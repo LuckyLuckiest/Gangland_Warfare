@@ -218,6 +218,9 @@ Commands:
       Parent:
          Add: "Se añadió &8[&e%parent%&8]&7 a &8[&a%rank%&8]&7."
          Remove: "Se eliminó &8[&e%parent%&8]&7 de &8[&a%rank%&8]&7."
+      VaultGroup:
+         Set: "Se vinculó &8[&a%rank%&8]&7 al grupo de Vault &8[&e%group%&8]&7."
+         Cleared: "Se eliminó el vínculo de grupo de Vault de &8[&a%rank%&8]&7."
    Bounty:
       Current: "Recompensa &c%money_symbol%%bounty%"
       Bounty_Set: "¡Hay una recompensa sobre tu cabeza!"
@@ -367,6 +370,8 @@ Errors:
       Invalid_Permission: "Este permiso no existe."
       Invalid_Parent: "Este padre no existe."
       Parent_Same: "Esta madre no puede ser la misma que el rango."
+   Vault:
+      Permission_Not_Available: "&cEl servicio de permisos de Vault no está disponible. Instala un plugin de permisos (p. ej. LuckPerms) y Vault para usar esta función."
    Bounty:
       No_Bounty: "Este jugador no tiene una recompensa."
       User_Set_Bounty: "No estableciste una recompensa para este jugador."

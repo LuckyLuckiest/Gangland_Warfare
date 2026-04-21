@@ -10,6 +10,7 @@ import me.luckyraven.bootstrap.PeriodicalUpdates;
 import me.luckyraven.bootstrap.ReloadPlugin;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.permission.PermissionManager;
+import me.luckyraven.data.permission.vault.VaultPermissionBridge;
 import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
 import me.luckyraven.data.placeholder.worker.PlaceholderAPIExpansion;
 import me.luckyraven.data.rank.RankManager;
@@ -22,6 +23,7 @@ import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.util.UpdateChecker;
 import me.luckyraven.weapon.configuration.WeaponAddon;
 import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.permission.Permission;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.bstats.bukkit.Metrics;
@@ -60,6 +62,11 @@ public final class Gangland extends JavaPlugin {
 		// vault soft dependency economy check
 		if (EconomyHandler.getVaultEconomy() != null) {
 			EconomyHandler.setVaultEconomy(null);
+		}
+
+		// vault soft dependency permission check
+		if (VaultPermissionBridge.isEnabled()) {
+			VaultPermissionBridge.set(null);
 		}
 
 		// unified bean lifecycle shutdown — deactivates sessions, converts active car data to parked records,
@@ -180,6 +187,17 @@ public final class Gangland extends JavaPlugin {
 
 			// set the vault economy
 			EconomyHandler.setVaultEconomy(rsp.getProvider());
+		});
+
+		Dependency vaultPermissions = new Dependency("Vault", Dependency.Type.SOFT);
+		vaultPermissions.validate(() -> {
+			RegisteredServiceProvider<Permission> rsp = getServer().getServicesManager()
+			                                                       .getRegistration(Permission.class);
+
+			if (rsp == null) return;
+
+			// set the vault permissions bridge
+			VaultPermissionBridge.set(rsp.getProvider());
 		});
 
 		Dependency viaVersion = new Dependency("ViaVersion", Dependency.Type.SOFT);

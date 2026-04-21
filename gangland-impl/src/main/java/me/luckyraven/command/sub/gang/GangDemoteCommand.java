@@ -144,7 +144,7 @@ class GangDemoteCommand extends SubArgument {
 			user.sendMessage(Messages.GANG_DEMOTE_PLAYER_SUCCESS.toString()
 			                                                    .replace("%player%", targetStr)
 			                                                    .replace("%rank%", previousRank.getName()));
-			targetMember.setRank(previousRank);
+			memberManager.assignRank(targetMember, previousRank);
 		}, sender -> GangKickCommand.getDescendantRanks(userManager, memberManager, gangManager, rankManager, sender));
 	}
 

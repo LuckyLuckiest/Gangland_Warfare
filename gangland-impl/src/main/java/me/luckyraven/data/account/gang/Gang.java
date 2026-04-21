@@ -7,6 +7,7 @@ import me.luckyraven.data.account.Level;
 import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.data.permission.vault.VaultPermissionBridge;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.economy.bank.EconomyHandler;
 import me.luckyraven.file.configuration.Settings;
@@ -95,8 +96,12 @@ public class Gang {
 	}
 
 	public void addMember(Member member, Rank rank) {
+		Rank oldRank = member.getRank();
+
 		member.setGangId(this.getId());
 		member.setRank(rank);
+
+		VaultPermissionBridge.onRankTransition(member.getUuid(), oldRank, rank);
 
 		if (members.contains(member)) return;
 
@@ -127,9 +132,14 @@ public class Gang {
 	public void removeMember(Member member) {
 		if (!members.contains(member)) return;
 
+		Rank oldRank = member.getRank();
+
 		member.resetGang();
 		member.setContribution(0D);
 		member.setRank(null);
+
+		VaultPermissionBridge.onRankTransition(member.getUuid(), oldRank, null);
+
 		members.remove(member);
 	}
 

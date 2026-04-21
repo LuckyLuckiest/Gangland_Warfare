@@ -3,6 +3,7 @@ package me.luckyraven.command.sub.rank;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
@@ -20,15 +21,17 @@ class RankPermissionCommand extends SubArgument {
 	private final Tree<Argument>    tree;
 	private final RankManager       rankManager;
 	private final PermissionManager permissionManager;
+	private final MemberManager     memberManager;
 
 	protected RankPermissionCommand(Gangland gangland, Tree<Argument> tree, Argument parent, RankManager rankManager,
-	                                PermissionManager permissionManager) {
+	                                PermissionManager permissionManager, MemberManager memberManager) {
 		super(gangland, new String[]{"permission", "perm"}, tree, parent);
 
 		this.gangland          = gangland;
 		this.tree              = tree;
 		this.rankManager       = rankManager;
 		this.permissionManager = permissionManager;
+		this.memberManager     = memberManager;
 
 		initializeArguments();
 	}
@@ -41,8 +44,10 @@ class RankPermissionCommand extends SubArgument {
 	}
 
 	private void initializeArguments() {
-		Argument addArg    = new RankPermissionAddCommand(gangland, tree, this, rankManager, permissionManager);
-		Argument removeArg = new RankPermissionRemoveCommand(gangland, tree, this, rankManager, permissionManager);
+		Argument addArg = new RankPermissionAddCommand(gangland, tree, this, rankManager, permissionManager,
+		                                               memberManager);
+		Argument removeArg = new RankPermissionRemoveCommand(gangland, tree, this, rankManager, permissionManager,
+		                                                     memberManager);
 
 		List<Argument> arguments = new ArrayList<>();
 		arguments.add(addArg);

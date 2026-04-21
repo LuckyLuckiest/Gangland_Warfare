@@ -319,6 +319,14 @@
 		"usage": "/glw rank parent remove <rank> <parent>",
 		"description": "Removes the rank from the specified parent."
 	},
+	"rank_vaultgroup_set": {
+		"usage": "/glw rank vaultgroup <rank> <group>",
+		"description": "Links the rank to an external Vault permission group so members gain that group on assignment."
+	},
+	"rank_vaultgroup_clear": {
+		"usage": "/glw rank vaultgroup <rank> clear",
+		"description": "Removes the Vault group link from the rank."
+	},
 	"bounty": {
 		"usage": "/glw bounty",
 		"description": "Shows the current bounty or help menu."

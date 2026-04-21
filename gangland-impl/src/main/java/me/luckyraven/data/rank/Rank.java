@@ -1,7 +1,9 @@
 package me.luckyraven.data.rank;
 
 import lombok.Getter;
+import lombok.Setter;
 import me.luckyraven.util.datastructure.Tree;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,6 +18,10 @@ public class Rank {
 	private final Tree.Node<Rank>  node;
 	private final int              usedId;
 	private final List<Permission> permissions;
+
+	@Setter
+	@Nullable
+	private String vaultGroup;
 
 	public Rank(String name, int id) {
 		this(name, id, new ArrayList<>());

@@ -221,6 +221,9 @@ Commands:
       Parent:
          Add: "Added &8[&e%parent%&8]&7 to &8[&a%rank%&8]&7."
          Remove: "Removed &8[&e%parent%&8]&7 from &8[&a%rank%&8]&7."
+      VaultGroup:
+         Set: "Linked &8[&a%rank%&8]&7 to Vault group &8[&e%group%&8]&7."
+         Cleared: "Removed the Vault group link from &8[&a%rank%&8]&7."
    Bounty:
       Current: "Bounty &c%money_symbol%%bounty%"
       Bounty_Set: "You have a bounty on your head!"
@@ -384,6 +387,8 @@ Errors:
       Invalid_Permission: "This permission doesn't exist."
       Invalid_Parent: "This parent doesn't exist."
       Parent_Same: "This parent can't be the same as the rank."
+   Vault:
+      Permission_Not_Available: "&cVault's permission service isn't available. Install a permission plugin (e.g. LuckPerms) and Vault to use this feature."
    Bounty:
       No_Bounty: "This player doesn't have a bounty."
       User_Set_Bounty: "You didn't set a bounty for this player."

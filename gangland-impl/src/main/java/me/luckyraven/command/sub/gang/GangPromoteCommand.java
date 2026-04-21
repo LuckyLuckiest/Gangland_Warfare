@@ -175,7 +175,7 @@ class GangPromoteCommand extends SubArgument {
 				String replace = string.replace("%player%", targetStr).replace("%rank%", first.getName());
 				user.sendMessage(replace);
 
-				targetMember.setRank(first);
+				memberManager.assignRank(targetMember, first);
 			}
 		}, sender -> {
 			Player       player = (Player) sender;

@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
+import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
@@ -19,15 +20,17 @@ class RankPermissionAddCommand extends SubArgument {
 	private final Tree<Argument>    tree;
 	private final RankManager       rankManager;
 	private final PermissionManager permissionManager;
+	private final MemberManager     memberManager;
 
 	RankPermissionAddCommand(Gangland gangland, Tree<Argument> tree, Argument parent, RankManager rankManager,
-	                         PermissionManager permissionManager) {
+	                         PermissionManager permissionManager, MemberManager memberManager) {
 		super(gangland, "add", tree, parent);
 
 		this.gangland          = gangland;
 		this.tree              = tree;
 		this.rankManager       = rankManager;
 		this.permissionManager = permissionManager;
+		this.memberManager     = memberManager;
 
 		rankPermission();
 	}
@@ -71,6 +74,7 @@ class RankPermissionAddCommand extends SubArgument {
 			}
 
 			rankManager.addPermission(rank, permString);
+			memberManager.applyRankPermissionChange(rank, permString, true);
 
 			String string  = Messages.RANK_PERMISSION_ADD.toString();
 			String replace = string.replace("%rank%", rank.getName()).replace("%permission%", permString);

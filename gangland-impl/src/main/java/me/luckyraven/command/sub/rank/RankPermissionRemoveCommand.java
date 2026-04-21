@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
+import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
@@ -19,15 +20,17 @@ class RankPermissionRemoveCommand extends SubArgument {
 	private final Tree<Argument>    tree;
 	private final RankManager       rankManager;
 	private final PermissionManager permissionManager;
+	private final MemberManager     memberManager;
 
 	RankPermissionRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent, RankManager rankManager,
-	                            PermissionManager permissionManager) {
+	                            PermissionManager permissionManager, MemberManager memberManager) {
 		super(gangland, "remove", tree, parent);
 
 		this.gangland          = gangland;
 		this.tree              = tree;
 		this.rankManager       = rankManager;
 		this.permissionManager = permissionManager;
+		this.memberManager     = memberManager;
 
 		rankPermission();
 	}
@@ -67,6 +70,7 @@ class RankPermissionRemoveCommand extends SubArgument {
 				return;
 			}
 
+			memberManager.applyRankPermissionChange(rank, permString, false);
 			rankManager.removePermission(rank, permString);
 
 			String string  = Messages.RANK_PERMISSION_REMOVE.toString();

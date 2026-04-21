@@ -2,7 +2,10 @@ package me.luckyraven.data.account.gang.member;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.data.permission.vault.VaultPermissionBridge;
 import me.luckyraven.data.rank.Rank;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.Nullable;
 
 import java.text.SimpleDateFormat;
@@ -47,6 +50,19 @@ public class Member {
 		return this.rank != null;
 	}
 
+	/**
+	 * Combined permission check: the member's rank grants the node, or (when Vault's Permission service is wired) an
+	 * external permission plugin grants it to the backing {@link OfflinePlayer}. Returns {@code false} if neither
+	 * source reports the node.
+	 */
+	public boolean hasPermission(String node) {
+		if (node == null || node.isEmpty()) return false;
+		if (this.rank != null && this.rank.contains(node)) return true;
+
+		OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
+		return VaultPermissionBridge.has(player, node);
+	}
+
 	public Date getGangJoinDate() {
 		return new Date(gangJoinDateLong);
 	}
@@ -82,7 +98,7 @@ public class Member {
 	@Override
 	public String toString() {
 		return String.format("Member{uuid=%s,gangId=%d,contribution=%.2f,rank=%s,gangJoin=%s}", uuid, gangId,
-							 contribution, rank == null ? "NA" : rank.getName(), getGangJoinDateString());
+		                     contribution, rank == null ? "NA" : rank.getName(), getGangJoinDateString());
 	}
 
 }

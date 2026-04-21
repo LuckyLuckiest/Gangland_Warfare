@@ -110,7 +110,7 @@ class GangDeleteCommand extends SubArgument {
 				user.resetGang();
 				member.resetGang();
 				member.setContribution(0D);
-				member.setRank(null);
+				memberManager.assignRank(member, null);
 				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
@@ -169,7 +169,7 @@ class GangDeleteCommand extends SubArgument {
 				user.resetGang();
 				member.resetGang();
 				member.setContribution(0D);
-				member.setRank(null);
+				memberManager.assignRank(member, null);
 				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
@@ -279,7 +279,7 @@ class GangDeleteCommand extends SubArgument {
 					if (mem != null) {
 						mem.resetGang();
 						mem.setContribution(0D);
-						mem.setRank(null);
+						memberManager.assignRank(mem, null);
 					}
 				}
 			});

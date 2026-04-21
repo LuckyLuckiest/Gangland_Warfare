@@ -180,7 +180,7 @@ public final class ComponentExecutorCommand extends Command {
 
 			if (nextRank == null) return;
 
-			targetMember.setRank(nextRank);
+			memberManager.assignRank(targetMember, nextRank);
 
 			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
 			Player        onlinePlayer  = offlinePlayer.getPlayer();

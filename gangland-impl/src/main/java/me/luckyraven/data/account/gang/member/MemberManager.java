@@ -2,6 +2,7 @@ package me.luckyraven.data.account.gang.member;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.data.account.gang.GangManager;
+import me.luckyraven.data.permission.vault.VaultPermissionBridge;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.GanglandDatabase;
@@ -11,11 +12,9 @@ import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.util.autowire.bean.BeanLifecycle;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class MemberManager implements BeanLifecycle {
 
@@ -122,6 +121,42 @@ public class MemberManager implements BeanLifecycle {
 
 	public Map<UUID, Member> getMembers() {
 		return Collections.unmodifiableMap(members);
+	}
+
+	/**
+	 * Returns every cached member currently wearing the given rank. Used by rank-permission mutation sites to propagate
+	 * changes through {@link VaultPermissionBridge}.
+	 */
+	public List<Member> getMembersByRank(Rank rank) {
+		if (rank == null) return Collections.emptyList();
+
+		List<Member> result = new ArrayList<>();
+
+		for (Member member : members.values()) {
+			if (member.getRank() == rank) result.add(member);
+		}
+
+		return result;
+	}
+
+	/**
+	 * Sets a member's rank and mirrors the transition to Vault (revokes the old rank's nodes/group, grants the new
+	 * rank's nodes/group). Callers must use this instead of {@link Member#setRank(Rank)} so external permission plugins
+	 * stay in sync. When Vault is absent, this behaves exactly like the direct setter.
+	 */
+	public void assignRank(Member member, @Nullable Rank newRank) {
+		Rank oldRank = member.getRank();
+		member.setRank(newRank);
+
+		VaultPermissionBridge.onRankTransition(member.getUuid(), oldRank, newRank);
+	}
+
+	/**
+	 * Pushes a permission-node add/remove onto every online member currently wearing the rank. Invoked from the
+	 * {@code /glw rank permission add|remove} command sites after {@code RankManager} has mutated its internal list.
+	 */
+	public void applyRankPermissionChange(Rank rank, String node, boolean added) {
+		VaultPermissionBridge.applyPermissionChange(getMembersByRank(rank), node, added);
 	}
 
 }

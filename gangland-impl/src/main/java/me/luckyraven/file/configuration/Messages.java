@@ -155,6 +155,9 @@ public enum Messages {
 	RANK_PARENT_ADD("Commands.Rank.Parent.Add", Type.COMMAND),
 	RANK_PARENT_REMOVE("Commands.Rank.Parent.Remove", Type.COMMAND),
 	RANK_PERMISSION_EXISTS("Commands.Rank.Permission.Exists", Type.COMMAND),
+	RANK_VAULT_GROUP_SET("Commands.Rank.VaultGroup.Set", Type.COMMAND),
+	RANK_VAULT_GROUP_CLEARED("Commands.Rank.VaultGroup.Cleared", Type.COMMAND),
+	VAULT_PERMISSION_NOT_AVAILABLE("Errors.Vault.Permission_Not_Available", Type.ERROR),
 
 	// commands - bounty
 	BOUNTY_CURRENT("Commands.Bounty.Current", Type.COMMAND),

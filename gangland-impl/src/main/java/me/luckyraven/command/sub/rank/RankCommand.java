@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
+import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.GanglandDatabase;
@@ -20,14 +21,16 @@ public final class RankCommand extends Command {
 	private final RankManager       rankManager;
 	private final GanglandDatabase  ganglandDatabase;
 	private final PermissionManager permissionManager;
+	private final MemberManager     memberManager;
 
 	public RankCommand(Gangland gangland, RankManager rankManager, GanglandDatabase ganglandDatabase,
-	                   PermissionManager permissionManager) {
+	                   PermissionManager permissionManager, MemberManager memberManager) {
 		super(gangland, "rank", false);
 
 		this.rankManager       = rankManager;
 		this.ganglandDatabase  = ganglandDatabase;
 		this.permissionManager = permissionManager;
+		this.memberManager     = memberManager;
 
 		List<CommandInformation> list = getCommands().entrySet()
 				.stream()
@@ -50,10 +53,12 @@ public final class RankCommand extends Command {
 		                                        ganglandDatabase);
 		Argument list = new RankListCommand(getGangland(), getArgumentTree(), getArgument(), rankManager);
 		Argument permission = new RankPermissionCommand(getGangland(), getArgumentTree(), getArgument(), rankManager,
-		                                                permissionManager);
+		                                                permissionManager, memberManager);
 		Argument info         = new RankInfoCommand(getGangland(), getArgumentTree(), getArgument(), rankManager);
 		Argument parent       = new RankParentCommand(getGangland(), getArgumentTree(), getArgument(), rankManager);
 		Argument traverseTree = new RankTraverseCommand(getGangland(), getArgumentTree(), getArgument(), rankManager);
+		Argument vaultGroup = new RankVaultGroupCommand(getGangland(), getArgumentTree(), getArgument(), rankManager,
+		                                                memberManager);
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
@@ -65,6 +70,7 @@ public final class RankCommand extends Command {
 		arguments.add(info);
 		arguments.add(parent);
 		arguments.add(traverseTree);
+		arguments.add(vaultGroup);
 
 		getArgument().addAllSubArguments(arguments);
 	}

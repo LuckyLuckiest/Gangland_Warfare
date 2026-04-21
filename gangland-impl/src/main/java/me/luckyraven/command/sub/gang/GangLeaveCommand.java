@@ -113,7 +113,7 @@ class GangLeaveCommand extends SubArgument {
 				user.resetGang();
 				member.resetGang();
 				member.setContribution(0D);
-				member.setRank(null);
+				memberManager.assignRank(member, null);
 				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}

@@ -74,10 +74,13 @@ public class RankRepository extends AbstractRepository<Rank> {
 		List<Object[]> data  = rankTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : data) {
-			int    id   = (int) result[0];
-			String name = String.valueOf(result[1]);
+			int    id         = (int) result[0];
+			String name       = String.valueOf(result[1]);
+			String vaultGroup = result.length > 2 && result[2] != null ? String.valueOf(result[2]) : null;
 
-			ranks.add(new Rank(name, id));
+			Rank rank = new Rank(name, id);
+			rank.setVaultGroup(vaultGroup);
+			ranks.add(rank);
 		}
 
 		return ranks;
