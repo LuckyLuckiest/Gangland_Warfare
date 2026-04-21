@@ -69,7 +69,7 @@ public final class TraderTraitsLoader implements BeanLifecycle {
 		}
 
 		registry.replaceAll(parsed);
-		log.info("Loaded {} trader trait(s): {}", parsed.size(), parsed.keySet());
+		log.debug("Loaded {} trader trait(s): {}", parsed.size(), parsed.keySet());
 	}
 
 	private TraderTraitDefinition parseDefinition(String id, NodeReader r) {

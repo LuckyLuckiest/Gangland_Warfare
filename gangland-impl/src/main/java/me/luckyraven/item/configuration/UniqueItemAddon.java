@@ -168,8 +168,8 @@ public class UniqueItemAddon implements Comparator<UniqueItem>, UniqueItemRegist
 			permissionManager.addPermission(uniqueItem.getPermission());
 		}
 
-		log.info("Loaded the following unique items:");
-		log.info(temp);
+		log.debug("Loaded the following unique items:");
+		log.debug(temp);
 	}
 
 }

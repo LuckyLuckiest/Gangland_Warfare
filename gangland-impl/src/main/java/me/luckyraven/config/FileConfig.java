@@ -31,7 +31,6 @@ import me.luckyraven.util.TimeMessages;
 import me.luckyraven.util.autowire.bean.Bean;
 import me.luckyraven.util.autowire.bean.Configuration;
 import me.luckyraven.util.autowire.bean.Phase;
-import me.luckyraven.util.autowire.bean.PostConstruct;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.configuration.AmmunitionAddon;
 import me.luckyraven.weapon.configuration.WeaponAddon;
@@ -253,16 +252,5 @@ public class FileConfig {
 	@Bean
 	public InventoryDefinitionStore inventoryDefinitionStore() {
 		return new InventoryDefinitionStore();
-	}
-
-	/**
-	 * After every other FILE bean has been registered + loaded by the per-bean hook, this @PostConstruct flips the
-	 * money addon's enabled flag to mirror {@link Settings#isMoneyDropEnabled()}. The check has to happen after
-	 * Settings has finished loading (which the FILE phase guarantees) but before any CONFIG bean reads the flag.
-	 */
-	@PostConstruct
-	public void finalizeFilePhase() {
-		// no-op anchor for now: the moneyAddon enabled-flag setup happens in the moneyAddon @Bean's postProcess.
-		log.info("FILE phase configuration complete");
 	}
 }

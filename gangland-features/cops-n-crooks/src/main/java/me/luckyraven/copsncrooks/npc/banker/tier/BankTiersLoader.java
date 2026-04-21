@@ -82,7 +82,7 @@ public final class BankTiersLoader implements BeanLifecycle {
 		}
 
 		registry.replaceAll(parsed);
-		log.info("Loaded {} bank tier(s): {}", parsed.size(), parsed.keySet());
+		log.debug("Loaded {} bank tier(s): {}", parsed.size(), parsed.keySet());
 	}
 
 	private BankTier parseTier(String id, NodeReader r, int fallbackOrder) {

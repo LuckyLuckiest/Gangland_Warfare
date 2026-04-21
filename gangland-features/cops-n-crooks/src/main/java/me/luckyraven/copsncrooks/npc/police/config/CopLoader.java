@@ -69,7 +69,7 @@ public class CopLoader extends FileLoader<CopConfig> {
 
 		if (!report.isEmpty()) report.log(log);
 
-		log.info("Loaded cop config with {} tiers", loadedConfig.getTiers().size());
+		log.debug("Loaded cop config with {} tiers", loadedConfig.getTiers().size());
 
 		if (consumer != null) {
 			consumer.accept(loadedConfig);

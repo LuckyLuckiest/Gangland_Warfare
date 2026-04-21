@@ -65,7 +65,7 @@ public class RepositoryRegistry {
 				if (!condition.isEmpty()) {
 					boolean invoke = invokeCondition(condition);
 					if (!invoke) {
-						log.info("Skipping repository {} due to condition: {}", clazz.getSimpleName(), condition);
+						log.debug("Skipping repository {} due to condition: {}", clazz.getSimpleName(), condition);
 						continue;
 					}
 				}
@@ -76,7 +76,7 @@ public class RepositoryRegistry {
 			// Second pass: sort by dependencies and register
 			List<Class<?>> sortedClasses = sortRepositoriesByDependencies(repositoryClasses);
 
-			log.info("Registering and linking {} repositories to their tables", sortedClasses.size());
+			log.debug("Registering and linking {} repositories to their tables", sortedClasses.size());
 			for (Class<?> clazz : sortedClasses) {
 				try {
 					registerRepositoryClass(clazz);
@@ -110,13 +110,13 @@ public class RepositoryRegistry {
 				registeredTables.add(table);
 				tablesByName.put(table.getName(), table);
 
-				log.info("Registered table '{}' from repository", table.getName());
+				log.debug("Registered table '{}' from repository", table.getName());
 			} catch (Exception exception) {
 				log.warn("Failed to extract table from repository: {}", exception.getMessage());
 			}
 		}
 
-		log.info("Registered repository for: {}", entityType.getSimpleName());
+		log.debug("Registered repository for: {}", entityType.getSimpleName());
 	}
 
 	/**
@@ -150,7 +150,7 @@ public class RepositoryRegistry {
 		Repository annotation = entry.repositoryClass().getAnnotation(Repository.class);
 		if (annotation != null && !annotation.isGeneric()) {
 			log.warn("Repository for {} is not marked as generic but getGenericRepository was called",
-					 rawEntityType.getSimpleName());
+			         rawEntityType.getSimpleName());
 		}
 
 		return (IRepository<T>) entry.instance();
@@ -234,7 +234,7 @@ public class RepositoryRegistry {
 	 * Initialize database tables for all registered repositories
 	 */
 	public void createTables() throws Exception {
-		log.info("Creating {} tables from repositories...", registeredTables.size());
+		log.debug("Creating {} tables from repositories...", registeredTables.size());
 
 		// Sort tables by dependencies
 		List<Table<?>> sortedTables = sortTablesByDependencies(registeredTables);
@@ -329,7 +329,7 @@ public class RepositoryRegistry {
 					}
 
 					log.debug("Repository {} depends on table {} which is not yet registered",
-							  repoClass.getSimpleName(), tableName);
+					          repoClass.getSimpleName(), tableName);
 					return false;
 				}
 			}
@@ -414,7 +414,7 @@ public class RepositoryRegistry {
 
 		if (targetConstructor == null) {
 			throw new NoSuchMethodException("No suitable constructor found for " + repoClass.getName() +
-											". Must accept (JavaPlugin, DatabaseHandler) or additional Table parameters");
+			                                ". Must accept (JavaPlugin, DatabaseHandler) or additional Table parameters");
 		}
 
 		// Create instance
@@ -509,7 +509,7 @@ public class RepositoryRegistry {
 
 			return result instanceof Boolean && (Boolean) result;
 		} catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException |
-				 InvocationTargetException e) {
+		         InvocationTargetException e) {
 			log.warn("Failed to invoke condition '{}': {}", condition, e.getMessage());
 			return false;
 		}

@@ -26,12 +26,12 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Populates the user managers with online and offline players from the database. Runs as a
- * {@link BeanPostInitialize} bean so it participates in both first-load and reload cycles <b>after</b> every
+ * Populates the user managers with online and offline players from the database. Runs as a {@link BeanPostInitialize}
+ * bean so it participates in both first-load and reload cycles <b>after</b> every
  * {@code BeanLifecycle.onInitialize(...)} call has completed — this is critical on reload because loading online
- * players fires {@code WantedStartEvent}, which drives {@code CopManager.startSpawnTask}, which reads a
- * lifecycle-wired {@code CopConfigProvider}. Running in post-init guarantees every lifecycle bean is fully re-wired
- * before any events fire from here.
+ * players fires {@code WantedStartEvent}, which drives {@code CopManager.startSpawnTask}, which reads a lifecycle-wired
+ * {@code CopConfigProvider}. Running in post-init guarantees every lifecycle bean is fully re-wired before any events
+ * fire from here.
  *
  * <p>Depends on {@link FileManager} (unused at runtime) solely to force topological ordering: files must be reloaded
  * before players can be loaded, because the addon data (unique items, etc.) is read during user initialization.
@@ -81,8 +81,8 @@ public final class PlayerBootstrapService implements BeanPostInitialize {
 		loadOnlinePlayers(userTable, bankTable, memberTable);
 		loadOfflinePlayers(userTable, bankTable);
 
-		log.info("Player bootstrap complete: {} online, {} offline",
-		         userManager.getUsers().size(), offlineUserManager.getUsers().size());
+		log.debug("Player bootstrap complete: {} online, {} offline",
+		          userManager.getUsers().size(), offlineUserManager.getUsers().size());
 	}
 
 	private void loadOnlinePlayers(UserTable userTable, BankTable bankTable, MemberTable memberTable) {

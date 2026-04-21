@@ -14,10 +14,9 @@ import org.bukkit.entity.Player;
 
 /**
  * Creates scoreboards for all online players. Runs as a {@link BeanPostInitialize} bean because it depends on
- * {@link PlayerBootstrapService} having populated the user manager, and that bean has itself been moved to post-init
- * to avoid racing against {@link BeanLifecycle#onInitialize(boolean)} on reload. Scoreboard <i>destruction</i> is
- * already handled by {@link UserManager#onPreClear()}, which stops and nulls every user's scoreboard before data is
- * cleared.
+ * {@link PlayerBootstrapService} having populated the user manager, and that bean has itself been moved to post-init to
+ * avoid racing against {@link BeanLifecycle#onInitialize(boolean)} on reload. Scoreboard <i>destruction</i> is already
+ * handled by {@link UserManager#onPreClear()}, which stops and nulls every user's scoreboard before data is cleared.
  *
  * <p>Depends on {@link PlayerBootstrapService} (via constructor param) to force topological ordering: players must be
  * loaded into the user manager before scoreboards can be created for them.
@@ -59,6 +58,6 @@ public final class ScoreboardLifecycleService implements BeanPostInitialize {
 			user.getScoreboard().start();
 		}
 
-		log.info("Scoreboard lifecycle complete: {} scoreboard(s) created", userManager.getUsers().size());
+		log.debug("Scoreboard lifecycle complete: {} scoreboard(s) created", userManager.getUsers().size());
 	}
 }

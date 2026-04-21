@@ -76,7 +76,7 @@ public class MoneyAddon {
 			}
 		}
 
-		log.info("MoneyAddon loaded {} variation(s) and {} drop source(s)", variations.size(), dropSources.size());
+		log.debug("MoneyAddon loaded {} variation(s) and {} drop source(s)", variations.size(), dropSources.size());
 	}
 
 	public void clear() {

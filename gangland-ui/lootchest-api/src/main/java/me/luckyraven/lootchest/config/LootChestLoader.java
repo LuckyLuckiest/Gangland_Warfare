@@ -87,7 +87,7 @@ public class LootChestLoader extends FileLoader<LootChestConfig> {
 
 		manager.setConfig(loadedConfig);
 
-		log.info("Loaded {} tiers and {} loot tables", tiers.size(), lootTables.size());
+		log.debug("Loaded {} tiers and {} loot tables", tiers.size(), lootTables.size());
 
 		if (consumer != null) {
 			consumer.accept(loadedConfig);

@@ -30,7 +30,7 @@ public class DatabaseManager {
 	public void initializeDatabases() {
 		for (DatabaseHandler database : databases) database.initialize();
 
-		log.info("Database initialization complete.");
+		log.debug("Database initialization complete.");
 	}
 
 	public void closeConnections() {
@@ -41,7 +41,7 @@ public class DatabaseManager {
 			if (database != null && database.getConnection() != null) backup = startBackup(databaseHandler);
 
 			if (backup != null && backup.getDatabase() != null &&
-				backup.getDatabase().getConnection() != null) backup.getDatabase().disconnect();
+			    backup.getDatabase().getConnection() != null) backup.getDatabase().disconnect();
 		}
 	}
 
@@ -147,18 +147,18 @@ public class DatabaseManager {
 	}
 
 	private void createDatabaseBackup(LinkedHashMap<String, List<Object[]>> data, String table, Database config,
-									  String[] columns, int[] dataTypes) {
+	                                  String[] columns, int[] dataTypes) {
 		// if they don't exist, we create them otherwise update the data
 		for (Object[] objects : data.get(table)) {
 			try {
 				Object[] row = config.select(columns[0] + " = ?", new Object[]{objects[0]}, new int[]{dataTypes[0]},
-											 new String[]{"*"});
+				                             new String[]{"*"});
 
 				if (row.length == 0) {
 					config.insert(columns, objects, dataTypes);
 				} else {
 					config.update(columns[0] + " = ?", new Object[]{objects[0]}, new int[]{dataTypes[0]}, columns,
-								  objects, dataTypes);
+					              objects, dataTypes);
 				}
 			} catch (SQLException exception) {
 				log.warn("Failed to backup row in table '{}': {}", table, exception.getMessage());

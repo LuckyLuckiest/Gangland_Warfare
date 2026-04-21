@@ -116,8 +116,8 @@ public abstract class FolderLoader extends FileLoader<FileHandler> implements Be
 
 		if (temp.isEmpty()) log.info("No files were handled");
 		else {
-			log.info("Registered the following files from '{}' folder:", getFolderName());
-			log.info(temp);
+			log.debug("Registered the following files from '{}' folder:", getFolderName());
+			log.debug(temp);
 		}
 	}
 
@@ -139,7 +139,7 @@ public abstract class FolderLoader extends FileLoader<FileHandler> implements Be
 			for (FileHandler file : files)
 				file.create(true);
 		} catch (IOException exception) {
-			log.info("{}: {}", UnhandledError.FILE_CREATE_ERROR, exception.getMessage(), exception);
+			log.warn("{}: {}", UnhandledError.FILE_CREATE_ERROR, exception.getMessage(), exception);
 		}
 	}
 

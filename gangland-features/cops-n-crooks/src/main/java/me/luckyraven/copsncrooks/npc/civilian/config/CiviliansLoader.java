@@ -70,8 +70,8 @@ public class CiviliansLoader extends FileLoader<CiviliansConfig> {
 
 		if (!report.isEmpty()) report.log(log);
 
-		log.info("Loaded civilians config with {} types and {} groups", loadedConfig.types().size(),
-		         loadedConfig.groups().size());
+		log.debug("Loaded civilians config with {} types and {} groups", loadedConfig.types().size(),
+		          loadedConfig.groups().size());
 
 		if (consumer != null) {
 			consumer.accept(loadedConfig);

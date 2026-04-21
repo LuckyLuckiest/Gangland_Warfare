@@ -201,8 +201,8 @@ public class WearableAddon extends WearableService implements FileInitializer {
 			loaded.add(key);
 		}
 
-		log.info("Loaded the following wearables:");
-		log.info(loaded);
+		log.debug("Loaded the following wearables:");
+		log.debug(loaded);
 	}
 
 }

@@ -49,7 +49,7 @@ public final class VersionSetup {
 			// check for known version structure changes
 			if (version.equals("craftbukkit")) {
 				// attempt to use reflection to get the version
-				log.warn("Unable to determine the server version... Trying to use bukkit version...");
+				log.debug("Unable to determine the server version... Trying to use bukkit version...");
 
 				version = Version.getBukkitVersion();
 

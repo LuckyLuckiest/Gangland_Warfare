@@ -60,7 +60,7 @@ public class CivilianService implements BeanLifecycle {
 		this.civiliansConfig = civiliansLoader.getLoadedConfig();
 
 		if (!civilianSettings.isCivilianAiEnabled()) {
-			log.info("Civilian AI is disabled — NPCs will not tick.");
+			log.debug("Civilian AI is disabled — NPCs will not tick.");
 			return;
 		}
 
@@ -73,8 +73,8 @@ public class CivilianService implements BeanLifecycle {
 		                                     timer -> tickProximitySpawners(civilianSettings));
 		checkTimer.start(false);
 
-		log.info("CivilianService initialized (tick rate: {} ticks, proximity check: {} ticks).", tickRate,
-		         checkInterval);
+		log.debug("CivilianService initialized (tick rate: {} ticks, proximity check: {} ticks).", tickRate,
+		          checkInterval);
 	}
 
 	@Override

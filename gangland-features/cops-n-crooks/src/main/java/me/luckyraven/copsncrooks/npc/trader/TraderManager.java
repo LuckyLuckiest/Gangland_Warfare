@@ -217,7 +217,7 @@ public final class TraderManager implements BeanLifecycle {
 		for (TraderData data : repository.loadAll()) {
 			if (spawn(data) != null) spawned++;
 		}
-		log.info("Spawned {} trader(s) from repository", spawned);
+		log.debug("Spawned {} trader(s) from repository", spawned);
 	}
 
 	private void startTasks() {

@@ -88,8 +88,8 @@ public class AmmunitionAddon implements FileInitializer {
 			temp.add(key);
 		}
 
-		log.info("Loaded the following ammunition:");
-		log.info(temp);
+		log.debug("Loaded the following ammunition:");
+		log.debug(temp);
 	}
 
 }

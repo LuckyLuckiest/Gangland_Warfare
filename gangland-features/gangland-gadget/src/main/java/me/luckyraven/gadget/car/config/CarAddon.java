@@ -147,7 +147,7 @@ public class CarAddon extends CarManager implements FileInitializer {
 			loaded.add(key);
 		}
 
-		log.info("Loaded the following cars:");
-		log.info(loaded);
+		log.debug("Loaded the following cars:");
+		log.debug(loaded);
 	}
 }

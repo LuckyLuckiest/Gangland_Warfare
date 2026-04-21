@@ -92,8 +92,8 @@ public class BeanFactory {
 			}
 			configClasses.add(clazz);
 		}
-		log.info("BeanFactory scanned {}: discovered {} configuration class(es)",
-		         basePackage, configClasses.size() - before);
+		log.debug("BeanFactory scanned {}: discovered {} configuration class(es)",
+		          basePackage, configClasses.size() - before);
 	}
 
 	/**
@@ -130,7 +130,7 @@ public class BeanFactory {
 
 		for (Class<?> configClass : configClasses) {
 			if (!classConditionsMet(configClass)) {
-				log.info("Skipping configuration {}: class-level condition not met", configClass.getName());
+				log.debug("Skipping configuration {}: class-level condition not met", configClass.getName());
 				continue;
 			}
 
@@ -152,8 +152,8 @@ public class BeanFactory {
 					continue;
 				}
 				if (!methodConditionsMet(method)) {
-					log.info("Skipping bean {}.{}: method-level condition not met",
-					         configClass.getSimpleName(), method.getName());
+					log.debug("Skipping bean {}.{}: method-level condition not met",
+					          configClass.getSimpleName(), method.getName());
 					continue;
 				}
 				phaseDefs.get(classPhase).add(buildDefinition(configInstance, method, classPhase));
@@ -193,7 +193,7 @@ public class BeanFactory {
 				}
 			}
 
-			log.info("{} phase complete: {} bean(s)", phase, phaseBeans.size());
+			log.debug("{} phase complete: {} bean(s)", phase, phaseBeans.size());
 		}
 
 		if (beforeLifecycle != null) {
@@ -204,8 +204,8 @@ public class BeanFactory {
 		runPostConstruct(allRegisteredBeans);
 		runPostInitialize(true);
 
-		log.info("Bean wiring complete: {} configs, {} beans across {} phases",
-		         configInstances.size(), allRegisteredBeans.size(), Phase.values().length);
+		log.debug("Bean wiring complete: {} configs, {} beans across {} phases",
+		          configInstances.size(), allRegisteredBeans.size(), Phase.values().length);
 	}
 
 	/**
@@ -238,7 +238,7 @@ public class BeanFactory {
 
 		runPostInitialize(false);
 
-		log.info("Lifecycle reload complete: {} bean(s)", forward.size());
+		log.debug("Lifecycle reload complete: {} bean(s)", forward.size());
 	}
 
 	/**
@@ -254,7 +254,7 @@ public class BeanFactory {
 			bean.onShutdown();
 		}
 
-		log.info("Lifecycle shutdown complete: {} bean(s)", reversed.size());
+		log.debug("Lifecycle shutdown complete: {} bean(s)", reversed.size());
 	}
 
 	private BeanDefinition buildDefinition(Object configInstance, Method method, Phase phase) {
@@ -573,7 +573,7 @@ public class BeanFactory {
 			count++;
 		}
 		if (count > 0) {
-			log.info("Post-initialize complete: {} bean(s)", count);
+			log.debug("Post-initialize complete: {} bean(s)", count);
 		}
 	}
 

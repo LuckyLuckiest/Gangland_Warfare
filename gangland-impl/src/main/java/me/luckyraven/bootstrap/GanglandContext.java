@@ -171,7 +171,7 @@ public final class GanglandContext {
 		}
 		listenerManager.scanAndRegisterListeners(LISTENER_PACKAGE, gangland);
 		listenerManager.registerEvents();
-		log.info("Listener phase complete: {} listener(s) registered", listenerManager.getListeners().size());
+		log.debug("Listener phase complete: {} listener(s) registered", listenerManager.getListeners().size());
 	}
 
 	private void runCommandPhase() {
@@ -194,6 +194,6 @@ public final class GanglandContext {
 		command.setExecutor(commandManager);
 		commandManager.scanAndRegisterCommands(COMMAND_PACKAGE, gangland.getClass().getClassLoader());
 		command.setTabCompleter(new CommandTabCompleter(CommandManager.getCommands()));
-		log.info("Command phase complete: {} command(s) registered", CommandManager.getCommands().size());
+		log.debug("Command phase complete: {} command(s) registered", CommandManager.getCommands().size());
 	}
 }

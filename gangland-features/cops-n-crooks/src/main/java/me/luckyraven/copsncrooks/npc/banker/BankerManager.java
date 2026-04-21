@@ -149,7 +149,7 @@ public final class BankerManager implements BeanLifecycle {
 		for (BankerData data : repository.loadAll()) {
 			if (spawn(data) != null) spawned++;
 		}
-		log.info("Spawned {} banker(s) from repository", spawned);
+		log.debug("Spawned {} banker(s) from repository", spawned);
 	}
 
 	private void startTasks() {
