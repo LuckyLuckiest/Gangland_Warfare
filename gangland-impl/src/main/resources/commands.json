@@ -35,21 +35,21 @@
 		"usage": "/glw economy help <page>",
 		"description": "Shows the specified page in economy menu."
 	},
-	"economy_add": {
-		"usage": "/glw economy deposit <specifier> <amount>",
-		"description": "Deposits the amount value to a user."
+	"economy_deposit": {
+		"usage": "/glw economy deposit <amount> [player]",
+		"description": "Deposits the amount into your account, or the target player's when specified."
 	},
-	"economy_take": {
-		"usage": "/glw economy withdraw <specifier> <amount>",
-		"description": "Withdraws the amount value from the user."
+	"economy_withdraw": {
+		"usage": "/glw economy withdraw <amount> [player]",
+		"description": "Withdraws the amount from your account, or the target player's when specified."
 	},
 	"economy_set": {
-		"usage": "/glw economy set <specifier> <amount>",
-		"description": "Sets amount value for the user."
+		"usage": "/glw economy set <amount> [player]",
+		"description": "Sets your account balance, or the target player's when specified."
 	},
 	"economy_reset": {
-		"usage": "/glw economy reset <specifier>",
-		"description": "Resets account balance for the user."
+		"usage": "/glw economy reset [player]",
+		"description": "Resets your account balance, or the target player's when specified."
 	},
 	"balance": {
 		"usage": "/glw balance",
@@ -72,12 +72,12 @@
 		"description": "Creates a bank with the specified name."
 	},
 	"bank_deposit": {
-		"usage": "/glw bank deposit <amount>",
-		"description": "Deposits the amount value to the bank."
+		"usage": "/glw bank deposit <amount> [player]",
+		"description": "Deposits the amount into your bank, or credits the target player's bank when specified."
 	},
 	"bank_withdraw": {
-		"usage": "/glw bank withdraw <amount>",
-		"description": "Withdraws the amount value from the bank."
+		"usage": "/glw bank withdraw <amount> [player]",
+		"description": "Withdraws the amount from your bank, or debits the target player's bank when specified."
 	},
 	"bank_balance": {
 		"usage": "/glw bank balance",
@@ -344,20 +344,20 @@
 		"description": "Shows the specified page in level menu."
 	},
 	"level_add_experience": {
-		"usage": "/glw level exp add <amount>",
-		"description": "Adds experience to your level."
+		"usage": "/glw level experience add <amount> [player]",
+		"description": "Adds experience to your level, or the target player's when specified."
 	},
 	"level_remove_experience": {
-		"usage": "/glw level exp remove <amount>",
-		"description": "Removes experience from your level."
+		"usage": "/glw level experience remove <amount> [player]",
+		"description": "Removes experience from your level, or the target player's when specified."
 	},
 	"level_add_levels": {
-		"usage": "/glw level add <amount>",
-		"description": "Adds levels."
+		"usage": "/glw level add <amount> [player]",
+		"description": "Adds levels to your account, or the target player's when specified."
 	},
 	"level_remove_levels": {
-		"usage": "/glw level remove <amount>",
-		"description": "Removes levels."
+		"usage": "/glw level remove <amount> [player]",
+		"description": "Removes levels from your account, or the target player's when specified."
 	},
 	"level_next": {
 		"usage": "/glw level next",
