@@ -25,7 +25,7 @@ AbstractNpc
           │
 CivilianService           Lifecycle management, spawn/despawn coordination
 CivilianSpawner           Spawn point management, wave-based spawning
-CivilianTypeConfig        Per-type configuration (wander, flee, combat, inventory)
+CivilianTypeConfig        Per-type configuration (wander, flee, combat)
 ```
 
 ---
@@ -114,12 +114,6 @@ civilian_types:
          flee_range: 20.0
          combat_enabled: false
          look_range: 8.0
-      inventory:
-         title: "&6Street Vendor"
-         size: 27
-         items:
-            0: "weapon:pistol{amount=1}"
-            1: "ammo:9mm{amount=32}"
 ```
 
 ### CivilianNavigationConfig (12 methods)
@@ -133,16 +127,6 @@ civilian_types:
 | `stuckCheckInterval`  | `int`    | Ticks between stuck detection samples      |
 | `maxStuckChecks`      | `int`    | Samples before considered stuck            |
 | `minProgressDistance` | `double` | Min distance per sample to count as moving |
-
-### CivilianInventoryConfig
-
-Configuration for trader-type civilians:
-
-| Field       | Type                   | Description                       |
-|-------------|------------------------|-----------------------------------|
-| `title`     | `String`               | Inventory display title           |
-| `size`      | `int`                  | Inventory size (9-54, normalized) |
-| `slotItems` | `Map<Integer, String>` | Slot -> item definition string    |
 
 ---
 
@@ -197,35 +181,6 @@ Uses the same `EntitySpawner` as cops, with a two-phase algorithm:
 
 ---
 
-## Trader Interaction
-
-When a player right-clicks a civilian NPC that has an inventory config, the
-`CivilianInteractListener` opens a custom inventory using the `InventoryHandler` framework.
-
-### Flow
-
-```
-Player right-clicks civilian NPC
-    → NPCRightClickEvent fired
-    → CivilianInteractListener.onNpcRightClick()
-    → Look up CivilianNpc by entity UUID
-    → Check if type has CivilianInventoryConfig
-    → Create InventoryHandler with title, size
-    → Populate slots using ItemParser
-    → Open inventory for player
-```
-
-### Item Resolution
-
-Items in the inventory config are parsed using the `ItemParser`:
-
-```
-"weapon:pistol{amount=1}"  →  Parsed by ItemConverterRegistry → ItemStack
-"ammo:9mm{amount=32}"     →  Parsed by ItemConverterRegistry → ItemStack
-```
-
----
-
 ## Events
 
 | Event                | When Fired             | Key Data                    |
@@ -240,7 +195,6 @@ Items in the inventory config are parsed using the `ItemParser`:
 | Listener                   | Events Handled       | Purpose                       |
 |----------------------------|----------------------|-------------------------------|
 | `CivilianDeathListener`    | `EntityDeathEvent`   | Drop handling, event dispatch |
-| `CivilianInteractListener` | `NPCRightClickEvent` | Trader inventory opening      |
 
 ---
 

@@ -42,7 +42,6 @@ Default_Entities:
 # Weapon_Pool   — Weapons randomly selected and held on spawn for hostile types.
 #                 Prefix "weapon:" selects a gangland weapon (with ammo); vanilla materials are fallback.
 # Drops         — Items and experience awarded to the killer on death.
-# Inventory     — Optional trader inventory opened on right-click. Omit for non-trader types.
 # AI            — Per-type behavior settings (wander range, flee, combat).
 #                 Technical navigation settings (recalculation ticks, stuck detection) live in settings.yml.
 #                 Combat.Difficulty selects a combat profile (EASY, NORMAL, HARD, DEADLY) that scales
@@ -130,11 +129,6 @@ Types:
       Drops:
          Experience: 0
          Items: []
-      Inventory:
-         Title: "&6&lTrader Shop"
-         Size: 27
-         Items:
-            13: "weapon:pistol"
       AI:
          Wander:
             Enabled: false

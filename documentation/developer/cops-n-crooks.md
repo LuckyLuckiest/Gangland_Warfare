@@ -437,7 +437,6 @@ npc/civilian/
     CivilianNavigationConfig Navigation settings (implements NpcNavigationConfig)
     CivilianWearableConfig   Armor slot strings
     CivilianDropConfig       Death drop configuration
-    CivilianInventoryConfig  Trader inventory configuration
     CivilianSettings         Settings.yml civilian section contract
   npc/
     CivilianNpc              Individual civilian NPC instance
@@ -528,8 +527,7 @@ record CivilianTypeConfig(
 		List<String> weaponNamePool,           // Gangland weapon names (hostile types)
 		List<ItemStack> weaponPool,            // Vanilla weapon fallback
 		CivilianDropConfig drops,              // Death drop config
-		CivilianAIBehaviorConfig ai,           // Per-type AI settings
-		CivilianInventoryConfig inventory      // Trader inventory (nullable)
+		CivilianAIBehaviorConfig ai            // Per-type AI settings
 )
 ```
 
@@ -1125,7 +1123,6 @@ public void onCuffed(CuffedEvent event) {
 | `CuffingListener`          | `listener.police`     | Cuffing process events, UI feedback during wind-up             |
 | `CivilianDeathListener`    | `listener.civilian`   | Civilian death -- drops, experience, wanted level tracking     |
 | `CivilianDamageListener`   | `listener.civilian`   | Civilian damaged -- triggers flee/combat, cop-civilian combat  |
-| `CivilianInteractListener` | `listener.civilian`   | Right-click interaction -- opens trader inventory              |
 
 ---
 

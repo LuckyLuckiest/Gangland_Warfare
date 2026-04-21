@@ -2,7 +2,6 @@ package me.luckyraven.copsncrooks.npc.civilian.config;
 
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -20,7 +19,6 @@ import java.util.List;
  * @param weaponPool vanilla material weapon ItemStacks for random selection (fallback)
  * @param drops death-drop configuration
  * @param ai per-type AI behavior settings
- * @param inventory optional trader inventory config; null for non-trader types
  */
 public record CivilianTypeConfig(
 		String typeId,
@@ -33,7 +31,6 @@ public record CivilianTypeConfig(
 		List<String> weaponNamePool,
 		List<ItemStack> weaponPool,
 		CivilianDropConfig drops,
-		CivilianAIBehaviorConfig ai,
-		@Nullable CivilianInventoryConfig inventory
+		CivilianAIBehaviorConfig ai
 ) {
 }

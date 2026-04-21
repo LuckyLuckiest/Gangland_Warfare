@@ -689,7 +689,6 @@ Civilian NPC system.
 | `CivilianTypeConfig.java`          | Configuration for a civilian type (skin, name format).                    |
 | `CivilianAIBehaviorConfig.java`    | AI behavior parameters (flee distance, combat aggression, wander radius). |
 | `CivilianNavigationConfig.java`    | Pathfinding settings (speed, range).                                      |
-| `CivilianInventoryConfig.java`     | Equipment and inventory configuration.                                    |
 | `CivilianWearableConfig.java`      | Armor configuration for civilians.                                        |
 | `CivilianDropConfig.java`          | Drop table configuration on death.                                        |
 | `CiviliansConfig.java`             | Top-level civilians configuration container.                              |
@@ -757,11 +756,11 @@ Jail system.
 
 Event listeners for the cops-n-crooks system.
 
-| Subpackage    | Listeners                                                                                                                                            |
-|---------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `civilian/`   | `CivilianDamageListener` (damage processing), `CivilianDeathListener` (death handling, drops), `CivilianInteractListener` (right-click interactions) |
-| `detainment/` | `CopListener` (cop NPC death and combat events)                                                                                                      |
-| `police/`     | `CuffingListener` (handcuff progress events), `DetainmentListener` (jail/release events)                                                             |
+| Subpackage    | Listeners                                                                                     |
+|---------------|-----------------------------------------------------------------------------------------------|
+| `civilian/`   | `CivilianDamageListener` (damage processing), `CivilianDeathListener` (death handling, drops) |
+| `detainment/` | `CopListener` (cop NPC death and combat events)                                               |
+| `police/`     | `CuffingListener` (handcuff progress events), `DetainmentListener` (jail/release events)      |
 
 ### Subpackage: `events/`
 

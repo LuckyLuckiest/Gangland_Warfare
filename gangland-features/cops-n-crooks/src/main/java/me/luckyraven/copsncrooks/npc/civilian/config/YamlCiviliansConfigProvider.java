@@ -93,11 +93,9 @@ public class YamlCiviliansConfigProvider {
 
 			CivilianAIBehaviorConfig ai = parseAI(type.get("AI").asMapping().orNull(), report, typeId);
 
-			CivilianInventoryConfig inventory = parseInventory(type.get("Inventory").asMapping().orNull(), report);
-
 			result.put(typeId, new CivilianTypeConfig(typeId, displayName, entityType, health, hostile,
 			                                          wearables, itemPool, weaponNamePool, weaponPool,
-			                                          drops, ai, inventory));
+			                                          drops, ai));
 		}
 
 		return result;
@@ -232,33 +230,6 @@ public class YamlCiviliansConfigProvider {
 			log.warn("Unknown NPC difficulty '{}' for {} — defaulting to NORMAL.", raw, contextLabel);
 			return NpcDifficulty.NORMAL;
 		}
-	}
-
-	@Nullable
-	private CivilianInventoryConfig parseInventory(@Nullable MappingNode invSection, ConfigReport report) {
-		if (invSection == null) return null;
-
-		NodeReader inv = NodeReader.of(invSection, report);
-
-		String title = inv.get("Title").asString().orDefault("&8Inventory");
-		int    size  = inv.get("Size").asInt().min(9).orDefault(27);
-
-		Map<Integer, String> slotItems = new LinkedHashMap<>();
-
-		MappingNode itemsSection = inv.get("Items").asMapping().orNull();
-		if (itemsSection != null) {
-			NodeReader items = NodeReader.of(itemsSection, report);
-
-			for (String slotKey : items.keys()) {
-				try {
-					int    slot  = Integer.parseInt(slotKey);
-					String entry = items.get(slotKey).asString().orDefault("");
-					if (!entry.isBlank()) slotItems.put(slot, entry);
-				} catch (NumberFormatException ignored) { }
-			}
-		}
-
-		return new CivilianInventoryConfig(title, size, slotItems);
 	}
 
 	private EntityType parseEntityType(String name) {
