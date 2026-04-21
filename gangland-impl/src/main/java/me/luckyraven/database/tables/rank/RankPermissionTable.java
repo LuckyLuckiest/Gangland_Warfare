@@ -13,10 +13,12 @@ public class RankPermissionTable extends Table<RankPermission> {
 	public RankPermissionTable(RankTable rankTable, PermissionTable permissionTable) {
 		super("rank_permission");
 
+		// Junction table — composite primary key (rank_id, permission_id). Marking rank_id as the sole PK collapses
+		// every rank's perms into one row on upsert; marking permission_id UNIQUE blocks sharing a permission across
+		// ranks. Both are wrong for a junction. Legacy databases created before this fix are migrated in-place by
+		// RankPermissionRepository#migrateSchemaIfNeeded.
 		Attribute<Integer> rankId       = new Attribute<>("rank_id", true, Integer.class);
-		Attribute<Integer> permissionId = new Attribute<>("permission_id", false, Integer.class);
-
-		permissionId.setUnique(true);
+		Attribute<Integer> permissionId = new Attribute<>("permission_id", true, Integer.class);
 
 		rankId.setForeignKey(rankTable.get("id"), rankTable);
 		permissionId.setForeignKey(permissionTable.get("id"), permissionTable);

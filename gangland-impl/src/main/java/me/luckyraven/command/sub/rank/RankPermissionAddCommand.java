@@ -14,6 +14,9 @@ import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.command.CommandSender;
 
+import java.util.List;
+import java.util.Set;
+
 class RankPermissionAddCommand extends SubArgument {
 
 	private final Gangland          gangland;
@@ -80,8 +83,13 @@ class RankPermissionAddCommand extends SubArgument {
 			String replace = string.replace("%rank%", rank.getName()).replace("%permission%", permString);
 
 			sender.sendMessage(replace);
-		}, sender -> permissionManager.getPermissions()
-				.stream().toList());
+		}, sender -> {
+			Set<String> permissions = permissionManager.getPermissions();
+
+			if (permissions.isEmpty()) return List.of("<permission>");
+
+			return permissions.stream().toList();
+		});
 
 		rankArg.addSubArgument(permArg);
 		this.addSubArgument(rankArg);

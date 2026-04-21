@@ -1,5 +1,6 @@
 package me.luckyraven.command.sub.rank;
 
+import lombok.CustomLog;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
@@ -14,15 +15,19 @@ import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.rank.RankParent;
 import me.luckyraven.data.rank.RankPermission;
 import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.database.repositories.rank.RankPermissionRepository;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TimeMessages;
 import org.bukkit.command.CommandSender;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+@CustomLog
 class RankDeleteCommand extends SubArgument {
 
 	private final Gangland         gangland;
@@ -65,7 +70,14 @@ class RankDeleteCommand extends SubArgument {
 				rankManager.remove(rank);
 
 				// Delete permissions and parent entry before the rank itself (FK order)
-				rankPermissionRepository.delete(new RankPermission(rank.getUsedId(), 0));
+				if (rankPermissionRepository instanceof RankPermissionRepository concrete) {
+					try {
+						concrete.deleteAllForRank(rank.getUsedId());
+					} catch (java.sql.SQLException exception) {
+						log.warn("Failed to purge rank_permission rows for rank {}: {}",
+						         rank.getName(), exception.getMessage());
+					}
+				}
 				rankParentRepository.delete(new RankParent(rank.getUsedId(), 0));
 				rankRepository.delete(rank);
 
@@ -114,8 +126,13 @@ class RankDeleteCommand extends SubArgument {
 				timer.start(false);
 				deleteRankTimer.put(s, timer);
 			});
-		}, sender -> rankManager.getRanks().values()
-				.stream().map(Rank::getName).toList());
+		}, sender -> {
+			Collection<Rank> values = rankManager.getRanks().values();
+
+			if (values.isEmpty()) return List.of("<name>");
+
+			return values.stream().map(Rank::getName).toList();
+		});
 
 		this.addSubArgument(deleteName);
 	}

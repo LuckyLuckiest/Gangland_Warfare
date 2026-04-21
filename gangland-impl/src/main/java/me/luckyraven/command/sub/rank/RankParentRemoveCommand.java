@@ -12,6 +12,9 @@ import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.command.CommandSender;
 
+import java.util.Collection;
+import java.util.List;
+
 class RankParentRemoveCommand extends SubArgument {
 
 	private final Gangland       gangland;
@@ -45,8 +48,13 @@ class RankParentRemoveCommand extends SubArgument {
 			}
 
 			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<parent>"));
-		}, sender -> rankManager.getRanks().values()
-				.stream().map(Rank::getName).toList());
+		}, sender -> {
+			Collection<Rank> values = rankManager.getRanks().values();
+
+			if (values.isEmpty()) return List.of("<name>");
+
+			return values.stream().map(Rank::getName).toList();
+		});
 
 		Argument parentArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Rank rank = rankManager.get(args[3]);
@@ -79,8 +87,13 @@ class RankParentRemoveCommand extends SubArgument {
 			String replace = string.replace("%parent%", childRank.getName()).replace("%rank%", rank.getName());
 
 			sender.sendMessage(replace);
-		}, sender -> rankManager.getRanks().values()
-				.stream().map(Rank::getName).toList());
+		}, sender -> {
+			Collection<Rank> values = rankManager.getRanks().values();
+
+			if (values.isEmpty()) return List.of("<name>");
+
+			return values.stream().map(Rank::getName).toList();
+		});
 
 		rankArg.addSubArgument(parentArg);
 		this.addSubArgument(rankArg);

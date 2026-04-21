@@ -9,6 +9,7 @@ import me.luckyraven.core.datastructure.Tree;
 import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.permission.vault.VaultPermissionBridge;
+import me.luckyraven.data.rank.Permission;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
@@ -17,6 +18,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -54,20 +56,27 @@ class RankVaultGroupCommand extends SubArgument {
 
 	private void initializeArguments() {
 		Argument rankArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			Rank rank = rankManager.get(args[3]);
+			Rank rank = rankManager.get(args[2]);
 
 			if (rank == null) {
 				sender.sendMessage(Messages.INVALID_RANK.toString());
 				return;
 			}
 
-			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(),
-			                                                 "<group|" + CLEAR_TOKEN + ">"));
+			String linked = rank.getVaultGroup();
+			if (linked == null || linked.isEmpty()) {
+				sender.sendMessage(Messages.RANK_VAULT_GROUP_NONE.toString().replace("%rank%", rank.getName()));
+				return;
+			}
+
+			sender.sendMessage(Messages.RANK_VAULT_GROUP_CURRENT.toString()
+			                                                    .replace("%rank%", rank.getName())
+			                                                    .replace("%group%", linked));
 		}, sender -> rankManager.getRanks().values()
 				.stream().map(Rank::getName).toList());
 
 		Argument groupArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
-			Rank rank = rankManager.get(args[3]);
+			Rank rank = rankManager.get(args[2]);
 
 			if (rank == null) {
 				sender.sendMessage(Messages.INVALID_RANK.toString());
@@ -79,11 +88,17 @@ class RankVaultGroupCommand extends SubArgument {
 				return;
 			}
 
-			String       token    = args[4];
+			String       token    = args[3];
 			boolean      clearing = token.equalsIgnoreCase(CLEAR_TOKEN);
 			String       newGroup = clearing ? null : token;
 			String       oldGroup = rank.getVaultGroup();
 			List<Member> wearing  = memberManager.getMembersByRank(rank);
+
+			if (!clearing && VaultPermissionBridge.getGroups()
+					.stream().noneMatch(token::equalsIgnoreCase)) {
+				sender.sendMessage(Messages.RANK_VAULT_GROUP_INVALID.toString().replace("%group%", token));
+				return;
+			}
 
 			rank.setVaultGroup(newGroup);
 
@@ -91,13 +106,27 @@ class RankVaultGroupCommand extends SubArgument {
 				OfflinePlayer player = Bukkit.getOfflinePlayer(member.getUuid());
 				VaultPermissionBridge.removeFromGroup(player, oldGroup);
 				VaultPermissionBridge.addToGroup(player, newGroup);
+
+				if (!clearing) {
+					for (Permission perm : rank.getPermissions()) {
+						VaultPermissionBridge.grant(player, perm.getPermission());
+					}
+				}
 			}
 
-			String template = clearing ? Messages.RANK_VAULT_GROUP_CLEARED.toString()
-			                           : Messages.RANK_VAULT_GROUP_SET.toString();
+			String template = clearing ?
+			                  Messages.RANK_VAULT_GROUP_CLEARED.toString() :
+			                  Messages.RANK_VAULT_GROUP_SET.toString();
 			sender.sendMessage(
 					template.replace("%rank%", rank.getName()).replace("%group%", newGroup == null ? "" : newGroup));
-		}, sender -> List.of(CLEAR_TOKEN));
+		}, sender -> {
+			List<String> suggestions = new ArrayList<>();
+
+			suggestions.add(CLEAR_TOKEN);
+			suggestions.addAll(VaultPermissionBridge.getGroups());
+
+			return suggestions;
+		});
 
 		rankArg.addSubArgument(groupArg);
 		this.addSubArgument(rankArg);

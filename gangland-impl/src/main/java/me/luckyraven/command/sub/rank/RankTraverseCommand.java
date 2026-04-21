@@ -5,6 +5,7 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.core.TriConsumer;
 import me.luckyraven.core.datastructure.Tree;
+import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.data.rank.RankManager;
 import org.bukkit.command.CommandSender;
@@ -30,11 +31,11 @@ class RankTraverseCommand extends SubArgument {
 					.stream().map(Tree.Node::getData).toList();
 
 			for (int i = 0; i < ranks.size(); i++) {
-				builder.append(ranks.get(i).getName());
-				if (i < ranks.size() - 1) builder.append(" -> ");
+				builder.append("&e").append(ranks.get(i).getName());
+				if (i < ranks.size() - 1) builder.append(" &b-> ");
 			}
 
-			sender.sendMessage(builder.toString());
+			sender.sendMessage(ChatUtil.color(builder.toString()));
 		};
 	}
 }

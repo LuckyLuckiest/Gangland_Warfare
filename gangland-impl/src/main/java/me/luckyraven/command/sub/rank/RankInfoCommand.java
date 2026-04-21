@@ -13,6 +13,7 @@ import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.command.CommandSender;
 
+import java.util.Collection;
 import java.util.List;
 
 class RankInfoCommand extends SubArgument {
@@ -61,10 +62,14 @@ class RankInfoCommand extends SubArgument {
 				if (i < rank.getNode().getChildren().size() - 1) parentBuilder.append(", ");
 			}
 
+			String vaultGroup = rank.getVaultGroup();
+			if (vaultGroup == null || vaultGroup.isEmpty()) vaultGroup = "None";
+
 			String string = Messages.RANK_INFO_PRIMARY.toString();
 			String replace = string.replace("%rank%", rank.getName())
 			                       .replace("%id%", String.valueOf(rank.getUsedId()))
-			                       .replace("%parent%", parentBuilder.toString());
+			                       .replace("%parent%", parentBuilder.toString())
+			                       .replace("%vault_group%", vaultGroup);
 
 			sender.sendMessage(replace);
 
@@ -72,7 +77,13 @@ class RankInfoCommand extends SubArgument {
 			String replace1 = string1.replace("%permissions%", permBuilder.toString());
 
 			sender.sendMessage(replace1);
-		}, sender -> List.of("<name>"));
+		}, sender -> {
+			Collection<Rank> values = rankManager.getRanks().values();
+
+			if (values.isEmpty()) return List.of("<name>");
+
+			return values.stream().map(Rank::getName).toList();
+		});
 
 		this.addSubArgument(infoName);
 	}

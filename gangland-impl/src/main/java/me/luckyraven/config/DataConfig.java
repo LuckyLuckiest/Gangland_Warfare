@@ -71,7 +71,7 @@ public class DataConfig {
 
 	@Bean
 	public RankManager rankManager(GanglandDatabase database, PermissionManager permissionManager) {
-		return new RankManager(gangland, database, permissionManager);
+		return new RankManager(database, permissionManager);
 	}
 
 	@Bean

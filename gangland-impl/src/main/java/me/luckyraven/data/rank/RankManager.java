@@ -1,7 +1,6 @@
 package me.luckyraven.data.rank;
 
 import lombok.Getter;
-import me.luckyraven.Gangland;
 import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.core.datastructure.Tree;
 import me.luckyraven.data.permission.PermissionManager;
@@ -15,18 +14,17 @@ import java.util.*;
 
 public class RankManager implements BeanLifecycle {
 
-	private final Gangland                 gangland;
-	private final GanglandDatabase         database;
-	private final PermissionManager        permissionManager;
-	private final Map<Integer, Rank>       ranks;
-	private final Set<RankParent>          ranksParent;
-	private final Map<Integer, Permission> permissions;
-	private final Set<RankPermission>      ranksPermissions;
+	private final         GanglandDatabase            database;
+	private final         PermissionManager           permissionManager;
+	private final         Map<Integer, Rank>          ranks;
+	private final         Set<RankParent>             ranksParent;
+	private final         Map<Integer, Permission>    permissions;
+	private final         Set<RankPermission>         ranksPermissions;
+	private final @Getter Tree<Rank>                  rankTree;
+	private               IRepository<Permission>     permissionRepo;
+	private               IRepository<RankPermission> rankPermissionRepo;
 
-	private final @Getter Tree<Rank> rankTree;
-
-	public RankManager(Gangland gangland, GanglandDatabase database, PermissionManager permissionManager) {
-		this.gangland          = gangland;
+	public RankManager(GanglandDatabase database, PermissionManager permissionManager) {
 		this.database          = database;
 		this.permissionManager = permissionManager;
 		this.ranks             = new HashMap<>();
@@ -39,10 +37,10 @@ public class RankManager implements BeanLifecycle {
 	public void initialize() {
 		RepositoryRegistry registry = database.getRepositoryRegistry();
 
-		IRepository<Rank>           rankRepo           = registry.getRepository(Rank.class);
-		IRepository<RankParent>     rankParentRepo     = registry.getRepository(RankParent.class);
-		IRepository<Permission>     permissionRepo     = registry.getRepository(Permission.class);
-		IRepository<RankPermission> rankPermissionRepo = registry.getRepository(RankPermission.class);
+		IRepository<Rank>       rankRepo       = registry.getRepository(Rank.class);
+		IRepository<RankParent> rankParentRepo = registry.getRepository(RankParent.class);
+		this.permissionRepo     = registry.getRepository(Permission.class);
+		this.rankPermissionRepo = registry.getRepository(RankPermission.class);
 
 		Collection<Rank>           loadedRanks           = rankRepo.loadAll();
 		Collection<Permission>     loadedPermissions     = permissionRepo.loadAll();
@@ -118,8 +116,8 @@ public class RankManager implements BeanLifecycle {
 		}
 
 		// Set data suppliers so repositoryRegistry.saveAll() can persist each collection
-		rankRepo.setDataSupplier(() -> ranks.values());
-		permissionRepo.setDataSupplier(() -> permissions.values());
+		rankRepo.setDataSupplier(ranks::values);
+		permissionRepo.setDataSupplier(permissions::values);
 		rankParentRepo.setDataSupplier(() -> ranksParent);
 		rankPermissionRepo.setDataSupplier(() -> ranksPermissions);
 	}
@@ -174,17 +172,24 @@ public class RankManager implements BeanLifecycle {
 
 		// Check if the permission already exists globally
 		Permission permission = findPermission(permissionString);
+		boolean    freshPerm  = permission == null;
 
-		if (permission == null) {
+		if (freshPerm) {
 			// Create a new permission
 			permission = new Permission(Permission.getNewId(), permissionString);
 			permissions.put(permission.getUsedId(), permission);
 		}
 
+		RankPermission link = new RankPermission(rank.getUsedId(), permission.getUsedId());
+
 		// Add the rank-permission relationship
-		ranksPermissions.add(new RankPermission(rank.getUsedId(), permission.getUsedId()));
+		ranksPermissions.add(link);
 		// Add permission to the rank itself
 		rank.addPermission(permission);
+
+		// Persist immediately so a server restart before autosave doesn't lose the change
+		if (freshPerm && permissionRepo != null) permissionRepo.save(permission);
+		if (rankPermissionRepo != null) rankPermissionRepo.save(link);
 
 		return true;
 	}
@@ -198,13 +203,18 @@ public class RankManager implements BeanLifecycle {
 
 		if (perm == null) return;
 
+		RankPermission link = new RankPermission(rank.getUsedId(), perm.getUsedId());
+
 		ranksPermissions.removeIf(
 				rp -> rp.rankId() == rank.getUsedId() && rp.permissionId() == perm.getUsedId());
 		rank.removePermission(perm);
 
+		if (rankPermissionRepo != null) rankPermissionRepo.delete(link);
+
 		if (ranksPermissions.stream().anyMatch(rp -> rp.permissionId() == perm.getUsedId())) return;
 
 		permissions.remove(perm.getUsedId());
+		if (permissionRepo != null) permissionRepo.delete(perm);
 	}
 
 	public boolean remove(Rank rank) {

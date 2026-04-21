@@ -14,6 +14,10 @@ import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.command.CommandSender;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
 class RankPermissionRemoveCommand extends SubArgument {
 
 	private final Gangland          gangland;
@@ -52,8 +56,13 @@ class RankPermissionRemoveCommand extends SubArgument {
 			}
 
 			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<permission>"));
-		}, sender -> rankManager.getRanks().values()
-				.stream().map(Rank::getName).toList());
+		}, sender -> {
+			Collection<Rank> values = rankManager.getRanks().values();
+
+			if (values.isEmpty()) return List.of("<name>");
+
+			return values.stream().map(Rank::getName).toList();
+		});
 
 		Argument permArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Rank rank = rankManager.get(args[3]);
@@ -77,8 +86,13 @@ class RankPermissionRemoveCommand extends SubArgument {
 			String replace = string.replace("%rank%", rank.getName()).replace("%permission%", permString);
 
 			sender.sendMessage(replace);
-		}, sender -> permissionManager.getPermissions()
-				.stream().toList());
+		}, sender -> {
+			Set<String> permissions = permissionManager.getPermissions();
+
+			if (permissions.isEmpty()) return List.of("<permission>");
+
+			return permissions.stream().toList();
+		});
 
 		rankArg.addSubArgument(permArg);
 		this.addSubArgument(rankArg);

@@ -66,7 +66,7 @@ public final class Gangland extends JavaPlugin {
 
 		// vault soft dependency permission check
 		if (VaultPermissionBridge.isEnabled()) {
-			VaultPermissionBridge.set(null);
+			VaultPermissionBridge.set(null, null);
 		}
 
 		// unified bean lifecycle shutdown — deactivates sessions, converts active car data to parked records,
@@ -197,7 +197,7 @@ public final class Gangland extends JavaPlugin {
 			if (rsp == null) return;
 
 			// set the vault permissions bridge
-			VaultPermissionBridge.set(rsp.getProvider());
+			VaultPermissionBridge.set(rsp.getProvider(), this);
 		});
 
 		Dependency viaVersion = new Dependency("ViaVersion", Dependency.Type.SOFT);

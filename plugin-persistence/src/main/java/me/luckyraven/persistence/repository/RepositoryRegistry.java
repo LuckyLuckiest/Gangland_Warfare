@@ -251,6 +251,17 @@ public class RepositoryRegistry {
 				throw e;
 			}
 		}
+
+		// Schema migrations run after all tables exist so a repo can safely reference sibling tables during its own fix
+		for (RepositoryEntry entry : repositories.values()) {
+			try {
+				entry.instance().migrateSchema();
+			} catch (Exception exception) {
+				log.error("Schema migration failed for {}: {}",
+				          entry.repositoryClass().getSimpleName(), exception.getMessage());
+				throw exception;
+			}
+		}
 	}
 
 	/**
