@@ -74,8 +74,7 @@ public class Phone {
 					if (name == null) name = "";
 				}
 
-				String finalName = name;
-				itemBuilder.modifyNBT(nbt -> nbt.setString("SkullOwner", finalName));
+				itemBuilder.customHead(name);
 
 				gangsItems.add(itemBuilder.build());
 			}

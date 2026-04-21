@@ -73,14 +73,14 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 				type = ColorUtil.getMaterialByColor(value, material.name());
 			}
 
+			ItemBuilder newItem = new ItemBuilder(type);
+
 			// handles head data
 			String headTag = "head";
 			if (item.hasNBTTag(headTag)) {
 				String value = placeholder.convert(player, item.getStringTagData(headTag));
-				item.modifyNBT(nbt -> nbt.setString("SkullOwner", value));
+				newItem.customHead(value);
 			}
-
-			ItemBuilder newItem = new ItemBuilder(type);
 
 			String itemDisplayName = placeholder.convert(player, item.getDisplayName());
 			newItem.setDisplayName(itemDisplayName);
@@ -233,7 +233,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 			             source.getStringTagData(headTag) :
 			             source.getStringTagData(dataTag);
 			String value = placeholder.convert(player, substituteEntry(raw, entry));
-			fresh.modifyNBT(nbt -> nbt.setString("SkullOwner", value));
+			fresh.customHead(value);
 		}
 
 		String displayName = placeholder.convert(player, substituteEntry(source.getDisplayName(), entry));
@@ -305,15 +305,15 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 			type = ColorUtil.getMaterialByColor(value, material.name());
 		}
 
+		ItemBuilder newItem = new ItemBuilder(type);
+
 		String headTag = "head";
 		String dataTag = "data";
 		if (item.hasNBTTag(headTag) || item.hasNBTTag(dataTag)) {
 			String head  = item.hasNBTTag(headTag) ? item.getStringTagData(headTag) : item.getStringTagData(dataTag);
 			String value = placeholder.convert(player, head);
-			item.modifyNBT(nbt -> nbt.setString("SkullOwner", value));
+			newItem.customHead(value);
 		}
-
-		ItemBuilder newItem = new ItemBuilder(type);
 
 		String itemDisplayName = placeholder.convert(player, item.getDisplayName());
 		newItem.setDisplayName(itemDisplayName);

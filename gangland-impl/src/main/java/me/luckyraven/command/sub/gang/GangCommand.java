@@ -237,7 +237,7 @@ public final class GangCommand extends Command {
 						ItemBuilder itemBuilder = new ItemBuilder(XMaterial.PLAYER_HEAD.get()).setDisplayName(
 								"&b" + offlinePlayer.getName()).setLore(data);
 
-						itemBuilder.modifyNBT(nbt -> nbt.setString("SkullOwner", offlinePlayer.getName()));
+						itemBuilder.customHead(offlinePlayer);
 
 						items.add(itemBuilder.build());
 					}

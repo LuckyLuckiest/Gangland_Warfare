@@ -1,16 +1,18 @@
 package me.luckyraven.core;
 
 import com.cryptomorin.xseries.XMaterial;
+import com.cryptomorin.xseries.profiles.builder.XSkull;
+import com.cryptomorin.xseries.profiles.objects.Profileable;
 import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import de.tr7zw.nbtapi.NBT;
 import de.tr7zw.nbtapi.iface.ReadWriteItemNBT;
-import de.tr7zw.nbtapi.iface.ReadWriteNBT;
 import de.tr7zw.nbtapi.iface.ReadableItemNBT;
 import lombok.Getter;
 import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.exception.PluginException;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -170,32 +172,29 @@ public class ItemBuilder implements Cloneable {
 		return this;
 	}
 
-	public ItemBuilder customHead(String base64) {
+	public ItemBuilder customHead(String profileInput) {
 		if (itemStack.getType() != XMaterial.PLAYER_HEAD.get()) return this;
+		if (profileInput == null || profileInput.isEmpty()) return this;
 
-		modifyNBT(nbt -> {
-			ReadWriteNBT skullOwnerCompound = nbt.getOrCreateCompound("SkullOwner");
-
-			skullOwnerCompound.setUUID("Id", UUID.randomUUID());
-
-			ReadWriteNBT propertiesCompound = skullOwnerCompound.getOrCreateCompound("Properties");
-
-			// clear existing textures
-			propertiesCompound.removeKey("textures");
-			propertiesCompound.getCompoundList("textures").addCompound().setString("Value", base64);
-		});
+		XSkull.of(itemStack).profile(Profileable.detect(profileInput)).apply();
 
 		return this;
 	}
 
 	public ItemBuilder customHead(UUID uniqueId) {
 		if (itemStack.getType() != XMaterial.PLAYER_HEAD.get()) return this;
+		if (uniqueId == null) return this;
 
-		modifyNBT(nbt -> {
-			ReadWriteNBT skullOwnerCompound = nbt.getOrCreateCompound("SkullOwner");
+		XSkull.of(itemStack).profile(Profileable.of(uniqueId)).apply();
 
-			skullOwnerCompound.setUUID("Id", uniqueId);
-		});
+		return this;
+	}
+
+	public ItemBuilder customHead(OfflinePlayer player) {
+		if (itemStack.getType() != XMaterial.PLAYER_HEAD.get()) return this;
+		if (player == null) return this;
+
+		XSkull.of(itemStack).profile(Profileable.of(player)).apply();
 
 		return this;
 	}
