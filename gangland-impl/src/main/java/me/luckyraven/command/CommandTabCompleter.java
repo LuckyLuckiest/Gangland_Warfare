@@ -10,36 +10,35 @@ import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RequiredArgsConstructor
 public final class CommandTabCompleter implements TabCompleter {
 
 	private final Map<String, Command> commandMap;
 
-	@Nullable
+	@NotNull
 	@Override
 	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull org.bukkit.command.Command command,
-	                                  @NotNull String label,
-	                                  @NotNull String[] args) {
+	                                  @NotNull String label, @NotNull String[] args) {
 		// commands according to user permission
 		List<Command> commands = CommandManager.getPermissibleCommands(sender);
 
 		// display all the initial arguments
-		if (args.length == 1)
+		if (args.length == 1) {
 			return collectedArguments(args, commands.stream().map(Command::getLabel).toList());
+		}
 
 		Command commandHandler = commandMap.get(args[0].toLowerCase());
-		// this won't solve the case of multiple optional values but would definitely stop the tab completion
-		// end the command tab completion if the size was greater than the height of the tree
-		if (commandHandler != null && args.length > commandHandler.getArgumentTree().height()) return null;
+		// return empty (not null) once we're past the deepest branch — null would let Bukkit fall back to
+		// its default player-name completer, which leaks unrelated online players into the suggestion list
+		if (commandHandler != null && args.length > commandHandler.getArgumentTree().height()) {
+			return Collections.emptyList();
+		}
 
 		// find the argument last valid argument
 		Argument arg = findArgument(args, commands);
-		if (arg == null) return null;
+		if (arg == null) return Collections.emptyList();
 
 		List<String> arguments = new ArrayList<>();
 
@@ -48,9 +47,17 @@ public final class CommandTabCompleter implements TabCompleter {
 				.stream().map(Tree.Node::getData).toList()) {
 			String permission = argument.getPermission();
 
-			if (permission.isEmpty() || sender.hasPermission(permission)) arguments.addAll(
-					argument.getArgumentString(sender));
+			if (permission.isEmpty() || sender.hasPermission(permission)) {
+				arguments.addAll(argument.getArgumentString(sender));
+			}
 		}
+
+		// surface 'help' as a first-layer suggestion for commands with a populated HelpInfo — dispatch is
+		// already handled centrally by CommandManager.onHelp, so no synthetic tree node is needed
+		if (args.length == 2 && commandHandler != null && commandHandler.getHelpInfo().size() > 0) {
+			arguments.add("help");
+		}
+
 		return collectedArguments(args, arguments);
 	}
 
