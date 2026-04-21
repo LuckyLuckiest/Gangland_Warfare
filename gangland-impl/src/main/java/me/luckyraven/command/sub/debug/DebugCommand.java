@@ -294,7 +294,7 @@ public final class DebugCommand extends Command {
 
 				MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getGangland(), player, entries,
 				                                                                    title,
-				                                                                    false, false, fill, buttonTags,
+				                                                                    false, 0, fill, buttonTags,
 				                                                                    null);
 
 				if (multi == null) return;

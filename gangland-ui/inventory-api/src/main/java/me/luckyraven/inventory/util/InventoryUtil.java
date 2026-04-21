@@ -98,7 +98,7 @@ public final class InventoryUtil {
 	}
 
 	public static void verticalLine(InventoryHandler inventoryHandler, Fill line, int column, ItemStack... items) {
-		Preconditions.checkArgument(column > 0 && column < 9, "Columns need to be between 1 and 9 inclusive");
+		Preconditions.checkArgument(column > 0 && column < 10, "Columns need to be between 1 and 9 inclusive");
 
 		// from 1-6
 		int rows = inventoryHandler.getSize() / 9;
@@ -116,7 +116,7 @@ public final class InventoryUtil {
 	}
 
 	public static void verticalLine(InventoryHandler inventoryHandler, Fill line, int column, boolean all) {
-		Preconditions.checkArgument(column > 0 && column < 9, "Columns need to be between 1 and 9 inclusive");
+		Preconditions.checkArgument(column > 0 && column < 10, "Columns need to be between 1 and 9 inclusive");
 
 		ItemBuilder itemBuilder = new ItemBuilder(getLineItem(line.material()));
 		ItemStack   item        = itemBuilder.setDisplayName(line.name()).build();

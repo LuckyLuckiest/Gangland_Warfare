@@ -1,7 +1,5 @@
 package me.luckyraven.inventory.multi;
 
-import me.luckyraven.core.ItemBuilder;
-import me.luckyraven.core.TriConsumer;
 import me.luckyraven.core.datastructure.LinkedList;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.part.ButtonTags;
@@ -9,7 +7,6 @@ import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.part.PageConfig;
 import me.luckyraven.inventory.util.InventoryUtil;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,19 +20,21 @@ public class MultiInventoryCreation {
 
 	@Nullable
 	public static MultiInventory dynamicMultiInventory(JavaPlugin plugin, Player player, List<ListEntry> items,
-	                                                   String title, boolean staticItemsAllowed, boolean fixedSize,
+	                                                   String title, boolean staticItemsAllowed, int size,
 	                                                   Fill fill, ButtonTags buttonTags,
-	                                                   @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
+	                                                   @Nullable Map<Integer, StaticSlotEntry> staticItems) {
 		if (staticItemsAllowed) {
-			if (staticItems == null || staticItems.size() <= 6) return null;
+			if (staticItems == null || staticItems.isEmpty() || staticItems.size() > 6) return null;
 		}
 
-		PageConfig cfg = computeConfigForCreation(items.size(), staticItemsAllowed, fixedSize);
+		int        staticCount = staticItems == null ? 0 : staticItems.size();
+		PageConfig cfg         = computeConfigForCreation(items.size(), size, staticCount, staticItemsAllowed);
 
 		// the first page
 		MultiInventory multi = new MultiInventory(plugin, title, cfg.initialPage(), player);
 
-		multi.addItems(multi, items, 0, items.size(), staticItemsAllowed, fill, staticItems);
+		int firstPageEnd = Math.min(cfg.perPage(), items.size());
+		multi.addItems(multi, items, 0, firstPageEnd, staticItemsAllowed, staticItems);
 		InventoryUtil.createBoarder(multi, fill);
 		// if there is a static items column, then create a line at column 2
 		if (staticItemsAllowed) InventoryUtil.verticalLine(multi, fill, 2, true);
@@ -44,20 +43,20 @@ public class MultiInventoryCreation {
 		int totalPages = cfg.pages();
 
 		for (int page = 1; page < totalPages; page++) {
-			int  size = page == totalPages - 1 ? cfg.finalPage() : cfg.initialPage();
-			long id   = MultiInventory.ID;
+			int  pageSize = cfg.initialPage();
+			long id       = MultiInventory.ID;
 
 			String format          = String.format("%s_%d", title, id);
 			String titleRefactored = titleRefactor(format);
 
 			MultiInventory.ID = id + 1;
 
-			InventoryHandler inv = new InventoryHandler(plugin, titleRefactored, size, player);
+			InventoryHandler inv = new InventoryHandler(plugin, titleRefactored, pageSize, player);
 
 			int startIndex = page * cfg.perPage();
 			int endIndex   = Math.min(startIndex + cfg.perPage(), items.size());
 
-			multi.addItems(inv, items, startIndex, endIndex, staticItemsAllowed, fill, staticItems);
+			multi.addItems(inv, items, startIndex, endIndex, staticItemsAllowed, staticItems);
 			InventoryUtil.createBoarder(inv, fill);
 			// if there is a static items column, then create a line at column 2
 			if (staticItemsAllowed) InventoryUtil.verticalLine(inv, fill, 2, true);
@@ -68,7 +67,7 @@ public class MultiInventoryCreation {
 		// add the navigation buttons
 		var linkedInventories = multi.getLinkedInventories();
 
-		int size      = linkedInventories.getSize();
+		int pageCount = linkedInventories.getSize();
 		int pageIndex = 0;
 
 		String originalTitle = multi.getDisplayTitle();
@@ -77,7 +76,7 @@ public class MultiInventoryCreation {
 			InventoryHandler currentInv = node.getData();
 			InventoryHandler nextInv    = node.getNext() == null ? null : node.getNext().getData();
 
-			addNavigationButtons(plugin, currentInv, nextInv, originalTitle, pageIndex, size, buttonTags,
+			addNavigationButtons(plugin, currentInv, nextInv, originalTitle, pageIndex, pageCount, buttonTags,
 			                     p -> multi.nextPage().open(p), p -> multi.previousPage().open(p),
 			                     p -> multi.homePage().open(p));
 
@@ -87,31 +86,49 @@ public class MultiInventoryCreation {
 		return multi;
 	}
 
-	static PageConfig computeConfigForCreation(int itemsCount, boolean staticItemsAllowed, boolean fixedSize) {
-		int maxRows         = 4;
-		int maxColumns      = staticItemsAllowed ? 6 : 7;
-		int perPage         = maxColumns * maxRows;
-		int pages           = (int) Math.ceil((double) itemsCount / perPage);
-		int remainingAmount = itemsCount % perPage;
-		int finalPage       = remainingAmount + 9 * 2 + (int) Math.ceil((double) remainingAmount / 9);
-		int initialPage     = pages == 1 ? finalPage : InventoryHandler.MAX_SLOTS;
+	/**
+	 * Determines the per-page layout. Priority resolves Row count:
+	 * <ol>
+	 *     <li>the explicit {@code size} from YAML (size / 9 rows)</li>
+	 *     <li>{@code staticItemCount + 2} border rows when static items are present</li>
+	 *     <li>{@code ceil(itemsCount / maxColumns) + 2} border rows as a last resort</li>
+	 * </ol>
+	 * Rows are clamped to [3, 6]. Pages are always full-size (rows × 9).
+	 */
+	static PageConfig computeConfigForCreation(int itemsCount, int size, int staticItemCount,
+	                                           boolean staticItemsAllowed) {
+		int maxColumns = staticItemsAllowed ? 6 : 7;
 
-		if (fixedSize) {
-			finalPage   = InventoryHandler.MAX_SLOTS;
-			initialPage = InventoryHandler.MAX_SLOTS;
+		int rows;
+		if (size >= 18 && size % 9 == 0) {
+			rows = size / 9;
+		} else if (staticItemsAllowed && staticItemCount > 0) {
+			rows = staticItemCount + 2;
+		} else {
+			rows = (int) Math.ceil((double) Math.max(itemsCount, 1) / maxColumns) + 2;
 		}
-		return new PageConfig(maxRows, maxColumns, perPage, pages, remainingAmount, finalPage, initialPage);
+		rows = Math.clamp(rows, 3, 6);
+
+		int maxRows         = Math.max(1, rows - 2);
+		int perPage         = maxRows * maxColumns;
+		int pages           = Math.max(1, (int) Math.ceil((double) itemsCount / perPage));
+		int pageSlots       = rows * 9;
+		int remainingAmount = itemsCount - (pages - 1) * perPage;
+
+		return new PageConfig(maxRows, maxColumns, perPage, pages, remainingAmount, pageSlots, pageSlots);
 	}
 
 	static PageConfig computeConfigForUpdate(int itemsCount, int inventorySize) {
-		int maxRows         = 4;
-		int maxColumns      = inventorySize / 9;
-		int perPage         = maxColumns * maxRows;
-		int pages           = (int) Math.ceil((double) itemsCount / perPage);
-		int remainingAmount = itemsCount % perPage;
-		int finalPage       = remainingAmount + 9 * 2 + (int) Math.ceil((double) remainingAmount / 9);
-		int initialPage     = pages == 1 ? finalPage : InventoryHandler.MAX_SLOTS;
-		return new PageConfig(maxRows, maxColumns, perPage, pages, remainingAmount, finalPage, initialPage);
+		int rows       = Math.clamp(inventorySize / 9, 3, 6);
+		int maxRows    = Math.max(1, rows - 2);
+		int maxColumns = 6;
+		int perPage    = maxRows * maxColumns;
+
+		int pages           = Math.max(1, (int) Math.ceil((double) itemsCount / perPage));
+		int pageSlots       = rows * 9;
+		int remainingAmount = itemsCount - (pages - 1) * perPage;
+
+		return new PageConfig(maxRows, maxColumns, perPage, pages, remainingAmount, pageSlots, pageSlots);
 	}
 
 }

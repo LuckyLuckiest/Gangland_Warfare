@@ -3,8 +3,6 @@ package me.luckyraven.inventory.multi;
 import com.google.common.base.Preconditions;
 import lombok.AccessLevel;
 import lombok.Getter;
-import me.luckyraven.core.ItemBuilder;
-import me.luckyraven.core.TriConsumer;
 import me.luckyraven.core.datastructure.LinkedList;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.part.Fill;
@@ -12,11 +10,9 @@ import me.luckyraven.inventory.part.PageConfig;
 import me.luckyraven.inventory.util.InventoryUtil;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -43,8 +39,7 @@ public class MultiInventory extends InventoryHandler {
 	}
 
 	public void updateItems(JavaPlugin plugin, List<ListEntry> items, Player player, boolean staticItemsAllowed,
-	                        Fill fill,
-	                        @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
+	                        Fill fill, @Nullable Map<Integer, StaticSlotEntry> staticItems) {
 		if (inventories.isEmpty()) {
 			return; // No inventories to update
 		}
@@ -57,7 +52,7 @@ public class MultiInventory extends InventoryHandler {
 		// Update the first page with new items
 		firstPage.clear();
 
-		addItems(firstPage, items, 0, Math.min(cfg.perPage(), items.size()), staticItemsAllowed, fill, staticItems);
+		addItems(firstPage, items, 0, Math.min(cfg.perPage(), items.size()), staticItemsAllowed, staticItems);
 		InventoryUtil.createBoarder(firstPage, fill);
 		if (staticItemsAllowed) InventoryUtil.verticalLine(firstPage, fill, 2, true);
 
@@ -73,7 +68,7 @@ public class MultiInventory extends InventoryHandler {
 				inv = new InventoryHandler(firstPage.getDisplayTitle(), size, player, namespacedKey);
 
 				addItems(inv, items, startIndex, Math.min((i + 1) * cfg.perPage(), items.size()), staticItemsAllowed,
-				         fill, staticItems);
+				         staticItems);
 				addPage(inv);
 			} else {
 				// If there's already an inventory for this page, update its items and title
@@ -82,7 +77,7 @@ public class MultiInventory extends InventoryHandler {
 				if (inv == null) continue;
 
 				inv.clear();
-				addItems(inv, items, startIndex, Math.min((i + 1) * cfg.perPage(), items.size()), false, fill, null);
+				addItems(inv, items, startIndex, Math.min((i + 1) * cfg.perPage(), items.size()), false, null);
 			}
 			InventoryUtil.createBoarder(inv, fill);
 			if (staticItemsAllowed) InventoryUtil.verticalLine(inv, fill, 2, true);
@@ -150,7 +145,7 @@ public class MultiInventory extends InventoryHandler {
 	}
 
 	void addItems(InventoryHandler inv, List<ListEntry> items, int startIndex, int endIndex, boolean staticItemsAllowed,
-	              Fill line, @Nullable Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
+	              @Nullable Map<Integer, StaticSlotEntry> staticItems) {
 		if (staticItemsAllowed) {
 			Preconditions.checkNotNull(staticItems, "No static items set");
 			Preconditions.checkArgument(staticItems.size() <= 6, "Can't add more items than max rows");
@@ -160,9 +155,13 @@ public class MultiInventory extends InventoryHandler {
 		int row        = 2;
 		int column     = 2 + additional;
 
-		if (staticItemsAllowed) verticalLine(inv, 1, line, staticItems);
+		// Items live between the top border (row 1) and the bottom border (last row); compute the last usable row from
+		// the inventory size so smaller inventories fill fewer rows.
+		int maxItemRow = inv.getSize() / 9 - 1;
 
-		for (int i = startIndex; i < endIndex && row % 6 != 0; i++) {
+		if (staticItemsAllowed) placeStaticItems(inv, staticItems);
+
+		for (int i = startIndex; i < endIndex && row <= maxItemRow; i++) {
 			ListEntry entry = items.get(i);
 			int       slot  = (row - 1) * 9 + (column - 1);
 			if (entry.onClick() != null) {
@@ -172,39 +171,24 @@ public class MultiInventory extends InventoryHandler {
 			}
 
 			if (column % 8 == 0) {
-				column = 2;
+				column = 2 + additional;
 				++row;
 			} else ++column;
 		}
 	}
 
-	private void verticalLine(InventoryHandler inventoryHandler, int column, Fill line,
-	                          Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItems) {
-		Preconditions.checkArgument(column > 0 && column < 9, "Columns need to be between 1 and 9 inclusive");
-
-		// from 1-6
-		int rows = inventoryHandler.getSize() / 9;
-
-		List<ItemStack>                                          items     = new ArrayList<>();
-		List<TriConsumer<Player, InventoryHandler, ItemBuilder>> consumers = new ArrayList<>();
-
-		for (Map.Entry<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> entry : staticItems.entrySet()) {
-			items.add(entry.getKey());
-			consumers.add(entry.getValue());
-		}
-
-		for (int i = 0; i < rows; ++i) {
-			int slot = (column - 1) + 9 * i;
-
-			if (inventoryHandler.getInventory().getItem(slot) != null) continue;
-
-			if (i < staticItems.size()) inventoryHandler.setItem(slot, items.get(i), false, consumers.get(i));
-			else {
-				ItemBuilder item = new ItemBuilder(InventoryUtil.getLineItem(line.material())).setDisplayName(
-						line.name());
-
-				inventoryHandler.getInventory().setItem(slot, item.build());
-			}
+	/**
+	 * Places each {@link StaticSlotEntry} at its declared YAML slot. Authors control placement directly via the slot
+	 * key — entries are never reshuffled into column-1 order. Unclaimed column-1 slots fall through to
+	 * {@link InventoryUtil#createBoarder}.
+	 */
+	private void placeStaticItems(InventoryHandler inv, Map<Integer, StaticSlotEntry> staticItems) {
+		for (Map.Entry<Integer, StaticSlotEntry> entry : staticItems.entrySet()) {
+			int             slot = entry.getKey();
+			StaticSlotEntry data = entry.getValue();
+			if (slot < 0 || slot >= inv.getSize()) continue;
+			if (inv.getInventory().getItem(slot) != null) continue;
+			inv.setItem(slot, data.item(), false, data.onClick());
 		}
 	}
 

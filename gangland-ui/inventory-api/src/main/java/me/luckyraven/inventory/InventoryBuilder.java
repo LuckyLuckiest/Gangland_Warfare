@@ -8,10 +8,7 @@ import me.luckyraven.core.color.ColorUtil;
 import me.luckyraven.core.color.MaterialType;
 import me.luckyraven.inventory.condition.ConditionEvaluator;
 import me.luckyraven.inventory.condition.ConditionalSlotData;
-import me.luckyraven.inventory.multi.ItemSourceEntry;
-import me.luckyraven.inventory.multi.ListEntry;
-import me.luckyraven.inventory.multi.MultiInventory;
-import me.luckyraven.inventory.multi.MultiInventoryCreation;
+import me.luckyraven.inventory.multi.*;
 import me.luckyraven.inventory.part.ButtonTags;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.part.Slot;
@@ -158,25 +155,27 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 
 		MultiInventory multiInventory;
 
-		// Prepare static items if any
-		Map<ItemStack, TriConsumer<Player, InventoryHandler, ItemBuilder>> staticItemsMap = null;
+		// Prepare static items, keyed by the explicit YAML slot so placement is deterministic and matches the user's
+		// layout rather than being collapsed into a hash-ordered column fill.
+		Map<Integer, StaticSlotEntry> staticItemsMap = null;
 
 		if (inventoryData.getStaticItems() != null && !inventoryData.getStaticItems().isEmpty()) {
-			staticItemsMap = new HashMap<>();
+			staticItemsMap = new TreeMap<>();
 
 			for (Map.Entry<Integer, Slot> entry : inventoryData.getStaticItems().entrySet()) {
-				Slot        slot = entry.getValue();
-				ItemBuilder item = slot.getItem();
+				int         slotIndex = entry.getKey();
+				Slot        slot      = entry.getValue();
+				ItemBuilder item      = slot.getItem();
 				if (item == null) continue;
 
 				// Process placeholders and create item
 				ItemStack processedItem = processItemStack(item, placeholder, player);
 
-				if (slot.isClickable() && slot.getClickableSlot() != null) {
-					staticItemsMap.put(processedItem, slot.getClickableSlot());
-				} else {
-					staticItemsMap.put(processedItem, (p, inv, builder) -> { });
-				}
+				TriConsumer<Player, InventoryHandler, ItemBuilder> onClick =
+						slot.isClickable() && slot.getClickableSlot() != null ? slot.getClickableSlot() :
+						(p, inv, builder) -> { };
+
+				staticItemsMap.put(slotIndex, new StaticSlotEntry(processedItem, onClick));
 			}
 		}
 
@@ -185,7 +184,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 		List<ListEntry> listEntries = renderListEntries(entries, placeholder, player);
 
 		multiInventory = MultiInventoryCreation.dynamicMultiInventory(plugin, player, listEntries, title, staticItems,
-		                                                              inventoryData.isBorder(), fill, buttonTags,
+		                                                              inventoryData.getSize(), fill, buttonTags,
 		                                                              staticItemsMap);
 
 		return multiInventory;

@@ -251,6 +251,6 @@ public class FileConfig {
 	 */
 	@Bean
 	public InventoryDefinitionStore inventoryDefinitionStore() {
-		return new InventoryDefinitionStore();
+		return new InventoryDefinitionStore(gangland);
 	}
 }

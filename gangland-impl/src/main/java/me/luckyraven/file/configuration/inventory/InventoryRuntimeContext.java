@@ -126,11 +126,13 @@ public class InventoryRuntimeContext {
 
 		// Open.Event may be a scalar (event name) OR a mapping (structured event spec consumed by
 		// registerUniqueItemHandler below). Route through NodeReader.get() so the key is marked touched either way —
-		// we still only pull out the scalar form here; mapping shapes are later drilled via the Bukkit API.
-		String openEvent = null;
+		// we pull out the scalar form here; mapping shapes are later drilled via the Bukkit API.
+		String  openEvent    = null;
+		boolean hasEventNode = false;
 		if (open != null) {
 			ConfigNode eventNode = open.get("Event").node();
 			if (eventNode instanceof ScalarNode scalar) openEvent = scalar.value();
+			hasEventNode = !(eventNode instanceof NullNode);
 		}
 
 		String openPermission = open == null ? null : open.get("Permission").asString().orNull();
@@ -181,8 +183,8 @@ public class InventoryRuntimeContext {
 		// Legacy non-positional path retained for registerUniqueItemHandler — it still drills into nested sections via
 		// ConfigurationSection. Upstream errors on Information/Open.Event have already been recorded in `report`.
 		ConfigurationSection informationSectionLegacy = config.getConfigurationSection("Information");
-		if (openEvent != null && informationSectionLegacy != null) {
-			states.add(new Pair<>(State.EVENT, openEvent));
+		if (openEvent != null) states.add(new Pair<>(State.EVENT, openEvent));
+		if (hasEventNode && informationSectionLegacy != null) {
 			registerUniqueItemHandler(name, informationSectionLegacy, openPermission);
 		}
 

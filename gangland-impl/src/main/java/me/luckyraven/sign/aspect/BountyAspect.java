@@ -122,7 +122,7 @@ public class BountyAspect implements SignAspect {
 
 		List<ListEntry> headEntries = heads.stream().map(ListEntry::of).toList();
 
-		MultiInventory multiInventory = dynamicMultiInventory(plugin, player, headEntries, title, false, false, fill,
+		MultiInventory multiInventory = dynamicMultiInventory(plugin, player, headEntries, title, false, 0, fill,
 		                                                      buttonTags, null);
 
 		if (multiInventory == null) return;

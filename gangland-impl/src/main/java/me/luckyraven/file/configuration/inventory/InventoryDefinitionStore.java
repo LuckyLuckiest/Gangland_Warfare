@@ -8,6 +8,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryEvent;
 import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -27,7 +28,7 @@ public class InventoryDefinitionStore {
 	private final Map<String, UniqueItemHandler>               uniqueItemHandler = new HashMap<>();
 	private final Map<Class<?>, SlotEventHandler>              slotHandlers      = new HashMap<>();
 
-	public InventoryDefinitionStore() {
+	public InventoryDefinitionStore(JavaPlugin plugin) {
 		// Player events
 		playerEvents.put("OnItemClick", PlayerInteractEvent.class);
 		playerEvents.put("OnDrop", PlayerDropItemEvent.class);
@@ -42,7 +43,7 @@ public class InventoryDefinitionStore {
 		inventoryEvents.put("OnInventory", InventoryEvent.class);
 
 		// Slot handlers — one stateless instance per event type
-		SlotEventHandler clickHandler = new ClickSlotHandler();
+		SlotEventHandler clickHandler = new ClickSlotHandler(plugin);
 		slotHandlers.put(InventoryClickEvent.class, clickHandler);
 		slotHandlers.put(InventoryInteractEvent.class, clickHandler);
 		slotHandlers.put(InventoryEvent.class, clickHandler);

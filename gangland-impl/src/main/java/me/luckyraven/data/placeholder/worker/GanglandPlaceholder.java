@@ -3,6 +3,12 @@ package me.luckyraven.data.placeholder.worker;
 import me.luckyraven.copsncrooks.npc.banker.tier.BankTier;
 import me.luckyraven.copsncrooks.npc.banker.tier.BankTierRegistry;
 import me.luckyraven.copsncrooks.wanted.Wanted;
+import me.luckyraven.core.color.ColorUtil;
+import me.luckyraven.core.placeholder.PlaceholderHandler;
+import me.luckyraven.core.placeholder.effect.ConditionalFlashWrapper;
+import me.luckyraven.core.placeholder.effect.FlashPlaceholderWrapper;
+import me.luckyraven.core.placeholder.replacer.Replacer;
+import me.luckyraven.core.utilities.NumberUtil;
 import me.luckyraven.data.account.Level;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;
@@ -16,12 +22,6 @@ import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.unique.UniqueItem;
-import me.luckyraven.core.color.ColorUtil;
-import me.luckyraven.core.placeholder.PlaceholderHandler;
-import me.luckyraven.core.placeholder.effect.ConditionalFlashWrapper;
-import me.luckyraven.core.placeholder.effect.FlashPlaceholderWrapper;
-import me.luckyraven.core.placeholder.replacer.Replacer;
-import me.luckyraven.core.utilities.NumberUtil;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -190,6 +190,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 		// economy
 		if (parameter.equals(userStr + "balance")) return NumberUtil.valueFormat(user.getEconomy().getAmount());
+		if (parameter.equals(userStr + "has-bank")) return String.valueOf(user.hasBank());
 
 		// bounty
 		if (parameter.equals(userStr + "bounty")) return NumberUtil.valueFormat(user.getBounty().getAmount());
