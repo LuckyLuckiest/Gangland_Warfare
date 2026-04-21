@@ -19,6 +19,7 @@ import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TriConsumer;
 import me.luckyraven.util.datastructure.Tree;
 import me.luckyraven.util.utilities.NumberUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -47,7 +48,10 @@ class BankDepositCommand extends SubArgument {
 		this.ganglandDatabase = ganglandDatabase;
 		this.tierRegistry     = tierRegistry;
 
-		this.addSubArgument(bankDeposit());
+		OptionalArgument amount = bankDeposit();
+		amount.addSubArgument(bankDepositTarget());
+
+		this.addSubArgument(amount);
 	}
 
 	@Override
@@ -154,6 +158,49 @@ class BankDepositCommand extends SubArgument {
 					.map(value -> value % 1 == 0 ? String.valueOf(value.longValue()) : String.format("%.2f", value))
 					.toList();
 		});
+	}
+
+	private OptionalArgument bankDepositTarget() {
+		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+			String name         = args[3];
+			Player targetPlayer = Bukkit.getPlayer(name);
+
+			if (targetPlayer == null) {
+				sender.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", name));
+				return;
+			}
+
+			User<Player> target = userManager.getUser(targetPlayer);
+
+			if (target == null) return;
+
+			if (!target.hasBank()) {
+				sender.sendMessage(Messages.MUST_CREATE_BANK.toString());
+				return;
+			}
+
+			BigDecimal argAmount;
+
+			try {
+				argAmount = Currency.parse(args[2]);
+			} catch (NumberFormatException exception) {
+				sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
+				return;
+			}
+
+			Bank       bank     = target.getBank();
+			BigDecimal newValue = bank.getEconomy().getAmount().add(argAmount);
+
+			bank.getEconomy().setAmount(Currency.of(newValue));
+
+			IRepository<Bank> repo = ganglandDatabase.getRepositoryRegistry().getRepository(Bank.class);
+			repo.save(bank);
+
+			target.getUser().sendMessage(Messages.BANK_MONEY_DEPOSIT_PLAYER.toString()
+			                                                               .replace("%amount%",
+			                                                                        Settings.formatAmount(argAmount)));
+		}, sender -> Bukkit.getOnlinePlayers()
+				.stream().map(Player::getName).toList());
 	}
 
 	private BankTier resolveTier(Bank bank) {
