@@ -8,8 +8,8 @@ import me.luckyraven.util.autowire.bean.Phase;
 
 /**
  * Bean wiring for {@link DebugLoggingInitializer}. The {@code Settings} parameter is unused in the body; its only
- * purpose is to establish a dependency edge so the bean graph topologically sorts this bean after the settings file
- * has finished loading.
+ * purpose is to establish a dependency edge so the bean graph topologically sorts this bean after the settings file has
+ * finished loading.
  */
 @Configuration(phase = Phase.FILE)
 public class DebugLoggingConfig {
@@ -17,7 +17,11 @@ public class DebugLoggingConfig {
 	@Bean
 	public DebugLoggingInitializer debugLoggingInitializer(Settings settings) {
 		DebugLoggingInitializer initializer = new DebugLoggingInitializer();
-		initializer.initialize();
+
+		if (Settings.isDebugEnabled()) {
+			initializer.initialize();
+		}
+
 		return initializer;
 	}
 

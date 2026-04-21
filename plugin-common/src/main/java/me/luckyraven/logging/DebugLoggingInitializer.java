@@ -45,8 +45,7 @@ public final class DebugLoggingInitializer {
 	 * sidesteps the INFO filter Paper's root refs apply.
 	 */
 	private static void installDebugLogger(org.apache.logging.log4j.core.config.Configuration cfg,
-	                                       Collection<Appender> appenders,
-	                                       String moduleName) {
+	                                       Collection<Appender> appenders, String moduleName) {
 		LoggerConfig existing = cfg.getLoggerConfig(moduleName);
 		if (existing.getName().equals(moduleName)) {
 			cfg.removeLogger(moduleName);
@@ -138,10 +137,6 @@ public final class DebugLoggingInitializer {
 	}
 
 	public void initialize() {
-		if (!Settings.isDebugEnabled()) {
-			return;
-		}
-
 		List<String> modules = Settings.getDebugModules();
 		if (modules == null || modules.isEmpty()) {
 			modules = discoverAllModules();
