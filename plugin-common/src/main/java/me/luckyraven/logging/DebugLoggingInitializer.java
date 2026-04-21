@@ -5,6 +5,7 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 
 import java.io.File;
@@ -43,7 +44,7 @@ public final class DebugLoggingInitializer {
 	 * log4j2 — filtering is done at the AppenderRef or via Filters — so routing DEBUG events through our LoggerConfig
 	 * sidesteps the INFO filter Paper's root refs apply.
 	 */
-	private static void installDebugLogger(org.apache.logging.log4j.core.config.Configuration cfg,
+	private static void installDebugLogger(Configuration cfg,
 	                                       Collection<Appender> appenders, String moduleName) {
 		LoggerConfig existing = cfg.getLoggerConfig(moduleName);
 		if (existing.getName().equals(moduleName)) {
@@ -145,9 +146,9 @@ public final class DebugLoggingInitializer {
 			log.info("Debug.Modules is empty — enabling DEBUG for every discovered module ({} total)", modules.size());
 		}
 
-		LoggerContext                                      ctx           = (LoggerContext) LogManager.getContext(false);
-		org.apache.logging.log4j.core.config.Configuration cfg           = ctx.getConfiguration();
-		Collection<Appender>                               rootAppenders = cfg.getAppenders().values();
+		LoggerContext        ctx           = (LoggerContext) LogManager.getContext(false);
+		Configuration        cfg           = ctx.getConfiguration();
+		Collection<Appender> rootAppenders = cfg.getAppenders().values();
 
 		if (rootAppenders.isEmpty()) {
 			log.warn("No appenders registered in the running log4j2 configuration — DEBUG logs cannot be routed");
