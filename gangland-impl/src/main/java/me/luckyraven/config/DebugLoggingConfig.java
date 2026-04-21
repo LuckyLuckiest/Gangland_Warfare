@@ -19,7 +19,7 @@ public class DebugLoggingConfig {
 		DebugLoggingInitializer initializer = new DebugLoggingInitializer();
 
 		if (Settings.isDebugEnabled()) {
-			initializer.initialize();
+			initializer.initialize(Settings.getDebugModules());
 		}
 
 		return initializer;

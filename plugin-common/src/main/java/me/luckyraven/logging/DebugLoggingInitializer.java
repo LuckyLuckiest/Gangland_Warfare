@@ -1,7 +1,6 @@
 package me.luckyraven.logging;
 
 import lombok.CustomLog;
-import me.luckyraven.file.configuration.Settings;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
@@ -136,8 +135,7 @@ public final class DebugLoggingInitializer {
 		}
 	}
 
-	public void initialize() {
-		List<String> modules = Settings.getDebugModules();
+	public void initialize(List<String> modules) {
 		if (modules == null || modules.isEmpty()) {
 			modules = discoverAllModules();
 			if (modules.isEmpty()) {
