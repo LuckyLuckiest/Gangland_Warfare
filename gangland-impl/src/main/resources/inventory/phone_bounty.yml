@@ -1,0 +1,33 @@
+Information:
+   Display_Name: "&d&lBounties"
+   Size: 54
+   Type: inventory
+   Open:
+      Type: OTHER_INVENTORY
+   Configuration:
+      Line:
+         Vertical: [2,8]
+         Horizontal: [1,6]
+      Fill: true
+
+Slots:
+   21:
+      Item: ENCHANTED_BOOK
+      Name: "&5&lActive Bounties"
+      Lore:
+         - "&7Open contracts"
+   23:
+      Item: PAPER
+      Name: "&e&lWanted List"
+      Lore:
+         - "&7Players with hits on them"
+   40:
+      Item: EMERALD
+      Name: "&a&lPlace Bounty"
+      Lore:
+         - "&7Put a hit on a player"
+   49:
+      Item: ARROW
+      Name: "&c&lBack"
+      OnClick:
+         Inventory: phone

@@ -10,43 +10,36 @@ Information:
    Configuration:
       Line:
          Vertical: [2,8]
+         Horizontal: [1,6]
       Fill: true
    Permission: "gangland.inventory.phone"
 
 Slots:
-   11:
-      Item: DIAMOND
-      Name: "&eMission"
-      # Optional resource-pack model id (0 = no override).
-      Custom_Model_Data: 0
-      OnClick:
-         Inventory: phone_mission
-   13:
-      Item: CAULDRON
-      Name: "&eGang"
+   20:
+      Item:
+         Type: LEATHER_CHESTPLATE
+         Color: "GREEN"
+      Name: "&a&lMy Gang"
+      Lore:
+         - "&7Play with friends, and dominate the city!"
       OnClick:
          Inventory: phone_gang
-   15:
-      Item: FURNACE_MINECART
-      Name: "&eProperty"
-      OnClick:
-         Inventory: phone_property
-   38:
-      Item:
-         Type: PLAYER_HEAD
-         Data:
-            Tag: "SkullOwner"
-            Value: "%gangland_user_name%"
-      Name: "&eAccount"
-      OnClick:
-         Inventory: phone_account
-   40:
-      Item: NETHER_STAR
-      Name: "&eBounties"
+   22:
+      Item: FURNACE
+      Name: "&d&lBounties"
+      Lore:
+         - "&7Place hits on other players!"
       OnClick:
          Inventory: phone_bounty
-   42:
-      Item: BOOK
-      Name: "&eContacts"
+   24:
+      Item: PAPER
+      Name: "&b&lOnline Banking"
+      Lore:
+         - "&7Keeping your money safe!"
       OnClick:
-         Inventory: phone_contact
+         Inventory: phone_banking
+   40:
+      Item: EMERALD
+      Name: "&a&lWallet"
+      Lore:
+         - "&e%money_symbol%%gangland_user_balance%"

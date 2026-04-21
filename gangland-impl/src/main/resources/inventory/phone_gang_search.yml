@@ -1,0 +1,59 @@
+Information:
+   Display_Name: "&6&lGangs View"
+   Size: 54
+   Type: multi-inventory
+   Open:
+      Type: OTHER_INVENTORY
+   Configuration:
+      Fill: true
+      Border: false
+   Multi:
+      Item_Source: "gangs"
+      Per_Page: 28
+   Item_Template:
+      Item:
+         Type: PLAYER_HEAD
+         Data: "%gang_leader_name%"
+      Name: "&r%gang_color-code%%gang_display-name%&7 Gang"
+      Lore:
+         - "&7ID&8: &f%gang_id%"
+         - "&7Members&8: &a%gang_online-members-size%&7/&f%gang_members-size%"
+         - "&7Created&8: &f%gang_created%"
+         - ""
+         - "&e%gang_description%"
+
+Static_Items:
+   9:
+      Item: ARROW
+      Name: "&c&lBack"
+      Lore:
+         - "&7Return to My Gang"
+      OnClick:
+         Inventory: phone_gang
+   18:
+      Item: NAME_TAG
+      Name: "&e&lSearch by Name"
+      Lore:
+         - "&7Filter the list by gang name."
+         - "&8Click to open an anvil."
+      OnClick:
+         Inventory:
+            Type: anvil
+            Title: "Search Gang"
+            Text: "Name"
+            Success:
+               Command: "/glw gang search %gangland_anvil_output%"
+   27:
+      Item: BARRIER
+      Name: "&c&lClear Filter"
+      Lore:
+         - "&7Reset the name filter and sort."
+      OnClick:
+         Command: "/glw gang search clear"
+   36:
+      Item: COMPASS
+      Name: "&b&lSort"
+      Lore:
+         - "&7Cycle sort: Name / Members / Newest."
+      OnClick:
+         Command: "/glw gang search sort"

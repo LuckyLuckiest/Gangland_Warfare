@@ -1,0 +1,105 @@
+Information:
+   Display_Name: "&b&lOnline Banking"
+   Size: 27
+   Type: inventory
+   Open:
+      Type: OTHER_INVENTORY
+   Configuration:
+      Line:
+         Vertical: [1,9]
+         Horizontal: [1,3]
+      Fill: true
+
+Slots:
+   4:
+      Item: BOOK
+      Condition:
+         Value: "%gangland_user_has-bank%"
+         True:
+            Name: "&b&lBank Account"
+            Lore:
+               - "&7Account&8: &f%gangland_bank_name%"
+               - "&7Tier&8: %gangland_bank_tier_display%"
+               - ""
+               - "&7Cash on hand&8: &a%money_symbol%%gangland_user_balance%"
+               - "&7Bank balance&8: &a%money_symbol%%gangland_bank_balance%"
+               - "&7Tier cap&8: &f%money_symbol%%gangland_bank_tier_cap%"
+               - ""
+               - "&7Daily deposit left&8: &f%money_symbol%%gangland_bank_remaining_deposit%"
+               - "&7Interest&8: &a+%gangland_bank_interest_rate%%/day"
+               - "&7Next reset&8: &f%gangland_bank_next_reset%"
+            Enchanted: true
+         False:
+            Name: "&b&lNo bank account on file"
+            Lore:
+               - "&7Open an account to deposit and withdraw."
+               - ""
+               - "&7Your cash&8: &f%money_symbol%%gangland_user_balance%"
+   11:
+      Item: EMERALD_BLOCK
+      Condition:
+         Value: "%gangland_user_has-bank%"
+         True:
+            Name: "&a&lDeposit"
+            Lore:
+               - "&7Move money from your cash to the bank."
+               - "&7Cash&8: &f%money_symbol%%gangland_user_balance%"
+               - "&7Daily remaining&8: &f%money_symbol%%gangland_bank_remaining_deposit%"
+            OnClick:
+               Inventory:
+                  Type: anvil
+                  Title: "Deposit Amount"
+                  Text: "0"
+                  Success:
+                     Command: "/glw bank deposit %gangland_anvil_output%"
+         False:
+            Name: "&7Deposit"
+            Lore:
+               - "&cOpen an account first."
+   13:
+      Item: PAPER
+      Condition:
+         Value: "%gangland_user_has-bank%"
+         True:
+            Name: "&e&lBalance"
+            Lore:
+               - "&7Print your latest balance to chat."
+            OnClick:
+               Command: "/glw bank balance"
+         False:
+            Name: "&e&lOpen Account"
+            Lore:
+               - "&7Register a bank account."
+               - "&7Opens an anvil to choose a name."
+            OnClick:
+               Inventory:
+                  Type: anvil
+                  Title: "Account Name"
+                  Text: "Name"
+                  Success:
+                     Command: "/glw bank create %gangland_anvil_output%"
+   15:
+      Item: GOLD_BLOCK
+      Condition:
+         Value: "%gangland_user_has-bank%"
+         True:
+            Name: "&6&lWithdraw"
+            Lore:
+               - "&7Move money from the bank to your cash."
+               - "&7Bank&8: &f%money_symbol%%gangland_bank_balance%"
+            OnClick:
+               Inventory:
+                  Type: anvil
+                  Title: "Withdraw Amount"
+                  Text: "0"
+                  Success:
+                     Command: "/glw bank withdraw %gangland_anvil_output%"
+         False:
+            Name: "&7Withdraw"
+            Lore:
+               - "&cOpen an account first."
+   22:
+      Item: ARROW
+      Name: "&c&lBack"
+      OnClick:
+         Inventory: phone

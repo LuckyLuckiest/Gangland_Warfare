@@ -1,5 +1,5 @@
 Information:
-   Display_Name: "%gangland_unique-item_phone_name%"
+   Display_Name: "&a&lMy Gang"
    Size: 45
    Type: inventory
    Open:
@@ -20,9 +20,9 @@ Slots:
             OnClick:
                Inventory: gang_info
          False:
-            Name: "&c&lCreate Gang"
+            Name: "&a&lCreate Gang"
             Lore:
-               - "&7Costs &a%gangland_money_symbol%%gangland_gang_create_fee%"
+               - "&7Price: &c%gangland_money_symbol%%gangland_gang_create_fee%"
             OnClick:
                Inventory:
                   Type: anvil
@@ -35,3 +35,8 @@ Slots:
       Name: "&b&lSearch Gang"
       OnClick:
          Inventory: phone_gang_search
+   40:
+      Item: ARROW
+      Name: "&c&lBack"
+      OnClick:
+         Inventory: phone
