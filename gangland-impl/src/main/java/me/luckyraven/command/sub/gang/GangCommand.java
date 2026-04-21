@@ -6,7 +6,7 @@ import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ArgumentUtil;
 import me.luckyraven.core.ItemBuilder;
-import me.luckyraven.core.autowire.bean.Qualifier;
+import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.color.ColorUtil;
 import me.luckyraven.core.color.MaterialType;
 import me.luckyraven.core.command.CommandHandler;

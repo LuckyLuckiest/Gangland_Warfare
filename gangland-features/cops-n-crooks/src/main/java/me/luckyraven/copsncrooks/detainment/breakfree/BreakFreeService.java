@@ -7,7 +7,7 @@ import me.luckyraven.copsncrooks.detainment.message.DetainmentMessageContract;
 import me.luckyraven.copsncrooks.detainment.release.ReleasePipeline;
 import me.luckyraven.copsncrooks.detainment.release.ReleaseReason;
 import me.luckyraven.copsncrooks.detainment.sound.DetainmentSoundContract;
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.core.utilities.ActionBarManager;
 import me.luckyraven.core.utilities.ChatUtil;
 import org.bukkit.Bukkit;

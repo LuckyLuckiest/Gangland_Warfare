@@ -1,7 +1,7 @@
 package me.luckyraven.copsncrooks.npc.trader.trait;
 
 import lombok.CustomLog;
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;

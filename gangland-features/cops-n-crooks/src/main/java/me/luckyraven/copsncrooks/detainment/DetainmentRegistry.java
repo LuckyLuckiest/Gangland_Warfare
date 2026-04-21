@@ -3,7 +3,7 @@ package me.luckyraven.copsncrooks.detainment;
 import lombok.Getter;
 import me.luckyraven.copsncrooks.jail.Jail;
 import me.luckyraven.copsncrooks.jail.JailRegistry;
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.persistence.repository.IRepository;
 import org.jetbrains.annotations.Nullable;
 

@@ -1,4 +1,4 @@
-package me.luckyraven.core.autowire.bean;
+package me.luckyraven.core.bean;
 
 /**
  * Post-init lifecycle contract — runs <b>after</b> every {@link BeanLifecycle#onInitialize(boolean)} call has completed

@@ -1,8 +1,8 @@
 package me.luckyraven.config;
 
-import me.luckyraven.core.autowire.bean.Bean;
-import me.luckyraven.core.autowire.bean.Configuration;
-import me.luckyraven.core.autowire.bean.Phase;
+import me.luckyraven.core.bean.Bean;
+import me.luckyraven.core.bean.Configuration;
+import me.luckyraven.core.bean.Phase;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.logging.DebugLoggingInitializer;
 

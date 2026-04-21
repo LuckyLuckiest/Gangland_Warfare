@@ -1,6 +1,6 @@
-package me.luckyraven.core.autowire.bean;
+package me.luckyraven.core.bean;
 
-import me.luckyraven.core.autowire.DependencyContainer;
+import me.luckyraven.core.bean.autowire.DependencyContainer;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

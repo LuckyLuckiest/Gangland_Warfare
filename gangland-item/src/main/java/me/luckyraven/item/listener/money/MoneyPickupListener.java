@@ -1,6 +1,6 @@
 package me.luckyraven.item.listener.money;
 
-import me.luckyraven.core.autowire.AutowireTarget;
+import me.luckyraven.core.bean.autowire.AutowireTarget;
 import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.item.money.MoneyDepositService;

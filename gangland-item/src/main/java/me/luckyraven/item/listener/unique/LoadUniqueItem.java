@@ -1,6 +1,6 @@
 package me.luckyraven.item.listener.unique;
 
-import me.luckyraven.core.autowire.AutowireTarget;
+import me.luckyraven.core.bean.autowire.AutowireTarget;
 import me.luckyraven.core.downed.PlayerDownedEvent;
 import me.luckyraven.core.downed.PlayerUndownedEvent;
 import me.luckyraven.core.listener.ListenerHandler;

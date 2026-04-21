@@ -1,4 +1,4 @@
-package me.luckyraven.core.autowire.bean;
+package me.luckyraven.core.bean;
 
 import java.lang.reflect.Method;
 import java.util.List;

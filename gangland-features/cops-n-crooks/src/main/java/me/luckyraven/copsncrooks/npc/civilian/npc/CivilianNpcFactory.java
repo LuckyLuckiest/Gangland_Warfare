@@ -9,7 +9,7 @@ import me.luckyraven.copsncrooks.npc.civilian.state.CivilianBehavior;
 import me.luckyraven.copsncrooks.npc.civilian.state.CivilianBehaviorFactory;
 import me.luckyraven.copsncrooks.npc.entity.EntityMark;
 import me.luckyraven.copsncrooks.npc.entity.EntityMarkManager;
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.item.ItemParser;
 import me.luckyraven.weapon.Weapon;

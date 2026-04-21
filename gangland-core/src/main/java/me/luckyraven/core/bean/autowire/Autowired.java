@@ -1,4 +1,4 @@
-package me.luckyraven.core.autowire;
+package me.luckyraven.core.bean.autowire;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

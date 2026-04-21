@@ -2,7 +2,7 @@ package me.luckyraven.core.listener;
 
 import lombok.CustomLog;
 import lombok.Getter;
-import me.luckyraven.core.autowire.DependencyContainer;
+import me.luckyraven.core.bean.autowire.DependencyContainer;
 import me.luckyraven.core.utilities.ReflectionUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;

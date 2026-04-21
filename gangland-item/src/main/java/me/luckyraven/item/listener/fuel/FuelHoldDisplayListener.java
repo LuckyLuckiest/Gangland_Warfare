@@ -1,7 +1,7 @@
 package me.luckyraven.item.listener.fuel;
 
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.core.autowire.AutowireTarget;
+import me.luckyraven.core.bean.autowire.AutowireTarget;
 import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.core.utilities.ActionBarManager;
 import me.luckyraven.item.fuel.Fuel;

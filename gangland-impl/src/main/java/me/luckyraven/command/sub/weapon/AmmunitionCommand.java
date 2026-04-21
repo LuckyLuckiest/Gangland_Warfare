@@ -3,7 +3,7 @@ package me.luckyraven.command.sub.weapon;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.core.autowire.bean.Qualifier;
+import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.command.CommandHandler;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.weapon.ammo.AmmunitionManager;

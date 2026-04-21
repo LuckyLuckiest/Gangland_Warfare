@@ -1,7 +1,7 @@
 package me.luckyraven.file.configuration;
 
-import me.luckyraven.core.autowire.bean.SettingsLookup;
-import me.luckyraven.core.autowire.bean.conditional.ConditionalOnSetting;
+import me.luckyraven.core.bean.SettingsLookup;
+import me.luckyraven.core.bean.conditional.ConditionalOnSetting;
 
 import java.util.Map;
 

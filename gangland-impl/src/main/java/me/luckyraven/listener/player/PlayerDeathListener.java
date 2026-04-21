@@ -2,7 +2,7 @@ package me.luckyraven.listener.player;
 
 import me.luckyraven.copsncrooks.npc.banker.tier.BankTier;
 import me.luckyraven.copsncrooks.npc.banker.tier.BankTierRegistry;
-import me.luckyraven.core.autowire.bean.Qualifier;
+import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.datastructure.ScientificCalculator;
 import me.luckyraven.core.downed.PlayerDownedEvent;
 import me.luckyraven.core.listener.ListenerHandler;

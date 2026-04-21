@@ -1,7 +1,7 @@
 package me.luckyraven.gadget.listener.car;
 
 import me.luckyraven.core.ItemBuilder;
-import me.luckyraven.core.autowire.AutowireTarget;
+import me.luckyraven.core.bean.autowire.AutowireTarget;
 import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarKey;

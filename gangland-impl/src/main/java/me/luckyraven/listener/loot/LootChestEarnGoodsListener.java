@@ -1,6 +1,6 @@
 package me.luckyraven.listener.loot;
 
-import me.luckyraven.core.autowire.bean.Qualifier;
+import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.data.account.Level;
 import me.luckyraven.data.account.user.User;

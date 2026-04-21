@@ -1,8 +1,8 @@
-package me.luckyraven.core.autowire.bean.conditional;
+package me.luckyraven.core.bean.conditional;
 
-import me.luckyraven.core.autowire.bean.Bean;
-import me.luckyraven.core.autowire.bean.Configuration;
-import me.luckyraven.core.autowire.bean.SettingsLookup;
+import me.luckyraven.core.bean.Bean;
+import me.luckyraven.core.bean.Configuration;
+import me.luckyraven.core.bean.SettingsLookup;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

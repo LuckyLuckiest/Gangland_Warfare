@@ -10,7 +10,7 @@ import me.luckyraven.copsncrooks.events.wanted.WantedEvent;
 import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.copsncrooks.wanted.WantedExecutor;
 import me.luckyraven.copsncrooks.wanted.WantedSettings;
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.core.feature.Executor;
 import me.luckyraven.core.timer.Timer;
 import me.luckyraven.data.account.Level;

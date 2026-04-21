@@ -2,7 +2,7 @@ package me.luckyraven.copsncrooks.npc.entity;
 
 import me.luckyraven.copsncrooks.npc.civilian.config.CiviliansConfig;
 import me.luckyraven.copsncrooks.npc.civilian.config.CiviliansLoader;
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;

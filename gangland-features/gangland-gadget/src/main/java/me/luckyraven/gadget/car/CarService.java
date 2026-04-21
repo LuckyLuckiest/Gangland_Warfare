@@ -3,7 +3,7 @@ package me.luckyraven.gadget.car;
 import io.netty.channel.Channel;
 import lombok.Getter;
 import me.luckyraven.core.ItemBuilder;
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.gadget.car.vehicle.ParkedVehicle;
 import me.luckyraven.gadget.car.vehicle.VehicleMovementTask;
 import me.luckyraven.gadget.car.vehicle.VehicleRegistry;

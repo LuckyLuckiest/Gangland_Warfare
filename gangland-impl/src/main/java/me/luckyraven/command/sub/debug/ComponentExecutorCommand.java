@@ -4,7 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.types.OptionalArgument;
-import me.luckyraven.core.autowire.bean.Qualifier;
+import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.command.CommandHandler;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangManager;

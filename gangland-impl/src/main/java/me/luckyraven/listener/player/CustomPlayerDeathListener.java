@@ -2,7 +2,7 @@ package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
 import me.luckyraven.command.sub.RespawnCommand;
-import me.luckyraven.core.autowire.bean.Qualifier;
+import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.downed.DownedPlayerRegistry;
 import me.luckyraven.core.downed.PlayerDownedEvent;
 import me.luckyraven.core.downed.PlayerUndownedEvent;

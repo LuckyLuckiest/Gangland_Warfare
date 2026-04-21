@@ -1,6 +1,6 @@
 package me.luckyraven.item.listener.wearable;
 
-import me.luckyraven.core.autowire.AutowireTarget;
+import me.luckyraven.core.bean.autowire.AutowireTarget;
 import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.item.contract.WearableEquipService;

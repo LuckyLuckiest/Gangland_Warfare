@@ -3,7 +3,7 @@ package me.luckyraven.bootstrap;
 import lombok.CustomLog;
 import lombok.Getter;
 import me.luckyraven.Gangland;
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.core.timer.RepeatingTimer;
 import me.luckyraven.core.utilities.TimeUtil;
 import me.luckyraven.data.account.user.User;

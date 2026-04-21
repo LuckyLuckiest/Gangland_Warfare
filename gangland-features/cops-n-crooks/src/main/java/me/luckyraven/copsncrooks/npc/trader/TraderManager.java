@@ -6,7 +6,7 @@ import me.luckyraven.copsncrooks.npc.trader.mood.MoodService;
 import me.luckyraven.copsncrooks.npc.trader.respawn.TraderRespawnService;
 import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitDefinition;
 import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitRegistry;
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.persistence.repository.IRepository;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;

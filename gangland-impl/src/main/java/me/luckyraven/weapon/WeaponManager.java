@@ -1,6 +1,6 @@
 package me.luckyraven.weapon;
 
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.repositories.weapon.WeaponRepository;
 import me.luckyraven.persistence.repository.IRepository;

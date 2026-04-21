@@ -1,6 +1,6 @@
 package me.luckyraven.weapon.listener;
 
-import me.luckyraven.core.autowire.AutowireTarget;
+import me.luckyraven.core.bean.autowire.AutowireTarget;
 import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;

@@ -1,4 +1,4 @@
-package me.luckyraven.core.autowire.bean;
+package me.luckyraven.core.bean;
 
 /**
  * Bootstrap phases run by {@link BeanFactory#instantiate()} in declared order. Each phase contains its own subgraph of

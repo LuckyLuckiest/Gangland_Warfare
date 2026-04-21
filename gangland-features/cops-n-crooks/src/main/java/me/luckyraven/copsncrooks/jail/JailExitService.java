@@ -1,6 +1,6 @@
 package me.luckyraven.copsncrooks.jail;
 
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.persistence.repository.IRepository;
 import org.bukkit.Location;
 

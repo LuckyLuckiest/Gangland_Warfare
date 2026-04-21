@@ -5,7 +5,7 @@ import me.luckyraven.copsncrooks.events.trader.TraderBuyRequestEvent;
 import me.luckyraven.copsncrooks.npc.trader.TraderManager;
 import me.luckyraven.copsncrooks.npc.trader.mood.MoodService;
 import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitDefinition;
-import me.luckyraven.core.autowire.bean.Qualifier;
+import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;

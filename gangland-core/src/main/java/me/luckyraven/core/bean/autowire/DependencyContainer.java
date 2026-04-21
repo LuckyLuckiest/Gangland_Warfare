@@ -1,7 +1,7 @@
-package me.luckyraven.core.autowire;
+package me.luckyraven.core.bean.autowire;
 
 import lombok.CustomLog;
-import me.luckyraven.core.autowire.bean.Qualifier;
+import me.luckyraven.core.bean.Qualifier;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Parameter;

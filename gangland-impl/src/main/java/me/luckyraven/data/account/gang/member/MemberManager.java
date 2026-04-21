@@ -1,7 +1,7 @@
 package me.luckyraven.data.account.gang.member;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.permission.vault.VaultPermissionBridge;
 import me.luckyraven.data.rank.Rank;

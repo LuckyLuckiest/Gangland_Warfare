@@ -2,7 +2,7 @@ package me.luckyraven.persistence;
 
 import lombok.CustomLog;
 import me.luckyraven.core.UnhandledError;
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;

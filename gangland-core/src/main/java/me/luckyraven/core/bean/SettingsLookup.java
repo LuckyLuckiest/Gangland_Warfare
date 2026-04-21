@@ -1,6 +1,6 @@
-package me.luckyraven.core.autowire.bean;
+package me.luckyraven.core.bean;
 
-import me.luckyraven.core.autowire.bean.conditional.ConditionalOnSetting;
+import me.luckyraven.core.bean.conditional.ConditionalOnSetting;
 
 /**
  * Contract used by the bean framework to evaluate {@link ConditionalOnSetting}. Implementations resolve a dotted-path

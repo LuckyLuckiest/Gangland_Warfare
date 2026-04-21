@@ -4,7 +4,7 @@ import lombok.CustomLog;
 import lombok.Getter;
 import me.luckyraven.Gangland;
 import me.luckyraven.core.UnhandledError;
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.YamlMessageProvider;

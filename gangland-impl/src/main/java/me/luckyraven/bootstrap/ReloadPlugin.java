@@ -2,7 +2,7 @@ package me.luckyraven.bootstrap;
 
 import lombok.CustomLog;
 import me.luckyraven.Gangland;
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Settings;

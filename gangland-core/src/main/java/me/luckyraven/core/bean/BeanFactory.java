@@ -1,9 +1,9 @@
-package me.luckyraven.core.autowire.bean;
+package me.luckyraven.core.bean;
 
 import lombok.CustomLog;
-import me.luckyraven.core.autowire.DependencyContainer;
-import me.luckyraven.core.autowire.bean.conditional.ConditionalOnBean;
-import me.luckyraven.core.autowire.bean.conditional.ConditionalOnSetting;
+import me.luckyraven.core.bean.autowire.DependencyContainer;
+import me.luckyraven.core.bean.conditional.ConditionalOnBean;
+import me.luckyraven.core.bean.conditional.ConditionalOnSetting;
 import me.luckyraven.core.utilities.ReflectionUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.ServicePriority;

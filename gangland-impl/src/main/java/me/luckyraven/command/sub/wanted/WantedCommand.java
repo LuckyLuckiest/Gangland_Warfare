@@ -3,7 +3,7 @@ package me.luckyraven.command.sub.wanted;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
-import me.luckyraven.core.autowire.bean.Qualifier;
+import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.command.CommandHandler;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;

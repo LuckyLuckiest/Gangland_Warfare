@@ -1,7 +1,7 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.core.autowire.bean.Qualifier;
+import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.listener.ListenerHandler;
 import me.luckyraven.core.listener.ListenerPriority;
 import me.luckyraven.data.account.gang.member.Member;

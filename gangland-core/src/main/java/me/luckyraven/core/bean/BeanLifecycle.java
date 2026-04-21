@@ -1,4 +1,4 @@
-package me.luckyraven.core.autowire.bean;
+package me.luckyraven.core.bean;
 
 /**
  * Optional lifecycle contract for beans managed by {@link BeanFactory}. Beans that implement this interface participate

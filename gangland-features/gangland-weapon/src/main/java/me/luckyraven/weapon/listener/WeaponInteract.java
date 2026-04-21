@@ -1,7 +1,7 @@
 package me.luckyraven.weapon.listener;
 
 import me.luckyraven.compatibility.recoil.RecoilCompatibility;
-import me.luckyraven.core.autowire.AutowireTarget;
+import me.luckyraven.core.bean.autowire.AutowireTarget;
 import me.luckyraven.core.configuration.SoundConfiguration;
 import me.luckyraven.core.downed.DownedPlayerRegistry;
 import me.luckyraven.core.listener.ListenerHandler;

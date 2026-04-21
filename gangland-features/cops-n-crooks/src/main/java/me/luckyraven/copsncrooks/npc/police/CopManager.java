@@ -12,7 +12,7 @@ import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawnManager;
 import me.luckyraven.copsncrooks.npc.police.state.CopState;
 import me.luckyraven.copsncrooks.npc.police.targeting.TargetingManager;
 import me.luckyraven.copsncrooks.wanted.Wanted;
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.core.downed.DownedPlayerRegistry;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Bukkit;

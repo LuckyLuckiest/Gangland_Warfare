@@ -1,7 +1,7 @@
 package me.luckyraven.data.teleportation;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.tables.gang.GangTable;

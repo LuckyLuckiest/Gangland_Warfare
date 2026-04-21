@@ -1,7 +1,7 @@
 package me.luckyraven.data.account.gang;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.repositories.gang.GangAllianceRepository;
 import me.luckyraven.persistence.repository.IRepository;

@@ -2,7 +2,7 @@ package me.luckyraven.data.rank;
 
 import lombok.Getter;
 import me.luckyraven.Gangland;
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.core.datastructure.Tree;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.database.GanglandDatabase;

@@ -12,7 +12,7 @@ import me.luckyraven.copsncrooks.npc.entity.EntityMarkManager;
 import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.copsncrooks.wanted.WantedExecutor;
 import me.luckyraven.copsncrooks.wanted.WantedSettings;
-import me.luckyraven.core.autowire.bean.Qualifier;
+import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.downed.DownedPlayerRegistry;
 import me.luckyraven.core.feature.Executor;
 import me.luckyraven.core.listener.ListenerHandler;

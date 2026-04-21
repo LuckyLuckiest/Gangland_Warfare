@@ -1,7 +1,7 @@
 package me.luckyraven.gadget.jetpack;
 
 import io.netty.channel.Channel;
-import me.luckyraven.core.autowire.bean.BeanLifecycle;
+import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.gadget.config.GadgetPhysicsConfig;
 import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.gadget.jetpack.packet.JetpackInputInterceptor;
