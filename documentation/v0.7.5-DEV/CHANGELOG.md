@@ -158,6 +158,50 @@ just traders — can reuse them.
 
 ---
 
+### Inventory & UI Refresh
+
+A new **multi-panel inventory** framework underpins every revamped GUI
+this cycle. Panels swap **in place** without closing the underlying
+Bukkit inventory, so switching between trader categories, banker
+sections, and shop-admin pages no longer triggers the familiar
+close-and-reopen flicker.
+
+- **Multi-panel framework** — one Bukkit inventory, many logical
+  panels. Each flow (trader, banker, shop admin) registers its panels
+  once and transitions between them with no `closeInventory` call in
+  between.
+- **Flow panels for traders and bankers** — the trader buy / barter /
+  sell / tip surfaces and the banker deposit / withdraw / tier surfaces
+  now run as flow panels on top of the framework. Rendering logic was
+  rewritten to coalesce updates into a single repaint per click.
+- **Admin legacy inventory migrated** — the legacy admin GUIs were
+  ported onto the multi-panel framework. Panel transitions inside
+  admin flows are now flicker-free, matching the rest of the UI.
+- **Shift-click + drag-and-drop in admin editors** — barter and sell
+  category editors accept shift-click moves and drag operations from
+  the player inventory; previously they only accepted single-click
+  placement.
+- **Custom inventory filter system** — per-view filter controls
+  (search, category sort, etc.) are now first-class, so heavy lists
+  (gang member browsers, shop catalogues) stay navigable.
+- **Gang inventory revamp** — the gang member browser ships with
+  search filters and an updated layout; pagination and rank
+  annotations are easier to scan.
+- **New inventory layouts** — several screens were rebuilt from
+  scratch with consistent borders, panel headers, and decorate
+  pipeline coverage. General icon/glass-pane polish across the board.
+- **Shop item freshness** — car entries now run through a dedicated
+  car item refresher on every delivery, so an updated `cars.yml`
+  shape is reflected in the next handout. Trader-bought ammunition
+  runs through an `AmmunitionItemRefresher` so bought stacks merge
+  cleanly with looted ones instead of occupying a separate slot.
+- **Item-equality by serialized payload** — shop, barter and sell
+  comparisons now serialize the full item (NBT + meta), not just
+  `Material`. Custom-model variants and differently-tagged stacks
+  stay distinct where they used to collide.
+
+---
+
 ### Banking & Banker NPC
 
 Every player gets an **account balance** (cash in hand) and a **bank
@@ -376,6 +420,13 @@ Small but load-bearing.
 - **Custom messages for every command** — every user-facing command
   string now routes through the `Messages` enum. Previously-hardcoded
   strings are removed.
+- **`/glw gang members`** — list the members of a gang from the command
+  line, with paging and the standard rank annotations. Useful for
+  admin inspection without opening the GUI.
+- **Rank schema + Vault-group rank command fix** — the rank command's
+  Vault-group apply path was reading a stale schema, so group changes
+  weren't always propagating to Vault. Rank edits now round-trip
+  cleanly.
 
 ---
 
@@ -477,6 +528,13 @@ against this version.
 - **Item moved from inventory into created inventory** — a bug where
   shift-clicking into a newly-opened shop view dropped the item into
   the wrong slot is fixed.
+- **Ammunition stacking from trader** — bought ammo now runs through
+  `AmmunitionItemRefresher` and merges with looted stacks instead of
+  occupying a separate slot.
+- **Shop item equality by `Material` only** — buy / barter / sell
+  comparisons used to match on `Material`, so custom-model variants
+  and differently-tagged stacks collided. Comparisons now serialize
+  the full item.
 
 ### Jail & Detainment
 
@@ -500,6 +558,23 @@ against this version.
   several categories; fixed.
 - **Tab-completion** — trailing-space bug and a mis-ordered suggestion
   list on some subcommands.
+
+### Inventories & UI
+
+- **Player heads not rendering** in several GUIs — the skull-owner
+  payload was being dropped through the decorate pipeline; preserved
+  now so head icons render correctly.
+- **Multiple items in the same slot not showing** — a paginated-
+  inventory branch was overwriting the displayed stack with whichever
+  item rendered last, hiding everything else assigned to the slot.
+- **Inventory / multi-inventory interaction bugs** — shift-click and
+  drag events on the new panel framework were crossing into the
+  player inventory in a few edge cases. Click handling is now scoped
+  per panel.
+- **False-positive config report for `Multi` and `Static_Items`** —
+  the validator was flagging legitimate `Multi` and `Static_Items`
+  blocks as unknown keys on `/glw reload`. Both are now in the
+  declared schema and pass validation.
 
 ### System & Reliability
 
@@ -582,13 +657,13 @@ Flagged so server owners can spot behavior changes in their own setups.
 
 No new hard dependencies compared to v0.7.4-DEV.
 
-| Requirement       | Details                                              |
-|-------------------|------------------------------------------------------|
-| Minecraft version | 1.20+ (1.21.x recommended)                           |
-| Java              | Java 21 or newer                                     |
-| Required plugins  | NBTAPI, Citizens                                     |
-| Optional plugins  | PlaceholderAPI, Vault, ViaVersion                    |
-| Server platform   | **Spigot** (not Paper — Paper-only APIs aren't used) |
+| Requirement       | Details                           |
+|-------------------|-----------------------------------|
+| Minecraft version | 1.20+ (1.21.x recommended)        |
+| Java              | Java 21 or newer                  |
+| Required plugins  | NBTAPI, Citizens                  |
+| Optional plugins  | PlaceholderAPI, Vault, ViaVersion |
+| Server platform   | **Spigot**                        |
 
 ---
 
