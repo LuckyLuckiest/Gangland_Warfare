@@ -21,6 +21,8 @@
         <module>gangland-gadget</module>
         <module>cops-n-crooks</module>
         <module>gangland-economy</module>
+        <module>gangland-gang</module>
+        <module>gangland-turf</module>
     </modules>
 
 </project>
