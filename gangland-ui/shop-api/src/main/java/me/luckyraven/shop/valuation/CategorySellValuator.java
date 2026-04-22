@@ -1,6 +1,8 @@
 package me.luckyraven.shop.valuation;
 
+import lombok.RequiredArgsConstructor;
 import me.luckyraven.core.ItemBuilder;
+import me.luckyraven.item.ItemSerializerRegistry;
 import me.luckyraven.shop.SellCategory;
 import me.luckyraven.shop.ShopDefinition;
 import org.bukkit.inventory.ItemStack;
@@ -8,12 +10,15 @@ import org.bukkit.inventory.ItemStack;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+@RequiredArgsConstructor
 public final class CategorySellValuator implements SellValuator {
 
 	public static final String SELL_PRICE_NBT_KEY = "sell_price";
 
 	private static final int          PRICE_SCALE = 2;
 	private static final RoundingMode PRICE_MODE  = RoundingMode.HALF_UP;
+
+	private final ItemSerializerRegistry serializerRegistry;
 
 	@Override
 	public ItemValuation value(ShopDefinition definition, ItemStack stack, double sellPriceRatio,
@@ -23,7 +28,7 @@ public final class CategorySellValuator implements SellValuator {
 		}
 
 		for (SellCategory category : definition.getSellCategories()) {
-			ItemStack template = category.matchingTemplate(stack);
+			ItemStack template = category.matchingTemplate(stack, serializerRegistry);
 			if (template == null) {
 				continue;
 			}

@@ -1,6 +1,8 @@
 package me.luckyraven.shop.valuation;
 
+import lombok.RequiredArgsConstructor;
 import me.luckyraven.core.ItemBuilder;
+import me.luckyraven.item.ItemSerializerRegistry;
 import me.luckyraven.shop.BarterCategory;
 import me.luckyraven.shop.ShopDefinition;
 import org.bukkit.inventory.ItemStack;
@@ -13,10 +15,13 @@ import java.math.RoundingMode;
  * {@code barterPriceRatio} instead of {@code sellPriceRatio}. The per-item NBT price tag is shared with the sell side
  * (see {@link CategorySellValuator#SELL_PRICE_NBT_KEY}) so a single admin-set value applies in both flows.
  */
+@RequiredArgsConstructor
 public final class CategoryBarterValuator {
 
 	private static final int          PRICE_SCALE = 2;
 	private static final RoundingMode PRICE_MODE  = RoundingMode.HALF_UP;
+
+	private final ItemSerializerRegistry serializerRegistry;
 
 	public ItemValuation value(ShopDefinition definition, ItemStack stack, double barterPriceRatio,
 	                           double moodMultiplier) {
@@ -25,7 +30,7 @@ public final class CategoryBarterValuator {
 		}
 
 		for (BarterCategory category : definition.getBarterCategories()) {
-			ItemStack template = category.matchingTemplate(stack);
+			ItemStack template = category.matchingTemplate(stack, serializerRegistry);
 			if (template == null) {
 				continue;
 			}

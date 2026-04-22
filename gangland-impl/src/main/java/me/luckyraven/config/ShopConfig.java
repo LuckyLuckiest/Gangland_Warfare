@@ -28,6 +28,7 @@ import me.luckyraven.file.configuration.shop.GanglandShopDisplayResolver;
 import me.luckyraven.file.configuration.shop.GanglandShopMessages;
 import me.luckyraven.file.configuration.shop.TraderSettingsImpl;
 import me.luckyraven.item.ItemRefresherRegistry;
+import me.luckyraven.item.ItemSerializerRegistry;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
@@ -123,13 +124,13 @@ public class ShopConfig {
 	}
 
 	@Bean
-	public SellValuator sellValuator() {
-		return new CategorySellValuator();
+	public SellValuator sellValuator(ItemSerializerRegistry serializerRegistry) {
+		return new CategorySellValuator(serializerRegistry);
 	}
 
 	@Bean
-	public CategoryBarterValuator categoryBarterValuator() {
-		return new CategoryBarterValuator();
+	public CategoryBarterValuator categoryBarterValuator(ItemSerializerRegistry serializerRegistry) {
+		return new CategoryBarterValuator(serializerRegistry);
 	}
 
 	// ── Traits (loaded from plugin/trader_traits.yml) ────────────────────
