@@ -183,11 +183,10 @@ public class ShopConfig {
 	}
 
 	@Bean
-	public NegotiationView negotiationView(MoodService moodService, QuantitySelectorView quantitySelectorView,
-	                                       TraderSettings traderSettings, TraderMessageContract traderMessages,
-	                                       TraderEconomyContract economy, ShopDisplayResolver displayResolver) {
-		return new NegotiationView(gangland, moodService, traderSettings, traderMessages, economy, displayResolver,
-		                           quantitySelectorView);
+	public NegotiationView negotiationView(MoodService moodService, TraderSettings traderSettings,
+	                                       TraderMessageContract traderMessages, TraderEconomyContract economy,
+	                                       ShopDisplayResolver displayResolver) {
+		return new NegotiationView(gangland, moodService, traderSettings, traderMessages, economy, displayResolver);
 	}
 
 	@Bean
@@ -212,8 +211,8 @@ public class ShopConfig {
 
 	@Bean
 	public TraderFlow traderFlow(ModeSelectView modeSelectView, ShopView shopView, NegotiationView negotiationView,
-	                             SellView sellView, BarterView barterView) {
-		return new TraderFlow(gangland, modeSelectView, shopView, negotiationView, sellView, barterView);
+	                             SellView sellView, BarterView barterView, QuantitySelectorView quantityView) {
+		return new TraderFlow(gangland, modeSelectView, shopView, negotiationView, sellView, barterView, quantityView);
 	}
 
 	@Bean
@@ -222,28 +221,32 @@ public class ShopConfig {
 	}
 
 	@Bean
-	public SellCategoryItemsAdminView sellCategoryItemsAdminView(PriceEditorView priceEditorView,
-	                                                             ItemRefresherRegistry refresherRegistry,
+	public SellCategoryItemsAdminView sellCategoryItemsAdminView(ItemRefresherRegistry refresherRegistry,
 	                                                             ShopDisplayResolver displayResolver) {
-		return new SellCategoryItemsAdminView(gangland, priceEditorView, refresherRegistry, displayResolver);
+		return new SellCategoryItemsAdminView(gangland, refresherRegistry, displayResolver);
 	}
 
 	@Bean
-	public BarterCategoryItemsAdminView barterCategoryItemsAdminView(PriceEditorView priceEditorView,
-	                                                                 ItemRefresherRegistry refresherRegistry,
+	public BarterCategoryItemsAdminView barterCategoryItemsAdminView(ItemRefresherRegistry refresherRegistry,
 	                                                                 ShopDisplayResolver displayResolver) {
-		return new BarterCategoryItemsAdminView(gangland, priceEditorView, refresherRegistry, displayResolver);
+		return new BarterCategoryItemsAdminView(gangland, refresherRegistry, displayResolver);
 	}
 
 	@Bean
-	public ShopAdminView shopAdminView(PriceEditorView priceEditorView,
-	                                   SellCategoryItemsAdminView categoryItemsView,
-	                                   BarterCategoryItemsAdminView barterItemsView,
-	                                   ItemRefresherRegistry refresherRegistry,
+	public ShopAdminView shopAdminView(ItemRefresherRegistry refresherRegistry,
 	                                   ShopMessageContract shopMessages, TraderSettings traderSettings,
 	                                   ShopDisplayResolver displayResolver) {
-		return new ShopAdminView(gangland, priceEditorView, categoryItemsView, barterItemsView, refresherRegistry,
-		                         shopMessages, traderSettings, displayResolver);
+		return new ShopAdminView(gangland, refresherRegistry, shopMessages, traderSettings, displayResolver);
+	}
+
+	@Bean
+	public ShopAdminFlow shopAdminFlow(ItemRefresherRegistry refresherRegistry,
+	                                   ShopAdminView adminPanel,
+	                                   PriceEditorView priceEditorPanel,
+	                                   SellCategoryItemsAdminView sellCategoryPanel,
+	                                   BarterCategoryItemsAdminView barterCategoryPanel) {
+		return new ShopAdminFlow(gangland, refresherRegistry, adminPanel, priceEditorPanel, sellCategoryPanel,
+		                         barterCategoryPanel);
 	}
 
 	// ── Trader NPC lifecycle ─────────────────────────────────────────────
@@ -263,10 +266,10 @@ public class ShopConfig {
 
 	@Bean
 	public ShopViewOpener shopViewOpener(TraderManager traderManager, ShopRegistry shopRegistry,
-	                                     TraderFlow traderFlow, ShopAdminView adminView,
+	                                     TraderFlow traderFlow, ShopAdminFlow adminFlow,
 	                                     ShopMessageContract shopMessages,
 	                                     TraderMessageContract traderMessages) {
-		return new ShopViewOpenerImpl(traderManager, shopRegistry, traderFlow, adminView,
+		return new ShopViewOpenerImpl(traderManager, shopRegistry, traderFlow, adminFlow,
 		                              shopMessages, traderMessages);
 	}
 

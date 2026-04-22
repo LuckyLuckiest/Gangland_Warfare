@@ -17,7 +17,6 @@ import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
 import me.luckyraven.shop.ShopItemEntry;
 import me.luckyraven.shop.message.ShopDisplayResolver;
-import me.luckyraven.shop.view.QuantitySelectorView;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -27,9 +26,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.math.BigDecimal;
 
 /**
- * Buy-negotiation panel. Fires {@link TraderBuyRequestEvent} on confirm; hands off to {@link BarterView} /
- * {@link QuantitySelectorView} via {@link MultiPanelInventory#suspend()} + re-entry through
- * {@link MultiPanelInventory#switchTo(String)} on callback.
+ * Buy-negotiation panel. Fires {@link TraderBuyRequestEvent} on confirm. Hands off to {@link BarterView} or
+ * {@link QuantitySelectorView} via {@link MultiPanelInventory#switchTo(String)} — both are panels in the trader
+ * flow, so the transitions are same-handle re-renders (no inventory swap) where size + title permit.
  */
 @RequiredArgsConstructor
 public final class NegotiationView implements Panel<TraderFlowSession> {
@@ -54,7 +53,6 @@ public final class NegotiationView implements Panel<TraderFlowSession> {
 	private final TraderMessageContract messages;
 	private final TraderEconomyContract economy;
 	private final ShopDisplayResolver   displayResolver;
-	private final QuantitySelectorView  quantitySelectorView;
 
 	private static SoundConfiguration vanilla(String name, float pitch) {
 		return new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, name, 0.6f, pitch);
@@ -169,40 +167,13 @@ public final class NegotiationView implements Panel<TraderFlowSession> {
 	}
 
 	private void onBuyAmount(MultiPanelInventory<TraderFlowSession> host, Player viewer, TraderFlowSession session) {
-		if (quantitySelectorView == null) return;
 		if (session.selectedEntry.getItem().getMaxStackSize() <= 1) return;
-
-		BigDecimal unitPrice = currentPrice(session);
-		int        maxCopies = 999;
-		String     title     = "&8Buy Amount&r &8&l[&b&l" + session.trait.displayName() + "&8&l]";
-
-		host.suspend();
-		quantitySelectorView.open(viewer, title, session.selectedEntry.getItem(), unitPrice, 1, maxCopies,
-		                          copies -> onBuyAmountConfirmed(host, viewer, session, copies),
-		                          () -> {
-									  host.resume();
-									  host.switchTo(TraderFlowSession.PANEL_NEGOTIATION);
-								  });
+		// QuantitySelectorView is now a panel in the trader flow. Reset picker state so the next entry starts fresh,
+		// then pivot — its confirm handler fires TraderBuyRequestEvent + host.end() directly.
+		session.quantityStaged = 1;
+		session.quantityMode   = 1;
+		host.switchTo(TraderFlowSession.PANEL_QUANTITY);
 		playSoundNextTick(viewer, SOUND_OPEN_SUB);
-	}
-
-	private void onBuyAmountConfirmed(MultiPanelInventory<TraderFlowSession> host, Player viewer,
-	                                  TraderFlowSession session, int copies) {
-		SOUND_BUY.playSound(viewer);
-		BigDecimal total = currentPrice(session).multiply(BigDecimal.valueOf(copies));
-
-		TraderBuyRequestEvent event = new TraderBuyRequestEvent(viewer, session.trader, session.selectedEntry, total,
-		                                                        copies);
-		Bukkit.getPluginManager().callEvent(event);
-
-		if (event.isCancelled()) {
-			host.resume();
-			host.switchTo(TraderFlowSession.PANEL_NEGOTIATION);
-			return;
-		}
-
-		host.resume();
-		host.end();
 	}
 
 	private void onCancel(MultiPanelInventory<TraderFlowSession> host, Player viewer) {

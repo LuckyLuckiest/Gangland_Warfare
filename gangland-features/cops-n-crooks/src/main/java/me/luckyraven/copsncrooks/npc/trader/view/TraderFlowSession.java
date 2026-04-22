@@ -31,6 +31,11 @@ public final class TraderFlowSession implements FlowSession {
 	public BigDecimal    basePrice;
 	public double        moodMultiplier;
 
+	// Quantity-picker state (populated by NegotiationView.onBuyAmount before switchTo PANEL_QUANTITY; reset on entry
+	// and on confirm so the next open starts fresh).
+	public int quantityStaged = 1;
+	public int quantityMode   = 1;
+
 	public TraderFlowSession(TraderNpc trader, ShopDefinition definition, TraderTraitDefinition trait) {
 		this.trader     = trader;
 		this.definition = definition;

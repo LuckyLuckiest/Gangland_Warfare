@@ -6,6 +6,8 @@ import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.core.configuration.SoundConfiguration;
 import me.luckyraven.core.utilities.NumberUtil;
 import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.flow.MultiPanelInventory;
+import me.luckyraven.inventory.flow.Panel;
 import me.luckyraven.item.ItemRefresherRegistry;
 import me.luckyraven.shop.SellCategory;
 import me.luckyraven.shop.message.ShopDisplayResolver;
@@ -24,12 +26,16 @@ import java.util.Map;
 import java.util.WeakHashMap;
 
 /**
- * Admin editor for a single {@link SellCategory}'s template items. The editor never holds the admin's real items: any
- * cursor-drop or shift-click is intercepted, cloned into the category, and the admin's source is left untouched —
- * mirroring the buy-entry admin flow so admins never lose the items they're configuring with.
+ * Panel editor for a single {@link SellCategory}'s template items. Lives inside the shop-admin flow; transitions back
+ * to {@link ShopAdminView} via {@link MultiPanelInventory#back()}, and into {@link PriceEditorView} via
+ * {@link MultiPanelInventory#switchTo(String)} with the edit context pre-populated on the shared flow session.
+ *
+ * <p>The cursor-drop / shift-click "add item" pattern still runs through a dedicated {@code SellCategoryAdminListener}
+ * that dispatches to {@link #handleClick} — the panel looks up the active host/category via the per-player
+ * {@code active} map populated in {@link #render}.
  */
 @RequiredArgsConstructor
-public final class SellCategoryItemsAdminView {
+public final class SellCategoryItemsAdminView implements Panel<ShopAdminFlowSession> {
 
 	private static final int   INVENTORY_SIZE = 54;
 	private static final int   SLOT_BACK      = 45;
@@ -46,36 +52,44 @@ public final class SellCategoryItemsAdminView {
 	                                                                            "UI_BUTTON_CLICK", 0.6f, 1.0f);
 
 	private final JavaPlugin            plugin;
-	private final PriceEditorView       priceEditorView;
 	private final ItemRefresherRegistry refresherRegistry;
 	private final ShopDisplayResolver   displayResolver;
 
-	private final Map<Player, Session> active = new WeakHashMap<>();
+	private final Map<Player, ActiveContext> active = new WeakHashMap<>();
 
-	public void open(Player admin, SellCategory category, Runnable onClose) {
-		String           title   = "&8Category: &f" + category.getDisplayName();
-		InventoryHandler handler = new InventoryHandler(plugin, title, INVENTORY_SIZE, admin);
-
-		Session session = new Session(category, handler, onClose);
-		active.put(admin, session);
-
-		renderChrome(session);
-		renderItems(admin, session);
-
-		handler.open(admin);
+	@Override
+	public int size(ShopAdminFlowSession session) {
+		return INVENTORY_SIZE;
 	}
 
-	/**
-	 * Event-level click handler invoked by {@code SellCategoryAdminListener}. Catches cursor-drops onto an editor slot
-	 * and shift-clicks from the admin's inventory; in both cases the admin's source item is left in place and a clone
-	 * is appended to the category's template list. Returns quickly when the click isn't one of the add-item patterns so
-	 * the per-slot left/right handlers (edit price / remove) can run for clicks with an empty cursor.
-	 */
+	@Override
+	public String title(ShopAdminFlowSession session) {
+		String name = session.sellCategoryInEdit != null ? session.sellCategoryInEdit.getDisplayName() : "Category";
+		return "&8Category: &f" + name;
+	}
+
+	@Override
+	public void render(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler, Player viewer,
+	                   ShopAdminFlowSession session) {
+		if (session.sellCategoryInEdit == null) {
+			host.back();
+			return;
+		}
+
+		active.put(viewer, new ActiveContext(host, handler, session.sellCategoryInEdit));
+		host.onEnd(s -> active.remove(viewer));
+
+		renderChrome(host, handler, session);
+		renderItems(host, handler, session);
+	}
+
+	// ── Listener bridge ──────────────────────────────────────────────────
+
 	public void handleClick(InventoryClickEvent event) {
 		if (!(event.getWhoClicked() instanceof Player admin)) return;
-		Session session = active.get(admin);
-		if (session == null) return;
-		if (event.getInventory() != session.handler.getInventory()) return;
+		ActiveContext ctx = active.get(admin);
+		if (ctx == null) return;
+		if (event.getInventory() != ctx.handler.getInventory()) return;
 
 		Inventory bottom = event.getView().getBottomInventory();
 		ClickType click  = event.getClick();
@@ -86,11 +100,11 @@ public final class SellCategoryItemsAdminView {
 			if (src == null || src.getType().isAir()) return;
 
 			event.setCancelled(true);
-			appendItem(admin, session, src);
+			appendItem(ctx, src);
 			return;
 		}
 
-		if (event.getClickedInventory() == session.handler.getInventory()) {
+		if (event.getClickedInventory() == ctx.handler.getInventory()) {
 			ItemStack cursor = event.getCursor();
 			if (cursor == null || cursor.getType().isAir()) return;
 
@@ -98,109 +112,109 @@ public final class SellCategoryItemsAdminView {
 			if (!isItemSlot(rawSlot)) return;
 
 			event.setCancelled(true);
-			appendItem(admin, session, cursor);
+			appendItem(ctx, cursor);
 		}
 	}
 
-	/**
-	 * Close handler invoked by {@code SellCategoryAdminListener}. Click handlers mutate the category list directly, so
-	 * close just runs the parent navigation callback.
-	 */
-	public void handleClose(Player admin, Inventory inventory) {
-		Session session = active.get(admin);
-		if (session == null) return;
-		if (session.handler.getInventory() != inventory) return;
-		if (session.pendingSubview) return;
+	// ── Rendering ────────────────────────────────────────────────────────
 
-		active.remove(admin);
-
-		if (session.onClose != null) {
-			Bukkit.getScheduler().runTask(plugin, session.onClose);
-		}
-	}
-
-	private void appendItem(Player admin, Session session, ItemStack source) {
-		if (session.category.getItems().size() >= ITEM_SLOTS.length) {
-			return;
-		}
+	private void appendItem(ActiveContext ctx, ItemStack source) {
+		if (ctx.category.getItems().size() >= ITEM_SLOTS.length) return;
 
 		ItemStack copy = refresherRegistry.refresh(source, null);
-		if (copy == null || copy.getType().isAir()) {
-			copy = source.clone();
-		} else {
-			copy = copy.clone();
-		}
+		if (copy == null || copy.getType().isAir()) copy = source.clone();
+		else copy = copy.clone();
 
-		session.category.getItems().add(copy);
-		renderItems(admin, session);
+		ctx.category.getItems().add(copy);
+		renderItemsDirect(ctx);
 	}
 
 	private boolean isItemSlot(int rawSlot) {
-		for (int s : ITEM_SLOTS) {
-			if (s == rawSlot) return true;
-		}
+		for (int s : ITEM_SLOTS) if (s == rawSlot) return true;
 		return false;
 	}
 
-	private void renderChrome(Session session) {
+	private void renderChrome(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler,
+	                          ShopAdminFlowSession session) {
 		ItemStack pane = XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
-		if (pane == null) {
-			pane = new ItemStack(Material.STONE);
-		}
+		if (pane == null) pane = new ItemStack(Material.STONE);
 		ItemBuilder filler = new ItemBuilder(pane).setDisplayName(" ");
-		for (int slot = 36; slot < INVENTORY_SIZE; slot++) {
-			session.handler.setItem(slot, filler, false, (p, inv, b) -> { });
-		}
+		for (int slot = 36; slot < INVENTORY_SIZE; slot++) handler.setItem(slot, filler, false, (p, inv, b) -> { });
 
 		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&eBack to categories")
 		                                                  .setLore("&7Save & return.");
-		session.handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> {
-			SOUND_BACK.playSound(p);
-			p.closeInventory();
+		handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> {
+			host.back();
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_BACK.playSound(p));
 		});
 
-		ItemBuilder info = new ItemBuilder(material(XMaterial.PAPER, Material.PAPER));
-		info.setDisplayName("&b" + session.category.getDisplayName())
-		    .setLore("&7ID: &f" + session.category.getId(),
-		             "&7Base price: &6$" + NumberUtil.valueFormat(session.category.getBasePrice()), " ",
+		SellCategory category = session.sellCategoryInEdit;
+		ItemBuilder  info     = new ItemBuilder(material(XMaterial.PAPER, Material.PAPER));
+		info.setDisplayName("&b" + category.getDisplayName())
+		    .setLore("&7ID: &f" + category.getId(),
+		             "&7Base price: &6$" + NumberUtil.valueFormat(category.getBasePrice()), " ",
 		             "&7Drop or shift-click items to add;", "&7originals stay in your inventory.",
 		             "&aL-click &7edit per-item price  &cR-click &7remove");
-		session.handler.setItem(SLOT_INFO, info, false, (p, inv, b) -> { });
+		handler.setItem(SLOT_INFO, info, false, (p, inv, b) -> { });
 
 		ItemBuilder price = new ItemBuilder(material(XMaterial.GOLD_INGOT, Material.GOLD_INGOT));
 		price.setDisplayName("&6Edit base price")
-		     .setLore("&7Current: &6$" + NumberUtil.valueFormat(session.category.getBasePrice()),
+		     .setLore("&7Current: &6$" + NumberUtil.valueFormat(category.getBasePrice()),
 		              "&7Click to open the price editor.");
-		session.handler.setItem(SLOT_PRICE, price, false, (p, inv, b) -> openPriceEditor(p, session));
+		handler.setItem(SLOT_PRICE, price, false, (p, inv, b) -> openBasePriceEditor(host, session));
 	}
 
-	private void renderItems(Player admin, Session session) {
-		int capacity = ITEM_SLOTS.length;
+	private void renderItems(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler,
+	                         ShopAdminFlowSession session) {
+		SellCategory category = session.sellCategoryInEdit;
+		int          capacity = ITEM_SLOTS.length;
 		for (int i = 0; i < capacity; i++) {
 			int slot = ITEM_SLOTS[i];
-			if (i < session.category.getItems().size()) {
+			if (i < category.getItems().size()) {
 				final int   finalIndex = i;
-				ItemBuilder display    = new ItemBuilder(session.category.getItems().get(i).clone());
-				session.handler.setItem(slot, display, false,
-				                        (p, inv, b) -> openPerItemPriceEditor(admin, session, finalIndex),
-				                        (p, inv, b) -> removeItem(admin, session, finalIndex));
+				ItemBuilder display    = new ItemBuilder(category.getItems().get(i).clone());
+				handler.setItem(slot, display, false,
+				                (p, inv, b) -> openPerItemPriceEditor(host, session, finalIndex),
+				                (p, inv, b) -> removeItem(host, session, finalIndex));
 			} else {
-				session.handler.getInventory().setItem(slot, null);
+				handler.getInventory().setItem(slot, null);
 			}
 		}
 	}
 
-	private void removeItem(Player admin, Session session, int index) {
-		if (index >= session.category.getItems().size()) return;
-		session.category.getItems().remove(index);
-		renderItems(admin, session);
+	/**
+	 * Used by the listener-dispatched appendItem path — no need to touch chrome, just refresh the item grid.
+	 */
+	private void renderItemsDirect(ActiveContext ctx) {
+		int capacity = ITEM_SLOTS.length;
+		for (int i = 0; i < capacity; i++) {
+			int slot = ITEM_SLOTS[i];
+			if (i < ctx.category.getItems().size()) {
+				final int   finalIndex = i;
+				ItemBuilder display    = new ItemBuilder(ctx.category.getItems().get(i).clone());
+				ctx.handler.setItem(slot, display, false,
+				                    (p, inv, b) -> openPerItemPriceEditor(ctx.host, ctx.host.session(), finalIndex),
+				                    (p, inv, b) -> removeItem(ctx.host, ctx.host.session(), finalIndex));
+			} else {
+				ctx.handler.getInventory().setItem(slot, null);
+			}
+		}
 	}
 
-	private void openPerItemPriceEditor(Player admin, Session session, int index) {
-		if (index >= session.category.getItems().size()) return;
+	private void removeItem(MultiPanelInventory<ShopAdminFlowSession> host, ShopAdminFlowSession session, int index) {
+		SellCategory category = session.sellCategoryInEdit;
+		if (category == null || index >= category.getItems().size()) return;
+		category.getItems().remove(index);
+		ActiveContext ctx = active.get(host.viewer());
+		if (ctx != null) renderItemsDirect(ctx);
+	}
 
-		session.pendingSubview = true;
-		ItemStack source = session.category.getItems().get(index).clone();
+	private void openPerItemPriceEditor(MultiPanelInventory<ShopAdminFlowSession> host, ShopAdminFlowSession session,
+	                                    int index) {
+		SellCategory category = session.sellCategoryInEdit;
+		if (category == null || index >= category.getItems().size()) return;
+
+		ItemStack source = category.getItems().get(index).clone();
 
 		ItemBuilder builder = new ItemBuilder(source);
 		BigDecimal  currentPrice;
@@ -209,51 +223,47 @@ public final class SellCategoryItemsAdminView {
 			if (raw instanceof Number n) {
 				currentPrice = BigDecimal.valueOf(n.doubleValue());
 			} else if (raw != null) {
-				try {
-					currentPrice = new BigDecimal(String.valueOf(raw).trim());
-				} catch (NumberFormatException ignored) {
-					currentPrice = session.category.getBasePrice();
-				}
+				try { currentPrice = new BigDecimal(String.valueOf(raw).trim()); } catch (
+						NumberFormatException ignored) { currentPrice = category.getBasePrice(); }
 			} else {
-				currentPrice = session.category.getBasePrice();
+				currentPrice = category.getBasePrice();
 			}
 		} else {
-			currentPrice = session.category.getBasePrice();
+			currentPrice = category.getBasePrice();
 		}
 
-		Runnable reopen = () -> {
-			session.pendingSubview = false;
-			renderChrome(session);
-			renderItems(admin, session);
-			session.handler.open(admin);
-		};
-
-		ItemStack decorated = refresherRegistry.decorate(source, admin);
+		ItemStack decorated = refresherRegistry.decorate(source, host.viewer());
 		String    label     = displayResolver.cleanDisplayName(decorated);
-		priceEditorView.openGeneric(admin, source, currentPrice, "Item " + label, value -> {
-			if (index >= session.category.getItems().size()) return;
-			ItemStack existing = session.category.getItems().get(index);
+		session.priceEditItem        = source;
+		session.priceEditOriginal    = currentPrice;
+		session.priceEditStaged      = currentPrice;
+		session.priceEditMode        = 1;
+		session.priceEditTitleSuffix = "Item " + label;
+		session.priceEditCommit      = value -> {
+			if (index >= category.getItems().size()) return;
+			ItemStack existing = category.getItems().get(index);
 			ItemStack tagged = new ItemBuilder(existing)
 					.addTag(CategorySellValuator.SELL_PRICE_NBT_KEY, value.toPlainString()).build();
-			session.category.getItems().set(index, tagged);
-		}, reopen);
+			category.getItems().set(index, tagged);
+		};
+		host.switchTo(ShopAdminFlowSession.PANEL_PRICE_EDITOR);
 	}
 
-	private void openPriceEditor(Player admin, Session session) {
-		session.pendingSubview = true;
+	private void openBasePriceEditor(MultiPanelInventory<ShopAdminFlowSession> host, ShopAdminFlowSession session) {
+		SellCategory category = session.sellCategoryInEdit;
+		if (category == null) return;
 
-		ItemStack preview = session.category.getItems().isEmpty() ?
-		                    new ItemStack(Material.GOLD_INGOT) :
-		                    session.category.getItems().getFirst().clone();
+		ItemStack preview = category.getItems().isEmpty()
+		                    ? new ItemStack(Material.GOLD_INGOT)
+		                    : category.getItems().getFirst().clone();
 
-		Runnable reopen = () -> {
-			session.pendingSubview = false;
-			renderChrome(session);
-			session.handler.open(admin);
-		};
-
-		priceEditorView.openGeneric(admin, preview, session.category.getBasePrice(),
-		                            "Category " + session.category.getId(), session.category::setBasePrice, reopen);
+		session.priceEditItem        = preview;
+		session.priceEditOriginal    = category.getBasePrice();
+		session.priceEditStaged      = category.getBasePrice();
+		session.priceEditMode        = 1;
+		session.priceEditTitleSuffix = "Category " + category.getId();
+		session.priceEditCommit      = category::setBasePrice;
+		host.switchTo(ShopAdminFlowSession.PANEL_PRICE_EDITOR);
 	}
 
 	private ItemStack material(XMaterial preferred, Material fallback) {
@@ -261,17 +271,7 @@ public final class SellCategoryItemsAdminView {
 		return stack != null ? stack : new ItemStack(fallback);
 	}
 
-	static final class Session {
-		final SellCategory     category;
-		final InventoryHandler handler;
-		final Runnable         onClose;
-		boolean pendingSubview = false;
-
-		Session(SellCategory category, InventoryHandler handler, Runnable onClose) {
-			this.category = category;
-			this.handler  = handler;
-			this.onClose  = onClose;
-		}
-	}
+	private record ActiveContext(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler,
+	                             SellCategory category) { }
 
 }

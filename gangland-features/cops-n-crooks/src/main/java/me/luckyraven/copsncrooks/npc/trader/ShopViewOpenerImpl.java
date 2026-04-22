@@ -8,7 +8,7 @@ import me.luckyraven.copsncrooks.npc.trader.view.TraderFlow;
 import me.luckyraven.shop.ShopDefinition;
 import me.luckyraven.shop.ShopRegistry;
 import me.luckyraven.shop.message.ShopMessageContract;
-import me.luckyraven.shop.view.ShopAdminView;
+import me.luckyraven.shop.view.ShopAdminFlow;
 import org.bukkit.entity.Player;
 
 @CustomLog
@@ -20,7 +20,7 @@ public class ShopViewOpenerImpl implements ShopViewOpener {
 	private final TraderManager         traderManager;
 	private final ShopRegistry          shopRegistry;
 	private final TraderFlow            traderFlow;
-	private final ShopAdminView         adminView;
+	private final ShopAdminFlow         adminFlow;
 	private final ShopMessageContract   shopMessages;
 	private final TraderMessageContract traderMessages;
 
@@ -39,7 +39,7 @@ public class ShopViewOpenerImpl implements ShopViewOpener {
 		}
 
 		if (player.hasPermission(ADMIN_PERMISSION) && player.isSneaking()) {
-			adminView.open(player, def);
+			adminFlow.start(player, def);
 			return;
 		}
 
@@ -52,7 +52,7 @@ public class ShopViewOpenerImpl implements ShopViewOpener {
 			admin.sendMessage(shopMessages.shopNotDefined(shopKey));
 			return;
 		}
-		adminView.open(admin, def);
+		adminFlow.start(admin, def);
 	}
 
 }

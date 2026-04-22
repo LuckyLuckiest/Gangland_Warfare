@@ -9,7 +9,7 @@ import me.luckyraven.core.datastructure.Tree;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.shop.ShopDefinition;
 import me.luckyraven.shop.ShopRegistry;
-import me.luckyraven.shop.view.ShopAdminView;
+import me.luckyraven.shop.view.ShopAdminFlow;
 import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -21,16 +21,16 @@ class ShopEditCommand extends SubArgument {
 	private final Gangland       gangland;
 	private final Tree<Argument> tree;
 	private final ShopRegistry   shopRegistry;
-	private final ShopAdminView  adminView;
+	private final ShopAdminFlow  adminFlow;
 
 	protected ShopEditCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
-	                          ShopRegistry shopRegistry, ShopAdminView adminView) {
+	                          ShopRegistry shopRegistry, ShopAdminFlow adminFlow) {
 		super(gangland, "edit", tree, parent);
 
 		this.gangland     = gangland;
 		this.tree         = tree;
 		this.shopRegistry = shopRegistry;
-		this.adminView    = adminView;
+		this.adminFlow    = adminFlow;
 
 		registerKeyArgument();
 	}
@@ -52,7 +52,7 @@ class ShopEditCommand extends SubArgument {
 				return;
 			}
 
-			adminView.open(player, def);
+			adminFlow.start(player, def);
 		}, sender -> new ArrayList<>(shopRegistry.keys()));
 
 		this.addSubArgument(key);

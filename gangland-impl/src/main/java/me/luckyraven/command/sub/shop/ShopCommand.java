@@ -5,7 +5,7 @@ import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.core.bean.command.CommandHandler;
 import me.luckyraven.shop.ShopRegistry;
-import me.luckyraven.shop.view.ShopAdminView;
+import me.luckyraven.shop.view.ShopAdminFlow;
 import org.bukkit.command.CommandSender;
 
 import java.util.Map;
@@ -14,12 +14,12 @@ import java.util.Map;
 public class ShopCommand extends Command {
 
 	private final ShopRegistry  shopRegistry;
-	private final ShopAdminView adminView;
+	private final ShopAdminFlow adminFlow;
 
-	public ShopCommand(Gangland gangland, ShopRegistry shopRegistry, ShopAdminView adminView) {
+	public ShopCommand(Gangland gangland, ShopRegistry shopRegistry, ShopAdminFlow adminFlow) {
 		super(gangland, "shop", true, "shops");
 		this.shopRegistry = shopRegistry;
-		this.adminView    = adminView;
+		this.adminFlow    = adminFlow;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -40,7 +40,7 @@ public class ShopCommand extends Command {
 		getArgument().addSubArgument(new ShopCreateCommand(getGangland(), getArgumentTree(), getArgument(),
 		                                                   shopRegistry));
 		getArgument().addSubArgument(new ShopEditCommand(getGangland(), getArgumentTree(), getArgument(),
-		                                                 shopRegistry, adminView));
+		                                                 shopRegistry, adminFlow));
 		getArgument().addSubArgument(new ShopListCommand(getGangland(), getArgumentTree(), getArgument(),
 		                                                 shopRegistry));
 		getArgument().addSubArgument(new ShopRemoveCommand(getGangland(), getArgumentTree(), getArgument(),

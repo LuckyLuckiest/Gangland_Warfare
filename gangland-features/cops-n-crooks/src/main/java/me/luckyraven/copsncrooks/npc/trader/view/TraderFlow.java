@@ -9,20 +9,21 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
- * Entry point for the trader NPC flow. Builds a fresh {@link MultiPanelInventory} per-viewer, registers the three
- * in-flow panels ({@link ModeSelectView}, {@link ShopView}, {@link NegotiationView}), and opens at the mode-select
- * panel. Sell + barter + quantity-selector continue to live as standalone legacy views that the negotiation panel
- * bridges into via {@link MultiPanelInventory#suspend()} / {@link MultiPanelInventory#resume()}.
+ * Entry point for the trader NPC flow. Builds a fresh {@link MultiPanelInventory} per-viewer, registers every trader
+ * panel (mode select, shop, negotiation, sell, barter, quantity), and opens at the mode-select panel. Every in-flow
+ * transition is a {@link MultiPanelInventory#switchTo(String)} — the framework re-renders into the same inventory
+ * handle when size + title match, or rebuilds otherwise without losing the session.
  */
 @RequiredArgsConstructor
 public final class TraderFlow {
 
-	private final JavaPlugin      plugin;
-	private final ModeSelectView  modeSelectPanel;
-	private final ShopView        shopPanel;
-	private final NegotiationView negotiationPanel;
-	private final SellView        sellPanel;
-	private final BarterView      barterPanel;
+	private final JavaPlugin           plugin;
+	private final ModeSelectView       modeSelectPanel;
+	private final ShopView             shopPanel;
+	private final NegotiationView      negotiationPanel;
+	private final SellView             sellPanel;
+	private final BarterView           barterPanel;
+	private final QuantitySelectorView quantityPanel;
 
 	public void start(Player viewer, TraderNpc trader, ShopDefinition definition, TraderTraitDefinition trait) {
 		TraderFlowSession                      session = new TraderFlowSession(trader, definition, trait);
@@ -32,6 +33,7 @@ public final class TraderFlow {
 		host.register(TraderFlowSession.PANEL_NEGOTIATION, negotiationPanel);
 		host.register(TraderFlowSession.PANEL_SELL, sellPanel);
 		host.register(TraderFlowSession.PANEL_BARTER, barterPanel);
+		host.register(TraderFlowSession.PANEL_QUANTITY, quantityPanel);
 		host.openAt(TraderFlowSession.PANEL_MODE_SELECT);
 	}
 
