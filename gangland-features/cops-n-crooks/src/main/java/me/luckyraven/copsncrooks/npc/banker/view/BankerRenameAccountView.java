@@ -2,13 +2,11 @@ package me.luckyraven.copsncrooks.npc.banker.view;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import me.luckyraven.copsncrooks.npc.banker.BankerNpc;
-import me.luckyraven.copsncrooks.npc.banker.config.BankerSettings;
 import me.luckyraven.copsncrooks.npc.banker.economy.BankerEconomyContract;
 import me.luckyraven.copsncrooks.npc.banker.economy.BankerEconomyContract.RenameInfo;
 import me.luckyraven.copsncrooks.npc.banker.message.BankerMessageContract;
 import me.luckyraven.core.configuration.SoundConfiguration;
+import me.luckyraven.inventory.flow.MultiPanelInventory;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -19,6 +17,12 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Anvil prompt for renaming the bank account. Not a {@link me.luckyraven.inventory.flow.Panel} itself — it has no
+ * inventory of its own; the whole interaction is one AnvilGUI popup. Invoked from {@link BankerMenuView}'s RENAME click
+ * with the active flow host so the flow can be suspended for the anvil detour and resumed (returning to the menu panel)
+ * on anvil close.
+ */
 @RequiredArgsConstructor
 public final class BankerRenameAccountView {
 
@@ -28,28 +32,23 @@ public final class BankerRenameAccountView {
 	                                                                               "ENTITY_VILLAGER_NO", 0.8f, 1.0f);
 
 	private final JavaPlugin            plugin;
-	private final BankerSettings        settings;
 	private final BankerEconomyContract economy;
 	private final BankerMessageContract messages;
 
-	@Setter
-	private BankerMenuView menuView;
-
-	public void open(Player viewer, BankerNpc banker) {
+	public void open(MultiPanelInventory<BankerFlowSession> host, Player viewer) {
 		RenameInfo info = economy.renameInfo(viewer);
 		if (!info.hasAccount()) {
 			viewer.sendMessage(messages.noAccount());
-			SOUND_DENY.playSound(viewer);
-			returnToMenu(viewer, banker);
+			playSoundNextTick(viewer, SOUND_DENY);
 			return;
 		}
 		if (!info.canAfford()) {
 			viewer.sendMessage(messages.renameCannotAfford(info.fee()));
-			SOUND_DENY.playSound(viewer);
-			returnToMenu(viewer, banker);
+			playSoundNextTick(viewer, SOUND_DENY);
 			return;
 		}
 
+		host.suspend();
 		new AnvilGUI.Builder()
 				.plugin(plugin)
 				.title("Rename (Fee: $" + info.fee().toPlainString() + ")")
@@ -63,7 +62,7 @@ public final class BankerRenameAccountView {
 					BankerEconomyContract.Result result = economy.tryRenameAccount(viewer, text);
 					String msg = switch (result) {
 						case SUCCESS -> {
-							SOUND_CONFIRM.playSound(viewer);
+							playSoundNextTick(viewer, SOUND_CONFIRM);
 							yield messages.renameSuccess(info.currentName(), text);
 						}
 						case NAME_EMPTY -> messages.renameNameEmpty();
@@ -76,7 +75,7 @@ public final class BankerRenameAccountView {
 					if (result != BankerEconomyContract.Result.SUCCESS
 					    && result != BankerEconomyContract.Result.NAME_EMPTY
 					    && result != BankerEconomyContract.Result.NAME_UNCHANGED) {
-						SOUND_DENY.playSound(viewer);
+						playSoundNextTick(viewer, SOUND_DENY);
 					}
 
 					// Stay open on NAME_EMPTY / NAME_UNCHANGED so the player can correct the entry without re-opening.
@@ -87,18 +86,20 @@ public final class BankerRenameAccountView {
 
 					return List.of(AnvilGUI.ResponseAction.close());
 				})
-				.onClose(state -> returnToMenu(viewer, banker))
+				.onClose(state -> Bukkit.getScheduler().runTask(plugin, () -> {
+					host.resume();
+					host.switchTo(BankerFlowSession.PANEL_MENU);
+				}))
 				.open(viewer);
-	}
-
-	private void returnToMenu(Player viewer, BankerNpc banker) {
-		if (menuView == null) return;
-		Bukkit.getScheduler().runTask(plugin, () -> menuView.open(viewer, banker));
 	}
 
 	private ItemStack material(XMaterial preferred, Material fallback) {
 		ItemStack stack = preferred.parseItem();
 		return stack != null ? stack : new ItemStack(fallback);
+	}
+
+	private void playSoundNextTick(Player player, SoundConfiguration sound) {
+		Bukkit.getScheduler().runTask(plugin, () -> sound.playSound(player));
 	}
 
 }

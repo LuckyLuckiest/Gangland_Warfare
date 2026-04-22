@@ -2,8 +2,6 @@ package me.luckyraven.copsncrooks.npc.banker.view;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import me.luckyraven.copsncrooks.npc.banker.BankerNpc;
 import me.luckyraven.copsncrooks.npc.banker.config.BankerSettings;
 import me.luckyraven.copsncrooks.npc.banker.economy.BankerEconomyContract;
 import me.luckyraven.copsncrooks.npc.banker.economy.BankerEconomyContract.BankerSnapshot;
@@ -13,6 +11,8 @@ import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.core.configuration.SoundConfiguration;
 import me.luckyraven.core.utilities.NumberUtil;
 import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.flow.MultiPanelInventory;
+import me.luckyraven.inventory.flow.Panel;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
 import org.bukkit.Bukkit;
@@ -23,8 +23,17 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.math.BigDecimal;
 
+/**
+ * Upgrade panel inside the banker flow. Previously a standalone view with its own {@code open(Player, BankerNpc)} +
+ * {@code closeInventory()/menuView.open(...)} return path; now a {@link Panel} that renders into the flow's active
+ * inventory handle and uses {@link MultiPanelInventory#back()} to return to the menu.
+ *
+ * <p>Preconditions (account present, a next tier exists) are already gated by {@link BankerMenuView}'s UPGRADE
+ * button — it only shows when {@code snap.nextTier() != null}. If a race condition removes the next tier between click
+ * and render (e.g. admin grant), the panel renders in its "no upgrade available" stub state with just a cancel button.
+ */
 @RequiredArgsConstructor
-public final class BankerUpgradeView {
+public final class BankerUpgradeView implements Panel<BankerFlowSession> {
 
 	private static final int SIZE         = 27;
 	private static final int SLOT_CURRENT = 11;
@@ -45,32 +54,53 @@ public final class BankerUpgradeView {
 	private final BankerEconomyContract economy;
 	private final BankerMessageContract messages;
 
-	@Setter
-	private BankerMenuView menuView;
-
 	private static String format(BigDecimal value) {
 		return NumberUtil.valueFormat(value);
 	}
 
-	public void open(Player viewer, BankerNpc banker) {
+	@Override
+	public int size(BankerFlowSession session) {
+		return SIZE;
+	}
+
+	@Override
+	public String title(BankerFlowSession session) {
+		return "&8&l[&b&l" + session.displayName() + "&8&l] &7Upgrade";
+	}
+
+	@Override
+	public void render(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler, Player viewer,
+	                   BankerFlowSession session) {
 		BankerSnapshot snap = economy.snapshot(viewer);
-		if (!snap.hasBank()) {
-			viewer.sendMessage(messages.noAccount());
-			return;
-		}
-		BankTier next = snap.nextTier();
+		BankTier       next = snap.hasBank() ? snap.nextTier() : null;
+
 		if (next == null) {
-			viewer.sendMessage(messages.upgradeMaxTier());
-			SOUND_DENY.playSound(viewer);
-			if (menuView != null) Bukkit.getScheduler().runTask(plugin, () -> menuView.open(viewer, banker));
-			return;
+			renderUnavailable(host, handler, snap);
+		} else {
+			renderUpgradeOffer(host, handler, snap, next, session);
 		}
 
-		String name  = banker.getData().getDisplayName() != null ? banker.getData().getDisplayName() : "Banker";
-		String title = "&8&l[&b&l" + name + "&8&l] &7Upgrade";
+		InventoryUtil.fillInventory(handler,
+		                            new Fill(settings.getInventoryFillName(), settings.getInventoryFillItem()));
+	}
 
-		InventoryHandler handler = new InventoryHandler(plugin, title, SIZE, viewer);
+	private void renderUnavailable(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler,
+	                               BankerSnapshot snap) {
+		ItemBuilder info = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER));
+		info.setDisplayName("&7No upgrade available")
+		    .setLore(snap.hasBank() ? "&8Your account is at the top tier." : "&8Open a bank account first.");
+		handler.setItem(SLOT_CURRENT, info, false, (p, inv, b) -> { });
 
+		ItemBuilder cancel = new ItemBuilder(material(XMaterial.RED_WOOL, Material.RED_WOOL));
+		cancel.setDisplayName("&cBACK");
+		handler.setItem(SLOT_CANCEL, cancel, false, (p, inv, b) -> {
+			host.back();
+			playSoundNextTick(p, SOUND_CANCEL);
+		});
+	}
+
+	private void renderUpgradeOffer(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler,
+	                                BankerSnapshot snap, BankTier next, BankerFlowSession session) {
 		BankTier    current     = snap.currentTier();
 		ItemBuilder currentItem = new ItemBuilder(material(XMaterial.IRON_BLOCK, Material.IRON_BLOCK));
 		currentItem.setDisplayName("&7Current: " + (current != null ? current.displayName() : "&8None"))
@@ -91,37 +121,33 @@ public final class BankerUpgradeView {
 		ItemBuilder confirm = new ItemBuilder(material(XMaterial.LIME_WOOL, Material.GREEN_WOOL));
 		confirm.setDisplayName("&a&lCONFIRM UPGRADE")
 		       .setLore("&7Pay &6$" + format(next.upgradeCost()) + " &7from your bank.");
-		handler.setItem(SLOT_CONFIRM, confirm, false, (p, inv, b) -> performUpgrade(p, banker, next));
+		handler.setItem(SLOT_CONFIRM, confirm, false, (p, inv, b) -> performUpgrade(host, p, session, next));
 
 		ItemBuilder cancel = new ItemBuilder(material(XMaterial.RED_WOOL, Material.RED_WOOL));
 		cancel.setDisplayName("&cCANCEL");
 		handler.setItem(SLOT_CANCEL, cancel, false, (p, inv, b) -> {
-			SOUND_CANCEL.playSound(p);
-			p.closeInventory();
-			if (menuView != null) Bukkit.getScheduler().runTask(plugin, () -> menuView.open(p, banker));
+			host.back();
+			playSoundNextTick(p, SOUND_CANCEL);
 		});
-
-		InventoryUtil.fillInventory(handler,
-		                            new Fill(settings.getInventoryFillName(), settings.getInventoryFillItem()));
-
-		handler.open(viewer);
 	}
 
-	private void performUpgrade(Player viewer, BankerNpc banker, BankTier next) {
+	private void performUpgrade(MultiPanelInventory<BankerFlowSession> host, Player viewer, BankerFlowSession session,
+	                            BankTier next) {
 		BankerEconomyContract.Result result = economy.tryUpgrade(viewer);
+		SoundConfiguration           sound  = null;
 		String                       msg;
 		switch (result) {
 			case SUCCESS -> {
-				msg = messages.upgradeSuccess(next.displayName());
-				SOUND_CONFIRM.playSound(viewer);
+				msg   = messages.upgradeSuccess(next.displayName());
+				sound = SOUND_CONFIRM;
 			}
 			case ALREADY_MAX_TIER -> {
-				msg = messages.upgradeMaxTier();
-				SOUND_DENY.playSound(viewer);
+				msg   = messages.upgradeMaxTier();
+				sound = SOUND_DENY;
 			}
 			case INSUFFICIENT_BANK_FUNDS -> {
-				msg = messages.upgradeInsufficientFunds(next.upgradeCost());
-				SOUND_DENY.playSound(viewer);
+				msg   = messages.upgradeInsufficientFunds(next.upgradeCost());
+				sound = SOUND_DENY;
 			}
 			case NO_ACCOUNT -> msg = messages.noAccount();
 			case TIER_MISSING -> msg = messages.tierMissing();
@@ -129,13 +155,28 @@ public final class BankerUpgradeView {
 		}
 		if (msg != null) viewer.sendMessage(msg);
 
-		viewer.closeInventory();
-		if (menuView != null) Bukkit.getScheduler().runTask(plugin, () -> menuView.open(viewer, banker));
+		// After the economy mutation: on success, return to the menu so the new tier renders; on failure, re-render
+		// this panel so the offer reflects the (still) current bank state.
+		if (result == BankerEconomyContract.Result.SUCCESS) {
+			host.back();
+		} else {
+			host.rerender();
+		}
+		if (sound != null) playSoundNextTick(viewer, sound);
 	}
 
 	private ItemStack material(XMaterial preferred, Material fallback) {
 		ItemStack stack = preferred.parseItem();
 		return stack != null ? stack : new ItemStack(fallback);
+	}
+
+	/**
+	 * Defers the sound by one tick so it plays after the panel swap has settled on the client. Playing the sound in the
+	 * same tick as a flow transition makes the client render the audio cue and the inventory change together, which the
+	 * viewer experiences as a flicker.
+	 */
+	private void playSoundNextTick(Player player, SoundConfiguration sound) {
+		Bukkit.getScheduler().runTask(plugin, () -> sound.playSound(player));
 	}
 
 }

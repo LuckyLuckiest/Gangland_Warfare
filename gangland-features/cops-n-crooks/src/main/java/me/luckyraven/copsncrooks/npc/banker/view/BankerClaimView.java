@@ -2,8 +2,6 @@ package me.luckyraven.copsncrooks.npc.banker.view;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import me.luckyraven.copsncrooks.npc.banker.BankerNpc;
 import me.luckyraven.copsncrooks.npc.banker.config.BankerSettings;
 import me.luckyraven.copsncrooks.npc.banker.economy.BankerEconomyContract;
 import me.luckyraven.copsncrooks.npc.banker.economy.BankerEconomyContract.ClaimInfo;
@@ -12,6 +10,8 @@ import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.core.configuration.SoundConfiguration;
 import me.luckyraven.core.utilities.NumberUtil;
 import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.flow.MultiPanelInventory;
+import me.luckyraven.inventory.flow.Panel;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
 import org.bukkit.Bukkit;
@@ -26,8 +26,13 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Rewards-claim panel inside the banker flow. Shows the weekly + monthly bonus icons with their current
+ * ready/cooldown/disabled state; clicking a ready icon grants the reward into the bank balance and
+ * {@link MultiPanelInventory#rerender() rerenders} the panel so the cooldown icon updates immediately.
+ */
 @RequiredArgsConstructor
-public final class BankerClaimView {
+public final class BankerClaimView implements Panel<BankerFlowSession> {
 
 	private static final int SIZE         = 27;
 	private static final int SLOT_INFO    = 4;
@@ -47,48 +52,58 @@ public final class BankerClaimView {
 	private final BankerEconomyContract economy;
 	private final BankerMessageContract messages;
 
-	@Setter
-	private BankerMenuView menuView;
+	@Override
+	public int size(BankerFlowSession session) {
+		return SIZE;
+	}
 
-	public void open(Player viewer, BankerNpc banker) {
+	@Override
+	public String title(BankerFlowSession session) {
+		return "&8&l[&b&l" + session.displayName() + "&8&l] &6Rewards";
+	}
+
+	@Override
+	public void render(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler, Player viewer,
+	                   BankerFlowSession session) {
 		ClaimInfo info = economy.claimInfo(viewer);
+
 		if (!info.hasAccount()) {
-			viewer.sendMessage(messages.noAccount());
-			SOUND_DENY.playSound(viewer);
-			if (menuView != null) Bukkit.getScheduler().runTask(plugin, () -> menuView.open(viewer, banker));
-			return;
+			renderNoAccount(host, handler);
+		} else {
+			renderRewards(host, handler, info);
 		}
 
-		String name  = banker.getData().getDisplayName() != null ? banker.getData().getDisplayName() : "Banker";
-		String title = "&8&l[&b&l" + name + "&8&l] &6Rewards";
+		ItemBuilder back = new ItemBuilder(material(XMaterial.ARROW, Material.ARROW)).setDisplayName("&7Back");
+		handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> {
+			host.back();
+			playSoundNextTick(p, SOUND_CANCEL);
+		});
 
-		InventoryHandler handler = new InventoryHandler(plugin, title, SIZE, viewer);
+		InventoryUtil.fillInventory(handler,
+		                            new Fill(settings.getInventoryFillName(), settings.getInventoryFillItem()));
+	}
 
+	private void renderNoAccount(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler) {
+		ItemBuilder infoItem = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER));
+		infoItem.setDisplayName("&cNo bank account on file")
+		        .setLore("&8Open an account first to unlock weekly + monthly rewards.");
+		handler.setItem(SLOT_INFO, infoItem, false, (p, inv, b) -> { });
+	}
+
+	private void renderRewards(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler, ClaimInfo info) {
 		ItemBuilder infoItem = new ItemBuilder(material(XMaterial.PAPER, Material.PAPER));
 		infoItem.setDisplayName("&6&lFree Rewards")
 		        .setLore("&7Claim tier-scaled bonuses on cooldown.", "&7Grants go straight to your bank balance.");
 		handler.setItem(SLOT_INFO, infoItem, false, (p, inv, b) -> { });
 
-		renderRewardIcon(handler, SLOT_WEEKLY, "WEEKLY", info.weeklyAmount(), info.weeklyReadyAt(), banker,
+		renderRewardIcon(host, handler, SLOT_WEEKLY, "WEEKLY", info.weeklyAmount(), info.weeklyReadyAt(),
 		                 ClaimKind.WEEKLY);
-		renderRewardIcon(handler, SLOT_MONTHLY, "MONTHLY", info.monthlyAmount(), info.monthlyReadyAt(), banker,
+		renderRewardIcon(host, handler, SLOT_MONTHLY, "MONTHLY", info.monthlyAmount(), info.monthlyReadyAt(),
 		                 ClaimKind.MONTHLY);
-
-		ItemBuilder back = new ItemBuilder(material(XMaterial.ARROW, Material.ARROW)).setDisplayName("&7Back");
-		handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> {
-			SOUND_CANCEL.playSound(p);
-			p.closeInventory();
-			if (menuView != null) Bukkit.getScheduler().runTask(plugin, () -> menuView.open(p, banker));
-		});
-
-		InventoryUtil.fillInventory(handler,
-		                            new Fill(settings.getInventoryFillName(), settings.getInventoryFillItem()));
-
-		handler.open(viewer);
 	}
 
-	private void renderRewardIcon(InventoryHandler handler, int slot, String label, BigDecimal amount,
-	                              java.time.Instant readyAt, BankerNpc banker, ClaimKind kind) {
+	private void renderRewardIcon(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler, int slot,
+	                              String label, BigDecimal amount, Instant readyAt, ClaimKind kind) {
 		boolean disabled = amount == null || amount.signum() <= 0;
 		boolean ready    = !disabled && (readyAt == null || !Instant.now().isBefore(readyAt));
 
@@ -129,11 +144,11 @@ public final class BankerClaimView {
 				p.sendMessage(messages.loanOnCooldown(formatDuration(Duration.between(Instant.now(), readyAt))));
 				return;
 			}
-			performClaim(p, banker, kind);
+			performClaim(host, p, kind);
 		});
 	}
 
-	private void performClaim(Player viewer, BankerNpc banker, ClaimKind kind) {
+	private void performClaim(MultiPanelInventory<BankerFlowSession> host, Player viewer, ClaimKind kind) {
 		BankerEconomyContract.Result result = kind == ClaimKind.WEEKLY ?
 		                                      economy.tryClaimWeekly(viewer) :
 		                                      economy.tryClaimMonthly(viewer);
@@ -141,27 +156,27 @@ public final class BankerClaimView {
 		ClaimInfo  refreshed = economy.claimInfo(viewer);
 		BigDecimal amount    = kind == ClaimKind.WEEKLY ? refreshed.weeklyAmount() : refreshed.monthlyAmount();
 
-		String msg;
+		SoundConfiguration sound = null;
+		String             msg;
 		switch (result) {
 			case SUCCESS -> {
-				msg = kind == ClaimKind.WEEKLY ?
-				      messages.weeklyLoanSuccess(amount) :
-				      messages.monthlyLoanSuccess(amount);
-				SOUND_CONFIRM.playSound(viewer);
+				msg   = kind == ClaimKind.WEEKLY ? messages.weeklyLoanSuccess(amount)
+				                                 : messages.monthlyLoanSuccess(amount);
+				sound = SOUND_CONFIRM;
 			}
 			case LOAN_ON_COOLDOWN -> {
 				Instant readyAt = kind == ClaimKind.WEEKLY ? refreshed.weeklyReadyAt() : refreshed.monthlyReadyAt();
 				String  remain  = readyAt == null ? "<1m" : formatDuration(Duration.between(Instant.now(), readyAt));
-				msg = messages.loanOnCooldown(remain);
-				SOUND_DENY.playSound(viewer);
+				msg   = messages.loanOnCooldown(remain);
+				sound = SOUND_DENY;
 			}
 			case LOAN_DISABLED -> {
-				msg = messages.loanDisabled();
-				SOUND_DENY.playSound(viewer);
+				msg   = messages.loanDisabled();
+				sound = SOUND_DENY;
 			}
 			case LOAN_CAP_FULL -> {
-				msg = messages.loanCapFull(amount);
-				SOUND_DENY.playSound(viewer);
+				msg   = messages.loanCapFull(amount);
+				sound = SOUND_DENY;
 			}
 			case NO_ACCOUNT -> msg = messages.noAccount();
 			case TIER_MISSING -> msg = messages.tierMissing();
@@ -169,8 +184,9 @@ public final class BankerClaimView {
 		}
 		if (msg != null) viewer.sendMessage(msg);
 
-		// Re-render so cooldown icon updates immediately.
-		open(viewer, banker);
+		// Re-render so cooldown icon updates immediately against the fresh ClaimInfo snapshot.
+		host.rerender();
+		if (sound != null) playSoundNextTick(viewer, sound);
 	}
 
 	private String formatDuration(Duration duration) {
@@ -188,6 +204,15 @@ public final class BankerClaimView {
 	private ItemStack material(XMaterial preferred, Material fallback) {
 		ItemStack stack = preferred.parseItem();
 		return stack != null ? stack : new ItemStack(fallback);
+	}
+
+	/**
+	 * Defers the sound by one tick so it plays after the panel swap / rerender has settled on the client. Playing the
+	 * sound inline in the same tick as a flow transition makes the client render audio and inventory change together,
+	 * which the viewer experiences as a flicker.
+	 */
+	private void playSoundNextTick(Player player, SoundConfiguration sound) {
+		Bukkit.getScheduler().runTask(plugin, () -> sound.playSound(player));
 	}
 
 	private enum ClaimKind {

@@ -98,10 +98,9 @@ public class BankerConfig {
 	}
 
 	@Bean
-	public BankerRenameAccountView bankerRenameAccountView(BankerSettings settings,
-	                                                       BankerEconomyContract economy,
+	public BankerRenameAccountView bankerRenameAccountView(BankerEconomyContract economy,
 	                                                       BankerMessageContract messages) {
-		return new BankerRenameAccountView(gangland, settings, economy, messages);
+		return new BankerRenameAccountView(gangland, economy, messages);
 	}
 
 	@Bean
@@ -115,28 +114,16 @@ public class BankerConfig {
 	public BankerMenuView bankerMenuView(BankerSettings settings,
 	                                     BankerEconomyContract economy,
 	                                     BankerMessageContract messages,
-	                                     BankerAmountView amountView,
-	                                     BankerUpgradeView upgradeView,
-	                                     BankerCreateAccountView createView,
-	                                     BankerRenameAccountView renameView,
-	                                     BankerClaimView claimView) {
+	                                     BankerRenameAccountView renameView) {
 		BankerMenuView view = new BankerMenuView(gangland, settings, economy, messages);
-		view.setSubViews(amountView, upgradeView, createView, renameView, claimView);
-		amountView.setMenuView(view);
-		upgradeView.setMenuView(view);
-		createView.setMenuView(view);
-		renameView.setMenuView(view);
-		claimView.setMenuView(view);
+		view.setSubViews(renameView);
 		return view;
 	}
 
 	@Bean
-	public BankerFlow bankerFlow(BankerMenuView menuPanel) {
-		BankerFlow flow = new BankerFlow(gangland, menuPanel);
-		// Circular: subviews call menuView.open(...) to "return to menu", which delegates to bankerFlow.start(...).
-		// Wired via setter so BankerMenuView can be constructed before BankerFlow exists.
-		menuPanel.setBankerFlow(flow);
-		return flow;
+	public BankerFlow bankerFlow(BankerMenuView menuPanel, BankerUpgradeView upgradePanel, BankerClaimView claimPanel,
+	                             BankerAmountView amountPanel, BankerCreateAccountView createPanel) {
+		return new BankerFlow(gangland, menuPanel, upgradePanel, claimPanel, amountPanel, createPanel);
 	}
 
 	// ── NPC lifecycle ───────────────────────────────────────────────────

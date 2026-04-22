@@ -8,12 +8,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 
 /**
- * Singleton click / drag / close listener for the player-facing sell view. Delegates to {@link SellView} which owns the
- * per-player session map.
+ * Singleton click / drag listener for the sell panel. Delegates to {@link SellView#handleClick} / {@link SellView#handleDrag}
+ * which look up the per-player dropzone state and either route the event into the dropzone or cancel it. Close handling
+ * moved onto {@link me.luckyraven.inventory.flow.MultiPanelInventory#onEnd} inside {@link SellView#render} when the
+ * panel became flow-aware, so no dedicated close event handler is needed here anymore.
  */
 @ListenerHandler
 @RequiredArgsConstructor
@@ -42,12 +43,6 @@ public final class TraderSellSessionListener implements Listener {
 		if (sellView.handleDrag(viewer, event.getInventory(), event.getRawSlots())) {
 			event.setCancelled(true);
 		}
-	}
-
-	@EventHandler
-	public void onClose(InventoryCloseEvent event) {
-		if (!(event.getPlayer() instanceof Player viewer)) return;
-		sellView.handleClose(viewer, event.getInventory());
 	}
 
 }

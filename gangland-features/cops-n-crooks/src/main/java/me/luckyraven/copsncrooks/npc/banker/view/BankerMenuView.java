@@ -2,8 +2,6 @@ package me.luckyraven.copsncrooks.npc.banker.view;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import me.luckyraven.copsncrooks.npc.banker.BankerNpc;
 import me.luckyraven.copsncrooks.npc.banker.config.BankerSettings;
 import me.luckyraven.copsncrooks.npc.banker.economy.BankerEconomyContract;
 import me.luckyraven.copsncrooks.npc.banker.economy.BankerEconomyContract.BankerSnapshot;
@@ -31,10 +29,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The banker flow's single in-flow panel — the rich account menu. The five subviews (amount, upgrade, create, rename,
- * claim) are still standalone legacy views reached via {@link MultiPanelInventory#end()} followed by the subview's own
- * {@code open(...)} call. Each subview calls {@link #open(Player, BankerNpc)} when it finishes, which restarts the flow
- * — this preserves the subview "return to menu" navigation pattern.
+ * The banker flow's root panel — the rich account menu. Every action button now pivots to another panel via
+ * {@link MultiPanelInventory#switchTo(String)} (amount / upgrade / claim / create) or kicks off an anvil prompt that
+ * returns to this panel on close (rename). No more legacy {@code player.closeInventory() + subview.open(...)} hops.
  */
 @RequiredArgsConstructor
 public final class BankerMenuView implements Panel<BankerFlowSession> {
@@ -59,35 +56,14 @@ public final class BankerMenuView implements Panel<BankerFlowSession> {
 	private final BankerEconomyContract economy;
 	private final BankerMessageContract messages;
 
-	private BankerAmountView        amountView;
-	private BankerUpgradeView       upgradeView;
-	private BankerCreateAccountView createView;
 	private BankerRenameAccountView renameView;
-	private BankerClaimView         claimView;
-
-	@Setter
-	private BankerFlow bankerFlow;
 
 	private static String amount(BigDecimal value) {
 		return NumberUtil.valueFormat(value);
 	}
 
-	public void setSubViews(BankerAmountView amountView, BankerUpgradeView upgradeView,
-	                        BankerCreateAccountView createView, BankerRenameAccountView renameView,
-	                        BankerClaimView claimView) {
-		this.amountView  = amountView;
-		this.upgradeView = upgradeView;
-		this.createView  = createView;
-		this.renameView  = renameView;
-		this.claimView   = claimView;
-	}
-
-	/**
-	 * Backwards-compat shim — subviews call this on close to "return to the menu". Just restarts the flow with the same
-	 * banker so the menu shows the latest snapshot.
-	 */
-	public void open(Player viewer, BankerNpc banker) {
-		if (bankerFlow != null) bankerFlow.start(viewer, banker);
+	public void setSubViews(BankerRenameAccountView renameView) {
+		this.renameView = renameView;
 	}
 
 	@Override
@@ -139,13 +115,11 @@ public final class BankerMenuView implements Panel<BankerFlowSession> {
 		handler.setItem(SLOT_CREATE_PROMPT, create, false, (p, inv, b) -> {
 			if (!info.canAfford()) {
 				viewer.sendMessage(messages.createCannotAfford(info.fee()));
-				SOUND_DENY.playSound(viewer);
+				Bukkit.getScheduler().runTask(plugin, () -> SOUND_DENY.playSound(viewer));
 				return;
 			}
-			SOUND_PICK.playSound(p);
-			handOffTo(host, p, () -> {
-				if (createView != null) createView.open(p, session.banker);
-			});
+			host.switchTo(BankerFlowSession.PANEL_CREATE);
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_PICK.playSound(p));
 		});
 	}
 
@@ -163,10 +137,11 @@ public final class BankerMenuView implements Panel<BankerFlowSession> {
 		                "&7Cash: &f$" + amount(snap.cashBalance()),
 		                "&7Daily remaining: &f$" + amount(snap.remainingDailyDeposit()));
 		handler.setItem(SLOT_DEPOSIT, deposit, false, (p, inv, b) -> {
-			SOUND_PICK.playSound(p);
-			handOffTo(host, p, () -> {
-				if (amountView != null) amountView.open(p, session.banker, BankerAmountView.Mode.DEPOSIT);
-			});
+			session.amountMode      = BankerAmountView.Mode.DEPOSIT;
+			session.amountStaged    = null;
+			session.amountStepIndex = 0;
+			host.switchTo(BankerFlowSession.PANEL_AMOUNT);
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_PICK.playSound(p));
 		});
 
 		ItemBuilder withdraw = new ItemBuilder(material(XMaterial.GOLD_BLOCK, Material.GOLD_BLOCK));
@@ -174,20 +149,19 @@ public final class BankerMenuView implements Panel<BankerFlowSession> {
 		        .setLore("&7Move money from the bank to your cash.",
 		                 "&7Bank: &f$" + amount(snap.bankBalance()));
 		handler.setItem(SLOT_WITHDRAW, withdraw, false, (p, inv, b) -> {
-			SOUND_PICK.playSound(p);
-			handOffTo(host, p, () -> {
-				if (amountView != null) amountView.open(p, session.banker, BankerAmountView.Mode.WITHDRAW);
-			});
+			session.amountMode      = BankerAmountView.Mode.WITHDRAW;
+			session.amountStaged    = null;
+			session.amountStepIndex = 0;
+			host.switchTo(BankerFlowSession.PANEL_AMOUNT);
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_PICK.playSound(p));
 		});
 
 		if (snap.nextTier() != null) {
 			ItemBuilder upgrade = new ItemBuilder(material(XMaterial.DIAMOND_BLOCK, Material.DIAMOND_BLOCK));
 			upgrade.setDisplayName("&b&lUPGRADE").setLore(buildUpgradeLore(snap));
 			handler.setItem(SLOT_UPGRADE, upgrade, false, (p, inv, b) -> {
-				SOUND_PICK.playSound(p);
-				handOffTo(host, p, () -> {
-					if (upgradeView != null) upgradeView.open(p, session.banker);
-				});
+				host.switchTo(BankerFlowSession.PANEL_UPGRADE);
+				Bukkit.getScheduler().runTask(plugin, () -> SOUND_PICK.playSound(p));
 			});
 		} else {
 			ItemBuilder maxTier = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER));
@@ -201,10 +175,10 @@ public final class BankerMenuView implements Panel<BankerFlowSession> {
 		               "&7Rename fee: &c$" + amount(settings.getRenameFee()),
 		               "&8Opens an anvil GUI.");
 		handler.setItem(SLOT_RENAME, rename, false, (p, inv, b) -> {
-			SOUND_PICK.playSound(p);
-			handOffTo(host, p, () -> {
-				if (renameView != null) renameView.open(p, session.banker);
-			});
+			// Rename is an anvil-only prompt (not a panel). It suspends the flow internally, opens the anvil, and on
+			// anvil-close switches back to PANEL_MENU — no switchTo here.
+			if (renameView != null) renameView.open(host, p);
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_PICK.playSound(p));
 		});
 
 		ItemBuilder rewards = new ItemBuilder(material(XMaterial.GOLD_INGOT, Material.GOLD_INGOT));
@@ -212,21 +186,9 @@ public final class BankerMenuView implements Panel<BankerFlowSession> {
 		       .setLore("&7Claim free weekly + monthly bonuses.",
 		                "&8Available amounts scale with your tier.");
 		handler.setItem(SLOT_REWARDS, rewards, false, (p, inv, b) -> {
-			SOUND_PICK.playSound(p);
-			handOffTo(host, p, () -> {
-				if (claimView != null) claimView.open(p, session.banker);
-			});
+			host.switchTo(BankerFlowSession.PANEL_CLAIM);
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_PICK.playSound(p));
 		});
-	}
-
-	/**
-	 * Ends the flow cleanly (so the flow's close listener doesn't tear down during handoff) and schedules the follow-up
-	 * open on the next tick — without the scheduler hop, Bukkit can misorder the close/open events and the subview
-	 * opens into a now-gone inventory handle.
-	 */
-	private void handOffTo(MultiPanelInventory<BankerFlowSession> host, Player viewer, Runnable open) {
-		host.end();
-		Bukkit.getScheduler().runTask(plugin, open);
 	}
 
 	private List<String> buildInfoLore(BankerSnapshot snap) {

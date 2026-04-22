@@ -17,6 +17,9 @@ public final class TraderFlowSession implements FlowSession {
 	public static final String PANEL_MODE_SELECT = "mode_select";
 	public static final String PANEL_SHOP        = "shop";
 	public static final String PANEL_NEGOTIATION = "negotiation";
+	public static final String PANEL_SELL        = "sell";
+	public static final String PANEL_BARTER      = "barter";
+	public static final String PANEL_QUANTITY    = "quantity";
 
 	public final TraderNpc             trader;
 	public final ShopDefinition        definition;

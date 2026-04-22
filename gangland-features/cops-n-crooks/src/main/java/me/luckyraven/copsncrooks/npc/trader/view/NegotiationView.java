@@ -54,7 +54,6 @@ public final class NegotiationView implements Panel<TraderFlowSession> {
 	private final TraderMessageContract messages;
 	private final TraderEconomyContract economy;
 	private final ShopDisplayResolver   displayResolver;
-	private final BarterView            barterView;
 	private final QuantitySelectorView  quantitySelectorView;
 
 	private static SoundConfiguration vanilla(String name, float pitch) {
@@ -165,15 +164,7 @@ public final class NegotiationView implements Panel<TraderFlowSession> {
 	}
 
 	private void onBarter(MultiPanelInventory<TraderFlowSession> host, Player viewer, TraderFlowSession session) {
-		if (barterView == null) return;
-
-		NegotiationSession adapter = new NegotiationSession(session.trader, session.definition, session.selectedEntry,
-		                                                    session.trait, session.basePrice);
-		host.suspend();
-		barterView.open(viewer, adapter, session.definition, currentPrice(session), p -> {
-			host.resume();
-			host.switchTo(TraderFlowSession.PANEL_NEGOTIATION);
-		});
+		host.switchTo(TraderFlowSession.PANEL_BARTER);
 		playSoundNextTick(viewer, SOUND_OPEN_SUB);
 	}
 

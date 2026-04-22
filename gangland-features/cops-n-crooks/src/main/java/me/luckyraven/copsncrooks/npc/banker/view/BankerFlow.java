@@ -8,9 +8,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Entry point for the banker NPC flow. Builds a fresh {@link MultiPanelInventory} per-viewer with the banker menu
- * registered as the single in-flow panel; the five existing subviews (amount, create, upgrade, rename, claim) stay as
- * standalone legacy views reached via {@link MultiPanelInventory#end()} hand-offs inside the menu panel.
+ * Entry point for the banker NPC flow. Builds a fresh {@link MultiPanelInventory} per-viewer and registers each
+ * converted panel. Remaining legacy subviews (amount, create, rename, claim) are still reached via
+ * {@link MultiPanelInventory#end()} hand-offs inside the menu panel — they will be registered here as they are
+ * migrated.
  *
  * <p>The {@link #startFromPhone(Player)} overload is the link from {@code phone_banking.yml} — no physical banker is
  * present, so {@code BankerFlowSession#banker} is {@code null} and display strings fall back to "Online Banking".
@@ -18,8 +19,12 @@ import org.jetbrains.annotations.Nullable;
 @RequiredArgsConstructor
 public final class BankerFlow {
 
-	private final JavaPlugin     plugin;
-	private final BankerMenuView menuPanel;
+	private final JavaPlugin              plugin;
+	private final BankerMenuView          menuPanel;
+	private final BankerUpgradeView       upgradePanel;
+	private final BankerClaimView         claimPanel;
+	private final BankerAmountView        amountPanel;
+	private final BankerCreateAccountView createPanel;
 
 	public void start(Player viewer, BankerNpc banker) {
 		startInternal(viewer, banker);
@@ -33,6 +38,10 @@ public final class BankerFlow {
 		BankerFlowSession                      session = new BankerFlowSession(banker);
 		MultiPanelInventory<BankerFlowSession> host    = new MultiPanelInventory<>(plugin, viewer, session);
 		host.register(BankerFlowSession.PANEL_MENU, menuPanel);
+		host.register(BankerFlowSession.PANEL_UPGRADE, upgradePanel);
+		host.register(BankerFlowSession.PANEL_CLAIM, claimPanel);
+		host.register(BankerFlowSession.PANEL_AMOUNT, amountPanel);
+		host.register(BankerFlowSession.PANEL_CREATE, createPanel);
 		host.openAt(BankerFlowSession.PANEL_MENU);
 	}
 

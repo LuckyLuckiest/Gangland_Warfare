@@ -3,21 +3,19 @@ package me.luckyraven.copsncrooks.npc.trader.view;
 import com.cryptomorin.xseries.XMaterial;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import me.luckyraven.copsncrooks.events.trader.TraderSellRequestEvent;
-import me.luckyraven.copsncrooks.npc.trader.TraderNpc;
 import me.luckyraven.copsncrooks.npc.trader.config.TraderSettings;
 import me.luckyraven.copsncrooks.npc.trader.mood.MoodService;
-import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitDefinition;
 import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.core.configuration.SoundConfiguration;
 import me.luckyraven.core.utilities.NumberUtil;
 import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.flow.MultiPanelInventory;
+import me.luckyraven.inventory.flow.Panel;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
 import me.luckyraven.item.ItemRefresherRegistry;
-import me.luckyraven.shop.ShopDefinition;
 import me.luckyraven.shop.message.ShopDisplayResolver;
 import me.luckyraven.shop.valuation.ItemValuation;
 import me.luckyraven.shop.valuation.SellValuator;
@@ -34,8 +32,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+/**
+ * Drop-zone sell panel. Players drop items into the left dropzone slots and the valuator produces an offer; confirming
+ * sells the items for the offered total.
+ *
+ * <p>The {@link SellState} is kept in a per-player {@link WeakHashMap} on this panel instance rather than on
+ * {@link TraderFlowSession} — the state is large (item dropzone mirror, breakdown lines, mood multiplier) and only
+ * meaningful while the viewer is actively in this panel. Entry populates the map in {@link #render}; exit paths (back /
+ * confirm / natural close) return un-committed items to the player and clear the entry via the flow's
+ * {@link MultiPanelInventory#onEnd onEnd} callback.
+ *
+ * <p>Bukkit click / drag events still flow through
+ * {@link me.luckyraven.copsncrooks.listener.trader.TraderSellSessionListener} which dispatches to
+ * {@link #handleClick}/{@link #handleDrag} — those look the viewer up in the per-player state and update the offer
+ * display in-place (no {@link MultiPanelInventory#rerender} which would {@code clear()} the dropzone).
+ */
 @RequiredArgsConstructor
-public final class SellView implements BeanLifecycle {
+public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 
 	private static final int SIZE         = 54;
 	private static final int SLOT_TRAIT   = 7;
@@ -61,84 +74,230 @@ public final class SellView implements BeanLifecycle {
 	private final ItemRefresherRegistry refresherRegistry;
 	private final TraderSettings        settings;
 	private final ShopDisplayResolver   displayResolver;
-	private final Map<Player, Session>  active = new WeakHashMap<>();
-	@Setter
-	private       TraderFlow            traderFlow;
+
+	private final Map<Player, SellState> active = new WeakHashMap<>();
 
 	private static SoundConfiguration vanilla(String name, float pitch) {
 		return new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, name, 0.6f, pitch);
 	}
 
 	private static boolean contains(int[] arr, int value) {
-		for (int v : arr) {
-			if (v == value) return true;
-		}
+		for (int v : arr) if (v == value) return true;
 		return false;
 	}
 
-	public void open(Player viewer, TraderNpc trader, ShopDefinition def, TraderTraitDefinition trait) {
-		double mood = moodService.priceMultiplier(trader.getData().getId(), viewer.getUniqueId(), trait.profile());
-		// Sell prices are inverse: mood multiplier is applied to base × ratio. A "friendly" trader (mood > 0, multiplier
-		// < 1 on buy) should pay more on sell — so we invert for sell usage.
-		double sellMood = 2.0 - mood;
-
-		int[] slots = dropzoneSlots(settings.getSellMaxOfferSlots());
-		InventoryHandler handler = new InventoryHandler(plugin, "&8Sell to&r &8&l[&b&l" + trait.displayName() + "&8&l]",
-		                                                SIZE, viewer);
-
-		Session session = new Session(viewer, trader, def, trait, handler, slots, sellMood);
-		active.put(viewer, session);
-
-		// Register dropzone slots with the inventory-api so InventoryClickHandler doesn't auto-cancel placement clicks.
-		for (int slot : slots) {
-			handler.setItem(slot, null, true);
-		}
-
-		renderChrome(session);
-
-		handler.open(viewer);
+	@Override
+	public int size(TraderFlowSession session) {
+		return SIZE;
 	}
 
-	public Session getSession(Player viewer) {
-		return active.get(viewer);
+	@Override
+	public String title(TraderFlowSession session) {
+		return "&8Sell to&r &8&l[&b&l" + session.trait.displayName() + "&8&l]";
+	}
+
+	@Override
+	public void render(MultiPanelInventory<TraderFlowSession> host, InventoryHandler handler, Player viewer,
+	                   TraderFlowSession session) {
+		SellState existing = active.get(viewer);
+		SellState state;
+		if (existing == null) {
+			double mood = moodService.priceMultiplier(session.trader.getData().getId(), viewer.getUniqueId(),
+			                                          session.trait.profile());
+			// Sell prices are inverse: friendly mood (< 1x on buy) should pay more on sell, so invert for sell usage.
+			double sellMood = 2.0 - mood;
+			int[]  slots    = dropzoneSlots(settings.getSellMaxOfferSlots());
+			state = new SellState(handler, session, slots, sellMood, viewer, host);
+			active.put(viewer, state);
+
+			// Register dropzone slots with inventory-api so the click handler doesn't auto-cancel placement clicks.
+			for (int slot : slots) handler.setItem(slot, null, true);
+
+			// Natural close / ESC / flow end: return un-committed items. Capture the handler ref at entry so the
+			// callback works even after the framework clears `current` during cleanup.
+			host.onEnd(s -> {
+				SellState st = active.remove(viewer);
+				if (st != null && !st.committed) returnItemsToPlayer(viewer, st);
+			});
+		} else {
+			state         = existing;
+			state.handler = handler;
+		}
+
+		renderChrome(state);
+	}
+
+	// ── Listener bridges (invoked by TraderSellSessionListener) ──────────
+
+	public ClickOutcome handleClick(Player viewer, org.bukkit.inventory.Inventory inventory,
+	                                org.bukkit.inventory.Inventory clickedInventory, int slot, InventoryAction action,
+	                                ItemStack currentItem) {
+		SellState state = active.get(viewer);
+		if (state == null || state.handler.getInventory() != inventory) return ClickOutcome.PASS;
+		org.bukkit.inventory.Inventory top = state.handler.getInventory();
+
+		if (clickedInventory == top) {
+			if (!contains(state.dropzoneSlots, slot)) return ClickOutcome.PASS;
+			scheduleRecompute(viewer, state);
+			return ClickOutcome.ALLOW;
+		}
+
+		if (action == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+			if (currentItem == null || currentItem.getType() == Material.AIR) return ClickOutcome.PASS;
+			int placed = tryPlaceInDropzone(state, currentItem.clone());
+			if (placed > 0) {
+				ItemStack remaining = currentItem.clone();
+				remaining.setAmount(currentItem.getAmount() - placed);
+				ItemStack replacement = remaining.getAmount() > 0 ? remaining : null;
+				scheduleRecompute(viewer, state);
+				return new ClickOutcome(true, replacement);
+			}
+			return ClickOutcome.CANCEL_ONLY;
+		}
+		return ClickOutcome.PASS;
+	}
+
+	public boolean handleDrag(Player viewer, org.bukkit.inventory.Inventory inventory,
+	                          java.util.Collection<Integer> rawSlots) {
+		SellState state = active.get(viewer);
+		if (state == null || state.handler.getInventory() != inventory) return false;
+
+		int topSize = state.handler.getInventory().getSize();
+		for (int raw : rawSlots) {
+			if (raw < topSize && !contains(state.dropzoneSlots, raw)) return true;
+		}
+		scheduleRecompute(viewer, state);
+		return false;
+	}
+
+	// ── Lifecycle: return in-flight items on plugin shutdown ──
+
+	@Override
+	public void onShutdown() {
+		List<Player> viewers = new ArrayList<>(active.keySet());
+		for (Player viewer : viewers) {
+			SellState state = active.remove(viewer);
+			if (state == null) continue;
+			state.committed = true; // skip the onEnd return pass
+			returnItemsToPlayer(viewer, state);
+			try {
+				viewer.closeInventory();
+			} catch (Exception ignored) { }
+		}
 	}
 
 	// ── Rendering ────────────────────────────────────────────────────────
 
-	@Override
-	public void onShutdown() {
-		// Plugin is stopping — return every in-flight sell offering to its owner and close the GUI so nothing is
-		// consumed by an accidental confirm or a stale event that never fires.
-		List<Player> viewers = new ArrayList<>(active.keySet());
-		for (Player viewer : viewers) {
-			Session session = active.remove(viewer);
-			if (session == null) continue;
-			session.committed          = true;          // keep the close listener from returning items again
-			session.returnToModeSelect = false;         // don't try to reopen the mode-select on disable
-			returnItemsToPlayer(viewer, session);
-			try {
-				viewer.closeInventory();
-			} catch (Exception ignored) {
-				// Server is tearing down; swallow any late close errors.
-			}
+	private void renderChrome(SellState state) {
+		state.handler.getInventory().setItem(SLOT_TRAIT, null);
+		state.handler.getInventory().setItem(SLOT_OFFER, null);
+		state.handler.getInventory().setItem(SLOT_MOOD, null);
+		state.handler.getInventory().setItem(SLOT_BACK, null);
+		state.handler.getInventory().setItem(SLOT_CLEAR, null);
+		state.handler.getInventory().setItem(SLOT_CONFIRM, null);
+
+		renderTrait(state);
+		renderOffer(state);
+		renderMood(state);
+		renderBack(state);
+		renderClear(state);
+		renderConfirm(state);
+
+		// Snapshot dropzone contents, fill decorative empty slots, then restore dropzones so the filler doesn't
+		// claim them (they must remain truly empty so players can drop items freely).
+		ItemStack[] preservedDropzone = new ItemStack[state.dropzoneSlots.length];
+		for (int i = 0; i < state.dropzoneSlots.length; i++) {
+			preservedDropzone[i] = state.handler.getInventory().getItem(state.dropzoneSlots[i]);
+			state.handler.getInventory().setItem(state.dropzoneSlots[i], new ItemStack(Material.BARRIER));
+		}
+
+		InventoryUtil.fillInventory(state.handler,
+		                            new Fill(settings.getInventoryFillName(), settings.getInventoryFillItem()));
+
+		for (int i = 0; i < state.dropzoneSlots.length; i++) {
+			state.handler.getInventory().setItem(state.dropzoneSlots[i], preservedDropzone[i]);
 		}
 	}
 
-	public void recomputeOffer(Session session) {
+	private void renderTrait(SellState state) {
+		ItemBuilder trait = new ItemBuilder(material(XMaterial.DIAMOND, Material.DIAMOND));
+		trait.setDisplayName("&d&lTrait: &d" + state.session.trait.displayName())
+		     .setLore("&7This trader's valuation style.", " ", "&8Drop items on the left to get an offer.");
+		state.handler.setItem(SLOT_TRAIT, trait, false, (p, inv, b) -> { });
+	}
+
+	private void renderMood(SellState state) {
+		double      mood = 2.0 - state.sellMoodMultiplier;
+		ItemBuilder pane = new ItemBuilder(material(XMaterial.NETHER_STAR, Material.NETHER_STAR));
+		pane.setDisplayName("&b&lMood: " + moodLabel(mood))
+		    .setLore("&7Sell multiplier:",
+		             "&e" + String.format("%.2fx", state.sellMoodMultiplier),
+		             " ",
+		             "&8Friendlier traders pay closer to base price.");
+		state.handler.setItem(SLOT_MOOD, pane, false, (p, inv, b) -> { });
+	}
+
+	private String moodLabel(double multiplier) {
+		if (multiplier <= 0.95) return "&aFriendly";
+		return "&fNeutral";
+	}
+
+	private void renderOffer(SellState state) {
+		recomputeOffer(state);
+
+		ItemBuilder offer = new ItemBuilder(material(XMaterial.GOLD_INGOT, Material.GOLD_INGOT)).setDisplayName(
+				"&6Offer: &e$" + NumberUtil.valueFormat(state.offeredTotal));
+		List<String> lore = new ArrayList<>();
+		if (state.breakdown.isEmpty()) {
+			lore.add("&8Drop items to the left to get an offer.");
+		} else {
+			int shown = Math.min(state.breakdown.size(), 5);
+			for (int i = 0; i < shown; i++) lore.add(state.breakdown.get(i));
+			if (state.breakdown.size() > shown) lore.add("&8…and " + (state.breakdown.size() - shown) + " more");
+		}
+		offer.setLore(lore);
+		state.handler.setItem(SLOT_OFFER, offer, false, (p, inv, b) -> { });
+	}
+
+	private void renderBack(SellState state) {
+		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&eBack to menu")
+		                                                  .setLore("&7Return your items and go back.");
+		state.handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> onBack(p, state));
+	}
+
+	private void renderClear(SellState state) {
+		ItemBuilder clear = new ItemBuilder(material(XMaterial.HOPPER, Material.HOPPER));
+		clear.setDisplayName("&eClear offer").setLore("&7Return all offered items to your inventory.");
+		state.handler.setItem(SLOT_CLEAR, clear, false, (p, inv, b) -> onClear(p, state));
+	}
+
+	private void renderConfirm(SellState state) {
+		boolean hasOffer = state.offeredTotal.signum() > 0;
+		ItemStack icon = hasOffer
+		                 ? material(XMaterial.LIME_WOOL, Material.GREEN_WOOL)
+		                 : material(XMaterial.GRAY_WOOL, Material.GRAY_WOOL);
+		ItemBuilder confirm = new ItemBuilder(icon);
+		confirm.setDisplayName(hasOffer
+		                       ? "&aCONFIRM — $" + NumberUtil.valueFormat(state.offeredTotal)
+		                       : "&8Nothing to sell")
+		       .setLore("&7Sell for &6$" + NumberUtil.valueFormat(state.offeredTotal) + "&7.");
+		state.handler.setItem(SLOT_CONFIRM, confirm, false, (p, inv, b) -> onConfirm(p, state));
+	}
+
+	// ── Offer computation ─────────────────────────────────────────────────
+
+	private void recomputeOffer(SellState state) {
 		BigDecimal   total     = BigDecimal.ZERO;
 		List<String> breakdown = new ArrayList<>();
 
-		for (int slot : session.dropzoneSlots) {
-			ItemStack rawStack = session.handler.getInventory().getItem(slot);
-			if (rawStack == null || rawStack.getType() == Material.AIR) {
-				continue;
-			}
-			// Decorate so custom-item display names reach the valuator and the breakdown, but runtime state
-			// (ammo, durability) stays as the player left it.
-			ItemStack decorated = refresherRegistry.decorate(rawStack, session.viewer);
-			ItemValuation valuation = valuator.value(session.definition, decorated,
-			                                         session.trait.profile().sellPriceRatio(),
-			                                         session.sellMoodMultiplier);
+		for (int slot : state.dropzoneSlots) {
+			ItemStack rawStack = state.handler.getInventory().getItem(slot);
+			if (rawStack == null || rawStack.getType() == Material.AIR) continue;
+
+			ItemStack decorated = refresherRegistry.decorate(rawStack, state.viewer);
+			ItemValuation valuation = valuator.value(state.session.definition, decorated,
+			                                         state.session.trait.profile().sellPriceRatio(),
+			                                         state.sellMoodMultiplier);
 			String label = displayResolver.cleanDisplayName(decorated);
 			if (valuation.hasValue()) {
 				BigDecimal lineTotal = valuation.unitPrice().multiply(BigDecimal.valueOf(decorated.getAmount()));
@@ -150,263 +309,76 @@ public final class SellView implements BeanLifecycle {
 			}
 		}
 
-		session.baseOffer    = total;
-		session.offeredTotal = total;
-		session.breakdown    = breakdown;
+		state.baseOffer    = total;
+		state.offeredTotal = total;
+		state.breakdown    = breakdown;
 	}
 
-	/**
-	 * Click handler. Returns {@code true} when the event should be cancelled. Handles both top-inventory dropzone
-	 * clicks (allow, schedule recompute) and shift-click-from-bottom (collect into dropzone, cancel the vanilla move).
-	 */
-	public ClickOutcome handleClick(Player viewer, org.bukkit.inventory.Inventory inventory,
-	                                org.bukkit.inventory.Inventory clickedInventory, int slot, InventoryAction action,
-	                                ItemStack currentItem) {
-		Session session = active.get(viewer);
-		if (session == null || session.handler.getInventory() != inventory) {
-			return ClickOutcome.PASS;
-		}
-		org.bukkit.inventory.Inventory top = session.handler.getInventory();
+	// ── Click actions ────────────────────────────────────────────────────
 
-		if (clickedInventory == top) {
-			boolean dropzone = contains(session.dropzoneSlots, slot);
-			if (!dropzone) return ClickOutcome.PASS;
-			scheduleRecompute(viewer, session);
-			return ClickOutcome.ALLOW;
-		}
-
-		if (action == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
-			if (currentItem == null || currentItem.getType() == Material.AIR) {
-				return ClickOutcome.PASS;
-			}
-			int placed = tryPlaceInDropzone(session, currentItem.clone());
-			if (placed > 0) {
-				ItemStack remaining = currentItem.clone();
-				remaining.setAmount(currentItem.getAmount() - placed);
-				ItemStack replacement = remaining.getAmount() > 0 ? remaining : null;
-				scheduleRecompute(viewer, session);
-				return new ClickOutcome(true, replacement);
-			}
-			return ClickOutcome.CANCEL_ONLY;
-		}
-		return ClickOutcome.PASS;
-	}
-
-	/**
-	 * Drag handler. Returns {@code true} if the drag touched any non-dropzone top slot and must be cancelled.
-	 */
-	public boolean handleDrag(Player viewer, org.bukkit.inventory.Inventory inventory,
-	                          java.util.Collection<Integer> rawSlots) {
-		Session session = active.get(viewer);
-		if (session == null || session.handler.getInventory() != inventory) return false;
-
-		int topSize = session.handler.getInventory().getSize();
-		for (int raw : rawSlots) {
-			if (raw < topSize && !contains(session.dropzoneSlots, raw)) {
-				return true;
-			}
-		}
-		scheduleRecompute(viewer, session);
-		return false;
-	}
-
-	/**
-	 * Close handler — returns items (if not committed) and optionally reopens the mode-select view.
-	 */
-	public void handleClose(Player viewer, org.bukkit.inventory.Inventory inventory) {
-		Session session = active.get(viewer);
-		if (session == null || session.handler.getInventory() != inventory) return;
-		if (session.pendingSubview) return;
-
-		if (!session.committed) {
-			returnItemsToPlayer(viewer, session);
-		}
+	private void onBack(Player viewer, SellState state) {
+		returnItemsToPlayer(viewer, state);
+		state.committed = true;  // suppress the onEnd return pass
 		active.remove(viewer);
-
-		if (session.returnToModeSelect && traderFlow != null && session.definition != null) {
-			Bukkit.getScheduler()
-			      .runTask(plugin,
-			               () -> traderFlow.start(viewer, session.trader, session.definition, session.trait));
-		}
+		host(state).back();
+		Bukkit.getScheduler().runTask(plugin, () -> SOUND_CANCEL.playSound(viewer));
 	}
 
-	private void renderChrome(Session session) {
-		session.handler.getInventory().setItem(SLOT_TRAIT, null);
-		session.handler.getInventory().setItem(SLOT_OFFER, null);
-		session.handler.getInventory().setItem(SLOT_MOOD, null);
-		session.handler.getInventory().setItem(SLOT_BACK, null);
-		session.handler.getInventory().setItem(SLOT_CLEAR, null);
-		session.handler.getInventory().setItem(SLOT_CONFIRM, null);
-
-		renderTrait(session);
-		renderOffer(session);
-		renderMood(session);
-		renderBack(session);
-		renderClear(session);
-		renderConfirm(session);
-
-		// Snapshot dropzone contents, fill decorative empty slots, then restore dropzones so the filler doesn't claim
-		// them (they must remain truly empty so players can drop items freely and closing the view doesn't return
-		// filler glass back into their inventory).
-		ItemStack[] preservedDropzone = new ItemStack[session.dropzoneSlots.length];
-		for (int i = 0; i < session.dropzoneSlots.length; i++) {
-			preservedDropzone[i] = session.handler.getInventory().getItem(session.dropzoneSlots[i]);
-			session.handler.getInventory().setItem(session.dropzoneSlots[i], new ItemStack(Material.BARRIER));
-		}
-
-		InventoryUtil.fillInventory(session.handler,
-		                            new Fill(settings.getInventoryFillName(), settings.getInventoryFillItem()));
-
-		for (int i = 0; i < session.dropzoneSlots.length; i++) {
-			session.handler.getInventory().setItem(session.dropzoneSlots[i], preservedDropzone[i]);
-		}
+	private void onClear(Player viewer, SellState state) {
+		returnItemsToPlayer(viewer, state);
+		recomputeOffer(state);
+		renderChrome(state);
 	}
 
-	private void renderTrait(Session session) {
-		ItemBuilder trait = new ItemBuilder(material(XMaterial.DIAMOND, Material.DIAMOND));
-		trait.setDisplayName("&d&lTrait: &d" + session.trait.displayName())
-		     .setLore("&7This trader's valuation style.",
-		              " ",
-		              "&8Drop items on the left to get an offer.");
-		session.handler.setItem(SLOT_TRAIT, trait, false, (p, inv, b) -> { });
-	}
+	private void onConfirm(Player viewer, SellState state) {
+		if (state.offeredTotal.signum() <= 0) return;
 
-	private void renderMood(Session session) {
-		double      mood = 2.0 - session.sellMoodMultiplier;
-		ItemBuilder pane = new ItemBuilder(material(XMaterial.NETHER_STAR, Material.NETHER_STAR));
-		pane.setDisplayName("&b&lMood: " + moodLabel(mood))
-		    .setLore("&7Sell multiplier:",
-		             "&e" + String.format("%.2fx", session.sellMoodMultiplier),
-		             " ",
-		             "&8Friendlier traders pay closer to base price.");
-		session.handler.setItem(SLOT_MOOD, pane, false, (p, inv, b) -> { });
-	}
-
-	private String moodLabel(double multiplier) {
-		if (multiplier <= 0.95) return "&aFriendly";
-		return "&fNeutral";
-	}
-
-	private void renderOffer(Session session) {
-		recomputeOffer(session);
-
-		ItemBuilder offer = new ItemBuilder(material(XMaterial.GOLD_INGOT, Material.GOLD_INGOT)).setDisplayName(
-				"&6Offer: &e$" + NumberUtil.valueFormat(session.offeredTotal));
-		List<String> lore = new ArrayList<>();
-		if (session.breakdown.isEmpty()) {
-			lore.add("&8Drop items to the left to get an offer.");
-		} else {
-			int shown = Math.min(session.breakdown.size(), 5);
-			for (int i = 0; i < shown; i++) {
-				lore.add(session.breakdown.get(i));
-			}
-			if (session.breakdown.size() > shown) {
-				lore.add("&8…and " + (session.breakdown.size() - shown) + " more");
-			}
-		}
-		offer.setLore(lore);
-		session.handler.setItem(SLOT_OFFER, offer, false, (p, inv, b) -> { });
-	}
-
-	private void renderBack(Session session) {
-		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&eBack to menu")
-		                                                  .setLore("&7Return your items and go back.");
-		session.handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> onBack(p, session));
-	}
-
-	// ── Actions ──────────────────────────────────────────────────────────
-
-	private void renderClear(Session session) {
-		ItemBuilder clear = new ItemBuilder(material(XMaterial.HOPPER, Material.HOPPER));
-		clear.setDisplayName("&eClear offer").setLore("&7Return all offered items to your inventory.");
-		session.handler.setItem(SLOT_CLEAR, clear, false, (p, inv, b) -> onClear(p, session));
-	}
-
-	private void renderConfirm(Session session) {
-		boolean hasOffer = session.offeredTotal.signum() > 0;
-		ItemStack icon = hasOffer ?
-		                 material(XMaterial.LIME_WOOL, Material.GREEN_WOOL) :
-		                 material(XMaterial.GRAY_WOOL, Material.GRAY_WOOL);
-		ItemBuilder confirm = new ItemBuilder(icon);
-		confirm.setDisplayName(hasOffer ?
-		                       "&aCONFIRM — $" + NumberUtil.valueFormat(session.offeredTotal) :
-		                       "&8Nothing to sell")
-		       .setLore("&7Sell for &6$" + NumberUtil.valueFormat(session.offeredTotal) + "&7.");
-		session.handler.setItem(SLOT_CONFIRM, confirm, false, (p, inv, b) -> onConfirm(p, session));
-	}
-
-	private void onBack(Player viewer, Session session) {
-		SOUND_CANCEL.playSound(viewer);
-		session.returnToModeSelect = true;
-		viewer.closeInventory();
-	}
-
-	private void onClear(Player viewer, Session session) {
-		returnItemsToPlayer(viewer, session);
-		recomputeOffer(session);
-		renderChrome(session);
-	}
-
-	// ── Helpers ──────────────────────────────────────────────────────────
-
-	private void onConfirm(Player viewer, Session session) {
-		if (session.offeredTotal.signum() <= 0) {
-			return;
-		}
-
-		// Walk the dropzone once, collecting only items the valuator accepted. No-offer items stay in their slots so the
-		// return pass below hands them back to the player instead of silently consuming them on confirm.
+		// Walk the dropzone once, collecting only items the valuator accepted. No-offer items stay put so the return
+		// pass hands them back instead of silently consuming them on confirm.
 		List<ItemStack> soldItems = new ArrayList<>();
 		List<Integer>   soldSlots = new ArrayList<>();
-		for (int slot : session.dropzoneSlots) {
-			ItemStack rawStack = session.handler.getInventory().getItem(slot);
-			if (rawStack == null || rawStack.getType() == Material.AIR) {
-				continue;
-			}
-			ItemStack decorated = refresherRegistry.decorate(rawStack, session.viewer);
-			ItemValuation valuation = valuator.value(session.definition, decorated,
-			                                         session.trait.profile().sellPriceRatio(),
-			                                         session.sellMoodMultiplier);
-			if (!valuation.hasValue()) {
-				continue;
-			}
+		for (int slot : state.dropzoneSlots) {
+			ItemStack rawStack = state.handler.getInventory().getItem(slot);
+			if (rawStack == null || rawStack.getType() == Material.AIR) continue;
+			ItemStack decorated = refresherRegistry.decorate(rawStack, state.viewer);
+			ItemValuation valuation = valuator.value(state.session.definition, decorated,
+			                                         state.session.trait.profile().sellPriceRatio(),
+			                                         state.sellMoodMultiplier);
+			if (!valuation.hasValue()) continue;
 			soldItems.add(rawStack.clone());
 			soldSlots.add(slot);
 		}
 
-		TraderSellRequestEvent event = new TraderSellRequestEvent(viewer, session.trader, soldItems,
-		                                                          session.offeredTotal);
+		TraderSellRequestEvent event = new TraderSellRequestEvent(viewer, state.session.trader, soldItems,
+		                                                          state.offeredTotal);
 		Bukkit.getPluginManager().callEvent(event);
+		if (event.isCancelled()) return;
 
-		if (event.isCancelled()) {
-			return;
-		}
-
-		SOUND_CONFIRM.playSound(viewer);
-		session.committed = true;
-		for (int slot : soldSlots) {
-			session.handler.getInventory().setItem(slot, null);
-		}
-		// committed=true skips the handleClose return pass, so hand back the no-offer leftovers explicitly.
-		returnItemsToPlayer(viewer, session);
-		viewer.closeInventory();
+		state.committed = true;
+		for (int slot : soldSlots) state.handler.getInventory().setItem(slot, null);
+		// committed=true skips the onEnd return pass, so hand back the no-offer leftovers explicitly.
+		returnItemsToPlayer(viewer, state);
+		active.remove(viewer);
+		host(state).back();
+		Bukkit.getScheduler().runTask(plugin, () -> SOUND_CONFIRM.playSound(viewer));
 	}
 
-	// ── Session ──────────────────────────────────────────────────────────
+	// ── Helpers ──────────────────────────────────────────────────────────
 
-	// ── Event bridges (invoked by the singleton TraderSellSessionListener) ──
+	private MultiPanelInventory<TraderFlowSession> host(SellState state) {
+		// The state captures the handler at entry; we need the host ref for back(). Stored directly on SellState.
+		return state.host;
+	}
 
-	private void returnItemsToPlayer(Player viewer, Session session) {
-		for (int slot : session.dropzoneSlots) {
-			ItemStack stack = session.handler.getInventory().getItem(slot);
-			if (stack == null || stack.getType() == Material.AIR) {
-				continue;
-			}
+	private void returnItemsToPlayer(Player viewer, SellState state) {
+		for (int slot : state.dropzoneSlots) {
+			ItemStack stack = state.handler.getInventory().getItem(slot);
+			if (stack == null || stack.getType() == Material.AIR) continue;
 			Map<Integer, ItemStack> leftover = viewer.getInventory().addItem(stack.clone());
 			for (ItemStack drop : leftover.values()) {
 				viewer.getWorld().dropItemNaturally(viewer.getLocation(), drop);
 			}
-			session.handler.getInventory().setItem(slot, null);
+			state.handler.getInventory().setItem(slot, null);
 		}
 	}
 
@@ -422,18 +394,18 @@ public final class SellView implements BeanLifecycle {
 		return stack != null ? stack : new ItemStack(fallback);
 	}
 
-	private int tryPlaceInDropzone(Session session, ItemStack stack) {
+	private int tryPlaceInDropzone(SellState state, ItemStack stack) {
 		int remaining  = stack.getAmount();
 		int maxPerSlot = stack.getMaxStackSize();
 
-		for (int slot : session.dropzoneSlots) {
+		for (int slot : state.dropzoneSlots) {
 			if (remaining <= 0) break;
-			ItemStack current = session.handler.getInventory().getItem(slot);
+			ItemStack current = state.handler.getInventory().getItem(slot);
 			if (current == null || current.getType() == Material.AIR) {
 				ItemStack placed = stack.clone();
 				int       amount = Math.min(remaining, maxPerSlot);
 				placed.setAmount(amount);
-				session.handler.getInventory().setItem(slot, placed);
+				state.handler.getInventory().setItem(slot, placed);
 				remaining -= amount;
 			} else if (current.isSimilar(stack) && current.getAmount() < maxPerSlot) {
 				int space = maxPerSlot - current.getAmount();
@@ -445,52 +417,41 @@ public final class SellView implements BeanLifecycle {
 		return stack.getAmount() - remaining;
 	}
 
-	private void scheduleRecompute(Player viewer, Session session) {
+	private void scheduleRecompute(Player viewer, SellState state) {
 		Bukkit.getScheduler().runTask(plugin, () -> {
-			if (active.get(viewer) != session) return;
-			recomputeOffer(session);
-			renderOffer(session);
-			renderConfirm(session);
+			if (active.get(viewer) != state) return;
+			recomputeOffer(state);
+			renderOffer(state);
+			renderConfirm(state);
 		});
 	}
 
-	public static final class Session {
-		final Player                viewer;
-		@Getter
-		final TraderNpc             trader;
-		final ShopDefinition        definition;
-		@Getter
-		final TraderTraitDefinition trait;
-		final InventoryHandler      handler;
-		final int[]                 dropzoneSlots;
-		final double                sellMoodMultiplier;
+	public static final class SellState {
+		final Player                                 viewer;
+		final TraderFlowSession                      session;
+		final int[]                                  dropzoneSlots;
+		final double                                 sellMoodMultiplier;
+		final MultiPanelInventory<TraderFlowSession> host;
+
+		InventoryHandler handler;
 
 		@Getter
 		BigDecimal baseOffer = BigDecimal.ZERO;
 		BigDecimal   offeredTotal = BigDecimal.ZERO;
 		List<String> breakdown    = new ArrayList<>();
+		boolean      committed    = false;
 
-		boolean pendingSubview     = false;
-		boolean committed          = false;
-		boolean returnToModeSelect = true;
-
-		Session(Player viewer, TraderNpc trader, ShopDefinition definition, TraderTraitDefinition trait,
-		        InventoryHandler handler, int[] dropzoneSlots, double sellMoodMultiplier) {
+		SellState(InventoryHandler handler, TraderFlowSession session, int[] dropzoneSlots, double sellMoodMultiplier,
+		          Player viewer, MultiPanelInventory<TraderFlowSession> host) {
 			this.viewer             = viewer;
-			this.trader             = trader;
-			this.definition         = definition;
-			this.trait              = trait;
+			this.session            = session;
 			this.handler            = handler;
 			this.dropzoneSlots      = dropzoneSlots;
 			this.sellMoodMultiplier = sellMoodMultiplier;
+			this.host               = host;
 		}
 	}
 
-	/**
-	 * Result of {@link #handleClick}. {@link #cancel} says whether Bukkit should cancel the event; when the click moved
-	 * an item into the dropzone via shift-click, {@link #replacementCurrent} is the residual stack to leave in the
-	 * bottom inventory slot.
-	 */
 	public record ClickOutcome(boolean cancel, ItemStack replacementCurrent, boolean replace) {
 		public static final ClickOutcome PASS        = new ClickOutcome(false, null, false);
 		public static final ClickOutcome ALLOW       = new ClickOutcome(false, null, false);

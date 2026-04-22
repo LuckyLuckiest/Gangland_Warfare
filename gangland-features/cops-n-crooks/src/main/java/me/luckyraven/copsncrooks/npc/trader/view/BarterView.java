@@ -10,11 +10,11 @@ import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.core.configuration.SoundConfiguration;
 import me.luckyraven.core.utilities.NumberUtil;
 import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.flow.MultiPanelInventory;
+import me.luckyraven.inventory.flow.Panel;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
 import me.luckyraven.item.ItemRefresherRegistry;
-import me.luckyraven.shop.ShopDefinition;
-import me.luckyraven.shop.ShopItemEntry;
 import me.luckyraven.shop.message.ShopDisplayResolver;
 import me.luckyraven.shop.valuation.CategoryBarterValuator;
 import me.luckyraven.shop.valuation.ItemValuation;
@@ -30,16 +30,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.function.Consumer;
 
 /**
- * Drop-zone view for the trader barter flow. The player drops items from any of the shop's
- * {@link me.luckyraven.shop.BarterCategory barter categories}; their combined value (via
+ * Drop-zone barter panel. The player drops items from any of the shop's barter categories; their combined value (via
  * {@link CategoryBarterValuator}) must meet or exceed the negotiated asking price for the swap to confirm. <strong>No
  * economy money is involved at any point</strong>.
+ *
+ * <p>Same lifecycle shape as {@link SellView}: per-player {@link BarterState} kept in a {@link WeakHashMap} on the
+ * panel instance, populated in {@link #render} and cleared via {@link MultiPanelInventory#onEnd}. Back-navigation
+ * returns to the negotiation panel via {@link MultiPanelInventory#back()} (the flow pushed negotiation onto the
+ * back-stack when it switched here).
  */
 @RequiredArgsConstructor
-public final class BarterView implements BeanLifecycle {
+public final class BarterView implements Panel<TraderFlowSession>, BeanLifecycle {
 
 	private static final int SIZE         = 54;
 	private static final int SLOT_TRAIT   = 7;
@@ -67,85 +70,81 @@ public final class BarterView implements BeanLifecycle {
 	private final ShopDisplayResolver    displayResolver;
 	private final TraderSettings         settings;
 
-	private final Map<Player, Session> active = new WeakHashMap<>();
+	private final Map<Player, BarterState> active = new WeakHashMap<>();
 
 	private static SoundConfiguration vanilla(String name, float pitch) {
 		return new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, name, 0.6f, pitch);
 	}
 
 	private static boolean contains(int[] arr, int value) {
-		for (int v : arr) {
-			if (v == value) return true;
-		}
+		for (int v : arr) if (v == value) return true;
 		return false;
 	}
 
 	@Override
-	public void onShutdown() {
-		List<Player> viewers = new ArrayList<>(active.keySet());
-		for (Player viewer : viewers) {
-			Session session = active.remove(viewer);
-			if (session == null) continue;
-			session.committed           = true;
-			session.returnToNegotiation = false;
-			returnItemsToPlayer(viewer, session);
-			try {
-				viewer.closeInventory();
-			} catch (Exception ignored) {
-			}
-		}
+	public int size(TraderFlowSession session) {
+		return SIZE;
 	}
 
-	public void open(Player viewer, NegotiationSession parent, ShopDefinition def,
-	                 BigDecimal askingValue,
-	                 Consumer<Player> onClose) {
-		double mood = moodService.priceMultiplier(parent.getTrader().getData().getId(), viewer.getUniqueId(),
-		                                          parent.getTrait().profile());
-		double barterMood = 2.0 - mood;
+	@Override
+	public String title(TraderFlowSession session) {
+		ItemStack decorated = refresherRegistry.decorate(session.selectedEntry.getItem(), null);
+		String    label     = displayResolver.cleanDisplayName(decorated);
+		return "&8Barter for " + label;
+	}
 
-		int[] slots = dropzoneSlots(settings.getSellMaxOfferSlots());
+	@Override
+	public void render(MultiPanelInventory<TraderFlowSession> host, InventoryHandler handler, Player viewer,
+	                   TraderFlowSession session) {
+		BarterState existing = active.get(viewer);
+		BarterState state;
+		if (existing == null) {
+			double mood = moodService.priceMultiplier(session.trader.getData().getId(), viewer.getUniqueId(),
+			                                          session.trait.profile());
+			double barterMood = 2.0 - mood;
+			int[]  slots      = dropzoneSlots(settings.getSellMaxOfferSlots());
+			// Asking value = negotiated base × current mood multiplier — matches NegotiationView.currentPrice().
+			BigDecimal asking = session.basePrice.multiply(BigDecimal.valueOf(session.moodMultiplier));
 
-		ItemStack        decorated = refresherRegistry.decorate(parent.getEntry().getItem(), viewer);
-		String           label     = displayResolver.cleanDisplayName(decorated);
-		InventoryHandler handler   = new InventoryHandler(plugin, "&8Barter for " + label, SIZE, viewer);
+			state = new BarterState(handler, session, slots, barterMood, asking, viewer, host);
+			active.put(viewer, state);
 
-		Session session = new Session(viewer, parent, def, parent.getEntry(), askingValue, handler, slots, barterMood,
-		                              onClose);
-		active.put(viewer, session);
+			for (int slot : slots) handler.setItem(slot, null, true);
 
-		for (int slot : slots) {
-			handler.setItem(slot, null, true);
+			host.onEnd(s -> {
+				BarterState st = active.remove(viewer);
+				if (st != null && !st.committed) returnItemsToPlayer(viewer, st);
+			});
+		} else {
+			state         = existing;
+			state.handler = handler;
 		}
 
-		renderChrome(session);
-
-		handler.open(viewer);
+		renderChrome(state);
 	}
+
+	// ── Listener bridges ─────────────────────────────────────────────────
 
 	public ClickOutcome handleClick(Player viewer, org.bukkit.inventory.Inventory inventory,
-	                                org.bukkit.inventory.Inventory clickedInventory, int slot,
-	                                InventoryAction action, ItemStack currentItem) {
-		Session session = active.get(viewer);
-		if (session == null || session.handler.getInventory() != inventory) {
-			return ClickOutcome.PASS;
-		}
+	                                org.bukkit.inventory.Inventory clickedInventory, int slot, InventoryAction action,
+	                                ItemStack currentItem) {
+		BarterState state = active.get(viewer);
+		if (state == null || state.handler.getInventory() != inventory) return ClickOutcome.PASS;
 
-		if (clickedInventory == session.handler.getInventory()) {
-			if (!contains(session.dropzoneSlots, slot)) return ClickOutcome.PASS;
-			scheduleRecompute(viewer, session);
+		if (clickedInventory == state.handler.getInventory()) {
+			if (!contains(state.dropzoneSlots, slot)) return ClickOutcome.PASS;
+			scheduleRecompute(viewer, state);
 			return ClickOutcome.ALLOW;
 		}
 
 		if (action == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
-			if (currentItem == null || currentItem.getType() == Material.AIR) {
-				return ClickOutcome.PASS;
-			}
-			int placed = tryPlaceInDropzone(session, currentItem.clone());
+			if (currentItem == null || currentItem.getType() == Material.AIR) return ClickOutcome.PASS;
+			int placed = tryPlaceInDropzone(state, currentItem.clone());
 			if (placed > 0) {
 				ItemStack remaining = currentItem.clone();
 				remaining.setAmount(currentItem.getAmount() - placed);
 				ItemStack replacement = remaining.getAmount() > 0 ? remaining : null;
-				scheduleRecompute(viewer, session);
+				scheduleRecompute(viewer, state);
 				return new ClickOutcome(true, replacement);
 			}
 			return ClickOutcome.CANCEL_ONLY;
@@ -155,181 +154,171 @@ public final class BarterView implements BeanLifecycle {
 
 	public boolean handleDrag(Player viewer, org.bukkit.inventory.Inventory inventory,
 	                          java.util.Collection<Integer> rawSlots) {
-		Session session = active.get(viewer);
-		if (session == null || session.handler.getInventory() != inventory) return false;
+		BarterState state = active.get(viewer);
+		if (state == null || state.handler.getInventory() != inventory) return false;
 
-		int topSize = session.handler.getInventory().getSize();
+		int topSize = state.handler.getInventory().getSize();
 		for (int raw : rawSlots) {
-			if (raw < topSize && !contains(session.dropzoneSlots, raw)) return true;
+			if (raw < topSize && !contains(state.dropzoneSlots, raw)) return true;
 		}
-		scheduleRecompute(viewer, session);
+		scheduleRecompute(viewer, state);
 		return false;
 	}
 
-	public void handleClose(Player viewer, org.bukkit.inventory.Inventory inventory) {
-		Session session = active.get(viewer);
-		if (session == null || session.handler.getInventory() != inventory) return;
+	// ── Lifecycle ────────────────────────────────────────────────────────
 
-		if (!session.committed) {
-			returnItemsToPlayer(viewer, session);
-		}
-		active.remove(viewer);
-
-		if (session.returnToNegotiation && session.onClose != null) {
-			Bukkit.getScheduler().runTask(plugin, () -> session.onClose.accept(viewer));
+	@Override
+	public void onShutdown() {
+		List<Player> viewers = new ArrayList<>(active.keySet());
+		for (Player viewer : viewers) {
+			BarterState state = active.remove(viewer);
+			if (state == null) continue;
+			state.committed = true;
+			returnItemsToPlayer(viewer, state);
+			try {
+				viewer.closeInventory();
+			} catch (Exception ignored) { }
 		}
 	}
 
-	private void renderChrome(Session session) {
-		session.handler.getInventory().setItem(SLOT_TRAIT, null);
-		session.handler.getInventory().setItem(SLOT_ASKING, null);
-		session.handler.getInventory().setItem(SLOT_OFFER, null);
-		session.handler.getInventory().setItem(SLOT_MOOD, null);
-		session.handler.getInventory().setItem(SLOT_BACK, null);
-		session.handler.getInventory().setItem(SLOT_CLEAR, null);
-		session.handler.getInventory().setItem(SLOT_CONFIRM, null);
+	// ── Rendering ────────────────────────────────────────────────────────
 
-		renderTrait(session);
-		renderAsking(session);
-		renderOffer(session);
-		renderMood(session);
-		renderBack(session);
-		renderClear(session);
-		renderConfirm(session);
+	private void renderChrome(BarterState state) {
+		state.handler.getInventory().setItem(SLOT_TRAIT, null);
+		state.handler.getInventory().setItem(SLOT_ASKING, null);
+		state.handler.getInventory().setItem(SLOT_OFFER, null);
+		state.handler.getInventory().setItem(SLOT_MOOD, null);
+		state.handler.getInventory().setItem(SLOT_BACK, null);
+		state.handler.getInventory().setItem(SLOT_CLEAR, null);
+		state.handler.getInventory().setItem(SLOT_CONFIRM, null);
+
+		renderTrait(state);
+		renderAsking(state);
+		renderOffer(state);
+		renderMood(state);
+		renderBack(state);
+		renderClear(state);
+		renderConfirm(state);
 
 		// Dropzone preservation trick — keep slots empty during background fill.
-		ItemStack[] preservedDropzone = new ItemStack[session.dropzoneSlots.length];
-		for (int i = 0; i < session.dropzoneSlots.length; i++) {
-			preservedDropzone[i] = session.handler.getInventory().getItem(session.dropzoneSlots[i]);
-			session.handler.getInventory().setItem(session.dropzoneSlots[i], new ItemStack(Material.BARRIER));
+		ItemStack[] preservedDropzone = new ItemStack[state.dropzoneSlots.length];
+		for (int i = 0; i < state.dropzoneSlots.length; i++) {
+			preservedDropzone[i] = state.handler.getInventory().getItem(state.dropzoneSlots[i]);
+			state.handler.getInventory().setItem(state.dropzoneSlots[i], new ItemStack(Material.BARRIER));
 		}
 
-		InventoryUtil.fillInventory(session.handler,
+		InventoryUtil.fillInventory(state.handler,
 		                            new Fill(settings.getInventoryFillName(), settings.getInventoryFillItem()));
 
-		for (int i = 0; i < session.dropzoneSlots.length; i++) {
-			session.handler.getInventory().setItem(session.dropzoneSlots[i], preservedDropzone[i]);
+		for (int i = 0; i < state.dropzoneSlots.length; i++) {
+			state.handler.getInventory().setItem(state.dropzoneSlots[i], preservedDropzone[i]);
 		}
 	}
 
-	private void renderTrait(Session session) {
+	private void renderTrait(BarterState state) {
 		ItemBuilder trait = new ItemBuilder(material(XMaterial.DIAMOND, Material.DIAMOND));
-		trait.setDisplayName("&d&lTrait: &d" + session.parent.getTrait().displayName())
-		     .setLore("&7This trader's bargaining style.",
-		              " ",
-		              "&8Drop items on the left to make an offer.");
-		session.handler.setItem(SLOT_TRAIT, trait, false, (p, inv, b) -> { });
+		trait.setDisplayName("&d&lTrait: &d" + state.session.trait.displayName())
+		     .setLore("&7This trader's bargaining style.", " ", "&8Drop items on the left to make an offer.");
+		state.handler.setItem(SLOT_TRAIT, trait, false, (p, inv, b) -> { });
 	}
 
-	private void renderAsking(Session session) {
-		ItemStack   decorated = refresherRegistry.decorate(session.entry.getItem(), session.viewer);
+	private void renderAsking(BarterState state) {
+		ItemStack   decorated = refresherRegistry.decorate(state.session.selectedEntry.getItem(), state.viewer);
 		ItemBuilder asking    = new ItemBuilder(decorated.clone());
 		asking.setDisplayName("&6&lAsking for &f" + displayResolver.cleanDisplayName(decorated))
 		      .setLore("&7Value required:",
-		               "&6$" + NumberUtil.valueFormat(session.askingValue),
+		               "&6$" + NumberUtil.valueFormat(state.askingValue),
 		               " ",
 		               "&8Meet or exceed this to swap.");
-		session.handler.setItem(SLOT_ASKING, asking, false, (p, inv, b) -> { });
+		state.handler.setItem(SLOT_ASKING, asking, false, (p, inv, b) -> { });
 	}
 
-	private void renderMood(Session session) {
+	private void renderMood(BarterState state) {
 		ItemBuilder mood = new ItemBuilder(material(XMaterial.NETHER_STAR, Material.NETHER_STAR));
-		mood.setDisplayName("&b&lMood: " + moodLabel(session.barterMoodMultiplier))
+		mood.setDisplayName("&b&lMood: " + moodLabel(state.barterMoodMultiplier))
 		    .setLore("&7Barter multiplier:",
-		             "&e" + String.format("%.2fx", session.barterMoodMultiplier),
+		             "&e" + String.format("%.2fx", state.barterMoodMultiplier),
 		             " ",
 		             "&8Friendlier traders value your goods higher.");
-		session.handler.setItem(SLOT_MOOD, mood, false, (p, inv, b) -> { });
+		state.handler.setItem(SLOT_MOOD, mood, false, (p, inv, b) -> { });
 	}
 
-	private void renderOffer(Session session) {
-		recomputeOffer(session);
+	private void renderOffer(BarterState state) {
+		recomputeOffer(state);
 
-		boolean    ready  = session.offeredValue.compareTo(session.askingValue) >= 0;
-		BigDecimal needed = session.askingValue.subtract(session.offeredValue).max(BigDecimal.ZERO);
-		BigDecimal excess = session.offeredValue.subtract(session.askingValue).max(BigDecimal.ZERO);
+		boolean    ready  = state.offeredValue.compareTo(state.askingValue) >= 0;
+		BigDecimal needed = state.askingValue.subtract(state.offeredValue).max(BigDecimal.ZERO);
+		BigDecimal excess = state.offeredValue.subtract(state.askingValue).max(BigDecimal.ZERO);
 
 		ItemStack icon;
-		if (session.offeredValue.signum() <= 0) {
-			icon = material(XMaterial.GOLD_NUGGET, Material.GOLD_NUGGET);
-		} else if (!ready) {
-			icon = material(XMaterial.GOLD_INGOT, Material.GOLD_INGOT);
-		} else {
-			icon = material(XMaterial.EMERALD, Material.EMERALD);
-		}
+		if (state.offeredValue.signum() <= 0) icon = material(XMaterial.GOLD_NUGGET, Material.GOLD_NUGGET);
+		else if (!ready) icon = material(XMaterial.GOLD_INGOT, Material.GOLD_INGOT);
+		else icon = material(XMaterial.EMERALD, Material.EMERALD);
 
 		ItemBuilder  offer = new ItemBuilder(icon).setDisplayName("&6&lBARTER OFFER");
 		List<String> lore  = new ArrayList<>();
-		if (session.offeredValue.signum() <= 0) {
+		if (state.offeredValue.signum() <= 0) {
 			lore.add("&7Drop barter items on the left.");
 		} else if (!ready) {
-			lore.add("&7Asking:   &6$" + NumberUtil.valueFormat(session.askingValue));
-			lore.add("&7Offered:  &e$" + NumberUtil.valueFormat(session.offeredValue));
+			lore.add("&7Asking:   &6$" + NumberUtil.valueFormat(state.askingValue));
+			lore.add("&7Offered:  &e$" + NumberUtil.valueFormat(state.offeredValue));
 			lore.add("&cNeed:     &c$" + NumberUtil.valueFormat(needed) + " more");
 		} else {
-			lore.add("&7Asking:   &6$" + NumberUtil.valueFormat(session.askingValue));
-			lore.add("&aOffered:  &a$" + NumberUtil.valueFormat(session.offeredValue));
+			lore.add("&7Asking:   &6$" + NumberUtil.valueFormat(state.askingValue));
+			lore.add("&aOffered:  &a$" + NumberUtil.valueFormat(state.offeredValue));
 			lore.add("&7Status:   &a&lREADY TO TRADE");
-			if (excess.signum() > 0) {
-				lore.add("&8(overpay $" + NumberUtil.valueFormat(excess) + " forfeited)");
-			}
+			if (excess.signum() > 0) lore.add("&8(overpay $" + NumberUtil.valueFormat(excess) + " forfeited)");
 		}
 		lore.add(" ");
-		if (session.breakdown.isEmpty()) {
+		if (state.breakdown.isEmpty()) {
 			lore.add("&8No items dropped yet.");
 		} else {
-			int shown = Math.min(session.breakdown.size(), 5);
-			for (int i = 0; i < shown; i++) {
-				lore.add(session.breakdown.get(i));
-			}
-			if (session.breakdown.size() > shown) {
-				lore.add("&8…and " + (session.breakdown.size() - shown) + " more");
-			}
+			int shown = Math.min(state.breakdown.size(), 5);
+			for (int i = 0; i < shown; i++) lore.add(state.breakdown.get(i));
+			if (state.breakdown.size() > shown) lore.add("&8…and " + (state.breakdown.size() - shown) + " more");
 		}
 		offer.setLore(lore);
-		session.handler.setItem(SLOT_OFFER, offer, false, (p, inv, b) -> { });
+		state.handler.setItem(SLOT_OFFER, offer, false, (p, inv, b) -> { });
 	}
 
-	private void renderBack(Session session) {
+	private void renderBack(BarterState state) {
 		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&eBack to negotiation")
 		                                                  .setLore("&7Return your items and go back.");
-		session.handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> onBack(p, session));
+		state.handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> onBack(p, state));
 	}
 
-	private void renderClear(Session session) {
+	private void renderClear(BarterState state) {
 		ItemBuilder clear = new ItemBuilder(material(XMaterial.HOPPER, Material.HOPPER)).setDisplayName(
 				"&eClear offer");
-		session.handler.setItem(SLOT_CLEAR, clear, false, (p, inv, b) -> onClear(p, session));
+		state.handler.setItem(SLOT_CLEAR, clear, false, (p, inv, b) -> onClear(p, state));
 	}
 
-	private void renderConfirm(Session session) {
-		boolean ready = session.offeredValue.compareTo(session.askingValue) >= 0 && session.offeredValue.signum() > 0;
+	private void renderConfirm(BarterState state) {
+		boolean ready = state.offeredValue.compareTo(state.askingValue) >= 0 && state.offeredValue.signum() > 0;
 
 		ItemStack icon = ready ? material(XMaterial.LIME_WOOL, Material.GREEN_WOOL)
 		                       : material(XMaterial.GRAY_WOOL, Material.GRAY_WOOL);
-
 		String displayName = ready ? "&aCONFIRM &7swap" : "&8Need more value";
 
 		ItemBuilder confirm = new ItemBuilder(icon);
 		confirm.setDisplayName(displayName)
 		       .setLore(ready ? "&7Hand over your items and receive the trader's." :
-		                "&7Drop barter items worth at least &6$" + NumberUtil.valueFormat(session.askingValue) + "&7.");
-		session.handler.setItem(SLOT_CONFIRM, confirm, false, (p, inv, b) -> onConfirm(p, session));
+		                "&7Drop barter items worth at least &6$" + NumberUtil.valueFormat(state.askingValue) + "&7.");
+		state.handler.setItem(SLOT_CONFIRM, confirm, false, (p, inv, b) -> onConfirm(p, state));
 	}
 
-	private void recomputeOffer(Session session) {
+	private void recomputeOffer(BarterState state) {
 		BigDecimal   offered   = BigDecimal.ZERO;
 		List<String> breakdown = new ArrayList<>();
 
-		for (int slot : session.dropzoneSlots) {
-			ItemStack rawStack = session.handler.getInventory().getItem(slot);
-			if (rawStack == null || rawStack.getType() == Material.AIR) {
-				continue;
-			}
-			ItemStack decorated = refresherRegistry.decorate(rawStack, session.viewer);
-			ItemValuation valuation = valuator.value(session.definition, decorated,
-			                                         session.parent.getTrait().profile().barterPriceRatio(),
-			                                         session.barterMoodMultiplier);
+		for (int slot : state.dropzoneSlots) {
+			ItemStack rawStack = state.handler.getInventory().getItem(slot);
+			if (rawStack == null || rawStack.getType() == Material.AIR) continue;
+
+			ItemStack decorated = refresherRegistry.decorate(rawStack, state.viewer);
+			ItemValuation valuation = valuator.value(state.session.definition, decorated,
+			                                         state.session.trait.profile().barterPriceRatio(),
+			                                         state.barterMoodMultiplier);
 			String label = displayResolver.cleanDisplayName(decorated);
 			if (valuation.hasValue()) {
 				BigDecimal lineTotal = valuation.unitPrice().multiply(BigDecimal.valueOf(decorated.getAmount()));
@@ -341,76 +330,70 @@ public final class BarterView implements BeanLifecycle {
 			}
 		}
 
-		session.offeredValue = offered;
-		session.breakdown    = breakdown;
+		state.offeredValue = offered;
+		state.breakdown    = breakdown;
 	}
 
 	private String moodLabel(double barterMoodMultiplier) {
-		// barterMood = 2.0 - mood: friendly mood (≤0.95) → barter ≥1.05 (generous); hostile mood (≥1.25) → ≤0.75.
 		if (barterMoodMultiplier >= 1.05) return "&aFriendly";
 		if (barterMoodMultiplier > 0.95) return "&fNeutral";
 		if (barterMoodMultiplier > 0.75) return "&eWary";
 		return "&cHostile";
 	}
 
-	private void onBack(Player viewer, Session session) {
-		SOUND_CLICK.playSound(viewer);
-		session.returnToNegotiation = true;
-		viewer.closeInventory();
+	// ── Click actions ────────────────────────────────────────────────────
+
+	private void onBack(Player viewer, BarterState state) {
+		returnItemsToPlayer(viewer, state);
+		state.committed = true; // suppress onEnd return pass
+		active.remove(viewer);
+		state.host.back();
+		Bukkit.getScheduler().runTask(plugin, () -> SOUND_CLICK.playSound(viewer));
 	}
 
-	private void onClear(Player viewer, Session session) {
-		returnItemsToPlayer(viewer, session);
-		recomputeOffer(session);
-		renderChrome(session);
+	private void onClear(Player viewer, BarterState state) {
+		returnItemsToPlayer(viewer, state);
+		recomputeOffer(state);
+		renderChrome(state);
 	}
 
-	private void onConfirm(Player viewer, Session session) {
-		if (session.offeredValue.compareTo(session.askingValue) < 0 || session.offeredValue.signum() <= 0) {
-			return;
-		}
+	private void onConfirm(Player viewer, BarterState state) {
+		if (state.offeredValue.compareTo(state.askingValue) < 0 || state.offeredValue.signum() <= 0) return;
 
-		List<ItemStack> offered = collectOfferedItems(session);
+		List<ItemStack> offered = collectOfferedItems(state);
 
-		TraderBarterEvent event = new TraderBarterEvent(viewer, session.parent.getTrader(), session.entry,
-		                                                session.askingValue, session.offeredValue, offered);
+		TraderBarterEvent event = new TraderBarterEvent(viewer, state.session.trader, state.session.selectedEntry,
+		                                                state.askingValue, state.offeredValue, offered);
 		Bukkit.getPluginManager().callEvent(event);
+		if (event.isCancelled()) return;
 
-		if (event.isCancelled()) {
-			return;
-		}
-
-		SOUND_CONFIRM.playSound(viewer);
-		session.committed = true;
-		for (int slot : session.dropzoneSlots) {
-			session.handler.getInventory().setItem(slot, null);
-		}
-		session.returnToNegotiation = false;
-		viewer.closeInventory();
+		state.committed = true;
+		for (int slot : state.dropzoneSlots) state.handler.getInventory().setItem(slot, null);
+		active.remove(viewer);
+		state.host.back();
+		Bukkit.getScheduler().runTask(plugin, () -> SOUND_CONFIRM.playSound(viewer));
 	}
 
-	private List<ItemStack> collectOfferedItems(Session session) {
+	// ── Helpers ──────────────────────────────────────────────────────────
+
+	private List<ItemStack> collectOfferedItems(BarterState state) {
 		List<ItemStack> items = new ArrayList<>();
-		for (int slot : session.dropzoneSlots) {
-			ItemStack stack = session.handler.getInventory().getItem(slot);
-			if (stack != null && stack.getType() != Material.AIR) {
-				items.add(stack.clone());
-			}
+		for (int slot : state.dropzoneSlots) {
+			ItemStack stack = state.handler.getInventory().getItem(slot);
+			if (stack != null && stack.getType() != Material.AIR) items.add(stack.clone());
 		}
 		return items;
 	}
 
-	private void returnItemsToPlayer(Player viewer, Session session) {
-		for (int slot : session.dropzoneSlots) {
-			ItemStack stack = session.handler.getInventory().getItem(slot);
-			if (stack == null || stack.getType() == Material.AIR) {
-				continue;
-			}
+	private void returnItemsToPlayer(Player viewer, BarterState state) {
+		for (int slot : state.dropzoneSlots) {
+			ItemStack stack = state.handler.getInventory().getItem(slot);
+			if (stack == null || stack.getType() == Material.AIR) continue;
 			Map<Integer, ItemStack> leftover = viewer.getInventory().addItem(stack.clone());
 			for (ItemStack drop : leftover.values()) {
 				viewer.getWorld().dropItemNaturally(viewer.getLocation(), drop);
 			}
-			session.handler.getInventory().setItem(slot, null);
+			state.handler.getInventory().setItem(slot, null);
 		}
 	}
 
@@ -426,18 +409,18 @@ public final class BarterView implements BeanLifecycle {
 		return stack != null ? stack : new ItemStack(fallback);
 	}
 
-	private int tryPlaceInDropzone(Session session, ItemStack stack) {
+	private int tryPlaceInDropzone(BarterState state, ItemStack stack) {
 		int remaining  = stack.getAmount();
 		int maxPerSlot = stack.getMaxStackSize();
 
-		for (int slot : session.dropzoneSlots) {
+		for (int slot : state.dropzoneSlots) {
 			if (remaining <= 0) break;
-			ItemStack current = session.handler.getInventory().getItem(slot);
+			ItemStack current = state.handler.getInventory().getItem(slot);
 			if (current == null || current.getType() == Material.AIR) {
 				ItemStack placed = stack.clone();
 				int       amount = Math.min(remaining, maxPerSlot);
 				placed.setAmount(amount);
-				session.handler.getInventory().setItem(slot, placed);
+				state.handler.getInventory().setItem(slot, placed);
 				remaining -= amount;
 			} else if (current.isSimilar(stack) && current.getAmount() < maxPerSlot) {
 				int space = maxPerSlot - current.getAmount();
@@ -449,44 +432,38 @@ public final class BarterView implements BeanLifecycle {
 		return stack.getAmount() - remaining;
 	}
 
-	private void scheduleRecompute(Player viewer, Session session) {
+	private void scheduleRecompute(Player viewer, BarterState state) {
 		Bukkit.getScheduler().runTask(plugin, () -> {
-			if (active.get(viewer) != session) return;
-			recomputeOffer(session);
-			renderOffer(session);
-			renderConfirm(session);
+			if (active.get(viewer) != state) return;
+			recomputeOffer(state);
+			renderOffer(state);
+			renderConfirm(state);
 		});
 	}
 
-	static final class Session {
-		final Player                             viewer;
-		final NegotiationSession parent;
-		final ShopDefinition                     definition;
-		final ShopItemEntry                      entry;
-		final BigDecimal                         askingValue;
-		final InventoryHandler                   handler;
-		final int[]                              dropzoneSlots;
-		final double                             barterMoodMultiplier;
-		final Consumer<Player>                   onClose;
+	static final class BarterState {
+		final Player                                 viewer;
+		final TraderFlowSession                      session;
+		final int[]                                  dropzoneSlots;
+		final double                                 barterMoodMultiplier;
+		final BigDecimal                             askingValue;
+		final MultiPanelInventory<TraderFlowSession> host;
 
-		BigDecimal   offeredValue = BigDecimal.ZERO;
-		List<String> breakdown    = new ArrayList<>();
+		InventoryHandler handler;
+		BigDecimal       offeredValue = BigDecimal.ZERO;
+		List<String>     breakdown    = new ArrayList<>();
+		boolean          committed    = false;
 
-		boolean committed           = false;
-		boolean returnToNegotiation = true;
-
-		Session(Player viewer, NegotiationSession parent, ShopDefinition definition,
-		        ShopItemEntry entry, BigDecimal askingValue, InventoryHandler handler, int[] dropzoneSlots,
-		        double barterMoodMultiplier, Consumer<Player> onClose) {
+		BarterState(InventoryHandler handler, TraderFlowSession session, int[] dropzoneSlots,
+		            double barterMoodMultiplier, BigDecimal askingValue, Player viewer,
+		            MultiPanelInventory<TraderFlowSession> host) {
 			this.viewer               = viewer;
-			this.parent               = parent;
-			this.definition           = definition;
-			this.entry                = entry;
-			this.askingValue          = askingValue;
+			this.session              = session;
 			this.handler              = handler;
 			this.dropzoneSlots        = dropzoneSlots;
 			this.barterMoodMultiplier = barterMoodMultiplier;
-			this.onClose              = onClose;
+			this.askingValue          = askingValue;
+			this.host                 = host;
 		}
 	}
 

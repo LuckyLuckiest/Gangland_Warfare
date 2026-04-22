@@ -35,7 +35,6 @@ public final class ModeSelectView implements Panel<TraderFlowSession> {
 
 	private final JavaPlugin     plugin;
 	private final TraderSettings settings;
-	private final SellView       sellView;
 
 	@Override
 	public int size(TraderFlowSession session) {
@@ -68,17 +67,8 @@ public final class ModeSelectView implements Panel<TraderFlowSession> {
 		    .setLore("&7Offer your items to the trader.",
 		             "&7" + session.definition.getSellCategories().size() + " categor(ies).");
 		handler.setItem(SLOT_SELL, sell, false, (p, inv, b) -> {
-			// SellView is still a standalone legacy view. End the flow cleanly before handing off so the host does not
-			// treat the resulting close event as an unexpected viewer dismissal. The click sound fires on the next
-			// tick, once the old inventory has closed — playing it inside the same tick as the screen swap causes the
-			// client to render the audio cue and the visual transition simultaneously, which reads as a flicker.
-			host.end();
-			if (sellView != null) {
-				Bukkit.getScheduler().runTask(plugin, () -> {
-					SOUND_PICK.playSound(p);
-					sellView.open(p, session.trader, session.definition, session.trait);
-				});
-			}
+			host.switchTo(TraderFlowSession.PANEL_SELL);
+			playSoundNextTick(p, SOUND_PICK);
 		});
 
 		ItemBuilder close = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER)).setDisplayName("&cClose");

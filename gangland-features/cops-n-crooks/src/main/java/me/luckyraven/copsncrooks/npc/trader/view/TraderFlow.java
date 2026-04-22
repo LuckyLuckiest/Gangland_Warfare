@@ -21,6 +21,8 @@ public final class TraderFlow {
 	private final ModeSelectView  modeSelectPanel;
 	private final ShopView        shopPanel;
 	private final NegotiationView negotiationPanel;
+	private final SellView        sellPanel;
+	private final BarterView      barterPanel;
 
 	public void start(Player viewer, TraderNpc trader, ShopDefinition definition, TraderTraitDefinition trait) {
 		TraderFlowSession                      session = new TraderFlowSession(trader, definition, trait);
@@ -28,6 +30,8 @@ public final class TraderFlow {
 		host.register(TraderFlowSession.PANEL_MODE_SELECT, modeSelectPanel);
 		host.register(TraderFlowSession.PANEL_SHOP, shopPanel);
 		host.register(TraderFlowSession.PANEL_NEGOTIATION, negotiationPanel);
+		host.register(TraderFlowSession.PANEL_SELL, sellPanel);
+		host.register(TraderFlowSession.PANEL_BARTER, barterPanel);
 		host.openAt(TraderFlowSession.PANEL_MODE_SELECT);
 	}
 

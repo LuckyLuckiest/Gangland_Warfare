@@ -1,12 +1,18 @@
 package me.luckyraven.file.configuration.copsncrooks;
 
 import me.luckyraven.copsncrooks.npc.banker.message.BankerMessageContract;
+import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 
 import java.math.BigDecimal;
 
 public final class GanglandBankerMessages implements BankerMessageContract {
+
+	private static String fillAmount(String template, BigDecimal amount) {
+		return template.replace("%money_symbol%", Settings.getMoneySymbol())
+		               .replace("%amount%", Settings.formatAmount(amount));
+	}
 
 	@Override
 	public String depositSuccess(BigDecimal amount) {
@@ -49,7 +55,7 @@ public final class GanglandBankerMessages implements BankerMessageContract {
 
 	@Override
 	public String upgradeSuccess(String tierDisplay) {
-		return Messages.BANKER_UPGRADE_SUCCESS.toString().replace("%tier%", tierDisplay);
+		return Messages.BANKER_UPGRADE_SUCCESS.toString().replace("%tier%", ChatUtil.color(tierDisplay));
 	}
 
 	@Override
@@ -138,11 +144,6 @@ public final class GanglandBankerMessages implements BankerMessageContract {
 	@Override
 	public String loanCapFull(BigDecimal amount) {
 		return fillAmount(Messages.BANKER_LOAN_CAP_FULL.toString(), amount);
-	}
-
-	private static String fillAmount(String template, BigDecimal amount) {
-		return template.replace("%money_symbol%", Settings.getMoneySymbol())
-		               .replace("%amount%", Settings.formatAmount(amount));
 	}
 
 }

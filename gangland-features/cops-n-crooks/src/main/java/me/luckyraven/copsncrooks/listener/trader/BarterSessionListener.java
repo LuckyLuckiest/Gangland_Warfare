@@ -8,12 +8,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 
 /**
- * Singleton click / drag / close listener for the barter view. Delegates to {@link BarterView} which owns the
- * per-player session map.
+ * Singleton click / drag listener for the barter panel. Close handling moved onto
+ * {@link me.luckyraven.inventory.flow.MultiPanelInventory#onEnd} inside {@link BarterView#render} when the panel
+ * became flow-aware, so no dedicated close event handler is needed here.
  */
 @ListenerHandler
 @RequiredArgsConstructor
@@ -42,12 +42,6 @@ public final class BarterSessionListener implements Listener {
 		if (barterView.handleDrag(viewer, event.getInventory(), event.getRawSlots())) {
 			event.setCancelled(true);
 		}
-	}
-
-	@EventHandler
-	public void onClose(InventoryCloseEvent event) {
-		if (!(event.getPlayer() instanceof Player viewer)) return;
-		barterView.handleClose(viewer, event.getInventory());
 	}
 
 }

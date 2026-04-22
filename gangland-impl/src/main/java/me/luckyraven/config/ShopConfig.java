@@ -183,12 +183,11 @@ public class ShopConfig {
 	}
 
 	@Bean
-	public NegotiationView negotiationView(MoodService moodService, BarterView barterView,
-	                                       QuantitySelectorView quantitySelectorView,
+	public NegotiationView negotiationView(MoodService moodService, QuantitySelectorView quantitySelectorView,
 	                                       TraderSettings traderSettings, TraderMessageContract traderMessages,
 	                                       TraderEconomyContract economy, ShopDisplayResolver displayResolver) {
 		return new NegotiationView(gangland, moodService, traderSettings, traderMessages, economy, displayResolver,
-		                           barterView, quantitySelectorView);
+		                           quantitySelectorView);
 	}
 
 	@Bean
@@ -207,18 +206,14 @@ public class ShopConfig {
 	}
 
 	@Bean
-	public ModeSelectView traderModeSelectView(TraderSettings traderSettings, SellView sellView) {
-		return new ModeSelectView(gangland, traderSettings, sellView);
+	public ModeSelectView traderModeSelectView(TraderSettings traderSettings) {
+		return new ModeSelectView(gangland, traderSettings);
 	}
 
 	@Bean
 	public TraderFlow traderFlow(ModeSelectView modeSelectView, ShopView shopView, NegotiationView negotiationView,
-	                             SellView sellView) {
-		TraderFlow flow = new TraderFlow(gangland, modeSelectView, shopView, negotiationView);
-		// Circular: SellView returns to the mode-select panel by restarting the flow. Wired via setter so the
-		// SellView bean can be constructed before TraderFlow exists.
-		sellView.setTraderFlow(flow);
-		return flow;
+	                             SellView sellView, BarterView barterView) {
+		return new TraderFlow(gangland, modeSelectView, shopView, negotiationView, sellView, barterView);
 	}
 
 	@Bean
