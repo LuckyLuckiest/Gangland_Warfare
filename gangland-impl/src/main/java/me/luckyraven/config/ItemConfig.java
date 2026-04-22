@@ -9,6 +9,7 @@ import me.luckyraven.item.converter.*;
 import me.luckyraven.item.money.MoneyAddon;
 import me.luckyraven.item.money.MoneyConverter;
 import me.luckyraven.item.money.MoneyDepositService;
+import me.luckyraven.item.refresher.AmmunitionItemRefresher;
 import me.luckyraven.item.refresher.UniqueItemRefresher;
 import me.luckyraven.item.refresher.WeaponRefresher;
 import me.luckyraven.item.refresher.WearableRefresher;
@@ -172,11 +173,17 @@ public class ItemConfig {
 	}
 
 	@Bean
+	public AmmunitionItemRefresher ammunitionItemRefresher(AmmunitionManager ammunitionManager) {
+		return new AmmunitionItemRefresher(ammunitionManager);
+	}
+
+	@Bean
 	public ItemRefresherRegistry itemRefresherRegistry(WeaponRefresher weaponRefresher,
 	                                                   WearableRefresher wearableRefresher,
-	                                                   UniqueItemRefresher uniqueItemRefresher) {
+	                                                   UniqueItemRefresher uniqueItemRefresher,
+	                                                   AmmunitionItemRefresher ammunitionItemRefresher) {
 		ItemRefresherRegistry registry = new ItemRefresherRegistry();
-		registry.register(weaponRefresher, wearableRefresher, uniqueItemRefresher);
+		registry.register(weaponRefresher, wearableRefresher, uniqueItemRefresher, ammunitionItemRefresher);
 		return registry;
 	}
 }
