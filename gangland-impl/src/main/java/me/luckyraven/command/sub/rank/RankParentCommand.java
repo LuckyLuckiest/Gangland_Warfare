@@ -5,8 +5,8 @@ import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.core.TriConsumer;
 import me.luckyraven.core.datastructure.Tree;
-import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.file.configuration.Messages;
+import me.luckyraven.gang.rank.RankManager;
 import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.command.CommandSender;
 

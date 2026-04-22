@@ -1,9 +1,9 @@
 package me.luckyraven.events.gang;
 
 import lombok.Getter;
-import me.luckyraven.data.account.Level;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.events.level.LevelUpEvent;
+import me.luckyraven.gang.Gang;
+import me.luckyraven.gang.events.level.LevelUpEvent;
+import me.luckyraven.gang.user.Level;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 

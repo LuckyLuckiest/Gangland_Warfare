@@ -1,11 +1,11 @@
 package me.luckyraven.database;
 
 import lombok.Getter;
-import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.rank.RankParent;
 import me.luckyraven.database.repositories.rank.RankParentRepository;
 import me.luckyraven.database.repositories.rank.RankRepository;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.gang.rank.Rank;
+import me.luckyraven.gang.rank.RankParent;
 import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.DatabaseManager;
 import me.luckyraven.persistence.database.DatabaseSettingsProvider;

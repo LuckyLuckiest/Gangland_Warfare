@@ -1,8 +1,8 @@
 package me.luckyraven.database.repositories.gang;
 
-import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.database.tables.gang.GangTable;
-import me.luckyraven.economy.bank.Currency;
+import me.luckyraven.economy.Currency;
+import me.luckyraven.gang.Gang;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.component.Table;
@@ -34,17 +34,18 @@ public class GangRepository extends AbstractRepository<Gang> {
 		List<Object[]> gangsData = gangTable.selectAllTableQuery(getDatabase());
 
 		for (Object[] result : gangsData) {
-			int    v           = 0;
-			int    id          = (int) result[v++];
-			String name        = String.valueOf(result[v++]);
-			String displayName = String.valueOf(result[v++]);
-			String description = String.valueOf(result[v++]);
-			String color       = String.valueOf(result[v++]);
-			double balance     = (double) result[v++];
-			int    level       = (int) result[v++];
-			double experience  = (double) result[v++];
-			double bounty      = (double) result[v++];
-			long   created     = (long) result[v];
+			int    v                  = 0;
+			int    id                 = (int) result[v++];
+			String name               = String.valueOf(result[v++]);
+			String displayName        = String.valueOf(result[v++]);
+			String description        = String.valueOf(result[v++]);
+			String color              = String.valueOf(result[v++]);
+			double balance            = (double) result[v++];
+			int    level              = (int) result[v++];
+			double experience         = (double) result[v++];
+			double bounty             = (double) result[v++];
+			long   created            = (long) result[v++];
+			long   lastMemberOnlineAt = (long) result[v];
 
 			Gang gang = new Gang(id);
 
@@ -57,6 +58,7 @@ public class GangRepository extends AbstractRepository<Gang> {
 			gang.getLevel().setExperience(experience);
 			gang.getBounty().setAmount(Currency.of(bounty));
 			gang.setCreated(created);
+			gang.setLastMemberOnlineAt(lastMemberOnlineAt);
 
 			gangs.add(gang);
 		}

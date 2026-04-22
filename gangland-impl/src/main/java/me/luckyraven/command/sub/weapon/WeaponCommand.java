@@ -5,7 +5,7 @@ import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.bean.command.CommandHandler;
-import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.file.configuration.weapon.WeaponLoader;
 import me.luckyraven.weapon.WeaponManager;
 import me.luckyraven.weapon.configuration.WeaponAddon;

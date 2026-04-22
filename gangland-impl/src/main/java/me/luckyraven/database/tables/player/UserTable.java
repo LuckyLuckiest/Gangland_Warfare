@@ -1,6 +1,6 @@
 package me.luckyraven.database.tables.player;
 
-import me.luckyraven.data.account.user.User;
+import me.luckyraven.gang.user.User;
 import me.luckyraven.persistence.database.component.Attribute;
 import me.luckyraven.persistence.database.component.Table;
 import org.bukkit.OfflinePlayer;

@@ -3,16 +3,17 @@ package me.luckyraven.bootstrap;
 import lombok.CustomLog;
 import me.luckyraven.Gangland;
 import me.luckyraven.core.bean.BeanPostInitialize;
-import me.luckyraven.data.account.gang.member.Member;
-import me.luckyraven.data.account.gang.member.MemberManager;
-import me.luckyraven.data.account.user.User;
-import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.data.user.UserDataLoader;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.TableLookup;
 import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.events.user.UserDataInitEvent;
+import me.luckyraven.gang.member.Member;
+import me.luckyraven.gang.member.MemberManager;
+import me.luckyraven.gang.user.User;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.unique.UniqueItemUtil;
 import me.luckyraven.persistence.FileManager;
@@ -44,26 +45,23 @@ public final class PlayerBootstrapService implements BeanPostInitialize {
 	private final UserManager<Player>        userManager;
 	private final UserManager<OfflinePlayer> offlineUserManager;
 	private final MemberManager              memberManager;
+	private final UserDataLoader             userDataLoader;
 	private final UniqueItemAddon            uniqueItemAddon;
-
-	@SuppressWarnings("unused")
-	// forces topo ordering — files to reload before players load
-	private final FileManager fileManager;
 
 	public PlayerBootstrapService(Gangland gangland,
 	                              GanglandDatabase ganglandDatabase,
 	                              UserManager<Player> userManager,
 	                              UserManager<OfflinePlayer> offlineUserManager,
 	                              MemberManager memberManager,
-	                              UniqueItemAddon uniqueItemAddon,
-	                              FileManager fileManager) {
+	                              UserDataLoader userDataLoader,
+	                              UniqueItemAddon uniqueItemAddon) {
 		this.gangland           = gangland;
 		this.ganglandDatabase   = ganglandDatabase;
 		this.userManager        = userManager;
 		this.offlineUserManager = offlineUserManager;
 		this.memberManager      = memberManager;
+		this.userDataLoader     = userDataLoader;
 		this.uniqueItemAddon    = uniqueItemAddon;
-		this.fileManager        = fileManager;
 	}
 
 	/**
@@ -110,7 +108,7 @@ public final class PlayerBootstrapService implements BeanPostInitialize {
 				uniqueItem.addItemToInventory(player);
 			}
 
-			userManager.initializeUserData(newUser, userTable, bankTable);
+			userDataLoader.loadUserData(newUser, userTable, bankTable);
 
 			UserDataInitEvent userDataInitEvent = new UserDataInitEvent(false, newUser);
 			Bukkit.getPluginManager().callEvent(userDataInitEvent);
@@ -152,7 +150,7 @@ public final class PlayerBootstrapService implements BeanPostInitialize {
 				}
 
 				User<OfflinePlayer> offlineUser = offlineUserManager.create(offlinePlayer);
-				offlineUserManager.initializeUserData(offlineUser, userTable, bankTable);
+				userDataLoader.loadUserData(offlineUser, userTable, bankTable);
 				offlineUserManager.add(offlineUser);
 			}
 		});

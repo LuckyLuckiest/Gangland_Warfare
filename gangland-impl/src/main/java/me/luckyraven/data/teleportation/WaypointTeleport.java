@@ -1,9 +1,9 @@
 package me.luckyraven.data.teleportation;
 
 import me.luckyraven.core.timer.CountdownTimer;
-import me.luckyraven.data.account.user.User;
 import me.luckyraven.events.teleportation.TeleportEvent;
 import me.luckyraven.file.configuration.Messages;
+import me.luckyraven.gang.user.User;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;

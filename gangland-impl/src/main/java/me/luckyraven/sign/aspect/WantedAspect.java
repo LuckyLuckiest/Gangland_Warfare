@@ -2,9 +2,9 @@ package me.luckyraven.sign.aspect;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.wanted.Wanted;
-import me.luckyraven.data.account.user.User;
-import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Messages;
+import me.luckyraven.gang.user.User;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.sign.model.ParsedSign;
 import me.luckyraven.sign.type.WantedSign;
 import org.bukkit.entity.Player;
@@ -33,7 +33,7 @@ public class WantedAspect implements SignAspect {
 
 				String string = Messages.WANTED_INCREASED.toString(Messages.Type.NO_CHANGE);
 				String replace = string.replace("%amount%", String.valueOf(amount))
-									   .replace("%stars%", wanted.getLevelStars());
+				                       .replace("%stars%", wanted.getLevelStars());
 				return AspectResult.success(replace);
 			}
 			case REMOVE -> {
@@ -43,7 +43,7 @@ public class WantedAspect implements SignAspect {
 
 				String string = Messages.WANTED_DECREASED.toString(Messages.Type.NO_CHANGE);
 				String replace = string.replace("%amount%", String.valueOf(amount))
-									   .replace("%stars%", wanted.getLevelStars());
+				                       .replace("%stars%", wanted.getLevelStars());
 				return AspectResult.success(replace);
 			}
 			case CLEAR -> {

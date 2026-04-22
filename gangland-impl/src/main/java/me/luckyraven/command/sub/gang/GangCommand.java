@@ -10,19 +10,19 @@ import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.bean.command.CommandHandler;
 import me.luckyraven.core.color.ColorUtil;
 import me.luckyraven.core.color.MaterialType;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangAlliance;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.member.Member;
-import me.luckyraven.data.account.gang.member.MemberManager;
-import me.luckyraven.data.account.user.User;
-import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.rank.RankManager;
+import me.luckyraven.data.user.UserDataLoader;
 import me.luckyraven.database.GanglandDatabase;
-import me.luckyraven.economy.bank.Currency;
+import me.luckyraven.economy.Currency;
 import me.luckyraven.file.configuration.Settings;
-import me.luckyraven.file.configuration.inventory.InventoryRuntimeContext;
+import me.luckyraven.gang.Gang;
+import me.luckyraven.gang.GangAlliance;
+import me.luckyraven.gang.GangManager;
+import me.luckyraven.gang.member.Member;
+import me.luckyraven.gang.member.MemberManager;
+import me.luckyraven.gang.rank.Rank;
+import me.luckyraven.gang.rank.RankManager;
+import me.luckyraven.gang.user.User;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.multi.ListEntry;
 import me.luckyraven.inventory.multi.MultiInventory;
@@ -52,6 +52,7 @@ public final class GangCommand extends Command {
 	private final MemberManager              memberManager;
 	private final RankManager                rankManager;
 	private final GanglandDatabase           ganglandDatabase;
+	private final UserDataLoader             userDataLoader;
 
 	public GangCommand(Gangland gangland,
 	                   @Qualifier("online") UserManager<Player> userManager,
@@ -60,7 +61,8 @@ public final class GangCommand extends Command {
 	                   MemberManager memberManager,
 	                   RankManager rankManager,
 	                   GanglandDatabase ganglandDatabase,
-	                   InventoryRuntimeContext inventoryRuntimeContext) {
+	                   UserDataLoader userDataLoader
+	) {
 		super(gangland, "gang", true);
 
 		this.userManager        = userManager;
@@ -69,6 +71,7 @@ public final class GangCommand extends Command {
 		this.memberManager      = memberManager;
 		this.rankManager        = rankManager;
 		this.ganglandDatabase   = ganglandDatabase;
+		this.userDataLoader     = userDataLoader;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -100,7 +103,7 @@ public final class GangCommand extends Command {
 		Argument acceptInvite = addUser.gangAccept();
 		Argument removeUser = new GangKickCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                          offlineUserManager, memberManager, gangManager, rankManager,
-		                                          ganglandDatabase);
+		                                          userDataLoader, ganglandDatabase);
 		Argument leave = new GangLeaveCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                      memberManager, gangManager, rankManager);
 		Argument promoteUser = new GangPromoteCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
@@ -214,7 +217,8 @@ public final class GangCommand extends Command {
 
 		// members
 		gui.setItem(19, XMaterial.PLAYER_HEAD.get(), "&bMembers", new ArrayList<>(
-							List.of("&a" + gang.getOnlineMembers(userManager).size() + "&7/&e" + gang.getMembers().size())), false,
+							List.of("&a" + gang.getOnlineMembers(userManager::getUser).size() + "&7/&e" +
+				                    gang.getMembers().size())), false,
 		            false, (player, inventory, item) -> {
 					User<Player> user1 = userManager.getUser(player);
 
@@ -275,7 +279,8 @@ public final class GangCommand extends Command {
 								.stream().map(GangAlliance::ally).toList()) {
 							List<String> data = new ArrayList<>();
 							data.add("&7ID:&e " + ally.getId());
-							data.add(String.format("&7Members:&a %d&7/&e%d", ally.getOnlineMembers(userManager).size(),
+							data.add(String.format("&7Members:&a %d&7/&e%d",
+				                                   ally.getOnlineMembers(userManager::getUser).size(),
 				                                   ally.getMembers().size()));
 							data.add("&7Created:&e " + ally.getDateCreatedString());
 

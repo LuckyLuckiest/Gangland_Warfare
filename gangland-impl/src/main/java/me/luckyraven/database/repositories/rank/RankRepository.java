@@ -1,7 +1,7 @@
 package me.luckyraven.database.repositories.rank;
 
-import me.luckyraven.data.rank.Rank;
 import me.luckyraven.database.tables.rank.RankTable;
+import me.luckyraven.gang.rank.Rank;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.component.Table;

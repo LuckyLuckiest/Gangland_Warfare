@@ -9,12 +9,13 @@ import me.luckyraven.core.TriConsumer;
 import me.luckyraven.core.datastructure.Tree;
 import me.luckyraven.core.timer.CountdownTimer;
 import me.luckyraven.core.utilities.TimeUtil;
-import me.luckyraven.data.account.user.User;
-import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.economy.Currency;
 import me.luckyraven.economy.bank.Bank;
-import me.luckyraven.economy.bank.Currency;
+import me.luckyraven.economy.exception.EconomyException;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.gang.user.User;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.TimeMessages;
 import org.bukkit.command.CommandSender;
@@ -87,7 +88,7 @@ class BankCreateCommand extends SubArgument {
 			// create the bank
 			try {
 				if (fee.signum() > 0) user.getEconomy().withdrawAmount(fee);
-			} catch (me.luckyraven.economy.bank.EconomyException ignored) {
+			} catch (EconomyException ignored) {
 				// shouldn't happen — we just checked the balance. Fall through.
 			}
 			bank.getEconomy().setAmount(Currency.of(Settings.getBankInitialBalance()));

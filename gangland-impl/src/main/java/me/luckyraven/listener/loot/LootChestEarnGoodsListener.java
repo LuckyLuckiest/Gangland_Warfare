@@ -2,12 +2,13 @@ package me.luckyraven.listener.loot;
 
 import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.bean.listener.ListenerHandler;
-import me.luckyraven.data.account.Level;
-import me.luckyraven.data.account.user.User;
-import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.events.level.LevelUpEvent;
+import me.luckyraven.economy.Currency;
 import me.luckyraven.events.user.UserLevelUpEvent;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.gang.events.level.LevelUpEvent;
+import me.luckyraven.gang.user.Level;
+import me.luckyraven.gang.user.User;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.lootchest.data.LootChestSession;
 import me.luckyraven.lootchest.events.lootchest.LootChestCooldownCompleteEvent;
 import me.luckyraven.lootchest.events.lootchest.LootChestOpenEvent;
@@ -60,7 +61,7 @@ public class LootChestEarnGoodsListener implements Listener {
 		                               Settings.getLootChestRewardExperienceMaximum());
 
 		// deposit money
-		user.getEconomy().depositAmount(me.luckyraven.economy.bank.Currency.of(money));
+		user.getEconomy().depositAmount(Currency.of(money));
 
 		// add experience
 		Level level = user.getLevel();

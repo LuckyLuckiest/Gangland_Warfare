@@ -5,7 +5,7 @@ import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.bean.command.CommandHandler;
-import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.gang.user.UserManager;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 

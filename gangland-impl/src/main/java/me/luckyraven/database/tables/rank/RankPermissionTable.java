@@ -1,7 +1,7 @@
 package me.luckyraven.database.tables.rank;
 
-import me.luckyraven.data.rank.RankPermission;
 import me.luckyraven.database.tables.plugin.PermissionTable;
+import me.luckyraven.gang.rank.RankPermission;
 import me.luckyraven.persistence.database.component.Attribute;
 import me.luckyraven.persistence.database.component.Table;
 
@@ -35,7 +35,7 @@ public class RankPermissionTable extends Table<RankPermission> {
 	@Override
 	public Map<String, Object> searchCriteria(RankPermission data) {
 		return createSearchCriteria("rank_id = ? AND permission_id = ?",
-									new Object[]{data.rankId(), data.permissionId()},
-									new int[]{Types.INTEGER, Types.INTEGER}, new int[]{0, 1});
+		                            new Object[]{data.rankId(), data.permissionId()},
+		                            new int[]{Types.INTEGER, Types.INTEGER}, new int[]{0, 1});
 	}
 }

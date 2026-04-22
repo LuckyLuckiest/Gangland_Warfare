@@ -1,7 +1,7 @@
 package me.luckyraven.database.repositories.plugin;
 
-import me.luckyraven.data.rank.Permission;
 import me.luckyraven.database.tables.plugin.PermissionTable;
+import me.luckyraven.gang.rank.Permission;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.component.Table;

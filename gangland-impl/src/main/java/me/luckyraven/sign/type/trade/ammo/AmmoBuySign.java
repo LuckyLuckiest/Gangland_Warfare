@@ -1,6 +1,7 @@
 package me.luckyraven.sign.type.trade.ammo;
 
-import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.core.color.Color;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.aspect.ItemTransferAspect;
 import me.luckyraven.sign.aspect.MoneyAspect;
@@ -15,7 +16,6 @@ import me.luckyraven.sign.registry.SignTypeDefinition;
 import me.luckyraven.sign.type.trade.BaseTradeSign;
 import me.luckyraven.sign.validation.SignValidator;
 import me.luckyraven.sign.validation.trade.ammo.AmmoSignValidator;
-import me.luckyraven.core.color.Color;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import org.bukkit.entity.Player;

@@ -2,8 +2,8 @@ package me.luckyraven.events.teleportation;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.teleportation.Waypoint;
+import me.luckyraven.gang.user.User;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
@@ -18,8 +18,8 @@ public class TeleportEvent extends Event implements Cancellable {
 	private static final HandlerList handler = new HandlerList();
 
 	private final User<Player> user;
-	private final Location from;
-	private final Waypoint waypoint;
+	private final Location     from;
+	private final Waypoint     waypoint;
 
 	private boolean cancelled;
 

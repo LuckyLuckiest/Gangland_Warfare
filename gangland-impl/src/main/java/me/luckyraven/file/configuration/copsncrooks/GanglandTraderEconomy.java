@@ -2,10 +2,10 @@ package me.luckyraven.file.configuration.copsncrooks;
 
 import lombok.CustomLog;
 import me.luckyraven.copsncrooks.npc.trader.economy.TraderEconomyContract;
-import me.luckyraven.data.account.user.User;
-import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.economy.bank.EconomyException;
-import me.luckyraven.economy.bank.EconomyHandler;
+import me.luckyraven.economy.EconomyHandler;
+import me.luckyraven.economy.exception.EconomyException;
+import me.luckyraven.gang.user.User;
+import me.luckyraven.gang.user.UserManager;
 import org.bukkit.entity.Player;
 
 import java.math.BigDecimal;

@@ -2,16 +2,16 @@ package me.luckyraven.file.configuration.inventory.itemsource;
 
 import me.luckyraven.config.GangFilterRegistration;
 import me.luckyraven.core.color.ColorUtil;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangAlliance;
-import me.luckyraven.data.account.gang.GangFilterAdapter;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.member.Member;
-import me.luckyraven.data.account.gang.member.MemberFilterAdapter;
-import me.luckyraven.data.account.user.User;
-import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.data.rank.Rank;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.gang.Gang;
+import me.luckyraven.gang.GangAlliance;
+import me.luckyraven.gang.GangFilterAdapter;
+import me.luckyraven.gang.GangManager;
+import me.luckyraven.gang.member.Member;
+import me.luckyraven.gang.member.MemberFilterAdapter;
+import me.luckyraven.gang.rank.Rank;
+import me.luckyraven.gang.user.User;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.inventory.filter.FilterApplier;
 import me.luckyraven.inventory.filter.FilterStore;
 import me.luckyraven.inventory.filter.SearchFilter;
@@ -93,7 +93,7 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 		List<ItemSourceEntry> entries = new ArrayList<>();
 		for (Gang ally : gang.getAllies()
 				.stream().map(GangAlliance::ally).toList()) {
-			int online = ally.getOnlineMembers(userManager).size();
+			int online = ally.getOnlineMembers(userManager::getUser).size();
 			int total  = ally.getMembers().size();
 
 			Map<String, String> placeholders = new LinkedHashMap<>();
@@ -137,7 +137,7 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 			placeholders.put("gang_leader_name", leaderName);
 			placeholders.put("gang_members-size", String.valueOf(gang.getMembers().size()));
 			placeholders.put("gang_online-members-size",
-			                 String.valueOf(gang.getOnlineMembers(userManager).size()));
+			                 String.valueOf(gang.getOnlineMembers(userManager::getUser).size()));
 			placeholders.put("gang_created", gang.getDateCreatedString());
 
 			entries.add(new ItemSourceEntry(placeholders));

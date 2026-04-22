@@ -1,7 +1,7 @@
 package me.luckyraven.database.tables.gang;
 
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangAlliance;
+import me.luckyraven.gang.Gang;
+import me.luckyraven.gang.GangAlliance;
 import me.luckyraven.persistence.database.component.Attribute;
 import me.luckyraven.persistence.database.component.Table;
 

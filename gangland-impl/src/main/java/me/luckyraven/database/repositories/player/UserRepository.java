@@ -1,10 +1,10 @@
 package me.luckyraven.database.repositories.player;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.data.account.user.User;
-import me.luckyraven.data.account.user.UserFactory;
 import me.luckyraven.database.tables.player.UserTable;
-import me.luckyraven.economy.bank.Currency;
+import me.luckyraven.economy.Currency;
+import me.luckyraven.gang.user.User;
+import me.luckyraven.gang.user.UserFactory;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.component.Table;

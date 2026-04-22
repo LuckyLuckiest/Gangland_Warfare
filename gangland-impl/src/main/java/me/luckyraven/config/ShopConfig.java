@@ -19,7 +19,6 @@ import me.luckyraven.core.bean.Bean;
 import me.luckyraven.core.bean.Configuration;
 import me.luckyraven.core.bean.PostConstruct;
 import me.luckyraven.core.bean.Qualifier;
-import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.copsncrooks.GanglandTraderEconomy;
@@ -27,6 +26,7 @@ import me.luckyraven.file.configuration.copsncrooks.GanglandTraderMessages;
 import me.luckyraven.file.configuration.shop.GanglandShopDisplayResolver;
 import me.luckyraven.file.configuration.shop.GanglandShopMessages;
 import me.luckyraven.file.configuration.shop.TraderSettingsImpl;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.item.ItemRefresherRegistry;
 import me.luckyraven.item.ItemSerializerRegistry;
 import me.luckyraven.persistence.FileManager;
@@ -157,7 +157,7 @@ public class ShopConfig {
 	// ── Settings ─────────────────────────────────────────────────────────
 
 	@Bean
-	public TraderSettings traderSettings(Settings settings) {
+	public TraderSettings traderSettings(@SuppressWarnings("unused") Settings settings) {
 		return new TraderSettingsImpl();
 	}
 

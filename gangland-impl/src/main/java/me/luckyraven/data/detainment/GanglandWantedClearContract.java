@@ -2,8 +2,8 @@ package me.luckyraven.data.detainment;
 
 import me.luckyraven.copsncrooks.detainment.wanted.WantedClearContract;
 import me.luckyraven.copsncrooks.wanted.Wanted;
-import me.luckyraven.data.account.user.User;
-import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.gang.user.User;
+import me.luckyraven.gang.user.UserManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 

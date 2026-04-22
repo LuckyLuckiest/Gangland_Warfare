@@ -2,7 +2,7 @@ package me.luckyraven.sign.type;
 
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.core.color.Color;
-import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.aspect.MoneyAspect;
 import me.luckyraven.sign.aspect.SignAspect;

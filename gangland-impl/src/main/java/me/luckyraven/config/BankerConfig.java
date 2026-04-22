@@ -14,13 +14,13 @@ import me.luckyraven.copsncrooks.npc.banker.view.*;
 import me.luckyraven.core.bean.Bean;
 import me.luckyraven.core.bean.Configuration;
 import me.luckyraven.core.bean.Qualifier;
-import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.economy.bank.Bank;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.copsncrooks.BankerSettingsImpl;
 import me.luckyraven.file.configuration.copsncrooks.GanglandBankerEconomy;
 import me.luckyraven.file.configuration.copsncrooks.GanglandBankerMessages;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
@@ -41,7 +41,8 @@ public class BankerConfig {
 	}
 
 	@Bean
-	public BankerSettings bankerSettings(Settings settings, PermissionManager permissionManager) {
+	public BankerSettings bankerSettings(@SuppressWarnings("unused") Settings settings,
+	                                     PermissionManager permissionManager) {
 		// Register the bypass-cap permission once, alongside settings load. Exposing it through PermissionManager
 		// surfaces it in rank / tab-completion flows the same way other gangland permissions are discovered.
 		permissionManager.addPermission(BankCommand.BYPASS_CAP_PERMISSION);

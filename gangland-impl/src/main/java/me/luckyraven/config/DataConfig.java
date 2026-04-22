@@ -9,15 +9,20 @@ import me.luckyraven.core.bean.Bean;
 import me.luckyraven.core.bean.Configuration;
 import me.luckyraven.core.bean.PostConstruct;
 import me.luckyraven.core.bean.Qualifier;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.member.MemberManager;
-import me.luckyraven.data.account.user.UserFactory;
-import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.plugin.PluginManager;
-import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.teleportation.WaypointManager;
+import me.luckyraven.data.user.UserDataLoader;
 import me.luckyraven.database.GanglandDatabase;
+import me.luckyraven.gang.Gang;
+import me.luckyraven.gang.GangManager;
+import me.luckyraven.gang.contract.*;
+import me.luckyraven.gang.member.MemberManager;
+import me.luckyraven.gang.rank.RankManager;
+import me.luckyraven.gang.user.UserFactory;
+import me.luckyraven.gang.user.UserManager;
+import me.luckyraven.persistence.repository.IRepository;
+import me.luckyraven.persistence.repository.RepositoryRegistry;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -46,44 +51,75 @@ public class DataConfig {
 		this.context  = context;
 	}
 
+	/**
+	 * Surfaces the database's {@link RepositoryRegistry} as a standalone bean so managers in feature modules can inject
+	 * it without depending on {@link GanglandDatabase}.
+	 */
+	@Bean
+	public RepositoryRegistry repositoryRegistry(GanglandDatabase database) {
+		return database.getRepositoryRegistry();
+	}
+
+	/**
+	 * Both UserManager beans declare {@code MemberManager} as a parameter purely for ordering. The constructor doesn't
+	 * consume it, but the dep edge forces BeanGraph to topologically sort {@code UserManager} <b>after</b>
+	 * {@link MemberManager} (and transitively after {@link GangManager} / {@link RankManager}), so by the time user
+	 * loading runs in {@code PlayerBootstrapService} the member / gang caches are already populated. Dropping the
+	 * parameter re-creates the pre-0.8.0 bug where members loaded after users and every member's gang link self-healed
+	 * to -1 on startup.
+	 */
 	@Bean(name = "online", isGeneric = true)
-	public UserManager<Player> userManager(GanglandDatabase database,
-	                                       MemberManager memberManager,
-	                                       BountySettings bountySettings,
-	                                       WantedSettings wantedSettings,
-	                                       UserFactory userFactory) {
-		return new UserManager<>(gangland, database, memberManager, bountySettings, wantedSettings, userFactory);
+	public UserManager<Player> userManager(RepositoryRegistry repositoryRegistry,
+	                                       UserFactory userFactory,
+	                                       @SuppressWarnings("unused") MemberManager orderingDep) {
+		return new UserManager<>(gangland, repositoryRegistry, userFactory);
 	}
 
 	@Bean(name = "offline", isGeneric = true)
-	public UserManager<OfflinePlayer> offlineUserManager(GanglandDatabase database,
-	                                                     MemberManager memberManager,
-	                                                     BountySettings bountySettings,
-	                                                     WantedSettings wantedSettings,
-	                                                     UserFactory userFactory) {
-		return new UserManager<>(gangland, database, memberManager, bountySettings, wantedSettings, userFactory);
+	public UserManager<OfflinePlayer> offlineUserManager(RepositoryRegistry repositoryRegistry,
+	                                                     UserFactory userFactory,
+	                                                     @SuppressWarnings("unused") MemberManager orderingDep) {
+		return new UserManager<>(gangland, repositoryRegistry, userFactory);
+	}
+
+	/**
+	 * Impl-side loader that hydrates a fresh {@link me.luckyraven.gang.user.User} from the DB. Lives here because it
+	 * reaches into concrete {@code UserTable} / {@code BankTable} — specifically
+	 * {@code BankTable.searchCriteria(User)}, which isn't on the abstract Table contract. {@link UserManager} in the
+	 * gang module stays table-agnostic.
+	 */
+	@Bean
+	public UserDataLoader userDataLoader(GanglandDatabase database,
+	                                     MemberManager memberManager,
+	                                     BountySettings bountySettings,
+	                                     WantedSettings wantedSettings) {
+		return new UserDataLoader(gangland, database, memberManager, bountySettings, wantedSettings);
 	}
 
 	@Bean
 	public PluginManager pluginManager(GanglandDatabase database) {
-		return new PluginManager(gangland, database);
+		return new PluginManager(database);
 	}
 
 	@Bean
-	public RankManager rankManager(GanglandDatabase database, PermissionManager permissionManager) {
-		return new RankManager(database, permissionManager);
+	public RankManager rankManager(RepositoryRegistry repositoryRegistry,
+	                               PermissionRegistryContract permissionRegistry) {
+		return new RankManager(repositoryRegistry, permissionRegistry);
 	}
 
 	@Bean
-	public GangManager gangManager(GanglandDatabase database) {
-		return new GangManager(gangland, database);
+	public GangManager gangManager(RepositoryRegistry repositoryRegistry,
+	                               GangAllianceRepositoryContract allianceRepository) {
+		IRepository<Gang> gangRepository = repositoryRegistry.getRepository(Gang.class);
+		return new GangManager(gangRepository, allianceRepository);
 	}
 
 	@Bean
-	public MemberManager memberManager(GangManager gangManager,
-	                                   RankManager rankManager,
-	                                   GanglandDatabase database) {
-		return new MemberManager(gangland, database, gangManager, rankManager);
+	public MemberManager memberManager(GanglandDatabase database,
+	                                   MemberRepositoryContract memberRepository,
+	                                   GangLookupContract gangLookup,
+	                                   RankLookupContract rankLookup) {
+		return new MemberManager(gangland, database, memberRepository, gangLookup, rankLookup);
 	}
 
 	@Bean

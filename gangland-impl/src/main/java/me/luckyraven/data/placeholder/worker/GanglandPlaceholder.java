@@ -9,17 +9,17 @@ import me.luckyraven.core.placeholder.effect.ConditionalFlashWrapper;
 import me.luckyraven.core.placeholder.effect.FlashPlaceholderWrapper;
 import me.luckyraven.core.placeholder.replacer.Replacer;
 import me.luckyraven.core.utilities.NumberUtil;
-import me.luckyraven.data.account.Level;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.member.Member;
-import me.luckyraven.data.account.gang.member.MemberManager;
-import me.luckyraven.data.account.user.User;
-import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.placeholder.PlaceholderService;
+import me.luckyraven.economy.Currency;
 import me.luckyraven.economy.bank.Bank;
-import me.luckyraven.economy.bank.Currency;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.gang.Gang;
+import me.luckyraven.gang.GangManager;
+import me.luckyraven.gang.member.Member;
+import me.luckyraven.gang.member.MemberManager;
+import me.luckyraven.gang.user.Level;
+import me.luckyraven.gang.user.User;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.unique.UniqueItem;
 import org.bukkit.OfflinePlayer;
@@ -307,9 +307,9 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		// members
 		if (parameter.equals(gangStr + "members-size")) return String.valueOf(gang.getMembers().size());
 		if (parameter.equals(gangStr + "online-members-size"))
-			return String.valueOf(gang.getOnlineMembers(userManager).size());
+			return String.valueOf(gang.getOnlineMembers(userManager::getUser).size());
 		if (parameter.equals(gangStr + "offline-members-size"))
-			return String.valueOf(gang.getMembers().size() - gang.getOnlineMembers(userManager).size());
+			return String.valueOf(gang.getMembers().size() - gang.getOnlineMembers(userManager::getUser).size());
 
 		// ally
 		if (parameter.equals(gangStr + "ally-list")) return gang.getAllyListString();

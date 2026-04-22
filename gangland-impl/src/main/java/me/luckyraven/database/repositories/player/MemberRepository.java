@@ -1,15 +1,15 @@
 package me.luckyraven.database.repositories.player;
 
 import lombok.CustomLog;
-import lombok.Setter;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.member.Member;
-import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.database.tables.rank.RankTable;
+import me.luckyraven.gang.Gang;
+import me.luckyraven.gang.contract.GangLookupContract;
+import me.luckyraven.gang.contract.MemberRepositoryContract;
+import me.luckyraven.gang.contract.RankLookupContract;
+import me.luckyraven.gang.member.Member;
+import me.luckyraven.gang.rank.Rank;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.component.Table;
@@ -27,14 +27,13 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 @CustomLog
-@Setter
 @Repository(Member.class)
-public class MemberRepository extends AbstractRepository<Member> {
+public class MemberRepository extends AbstractRepository<Member> implements MemberRepositoryContract {
 
 	private final MemberTable memberTable;
 
-	private RankManager rankManager;
-	private GangManager gangManager;
+	private RankLookupContract rankLookup;
+	private GangLookupContract gangLookup;
 
 	public MemberRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
 		super(plugin, databaseHandler);
@@ -42,6 +41,16 @@ public class MemberRepository extends AbstractRepository<Member> {
 		UserTable userTable = new UserTable();
 		RankTable rankTable = new RankTable();
 		this.memberTable = new MemberTable(userTable, rankTable);
+	}
+
+	@Override
+	public void setRankLookup(RankLookupContract rankLookup) {
+		this.rankLookup = rankLookup;
+	}
+
+	@Override
+	public void setGangLookup(GangLookupContract gangLookup) {
+		this.gangLookup = gangLookup;
 	}
 
 	@Override
@@ -58,12 +67,12 @@ public class MemberRepository extends AbstractRepository<Member> {
 			int    rankId       = (int) result[v++];
 			long   joinedGang   = (long) result[v];
 
-			Rank   rank   = rankManager.get(rankId);
+			Rank   rank   = rankLookup.get(rankId);
 			Member member = new Member(uuid);
 
 			if (rank == null) {
 				// convert the rank to the initial rank (head)
-				rank = rankManager.getRankTree().getRoot().getData();
+				rank = rankLookup.getRootRank();
 			}
 
 			member.setGangId(gangId);
@@ -71,7 +80,7 @@ public class MemberRepository extends AbstractRepository<Member> {
 			member.setRank(rank);
 			member.setGangJoinDateLong(joinedGang);
 
-			Gang gang = gangManager.getGang(gangId);
+			Gang gang = gangLookup.findById(gangId);
 
 			// Self-heal: stale gang_id points at a gang that no longer exists.
 			// Reset the member's gang link in memory and persist -1 to the table immediately.

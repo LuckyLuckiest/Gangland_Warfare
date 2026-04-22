@@ -4,10 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.core.bean.listener.ListenerPriority;
-import me.luckyraven.data.account.gang.member.Member;
-import me.luckyraven.data.account.gang.member.MemberManager;
-import me.luckyraven.data.account.user.User;
-import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.data.user.UserDataLoader;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.TableLookup;
 import me.luckyraven.database.tables.player.BankTable;
@@ -15,6 +12,10 @@ import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.events.user.UserDataInitEvent;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.gang.member.Member;
+import me.luckyraven.gang.member.MemberManager;
+import me.luckyraven.gang.user.User;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.util.GanglandChatUtil;
 import me.luckyraven.util.UpdateChecker;
@@ -35,17 +36,20 @@ public final class CreateAccountListener implements Listener {
 	private final UserManager<Player>        userManager;
 	private final UserManager<OfflinePlayer> offlineUserManager;
 	private final MemberManager              memberManager;
+	private final UserDataLoader             userDataLoader;
 	private final GanglandDatabase           ganglandDatabase;
 
 	public CreateAccountListener(Gangland gangland,
 	                             @Qualifier("online") UserManager<Player> userManager,
 	                             @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
 	                             MemberManager memberManager,
+	                             UserDataLoader userDataLoader,
 	                             GanglandDatabase ganglandDatabase) {
 		this.gangland           = gangland;
 		this.userManager        = userManager;
 		this.offlineUserManager = offlineUserManager;
 		this.memberManager      = memberManager;
+		this.userDataLoader     = userDataLoader;
 		this.ganglandDatabase   = ganglandDatabase;
 	}
 
@@ -90,7 +94,7 @@ public final class CreateAccountListener implements Listener {
 			UserTable      userTable = TableLookup.find(UserTable.class, tables);
 			BankTable      bankTable = TableLookup.find(BankTable.class, tables);
 
-			userManager.initializeUserData(user, userTable, bankTable);
+			userDataLoader.loadUserData(user, userTable, bankTable);
 
 			if (!finalMember.hasGang()) {
 				MemberTable memberTable = TableLookup.find(MemberTable.class, tables);

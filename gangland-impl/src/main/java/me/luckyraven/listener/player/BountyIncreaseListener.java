@@ -3,13 +3,13 @@ package me.luckyraven.listener.player;
 import me.luckyraven.copsncrooks.events.bounty.BountyEvent;
 import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.bean.listener.ListenerHandler;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.user.User;
-import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.events.gang.GangBountyEvent;
-import me.luckyraven.events.user.UserBountyEvent;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.gang.Gang;
+import me.luckyraven.gang.events.user.UserBountyEvent;
+import me.luckyraven.gang.user.User;
+import me.luckyraven.gang.user.UserManager;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -45,7 +45,7 @@ public class BountyIncreaseListener implements Listener {
 
 		if (gang == null || event.isCancelled()) return;
 
-		List<User<Player>> onlineMembers = gang.getOnlineMembers(userManager);
+		List<User<Player>> onlineMembers = gang.getOnlineMembers(userManager::getUser);
 
 		String bountyIncrement = getBountyIncrementMessage(event);
 

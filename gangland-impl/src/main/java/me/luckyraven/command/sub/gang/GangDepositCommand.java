@@ -7,16 +7,16 @@ import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.core.TriConsumer;
 import me.luckyraven.core.datastructure.Tree;
 import me.luckyraven.core.utilities.NumberUtil;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.member.Member;
-import me.luckyraven.data.account.gang.member.MemberManager;
-import me.luckyraven.data.account.user.User;
-import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.economy.bank.Currency;
-import me.luckyraven.economy.bank.EconomyHandler;
+import me.luckyraven.economy.Currency;
+import me.luckyraven.economy.EconomyHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.gang.Gang;
+import me.luckyraven.gang.GangManager;
+import me.luckyraven.gang.member.Member;
+import me.luckyraven.gang.member.MemberManager;
+import me.luckyraven.gang.user.User;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -88,7 +88,7 @@ class GangDepositCommand extends SubArgument {
 
 				double contribution = Math.round(argAmount.doubleValue() / rate * round) / round;
 
-				List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
+				List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager::getUser);
 
 				if (user.getEconomy().getAmount().compareTo(argAmount) < 0) {
 					user.sendMessage(Messages.CANNOT_TAKE_MORE_THAN_BALANCE.toString());

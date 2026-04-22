@@ -1,7 +1,6 @@
 package me.luckyraven.command.sub.debug;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.cryptomorin.xseries.particles.XParticle;
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import me.luckyraven.Gangland;
 import me.luckyraven.bootstrap.PeriodicalUpdates;
@@ -15,35 +14,32 @@ import me.luckyraven.core.color.Color;
 import me.luckyraven.core.color.ColorUtil;
 import me.luckyraven.core.color.MaterialType;
 import me.luckyraven.core.datastructure.JsonFormatter;
-import me.luckyraven.core.timer.CountdownTimer;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.member.Member;
-import me.luckyraven.data.account.gang.member.MemberManager;
-import me.luckyraven.data.account.user.User;
-import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
-import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointManager;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.gang.Gang;
+import me.luckyraven.gang.GangManager;
+import me.luckyraven.gang.member.Member;
+import me.luckyraven.gang.member.MemberManager;
+import me.luckyraven.gang.rank.Rank;
+import me.luckyraven.gang.rank.RankManager;
+import me.luckyraven.gang.user.User;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.multi.ListEntry;
 import me.luckyraven.inventory.multi.MultiInventory;
 import me.luckyraven.inventory.multi.MultiInventoryCreation;
 import me.luckyraven.inventory.part.ButtonTags;
 import me.luckyraven.inventory.part.Fill;
-import me.luckyraven.util.ray.RayTrace;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponManager;
 import net.wesjd.anvilgui.AnvilGUI;
-import org.bukkit.*;
-import org.bukkit.block.Block;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.permissions.Permission;
@@ -153,8 +149,6 @@ public final class DebugCommand extends Command {
 
 		Argument version = getVersion();
 
-		Argument rayCast = getRayCast();
-
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
 
@@ -173,7 +167,6 @@ public final class DebugCommand extends Command {
 		arguments.add(checkPerm);
 		arguments.add(giveGun);
 		arguments.add(version);
-		arguments.add(rayCast);
 
 		getArgument().addAllSubArguments(arguments);
 	}
@@ -464,49 +457,6 @@ public final class DebugCommand extends Command {
 			ProtocolVersion protocolVersion = ProtocolVersion.getProtocol(playerVersion);
 
 			sender.sendMessage("Client version: " + protocolVersion.getName());
-		});
-	}
-
-	private @NotNull Argument getRayCast() {
-		return new Argument(getGangland(), "raycast", getArgumentTree(), (argument, sender, args) -> {
-			if (!(sender instanceof Player player)) return;
-
-			double x = 0.15;
-			double y = 0.15;
-			double z = 0.15;
-
-			Location location = RayTrace.cast(player, x, y, z);
-			sender.sendMessage(location != null ? location.toString() : "null");
-
-			if (location != null) {
-				for (int i = 0; i < 100; i++) {
-					player.getWorld()
-					      .spawnParticle(Objects.requireNonNull(XParticle.DUST.get()), location, 50,
-					                     new Particle.DustOptions(Color.RED.getBukkitColor(), 0.5F));
-				}
-
-				for (Entity entity : player.getWorld().getNearbyEntities(location, x, y, z)) {
-					// Check if the ray intersects with an entity
-					if (entity instanceof LivingEntity && !entity.equals(player)) {
-						((LivingEntity) entity).damage(4);
-					}
-				}
-
-				Block block = location.getBlock();
-
-//				CompatibilityAPI.getBlockCompatibility().getCrackPacket(block, 1);
-
-				if (block.getType() != Material.AIR) {
-					World    world         = block.getWorld();
-					Location blockLocation = block.getLocation();
-
-					CountdownTimer timer = new CountdownTimer(getGangland(), 0L, 0L, 40, null,
-					                                          t -> world.playEffect(blockLocation, Effect.STEP_SOUND,
-					                                                                block.getType()), null);
-
-					timer.start(false);
-				}
-			}
 		});
 	}
 

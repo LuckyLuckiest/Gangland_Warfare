@@ -6,19 +6,20 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.core.TriConsumer;
 import me.luckyraven.core.datastructure.Tree;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.member.Member;
-import me.luckyraven.data.account.gang.member.MemberManager;
-import me.luckyraven.data.account.user.User;
-import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.rank.RankManager;
+import me.luckyraven.data.user.UserDataLoader;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.TableLookup;
 import me.luckyraven.database.tables.player.BankTable;
 import me.luckyraven.database.tables.player.UserTable;
 import me.luckyraven.file.configuration.Messages;
+import me.luckyraven.gang.Gang;
+import me.luckyraven.gang.GangManager;
+import me.luckyraven.gang.member.Member;
+import me.luckyraven.gang.member.MemberManager;
+import me.luckyraven.gang.rank.Rank;
+import me.luckyraven.gang.rank.RankManager;
+import me.luckyraven.gang.user.User;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.Bukkit;
@@ -39,11 +40,13 @@ class GangKickCommand extends SubArgument {
 	private final MemberManager              memberManager;
 	private final GangManager                gangManager;
 	private final RankManager                rankManager;
+	private final UserDataLoader             userDataLoader;
 	private final GanglandDatabase           ganglandDatabase;
 
 	protected GangKickCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
 	                          UserManager<Player> userManager, UserManager<OfflinePlayer> offlineUserManager,
 	                          MemberManager memberManager, GangManager gangManager, RankManager rankManager,
+	                          UserDataLoader userDataLoader,
 	                          GanglandDatabase ganglandDatabase) {
 		super(gangland, "kick", tree, parent);
 
@@ -54,6 +57,7 @@ class GangKickCommand extends SubArgument {
 		this.memberManager      = memberManager;
 		this.gangManager        = gangManager;
 		this.rankManager        = rankManager;
+		this.userDataLoader     = userDataLoader;
 		this.ganglandDatabase   = ganglandDatabase;
 
 		gangKick();
@@ -194,7 +198,7 @@ class GangKickCommand extends SubArgument {
 
 				User<OfflinePlayer> offlineUser = (User<OfflinePlayer>) targetUser;
 
-				offlineUserManager.initializeUserData(offlineUser, userTable, bankTable);
+				userDataLoader.loadUserData(offlineUser, userTable, bankTable);
 
 				// no user initializer event called so far (need to work with it until fully compatible)
 

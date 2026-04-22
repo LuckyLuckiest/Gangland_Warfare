@@ -10,12 +10,12 @@ import me.luckyraven.core.bean.Bean;
 import me.luckyraven.core.bean.BeanGraph;
 import me.luckyraven.core.bean.Configuration;
 import me.luckyraven.core.bean.Phase;
-import me.luckyraven.data.account.user.UserFactory;
 import me.luckyraven.data.permission.PermissionHandler;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.permission.PermissionWorker;
 import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.database.GanglandDatabaseSettings;
+import me.luckyraven.gang.user.UserFactory;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.service.InventoryRegistry;
 import me.luckyraven.persistence.FileHandler;
@@ -78,7 +78,7 @@ public class KernelConfig {
 	}
 
 	/**
-	 * Builds {@link me.luckyraven.data.account.user.User} instances with their {@link PlaceholderService} and
+	 * Builds {@link me.luckyraven.gang.user.User} instances with their {@link PlaceholderService} and
 	 * {@link InventoryRegistry} dependencies wired in. Replaces the static {@code User.setPlaceholder(...)} field.
 	 */
 	@Bean

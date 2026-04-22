@@ -1,10 +1,10 @@
 package me.luckyraven.database.repositories.rank;
 
 import lombok.CustomLog;
-import me.luckyraven.data.rank.RankPermission;
 import me.luckyraven.database.tables.plugin.PermissionTable;
 import me.luckyraven.database.tables.rank.RankPermissionTable;
 import me.luckyraven.database.tables.rank.RankTable;
+import me.luckyraven.gang.rank.RankPermission;
 import me.luckyraven.persistence.database.Database;
 import me.luckyraven.persistence.database.DatabaseHandler;
 import me.luckyraven.persistence.database.SchemaMigrations;

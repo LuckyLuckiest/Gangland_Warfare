@@ -1,7 +1,7 @@
 package me.luckyraven.events.user;
 
 import lombok.Getter;
-import me.luckyraven.data.account.user.User;
+import me.luckyraven.gang.user.User;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;

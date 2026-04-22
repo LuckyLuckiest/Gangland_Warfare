@@ -1,9 +1,9 @@
 package me.luckyraven.sign.type.trade.car;
 
 import me.luckyraven.core.color.Color;
-import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.gadget.car.Car;
 import me.luckyraven.gadget.car.CarManager;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.aspect.AspectResult;
 import me.luckyraven.sign.aspect.ItemTransferAspect;

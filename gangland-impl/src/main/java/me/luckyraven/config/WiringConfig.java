@@ -3,19 +3,20 @@ package me.luckyraven.config;
 import lombok.CustomLog;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.CommandManager;
+import me.luckyraven.copsncrooks.npc.banker.tier.BankTierRegistry;
 import me.luckyraven.core.bean.Bean;
 import me.luckyraven.core.bean.Configuration;
 import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.bean.autowire.DependencyContainer;
 import me.luckyraven.core.bean.listener.ListenerPriority;
 import me.luckyraven.core.placeholder.replacer.Replacer;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.member.MemberManager;
-import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.placeholder.PlaceholderService;
 import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
 import me.luckyraven.data.teleportation.Waypoint;
 import me.luckyraven.data.teleportation.WaypointTeleport;
+import me.luckyraven.gang.GangManager;
+import me.luckyraven.gang.member.MemberManager;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.listener.ListenerManager;
 import org.bukkit.entity.Player;
@@ -57,8 +58,7 @@ public class WiringConfig {
 	                                               MemberManager memberManager,
 	                                               GangManager gangManager,
 	                                               UniqueItemAddon uniqueItemAddon,
-	                                               me.luckyraven.copsncrooks.npc.banker.tier.BankTierRegistry
-														   bankTierRegistry,
+	                                               BankTierRegistry bankTierRegistry,
 	                                               PlaceholderService placeholderService) {
 		return new GanglandPlaceholder(Gangland.FULL_PREFIX, Replacer.Closure.PERCENT,
 		                               userManager, memberManager, gangManager,

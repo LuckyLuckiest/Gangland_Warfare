@@ -1,7 +1,7 @@
 package me.luckyraven.sign.type.trade.wearable;
 
 import me.luckyraven.core.color.Color;
-import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.sign.SignType;
 import me.luckyraven.sign.aspect.AspectResult;

@@ -1,16 +1,16 @@
 package me.luckyraven.bootstrap;
 
 import lombok.CustomLog;
-import me.luckyraven.Gangland;
 import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.core.bean.BeanPostInitialize;
-import me.luckyraven.data.account.user.User;
-import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.gang.user.User;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.scoreboard.Scoreboard;
 import me.luckyraven.scoreboard.ScoreboardManager;
 import me.luckyraven.scoreboard.driver.DriverHandler;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * Creates scoreboards for all online players. Runs as a {@link BeanPostInitialize} bean because it depends on
@@ -24,21 +24,16 @@ import org.bukkit.entity.Player;
 @CustomLog
 public final class ScoreboardLifecycleService implements BeanPostInitialize {
 
-	private final Gangland            gangland;
+	private final JavaPlugin          plugin;
 	private final ScoreboardManager   scoreboardManager;
 	private final UserManager<Player> userManager;
 
-	@SuppressWarnings("unused") // forces topo ordering — players loaded before scoreboards created
-	private final PlayerBootstrapService playerBootstrapService;
-
-	public ScoreboardLifecycleService(Gangland gangland,
+	public ScoreboardLifecycleService(JavaPlugin plugin,
 	                                  ScoreboardManager scoreboardManager,
-	                                  UserManager<Player> userManager,
-	                                  PlayerBootstrapService playerBootstrapService) {
-		this.gangland               = gangland;
-		this.scoreboardManager      = scoreboardManager;
-		this.userManager            = userManager;
-		this.playerBootstrapService = playerBootstrapService;
+	                                  UserManager<Player> userManager) {
+		this.plugin            = plugin;
+		this.scoreboardManager = scoreboardManager;
+		this.userManager       = userManager;
 	}
 
 	/**
@@ -52,7 +47,7 @@ public final class ScoreboardLifecycleService implements BeanPostInitialize {
 
 		for (User<Player> user : userManager.getUsers().values()) {
 			DriverHandler driverHandler = scoreboardManager.getDriverHandler(user.getUser());
-			Scoreboard    scoreboard    = new Scoreboard(gangland, driverHandler);
+			Scoreboard    scoreboard    = new Scoreboard(plugin, driverHandler);
 
 			user.setScoreboard(scoreboard);
 			user.getScoreboard().start();

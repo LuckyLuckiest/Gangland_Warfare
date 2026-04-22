@@ -1,6 +1,6 @@
 package me.luckyraven.database.tables.rank;
 
-import me.luckyraven.data.rank.Rank;
+import me.luckyraven.gang.rank.Rank;
 import me.luckyraven.persistence.database.component.Attribute;
 import me.luckyraven.persistence.database.component.Table;
 

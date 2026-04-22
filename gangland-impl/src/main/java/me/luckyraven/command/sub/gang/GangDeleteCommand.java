@@ -8,23 +8,23 @@ import me.luckyraven.core.TriConsumer;
 import me.luckyraven.core.datastructure.Tree;
 import me.luckyraven.core.timer.CountdownTimer;
 import me.luckyraven.core.utilities.TimeUtil;
-import me.luckyraven.data.account.gang.Gang;
-import me.luckyraven.data.account.gang.GangAlliance;
-import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.member.Member;
-import me.luckyraven.data.account.gang.member.MemberManager;
-import me.luckyraven.data.account.user.User;
-import me.luckyraven.data.account.user.UserManager;
-import me.luckyraven.data.rank.Rank;
-import me.luckyraven.data.rank.RankManager;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.database.TableLookup;
 import me.luckyraven.database.repositories.gang.GangAllianceRepository;
 import me.luckyraven.database.tables.player.MemberTable;
 import me.luckyraven.database.tables.player.UserTable;
-import me.luckyraven.economy.bank.Currency;
+import me.luckyraven.economy.Currency;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.gang.Gang;
+import me.luckyraven.gang.GangAlliance;
+import me.luckyraven.gang.GangManager;
+import me.luckyraven.gang.member.Member;
+import me.luckyraven.gang.member.MemberManager;
+import me.luckyraven.gang.rank.Rank;
+import me.luckyraven.gang.rank.RankManager;
+import me.luckyraven.gang.user.User;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.persistence.database.DatabaseHelper;
 import me.luckyraven.persistence.database.component.Table;
 import me.luckyraven.persistence.database.query.QueryBuilder;
@@ -177,7 +177,7 @@ class GangDeleteCommand extends SubArgument {
 			// need to get all the users, even if they are not online,
 			// the periodical updates should take care of all the data save
 			// change the data directly from the database, and collect the online players ONLY!
-			List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager);
+			List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager::getUser);
 
 			// get the contribution frequency for each user, and return that frequency according to the current balance
 			double total = gang.getMembers()

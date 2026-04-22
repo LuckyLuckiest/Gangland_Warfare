@@ -8,11 +8,12 @@ import me.luckyraven.core.bean.Bean;
 import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.core.bean.Configuration;
 import me.luckyraven.core.bean.Qualifier;
-import me.luckyraven.data.account.gang.member.MemberManager;
-import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.plugin.PluginManager;
+import me.luckyraven.data.user.UserDataLoader;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.gang.member.MemberManager;
+import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.scoreboard.ScoreboardManager;
@@ -49,16 +50,20 @@ public class SchedulingConfig {
 														 UserManager<OfflinePlayer> offlineUserManager,
 	                                                     MemberManager memberManager,
 	                                                     UniqueItemAddon uniqueItemAddon,
-	                                                     FileManager fileManager) {
+	                                                     UserDataLoader userDataLoader,
+	                                                     @SuppressWarnings("unused") FileManager fileManager) {
 		return new PlayerBootstrapService(gangland, ganglandDatabase, userManager, offlineUserManager, memberManager,
-		                                  uniqueItemAddon, fileManager);
+		                                  userDataLoader, uniqueItemAddon);
 	}
 
 	@Bean
 	public ScoreboardLifecycleService scoreboardLifecycleService(ScoreboardManager scoreboardManager,
 	                                                             @Qualifier("online") UserManager<Player> userManager,
-	                                                             PlayerBootstrapService playerBootstrapService) {
-		return new ScoreboardLifecycleService(gangland, scoreboardManager, userManager, playerBootstrapService);
+	                                                             @SuppressWarnings("unused")
+																 PlayerBootstrapService playerBootstrapService) {
+		// PlayerBootstrapService needs to load before the ScoreboardLifecycleService since all the users need load
+		// before attaching the scoreboard to them
+		return new ScoreboardLifecycleService(gangland, scoreboardManager, userManager);
 	}
 
 	@Bean

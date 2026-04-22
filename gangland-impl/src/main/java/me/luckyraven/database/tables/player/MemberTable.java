@@ -1,7 +1,7 @@
 package me.luckyraven.database.tables.player;
 
-import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.database.tables.rank.RankTable;
+import me.luckyraven.gang.member.Member;
 import me.luckyraven.persistence.database.component.Attribute;
 import me.luckyraven.persistence.database.component.Table;
 
@@ -38,12 +38,12 @@ public class MemberTable extends Table<Member> {
 	@Override
 	public Object[] getData(Member data) {
 		return new Object[]{data.getUuid().toString(), data.getGangId(), data.getContribution(),
-							data.getRank() == null ? -1 : data.getRank().getUsedId(), data.getGangJoinDateLong()};
+		                    data.getRank() == null ? -1 : data.getRank().getUsedId(), data.getGangJoinDateLong()};
 	}
 
 	@Override
 	public Map<String, Object> searchCriteria(Member data) {
 		return createSearchCriteria("uuid = ?", new Object[]{data.getUuid().toString()}, new int[]{Types.CHAR},
-									new int[]{0});
+		                            new int[]{0});
 	}
 }
