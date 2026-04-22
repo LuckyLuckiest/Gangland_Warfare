@@ -2,6 +2,7 @@ package me.luckyraven.data.permission;
 
 import lombok.CustomLog;
 import lombok.Getter;
+import me.luckyraven.Gangland;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -104,7 +105,7 @@ public class PermissionManager {
 
 	private String extractCategory(String permission) {
 		String[] parts = permission.split("\\.");
-		if (parts.length >= 2 && parts[0].equalsIgnoreCase("gangland")) return parts[1];
+		if (parts.length >= 2 && parts[0].equalsIgnoreCase(Gangland.FULL_PREFIX)) return parts[1];
 
 		return parts[0];
 	}
