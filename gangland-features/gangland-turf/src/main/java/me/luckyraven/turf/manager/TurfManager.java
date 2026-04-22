@@ -1,0 +1,127 @@
+package me.luckyraven.turf.manager;
+
+import lombok.CustomLog;
+import me.luckyraven.turf.contract.TurfRepositoryContract;
+import me.luckyraven.turf.data.CuboidRegion;
+import me.luckyraven.turf.data.Turf;
+import me.luckyraven.turf.data.TurfRuntimeState;
+import org.bukkit.Location;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Central registry for turfs. Holds the persisted definitions plus per-turf in-memory runtime state (capture progress
+ * etc.). Persistence is delegated to the {@link TurfRepositoryContract} — the repo lives in gangland-impl.
+ */
+@CustomLog
+public final class TurfManager {
+
+	private final TurfRepositoryContract        repository;
+	private final Map<String, Turf>             turfsById;
+	private final Map<String, List<Turf>>       turfsByWorld;
+	private final Map<String, TurfRuntimeState> runtimeStates;
+
+	public TurfManager(TurfRepositoryContract repository) {
+		this.repository    = repository;
+		this.turfsById     = new ConcurrentHashMap<>();
+		this.turfsByWorld  = new ConcurrentHashMap<>();
+		this.runtimeStates = new ConcurrentHashMap<>();
+	}
+
+	/**
+	 * Called after the repository has loaded persisted turfs. Re-populates the by-world index and creates a fresh IDLE
+	 * runtime state per turf (in-flight captures do not survive restart per spec).
+	 */
+	public void initialize() {
+		turfsById.clear();
+		turfsByWorld.clear();
+		runtimeStates.clear();
+
+		Collection<Turf> loaded = repository.loadAll();
+		for (Turf turf : loaded) {
+			register(turf);
+		}
+
+		// Hand the repo a supplier so RepositoryRegistry.saveAll() (periodic autosave + shutdown)
+		// can flush the current in-memory turf set to the DB. Without this, saveAllFromMemory()
+		// throws IllegalStateException("No data supplier set for repository: TurfRepository").
+		repository.setDataSupplier(turfsById::values);
+
+		log.info("Loaded {} turf(s) across {} world(s)", turfsById.size(), turfsByWorld.size());
+	}
+
+	public Collection<Turf> getAll() {
+		return Collections.unmodifiableCollection(turfsById.values());
+	}
+
+	public @Nullable Turf get(String id) {
+		return turfsById.get(id);
+	}
+
+	public List<Turf> getTurfsInWorld(String world) {
+		return turfsByWorld.getOrDefault(world, Collections.emptyList());
+	}
+
+	public TurfRuntimeState getRuntimeState(String turfId) {
+		return runtimeStates.get(turfId);
+	}
+
+	public @Nullable Turf findAt(Location location) {
+		if (location == null || location.getWorld() == null) {
+			return null;
+		}
+		// Overlap is rejected at creation so the first match is unambiguous.
+		for (Turf turf : getTurfsInWorld(location.getWorld().getName())) {
+			if (turf.getRegion().contains(location)) {
+				return turf;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * @return {@code null} if the id and bounds are unique, otherwise the existing turf id that conflicts.
+	 */
+	public @Nullable String findConflict(String newId, CuboidRegion newRegion) {
+		if (turfsById.containsKey(newId)) {
+			return newId;
+		}
+		for (Turf existing : getTurfsInWorld(newRegion.getWorld())) {
+			if (existing.getRegion().overlaps(newRegion)) {
+				return existing.getId();
+			}
+		}
+		return null;
+	}
+
+	public void create(Turf turf) {
+		register(turf);
+		repository.save(turf);
+	}
+
+	public void delete(Turf turf) {
+		turfsById.remove(turf.getId());
+		List<Turf> worldTurfs = turfsByWorld.get(turf.getRegion().getWorld());
+		if (worldTurfs != null) {
+			worldTurfs.remove(turf);
+		}
+		runtimeStates.remove(turf.getId());
+		repository.delete(turf);
+	}
+
+	/**
+	 * Called whenever ownership or the persisted capture timestamp changes. Bypasses the autosave cadence — capture is
+	 * an important enough state change that it should hit disk immediately.
+	 */
+	public void persist(Turf turf) {
+		repository.save(turf);
+	}
+
+	private void register(Turf turf) {
+		turfsById.put(turf.getId(), turf);
+		turfsByWorld.computeIfAbsent(turf.getRegion().getWorld(), k -> new ArrayList<>()).add(turf);
+		runtimeStates.put(turf.getId(), new TurfRuntimeState(turf.getId()));
+	}
+}
