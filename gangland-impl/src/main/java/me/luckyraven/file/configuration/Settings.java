@@ -3,7 +3,7 @@ package me.luckyraven.file.configuration;
 import lombok.CustomLog;
 import lombok.Getter;
 import me.luckyraven.core.utilities.NumberUtil;
-import me.luckyraven.economy.bank.Currency;
+import me.luckyraven.economy.Currency;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileInitializer;

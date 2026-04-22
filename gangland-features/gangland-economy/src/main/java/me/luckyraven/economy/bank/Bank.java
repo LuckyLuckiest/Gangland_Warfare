@@ -2,6 +2,8 @@ package me.luckyraven.economy.bank;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.economy.Currency;
+import me.luckyraven.economy.EconomyHandler;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;

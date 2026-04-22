@@ -3,7 +3,7 @@ package me.luckyraven.copsncrooks.events.bounty;
 import lombok.Getter;
 import lombok.Setter;
 import me.luckyraven.copsncrooks.bounty.Bounty;
-import me.luckyraven.economy.bank.Currency;
+import me.luckyraven.economy.Currency;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 

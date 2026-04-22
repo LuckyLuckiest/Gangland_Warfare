@@ -1,8 +1,9 @@
-package me.luckyraven.economy.bank;
+package me.luckyraven.economy;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.economy.exception.EconomyException;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.Nullable;
@@ -11,9 +12,8 @@ import java.math.BigDecimal;
 
 /**
  * Canonical balance holder. Stores the balance as a {@link BigDecimal} at {@link Currency#SCALE} precision so huge
- * values round-trip without {@code double} precision loss. The only public money API is
- * {@link #getAmount()} / {@link #setAmount(BigDecimal)} / {@link #depositAmount(BigDecimal)} /
- * {@link #withdrawAmount(BigDecimal)}.
+ * values round-trip without {@code double} precision loss. The only public money API is {@link #getAmount()} /
+ * {@link #setAmount(BigDecimal)} / {@link #depositAmount(BigDecimal)} / {@link #withdrawAmount(BigDecimal)}.
  *
  * <p>Vault sync: when enabled, reads widen the Vault double balance to BigDecimal; writes downcast to
  * {@code double}. Beyond {@code 2^53} Vault itself loses precision — that's Vault's ceiling, not ours.

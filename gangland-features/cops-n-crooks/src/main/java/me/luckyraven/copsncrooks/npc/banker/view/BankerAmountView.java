@@ -9,7 +9,7 @@ import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.core.configuration.SoundConfiguration;
 import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.core.utilities.NumberUtil;
-import me.luckyraven.economy.bank.Currency;
+import me.luckyraven.economy.Currency;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.flow.MultiPanelInventory;
 import me.luckyraven.inventory.flow.Panel;

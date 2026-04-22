@@ -1,6 +1,5 @@
 package me.luckyraven.data.plugin;
 
-import me.luckyraven.Gangland;
 import me.luckyraven.core.bean.BeanLifecycle;
 import me.luckyraven.core.utilities.TimeUtil;
 import me.luckyraven.database.GanglandDatabase;
@@ -12,12 +11,10 @@ import java.util.*;
 
 public class PluginManager implements BeanLifecycle {
 
-	private final Gangland         gangland;
 	private final GanglandDatabase database;
 	private final List<PluginData> pluginDataList;
 
-	public PluginManager(Gangland gangland, GanglandDatabase database) {
-		this.gangland       = gangland;
+	public PluginManager(GanglandDatabase database) {
 		this.database       = database;
 		this.pluginDataList = new ArrayList<>();
 	}

@@ -2,7 +2,7 @@ package me.luckyraven.copsncrooks.npc.banker.tier;
 
 import lombok.CustomLog;
 import me.luckyraven.core.bean.BeanLifecycle;
-import me.luckyraven.economy.bank.Currency;
+import me.luckyraven.economy.Currency;
 import me.luckyraven.exception.PluginException;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
