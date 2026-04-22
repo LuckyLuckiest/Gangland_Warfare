@@ -13,7 +13,6 @@ import me.luckyraven.core.color.MaterialType;
 import me.luckyraven.data.account.gang.Gang;
 import me.luckyraven.data.account.gang.GangAlliance;
 import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.GangSearchFilterStore;
 import me.luckyraven.data.account.gang.member.Member;
 import me.luckyraven.data.account.gang.member.MemberManager;
 import me.luckyraven.data.account.user.User;
@@ -53,8 +52,6 @@ public final class GangCommand extends Command {
 	private final MemberManager              memberManager;
 	private final RankManager                rankManager;
 	private final GanglandDatabase           ganglandDatabase;
-	private final GangSearchFilterStore      gangSearchFilterStore;
-	private final InventoryRuntimeContext    inventoryRuntimeContext;
 
 	public GangCommand(Gangland gangland,
 	                   @Qualifier("online") UserManager<Player> userManager,
@@ -63,18 +60,15 @@ public final class GangCommand extends Command {
 	                   MemberManager memberManager,
 	                   RankManager rankManager,
 	                   GanglandDatabase ganglandDatabase,
-	                   GangSearchFilterStore gangSearchFilterStore,
 	                   InventoryRuntimeContext inventoryRuntimeContext) {
 		super(gangland, "gang", true);
 
-		this.userManager             = userManager;
-		this.offlineUserManager      = offlineUserManager;
-		this.gangManager             = gangManager;
-		this.memberManager           = memberManager;
-		this.rankManager             = rankManager;
-		this.ganglandDatabase        = ganglandDatabase;
-		this.gangSearchFilterStore   = gangSearchFilterStore;
-		this.inventoryRuntimeContext = inventoryRuntimeContext;
+		this.userManager        = userManager;
+		this.offlineUserManager = offlineUserManager;
+		this.gangManager        = gangManager;
+		this.memberManager      = memberManager;
+		this.rankManager        = rankManager;
+		this.ganglandDatabase   = ganglandDatabase;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -134,8 +128,6 @@ public final class GangCommand extends Command {
 		                                          gangManager);
 		Argument color = new GangColorCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                      gangManager);
-		Argument search = new GangSearchCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
-		                                        gangSearchFilterStore, inventoryRuntimeContext);
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
@@ -164,8 +156,6 @@ public final class GangCommand extends Command {
 
 		arguments.add(display);
 		arguments.add(color);
-
-		arguments.add(search);
 
 		getArgument().addAllSubArguments(arguments);
 	}

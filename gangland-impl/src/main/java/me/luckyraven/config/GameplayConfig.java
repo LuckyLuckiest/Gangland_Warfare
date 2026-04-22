@@ -9,8 +9,9 @@ import me.luckyraven.core.bean.Bean;
 import me.luckyraven.core.bean.Configuration;
 import me.luckyraven.core.bean.PostConstruct;
 import me.luckyraven.core.bean.Qualifier;
+import me.luckyraven.data.account.gang.GangFilterAdapter;
 import me.luckyraven.data.account.gang.GangManager;
-import me.luckyraven.data.account.gang.GangSearchFilterStore;
+import me.luckyraven.data.account.gang.member.MemberFilterAdapter;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.economy.GanglandMoneyDepositService;
 import me.luckyraven.data.permission.PermissionManager;
@@ -27,6 +28,10 @@ import me.luckyraven.gadget.car.config.CarAddon;
 import me.luckyraven.gadget.wearable.WearableAddon;
 import me.luckyraven.hologram.HologramService;
 import me.luckyraven.inventory.condition.BooleanExpressionEvaluator;
+import me.luckyraven.inventory.filter.FilterApplier;
+import me.luckyraven.inventory.filter.FilterRegistry;
+import me.luckyraven.inventory.filter.FilterStore;
+import me.luckyraven.inventory.filter.SearchButtonFactory;
 import me.luckyraven.inventory.multi.ItemSourceProvider;
 import me.luckyraven.item.ItemConverterRegistry;
 import me.luckyraven.item.ItemParser;
@@ -100,16 +105,37 @@ public class GameplayConfig {
 	// ---------------------------------------------------------------------------------------------------------------
 
 	/**
+	 * Domain-agnostic filter plumbing — the registry tracks per-view
+	 * {@link me.luckyraven.inventory.filter.FilterBinding} specs, the store holds per-(binding, player)
+	 * {@link me.luckyraven.inventory.filter.SearchFilter} state, and the applier is the shared filter/sort pipeline
+	 * that replaced the old hand-rolled gang-search code.
+	 */
+	@Bean
+	public FilterRegistry filterRegistry() {
+		return new FilterRegistry();
+	}
+
+	@Bean
+	public FilterStore filterStore(FilterRegistry filterRegistry) {
+		return new FilterStore(filterRegistry);
+	}
+
+	@Bean
+	public FilterApplier filterApplier() {
+		return new FilterApplier();
+	}
+
+	@Bean
+	public SearchButtonFactory searchButtonFactory(FilterStore filterStore, FilterRegistry filterRegistry) {
+		return new SearchButtonFactory(filterStore, filterRegistry);
+	}
+
+	/**
 	 * Bridges FILE-phase {@link InventoryDefinitionStore} (pure data maps) and the CONFIG-phase services that
 	 * registration + open-inventory logic needs (user manager, item source provider, condition evaluator, …). Owns the
 	 * {@code registerInventory} and {@code openInventoryForPlayer} methods that used to live as statics on
 	 * {@code InventoryAddon}.
 	 */
-	@Bean
-	public GangSearchFilterStore gangSearchFilterStore() {
-		return new GangSearchFilterStore();
-	}
-
 	@Bean
 	public InventoryRuntimeContext inventoryRuntimeContext(InventoryDefinitionStore definitionStore,
 	                                                       BooleanExpressionEvaluator conditionEvaluator,
@@ -117,10 +143,14 @@ public class GameplayConfig {
 	                                                       PermissionManager permissionManager,
 	                                                       @Qualifier("online") UserManager<Player> userManager,
 	                                                       GangManager gangManager,
-	                                                       GangSearchFilterStore gangSearchFilterStore,
+	                                                       FilterStore filterStore,
+	                                                       FilterApplier filterApplier,
+	                                                       GangFilterAdapter gangFilterAdapter,
+	                                                       MemberFilterAdapter memberFilterAdapter,
 	                                                       ItemParser itemParser) {
-		ItemSourceProvider itemSourceProvider = new GangItemSourceProvider(userManager, gangManager,
-		                                                                   gangSearchFilterStore);
+		ItemSourceProvider itemSourceProvider = new GangItemSourceProvider(userManager, gangManager, filterStore,
+		                                                                   filterApplier, gangFilterAdapter,
+		                                                                   memberFilterAdapter);
 		return new InventoryRuntimeContext(gangland, definitionStore, itemSourceProvider, conditionEvaluator,
 		                                   userManager, permissionManager, placeholderService, itemParser);
 	}

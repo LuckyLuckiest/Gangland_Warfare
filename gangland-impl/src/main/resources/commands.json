@@ -814,5 +814,29 @@
 	"permissions_check": {
 		"usage": "/glw permissions check <permission>",
 		"description": "Checks whether a permission is registered with the plugin and Bukkit."
+	},
+	"filter_sort": {
+		"usage": "/glw filter <binding> sort",
+		"description": "Advances the sort cycle of a bound list view (gangs, gang_members, …)."
+	},
+	"filter_clear": {
+		"usage": "/glw filter <binding> clear",
+		"description": "Clears every active filter and resets the sort to the binding default."
+	},
+	"filter_search": {
+		"usage": "/glw filter <binding> search <text...>",
+		"description": "Text-filters the bound list view by its NAME field."
+	},
+	"filter_set": {
+		"usage": "/glw filter <binding> set <field> <text...>",
+		"description": "Text-filters the bound list view by an arbitrary field (e.g. DESCRIPTION)."
+	},
+	"filter_next": {
+		"usage": "/glw filter <binding> next <field> <csv-options>",
+		"description": "Cycles an enum-valued field through the comma-separated option list, clearing after the last."
+	},
+	"bank_menu": {
+		"usage": "/glw bank menu",
+		"description": "Opens the rich banker panel (Deposit / Withdraw / Upgrade / Rename / Rewards). Phone-banking entry point."
 	}
 }

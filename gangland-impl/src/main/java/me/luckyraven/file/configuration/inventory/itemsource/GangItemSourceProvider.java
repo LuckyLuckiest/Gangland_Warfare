@@ -1,12 +1,20 @@
 package me.luckyraven.file.configuration.inventory.itemsource;
 
+import me.luckyraven.config.GangFilterRegistration;
 import me.luckyraven.core.color.ColorUtil;
-import me.luckyraven.data.account.gang.*;
+import me.luckyraven.data.account.gang.Gang;
+import me.luckyraven.data.account.gang.GangAlliance;
+import me.luckyraven.data.account.gang.GangFilterAdapter;
+import me.luckyraven.data.account.gang.GangManager;
 import me.luckyraven.data.account.gang.member.Member;
+import me.luckyraven.data.account.gang.member.MemberFilterAdapter;
 import me.luckyraven.data.account.user.User;
 import me.luckyraven.data.account.user.UserManager;
 import me.luckyraven.data.rank.Rank;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.inventory.filter.FilterApplier;
+import me.luckyraven.inventory.filter.FilterStore;
+import me.luckyraven.inventory.filter.SearchFilter;
 import me.luckyraven.inventory.multi.ItemSourceEntry;
 import me.luckyraven.inventory.multi.ItemSourceProvider;
 import org.bukkit.Bukkit;
@@ -17,15 +25,22 @@ import java.util.*;
 
 public class GangItemSourceProvider implements ItemSourceProvider {
 
-	private final UserManager<Player>   userManager;
-	private final GangManager           gangManager;
-	private final GangSearchFilterStore searchFilterStore;
+	private final UserManager<Player> userManager;
+	private final GangManager         gangManager;
+	private final FilterStore         filterStore;
+	private final FilterApplier       filterApplier;
+	private final GangFilterAdapter   gangFilterAdapter;
+	private final MemberFilterAdapter memberFilterAdapter;
 
 	public GangItemSourceProvider(UserManager<Player> userManager, GangManager gangManager,
-	                              GangSearchFilterStore searchFilterStore) {
-		this.userManager       = userManager;
-		this.gangManager       = gangManager;
-		this.searchFilterStore = searchFilterStore;
+	                              FilterStore filterStore, FilterApplier filterApplier,
+	                              GangFilterAdapter gangFilterAdapter, MemberFilterAdapter memberFilterAdapter) {
+		this.userManager         = userManager;
+		this.gangManager         = gangManager;
+		this.filterStore         = filterStore;
+		this.filterApplier       = filterApplier;
+		this.gangFilterAdapter   = gangFilterAdapter;
+		this.memberFilterAdapter = memberFilterAdapter;
 	}
 
 	@Override
@@ -40,15 +55,16 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 
 	private List<ItemSourceEntry> getGangMembers(Player player) {
 		User<Player> user = userManager.getUser(player);
-
 		if (user == null || !user.hasGang()) return new ArrayList<>();
 
 		Gang gang = gangManager.getGang(user.getGangId());
 		if (gang == null) return new ArrayList<>();
 
-		List<ItemSourceEntry> entries = new ArrayList<>();
+		SearchFilter filter  = filterStore.get(GangFilterRegistration.BINDING_GANG_MEMBERS, player);
+		List<Member> members = filterApplier.apply(gang.getMembers(), filter, memberFilterAdapter);
 
-		for (Member member : gang.getMembers()) {
+		List<ItemSourceEntry> entries = new ArrayList<>(members.size());
+		for (Member member : members) {
 			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
 			Rank          userRank      = member.getRank();
 			String        rank          = userRank != null ? userRank.getName() : "null";
@@ -64,20 +80,17 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 
 			entries.add(new ItemSourceEntry(placeholders));
 		}
-
 		return entries;
 	}
 
 	private List<ItemSourceEntry> getGangAllies(Player player) {
 		User<Player> user = userManager.getUser(player);
-
 		if (user == null || !user.hasGang()) return new ArrayList<>();
 
 		Gang gang = gangManager.getGang(user.getGangId());
 		if (gang == null) return new ArrayList<>();
 
 		List<ItemSourceEntry> entries = new ArrayList<>();
-
 		for (Gang ally : gang.getAllies()
 				.stream().map(GangAlliance::ally).toList()) {
 			int online = ally.getOnlineMembers(userManager).size();
@@ -92,24 +105,12 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 
 			entries.add(new ItemSourceEntry(placeholders));
 		}
-
 		return entries;
 	}
 
 	private List<ItemSourceEntry> getGangs(Player player) {
-		GangSearchFilter filter = searchFilterStore.get(player);
-		String           query  = filter.hasNameQuery() ? filter.nameQuery().toLowerCase(Locale.ROOT) : null;
-
-		List<Gang> gangs = new ArrayList<>(gangManager.getGangs().values());
-
-		if (query != null) gangs.removeIf(g -> !g.getDisplayNameString().toLowerCase(Locale.ROOT).contains(query));
-
-		Comparator<Gang> comparator = switch (filter.sort()) {
-			case NAME -> Comparator.comparing(g -> g.getDisplayNameString().toLowerCase(Locale.ROOT));
-			case MEMBERS -> Comparator.<Gang>comparingInt(g -> g.getMembers().size()).reversed();
-			case CREATED -> Comparator.comparing(Gang::getDateCreatedString).reversed();
-		};
-		gangs.sort(comparator);
+		SearchFilter filter = filterStore.get(GangFilterRegistration.BINDING_GANGS, player);
+		List<Gang>   gangs  = filterApplier.apply(gangManager.getGangs().values(), filter, gangFilterAdapter);
 
 		String                tail    = Settings.getGangRankTail();
 		List<ItemSourceEntry> entries = new ArrayList<>(gangs.size());
@@ -118,9 +119,7 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 			UUID leaderUuid = gang.getMembers()
 					.stream()
 					.filter(m -> m.getRank() != null && m.getRank().getName().equalsIgnoreCase(tail))
-					.findFirst()
-					.map(Member::getUuid)
-					.orElse(null);
+					.findFirst().map(Member::getUuid).orElse(null);
 
 			String leaderName = "";
 			if (leaderUuid != null) {
@@ -143,7 +142,6 @@ public class GangItemSourceProvider implements ItemSourceProvider {
 
 			entries.add(new ItemSourceEntry(placeholders));
 		}
-
 		return entries;
 	}
 
