@@ -2,22 +2,27 @@ package me.luckyraven.copsncrooks.npc.trader.view;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.copsncrooks.npc.trader.TraderNpc;
 import me.luckyraven.copsncrooks.npc.trader.config.TraderSettings;
-import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitDefinition;
 import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.core.configuration.SoundConfiguration;
 import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.flow.MultiPanelInventory;
+import me.luckyraven.inventory.flow.Panel;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
-import me.luckyraven.shop.ShopDefinition;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+/**
+ * First panel in the trader flow — asks the viewer whether they want to BUY, SELL, or close. Previously this was a
+ * standalone view that opened {@link ShopView} / {@link SellView} via {@code player.closeInventory()} + re-open; it now
+ * lives inside the {@link MultiPanelInventory} so the flow session is preserved across transitions.
+ */
 @RequiredArgsConstructor
-public final class ModeSelectView {
+public final class ModeSelectView implements Panel<TraderFlowSession> {
 
 	private static final int SIZE       = 27;
 	private static final int SLOT_INFO  = 4;
@@ -30,56 +35,71 @@ public final class ModeSelectView {
 
 	private final JavaPlugin     plugin;
 	private final TraderSettings settings;
-	private       ShopView       shopView;
-	private       SellView       sellView;
+	private final SellView       sellView;
 
-	public void setSubViews(ShopView shopView, SellView sellView) {
-		this.shopView = shopView;
-		this.sellView = sellView;
+	@Override
+	public int size(TraderFlowSession session) {
+		return SIZE;
 	}
 
-	public void open(Player viewer, TraderNpc trader, ShopDefinition def, TraderTraitDefinition trait) {
-		String           title   = def.getTitle() + "&r &8&l[&b&l" + trait.displayName() + "&8&l]";
-		InventoryHandler handler = new InventoryHandler(plugin, title, SIZE, viewer);
+	@Override
+	public String title(TraderFlowSession session) {
+		return session.definition.getTitle() + "&r &8&l[&b&l" + session.trait.displayName() + "&8&l]";
+	}
 
+	@Override
+	public void render(MultiPanelInventory<TraderFlowSession> host, InventoryHandler handler, Player viewer,
+	                   TraderFlowSession session) {
 		ItemBuilder info = new ItemBuilder(material(XMaterial.PAPER, Material.PAPER));
-		info.setDisplayName("&b" + trait.displayName()).setLore("&7Choose how you want to interact.");
+		info.setDisplayName("&b" + session.trait.displayName()).setLore("&7Choose how you want to interact.");
 		handler.setItem(SLOT_INFO, info, false, (p, inv, b) -> { });
 
 		ItemBuilder buy = new ItemBuilder(material(XMaterial.EMERALD_BLOCK, Material.EMERALD_BLOCK));
 		buy.setDisplayName("&a&lBUY")
-		   .setLore("&7Browse what the trader sells.", "&7" + def.getBuyEntries().size() + " item(s) listed.");
+		   .setLore("&7Browse what the trader sells.",
+		            "&7" + session.definition.getBuyEntries().size() + " item(s) listed.");
 		handler.setItem(SLOT_BUY, buy, false, (p, inv, b) -> {
-			SOUND_PICK.playSound(p);
-			p.closeInventory();
-			if (shopView != null) {
-				shopView.open(p, trader, def, trait);
-			}
+			host.switchTo(TraderFlowSession.PANEL_SHOP);
+			playSoundNextTick(p, SOUND_PICK);
 		});
 
 		ItemBuilder sell = new ItemBuilder(material(XMaterial.GOLD_BLOCK, Material.GOLD_BLOCK));
 		sell.setDisplayName("&6&lSELL")
-		    .setLore("&7Offer your items to the trader.", "&7" + def.getSellCategories().size() + " categor(ies).");
+		    .setLore("&7Offer your items to the trader.",
+		             "&7" + session.definition.getSellCategories().size() + " categor(ies).");
 		handler.setItem(SLOT_SELL, sell, false, (p, inv, b) -> {
-			SOUND_PICK.playSound(p);
-			p.closeInventory();
+			// SellView is still a standalone legacy view. End the flow cleanly before handing off so the host does not
+			// treat the resulting close event as an unexpected viewer dismissal. The click sound fires on the next
+			// tick, once the old inventory has closed — playing it inside the same tick as the screen swap causes the
+			// client to render the audio cue and the visual transition simultaneously, which reads as a flicker.
+			host.end();
 			if (sellView != null) {
-				sellView.open(p, trader, def, trait);
+				Bukkit.getScheduler().runTask(plugin, () -> {
+					SOUND_PICK.playSound(p);
+					sellView.open(p, session.trader, session.definition, session.trait);
+				});
 			}
 		});
 
 		ItemBuilder close = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER)).setDisplayName("&cClose");
-		handler.setItem(SLOT_CLOSE, close, false, (p, inv, b) -> p.closeInventory());
+		handler.setItem(SLOT_CLOSE, close, false, (p, inv, b) -> host.end());
 
 		InventoryUtil.fillInventory(handler,
 		                            new Fill(settings.getInventoryFillName(), settings.getInventoryFillItem()));
-
-		handler.open(viewer);
 	}
 
 	private ItemStack material(XMaterial preferred, Material fallback) {
 		ItemStack stack = preferred.parseItem();
 		return stack != null ? stack : new ItemStack(fallback);
+	}
+
+	/**
+	 * Defers the sound by one tick so it plays after the panel swap has settled on the client. Playing the sound inline
+	 * — in the same tick as {@code switchTo}/{@code end} — makes the client render audio and inventory change together,
+	 * which the viewer experiences as a flicker even when the transition itself is smooth.
+	 */
+	private void playSoundNextTick(Player player, SoundConfiguration sound) {
+		Bukkit.getScheduler().runTask(plugin, () -> sound.playSound(player));
 	}
 
 }

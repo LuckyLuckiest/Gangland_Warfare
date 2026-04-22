@@ -19,3 +19,32 @@ Information:
          - "&7Joined:&e %member_join_date%"
          - ""
          - "&7Status: %member_online_status%"
+
+Static_Items:
+   18:
+      Item: NAME_TAG
+      Name: "&e&lSearch by Name"
+      Lore:
+         - "&7Filter the list by player name."
+         - "&8Click to open an anvil."
+      OnClick:
+         Inventory:
+            Type: anvil
+            Title: "Search Members"
+            Text: "Name"
+            Success:
+               Command: "/glw filter gang_members search %gangland_anvil_output%"
+   27:
+      Item: BARRIER
+      Name: "&c&lClear Filter"
+      Lore:
+         - "&7Reset every filter and the sort key."
+      OnClick:
+         Command: "/glw filter gang_members clear"
+   36:
+      Item: COMPASS
+      Name: "&b&lSort"
+      Lore:
+         - "&7Cycle sort: Name / Rank / Contribution / Joined."
+      OnClick:
+         Command: "/glw filter gang_members sort"

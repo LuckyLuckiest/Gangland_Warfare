@@ -2,6 +2,7 @@ package me.luckyraven.copsncrooks.npc.banker.view;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import me.luckyraven.copsncrooks.npc.banker.BankerNpc;
 import me.luckyraven.copsncrooks.npc.banker.config.BankerSettings;
 import me.luckyraven.copsncrooks.npc.banker.economy.BankerEconomyContract;
@@ -13,8 +14,11 @@ import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.core.configuration.SoundConfiguration;
 import me.luckyraven.core.utilities.NumberUtil;
 import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.flow.MultiPanelInventory;
+import me.luckyraven.inventory.flow.Panel;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -26,8 +30,14 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The banker flow's single in-flow panel — the rich account menu. The five subviews (amount, upgrade, create, rename,
+ * claim) are still standalone legacy views reached via {@link MultiPanelInventory#end()} followed by the subview's own
+ * {@code open(...)} call. Each subview calls {@link #open(Player, BankerNpc)} when it finishes, which restarts the flow
+ * — this preserves the subview "return to menu" navigation pattern.
+ */
 @RequiredArgsConstructor
-public final class BankerMenuView {
+public final class BankerMenuView implements Panel<BankerFlowSession> {
 
 	private static final int SIZE               = 27;
 	private static final int SLOT_INFO          = 4;
@@ -55,10 +65,9 @@ public final class BankerMenuView {
 	private BankerRenameAccountView renameView;
 	private BankerClaimView         claimView;
 
-	/**
-	 * Formats a {@link BigDecimal} amount for lore display via {@link NumberUtil#valueFormat(BigDecimal)} — the
-	 * BigDecimal-native path preserves precision for Vault-tier values beyond {@code 2^53}.
-	 */
+	@Setter
+	private BankerFlow bankerFlow;
+
 	private static String amount(BigDecimal value) {
 		return NumberUtil.valueFormat(value);
 	}
@@ -73,34 +82,46 @@ public final class BankerMenuView {
 		this.claimView   = claimView;
 	}
 
-	// ── No account path ────────────────────────────────────────────────────
-
+	/**
+	 * Backwards-compat shim — subviews call this on close to "return to the menu". Just restarts the flow with the same
+	 * banker so the menu shows the latest snapshot.
+	 */
 	public void open(Player viewer, BankerNpc banker) {
+		if (bankerFlow != null) bankerFlow.start(viewer, banker);
+	}
+
+	@Override
+	public int size(BankerFlowSession session) {
+		return SIZE;
+	}
+
+	@Override
+	public String title(BankerFlowSession session) {
+		return "&8&l[&b&l" + session.displayName() + "&8&l]";
+	}
+
+	@Override
+	public void render(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler, Player viewer,
+	                   BankerFlowSession session) {
 		BankerSnapshot snap = economy.snapshot(viewer);
 
-		String name  = banker.getData().getDisplayName() != null ? banker.getData().getDisplayName() : "Banker";
-		String title = "&8&l[&b&l" + name + "&8&l]";
-
-		InventoryHandler handler = new InventoryHandler(plugin, title, SIZE, viewer);
-
 		if (!snap.hasBank()) {
-			renderNoAccount(handler, viewer, banker);
+			renderNoAccount(host, handler, viewer, session);
 		} else {
-			renderHasAccount(handler, snap, banker);
+			renderHasAccount(host, handler, snap, session);
 		}
 
 		ItemBuilder close = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER)).setDisplayName("&cClose");
-		handler.setItem(SLOT_CLOSE, close, false, (p, inv, b) -> p.closeInventory());
+		handler.setItem(SLOT_CLOSE, close, false, (p, inv, b) -> host.end());
 
 		InventoryUtil.fillInventory(handler,
 		                            new Fill(settings.getInventoryFillName(), settings.getInventoryFillItem()));
-
-		handler.open(viewer);
 	}
 
-	// ── Existing account path ──────────────────────────────────────────────
+	// ── No account path ────────────────────────────────────────────────────
 
-	private void renderNoAccount(InventoryHandler handler, Player viewer, BankerNpc banker) {
+	private void renderNoAccount(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler, Player viewer,
+	                             BankerFlowSession session) {
 		CreationInfo info = economy.creationInfo(viewer);
 
 		ItemBuilder infoItem = new ItemBuilder(material(XMaterial.PAPER, Material.PAPER));
@@ -122,12 +143,16 @@ public final class BankerMenuView {
 				return;
 			}
 			SOUND_PICK.playSound(p);
-			p.closeInventory();
-			if (createView != null) createView.open(p, banker);
+			handOffTo(host, p, () -> {
+				if (createView != null) createView.open(p, session.banker);
+			});
 		});
 	}
 
-	private void renderHasAccount(InventoryHandler handler, BankerSnapshot snap, BankerNpc banker) {
+	// ── Existing account path ──────────────────────────────────────────────
+
+	private void renderHasAccount(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler,
+	                              BankerSnapshot snap, BankerFlowSession session) {
 		ItemBuilder info = new ItemBuilder(material(XMaterial.BOOK, Material.BOOK));
 		info.setDisplayName("&b&lBank Account").setLore(buildInfoLore(snap));
 		handler.setItem(SLOT_INFO, info, false, (p, inv, b) -> { });
@@ -139,8 +164,9 @@ public final class BankerMenuView {
 		                "&7Daily remaining: &f$" + amount(snap.remainingDailyDeposit()));
 		handler.setItem(SLOT_DEPOSIT, deposit, false, (p, inv, b) -> {
 			SOUND_PICK.playSound(p);
-			p.closeInventory();
-			if (amountView != null) amountView.open(p, banker, BankerAmountView.Mode.DEPOSIT);
+			handOffTo(host, p, () -> {
+				if (amountView != null) amountView.open(p, session.banker, BankerAmountView.Mode.DEPOSIT);
+			});
 		});
 
 		ItemBuilder withdraw = new ItemBuilder(material(XMaterial.GOLD_BLOCK, Material.GOLD_BLOCK));
@@ -149,8 +175,9 @@ public final class BankerMenuView {
 		                 "&7Bank: &f$" + amount(snap.bankBalance()));
 		handler.setItem(SLOT_WITHDRAW, withdraw, false, (p, inv, b) -> {
 			SOUND_PICK.playSound(p);
-			p.closeInventory();
-			if (amountView != null) amountView.open(p, banker, BankerAmountView.Mode.WITHDRAW);
+			handOffTo(host, p, () -> {
+				if (amountView != null) amountView.open(p, session.banker, BankerAmountView.Mode.WITHDRAW);
+			});
 		});
 
 		if (snap.nextTier() != null) {
@@ -158,8 +185,9 @@ public final class BankerMenuView {
 			upgrade.setDisplayName("&b&lUPGRADE").setLore(buildUpgradeLore(snap));
 			handler.setItem(SLOT_UPGRADE, upgrade, false, (p, inv, b) -> {
 				SOUND_PICK.playSound(p);
-				p.closeInventory();
-				if (upgradeView != null) upgradeView.open(p, banker);
+				handOffTo(host, p, () -> {
+					if (upgradeView != null) upgradeView.open(p, session.banker);
+				});
 			});
 		} else {
 			ItemBuilder maxTier = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER));
@@ -174,8 +202,9 @@ public final class BankerMenuView {
 		               "&8Opens an anvil GUI.");
 		handler.setItem(SLOT_RENAME, rename, false, (p, inv, b) -> {
 			SOUND_PICK.playSound(p);
-			p.closeInventory();
-			if (renameView != null) renameView.open(p, banker);
+			handOffTo(host, p, () -> {
+				if (renameView != null) renameView.open(p, session.banker);
+			});
 		});
 
 		ItemBuilder rewards = new ItemBuilder(material(XMaterial.GOLD_INGOT, Material.GOLD_INGOT));
@@ -184,9 +213,20 @@ public final class BankerMenuView {
 		                "&8Available amounts scale with your tier.");
 		handler.setItem(SLOT_REWARDS, rewards, false, (p, inv, b) -> {
 			SOUND_PICK.playSound(p);
-			p.closeInventory();
-			if (claimView != null) claimView.open(p, banker);
+			handOffTo(host, p, () -> {
+				if (claimView != null) claimView.open(p, session.banker);
+			});
 		});
+	}
+
+	/**
+	 * Ends the flow cleanly (so the flow's close listener doesn't tear down during handoff) and schedules the follow-up
+	 * open on the next tick — without the scheduler hop, Bukkit can misorder the close/open events and the subview
+	 * opens into a now-gone inventory handle.
+	 */
+	private void handOffTo(MultiPanelInventory<BankerFlowSession> host, Player viewer, Runnable open) {
+		host.end();
+		Bukkit.getScheduler().runTask(plugin, open);
 	}
 
 	private List<String> buildInfoLore(BankerSnapshot snap) {
@@ -244,18 +284,13 @@ public final class BankerMenuView {
 			return lore;
 		}
 		BankTier current = snap.currentTier();
-		if (current != null) {
-			lore.add("&7Current: " + current.displayName());
-		}
+		if (current != null) lore.add("&7Current: " + current.displayName());
 		lore.add("&7Next: " + next.displayName());
 		lore.add("&7New cap: &f$" + amount(next.maxBalance()));
 		lore.add("&7Cost: &6$" + amount(next.upgradeCost()) + " &7(from bank)");
 		lore.add(" ");
-		if (snap.bankBalance().compareTo(next.upgradeCost()) < 0) {
-			lore.add("&cInsufficient bank funds.");
-		} else {
-			lore.add("&aClick to upgrade.");
-		}
+		if (snap.bankBalance().compareTo(next.upgradeCost()) < 0) lore.add("&cInsufficient bank funds.");
+		else lore.add("&aClick to upgrade.");
 		return lore;
 	}
 

@@ -98,6 +98,17 @@ Slots:
             Name: "&7Withdraw"
             Lore:
                - "&cOpen an account first."
+   17:
+      Item: CHEST
+      Name: "&b&lFull Banking Menu"
+      Lore:
+         - "&7Open the rich banker interface."
+         - "&7All account actions — deposit, withdraw,"
+         - "&7upgrade, rename, claim — in one place."
+         - ""
+         - "&8Same UI as visiting a Banker NPC."
+      OnClick:
+         Command: "/glw bank menu"
    22:
       Item: ARROW
       Name: "&c&lBack"

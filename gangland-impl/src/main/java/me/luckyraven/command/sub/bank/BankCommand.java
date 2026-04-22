@@ -4,6 +4,7 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.copsncrooks.npc.banker.tier.BankTierRegistry;
+import me.luckyraven.copsncrooks.npc.banker.view.BankerFlow;
 import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.bean.command.CommandHandler;
 import me.luckyraven.data.account.user.User;
@@ -34,16 +35,19 @@ public final class BankCommand extends Command {
 	private final UserManager<Player> userManager;
 	private final GanglandDatabase    ganglandDatabase;
 	private final BankTierRegistry    tierRegistry;
+	private final BankerFlow          bankerFlow;
 
 	public BankCommand(Gangland gangland,
 	                   @Qualifier("online") UserManager<Player> userManager,
 	                   GanglandDatabase ganglandDatabase,
-	                   BankTierRegistry tierRegistry) {
+	                   BankTierRegistry tierRegistry,
+	                   BankerFlow bankerFlow) {
 		super(gangland, "bank", true);
 
 		this.userManager      = userManager;
 		this.ganglandDatabase = ganglandDatabase;
 		this.tierRegistry     = tierRegistry;
+		this.bankerFlow       = bankerFlow;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -102,6 +106,7 @@ public final class BankCommand extends Command {
 		                                                    userManager);
 		BankResetCapCommand resetCap = new BankResetCapCommand(getGangland(), getArgumentTree(), getArgument(),
 		                                                       userManager, ganglandDatabase);
+		BankMenuCommand menu = new BankMenuCommand(getGangland(), getArgumentTree(), getArgument(), bankerFlow);
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
@@ -111,6 +116,7 @@ public final class BankCommand extends Command {
 		arguments.add(withdraw);
 		arguments.add(balance);
 		arguments.add(resetCap);
+		arguments.add(menu);
 
 		getArgument().addAllSubArguments(arguments);
 	}

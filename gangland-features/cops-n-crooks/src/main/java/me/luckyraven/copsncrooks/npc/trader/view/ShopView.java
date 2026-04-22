@@ -1,18 +1,16 @@
 package me.luckyraven.copsncrooks.npc.trader.view;
 
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import me.luckyraven.copsncrooks.npc.trader.TraderNpc;
 import me.luckyraven.copsncrooks.npc.trader.config.TraderSettings;
 import me.luckyraven.copsncrooks.npc.trader.mood.MoodService;
-import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitDefinition;
 import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.core.configuration.SoundConfiguration;
 import me.luckyraven.core.utilities.NumberUtil;
 import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.flow.MultiPanelInventory;
+import me.luckyraven.inventory.flow.Panel;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
-import me.luckyraven.shop.ShopDefinition;
 import me.luckyraven.shop.ShopItemEntry;
 import me.luckyraven.shop.message.ShopDisplayResolver;
 import org.bukkit.Bukkit;
@@ -27,11 +25,11 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Trader-specific browser view. Applies mood-based price multipliers, routes clicks into {@link NegotiationView}. Moved
- * from gangland-impl's shop package per the feedback that all trader NPC code lives in cops-n-crooks.
+ * Paginated browser panel in the trader flow. Applies the mood-based price multiplier at render time; clicks pivot to
+ * the {@link NegotiationView} panel with the selected entry stashed on {@link TraderFlowSession}.
  */
 @RequiredArgsConstructor
-public final class ShopView {
+public final class ShopView implements Panel<TraderFlowSession> {
 
 	private static final int   INVENTORY_SIZE   = 54;
 	private static final int[] INTERIOR_SLOTS   = {
@@ -52,29 +50,30 @@ public final class ShopView {
 
 	private final JavaPlugin          plugin;
 	private final MoodService         moodService;
-	private final NegotiationView     negotiationView;
 	private final TraderSettings      settings;
 	private final ShopDisplayResolver displayResolver;
-	@Setter
-	private       ModeSelectView      modeSelectView;
 
-	public void open(Player viewer, TraderNpc trader, ShopDefinition def, TraderTraitDefinition trait) {
-		openPage(viewer, trader, def, trait, 0);
+	@Override
+	public int size(TraderFlowSession session) {
+		return INVENTORY_SIZE;
 	}
 
-	private void openPage(Player viewer, TraderNpc trader, ShopDefinition def, TraderTraitDefinition trait, int page) {
-		String title = def.getTitle() + "&r &8&l[&b&l" + trait.displayName() + "&8&l]";
+	@Override
+	public String title(TraderFlowSession session) {
+		return session.definition.getTitle() + "&r &8&l[&b&l" + session.trait.displayName() + "&8&l]";
+	}
 
-		InventoryHandler handler = new InventoryHandler(plugin, title, INVENTORY_SIZE, viewer);
+	@Override
+	public void render(MultiPanelInventory<TraderFlowSession> host, InventoryHandler handler, Player viewer,
+	                   TraderFlowSession session) {
+		List<ShopItemEntry> entries    = session.definition.getBuyEntries();
+		int                 totalPages = Math.max(1, (int) Math.ceil(entries.size() / (double) ENTRIES_PER_PAGE));
+		session.currentShopPage = Math.clamp(session.currentShopPage, 0, totalPages - 1);
 
-		List<ShopItemEntry> entries     = def.getBuyEntries();
-		int                 totalPages  = Math.max(1, (int) Math.ceil(entries.size() / (double) ENTRIES_PER_PAGE));
-		int                 currentPage = Math.clamp(page, 0, totalPages - 1);
+		double multiplier = moodService.priceMultiplier(session.trader.getData().getId(), viewer.getUniqueId(),
+		                                                session.trait.profile());
 
-		double multiplier = moodService.priceMultiplier(trader.getData().getId(), viewer.getUniqueId(),
-		                                                trait.profile());
-
-		int base = currentPage * ENTRIES_PER_PAGE;
+		int base = session.currentShopPage * ENTRIES_PER_PAGE;
 		for (int i = 0; i < ENTRIES_PER_PAGE; i++) {
 			int entryIndex = base + i;
 			if (entryIndex >= entries.size()) break;
@@ -88,51 +87,48 @@ public final class ShopView {
 			int         slot    = INTERIOR_SLOTS[i];
 
 			handler.setItem(slot, display, false, (clicker, inv, builder) -> {
-				clicker.closeInventory();
-				Bukkit.getScheduler()
-				      .runTask(plugin, () -> negotiationView.open(clicker, trader, def, entry, trait,
-				                                                  () -> openPage(clicker, trader, def, trait,
-				                                                                 currentPage)));
+				session.selectedEntry  = entry;
+				session.basePrice      = entry.hasPrice() ? entry.getPrice() : BigDecimal.ZERO;
+				session.moodMultiplier = multiplier;
+				host.switchTo(TraderFlowSession.PANEL_NEGOTIATION);
 			});
 		}
 
-		renderNavigation(viewer, trader, def, trait, handler, currentPage, totalPages);
+		renderNavigation(host, handler, viewer, session, totalPages);
 
 		InventoryUtil.createBoarder(handler,
 		                            new Fill(settings.getInventoryFillName(), settings.getInventoryFillItem()));
-		handler.open(viewer);
 	}
 
-	private void renderNavigation(Player viewer, TraderNpc trader, ShopDefinition def, TraderTraitDefinition trait,
-	                              InventoryHandler handler, int currentPage, int totalPages) {
+	private void renderNavigation(MultiPanelInventory<TraderFlowSession> host, InventoryHandler handler, Player viewer,
+	                              TraderFlowSession session, int totalPages) {
+		int currentPage = session.currentShopPage;
+
 		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&eBack to menu");
-		handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> {
-			viewer.closeInventory();
-			if (modeSelectView != null) {
-				Bukkit.getScheduler().runTask(plugin, () -> modeSelectView.open(viewer, trader, def, trait));
-			}
-		});
+		handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> host.switchTo(TraderFlowSession.PANEL_MODE_SELECT));
 
 		if (currentPage > 0) {
 			ItemBuilder prev = new ItemBuilder(Material.ARROW).setDisplayName("&e◄ Previous page")
 			                                                  .setLore("&7Go to page " + currentPage + ".");
 			handler.setItem(SLOT_PREV, prev, false, (p, inv, b) -> {
-				SOUND_PAGE.playSound(viewer);
-				openPage(viewer, trader, def, trait, currentPage - 1);
+				session.currentShopPage = currentPage - 1;
+				host.rerender();
+				Bukkit.getScheduler().runTask(plugin, () -> SOUND_PAGE.playSound(viewer));
 			});
 		}
 
 		ItemBuilder info = new ItemBuilder(Material.PAPER);
 		info.setDisplayName("&bPage &f" + (currentPage + 1) + "&7/&f" + totalPages)
-		    .setLore("&7" + def.getBuyEntries().size() + " item(s) total.");
+		    .setLore("&7" + session.definition.getBuyEntries().size() + " item(s) total.");
 		handler.setItem(SLOT_PAGE_INFO, info, false, (p, inv, b) -> { });
 
 		if (currentPage < totalPages - 1) {
 			ItemBuilder next = new ItemBuilder(Material.ARROW);
 			next.setDisplayName("&eNext page ►").setLore("&7Go to page " + (currentPage + 2) + ".");
 			handler.setItem(SLOT_NEXT, next, false, (p, inv, b) -> {
-				SOUND_PAGE.playSound(viewer);
-				openPage(viewer, trader, def, trait, currentPage + 1);
+				session.currentShopPage = currentPage + 1;
+				host.rerender();
+				Bukkit.getScheduler().runTask(plugin, () -> SOUND_PAGE.playSound(viewer));
 			});
 		}
 	}
@@ -146,9 +142,7 @@ public final class ShopView {
 		                            new ArrayList<>(copy.getItemMeta().getLore()) :
 		                            new ArrayList<>();
 
-		if (entry.hasPrice()) {
-			existingLore.add("&7Price: &6$" + NumberUtil.valueFormat(finalPrice));
-		}
+		if (entry.hasPrice()) existingLore.add("&7Price: &6$" + NumberUtil.valueFormat(finalPrice));
 		existingLore.add("&8▸ Click to buy");
 
 		builder.setLore(existingLore);

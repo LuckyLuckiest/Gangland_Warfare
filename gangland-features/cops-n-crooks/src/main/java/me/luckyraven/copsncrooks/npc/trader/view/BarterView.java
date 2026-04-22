@@ -96,7 +96,7 @@ public final class BarterView implements BeanLifecycle {
 		}
 	}
 
-	public void open(Player viewer, NegotiationView.NegotiationSession parent, ShopDefinition def,
+	public void open(Player viewer, NegotiationSession parent, ShopDefinition def,
 	                 BigDecimal askingValue,
 	                 Consumer<Player> onClose) {
 		double mood = moodService.priceMultiplier(parent.getTrader().getData().getId(), viewer.getUniqueId(),
@@ -460,7 +460,7 @@ public final class BarterView implements BeanLifecycle {
 
 	static final class Session {
 		final Player                             viewer;
-		final NegotiationView.NegotiationSession parent;
+		final NegotiationSession parent;
 		final ShopDefinition                     definition;
 		final ShopItemEntry                      entry;
 		final BigDecimal                         askingValue;
@@ -475,7 +475,7 @@ public final class BarterView implements BeanLifecycle {
 		boolean committed           = false;
 		boolean returnToNegotiation = true;
 
-		Session(Player viewer, NegotiationView.NegotiationSession parent, ShopDefinition definition,
+		Session(Player viewer, NegotiationSession parent, ShopDefinition definition,
 		        ShopItemEntry entry, BigDecimal askingValue, InventoryHandler handler, int[] dropzoneSlots,
 		        double barterMoodMultiplier, Consumer<Player> onClose) {
 			this.viewer               = viewer;

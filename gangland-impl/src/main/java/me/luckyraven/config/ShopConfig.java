@@ -2,6 +2,7 @@ package me.luckyraven.config;
 
 import lombok.CustomLog;
 import me.luckyraven.Gangland;
+import me.luckyraven.bootstrap.GanglandContext;
 import me.luckyraven.copsncrooks.npc.trader.ShopViewOpener;
 import me.luckyraven.copsncrooks.npc.trader.ShopViewOpenerImpl;
 import me.luckyraven.copsncrooks.npc.trader.TraderData;
@@ -16,8 +17,10 @@ import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitsLoader;
 import me.luckyraven.copsncrooks.npc.trader.view.*;
 import me.luckyraven.core.bean.Bean;
 import me.luckyraven.core.bean.Configuration;
+import me.luckyraven.core.bean.PostConstruct;
 import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.data.account.user.UserManager;
+import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.copsncrooks.GanglandTraderEconomy;
 import me.luckyraven.file.configuration.copsncrooks.GanglandTraderMessages;
@@ -47,10 +50,25 @@ import org.bukkit.entity.Player;
 @Configuration
 public class ShopConfig {
 
-	private final Gangland gangland;
+	private final Gangland        gangland;
+	private final GanglandContext context;
 
-	public ShopConfig(Gangland gangland) {
+	public ShopConfig(Gangland gangland, GanglandContext context) {
 		this.gangland = gangland;
+		this.context  = context;
+	}
+
+	/**
+	 * Registers the {@code gangland.shop.admin} node (the gate for sneak-opening {@code ShopAdminView}) with the
+	 * {@link PermissionManager} so it appears in {@code /glw perm shop} and is selectable in rank permission
+	 * autocompletion. {@link PermissionManager} is resolved lazily from the context because it's registered by another
+	 * CONFIG-phase {@code @Configuration}; taking it as a constructor arg would trigger the same ordering failure that
+	 * caught {@code GangFilterRegistration}.
+	 */
+	@PostConstruct
+	public void registerPermissions() {
+		PermissionManager permissionManager = context.get(PermissionManager.class);
+		if (permissionManager != null) permissionManager.addPermission(ShopViewOpenerImpl.ADMIN_PERMISSION);
 	}
 
 	// ── YAML I/O + shared services ───────────────────────────────────────
@@ -168,8 +186,8 @@ public class ShopConfig {
 	                                       QuantitySelectorView quantitySelectorView,
 	                                       TraderSettings traderSettings, TraderMessageContract traderMessages,
 	                                       TraderEconomyContract economy, ShopDisplayResolver displayResolver) {
-		return new NegotiationView(gangland, moodService, traderSettings, traderMessages,
-		                           economy, displayResolver, barterView, quantitySelectorView);
+		return new NegotiationView(gangland, moodService, traderSettings, traderMessages, economy, displayResolver,
+		                           barterView, quantitySelectorView);
 	}
 
 	@Bean
@@ -182,20 +200,24 @@ public class ShopConfig {
 	}
 
 	@Bean
-	public ShopView traderShopView(MoodService moodService, NegotiationView negotiationView,
-	                               TraderSettings traderSettings, ShopDisplayResolver displayResolver) {
-		return new ShopView(gangland, moodService, negotiationView, traderSettings, displayResolver);
+	public ShopView traderShopView(MoodService moodService, TraderSettings traderSettings,
+	                               ShopDisplayResolver displayResolver) {
+		return new ShopView(gangland, moodService, traderSettings, displayResolver);
 	}
 
 	@Bean
-	public ModeSelectView traderModeSelectView(TraderSettings traderSettings,
-	                                           ShopView shopView,
-	                                           SellView sellView) {
-		ModeSelectView view = new ModeSelectView(gangland, traderSettings);
-		view.setSubViews(shopView, sellView);
-		shopView.setModeSelectView(view);
-		sellView.setModeSelectView(view);
-		return view;
+	public ModeSelectView traderModeSelectView(TraderSettings traderSettings, SellView sellView) {
+		return new ModeSelectView(gangland, traderSettings, sellView);
+	}
+
+	@Bean
+	public TraderFlow traderFlow(ModeSelectView modeSelectView, ShopView shopView, NegotiationView negotiationView,
+	                             SellView sellView) {
+		TraderFlow flow = new TraderFlow(gangland, modeSelectView, shopView, negotiationView);
+		// Circular: SellView returns to the mode-select panel by restarting the flow. Wired via setter so the
+		// SellView bean can be constructed before TraderFlow exists.
+		sellView.setTraderFlow(flow);
+		return flow;
 	}
 
 	@Bean
@@ -245,10 +267,10 @@ public class ShopConfig {
 
 	@Bean
 	public ShopViewOpener shopViewOpener(TraderManager traderManager, ShopRegistry shopRegistry,
-	                                     ModeSelectView modeSelectView, ShopAdminView adminView,
+	                                     TraderFlow traderFlow, ShopAdminView adminView,
 	                                     ShopMessageContract shopMessages,
 	                                     TraderMessageContract traderMessages) {
-		return new ShopViewOpenerImpl(traderManager, shopRegistry, modeSelectView, adminView,
+		return new ShopViewOpenerImpl(traderManager, shopRegistry, traderFlow, adminView,
 		                              shopMessages, traderMessages);
 	}
 

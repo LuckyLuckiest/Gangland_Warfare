@@ -130,6 +130,15 @@ public class BankerConfig {
 		return view;
 	}
 
+	@Bean
+	public BankerFlow bankerFlow(BankerMenuView menuPanel) {
+		BankerFlow flow = new BankerFlow(gangland, menuPanel);
+		// Circular: subviews call menuView.open(...) to "return to menu", which delegates to bankerFlow.start(...).
+		// Wired via setter so BankerMenuView can be constructed before BankerFlow exists.
+		menuPanel.setBankerFlow(flow);
+		return flow;
+	}
+
 	// ── NPC lifecycle ───────────────────────────────────────────────────
 
 	@Bean

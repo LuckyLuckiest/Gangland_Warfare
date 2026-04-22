@@ -42,18 +42,39 @@ Static_Items:
             Title: "Search Gang"
             Text: "Name"
             Success:
-               Command: "/glw gang search %gangland_anvil_output%"
+               Command: "/glw filter gangs search %gangland_anvil_output%"
+   19:
+      Item: BOOK
+      Name: "&e&lSearch by Description"
+      Lore:
+         - "&7Filter by text inside the description."
+         - "&8Click to open an anvil."
+      OnClick:
+         Inventory:
+            Type: anvil
+            Title: "Search Desc"
+            Text: "Text"
+            Success:
+               Command: "/glw filter gangs set DESCRIPTION %gangland_anvil_output%"
    27:
       Item: BARRIER
       Name: "&c&lClear Filter"
       Lore:
-         - "&7Reset the name filter and sort."
+         - "&7Reset every filter and the sort key."
       OnClick:
-         Command: "/glw gang search clear"
+         Command: "/glw filter gangs clear"
+   28:
+      Item: RED_WOOL
+      Name: "&d&lCycle Color"
+      Lore:
+         - "&7Cycle the color filter through the palette."
+         - "&8After the last color the filter resets."
+      OnClick:
+         Command: "/glw filter gangs next COLOR WHITE,LIGHT_GRAY,GRAY,BLACK,BROWN,RED,ORANGE,YELLOW,LIME,GREEN,CYAN,LIGHT_BLUE,BLUE,PURPLE,MAGENTA,PINK"
    36:
       Item: COMPASS
       Name: "&b&lSort"
       Lore:
          - "&7Cycle sort: Name / Members / Newest."
       OnClick:
-         Command: "/glw gang search sort"
+         Command: "/glw filter gangs sort"

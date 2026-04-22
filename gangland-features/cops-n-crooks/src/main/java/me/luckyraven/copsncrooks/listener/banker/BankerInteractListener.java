@@ -3,7 +3,7 @@ package me.luckyraven.copsncrooks.listener.banker;
 import lombok.RequiredArgsConstructor;
 import me.luckyraven.copsncrooks.npc.banker.BankerManager;
 import me.luckyraven.copsncrooks.npc.banker.BankerNpc;
-import me.luckyraven.copsncrooks.npc.banker.view.BankerMenuView;
+import me.luckyraven.copsncrooks.npc.banker.view.BankerFlow;
 import me.luckyraven.core.bean.listener.ListenerHandler;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
 import org.bukkit.entity.Entity;
@@ -15,8 +15,8 @@ import org.bukkit.event.Listener;
 @RequiredArgsConstructor
 public class BankerInteractListener implements Listener {
 
-	private final BankerManager  bankerManager;
-	private final BankerMenuView menuView;
+	private final BankerManager bankerManager;
+	private final BankerFlow    bankerFlow;
 
 	@EventHandler
 	public void onNpcRightClick(NPCRightClickEvent event) {
@@ -27,7 +27,7 @@ public class BankerInteractListener implements Listener {
 		if (banker == null) return;
 
 		Player player = event.getClicker();
-		menuView.open(player, banker);
+		bankerFlow.start(player, banker);
 	}
 
 }

@@ -63,7 +63,7 @@ public final class SellView implements BeanLifecycle {
 	private final ShopDisplayResolver   displayResolver;
 	private final Map<Player, Session>  active = new WeakHashMap<>();
 	@Setter
-	private       ModeSelectView        modeSelectView;
+	private       TraderFlow            traderFlow;
 
 	private static SoundConfiguration vanilla(String name, float pitch) {
 		return new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, name, 0.6f, pitch);
@@ -223,10 +223,10 @@ public final class SellView implements BeanLifecycle {
 		}
 		active.remove(viewer);
 
-		if (session.returnToModeSelect && modeSelectView != null && session.definition != null) {
+		if (session.returnToModeSelect && traderFlow != null && session.definition != null) {
 			Bukkit.getScheduler()
 			      .runTask(plugin,
-			               () -> modeSelectView.open(viewer, session.trader, session.definition, session.trait));
+			               () -> traderFlow.start(viewer, session.trader, session.definition, session.trait));
 		}
 	}
 
