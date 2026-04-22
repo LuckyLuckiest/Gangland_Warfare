@@ -90,6 +90,7 @@ public abstract class ListenerService {
 				try {
 					Listener listener = (Listener) dependencyContainer.createInstance(clazz);
 					addEvent(listener, priority);
+					log.debug("Listener {} has been registered!", clazz.getName());
 				} catch (Exception exception) {
 					log.warn("Failed to instantiate listener {}: {}", clazz.getName(), exception.getMessage());
 				}

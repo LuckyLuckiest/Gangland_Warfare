@@ -71,6 +71,7 @@ public abstract class CommandService<T> {
 				try {
 					T instance = createInstance(entry.clazz());
 					registerCommand(instance);
+					log.debug("Command {} has been registered!", entry.clazz.getName());
 				} catch (Exception exception) {
 					log.warn("Failed to instantiate command {}: {}", entry.clazz().getName(), exception.getMessage());
 				}
