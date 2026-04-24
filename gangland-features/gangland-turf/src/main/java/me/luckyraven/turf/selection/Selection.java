@@ -15,6 +15,12 @@ public final class Selection {
 	private @Nullable String   world;
 	private @Nullable Location pos1;
 	private @Nullable Location pos2;
+	/**
+	 * The turf currently "selected" by the admin — set automatically on successful create and on
+	 * {@code /glw turf select}, consumed by commands like {@code /glw turf tp} when called without an explicit id.
+	 * Cleared whenever pos1/pos2 changes, because setting corners implies a fresh, not-yet-created turf.
+	 */
+	private @Nullable Integer  activeTurfId;
 
 	public boolean isComplete() {
 		return pos1 != null && pos2 != null;
@@ -35,5 +41,7 @@ public final class Selection {
 		} else {
 			this.pos2 = location;
 		}
+		// New corners = new work-in-progress turf; invalidate any previously-selected turf id.
+		this.activeTurfId = null;
 	}
 }

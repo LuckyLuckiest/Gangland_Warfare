@@ -8,11 +8,16 @@ import java.math.BigDecimal;
 /**
  * Persisted turf definition. Owner, income, bounds, and the cooldown anchor survive restart. Live state (current
  * capture progress, contesting gang) is tracked separately in {@link me.luckyraven.turf.data.TurfRuntimeState}.
+ *
+ * <p>The {@code id} is an auto-incrementing integer assigned by {@code TurfManager.allocateId()} on create — admins
+ * never type it; they reference a turf by standing inside it or by the last turf they created (the active selection).
+ * {@code displayName} is the human-readable label shown to players in the action bar, boss bar, broadcasts, and
+ * {@code /glw turf info}.
  */
 @Getter
 public final class Turf {
 
-	private final String       id;
+	private final int          id;
 	private final long         createdAt;
 	@Setter
 	private       String       displayName;
@@ -31,7 +36,7 @@ public final class Turf {
 	@Setter
 	private       long         lastCaptureTimestamp;
 
-	public Turf(String id,
+	public Turf(int id,
 	            String displayName,
 	            CuboidRegion region,
 	            Integer ownerGangId,

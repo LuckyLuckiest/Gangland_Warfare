@@ -37,7 +37,7 @@ public class TurfRepository extends AbstractRepository<Turf> implements TurfRepo
 
 		for (Object[] result : turfData) {
 			int    v                    = 0;
-			String id                   = String.valueOf(result[v++]);
+			int    id                   = ((Number) result[v++]).intValue();
 			String displayName          = String.valueOf(result[v++]);
 			String world                = String.valueOf(result[v++]);
 			int    minX                 = (int) result[v++];
@@ -79,6 +79,6 @@ public class TurfRepository extends AbstractRepository<Turf> implements TurfRepo
 	@Override
 	protected void doDelete(Turf data) throws SQLException {
 		Database table = getDatabase().table(turfTable.getName());
-		table.delete("id", data.getId(), Types.VARCHAR);
+		table.delete("id", data.getId(), Types.INTEGER);
 	}
 }

@@ -671,3 +671,79 @@ Banker:
    Invulnerable: true
    # Tier id substituted when a player's bank has no stored tier id or references a missing tier.
    Fallback_Tier_Id: "Basic"
+
+# +------+ #
+# | Turf | #
+# +------+ #
+
+# Gang turf system. Admins define cuboid (X/Z) regions that gangs own and fight over via
+# /glw turf. Owning a turf generates passive income every Income_Interval_Minutes. Contested
+# turfs follow the weighted head-count capture model in CaptureService.
+Turf:
+   # Interval (minutes) between income payouts to each turf's owning gang. Paid straight into
+   # the gang vault; orphaned turfs (owning gang deleted) auto-release.
+   Income_Interval_Minutes: 10
+   # Default income amount stamped on new turfs by /glw turf create when no amount is given.
+   Default_Income_Amount: 100.0
+   # Material given by /glw turf wand; any ItemStack NBT-tagged as a turf wand still works, so
+   # changing this does not invalidate previously given wands.
+   Wand_Item_Type: CARROT_ON_A_STICK
+   # Seconds the /glw turf show particle outline runs before self-cancelling.
+   Visualization_Duration_Seconds: 30
+   # Particle type spawned along the 4 vertical edges by /glw turf show (XSeries-resolved name).
+   Visualization_Particle: FLAME
+   # Capture subsystem. Runtime state (contested/cooldown/progress) is not persisted — only
+   # Last_Capture_Timestamp anchors cooldowns across restarts.
+   Capture:
+      # Base time (seconds) for a single attacker to fill 0 -> 100 with no defenders present.
+      # Multiple attackers fill proportionally faster; defenders inside roll progress backward.
+      # Applies to captures of OWNED turfs. Unclaimed turfs use the two-phase timings below.
+      Duration_Seconds: 180
+      # Unclaimed turfs capture in two phases with independent timings. Phase 1 (CLAIM) marks the turf
+      # as "potentially" yours; Phase 2 (CONSOLIDATE) locks it in. Other gangs present inside decrease
+      # progress; if they push Phase 1 all the way to zero while dominating, they take over and start
+      # at Phase 2 (aggression reward). Each base time assumes one attacker with no opposition — net
+      # head-count scales the actual fill rate.
+      Unclaimed_Phase1_Seconds: 90
+      Unclaimed_Phase2_Seconds: 90
+      # Lockout window (minutes) after a capture completes during which the turf cannot be
+      # contested again.
+      Cooldown_Minutes: 15
+      # Grace (seconds) after the challenger leaves the turf before the contest cancels as
+      # ABANDONED.
+      Abandon_Grace_Seconds: 15
+      # After the last gang member logs off, the gang's turfs stay protected for this many
+      # minutes; after that they become capturable again with the gang fully offline.
+      Post_Logoff_Protection_Minutes: 10
+      # Days of zero gang activity before every turf the gang owns auto-releases.
+      Inactivity_Auto_Release_Days: 10
+      # Play the capture start / complete / failed sounds (see Sounds below) to players inside
+      # the turf. Disable to keep captures silent.
+      Enable_Sound: true
+      # When true, a capture completing fires a server-wide broadcast message. Disable on
+      # servers where capture results should stay local.
+      Broadcast_Globally: true
+      # Progress % thresholds that fire TurfCaptureProgressEvent on an upward crossing only —
+      # oscillation in a see-saw fight does not re-emit them.
+      Progress_Milestones: [25, 50, 75]
+      # Sounds played on every player currently inside the turf when the capture state
+      # transitions. Sound names resolved via XSeries so both 1.13+ and legacy ids work.
+      Sounds:
+         Start:
+            Name: BLOCK_NOTE_BLOCK_PLING
+            Volume: 1.0
+            Pitch: 1.0
+         Complete:
+            Name: UI_TOAST_CHALLENGE_COMPLETE
+            Volume: 1.0
+            Pitch: 1.0
+         Failed:
+            Name: ENTITY_VILLAGER_NO
+            Volume: 1.0
+            Pitch: 1.0
+         # Subtle click played to players inside the turf on every upward bossbar tick (~1 Hz) so attackers get
+         # audio feedback that progress is moving. Keep Volume low — this fires every second while contesting.
+         Tick:
+            Name: BLOCK_NOTE_BLOCK_HAT
+            Volume: 0.3
+            Pitch: 1.8

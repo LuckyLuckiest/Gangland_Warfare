@@ -2,6 +2,7 @@ package me.luckyraven.turf.data;
 
 import lombok.Getter;
 import lombok.Setter;
+import me.luckyraven.turf.state.CapturePhase;
 import me.luckyraven.turf.state.TurfState;
 
 /**
@@ -13,29 +14,37 @@ import me.luckyraven.turf.state.TurfState;
 @Setter
 public final class TurfRuntimeState {
 
-	private final String    turfId;
-	private       TurfState state;
+	private final int          turfId;
+	private       TurfState    state;
 	/**
-	 * 0.0 .. 100.0
+	 * Unclaimed-turf sub-state: which half of the two-phase capture is currently in play. Ignored for owned-turf
+	 * captures (they're single-phase).
 	 */
-	private       double    captureProgress;
+	private       CapturePhase phase;
+	/**
+	 * 0.0 .. 100.0 — progress <i>within the current phase</i>. Crossing 100 in {@link CapturePhase#CLAIM} transitions
+	 * to {@link CapturePhase#CONSOLIDATE} at progress=0; crossing 0 in CONSOLIDATE reverts to CLAIM at progress=100.
+	 */
+	private       double       captureProgress;
 	/**
 	 * null unless state == CONTESTING
 	 */
-	private       Integer   challengerGangId;
+	private       Integer      challengerGangId;
 	/**
 	 * epoch ms; used for abandon-grace detection
 	 */
-	private       long      lastChallengerSeenAt;
+	private       long         lastChallengerSeenAt;
 
-	public TurfRuntimeState(String turfId) {
+	public TurfRuntimeState(int turfId) {
 		this.turfId          = turfId;
 		this.state           = TurfState.IDLE;
+		this.phase           = CapturePhase.CLAIM;
 		this.captureProgress = 0.0;
 	}
 
 	public void reset() {
 		this.state                = TurfState.IDLE;
+		this.phase                = CapturePhase.CLAIM;
 		this.captureProgress      = 0.0;
 		this.challengerGangId     = null;
 		this.lastChallengerSeenAt = 0L;

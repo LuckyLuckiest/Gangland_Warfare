@@ -12,7 +12,7 @@ public class TurfTable extends Table<Turf> {
 	public TurfTable() {
 		super("turf");
 
-		Attribute<String>  id                   = new Attribute<>("id", true, String.class);
+		Attribute<Integer> id                   = new Attribute<>("id", true, Integer.class);
 		Attribute<String>  displayName          = new Attribute<>("display_name", false, String.class);
 		Attribute<String>  world                = new Attribute<>("world", false, String.class);
 		Attribute<Integer> minX                 = new Attribute<>("min_x", false, Integer.class);
@@ -26,6 +26,8 @@ public class TurfTable extends Table<Turf> {
 
 		incomeAmount.setDefaultValue(0D);
 		lastCaptureTimestamp.setDefaultValue(0L);
+		// Unclaimed turfs persist with owner_gang_id = NULL; allow that at the SQL level.
+		ownerGangId.setCanBeNull(true);
 
 		this.addAttribute(id);
 		this.addAttribute(displayName);
@@ -59,6 +61,6 @@ public class TurfTable extends Table<Turf> {
 
 	@Override
 	public Map<String, Object> searchCriteria(Turf data) {
-		return createSearchCriteria("id = ?", new Object[]{data.getId()}, new int[]{Types.VARCHAR}, new int[]{0});
+		return createSearchCriteria("id = ?", new Object[]{data.getId()}, new int[]{Types.INTEGER}, new int[]{0});
 	}
 }

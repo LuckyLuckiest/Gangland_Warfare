@@ -14,4 +14,10 @@ public interface TurfSoundContract {
 	void playCaptureComplete(Player listener);
 
 	void playCaptureFailed(Player listener);
+
+	/**
+	 * Subtle "click" played on every upward bossbar tick so attackers get audio feedback that progress is moving.
+	 * Implementations should keep the volume low to avoid spam at 1 Hz.
+	 */
+	void playCaptureTick(Player listener);
 }

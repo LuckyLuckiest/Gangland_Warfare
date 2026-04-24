@@ -10,18 +10,23 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Central registry for turfs. Holds the persisted definitions plus per-turf in-memory runtime state (capture progress
  * etc.). Persistence is delegated to the {@link TurfRepositoryContract} — the repo lives in gangland-impl.
+ *
+ * <p>Turf ids are auto-incrementing integers; callers ask for a fresh id via {@link #allocateId()} before constructing
+ * a new {@link Turf}. On {@link #initialize()} the counter is seeded to {@code max(existingIds) + 1} so restart-safe.
  */
 @CustomLog
 public final class TurfManager {
 
-	private final TurfRepositoryContract        repository;
-	private final Map<String, Turf>             turfsById;
-	private final Map<String, List<Turf>>       turfsByWorld;
-	private final Map<String, TurfRuntimeState> runtimeStates;
+	private final TurfRepositoryContract         repository;
+	private final Map<Integer, Turf>             turfsById;
+	private final Map<String, List<Turf>>        turfsByWorld;
+	private final Map<Integer, TurfRuntimeState> runtimeStates;
+	private final AtomicInteger                  nextId = new AtomicInteger(1);
 
 	public TurfManager(TurfRepositoryContract repository) {
 		this.repository    = repository;
@@ -31,32 +36,43 @@ public final class TurfManager {
 	}
 
 	/**
-	 * Called after the repository has loaded persisted turfs. Re-populates the by-world index and creates a fresh IDLE
-	 * runtime state per turf (in-flight captures do not survive restart per spec).
+	 * Called after the repository has loaded persisted turfs. Re-populates the by-world index, creates a fresh IDLE
+	 * runtime state per turf (in-flight captures do not survive restart per spec), and seeds the id allocator to one
+	 * past the highest existing id.
 	 */
 	public void initialize() {
 		turfsById.clear();
 		turfsByWorld.clear();
 		runtimeStates.clear();
 
-		Collection<Turf> loaded = repository.loadAll();
+		Collection<Turf> loaded  = repository.loadAll();
+		int              highest = 0;
 		for (Turf turf : loaded) {
 			register(turf);
+			if (turf.getId() > highest) {
+				highest = turf.getId();
+			}
 		}
+		nextId.set(highest + 1);
 
 		// Hand the repo a supplier so RepositoryRegistry.saveAll() (periodic autosave + shutdown)
 		// can flush the current in-memory turf set to the DB. Without this, saveAllFromMemory()
 		// throws IllegalStateException("No data supplier set for repository: TurfRepository").
 		repository.setDataSupplier(turfsById::values);
 
-		log.info("Loaded {} turf(s) across {} world(s)", turfsById.size(), turfsByWorld.size());
+		log.info("Loaded {} turf(s) across {} world(s); next id = {}",
+		         turfsById.size(), turfsByWorld.size(), nextId.get());
+	}
+
+	public int allocateId() {
+		return nextId.getAndIncrement();
 	}
 
 	public Collection<Turf> getAll() {
 		return Collections.unmodifiableCollection(turfsById.values());
 	}
 
-	public @Nullable Turf get(String id) {
+	public @Nullable Turf get(int id) {
 		return turfsById.get(id);
 	}
 
@@ -64,7 +80,7 @@ public final class TurfManager {
 		return turfsByWorld.getOrDefault(world, Collections.emptyList());
 	}
 
-	public TurfRuntimeState getRuntimeState(String turfId) {
+	public TurfRuntimeState getRuntimeState(int turfId) {
 		return runtimeStates.get(turfId);
 	}
 
@@ -82,15 +98,13 @@ public final class TurfManager {
 	}
 
 	/**
-	 * @return {@code null} if the id and bounds are unique, otherwise the existing turf id that conflicts.
+	 * @return {@code null} if {@code newRegion} does not overlap any existing turf in its world, otherwise the existing
+	 * 		turf that conflicts.
 	 */
-	public @Nullable String findConflict(String newId, CuboidRegion newRegion) {
-		if (turfsById.containsKey(newId)) {
-			return newId;
-		}
+	public @Nullable Turf findConflict(CuboidRegion newRegion) {
 		for (Turf existing : getTurfsInWorld(newRegion.getWorld())) {
 			if (existing.getRegion().overlaps(newRegion)) {
-				return existing.getId();
+				return existing;
 			}
 		}
 		return null;

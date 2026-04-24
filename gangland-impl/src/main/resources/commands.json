@@ -838,5 +838,61 @@
 	"bank_menu": {
 		"usage": "/glw bank menu",
 		"description": "Opens the rich banker panel (Deposit / Withdraw / Upgrade / Rename / Rewards). Phone-banking entry point."
+	},
+	"turf": {
+		"usage": "/glw turf",
+		"description": "Shows info on the turf you are standing in, or lists your gang's turfs when outside one."
+	},
+	"turf_wand": {
+		"usage": "/glw turf wand",
+		"description": "Receive the turf selection wand. Left-click = pos1, right-click = pos2."
+	},
+	"turf_pos1": {
+		"usage": "/glw turf pos1",
+		"description": "Set selection corner 1 to your current location."
+	},
+	"turf_pos2": {
+		"usage": "/glw turf pos2",
+		"description": "Set selection corner 2 to your current location."
+	},
+	"turf_create": {
+		"usage": "/glw turf create <displayName>",
+		"description": "Create a turf from your active wand selection. The id is auto-assigned; the new turf becomes your active selection."
+	},
+	"turf_delete": {
+		"usage": "/glw turf delete",
+		"description": "Delete your active-selection turf (or the one you're standing inside)."
+	},
+	"turf_setowner": {
+		"usage": "/glw turf setowner <gang|none>",
+		"description": "Set the owner of your active-selection turf. Pass 'none' to clear ownership."
+	},
+	"turf_list": {
+		"usage": "/glw turf list",
+		"description": "List every turf with its owner and world."
+	},
+	"turf_info": {
+		"usage": "/glw turf info",
+		"description": "Detailed info for your active-selection turf — owner, bounds, income, state."
+	},
+	"turf_show": {
+		"usage": "/glw turf show",
+		"description": "Spawn a particle outline along the edges of your active-selection turf, the turf you're in, or your wand selection."
+	},
+	"turf_status": {
+		"usage": "/glw turf status",
+		"description": "Live state of your active-selection turf — capture progress, cooldown, challenger."
+	},
+	"turf_select": {
+		"usage": "/glw turf select [id]",
+		"description": "Mark a turf as your active selection. With no id, selects the turf you're standing inside; pass an id from /glw turf list to pick a remote turf so you can /glw turf tp to it."
+	},
+	"turf_tp": {
+		"usage": "/glw turf tp [id]",
+		"description": "Teleport to the centre of a turf. With no id, teleports to your active selection."
+	},
+	"turf_income": {
+		"usage": "/glw turf income <amount>",
+		"description": "Set the per-interval passive income of your active-selection turf (paid to the owning gang every Income_Interval_Minutes)."
 	}
 }

@@ -13,4 +13,11 @@ public interface TurfMessageContract {
 	void send(CommandSender recipient, String key, Object... replacements);
 
 	void broadcast(String key, Object... replacements);
+
+	/**
+	 * Renders a duration into a localised multi-unit string (e.g. {@code "1h 30m"}, {@code "45s"}) using the plugin's
+	 * {@code TimeUtil} / {@code TimeMessages} machinery — same units Waypoint/Bank/Gang confirm timers use. Callers
+	 * pass seconds so the contract stays free of {@link java.time} / {@code TimeUnit} imports in feature-module code.
+	 */
+	String formatDuration(long seconds);
 }

@@ -210,10 +210,34 @@ public class Settings implements FileInitializer {
 	private static @Getter List<String> lootChestAllowedBlocks;
 	private static @Getter double       lootChestRewardMoneyMinimum, lootChestRewardMoneyMaximum,
 			lootChestRewardExperienceMinimum, lootChestRewardExperienceMaximum;
-	private static @Getter List<String> lootChestRewardCommands;
+	private static @Getter List<String>  lootChestRewardCommands;
 	// money drop (cash items dropped by mobs / cops / civilians / players on death)
-	private static @Getter boolean      moneyDropEnabled;
-	private final          FileHandler  fileHandler;
+	private static @Getter boolean       moneyDropEnabled;
+	// turf configuration
+	private static @Getter int           turfIncomeIntervalMinutes;
+	private static @Getter BigDecimal    turfDefaultIncomeAmount;
+	private static @Getter String        turfWandItemType;
+	private static @Getter int           turfVisualizationDurationSeconds;
+	private static @Getter String        turfVisualizationParticle;
+	// turf - capture
+	private static @Getter int           turfCaptureDurationSeconds;
+	private static @Getter int           turfCaptureUnclaimedPhase1Seconds;
+	private static @Getter int           turfCaptureUnclaimedPhase2Seconds;
+	private static @Getter int           turfCaptureCooldownMinutes;
+	private static @Getter int           turfCaptureAbandonGraceSeconds;
+	private static @Getter int           turfCapturePostLogoffProtectionMinutes;
+	private static @Getter int           turfCaptureInactivityAutoReleaseDays;
+	private static @Getter boolean       turfCaptureSoundEnabled;
+	private static @Getter boolean       turfCaptureBroadcastGlobally;
+	private static @Getter List<Integer> turfCaptureProgressMilestones;
+	// turf - sounds
+	private static @Getter String        turfCaptureSoundStartName, turfCaptureSoundCompleteName,
+			turfCaptureSoundFailedName, turfCaptureSoundTickName;
+	private static @Getter double turfCaptureSoundStartVolume, turfCaptureSoundCompleteVolume,
+			turfCaptureSoundFailedVolume, turfCaptureSoundTickVolume;
+	private static @Getter double turfCaptureSoundStartPitch, turfCaptureSoundCompletePitch,
+			turfCaptureSoundFailedPitch, turfCaptureSoundTickPitch;
+	private final FileHandler fileHandler;
 
 	public Settings(FileManager fileManager) {
 		try {
@@ -235,7 +259,7 @@ public class Settings implements FileInitializer {
 	 * BigDecimal-aware currency formatter. Delegates to {@link #formatDouble(double)} via {@code doubleValue()} so
 	 * existing formatter config (thousand separators, decimal places) applies unchanged; values beyond {@code 2^53}
 	 * lose precision in the rendered string but still round-trip through the DB via
-	 * {@link me.luckyraven.economy.bank.Currency#plainString(BigDecimal)}.
+	 * {@link Currency#plainString(BigDecimal)}.
 	 */
 	public static String formatAmount(BigDecimal value) {
 		return NumberUtil.valueFormat(value);
@@ -688,6 +712,48 @@ public class Settings implements FileInitializer {
 		bankerMaxHealth       = dbl(banker, "Max_Health", 20.0);
 		bankerInvulnerable    = bool(banker, "Invulnerable", true);
 		bankerFallbackTierId  = str(banker, "Fallback_Tier_Id", "Basic");
+
+		// turf
+		NodeReader turf        = section(root, "Turf", report);
+		NodeReader turfCapture = section(turf, "Capture", report);
+		NodeReader turfSounds  = section(turfCapture, "Sounds", report);
+		NodeReader turfStart   = section(turfSounds, "Start", report);
+		NodeReader turfDone    = section(turfSounds, "Complete", report);
+		NodeReader turfFailed  = section(turfSounds, "Failed", report);
+		NodeReader turfTick    = section(turfSounds, "Tick", report);
+
+		turfIncomeIntervalMinutes        = intVal(turf, "Income_Interval_Minutes", 10);
+		turfDefaultIncomeAmount          = money(turf, "Default_Income_Amount", "100");
+		turfWandItemType                 = str(turf, "Wand_Item_Type", "BLAZE_ROD");
+		turfVisualizationDurationSeconds = intVal(turf, "Visualization_Duration_Seconds", 30);
+		turfVisualizationParticle        = str(turf, "Visualization_Particle", "FLAME");
+
+		turfCaptureDurationSeconds             = intVal(turfCapture, "Duration_Seconds", 180);
+		turfCaptureUnclaimedPhase1Seconds      = intVal(turfCapture, "Unclaimed_Phase1_Seconds", 90);
+		turfCaptureUnclaimedPhase2Seconds      = intVal(turfCapture, "Unclaimed_Phase2_Seconds", 90);
+		turfCaptureCooldownMinutes             = intVal(turfCapture, "Cooldown_Minutes", 15);
+		turfCaptureAbandonGraceSeconds         = intVal(turfCapture, "Abandon_Grace_Seconds", 15);
+		turfCapturePostLogoffProtectionMinutes = intVal(turfCapture, "Post_Logoff_Protection_Minutes", 10);
+		turfCaptureInactivityAutoReleaseDays   = intVal(turfCapture, "Inactivity_Auto_Release_Days", 10);
+		turfCaptureSoundEnabled                = bool(turfCapture, "Enable_Sound", true);
+		turfCaptureBroadcastGlobally           = bool(turfCapture, "Broadcast_Globally", true);
+		turfCaptureProgressMilestones          = intList(turfCapture, "Progress_Milestones");
+		if (turfCaptureProgressMilestones.isEmpty()) {
+			turfCaptureProgressMilestones = Arrays.asList(25, 50, 75);
+		}
+
+		turfCaptureSoundStartName      = str(turfStart, "Name", "BLOCK_NOTE_BLOCK_PLING");
+		turfCaptureSoundStartVolume    = dbl(turfStart, "Volume", 1.0);
+		turfCaptureSoundStartPitch     = dbl(turfStart, "Pitch", 1.0);
+		turfCaptureSoundCompleteName   = str(turfDone, "Name", "UI_TOAST_CHALLENGE_COMPLETE");
+		turfCaptureSoundCompleteVolume = dbl(turfDone, "Volume", 1.0);
+		turfCaptureSoundCompletePitch  = dbl(turfDone, "Pitch", 1.0);
+		turfCaptureSoundFailedName     = str(turfFailed, "Name", "ENTITY_VILLAGER_NO");
+		turfCaptureSoundFailedVolume   = dbl(turfFailed, "Volume", 1.0);
+		turfCaptureSoundFailedPitch    = dbl(turfFailed, "Pitch", 1.0);
+		turfCaptureSoundTickName       = str(turfTick, "Name", "BLOCK_NOTE_BLOCK_HAT");
+		turfCaptureSoundTickVolume     = dbl(turfTick, "Volume", 0.3);
+		turfCaptureSoundTickPitch      = dbl(turfTick, "Pitch", 1.8);
 
 		if (!report.isEmpty()) report.log(log);
 

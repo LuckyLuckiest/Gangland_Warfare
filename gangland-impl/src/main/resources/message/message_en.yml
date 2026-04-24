@@ -350,6 +350,53 @@ Commands:
       Drift: "&eDrift &8» &b%permission% &7(Bukkit: &f%bukkit%&7, tracked: &f%tracked%&7)"
    Loot_Chest:
       Removed: "&aLoot chest removed successfully!"
+   Turf:
+      Enter:
+         Owned: "&8» &7Entering &f%turf% &7— Controlled by &e%gang%"
+         Unclaimed: "&8» &7Entering &f%turf% &7— &8Unclaimed territory"
+         Title: "&6&l%turf%"
+         Subtitle_Owned: "&7Controlled by &e%gang%"
+         Subtitle_Unclaimed: "&7Unclaimed Territory"
+      Exit: "&8« &7Leaving &f%turf%"
+      Presence:
+         Owned: "&f%turf% &7— Territory of &e%gang%"
+         Unclaimed: "&f%turf% &7— &8Unclaimed territory"
+      Capture:
+         BossBar_Title: "&e%gang% &7is capturing &f%turf%"
+         Cooldown_Actionbar: "&f%turf% &7— Securing territory (&b%minutes%m&7 left)"
+         Captured_Broadcast: "&6&l%gang% &7captured &f%turf%&7! &8(was &c%old_gang%&8)"
+      Wand:
+         Given: "&aReceived the turf selection wand. Left-click = pos1, right-click = pos2."
+         Pos_Set: "&7Turf &a%corner% &7set to &f(%x%, %y%, %z%)&7 in world &f%world%&7."
+      Create:
+         Success: "&aCreated turf &f%turf% &8[&7id=%id%&8] &7(&f%min%&7 to &f%max%&7 in &f%world%&7). &e(now selected — /glw turf tp)"
+      Delete:
+         Success: "&aDeleted turf &f%turf%&7."
+      SetOwner:
+         Success: "&aSet &f%turf%'s &aowner to &e%gang%&7."
+         Cleared: "&aCleared owner of &f%turf%&7."
+      Select:
+         Success: "&aSelected turf &f%turf% &8[&7id=%id%&8]&7. &7Use &e/glw turf tp&7 to teleport."
+      Tp:
+         Success: "&aTeleported to &f%turf% &8[&7id=%id%&8]&7."
+      Income:
+         Success: "&aSet &f%turf%&a income to &b%money_symbol%%amount% &aper &b%time%&a."
+      Show:
+         Started: "&aRendering turf &f%turf% &7for &b%seconds%s&7."
+      Info:
+         Header: "&6&l%turf% &8[&7id=%id%&8]"
+         Owner: " &7Owner: &e%gang%"
+         Region: " &7Region: &f(%min% → %max%) &7in &f%world%"
+         Income: " &7Income: &a%money_symbol%%amount% &7every &b%time%"
+         State: " &7State: &f%state%"
+      List:
+         Header: "&6&lTurfs &7(&e%count%&7):"
+         Row: " &8- &8[&7id=%id%&8] &f%turf% &7owned by &e%gang% &8(&b%world%&8)"
+         Empty: "&7No turfs have been defined."
+      Status:
+         Idle: "&7%turf% &7— &aIdle&7 (owner: &e%gang%&7)"
+         Contesting: "&7%turf% &7— &c%progress%%&7 by &e%gang%%phase%"
+         Cooldown: "&7%turf% &7— &6Cooldown &8(%time% left)"
 
 Errors:
    Prefix: "&4Error&7: "
@@ -478,6 +525,18 @@ Errors:
    Argument:
       Not_Implemented: "Not implemented method!"
       Confirm_Required: "Need to execute the initial statement to use this argument."
+   Turf:
+      Create:
+         Overlap: "&cThat selection overlaps turf &f%turf%&c — pick a different area."
+         No_Selection: "&cSet pos1 and pos2 first (via the wand or &e/glw turf pos1&c / &e/glw turf pos2&c)."
+         Cross_World: "&cBoth corners must be in the same world."
+         Id_Taken: "&cA turf named &f%turf%&c already exists."
+      Income:
+         Invalid: "&cInvalid income amount: &f%amount%&c. Must be a non-negative number."
+      Not_Found: "&cNo turf named &f%turf%&c."
+      Not_Inside: "&cStand inside a turf to use this command."
+      No_Gang: "&cYou must be in a gang to use this command."
+      No_Active: "&cNo active turf. Use &e/glw turf select <id>&c or &e/glw turf create&c first."
 
 Information:
    Prefix: "&8&l[&7Information&8&l]&7 "
@@ -485,6 +544,13 @@ Information:
       Request_Already_Sent: "Gang alliance to that gang is already sent!"
       Already_Allied: "Already allied with that gang."
       Kicked: "You have been kicked from the gang!"
+   Turf:
+      Contest_Start_Defender: "&c⚠ Your turf &f%turf%&c is being contested by &e%gang%&c!"
+      Contest_Half_Defender: "&4⚠ &cCapture of &f%turf%&c is halfway done — defend it!"
+      Blocked:
+         Cooldown: "&7This turf is recovering. Capturable again in &e%time%&7."
+         Contesting: "&7&e%gang% &7is already capturing this turf &8(&e%progress%%&8)."
+         Protected: "&7A member of &e%gang% &7was online recently — their turf is protected for &e%time%&7."
    Balance:
       Registered_Only: "Balance are for registered users"
    Argument:
