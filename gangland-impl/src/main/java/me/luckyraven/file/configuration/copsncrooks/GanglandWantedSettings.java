@@ -1,8 +1,8 @@
 package me.luckyraven.file.configuration.copsncrooks;
 
-import me.luckyraven.copsncrooks.wanted.WantedSettings;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.gang.wanted.WantedSettings;
 
 import java.math.BigDecimal;
 

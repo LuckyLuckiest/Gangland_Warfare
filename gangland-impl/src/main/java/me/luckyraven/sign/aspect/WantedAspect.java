@@ -1,10 +1,10 @@
 package me.luckyraven.sign.aspect;
 
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.gang.user.User;
 import me.luckyraven.gang.user.UserManager;
+import me.luckyraven.gang.wanted.Wanted;
 import me.luckyraven.sign.model.ParsedSign;
 import me.luckyraven.sign.type.WantedSign;
 import org.bukkit.entity.Player;

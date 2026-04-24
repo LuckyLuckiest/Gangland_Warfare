@@ -1,7 +1,7 @@
 package me.luckyraven.file.configuration.copsncrooks;
 
-import me.luckyraven.copsncrooks.bounty.BountySettings;
 import me.luckyraven.file.configuration.Settings;
+import me.luckyraven.gang.bounty.BountySettings;
 
 import java.math.BigDecimal;
 

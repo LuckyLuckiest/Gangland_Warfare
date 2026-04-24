@@ -2,8 +2,8 @@ package me.luckyraven.copsncrooks.combo;
 
 import lombok.Setter;
 import me.luckyraven.copsncrooks.events.combo.KillComboEvent;
-import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.core.utilities.NumberUtil;
+import me.luckyraven.gang.wanted.Wanted;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;

@@ -1,6 +1,6 @@
 package me.luckyraven.copsncrooks.npc.police.targeting;
 
-import me.luckyraven.copsncrooks.wanted.Wanted;
+import me.luckyraven.gang.wanted.Wanted;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;

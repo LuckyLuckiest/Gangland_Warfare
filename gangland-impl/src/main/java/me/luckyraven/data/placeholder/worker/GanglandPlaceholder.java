@@ -2,7 +2,6 @@ package me.luckyraven.data.placeholder.worker;
 
 import me.luckyraven.copsncrooks.npc.banker.tier.BankTier;
 import me.luckyraven.copsncrooks.npc.banker.tier.BankTierRegistry;
-import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.core.color.ColorUtil;
 import me.luckyraven.core.placeholder.PlaceholderHandler;
 import me.luckyraven.core.placeholder.effect.ConditionalFlashWrapper;
@@ -20,6 +19,7 @@ import me.luckyraven.gang.member.MemberManager;
 import me.luckyraven.gang.user.Level;
 import me.luckyraven.gang.user.User;
 import me.luckyraven.gang.user.UserManager;
+import me.luckyraven.gang.wanted.Wanted;
 import me.luckyraven.item.configuration.UniqueItemAddon;
 import me.luckyraven.item.unique.UniqueItem;
 import org.bukkit.OfflinePlayer;

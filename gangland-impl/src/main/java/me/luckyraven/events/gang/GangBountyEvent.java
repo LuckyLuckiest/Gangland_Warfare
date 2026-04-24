@@ -1,8 +1,8 @@
 package me.luckyraven.events.gang;
 
 import lombok.Getter;
-import me.luckyraven.copsncrooks.events.bounty.BountyEvent;
 import me.luckyraven.gang.Gang;
+import me.luckyraven.gang.events.bounty.BountyEvent;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 

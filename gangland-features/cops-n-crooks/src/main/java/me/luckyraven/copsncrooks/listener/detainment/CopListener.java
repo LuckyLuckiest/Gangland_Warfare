@@ -1,13 +1,13 @@
 package me.luckyraven.copsncrooks.listener.detainment;
 
 import lombok.RequiredArgsConstructor;
-import me.luckyraven.copsncrooks.events.wanted.WantedEndEvent;
-import me.luckyraven.copsncrooks.events.wanted.WantedLevelChangeEvent;
-import me.luckyraven.copsncrooks.events.wanted.WantedStartEvent;
 import me.luckyraven.copsncrooks.npc.police.CopManager;
 import me.luckyraven.copsncrooks.npc.police.npc.CopNpc;
 import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.core.downed.PlayerDownedEvent;
+import me.luckyraven.gang.events.wanted.WantedEndEvent;
+import me.luckyraven.gang.events.wanted.WantedLevelChangeEvent;
+import me.luckyraven.gang.events.wanted.WantedStartEvent;
 import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;
 import net.citizensnpcs.api.CitizensAPI;

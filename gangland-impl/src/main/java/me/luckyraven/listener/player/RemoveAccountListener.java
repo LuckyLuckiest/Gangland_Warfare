@@ -1,15 +1,15 @@
 package me.luckyraven.listener.player;
 
 import me.luckyraven.Gangland;
-import me.luckyraven.copsncrooks.bounty.Bounty;
-import me.luckyraven.copsncrooks.wanted.Wanted;
 import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.core.bean.listener.ListenerPriority;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.economy.bank.Bank;
+import me.luckyraven.gang.bounty.Bounty;
 import me.luckyraven.gang.user.User;
 import me.luckyraven.gang.user.UserManager;
+import me.luckyraven.gang.wanted.Wanted;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponManager;
