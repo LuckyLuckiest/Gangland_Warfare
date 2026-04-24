@@ -5,6 +5,8 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.ArgumentUtil;
+import me.luckyraven.command.sub.gang.ally.GangAllyCommand;
+import me.luckyraven.command.sub.gang.invite.GangInviteCommand;
 import me.luckyraven.core.ItemBuilder;
 import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.bean.command.CommandHandler;

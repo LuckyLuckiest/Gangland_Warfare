@@ -3,6 +3,7 @@ package me.luckyraven.command.sub.level;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.sub.level.experience.LevelExperienceCommand;
 import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.bean.command.CommandHandler;
 import me.luckyraven.file.configuration.Messages;
@@ -44,8 +45,8 @@ public final class LevelCommand extends Command {
 	 * up; otherwise the sender itself is returned. Emits {@code PLAYER_NOT_FOUND} or {@code NOT_PLAYER} on failure and
 	 * returns {@code null} — callers should abort their action when null is returned.
 	 */
-	static User<Player> resolveTarget(CommandSender sender, String[] args, int targetIdx,
-	                                  UserManager<Player> userManager) {
+	public static User<Player> resolveTarget(CommandSender sender, String[] args, int targetIdx,
+	                                         UserManager<Player> userManager) {
 		if (args.length > targetIdx) {
 			String name   = args[targetIdx];
 			Player target = Bukkit.getPlayer(name);

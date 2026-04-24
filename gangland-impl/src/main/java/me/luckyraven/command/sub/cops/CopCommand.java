@@ -3,6 +3,7 @@ package me.luckyraven.command.sub.cops;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.sub.cops.spawner.CopSpawnerCommand;
 import me.luckyraven.copsncrooks.npc.police.CopService;
 import me.luckyraven.copsncrooks.npc.police.spawn.CopSpawnManager;
 import me.luckyraven.core.bean.command.CommandHandler;

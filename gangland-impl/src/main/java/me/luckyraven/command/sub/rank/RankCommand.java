@@ -4,6 +4,8 @@ import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.data.CommandInformation;
+import me.luckyraven.command.sub.rank.parent.RankParentCommand;
+import me.luckyraven.command.sub.rank.permission.RankPermissionCommand;
 import me.luckyraven.core.bean.command.CommandHandler;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.database.GanglandDatabase;

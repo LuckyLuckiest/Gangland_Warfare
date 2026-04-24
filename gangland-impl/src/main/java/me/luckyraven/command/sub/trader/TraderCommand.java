@@ -3,6 +3,7 @@ package me.luckyraven.command.sub.trader;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.command.sub.trader.edit.TraderEditCommand;
 import me.luckyraven.copsncrooks.npc.trader.TraderManager;
 import me.luckyraven.copsncrooks.npc.trader.trait.TraderTraitRegistry;
 import me.luckyraven.core.bean.command.CommandHandler;
