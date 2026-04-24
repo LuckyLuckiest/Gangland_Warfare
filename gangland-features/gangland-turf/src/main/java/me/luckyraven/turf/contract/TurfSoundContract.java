@@ -20,4 +20,10 @@ public interface TurfSoundContract {
 	 * Implementations should keep the volume low to avoid spam at 1 Hz.
 	 */
 	void playCaptureTick(Player listener);
+
+	/**
+	 * Played to players inside a turf when its owning gang is cleared (admin {@code /glw turf setowner none},
+	 * inactivity auto-release, etc.) — distinct from a failed capture so the audio cue makes the meaning obvious.
+	 */
+	void playOwnerCleared(Player listener);
 }

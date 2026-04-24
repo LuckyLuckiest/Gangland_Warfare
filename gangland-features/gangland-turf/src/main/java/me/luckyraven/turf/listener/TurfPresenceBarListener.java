@@ -12,6 +12,7 @@ import me.luckyraven.turf.data.Turf;
 import me.luckyraven.turf.events.TurfCapturedEvent;
 import me.luckyraven.turf.events.TurfEnterEvent;
 import me.luckyraven.turf.events.TurfExitEvent;
+import me.luckyraven.turf.events.TurfOwnerChangedEvent;
 import me.luckyraven.turf.manager.TurfManager;
 import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;
@@ -41,8 +42,12 @@ import java.util.UUID;
  *   <li><b>WHITE</b> — turf is unclaimed and the viewer has no gang.</li>
  * </ul>
  *
- * <p>Bars are refreshed on {@link TurfCapturedEvent} so every viewer currently standing in the captured turf sees
- * their colour flip the moment ownership changes.
+ * <p>Unclaimed turfs do <b>not</b> get a presence bar — the dual capture bossbars already communicate the unclaimed
+ * status while a contest is in flight, and outside a contest there is nothing useful to surface for an unclaimed
+ * region. Bars are refreshed on {@link TurfCapturedEvent} so every viewer currently standing in the captured turf
+ * sees their colour flip the moment ownership changes, and on {@link TurfOwnerChangedEvent} so admin
+ * {@code /glw turf setowner} (including clearing to {@code none}) tears the bar down or recolours it for everyone
+ * inside without waiting for them to walk out and back in.
  */
 @ListenerHandler
 @RequiredArgsConstructor
@@ -70,10 +75,21 @@ public final class TurfPresenceBarListener implements Listener {
 
 	@EventHandler
 	public void onCaptured(TurfCapturedEvent event) {
-		int capturedId = event.getTurf().getId();
-		// Recolour every viewer whose current presence bar is for the just-captured turf.
+		refreshAllInside(event.getTurf());
+	}
+
+	@EventHandler
+	public void onOwnerChanged(TurfOwnerChangedEvent event) {
+		// Admin /glw turf setowner (clear or reassign) is the only way an owned turf can flip to unclaimed
+		// or change owner outside the capture flow. Without this hook, the stale "Territory of <gang>" bar
+		// would sit on every viewer inside until they walked out and back in.
+		refreshAllInside(event.getTurf());
+	}
+
+	private void refreshAllInside(Turf turf) {
+		int turfId = turf.getId();
 		for (Map.Entry<UUID, Entry> entry : new HashMap<>(active).entrySet()) {
-			if (entry.getValue().turfId != capturedId) {
+			if (entry.getValue().turfId != turfId) {
 				continue;
 			}
 			Player viewer = Bukkit.getPlayer(entry.getKey());
@@ -81,7 +97,7 @@ public final class TurfPresenceBarListener implements Listener {
 				continue;
 			}
 			hideFor(viewer);
-			showFor(viewer, event.getTurf());
+			showFor(viewer, turf); // No-op if turf is now unclaimed.
 		}
 	}
 
@@ -94,16 +110,18 @@ public final class TurfPresenceBarListener implements Listener {
 		hideFor(viewer); // Guard against stacked duplicates if enter fires while an old bar is still up.
 
 		Integer ownerId = turf.getOwnerGangId();
-		Gang    owner   = ownerId == null ? null : gangs.findById(ownerId);
-		String  title;
-		if (owner != null) {
-			title = messages.format("TURF_PRESENCE_OWNED",
-			                        "turf", turf.getDisplayName(),
-			                        "gang", GangDisplayNameResolver.resolve(owner));
-		} else {
-			title = messages.format("TURF_PRESENCE_UNCLAIMED",
-			                        "turf", turf.getDisplayName());
+		if (ownerId == null) {
+			// Unclaimed turfs have no presence bar — the dual capture bossbar covers anything worth saying
+			// during a contest, and there is nothing to display about an empty region outside one.
+			return;
 		}
+		Gang owner = gangs.findById(ownerId);
+		if (owner == null) {
+			return;
+		}
+		String title = messages.format("TURF_PRESENCE_OWNED",
+		                               "turf", turf.getDisplayName(),
+		                               "gang", GangDisplayNameResolver.resolve(owner));
 
 		BarColor color = resolveColor(viewer, ownerId);
 		BossBar  bar   = Bukkit.createBossBar(ChatUtil.color(title), color, BarStyle.SOLID);

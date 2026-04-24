@@ -25,9 +25,12 @@ import org.bukkit.event.Listener;
  * <p>Possible reasons reported:
  * <ul>
  *   <li><b>Cooldown</b> — turf was captured recently; tells them how many minutes until it's contestable.</li>
- *   <li><b>Contesting</b> — another gang is already mid-capture; tells them who and how far along.</li>
  *   <li><b>Protected</b> — owner gang still has members online (or within the post-logoff grace window).</li>
  * </ul>
+ *
+ * <p>An active contest no longer produces a "blocked" message — Phase 1 is global so any gang member who walks in can
+ * help fill it, and the contest-aware action-bar / dual-bossbar UI already tells them what's happening. Sending a
+ * "you're blocked" chat line on top would be wrong (they're not blocked) and noisy.
  */
 @ListenerHandler
 @RequiredArgsConstructor
@@ -65,15 +68,9 @@ public final class TurfCaptureFeedbackListener implements Listener {
 			return;
 		}
 
-		// Another gang is already contesting.
+		// An active contest is intentionally not reported here — see class javadoc for why.
 		TurfRuntimeState state = turfs.getRuntimeState(turf.getId());
-		if (state != null && state.getState() == TurfState.CONTESTING
-		    && state.getChallengerGangId() != null
-		    && state.getChallengerGangId() != user.getGangId()) {
-			Gang challenger = gangs.findById(state.getChallengerGangId());
-			messages.send(player, "TURF_BLOCKED_CONTESTING",
-			              "gang", GangDisplayNameResolver.resolve(challenger),
-			              "progress", String.valueOf((int) state.getCaptureProgress()));
+		if (state != null && state.getState() == TurfState.CONTESTING) {
 			return;
 		}
 

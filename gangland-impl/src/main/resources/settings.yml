@@ -747,3 +747,10 @@ Turf:
             Name: BLOCK_NOTE_BLOCK_HAT
             Volume: 0.3
             Pitch: 1.8
+         # Played to players inside a turf when its owning gang is cleared (admin
+         # /glw turf setowner none, inactivity auto-release, etc.) — distinct from a failed capture so the audio
+         # cue makes the meaning obvious.
+         Unclaimed:
+            Name: ENTITY_ENDER_DRAGON_GROWL
+            Volume: 0.5
+            Pitch: 1.5

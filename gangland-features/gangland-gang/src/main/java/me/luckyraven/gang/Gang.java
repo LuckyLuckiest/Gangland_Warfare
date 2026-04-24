@@ -14,6 +14,7 @@ import me.luckyraven.gang.vault.permission.VaultPermissionBridge;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.Nullable;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -31,7 +32,10 @@ public class Gang {
 	private final EconomyHandler    economy;
 	private final List<Member>      members;
 
-	private String name, displayName, color, description;
+	private String name;
+	@Nullable
+	private String displayName;
+	private String color, description;
 	private long  created;
 	/**
 	 * Epoch ms of the most recent member login / heartbeat while the gang has at least one member online. Freezes the
@@ -172,7 +176,7 @@ public class Gang {
 	}
 
 	public String getDisplayNameString() {
-		return displayName.isEmpty() ?
+		return displayName == null || displayName.isEmpty() ?
 		       this.name :
 		       ChatUtil.color(this.displayName + "&c" + GangSettings.getGangDisplayNameChar());
 	}
@@ -195,8 +199,7 @@ public class Gang {
 	public String toString() {
 		return String.format(
 				"Gang{id=%d,name=%s,description=%s,members=%s,created=%s,balance=%s,level=%.2f,bounty=%s,allies=%s}",
-				getId(), name, description, getMembers(), getDateCreatedString(),
-				economy.getAmount().toPlainString(),
+				getId(), name, description, getMembers(), getDateCreatedString(), economy.getAmount().toPlainString(),
 				level.getExperience(), bounty.getAmount().toPlainString(), getAllyListString());
 	}
 

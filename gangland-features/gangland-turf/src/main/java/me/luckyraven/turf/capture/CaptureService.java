@@ -167,13 +167,25 @@ public final class CaptureService {
 			return;
 		}
 		if (turf.isUnclaimed()) {
-			// Unclaimed: pick the gang with the most members. Ties at the top → no contest starts
-			// (there's no single "leader"). A lone gang always qualifies.
-			Integer leader = dominantGang(groups.challengersByGang, null);
-			if (leader == null) {
+			// Phase 1 is global — any gang member inside is enough to start the contest. The "challenger"
+			// chosen here is mostly cosmetic (used as the initial bossbar label until Phase 1 completes
+			// and a fresh dominant gang is elected for Phase 2). Pick the dominant gang if there is one,
+			// otherwise the lowest gang id for determinism. Without this, two evenly-matched gangs
+			// arriving simultaneously would never trigger a contest.
+			if (groups.challengersByGang.isEmpty()) {
 				return;
 			}
-			Gang challenger = gangs.findById(leader);
+			Integer initialChallengerId = dominantGang(groups.challengersByGang, null);
+			if (initialChallengerId == null) {
+				int lowest = Integer.MAX_VALUE;
+				for (Integer gangId : groups.challengersByGang.keySet()) {
+					if (gangId < lowest) {
+						lowest = gangId;
+					}
+				}
+				initialChallengerId = lowest;
+			}
+			Gang challenger = gangs.findById(initialChallengerId);
 			if (challenger == null) {
 				return;
 			}
@@ -201,13 +213,13 @@ public final class CaptureService {
 
 		if (challengers > 0) {
 			state.setLastChallengerSeenAt(now);
-		} else if (now - state.getLastChallengerSeenAt() > settings.getAbandonGraceSeconds() * 1000L) {
-			cancel(turf, state, playersInside, TurfCaptureFailedEvent.Reason.ABANDONED);
-			return;
 		}
 
-		double base  = 100.0 / Math.max(1, settings.getCaptureDurationSeconds());
-		int    net   = challengers - groups.defenders;
+		double base = 100.0 / Math.max(1, settings.getCaptureDurationSeconds());
+		// Empty contest decays at 1v0 rate so the bar visibly winds down (and unclaimed turfs roll their
+		// phase back through CLAIM) instead of freezing for the abandon-grace window. The cancel branch
+		// at progress<=0 still ends the contest cleanly, but only after the player gets visual feedback.
+		int    net   = (challengers == 0 && groups.defenders == 0) ? -1 : challengers - groups.defenders;
 		double delta = net * base;
 
 		double before = state.getCaptureProgress();
@@ -216,7 +228,10 @@ public final class CaptureService {
 
 		for (int milestone : settings.getProgressMilestones()) {
 			if (before < milestone && after >= milestone) {
-				Bukkit.getPluginManager().callEvent(new TurfCaptureProgressEvent(turf, after));
+				// Owned-turf captures are single-phase; the dual-bar UI just renders bar B and ignores the
+				// claim split, so we report (CLAIM, after, 0) — the legacy "progress" stays meaningful.
+				Bukkit.getPluginManager()
+				      .callEvent(new TurfCaptureProgressEvent(turf, after, CapturePhase.CLAIM, after, 0.0));
 			}
 		}
 
@@ -235,22 +250,17 @@ public final class CaptureService {
 
 	private void tickContestingUnclaimed(Turf turf, TurfRuntimeState state, TickGroups groups,
 	                                     List<Player> playersInside, long now) {
-		int capturingGangId = state.getChallengerGangId() == null ? -1 : state.getChallengerGangId();
-		int capturing       = groups.challengersByGang.getOrDefault(capturingGangId, 0);
-
-		// Sum every other gang's members as combined opposers — the tug-of-war is 1-vs-rest.
-		int opposers = 0;
-		for (Map.Entry<Integer, Integer> entry : groups.challengersByGang.entrySet()) {
-			if (entry.getKey() != capturingGangId) {
-				opposers += entry.getValue();
-			}
+		int totalInside = 0;
+		for (Integer count : groups.challengersByGang.values()) {
+			totalInside += count;
 		}
 
-		if (capturing > 0) {
+		// Abandon grace applies globally in both phases — "no gang member has been inside for X seconds"
+		// ends the contest. Phase 1 doesn't decrement on its own (see below) so we need the grace timer
+		// to stop a half-filled Phase 1 from lingering forever on an empty turf.
+		if (totalInside > 0) {
 			state.setLastChallengerSeenAt(now);
-		} else if (opposers == 0
-		           && now - state.getLastChallengerSeenAt() > settings.getAbandonGraceSeconds() * 1000L) {
-			// Capturing gang left AND no opposers to transfer to → abandon.
+		} else if (now - state.getLastChallengerSeenAt() > settings.getAbandonGraceSeconds() * 1000L) {
 			cancel(turf, state, playersInside, TurfCaptureFailedEvent.Reason.ABANDONED);
 			return;
 		}
@@ -258,9 +268,29 @@ public final class CaptureService {
 		int phaseDurationSeconds = state.getPhase() == CapturePhase.CLAIM
 		                           ? settings.getUnclaimedPhase1Seconds()
 		                           : settings.getUnclaimedPhase2Seconds();
-		double base  = 100.0 / Math.max(1, phaseDurationSeconds);
-		int    net   = capturing - opposers;
-		double delta = net * base;
+		double base = 100.0 / Math.max(1, phaseDurationSeconds);
+
+		double delta;
+		if (state.getPhase() == CapturePhase.CLAIM) {
+			// Phase 1 is GLOBAL — anyone inside (regardless of gang) contributes. Rivals who enter
+			// to "stop" a capturing gang are actually forced to help complete Phase 1 alongside them;
+			// the fight over who owns the turf happens in Phase 2. Empty Phase 1 freezes rather than
+			// decaying so a partially-filled claim survives a brief gap before grace ends it.
+			delta = totalInside > 0 ? base : 0.0;
+		} else {
+			// Phase 2 is the contestable phase: per-gang tug-of-war with decay-on-empty so the bar
+			// visibly winds back down to zero (rolling into Phase 1 @100) instead of freezing.
+			int capturingGangId = state.getChallengerGangId() == null ? -1 : state.getChallengerGangId();
+			int capturing       = groups.challengersByGang.getOrDefault(capturingGangId, 0);
+			int opposers        = 0;
+			for (Map.Entry<Integer, Integer> entry : groups.challengersByGang.entrySet()) {
+				if (entry.getKey() != capturingGangId) {
+					opposers += entry.getValue();
+				}
+			}
+			int net = (capturing == 0 && opposers == 0) ? -1 : capturing - opposers;
+			delta = net * base;
+		}
 
 		double before = state.getCaptureProgress();
 		double after  = clamp(before + delta, 0.0, 100.0);
@@ -268,15 +298,37 @@ public final class CaptureService {
 
 		for (int milestone : settings.getProgressMilestones()) {
 			if (before < milestone && after >= milestone) {
-				Bukkit.getPluginManager().callEvent(new TurfCaptureProgressEvent(turf, after));
+				// Split the two halves so the dual-bar UI can render claim + consolidate as separate bars
+				// without re-reading TurfRuntimeState off-thread. CLAIM phase pins consolidate at 0;
+				// CONSOLIDATE phase pins claim at 100 (it already filled).
+				double claim       = state.getPhase() == CapturePhase.CLAIM ? after : 100.0;
+				double consolidate = state.getPhase() == CapturePhase.CONSOLIDATE ? after : 0.0;
+				Bukkit.getPluginManager()
+				      .callEvent(new TurfCaptureProgressEvent(turf, after, state.getPhase(), claim, consolidate));
 			}
 		}
 
 		// Phase-boundary transitions ------------------------------------------------------------
 		if (state.getPhase() == CapturePhase.CLAIM && after >= 100.0) {
-			// Phase 1 done → Phase 2 starts at zero, same gang, same bar.
+			// Phase 1 done → pick the gang that's currently dominant inside. Ties stall at 100 until
+			// someone gains dominance; empty rooms also stall. The winning gang becomes the challenger
+			// for Phase 2, re-firing TurfCaptureStartEvent so listeners pick up the new bossbar colour
+			// even if a prior gang had previously held the contest.
+			Integer dominant = dominantGang(groups.challengersByGang, null);
+			if (dominant == null) {
+				return;
+			}
+			Gang newOwner = gangs.findById(dominant);
+			if (newOwner == null) {
+				return;
+			}
 			state.setPhase(CapturePhase.CONSOLIDATE);
 			state.setCaptureProgress(0.0);
+			state.setChallengerGangId(dominant);
+			for (Player player : playersInside) {
+				sounds.playCaptureStart(player);
+			}
+			Bukkit.getPluginManager().callEvent(new TurfCaptureStartEvent(turf, newOwner));
 			return;
 		}
 		if (state.getPhase() == CapturePhase.CONSOLIDATE && after >= 100.0) {
@@ -284,31 +336,19 @@ public final class CaptureService {
 			return;
 		}
 		if (state.getPhase() == CapturePhase.CONSOLIDATE && after <= 0.0) {
-			// Phase 2 rolled back → revert to Phase 1 at the boundary (100). Same capturing gang —
-			// they still have a claim on the turf; Phase 2 has to be redone but Phase 1 is intact.
+			// Phase 2 rolled back → revert to Phase 1 at the boundary (100). Challenger is cleared so the
+			// next Phase 1 completion picks a fresh dominant gang — this is the ping-pong cycle: rivals
+			// who push the current Phase 2 owner back to 0 get a fair shot at claiming Phase 2 for
+			// themselves on the next transition.
 			state.setPhase(CapturePhase.CLAIM);
 			state.setCaptureProgress(100.0);
+			state.setChallengerGangId(null);
 			return;
 		}
 		if (state.getPhase() == CapturePhase.CLAIM && after <= 0.0) {
-			// Phase 1 rolled back to zero. If a dominant opposer is present, transfer the contest
-			// to them starting at Phase 2 progress=0 (they've earned the skip by wrestling the
-			// previous gang all the way back). If no opposer, just cancel — turf goes unclaimed.
-			Integer takeoverId = dominantGang(groups.challengersByGang, capturingGangId);
-			if (takeoverId == null) {
-				cancel(turf, state, playersInside, TurfCaptureFailedEvent.Reason.ABANDONED);
-				return;
-			}
-			Gang takeover = gangs.findById(takeoverId);
-			if (takeover == null) {
-				cancel(turf, state, playersInside, TurfCaptureFailedEvent.Reason.ABANDONED);
-				return;
-			}
-			// Tear down the previous bars/state cleanly, then start the new gang's contest so every
-			// listener (bossbar, notifier, status) sees the transition as a proper restart.
-			Bukkit.getPluginManager()
-			      .callEvent(new TurfCaptureFailedEvent(turf, TurfCaptureFailedEvent.Reason.DEFENDED));
-			startContest(turf, state, takeover, CapturePhase.CONSOLIDATE, 0.0, playersInside, now);
+			// With Phase 1 non-decrementing this branch is unreachable during normal ticks; kept as a
+			// defensive cancel in case future tuning reintroduces decay.
+			cancel(turf, state, playersInside, TurfCaptureFailedEvent.Reason.ABANDONED);
 		}
 	}
 

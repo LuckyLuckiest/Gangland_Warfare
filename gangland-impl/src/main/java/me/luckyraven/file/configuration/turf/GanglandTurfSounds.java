@@ -44,6 +44,22 @@ public final class GanglandTurfSounds implements TurfSoundContract {
 		tick().playSound(listener);
 	}
 
+	@Override
+	public void playOwnerCleared(Player listener) {
+		if (!Settings.isTurfCaptureSoundEnabled()) {
+			return;
+		}
+		unclaimed().playSound(listener);
+	}
+
+	private SoundConfiguration unclaimed() {
+		return new SoundConfiguration(
+				SoundConfiguration.SoundType.VANILLA,
+				Settings.getTurfCaptureSoundUnclaimedName(),
+				(float) Settings.getTurfCaptureSoundUnclaimedVolume(),
+				(float) Settings.getTurfCaptureSoundUnclaimedPitch());
+	}
+
 	private SoundConfiguration tick() {
 		return new SoundConfiguration(
 				SoundConfiguration.SoundType.VANILLA,

@@ -354,15 +354,20 @@ Commands:
       Enter:
          Owned: "&8» &7Entering &f%turf% &7— Controlled by &e%gang%"
          Unclaimed: "&8» &7Entering &f%turf% &7— &8Unclaimed territory"
+         Contesting_Claim: "&8» &7Entering &f%turf% &7— &ePhase 1: securing territory &7(any gang helps)"
+         Contesting_Consolidate: "&8» &7Entering &f%turf% &7— &ePhase 2: &c%gang% &7consolidating"
          Title: "&6&l%turf%"
          Subtitle_Owned: "&7Controlled by &e%gang%"
          Subtitle_Unclaimed: "&7Unclaimed Territory"
+         Subtitle_Contesting_Claim: "&ePhase 1 &7— securing territory"
+         Subtitle_Contesting_Consolidate: "&ePhase 2 &7— &c%gang% &7consolidating"
       Exit: "&8« &7Leaving &f%turf%"
       Presence:
          Owned: "&f%turf% &7— Territory of &e%gang%"
          Unclaimed: "&f%turf% &7— &8Unclaimed territory"
       Capture:
          BossBar_Title: "&e%gang% &7is capturing &f%turf%"
+         Unclaimed_Bossbar_Title: "&fUnclaimed Territory"
          Cooldown_Actionbar: "&f%turf% &7— Securing territory (&b%minutes%m&7 left)"
          Captured_Broadcast: "&6&l%gang% &7captured &f%turf%&7! &8(was &c%old_gang%&8)"
       Wand:
@@ -535,6 +540,7 @@ Errors:
          Invalid: "&cInvalid income amount: &f%amount%&c. Must be a non-negative number."
       Not_Found: "&cNo turf named &f%turf%&c."
       Not_Inside: "&cStand inside a turf to use this command."
+      Gang_Not_Found: "&cNo gang named &f%gang%&c."
       No_Gang: "&cYou must be in a gang to use this command."
       No_Active: "&cNo active turf. Use &e/glw turf select <id>&c or &e/glw turf create&c first."
 
@@ -549,7 +555,6 @@ Information:
       Contest_Half_Defender: "&4⚠ &cCapture of &f%turf%&c is halfway done — defend it!"
       Blocked:
          Cooldown: "&7This turf is recovering. Capturable again in &e%time%&7."
-         Contesting: "&7&e%gang% &7is already capturing this turf &8(&e%progress%%&8)."
          Protected: "&7A member of &e%gang% &7was online recently — their turf is protected for &e%time%&7."
    Balance:
       Registered_Only: "Balance are for registered users"

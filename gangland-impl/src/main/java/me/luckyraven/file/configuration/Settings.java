@@ -232,11 +232,11 @@ public class Settings implements FileInitializer {
 	private static @Getter List<Integer> turfCaptureProgressMilestones;
 	// turf - sounds
 	private static @Getter String        turfCaptureSoundStartName, turfCaptureSoundCompleteName,
-			turfCaptureSoundFailedName, turfCaptureSoundTickName;
+			turfCaptureSoundFailedName, turfCaptureSoundTickName, turfCaptureSoundUnclaimedName;
 	private static @Getter double turfCaptureSoundStartVolume, turfCaptureSoundCompleteVolume,
-			turfCaptureSoundFailedVolume, turfCaptureSoundTickVolume;
+			turfCaptureSoundFailedVolume, turfCaptureSoundTickVolume, turfCaptureSoundUnclaimedVolume;
 	private static @Getter double turfCaptureSoundStartPitch, turfCaptureSoundCompletePitch,
-			turfCaptureSoundFailedPitch, turfCaptureSoundTickPitch;
+			turfCaptureSoundFailedPitch, turfCaptureSoundTickPitch, turfCaptureSoundUnclaimedPitch;
 	private final FileHandler fileHandler;
 
 	public Settings(FileManager fileManager) {
@@ -714,13 +714,14 @@ public class Settings implements FileInitializer {
 		bankerFallbackTierId  = str(banker, "Fallback_Tier_Id", "Basic");
 
 		// turf
-		NodeReader turf        = section(root, "Turf", report);
-		NodeReader turfCapture = section(turf, "Capture", report);
-		NodeReader turfSounds  = section(turfCapture, "Sounds", report);
-		NodeReader turfStart   = section(turfSounds, "Start", report);
-		NodeReader turfDone    = section(turfSounds, "Complete", report);
-		NodeReader turfFailed  = section(turfSounds, "Failed", report);
-		NodeReader turfTick    = section(turfSounds, "Tick", report);
+		NodeReader turf          = section(root, "Turf", report);
+		NodeReader turfCapture   = section(turf, "Capture", report);
+		NodeReader turfSounds    = section(turfCapture, "Sounds", report);
+		NodeReader turfStart     = section(turfSounds, "Start", report);
+		NodeReader turfDone      = section(turfSounds, "Complete", report);
+		NodeReader turfFailed    = section(turfSounds, "Failed", report);
+		NodeReader turfTick      = section(turfSounds, "Tick", report);
+		NodeReader turfUnclaimed = section(turfSounds, "Unclaimed", report);
 
 		turfIncomeIntervalMinutes        = intVal(turf, "Income_Interval_Minutes", 10);
 		turfDefaultIncomeAmount          = money(turf, "Default_Income_Amount", "100");
@@ -742,18 +743,21 @@ public class Settings implements FileInitializer {
 			turfCaptureProgressMilestones = Arrays.asList(25, 50, 75);
 		}
 
-		turfCaptureSoundStartName      = str(turfStart, "Name", "BLOCK_NOTE_BLOCK_PLING");
-		turfCaptureSoundStartVolume    = dbl(turfStart, "Volume", 1.0);
-		turfCaptureSoundStartPitch     = dbl(turfStart, "Pitch", 1.0);
-		turfCaptureSoundCompleteName   = str(turfDone, "Name", "UI_TOAST_CHALLENGE_COMPLETE");
-		turfCaptureSoundCompleteVolume = dbl(turfDone, "Volume", 1.0);
-		turfCaptureSoundCompletePitch  = dbl(turfDone, "Pitch", 1.0);
-		turfCaptureSoundFailedName     = str(turfFailed, "Name", "ENTITY_VILLAGER_NO");
-		turfCaptureSoundFailedVolume   = dbl(turfFailed, "Volume", 1.0);
-		turfCaptureSoundFailedPitch    = dbl(turfFailed, "Pitch", 1.0);
-		turfCaptureSoundTickName       = str(turfTick, "Name", "BLOCK_NOTE_BLOCK_HAT");
-		turfCaptureSoundTickVolume     = dbl(turfTick, "Volume", 0.3);
-		turfCaptureSoundTickPitch      = dbl(turfTick, "Pitch", 1.8);
+		turfCaptureSoundStartName       = str(turfStart, "Name", "BLOCK_NOTE_BLOCK_PLING");
+		turfCaptureSoundStartVolume     = dbl(turfStart, "Volume", 1.0);
+		turfCaptureSoundStartPitch      = dbl(turfStart, "Pitch", 1.0);
+		turfCaptureSoundCompleteName    = str(turfDone, "Name", "UI_TOAST_CHALLENGE_COMPLETE");
+		turfCaptureSoundCompleteVolume  = dbl(turfDone, "Volume", 1.0);
+		turfCaptureSoundCompletePitch   = dbl(turfDone, "Pitch", 1.0);
+		turfCaptureSoundFailedName      = str(turfFailed, "Name", "ENTITY_VILLAGER_NO");
+		turfCaptureSoundFailedVolume    = dbl(turfFailed, "Volume", 1.0);
+		turfCaptureSoundFailedPitch     = dbl(turfFailed, "Pitch", 1.0);
+		turfCaptureSoundTickName        = str(turfTick, "Name", "BLOCK_NOTE_BLOCK_HAT");
+		turfCaptureSoundTickVolume      = dbl(turfTick, "Volume", 0.3);
+		turfCaptureSoundTickPitch       = dbl(turfTick, "Pitch", 1.8);
+		turfCaptureSoundUnclaimedName   = str(turfUnclaimed, "Name", "ENTITY_ENDER_DRAGON_GROWL");
+		turfCaptureSoundUnclaimedVolume = dbl(turfUnclaimed, "Volume", 0.5);
+		turfCaptureSoundUnclaimedPitch  = dbl(turfUnclaimed, "Pitch", 1.5);
 
 		if (!report.isEmpty()) report.log(log);
 

@@ -12,10 +12,12 @@ import me.luckyraven.gang.contract.GangLookupContract;
 import me.luckyraven.turf.contract.TurfMessageContract;
 import me.luckyraven.turf.data.Turf;
 import me.luckyraven.turf.data.TurfRuntimeState;
+import me.luckyraven.turf.events.TurfOwnerChangedEvent;
 import me.luckyraven.turf.listener.GangDisplayNameResolver;
 import me.luckyraven.turf.manager.TurfManager;
 import me.luckyraven.turf.selection.WandSelectionManager;
 import me.luckyraven.util.GanglandChatUtil;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 
 import java.util.ArrayList;
@@ -63,22 +65,25 @@ class TurfSetOwnerCommand extends SubArgument {
 			if (turf == null) {
 				return;
 			}
-			String gangToken = args[2];
+			String  gangToken  = args[2];
+			Integer oldOwnerId = turf.getOwnerGangId();
 			if (CLEAR_TOKEN.equalsIgnoreCase(gangToken)) {
 				turf.setOwnerGangId(null);
 				resetCaptureState(turf);
 				turfs.persist(turf);
+				Bukkit.getPluginManager().callEvent(new TurfOwnerChangedEvent(turf, oldOwnerId, null));
 				messages.send(sender, "TURF_SETOWNER_CLEARED", "turf", turf.getDisplayName());
 				return;
 			}
 			Gang target = findGangByName(gangToken);
 			if (target == null) {
-				messages.send(sender, "TURF_NOT_FOUND", "turf", gangToken);
+				messages.send(sender, "TURF_GANG_NOT_FOUND", "gang", gangToken);
 				return;
 			}
 			turf.setOwnerGangId(target.getId());
 			resetCaptureState(turf);
 			turfs.persist(turf);
+			Bukkit.getPluginManager().callEvent(new TurfOwnerChangedEvent(turf, oldOwnerId, target.getId()));
 			messages.send(sender, "TURF_SETOWNER_SUCCESS",
 			              "turf", turf.getDisplayName(),
 			              "gang", GangDisplayNameResolver.resolve(target));
@@ -86,7 +91,7 @@ class TurfSetOwnerCommand extends SubArgument {
 			List<String> names = new ArrayList<>();
 			names.add(CLEAR_TOKEN);
 			for (Gang gang : gangs.getAll()) {
-				names.add(gang.getDisplayName());
+				names.add(gang.getName());
 			}
 			return names;
 		});
@@ -94,7 +99,7 @@ class TurfSetOwnerCommand extends SubArgument {
 
 	private Gang findGangByName(String name) {
 		for (Gang gang : gangs.getAll()) {
-			if (gang.getDisplayName().equalsIgnoreCase(name)) {
+			if (gang.getName().equalsIgnoreCase(name)) {
 				return gang;
 			}
 		}
