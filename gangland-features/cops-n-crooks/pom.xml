@@ -60,6 +60,16 @@
             <artifactId>gangland-economy</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-data</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-turf</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
 
         <!-- Citizens dependency -->
         <dependency>

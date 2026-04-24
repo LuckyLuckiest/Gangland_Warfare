@@ -1,9 +1,9 @@
-package me.luckyraven.copsncrooks.bounty;
+package me.luckyraven.gang.bounty;
 
-import me.luckyraven.copsncrooks.events.bounty.BountyEvent;
 import me.luckyraven.core.feature.Executor;
 import me.luckyraven.core.timer.Timer;
 import me.luckyraven.economy.Currency;
+import me.luckyraven.gang.events.bounty.BountyEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 

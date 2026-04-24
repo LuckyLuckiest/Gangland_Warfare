@@ -1,13 +1,13 @@
-package me.luckyraven.copsncrooks.wanted;
+package me.luckyraven.gang.wanted;
 
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.copsncrooks.events.wanted.WantedEndEvent;
-import me.luckyraven.copsncrooks.events.wanted.WantedLevelChangeEvent;
-import me.luckyraven.copsncrooks.events.wanted.WantedStartEvent;
 import me.luckyraven.core.timer.RepeatingTimer;
+import me.luckyraven.gang.events.wanted.WantedEndEvent;
+import me.luckyraven.gang.events.wanted.WantedLevelChangeEvent;
+import me.luckyraven.gang.events.wanted.WantedStartEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;

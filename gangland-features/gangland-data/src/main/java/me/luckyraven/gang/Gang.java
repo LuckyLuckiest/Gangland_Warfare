@@ -2,10 +2,10 @@ package me.luckyraven.gang;
 
 import lombok.Getter;
 import lombok.Setter;
-import me.luckyraven.copsncrooks.bounty.Bounty;
 import me.luckyraven.core.color.Color;
 import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.economy.EconomyHandler;
+import me.luckyraven.gang.bounty.Bounty;
 import me.luckyraven.gang.member.Member;
 import me.luckyraven.gang.rank.Rank;
 import me.luckyraven.gang.user.Level;

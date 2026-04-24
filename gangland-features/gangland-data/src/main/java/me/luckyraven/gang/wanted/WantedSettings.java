@@ -1,4 +1,4 @@
-package me.luckyraven.copsncrooks.wanted;
+package me.luckyraven.gang.wanted;
 
 import java.math.BigDecimal;
 

@@ -85,21 +85,25 @@
             <groupId>me.luckyraven</groupId>
             <artifactId>lootchest-api</artifactId>
             <version>${project.parent.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>shop-api</artifactId>
             <version>${project.parent.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>cops-n-crooks</artifactId>
             <version>${project.parent.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-economy</artifactId>
             <version>${project.parent.version}</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
@@ -109,7 +113,7 @@
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-gang</artifactId>
+            <artifactId>gangland-data</artifactId>
             <version>${project.parent.version}</version>
             <scope>compile</scope>
         </dependency>

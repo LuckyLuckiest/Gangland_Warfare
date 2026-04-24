@@ -1,4 +1,4 @@
-package me.luckyraven.copsncrooks.bounty;
+package me.luckyraven.gang.bounty;
 
 /**
  * Provides the data a {@link BountyExecutor} needs from its owning entity.

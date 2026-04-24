@@ -11,9 +11,9 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>gangland-gang</artifactId>
+    <artifactId>gangland-data</artifactId>
 
-    <name>Gangland Gang</name>
+    <name>Gangland Data</name>
 
     <dependencies>
         <!-- Spigot Build -->
@@ -42,11 +42,6 @@
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-economy</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>cops-n-crooks</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

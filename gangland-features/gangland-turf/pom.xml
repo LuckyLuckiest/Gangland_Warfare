@@ -46,7 +46,7 @@
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-gang</artifactId>
+            <artifactId>gangland-data</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 
