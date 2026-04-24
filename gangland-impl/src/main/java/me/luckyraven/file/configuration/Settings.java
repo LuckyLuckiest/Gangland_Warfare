@@ -237,6 +237,11 @@ public class Settings implements FileInitializer {
 			turfCaptureSoundFailedVolume, turfCaptureSoundTickVolume, turfCaptureSoundUnclaimedVolume;
 	private static @Getter double turfCaptureSoundStartPitch, turfCaptureSoundCompletePitch,
 			turfCaptureSoundFailedPitch, turfCaptureSoundTickPitch, turfCaptureSoundUnclaimedPitch;
+	// turf - contribution
+	private static @Getter double turfContributionDefenderPresenceTick;
+	private static @Getter double turfContributionAttackerPresenceTick;
+	private static @Getter double turfContributionCaptureCompleteBonus;
+	private static @Getter double turfContributionDefenseSuccessBonus;
 	private final FileHandler fileHandler;
 
 	public Settings(FileManager fileManager) {
@@ -758,6 +763,15 @@ public class Settings implements FileInitializer {
 		turfCaptureSoundUnclaimedName   = str(turfUnclaimed, "Name", "ENTITY_ENDER_DRAGON_GROWL");
 		turfCaptureSoundUnclaimedVolume = dbl(turfUnclaimed, "Volume", 0.5);
 		turfCaptureSoundUnclaimedPitch  = dbl(turfUnclaimed, "Pitch", 1.5);
+
+		// turf contribution — points awarded to Member.contribution for turf activity. The gang module
+		// persists contribution already; values can later drive a weighted payout of gang turf income.
+		NodeReader turfContribution       = section(turf, "Contribution", report);
+		NodeReader turfContributionPoints = section(turfContribution, "Points", report);
+		turfContributionDefenderPresenceTick = dbl(turfContributionPoints, "Defender_Presence_Tick", 0.5);
+		turfContributionAttackerPresenceTick = dbl(turfContributionPoints, "Attacker_Presence_Tick", 1.0);
+		turfContributionCaptureCompleteBonus = dbl(turfContributionPoints, "Capture_Complete_Bonus", 50.0);
+		turfContributionDefenseSuccessBonus  = dbl(turfContributionPoints, "Defense_Success_Bonus", 25.0);
 
 		if (!report.isEmpty()) report.log(log);
 

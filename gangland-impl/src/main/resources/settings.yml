@@ -754,3 +754,18 @@ Turf:
             Name: ENTITY_ENDER_DRAGON_GROWL
             Volume: 0.5
             Pitch: 1.5
+   # Contribution points awarded to Member.contribution when players take part in turf activity. The gang
+   # module already persists this field and exposes it to commands / leaderboards; values here just control
+   # how aggressively presence + capture events feed it. Tune to match the intended payout weighting.
+   Contribution:
+      Points:
+         # Per 1-Hz tick to defender-gang members standing inside an OWNED turf under contest.
+         Defender_Presence_Tick: 0.5
+         # Per 1-Hz tick to attacker-gang members standing inside the turf they're capturing.
+         Attacker_Presence_Tick: 1.0
+         # Flat one-shot bonus to every challenger-gang member inside the turf at the moment a capture
+         # completes.
+         Capture_Complete_Bonus: 50.0
+         # Flat one-shot bonus to every defender-gang member inside the turf at the moment an attack is
+         # pushed back to zero (DEFENDED).
+         Defense_Success_Bonus: 25.0

@@ -5,9 +5,14 @@ import me.luckyraven.gang.Gang;
 import me.luckyraven.gang.contract.GangLookupContract;
 import me.luckyraven.turf.data.Turf;
 import me.luckyraven.turf.manager.TurfManager;
+import me.luckyraven.turf.powerups.ActiveBuffManager;
+import me.luckyraven.turf.powerups.EffectType;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 /**
  * Periodic task (default every 10 minutes) that walks every owned turf and deposits its configured income into the
@@ -19,6 +24,7 @@ public final class TurfIncomeDistributor {
 	private final JavaPlugin         plugin;
 	private final TurfManager        turfs;
 	private final GangLookupContract gangs;
+	private final ActiveBuffManager  buffs;
 	private final long               intervalTicks;
 
 	private BukkitTask task;
@@ -26,10 +32,12 @@ public final class TurfIncomeDistributor {
 	public TurfIncomeDistributor(JavaPlugin plugin,
 	                             TurfManager turfs,
 	                             GangLookupContract gangs,
+	                             ActiveBuffManager buffs,
 	                             long intervalTicks) {
 		this.plugin        = plugin;
 		this.turfs         = turfs;
 		this.gangs         = gangs;
+		this.buffs         = buffs;
 		this.intervalTicks = intervalTicks;
 	}
 
@@ -59,7 +67,10 @@ public final class TurfIncomeDistributor {
 				turfs.persist(turf);
 				continue;
 			}
-			gang.getEconomy().depositAmount(turf.getIncomeAmount());
+			BigDecimal multiplier = BigDecimal.valueOf(buffs.effectiveMultiplier(turf.getId(),
+			                                                                     EffectType.INCOME_MULTIPLIER));
+			BigDecimal payout = turf.getIncomeAmount().multiply(multiplier).setScale(2, RoundingMode.HALF_UP);
+			gang.getEconomy().depositAmount(payout);
 		}
 	}
 }

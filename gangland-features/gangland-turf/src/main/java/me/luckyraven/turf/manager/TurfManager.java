@@ -60,8 +60,8 @@ public final class TurfManager {
 		// throws IllegalStateException("No data supplier set for repository: TurfRepository").
 		repository.setDataSupplier(turfsById::values);
 
-		log.info("Loaded {} turf(s) across {} world(s); next id = {}",
-		         turfsById.size(), turfsByWorld.size(), nextId.get());
+		log.debug("Loaded {} turf(s) across {} world(s); next id = {}",
+		          turfsById.size(), turfsByWorld.size(), nextId.get());
 	}
 
 	public int allocateId() {
