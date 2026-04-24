@@ -4,18 +4,24 @@ import me.luckyraven.Gangland;
 import me.luckyraven.core.bean.Bean;
 import me.luckyraven.core.bean.Configuration;
 import me.luckyraven.data.permission.PermissionManager;
+import me.luckyraven.database.repositories.turf.ActiveTurfBuffRepository;
+import me.luckyraven.database.repositories.turf.TurfGarrisonRepository;
 import me.luckyraven.database.repositories.turf.TurfRepository;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.file.configuration.turf.GanglandTurfMessages;
 import me.luckyraven.file.configuration.turf.GanglandTurfSounds;
 import me.luckyraven.gang.contract.GangLookupContract;
 import me.luckyraven.gang.contract.UserLookupContract;
+import me.luckyraven.persistence.FileManager;
 import me.luckyraven.turf.capture.CaptureService;
 import me.luckyraven.turf.capture.CaptureSettings;
 import me.luckyraven.turf.contract.TurfMessageContract;
 import me.luckyraven.turf.contract.TurfRepositoryContract;
 import me.luckyraven.turf.contract.TurfSoundContract;
+import me.luckyraven.turf.contribution.TurfContributionSettings;
+import me.luckyraven.turf.contribution.TurfContributionTickTask;
 import me.luckyraven.turf.manager.TurfManager;
+import me.luckyraven.turf.powerups.*;
 import me.luckyraven.turf.selection.WandSelectionManager;
 import me.luckyraven.turf.task.GangPresenceTracker;
 import me.luckyraven.turf.task.InactivityReleaseTask;
@@ -34,6 +40,40 @@ public final class TurfConfig {
 	@Bean
 	public TurfRepositoryContract turfRepositoryContract(TurfRepository repository) {
 		return repository;
+	}
+
+	@Bean
+	public PowerupRegistry powerupRegistry() {
+		return new PowerupRegistry();
+	}
+
+	@Bean
+	public PowerupRegistryLoader powerupRegistryLoader(PowerupRegistry registry, FileManager fileManager) {
+		return new PowerupRegistryLoader(registry, fileManager);
+	}
+
+	@Bean
+	public ActiveBuffRepositoryContract activeBuffRepositoryContract(ActiveTurfBuffRepository repository) {
+		return repository;
+	}
+
+	@Bean
+	public GarrisonRepositoryContract garrisonRepositoryContract(TurfGarrisonRepository repository) {
+		return repository;
+	}
+
+	@Bean
+	public ActiveBuffManager activeBuffManager(Gangland plugin, ActiveBuffRepositoryContract repository) {
+		ActiveBuffManager manager = new ActiveBuffManager(plugin, repository);
+		manager.initialize();
+		return manager;
+	}
+
+	@Bean
+	public GarrisonManager garrisonManager(GarrisonRepositoryContract repository) {
+		GarrisonManager manager = new GarrisonManager(repository);
+		manager.initialize();
+		return manager;
 	}
 
 	@Bean
@@ -98,9 +138,10 @@ public final class TurfConfig {
 	@Bean
 	public TurfIncomeDistributor turfIncomeDistributor(Gangland plugin,
 	                                                   TurfManager turfs,
-	                                                   GangLookupContract gangs) {
+	                                                   GangLookupContract gangs,
+	                                                   ActiveBuffManager buffs) {
 		long                  intervalTicks = Settings.getTurfIncomeIntervalMinutes() * 60L * 20L;
-		TurfIncomeDistributor distributor   = new TurfIncomeDistributor(plugin, turfs, gangs, intervalTicks);
+		TurfIncomeDistributor distributor   = new TurfIncomeDistributor(plugin, turfs, gangs, buffs, intervalTicks);
 		distributor.start();
 		return distributor;
 	}
@@ -122,6 +163,26 @@ public final class TurfConfig {
 				plugin, gangs, users, settings.getInactivityAutoReleaseDays(), release);
 		tracker.start();
 		return tracker;
+	}
+
+	@Bean
+	public TurfContributionSettings turfContributionSettings(@SuppressWarnings("unused") Settings settings) {
+		return new TurfContributionSettings(
+				Settings.getTurfContributionDefenderPresenceTick(),
+				Settings.getTurfContributionAttackerPresenceTick(),
+				Settings.getTurfContributionCaptureCompleteBonus(),
+				Settings.getTurfContributionDefenseSuccessBonus());
+	}
+
+	@Bean
+	public TurfContributionTickTask turfContributionTickTask(Gangland plugin,
+	                                                         TurfManager turfs,
+	                                                         GangLookupContract gangs,
+	                                                         UserLookupContract users,
+	                                                         TurfContributionSettings settings) {
+		TurfContributionTickTask task = new TurfContributionTickTask(plugin, turfs, gangs, users, settings);
+		task.start();
+		return task;
 	}
 
 	// TurfBossBarListener and TurfCaptureNotifier are @ListenerHandler classes — the framework instantiates them

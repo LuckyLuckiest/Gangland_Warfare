@@ -386,6 +386,17 @@ Commands:
          Success: "&aTeleported to &f%turf% &8[&7id=%id%&8]&7."
       Income:
          Success: "&aSet &f%turf%&a income to &b%money_symbol%%amount% &aper &b%time%&a."
+      PowerupNpc:
+         Set: "&aPlaced powerup NPC for &f%turf%&7."
+         Removed: "&aRemoved powerup NPC for &f%turf%&7."
+      Garrison:
+         View: "&7Garrison on &f%turf%&7: &f%count%&7."
+         Set: "&aSet &f%turf% &agarrison to &f%count%&7."
+      Buff:
+         List_Empty: "&7No active buffs on &f%turf%&7."
+         List_Header: "&7Active buffs on &f%turf% &7(&f%count%&7):"
+         List_Row: "  &f%id% &7(%type% &fx%magnitude%&7) — &b%time% &7remaining"
+         Activated: "&aActivated &f%id% &aon &f%turf% &afor &b%duration%&7."
       Show:
          Started: "&aRendering turf &f%turf% &7for &b%seconds%s&7."
       Info:

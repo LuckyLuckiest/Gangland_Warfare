@@ -3,6 +3,7 @@ package me.luckyraven.command.sub.turf;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.Command;
 import me.luckyraven.command.argument.Argument;
+import me.luckyraven.copsncrooks.npc.turf.TurfPowerupManager;
 import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.bean.command.CommandHandler;
 import me.luckyraven.gang.Gang;
@@ -14,6 +15,9 @@ import me.luckyraven.turf.contract.TurfMessageContract;
 import me.luckyraven.turf.data.Turf;
 import me.luckyraven.turf.listener.GangDisplayNameResolver;
 import me.luckyraven.turf.manager.TurfManager;
+import me.luckyraven.turf.powerups.ActiveBuffManager;
+import me.luckyraven.turf.powerups.GarrisonManager;
+import me.luckyraven.turf.powerups.PowerupRegistry;
 import me.luckyraven.turf.selection.WandSelectionManager;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -36,6 +40,10 @@ public final class TurfCommand extends Command {
 	private final UserLookupContract   users;
 	private final UserManager<Player>  userManager;
 	private final TurfMessageContract  messages;
+	private final TurfPowerupManager   powerupNpcs;
+	private final GarrisonManager      garrisons;
+	private final PowerupRegistry      powerupRegistry;
+	private final ActiveBuffManager    activeBuffs;
 
 	public TurfCommand(Gangland gangland,
 	                   TurfManager turfs,
@@ -43,15 +51,23 @@ public final class TurfCommand extends Command {
 	                   GangLookupContract gangs,
 	                   UserLookupContract users,
 	                   @Qualifier("online") UserManager<Player> userManager,
-	                   TurfMessageContract messages) {
+	                   TurfMessageContract messages,
+	                   TurfPowerupManager powerupNpcs,
+	                   GarrisonManager garrisons,
+	                   PowerupRegistry powerupRegistry,
+	                   ActiveBuffManager activeBuffs) {
 		super(gangland, "turf", false);
 
-		this.turfs       = turfs;
-		this.selections  = selections;
-		this.gangs       = gangs;
-		this.users       = users;
-		this.userManager = userManager;
-		this.messages    = messages;
+		this.turfs           = turfs;
+		this.selections      = selections;
+		this.gangs           = gangs;
+		this.users           = users;
+		this.userManager     = userManager;
+		this.messages        = messages;
+		this.powerupNpcs     = powerupNpcs;
+		this.garrisons       = garrisons;
+		this.powerupRegistry = powerupRegistry;
+		this.activeBuffs     = activeBuffs;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -107,6 +123,13 @@ public final class TurfCommand extends Command {
 		                                     messages);
 		TurfIncomeCommand income = new TurfIncomeCommand(getGangland(), getArgumentTree(), getArgument(), turfs,
 		                                                 selections, messages);
+		TurfPowerupNpcCommand powerupNpc = new TurfPowerupNpcCommand(getGangland(), getArgumentTree(),
+		                                                             getArgument(), turfs, selections, messages,
+		                                                             powerupNpcs);
+		TurfGarrisonCommand garrison = new TurfGarrisonCommand(getGangland(), getArgumentTree(), getArgument(),
+		                                                       turfs, selections, messages, garrisons);
+		TurfBuffCommand buff = new TurfBuffCommand(getGangland(), getArgumentTree(), getArgument(),
+		                                           turfs, selections, messages, powerupRegistry, activeBuffs);
 
 		List<Argument> arguments = new ArrayList<>();
 		arguments.add(wand);
@@ -122,6 +145,9 @@ public final class TurfCommand extends Command {
 		arguments.add(select);
 		arguments.add(tp);
 		arguments.add(income);
+		arguments.add(powerupNpc);
+		arguments.add(garrison);
+		arguments.add(buff);
 		getArgument().addAllSubArguments(arguments);
 	}
 

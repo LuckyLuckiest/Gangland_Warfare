@@ -20,6 +20,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,8 +33,8 @@ class GangAllyCommand extends SubArgument {
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 
-	protected GangAllyCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
-	                          UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager) {
+	protected GangAllyCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	                          MemberManager memberManager, GangManager gangManager) {
 		super(gangland, "ally", tree, parent);
 
 		this.gangland      = gangland;
@@ -119,6 +120,37 @@ class GangAllyCommand extends SubArgument {
 
 			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
 		}, this.getPermission() + ".abandon");
+	}
+
+	/**
+	 * Builds the disambiguated display-name → id map used by both the tab-completion list and the
+	 * {@code displayToValue} lookup. Duplicate names are suffixed with {@code :id} so each ally has a unique display
+	 * key — and the same keys are what tab-completion shows, so users can't pick a label that fails the action's
+	 * lookup.
+	 */
+	private Map<String, String> buildAllyMap(CommandSender sender) {
+		if (!(sender instanceof Player player)) return new HashMap<>();
+		User<Player> user = userManager.getUser(player);
+		if (user == null || !user.hasGang()) return new HashMap<>();
+
+		Gang gang = gangManager.getGang(user.getGangId());
+		if (gang == null) return new HashMap<>();
+
+		List<Gang> allies = gang.getAllies()
+				.stream().map(GangAlliance::ally).toList();
+
+		Map<String, Integer> nameCount = new HashMap<>();
+		for (Gang ally : allies) {
+			nameCount.merge(ally.getName(), 1, Integer::sum);
+		}
+
+		Map<String, String> map = new HashMap<>();
+		for (Gang ally : allies) {
+			String name        = ally.getName();
+			String displayName = nameCount.get(name) > 1 ? name + ":" + ally.getId() : name;
+			map.put(displayName, String.valueOf(ally.getId()));
+		}
+		return map;
 	}
 
 	private @NotNull Argument getAllyId(HashMap<Gang, Gang> gangsIdMap,
@@ -227,53 +259,7 @@ class GangAllyCommand extends SubArgument {
 				}
 			}
 
-		}, sender -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-
-			if (user == null) return null;
-
-			if (!user.hasGang()) {
-				return null;
-			}
-
-			Gang gang = gangManager.getGang(user.getGangId());
-
-			return gang.getAllies()
-					.stream().map(GangAlliance::ally).map(Gang::getName).toList();
-		}, sender -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-
-			if (user == null) return null;
-
-			if (!user.hasGang()) {
-				return null;
-			}
-
-			Gang gang = gangManager.getGang(user.getGangId());
-
-			List<Gang> allies = gang.getAllies()
-					.stream().map(GangAlliance::ally).toList();
-
-			// First pass: count how many times each name appears
-			Map<String, Integer> nameCount = new HashMap<>();
-			for (Gang ally : allies) {
-				String name = ally.getName();
-				nameCount.put(name, nameCount.getOrDefault(name, 0) + 1);
-			}
-
-			Map<String, String> gangs = new HashMap<>();
-
-			for (Gang ally : allies) {
-				String name        = ally.getName();
-				String displayName = nameCount.get(name) > 1 ? name + ":" + ally.getId() : name;
-
-				gangs.put(displayName, String.valueOf(ally.getId()));
-			}
-
-			return gangs;
-		});
+		}, sender -> new ArrayList<>(buildAllyMap(sender).keySet()), this::buildAllyMap);
 	}
 
 	private @NotNull Argument getAllyAccept(HashMap<Gang, Gang> gangsIdMap,
@@ -318,9 +304,8 @@ class GangAllyCommand extends SubArgument {
 					.filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
 					                        sending.getId())
 					.toList()
-					.forEach(pl -> pl.sendMessage(Messages.GANG_ALLY_ACCEPT.toString()
-					                                                       .replace("%gang%",
-					                                                                receiving.getDisplayNameString())));
+					.forEach(pl -> pl.sendMessage(
+							Messages.GANG_ALLY_ACCEPT.toString().replace("%gang%", receiving.getDisplayNameString())));
 
 			// send a message to every member in receiving gang
 			Bukkit.getOnlinePlayers()
@@ -328,9 +313,8 @@ class GangAllyCommand extends SubArgument {
 					.filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
 					                        receiving.getId())
 					.toList()
-					.forEach(pl -> pl.sendMessage(Messages.GANG_ALLY_ACCEPT.toString()
-					                                                       .replace("%gang%",
-					                                                                sending.getDisplayNameString())));
+					.forEach(pl -> pl.sendMessage(
+							Messages.GANG_ALLY_ACCEPT.toString().replace("%gang%", sending.getDisplayNameString())));
 
 			gangsIdMap.remove(receiving);
 
@@ -380,9 +364,8 @@ class GangAllyCommand extends SubArgument {
 					.filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
 					                        sending.getId())
 					.toList()
-					.forEach(pl -> pl.sendMessage(Messages.GANG_ALLY_REJECT.toString()
-					                                                       .replace("%gang%",
-					                                                                receiving.getDisplayNameString())));
+					.forEach(pl -> pl.sendMessage(
+							Messages.GANG_ALLY_REJECT.toString().replace("%gang%", receiving.getDisplayNameString())));
 
 			// send a message to every member in receiving gang
 			Bukkit.getOnlinePlayers()
@@ -390,9 +373,8 @@ class GangAllyCommand extends SubArgument {
 					.filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
 					                        receiving.getId())
 					.toList()
-					.forEach(pl -> pl.sendMessage(Messages.GANG_ALLY_REJECT.toString()
-					                                                       .replace("%gang%",
-					                                                                sending.getDisplayNameString())));
+					.forEach(pl -> pl.sendMessage(
+							Messages.GANG_ALLY_REJECT.toString().replace("%gang%", sending.getDisplayNameString())));
 
 			gangsIdMap.remove(receiving);
 

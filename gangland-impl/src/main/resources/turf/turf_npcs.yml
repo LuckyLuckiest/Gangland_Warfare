@@ -1,0 +1,42 @@
+#   +------------------------------------------------------+   #
+#  /     __________      _______________       ____         \  #
+# |     / ________/      \_____   _____/      / __ \         | #
+# |    | /                     | |           / /  \ \        | #
+# |    | |  _______            | |          / /____\ \       | #
+# |    | |  \_____ \           | |         / ________ \      | #
+# |    | \_______/ ||          | |        / /        \ \     | #
+# |     \__________/           |_|       /_/          \_\    | #
+# |                                                          | #
+# |                    File: turf_npcs.yml                   | #
+# |                  Author: [LuckyRaven10]                  | #
+#  \                                                        /  #
+#   +------------------------------------------------------+   #
+
+# +-------------------+ #
+# | Turf NPC Settings | #
+# +-------------------+ #
+# Per-NPC-type knobs for the turf system's Citizens-backed NPCs:
+#   - Powerup_Npc — the per-turf Quartermaster admins place via /glw turf powerupnpc set <turf>
+#   - Defender    — deploy-side knobs only. Defender NPCs ARE civilian NPCs (defined in civilians.yml under
+#                   the type id below). Their model, health, equipment, damage, AI tuning, etc. all live there.
+#                   This section only controls how the deployer routes them: which type to spawn, how far they
+#                   chase attackers, and a safety lifespan in case the recall event misses them.
+#
+# These are NOT the powerup catalogue (which lives in turf_powerups.yml) and NOT the contribution payout knobs
+# (which live in settings.yml under Turf.Contribution). They're hot-reloadable.
+Powerup_Npc:
+   # civilians.yml type id used to spawn the per-turf Quartermaster. Display name, model, equipment, health,
+   # invulnerability, AI, and combat stats all live in civilians.yml under this type — turf module just routes
+   # to it. While the turf is being contested, TurfPowerupNpc.engage() flips this NPC into COMBAT and points
+   # its target at the closest attacker; on capture-end it pacifies back to IDLE.
+   Type_Id: quartermaster
+Defender:
+   # civilians.yml type id to spawn for each garrisoned defender. The type's combat behaviour, equipment, and
+   # stats are fully owned by civilians.yml.
+   Type_Id: turf_defender
+   # Defenders only attack players within this distance (blocks) from their own position. Set comfortably larger
+   # than the average turf radius so defenders inside the region don't lose targets who are also inside but on
+   # the far edge.
+   Targeting_Radius: 32.0
+   # Safety lifespan — TurfDefenderDeployer.recall() should fire on capture-end, this is the fallback.
+   Lifespan_Seconds: 600

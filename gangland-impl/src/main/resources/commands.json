@@ -894,5 +894,17 @@
 	"turf_income": {
 		"usage": "/glw turf income <amount>",
 		"description": "Set the per-interval passive income of your active-selection turf (paid to the owning gang every Income_Interval_Minutes)."
+	},
+	"turf_powerupnpc": {
+		"usage": "/glw turf powerupnpc <set|remove>",
+		"description": "Place (at your current location) or remove the per-turf Quartermaster NPC for your active-selection turf."
+	},
+	"turf_garrison": {
+		"usage": "/glw turf garrison [count]",
+		"description": "Set the defender garrison stock for your active-selection turf. With no count, prints the current stock."
+	},
+	"turf_buff": {
+		"usage": "/glw turf buff [powerup_id]",
+		"description": "Activate a powerup catalogue entry on your active-selection turf. With no id, lists the active buffs."
 	}
 }
