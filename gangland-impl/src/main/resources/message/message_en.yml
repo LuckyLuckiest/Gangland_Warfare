@@ -171,6 +171,8 @@ Commands:
       Invite:
          Player: "You have invited &6%player%&7 to the gang."
          Target: "You were invited to join &8[&a%gang%&8]&7."
+         Expires_Online: "&7The invitation expires in &e1 minute&7. Use &e/glw gang accept&7 to join."
+         No_Expiry: "&7They are offline — the invitation will wait until they next log in."
          Accept: "You have joined &8[&a%gang%&8]&7 gang."
          Joined: "&6%player%&7 joined the gang."
          Accept_Multiple: "&eYou have %count% pending gang invites.&7 Use &e/glw gang accept <gang>&7 to pick — auto-selected &8[&e%gang%&8]&7."
@@ -211,8 +213,14 @@ Commands:
          End: "Reached the initial rank."
       Leave:
          Left: "You have left the gang."
+         Broadcast: "&6%player%&7 has left the gang."
          Owner_Rank: "Need to transfer the ownership to another user."
          Kicked: "You have kicked &6%player%&7 from the gang."
+      Transfer:
+         Request: "Confirm transferring ownership to &6%player%&7."
+         Player_Success: "You have transferred ownership to &6%player%&7."
+         Target_Success: "&6%player%&7 has transferred ownership to you."
+         No_Parent: "&cThere is no rank below the owner to demote yourself to."
       Money:
          Add: "&6%player%&7 has deposited &a%money_symbol%%amount% &7to the gang account."
          Take: "&6%player%&7 has withdrawn &a%money_symbol%%amount% &7from the gang account."
@@ -473,6 +481,7 @@ Errors:
       Doesnt_Exist: "That gang doesn't exist."
       Same_Rank: "Can't perform actions to similar ranks."
       Higher_Rank: "Can't perform actions to higher rank than yours."
+      Cannot_Act_Self: "&cYou can't perform that action on yourself."
    Rank:
       Invalid: "This rank doesn't exist."
       Invalid_Permission: "This permission doesn't exist."
@@ -585,7 +594,9 @@ Information:
       Already_Allied: "Already allied with that gang."
       Kicked: "You have been kicked from the gang!"
    Mail:
-      Pending_Invites: "&7You have &e%count%&7 pending gang invite(s) — use &e/glw gang accept&7 to join."
+      Pending_Invites:
+         Header: "&7You have &e%count%&7 pending gang invite(s) — use &e/glw gang accept <gang>&7 to pick:"
+         Entry: " &8- &b%gang%"
    Turf:
       Contest_Start_Defender: "&c⚠ Your turf &f%turf%&c is being contested by &e%gang%&c!"
       Contest_Half_Defender: "&4⚠ &cCapture of &f%turf%&c is halfway done — defend it!"

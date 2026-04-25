@@ -168,6 +168,8 @@ Commands:
       Invite:
          Player: "Has invitado a &6%player%&7 a la banda."
          Target: "Fuiste invitado a unirte a &8[&a%gang%&8]&7."
+         Expires_Online: "&7La invitación expira en &e1 minuto&7. Usa &e/glw gang accept&7 para unirte."
+         No_Expiry: "&7Está desconectado — la invitación quedará pendiente hasta su próxima conexión."
          Accept: "Te has unido a la banda &8[&a%gang%&8]&7."
          Joined: "&6%player%&7 se unió a la banda."
       Ally:
@@ -186,8 +188,14 @@ Commands:
          End: "Se alcanzó el rango inicial."
       Leave:
          Left: "Has abandonado la banda."
+         Broadcast: "&6%player%&7 abandonó la banda."
          Owner_Rank: "Debes transferir la propiedad a otro usuario."
          Kicked: "Has expulsado a &6%player%&7 de la banda."
+      Transfer:
+         Request: "Confirma transferir la propiedad a &6%player%&7."
+         Player_Success: "Has transferido la propiedad a &6%player%&7."
+         Target_Success: "&6%player%&7 te ha transferido la propiedad."
+         No_Parent: "&cNo hay un rango por debajo del propietario al que descender."
       Money:
          Add: "&6%player%&7 depositó &a%money_symbol%%amount% &7en la cuenta de la banda."
          Take: "&6%player%&7 retiró &a%money_symbol%%amount% &7de la cuenta de la banda."
@@ -371,6 +379,7 @@ Errors:
       Doesnt_Exist: "Esa banda no existe."
       Same_Rank: "No se pueden realizar acciones a rangos similares."
       Higher_Rank: "No se pueden realizar acciones a un rango mayor que el tuyo."
+      Cannot_Act_Self: "&cNo puedes realizar esa acción sobre ti mismo."
    Rank:
       Invalid: "Este rango no existe."
       Invalid_Permission: "Este permiso no existe."
@@ -444,6 +453,10 @@ Information:
       Request_Already_Sent: "¡La solicitud de alianza a esa banda ya fue enviada!"
       Already_Allied: "Ya estás aliado con esa banda."
       Kicked: "¡Has sido expulsado de la banda!"
+   Mail:
+      Pending_Invites:
+         Header: "&7Tienes &e%count%&7 invitación(es) de banda pendiente(s) — usa &e/glw gang accept <gang>&7 para elegir:"
+         Entry: " &8- &b%gang%"
    Balance:
       Registered_Only: "El saldo es solo para usuarios registrados"
    Argument:

@@ -144,18 +144,28 @@ public class GangInviteCommand extends SubArgument {
 				return;
 			}
 
+			Player  onlineTarget = Bukkit.getPlayer(targetUuid);
+			boolean targetOnline = onlineTarget != null;
+
+			// Online targets get 1-minute expiry so the invite cleans itself up if ignored. Offline targets get a
+			// non-expiring invite (expiresAt = 0 → MailItem#isExpired returns false) so they can act on it whenever
+			// they next log in.
 			long now      = System.currentTimeMillis();
-			long expireAt = now + INVITE_EXPIRY_MS;
+			long expireAt = targetOnline ? now + INVITE_EXPIRY_MS : 0L;
 			MailItem mail = new MailItem(mailManager.allocateId(), MailType.GANG_INVITE, null, user.getGangId(),
-			                             targetUuid, MailItem.NO_GANG, null, now, expireAt, MailStatus.PENDING, false);
+			                             targetUuid, MailItem.NO_GANG, null, now, expireAt, MailStatus.PENDING,
+			                             false);
 			mailManager.send(mail);
 
 			user.sendMessage(Messages.GANG_INVITE_PLAYER.toString().replace("%player%", targetStr));
+			user.sendMessage(targetOnline ?
+			                 Messages.GANG_INVITE_EXPIRES_ONLINE.toString() :
+			                 Messages.GANG_INVITE_NO_EXPIRY.toString());
 
-			Player onlineTarget = Bukkit.getPlayer(targetUuid);
-			if (onlineTarget != null) {
+			if (targetOnline) {
 				String replace = Messages.GANG_INVITE_TARGET.toString().replace("%gang%", gang.getDisplayNameString());
 				onlineTarget.sendMessage(replace);
+				onlineTarget.sendMessage(Messages.GANG_INVITE_EXPIRES_ONLINE.toString());
 			}
 		}, sender -> {
 			Player       player = (Player) sender;
@@ -174,11 +184,19 @@ public class GangInviteCommand extends SubArgument {
 				possibleUsers.add(onlinePlayer.getName());
 			}
 
-			for (User<OfflinePlayer> offlineUser : offlineUserManager.getUsers().values()) {
-				OfflinePlayer offlinePlayer = offlineUser.getUser();
-				if (offlinePlayer == null || offlineUser.hasGang()) continue;
+			// Source offline names from Bukkit's "ever played" list — the in-memory offline UserManager can hold
+			// stale gangIds (e.g., former members of a deleted gang who are still offline) and CraftOfflinePlayer
+			// instances whose getName() returns null. Bukkit.getOfflinePlayers() always carries a real name and we
+			// only consult the cache to filter out players currently in a gang.
+			for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+				if (offlinePlayer.isOnline()) continue;
+
 				String name = offlinePlayer.getName();
 				if (name == null || possibleUsers.contains(name)) continue;
+
+				User<OfflinePlayer> offlineUser = offlineUserManager.getUser(offlinePlayer);
+				if (offlineUser != null && offlineUser.hasGang()) continue;
+
 				possibleUsers.add(name);
 			}
 
