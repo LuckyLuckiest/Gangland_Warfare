@@ -26,10 +26,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Handles all users registered data, only for online users.
@@ -232,12 +229,17 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 	public void flushPermissions(@Nullable Rank rank) {
 		if (!(user instanceof Player player)) return;
 
-		for (String permission : permissionAttachment.getPermissions().keySet())
+		ArrayList<String> strings = new ArrayList<>(permissionAttachment.getPermissions().keySet());
+		for (String permission : strings) {
 			permissionAttachment.unsetPermission(permission);
+		}
 
 		// add the new rank attachments
-		if (rank != null) for (Permission perm : rank.getPermissions())
-			permissionAttachment.setPermission(perm.getPermission(), true);
+		if (rank != null) {
+			for (Permission perm : rank.getPermissions()) {
+				permissionAttachment.setPermission(perm.getPermission(), true);
+			}
+		}
 
 		player.updateCommands();
 	}
