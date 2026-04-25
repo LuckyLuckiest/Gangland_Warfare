@@ -11,6 +11,7 @@ import me.luckyraven.gang.contract.UserLookupContract;
 import me.luckyraven.gang.user.User;
 import me.luckyraven.turf.data.Turf;
 import me.luckyraven.turf.manager.TurfManager;
+import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -65,6 +66,34 @@ public final class TurfFriendlyFireListener implements Listener {
 		// Friendly = same gang OR allied gang. Allies share the turf's NPCs so attacks between them never
 		// flip the civilian into self-defense, and damage is fully cancelled (matches gang-allies' existing
 		// no-damage rule against each other).
+		if (!isFriendly(user.getGangId(), ownerGangId)) return;
+
+		event.setCancelled(true);
+	}
+
+	/**
+	 * Mirrors {@link #onDamage} on the canonical weapon-impact event so weapons whose damage path bypasses
+	 * {@link EntityDamageByEntityEvent} (flamethrower fire ticks, biological clouds, melee custom handlers, etc.) are
+	 * still cancelled when the shooter is a friendly. Cancelling here short-circuits the raytracer's
+	 * {@code impactHandler} branch before {@code setFireTicks} / potion application runs.
+	 */
+	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+	public void onWeaponImpact(WeaponRaytraceImpactEvent event) {
+		Entity damaged = event.getHitEntity();
+		if (damaged == null) return;
+
+		int turfId = resolveTurfId(damaged);
+		if (turfId < 0) return;
+
+		Turf turf = turfs.get(turfId);
+		if (turf == null || turf.isUnclaimed()) return;
+		int ownerGangId = turf.getOwnerGangId();
+
+		if (!(event.getShooter() instanceof Player attacker)) return;
+
+		User<Player> user = users.findByPlayer(attacker);
+		if (user == null || !user.hasGang()) return;
+
 		if (!isFriendly(user.getGangId(), ownerGangId)) return;
 
 		event.setCancelled(true);

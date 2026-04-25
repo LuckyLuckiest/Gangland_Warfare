@@ -6,6 +6,7 @@ import me.luckyraven.gang.Gang;
 import me.luckyraven.gang.GangManager;
 import me.luckyraven.gang.user.User;
 import me.luckyraven.gang.user.UserManager;
+import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -42,6 +43,25 @@ public class GangMembersDamageListener implements Listener {
 		if (userDamager == null || userDamaged == null || !(userDamager.hasGang() && userDamaged.hasGang())) return;
 
 		// checks if they are alias or in the same gang
+		Gang gang1 = gangManager.getGang(userDamager.getGangId());
+		Gang gang2 = gangManager.getGang(userDamaged.getGangId());
+
+		if (gang1.isAlly(gang2) || userDamager.getGangId() == userDamaged.getGangId()) event.setCancelled(true);
+	}
+
+	// Mirrors onGangMemberHitMembers on the canonical weapon-impact event so weapons whose damage path bypasses
+	// EntityDamageByEntityEvent (flamethrower fire ticks, biological clouds, melee custom handlers, etc.) are still
+	// cancelled when both shooter and target are gang members or allies.
+	@EventHandler(priority = EventPriority.LOWEST)
+	public void onGangMemberWeaponImpact(WeaponRaytraceImpactEvent event) {
+		if (!(event.getShooter() instanceof Player damager)) return;
+		if (!(event.getHitEntity() instanceof Player damaged)) return;
+
+		User<Player> userDamager = userManager.getUser(damager);
+		User<Player> userDamaged = userManager.getUser(damaged);
+
+		if (userDamager == null || userDamaged == null || !(userDamager.hasGang() && userDamaged.hasGang())) return;
+
 		Gang gang1 = gangManager.getGang(userDamager.getGangId());
 		Gang gang2 = gangManager.getGang(userDamaged.getGangId());
 
