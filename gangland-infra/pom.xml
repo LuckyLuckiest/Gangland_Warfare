@@ -6,35 +6,27 @@
 
     <parent>
         <groupId>me.luckyraven</groupId>
-        <artifactId>gangland-features</artifactId>
+        <artifactId>gangland_warfare</artifactId>
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>gangland-economy</artifactId>
+    <artifactId>gangland-infra</artifactId>
+    <packaging>pom</packaging>
 
-    <name>Gangland Economy</name>
+    <name>Gangland Infrastructure</name>
+
+    <modules>
+        <module>gangland-domain</module>
+        <module>gangland-economy</module>
+        <module>gangland-item</module>
+    </modules>
 
     <dependencies>
-        <!-- Spigot Build -->
+        <!-- Every infra module compiles against the Spigot API at provided scope. -->
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>${bukkit.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- Local dependencies -->
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>plugin-common</artifactId>
-        </dependency>
-
-        <!-- Vault -->
-        <dependency>
-            <groupId>com.github.MilkBowl</groupId>
-            <artifactId>VaultAPI</artifactId>
-            <version>${vault.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

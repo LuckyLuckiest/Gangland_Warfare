@@ -6,20 +6,20 @@
 
     <parent>
         <groupId>me.luckyraven</groupId>
-        <artifactId>gangland-ui</artifactId>
+        <artifactId>gangland-infra</artifactId>
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>inventory-api</artifactId>
+    <artifactId>gangland-item</artifactId>
 
-    <name>Inventory API</name>
+    <name>Gangland Item</name>
 
     <dependencies>
+        <!-- Local dependencies -->
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-core</artifactId>
-            <scope>provided</scope>
+            <artifactId>plugin-common</artifactId>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
@@ -28,23 +28,26 @@
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>plugin-common</artifactId>
+            <artifactId>gangland-core</artifactId>
+            <scope>provided</scope>
         </dependency>
 
+        <!-- XSeries -->
         <dependency>
             <groupId>com.github.cryptomorin</groupId>
             <artifactId>XSeries</artifactId>
         </dependency>
 
+        <!-- NBTAPI -->
         <dependency>
             <groupId>de.tr7zw</groupId>
             <artifactId>item-nbt-api-plugin</artifactId>
         </dependency>
 
+        <!-- JUnit 5 -->
         <dependency>
-            <groupId>net.wesjd</groupId>
-            <artifactId>anvilgui</artifactId>
-            <scope>compile</scope>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
         </dependency>
     </dependencies>
 

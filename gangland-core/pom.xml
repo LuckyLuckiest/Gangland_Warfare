@@ -19,7 +19,6 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>${bukkit.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -33,16 +32,12 @@
         <dependency>
             <groupId>com.github.cryptomorin</groupId>
             <artifactId>XSeries</artifactId>
-            <version>${xseries.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <!-- exp4j -->
         <dependency>
             <groupId>net.objecthunter</groupId>
             <artifactId>exp4j</artifactId>
-            <version>${exp4j.version}</version>
-            <scope>compile</scope>
         </dependency>
 
         <!-- Required plugins dependencies (start) -->
@@ -51,15 +46,11 @@
         <dependency>
             <groupId>de.tr7zw</groupId>
             <artifactId>item-nbt-api-plugin</artifactId>
-            <version>${nbt.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>com.viaversion</groupId>
             <artifactId>viaversion-api</artifactId>
-            <version>${viaversion.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <!-- Required plugins dependencies (end) -->

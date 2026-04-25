@@ -6,24 +6,26 @@
 
     <parent>
         <groupId>me.luckyraven</groupId>
-        <artifactId>gangland-ui</artifactId>
+        <artifactId>gangland-infra</artifactId>
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>sign-api</artifactId>
+    <artifactId>gangland-economy</artifactId>
 
-    <name>Sign API</name>
+    <name>Gangland Economy</name>
 
     <dependencies>
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-core</artifactId>
-            <scope>provided</scope>
-        </dependency>
+        <!-- Local dependencies -->
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>plugin-common</artifactId>
+        </dependency>
+
+        <!-- Vault -->
+        <dependency>
+            <groupId>com.github.MilkBowl</groupId>
+            <artifactId>VaultAPI</artifactId>
         </dependency>
     </dependencies>
 

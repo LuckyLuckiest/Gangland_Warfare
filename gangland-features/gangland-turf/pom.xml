@@ -20,7 +20,6 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>${bukkit.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -32,22 +31,18 @@
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>plugin-persistence</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-core</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-economy</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-data</artifactId>
-            <version>${project.parent.version}</version>
+            <artifactId>gangland-domain</artifactId>
         </dependency>
 
         <!-- XSeries dependency -->
@@ -60,8 +55,6 @@
         <dependency>
             <groupId>de.tr7zw</groupId>
             <artifactId>item-nbt-api-plugin</artifactId>
-            <version>${nbt.version}</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
 

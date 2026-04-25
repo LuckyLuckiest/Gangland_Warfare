@@ -6,23 +6,16 @@
 
     <parent>
         <groupId>me.luckyraven</groupId>
-        <artifactId>gangland_warfare</artifactId>
+        <artifactId>gangland-infra</artifactId>
         <version>${revision}</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>gangland-item</artifactId>
+    <artifactId>gangland-domain</artifactId>
 
-    <name>Gangland Item</name>
+    <name>Gangland Domain</name>
 
     <dependencies>
-        <!-- Spigot Build -->
-        <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
-            <version>${bukkit.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
         <!-- Local dependencies -->
         <dependency>
             <groupId>me.luckyraven</groupId>
@@ -31,38 +24,40 @@
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>plugin-persistence</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-core</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>gangland-economy</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>inventory-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>me.luckyraven</groupId>
+            <artifactId>scoreboard-api</artifactId>
         </dependency>
 
         <!-- XSeries -->
         <dependency>
             <groupId>com.github.cryptomorin</groupId>
             <artifactId>XSeries</artifactId>
-            <version>${xseries.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <!-- NBTAPI -->
         <dependency>
             <groupId>de.tr7zw</groupId>
             <artifactId>item-nbt-api-plugin</artifactId>
-            <version>${nbt.version}</version>
-            <scope>provided</scope>
         </dependency>
 
-        <!-- JUnit 5 -->
+        <!-- Vault (soft) -->
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
+            <groupId>com.github.MilkBowl</groupId>
+            <artifactId>VaultAPI</artifactId>
         </dependency>
     </dependencies>
 

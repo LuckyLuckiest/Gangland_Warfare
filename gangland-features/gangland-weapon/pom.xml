@@ -20,7 +20,6 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>${bukkit.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -28,13 +27,11 @@
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-core</artifactId>
-            <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-item</artifactId>
-            <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -44,13 +41,11 @@
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>version-impl</artifactId>
-            <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>plugin-persistence</artifactId>
-            <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -64,16 +59,12 @@
         <dependency>
             <groupId>com.viaversion</groupId>
             <artifactId>viaversion-api</artifactId>
-            <version>${viaversion.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <!-- AnvilGUI -->
         <dependency>
             <groupId>net.wesjd</groupId>
             <artifactId>anvilgui</artifactId>
-            <version>${anvilgui.version}</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
 

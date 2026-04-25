@@ -22,7 +22,6 @@
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>${bukkit.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -32,32 +31,22 @@
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>version-impl</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-core</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>hologram-api</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-weapon</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>inventory-api</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
@@ -66,68 +55,46 @@
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>plugin-persistence</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>scoreboard-api</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>sign-api</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>lootchest-api</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>shop-api</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>cops-n-crooks</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-economy</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-gadget</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-data</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
+            <artifactId>gangland-domain</artifactId>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-turf</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-mail</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>compile</scope>
         </dependency>
         <!-- Important local dependencies (end) -->
 
@@ -137,7 +104,6 @@
         <dependency>
             <groupId>net.wesjd</groupId>
             <artifactId>anvilgui</artifactId>
-            <version>${anvilgui.version}</version>
             <scope>compile</scope>
         </dependency>
 
@@ -145,15 +111,12 @@
         <dependency>
             <groupId>org.bstats</groupId>
             <artifactId>bstats-bukkit</artifactId>
-            <version>${bstats.version}</version>
-            <scope>compile</scope>
         </dependency>
 
         <!-- XSeries -->
         <dependency>
             <groupId>com.github.cryptomorin</groupId>
             <artifactId>XSeries</artifactId>
-            <version>${xseries.version}</version>
             <scope>compile</scope>
         </dependency>
 
@@ -161,8 +124,6 @@
         <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
-            <version>${org.reflections.version}</version>
-            <scope>compile</scope>
         </dependency>
 
         <!-- Compile level dependencies (end) -->
@@ -173,8 +134,6 @@
         <dependency>
             <groupId>de.tr7zw</groupId>
             <artifactId>item-nbt-api-plugin</artifactId>
-            <version>${nbt.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <!-- Required plugins dependencies (end) -->
@@ -185,31 +144,24 @@
         <dependency>
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>
-            <version>${placeholderapi.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <!-- Vault -->
         <dependency>
             <groupId>com.github.MilkBowl</groupId>
             <artifactId>VaultAPI</artifactId>
-            <version>${vault.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <!-- CitizenAPI -->
         <dependency>
             <groupId>net.citizensnpcs</groupId>
             <artifactId>citizens-main</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <!-- ViaVersion -->
         <dependency>
             <groupId>com.viaversion</groupId>
             <artifactId>viaversion-api</artifactId>
-            <version>${viaversion.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <!-- Soft plugins dependencies (end) -->
@@ -220,16 +172,12 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
         </dependency>
 
         <!-- Mocking -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>${mockito.version}</version>
-            <scope>test</scope>
         </dependency>
 
         <!-- Test dependencies (end) -->

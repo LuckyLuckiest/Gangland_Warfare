@@ -16,11 +16,10 @@
     <name>Cops N Crooks</name>
 
     <dependencies>
-        <!-- Spigot Build -->
+        <!-- Spigot Build (full server — needed for io.netty access) -->
         <dependency>
             <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
-            <version>${bukkit.version}</version>
+            <artifactId>spigot</artifactId>
             <scope>provided</scope>
         </dependency>
 
@@ -28,54 +27,44 @@
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-item</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>version-impl</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>plugin-persistence</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-weapon</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>inventory-api</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>shop-api</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-economy</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-data</artifactId>
-            <version>${project.parent.version}</version>
+            <artifactId>gangland-domain</artifactId>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-turf</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
 
         <!-- Citizens dependency -->
         <dependency>
             <groupId>net.citizensnpcs</groupId>
             <artifactId>citizens-main</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <!-- XSeries dependency -->

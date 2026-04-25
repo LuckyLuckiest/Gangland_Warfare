@@ -23,8 +23,6 @@
     </dependencies>
 
     <build>
-        <!-- Maven plugin jar (start) -->
-
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -38,8 +36,6 @@
                 </configuration>
             </plugin>
         </plugins>
-
-        <!-- Maven plugin jar (end) -->
     </build>
 
 </project>

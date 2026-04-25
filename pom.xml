@@ -21,8 +21,8 @@
         <module>gangland-impl</module>
         <module>gangland-build</module>
         <module>gangland-core</module>
-        <module>gangland-item</module>
 
+        <module>gangland-infra</module>
         <module>gangland-ui</module>
         <module>gangland-features</module>
 
@@ -95,15 +95,6 @@
         <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
     </properties>
 
-    <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-            </resource>
-        </resources>
-    </build>
-
     <repositories>
         <repository>
             <id>maven_central</id>
@@ -167,25 +158,249 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Internal modules -->
             <dependency>
                 <groupId>me.luckyraven</groupId>
                 <artifactId>plugin-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>plugin-persistence</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>gangland-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>gangland-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>gangland-economy</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>gangland-item</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>inventory-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>scoreboard-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>sign-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>lootchest-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>hologram-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>shop-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>gangland-weapon</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>gangland-gadget</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>gangland-turf</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>gangland-mail</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>cops-n-crooks</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>version-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>me.luckyraven</groupId>
+                <artifactId>gangland-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
+            <!-- Server platform -->
+            <dependency>
+                <groupId>org.spigotmc</groupId>
+                <artifactId>spigot-api</artifactId>
+                <version>${bukkit.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.spigotmc</groupId>
+                <artifactId>spigot</artifactId>
+                <version>${bukkit.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- Required plugins -->
+            <dependency>
+                <groupId>de.tr7zw</groupId>
+                <artifactId>item-nbt-api-plugin</artifactId>
+                <version>${nbt.version}</version>
+                <scope>provided</scope>
+            </dependency>
             <dependency>
                 <groupId>net.citizensnpcs</groupId>
                 <artifactId>citizens-main</artifactId>
                 <version>${citizen.version}</version>
+                <scope>provided</scope>
             </dependency>
 
+            <!-- Soft plugins -->
+            <dependency>
+                <groupId>com.github.MilkBowl</groupId>
+                <artifactId>VaultAPI</artifactId>
+                <version>${vault.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.viaversion</groupId>
+                <artifactId>viaversion-api</artifactId>
+                <version>${viaversion.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>me.clip</groupId>
+                <artifactId>placeholderapi</artifactId>
+                <version>${placeholderapi.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- Shaded libraries (no scope here — gangland-build needs them at compile to shade,
+                 and consumers not in the shade path are uniformly resolved through gangland-build) -->
             <dependency>
                 <groupId>com.github.cryptomorin</groupId>
                 <artifactId>XSeries</artifactId>
                 <version>${xseries.version}</version>
             </dependency>
+            <dependency>
+                <groupId>net.wesjd</groupId>
+                <artifactId>anvilgui</artifactId>
+                <version>${anvilgui.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>fr.mrmicky</groupId>
+                <artifactId>fastboard</artifactId>
+                <version>${fastboard.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.bstats</groupId>
+                <artifactId>bstats-bukkit</artifactId>
+                <version>${bstats.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.zaxxer</groupId>
+                <artifactId>HikariCP</artifactId>
+                <version>${hikaricp.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>net.objecthunter</groupId>
+                <artifactId>exp4j</artifactId>
+                <version>${exp4j.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.reflections</groupId>
+                <artifactId>reflections</artifactId>
+                <version>${org.reflections.version}</version>
+                <scope>compile</scope>
+            </dependency>
+
+            <!-- Test -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.xerial</groupId>
+                <artifactId>sqlite-jdbc</artifactId>
+                <version>${sqlite-jdbc.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>${log4j-slf4j2.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>3.6.1</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+    </build>
 
     <dependencies>
         <!-- Technical provided level dependencies (start) -->

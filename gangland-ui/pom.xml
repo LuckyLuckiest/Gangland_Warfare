@@ -25,4 +25,13 @@
         <module>shop-api</module>
     </modules>
 
+    <dependencies>
+        <!-- Every UI module compiles against the Spigot API at provided scope. -->
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
 </project>

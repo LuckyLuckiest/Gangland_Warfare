@@ -16,24 +16,14 @@
     <name>Shop API</name>
 
     <dependencies>
-        <!-- Spigot Build -->
-        <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
-            <version>${bukkit.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-core</artifactId>
-            <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>plugin-persistence</artifactId>
-            <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -43,21 +33,17 @@
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>inventory-api</artifactId>
-            <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>me.luckyraven</groupId>
             <artifactId>gangland-item</artifactId>
-            <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>com.github.cryptomorin</groupId>
             <artifactId>XSeries</artifactId>
-            <version>${xseries.version}</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
 
