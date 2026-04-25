@@ -12,6 +12,7 @@ import me.luckyraven.core.bean.Qualifier;
 import me.luckyraven.core.bean.command.CommandHandler;
 import me.luckyraven.core.color.ColorUtil;
 import me.luckyraven.core.color.MaterialType;
+import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.user.UserDataLoader;
 import me.luckyraven.database.GanglandDatabase;
 import me.luckyraven.economy.Currency;
@@ -117,8 +118,10 @@ public final class GangCommand extends Command {
 		                                              memberManager, gangManager, rankManager);
 		Argument demoteUser = new GangDemoteCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                            memberManager, gangManager, rankManager);
+		Argument transferOwner = new GangTransferCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                                 memberManager, gangManager, rankManager);
 
-		getArgument().addPermission(getPermission() + ".force_rank");
+		getGangland().getContext().get(PermissionManager.class).addPermission(getPermission() + ".force_rank");
 
 		Argument deposit = new GangDepositCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                          memberManager, gangManager);
@@ -153,6 +156,7 @@ public final class GangCommand extends Command {
 
 		arguments.add(promoteUser);
 		arguments.add(demoteUser);
+		arguments.add(transferOwner);
 
 		arguments.add(deposit);
 		arguments.add(withdraw);

@@ -243,6 +243,10 @@
 		"usage": "/glw gang demote <name>",
 		"description": "Demotes the player to the previous rank."
 	},
+	"gang_transfer": {
+		"usage": "/glw gang transfer <name>",
+		"description": "Transfers gang ownership to another member."
+	},
 	"gang_ally_request": {
 		"usage": "/glw gang ally request <id>",
 		"description": "Request alliances to the other gang."
