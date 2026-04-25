@@ -8,6 +8,7 @@ import me.luckyraven.core.utilities.ParticleUtil;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.dto.IncendiaryData;
 import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
+import me.luckyraven.weapon.fire.PluginFireRegistry;
 import me.luckyraven.weapon.raytrace.RaytraceRequest;
 import me.luckyraven.weapon.raytrace.WeaponMuzzle;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;
@@ -40,14 +41,17 @@ public class IncendiaryAction {
 	private final IncendiaryWeapon    weapon;
 	private final RecoilCompatibility recoilCompatibility;
 	private final WeaponRaytracer     raytracer;
+	private final PluginFireRegistry  fireRegistry;
 
 	public IncendiaryAction(JavaPlugin plugin, WeaponService weaponService, IncendiaryWeapon weapon,
-	                        RecoilCompatibility recoilCompatibility, WeaponRaytracer raytracer) {
+	                        RecoilCompatibility recoilCompatibility, WeaponRaytracer raytracer,
+	                        PluginFireRegistry fireRegistry) {
 		this.plugin              = plugin;
 		this.weaponService       = weaponService;
 		this.weapon              = weapon;
 		this.recoilCompatibility = recoilCompatibility;
 		this.raytracer           = raytracer;
+		this.fireRegistry        = fireRegistry;
 	}
 
 	/**
@@ -173,10 +177,12 @@ public class IncendiaryAction {
 				Block fireBlock = hitBlock.getRelative(face);
 				if (fireBlock.getType() == Material.AIR) {
 					fireBlock.setType(Material.FIRE);
+					fireRegistry.track(fireBlock);
 					plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
 						if (fireBlock.getType() == Material.FIRE) {
 							fireBlock.setType(Material.AIR);
 						}
+						fireRegistry.untrack(fireBlock);
 					}, data.getFireDuration());
 				}
 			}

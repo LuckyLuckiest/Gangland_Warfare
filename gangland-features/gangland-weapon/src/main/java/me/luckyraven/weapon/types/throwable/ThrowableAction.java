@@ -7,6 +7,7 @@ import me.luckyraven.core.timer.RepeatingTimer;
 import me.luckyraven.core.utilities.ParticleUtil;
 import me.luckyraven.weapon.dto.ThrowableData;
 import me.luckyraven.weapon.events.projectile.WeaponRaytraceImpactEvent;
+import me.luckyraven.weapon.fire.PluginFireRegistry;
 import me.luckyraven.weapon.projectile.ProjectileState;
 import me.luckyraven.weapon.util.PotionEffectParser;
 import org.bukkit.*;
@@ -46,11 +47,14 @@ public class ThrowableAction {
 	private final JavaPlugin          plugin;
 	private final ThrowableWeapon     weapon;
 	private final RecoilCompatibility recoilCompatibility;
+	private final PluginFireRegistry  fireRegistry;
 
-	public ThrowableAction(JavaPlugin plugin, ThrowableWeapon weapon, RecoilCompatibility recoilCompatibility) {
+	public ThrowableAction(JavaPlugin plugin, ThrowableWeapon weapon, RecoilCompatibility recoilCompatibility,
+	                       PluginFireRegistry fireRegistry) {
 		this.plugin              = plugin;
 		this.weapon              = weapon;
 		this.recoilCompatibility = recoilCompatibility;
+		this.fireRegistry        = fireRegistry;
 	}
 
 	public void activate(Player player) {
@@ -279,6 +283,7 @@ public class ThrowableAction {
 					org.bukkit.block.Block below = candidate.getRelative(org.bukkit.block.BlockFace.DOWN);
 					if (!below.getType().isSolid()) continue;
 					candidate.setType(Material.FIRE);
+					fireRegistry.track(candidate);
 					placed.add(candidate);
 				}
 			}
@@ -290,6 +295,7 @@ public class ThrowableAction {
 					if (b.getType() == Material.FIRE) {
 						b.setType(Material.AIR);
 					}
+					fireRegistry.untrack(b);
 				}
 			}, fireTicks);
 		}

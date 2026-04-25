@@ -12,6 +12,7 @@ import me.luckyraven.weapon.SelectiveFire;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.dto.ScopeData;
+import me.luckyraven.weapon.fire.PluginFireRegistry;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;
 import me.luckyraven.weapon.types.biological.BiologicalAction;
 import me.luckyraven.weapon.types.biological.BiologicalWeapon;
@@ -46,7 +47,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 @ListenerHandler
-@AutowireTarget({WeaponService.class, RecoilCompatibility.class, WeaponRaytracer.class})
+@AutowireTarget({WeaponService.class, RecoilCompatibility.class, WeaponRaytracer.class, PluginFireRegistry.class})
 public class WeaponInteract implements Listener {
 
 	/**
@@ -75,6 +76,7 @@ public class WeaponInteract implements Listener {
 	private final WeaponService       weaponService;
 	private final RecoilCompatibility recoilCompatibility;
 	private final WeaponRaytracer     raytracer;
+	private final PluginFireRegistry  fireRegistry;
 
 	private final Map<UUID, AtomicReference<WeaponData>> continuousFire;
 	/**
@@ -119,11 +121,12 @@ public class WeaponInteract implements Listener {
 	private final Map<UUID, Long>                        lastMeleeSwingMs;
 
 	public WeaponInteract(JavaPlugin plugin, WeaponService weaponService, RecoilCompatibility recoilCompatibility,
-	                      WeaponRaytracer raytracer) {
+	                      WeaponRaytracer raytracer, PluginFireRegistry fireRegistry) {
 		this.plugin              = plugin;
 		this.weaponService       = weaponService;
 		this.recoilCompatibility = recoilCompatibility;
 		this.raytracer           = raytracer;
+		this.fireRegistry        = fireRegistry;
 		this.continuousFire      = new ConcurrentHashMap<>();
 		this.pressLockUntilTick  = new ConcurrentHashMap<>();
 		this.pressHoldState      = new ConcurrentHashMap<>();
@@ -373,7 +376,7 @@ public class WeaponInteract implements Listener {
 				if (!rightClick) break;
 
 				IncendiaryAction action = new IncendiaryAction(plugin, weaponService, incendiary, recoilCompatibility,
-				                                               raytracer);
+				                                               raytracer, fireRegistry);
 
 				SelectiveFire mode = incendiary.getCurrentSelectiveFire();
 				if (mode == SelectiveFire.AUTO) {
@@ -449,7 +452,7 @@ public class WeaponInteract implements Listener {
 
 		engagePressHoldWatchdog(weaponUuid, MIN_PRESS_LOCK_TICKS);
 
-		new ThrowableAction(plugin, weapon, recoilCompatibility).activate(player);
+		new ThrowableAction(plugin, weapon, recoilCompatibility, fireRegistry).activate(player);
 	}
 
 	/**

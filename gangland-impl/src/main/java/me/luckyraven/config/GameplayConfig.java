@@ -61,6 +61,7 @@ import me.luckyraven.weapon.WeaponManager;
 import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.ammo.AmmunitionManager;
 import me.luckyraven.weapon.configuration.WeaponAddon;
+import me.luckyraven.weapon.fire.PluginFireRegistry;
 import me.luckyraven.weapon.modifiers.BlockDamageManager;
 import me.luckyraven.weapon.raytrace.WeaponRaytracer;
 import me.luckyraven.weapon.raytrace.WeaponVisualSpawner;
@@ -220,6 +221,11 @@ public class GameplayConfig {
 	@Bean
 	public RecoilCompatibility recoilCompatibility(CompatibilityWorker compatibilityWorker) {
 		return compatibilityWorker.getRecoilCompatibility();
+	}
+
+	@Bean
+	public PluginFireRegistry pluginFireRegistry() {
+		return new PluginFireRegistry();
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
