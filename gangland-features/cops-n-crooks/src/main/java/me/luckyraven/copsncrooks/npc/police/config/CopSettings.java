@@ -81,6 +81,10 @@ public interface CopSettings {
 
 	int getSpawnYOffset();
 
+	double getMaxSpawnYDiff();
+
+	double getSpawnerMaxYDiff();
+
 	int getMinOpenHorizontalSides();
 
 	double getSpawnerPreferenceRadius();

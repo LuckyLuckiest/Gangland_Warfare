@@ -353,6 +353,16 @@ Cops:
       Phase1_Attempts: 20
       # Number of attempts per shrink step in phase-2 of spawn location selection.
       Phase2_Attempts: 15
+      # Maximum |spawnY - playerY| allowed for a chosen spawn location (blocks). The vertical search
+      # may scan further to locate ground (see Vertical_Search_Range) but the resulting position is
+      # rejected if the cop ends up too far above or below the player — prevents cops from spawning
+      # on a rooftop while the player is on the street, or vice-versa.
+      Max_Y_Diff: 4.0
+      # Maximum |spawnerY - playerY| allowed when picking a registered cop spawner (blocks). Filters
+      # out spawners whose Y is too far from the player so the spawned cop can plausibly path to them.
+      # Generous default so a roof-vs-ground-floor pair both apply, but a tower 25+ blocks above the
+      # street is excluded.
+      Spawner_Max_Y_Diff: 16.0
 
    # Controls when a pursuing cop gives up chasing its target and transitions to RETURNING.
    # Acts as a final-fallback leash so stuck/unreachable cops don't occupy the per-player cap forever.
@@ -530,6 +540,14 @@ Civilians:
       Phase1_Attempts: 20
       # Number of attempts per shrink step in phase-2 of spawn location selection.
       Phase2_Attempts: 15
+      # Maximum |spawnY - playerY| allowed for a chosen spawn location (blocks). The vertical search
+      # may scan further to locate ground (see Vertical_Search_Range) but the resulting position is
+      # rejected if the civilian ends up too far above or below the player.
+      Max_Y_Diff: 4.0
+      # Maximum |spawnerY - playerY| allowed when picking a registered civilian spawner (blocks).
+      # Filters out spawners whose Y is too far from the player so the spawned civilian can plausibly
+      # path to them.
+      Spawner_Max_Y_Diff: 16.0
    # Controls automatic civilian spawning from registered spawner points based on player proximity.
    # Civilians spawn at spawner locations when a player enters the activation radius, similar to
    # Minecraft village spawning. They despawn when all players move beyond the despawn radius.

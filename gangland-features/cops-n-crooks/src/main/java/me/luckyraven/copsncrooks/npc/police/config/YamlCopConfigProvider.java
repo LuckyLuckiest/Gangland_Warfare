@@ -44,6 +44,8 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final double spawnRadiusShrinkStep;
 	private final int    verticalSearchRange;
 	private final int    spawnYOffset;
+	private final double maxSpawnYDiff;
+	private final double spawnerMaxYDiff;
 	private final int    minOpenHorizontalSides;
 	private final double spawnerPreferenceRadius;
 	private final double visibilityCheckDistance;
@@ -102,6 +104,8 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.spawnRadiusShrinkStep   = copSettings != null ? copSettings.getSpawnRadiusShrinkStep() : 5.0;
 		this.verticalSearchRange     = copSettings != null ? copSettings.getVerticalSearchRange() : 10;
 		this.spawnYOffset            = copSettings != null ? copSettings.getSpawnYOffset() : 0;
+		this.maxSpawnYDiff           = copSettings != null ? copSettings.getMaxSpawnYDiff() : 4.0;
+		this.spawnerMaxYDiff         = copSettings != null ? copSettings.getSpawnerMaxYDiff() : 16.0;
 		this.minOpenHorizontalSides  = copSettings != null ? copSettings.getMinOpenHorizontalSides() : 2;
 		this.spawnerPreferenceRadius = copSettings != null ? copSettings.getSpawnerPreferenceRadius() : 80.0;
 		this.visibilityCheckDistance = copSettings != null ? copSettings.getVisibilityCheckDistance() : 48.0;
@@ -221,6 +225,16 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	@Override
 	public int getSpawnYOffset() {
 		return spawnYOffset;
+	}
+
+	@Override
+	public double getMaxSpawnYDiff() {
+		return maxSpawnYDiff;
+	}
+
+	@Override
+	public double getSpawnerMaxYDiff() {
+		return spawnerMaxYDiff;
 	}
 
 	@Override

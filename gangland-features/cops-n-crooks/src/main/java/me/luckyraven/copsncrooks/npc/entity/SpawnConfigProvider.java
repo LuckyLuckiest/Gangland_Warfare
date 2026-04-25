@@ -36,6 +36,19 @@ public interface SpawnConfigProvider {
 	int getSpawnYOffset();
 
 	/**
+	 * Maximum |spawnY - targetY| allowed for a chosen spawn location (blocks). The vertical search may scan further to
+	 * find ground, but the resulting position is rejected if the player and the spawn point are not on a similar Y
+	 * level — keeps NPCs from materialising on rooftops or in basements relative to the player.
+	 */
+	double getMaxSpawnYDiff();
+
+	/**
+	 * Maximum |spawnerY - targetY| allowed when picking a registered spawner (blocks). Filters out spawners whose Y is
+	 * too far from the target so the spawned NPC can plausibly path to them.
+	 */
+	double getSpawnerMaxYDiff();
+
+	/**
 	 * Minimum number of open horizontal sides required at a spawn position.
 	 */
 	int getMinOpenHorizontalSides();

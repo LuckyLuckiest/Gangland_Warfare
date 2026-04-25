@@ -121,6 +121,7 @@ public class Settings implements FileInitializer {
 	private static @Getter int civilianSpawnVerticalSearchRange, civilianSpawnYOffset,
 			civilianSpawnMinOpenHorizontalSides;
 	private static @Getter int civilianSpawnPhase1Attempts, civilianSpawnPhase2Attempts;
+	private static @Getter double civilianSpawnMaxYDiff, civilianSpawnSpawnerMaxYDiff;
 	// shared NPC navigation configuration
 	private static @Getter int npcNavRecalculationTicks, npcNavStuckCheckInterval, npcNavMaxStuckChecks,
 			npcNavMaxHopelessStuckChecks, npcNavMinRepathAfterLossTicks;
@@ -140,6 +141,7 @@ public class Settings implements FileInitializer {
 			copSpawnVisibilityCheckDistance;
 	private static @Getter int copSpawnVerticalSearchRange, copSpawnYOffset, copSpawnMinOpenHorizontalSides;
 	private static @Getter int copSpawnPhase1Attempts, copSpawnPhase2Attempts;
+	private static @Getter double copSpawnMaxYDiff, copSpawnSpawnerMaxYDiff;
 	// cop pursuit leash configuration
 	private static @Getter double     copPursuitMaxDistance;
 	private static @Getter int        copPursuitMaxTicks;
@@ -557,6 +559,8 @@ public class Settings implements FileInitializer {
 		civilianSpawnVisibilityCheckDistance = dbl(civiliansSpawn, "Visibility_Check_Distance", 48.0);
 		civilianSpawnPhase1Attempts          = intVal(civiliansSpawn, "Phase1_Attempts", 20);
 		civilianSpawnPhase2Attempts          = intVal(civiliansSpawn, "Phase2_Attempts", 15);
+		civilianSpawnMaxYDiff                = dbl(civiliansSpawn, "Max_Y_Diff", 4.0);
+		civilianSpawnSpawnerMaxYDiff         = dbl(civiliansSpawn, "Spawner_Max_Y_Diff", 16.0);
 
 		// shared NPC navigation
 		NodeReader npcNav = section(root, "NPC_Navigation", report);
@@ -605,6 +609,8 @@ public class Settings implements FileInitializer {
 		copSpawnVisibilityCheckDistance = dbl(copsSpawn, "Visibility_Check_Distance", 48.0);
 		copSpawnPhase1Attempts          = intVal(copsSpawn, "Phase1_Attempts", 20);
 		copSpawnPhase2Attempts          = intVal(copsSpawn, "Phase2_Attempts", 15);
+		copSpawnMaxYDiff                = dbl(copsSpawn, "Max_Y_Diff", 4.0);
+		copSpawnSpawnerMaxYDiff         = dbl(copsSpawn, "Spawner_Max_Y_Diff", 16.0);
 
 		copPursuitMaxDistance = dbl(copsPursuit, "Max_Distance", 80.0);
 		copPursuitMaxTicks    = intVal(copsPursuit, "Max_Ticks", 120);

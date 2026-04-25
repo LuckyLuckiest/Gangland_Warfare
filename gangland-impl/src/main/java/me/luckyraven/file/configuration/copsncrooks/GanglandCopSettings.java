@@ -116,6 +116,16 @@ public class GanglandCopSettings implements CopSettings {
 	}
 
 	@Override
+	public double getMaxSpawnYDiff() {
+		return Settings.getCopSpawnMaxYDiff();
+	}
+
+	@Override
+	public double getSpawnerMaxYDiff() {
+		return Settings.getCopSpawnSpawnerMaxYDiff();
+	}
+
+	@Override
 	public int getMinOpenHorizontalSides() {
 		return Settings.getCopSpawnMinOpenHorizontalSides();
 	}

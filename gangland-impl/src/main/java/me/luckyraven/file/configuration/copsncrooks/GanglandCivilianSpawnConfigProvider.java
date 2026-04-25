@@ -41,6 +41,16 @@ public class GanglandCivilianSpawnConfigProvider implements SpawnConfigProvider 
 	}
 
 	@Override
+	public double getMaxSpawnYDiff() {
+		return Settings.getCivilianSpawnMaxYDiff();
+	}
+
+	@Override
+	public double getSpawnerMaxYDiff() {
+		return Settings.getCivilianSpawnSpawnerMaxYDiff();
+	}
+
+	@Override
 	public int getMinOpenHorizontalSides() {
 		return Settings.getCivilianSpawnMinOpenHorizontalSides();
 	}

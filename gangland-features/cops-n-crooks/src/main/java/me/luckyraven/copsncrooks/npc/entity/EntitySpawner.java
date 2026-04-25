@@ -138,15 +138,20 @@ public abstract class EntitySpawner<S extends EntitySpawnerPoint> implements Bea
 		Location closest       = null;
 		double   prefRadius    = config.getSpawnerPreferenceRadius();
 		double   closestDistSq = prefRadius * prefRadius;
+		double   maxYDiff      = config.getSpawnerMaxYDiff();
 
 		for (S spawner : spawners.values()) {
 			Location loc   = spawner.getLocation();
 			World    world = loc.getWorld();
 			if (world == null || !world.equals(playerLoc.getWorld())) continue;
 
-			// Use XZ-only distance so that spawners directly below or above the player
-			// (e.g. at street level while the player is on a rooftop) are still preferred
-			// over more distant ground-level spawners.
+			// Y filter first: a spawner far below/above the player is unreachable for the spawned NPC even if
+			// horizontally near. Without this, a street-level spawner is "preferred" while the player is several
+			// storeys up but the cop never paths up to them.
+			if (Math.abs(loc.getY() - playerLoc.getY()) > maxYDiff) continue;
+
+			// Among spawners within the Y tolerance, prefer the horizontally closest one. XZ-only here means that a
+			// roof-vs-ground-floor spawner pair (when both are within Y tolerance) still ranks by horizontal distance.
 			double dx     = loc.getX() - playerLoc.getX();
 			double dz     = loc.getZ() - playerLoc.getZ();
 			double distSq = dx * dx + dz * dz;
@@ -238,6 +243,10 @@ public abstract class EntitySpawner<S extends EntitySpawnerPoint> implements Bea
 
 		Location spawnLoc = findGroundNearY(world, x, z, playerLoc.getBlockY() + config.getSpawnYOffset());
 		if (spawnLoc == null) return null;
+		// Reject ground that the search walked too far up/down from the player. Keeps cops from spawning on a rooftop
+		// while the player is on the street below (or vice-versa) just because that's where the first valid ground
+		// happened to be inside verticalSearchRange.
+		if (Math.abs(spawnLoc.getY() - playerLoc.getY()) > config.getMaxSpawnYDiff()) return null;
 		if (requireBehind && !isSpawnBehindPlayer(spawnLoc, player)) return null;
 		if (isOutdoor(spawnLoc) != playerOutdoor) return null;
 
