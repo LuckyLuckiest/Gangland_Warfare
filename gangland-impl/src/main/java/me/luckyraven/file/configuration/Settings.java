@@ -219,6 +219,7 @@ public class Settings implements FileInitializer {
 	private static @Getter String        turfWandItemType;
 	private static @Getter int           turfVisualizationDurationSeconds;
 	private static @Getter String        turfVisualizationParticle;
+	private static @Getter boolean       turfShowEnterTitle;
 	// turf - capture
 	private static @Getter int           turfCaptureDurationSeconds;
 	private static @Getter int           turfCaptureUnclaimedPhase1Seconds;
@@ -238,11 +239,11 @@ public class Settings implements FileInitializer {
 	private static @Getter double turfCaptureSoundStartPitch, turfCaptureSoundCompletePitch,
 			turfCaptureSoundFailedPitch, turfCaptureSoundTickPitch, turfCaptureSoundUnclaimedPitch;
 	// turf - contribution
-	private static @Getter double turfContributionDefenderPresenceTick;
-	private static @Getter double turfContributionAttackerPresenceTick;
-	private static @Getter double turfContributionCaptureCompleteBonus;
-	private static @Getter double turfContributionDefenseSuccessBonus;
-	private final FileHandler fileHandler;
+	private static @Getter double      turfContributionDefenderPresenceTick;
+	private static @Getter double      turfContributionAttackerPresenceTick;
+	private static @Getter double      turfContributionCaptureCompleteBonus;
+	private static @Getter double      turfContributionDefenseSuccessBonus;
+	private final          FileHandler fileHandler;
 
 	public Settings(FileManager fileManager) {
 		try {
@@ -733,6 +734,7 @@ public class Settings implements FileInitializer {
 		turfWandItemType                 = str(turf, "Wand_Item_Type", "BLAZE_ROD");
 		turfVisualizationDurationSeconds = intVal(turf, "Visualization_Duration_Seconds", 30);
 		turfVisualizationParticle        = str(turf, "Visualization_Particle", "FLAME");
+		turfShowEnterTitle               = bool(turf, "Show_Enter_Title", true);
 
 		turfCaptureDurationSeconds             = intVal(turfCapture, "Duration_Seconds", 180);
 		turfCaptureUnclaimedPhase1Seconds      = intVal(turfCapture, "Unclaimed_Phase1_Seconds", 90);

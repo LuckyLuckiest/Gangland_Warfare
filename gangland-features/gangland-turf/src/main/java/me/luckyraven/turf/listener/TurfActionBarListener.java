@@ -6,6 +6,7 @@ import me.luckyraven.core.utilities.ActionBarManager;
 import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.gang.Gang;
 import me.luckyraven.gang.contract.GangLookupContract;
+import me.luckyraven.turf.contract.TurfDisplayContract;
 import me.luckyraven.turf.contract.TurfMessageContract;
 import me.luckyraven.turf.data.Turf;
 import me.luckyraven.turf.data.TurfRuntimeState;
@@ -46,6 +47,7 @@ public final class TurfActionBarListener implements Listener {
 	private final TurfManager         turfs;
 	private final GangLookupContract  gangs;
 	private final TurfMessageContract messages;
+	private final TurfDisplayContract display;
 
 	@EventHandler
 	public void onEnter(TurfEnterEvent event) {
@@ -90,8 +92,10 @@ public final class TurfActionBarListener implements Listener {
 		String title = messages.format("TURF_TITLE",
 		                               "turf", turf.getDisplayName());
 
-		player.sendTitle(ChatUtil.color(title), ChatUtil.color(subtitle),
-		                 TITLE_FADE_IN, TITLE_STAY, TITLE_FADE_OUT);
+		if (display.isEnterTitleEnabled()) {
+			player.sendTitle(ChatUtil.color(title), ChatUtil.color(subtitle),
+			                 TITLE_FADE_IN, TITLE_STAY, TITLE_FADE_OUT);
+		}
 		ActionBarManager.send(player, ChatUtil.color(actionBar));
 	}
 

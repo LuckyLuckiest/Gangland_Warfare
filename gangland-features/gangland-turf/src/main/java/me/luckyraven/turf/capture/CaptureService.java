@@ -139,8 +139,9 @@ public final class CaptureService {
 	}
 
 	private TickGroups classify(Turf turf, List<Player> playersInside) {
-		TickGroups groups = new TickGroups();
-		Integer    owner  = turf.getOwnerGangId();
+		TickGroups groups    = new TickGroups();
+		Integer    owner     = turf.getOwnerGangId();
+		Gang       ownerGang = owner == null ? null : gangs.findById(owner);
 		for (Player player : playersInside) {
 			// Dead players leave a body at the death location until they click respawn — that body
 			// shouldn't count as a live defender or attacker. Skipping them here also naturally pauses
@@ -153,13 +154,24 @@ public final class CaptureService {
 				continue;
 			}
 			int gangId = user.getGangId();
-			if (owner != null && gangId == owner) {
+			// Allies of the owner are folded into the defender bucket so they can't trigger or progress a
+			// contest against an ally's turf, and the Quartermaster/defenders never name the ally's gang
+			// as challenger (which would target every ally member).
+			if (owner != null && (gangId == owner || isOwnerAlly(ownerGang, gangId))) {
 				groups.defenders++;
 			} else {
 				groups.challengersByGang.merge(gangId, 1, Integer::sum);
 			}
 		}
 		return groups;
+	}
+
+	private boolean isOwnerAlly(Gang ownerGang, int otherGangId) {
+		if (ownerGang == null) {
+			return false;
+		}
+		Gang other = gangs.findById(otherGangId);
+		return other != null && other.isAlly(ownerGang);
 	}
 
 	private void tickIdle(Turf turf, TurfRuntimeState state, TickGroups groups, List<Player> playersInside, long now) {

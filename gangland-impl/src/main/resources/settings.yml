@@ -692,6 +692,10 @@ Turf:
    Visualization_Duration_Seconds: 30
    # Particle type spawned along the 4 vertical edges by /glw turf show (XSeries-resolved name).
    Visualization_Particle: FLAME
+   # Whether the big title screen flashes on the player when they enter a turf. Disable to
+   # keep the announcement to just the action-bar line, which is less intrusive when sprinting
+   # across multiple turfs in a row.
+   Show_Enter_Title: true
    # Capture subsystem. Runtime state (contested/cooldown/progress) is not persisted — only
    # Last_Capture_Timestamp anchors cooldowns across restarts.
    Capture:

@@ -15,6 +15,7 @@ import me.luckyraven.gang.contract.UserLookupContract;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.turf.capture.CaptureService;
 import me.luckyraven.turf.capture.CaptureSettings;
+import me.luckyraven.turf.contract.TurfDisplayContract;
 import me.luckyraven.turf.contract.TurfMessageContract;
 import me.luckyraven.turf.contract.TurfRepositoryContract;
 import me.luckyraven.turf.contract.TurfSoundContract;
@@ -84,6 +85,11 @@ public final class TurfConfig {
 	@Bean
 	public TurfSoundContract turfSoundContract() {
 		return new GanglandTurfSounds();
+	}
+
+	@Bean
+	public TurfDisplayContract turfDisplayContract() {
+		return Settings::isTurfShowEnterTitle;
 	}
 
 	@Bean
