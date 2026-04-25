@@ -16,6 +16,7 @@ import me.luckyraven.gang.bounty.BountySettings;
 import me.luckyraven.gang.events.bounty.BountyEvent;
 import me.luckyraven.gang.events.user.UserBountyEvent;
 import me.luckyraven.gang.events.wanted.WantedEvent;
+import me.luckyraven.gang.member.Member;
 import me.luckyraven.gang.member.MemberManager;
 import me.luckyraven.gang.user.Level;
 import me.luckyraven.gang.user.User;
@@ -96,7 +97,10 @@ public final class UserDataLoader {
 			user.getEconomy().setAmount(Currency.of(balance));
 			user.getWanted().setLevel(wanted);
 
-			user.setGangId(memberManager.getMember(user.getUuid()).getGangId());
+			Member member = memberManager.getMember(user.getUuid());
+			if (member != null) {
+				user.setGangId(member.getGangId());
+			}
 
 			Map<String, Object> bankSearch = bankTable.searchCriteria(user);
 			Object[] bankData = db.table(bankTable.getName())
