@@ -68,6 +68,7 @@ import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.repository.IRepository;
 import me.luckyraven.persistence.repository.RepositoryRegistry;
 import me.luckyraven.weapon.WeaponManager;
+import me.luckyraven.weapon.WeaponService;
 import org.bukkit.entity.Player;
 
 
@@ -412,8 +413,9 @@ public class CopsAndGadgetsConfig {
 	@Bean
 	public JetpackService jetpackService(FuelService fuelService,
 	                                     GadgetPhysicsConfig gadgetPhysicsConfig,
-	                                     WearableAddon wearableAddon) {
-		return new JetpackService(fuelService, gangland, gadgetPhysicsConfig, wearableAddon);
+	                                     WearableAddon wearableAddon,
+	                                     WeaponService weaponService) {
+		return new JetpackService(fuelService, gangland, gadgetPhysicsConfig, wearableAddon, weaponService);
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------

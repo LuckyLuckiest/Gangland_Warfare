@@ -7,6 +7,7 @@ import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.gadget.jetpack.packet.JetpackInputInterceptor;
 import me.luckyraven.gadget.packet.PlayerInputInterceptor;
 import me.luckyraven.item.wearable.Wearable;
+import me.luckyraven.weapon.WeaponService;
 import me.luckyraven.weapon.wearable.WearableService;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -28,13 +29,15 @@ public class JetpackService implements BeanLifecycle {
 	private final JavaPlugin                plugin;
 	private final GadgetPhysicsConfig       physicsConfig;
 	private final WearableService           wearableService;
+	private final WeaponService             weaponService;
 
 	public JetpackService(FuelService fuelService, JavaPlugin plugin, GadgetPhysicsConfig physicsConfig,
-	                      WearableService wearableService) {
+	                      WearableService wearableService, WeaponService weaponService) {
 		this.fuelService     = fuelService;
 		this.plugin          = plugin;
 		this.physicsConfig   = physicsConfig;
 		this.wearableService = wearableService;
+		this.weaponService   = weaponService;
 	}
 
 	/**
@@ -44,7 +47,7 @@ public class JetpackService implements BeanLifecycle {
 		if (activeSessions.containsKey(player.getUniqueId())) return;
 
 		JetpackSession session = new JetpackSession(player, jetpackWearable);
-		JetpackTask    task    = new JetpackTask(session, this, fuelService, physicsConfig);
+		JetpackTask    task    = new JetpackTask(session, this, fuelService, physicsConfig, weaponService);
 		session.setTask(task);
 
 		activeSessions.put(player.getUniqueId(), session);

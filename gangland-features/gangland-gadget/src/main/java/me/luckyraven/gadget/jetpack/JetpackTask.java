@@ -10,6 +10,9 @@ import me.luckyraven.gadget.fuel.FuelService;
 import me.luckyraven.item.fuel.FuelBar;
 import me.luckyraven.item.wearable.Wearable;
 import me.luckyraven.item.wearable.WearableTrait;
+import me.luckyraven.weapon.Weapon;
+import me.luckyraven.weapon.WeaponService;
+import me.luckyraven.weapon.dto.ScopeData;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -40,17 +43,19 @@ public class JetpackTask extends BukkitRunnable {
 	private final        JetpackService      jetpackService;
 	private final        FuelService         fuelService;
 	private final        GadgetPhysicsConfig physicsConfig;
+	private final        WeaponService       weaponService;
 
 	private int     thrustTicks         = 0;
 	private boolean prevGlideToggleHeld = false;
 	private int     soundTick           = 0;
 
 	public JetpackTask(JetpackSession session, JetpackService jetpackService, FuelService fuelService,
-	                   GadgetPhysicsConfig physicsConfig) {
+	                   GadgetPhysicsConfig physicsConfig, WeaponService weaponService) {
 		this.session        = session;
 		this.jetpackService = jetpackService;
 		this.fuelService    = fuelService;
 		this.physicsConfig  = physicsConfig;
+		this.weaponService  = weaponService;
 	}
 
 	@Override
@@ -61,6 +66,12 @@ public class JetpackTask extends BukkitRunnable {
 		if (checkGuards(player, jetpack)) return;
 
 		boolean spaceHeld = session.isInputJump();
+		// While a held weapon is scoped, ScopeJumpListener blocks upward Y movement on PlayerMoveEvent — the jump
+		// can't happen, so the thrust path must not consume fuel either. Glide (sneak+space) is intentionally left
+		// alone since the bug is about the jump key, not the glide gesture.
+		if (spaceHeld && isScoped(player)) {
+			spaceHeld = false;
+		}
 		boolean sneakHeld = session.isInputSneak();
 		boolean hasFuel   = fuelService.hasFuelOnWearable(player);
 		boolean onGround  = PlayerUtil.isOnGround(player);
@@ -112,7 +123,7 @@ public class JetpackTask extends BukkitRunnable {
 			}
 			session.setGlideModeActive(false);
 		}
-		if (hasFuel && spaceHeld) {
+		if (hasFuel && spaceHeld && !onGround) {
 			fuelService.consumeFuelFromWearable(player, getEffectiveConsumptionRate(jetpack));
 			thrustTicks++;
 			double ramp = Math.min(thrustTicks / (double) physicsConfig.getJetpackThrustRampTicks(), 1.0);
@@ -226,6 +237,15 @@ public class JetpackTask extends BukkitRunnable {
 		if (chestplate == null || chestplate.getType().isAir()) return false;
 		String key = Wearable.getWearableKey(chestplate);
 		return key != null && key.equals(jetpack.getWearableKey());
+	}
+
+	private boolean isScoped(Player player) {
+		ItemStack held = player.getInventory().getItemInMainHand();
+		if (held.getType().isAir()) return false;
+		Weapon weapon = weaponService.validateAndGetWeapon(player, held);
+		if (weapon == null) return false;
+		ScopeData scope = weapon.getScopeData();
+		return scope != null && scope.isScoped();
 	}
 
 }
