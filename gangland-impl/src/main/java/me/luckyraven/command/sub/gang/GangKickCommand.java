@@ -97,7 +97,9 @@ class GangKickCommand extends SubArgument {
 
 			Tree<Rank> rankTree = rankManager.getRankTree();
 
-			if (!rankTree.isDescendant(userRank.getNode(), memberRank.getNode())) continue;
+			// Rank tree is head-rooted (lowest rank = root, tail/owner = deepest leaf), so "user outranks target"
+			// means userRank is a descendant of memberRank. Argument order matches GangPromoteCommand's filter.
+			if (!rankTree.isDescendant(memberRank.getNode(), userRank.getNode())) continue;
 
 			OfflinePlayer offlinePlayer     = Bukkit.getOfflinePlayer(member.getUuid());
 			String        offlinePlayerName = offlinePlayer.getName();
@@ -164,6 +166,12 @@ class GangKickCommand extends SubArgument {
 
 			if (targetMember == null) {
 				user.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
+				return;
+			}
+
+			// Self-action is a domain rule, never a permission decision — applied before the rank-hierarchy gate.
+			if (targetMember.getUuid().equals(player.getUniqueId())) {
+				user.sendMessage(Messages.GANG_CANNOT_ACT_SELF.toString());
 				return;
 			}
 
