@@ -107,6 +107,14 @@ public final class VaultPermissionBridge {
 
 	public static void removeFromGroup(@Nullable OfflinePlayer player, @Nullable String group) {
 		if (vault == null || player == null || group == null || group.isEmpty()) return;
+
+		// Never strip the player from the permission provider's default group — every player is implicitly a
+		// member of it, and dropping them out (e.g. when a rank linked to "default" is cleared) takes down every
+		// perm granted at the default level (gangland.command.*, common command access, etc.). This used to
+		// surface as "all permissions disappear when kicked from a gang" if an admin linked a gang rank to the
+		// LP default group.
+		if (isDefaultGroup(group)) return;
+
 		dispatch(player, () -> {
 			try {
 				vault.playerRemoveGroup(null, player, group);
@@ -158,6 +166,13 @@ public final class VaultPermissionBridge {
 				revoke(player, node);
 			}
 		}
+	}
+
+	private static boolean isDefaultGroup(String group) {
+		// Vault's Permission abstraction doesn't expose a default-group lookup, so match the conventional name
+		// instead. LuckPerms, PermissionsEx, GroupManager and bPermissions all ship with "default" as the
+		// always-applied group; admins who renamed it can extend this guard via configuration if they need to.
+		return "default".equalsIgnoreCase(group);
 	}
 
 	/**
