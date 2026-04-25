@@ -104,6 +104,12 @@ class GangPromoteCommand extends SubArgument {
 				return;
 			}
 
+			// Self-action is a domain rule, never a permission decision — applied before the force/rank gate.
+			if (targetMember.getUuid().equals(player.getUniqueId())) {
+				user.sendMessage(Messages.GANG_CANNOT_ACT_SELF.toString());
+				return;
+			}
+
 			// change the user rank by proceeding to the next node
 			Rank currentRank = targetMember.getRank();
 			// in the case there are more than one child then give options to the promoter
@@ -119,10 +125,12 @@ class GangPromoteCommand extends SubArgument {
 				}
 
 				// check if target has higher rank than user
+				// Tree is head-rooted (lowest rank = root, tail/owner = deepest leaf), so "user outranks target"
+				// means userNode is a descendant of targetNode. Mirrors the (correct) pattern in GangDemoteCommand.
 				Tree.Node<Rank> userNode   = userMemberRank.getNode();
 				Tree.Node<Rank> targetNode = currentRank.getNode();
 
-				if (rankManager.getRankTree().isDescendant(targetNode, userNode)) {
+				if (!rankManager.getRankTree().isDescendant(targetNode, userNode)) {
 					user.sendMessage(Messages.GANG_HIGHER_RANK_ACTION.toString());
 					return;
 				}

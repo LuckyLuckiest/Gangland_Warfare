@@ -100,6 +100,12 @@ class GangDemoteCommand extends SubArgument {
 				return;
 			}
 
+			// Self-action is a domain rule, never a permission decision — applied before the force/rank gate.
+			if (targetMember.getUuid().equals(player.getUniqueId())) {
+				user.sendMessage(Messages.GANG_CANNOT_ACT_SELF.toString());
+				return;
+			}
+
 			// change the user rank by proceeding to the next node
 			Rank currentRank = targetMember.getRank();
 			Rank userRank    = userMember.getRank();
