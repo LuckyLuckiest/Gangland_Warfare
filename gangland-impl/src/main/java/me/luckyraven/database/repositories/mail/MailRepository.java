@@ -49,10 +49,13 @@ public class MailRepository extends AbstractRepository<MailItem> implements Mail
 			String     subject         = subjectRaw == null ? null : subjectRaw.toString();
 			long       createdAt       = ((Number) result[v++]).longValue();
 			long       expiresAt       = ((Number) result[v++]).longValue();
+			long       pausedAt        = ((Number) result[v++]).longValue();
 			int        readFlag        = ((Number) result[v]).intValue();
 
-			mails.add(new MailItem(id, type, senderUuid, senderGangId, recipientUuid, recipientGangId, subject,
-			                       createdAt, expiresAt, status, readFlag != 0));
+			MailItem mail = new MailItem(id, type, senderUuid, senderGangId, recipientUuid, recipientGangId, subject,
+			                             createdAt, expiresAt, status, readFlag != 0);
+			mail.setPausedAt(pausedAt);
+			mails.add(mail);
 		}
 
 		return mails;

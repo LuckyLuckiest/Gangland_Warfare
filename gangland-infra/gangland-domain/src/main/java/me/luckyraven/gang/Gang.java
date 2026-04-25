@@ -152,6 +152,21 @@ public class Gang {
 		members.remove(member);
 	}
 
+	public boolean hasAnyMemberOnline() {
+		for (Member member : members) {
+			if (Bukkit.getOfflinePlayer(member.getUuid()).isOnline()) return true;
+		}
+		return false;
+	}
+
+	public boolean hasAnyMemberOnlineExcluding(UUID exclude) {
+		for (Member member : members) {
+			if (exclude != null && exclude.equals(member.getUuid())) continue;
+			if (Bukkit.getOfflinePlayer(member.getUuid()).isOnline()) return true;
+		}
+		return false;
+	}
+
 	public List<User<Player>> getOnlineMembers(Function<Player, User<Player>> userLookup) {
 		List<User<Player>> users = new ArrayList<>();
 

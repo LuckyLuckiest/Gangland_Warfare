@@ -173,12 +173,10 @@ public final class MailManager {
 	 * tick; safe to call frequently (cheap when nothing is due).
 	 */
 	public void expireDue() {
-		long           now = System.currentTimeMillis();
 		List<MailItem> due = new ArrayList<>();
 		for (MailItem mail : mailById.values()) {
 			if (mail.getStatus() != MailStatus.PENDING) continue;
-			if (mail.getExpiresAt() <= 0) continue;
-			if (mail.getExpiresAt() > now) continue;
+			if (!mail.isExpired()) continue;
 			due.add(mail);
 		}
 		for (MailItem mail : due) {

@@ -457,6 +457,9 @@ Information:
       Pending_Invites:
          Header: "&7Tienes &e%count%&7 invitación(es) de banda pendiente(s) — usa &e/glw gang accept <gang>&7 para elegir:"
          Entry: " &8- &b%gang%"
+      Pending_Ally_Requests:
+         Header: "&7Tu banda tiene &e%count%&7 solicitud(es) de alianza pendiente(s) — usa &e/glw gang ally accept <gang>&7 para elegir:"
+         Entry: " &8- &b%gang%"
    Balance:
       Registered_Only: "El saldo es solo para usuarios registrados"
    Argument:

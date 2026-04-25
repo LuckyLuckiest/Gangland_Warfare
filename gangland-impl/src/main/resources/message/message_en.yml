@@ -597,6 +597,9 @@ Information:
       Pending_Invites:
          Header: "&7You have &e%count%&7 pending gang invite(s) — use &e/glw gang accept <gang>&7 to pick:"
          Entry: " &8- &b%gang%"
+      Pending_Ally_Requests:
+         Header: "&7Your gang has &e%count%&7 pending alliance request(s) — use &e/glw gang ally accept <gang>&7 to pick:"
+         Entry: " &8- &b%gang%"
    Turf:
       Contest_Start_Defender: "&c⚠ Your turf &f%turf%&c is being contested by &e%gang%&c!"
       Contest_Half_Defender: "&4⚠ &cCapture of &f%turf%&c is halfway done — defend it!"

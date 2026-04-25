@@ -23,6 +23,7 @@ public class MailTable extends Table<MailItem> {
 		Attribute<String>  subject         = new Attribute<>("subject", false, String.class);
 		Attribute<Long>    createdAt       = new Attribute<>("created_at", false, Long.class);
 		Attribute<Long>    expiresAt       = new Attribute<>("expires_at", false, Long.class);
+		Attribute<Long>    pausedAt        = new Attribute<>("paused_at", false, Long.class);
 		Attribute<Integer> readFlag        = new Attribute<>("read_flag", false, Integer.class);
 
 		// Sized tighter than the default 255 — UUID strings are exactly 36 chars.
@@ -34,6 +35,7 @@ public class MailTable extends Table<MailItem> {
 		senderGangId.setDefaultValue(MailItem.NO_GANG);
 		recipientGangId.setDefaultValue(MailItem.NO_GANG);
 		expiresAt.setDefaultValue(-1L);
+		pausedAt.setDefaultValue(0L);
 		readFlag.setDefaultValue(0);
 
 		this.addAttribute(id);
@@ -46,6 +48,7 @@ public class MailTable extends Table<MailItem> {
 		this.addAttribute(subject);
 		this.addAttribute(createdAt);
 		this.addAttribute(expiresAt);
+		this.addAttribute(pausedAt);
 		this.addAttribute(readFlag);
 	}
 
@@ -67,7 +70,7 @@ public class MailTable extends Table<MailItem> {
 
 		return new Object[]{data.getId(), data.getType().name(), data.getStatus().name(), senderUuid,
 		                    data.getSenderGangId(), recipientUuid, data.getRecipientGangId(), data.getSubject(),
-		                    data.getCreatedAt(), data.getExpiresAt(), data.isRead() ? 1 : 0};
+		                    data.getCreatedAt(), data.getExpiresAt(), data.getPausedAt(), data.isRead() ? 1 : 0};
 	}
 
 	@Override

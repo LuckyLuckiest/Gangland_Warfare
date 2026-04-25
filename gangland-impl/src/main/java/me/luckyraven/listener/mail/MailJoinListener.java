@@ -4,6 +4,8 @@ import me.luckyraven.core.bean.listener.ListenerHandler;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.gang.Gang;
 import me.luckyraven.gang.GangManager;
+import me.luckyraven.gang.member.Member;
+import me.luckyraven.gang.member.MemberManager;
 import me.luckyraven.mail.MailItem;
 import me.luckyraven.mail.MailManager;
 import me.luckyraven.mail.MailType;
@@ -17,23 +19,32 @@ import java.util.List;
 
 /**
  * Surfaces pending mail to players as they join. Gang invites are listed by inviting gang so the recipient can pick the
- * right one with {@code /glw gang accept <gang>}; players with no pending mail see nothing.
+ * right one with {@code /glw gang accept <gang>}; pending ally requests addressed to the joiner's gang are likewise
+ * surfaced and have their expiry countdown resumed (the request is paused while the recipient gang has nobody online).
+ * Players with no pending mail see nothing.
  */
 @ListenerHandler
 public final class MailJoinListener implements Listener {
 
-	private final MailManager mailManager;
-	private final GangManager gangManager;
+	private final MailManager   mailManager;
+	private final GangManager   gangManager;
+	private final MemberManager memberManager;
 
-	public MailJoinListener(MailManager mailManager, GangManager gangManager) {
-		this.mailManager = mailManager;
-		this.gangManager = gangManager;
+	public MailJoinListener(MailManager mailManager, GangManager gangManager, MemberManager memberManager) {
+		this.mailManager   = mailManager;
+		this.gangManager   = gangManager;
+		this.memberManager = memberManager;
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onJoin(PlayerJoinEvent event) {
 		Player player = event.getPlayer();
 
+		surfaceInvites(player);
+		resumeAndSurfaceAllyRequests(player);
+	}
+
+	private void surfaceInvites(Player player) {
 		List<MailItem> invites = mailManager.findPendingForRecipient(player.getUniqueId(), MailType.GANG_INVITE);
 		if (invites.isEmpty()) return;
 
@@ -46,6 +57,34 @@ public final class MailJoinListener implements Listener {
 
 			player.sendMessage(Messages.MAIL_PENDING_INVITES_ENTRY.toString()
 			                                                      .replace("%gang%", gang.getDisplayNameString()));
+		}
+	}
+
+	private void resumeAndSurfaceAllyRequests(Player player) {
+		Member member = memberManager.getMember(player.getUniqueId());
+		if (member == null || member.getGangId() == MailItem.NO_GANG) return;
+
+		List<MailItem> requests = mailManager.findPendingForRecipientGang(member.getGangId(),
+		                                                                  MailType.GANG_ALLY_REQUEST);
+		if (requests.isEmpty()) return;
+
+		long now = System.currentTimeMillis();
+		for (MailItem request : requests) {
+			if (!request.isPaused()) continue;
+			request.setExpiresAt(request.getExpiresAt() + (now - request.getPausedAt()));
+			request.setPausedAt(0L);
+		}
+
+		player.sendMessage(Messages.MAIL_PENDING_ALLY_REQUESTS.toString()
+		                                                      .replace("%count%", String.valueOf(requests.size())));
+
+		for (MailItem request : requests) {
+			Gang sender = gangManager.getGang(request.getSenderGangId());
+			if (sender == null) continue;
+
+			player.sendMessage(Messages.MAIL_PENDING_ALLY_REQUESTS_ENTRY.toString()
+			                                                            .replace("%gang%",
+			                                                                     sender.getDisplayNameString()));
 		}
 	}
 

@@ -37,7 +37,18 @@ public final class MailItem {
 	private final String subject;
 
 	private final long createdAt;
-	private final long expiresAt;
+
+	@Setter
+	private long expiresAt;
+
+	/**
+	 * Epoch ms at which the expiry countdown was paused, or {@code 0} when not paused. While paused
+	 * {@link #isExpired()} always returns {@code false}; on resume the caller shifts {@link #expiresAt} forward by
+	 * {@code (now - pausedAt)} and clears this back to {@code 0}. Currently used by {@link MailType#GANG_ALLY_REQUEST}
+	 * so the 60-second window does not tick down while no member of the recipient gang is online.
+	 */
+	@Setter
+	private long pausedAt;
 
 	@Setter
 	private MailStatus status;
@@ -65,10 +76,16 @@ public final class MailItem {
 	}
 
 	/**
-	 * @return {@code true} if {@link #expiresAt} is set and {@code System.currentTimeMillis()} is past it.
+	 * @return {@code true} if {@link #expiresAt} is set, {@code System.currentTimeMillis()} is past it, and the item is
+	 * 		not currently paused. While paused, expiry never fires regardless of the deadline value.
 	 */
 	public boolean isExpired() {
+		if (isPaused()) return false;
 		return expiresAt > 0 && System.currentTimeMillis() >= expiresAt;
+	}
+
+	public boolean isPaused() {
+		return pausedAt > 0L;
 	}
 
 }

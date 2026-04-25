@@ -164,6 +164,8 @@ public enum Messages {
 	GANG_ALLY_PENDING_CANCEL_TARGET("Commands.Gang.Ally.Pending.Cancel.Target", Type.COMMAND),
 	MAIL_PENDING_INVITES("Information.Mail.Pending_Invites.Header", Type.INFORMATION),
 	MAIL_PENDING_INVITES_ENTRY("Information.Mail.Pending_Invites.Entry", Type.INFORMATION),
+	MAIL_PENDING_ALLY_REQUESTS("Information.Mail.Pending_Ally_Requests.Header", Type.INFORMATION),
+	MAIL_PENDING_ALLY_REQUESTS_ENTRY("Information.Mail.Pending_Ally_Requests.Entry", Type.INFORMATION),
 	GANG_DISPLAY_SET("Commands.Gang.Display_Name.Set", Type.COMMAND),
 	GANG_DISPLAY_REMOVED("Commands.Gang.Display_Name.Removed", Type.COMMAND),
 	GANG_COLOR_SET("Commands.Gang.Color.Set", Type.COMMAND),

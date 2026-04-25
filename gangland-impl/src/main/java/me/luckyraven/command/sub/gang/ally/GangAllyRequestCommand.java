@@ -167,6 +167,9 @@ class GangAllyRequestCommand extends SubArgument {
 			long expireAt = now + REQUEST_EXPIRY_MS;
 			MailItem mail = new MailItem(mailManager.allocateId(), MailType.GANG_ALLY_REQUEST, null, sending.getId(),
 			                             null, receiving.getId(), null, now, expireAt, MailStatus.PENDING, false);
+			if (!receiving.hasAnyMemberOnline()) {
+				mail.setPausedAt(now);
+			}
 			mailManager.send(mail);
 		}, sender -> new ArrayList<>(buildRequestableGangMap(sender).keySet()), this::buildRequestableGangMap);
 	}
