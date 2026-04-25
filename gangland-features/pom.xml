@@ -23,6 +23,7 @@
         <module>gangland-economy</module>
         <module>gangland-data</module>
         <module>gangland-turf</module>
+        <module>gangland-mail</module>
     </modules>
 
 </project>

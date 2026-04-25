@@ -1,0 +1,12 @@
+package me.luckyraven.mail.contract;
+
+import me.luckyraven.mail.MailItem;
+import me.luckyraven.persistence.repository.IRepository;
+
+/**
+ * Lets {@code MailManager} sit in the feature module without depending on {@code gangland-impl}'s concrete repository.
+ * The impl-side {@code MailRepository} implements this contract directly so it can be cast off the
+ * {@code RepositoryRegistry} during bean wiring.
+ */
+public interface MailRepositoryContract extends IRepository<MailItem> {
+}

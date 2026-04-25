@@ -6,13 +6,16 @@ import me.luckyraven.command.argument.SubArgument;
 import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.core.TriConsumer;
 import me.luckyraven.core.datastructure.Tree;
-import me.luckyraven.core.timer.CountdownTimer;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.gang.Gang;
 import me.luckyraven.gang.GangManager;
 import me.luckyraven.gang.member.MemberManager;
 import me.luckyraven.gang.user.User;
 import me.luckyraven.gang.user.UserManager;
+import me.luckyraven.mail.MailItem;
+import me.luckyraven.mail.MailManager;
+import me.luckyraven.mail.MailStatus;
+import me.luckyraven.mail.MailType;
 import me.luckyraven.util.GanglandChatUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -25,26 +28,25 @@ import java.util.Map;
 
 class GangAllyRequestCommand extends SubArgument {
 
-	private final Gangland                      gangland;
-	private final Tree<Argument>                tree;
-	private final UserManager<Player>           userManager;
-	private final MemberManager                 memberManager;
-	private final GangManager                   gangManager;
-	private final HashMap<Gang, Gang>           gangsIdMap;
-	private final HashMap<Gang, CountdownTimer> gangRequestTimer;
+	private static final long REQUEST_EXPIRY_MS = 60_000L;
+
+	private final Gangland            gangland;
+	private final Tree<Argument>      tree;
+	private final UserManager<Player> userManager;
+	private final MemberManager       memberManager;
+	private final GangManager         gangManager;
+	private final MailManager         mailManager;
 
 	GangAllyRequestCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
-	                       MemberManager memberManager, GangManager gangManager,
-	                       HashMap<Gang, Gang> gangsIdMap, HashMap<Gang, CountdownTimer> gangRequestTimer) {
+	                       MemberManager memberManager, GangManager gangManager, MailManager mailManager) {
 		super(gangland, "request", tree, parent);
 
-		this.gangland         = gangland;
-		this.tree             = tree;
-		this.userManager      = userManager;
-		this.memberManager    = memberManager;
-		this.gangManager      = gangManager;
-		this.gangsIdMap       = gangsIdMap;
-		this.gangRequestTimer = gangRequestTimer;
+		this.gangland      = gangland;
+		this.tree          = tree;
+		this.userManager   = userManager;
+		this.memberManager = memberManager;
+		this.gangManager   = gangManager;
+		this.mailManager   = mailManager;
 
 		this.addSubArgument(buildAllyId());
 	}
@@ -67,9 +69,8 @@ class GangAllyRequestCommand extends SubArgument {
 	}
 
 	/**
-	 * Builds the disambiguated display-name → id map of every gang the sender's gang could request an alliance with —
-	 * i.e. every gang except the sender's own gang and gangs already allied to it. Duplicate names are suffixed with
-	 * {@code :id} so each option has a unique tab-completion key.
+	 * Disambiguated display-name → id map of gangs the sender's gang could request an alliance with — every gang except
+	 * the sender's own and any gang already allied to it.
 	 */
 	private Map<String, String> buildRequestableGangMap(CommandSender sender) {
 		if (!(sender instanceof Player player)) return new HashMap<>();
@@ -85,7 +86,6 @@ class GangAllyRequestCommand extends SubArgument {
 		for (Gang candidate : all) {
 			if (candidate == senderGang) continue;
 			if (candidate.isAlly(senderGang)) continue;
-
 			nameCount.merge(candidate.getName(), 1, Integer::sum);
 		}
 
@@ -93,7 +93,6 @@ class GangAllyRequestCommand extends SubArgument {
 		for (Gang candidate : all) {
 			if (candidate == senderGang) continue;
 			if (candidate.isAlly(senderGang)) continue;
-
 			String name        = candidate.getName();
 			String displayName = nameCount.get(name) > 1 ? name + ":" + candidate.getId() : name;
 			map.put(displayName, String.valueOf(candidate.getId()));
@@ -118,7 +117,6 @@ class GangAllyRequestCommand extends SubArgument {
 			String value = optionalArgument.getActualValue(args[3], sender);
 
 			int id;
-
 			try {
 				id = Integer.parseInt(value);
 			} catch (NumberFormatException exception) {
@@ -139,7 +137,8 @@ class GangAllyRequestCommand extends SubArgument {
 				return;
 			}
 
-			if (gangsIdMap.containsKey(receiving)) {
+			if (mailManager.findPendingBetweenGangs(sending.getId(), receiving.getId(), MailType.GANG_ALLY_REQUEST)
+			               .isPresent()) {
 				user.sendMessage(Messages.GANG_ALLIANCE_ALREADY_SENT.toString());
 				return;
 			}
@@ -164,15 +163,11 @@ class GangAllyRequestCommand extends SubArgument {
 					                                                                .replace("%gang%",
 					                                                                         sending.getDisplayNameString())));
 
-			gangsIdMap.put(receiving, sending);
-
-			CountdownTimer timer = new CountdownTimer(gangland, 60, null, null, time -> {
-				gangsIdMap.remove(receiving);
-				gangRequestTimer.remove(receiving);
-			});
-
-			timer.start(true);
-			gangRequestTimer.put(receiving, timer);
+			long now      = System.currentTimeMillis();
+			long expireAt = now + REQUEST_EXPIRY_MS;
+			MailItem mail = new MailItem(mailManager.allocateId(), MailType.GANG_ALLY_REQUEST, null, sending.getId(),
+			                             null, receiving.getId(), null, now, expireAt, MailStatus.PENDING, false);
+			mailManager.send(mail);
 		}, sender -> new ArrayList<>(buildRequestableGangMap(sender).keySet()), this::buildRequestableGangMap);
 	}
 

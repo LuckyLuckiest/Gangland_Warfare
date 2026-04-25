@@ -3,9 +3,9 @@ package me.luckyraven.command.sub.gang.invite;
 import me.luckyraven.Gangland;
 import me.luckyraven.command.argument.Argument;
 import me.luckyraven.command.argument.SubArgument;
+import me.luckyraven.command.argument.types.OptionalArgument;
 import me.luckyraven.core.TriConsumer;
 import me.luckyraven.core.datastructure.Tree;
-import me.luckyraven.core.timer.CountdownTimer;
 import me.luckyraven.file.configuration.Messages;
 import me.luckyraven.file.configuration.Settings;
 import me.luckyraven.gang.Gang;
@@ -16,80 +16,171 @@ import me.luckyraven.gang.rank.Rank;
 import me.luckyraven.gang.rank.RankManager;
 import me.luckyraven.gang.user.User;
 import me.luckyraven.gang.user.UserManager;
+import me.luckyraven.mail.MailItem;
+import me.luckyraven.mail.MailManager;
+import me.luckyraven.mail.MailType;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 class GangInviteAcceptCommand extends SubArgument {
 
-	private final UserManager<Player>                   userManager;
-	private final MemberManager                         memberManager;
-	@SuppressWarnings("unused") // kept for constructor symmetry with other gang leaves; used once mail lands
-	private final GangManager                           gangManager;
-	private final RankManager                           rankManager;
-	private final HashMap<User<Player>, Gang>           playerInvite;
-	private final HashMap<User<Player>, CountdownTimer> inviteTimer;
+	private final Gangland            gangland;
+	private final Tree<Argument>      tree;
+	private final UserManager<Player> userManager;
+	private final MemberManager       memberManager;
+	private final GangManager         gangManager;
+	private final RankManager         rankManager;
+	private final MailManager         mailManager;
 
 	GangInviteAcceptCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
 	                        MemberManager memberManager, GangManager gangManager, RankManager rankManager,
-	                        HashMap<User<Player>, Gang> playerInvite,
-	                        HashMap<User<Player>, CountdownTimer> inviteTimer) {
+	                        MailManager mailManager) {
 		super(gangland, "accept", tree, parent);
 
+		this.gangland      = gangland;
+		this.tree          = tree;
 		this.userManager   = userManager;
 		this.memberManager = memberManager;
 		this.gangManager   = gangManager;
 		this.rankManager   = rankManager;
-		this.playerInvite  = playerInvite;
-		this.inviteTimer   = inviteTimer;
+		this.mailManager   = mailManager;
+
+		this.addSubArgument(senderGangArgument());
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
+		// `/glw gang accept` (no extra token) — auto-pick the oldest pending invite, warn if there were more.
 		return (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
 			if (user == null) return;
 
-			if (!playerInvite.containsKey(user)) {
+			if (user.hasGang()) {
+				user.sendMessage(Messages.PLAYER_IN_GANG.toString());
+				return;
+			}
+
+			List<MailItem> pending = mailManager.findPendingForRecipient(player.getUniqueId(), MailType.GANG_INVITE);
+			if (pending.isEmpty()) {
 				user.sendMessage(Messages.NO_GANG_INVITATION.toString());
 				return;
 			}
+
+			MailItem mail = pending.getFirst();
+			Gang     gang = gangManager.getGang(mail.getSenderGangId());
+			if (gang == null) {
+				mailManager.cancel(mail);
+				user.sendMessage(Messages.NO_GANG_INVITATION.toString());
+				return;
+			}
+
+			if (pending.size() > 1) {
+				user.sendMessage(Messages.GANG_INVITE_ACCEPT_MULTIPLE.toString()
+				                                                     .replace("%count%",
+				                                                              String.valueOf(pending.size()))
+				                                                     .replace("%gang%", gang.getDisplayNameString()));
+			}
+
+			doAccept(user, player, gang, mail);
+		};
+	}
+
+	/**
+	 * Builds the disambiguated display-name → gang-id map of gangs that have a pending invite waiting for the sender.
+	 */
+	private Map<String, String> buildPendingInviteSenderMap(CommandSender sender) {
+		if (!(sender instanceof Player player)) return new HashMap<>();
+		User<Player> user = userManager.getUser(player);
+		if (user == null) return new HashMap<>();
+
+		List<MailItem> pending = mailManager.findPendingForRecipient(player.getUniqueId(), MailType.GANG_INVITE);
+
+		List<Gang> senders = new ArrayList<>();
+		for (MailItem mail : pending) {
+			Gang gang = gangManager.getGang(mail.getSenderGangId());
+			if (gang != null) senders.add(gang);
+		}
+
+		Map<String, Integer> nameCount = new HashMap<>();
+		for (Gang g : senders) nameCount.merge(g.getName(), 1, Integer::sum);
+
+		Map<String, String> map = new HashMap<>();
+		for (Gang g : senders) {
+			String name        = g.getName();
+			String displayName = nameCount.get(name) > 1 ? name + ":" + g.getId() : name;
+			map.put(displayName, String.valueOf(g.getId()));
+		}
+		return map;
+	}
+
+	private OptionalArgument senderGangArgument() {
+		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+			OptionalArgument optionalArgument = (OptionalArgument) argument;
+
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
 
 			if (user.hasGang()) {
 				user.sendMessage(Messages.PLAYER_IN_GANG.toString());
 				return;
 			}
 
-			Gang   gang   = playerInvite.get(user);
-			Member member = memberManager.getMember(player.getUniqueId());
-			Rank   rank   = rankManager.get(Settings.getGangRankHead());
+			String value = optionalArgument.getActualValue(args[2], sender);
 
-			List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager::getUser);
-			for (User<Player> onUser : gangOnlineMembers) {
-				String playerJoined = Messages.GANG_PLAYER_JOINED.toString()
-				                                                 .replace("%player%", user.getUser().getName());
-
-				onUser.sendMessage(playerJoined);
+			int senderId;
+			try {
+				senderId = Integer.parseInt(value);
+			} catch (NumberFormatException exception) {
+				user.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", value));
+				return;
 			}
 
-			member.setGangJoinDateLong(Instant.now().toEpochMilli());
-			gang.addMember(user, member, rank);
-			sender.sendMessage(
-					Messages.GANG_INVITE_ACCEPT.toString().replace("%gang%", gang.getDisplayNameString()));
-
-			playerInvite.remove(user);
-
-			CountdownTimer timer = inviteTimer.get(user);
-			if (timer != null) {
-				if (!timer.isCancelled()) timer.cancel();
-				inviteTimer.remove(user);
+			MailItem match = null;
+			for (MailItem mail : mailManager.findPendingForRecipient(player.getUniqueId(), MailType.GANG_INVITE)) {
+				if (mail.getSenderGangId() == senderId) {
+					match = mail;
+					break;
+				}
 			}
-		};
+
+			Gang gang = gangManager.getGang(senderId);
+			if (match == null || gang == null) {
+				String name = gang == null ? value : gang.getDisplayNameString();
+				user.sendMessage(Messages.GANG_INVITE_NO_INVITE_FROM.toString().replace("%gang%", name));
+				return;
+			}
+
+			doAccept(user, player, gang, match);
+		}, sender -> new ArrayList<>(buildPendingInviteSenderMap(sender).keySet()), this::buildPendingInviteSenderMap);
+	}
+
+	private void doAccept(User<Player> user, Player player, Gang gang, MailItem mail) {
+		Member member = memberManager.getMember(player.getUniqueId());
+		Rank   rank   = rankManager.get(Settings.getGangRankHead());
+
+		List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager::getUser);
+		for (User<Player> onUser : gangOnlineMembers) {
+			String playerJoined = Messages.GANG_PLAYER_JOINED.toString()
+			                                                 .replace("%player%", user.getUser().getName());
+
+			onUser.sendMessage(playerJoined);
+		}
+
+		member.setGangJoinDateLong(Instant.now().toEpochMilli());
+		gang.addMember(user, member, rank);
+		player.sendMessage(Messages.GANG_INVITE_ACCEPT.toString().replace("%gang%", gang.getDisplayNameString()));
+
+		mailManager.accept(mail);
 	}
 
 }

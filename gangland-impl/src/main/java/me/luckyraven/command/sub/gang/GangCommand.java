@@ -32,6 +32,7 @@ import me.luckyraven.inventory.multi.MultiInventoryCreation;
 import me.luckyraven.inventory.part.ButtonTags;
 import me.luckyraven.inventory.part.Fill;
 import me.luckyraven.inventory.util.InventoryUtil;
+import me.luckyraven.mail.MailManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -55,6 +56,7 @@ public final class GangCommand extends Command {
 	private final RankManager                rankManager;
 	private final GanglandDatabase           ganglandDatabase;
 	private final UserDataLoader             userDataLoader;
+	private final MailManager                mailManager;
 
 	public GangCommand(Gangland gangland,
 	                   @Qualifier("online") UserManager<Player> userManager,
@@ -63,7 +65,8 @@ public final class GangCommand extends Command {
 	                   MemberManager memberManager,
 	                   RankManager rankManager,
 	                   GanglandDatabase ganglandDatabase,
-	                   UserDataLoader userDataLoader
+	                   UserDataLoader userDataLoader,
+	                   MailManager mailManager
 	) {
 		super(gangland, "gang", true);
 
@@ -74,6 +77,7 @@ public final class GangCommand extends Command {
 		this.rankManager        = rankManager;
 		this.ganglandDatabase   = ganglandDatabase;
 		this.userDataLoader     = userDataLoader;
+		this.mailManager        = mailManager;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -101,7 +105,8 @@ public final class GangCommand extends Command {
 		Argument delete = new GangDeleteCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                        memberManager, gangManager, rankManager, ganglandDatabase);
 		GangInviteCommand addUser = new GangInviteCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
-		                                                  memberManager, gangManager, rankManager);
+		                                                  offlineUserManager, memberManager, gangManager, rankManager,
+		                                                  mailManager);
 		Argument acceptInvite = addUser.gangAccept();
 		Argument removeUser = new GangKickCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                          offlineUserManager, memberManager, gangManager, rankManager,
@@ -128,7 +133,7 @@ public final class GangCommand extends Command {
 		Argument description = new GangDescriptionCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                                  gangManager);
 		Argument ally = new GangAllyCommand(getGangland(), getArgumentTree(), getArgument(), userManager, memberManager,
-		                                    gangManager);
+		                                    gangManager, mailManager);
 		Argument display = new GangDisplayCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                          gangManager);
 		Argument color = new GangColorCommand(getGangland(), getArgumentTree(), getArgument(), userManager,

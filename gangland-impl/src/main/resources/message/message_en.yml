@@ -173,12 +173,34 @@ Commands:
          Target: "You were invited to join &8[&a%gang%&8]&7."
          Accept: "You have joined &8[&a%gang%&8]&7 gang."
          Joined: "&6%player%&7 joined the gang."
+         Accept_Multiple: "&eYou have %count% pending gang invites.&7 Use &e/glw gang accept <gang>&7 to pick — auto-selected &8[&e%gang%&8]&7."
+         No_Invite_From: "&7No pending gang invite from &8[&e%gang%&8]&7."
+         Pending:
+            None: "&7No pending invites from your gang."
+            Header: "&6&lPending invites&r &8(&e%count%&8):"
+            Entry: " &8- &b%player%"
+         Cancel:
+            None: "&7No pending invite to &6%player%&7 to cancel."
+            Sender: "Cancelled the invite to &6%player%&7."
+            Target: "Your gang invitation was cancelled."
+            Multiple: "&eYou have %count% outgoing pending invites.&7 Use &e/glw gang invite cancel <player>&7 to pick — auto-cancelled &6%player%&7."
       Ally:
          Send_Request: "Sent an alliance request to &8[&e%gang%&8]&7."
          Receive_Request: "Gang alliance was requested from &8[&e%gang%&8]&7."
          Accept_Request: "Gang alliance with &8[&e%gang%&8]&7 was &aaccepted&7."
          Reject_Request: "Gang alliance with &8[&e%gang%&8]&7 was &crejected&7."
          Abandon: "Gang alliance was abandoned with &8[&e%gang%&8]&7."
+         Accept_Multiple: "&eYou have %count% pending ally requests.&7 Use &e/glw gang ally accept <gang>&7 to pick — auto-selected &8[&e%gang%&8]&7."
+         Reject_Multiple: "&eYou have %count% pending ally requests.&7 Use &e/glw gang ally reject <gang>&7 to pick — auto-selected &8[&e%gang%&8]&7."
+         No_Request_From: "&7No pending ally request from &8[&e%gang%&8]&7."
+         Pending:
+            None: "&7No pending ally requests from your gang."
+            Header: "&6&lPending ally requests&r &8(&e%count%&8):"
+            Entry: " &8- &b%gang%"
+            Cancel:
+               None: "&7No pending ally request to that gang to cancel."
+               Sender: "Cancelled the ally request to &8[&e%gang%&8]&7."
+               Target: "&8[&e%gang%&8]&7 cancelled their ally request."
       Promote:
          Player_Success: "You have promoted &6%player%&7 to &e%rank%&7."
          Target_Success: "You have been promoted to &e%rank%&7."
@@ -559,8 +581,11 @@ Information:
    Prefix: "&8&l[&7Information&8&l]&7 "
    Gang:
       Request_Already_Sent: "Gang alliance to that gang is already sent!"
+      Invite_Already_Sent: "&6%player%&7 already has a pending invite from your gang."
       Already_Allied: "Already allied with that gang."
       Kicked: "You have been kicked from the gang!"
+   Mail:
+      Pending_Invites: "&7You have &e%count%&7 pending gang invite(s) — use &e/glw gang accept&7 to join."
    Turf:
       Contest_Start_Defender: "&c⚠ Your turf &f%turf%&c is being contested by &e%gang%&c!"
       Contest_Half_Defender: "&4⚠ &cCapture of &f%turf%&c is halfway done — defend it!"
