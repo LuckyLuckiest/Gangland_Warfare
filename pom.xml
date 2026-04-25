@@ -73,7 +73,7 @@
         <!-- Dependencies/Libraries versions -->
         <nbt.version>2.15.7</nbt.version>
         <xseries.version>13.6.0</xseries.version>
-        <anvilgui.version>1.10.11-SNAPSHOT</anvilgui.version>
+        <anvilgui.version>1.10.12-SNAPSHOT</anvilgui.version>
         <fastboard.version>2.1.5</fastboard.version>
         <viaversion.version>5.8.1</viaversion.version>
         <placeholderapi.version>2.12.2</placeholderapi.version>
@@ -146,6 +146,11 @@
         <repository>
             <id>viaversion-repo</id>
             <url>https://repo.viaversion.com</url>
+        </repository>
+
+        <repository>
+            <id>mvn-wesjd-net</id>
+            <url>https://mvn.wesjd.net/</url>
         </repository>
     </repositories>
 
