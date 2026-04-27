@@ -18,6 +18,7 @@ import me.luckyraven.database.GanglandDatabaseSettings;
 import me.luckyraven.gang.user.UserFactory;
 import me.luckyraven.inventory.InventoryHandler;
 import me.luckyraven.inventory.service.InventoryRegistry;
+import me.luckyraven.inventory.villager.VillagerInventoryRegistry;
 import me.luckyraven.persistence.FileHandler;
 import me.luckyraven.persistence.FileManager;
 import me.luckyraven.persistence.database.DatabaseManager;
@@ -75,6 +76,16 @@ public class KernelConfig {
 		InventoryRegistry registry = new InventoryRegistry();
 		InventoryHandler.setRegistry(registry);
 		return registry;
+	}
+
+	/**
+	 * Per-player tracker of open {@link me.luckyraven.inventory.villager.VillagerInventory} wrappers. Threaded into the
+	 * {@link me.luckyraven.inventory.villager.VillagerInventoryListener} and into every wrapper that needs to register
+	 * itself on open. Parallel to {@link InventoryRegistry} but for the native Bukkit merchant UI.
+	 */
+	@Bean
+	public VillagerInventoryRegistry villagerInventoryRegistry() {
+		return new VillagerInventoryRegistry();
 	}
 
 	/**

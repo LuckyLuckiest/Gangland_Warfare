@@ -25,7 +25,11 @@ auto-registration via the `DependencyContainer` scan.
 InventoryBuilder (record)
     ├── creates ──> InventoryHandler (core runtime object)
     ├── creates ──> MultiInventory (paginated variant)
-    
+
+MultiPanelInventory<S> (multi-screen flow host, builds on InventoryHandler)
+    ├── owns ──> Panel<S> registry + back-stack
+    ├── owns ──> typed FlowSession (survives panel swaps)
+
 InventoryHandler
     ├── registered in ──> InventoryRegistry (singleton, per-player tracking)
     ├── events routed by ──> InventoryClickHandler, InventoryCloseHandler, InventoryDragHandler
@@ -484,6 +488,115 @@ public interface InventoryOpener {
 
 The implementation in `gangland-impl` resolves the inventory name from the YAML-configured inventory map
 and opens it for the player.
+
+### Multi-Panel Flow (`me.luckyraven.inventory.flow`)
+
+`MultiPanelInventory<S>` is the seamless-flow enhancement layered on top of the in-place updates
+already provided by `InventoryHandler.rename()` and `MultiInventory.updateItems()`. Those swap
+*content* inside one fixed window; `MultiPanelInventory` keeps a single open window across a
+sequence of fully distinct screens (`Panel<S>`) — each with its own size, title, and slot layout —
+while threading one typed `FlowSession` through every screen.
+
+```
+MultiPanelInventory<S extends FlowSession> (host)
+    ├── owns ──> S session                             (typed payload, survives panel swaps)
+    ├── owns ──> Map<String, Panel<S>> panels          (registered screens)
+    ├── owns ──> Deque<String> backStack               (push on switchTo, pop on back)
+    ├── owns ──> InventoryHandler current              (rebuilt on size/title change)
+    ├── implements ──> Listener (InventoryCloseEvent)  (auto-cleanup on natural close)
+```
+
+#### Why it exists
+
+The legacy way to chain GUIs was `player.closeInventory(); next.open(player)`, which:
+
+- destroyed any in-flight session state between screens,
+- fired a real `InventoryCloseEvent`, so close-handlers had to be defensively guarded,
+- could not cleanly recover after an anvil/chat detour returned to the flow.
+
+`MultiPanelInventory` solves all three: the session is held by the host, swaps are wrapped in a
+`suppressClose()` latch, and side-effect detours have first-class `suspend()` / `resume()` hooks.
+
+#### Contracts
+
+```java
+public interface FlowSession { }   // marker — feature modules implement on their own session record
+
+public interface Panel<S extends FlowSession> {
+    int size(S session);
+
+    String title(S session);
+
+    void render(MultiPanelInventory<S> host, InventoryHandler handler, Player viewer, S session);
+}
+```
+
+#### Host API
+
+| Method                                                      | Purpose                                                                     |
+|-------------------------------------------------------------|-----------------------------------------------------------------------------|
+| `register(id, panel)`                                       | Register a panel under a string id. Returns `this` for chaining.            |
+| `openAt(id)`                                                | Open at the given panel; registers the close listener on first open.        |
+| `switchTo(id)`                                              | Push current panel onto the back-stack and switch.                          |
+| `back()`                                                    | Pop back-stack; calls `end()` if empty.                                     |
+| `rerender()`                                                | Re-run the current panel's render against the same handle.                  |
+| `suspend()` / `resume()`                                    | Bracket external UIs (anvil, chat) so the close listener no-ops.            |
+| `suppressClose()`                                           | True while switching or suspended — checked by the internal close listener. |
+| `end()`                                                     | Close the inventory, fire `onEnd`, unregister listener.                     |
+| `onEnd(Consumer<S>)`                                        | Register a teardown callback that runs once on flow end.                    |
+| `viewer()` / `session()` / `handler()` / `currentPanelId()` | Accessors for use inside `Panel.render`.                                    |
+
+#### Switch path — re-render vs. rebuild
+
+Bukkit fixes an inventory's size at construction, so `switchTo` chooses a path automatically:
+
+1. **Re-render in place** — when the target panel's `size(session)` and `title(session)` match the
+   current handle, the host calls `current.clear()` and `panel.render(...)`. No new inventory is
+   opened; the viewer's screen never flickers.
+2. **Rebuild** — when size or title differ, the host constructs a new `InventoryHandler`, renders
+   into it, and opens it for the viewer. The `switching` flag is held across the open call so the
+   `InventoryCloseEvent` Bukkit fires for the previous handle is treated as suppressed.
+
+#### Side-effect detours
+
+External UIs (AnvilGUI, chat-prompt, BarterView) fire their own close events when they take over the
+screen. Wrapping the detour with `suspend()` / `resume()` does two things: nulls out `current` so the
+incoming close event is a no-op, and forces the next `switchTo` after `resume()` to take the rebuild
+path (the old Bukkit handle is gone). Re-enter the flow from the side-effect's completion callback.
+
+```java
+flow.suspend();
+new AnvilGUI.Builder()
+        .onClick((slot, snapshot) -> {
+            flow.resume();
+            flow.session().setBidAmount(parse(snapshot.getText()));
+            flow.switchTo("buy");
+            return List.of(AnvilGUI.ResponseAction.close());
+        })
+        .open(player);
+```
+
+#### Example wiring
+
+```java
+public record TraderFlowSession(Trader trader, Player buyer, ...) implements FlowSession { }
+
+MultiPanelInventory<TraderFlowSession> flow =
+        new MultiPanelInventory<>(plugin, player, new TraderFlowSession(trader, player))
+                .register("menu", new TraderMenuPanel())
+                .register("buy", new TraderBuyPanel())
+                .register("barter", new TraderBarterPanel())
+                .onEnd(session -> trader.releaseHold(session.buyer()));
+
+flow.openAt("menu");
+```
+
+Inside a panel's `render`, slot click handlers drive navigation:
+
+```java
+handler.setItem(13, buyButton, false, (p, inv, item) -> flow.switchTo("buy"));
+handler.setItem(22, backButton, false, (p, inv, item) -> flow.back());
+```
 
 ---
 

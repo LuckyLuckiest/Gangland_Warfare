@@ -14,6 +14,7 @@ import me.luckyraven.core.color.Color;
 import me.luckyraven.core.color.ColorUtil;
 import me.luckyraven.core.color.MaterialType;
 import me.luckyraven.core.datastructure.JsonFormatter;
+import me.luckyraven.core.utilities.ChatUtil;
 import me.luckyraven.data.permission.PermissionManager;
 import me.luckyraven.data.placeholder.worker.GanglandPlaceholder;
 import me.luckyraven.data.teleportation.Waypoint;
@@ -28,11 +29,15 @@ import me.luckyraven.gang.rank.RankManager;
 import me.luckyraven.gang.user.User;
 import me.luckyraven.gang.user.UserManager;
 import me.luckyraven.inventory.InventoryHandler;
+import me.luckyraven.inventory.flow.MultiPanelInventory;
 import me.luckyraven.inventory.multi.ListEntry;
 import me.luckyraven.inventory.multi.MultiInventory;
 import me.luckyraven.inventory.multi.MultiInventoryCreation;
 import me.luckyraven.inventory.part.ButtonTags;
 import me.luckyraven.inventory.part.Fill;
+import me.luckyraven.inventory.villager.VillagerInventory;
+import me.luckyraven.inventory.villager.VillagerInventoryRegistry;
+import me.luckyraven.inventory.villager.VillagerTrade;
 import me.luckyraven.weapon.Weapon;
 import me.luckyraven.weapon.WeaponManager;
 import net.wesjd.anvilgui.AnvilGUI;
@@ -50,15 +55,16 @@ import java.util.*;
 @CommandHandler
 public final class DebugCommand extends Command {
 
-	private final UserManager<Player> userManager;
-	private final GangManager         gangManager;
-	private final MemberManager       memberManager;
-	private final RankManager         rankManager;
-	private final WaypointManager     waypointManager;
-	private final PermissionManager   permissionManager;
-	private final WeaponManager       weaponManager;
-	private final GanglandPlaceholder placeholder;
-	private final CommandManager      commandManager;
+	private final UserManager<Player>       userManager;
+	private final GangManager               gangManager;
+	private final MemberManager             memberManager;
+	private final RankManager               rankManager;
+	private final WaypointManager           waypointManager;
+	private final PermissionManager         permissionManager;
+	private final WeaponManager             weaponManager;
+	private final GanglandPlaceholder       placeholder;
+	private final CommandManager            commandManager;
+	private final VillagerInventoryRegistry villagerRegistry;
 
 	public DebugCommand(Gangland gangland,
 	                    @Qualifier("online") UserManager<Player> userManager,
@@ -69,7 +75,8 @@ public final class DebugCommand extends Command {
 	                    PermissionManager permissionManager,
 	                    WeaponManager weaponManager,
 	                    GanglandPlaceholder placeholder,
-	                    CommandManager commandManager) {
+	                    CommandManager commandManager,
+	                    VillagerInventoryRegistry villagerRegistry) {
 		super(gangland, "debug", false);
 
 		this.userManager       = userManager;
@@ -81,6 +88,7 @@ public final class DebugCommand extends Command {
 		this.weaponManager     = weaponManager;
 		this.placeholder       = placeholder;
 		this.commandManager    = commandManager;
+		this.villagerRegistry  = villagerRegistry;
 	}
 
 	@Override
@@ -109,6 +117,9 @@ public final class DebugCommand extends Command {
 
 		// anvil gui
 		Argument anvil = getAnvil();
+
+		// villager merchant gui
+		Argument villager = getVillagerTest();
 
 		// permissions list
 		Argument perm = getPerm();
@@ -159,6 +170,7 @@ public final class DebugCommand extends Command {
 		arguments.add(waypointData);
 		arguments.add(multiInv);
 		arguments.add(anvil);
+		arguments.add(villager);
 		arguments.add(perm);
 		arguments.add(settingOptions);
 		arguments.add(placeholder);
@@ -323,6 +335,48 @@ public final class DebugCommand extends Command {
 				sender.sendMessage("How will you view the anvil inventory?");
 			}
 		});
+	}
+
+	private @NotNull Argument getVillagerTest() {
+		return new Argument(getGangland(), "villager", getArgumentTree(), (argument, sender, args) -> {
+			if (!(sender instanceof Player player)) {
+				sender.sendMessage("How will you see the inventory?");
+				return;
+			}
+
+			VillagerDebugPanel         panel   = new VillagerDebugPanel(this::openDebugVillager);
+			VillagerDebugPanel.Session session = new VillagerDebugPanel.Session();
+
+			MultiPanelInventory<VillagerDebugPanel.Session> host =
+					new MultiPanelInventory<>(getGangland(), player, session);
+			host.register("main", panel);
+			host.openAt("main");
+		});
+	}
+
+	private void openDebugVillager(Player player) {
+		VillagerInventory vi = new VillagerInventory(villagerRegistry, "&6&lDebug Trader");
+
+		vi.addTrade(VillagerTrade.of(
+				new ItemStack(Material.DIAMOND),
+				new ItemStack(Material.EMERALD, 1),
+				9999,
+				p -> p.sendMessage(ChatUtil.color("&aBought a diamond for 1 emerald."))));
+
+		vi.addTrade(VillagerTrade.of(
+				new ItemStack(Material.BREAD),
+				new ItemStack(Material.WHEAT, 2),
+				9999,
+				p -> p.sendMessage(ChatUtil.color("&aBought bread for 2 wheat."))));
+
+		vi.addTrade(VillagerTrade.of(
+				new ItemStack(Material.GOLDEN_APPLE),
+				new ItemStack(Material.GOLD_INGOT, 4),
+				new ItemStack(Material.APPLE, 1),
+				9999,
+				p -> p.sendMessage(ChatUtil.color("&aBought a golden apple."))));
+
+		vi.open(player);
 	}
 
 	private @NotNull Argument getPerm() {
