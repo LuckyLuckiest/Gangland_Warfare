@@ -73,6 +73,7 @@ public class Gang {
 		this.color       = Color.LIGHT_BLUE.name();
 		this.description = "Conquering the hood";
 		this.created     = Instant.now().toEpochMilli();
+		this.state       = State.OPEN;
 	}
 
 	public static int generateId() {

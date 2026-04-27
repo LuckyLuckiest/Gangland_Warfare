@@ -23,12 +23,14 @@ public class GangTable extends Table<Gang> {
 		Attribute<Double>  bounty             = new Attribute<>("bounty", false, Double.class);
 		Attribute<Long>    created            = new Attribute<>("created", false, Long.class);
 		Attribute<Long>    lastMemberOnlineAt = new Attribute<>("last_member_online_at", false, Long.class);
+		Attribute<String>  state              = new Attribute<>("state", false, String.class);
 
 		balance.setDefaultValue(0D);
 		level.setDefaultValue(0);
 		experience.setDefaultValue(0D);
 		bounty.setDefaultValue(0D);
 		lastMemberOnlineAt.setDefaultValue(0L);
+		state.setDefaultValue(Gang.State.OPEN.name());
 
 		this.addAttribute(id);
 		this.addAttribute(name);
@@ -41,6 +43,7 @@ public class GangTable extends Table<Gang> {
 		this.addAttribute(bounty);
 		this.addAttribute(created);
 		this.addAttribute(lastMemberOnlineAt);
+		this.addAttribute(state);
 	}
 
 	@Override
@@ -48,7 +51,7 @@ public class GangTable extends Table<Gang> {
 		return new Object[]{data.getId(), data.getName(), data.getDisplayName(), data.getDescription(), data.getColor(),
 		                    data.getEconomy().getAmount().doubleValue(), data.getLevel().getLevelValue(),
 		                    data.getLevel().getExperience(), data.getBounty().getAmount().doubleValue(),
-		                    data.getCreated(), data.getLastMemberOnlineAt()};
+		                    data.getCreated(), data.getLastMemberOnlineAt(), data.getState().name()};
 	}
 
 	@Override

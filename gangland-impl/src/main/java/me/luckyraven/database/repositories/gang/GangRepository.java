@@ -45,7 +45,8 @@ public class GangRepository extends AbstractRepository<Gang> {
 			double experience         = (double) result[v++];
 			double bounty             = (double) result[v++];
 			long   created            = (long) result[v++];
-			long   lastMemberOnlineAt = (long) result[v];
+			long   lastMemberOnlineAt = (long) result[v++];
+			String state              = String.valueOf(result[v]);
 
 			Gang gang = new Gang(id);
 
@@ -59,6 +60,7 @@ public class GangRepository extends AbstractRepository<Gang> {
 			gang.getBounty().setAmount(Currency.of(bounty));
 			gang.setCreated(created);
 			gang.setLastMemberOnlineAt(lastMemberOnlineAt);
+			gang.setState(parseState(state));
 
 			gangs.add(gang);
 		}
@@ -69,6 +71,17 @@ public class GangRepository extends AbstractRepository<Gang> {
 	@Override
 	protected <E> Consumer<E> processSave() {
 		return null;
+	}
+
+	private Gang.State parseState(String raw) {
+		if (raw == null || raw.equals("null")) {
+			return Gang.State.OPEN;
+		}
+		try {
+			return Gang.State.valueOf(raw);
+		} catch (IllegalArgumentException ignored) {
+			return Gang.State.OPEN;
+		}
 	}
 
 	@Override
