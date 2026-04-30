@@ -1,6 +1,6 @@
 package files;
 
-import me.luckyraven.Gangland;
+import org.luckyraven.gangland.Gangland;
 
 import java.io.File;
 import java.io.IOException;

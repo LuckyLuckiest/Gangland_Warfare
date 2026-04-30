@@ -2,7 +2,7 @@
 
 ## Overview
 
-The gadget system lives in the `gangland-features/gangland-gadget` module (`me.luckyraven.gadget`) and
+The gadget system lives in the `gangland-features/gangland-gadget` module (`org.luckyraven.gangland.gadget`) and
 provides three major subsystems:
 
 | Subsystem   | Classes | Purpose                                       |
@@ -83,7 +83,7 @@ world. Cars are backed by Minecart entities with custom velocity-based movement 
 
 ### Car (data model)
 
-**File:** `me.luckyraven.gadget.car.Car`
+**File:** `car.gadget.org.luckyraven.gangland.Car`
 
 Immutable `@Builder` value object holding a car type's configuration. Built by `CarAddon` from
 `cars.yml`.
@@ -126,7 +126,7 @@ public enum CarKey {
 
 ### CarManager
 
-**File:** `me.luckyraven.gadget.car.CarManager`
+**File:** `car.gadget.org.luckyraven.gangland.CarManager`
 
 Simple `Map<String, Car>` registry. Subclassed by `CarAddon` which loads from YAML.
 
@@ -139,7 +139,7 @@ Simple `Map<String, Car>` registry. Subclassed by `CarAddon` which loads from YA
 
 ### CarAddon (config loader)
 
-**File:** `me.luckyraven.gadget.car.config.CarAddon`
+**File:** `config.car.gadget.org.luckyraven.gangland.CarAddon`
 
 Extends `CarManager`. Reads `cars.yml` via `FileManager` and constructs `Car` objects.
 
@@ -171,7 +171,7 @@ sports_car:
 
 ### CarService (core lifecycle API)
 
-**File:** `me.luckyraven.gadget.car.CarService` ── 659 lines
+**File:** `car.gadget.org.luckyraven.gangland.CarService` ── 659 lines
 
 The central API for the car system. Manages the full vehicle lifecycle:
 
@@ -227,7 +227,7 @@ Stored on the Minecart entity for crash recovery:
 
 ### VehicleEntity (interface)
 
-**File:** `me.luckyraven.gadget.car.vehicle.entity.VehicleEntity`
+**File:** `entity.vehicle.car.gadget.org.luckyraven.gangland.VehicleEntity`
 
 Abstraction over the underlying Bukkit entity used to represent a drivable car.
 
@@ -257,7 +257,7 @@ public interface VehicleEntity {
 
 ### MinecartVehicle (entity wrapper)
 
-**File:** `me.luckyraven.gadget.car.vehicle.entity.MinecartVehicle`
+**File:** `entity.vehicle.car.gadget.org.luckyraven.gangland.MinecartVehicle`
 
 Implements `VehicleEntity` using a `Minecart` as the host entity. Key behaviors:
 
@@ -288,7 +288,7 @@ preserved from the entity's current velocity so gravity still works.
 
 ### VehicleSession (driver state)
 
-**File:** `me.luckyraven.gadget.car.vehicle.VehicleSession` ── 151 lines
+**File:** `vehicle.car.gadget.org.luckyraven.gangland.VehicleSession` ── 151 lines
 
 Represents an active driving session. Created when a player mounts a car, destroyed on park/destroy.
 
@@ -328,7 +328,7 @@ Represents an active driving session. Created when a player mounts a car, destro
 
 ### VehicleMovementTask (tick-based physics)
 
-**File:** `me.luckyraven.gadget.car.vehicle.VehicleMovementTask` ── 195 lines
+**File:** `vehicle.car.gadget.org.luckyraven.gangland.VehicleMovementTask` ── 195 lines
 
 Extends `BukkitRunnable`, scheduled at `runTaskTimer(plugin, 1L, 1L)` (every tick = 50ms).
 
@@ -411,7 +411,7 @@ Moves speed toward zero without overshooting.
 
 ### VehicleInputInterceptor (packet-level input)
 
-**File:** `me.luckyraven.gadget.car.vehicle.packet.VehicleInputInterceptor` -- 157 lines
+**File:** `packet.vehicle.car.gadget.org.luckyraven.gangland.VehicleInputInterceptor` -- 157 lines
 
 A Netty `ChannelInboundHandlerAdapter` injected into the player's pipeline at the
 `"packet_handler"` position under the name `"gangland_vehicle_input"`.
@@ -440,7 +440,7 @@ reads happen on the main server thread.
 
 ### VehicleRegistry
 
-**File:** `me.luckyraven.gadget.car.vehicle.VehicleRegistry`
+**File:** `vehicle.car.gadget.org.luckyraven.gangland.VehicleRegistry`
 
 Dual-index `ConcurrentHashMap` registry tracking all active sessions:
 
@@ -461,7 +461,7 @@ Dual-index `ConcurrentHashMap` registry tracking all active sessions:
 
 ### ParkedVehicle (in-world idle state)
 
-**File:** `me.luckyraven.gadget.car.vehicle.ParkedVehicle`
+**File:** `vehicle.car.gadget.org.luckyraven.gangland.ParkedVehicle`
 
 In-memory representation of a placed-but-not-driven car. Holds a reference to the live
 `VehicleEntity` plus serializable state (fuel, durability, placer UUID, exhaust side).
@@ -474,7 +474,7 @@ In-memory representation of a placed-but-not-driven car. Holds a reference to th
 
 ### ParkedCar (database record)
 
-**File:** `me.luckyraven.gadget.car.ParkedCar`
+**File:** `car.gadget.org.luckyraven.gangland.ParkedCar`
 
 Pure data record persisted via `IRepository<ParkedCar>`. Contains only serializable fields -- no
 live entity references.
@@ -511,7 +511,7 @@ sessions. Controls which side(s) exhaust particles spawn from.
 
 ### GadgetPhysicsConfig (interface)
 
-**File:** `me.luckyraven.gadget.config.GadgetPhysicsConfig`
+**File:** `config.gadget.org.luckyraven.gangland.GadgetPhysicsConfig`
 
 Contract interface for physics constants loaded from `settings.yml`. The implementation lives in
 `gangland-impl` (never imported directly from feature modules per project convention).
@@ -564,7 +564,7 @@ anti-cheat kick.
 
 ### JetpackService (lifecycle manager)
 
-**File:** `me.luckyraven.gadget.jetpack.JetpackService` -- 166 lines
+**File:** `jetpack.gadget.org.luckyraven.gangland.JetpackService` -- 166 lines
 
 | Method                            | Description                                                                                                                 |
 |-----------------------------------|-----------------------------------------------------------------------------------------------------------------------------|
@@ -578,7 +578,7 @@ anti-cheat kick.
 
 ### JetpackSession (per-player state)
 
-**File:** `me.luckyraven.gadget.jetpack.JetpackSession`
+**File:** `jetpack.gadget.org.luckyraven.gangland.JetpackSession`
 
 | Field             | Type             | Description                                  |
 |-------------------|------------------|----------------------------------------------|
@@ -597,7 +597,7 @@ anti-cheat kick.
 
 ### JetpackTask (tick-based physics)
 
-**File:** `me.luckyraven.gadget.jetpack.JetpackTask` -- 232 lines
+**File:** `jetpack.gadget.org.luckyraven.gangland.JetpackTask` -- 232 lines
 
 Extends `BukkitRunnable`, runs every tick (50ms). All physics constants sourced from
 `GadgetPhysicsConfig`.
@@ -724,7 +724,7 @@ Plays flight sounds every 10 ticks:
 
 ### JetpackInputInterceptor (packet capture)
 
-**File:** `me.luckyraven.gadget.jetpack.packet.JetpackInputInterceptor`
+**File:** `packet.jetpack.gadget.org.luckyraven.gangland.JetpackInputInterceptor`
 
 Netty handler named `"gangland_jetpack_input"`. Same architecture as `VehicleInputInterceptor` but
 captures additional keys:
@@ -747,7 +747,7 @@ float accessors), plus `jump()` / `jumping()` and `shift()` / `shiftKeyDown()`.
 
 ### FuelService (runtime API)
 
-**File:** `me.luckyraven.gadget.fuel.FuelService` -- 261 lines
+**File:** `fuel.gadget.org.luckyraven.gangland.FuelService` -- 261 lines
 
 Central fuel operations API. Manages a registry of `Fuel` definitions and provides methods to
 consume, add, and query fuel from items in player inventories.
@@ -793,7 +793,7 @@ These read/write fuel directly from the player's equipped chestplate (used by je
 
 ### Fuel Data Model (gangland-item module)
 
-The `Fuel` class lives in `gangland-item` (`me.luckyraven.item.fuel.Fuel`). It is a `@Builder` data
+The `Fuel` class lives in `gangland-item` (`fuel.item.org.luckyraven.gangland.Fuel`). It is a `@Builder` data
 object plus static NBT helpers.
 
 **FuelKey NBT constants:**
@@ -816,7 +816,7 @@ object plus static NBT helpers.
 
 ### FuelBar (action bar display)
 
-**File:** `me.luckyraven.item.fuel.FuelBar`
+**File:** `fuel.item.org.luckyraven.gangland.FuelBar`
 
 Renders a 20-segment fuel gauge for the action bar:
 
@@ -830,12 +830,11 @@ Used by `VehicleMovementTask`, `JetpackTask`, `FuelHoldDisplayListener`, and
 
 ---
 
-
 ## Wearable System
 
 ### WearableAddon (config loader)
 
-**File:** `me.luckyraven.gadget.wearable.WearableAddon`
+**File:** `wearable.gadget.org.luckyraven.gangland.WearableAddon`
 
 Extends `WearableService`. Reads `wearables.yml` via `FileManager` and constructs `Wearable`
 objects. Each wearable can optionally include a Jetpack section.

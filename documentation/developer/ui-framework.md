@@ -4,13 +4,13 @@
 
 The Gangland Warfare UI framework is composed of five independent modules under `gangland-ui/`:
 
-| Module           | Package                    | Classes | Purpose                                    |
-|------------------|----------------------------|---------|--------------------------------------------|
-| `inventory-api`  | `me.luckyraven.inventory`  | ~37     | Custom inventory GUIs with click handlers  |
-| `scoreboard-api` | `me.luckyraven.scoreboard` | ~8      | Per-player sidebar scoreboards             |
-| `sign-api`       | `me.luckyraven.sign`       | ~25     | Interactive sign placement and interaction |
-| `lootchest-api`  | `me.luckyraven.lootchest`  | ~35     | Loot chest sessions with cracking minigame |
-| `hologram-api`   | `me.luckyraven.hologram`   | 3       | Floating text via invisible armor stands   |
+| Module           | Package                              | Classes | Purpose                                    |
+|------------------|--------------------------------------|---------|--------------------------------------------|
+| `inventory-api`  | `org.luckyraven.gangland.inventory`  | ~37     | Custom inventory GUIs with click handlers  |
+| `scoreboard-api` | `org.luckyraven.gangland.scoreboard` | ~8      | Per-player sidebar scoreboards             |
+| `sign-api`       | `org.luckyraven.gangland.sign`       | ~25     | Interactive sign placement and interaction |
+| `lootchest-api`  | `org.luckyraven.gangland.lootchest`  | ~35     | Loot chest sessions with cracking minigame |
+| `hologram-api`   | `org.luckyraven.gangland.hologram`   | 3       | Floating text via invisible armor stands   |
 
 All modules are event-driven using Bukkit listeners. Listeners are annotated with `@ListenerHandler` for
 auto-registration via the `DependencyContainer` scan.
@@ -489,7 +489,7 @@ public interface InventoryOpener {
 The implementation in `gangland-impl` resolves the inventory name from the YAML-configured inventory map
 and opens it for the player.
 
-### Multi-Panel Flow (`me.luckyraven.inventory.flow`)
+### Multi-Panel Flow (`org.luckyraven.gangland.inventory.flow`)
 
 `MultiPanelInventory<S>` is the seamless-flow enhancement layered on top of the in-place updates
 already provided by `InventoryHandler.rename()` and `MultiInventory.updateItems()`. Those swap
@@ -523,11 +523,11 @@ The legacy way to chain GUIs was `player.closeInventory(); next.open(player)`, w
 public interface FlowSession { }   // marker — feature modules implement on their own session record
 
 public interface Panel<S extends FlowSession> {
-    int size(S session);
+	int size(S session);
 
-    String title(S session);
+	String title(S session);
 
-    void render(MultiPanelInventory<S> host, InventoryHandler handler, Player viewer, S session);
+	void render(MultiPanelInventory<S> host, InventoryHandler handler, Player viewer, S session);
 }
 ```
 
@@ -566,14 +566,28 @@ path (the old Bukkit handle is gone). Re-enter the flow from the side-effect's c
 
 ```java
 flow.suspend();
-new AnvilGUI.Builder()
-        .onClick((slot, snapshot) -> {
-            flow.resume();
-            flow.session().setBidAmount(parse(snapshot.getText()));
-            flow.switchTo("buy");
-            return List.of(AnvilGUI.ResponseAction.close());
-        })
-        .open(player);
+new AnvilGUI.
+
+Builder()
+        .
+
+onClick((slot, snapshot) ->{
+		flow.
+
+resume();
+            flow.
+
+session().
+
+setBidAmount(parse(snapshot.getText()));
+		flow.
+
+switchTo("buy");
+            return List.
+
+of(AnvilGUI.ResponseAction.close());
+		})
+		.open(player);
 ```
 
 #### Example wiring
@@ -582,20 +596,28 @@ new AnvilGUI.Builder()
 public record TraderFlowSession(Trader trader, Player buyer, ...) implements FlowSession { }
 
 MultiPanelInventory<TraderFlowSession> flow =
-        new MultiPanelInventory<>(plugin, player, new TraderFlowSession(trader, player))
-                .register("menu", new TraderMenuPanel())
-                .register("buy", new TraderBuyPanel())
-                .register("barter", new TraderBarterPanel())
-                .onEnd(session -> trader.releaseHold(session.buyer()));
+		new MultiPanelInventory<>(plugin, player, new TraderFlowSession(trader, player))
+				.register("menu", new TraderMenuPanel())
+				.register("buy", new TraderBuyPanel())
+				.register("barter", new TraderBarterPanel())
+				.onEnd(session -> trader.releaseHold(session.buyer()));
 
-flow.openAt("menu");
+flow.
+
+openAt("menu");
 ```
 
 Inside a panel's `render`, slot click handlers drive navigation:
 
 ```java
-handler.setItem(13, buyButton, false, (p, inv, item) -> flow.switchTo("buy"));
-handler.setItem(22, backButton, false, (p, inv, item) -> flow.back());
+handler.setItem(13,buyButton, false,(p, inv, item) ->flow.
+
+switchTo("buy"));
+		handler.
+
+setItem(22,backButton, false,(p, inv, item) ->flow.
+
+back());
 ```
 
 ---

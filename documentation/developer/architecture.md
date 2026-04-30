@@ -10,8 +10,8 @@ Gangland Warfare is a multi-module Spigot plugin built on Java 21. It uses a Spr
 (`BeanFactory` + `@Configuration` classes) for phased bootstrap and dependency injection, and relies on
 an event-driven architecture with a generic repository persistence layer.
 
-**Entry Point:** `me.luckyraven.Gangland` (extends `JavaPlugin`)  
-**Primary Package:** `me.luckyraven`  
+**Entry Point:** `org.luckyraven.gangland.Gangland` (extends `JavaPlugin`)  
+**Primary Package:** `org.luckyraven.gangland`  
 **Build Output:** `gangland-build` (shaded JAR)
 
 ---
@@ -62,7 +62,7 @@ Server Start
     │     ╰── context.bootstrap()
     │           ├── Install FILE phase hook (FileManager.initializeAll() per bean)
     │           ├── Install DATABASE phase hook (publish repos to container)
-    │           ├── Scan me.luckyraven.config for @Configuration classes
+    │           ├── Scan org.luckyraven.gangland.config for @Configuration classes
     │           ├── BeanFactory.instantiate()
     │           │     ├── KERNEL phase   → version, compatibility, permissions, files, DB, scoreboard
     │           │     ├── FILE phase     → Settings, addons, file initializers (staged loading)
@@ -87,7 +87,7 @@ Server Start
 ## Bean Bootstrap Pipeline
 
 The `GanglandContext.bootstrap()` method drives the entire plugin setup. `BeanFactory` discovers
-`@Configuration` classes in `me.luckyraven.config`, collects their `@Bean` methods, topologically
+`@Configuration` classes in `org.luckyraven.gangland.config`, collects their `@Bean` methods, topologically
 sorts them per phase, and invokes each exactly once. The result is registered as a singleton in
 the shared `DependencyContainer`.
 
@@ -121,10 +121,10 @@ Two hooks are installed before `BeanFactory.instantiate()` runs:
 
 After all bean phases complete, `GanglandContext` runs two final phases:
 
-1. **Listeners:** Pulls `ListenerManager` from the container, scans `me.luckyraven` for
+1. **Listeners:** Pulls `ListenerManager` from the container, scans `org.luckyraven.gangland` for
    `@ListenerHandler` classes, instantiates each via constructor injection, and registers
    with Bukkit's event system
-2. **Commands:** Pulls `CommandManager` from the container, scans `me.luckyraven.command.sub`
+2. **Commands:** Pulls `CommandManager` from the container, scans `org.luckyraven.gangland.command.sub`
    for `@CommandHandler` classes, instantiates each via constructor injection, and binds
    the executor to the `/glw` `PluginCommand`
 

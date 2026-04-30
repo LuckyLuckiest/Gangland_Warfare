@@ -11,7 +11,7 @@ parsing, unique items with controlled inventory behavior, a fuel system for gadg
 with trait-based damage reduction.
 
 **Module:** `gangland-item`  
-**Package:** `me.luckyraven.item.*`
+**Package:** `org.luckyraven.gangland.item.*`
 
 ---
 

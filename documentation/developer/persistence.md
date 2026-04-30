@@ -26,7 +26,7 @@ Key characteristics:
 
 ```
 plugin-persistence
-  me.luckyraven.persistence
+  org.luckyraven.gangland.persistence
     ├── database
     │   ├── component       # Table, Attribute, AttributeLink
     │   ├── query           # QueryBuilder, Column
@@ -47,7 +47,7 @@ plugin-persistence
     ╰── FolderLoader.java
 
 gangland-impl
-  me.luckyraven.database
+  org.luckyraven.gangland.database
     ├── GanglandDatabase.java
     ├── GanglandDatabaseSettings.java
     ├── tables/          # Concrete Table<T> definitions
@@ -173,7 +173,7 @@ public class RepositoryRegistry {
 
 #### Auto-discovery flow
 
-`scanAndRegisterRepositories("me.luckyraven.database.repositories")` performs:
+`scanAndRegisterRepositories("org.luckyraven.gangland.database.repositories")` performs:
 
 1. **Scan** -- Uses `ReflectionUtil.findClasses()` to find all classes under the package.
 2. **Filter** -- Keeps only classes annotated with `@Repository` that implement `IRepository`.
@@ -529,7 +529,7 @@ public @interface AttributeLink {
 
 ### Concrete Tables
 
-All table classes are in `gangland-impl` under `me.luckyraven.database.tables.*`.
+All table classes are in `gangland-impl` under `org.luckyraven.gangland.database.tables.*`.
 
 | Table Class            | DB Table Name      | Entity Type                     | Key Columns                                                                                                                    |
 |------------------------|--------------------|---------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -583,7 +583,7 @@ Tables with no foreign keys (can be created first): `user`, `gang`, `rank_tree`,
 
 ## Concrete Repositories
 
-All repository classes are in `gangland-impl` under `me.luckyraven.database.repositories.*`.
+All repository classes are in `gangland-impl` under `org.luckyraven.gangland.database.repositories.*`.
 
 | Repository                  | Entity Type       | Table Dependency                                  |
 |-----------------------------|-------------------|---------------------------------------------------|
@@ -865,11 +865,11 @@ public abstract class FolderLoader extends FileLoader<FileHandler> {
 Create a `Table<T>` subclass in `gangland-impl/src/main/java/me/luckyraven/database/tables/`.
 
 ```java
-package me.luckyraven.database.tables.example;
+package org.luckyraven.gangland.database.tables.example;
 
-import me.luckyraven.data.example.Bounty;
-import me.luckyraven.persistence.database.component.Attribute;
-import me.luckyraven.persistence.database.component.Table;
+import org.luckyraven.gangland.data.example.Bounty;
+import component.database.persistence.org.luckyraven.gangland.Attribute;
+import component.database.persistence.org.luckyraven.gangland.Table;
 
 import java.sql.Types;
 import java.util.Map;
@@ -944,15 +944,15 @@ public class BountyTable extends Table<Bounty> {
 Create an `AbstractRepository<T>` subclass in `gangland-impl/src/main/java/me/luckyraven/database/repositories/`.
 
 ```java
-package me.luckyraven.database.repositories.example;
+package org.luckyraven.gangland.database.repositories.example;
 
-import me.luckyraven.data.example.Bounty;
-import me.luckyraven.database.tables.example.BountyTable;
-import me.luckyraven.persistence.database.Database;
-import me.luckyraven.persistence.database.DatabaseHandler;
-import me.luckyraven.persistence.database.component.Table;
-import me.luckyraven.persistence.repository.AbstractRepository;
-import me.luckyraven.persistence.repository.Repository;
+import org.luckyraven.gangland.data.example.Bounty;
+import org.luckyraven.gangland.database.tables.example.BountyTable;
+import database.persistence.org.luckyraven.gangland.Database;
+import database.persistence.org.luckyraven.gangland.DatabaseHandler;
+import component.database.persistence.org.luckyraven.gangland.Table;
+import repository.persistence.org.luckyraven.gangland.AbstractRepository;
+import repository.persistence.org.luckyraven.gangland.Repository;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.SQLException;
@@ -1054,7 +1054,7 @@ To only register a repository when a feature is enabled:
 
 ```java
 
-@Repository(value = Bounty.class, condition = "me.luckyraven.file.configuration.SettingAddon.isBountyEnabled()")
+@Repository(value = Bounty.class, condition = "org.luckyraven.gangland.file.configuration.SettingAddon.isBountyEnabled()")
 public class BountyRepository extends AbstractRepository<Bounty> {
 	// ...
 }

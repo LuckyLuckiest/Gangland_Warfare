@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>me.luckyraven</groupId>
+        <groupId>org.luckyraven</groupId>
         <artifactId>gangland_warfare</artifactId>
         <version>${revision}</version>
         <relativePath>../../pom.xml</relativePath>
@@ -34,7 +34,7 @@
 
         <!-- Core Module -->
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>gangland-impl</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

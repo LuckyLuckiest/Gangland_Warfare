@@ -1,0 +1,324 @@
+package org.luckyraven.gangland.listener.player;
+
+import net.citizensnpcs.api.CitizensAPI;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
+import org.luckyraven.gangland.Gangland;
+import org.luckyraven.gangland.command.sub.RespawnCommand;
+import org.luckyraven.gangland.core.bean.Qualifier;
+import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
+import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
+import org.luckyraven.gangland.core.downed.PlayerUndownedEvent;
+import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.gangland.core.utilities.TimeUtil;
+import org.luckyraven.gangland.data.teleportation.IllegalTeleportException;
+import org.luckyraven.gangland.data.teleportation.Waypoint;
+import org.luckyraven.gangland.data.teleportation.WaypointManager;
+import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.gangland.gadget.jetpack.JetpackService;
+import org.luckyraven.gangland.gang.user.User;
+import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.util.TimeMessages;
+
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+@ListenerHandler
+public class CustomPlayerDeathListener implements Listener {
+
+	/**
+	 * Minimum health set when a player is downed — keeps them alive server-side.
+	 */
+	private static final double DOWNED_HEALTH = 0.5;
+
+	/**
+	 * Static reference so {@link RespawnCommand} can reach this instance.
+	 */
+	private static CustomPlayerDeathListener instance;
+
+	private final Gangland              gangland;
+	private final UserManager<Player>   userManager;
+	private final WaypointManager       waypointManager;
+	private final JetpackService        jetpackService;
+	private final Map<UUID, BukkitTask> respawnTasks   = new ConcurrentHashMap<>();
+	private final Map<UUID, GameMode>   savedGameModes = new ConcurrentHashMap<>();
+
+	public CustomPlayerDeathListener(Gangland gangland,
+	                                 @Qualifier("online") UserManager<Player> userManager,
+	                                 WaypointManager waypointManager,
+	                                 JetpackService jetpackService) {
+		this.gangland        = gangland;
+		this.userManager     = userManager;
+		this.waypointManager = waypointManager;
+		this.jetpackService  = jetpackService;
+		instance             = this;
+	}
+
+	public static void triggerManualRespawn(Player player) {
+		if (instance == null) return;
+		instance.performRespawn(player);
+	}
+
+	/**
+	 * Intercepts lethal damage before the player actually dies. When the hit would reduce health to or below the
+	 * configured threshold, the damage is canceled and the player enters the downed state instead.
+	 */
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onEntityDamage(EntityDamageEvent event) {
+		if (!Settings.isRespawnEnabled()) return;
+		if (!(event.getEntity() instanceof Player player)) return;
+
+		// Citizens NPCs with PLAYER entity type are instanceof Player — they must die normally.
+		if (CitizensAPI.getNPCRegistry().isNPC(player)) return;
+
+		UUID uuid = player.getUniqueId();
+
+		// Already downed — absorb all further damage until they respawn.
+		if (DownedPlayerRegistry.isDowned(uuid)) {
+			event.setCancelled(true);
+			return;
+		}
+
+		double resultHealth = player.getHealth() - event.getFinalDamage();
+		if (resultHealth <= 0) {
+			event.setCancelled(true);
+			player.setHealth(DOWNED_HEALTH);
+			// Mark as downed immediately so any damage in the 1-tick scheduler delay is absorbed.
+			DownedPlayerRegistry.add(uuid);
+			// Delay 1 tick so the cancelled damage is fully processed first.
+			Bukkit.getScheduler().runTaskLater(gangland, () -> enterDownedState(player), 1L);
+		}
+	}
+
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onPlayerQuit(PlayerQuitEvent event) {
+		cleanup(event.getPlayer().getUniqueId());
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+	public void onPlayerInteract(PlayerInteractEvent event) {
+		if (DownedPlayerRegistry.isDowned(event.getPlayer().getUniqueId())) {
+			event.setCancelled(true);
+		}
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+	public void onBlockBreak(BlockBreakEvent event) {
+		if (DownedPlayerRegistry.isDowned(event.getPlayer().getUniqueId())) {
+			event.setCancelled(true);
+		}
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+	public void onBlockPlace(BlockPlaceEvent event) {
+		if (DownedPlayerRegistry.isDowned(event.getPlayer().getUniqueId())) {
+			event.setCancelled(true);
+		}
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+	public void onItemDrop(PlayerDropItemEvent event) {
+		if (DownedPlayerRegistry.isDowned(event.getPlayer().getUniqueId())) {
+			event.setCancelled(true);
+		}
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+	public void onItemConsume(PlayerItemConsumeEvent event) {
+		if (DownedPlayerRegistry.isDowned(event.getPlayer().getUniqueId())) {
+			event.setCancelled(true);
+		}
+	}
+
+	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+	public void onItemPickup(EntityPickupItemEvent event) {
+		if (!(event.getEntity() instanceof Player player)) return;
+		if (DownedPlayerRegistry.isDowned(player.getUniqueId())) {
+			event.setCancelled(true);
+		}
+	}
+
+	private void enterDownedState(Player player) {
+		if (!player.isOnline()) return;
+
+		// Vanilla PlayerDeathEvent never fires in this path (damage was cancelled), so Bukkit never spills
+		// event.getDrops(). Mirror the vanilla drop behaviour here unless keepInventory overrides it.
+		dropInventoryIfAllowed(player);
+
+		if (jetpackService != null) jetpackService.deactivate(player);
+
+		UUID uuid = player.getUniqueId();
+		DownedPlayerRegistry.add(uuid);
+		savedGameModes.put(uuid, player.getGameMode());
+
+		Bukkit.getPluginManager().callEvent(new PlayerDownedEvent(player));
+
+		GameMode gm = parseGameMode(Settings.getRespawnGameMode());
+		player.setGameMode(gm);
+
+		if (Settings.isRespawnGameModeAllowFly()) {
+			player.setAllowFlight(true);
+			player.setFlying(true);
+		}
+
+		int delay = Settings.getRespawnDelay();
+
+		if (delay <= 0) {
+			showTitle(player, 0);
+			performRespawn(player);
+			return;
+		}
+
+		showTitle(player, delay);
+		sendRespawnButton(player);
+		startCountdown(player, delay);
+	}
+
+	private void startCountdown(Player player, int delay) {
+		UUID uuid = player.getUniqueId();
+
+		BukkitRunnable runnable = new BukkitRunnable() {
+			int remaining = delay;
+
+			@Override
+			public void run() {
+				if (!player.isOnline()) {
+					cleanup(uuid);
+					this.cancel();
+					return;
+				}
+
+				remaining--;
+
+				if (remaining <= 0) {
+					respawnTasks.remove(uuid);
+					this.cancel();
+					performRespawn(player);
+					return;
+				}
+
+				showTitle(player, remaining);
+			}
+		};
+
+		respawnTasks.put(uuid, runnable.runTaskTimer(gangland, 20L, 20L));
+	}
+
+	private void performRespawn(Player player) {
+		if (!player.isOnline()) return;
+
+		UUID uuid = player.getUniqueId();
+
+		BukkitTask task = respawnTasks.remove(uuid);
+		if (task != null) task.cancel();
+
+		DownedPlayerRegistry.remove(uuid);
+
+		double maxHealth = Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue();
+		double amount    = Math.min(Settings.getRespawnHealthAmount(), maxHealth);
+
+		player.setHealth(amount);
+		player.setFoodLevel(Settings.getRespawnHungerAmount());
+
+		GameMode original = savedGameModes.remove(uuid);
+		player.setGameMode(original != null ? original : GameMode.SURVIVAL);
+		player.setAllowFlight(false);
+		player.setFlying(false);
+
+		if (Settings.isRespawnTeleportEnabled()) {
+			User<Player> user     = userManager.getUser(player);
+			Waypoint     waypoint = waypointManager.get(Settings.getRespawnTeleportWaypoint());
+			if (user != null && waypoint != null) {
+				try {
+					waypoint.getWaypointTeleport().teleport(gangland, user, (u, t) -> { });
+				} catch (IllegalTeleportException ignored) {
+					// player was on waypoint cooldown — teleport directly
+					Location loc = waypoint.getLocation();
+					if (loc != null) player.teleport(loc);
+				}
+			}
+		}
+
+		player.sendTitle("", "", 0, 1, 1);
+
+		// Vanilla PlayerRespawnEvent does not fire here (player never actually died), so notify listeners
+		// that the player is back on their feet via the custom counterpart.
+		Bukkit.getPluginManager().callEvent(new PlayerUndownedEvent(player));
+	}
+
+	private void cleanup(UUID uuid) {
+		BukkitTask task = respawnTasks.remove(uuid);
+		if (task != null) task.cancel();
+		DownedPlayerRegistry.remove(uuid);
+		savedGameModes.remove(uuid);
+	}
+
+	private void dropInventoryIfAllowed(Player player) {
+		World world = player.getWorld();
+		if (Boolean.TRUE.equals(world.getGameRuleValue(GameRule.KEEP_INVENTORY))) return;
+
+		Location        loc = player.getLocation();
+		PlayerInventory inv = player.getInventory();
+
+		// PlayerInventory.getContents() returns all 41 slots — main (0-35), armor (36-39), off-hand (40) —
+		// so one pass drops everything exactly once. inv.clear() then wipes all of those slots.
+		for (ItemStack stack : inv.getContents()) {
+			if (stack == null || stack.getType().isAir()) continue;
+			world.dropItemNaturally(loc, stack);
+		}
+
+		inv.clear();
+	}
+
+	private void sendRespawnButton(Player player) {
+		TextComponent prefix = new TextComponent(Messages.DEATH_RESPAWN_WASTED_PREFIX.toString());
+		TextComponent button = new TextComponent(Messages.DEATH_RESPAWN_BUTTON.toString());
+		button.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/" + Gangland.SHORT_PREFIX + " respawn"));
+		prefix.addExtra(button);
+		player.spigot().sendMessage(prefix);
+	}
+
+	private void showTitle(Player player, int seconds) {
+		if (!Settings.isRespawnScreenEnabled()) return;
+
+		String title = ChatUtil.color(Settings.getRespawnScreenTitle());
+
+		String formatTime = TimeUtil.formatTime(seconds, true, TimeMessages.getInstance());
+		String replace    = Settings.getRespawnScreenSubtitle().replace("%time%", formatTime);
+		String subtitle   = ChatUtil.color(replace);
+
+		// fadeIn=0, stay=25 ticks (~1.25 s), fadeOut=5 — replaced each second by the timer.
+		player.sendTitle(title, subtitle, 0, 25, 5);
+	}
+
+	private GameMode parseGameMode(String name) {
+		try {
+			return GameMode.valueOf(name.toUpperCase());
+		} catch (IllegalArgumentException ignored) {
+			return GameMode.SURVIVAL;
+		}
+	}
+
+}

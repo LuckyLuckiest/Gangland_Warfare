@@ -1,7 +1,7 @@
-import me.luckyraven.events.user.UserLevelUpEvent;
-import me.luckyraven.gang.events.level.LevelUpEvent;
-import me.luckyraven.gang.user.Level;
-import me.luckyraven.gang.user.User;
+import org.luckyraven.gangland.events.user.UserLevelUpEvent;
+import org.luckyraven.gangland.gang.events.level.LevelUpEvent;
+import org.luckyraven.gangland.gang.user.Level;
+import org.luckyraven.gangland.gang.user.User;
 
 import java.util.Scanner;
 

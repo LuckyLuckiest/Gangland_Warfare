@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>me.luckyraven</groupId>
+        <groupId>org.luckyraven</groupId>
         <artifactId>gangland-features</artifactId>
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
@@ -25,39 +25,39 @@
 
         <!-- Local dependencies -->
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>gangland-item</artifactId>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-impl</artifactId>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>plugin-persistence</artifactId>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>gangland-weapon</artifactId>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>inventory-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>shop-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>gangland-economy</artifactId>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>gangland-domain</artifactId>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>gangland-turf</artifactId>
         </dependency>
 

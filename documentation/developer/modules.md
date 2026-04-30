@@ -1,7 +1,7 @@
 # Gangland Warfare - Developer Module Reference
 
 > **Version:** 0.7.4-DEV | **Platform:** Spigot 1.21 | **Java:** 21  
-> **Primary Package:** `me.luckyraven` | **Command Prefix:** `/glw` (alias `/gangland`)
+> **Primary Package:** `org.luckyraven.gangland` | **Command Prefix:** `/glw` (alias `/gangland`)
 
 This document provides a comprehensive reference for every module in the Gangland Warfare plugin. Each section details
 the module's purpose, package structure, key classes, and how it integrates with the rest of the system.
@@ -34,7 +34,7 @@ the module's purpose, package structure, key classes, and how it integrates with
 managers/services, database repositories, table definitions, configuration loaders, and concrete implementations of
 interfaces defined in feature modules.
 
-**Java Files:** 319 | **Primary Package:** `me.luckyraven`
+**Java Files:** 319 | **Primary Package:** `org.luckyraven.gangland`
 
 ### Entry Point Classes
 
@@ -345,7 +345,7 @@ mvn clean package -DskipTests
 **Purpose:** Foundation module providing dependency injection, reflection utilities, command/listener frameworks, data
 structures, color utilities, timers, and common helpers used by all other modules.
 
-**Java Files:** 47 | **Package:** `me.luckyraven.util.*`
+**Java Files:** 47 | **Package:** `org.luckyraven.gangland.util.*`
 
 ### Subpackage: `autowire/`
 
@@ -482,7 +482,7 @@ Static utility classes used across all modules.
 **Purpose:** Defines the item parsing framework, item converters, fuel system, unique items, and wearable armor. Used by
 both `gangland-impl` (for concrete converters) and feature modules (for item type definitions).
 
-**Java Files:** 13 | **Package:** `me.luckyraven.item.*`
+**Java Files:** 13 | **Package:** `org.luckyraven.gangland.item.*`
 
 ### Root Classes
 
@@ -528,7 +528,7 @@ Wearable armor with special traits.
 **Purpose:** Generic persistence layer providing the repository pattern, database abstraction (MySQL/SQLite), table
 definitions, query building, and file persistence utilities. This module has no knowledge of Gangland-specific entities.
 
-**Java Files:** 20 | **Package:** `me.luckyraven.persistence.*`
+**Java Files:** 20 | **Package:** `org.luckyraven.gangland.persistence.*`
 
 ### Root Classes (File Persistence)
 
@@ -597,7 +597,7 @@ Database engine implementations.
 **Purpose:** Provides the shared logging utility and exception hierarchy used by all modules. Minimal dependency
 footprint.
 
-**Java Files:** 2 | **Package:** `me.luckyraven.*`
+**Java Files:** 2 | **Package:** `org.luckyraven.gangland.*`
 
 | Class                            | Description                                                                                                                                                                                                                                                                                                           |
 |----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -611,7 +611,7 @@ footprint.
 **Purpose:** The cops-and-crooks gameplay system. Handles NPC cop/civilian spawning, wanted levels, bounties, kill
 combos, detainment (handcuffs + jailing), and all associated AI behaviors.
 
-**Java Files:** 91 | **Package:** `me.luckyraven.copsncrooks.*`
+**Java Files:** 91 | **Package:** `org.luckyraven.gangland.copsncrooks.*`
 
 ### Subpackage: `bounty/`
 
@@ -782,7 +782,7 @@ Custom Bukkit events (11 total).
 incendiaries, biological), projectile physics, damage modifiers, reload mechanics, spread/recoil, and selective fire
 modes.
 
-**Java Files:** 83 | **Package:** `me.luckyraven.weapon.*`
+**Java Files:** 83 | **Package:** `org.luckyraven.gangland.weapon.*`
 
 ### Root Classes
 
@@ -956,7 +956,7 @@ Custom weapon events (10 total).
 
 **Purpose:** Vehicle system (cars), jetpacks, fuel management, and wearable equipment mechanics.
 
-**Java Files:** 47 | **Package:** `me.luckyraven.gadget.*`
+**Java Files:** 47 | **Package:** `org.luckyraven.gangland.gadget.*`
 
 ### Root Class
 
@@ -1037,7 +1037,7 @@ Event listeners (11 total).
 **Purpose:** FastBoard-based scoreboard rendering system with ViaVersion compatibility and progressive optimization
 strategies.
 
-**Java Files:** 8 | **Package:** `me.luckyraven.scoreboard.*`
+**Java Files:** 8 | **Package:** `org.luckyraven.gangland.scoreboard.*`
 
 | Class                                | Description                                                                                                                                           |
 |--------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -1057,7 +1057,7 @@ strategies.
 **Purpose:** Custom inventory/GUI framework with YAML-driven layouts, conditional slots, multi-page navigation, and a
 comprehensive event handling system.
 
-**Java Files:** 37 | **Package:** `me.luckyraven.inventory.*`
+**Java Files:** 37 | **Package:** `org.luckyraven.gangland.inventory.*`
 
 ### Root Classes
 
@@ -1158,7 +1158,7 @@ Inventory building blocks.
 **Purpose:** Sign interaction framework using the Chain of Responsibility pattern. Supports composable sign behaviors
 via aspects, sign parsing, format registries, bulk operations, and validation.
 
-**Java Files:** 28 | **Package:** `me.luckyraven.sign.*`
+**Java Files:** 28 | **Package:** `org.luckyraven.gangland.sign.*`
 
 ### Root Classes
 
@@ -1247,7 +1247,7 @@ Bulk sign operations.
 **Purpose:** Loot chest system with cracking mini-game, cooldown management, hologram integration, tiered loot tables,
 and a comprehensive event lifecycle.
 
-**Java Files:** 33 | **Package:** `me.luckyraven.lootchest.*`
+**Java Files:** 33 | **Package:** `org.luckyraven.gangland.lootchest.*`
 
 ### Root Classes
 
@@ -1327,7 +1327,7 @@ Custom events (8 total + 1 base).
 
 **Purpose:** Minimal hologram display system for floating text above loot chests, waypoints, and other world markers.
 
-**Java Files:** 3 | **Package:** `me.luckyraven.hologram.*`
+**Java Files:** 3 | **Package:** `org.luckyraven.gangland.hologram.*`
 
 | Class                             | Description                                                                                                     |
 |-----------------------------------|-----------------------------------------------------------------------------------------------------------------|
@@ -1344,7 +1344,7 @@ interfaces, allowing the plugin to run on Minecraft 1.10 through 1.21.
 
 ### version-impl (Interface Module)
 
-**Java Files:** 6 | **Package:** `me.luckyraven.compatibility.*`
+**Java Files:** 6 | **Package:** `org.luckyraven.gangland.compatibility.*`
 
 | Class                             | Description                                                                            |
 |-----------------------------------|----------------------------------------------------------------------------------------|

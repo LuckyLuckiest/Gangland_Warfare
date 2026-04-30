@@ -78,7 +78,7 @@ Server starts
     ├── Extract NMS version: "v1_21_R3"
     │
     ├── Map to module class:
-    │   "me.luckyraven.compatibility.v1_21_R3.VersionImplementation"
+    │   "org.luckyraven.gangland.compatibility.v1_21_R3.VersionImplementation"
     │
     ├── Instantiate via reflection
     │
@@ -244,7 +244,7 @@ gangland-compatibility/version-X_XX_RX/
 
 <project>
     <parent>
-        <groupId>me.luckyraven</groupId>
+        <groupId>org.luckyraven.gangland</groupId>
         <artifactId>gangland-compatibility</artifactId>
         <version>${revision}</version>
     </parent>
@@ -253,7 +253,7 @@ gangland-compatibility/version-X_XX_RX/
 
     <dependencies>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven.gangland</groupId>
             <artifactId>version-impl</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -270,7 +270,7 @@ gangland-compatibility/version-X_XX_RX/
 ### Step 3: Implement Compatibility
 
 ```java
-package me.luckyraven.compatibility.vX_XX_RX;
+package org.luckyraven.gangland.compatibility.vX_XX_RX;
 
 public class VersionImplementation implements Compatibility {
 
@@ -286,7 +286,7 @@ public class VersionImplementation implements Compatibility {
 ### Step 4: Implement Recoil
 
 ```java
-package me.luckyraven.compatibility.vX_XX_RX;
+package org.luckyraven.gangland.compatibility.vX_XX_RX;
 
 public class RecoilCompatibilityImpl implements RecoilCompatibility {
 

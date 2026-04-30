@@ -1,0 +1,155 @@
+package org.luckyraven.gangland.turf.listener;
+
+import lombok.RequiredArgsConstructor;
+import org.bukkit.Bukkit;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.gangland.gang.Gang;
+import org.luckyraven.gangland.gang.contract.GangLookupContract;
+import org.luckyraven.gangland.gang.contract.UserLookupContract;
+import org.luckyraven.gangland.gang.user.User;
+import org.luckyraven.gangland.turf.contract.TurfMessageContract;
+import org.luckyraven.gangland.turf.data.Turf;
+import org.luckyraven.gangland.turf.events.TurfCapturedEvent;
+import org.luckyraven.gangland.turf.events.TurfEnterEvent;
+import org.luckyraven.gangland.turf.events.TurfExitEvent;
+import org.luckyraven.gangland.turf.events.TurfOwnerChangedEvent;
+import org.luckyraven.gangland.turf.manager.TurfManager;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+/**
+ * Persistent "you are inside a turf" BossBar that appears the moment a player enters any turf and disappears the
+ * instant they leave. Colour is picked per-viewer based on their relationship to the owning gang, so one player
+ * standing in a turf sees GREEN while a rival next to them sees RED — even though it's the same turf.
+ *
+ * <p>Colour map (chosen to stack readably with the CONTESTING bossbar from {@link TurfBossBarListener} — none of
+ * these overlap with the capture-bar palette of red/green/white):
+ * <ul>
+ *   <li><b>GREEN</b> — turf is owned by the viewer's own gang (friendly territory).</li>
+ *   <li><b>RED</b> — turf is owned by a rival gang (hostile territory).</li>
+ *   <li><b>BLUE</b> — turf is unclaimed and the viewer has a gang (opportunity to capture).</li>
+ *   <li><b>YELLOW</b> — turf is owned by some gang but the viewer has no gang (bystander).</li>
+ *   <li><b>WHITE</b> — turf is unclaimed and the viewer has no gang.</li>
+ * </ul>
+ *
+ * <p>Unclaimed turfs do <b>not</b> get a presence bar — the dual capture bossbars already communicate the unclaimed
+ * status while a contest is in flight, and outside a contest there is nothing useful to surface for an unclaimed
+ * region. Bars are refreshed on {@link TurfCapturedEvent} so every viewer currently standing in the captured turf
+ * sees their colour flip the moment ownership changes, and on {@link TurfOwnerChangedEvent} so admin
+ * {@code /glw turf setowner} (including clearing to {@code none}) tears the bar down or recolours it for everyone
+ * inside without waiting for them to walk out and back in.
+ */
+@ListenerHandler
+@RequiredArgsConstructor
+public final class TurfPresenceBarListener implements Listener {
+
+	private final TurfManager         turfs;
+	private final GangLookupContract  gangs;
+	private final UserLookupContract  users;
+	private final TurfMessageContract messages;
+
+	/**
+	 * viewer → (turfId, bar) so we can tear down the right bar on exit without scanning.
+	 */
+	private final Map<UUID, Entry> active = new HashMap<>();
+
+	@EventHandler
+	public void onEnter(TurfEnterEvent event) {
+		showFor(event.getPlayer(), event.getTurf());
+	}
+
+	@EventHandler
+	public void onExit(TurfExitEvent event) {
+		hideFor(event.getPlayer());
+	}
+
+	@EventHandler
+	public void onCaptured(TurfCapturedEvent event) {
+		refreshAllInside(event.getTurf());
+	}
+
+	@EventHandler
+	public void onOwnerChanged(TurfOwnerChangedEvent event) {
+		// Admin /glw turf setowner (clear or reassign) is the only way an owned turf can flip to unclaimed
+		// or change owner outside the capture flow. Without this hook, the stale "Territory of <gang>" bar
+		// would sit on every viewer inside until they walked out and back in.
+		refreshAllInside(event.getTurf());
+	}
+
+	@EventHandler
+	public void onQuit(PlayerQuitEvent event) {
+		hideFor(event.getPlayer());
+	}
+
+	private void refreshAllInside(Turf turf) {
+		int turfId = turf.getId();
+		for (Map.Entry<UUID, Entry> entry : new HashMap<>(active).entrySet()) {
+			if (entry.getValue().turfId != turfId) {
+				continue;
+			}
+			Player viewer = Bukkit.getPlayer(entry.getKey());
+			if (viewer == null) {
+				continue;
+			}
+			hideFor(viewer);
+			showFor(viewer, turf); // No-op if turf is now unclaimed.
+		}
+	}
+
+	private void showFor(Player viewer, Turf turf) {
+		hideFor(viewer); // Guard against stacked duplicates if enter fires while an old bar is still up.
+
+		Integer ownerId = turf.getOwnerGangId();
+		if (ownerId == null) {
+			// Unclaimed turfs have no presence bar — the dual capture bossbar covers anything worth saying
+			// during a contest, and there is nothing to display about an empty region outside one.
+			return;
+		}
+		Gang owner = gangs.findById(ownerId);
+		if (owner == null) {
+			return;
+		}
+		String title = messages.format("TURF_PRESENCE_OWNED",
+		                               "turf", turf.getDisplayName(),
+		                               "gang", GangDisplayNameResolver.resolve(owner));
+
+		BarColor color = resolveColor(viewer, ownerId);
+		BossBar  bar   = Bukkit.createBossBar(ChatUtil.color(title), color, BarStyle.SOLID);
+		bar.setProgress(1.0);
+		bar.addPlayer(viewer);
+
+		active.put(viewer.getUniqueId(), new Entry(turf.getId(), bar));
+	}
+
+	private void hideFor(Player viewer) {
+		Entry entry = active.remove(viewer.getUniqueId());
+		if (entry != null) {
+			entry.bar.removeAll();
+		}
+	}
+
+	private BarColor resolveColor(Player viewer, Integer ownerId) {
+		User<Player> user    = users.findByPlayer(viewer);
+		boolean      hasGang = user != null && user.hasGang();
+		if (ownerId == null) {
+			return hasGang ? BarColor.BLUE : BarColor.WHITE;
+		}
+		if (hasGang && user.getGangId() == ownerId) {
+			return BarColor.GREEN;
+		}
+		return hasGang ? BarColor.RED : BarColor.YELLOW;
+	}
+
+	private record Entry(int turfId, BossBar bar) {
+	}
+}

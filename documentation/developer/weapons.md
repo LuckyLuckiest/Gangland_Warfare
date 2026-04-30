@@ -1,7 +1,7 @@
 # Weapon System -- Developer Documentation
 
 > **Module:** `gangland-features/gangland-weapon`
-> **Package root:** `me.luckyraven.weapon`
+> **Package root:** `org.luckyraven.gangland.weapon`
 > **Class count:** 83
 
 ---
@@ -98,7 +98,7 @@ programmatically through the weapon pipeline.
 
 ### `Weapon` (abstract, 479 lines)
 
-**Path:** `me.luckyraven.weapon.Weapon`
+**Path:** `weapon.org.luckyraven.gangland.Weapon`
 
 The base data class for all weapons. Extends no Bukkit class; implements `Cloneable` and `Comparable<Weapon>`.
 
@@ -198,7 +198,7 @@ Weapon clone()                 // Deep-copies all mutable DTOs
 
 ### `WeaponService` (abstract, 244 lines)
 
-**Path:** `me.luckyraven.weapon.WeaponService`
+**Path:** `weapon.org.luckyraven.gangland.WeaponService`
 
 Central runtime registry mapping `UUID -> Weapon`. Every active weapon instance lives here.
 
@@ -251,7 +251,7 @@ in the player's inventory.
 
 ### `WeaponTag` (enum)
 
-**Path:** `me.luckyraven.weapon.WeaponTag`
+**Path:** `weapon.org.luckyraven.gangland.WeaponTag`
 
 Defines the NBT keys written to weapon ItemStacks:
 
@@ -266,7 +266,7 @@ STATIC tags are set once at creation. DYNAMIC tags are updated after every shot/
 
 ### `SelectiveFire` (enum)
 
-**Path:** `me.luckyraven.weapon.SelectiveFire`
+**Path:** `weapon.org.luckyraven.gangland.SelectiveFire`
 
 Three fire modes with cyclic state transition:
 
@@ -565,7 +565,7 @@ of the default 1.
 
 ### `WProjectile` (abstract base)
 
-**Path:** `me.luckyraven.weapon.projectile.WProjectile`
+**Path:** `org.luckyraven.gangland.weapon.projectile.WProjectile`
 
 Low-level projectile tracking with location, velocity, distance, and environment awareness.
 
@@ -585,7 +585,7 @@ int getMaxAliveTicks()        // 600 (30 seconds)
 
 ### `WeaponProjectile<T extends Projectile>` (abstract)
 
-**Path:** `me.luckyraven.weapon.projectile.WeaponProjectile`
+**Path:** `org.luckyraven.gangland.weapon.projectile.WeaponProjectile`
 
 Wraps a Bukkit `Projectile` entity. `T` is the entity type (Snowball, Fireball, Firework).
 
@@ -672,7 +672,7 @@ Rocket(plugin, shooter, weapon)
 
 ### `ProjectileState`
 
-**Path:** `me.luckyraven.weapon.projectile.ProjectileState`
+**Path:** `projectile.weapon.org.luckyraven.gangland.ProjectileState`
 
 Tracks the runtime state of a single active projectile for modifier calculations:
 
@@ -702,7 +702,7 @@ boolean canRicochet()          // Check against max bounces
 
 ### `BlockDamageManager`
 
-**Path:** `me.luckyraven.weapon.modifiers.BlockDamageManager`
+**Path:** `modifiers.weapon.org.luckyraven.gangland.BlockDamageManager`
 
 Manages progressive block crack animations from projectile impacts.
 
@@ -739,7 +739,7 @@ Redstone Lamp, Melon, Pumpkin, Terracotta variants.
 
 ### `Ammunition`
 
-**Path:** `me.luckyraven.weapon.ammo.Ammunition`
+**Path:** `ammo.weapon.org.luckyraven.gangland.Ammunition`
 
 Represents an ammo type (e.g., "9mm", "Shotgun Shells").
 
@@ -929,7 +929,7 @@ static void spawnTracerParticles(Weapon weapon, Location from, Location to, Play
 
 ### `Reload` (abstract)
 
-**Path:** `me.luckyraven.weapon.reload.Reload`
+**Path:** `reload.weapon.org.luckyraven.gangland.Reload`
 
 Base class for all reload strategies. Manages reload state, player tracking, and
 sound/scope effects.
@@ -1014,7 +1014,7 @@ int numberOfInsertions = leftToInsert / restore;
 
 ### `SpreadManager`
 
-**Path:** `me.luckyraven.weapon.projectile.spread.SpreadManager`
+**Path:** `spread.projectile.weapon.org.luckyraven.gangland.SpreadManager`
 
 Calculates bullet spread (accuracy degradation) with accumulation and time-based reset.
 
@@ -1043,7 +1043,7 @@ Calculates bullet spread (accuracy degradation) with accumulation and time-based
 
 ### `RecoilManager`
 
-**Path:** `me.luckyraven.weapon.projectile.recoil.RecoilManager`
+**Path:** `recoil.projectile.weapon.org.luckyraven.gangland.RecoilManager`
 
 Applies camera rotation (recoil) to the player after each shot, using NMS compatibility.
 
@@ -1088,7 +1088,7 @@ The pattern repeats cyclically. Reset occurs when:
 
 ### `FullAutoTask`
 
-**Path:** `me.luckyraven.weapon.types.gun.FullAutoTask`
+**Path:** `gun.types.weapon.org.luckyraven.gangland.FullAutoTask`
 
 Handles fully automatic fire rate timing. Uses a pre-computed 20-tick boolean table
 (inspired by WeaponMechanics by CJCrafter) to distribute shots evenly across ticks.
@@ -1109,7 +1109,7 @@ where `AUTO[shotsPerSecond][tickIndex]` is `true`.
 
 ### `WeaponInteract` (557 lines)
 
-**Path:** `me.luckyraven.weapon.listener.WeaponInteract`
+**Path:** `listener.weapon.org.luckyraven.gangland.WeaponInteract`
 
 The primary listener handling all player input for weapons. Autowired with
 `WeaponService` and `RecoilCompatibility`.
@@ -1672,7 +1672,7 @@ fireTicks = reduceFireTicks(configuredTicks)   // FIRE_RESISTANT + FIRE_PROTECTI
 
 ## Wearable / Armor Reduction
 
-**Path:** `me.luckyraven.weapon.wearable.WearableService`
+**Path:** `wearable.weapon.org.luckyraven.gangland.WearableService`
 
 Applies custom armor reduction from the plugin's wearable system alongside vanilla armor.
 
@@ -1735,7 +1735,7 @@ ammo = "762mm"   (String - key into AmmunitionManager)
 
 ## Durability System
 
-**Path:** `me.luckyraven.weapon.durability.DurabilityCalculator`
+**Path:** `durability.weapon.org.luckyraven.gangland.DurabilityCalculator`
 
 The weapon has its own durability system independent of Minecraft's item durability.
 The weapon durability is mapped to the item's visual durability bar for display.

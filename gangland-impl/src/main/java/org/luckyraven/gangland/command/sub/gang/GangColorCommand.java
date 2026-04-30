@@ -1,0 +1,137 @@
+package org.luckyraven.gangland.command.sub.gang;
+
+import com.cryptomorin.xseries.XMaterial;
+import org.bukkit.Material;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.luckyraven.gangland.Gangland;
+import org.luckyraven.gangland.command.argument.Argument;
+import org.luckyraven.gangland.command.argument.SubArgument;
+import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.gangland.core.TriConsumer;
+import org.luckyraven.gangland.core.color.Color;
+import org.luckyraven.gangland.core.color.ColorUtil;
+import org.luckyraven.gangland.core.color.MaterialType;
+import org.luckyraven.gangland.core.datastructure.Tree;
+import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.gangland.gang.Gang;
+import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.user.User;
+import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.inventory.InventoryHandler;
+import org.luckyraven.gangland.inventory.part.Fill;
+import org.luckyraven.gangland.inventory.util.InventoryUtil;
+import org.luckyraven.gangland.util.GanglandChatUtil;
+
+class GangColorCommand extends SubArgument {
+
+	private final Gangland            gangland;
+	private final UserManager<Player> userManager;
+	private final GangManager         gangManager;
+
+	protected GangColorCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	                           UserManager<Player> userManager, GangManager gangManager) {
+		super(gangland, "color", tree, parent);
+
+		this.gangland    = gangland;
+		this.userManager = userManager;
+		this.gangManager = gangManager;
+	}
+
+	@Override
+	protected TriConsumer<Argument, CommandSender, String[]> action() {
+		return (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
+
+			if (!user.hasGang()) {
+				sender.sendMessage(Messages.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			displayColors(player);
+		};
+	}
+
+	private void displayColors(Player player) {
+		String title = "&5&lChoose a color";
+		int    size  = InventoryHandler.MAX_SLOTS;
+
+		InventoryHandler colorGUI = new InventoryHandler(gangland, title, size, player);
+
+		int row = 2, column = 2;
+		for (Color color : Color.values()) {
+			String colorName = color.name();
+			String colorCode = color.getColorCode();
+
+			MaterialType type         = MaterialType.WOOL;
+			String       materialName = type.name();
+
+			Material material = ColorUtil.getMaterialByColor(colorName, materialName);
+
+			if (material == null) return;
+
+			String name = colorCode + GanglandChatUtil.capitalize(colorName.toLowerCase().replace('_', ' ')) + " " +
+			              GanglandChatUtil.capitalize(materialName.toLowerCase().replace('_', ' '));
+
+			ItemBuilder itemBuilder = new ItemBuilder(material).setDisplayName(name);
+
+			int slot = (row - 1) * 9 + (column - 1);
+
+			colorGUI.setItem(slot, itemBuilder, false, (player1, inventory, item) -> {
+				String title2 = "&4&lAre you sure?";
+
+				InventoryHandler confirmGUI = new InventoryHandler(gangland, title2, size, player1);
+				confirmGUI.setItem(22, item.build(), false);
+
+				Material mat = ColorUtil.getMaterialByColor(colorName, MaterialType.STAINED_GLASS_PANE.name());
+				InventoryUtil.aroundSlot(confirmGUI, 22, mat);
+
+				confirmGUI.setItem(49, XMaterial.GREEN_CONCRETE.get(), "&aConfirm", null, false, false,
+				                   (player2, inv, it) -> {
+									   User<Player> user = userManager.getUser(player2);
+
+									   if (user == null) return;
+
+									   Gang gang = gangManager.getGang(user.getGangId());
+									   // save the data in gang
+									   gang.setColor(colorName);
+
+									   // inform player
+									   String colorSelected = GanglandChatUtil.color(
+											   colorCode + GanglandChatUtil.capitalize(
+													   colorName.toLowerCase().replace('_', ' ')));
+									   player2.sendMessage(Messages.GANG_COLOR_SET.toString()
+					                                                              .replace("%color%",
+					                                                                       colorSelected));
+
+									   inv.close(player2);
+								   });
+
+				Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
+
+				InventoryUtil.fillInventory(confirmGUI, fill);
+
+				confirmGUI.open(player1);
+			});
+
+			if (column % 8 == 0) {
+				column = 2;
+				++row;
+			} else ++column;
+		}
+
+		colorGUI.setItem((6 - 1) * 9, XMaterial.RED_CONCRETE.get(), "&4Exit", null, false, false,
+		                 (player1, inventory, item) -> inventory.close(player1));
+
+		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryLineName());
+
+		InventoryUtil.createBoarder(colorGUI, fill);
+
+		colorGUI.open(player);
+	}
+
+}

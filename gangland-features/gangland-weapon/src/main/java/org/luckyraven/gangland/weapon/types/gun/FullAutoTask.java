@@ -1,0 +1,117 @@
+package org.luckyraven.gangland.weapon.types.gun;
+
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.compatibility.recoil.RecoilCompatibility;
+import org.luckyraven.gangland.core.timer.Timer;
+import org.luckyraven.gangland.weapon.WeaponService;
+import org.luckyraven.gangland.weapon.raytrace.WeaponRaytracer;
+
+/**
+ * I will not claim this class as an invention from my side, but it is made by CJCrafter from WeaponMechanics. A
+ * brilliant team that created sophisticated and efficient algorithms to make the user experience smooth.
+ */
+public class FullAutoTask extends Timer {
+
+	/**
+	 * These values are implemented as a result of not having hardcoded values from FullAutoTask class implemented by
+	 * CJCrafter.
+	 *
+	 * @see <a
+	 * 		href="https://github.com/WeaponMechanics/WeaponMechanics/blob/master/weaponmechanics-core/src/main/java/me/deecaad/weaponmechanics/weapon/shoot/FullAutoTask.java">FullAutoTask
+	 * 		class</a>
+	 */
+	private static final boolean[][] AUTO = new boolean[21][20];
+
+	static {
+		for (int shotsPerSecond = 1; shotsPerSecond < AUTO.length; shotsPerSecond++) {
+			double    accumulate = 0D;
+			boolean[] collection = new boolean[AUTO[shotsPerSecond].length];
+
+			for (int i = 0; i < AUTO[shotsPerSecond].length; i++) {
+				accumulate += shotsPerSecond / 20.0 + 0.00000000001;
+
+				if (accumulate < 1.0) continue;
+
+				accumulate -= 1.0;
+				collection[i] = true;
+			}
+
+			while (!collection[0]) {
+				rotateArray(collection);
+			}
+
+			System.arraycopy(collection, 0, AUTO[shotsPerSecond], 0, AUTO[shotsPerSecond].length);
+		}
+	}
+
+	private final JavaPlugin          plugin;
+	private final WeaponService       weaponService;
+	private final GunWeapon           weapon;
+	private final RecoilCompatibility recoilCompatibility;
+	private final WeaponRaytracer     raytracer;
+	private final Player              player;
+	private final ItemStack           itemStack;
+	private final Runnable            onCancel;
+
+	private int tickIndex;
+
+	public FullAutoTask(JavaPlugin plugin, WeaponService weaponService, GunWeapon weapon,
+	                    RecoilCompatibility recoilCompatibility, WeaponRaytracer raytracer, Player player,
+	                    ItemStack weaponItem, Runnable onCancel) {
+		super(plugin, weapon.getProjectileData().getCooldown(), 1L);
+
+		this.plugin              = plugin;
+		this.weaponService       = weaponService;
+		this.weapon              = weapon;
+		this.recoilCompatibility = recoilCompatibility;
+		this.raytracer           = raytracer;
+		this.player              = player;
+		this.itemStack           = weaponItem;
+		this.onCancel            = onCancel;
+
+		this.tickIndex = 0;
+	}
+
+	private static void rotateArray(boolean[] array) {
+		boolean first = array[0];
+
+		System.arraycopy(array, 1, array, 0, array.length - 1);
+		array[array.length - 1] = first;
+	}
+
+	@Override
+	public void run() {
+		if (!itemStack.hasItemMeta() || weapon.isReloading()) {
+			cancel();
+			return;
+		}
+
+		int cooldown       = Math.max(1, weapon.getProjectileData().getCooldown());
+		int tickValue      = 20 / cooldown;
+		int shotsPerSecond = Math.clamp(tickValue, 1, 20);
+
+		if (AUTO[shotsPerSecond][tickIndex]) {
+			GunAction gunAction = new GunAction(plugin, weaponService, weapon, recoilCompatibility, raytracer);
+
+			gunAction.weaponShoot(player);
+		}
+
+		// Advance tick
+		tickIndex = (tickIndex + 1) % 20;
+	}
+
+	@Override
+	public synchronized void cancel() throws IllegalStateException {
+		onCancel.run();
+		super.cancel();
+	}
+
+	@Override
+	public void stop() {
+		onCancel.run();
+		super.stop();
+	}
+
+}

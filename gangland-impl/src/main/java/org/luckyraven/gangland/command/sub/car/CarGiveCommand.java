@@ -1,0 +1,131 @@
+package org.luckyraven.gangland.command.sub.car;
+
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.luckyraven.gangland.Gangland;
+import org.luckyraven.gangland.command.argument.Argument;
+import org.luckyraven.gangland.command.argument.SubArgument;
+import org.luckyraven.gangland.command.argument.types.OptionalArgument;
+import org.luckyraven.gangland.core.TriConsumer;
+import org.luckyraven.gangland.core.datastructure.Tree;
+import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.gadget.car.Car;
+import org.luckyraven.gangland.gadget.car.config.CarAddon;
+import org.luckyraven.gangland.gang.user.User;
+import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.util.GanglandChatUtil;
+
+import java.util.List;
+import java.util.Map;
+
+class CarGiveCommand extends SubArgument {
+
+	private final Gangland            gangland;
+	private final Tree<Argument>      tree;
+	private final UserManager<Player> userManager;
+	private final CarAddon            carAddon;
+
+	CarGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	               UserManager<Player> userManager, CarAddon carAddon) {
+		super(gangland, "give", tree, parent);
+
+		this.gangland    = gangland;
+		this.tree        = tree;
+		this.userManager = userManager;
+		this.carAddon    = carAddon;
+
+		carGive();
+	}
+
+	@Override
+	protected TriConsumer<Argument, CommandSender, String[]> action() {
+		return (argument, sender, args) -> sender.sendMessage(
+				GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
+	}
+
+	private void carGive() {
+		Argument name = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
+
+			String  carName = args[2];
+			boolean gave    = giveCarItem(player, carName, 1);
+
+			if (gave) {
+				user.sendMessage(Messages.CAR_GAVE.toString()
+				                                  .replace("%name%", carName)
+				                                  .replace("%amount%", "1"));
+			} else {
+				user.sendMessage(Messages.CAR_INVALID.toString().replace("%car%", carName));
+			}
+		}, sender -> carAddon.getCars().keySet()
+				.stream().toList());
+
+		Argument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+			Player       player = (Player) sender;
+			User<Player> user   = userManager.getUser(player);
+
+			if (user == null) return;
+
+			String carName = args[2];
+			int    carAmount;
+
+			try {
+				carAmount = Integer.parseInt(args[3]);
+			} catch (NumberFormatException exception) {
+				user.sendMessage(Messages.MUST_BE_NUMBERS.toString());
+				return;
+			}
+
+			boolean gave = giveCarItem(player, carName, carAmount);
+
+			if (gave) {
+				user.sendMessage(Messages.CAR_GAVE.toString()
+				                                  .replace("%name%", carName)
+				                                  .replace("%amount%", String.valueOf(carAmount)));
+			} else {
+				user.sendMessage(Messages.CAR_INVALID.toString().replace("%car%", carName));
+			}
+		}, sender -> List.of("<amount>"));
+
+		name.addSubArgument(amount);
+		this.addSubArgument(name);
+	}
+
+	private boolean giveCarItem(Player player, String name, int amount) {
+		Car car = carAddon.getCar(name);
+
+		if (car == null) return false;
+
+		ItemStack       sampleItem   = car.buildItem(player);
+		int             maxStackSize = sampleItem.getMaxStackSize();
+		int             slots        = (int) Math.ceil(amount / (double) maxStackSize);
+		int             amountLeft   = amount;
+		PlayerInventory inventory    = player.getInventory();
+		ItemStack[]     items        = new ItemStack[slots];
+
+		for (int i = 0; i < items.length; ++i) {
+			int amountGive = Math.min(amountLeft, maxStackSize);
+
+			if (amountGive <= 0) break;
+
+			ItemStack item = car.buildItem(player);
+			item.setAmount(amountGive);
+			items[i] = item;
+			           amountLeft -= amountGive;
+		}
+
+		Map<Integer, ItemStack> left = inventory.addItem(items);
+
+		for (ItemStack item : left.values()) {
+			player.getWorld().dropItemNaturally(player.getLocation(), item);
+		}
+
+		return true;
+	}
+
+}

@@ -11,7 +11,7 @@ registered in `plugin.yml`. Sub-commands are routed via a tree-based `Argument` 
 supports permission checks, tab completion, and typo suggestions.
 
 **Module:** `gangland-impl`  
-**Package:** `me.luckyraven.command.*`
+**Package:** `org.luckyraven.gangland.command.*`
 
 ---
 
@@ -213,16 +213,16 @@ When no argument matches, the system provides helpful suggestions:
 
 ### Step 1: Create the Command Group
 
-Create a class extending `SubArgument` in `me.luckyraven.command.sub.yourcommand/`:
+Create a class extending `SubArgument` in `org.luckyraven.gangland.command.sub.yourcommand/`:
 
 ```java
-package me.luckyraven.command.sub.yourcommand;
+package org.luckyraven.gangland.command.sub.yourcommand;
 
-import me.luckyraven.Gangland;
-import me.luckyraven.command.argument.Argument;
-import me.luckyraven.command.argument.SubArgument;
-import me.luckyraven.util.TriConsumer;
-import me.luckyraven.util.datastructure.Tree;
+import org.luckyraven.gangland.Gangland;
+import argument.command.org.luckyraven.gangland.Argument;
+import argument.command.org.luckyraven.gangland.SubArgument;
+import org.luckyraven.gangland.util.TriConsumer;
+import org.luckyraven.gangland.util.datastructure.Tree;
 import org.bukkit.command.CommandSender;
 
 public class YourCommand extends SubArgument {

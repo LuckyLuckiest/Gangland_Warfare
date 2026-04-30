@@ -1,0 +1,29 @@
+package org.luckyraven.gangland.weapon.dto;
+
+import lombok.Builder;
+import lombok.Getter;
+import org.luckyraven.gangland.weapon.projectile.ProjectileType;
+
+@Getter
+@Builder
+public class ProjectileData {
+
+	private final double         speed;
+	private final ProjectileType type;
+	private final double         damage;
+	private final int            consumed;
+	private final int            perShot;
+	private final int            cooldown;
+	private final int            distance;
+	private final boolean        particle;
+	@Builder.Default
+	private final double         gravity = 0.0;
+
+	@Override
+	public String toString() {
+		return String.format(
+				"ProjectileData{speed=%.2f,type=%s,damage=%.2f,consumed=%d,perShot=%d,cooldown=%d,distance=%d,particle=%b,gravity=%.4f}",
+				speed, type, damage, consumed, perShot, cooldown, distance, particle, gravity);
+	}
+
+}

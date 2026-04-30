@@ -1,0 +1,121 @@
+package org.luckyraven.gangland.weapon.reload.type;
+
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
+import org.luckyraven.gangland.core.timer.SequenceTimer;
+import org.luckyraven.gangland.weapon.Weapon;
+import org.luckyraven.gangland.weapon.ammo.Ammunition;
+import org.luckyraven.gangland.weapon.dto.AmmunitionData;
+import org.luckyraven.gangland.weapon.dto.ReloadData;
+import org.luckyraven.gangland.weapon.reload.Reload;
+
+import java.util.Objects;
+
+public class InstantReload extends Reload {
+
+	private SequenceTimer timer;
+
+	public InstantReload(Weapon weapon, Ammunition ammunition) {
+		super(weapon, ammunition);
+	}
+
+	@Override
+	public void stopReloading() {
+		if (timer == null || timer.isCancelled()) return;
+
+		if (isReloading()) {
+			super.endReloading(getCurrentPlayer());
+		}
+
+		timer.stop();
+		timer = null;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("InstantReload{isReloading=%s, timer=%s}", isReloading(), timer);
+	}
+
+	@Override
+	protected void executeReload(JavaPlugin plugin, Player player, boolean removeAmmunition) {
+		PlayerInventory inventory = player != null ? player.getInventory() : null;
+
+		timer = new SequenceTimer(plugin);
+
+		ReloadData reloadData = getWeapon().getReloadData();
+		if (reloadData == null) return;
+
+		// start reloading the gun
+		timer.addIntervalTaskPair(0, time -> {
+			super.startReloading(player);
+		});
+
+		// the sound that plays at the middle
+		long midSound = reloadData.getCooldown() / 2;
+		timer.addIntervalTaskPair(midSound, time -> {
+			if (player != null && (player.isDead() || DownedPlayerRegistry.isDowned(player.getUniqueId()))) {
+				stopReloading();
+				return;
+			}
+
+			if (player != null) {
+				SoundConfiguration.playSounds(player, getWeapon().getSoundData().getReloadCustomMid(), null);
+			}
+		});
+
+		long remaining = Math.max(0, reloadData.getCooldown() - midSound);
+		// continue execution after the sound had finished
+		timer.addIntervalTaskPair(remaining, time -> {
+			if (player != null && (player.isDead() || DownedPlayerRegistry.isDowned(player.getUniqueId()))) {
+				stopReloading();
+				return;
+			}
+
+			AmmunitionData ammunitionData = getWeapon().getAmmunitionData();
+			if (ammunitionData == null) return;
+
+			if (inventory != null) {
+				// if ammo was lost before or during the reload start (e.g. dropped), abort immediately
+				boolean contains = inventory.containsAtLeast(getAmmunition().buildItem(player, 1),
+				                                             ammunitionData.getConsumeRate());
+				if (removeAmmunition && !contains) {
+					stopReloading();
+					return;
+				}
+
+				// remove the magazine the moment the reloading starts to prevent bugs
+				if (removeAmmunition) {
+					inventory.removeItem(getAmmunition().buildItem(player, ammunitionData.getConsumeRate()));
+				}
+			}
+
+			// add to the weapon capacity
+			getWeapon().addAmmunition(ammunitionData.getRestore());
+
+			if (inventory != null) {
+				// update the weapon data in the player's inventory
+				int newSlot = findWeaponSlot(inventory, getWeapon());
+
+				if (newSlot > -1) {
+					ItemStack existingItem = inventory.getItem(newSlot);
+					ItemBuilder heldWeapon = new ItemBuilder(
+							Objects.requireNonNullElseGet(existingItem, () -> getWeapon().buildItem(player)));
+
+					getWeapon().updateWeaponData(heldWeapon, player);
+					getWeapon().updateWeapon(player, heldWeapon, newSlot);
+				}
+			}
+
+			// end reloading the gun
+			super.endReloading(player);
+		});
+
+		timer.start(false);
+	}
+
+}

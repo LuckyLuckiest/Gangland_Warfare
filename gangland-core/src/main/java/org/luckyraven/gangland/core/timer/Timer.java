@@ -1,0 +1,68 @@
+package org.luckyraven.gangland.core.timer;
+
+import lombok.Getter;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+
+public abstract class Timer extends BukkitRunnable {
+
+	private final JavaPlugin plugin;
+	@Getter
+	private final long       delay, period;
+	private final AtomicBoolean stopped;
+
+	private BukkitTask bukkitTask;
+
+	/**
+	 * Schedules this to repeatedly run until canceled, starting after the specified number of server ticks.
+	 * <p>
+	 * This method defaults the delay to 0 and the period to 20 ticks.
+	 * </p>
+	 *
+	 * @param plugin the reference to the plugin scheduling task
+	 */
+	public Timer(JavaPlugin plugin) {
+		this(plugin, 0L, 20L);
+	}
+
+	/**
+	 * Schedules this to repeatedly run until canceled, starting after the specified number of server ticks.
+	 *
+	 * @param plugin the reference to the plugin scheduling task
+	 * @param delay the ticks to wait before running the task for the first time
+	 * @param period the ticks to wait between runs
+	 */
+	public Timer(JavaPlugin plugin, long delay, long period) {
+		this.plugin  = plugin;
+		this.delay   = delay;
+		this.period  = period;
+		this.stopped = new AtomicBoolean(true);
+	}
+
+	public boolean isRunning() {
+		return !stopped.get();
+	}
+
+	public void start(boolean async) {
+		if (bukkitTask != null) return;
+		if (isRunning()) return;
+
+		if (async) this.bukkitTask = runTaskTimerAsynchronously(plugin, delay, period);
+		else this.bukkitTask = runTaskTimer(plugin, delay, period);
+
+		this.stopped.set(false);
+	}
+
+	public void stop() {
+		if (!isRunning() || bukkitTask == null) return;
+
+		this.bukkitTask.cancel();
+		this.stopped.set(true);
+
+		this.bukkitTask = null;
+	}
+
+}

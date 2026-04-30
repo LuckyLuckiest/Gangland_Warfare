@@ -1,0 +1,59 @@
+package org.luckyraven.gangland.command.sub.cops;
+
+import org.bukkit.command.CommandSender;
+import org.luckyraven.gangland.Gangland;
+import org.luckyraven.gangland.command.Command;
+import org.luckyraven.gangland.command.argument.Argument;
+import org.luckyraven.gangland.command.sub.cops.spawner.CopSpawnerCommand;
+import org.luckyraven.gangland.copsncrooks.npc.police.CopService;
+import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
+import org.luckyraven.gangland.core.bean.command.CommandHandler;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+@CommandHandler
+public class CopCommand extends Command {
+
+	private final CopService      copService;
+	private final CopSpawnManager copSpawnManager;
+
+	public CopCommand(Gangland gangland, CopService copService, CopSpawnManager copSpawnManager) {
+		super(gangland, "cop", false, "cops");
+
+		this.copService      = copService;
+		this.copSpawnManager = copSpawnManager;
+
+		var list = getCommands().entrySet()
+				.stream()
+				.filter(entry -> entry.getKey().startsWith("cop"))
+				.sorted(Map.Entry.comparingByKey())
+				.map(Map.Entry::getValue)
+				.toList();
+		getHelpInfo().addAll(list);
+	}
+
+	@Override
+	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
+		help(commandSender, 1);
+	}
+
+	@Override
+	protected void initializeArguments() {
+		Argument spawner = new CopSpawnerCommand(getGangland(), getArgumentTree(), getArgument(), copSpawnManager);
+		Argument list    = new CopListCommand(getGangland(), getArgumentTree(), getArgument(), copService);
+
+		List<Argument> arguments = new ArrayList<>();
+
+		arguments.add(spawner);
+		arguments.add(list);
+
+		getArgument().addAllSubArguments(arguments);
+	}
+
+	@Override
+	protected void help(CommandSender sender, int page) {
+		getHelpInfo().displayHelp(sender, page, "Cops");
+	}
+}

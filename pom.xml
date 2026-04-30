@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>me.luckyraven</groupId>
+    <groupId>org.luckyraven</groupId>
     <artifactId>gangland_warfare</artifactId>
     <version>${revision}</version>
     <packaging>pom</packaging>
@@ -32,13 +32,6 @@
         <!-- Compatibility modules -->
         <module>gangland-compatibility</module>
         <module>gangland-compatibility/version-impl</module>
-        <module>gangland-compatibility/version-1_10_R1</module>
-        <module>gangland-compatibility/version-1_11_R1</module>
-        <module>gangland-compatibility/version-1_12_R1</module>
-        <module>gangland-compatibility/version-1_13_R1</module>
-        <module>gangland-compatibility/version-1_13_R2</module>
-        <module>gangland-compatibility/version-1_14_R1</module>
-        <module>gangland-compatibility/version-1_15_R1</module>
         <module>gangland-compatibility/version-1_16_R1</module>
         <module>gangland-compatibility/version-1_16_R2</module>
         <module>gangland-compatibility/version-1_16_R3</module>
@@ -165,97 +158,97 @@
         <dependencies>
             <!-- Internal modules -->
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>plugin-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>plugin-persistence</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>gangland-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>gangland-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>gangland-economy</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>gangland-item</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>inventory-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>scoreboard-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>sign-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>lootchest-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>hologram-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>shop-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>gangland-weapon</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>gangland-gadget</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>gangland-turf</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>gangland-mail</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>cops-n-crooks</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>version-impl</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>me.luckyraven</groupId>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>gangland-impl</artifactId>
                 <version>${project.version}</version>
             </dependency>

@@ -72,7 +72,7 @@ mvn test -pl plugin-persistence -am -Dtest=SQLiteIntegrationTest
 mvn test -pl plugin-persistence -am -Dtest="TableIntegrationTest#validateSchema_addsNewColumn"
 
 # Run all tests in a specific package (glob)
-mvn test -pl plugin-persistence -am -Dtest="me.luckyraven.persistence.component.*"
+mvn test -pl plugin-persistence -am -Dtest="org.luckyraven.gangland.persistence.component.*"
 
 # Skip tests during a full build
 mvn clean package -DskipTests
@@ -140,14 +140,13 @@ in `plugin-persistence/pom.xml` (or whichever module needs it):
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.MockPlugin;
 import be.seeseemelk.mockbukkit.ServerMock;
-import me.luckyraven.persistence.database.DatabaseHelper;
-import me.luckyraven.persistence.database.DatabaseHandler;
-import me.luckyraven.persistence.database.type.SQLite;
+import database.persistence.org.luckyraven.gangland.DatabaseHelper;
+import database.persistence.org.luckyraven.gangland.DatabaseHandler;
+import type.database.persistence.org.luckyraven.gangland.SQLite;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
-import java.sql.Types;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
 

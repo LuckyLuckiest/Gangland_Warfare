@@ -11,7 +11,7 @@ creating an immersive urban environment. Civilians wander, react to threats, and
 traders with configurable inventories.
 
 **Module:** `gangland-features/cops-n-crooks`  
-**Package:** `me.luckyraven.copsncrooks.npc.civilian.*`
+**Package:** `org.luckyraven.gangland.copsncrooks.npc.civilian.*`
 
 ---
 

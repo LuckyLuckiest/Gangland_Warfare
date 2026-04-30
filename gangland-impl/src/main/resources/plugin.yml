@@ -1,6 +1,6 @@
 name: Gangland_Warfare
 version: ${project.version}
-main: me.luckyraven.Gangland
+main: org.luckyraven.gangland.Gangland
 database: true
 api-version: 1.13
 depend:

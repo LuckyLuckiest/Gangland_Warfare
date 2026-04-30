@@ -7,7 +7,8 @@
 ## Overview
 
 `GanglandDatabase` wraps HikariCP and supports both MySQL and SQLite, selected by `settings.yml`. All `@Repository`
-classes are auto-registered via `RepositoryRegistry.scanAndRegisterRepositories("me.luckyraven.database.repositories")`.
+classes are auto-registered via
+`RepositoryRegistry.scanAndRegisterRepositories("org.luckyraven.gangland.database.repositories")`.
 
 Run this checklist **twice** per release — once with SQLite, once with MySQL.
 
@@ -76,7 +77,7 @@ Run this checklist **twice** per release — once with SQLite, once with MySQL.
 
 ## Repository Registration
 
-- [ ] On boot, every `@Repository` class under `me.luckyraven.database.repositories` logs a registration line.
+- [ ] On boot, every `@Repository` class under `org.luckyraven.gangland.database.repositories` logs a registration line.
 - [ ] `RepositoryRegistry.getAllRepositories()` returns one entry per entity type — not per class. Registering two
   repositories under the same entity class overwrites the first (this is intentional per CLAUDE.md).
 
@@ -84,7 +85,7 @@ Run this checklist **twice** per release — once with SQLite, once with MySQL.
 
 ## Table Schema
 
-- [ ] Tables are defined as constants under `me.luckyraven.database.tables.*`.
+- [ ] Tables are defined as constants under `org.luckyraven.gangland.database.tables.*`.
 - [ ] If a schema migration is part of this release: migration runs exactly once; second boot is a no-op; no data
   loss.
 

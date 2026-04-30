@@ -118,4 +118,4 @@ gangland_warfare/
 
 ---
 
-*All paths are relative to the project root. Primary package: `me.luckyraven`.*
+*All paths are relative to the project root. Primary package: `org.luckyraven.gangland`.*
