@@ -51,9 +51,6 @@
         <module>gangland-ui</module>
         <module>gangland-features</module>
 
-        <module>plugin-common</module>
-        <module>plugin-persistence</module>
-
         <!-- Compatibility (version-impl + one NMS adapter per CraftBukkit revision, MC 1.16+
              to match Keystone's API floor). The adapter modules are listed in
              gangland-compatibility/pom.xml, which is also their parent and centralizes the
@@ -63,14 +60,19 @@
 
     <properties>
         <revision>0.8.0</revision>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <!-- Matches Keystone's release (17): the shaded jar must load on every JVM Keystone
+             loads on, or the MC 1.16+ support floor is silently broken. release (not
+             source/target) also validates against the Java 17 API, so building on a newer
+             JDK cannot leak newer APIs into the plugin. -->
+        <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- The version used to run the plugin -->
         <bukkit.version>1.21.11-R0.1-SNAPSHOT</bukkit.version>
 
         <!-- Dependencies/Libraries versions -->
+        <!-- Shared infrastructure (Keystone.jar provides it at runtime — provided scope, never shaded) -->
+        <keystone.version>1.7.2</keystone.version>
         <nbt.version>2.15.7</nbt.version>
         <xseries.version>13.6.0</xseries.version>
         <anvilgui.version>1.10.11-SNAPSHOT</anvilgui.version>
@@ -83,7 +85,6 @@
         <bstats.version>3.2.1</bstats.version>
 
         <hikaricp.version>7.0.2</hikaricp.version>
-        <org.reflections.version>0.10.2</org.reflections.version>
         <exp4j.version>0.4.8</exp4j.version>
 
         <junit.version>6.0.3</junit.version>
@@ -158,17 +159,53 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Keystone shared infrastructure. The Keystone.jar dependency plugin provides every class at
+                 runtime (plugin.yml depend: [Keystone]), so all keystone-* modules are provided scope and must
+                 NEVER be shaded — a shaded duplicate would shadow the loaded copy with a stale version. -->
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-common</artifactId>
+                <version>${keystone.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-bean</artifactId>
+                <version>${keystone.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-item</artifactId>
+                <version>${keystone.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-persistence</artifactId>
+                <version>${keystone.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-command</artifactId>
+                <version>${keystone.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-hooks</artifactId>
+                <version>${keystone.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-testkit</artifactId>
+                <version>${keystone.version}</version>
+                <scope>test</scope>
+            </dependency>
+
             <!-- Internal modules -->
-            <dependency>
-                <groupId>org.luckyraven</groupId>
-                <artifactId>plugin-common</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.luckyraven</groupId>
-                <artifactId>plugin-persistence</artifactId>
-                <version>${project.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.luckyraven</groupId>
                 <artifactId>gangland-core</artifactId>
@@ -177,11 +214,6 @@
             <dependency>
                 <groupId>org.luckyraven</groupId>
                 <artifactId>gangland-domain</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.luckyraven</groupId>
-                <artifactId>gangland-economy</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -337,12 +369,6 @@
                 <groupId>net.objecthunter</groupId>
                 <artifactId>exp4j</artifactId>
                 <version>${exp4j.version}</version>
-                <scope>compile</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.reflections</groupId>
-                <artifactId>reflections</artifactId>
-                <version>${org.reflections.version}</version>
                 <scope>compile</scope>
             </dependency>
 

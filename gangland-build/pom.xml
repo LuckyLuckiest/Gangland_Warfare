@@ -14,30 +14,10 @@
 
     <name>Gangland Build</name>
 
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
     <build>
         <directory>../target</directory>
 
         <plugins>
-            <!-- Maven plugin compiler (start) -->
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                    <encoding>${project.build.sourceEncoding}</encoding>
-                </configuration>
-            </plugin>
-
-            <!-- Maven plugin compiler (end) -->
-
             <!-- Maven plugin shade (start) -->
 
             <plugin>
@@ -48,20 +28,13 @@
                     <shadedArtifactAttached>true</shadedArtifactAttached>
                     <finalName>${project.parent.artifactId}-${project.parent.version}</finalName>
 
+                    <!-- HikariCP, XSeries and exp4j are no longer shaded (Keystone migration): Keystone.jar ships
+                         them unrelocated on its classpath, so Gangland's classes resolve them from there at
+                         runtime. Only Gangland-exclusive libraries remain in this jar. -->
                     <relocations>
                         <relocation>
                             <pattern>net.wesjd.anvilgui</pattern>
                             <shadedPattern>org.luckyraven.gangland.dependency.anvilgui</shadedPattern>
-                        </relocation>
-
-                        <relocation>
-                            <pattern>com.zaxxer.hikari</pattern>
-                            <shadedPattern>org.luckyraven.gangland.dependency.hikari</shadedPattern>
-                        </relocation>
-
-                        <relocation>
-                            <pattern>com.cryptomorin.xseries</pattern>
-                            <shadedPattern>org.luckyraven.gangland.dependency.xseries</shadedPattern>
                         </relocation>
 
                         <relocation>
@@ -70,18 +43,8 @@
                         </relocation>
 
                         <relocation>
-                            <pattern>net.objecthunter.exp4j</pattern>
-                            <shadedPattern>org.luckyraven.gangland.dependency.exp4j</shadedPattern>
-                        </relocation>
-
-                        <relocation>
                             <pattern>org.bstats</pattern>
                             <shadedPattern>org.luckyraven.gangland.dependency.bstats</shadedPattern>
-                        </relocation>
-
-                        <relocation>
-                            <pattern>org.reflections</pattern>
-                            <shadedPattern>org.luckyraven.gangland.util.reflections</shadedPattern>
                         </relocation>
                     </relocations>
 
@@ -103,12 +66,11 @@
 
                     <artifactSet>
                         <includes>
+                            <!-- keystone-* modules share this groupId but are provided scope, so the shade
+                                 plugin never includes them — the runtime copies come from Keystone.jar. -->
                             <include>org.luckyraven:*</include>
                             <include>net.wesjd:anvilgui</include>
-                            <include>com.zaxxer:HikariCP</include>
-                            <include>com.github.cryptomorin:XSeries</include>
                             <include>fr.mrmicky:fastboard</include>
-                            <include>net.objecthunter:exp4j</include>
                             <include>org.bstats:*</include>
                         </includes>
                     </artifactSet>
@@ -135,7 +97,8 @@
             <artifactId>gangland-impl</artifactId>
         </dependency>
 
-        <!-- Include NMS -->
+        <!-- Include NMS (MC 1.16+, matching Keystone's API floor; players on older
+             clients are handled by ViaVersion/ViaBackwards) -->
         <!-- 1.21.x -->
         <dependency>
             <groupId>org.luckyraven</groupId>

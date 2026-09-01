@@ -16,6 +16,14 @@
     <name>Gangland Gadgets</name>
 
     <dependencies>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-bean</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-item</artifactId>
+        </dependency>
         <!-- Spigot Build (full server — needed for io.netty access) -->
         <dependency>
             <groupId>org.spigotmc</groupId>
@@ -41,11 +49,11 @@
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>plugin-common</artifactId>
+            <artifactId>keystone-common</artifactId>
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>plugin-persistence</artifactId>
+            <artifactId>keystone-persistence</artifactId>
             <scope>provided</scope>
         </dependency>
 

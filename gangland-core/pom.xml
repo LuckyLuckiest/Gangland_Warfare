@@ -25,35 +25,14 @@
         <!-- Local dependencies -->
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>plugin-common</artifactId>
+            <artifactId>keystone-common</artifactId>
         </dependency>
 
-        <!-- XSeries -->
+        <!-- XSeries (SoundConfiguration is XSound-backed) -->
         <dependency>
             <groupId>com.github.cryptomorin</groupId>
             <artifactId>XSeries</artifactId>
         </dependency>
-
-        <!-- exp4j -->
-        <dependency>
-            <groupId>net.objecthunter</groupId>
-            <artifactId>exp4j</artifactId>
-        </dependency>
-
-        <!-- Required plugins dependencies (start) -->
-
-        <!-- NBTAPI -->
-        <dependency>
-            <groupId>de.tr7zw</groupId>
-            <artifactId>item-nbt-api-plugin</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.viaversion</groupId>
-            <artifactId>viaversion-api</artifactId>
-        </dependency>
-
-        <!-- Required plugins dependencies (end) -->
     </dependencies>
 
 </project>

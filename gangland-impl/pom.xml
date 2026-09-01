@@ -16,6 +16,18 @@
     <name>Gangland</name>
 
     <dependencies>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-bean</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-command</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-item</artifactId>
+        </dependency>
         <!-- Bukkit/Spigot/Paper builds (start) -->
 
         <!-- Spigot Build -->
@@ -50,11 +62,11 @@
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>plugin-common</artifactId>
+            <artifactId>keystone-common</artifactId>
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>plugin-persistence</artifactId>
+            <artifactId>keystone-persistence</artifactId>
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
@@ -78,7 +90,7 @@
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>gangland-economy</artifactId>
+            <artifactId>keystone-hooks</artifactId>
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
@@ -120,11 +132,6 @@
             <scope>compile</scope>
         </dependency>
 
-        <!-- reflections -->
-        <dependency>
-            <groupId>org.reflections</groupId>
-            <artifactId>reflections</artifactId>
-        </dependency>
 
         <!-- Compile level dependencies (end) -->
 
@@ -172,6 +179,18 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
+        </dependency>
+
+        <!-- Keystone test fixtures (BukkitStatics, PluginMocks, SqliteDbs, DbFiles) -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-testkit</artifactId>
+        </dependency>
+
+        <!-- SQLite driver for backend round-trip tests -->
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
         </dependency>
 
         <!-- Mocking -->

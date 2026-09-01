@@ -16,14 +16,18 @@
     <name>Gangland Domain</name>
 
     <dependencies>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-bean</artifactId>
+        </dependency>
         <!-- Local dependencies -->
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>plugin-common</artifactId>
+            <artifactId>keystone-common</artifactId>
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>plugin-persistence</artifactId>
+            <artifactId>keystone-persistence</artifactId>
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
@@ -31,7 +35,7 @@
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>gangland-economy</artifactId>
+            <artifactId>keystone-hooks</artifactId>
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>

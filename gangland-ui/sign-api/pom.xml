@@ -18,12 +18,16 @@
     <dependencies>
         <dependency>
             <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-bean</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
             <artifactId>gangland-core</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>plugin-common</artifactId>
+            <artifactId>keystone-common</artifactId>
         </dependency>
     </dependencies>
 

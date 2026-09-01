@@ -14,6 +14,12 @@
     <name>Version Handler</name>
 
     <dependencies>
+        <!-- Keystone shared infrastructure (provided by Keystone.jar at runtime; never shaded).
+             Declared directly: provided scope is not transitive, so it cannot arrive via gangland-core. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-common</artifactId>
+        </dependency>
         <!-- Spigot Build -->
         <dependency>
             <groupId>org.spigotmc</groupId>

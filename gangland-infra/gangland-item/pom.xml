@@ -16,14 +16,22 @@
     <name>Gangland Item</name>
 
     <dependencies>
-        <!-- Local dependencies -->
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>plugin-common</artifactId>
+            <artifactId>keystone-bean</artifactId>
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>plugin-persistence</artifactId>
+            <artifactId>keystone-item</artifactId>
+        </dependency>
+        <!-- Local dependencies -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-persistence</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

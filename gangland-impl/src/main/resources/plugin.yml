@@ -2,13 +2,16 @@ name: Gangland_Warfare
 version: ${project.version}
 main: org.luckyraven.gangland.Gangland
 database: true
-api-version: 1.13
+# Support floor is MC 1.16, matching Keystone's API floor; players on older clients go through ViaVersion/ViaBackwards
+api-version: 1.16
 depend:
+   - Keystone
    - NBTAPI
    - Citizens
 softdepend:
    - PlaceholderAPI
    - Vault
+   - ViaVersion
 author: LuckyRaven10
 description: ${project.description}
 

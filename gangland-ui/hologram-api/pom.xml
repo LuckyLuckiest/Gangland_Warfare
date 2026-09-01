@@ -16,6 +16,14 @@
     <name>Hologram API</name>
 
     <dependencies>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-bean</artifactId>
+        </dependency>
         <!-- Local dependencies -->
         <dependency>
             <groupId>org.luckyraven</groupId>
