@@ -8,16 +8,19 @@ import org.luckyraven.gangland.command.Command;
 import org.luckyraven.gangland.command.CommandManager;
 import org.luckyraven.gangland.command.CommandTabCompleter;
 import org.luckyraven.gangland.command.data.InformationManager;
-import org.luckyraven.gangland.core.bean.BeanFactory;
-import org.luckyraven.gangland.core.bean.BeanGraph;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
-import org.luckyraven.gangland.core.bean.Phase;
-import org.luckyraven.gangland.core.bean.autowire.DependencyContainer;
+import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.keystone.bean.BeanFactory;
+import org.luckyraven.keystone.command.argument.ArgumentMessages;
+import org.luckyraven.keystone.command.brigadier.BrigadierTabRegistrar;
+import org.luckyraven.keystone.bean.BeanGraph;
+import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.bean.Phase;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.gangland.file.configuration.SettingsLookupImpl;
 import org.luckyraven.gangland.listener.ListenerManager;
-import org.luckyraven.gangland.persistence.FileManager;
-import org.luckyraven.gangland.persistence.repository.IRepository;
-import org.luckyraven.gangland.persistence.repository.RepositoryRegistry;
+import org.luckyraven.keystone.persistence.FileManager;
+import org.luckyraven.keystone.persistence.repository.IRepository;
+import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -187,6 +190,13 @@ public final class GanglandContext {
 			log.warn("Plugin command /{} not declared in plugin.yml — skipping command bind", Gangland.SHORT_PREFIX);
 			return;
 		}
+		// Localize the strings the Keystone argument tree emits itself (no-permission, not-implemented, the
+		// wrong-arguments prefix). Suppliers, so a /glw reload language switch takes effect immediately. The
+		// action-error slot keeps Keystone's default line.
+		ArgumentMessages.install(Messages.COMMAND_NO_PERM::toString,
+		                         Messages.ARGUMENT_NOT_IMPLEMENTED::toString,
+		                         Messages.ARGUMENTS_WRONG::toString,
+		                         null);
 		// Bind the singleton InformationManager to Command's static field BEFORE scanning so subclass constructors
 		// that call getCommands() / getCommandInformation() during their own construction see a non-null manager.
 		// Threading the manager through every Command subclass super(...) call would touch 25+ files for one read.
@@ -194,6 +204,11 @@ public final class GanglandContext {
 		command.setExecutor(commandManager);
 		commandManager.scanAndRegisterCommands(COMMAND_PACKAGE, gangland.getClass().getClassLoader());
 		command.setTabCompleter(new CommandTabCompleter(CommandManager.getCommands()));
+
+		// Client-side Brigadier completion (Commodore ships in Keystone.jar; brigadier in the server jar). Safe on
+		// plain Spigot — on any failure it logs WARN and the server-side tab completer above stays the only path.
+		BrigadierTabRegistrar.registerIfSupported(gangland, command, CommandManager.getCommands());
+
 		log.debug("Command phase complete: {} command(s) registered", CommandManager.getCommands().size());
 	}
 }

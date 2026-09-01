@@ -4,13 +4,13 @@ import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.command.argument.Argument;
-import org.luckyraven.gangland.command.argument.SubArgument;
-import org.luckyraven.gangland.command.argument.types.OptionalArgument;
+import org.luckyraven.keystone.command.argument.Argument;
+import org.luckyraven.keystone.command.argument.SubArgument;
+import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.gangland.copsncrooks.npc.banker.BankerData;
 import org.luckyraven.gangland.copsncrooks.npc.banker.BankerManager;
-import org.luckyraven.gangland.core.TriConsumer;
-import org.luckyraven.gangland.core.datastructure.Tree;
+import org.luckyraven.keystone.util.TriConsumer;
+import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.List;

@@ -7,11 +7,11 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.command.argument.Argument;
-import org.luckyraven.gangland.command.argument.SubArgument;
-import org.luckyraven.gangland.command.argument.types.OptionalArgument;
-import org.luckyraven.gangland.core.TriConsumer;
-import org.luckyraven.gangland.core.datastructure.Tree;
+import org.luckyraven.keystone.command.argument.Argument;
+import org.luckyraven.keystone.command.argument.SubArgument;
+import org.luckyraven.keystone.command.argument.types.OptionalArgument;
+import org.luckyraven.keystone.util.TriConsumer;
+import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
@@ -166,7 +166,7 @@ class GangPromoteCommand extends SubArgument {
 				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
 				String        offlineName   = offlinePlayer.getName();
 
-				Rank first = nextRanks.getFirst();
+				Rank first = nextRanks.get(0);
 				if (offlineName != null && !offlineName.isEmpty() && offlinePlayer.isOnline()) {
 					Player onlinePlayer = offlinePlayer.getPlayer();
 					String message = Messages.GANG_PROMOTE_TARGET_SUCCESS.toString()

@@ -2,37 +2,43 @@ package org.luckyraven.gangland.command;
 
 import lombok.CustomLog;
 import lombok.Getter;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.PluginDescriptionFile;
 import org.jetbrains.annotations.NotNull;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.command.argument.Argument;
 import org.luckyraven.gangland.command.sub.DownloadPluginCommand;
 import org.luckyraven.gangland.command.sub.debug.ComponentExecutorCommand;
 import org.luckyraven.gangland.command.sub.debug.DebugCommand;
 import org.luckyraven.gangland.command.sub.debug.ReadNBTCommand;
 import org.luckyraven.gangland.command.sub.debug.TimerCommand;
-import org.luckyraven.gangland.core.UnhandledError;
-import org.luckyraven.gangland.core.bean.autowire.DependencyContainer;
-import org.luckyraven.gangland.core.bean.command.CommandService;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.gangland.file.configuration.SettingsLookupImpl;
 import org.luckyraven.gangland.util.GanglandChatUtil;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
+import org.luckyraven.keystone.command.argument.Argument;
+import org.luckyraven.keystone.util.UnhandledError;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
-import static org.luckyraven.gangland.util.GanglandChatUtil.color;
-
+/**
+ * Gangland's dispatcher — a subclass of Keystone's {@link org.luckyraven.keystone.command.CommandManager} (1.7.2
+ * migration). Keystone owns scanning, two-phase instantiation via the {@link DependencyContainer}, registration and
+ * per-subcommand help paging; this class keeps the consumer-side behavior:
+ *
+ * <ul>
+ *     <li>{@link Messages}-localized error lines and the {@link GanglandChatUtil} "did you mean" styling;</li>
+ *     <li>the dev-only tab/suggestion filter for debug commands ({@link #getFilters()});</li>
+ *     <li>the branded {@code /glw} splash in {@link #show}.</li>
+ * </ul>
+ *
+ * <p>Condition evaluation ({@code @CommandHandler(condition = ...)}) runs through {@link SettingsLookupImpl},
+ * which resolves dotted settings keys against the loaded settings map.
+ */
 @CustomLog
-public final class CommandManager extends CommandService<Command> implements CommandExecutor {
+public final class CommandManager extends org.luckyraven.keystone.command.CommandManager {
 
-	// classes that shouldn't be displayed in tab completion
+	// classes that shouldn't be displayed in tab completion for non-dev users
 	@Getter
 	private static final List<Class<? extends Command>> filters = Arrays.asList(DebugCommand.class,
 	                                                                            ComponentExecutorCommand.class,
@@ -40,27 +46,29 @@ public final class CommandManager extends CommandService<Command> implements Com
 	                                                                            TimerCommand.class,
 	                                                                            DownloadPluginCommand.class);
 
-	private static final Map<String, Command> commands = new HashMap<>();
-
-	private final Gangland            gangland;
-	private final DependencyContainer dependencyContainer;
-	private final String              fullPrefix;
-	private final String              shortPrefix;
+	private final Gangland gangland;
+	private final String   fullPrefix;
+	private final String   shortPrefix;
 
 	public CommandManager(Gangland gangland,
 	                      DependencyContainer dependencyContainer,
 	                      String fullPrefix,
 	                      String shortPrefix) {
-		this.gangland            = gangland;
-		this.dependencyContainer = dependencyContainer;
-		this.fullPrefix          = fullPrefix;
-		this.shortPrefix         = shortPrefix;
+		super(gangland, dependencyContainer, new SettingsLookupImpl(), fullPrefix, shortPrefix);
+
+		this.gangland    = gangland;
+		this.fullPrefix  = fullPrefix;
+		this.shortPrefix = shortPrefix;
 	}
 
-	public static List<Command> getPermissibleCommands(CommandSender sender) {
-		List<Command> commands = new ArrayList<>();
+	/**
+	 * Permission-filtered commands minus the dev-only debug commands for everyone but the dev accounts. Shadows the
+	 * unfiltered Keystone static on purpose — Gangland callers (tab completer, help) go through this one.
+	 */
+	public static List<org.luckyraven.keystone.command.Command> getPermissibleCommands(CommandSender sender) {
+		List<org.luckyraven.keystone.command.Command> result = new ArrayList<>();
 
-		for (Command handler : CommandManager.commands.values()) {
+		for (org.luckyraven.keystone.command.Command handler : getCommands().values()) {
 			// filter the commands for non-dev users
 			if (!isDev(sender)) {
 				if (filters.stream().anyMatch(filterClass -> filterClass.isInstance(handler))) continue;
@@ -69,14 +77,10 @@ public final class CommandManager extends CommandService<Command> implements Com
 			String permission = handler.getPermission();
 
 			// check if the user has the permission to suggest the tab completion
-			if (permission.isEmpty() || sender.hasPermission(handler.getPermission())) commands.add(handler);
+			if (permission.isEmpty() || sender.hasPermission(permission)) result.add(handler);
 		}
 
-		return commands;
-	}
-
-	public static Map<String, Command> getCommands() {
-		return new HashMap<>(commands);
+		return result;
 	}
 
 	private static boolean isDev(CommandSender sender) {
@@ -88,18 +92,6 @@ public final class CommandManager extends CommandService<Command> implements Com
 		UUID uuid2 = UUID.fromString("ad72b2bb-bc30-4c55-a275-106976e70894");
 
 		return senderUuid.equals(uuid1) || senderUuid.equals(uuid2);
-	}
-
-	@Override
-	public boolean invokeCondition(String condition) throws InvocationTargetException, IllegalAccessException {
-		Method method = Settings.getSetting(condition);
-
-		if (method != null && (method.getReturnType().getSimpleName().equalsIgnoreCase("boolean") ||
-		                       method.getReturnType() == Boolean.class)) {
-			return (boolean) method.invoke(null);
-		}
-
-		return false;
 	}
 
 	@Override
@@ -120,12 +112,12 @@ public final class CommandManager extends CommandService<Command> implements Com
 
 			boolean match = false;
 
-			for (Map.Entry<String, Command> entry : commands.entrySet()) {
+			for (Map.Entry<String, org.luckyraven.keystone.command.Command> entry : getCommands().entrySet()) {
 				if (!(entry.getKey().equalsIgnoreCase(args[0]) ||
 				      entry.getValue().getAlias().contains(args[0].toLowerCase()))) continue;
 
-				if (Arrays.stream(args).anyMatch("help"::equalsIgnoreCase)) onHelp(entry, sender, args);
-				else entry.getValue().runExecute(sender, args);
+				if (Arrays.stream(args).anyMatch("help"::equalsIgnoreCase)) onSubHelp(entry.getValue(), sender, args);
+				else entry.getValue().runExecute(shortPrefix, sender, args);
 
 				match = true;
 				break;
@@ -135,17 +127,17 @@ public final class CommandManager extends CommandService<Command> implements Com
 				sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_DONT_EXIST.toString(),
 				                                                 String.format("/%s %s", label, Arrays.asList(args))));
 
-				List<Command> commands = getPermissibleCommands(sender);
+				List<org.luckyraven.keystone.command.Command> permissible = getPermissibleCommands(sender);
 
-				Set<String> dictionary = commands.stream()
-						.map(Command::getAlias)
+				Set<String> dictionary = permissible.stream()
+						.map(org.luckyraven.keystone.command.Command::getAlias)
 						.flatMap(Collection::stream)
 						.filter(s -> !s.equals(Argument.OPTIONAL_ARGUMENT))
 						.collect(Collectors.toSet());
 
-				dictionary.addAll(commands.stream()
-										  .map(handler -> handler.getArgument().getArguments()[0])
-						                  .collect(Collectors.toSet()));
+				dictionary.addAll(permissible.stream()
+						                     .map(handler -> handler.getArgument().getArguments()[0])
+						                     .collect(Collectors.toSet()));
 
 				String commandSuggestion = GanglandChatUtil.generateCommandSuggestion(args[0], dictionary, label, null);
 
@@ -160,14 +152,11 @@ public final class CommandManager extends CommandService<Command> implements Com
 		return true;
 	}
 
-	public void addCommand(Command sub) {
-		commands.put(sub.getLabel(), sub);
-	}
-
+	@Override
 	public void show(CommandSender cs) {
-		PluginDescriptionFile pdf = gangland.getDescription();
+		org.bukkit.plugin.PluginDescriptionFile pdf = gangland.getDescription();
 		cs.sendMessage("");
-		cs.sendMessage(color("&8--&6=&7&oGangland Warfare&6=&8--"));
+		cs.sendMessage(GanglandChatUtil.color("&8--&6=&7&oGangland Warfare&6=&8--"));
 
 		List<String>  authors   = pdf.getAuthors();
 		StringBuilder authorStr = new StringBuilder();
@@ -176,53 +165,35 @@ public final class CommandManager extends CommandService<Command> implements Com
 			if (i < authors.size() - 1) authorStr.append(", ");
 		}
 
-		cs.sendMessage(color("&7Author" + GanglandChatUtil.plural(authors.size()) + "&8: &b" + authorStr));
-		cs.sendMessage(color("&7Version&8: &b" + pdf.getVersion()));
-		cs.sendMessage(color("&7Type &6/" + shortPrefix + " help &7to start."));
+		cs.sendMessage(GanglandChatUtil.color("&7Author" + GanglandChatUtil.plural(authors.size()) + "&8: &b" + authorStr));
+		cs.sendMessage(GanglandChatUtil.color("&7Version&8: &b" + pdf.getVersion()));
+		cs.sendMessage(GanglandChatUtil.color("&7Type &6/" + shortPrefix + " help &7to start."));
 		cs.sendMessage("");
 	}
 
-	@Override
-	protected Command createInstance(Class<?> clazz) throws Exception {
-		if (!Command.class.isAssignableFrom(clazz)) {
-			throw new IllegalArgumentException(clazz.getName() + " does not extend " + Command.class.getSimpleName());
+	/**
+	 * Mirrors Keystone's private per-subcommand help paging, with {@link GanglandChatUtil}-styled validation errors
+	 * (which the pre-migration code built and then silently dropped — they are actually sent now).
+	 */
+	private void onSubHelp(org.luckyraven.keystone.command.Command sub, CommandSender sender, String[] args) {
+		int page  = 1;
+		int index = -1;
+		for (int i = 0; i < args.length - 1; i++) {
+			if (args[i].equalsIgnoreCase("help")) {
+				index = i;
+				break;
+			}
 		}
-
-		// Construct via the root container so commands can declare any registered bean as a constructor parameter
-		// (UserManager, GangManager, WeaponManager, etc.) and receive it automatically. The legacy
-		// (Gangland) constructor still works because the container resolves Gangland the same as any other bean.
-		Command instance = (Command) dependencyContainer.createInstance(clazz);
-
-		// Build sub-arguments AFTER the constructor returns so subclass fields (constructor-injected beans) are
-		// fully assigned. The Command base class deliberately does NOT call initializeArguments() in its constructor
-		// — Java init order means subclass fields are still null at the point super() runs, so any sub-argument that
-		// receives one of those fields would NPE.
-		instance.initializeArguments();
-
-		return instance;
-	}
-
-	@Override
-	protected void registerCommand(Command command) {
-		addCommand(command);
-	}
-
-	private void onHelp(Map.Entry<String, Command> entry, CommandSender sender, String[] args) {
-		// Get the page number if it exists
-		int page = 1;
-		int index = IntStream.range(0, args.length - 1)
-		                     .filter(i -> args[i].equalsIgnoreCase("help"))
-		                     .findFirst()
-		                     .orElse(-1);
 		if (index != -1) try {
 			page = Integer.parseInt(args[index + 1]);
 		} catch (NumberFormatException | ArrayIndexOutOfBoundsException ignored) { }
 
-		// display the help of the command (if mentioned)
+		if (!(sub instanceof Command ganglandCommand)) return;
+
 		try {
-			entry.getValue().help(sender, page);
+			ganglandCommand.renderHelp(sender, page);
 		} catch (IllegalArgumentException exception) {
-			GanglandChatUtil.errorMessage(exception.getMessage());
+			sender.sendMessage(GanglandChatUtil.errorMessage(exception.getMessage()));
 		}
 	}
 

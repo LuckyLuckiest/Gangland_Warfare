@@ -3,7 +3,7 @@ package org.luckyraven.gangland.command.sub.jail;
 import org.bukkit.command.CommandSender;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.command.Command;
-import org.luckyraven.gangland.command.argument.Argument;
+import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentRegistry;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.detainment.intake.JailIntakeService;
@@ -11,7 +11,7 @@ import org.luckyraven.gangland.copsncrooks.detainment.release.ReleasePipeline;
 import org.luckyraven.gangland.copsncrooks.jail.JailExitService;
 import org.luckyraven.gangland.copsncrooks.jail.JailRegistry;
 import org.luckyraven.gangland.copsncrooks.jail.JailService;
-import org.luckyraven.gangland.core.bean.command.CommandHandler;
+import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 

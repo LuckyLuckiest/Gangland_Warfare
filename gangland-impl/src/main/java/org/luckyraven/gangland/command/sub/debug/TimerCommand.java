@@ -4,10 +4,10 @@ import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.command.Command;
-import org.luckyraven.gangland.command.argument.Argument;
-import org.luckyraven.gangland.command.argument.types.OptionalArgument;
-import org.luckyraven.gangland.core.bean.command.CommandHandler;
-import org.luckyraven.gangland.core.timer.SequenceTimer;
+import org.luckyraven.keystone.command.argument.Argument;
+import org.luckyraven.keystone.command.argument.types.OptionalArgument;
+import org.luckyraven.keystone.bean.command.CommandHandler;
+import org.luckyraven.keystone.timer.SequenceTimer;
 
 import java.util.*;
 

@@ -4,11 +4,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.command.argument.Argument;
-import org.luckyraven.gangland.command.argument.SubArgument;
-import org.luckyraven.gangland.command.argument.types.OptionalArgument;
-import org.luckyraven.gangland.core.TriConsumer;
-import org.luckyraven.gangland.core.datastructure.Tree;
+import org.luckyraven.keystone.command.argument.Argument;
+import org.luckyraven.keystone.command.argument.SubArgument;
+import org.luckyraven.keystone.command.argument.types.OptionalArgument;
+import org.luckyraven.keystone.util.TriConsumer;
+import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
@@ -68,7 +68,7 @@ class GangAllyAcceptCommand extends SubArgument {
 				return;
 			}
 
-			MailItem mail    = incoming.getFirst();
+			MailItem mail    = incoming.get(0);
 			Gang     sending = gangManager.getGang(mail.getSenderGangId());
 
 			if (sending == null) {
@@ -165,7 +165,7 @@ class GangAllyAcceptCommand extends SubArgument {
 		if (userGang.isAlly(sending)) {
 			List<User<Player>> userGangOnline = userGang.getOnlineMembers(userManager::getUser);
 			if (!userGangOnline.isEmpty()) {
-				userGangOnline.getFirst().sendMessage(Messages.ALREADY_ALLIED_GANG.toString());
+				userGangOnline.get(0).sendMessage(Messages.ALREADY_ALLIED_GANG.toString());
 			}
 			mailManager.accept(mail);
 			return;

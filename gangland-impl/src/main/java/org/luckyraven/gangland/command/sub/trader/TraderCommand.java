@@ -3,11 +3,11 @@ package org.luckyraven.gangland.command.sub.trader;
 import org.bukkit.command.CommandSender;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.command.Command;
-import org.luckyraven.gangland.command.argument.Argument;
+import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.command.sub.trader.edit.TraderEditCommand;
 import org.luckyraven.gangland.copsncrooks.npc.trader.TraderManager;
 import org.luckyraven.gangland.copsncrooks.npc.trader.trait.TraderTraitRegistry;
-import org.luckyraven.gangland.core.bean.command.CommandHandler;
+import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.gangland.shop.ShopRegistry;
 
 import java.util.Map;

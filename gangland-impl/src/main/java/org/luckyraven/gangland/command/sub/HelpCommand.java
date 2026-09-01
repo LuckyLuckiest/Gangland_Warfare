@@ -4,11 +4,11 @@ import org.bukkit.command.CommandSender;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.gangland.command.CommandManager;
-import org.luckyraven.gangland.command.argument.Argument;
+import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.command.data.CommandInformation;
 import org.luckyraven.gangland.command.data.InformationManager;
-import org.luckyraven.gangland.core.bean.command.CommandHandler;
-import org.luckyraven.gangland.core.bean.command.CommandPriority;
+import org.luckyraven.keystone.bean.command.CommandHandler;
+import org.luckyraven.keystone.bean.command.CommandPriority;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,9 +23,12 @@ public final class HelpCommand extends Command {
 
 		list.add(informationManager.getCommands().get("general"));
 		list.add(informationManager.getCommands().get("general_page"));
+		// Keystone's registry is typed on its own Command; help info lives on the Gangland subclass
 		list.addAll(CommandManager.getCommands()
 		                          .values()
 		                          .parallelStream()
+		                          .filter(Command.class::isInstance)
+		                          .map(Command.class::cast)
 		                          .flatMap(entry -> entry.getHelpInfo().getList()
 										  .stream())
 		                          .toList());

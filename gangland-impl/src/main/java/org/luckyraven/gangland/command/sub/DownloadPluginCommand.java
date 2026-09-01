@@ -4,11 +4,12 @@ import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.command.Command;
-import org.luckyraven.gangland.command.argument.Argument;
-import org.luckyraven.gangland.command.argument.types.DoubleArgument;
-import org.luckyraven.gangland.core.bean.command.CommandHandler;
+import org.luckyraven.keystone.command.argument.Argument;
+import org.luckyraven.keystone.command.argument.types.DoubleArgument;
+import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.util.UpdateChecker;
+import org.luckyraven.gangland.util.UpdateNotifier;
+
 
 import java.util.Map;
 
@@ -56,7 +57,7 @@ public final class DownloadPluginCommand extends Command {
 
 	private @NotNull Argument getConfirm() {
 		return new DoubleArgument(getGangland(), "download", getArgumentTree(), (argument, sender, args) -> {
-			UpdateChecker updateChecker = getGangland().getUpdateChecker();
+			UpdateNotifier updateChecker = getGangland().getUpdateChecker();
 			boolean       newUpdate     = updateChecker.updateAvailable();
 
 			if (!newUpdate) {

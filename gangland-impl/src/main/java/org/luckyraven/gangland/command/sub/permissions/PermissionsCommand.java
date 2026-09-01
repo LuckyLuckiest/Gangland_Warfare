@@ -3,10 +3,10 @@ package org.luckyraven.gangland.command.sub.permissions;
 import org.bukkit.command.CommandSender;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.command.Command;
-import org.luckyraven.gangland.command.argument.Argument;
-import org.luckyraven.gangland.command.argument.types.OptionalArgument;
-import org.luckyraven.gangland.core.bean.command.CommandHandler;
-import org.luckyraven.gangland.data.permission.PermissionManager;
+import org.luckyraven.keystone.command.argument.Argument;
+import org.luckyraven.keystone.command.argument.types.OptionalArgument;
+import org.luckyraven.keystone.bean.command.CommandHandler;
+import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 

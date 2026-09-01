@@ -5,31 +5,32 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.command.argument.Argument;
-import org.luckyraven.gangland.command.argument.types.ConfirmArgument;
-import org.luckyraven.gangland.command.argument.types.OptionalArgument;
-import org.luckyraven.gangland.core.datastructure.Tree;
+import org.luckyraven.keystone.command.argument.Argument;
+import org.luckyraven.keystone.command.argument.types.ConfirmArgument;
+import org.luckyraven.keystone.command.argument.types.OptionalArgument;
+import org.luckyraven.keystone.datastructure.Tree;
 
 import java.util.*;
 
 @RequiredArgsConstructor
 public final class CommandTabCompleter implements TabCompleter {
 
-	private final Map<String, Command> commandMap;
+	private final Map<String, org.luckyraven.keystone.command.Command> commandMap;
 
 	@NotNull
 	@Override
 	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull org.bukkit.command.Command command,
 	                                  @NotNull String label, @NotNull String[] args) {
-		// commands according to user permission
-		List<Command> commands = CommandManager.getPermissibleCommands(sender);
+		// commands according to user permission (dev-filtered — the Gangland shadow, not Keystone's static)
+		List<org.luckyraven.keystone.command.Command> commands = CommandManager.getPermissibleCommands(sender);
 
 		// display all the initial arguments
 		if (args.length == 1) {
-			return collectedArguments(args, commands.stream().map(Command::getLabel).toList());
+			return collectedArguments(args,
+			                          commands.stream().map(org.luckyraven.keystone.command.Command::getLabel).toList());
 		}
 
-		Command commandHandler = commandMap.get(args[0].toLowerCase());
+		org.luckyraven.keystone.command.Command commandHandler = commandMap.get(args[0].toLowerCase());
 		// return empty (not null) once we're past the deepest branch — null would let Bukkit fall back to
 		// its default player-name completer, which leaks unrelated online players into the suggestion list
 		if (commandHandler != null && args.length > commandHandler.getArgumentTree().height()) {
@@ -53,8 +54,9 @@ public final class CommandTabCompleter implements TabCompleter {
 		}
 
 		// surface 'help' as a first-layer suggestion for commands with a populated HelpInfo — dispatch is
-		// already handled centrally by CommandManager.onHelp, so no synthetic tree node is needed
-		if (args.length == 2 && commandHandler != null && commandHandler.getHelpInfo().size() > 0) {
+		// already handled centrally by CommandManager.onSubHelp, so no synthetic tree node is needed
+		if (args.length == 2 && commandHandler instanceof Command ganglandCommand
+		    && ganglandCommand.getHelpInfo().size() > 0) {
 			arguments.add("help");
 		}
 
@@ -69,8 +71,9 @@ public final class CommandTabCompleter implements TabCompleter {
 		return arguments.stream().map(String::toLowerCase).filter(arg -> arg.contains(lastArg)).distinct().toList();
 	}
 
-	private Argument findArgument(String[] args, List<Command> commands) {
-		for (Tree<Argument> tree : commands.stream().map(Command::getArgumentTree).toList()) {
+	private Argument findArgument(String[] args, List<org.luckyraven.keystone.command.Command> commands) {
+		for (Tree<Argument> tree : commands.stream()
+		                                   .map(org.luckyraven.keystone.command.Command::getArgumentTree).toList()) {
 			// We want to find the parent of the argument being typed
 			// so we can show its children as completions
 			int targetDepth = args.length - 2;
