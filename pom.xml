@@ -11,11 +11,36 @@
 
     <name>Gangland Warfare</name>
     <description>Rival gangs battling for control in Minecraft.</description>
+    <url>https://github.com/LuckyLuckiest/Gangland_Warfare</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <developers>
         <developer>
+            <id>LuckyLuckiest</id>
             <name>LuckyRaven10</name>
+            <email>luckyluckiest2002@gmail.com</email>
+            <url>https://github.com/LuckyLuckiest</url>
         </developer>
     </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/LuckyLuckiest/Gangland_Warfare.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/LuckyLuckiest/Gangland_Warfare.git</developerConnection>
+        <url>https://github.com/LuckyLuckiest/Gangland_Warfare</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/LuckyLuckiest/Gangland_Warfare/issues</url>
+    </issueManagement>
 
     <modules>
         <module>gangland-impl</module>
@@ -86,6 +111,13 @@
         <log4j-slf4j2.version>3.0.0-beta2</log4j-slf4j2.version>
         <sqlite-jdbc.version>3.51.2.0</sqlite-jdbc.version>
         <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
+
+        <!-- Release / publishing plugin versions -->
+        <flatten-maven-plugin.version>1.8.0</flatten-maven-plugin.version>
+        <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
+        <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
+        <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
+        <central-publishing-maven-plugin.version>0.11.0</central-publishing-maven-plugin.version>
     </properties>
 
     <repositories>
@@ -401,6 +433,58 @@
             </plugins>
         </pluginManagement>
 
+        <plugins>
+            <!-- Resolves the CI-friendly ${revision} placeholder into a literal version in every
+                 installed/deployed POM. Without this, Maven Central consumers receive POMs whose
+                 <version> is the unresolvable string "${revision}". -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>${flatten-maven-plugin.version}</version>
+                <configuration>
+                    <updatePomFile>true</updatePomFile>
+                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten.clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Publishes to Maven Central via the Central Portal on `mvn deploy`.
+                 Generates the required .md5/.sha1 (plus .sha256/.sha512) checksum files
+                 for every artifact in the upload bundle (checksums=all is the default). -->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>${central-publishing-maven-plugin.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <!-- Leave manual review/publish in the Central Portal UI; flip to true to
+                         publish automatically once validation passes. -->
+                    <autoPublish>false</autoPublish>
+                    <!-- The shaded server jar is distributed via SpigotMC/GitHub Releases,
+                         not Maven Central (it also has no sources/javadoc of its own). -->
+                    <excludeArtifacts>
+                        <excludeArtifact>gangland-build</excludeArtifact>
+                    </excludeArtifacts>
+                </configuration>
+            </plugin>
+        </plugins>
+
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -438,5 +522,65 @@
 
         <!-- Technical provided level dependencies (end) -->
     </dependencies>
+
+    <profiles>
+        <!-- Activate for Maven Central releases: mvn clean deploy -P central-release
+             Attaches -sources.jar and -javadoc.jar to every jar module and GPG-signs
+             every file, as required by https://central.sonatype.org/publish/requirements/ -->
+        <profile>
+            <id>central-release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>${maven-source-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>${maven-javadoc-plugin.version}</version>
+                        <configuration>
+                            <doclint>none</doclint>
+                            <quiet>true</quiet>
+                            <notimestamp>true</notimestamp>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven-gpg-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

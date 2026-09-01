@@ -10,6 +10,9 @@ out/
 *.env
 nul
 
+# flatten-maven-plugin output (generated during build, removed by mvn clean)
+.flattened-pom.xml
+
 # Compiled class file
 *.class
 

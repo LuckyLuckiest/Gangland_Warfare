@@ -92,8 +92,9 @@
                             <includes>
                                 <!-- AnvilGUI -->
                                 <include>net/wesjd/anvilgui/version/</include>
-                                <!-- Compatibility -->
-                                <include>me/luckyraven/</include>
+                                <!-- Project classes are discovered reflectively (beans, listeners,
+                                     repositories, NMS adapters) so minimizeJar must keep them all -->
+                                <include>org/luckyraven/</include>
                             </includes>
                         </filter>
                     </filters>
@@ -102,7 +103,7 @@
 
                     <artifactSet>
                         <includes>
-                            <include>org.luckyraven.gangland:*</include>
+                            <include>org.luckyraven:*</include>
                             <include>net.wesjd:anvilgui</include>
                             <include>com.zaxxer:HikariCP</include>
                             <include>com.github.cryptomorin:XSeries</include>
