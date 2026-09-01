@@ -6,37 +6,29 @@
 
     <parent>
         <groupId>org.luckyraven</groupId>
-        <artifactId>gangland_warfare</artifactId>
+        <artifactId>gangland-compatibility</artifactId>
         <version>${revision}</version>
-        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>version-1_16_R3</artifactId>
 
     <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <spigot.version>1.16.5-R0.1-SNAPSHOT</spigot.version>
     </properties>
 
     <dependencies>
-        <!-- Bukkit/Spigot/Paper builds (start) -->
-
-        <!-- Spigot Build -->
+        <!-- NMS server internals (pre-1.20.5 revisions compile directly against the
+             obfuscated server jar; no remap step needed) -->
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot</artifactId>
-            <version>1.16.5-R0.1-SNAPSHOT</version>
+            <version>${spigot.version}</version>
             <scope>provided</scope>
         </dependency>
 
-        <!-- Bukkit/Spigot/Paper builds (end) -->
-
-        <!-- Core Module -->
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>gangland-impl</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
 

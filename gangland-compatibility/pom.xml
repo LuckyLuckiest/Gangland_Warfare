@@ -15,27 +15,81 @@
 
     <name>Gangland Compatibility</name>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>plugin-common</artifactId>
-        </dependency>
-    </dependencies>
+    <modules>
+        <module>version-impl</module>
+
+        <!-- One NMS adapter per CraftBukkit revision. Support floor is MC 1.16, matching
+             Keystone's API floor (Spigot 1.16.5, api-version 1.16); the whole stack compiles
+             at Java release 17 so the jar loads on every JVM Keystone loads on. Players on
+             older clients connect through ViaVersion/ViaBackwards. -->
+        <module>version-1_16_R1</module>
+        <module>version-1_16_R2</module>
+        <module>version-1_16_R3</module>
+        <module>version-1_17_R1</module>
+        <module>version-1_18_R1</module>
+        <module>version-1_18_R2</module>
+        <module>version-1_19_R1</module>
+        <module>version-1_19_R2</module>
+        <module>version-1_19_R3</module>
+        <module>version-1_20_R1</module>
+        <module>version-1_20_R2</module>
+        <module>version-1_20_R3</module>
+        <module>version-1_20_R4</module>
+        <module>version-1_21_R1</module>
+        <module>version-1_21_R2</module>
+        <module>version-1_21_R3</module>
+        <module>version-1_21_R4</module>
+        <module>version-1_21_R5</module>
+        <module>version-1_21_R6</module>
+        <module>version-1_21_R7</module>
+    </modules>
 
     <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>4.0.0-beta-1</version>
-                <configuration>
-                    <skipIfEmpty>true</skipIfEmpty>
-                    <classesDirectory/>
-                    <outputDirectory/>
-                    <testClassesDirectory/>
-                </configuration>
-            </plugin>
-        </plugins>
+        <pluginManagement>
+            <plugins>
+                <!-- Shared remap pipeline for every version-* module: compile against the
+                     mojang-mapped server, then remap mojang -> obf -> spigot at package time
+                     so the shipped classes match the obfuscated runtime server. A module only
+                     declares this plugin (no config) and sets its ${spigot.version} property. -->
+                <plugin>
+                    <groupId>net.md-5</groupId>
+                    <artifactId>specialsource-maven-plugin</artifactId>
+                    <version>${specialsource-maven-plugin.version}</version>
+                    <executions>
+                        <!-- Remap mojang -> obf -->
+                        <execution>
+                            <id>remap-obf</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>remap</goal>
+                            </goals>
+                            <configuration>
+                                <srgIn>org.spigotmc:minecraft-server:${spigot.version}:txt:maps-mojang</srgIn>
+                                <reverse>true</reverse>
+                                <remappedDependencies>org.spigotmc:spigot:${spigot.version}:jar:remapped-mojang
+                                </remappedDependencies>
+                                <remappedArtifactAttached>false</remappedArtifactAttached>
+                            </configuration>
+                        </execution>
+                        <!-- Remap obf -> spigot -->
+                        <execution>
+                            <id>remap-spigot</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>remap</goal>
+                            </goals>
+                            <configuration>
+                                <inputFile>${project.build.directory}/${project.artifactId}-${project.version}.jar
+                                </inputFile>
+                                <srgIn>org.spigotmc:minecraft-server:${spigot.version}:csrg:maps-spigot</srgIn>
+                                <remappedDependencies>org.spigotmc:spigot:${spigot.version}:jar:remapped-obf
+                                </remappedDependencies>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
 
 </project>

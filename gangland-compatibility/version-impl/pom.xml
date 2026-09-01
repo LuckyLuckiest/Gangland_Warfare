@@ -5,20 +5,13 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.luckyraven</groupId>
-        <artifactId>gangland_warfare</artifactId>
+        <artifactId>gangland-compatibility</artifactId>
         <version>${revision}</version>
-        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>version-impl</artifactId>
 
     <name>Version Handler</name>
-
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
 
     <dependencies>
         <!-- Spigot Build -->
