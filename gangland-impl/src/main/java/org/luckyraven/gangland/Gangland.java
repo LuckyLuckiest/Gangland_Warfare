@@ -20,19 +20,20 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.bootstrap.GanglandContext;
 import org.luckyraven.gangland.bootstrap.PeriodicalUpdates;
 import org.luckyraven.gangland.bootstrap.ReloadPlugin;
-import org.luckyraven.gangland.data.permission.PermissionManager;
+import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.data.placeholder.worker.GanglandPlaceholder;
 import org.luckyraven.gangland.data.placeholder.worker.PlaceholderAPIExpansion;
 import org.luckyraven.gangland.data.teleportation.WaypointManager;
-import org.luckyraven.gangland.economy.EconomyHandler;
+import org.luckyraven.keystone.economy.EconomyHandler;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionStore;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.gang.vault.permission.VaultPermissionBridge;
-import org.luckyraven.gangland.persistence.database.DatabaseManager;
+import org.luckyraven.keystone.persistence.database.DatabaseManager;
 import org.luckyraven.gangland.scoreboard.ScoreboardManager;
-import org.luckyraven.gangland.util.UpdateChecker;
+import org.luckyraven.gangland.util.UpdateNotifier;
+import org.luckyraven.keystone.update.UpdateChecker;
 import org.luckyraven.gangland.weapon.configuration.WeaponAddon;
 
 import java.util.HashMap;
@@ -47,7 +48,7 @@ public final class Gangland extends JavaPlugin {
 
 	private GanglandContext         context;
 	private ReloadPlugin            reloadPlugin;
-	private UpdateChecker           updateChecker;
+	private UpdateNotifier          updateChecker;
 	private PlaceholderAPIExpansion placeholderAPIExpansion;
 	private ViaAPI<?>               viaAPI;
 
@@ -217,11 +218,10 @@ public final class Gangland extends JavaPlugin {
 		int hours      = 6;
 		int resourceId = 131157;
 
-		// initialize the update checker
-		this.updateChecker = new UpdateChecker(this, FULL_PREFIX, resourceId, hours * 60 * 60L);
-
-		// add the necessary permissions for checking for updates
-		context.get(PermissionManager.class).addPermission(updateChecker.getCheckPermission());
+		// Keystone's checker fetches/compares/downloads and registers the check permission itself; the
+		// UpdateNotifier wraps it with Gangland's periodic operator notification + auto-update policy.
+		UpdateChecker checker = new UpdateChecker(this, context.get(PermissionManager.class), FULL_PREFIX, resourceId);
+		this.updateChecker = new UpdateNotifier(this, checker, hours * 60 * 60L);
 
 		// the tasks and timer should be async, so there is no load on the main server thread
 		updateChecker.start();

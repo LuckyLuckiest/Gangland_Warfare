@@ -4,12 +4,12 @@ import lombok.CustomLog;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.config.CivilianSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopSettings;
-import org.luckyraven.gangland.core.bean.Bean;
-import org.luckyraven.gangland.core.bean.Configuration;
-import org.luckyraven.gangland.core.bean.Phase;
-import org.luckyraven.gangland.data.permission.PermissionManager;
+import org.luckyraven.keystone.bean.Bean;
+import org.luckyraven.keystone.bean.Configuration;
+import org.luckyraven.keystone.bean.Phase;
+import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.data.placeholder.PlaceholderService;
-import org.luckyraven.gangland.file.LanguageLoader;
+import org.luckyraven.keystone.persistence.message.LanguageLoader;
 import org.luckyraven.gangland.file.configuration.*;
 import org.luckyraven.gangland.file.configuration.copsncrooks.*;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionStore;
@@ -24,8 +24,8 @@ import org.luckyraven.gangland.gang.wanted.WantedSettings;
 import org.luckyraven.gangland.inventory.condition.BooleanExpressionEvaluator;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.item.money.MoneyAddon;
-import org.luckyraven.gangland.persistence.FileHandler;
-import org.luckyraven.gangland.persistence.FileManager;
+import org.luckyraven.keystone.persistence.FileHandler;
+import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.gangland.scoreboard.ScoreboardManager;
 import org.luckyraven.gangland.scoreboard.configuration.ScoreboardAddon;
 import org.luckyraven.gangland.sign.GanglandSignInformation;
@@ -84,11 +84,18 @@ public class FileConfig {
 	 */
 	@Bean
 	public LanguageLoader languageLoader(FileManager fileManager, Settings settings) {
-		LanguageLoader loader = new LanguageLoader(gangland, fileManager);
+		// Keystone's LanguageLoader (1.7.x migration): the language comes from the settings supplier, missing keys
+		// are reported through Messages.findMissingPaths, and the onLoaded callback re-publishes the provider into
+		// the Messages/TimeMessages static seams on BOTH first load and every /glw reload lifecycle pass.
+		LanguageLoader loader = new LanguageLoader(gangland, fileManager,
+		                                           Settings::getLanguagePicked,
+		                                           "message", "message",
+		                                           Messages::findMissingPaths,
+		                                           provider -> {
+			                                           Messages.init(provider);
+			                                           TimeMessages.initialize();
+		                                           });
 		loader.initialize();
-		// Single static seam: the MessageProvider bean is published into the Messages enum once at startup.
-		Messages.init(new YamlMessageProvider(loader.getMessage(), loader.getJarMessage()));
-		TimeMessages.initialize();
 		return loader;
 	}
 

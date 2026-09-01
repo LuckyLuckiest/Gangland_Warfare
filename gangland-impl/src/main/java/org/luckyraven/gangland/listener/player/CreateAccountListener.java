@@ -8,9 +8,9 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.core.bean.Qualifier;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
-import org.luckyraven.gangland.core.bean.listener.ListenerPriority;
+import org.luckyraven.keystone.bean.Qualifier;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.listener.ListenerPriority;
 import org.luckyraven.gangland.data.user.UserDataLoader;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.database.TableLookup;
@@ -23,9 +23,9 @@ import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.database.component.Table;
 import org.luckyraven.gangland.util.GanglandChatUtil;
-import org.luckyraven.gangland.util.UpdateChecker;
+import org.luckyraven.gangland.util.UpdateNotifier;
 
 import java.util.List;
 
@@ -59,7 +59,7 @@ public final class CreateAccountListener implements Listener {
 		Player       player = event.getPlayer();
 		User<Player> user   = userManager.create(player);
 
-		UpdateChecker updateChecker = gangland.getUpdateChecker();
+		UpdateNotifier updateChecker = gangland.getUpdateChecker();
 
 		if (player.hasPermission(updateChecker.getCheckPermission()) && updateChecker.updateAvailable()) {
 			player.sendMessage(GanglandChatUtil.prefixMessage(updateChecker.getUpdateMessage()));

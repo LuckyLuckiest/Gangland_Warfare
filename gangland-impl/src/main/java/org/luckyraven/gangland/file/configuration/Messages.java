@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.file.configuration;
 
+import org.luckyraven.keystone.message.MessageProvider;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 

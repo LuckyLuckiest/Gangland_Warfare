@@ -6,27 +6,31 @@ import org.luckyraven.gangland.command.data.InformationManager;
 import org.luckyraven.gangland.compatibility.CompatibilitySetup;
 import org.luckyraven.gangland.compatibility.CompatibilityWorker;
 import org.luckyraven.gangland.compatibility.VersionSetup;
-import org.luckyraven.gangland.core.bean.Bean;
-import org.luckyraven.gangland.core.bean.BeanGraph;
-import org.luckyraven.gangland.core.bean.Configuration;
-import org.luckyraven.gangland.core.bean.Phase;
-import org.luckyraven.gangland.data.permission.PermissionHandler;
-import org.luckyraven.gangland.data.permission.PermissionManager;
-import org.luckyraven.gangland.data.permission.PermissionWorker;
+import org.luckyraven.keystone.bean.Bean;
+import org.luckyraven.keystone.bean.BeanGraph;
+import org.luckyraven.keystone.bean.Configuration;
+import org.luckyraven.keystone.bean.Phase;
+import org.luckyraven.keystone.permission.PermissionHandler;
+import org.luckyraven.keystone.permission.PermissionManager;
+import org.luckyraven.keystone.permission.PermissionWorker;
 import org.luckyraven.gangland.data.placeholder.PlaceholderService;
 import org.luckyraven.gangland.database.GanglandDatabaseSettings;
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.user.User;
+import org.luckyraven.keystone.diagnostics.Diagnostics;
+import org.luckyraven.keystone.diagnostics.LoggingSink;
+import org.luckyraven.keystone.diagnostics.RecentFaultsSink;
 import org.luckyraven.gangland.gang.user.UserFactory;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.service.InventoryRegistry;
 import org.luckyraven.gangland.inventory.villager.VillagerInventory;
 import org.luckyraven.gangland.inventory.villager.VillagerInventoryListener;
 import org.luckyraven.gangland.inventory.villager.VillagerInventoryRegistry;
-import org.luckyraven.gangland.persistence.FileHandler;
-import org.luckyraven.gangland.persistence.FileInitializer;
-import org.luckyraven.gangland.persistence.FileManager;
-import org.luckyraven.gangland.persistence.database.DatabaseManager;
-import org.luckyraven.gangland.persistence.database.DatabaseSettingsProvider;
+import org.luckyraven.keystone.persistence.FileHandler;
+import org.luckyraven.keystone.persistence.FileInitializer;
+import org.luckyraven.keystone.persistence.FileManager;
+import org.luckyraven.keystone.persistence.database.DatabaseManager;
+import org.luckyraven.keystone.persistence.database.DatabaseSettingsProvider;
 
 /**
  * KERNEL-phase configuration that produces every bootstrap-critical singleton the plugin needs before the FILE phase
@@ -65,9 +69,30 @@ public class KernelConfig {
 		return new CompatibilitySetup(versionSetup);
 	}
 
+	/**
+	 * The plugin's fault hub (Keystone diagnostics, 1.7.x migration). Guard-wrapped listener dispatch, the command
+	 * funnels, repository failures and backend queries all report here; faults are classified
+	 * (user error / dependency / internal bug), logged at the right level, kept in a recent-faults ring, and — once
+	 * the DATABASE phase adds the {@code DatabaseFaultSink} — persisted. Installed process-wide so Keystone code
+	 * paths reach it via {@code Diagnostics.active()}.
+	 */
+	@Bean
+	public Diagnostics diagnostics() {
+		Diagnostics hub = Diagnostics.withDefaults()
+		                             .addSink(new LoggingSink())
+		                             .addSink(new RecentFaultsSink());
+		Diagnostics.install(hub);
+		return hub;
+	}
+
 	@Bean
 	public PlaceholderService placeholderService() {
-		return new PlaceholderService(gangland);
+		PlaceholderService service = new PlaceholderService(gangland);
+		// The old gangland-core ChatUtil.color(String) implicitly substituted %money_symbol% with a hardcoded "$";
+		// Keystone's ChatUtil (1.7.0+) is pure color translation. The token is resolved here instead, settings-backed,
+		// so inventory/scoreboard templates keep rendering — now with the configured symbol.
+		service.register((player, text) -> text.replace("%money_symbol%", Settings.getMoneySymbol()));
+		return service;
 	}
 
 	/**
@@ -117,7 +142,7 @@ public class KernelConfig {
 
 	@Bean
 	public PermissionManager permissionManager(PermissionHandler permissionHandler) {
-		return new PermissionManager(permissionHandler);
+		return new PermissionManager(permissionHandler, Gangland.FULL_PREFIX);
 	}
 
 	/**

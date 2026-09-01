@@ -1,6 +1,6 @@
 package org.luckyraven.gangland.util;
 
-import org.luckyraven.gangland.core.utilities.messages.TimeMessagesProvider;
+import org.luckyraven.keystone.util.messages.TimeMessagesProvider;
 import org.luckyraven.gangland.file.configuration.Messages;
 
 public final class TimeMessages implements TimeMessagesProvider {
