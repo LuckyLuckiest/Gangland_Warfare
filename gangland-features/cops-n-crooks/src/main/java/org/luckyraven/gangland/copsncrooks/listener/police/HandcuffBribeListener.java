@@ -11,7 +11,7 @@ import org.luckyraven.gangland.copsncrooks.detainment.paperwork.HandcuffBribeVie
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 /**
  * When a HANDCUFFED player right-clicks the specific cop NPC that is guarding them, opens the handcuff bribe GUI so

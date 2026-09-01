@@ -13,7 +13,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpcFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
-import org.luckyraven.gangland.persistence.repository.IRepository;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.gangland.weapon.WeaponService;
 
 public class CopSpawnManager extends EntitySpawner<CopSpawner> {

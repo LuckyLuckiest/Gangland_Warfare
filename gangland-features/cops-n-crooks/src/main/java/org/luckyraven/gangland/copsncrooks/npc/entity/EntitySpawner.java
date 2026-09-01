@@ -5,8 +5,8 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
-import org.luckyraven.gangland.persistence.repository.IRepository;
+import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.util.ArrayList;
 import java.util.Collection;

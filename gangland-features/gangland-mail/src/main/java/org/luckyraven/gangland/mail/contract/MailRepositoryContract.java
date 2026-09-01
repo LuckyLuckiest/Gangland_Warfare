@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.mail.contract;
 
 import org.luckyraven.gangland.mail.MailItem;
-import org.luckyraven.gangland.persistence.repository.IRepository;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 
 /**
  * Lets {@code MailManager} sit in the feature module without depending on {@code gangland-impl}'s concrete repository.

@@ -9,7 +9,7 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.detainment.message.DetainmentMessageContract;
-import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.keystone.item.ItemBuilder;
 
 /**
  * "Jail Paperwork" item given to jailed players. Right-clicking it opens the {@code PaperworkView} GUI where the player

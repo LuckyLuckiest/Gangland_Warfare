@@ -1,6 +1,6 @@
 package org.luckyraven.gangland.turf.powerups;
 
-import org.luckyraven.gangland.persistence.repository.IRepository;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 
 /**
  * Persistence contract for {@link ActiveTurfBuff}. Concrete impl lives in gangland-impl as an

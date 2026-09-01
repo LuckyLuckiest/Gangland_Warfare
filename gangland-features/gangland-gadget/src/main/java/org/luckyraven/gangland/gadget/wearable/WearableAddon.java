@@ -7,14 +7,14 @@ import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.Placeholder;
+import org.luckyraven.keystone.util.Placeholder;
 import org.luckyraven.gangland.core.configuration.SoundConfiguration;
-import org.luckyraven.gangland.exception.PluginException;
+import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.gangland.item.wearable.Wearable;
 import org.luckyraven.gangland.item.wearable.WearableTrait;
-import org.luckyraven.gangland.persistence.FileHandler;
-import org.luckyraven.gangland.persistence.FileInitializer;
-import org.luckyraven.gangland.persistence.FileManager;
+import org.luckyraven.keystone.persistence.FileHandler;
+import org.luckyraven.keystone.persistence.FileInitializer;
+import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.gangland.weapon.wearable.WearableService;
 
 import java.io.IOException;
@@ -178,7 +178,7 @@ public class WearableAddon extends WearableService implements FileInitializer {
 			                            .name(name)
 			                            .lore(lore.isEmpty() ? null : lore)
 			                            .wearableKey(key)
-			                            .baseDamageReduction(Math.clamp(baseDamageReduction, 0.0, 1.0))
+			                            .baseDamageReduction(Math.max(0.0, Math.min(baseDamageReduction, 1.0)))
 			                            .traits(traits)
 			                            .leatherColor(leatherColor)
 			                            .temporary(false)

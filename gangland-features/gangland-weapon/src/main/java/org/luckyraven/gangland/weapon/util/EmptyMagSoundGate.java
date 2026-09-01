@@ -3,7 +3,7 @@ package org.luckyraven.gangland.weapon.util;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.core.configuration.SoundConfiguration;
-import org.luckyraven.gangland.core.timer.RepeatingTimer;
+import org.luckyraven.keystone.timer.RepeatingTimer;
 import org.luckyraven.gangland.weapon.Weapon;
 import org.luckyraven.gangland.weapon.dto.SoundData;
 

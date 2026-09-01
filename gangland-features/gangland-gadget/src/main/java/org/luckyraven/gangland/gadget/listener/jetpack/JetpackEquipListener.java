@@ -14,8 +14,8 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.core.bean.autowire.AutowireTarget;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.autowire.AutowireTarget;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.gadget.jetpack.JetpackService;
 
 /**

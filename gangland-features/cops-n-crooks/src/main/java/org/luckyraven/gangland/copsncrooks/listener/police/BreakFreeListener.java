@@ -5,7 +5,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.luckyraven.gangland.copsncrooks.detainment.breakfree.BreakFreeService;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 /**
  * Routes sneak-key presses to the break-free minigame. Sneak-release is ignored so only the downward press counts.

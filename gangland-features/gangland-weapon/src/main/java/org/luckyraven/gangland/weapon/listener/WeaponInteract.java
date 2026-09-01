@@ -15,13 +15,13 @@ import org.bukkit.event.player.PlayerItemHeldEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.compatibility.recoil.RecoilCompatibility;
-import org.luckyraven.gangland.core.bean.autowire.AutowireTarget;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.autowire.AutowireTarget;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.core.configuration.SoundConfiguration;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
-import org.luckyraven.gangland.core.timer.CountdownTimer;
-import org.luckyraven.gangland.core.timer.RepeatingTimer;
-import org.luckyraven.gangland.core.timer.SequenceTimer;
+import org.luckyraven.keystone.timer.CountdownTimer;
+import org.luckyraven.keystone.timer.RepeatingTimer;
+import org.luckyraven.keystone.timer.SequenceTimer;
 import org.luckyraven.gangland.weapon.SelectiveFire;
 import org.luckyraven.gangland.weapon.Weapon;
 import org.luckyraven.gangland.weapon.WeaponService;
@@ -358,38 +358,30 @@ public class WeaponInteract implements Listener {
 		// block all actions while reloading
 		if (weapon.isReloading()) return;
 
-		switch (weapon) {
-			case ThrowableWeapon throwable -> {
-				if (!rightClick) break;
-				handleThrowablePress(throwable, player);
-			}
-			case MeleeWeapon melee -> {
-				if (leftClick) {
-					if (tryClaimMeleeSwing(melee.getUuid())) {
-						boolean hit = new MeleeAction(melee, recoilCompatibility, raytracer, meleeCooldowns).activate(
-								player);
-						if (hit) melee.applyOnHitDurability(player, player.getInventory().getHeldItemSlot());
-					}
+		if (weapon instanceof ThrowableWeapon throwable) {
+			if (rightClick) handleThrowablePress(throwable, player);
+		} else if (weapon instanceof MeleeWeapon melee) {
+			if (leftClick) {
+				if (tryClaimMeleeSwing(melee.getUuid())) {
+					boolean hit = new MeleeAction(melee, recoilCompatibility, raytracer, meleeCooldowns).activate(
+							player);
+					if (hit) melee.applyOnHitDurability(player, player.getInventory().getHeldItemSlot());
 				}
 			}
-			case IncendiaryWeapon incendiary -> {
-				if (!rightClick) break;
+		} else if (weapon instanceof IncendiaryWeapon incendiary) {
+			if (!rightClick) return;
 
-				IncendiaryAction action = new IncendiaryAction(plugin, weaponService, incendiary, recoilCompatibility,
-				                                               raytracer, fireRegistry);
+			IncendiaryAction action = new IncendiaryAction(plugin, weaponService, incendiary, recoilCompatibility,
+			                                               raytracer, fireRegistry);
 
-				SelectiveFire mode = incendiary.getCurrentSelectiveFire();
-				if (mode == SelectiveFire.AUTO) {
-					handleIncendiaryAuto(incendiary, action, player);
-				} else {
-					handleIncendiaryPress(incendiary, action, player);
-				}
+			SelectiveFire mode = incendiary.getCurrentSelectiveFire();
+			if (mode == SelectiveFire.AUTO) {
+				handleIncendiaryAuto(incendiary, action, player);
+			} else {
+				handleIncendiaryPress(incendiary, action, player);
 			}
-			case BiologicalWeapon biological -> {
-				if (!rightClick) break;
-				handleBiologicalCharge(biological, player);
-			}
-			default -> { }
+		} else if (weapon instanceof BiologicalWeapon biological) {
+			if (rightClick) handleBiologicalCharge(biological, player);
 		}
 	}
 

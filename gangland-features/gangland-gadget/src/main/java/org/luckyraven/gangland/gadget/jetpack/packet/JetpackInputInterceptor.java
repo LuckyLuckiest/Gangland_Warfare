@@ -2,7 +2,7 @@ package org.luckyraven.gangland.gadget.jetpack.packet;
 
 import org.luckyraven.gangland.gadget.jetpack.JetpackSession;
 import org.luckyraven.gangland.gadget.jetpack.JetpackTask;
-import org.luckyraven.gangland.gadget.packet.PlayerInputInterceptor;
+import org.luckyraven.keystone.nms.input.PlayerInputInterceptor;
 
 /**
  * Writes the client's WASD/jump/sneak state from every {@code ServerboundPlayerInputPacket} into the active

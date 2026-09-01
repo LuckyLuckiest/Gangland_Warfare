@@ -5,7 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.turf.contract.TurfSoundContract;
 import org.luckyraven.gangland.turf.events.TurfOwnerChangedEvent;
 import org.luckyraven.gangland.turf.manager.TurfManager;

@@ -9,7 +9,7 @@ import org.bukkit.event.Listener;
 import org.luckyraven.gangland.copsncrooks.npc.banker.BankerManager;
 import org.luckyraven.gangland.copsncrooks.npc.banker.BankerNpc;
 import org.luckyraven.gangland.copsncrooks.npc.banker.view.BankerFlow;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 @ListenerHandler
 @RequiredArgsConstructor

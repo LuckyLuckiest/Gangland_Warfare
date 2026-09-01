@@ -8,9 +8,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.npc.trader.config.TraderSettings;
 import org.luckyraven.gangland.copsncrooks.npc.trader.mood.MoodService;
-import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.core.configuration.SoundConfiguration;
-import org.luckyraven.gangland.core.utilities.NumberUtil;
+import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
 import org.luckyraven.gangland.inventory.flow.Panel;
@@ -68,7 +68,7 @@ public final class ShopView implements Panel<TraderFlowSession> {
 	                   TraderFlowSession session) {
 		List<ShopItemEntry> entries    = session.definition.getBuyEntries();
 		int                 totalPages = Math.max(1, (int) Math.ceil(entries.size() / (double) ENTRIES_PER_PAGE));
-		session.currentShopPage = Math.clamp(session.currentShopPage, 0, totalPages - 1);
+		session.currentShopPage = Math.max(0, Math.min(session.currentShopPage, totalPages - 1));
 
 		double multiplier = moodService.priceMultiplier(session.trader.getData().getId(), viewer.getUniqueId(),
 		                                                session.trait.profile());

@@ -13,8 +13,8 @@ import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.banker.config.BankerSettings;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
-import org.luckyraven.gangland.persistence.repository.IRepository;
+import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.util.*;
 import java.util.function.Consumer;

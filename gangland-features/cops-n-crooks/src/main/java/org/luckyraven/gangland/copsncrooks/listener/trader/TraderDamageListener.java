@@ -7,7 +7,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.luckyraven.gangland.copsncrooks.npc.trader.TraderManager;
 import org.luckyraven.gangland.copsncrooks.npc.trader.TraderNpc;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 import java.util.UUID;
 

@@ -12,8 +12,8 @@ import org.luckyraven.gangland.copsncrooks.detainment.message.DetainmentMessageC
 import org.luckyraven.gangland.copsncrooks.jail.JailRegistry;
 import org.luckyraven.gangland.copsncrooks.jail.JailService;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
-import org.luckyraven.gangland.core.utilities.ActionBarManager;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.util.ActionBarManager;
+import org.luckyraven.keystone.util.ChatUtil;
 
 import java.util.Map;
 import java.util.UUID;

@@ -7,9 +7,9 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.NpcDifficulty;
 import org.luckyraven.gangland.item.ItemParser;
-import org.luckyraven.gangland.persistence.config.ConfigReport;
-import org.luckyraven.gangland.persistence.config.MappingNode;
-import org.luckyraven.gangland.persistence.config.NodeReader;
+import org.luckyraven.keystone.persistence.config.ConfigReport;
+import org.luckyraven.keystone.persistence.config.MappingNode;
+import org.luckyraven.keystone.persistence.config.NodeReader;
 
 import java.util.*;
 

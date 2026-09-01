@@ -12,8 +12,8 @@ import org.luckyraven.gangland.copsncrooks.listener.turf.TurfPowerupChunkLoadLis
 import org.luckyraven.gangland.copsncrooks.npc.civilian.npc.CivilianNpc;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
 import org.luckyraven.gangland.copsncrooks.npc.turf.config.TurfPowerupSettings;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
-import org.luckyraven.gangland.persistence.repository.IRepository;
+import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.util.*;
 import java.util.function.Supplier;

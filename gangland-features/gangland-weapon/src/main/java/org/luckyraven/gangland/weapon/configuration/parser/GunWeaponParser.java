@@ -1,9 +1,9 @@
 package org.luckyraven.gangland.weapon.configuration.parser;
 
 import org.bukkit.configuration.InvalidConfigurationException;
-import org.luckyraven.gangland.persistence.config.ConfigReport;
-import org.luckyraven.gangland.persistence.config.MappingNode;
-import org.luckyraven.gangland.persistence.config.NodeReader;
+import org.luckyraven.keystone.persistence.config.ConfigReport;
+import org.luckyraven.keystone.persistence.config.MappingNode;
+import org.luckyraven.keystone.persistence.config.NodeReader;
 import org.luckyraven.gangland.weapon.SelectiveFire;
 import org.luckyraven.gangland.weapon.ammo.AmmunitionManager;
 import org.luckyraven.gangland.weapon.configuration.parser.AmmunitionSectionParser.ParsedAmmo;

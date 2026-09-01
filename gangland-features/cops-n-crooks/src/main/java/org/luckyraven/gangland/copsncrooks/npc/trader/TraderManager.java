@@ -17,8 +17,8 @@ import org.luckyraven.gangland.copsncrooks.npc.trader.mood.MoodService;
 import org.luckyraven.gangland.copsncrooks.npc.trader.respawn.TraderRespawnService;
 import org.luckyraven.gangland.copsncrooks.npc.trader.trait.TraderTraitDefinition;
 import org.luckyraven.gangland.copsncrooks.npc.trader.trait.TraderTraitRegistry;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
-import org.luckyraven.gangland.persistence.repository.IRepository;
+import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.util.*;
 import java.util.function.Consumer;

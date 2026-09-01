@@ -2,7 +2,7 @@ package org.luckyraven.gangland.weapon.projectile.recoil;
 
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.compatibility.recoil.RecoilCompatibility;
-import org.luckyraven.gangland.exception.PluginException;
+import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.gangland.weapon.Weapon;
 
 import java.util.List;

@@ -9,9 +9,9 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.core.ItemBuilder;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.item.ItemBuilder;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.turf.selection.Selection;
 import org.luckyraven.gangland.turf.selection.WandSelectionManager;
 

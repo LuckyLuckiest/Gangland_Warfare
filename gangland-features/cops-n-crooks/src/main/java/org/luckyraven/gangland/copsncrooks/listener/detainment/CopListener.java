@@ -15,7 +15,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
 import org.luckyraven.gangland.gang.events.wanted.WantedEndEvent;
 import org.luckyraven.gangland.gang.events.wanted.WantedLevelChangeEvent;

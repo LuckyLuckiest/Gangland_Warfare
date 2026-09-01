@@ -12,7 +12,7 @@ import org.luckyraven.gangland.copsncrooks.listener.civilian.CivilianDamageListe
 import org.luckyraven.gangland.copsncrooks.npc.turf.TurfPowerupManager;
 import org.luckyraven.gangland.copsncrooks.npc.turf.TurfPowerupNpc;
 import org.luckyraven.gangland.copsncrooks.npc.turf.defender.TurfDefenderDeployer;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.contract.UserLookupContract;

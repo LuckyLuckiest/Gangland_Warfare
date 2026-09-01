@@ -4,8 +4,8 @@ import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.jail.Jail;
 import org.luckyraven.gangland.copsncrooks.jail.JailRegistry;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
-import org.luckyraven.gangland.persistence.repository.IRepository;
+import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -10,7 +10,7 @@ import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.core.configuration.SoundConfiguration;
-import org.luckyraven.gangland.core.utilities.ParticleUtil;
+import org.luckyraven.keystone.util.ParticleUtil;
 import org.luckyraven.gangland.weapon.Weapon;
 import org.luckyraven.gangland.weapon.WeaponService;
 import org.luckyraven.gangland.weapon.dto.DamageData;

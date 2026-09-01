@@ -13,7 +13,7 @@ import org.luckyraven.gangland.copsncrooks.npc.civilian.npc.CivilianNpc;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.npc.CivilianNpcFactory;
 import org.luckyraven.gangland.copsncrooks.npc.entity.EntitySpawner;
 import org.luckyraven.gangland.copsncrooks.npc.entity.SpawnConfigProvider;
-import org.luckyraven.gangland.persistence.repository.IRepository;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 
 /**
  * Manages civilian spawn points and delegates NPC creation to {@link CivilianNpcFactory}.

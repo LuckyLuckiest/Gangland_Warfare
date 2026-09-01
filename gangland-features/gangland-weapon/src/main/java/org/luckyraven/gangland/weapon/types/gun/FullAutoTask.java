@@ -4,7 +4,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.compatibility.recoil.RecoilCompatibility;
-import org.luckyraven.gangland.core.timer.Timer;
+import org.luckyraven.keystone.timer.Timer;
 import org.luckyraven.gangland.weapon.WeaponService;
 import org.luckyraven.gangland.weapon.raytrace.WeaponRaytracer;
 
@@ -90,7 +90,7 @@ public class FullAutoTask extends Timer {
 
 		int cooldown       = Math.max(1, weapon.getProjectileData().getCooldown());
 		int tickValue      = 20 / cooldown;
-		int shotsPerSecond = Math.clamp(tickValue, 1, 20);
+		int shotsPerSecond = Math.max(1, Math.min(tickValue, 20));
 
 		if (AUTO[shotsPerSecond][tickIndex]) {
 			GunAction gunAction = new GunAction(plugin, weaponService, weapon, recoilCompatibility, raytracer);

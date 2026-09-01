@@ -9,10 +9,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.events.trader.TraderBuyRequestEvent;
-import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.core.configuration.SoundConfiguration;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
-import org.luckyraven.gangland.core.utilities.NumberUtil;
+import org.luckyraven.keystone.util.ChatUtil;
+import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
 import org.luckyraven.gangland.inventory.flow.Panel;
@@ -227,7 +227,7 @@ public final class QuantitySelectorView implements Panel<TraderFlowSession> {
 	// ── Actions ──────────────────────────────────────────────────────────
 
 	private void adjustQuantity(MultiPanelInventory<TraderFlowSession> host, TraderFlowSession session, int delta) {
-		session.quantityStaged = Math.clamp(session.quantityStaged + delta, 1, MAX_COPIES);
+		session.quantityStaged = Math.max(1, Math.min(session.quantityStaged + delta, MAX_COPIES));
 		host.rerender();
 	}
 

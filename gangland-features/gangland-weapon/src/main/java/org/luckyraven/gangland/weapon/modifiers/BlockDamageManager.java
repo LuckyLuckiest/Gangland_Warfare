@@ -126,7 +126,7 @@ public class BlockDamageManager {
 	 * Sends block damage animation to all players within render distance.
 	 */
 	private void sendBlockDamage(Location location, int stage, int entityId) {
-		float progress = Math.clamp(stage / (float) MAX_DAMAGE_STAGE, 0.0f, 1.0f);
+		float progress = Math.max(0.0f, Math.min(stage / (float) MAX_DAMAGE_STAGE, 1.0f));
 
 		World world = Objects.requireNonNull(location.getWorld());
 		for (Player player : world.getPlayers()) {

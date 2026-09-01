@@ -9,9 +9,9 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.NpcDifficulty;
 import org.luckyraven.gangland.item.ItemParser;
-import org.luckyraven.gangland.persistence.config.ConfigReport;
-import org.luckyraven.gangland.persistence.config.MappingNode;
-import org.luckyraven.gangland.persistence.config.NodeReader;
+import org.luckyraven.keystone.persistence.config.ConfigReport;
+import org.luckyraven.keystone.persistence.config.MappingNode;
+import org.luckyraven.keystone.persistence.config.NodeReader;
 
 import java.util.*;
 
@@ -184,7 +184,7 @@ public class YamlCiviliansConfigProvider {
 		String suffix = raw.substring(at + 1);
 		try {
 			double chance = Double.parseDouble(suffix);
-			return new CivilianDropConfig.DropEntry(entry, Math.clamp(chance, 0.0, 1.0));
+			return new CivilianDropConfig.DropEntry(entry, Math.max(0.0, Math.min(chance, 1.0)));
 		} catch (NumberFormatException ignored) {
 			return new CivilianDropConfig.DropEntry(raw, 1.0);
 		}

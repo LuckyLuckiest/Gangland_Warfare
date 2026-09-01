@@ -6,8 +6,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.luckyraven.gangland.core.bean.autowire.AutowireTarget;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.autowire.AutowireTarget;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.gadget.car.CarService;
 import org.luckyraven.gangland.gadget.car.vehicle.VehicleSession;
 

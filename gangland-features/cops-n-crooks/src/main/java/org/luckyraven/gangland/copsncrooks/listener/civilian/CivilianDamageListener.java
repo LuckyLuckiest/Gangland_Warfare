@@ -15,7 +15,7 @@ import org.luckyraven.gangland.copsncrooks.npc.civilian.CivilianService;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.CivilianState;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.config.CivilianAIBehaviorConfig;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.npc.CivilianNpc;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
 
 import java.util.UUID;

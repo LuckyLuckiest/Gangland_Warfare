@@ -15,7 +15,7 @@ import org.luckyraven.gangland.copsncrooks.events.npc.CivilianDeathEvent;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.CivilianService;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.config.CivilianDropConfig;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.npc.CivilianNpc;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.item.ItemParser;
 
 import java.util.concurrent.ThreadLocalRandom;

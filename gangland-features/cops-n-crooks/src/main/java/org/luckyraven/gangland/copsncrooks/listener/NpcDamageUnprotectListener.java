@@ -15,8 +15,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMark;
 import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMarkManager;
 import org.luckyraven.gangland.copsncrooks.npc.trader.TraderNpc;
-import org.luckyraven.gangland.core.bean.autowire.AutowireTarget;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.autowire.AutowireTarget;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.weapon.events.projectile.WeaponRaytraceImpactEvent;
 
 /**

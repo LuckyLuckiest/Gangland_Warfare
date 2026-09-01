@@ -16,8 +16,8 @@ import org.luckyraven.gangland.copsncrooks.detainment.economy.DetainmentCostsCon
 import org.luckyraven.gangland.copsncrooks.detainment.economy.DetainmentEconomyContract;
 import org.luckyraven.gangland.copsncrooks.detainment.message.DetainmentMessageContract;
 import org.luckyraven.gangland.copsncrooks.detainment.sentence.SentenceService;
-import org.luckyraven.gangland.core.ItemBuilder;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.item.ItemBuilder;
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.inventory.util.InventoryUtil;

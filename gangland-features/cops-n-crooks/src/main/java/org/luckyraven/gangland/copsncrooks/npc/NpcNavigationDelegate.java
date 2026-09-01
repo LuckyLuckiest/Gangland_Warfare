@@ -1040,7 +1040,7 @@ final class NpcNavigationDelegate {
 			ladderDescending = heightDelta < 0;
 			double xzDist = Math.sqrt(
 					Math.pow(destination.getX() - from.getX(), 2) + Math.pow(destination.getZ() - from.getZ(), 2));
-			int ladderSearchRadius = Math.clamp((int) Math.ceil(xzDist / 2) + 5, 15, 30);
+			int ladderSearchRadius = Math.max(15, Math.min((int) Math.ceil(xzDist / 2) + 5, 30));
 
 			Location ladderBase = findNearestLadderBase(from, destination, ladderSearchRadius);
 

@@ -6,11 +6,11 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.Placeholder;
-import org.luckyraven.gangland.exception.PluginException;
-import org.luckyraven.gangland.persistence.FileHandler;
-import org.luckyraven.gangland.persistence.FileInitializer;
-import org.luckyraven.gangland.persistence.FileManager;
+import org.luckyraven.keystone.util.Placeholder;
+import org.luckyraven.keystone.exception.PluginException;
+import org.luckyraven.keystone.persistence.FileHandler;
+import org.luckyraven.keystone.persistence.FileInitializer;
+import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.gangland.weapon.ammo.Ammunition;
 import org.luckyraven.gangland.weapon.ammo.AmmunitionManager;
 

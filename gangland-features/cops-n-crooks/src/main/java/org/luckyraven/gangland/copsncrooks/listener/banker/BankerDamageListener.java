@@ -8,7 +8,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.luckyraven.gangland.copsncrooks.npc.banker.BankerManager;
 import org.luckyraven.gangland.copsncrooks.npc.banker.BankerNpc;
 import org.luckyraven.gangland.copsncrooks.npc.banker.config.BankerSettings;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 /**
  * Belt-and-suspenders damage guard for banker NPCs. Citizens' {@code setProtected} and the {@code LivingEntity}

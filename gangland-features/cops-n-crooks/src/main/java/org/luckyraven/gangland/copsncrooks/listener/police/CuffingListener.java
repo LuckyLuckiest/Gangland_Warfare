@@ -9,9 +9,9 @@ import org.luckyraven.gangland.copsncrooks.detainment.message.DetainmentMessageC
 import org.luckyraven.gangland.copsncrooks.detainment.transit.TransitService;
 import org.luckyraven.gangland.copsncrooks.events.police.CuffedEvent;
 import org.luckyraven.gangland.copsncrooks.events.police.DuringCuffingEvent;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.util.ChatUtil;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

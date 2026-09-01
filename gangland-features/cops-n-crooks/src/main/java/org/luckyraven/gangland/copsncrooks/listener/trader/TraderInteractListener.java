@@ -9,7 +9,7 @@ import org.bukkit.event.Listener;
 import org.luckyraven.gangland.copsncrooks.npc.trader.ShopViewOpener;
 import org.luckyraven.gangland.copsncrooks.npc.trader.TraderManager;
 import org.luckyraven.gangland.copsncrooks.npc.trader.TraderNpc;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 @ListenerHandler
 @RequiredArgsConstructor

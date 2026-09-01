@@ -5,7 +5,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.luckyraven.gangland.copsncrooks.npc.turf.TurfPowerupManager;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 /**
  * Drains {@link TurfPowerupManager}'s pending-spawn queue as Bukkit loads chunks. On a fresh server boot the

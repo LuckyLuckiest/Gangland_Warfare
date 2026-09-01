@@ -1,10 +1,10 @@
 package org.luckyraven.gangland.weapon.configuration.parser;
 
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.persistence.config.ConfigReport;
-import org.luckyraven.gangland.persistence.config.MappingNode;
-import org.luckyraven.gangland.persistence.config.NodeReader;
-import org.luckyraven.gangland.persistence.config.Severity;
+import org.luckyraven.keystone.persistence.config.ConfigReport;
+import org.luckyraven.keystone.persistence.config.MappingNode;
+import org.luckyraven.keystone.persistence.config.NodeReader;
+import org.luckyraven.keystone.persistence.config.Severity;
 import org.luckyraven.gangland.weapon.ammo.Ammunition;
 import org.luckyraven.gangland.weapon.ammo.AmmunitionManager;
 import org.luckyraven.gangland.weapon.dto.AmmunitionData;

@@ -11,10 +11,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.events.trader.TraderBarterEvent;
 import org.luckyraven.gangland.copsncrooks.npc.trader.config.TraderSettings;
 import org.luckyraven.gangland.copsncrooks.npc.trader.mood.MoodService;
-import org.luckyraven.gangland.core.ItemBuilder;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
+import org.luckyraven.keystone.item.ItemBuilder;
+import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.core.configuration.SoundConfiguration;
-import org.luckyraven.gangland.core.utilities.NumberUtil;
+import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
 import org.luckyraven.gangland.inventory.flow.Panel;
@@ -398,7 +398,7 @@ public final class BarterView implements Panel<TraderFlowSession>, BeanLifecycle
 	}
 
 	private int[] dropzoneSlots(int cap) {
-		int   limit = Math.clamp(cap, 1, ALL_DROPZONE_SLOTS.length);
+		int   limit = Math.max(1, Math.min(cap, ALL_DROPZONE_SLOTS.length));
 		int[] out   = new int[limit];
 		System.arraycopy(ALL_DROPZONE_SLOTS, 0, out, 0, limit);
 		return out;

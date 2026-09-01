@@ -10,9 +10,9 @@ import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.ItemBuilder;
-import org.luckyraven.gangland.core.utilities.ActionBarManager;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.item.ItemBuilder;
+import org.luckyraven.keystone.util.ActionBarManager;
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.gadget.car.Car;
 import org.luckyraven.gangland.gadget.car.CarKey;
 import org.luckyraven.gangland.gadget.car.ExhaustSide;
@@ -150,7 +150,7 @@ public class VehicleSession {
 
 	private double durabilityProgress() {
 		if (car.getMaxDurability() <= 0) return 1.0;
-		return Math.clamp((double) currentDurability / car.getMaxDurability(), 0.0, 1.0);
+		return Math.max(0.0, Math.min((double) currentDurability / car.getMaxDurability(), 1.0));
 	}
 
 	private String buildHealthTitle() {

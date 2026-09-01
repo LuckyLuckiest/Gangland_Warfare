@@ -9,7 +9,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Projectile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
-import org.luckyraven.gangland.core.timer.RepeatingTimer;
+import org.luckyraven.keystone.timer.RepeatingTimer;
 
 import java.util.List;
 

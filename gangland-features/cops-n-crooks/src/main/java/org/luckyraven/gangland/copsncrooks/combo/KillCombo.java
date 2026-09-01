@@ -5,7 +5,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.events.combo.KillComboEvent;
-import org.luckyraven.gangland.core.utilities.NumberUtil;
+import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.gang.wanted.Wanted;
 
 import java.util.HashMap;

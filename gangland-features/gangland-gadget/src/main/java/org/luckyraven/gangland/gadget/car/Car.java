@@ -6,8 +6,8 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.ItemBuilder;
-import org.luckyraven.gangland.core.Placeholder;
+import org.luckyraven.keystone.item.ItemBuilder;
+import org.luckyraven.keystone.util.Placeholder;
 import org.luckyraven.gangland.item.fuel.FuelKey;
 
 import java.util.ArrayList;

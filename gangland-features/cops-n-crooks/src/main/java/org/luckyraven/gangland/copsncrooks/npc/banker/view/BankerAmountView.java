@@ -11,11 +11,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.npc.banker.economy.BankerEconomyContract;
 import org.luckyraven.gangland.copsncrooks.npc.banker.economy.BankerEconomyContract.BankerSnapshot;
 import org.luckyraven.gangland.copsncrooks.npc.banker.message.BankerMessageContract;
-import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.core.configuration.SoundConfiguration;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
-import org.luckyraven.gangland.core.utilities.NumberUtil;
-import org.luckyraven.gangland.economy.Currency;
+import org.luckyraven.keystone.util.ChatUtil;
+import org.luckyraven.keystone.util.NumberUtil;
+import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
 import org.luckyraven.gangland.inventory.flow.Panel;
@@ -258,7 +258,7 @@ public final class BankerAmountView implements Panel<BankerFlowSession> {
 	}
 
 	private BigDecimal stepFor(int modeIndex) {
-		int clamped = Math.clamp(modeIndex, 0, STEP_LADDER.length - 1);
+		int clamped = Math.max(0, Math.min(modeIndex, STEP_LADDER.length - 1));
 		return STEP_LADDER[clamped];
 	}
 

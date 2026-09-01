@@ -1,6 +1,6 @@
 package org.luckyraven.gangland.weapon.durability;
 
-import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.weapon.Weapon;
 
 public class DurabilityCalculator {

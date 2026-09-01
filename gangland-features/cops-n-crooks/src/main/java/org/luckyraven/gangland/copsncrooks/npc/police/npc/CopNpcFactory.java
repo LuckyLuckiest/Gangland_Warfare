@@ -19,7 +19,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.weapon.Weapon;
 import org.luckyraven.gangland.weapon.WeaponService;
 import org.luckyraven.gangland.weapon.ammo.Ammunition;

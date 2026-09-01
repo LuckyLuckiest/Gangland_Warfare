@@ -6,7 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import org.luckyraven.gangland.compatibility.recoil.RecoilCompatibility;
 import org.luckyraven.gangland.core.configuration.SoundConfiguration;
-import org.luckyraven.gangland.core.utilities.ParticleUtil;
+import org.luckyraven.keystone.util.ParticleUtil;
 import org.luckyraven.gangland.weapon.dto.MeleeData;
 import org.luckyraven.gangland.weapon.events.projectile.WeaponRaytraceImpactEvent;
 import org.luckyraven.gangland.weapon.modifiers.action.ArmorPiercingModifier;

@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.exception.PluginException;
+import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.gangland.weapon.types.throwable.ThrowableType;
 import org.luckyraven.gangland.weapon.util.PotionEffectParser;
 

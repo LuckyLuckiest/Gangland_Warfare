@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.weapon.configuration.WeaponAddon;
 import org.luckyraven.gangland.weapon.dto.AmmunitionData;
 import org.luckyraven.gangland.weapon.types.WeaponType;

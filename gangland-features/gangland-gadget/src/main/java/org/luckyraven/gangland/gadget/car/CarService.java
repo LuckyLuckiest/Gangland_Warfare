@@ -14,8 +14,8 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.ItemBuilder;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
+import org.luckyraven.keystone.item.ItemBuilder;
+import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.gadget.car.vehicle.ParkedVehicle;
 import org.luckyraven.gangland.gadget.car.vehicle.VehicleMovementTask;
 import org.luckyraven.gangland.gadget.car.vehicle.VehicleRegistry;
@@ -25,9 +25,9 @@ import org.luckyraven.gangland.gadget.car.vehicle.entity.VehicleEntity;
 import org.luckyraven.gangland.gadget.car.vehicle.packet.VehicleInputInterceptor;
 import org.luckyraven.gangland.gadget.config.GadgetPhysicsConfig;
 import org.luckyraven.gangland.gadget.fuel.FuelService;
-import org.luckyraven.gangland.gadget.packet.PlayerInputInterceptor;
+import org.luckyraven.keystone.nms.input.PlayerInputInterceptor;
 import org.luckyraven.gangland.item.fuel.FuelKey;
-import org.luckyraven.gangland.persistence.repository.IRepository;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -626,7 +626,7 @@ public class CarService implements BeanLifecycle {
 		Car car = parked.getCar();
 		if (!car.isFuelEnabled() || car.getFuelKey() == null) return false;
 
-		int toAdd = Math.clamp(amount, 0, parked.getMaxFuel() - parked.getFuel());
+		int toAdd = Math.max(0, Math.min(amount, parked.getMaxFuel() - parked.getFuel()));
 		if (toAdd == 0) return false;
 
 		parked.addFuel(toAdd);

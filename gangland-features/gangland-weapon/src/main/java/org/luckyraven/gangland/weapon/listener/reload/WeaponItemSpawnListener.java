@@ -6,9 +6,9 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.core.bean.autowire.AutowireTarget;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.bean.autowire.AutowireTarget;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.weapon.Weapon;
 import org.luckyraven.gangland.weapon.WeaponService;
 

@@ -19,7 +19,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.targeting.TargetingManager;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
+import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
 import org.luckyraven.gangland.gang.wanted.Wanted;
 

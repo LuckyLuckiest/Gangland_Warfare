@@ -52,7 +52,7 @@ public final class MoodService {
 	}
 
 	private double clamp(double value) {
-		return Math.clamp(value, MOOD_MIN, MOOD_MAX);
+		return Math.max(MOOD_MIN, Math.min(value, MOOD_MAX));
 	}
 
 }

@@ -2,8 +2,8 @@ package org.luckyraven.gangland.copsncrooks.jail;
 
 import lombok.Getter;
 import org.bukkit.Location;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
-import org.luckyraven.gangland.persistence.repository.IRepository;
+import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.util.UUID;
 

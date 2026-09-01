@@ -8,7 +8,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.config.CiviliansConfig;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.config.CiviliansLoader;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
+import org.luckyraven.keystone.bean.BeanLifecycle;
 
 import java.util.*;
 

@@ -4,7 +4,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.util.BlockVector;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
+import org.luckyraven.keystone.bean.BeanLifecycle;
 
 import java.util.Map;
 import java.util.Set;

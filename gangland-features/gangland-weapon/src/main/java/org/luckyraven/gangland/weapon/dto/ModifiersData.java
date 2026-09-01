@@ -2,7 +2,7 @@ package org.luckyraven.gangland.weapon.dto;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.luckyraven.gangland.exception.PluginException;
+import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.gangland.weapon.modifiers.action.*;
 
 import java.util.ArrayList;

@@ -6,7 +6,7 @@ import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.luckyraven.gangland.core.utilities.ParticleUtil;
+import org.luckyraven.keystone.util.ParticleUtil;
 import org.luckyraven.gangland.gadget.car.Car;
 import org.luckyraven.gangland.gadget.car.CarService;
 import org.luckyraven.gangland.gadget.car.ExhaustSide;

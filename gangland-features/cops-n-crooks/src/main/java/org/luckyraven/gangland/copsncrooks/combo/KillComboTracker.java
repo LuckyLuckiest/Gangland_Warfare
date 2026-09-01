@@ -5,7 +5,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.core.timer.CountdownTimer;
+import org.luckyraven.keystone.timer.CountdownTimer;
 
 import java.util.ArrayList;
 import java.util.List;

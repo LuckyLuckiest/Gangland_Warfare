@@ -6,7 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.npc.trader.TraderData;
 import org.luckyraven.gangland.copsncrooks.npc.trader.config.TraderSettings;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
+import org.luckyraven.keystone.bean.BeanLifecycle;
 
 import java.util.HashSet;
 import java.util.Set;

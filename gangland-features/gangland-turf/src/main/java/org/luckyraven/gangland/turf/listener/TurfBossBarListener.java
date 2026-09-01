@@ -10,8 +10,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.contract.UserLookupContract;
@@ -204,16 +204,16 @@ public final class TurfBossBarListener implements Listener {
 			claimBar = Bukkit.createBossBar(buildClaimTitle(), BarColor.WHITE, BarStyle.SOLID);
 			// Claim bar fills first; consolidate bar stays at 0 until CLAIM completes.
 			double claimProgress = state.getPhase() == CapturePhase.CLAIM
-			                       ? Math.clamp(state.getCaptureProgress() / 100.0, 0.0, 1.0)
+			                       ? Math.max(0.0, Math.min(state.getCaptureProgress() / 100.0, 1.0))
 			                       : 1.0;
 			double consolidateProgress = state.getPhase() == CapturePhase.CONSOLIDATE
-			                             ? Math.clamp(state.getCaptureProgress() / 100.0, 0.0, 1.0)
+			                             ? Math.max(0.0, Math.min(state.getCaptureProgress() / 100.0, 1.0))
 			                             : 0.0;
 			claimBar.setProgress(claimProgress);
 			consolidateBar.setProgress(consolidateProgress);
 			claimBar.addPlayer(viewer);
 		} else {
-			consolidateBar.setProgress(Math.clamp(state.getCaptureProgress() / 100.0, 0.0, 1.0));
+			consolidateBar.setProgress(Math.max(0.0, Math.min(state.getCaptureProgress() / 100.0, 1.0)));
 		}
 
 		consolidateBar.addPlayer(viewer);
@@ -258,7 +258,7 @@ public final class TurfBossBarListener implements Listener {
 				continue;
 			}
 
-			double progress = Math.clamp(state.getCaptureProgress() / 100.0, 0.0, 1.0);
+			double progress = Math.max(0.0, Math.min(state.getCaptureProgress() / 100.0, 1.0));
 			double claimProgress;
 			double consolidateProgress;
 			if (turf.isUnclaimed()) {

@@ -15,9 +15,9 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.ItemBuilder;
-import org.luckyraven.gangland.core.Placeholder;
-import org.luckyraven.gangland.exception.PluginException;
+import org.luckyraven.keystone.item.ItemBuilder;
+import org.luckyraven.keystone.util.Placeholder;
+import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.gangland.weapon.dto.*;
 import org.luckyraven.gangland.weapon.durability.DurabilityCalculator;
 import org.luckyraven.gangland.weapon.projectile.recoil.RecoilManager;
@@ -437,8 +437,8 @@ public abstract class Weapon implements Cloneable, Comparable<Weapon> {
 
 	private void push(Player player, double powerUp, double push) {
 		// Safety check - clamp values to reasonable limits
-		powerUp = Math.clamp(powerUp, -0.5, 0.5);
-		push    = Math.clamp(push, -0.5, 0.5);
+		powerUp = Math.max(-0.5, Math.min(powerUp, 0.5));
+		push    = Math.max(-0.5, Math.min(push, 0.5));
 
 		if (push > 0) push *= -1;
 

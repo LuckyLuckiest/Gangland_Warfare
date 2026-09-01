@@ -13,8 +13,8 @@ import org.luckyraven.gangland.copsncrooks.npc.civilian.npc.CivilianNpcFactory;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.spawn.CivilianSpawner;
 import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMarkManager;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
-import org.luckyraven.gangland.core.timer.RepeatingTimer;
+import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.timer.RepeatingTimer;
 
 import java.util.*;
 

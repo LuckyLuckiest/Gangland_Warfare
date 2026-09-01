@@ -7,7 +7,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPortalEvent;
 import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMark;
 import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMarkManager;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 /**
  * Prevents Gangland NPCs (civilians, cops) from being teleported through nether/end portals. Citizens pathfinding can

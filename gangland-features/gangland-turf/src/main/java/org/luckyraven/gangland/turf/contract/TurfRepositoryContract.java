@@ -1,6 +1,6 @@
 package org.luckyraven.gangland.turf.contract;
 
-import org.luckyraven.gangland.persistence.repository.IRepository;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.gangland.turf.data.Turf;
 
 /**

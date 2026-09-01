@@ -13,8 +13,8 @@ import org.luckyraven.gangland.copsncrooks.detainment.message.DetainmentMessageC
 import org.luckyraven.gangland.copsncrooks.detainment.release.ReleasePipeline;
 import org.luckyraven.gangland.copsncrooks.detainment.release.ReleaseReason;
 import org.luckyraven.gangland.copsncrooks.detainment.sound.DetainmentSoundContract;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
-import org.luckyraven.gangland.core.utilities.ActionBarManager;
+import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.util.ActionBarManager;
 
 import java.util.Map;
 import java.util.UUID;

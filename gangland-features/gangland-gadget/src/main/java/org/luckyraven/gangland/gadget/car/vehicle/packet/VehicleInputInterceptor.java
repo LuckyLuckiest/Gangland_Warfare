@@ -2,7 +2,7 @@ package org.luckyraven.gangland.gadget.car.vehicle.packet;
 
 import org.luckyraven.gangland.gadget.car.vehicle.VehicleMovementTask;
 import org.luckyraven.gangland.gadget.car.vehicle.VehicleSession;
-import org.luckyraven.gangland.gadget.packet.PlayerInputInterceptor;
+import org.luckyraven.keystone.nms.input.PlayerInputInterceptor;
 
 /**
  * Writes the client's WASD state from every {@code ServerboundPlayerInputPacket} into the active
