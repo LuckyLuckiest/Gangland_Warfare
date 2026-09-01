@@ -3,7 +3,7 @@ package org.luckyraven.gangland.file.configuration.inventory;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.inventory.condition.ConditionalSlotData;
 import org.luckyraven.gangland.inventory.condition.SlotCondition;
 import org.luckyraven.gangland.inventory.handler.SlotItemFactory;

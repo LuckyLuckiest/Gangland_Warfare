@@ -1,6 +1,6 @@
 package datastructure;
 
-import org.luckyraven.gangland.core.datastructure.JsonFormatter;
+import org.luckyraven.keystone.datastructure.JsonFormatter;
 
 import java.util.Map;
 import java.util.TreeMap;

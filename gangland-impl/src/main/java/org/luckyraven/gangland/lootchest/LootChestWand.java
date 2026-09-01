@@ -8,9 +8,9 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.core.configuration.SoundConfiguration;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.inventory.util.InventoryUtil;
@@ -427,7 +427,7 @@ public class LootChestWand {
 		List<LootItemReference> entries = table.getItemReferences();
 		int totalPages = Math.max(1, (int) Math.ceil(
 				entries.size() / (double) PREVIEW_ENTRIES_PER_PAGE));
-		int currentPage = Math.clamp(page, 0, totalPages - 1);
+		int currentPage = Math.max(0, Math.min(page, totalPages - 1));
 
 		String           title     = "&6&lPreview: &e" + table.getDisplayName();
 		InventoryHandler inventory = new InventoryHandler(gangland, title, PREVIEW_SIZE, player);
@@ -493,7 +493,7 @@ public class LootChestWand {
 			ItemStack clone = resolved.clone();
 			// Mirror the roll clamp used by LootTable#createItemFromReference so the preview
 			// shows the realistic maximum stack rather than a confusing value > maxStackSize.
-			int rolled = Math.clamp(entry.getMaxAmount(), 1, clone.getMaxStackSize());
+			int rolled = Math.max(1, Math.min(entry.getMaxAmount(), clone.getMaxStackSize()));
 			clone.setAmount(rolled);
 			builder = new ItemBuilder(clone);
 		} else {

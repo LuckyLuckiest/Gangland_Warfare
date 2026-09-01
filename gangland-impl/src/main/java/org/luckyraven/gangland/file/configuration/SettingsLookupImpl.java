@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.file.configuration;
 
-import org.luckyraven.gangland.core.bean.SettingsLookup;
-import org.luckyraven.gangland.core.bean.conditional.ConditionalOnSetting;
+import org.luckyraven.keystone.bean.SettingsLookup;
+import org.luckyraven.keystone.bean.conditional.ConditionalOnSetting;
 
 import java.util.Map;
 

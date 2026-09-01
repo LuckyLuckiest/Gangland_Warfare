@@ -1,9 +1,9 @@
 package org.luckyraven.gangland.config;
 
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.core.bean.Bean;
-import org.luckyraven.gangland.core.bean.Configuration;
-import org.luckyraven.gangland.data.permission.PermissionManager;
+import org.luckyraven.keystone.bean.Bean;
+import org.luckyraven.keystone.bean.Configuration;
+import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.database.repositories.turf.ActiveTurfBuffRepository;
 import org.luckyraven.gangland.database.repositories.turf.TurfGarrisonRepository;
 import org.luckyraven.gangland.database.repositories.turf.TurfRepository;
@@ -12,7 +12,7 @@ import org.luckyraven.gangland.file.configuration.turf.GanglandTurfMessages;
 import org.luckyraven.gangland.file.configuration.turf.GanglandTurfSounds;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.contract.UserLookupContract;
-import org.luckyraven.gangland.persistence.FileManager;
+import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.gangland.turf.capture.CaptureService;
 import org.luckyraven.gangland.turf.capture.CaptureSettings;
 import org.luckyraven.gangland.turf.contract.TurfDisplayContract;

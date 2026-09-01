@@ -1,6 +1,6 @@
 package org.luckyraven.gangland.file.configuration.gang;
 
-import org.luckyraven.gangland.data.permission.PermissionManager;
+import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.gang.contract.PermissionRegistryContract;
 
 /**

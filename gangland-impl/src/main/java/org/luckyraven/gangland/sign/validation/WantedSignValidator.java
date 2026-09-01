@@ -1,6 +1,6 @@
 package org.luckyraven.gangland.sign.validation;
 
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.sign.SignType;
 import org.luckyraven.gangland.sign.type.WantedSign;

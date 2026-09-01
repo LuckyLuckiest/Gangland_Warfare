@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.core.color.Color;
+import org.luckyraven.keystone.color.Color;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.sign.SignType;
 import org.luckyraven.gangland.sign.aspect.BountyAspect;

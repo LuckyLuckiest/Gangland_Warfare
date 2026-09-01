@@ -1,6 +1,6 @@
 package org.luckyraven.gangland.file.configuration.lootchest;
 
-import org.luckyraven.gangland.core.utilities.messages.TimeMessagesProvider;
+import org.luckyraven.keystone.util.messages.TimeMessagesProvider;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.lootchest.config.LootChestMessagesProvider;
 import org.luckyraven.gangland.lootchest.data.LootTier;

@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.config.GangFilterRegistration;
-import org.luckyraven.gangland.core.color.ColorUtil;
+import org.luckyraven.keystone.color.ColorUtil;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangAlliance;

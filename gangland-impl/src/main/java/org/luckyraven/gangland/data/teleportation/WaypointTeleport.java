@@ -9,7 +9,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.timer.CountdownTimer;
+import org.luckyraven.keystone.timer.CountdownTimer;
 import org.luckyraven.gangland.events.teleportation.TeleportEvent;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.user.User;

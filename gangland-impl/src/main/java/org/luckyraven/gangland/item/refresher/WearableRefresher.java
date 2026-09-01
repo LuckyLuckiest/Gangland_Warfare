@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.item.ItemRefresher;
 import org.luckyraven.gangland.item.wearable.Wearable;
 import org.luckyraven.gangland.weapon.wearable.WearableService;

@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.sign.type.trade;
 
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.core.color.Color;
+import org.luckyraven.keystone.color.Color;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.sign.SignType;

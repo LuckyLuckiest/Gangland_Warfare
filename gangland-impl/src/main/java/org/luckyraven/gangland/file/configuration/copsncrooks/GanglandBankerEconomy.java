@@ -8,13 +8,13 @@ import org.luckyraven.gangland.copsncrooks.npc.banker.config.BankerSettings;
 import org.luckyraven.gangland.copsncrooks.npc.banker.economy.BankerEconomyContract;
 import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTier;
 import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTierRegistry;
-import org.luckyraven.gangland.economy.Currency;
-import org.luckyraven.gangland.economy.EconomyHandler;
-import org.luckyraven.gangland.economy.bank.Bank;
-import org.luckyraven.gangland.economy.exception.EconomyException;
+import org.luckyraven.keystone.economy.Currency;
+import org.luckyraven.keystone.economy.EconomyHandler;
+import org.luckyraven.keystone.economy.bank.Bank;
+import org.luckyraven.keystone.economy.exception.EconomyException;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.persistence.repository.IRepository;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.math.BigDecimal;
 import java.time.Duration;

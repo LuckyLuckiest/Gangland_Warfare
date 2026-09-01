@@ -9,7 +9,7 @@ import org.luckyraven.gangland.copsncrooks.events.trader.TraderBarterEvent;
 import org.luckyraven.gangland.copsncrooks.npc.trader.TraderManager;
 import org.luckyraven.gangland.copsncrooks.npc.trader.mood.MoodService;
 import org.luckyraven.gangland.copsncrooks.npc.trader.trait.TraderTraitDefinition;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.shop.message.ShopDisplayResolver;
 import org.luckyraven.gangland.shop.message.ShopMessageContract;
 import org.luckyraven.gangland.shop.transaction.BarterResult;

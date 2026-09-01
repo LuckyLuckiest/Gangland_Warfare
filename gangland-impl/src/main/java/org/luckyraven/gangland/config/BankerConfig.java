@@ -12,19 +12,19 @@ import org.luckyraven.gangland.copsncrooks.npc.banker.message.BankerMessageContr
 import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTierRegistry;
 import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTiersLoader;
 import org.luckyraven.gangland.copsncrooks.npc.banker.view.*;
-import org.luckyraven.gangland.core.bean.Bean;
-import org.luckyraven.gangland.core.bean.Configuration;
-import org.luckyraven.gangland.core.bean.Qualifier;
-import org.luckyraven.gangland.data.permission.PermissionManager;
-import org.luckyraven.gangland.economy.bank.Bank;
+import org.luckyraven.keystone.bean.Bean;
+import org.luckyraven.keystone.bean.Configuration;
+import org.luckyraven.keystone.bean.Qualifier;
+import org.luckyraven.keystone.permission.PermissionManager;
+import org.luckyraven.keystone.economy.bank.Bank;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.file.configuration.copsncrooks.BankerSettingsImpl;
 import org.luckyraven.gangland.file.configuration.copsncrooks.GanglandBankerEconomy;
 import org.luckyraven.gangland.file.configuration.copsncrooks.GanglandBankerMessages;
 import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.persistence.FileManager;
-import org.luckyraven.gangland.persistence.repository.IRepository;
-import org.luckyraven.gangland.persistence.repository.RepositoryRegistry;
+import org.luckyraven.keystone.persistence.FileManager;
+import org.luckyraven.keystone.persistence.repository.IRepository;
+import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 /**
  * Bean wiring for the Banker NPC feature. Mirrors the trader wiring in {@link ShopConfig}, minus trait-, mood- and

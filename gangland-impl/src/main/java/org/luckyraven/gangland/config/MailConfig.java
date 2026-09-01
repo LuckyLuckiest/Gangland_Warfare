@@ -3,14 +3,14 @@ package org.luckyraven.gangland.config;
 import lombok.CustomLog;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.bootstrap.GanglandContext;
-import org.luckyraven.gangland.core.bean.Bean;
-import org.luckyraven.gangland.core.bean.Configuration;
-import org.luckyraven.gangland.core.bean.PostConstruct;
-import org.luckyraven.gangland.core.timer.RepeatingTimer;
+import org.luckyraven.keystone.bean.Bean;
+import org.luckyraven.keystone.bean.Configuration;
+import org.luckyraven.keystone.bean.PostConstruct;
+import org.luckyraven.keystone.timer.RepeatingTimer;
 import org.luckyraven.gangland.mail.MailItem;
 import org.luckyraven.gangland.mail.MailManager;
 import org.luckyraven.gangland.mail.contract.MailRepositoryContract;
-import org.luckyraven.gangland.persistence.repository.RepositoryRegistry;
+import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 /**
  * CONFIG-phase wiring for the mail subsystem. The {@link MailRepositoryContract} bean is dispensed off the

@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.config;
 
-import org.luckyraven.gangland.core.bean.Bean;
-import org.luckyraven.gangland.core.bean.Configuration;
+import org.luckyraven.keystone.bean.Bean;
+import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.gangland.gadget.car.config.CarAddon;
 import org.luckyraven.gangland.item.*;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;

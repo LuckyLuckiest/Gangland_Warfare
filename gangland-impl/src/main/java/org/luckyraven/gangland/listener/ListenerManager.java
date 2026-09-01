@@ -1,8 +1,8 @@
 package org.luckyraven.gangland.listener;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.core.bean.autowire.DependencyContainer;
-import org.luckyraven.gangland.core.bean.listener.ListenerService;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
+import org.luckyraven.keystone.bean.listener.ListenerService;
 import org.luckyraven.gangland.file.configuration.Settings;
 
 import java.lang.reflect.InvocationTargetException;

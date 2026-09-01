@@ -3,8 +3,8 @@ package org.luckyraven.gangland.file.configuration.copsncrooks;
 import lombok.CustomLog;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.copsncrooks.npc.trader.economy.TraderEconomyContract;
-import org.luckyraven.gangland.economy.EconomyHandler;
-import org.luckyraven.gangland.economy.exception.EconomyException;
+import org.luckyraven.keystone.economy.EconomyHandler;
+import org.luckyraven.keystone.economy.exception.EconomyException;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
 

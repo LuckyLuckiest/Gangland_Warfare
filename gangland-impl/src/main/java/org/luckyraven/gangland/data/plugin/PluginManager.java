@@ -1,10 +1,10 @@
 package org.luckyraven.gangland.data.plugin;
 
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
-import org.luckyraven.gangland.core.utilities.TimeUtil;
+import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.util.TimeUtil;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.persistence.repository.IRepository;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.time.Instant;
 import java.util.*;

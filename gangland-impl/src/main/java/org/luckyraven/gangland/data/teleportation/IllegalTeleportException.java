@@ -1,6 +1,6 @@
 package org.luckyraven.gangland.data.teleportation;
 
-import org.luckyraven.gangland.exception.PluginException;
+import org.luckyraven.keystone.exception.PluginException;
 
 public class IllegalTeleportException extends PluginException {
 

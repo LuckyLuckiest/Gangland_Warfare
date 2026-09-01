@@ -1,9 +1,9 @@
 package org.luckyraven.gangland.weapon;
 
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
+import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.database.repositories.weapon.WeaponRepository;
-import org.luckyraven.gangland.persistence.repository.IRepository;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.gangland.weapon.configuration.WeaponAddon;
 
 import java.util.Collection;

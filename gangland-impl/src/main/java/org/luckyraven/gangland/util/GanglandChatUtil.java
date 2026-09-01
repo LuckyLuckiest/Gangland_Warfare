@@ -3,7 +3,7 @@ package org.luckyraven.gangland.util;
 import org.apache.logging.log4j.Logger;
 import org.bukkit.Bukkit;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 

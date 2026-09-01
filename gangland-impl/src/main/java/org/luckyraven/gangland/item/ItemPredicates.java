@@ -2,7 +2,7 @@ package org.luckyraven.gangland.item;
 
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.gadget.car.CarKey;
 import org.luckyraven.gangland.item.money.MoneyItemUtil;
 import org.luckyraven.gangland.item.unique.UniqueItemKeys;

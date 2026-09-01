@@ -1,10 +1,10 @@
 package org.luckyraven.gangland.config;
 
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.core.bean.Bean;
-import org.luckyraven.gangland.core.bean.Configuration;
-import org.luckyraven.gangland.core.bean.Qualifier;
-import org.luckyraven.gangland.data.permission.PermissionManager;
+import org.luckyraven.keystone.bean.Bean;
+import org.luckyraven.keystone.bean.Configuration;
+import org.luckyraven.keystone.bean.Qualifier;
+import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.file.configuration.gang.*;
 import org.luckyraven.gangland.gang.GangAlliance;
 import org.luckyraven.gangland.gang.GangManager;
@@ -14,7 +14,7 @@ import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.gang.vault.permission.VaultPermissionBridge;
-import org.luckyraven.gangland.persistence.repository.RepositoryRegistry;
+import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 /**
  * Wires gangland-impl's {@code Settings}, {@code Messages}, {@link VaultPermissionBridge}, {@link PermissionManager},

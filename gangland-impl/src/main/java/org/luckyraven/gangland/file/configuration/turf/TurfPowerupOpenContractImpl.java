@@ -6,7 +6,7 @@ import org.luckyraven.gangland.copsncrooks.npc.turf.TurfPowerupManager;
 import org.luckyraven.gangland.copsncrooks.npc.turf.TurfPowerupNpc;
 import org.luckyraven.gangland.copsncrooks.npc.turf.TurfPowerupOpenContract;
 import org.luckyraven.gangland.copsncrooks.npc.turf.view.TurfPowerupFlow;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.contract.UserLookupContract;

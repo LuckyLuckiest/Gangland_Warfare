@@ -1,11 +1,11 @@
 package org.luckyraven.gangland.file.configuration;
 
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
-import org.luckyraven.gangland.exception.PluginException;
+import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.gangland.item.money.MoneyAddon;
-import org.luckyraven.gangland.persistence.FileHandler;
-import org.luckyraven.gangland.persistence.FileInitializer;
-import org.luckyraven.gangland.persistence.FileManager;
+import org.luckyraven.keystone.persistence.FileHandler;
+import org.luckyraven.keystone.persistence.FileInitializer;
+import org.luckyraven.keystone.persistence.FileManager;
 
 import java.io.IOException;
 import java.util.Objects;

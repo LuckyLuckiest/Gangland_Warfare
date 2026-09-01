@@ -2,7 +2,7 @@ package org.luckyraven.gangland.file.configuration.turf;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.core.utilities.TimeUtil;
+import org.luckyraven.keystone.util.TimeUtil;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.util.TimeMessages;

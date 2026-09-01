@@ -3,8 +3,8 @@ package org.luckyraven.gangland.file.configuration.weapon;
 import lombok.CustomLog;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.persistence.FileManager;
-import org.luckyraven.gangland.persistence.FolderLoader;
+import org.luckyraven.keystone.persistence.FileManager;
+import org.luckyraven.keystone.persistence.FolderLoader;
 import org.luckyraven.gangland.weapon.ammo.AmmunitionManager;
 import org.luckyraven.gangland.weapon.configuration.WeaponAddon;
 

@@ -9,7 +9,7 @@ import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
 import org.luckyraven.gangland.copsncrooks.detainment.inventory.SeizedInventory;
 import org.luckyraven.gangland.copsncrooks.detainment.inventory.SeizedInventoryService;
-import org.luckyraven.gangland.persistence.repository.IRepository;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.io.ByteArrayInputStream;

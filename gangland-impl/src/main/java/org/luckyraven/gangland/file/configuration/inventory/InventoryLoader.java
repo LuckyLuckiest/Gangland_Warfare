@@ -1,8 +1,8 @@
 package org.luckyraven.gangland.file.configuration.inventory;
 
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.persistence.FileManager;
-import org.luckyraven.gangland.persistence.FolderLoader;
+import org.luckyraven.keystone.persistence.FileManager;
+import org.luckyraven.keystone.persistence.FolderLoader;
 
 public class InventoryLoader extends FolderLoader {
 

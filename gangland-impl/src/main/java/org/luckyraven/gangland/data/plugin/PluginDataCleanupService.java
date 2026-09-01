@@ -1,15 +1,16 @@
 package org.luckyraven.gangland.data.plugin;
 
 import lombok.CustomLog;
-import org.luckyraven.gangland.core.utilities.TimeUtil;
+import org.luckyraven.keystone.util.TimeUtil;
 import org.luckyraven.gangland.database.repositories.weapon.WeaponRepository;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.persistence.repository.IRepository;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.gangland.util.TimeMessages;
 import org.luckyraven.gangland.weapon.Weapon;
 import org.luckyraven.gangland.weapon.WeaponManager;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * Service responsible for cleaning up unused data from the database based on the plugin's scheduled scan dates.
@@ -36,8 +37,9 @@ public final class PluginDataCleanupService {
 	public void checkAndPerformCleanup() {
 		if (validatePluginData()) return;
 
-		PluginData pluginData = pluginManager.getPluginDataList().getLast();
-		long       now        = System.currentTimeMillis();
+		List<PluginData> dataList   = pluginManager.getPluginDataList();
+		PluginData       pluginData = dataList.get(dataList.size() - 1);
+		long             now        = System.currentTimeMillis();
 
 		if (now >= pluginData.getScheduledScanDate()) {
 			if (logDebug) log.info("Scheduled cleanup scan is due. Starting cleanup...");
@@ -60,7 +62,8 @@ public final class PluginDataCleanupService {
 
 		if (logDebug) log.info("Forcing immediate cleanup scan...");
 
-		performCleanup(pluginManager.getPluginDataList().getLast());
+		List<PluginData> dataList = pluginManager.getPluginDataList();
+		performCleanup(dataList.get(dataList.size() - 1));
 	}
 
 	private boolean validatePluginData() {

@@ -2,7 +2,7 @@ package org.luckyraven.gangland.sign.type;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.core.color.Color;
+import org.luckyraven.keystone.color.Color;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.sign.SignType;
 import org.luckyraven.gangland.sign.aspect.MoneyAspect;

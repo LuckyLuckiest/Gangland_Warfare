@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.file.configuration.copsncrooks;
 
 import org.luckyraven.gangland.copsncrooks.npc.banker.message.BankerMessageContract;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 

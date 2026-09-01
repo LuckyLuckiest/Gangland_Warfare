@@ -1,7 +1,7 @@
 package datastructure;
 
-import org.luckyraven.gangland.core.datastructure.Tree;
-import org.luckyraven.gangland.core.datastructure.Tree.Node;
+import org.luckyraven.keystone.datastructure.Tree;
+import org.luckyraven.keystone.datastructure.Tree.Node;
 
 import java.util.Arrays;
 

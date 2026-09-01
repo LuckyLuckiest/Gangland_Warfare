@@ -2,9 +2,9 @@ package org.luckyraven.gangland.sign.aspect;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.economy.Currency;
-import org.luckyraven.gangland.economy.EconomyHandler;
-import org.luckyraven.gangland.economy.exception.EconomyException;
+import org.luckyraven.keystone.economy.Currency;
+import org.luckyraven.keystone.economy.EconomyHandler;
+import org.luckyraven.keystone.economy.exception.EconomyException;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.user.User;

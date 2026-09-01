@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.sign.type.trade.car;
 
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.core.color.Color;
+import org.luckyraven.keystone.color.Color;
 import org.luckyraven.gangland.gadget.car.Car;
 import org.luckyraven.gangland.gadget.car.CarManager;
 import org.luckyraven.gangland.gang.user.UserManager;

@@ -1,9 +1,9 @@
 package org.luckyraven.gangland.config;
 
 import org.luckyraven.gangland.bootstrap.GanglandContext;
-import org.luckyraven.gangland.core.bean.Bean;
-import org.luckyraven.gangland.core.bean.Configuration;
-import org.luckyraven.gangland.core.bean.PostConstruct;
+import org.luckyraven.keystone.bean.Bean;
+import org.luckyraven.keystone.bean.Configuration;
+import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.gangland.gang.GangFilterAdapter;
 import org.luckyraven.gangland.gang.member.MemberFilterAdapter;
 import org.luckyraven.gangland.inventory.filter.FilterBinding;

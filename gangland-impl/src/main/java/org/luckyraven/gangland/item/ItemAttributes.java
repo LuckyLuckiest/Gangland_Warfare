@@ -3,7 +3,7 @@ package org.luckyraven.gangland.item;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
-import org.luckyraven.gangland.core.color.Color;
+import org.luckyraven.keystone.color.Color;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.Arrays;

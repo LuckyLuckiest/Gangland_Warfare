@@ -2,7 +2,7 @@ package org.luckyraven.gangland.sign.type;
 
 import lombok.RequiredArgsConstructor;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.core.color.Color;
+import org.luckyraven.keystone.color.Color;
 import org.luckyraven.gangland.gadget.car.CarManager;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.sign.SignType;
