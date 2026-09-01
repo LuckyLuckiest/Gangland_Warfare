@@ -1,9 +1,11 @@
 package org.luckyraven.gangland.data.placeholder;
 
-import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.core.Placeholder;
+import org.luckyraven.keystone.papi.PlaceholderAPIProvider;
+import org.luckyraven.keystone.placeholder.CompositePlaceholderProvider;
+import org.luckyraven.keystone.placeholder.PlaceholderProvider;
+import org.luckyraven.keystone.util.Placeholder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,12 +20,20 @@ import java.util.List;
  * unchanged — exactly matching the legacy null-delegate behavior. Once the CONFIG phase finishes, the registered
  * resolvers are applied in registration order.
  *
- * <p>If PlaceholderAPI is loaded, its expansion is preferred and the internal registry is bypassed entirely.
+ * <p>Resolution runs as a Keystone {@link CompositePlaceholderProvider} chain (1.7.x migration): when the
+ * PlaceholderAPI expansion is hooked, PAPI resolves <b>first as one link in the chain</b> — it no longer bypasses the
+ * internal registry, so built-in resolvers (money symbol, gang/user tokens) still apply afterwards.
  */
 public class PlaceholderService implements Placeholder {
 
 	private final Gangland          gangland;
 	private final List<Placeholder> resolvers = new ArrayList<>();
+
+	/**
+	 * Created lazily behind the expansion guard so the class — and its PlaceholderAPI imports — never load on a
+	 * server without PAPI installed.
+	 */
+	private PlaceholderProvider papiProvider;
 
 	public PlaceholderService(Gangland gangland) {
 		this.gangland = gangland;
@@ -38,29 +48,30 @@ public class PlaceholderService implements Placeholder {
 	}
 
 	/**
-	 * Uses PlaceholderAPI if configured to replace the text with the appropriate placeholder configured.
-	 * </b>
-	 * If PlaceholderAPI wasn't configured, every registered resolver is applied in registration order.
+	 * Resolves placeholders through the composite chain: PlaceholderAPI (when hooked) first, then every registered
+	 * resolver in registration order.
 	 *
 	 * @param player the player object
 	 * @param text the string that contains the placeholder(s)
 	 *
-	 * @return the replaced placeholder text with the appropriate placeholder
+	 * @return the text with every resolvable placeholder replaced
 	 */
 	@Override
 	public String convert(Player player, String text) {
+		List<PlaceholderProvider> chain = new ArrayList<>(resolvers.size() + 1);
+
 		if (gangland.getPlaceholderAPIExpansion() != null) {
-			if (PlaceholderAPI.containsPlaceholders(text)) {
-				return PlaceholderAPI.setPlaceholders(player, text);
+			if (papiProvider == null) {
+				papiProvider = new PlaceholderAPIProvider();
 			}
-			return text;
+			chain.add(papiProvider);
 		}
 
-		String result = text;
 		for (Placeholder resolver : resolvers) {
-			result = resolver.convert(player, result);
+			chain.add((offlinePlayer, raw) -> resolver.convert(player, raw));
 		}
-		return result;
+
+		return CompositePlaceholderProvider.of(chain).resolve(player, text);
 	}
 
 }
