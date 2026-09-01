@@ -6,14 +6,19 @@
 
 ## Overview
 
-Gangland Warfare supports Minecraft versions 1.10 through 1.21 using the Adapter pattern.
-Each server version has its own module that provides NMS (net.minecraft.server) implementations
+Gangland Warfare supports Minecraft servers 1.16 and newer using the Adapter pattern.
+Each server revision has its own module that provides NMS (net.minecraft.server) implementations
 for version-specific operations -- primarily weapon recoil effects that require sending raw
 packets to rotate the player's camera.
 
+The 1.16 floor matches Keystone's API floor (Spigot 1.16.5, `api-version: 1.16`), and the
+whole stack compiles at Java release 17 to match Keystone, so the jar loads on every JVM
+Keystone loads on. Players on older clients are supported through ViaVersion/ViaBackwards
+on the server (recoil verified working through the Via pipeline).
+
 **Module:** `gangland-compatibility`  
 **Interface Module:** `gangland-compatibility/version-impl`  
-**Adapter Modules:** `gangland-compatibility/version-1_10_R1` through `version-1_21_R7`
+**Adapter Modules:** `gangland-compatibility/version-1_16_R1` through `version-1_21_R7`
 
 ---
 
@@ -34,11 +39,11 @@ packets to rotate the player's camera.
               ╭──────────────┼──────────────╮
               │              │              │
     ╭─────────┴──╮  ╭────────┴────╮  ╭──────┴───────╮
-    │version-1_10│  │version-1_16 │  │version-1_21  │
-    │  _R1       │  │  _R3        │  │  _R7         │
+    │version-1_16│  │version-1_18 │  │version-1_21  │
+    │  _R1       │  │  _R2        │  │  _R7         │
     ╰────────────╯  ╰─────────────╯  ╰──────────────╯
          ...             ...              ...
-                  (28 modules total)
+                  (20 modules total)
 ```
 
 ### Compatibility Interface
@@ -97,35 +102,35 @@ for feature gating and API compatibility decisions.
 
 ## Supported Versions
 
-| Module            | Minecraft Version | NMS Package |
-|-------------------|-------------------|-------------|
-| `version-1_10_R1` | 1.10.x            | `v1_10_R1`  |
-| `version-1_11_R1` | 1.11.x            | `v1_11_R1`  |
-| `version-1_12_R1` | 1.12.x            | `v1_12_R1`  |
-| `version-1_13_R1` | 1.13              | `v1_13_R1`  |
-| `version-1_13_R2` | 1.13.1-2          | `v1_13_R2`  |
-| `version-1_14_R1` | 1.14.x            | `v1_14_R1`  |
-| `version-1_15_R1` | 1.15.x            | `v1_15_R1`  |
-| `version-1_16_R1` | 1.16.1            | `v1_16_R1`  |
-| `version-1_16_R2` | 1.16.2-3          | `v1_16_R2`  |
-| `version-1_16_R3` | 1.16.4-5          | `v1_16_R3`  |
-| `version-1_17_R1` | 1.17.x            | `v1_17_R1`  |
-| `version-1_18_R1` | 1.18              | `v1_18_R1`  |
-| `version-1_18_R2` | 1.18.2            | `v1_18_R2`  |
-| `version-1_19_R1` | 1.19              | `v1_19_R1`  |
-| `version-1_19_R2` | 1.19.2-3          | `v1_19_R2`  |
-| `version-1_19_R3` | 1.19.4            | `v1_19_R3`  |
-| `version-1_20_R1` | 1.20-1.20.1       | `v1_20_R1`  |
-| `version-1_20_R2` | 1.20.2            | `v1_20_R2`  |
-| `version-1_20_R3` | 1.20.3-4          | `v1_20_R3`  |
-| `version-1_20_R4` | 1.20.5-6          | `v1_20_R4`  |
-| `version-1_21_R1` | 1.21              | `v1_21_R1`  |
-| `version-1_21_R2` | 1.21.1            | `v1_21_R2`  |
-| `version-1_21_R3` | 1.21.2            | `v1_21_R3`  |
-| `version-1_21_R4` | 1.21.3            | `v1_21_R4`  |
-| `version-1_21_R5` | 1.21.4            | `v1_21_R5`  |
-| `version-1_21_R6` | 1.21.5            | `v1_21_R6`  |
-| `version-1_21_R7` | 1.21.6+           | `v1_21_R7`  |
+| Module            | Minecraft Version | NMS Revision |
+|-------------------|-------------------|--------------|
+| `version-1_16_R1` | 1.16.1            | `v1_16_R1`   |
+| `version-1_16_R2` | 1.16.2-3          | `v1_16_R2`   |
+| `version-1_16_R3` | 1.16.4-5          | `v1_16_R3`   |
+| `version-1_17_R1` | 1.17.x            | `v1_17_R1`   |
+| `version-1_18_R1` | 1.18-1.18.1       | `v1_18_R1`   |
+| `version-1_18_R2` | 1.18.2            | `v1_18_R2`   |
+| `version-1_19_R1` | 1.19-1.19.2       | `v1_19_R1`   |
+| `version-1_19_R2` | 1.19.3            | `v1_19_R2`   |
+| `version-1_19_R3` | 1.19.4            | `v1_19_R3`   |
+| `version-1_20_R1` | 1.20-1.20.1       | `v1_20_R1`   |
+| `version-1_20_R2` | 1.20.2            | `v1_20_R2`   |
+| `version-1_20_R3` | 1.20.3-4          | `v1_20_R3`   |
+| `version-1_20_R4` | 1.20.5-6          | `v1_20_R4`   |
+| `version-1_21_R1` | 1.21-1.21.1       | `v1_21_R1`   |
+| `version-1_21_R2` | 1.21.2-3          | `v1_21_R2`   |
+| `version-1_21_R3` | 1.21.4            | `v1_21_R3`   |
+| `version-1_21_R4` | 1.21.5            | `v1_21_R4`   |
+| `version-1_21_R5` | 1.21.6-8          | `v1_21_R5`   |
+| `version-1_21_R6` | 1.21.9-10         | `v1_21_R6`   |
+| `version-1_21_R7` | 1.21.11+          | `v1_21_R7`   |
+
+Servers up to 1.20.4 are detected directly from the versioned CraftBukkit package name.
+Since 1.20.5 the CraftBukkit package is no longer versioned, so the `Version` enum in
+`version-impl` maps the reported Bukkit version to the correct adapter (including Spigot
+revisions that share one CraftBukkit revision) — that is why the enum only lists 1.20.5+
+entries even though older servers are supported. Players on clients older than the server
+are handled by ViaVersion/ViaBackwards.
 
 ---
 

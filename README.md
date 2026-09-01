@@ -173,4 +173,4 @@ mvn clean package -DskipTests
 
 The final shaded JAR is produced by the `gangland-build` module.
 
-**Java 21** and **Maven** are required to build the project.
+**Java 17+** (JDK 17 or newer; the build targets release 17 to match Keystone) and **Maven** are required to build the project.

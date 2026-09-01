@@ -6,7 +6,8 @@
 
 ## Overview
 
-Gangland Warfare is a multi-module Spigot plugin built on Java 21. It uses a Spring-style bean framework
+Gangland Warfare is a multi-module Spigot plugin built at Java release 17 (matching Keystone's
+compile target, so it loads on every JVM Keystone loads on). It uses a Spring-style bean framework
 (`BeanFactory` + `@Configuration` classes) for phased bootstrap and dependency injection, and relies on
 an event-driven architecture with a generic repository persistence layer.
 

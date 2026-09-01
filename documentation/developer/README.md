@@ -70,7 +70,7 @@ gangland_warfare/
 │   ╰── hologram-api/           Floating text displays
 ├── gangland-compatibility/
 │   ├── version-impl/           Adapter interfaces
-│   ╰── version-1_10_R1..R7/   28 NMS adapter modules (MC 1.10-1.21)
+│   ╰── version-1_16_R1..1_21_R7/  20 NMS adapter modules (MC 1.16+)
 ╰── documentation/
     ├── features/               User-facing feature guides
     ├── v0.7.3-DEV/             Version-specific docs

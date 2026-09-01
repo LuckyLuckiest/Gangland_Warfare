@@ -1340,7 +1340,8 @@ Custom events (8 total + 1 base).
 ## gangland-compatibility
 
 **Purpose:** NMS (Net Minecraft Server) compatibility layer. Provides version-specific implementations behind abstract
-interfaces, allowing the plugin to run on Minecraft 1.10 through 1.21.
+interfaces, allowing the plugin to run on Minecraft 1.16 and newer (matching Keystone's API floor); players on older
+clients are handled by ViaVersion/ViaBackwards.
 
 ### version-impl (Interface Module)
 
@@ -1355,7 +1356,7 @@ interfaces, allowing the plugin to run on Minecraft 1.10 through 1.21.
 | `VersionSetup.java`               | Detects the running server version at load time by inspecting the server package name. |
 | `recoil/RecoilCompatibility.java` | Interface for version-specific camera recoil packet manipulation.                      |
 
-### Version Modules (27 modules)
+### Version Modules (20 modules)
 
 Each version module contains exactly 2 Java files:
 
@@ -1368,13 +1369,6 @@ Each version module contains exactly 2 Java files:
 
 | Module            | Minecraft Version |
 |-------------------|-------------------|
-| `version-1_10_R1` | 1.10.x            |
-| `version-1_11_R1` | 1.11.x            |
-| `version-1_12_R1` | 1.12.x            |
-| `version-1_13_R1` | 1.13              |
-| `version-1_13_R2` | 1.13.1 - 1.13.2   |
-| `version-1_14_R1` | 1.14.x            |
-| `version-1_15_R1` | 1.15.x            |
 | `version-1_16_R1` | 1.16.1            |
 | `version-1_16_R2` | 1.16.2 - 1.16.3   |
 | `version-1_16_R3` | 1.16.4 - 1.16.5   |
@@ -1388,13 +1382,13 @@ Each version module contains exactly 2 Java files:
 | `version-1_20_R2` | 1.20.2            |
 | `version-1_20_R3` | 1.20.3 - 1.20.4   |
 | `version-1_20_R4` | 1.20.5 - 1.20.6   |
-| `version-1_21_R1` | 1.21              |
-| `version-1_21_R2` | 1.21.1            |
-| `version-1_21_R3` | 1.21.2 - 1.21.3   |
-| `version-1_21_R4` | 1.21.4            |
-| `version-1_21_R5` | 1.21.5            |
-| `version-1_21_R6` | 1.21.6            |
-| `version-1_21_R7` | 1.21.7            |
+| `version-1_21_R1` | 1.21 - 1.21.1     |
+| `version-1_21_R2` | 1.21.2 - 1.21.3   |
+| `version-1_21_R3` | 1.21.4            |
+| `version-1_21_R4` | 1.21.5            |
+| `version-1_21_R5` | 1.21.6 - 1.21.8   |
+| `version-1_21_R6` | 1.21.9 - 1.21.10  |
+| `version-1_21_R7` | 1.21.11+          |
 
 ---
 
