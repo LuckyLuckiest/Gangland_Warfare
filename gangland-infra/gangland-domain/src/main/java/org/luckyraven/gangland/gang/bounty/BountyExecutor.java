@@ -3,8 +3,8 @@ package org.luckyraven.gangland.gang.bounty;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.core.feature.Executor;
-import org.luckyraven.gangland.core.timer.Timer;
-import org.luckyraven.gangland.economy.Currency;
+import org.luckyraven.keystone.timer.Timer;
+import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.gangland.gang.events.bounty.BountyEvent;
 
 import java.math.BigDecimal;

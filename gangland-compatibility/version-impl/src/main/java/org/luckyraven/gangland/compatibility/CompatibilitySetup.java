@@ -2,7 +2,7 @@ package org.luckyraven.gangland.compatibility;
 
 import lombok.CustomLog;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.utilities.ReflectionUtil;
+import org.luckyraven.keystone.util.ReflectionUtil;
 
 import java.lang.reflect.Constructor;
 

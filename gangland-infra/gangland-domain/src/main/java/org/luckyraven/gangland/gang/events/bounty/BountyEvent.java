@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
-import org.luckyraven.gangland.economy.Currency;
+import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.gangland.gang.bounty.Bounty;
 
 import java.math.BigDecimal;

@@ -3,7 +3,7 @@ package org.luckyraven.gangland.gang.rank;
 import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.datastructure.Tree;
+import org.luckyraven.keystone.datastructure.Tree;
 
 import java.util.ArrayList;
 import java.util.Collections;

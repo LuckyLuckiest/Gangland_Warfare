@@ -2,16 +2,16 @@ package org.luckyraven.gangland.gang.member;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
+import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.contract.MemberRepositoryContract;
 import org.luckyraven.gangland.gang.contract.RankLookupContract;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.vault.permission.VaultPermissionBridge;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.DatabaseHelper;
-import org.luckyraven.gangland.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.DatabaseHelper;
+import org.luckyraven.keystone.persistence.database.component.Table;
 
 import java.util.*;
 

@@ -2,7 +2,7 @@ package org.luckyraven.gangland.item.money;
 
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.keystone.item.ItemBuilder;
 
 /**
  * NBT helpers for cash items. Single source of truth for the marker tag and the amount/variation reads — both the

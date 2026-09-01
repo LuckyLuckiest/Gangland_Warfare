@@ -3,7 +3,7 @@ package org.luckyraven.gangland.item.money;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.keystone.item.ItemBuilder;
 
 import java.util.ArrayList;
 import java.util.List;

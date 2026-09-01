@@ -34,7 +34,7 @@ public class MoneyConverter implements ItemConverter {
 		if (attributes != null && attributes.containsKey(AMOUNT_ATTRIBUTE)) {
 			try {
 				int requested = Integer.parseInt(attributes.get(AMOUNT_ATTRIBUTE));
-				amount = Math.clamp(requested, variation.getMin(), variation.getMax());
+				amount = Math.max(variation.getMin(), Math.min(requested, variation.getMax()));
 			} catch (NumberFormatException ignored) {
 				// fall back to the rolled amount
 			}

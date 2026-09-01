@@ -3,8 +3,8 @@ package org.luckyraven.gangland.gang.wanted;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.core.feature.Executor;
-import org.luckyraven.gangland.core.timer.Timer;
-import org.luckyraven.gangland.economy.Currency;
+import org.luckyraven.keystone.timer.Timer;
+import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.gangland.gang.events.wanted.WantedEvent;
 
 import java.math.BigDecimal;

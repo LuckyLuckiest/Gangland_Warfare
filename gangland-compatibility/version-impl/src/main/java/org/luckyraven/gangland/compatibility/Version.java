@@ -9,7 +9,11 @@ import org.jetbrains.annotations.Nullable;
 @Getter
 public enum Version {
 
-	// support for 1.20.5+
+	// Only 1.20.5+ revisions are listed here — NOT the support floor (which is MC 1.16,
+	// matching Keystone's API floor). Servers up to 1.20.4 expose a versioned CraftBukkit
+	// package, so VersionSetup resolves their adapter directly from the package name and
+	// never consults this enum; since 1.20.5 the package is unversioned, so this enum maps
+	// the reported Bukkit version to the right adapter instead.
 	// enum value=craftbukkit version, string values=spigot versions
 	v1_20_R4(new String[]{"v1_20_R5", "v1_20_R6"}),
 	v1_21_R1(new String[]{"v1_21", "v1_21_R1"}),

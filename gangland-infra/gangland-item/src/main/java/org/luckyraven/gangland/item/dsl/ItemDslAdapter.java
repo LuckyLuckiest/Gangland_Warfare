@@ -6,11 +6,11 @@ import org.bukkit.inventory.ItemStack;
 import org.luckyraven.gangland.item.ItemConverter;
 import org.luckyraven.gangland.item.ItemConverterRegistry;
 import org.luckyraven.gangland.item.ItemParser;
-import org.luckyraven.gangland.persistence.config.*;
-import org.luckyraven.gangland.persistence.config.dsl.BracketedAttrsParser;
-import org.luckyraven.gangland.persistence.config.dsl.DslValue;
-import org.luckyraven.gangland.persistence.config.dsl.StringDslParser;
-import org.luckyraven.gangland.persistence.config.dsl.TrackingStringMap;
+import org.luckyraven.keystone.persistence.config.*;
+import org.luckyraven.keystone.persistence.config.dsl.BracketedAttrsParser;
+import org.luckyraven.keystone.persistence.config.dsl.DslValue;
+import org.luckyraven.keystone.persistence.config.dsl.StringDslParser;
+import org.luckyraven.keystone.persistence.config.dsl.TrackingStringMap;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;

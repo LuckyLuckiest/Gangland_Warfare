@@ -6,8 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.core.timer.RepeatingTimer;
-import org.luckyraven.gangland.economy.Currency;
+import org.luckyraven.keystone.timer.RepeatingTimer;
+import org.luckyraven.keystone.economy.Currency;
 
 import java.math.BigDecimal;
 import java.util.HashMap;

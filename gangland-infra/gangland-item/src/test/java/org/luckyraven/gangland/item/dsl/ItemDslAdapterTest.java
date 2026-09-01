@@ -6,12 +6,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.item.ItemConverter;
 import org.luckyraven.gangland.item.ItemConverterRegistry;
-import org.luckyraven.gangland.persistence.config.ConfigIssue;
-import org.luckyraven.gangland.persistence.config.ConfigReport;
-import org.luckyraven.gangland.persistence.config.SourceLocation;
-import org.luckyraven.gangland.persistence.config.dsl.BracketedAttrsParser;
-import org.luckyraven.gangland.persistence.config.dsl.DslValue;
-import org.luckyraven.gangland.persistence.config.dsl.StringDslParser;
+import org.luckyraven.keystone.persistence.config.ConfigIssue;
+import org.luckyraven.keystone.persistence.config.ConfigReport;
+import org.luckyraven.keystone.persistence.config.SourceLocation;
+import org.luckyraven.keystone.persistence.config.dsl.BracketedAttrsParser;
+import org.luckyraven.keystone.persistence.config.dsl.DslValue;
+import org.luckyraven.keystone.persistence.config.dsl.StringDslParser;
 
 import java.nio.file.Path;
 import java.util.Collections;
@@ -85,8 +85,8 @@ class ItemDslAdapterTest {
 
 		assertNull(stack);
 		assertTrue(report.hasErrors());
-		assertEquals("item.unknown_type", report.issues().getFirst().code());
-		assertEquals(5, report.issues().getFirst().at().line());
+		assertEquals("item.unknown_type", report.issues().get(0).code());
+		assertEquals(5, report.issues().get(0).at().line());
 	}
 
 	@Test
@@ -113,7 +113,7 @@ class ItemDslAdapterTest {
 		ItemStack    stack  = adapter.apply(value, report);
 
 		assertNull(stack);
-		assertEquals("item.missing_type", report.issues().getFirst().code());
+		assertEquals("item.missing_type", report.issues().get(0).code());
 	}
 
 	@Test

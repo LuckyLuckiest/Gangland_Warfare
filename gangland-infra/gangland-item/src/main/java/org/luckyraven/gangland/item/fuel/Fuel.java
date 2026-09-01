@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.item.unique.UniqueItem;
 
 /**
@@ -98,7 +98,7 @@ public class Fuel {
 	 */
 	public static ItemStack setCurrentFuel(ItemStack item, int current) {
 		int max     = getMaxFuel(item);
-		int clamped = Math.clamp(current, 0, max);
+		int clamped = Math.max(0, Math.min(current, max));
 
 		ItemBuilder builder = new ItemBuilder(item);
 		builder.addTag(FuelKey.FUEL_CURRENT.getKey(), clamped);
@@ -172,7 +172,7 @@ public class Fuel {
 	 */
 	public static ItemStack writeFuelCurrent(ItemStack item, int current) {
 		int max     = readFuelMax(item);
-		int clamped = max > 0 ? Math.clamp(current, 0, max) : Math.max(0, current);
+		int clamped = max > 0 ? Math.max(0, Math.min(current, max)) : Math.max(0, current);
 
 		ItemBuilder builder = new ItemBuilder(item);
 		builder.addTag(FuelKey.FUEL_CURRENT.getKey(), clamped);

@@ -27,7 +27,7 @@ public final class FuelBar {
 		if (currentFuel <= 0) return "&6⛽ Fuel &cEmpty";
 
 		int filled = (int) Math.round((double) currentFuel / maxFuel * BAR_LENGTH);
-		filled = Math.clamp(filled, 0, BAR_LENGTH);
+		filled = Math.max(0, Math.min(filled, BAR_LENGTH));
 		int empty = BAR_LENGTH - filled;
 
 		StringBuilder bar = new StringBuilder();
@@ -35,11 +35,11 @@ public final class FuelBar {
 
 		// Green filled portion
 		bar.append("&a");
-		bar.repeat(String.valueOf(SEGMENT), Math.max(0, filled));
+		bar.append(String.valueOf(SEGMENT).repeat(Math.max(0, filled)));
 
 		// Gray empty portion
 		bar.append("&7");
-		bar.repeat(String.valueOf(SEGMENT), Math.max(0, empty));
+		bar.append(String.valueOf(SEGMENT).repeat(Math.max(0, empty)));
 
 		bar.append(" &f").append(currentFuel).append("&7/&f").append(maxFuel);
 		return bar.toString();

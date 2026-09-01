@@ -2,12 +2,12 @@ package org.luckyraven.gangland.gang.rank;
 
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
-import org.luckyraven.gangland.core.datastructure.Tree;
+import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.luckyraven.gangland.gang.contract.PermissionRegistryContract;
-import org.luckyraven.gangland.persistence.repository.IRepository;
-import org.luckyraven.gangland.persistence.repository.RepositoryRegistry;
+import org.luckyraven.keystone.persistence.repository.IRepository;
+import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 import java.util.*;
 

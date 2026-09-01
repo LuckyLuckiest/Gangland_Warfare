@@ -11,8 +11,8 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.ItemBuilder;
-import org.luckyraven.gangland.core.Placeholder;
+import org.luckyraven.keystone.item.ItemBuilder;
+import org.luckyraven.keystone.util.Placeholder;
 import org.luckyraven.gangland.item.fuel.Fuel;
 
 import java.util.ArrayList;

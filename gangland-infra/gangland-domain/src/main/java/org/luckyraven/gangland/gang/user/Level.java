@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.datastructure.ScientificCalculator;
+import org.luckyraven.keystone.datastructure.ScientificCalculator;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.luckyraven.gangland.gang.events.level.LevelUpEvent;
 

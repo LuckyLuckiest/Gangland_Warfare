@@ -10,10 +10,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.ItemBuilder;
-import org.luckyraven.gangland.core.Placeholder;
+import org.luckyraven.keystone.item.ItemBuilder;
+import org.luckyraven.keystone.util.Placeholder;
 import org.luckyraven.gangland.core.configuration.SoundConfiguration;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.item.fuel.FuelKey;
 
 import java.util.*;
@@ -265,11 +265,10 @@ public class Wearable {
 
 		// Apply leather dye color
 		if (leatherColor != null && isLeatherArmor(material)) {
-			builder.modifyNBT(nbt -> nbt.modifyMeta((readable, meta) -> {
-				if (meta instanceof LeatherArmorMeta leatherMeta) {
-					leatherMeta.setColor(leatherColor);
-				}
-			}));
+			if (builder.build().getItemMeta() instanceof LeatherArmorMeta leatherMeta) {
+				leatherMeta.setColor(leatherColor);
+				builder.setItemMeta(leatherMeta);
+			}
 		}
 
 		// Stamp fuel NBT for jetpack wearables so they carry their own charge

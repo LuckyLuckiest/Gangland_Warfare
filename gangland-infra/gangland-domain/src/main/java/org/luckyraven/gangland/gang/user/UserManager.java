@@ -7,13 +7,13 @@ import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
-import org.luckyraven.gangland.economy.bank.Bank;
+import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.economy.bank.Bank;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.rank.Permission;
 import org.luckyraven.gangland.gang.rank.Rank;
-import org.luckyraven.gangland.persistence.repository.IRepository;
-import org.luckyraven.gangland.persistence.repository.RepositoryRegistry;
+import org.luckyraven.keystone.persistence.repository.IRepository;
+import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 import java.util.Collections;
 import java.util.HashMap;

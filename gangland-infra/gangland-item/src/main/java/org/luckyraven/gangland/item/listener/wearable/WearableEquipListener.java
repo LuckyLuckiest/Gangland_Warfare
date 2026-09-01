@@ -8,9 +8,9 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.core.bean.autowire.AutowireTarget;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.bean.autowire.AutowireTarget;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.item.contract.WearableEquipService;
 import org.luckyraven.gangland.item.wearable.Wearable;
 

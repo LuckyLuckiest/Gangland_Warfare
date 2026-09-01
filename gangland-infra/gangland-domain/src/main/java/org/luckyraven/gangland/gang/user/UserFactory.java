@@ -2,7 +2,7 @@ package org.luckyraven.gangland.gang.user;
 
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.core.Placeholder;
+import org.luckyraven.keystone.util.Placeholder;
 import org.luckyraven.gangland.inventory.service.InventoryRegistry;
 
 /**

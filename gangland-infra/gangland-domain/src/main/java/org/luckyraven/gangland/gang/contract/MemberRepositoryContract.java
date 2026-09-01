@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.gang.contract;
 
 import org.luckyraven.gangland.gang.member.Member;
-import org.luckyraven.gangland.persistence.repository.IRepository;
+import org.luckyraven.keystone.persistence.repository.IRepository;
 
 /**
  * Repository contract for members. Lets the member manager inject rank / gang lookups into the member repo without

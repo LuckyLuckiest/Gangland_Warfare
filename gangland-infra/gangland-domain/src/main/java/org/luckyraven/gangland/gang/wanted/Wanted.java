@@ -7,7 +7,7 @@ import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.core.timer.RepeatingTimer;
+import org.luckyraven.keystone.timer.RepeatingTimer;
 import org.luckyraven.gangland.gang.events.wanted.WantedEndEvent;
 import org.luckyraven.gangland.gang.events.wanted.WantedLevelChangeEvent;
 import org.luckyraven.gangland.gang.events.wanted.WantedStartEvent;
@@ -42,7 +42,7 @@ public class Wanted {
 
 	public static String buildStars(int level, int maxLevel) {
 		int cappedMax = Math.max(0, maxLevel);
-		int filled    = Math.clamp(level, 0, cappedMax);
+		int filled    = Math.max(0, Math.min(level, cappedMax));
 		int empty     = cappedMax - filled;
 
 		return "★".repeat(filled) + "☆".repeat(empty);
@@ -58,7 +58,7 @@ public class Wanted {
 
 	public void setLevel(int level) {
 		int oldLevel = this.level;
-		int newLevel = Math.clamp(level, 0, maxLevel);
+		int newLevel = Math.max(0, Math.min(level, maxLevel));
 
 		// Fire change event if owner is set
 		if (owner != null && oldLevel != newLevel) {
