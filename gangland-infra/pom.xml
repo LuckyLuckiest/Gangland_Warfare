@@ -18,7 +18,6 @@
 
     <modules>
         <module>gangland-domain</module>
-        <module>gangland-economy</module>
         <module>gangland-item</module>
     </modules>
 
