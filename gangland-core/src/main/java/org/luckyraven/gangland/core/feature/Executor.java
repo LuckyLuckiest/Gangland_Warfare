@@ -4,7 +4,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.core.timer.Timer;
+import org.luckyraven.keystone.timer.Timer;
 
 @Getter(AccessLevel.PROTECTED)
 @RequiredArgsConstructor
