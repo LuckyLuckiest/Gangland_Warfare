@@ -3,7 +3,7 @@ package org.luckyraven.gangland.shop.io;
 import lombok.CustomLog;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.persistence.FileHandler;
+import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.gangland.shop.*;
 
 import java.util.ArrayList;

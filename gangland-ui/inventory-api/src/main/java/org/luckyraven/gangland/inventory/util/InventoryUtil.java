@@ -5,8 +5,8 @@ import com.google.common.base.Preconditions;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
-import org.luckyraven.gangland.core.ItemBuilder;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.item.ItemBuilder;
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.part.Fill;
 

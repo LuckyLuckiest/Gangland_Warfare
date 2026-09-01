@@ -3,9 +3,9 @@ package org.luckyraven.gangland.shop;
 import lombok.CustomLog;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.persistence.FileHandler;
-import org.luckyraven.gangland.persistence.FileManager;
-import org.luckyraven.gangland.persistence.FolderLoader;
+import org.luckyraven.keystone.persistence.FileHandler;
+import org.luckyraven.keystone.persistence.FileManager;
+import org.luckyraven.keystone.persistence.FolderLoader;
 import org.luckyraven.gangland.shop.io.ShopYamlReader;
 import org.luckyraven.gangland.shop.io.ShopYamlWriter;
 

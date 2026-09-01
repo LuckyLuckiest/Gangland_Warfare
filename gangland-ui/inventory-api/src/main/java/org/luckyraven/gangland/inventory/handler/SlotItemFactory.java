@@ -5,8 +5,8 @@ import com.cryptomorin.xseries.XMaterial;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.ItemBuilder;
-import org.luckyraven.gangland.core.color.MaterialType;
+import org.luckyraven.keystone.item.ItemBuilder;
+import org.luckyraven.keystone.color.MaterialType;
 
 import java.util.Arrays;
 import java.util.List;

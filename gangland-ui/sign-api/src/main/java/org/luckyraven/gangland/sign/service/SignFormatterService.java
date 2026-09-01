@@ -2,7 +2,7 @@ package org.luckyraven.gangland.sign.service;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.sign.model.SignFormat;
 import org.luckyraven.gangland.sign.model.SignLineFormat;
 import org.luckyraven.gangland.sign.registry.SignFormatRegistry;

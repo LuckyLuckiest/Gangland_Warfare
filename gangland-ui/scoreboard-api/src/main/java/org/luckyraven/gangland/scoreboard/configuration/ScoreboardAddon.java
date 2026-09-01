@@ -3,10 +3,10 @@ package org.luckyraven.gangland.scoreboard.configuration;
 import lombok.Getter;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.luckyraven.gangland.exception.PluginException;
-import org.luckyraven.gangland.persistence.FileHandler;
-import org.luckyraven.gangland.persistence.FileInitializer;
-import org.luckyraven.gangland.persistence.FileManager;
+import org.luckyraven.keystone.exception.PluginException;
+import org.luckyraven.keystone.persistence.FileHandler;
+import org.luckyraven.keystone.persistence.FileInitializer;
+import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.gangland.scoreboard.part.Line;
 import org.luckyraven.gangland.scoreboard.part.StaticLine;
 

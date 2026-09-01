@@ -5,7 +5,7 @@ import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import fr.mrmicky.fastboard.FastBoard;
 import lombok.Getter;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.core.Placeholder;
+import org.luckyraven.keystone.util.Placeholder;
 import org.luckyraven.gangland.scoreboard.part.Line;
 
 import java.util.HashMap;

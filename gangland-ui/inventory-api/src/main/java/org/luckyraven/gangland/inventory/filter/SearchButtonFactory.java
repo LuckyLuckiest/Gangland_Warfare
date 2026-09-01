@@ -1,8 +1,8 @@
 package org.luckyraven.gangland.inventory.filter;
 
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.core.ItemBuilder;
-import org.luckyraven.gangland.core.TriConsumer;
+import org.luckyraven.keystone.item.ItemBuilder;
+import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 
 import java.util.List;

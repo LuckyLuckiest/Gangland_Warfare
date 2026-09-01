@@ -3,7 +3,7 @@ package org.luckyraven.gangland.inventory.condition;
 import lombok.Getter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.InventoryOpener;
 

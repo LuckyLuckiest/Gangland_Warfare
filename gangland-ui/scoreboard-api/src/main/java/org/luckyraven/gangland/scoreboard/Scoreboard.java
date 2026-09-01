@@ -1,8 +1,8 @@
 package org.luckyraven.gangland.scoreboard;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.core.placeholder.effect.FlashPlaceholderWrapper;
-import org.luckyraven.gangland.core.timer.RepeatingTimer;
+import org.luckyraven.keystone.placeholder.effect.FlashPlaceholderWrapper;
+import org.luckyraven.keystone.timer.RepeatingTimer;
 import org.luckyraven.gangland.scoreboard.driver.DriverHandler;
 
 public class Scoreboard {

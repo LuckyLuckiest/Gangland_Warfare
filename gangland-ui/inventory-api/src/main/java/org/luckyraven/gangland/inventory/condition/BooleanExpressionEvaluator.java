@@ -2,7 +2,7 @@ package org.luckyraven.gangland.inventory.condition;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.core.Placeholder;
+import org.luckyraven.keystone.util.Placeholder;
 
 @RequiredArgsConstructor
 public class BooleanExpressionEvaluator implements ConditionEvaluator {

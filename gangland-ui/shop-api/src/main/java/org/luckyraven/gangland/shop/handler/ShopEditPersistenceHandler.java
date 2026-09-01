@@ -4,7 +4,7 @@ import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.shop.ShopRegistry;
 import org.luckyraven.gangland.shop.event.ShopEditedEvent;
 import org.luckyraven.gangland.shop.message.ShopMessageContract;

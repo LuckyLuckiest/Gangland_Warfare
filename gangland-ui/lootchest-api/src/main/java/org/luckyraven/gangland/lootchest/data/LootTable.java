@@ -170,7 +170,7 @@ public class LootTable {
 			return item;
 		}
 
-		return items.isEmpty() ? null : items.getLast();
+		return items.isEmpty() ? null : items.get(items.size() - 1);
 	}
 
 	/**

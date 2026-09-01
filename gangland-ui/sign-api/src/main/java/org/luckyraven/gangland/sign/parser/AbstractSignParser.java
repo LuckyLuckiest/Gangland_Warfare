@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.sign.parser;
 
 import org.bukkit.ChatColor;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.sign.SignType;
 import org.luckyraven.gangland.sign.validation.SignValidationException;
 

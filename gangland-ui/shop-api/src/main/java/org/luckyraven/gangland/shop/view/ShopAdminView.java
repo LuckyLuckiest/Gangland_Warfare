@@ -11,10 +11,10 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.core.configuration.SoundConfiguration;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
-import org.luckyraven.gangland.core.utilities.NumberUtil;
+import org.luckyraven.keystone.util.ChatUtil;
+import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
 import org.luckyraven.gangland.inventory.flow.Panel;
@@ -293,7 +293,7 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 
 	private void changePage(MultiPanelInventory<ShopAdminFlowSession> host, ShopAdminFlowSession session, int newPage) {
 		int maxPage = totalPages(session) - 1 + (isLastPageFull(session) ? 1 : 0);
-		int clamped = Math.clamp(newPage, 0, maxPage);
+		int clamped = Math.max(0, Math.min(newPage, maxPage));
 		if (clamped == session.currentPage) return;
 		session.currentPage = clamped;
 		host.rerender();
@@ -495,7 +495,7 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 	private ItemBuilder buildCategoryDisplay(SellCategory category) {
 		ItemStack icon = category.getItems().isEmpty()
 		                 ? material(XMaterial.BOOK, Material.BOOK)
-		                 : category.getItems().getFirst().clone();
+		                 : category.getItems().get(0).clone();
 		ItemBuilder builder = new ItemBuilder(icon);
 		builder.setDisplayName("&6" + category.getDisplayName());
 
@@ -511,7 +511,7 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 	private ItemBuilder buildBarterCategoryDisplay(BarterCategory category) {
 		ItemStack icon = category.getItems().isEmpty()
 		                 ? material(XMaterial.DIAMOND, Material.DIAMOND)
-		                 : category.getItems().getFirst().clone();
+		                 : category.getItems().get(0).clone();
 		ItemBuilder builder = new ItemBuilder(icon);
 		builder.setDisplayName("&b" + category.getDisplayName());
 

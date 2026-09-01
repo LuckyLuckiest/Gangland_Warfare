@@ -2,7 +2,7 @@ package org.luckyraven.gangland.shop.valuation;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.item.ItemSerializerRegistry;
 import org.luckyraven.gangland.shop.BarterCategory;
 import org.luckyraven.gangland.shop.ShopDefinition;

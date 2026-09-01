@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.sign.validation;
 
 import org.bukkit.ChatColor;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.sign.SignType;
 
 public abstract class AbstractSignValidator implements SignValidator {

@@ -4,7 +4,7 @@ import lombok.Getter;
 import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
+import org.luckyraven.keystone.bean.BeanLifecycle;
 
 import java.util.Map;
 import java.util.Optional;

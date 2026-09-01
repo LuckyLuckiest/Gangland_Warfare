@@ -3,7 +3,7 @@ package org.luckyraven.gangland.inventory.multi;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.datastructure.LinkedList;
+import org.luckyraven.keystone.datastructure.LinkedList;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.part.ButtonTags;
 import org.luckyraven.gangland.inventory.part.Fill;
@@ -107,7 +107,7 @@ public class MultiInventoryCreation {
 		} else {
 			rows = (int) Math.ceil((double) Math.max(itemsCount, 1) / maxColumns) + 2;
 		}
-		rows = Math.clamp(rows, 3, 6);
+		rows = Math.max(3, Math.min(rows, 6));
 
 		int maxRows         = Math.max(1, rows - 2);
 		int perPage         = maxRows * maxColumns;
@@ -119,7 +119,7 @@ public class MultiInventoryCreation {
 	}
 
 	static PageConfig computeConfigForUpdate(int itemsCount, int inventorySize) {
-		int rows       = Math.clamp(inventorySize / 9, 3, 6);
+		int rows       = Math.max(3, Math.min(inventorySize / 9, 6));
 		int maxRows    = Math.max(1, rows - 2);
 		int maxColumns = 6;
 		int perPage    = maxRows * maxColumns;

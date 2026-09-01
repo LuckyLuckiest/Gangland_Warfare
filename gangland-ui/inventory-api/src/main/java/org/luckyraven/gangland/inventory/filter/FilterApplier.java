@@ -33,19 +33,26 @@ public final class FilterApplier {
 
 	private boolean matches(Object projected, FilterValue value) {
 		if (value == null) return true;
-		return switch (value) {
-			case FilterValue.TextValue t -> projected != null
-			                                && projected.toString().toLowerCase(Locale.ROOT)
-			                                            .contains(t.value().toLowerCase(Locale.ROOT));
-			case FilterValue.EnumValue e -> projected != null
-			                                && projected.toString().equalsIgnoreCase(e.value());
-			case FilterValue.RangeValue r -> projected instanceof Number n
-			                                 && inRange(n.doubleValue(), r.min(), r.max());
-			case FilterValue.DateValue d -> projected instanceof LocalDate date
-			                                && (d.from() == null || !date.isBefore(d.from()))
-			                                && (d.to() == null || !date.isAfter(d.to()));
-			case FilterValue.BooleanValue b -> projected instanceof Boolean boxed && boxed == b.value();
-		};
+		if (value instanceof FilterValue.TextValue t) {
+			return projected != null
+			       && projected.toString().toLowerCase(Locale.ROOT)
+			                   .contains(t.value().toLowerCase(Locale.ROOT));
+		}
+		if (value instanceof FilterValue.EnumValue e) {
+			return projected != null && projected.toString().equalsIgnoreCase(e.value());
+		}
+		if (value instanceof FilterValue.RangeValue r) {
+			return projected instanceof Number n && inRange(n.doubleValue(), r.min(), r.max());
+		}
+		if (value instanceof FilterValue.DateValue d) {
+			return projected instanceof LocalDate date
+			       && (d.from() == null || !date.isBefore(d.from()))
+			       && (d.to() == null || !date.isAfter(d.to()));
+		}
+		if (value instanceof FilterValue.BooleanValue b) {
+			return projected instanceof Boolean boxed && boxed == b.value();
+		}
+		return true;
 	}
 
 	private boolean inRange(double value, Number min, Number max) {

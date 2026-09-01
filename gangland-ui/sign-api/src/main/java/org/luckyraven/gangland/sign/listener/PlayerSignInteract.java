@@ -9,7 +9,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.luckyraven.gangland.core.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.sign.aspect.AspectResult;
 import org.luckyraven.gangland.sign.bulk.BulkActionManager;
 import org.luckyraven.gangland.sign.bulk.BulkActionPreview;

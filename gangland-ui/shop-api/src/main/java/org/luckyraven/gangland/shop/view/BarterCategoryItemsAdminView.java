@@ -10,9 +10,9 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.core.configuration.SoundConfiguration;
-import org.luckyraven.gangland.core.utilities.NumberUtil;
+import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
 import org.luckyraven.gangland.inventory.flow.Panel;
@@ -247,7 +247,7 @@ public final class BarterCategoryItemsAdminView implements Panel<ShopAdminFlowSe
 
 		ItemStack preview = category.getItems().isEmpty()
 		                    ? new ItemStack(Material.GOLD_INGOT)
-		                    : category.getItems().getFirst().clone();
+		                    : category.getItems().get(0).clone();
 
 		session.priceEditItem        = preview;
 		session.priceEditOriginal    = category.getBasePrice();

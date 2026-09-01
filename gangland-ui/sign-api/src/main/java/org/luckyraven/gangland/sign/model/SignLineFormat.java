@@ -2,7 +2,7 @@ package org.luckyraven.gangland.sign.model;
 
 import lombok.Builder;
 import lombok.Getter;
-import org.luckyraven.gangland.core.color.Color;
+import org.luckyraven.keystone.color.Color;
 import org.luckyraven.gangland.sign.validation.SignValidationException;
 
 import java.util.function.Function;

@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.inventory.handler;
 
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.core.ItemBuilder;
+import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 
 /**

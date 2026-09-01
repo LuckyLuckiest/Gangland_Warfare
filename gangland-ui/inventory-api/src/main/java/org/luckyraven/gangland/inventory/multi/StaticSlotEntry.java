@@ -2,8 +2,8 @@ package org.luckyraven.gangland.inventory.multi;
 
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.core.ItemBuilder;
-import org.luckyraven.gangland.core.TriConsumer;
+import org.luckyraven.keystone.item.ItemBuilder;
+import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 
 /**

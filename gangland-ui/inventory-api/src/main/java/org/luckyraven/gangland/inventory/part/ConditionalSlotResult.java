@@ -2,8 +2,8 @@ package org.luckyraven.gangland.inventory.part;
 
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.ItemBuilder;
-import org.luckyraven.gangland.core.TriConsumer;
+import org.luckyraven.keystone.item.ItemBuilder;
+import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.condition.ConditionalSlotData;
 

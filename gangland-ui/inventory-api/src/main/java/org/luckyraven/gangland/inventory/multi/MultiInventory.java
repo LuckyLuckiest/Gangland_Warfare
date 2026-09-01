@@ -7,7 +7,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.datastructure.LinkedList;
+import org.luckyraven.keystone.datastructure.LinkedList;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.inventory.part.PageConfig;

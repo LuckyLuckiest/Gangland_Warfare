@@ -2,7 +2,7 @@ package org.luckyraven.gangland.scoreboard.driver.version;
 
 import com.viaversion.viaversion.api.ViaAPI;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.core.Placeholder;
+import org.luckyraven.keystone.util.Placeholder;
 import org.luckyraven.gangland.scoreboard.driver.DriverHandler;
 import org.luckyraven.gangland.scoreboard.part.Line;
 

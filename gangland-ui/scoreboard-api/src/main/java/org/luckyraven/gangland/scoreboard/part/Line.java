@@ -2,8 +2,8 @@ package org.luckyraven.gangland.scoreboard.part;
 
 import lombok.Getter;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.core.Placeholder;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.util.Placeholder;
+import org.luckyraven.keystone.util.ChatUtil;
 
 import java.util.ArrayList;
 import java.util.List;

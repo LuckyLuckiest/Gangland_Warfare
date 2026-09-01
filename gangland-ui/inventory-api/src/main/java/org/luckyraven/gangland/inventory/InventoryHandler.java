@@ -14,9 +14,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.ItemBuilder;
-import org.luckyraven.gangland.core.TriConsumer;
-import org.luckyraven.gangland.core.utilities.ChatUtil;
+import org.luckyraven.keystone.item.ItemBuilder;
+import org.luckyraven.keystone.util.TriConsumer;
+import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.inventory.service.InventoryRegistry;
 
 import java.util.*;
