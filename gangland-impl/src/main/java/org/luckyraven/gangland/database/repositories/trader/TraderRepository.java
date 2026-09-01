@@ -6,14 +6,13 @@ import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.npc.trader.TraderData;
 import org.luckyraven.gangland.database.tables.trader.TraderTable;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -25,8 +24,8 @@ public class TraderRepository extends AbstractRepository<TraderData> {
 
 	private final TraderTable table;
 
-	public TraderRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public TraderRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		this.table = new TraderTable();
 	}
@@ -34,7 +33,7 @@ public class TraderRepository extends AbstractRepository<TraderData> {
 	@Override
 	protected Collection<TraderData> doLoadAll() throws SQLException {
 		List<TraderData> list = new ArrayList<>();
-		List<Object[]>   data = table.selectAllTableQuery(getDatabase());
+		List<Object[]>   data = tableBackend().selectAll();
 
 		for (Object[] row : data) {
 			int v = 0;
@@ -72,8 +71,7 @@ public class TraderRepository extends AbstractRepository<TraderData> {
 
 	@Override
 	protected void doDelete(TraderData data) throws SQLException {
-		Database t = getDatabase().table(table.getName());
-		t.delete("id", data.getId().toString(), Types.VARCHAR);
+		tableBackend().delete("id = ?", data.getId().toString());
 	}
 
 }

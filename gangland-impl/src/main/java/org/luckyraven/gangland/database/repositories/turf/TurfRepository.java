@@ -2,18 +2,17 @@ package org.luckyraven.gangland.database.repositories.turf;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.database.tables.turf.TurfTable;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 import org.luckyraven.gangland.turf.contract.TurfRepositoryContract;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,8 +23,8 @@ public class TurfRepository extends AbstractRepository<Turf> implements TurfRepo
 
 	private final TurfTable turfTable;
 
-	public TurfRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public TurfRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		this.turfTable = new TurfTable();
 	}
@@ -33,7 +32,7 @@ public class TurfRepository extends AbstractRepository<Turf> implements TurfRepo
 	@Override
 	protected Collection<Turf> doLoadAll() throws SQLException {
 		List<Turf>     turfs    = new ArrayList<>();
-		List<Object[]> turfData = turfTable.selectAllTableQuery(getDatabase());
+		List<Object[]> turfData = tableBackend().selectAll();
 
 		for (Object[] result : turfData) {
 			int    v                    = 0;
@@ -78,7 +77,6 @@ public class TurfRepository extends AbstractRepository<Turf> implements TurfRepo
 
 	@Override
 	protected void doDelete(Turf data) throws SQLException {
-		Database table = getDatabase().table(turfTable.getName());
-		table.delete("id", data.getId(), Types.INTEGER);
+		tableBackend().delete("id = ?", data.getId());
 	}
 }

@@ -8,12 +8,12 @@ import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangAlliance;
 import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.DatabaseHelper;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.database.query.QueryBuilder;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.DatabaseHelper;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -29,8 +29,8 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> imp
 
 	private GangLookupContract gangLookup;
 
-	public GangAllianceRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public GangAllianceRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		GangTable gangTable = new GangTable();
 		this.gangAllianceTable = new GangAllianceTable(gangTable);
@@ -49,16 +49,15 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> imp
 	public void deleteAllForGang(Gang gang) {
 		DatabaseHelper helper = new DatabaseHelper(getPlugin(), getDatabaseHandler());
 		helper.runQueriesAsync(database -> {
-			String tableName = gangAllianceTable.getName();
-			QueryBuilder.on(database, tableName).delete().where("gang_id", gang.getId()).execute();
-			QueryBuilder.on(database, tableName).delete().where("ally_id", gang.getId()).execute();
+			tableBackend().delete("gang_id = ?", gang.getId());
+			tableBackend().delete("ally_id = ?", gang.getId());
 		});
 	}
 
 	@Override
 	protected Collection<GangAlliance> doLoadAll() throws SQLException {
 		List<GangAlliance> alliances      = new ArrayList<>();
-		List<Object[]>     gangAlliesData = gangAllianceTable.selectAllTableQuery(getDatabase());
+		List<Object[]>     gangAlliesData = tableBackend().selectAll();
 
 		// Load all gang alliances
 		for (Object[] result : gangAlliesData) {
@@ -72,11 +71,7 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> imp
 			// Orphan: one or both ends reference a gang that no longer exists. Drop the row.
 			if (gang == null || ally == null) {
 				log.warn("Orphan alliance row gang_id={} ally_id={}; deleting.", gangId, allieId);
-				QueryBuilder.on(getDatabase(), gangAllianceTable.getName())
-				            .delete()
-				            .where("gang_id", gangId)
-				            .where("ally_id", allieId)
-				            .execute();
+				tableBackend().delete("gang_id = ? AND ally_id = ?", gangId, allieId);
 				continue;
 			}
 
@@ -98,10 +93,6 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> imp
 
 	@Override
 	protected void doDelete(GangAlliance data) throws SQLException {
-		QueryBuilder.on(getDatabase(), gangAllianceTable.getName())
-		            .delete()
-		            .where("gang_id", data.gang().getId())
-		            .where("ally_id", data.ally().getId())
-		            .execute();
+		tableBackend().delete("gang_id = ? AND ally_id = ?", data.gang().getId(), data.ally().getId());
 	}
 }

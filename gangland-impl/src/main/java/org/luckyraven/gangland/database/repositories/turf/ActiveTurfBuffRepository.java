@@ -2,17 +2,16 @@ package org.luckyraven.gangland.database.repositories.turf;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.database.tables.turf.ActiveTurfBuffTable;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 import org.luckyraven.gangland.turf.powerups.ActiveBuffRepositoryContract;
 import org.luckyraven.gangland.turf.powerups.ActiveTurfBuff;
 import org.luckyraven.gangland.turf.powerups.EffectType;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,8 +23,8 @@ public class ActiveTurfBuffRepository extends AbstractRepository<ActiveTurfBuff>
 
 	private final ActiveTurfBuffTable table;
 
-	public ActiveTurfBuffRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public ActiveTurfBuffRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		this.table = new ActiveTurfBuffTable();
 	}
@@ -33,7 +32,7 @@ public class ActiveTurfBuffRepository extends AbstractRepository<ActiveTurfBuff>
 	@Override
 	protected Collection<ActiveTurfBuff> doLoadAll() throws SQLException {
 		List<ActiveTurfBuff> buffs = new ArrayList<>();
-		List<Object[]>       rows  = table.selectAllTableQuery(getDatabase());
+		List<Object[]>       rows  = tableBackend().selectAll();
 		for (Object[] result : rows) {
 			int    v          = 0;
 			long   id         = ((Number) result[v++]).longValue();
@@ -67,7 +66,6 @@ public class ActiveTurfBuffRepository extends AbstractRepository<ActiveTurfBuff>
 
 	@Override
 	protected void doDelete(ActiveTurfBuff data) throws SQLException {
-		Database db = getDatabase().table(table.getName());
-		db.delete("id", data.getId(), Types.BIGINT);
+		tableBackend().delete("id = ?", data.getId());
 	}
 }

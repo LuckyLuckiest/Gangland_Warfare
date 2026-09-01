@@ -3,18 +3,16 @@ package org.luckyraven.gangland.database.repositories.weapon;
 import lombok.Setter;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.database.tables.weapon.WeaponTable;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.DatabaseHelper;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.database.query.QueryBuilder;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.DatabaseHelper;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 import org.luckyraven.gangland.weapon.Weapon;
 import org.luckyraven.gangland.weapon.configuration.WeaponAddon;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -29,8 +27,8 @@ public class WeaponRepository extends AbstractRepository<Weapon> {
 	@Setter
 	private WeaponAddon weaponAddon;
 
-	public WeaponRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public WeaponRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		this.weaponTable = new WeaponTable();
 	}
@@ -40,13 +38,13 @@ public class WeaponRepository extends AbstractRepository<Weapon> {
 	 */
 	public void deleteAll() {
 		DatabaseHelper helper = new DatabaseHelper(getPlugin(), getDatabaseHandler());
-		helper.runQueriesAsync(database -> QueryBuilder.on(database, weaponTable.getName()).delete().execute());
+		helper.runQueriesAsync(database -> tableBackend().delete(null));
 	}
 
 	@Override
 	protected Collection<Weapon> doLoadAll() throws SQLException {
 		List<Weapon>   weapons = new ArrayList<>();
-		List<Object[]> data    = weaponTable.selectAllTableQuery(getDatabase());
+		List<Object[]> data    = tableBackend().selectAll();
 
 		for (Object[] result : data) {
 			UUID   uuid = UUID.fromString(String.valueOf(result[0]));
@@ -76,7 +74,6 @@ public class WeaponRepository extends AbstractRepository<Weapon> {
 
 	@Override
 	protected void doDelete(Weapon data) throws SQLException {
-		Database table = getDatabase().table(weaponTable.getName());
-		table.delete("uuid", data.getUuid().toString(), Types.VARCHAR);
+		tableBackend().delete("uuid = ?", data.getUuid().toString());
 	}
 }

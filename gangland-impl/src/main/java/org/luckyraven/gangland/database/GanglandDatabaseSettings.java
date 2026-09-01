@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.database;
 
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.persistence.database.DatabaseSettingsProvider;
+import org.luckyraven.keystone.persistence.database.DatabaseSettingsProvider;
 
 public class GanglandDatabaseSettings implements DatabaseSettingsProvider {
 	@Override

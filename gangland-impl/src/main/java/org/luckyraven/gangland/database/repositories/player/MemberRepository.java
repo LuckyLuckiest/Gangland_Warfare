@@ -11,15 +11,13 @@ import org.luckyraven.gangland.gang.contract.MemberRepositoryContract;
 import org.luckyraven.gangland.gang.contract.RankLookupContract;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.rank.Rank;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.database.query.QueryBuilder;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -35,8 +33,8 @@ public class MemberRepository extends AbstractRepository<Member> implements Memb
 	private RankLookupContract rankLookup;
 	private GangLookupContract gangLookup;
 
-	public MemberRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public MemberRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		UserTable userTable = new UserTable();
 		RankTable rankTable = new RankTable();
@@ -56,7 +54,7 @@ public class MemberRepository extends AbstractRepository<Member> implements Memb
 	@Override
 	protected Collection<Member> doLoadAll() throws SQLException {
 		List<Member>   members = new ArrayList<>();
-		List<Object[]> data    = memberTable.selectAllTableQuery(getDatabase());
+		List<Object[]> data    = tableBackend().selectAll();
 
 		for (Object[] result : data) {
 			int v = 0;
@@ -90,13 +88,9 @@ public class MemberRepository extends AbstractRepository<Member> implements Memb
 				member.setContribution(0D);
 				member.setRank(null);
 
-				QueryBuilder.on(getDatabase(), memberTable.getName())
-				            .update()
-				            .set("gang_id", -1)
-				            .set("contribution", 0D)
-				            .set("rank_id", -1)
-				            .where("uuid", uuid.toString())
-				            .execute();
+				getBackend().execute("UPDATE " + memberTable.getName() +
+				                     " SET gang_id = ?, contribution = ?, rank_id = ? WHERE uuid = ?",
+				                     -1, 0D, -1, uuid.toString());
 			}
 
 			members.add(member);
@@ -119,7 +113,6 @@ public class MemberRepository extends AbstractRepository<Member> implements Memb
 
 	@Override
 	protected void doDelete(Member data) throws SQLException {
-		Database table = getDatabase().table(memberTable.getName());
-		table.delete("uuid", data.getUuid(), Types.VARCHAR);
+		tableBackend().delete("uuid = ?", data.getUuid());
 	}
 }

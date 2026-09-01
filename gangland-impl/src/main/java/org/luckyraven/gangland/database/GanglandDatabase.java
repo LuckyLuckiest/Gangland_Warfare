@@ -8,30 +8,76 @@ import org.luckyraven.gangland.database.repositories.rank.RankRepository;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankParent;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.DatabaseManager;
-import org.luckyraven.gangland.persistence.database.DatabaseSettingsProvider;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.IRepository;
-import org.luckyraven.gangland.persistence.repository.RepositoryRegistry;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.DatabaseManager;
+import org.luckyraven.keystone.persistence.database.DatabaseSettingsProvider;
+import org.luckyraven.keystone.persistence.database.backend.ConnectionParams;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.backend.MysqlBackend;
+import org.luckyraven.keystone.persistence.database.backend.SqliteBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.IRepository;
+import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class GanglandDatabase extends DatabaseHandler {
 
-	private final String             schema;
+	private final String                   schema;
+	private final JavaPlugin               plugin;
+	private final DatabaseSettingsProvider settings;
+
 	@Getter
-	private final RepositoryRegistry repositoryRegistry;
+	private RepositoryRegistry repositoryRegistry;
+	@Getter
+	private DatabaseBackend    backend;
 
 	public GanglandDatabase(JavaPlugin plugin, String schema, DatabaseSettingsProvider settings) {
 		super(plugin, settings);
 
-		this.schema             = schema;
-		this.repositoryRegistry = new RepositoryRegistry(plugin, this);
+		this.schema   = schema;
+		this.plugin   = plugin;
+		this.settings = settings;
+	}
+
+	/**
+	 * Connects the {@link DatabaseBackend} matching the resolved database type and constructs the
+	 * {@link RepositoryRegistry} on the backend path (repositories persist through {@code TableBackend}; table
+	 * creation runs through the backend's schema-diff engine).
+	 *
+	 * <p>Must be called <b>after</b> {@link #setType(int)} so the MySQL→SQLite fallback has been resolved, and —
+	 * on MySQL — after {@link #createSchema()}, because the backend pool connects directly to the schema.
+	 */
+	public void connectBackend() throws SQLException {
+		if (backend != null) {
+			throw new SQLException("Backend already connected");
+		}
+
+		ConnectionParams params;
+		switch (getType()) {
+			case MYSQL -> {
+				this.backend = new MysqlBackend();
+				String url = String.format("jdbc:mysql://%s:%d/%s",
+				                           settings.getMysqlHost(), settings.getMysqlPort(), getSchemaName());
+				params = ConnectionParams.credentialed(url, settings.getMysqlUsername(),
+				                                       settings.getMysqlPassword(), Map.of());
+			}
+			case SQLITE -> {
+				this.backend = new SqliteBackend();
+				// Exactly the file enforceType() connects the legacy pool to — both stacks share one database.
+				String path = plugin.getDataFolder().getAbsolutePath() + File.separator + getSchema() + ".db";
+				params = ConnectionParams.of("jdbc:sqlite:" + path);
+			}
+			default -> throw new SQLException("Unknown database type");
+		}
+
+		backend.connect(params);
+		this.repositoryRegistry = new RepositoryRegistry(plugin, this, backend);
 	}
 
 	@Nullable

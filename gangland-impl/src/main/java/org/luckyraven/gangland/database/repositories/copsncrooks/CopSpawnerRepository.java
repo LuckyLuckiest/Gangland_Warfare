@@ -6,14 +6,13 @@ import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawner;
 import org.luckyraven.gangland.database.tables.copsncrooks.CopSpawnerTable;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,8 +23,8 @@ public class CopSpawnerRepository extends AbstractRepository<CopSpawner> {
 
 	private final CopSpawnerTable copSpawnerTable;
 
-	public CopSpawnerRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public CopSpawnerRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		this.copSpawnerTable = new CopSpawnerTable();
 	}
@@ -33,7 +32,7 @@ public class CopSpawnerRepository extends AbstractRepository<CopSpawner> {
 	@Override
 	protected Collection<CopSpawner> doLoadAll() throws SQLException {
 		List<CopSpawner> copSpawners = new ArrayList<>();
-		List<Object[]>   data        = copSpawnerTable.selectAllTableQuery(getDatabase());
+		List<Object[]>   data        = tableBackend().selectAll();
 
 		for (Object[] result : data) {
 			int v = 0;
@@ -69,7 +68,6 @@ public class CopSpawnerRepository extends AbstractRepository<CopSpawner> {
 
 	@Override
 	protected void doDelete(CopSpawner data) throws SQLException {
-		Database table = getDatabase().table(copSpawnerTable.getName());
-		table.delete("id", data.getId(), Types.VARCHAR);
+		tableBackend().delete("id = ?", data.getId());
 	}
 }

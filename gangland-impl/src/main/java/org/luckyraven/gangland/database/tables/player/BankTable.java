@@ -1,11 +1,11 @@
 package org.luckyraven.gangland.database.tables.player;
 
 import org.bukkit.OfflinePlayer;
-import org.luckyraven.gangland.economy.Currency;
-import org.luckyraven.gangland.economy.bank.Bank;
+import org.luckyraven.keystone.economy.Currency;
+import org.luckyraven.keystone.economy.bank.Bank;
 import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.persistence.database.component.Attribute;
-import org.luckyraven.gangland.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.database.component.Attribute;
+import org.luckyraven.keystone.persistence.database.component.Table;
 
 import java.sql.Types;
 import java.time.Instant;

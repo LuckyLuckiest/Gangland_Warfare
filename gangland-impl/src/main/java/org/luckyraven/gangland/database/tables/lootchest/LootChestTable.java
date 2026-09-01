@@ -1,8 +1,8 @@
 package org.luckyraven.gangland.database.tables.lootchest;
 
 import org.luckyraven.gangland.lootchest.data.LootChestData;
-import org.luckyraven.gangland.persistence.database.component.Attribute;
-import org.luckyraven.gangland.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.database.component.Attribute;
+import org.luckyraven.keystone.persistence.database.component.Table;
 
 import java.sql.Types;
 import java.util.Map;

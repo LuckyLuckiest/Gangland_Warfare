@@ -5,14 +5,13 @@ import org.luckyraven.gangland.copsncrooks.detainment.DetainedPlayer;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentState;
 import org.luckyraven.gangland.database.tables.copsncrooks.DetainmentTable;
 import org.luckyraven.gangland.database.tables.copsncrooks.JailTable;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,8 +23,8 @@ public class DetainmentRepository extends AbstractRepository<DetainedPlayer> {
 
 	private final DetainmentTable detainmentTable;
 
-	public DetainmentRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public DetainmentRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		// DetainmentTable depends on JailTable
 		// But JailTable will be created by JailRepository first
@@ -37,7 +36,7 @@ public class DetainmentRepository extends AbstractRepository<DetainedPlayer> {
 	@Override
 	protected Collection<DetainedPlayer> doLoadAll() throws SQLException {
 		List<DetainedPlayer> detained = new ArrayList<>();
-		List<Object[]>       data     = detainmentTable.selectAllTableQuery(getDatabase());
+		List<Object[]>       data     = tableBackend().selectAll();
 
 		for (Object[] result : data) {
 			int v = 0;
@@ -76,7 +75,6 @@ public class DetainmentRepository extends AbstractRepository<DetainedPlayer> {
 
 	@Override
 	protected void doDelete(DetainedPlayer data) throws SQLException {
-		Database table = getDatabase().table(detainmentTable.getName());
-		table.delete("player_uuid", data.getPlayerId().toString(), Types.VARCHAR);
+		tableBackend().delete("player_uuid = ?", data.getPlayerId().toString());
 	}
 }

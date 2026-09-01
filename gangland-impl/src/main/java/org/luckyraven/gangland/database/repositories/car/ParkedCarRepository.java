@@ -4,14 +4,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.database.tables.car.ParkedCarTable;
 import org.luckyraven.gangland.gadget.car.ExhaustSide;
 import org.luckyraven.gangland.gadget.car.ParkedCar;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -23,15 +22,15 @@ public class ParkedCarRepository extends AbstractRepository<ParkedCar> {
 
 	private final ParkedCarTable parkedCarTable;
 
-	public ParkedCarRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public ParkedCarRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 		this.parkedCarTable = new ParkedCarTable();
 	}
 
 	@Override
 	protected Collection<ParkedCar> doLoadAll() throws SQLException {
 		List<ParkedCar> cars = new ArrayList<>();
-		List<Object[]>  data = parkedCarTable.selectAllTableQuery(getDatabase());
+		List<Object[]>  data = tableBackend().selectAll();
 
 		for (Object[] result : data) {
 			int    v              = 0;
@@ -82,7 +81,6 @@ public class ParkedCarRepository extends AbstractRepository<ParkedCar> {
 
 	@Override
 	protected void doDelete(ParkedCar data) throws SQLException {
-		Database table = getDatabase().table(parkedCarTable.getName());
-		table.delete("id", data.getDbId(), Types.VARCHAR);
+		tableBackend().delete("id = ?", data.getDbId());
 	}
 }

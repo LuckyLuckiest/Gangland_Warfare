@@ -6,17 +6,16 @@ import org.luckyraven.gangland.database.tables.plugin.PermissionTable;
 import org.luckyraven.gangland.database.tables.rank.RankPermissionTable;
 import org.luckyraven.gangland.database.tables.rank.RankTable;
 import org.luckyraven.gangland.gang.rank.RankPermission;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.SchemaMigrations;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.SchemaMigrations;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -28,8 +27,8 @@ public class RankPermissionRepository extends AbstractRepository<RankPermission>
 
 	private final RankPermissionTable rankPermissionTable;
 
-	public RankPermissionRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public RankPermissionRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		this.rankPermissionTable = new RankPermissionTable(new RankTable(), new PermissionTable());
 	}
@@ -38,8 +37,7 @@ public class RankPermissionRepository extends AbstractRepository<RankPermission>
 	 * Deletes every rank_permission row for a given rank. Used when a rank itself is being removed.
 	 */
 	public void deleteAllForRank(int rankId) throws SQLException {
-		Database table = getDatabase().table(rankPermissionTable.getName());
-		table.delete("rank_id", rankId, Types.INTEGER);
+		tableBackend().delete("rank_id = ?", rankId);
 	}
 
 	/**
@@ -77,7 +75,7 @@ public class RankPermissionRepository extends AbstractRepository<RankPermission>
 	@Override
 	protected Collection<RankPermission> doLoadAll() throws SQLException {
 		List<RankPermission> rankPermissions = new ArrayList<>();
-		List<Object[]>       data            = rankPermissionTable.selectAllTableQuery(getDatabase());
+		List<Object[]>       data            = tableBackend().selectAll();
 
 		for (Object[] result : data) {
 			int rankId       = (int) result[0];
@@ -101,10 +99,7 @@ public class RankPermissionRepository extends AbstractRepository<RankPermission>
 
 	@Override
 	protected void doDelete(RankPermission data) throws SQLException {
-		Database table = getDatabase().table(rankPermissionTable.getName());
-		table.delete("rank_id = ? AND permission_id = ?",
-		             new Object[]{data.rankId(), data.permissionId()},
-		             new int[]{Types.INTEGER, Types.INTEGER});
+		tableBackend().delete("rank_id = ? AND permission_id = ?", data.rankId(), data.permissionId());
 	}
 
 	private void migrateMysql(Connection conn) throws SQLException {

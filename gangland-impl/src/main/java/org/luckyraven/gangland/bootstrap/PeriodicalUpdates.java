@@ -5,9 +5,9 @@ import lombok.Getter;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.core.bean.BeanLifecycle;
-import org.luckyraven.gangland.core.timer.RepeatingTimer;
-import org.luckyraven.gangland.core.utilities.TimeUtil;
+import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.timer.RepeatingTimer;
+import org.luckyraven.keystone.util.TimeUtil;
 import org.luckyraven.gangland.data.plugin.PluginData;
 import org.luckyraven.gangland.data.plugin.PluginDataCleanupService;
 import org.luckyraven.gangland.data.plugin.PluginManager;
@@ -15,13 +15,14 @@ import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.database.TableLookup;
 import org.luckyraven.gangland.database.tables.player.BankTable;
 import org.luckyraven.gangland.database.tables.player.UserTable;
-import org.luckyraven.gangland.economy.bank.Bank;
+import org.luckyraven.keystone.economy.bank.Bank;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.persistence.database.DatabaseHelper;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.RepositoryRegistry;
+import org.luckyraven.keystone.persistence.database.DatabaseHelper;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.database.component.TableBackend;
+import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 import org.luckyraven.gangland.weapon.Weapon;
 import org.luckyraven.gangland.weapon.WeaponManager;
 
@@ -258,7 +259,11 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 	}
 
 	private <T> void updateAllData(Table<T> table, Collection<? extends T> collection) {
-		helper.runQueries(database -> table.batchUpsertTableQuery(database, new ArrayList<>(collection)));
+		// Backend-SPI batch: one PreparedStatement JDBC batch in one transaction (Keystone 1.7.1,
+		// DatabaseBackend.upsertAll) — the same semantics the legacy batchUpsertTableQuery had. The helper still
+		// owns the async-while-enabled scheduling; its legacy Database argument is deliberately unused.
+		List<T> snapshot = new ArrayList<>(collection);
+		helper.runQueries(legacy -> new TableBackend<>(table, database.getBackend()).upsertAll(snapshot));
 	}
 
 	/**

@@ -3,14 +3,13 @@ package org.luckyraven.gangland.database.repositories.plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.data.plugin.PluginData;
 import org.luckyraven.gangland.database.tables.plugin.PluginDataTable;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -21,8 +20,8 @@ public class PluginDataRepository extends AbstractRepository<PluginData> {
 
 	private final PluginDataTable pluginDataTable;
 
-	public PluginDataRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public PluginDataRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		this.pluginDataTable = new PluginDataTable();
 	}
@@ -30,7 +29,7 @@ public class PluginDataRepository extends AbstractRepository<PluginData> {
 	@Override
 	protected Collection<PluginData> doLoadAll() throws SQLException {
 		List<PluginData> pluginDataList = new ArrayList<>();
-		List<Object[]>   data           = pluginDataTable.selectAllTableQuery(getDatabase());
+		List<Object[]>   data           = tableBackend().selectAll();
 
 		for (Object[] result : data) {
 			int  v              = 0;
@@ -57,7 +56,6 @@ public class PluginDataRepository extends AbstractRepository<PluginData> {
 
 	@Override
 	protected void doDelete(PluginData data) throws SQLException {
-		Database table = getDatabase().table(pluginDataTable.getName());
-		table.delete("id", data.getId(), Types.INTEGER);
+		tableBackend().delete("id = ?", data.getId());
 	}
 }

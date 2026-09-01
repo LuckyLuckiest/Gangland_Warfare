@@ -1,8 +1,8 @@
 package org.luckyraven.gangland.database.tables.rank;
 
 import org.luckyraven.gangland.gang.rank.Rank;
-import org.luckyraven.gangland.persistence.database.component.Attribute;
-import org.luckyraven.gangland.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.database.component.Attribute;
+import org.luckyraven.keystone.persistence.database.component.Table;
 
 import java.sql.Types;
 import java.util.Map;
@@ -15,6 +15,10 @@ public class RankTable extends Table<Rank> {
 		Attribute<Integer> id         = new Attribute<>("id", true, Integer.class);
 		Attribute<String>  name       = new Attribute<>("name", false, String.class);
 		Attribute<String>  vaultGroup = new Attribute<>("vault_group", false, String.class);
+
+		// The domain treats an unlinked rank as vault_group = null (doLoadAll reads it nullable; initial
+		// head/tail ranks are inserted without one), so the column must not be declared NOT NULL.
+		vaultGroup.setCanBeNull(true);
 
 		this.addAttribute(id);
 		this.addAttribute(name);

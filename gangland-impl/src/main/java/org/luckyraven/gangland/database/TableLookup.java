@@ -1,6 +1,6 @@
 package org.luckyraven.gangland.database;
 
-import org.luckyraven.gangland.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.database.component.Table;
 
 import java.util.List;
 

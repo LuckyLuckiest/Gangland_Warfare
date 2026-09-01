@@ -3,14 +3,13 @@ package org.luckyraven.gangland.database.repositories.copsncrooks;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.detainment.inventory.SeizedInventory;
 import org.luckyraven.gangland.database.tables.copsncrooks.SeizedInventoryTable;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -22,15 +21,15 @@ public class SeizedInventoryRepository extends AbstractRepository<SeizedInventor
 
 	private final SeizedInventoryTable seizedInventoryTable;
 
-	public SeizedInventoryRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public SeizedInventoryRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 		this.seizedInventoryTable = new SeizedInventoryTable();
 	}
 
 	@Override
 	protected Collection<SeizedInventory> doLoadAll() throws SQLException {
 		List<SeizedInventory> list = new ArrayList<>();
-		List<Object[]>        data = seizedInventoryTable.selectAllTableQuery(getDatabase());
+		List<Object[]>        data = tableBackend().selectAll();
 
 		for (Object[] result : data) {
 			int v = 0;
@@ -57,7 +56,6 @@ public class SeizedInventoryRepository extends AbstractRepository<SeizedInventor
 
 	@Override
 	protected void doDelete(SeizedInventory data) throws SQLException {
-		Database table = getDatabase().table(seizedInventoryTable.getName());
-		table.delete("player_uuid", data.getPlayerId().toString(), Types.VARCHAR);
+		tableBackend().delete("player_uuid = ?", data.getPlayerId().toString());
 	}
 }

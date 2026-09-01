@@ -5,14 +5,13 @@ import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.data.teleportation.Waypoint;
 import org.luckyraven.gangland.database.tables.gang.GangTable;
 import org.luckyraven.gangland.database.tables.waypoint.WaypointTable;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -23,8 +22,8 @@ public class WaypointRepository extends AbstractRepository<Waypoint> {
 
 	private final WaypointTable waypointTable;
 
-	public WaypointRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public WaypointRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		this.waypointTable = new WaypointTable(new GangTable());
 	}
@@ -32,7 +31,7 @@ public class WaypointRepository extends AbstractRepository<Waypoint> {
 	@Override
 	protected Collection<Waypoint> doLoadAll() throws SQLException {
 		List<Waypoint> waypoints = new ArrayList<>();
-		List<Object[]> data      = waypointTable.selectAllTableQuery(getDatabase());
+		List<Object[]> data      = tableBackend().selectAll();
 
 		for (Object[] result : data) {
 			int    v        = 0;
@@ -81,7 +80,6 @@ public class WaypointRepository extends AbstractRepository<Waypoint> {
 
 	@Override
 	protected void doDelete(Waypoint data) throws SQLException {
-		Database table = getDatabase().table(waypointTable.getName());
-		table.delete("id", data.getUsedId(), Types.INTEGER);
+		tableBackend().delete("id = ?", data.getUsedId());
 	}
 }

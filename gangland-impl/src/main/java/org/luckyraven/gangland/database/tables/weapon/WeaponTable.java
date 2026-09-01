@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.database.tables.weapon;
 
-import org.luckyraven.gangland.persistence.database.component.Attribute;
-import org.luckyraven.gangland.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.database.component.Attribute;
+import org.luckyraven.keystone.persistence.database.component.Table;
 import org.luckyraven.gangland.weapon.Weapon;
 
 import java.sql.Types;

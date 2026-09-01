@@ -2,16 +2,15 @@ package org.luckyraven.gangland.database.repositories.gang;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.database.tables.gang.GangTable;
-import org.luckyraven.gangland.economy.Currency;
+import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.gangland.gang.Gang;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -22,8 +21,8 @@ public class GangRepository extends AbstractRepository<Gang> {
 
 	private final GangTable gangTable;
 
-	public GangRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public GangRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		this.gangTable = new GangTable();
 	}
@@ -31,7 +30,7 @@ public class GangRepository extends AbstractRepository<Gang> {
 	@Override
 	protected Collection<Gang> doLoadAll() throws SQLException {
 		List<Gang>     gangs     = new ArrayList<>();
-		List<Object[]> gangsData = gangTable.selectAllTableQuery(getDatabase());
+		List<Object[]> gangsData = tableBackend().selectAll();
 
 		for (Object[] result : gangsData) {
 			int    v                  = 0;
@@ -80,8 +79,7 @@ public class GangRepository extends AbstractRepository<Gang> {
 
 	@Override
 	protected void doDelete(Gang data) throws SQLException {
-		Database table = getDatabase().table(gangTable.getName());
-		table.delete("id", data.getId(), Types.INTEGER);
+		tableBackend().delete("id = ?", data.getId());
 	}
 
 	private Gang.State parseState(String raw) {

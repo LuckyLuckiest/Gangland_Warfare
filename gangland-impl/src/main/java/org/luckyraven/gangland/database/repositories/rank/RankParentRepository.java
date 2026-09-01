@@ -4,14 +4,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.database.tables.rank.RankParentTable;
 import org.luckyraven.gangland.database.tables.rank.RankTable;
 import org.luckyraven.gangland.gang.rank.RankParent;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -22,8 +21,8 @@ public class RankParentRepository extends AbstractRepository<RankParent> {
 
 	private final RankParentTable rankParentTable;
 
-	public RankParentRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public RankParentRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		this.rankParentTable = new RankParentTable(new RankTable());
 	}
@@ -36,20 +35,19 @@ public class RankParentRepository extends AbstractRepository<RankParent> {
 	 * @param tailId the id of the tail (lowest) rank - stored as the parent row's {@code parent_id}
 	 */
 	public void insertInitialRelation(int headId, int tailId) throws SQLException {
-		Database dataTable = getDatabase().table(rankParentTable.getName());
+		Integer existing = getBackend().queryBuilder(rankParentTable.getName())
+		                               .where("id", headId)
+		                               .one(resultSet -> resultSet.getInt("id"));
 
-		Object[] existing = dataTable.select("id = ?", new Object[]{headId}, new int[]{Types.INTEGER},
-		                                     new String[]{"*"});
-
-		if (existing.length == 0) {
-			getTable().insertTableQuery(getDatabase(), new RankParent(headId, tailId));
+		if (existing == null) {
+			tableBackend().insert(new RankParent(headId, tailId));
 		}
 	}
 
 	@Override
 	protected Collection<RankParent> doLoadAll() throws SQLException {
 		List<RankParent> rankParents = new ArrayList<>();
-		List<Object[]>   data        = rankParentTable.selectAllTableQuery(getDatabase());
+		List<Object[]>   data        = tableBackend().selectAll();
 
 		for (Object[] result : data) {
 			int rankId   = (int) result[0];
@@ -73,7 +71,6 @@ public class RankParentRepository extends AbstractRepository<RankParent> {
 
 	@Override
 	protected void doDelete(RankParent data) throws SQLException {
-		Database table = getDatabase().table(rankParentTable.getName());
-		table.delete("id", data.rankId(), Types.INTEGER);
+		tableBackend().delete("id = ?", data.rankId());
 	}
 }

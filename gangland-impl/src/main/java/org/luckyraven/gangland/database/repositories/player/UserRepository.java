@@ -5,17 +5,16 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.database.tables.player.UserTable;
-import org.luckyraven.gangland.economy.Currency;
+import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserFactory;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -24,8 +23,8 @@ public class UserRepository extends AbstractRepository<User<? extends OfflinePla
 
 	private final UserTable userTable;
 
-	public UserRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public UserRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		this.userTable = new UserTable();
 	}
@@ -39,7 +38,7 @@ public class UserRepository extends AbstractRepository<User<? extends OfflinePla
 		// KERNEL where UserFactory was built), the bean is in the container.
 		UserFactory userFactory = ((Gangland) getPlugin()).getContext().get(UserFactory.class);
 
-		List<Object[]> data = userTable.selectAllTableQuery(getDatabase());
+		List<Object[]> data = tableBackend().selectAll();
 
 		for (Object[] result : data) {
 			int    v          = 0;
@@ -84,7 +83,6 @@ public class UserRepository extends AbstractRepository<User<? extends OfflinePla
 
 	@Override
 	protected void doDelete(User<? extends OfflinePlayer> data) throws SQLException {
-		Database table = getDatabase().table(userTable.getName());
-		table.delete("uuid", data.getUuid().toString(), Types.VARCHAR);
+		tableBackend().delete("uuid = ?", data.getUuid().toString());
 	}
 }

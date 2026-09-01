@@ -2,16 +2,22 @@ package org.luckyraven.gangland.config;
 
 import lombok.CustomLog;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.core.bean.Bean;
-import org.luckyraven.gangland.core.bean.Configuration;
-import org.luckyraven.gangland.core.bean.Phase;
+import org.luckyraven.keystone.bean.Bean;
+import org.luckyraven.keystone.bean.Configuration;
+import org.luckyraven.keystone.bean.Phase;
 import org.luckyraven.gangland.database.GanglandDatabase;
-import org.luckyraven.gangland.exception.PluginException;
+import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.DatabaseManager;
-import org.luckyraven.gangland.persistence.database.DatabaseSettingsProvider;
-import org.luckyraven.gangland.persistence.repository.RepositoryRegistry;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.DatabaseManager;
+import org.luckyraven.keystone.persistence.database.DatabaseSettingsProvider;
+import org.luckyraven.keystone.diagnostics.Diagnostics;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.diagnostics.DatabaseFaultSink;
+import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
+
+import java.io.IOException;
+import java.sql.SQLException;
 
 /**
  * DATABASE-phase wiring. Produces the {@link GanglandDatabase} (driven by {@code Settings.getDatabaseType()}, hence the
@@ -42,10 +48,23 @@ public class DatabaseConfig {
 		           : DatabaseHandler.SQLITE;
 
 		GanglandDatabase database = new GanglandDatabase(gangland, Gangland.FULL_PREFIX, settings);
+		// Connects the legacy pool and resolves the MySQL→SQLite fallback — the backend must be built from the
+		// RESOLVED type, so it connects only after this call.
 		database.setType(type);
 
+		try {
+			if (database.getType() == DatabaseHandler.MYSQL) {
+				// The backend pool connects straight to the schema; make sure it exists first (idempotent).
+				database.createSchema();
+			}
+			database.connectBackend();
+		} catch (SQLException | IOException exception) {
+			throw new PluginException("Failed to connect the database backend: " + exception.getMessage(), exception);
+		}
+
 		// Repository scan must run BEFORE the database is added to the manager so the manager sees the repos when
-		// it initializes connections.
+		// it initializes connections. Repositories receive the DatabaseBackend via constructor injection and
+		// persist through TableBackend; createTables() applies schemas through the backend diff engine.
 		database.getRepositoryRegistry().scanAndRegisterRepositories("org.luckyraven.gangland.database.repositories");
 
 		databaseManager.addDatabase(database);
@@ -57,6 +76,25 @@ public class DatabaseConfig {
 			throw new PluginException("Gangland Database instance is not found.");
 		}
 		return resolved;
+	}
+
+	/**
+	 * The connected backend as a first-class bean so later phases (persistent cooldowns, fault sinks, services)
+	 * can inject {@link DatabaseBackend} directly.
+	 */
+	@Bean
+	public DatabaseBackend databaseBackend(GanglandDatabase database) {
+		return database.getBackend();
+	}
+
+	/**
+	 * Persists classified faults (dependency failures and internal bugs — never user errors) into
+	 * {@code gangland_faults} through the backend. Self-registers into the hub; its schema is applied during the
+	 * LIFECYCLE pass, after the backend is connected.
+	 */
+	@Bean
+	public DatabaseFaultSink databaseFaultSink(GanglandDatabase database, Diagnostics diagnostics) {
+		return new DatabaseFaultSink(database.getBackend(), diagnostics, "gangland_faults");
 	}
 
 	/**

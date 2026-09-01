@@ -6,14 +6,13 @@ import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.spawn.CivilianSpawner;
 import org.luckyraven.gangland.database.tables.copsncrooks.CivilianSpawnerTable;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,8 +23,8 @@ public class CivilianSpawnerRepository extends AbstractRepository<CivilianSpawne
 
 	private final CivilianSpawnerTable copSpawnerTable;
 
-	public CivilianSpawnerRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public CivilianSpawnerRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		this.copSpawnerTable = new CivilianSpawnerTable();
 	}
@@ -33,7 +32,7 @@ public class CivilianSpawnerRepository extends AbstractRepository<CivilianSpawne
 	@Override
 	protected Collection<CivilianSpawner> doLoadAll() throws SQLException {
 		List<CivilianSpawner> copSpawners = new ArrayList<>();
-		List<Object[]>        data        = copSpawnerTable.selectAllTableQuery(getDatabase());
+		List<Object[]>        data        = tableBackend().selectAll();
 
 		for (Object[] result : data) {
 			int v = 0;
@@ -73,7 +72,6 @@ public class CivilianSpawnerRepository extends AbstractRepository<CivilianSpawne
 
 	@Override
 	protected void doDelete(CivilianSpawner data) throws SQLException {
-		Database table = getDatabase().table(copSpawnerTable.getName());
-		table.delete("id", data.getId(), Types.VARCHAR);
+		tableBackend().delete("id = ?", data.getId());
 	}
 }

@@ -2,8 +2,8 @@ package org.luckyraven.gangland.database.tables.copsncrooks;
 
 import org.bukkit.Location;
 import org.luckyraven.gangland.copsncrooks.jail.Jail;
-import org.luckyraven.gangland.persistence.database.component.Attribute;
-import org.luckyraven.gangland.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.database.component.Attribute;
+import org.luckyraven.keystone.persistence.database.component.Table;
 
 import java.sql.Types;
 import java.util.Map;

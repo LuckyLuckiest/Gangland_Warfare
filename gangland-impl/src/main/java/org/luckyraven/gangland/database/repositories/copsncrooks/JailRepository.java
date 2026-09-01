@@ -7,14 +7,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.jail.Jail;
 import org.luckyraven.gangland.copsncrooks.jail.JailService;
 import org.luckyraven.gangland.database.tables.copsncrooks.JailTable;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -25,8 +24,8 @@ public class JailRepository extends AbstractRepository<Jail> {
 
 	private final JailTable jailTable;
 
-	public JailRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public JailRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		// Table is created here, managed by repository
 		this.jailTable = new JailTable();
@@ -35,7 +34,7 @@ public class JailRepository extends AbstractRepository<Jail> {
 	@Override
 	protected Collection<Jail> doLoadAll() throws SQLException {
 		List<Jail>     jails = new ArrayList<>();
-		List<Object[]> data  = jailTable.selectAllTableQuery(getDatabase());
+		List<Object[]> data  = tableBackend().selectAll();
 
 		for (Object[] result : data) {
 			int v = 0;
@@ -72,7 +71,6 @@ public class JailRepository extends AbstractRepository<Jail> {
 
 	@Override
 	protected void doDelete(Jail data) throws SQLException {
-		Database table = getDatabase().table(jailTable.getName());
-		table.delete("id", data.getId(), Types.INTEGER);
+		tableBackend().delete("id = ?", data.getId());
 	}
 }

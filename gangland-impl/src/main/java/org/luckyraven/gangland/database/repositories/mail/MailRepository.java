@@ -6,14 +6,13 @@ import org.luckyraven.gangland.mail.MailItem;
 import org.luckyraven.gangland.mail.MailStatus;
 import org.luckyraven.gangland.mail.MailType;
 import org.luckyraven.gangland.mail.contract.MailRepositoryContract;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -25,15 +24,15 @@ public class MailRepository extends AbstractRepository<MailItem> implements Mail
 
 	private final MailTable mailTable;
 
-	public MailRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public MailRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 		this.mailTable = new MailTable();
 	}
 
 	@Override
 	protected Collection<MailItem> doLoadAll() throws SQLException {
 		List<MailItem> mails = new ArrayList<>();
-		List<Object[]> rows  = mailTable.selectAllTableQuery(getDatabase());
+		List<Object[]> rows  = tableBackend().selectAll();
 
 		for (Object[] result : rows) {
 			int v = 0;
@@ -73,7 +72,6 @@ public class MailRepository extends AbstractRepository<MailItem> implements Mail
 
 	@Override
 	protected void doDelete(MailItem data) throws SQLException {
-		Database table = getDatabase().table(mailTable.getName());
-		table.delete("id", data.getId(), Types.BIGINT);
+		tableBackend().delete("id = ?", data.getId());
 	}
 }

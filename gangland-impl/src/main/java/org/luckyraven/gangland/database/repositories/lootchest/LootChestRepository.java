@@ -9,14 +9,13 @@ import org.luckyraven.gangland.database.tables.lootchest.LootChestTable;
 import org.luckyraven.gangland.lootchest.LootChestService;
 import org.luckyraven.gangland.lootchest.data.LootChestData;
 import org.luckyraven.gangland.lootchest.data.LootTier;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -28,8 +27,8 @@ public class LootChestRepository extends AbstractRepository<LootChestData> {
 	@Setter
 	private LootChestService lootChestService;
 
-	public LootChestRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public LootChestRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		this.lootChestTable = new LootChestTable();
 	}
@@ -37,7 +36,7 @@ public class LootChestRepository extends AbstractRepository<LootChestData> {
 	@Override
 	protected Collection<LootChestData> doLoadAll() throws SQLException {
 		List<LootChestData> list = new ArrayList<>();
-		List<Object[]>      data = lootChestTable.selectAllTableQuery(getDatabase());
+		List<Object[]>      data = tableBackend().selectAll();
 
 		for (Object[] result : data) {
 			int v = 0;
@@ -96,7 +95,6 @@ public class LootChestRepository extends AbstractRepository<LootChestData> {
 
 	@Override
 	protected void doDelete(LootChestData data) throws SQLException {
-		Database table = getDatabase().table(lootChestTable.getName());
-		table.delete("id", data.getId().toString(), Types.VARCHAR);
+		tableBackend().delete("id = ?", data.getId().toString());
 	}
 }

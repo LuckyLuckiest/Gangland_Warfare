@@ -2,16 +2,15 @@ package org.luckyraven.gangland.database.repositories.turf;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.database.tables.turf.TurfGarrisonTable;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 import org.luckyraven.gangland.turf.powerups.Garrison;
 import org.luckyraven.gangland.turf.powerups.GarrisonRepositoryContract;
 
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -22,8 +21,8 @@ public class TurfGarrisonRepository extends AbstractRepository<Garrison> impleme
 
 	private final TurfGarrisonTable table;
 
-	public TurfGarrisonRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public TurfGarrisonRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		this.table = new TurfGarrisonTable();
 	}
@@ -31,7 +30,7 @@ public class TurfGarrisonRepository extends AbstractRepository<Garrison> impleme
 	@Override
 	protected Collection<Garrison> doLoadAll() throws SQLException {
 		List<Garrison> rows = new ArrayList<>();
-		for (Object[] result : table.selectAllTableQuery(getDatabase())) {
+		for (Object[] result : tableBackend().selectAll()) {
 			int turfId = ((Number) result[0]).intValue();
 			int count  = ((Number) result[1]).intValue();
 			rows.add(new Garrison(turfId, count));
@@ -51,7 +50,6 @@ public class TurfGarrisonRepository extends AbstractRepository<Garrison> impleme
 
 	@Override
 	protected void doDelete(Garrison data) throws SQLException {
-		Database db = getDatabase().table(table.getName());
-		db.delete("turf_id", data.getTurfId(), Types.INTEGER);
+		tableBackend().delete("turf_id = ?", data.getTurfId());
 	}
 }

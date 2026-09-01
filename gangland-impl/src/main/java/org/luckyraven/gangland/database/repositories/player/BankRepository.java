@@ -3,17 +3,16 @@ package org.luckyraven.gangland.database.repositories.player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.database.tables.player.BankTable;
 import org.luckyraven.gangland.database.tables.player.UserTable;
-import org.luckyraven.gangland.economy.Currency;
-import org.luckyraven.gangland.economy.bank.Bank;
-import org.luckyraven.gangland.persistence.database.Database;
-import org.luckyraven.gangland.persistence.database.DatabaseHandler;
-import org.luckyraven.gangland.persistence.database.component.Table;
-import org.luckyraven.gangland.persistence.repository.AbstractRepository;
-import org.luckyraven.gangland.persistence.repository.Repository;
+import org.luckyraven.keystone.economy.Currency;
+import org.luckyraven.keystone.economy.bank.Bank;
+import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
+import org.luckyraven.keystone.persistence.repository.AbstractRepository;
+import org.luckyraven.keystone.persistence.repository.Repository;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -27,8 +26,8 @@ public class BankRepository extends AbstractRepository<Bank> {
 
 	private final BankTable bankTable;
 
-	public BankRepository(JavaPlugin plugin, DatabaseHandler databaseHandler) {
-		super(plugin, databaseHandler);
+	public BankRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
+		super(plugin, databaseHandler, backend);
 
 		UserTable userTable = new UserTable();
 		this.bankTable = new BankTable(userTable);
@@ -46,7 +45,7 @@ public class BankRepository extends AbstractRepository<Bank> {
 	@Override
 	protected Collection<Bank> doLoadAll() throws SQLException {
 		List<Bank>     banks = new ArrayList<>();
-		List<Object[]> data  = bankTable.selectAllTableQuery(getDatabase());
+		List<Object[]> data  = tableBackend().selectAll();
 
 		for (Object[] result : data) {
 			int        v           = 0;
@@ -98,7 +97,6 @@ public class BankRepository extends AbstractRepository<Bank> {
 
 	@Override
 	protected void doDelete(Bank data) throws SQLException {
-		Database table = getDatabase().table(bankTable.getName());
-		table.delete("uuid", data.getUuid().toString(), Types.VARCHAR);
+		tableBackend().delete("uuid = ?", data.getUuid().toString());
 	}
 }
