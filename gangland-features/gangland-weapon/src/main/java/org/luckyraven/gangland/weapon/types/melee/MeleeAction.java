@@ -5,7 +5,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 import org.luckyraven.gangland.compatibility.recoil.RecoilCompatibility;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ParticleUtil;
 import org.luckyraven.gangland.weapon.dto.MeleeData;
 import org.luckyraven.gangland.weapon.events.projectile.WeaponRaytraceImpactEvent;
@@ -50,7 +50,7 @@ public class MeleeAction {
 
 		// empty-mag guard — only applies to melee weapons with ammo configured
 		if (weapon.getReloadData() != null && weapon.isMagazineEmpty()) {
-			SoundConfiguration.playSounds(player, weapon.getSoundData().getEmptyMagCustom(),
+			SoundEffect.playSounds(player, weapon.getSoundData().getEmptyMagCustom(),
 			                              weapon.getSoundData().getEmptyMagDefault());
 			return false;
 		}
@@ -120,7 +120,7 @@ public class MeleeAction {
 		ParticleUtil.spawnSlashArc(player.getLocation(), lookDir, range * 0.6);
 
 		// swing sound and recoil always apply on swing
-		SoundConfiguration.playSounds(player, weapon.getSoundData().getShotCustom(),
+		SoundEffect.playSounds(player, weapon.getSoundData().getShotCustom(),
 		                              weapon.getSoundData().getShotDefault());
 
 		if (weapon.getRecoilData() != null) {

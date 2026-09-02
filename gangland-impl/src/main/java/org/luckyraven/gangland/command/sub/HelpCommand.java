@@ -16,15 +16,16 @@ import java.util.List;
 @CommandHandler(priority = CommandPriority.LOWEST)
 public final class HelpCommand extends Command {
 
-	public HelpCommand(Gangland gangland, InformationManager informationManager) {
+	public HelpCommand(Gangland gangland, InformationManager informationManager, CommandManager commandManager) {
 		super(gangland, "help", false, "general", "?");
 
 		List<CommandInformation> list = new ArrayList<>();
 
 		list.add(informationManager.getCommands().get("general"));
 		list.add(informationManager.getCommands().get("general_page"));
-		// Keystone's registry is typed on its own Command; help info lives on the Gangland subclass
-		list.addAll(CommandManager.getCommands()
+		// Keystone's registry is typed on its own Command; help info lives on the Gangland subclass.
+		// LOWEST priority makes this the last command constructed, so the manager's view is complete here.
+		list.addAll(commandManager.commandView()
 		                          .values()
 		                          .parallelStream()
 		                          .filter(Command.class::isInstance)

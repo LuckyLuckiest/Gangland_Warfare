@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
@@ -43,20 +43,20 @@ public final class PriceEditorView implements Panel<ShopAdminFlowSession> {
 	private static final int   MAX_MODE_CYCLE   = 10;
 	private static final int   INVENTORY_SIZE   = 54;
 
-	private static final SoundConfiguration SOUND_ADD         = vanilla("UI_BUTTON_CLICK", 1.5f);
-	private static final SoundConfiguration SOUND_SUB         = vanilla("UI_BUTTON_CLICK", 0.8f);
-	private static final SoundConfiguration SOUND_MODE_UP     = vanilla("BLOCK_NOTE_BLOCK_HAT", 1.5f);
-	private static final SoundConfiguration SOUND_MODE_DOWN   = vanilla("BLOCK_NOTE_BLOCK_HAT", 0.8f);
-	private static final SoundConfiguration SOUND_ANVIL_PRICE = vanilla("BLOCK_ANVIL_USE", 1.2f);
-	private static final SoundConfiguration SOUND_ANVIL_MODE  = vanilla("BLOCK_ANVIL_USE", 1.0f);
-	private static final SoundConfiguration SOUND_SAVE        = vanilla("ENTITY_PLAYER_LEVELUP", 1.0f);
-	private static final SoundConfiguration SOUND_CANCEL      = vanilla("ENTITY_VILLAGER_NO", 1.0f);
+	private static final SoundEffect SOUND_ADD         = vanilla("UI_BUTTON_CLICK", 1.5f);
+	private static final SoundEffect SOUND_SUB         = vanilla("UI_BUTTON_CLICK", 0.8f);
+	private static final SoundEffect SOUND_MODE_UP     = vanilla("BLOCK_NOTE_BLOCK_HAT", 1.5f);
+	private static final SoundEffect SOUND_MODE_DOWN   = vanilla("BLOCK_NOTE_BLOCK_HAT", 0.8f);
+	private static final SoundEffect SOUND_ANVIL_PRICE = vanilla("BLOCK_ANVIL_USE", 1.2f);
+	private static final SoundEffect SOUND_ANVIL_MODE  = vanilla("BLOCK_ANVIL_USE", 1.0f);
+	private static final SoundEffect SOUND_SAVE        = vanilla("ENTITY_PLAYER_LEVELUP", 1.0f);
+	private static final SoundEffect SOUND_CANCEL      = vanilla("ENTITY_VILLAGER_NO", 1.0f);
 
 	private final JavaPlugin     plugin;
 	private final ShopUiSettings settings;
 
-	private static SoundConfiguration vanilla(String name, float pitch) {
-		return new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, name, 0.6f, pitch);
+	private static SoundEffect vanilla(String name, float pitch) {
+		return new SoundEffect(SoundEffect.SoundType.VANILLA, name, 0.6f, pitch);
 	}
 
 	@Override

@@ -13,7 +13,7 @@ import org.luckyraven.gangland.copsncrooks.npc.trader.config.TraderSettings;
 import org.luckyraven.gangland.copsncrooks.npc.trader.mood.MoodService;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.bean.BeanLifecycle;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
@@ -60,8 +60,8 @@ public final class BarterView implements Panel<TraderFlowSession>, BeanLifecycle
 			37, 38, 39, 40, 41
 	};
 
-	private static final SoundConfiguration SOUND_CONFIRM = vanilla("ENTITY_PLAYER_LEVELUP", 1.0f);
-	private static final SoundConfiguration SOUND_CLICK   = vanilla("UI_BUTTON_CLICK", 1.0f);
+	private static final SoundEffect SOUND_CONFIRM = vanilla("ENTITY_PLAYER_LEVELUP", 1.0f);
+	private static final SoundEffect SOUND_CLICK   = vanilla("UI_BUTTON_CLICK", 1.0f);
 
 	private final JavaPlugin             plugin;
 	private final MoodService            moodService;
@@ -72,8 +72,8 @@ public final class BarterView implements Panel<TraderFlowSession>, BeanLifecycle
 
 	private final Map<Player, BarterState> active = new WeakHashMap<>();
 
-	private static SoundConfiguration vanilla(String name, float pitch) {
-		return new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, name, 0.6f, pitch);
+	private static SoundEffect vanilla(String name, float pitch) {
+		return new SoundEffect(SoundEffect.SoundType.VANILLA, name, 0.6f, pitch);
 	}
 
 	private static boolean contains(int[] arr, int value) {

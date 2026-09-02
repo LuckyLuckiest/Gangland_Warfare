@@ -9,7 +9,7 @@ import org.bukkit.util.BoundingBox;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ParticleUtil;
 import org.luckyraven.gangland.weapon.Weapon;
 import org.luckyraven.gangland.weapon.WeaponService;
@@ -464,15 +464,15 @@ public class WeaponRaytracer {
 				living.setFireTicks(fireTicks);
 			}
 
-			SoundConfiguration impactCustom  = weapon.getSoundData().getImpactCustom();
-			SoundConfiguration impactDefault = weapon.getSoundData().getImpactDefault();
+			SoundEffect impactCustom  = weapon.getSoundData().getImpactCustom();
+			SoundEffect impactDefault = weapon.getSoundData().getImpactDefault();
 			if (impactCustom != null || impactDefault != null) {
-				SoundConfiguration.playSoundsAtLocation(living.getLocation(), impactCustom, impactDefault);
+				SoundEffect.playSoundsAtLocation(living.getLocation(), impactCustom, impactDefault);
 			}
 
 			if (criticalHit && shooter instanceof Player player) {
-				SoundConfiguration critSound = new SoundConfiguration(
-						SoundConfiguration.SoundType.VANILLA, "ITEM_SHIELD_BREAK", 1F, 1F);
+				SoundEffect critSound = new SoundEffect(
+						SoundEffect.SoundType.VANILLA, "ITEM_SHIELD_BREAK", 1F, 1F);
 				critSound.playSound(player);
 			}
 		}

@@ -11,7 +11,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 import org.luckyraven.gangland.compatibility.recoil.RecoilCompatibility;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.timer.RepeatingTimer;
 import org.luckyraven.keystone.util.ParticleUtil;
 import org.luckyraven.gangland.weapon.WeaponService;
@@ -76,7 +76,7 @@ public class IncendiaryAction {
 		}
 
 		// shoot sound
-		SoundConfiguration.playSounds(player, weapon.getSoundData().getShotCustom(),
+		SoundEffect.playSounds(player, weapon.getSoundData().getShotCustom(),
 		                              weapon.getSoundData().getShotDefault());
 
 		sprayFire(player, data, tracksAmmo);

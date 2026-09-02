@@ -14,7 +14,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.util.TimeUtil;
 import org.luckyraven.keystone.util.messages.TimeMessagesProvider;
@@ -180,7 +180,7 @@ public class LootChestListener implements Listener {
 
 		if (!(lockedSound != null && !lockedSound.isEmpty())) return;
 
-		var soundConfig = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, lockedSound, 1.0f, 1.0f);
+		var soundConfig = new SoundEffect(SoundEffect.SoundType.VANILLA, lockedSound, 1.0f, 1.0f);
 
 		soundConfig.playSound(player);
 	}

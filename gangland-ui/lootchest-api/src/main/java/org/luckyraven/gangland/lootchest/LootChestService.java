@@ -9,7 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.gangland.hologram.HologramService;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.item.ItemParser;
@@ -456,7 +456,7 @@ public abstract class LootChestService {
 		sessionStartHandler.addHandler(session -> {
 			Player player = session.getPlayer();
 
-			var soundConfig = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, config.getOpeningSound(),
+			var soundConfig = new SoundEffect(SoundEffect.SoundType.VANILLA, config.getOpeningSound(),
 			                                         1.0f, 1.0f);
 
 			soundConfig.playSound(player);
@@ -465,7 +465,7 @@ public abstract class LootChestService {
 		sessionCompleteHandler.addHandler(session -> {
 			Player player = session.getPlayer();
 
-			var soundConfig = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, config.getClosingSound(),
+			var soundConfig = new SoundEffect(SoundEffect.SoundType.VANILLA, config.getClosingSound(),
 			                                         1.0f, 1.0f);
 
 			soundConfig.playSound(player);

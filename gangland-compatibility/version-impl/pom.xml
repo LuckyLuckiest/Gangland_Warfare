@@ -28,11 +28,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>gangland-core</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>com.viaversion</groupId>
             <artifactId>viaversion-api</artifactId>
         </dependency>

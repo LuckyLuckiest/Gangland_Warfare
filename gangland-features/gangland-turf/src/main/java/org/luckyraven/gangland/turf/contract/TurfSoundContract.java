@@ -3,7 +3,7 @@ package org.luckyraven.gangland.turf.contract;
 import org.bukkit.entity.Player;
 
 /**
- * Plays configured capture SFX. Implemented in gangland-impl using the plugin's {@code SoundConfiguration}
+ * Plays configured capture SFX. Implemented in gangland-impl using the plugin's {@code SoundEffect}
  * (XSound-backed) so the turf module does not import the impl-side sound infrastructure or raw
  * {@code org.bukkit.Sound}.
  */

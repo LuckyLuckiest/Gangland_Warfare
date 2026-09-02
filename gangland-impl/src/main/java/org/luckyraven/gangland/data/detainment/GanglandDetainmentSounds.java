@@ -2,11 +2,11 @@ package org.luckyraven.gangland.data.detainment;
 
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.copsncrooks.detainment.sound.DetainmentSoundContract;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.gangland.file.configuration.Settings;
 
 /**
- * Routes every detainment audio cue through the XSound-backed {@link SoundConfiguration}. Sound *names* come from
+ * Routes every detainment audio cue through the XSound-backed {@link SoundEffect}. Sound *names* come from
  * settings.yml; the constants here are the volume / pitch envelopes tuned for an audible, punchy response.
  */
 public final class GanglandDetainmentSounds implements DetainmentSoundContract {
@@ -50,6 +50,6 @@ public final class GanglandDetainmentSounds implements DetainmentSoundContract {
 
 	private void play(Player player, String soundName, float volume, float pitch) {
 		if (player == null || soundName == null || soundName.isBlank()) return;
-		new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, soundName, volume, pitch).playSound(player);
+		new SoundEffect(SoundEffect.SoundType.VANILLA, soundName, volume, pitch).playSound(player);
 	}
 }

@@ -1,13 +1,13 @@
 package org.luckyraven.gangland.file.configuration.turf;
 
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.turf.contract.TurfSoundContract;
 
 /**
  * Plays the configured capture SFX to players inside a contested turf. Sound names / volumes / pitches come from
- * {@code settings.yml} via {@link Settings}; playback runs through {@link SoundConfiguration} so the XSound fallback
+ * {@code settings.yml} via {@link Settings}; playback runs through {@link SoundEffect} so the XSound fallback
  * keeps legacy sound ids working on newer Minecraft versions.
  */
 public final class GanglandTurfSounds implements TurfSoundContract {
@@ -52,41 +52,41 @@ public final class GanglandTurfSounds implements TurfSoundContract {
 		unclaimed().playSound(listener);
 	}
 
-	private SoundConfiguration unclaimed() {
-		return new SoundConfiguration(
-				SoundConfiguration.SoundType.VANILLA,
+	private SoundEffect unclaimed() {
+		return new SoundEffect(
+				SoundEffect.SoundType.VANILLA,
 				Settings.getTurfCaptureSoundUnclaimedName(),
 				(float) Settings.getTurfCaptureSoundUnclaimedVolume(),
 				(float) Settings.getTurfCaptureSoundUnclaimedPitch());
 	}
 
-	private SoundConfiguration tick() {
-		return new SoundConfiguration(
-				SoundConfiguration.SoundType.VANILLA,
+	private SoundEffect tick() {
+		return new SoundEffect(
+				SoundEffect.SoundType.VANILLA,
 				Settings.getTurfCaptureSoundTickName(),
 				(float) Settings.getTurfCaptureSoundTickVolume(),
 				(float) Settings.getTurfCaptureSoundTickPitch());
 	}
 
-	private SoundConfiguration start() {
-		return new SoundConfiguration(
-				SoundConfiguration.SoundType.VANILLA,
+	private SoundEffect start() {
+		return new SoundEffect(
+				SoundEffect.SoundType.VANILLA,
 				Settings.getTurfCaptureSoundStartName(),
 				(float) Settings.getTurfCaptureSoundStartVolume(),
 				(float) Settings.getTurfCaptureSoundStartPitch());
 	}
 
-	private SoundConfiguration complete() {
-		return new SoundConfiguration(
-				SoundConfiguration.SoundType.VANILLA,
+	private SoundEffect complete() {
+		return new SoundEffect(
+				SoundEffect.SoundType.VANILLA,
 				Settings.getTurfCaptureSoundCompleteName(),
 				(float) Settings.getTurfCaptureSoundCompleteVolume(),
 				(float) Settings.getTurfCaptureSoundCompletePitch());
 	}
 
-	private SoundConfiguration failed() {
-		return new SoundConfiguration(
-				SoundConfiguration.SoundType.VANILLA,
+	private SoundEffect failed() {
+		return new SoundEffect(
+				SoundEffect.SoundType.VANILLA,
 				Settings.getTurfCaptureSoundFailedName(),
 				(float) Settings.getTurfCaptureSoundFailedVolume(),
 				(float) Settings.getTurfCaptureSoundFailedPitch());

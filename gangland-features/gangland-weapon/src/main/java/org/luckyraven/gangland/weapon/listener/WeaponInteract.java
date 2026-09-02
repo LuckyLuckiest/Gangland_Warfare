@@ -17,7 +17,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.compatibility.recoil.RecoilCompatibility;
 import org.luckyraven.keystone.bean.autowire.AutowireTarget;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
 import org.luckyraven.keystone.timer.CountdownTimer;
 import org.luckyraven.keystone.timer.RepeatingTimer;
@@ -165,7 +165,7 @@ public class WeaponInteract implements Listener {
 			if (scopeData != null && !scopeData.isScoped()) weapon.scope(player, true);
 			else weapon.unScope(player, true);
 
-			SoundConfiguration.playSounds(player, weapon.getSoundData().getScopeCustom(),
+			SoundEffect.playSounds(player, weapon.getSoundData().getScopeCustom(),
 			                              weapon.getSoundData().getScopeDefault());
 			return;
 		}

@@ -8,8 +8,8 @@ import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration.SoundType;
+import org.luckyraven.keystone.sound.SoundEffect;
+import org.luckyraven.keystone.sound.SoundEffect.SoundType;
 import org.luckyraven.gangland.item.money.MoneyItem.PickupSound;
 
 import java.util.*;
@@ -202,7 +202,7 @@ public class MoneyAddon {
 
 		// Detect whether the configured sound is a vanilla key or a custom resource pack sound
 		SoundType          soundType   = XSound.of(soundName).isPresent() ? SoundType.VANILLA : SoundType.CUSTOM;
-		SoundConfiguration soundConfig = new SoundConfiguration(soundType, soundName, volume, pitch);
+		SoundEffect soundConfig = new SoundEffect(soundType, soundName, volume, pitch);
 
 		return new PickupSound(soundConfig);
 	}

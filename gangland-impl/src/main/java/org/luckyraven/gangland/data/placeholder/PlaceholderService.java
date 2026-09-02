@@ -60,7 +60,7 @@ public class PlaceholderService implements Placeholder {
 	public String convert(Player player, String text) {
 		List<PlaceholderProvider> chain = new ArrayList<>(resolvers.size() + 1);
 
-		if (gangland.getPlaceholderAPIExpansion() != null) {
+		if (gangland.getPapiExpansion() != null) {
 			if (papiProvider == null) {
 				papiProvider = new PlaceholderAPIProvider();
 			}

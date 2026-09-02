@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.part.Fill;
@@ -40,8 +40,8 @@ public class LootChestWand {
 	private static final int PREVIEW_SLOT_PAGE_INFO = 49;
 	private static final int PREVIEW_SLOT_NEXT      = 50;
 
-	private static final SoundConfiguration PREVIEW_PAGE_SOUND = new SoundConfiguration(
-			SoundConfiguration.SoundType.VANILLA, "UI_BUTTON_CLICK", 0.6f, 1.2f);
+	private static final SoundEffect PREVIEW_PAGE_SOUND = new SoundEffect(
+			SoundEffect.SoundType.VANILLA, "UI_BUTTON_CLICK", 0.6f, 1.2f);
 
 	private final Gangland         gangland;
 	private final LootChestManager lootChestManager;

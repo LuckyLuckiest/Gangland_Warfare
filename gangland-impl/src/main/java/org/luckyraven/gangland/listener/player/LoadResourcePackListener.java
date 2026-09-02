@@ -9,12 +9,18 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerResourcePackStatusEvent;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
-import org.luckyraven.gangland.core.configuration.ResourcePackTracker;
+import org.luckyraven.keystone.sound.ResourcePackTracker;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 @ListenerHandler
 public class LoadResourcePackListener implements Listener {
+
+	private final ResourcePackTracker resourcePackTracker;
+
+	public LoadResourcePackListener(ResourcePackTracker resourcePackTracker) {
+		this.resourcePackTracker = resourcePackTracker;
+	}
 
 	@EventHandler
 	public void onResourcePackStatus(PlayerResourcePackStatusEvent event) {
@@ -32,7 +38,7 @@ public class LoadResourcePackListener implements Listener {
 				String message = GanglandChatUtil.prefixMessage("&aResource pack has been downloaded successfully.");
 
 				player.sendMessage(message);
-				ResourcePackTracker.markLoaded(player);
+				resourcePackTracker.markLoaded(player);
 			}
 			case FAILED_DOWNLOAD -> {
 				String message = GanglandChatUtil.errorMessage("Could not download the resource pack.");
@@ -72,7 +78,7 @@ public class LoadResourcePackListener implements Listener {
 
 	@EventHandler
 	public void onPlayerQuit(PlayerQuitEvent event) {
-		ResourcePackTracker.markUnloaded(event.getPlayer());
+		resourcePackTracker.markUnloaded(event.getPlayer());
 	}
 
 }

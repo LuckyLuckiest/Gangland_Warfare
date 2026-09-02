@@ -13,7 +13,7 @@ import org.luckyraven.gangland.copsncrooks.npc.banker.economy.BankerEconomyContr
 import org.luckyraven.gangland.copsncrooks.npc.banker.economy.BankerEconomyContract.CreationInfo;
 import org.luckyraven.gangland.copsncrooks.npc.banker.message.BankerMessageContract;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
@@ -37,11 +37,11 @@ public final class BankerCreateAccountView implements Panel<BankerFlowSession> {
 	private static final int SLOT_CONFIRM = 11;
 	private static final int SLOT_CANCEL  = 15;
 
-	private static final SoundConfiguration SOUND_CONFIRM = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
+	private static final SoundEffect SOUND_CONFIRM = new SoundEffect(SoundEffect.SoundType.VANILLA,
 	                                                                               "ENTITY_PLAYER_LEVELUP", 1.0f, 1.0f);
-	private static final SoundConfiguration SOUND_DENY    = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
+	private static final SoundEffect SOUND_DENY    = new SoundEffect(SoundEffect.SoundType.VANILLA,
 	                                                                               "ENTITY_VILLAGER_NO", 0.8f, 1.0f);
-	private static final SoundConfiguration SOUND_CLICK   = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
+	private static final SoundEffect SOUND_CLICK   = new SoundEffect(SoundEffect.SoundType.VANILLA,
 	                                                                               "UI_BUTTON_CLICK", 0.6f, 1.2f);
 
 	private final JavaPlugin            plugin;
@@ -159,7 +159,7 @@ public final class BankerCreateAccountView implements Panel<BankerFlowSession> {
 		return stack != null ? stack : new ItemStack(fallback);
 	}
 
-	private void playSoundNextTick(Player player, SoundConfiguration sound) {
+	private void playSoundNextTick(Player player, SoundEffect sound) {
 		Bukkit.getScheduler().runTask(plugin, () -> sound.playSound(player));
 	}
 

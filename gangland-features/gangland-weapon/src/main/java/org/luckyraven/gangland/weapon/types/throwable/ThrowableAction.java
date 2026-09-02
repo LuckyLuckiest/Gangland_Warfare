@@ -10,7 +10,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.util.Vector;
 import org.luckyraven.gangland.compatibility.recoil.RecoilCompatibility;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.timer.CountdownTimer;
 import org.luckyraven.keystone.timer.RepeatingTimer;
 import org.luckyraven.keystone.util.ParticleUtil;
@@ -76,7 +76,7 @@ public class ThrowableAction {
 		Vector throwVec = eyeLoc.getDirection().normalize().multiply(1.2).add(new Vector(0, 0.2, 0));
 		grenade.setVelocity(throwVec);
 
-		SoundConfiguration.playSounds(player, weapon.getSoundData().getShotCustom(),
+		SoundEffect.playSounds(player, weapon.getSoundData().getShotCustom(),
 		                              weapon.getSoundData().getShotDefault());
 
 		if (weapon.getRecoilData() != null) {

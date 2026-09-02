@@ -9,7 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.npc.trader.config.TraderSettings;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
 import org.luckyraven.gangland.inventory.flow.Panel;
@@ -30,7 +30,7 @@ public final class ModeSelectView implements Panel<TraderFlowSession> {
 	private static final int SLOT_SELL  = 14;
 	private static final int SLOT_CLOSE = 22;
 
-	private static final SoundConfiguration SOUND_PICK = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
+	private static final SoundEffect SOUND_PICK = new SoundEffect(SoundEffect.SoundType.VANILLA,
 	                                                                            "UI_BUTTON_CLICK", 0.6f, 1.4f);
 
 	private final JavaPlugin     plugin;
@@ -88,7 +88,7 @@ public final class ModeSelectView implements Panel<TraderFlowSession> {
 	 * — in the same tick as {@code switchTo}/{@code end} — makes the client render audio and inventory change together,
 	 * which the viewer experiences as a flicker even when the transition itself is smooth.
 	 */
-	private void playSoundNextTick(Player player, SoundConfiguration sound) {
+	private void playSoundNextTick(Player player, SoundEffect sound) {
 		Bukkit.getScheduler().runTask(plugin, () -> sound.playSound(player));
 	}
 

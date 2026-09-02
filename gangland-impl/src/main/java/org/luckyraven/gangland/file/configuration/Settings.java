@@ -173,7 +173,7 @@ public class Settings implements FileInitializer {
 	private static @Getter int        detainmentSentencePerWantedLevelSeconds;
 	// detainment fallback exit waypoint
 	private static @Getter String     detainmentFallbackExitWaypoint;
-	// detainment sounds (XSound names; built into SoundConfiguration at playback)
+	// detainment sounds (XSound names; built into SoundEffect at playback)
 	private static @Getter String     detainmentBailSuccessSound;
 	private static @Getter String     detainmentBribeSuccessSound;
 	private static @Getter String     detainmentBribeFailSound;

@@ -381,10 +381,9 @@ Command framework annotations and interfaces.
 
 Configuration POJOs and trackers.
 
-| Class                      | Description                                                                                   |
-|----------------------------|-----------------------------------------------------------------------------------------------|
-| `ResourcePackTracker.java` | Tracks per-player resource pack download status (`ACCEPTED`, `LOADED`, `DECLINED`, `FAILED`). |
-| `SoundConfiguration.java`  | POJO representing a configured sound (Bukkit `Sound`, volume, pitch).                         |
+Both former residents moved upstream in Keystone 1.7.3: `SoundEffect` and `ResourcePackTracker`
+now live in `org.luckyraven.keystone.sound` (the tracker is a KERNEL bean installed via
+`ResourcePackTracker.install(...)`; custom-sound playback gates on it).
 
 ### Subpackage: `datastructure/`
 

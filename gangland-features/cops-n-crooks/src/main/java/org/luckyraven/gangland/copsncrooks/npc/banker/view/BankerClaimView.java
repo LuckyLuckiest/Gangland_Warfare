@@ -12,7 +12,7 @@ import org.luckyraven.gangland.copsncrooks.npc.banker.economy.BankerEconomyContr
 import org.luckyraven.gangland.copsncrooks.npc.banker.economy.BankerEconomyContract.ClaimInfo;
 import org.luckyraven.gangland.copsncrooks.npc.banker.message.BankerMessageContract;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
@@ -40,11 +40,11 @@ public final class BankerClaimView implements Panel<BankerFlowSession> {
 	private static final int SLOT_MONTHLY = 15;
 	private static final int SLOT_BACK    = 22;
 
-	private static final SoundConfiguration SOUND_CONFIRM = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
+	private static final SoundEffect SOUND_CONFIRM = new SoundEffect(SoundEffect.SoundType.VANILLA,
 	                                                                               "ENTITY_PLAYER_LEVELUP", 1.0f, 1.2f);
-	private static final SoundConfiguration SOUND_DENY    = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
+	private static final SoundEffect SOUND_DENY    = new SoundEffect(SoundEffect.SoundType.VANILLA,
 	                                                                               "ENTITY_VILLAGER_NO", 0.8f, 1.0f);
-	private static final SoundConfiguration SOUND_CANCEL  = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
+	private static final SoundEffect SOUND_CANCEL  = new SoundEffect(SoundEffect.SoundType.VANILLA,
 	                                                                               "UI_BUTTON_CLICK", 0.8f, 0.8f);
 
 	private final JavaPlugin            plugin;
@@ -156,7 +156,7 @@ public final class BankerClaimView implements Panel<BankerFlowSession> {
 		ClaimInfo  refreshed = economy.claimInfo(viewer);
 		BigDecimal amount    = kind == ClaimKind.WEEKLY ? refreshed.weeklyAmount() : refreshed.monthlyAmount();
 
-		SoundConfiguration sound = null;
+		SoundEffect sound = null;
 		String             msg;
 		switch (result) {
 			case SUCCESS -> {
@@ -211,7 +211,7 @@ public final class BankerClaimView implements Panel<BankerFlowSession> {
 	 * sound inline in the same tick as a flow transition makes the client render audio and inventory change together,
 	 * which the viewer experiences as a flicker.
 	 */
-	private void playSoundNextTick(Player player, SoundConfiguration sound) {
+	private void playSoundNextTick(Player player, SoundEffect sound) {
 		Bukkit.getScheduler().runTask(plugin, () -> sound.playSound(player));
 	}
 

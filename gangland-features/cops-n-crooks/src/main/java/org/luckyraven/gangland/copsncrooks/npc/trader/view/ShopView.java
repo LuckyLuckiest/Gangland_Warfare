@@ -9,7 +9,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.npc.trader.config.TraderSettings;
 import org.luckyraven.gangland.copsncrooks.npc.trader.mood.MoodService;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
@@ -45,7 +45,7 @@ public final class ShopView implements Panel<TraderFlowSession> {
 	private static final int SLOT_NEXT      = 50;
 	private static final int SLOT_BACK      = 45;
 
-	private static final SoundConfiguration SOUND_PAGE = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
+	private static final SoundEffect SOUND_PAGE = new SoundEffect(SoundEffect.SoundType.VANILLA,
 	                                                                            "UI_BUTTON_CLICK", 0.6f, 1.2f);
 
 	private final JavaPlugin          plugin;

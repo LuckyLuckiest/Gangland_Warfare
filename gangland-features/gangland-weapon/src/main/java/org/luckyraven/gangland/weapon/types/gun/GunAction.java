@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.compatibility.recoil.RecoilCompatibility;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ActionBarManager;
 import org.luckyraven.gangland.weapon.WeaponService;
 import org.luckyraven.gangland.weapon.events.projectile.WeaponShootEvent;
@@ -84,7 +84,7 @@ public class GunAction {
 		}
 
 		// shooting sound — echo broadcasts to all players near the shooter's location
-		SoundConfiguration.playSoundsAtLocation(shooter.getLocation(), weapon.getSoundData().getShotCustom(),
+		SoundEffect.playSoundsAtLocation(shooter.getLocation(), weapon.getSoundData().getShotCustom(),
 		                                        weapon.getSoundData().getShotDefault());
 	}
 

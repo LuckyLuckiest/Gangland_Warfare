@@ -9,7 +9,7 @@ import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
 import org.luckyraven.keystone.timer.SequenceTimer;
 import org.luckyraven.gangland.weapon.SelectiveFire;
@@ -333,7 +333,7 @@ final class NpcCombatDelegate {
 		if (registration != null) {
 			WeaponShooting.fire(owner.plugin, registration.getProvider(), shooter, gun);
 		}
-		SoundConfiguration.playSoundsAtLocation(shooter.getEyeLocation(),
+		SoundEffect.playSoundsAtLocation(shooter.getEyeLocation(),
 		                                        owner.heldWeapon.getSoundData().getShotCustom(),
 		                                        owner.heldWeapon.getSoundData().getShotDefault());
 		refreshHeldItem();

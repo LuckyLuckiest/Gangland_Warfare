@@ -5,7 +5,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
 import org.luckyraven.keystone.timer.SequenceTimer;
 import org.luckyraven.gangland.weapon.Weapon;
@@ -64,7 +64,7 @@ public class InstantReload extends Reload {
 			}
 
 			if (player != null) {
-				SoundConfiguration.playSounds(player, getWeapon().getSoundData().getReloadCustomMid(), null);
+				SoundEffect.playSounds(player, getWeapon().getSoundData().getReloadCustomMid(), null);
 			}
 		});
 

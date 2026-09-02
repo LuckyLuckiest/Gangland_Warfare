@@ -3,9 +3,7 @@ package org.luckyraven.gangland.config;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.bootstrap.GanglandContext;
 import org.luckyraven.gangland.command.data.InformationManager;
-import org.luckyraven.gangland.compatibility.CompatibilitySetup;
 import org.luckyraven.gangland.compatibility.CompatibilityWorker;
-import org.luckyraven.gangland.compatibility.VersionSetup;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.BeanGraph;
 import org.luckyraven.keystone.bean.Configuration;
@@ -31,6 +29,7 @@ import org.luckyraven.keystone.persistence.FileInitializer;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.database.DatabaseManager;
 import org.luckyraven.keystone.persistence.database.DatabaseSettingsProvider;
+import org.luckyraven.keystone.sound.ResourcePackTracker;
 
 /**
  * KERNEL-phase configuration that produces every bootstrap-critical singleton the plugin needs before the FILE phase
@@ -59,14 +58,16 @@ public class KernelConfig {
 		return manager;
 	}
 
+	/**
+	 * Tracks which players accepted the resource pack, gating custom-sound playback. Installed process-wide so
+	 * {@code SoundEffect}'s CUSTOM branch reaches it via {@code ResourcePackTracker.active()}; the listener feeds
+	 * it and {@code Gangland.onDisable} uninstalls it.
+	 */
 	@Bean
-	public VersionSetup versionSetup() {
-		return new VersionSetup();
-	}
-
-	@Bean
-	public CompatibilitySetup compatibilitySetup(VersionSetup versionSetup) {
-		return new CompatibilitySetup(versionSetup);
+	public ResourcePackTracker resourcePackTracker() {
+		ResourcePackTracker tracker = new ResourcePackTracker();
+		ResourcePackTracker.install(tracker);
+		return tracker;
 	}
 
 	/**
@@ -127,12 +128,14 @@ public class KernelConfig {
 	}
 
 	/**
-	 * ViaAPI is {@code null} at this point — it is set later by {@code Gangland.dependencyHandler()} after bootstrap
-	 * completes. {@link CompatibilityWorker} handles a {@code null} ViaAPI gracefully.
+	 * Version detection and adapter loading live in Keystone now ({@code CraftBukkitRevision} +
+	 * {@code VersionedAdapterLoader}); the worker keeps only Gangland's contract + fallback. ViaAPI is passed as a
+	 * supplier because it is still {@code null} here — {@code Gangland.dependencyHandler()} sets it after
+	 * bootstrap, and the supplier resolves it at recoil time.
 	 */
 	@Bean
-	public CompatibilityWorker compatibilityWorker(CompatibilitySetup compatibilitySetup) {
-		return new CompatibilityWorker(gangland.getViaAPI(), compatibilitySetup);
+	public CompatibilityWorker compatibilityWorker() {
+		return new CompatibilityWorker(gangland::getViaAPI);
 	}
 
 	@Bean

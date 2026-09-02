@@ -12,7 +12,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
@@ -61,9 +61,9 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 	private static final int SLOT_NEXT         = 50;
 	private static final int SLOT_TAB_SELL     = 53;
 
-	private static final SoundConfiguration SOUND_PAGE = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
+	private static final SoundEffect SOUND_PAGE = new SoundEffect(SoundEffect.SoundType.VANILLA,
 	                                                                            "UI_BUTTON_CLICK", 0.6f, 1.2f);
-	private static final SoundConfiguration SOUND_TAB  = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
+	private static final SoundEffect SOUND_TAB  = new SoundEffect(SoundEffect.SoundType.VANILLA,
 	                                                                            "UI_BUTTON_CLICK", 0.6f, 1.5f);
 
 	private final JavaPlugin            plugin;

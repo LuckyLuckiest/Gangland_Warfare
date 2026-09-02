@@ -4,7 +4,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ActionBarManager;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.util.ParticleUtil;
@@ -226,9 +226,9 @@ public class JetpackTask extends BukkitRunnable {
 		soundTick = 0;
 
 		if (session.isThrusting()) {
-			SoundConfiguration.playSounds(player, jetpack.getThrustDefaultSound(), jetpack.getThrustCustomSound());
+			SoundEffect.playSounds(player, jetpack.getThrustDefaultSound(), jetpack.getThrustCustomSound());
 		} else if (session.isGliding()) {
-			SoundConfiguration.playSounds(player, jetpack.getGlideDefaultSound(), jetpack.getGlideCustomSound());
+			SoundEffect.playSounds(player, jetpack.getGlideDefaultSound(), jetpack.getGlideCustomSound());
 		}
 	}
 

@@ -25,7 +25,7 @@ import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.keystone.persistence.database.component.Table;
 import org.luckyraven.gangland.util.GanglandChatUtil;
-import org.luckyraven.gangland.util.UpdateNotifier;
+import org.luckyraven.keystone.update.UpdateNotifier;
 
 import java.util.List;
 

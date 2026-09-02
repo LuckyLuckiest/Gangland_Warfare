@@ -2,7 +2,7 @@ package org.luckyraven.gangland.weapon.dto;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.exception.PluginException;
 
 @Data
@@ -10,64 +10,41 @@ import org.luckyraven.keystone.exception.PluginException;
 public class SoundData implements Cloneable {
 
 	// Shot sounds
-	private SoundConfiguration shotDefault;
-	private SoundConfiguration shotCustom;
+	private SoundEffect shotDefault;
+	private SoundEffect shotCustom;
 
 	// Empty mag sounds
-	private SoundConfiguration emptyMagDefault;
-	private SoundConfiguration emptyMagCustom;
+	private SoundEffect emptyMagDefault;
+	private SoundEffect emptyMagCustom;
 
 	// Reload sounds
-	private SoundConfiguration reloadDefaultBefore;
-	private SoundConfiguration reloadDefaultAfter;
-	private SoundConfiguration reloadCustomStart;
-	private SoundConfiguration reloadCustomMid;
-	private SoundConfiguration reloadCustomEnd;
+	private SoundEffect reloadDefaultBefore;
+	private SoundEffect reloadDefaultAfter;
+	private SoundEffect reloadCustomStart;
+	private SoundEffect reloadCustomMid;
+	private SoundEffect reloadCustomEnd;
 
 	// Scope sounds
-	private SoundConfiguration scopeDefault;
-	private SoundConfiguration scopeCustom;
+	private SoundEffect scopeDefault;
+	private SoundEffect scopeCustom;
 
 	// Flyby sounds (bullet passing near a player)
-	private SoundConfiguration flybyDefault;
-	private SoundConfiguration flybyCustom;
+	private SoundEffect flybyDefault;
+	private SoundEffect flybyCustom;
 	private double             flybyRange;
 
 	// Impact sounds (bullet striking a target)
-	private SoundConfiguration impactDefault;
-	private SoundConfiguration impactCustom;
+	private SoundEffect impactDefault;
+	private SoundEffect impactCustom;
 
 	@Override
 	public SoundData clone() {
-		SoundData copy;
-
 		try {
-			copy = (SoundData) super.clone();
+			// SoundEffect is an immutable record — the field-reference copy from super.clone() is enough.
+			return (SoundData) super.clone();
 		} catch (CloneNotSupportedException exception) {
 			throw new PluginException(exception);
 		}
-
-		copy.shotDefault         = cloneSound(shotDefault);
-		copy.shotCustom          = cloneSound(shotCustom);
-		copy.emptyMagDefault     = cloneSound(emptyMagDefault);
-		copy.emptyMagCustom      = cloneSound(emptyMagCustom);
-		copy.reloadDefaultBefore = cloneSound(reloadDefaultBefore);
-		copy.reloadDefaultAfter  = cloneSound(reloadDefaultAfter);
-		copy.reloadCustomStart   = cloneSound(reloadCustomStart);
-		copy.reloadCustomMid     = cloneSound(reloadCustomMid);
-		copy.reloadCustomEnd     = cloneSound(reloadCustomEnd);
-		copy.scopeDefault        = cloneSound(scopeDefault);
-		copy.scopeCustom         = cloneSound(scopeCustom);
-		copy.flybyDefault        = cloneSound(flybyDefault);
-		copy.flybyCustom         = cloneSound(flybyCustom);
-		copy.impactDefault       = cloneSound(impactDefault);
-		copy.impactCustom        = cloneSound(impactCustom);
-
-		return copy;
-	}
-
-	private SoundConfiguration cloneSound(SoundConfiguration sound) {
-		return sound != null ? sound.clone() : null;
 	}
 
 }

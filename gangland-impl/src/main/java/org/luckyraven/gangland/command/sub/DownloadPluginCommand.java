@@ -8,7 +8,7 @@ import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.types.DoubleArgument;
 import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.util.UpdateNotifier;
+import org.luckyraven.keystone.update.UpdateNotifier;
 
 
 import java.util.Map;

@@ -5,7 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.luckyraven.gangland.compatibility.recoil.RecoilCompatibility;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.timer.RepeatingTimer;
 import org.luckyraven.keystone.util.ActionBarManager;
 import org.luckyraven.keystone.util.ParticleUtil;
@@ -106,7 +106,7 @@ public class BiologicalAction {
 		BiologicalData data = weapon.getBiologicalData();
 
 		// release sound and recoil
-		SoundConfiguration.playSounds(player, weapon.getSoundData().getShotCustom(),
+		SoundEffect.playSounds(player, weapon.getSoundData().getShotCustom(),
 		                              weapon.getSoundData().getShotDefault());
 
 		if (weapon.getRecoilData() != null) {

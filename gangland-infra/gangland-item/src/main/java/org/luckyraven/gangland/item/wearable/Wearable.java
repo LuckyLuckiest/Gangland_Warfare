@@ -12,7 +12,7 @@ import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.util.Placeholder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.item.fuel.FuelKey;
 
@@ -64,13 +64,13 @@ public class Wearable {
 	private final double             maxSpeedY;
 	private final int                maxFuel;
 	@Nullable
-	private final SoundConfiguration thrustDefaultSound;
+	private final SoundEffect thrustDefaultSound;
 	@Nullable
-	private final SoundConfiguration thrustCustomSound;
+	private final SoundEffect thrustCustomSound;
 	@Nullable
-	private final SoundConfiguration glideDefaultSound;
+	private final SoundEffect glideDefaultSound;
 	@Nullable
-	private final SoundConfiguration glideCustomSound;
+	private final SoundEffect glideCustomSound;
 
 	/**
 	 * Placeholder resolver injected by {@code WearableAddon} at load time via the builder so {@link #buildItem(Player)}

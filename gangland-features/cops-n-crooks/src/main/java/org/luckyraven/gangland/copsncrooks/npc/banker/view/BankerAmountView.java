@@ -12,7 +12,7 @@ import org.luckyraven.gangland.copsncrooks.npc.banker.economy.BankerEconomyContr
 import org.luckyraven.gangland.copsncrooks.npc.banker.economy.BankerEconomyContract.BankerSnapshot;
 import org.luckyraven.gangland.copsncrooks.npc.banker.message.BankerMessageContract;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.keystone.economy.Currency;
@@ -58,20 +58,20 @@ public final class BankerAmountView implements Panel<BankerFlowSession> {
 			BigDecimal.valueOf(10_000_000)
 	};
 
-	private static final SoundConfiguration SOUND_ADD     = vanilla("UI_BUTTON_CLICK", 1.5f);
-	private static final SoundConfiguration SOUND_SUB     = vanilla("UI_BUTTON_CLICK", 0.8f);
-	private static final SoundConfiguration SOUND_MODE_UP = vanilla("BLOCK_NOTE_BLOCK_HAT", 1.5f);
-	private static final SoundConfiguration SOUND_MODE_DN = vanilla("BLOCK_NOTE_BLOCK_HAT", 0.8f);
-	private static final SoundConfiguration SOUND_CONFIRM = vanilla("ENTITY_PLAYER_LEVELUP", 1.0f);
-	private static final SoundConfiguration SOUND_CANCEL  = vanilla("ENTITY_VILLAGER_NO", 1.0f);
-	private static final SoundConfiguration SOUND_DENY    = vanilla("BLOCK_NOTE_BLOCK_BASS", 1.0f);
+	private static final SoundEffect SOUND_ADD     = vanilla("UI_BUTTON_CLICK", 1.5f);
+	private static final SoundEffect SOUND_SUB     = vanilla("UI_BUTTON_CLICK", 0.8f);
+	private static final SoundEffect SOUND_MODE_UP = vanilla("BLOCK_NOTE_BLOCK_HAT", 1.5f);
+	private static final SoundEffect SOUND_MODE_DN = vanilla("BLOCK_NOTE_BLOCK_HAT", 0.8f);
+	private static final SoundEffect SOUND_CONFIRM = vanilla("ENTITY_PLAYER_LEVELUP", 1.0f);
+	private static final SoundEffect SOUND_CANCEL  = vanilla("ENTITY_VILLAGER_NO", 1.0f);
+	private static final SoundEffect SOUND_DENY    = vanilla("BLOCK_NOTE_BLOCK_BASS", 1.0f);
 
 	private final JavaPlugin            plugin;
 	private final BankerEconomyContract economy;
 	private final BankerMessageContract messages;
 
-	private static SoundConfiguration vanilla(String name, float pitch) {
-		return new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, name, 0.6f, pitch);
+	private static SoundEffect vanilla(String name, float pitch) {
+		return new SoundEffect(SoundEffect.SoundType.VANILLA, name, 0.6f, pitch);
 	}
 
 	private static String format(BigDecimal value) {
@@ -292,7 +292,7 @@ public final class BankerAmountView implements Panel<BankerFlowSession> {
 		                                      ? economy.tryDeposit(viewer, amount)
 		                                      : economy.tryWithdraw(viewer, amount);
 
-		SoundConfiguration sound = null;
+		SoundEffect sound = null;
 		String             msg;
 		switch (result) {
 			case SUCCESS -> {
@@ -387,7 +387,7 @@ public final class BankerAmountView implements Panel<BankerFlowSession> {
 	 * sound inline in the same tick as a flow transition makes the client render audio and inventory change together,
 	 * which the viewer experiences as a flicker.
 	 */
-	private void playSoundNextTick(Player player, SoundConfiguration sound) {
+	private void playSoundNextTick(Player player, SoundEffect sound) {
 		Bukkit.getScheduler().runTask(plugin, () -> sound.playSound(player));
 	}
 

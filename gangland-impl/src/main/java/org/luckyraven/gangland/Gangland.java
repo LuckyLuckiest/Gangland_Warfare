@@ -6,7 +6,6 @@ import com.zaxxer.hikari.HikariConfig;
 import lombok.CustomLog;
 import lombok.Getter;
 import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.permission.Permission;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.bstats.bukkit.Metrics;
@@ -22,7 +21,7 @@ import org.luckyraven.gangland.bootstrap.PeriodicalUpdates;
 import org.luckyraven.gangland.bootstrap.ReloadPlugin;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.data.placeholder.worker.GanglandPlaceholder;
-import org.luckyraven.gangland.data.placeholder.worker.PlaceholderAPIExpansion;
+import org.luckyraven.keystone.papi.PapiExpansionAdapter;
 import org.luckyraven.gangland.data.teleportation.WaypointManager;
 import org.luckyraven.keystone.economy.EconomyHandler;
 import org.luckyraven.gangland.file.configuration.Settings;
@@ -30,9 +29,12 @@ import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionS
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.gang.vault.permission.VaultPermissionBridge;
+import org.luckyraven.keystone.vault.permission.VaultOfflinePermissionService;
 import org.luckyraven.keystone.persistence.database.DatabaseManager;
+import org.luckyraven.keystone.sound.ResourcePackTracker;
 import org.luckyraven.gangland.scoreboard.ScoreboardManager;
-import org.luckyraven.gangland.util.UpdateNotifier;
+import org.luckyraven.gangland.util.GanglandChatUtil;
+import org.luckyraven.keystone.update.UpdateNotifier;
 import org.luckyraven.keystone.update.UpdateChecker;
 import org.luckyraven.gangland.weapon.configuration.WeaponAddon;
 
@@ -46,11 +48,11 @@ public final class Gangland extends JavaPlugin {
 	public static final String FULL_PREFIX  = "gangland";
 	public static final String SHORT_PREFIX = "glw";
 
-	private GanglandContext         context;
-	private ReloadPlugin            reloadPlugin;
-	private UpdateNotifier          updateChecker;
-	private PlaceholderAPIExpansion placeholderAPIExpansion;
-	private ViaAPI<?>               viaAPI;
+	private GanglandContext      context;
+	private ReloadPlugin         reloadPlugin;
+	private UpdateNotifier       updateChecker;
+	private PapiExpansionAdapter papiExpansion;
+	private ViaAPI<?>            viaAPI;
 
 	@Override
 	public void onLoad() {
@@ -67,7 +69,14 @@ public final class Gangland extends JavaPlugin {
 
 		// vault soft dependency permission check
 		if (VaultPermissionBridge.isEnabled()) {
-			VaultPermissionBridge.set(null, null);
+			VaultPermissionBridge.set(null);
+		}
+
+		// uninstall the resource-pack tracker so custom-sound gating doesn't outlive the plugin
+		ResourcePackTracker tracker = ResourcePackTracker.active();
+		if (tracker != null) {
+			tracker.clear();
+			ResourcePackTracker.install(null);
 		}
 
 		// unified bean lifecycle shutdown — deactivates sessions, converts active car data to parked records,
@@ -176,8 +185,8 @@ public final class Gangland extends JavaPlugin {
 		Dependency placeholderApi = new Dependency("PlaceholderAPI", Dependency.Type.SOFT);
 		placeholderApi.validate(() -> {
 			GanglandPlaceholder placeholder = context.get(GanglandPlaceholder.class);
-			this.placeholderAPIExpansion = new PlaceholderAPIExpansion(this, FULL_PREFIX, placeholder);
-			this.placeholderAPIExpansion.register();
+			this.papiExpansion = new PapiExpansionAdapter(this, FULL_PREFIX, placeholder);
+			this.papiExpansion.register();
 		});
 
 		Dependency vault = new Dependency("Vault", Dependency.Type.SOFT);
@@ -192,13 +201,13 @@ public final class Gangland extends JavaPlugin {
 
 		Dependency vaultPermissions = new Dependency("Vault", Dependency.Type.SOFT);
 		vaultPermissions.validate(() -> {
-			RegisteredServiceProvider<Permission> rsp = getServer().getServicesManager()
-			                                                       .getRegistration(Permission.class);
+			// Keystone's offline-capable service owns the Vault plumbing (async dispatch for offline targets,
+			// protected default group); the domain bridge stays a thin facade over it.
+			VaultOfflinePermissionService service = VaultOfflinePermissionService.fromServices(this);
 
-			if (rsp == null) return;
+			if (service == null) return;
 
-			// set the vault permissions bridge
-			VaultPermissionBridge.set(rsp.getProvider(), this);
+			VaultPermissionBridge.set(service);
 		});
 
 		Dependency viaVersion = new Dependency("ViaVersion", Dependency.Type.SOFT);
@@ -218,10 +227,12 @@ public final class Gangland extends JavaPlugin {
 		int hours      = 6;
 		int resourceId = 131157;
 
-		// Keystone's checker fetches/compares/downloads and registers the check permission itself; the
-		// UpdateNotifier wraps it with Gangland's periodic operator notification + auto-update policy.
+		// Keystone's checker fetches/compares/downloads and registers the check permission itself; Keystone's
+		// UpdateNotifier wraps it with the periodic operator notification + auto-update policy, seamed on
+		// Gangland's settings toggle and command-message styling.
 		UpdateChecker checker = new UpdateChecker(this, context.get(PermissionManager.class), FULL_PREFIX, resourceId);
-		this.updateChecker = new UpdateNotifier(this, checker, hours * 60 * 60L);
+		this.updateChecker = new UpdateNotifier(this, checker, hours * 60 * 60L,
+		                                        Settings::isUpdaterAutoUpdate, GanglandChatUtil::commandMessage);
 
 		// the tasks and timer should be async, so there is no load on the main server thread
 		updateChecker.start();

@@ -6,7 +6,7 @@ import org.bukkit.Material;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.util.Placeholder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.config.ConfigReport;
 import org.luckyraven.keystone.persistence.config.FileHandlerReader;
@@ -234,9 +234,9 @@ public class WeaponAddon {
 		NodeReader sound = NodeReader.of(soundSection, report);
 
 		weapon.getSoundData().setScopeDefault(parseSound(sound, "Default_Sound",
-		                                                 SoundConfiguration.SoundType.VANILLA, report));
+		                                                 SoundEffect.SoundType.VANILLA, report));
 		weapon.getSoundData().setScopeCustom(parseSound(sound, "Custom_Sound",
-		                                                SoundConfiguration.SoundType.CUSTOM, report));
+		                                                SoundEffect.SoundType.CUSTOM, report));
 	}
 
 	private void applyShootSounds(@Nullable NodeReader shoot, Weapon weapon, ConfigReport report) {
@@ -247,24 +247,24 @@ public class WeaponAddon {
 		NodeReader sound = NodeReader.of(soundSection, report);
 
 		weapon.getSoundData().setShotDefault(parseSound(sound, "Default_Sound",
-		                                                SoundConfiguration.SoundType.VANILLA, report));
+		                                                SoundEffect.SoundType.VANILLA, report));
 		weapon.getSoundData().setShotCustom(parseSound(sound, "Custom_Sound",
-		                                               SoundConfiguration.SoundType.CUSTOM, report));
+		                                               SoundEffect.SoundType.CUSTOM, report));
 		weapon.getSoundData().setEmptyMagDefault(parseSound(sound, "Empty_Default_Sound",
-		                                                    SoundConfiguration.SoundType.VANILLA, report));
+		                                                    SoundEffect.SoundType.VANILLA, report));
 		weapon.getSoundData().setEmptyMagCustom(parseSound(sound, "Empty_Custom_Sound",
-		                                                   SoundConfiguration.SoundType.CUSTOM, report));
+		                                                   SoundEffect.SoundType.CUSTOM, report));
 
 		double flybyRange = sound.get("Flyby_Range").asDouble().orDefault(0.0);
 		weapon.getSoundData().setFlybyRange(flybyRange);
 		weapon.getSoundData().setFlybyDefault(parseSound(sound, "Flyby_Default_Sound",
-		                                                 SoundConfiguration.SoundType.VANILLA, report));
+		                                                 SoundEffect.SoundType.VANILLA, report));
 		weapon.getSoundData().setFlybyCustom(parseSound(sound, "Flyby_Custom_Sound",
-		                                                SoundConfiguration.SoundType.CUSTOM, report));
+		                                                SoundEffect.SoundType.CUSTOM, report));
 		weapon.getSoundData().setImpactDefault(parseSound(sound, "Impact_Default_Sound",
-		                                                  SoundConfiguration.SoundType.VANILLA, report));
+		                                                  SoundEffect.SoundType.VANILLA, report));
 		weapon.getSoundData().setImpactCustom(parseSound(sound, "Impact_Custom_Sound",
-		                                                 SoundConfiguration.SoundType.CUSTOM, report));
+		                                                 SoundEffect.SoundType.CUSTOM, report));
 	}
 
 	private void applyReloadSoundsAndActionBar(NodeReader root, Weapon weapon, ConfigReport report) {
@@ -278,19 +278,19 @@ public class WeaponAddon {
 			NodeReader reloadSound = NodeReader.of(reloadSoundSection, report);
 
 			weapon.getSoundData().setReloadDefaultBefore(parseSound(reloadSound, "Default_Sound_Before",
-			                                                        SoundConfiguration.SoundType.VANILLA, report));
+			                                                        SoundEffect.SoundType.VANILLA, report));
 			weapon.getSoundData().setReloadDefaultAfter(parseSound(reloadSound, "Default_Sound_After",
-			                                                       SoundConfiguration.SoundType.VANILLA, report));
+			                                                       SoundEffect.SoundType.VANILLA, report));
 
 			MappingNode customSoundSection = reloadSound.get("Custom_Sound").asMapping().orNull();
 			if (customSoundSection != null) {
 				NodeReader custom = NodeReader.of(customSoundSection, report);
 				weapon.getSoundData().setReloadCustomStart(parseSound(custom, "Start",
-				                                                      SoundConfiguration.SoundType.CUSTOM, report));
+				                                                      SoundEffect.SoundType.CUSTOM, report));
 				weapon.getSoundData().setReloadCustomMid(parseSound(custom, "Mid",
-				                                                    SoundConfiguration.SoundType.CUSTOM, report));
+				                                                    SoundEffect.SoundType.CUSTOM, report));
 				weapon.getSoundData().setReloadCustomEnd(parseSound(custom, "End",
-				                                                    SoundConfiguration.SoundType.CUSTOM, report));
+				                                                    SoundEffect.SoundType.CUSTOM, report));
 			}
 		}
 
@@ -304,7 +304,7 @@ public class WeaponAddon {
 	}
 
 	@Nullable
-	private SoundConfiguration parseSound(NodeReader parent, String key, SoundConfiguration.SoundType type,
+	private SoundEffect parseSound(NodeReader parent, String key, SoundEffect.SoundType type,
 	                                      ConfigReport report) {
 		MappingNode section = parent.get(key).asMapping().orNull();
 		if (section == null) return null;
@@ -313,7 +313,7 @@ public class WeaponAddon {
 		if (sound == null) return null;
 		float volume = (float) r.get("Volume").asDouble().orDefault(1.0);
 		float pitch  = (float) r.get("Pitch").asDouble().orDefault(1.0);
-		return new SoundConfiguration(type, sound, volume, pitch);
+		return new SoundEffect(type, sound, volume, pitch);
 	}
 
 }

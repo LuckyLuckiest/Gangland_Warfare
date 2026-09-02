@@ -11,7 +11,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.npc.banker.economy.BankerEconomyContract;
 import org.luckyraven.gangland.copsncrooks.npc.banker.economy.BankerEconomyContract.RenameInfo;
 import org.luckyraven.gangland.copsncrooks.npc.banker.message.BankerMessageContract;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
 import org.luckyraven.gangland.inventory.flow.Panel;
 
@@ -26,9 +26,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public final class BankerRenameAccountView {
 
-	private static final SoundConfiguration SOUND_CONFIRM = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
+	private static final SoundEffect SOUND_CONFIRM = new SoundEffect(SoundEffect.SoundType.VANILLA,
 	                                                                               "ENTITY_PLAYER_LEVELUP", 1.0f, 1.2f);
-	private static final SoundConfiguration SOUND_DENY    = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
+	private static final SoundEffect SOUND_DENY    = new SoundEffect(SoundEffect.SoundType.VANILLA,
 	                                                                               "ENTITY_VILLAGER_NO", 0.8f, 1.0f);
 
 	private final JavaPlugin            plugin;
@@ -98,7 +98,7 @@ public final class BankerRenameAccountView {
 		return stack != null ? stack : new ItemStack(fallback);
 	}
 
-	private void playSoundNextTick(Player player, SoundConfiguration sound) {
+	private void playSoundNextTick(Player player, SoundEffect sound) {
 		Bukkit.getScheduler().runTask(plugin, () -> sound.playSound(player));
 	}
 

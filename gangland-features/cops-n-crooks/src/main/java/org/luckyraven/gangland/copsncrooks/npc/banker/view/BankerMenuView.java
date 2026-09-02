@@ -14,7 +14,7 @@ import org.luckyraven.gangland.copsncrooks.npc.banker.economy.BankerEconomyContr
 import org.luckyraven.gangland.copsncrooks.npc.banker.message.BankerMessageContract;
 import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTier;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
@@ -46,9 +46,9 @@ public final class BankerMenuView implements Panel<BankerFlowSession> {
 	private static final int SLOT_CREATE_PROMPT = 13;
 	private static final int SLOT_CLOSE         = 22;
 
-	private static final SoundConfiguration SOUND_PICK = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
+	private static final SoundEffect SOUND_PICK = new SoundEffect(SoundEffect.SoundType.VANILLA,
 	                                                                            "UI_BUTTON_CLICK", 0.6f, 1.4f);
-	private static final SoundConfiguration SOUND_DENY = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
+	private static final SoundEffect SOUND_DENY = new SoundEffect(SoundEffect.SoundType.VANILLA,
 	                                                                            "ENTITY_VILLAGER_NO", 0.8f, 1.0f);
 
 	private final JavaPlugin            plugin;

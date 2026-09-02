@@ -3,7 +3,7 @@ package org.luckyraven.gangland.item.money;
 import lombok.Getter;
 import org.bukkit.Material;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 
 import java.util.List;
 
@@ -56,6 +56,6 @@ public class MoneyItem {
 	 * Pickup feedback for a cash variation. Played by the pickup and right-click listeners at the player's location
 	 * after a successful deposit.
 	 */
-	public record PickupSound(SoundConfiguration soundConfig) { }
+	public record PickupSound(SoundEffect soundConfig) { }
 
 }

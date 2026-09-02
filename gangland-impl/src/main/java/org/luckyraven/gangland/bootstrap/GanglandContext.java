@@ -6,10 +6,10 @@ import org.bukkit.command.PluginCommand;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.gangland.command.CommandManager;
-import org.luckyraven.gangland.command.CommandTabCompleter;
 import org.luckyraven.gangland.command.data.InformationManager;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.keystone.bean.BeanFactory;
+import org.luckyraven.keystone.command.CommandTabCompleter;
 import org.luckyraven.keystone.command.argument.ArgumentMessages;
 import org.luckyraven.keystone.command.brigadier.BrigadierTabRegistrar;
 import org.luckyraven.keystone.bean.BeanGraph;
@@ -203,12 +203,18 @@ public final class GanglandContext {
 		Command.setInformationManager(container.getInstance(InformationManager.class));
 		command.setExecutor(commandManager);
 		commandManager.scanAndRegisterCommands(COMMAND_PACKAGE, gangland.getClass().getClassLoader());
-		command.setTabCompleter(new CommandTabCompleter(CommandManager.getCommands()));
+
+		// Keystone's completer reads the manager's LIVE view + dev-visibility filter per keystroke (1.7.3 — the old
+		// local completer worked off a bootstrap snapshot); the help suggestion appears only where help pages exist.
+		CommandTabCompleter tabCompleter = new CommandTabCompleter(commandManager);
+		tabCompleter.setHelpSuggestionPredicate(cmd -> cmd instanceof Command ganglandCommand &&
+		                                               ganglandCommand.getHelpInfo().size() > 0);
+		command.setTabCompleter(tabCompleter);
 
 		// Client-side Brigadier completion (Commodore ships in Keystone.jar; brigadier in the server jar). Safe on
 		// plain Spigot — on any failure it logs WARN and the server-side tab completer above stays the only path.
-		BrigadierTabRegistrar.registerIfSupported(gangland, command, CommandManager.getCommands());
+		BrigadierTabRegistrar.registerIfSupported(gangland, command, commandManager);
 
-		log.debug("Command phase complete: {} command(s) registered", CommandManager.getCommands().size());
+		log.debug("Command phase complete: {} command(s) registered", commandManager.commandView().size());
 	}
 }

@@ -1,16 +1,9 @@
 package org.luckyraven.gangland.command;
 
 import lombok.CustomLog;
-import lombok.Getter;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.command.sub.DownloadPluginCommand;
-import org.luckyraven.gangland.command.sub.debug.ComponentExecutorCommand;
-import org.luckyraven.gangland.command.sub.debug.DebugCommand;
-import org.luckyraven.gangland.command.sub.debug.ReadNBTCommand;
-import org.luckyraven.gangland.command.sub.debug.TimerCommand;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.SettingsLookupImpl;
 import org.luckyraven.gangland.util.GanglandChatUtil;
@@ -22,13 +15,14 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Gangland's dispatcher — a subclass of Keystone's {@link org.luckyraven.keystone.command.CommandManager} (1.7.2
- * migration). Keystone owns scanning, two-phase instantiation via the {@link DependencyContainer}, registration and
- * per-subcommand help paging; this class keeps the consumer-side behavior:
+ * Gangland's dispatcher — a subclass of Keystone's {@link org.luckyraven.keystone.command.CommandManager}.
+ * Keystone owns scanning, two-phase instantiation via the {@link DependencyContainer}, the instance-scoped
+ * registry, visibility filtering and per-subcommand help paging; this class keeps the consumer-side behavior:
  *
  * <ul>
  *     <li>{@link Messages}-localized error lines and the {@link GanglandChatUtil} "did you mean" styling;</li>
- *     <li>the dev-only tab/suggestion filter for debug commands ({@link #getFilters()});</li>
+ *     <li>the dev-only listing filter, installed as a {@link DevCommandVisibilityFilter} through Keystone's
+ *     visibility seam (1.7.3 — replaces the old static-hiding {@code getPermissibleCommands} shadow);</li>
  *     <li>the branded {@code /glw} splash in {@link #show}.</li>
  * </ul>
  *
@@ -37,14 +31,6 @@ import java.util.stream.Collectors;
  */
 @CustomLog
 public final class CommandManager extends org.luckyraven.keystone.command.CommandManager {
-
-	// classes that shouldn't be displayed in tab completion for non-dev users
-	@Getter
-	private static final List<Class<? extends Command>> filters = Arrays.asList(DebugCommand.class,
-	                                                                            ComponentExecutorCommand.class,
-	                                                                            ReadNBTCommand.class,
-	                                                                            TimerCommand.class,
-	                                                                            DownloadPluginCommand.class);
 
 	private final Gangland gangland;
 	private final String   fullPrefix;
@@ -59,39 +45,8 @@ public final class CommandManager extends org.luckyraven.keystone.command.Comman
 		this.gangland    = gangland;
 		this.fullPrefix  = fullPrefix;
 		this.shortPrefix = shortPrefix;
-	}
 
-	/**
-	 * Permission-filtered commands minus the dev-only debug commands for everyone but the dev accounts. Shadows the
-	 * unfiltered Keystone static on purpose — Gangland callers (tab completer, help) go through this one.
-	 */
-	public static List<org.luckyraven.keystone.command.Command> getPermissibleCommands(CommandSender sender) {
-		List<org.luckyraven.keystone.command.Command> result = new ArrayList<>();
-
-		for (org.luckyraven.keystone.command.Command handler : getCommands().values()) {
-			// filter the commands for non-dev users
-			if (!isDev(sender)) {
-				if (filters.stream().anyMatch(filterClass -> filterClass.isInstance(handler))) continue;
-			}
-
-			String permission = handler.getPermission();
-
-			// check if the user has the permission to suggest the tab completion
-			if (permission.isEmpty() || sender.hasPermission(permission)) result.add(handler);
-		}
-
-		return result;
-	}
-
-	private static boolean isDev(CommandSender sender) {
-		if (!(sender instanceof Player player)) return false;
-
-		UUID senderUuid = player.getUniqueId();
-		// main & second account
-		UUID uuid1 = UUID.fromString("4b2d5e4d-a089-4660-b777-dd71f3fbbbfa");
-		UUID uuid2 = UUID.fromString("ad72b2bb-bc30-4c55-a275-106976e70894");
-
-		return senderUuid.equals(uuid1) || senderUuid.equals(uuid2);
+		setVisibilityFilter(new DevCommandVisibilityFilter());
 	}
 
 	@Override
@@ -112,7 +67,7 @@ public final class CommandManager extends org.luckyraven.keystone.command.Comman
 
 			boolean match = false;
 
-			for (Map.Entry<String, org.luckyraven.keystone.command.Command> entry : getCommands().entrySet()) {
+			for (Map.Entry<String, org.luckyraven.keystone.command.Command> entry : commandView().entrySet()) {
 				if (!(entry.getKey().equalsIgnoreCase(args[0]) ||
 				      entry.getValue().getAlias().contains(args[0].toLowerCase()))) continue;
 
@@ -127,7 +82,7 @@ public final class CommandManager extends org.luckyraven.keystone.command.Comman
 				sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_DONT_EXIST.toString(),
 				                                                 String.format("/%s %s", label, Arrays.asList(args))));
 
-				List<org.luckyraven.keystone.command.Command> permissible = getPermissibleCommands(sender);
+				List<org.luckyraven.keystone.command.Command> permissible = permissibleCommands(sender);
 
 				Set<String> dictionary = permissible.stream()
 						.map(org.luckyraven.keystone.command.Command::getAlias)

@@ -1,7 +1,6 @@
 package org.luckyraven.gangland.util;
 
 import org.apache.logging.log4j.Logger;
-import org.bukkit.Bukkit;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.file.configuration.Messages;
@@ -34,18 +33,11 @@ public final class GanglandChatUtil extends ChatUtil {
 	}
 
 	public static void sendToOperators(String permission, String message) {
-		sendToOperators(permission, message, null, false);
+		ChatUtil.sendToOperators(permission, commandMessage(message));
 	}
 
 	public static void sendToOperators(String permission, String message, Logger logger, boolean sendAsWarn) {
-		Bukkit.getServer()
-		      .getOnlinePlayers()
-				.stream()
-				.filter(player -> permission == null || permission.isEmpty() || player.hasPermission(permission))
-				.forEach(player -> player.sendMessage(commandMessage(message)));
-
-		if (sendAsWarn && logger != null) logger.warn(message);
-		else Bukkit.getServer().getConsoleSender().sendMessage(commandMessage(message));
+		ChatUtil.sendToOperators(permission, commandMessage(message), logger, sendAsWarn);
 	}
 
 	public static String commandDesign(String command) {

@@ -4,7 +4,7 @@ import org.bukkit.entity.Player;
 
 /**
  * Emits the audio cues that accompany detainment events. Implementations route each call through the host's
- * {@code SoundConfiguration} framework so cops-n-crooks code doesn't touch the XSound API directly.
+ * {@code SoundEffect} framework so cops-n-crooks code doesn't touch the XSound API directly.
  */
 public interface DetainmentSoundContract {
 

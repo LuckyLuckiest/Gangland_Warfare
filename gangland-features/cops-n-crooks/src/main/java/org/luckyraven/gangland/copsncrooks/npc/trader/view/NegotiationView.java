@@ -13,7 +13,7 @@ import org.luckyraven.gangland.copsncrooks.npc.trader.economy.TraderEconomyContr
 import org.luckyraven.gangland.copsncrooks.npc.trader.message.TraderMessageContract;
 import org.luckyraven.gangland.copsncrooks.npc.trader.mood.MoodService;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
@@ -42,10 +42,10 @@ public final class NegotiationView implements Panel<TraderFlowSession> {
 	private static final int   SLOT_CANCEL     = 49;
 	private static final int[] SLOT_MOOD_RING  = {12, 13, 14, 21, 23, 30, 31, 32};
 
-	private static final SoundConfiguration SOUND_BUY      = vanilla("ENTITY_PLAYER_LEVELUP", 1.0f);
-	private static final SoundConfiguration SOUND_OPEN_SUB = vanilla("UI_BUTTON_CLICK", 1.2f);
-	private static final SoundConfiguration SOUND_TIP      = vanilla("BLOCK_NOTE_BLOCK_CHIME", 1.5f);
-	private static final SoundConfiguration SOUND_CANCEL   = vanilla("ENTITY_VILLAGER_NO", 1.0f);
+	private static final SoundEffect SOUND_BUY      = vanilla("ENTITY_PLAYER_LEVELUP", 1.0f);
+	private static final SoundEffect SOUND_OPEN_SUB = vanilla("UI_BUTTON_CLICK", 1.2f);
+	private static final SoundEffect SOUND_TIP      = vanilla("BLOCK_NOTE_BLOCK_CHIME", 1.5f);
+	private static final SoundEffect SOUND_CANCEL   = vanilla("ENTITY_VILLAGER_NO", 1.0f);
 
 	private final JavaPlugin            plugin;
 	private final MoodService           moodService;
@@ -54,8 +54,8 @@ public final class NegotiationView implements Panel<TraderFlowSession> {
 	private final TraderEconomyContract economy;
 	private final ShopDisplayResolver   displayResolver;
 
-	private static SoundConfiguration vanilla(String name, float pitch) {
-		return new SoundConfiguration(SoundConfiguration.SoundType.VANILLA, name, 0.6f, pitch);
+	private static SoundEffect vanilla(String name, float pitch) {
+		return new SoundEffect(SoundEffect.SoundType.VANILLA, name, 0.6f, pitch);
 	}
 
 	@Override
@@ -187,7 +187,7 @@ public final class NegotiationView implements Panel<TraderFlowSession> {
 	 * viewer experiences as a flicker even when the transition itself is a re-render against the same inventory
 	 * handle.
 	 */
-	private void playSoundNextTick(Player player, SoundConfiguration sound) {
+	private void playSoundNextTick(Player player, SoundEffect sound) {
 		Bukkit.getScheduler().runTask(plugin, () -> sound.playSound(player));
 	}
 

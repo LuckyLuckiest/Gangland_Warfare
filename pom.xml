@@ -72,7 +72,7 @@
 
         <!-- Dependencies/Libraries versions -->
         <!-- Shared infrastructure (Keystone.jar provides it at runtime — provided scope, never shaded) -->
-        <keystone.version>1.7.2</keystone.version>
+        <keystone.version>1.7.3</keystone.version>
         <nbt.version>2.15.7</nbt.version>
         <xseries.version>13.6.0</xseries.version>
         <anvilgui.version>1.10.11-SNAPSHOT</anvilgui.version>

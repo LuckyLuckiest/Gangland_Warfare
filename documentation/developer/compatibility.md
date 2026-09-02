@@ -11,13 +11,20 @@ Each server revision has its own module that provides NMS (net.minecraft.server)
 for version-specific operations -- primarily weapon recoil effects that require sending raw
 packets to rotate the player's camera.
 
+Since Keystone 1.7.3, **version detection and adapter loading are Keystone's job**:
+`org.luckyraven.keystone.nms.CraftBukkitRevision` resolves the running server's CraftBukkit
+revision (versioned package suffix first, then Keystone's release→revision table for the
+unversioned 1.20.5+ packages), and `VersionedAdapterLoader` reflectively constructs the matching
+adapter class. Gangland keeps only its contract (`Compatibility` / `RecoilCompatibility`) and the
+per-version NMS implementations.
+
 The 1.16 floor matches Keystone's API floor (Spigot 1.16.5, `api-version: 1.16`), and the
 whole stack compiles at Java release 17 to match Keystone, so the jar loads on every JVM
 Keystone loads on. Players on older clients are supported through ViaVersion/ViaBackwards
 on the server (recoil verified working through the Via pipeline).
 
-**Module:** `gangland-compatibility`  
-**Interface Module:** `gangland-compatibility/version-impl`  
+**Module:** `gangland-compatibility`
+**Interface Module:** `gangland-compatibility/version-impl`
 **Adapter Modules:** `gangland-compatibility/version-1_16_R1` through `version-1_21_R7`
 
 ---
@@ -26,16 +33,17 @@ on the server (recoil verified working through the Via pipeline).
 
 ```
                     ╭──────────────────╮
-                    │  gangland-impl   │
+                    │ gangland-weapon  │
                     │  (RecoilManager) │
                     ╰────────┬─────────╯
                              │ uses
-                    ╭────────┴─────────╮
-                    │   version-impl   │
-                    │  (Compatibility) │
-                    │  (interface)     │
-                    ╰────────┬─────────╯
-                             │ implemented by
+                    ╭────────┴──────────╮
+                    │   version-impl    │
+                    │ Compatibility     │  ← contract interface
+                    │ RecoilCompat.     │  ← Bukkit-API fallback base class
+                    │ CompatibilityWorker│ ← resolves the adapter via Keystone
+                    ╰────────┬──────────╯
+                             │ loaded by revision name (Keystone VersionedAdapterLoader)
               ╭──────────────┼──────────────╮
               │              │              │
     ╭─────────┴──╮  ╭────────┴────╮  ╭──────┴───────╮
@@ -46,7 +54,7 @@ on the server (recoil verified working through the Via pipeline).
                   (20 modules total)
 ```
 
-### Compatibility Interface
+### The contract
 
 ```java
 public interface Compatibility {
@@ -54,49 +62,47 @@ public interface Compatibility {
 }
 ```
 
-Each version module provides a `VersionImplementation` class that implements this interface.
+Each version module ships a class **named exactly after its CraftBukkit revision** (e.g.
+`org.luckyraven.gangland.compatibility.version.v1_21_R7`) implementing `Compatibility`, plus a
+`recoil.Recoil_1_XX_RY extends RecoilCompatibility` with the real NMS packet code.
 
-### RecoilCompatibility Interface
+### RecoilCompatibility (base class, not an interface)
 
 ```java
-public interface RecoilCompatibility {
-	void applyRecoil(Player player, float pitch, float yaw);
+public class RecoilCompatibility {
+	public void modifyCameraRotation(@NotNull Player player, float yaw, float pitch, boolean position)
 }
 ```
 
-Each version module implements this with the correct NMS packet construction for that version.
+The base implementation is the **fallback**: it rotates the camera through the Bukkit API
+(`Player#setRotation`) instead of position packets. ViaVersion is consulted through a supplier
+(the API only becomes available after the dependency handler runs); without ViaVersion the gate is
+skipped — the 1.16 server floor already guarantees client rotation support.
 
 ---
 
-## Version Detection
+## Version Detection (Keystone-owned)
 
-### CompatibilitySetup
-
-At plugin load time, `CompatibilitySetup` detects the running server version:
+`CompatibilityWorker` (a KERNEL bean) resolves the adapter once at bootstrap:
 
 ```
 Server starts
     │
-    ├── Get server package version string
-    │   e.g., "org.bukkit.craftbukkit.v1_21_R3"
+    ├── Keystone CraftBukkitRevision.current()
+    │   ├── versioned CraftBukkit package (≤ 1.20.4): parse "v1_21_R3" from the package name
+    │   ├── unversioned package (1.20.5+): Keystone's MC-release → revision table
+    │   ╰── unknown release: latestKnown() + a nms.revision.unknown fault via Diagnostics
     │
-    ├── Extract NMS version: "v1_21_R3"
+    ├── Keystone VersionedAdapterLoader.loadOrFallback(Compatibility.class,
+    │       "org.luckyraven.gangland.compatibility.version", fallback)
+    │   ├── Class.forName(<package>.<revision>) + no-arg construction + cast
+    │   ╰── failure: nms.adapter.missing / nms.adapter.instantiation fault via Diagnostics
     │
-    ├── Map to module class:
-    │   "org.luckyraven.gangland.compatibility.v1_21_R3.VersionImplementation"
-    │
-    ├── Instantiate via reflection
-    │
-    ╰── Store as active Compatibility instance
+    ╰── no adapter → base RecoilCompatibility (Bukkit-API rotation, "limited functionality")
 ```
 
-If the version is not supported, the compatibility layer is null and recoil effects are
-silently disabled.
-
-### VersionSetup
-
-Runs before `CompatibilitySetup` to detect the Minecraft version number (e.g., `1.21.3`)
-for feature gating and API compatibility decisions.
+Adapter-load failures are no longer silent: they land in the Diagnostics sinks
+(`gangland_faults`, recent-faults ring) with a stable fault code.
 
 ---
 
@@ -125,12 +131,9 @@ for feature gating and API compatibility decisions.
 | `version-1_21_R6` | 1.21.9-10         | `v1_21_R6`   |
 | `version-1_21_R7` | 1.21.11+          | `v1_21_R7`   |
 
-Servers up to 1.20.4 are detected directly from the versioned CraftBukkit package name.
-Since 1.20.5 the CraftBukkit package is no longer versioned, so the `Version` enum in
-`version-impl` maps the reported Bukkit version to the correct adapter (including Spigot
-revisions that share one CraftBukkit revision) — that is why the enum only lists 1.20.5+
-entries even though older servers are supported. Players on clients older than the server
-are handled by ViaVersion/ViaBackwards.
+The 1.20.5+ release→revision mapping lives **in Keystone** (`CraftBukkitRevision`'s table), not in
+this repo — Gangland deleted its old `Version` enum. Players on clients older than the server are
+handled by ViaVersion/ViaBackwards.
 
 ---
 
@@ -141,58 +144,35 @@ are handled by ViaVersion/ViaBackwards.
 ```
 Player fires weapon
     │
-    ├── WeaponInteract detects left-click
-    ├── WeaponService.handleShoot() called
+    ├── WeaponInteract detects the fire click
     ├── Weapon config has recoil values (pitch, yaw)
     │
-    ├── RecoilManager.applyRecoil(player, pitch, yaw)
+    ├── RecoilManager → RecoilCompatibility.modifyCameraRotation(player, yaw, pitch, position)
     │     │
-    │     ├── Get active Compatibility instance
-    │     ├── Get RecoilCompatibility from it
-    │     ╰── recoilCompat.applyRecoil(player, pitch, yaw)
-    │           │
-    │           ├── [NMS] Create position/rotation packet
-    │           ├── [NMS] Set relative pitch and yaw offsets
-    │           ╰── [NMS] Send packet to player's connection
+    │     ├── [NMS adapter] Create relative position/rotation packet for this revision
+    │     ╰── [NMS adapter] Send packet to the player's connection
+    │     (fallback base: Bukkit Player#setRotation)
     │
-    ╰── Player camera rotates by (pitch, yaw) offset
+    ╰── Player camera rotates by the (pitch, yaw) offset
 ```
 
-### NMS Implementation (Example: 1.21)
-
-For modern versions (1.17+), the implementation typically looks like:
+### NMS Implementation (Example: modern versions)
 
 ```java
-public class RecoilCompatibilityImpl implements RecoilCompatibility {
+public class Recoil_1_21_R7 extends RecoilCompatibility {
 
 	@Override
-	public void applyRecoil(Player player, float pitch, float yaw) {
-		// Get CraftPlayer handle
+	public void modifyCameraRotation(Player player, float yaw, float pitch, boolean position) {
 		ServerPlayer serverPlayer = ((CraftPlayer) player).getHandle();
-
-		// Create relative position packet (flags indicate relative values)
-		ClientboundPlayerPositionPacket packet = new ClientboundPlayerPositionPacket(
-				0, 0, 0,       // x, y, z (0 = no movement)
-				yaw,            // yaw offset
-				pitch,          // pitch offset
-				RELATIVE_FLAGS, // all values are relative
-				0               // teleport ID
-		);
-
-		// Send packet
+		// build ClientboundPlayerPositionPacket with relative flags for yaw/pitch
 		serverPlayer.connection.send(packet);
 	}
 }
 ```
 
-For older versions (pre-1.17), the NMS package names differ:
-
-```java
-// 1.16 and earlier use versioned NMS packages
-
-import net.minecraft.server.v1_16_R3.PacketPlayOutPosition;
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer;
-```
+Pre-1.17 versions use the versioned `net.minecraft.server.v1_16_RX.*` packages; 1.20.4+ modules
+compile mojang-mapped and are remapped to the obfuscated runtime by the shared specialsource
+pipeline in `gangland-compatibility/pom.xml`.
 
 ### Recoil Configuration
 
@@ -215,122 +195,38 @@ The `RecoilManager` may also apply modifiers:
 
 ## ViaVersion Integration
 
-The plugin optionally integrates with ViaVersion to detect the client protocol version
-of connecting players. This is used primarily by the scoreboard system to select the
-correct packet format for scoreboard updates.
-
-```java
-// In Gangland.java
-ViaAPI<?> viaAPI;  // null if ViaVersion not present
-```
-
-This allows the plugin to handle players connecting with different client versions on
-a single server (e.g., a 1.21 server accepting 1.20 clients via ViaVersion).
+The plugin optionally integrates with ViaVersion to detect the client protocol version of
+connecting players — used by the scoreboard driver selection and by the fallback recoil's
+rotation gate. `CompatibilityWorker` receives `gangland::getViaAPI` as a supplier because the API
+is set by the dependency handler *after* the bean graph is built.
 
 ---
 
-## Adding Support for a New Version
+## Adding Support for a New Minecraft Version
 
-### Step 1: Create the Module
-
-Create a new directory:
-
-```
-gangland-compatibility/version-X_XX_RX/
-  ├── pom.xml
-  ╰── src/main/java/me/luckyraven/compatibility/vX_XX_RX/
-        ├── VersionImplementation.java
-        ╰── RecoilCompatibilityImpl.java
-```
-
-### Step 2: pom.xml
-
-```xml
-
-<project>
-    <parent>
-        <groupId>org.luckyraven.gangland</groupId>
-        <artifactId>gangland-compatibility</artifactId>
-        <version>${revision}</version>
-    </parent>
-
-    <artifactId>version-X_XX_RX</artifactId>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.luckyraven.gangland</groupId>
-            <artifactId>version-impl</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot</artifactId>
-            <version>X.XX.X-RX-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
-</project>
-```
-
-### Step 3: Implement Compatibility
-
-```java
-package org.luckyraven.gangland.compatibility.vX_XX_RX;
-
-public class VersionImplementation implements Compatibility {
-
-	private final RecoilCompatibility recoilCompatibility = new RecoilCompatibilityImpl();
-
-	@Override
-	public RecoilCompatibility getRecoilCompatibility() {
-		return recoilCompatibility;
-	}
-}
-```
-
-### Step 4: Implement Recoil
-
-```java
-package org.luckyraven.gangland.compatibility.vX_XX_RX;
-
-public class RecoilCompatibilityImpl implements RecoilCompatibility {
-
-	@Override
-	public void applyRecoil(Player player, float pitch, float yaw) {
-		// Use the correct NMS classes for this version
-		// Send position packet with relative pitch/yaw
-	}
-}
-```
-
-### Step 5: Register in Parent POM
-
-Add to `gangland-compatibility/pom.xml`:
-
-```xml
-
-<module>version-X_XX_RX</module>
-```
-
-And to the root `pom.xml`:
-
-```xml
-
-<module>gangland-compatibility/version-X_XX_RX</module>
-```
-
-### Step 6: Update CompatibilitySetup
-
-Add the new version string to the version detection map in `CompatibilitySetup` so it
-maps to the correct `VersionImplementation` class.
+1. **Keystone side (once per MC release):** add the release→revision entry to
+   `CraftBukkitRevision`'s table (and bump `latestKnown()` if it is a new revision), bump the
+   Keystone version, `mvn clean install`.
+2. **New revision only — create the module** `gangland-compatibility/version-X_XX_RY/` with two
+   classes under `org.luckyraven.gangland.compatibility.version`:
+   - `vX_XX_RY implements Compatibility` (returns the recoil impl), and
+   - `recoil.Recoil_X_XX_RY extends RecoilCompatibility` (the NMS packet code).
+   The class name **must** equal the CraftBukkit revision — that is what the loader resolves.
+3. **pom.xml:** copy a sibling module's pom; set `spigot.version`. For 1.20.4+ servers use the
+   `remapped-mojang` classifier + the inherited specialsource plugin (see `version-1_21_R7`);
+   older versions depend on the plain (obfuscated) `spigot` artifact with no build block.
+4. **Register the module** in `gangland-compatibility/pom.xml`'s `<modules>` and as a dependency
+   in `gangland-build/pom.xml` (the shade must carry it for the reflective load).
+5. No detection code changes in Gangland — the loader picks the class up by name.
 
 ---
 
 ## Troubleshooting
 
-| Issue                        | Cause                                 | Solution                           |
-|------------------------------|---------------------------------------|------------------------------------|
-| No recoil on fire            | Version not recognized                | Check `CompatibilitySetup` mapping |
-| `ClassNotFoundException`     | NMS classes changed in new MC version | Create new version module          |
-| `NoSuchMethodError`          | NMS method signature changed          | Update `RecoilCompatibilityImpl`   |
-| Recoil works but feels wrong | Packet flags not set to relative      | Check relative flags in packet     |
+| Issue                        | Cause                                 | Solution                                        |
+|------------------------------|---------------------------------------|-------------------------------------------------|
+| No recoil on fire            | No adapter for this revision          | Check the `nms.adapter.missing` fault; add the module / bump Keystone's table |
+| "Using default recoil"       | Fallback engaged                      | Same as above — the Bukkit-API fallback still rotates, packets don't |
+| `ClassNotFoundException`     | NMS classes changed in new MC version | Create new version module                       |
+| `NoSuchMethodError`          | NMS method signature changed          | Update the `Recoil_X_XX_RY` implementation      |
+| Recoil works but feels wrong | Packet flags not set to relative      | Check relative flags in packet                  |

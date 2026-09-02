@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ActionBarManager;
 import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.gangland.weapon.Weapon;
@@ -89,7 +89,7 @@ public abstract class Reload implements Cloneable {
 		}
 
 		// start reloading sound
-		SoundConfiguration.playSounds(player, weapon.getSoundData().getReloadCustomStart(),
+		SoundEffect.playSounds(player, weapon.getSoundData().getReloadCustomStart(),
 		                              weapon.getSoundData().getReloadDefaultBefore());
 
 		// scope the player and make them slow down
@@ -106,7 +106,7 @@ public abstract class Reload implements Cloneable {
 		if (player == null) return;
 
 		// end reloading sound
-		SoundConfiguration.playSounds(player, weapon.getSoundData().getReloadCustomEnd(),
+		SoundEffect.playSounds(player, weapon.getSoundData().getReloadCustomEnd(),
 		                              weapon.getSoundData().getReloadDefaultAfter());
 
 		// un-scope the player to resume the showdown

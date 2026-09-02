@@ -929,7 +929,7 @@ jetpack_mk1:
 - `ChatUtil` -- color code formatting
 - `ParticleUtil` -- exhaust, burnout, jetpack flame/glide, explosion particles
 - `PlayerUtil.isOnGround()` -- ground detection for jetpack
-- `SoundConfiguration` -- vanilla/custom sound playback
+- `SoundEffect` (keystone-common `sound` package) -- vanilla/custom sound playback
 
 ### gangland-gadget -> plugin-persistence
 

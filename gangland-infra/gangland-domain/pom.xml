@@ -57,12 +57,6 @@
             <groupId>de.tr7zw</groupId>
             <artifactId>item-nbt-api-plugin</artifactId>
         </dependency>
-
-        <!-- Vault (soft) -->
-        <dependency>
-            <groupId>com.github.MilkBowl</groupId>
-            <artifactId>VaultAPI</artifactId>
-        </dependency>
     </dependencies>
 
 </project>

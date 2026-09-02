@@ -8,7 +8,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.util.Placeholder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.gangland.item.wearable.Wearable;
 import org.luckyraven.gangland.item.wearable.WearableTrait;
@@ -51,19 +51,19 @@ public class WearableAddon extends WearableService implements FileInitializer {
 	}
 
 	/**
-	 * Reads a sound sub-section at {@code path} inside {@code parent} and constructs a {@link SoundConfiguration}.
+	 * Reads a sound sub-section at {@code path} inside {@code parent} and constructs a {@link SoundEffect}.
 	 * Returns {@code null} if the sub-section or its {@code Sound} key is missing.
 	 */
 	@Nullable
-	private static SoundConfiguration parseSoundConfig(ConfigurationSection parent, String path,
-	                                                   SoundConfiguration.SoundType type) {
+	private static SoundEffect parseSoundConfig(ConfigurationSection parent, String path,
+	                                                   SoundEffect.SoundType type) {
 		ConfigurationSection sub = parent.getConfigurationSection(path);
 		if (sub == null) return null;
 		String sound = sub.getString("Sound");
 		if (sound == null || sound.isEmpty()) return null;
 		float volume = (float) sub.getDouble("Volume", 1.0);
 		float pitch  = (float) sub.getDouble("Pitch", 1.0);
-		return new SoundConfiguration(type, sound, volume, pitch);
+		return new SoundEffect(type, sound, volume, pitch);
 	}
 
 	/**
@@ -145,10 +145,10 @@ public class WearableAddon extends WearableService implements FileInitializer {
 			double             glideDescentRate    = 0;
 			double             maxSpeedY           = 0;
 			int                maxFuel             = 0;
-			SoundConfiguration thrustDefaultSound  = null;
-			SoundConfiguration thrustCustomSound   = null;
-			SoundConfiguration glideDefaultSound   = null;
-			SoundConfiguration glideCustomSound    = null;
+			SoundEffect thrustDefaultSound  = null;
+			SoundEffect thrustCustomSound   = null;
+			SoundEffect glideDefaultSound   = null;
+			SoundEffect glideCustomSound    = null;
 
 			ConfigurationSection jetpackSection = section.getConfigurationSection("Jetpack");
 			if (jetpackSection != null) {
@@ -162,13 +162,13 @@ public class WearableAddon extends WearableService implements FileInitializer {
 				ConfigurationSection soundSection = jetpackSection.getConfigurationSection("Sound");
 				if (soundSection != null) {
 					thrustDefaultSound = parseSoundConfig(soundSection, "Thrust.Default_Sound",
-					                                      SoundConfiguration.SoundType.VANILLA);
+					                                      SoundEffect.SoundType.VANILLA);
 					thrustCustomSound  = parseSoundConfig(soundSection, "Thrust.Custom_Sound",
-					                                      SoundConfiguration.SoundType.CUSTOM);
+					                                      SoundEffect.SoundType.CUSTOM);
 					glideDefaultSound  = parseSoundConfig(soundSection, "Glide.Default_Sound",
-					                                      SoundConfiguration.SoundType.VANILLA);
+					                                      SoundEffect.SoundType.VANILLA);
 					glideCustomSound   = parseSoundConfig(soundSection, "Glide.Custom_Sound",
-					                                      SoundConfiguration.SoundType.CUSTOM);
+					                                      SoundEffect.SoundType.CUSTOM);
 				}
 			}
 

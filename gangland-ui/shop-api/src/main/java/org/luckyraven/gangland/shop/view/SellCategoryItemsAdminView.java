@@ -11,7 +11,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.core.configuration.SoundConfiguration;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
@@ -48,7 +48,7 @@ public final class SellCategoryItemsAdminView implements Panel<ShopAdminFlowSess
 			27, 28, 29, 30, 31, 32, 33, 34, 35
 	};
 
-	private static final SoundConfiguration SOUND_BACK = new SoundConfiguration(SoundConfiguration.SoundType.VANILLA,
+	private static final SoundEffect SOUND_BACK = new SoundEffect(SoundEffect.SoundType.VANILLA,
 	                                                                            "UI_BUTTON_CLICK", 0.6f, 1.0f);
 
 	private final JavaPlugin            plugin;
