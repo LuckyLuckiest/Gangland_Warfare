@@ -26,8 +26,6 @@
 Rendered page with diagrams and a table of contents: https://claude.ai/code/artifact/c0ae92aa-f60d-4ab4-8776-0c0f512eca2b
 <!-- preface:end -->
 
-> Diagrams below are Mermaid source; the rendered version with drawn diagrams is the linked page above.
-
 ## Overview
 Gangs are player-owned organisations held entirely in RAM by three CONFIG-phase beans — `GangManager` (`Map<Integer, Gang>`), `MemberManager` (`Map<UUID, Member>`) and `RankManager` (ranks + permissions + a `Tree<Rank>`) — and flushed to SQL by `PeriodicalUpdates` → `RepositoryRegistry.saveAll()`, which is an **upsert-only** pass and never a delete pass. Membership is a *three-sided* link: `User.gangId` (player row), `Member.gangId`/`Member.rank` (member row) and `Gang.members` (the list); only `Gang.addMember` / `Gang.removeMember` keep all three in step. Ranks are **global, not per-gang**: one shared `Tree<Rank>` rooted at the `Gang.Rank.Head` name ("member") whose deepest leaf is the `Gang.Rank.Tail` ("owner"), and "actor outranks target" is expressed as `rankTree.isDescendant(targetNode, actorNode)`. There is **no per-permission gate on any gang subcommand** — authority is only rank-tree depth (kick/promote/demote), `match(tailId)` owner checks (delete/transfer/leave), or nothing at all (invite, ally, deposit, withdraw, rename, description, display, color). Cross-session requests (gang invites, alliance requests) are modelled as `MailItem` rows owned by the `gangland-mail` feature module, expired by a 1 Hz async sweep and surfaced on `PlayerJoinEvent`. There is no gang-chat feature and no chat filter in this codebase; `/glw filter` is the *inventory* list filter that backs the gang-search GUI.
 

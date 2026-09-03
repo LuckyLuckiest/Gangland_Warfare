@@ -26,8 +26,6 @@
 Rendered page with diagrams and a table of contents: https://claude.ai/code/artifact/7a132f36-b2ce-48a2-8263-4eff270282ed
 <!-- preface:end -->
 
-> Diagrams below are Mermaid source; the rendered version with drawn diagrams is the linked page above.
-
 ## Overview
 
 Turf Wars lets gangs own X/Z rectangular regions ("turfs") that pay passive income and can be taken by force. The

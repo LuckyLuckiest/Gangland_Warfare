@@ -26,8 +26,6 @@
 Rendered page with diagrams and a table of contents: https://claude.ai/code/artifact/5726570b-bd6c-4c4e-ac33-0f86befcb011
 <!-- preface:end -->
 
-> Diagrams below are Mermaid source; the rendered version with drawn diagrams is the linked page above.
-
 ## Overview
 
 This area is the plugin's spine: it turns a cold `JavaPlugin` into a fully wired object graph, loads every YAML file,

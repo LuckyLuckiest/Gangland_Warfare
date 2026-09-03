@@ -26,8 +26,6 @@
 Rendered page with diagrams and a table of contents: https://claude.ai/code/artifact/7ad4b853-5bb5-412c-9e96-0e3f465f9836
 <!-- preface:end -->
 
-> Diagrams below are Mermaid source; the rendered version with drawn diagrams is the linked page above.
-
 ## Overview
 
 Three independent UI subsystems live under `gangland-ui/`: a chest-GUI framework (`inventory-api`, 58 files), a

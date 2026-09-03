@@ -26,8 +26,6 @@
 Rendered page with diagrams and a table of contents: https://claude.ai/code/artifact/65f0d8f2-4c5b-418c-97b3-23d619d82473
 <!-- preface:end -->
 
-> Diagrams below are Mermaid source; the rendered version with drawn diagrams is the linked page above.
-
 ## Overview
 Three loosely-coupled world-interaction features share this report. **Loot chests** live in `gangland-ui/lootchest-api` (abstract `LootChestService` + `ChestCooldownManager` + session/cracking data classes) with the concrete `LootChestManager`, wand, repository and YAML loaders in `gangland-impl`; chests are placed with an NBT-configured wand, opened by right-click, roll a weighted loot table into a per-chest *shared* inventory, and enter a hologram-backed cooldown when closed. **Signs** live in `gangland-ui/sign-api` (registry -> validator -> parser -> aspect-chain handler) with all concrete sign types, aspects, parsers and validators in `gangland-impl/sign/**`; there is no sign persistence at all — the block itself is the record, and the sign is re-parsed on every right-click. **Waypoints** are entirely in `gangland-impl` (`data/teleportation/**` + 15 `command/sub/waypoint/**` classes), persisted through `WaypointRepository`/`WaypointTable`, and teleport via a `CountdownTimer` warm-up with move-cancellation, per-waypoint cooldown, invulnerability shield and cost.
 

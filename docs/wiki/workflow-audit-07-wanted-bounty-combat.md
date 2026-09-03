@@ -26,8 +26,6 @@
 Rendered page with diagrams and a table of contents: https://claude.ai/code/artifact/dbb55def-1066-4c70-b09d-72c22ea63df2
 <!-- preface:end -->
 
-> Diagrams below are Mermaid source; the rendered version with drawn diagrams is the linked page above.
-
 ## Overview
 
 Wanted level and bounty are per-player value objects held on `User` — `Wanted` and `Bounty` in

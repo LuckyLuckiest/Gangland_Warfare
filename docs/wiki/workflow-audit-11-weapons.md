@@ -26,8 +26,6 @@
 Rendered page with diagrams and a table of contents: https://claude.ai/code/artifact/48a0fd29-5ad2-43ea-b05f-5d9c38e82196
 <!-- preface:end -->
 
-> Diagrams below are Mermaid source; the rendered version with drawn diagrams is the linked page above.
-
 ## Overview
 
 The weapon system lives almost entirely in `gangland-features/gangland-weapon` (package `org.luckyraven.gangland.weapon`), with thin wiring, commands, persistence and item-conversion adapters in `gangland-impl`. Weapon definitions are one YAML file per weapon under `gangland-impl/src/main/resources/weapon/`; `WeaponAddon` parses them through Keystone's `NodeReader`/`ConfigReport` chain and dispatches to one of five type parsers (gun, throwable, melee, incendiary, biological), producing a `Weapon` template registered by file name. At runtime `WeaponService`/`WeaponManager` mint per-item `Weapon` instances keyed by a UUID stamped in item NBT; only `uuid` + `type` are persisted to the `weapon` table — magazine, durability and fire mode live in the ItemStack's NBT tags and are re-read on every interaction.

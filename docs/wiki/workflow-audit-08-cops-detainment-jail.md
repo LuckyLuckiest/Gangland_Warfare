@@ -26,8 +26,6 @@
 Rendered page with diagrams and a table of contents: https://claude.ai/code/artifact/7b91103f-1e4a-45b8-91eb-25e5c47775c1
 <!-- preface:end -->
 
-> Diagrams below are Mermaid source; the rendered version with drawn diagrams is the linked page above.
-
 ## Overview
 The area spans three cooperating subsystems that live mostly in `gangland-features/cops-n-crooks`, with wiring, commands, persistence and config adapters in `gangland-impl`. **Police NPCs** are Citizens `EntityType.PLAYER` NPCs spawned per wanted player by `CopManager`, driven by two `BukkitTask` timers (a spawn task and an AI task) and a six-state behaviour machine (`IDLE / PURSUING / CUFFING / GUARDING / COMBAT / RETURNING`). **Detainment** is a three-value state machine (`NORMAL / HANDCUFFED / JAILED`) held in `DetainmentRegistry`, persisted to the `detainment` table, with side pipelines for transit, intake, sentence, bail, bribe, break-free and inventory seizure. **Jails** are numbered cells (`jail` table) with per-jail or global exit points (`jail_exit` table); `ReleasePipeline` is the single intended exit funnel. Shared NPC infrastructure (`AbstractNpc`, `NpcNavigationDelegate`, `NpcCombatDelegate`, `EntitySpawner`, `EntityMarkManager`) is reused verbatim by civilians, traders, bankers and turf defenders, so any change there is cross-feature. Everything is constructed as Keystone beans by `gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java`.
 

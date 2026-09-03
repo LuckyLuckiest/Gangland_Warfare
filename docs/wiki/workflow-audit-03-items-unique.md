@@ -26,8 +26,6 @@
 Rendered page with diagrams and a table of contents: https://claude.ai/code/artifact/c5d60743-8bf7-4897-b357-74354f2457fb
 <!-- preface:end -->
 
-> Diagrams below are Mermaid source; the rendered version with drawn diagrams is the linked page above.
-
 ## Overview
 
 Gangland's item framework is a string↔ItemStack pipeline defined in `gangland-infra/gangland-item` (package

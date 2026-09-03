@@ -26,8 +26,6 @@
 Rendered page with diagrams and a table of contents: https://claude.ai/code/artifact/d2dbe24f-1d3f-46ca-9353-0c2775157df9
 <!-- preface:end -->
 
-> Diagrams below are Mermaid source; the rendered version with drawn diagrams is the linked page above.
-
 ## Overview
 
 Gangland registers exactly one Bukkit command, `/glw` (alias `/gangland`, permission `gangland.command.main`,

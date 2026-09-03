@@ -26,8 +26,6 @@
 Rendered page with diagrams and a table of contents: https://claude.ai/code/artifact/3ca10fb3-4772-4439-94c1-cec3e53af294
 <!-- preface:end -->
 
-> Diagrams below are Mermaid source; the rendered version with drawn diagrams is the linked page above.
-
 ## Overview
 This area owns the per-player record (`User`) and everything hanging off it: cash balance, bank account, XP/level, kill/death counters, bounty and wanted state, plus the caches that hold those records for online and offline players. Players get a cash balance (optionally mirrored into Vault), physical cash items that drop from kills and deposit on pickup, an XP/level ladder driven by a configurable formula, and a tiered bank account they open and operate either through `/glw bank …` or through a Citizens-backed Banker NPC GUI. Admins get `/glw economy …`, `/glw level …`, `/glw bank resetcap` and `/glw banker …`.
 

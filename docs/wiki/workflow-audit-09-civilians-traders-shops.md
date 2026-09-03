@@ -26,8 +26,6 @@
 Rendered page with diagrams and a table of contents: https://claude.ai/code/artifact/dad8da79-b977-4cdc-9712-e080406cb0b5
 <!-- preface:end -->
 
-> Diagrams below are Mermaid source; the rendered version with drawn diagrams is the linked page above.
-
 ## Overview
 
 Civilians are Citizens-backed ambient NPCs defined in `npc/civilians.yml` (types + groups), spawned either manually via

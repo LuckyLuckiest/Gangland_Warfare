@@ -26,8 +26,6 @@
 Rendered page with diagrams and a table of contents: https://claude.ai/code/artifact/a3c799ae-5752-467c-b9b2-26e7e29e7882
 <!-- preface:end -->
 
-> Diagrams below are Mermaid source; the rendered version with drawn diagrams is the linked page above.
-
 ## Overview
 
 The gadget area spans three co-operating subsystems. **Cars** are Bukkit `Minecart` entities (no armour stands, no
