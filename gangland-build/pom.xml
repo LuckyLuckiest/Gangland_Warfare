@@ -73,6 +73,11 @@
                             <include>fr.mrmicky:fastboard</include>
                             <include>org.bstats:*</include>
                         </includes>
+                        <excludes>
+                            <!-- Runtime modules ship as their own jars under target/modules/ (see the
+                                 maven-dependency-plugin execution below), never inside the core jar. -->
+                            <exclude>org.luckyraven:gangland-mail</exclude>
+                        </excludes>
                     </artifactSet>
                 </configuration>
 
@@ -87,6 +92,34 @@
             </plugin>
 
             <!-- Maven plugin shade (end) -->
+
+            <!-- Runtime modules: copied next to the core jar as target/modules/<artifact>-<version>.jar. Server
+                 owners drop them into plugins/Gangland_Warfare/modules/. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.8.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-runtime-modules</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/modules</outputDirectory>
+                            <stripVersion>false</stripVersion>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.luckyraven</groupId>
+                                    <artifactId>gangland-mail</artifactId>
+                                    <version>${project.version}</version>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -95,6 +128,15 @@
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>gangland-impl</artifactId>
+        </dependency>
+
+        <!-- Runtime modules: provided so the reactor builds them before this module and the shade (which
+             only sees compile/runtime scope) leaves them out of the core jar. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-mail</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Include NMS (MC 1.16+, matching Keystone's API floor; players on older

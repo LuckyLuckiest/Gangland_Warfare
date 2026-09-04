@@ -8,6 +8,8 @@ import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.BeanGraph;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.Phase;
+import org.luckyraven.keystone.module.LoadedModule;
+import org.luckyraven.keystone.module.ModuleLoader;
 import org.luckyraven.keystone.permission.PermissionHandler;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.keystone.permission.PermissionWorker;
@@ -51,10 +53,19 @@ public class KernelConfig {
 		this.gangland = gangland;
 	}
 
+	/**
+	 * The /glw help index: the core's commands.json plus the commands.json each runtime module ships at its jar
+	 * root, read from the module's own jar (the module loader is parent-first, so a loader lookup would return the
+	 * core's file). KERNEL phase because Command subclasses read it during construction in the COMMAND phase.
+	 */
 	@Bean
-	public InformationManager informationManager() {
+	public InformationManager informationManager(ModuleLoader moduleLoader) {
 		InformationManager manager = new InformationManager();
 		manager.processCommands();
+		for (LoadedModule module : moduleLoader.loaded()) {
+			module.readResource(InformationManager.COMMANDS_RESOURCE)
+			      .ifPresent(bytes -> manager.merge(module.id(), bytes));
+		}
 		return manager;
 	}
 

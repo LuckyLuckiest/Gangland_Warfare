@@ -211,22 +211,6 @@
 		"usage": "/glw gang desc",
 		"description": "Changes current gang description."
 	},
-	"gang_invite_player": {
-		"usage": "/glw gang invite <name>",
-		"description": "Invites the player to the gang."
-	},
-	"gang_invite_accept": {
-		"usage": "/glw gang accept",
-		"description": "Accept gang join invitation."
-	},
-	"gang_invite_pending": {
-		"usage": "/glw gang invite",
-		"description": "Lists outgoing pending invites from your gang."
-	},
-	"gang_invite_cancel": {
-		"usage": "/glw gang invite cancel <name>",
-		"description": "Cancels an outgoing gang invite."
-	},
 	"gang_kick_player": {
 		"usage": "/glw gang kick <name>",
 		"description": "Kicks the player from the gang."
@@ -247,21 +231,9 @@
 		"usage": "/glw gang transfer <name>",
 		"description": "Transfers gang ownership to another member."
 	},
-	"gang_ally_request": {
-		"usage": "/glw gang ally request <id>",
-		"description": "Request alliances to the other gang."
-	},
 	"gang_ally_remove": {
 		"usage": "/glw gang ally abandon <id>",
 		"description": "Abandon alliances to that gang."
-	},
-	"gang_ally_pending": {
-		"usage": "/glw gang ally pending",
-		"description": "Lists outgoing pending ally requests from your gang."
-	},
-	"gang_ally_pending_cancel": {
-		"usage": "/glw gang ally pending cancel <gang>",
-		"description": "Cancels an outgoing pending ally request."
 	},
 	"safe_wand": {
 		"usage": "/glw safewand",

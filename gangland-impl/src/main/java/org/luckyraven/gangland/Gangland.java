@@ -83,6 +83,9 @@ public final class Gangland extends JavaPlugin {
 		// despawns NPCs and holograms, all in reverse topological order
 		context.shutdownBeans();
 
+		// runtime modules: onDisabled in reverse load order, then the module classloader closes
+		context.disableModules();
+
 		// force save all pending data AFTER bean shutdown so converted records (CarService etc.) are included
 		PeriodicalUpdates periodicalUpdates = context.get(PeriodicalUpdates.class);
 		if (periodicalUpdates != null) {

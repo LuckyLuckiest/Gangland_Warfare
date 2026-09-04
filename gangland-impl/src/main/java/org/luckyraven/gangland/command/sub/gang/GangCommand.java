@@ -11,10 +11,11 @@ import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.ArgumentUtil;
+import org.luckyraven.gangland.command.extension.CommandContributions;
 import org.luckyraven.gangland.command.sub.gang.ally.GangAllyCommand;
-import org.luckyraven.gangland.command.sub.gang.invite.GangInviteCommand;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.bean.Qualifier;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.keystone.color.ColorUtil;
 import org.luckyraven.keystone.color.MaterialType;
@@ -39,7 +40,6 @@ import org.luckyraven.gangland.inventory.multi.MultiInventoryCreation;
 import org.luckyraven.gangland.inventory.part.ButtonTags;
 import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.inventory.util.InventoryUtil;
-import org.luckyraven.gangland.mail.MailManager;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -57,7 +57,11 @@ public final class GangCommand extends Command {
 	private final RankManager                rankManager;
 	private final GanglandDatabase           ganglandDatabase;
 	private final UserDataLoader             userDataLoader;
-	private final MailManager                mailManager;
+	/**
+	 * Sub-arguments runtime modules attach under {@code gang} and {@code gang.ally} (the mail module contributes
+	 * invite/accept and the alliance request flow). Empty when no module is installed — the core never names them.
+	 */
+	private final CommandContributions       contributions;
 
 	public GangCommand(Gangland gangland,
 	                   @Qualifier("online") UserManager<Player> userManager,
@@ -67,7 +71,7 @@ public final class GangCommand extends Command {
 	                   RankManager rankManager,
 	                   GanglandDatabase ganglandDatabase,
 	                   UserDataLoader userDataLoader,
-	                   MailManager mailManager
+	                   DependencyContainer container
 	) {
 		super(gangland, "gang", true);
 
@@ -78,7 +82,7 @@ public final class GangCommand extends Command {
 		this.rankManager        = rankManager;
 		this.ganglandDatabase   = ganglandDatabase;
 		this.userDataLoader     = userDataLoader;
-		this.mailManager        = mailManager;
+		this.contributions      = CommandContributions.from(container);
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -105,10 +109,6 @@ public final class GangCommand extends Command {
 		                                        memberManager, gangManager, rankManager, ganglandDatabase);
 		Argument delete = new GangDeleteCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                        memberManager, gangManager, rankManager, ganglandDatabase);
-		GangInviteCommand addUser = new GangInviteCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
-		                                                  offlineUserManager, memberManager, gangManager, rankManager,
-		                                                  mailManager);
-		Argument acceptInvite = addUser.gangAccept();
 		Argument removeUser = new GangKickCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                          offlineUserManager, memberManager, gangManager, rankManager,
 		                                          userDataLoader, ganglandDatabase);
@@ -136,7 +136,7 @@ public final class GangCommand extends Command {
 		Argument description = new GangDescriptionCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                                  gangManager);
 		Argument ally = new GangAllyCommand(getGangland(), getArgumentTree(), getArgument(), userManager, memberManager,
-		                                    gangManager, mailManager);
+		                                    gangManager, contributions);
 		Argument display = new GangDisplayCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                          gangManager);
 		Argument color = new GangColorCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
@@ -148,8 +148,8 @@ public final class GangCommand extends Command {
 		arguments.add(create);
 		arguments.add(delete);
 
-		arguments.add(addUser);
-		arguments.add(acceptInvite);
+		// invite / accept (and anything else a module hangs under /glw gang) come from installed modules
+		arguments.addAll(contributions.createFor("gang", getArgumentTree(), getArgument()));
 
 		arguments.add(removeUser);
 		arguments.add(leave);

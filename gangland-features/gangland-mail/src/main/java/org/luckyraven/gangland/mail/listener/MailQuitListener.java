@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.listener.mail;
+package org.luckyraven.gangland.mail.listener;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

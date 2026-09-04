@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.database.tables.mail;
+package org.luckyraven.gangland.mail.database;
 
 import org.luckyraven.gangland.mail.MailItem;
 import org.luckyraven.keystone.persistence.database.component.Attribute;

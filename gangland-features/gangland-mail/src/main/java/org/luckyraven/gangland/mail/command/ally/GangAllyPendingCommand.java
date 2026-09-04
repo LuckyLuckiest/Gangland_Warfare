@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.command.sub.gang.ally;
+package org.luckyraven.gangland.mail.command.ally;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -19,13 +19,13 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.List;
 
-class GangAllyPendingCommand extends SubArgument {
+public class GangAllyPendingCommand extends SubArgument {
 
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
 	private final MailManager         mailManager;
 
-	GangAllyPendingCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	public GangAllyPendingCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
 	                       GangManager gangManager, MailManager mailManager) {
 		super(gangland, "pending", tree, parent);
 

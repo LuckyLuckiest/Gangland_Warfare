@@ -59,7 +59,7 @@
     </modules>
 
     <properties>
-        <revision>0.8.1</revision>
+        <revision>0.8.2</revision>
         <!-- Matches Keystone's release (17): the shaded jar must load on every JVM Keystone
              loads on, or the MC 1.16+ support floor is silently broken. release (not
              source/target) also validates against the Java 17 API, so building on a newer
@@ -72,7 +72,7 @@
 
         <!-- Dependencies/Libraries versions -->
         <!-- Shared infrastructure (Keystone.jar provides it at runtime — provided scope, never shaded) -->
-        <keystone.version>1.7.3</keystone.version>
+        <keystone.version>1.8.0</keystone.version>
         <nbt.version>2.15.7</nbt.version>
         <xseries.version>13.6.0</xseries.version>
         <anvilgui.version>1.10.11-SNAPSHOT</anvilgui.version>
@@ -195,6 +195,12 @@
             <dependency>
                 <groupId>org.luckyraven</groupId>
                 <artifactId>keystone-hooks</artifactId>
+                <version>${keystone.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-module</artifactId>
                 <version>${keystone.version}</version>
                 <scope>provided</scope>
             </dependency>

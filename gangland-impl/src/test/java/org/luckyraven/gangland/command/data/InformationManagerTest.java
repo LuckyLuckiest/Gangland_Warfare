@@ -3,6 +3,7 @@ package org.luckyraven.gangland.command.data;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -37,10 +38,38 @@ class InformationManagerTest {
 
 		manager.processCommands();
 
-		assertEquals(232, manager.getCommands().size(),
-				"pins the current entry count; update this alongside any deliberate commands.json edit");
+		assertEquals(225, manager.getCommands().size(),
+				"pins the current entry count (232 minus the 7 mail entries that moved to the mail module's own "
+				+ "commands.json in 0.8.2); update this alongside any deliberate commands.json edit");
 		assertTrue(manager.getCommands().containsKey("general"));
 		assertTrue(manager.getCommands().containsKey("general_page"));
+	}
+
+	@Test
+	@DisplayName("merge folds a module's commands.json into the index and overwrites duplicate keys")
+	void merge_addsModuleEntries() {
+		InformationManager manager = new InformationManager();
+		manager.processCommands();
+		int before = manager.getCommands().size();
+
+		String json = "{\"gang_invite_player\": {\"usage\": \"/glw gang invite <name>\", \"description\": \"Invites.\"},"
+		              + " \"general\": {\"usage\": \"/glw\", \"description\": \"overridden\"}}";
+		int added = manager.merge("mail", json.getBytes(StandardCharsets.UTF_8));
+
+		assertEquals(2, added);
+		assertEquals(before + 1, manager.getCommands().size(), "one new key, one overwritten");
+		assertEquals("Invites.", manager.getCommands().get("gang_invite_player").description());
+		assertEquals("overridden", manager.getCommands().get("general").description());
+	}
+
+	@Test
+	@DisplayName("merge skips malformed input instead of throwing")
+	void merge_malformedInput_skipped() {
+		InformationManager manager = new InformationManager();
+
+		assertEquals(0, manager.merge("broken", "not json".getBytes(StandardCharsets.UTF_8)));
+		assertEquals(0, manager.merge("array", "[1,2]".getBytes(StandardCharsets.UTF_8)));
+		assertTrue(manager.getCommands().isEmpty());
 	}
 
 	@Test

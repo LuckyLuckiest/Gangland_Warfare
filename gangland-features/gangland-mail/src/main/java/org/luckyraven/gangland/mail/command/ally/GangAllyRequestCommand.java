@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.command.sub.gang.ally;
+package org.luckyraven.gangland.mail.command.ally;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -26,7 +26,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-class GangAllyRequestCommand extends SubArgument {
+public class GangAllyRequestCommand extends SubArgument {
 
 	private static final long REQUEST_EXPIRY_MS = 60_000L;
 
@@ -37,7 +37,7 @@ class GangAllyRequestCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final MailManager         mailManager;
 
-	GangAllyRequestCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	public GangAllyRequestCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
 	                       MemberManager memberManager, GangManager gangManager, MailManager mailManager) {
 		super(gangland, "request", tree, parent);
 

@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.command.sub.gang.invite;
+package org.luckyraven.gangland.mail.command.invite;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

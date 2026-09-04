@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.command.sub.gang.ally;
+package org.luckyraven.gangland.mail.command.ally;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -21,7 +21,7 @@ import org.luckyraven.gangland.mail.MailType;
 
 import java.util.*;
 
-class GangAllyAcceptCommand extends SubArgument {
+public class GangAllyRejectCommand extends SubArgument {
 
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
@@ -30,9 +30,9 @@ class GangAllyAcceptCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final MailManager         mailManager;
 
-	GangAllyAcceptCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	public GangAllyRejectCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
 	                      MemberManager memberManager, GangManager gangManager, MailManager mailManager) {
-		super(gangland, "accept", tree, parent);
+		super(gangland, "reject", tree, parent);
 
 		this.gangland      = gangland;
 		this.tree          = tree;
@@ -46,7 +46,6 @@ class GangAllyAcceptCommand extends SubArgument {
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
-		// `/glw gang ally accept` (no extra token) — auto-pick the oldest pending request and warn if there were more.
 		return (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
@@ -78,19 +77,15 @@ class GangAllyAcceptCommand extends SubArgument {
 			}
 
 			if (incoming.size() > 1) {
-				user.sendMessage(Messages.GANG_ALLY_ACCEPT_MULTIPLE.toString()
+				user.sendMessage(Messages.GANG_ALLY_REJECT_MULTIPLE.toString()
 				                                                   .replace("%count%", String.valueOf(incoming.size()))
 				                                                   .replace("%gang%", sending.getDisplayNameString()));
 			}
 
-			doAccept(userGang, sending, mail);
+			doReject(userGang, sending, mail);
 		};
 	}
 
-	/**
-	 * Builds the disambiguated display-name → gang-id map of gangs that currently have a pending ally request addressed
-	 * to the sender's gang.
-	 */
 	private Map<String, String> buildIncomingSenderMap(CommandSender sender) {
 		if (!(sender instanceof Player player)) return new HashMap<>();
 		User<Player> user = userManager.getUser(player);
@@ -157,30 +152,18 @@ class GangAllyAcceptCommand extends SubArgument {
 				return;
 			}
 
-			doAccept(userGang, sending, pending.get());
+			doReject(userGang, sending, pending.get());
 		}, sender -> new ArrayList<>(buildIncomingSenderMap(sender).keySet()), this::buildIncomingSenderMap);
 	}
 
-	private void doAccept(Gang userGang, Gang sending, MailItem mail) {
-		if (userGang.isAlly(sending)) {
-			List<User<Player>> userGangOnline = userGang.getOnlineMembers(userManager::getUser);
-			if (!userGangOnline.isEmpty()) {
-				userGangOnline.get(0).sendMessage(Messages.ALREADY_ALLIED_GANG.toString());
-			}
-			mailManager.accept(mail);
-			return;
-		}
-
-		userGang.addAlly(sending);
-		sending.addAlly(userGang);
-
+	private void doReject(Gang userGang, Gang sending, MailItem mail) {
 		Bukkit.getOnlinePlayers()
 				.stream()
 				.filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
 				                        sending.getId())
 				.toList()
 				.forEach(pl -> pl.sendMessage(
-						Messages.GANG_ALLY_ACCEPT.toString().replace("%gang%", userGang.getDisplayNameString())));
+						Messages.GANG_ALLY_REJECT.toString().replace("%gang%", userGang.getDisplayNameString())));
 
 		Bukkit.getOnlinePlayers()
 				.stream()
@@ -188,9 +171,9 @@ class GangAllyAcceptCommand extends SubArgument {
 				                        userGang.getId())
 				.toList()
 				.forEach(pl -> pl.sendMessage(
-						Messages.GANG_ALLY_ACCEPT.toString().replace("%gang%", sending.getDisplayNameString())));
+						Messages.GANG_ALLY_REJECT.toString().replace("%gang%", sending.getDisplayNameString())));
 
-		mailManager.accept(mail);
+		mailManager.reject(mail);
 	}
 
 }

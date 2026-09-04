@@ -1,7 +1,6 @@
-package org.luckyraven.gangland.database.repositories.mail;
+package org.luckyraven.gangland.mail.database;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.database.tables.mail.MailTable;
 import org.luckyraven.gangland.mail.MailItem;
 import org.luckyraven.gangland.mail.MailStatus;
 import org.luckyraven.gangland.mail.MailType;

@@ -36,6 +36,35 @@
             <groupId>org.luckyraven</groupId>
             <artifactId>gangland-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-bean</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-command</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-module</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-hooks</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-item</artifactId>
+        </dependency>
+
+        <!-- The host (core) jar. Provided: at runtime this module is loaded from plugins/Gangland_Warfare/modules/
+             by Keystone's ModuleLoader, whose parent is the host plugin's classloader, so every impl class
+             resolves from there. Dependency direction is module -> core; core never names a mail type. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-impl</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
 </project>

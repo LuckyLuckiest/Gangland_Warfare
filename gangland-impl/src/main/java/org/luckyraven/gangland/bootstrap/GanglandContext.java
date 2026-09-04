@@ -18,12 +18,16 @@ import org.luckyraven.keystone.bean.Phase;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.gangland.file.configuration.SettingsLookupImpl;
 import org.luckyraven.gangland.listener.ListenerManager;
+import org.luckyraven.keystone.module.LoadedModule;
+import org.luckyraven.keystone.module.ModuleLoader;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
+import org.luckyraven.keystone.update.PluginVersion;
 
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -56,6 +60,13 @@ import java.util.Set;
  *     executor and tab completer to the {@link PluginCommand}.</li>
  * </ol>
  *
+ * <p><b>Runtime modules (0.8.2).</b> Before the scan, Keystone's {@link ModuleLoader} reads every jar in
+ * {@code plugins/Gangland_Warfare/modules/}, checks {@code Host_Api} and {@code Depends}, adds the accepted jars to
+ * one parent-first classloader and lets each module declare its configurations and packages. Those configurations
+ * are registered alongside the core's before {@link BeanFactory#instantiate()}, and the listener, command and
+ * repository scans run a second time per module through the module classloader. A faulty module is skipped with a
+ * fault; the core never names a module type. Modules load once — a changed folder needs a restart.
+ *
  * <p>The container is intentionally exposed via {@link #getContainer()} for code paths that need direct access
  * (e.g. qualified bean lookups). New code should prefer {@code @Bean} methods or {@link #get(Class)}.
  */
@@ -65,11 +76,14 @@ public final class GanglandContext {
 	private static final String CONFIG_PACKAGE   = "org.luckyraven.gangland.config";
 	private static final String LISTENER_PACKAGE = "org.luckyraven.gangland";
 	private static final String COMMAND_PACKAGE  = "org.luckyraven.gangland.command.sub";
+	private static final String MODULES_FOLDER   = "modules";
 
 	@Getter
 	private final DependencyContainer container;
 	@Getter
 	private final BeanFactory         beanFactory;
+	@Getter
+	private final ModuleLoader        moduleLoader;
 
 	private final Gangland gangland;
 
@@ -82,6 +96,8 @@ public final class GanglandContext {
 		this.gangland    = gangland;
 		this.container   = new DependencyContainer();
 		this.beanFactory = new BeanFactory(container, gangland, new SettingsLookupImpl());
+		this.moduleLoader = new ModuleLoader(gangland, gangland.getDataFolder().toPath().resolve(MODULES_FOLDER),
+		                                     hostApi(gangland));
 
 		// Self-register so configurations and beans can pull the context / container as a constructor parameter.
 		container.registerInstance(GanglandContext.class, this);
@@ -89,6 +105,15 @@ public final class GanglandContext {
 		// Register Gangland explicitly under its concrete type so @Bean methods can take Gangland as a parameter
 		// directly (registerInstance walks supertypes too, but listing it here makes the intent obvious).
 		container.registerInstance(Gangland.class, gangland);
+		// The module loader is a kernel object too: DatabaseConfig scans module repository packages through it and
+		// KernelConfig merges each module's commands.json into the help index.
+		container.registerInstance(ModuleLoader.class, moduleLoader);
+	}
+
+	/** Major.minor of the running plugin — what a module's {@code Host_Api} must match to load. */
+	private static String hostApi(Gangland gangland) {
+		PluginVersion version = PluginVersion.parse(gangland.getDescription().getVersion());
+		return version.major() + "." + version.minor();
 	}
 
 	/**
@@ -118,6 +143,15 @@ public final class GanglandContext {
 	}
 
 	/**
+	 * Calls {@code onDisabled()} on every loaded module in reverse load order and closes the module classloader.
+	 * Call from {@code Gangland.onDisable()} <b>after</b> {@link #shutdownBeans()} — module beans shut down with the
+	 * rest of the pipeline first.
+	 */
+	public void disableModules() {
+		moduleLoader.disableAll();
+	}
+
+	/**
 	 * Drive the phased bean instantiation, then run the listener and command scans. Must be called exactly once.
 	 * {@code KernelConfig} produces all kernel singletons (FileManager, PermissionManager, etc.) during the
 	 * {@link Phase#KERNEL} phase before FILE-phase hooks need them.
@@ -142,11 +176,24 @@ public final class GanglandContext {
 		// concrete repository class) resolve automatically. Idempotent via publishedRepositories identity set.
 		beanFactory.setPhaseHook(Phase.DATABASE, beans -> publishRepositoriesFromContainer());
 
+		// Runtime modules: discovered, checked and configured before the scan so their @Configuration classes join
+		// the same phased pipeline as the core's. Faults (bad descriptor, wrong Host_Api, missing dependency, a
+		// throwing Main) skip that module and are kept in moduleLoader.faults(); the server keeps booting.
+		List<LoadedModule> modules = moduleLoader.load();
+		log.info("Runtime modules: {} loaded, {} fault(s)", modules.size(), moduleLoader.faults().size());
+
 		beanFactory.scan(CONFIG_PACKAGE);
+		for (LoadedModule module : modules) {
+			for (Class<?> configuration : module.registrations().configurations()) {
+				beanFactory.registerConfiguration(configuration);
+			}
+		}
 		beanFactory.instantiate();
 
 		runListenerPhase();
 		runCommandPhase();
+
+		moduleLoader.enableAll(container);
 	}
 
 	@SuppressWarnings({"unchecked", "rawtypes"})
@@ -173,6 +220,12 @@ public final class GanglandContext {
 					" to a CONFIG-phase @Configuration class.");
 		}
 		listenerManager.scanAndRegisterListeners(LISTENER_PACKAGE, gangland);
+		// Module listeners live in jars the plugin loader cannot see: scan their packages through the module loader.
+		for (LoadedModule module : moduleLoader.loaded()) {
+			for (String listenerPackage : module.registrations().listenerPackages()) {
+				listenerManager.scanAndRegisterListeners(listenerPackage, moduleLoader.classLoader());
+			}
+		}
 		listenerManager.registerEvents();
 		log.debug("Listener phase complete: {} listener(s) registered", listenerManager.getListeners().size());
 	}
@@ -203,6 +256,12 @@ public final class GanglandContext {
 		Command.setInformationManager(container.getInstance(InformationManager.class));
 		command.setExecutor(commandManager);
 		commandManager.scanAndRegisterCommands(COMMAND_PACKAGE, gangland.getClass().getClassLoader());
+		// Top-level @CommandHandler classes a module ships (none for mail, whose commands are contributions).
+		for (LoadedModule module : moduleLoader.loaded()) {
+			for (String commandPackage : module.registrations().commandPackages()) {
+				commandManager.scanAndRegisterCommands(commandPackage, moduleLoader.classLoader());
+			}
+		}
 
 		// Keystone's completer reads the manager's LIVE view + dev-visibility filter per keystroke (1.7.3 — the old
 		// local completer worked off a bootstrap snapshot); the help suggestion appears only where help pages exist.

@@ -14,6 +14,8 @@ import org.luckyraven.keystone.persistence.database.DatabaseSettingsProvider;
 import org.luckyraven.keystone.diagnostics.Diagnostics;
 import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
 import org.luckyraven.keystone.persistence.database.diagnostics.DatabaseFaultSink;
+import org.luckyraven.keystone.module.LoadedModule;
+import org.luckyraven.keystone.module.ModuleLoader;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 import java.io.IOException;
@@ -42,7 +44,8 @@ public class DatabaseConfig {
 	@Bean
 	public GanglandDatabase ganglandDatabase(DatabaseManager databaseManager,
 	                                         DatabaseSettingsProvider settings,
-	                                         Settings settingsAddon) {
+	                                         Settings settingsAddon,
+	                                         ModuleLoader moduleLoader) {
 		int type = Settings.getDatabaseType().equalsIgnoreCase("mysql")
 		           ? DatabaseHandler.MYSQL
 		           : DatabaseHandler.SQLITE;
@@ -66,6 +69,14 @@ public class DatabaseConfig {
 		// it initializes connections. Repositories receive the DatabaseBackend via constructor injection and
 		// persist through TableBackend; createTables() applies schemas through the backend diff engine.
 		database.getRepositoryRegistry().scanAndRegisterRepositories("org.luckyraven.gangland.database.repositories");
+		// Runtime modules ship their own @Repository classes in jars the plugin loader cannot see: scan the
+		// packages they declared through the module loader so their tables join the same schema pass.
+		for (LoadedModule module : moduleLoader.loaded()) {
+			for (String repositoryPackage : module.registrations().repositoryPackages()) {
+				database.getRepositoryRegistry().scanAndRegisterRepositories(repositoryPackage,
+				                                                             moduleLoader.classLoader());
+			}
+		}
 
 		databaseManager.addDatabase(database);
 		databaseManager.initializeDatabases();

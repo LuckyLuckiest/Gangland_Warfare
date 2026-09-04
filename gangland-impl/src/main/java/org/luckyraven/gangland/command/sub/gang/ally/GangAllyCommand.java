@@ -3,6 +3,7 @@ package org.luckyraven.gangland.command.sub.gang.ally;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
+import org.luckyraven.gangland.command.extension.CommandContributions;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -12,23 +13,28 @@ import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.mail.MailManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * {@code /glw gang ally}. The core owns {@code abandon}; the request/accept/reject/pending flow is mail and arrives
+ * through the {@code gang.ally} {@link CommandContributions} when the mail module is installed.
+ */
 public class GangAllyCommand extends SubArgument {
 
-	private final Gangland            gangland;
-	private final Tree<Argument>      tree;
-	private final UserManager<Player> userManager;
-	private final MemberManager       memberManager;
-	private final GangManager         gangManager;
-	private final MailManager         mailManager;
+	public static final String CONTRIBUTION_PARENT = "gang.ally";
+
+	private final Gangland             gangland;
+	private final Tree<Argument>       tree;
+	private final UserManager<Player>  userManager;
+	private final MemberManager        memberManager;
+	private final GangManager          gangManager;
+	private final CommandContributions contributions;
 
 	public GangAllyCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
-	                       MemberManager memberManager, GangManager gangManager, MailManager mailManager) {
+	                       MemberManager memberManager, GangManager gangManager, CommandContributions contributions) {
 		super(gangland, "ally", tree, parent);
 
 		this.gangland      = gangland;
@@ -36,7 +42,7 @@ public class GangAllyCommand extends SubArgument {
 		this.userManager   = userManager;
 		this.memberManager = memberManager;
 		this.gangManager   = gangManager;
-		this.mailManager   = mailManager;
+		this.contributions = contributions;
 
 		initializeArguments();
 	}
@@ -54,30 +60,20 @@ public class GangAllyCommand extends SubArgument {
 				return;
 			}
 
-			sender.sendMessage(
-					GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(),
-					                              "<request/abandon/accept/reject/pending>"));
+			String options = contributions.hasAny(CONTRIBUTION_PARENT)
+			                 ? "<request/abandon/accept/reject/pending>"
+			                 : "<abandon>";
+			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), options));
 		};
 	}
 
 	private void initializeArguments() {
-		GangAllyRequestCommand request = new GangAllyRequestCommand(gangland, tree, this, userManager, memberManager,
-		                                                            gangManager, mailManager);
 		GangAllyAbandonCommand abandon = new GangAllyAbandonCommand(gangland, tree, this, userManager, memberManager,
 		                                                            gangManager);
-		GangAllyAcceptCommand accept = new GangAllyAcceptCommand(gangland, tree, this, userManager, memberManager,
-		                                                         gangManager, mailManager);
-		GangAllyRejectCommand reject = new GangAllyRejectCommand(gangland, tree, this, userManager, memberManager,
-		                                                         gangManager, mailManager);
-		GangAllyPendingCommand pending = new GangAllyPendingCommand(gangland, tree, this, userManager, gangManager,
-		                                                            mailManager);
 
 		List<Argument> arguments = new ArrayList<>();
-		arguments.add(request);
 		arguments.add(abandon);
-		arguments.add(accept);
-		arguments.add(reject);
-		arguments.add(pending);
+		arguments.addAll(contributions.createFor(CONTRIBUTION_PARENT, tree, this));
 
 		this.addAllSubArguments(arguments);
 	}

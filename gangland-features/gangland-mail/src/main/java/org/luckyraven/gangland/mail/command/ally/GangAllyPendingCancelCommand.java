@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.command.sub.gang.ally;
+package org.luckyraven.gangland.mail.command.ally;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -21,7 +21,7 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.*;
 
-class GangAllyPendingCancelCommand extends SubArgument {
+public class GangAllyPendingCancelCommand extends SubArgument {
 
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
@@ -29,7 +29,7 @@ class GangAllyPendingCancelCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final MailManager         mailManager;
 
-	GangAllyPendingCancelCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	public GangAllyPendingCancelCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
 	                             UserManager<Player> userManager, GangManager gangManager, MailManager mailManager) {
 		super(gangland, "cancel", tree, parent);
 
