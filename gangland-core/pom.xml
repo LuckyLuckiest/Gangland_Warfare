@@ -29,4 +29,23 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <!-- Publishes gangland-core's test classes as a test-jar so sibling modules can share
+                 testsupport/BukkitRegistryFixture instead of each duplicating it. Test scope only —
+                 nothing here ever reaches the shaded runtime jar. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

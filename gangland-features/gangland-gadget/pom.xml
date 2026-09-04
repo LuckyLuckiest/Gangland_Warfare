@@ -74,6 +74,14 @@
             <groupId>net.wesjd</groupId>
             <artifactId>anvilgui</artifactId>
         </dependency>
-    </dependencies>
+    
+        <!-- Shared test fixtures (testsupport.BukkitRegistryFixture) -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-core</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+</dependencies>
 
 </project>
