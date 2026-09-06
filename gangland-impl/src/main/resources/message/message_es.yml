@@ -366,6 +366,8 @@ Errors:
       Cannot_Exceed_Max: "No puedes exceder la &ccantidad máxima &7establecida."
       Cannot_Take_More_Than_Balance: "No puedes retirar más dinero de tu &csaldo&7."
       Cannot_Take_Less_Than_Zero: "No puedes retirar una cantidad menor a &ccero&7."
+   Bounty:
+      Below_Minimum: "La recompensa más pequeña que puedes poner es &c%money_symbol%%minimum%&7."
    Bank:
       Must_Create: "Debes crear un banco para continuar."
       Cannot_Create: "Fondos insuficientes para crear una &ccuenta bancaria&7."

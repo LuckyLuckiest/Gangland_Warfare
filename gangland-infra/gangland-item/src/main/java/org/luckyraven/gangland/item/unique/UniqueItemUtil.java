@@ -28,7 +28,7 @@ public final class UniqueItemUtil {
 			if (item == null) continue;
 			if (item.getType() != uniqueItem.getMaterial()) continue;
 			if (!isUniqueItem(item)) continue;
-			if (uniqueItem.compareTo(item) == 0) continue;
+			if (!uniqueItem.matches(item)) continue;
 
 			return true;
 		}

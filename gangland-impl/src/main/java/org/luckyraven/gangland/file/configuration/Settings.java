@@ -80,6 +80,7 @@ public class Settings implements FileInitializer {
 	private static @Getter boolean    respawnTeleportEnabled;
 	private static @Getter String     respawnTeleportWaypoint;
 	// bounty configuration
+	private static @Getter BigDecimal bountyMinimum;
 	private static @Getter BigDecimal bountyEachKillValue;
 	private static @Getter BigDecimal bountyMaxKill;
 	private static @Getter boolean    bountyTimerEnabled;
@@ -483,6 +484,7 @@ public class Settings implements FileInitializer {
 		NodeReader bountyKill  = section(bounty, "Kill", report);
 		NodeReader bountyTimer = section(bounty, "Repeating_Timer", report);
 
+		bountyMinimum       = money(bounty, "Minimum", "0");
 		bountyEachKillValue = money(bountyKill, "Each", "5");
 		bountyMaxKill       = money(bountyKill, "Maximum", "50000");
 		bountyTimerEnabled  = bool(bountyTimer, "Enable", true);

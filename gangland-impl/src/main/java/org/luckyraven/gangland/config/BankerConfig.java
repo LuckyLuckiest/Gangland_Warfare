@@ -46,6 +46,9 @@ public class BankerConfig {
 		// Register the bypass-cap permission once, alongside settings load. Exposing it through PermissionManager
 		// surfaces it in rank / tab-completion flows the same way other gangland permissions are discovered.
 		permissionManager.addPermission(BankCommand.BYPASS_CAP_PERMISSION);
+		// The cross-player deposit/withdraw forms are OptionalArgument leaves, which Keystone does not give a
+		// permission of their own — this node is what gates them.
+		permissionManager.addPermission(BankCommand.ADMIN_PERMISSION);
 		return new BankerSettingsImpl();
 	}
 

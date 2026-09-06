@@ -5,7 +5,6 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,10 +16,9 @@ import org.luckyraven.gangland.item.contract.UniqueItemRegistry;
 import org.luckyraven.gangland.item.event.PlayerItemInitEvent;
 import org.luckyraven.gangland.item.unique.UniqueItem;
 import org.luckyraven.gangland.item.unique.UniqueItemKeys;
+import org.luckyraven.gangland.item.support.PerStackNbtAccessor;
 import org.luckyraven.keystone.item.nbt.NbtBridge;
 import org.luckyraven.keystone.testkit.BukkitStatics;
-import org.luckyraven.keystone.testkit.RecordingNbtAccessor;
-import org.luckyraven.keystone.util.ChatUtil;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -32,11 +30,11 @@ import static org.mockito.Mockito.*;
 /**
  * Unit tests for {@link LoadUniqueItem}.
  *
- * <p>Pins Observation #2 (items-unique.md): {@code removeItem} has the same inversion as
+ * <p>Regression net for IT-02 (Observation #2, items-unique.md): {@code removeItem} had the same inversion as
  * {@code UniqueItemUtil.hasUniqueItem} — {@code if (uniqueItem.compareTo(contents[i]) == 0) continue;} then
- * {@code inventory.setItem(i, null)} — so it nulls the first slot that does <em>not</em> match the target item,
- * i.e. it can silently destroy an arbitrary inventory slot when a player is downed while holding a droppable
- * unique item.
+ * {@code inventory.setItem(i, null)} — so it nulled the first slot that did <em>not</em> match the target item,
+ * silently destroying an arbitrary inventory slot when a player was downed while holding a droppable unique
+ * item. It now clears only stacks that {@code UniqueItem.matches}.
  *
  * <p>Also pins the join/respawn per-item skip gates (Add_On_Join / Add_To_Inventory / Add_On_Respawn) and the
  * async-event -> main-thread hop in {@code onJoinGiveItem} (W7, items-unique.md), using {@link BukkitStatics} so
@@ -45,14 +43,14 @@ import static org.mockito.Mockito.*;
 @DisplayName("LoadUniqueItem — join/respawn granting and downed-state removal")
 class LoadUniqueItemTest {
 
-	private RecordingNbtAccessor accessor;
+	private PerStackNbtAccessor  accessor;
 	private UniqueItemRegistry   registry;
 	private JavaPlugin           plugin;
 	private LoadUniqueItem       listener;
 
 	@BeforeEach
 	void setUp() {
-		accessor = new RecordingNbtAccessor();
+		accessor = new PerStackNbtAccessor();
 		NbtBridge.install(accessor);
 
 		registry = mock(UniqueItemRegistry.class);
@@ -164,36 +162,89 @@ class LoadUniqueItemTest {
 	// -------------------------------------------------------------- onPlayerDowned / removeItem inversion (#2)
 
 	@Test
-	@DisplayName("Observations #2 + #3: onPlayerDowned preserves a plain (non-unique) item and instead destroys "
-			+ "the genuine unique item, because compareTo() never equals 0 against a colour-translated display "
-			+ "name")
-	void onPlayerDowned_preservesPlainItem_destroysGenuineUniqueItem() {
-		UniqueItem phone = UniqueItem.builder()
-				.uniqueItem("phone").material(Material.IRON_INGOT).customModelData(0).name("&6Phone")
-				.addOnJoin(false).addOnRespawn(false).dropOnDeath(false).allowDuplicates(false).addToInventory(true)
-				.droppable(true)
-				.build();
+	@DisplayName("IT-02: onPlayerDowned removes only the target unique item, leaving a plain item and a different "
+			+ "unique item of the same material untouched")
+	void onPlayerDowned_removesOnlyTheTargetUniqueItem() {
+		UniqueItem phone = droppablePhone();
 		when(registry.getUniqueItems()).thenReturn(Map.of("phone", phone));
 
-		// Slot 0: an unrelated plain item — Mockito leaves getItemMeta() as null by default, so compareTo()
-		// short-circuits to 0 via the "meta == null" branch and the buggy "continue on match" preserves it.
+		// Slot 0: an unrelated plain item. Before the fix this was the slot the loop nulled, because it "did not
+		// match" — the inverted branch destroyed an arbitrary inventory slot.
 		ItemStack plainItem = mock(ItemStack.class);
 		when(plainItem.getType()).thenReturn(Material.DIRT);
 
-		// Slot 1: the actual, correctly-built phone (colour-translated display name) — its compareTo() against
-		// itself is never 0 (Observation #3), so the loop treats it as "not a match" and nulls it. This same
-		// mismatch is also what makes hasUniqueItem(player, phone) report true and let onPlayerDowned proceed.
-		ItemStack builtPhone = uniqueStack(Material.IRON_INGOT, "&6Phone");
+		// Slot 1: the actual phone — the only stack that must be removed.
+		ItemStack builtPhone = taggedStack(Material.IRON_INGOT, "phone");
+
+		// Slot 2: a different unique item of the same material. It must survive; the two-slot fixture this test
+		// replaced could not tell "removed the right one" from "removed the first non-match".
+		ItemStack lockpick = taggedStack(Material.IRON_INGOT, "lockpick");
 
 		Player          player    = mock(Player.class);
 		PlayerInventory inventory = mock(PlayerInventory.class);
 		when(player.getInventory()).thenReturn(inventory);
-		when(inventory.getContents()).thenReturn(new ItemStack[]{plainItem, builtPhone});
+		when(inventory.getContents()).thenReturn(new ItemStack[]{plainItem, builtPhone, lockpick});
 
 		listener.onPlayerDowned(new PlayerDownedEvent(player));
 
 		verify(inventory, never()).setItem(eq(0), any());
 		verify(inventory).setItem(eq(1), isNull());
+		verify(inventory, never()).setItem(eq(2), any());
+	}
+
+	@Test
+	@DisplayName("IT-02: onPlayerDowned does nothing when the player does not hold the droppable unique item")
+	void onPlayerDowned_playerDoesNotHoldItem_touchesNothing() {
+		UniqueItem phone = droppablePhone();
+		when(registry.getUniqueItems()).thenReturn(Map.of("phone", phone));
+
+		ItemStack plainItem = mock(ItemStack.class);
+		when(plainItem.getType()).thenReturn(Material.DIRT);
+
+		ItemStack lockpick = taggedStack(Material.IRON_INGOT, "lockpick");
+
+		Player          player    = mock(Player.class);
+		PlayerInventory inventory = mock(PlayerInventory.class);
+		when(player.getInventory()).thenReturn(inventory);
+		when(inventory.getContents()).thenReturn(new ItemStack[]{plainItem, lockpick});
+
+		listener.onPlayerDowned(new PlayerDownedEvent(player));
+
+		verify(inventory, never()).setItem(anyInt(), any());
+	}
+
+	@Test
+	@DisplayName("IT-02: with Allow_Duplicates true, onPlayerDowned removes every copy of the target item only")
+	void onPlayerDowned_allowDuplicates_removesEveryCopyOfTheTargetOnly() {
+		UniqueItem phone = UniqueItem.builder()
+				.uniqueItem("phone").material(Material.IRON_INGOT).customModelData(0).name("&6Phone")
+				.addOnJoin(false).addOnRespawn(false).dropOnDeath(false).allowDuplicates(true).addToInventory(true)
+				.droppable(true)
+				.build();
+		when(registry.getUniqueItems()).thenReturn(Map.of("phone", phone));
+
+		ItemStack firstPhone  = taggedStack(Material.IRON_INGOT, "phone");
+		ItemStack lockpick    = taggedStack(Material.IRON_INGOT, "lockpick");
+		ItemStack secondPhone = taggedStack(Material.IRON_INGOT, "phone");
+
+		Player          player    = mock(Player.class);
+		PlayerInventory inventory = mock(PlayerInventory.class);
+		when(player.getInventory()).thenReturn(inventory);
+		when(inventory.getContents()).thenReturn(new ItemStack[]{firstPhone, lockpick, secondPhone});
+
+		listener.onPlayerDowned(new PlayerDownedEvent(player));
+
+		verify(inventory).setItem(eq(0), isNull());
+		verify(inventory, never()).setItem(eq(1), any());
+		verify(inventory).setItem(eq(2), isNull());
+	}
+
+	private static UniqueItem droppablePhone() {
+		return UniqueItem.builder()
+				.uniqueItem("phone").material(Material.IRON_INGOT).customModelData(0).name("&6Phone")
+				.addOnJoin(false).addOnRespawn(false).dropOnDeath(false).allowDuplicates(false).addToInventory(true)
+				.droppable(true)
+				.build();
 	}
 
 	@Test
@@ -210,13 +261,10 @@ class LoadUniqueItemTest {
 
 	// -------------------------------------------------------------- fixtures
 
-	private ItemStack uniqueStack(Material material, String rawDisplayName) {
+	private ItemStack taggedStack(Material material, String uniqueKey) {
 		ItemStack stack = mock(ItemStack.class);
-		ItemMeta  meta  = mock(ItemMeta.class);
 		when(stack.getType()).thenReturn(material);
-		when(stack.getItemMeta()).thenReturn(meta);
-		when(meta.getDisplayName()).thenReturn(ChatUtil.color(rawDisplayName));
-		accessor.values.put(UniqueItemKeys.UNIQUE_ITEM_KEY, "shared-tag-not-discriminating");
+		accessor.put(stack, UniqueItemKeys.UNIQUE_ITEM_KEY, uniqueKey);
 		return stack;
 	}
 

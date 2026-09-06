@@ -239,6 +239,9 @@ User:
 # | Bounty Config | #
 # +---------------+ #
 Bounty:
+   # The smallest bounty a player may place with [/glw bounty set]. Set to 0 to disable the check.
+   # Amounts of zero or less are always rejected, regardless of this value.
+   Minimum: 0
    Kill:
       # Each kill committed will be added on the total bounty amount.
       Each: 5

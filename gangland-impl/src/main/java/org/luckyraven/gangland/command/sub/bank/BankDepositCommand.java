@@ -7,6 +7,7 @@ import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
+import org.luckyraven.gangland.command.util.ParsedAmount;
 import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTier;
 import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTierRegistry;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -85,17 +86,14 @@ class BankDepositCommand extends SubArgument {
 				return;
 			}
 
-			BigDecimal argAmount;
+			ParsedAmount parsed = ParsedAmount.of(args[2]);
 
-			try {
-				argAmount = Currency.parse(args[2]);
-			} catch (NumberFormatException exception) {
-				String string  = Messages.MUST_BE_NUMBERS.toString();
-				String replace = string.replace("%command%", args[2]);
-
-				user.sendMessage(replace);
+			if (!parsed.isValid()) {
+				user.sendMessage(parsed.failureMessage(args[2]));
 				return;
 			}
+
+			BigDecimal argAmount = parsed.require();
 
 			BigDecimal cashBal = user.getEconomy().getAmount();
 			BigDecimal bankBal = bank.getEconomy().getAmount();
@@ -162,6 +160,11 @@ class BankDepositCommand extends SubArgument {
 
 	private OptionalArgument bankDepositTarget() {
 		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+			if (!sender.hasPermission(BankCommand.ADMIN_PERMISSION)) {
+				sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				return;
+			}
+
 			String name         = args[3];
 			Player targetPlayer = Bukkit.getPlayer(name);
 
@@ -179,14 +182,14 @@ class BankDepositCommand extends SubArgument {
 				return;
 			}
 
-			BigDecimal argAmount;
+			ParsedAmount parsed = ParsedAmount.of(args[2]);
 
-			try {
-				argAmount = Currency.parse(args[2]);
-			} catch (NumberFormatException exception) {
-				sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
+			if (!parsed.isValid()) {
+				sender.sendMessage(parsed.failureMessage(args[2]));
 				return;
 			}
+
+			BigDecimal argAmount = parsed.require();
 
 			Bank       bank     = target.getBank();
 			BigDecimal newValue = bank.getEconomy().getAmount().add(argAmount);
