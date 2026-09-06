@@ -6,6 +6,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.luckyraven.gangland.support.SettingsFixture;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -74,6 +75,34 @@ class SettingsTest {
 		assertEquals(10, Settings.getAutoSaveTime(), "default when Database.Auto_Save is absent");
 		assertEquals(30.0, Settings.getCleanUpTime(), "default when Database.Clean_Up is absent");
 		assertTrue(Settings.isAutoSave(), "default Auto_Save.Enable when the section is absent");
+	}
+
+	@Test
+	@DisplayName("WB-02: Bounty.Minimum is read from the YAML and drives the bounty floor")
+	void initialize_bountyMinimum_isReadFromYaml() throws IOException {
+		SettingsFixture.write(tempDir, """
+				Money_Symbol: '$'
+				Bounty:
+				  Minimum: 250
+				""");
+
+		SettingsFixture.initialize(tempDir);
+
+		assertEquals(0, new BigDecimal("250").compareTo(Settings.getBountyMinimum()));
+	}
+
+	@Test
+	@DisplayName("WB-02: an absent Bounty.Minimum defaults to 0, which disables the floor but never the "
+			+ "zero-or-negative rejection")
+	void initialize_bountyMinimumAbsent_defaultsToZero() throws IOException {
+		SettingsFixture.write(tempDir, "Money_Symbol: '$'\n");
+
+		SettingsFixture.initialize(tempDir);
+
+		BigDecimal minimum = Settings.getBountyMinimum();
+
+		assertEquals(0, BigDecimal.ZERO.compareTo(minimum), "default when the Bounty section is absent");
+		assertFalse(minimum.signum() > 0, "signum() > 0 is the guard BountySetCommand uses to skip the floor check");
 	}
 
 	@Test

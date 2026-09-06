@@ -468,6 +468,8 @@ Errors:
       Cannot_Exceed_Max: "You can't exceed the &cmaximum amount &7set."
       Cannot_Take_More_Than_Balance: "You can't take money more than your &cbalance&7."
       Cannot_Take_Less_Than_Zero: "You can't take money less than &czero&7."
+   Bounty:
+      Below_Minimum: "The smallest bounty you can place is &c%money_symbol%%minimum%&7."
    Bank:
       Must_Create: "Must create a Bank to continue."
       Cannot_Create: "Insufficient funds to create a &cbank account&7."

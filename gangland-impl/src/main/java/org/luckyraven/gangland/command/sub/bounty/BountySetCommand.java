@@ -7,6 +7,7 @@ import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
+import org.luckyraven.gangland.command.util.ParsedAmount;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.economy.Currency;
@@ -73,15 +74,24 @@ class BountySetCommand extends SubArgument {
 				return;
 			}
 
-			String     amountStr = args[3];
-			BigDecimal value;
-			try {
-				value = Currency.parse(amountStr);
-			} catch (NumberFormatException exception) {
-				String string1 = Messages.MUST_BE_NUMBERS.toString();
-				String replace = string1.replace("%command%", amountStr);
+			String       amountStr = args[3];
+			ParsedAmount parsed    = ParsedAmount.of(amountStr);
 
-				sender.sendMessage(replace);
+			if (!parsed.isValid()) {
+				sender.sendMessage(parsed.failureMessage(amountStr));
+				return;
+			}
+
+			BigDecimal value = parsed.require();
+
+			// A negative amount used to reach withdrawAmount(), which credited the sender and wrote a negative
+			// bounty into the ledger; the minimum keeps trivial 0.01 bounties out of the ledger too.
+			BigDecimal minimum = Currency.of(Settings.getBountyMinimum());
+
+			if (minimum.signum() > 0 && value.compareTo(minimum) < 0) {
+				sender.sendMessage(Messages.BOUNTY_BELOW_MINIMUM.toString()
+				                                                .replace("%money_symbol%", Settings.getMoneySymbol())
+				                                                .replace("%minimum%", Settings.formatAmount(minimum)));
 				return;
 			}
 

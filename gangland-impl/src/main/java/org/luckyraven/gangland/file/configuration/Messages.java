@@ -245,6 +245,7 @@ public enum Messages {
 	CANNOT_EXCEED_MAXIMUM("Errors.Economy.Cannot_Exceed_Max", Type.ERROR),
 	CANNOT_TAKE_MORE_THAN_BALANCE("Errors.Economy.Cannot_Take_More_Than_Balance", Type.ERROR),
 	CANNOT_TAKE_LESS_THAN_ZERO("Errors.Economy.Cannot_Take_Less_Than_Zero", Type.ERROR),
+	BOUNTY_BELOW_MINIMUM("Errors.Bounty.Below_Minimum", Type.ERROR),
 
 	// errors - bank
 	MUST_CREATE_BANK("Errors.Bank.Must_Create", Type.ERROR),
