@@ -4,42 +4,44 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.item.support.PerStackNbtAccessor;
 import org.luckyraven.keystone.item.nbt.NbtBridge;
-import org.luckyraven.keystone.testkit.RecordingNbtAccessor;
-import org.luckyraven.keystone.util.ChatUtil;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for {@link UniqueItemUtil}, routed through an installed {@link RecordingNbtAccessor} so tag reads/
- * writes are asserted with no NBT provider on the classpath (per {@code documentation/TESTING.md} section 4).
+ * Unit tests for {@link UniqueItemUtil}, routed through an installed {@link PerStackNbtAccessor} so tag
+ * reads/writes are asserted with no NBT provider on the classpath (per {@code documentation/TESTING.md}
+ * section 4).
  *
- * <p>Pins Observation #1 (items-unique.md), the highest-value regression test in this area: {@code hasUniqueItem}
- * does {@code if (uniqueItem.compareTo(item) == 0) continue;} — it <em>skips</em> the item that actually matches
- * and returns {@code true} only when the inventory holds a <em>different</em> unique item of the same material.
- * Combined with {@code Allow_Duplicates: false} at the call site ({@code LoadUniqueItem:46,89}), this means the
- * duplicate guard never fires for a genuine duplicate.
+ * <p>Regression net for IT-01 (Observation #1, items-unique.md). {@code hasUniqueItem} used to do
+ * {@code if (uniqueItem.compareTo(item) == 0) continue;} — it <em>skipped</em> the item that actually
+ * matched and returned {@code true} only when the inventory held a <em>different</em> unique item of the
+ * same material. Combined with {@code Allow_Duplicates: false} at the call site
+ * ({@code LoadUniqueItem:46,89}), the duplicate guard never fired and unique items multiplied on every join.
+ * Identity now comes from the {@code uniqueItem} NBT tag via {@code UniqueItem.matches}.
  *
- * <p>{@code buildItem(Player)} is deliberately never invoked here — it needs a live {@code ItemFactory} to back
- * {@code ItemStack#getItemMeta()}, which is not available without a running server or MockBukkit (neither is wired
- * into this repo's testkit). Every {@link ItemStack} below is a hand-stubbed Mockito mock instead, exactly as
- * {@code UniqueItemTest} does for {@code compareTo}.
+ * <p>{@link PerStackNbtAccessor} rather than testkit's {@code RecordingNbtAccessor} is required here: the
+ * latter keys tags by name only, so two stacks could never carry different unique-item keys.
+ *
+ * <p>{@code buildItem(Player)} is deliberately never invoked here — it needs a live {@code ItemFactory} to
+ * back {@code ItemStack#getItemMeta()}. Every {@link ItemStack} below is a hand-stubbed Mockito mock
+ * instead; {@code UniqueItemIdentityIntegrationTest} covers the real-stack path.
  */
 @DisplayName("UniqueItemUtil — unique-item identity and inventory scanning")
 class UniqueItemUtilTest {
 
-	private RecordingNbtAccessor accessor;
+	private PerStackNbtAccessor accessor;
 
 	@BeforeEach
 	void installNbt() {
-		accessor = new RecordingNbtAccessor();
+		accessor = new PerStackNbtAccessor();
 		NbtBridge.install(accessor);
 	}
 
@@ -66,7 +68,7 @@ class UniqueItemUtilTest {
 
 		assertFalse(UniqueItemUtil.isUniqueItem(stack));
 
-		accessor.values.put(UniqueItemKeys.UNIQUE_ITEM_KEY, "phone");
+		accessor.put(stack, UniqueItemKeys.UNIQUE_ITEM_KEY, "phone");
 		assertTrue(UniqueItemUtil.isUniqueItem(stack));
 	}
 
@@ -78,55 +80,60 @@ class UniqueItemUtilTest {
 
 		assertNull(UniqueItemUtil.getUniqueItemKey(stack));
 
-		accessor.values.put(UniqueItemKeys.UNIQUE_ITEM_KEY, "phone");
+		accessor.put(stack, UniqueItemKeys.UNIQUE_ITEM_KEY, "phone");
 		assertEquals("phone", UniqueItemUtil.getUniqueItemKey(stack));
 	}
 
 	@Test
-	@DisplayName("Observation #1: an inventory holding the target item itself (and nothing else) reports "
-			+ "hasUniqueItem == false")
-	void hasUniqueItem_onlyTheMatchingItemPresent_reportsFalse() {
-		UniqueItem uniqueItem = UniqueItem.builder()
-				.uniqueItem("phone").material(Material.IRON_INGOT).customModelData(0)
-				.name("Phone") // no colour codes, so compareTo's name check can genuinely succeed
-				.addOnJoin(true).addOnRespawn(false).dropOnDeath(false).allowDuplicates(false).addToInventory(true)
-				.build();
+	@DisplayName("IT-01: an inventory holding the target item reports hasUniqueItem == true")
+	void hasUniqueItem_matchingItemPresent_reportsTrue() {
+		UniqueItem phone = phone();
 
-		ItemStack matchingStack = mockUniqueStack(Material.IRON_INGOT, "Phone", "phone");
+		ItemStack matchingStack = taggedStack(Material.IRON_INGOT, "phone");
 
 		Player player = playerWithInventory(matchingStack);
 
-		assertFalse(UniqueItemUtil.hasUniqueItem(player, uniqueItem),
-		            "the one genuinely matching item is skipped by the inverted 'continue' branch");
+		assertTrue(UniqueItemUtil.hasUniqueItem(player, phone),
+		           "the genuinely matching item must be found — this is the duplicate guard");
 	}
 
 	@Test
-	@DisplayName("Observation #1: a DIFFERENT unique item of the same material makes hasUniqueItem report true, "
-			+ "even though the inventory does not contain the target item at all")
-	void hasUniqueItem_differentUniqueItemSameMaterial_reportsTrue() {
-		UniqueItem phone = UniqueItem.builder()
-				.uniqueItem("phone").material(Material.IRON_INGOT).customModelData(0)
-				.name("Phone")
-				.addOnJoin(true).addOnRespawn(false).dropOnDeath(false).allowDuplicates(false).addToInventory(true)
-				.build();
+	@DisplayName("IT-01: a DIFFERENT unique item of the same material does not report hasUniqueItem == true")
+	void hasUniqueItem_differentUniqueItemSameMaterial_reportsFalse() {
+		UniqueItem phone = phone();
 
-		// A different unique item ("lockpick"), same material, non-matching display name.
-		ItemStack otherUniqueStack = mockUniqueStack(Material.IRON_INGOT, "Lockpick", "lockpick");
+		// A different unique item ("lockpick"), same material — must not satisfy the phone's duplicate guard.
+		ItemStack otherUniqueStack = taggedStack(Material.IRON_INGOT, "lockpick");
 
 		Player player = playerWithInventory(otherUniqueStack);
 
-		assertTrue(UniqueItemUtil.hasUniqueItem(player, phone),
-		           "the predicate is inverted: it reports true for ANY other unique item of the same material");
+		assertFalse(UniqueItemUtil.hasUniqueItem(player, phone),
+		            "identity is the uniqueItem NBT tag, so another unique item of the same material is not a match");
+	}
+
+	@Test
+	@DisplayName("hasUniqueItem finds the target item among unrelated inventory contents")
+	void hasUniqueItem_findsTargetAmongOtherContents() {
+		UniqueItem phone = phone();
+
+		ItemStack wrongMaterial = mock(ItemStack.class);
+		when(wrongMaterial.getType()).thenReturn(Material.DIRT);
+
+		ItemStack plainIron = mock(ItemStack.class);
+		when(plainIron.getType()).thenReturn(Material.IRON_INGOT);
+
+		ItemStack lockpick = taggedStack(Material.IRON_INGOT, "lockpick");
+		ItemStack thePhone = taggedStack(Material.IRON_INGOT, "phone");
+
+		Player player = playerWithInventory(null, wrongMaterial, plainIron, lockpick, thePhone);
+
+		assertTrue(UniqueItemUtil.hasUniqueItem(player, phone));
 	}
 
 	@Test
 	@DisplayName("hasUniqueItem ignores null slots, wrong-material items, and non-unique items of the right material")
 	void hasUniqueItem_ignoresNonMatchingSlots() {
-		UniqueItem phone = UniqueItem.builder()
-				.uniqueItem("phone").material(Material.IRON_INGOT).customModelData(0)
-				.name("Phone")
-				.addOnJoin(true).addOnRespawn(false).dropOnDeath(false).allowDuplicates(false).addToInventory(true)
-				.build();
+		UniqueItem phone = phone();
 
 		ItemStack wrongMaterial = mock(ItemStack.class);
 		when(wrongMaterial.getType()).thenReturn(Material.DIRT);
@@ -139,18 +146,32 @@ class UniqueItemUtilTest {
 		assertFalse(UniqueItemUtil.hasUniqueItem(player, phone));
 	}
 
+	@Test
+	@DisplayName("hasUniqueItem does not match the right key stamped on the wrong material")
+	void hasUniqueItem_rightKeyWrongMaterial_reportsFalse() {
+		UniqueItem phone = phone();
+
+		ItemStack wrongMaterial = taggedStack(Material.GOLD_INGOT, "phone");
+
+		Player player = playerWithInventory(wrongMaterial);
+
+		assertFalse(UniqueItemUtil.hasUniqueItem(player, phone));
+	}
+
 	// -------------------------------------------------------------- fixtures
 
-	private ItemStack mockUniqueStack(Material material, String rawDisplayName, String uniqueKey) {
+	private static UniqueItem phone() {
+		return UniqueItem.builder()
+				.uniqueItem("phone").material(Material.IRON_INGOT).customModelData(0)
+				.name("&6Phone")
+				.addOnJoin(true).addOnRespawn(false).dropOnDeath(false).allowDuplicates(false).addToInventory(true)
+				.build();
+	}
+
+	private ItemStack taggedStack(Material material, String uniqueKey) {
 		ItemStack stack = mock(ItemStack.class);
-		ItemMeta  meta  = mock(ItemMeta.class);
 		when(stack.getType()).thenReturn(material);
-		when(stack.getItemMeta()).thenReturn(meta);
-		when(meta.getDisplayName()).thenReturn(ChatUtil.color(rawDisplayName));
-		// The shared accessor map is not per-stack; every "unique" stack in these tests reads the same tag value,
-		// which is exactly why hasUniqueItem cannot tell two different unique items apart by NBT alone here — the
-		// discriminator under test is compareTo's display-name comparison, not the tag.
-		accessor.values.put(UniqueItemKeys.UNIQUE_ITEM_KEY, uniqueKey);
+		accessor.put(stack, UniqueItemKeys.UNIQUE_ITEM_KEY, uniqueKey);
 		return stack;
 	}
 

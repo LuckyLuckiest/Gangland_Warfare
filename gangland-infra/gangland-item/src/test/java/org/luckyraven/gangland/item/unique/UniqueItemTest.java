@@ -4,38 +4,41 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.item.support.PerStackNbtAccessor;
 import org.luckyraven.keystone.item.nbt.NbtBridge;
-import org.luckyraven.keystone.testkit.RecordingNbtAccessor;
-import org.luckyraven.keystone.util.ChatUtil;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for {@link UniqueItem} that do not require {@code buildItem(Player)} to run (that call needs a live
- * {@code ItemFactory} — see {@code UniqueItemUtilTest} javadoc for why that path is out of unit-test reach here).
+ * {@code ItemFactory}; {@code UniqueItemIdentityIntegrationTest} covers that path with a real server registry).
  *
- * <p>Pins Observation #3 (items-unique.md): {@code compareTo} compares the raw, unresolved config {@code name}
- * (still carrying {@code &}-codes) against the built item's colour-translated {@code meta.getDisplayName()} — so it
- * never reports a match against a genuinely built stack, which is the root cause behind Observations #1 and #2 in
- * {@link UniqueItemUtilTest} and {@code LoadUniqueItemTest}.
+ * <p>Regression net for IT-03 (Observation #3, items-unique.md). {@code compareTo} used to compare the raw,
+ * unresolved config {@code name} (still carrying {@code &}-codes) against the built item's colour-translated
+ * {@code meta.getDisplayName()}, so it never reported a match against a genuinely built stack — the root
+ * cause behind IT-01 and IT-02. It also returned {@code 0} ("equal") for stacks with no meta and for stacks
+ * that were not unique items at all, which made every caller treating {@code 0} as "this is my item" act on
+ * unrelated inventory contents.
  *
- * <p>Also pins Observation #21: {@code addItemToInventory} returns {@code !addItem(...)}, i.e. {@code false} on
- * success and {@code true} on failure — inverted from what the name implies.
+ * <p>Identity is now {@link UniqueItem#matches(ItemStack)} — the {@code uniqueItem} NBT tag plus the
+ * material — and {@code compareTo(stack) == 0} is exactly that predicate.
+ *
+ * <p>Also pins Observation #21 (IT-21, still open): {@code addItemToInventory} returns {@code !addItem(...)},
+ * i.e. {@code false} on success and {@code true} on failure — inverted from what the name implies.
  */
 @DisplayName("UniqueItem — identity comparison and inventory placement")
 class UniqueItemTest {
 
-	private RecordingNbtAccessor accessor;
+	private PerStackNbtAccessor accessor;
 
 	@BeforeEach
 	void installNbt() {
-		accessor = new RecordingNbtAccessor();
+		accessor = new PerStackNbtAccessor();
 		NbtBridge.install(accessor);
 	}
 
@@ -65,63 +68,112 @@ class UniqueItemTest {
 		assertEquals("gangland.uniqueitem.phone", uniqueItem.getPermission());
 	}
 
+	// -------------------------------------------------------------- matches
+
 	@Test
-	@DisplayName("compareTo returns 0 immediately when the stack has no ItemMeta")
-	void compareTo_noMeta_returnsZero() {
+	@DisplayName("matches is false for a null stack")
+	void matches_nullStack_isFalse() {
+		assertFalse(baseBuilder().build().matches(null));
+	}
+
+	@Test
+	@DisplayName("matches is true for a stack carrying this item's key on this item's material")
+	void matches_sameKeyAndMaterial_isTrue() {
+		UniqueItem uniqueItem = baseBuilder().build();
+		ItemStack  stack      = taggedStack(Material.IRON_INGOT, "phone");
+
+		assertTrue(uniqueItem.matches(stack));
+	}
+
+	@Test
+	@DisplayName("matches is false for another unique item's key on the same material")
+	void matches_differentKey_isFalse() {
+		UniqueItem uniqueItem = baseBuilder().build();
+		ItemStack  stack      = taggedStack(Material.IRON_INGOT, "lockpick");
+
+		assertFalse(uniqueItem.matches(stack));
+	}
+
+	@Test
+	@DisplayName("matches is false for this item's key stamped on the wrong material")
+	void matches_wrongMaterial_isFalse() {
+		UniqueItem uniqueItem = baseBuilder().build();
+		ItemStack  stack      = taggedStack(Material.GOLD_INGOT, "phone");
+
+		assertFalse(uniqueItem.matches(stack));
+	}
+
+	@Test
+	@DisplayName("matches is false for an untagged stack of the right material")
+	void matches_untaggedStack_isFalse() {
+		UniqueItem uniqueItem = baseBuilder().build();
+		ItemStack  stack      = mock(ItemStack.class);
+		when(stack.getType()).thenReturn(Material.IRON_INGOT);
+
+		assertFalse(uniqueItem.matches(stack));
+	}
+
+	// -------------------------------------------------------------- compareTo
+
+	@Test
+	@DisplayName("IT-03: compareTo is non-zero for a stack that is not a unique item, so callers that treat 0 as "
+			+ "a match never act on plain inventory contents")
+	void compareTo_notUniqueItem_isNonZero() {
+		UniqueItem uniqueItem = baseBuilder().build();
+		ItemStack  stack      = mock(ItemStack.class);
+		when(stack.getType()).thenReturn(Material.IRON_INGOT);
+
+		assertNotEquals(0, uniqueItem.compareTo(stack));
+	}
+
+	@Test
+	@DisplayName("IT-03: compareTo is non-zero for a stack with no ItemMeta — identity no longer reads meta at all")
+	void compareTo_noMeta_isNonZero() {
 		UniqueItem uniqueItem = baseBuilder().build();
 		ItemStack  stack      = mock(ItemStack.class);
 		when(stack.getItemMeta()).thenReturn(null);
 
-		assertEquals(0, uniqueItem.compareTo(stack));
+		assertNotEquals(0, uniqueItem.compareTo(stack));
 	}
 
 	@Test
-	@DisplayName("compareTo returns 0 when the stack is not tagged as a unique item at all (not just 'no match')")
-	void compareTo_notUniqueItem_returnsZero() {
-		UniqueItem uniqueItem = baseBuilder().build();
-		ItemStack  stack      = mock(ItemStack.class);
-		ItemMeta   meta       = mock(ItemMeta.class);
-		when(stack.getItemMeta()).thenReturn(meta);
-		when(stack.getType()).thenReturn(Material.IRON_INGOT);
-		// RecordingNbtAccessor has no "uniqueItem" tag recorded, so isUniqueItem(stack) is false.
-
-		assertEquals(0, uniqueItem.compareTo(stack),
-		             "0 here means 'not comparable', but callers cannot distinguish this from a genuine match");
-	}
-
-	@Test
-	@DisplayName("Observation #3: compareTo never matches a genuinely built stack, because it compares the raw "
-			+ "&-coded config name against the colour-translated display name")
-	void compareTo_rawNameVsColourTranslatedName_neverMatches() {
+	@DisplayName("IT-03: compareTo matches a genuinely built stack whose display name is colour-translated, "
+			+ "because identity is the uniqueItem NBT tag and not the display name")
+	void compareTo_rawNameVsColourTranslatedName_matches() {
 		UniqueItem uniqueItem = baseBuilder().name("&6Phone").build();
 
-		ItemStack stack = mock(ItemStack.class);
-		ItemMeta  meta  = mock(ItemMeta.class);
-		when(stack.getItemMeta()).thenReturn(meta);
-		when(stack.getType()).thenReturn(Material.IRON_INGOT);
-		// Exactly what UniqueItem.buildItem would have produced via ItemBuilder.setDisplayName -> ChatUtil.color.
-		when(meta.getDisplayName()).thenReturn(ChatUtil.color("&6Phone"));
-		tagAsUniqueItem("phone");
+		// The stack a real buildItem() would produce: display name translated to §6Phone, tag "phone" stamped.
+		ItemStack stack = taggedStack(Material.IRON_INGOT, "phone");
 
-		assertNotEquals(0, uniqueItem.compareTo(stack),
-		                "raw '&6Phone' can never equal its own colour-translated '§6Phone'");
+		assertEquals(0, uniqueItem.compareTo(stack),
+		             "the raw '&6Phone' vs rendered '§6Phone' mismatch must no longer defeat identity");
 	}
 
 	@Test
-	@DisplayName("compareTo does return 0 for a stack whose display name is byte-for-byte identical to the raw "
-			+ "config name and whose material matches — the one case where the identity check actually works")
-	void compareTo_identicalRawNameAndMaterial_returnsZero() {
-		UniqueItem uniqueItem = baseBuilder().name("Phone").build(); // no colour codes to translate
+	@DisplayName("compareTo is non-zero for a different unique item, and orders by registry key")
+	void compareTo_differentKey_ordersByKey() {
+		UniqueItem uniqueItem = baseBuilder().build(); // key "phone"
+		ItemStack  lockpick   = taggedStack(Material.IRON_INGOT, "lockpick");
 
-		ItemStack stack = mock(ItemStack.class);
-		ItemMeta  meta  = mock(ItemMeta.class);
-		when(stack.getItemMeta()).thenReturn(meta);
-		when(stack.getType()).thenReturn(Material.IRON_INGOT);
-		when(meta.getDisplayName()).thenReturn("Phone");
-		tagAsUniqueItem("phone");
-
-		assertEquals(0, uniqueItem.compareTo(stack));
+		assertTrue(uniqueItem.compareTo(lockpick) > 0, "'phone' sorts after 'lockpick'");
 	}
+
+	@Test
+	@DisplayName("compareTo == 0 agrees with matches for every fixture")
+	void compareTo_agreesWithMatches() {
+		UniqueItem uniqueItem = baseBuilder().build();
+
+		ItemStack match        = taggedStack(Material.IRON_INGOT, "phone");
+		ItemStack otherKey     = taggedStack(Material.IRON_INGOT, "lockpick");
+		ItemStack otherMateria = taggedStack(Material.GOLD_INGOT, "phone");
+
+		for (ItemStack stack : new ItemStack[]{match, otherKey, otherMateria}) {
+			assertEquals(uniqueItem.matches(stack), uniqueItem.compareTo(stack) == 0,
+			             "compareTo(x) == 0 must be exactly matches(x)");
+		}
+	}
+
+	// -------------------------------------------------------------- addItemToInventory (IT-21, still open)
 
 	@Test
 	@DisplayName("Observation #21: addItemToInventory returns false immediately when Slot: -1 (addToInventory=false)")
@@ -154,10 +206,13 @@ class UniqueItemTest {
 		verify(inventory, never()).setItem(anyInt(), any(ItemStack.class));
 	}
 
-	private void tagAsUniqueItem(String key) {
-		// isUniqueItem/getStringTagData read through the installed RecordingNbtAccessor, keyed purely by tag name
-		// (the accessor's map is not per-stack).
-		accessor.values.put(UniqueItemKeys.UNIQUE_ITEM_KEY, key);
+	// -------------------------------------------------------------- fixtures
+
+	private ItemStack taggedStack(Material material, String uniqueKey) {
+		ItemStack stack = mock(ItemStack.class);
+		when(stack.getType()).thenReturn(material);
+		accessor.put(stack, UniqueItemKeys.UNIQUE_ITEM_KEY, uniqueKey);
+		return stack;
 	}
 
 }

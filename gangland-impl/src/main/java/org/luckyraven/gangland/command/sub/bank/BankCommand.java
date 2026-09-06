@@ -32,6 +32,16 @@ public final class BankCommand extends Command {
 	 */
 	public static final String BYPASS_CAP_PERMISSION = "gangland.bank.bypass_cap";
 
+	/**
+	 * Gates the cross-player forms {@code /glw bank deposit <amount> <player>} and
+	 * {@code /glw bank withdraw <amount> <player>}, which credit or destroy money in someone else's bank
+	 * without touching the sender's balance. Keystone derives a permission per {@code SubArgument} but not
+	 * per {@code OptionalArgument} leaf, so without this node both forms inherit
+	 * {@code gangland.command.bank.deposit} / {@code .withdraw} — i.e. anyone who may bank at all could mint
+	 * money for others. Registered with the {@code PermissionManager} from {@code BankerConfig}.
+	 */
+	public static final String ADMIN_PERMISSION = "gangland.command.bank.admin";
+
 	private final UserManager<Player> userManager;
 	private final GanglandDatabase    ganglandDatabase;
 	private final BankTierRegistry    tierRegistry;
@@ -58,10 +68,27 @@ public final class BankCommand extends Command {
 		getHelpInfo().addAll(list);
 	}
 
-	static boolean processMoney(User<Player> user, Bank bank,
-	                            BigDecimal check, BigDecimal amount,
-	                            BigDecimal inBank, BigDecimal inAccount) {
-		if (check.signum() == 0) {
+	/**
+	 * Moves money between a player's cash and their bank after checking the amount and the source balance.
+	 *
+	 * @param user      the owning user, messaged on refusal
+	 * @param bank      the user's bank
+	 * @param check     the source balance the amount is taken from (cash on deposit, bank on withdraw)
+	 * @param amount    the requested amount; must be strictly positive
+	 * @param inBank    the bank balance to write when the move is allowed
+	 * @param inAccount the cash balance to write when the move is allowed
+	 *
+	 * @return {@code true} when both balances were written, {@code false} when the move was refused
+	 */
+	public static boolean processMoney(User<Player> user, Bank bank,
+	                                   BigDecimal check, BigDecimal amount,
+	                                   BigDecimal inBank, BigDecimal inAccount) {
+		if (amount.signum() <= 0) {
+			// Last line of defence: every caller parses through ParsedAmount, but a zero or negative amount
+			// reaching here would move money the wrong way (deposit -N credits cash, withdraw -N credits the bank).
+			user.getUser().sendMessage(Messages.CANNOT_TAKE_LESS_THAN_ZERO.toString());
+			return false;
+		} else if (check.signum() == 0) {
 			user.getUser().sendMessage(Messages.CANNOT_TAKE_LESS_THAN_ZERO.toString());
 			return false;
 		} else if (amount.compareTo(check) > 0) {

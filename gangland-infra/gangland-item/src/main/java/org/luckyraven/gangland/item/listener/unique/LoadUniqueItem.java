@@ -98,7 +98,7 @@ public class LoadUniqueItem implements Listener {
 
 		for (int i = 0; i < contents.length; i++) {
 			if (contents[i] == null) continue;
-			if (uniqueItem.compareTo(contents[i]) == 0) continue;
+			if (!uniqueItem.matches(contents[i])) continue;
 
 			inventory.setItem(i, null);
 

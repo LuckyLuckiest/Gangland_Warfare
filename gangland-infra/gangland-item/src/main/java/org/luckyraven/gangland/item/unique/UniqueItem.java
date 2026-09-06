@@ -8,7 +8,6 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.item.ItemBuilder;
@@ -61,21 +60,47 @@ public class UniqueItem implements Comparable<ItemStack> {
 		return "gangland.uniqueitem." + uniqueItem;
 	}
 
+	/**
+	 * Identity check against a live stack: does {@code stack} carry this item's registry key in its
+	 * {@link UniqueItemKeys#UNIQUE_ITEM_KEY} NBT tag, on the material this item is configured for?
+	 *
+	 * <p>The tag is stamped by {@link #buildItem(Player)}, so it survives colour codes, placeholder
+	 * resolution and lore edits — unlike the display name, which is stored raw in the config
+	 * ({@code &6Phone}) but rendered translated ({@code §6Phone}) on the stack, and so could never match.
+	 *
+	 * @param stack the stack to test; {@code null}, AIR and untagged stacks are never a match
+	 *
+	 * @return {@code true} only when the stack is this exact unique item
+	 */
+	public boolean matches(@Nullable ItemStack stack) {
+		if (stack == null) return false;
+
+		String key = UniqueItemUtil.getUniqueItemKey(stack);
+
+		if (key == null) return false;
+
+		return this.uniqueItem.equals(key) && this.material == stack.getType();
+	}
+
+	/**
+	 * Orders by unique-item registry key, then by material, so {@code compareTo(stack) == 0} is exactly
+	 * {@link #matches(ItemStack)}.
+	 *
+	 * <p>This is a <em>partial</em> order over {@link ItemStack}: every stack that is not a unique item
+	 * sorts after every unique item ({@code 1}) rather than comparing equal. Returning {@code 0} for those
+	 * would make every caller that treats {@code 0} as "this is my item" — {@code UniqueItemUtil
+	 * .hasUniqueItem} and {@code LoadUniqueItem.removeItem} — act on plain inventory contents.
+	 */
 	@Override
 	public int compareTo(@NotNull ItemStack itemStack) {
-		ItemMeta meta = itemStack.getItemMeta();
+		String key = UniqueItemUtil.getUniqueItemKey(itemStack);
 
-		if (meta == null) return 0;
-		if (!UniqueItemUtil.isUniqueItem(itemStack)) return 0;
+		if (key == null) return 1;
 
-		int result;
-
-		result = this.name.compareToIgnoreCase(meta.getDisplayName());
+		int result = this.uniqueItem.compareTo(key);
 		if (result != 0) return result;
 
-		result = this.material.compareTo(itemStack.getType());
-
-		return result;
+		return this.material.compareTo(itemStack.getType());
 	}
 
 	public boolean addItemToInventory(Player player) {

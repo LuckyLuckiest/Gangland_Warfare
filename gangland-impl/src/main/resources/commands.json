@@ -73,11 +73,11 @@
 	},
 	"bank_deposit": {
 		"usage": "/glw bank deposit <amount> [player]",
-		"description": "Deposits the amount into your bank, or credits the target player's bank when specified."
+		"description": "Deposits the amount into your bank. The [player] form credits another player's bank and needs gangland.command.bank.admin."
 	},
 	"bank_withdraw": {
 		"usage": "/glw bank withdraw <amount> [player]",
-		"description": "Withdraws the amount from your bank, or debits the target player's bank when specified."
+		"description": "Withdraws the amount from your bank. The [player] form debits another player's bank and needs gangland.command.bank.admin."
 	},
 	"bank_balance": {
 		"usage": "/glw bank balance",
