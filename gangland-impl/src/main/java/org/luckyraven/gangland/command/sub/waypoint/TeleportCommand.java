@@ -12,6 +12,7 @@ import org.luckyraven.keystone.timer.CountdownTimer;
 import org.luckyraven.keystone.util.TimeUtil;
 import org.luckyraven.gangland.data.teleportation.IllegalTeleportException;
 import org.luckyraven.gangland.data.teleportation.Waypoint;
+import org.luckyraven.gangland.data.teleportation.WaypointAccess;
 import org.luckyraven.gangland.data.teleportation.WaypointManager;
 import org.luckyraven.gangland.data.teleportation.WaypointTeleport;
 import org.luckyraven.keystone.economy.Currency;
@@ -115,8 +116,17 @@ public final class TeleportCommand extends Command {
 	}
 
 	private void teleportCost(User<Player> user, Waypoint waypoint) {
+		if (user == null) return;
+
 		if (waypoint == null) {
 			user.getUser().sendMessage(Messages.INVALID_WAYPOINT.toString());
+			return;
+		}
+
+		// LS-01: the permission and gang filter lived only in the tab-completer, so typing an unlisted
+		// waypoint name teleported the player into another gang's base.
+		if (!WaypointAccess.canAccess(user, waypoint)) {
+			user.getUser().sendMessage(Messages.WARP_NO_PERM.toString());
 			return;
 		}
 

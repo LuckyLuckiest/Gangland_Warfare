@@ -674,6 +674,7 @@ Waypoint:
    Cooldown: "&7You are on a cooldown. Wait &b%timer&7."
    Cancelled_Teleport: "&7You moved, cancelled teleportation!"
    List_Header: "Waypoints:"
+   List_Empty: "&7No waypoints are available to you."
 
 Signs:
    Created: 'Sign created successfully!'

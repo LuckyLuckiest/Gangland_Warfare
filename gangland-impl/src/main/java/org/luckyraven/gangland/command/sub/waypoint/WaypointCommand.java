@@ -82,7 +82,8 @@ public final class WaypointCommand extends Command {
 		Argument deselect = new WaypointDeselectCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                                waypointManager);
 
-		Argument list = new WaypointListCommand(getGangland(), getArgumentTree(), getArgument(), waypointManager);
+		Argument list = new WaypointListCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		                                        waypointManager);
 		Argument info = new WaypointInfoCommand(getGangland(), getArgumentTree(), getArgument(), waypointManager);
 
 		Argument type = new WaypointTypeCommand(getGangland(), getArgumentTree(), getArgument(), userManager,

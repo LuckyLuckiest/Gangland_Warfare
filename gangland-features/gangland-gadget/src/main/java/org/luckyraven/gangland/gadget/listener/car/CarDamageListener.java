@@ -19,6 +19,8 @@ import org.luckyraven.keystone.bean.autowire.AutowireTarget;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.util.ParticleUtil;
 import org.luckyraven.gangland.gadget.car.CarService;
+import org.luckyraven.gangland.gadget.car.access.CarAccessPolicy;
+import org.luckyraven.gangland.gadget.car.message.CarMessageContract;
 import org.luckyraven.gangland.gadget.car.vehicle.ParkedVehicle;
 import org.luckyraven.gangland.gadget.car.vehicle.VehicleSession;
 import org.luckyraven.gangland.weapon.WeaponService;
@@ -48,11 +50,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @ListenerHandler
 @RequiredArgsConstructor
-@AutowireTarget({CarService.class, WeaponService.class})
+@AutowireTarget({CarService.class, WeaponService.class, CarAccessPolicy.class, CarMessageContract.class})
 public class CarDamageListener implements Listener {
 
-	private final CarService    carService;
-	private final WeaponService weaponService;
+	private final CarService         carService;
+	private final WeaponService      weaponService;
+	private final CarAccessPolicy    accessPolicy;
+	private final CarMessageContract messages;
 
 	/**
 	 * Tracks players who have just right-clicked a car entity (populated by {@link #onCarRightClick} at {@code LOWEST}
@@ -112,6 +116,13 @@ public class CarDamageListener implements Listener {
 		if (parked != null && player.isSneaking() &&
 		    !weaponService.isWeapon(player.getInventory().getItemInMainHand())) {
 			if (pendingRightClickInteract.remove(player.getUniqueId())) return;
+
+			// GD-06: pickup returns the car item, so an ungated pickup was outright theft.
+			if (!accessPolicy.canUse(player, parked.getPlacerUUID())) {
+				player.sendMessage(messages.noPermission());
+				return;
+			}
+
 			carService.pickupCar(player, entityUUID);
 			return;
 		}
