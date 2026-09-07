@@ -27,7 +27,7 @@ public final class GanglandShopDisplayResolver implements ShopDisplayResolver {
 
 		String weaponName = new ItemBuilder(item).getStringTagData(Weapon.getTagProperName(WeaponTag.WEAPON));
 		if (weaponName != null && !weaponName.isEmpty()) {
-			Weapon weapon = weaponService.getWeapon(weaponName);
+			Weapon weapon = weaponService.getWeaponTemplate(weaponName);
 			if (weapon != null && weapon.getDisplayName() != null && !weapon.getDisplayName().isBlank()) {
 				// Weapon#getDisplayName returns the raw YAML string with '&' codes — translate before returning
 				// so callers can drop the result straight into item display names / chat messages.

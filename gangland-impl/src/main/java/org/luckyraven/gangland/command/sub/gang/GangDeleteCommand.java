@@ -86,7 +86,7 @@ class GangDeleteCommand extends SubArgument {
 
 			Member member = memberManager.getMember(player.getUniqueId());
 
-			if (!user.hasGang()) {
+			if (member == null || !user.hasGang()) {
 				sender.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
@@ -147,7 +147,7 @@ class GangDeleteCommand extends SubArgument {
 
 			Member member = memberManager.getMember(player.getUniqueId());
 
-			if (!user.hasGang()) {
+			if (member == null || !user.hasGang()) {
 				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
@@ -202,6 +202,10 @@ class GangDeleteCommand extends SubArgument {
 				Player currentPlayer = gangUser.getUser();
 				Member mem           = memberManager.getMember(currentPlayer.getUniqueId());
 
+				// An online gang member with no cached Member cannot be paid out or reset — skip rather than NPE
+				// halfway through the disband (GR-01).
+				if (mem == null) continue;
+
 				// Capture contribution before removeMember zeros it
 				double     freq    = mem.getContribution();
 				BigDecimal balance = gang.getEconomy().getAmount();
@@ -227,7 +231,13 @@ class GangDeleteCommand extends SubArgument {
 			// Update offline members: query MemberTable for all gang members, distribute balance,
 			// then reset their gang_id in both the DB and (if cached) in-memory member objects.
 			// The SQL reset must run even when the Member isn't cached in MemberManager.
-			helper.runQueriesAsync(database -> {
+			//
+			// Deliberately synchronous (GR-02): this block mutates gang.getEconomy() and calls
+			// memberManager.assignRank (→ Bukkit.getOfflinePlayer → Vault), and the gang row / in-memory gang are
+			// torn down a few lines below. Running it off-thread raced the disband and both duplicated and lost
+			// money. Disband is a rare, confirm-gated command, so a short main-thread query block is the right
+			// trade for a deterministic payout.
+			helper.runQueries(database -> {
 				String memberTableName = memberTable.getName();
 				String userTableName   = userTable.getName();
 

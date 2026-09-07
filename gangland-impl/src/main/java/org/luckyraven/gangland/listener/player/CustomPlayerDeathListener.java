@@ -54,6 +54,13 @@ public class CustomPlayerDeathListener implements Listener {
 	private static final double DOWNED_HEALTH = 0.5;
 
 	/**
+	 * Vanilla default max health. {@link #restoreDownedState(Player)} clamps to this instead of reading
+	 * {@code Attribute.MAX_HEALTH}: the quit path runs while the player is already leaving, and the configured
+	 * respawn health is itself expressed in vanilla hearts.
+	 */
+	private static final double DEFAULT_MAX_HEALTH = 20.0;
+
+	/**
 	 * Static reference so {@link RespawnCommand} can reach this instance.
 	 */
 	private static CustomPlayerDeathListener instance;
@@ -114,7 +121,41 @@ public class CustomPlayerDeathListener implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onPlayerQuit(PlayerQuitEvent event) {
-		cleanup(event.getPlayer().getUniqueId());
+		Player player = event.getPlayer();
+
+		// WB-09: cleanup() alone dropped the saved game mode, so a player who quit while downed was persisted in
+		// the downed game mode with DOWNED_HEALTH and rejoined stuck there. Undo the downed state first, and clean
+		// up regardless of how that goes so the registry never keeps a stale entry for an offline player.
+		try {
+			restoreDownedState(player);
+		} finally {
+			cleanup(player.getUniqueId());
+		}
+	}
+
+	/**
+	 * Puts a downed player back on their feet without running the full respawn: the saved game mode, flight state,
+	 * health and food are restored so the state written to {@code player.dat} on quit is a normal, playable one.
+	 * No-op for a player who was not downed.
+	 *
+	 * <p>Deliberately does <em>not</em> fire {@link PlayerUndownedEvent} or teleport — the player is leaving, and
+	 * listeners of that event expect an online player.
+	 */
+	private void restoreDownedState(Player player) {
+		UUID uuid = player.getUniqueId();
+
+		if (!DownedPlayerRegistry.isDowned(uuid)) return;
+
+		GameMode original = savedGameModes.get(uuid);
+		player.setGameMode(original != null ? original : GameMode.SURVIVAL);
+
+		player.setAllowFlight(false);
+		player.setFlying(false);
+
+		double health = Math.min(Settings.getRespawnHealthAmount(), DEFAULT_MAX_HEALTH);
+
+		player.setHealth(Math.max(health, DOWNED_HEALTH));
+		player.setFoodLevel(Settings.getRespawnHungerAmount());
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)

@@ -7,6 +7,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Projectile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
+import org.luckyraven.gangland.weapon.dto.DamageData;
 import org.luckyraven.gangland.weapon.dto.ProjectileData;
 import org.luckyraven.gangland.weapon.projectile.ProjectileState;
 import org.luckyraven.gangland.weapon.projectile.ProjectileType;
@@ -100,11 +101,16 @@ public final class WeaponShooting {
 		double speedPerTick = Math.max(0.1, projectileData.getSpeed());
 		int    maxTicks     = (int) Math.ceil(projectileData.getDistance() / speedPerTick) * 2 + 20;
 
+		DamageData damageData = weapon.getDamageData();
+
+		// Radius and damage are two distinct config values: Explosion_Radius sizes the blast, Explosion_Damage is
+		// the damage dealt at its centre. Reading the radius off the damage produced 50-block rocket blasts.
 		boolean explode         = type == ProjectileType.ROCKET;
-		double  explosionRadius = explode ? weapon.getDamageData().getExplosionDamage() : 0;
+		double  explosionRadius = explode ? damageData.getExplosionRadius() : 0;
+		double  explosionDamage = explode ? damageData.getExplosionDamage() : 0;
 
 		new SteppedProjectileTask(plugin, raytracer, raytracer.getVisualSpawner(), visual, ctx, explode,
-		                          explosionRadius, maxTicks).start();
+		                          explosionRadius, explosionDamage, maxTicks).start();
 	}
 
 }

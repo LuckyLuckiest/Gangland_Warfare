@@ -66,6 +66,29 @@ public class GanglandMoneyDepositService implements MoneyDepositService {
 	}
 
 	@Override
+	public double withdraw(Player player, double amount) {
+		if (player == null || amount <= 0) return 0D;
+
+		User<Player> user = userManager.getUser(player);
+
+		if (user == null) return 0D;
+
+		BigDecimal balance = user.getEconomy().getAmount();
+
+		if (balance.signum() <= 0) return 0D;
+
+		// Clamp to the balance: EconomyHandler.withdrawAmount throws when the delta exceeds it, and a player
+		// dying broke should simply drop nothing rather than abort the whole drop path.
+		BigDecimal taken = Currency.of(amount).min(balance);
+
+		if (taken.signum() <= 0) return 0D;
+
+		user.getEconomy().withdrawAmount(taken);
+
+		return taken.doubleValue();
+	}
+
+	@Override
 	public String resolvePlaceholders(@Nullable Player player, String text) {
 		if (text == null || text.isEmpty()) return text;
 		return placeholderService.convert(player, text);

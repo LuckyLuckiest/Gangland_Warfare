@@ -113,10 +113,21 @@ public class DetainmentService {
 		}
 	}
 
+	/**
+	 * Logging out while handcuffed must not let the player escape the arrest, but it must not promote them to JAILED
+	 * either: that write would bypass {@code JailIntakeService} entirely (no cell occupancy, no inventory seizure, no
+	 * wanted clear, no paperwork item and — fatally — no {@code sentenceExpiresAt}), leaving them jailed forever with
+	 * nothing to auto-release them. Instead the transit timer is marked due, so the {@code PlayerJoinEvent} handler's
+	 * {@code TransitService.resumeOnJoin} commits them through the normal intake pipeline on their next login.
+	 */
 	public void handleQuit(Player player) {
 		if (getState(player) != DetainmentState.HANDCUFFED) return;
 
-		detainmentRegistry.setState(player.getUniqueId(), DetainmentState.JAILED);
+		DetainedPlayer detained = detainmentRegistry.getDetainedPlayers().get(player.getUniqueId());
+		if (detained == null) return;
+
+		detained.setTransitExpiresAt(System.currentTimeMillis());
+		detainmentRegistry.save(detained);
 	}
 
 	public void handleRespawn(Player player) {

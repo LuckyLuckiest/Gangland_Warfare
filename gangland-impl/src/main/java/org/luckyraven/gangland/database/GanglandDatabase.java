@@ -90,8 +90,30 @@ public class GanglandDatabase extends DatabaseHandler {
 				.orElse(null);
 	}
 
+	/**
+	 * Disconnects the {@link DatabaseBackend} pool and drops the reference so a later {@link #connectBackend()} can
+	 * rebuild it. Safe to call when no backend was ever connected.
+	 *
+	 * <p>Keystone's {@code DatabaseManager.closeConnections()} only closes the legacy {@code Database}; without this
+	 * the backend's HikariCP pool — and, on SQLite/Windows, its file handles — outlive a {@code /reload}.
+	 */
+	public void disconnectBackend() {
+		if (backend == null) return;
+
+		backend.disconnect();
+		this.backend = null;
+	}
+
 	@Override
 	public void createSchema() throws SQLException, IOException {
+		// setType(MYSQL) swallows a failed connect when Database.SQLite.Failed_MySQL is disabled, leaving the type
+		// at MYSQL with no Database behind it. Fail with a diagnosable SQLException instead of a raw NPE here.
+		if (getDatabase() == null) {
+			throw new SQLException("No database connection for schema '" + getSchema() +
+			                       "'. The configured database (Database.Type) could not be reached and " +
+			                       "Database.SQLite.Failed_MySQL is disabled, so no SQLite fallback was applied.");
+		}
+
 		getDatabase().createSchema(getSchema());
 
 		// Switch the schema only when using mysql, because it needs to create the schema from the connection

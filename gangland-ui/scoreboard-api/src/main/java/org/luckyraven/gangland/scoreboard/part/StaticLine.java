@@ -10,4 +10,13 @@ public class StaticLine extends Line {
 		super(0, index);
 	}
 
+	protected StaticLine(StaticLine source) {
+		super(source);
+	}
+
+	@Override
+	public Line copy() {
+		return new StaticLine(this);
+	}
+
 }

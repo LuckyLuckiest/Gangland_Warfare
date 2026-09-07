@@ -202,7 +202,7 @@ public class CopNpcFactory {
 		int start = ThreadLocalRandom.current().nextInt(pool.size());
 		for (int i = 0; i < pool.size(); i++) {
 			String name   = pool.get((start + i) % pool.size());
-			Weapon weapon = weaponService.getWeapon(name);
+			Weapon weapon = weaponService.createTransientWeapon(name);
 
 			if (weapon != null) return weapon;
 		}

@@ -27,6 +27,46 @@ public class Line {
 		this.usedIndex = index;
 	}
 
+	/**
+	 * Copy constructor. Clones the interval, board slot and rotation cursor, and takes a private copy of the
+	 * already-coloured contents — {@link #addContent(String)} is deliberately bypassed so
+	 * {@link ChatUtil#color(String)} is not applied a second time.
+	 */
+	protected Line(Line source) {
+		this.interval  = source.interval;
+		this.usedIndex = source.usedIndex;
+		this.index     = source.index;
+		this.contents  = new ArrayList<>(source.contents);
+	}
+
+	/**
+	 * A board-private clone of this line. {@link #update(Placeholder, Player)} advances the rotation cursor, so
+	 * every player's board must own its own {@code Line} instances — sharing the configured ones makes animated
+	 * content cycle once per online player per tick instead of once per tick (UI-01).
+	 *
+	 * @return an independent copy holding the same contents
+	 */
+	public Line copy() {
+		return new Line(this);
+	}
+
+	/**
+	 * Copies a whole board's worth of lines through {@link #copy()}, preserving order.
+	 *
+	 * @param lines the configured lines
+	 *
+	 * @return a new, independently mutable list of independent lines
+	 */
+	public static List<Line> copyAll(List<Line> lines) {
+		List<Line> copies = new ArrayList<>(lines.size());
+
+		for (Line line : lines) {
+			copies.add(line.copy());
+		}
+
+		return copies;
+	}
+
 	public void addContent(String content) {
 		contents.add(ChatUtil.color(content));
 	}

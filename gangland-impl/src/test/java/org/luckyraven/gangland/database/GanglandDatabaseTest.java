@@ -12,12 +12,15 @@ import org.luckyraven.keystone.testkit.PluginMocks;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * {@link GanglandDatabase#setType(int)} / {@code getSchema()} / {@code createSchema()} against the real (embedded,
@@ -28,7 +31,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * {@code getDatabase() == null}, and the very next {@code database.createSchema()} call — which
  * {@code DatabaseConfig.ganglandDatabase(...)} makes unconditionally whenever the resolved type is MYSQL — throws a
  * raw {@link NullPointerException} instead of the {@code SQLException}/{@code IOException} that bean method's
- * {@code catch} clause expects, aborting {@code onEnable} with an undiagnosable stack trace.
+ * {@code catch} clause expects, aborting {@code onEnable} with an undiagnosable stack trace. <b>Fixed (CL-01):</b>
+ * {@code createSchema()} now guards the null {@code Database} and throws an {@code SQLException} naming
+ * {@code Database.SQLite.Failed_MySQL}, and {@code DatabaseConfig} additionally fails fast with a
+ * {@code PluginException} right after {@code setType(...)}.
  *
  * <p><b>Mechanism note</b> (verified against the actual Keystone 1.7.3 sources on disk, not just the audit's
  * description): {@code DatabaseHandler.enforceType(MYSQL)} today catches {@code SQLException | RuntimeException}
@@ -49,8 +55,12 @@ class GanglandDatabaseTest {
 
 	@AfterEach
 	void tearDown() {
-		if (database != null && database.getDatabase() != null) {
-			database.getDatabase().disconnect();
+		if (database != null) {
+			database.disconnectBackend();
+
+			if (database.getDatabase() != null) {
+				database.getDatabase().disconnect();
+			}
 		}
 		DbFiles.release(tempDir);
 	}
@@ -92,16 +102,39 @@ class GanglandDatabaseTest {
 	}
 
 	@Test
-	@DisplayName("Observation #1 part 2 (core-lifecycle.md): createSchema() on that state throws an undiagnosable NPE")
-	void createSchema_afterFailedMysqlNoFallback_throwsNpe() {
+	@DisplayName("CL-01: createSchema() on that state throws a diagnosable SQLException, never a raw NPE")
+	void createSchema_afterFailedMysqlNoFallback_throwsDiagnosableSqlException() {
 		database = new GanglandDatabase(PluginMocks.plugin(tempDir), "gangland",
 				DatabaseSettingsMocks.mysqlNoFallback());
 		database.setType(DatabaseHandler.MYSQL);
 
-		assertThrows(NullPointerException.class, database::createSchema,
-				"pins the current undiagnosable-NPE behaviour; DatabaseConfig.ganglandDatabase(...) only catches " +
-						"SQLException/IOException around this call, so this NPE escapes uncaught and aborts " +
-						"onEnable");
+		SQLException exception = assertThrows(SQLException.class, database::createSchema,
+				"the null Database left behind by the swallowed MySQL failure must surface as the " +
+						"SQLException DatabaseConfig.ganglandDatabase(...) already catches — never as a raw " +
+						"NullPointerException that escapes uncaught and aborts onEnable");
+
+		assertNotNull(exception.getMessage());
+		assertTrue(exception.getMessage().contains("Failed_MySQL"),
+				"the message must name the setting the operator has to change; was: " + exception.getMessage());
+	}
+
+	@Test
+	@DisplayName("CL-04: disconnectBackend() closes the backend pool and drops the reference so a reload can rebuild it")
+	void disconnectBackend_closesThePoolAndClearsTheReference() throws SQLException {
+		database = new GanglandDatabase(PluginMocks.plugin(tempDir), "gangland", DatabaseSettingsMocks.sqliteOnly());
+		database.setType(DatabaseHandler.SQLITE);
+		database.connectBackend();
+
+		assertNotNull(database.getBackend());
+		assertTrue(database.getBackend().isConnected());
+
+		database.disconnectBackend();
+
+		assertNull(database.getBackend(),
+				"DatabaseManager.closeConnections() only closes the legacy Database; the backend pool has to be " +
+						"released here or its HikariCP pool (and on Windows its SQLite file handles) survives a " +
+						"/reload");
+		assertDoesNotThrow(database::disconnectBackend, "a second call is a no-op");
 	}
 
 	@Test

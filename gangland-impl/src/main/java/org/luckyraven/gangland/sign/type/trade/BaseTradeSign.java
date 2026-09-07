@@ -44,8 +44,7 @@ public abstract class BaseTradeSign implements Sign {
 	}
 
 	protected ItemStack getWeaponItem(String weaponName) {
-		Weapon template = weaponService.getWeapons()
-		                               .values()
+		Weapon template = weaponService.getWeaponTemplates()
 				.stream()
 				.filter(w -> w.getName().equalsIgnoreCase(weaponName))
 				.findFirst()

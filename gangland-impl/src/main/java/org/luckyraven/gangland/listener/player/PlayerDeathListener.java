@@ -207,7 +207,7 @@ public class PlayerDeathListener implements Listener {
 
 		Weapon weapon;
 		if (throwableName != null) {
-			weapon = weaponManager.getWeapon(throwableName);
+			weapon = weaponManager.getWeaponTemplate(throwableName);
 		} else {
 			ItemStack heldItem = killer.getInventory().getItemInMainHand();
 			weapon = weaponManager.validateAndGetWeapon(killer, heldItem);

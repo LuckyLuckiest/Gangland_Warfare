@@ -55,8 +55,11 @@ public class ScoreboardManager {
 	public DriverHandler getDriverHandler(Player player) {
 		final ViaAPI<?> viaAPI = gangland.getViaAPI();
 
-		List<Line> lines = scoreboardAddon.getLines();
-		Line       title = scoreboardAddon.getTitle();
+		// UI-01: every board gets its own deep copy of the configured lines. Line#update advances a rotation
+		// cursor, so sharing the configured instances made animated content cycle once per online player per tick
+		// and showed every player the same frame.
+		List<Line> lines = Line.copyAll(scoreboardAddon.getLines());
+		Line       title = scoreboardAddon.getTitle().copy();
 		return switch (Settings.getScoreboardDriver().toLowerCase()) {
 			case "driver_v3" -> new DriverV3(placeholder, viaAPI, player, title, lines);
 			case "driver_v2" -> new DriverV2(placeholder, viaAPI, player, title, lines);

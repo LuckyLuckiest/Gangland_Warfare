@@ -13,11 +13,13 @@ public class GangAllianceTable extends Table<GangAlliance> {
 	public GangAllianceTable(GangTable gangTable) {
 		super("gang_ally");
 
+		// Composite primary key: an alliance is identified by the (gang_id, ally_id) pair, and each direction is
+		// stored as its own row. Keying on gang_id alone made the upsert conflict target a single column, so a gang
+		// with two or more allies collapsed to one row on every save (GR-05). ally_id must NOT be UNIQUE either —
+		// a gang may appear as the allied side of several alliances.
 		Attribute<Integer> gangId = new Attribute<>("gang_id", true, Integer.class);
-		Attribute<Integer> allyId = new Attribute<>("ally_id", false, Integer.class);
+		Attribute<Integer> allyId = new Attribute<>("ally_id", true, Integer.class);
 		Attribute<Long>    since  = new Attribute<>("since", false, Long.class);
-
-		allyId.setUnique(true);
 
 		since.setDefaultValue(-1L);
 

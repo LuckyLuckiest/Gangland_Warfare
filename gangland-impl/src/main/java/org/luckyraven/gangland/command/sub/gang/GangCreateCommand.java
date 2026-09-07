@@ -87,6 +87,13 @@ class GangCreateCommand extends SubArgument {
 
 			Member member = memberManager.getMember(player.getUniqueId());
 
+			// GR-01: guard before the creation fee is withdrawn — a player with no cached Member cannot be put in
+			// a gang, and NPEing after the withdrawal would burn the fee.
+			if (member == null) {
+				user.sendMessage(Messages.CANNOT_CREATE_GANG.toString());
+				return;
+			}
+
 			if (user.hasGang()) {
 				user.sendMessage(Messages.PLAYER_IN_GANG.toString());
 				return;

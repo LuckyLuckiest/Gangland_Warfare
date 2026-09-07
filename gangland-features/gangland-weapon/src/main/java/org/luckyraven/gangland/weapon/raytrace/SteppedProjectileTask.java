@@ -36,6 +36,7 @@ public class SteppedProjectileTask {
 	private final RaytraceContext     ctx;
 	private final boolean             explodeOnTerminate;
 	private final double              explosionRadius;
+	private final double              explosionDamage;
 	private final int                 maxTicks;
 
 	private Location       lastLoc;
@@ -45,7 +46,7 @@ public class SteppedProjectileTask {
 
 	public SteppedProjectileTask(JavaPlugin plugin, WeaponRaytracer raytracer, WeaponVisualSpawner visualSpawner,
 	                             Projectile visual, RaytraceContext ctx, boolean explodeOnTerminate,
-	                             double explosionRadius, int maxTicks) {
+	                             double explosionRadius, double explosionDamage, int maxTicks) {
 		this.plugin             = plugin;
 		this.raytracer          = raytracer;
 		this.visualSpawner      = visualSpawner;
@@ -53,6 +54,7 @@ public class SteppedProjectileTask {
 		this.ctx                = ctx;
 		this.explodeOnTerminate = explodeOnTerminate;
 		this.explosionRadius    = explosionRadius;
+		this.explosionDamage    = explosionDamage;
 		this.maxTicks           = maxTicks;
 		this.lastLoc            = visual.getLocation();
 		this.tickCounter        = 0;
@@ -127,15 +129,22 @@ public class SteppedProjectileTask {
 			visual.remove();
 		}
 
-		if (explodeOnTerminate && impactLocation != null) {
+		if (explodeOnTerminate && explosionRadius > 0 && impactLocation != null) {
 			fireExplosion(impactLocation);
 		}
 	}
 
 	/**
-	 * AOE damage with linear falloff plus visual/sound effects. Mirrors the legacy explosion behaviour from
-	 * {@code ProjectileDamageListener#explosiveProjectile}.
+	 * Linear damage falloff from the blast centre. {@code explosionDamage} is dealt at distance 0 and tapers to 0 at
+	 * {@code explosionRadius}; anything outside the radius (or a weapon that configured no blast) takes nothing.
 	 */
+	static double falloffDamage(double explosionDamage, double explosionRadius, double distance) {
+		if (explosionDamage <= 0 || explosionRadius <= 0 || distance >= explosionRadius) {
+			return 0;
+		}
+		return explosionDamage * (1 - (distance / explosionRadius));
+	}
+
 	private void fireExplosion(Location loc) {
 		World world = loc.getWorld();
 		if (world == null) {
@@ -147,8 +156,7 @@ public class SteppedProjectileTask {
 			if (!(entity instanceof LivingEntity target)) continue;
 			if (target.equals(shooter)) continue;
 
-			double distance = target.getLocation().distance(loc);
-			double damage   = 20 * (1 - (distance / explosionRadius));
+			double damage = falloffDamage(explosionDamage, explosionRadius, target.getLocation().distance(loc));
 			if (damage > 0) {
 				target.damage(damage, shooter);
 			}

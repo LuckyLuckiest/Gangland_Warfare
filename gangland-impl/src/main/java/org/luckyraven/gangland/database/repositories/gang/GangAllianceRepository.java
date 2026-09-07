@@ -11,11 +11,14 @@ import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
 import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
 import org.luckyraven.keystone.persistence.database.DatabaseHelper;
+import org.luckyraven.keystone.persistence.database.SchemaMigrations;
 import org.luckyraven.keystone.persistence.database.component.Table;
 import org.luckyraven.keystone.persistence.repository.AbstractRepository;
 import org.luckyraven.keystone.persistence.repository.Repository;
 
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -52,6 +55,40 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> imp
 			tableBackend().delete("gang_id = ?", gang.getId());
 			tableBackend().delete("ally_id = ?", gang.getId());
 		});
+	}
+
+	/**
+	 * Flips legacy {@code gang_ally} rows (sole PK on {@code gang_id}, UNIQUE on {@code ally_id}) to a composite PK on
+	 * {@code (gang_id, ally_id)} — see GR-05. Existing rows are preserved; the old schema could not hold duplicates of
+	 * the new key, so no de-duplication is needed. Idempotent: on databases that already carry the composite PK,
+	 * {@link SchemaMigrations#isColumnInPrimaryKey} returns true and we return early.
+	 */
+	@Override
+	public void migrateSchema() throws SQLException {
+		Connection conn   = getDatabase() == null ? null : getDatabase().getConnection();
+		int        dbType = getDatabaseHandler().getType();
+
+		if (conn == null) return;
+		if (SchemaMigrations.isColumnInPrimaryKey(conn, dbType, gangAllianceTable.getName(), "ally_id")) return;
+
+		log.warn("Detected legacy {} schema. Migrating to composite primary key...", gangAllianceTable.getName());
+
+		switch (dbType) {
+			case DatabaseHandler.SQLITE -> SchemaMigrations.rebuildSqliteTable(conn, gangAllianceTable.getName(),
+			                                                                   "CREATE TABLE " +
+			                                                                   gangAllianceTable.getName() +
+			                                                                   "_migration (" +
+			                                                                   "gang_id INTEGER NOT NULL, " +
+			                                                                   "ally_id INTEGER NOT NULL, " +
+			                                                                   "since INTEGER DEFAULT -1, " +
+			                                                                   "PRIMARY KEY (gang_id, ally_id), " +
+			                                                                   "FOREIGN KEY (gang_id) REFERENCES gang(id), " +
+			                                                                   "FOREIGN KEY (ally_id) REFERENCES gang(id))",
+			                                                                   "gang_id", "ally_id", "since");
+			case DatabaseHandler.MYSQL -> migrateMysql(conn);
+		}
+
+		log.info("{} migration complete.", gangAllianceTable.getName());
 	}
 
 	@Override
@@ -94,5 +131,22 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> imp
 	@Override
 	protected void doDelete(GangAlliance data) throws SQLException {
 		tableBackend().delete("gang_id = ? AND ally_id = ?", data.gang().getId(), data.ally().getId());
+	}
+
+	/**
+	 * MySQL leg of {@link #migrateSchema()}. The FK on {@code ally_id} is backed by the legacy UNIQUE index, so a
+	 * plain index has to replace it before the UNIQUE can be dropped (MySQL error 1553 otherwise). {@code gang_id}
+	 * stays leftmost in the new key, so its own FK keeps a backing index throughout.
+	 */
+	private void migrateMysql(Connection conn) throws SQLException {
+		String table = gangAllianceTable.getName();
+
+		try (Statement stmt = conn.createStatement()) {
+			if (SchemaMigrations.hasUniqueIndex(conn, DatabaseHandler.MYSQL, table, "ally_id")) {
+				stmt.execute("ALTER TABLE " + table + " ADD INDEX ally_id_idx (ally_id)");
+				stmt.execute("ALTER TABLE " + table + " DROP INDEX ally_id");
+			}
+			stmt.execute("ALTER TABLE " + table + " DROP PRIMARY KEY, ADD PRIMARY KEY (gang_id, ally_id)");
+		}
 	}
 }

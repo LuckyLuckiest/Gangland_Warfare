@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryAction;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.events.trader.TraderBarterEvent;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.function.Predicate;
 
 /**
  * Drop-zone barter panel. The player drops items from any of the shop's barter categories; their combined value (via
@@ -360,7 +362,10 @@ public final class BarterView implements Panel<TraderFlowSession>, BeanLifecycle
 	private void onConfirm(Player viewer, BarterState state) {
 		if (state.offeredValue.compareTo(state.askingValue) < 0 || state.offeredValue.signum() <= 0) return;
 
-		List<ItemStack> offered = collectOfferedItems(state);
+		// Only the stacks the valuator accepted are part of the swap. Stacks it rejected ("not accepted") stay in the
+		// dropzone so the explicit return pass below hands them back instead of destroying them.
+		List<Integer>   consumedSlots = acceptedSlots(state);
+		List<ItemStack> offered       = collectOfferedItems(state, consumedSlots);
 
 		TraderBarterEvent event = new TraderBarterEvent(viewer, state.session.trader, state.session.selectedEntry,
 		                                                state.askingValue, state.offeredValue, offered);
@@ -368,7 +373,9 @@ public final class BarterView implements Panel<TraderFlowSession>, BeanLifecycle
 		if (event.isCancelled()) return;
 
 		state.committed = true;
-		for (int slot : state.dropzoneSlots) state.handler.getInventory().setItem(slot, null);
+		for (int slot : consumedSlots) state.handler.getInventory().setItem(slot, null);
+		// committed=true skips the onEnd return pass, so hand back the rejected leftovers explicitly.
+		returnItemsToPlayer(viewer, state);
 		active.remove(viewer);
 		state.host.back();
 		Bukkit.getScheduler().runTask(plugin, () -> SOUND_CONFIRM.playSound(viewer));
@@ -376,9 +383,38 @@ public final class BarterView implements Panel<TraderFlowSession>, BeanLifecycle
 
 	// ── Helpers ──────────────────────────────────────────────────────────
 
-	private List<ItemStack> collectOfferedItems(BarterState state) {
+	/**
+	 * The dropzone slots holding a stack the barter valuator gave a value to - i.e. the stacks that actually pay for
+	 * the swap. Mirrors {@code SellView#onConfirm}: everything else is left alone so it can be returned.
+	 */
+	private List<Integer> acceptedSlots(BarterState state) {
+		return acceptedSlots(state.dropzoneSlots, state.handler.getInventory(), rawStack -> {
+			ItemStack decorated = refresherRegistry.decorate(rawStack, state.viewer);
+			return valuator.value(state.session.definition, decorated,
+			                      state.session.trait.profile().barterPriceRatio(),
+			                      state.barterMoodMultiplier).hasValue();
+		});
+	}
+
+	/**
+	 * Walks {@code dropzoneSlots} and keeps only the slots whose stack {@code accepted} says the trader values. Split
+	 * out as a static so the "rejected stacks are never consumed" rule is testable without a live inventory view.
+	 */
+	static List<Integer> acceptedSlots(int[] dropzoneSlots, Inventory inventory, Predicate<ItemStack> accepted) {
+		List<Integer> slots = new ArrayList<>();
+		for (int slot : dropzoneSlots) {
+			ItemStack rawStack = inventory.getItem(slot);
+			if (rawStack == null || rawStack.getType() == Material.AIR) continue;
+			if (!accepted.test(rawStack)) continue;
+
+			slots.add(slot);
+		}
+		return slots;
+	}
+
+	private List<ItemStack> collectOfferedItems(BarterState state, List<Integer> slots) {
 		List<ItemStack> items = new ArrayList<>();
-		for (int slot : state.dropzoneSlots) {
+		for (int slot : slots) {
 			ItemStack stack = state.handler.getInventory().getItem(slot);
 			if (stack != null && stack.getType() != Material.AIR) items.add(stack.clone());
 		}

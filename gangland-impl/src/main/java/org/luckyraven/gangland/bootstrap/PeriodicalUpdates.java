@@ -12,33 +12,27 @@ import org.luckyraven.gangland.data.plugin.PluginData;
 import org.luckyraven.gangland.data.plugin.PluginDataCleanupService;
 import org.luckyraven.gangland.data.plugin.PluginManager;
 import org.luckyraven.gangland.database.GanglandDatabase;
-import org.luckyraven.gangland.database.TableLookup;
-import org.luckyraven.gangland.database.tables.player.BankTable;
-import org.luckyraven.gangland.database.tables.player.UserTable;
-import org.luckyraven.keystone.economy.bank.Bank;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.keystone.persistence.database.DatabaseHelper;
-import org.luckyraven.keystone.persistence.database.component.Table;
-import org.luckyraven.keystone.persistence.database.component.TableBackend;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 import org.luckyraven.gangland.weapon.Weapon;
 import org.luckyraven.gangland.weapon.WeaponManager;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 
 @CustomLog
 public final class PeriodicalUpdates implements BeanLifecycle {
 
-	private final Gangland                   gangland;
-	private final GanglandDatabase           database;
-	private final DatabaseHelper             helper;
-	private final RepositoryRegistry         repositoryRegistry;
-	private final PluginManager              pluginManager;
+	private final Gangland           gangland;
+	private final GanglandDatabase   database;
+	private final RepositoryRegistry repositoryRegistry;
+	private final PluginManager      pluginManager;
+	/**
+	 * Kept as a field even though the save now runs entirely through the repository data suppliers: the online
+	 * manager is a constructor dependency that pins bean ordering, and the offline cache still has to be cleared
+	 * here after its snapshot has been taken.
+	 */
+	@SuppressWarnings("unused")
 	private final UserManager<Player>        userManager;
 	private final UserManager<OfflinePlayer> offlineUserManager;
 	private final WeaponManager              weaponManager;
@@ -70,16 +64,15 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 		this.userManager        = userManager;
 		this.offlineUserManager = offlineUserManager;
 		this.weaponManager      = weaponManager;
-		this.helper             = new DatabaseHelper(gangland, database);
 		this.repositoryRegistry = database.getRepositoryRegistry();
 	}
 
 	/**
 	 * All queried data is sent and handled in the database.
 	 * <p>
-	 * User and bank data (online and offline) are saved directly via table queries so that the offline user cache can
-	 * be cleared immediately after. Everything else is persisted through each manager's data supplier via
-	 * {@link RepositoryRegistry#saveAll()}.
+	 * Everything — users and banks included — is persisted through each manager's data supplier via
+	 * {@link RepositoryRegistry#saveAll()}. The offline user cache is cleared afterwards, once {@code saveAll} has
+	 * taken its snapshot.
 	 */
 	public void updatingDatabase() {
 		updatingDatabase(null);
@@ -92,36 +85,24 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 	 * @param onComplete called when all saves are done, or {@code null} for fire-and-forget
 	 */
 	public void updatingDatabase(Runnable onComplete) {
-		List<Table<?>> tables = database.getTables();
-
 		// adjust plugin scan dates before the repository save
 		for (PluginData pluginData : pluginManager.getPluginDataList()) {
 			adjustScheduledScanDate(pluginData);
 		}
 
-		// save user and bank data - kept as direct table updates so the offline cache can be
-		// cleared synchronously after saving
-		UserTable userTable = TableLookup.find(UserTable.class, tables);
-		BankTable bankTable = TableLookup.find(BankTable.class, tables);
-
-		// online users
-		Collection<User<Player>> onlineUsers = userManager.getUsers().values();
-		Collection<Bank> onlineBanks = userManager.getUsers().values()
-				.stream().filter(User::hasBank).map(User::getBank).toList();
-		updateAllData(userTable, onlineUsers);
-		updateAllData(bankTable, onlineBanks);
-
-		// offline users
-		Collection<User<OfflinePlayer>> offlineUsers = offlineUserManager.getUsers().values();
-		Collection<Bank> offlineBanks = offlineUserManager.getUsers().values()
-				.stream().filter(User::hasBank).map(User::getBank).toList();
-		updateAllData(userTable, offlineUsers);
-		updateAllData(bankTable, offlineBanks);
-		offlineUserManager.clear();
-
-		// update all repositories (rank, permissions, gangs, alliances, members, waypoints,
-		//                          weapons, loot chests, plugin data, cop spawners, jails, detainment)
+		// Update every repository — users and banks included. Both UserManager beans are linked (see
+		// DataConfig.offlineUserManager), so the UserRepository / BankRepository data suppliers now cover the online
+		// AND the offline cache; the separate direct table writes this method used to make were an exact duplicate
+		// of that work and were removed rather than left to race the repository writes on another thread.
+		//
+		// saveAll() reads every supplier and copies it on THIS thread (AbstractRepository.saveAll snapshots before
+		// its async hop), so it must be called on the main thread — see start() — and the offline cache may only be
+		// cleared after it returns.
 		repositoryRegistry.saveAll(onComplete);
+
+		// the offline cache is a write-through buffer for players who already left: once its snapshot is on its way
+		// to the database there is nothing left to keep
+		offlineUserManager.clear();
 	}
 
 	/**
@@ -196,6 +177,13 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 
 	/**
 	 * Starts the periodical update tasks.
+	 *
+	 * <p>The timer is deliberately <b>synchronous</b> (CL-02): {@link #updatingDatabase(Runnable)} clears the offline
+	 * user cache and every repository data supplier copies its manager's live map. Those maps are mutated on the main
+	 * thread by join / quit handling, so iterating them off-thread raced into
+	 * {@code ConcurrentModificationException}s (a partial save that skipped the remaining repositories) and lost
+	 * writes. Every snapshot is therefore taken on the main thread; only the JDBC work leaves it, through
+	 * {@code AbstractRepository}'s own async hop inside {@code RepositoryRegistry.saveAll}.
 	 */
 	public void start() {
 		if (this.repeatingTimer == null) return;
@@ -204,7 +192,7 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 
 		initializeCleanupService();
 
-		this.repeatingTimer.start(true);
+		this.repeatingTimer.start(false);
 	}
 
 	private void initializeCleanupService() {
@@ -256,14 +244,6 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 
 	private void processTime(long start) {
 		log.info("The process took {}ms", System.currentTimeMillis() - start);
-	}
-
-	private <T> void updateAllData(Table<T> table, Collection<? extends T> collection) {
-		// Backend-SPI batch: one PreparedStatement JDBC batch in one transaction (Keystone 1.7.1,
-		// DatabaseBackend.upsertAll) — the same semantics the legacy batchUpsertTableQuery had. The helper still
-		// owns the async-while-enabled scheduling; its legacy Database argument is deliberately unused.
-		List<T> snapshot = new ArrayList<>(collection);
-		helper.runQueries(legacy -> new TableBackend<>(table, database.getBackend()).upsertAll(snapshot));
 	}
 
 	/**

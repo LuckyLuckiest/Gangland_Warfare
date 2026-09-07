@@ -21,6 +21,15 @@ public class Bounty {
 	@Setter(AccessLevel.NONE)
 	private final Map<CommandSender, BigDecimal> userSetBounty;
 
+	/**
+	 * What each contributor actually <em>paid</em> for their entry in {@link #userSetBounty}. The posted figure is
+	 * level-scaled ({@link #calculateLevelScaledBounty(BigDecimal, int)}); the paid figure is not, so a refund must
+	 * never be read out of {@code userSetBounty}. Keeping both is the single source of truth for WB-01.
+	 */
+	@Getter(AccessLevel.NONE)
+	@Setter(AccessLevel.NONE)
+	private final Map<CommandSender, BigDecimal> userPaidBounty;
+
 	@Setter(AccessLevel.NONE)
 	private RepeatingTimer repeatingTimer;
 
@@ -31,6 +40,7 @@ public class Bounty {
 	public Bounty(BigDecimal baseAmount, double levelMultiplier) {
 		this.amount          = Currency.ZERO;
 		this.userSetBounty   = new HashMap<>();
+		this.userPaidBounty  = new HashMap<>();
 		this.baseAmount      = Currency.of(baseAmount);
 		this.levelMultiplier = levelMultiplier;
 	}
@@ -53,6 +63,7 @@ public class Bounty {
 		stopTimer();
 
 		this.userSetBounty.clear();
+		this.userPaidBounty.clear();
 	}
 
 	public int size() {
@@ -63,19 +74,42 @@ public class Bounty {
 		return userSetBounty.get(sender);
 	}
 
-	public void addBounty(CommandSender sender, BigDecimal amount, int userLevel) {
-		BigDecimal scaledAmount = calculateLevelScaledBounty(amount, userLevel);
+	/**
+	 * The amount the sender actually paid for their contribution — what a refund must return. Falls back to the
+	 * posted figure for entries added before a paid figure was ever recorded.
+	 *
+	 * @param sender the contributor
+	 *
+	 * @return the paid amount, or {@code null} when the sender has no ledger entry at all
+	 */
+	public BigDecimal getPaidAmount(CommandSender sender) {
+		return userPaidBounty.getOrDefault(sender, userSetBounty.get(sender));
+	}
 
-		addBounty(sender, scaledAmount);
+	public void addBounty(CommandSender sender, BigDecimal amount, int userLevel) {
+		BigDecimal paid = Currency.of(amount);
+
+		recordBounty(sender, calculateLevelScaledBounty(paid, userLevel), paid);
 	}
 
 	public void addBounty(CommandSender sender, BigDecimal amount) {
 		BigDecimal normalised = Currency.of(amount);
 
-		BigDecimal previous = userSetBounty.getOrDefault(sender, Currency.ZERO);
-		userSetBounty.put(sender, previous.add(normalised));
+		recordBounty(sender, normalised, normalised);
+	}
 
-		this.amount = this.amount.add(normalised);
+	/**
+	 * Books one contribution: {@code posted} goes on the target's head, {@code paid} is what the contributor was
+	 * charged for it. The two differ whenever the bounty is level-scaled.
+	 */
+	private void recordBounty(CommandSender sender, BigDecimal posted, BigDecimal paid) {
+		BigDecimal previousPosted = userSetBounty.getOrDefault(sender, Currency.ZERO);
+		userSetBounty.put(sender, previousPosted.add(posted));
+
+		BigDecimal previousPaid = userPaidBounty.getOrDefault(sender, Currency.ZERO);
+		userPaidBounty.put(sender, previousPaid.add(paid));
+
+		this.amount = this.amount.add(posted);
 	}
 
 	public BigDecimal calculateLevelScaledBounty(BigDecimal baseAmount, int userLevel) {
@@ -91,6 +125,8 @@ public class Bounty {
 
 	public void removeBounty(CommandSender sender) {
 		BigDecimal removed = userSetBounty.remove(sender);
+		userPaidBounty.remove(sender);
+
 		if (removed == null) return;
 
 		BigDecimal next = this.amount.subtract(removed);

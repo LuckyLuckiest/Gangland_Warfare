@@ -17,7 +17,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.bootstrap.GanglandContext;
-import org.luckyraven.gangland.bootstrap.PeriodicalUpdates;
+import org.luckyraven.gangland.bootstrap.ShutdownSequence;
 import org.luckyraven.gangland.bootstrap.ReloadPlugin;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.data.placeholder.worker.GanglandPlaceholder;
@@ -30,7 +30,6 @@ import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.gang.vault.permission.VaultPermissionBridge;
 import org.luckyraven.keystone.vault.permission.VaultOfflinePermissionService;
-import org.luckyraven.keystone.persistence.database.DatabaseManager;
 import org.luckyraven.keystone.sound.ResourcePackTracker;
 import org.luckyraven.gangland.scoreboard.ScoreboardManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
@@ -79,24 +78,12 @@ public final class Gangland extends JavaPlugin {
 			ResourcePackTracker.install(null);
 		}
 
-		// unified bean lifecycle shutdown — deactivates sessions, converts active car data to parked records,
-		// despawns NPCs and holograms, all in reverse topological order
-		context.shutdownBeans();
+		// onDisable() also runs when onEnable() never completed
+		if (context == null) return;
 
-		// runtime modules: onDisabled in reverse load order, then the module classloader closes
-		context.disableModules();
-
-		// force save all pending data AFTER bean shutdown so converted records (CarService etc.) are included
-		PeriodicalUpdates periodicalUpdates = context.get(PeriodicalUpdates.class);
-		if (periodicalUpdates != null) {
-			periodicalUpdates.forceUpdate();
-		}
-
-		// closing all connections
-		DatabaseManager databaseManager = context.get(DatabaseManager.class);
-		if (databaseManager != null && !databaseManager.getDatabases().isEmpty()) {
-			databaseManager.closeConnections();
-		}
+		// Every stage (bean shutdown, module disable, final save, connection close, backend disconnect) is isolated
+		// inside ShutdownSequence: one throwing onShutdown() must never skip the final save or the DB close.
+		new ShutdownSequence(context).run();
 	}
 
 	@Override

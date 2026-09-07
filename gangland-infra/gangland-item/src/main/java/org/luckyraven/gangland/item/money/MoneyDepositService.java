@@ -30,6 +30,19 @@ public interface MoneyDepositService {
 	double getBalance(Player player);
 
 	/**
+	 * Debits up to {@code amount} from the player's balance and returns how much was actually taken.
+	 *
+	 * <p>Used by the drop listener on player death: a player-death cash drop moves money that already exists, it
+	 * must never mint it. Implementations clamp to the current balance, so a player who cannot cover the rolled
+	 * amount only drops what they had. Returns {@code 0} when the player is unknown or has nothing to give.
+	 *
+	 * @param player the dead player
+	 * @param amount the amount the drop wants to remove
+	 * @return the amount actually removed from the balance
+	 */
+	double withdraw(Player player, double amount);
+
+	/**
 	 * Returns the configured currency symbol (e.g. {@code $}). Listeners use this when they need to render a value
 	 * outside of the standard pickup notification, such as in the drop log.
 	 */

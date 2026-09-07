@@ -76,7 +76,8 @@ class GangDemoteCommand extends SubArgument {
 			String  forceRank = String.format("%s.command.gang.force_rank", Gangland.FULL_PREFIX);
 			boolean force     = player.hasPermission(forceRank);
 
-			if (!user.hasGang()) {
+			// GR-01: a player with no cached Member would NPE further down this command.
+			if (userMember == null || !user.hasGang()) {
 				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}

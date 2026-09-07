@@ -84,7 +84,8 @@ class GangLeaveCommand extends SubArgument {
 
 			Member member = memberManager.getMember(player.getUniqueId());
 
-			if (!user.hasGang()) {
+			// GR-01: a player with no cached Member would NPE further down this command.
+			if (member == null || !user.hasGang()) {
 				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}
@@ -131,7 +132,8 @@ class GangLeaveCommand extends SubArgument {
 
 		Member member = memberManager.getMember(player.getUniqueId());
 
-		if (!user.hasGang()) {
+		// GR-01: a player with no cached Member would NPE further down this command.
+		if (member == null || !user.hasGang()) {
 			user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 			return false;
 		}
