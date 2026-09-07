@@ -10,7 +10,7 @@
 10~~P3~~commands.json has 19 dead entries and reload data/inventory/cleanup drift~~Delete the dealer/kit/safe_wand/spawn/warp entries; fix the reload_* entries to match ReloadCommand.initializeArguments.~~InformationManagerTest (drift test; update the count when cleaned)
 11~~P2~~Teleport and Waypoint commands consume the same 17 help entries~~Give TeleportCommand its own teleport_* entries and filter by that prefix.~~-
 12~~P2~~HelpCommand aggregate list is built without sender or permission filtering~~Build the list per sender (permission + dev visibility) at execution time.~~-
-13~~P0~~/glw debug settings prints the MySQL password~~Redact mysqlPassword/mysqlUsername/mysqlHost (any key containing password or secret) in the settings dump.~~-
+13~~P0~~/glw debug settings prints the MySQL password~~Redact mysqlPassword/mysqlUsername/mysqlHost (any key containing password or secret) in the settings dump.~~FIXED 0.8.3 wave 3, commit 8a731fd5 (branch worktree-p0-wave-3); SettingsRedaction filters the debug dump AND GanglandPlaceholder; SettingsRedactionTest
 14~~P2~~TimerCommand map keyed by the live CommandSender is never cleared~~Key by UUID and remove (and stop the SequenceTimer) on PlayerQuitEvent.~~-
 15~~P2~~message_es.yml is missing 114 message paths~~Add the missing keys (turf, banker, invite, ally, shop) or make LanguageLoader fall back to message_en for missing paths.~~MessagesTest (findMissingPaths guard)
 16~~P3~~Only 4 of 9 ArgumentMessages slots are localised~~Install confirmRequired, confirmPrompt, didYouMean, selectorSyntax and selectorNoPlayer from Messages in GanglandContext.~~-

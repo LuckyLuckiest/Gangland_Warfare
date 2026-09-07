@@ -3,7 +3,7 @@
 3~~P1~~The car item is destroyed when the inventory is full on pickup or destroy~~Drop leftovers like CarGiveCommand.giveCarItem does.~~-
 4~~P1~~An empty jetpack grants permanent fall immunity~~Cancel fall damage only while hasFuel (and recently flying).~~-
 5~~P1~~A zero-fuel jetpack still glides and steers~~Gate the descent cap and air control on hasFuel.~~-
-6~~P0~~Any player can mount, pick up or refuel any placed car~~Check car_owner/placer_uuid (and gangland.cars.<id>) on mount, pickup and refuel; allow gang members and an admin bypass.~~-
+6~~P0~~Any player can mount, pick up or refuel any placed car~~Check car_owner/placer_uuid (and gangland.cars.<id>) on mount, pickup and refuel; allow gang members and an admin bypass.~~FIXED 0.8.3 wave 3, commit 8a731fd5; CarAccessPolicy + CarGangContract on mount/refuel/pickup; CarAccessPolicyTest
 7~~P1~~The wearable permission is only checked on inventory clicks~~Validate on right-click equip, InventoryDrag and dispenser paths, and strip unpermitted armour periodically.~~-
 8~~P2~~The input packet class is missing on 1.16 and jetpack input is inert below 1.21.2~~Fall back to PlayerToggleSneakEvent/PlayerMoveEvent for jetpack input and log when the interceptor is unavailable.~~-
 9~~P1~~Refuelling a stack of cans fuels all N (duplication)~~Split one can off the stack before writing the fuel NBT.~~-

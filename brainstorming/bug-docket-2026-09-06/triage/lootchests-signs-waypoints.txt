@@ -1,4 +1,4 @@
-1~~P0~~Waypoint teleport, select and list ignore the permission and gang checks~~Apply waypoint.getPermission() and the gang check in the action bodies, not only in the completers.~~-
+1~~P0~~Waypoint teleport, select and list ignore the permission and gang checks~~Apply waypoint.getPermission() and the gang check in the action bodies, not only in the completers.~~FIXED 0.8.3 wave 3, commit 8a731fd5; new WaypointAccess applied in teleport/select/list; WaypointAccessTest
 2~~P2~~The cracking mini-game is unreachable (dead feature)~~Wire crackingEnabled from LootChestSettings and feed addProgress from a listener, or remove the feature.~~CrackingSessionTest (machine pinned)
 3~~P0~~Buying more than fits voids items after payment~~Check space for the full amount in canExecute; drop leftovers or refund.~~-
 4~~P2~~Sell signs pay before taking the item; aspect priorities are never applied~~Use getSortedAspects() in AspectBasedSignHandler.~~AspectBasedSignHandlerTest (#4 pins the raw order)
@@ -16,7 +16,7 @@
 16~~P2~~Allowed_Tiers and tierId are never applied~~Filter entries by tier in generateLoot.~~LootTableTest (pins; flip when fixed)
 17~~P2~~Minimum >= Maximum throws inside the handler~~Validate at load and guard nextDouble.~~-
 18~~P3~~openedLootChests is keyed by Player and rewards on open without taking~~Key by UUID and reward on close/take.~~-
-19~~P0~~Any player can create a shop sign and there is no break protection~~Check the permission on SignChangeEvent (SIGN_NO_PERM) and add a BlockBreakEvent guard for owner/admin.~~-
+19~~P0~~Any player can create a shop sign and there is no break protection~~Check the permission on SignChangeEvent (SIGN_NO_PERM) and add a BlockBreakEvent guard for owner/admin.~~FIXED 0.8.3 wave 3, commit 8a731fd5; SignPermissions + SignProtection listener; SignCreationTest (red-first) + SignProtectionTest
 20~~P2~~Interaction re-parses but never validates signs (negatives honoured)~~Run validateSign in the interact path or validate inside the parser.~~AbstractSignParserTest (pins)
 21~~P3~~Editing a formatted [BUY] sign fails validation~~Strip brackets in validateSignType.~~-
 22~~P2~~Unguarded Enum.valueOf on sign content~~Same as WB-21.~~-

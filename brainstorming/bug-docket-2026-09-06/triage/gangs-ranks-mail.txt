@@ -1,11 +1,11 @@
 1~~P0~~memberManager.getMember(uuid) is dereferenced without a null check in about 15 command sites~~Add a MemberManager.require(uuid) helper that sends Messages.NOT_IN_GANG and aborts; null-check every call site (GangInviteAcceptCommand:168 now lives in gangland-mail).~~-
 2~~P0~~Gang delete payout runs async while the sync path deletes the gang~~Do the payout synchronously (or finish the async work and delete in a sync callback); never call Bukkit/Vault off-thread.~~-
-3~~P0~~/glw gang withdraw (and deposit, rename, desc, display, color, invite, ally) have no rank gate~~Require a rank permission node via Member.hasPermission for every mutating subcommand.~~-
+3~~P0~~/glw gang withdraw (and deposit, rename, desc, display, color, invite, ally) have no rank gate~~Require a rank permission node via Member.hasPermission for every mutating subcommand.~~FIXED 0.8.3 wave 3, commit 8a731fd5; GangPermissions gate on every mutating subcommand (impl + mail); GangPermissionsTest
 4~~P1~~Rank parent edits never reach RankManager.ranksParent, so they are lost on restart~~Update ranksParent (add/remove RankParent) alongside the tree mutation and persist it.~~-
 5~~P0~~gang_ally primary key on gang_id alone keeps one row per gang~~Make the key composite (gang_id, ally_id) in GangAllianceTable and migrate existing rows.~~-
 6~~P0~~Ally abandon never deletes the row, so the alliance resurrects on restart~~Delete both direction rows in GangAllyAbandonCommand through GangAllianceRepository.~~-
 7~~P1~~Promotion in a branching hierarchy never sends the options~~Send the built ComponentBuilder (or auto-pick when there is one child).~~-
-8~~P0~~/glw option gang rank assigns any rank, including owner, to anyone~~Enforce the tree hierarchy and force_rank permission, or restrict the command to admins.~~-
+8~~P0~~/glw option gang rank assigns any rank, including owner, to anyone~~Enforce the tree hierarchy and force_rank permission, or restrict the command to admins.~~FIXED 0.8.3 wave 3, commit 8a731fd5; RankAssignmentPolicy hierarchy check + narrowed completer; RankAssignmentPolicyTest (red-first)
 9~~P1~~Rank delete leaves stale sets that re-upsert the deleted rank~~Detach the node, prune ranksParent/ranksPermissions, delete the rows, re-rank members and guard head/tail.~~RankManagerTest (comment)
 10~~P2~~Transfer confirm lock never times out~~Use a CountdownTimer with auto-unlock and clear pendingTargets on quit.~~-
 11~~P1~~Mail expiry sweep runs async (start(true)) and is never cancelled (now MailModuleConfig.java:89-90)~~Use start(false) and stop the timer in the module's onDisabled/onPreClear.~~-
