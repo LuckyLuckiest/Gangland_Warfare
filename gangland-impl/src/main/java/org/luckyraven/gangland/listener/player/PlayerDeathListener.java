@@ -9,11 +9,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.Nullable;
 import org.luckyraven.gangland.data.economy.BankTierView;
 import org.luckyraven.gangland.data.economy.BankTiers;
+import org.luckyraven.gangland.listener.death.DeathMessageContributor;
 import org.luckyraven.keystone.bean.Qualifier;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.datastructure.ScientificCalculator;
 import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
@@ -27,33 +28,31 @@ import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.weapon.Weapon;
-import org.luckyraven.gangland.weapon.WeaponManager;
-import org.luckyraven.gangland.weapon.types.throwable.ThrowableAction;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 @ListenerHandler
 public class PlayerDeathListener implements Listener {
 
 	private static final long DEATH_DEDUP_WINDOW_MS = 500L;
 
-	private final UserManager<Player> userManager;
-	private final WeaponManager       weaponManager;
-	private final GanglandPlaceholder placeholder;
-	private final BankTiers           bankTiers;
-	private final Map<UUID, Long>     recentDeaths      = new ConcurrentHashMap<>();
-	private final Set<UUID>           downedBroadcasted = ConcurrentHashMap.newKeySet();
+	private final UserManager<Player>                       userManager;
+	private final GanglandPlaceholder                       placeholder;
+	private final BankTiers                                 bankTiers;
+	private final Supplier<List<DeathMessageContributor>>   deathContributors;
+	private final Map<UUID, Long>                           recentDeaths      = new ConcurrentHashMap<>();
+	private final Set<UUID>                                 downedBroadcasted = ConcurrentHashMap.newKeySet();
 
 	public PlayerDeathListener(@Qualifier("online") UserManager<Player> userManager,
-	                           WeaponManager weaponManager,
 	                           GanglandPlaceholder placeholder,
-	                           BankTiers bankTiers) {
-		this.userManager      = userManager;
-		this.weaponManager    = weaponManager;
-		this.placeholder      = placeholder;
-		this.bankTiers        = bankTiers;
+	                           BankTiers bankTiers,
+	                           DependencyContainer container) {
+		this.userManager       = userManager;
+		this.placeholder       = placeholder;
+		this.bankTiers         = bankTiers;
+		this.deathContributors = () -> container.getAllInstances(DeathMessageContributor.class);
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
@@ -91,7 +90,7 @@ public class PlayerDeathListener implements Listener {
 			handleMoney(user);
 		}
 
-		// change the death message according to the weapon (always runs)
+		// change the death message according to the killing method (always runs)
 		changeDeathMessage(event, player);
 	}
 
@@ -201,38 +200,26 @@ public class PlayerDeathListener implements Listener {
 
 		if (killer == null) return null;
 
-		// check if a throwable weapon was responsible (killer may have switched items since throwing)
-		String throwableName = ThrowableAction.pendingKillerWeapon.remove(player.getUniqueId());
-
-		Weapon weapon;
-		if (throwableName != null) {
-			weapon = weaponManager.getWeaponTemplate(throwableName);
-		} else {
-			ItemStack heldItem = killer.getInventory().getItemInMainHand();
-			weapon = weaponManager.validateAndGetWeapon(killer, heldItem);
+		// ask every module's DeathMessageContributor what killed this player; first non-null claim wins
+		DeathMessageContributor.Resolved resolved = null;
+		for (DeathMessageContributor contributor : deathContributors.get()) {
+			resolved = contributor.resolve(player, killer);
+			if (resolved != null) break;
 		}
 
 		List<String> globalMessages = Messages.DEAD_USING_WEAPON.toStringList();
 
-		// no weapon found — fall back to the global death messages if available
-		if (weapon == null) {
-			String template = getRandomGlobalMessage(globalMessages);
-			if (template == null) return null;
-			// use the throwable's name if we at least know which weapon it was
-			String itemName = throwableName != null ? throwableName : "";
-			return ChatUtil.color(template.replace("%killer%", killer.getName())
-			                              .replace("%victim%", player.getName())
-			                              .replace("%item%", itemName));
-		}
-
-		// prefer weapon-specific death messages; fall back to global config
-		String template = weapon.pickDeathMessage().orElseGet(() -> getRandomGlobalMessage(globalMessages));
-
+		// prefer the contributor's own template; fall back to the global death messages if available
+		String template = resolved != null ? resolved.template() : null;
+		if (template == null) template = getRandomGlobalMessage(globalMessages);
 		if (template == null) return null;
+
+		// empty string when nothing claimed the kill
+		String itemName = resolved != null ? resolved.itemName() : "";
 
 		return ChatUtil.color(template.replace("%killer%", killer.getName())
 		                              .replace("%victim%", player.getName())
-		                              .replace("%item%", weapon.getDisplayName()));
+		                              .replace("%item%", itemName));
 	}
 
 	private @Nullable String getRandomGlobalMessage(List<String> globalMessages) {

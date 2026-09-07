@@ -1,0 +1,7 @@
+# Keystone module descriptor - read by Gangland's ModuleLoader from plugins/Gangland_Warfare/modules/.
+Id: weapon
+Name: Gangland Weapons
+Version: ${project.version}
+Main: org.luckyraven.gangland.weapon.WeaponModule
+Host_Api: 0.8
+Artifact: org.luckyraven:gangland-weapon

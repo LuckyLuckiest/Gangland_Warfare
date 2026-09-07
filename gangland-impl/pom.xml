@@ -54,10 +54,6 @@
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>gangland-weapon</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
             <artifactId>inventory-api</artifactId>
         </dependency>
         <dependency>

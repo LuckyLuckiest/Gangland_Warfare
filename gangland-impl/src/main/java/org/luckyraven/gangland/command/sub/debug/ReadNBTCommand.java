@@ -9,9 +9,8 @@ import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.keystone.datastructure.JsonFormatter;
-import org.luckyraven.gangland.lootchest.LootChestWandTag;
+import org.luckyraven.gangland.item.NbtTagCatalog;
 import org.luckyraven.gangland.util.GanglandChatUtil;
-import org.luckyraven.gangland.weapon.WeaponTag;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -19,8 +18,11 @@ import java.util.Map;
 @CommandHandler
 public final class ReadNBTCommand extends Command {
 
-	public ReadNBTCommand(Gangland gangland) {
+	private final NbtTagCatalog nbtTagCatalog;
+
+	public ReadNBTCommand(Gangland gangland, NbtTagCatalog nbtTagCatalog) {
 		super(gangland, "nbt", true, "read-nbt", "readnbt");
+		this.nbtTagCatalog = nbtTagCatalog;
 	}
 
 	@Override
@@ -50,17 +52,7 @@ public final class ReadNBTCommand extends Command {
 			// Collect only tags that have values
 			Map<String, String> presentTags = new LinkedHashMap<>();
 
-			for (WeaponTag tag : WeaponTag.values()) {
-				String tagName = tag.name().toLowerCase();
-
-				if (!itemBuilder.hasNBTTag(tagName)) continue;
-
-				presentTags.put(tagName, String.valueOf(itemBuilder.getTagData(tagName)));
-			}
-
-			for (LootChestWandTag tag : LootChestWandTag.values()) {
-				String tagName = tag.toString().toLowerCase();
-
+			for (String tagName : nbtTagCatalog.tags()) {
 				if (!itemBuilder.hasNBTTag(tagName)) continue;
 
 				presentTags.put(tagName, String.valueOf(itemBuilder.getTagData(tagName)));

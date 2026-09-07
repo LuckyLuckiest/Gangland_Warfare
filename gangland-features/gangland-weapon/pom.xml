@@ -24,6 +24,21 @@
             <groupId>org.luckyraven</groupId>
             <artifactId>keystone-item</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-command</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-module</artifactId>
+        </dependency>
+        <!-- Needed once this module's own compile is reached: User/UserManager implement Keystone's EconomyOwner,
+             which lives in keystone-hooks. provided scope is not transitive — the module must declare it itself
+             even though gangland-impl (provided, below) also depends on it. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-hooks</artifactId>
+        </dependency>
         <!-- Spigot Build -->
         <dependency>
             <groupId>org.spigotmc</groupId>
@@ -44,11 +59,39 @@
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-domain</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>sign-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>inventory-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
             <artifactId>keystone-common</artifactId>
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>version-impl</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!-- provided scope is not transitive: RecoilCompatibility (version-impl) declares this at compile scope for
+             ITS OWN compilation, but that never reaches a module that only depends on version-impl at `provided`.
+             Weapon's own source never imports com.viaversion.*, but RecoilManagerTest mocks RecoilCompatibility,
+             and Mockito's inline mock maker retransforms its full type hierarchy (including the ViaAPI field type),
+             which throws TypeNotPresentException without this on the classpath. T1 removed this dependency as
+             "never imported"; that check only covered direct imports, not what mocking a provided-scope type pulls
+             in at test time. Found and fixed while running T24 (2026-09-08); the scrum master still needs to
+             record this in the bug docket (this executor's task did not touch brainstorming/bug-docket-2026-09-06/**). -->
+        <dependency>
+            <groupId>com.viaversion</groupId>
+            <artifactId>viaversion-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -63,18 +106,15 @@
             <artifactId>XSeries</artifactId>
         </dependency>
 
-        <!-- ViaVersion -->
+        <!-- The host (core) jar. Provided: at runtime this module is loaded from plugins/Gangland_Warfare/modules/
+             by Keystone's ModuleLoader, whose parent is the host plugin's classloader, so every impl class
+             resolves from there. Dependency direction is module -> core; core never names a weapon type. -->
         <dependency>
-            <groupId>com.viaversion</groupId>
-            <artifactId>viaversion-api</artifactId>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-impl</artifactId>
+            <scope>provided</scope>
         </dependency>
 
-        <!-- AnvilGUI -->
-        <dependency>
-            <groupId>net.wesjd</groupId>
-            <artifactId>anvilgui</artifactId>
-        </dependency>
-    
         <!-- Shared test fixtures (testsupport.BukkitRegistryFixture) -->
         <dependency>
             <groupId>org.luckyraven</groupId>

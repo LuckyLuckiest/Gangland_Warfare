@@ -1,6 +1,6 @@
 # Weapon System -- Developer Documentation
 
-> **Module:** `gangland-features/gangland-weapon`
+> **Module:** `gangland-features/gangland-weapon` -- runtime module since 0.8.4 (`documentation/module-loader.md`)
 > **Package root:** `org.luckyraven.gangland.weapon`
 > **Class count:** 83
 

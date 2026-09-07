@@ -26,7 +26,6 @@ import org.luckyraven.gangland.item.ItemRefresherRegistry;
 import org.luckyraven.gangland.item.ItemSerializerRegistry;
 import org.luckyraven.gangland.item.fuel.FuelService;
 import org.luckyraven.gangland.weapon.WeaponService;
-import org.luckyraven.gangland.weapon.ammo.AmmunitionManager;
 import org.luckyraven.gangland.weapon.wearable.WearableAddon;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
@@ -118,9 +117,8 @@ public class GadgetModuleConfig {
 
 	@Bean
 	public CarSignContribution carSignContribution(@Qualifier("online") UserManager<Player> userManager,
-	                                               CarAddon carAddon, WeaponService weaponService,
-	                                               AmmunitionManager ammunitionManager) {
-		return new CarSignContribution(userManager, carAddon, weaponService, ammunitionManager);
+	                                               CarAddon carAddon) {
+		return new CarSignContribution(userManager, carAddon);
 	}
 
 	@Bean

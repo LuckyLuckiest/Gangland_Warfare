@@ -4,21 +4,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.luckyraven.gangland.database.repositories.weapon.WeaponRepository;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.support.FakeMessageProvider;
 import org.luckyraven.gangland.support.SettingsFixture;
 import org.luckyraven.gangland.util.TimeMessages;
-import org.luckyraven.gangland.weapon.Weapon;
-import org.luckyraven.gangland.weapon.WeaponManager;
-import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,14 +21,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
- * {@link PluginDataCleanupService} against mocked collaborators. Proves the due/not-due branch, that the full-table
- * {@code deleteAll()} only fires when the injected {@code IRepository<Weapon>} is actually a
- * {@link WeaponRepository} (the {@code instanceof} guard in {@code resetWeapons()}), and that a due scan reschedules
- * via {@code PluginManager.nextPlannedDate}.
+ * {@link PluginDataCleanupService} against a mocked {@link DataCleanupTask}. Proves the due/not-due branch, that
+ * every registered task's {@code cleanup()} only fires on a due (or forced) scan, and that a due scan reschedules
+ * via {@code PluginManager.nextPlannedDate}. Since the 0.8.4 module split, the service no longer knows about any
+ * feature-specific repository or manager type directly — it iterates whatever {@link DataCleanupTask} beans the
+ * container holds; the weapon module's own guard against a non-owning repository implementation is pinned by its
+ * own data-cleanup-task test in that module, not here.
  *
  * <p>{@code Settings}/{@code Messages}/{@code TimeMessages} are process-wide statics with no reset hook
  * (documentation/TESTING.md §4/§8). This service reads {@code Settings.isAutoSaveDebug()} once per construction to
@@ -50,8 +45,7 @@ class PluginDataCleanupServiceTest {
 	Path tempDir;
 
 	private PluginManager    pluginManager;
-	private WeaponRepository weaponRepository;
-	private WeaponManager    weaponManager;
+	private DataCleanupTask  task;
 	private PluginDataCleanupService service;
 
 	@BeforeEach
@@ -67,10 +61,9 @@ class PluginDataCleanupServiceTest {
 				.withString("Time_Unit.Year", "y"));
 		TimeMessages.initialize();
 
-		pluginManager    = mock(PluginManager.class);
-		weaponRepository = mock(WeaponRepository.class);
-		weaponManager    = mock(WeaponManager.class);
-		service          = new PluginDataCleanupService(pluginManager, weaponRepository, weaponManager);
+		pluginManager = mock(PluginManager.class);
+		task          = mock(DataCleanupTask.class);
+		service       = new PluginDataCleanupService(pluginManager, () -> List.of(task));
 	}
 
 	@Test
@@ -80,35 +73,33 @@ class PluginDataCleanupServiceTest {
 
 		assertDoesNotThrow(() -> service.checkAndPerformCleanup());
 
-		verifyNoInteractions(weaponManager);
-		verify(weaponRepository, never()).deleteAll();
+		verify(task, never()).cleanup();
 	}
 
 	@Test
-	@DisplayName("scan not yet due: leaves weapons and scan dates untouched")
+	@DisplayName("scan not yet due: leaves the registered tasks and scan dates untouched")
 	void checkAndPerformCleanup_notDue_doesNothing() {
 		PluginData future = new PluginData(1, 0L, 0L, System.currentTimeMillis() + Duration.ofDays(1).toMillis());
 		when(pluginManager.getPluginDataList()).thenReturn(List.of(future));
 
 		service.checkAndPerformCleanup();
 
-		verify(weaponRepository, never()).deleteAll();
-		verifyNoInteractions(weaponManager);
+		verify(task, never()).cleanup();
 	}
 
 	@Test
-	@DisplayName("scan due: deletes every weapon row, clears the cache, and reschedules via nextPlannedDate")
-	void checkAndPerformCleanup_due_resetsWeaponsAndReschedules() {
+	@DisplayName("scan due: runs every registered task and reschedules via nextPlannedDate")
+	void checkAndPerformCleanup_due_runsTasksAndReschedules() {
 		PluginData due = new PluginData(1, 0L, 0L, System.currentTimeMillis() - 1_000);
 		when(pluginManager.getPluginDataList()).thenReturn(List.of(due));
-		when(weaponManager.getWeapons()).thenReturn(Map.of(UUID.randomUUID(), mock(Weapon.class)));
+		when(task.name()).thenReturn("weapons");
+		when(task.cleanup()).thenReturn(1);
 		Date nextScan = new Date(System.currentTimeMillis() + Duration.ofDays(30).toMillis());
 		when(pluginManager.nextPlannedDate(any())).thenReturn(nextScan);
 
 		service.checkAndPerformCleanup();
 
-		verify(weaponRepository).deleteAll();
-		verify(weaponManager).clear();
+		verify(task).cleanup();
 		assertEquals(nextScan.getTime(), due.getScheduledScanDate());
 		assertTrue(due.getScanDate() > 0);
 	}
@@ -122,26 +113,6 @@ class PluginDataCleanupServiceTest {
 
 		service.forceCleanup();
 
-		verify(weaponRepository).deleteAll();
-		verify(weaponManager).clear();
-	}
-
-	@Test
-	@DisplayName("a plain IRepository<Weapon> (not a WeaponRepository) is skipped by the instanceof guard, but the cache still clears")
-	void resetWeapons_nonWeaponRepositoryImplementation_skipsDeleteAll() {
-		@SuppressWarnings("unchecked")
-		IRepository<Weapon> genericRepository = mock(IRepository.class);
-		PluginDataCleanupService genericService =
-				new PluginDataCleanupService(pluginManager, genericRepository, weaponManager);
-		PluginData due = new PluginData(1, 0L, 0L, System.currentTimeMillis() - 1_000);
-		when(pluginManager.getPluginDataList()).thenReturn(List.of(due));
-		when(pluginManager.nextPlannedDate(any())).thenReturn(new Date());
-		when(weaponManager.getWeapons()).thenReturn(Map.of());
-
-		assertDoesNotThrow(genericService::checkAndPerformCleanup,
-				"resetWeapons()'s `if (weaponRepository instanceof WeaponRepository repo)` guard is exactly what " +
-						"keeps this from a ClassCastException against a plain IRepository<Weapon>");
-
-		verify(weaponManager).clear();
+		verify(task).cleanup();
 	}
 }

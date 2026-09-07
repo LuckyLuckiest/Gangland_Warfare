@@ -5,8 +5,10 @@ import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.file.configuration.shop.GanglandShopDisplayResolver;
 import org.luckyraven.gangland.file.configuration.shop.GanglandShopMessages;
 import org.luckyraven.gangland.file.configuration.shop.GanglandShopUiSettings;
+import org.luckyraven.gangland.file.configuration.shop.ShopDisplayNameProvider;
 import org.luckyraven.gangland.item.ItemRefresherRegistry;
 import org.luckyraven.gangland.item.ItemSerializerRegistry;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
@@ -23,7 +25,6 @@ import org.luckyraven.gangland.shop.valuation.CategoryBarterValuator;
 import org.luckyraven.gangland.shop.valuation.CategorySellValuator;
 import org.luckyraven.gangland.shop.valuation.SellValuator;
 import org.luckyraven.gangland.shop.view.*;
-import org.luckyraven.gangland.weapon.WeaponService;
 
 /**
  * CONFIG-phase wiring for the shop-api layer used by both the trader NPC (cops-n-crooks module) and the admin
@@ -67,8 +68,8 @@ public class ShopConfig {
 	}
 
 	@Bean
-	public ShopDisplayResolver shopDisplayResolver(WeaponService weaponService) {
-		return new GanglandShopDisplayResolver(weaponService);
+	public ShopDisplayResolver shopDisplayResolver(DependencyContainer container) {
+		return new GanglandShopDisplayResolver(() -> container.getAllInstances(ShopDisplayNameProvider.class));
 	}
 
 	// ── Purchase / barter / sell services ────────────────────────────────

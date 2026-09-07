@@ -8,15 +8,15 @@ import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.timer.RepeatingTimer;
 import org.luckyraven.keystone.util.TimeUtil;
+import org.luckyraven.gangland.data.plugin.DataCleanupTask;
 import org.luckyraven.gangland.data.plugin.PluginData;
 import org.luckyraven.gangland.data.plugin.PluginDataCleanupService;
 import org.luckyraven.gangland.data.plugin.PluginManager;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
-import org.luckyraven.gangland.weapon.Weapon;
-import org.luckyraven.gangland.weapon.WeaponManager;
 
 import java.util.Date;
 
@@ -35,7 +35,7 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 	@SuppressWarnings("unused")
 	private final UserManager<Player>        userManager;
 	private final UserManager<OfflinePlayer> offlineUserManager;
-	private final WeaponManager              weaponManager;
+	private final DependencyContainer        container;
 
 	@Getter
 	private PluginDataCleanupService cleanupService;
@@ -46,9 +46,9 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 	                         PluginManager pluginManager,
 	                         UserManager<Player> userManager,
 	                         UserManager<OfflinePlayer> offlineUserManager,
-	                         WeaponManager weaponManager,
+	                         DependencyContainer container,
 	                         long interval) {
-		this(gangland, database, pluginManager, userManager, offlineUserManager, weaponManager);
+		this(gangland, database, pluginManager, userManager, offlineUserManager, container);
 		this.repeatingTimer = new RepeatingTimer(gangland, 20L * interval, timer -> task());
 	}
 
@@ -57,13 +57,13 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 	                         PluginManager pluginManager,
 	                         UserManager<Player> userManager,
 	                         UserManager<OfflinePlayer> offlineUserManager,
-	                         WeaponManager weaponManager) {
+	                         DependencyContainer container) {
 		this.gangland           = gangland;
 		this.database           = database;
 		this.pluginManager      = pluginManager;
 		this.userManager        = userManager;
 		this.offlineUserManager = offlineUserManager;
-		this.weaponManager      = weaponManager;
+		this.container          = container;
 		this.repositoryRegistry = database.getRepositoryRegistry();
 	}
 
@@ -196,8 +196,8 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 	}
 
 	private void initializeCleanupService() {
-		var weaponRepository = database.getRepositoryRegistry().getRepository(Weapon.class);
-		cleanupService = new PluginDataCleanupService(pluginManager, weaponRepository, weaponManager);
+		cleanupService = new PluginDataCleanupService(pluginManager,
+		                                              () -> container.getAllInstances(DataCleanupTask.class));
 	}
 
 	private void task() {

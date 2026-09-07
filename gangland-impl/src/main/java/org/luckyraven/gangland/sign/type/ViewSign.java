@@ -3,7 +3,6 @@ package org.luckyraven.gangland.sign.type;
 import lombok.RequiredArgsConstructor;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.color.Color;
-import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.sign.SignType;
 import org.luckyraven.gangland.sign.aspect.SignAspect;
 import org.luckyraven.gangland.sign.aspect.ViewInventoryAspect;
@@ -17,32 +16,24 @@ import org.luckyraven.gangland.sign.parser.ViewSignParser;
 import org.luckyraven.gangland.sign.registry.SignTypeDefinition;
 import org.luckyraven.gangland.sign.validation.SignValidator;
 import org.luckyraven.gangland.sign.validation.ViewSignValidator;
-import org.luckyraven.gangland.weapon.WeaponService;
-import org.luckyraven.gangland.weapon.ammo.AmmunitionManager;
-import org.luckyraven.gangland.weapon.wearable.WearableService;
 
 import java.util.List;
 
 @RequiredArgsConstructor
 public class ViewSign implements Sign {
 
-	private final Gangland           gangland;
-	private final WeaponService      weaponService;
-	private final AmmunitionManager  ammunitionManager;
-	private final SignContributions  contributions;
-	private final WearableService    wearableService;
-	private final UniqueItemAddon    uniqueItemAddon;
-	private final SignType           signType;
+	private final Gangland          gangland;
+	private final SignContributions contributions;
+	private final SignType          signType;
 
 	@Override
 	public SignTypeDefinition createDefinition() {
 		// Create validator & parser
-		SignValidator validator = new ViewSignValidator(signType, weaponService, ammunitionManager);
+		SignValidator validator = new ViewSignValidator(signType);
 		SignParser    parser    = new ViewSignParser(signType);
 
 		// aspect
-		SignAspect viewAspect = new ViewInventoryAspect(gangland, weaponService, ammunitionManager, contributions,
-		                                                wearableService, uniqueItemAddon);
+		SignAspect viewAspect = new ViewInventoryAspect(gangland, contributions);
 
 		// handler
 		List<SignAspect> aspects = List.of(viewAspect);

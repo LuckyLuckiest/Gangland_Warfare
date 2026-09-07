@@ -16,6 +16,7 @@ plugins/
     │   ├── cops-n-crooks-0.8.4.jar      cops, civilians, jails, detainment, trader/banker NPCs
     │   ├── gangland-gadget-0.8.4.jar    cars and jetpacks
     │   ├── gangland-turf-0.8.4.jar      turf capture, contribution, garrison gameplay
+    │   ├── gangland-weapon-0.8.4.jar    weapon, ammunition, wearable and projectile system
     │   └── .stale/                      replaced jars, deleted on the next start
     └── settings.yml …
 ```
@@ -31,13 +32,11 @@ plugins/
 | cops-n-crooks — cops, civilians, jails, detainment, trader/banker NPCs, turf-NPC powerups | `cops-n-crooks` | runtime module since 0.8.4 |
 | gadget — cars (`/glw car`), jetpacks | `gangland-gadget` | runtime module since 0.8.4 |
 | turf — `TurfManager`, capture, powerups/garrison, the `/glw turf` tree | `gangland-turf` | runtime module since 0.8.4 |
-| weapon | `gangland-weapon` | still a compile-time dependency of `gangland-impl`; next in line |
+| weapon — `WeaponManager`, ammunition, wearables, the weapon/ammo/wearable trade and view signs, the `/glw weapon`, `/glw ammo` and `/glw item wearable` trees | `gangland-weapon` | runtime module since 0.8.4 |
 
-**Order for the remaining flips.** The feature poms form a DAG (`gadget → weapon`, `cops-n-crooks → weapon + turf`),
-so a feature can only be flipped once nothing left in the core's compile closure depends on it. With cops-n-crooks,
-gadget and turf already flipped, the remaining incremental order is **weapon** only.
-`cops-n-crooks`' `module.yml` now carries `Depends:` with `- turf`; `gadget`'s carries no `Depends:` yet.
-`cops-n-crooks` gains `[weapon]` and `gadget` gains `[weapon]` at the weapon flip.
+All five features (mail, cops-n-crooks, gadget, turf, weapon) are now runtime modules; the core's feature compile
+closure is empty. `cops-n-crooks`' `module.yml` carries `Depends:` with `- turf` and `- weapon`; `gadget`'s carries
+`Depends:` with `- weapon`.
 
 ## How the core loads modules
 
@@ -126,8 +125,10 @@ public final class GangMailContribution implements CommandContribution {
 ```
 
 `GangCommand` pulls `CommandContributions.from(container)` and appends every contribution addressed to `gang`;
-`GangAllyCommand` does the same for `gang.ally`. A core command that wants to accept contributions queries its own
-path the same way. Register one bean per contribution (distinct concrete types, as `MailModuleConfig` does).
+`GangAllyCommand` does the same for `gang.ally`. `DebugCommand` and `ItemCommand` do the same for `debug` and
+`item` — the weapon module attaches `/glw debug weapon` and `/glw item wearable` this way (`DebugWeaponContribution`,
+`ItemWearableContribution`). A core command that wants to accept contributions queries its own path the same way.
+Register one bean per contribution (distinct concrete types, as `MailModuleConfig` does).
 
 ## Core seams
 
@@ -180,6 +181,50 @@ Contributions and seams added by the **gadget** flip (0.8.4):
   catch-all registers at `CATCH_ALL_PRIORITY` (`Integer.MIN_VALUE`) so it always sorts last, letting a module's
   default-priority serializer (e.g. `CarItemSerializer`) win even though it registers after the core's beans in
   bootstrap order.
+
+Contributions and seams added by the **weapon** flip (0.8.4):
+
+- **`MetricsContributor`** (`org.luckyraven.gangland.metrics`, gangland-impl) — `Map<String, IntSupplier>
+  singleLineCharts()`. Consumed by `Gangland.bStats()` via `context.getContainer().getAllInstances(...)`, called at
+  the end of `onEnable()` after `bootstrap()` (and therefore `moduleLoader.enableAll()`) has already run, so every
+  module bean exists by then. Installed by `WeaponModuleConfig`'s `weaponMetricsContributor` bean
+  (`WeaponMetricsContributor`, `number_of_weapons`).
+- **`DataCleanupTask`** (`org.luckyraven.gangland.data.plugin`, gangland-impl) — `String name(); int cleanup()`.
+  Consumed **lazily** by `PluginDataCleanupService.performCleanup(...)` via a `Supplier<List<DataCleanupTask>>`
+  built from a `DependencyContainer` in `PeriodicalUpdates`'s constructor — lazy because `PeriodicalUpdates`
+  implements `BeanLifecycle` and its `onInitialize` fires inside the CONFIG phase, before module beans exist; the
+  supplier is only invoked from the auto-save timer, well after bootstrap. Installed by `WeaponModuleConfig`'s
+  `weaponDataCleanupTask` bean (`WeaponDataCleanupTask`, today's `resetWeapons()` body verbatim, including the
+  `instanceof WeaponRepository` guard).
+- **`NbtTagCatalog`** (`org.luckyraven.gangland.item`, gangland-impl) — a registry bean (rule-3a pattern, no
+  interface): `register(String...)` / `tags()`. The core's `ItemConfig.nbtTagCatalog()` bean registers every
+  `LootChestWandTag`; a module's `@Bean` takes the catalog as a constructor parameter and registers its own tags.
+  Consumed at command-execution time by `ReadNBTCommand` (`/glw debug nbt brief`), order-safe. `WeaponModuleConfig`
+  registers every `WeaponTag`.
+- **`ShopDisplayNameProvider`** (`org.luckyraven.gangland.file.configuration.shop`, gangland-impl, beside
+  `GanglandShopDisplayResolver`) — `@Nullable String cleanDisplayName(ItemStack item)`, returning `null` when the
+  provider does not own the item. Consumed **lazily** by `GanglandShopDisplayResolver` via a
+  `Supplier<List<ShopDisplayNameProvider>>`, tried in order before the `ItemMeta`/humanised-material fallback.
+  Installed by `WeaponModuleConfig`'s `weaponShopDisplayNameProvider` bean (`WeaponShopDisplayNameProvider`).
+- **`DeathMessageContributor`** (`org.luckyraven.gangland.listener.death`, gangland-impl) — `@Nullable Resolved
+  resolve(Player victim, Player killer)`, where `Resolved(String template, String itemName)` (a `null` template
+  means "use the global message list"). Consumed **lazily** by `PlayerDeathListener.buildDeathMessage` via a
+  `Supplier<List<DeathMessageContributor>>`, walked for the first non-null result. Installed by
+  `WeaponModuleConfig`'s `weaponDeathMessageContributor` bean (`WeaponDeathMessageContributor`, the
+  `ThrowableAction.pendingKillerWeapon` / `WeaponManager.getWeaponTemplate` / `validateAndGetWeapon` logic moved
+  verbatim from `PlayerDeathListener`).
+- **`ItemRefresherRegistry.CATCH_ALL_PRIORITY`** (`gangland-infra/gangland-item`) — mirrors
+  `ItemSerializerRegistry`'s priority overload exactly (`register(refresher, priority)`, stable descending sort).
+  Needed because, unlike the serializer registry, refresher ordering carries live behaviour: a unique **weapon**
+  carries both the weapon and the uniqueItem NBT tag, so the weapon/wearable refreshers must outrank
+  `UniqueItemRefresher` (registered by `WeaponModuleConfig` at priority `10`) while the ammunition refresher must
+  stay behind it (registered at the default priority `0`), reproducing the pre-flip order
+  `weapon, wearable, unique, ammunition, car` exactly.
+- Contribution paths added by the weapon flip: `DebugWeaponContribution` (`parent() == "debug"`, attaches
+  `/glw debug weapon`, queried by `DebugCommand`) and `ItemWearableContribution` (`parent() == "item"`, attaches
+  `/glw item wearable`, queried by `ItemCommand`); one `WeaponSignContribution` bean (weapon-buy/-sell,
+  ammo-buy/-sell, wearable-buy/-sell) and one `WeaponSignViewProvider` bean (weapon/ammunition/wearable views) on
+  the flip-2 sign seam.
 
 Later flips append their own holders/contributions as new rows in this section rather than starting a new one.
 

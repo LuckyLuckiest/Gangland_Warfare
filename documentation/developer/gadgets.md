@@ -18,8 +18,9 @@ provides three major subsystems:
 
 ```
 gangland-gadget
-    depends on ──> gangland-item      (Fuel, Wearable data models)
-    depends on ──> gangland-weapon    (WeaponService, projectile damage lookup)
+    depends on ──> gangland-item      (Fuel data model; Wearable moved to gangland-weapon in 0.8.4)
+    Depends: weapon (module.yml, runtime module dependency since 0.8.4 -- WeaponService, projectile damage lookup,
+                      resolved through Keystone's ModuleLoader, not a compile-time edge)
     depends on ──> gangland-core      (ItemBuilder, ActionBarManager, ParticleUtil)
     depends on ──> plugin-common      (custom logging)
     depends on ──> plugin-persistence (IRepository for ParkedCar)
@@ -916,6 +917,12 @@ jetpack_mk1:
 - `Wearable` -- jetpack wearable data model, `WearableTrait` enum
 
 ### gangland-gadget -> gangland-weapon
+
+Since 0.8.4 this is a **runtime module dependency**: `gangland-gadget/src/main/resources/module.yml` declares
+`Depends: - weapon`, resolved by Keystone's `ModuleLoader` at load time rather than a Maven compile edge (gadget's
+own `gangland-weapon` pom dependency is `provided`). The wearable stack (`WearableAddon`, `WearableService`, the
+`/glw item wearable` commands, converter/refresher/serializer) also moved into the weapon module in 0.8.4 -- it is
+no longer gadget's own code, only a dependency gadget still reads from.
 
 - `WeaponService` -- checks if an item is a weapon (for melee damage in `CarDamageListener`)
 - `ProjectileDamageListener.getDamageForProjectile()` -- reads weapon projectile damage

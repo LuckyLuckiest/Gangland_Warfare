@@ -31,14 +31,16 @@ import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.gang.vault.permission.VaultPermissionBridge;
 import org.luckyraven.keystone.vault.permission.VaultOfflinePermissionService;
 import org.luckyraven.keystone.sound.ResourcePackTracker;
+import org.luckyraven.gangland.metrics.MetricsContributor;
 import org.luckyraven.gangland.scoreboard.ScoreboardManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.keystone.update.UpdateNotifier;
 import org.luckyraven.keystone.update.UpdateChecker;
-import org.luckyraven.gangland.weapon.configuration.WeaponAddon;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.IntSupplier;
 
 @Getter
 @CustomLog
@@ -113,9 +115,6 @@ public final class Gangland extends JavaPlugin {
 		int     pluginId = 21012;
 		Metrics metrics  = new Metrics(this, pluginId);
 
-		// number of weapons loaded
-		metrics.addCustomChart(new SingleLineChart("number_of_weapons", () -> context.get(WeaponAddon.class).size()));
-
 		// number of inventories loaded
 		metrics.addCustomChart(new SingleLineChart("number_of_inventories",
 		                                           () -> context.get(InventoryDefinitionStore.class).size()));
@@ -145,6 +144,15 @@ public final class Gangland extends JavaPlugin {
 
 			return values;
 		}));
+
+		// Charts a runtime module contributes. bootstrap() has already run moduleLoader.enableAll(), so every module
+		// bean exists by the time onEnable() reaches here.
+		List<MetricsContributor> contributors = context.getContainer().getAllInstances(MetricsContributor.class);
+		for (MetricsContributor contributor : contributors == null ? List.<MetricsContributor>of() : contributors) {
+			for (Map.Entry<String, IntSupplier> chart : contributor.singleLineCharts().entrySet()) {
+				metrics.addCustomChart(new SingleLineChart(chart.getKey(), () -> chart.getValue().getAsInt()));
+			}
+		}
 	}
 
 	/**

@@ -170,9 +170,7 @@ public class KernelConfig {
 		fm.addFile(new FileHandler(gangland, "settings", ".yml"), true);
 		fm.addFile(new FileHandler(gangland, "scoreboard", ".yml"), true);
 
-		fm.addFile(new FileHandler(gangland, "ammunition", "items", ".yml"), true);
 		fm.addFile(new FileHandler(gangland, "unique_items", "items", ".yml"), true);
-		fm.addFile(new FileHandler(gangland, "wearables", "items", ".yml"), true);
 		fm.addFile(new FileHandler(gangland, "money", "items", ".yml"), true);
 
 		fm.addFile(new FileHandler(gangland, "loot_chests", "lootchests", ".yml"), true);

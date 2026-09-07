@@ -777,6 +777,9 @@ Custom Bukkit events (11 total).
 
 ## gangland-features/gangland-weapon
 
+**Runtime module since 0.8.4** (`modules/gangland-weapon-<rev>.jar`, never in the core jar) --
+see `documentation/module-loader.md`.
+
 **Purpose:** Complete weapon, ammunition, and projectile system. Defines weapon types (guns, melee, throwables,
 incendiaries, biological), projectile physics, damage modifiers, reload mechanics, spread/recoil, and selective fire
 modes.

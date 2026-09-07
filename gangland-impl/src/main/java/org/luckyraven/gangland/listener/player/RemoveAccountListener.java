@@ -7,7 +7,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.inventory.ItemStack;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
@@ -19,8 +18,6 @@ import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.gang.wanted.Wanted;
 import org.luckyraven.keystone.persistence.repository.IRepository;
-import org.luckyraven.gangland.weapon.Weapon;
-import org.luckyraven.gangland.weapon.WeaponManager;
 
 @ListenerHandler(priority = ListenerPriority.LOW)
 public final class RemoveAccountListener implements Listener {
@@ -29,18 +26,15 @@ public final class RemoveAccountListener implements Listener {
 	private final GanglandDatabase           ganglandDatabase;
 	private final UserManager<Player>        userManager;
 	private final UserManager<OfflinePlayer> offlineUserManager;
-	private final WeaponManager              weaponManager;
 
 	public RemoveAccountListener(Gangland gangland,
 	                             GanglandDatabase ganglandDatabase,
 	                             @Qualifier("online") UserManager<Player> userManager,
-	                             @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
-	                             WeaponManager weaponManager) {
+	                             @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager) {
 		this.gangland           = gangland;
 		this.ganglandDatabase   = ganglandDatabase;
 		this.userManager        = userManager;
 		this.offlineUserManager = offlineUserManager;
-		this.weaponManager      = weaponManager;
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
@@ -106,16 +100,6 @@ public final class RemoveAccountListener implements Listener {
 		offlineUser.setBank(user.getBank());
 
 		offlineUserManager.add(offlineUser);
-
-		// search if the player holds a weapon
-		// check if it was a weapon
-		ItemStack item   = player.getInventory().getItemInMainHand();
-		Weapon    weapon = weaponManager.validateAndGetWeapon(player, item);
-
-		if (weapon == null) return;
-		if (weapon.isReloading()) weapon.stopReloading();
-
-		weapon.unScope(player, true);
 	}
 
 }

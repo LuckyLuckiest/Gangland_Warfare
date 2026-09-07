@@ -17,9 +17,6 @@ import org.luckyraven.gangland.sign.service.SignInformation;
 import org.luckyraven.gangland.sign.service.SignInteraction;
 import org.luckyraven.gangland.sign.type.Sign;
 import org.luckyraven.gangland.sign.validation.SignValidator;
-import org.luckyraven.gangland.weapon.WeaponService;
-import org.luckyraven.gangland.weapon.ammo.AmmunitionManager;
-import org.luckyraven.gangland.weapon.wearable.WearableService;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 
 import java.util.List;
@@ -76,9 +73,7 @@ class SignManagerContributionTest {
 		UserManager<org.bukkit.OfflinePlayer> offlineUsers = mock(UserManager.class);
 
 		SignManager manager = new SignManager(mock(Gangland.class), "glw", new SignTypeRegistry(), signInteraction,
-		                                      mock(WeaponService.class), mock(AmmunitionManager.class),
-		                                      mock(UniqueItemAddon.class), onlineUsers, offlineUsers,
-		                                      mock(WearableService.class), container);
+		                                      mock(UniqueItemAddon.class), onlineUsers, offlineUsers, container);
 
 		List<SignTypeDefinition> definitions = manager.setupSigns();
 

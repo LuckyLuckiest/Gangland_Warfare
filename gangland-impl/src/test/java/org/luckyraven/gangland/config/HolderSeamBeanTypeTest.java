@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.gangland.data.economy.GanglandMoneyDropClassifier;
 import org.luckyraven.gangland.gang.wanted.WantedKillTrackers;
+import org.luckyraven.gangland.item.NbtTagCatalog;
 import org.luckyraven.keystone.bean.Bean;
 
 import java.lang.reflect.Method;
@@ -39,6 +40,11 @@ class HolderSeamBeanTypeTest {
 	@Test
 	void wantedKillTrackersBeanIsDeclaredAsTheHolderClass() {
 		assertDeclaredReturnType(DataConfig.class, "wantedKillTrackers", WantedKillTrackers.class);
+	}
+
+	@Test
+	void nbtTagCatalogBeanIsDeclaredAsTheHolderClass() {
+		assertDeclaredReturnType(ItemConfig.class, "nbtTagCatalog", NbtTagCatalog.class);
 	}
 
 	private static void assertDeclaredReturnType(Class<?> configuration, String beanMethod, Class<?> holder) {

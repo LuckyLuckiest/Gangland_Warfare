@@ -15,9 +15,11 @@ import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.bootstrap.PeriodicalUpdates;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.gangland.command.CommandManager;
+import org.luckyraven.gangland.command.extension.CommandContributions;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.bean.Qualifier;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.keystone.color.Color;
 import org.luckyraven.keystone.color.ColorUtil;
@@ -48,11 +50,12 @@ import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.inventory.villager.VillagerInventory;
 import org.luckyraven.gangland.inventory.villager.VillagerInventoryRegistry;
 import org.luckyraven.gangland.inventory.villager.VillagerTrade;
-import org.luckyraven.gangland.weapon.Weapon;
-import org.luckyraven.gangland.weapon.WeaponManager;
 
 import java.util.*;
 
+/**
+ * Accepts {@code CommandContribution}s at path {@code debug}.
+ */
 @CommandHandler
 public final class DebugCommand extends Command {
 
@@ -62,10 +65,10 @@ public final class DebugCommand extends Command {
 	private final RankManager               rankManager;
 	private final WaypointManager           waypointManager;
 	private final PermissionManager         permissionManager;
-	private final WeaponManager             weaponManager;
 	private final GanglandPlaceholder       placeholder;
 	private final CommandManager            commandManager;
 	private final VillagerInventoryRegistry villagerRegistry;
+	private final CommandContributions      contributions;
 
 	public DebugCommand(Gangland gangland,
 	                    @Qualifier("online") UserManager<Player> userManager,
@@ -74,10 +77,10 @@ public final class DebugCommand extends Command {
 	                    RankManager rankManager,
 	                    WaypointManager waypointManager,
 	                    PermissionManager permissionManager,
-	                    WeaponManager weaponManager,
 	                    GanglandPlaceholder placeholder,
 	                    CommandManager commandManager,
-	                    VillagerInventoryRegistry villagerRegistry) {
+	                    VillagerInventoryRegistry villagerRegistry,
+	                    DependencyContainer container) {
 		super(gangland, "debug", false);
 
 		this.userManager       = userManager;
@@ -86,10 +89,10 @@ public final class DebugCommand extends Command {
 		this.rankManager       = rankManager;
 		this.waypointManager   = waypointManager;
 		this.permissionManager = permissionManager;
-		this.weaponManager     = weaponManager;
 		this.placeholder       = placeholder;
 		this.commandManager    = commandManager;
 		this.villagerRegistry  = villagerRegistry;
+		this.contributions     = CommandContributions.from(container);
 	}
 
 	@Override
@@ -157,8 +160,6 @@ public final class DebugCommand extends Command {
 
 		checkPerm.addSubArgument(checkOptional);
 
-		Argument giveGun = getGiveGun();
-
 		Argument version = getVersion();
 
 		// add sub arguments
@@ -178,10 +179,13 @@ public final class DebugCommand extends Command {
 		arguments.add(updateData);
 		arguments.add(inventoriesData);
 		arguments.add(checkPerm);
-		arguments.add(giveGun);
 		arguments.add(version);
 
 		getArgument().addAllSubArguments(arguments);
+
+		for (Argument contributed : contributions.createFor("debug", getArgumentTree(), getArgument())) {
+			getArgument().addSubArgument(contributed);
+		}
 	}
 
 	@Override
@@ -495,15 +499,6 @@ public final class DebugCommand extends Command {
 			sender.sendMessage("hasPermission: " + sender.hasPermission(permission));
 			sender.sendMessage("isPermissionSet: " + sender.isPermissionSet(permission));
 		}, sender -> List.of("<permission>"));
-	}
-
-	private @NotNull Argument getGiveGun() {
-		return new Argument(getGangland(), "weapon", getArgumentTree(), (argument, sender, args) -> {
-			Collection<Weapon> values = weaponManager.getWeapons().values();
-			for (Weapon weapon : values) {
-				sender.sendMessage(weapon.getUuid().toString());
-			}
-		});
 	}
 
 	private @NotNull Argument getVersion() {

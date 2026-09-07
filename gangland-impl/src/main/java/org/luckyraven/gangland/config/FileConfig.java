@@ -12,25 +12,18 @@ import org.luckyraven.gangland.file.configuration.*;
 import org.luckyraven.gangland.file.configuration.wanted.GanglandBountySettings;
 import org.luckyraven.gangland.file.configuration.wanted.GanglandWantedSettings;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionStore;
-import org.luckyraven.gangland.file.configuration.weapon.GanglandBlockRegenerationSettings;
-import org.luckyraven.gangland.file.configuration.weapon.WeaponLoader;
 import org.luckyraven.gangland.item.fuel.FuelService;
-import org.luckyraven.gangland.weapon.wearable.WearableAddon;
 import org.luckyraven.gangland.gang.bounty.BountySettings;
 import org.luckyraven.gangland.gang.wanted.WantedSettings;
 import org.luckyraven.gangland.inventory.condition.BooleanExpressionEvaluator;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.item.money.MoneyAddon;
-import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.gangland.scoreboard.ScoreboardManager;
 import org.luckyraven.gangland.scoreboard.configuration.ScoreboardAddon;
 import org.luckyraven.gangland.sign.GanglandSignInformation;
 import org.luckyraven.gangland.sign.service.SignInformation;
 import org.luckyraven.gangland.util.TimeMessages;
-import org.luckyraven.gangland.weapon.ammo.AmmunitionManager;
-import org.luckyraven.gangland.weapon.configuration.AmmunitionAddon;
-import org.luckyraven.gangland.weapon.configuration.WeaponAddon;
 
 /**
  * FILE-phase wiring. Every {@code @Bean} here is invoked before the DATABASE phase begins, and {@link FileManager}'s
@@ -115,11 +108,6 @@ public class FileConfig {
 		return new GanglandWantedSettings();
 	}
 
-	@Bean
-	public GanglandBlockRegenerationSettings blockRegenerationSettings() {
-		return new GanglandBlockRegenerationSettings();
-	}
-
 	// ---------------------------------------------------------------------------------------------------------------
 	// FileInitializer beans
 	// ---------------------------------------------------------------------------------------------------------------
@@ -137,24 +125,6 @@ public class FileConfig {
 		return new ScoreboardManager(gangland, placeholderService, scoreboardAddon);
 	}
 
-	/**
-	 * Empty {@link AmmunitionManager} created in the FILE phase so {@link AmmunitionAddon} can populate it. Belongs to
-	 * FILE rather than CONFIG because its lifecycle is bound to ammunition.yml loading.
-	 */
-	@Bean
-	public AmmunitionManager ammunitionManager(Settings settings) {
-		return new AmmunitionManager();
-	}
-
-	@Bean
-	public AmmunitionAddon ammunitionAddon(FileManager fileManager,
-	                                       AmmunitionManager ammunitionManager,
-	                                       PlaceholderService placeholderService) {
-		AmmunitionAddon addon = new AmmunitionAddon(fileManager, ammunitionManager, placeholderService);
-		fileManager.registerInitializer(addon);
-		return addon;
-	}
-
 	@Bean
 	public FuelService fuelService(Settings settings) {
 		return new FuelService();
@@ -168,38 +138,6 @@ public class FileConfig {
 		UniqueItemAddon addon = new UniqueItemAddon(permissionManager, fileManager, fuelService, placeholderService);
 		fileManager.registerInitializer(addon);
 		return addon;
-	}
-
-	@Bean
-	public WearableAddon wearableAddon(PermissionManager permissionManager,
-	                                   FileManager fileManager,
-	                                   PlaceholderService placeholderService) {
-		WearableAddon addon = new WearableAddon(permissionManager::addPermission, fileManager, placeholderService);
-		fileManager.registerInitializer(addon);
-		return addon;
-	}
-
-	@Bean
-	public WeaponAddon weaponAddon(AmmunitionAddon ammunitionAddon, PlaceholderService placeholderService) {
-		return new WeaponAddon(placeholderService);
-	}
-
-	/**
-	 * {@link WeaponLoader} reads its own folder of YAML files (rifle, grenade, knife, flamethrower, syringe_gun) and
-	 * registers them via {@link WeaponAddon}. Constructor injection supplies {@link FileManager},
-	 * {@link AmmunitionManager} and {@link WeaponAddon} directly.
-	 */
-	@Bean
-	public WeaponLoader weaponLoader(FileManager fileManager,
-	                                 AmmunitionManager ammunitionManager,
-	                                 WeaponAddon weaponAddon) {
-		WeaponLoader loader = new WeaponLoader(gangland, fileManager, weaponAddon, ammunitionManager);
-		loader.addExpectedFile(new FileHandler(gangland, "rifle", "weapon", ".yml"));
-		loader.addExpectedFile(new FileHandler(gangland, "grenade", "weapon", ".yml"));
-		loader.addExpectedFile(new FileHandler(gangland, "knife", "weapon", ".yml"));
-		loader.addExpectedFile(new FileHandler(gangland, "flamethrower", "weapon", ".yml"));
-		loader.addExpectedFile(new FileHandler(gangland, "syringe_gun", "weapon", ".yml"));
-		return loader;
 	}
 
 	@Bean

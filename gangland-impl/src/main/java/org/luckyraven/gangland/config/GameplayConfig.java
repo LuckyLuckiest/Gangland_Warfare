@@ -1,14 +1,10 @@
 package org.luckyraven.gangland.config;
 
 import lombok.CustomLog;
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.ServicePriority;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.bootstrap.GanglandContext;
-import org.luckyraven.gangland.compatibility.CompatibilityWorker;
-import org.luckyraven.gangland.compatibility.recoil.RecoilCompatibility;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.PostConstruct;
@@ -17,15 +13,12 @@ import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.gangland.data.economy.GanglandMoneyDepositService;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.data.placeholder.PlaceholderService;
-import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionStore;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryLoader;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryRuntimeContext;
 import org.luckyraven.gangland.file.configuration.inventory.itemsource.GangItemSourceProvider;
 import org.luckyraven.gangland.file.configuration.lootchest.GanglandLootChestMessages;
 import org.luckyraven.gangland.file.configuration.lootchest.LootChestSettings;
-import org.luckyraven.gangland.file.configuration.weapon.GanglandBlockRegenerationSettings;
-import org.luckyraven.gangland.weapon.wearable.WearableAddon;
 import org.luckyraven.gangland.gang.GangFilterAdapter;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberFilterAdapter;
@@ -40,7 +33,6 @@ import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.item.contract.GanglandUniqueItemInteractionService;
 import org.luckyraven.gangland.item.contract.UniqueItemInteractionService;
 import org.luckyraven.gangland.item.contract.UniqueItemRegistry;
-import org.luckyraven.gangland.item.contract.WearableEquipService;
 import org.luckyraven.gangland.item.listener.money.MoneyProximityPickupTask;
 import org.luckyraven.gangland.item.money.MoneyAddon;
 import org.luckyraven.gangland.item.money.MoneyDepositService;
@@ -59,24 +51,14 @@ import org.luckyraven.gangland.sign.SignPermissions;
 import org.luckyraven.gangland.sign.service.SignInformation;
 import org.luckyraven.gangland.sign.service.SignInteraction;
 import org.luckyraven.gangland.sign.service.SignInteractionService;
-import org.luckyraven.gangland.weapon.WeaponManager;
-import org.luckyraven.gangland.weapon.WeaponService;
-import org.luckyraven.gangland.weapon.ammo.AmmunitionManager;
-import org.luckyraven.gangland.weapon.configuration.WeaponAddon;
-import org.luckyraven.gangland.weapon.fire.PluginFireRegistry;
-import org.luckyraven.gangland.weapon.modifiers.BlockDamageManager;
-import org.luckyraven.gangland.weapon.raytrace.WeaponRaytracer;
-import org.luckyraven.gangland.weapon.raytrace.WeaponVisualSpawner;
-import org.luckyraven.gangland.weapon.wearable.WearableService;
 
 /**
- * CONFIG-phase wiring for the gameplay-side managers: weapons, signs, items, inventory, hologram, loot chest, money.
- * Every bean here can constructor-inject any FILE-phase or DATABASE-phase bean by type.
+ * CONFIG-phase wiring for the gameplay-side managers: signs, items, inventory, hologram, loot chest, money. The
+ * weapon/wearable system's own CONFIG-phase beans live in the weapon module's {@code WeaponModuleConfig}. Every
+ * bean here can constructor-inject any FILE-phase or DATABASE-phase bean by type.
  *
  * <p>The structural ordering inside the topo sort:
  * <ol>
- *     <li>Weapon system: {@link WeaponManager} → {@link BlockDamageManager} / {@link WeaponVisualSpawner} →
- *     {@link WeaponRaytracer} (depends on the previous three).</li>
  *     <li>Sign system: registries → {@link SignFormatterService} → {@link SignInteraction} → {@link SignManager}
  *     and {@link BulkActionManager}.</li>
  *     <li>Money + items: {@link MoneyDepositService} (must precede the parser; {@code MoneyConverter} resolves the
@@ -176,56 +158,6 @@ public class GameplayConfig {
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
-	// Weapon system
-	// ---------------------------------------------------------------------------------------------------------------
-
-	@Bean
-	public WeaponManager weaponManager(WeaponAddon weaponAddon, GanglandDatabase database) {
-		return new WeaponManager(weaponAddon, database);
-	}
-
-	@Bean
-	public WeaponService weaponService(WeaponManager weaponManager) {
-		return weaponManager;
-	}
-
-	@Bean
-	public BlockDamageManager blockDamageManager(GanglandBlockRegenerationSettings settings) {
-		return new BlockDamageManager(gangland, settings);
-	}
-
-	@Bean
-	public WeaponVisualSpawner weaponVisualSpawner() {
-		return new WeaponVisualSpawner();
-	}
-
-	@Bean
-	public WeaponRaytracer weaponRaytracer(WeaponManager weaponManager, WearableAddon wearableAddon,
-	                                       BlockDamageManager blockDamageManager,
-	                                       WeaponVisualSpawner weaponVisualSpawner) {
-		WeaponRaytracer raytracer = new WeaponRaytracer(weaponManager, wearableAddon, blockDamageManager,
-		                                                weaponVisualSpawner);
-		// Cross-module raytracer publishing — same as the legacy events() method did.
-		Bukkit.getServicesManager().register(WeaponRaytracer.class, raytracer, gangland, ServicePriority.Normal);
-		return raytracer;
-	}
-
-	@Bean
-	public WearableService wearableService(WearableAddon wearableAddon) {
-		return wearableAddon;
-	}
-
-	@Bean
-	public RecoilCompatibility recoilCompatibility(CompatibilityWorker compatibilityWorker) {
-		return compatibilityWorker.getRecoilCompatibility();
-	}
-
-	@Bean
-	public PluginFireRegistry pluginFireRegistry() {
-		return new PluginFireRegistry();
-	}
-
-	// ---------------------------------------------------------------------------------------------------------------
 	// Sign system
 	// ---------------------------------------------------------------------------------------------------------------
 
@@ -272,14 +204,12 @@ public class GameplayConfig {
 	 */
 	@Bean
 	public SignManager signManager(SignTypeRegistry signTypeRegistry, SignInteraction signInteraction,
-	                               WeaponManager weaponManager, AmmunitionManager ammunitionManager,
 	                               UniqueItemAddon uniqueItemAddon,
 	                               @Qualifier("online") UserManager<Player> userManager,
 	                               @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
-	                               WearableAddon wearableAddon, DependencyContainer container) {
+	                               DependencyContainer container) {
 		return new SignManager(gangland, Gangland.SHORT_PREFIX, signTypeRegistry, signInteraction,
-		                       weaponManager, ammunitionManager, uniqueItemAddon, userManager,
-		                       offlineUserManager, wearableAddon, container);
+		                       uniqueItemAddon, userManager, offlineUserManager, container);
 	}
 
 	@Bean
@@ -315,11 +245,6 @@ public class GameplayConfig {
 	@Bean
 	public UniqueItemInteractionService uniqueItemInteractionService(InventoryRuntimeContext inventoryRuntimeContext) {
 		return new GanglandUniqueItemInteractionService(inventoryRuntimeContext);
-	}
-
-	@Bean
-	public WearableEquipService wearableEquipService(WearableAddon wearableAddon) {
-		return wearableAddon;
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------

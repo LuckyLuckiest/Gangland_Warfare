@@ -153,7 +153,7 @@ Full documentation is available in the [`documentation/`](./documentation/) fold
 |------------------------------------|-------------------------------------------------------|
 | `gangland-impl`                    | Plugin entry point, commands, listeners, and managers |
 | `cops-n-crooks`                    | Cop AI, spawning, detainment, and jail logic          |
-| `gangland-weapon`                  | Weapon, ammo, and projectile system                   |
+| `gangland-weapon`                  | Runtime module since 0.8.4 — weapon, ammo, and projectile system |
 | `plugin-persistence`               | Generic repository pattern and database abstraction   |
 | `gangland-util`                    | Shared utilities and dependency injection container   |
 | `scoreboard-api`                   | FastBoard-based scoreboard rendering                  |

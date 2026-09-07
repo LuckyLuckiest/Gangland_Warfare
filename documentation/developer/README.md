@@ -58,7 +58,7 @@ gangland_warfare/
 ├── gangland-item/              Item parsing, fuel, unique items, wearables
 ├── plugin-persistence/         Repository pattern, database, file persistence
 ├── plugin-common/              Logger, exception hierarchy
-├── gangland-features/
+├── gangland-features/           (all runtime modules since 0.8.4 -- see documentation/module-loader.md)
 │   ├── cops-n-crooks/          Police NPCs, civilians, wanted/bounty, jail
 │   ├── gangland-weapon/        Weapon engine, projectiles, modifiers
 │   ╰── gangland-gadget/        Cars, jetpacks, fuel

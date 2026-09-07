@@ -17,9 +17,9 @@ import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.gangland.scoreboard.ScoreboardManager;
-import org.luckyraven.gangland.weapon.WeaponManager;
 
 /**
  * CONFIG-phase wiring for the four lifecycle service beans that automate plugin reload, player loading, scoreboard
@@ -71,13 +71,13 @@ public class SchedulingConfig {
 	                                           PluginManager pluginManager,
 	                                           @Qualifier("online") UserManager<Player> userManager,
 	                                           @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
-	                                           WeaponManager weaponManager) {
+	                                           DependencyContainer container) {
 		if (Settings.isAutoSave()) {
 			long interval = Settings.getAutoSaveTime() * 60L;
 			return new PeriodicalUpdates(gangland, ganglandDatabase, pluginManager, userManager,
-			                             offlineUserManager, weaponManager, interval);
+			                             offlineUserManager, container, interval);
 		}
 		return new PeriodicalUpdates(gangland, ganglandDatabase, pluginManager, userManager,
-		                             offlineUserManager, weaponManager);
+		                             offlineUserManager, container);
 	}
 }

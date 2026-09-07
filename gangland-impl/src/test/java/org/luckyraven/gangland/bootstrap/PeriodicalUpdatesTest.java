@@ -10,11 +10,14 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.data.plugin.PluginManager;
 import org.luckyraven.gangland.database.GanglandDatabase;
+import org.luckyraven.gangland.data.plugin.DataCleanupTask;
 import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.weapon.WeaponManager;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.mockito.InOrder;
+
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -44,7 +47,7 @@ class PeriodicalUpdatesTest {
 	private PluginManager              pluginManager;
 	private UserManager<Player>        userManager;
 	private UserManager<OfflinePlayer> offlineUserManager;
-	private WeaponManager              weaponManager;
+	private DependencyContainer        container;
 
 	@SuppressWarnings("unchecked")
 	@BeforeEach
@@ -55,9 +58,10 @@ class PeriodicalUpdatesTest {
 		pluginManager      = mock(PluginManager.class);
 		userManager        = mock(UserManager.class);
 		offlineUserManager = mock(UserManager.class);
-		weaponManager      = mock(WeaponManager.class);
+		container          = mock(DependencyContainer.class);
 
 		when(database.getRepositoryRegistry()).thenReturn(repositoryRegistry);
+		when(container.getAllInstances(DataCleanupTask.class)).thenReturn(List.of());
 	}
 
 	@Test
@@ -68,7 +72,7 @@ class PeriodicalUpdatesTest {
 					.thenReturn(mock(BukkitTask.class));
 
 			PeriodicalUpdates updates = new PeriodicalUpdates(gangland, database, pluginManager, userManager,
-			                                                  offlineUserManager, weaponManager, 300L);
+			                                                  offlineUserManager, container, 300L);
 
 			updates.start();
 
@@ -83,7 +87,7 @@ class PeriodicalUpdatesTest {
 	void start_withoutATimer_schedulesNothing() {
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
 			PeriodicalUpdates updates = new PeriodicalUpdates(gangland, database, pluginManager, userManager,
-			                                                  offlineUserManager, weaponManager);
+			                                                  offlineUserManager, container);
 
 			updates.start();
 
@@ -98,7 +102,7 @@ class PeriodicalUpdatesTest {
 	@DisplayName("CL-02/CL-23: the offline cache is only cleared AFTER saveAll has taken its snapshot")
 	void updatingDatabase_clearsTheOfflineCacheAfterTheRepositorySnapshot() {
 		PeriodicalUpdates updates = new PeriodicalUpdates(gangland, database, pluginManager, userManager,
-		                                                  offlineUserManager, weaponManager);
+		                                                  offlineUserManager, container);
 
 		updates.updatingDatabase();
 

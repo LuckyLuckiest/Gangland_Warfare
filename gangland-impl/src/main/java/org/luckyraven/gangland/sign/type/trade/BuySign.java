@@ -21,8 +21,6 @@ import org.luckyraven.gangland.sign.parser.TradeSignParser;
 import org.luckyraven.gangland.sign.registry.SignTypeDefinition;
 import org.luckyraven.gangland.sign.validation.SignValidator;
 import org.luckyraven.gangland.sign.validation.trade.ItemSignValidator;
-import org.luckyraven.gangland.weapon.WeaponService;
-import org.luckyraven.gangland.weapon.ammo.AmmunitionManager;
 
 import java.util.List;
 
@@ -37,10 +35,7 @@ public class BuySign extends BaseTradeSign implements BulkSignHandler {
 	 */
 	private SignHandler handler;
 
-	public BuySign(UserManager<Player> userManager, WeaponService weaponService, AmmunitionManager ammunitionManager,
-	               UniqueItemAddon uniqueItemAddon, SignType signType) {
-		super(weaponService, ammunitionManager);
-
+	public BuySign(UserManager<Player> userManager, UniqueItemAddon uniqueItemAddon, SignType signType) {
 		this.userManager     = userManager;
 		this.uniqueItemAddon = uniqueItemAddon;
 		this.signType        = signType;

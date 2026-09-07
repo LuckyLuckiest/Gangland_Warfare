@@ -6,4 +6,5 @@ Main: org.luckyraven.gangland.copsncrooks.CopsNCrooksModule
 Host_Api: 0.8
 Depends:
   - turf
+  - weapon
 Artifact: org.luckyraven:cops-n-crooks

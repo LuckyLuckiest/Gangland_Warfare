@@ -296,8 +296,10 @@ Database:
 
 ### Dependency Rules
 
-1. **Feature modules** (`cops-n-crooks`, `gangland-weapon`, `gangland-gadget`) depend on
-   `gangland-core`, `gangland-item`, `plugin-persistence`, `plugin-common`
+1. **Feature modules** (`cops-n-crooks`, `gangland-weapon`, `gangland-gadget`, `gangland-turf`, `gangland-mail`) are
+   runtime modules since 0.8.4 (`documentation/module-loader.md`): each depends on `gangland-impl` and the shared
+   infra modules at `provided` scope and is loaded from `plugins/Gangland_Warfare/modules/` at runtime through
+   Keystone's `ModuleLoader`, rather than being a compile-time dependency of the core jar
 2. **UI modules** depend on `gangland-core`, `plugin-common`
 3. **`gangland-impl`** depends on everything (it wires it all together)
 4. **`gangland-build`** shades everything into the final JAR

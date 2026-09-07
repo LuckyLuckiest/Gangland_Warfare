@@ -38,11 +38,12 @@ class InformationManagerTest {
 
 		manager.processCommands();
 
-		assertEquals(161, manager.getCommands().size(),
+		assertEquals(149, manager.getCommands().size(),
 				"pins the current entry count (225 minus the 43 cops/banker/trader/civilian/jail/cuff keys that "
 				+ "moved to the cops-n-crooks module's own commands.json in 0.8.4, minus the 5 car* keys that moved "
 				+ "to the gadget module's own commands.json in 0.8.4, minus the 16 turf entries that moved to the "
-				+ "turf module's own commands.json in 0.8.4); update this alongside any deliberate "
+				+ "turf module's own commands.json in 0.8.4, minus the 12 weapon/ammunition/item-wearable keys that "
+				+ "moved to the weapon module's own commands.json in 0.8.4); update this alongside any deliberate "
 				+ "commands.json edit");
 		assertTrue(manager.getCommands().containsKey("general"));
 		assertTrue(manager.getCommands().containsKey("general_page"));

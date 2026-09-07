@@ -2,15 +2,12 @@ package org.luckyraven.gangland.data.plugin;
 
 import lombok.CustomLog;
 import org.luckyraven.keystone.util.TimeUtil;
-import org.luckyraven.gangland.database.repositories.weapon.WeaponRepository;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.gangland.util.TimeMessages;
-import org.luckyraven.gangland.weapon.Weapon;
-import org.luckyraven.gangland.weapon.WeaponManager;
 
 import java.util.Date;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * Service responsible for cleaning up unused data from the database based on the plugin's scheduled scan dates.
@@ -20,15 +17,12 @@ public final class PluginDataCleanupService {
 
 	private final boolean logDebug = Settings.isAutoSaveDebug();
 
-	private final PluginManager       pluginManager;
-	private final IRepository<Weapon> weaponRepository;
-	private final WeaponManager       weaponManager;
+	private final PluginManager                   pluginManager;
+	private final Supplier<List<DataCleanupTask>> tasks;
 
-	public PluginDataCleanupService(PluginManager pluginManager, IRepository<Weapon> weaponRepository,
-	                                WeaponManager weaponManager) {
-		this.pluginManager    = pluginManager;
-		this.weaponRepository = weaponRepository;
-		this.weaponManager    = weaponManager;
+	public PluginDataCleanupService(PluginManager pluginManager, Supplier<List<DataCleanupTask>> tasks) {
+		this.pluginManager = pluginManager;
+		this.tasks         = tasks;
 	}
 
 	/**
@@ -78,9 +72,10 @@ public final class PluginDataCleanupService {
 	private void performCleanup(PluginData pluginData) {
 		long startTime = System.currentTimeMillis();
 
-		// Reset weapons in the database
-		int weaponsReset = resetWeapons();
-		if (logDebug) log.info("Reset {} weapons from database", weaponsReset);
+		for (DataCleanupTask task : tasks.get()) {
+			int cleared = task.cleanup();
+			if (logDebug) log.info("Cleanup task '{}' cleared {} record(s)", task.name(), cleared);
+		}
 
 		// Update plugin data with new scan dates (will be persisted by PeriodicalUpdates)
 		long now          = System.currentTimeMillis();
@@ -93,19 +88,6 @@ public final class PluginDataCleanupService {
 
 		long duration = System.currentTimeMillis() - startTime;
 		if (logDebug) log.info("Cleanup scan completed in {}ms", duration);
-	}
-
-	private int resetWeapons() {
-		int count = weaponManager.getWeapons().size();
-
-		if (weaponRepository instanceof WeaponRepository repo) {
-			repo.deleteAll();
-		}
-
-		weaponManager.clear();
-
-		if (logDebug) log.info("Cleared {} weapons from weapon table", count);
-		return count;
 	}
 
 }
