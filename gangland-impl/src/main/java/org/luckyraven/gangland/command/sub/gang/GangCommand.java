@@ -132,15 +132,15 @@ public final class GangCommand extends Command {
 		Argument members = new GangMembersCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
 		                                          gangManager);
 		Argument name = new GangRenameCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
-		                                      gangManager);
+		                                      memberManager, gangManager);
 		Argument description = new GangDescriptionCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
-		                                                  gangManager);
+		                                                  memberManager, gangManager);
 		Argument ally = new GangAllyCommand(getGangland(), getArgumentTree(), getArgument(), userManager, memberManager,
 		                                    gangManager, contributions);
 		Argument display = new GangDisplayCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
-		                                          gangManager);
+		                                          memberManager, gangManager);
 		Argument color = new GangColorCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
-		                                      gangManager);
+		                                      memberManager, gangManager);
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();

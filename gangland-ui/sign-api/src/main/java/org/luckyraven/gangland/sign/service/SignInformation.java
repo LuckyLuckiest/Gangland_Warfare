@@ -17,6 +17,9 @@ public interface SignInformation {
 
 	String getInvalidSign();
 
+	/** Shown when a player may not create or break a plugin sign (docket LS-19). */
+	String getSignNoPermission();
+
 	String getBulkConfirmExpired();
 
 	String getBulkConfirmRequest(BulkActionPreview preview, int confirmWindowSeconds);

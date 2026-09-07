@@ -7,6 +7,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.SignChangeEvent;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
+import org.luckyraven.gangland.sign.SignPermissions;
 import org.luckyraven.gangland.sign.service.SignInformation;
 import org.luckyraven.gangland.sign.service.SignInteractionService;
 import org.luckyraven.gangland.sign.validation.SignValidationException;
@@ -27,6 +28,15 @@ public class SignCreation implements Listener {
 		}
 
 		Player player = event.getPlayer();
+
+		// LS-19: the sign was formatted and activated for anyone who could place one. Cancel rather than return —
+		// PlayerSignInteract identifies a plugin sign from its first line, so leaving the raw text in place would
+		// still hand the player a working shop.
+		if (!player.hasPermission(SignPermissions.CREATE)) {
+			player.sendMessage(information.getSignNoPermission());
+			event.setCancelled(true);
+			return;
+		}
 
 		try {
 			signService.validateSign(lines);

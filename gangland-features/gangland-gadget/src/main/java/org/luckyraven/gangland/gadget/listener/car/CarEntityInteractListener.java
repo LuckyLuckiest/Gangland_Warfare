@@ -14,6 +14,7 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.util.ActionBarManager;
 import org.luckyraven.gangland.gadget.car.Car;
 import org.luckyraven.gangland.gadget.car.CarService;
+import org.luckyraven.gangland.gadget.car.access.CarAccessPolicy;
 import org.luckyraven.gangland.gadget.car.message.CarMessageContract;
 import org.luckyraven.gangland.gadget.car.vehicle.ParkedVehicle;
 import org.luckyraven.gangland.item.fuel.Fuel;
@@ -26,15 +27,18 @@ import java.util.UUID;
  * intentionally ignored — pickup is handled by shift + left-click via {@link CarDamageListener}.
  */
 @ListenerHandler
-@AutowireTarget({CarService.class, CarMessageContract.class})
+@AutowireTarget({CarService.class, CarMessageContract.class, CarAccessPolicy.class})
 public class CarEntityInteractListener implements Listener {
 
 	private final CarService         carService;
 	private final CarMessageContract messages;
+	private final CarAccessPolicy    accessPolicy;
 
-	public CarEntityInteractListener(CarService carService, CarMessageContract messages) {
-		this.carService = carService;
-		this.messages   = messages;
+	public CarEntityInteractListener(CarService carService, CarMessageContract messages,
+	                                 CarAccessPolicy accessPolicy) {
+		this.carService   = carService;
+		this.messages     = messages;
+		this.accessPolicy = accessPolicy;
 	}
 
 	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
@@ -51,6 +55,13 @@ public class CarEntityInteractListener implements Listener {
 
 		// Shift + right-click is reserved for other actions (pickup = shift + left-click)
 		if (player.isSneaking()) return;
+
+		// GD-06: mounting and fuel-can refuelling never looked at who placed the car.
+		ParkedVehicle target = carService.getParkedVehicle(entityUUID);
+		if (target != null && !accessPolicy.canUse(player, target.getPlacerUUID())) {
+			player.sendMessage(messages.noPermission());
+			return;
+		}
 
 		// Fuel-can refueling: right-click the car while holding a matching fuel can
 		ItemStack heldItem = player.getInventory().getItemInMainHand();

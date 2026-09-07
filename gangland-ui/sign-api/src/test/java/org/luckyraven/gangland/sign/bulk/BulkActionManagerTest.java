@@ -257,6 +257,11 @@ class BulkActionManagerTest {
 		}
 
 		@Override
+		public String getSignNoPermission() {
+			return "";
+		}
+
+		@Override
 		public String getInvalidSign() {
 			return "";
 		}

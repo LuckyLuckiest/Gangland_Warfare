@@ -568,6 +568,7 @@ public enum Messages {
 
 	// commands - waypoint (extras)
 	WAYPOINT_LIST_HEADER("Waypoint.List_Header", Type.PREFIX),
+	WAYPOINT_LIST_EMPTY("Waypoint.List_Empty", Type.PREFIX),
 	WAYPOINT_DELETED("Commands.Waypoint.Deleted", Type.COMMAND),
 	WAYPOINT_TYPE_INVALID_HEADER("Errors.Waypoint.Invalid_Type_Header", Type.ERROR),
 

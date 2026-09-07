@@ -52,8 +52,11 @@ import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.file.configuration.copsncrooks.GanglandCivilianSpawnConfigProvider;
 import org.luckyraven.gangland.file.configuration.copsncrooks.GanglandDetainmentMessages;
 import org.luckyraven.gangland.file.configuration.gadget.GanglandCarMessages;
+import org.luckyraven.gangland.gadget.GanglandCarGangs;
 import org.luckyraven.gangland.gadget.car.CarService;
 import org.luckyraven.gangland.gadget.car.ParkedCar;
+import org.luckyraven.gangland.gadget.car.access.CarAccessPolicy;
+import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gadget.car.config.CarAddon;
 import org.luckyraven.gangland.gadget.car.message.CarMessageContract;
 import org.luckyraven.gangland.gadget.car.vehicle.VehicleRegistry;
@@ -152,6 +155,17 @@ public class CopsAndGadgetsConfig {
 	@Bean
 	public CarMessageContract carMessageContract() {
 		return new GanglandCarMessages();
+	}
+
+	/**
+	 * GD-06: mount, refuel and pickup are gated on the placer's UUID. The gang half of the rule comes from
+	 * {@link MemberManager}, which the gadget module cannot see — hence the contract.
+	 */
+	@Bean
+	public CarAccessPolicy carAccessPolicy(MemberManager memberManager, PermissionManager permissionManager) {
+		permissionManager.addPermission(CarAccessPolicy.BYPASS_PERMISSION);
+
+		return new CarAccessPolicy(new GanglandCarGangs(memberManager));
 	}
 
 	@Bean
