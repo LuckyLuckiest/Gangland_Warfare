@@ -4,8 +4,8 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTier;
-import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTierRegistry;
+import org.luckyraven.gangland.data.economy.BankTierView;
+import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.keystone.color.ColorUtil;
 import org.luckyraven.keystone.placeholder.PlaceholderHandler;
 import org.luckyraven.keystone.placeholder.effect.ConditionalFlashWrapper;
@@ -39,7 +39,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 	private final UniqueItemAddon     uniqueItemAddon;
-	private final BankTierRegistry    bankTierRegistry;
+	private final BankTiers           bankTiers;
 
 	public GanglandPlaceholder(String prefix,
 	                           Replacer.Closure closure,
@@ -47,14 +47,14 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	                           MemberManager memberManager,
 	                           GangManager gangManager,
 	                           UniqueItemAddon uniqueItemAddon,
-	                           BankTierRegistry bankTierRegistry,
+	                           BankTiers bankTiers,
 	                           PlaceholderService placeholderService) {
 		super(prefix, closure);
 		this.userManager      = userManager;
 		this.memberManager    = memberManager;
 		this.gangManager      = gangManager;
 		this.uniqueItemAddon  = uniqueItemAddon;
-		this.bankTierRegistry = bankTierRegistry;
+		this.bankTiers        = bankTiers;
 		placeholderService.register(this);
 	}
 
@@ -234,8 +234,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (parameter.equals(bankStr + "name")) return bank.getName();
 		if (parameter.equals(bankStr + "balance")) return NumberUtil.valueFormat(bank.getEconomy().getAmount());
 
-		BankTier tier = bankTierRegistry.get(bank.getTierId());
-		if (tier == null) tier = bankTierRegistry.first();
+		BankTierView tier = bankTiers.tierFor(bank);
 
 		if (parameter.equals(bankStr + "tier")) return tier == null ? "" : tier.id();
 		if (parameter.equals(bankStr + "tier_display")) return tier == null ? "" : tier.displayName();

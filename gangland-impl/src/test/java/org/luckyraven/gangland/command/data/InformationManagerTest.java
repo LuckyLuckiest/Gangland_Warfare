@@ -38,9 +38,10 @@ class InformationManagerTest {
 
 		manager.processCommands();
 
-		assertEquals(225, manager.getCommands().size(),
-				"pins the current entry count (232 minus the 7 mail entries that moved to the mail module's own "
-				+ "commands.json in 0.8.2); update this alongside any deliberate commands.json edit");
+		assertEquals(182, manager.getCommands().size(),
+				"pins the current entry count (225 minus the 43 cops/banker/trader/civilian/jail/cuff keys that "
+				+ "moved to the cops-n-crooks module's own commands.json in 0.8.4); update this alongside any "
+				+ "deliberate commands.json edit");
 		assertTrue(manager.getCommands().containsKey("general"));
 		assertTrue(manager.getCommands().containsKey("general_page"));
 	}

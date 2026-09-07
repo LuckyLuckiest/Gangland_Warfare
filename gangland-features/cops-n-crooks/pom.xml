@@ -49,6 +49,7 @@
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>gangland-weapon</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
@@ -69,6 +70,15 @@
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>gangland-turf</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-module</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-command</artifactId>
         </dependency>
 
         <!-- Citizens dependency -->
@@ -81,6 +91,15 @@
         <dependency>
             <groupId>com.github.cryptomorin</groupId>
             <artifactId>XSeries</artifactId>
+        </dependency>
+
+        <!-- The host (core) jar. Provided: at runtime this module is loaded from plugins/Gangland_Warfare/modules/
+             by Keystone's ModuleLoader, whose parent is the host plugin's classloader, so every impl class
+             resolves from there. Dependency direction is module -> core; core never names a cops type. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-impl</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

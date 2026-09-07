@@ -86,10 +86,6 @@
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>cops-n-crooks</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
             <artifactId>keystone-hooks</artifactId>
         </dependency>
         <dependency>
@@ -107,6 +103,13 @@
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>gangland-turf</artifactId>
+        </dependency>
+        <!-- Was reached transitively through cops-n-crooks (a compile-scope dependency there) before flip 1;
+             gangland-impl's item.unique/item.fuel/item.contract usages (e.g. UniqueItemAddon) need it directly
+             now that cops-n-crooks is gone from this pom. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-item</artifactId>
         </dependency>
         <!-- Important local dependencies (end) -->
 

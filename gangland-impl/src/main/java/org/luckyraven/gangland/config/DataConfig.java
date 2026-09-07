@@ -7,11 +7,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.bootstrap.GanglandContext;
+import org.luckyraven.gangland.command.sub.bank.BankCommand;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.permission.PermissionManager;
+import org.luckyraven.gangland.data.economy.BankTiers;
+import org.luckyraven.gangland.data.economy.GanglandMoneyDropClassifier;
 import org.luckyraven.gangland.data.plugin.PluginManager;
 import org.luckyraven.gangland.data.teleportation.WaypointManager;
 import org.luckyraven.gangland.data.user.UserDataLoader;
@@ -25,7 +28,9 @@ import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserFactory;
 import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.gang.wanted.WantedKillTrackers;
 import org.luckyraven.gangland.gang.wanted.WantedSettings;
+import org.luckyraven.gangland.item.money.MoneyDropClassifier;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
@@ -139,6 +144,35 @@ public class DataConfig {
 	}
 
 	/**
+	 * Seam 1 holder. Always present so {@code MoneyDropListener} constructs whether or not the cops-n-crooks
+	 * module is installed; inert (players and vanilla mobs only) until the module installs a delegate. See
+	 * documentation/module-loader.md, "Core seams".
+	 */
+	@Bean
+	public GanglandMoneyDropClassifier moneyDropClassifier() {
+		return new GanglandMoneyDropClassifier();
+	}
+
+	/**
+	 * Seam 2 holder. Always present so {@code /glw bank}, the death penalty and the bank placeholders construct;
+	 * inert (no caps, no daily limit, no insurance discount, empty tier placeholders) until the cops-n-crooks
+	 * module installs a tier lookup. See documentation/module-loader.md, "Core seams".
+	 */
+	@Bean
+	public BankTiers bankTiers() {
+		return new BankTiers();
+	}
+
+	/**
+	 * Seam 3 holder. Always present so {@code EntityDamageListener} constructs; inert (combo-disabled behaviour)
+	 * until the cops-n-crooks module installs a delegate. See documentation/module-loader.md, "Core seams".
+	 */
+	@Bean
+	public WantedKillTrackers wantedKillTrackers() {
+		return new WantedKillTrackers();
+	}
+
+	/**
 	 * Collects every Bukkit permission that starts with the plugin's prefix and registers them into the
 	 * {@link PermissionManager}. Runs as a {@code @PostConstruct} so it fires after every CONFIG bean is in place but
 	 * before LIFECYCLE — the gang manager's {@code initialize()} doesn't depend on the permission set, so timing is
@@ -153,5 +187,10 @@ public class DataConfig {
 				.filter(name -> name.startsWith(Gangland.FULL_PREFIX))
 				.collect(Collectors.toSet());
 		permissionManager.addAllPermissions(ganglandPermissions);
+
+		// The two bank permission nodes stay registered whether or not the cops-n-crooks module is installed —
+		// they gate core /glw bank deposit|withdraw forms (moved from BankerConfig, T14).
+		permissionManager.addPermission(BankCommand.BYPASS_CAP_PERMISSION);
+		permissionManager.addPermission(BankCommand.ADMIN_PERMISSION);
 	}
 }

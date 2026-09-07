@@ -2,8 +2,6 @@ package org.luckyraven.gangland.config;
 
 import lombok.CustomLog;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.config.CivilianSettings;
-import org.luckyraven.gangland.copsncrooks.npc.police.config.CopSettings;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.Phase;
@@ -11,7 +9,8 @@ import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.data.placeholder.PlaceholderService;
 import org.luckyraven.keystone.persistence.message.LanguageLoader;
 import org.luckyraven.gangland.file.configuration.*;
-import org.luckyraven.gangland.file.configuration.copsncrooks.*;
+import org.luckyraven.gangland.file.configuration.wanted.GanglandBountySettings;
+import org.luckyraven.gangland.file.configuration.wanted.GanglandWantedSettings;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionStore;
 import org.luckyraven.gangland.file.configuration.weapon.GanglandBlockRegenerationSettings;
 import org.luckyraven.gangland.file.configuration.weapon.WeaponLoader;
@@ -116,21 +115,6 @@ public class FileConfig {
 	@Bean
 	public WantedSettings wantedSettings() {
 		return new GanglandWantedSettings();
-	}
-
-	@Bean
-	public CopSettings copSettings() {
-		return new GanglandCopSettings();
-	}
-
-	@Bean
-	public CivilianSettings civilianSettings() {
-		return new GanglandCivilianSettings();
-	}
-
-	@Bean
-	public GanglandCivilianSpawnConfigProvider civilianSpawnConfigProvider() {
-		return new GanglandCivilianSpawnConfigProvider();
 	}
 
 	@Bean

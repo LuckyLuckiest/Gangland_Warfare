@@ -8,8 +8,8 @@ import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.gangland.command.util.ParsedAmount;
-import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTier;
-import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTierRegistry;
+import org.luckyraven.gangland.data.economy.BankTierView;
+import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.util.NumberUtil;
@@ -36,18 +36,18 @@ class BankDepositCommand extends SubArgument {
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final GanglandDatabase    ganglandDatabase;
-	private final BankTierRegistry    tierRegistry;
+	private final BankTiers           bankTiers;
 
 	protected BankDepositCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
 	                             UserManager<Player> userManager, GanglandDatabase ganglandDatabase,
-	                             BankTierRegistry tierRegistry) {
+	                             BankTiers bankTiers) {
 		super(gangland, "deposit", tree, parent);
 
 		this.gangland         = gangland;
 		this.tree             = tree;
 		this.userManager      = userManager;
 		this.ganglandDatabase = ganglandDatabase;
-		this.tierRegistry     = tierRegistry;
+		this.bankTiers        = bankTiers;
 
 		OptionalArgument amount = bankDeposit();
 		amount.addSubArgument(bankDepositTarget());
@@ -98,7 +98,7 @@ class BankDepositCommand extends SubArgument {
 			BigDecimal cashBal = user.getEconomy().getAmount();
 			BigDecimal bankBal = bank.getEconomy().getAmount();
 			BigDecimal inBank  = bankBal.add(argAmount);
-			BankTier   tier    = resolveTier(bank);
+			BankTierView tier  = bankTiers.tierFor(bank);
 
 			if (tier != null && inBank.compareTo(tier.maxBalance()) > 0) {
 				user.sendMessage(Messages.CANNOT_EXCEED_MAXIMUM.toString());
@@ -204,12 +204,6 @@ class BankDepositCommand extends SubArgument {
 			                                                                        Settings.formatAmount(argAmount)));
 		}, sender -> Bukkit.getOnlinePlayers()
 				.stream().map(Player::getName).toList());
-	}
-
-	private BankTier resolveTier(Bank bank) {
-		BankTier tier = tierRegistry.get(bank.getTierId());
-		if (tier != null) return tier;
-		return tierRegistry.first();
 	}
 
 }

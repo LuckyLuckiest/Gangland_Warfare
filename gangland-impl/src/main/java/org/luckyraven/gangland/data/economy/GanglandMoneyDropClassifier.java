@@ -1,35 +1,32 @@
 package org.luckyraven.gangland.data.economy;
 
-import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.CivilianNpcRegistry;
-import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.item.money.MoneyDropClassifier;
 import org.luckyraven.gangland.item.money.MoneyDropContext;
 
 /**
- * Classifier implementation that knows how to recognise cops-n-crooks NPCs. Lives in gangland-impl so the listener
- * (which is in gangland-item) doesn't have to import {@code CopManager}/{@code CivilianNpcRegistry}.
+ * Classifier implementation that recognises players and, once a module installs one, cops-n-crooks NPCs too. Lives
+ * in gangland-impl so the listener (which is in gangland-item) doesn't have to import a feature module type, and
+ * always registers as a bean so {@code MoneyDropListener} constructs whether or not a module is installed.
  */
-@RequiredArgsConstructor
 public class GanglandMoneyDropClassifier implements MoneyDropClassifier {
 
-	private final CopManager          copManager;
-	private final CivilianNpcRegistry civilianNpcRegistry;
+	private volatile NpcMoneyDropSource npcSource;
+
+	public void install(NpcMoneyDropSource source) {
+		this.npcSource = source;
+	}
 
 	@Override
 	public MoneyDropContext classify(LivingEntity entity) {
 		if (entity instanceof Player) return MoneyDropContext.PLAYER;
 
-		if (copManager != null && copManager.isCopNpc(entity)) {
-			return MoneyDropContext.COP;
+		NpcMoneyDropSource source = this.npcSource;
+		if (source != null) {
+			MoneyDropContext context = source.classify(entity);
+			if (context != null) return context;
 		}
-
-		if (civilianNpcRegistry != null && civilianNpcRegistry.getNpc(entity.getUniqueId()) != null) {
-			return MoneyDropContext.CIVILIAN;
-		}
-
 		return MoneyDropContext.MOB;
 	}
 

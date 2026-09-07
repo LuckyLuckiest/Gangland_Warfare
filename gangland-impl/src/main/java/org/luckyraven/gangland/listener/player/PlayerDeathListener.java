@@ -11,8 +11,8 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.Nullable;
-import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTier;
-import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTierRegistry;
+import org.luckyraven.gangland.data.economy.BankTierView;
+import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.datastructure.ScientificCalculator;
@@ -42,18 +42,18 @@ public class PlayerDeathListener implements Listener {
 	private final UserManager<Player> userManager;
 	private final WeaponManager       weaponManager;
 	private final GanglandPlaceholder placeholder;
-	private final BankTierRegistry    bankTierRegistry;
+	private final BankTiers           bankTiers;
 	private final Map<UUID, Long>     recentDeaths      = new ConcurrentHashMap<>();
 	private final Set<UUID>           downedBroadcasted = ConcurrentHashMap.newKeySet();
 
 	public PlayerDeathListener(@Qualifier("online") UserManager<Player> userManager,
 	                           WeaponManager weaponManager,
 	                           GanglandPlaceholder placeholder,
-	                           BankTierRegistry bankTierRegistry) {
+	                           BankTiers bankTiers) {
 		this.userManager      = userManager;
 		this.weaponManager    = weaponManager;
 		this.placeholder      = placeholder;
-		this.bankTierRegistry = bankTierRegistry;
+		this.bankTiers        = bankTiers;
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
@@ -170,8 +170,7 @@ public class PlayerDeathListener implements Listener {
 	private double bankInsuranceDiscount(User<Player> user) {
 		Bank bank = user.getBank();
 		if (bank == null) return 0D;
-		BankTier tier = bankTierRegistry.get(bank.getTierId());
-		if (tier == null) tier = bankTierRegistry.first();
+		BankTierView tier = bankTiers.tierFor(bank);
 		return tier == null ? 0D : tier.deathLossDiscount();
 	}
 

@@ -491,78 +491,6 @@
 		"usage": "/glw lootchest remove",
 		"description": "Removes the loot chest you are looking at."
 	},
-	"cuff": {
-		"usage": "/glw cuff <player>",
-		"description": "Handcuffs the specified player."
-	},
-	"uncuff": {
-		"usage": "/glw uncuff <player>",
-		"description": "Releases the specified player from handcuffs."
-	},
-	"jail_help": {
-		"usage": "/glw jail help <page>",
-		"description": "Shows the specified page in jail menu."
-	},
-	"jail_throw": {
-		"usage": "/glw jail throw <player>",
-		"description": "Jails the specified player in an empty jail."
-	},
-	"jail_create": {
-		"usage": "/glw jail create",
-		"description": "Creates a jail at your current location."
-	},
-	"jail_remove": {
-		"usage": "/glw jail remove <id>",
-		"description": "Removes the jail with the specified id."
-	},
-	"jail_release": {
-		"usage": "/glw jail release <player>",
-		"description": "Releases the specified player from jail."
-	},
-	"jail_list": {
-		"usage": "/glw jail list",
-		"description": "Shows all the available jails."
-	},
-	"jail_info": {
-		"usage": "/glw jail info <id>",
-		"description": "Shows information about the specified jail."
-	},
-	"jail_teleport": {
-		"usage": "/glw jail teleport <id>",
-		"description": "Teleports to the specified jail."
-	},
-	"jail_setexit": {
-		"usage": "/glw jail setexit [jailId]",
-		"description": "Without jailId: sets the GLOBAL release exit (used by every jail that has no specific exit). With jailId: sets the exit for that specific jail, overriding the global."
-	},
-	"cop_help": {
-		"usage": "/glw cop help <page>",
-		"description": "Shows the specified page in cop menu."
-	},
-	"cop_list": {
-		"usage": "/glw cop list",
-		"description": "Shows all the available cops."
-	},
-	"cop_spawner_set": {
-		"usage": "/glw cop spawner set",
-		"description": "Sets a cop spawner at your current location."
-	},
-	"cop_spawner_remove": {
-		"usage": "/glw cop spawner remove <id>",
-		"description": "Removes the cop spawner with the specified id."
-	},
-	"cop_spawner_list": {
-		"usage": "/glw cop spawner list",
-		"description": "Shows all the available cop spawners."
-	},
-	"cop_spawner_info": {
-		"usage": "/glw cop spawner info <id>",
-		"description": "Shows the information of the cop spawner with the specified id."
-	},
-	"cop_spawner_teleport": {
-		"usage": "/glw cop spawner teleport <id>",
-		"description": "Teleports the player to the cop spawner with the specified id."
-	},
 	"car": {
 		"usage": "/glw car",
 		"description": "Shows car help page."
@@ -671,50 +599,6 @@
 		"usage": "/glw item money list",
 		"description": "Shows all registered money items."
 	},
-	"civilian_help": {
-		"usage": "/glw civilian help <page>",
-		"description": "Shows the specified page in civilian menu."
-	},
-	"civilian_list": {
-		"usage": "/glw civilian list",
-		"description": "Shows all active civilian NPCs."
-	},
-	"civilian_groups": {
-		"usage": "/glw civilian groups",
-		"description": "Shows all active civilian groups."
-	},
-	"civilian_spawn": {
-		"usage": "/glw civilian spawn <typeId>",
-		"description": "Spawns a civilian of the specified type near you."
-	},
-	"civilian_spawngroup": {
-		"usage": "/glw civilian spawngroup <groupId>",
-		"description": "Spawns a civilian group of the specified id at your location."
-	},
-	"civilian_spawner_set": {
-		"usage": "/glw civilian spawner set",
-		"description": "Sets a civilian spawner at your current location."
-	},
-	"civilian_spawner_setgroup": {
-		"usage": "/glw civilian spawner setgroup <groupId>",
-		"description": "Sets a group civilian spawner at your current location for the specified group."
-	},
-	"civilian_spawner_remove": {
-		"usage": "/glw civilian spawner remove <id>",
-		"description": "Removes the civilian spawner with the specified id."
-	},
-	"civilian_spawner_list": {
-		"usage": "/glw civilian spawner list",
-		"description": "Shows all the available civilian spawners."
-	},
-	"civilian_spawner_info": {
-		"usage": "/glw civilian spawner info <id>",
-		"description": "Shows the information of the civilian spawner with the specified id."
-	},
-	"civilian_spawner_teleport": {
-		"usage": "/glw civilian spawner teleport <id>",
-		"description": "Teleports the player to the civilian spawner with the specified id."
-	},
 	"shop": {
 		"usage": "/glw shop",
 		"description": "Shows shop admin help page."
@@ -742,54 +626,6 @@
 	"shop_title": {
 		"usage": "/glw shop title <key>",
 		"description": "Opens an anvil GUI to edit the shop's inventory display name; supports &-color codes and spaces."
-	},
-	"trader": {
-		"usage": "/glw trader",
-		"description": "Shows trader admin help page."
-	},
-	"trader_help": {
-		"usage": "/glw trader help <page>",
-		"description": "Shows the specified page in trader menu."
-	},
-	"trader_create": {
-		"usage": "/glw trader create <shopKey> <traitId> [displayName]",
-		"description": "Spawns a stationary trader NPC at your location bound to <shopKey> with personality <traitId>."
-	},
-	"trader_edit_shop": {
-		"usage": "/glw trader edit shop <shopKey>",
-		"description": "Retargets the trader in your crosshair to a different shop."
-	},
-	"trader_edit_trait": {
-		"usage": "/glw trader edit trait <traitId>",
-		"description": "Changes the trait of the trader in your crosshair."
-	},
-	"trader_edit_name": {
-		"usage": "/glw trader edit name",
-		"description": "Opens an anvil GUI to rename the trader in your crosshair; supports spaces."
-	},
-	"trader_remove": {
-		"usage": "/glw trader remove",
-		"description": "Removes the trader NPC in your crosshair (within 5 blocks)."
-	},
-	"banker": {
-		"usage": "/glw banker",
-		"description": "Shows banker admin help page."
-	},
-	"banker_help": {
-		"usage": "/glw banker help <page>",
-		"description": "Shows the specified page in banker menu."
-	},
-	"banker_create": {
-		"usage": "/glw banker create [displayName]",
-		"description": "Spawns a stationary banker NPC at your location. Right-click it to open the bank GUI."
-	},
-	"banker_edit_name": {
-		"usage": "/glw banker edit name",
-		"description": "Opens an anvil GUI to rename the banker in your crosshair; supports spaces."
-	},
-	"banker_remove": {
-		"usage": "/glw banker remove",
-		"description": "Removes the banker NPC in your crosshair (within 5 blocks)."
 	},
 	"permissions": {
 		"usage": "/glw permissions",
@@ -826,10 +662,6 @@
 	"filter_next": {
 		"usage": "/glw filter <binding> next <field> <csv-options>",
 		"description": "Cycles an enum-valued field through the comma-separated option list, clearing after the last."
-	},
-	"bank_menu": {
-		"usage": "/glw bank menu",
-		"description": "Opens the rich banker panel (Deposit / Withdraw / Upgrade / Rename / Rewards). Phone-banking entry point."
 	},
 	"turf": {
 		"usage": "/glw turf",
@@ -886,10 +718,6 @@
 	"turf_income": {
 		"usage": "/glw turf income <amount>",
 		"description": "Set the per-interval passive income of your active-selection turf (paid to the owning gang every Income_Interval_Minutes)."
-	},
-	"turf_powerupnpc": {
-		"usage": "/glw turf powerupnpc <set|remove>",
-		"description": "Place (at your current location) or remove the per-turf Quartermaster NPC for your active-selection turf."
 	},
 	"turf_garrison": {
 		"usage": "/glw turf garrison [count]",

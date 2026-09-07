@@ -1,39 +1,17 @@
 package org.luckyraven.gangland.config;
 
 import lombok.CustomLog;
-import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.bootstrap.GanglandContext;
-import org.luckyraven.gangland.copsncrooks.npc.trader.ShopViewOpener;
-import org.luckyraven.gangland.copsncrooks.npc.trader.ShopViewOpenerImpl;
-import org.luckyraven.gangland.copsncrooks.npc.trader.TraderData;
-import org.luckyraven.gangland.copsncrooks.npc.trader.TraderManager;
-import org.luckyraven.gangland.copsncrooks.npc.trader.config.TraderSettings;
-import org.luckyraven.gangland.copsncrooks.npc.trader.economy.TraderEconomyContract;
-import org.luckyraven.gangland.copsncrooks.npc.trader.message.TraderMessageContract;
-import org.luckyraven.gangland.copsncrooks.npc.trader.mood.MoodService;
-import org.luckyraven.gangland.copsncrooks.npc.trader.respawn.TraderRespawnService;
-import org.luckyraven.gangland.copsncrooks.npc.trader.trait.TraderTraitRegistry;
-import org.luckyraven.gangland.copsncrooks.npc.trader.trait.TraderTraitsLoader;
-import org.luckyraven.gangland.copsncrooks.npc.trader.view.*;
-import org.luckyraven.keystone.bean.Bean;
-import org.luckyraven.keystone.bean.Configuration;
-import org.luckyraven.keystone.bean.PostConstruct;
-import org.luckyraven.keystone.bean.Qualifier;
-import org.luckyraven.keystone.permission.PermissionManager;
-import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.file.configuration.copsncrooks.GanglandTraderEconomy;
-import org.luckyraven.gangland.file.configuration.copsncrooks.GanglandTraderMessages;
 import org.luckyraven.gangland.file.configuration.shop.GanglandShopDisplayResolver;
 import org.luckyraven.gangland.file.configuration.shop.GanglandShopMessages;
-import org.luckyraven.gangland.file.configuration.shop.TraderSettingsImpl;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.file.configuration.shop.GanglandShopUiSettings;
 import org.luckyraven.gangland.item.ItemRefresherRegistry;
 import org.luckyraven.gangland.item.ItemSerializerRegistry;
 import org.luckyraven.keystone.persistence.FileManager;
-import org.luckyraven.keystone.persistence.repository.IRepository;
-import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
+import org.luckyraven.keystone.bean.Bean;
+import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.gangland.shop.ShopRegistry;
+import org.luckyraven.gangland.shop.config.ShopUiSettings;
 import org.luckyraven.gangland.shop.io.ShopYamlReader;
 import org.luckyraven.gangland.shop.io.ShopYamlWriter;
 import org.luckyraven.gangland.shop.message.ShopDisplayResolver;
@@ -47,29 +25,26 @@ import org.luckyraven.gangland.shop.valuation.SellValuator;
 import org.luckyraven.gangland.shop.view.*;
 import org.luckyraven.gangland.weapon.WeaponService;
 
+/**
+ * CONFIG-phase wiring for the shop-api layer used by both the trader NPC (cops-n-crooks module) and the admin
+ * editor: registry I/O, purchase/barter/sell services, valuators and the admin views. Trader-specific beans moved
+ * to {@code TraderModuleConfig} (T15, module split sprint 2026-09-07) — this class must keep working with zero
+ * modules installed, since {@code ShopCommand} injects {@link ShopRegistry} and {@link ShopAdminFlow} directly.
+ *
+ * <p>{@link #shopUiSettings} is constructed inline, never a {@code @Bean}: {@code TraderSettings} (cops-n-crooks)
+ * extends {@link ShopUiSettings}, so a module-side {@code TraderSettings} bean would also register under
+ * {@link ShopUiSettings} — publishing a core bean of that type too would make resolution order-dependent.
+ */
 @CustomLog
 @Configuration
 public class ShopConfig {
 
-	private final Gangland        gangland;
-	private final GanglandContext context;
+	private final Gangland gangland;
 
-	public ShopConfig(Gangland gangland, GanglandContext context) {
+	private final ShopUiSettings shopUiSettings = new GanglandShopUiSettings();
+
+	public ShopConfig(Gangland gangland) {
 		this.gangland = gangland;
-		this.context  = context;
-	}
-
-	/**
-	 * Registers the {@code gangland.shop.admin} node (the gate for sneak-opening {@code ShopAdminView}) with the
-	 * {@link PermissionManager} so it appears in {@code /glw perm shop} and is selectable in rank permission
-	 * autocompletion. {@link PermissionManager} is resolved lazily from the context because it's registered by another
-	 * CONFIG-phase {@code @Configuration}; taking it as a constructor arg would trigger the same ordering failure that
-	 * caught {@code GangFilterRegistration}.
-	 */
-	@PostConstruct
-	public void registerPermissions() {
-		PermissionManager permissionManager = context.get(PermissionManager.class);
-		if (permissionManager != null) permissionManager.addPermission(ShopViewOpenerImpl.ADMIN_PERMISSION);
 	}
 
 	// ── YAML I/O + shared services ───────────────────────────────────────
@@ -84,21 +59,11 @@ public class ShopConfig {
 		return new ShopYamlWriter();
 	}
 
-	@Bean
-	public MoodService moodService() {
-		return new MoodService();
-	}
-
 	// ── Message contracts ────────────────────────────────────────────────
 
 	@Bean
 	public ShopMessageContract shopMessageContract() {
 		return new GanglandShopMessages();
-	}
-
-	@Bean
-	public TraderMessageContract traderMessageContract() {
-		return new GanglandTraderMessages();
 	}
 
 	@Bean
@@ -133,18 +98,6 @@ public class ShopConfig {
 		return new CategoryBarterValuator(serializerRegistry);
 	}
 
-	// ── Traits (loaded from plugin/trader_traits.yml) ────────────────────
-
-	@Bean
-	public TraderTraitRegistry traderTraitRegistry() {
-		return new TraderTraitRegistry();
-	}
-
-	@Bean
-	public TraderTraitsLoader traderTraitsLoader(TraderTraitRegistry registry, FileManager fileManager) {
-		return new TraderTraitsLoader(registry, fileManager);
-	}
-
 	// ── Shop registry (per-shop YAML via FolderLoader) ───────────────────
 
 	@Bean
@@ -154,70 +107,11 @@ public class ShopConfig {
 		return registry;
 	}
 
-	// ── Settings ─────────────────────────────────────────────────────────
+	// ── Admin views ──────────────────────────────────────────────────────
 
 	@Bean
-	public TraderSettings traderSettings(@SuppressWarnings("unused") Settings settings) {
-		return new TraderSettingsImpl();
-	}
-
-	// ── Views ────────────────────────────────────────────────────────────
-
-	@Bean
-	public TraderEconomyContract traderEconomyContract(@Qualifier("online") UserManager<Player> userManager) {
-		return new GanglandTraderEconomy(userManager);
-	}
-
-	@Bean
-	public BarterView barterView(MoodService moodService, CategoryBarterValuator barterValuator,
-	                             ItemRefresherRegistry refresherRegistry,
-	                             ShopDisplayResolver displayResolver,
-	                             TraderSettings traderSettings) {
-		return new BarterView(gangland, moodService, barterValuator, refresherRegistry, displayResolver,
-		                      traderSettings);
-	}
-
-	@Bean
-	public QuantitySelectorView quantitySelectorView() {
-		return new QuantitySelectorView(gangland);
-	}
-
-	@Bean
-	public NegotiationView negotiationView(MoodService moodService, TraderSettings traderSettings,
-	                                       TraderMessageContract traderMessages, TraderEconomyContract economy,
-	                                       ShopDisplayResolver displayResolver) {
-		return new NegotiationView(gangland, moodService, traderSettings, traderMessages, economy, displayResolver);
-	}
-
-	@Bean
-	public SellView traderSellView(MoodService moodService, SellValuator sellValuator,
-	                               ItemRefresherRegistry refresherRegistry,
-	                               TraderSettings traderSettings,
-	                               ShopDisplayResolver displayResolver) {
-		return new SellView(gangland, moodService, sellValuator, refresherRegistry,
-		                    traderSettings, displayResolver);
-	}
-
-	@Bean
-	public ShopView traderShopView(MoodService moodService, TraderSettings traderSettings,
-	                               ShopDisplayResolver displayResolver) {
-		return new ShopView(gangland, moodService, traderSettings, displayResolver);
-	}
-
-	@Bean
-	public ModeSelectView traderModeSelectView(TraderSettings traderSettings) {
-		return new ModeSelectView(gangland, traderSettings);
-	}
-
-	@Bean
-	public TraderFlow traderFlow(ModeSelectView modeSelectView, ShopView shopView, NegotiationView negotiationView,
-	                             SellView sellView, BarterView barterView, QuantitySelectorView quantityView) {
-		return new TraderFlow(gangland, modeSelectView, shopView, negotiationView, sellView, barterView, quantityView);
-	}
-
-	@Bean
-	public PriceEditorView priceEditorView(TraderSettings traderSettings) {
-		return new PriceEditorView(gangland, traderSettings);
+	public PriceEditorView priceEditorView() {
+		return new PriceEditorView(gangland, shopUiSettings);
 	}
 
 	@Bean
@@ -234,9 +128,9 @@ public class ShopConfig {
 
 	@Bean
 	public ShopAdminView shopAdminView(ItemRefresherRegistry refresherRegistry,
-	                                   ShopMessageContract shopMessages, TraderSettings traderSettings,
+	                                   ShopMessageContract shopMessages,
 	                                   ShopDisplayResolver displayResolver) {
-		return new ShopAdminView(gangland, refresherRegistry, shopMessages, traderSettings, displayResolver);
+		return new ShopAdminView(gangland, refresherRegistry, shopMessages, shopUiSettings, displayResolver);
 	}
 
 	@Bean
@@ -247,30 +141,6 @@ public class ShopConfig {
 	                                   BarterCategoryItemsAdminView barterCategoryPanel) {
 		return new ShopAdminFlow(gangland, refresherRegistry, adminPanel, priceEditorPanel, sellCategoryPanel,
 		                         barterCategoryPanel);
-	}
-
-	// ── Trader NPC lifecycle ─────────────────────────────────────────────
-
-	@Bean
-	public TraderRespawnService traderRespawnService(TraderSettings settings) {
-		return new TraderRespawnService(gangland, settings);
-	}
-
-	@Bean
-	public TraderManager traderManager(TraderSettings settings, TraderTraitRegistry traitRegistry,
-	                                   MoodService moodService, TraderRespawnService respawnService,
-	                                   RepositoryRegistry repositoryRegistry) {
-		IRepository<TraderData> repo = repositoryRegistry.getRepository(TraderData.class);
-		return new TraderManager(gangland, repo, settings, traitRegistry, moodService, respawnService);
-	}
-
-	@Bean
-	public ShopViewOpener shopViewOpener(TraderManager traderManager, ShopRegistry shopRegistry,
-	                                     TraderFlow traderFlow, ShopAdminFlow adminFlow,
-	                                     ShopMessageContract shopMessages,
-	                                     TraderMessageContract traderMessages) {
-		return new ShopViewOpenerImpl(traderManager, shopRegistry, traderFlow, adminFlow,
-		                              shopMessages, traderMessages);
 	}
 
 }

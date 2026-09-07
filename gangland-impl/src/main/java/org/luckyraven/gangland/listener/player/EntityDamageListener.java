@@ -10,9 +10,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.copsncrooks.combo.KillCombo;
-import org.luckyraven.gangland.copsncrooks.events.combo.KillComboEvent;
-import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMarkManager;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
@@ -33,6 +30,7 @@ import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.gang.wanted.Wanted;
 import org.luckyraven.gangland.gang.wanted.WantedExecutor;
+import org.luckyraven.gangland.gang.wanted.WantedKillTrackers;
 import org.luckyraven.gangland.gang.wanted.WantedSettings;
 
 import java.math.BigDecimal;
@@ -43,21 +41,18 @@ public class EntityDamageListener implements Listener {
 
 	private final Gangland            gangland;
 	private final UserManager<Player> userManager;
-	private final EntityMarkManager   entityMarkManager;
-	private final KillCombo           killCombo;
+	private final WantedKillTrackers  wantedKills;
 	private final BountySettings      bountySettings;
 	private final WantedSettings      wantedSettings;
 
 	public EntityDamageListener(Gangland gangland,
 	                            @Qualifier("online") UserManager<Player> userManager,
-	                            EntityMarkManager entityMarkManager,
-	                            KillCombo killCombo,
+	                            WantedKillTrackers wantedKills,
 	                            BountySettings bountySettings,
 	                            WantedSettings wantedSettings) {
 		this.gangland          = gangland;
 		this.userManager       = userManager;
-		this.entityMarkManager = entityMarkManager;
-		this.killCombo         = killCombo;
+		this.wantedKills       = wantedKills;
 		this.bountySettings    = bountySettings;
 		this.wantedSettings    = wantedSettings;
 		setupKillComboCallbacks();
@@ -111,10 +106,10 @@ public class EntityDamageListener implements Listener {
 			damagerUser.setMobKills(damagerUser.getMobKills() + 1);
 
 			// Only increase wanted if this NPC counts towards wanted (cops should, civilians may, etc.)
-			if (entityMarkManager.countsForWanted(deadPlayer)) {
-				if (Settings.isWantedKillComboEnabled()) {
-					killCombo.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
-					                     Settings.getWantedKillComboResetAfter());
+			if (wantedKills.countsForWanted(deadPlayer)) {
+				if (wantedKills.isActive() && Settings.isWantedKillComboEnabled()) {
+					wantedKills.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
+					                       Settings.getWantedKillComboResetAfter());
 				} else {
 					handleWanted(damagerUser);
 				}
@@ -140,15 +135,15 @@ public class EntityDamageListener implements Listener {
 			damagerUser.sendMessage(replace);
 
 			// Reset kill combo if player was killed by someone with bounty
-			if (Settings.isWantedKillComboEnabled()) {
-				killCombo.resetCombo(deadPlayer.getUniqueId());
+			if (wantedKills.isActive() && Settings.isWantedKillComboEnabled()) {
+				wantedKills.resetCombo(deadPlayer.getUniqueId());
 			}
 		} else handleBounty(damagerUser);
 
 		// increase the wanted level for killing another player
-		if (Settings.isWantedKillComboEnabled()) {
-			killCombo.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
-			                     Settings.getWantedKillComboResetAfter());
+		if (wantedKills.isActive() && Settings.isWantedKillComboEnabled()) {
+			wantedKills.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
+			                       Settings.getWantedKillComboResetAfter());
 		} else handleWanted(damagerUser);
 	}
 
@@ -158,12 +153,12 @@ public class EntityDamageListener implements Listener {
 		attacker.setMobKills(attacker.getMobKills() + 1);
 
 		// check if the entity is a civilian and increase the wanted level
-		if (!entityMarkManager.countsForWanted(victim)) return false;
+		if (!wantedKills.countsForWanted(victim)) return false;
 
 		// Record kill in combo system if enabled
-		if (Settings.isWantedKillComboEnabled()) {
-			killCombo.recordKill(attacker.getUser(), attacker.getWanted(), victim,
-			                     Settings.getWantedKillComboResetAfter());
+		if (wantedKills.isActive() && Settings.isWantedKillComboEnabled()) {
+			wantedKills.recordKill(attacker.getUser(), attacker.getWanted(), victim,
+			                       Settings.getWantedKillComboResetAfter());
 		} else handleWanted(attacker);
 
 		return false;
@@ -174,18 +169,12 @@ public class EntityDamageListener implements Listener {
 	}
 
 	private void setupKillComboCallbacks() {
-		// Callback when wanted level should be triggered
-		killCombo.setOnWantedLevelTrigger(this::onKillComboWantedTrigger);
-
-		// Callback when combo resets
-		killCombo.setOnComboReset(this::onKillComboReset);
-
-		// Callback when player dies
-		killCombo.setOnPlayerDeath(this::onPlayerDeathResetWanted);
+		wantedKills.onWantedTrigger(this::onKillComboWantedTrigger);
+		wantedKills.onComboReset(this::onKillComboReset);
+		wantedKills.onVictimDeath(this::onPlayerDeathResetWanted);
 	}
 
-	private void onKillComboWantedTrigger(KillComboEvent event) {
-		Player       player      = event.getPlayer();
+	private void onKillComboWantedTrigger(Player player) {
 		User<Player> damagerUser = userManager.getUser(player);
 
 		if (damagerUser == null) return;
@@ -194,8 +183,7 @@ public class EntityDamageListener implements Listener {
 		handleWanted(damagerUser);
 	}
 
-	private void onKillComboReset(KillComboEvent event) {
-		Player       player  = event.getPlayer();
+	private void onKillComboReset(Player player) {
 		User<Player> user    = userManager.getUser(player);
 		String       message = ChatUtil.color("&e&lKill combo reset!");
 

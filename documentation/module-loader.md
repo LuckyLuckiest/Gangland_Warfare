@@ -25,12 +25,14 @@ plugins/
 | Module | Jar | Status |
 |---|---|---|
 | mail — `MailManager`, gang invites, alliance requests, join/quit surfacing | `gangland-mail` | runtime module since 0.8.2 (the pilot) |
-| turf, weapon, gadget, cops-n-crooks | `gangland-turf`, `gangland-weapon`, `gangland-gadget`, `cops-n-crooks` | still compile-time dependencies of `gangland-impl`; next in line |
+| cops-n-crooks — cops, civilians, jails, detainment, trader/banker NPCs, turf-NPC powerups | `cops-n-crooks` | runtime module since 0.8.4 |
+| turf, weapon, gadget | `gangland-turf`, `gangland-weapon`, `gangland-gadget` | still compile-time dependencies of `gangland-impl`; next in line |
 
 **Order for the remaining flips.** The feature poms form a DAG (`gadget → weapon`, `cops-n-crooks → weapon + turf`),
-so a feature can only be flipped once nothing left in the core's compile closure depends on it. Incrementally
-that is **cops-n-crooks → gadget → turf → weapon** (or all four in one wave). Flipping turf while cops-n-crooks is
-still in the core creates the reactor cycle impl → cops → turf → impl.
+so a feature can only be flipped once nothing left in the core's compile closure depends on it. With cops-n-crooks
+already flipped, the remaining incremental order is **gadget → turf → weapon** (or all three in one wave).
+`cops-n-crooks`' `module.yml` carries no `Depends:` yet; it gains `[turf]` at the turf flip and `[turf, weapon]` at
+the weapon flip.
 
 ## How the core loads modules
 
@@ -74,10 +76,13 @@ A module is a Maven module under `gangland-features/` that depends on `gangland-
 - Its `@Configuration` class(es), its `@Repository` classes and `Table`s, its `@ListenerHandler` classes (under
   `<module>.listener`), and any `@CommandHandler` top-level commands (under `<module>.command`).
 - Its own `commands.json` at the jar root for the help entries of the commands it adds.
-- Its YAML defaults under `src/main/resources/<module>/` — the rule that every YAML lives in `gangland-impl` now
-  applies only to shared top-level files (`settings.yml`, messages). Register them with the five-argument
-  `FileHandler(plugin, name, directory, ".yml", moduleLoader.classLoader())` so the default is copied out of the
-  module jar.
+- Its YAML defaults in the module jar **at exactly the data-folder path** (e.g. `npc/cops.yml`), *not* under
+  `src/main/resources/<module>/` — the rule that every YAML lives in `gangland-impl` now applies only to shared
+  top-level files (`settings.yml`, messages). `FileHandler`'s resource lookup is `directory + fileType` with
+  forward slashes, so the module jar must carry the file at that same relative path and it must no longer exist
+  in the core jar, or the parent-first `ModuleClassLoader` keeps serving the core's (now missing) copy. Register
+  the default with the five-argument
+  `FileHandler(plugin, name, directory, ".yml", moduleLoader.classLoader())` so it is copied out of the module jar.
 
 Modules may import core types directly (`Messages`, `Settings`, managers): the compile-time direction is
 module → core. Contract interfaces (`MailRepositoryContract`, `TurfMessageContract`, …) stay as the test seam;
@@ -107,6 +112,34 @@ public final class GangMailContribution implements CommandContribution {
 `GangCommand` pulls `CommandContributions.from(container)` and appends every contribution addressed to `gang`;
 `GangAllyCommand` does the same for `gang.ally`. A core command that wants to accept contributions queries its own
 path the same way. Register one bean per contribution (distinct concrete types, as `MailModuleConfig` does).
+
+## Core seams
+
+When core code needs something a feature module provides, the module never gets a second bean of a type the core
+already publishes — `DependencyContainer.registerInstance` walks the type hierarchy and `getInstance` returns
+`list.get(0)`, so two beans of one interface resolve non-deterministically. Instead the sprint uses exactly two
+seam shapes:
+
+- **Contributions** — many providers, core registers no bean of the type, the consumer pulls
+  `container.getAllInstances(<Type>.class)` (`CommandContribution`, `SignTypeContribution`, `SignViewProvider`).
+- **Holders** — exactly one core bean with a safe (inert/no-op) default; the module installs one delegate from a
+  single `@PostConstruct` via an `install(...)` method (`GanglandMoneyDropClassifier`/`NpcMoneyDropSource`,
+  `BankTiers`/`BankTierView`, `WantedKillTrackers`/`WantedKillTracker`, `TurfNpcContracts`).
+
+Holders introduced by the **cops-n-crooks** flip (0.8.4):
+
+| Holder (core) | Interface installed | Core package | Default when no module | Installed by |
+|---|---|---|---|---|
+| `GanglandMoneyDropClassifier` | `NpcMoneyDropSource` | `org.luckyraven.gangland.data.economy` | classifies no NPC as a cop/civilian cash drop | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`CopsMoneyDropSource`) |
+| `BankTiers` | `BankTierView` | `org.luckyraven.gangland.data.economy` | `tierFor(...)` returns `null` — no tier cap, no daily deposit limit, no death-penalty insurance discount, empty `%..bank_tier%` placeholders | `CopsNCrooksModuleConfig`'s `installCoreSeams()` |
+| `WantedKillTrackers` | `WantedKillTracker` | `org.luckyraven.gangland.gang.wanted` (gangland-domain) | `isActive()` false — kill combo and "counts for wanted" both disabled, `EntityDamageListener` falls back to its pre-combo branches | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`KillComboWantedTracker`) |
+| `TurfNpcContracts` | `TurfNpcContract` | `org.luckyraven.gangland.turf.turfnpcs` (gangland-turf, still core) | all four methods no-op — `GarrisonDeployListener` sees an inert contract, garrison deployment silently does nothing | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`TurfNpcContractImpl`) |
+
+Contribution paths added by the cops-n-crooks flip: `BankMenuContribution` (`parent() == "bank"`, attaches
+`/glw bank menu`, queried by `BankCommand`) and `TurfPowerupNpcContribution` (`parent() == "turf"`, attaches
+`/glw turf powerupnpc`, queried by `TurfCommand`).
+
+Later flips append their own holders/contributions as new rows in this section rather than starting a new one.
 
 ## Faults you will see in the console
 

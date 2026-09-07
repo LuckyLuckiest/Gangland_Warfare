@@ -179,13 +179,7 @@ public class KernelConfig {
 		fm.addFile(new FileHandler(gangland, "loot_chests", "lootchests", ".yml"), true);
 		fm.addFile(new FileHandler(gangland, "tiers", "lootchests", ".yml"), true);
 
-		fm.addFile(new FileHandler(gangland, "cops", "npc", ".yml"), true);
-		fm.addFile(new FileHandler(gangland, "civilians", "npc", ".yml"), true);
-		fm.addFile(new FileHandler(gangland, "trader_traits", "npc", ".yml"), true);
-		fm.addFile(new FileHandler(gangland, "bank_tiers", "npc", ".yml"), true);
-
 		fm.addFile(new FileHandler(gangland, "turf_powerups", "turf", ".yml"), true);
-		fm.addFile(new FileHandler(gangland, "turf_npcs", "turf", ".yml"), true);
 		return fm;
 	}
 

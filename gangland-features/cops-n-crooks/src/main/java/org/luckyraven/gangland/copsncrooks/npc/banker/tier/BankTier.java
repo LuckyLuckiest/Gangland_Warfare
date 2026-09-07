@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.npc.banker.tier;
 
+import org.luckyraven.gangland.data.economy.BankTierView;
+
 import java.math.BigDecimal;
 
 /**
@@ -23,5 +25,5 @@ public record BankTier(String id,
                        double interestRate,
                        double deathLossDiscount,
                        BigDecimal weeklyLoanAmount,
-                       BigDecimal monthlyLoanAmount) {
+                       BigDecimal monthlyLoanAmount) implements BankTierView {
 }

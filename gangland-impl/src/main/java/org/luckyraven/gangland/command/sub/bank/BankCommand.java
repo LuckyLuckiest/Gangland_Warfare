@@ -5,9 +5,10 @@ import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
-import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTierRegistry;
-import org.luckyraven.gangland.copsncrooks.npc.banker.view.BankerFlow;
+import org.luckyraven.gangland.command.extension.CommandContributions;
+import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.keystone.bean.Qualifier;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.keystone.economy.Currency;
@@ -44,20 +45,24 @@ public final class BankCommand extends Command {
 
 	private final UserManager<Player> userManager;
 	private final GanglandDatabase    ganglandDatabase;
-	private final BankTierRegistry    tierRegistry;
-	private final BankerFlow          bankerFlow;
+	private final BankTiers           bankTiers;
+	/**
+	 * Sub-arguments a runtime module attaches under {@code bank} (the cops-n-crooks module contributes
+	 * {@code menu}, the phone-banking entry point). Empty when no module is installed — the core never names them.
+	 */
+	private final CommandContributions contributions;
 
 	public BankCommand(Gangland gangland,
 	                   @Qualifier("online") UserManager<Player> userManager,
 	                   GanglandDatabase ganglandDatabase,
-	                   BankTierRegistry tierRegistry,
-	                   BankerFlow bankerFlow) {
+	                   BankTiers bankTiers,
+	                   DependencyContainer container) {
 		super(gangland, "bank", true);
 
 		this.userManager      = userManager;
 		this.ganglandDatabase = ganglandDatabase;
-		this.tierRegistry     = tierRegistry;
-		this.bankerFlow       = bankerFlow;
+		this.bankTiers        = bankTiers;
+		this.contributions    = CommandContributions.from(container);
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -126,14 +131,13 @@ public final class BankCommand extends Command {
 	protected void initializeArguments() {
 		BankCreateCommand create = new BankCreateCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
 		BankDepositCommand deposit = new BankDepositCommand(getGangland(), getArgumentTree(), getArgument(),
-		                                                    userManager, ganglandDatabase, tierRegistry);
+		                                                    userManager, ganglandDatabase, bankTiers);
 		BankWithdrawCommand withdraw = new BankWithdrawCommand(getGangland(), getArgumentTree(), getArgument(),
 		                                                       userManager, ganglandDatabase);
 		BankBalanceCommand balance = new BankBalanceCommand(getGangland(), getArgumentTree(), getArgument(),
 		                                                    userManager);
 		BankResetCapCommand resetCap = new BankResetCapCommand(getGangland(), getArgumentTree(), getArgument(),
 		                                                       userManager, ganglandDatabase);
-		BankMenuCommand menu = new BankMenuCommand(getGangland(), getArgumentTree(), getArgument(), bankerFlow);
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();
@@ -143,7 +147,9 @@ public final class BankCommand extends Command {
 		arguments.add(withdraw);
 		arguments.add(balance);
 		arguments.add(resetCap);
-		arguments.add(menu);
+
+		// menu (and anything else a module hangs under /glw bank) comes from installed modules
+		arguments.addAll(contributions.createFor("bank", getArgumentTree(), getArgument()));
 
 		getArgument().addAllSubArguments(arguments);
 	}

@@ -13,7 +13,7 @@ import org.luckyraven.gangland.turf.events.TurfCaptureFailedEvent;
 import org.luckyraven.gangland.turf.events.TurfCaptureStartEvent;
 import org.luckyraven.gangland.turf.events.TurfCapturedEvent;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
-import org.luckyraven.gangland.turf.turfnpcs.TurfNpcContract;
+import org.luckyraven.gangland.turf.turfnpcs.TurfNpcContracts;
 
 /**
  * Auto-deploys the owning gang's pre-purchased defender garrison the moment an enemy starts capturing the turf, and
@@ -29,8 +29,8 @@ import org.luckyraven.gangland.turf.turfnpcs.TurfNpcContract;
 @RequiredArgsConstructor
 public final class GarrisonDeployListener implements Listener {
 
-	private final GarrisonManager garrisons;
-	private final TurfNpcContract npcs;
+	private final GarrisonManager  garrisons;
+	private final TurfNpcContracts npcs;
 
 	@EventHandler
 	public void onCaptureStart(TurfCaptureStartEvent event) {

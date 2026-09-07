@@ -4,7 +4,7 @@ import lombok.CustomLog;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.command.CommandManager;
-import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTierRegistry;
+import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.Qualifier;
@@ -58,10 +58,10 @@ public class WiringConfig {
 	                                               MemberManager memberManager,
 	                                               GangManager gangManager,
 	                                               UniqueItemAddon uniqueItemAddon,
-	                                               BankTierRegistry bankTierRegistry,
+	                                               BankTiers bankTiers,
 	                                               PlaceholderService placeholderService) {
 		return new GanglandPlaceholder(Gangland.FULL_PREFIX, Replacer.Closure.PERCENT,
 		                               userManager, memberManager, gangManager,
-		                               uniqueItemAddon, bankTierRegistry, placeholderService);
+		                               uniqueItemAddon, bankTiers, placeholderService);
 	}
 }

@@ -5,8 +5,9 @@ import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
-import org.luckyraven.gangland.copsncrooks.npc.turf.TurfPowerupManager;
+import org.luckyraven.gangland.command.extension.CommandContributions;
 import org.luckyraven.keystone.bean.Qualifier;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
@@ -40,10 +41,14 @@ public final class TurfCommand extends Command {
 	private final UserLookupContract   users;
 	private final UserManager<Player>  userManager;
 	private final TurfMessageContract  messages;
-	private final TurfPowerupManager   powerupNpcs;
 	private final GarrisonManager      garrisons;
 	private final PowerupRegistry      powerupRegistry;
 	private final ActiveBuffManager    activeBuffs;
+	/**
+	 * Sub-arguments a runtime module attaches under {@code turf} (the cops-n-crooks module contributes
+	 * {@code powerupnpc}). Empty when no module is installed — the core never names them.
+	 */
+	private final CommandContributions contributions;
 
 	public TurfCommand(Gangland gangland,
 	                   TurfManager turfs,
@@ -52,10 +57,10 @@ public final class TurfCommand extends Command {
 	                   UserLookupContract users,
 	                   @Qualifier("online") UserManager<Player> userManager,
 	                   TurfMessageContract messages,
-	                   TurfPowerupManager powerupNpcs,
 	                   GarrisonManager garrisons,
 	                   PowerupRegistry powerupRegistry,
-	                   ActiveBuffManager activeBuffs) {
+	                   ActiveBuffManager activeBuffs,
+	                   DependencyContainer container) {
 		super(gangland, "turf", false);
 
 		this.turfs           = turfs;
@@ -64,10 +69,10 @@ public final class TurfCommand extends Command {
 		this.users           = users;
 		this.userManager     = userManager;
 		this.messages        = messages;
-		this.powerupNpcs     = powerupNpcs;
 		this.garrisons       = garrisons;
 		this.powerupRegistry = powerupRegistry;
 		this.activeBuffs     = activeBuffs;
+		this.contributions   = CommandContributions.from(container);
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -123,9 +128,6 @@ public final class TurfCommand extends Command {
 		                                     messages);
 		TurfIncomeCommand income = new TurfIncomeCommand(getGangland(), getArgumentTree(), getArgument(), turfs,
 		                                                 selections, messages);
-		TurfPowerupNpcCommand powerupNpc = new TurfPowerupNpcCommand(getGangland(), getArgumentTree(),
-		                                                             getArgument(), turfs, selections, messages,
-		                                                             powerupNpcs);
 		TurfGarrisonCommand garrison = new TurfGarrisonCommand(getGangland(), getArgumentTree(), getArgument(),
 		                                                       turfs, selections, messages, garrisons);
 		TurfBuffCommand buff = new TurfBuffCommand(getGangland(), getArgumentTree(), getArgument(),
@@ -145,9 +147,12 @@ public final class TurfCommand extends Command {
 		arguments.add(select);
 		arguments.add(tp);
 		arguments.add(income);
-		arguments.add(powerupNpc);
 		arguments.add(garrison);
 		arguments.add(buff);
+
+		// powerupnpc (and anything else a module hangs under /glw turf) comes from installed modules
+		arguments.addAll(contributions.createFor("turf", getArgumentTree(), getArgument()));
+
 		getArgument().addAllSubArguments(arguments);
 	}
 

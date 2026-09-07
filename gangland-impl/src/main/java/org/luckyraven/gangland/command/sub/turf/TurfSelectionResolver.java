@@ -21,15 +21,15 @@ import org.luckyraven.gangland.turf.selection.WandSelectionManager;
  * When a turf is resolved by standing-in, it is promoted to the admin's active selection so later commands stay
  * consistent with the first resolution.
  */
-final class TurfSelectionResolver {
+public final class TurfSelectionResolver {
 
 	private TurfSelectionResolver() {
 	}
 
-	static @Nullable Turf resolve(CommandSender sender,
-	                              TurfManager turfs,
-	                              WandSelectionManager selections,
-	                              TurfMessageContract messages) {
+	public static @Nullable Turf resolve(CommandSender sender,
+	                                     TurfManager turfs,
+	                                     WandSelectionManager selections,
+	                                     TurfMessageContract messages) {
 		if (!(sender instanceof Player player)) {
 			messages.send(sender, "TURF_NO_ACTIVE");
 			return null;

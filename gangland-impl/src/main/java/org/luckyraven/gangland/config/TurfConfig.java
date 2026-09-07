@@ -28,6 +28,7 @@ import org.luckyraven.gangland.turf.task.GangPresenceTracker;
 import org.luckyraven.gangland.turf.task.InactivityReleaseTask;
 import org.luckyraven.gangland.turf.task.TurfIncomeDistributor;
 import org.luckyraven.gangland.turf.task.TurfLocationTracker;
+import org.luckyraven.gangland.turf.turfnpcs.TurfNpcContracts;
 
 import java.util.List;
 
@@ -196,4 +197,13 @@ public final class TurfConfig {
 	// produce a second instance whose events never fire (the auto-scanned copy is the one wired up), which is
 	// exactly what hid the bossbar-refresh bug: the @Bean copy had its scheduler task running, but its barsByTurf
 	// was always empty because events went to the other instance.
+
+	/**
+	 * The turf → NPC bridge. Always present so GarrisonDeployListener always constructs; inert until the
+	 * cops-n-crooks module installs TurfNpcContractImpl into it (see documentation/module-loader.md, "Core seams").
+	 */
+	@Bean
+	public TurfNpcContracts turfNpcContracts() {
+		return new TurfNpcContracts();
+	}
 }
