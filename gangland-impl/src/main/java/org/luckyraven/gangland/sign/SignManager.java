@@ -5,9 +5,9 @@ import lombok.Getter;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.gadget.car.CarManager;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
+import org.luckyraven.gangland.sign.extension.SignContributions;
 import org.luckyraven.gangland.sign.registry.SignFormatRegistry;
 import org.luckyraven.gangland.sign.registry.SignTypeDefinition;
 import org.luckyraven.gangland.sign.registry.SignTypeRegistry;
@@ -20,8 +20,6 @@ import org.luckyraven.gangland.sign.type.trade.BuySign;
 import org.luckyraven.gangland.sign.type.trade.SellSign;
 import org.luckyraven.gangland.sign.type.trade.ammo.AmmoBuySign;
 import org.luckyraven.gangland.sign.type.trade.ammo.AmmoSellSign;
-import org.luckyraven.gangland.sign.type.trade.car.CarBuySign;
-import org.luckyraven.gangland.sign.type.trade.car.CarSellSign;
 import org.luckyraven.gangland.sign.type.trade.weapon.WeaponBuySign;
 import org.luckyraven.gangland.sign.type.trade.weapon.WeaponSellSign;
 import org.luckyraven.gangland.sign.type.trade.wearable.WearableBuySign;
@@ -30,10 +28,18 @@ import org.luckyraven.gangland.sign.validation.SignValidationException;
 import org.luckyraven.gangland.weapon.WeaponService;
 import org.luckyraven.gangland.weapon.ammo.AmmunitionManager;
 import org.luckyraven.gangland.weapon.wearable.WearableService;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Builds the core sign catalogue and, through {@link SignContributions}, whatever car/weapon/wearable sign types
+ * runtime modules contribute. {@code setupSigns()} resolves {@link SignContributions#from(DependencyContainer)}
+ * exactly once, at the top of the method — not in the constructor, because this bean is constructed in the CONFIG
+ * phase while module beans may not exist yet, and {@code setupSigns()} itself only runs later, from Keystone's
+ * convention {@code initialize()} pass, by which point every module bean is guaranteed to exist.
+ */
 @Getter
 public class SignManager extends SignService {
 
@@ -54,7 +60,7 @@ public class SignManager extends SignService {
 	@Getter(AccessLevel.NONE)
 	private final WearableService            wearableService;
 	@Getter(AccessLevel.NONE)
-	private final CarManager                 carManager;
+	private final DependencyContainer        container;
 
 	public SignManager(Gangland gangland,
 	                   String shortPrefix,
@@ -66,7 +72,7 @@ public class SignManager extends SignService {
 	                   UserManager<Player> userManager,
 	                   UserManager<OfflinePlayer> offlineUserManager,
 	                   WearableService wearableService,
-	                   CarManager carManager) {
+	                   DependencyContainer container) {
 		super(registry, signInteraction);
 
 		this.gangland           = gangland;
@@ -78,7 +84,7 @@ public class SignManager extends SignService {
 		this.userManager        = userManager;
 		this.offlineUserManager = offlineUserManager;
 		this.wearableService    = wearableService;
-		this.carManager         = carManager;
+		this.container          = container;
 	}
 
 	@Override
@@ -86,6 +92,10 @@ public class SignManager extends SignService {
 		List<SignTypeDefinition> definitions = new ArrayList<>();
 
 		String signPrefix = shortPrefix + "-";
+
+		// Resolved here, not in the constructor: this bean is built in the CONFIG phase, but setupSigns() runs in
+		// Keystone's convention initialize() pass, the first moment every module bean is guaranteed to exist.
+		SignContributions contributions = SignContributions.from(container);
 
 		// weapon buy
 		String   weaponBuyKey  = signPrefix + "weapon-buy";
@@ -144,7 +154,7 @@ public class SignManager extends SignService {
 		// view
 		String   viewKey  = signPrefix + "view";
 		SignType viewType = new SignType(viewKey, "VIEW");
-		Sign view = new ViewSign(gangland, weaponService, ammunitionManager, carManager, wearableService,
+		Sign view = new ViewSign(gangland, weaponService, ammunitionManager, contributions, wearableService,
 		                         uniqueItemAddon, viewType);
 
 		formatRegistry.register(view.createFormat());
@@ -189,23 +199,11 @@ public class SignManager extends SignService {
 
 		definitions.add(wearableSell.createDefinition());
 
-		// car buy
-		String   carBuyKey  = signPrefix + "car-buy";
-		SignType carBuyType = new SignType(carBuyKey, "CAR-BUY");
-		Sign     carBuy     = new CarBuySign(userManager, carManager, weaponService, ammunitionManager, carBuyType);
-
-		formatRegistry.register(carBuy.createFormat());
-
-		definitions.add(carBuy.createDefinition());
-
-		// car sell
-		String   carSellKey  = signPrefix + "car-sell";
-		SignType carSellType = new SignType(carSellKey, "CAR-SELL");
-		Sign     carSell     = new CarSellSign(userManager, carManager, weaponService, ammunitionManager, carSellType);
-
-		formatRegistry.register(carSell.createFormat());
-
-		definitions.add(carSell.createDefinition());
+		// signs contributed by runtime modules (e.g. gadget's car-buy / car-sell)
+		for (Sign contributed : contributions.createSigns(signPrefix)) {
+			formatRegistry.register(contributed.createFormat());
+			definitions.add(contributed.createDefinition());
+		}
 
 		return definitions;
 	}

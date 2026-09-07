@@ -1,7 +1,6 @@
-package org.luckyraven.gangland.database.repositories.car;
+package org.luckyraven.gangland.gadget.database;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.database.tables.car.ParkedCarTable;
 import org.luckyraven.gangland.gadget.car.ExhaustSide;
 import org.luckyraven.gangland.gadget.car.ParkedCar;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;

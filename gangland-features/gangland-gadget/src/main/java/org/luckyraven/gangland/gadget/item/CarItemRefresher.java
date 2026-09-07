@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.item.refresher;
+package org.luckyraven.gangland.gadget.item;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;

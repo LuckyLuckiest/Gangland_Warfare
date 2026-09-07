@@ -1,5 +1,6 @@
-package org.luckyraven.gangland.file.configuration;
+package org.luckyraven.gangland.gadget.contract;
 
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gadget.config.GadgetPhysicsConfig;
 
 /**

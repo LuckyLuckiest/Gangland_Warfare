@@ -7,8 +7,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gadget.car.Car;
-import org.luckyraven.gangland.gadget.car.CarManager;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.inventory.util.InventoryUtil;
@@ -16,6 +14,7 @@ import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.item.unique.UniqueItem;
 import org.luckyraven.gangland.item.wearable.Wearable;
 import org.luckyraven.gangland.item.wearable.WearableTrait;
+import org.luckyraven.gangland.sign.extension.SignContributions;
 import org.luckyraven.gangland.sign.model.ParsedSign;
 import org.luckyraven.gangland.weapon.Weapon;
 import org.luckyraven.gangland.weapon.WeaponService;
@@ -32,12 +31,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ViewInventoryAspect implements SignAspect {
 
-	private final JavaPlugin        plugin;
-	private final WeaponService     weaponService;
-	private final AmmunitionManager ammunitionManager;
-	private final CarManager        carManager;
-	private final WearableService   wearableService;
-	private final UniqueItemAddon   uniqueItemAddon;
+	private final JavaPlugin         plugin;
+	private final WeaponService      weaponService;
+	private final AmmunitionManager  ammunitionManager;
+	private final SignContributions  contributions;
+	private final WearableService    wearableService;
+	private final UniqueItemAddon    uniqueItemAddon;
 
 	@Override
 	public AspectResult execute(Player player, ParsedSign sign) {
@@ -64,11 +63,9 @@ public class ViewInventoryAspect implements SignAspect {
 			return AspectResult.success("Opened wearable view: " + itemName);
 		}
 
-		// Try to find car
-		Car car = findCar(itemName);
-		if (car != null) {
-			openCarView(player, car);
-			return AspectResult.success("Opened car view: " + itemName);
+		// Try a module-contributed view (e.g. gadget's car view)
+		if (contributions.openView(player, itemName)) {
+			return AspectResult.success("Opened view: " + itemName);
 		}
 
 		// Generic item view
@@ -206,35 +203,6 @@ public class ViewInventoryAspect implements SignAspect {
 		inventory.open(player);
 	}
 
-	private void openCarView(Player player, Car car) {
-		String title = "&6View: &e" + car.getDisplayName();
-
-		InventoryHandler inventory = new InventoryHandler(plugin, title, 9, player);
-
-		List<String> lore = new ArrayList<>();
-		lore.add("&7Speed: &f" + car.getMaxSpeed() + " &7blocks/tick");
-		lore.add("&7Acceleration: &f" + car.getAcceleration());
-		lore.add("&7Health: &f" + car.getMaxHealth() + " HP");
-		lore.add("&7Durability: &f" + car.getMaxDurability());
-
-		if (car.isFuelEnabled()) {
-			lore.add("&7Fuel: &fRequired");
-			lore.add("&7Fuel Type: &f" + car.getFuelKey());
-		} else {
-			lore.add("&7Fuel: &aUnlimited");
-		}
-
-		ItemStack carItem = new ItemBuilder(car.buildItem(player)).setLore(lore).build();
-
-		inventory.setItem(4, carItem, false, null);
-
-		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
-
-		InventoryUtil.fillInventory(inventory, fill);
-
-		inventory.open(player);
-	}
-
 	private void openWearableView(Player player, Wearable wearable) {
 		String title = "&6View: &e" + wearable.getName();
 
@@ -288,10 +256,6 @@ public class ViewInventoryAspect implements SignAspect {
 			}
 		}
 		return null;
-	}
-
-	private Car findCar(String identifier) {
-		return carManager.getCar(identifier);
 	}
 
 	private Weapon findWeapon(String identifier) {

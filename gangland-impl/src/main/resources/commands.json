@@ -491,26 +491,6 @@
 		"usage": "/glw lootchest remove",
 		"description": "Removes the loot chest you are looking at."
 	},
-	"car": {
-		"usage": "/glw car",
-		"description": "Shows car help page."
-	},
-	"car_help": {
-		"usage": "/glw car help <page>",
-		"description": "Shows the specified page in car menu."
-	},
-	"car_give": {
-		"usage": "/glw car give <name> <amount>",
-		"description": "Gives the specified car item."
-	},
-	"car_info": {
-		"usage": "/glw car info",
-		"description": "Shows information about the car item in hand."
-	},
-	"car_list": {
-		"usage": "/glw car list",
-		"description": "Shows all registered cars."
-	},
 	"fuel": {
 		"usage": "/glw fuel",
 		"description": "Shows fuel help page."

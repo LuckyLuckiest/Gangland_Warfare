@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.database.tables.car;
+package org.luckyraven.gangland.gadget.database;
 
 import org.luckyraven.gangland.gadget.car.ParkedCar;
 import org.luckyraven.keystone.persistence.database.component.Attribute;

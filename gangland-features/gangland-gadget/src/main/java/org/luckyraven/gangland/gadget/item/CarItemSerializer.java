@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.item.serializer;
+package org.luckyraven.gangland.gadget.item;
 
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;

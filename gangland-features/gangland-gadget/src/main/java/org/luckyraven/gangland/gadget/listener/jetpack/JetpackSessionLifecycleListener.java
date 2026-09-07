@@ -9,13 +9,14 @@ import org.bukkit.event.entity.EntityDismountEvent;
 import org.bukkit.event.entity.EntityMountEvent;
 import org.luckyraven.keystone.bean.autowire.AutowireTarget;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
+import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
 import org.luckyraven.gangland.core.downed.PlayerUndownedEvent;
 import org.luckyraven.gangland.gadget.jetpack.JetpackService;
 
 /**
- * Manages jetpack session lifecycle around vehicle mount/dismount and GTA-style respawn (undowned). Deactivates the
- * jetpack when the player enters any vehicle, and re-checks the chestplate slot when the player exits a vehicle or
- * recovers from the downed state.
+ * Manages jetpack session lifecycle around vehicle mount/dismount, entering the downed state, and GTA-style
+ * respawn (undowned). Deactivates the jetpack when the player enters any vehicle or is downed, and re-checks the
+ * chestplate slot when the player exits a vehicle or recovers from the downed state.
  */
 @ListenerHandler
 @RequiredArgsConstructor
@@ -42,5 +43,10 @@ public class JetpackSessionLifecycleListener implements Listener {
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onUndowned(PlayerUndownedEvent event) {
 		jetpackService.scheduleChestplateCheck(event.getPlayer());
+	}
+
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onDowned(PlayerDownedEvent event) {
+		jetpackService.deactivate(event.getPlayer());
 	}
 }

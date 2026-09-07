@@ -3,11 +3,11 @@ package org.luckyraven.gangland.sign.type;
 import lombok.RequiredArgsConstructor;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.color.Color;
-import org.luckyraven.gangland.gadget.car.CarManager;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.sign.SignType;
 import org.luckyraven.gangland.sign.aspect.SignAspect;
 import org.luckyraven.gangland.sign.aspect.ViewInventoryAspect;
+import org.luckyraven.gangland.sign.extension.SignContributions;
 import org.luckyraven.gangland.sign.handler.AspectBasedSignHandler;
 import org.luckyraven.gangland.sign.handler.SignHandler;
 import org.luckyraven.gangland.sign.model.SignFormat;
@@ -26,13 +26,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ViewSign implements Sign {
 
-	private final Gangland          gangland;
-	private final WeaponService     weaponService;
-	private final AmmunitionManager ammunitionManager;
-	private final CarManager        carManager;
-	private final WearableService   wearableService;
-	private final UniqueItemAddon   uniqueItemAddon;
-	private final SignType          signType;
+	private final Gangland           gangland;
+	private final WeaponService      weaponService;
+	private final AmmunitionManager  ammunitionManager;
+	private final SignContributions  contributions;
+	private final WearableService    wearableService;
+	private final UniqueItemAddon    uniqueItemAddon;
+	private final SignType           signType;
 
 	@Override
 	public SignTypeDefinition createDefinition() {
@@ -41,7 +41,7 @@ public class ViewSign implements Sign {
 		SignParser    parser    = new ViewSignParser(signType);
 
 		// aspect
-		SignAspect viewAspect = new ViewInventoryAspect(gangland, weaponService, ammunitionManager, carManager,
+		SignAspect viewAspect = new ViewInventoryAspect(gangland, weaponService, ammunitionManager, contributions,
 		                                                wearableService, uniqueItemAddon);
 
 		// handler

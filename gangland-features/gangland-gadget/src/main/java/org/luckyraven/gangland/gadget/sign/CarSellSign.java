@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.sign.type.trade.car;
+package org.luckyraven.gangland.gadget.sign;
 
 import org.bukkit.entity.Player;
 import org.luckyraven.keystone.color.Color;
@@ -22,13 +22,12 @@ import org.luckyraven.gangland.sign.parser.TradeSignParser;
 import org.luckyraven.gangland.sign.registry.SignTypeDefinition;
 import org.luckyraven.gangland.sign.type.trade.BaseTradeSign;
 import org.luckyraven.gangland.sign.validation.SignValidator;
-import org.luckyraven.gangland.sign.validation.trade.car.CarSignValidator;
 import org.luckyraven.gangland.weapon.WeaponService;
 import org.luckyraven.gangland.weapon.ammo.AmmunitionManager;
 
 import java.util.List;
 
-public class CarBuySign extends BaseTradeSign implements BulkSignHandler {
+public class CarSellSign extends BaseTradeSign implements BulkSignHandler {
 
 	private final UserManager<Player> userManager;
 	private final CarManager          carManager;
@@ -36,8 +35,8 @@ public class CarBuySign extends BaseTradeSign implements BulkSignHandler {
 
 	private SignHandler handler;
 
-	public CarBuySign(UserManager<Player> userManager, CarManager carManager,
-	                  WeaponService weaponService, AmmunitionManager ammunitionManager, SignType signType) {
+	public CarSellSign(UserManager<Player> userManager, CarManager carManager,
+	                   WeaponService weaponService, AmmunitionManager ammunitionManager, SignType signType) {
 		super(weaponService, ammunitionManager);
 
 		this.userManager = userManager;
@@ -50,16 +49,16 @@ public class CarBuySign extends BaseTradeSign implements BulkSignHandler {
 		SignValidator validator = new CarSignValidator(signType, carManager);
 		SignParser    parser    = new TradeSignParser(signType);
 
-		SignAspect moneyAspect = new MoneyAspect(userManager, MoneyAspect.TransactionType.WITHDRAW);
-
 		SignAspect itemAspect = new ItemTransferAspect(sign -> {
 			var car = carManager.getCar(sign.getContent());
 			return car != null ? car.buildItem() : null;
-		}, ItemTransferAspect.TransferType.GIVE, (player, a, b) -> {
+		}, ItemTransferAspect.TransferType.TAKE, (player, a, b) -> {
 			String keyA = Car.getCarId(a);
 			String keyB = Car.getCarId(b);
 			return keyA != null && keyA.equals(keyB);
 		});
+
+		SignAspect moneyAspect = new MoneyAspect(userManager, MoneyAspect.TransactionType.DEPOSIT);
 
 		List<SignAspect> aspects = List.of(moneyAspect, itemAspect);
 

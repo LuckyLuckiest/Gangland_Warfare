@@ -13,6 +13,8 @@ plugins/
 └── Gangland_Warfare/
     ├── modules/
     │   ├── gangland-mail-0.8.2.jar      the mail module (gang invites, alliance requests)
+    │   ├── cops-n-crooks-0.8.4.jar      cops, civilians, jails, detainment, trader/banker NPCs
+    │   ├── gangland-gadget-0.8.4.jar    cars and jetpacks
     │   └── .stale/                      replaced jars, deleted on the next start
     └── settings.yml …
 ```
@@ -26,13 +28,14 @@ plugins/
 |---|---|---|
 | mail — `MailManager`, gang invites, alliance requests, join/quit surfacing | `gangland-mail` | runtime module since 0.8.2 (the pilot) |
 | cops-n-crooks — cops, civilians, jails, detainment, trader/banker NPCs, turf-NPC powerups | `cops-n-crooks` | runtime module since 0.8.4 |
-| turf, weapon, gadget | `gangland-turf`, `gangland-weapon`, `gangland-gadget` | still compile-time dependencies of `gangland-impl`; next in line |
+| gadget — cars (`/glw car`), jetpacks | `gangland-gadget` | runtime module since 0.8.4 |
+| turf, weapon | `gangland-turf`, `gangland-weapon` | still compile-time dependencies of `gangland-impl`; next in line |
 
 **Order for the remaining flips.** The feature poms form a DAG (`gadget → weapon`, `cops-n-crooks → weapon + turf`),
 so a feature can only be flipped once nothing left in the core's compile closure depends on it. With cops-n-crooks
-already flipped, the remaining incremental order is **gadget → turf → weapon** (or all three in one wave).
-`cops-n-crooks`' `module.yml` carries no `Depends:` yet; it gains `[turf]` at the turf flip and `[turf, weapon]` at
-the weapon flip.
+and gadget already flipped, the remaining incremental order is **turf → weapon** (or both in one wave).
+`cops-n-crooks`' and `gadget`'s `module.yml` carry no `Depends:` yet; `cops-n-crooks` gains `[turf]` at the turf
+flip and `[turf, weapon]` at the weapon flip, and `gadget` gains `[weapon]` at the weapon flip.
 
 ## How the core loads modules
 
@@ -83,6 +86,11 @@ A module is a Maven module under `gangland-features/` that depends on `gangland-
   in the core jar, or the parent-first `ModuleClassLoader` keeps serving the core's (now missing) copy. Register
   the default with the five-argument
   `FileHandler(plugin, name, directory, ".yml", moduleLoader.classLoader())` so it is copied out of the module jar.
+  When the data-folder path is a **pre-existing shared directory** that other modules and the core also drop files
+  into (`items/`, `npc/`, `turf/`, `weapon/`), the module's file sits at that shared path too, not under
+  `<module>/` — e.g. the gadget module ships `src/main/resources/items/cars.yml`, resolving to the `items/cars.yml`
+  data-folder path the core's `ammunition.yml`/`wearables.yml`/`unique_items.yml` already share, because existing
+  servers already look for the file there.
 
 Modules may import core types directly (`Messages`, `Settings`, managers): the compile-time direction is
 module → core. Contract interfaces (`MailRepositoryContract`, `TurfMessageContract`, …) stay as the test seam;
@@ -138,6 +146,32 @@ Holders introduced by the **cops-n-crooks** flip (0.8.4):
 Contribution paths added by the cops-n-crooks flip: `BankMenuContribution` (`parent() == "bank"`, attaches
 `/glw bank menu`, queried by `BankCommand`) and `TurfPowerupNpcContribution` (`parent() == "turf"`, attaches
 `/glw turf powerupnpc`, queried by `TurfCommand`).
+
+Contributions and seams added by the **gadget** flip (0.8.4):
+
+- **`SignTypeContribution`** (`org.luckyraven.gangland.sign.extension`, gangland-impl) — `List<Sign>
+  signs(String signPrefix)`. `SignManager.setupSigns()` resolves `SignContributions.from(container)` once at the
+  top of the method (lazily — a module bean is not guaranteed to exist yet at `SignManager`'s own construction
+  time, only once Keystone's convention `initialize()` pass runs) and appends every contributed sign's format and
+  definition. Installed by the gadget module's `carSignContribution` bean (`CarSignContribution`, which rebuilds
+  the `car-buy`/`car-sell` sign types).
+- **`SignViewProvider`** (same package) — `boolean open(Player player, String content)`; `ViewInventoryAspect`
+  tries every registered provider in order and falls through to the generic item view when none claims the name.
+  Installed by the gadget module's `carSignViewProvider` bean (`CarSignViewProvider`).
+- **`SignContributions`** (same package) — the `getAllInstances`-backed holder both interfaces above resolve
+  through, modelled on `CommandContributions`. `SignContributions.none()` is the inert default with zero modules
+  installed.
+- **Item registry injection (no new interface).** A module's `@Bean` methods take the existing
+  `ItemConverterRegistry` / `ItemSerializerRegistry` / `ItemRefresherRegistry` beans as constructor parameters and
+  call `register(...)` on them directly — the parameter is the `BeanGraph` ordering edge that guarantees the
+  module bean runs after the core registry bean exists. No core seam interface is needed; this is the pattern
+  every future item-owning module (weapon included) should reuse. See `GadgetModuleConfig`'s `carConverter`,
+  `carItemSerializer`, `carItemRefresher` beans.
+- **`ItemSerializerRegistry.CATCH_ALL_PRIORITY`** (`gangland-infra/gangland-item`) — the registry now sorts its
+  entries by priority (stable sort, so same-priority registrations keep insertion order); the core's `MATERIAL`
+  catch-all registers at `CATCH_ALL_PRIORITY` (`Integer.MIN_VALUE`) so it always sorts last, letting a module's
+  default-priority serializer (e.g. `CarItemSerializer`) win even though it registers after the core's beans in
+  bootstrap order.
 
 Later flips append their own holders/contributions as new rows in this section rather than starting a new one.
 

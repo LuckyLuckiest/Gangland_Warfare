@@ -78,6 +78,7 @@
                                  maven-dependency-plugin execution below), never inside the core jar. -->
                             <exclude>org.luckyraven:gangland-mail</exclude>
                             <exclude>org.luckyraven:cops-n-crooks</exclude>
+                            <exclude>org.luckyraven:gangland-gadget</exclude>
                         </excludes>
                     </artifactSet>
                 </configuration>
@@ -121,6 +122,11 @@
                                     <artifactId>cops-n-crooks</artifactId>
                                     <version>${project.version}</version>
                                 </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.luckyraven</groupId>
+                                    <artifactId>gangland-gadget</artifactId>
+                                    <version>${project.version}</version>
+                                </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>
@@ -147,6 +153,12 @@
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>cops-n-crooks</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-gadget</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>

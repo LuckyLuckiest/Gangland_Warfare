@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.command.sub.car;
+package org.luckyraven.gangland.gadget.command;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

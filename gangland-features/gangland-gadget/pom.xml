@@ -24,6 +24,18 @@
             <groupId>org.luckyraven</groupId>
             <artifactId>keystone-item</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-module</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-command</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-hooks</artifactId>
+        </dependency>
         <!-- Spigot Build (full server — needed for io.netty access) -->
         <dependency>
             <groupId>org.spigotmc</groupId>
@@ -69,12 +81,15 @@
             <artifactId>item-nbt-api-plugin</artifactId>
         </dependency>
 
-        <!-- AnvilGUI -->
+        <!-- The host (core) jar. Provided: at runtime this module is loaded from plugins/Gangland_Warfare/modules/
+             by Keystone's ModuleLoader, whose parent is the host plugin's classloader, so every impl class
+             resolves from there. Dependency direction is module -> core; core never names a gadget type. -->
         <dependency>
-            <groupId>net.wesjd</groupId>
-            <artifactId>anvilgui</artifactId>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-impl</artifactId>
+            <scope>provided</scope>
         </dependency>
-    
+
         <!-- Shared test fixtures (testsupport.BukkitRegistryFixture) -->
         <dependency>
             <groupId>org.luckyraven</groupId>

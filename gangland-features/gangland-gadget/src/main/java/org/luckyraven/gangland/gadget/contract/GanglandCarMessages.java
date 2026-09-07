@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.file.configuration.gadget;
+package org.luckyraven.gangland.gadget.contract;
 
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gadget.car.message.CarMessageContract;

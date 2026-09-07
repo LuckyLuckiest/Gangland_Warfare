@@ -14,8 +14,6 @@ import org.luckyraven.gangland.file.configuration.wanted.GanglandWantedSettings;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionStore;
 import org.luckyraven.gangland.file.configuration.weapon.GanglandBlockRegenerationSettings;
 import org.luckyraven.gangland.file.configuration.weapon.WeaponLoader;
-import org.luckyraven.gangland.gadget.car.config.CarAddon;
-import org.luckyraven.gangland.gadget.config.GadgetPhysicsConfig;
 import org.luckyraven.gangland.item.fuel.FuelService;
 import org.luckyraven.gangland.weapon.wearable.WearableAddon;
 import org.luckyraven.gangland.gang.bounty.BountySettings;
@@ -122,11 +120,6 @@ public class FileConfig {
 		return new GanglandBlockRegenerationSettings();
 	}
 
-	@Bean
-	public GadgetPhysicsConfig gadgetPhysicsConfig(Settings settings) {
-		return new GadgetPhysicsConfigImpl();
-	}
-
 	// ---------------------------------------------------------------------------------------------------------------
 	// FileInitializer beans
 	// ---------------------------------------------------------------------------------------------------------------
@@ -182,15 +175,6 @@ public class FileConfig {
 	                                   FileManager fileManager,
 	                                   PlaceholderService placeholderService) {
 		WearableAddon addon = new WearableAddon(permissionManager::addPermission, fileManager, placeholderService);
-		fileManager.registerInitializer(addon);
-		return addon;
-	}
-
-	@Bean
-	public CarAddon carAddon(PermissionManager permissionManager,
-	                         FileManager fileManager,
-	                         PlaceholderService placeholderService) {
-		CarAddon addon = new CarAddon(permissionManager::addPermission, fileManager, placeholderService);
 		fileManager.registerInitializer(addon);
 		return addon;
 	}

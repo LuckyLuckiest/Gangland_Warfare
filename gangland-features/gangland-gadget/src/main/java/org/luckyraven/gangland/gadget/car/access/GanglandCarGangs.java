@@ -1,6 +1,5 @@
-package org.luckyraven.gangland.gadget;
+package org.luckyraven.gangland.gadget.car.access;
 
-import org.luckyraven.gangland.gadget.car.access.CarGangContract;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
 

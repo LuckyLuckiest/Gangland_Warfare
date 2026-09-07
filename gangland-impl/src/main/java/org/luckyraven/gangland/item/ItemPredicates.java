@@ -3,7 +3,6 @@ package org.luckyraven.gangland.item;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.gadget.car.CarKey;
 import org.luckyraven.gangland.item.money.MoneyItemUtil;
 import org.luckyraven.gangland.item.unique.UniqueItemKeys;
 import org.luckyraven.gangland.item.wearable.Wearable;
@@ -19,8 +18,10 @@ import java.util.function.Predicate;
  * registration picks it up automatically.
  *
  * <p>This class lives in {@code gangland-impl} because the predicates depend on constants from the feature modules
- * ({@code CarKey}, …) that {@code gangland-item} cannot see. The matching {@link ItemKind} enum stays in
- * {@code gangland-item} because it holds nothing but labels.
+ * ({@code Weapon}, {@code Ammunition}, {@code Wearable}, …) that {@code gangland-item} cannot see. The matching
+ * {@link ItemKind} enum stays in {@code gangland-item} because it holds nothing but labels. The {@code CAR}
+ * predicate moved to the gadget module's {@code GadgetItemPredicates} — the core cannot see {@code CarKey} once
+ * gadget is a runtime module.
  */
 public final class ItemPredicates {
 
@@ -29,7 +30,6 @@ public final class ItemPredicates {
 	                                                                      Weapon.getTagProperName(WeaponTag.WEAPON));
 	public static final Predicate<ItemStack> AMMUNITION = stack -> hasTag(stack, Ammunition.NBT_KEY);
 	public static final Predicate<ItemStack> WEARABLE   = stack -> hasTag(stack, Wearable.NBT_KEY);
-	public static final Predicate<ItemStack> CAR        = stack -> hasTag(stack, CarKey.CAR_ID.getKey());
 	public static final Predicate<ItemStack> MONEY      = stack -> hasTag(stack, MoneyItemUtil.MARKER_TAG);
 
 	/**

@@ -94,10 +94,6 @@
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>gangland-gadget</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
             <artifactId>gangland-domain</artifactId>
         </dependency>
         <dependency>

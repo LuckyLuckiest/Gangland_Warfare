@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.item.converter;
+package org.luckyraven.gangland.gadget.item;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.inventory.ItemStack;

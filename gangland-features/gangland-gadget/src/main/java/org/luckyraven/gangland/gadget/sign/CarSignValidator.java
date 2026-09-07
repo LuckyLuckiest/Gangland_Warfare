@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.sign.validation.trade.car;
+package org.luckyraven.gangland.gadget.sign;
 
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gadget.car.CarManager;

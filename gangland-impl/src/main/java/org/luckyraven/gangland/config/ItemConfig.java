@@ -2,7 +2,6 @@ package org.luckyraven.gangland.config;
 
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
-import org.luckyraven.gangland.gadget.car.config.CarAddon;
 import org.luckyraven.gangland.item.*;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.item.converter.*;
@@ -50,11 +49,6 @@ public class ItemConfig {
 	}
 
 	@Bean
-	public CarConverter carConverter(CarAddon carAddon) {
-		return new CarConverter(carAddon);
-	}
-
-	@Bean
 	public UniqueConverter uniqueConverter(UniqueItemAddon uniqueItemAddon) {
 		return new UniqueConverter(uniqueItemAddon);
 	}
@@ -69,7 +63,6 @@ public class ItemConfig {
 	                                                   WeaponConverter weaponConverter,
 	                                                   AmmunitionConverter ammunitionConverter,
 	                                                   WearableConverter wearableConverter,
-	                                                   CarConverter carConverter,
 	                                                   UniqueConverter uniqueConverter,
 	                                                   MoneyConverter moneyConverter) {
 		ItemConverterRegistry registry = new ItemConverterRegistry();
@@ -80,7 +73,6 @@ public class ItemConfig {
 		registry.register("ammo", ammunitionConverter);
 
 		registry.register(ItemKind.WEARABLE, wearableConverter);
-		registry.register(ItemKind.CAR, carConverter);
 		registry.register(ItemKind.UNIQUE, uniqueConverter);
 
 		registry.register(ItemKind.MONEY, moneyConverter);
@@ -121,11 +113,6 @@ public class ItemConfig {
 	}
 
 	@Bean
-	public CarItemSerializer carItemSerializer() {
-		return new CarItemSerializer();
-	}
-
-	@Bean
 	public MoneyItemSerializer moneyItemSerializer() {
 		return new MoneyItemSerializer();
 	}
@@ -135,20 +122,20 @@ public class ItemConfig {
 	                                                     WeaponItemSerializer weaponItemSerializer,
 	                                                     AmmunitionItemSerializer ammunitionItemSerializer,
 	                                                     WearableItemSerializer wearableItemSerializer,
-	                                                     CarItemSerializer carItemSerializer,
 	                                                     MoneyItemSerializer moneyItemSerializer,
 	                                                     MaterialItemSerializer materialItemSerializer) {
 		ItemSerializerRegistry registry = new ItemSerializerRegistry();
 		// Registration order is priority order: the first predicate that matches wins. Unique goes first because
 		// a unique item can wrap any underlying domain (a unique weapon stamps *both* the weapon tag and the
-		// uniqueItem tag, and we want it identified as unique). Material is the final catch-all.
+		// uniqueItem tag, and we want it identified as unique). Material is the final catch-all — it registers at
+		// CATCH_ALL_PRIORITY (not the default priority) so it always sorts last even after a runtime module
+		// registers its own serializer later, at the default priority, in its own CONFIG phase.
 		registry.register(ItemPredicates.UNIQUE, uniqueItemSerializer);
 		registry.register(ItemPredicates.WEAPON, weaponItemSerializer);
 		registry.register(ItemPredicates.AMMUNITION, ammunitionItemSerializer);
 		registry.register(ItemPredicates.WEARABLE, wearableItemSerializer);
-		registry.register(ItemPredicates.CAR, carItemSerializer);
 		registry.register(ItemPredicates.MONEY, moneyItemSerializer);
-		registry.register(ItemPredicates.MATERIAL, materialItemSerializer);
+		registry.register(ItemPredicates.MATERIAL, materialItemSerializer, ItemSerializerRegistry.CATCH_ALL_PRIORITY);
 		return registry;
 	}
 
@@ -175,19 +162,12 @@ public class ItemConfig {
 	}
 
 	@Bean
-	public CarItemRefresher carItemRefresher(CarAddon carAddon) {
-		return new CarItemRefresher(carAddon);
-	}
-
-	@Bean
 	public ItemRefresherRegistry itemRefresherRegistry(WeaponRefresher weaponRefresher,
 	                                                   WearableRefresher wearableRefresher,
 	                                                   UniqueItemRefresher uniqueItemRefresher,
-	                                                   AmmunitionItemRefresher ammunitionItemRefresher,
-	                                                   CarItemRefresher carItemRefresher) {
+	                                                   AmmunitionItemRefresher ammunitionItemRefresher) {
 		ItemRefresherRegistry registry = new ItemRefresherRegistry();
-		registry.register(weaponRefresher, wearableRefresher, uniqueItemRefresher, ammunitionItemRefresher,
-		                  carItemRefresher);
+		registry.register(weaponRefresher, wearableRefresher, uniqueItemRefresher, ammunitionItemRefresher);
 		return registry;
 	}
 }

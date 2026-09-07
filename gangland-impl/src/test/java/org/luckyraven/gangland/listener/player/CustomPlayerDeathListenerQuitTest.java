@@ -63,12 +63,7 @@ class CustomPlayerDeathListenerQuitTest {
 
 		listener = new CustomPlayerDeathListener(mock(Gangland.class),
 		                                         mock(UserManager.class),
-		                                         mock(WaypointManager.class),
-		                                         // JetpackService cannot be instrumented here: its class
-		                                         // initialisation pulls in Netty, which is not on the test
-		                                         // classpath. The listener null-guards it (line 211) and the
-		                                         // quit-restore path never touches it.
-		                                         null);
+		                                         mock(WaypointManager.class));
 	}
 
 	@AfterEach

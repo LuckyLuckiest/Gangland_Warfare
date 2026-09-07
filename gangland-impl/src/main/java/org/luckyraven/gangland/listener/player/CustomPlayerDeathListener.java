@@ -35,7 +35,6 @@ import org.luckyraven.gangland.data.teleportation.Waypoint;
 import org.luckyraven.gangland.data.teleportation.WaypointManager;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gadget.jetpack.JetpackService;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.util.TimeMessages;
@@ -68,18 +67,15 @@ public class CustomPlayerDeathListener implements Listener {
 	private final Gangland              gangland;
 	private final UserManager<Player>   userManager;
 	private final WaypointManager       waypointManager;
-	private final JetpackService        jetpackService;
 	private final Map<UUID, BukkitTask> respawnTasks   = new ConcurrentHashMap<>();
 	private final Map<UUID, GameMode>   savedGameModes = new ConcurrentHashMap<>();
 
 	public CustomPlayerDeathListener(Gangland gangland,
 	                                 @Qualifier("online") UserManager<Player> userManager,
-	                                 WaypointManager waypointManager,
-	                                 JetpackService jetpackService) {
+	                                 WaypointManager waypointManager) {
 		this.gangland        = gangland;
 		this.userManager     = userManager;
 		this.waypointManager = waypointManager;
-		this.jetpackService  = jetpackService;
 		instance             = this;
 	}
 
@@ -207,8 +203,6 @@ public class CustomPlayerDeathListener implements Listener {
 		// Vanilla PlayerDeathEvent never fires in this path (damage was cancelled), so Bukkit never spills
 		// event.getDrops(). Mirror the vanilla drop behaviour here unless keepInventory overrides it.
 		dropInventoryIfAllowed(player);
-
-		if (jetpackService != null) jetpackService.deactivate(player);
 
 		UUID uuid = player.getUniqueId();
 		DownedPlayerRegistry.add(uuid);

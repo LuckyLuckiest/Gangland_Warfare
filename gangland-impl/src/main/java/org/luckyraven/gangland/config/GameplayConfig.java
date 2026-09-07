@@ -13,6 +13,7 @@ import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.Qualifier;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.gangland.data.economy.GanglandMoneyDepositService;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.data.placeholder.PlaceholderService;
@@ -24,7 +25,6 @@ import org.luckyraven.gangland.file.configuration.inventory.itemsource.GangItemS
 import org.luckyraven.gangland.file.configuration.lootchest.GanglandLootChestMessages;
 import org.luckyraven.gangland.file.configuration.lootchest.LootChestSettings;
 import org.luckyraven.gangland.file.configuration.weapon.GanglandBlockRegenerationSettings;
-import org.luckyraven.gangland.gadget.car.config.CarAddon;
 import org.luckyraven.gangland.weapon.wearable.WearableAddon;
 import org.luckyraven.gangland.gang.GangFilterAdapter;
 import org.luckyraven.gangland.gang.GangManager;
@@ -261,18 +261,25 @@ public class GameplayConfig {
 		return new BulkActionManager(gangland, signInformation);
 	}
 
+	/**
+	 * {@code manager.initialize()} is deliberately not called here: Keystone's convention pass calls
+	 * {@code initialize()} on every non-{@code FileInitializer}/non-{@code BeanLifecycle} bean automatically, once
+	 * every phase — and every module's beans — already exist. Calling it again here ran {@code setupSigns()}
+	 * twice (harmless, since both sign registries are {@code Map.put}s, but still a real double-initialisation);
+	 * deferring to the convention pass is also required for the sign-extension seam, since a module's
+	 * {@code SignTypeContribution}/{@code SignViewProvider} beans are not guaranteed to exist yet at CONFIG-phase
+	 * bean-construction time.
+	 */
 	@Bean
 	public SignManager signManager(SignTypeRegistry signTypeRegistry, SignInteraction signInteraction,
 	                               WeaponManager weaponManager, AmmunitionManager ammunitionManager,
 	                               UniqueItemAddon uniqueItemAddon,
 	                               @Qualifier("online") UserManager<Player> userManager,
 	                               @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
-	                               WearableAddon wearableAddon, CarAddon carAddon) {
-		SignManager manager = new SignManager(gangland, Gangland.SHORT_PREFIX, signTypeRegistry, signInteraction,
-		                                      weaponManager, ammunitionManager, uniqueItemAddon, userManager,
-		                                      offlineUserManager, wearableAddon, carAddon);
-		manager.initialize();
-		return manager;
+	                               WearableAddon wearableAddon, DependencyContainer container) {
+		return new SignManager(gangland, Gangland.SHORT_PREFIX, signTypeRegistry, signInteraction,
+		                       weaponManager, ammunitionManager, uniqueItemAddon, userManager,
+		                       offlineUserManager, wearableAddon, container);
 	}
 
 	@Bean
