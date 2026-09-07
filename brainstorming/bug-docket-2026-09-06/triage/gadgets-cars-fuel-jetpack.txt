@@ -1,0 +1,28 @@
+1~~P1~~destroyAll pass 1 ejects are cancelled by the dismount listener~~Unregister the sessions (or set a bypass flag) before ejecting so the listener lets the eject through.~~-
+2~~P2~~The CarQuitListener eject is dead code~~Same fix as GD-01; remove the dead eject.~~-
+3~~P1~~The car item is destroyed when the inventory is full on pickup or destroy~~Drop leftovers like CarGiveCommand.giveCarItem does.~~-
+4~~P1~~An empty jetpack grants permanent fall immunity~~Cancel fall damage only while hasFuel (and recently flying).~~-
+5~~P1~~A zero-fuel jetpack still glides and steers~~Gate the descent cap and air control on hasFuel.~~-
+6~~P0~~Any player can mount, pick up or refuel any placed car~~Check car_owner/placer_uuid (and gangland.cars.<id>) on mount, pickup and refuel; allow gang members and an admin bypass.~~-
+7~~P1~~The wearable permission is only checked on inventory clicks~~Validate on right-click equip, InventoryDrag and dispenser paths, and strip unpermitted armour periodically.~~-
+8~~P2~~The input packet class is missing on 1.16 and jetpack input is inert below 1.21.2~~Fall back to PlayerToggleSneakEvent/PlayerMoveEvent for jetpack input and log when the interceptor is unavailable.~~-
+9~~P1~~Refuelling a stack of cans fuels all N (duplication)~~Split one can off the stack before writing the fuel NBT.~~-
+10~~P2~~Car items carry FUEL_ID and pass as fuel cans~~Use a distinct tag or check for the car tag in Fuel.isFuelItem.~~CarNbtIdentityTest (pins; flip when fixed)
+11~~P2~~ParkedCar yaw Float/double mismatch on MySQL~~Use Number casts.~~-
+12~~P2~~A jetpack without Fuel_Key starts a session that never flies~~Treat an empty Fuel_Key as "not a jetpack" or fail the load.~~-
+13~~P2~~Orphan minecarts across chunk boundaries produce duplicates~~Search neighbouring chunks (or by entity UUID) and remove orphans with no record.~~-
+14~~P3~~destroyCar's early return leaks the registry entry~~Unregister before the task null check.~~-
+15~~P2~~setAllowFlight(false) is unconditional (creative, downed)~~Restore the previous allowFlight state.~~-
+16~~P3~~Raw Sound constants~~Use SoundEffect.~~-
+17~~P3~~Hardcoded English strings~~Route through Messages / CarMessageContract.~~-
+18~~P2~~No car placement limit, validity check or cooldown~~Add Max_Cars per player and a spawn validity check.~~-
+19~~P3~~A null UUID could NPE in the tick task (theoretical)~~Guard it.~~-
+20~~P3~~Car.maxHealth and glideDescentRate are dead config~~Implement or remove them.~~-
+21~~P3~~The fuel_refuel_amount help entry is missing~~Add it to commands.json.~~-
+22~~P3~~setChestplate on every fuel tick~~Batch the NBT writes (every N ticks).~~-
+23~~P3~~A chunk is force-loaded per parked car at startup~~Load lazily on ChunkLoadEvent.~~-
+24~~P2~~Non-sneak dismounts are cancelled for every cause~~Cancel only player-initiated dismounts (plugin-eject flag / not dead).~~-
+25~~P3~~Fuel and durability are not persisted while driving; per-hit writes when parked~~Periodic session save; debounce parked writes.~~-
+26~~P3~~MinecartVehicle.getLocation may return null~~Guard the callers.~~-
+27~~P3~~pendingRightClickInteract token race~~Consume the token in one place.~~-
+28~~P3~~slotCache is cleared only on quit~~Add an expiry.~~-

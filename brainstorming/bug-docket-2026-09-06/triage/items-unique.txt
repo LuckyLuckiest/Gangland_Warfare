@@ -1,0 +1,32 @@
+1~~P0~~hasUniqueItem is inverted: the duplicate guard never fires and phones multiply on every join~~Return true when the item matches (remove the continue) and compare by the uniqueItem NBT tag (see IT-03).~~FIXED 0.8.3 c94fceab (#8); UniqueItemUtilTest + UniqueItemIdentityIntegrationTest now assert the fix
+2~~P0~~removeItem nulls the first slot that does NOT match~~Invert the condition so only the matching slot is cleared; match by NBT tag.~~FIXED 0.8.3 c94fceab (#9); LoadUniqueItemTest 3-slot fixture + UniqueItemIdentityIntegrationTest
+3~~P0~~compareTo compares the raw &-coded config name to the built display name~~Implement identity via UniqueItemKeys.UNIQUE_ITEM_KEY on the stack and drop the display-name comparison.~~FIXED 0.8.3 c94fceab (#10); UniqueItemTest matches_*/compareTo_* now assert tag identity
+4~~P1~~AmmunitionConverter drops a custom name when the template has no lore~~Capture meta after applyAttributes (or apply the attributes to the final ItemBuilder).~~-
+5~~P2~~Serializer order (UNIQUE first) contradicts refresher order (WEAPON first)~~Put UNIQUE first in both registries so a unique wrapper survives a refresh.~~-
+6~~P2~~decorate() resets custom NBT runtime state (ammo, fuel, owner) to factory values~~Override decorate in the weapon, car and unique refreshers to carry over ammo-left, fuel_current and car_owner.~~-
+7~~P2~~Non-movable unique items can be moved via drag or number-key swap~~Handle InventoryDragEvent and hotbar/offhand swaps in UniqueItemInventoryRestrict.~~-
+8~~P1~~Drop_On_Death=false items are destroyed on death instead of kept~~Keep non-dropping unique items and re-add them on respawn; honour Drop_On_Death under KEEP_INVENTORY too.~~-
+9~~P1~~UniqueItemAddon skips bad entries and falls back to BARRIER silently~~log.warn each skipped key and reject unresolvable materials instead of substituting BARRIER.~~-
+10~~P2~~XMaterial.get() may return null and NPE at build time~~Check for null and skip the item with a warning.~~-
+11~~P1~~Attribute values cannot contain commas, so multi-line lore is unreachable~~Let KEY_VALUE_PATTERN accept quoted values (or use ; as the lore separator) and document it.~~ItemParserTest (pins #11)
+12~~P2~~A second {...} group is stripped but never parsed~~Parse every group (merge attributes) or reject a second group loudly.~~ItemParserTest (pins #12)
+13~~P2~~Material fallback uses raw Material.valueOf instead of XMaterial~~Resolve through XMaterial.matchXMaterial in ItemParser.getConverter.~~ItemParserTest (pins #13)
+14~~P2~~Documented DSL attributes (custom_model_data, amount, enchantments...) are ignored~~Implement the advertised attributes in ItemAttributes or remove them from the javadoc.~~-
+15~~P3~~color accepts only Color enum names on leather armour~~Accept hex values and support PotionMeta/MapMeta; log on failure.~~-
+16~~P2~~ItemDslAdapter has no production caller~~Wire ItemDslAdapter into the shop, loot and unique parsers so located errors reach the ConfigReport, or delete it.~~ItemDslAdapterTest
+17~~P2~~Gangland ships a parallel copy of Keystone's item framework~~Migrate to keystone-item's ItemParser and registries (tracked migration item).~~-
+18~~P3~~hasTag predicates run on AIR and trigger six NBT reads plus warn spam~~Return false early for AIR/null in ItemPredicates.hasTag.~~-
+19~~P3~~refresh/decorate return the source instance for null or AIR~~Return a clone (or null) so no shared instance can leak.~~ItemRefresherRegistryTest (pins)
+20~~P2~~Serialised ids are lowercased unconditionally~~Keep the case, or make registry lookups case-insensitive end to end.~~ItemSerializerRegistryTest (pins)
+21~~P2~~addItemToInventory returns false on success~~Return addItem(...) directly and fix any caller.~~UniqueItemTest (pins)
+22~~P3~~Interaction is blocked whenever the item is not Movable~~Add a separate Usable flag, or block only moving, not right-click.~~-
+23~~P3~~Literal "uniqueItem" instead of the UniqueItemKeys constant in four places~~Replace with UniqueItemKeys.UNIQUE_ITEM_KEY.~~-
+24~~P2~~InventoryParser reads Action from Open.Event while the YAML nests it under OnItemClick~~Read Open.Event.OnItemClick.Action and fix phone.yml's RIGHT_CLICK value (see UI-20).~~-
+25~~P3~~/glw item unique give accepts zero and negative amounts~~Validate amount >= 1 and send a usage error.~~-
+26~~P3~~item_unique_info is documented with an argument it does not take~~Fix the commands.json usage string.~~-
+27~~P2~~UniqueItemAddon.clear leaves the FuelService registry populated~~Clear fuel definitions for unique items in clear() (or FuelService.onPreClear).~~-
+28~~P3~~gangland.uniqueitem.<key> permissions are registered but never checked~~Enforce them in LoadUniqueItem and the give command, or stop registering them.~~-
+29~~P3~~Respawn inventory write at default priority may be overwritten~~Delay the give by one tick in onRespawn.~~-
+30~~P3~~Without NBTAPI the whole identity layer silently disables~~Keep NBTAPI a hard dependency and fail loudly if NbtBridge is the no-op accessor at bootstrap.~~-
+31~~P2~~Ammo fallback matches by display name and material~~Require the ammo NBT tag; drop the name-based fallback.~~-
+32~~P2~~Car and fuel refresh rebuilds fuel to max and drops car_owner on trade-in~~Override decorate to carry fuel_current and owner (see IT-06).~~-

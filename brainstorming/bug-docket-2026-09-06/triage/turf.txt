@@ -1,0 +1,39 @@
+1~~P1~~A capture completes into a disbanded gang's id with no event and no cleanup~~Check newOwner != null before setOwnerGangId/persist; on null cancel the contest and fire TurfCaptureFailedEvent.~~CaptureServiceStartAndCompleteTest (pins; flip when fixed)
+2~~P1~~reinforced_defense and garrison_discount buffs are purchasable but do nothing~~Apply CAPTURE_DEFENSE_BONUS in the CaptureService weighting and GARRISON_DISCOUNT in the garrison price.~~-
+3~~P1~~Turf delete leaves contests, boss bars, child rows and NPCs behind~~In TurfManager.delete cancel the contest, fire the failed event, delete child rows and despawn the Quartermaster.~~-
+4~~P2~~Admin setowner leaves bars, defenders and the NPC in contest state~~Fire TurfCaptureFailedEvent(CANCELLED) from TurfSetOwnerCommand.~~-
+5~~P1~~A deleted highest id is reused, so a new turf inherits orphaned rows~~Delete child rows on turf delete (TF-03) and never reuse ids (persist nextId or use autoincrement).~~TurfManagerTest (pins; flip when fixed)
+6~~P2~~TurfLocationTracker.onQuit is never registered, so the cache grows forever~~Annotate with @ListenerHandler (drop the @Bean) or register the listener explicitly.~~-
+7~~P2~~No turf bean implements BeanLifecycle and the stop() methods have no callers~~Implement BeanLifecycle on the TurfConfig beans: stop tasks in onPreClear, restart in onInitialize.~~-
+8~~P2~~The boss bar refresh task has no cancel path~~Store the task and cancel it in onShutdown.~~-
+9~~P2~~The inactivity task's initial delay equals its 24h period~~Use a short initial delay.~~-
+10~~P2~~Auto-release fires no TurfOwnerChangedEvent~~Fire the event and play the owner-cleared sound.~~-
+11~~P2~~"Push CLAIM to zero and steal" is not implemented; the exclude parameter is dead~~Implement the CLAIM<=0 branch (exclude the failed challenger) or delete the dead code and fix the settings.yml comments.~~CaptureServiceHelpersTest (dead call site)
+12~~P2~~Abandon_Grace_Seconds is ignored on owned turfs~~Cancel the contest after the grace window using lastChallengerSeenAt.~~CaptureServiceOwnedTurfTest (pins; flip when fixed)
+13~~P3~~Unboxing a @Nullable challenger id~~Null-check before unboxing.~~-
+14~~P2~~TurfRepository hard casts may ClassCastException on MySQL~~Use Number casts like the sibling repositories.~~-
+15~~P3~~income_amount is stored as Double (BigDecimal loss)~~Store as a string or DECIMAL column.~~-
+16~~P2~~A hardcoded y < 0 || y > 319 filter excludes deep players~~Remove the Y filter; the region is Y-agnostic.~~-
+17~~P3~~PER_DEFENDER_COST is hard-coded~~Move it to turf_powerups.yml and apply GARRISON_DISCOUNT.~~-
+18~~P3~~The buff catalogue shows only 9 entries~~Paginate.~~-
+19~~P2~~The powerup panel does not re-validate ownership on click~~Re-check the turf owner/ally in attemptBuy.~~-
+20~~P2~~The whole garrison is consumed on the first capture start~~Deploy incrementally and refund on an instant cancel; spawn around the fight, not one column.~~GarrisonManagerTest
+21~~P3~~No region size validation; perimeter particles every second~~Validate min/max size and throttle particles.~~-
+22~~P3~~59 TURF_* keys are missing from message_es~~Covered by CM-15.~~-
+23~~P3~~Hardcoded English and "$" in the turf views~~Route through TurfMessageContract and Settings.getMoneySymbol().~~-
+24~~P3~~One-directional ally checks~~Use a symmetric helper (either side).~~GangAllianceTest (addAlly is one-directional)
+25~~P2~~Disbanding a gang does not release its turfs~~Release turfs (fire owner-changed) in GangManager.remove or a gang-delete listener.~~-
+26~~X~~A third gang on an owned turf is ignored (intentional per javadoc)~~No change; documented.~~CaptureServiceOwnedTurfTest (documents)
+27~~P3~~COOLDOWN is not persisted, so a turf reads IDLE after restart~~Derive COOLDOWN from lastCaptureTimestamp on load.~~-
+28~~P3~~Reason.CANCELLED is never fired~~Fire it from delete and setowner (TF-03/04).~~-
+29~~P3~~A cross-world corner wipes both corners; ID_TAKEN is never sent~~Reject the corner instead and add a duplicate-name check.~~-
+30~~P3~~Two admin permission namespaces~~Unify on gangland.command.turf.*.~~-
+31~~P3~~/glw turf buff activates for free (staff tool)~~Document it; optionally charge.~~-
+32~~P3~~prune deletes one row per expired buff on the main thread~~Batch the deletes.~~-
+33~~P3~~remove() loads the whole table~~Delete by id.~~-
+34~~P3~~getTurfsInWorld returns the live list~~Return an unmodifiable copy.~~-
+35~~P3~~Linear scan per damage event in findOwningTurfId~~Index defenders by entity UUID.~~-
+36~~P3~~turf_npcs.yml is never re-read~~Reload in onInitialize (TF-07).~~-
+37~~P3~~Income has no cap and no online requirement~~Cap the multiplier product; optional online requirement.~~ActiveBuffManagerTest
+38~~P3~~The powerup NPC display name is always null~~Pass the configured name.~~-
+39~~P3~~There is no /glw turf rename~~Add the command.~~-

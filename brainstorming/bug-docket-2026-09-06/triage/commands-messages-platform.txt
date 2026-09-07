@@ -1,0 +1,36 @@
+1~~P0~~NPE on every join when Update_Checker.Enable is false~~Null-check updateChecker in CreateAccountListener (or always construct the checker in a disabled state).~~-
+2~~P1~~/glw <sub> help bypasses the subcommand permission~~Route onSubHelp through runExecute, or check sender.hasPermission(sub.getPermission()) before renderHelp.~~-
+3~~P0~~GangCommand never registers: condition "isGangEnabled" never matches~~Change the annotation to condition="gangEnabled" (the field key) or make SettingsLookupImpl also resolve getter names.~~SettingsLookupImplTest (pins; flip when fixed)
+4~~P1~~/glw resource is gated on the scoreboard toggle~~Replace Settings.isScoreboardEnabled() with Settings.isResourcePackEnabled() in DownloadResourceCommand.~~-
+5~~P0~~Balance tab-completion runs a full user-table SELECT per keystroke on the main thread~~Complete from the online/offline UserManager caches, and resolve the target in the action body from the cache first.~~-
+6~~P2~~Console tab-complete of /glw option throws ClassCastException and spams gang-less players~~Guard sender instanceof Player in the completion supplier and drop the chat message.~~-
+7~~P2~~(Player) sender casts in a console-allowed command~~Mark ComponentExecutorCommand user=true or guard every action with an instanceof check. Same as GR-36.~~-
+8~~P2~~Throwable messages are sent verbatim to players~~Send a generic Messages error and log the real message; pass through only PluginException messages. Keystone upstream.~~-
+9~~P1~~Dispatch-level Throwable is only logged; the sender sees nothing and Diagnostics is skipped~~Match Keystone: report to Diagnostics.active() and send CommandMessages.dispatchError().~~-
+10~~P3~~commands.json has 19 dead entries and reload data/inventory/cleanup drift~~Delete the dealer/kit/safe_wand/spawn/warp entries; fix the reload_* entries to match ReloadCommand.initializeArguments.~~InformationManagerTest (drift test; update the count when cleaned)
+11~~P2~~Teleport and Waypoint commands consume the same 17 help entries~~Give TeleportCommand its own teleport_* entries and filter by that prefix.~~-
+12~~P2~~HelpCommand aggregate list is built without sender or permission filtering~~Build the list per sender (permission + dev visibility) at execution time.~~-
+13~~P0~~/glw debug settings prints the MySQL password~~Redact mysqlPassword/mysqlUsername/mysqlHost (any key containing password or secret) in the settings dump.~~-
+14~~P2~~TimerCommand map keyed by the live CommandSender is never cleared~~Key by UUID and remove (and stop the SequenceTimer) on PlayerQuitEvent.~~-
+15~~P2~~message_es.yml is missing 114 message paths~~Add the missing keys (turf, banker, invite, ally, shop) or make LanguageLoader fall back to message_en for missing paths.~~MessagesTest (findMissingPaths guard)
+16~~P3~~Only 4 of 9 ArgumentMessages slots are localised~~Install confirmRequired, confirmPrompt, didYouMean, selectorSyntax and selectorNoPlayer from Messages in GanglandContext.~~-
+17~~P1~~Any "help" token anywhere in the line renders help instead of executing~~Treat "help" as help only when it is args[0] or args[1].~~-
+18~~P3~~Suggestions always say /glw even via the /gangland alias~~Pass the typed label to runExecute.~~-
+19~~P3~~Help page-range errors are raw English~~Use Commands.Syntax.Page_Invalid through Messages in HelpInfo.~~HelpInfoTest (pins the text; update when localised)
+20~~P2~~Missing general/general_page JSON keys put null in the help list (NPE)~~Null-check the two lookups and log a clear error.~~-
+21~~P3~~parallelStream over the command registry during construction~~Use a plain stream.~~-
+22~~P2~~A missing or malformed commands.json kills bootstrap with no message~~Catch and rethrow as PluginException("commands.json missing/invalid") with the path.~~-
+23~~P3~~InformationManager is a static on the command base~~Documented trade-off; inject per command when Keystone 2.0 lands.~~-
+24~~P3~~Developer UUIDs hard-coded in DevCommandVisibilityFilter~~Move the list to settings.yml.~~-
+25~~P2~~FAILED_DOWNLOAD and DECLINED never call markUnloaded~~Call markUnloaded(player) in both branches.~~-
+26~~P1~~The DECLINED fallback button runs a dev-filtered command players cannot use~~Point the button at a player-visible command (e.g. /glw resource) or give it its own permission.~~-
+27~~P2~~/glw update throws NPE when the updater is disabled~~Null-check getUpdateChecker() and send an "updater disabled" message.~~-
+28~~P2~~Placeholder provider chain is rebuilt on every convert call~~Cache the CompositePlaceholderProvider; rebuild only when resolvers change.~~-
+29~~P3~~Resolver lambda ignores the composite's offlinePlayer argument~~Use the argument the composite passes.~~-
+30~~P3~~Placeholder branch uses contains() instead of startsWith()~~Use startsWith.~~-
+31~~P2~~Unresolvable placeholders render as "NA"~~Return null so the token stays visible as %typo%.~~-
+32~~P2~~Placeholder resolution has no main-thread guard~~Guard with Bukkit.isPrimaryThread() and either reschedule or read immutable snapshots.~~-
+33~~P3~~TimeMessages singleton may be vestigial~~Verify Keystone consumes TimeMessagesProvider; delete the class if not.~~TimeMessagesTest (documents idempotency)
+34~~P3~~gangland-core feature.Executor has no subclass~~Delete it.~~-
+35~~P3~~Keystone process-wide statics (ArgumentMessages, CommandManager.defaultInstance)~~Keystone 2.0 item; no Gangland action.~~-
+36~~P3~~Reload success/failure text is hard-coded English~~Route through Messages keys.~~-

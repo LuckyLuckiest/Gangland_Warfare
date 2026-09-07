@@ -1,0 +1,42 @@
+1~~P0~~The configured explosion damage is used as the explosion radius (50-block rockets)~~Add a dedicated Explosion_Radius (default per projectile type) for the radius and keep Explosion_Damage for damage.~~-
+2~~P1~~Rocket damage is hard-coded 20 * falloff~~Use weapon.getDamageData().getExplosionDamage() in SteppedProjectileTask.~~-
+3~~P1~~Biological weapons deal no health damage~~Let the impact handler fall through to the damage pipeline (or apply the damage inside the handler).~~-
+4~~P1~~Grenades damage twice (createExplosion plus the manual loop)~~Create the explosion without entity damage and keep only the manual loop.~~-
+5~~P2~~A non-sneaking left click on scope-less weapons is consumed by the scope branch~~validateScope must return false when scopeData == null.~~-
+6~~P0~~Every getWeapon(type) with a null UUID mints a registry entry and a DB row~~Return the template (or a transient clone) for converters, refreshers and messages; mint only on an actual give; prune unowned rows in the cleanup.~~WeaponCloneTest (context)
+7~~P1~~getModifiersData() NPEs for weapons without a Modifiers section~~Create an empty ModifiersData by default in the parser.~~ProjectileStateTest (pins; flip when fixed)
+8~~P1~~Spread reset compares ticks to milliseconds, so spread never accumulates~~Convert resetTime ticks to ms (x50) before comparing.~~SpreadManagerTest (pins; flip when fixed)
+9~~P1~~Per-weapon state maps are never cleared on quit, death or shutdown~~Clear every WeaponInteract map for the player's weapons on quit and in onShutdown; cancel the tasks.~~-
+10~~P1~~Reload timers survive quit and shutdown; the reloading flag can stick~~Cancel reload timers on quit, death and shutdown and always reset reloading.~~-
+11~~P2~~Division by zero for Capacity 0 or num-0~~Validate > 0 at parse time.~~-
+12~~P2~~A cancelled shot refunds 1 instead of Consumed_Amount~~Refund projectileData.getConsumed().~~-
+13~~P2~~Consumed_Amount defaults to 0, giving an infinite magazine~~Default to 1.~~WeaponConsumeShotTest (pins; flip when fixed)
+14~~P1~~Biological ammo is never written to NBT; melee and throwable never consume~~Call updateWeaponData after consumeShot in BiologicalAction; decide and implement ammo for melee/throwable across all five types.~~WeaponConsumeShotTest (#14 first half)
+15~~P2~~An empty Effects_Per_Level gives index -1~~Validate at parse time and guard in the action.~~-
+16~~P2~~ReloadType.amount is shared mutable enum state~~Store the amount on the weapon's AmmunitionData, not the enum.~~TypeEnumParsingTest (pins; flip when fixed)
+17~~X~~WITHDRAWN: Consume_Rate is live (IncendiaryWeapon.consumeShot)~~No change.~~WeaponConsumeShotTest (corrected)
+18~~P3~~WeaponEntityDamageEvent and WeaponKillEntityEvent are never fired~~Fire them from the damage pipeline (CarDamageListener depends on one) or delete them.~~-
+19~~P2~~AP damage is dealt without a damager (no kill credit)~~Use target.damage(amount, player).~~-
+20~~P3~~Grenade self-damage is unattributed and double-counted~~Skip the manual self-damage or attribute it.~~-
+21~~P3~~pendingKillerWeapon leaks for survivors~~Expire entries after N ticks.~~-
+22~~P2~~setInvulnerable(false) permanently clears the target's flag~~Do not touch invulnerability; skip invulnerable targets.~~-
+23~~P3~~setNoDamageTicks(0) removes i-frames (intentional)~~Make it configurable per weapon.~~-
+24~~P2~~UUID.fromString on raw NBT can throw out of the interact handler~~try/catch and treat as an unknown weapon.~~-
+25~~P3~~Async watchdog timers call Timer.stop/cancel~~Verify Keystone Timer thread-safety; otherwise use start(false).~~-
+26~~P3~~The hitscan origin is the eye while the tracer starts at the muzzle~~Use one origin for both.~~-
+27~~P3~~Hardcoded English strings and a literal section sign in BiologicalAction~~Route through Messages and ChatUtil.color.~~-
+28~~P3~~Raw Sound.ENTITY_GENERIC_EXPLODE~~Use SoundEffect.~~-
+29~~P3~~shootInterval schedules a new timer per shot (dormant)~~Reuse one timer and fix the magazine-vs-consume comparison.~~-
+30~~P2~~An unknown Category becomes OTHER; bad materials become FEATHER or IRON_PICKAXE~~Reject unknown categories and materials with a WARN and skip the file.~~TypeEnumParsingTest (pins #30)
+31~~P2~~Parse failures are logged at info and tab-completion still offers the weapon~~Log at WARN and complete from the loaded registry.~~-
+32~~P2~~Throwables share one UUID per type, so press, scope and spread state is shared between players~~Key throwable state per player (UUID + player).~~-
+33~~P3~~Durability.Base 0 divides by zero and silently yields 0~~Validate > 0.~~DurabilityCalculatorTest (pins; framing corrected)
+34~~P3~~RecoilManager.clone without Cloneable~~Implement Cloneable or delete it.~~-
+35~~P3~~Per_Shot affects the SINGLE press-lock window~~Use 1 for the SINGLE lock.~~-
+36~~P3~~A fractional Cooldown is truncated to 0~~Parse as ticks with rounding (or document integer ticks) and log.~~SelectiveFireTest (second half)
+37~~P3~~The cosmetic id is unregistered before the task ends~~Unregister when the task finishes.~~-
+38~~P2~~Plugin fire is not reverted on shutdown~~Revert placed FIRE blocks in onShutdown.~~-
+39~~P3~~A Config_Version key skips the file silently~~Log at WARN.~~-
+40~~P3~~Carried-ammo count uses full ItemStack equality~~Match by the ammo NBT tag.~~-
+41~~P3~~Dead flare ammunition entry~~Remove it or reference it.~~-
+42~~P2~~The five action types diverge on ammo, durability, events and damage~~Extract one shared shot pipeline used by all five actions.~~WeaponConsumeShotTest (all five types)

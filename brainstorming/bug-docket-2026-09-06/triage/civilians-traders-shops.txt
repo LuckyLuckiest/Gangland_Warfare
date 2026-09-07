@@ -1,0 +1,27 @@
+1~~P0~~Barter consumes rejected (value 0) stacks~~Collect only valued stacks (mirror SellView.onConfirm) and return the rest to the player.~~ShopBarterServiceTest (service level)
+2~~P1~~TraderRespawnService.cancelAll never cancels the scheduled BukkitTask~~Keep the BukkitTask handles and cancel them.~~-
+3~~P2~~The delayed spawnAllFromRepository can run after a reload~~Store the task and cancel it in onPreClear.~~-
+4~~P1~~ESC on /glw shop edit rewrites the shop file and strips comments~~Fire ShopEditedEvent only when the definition changed (dirty flag).~~-
+5~~P2~~Save renumbers every buy entry Slot~~Preserve the authored slots, or drop the Slot field and stop validating it.~~-
+6~~P3~~Slot is never validated against Size~~Validate slot < size.~~ShopYamlReaderTest
+7~~P2~~Purchase overflow is dropped on the ground and INVENTORY_FULL is never returned~~Check free space for the full amount before withdrawing and return INVENTORY_FULL.~~ShopPurchaseServiceTest (pins #7; flip when fixed)
+8~~P2~~WeakHashMap<Player, State> is defeated by strong viewer references~~Key by UUID and remove on quit.~~-
+9~~P3~~Non-prefixed Weapon_Pool entries are added to both pools~~Add only weapon:-prefixed entries to weaponPool.~~-
+10~~P2~~Item_Pool is parsed but never read~~Give civilians the items on spawn or remove the key.~~-
+11~~P2~~A killed player is re-targeted on return~~Clear targetPlayerId in clearCivilianTargets.~~-
+12~~P2~~A missing Min_Friend_Discount gives a 100% discount~~Default to a sane value (e.g. 0.5) and clamp priceMultiplier.~~-
+13~~P2~~findClosestPlayer NPEs when the trader's world is missing~~Guard getWorld() and skip the trader.~~-
+14~~P3~~requireNonNull on nullable worlds~~Guard and skip the cycle.~~-
+15~~P2~~Attribute.MAX_HEALTH vs the 1.16 floor~~Same as US-07.~~-
+16~~P3~~ECONOMY_ERROR on tip only plays a sound~~Send a message.~~-
+17~~P3~~Shop price is not rounded to 2 dp~~setScale(2, HALF_UP).~~-
+18~~P3~~MAX_MODE_CYCLE is hard-coded~~Use ShopUiSettings.getMaxModeMultiplier().~~-
+19~~P3~~Mood map is never persisted or pruned~~Prune on quit and document the reset.~~-
+20~~P3~~remove() does a full table load~~Delete by the known row.~~-
+21~~P2~~A killed trader drops its equipment~~Clear drops and XP in TraderDamageListener like CivilianDeathListener.~~-
+22~~P3~~A price edit may mutate the shared ItemStack (unverified)~~Deep-copy the ItemStacks in deepCopySell.~~-
+23~~P3~~Concurrent admin saves are last-writer-wins~~Merge on save or lock the shop while editing.~~-
+24~~P3~~commands.json lacks a "civilian" root entry~~Add it.~~-
+25~~P2~~Behaviour.Enabled false also disables proximity spawning~~Split the two timers behind separate settings.~~-
+26~~P3~~Group keys include nanoTime~~Use a stable id.~~-
+27~~P3~~ignoreCancelled on a non-Cancellable event~~Remove the flag.~~-

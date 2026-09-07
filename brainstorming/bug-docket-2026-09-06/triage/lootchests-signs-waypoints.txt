@@ -1,0 +1,34 @@
+1~~P0~~Waypoint teleport, select and list ignore the permission and gang checks~~Apply waypoint.getPermission() and the gang check in the action bodies, not only in the completers.~~-
+2~~P2~~The cracking mini-game is unreachable (dead feature)~~Wire crackingEnabled from LootChestSettings and feed addProgress from a listener, or remove the feature.~~CrackingSessionTest (machine pinned)
+3~~P0~~Buying more than fits voids items after payment~~Check space for the full amount in canExecute; drop leftovers or refund.~~-
+4~~P2~~Sell signs pay before taking the item; aspect priorities are never applied~~Use getSortedAspects() in AspectBasedSignHandler.~~AspectBasedSignHandlerTest (#4 pins the raw order)
+5~~P2~~The respawn time is written as long and read as int, so it is always 300~~Read with getLongTagData.~~-
+6~~P1~~Static Player-keyed maps in WaypointTeleport (leak, cooldown bypass by relog)~~Key by UUID, make them instance fields and clear on quit.~~-
+7~~P1~~refactorIds mutates the waypoint map async and NPEs on a missing twin~~Run on the main thread and stop renumbering ids (use stable ids).~~-
+8~~P2~~Three permission node shapes for waypoints~~Standardise on gangland.waypoint.<name> everywhere.~~-
+9~~P2~~gang_id -1 violates the FK on MySQL~~Write NULL for non-gang waypoints.~~-
+10~~P2~~yaw/pitch Float vs double casts~~Use Number casts.~~-
+11~~P2~~Looted chests get no hologram or timer after restart~~On load start a cooldown or reset is_looted.~~-
+12~~P2~~A null world NPEs in hologram spawn~~Guard getWorld() (skip and log).~~-
+13~~P2~~The first viewer's close starts the cooldown; respawn re-syncs stale viewers~~Start the cooldown when the last viewer closes and close remaining viewers before respawn.~~-
+14~~P2~~Removing a chest leaves active sessions~~Close sessions and clear the maps in unregisterChest.~~-
+15~~P2~~Quitting with a chest open never starts the cooldown~~Run the completion handler in cancelSession.~~-
+16~~P2~~Allowed_Tiers and tierId are never applied~~Filter entries by tier in generateLoot.~~LootTableTest (pins; flip when fixed)
+17~~P2~~Minimum >= Maximum throws inside the handler~~Validate at load and guard nextDouble.~~-
+18~~P3~~openedLootChests is keyed by Player and rewards on open without taking~~Key by UUID and reward on close/take.~~-
+19~~P0~~Any player can create a shop sign and there is no break protection~~Check the permission on SignChangeEvent (SIGN_NO_PERM) and add a BlockBreakEvent guard for owner/admin.~~-
+20~~P2~~Interaction re-parses but never validates signs (negatives honoured)~~Run validateSign in the interact path or validate inside the parser.~~AbstractSignParserTest (pins)
+21~~P3~~Editing a formatted [BUY] sign fails validation~~Strip brackets in validateSignType.~~-
+22~~P2~~Unguarded Enum.valueOf on sign content~~Same as WB-21.~~-
+23~~P3~~Loot chest events are Cancellable but never checked~~Honour isCancelled after callEvent.~~-
+24~~P2~~cooldown_bypass is registered but force_rank is checked~~Check the registered node.~~-
+25~~P2~~Async CountdownTimer callbacks mutate plain HashMaps~~Use start(false).~~-
+26~~P2~~Reconfirm is keyed by player only, skipping the price confirm for another waypoint~~Key by (player, waypoint).~~-
+27~~P3~~createWaypointName.get(player).get() can NPE~~Null-guard.~~-
+28~~P1~~Invulnerability is never cleared on quit or reload~~Clear on quit and in onShutdown/onPreClear.~~-
+29~~P3~~The Countdown_Timer config key is unread~~Use it or remove it.~~-
+30~~P3~~The wand writes to the currently held item, not the GUI's item~~Capture the ItemStack at GUI open.~~-
+31~~P3~~Allowed-block substring match~~Use an exact Material match.~~-
+32~~P3~~Zero-weight tables always return the last entry~~Fall back to a uniform choice.~~LootTableTest
+33~~P3~~Bulk actions are identical to single clicks~~Implement a quantity or drop the feature.~~-
+34~~P2~~One bad sign format aborts all remaining registrations~~Catch per format and continue.~~-
