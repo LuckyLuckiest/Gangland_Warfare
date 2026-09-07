@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.gangland.data.economy.GanglandMoneyDropClassifier;
 import org.luckyraven.gangland.gang.wanted.WantedKillTrackers;
-import org.luckyraven.gangland.turf.turfnpcs.TurfNpcContracts;
 import org.luckyraven.keystone.bean.Bean;
 
 import java.lang.reflect.Method;
@@ -13,13 +12,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
- * Pins the registration type of the four core holder seams a runtime module installs a delegate into.
+ * Pins the registration type of the core holder seams a runtime module installs a delegate into.
  *
  * <p>Keystone's {@code DependencyContainer.registerInstance(type, instance)} files a bean under the {@code @Bean}
  * method's <em>declared</em> return type plus the concrete class's supertypes — never under the concrete class
  * itself. A holder declared as its interface (e.g. {@code MoneyDropClassifier}) is therefore invisible to
  * {@code container.getInstance(GanglandMoneyDropClassifier.class)}, and the module's {@code @PostConstruct}
  * install hook throws at boot whenever the module is present. Found by the flip-1 code review (2026-09-07).
+ *
+ * <p>The {@code turfNpcContracts} holder pin moved to the turf module's own
+ * {@code TurfModuleConfigHolderSeamTest} in the 0.8.4 turf flip (group C, T7): {@code TurfConfig} was deleted from
+ * core when its beans moved verbatim into {@code TurfModuleConfig}, and core code may not name a module type.
  */
 class HolderSeamBeanTypeTest {
 
@@ -36,11 +39,6 @@ class HolderSeamBeanTypeTest {
 	@Test
 	void wantedKillTrackersBeanIsDeclaredAsTheHolderClass() {
 		assertDeclaredReturnType(DataConfig.class, "wantedKillTrackers", WantedKillTrackers.class);
-	}
-
-	@Test
-	void turfNpcContractsBeanIsDeclaredAsTheHolderClass() {
-		assertDeclaredReturnType(TurfConfig.class, "turfNpcContracts", TurfNpcContracts.class);
 	}
 
 	private static void assertDeclaredReturnType(Class<?> configuration, String beanMethod, Class<?> holder) {

@@ -15,6 +15,7 @@ plugins/
     │   ├── gangland-mail-0.8.2.jar      the mail module (gang invites, alliance requests)
     │   ├── cops-n-crooks-0.8.4.jar      cops, civilians, jails, detainment, trader/banker NPCs
     │   ├── gangland-gadget-0.8.4.jar    cars and jetpacks
+    │   ├── gangland-turf-0.8.4.jar      turf capture, contribution, garrison gameplay
     │   └── .stale/                      replaced jars, deleted on the next start
     └── settings.yml …
 ```
@@ -29,13 +30,14 @@ plugins/
 | mail — `MailManager`, gang invites, alliance requests, join/quit surfacing | `gangland-mail` | runtime module since 0.8.2 (the pilot) |
 | cops-n-crooks — cops, civilians, jails, detainment, trader/banker NPCs, turf-NPC powerups | `cops-n-crooks` | runtime module since 0.8.4 |
 | gadget — cars (`/glw car`), jetpacks | `gangland-gadget` | runtime module since 0.8.4 |
-| turf, weapon | `gangland-turf`, `gangland-weapon` | still compile-time dependencies of `gangland-impl`; next in line |
+| turf — `TurfManager`, capture, powerups/garrison, the `/glw turf` tree | `gangland-turf` | runtime module since 0.8.4 |
+| weapon | `gangland-weapon` | still a compile-time dependency of `gangland-impl`; next in line |
 
 **Order for the remaining flips.** The feature poms form a DAG (`gadget → weapon`, `cops-n-crooks → weapon + turf`),
-so a feature can only be flipped once nothing left in the core's compile closure depends on it. With cops-n-crooks
-and gadget already flipped, the remaining incremental order is **turf → weapon** (or both in one wave).
-`cops-n-crooks`' and `gadget`'s `module.yml` carry no `Depends:` yet; `cops-n-crooks` gains `[turf]` at the turf
-flip and `[turf, weapon]` at the weapon flip, and `gadget` gains `[weapon]` at the weapon flip.
+so a feature can only be flipped once nothing left in the core's compile closure depends on it. With cops-n-crooks,
+gadget and turf already flipped, the remaining incremental order is **weapon** only.
+`cops-n-crooks`' `module.yml` now carries `Depends:` with `- turf`; `gadget`'s carries no `Depends:` yet.
+`cops-n-crooks` gains `[weapon]` and `gadget` gains `[weapon]` at the weapon flip.
 
 ## How the core loads modules
 
@@ -73,7 +75,8 @@ A module is a Maven module under `gangland-features/` that depends on `gangland-
   ```
 
   `Depends:` lists other module ids when needed (block-style list). `Artifact` is optional and only feeds the
-  update service.
+  update service. Live example: `cops-n-crooks` declares `Depends:` with `- turf` because its turf-NPC views
+  consume `turf.data.Turf` and the powerup managers.
 - A `Main` class implementing Keystone's `KeystoneModule`, declaring its configuration classes and listener,
   command and repository packages — see `MailModule`.
 - Its `@Configuration` class(es), its `@Repository` classes and `Table`s, its `@ListenerHandler` classes (under
@@ -90,7 +93,12 @@ A module is a Maven module under `gangland-features/` that depends on `gangland-
   into (`items/`, `npc/`, `turf/`, `weapon/`), the module's file sits at that shared path too, not under
   `<module>/` — e.g. the gadget module ships `src/main/resources/items/cars.yml`, resolving to the `items/cars.yml`
   data-folder path the core's `ammunition.yml`/`wearables.yml`/`unique_items.yml` already share, because existing
-  servers already look for the file there.
+  servers already look for the file there. A second worked example: the turf module ships
+  `src/main/resources/turf/turf_powerups.yml`, registered by a **KERNEL-phase** module configuration
+  (`TurfModuleFileConfig`) rather than a method on the module's main CONFIG-phase configuration — the registration
+  must run before `FileManager` is used, and `FileManager` is itself a KERNEL bean, so a `@Configuration` at any
+  later phase would race the CONFIG-phase code (`PowerupRegistryLoader`) that calls
+  `fileManager.checkFileLoaded("turf_powerups")`.
 
 Modules may import core types directly (`Messages`, `Settings`, managers): the compile-time direction is
 module → core. Contract interfaces (`MailRepositoryContract`, `TurfMessageContract`, …) stay as the test seam;
@@ -141,7 +149,7 @@ Holders introduced by the **cops-n-crooks** flip (0.8.4):
 | `GanglandMoneyDropClassifier` | `NpcMoneyDropSource` | `org.luckyraven.gangland.data.economy` | classifies no NPC as a cop/civilian cash drop | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`CopsMoneyDropSource`) |
 | `BankTiers` | `BankTierView` | `org.luckyraven.gangland.data.economy` | `tierFor(...)` returns `null` — no tier cap, no daily deposit limit, no death-penalty insurance discount, empty `%..bank_tier%` placeholders | `CopsNCrooksModuleConfig`'s `installCoreSeams()` |
 | `WantedKillTrackers` | `WantedKillTracker` | `org.luckyraven.gangland.gang.wanted` (gangland-domain) | `isActive()` false — kill combo and "counts for wanted" both disabled, `EntityDamageListener` falls back to its pre-combo branches | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`KillComboWantedTracker`) |
-| `TurfNpcContracts` | `TurfNpcContract` | `org.luckyraven.gangland.turf.turfnpcs` (gangland-turf, still core) | all four methods no-op — `GarrisonDeployListener` sees an inert contract, garrison deployment silently does nothing | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`TurfNpcContractImpl`) |
+| `TurfNpcContracts` | `TurfNpcContract` | `org.luckyraven.gangland.turf.turfnpcs` (gangland-turf; `turfNpcContracts()` is now registered by `TurfModuleConfig` in the turf module, moved there verbatim by the turf flip) | all four methods no-op — `GarrisonDeployListener` sees an inert contract, garrison deployment silently does nothing | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`TurfNpcContractImpl`) |
 
 Contribution paths added by the cops-n-crooks flip: `BankMenuContribution` (`parent() == "bank"`, attaches
 `/glw bank menu`, queried by `BankCommand`) and `TurfPowerupNpcContribution` (`parent() == "turf"`, attaches

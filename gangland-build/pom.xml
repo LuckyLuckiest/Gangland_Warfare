@@ -79,6 +79,7 @@
                             <exclude>org.luckyraven:gangland-mail</exclude>
                             <exclude>org.luckyraven:cops-n-crooks</exclude>
                             <exclude>org.luckyraven:gangland-gadget</exclude>
+                            <exclude>org.luckyraven:gangland-turf</exclude>
                         </excludes>
                     </artifactSet>
                 </configuration>
@@ -127,6 +128,11 @@
                                     <artifactId>gangland-gadget</artifactId>
                                     <version>${project.version}</version>
                                 </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.luckyraven</groupId>
+                                    <artifactId>gangland-turf</artifactId>
+                                    <version>${project.version}</version>
+                                </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>
@@ -159,6 +165,12 @@
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>gangland-gadget</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-turf</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>

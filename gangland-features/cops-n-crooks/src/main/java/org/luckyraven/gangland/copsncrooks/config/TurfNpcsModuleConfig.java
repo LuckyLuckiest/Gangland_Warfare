@@ -37,7 +37,7 @@ import org.luckyraven.keystone.persistence.FileManager;
  * produces or wires a {@code copsncrooks.npc.turf} / {@code copsncrooks.npc.civilian} type, so there is no
  * turf-only remainder. {@link #turfNpcContractImpl} returns the concrete {@link TurfNpcContractImpl} (not the
  * {@code TurfNpcContract} interface) so nothing registers a second bean under that interface — the core
- * {@code TurfNpcContracts} holder (seam 4, {@code TurfConfig.turfNpcContracts()}) is the only producer of
+ * {@code TurfNpcContracts} holder (seam 4, {@code TurfModuleConfig.turfNpcContracts()}) is the only producer of
  * {@code TurfNpcContract}, and {@code CopsNCrooksModuleConfig.installCoreSeams()} fetches this bean by its concrete
  * type to install into it.
  */

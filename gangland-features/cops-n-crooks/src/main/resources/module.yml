@@ -4,4 +4,6 @@ Name: Cops N Crooks
 Version: ${project.version}
 Main: org.luckyraven.gangland.copsncrooks.CopsNCrooksModule
 Host_Api: 0.8
+Depends:
+  - turf
 Artifact: org.luckyraven:cops-n-crooks

@@ -178,7 +178,6 @@ public class KernelConfig {
 		fm.addFile(new FileHandler(gangland, "loot_chests", "lootchests", ".yml"), true);
 		fm.addFile(new FileHandler(gangland, "tiers", "lootchests", ".yml"), true);
 
-		fm.addFile(new FileHandler(gangland, "turf_powerups", "turf", ".yml"), true);
 		return fm;
 	}
 

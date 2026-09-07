@@ -24,6 +24,14 @@
             <groupId>org.luckyraven</groupId>
             <artifactId>keystone-item</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-command</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-module</artifactId>
+        </dependency>
         <!-- Spigot Build -->
         <dependency>
             <groupId>org.spigotmc</groupId>
@@ -43,6 +51,7 @@
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>gangland-core</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
@@ -51,6 +60,7 @@
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>gangland-domain</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <!-- XSeries dependency -->
@@ -63,6 +73,15 @@
         <dependency>
             <groupId>de.tr7zw</groupId>
             <artifactId>item-nbt-api-plugin</artifactId>
+        </dependency>
+
+        <!-- The host (core) jar. Provided: at runtime this module is loaded from plugins/Gangland_Warfare/modules/
+             by Keystone's ModuleLoader, whose parent is the host plugin's classloader, so every impl class
+             resolves from there. Dependency direction is module -> core; core never names a turf type. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-impl</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
