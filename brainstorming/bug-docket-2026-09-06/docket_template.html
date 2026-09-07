@@ -1,0 +1,493 @@
+<title>Gangland Warfare Bug Docket</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ground: #EDF0F4; --surface: #FFFFFF; --surface-2: #F6F8FA;
+  --ink: #141922; --ink-2: #333B47; --muted: #5A6473;
+  --line: #D3D9E2; --line-2: #E6EAF0;
+  --accent: #2451C8; --accent-ink: #FFFFFF; --accent-soft: #E3EAFB;
+  --hazard: #C9A227;
+  --p0: #B8302F; --p0-soft: #F8E3E2;
+  --p1: #B36F0E; --p1-soft: #FBEDD3;
+  --p2: #3F6A99; --p2-soft: #E2ECF6;
+  --p3: #6B7480; --p3-soft: #EDF0F3;
+  --px: #8A93A0; --px-soft: #F1F3F6;
+  --ok: #2F7D4F; --ok-soft: #DFF1E5;
+  --code-bg: #F1F3F7;
+  --shadow: 0 1px 0 rgba(20,25,34,.04), 0 8px 24px -16px rgba(20,25,34,.25);
+  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: "IBM Plex Mono", "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0E1218; --surface: #161B23; --surface-2: #1C222C;
+    --ink: #E7EBF1; --ink-2: #C9D1DC; --muted: #9AA5B5;
+    --line: #2A3241; --line-2: #222937;
+    --accent: #7B9BFF; --accent-ink: #0E1218; --accent-soft: #1E2A4A;
+    --hazard: #E0B94A;
+    --p0: #F07070; --p0-soft: #43201F;
+    --p1: #E5A54A; --p1-soft: #3E2E14;
+    --p2: #7FA8D6; --p2-soft: #1C2B3D;
+    --p3: #9AA5B5; --p3-soft: #1F2631;
+    --px: #7C8794; --px-soft: #1A202A;
+    --ok: #63C287; --ok-soft: #16331F;
+    --code-bg: #10151C;
+    --shadow: 0 1px 0 rgba(0,0,0,.3), 0 8px 24px -16px rgba(0,0,0,.7);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0E1218; --surface: #161B23; --surface-2: #1C222C;
+  --ink: #E7EBF1; --ink-2: #C9D1DC; --muted: #9AA5B5;
+  --line: #2A3241; --line-2: #222937;
+  --accent: #7B9BFF; --accent-ink: #0E1218; --accent-soft: #1E2A4A;
+  --hazard: #E0B94A;
+  --p0: #F07070; --p0-soft: #43201F;
+  --p1: #E5A54A; --p1-soft: #3E2E14;
+  --p2: #7FA8D6; --p2-soft: #1C2B3D;
+  --p3: #9AA5B5; --p3-soft: #1F2631;
+  --px: #7C8794; --px-soft: #1A202A;
+  --ok: #63C287; --ok-soft: #16331F;
+  --code-bg: #10151C;
+  --shadow: 0 1px 0 rgba(0,0,0,.3), 0 8px 24px -16px rgba(0,0,0,.7);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.55; font-variant-numeric: tabular-nums; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+code { font-family: var(--mono); font-size: .86em; background: var(--code-bg); border: 1px solid var(--line-2); border-radius: 3px; padding: .05em .35em; color: var(--ink-2); overflow-wrap: anywhere; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.1; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(2rem, 4vw, 2.9rem); font-weight: 700; }
+h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: .01em; }
+.eyebrow { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .12em; font-size: .76rem; color: var(--muted); }
+.muted { color: var(--muted); }
+button { font: inherit; color: inherit; }
+
+/* top bar */
+.topbar { position: sticky; top: 0; z-index: 30; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 1.5rem; padding: .55rem 1.5rem; background: var(--surface); border-bottom: 1px solid var(--line); }
+.topbar::before { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: repeating-linear-gradient(90deg, var(--hazard) 0 18px, transparent 18px 28px); opacity: .7; }
+.tb-home { display: flex; flex-direction: column; line-height: 1.05; }
+.tb-home .eyebrow { font-size: .64rem; }
+.tb-title { font-family: var(--display); font-weight: 700; font-size: 1.25rem; letter-spacing: .02em; }
+.tb-meta { display: flex; align-items: center; gap: .6rem; font-family: var(--mono); font-size: .72rem; color: var(--muted); justify-content: center; flex-wrap: wrap; }
+.tb-meta .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--line); }
+.sync { display: inline-flex; align-items: center; gap: .4rem; font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: .74rem; color: var(--muted); white-space: nowrap; }
+.sync::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+.sync[data-state="live"] { color: var(--ok); } .sync[data-state="live"]::before { background: var(--ok); }
+.sync[data-state="local"] { color: var(--p1); } .sync[data-state="local"]::before { background: var(--p1); }
+.sync[data-state="error"] { color: var(--p0); } .sync[data-state="error"]::before { background: var(--p0); }
+@media (max-width: 760px) { .topbar { grid-template-columns: 1fr auto; } .tb-meta { display: none; } }
+
+/* layout */
+.main { max-width: 1240px; margin: 0 auto; padding: 1.5rem 1.5rem 4rem; }
+.hero { padding-bottom: 1.4rem; border-bottom: 1px solid var(--line); }
+.hero h1 { margin: .3rem 0 .7rem; max-width: 26ch; }
+.lede { font-size: 1.02rem; color: var(--ink-2); max-width: 66ch; margin: 0 0 .6rem; }
+.fine { font-size: .84rem; color: var(--muted); max-width: 70ch; margin: 0; }
+.fine code { font-size: .8em; }
+
+/* docket strip (stat tiles) */
+.strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .6rem; min-width: 0; margin-top: 1.4rem; }
+.tile { display: flex; flex-direction: column; gap: .15rem; padding: .7rem .9rem .6rem; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; border-top: 3px solid var(--tile); cursor: pointer; text-align: left; box-shadow: var(--shadow); min-width: 0; }
+.tile:hover { border-color: var(--accent); border-top-color: var(--tile); }
+.tile[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); border-top-color: var(--tile); }
+.tile .t-label { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .1em; font-size: .68rem; color: var(--muted); white-space: nowrap; }
+.tile .t-num { font-family: var(--display); font-weight: 700; font-size: 1.9rem; line-height: 1; color: var(--ink); }
+.tile .t-sub { font-size: .76rem; color: var(--muted); overflow-wrap: anywhere; }
+.tile .t-sub b { color: var(--ok); font-weight: 600; }
+.tile-p0 { --tile: var(--p0); } .tile-p1 { --tile: var(--p1); } .tile-p2 { --tile: var(--p2); } .tile-p3 { --tile: var(--p3); } .tile-x { --tile: var(--px); }
+@media (max-width: 760px) { .strip { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* controls */
+.controls { position: sticky; top: 52px; z-index: 20; display: flex; flex-wrap: wrap; gap: .5rem .7rem; align-items: center; padding: .7rem 0; margin: 0 0 .6rem; background: var(--ground); border-bottom: 1px solid var(--line-2); }
+.controls input[type=search], .controls select { font: inherit; font-size: .88rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 3px; padding: .38rem .6rem; }
+.controls input[type=search] { flex: 1 1 220px; min-width: 160px; }
+.chipset { display: inline-flex; gap: .3rem; flex-wrap: wrap; }
+.chip { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; font-size: .78rem; padding: .28rem .6rem; border-radius: 3px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; color: var(--ink-2); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+.chip.c-p0[aria-pressed="true"] { background: var(--p0); border-color: var(--p0); color: #fff; }
+.chip.c-p1[aria-pressed="true"] { background: var(--p1); border-color: var(--p1); color: #fff; }
+.chip.c-p2[aria-pressed="true"] { background: var(--p2); border-color: var(--p2); color: #fff; }
+.chip.c-p3[aria-pressed="true"] { background: var(--p3); border-color: var(--p3); color: #fff; }
+.chip.c-x[aria-pressed="true"] { background: var(--px); border-color: var(--px); color: #fff; }
+.ctl-label { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .1em; font-size: .68rem; color: var(--muted); margin-left: .3rem; }
+.count { font-family: var(--mono); font-size: .78rem; color: var(--muted); margin-left: auto; white-space: nowrap; }
+.btn { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; font-size: .78rem; padding: .3rem .65rem; border-radius: 3px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; color: var(--ink-2); white-space: nowrap; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { color: var(--accent-ink); filter: brightness(1.08); }
+
+/* groups and rows */
+.group { margin: 1.4rem 0 0; }
+.group-head { display: flex; align-items: baseline; gap: .8rem; padding: .3rem 0 .5rem; flex-wrap: wrap; }
+.group-head h2 { display: inline-flex; align-items: baseline; gap: .5rem; }
+.group-head .g-count { font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+.group-head .g-desc { font-size: .86rem; color: var(--muted); flex: 1 1 320px; }
+.group-head .btn { margin-left: auto; }
+.rows { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); overflow: hidden; }
+.bug { border-bottom: 1px solid var(--line-2); border-left: 4px solid var(--stripe); }
+.bug:last-child { border-bottom: 0; }
+.bug[data-tier="P0"] { --stripe: var(--p0); } .bug[data-tier="P1"] { --stripe: var(--p1); } .bug[data-tier="P2"] { --stripe: var(--p2); } .bug[data-tier="P3"] { --stripe: var(--p3); } .bug[data-tier="X"] { --stripe: var(--px); }
+.bug[data-status="fixed"] .b-title { text-decoration: line-through; text-decoration-color: var(--muted); text-decoration-thickness: 1px; color: var(--muted); }
+.bug[data-status="wontfix"] .b-title { color: var(--muted); }
+.bug > summary { list-style: none; display: grid; grid-template-columns: 5.2rem minmax(0, 1fr) auto; gap: .2rem 1rem; align-items: start; padding: .6rem .9rem .6rem .8rem; cursor: pointer; }
+.bug > summary::-webkit-details-marker { display: none; }
+.bug > summary:hover { background: var(--surface-2); }
+.b-id { font-family: var(--display); font-weight: 700; font-size: 1rem; letter-spacing: .04em; color: var(--stripe); padding-top: .1rem; }
+.b-id small { display: block; font-family: var(--mono); font-weight: 400; font-size: .68rem; color: var(--muted); letter-spacing: 0; }
+.b-main { min-width: 0; }
+.b-title { font-family: var(--display); font-weight: 600; font-size: 1.12rem; line-height: 1.2; color: var(--ink); }
+.b-meta { display: flex; flex-wrap: wrap; gap: .25rem .7rem; align-items: center; margin-top: .25rem; font-size: .78rem; color: var(--muted); }
+.b-meta .loc { font-family: var(--mono); font-size: .74rem; color: var(--ink-2); max-width: 46ch; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pill { display: inline-flex; align-items: center; gap: .3rem; font-family: var(--display); font-weight: 600; letter-spacing: .04em; font-size: .74rem; padding: .05rem .45rem; border-radius: 3px; white-space: nowrap; line-height: 1.5; }
+.pill-sys { background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-2); }
+.pill-risk { background: var(--p3-soft); color: var(--ink-2); }
+.pill-risk .stars { letter-spacing: -.05em; }
+.pill-risk.r-high { background: var(--p0-soft); color: var(--p0); } .pill-risk.r-medium { background: var(--p1-soft); color: var(--p1); } .pill-risk.r-low { background: var(--ok-soft); color: var(--ok); }
+.pill-test { background: var(--accent-soft); color: var(--accent); }
+.pill-recheck { background: var(--p2-soft); color: var(--p2); }
+.pill-unv { border: 1px dashed var(--line); color: var(--muted); }
+.b-status { display: inline-flex; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; align-self: start; }
+.b-status button { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; font-size: .7rem; padding: .28rem .5rem; border: 0; border-right: 1px solid var(--line); background: var(--surface); color: var(--muted); cursor: pointer; }
+.b-status button:last-child { border-right: 0; }
+.b-status button:hover { color: var(--ink); background: var(--surface-2); }
+.b-status button[aria-pressed="true"][data-s="open"] { background: var(--ink); color: var(--ground); }
+.b-status button[aria-pressed="true"][data-s="progress"] { background: var(--accent); color: var(--accent-ink); }
+.b-status button[aria-pressed="true"][data-s="fixed"] { background: var(--ok); color: #fff; }
+.b-status button[aria-pressed="true"][data-s="wontfix"] { background: var(--px); color: #fff; }
+.b-body { padding: .2rem 1rem 1rem 6.2rem; display: grid; grid-template-columns: minmax(0, 1fr) 15rem; gap: 1rem 2rem; }
+.b-body dl { margin: 0; display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: .35rem 1rem; }
+.b-body dt { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: .1em; font-size: .68rem; color: var(--muted); padding-top: .2rem; }
+.b-body dd { margin: 0; font-size: .92rem; max-width: 78ch; overflow-wrap: anywhere; }
+.b-body dd.fix { color: var(--ink); background: var(--accent-soft); border-left: 3px solid var(--accent); padding: .4rem .7rem; border-radius: 0 3px 3px 0; max-width: none; }
+.b-side { display: flex; flex-direction: column; gap: .5rem; align-self: start; }
+.b-side .btn { width: 100%; text-align: center; }
+.note { font: inherit; font-size: .84rem; width: 100%; padding: .4rem .55rem; border: 1px solid var(--line); border-radius: 3px; background: var(--surface); color: var(--ink); }
+.note::placeholder { color: var(--muted); }
+.stamp { font-family: var(--mono); font-size: .7rem; color: var(--muted); }
+@media (max-width: 860px) {
+  .bug > summary { grid-template-columns: 4.2rem minmax(0, 1fr); }
+  .b-status { grid-column: 1 / -1; justify-self: start; }
+  .b-body { grid-template-columns: 1fr; padding-left: 1rem; }
+  .b-body dl { grid-template-columns: 1fr; gap: .1rem 0; }
+  .b-body dt { padding-top: .5rem; }
+}
+.empty { padding: 2rem; text-align: center; color: var(--muted); border: 1px dashed var(--line); border-radius: 4px; }
+.toast { position: fixed; left: 50%; bottom: 1.4rem; transform: translateX(-50%); background: var(--ink); color: var(--ground); font-family: var(--display); font-weight: 600; letter-spacing: .04em; padding: .5rem .9rem; border-radius: 3px; opacity: 0; transition: opacity .15s; pointer-events: none; z-index: 40; }
+.toast.show { opacity: 1; }
+.foot { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--line); font-size: .82rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: .6rem 2rem; justify-content: space-between; }
+.legend { display: flex; flex-wrap: wrap; gap: .4rem 1rem; font-size: .8rem; color: var(--muted); margin: .9rem 0 0; }
+.legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: .3rem; }
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+@media print { .topbar, .controls, .b-side, .b-status { display: none; } .bug { break-inside: avoid; } .bug[open] .b-body { display: grid; } }
+</style>
+
+<header class="topbar">
+  <span class="tb-home"><span class="eyebrow">Warrant list</span><span class="tb-title">Gangland Warfare</span></span>
+  <div class="tb-meta"><span>branch 0.8.2</span><span class="dot"></span><span>HEAD 66eeb647</span><span class="dot"></span><span>Keystone 1.8.0</span><span class="dot"></span><span>audit 2026-09-02 · tests 2026-09-04 · docket 2026-09-06</span></div>
+  <span class="sync" id="sync" data-state="idle">status: connecting</span>
+</header>
+
+<main class="main">
+  <section class="hero">
+    <div>
+      <span class="eyebrow">Bug docket · every observation from the 13 case files, triaged</span>
+      <h1>What has to be fixed, in the order it should be fixed</h1>
+      <p class="lede">Each entry is one observation from the 2026-09-02 workflow audit, re-read with the 2026-09-04 test suite beside it and given a fix tier, a one-line fix direction and the test that pins it. Open an entry, copy its brief, hand it to an agent, then mark it fixed here so the next agent sees the live state.</p>
+      <p class="fine">P0 and P1 are the immediate docket: money or item creation and loss, corrupted or lost data, permission holes, crashes on normal play paths and thread-safety faults come first; broken-but-bounded behaviour second. P2 is scheduled work, P3 is cleanup. Tier is this docket's judgement; the audit's own wanted-star risk and confidence stay on every row. Line numbers were re-verified on 0.8.1 on 2026-09-03; the only source change since is the mail module split, and the entries it moved are marked <em>re-checked 0.8.2</em>.</p>
+    </div>
+    <div class="strip" id="strip"></div>
+  </section>
+
+  <div class="controls" id="controls">
+    <input type="search" id="q" placeholder="Search id, title, file, text…" aria-label="Search bugs">
+    <span class="ctl-label">Tier</span>
+    <span class="chipset" id="tierChips">
+      <button class="chip c-p0" data-tier="P0" aria-pressed="true">P0 fix now</button>
+      <button class="chip c-p1" data-tier="P1" aria-pressed="true">P1 fix next</button>
+      <button class="chip c-p2" data-tier="P2" aria-pressed="true">P2 scheduled</button>
+      <button class="chip c-p3" data-tier="P3" aria-pressed="true">P3 cleanup</button>
+      <button class="chip c-x" data-tier="X" aria-pressed="false">withdrawn</button>
+    </span>
+    <span class="ctl-label">System</span>
+    <select id="sysSel" aria-label="System"><option value="">All systems</option></select>
+    <span class="ctl-label">Status</span>
+    <select id="statusSel" aria-label="Status"><option value="">Any status</option><option value="open">Open</option><option value="progress">In progress</option><option value="fixed">Fixed</option><option value="wontfix">Won't fix</option><option value="unfinished">Not yet fixed</option></select>
+    <button class="chip" id="testChip" aria-pressed="false" title="Only entries a test already pins">test-pinned</button>
+    <span class="ctl-label">Group</span>
+    <select id="groupSel" aria-label="Group by"><option value="tier">by tier</option><option value="sys">by system</option></select>
+    <button class="btn" id="expandAll">Expand</button>
+    <button class="btn" id="collapseAll">Collapse</button>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div id="docket"></div>
+
+  <p class="legend"><span><span class="sw" style="background:var(--p0)"></span>P0 fix now</span><span><span class="sw" style="background:var(--p1)"></span>P1 fix next</span><span><span class="sw" style="background:var(--p2)"></span>P2 scheduled</span><span><span class="sw" style="background:var(--p3)"></span>P3 cleanup</span><span><span class="sw" style="background:var(--px)"></span>withdrawn / by design</span><span>★★★ audit risk (three stars = reachable in normal play)</span><span>“pinned” = a unit test asserts today’s wrong behaviour; flip it when you fix the bug</span></p>
+
+  <footer class="foot">
+    <span>Sources: <code>brainstorming/workflow-audit-2026-09-02/*.md</code> (observation tables), the 2026-09-04 test commits (bc0be094 … 7a8a75f5), <code>documentation/TESTING.md</code>.</span>
+    <span>Status and notes are shared with everyone who opens this page.</span>
+  </footer>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script id="docket-data" type="application/json">/*__DATA__*/</script>
+<script>
+(function () {
+  "use strict";
+  var BUGS = JSON.parse(document.getElementById("docket-data").textContent);
+  var TIERS = [
+    { key: "P0", name: "P0 · Fix now", desc: "Money or item creation and loss, corrupted or lost data, permission holes, crashes on normal play paths, thread-safety faults." },
+    { key: "P1", name: "P1 · Fix next", desc: "Wrong behaviour in normal play that is bounded, stuck states, leaks that grow with uptime, silent failures that hide problems from admins." },
+    { key: "P2", name: "P2 · Scheduled", desc: "Edge-case crashes, backend-specific failures, latent traps, dead features that ship as if working, missing UX pieces." },
+    { key: "P3", name: "P3 · Cleanup", desc: "Dead code and config, help and i18n drift, convention violations, cosmetics, misleading names." },
+    { key: "X",  name: "Withdrawn or by design", desc: "Observations the tests or a second read showed to be correct behaviour. Kept so every audit row is accounted for." }
+  ];
+  var STATUSES = [["open", "Open"], ["progress", "In progress"], ["fixed", "Fixed"], ["wontfix", "Won't fix"]];
+  var SYSTEMS = [];
+  (function () {
+    var seen = {};
+    BUGS.forEach(function (b) { if (!seen[b.sys]) { seen[b.sys] = true; SYSTEMS.push({ slug: b.sys, name: b.sysName, order: b.sysOrder, code: b.code === "T" ? null : b.code }); } });
+    SYSTEMS.sort(function (a, b) { return a.order < b.order ? -1 : 1; });
+  })();
+
+  /* ---------- state ---------- */
+  var state = { q: "", tiers: { P0: true, P1: true, P2: true, P3: true, X: false }, sys: "", status: "", testOnly: false, group: "tier", open: {} };
+  var statusMap = {};   // id -> {status, note, updatedAt}
+  var db = null, mode = "idle";
+  try {
+    var saved = JSON.parse(localStorage.getItem("gw-docket-filters") || "null");
+    if (saved && saved.tiers) { state.tiers = saved.tiers; state.sys = saved.sys || ""; state.status = saved.status || ""; state.testOnly = !!saved.testOnly; state.group = saved.group || "tier"; }
+  } catch (e) {}
+  function persistFilters() { try { localStorage.setItem("gw-docket-filters", JSON.stringify({ tiers: state.tiers, sys: state.sys, status: state.status, testOnly: state.testOnly, group: state.group })); } catch (e) {} }
+
+  /* ---------- helpers ---------- */
+  function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+  function md(s) {
+    var t = esc(s);
+    t = t.replace(/`([^`]+)`/g, function (m, c) { return "<code>" + c + "</code>"; });
+    t = t.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    t = t.replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,;:]|$)/g, "$1<em>$2</em>");
+    return t;
+  }
+  function plain(s) { return String(s == null ? "" : s).replace(/[`*]/g, ""); }
+  function stars(risk) { var r = (risk || "").toLowerCase(); if (r === "high") return "★★★"; if (r === "medium") return "★★☆"; if (r === "low") return "★☆☆"; return "—"; }
+  function riskClass(risk) { var r = (risk || "").toLowerCase(); return r === "high" || r === "medium" || r === "low" ? "r-" + r : ""; }
+  function tierLabel(t) { for (var i = 0; i < TIERS.length; i++) if (TIERS[i].key === t) return TIERS[i].name; return t; }
+  function statusOf(id) { var s = statusMap[id]; return (s && s.status) || "open"; }
+  function noteOf(id) { var s = statusMap[id]; return (s && s.note) || ""; }
+  function toast(msg) { var el = document.getElementById("toast"); el.textContent = msg; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove("show"); }, 1600); }
+  function copyText(text, label) {
+    function fallback() {
+      var ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.left = "-9999px"; document.body.appendChild(ta); ta.select();
+      var ok = false; try { ok = document.execCommand("copy"); } catch (e) {} document.body.removeChild(ta);
+      toast(ok ? label + " copied" : "Copy failed — select the text manually");
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(function () { toast(label + " copied"); }, fallback); } else { fallback(); }
+  }
+
+  function brief(b) {
+    var lines = [];
+    lines.push("GANGLAND WARFARE FIX BRIEF — " + b.id + " (" + tierLabel(b.tier) + ")");
+    lines.push("Title: " + b.title);
+    lines.push("System: " + b.sysName + " · audit source " + b.source + (b.code === "T" ? "" : ", observation #" + b.num) + " · audit risk " + (b.risk || "n/a") + " · tracer confidence " + (b.confidence || "n/a") + (b.unverified ? " (marked unverified — confirm in code first)" : ""));
+    lines.push("Location: " + plain(b.location));
+    lines.push("Observation: " + plain(b.observation));
+    if (b.impact) lines.push("Impact: " + plain(b.impact));
+    lines.push("Fix direction: " + plain(b.fix));
+    lines.push("Tests: " + (b.tests ? b.tests + ". A test that pins the bug asserts today's wrong behaviour — flip its assertion as part of the fix." : "none pin this yet — add one next to the class under test (see documentation/TESTING.md)."));
+    var st = statusOf(b.id), nt = noteOf(b.id);
+    if (st !== "open" || nt) lines.push("Docket status: " + st + (nt ? " — " + nt : ""));
+    lines.push("Repo: branch 0.8.2 (HEAD 66eeb647), Keystone 1.8.0, Spigot API only. Read brainstorming/workflow-audit-2026-09-02/" + (b.code === "T" ? b.sys + ".md" : b.source) + " for the workflow context, run graphify query first, then open the cited files. Verify with mvn -pl <module> -am test.");
+    lines.push("House rules: method braces on their own lines; Lombok @CustomLog for logging; SoundEffect/XSeries for version-drifting enums; never io.papermc imports; new commands need commands.json entries.");
+    return lines.join("\n");
+  }
+
+  /* ---------- filtering ---------- */
+  function visible() {
+    var q = state.q.trim().toLowerCase();
+    return BUGS.filter(function (b) {
+      if (!state.tiers[b.tier]) return false;
+      if (state.sys && b.sys !== state.sys) return false;
+      if (state.testOnly && !b.tests) return false;
+      var st = statusOf(b.id);
+      if (state.status === "unfinished") { if (st === "fixed" || st === "wontfix") return false; }
+      else if (state.status && st !== state.status) return false;
+      if (q) {
+        var hay = (b.id + " " + b.title + " " + b.location + " " + b.observation + " " + (b.impact || "") + " " + b.fix + " " + (b.tests || "") + " " + b.sysName + " " + noteOf(b.id)).toLowerCase();
+        if (hay.indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+  }
+  var TIER_RANK = { P0: 0, P1: 1, P2: 2, P3: 3, X: 4 };
+  function sortBugs(list) {
+    return list.slice().sort(function (a, b) {
+      if (TIER_RANK[a.tier] !== TIER_RANK[b.tier]) return TIER_RANK[a.tier] - TIER_RANK[b.tier];
+      if (a.sysOrder !== b.sysOrder) return a.sysOrder < b.sysOrder ? -1 : 1;
+      return a.num - b.num;
+    });
+  }
+
+  /* ---------- rendering ---------- */
+  function renderStrip() {
+    var strip = document.getElementById("strip");
+    var html = "";
+    TIERS.forEach(function (t) {
+      var all = BUGS.filter(function (b) { return b.tier === t.key; });
+      var fixed = all.filter(function (b) { var s = statusOf(b.id); return s === "fixed" || s === "wontfix"; }).length;
+      var prog = all.filter(function (b) { return statusOf(b.id) === "progress"; }).length;
+      var only = Object.keys(state.tiers).every(function (k) { return state.tiers[k] === (k === t.key); });
+      html += '<button class="tile tile-' + t.key.toLowerCase() + '" data-tier="' + t.key + '" aria-pressed="' + only + '" title="Show only ' + esc(t.name) + '">' +
+        '<span class="t-label">' + esc(t.key === "X" ? "withdrawn" : t.name.replace(" · ", " ")) + '</span>' +
+        '<span class="t-num">' + all.length + '</span>' +
+        '<span class="t-sub">' + (t.key === "X" ? "accounted for" : '<b>' + fixed + '</b> done · ' + prog + ' in progress · ' + (all.length - fixed - prog) + ' open') + '</span></button>';
+    });
+    strip.innerHTML = html;
+    Array.prototype.forEach.call(strip.querySelectorAll(".tile"), function (el) {
+      el.addEventListener("click", function () {
+        var k = el.getAttribute("data-tier");
+        var only = Object.keys(state.tiers).every(function (x) { return state.tiers[x] === (x === k); });
+        Object.keys(state.tiers).forEach(function (x) { state.tiers[x] = only ? (x !== "X") : (x === k); });
+        persistFilters(); syncChips(); render();
+      });
+    });
+  }
+  function syncChips() {
+    Array.prototype.forEach.call(document.querySelectorAll("#tierChips .chip"), function (c) { c.setAttribute("aria-pressed", String(!!state.tiers[c.getAttribute("data-tier")])); });
+    document.getElementById("testChip").setAttribute("aria-pressed", String(state.testOnly));
+    document.getElementById("sysSel").value = state.sys;
+    document.getElementById("statusSel").value = state.status;
+    document.getElementById("groupSel").value = state.group;
+  }
+  function bugRow(b) {
+    var st = statusOf(b.id);
+    var meta = '<span class="pill pill-sys">' + esc(b.sysName) + '</span>' +
+      '<span class="loc" title="' + esc(plain(b.location)) + '">' + esc(plain(b.location)) + '</span>' +
+      (b.code === "T" ? '<span class="pill pill-test">found by tests</span>' : '<span class="pill pill-risk ' + riskClass(b.risk) + '" title="Audit risk ' + esc(b.risk || "n/a") + ', tracer confidence ' + esc(b.confidence) + '"><span class="stars" aria-hidden="true">' + stars(b.risk) + '</span>' + esc(b.risk === "Withdrawn" ? "withdrawn" : (b.risk || "n/a")) + ' · conf ' + esc(b.confidence) + '</span>') +
+      (b.tests && b.code !== "T" ? '<span class="pill pill-test" title="' + esc(b.tests) + '">test-pinned</span>' : "") +
+      (b.recheck && b.code !== "T" ? '<span class="pill pill-recheck">re-checked 0.8.2</span>' : "") +
+      (b.unverified ? '<span class="pill pill-unv">unverified</span>' : "");
+    var statusBtns = STATUSES.map(function (s) { return '<button type="button" data-s="' + s[0] + '" aria-pressed="' + (st === s[0]) + '">' + s[1] + '</button>'; }).join("");
+    var body = '<dl>' +
+      '<dt>Location</dt><dd>' + md(b.location) + '</dd>' +
+      '<dt>Observation</dt><dd>' + md(b.observation) + '</dd>' +
+      (b.impact ? '<dt>Impact</dt><dd>' + md(b.impact) + '</dd>' : "") +
+      '<dt>Fix direction</dt><dd class="fix">' + md(b.fix) + '</dd>' +
+      '<dt>Tests</dt><dd>' + (b.tests ? esc(b.tests) : '<span class="muted">none pin this yet</span>') + '</dd>' +
+      '<dt>Audit</dt><dd>' + (b.code === "T" ? 'Found while writing the test suite (2026-09-04); not in the audit tables. Case file: <a href="' + b.case + '" target="_blank" rel="noopener">' + esc(b.sysName) + '</a>' : '<a href="' + b.case + '" target="_blank" rel="noopener">' + esc(b.source) + ' · observation #' + b.num + '</a> · risk ' + esc(b.risk || "n/a") + ' · confidence ' + esc(b.confidence)) + '</dd>' +
+      '</dl>' +
+      '<div class="b-side">' +
+      '<button type="button" class="btn primary" data-act="copy">Copy fix brief</button>' +
+      '<input class="note" data-act="note" type="text" placeholder="Note (commit, agent, blocker)…" value="' + esc(noteOf(b.id)) + '" aria-label="Note for ' + esc(b.id) + '">' +
+      '<span class="stamp" data-act="stamp">' + stampText(b.id) + '</span>' +
+      '</div>';
+    return '<details class="bug" data-id="' + b.id + '" data-tier="' + b.tier + '" data-status="' + st + '"' + (state.open[b.id] ? " open" : "") + '>' +
+      '<summary><span class="b-id">' + b.id + '<small>' + esc(b.tier === "X" ? "withdrawn" : b.tier) + '</small></span>' +
+      '<span class="b-main"><span class="b-title">' + esc(b.title) + '</span><span class="b-meta">' + meta + '</span></span>' +
+      '<span class="b-status" role="group" aria-label="Status of ' + esc(b.id) + '">' + statusBtns + '</span></summary>' +
+      '<div class="b-body">' + body + '</div></details>';
+  }
+  function stampText(id) { var s = statusMap[id]; if (!s || !s.updatedAt) return ""; var d = new Date(s.updatedAt); return isNaN(d) ? "" : "updated " + d.toISOString().slice(0, 16).replace("T", " "); }
+  function render() {
+    var list = sortBugs(visible());
+    var host = document.getElementById("docket");
+    document.getElementById("count").textContent = list.length + " of " + BUGS.length + " entries";
+    if (!list.length) { host.innerHTML = '<p class="empty">Nothing matches these filters.</p>'; renderStrip(); return; }
+    var groups = [];
+    if (state.group === "tier") {
+      TIERS.forEach(function (t) { var g = list.filter(function (b) { return b.tier === t.key; }); if (g.length) groups.push({ key: t.key, name: t.name, desc: t.desc, items: g }); });
+    } else {
+      SYSTEMS.forEach(function (s) { var g = list.filter(function (b) { return b.sys === s.slug; }); if (g.length) { var c = {}; g.forEach(function (b) { c[b.tier] = (c[b.tier] || 0) + 1; }); groups.push({ key: s.slug, name: s.order + " · " + s.name, desc: ["P0", "P1", "P2", "P3", "X"].filter(function (k) { return c[k]; }).map(function (k) { return c[k] + " " + (k === "X" ? "withdrawn" : k); }).join(" · "), items: g }); } });
+    }
+    host.innerHTML = groups.map(function (g) {
+      return '<section class="group" data-group="' + esc(g.key) + '"><div class="group-head"><h2>' + esc(g.name) + ' <span class="g-count">' + g.items.length + '</span></h2><span class="g-desc">' + esc(g.desc) + '</span><button type="button" class="btn" data-act="copygroup">Copy ' + g.items.length + ' briefs</button></div><div class="rows">' + g.items.map(bugRow).join("") + '</div></section>';
+    }).join("");
+    renderStrip();
+  }
+
+  /* ---------- status persistence ---------- */
+  function setSync(m, label) { mode = m; var el = document.getElementById("sync"); el.setAttribute("data-state", m); el.textContent = "status: " + label; }
+  function loadLocal() { try { statusMap = JSON.parse(localStorage.getItem("gw-docket-status") || "{}") || {}; } catch (e) { statusMap = {}; } }
+  function saveLocal() { try { localStorage.setItem("gw-docket-status", JSON.stringify(statusMap)); } catch (e) {} }
+  function writeStatus(id, patch) {
+    var cur = statusMap[id] || { status: "open", note: "" };
+    var next = { status: patch.status !== undefined ? patch.status : cur.status, note: patch.note !== undefined ? patch.note : (cur.note || ""), updatedAt: new Date().toISOString() };
+    statusMap[id] = next;
+    if (db) {
+      db.doc("bugs/" + id).set(next).then(null, function (e) { toast("Save failed: " + (e && e.code ? e.code : "unknown")); });
+    } else { saveLocal(); }
+    refreshRow(id); renderStrip();
+  }
+  function refreshRow(id) {
+    var el = document.querySelector('.bug[data-id="' + id + '"]');
+    if (el) {
+      var st = statusOf(id);
+      el.setAttribute("data-status", st);
+      Array.prototype.forEach.call(el.querySelectorAll(".b-status button"), function (btn) { btn.setAttribute("aria-pressed", String(btn.getAttribute("data-s") === st)); });
+      var note = el.querySelector('[data-act="note"]'); if (note && document.activeElement !== note) note.value = noteOf(id);
+      var stamp = el.querySelector('[data-act="stamp"]'); if (stamp) stamp.textContent = stampText(id);
+    }
+  }
+  function waitForClaude(ms) {
+    return new Promise(function (resolve) {
+      var t0 = Date.now();
+      (function tick() { if (window.claude && typeof window.claude.use === "function") return resolve(window.claude); if (Date.now() - t0 > ms) return resolve(null); setTimeout(tick, 120); })();
+    });
+  }
+  function initStore() {
+    loadLocal(); refreshAll();
+    waitForClaude(10000).then(function (c) {
+      if (!c) { setSync("local", "this browser only"); return; }
+      return c.use("db").then(function (d) {
+        if (!d) { setSync("local", "this browser only"); return; }
+        db = d;
+        db.collection("bugs").onSnapshot(function (snap) {
+          var next = {};
+          snap.docs.forEach(function (doc) { if (doc.exists) next[doc.id] = doc.data(); });
+          statusMap = next; refreshAll();
+          setSync("live", snap.metadata && snap.metadata.fromCache ? "shared (syncing)" : "shared, live");
+        }, function (e) { db = null; loadLocal(); refreshAll(); setSync("error", "sync lost (" + (e && e.code ? e.code : "unknown") + ") — this browser only"); });
+      });
+    }).catch(function () { setSync("local", "this browser only"); });
+  }
+  function refreshAll() { BUGS.forEach(function (b) { var el = document.querySelector('.bug[data-id="' + b.id + '"]'); if (el) refreshRow(b.id); }); renderStrip(); if (state.status) render(); }
+
+  /* ---------- events ---------- */
+  document.getElementById("docket").addEventListener("click", function (ev) {
+    var btn = ev.target.closest("button");
+    if (!btn) return;
+    var bug = ev.target.closest(".bug");
+    if (btn.hasAttribute("data-s") && bug) { ev.preventDefault(); writeStatus(bug.getAttribute("data-id"), { status: btn.getAttribute("data-s") }); return; }
+    if (btn.getAttribute("data-act") === "copy" && bug) { var b = BUGS.filter(function (x) { return x.id === bug.getAttribute("data-id"); })[0]; if (b) copyText(brief(b), b.id + " brief"); return; }
+    if (btn.getAttribute("data-act") === "copygroup") { var sec = btn.closest(".group"); var ids = Array.prototype.map.call(sec.querySelectorAll(".bug"), function (el) { return el.getAttribute("data-id"); }); var text = BUGS.filter(function (x) { return ids.indexOf(x.id) >= 0; }).map(brief).join("\n\n" + "-".repeat(72) + "\n\n"); copyText(text, ids.length + " briefs"); return; }
+  });
+  document.getElementById("docket").addEventListener("change", function (ev) {
+    var inp = ev.target; if (inp.getAttribute("data-act") !== "note") return;
+    var bug = inp.closest(".bug"); if (bug) writeStatus(bug.getAttribute("data-id"), { note: inp.value.trim() });
+  });
+  document.getElementById("docket").addEventListener("keydown", function (ev) { if (ev.target.getAttribute && ev.target.getAttribute("data-act") === "note" && ev.key === "Enter") { ev.target.blur(); } });
+  document.getElementById("docket").addEventListener("toggle", function (ev) { var d = ev.target; if (d.classList && d.classList.contains("bug")) { state.open[d.getAttribute("data-id")] = d.open; } }, true);
+  document.getElementById("docket").addEventListener("click", function (ev) { if (ev.target.closest(".b-status") || ev.target.closest(".b-side")) { if (ev.target.closest("summary")) ev.preventDefault(); } });
+
+  document.getElementById("q").addEventListener("input", function (ev) { state.q = ev.target.value; render(); });
+  Array.prototype.forEach.call(document.querySelectorAll("#tierChips .chip"), function (c) { c.addEventListener("click", function () { var k = c.getAttribute("data-tier"); state.tiers[k] = !state.tiers[k]; persistFilters(); syncChips(); render(); }); });
+  document.getElementById("testChip").addEventListener("click", function () { state.testOnly = !state.testOnly; persistFilters(); syncChips(); render(); });
+  var sysSel = document.getElementById("sysSel");
+  SYSTEMS.forEach(function (s) { var o = document.createElement("option"); o.value = s.slug; o.textContent = s.order + " · " + s.name; sysSel.appendChild(o); });
+  sysSel.addEventListener("change", function () { state.sys = sysSel.value; persistFilters(); render(); });
+  document.getElementById("statusSel").addEventListener("change", function (ev) { state.status = ev.target.value; persistFilters(); render(); });
+  document.getElementById("groupSel").addEventListener("change", function (ev) { state.group = ev.target.value; persistFilters(); render(); });
+  document.getElementById("expandAll").addEventListener("click", function () { Array.prototype.forEach.call(document.querySelectorAll(".bug"), function (d) { d.open = true; state.open[d.getAttribute("data-id")] = true; }); });
+  document.getElementById("collapseAll").addEventListener("click", function () { Array.prototype.forEach.call(document.querySelectorAll(".bug"), function (d) { d.open = false; state.open[d.getAttribute("data-id")] = false; }); });
+
+  syncChips(); render(); initStore();
+})();
+</script>

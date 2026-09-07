@@ -4,42 +4,32 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>me.luckyraven</groupId>
-        <artifactId>gangland_warfare</artifactId>
+        <groupId>org.luckyraven</groupId>
+        <artifactId>gangland-compatibility</artifactId>
         <version>${revision}</version>
-        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>version-impl</artifactId>
 
     <name>Version Handler</name>
 
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
     <dependencies>
+        <!-- Keystone shared infrastructure (provided by Keystone.jar at runtime; never shaded).
+             Declared directly: provided scope is not transitive, so it cannot arrive via gangland-core. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-common</artifactId>
+        </dependency>
         <!-- Spigot Build -->
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
-            <version>${bukkit.version}</version>
             <scope>provided</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-core</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.viaversion</groupId>
             <artifactId>viaversion-api</artifactId>
-            <version>${viaversion.version}</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
 

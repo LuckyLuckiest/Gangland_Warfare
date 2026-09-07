@@ -14,7 +14,8 @@ This system replaced the old `Initializer.java` hand-coded wiring. Instead of ma
 manager, the framework discovers, resolves, and invokes bean methods automatically.
 
 **Module:** `gangland-core`
-**Package:** `me.luckyraven.util.autowire` (container) and `me.luckyraven.util.autowire.bean` (bean framework)
+**Package:** `org.luckyraven.gangland.util.autowire` (container) and `org.luckyraven.gangland.util.autowire.bean` (bean
+framework)
 
 ---
 
@@ -166,7 +167,7 @@ Synthetic phase. After all bean phases complete:
 
 ### Phase 6: LISTENER
 
-`GanglandContext` pulls `ListenerManager` from the container and calls `scanAndRegisterListeners("me.luckyraven",
+`GanglandContext` pulls `ListenerManager` from the container and calls `scanAndRegisterListeners("org.luckyraven.gangland",
 plugin)`. This:
 
 1. Discovers all `@ListenerHandler`-annotated classes via `ReflectionUtil.findClasses()`
@@ -176,7 +177,7 @@ plugin)`. This:
 ### Phase 7: COMMAND
 
 Same shape as LISTENER. `GanglandContext` pulls `CommandManager` from the container and calls
-`scanAndRegisterCommands("me.luckyraven.command.sub", classLoader)`. This:
+`scanAndRegisterCommands("org.luckyraven.gangland.command.sub", classLoader)`. This:
 
 1. Discovers all `Command` subclasses annotated with `@CommandHandler`
 2. Instantiates each via constructor injection
@@ -354,7 +355,7 @@ public class MyFeatureConfig {
 
 **Rules:**
 
-- Place in `me.luckyraven.config` package (the package scanned by `GanglandContext`)
+- Place in `org.luckyraven.gangland.config` package (the package scanned by `GanglandContext`)
 - Annotate with `@Configuration` and specify the `phase`
 - Constructor parameters are injected from the container (beans from earlier phases)
 - Default phase is `CONFIG` if not specified
@@ -555,7 +556,7 @@ public final class BalanceCommand extends Command {
 
 ### CommandManager
 
-The `CommandManager` (produced as a CONFIG-phase bean) scans `me.luckyraven.command.sub` for `@CommandHandler`
+The `CommandManager` (produced as a CONFIG-phase bean) scans `org.luckyraven.gangland.command.sub` for `@CommandHandler`
 classes:
 
 1. Discovers all `Command` subclasses

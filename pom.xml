@@ -4,73 +4,75 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>me.luckyraven</groupId>
+    <groupId>org.luckyraven</groupId>
     <artifactId>gangland_warfare</artifactId>
     <version>${revision}</version>
     <packaging>pom</packaging>
 
     <name>Gangland Warfare</name>
     <description>Rival gangs battling for control in Minecraft.</description>
+    <url>https://github.com/LuckyLuckiest/Gangland_Warfare</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <developers>
         <developer>
+            <id>LuckyLuckiest</id>
             <name>LuckyRaven10</name>
+            <email>luckyluckiest2002@gmail.com</email>
+            <url>https://github.com/LuckyLuckiest</url>
         </developer>
     </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/LuckyLuckiest/Gangland_Warfare.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/LuckyLuckiest/Gangland_Warfare.git</developerConnection>
+        <url>https://github.com/LuckyLuckiest/Gangland_Warfare</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/LuckyLuckiest/Gangland_Warfare/issues</url>
+    </issueManagement>
 
     <modules>
         <module>gangland-impl</module>
         <module>gangland-build</module>
         <module>gangland-core</module>
-        <module>gangland-item</module>
 
+        <module>gangland-infra</module>
         <module>gangland-ui</module>
         <module>gangland-features</module>
 
-        <module>plugin-common</module>
-        <module>plugin-persistence</module>
-
-        <!-- Compatibility modules -->
+        <!-- Compatibility (version-impl + one NMS adapter per CraftBukkit revision, MC 1.16+
+             to match Keystone's API floor). The adapter modules are listed in
+             gangland-compatibility/pom.xml, which is also their parent and centralizes the
+             shared remap pipeline. -->
         <module>gangland-compatibility</module>
-        <module>gangland-compatibility/version-impl</module>
-        <module>gangland-compatibility/version-1_10_R1</module>
-        <module>gangland-compatibility/version-1_11_R1</module>
-        <module>gangland-compatibility/version-1_12_R1</module>
-        <module>gangland-compatibility/version-1_13_R1</module>
-        <module>gangland-compatibility/version-1_13_R2</module>
-        <module>gangland-compatibility/version-1_14_R1</module>
-        <module>gangland-compatibility/version-1_15_R1</module>
-        <module>gangland-compatibility/version-1_16_R1</module>
-        <module>gangland-compatibility/version-1_16_R2</module>
-        <module>gangland-compatibility/version-1_16_R3</module>
-        <module>gangland-compatibility/version-1_17_R1</module>
-        <module>gangland-compatibility/version-1_18_R1</module>
-        <module>gangland-compatibility/version-1_18_R2</module>
-        <module>gangland-compatibility/version-1_19_R1</module>
-        <module>gangland-compatibility/version-1_19_R2</module>
-        <module>gangland-compatibility/version-1_19_R3</module>
-        <module>gangland-compatibility/version-1_20_R1</module>
-        <module>gangland-compatibility/version-1_20_R2</module>
-        <module>gangland-compatibility/version-1_20_R3</module>
-        <module>gangland-compatibility/version-1_20_R4</module>
-        <module>gangland-compatibility/version-1_21_R1</module>
-        <module>gangland-compatibility/version-1_21_R2</module>
-        <module>gangland-compatibility/version-1_21_R3</module>
-        <module>gangland-compatibility/version-1_21_R4</module>
-        <module>gangland-compatibility/version-1_21_R5</module>
-        <module>gangland-compatibility/version-1_21_R6</module>
-        <module>gangland-compatibility/version-1_21_R7</module>
     </modules>
 
     <properties>
-        <revision>0.7.5-DEV</revision>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <revision>0.8.3</revision>
+        <!-- Matches Keystone's release (17): the shaded jar must load on every JVM Keystone
+             loads on, or the MC 1.16+ support floor is silently broken. release (not
+             source/target) also validates against the Java 17 API, so building on a newer
+             JDK cannot leak newer APIs into the plugin. -->
+        <maven.compiler.release>17</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- The version used to run the plugin -->
         <bukkit.version>1.21.11-R0.1-SNAPSHOT</bukkit.version>
 
         <!-- Dependencies/Libraries versions -->
+        <!-- Shared infrastructure (Keystone.jar provides it at runtime — provided scope, never shaded) -->
+        <keystone.version>1.8.0</keystone.version>
         <nbt.version>2.15.7</nbt.version>
         <xseries.version>13.6.0</xseries.version>
         <anvilgui.version>1.10.11-SNAPSHOT</anvilgui.version>
@@ -83,7 +85,6 @@
         <bstats.version>3.2.1</bstats.version>
 
         <hikaricp.version>7.0.2</hikaricp.version>
-        <org.reflections.version>0.10.2</org.reflections.version>
         <exp4j.version>0.4.8</exp4j.version>
 
         <junit.version>6.0.3</junit.version>
@@ -93,9 +94,413 @@
         <log4j-slf4j2.version>3.0.0-beta2</log4j-slf4j2.version>
         <sqlite-jdbc.version>3.51.2.0</sqlite-jdbc.version>
         <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
+        <specialsource-maven-plugin.version>2.0.3</specialsource-maven-plugin.version>
+
+        <!-- Release / publishing plugin versions -->
+        <flatten-maven-plugin.version>1.8.0</flatten-maven-plugin.version>
+        <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
+        <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
+        <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
+        <central-publishing-maven-plugin.version>0.11.0</central-publishing-maven-plugin.version>
     </properties>
 
+    <!-- Maven Central is built in and needs no declaration; every entry here is a real
+         remote Maven must also consult, so only repos that actually serve a dependency
+         are listed (fewer remotes = faster snapshot/metadata resolution). -->
+    <repositories>
+        <!-- bungeecord-chat snapshots (transitive of spigot-api) -->
+        <repository>
+            <id>sonatype</id>
+            <url>https://oss.sonatype.org/content/groups/public/</url>
+        </repository>
+
+        <!-- VaultAPI -->
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+
+        <!-- spigot-api snapshots -->
+        <repository>
+            <id>spigot-repo</id>
+            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
+        </repository>
+
+        <!-- item-nbt-api-plugin -->
+        <repository>
+            <id>codemc-repo</id>
+            <url>https://repo.codemc.io/repository/maven-public/</url>
+        </repository>
+
+        <!-- placeholderapi -->
+        <repository>
+            <id>placeholderapi</id>
+            <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
+        </repository>
+
+        <!-- citizens-main -->
+        <repository>
+            <id>citizens-repo</id>
+            <url>https://maven.citizensnpcs.co/repo</url>
+        </repository>
+
+        <!-- viaversion-api -->
+        <repository>
+            <id>viaversion-repo</id>
+            <url>https://repo.viaversion.com</url>
+        </repository>
+
+        <!-- anvilgui snapshots -->
+        <repository>
+            <id>mvn-wesjd-net</id>
+            <url>https://mvn.wesjd.net/</url>
+        </repository>
+    </repositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Keystone shared infrastructure. The Keystone.jar dependency plugin provides every class at
+                 runtime (plugin.yml depend: [Keystone]), so all keystone-* modules are provided scope and must
+                 NEVER be shaded — a shaded duplicate would shadow the loaded copy with a stale version. -->
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-common</artifactId>
+                <version>${keystone.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-bean</artifactId>
+                <version>${keystone.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-item</artifactId>
+                <version>${keystone.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-persistence</artifactId>
+                <version>${keystone.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-command</artifactId>
+                <version>${keystone.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-hooks</artifactId>
+                <version>${keystone.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-module</artifactId>
+                <version>${keystone.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-testkit</artifactId>
+                <version>${keystone.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- Internal modules -->
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>gangland-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>gangland-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>gangland-item</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>inventory-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>scoreboard-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>sign-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>lootchest-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>hologram-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>shop-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>gangland-weapon</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>gangland-gadget</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>gangland-turf</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>gangland-mail</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>cops-n-crooks</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>version-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>gangland-impl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Server platform -->
+            <dependency>
+                <groupId>org.spigotmc</groupId>
+                <artifactId>spigot-api</artifactId>
+                <version>${bukkit.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.spigotmc</groupId>
+                <artifactId>spigot</artifactId>
+                <version>${bukkit.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- Required plugins -->
+            <dependency>
+                <groupId>de.tr7zw</groupId>
+                <artifactId>item-nbt-api-plugin</artifactId>
+                <version>${nbt.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>net.citizensnpcs</groupId>
+                <artifactId>citizens-main</artifactId>
+                <version>${citizen.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- Soft plugins -->
+            <dependency>
+                <groupId>com.github.MilkBowl</groupId>
+                <artifactId>VaultAPI</artifactId>
+                <version>${vault.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.viaversion</groupId>
+                <artifactId>viaversion-api</artifactId>
+                <version>${viaversion.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>me.clip</groupId>
+                <artifactId>placeholderapi</artifactId>
+                <version>${placeholderapi.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- Shaded libraries (no scope here — gangland-build needs them at compile to shade,
+                 and consumers not in the shade path are uniformly resolved through gangland-build) -->
+            <dependency>
+                <groupId>com.github.cryptomorin</groupId>
+                <artifactId>XSeries</artifactId>
+                <version>${xseries.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.wesjd</groupId>
+                <artifactId>anvilgui</artifactId>
+                <version>${anvilgui.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>fr.mrmicky</groupId>
+                <artifactId>fastboard</artifactId>
+                <version>${fastboard.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.bstats</groupId>
+                <artifactId>bstats-bukkit</artifactId>
+                <version>${bstats.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.zaxxer</groupId>
+                <artifactId>HikariCP</artifactId>
+                <version>${hikaricp.version}</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>net.objecthunter</groupId>
+                <artifactId>exp4j</artifactId>
+                <version>${exp4j.version}</version>
+                <scope>compile</scope>
+            </dependency>
+
+            <!-- Test -->
+            <!-- gangland-core's test classes (testsupport/BukkitRegistryFixture), shared by any module
+                 whose subject code touches Material.isAir() or an XSeries registry lookup. -->
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>gangland-core</artifactId>
+                <version>${revision}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.xerial</groupId>
+                <artifactId>sqlite-jdbc</artifactId>
+                <version>${sqlite-jdbc.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>${log4j-slf4j2.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire-plugin.version}</version>
+                    <configuration>
+                        <!-- Mockito's inline mock-maker self-attaches a Byte Buddy agent; without this the JVM
+                             prints four warning lines per surefire fork. -->
+                        <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
+                    <configuration>
+                        <annotationProcessorPaths>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok</artifactId>
+                                <version>${lombok.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>3.6.1</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <!-- Resolves the CI-friendly ${revision} placeholder into a literal version in every
+                 installed/deployed POM. Without this, Maven Central consumers receive POMs whose
+                 <version> is the unresolvable string "${revision}". -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>${flatten-maven-plugin.version}</version>
+                <configuration>
+                    <updatePomFile>true</updatePomFile>
+                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten.clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Publishes to Maven Central via the Central Portal on `mvn deploy`.
+                 Generates the required .md5/.sha1 (plus .sha256/.sha512) checksum files
+                 for every artifact in the upload bundle (checksums=all is the default). -->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>${central-publishing-maven-plugin.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <!-- Leave manual review/publish in the Central Portal UI; flip to true to
+                         publish automatically once validation passes. -->
+                    <autoPublish>false</autoPublish>
+                    <!-- The shaded server jar is distributed via SpigotMC/GitHub Releases,
+                         not Maven Central (it also has no sources/javadoc of its own). -->
+                    <excludeArtifacts>
+                        <excludeArtifact>gangland-build</excludeArtifact>
+                    </excludeArtifacts>
+                </configuration>
+            </plugin>
+        </plugins>
+
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -103,89 +508,6 @@
             </resource>
         </resources>
     </build>
-
-    <repositories>
-        <repository>
-            <id>maven_central</id>
-            <name>Maven Central</name>
-            <url>https://repo.maven.apache.org/maven2/</url>
-        </repository>
-
-        <repository>
-            <id>sonatype</id>
-            <url>https://oss.sonatype.org/content/groups/public/</url>
-        </repository>
-
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-
-        <repository>
-            <id>papermc</id>
-            <url>https://repo.papermc.io/repository/maven-public/</url>
-        </repository>
-
-        <repository>
-            <id>spigot-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
-        </repository>
-
-        <repository>
-            <id>codemc-repo</id>
-            <url>https://repo.codemc.io/repository/maven-public/</url>
-            <layout>default</layout>
-        </repository>
-
-        <repository>
-            <id>placeholderapi</id>
-            <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
-        </repository>
-
-        <repository>
-            <id>citizens-repo</id>
-            <url>https://maven.citizensnpcs.co/repo</url>
-        </repository>
-
-        <repository>
-            <id>dmulloy2-repo</id>
-            <url>https://repo.dmulloy2.net/repository/public/</url>
-        </repository>
-
-        <repository>
-            <id>viaversion-repo</id>
-            <url>https://repo.viaversion.com</url>
-        </repository>
-    </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>papermc</id>
-            <url>https://repo.papermc.io/repository/maven-public/</url>
-        </pluginRepository>
-    </pluginRepositories>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>me.luckyraven</groupId>
-                <artifactId>plugin-common</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>net.citizensnpcs</groupId>
-                <artifactId>citizens-main</artifactId>
-                <version>${citizen.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.github.cryptomorin</groupId>
-                <artifactId>XSeries</artifactId>
-                <version>${xseries.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <dependencies>
         <!-- Technical provided level dependencies (start) -->
@@ -215,6 +537,89 @@
         </dependency>
 
         <!-- Technical provided level dependencies (end) -->
+
+        <!-- Test dependencies inherited by EVERY module (start).
+             Declared here rather than per-module so any module can grow a src/test tree without
+             touching its pom. Versions come from <dependencyManagement> above. keystone-testkit
+             supplies BukkitStatics / PluginMocks / SqliteDbs / DbFiles / CapturingDiagnostics —
+             see documentation/TESTING.md for the house patterns. -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-testkit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+        </dependency>
+        <!-- Test dependencies inherited by EVERY module (end) -->
     </dependencies>
+
+    <profiles>
+        <!-- Activate for Maven Central releases: mvn clean deploy -P central-release
+             Attaches -sources.jar and -javadoc.jar to every jar module and GPG-signs
+             every file, as required by https://central.sonatype.org/publish/requirements/ -->
+        <profile>
+            <id>central-release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>${maven-source-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>${maven-javadoc-plugin.version}</version>
+                        <configuration>
+                            <doclint>none</doclint>
+                            <quiet>true</quiet>
+                            <notimestamp>true</notimestamp>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven-gpg-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

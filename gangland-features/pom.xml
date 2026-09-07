@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>me.luckyraven</groupId>
+        <groupId>org.luckyraven</groupId>
         <artifactId>gangland_warfare</artifactId>
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
@@ -19,8 +19,9 @@
     <modules>
         <module>gangland-weapon</module>
         <module>gangland-gadget</module>
+        <module>gangland-turf</module>
+        <module>gangland-mail</module>
         <module>cops-n-crooks</module>
-        <module>gangland-economy</module>
     </modules>
 
 </project>

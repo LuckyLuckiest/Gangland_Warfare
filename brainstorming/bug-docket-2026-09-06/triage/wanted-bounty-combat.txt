@@ -1,0 +1,42 @@
+1~~P0~~Bounty set withdraws the raw value but clear refunds the level-scaled amount (2x profit)~~Store the amount actually paid in the ledger (or refund unscaled); one source of truth.~~BountyTest (caller-level note)
+2~~P0~~Negative bounty amounts mint money for the sender~~Reject amount <= 0 in BountySetCommand and enforce a configured minimum.~~FIXED 0.8.3 61d45ddc (#13); ParsedAmount routing + Bounty.Minimum setting; SettingsTest bountyMinimum cases + ParsedAmountTest
+3~~P1~~hasBounty is true for negative totals~~hasBounty = amount.signum() > 0 and clamp amount >= 0 in setAmount.~~BountyTest (pins; flip when fixed)
+4~~P1~~The wanted decay timer never starts on join because setLevel is deferred to the main thread~~Run the isWanted check after the main-thread setLevel completes (callback) or read the loaded level directly.~~-
+5~~P1~~UserBountyEvent is dispatched async but isCancelled is read synchronously~~Call the event synchronously and branch on the result.~~-
+6~~P1~~Wanted and bounty executors run async and call events, Vault and messages~~Use start(false) for both timers.~~-
+7~~P1~~The kill-combo window is 20x the configured seconds and the reset mutates a HashMap async~~timeLeft = Reset_After seconds (not ticks) and run the timer sync.~~-
+8~~P1~~activeTrackers is a HashMap mutated cross-thread, never cleared, holding Player references~~Use a ConcurrentHashMap keyed by UUID, remove on quit and call clearAll() from shutdown.~~KillComboTrackerTest (history growth)
+9~~P0~~Quitting while downed leaves the player in spectator with 0.5 HP on rejoin~~On quit restore gamemode, health and flight before cleanup, or persist the downed state and restore on join.~~-
+10~~P1~~Downed state is dropped on reload/shutdown~~Implement BeanLifecycle and revive/restore every downed player in onShutdown/onPreClear.~~-
+11~~P1~~A single reused WantedEvent/BountyEvent instance stays cancelled forever~~Construct a new event per tick.~~-
+12~~P1~~userSetBounty is keyed by the live CommandSender and never persisted~~Key by UUID and persist the ledger (or drop the ledger feature).~~-
+13~~P1~~bounty.setAmount bypasses the ledger~~Route auto-accrual through addBounty with a system sender, or track a separate systemAmount.~~BountyTest (pins #13)
+14~~P2~~Bounty.Kill.Each is dead when the repeating timer is enabled~~Apply Kill.Each on every kill, then start or refresh the timer.~~-
+15~~P3~~An over-max bounty returns instead of clamping~~Clamp to Maximum.~~-
+16~~P3~~The timer cap is checked before the multiply, so it overshoots once~~Clamp after the multiplication.~~-
+17~~P3~~recentDeaths and downedBroadcasted are never pruned~~Same as US-33.~~-
+18~~P3~~userManager.getUser(null) is safe only by accident~~Null-check the Bukkit.getPlayer result.~~-
+19~~P2~~UserManager.users HashMap is read from async callbacks~~Use a ConcurrentHashMap or keep all reads on the main thread (follows from WB-06/07).~~-
+20~~P2~~Sign- and command-granted wanted levels never decay~~Start the WantedExecutor timer from one shared helper used by every grant path.~~-
+21~~P2~~Unguarded Enum.valueOf on sign content~~try/catch and treat the sign as invalid. Same as LS-22.~~AspectBasedSignHandlerTest (#4/#21 note)
+22~~P2~~Paying off a bounty destroys the stakes without refund or notice~~Refund the placers (or document the sink) and notify them.~~-
+23~~P2~~Clearing another player's wanted level uses the self permission~~Add gangland.command.wanted.clear.others.~~-
+24~~P2~~Self-bounty is allowed and there is no cooldown~~Reject self-targeting and add a cooldown setting.~~-
+25~~P3~~The target is notified before payment validation~~Move the message after the withdraw succeeds.~~-
+26~~P3~~The event's amountApplied is unscaled~~Pass the scaled figure.~~-
+27~~P3~~A tracker is allocated per kill even when cached~~Use computeIfAbsent with a lambda.~~-
+28~~P3~~onComboIncrement is never assigned~~Wire it or delete it.~~-
+29~~P3~~KillComboEvent is never called~~Call it in KillCombo.recordKill or delete it.~~-
+30~~P3~~killHistory is unbounded~~Cap the history length.~~KillComboTrackerTest
+31~~P2~~pointKillCount is never reduced, so wanted climbs faster than intended~~Reset pointKillCount after a trigger.~~-
+32~~P3~~isEntityDead is inverted in name~~Rename it (survives) or fix the negation.~~-
+33~~P3~~Blood particles spawn before the lethality check~~Move the call after the check.~~-
+34~~P2~~Attribute.MAX_HEALTH vs the 1.16 floor~~Same as US-07.~~-
+35~~P3~~Wanted.Enable is parsed but never read~~Enforce it in the grant paths or remove the key.~~-
+36~~P3~~Hardcoded wanted and combo strings; dead message keys~~Route through Messages.~~-
+37~~P2~~phone_bounty.yml is registered but nothing opens it~~Implement it or remove it (with UI-21).~~-
+38~~P2~~CustomPlayerDeathListener static instance survives reload~~Inject the bean into RespawnCommand instead of a static.~~-
+39~~P3~~stopTimer runs twice on quit (async and sync)~~Keep only the sync call.~~-
+40~~P2~~Cops can target downed players~~Filter DownedPlayerRegistry in findBestTarget.~~-
+41~~P3~~handleCommandExecution's return value is misnamed~~Return separate flags.~~-
+42~~P2~~Downing is decided at HIGHEST and ignores later damage reductions~~Decide at MONITOR (read-only) or recompute the final damage.~~-

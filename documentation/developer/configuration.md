@@ -68,21 +68,21 @@ Resource_Pack:
 
 ```yaml
 Database:
-  Type: sqlite                   # "mysql" or "sqlite"
-  MySQL:
-    Host: localhost
-    Port: 3306
-    Username: root
-    Password: ""
-  SQLite:
-    Backup: true                 # Create backups
-    Failed_MySQL: true           # Fallback to SQLite if MySQL fails
-  Auto_Save:
-    Enable: true
-    Time: 10                     # Minutes between saves
-    Debug: true                  # Log save performance
-  Clean_Up:
-    Time: 30                     # Days before old data cleanup
+   Type: sqlite                   # "mysql" or "sqlite"
+   MySQL:
+      Host: localhost
+      Port: 3306
+      Username: root
+      Password: ""
+   SQLite:
+      Backup: true                 # Create backups
+      Failed_MySQL: true           # Fallback to SQLite if MySQL fails
+   Auto_Save:
+      Enable: true
+      Time: 10                     # Minutes between saves
+      Debug: true                  # Log save performance
+   Clean_Up:
+      Time: 30                     # Days before old data cleanup
 ```
 
 ### Scoreboard
@@ -119,126 +119,126 @@ Inventory:
 
 ```yaml
 User:
-  Account:
-    Initial_Balance: 0
-    Maximum_Balance: 10_000_000
-  Bank:
-    Initial_Balance: 0
-    Create_Cost: 5_000
-    Maximum_Balance: 1_000_000_000
-  Level:
-    Maximum_Level: 100
-    Base_Amount: 1_000
-    Formula: "base * level ^ 1.5"
-    Skill:
-      Upgrade: 1
-      Cost: 500
-      Formula: "base * level ^ 1.8"
-  Death:
-    Enable: true
-    Money:
-      Command:
-        Enable: false
-        Executable:
-          - "/glw eco withdraw %player% 20"
-      Lose_Money: true
-      Formula: "balance * 0.15"
-      Threshold: 1_000
-    Respawn:
-      Enable: false
-      Delay: 10
-      Screen:
-        Enable: true
-        Title: "&cWASTED"
-        Subtitle: "&7Respawning after &a%time%"
-      GameMode:
-        Change_To: "spectator"
-        Allow_Fly: true
-      Teleport:
-        Enable: true
-        Waypoint: "spawn"
-      Health: 20
-      Hunger: 20
+   Account:
+      Initial_Balance: 0
+      Maximum_Balance: 10_000_000
+   Bank:
+      Initial_Balance: 0
+      Create_Cost: 5_000
+      Maximum_Balance: 1_000_000_000
+   Level:
+      Maximum_Level: 100
+      Base_Amount: 1_000
+      Formula: "base * level ^ 1.5"
+      Skill:
+         Upgrade: 1
+         Cost: 500
+         Formula: "base * level ^ 1.8"
+   Death:
+      Enable: true
+      Money:
+         Command:
+            Enable: false
+            Executable:
+               - "/glw eco withdraw %player% 20"
+         Lose_Money: true
+         Formula: "balance * 0.15"
+         Threshold: 1_000
+      Respawn:
+         Enable: false
+         Delay: 10
+         Screen:
+            Enable: true
+            Title: "&cWASTED"
+            Subtitle: "&7Respawning after &a%time%"
+         GameMode:
+            Change_To: "spectator"
+            Allow_Fly: true
+         Teleport:
+            Enable: true
+            Waypoint: "spawn"
+         Health: 20
+         Hunger: 20
 ```
 
 ### Bounty
 
 ```yaml
 Bounty:
-  Kill:
-    Each: 5                      # Bounty added per kill
-    Maximum: 50_000
-  Repeating_Timer:
-    Enable: true
-    Multiple: 2                  # Multiplier per timer cycle
-    Time: 300                    # Seconds between multiplications
-    Maximum: 20_000
+   Kill:
+      Each: 5                      # Bounty added per kill
+      Maximum: 50_000
+   Repeating_Timer:
+      Enable: true
+      Multiple: 2                  # Multiplier per timer cycle
+      Time: 300                    # Seconds between multiplications
+      Maximum: 20_000
 ```
 
 ### Wanted
 
 ```yaml
 Wanted:
-  Enable: true
-  Take_Money:
-    Amount: 50
-    Multiplier: 5                # amount * multiplier ^ stars
-  Repeating_Timer:
-    Enable: true
-    Time: 120                    # Default seconds between level reduction
-    Multiplier:
+   Enable: true
+   Take_Money:
+      Amount: 50
+      Multiplier: 5                # amount * multiplier ^ stars
+   Repeating_Timer:
       Enable: true
-      Amount: 1.1                # time * amount ^ stars
-  Level:
-    Increment: 1
-    Maximum: 5
-  Kill_Combo:
-    Enable: true
-    Reset_After: 10              # Seconds of inactivity to reset combo
-    Kill_Counter:                 # Kills needed per wanted level
-      - 2
-      - 5
-      - 10
-      - 15
-      - 20
+      Time: 120                    # Default seconds between level reduction
+      Multiplier:
+         Enable: true
+         Amount: 1.1                # time * amount ^ stars
+   Level:
+      Increment: 1
+      Maximum: 5
+   Kill_Combo:
+      Enable: true
+      Reset_After: 10              # Seconds of inactivity to reset combo
+      Kill_Counter: # Kills needed per wanted level
+         - 2
+         - 5
+         - 10
+         - 15
+         - 20
 ```
 
 ### Cops
 
 ```yaml
 Cops:
-  Count:
-    Formula_Enabled: false
-    Formula: "base + (level - 1) * perLevel"
-    Base: 2                      # Cops at wanted level 1
-    Per_Level: 1                 # Additional cops per level above 1
-    Max: 8                       # Hard cap
-  Behaviour:
-    Max_Per_Player: 8
-    AI_Tick_Rate: 10             # Ticks between AI cycles
-    Spawn_Check_Rate: 40
-    Cuff_Radius: 3.0
-    Max_Cuff_Attempts: 3
-    Cuff_Cooldown_Ticks: 100
-    Alert_Range: 40.0
-    Combat_Range: 4.0
-    Attack_Cooldown_Ticks: 20
-  Spawn:
-    Min_Distance: 10.0
-    Max_Distance: 50.0
-    Phase1_Min_Distance: 30.0
-    Radius_Shrink_Step: 5.0
-    Vertical_Search_Range: 10
-    Y_Offset: 0
-    Min_Open_Sides: 2
-    Spawner_Preference_Radius: 80.0
-    Visibility_Check_Distance: 48.0
-    Phase1_Attempts: 20
-    Phase2_Attempts: 15
-  Return:
-    Max_Ticks: 600
-    Station_Arrival_Distance: 3.0
-  Starting_Ammo_Magazines: 3
+   Count:
+      Formula_Enabled: false
+      Formula: "base + (level - 1) * perLevel"
+      Base: 2                      # Cops at wanted level 1
+      Per_Level: 1                 # Additional cops per level above 1
+      Max: 8                       # Hard cap
+   Behaviour:
+      Max_Per_Player: 8
+      AI_Tick_Rate: 10             # Ticks between AI cycles
+      Spawn_Check_Rate: 40
+      Cuff_Radius: 3.0
+      Max_Cuff_Attempts: 3
+      Cuff_Cooldown_Ticks: 100
+      Alert_Range: 40.0
+      Combat_Range: 4.0
+      Attack_Cooldown_Ticks: 20
+   Spawn:
+      Min_Distance: 10.0
+      Max_Distance: 50.0
+      Phase1_Min_Distance: 30.0
+      Radius_Shrink_Step: 5.0
+      Vertical_Search_Range: 10
+      Y_Offset: 0
+      Min_Open_Sides: 2
+      Spawner_Preference_Radius: 80.0
+      Visibility_Check_Distance: 48.0
+      Phase1_Attempts: 20
+      Phase2_Attempts: 15
+   Return:
+      Max_Ticks: 600
+      Station_Arrival_Distance: 3.0
+   Starting_Ammo_Magazines: 3
 ```
 
 ### Detainment
@@ -253,17 +253,17 @@ Detainment:
 
 ```yaml
 Gang:
-  Enable: true
-  Name_Duplicates: false
-  Display_Name_Char: '*'
-  Rank:
-    Head: "member"               # Initial rank
-    Tail: "owner"                # Final rank
-  Account:
-    Initial_Balance: 0
-    Create_Cost: 100_000
-    Maximum_Balance: 100_000_000_000
-    Contribution_Rate: 1_000
+   Enable: true
+   Name_Duplicates: false
+   Display_Name_Char: '*'
+   Rank:
+      Head: "member"               # Initial rank
+      Tail: "owner"                # Final rank
+   Account:
+      Initial_Balance: 0
+      Create_Cost: 100_000
+      Maximum_Balance: 100_000_000_000
+      Contribution_Rate: 1_000
 ```
 
 ### Economy
@@ -369,29 +369,29 @@ behavior overrides.
 ```yaml
 # Example tier structure
 tiers:
-  officer:
-    display_name: "&9Officer"
-    health: 20.0
-    damage: 4.0
-    armor:
-      helmet: IRON_HELMET
-      chestplate: IRON_CHESTPLATE
-    weapons:
-      - "pistol"
-    can_cuff: true
-    cuff_priority: 0.8
+   officer:
+      display_name: "&9Officer"
+      health: 20.0
+      damage: 4.0
+      armor:
+         helmet: IRON_HELMET
+         chestplate: IRON_CHESTPLATE
+      weapons:
+         - "pistol"
+      can_cuff: true
+      cuff_priority: 0.8
 
-  swat:
-    display_name: "&4SWAT"
-    health: 40.0
-    damage: 8.0
-    armor:
-      helmet: DIAMOND_HELMET
-      chestplate: DIAMOND_CHESTPLATE
-    weapons:
-      - "assault_rifle"
-      - "shotgun"
-    can_cuff: false
+   swat:
+      display_name: "&4SWAT"
+      health: 40.0
+      damage: 8.0
+      armor:
+         helmet: DIAMOND_HELMET
+         chestplate: DIAMOND_CHESTPLATE
+      weapons:
+         - "assault_rifle"
+         - "shotgun"
+      can_cuff: false
 ```
 
 ---
@@ -402,26 +402,26 @@ Defines civilian NPC types and spawner configurations.
 
 ```yaml
 types:
-  street_vendor:
-    display_name: "&eStreet Vendor"
-    skin: "texture_data"
-    behaviour:
-      wander_range: 10.0
-      flee_range: 20.0
-      combat_enabled: false
-    inventory:
-      title: "&6Street Vendor"
-      size: 27
-      items:
-        0: "weapon:pistol{amount=1}"
-        1: "ammo:9mm{amount=32}"
+   street_vendor:
+      display_name: "&eStreet Vendor"
+      skin: "texture_data"
+      behaviour:
+         wander_range: 10.0
+         flee_range: 20.0
+         combat_enabled: false
+      inventory:
+         title: "&6Street Vendor"
+         size: 27
+         items:
+            0: "weapon:pistol{amount=1}"
+            1: "ammo:9mm{amount=32}"
 
-  pedestrian:
-    display_name: "&7Pedestrian"
-    behaviour:
-      wander_range: 15.0
-      flee_range: 25.0
-      combat_enabled: false
+   pedestrian:
+      display_name: "&7Pedestrian"
+      behaviour:
+         wander_range: 15.0
+         flee_range: 25.0
+         combat_enabled: false
 ```
 
 ---
@@ -433,18 +433,18 @@ Car type definitions with physics and fuel configuration.
 ```yaml
 # Example car definition
 cars:
-  sedan:
-    display_name: "&aSport Sedan"
-    material: MINECART
-    custom_model_data: 1001
-    max_speed: 0.8
-    acceleration: 0.02
-    deceleration: 0.01
-    health: 100.0
-    fuel:
-      max: 1000
-      material: COAL
-      per_item: 100
+   sedan:
+      display_name: "&aSport Sedan"
+      material: MINECART
+      custom_model_data: 1001
+      max_speed: 0.8
+      acceleration: 0.02
+      deceleration: 0.01
+      health: 100.0
+      fuel:
+         max: 1000
+         material: COAL
+         per_item: 100
 ```
 
 ---
@@ -515,17 +515,17 @@ Scoreboard layout configuration.
 
 ```yaml
 title:
-  text: "&6Gangland Warfare"
-  animated: false
+   text: "&6Gangland Warfare"
+   animated: false
 lines:
-  - text: "&7Balance: &a%balance%"
-    update_interval: 20
-  - text: "&7Level: &e%level%"
-    update_interval: 100
-  - text: "&7Gang: &b%gang_name%"
-    update_interval: 60
-  - text: "&7Wanted: %wanted_stars%"
-    update_interval: 10
+   -  text: "&7Balance: &a%balance%"
+      update_interval: 20
+   -  text: "&7Level: &e%level%"
+      update_interval: 100
+   -  text: "&7Gang: &b%gang_name%"
+      update_interval: 60
+   -  text: "&7Wanted: %wanted_stars%"
+      update_interval: 10
 ```
 
 ---
@@ -537,22 +537,22 @@ Spigot plugin metadata (not user-editable, filtered at build time).
 ```yaml
 name: Gangland_Warfare
 version: ${project.version}
-main: me.luckyraven.Gangland
+main: org.luckyraven.gangland.Gangland
 database: true
 api-version: 1.13
 depend:
-  - NBTAPI
-  - Citizens
+   - NBTAPI
+   - Citizens
 softdepend:
-  - PlaceholderAPI
-  - Vault
+   - PlaceholderAPI
+   - Vault
 commands:
-  glw:
-    description: Gangland warfare main command.
-    permission: gangland.command.main
+   glw:
+      description: Gangland warfare main command.
+      permission: gangland.command.main
 permissions:
-  gangland.command.main:
-    default: op
+   gangland.command.main:
+      default: op
 ```
 
 ---

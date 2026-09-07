@@ -1,0 +1,37 @@
+1~~P0~~memberManager.getMember(uuid) is dereferenced without a null check in about 15 command sites~~Add a MemberManager.require(uuid) helper that sends Messages.NOT_IN_GANG and aborts; null-check every call site (GangInviteAcceptCommand:168 now lives in gangland-mail).~~-
+2~~P0~~Gang delete payout runs async while the sync path deletes the gang~~Do the payout synchronously (or finish the async work and delete in a sync callback); never call Bukkit/Vault off-thread.~~-
+3~~P0~~/glw gang withdraw (and deposit, rename, desc, display, color, invite, ally) have no rank gate~~Require a rank permission node via Member.hasPermission for every mutating subcommand.~~-
+4~~P1~~Rank parent edits never reach RankManager.ranksParent, so they are lost on restart~~Update ranksParent (add/remove RankParent) alongside the tree mutation and persist it.~~-
+5~~P0~~gang_ally primary key on gang_id alone keeps one row per gang~~Make the key composite (gang_id, ally_id) in GangAllianceTable and migrate existing rows.~~-
+6~~P0~~Ally abandon never deletes the row, so the alliance resurrects on restart~~Delete both direction rows in GangAllyAbandonCommand through GangAllianceRepository.~~-
+7~~P1~~Promotion in a branching hierarchy never sends the options~~Send the built ComponentBuilder (or auto-pick when there is one child).~~-
+8~~P0~~/glw option gang rank assigns any rank, including owner, to anyone~~Enforce the tree hierarchy and force_rank permission, or restrict the command to admins.~~-
+9~~P1~~Rank delete leaves stale sets that re-upsert the deleted rank~~Detach the node, prune ranksParent/ranksPermissions, delete the rows, re-rank members and guard head/tail.~~RankManagerTest (comment)
+10~~P2~~Transfer confirm lock never times out~~Use a CountdownTimer with auto-unlock and clear pendingTargets on quit.~~-
+11~~P1~~Mail expiry sweep runs async (start(true)) and is never cancelled (now MailModuleConfig.java:89-90)~~Use start(false) and stop the timer in the module's onDisabled/onPreClear.~~-
+12~~P2~~RankManager.clear leaves permissions, ranksParent and ranksPermissions populated~~Clear every collection and reset Permission.ID.~~RankManagerTest (pins; flip when fixed)
+13~~P2~~A renamed head rank creates a detached root and orphans the hierarchy~~Fail loudly (log and keep the previous root) when Gang.Rank.Head matches no persisted rank.~~RankManagerTest (pins)
+14~~P1~~Online-player streams NPE on uncached members in ally request/accept/abandon~~Filter with a null-safe helper (memberManager.findMember(uuid).map(...)). Files now in gangland-mail (request/accept) and impl (abandon).~~-
+15~~P2~~GangMembersDamageListener uses getGang without a null check~~Null-check and treat as no gang.~~-
+16~~P2~~alliance_stat.yml button runs a non-existent "ally info" argument~~Register a gang ally info sub-argument or remove the click (re-checked on 0.8.2: still missing).~~-
+17~~P2~~gang_stat.yml has no Slots block~~Same as UI-22.~~-
+18~~P3~~GangCommand.gangStat is dead code (~140 lines)~~Delete it or wire it to the stat button.~~-
+19~~P2~~GangBountyEvent and GangLevelUpEvent are never constructed, so the features are inert~~Fire the events from the bounty/level flows or delete the listeners and events.~~-
+20~~P2~~SQL NULL becomes the literal "null" string in GangRepository~~Map null columns to null or a fallback explicitly.~~-
+21~~P1~~New rank ids come from totalRanks()+1 and collide after a delete~~Use max(id)+1 or DB autoincrement.~~-
+22~~P2~~RankParent.parentId actually stores the child id and child rows are never deleted~~Rename the fields and delete both sides in doDelete.~~-
+23~~P2~~Accepting an invite leaves the recipient's other invites PENDING forever~~Cancel the recipient's other pending invites on accept and give offline invites an expiry.~~-
+24~~P2~~There is no invite reject command and commands.json has gaps~~Add a gang reject argument to the mail contribution and the missing entries (re-checked on 0.8.2: still missing).~~-
+25~~P3~~/glw permissions help entries are listed twice~~Remove the duplicate addAll.~~-
+26~~P3~~/glw rank info prints Permission.toString()~~Append permission.getPermission().~~-
+27~~P3~~Display_Name_Char "" throws at startup~~Validate and default to "*".~~-
+28~~P2~~getRootRank NPEs when the tree has no root~~Null-guard and fall back to the tail rank with a log line.~~-
+29~~P2~~No gang-name validation; duplicate detection is skipped when Name_Duplicates is true~~Validate length, charset and colour codes; always reject exact duplicates.~~-
+30~~P3~~deleteGangName.get(user).get() can NPE at timer expiry~~Null-check the entry in the confirm handler.~~-
+31~~P2~~One bad MailType/MailStatus row aborts the whole mail load (now gangland-mail MailRepository.java:40-41)~~Guard per row: skip and warn.~~-
+32~~P2~~Positional hard casts in member hydration; a missing member row is skipped under autosave~~Insert the row immediately and use Number casts.~~-
+33~~P3~~The no-arg Gang() constructor can collide on random ids~~Move the collision check into generateId.~~-
+34~~P3~~Colour confirm handler assumes the user still has a gang~~Re-check hasGang() before getGang.~~-
+35~~P2~~Gang.equals without hashCode~~Add hashCode on id.~~GangAllianceTest (pins; flip when fixed)
+36~~P2~~Console-allowed option command casts to Player~~Same as CM-07.~~-
+37~~P2~~Free-text permission nodes are persisted and online attachments are not refreshed~~Validate via permissionExists and refresh online members' attachments.~~-

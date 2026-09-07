@@ -144,6 +144,66 @@ Types:
             Attack_Range: 0.0
             Attack_Interval_Ticks: 0
 
+   turf_defender:
+      Display_Name: "&c&lTurf Defender"
+      Entity_Type: PLAYER
+      Health: 30.0
+      Hostile: true
+      Wearables:
+         Helmet: ""
+         Chestplate: "IRON_CHESTPLATE"
+         Leggings: "IRON_LEGGINGS"
+         Boots: "IRON_BOOTS"
+      Item_Pool: []
+      Weapon_Pool:
+         - "weapon:rifle"
+      Drops:
+         Experience: 0
+         Items: []
+      AI:
+         Wander:
+            Enabled: false
+            Range: 0
+         Flee_On_Damage:
+            Enabled: false
+            Flee_Range: 0
+         Combat:
+            Enabled: true
+            Attack_Damage: 5.0
+            Attack_Range: 14.0
+            Attack_Interval_Ticks: 18
+            Difficulty: NORMAL
+
+   quartermaster:
+      Display_Name: "&6&lQuartermaster"
+      Entity_Type: PLAYER
+      Health: 40.0
+      Hostile: true
+      Wearables:
+         Helmet: "GOLDEN_HELMET"
+         Chestplate: "GOLDEN_CHESTPLATE"
+         Leggings: "GOLDEN_LEGGINGS"
+         Boots: "GOLDEN_BOOTS"
+      Item_Pool: []
+      Weapon_Pool:
+         - "weapon:rifle"
+      Drops:
+         Experience: 0
+         Items: []
+      AI:
+         Wander:
+            Enabled: false
+            Range: 0
+         Flee_On_Damage:
+            Enabled: false
+            Flee_Range: 0
+         Combat:
+            Enabled: true
+            Attack_Damage: 6.0
+            Attack_Range: 14.0
+            Attack_Interval_Ticks: 16
+            Difficulty: HARD
+
 # +--------+ #
 # | Groups | #
 # +--------+ #

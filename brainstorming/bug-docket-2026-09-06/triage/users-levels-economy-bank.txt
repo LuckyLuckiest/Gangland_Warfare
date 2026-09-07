@@ -1,0 +1,42 @@
+1~~P0~~Offline cache keyed by Player vs OfflinePlayer: the quit snapshot overwrites the live row after a rejoin~~Key both UserManager maps by UUID and evict by UUID on join.~~UserManagerTest (proxy pin)
+2~~P0~~Every join resets the Vault balance to Initial_Balance until the DB read returns~~Set the initial balance only when no user row exists, after the async load, never before it.~~-
+3~~P0~~/glw bank deposit and withdraw accept negative amounts (free cash, negative bank)~~Reject amount <= 0 in BankCommand.processMoney and at parse time.~~FIXED 0.8.3 c94fceab (#11); ParsedAmountTest + BankCommandTest + BankAmountGuardIntegrationTest
+4~~P0~~The <amount> <player> forms mint or destroy money for others with no admin gate~~Give the target forms a separate admin permission (gangland.command.bank.admin) plus commands.json entries, or remove them.~~FIXED 0.8.3 c94fceab (#12); manual checklist only - no unit seam for OptionalArgument actions
+5~~P1~~Death tax withdraw can throw EconomyException inside the death handler~~Clamp the deduction to the balance (User.withdraw) and catch EconomyException so changeDeathMessage still runs.~~UserTest (withdraw clamp)
+6~~P0~~Death drops mint cash: items are dropped but nothing is debited~~Debit the dropped amount from the dead player's balance (or drop only what the tax removed).~~-
+7~~P2~~Attribute.MAX_HEALTH on the declared 1.16 floor~~Resolve via XAttribute.MAX_HEALTH everywhere (repo-wide pattern; also WB-34, CT-15).~~-
+8~~P1~~addLevels overshoots maxLevel and a cancelled level-up still consumes XP~~Clamp on the resulting level, create a new event per level, subtract XP only when the event is not cancelled.~~LevelTest (pins; flip when fixed)
+9~~P1~~Level meter divides by zero at level 0 (NaN/Infinity, huge string)~~Guard requiredExp <= 0 in LevelCommand and Level.getPercentage; guard an empty LEVEL_METER_BAR.~~LevelTest (pins #9)
+10~~P2~~Unchecked (Player) sender casts in bank and level sub-arguments and completers~~Guard instanceof Player in completers; rely on user=true for actions.~~-
+11~~P1~~The offline cache is cleared every autosave and never repopulated~~Stop clearing the offline cache in the autosave; prune only entries older than N minutes.~~-
+12~~P1~~Both UserManager beans register suppliers for User and Bank (last wins)~~Same fix as CL-23.~~UserManagerTest (pins)
+13~~P1~~/glw bank create makes an unsaved, tier-less bank~~Route through the same creation path as the banker NPC (assign tier, anchor interest, save).~~-
+14~~P3~~createBankName and createBankTimer are never cleared on quit~~Key by UUID and clear on PlayerQuitEvent.~~-
+15~~P2~~perItem * amount overflows int and the cash vanishes~~Use long or BigDecimal for the total.~~-
+16~~P2~~Deposit silently discards cash when the user is not cached~~Check the user before removing the item entity; notify or log otherwise.~~-
+17~~P1~~Holding money cancels every interact (chests, doors, block placement)~~Cancel only when the action is the money use itself; skip creative mode.~~-
+18~~P2~~Bounty and wanted timers are started async from an async DB task~~Start the timers with start(false) from a main-thread task.~~-
+19~~P1~~UserDataInitEvent is fired async and the scoreboard is created off-thread~~Fire the event from a sync task after the async load completes.~~-
+20~~P2~~On quit the async clearInventories races the sync save~~Run clearInventories synchronously in the same handler.~~-
+21~~P2~~A banker with a missing world NPEs on every head-track tick~~Skip rows whose world is missing (log) and guard getWorld() in findClosestPlayer.~~-
+22~~P3~~Two reloads within two seconds queue two banker spawn passes~~Cancel the pending spawn task in onPreClear.~~-
+23~~P3~~remove() and init do full-table loads~~Delete by the known row; cache loaded rows.~~-
+24~~P3~~bypass_cap skips recordDeposit and the bypass is asymmetric~~Record deposits regardless and decide what the bypass covers.~~-
+25~~P2~~Max_Balance 0 rejects every deposit with no diagnostic~~Treat 0 or missing as unlimited and log at load.~~-
+26~~P2~~snapshot() accrues interest without saving (double pay after a crash)~~Save after maintain(), or accrue only inside transactions.~~-
+27~~P3~~An uncapped daily limit renders as 1.797E308~~Special-case 0 as "unlimited" in computeMax and the messages.~~-
+28~~P3~~setUser on the bank economy handler has no effect~~Remove the misleading calls.~~-
+29~~P3~~UserRepository reaches the UserFactory through an unchecked cast~~Inject UserFactory via the repository constructor or registry.~~-
+30~~P1~~/glw eco deposit, withdraw and set accept negative amounts~~Reject amount < 0 (and <= 0 for deposit/withdraw).~~-
+31~~P3~~Economy confirmations go to the target, not the sender~~Send *_TARGET to the target and the base message to the sender.~~-
+32~~P2~~Bounty payout and money pickups ignore Maximum_Balance~~Clamp through one shared deposit helper honouring User.Account.Maximum_Balance; use the right message.~~-
+33~~P3~~recentDeaths and downedBroadcasted are never pruned~~Remove on quit and expire by timestamp. Same as WB-17.~~-
+34~~P1~~A malformed bank_tiers.yml yields zero tiers and unbounded deposits~~Fail the load (keep defaults) and treat a null tier as "reject deposits", not "no cap".~~-
+35~~P3~~message_es.yml is missing the Banker and Bank keys~~Covered by CM-15.~~-
+36~~P3~~user_stat.yml is actually a gang roster~~Rename it or author the real user statistics screen.~~-
+37~~P3~~Placeholder tier fallback differs from the banker GUI~~Use Banker.Fallback_Tier_Id in GanglandPlaceholder.~~-
+38~~P3~~Bank placeholders show stale counters~~Call a read-only maintain() before reading.~~-
+39~~P2~~UserRepository decodes rows with positional hard casts~~Use Number casts like BankRepository and wrap the load in try/catch.~~-
+40~~P3~~Money_Symbol "" throws and multi-character symbols are truncated~~Validate at load (default "$" when empty) and allow multi-character symbols.~~-
+41~~P3~~Banker interaction has no permission or distance check~~Add a use permission and a distance check in BankerInteractListener.~~-
+42~~P3~~resolveTarget returns null silently for uncached online players~~Send a "player not loaded" message.~~-

@@ -1,0 +1,35 @@
+1~~P0~~Scoreboard driver appends the title to one shared live line list per board created~~Deep-copy scoreboardAddon.getLines() per board so Line state and growth are per player.~~-
+2~~P0~~Scoreboard updater runs async every tick, touching placeholders and FastBoard~~Use timer.start(false) with a configurable interval; keep only pure string formatting off-thread.~~-
+3~~P1~~rerender/switchTo reuse leaves stale clickable and draggable slots~~Clear clickableSlots, rightClickSlots, clickableItems and draggableSlots in InventoryHandler.clear() before re-rendering.~~-
+4~~P1~~InventoryRegistry never unregisters handlers and findByInventory scans everything~~Unregister in User.removeInventory and on close, register multi pages through the user, and index handlers by Inventory identity.~~-
+5~~P2~~Per-user inventory cache hits or misses depending on title/name coincidence~~Key the cache by the YAML name consistently and invalidate on open (or drop the cache).~~-
+6~~P2~~InventoryOpenByCommandListener return values are inverted and render failures are swallowed~~Return true on success and log the exception in the catch.~~-
+7~~P2~~Dangling else in MultiInventory.removePage~~Add braces so the else-if binds to the outer if.~~-
+8~~P2~~Click consumer runs before event.setCancelled~~Cancel first, then run the consumer; defer inventory opens by one tick.~~-
+9~~P2~~Out-of-range Line values throw at open time from a click handler~~Validate Line.Vertical/Horizontal at parse time and wrap openInventoryForPlayer in try/catch with a log.~~-
+10~~P3~~SPECIAL_INVENTORIES handlers would not cancel clicks (dormant)~~Register special inventories in InventoryRegistry or delete the mechanism.~~-
+11~~P2~~A suspended flow is never cleaned up when the anvil is abandoned~~On quit or close during suspend, run cleanup()/onEnd and add a timeout.~~-
+12~~P3~~VillagerInventory recipe lookup by identity may miss CraftMerchantRecipe~~Match by recipe index or result instead of identity.~~-
+13~~P2~~Chest hologram removal bypasses HologramService and leaks map entries~~Call hologramService.removeHologram(id) in ChestCooldownManager.~~-
+14~~P1~~Holograms vanish after a chunk unload and never respawn~~Make the armour stands persistent or respawn them on ChunkLoadEvent/update() when isArmorStandDead.~~-
+15~~P3~~hologramsByLocation is keyed by the caller's mutable Location~~Clone the key on insert and reject a second hologram at the same location.~~-
+16~~P1~~DriverV1/V2 skip rows that share the title's interval (Wanted never refreshes)~~Update every line in the cluster; remove the title-only branch.~~-
+17~~P2~~An empty Lines list throws every tick~~Guard empty contents in Line and validate scoreboard.yml at load.~~-
+18~~P3~~Multi.Per_Page is parsed but never read~~Use perPage in computeConfigForCreation or remove the key from the three YAMLs.~~-
+19~~P3~~Home_Page head texture key is read but missing from settings.yml~~Add Inventory.Multi_Inventory.Home_Page to settings.yml.~~-
+20~~P2~~Invalid Action names are swallowed silently (phone.yml RIGHT_CLICK)~~Log unknown Action values and fix phone.yml to RIGHT_CLICK_AIR/RIGHT_CLICK_BLOCK.~~-
+21~~P2~~phone_bounty.yml slots 21/23/40 have no click handlers~~Add OnClick blocks or implement the bounty GUI (see WB-37).~~-
+22~~P2~~gang_stat.yml has no Slots block, so the GUI is empty~~Author the Slots block or remove the button in gang_info. Same as GR-17.~~-
+23~~P2~~Anvil output passes through the placeholder engine inside a command string~~Escape % in player text before substitution, or convert placeholders before inserting the output.~~-
+24~~P3~~Raw Sound enum in MultiInventoryNavigation~~Use Keystone SoundEffect.~~-
+25~~P3~~MultiInventory.ID static counter is unsynchronised~~Use an AtomicLong.~~-
+26~~P3~~FilterStore.clearAllForPlayer is never called~~Call it on PlayerQuitEvent.~~-
+27~~P3~~FilterApplier comparator can ClassCastException on mixed types~~Compare as strings when classes differ.~~-
+28~~P2~~validateMaterial is a substring match and unknown names kill the whole file~~Use exact MaterialType names and XMaterial.matchXMaterial(); skip the slot with a warning.~~-
+29~~P3~~Rebuilt ItemBuilder drops the stack amount~~Copy amount (and model data) in InventoryBuilder.~~-
+30~~P3~~Open.Permission is enforced but never registered~~Register it with PermissionManager.~~-
+31~~P3~~backStack grows when switching between same-size panels~~Push only when the panel actually changes.~~-
+32~~P3~~Bottom-inventory number-key and offhand swaps are allowed while a GUI is open~~Cancel HOTBAR_SWAP and SWAP_WITH_CURSOR for flows that stage player items.~~-
+33~~P3~~HologramProtectionListener linear scan per interaction~~Index armour stands by UUID.~~-
+34~~P3~~SearchButtonFactory has no callers~~Delete it or use it from the YAML views.~~-
+35~~P3~~Multi-event slots resolve non-deterministically~~Iterate in a defined order and reject duplicate event blocks.~~-

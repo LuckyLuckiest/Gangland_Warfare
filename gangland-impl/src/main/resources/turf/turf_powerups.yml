@@ -1,0 +1,54 @@
+#   +------------------------------------------------------+   #
+#  /     __________      _______________       ____         \  #
+# |     / ________/      \_____   _____/      / __ \         | #
+# |    | /                     | |           / /  \ \        | #
+# |    | |  _______            | |          / /____\ \       | #
+# |    | |  \_____ \           | |         / ________ \      | #
+# |    | \_______/ ||          | |        / /        \ \     | #
+# |     \__________/           |_|       /_/          \_\    | #
+# |                                                          | #
+# |                  File: turf_powerups.yml                 | #
+# |                  Author: [LuckyRaven10]                  | #
+#  \                                                        /  #
+#   +------------------------------------------------------+   #
+
+# +-----------------+ #
+# | Turf Powerups   | #
+# +-----------------+ #
+# Catalogue of purchasable timed buffs the per-turf Quartermaster NPC sells. Each entry is keyed by a lowercase
+# lookup id; the id is what code asks for and what admin commands accept. Every value is hot-reloadable — drop the
+# server, edit, restart, and the registry rebuilds at next file-load phase.
+#
+# Effect_Type values:
+#   INCOME_MULTIPLIER     Magnitude is the multiplier on the per-interval payout. 1.25 → +25% income.
+#   CAPTURE_DEFENSE_BONUS Magnitude is the flat number added to the defender side of the capture tug-of-war.
+#                         1.0 ≈ one phantom defender that helps push attackers back.
+#   GARRISON_DISCOUNT     Magnitude is the multiplier on the garrison Per_Defender_Cost. 0.8 → 20% off.
+#
+# Cost is paid out of the owning gang's bank when the buff is activated.
+# Duration_Seconds is wall-clock; the buff expires once that many seconds elapse, regardless of capture activity.
+Powerups:
+   small_income_boost:
+      Display_Name: "&aSmall Income Boost"
+      Cost: 5000
+      Effect_Type: INCOME_MULTIPLIER
+      Magnitude: 1.25
+      Duration_Seconds: 3600
+   large_income_boost:
+      Display_Name: "&2Large Income Boost"
+      Cost: 15000
+      Effect_Type: INCOME_MULTIPLIER
+      Magnitude: 1.75
+      Duration_Seconds: 3600
+   reinforced_defense:
+      Display_Name: "&cReinforced Defense"
+      Cost: 8000
+      Effect_Type: CAPTURE_DEFENSE_BONUS
+      Magnitude: 1.0
+      Duration_Seconds: 1800
+   garrison_discount:
+      Display_Name: "&bGarrison Discount"
+      Cost: 2500
+      Effect_Type: GARRISON_DISCOUNT
+      Magnitude: 0.8
+      Duration_Seconds: 1800

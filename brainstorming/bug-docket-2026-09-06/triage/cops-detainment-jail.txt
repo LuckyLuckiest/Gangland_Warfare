@@ -1,0 +1,42 @@
+1~~P0~~detainment.jail_id is UNIQUE, so a second inmate per cell is never persisted~~Remove setUnique(true) on jail_id; uniqueness belongs to the player uuid.~~-
+2~~P1~~JailService.ID is restored by last-row assignment, so /glw jail create can move an existing jail~~Seed from max(id)+1 in JailRepository/JailService.~~JailRegistryTest (pins the move mechanics)
+3~~P1~~Cop tier Health is never applied~~Apply tier.health() in CopNpcFactory.createCop (MAX_HEALTH attribute plus heal).~~-
+4~~P0~~Quitting while handcuffed promotes to JAILED with no sentence, so the player is never released~~Route the quit promotion through JailIntakeService (occupancy, seizure, expiry, paperwork).~~-
+5~~P1~~PURSUING/RETURNING ping-pong keeps cops alive forever~~Clear targetPlayerId (or set a give-up flag) when pursuit gives up; ReturningBehavior must not re-pursue until a new sighting.~~-
+6~~P0~~The seized inventory is deleted before restore succeeds, so a failure loses it permanently~~Deserialise first and remove the cache and DB row only after applyInventory returns true.~~-
+7~~P1~~Removing a jail leaves inmates pointing at a deleted cell (FK)~~Release or relocate inmates and delete detainment and jail_exit rows before deleting the jail.~~-
+8~~P2~~Attack cooldowns are decremented per AI tick (10x slower) and Attack_Cooldown_Ticks is unread~~Decrement by the AI tick rate and read Attack_Cooldown_Ticks.~~-
+9~~P2~~Yaw and atan2 frames differ, so spawn-behind picks the wrong hemisphere~~Use Location.getDirection() and a dot product.~~-
+10~~P1~~currentCuffCooldown is keyed by Player and cleaned only on success~~Key by UUID and remove on quit or expiry.~~-
+11~~P2~~A cancelled transit is not saved and can resurrect after a crash~~Save the detained record in cancelInternal.~~-
+12~~P0~~An unknown detainment state shifts every following column by one~~Do not increment v twice in the catch (read the value once into a local).~~-
+13~~P2~~Cop spawner yaw/pitch use (double) casts on Float columns~~Use ((Number) x).floatValue().~~-
+14~~P2~~PotionEffect.INFINITE_DURATION on the 1.16 floor~~Use a large finite duration or an XPotion helper.~~-
+15~~P2~~Cops leak after the wanted level ends and the player quits~~despawnAllForPlayer on quit and when wanted ends.~~-
+16~~P2~~cop.destroy() without the EntityMarkManager leaks marks~~Pass the mark manager (or destroy through CopManager).~~-
+17~~P1~~/glw cuff never schedules transit and /glw uncuff bypasses ReleasePipeline~~Cuff calls TransitService.schedule; uncuff calls ReleasePipeline.release.~~-
+18~~P2~~A player can be JAILED with jailId null when all cells are full~~Refuse intake (stay HANDCUFFED) and notify, or wait-list.~~-
+19~~P3~~detainPlayer is called twice per intake~~Remove the redundant call.~~-
+20~~P2~~The static GUI allowlist survives reload and missed close events~~Make DetainmentGuiAccess a bean with onPreClear and revoke on a timeout.~~-
+21~~P3~~Bribe GUI reachability vs the HIGHEST cancel (unverified)~~Verify on a live server; if blocked, exempt NPC targets in the restraint blanket.~~-
+22~~P2~~Transit countdown and sentence-complete messages are never invoked~~Call the contract methods from TransitService.tick and SentenceService.~~-
+23~~P2~~Max_Cuff_Attempts never escalates~~Count failures in CuffingBehavior and transition to COMBAT at N.~~-
+24~~P2~~CuffLockRegistry.releaseByCop/forceRelease are never called, so stale locks block cuffing~~Call releaseByCop in AbstractNpc.destroy and forceRelease on release/quit.~~CuffLockRegistryTest (primitives pinned)
+25~~P3~~CopConfig snapshot is dead and incomplete~~Delete CopConfig or make it the single source.~~-
+26~~P3~~The money icon variation never varies~~Implement the range match in pickVariation.~~-
+27~~P2~~WantedLevelChangeEvent fires before the level updates (works by accident)~~Update the level before firing; keep CopListener on WantedStartEvent.~~-
+28~~P3~~Raw Sound and Particle constants in the NPC delegates~~Use SoundEffect and XParticle.~~-
+29~~P3~~faceTarget teleports the NPC on every attack~~Rotate via the navigator/look instead of teleport.~~-
+30~~P3~~"Serve Sentence" button and sentence opt-in are not implemented~~Remove the button or implement opt-in.~~-
+31~~P3~~BreakFree counters are never reset~~Reset on release and quit.~~-
+32~~P2~~Respawn uses cell occupancy that is never restored (world spawn, double teleport)~~Rebuild occupancy from DetainedPlayer.jailId at startup and use jailId for respawn.~~-
+33~~P2~~copAttackers never expires~~Expire entries by timestamp.~~-
+34~~P3~~EntityType.valueOf is rebuilt per call and throws on typos~~Parse once at load inside try/catch.~~-
+35~~P3~~EntityMark.isCivilian includes POLICE~~Rename to isNpc or split the predicates.~~-
+36~~P2~~snapshot overwrites an existing seized inventory~~Refuse a second snapshot while one exists (merge or keep the first).~~-
+37~~P3~~isValid mutates entity flags on every damage event~~Separate the pure isValid from ensureDamageable.~~-
+38~~P3~~stopNavigation is a no-op during a ladder climb and destroy skips cleanup~~Cancel the climb in stopNavigation and in destroy.~~-
+39~~P3~~CopDeathEvent is never fired~~Fire it from CopListener on cop death or delete it.~~-
+40~~P3~~Bail/bribe double-click race~~Re-check the state inside tryCharge/release.~~-
+41~~P3~~cuff_help and uncuff_help entries are missing~~Add the entries.~~-
+42~~P3~~Transit fire drops silently~~log.debug when the commit is skipped.~~-

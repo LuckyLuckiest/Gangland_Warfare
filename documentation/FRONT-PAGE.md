@@ -372,7 +372,7 @@ The following systems are actively in development:
 | Requirement       | Details                                                    |
 |-------------------|------------------------------------------------------------|
 | Minecraft version | 1.20+ (tested; earlier versions are partially implemented) |
-| Java              | Java 21 or newer                                           |
+| Java              | Java 17 or newer                                           |
 | Server platform   | **Spigot** (Paper-only APIs are not used)                  |
 | Required plugins  | NBTAPI, Citizens                                           |
 | Optional plugins  | PlaceholderAPI, Vault, ViaVersion                          |

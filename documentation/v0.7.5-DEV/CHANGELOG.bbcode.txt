@@ -328,7 +328,7 @@ Not user-facing, but flagged here for anyone shipping custom modules against thi
 [LIST]
 [*]Listener and command packages moved inside the [ICODE]bean[/ICODE] package for consistency with [ICODE]@ListenerHandler[/ICODE] / [ICODE]@CommandHandler[/ICODE].
 [*]Autowire package folded under [ICODE]bean[/ICODE].
-[*][ICODE]gangland-core[/ICODE] main package renamed to [ICODE]me.luckyraven.core[/ICODE].
+[*][ICODE]gangland-core[/ICODE] main package renamed to [ICODE]org.luckyraven.gangland.core[/ICODE].
 [*][ICODE]BankerViewOpener[/ICODE] contract removed — the view is specified directly at the call site, dropping an unnecessary indirection.
 [*]Trader trait loader moved onto the shared bean lifecycle.
 [*]Input interceptors abstracted so anvil-GUI / chat-prompt sessions share the same cancellation pipeline.

@@ -15,7 +15,7 @@ subsystem for Gangland Warfare. It provides:
 The module contains 91 classes organized across these packages:
 
 ```
-me.luckyraven.copsncrooks
+org.luckyraven.gangland.copsncrooks
   bounty/            Bounty tracking and executor
   combo/             Kill combo system
   detainment/        Detainment states, registry, service
@@ -49,7 +49,7 @@ AbstractNpc                      (base class -- weapon pipeline, navigation, com
 
 ### AbstractNpc -- Base NPC Layer
 
-**Package:** `me.luckyraven.copsncrooks.entity.npc`
+**Package:** `org.luckyraven.gangland.copsncrooks.entity.npc`
 
 `AbstractNpc` is the shared base class for all Citizens-backed NPC types. It owns:
 
@@ -670,7 +670,7 @@ Group coherence is enforced during `WANDERING`: if a member's distance from the 
 
 ### EntitySpawner<S>
 
-**Package:** `me.luckyraven.copsncrooks.entity`
+**Package:** `org.luckyraven.gangland.copsncrooks.entity`
 
 Abstract base providing the shared spawn-location algorithm and persistent spawner registry.
 Extended by `CopSpawnManager` and `CivilianSpawnManager`.
@@ -765,7 +765,7 @@ to determine if a killed entity should increment the player's wanted level.
 
 ## Wanted System
 
-**Package:** `me.luckyraven.copsncrooks.wanted`
+**Package:** `org.luckyraven.gangland.copsncrooks.wanted`
 
 ### Wanted
 
@@ -836,7 +836,7 @@ double getTakeMoneyMultiplier()      // Money scaling multiplier per level
 
 ## Kill Combo System
 
-**Package:** `me.luckyraven.copsncrooks.combo`
+**Package:** `org.luckyraven.gangland.copsncrooks.combo`
 
 ### KillCombo
 
@@ -892,7 +892,7 @@ When the timer expires, the tracker fires the combo reset callback and removes i
 
 ## Bounty System
 
-**Package:** `me.luckyraven.copsncrooks.bounty`
+**Package:** `org.luckyraven.gangland.copsncrooks.bounty`
 
 ### Bounty
 
@@ -1114,15 +1114,15 @@ public void onCuffed(CuffedEvent event) {
 
 ## Listeners
 
-**Package:** `me.luckyraven.copsncrooks.listener`
+**Package:** `org.luckyraven.gangland.copsncrooks.listener`
 
-| Listener                   | Package               | Handles                                                        |
-|----------------------------|-----------------------|----------------------------------------------------------------|
-| `CopListener`              | `listener.detainment` | Cop NPC damage events -- alerts group, tracks attackers        |
-| `DetainmentListener`       | `listener.police`     | Detainment state changes, visual effects, movement restriction |
-| `CuffingListener`          | `listener.police`     | Cuffing process events, UI feedback during wind-up             |
-| `CivilianDeathListener`    | `listener.civilian`   | Civilian death -- drops, experience, wanted level tracking     |
-| `CivilianDamageListener`   | `listener.civilian`   | Civilian damaged -- triggers flee/combat, cop-civilian combat  |
+| Listener                 | Package               | Handles                                                        |
+|--------------------------|-----------------------|----------------------------------------------------------------|
+| `CopListener`            | `listener.detainment` | Cop NPC damage events -- alerts group, tracks attackers        |
+| `DetainmentListener`     | `listener.police`     | Detainment state changes, visual effects, movement restriction |
+| `CuffingListener`        | `listener.police`     | Cuffing process events, UI feedback during wind-up             |
+| `CivilianDeathListener`  | `listener.civilian`   | Civilian death -- drops, experience, wanted level tracking     |
+| `CivilianDamageListener` | `listener.civilian`   | Civilian damaged -- triggers flee/combat, cop-civilian combat  |
 
 ---
 

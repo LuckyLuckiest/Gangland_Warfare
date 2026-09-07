@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>me.luckyraven</groupId>
+        <groupId>org.luckyraven</groupId>
         <artifactId>gangland_warfare</artifactId>
         <version>${revision}</version>
     </parent>
@@ -14,76 +14,37 @@
 
     <name>Gangland Build</name>
 
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
     <build>
         <directory>../target</directory>
 
         <plugins>
-            <!-- Maven plugin compiler (start) -->
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                    <encoding>${project.build.sourceEncoding}</encoding>
-                </configuration>
-            </plugin>
-
-            <!-- Maven plugin compiler (end) -->
-
             <!-- Maven plugin shade (start) -->
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.6.1</version>
                 <configuration>
                     <createDependencyReducedPom>false</createDependencyReducedPom>
                     <shadedArtifactAttached>true</shadedArtifactAttached>
                     <finalName>${project.parent.artifactId}-${project.parent.version}</finalName>
 
+                    <!-- HikariCP, XSeries and exp4j are no longer shaded (Keystone migration): Keystone.jar ships
+                         them unrelocated on its classpath, so Gangland's classes resolve them from there at
+                         runtime. Only Gangland-exclusive libraries remain in this jar. -->
                     <relocations>
                         <relocation>
                             <pattern>net.wesjd.anvilgui</pattern>
-                            <shadedPattern>me.luckyraven.dependency.anvilgui</shadedPattern>
-                        </relocation>
-
-                        <relocation>
-                            <pattern>com.zaxxer.hikari</pattern>
-                            <shadedPattern>me.luckyraven.dependency.hikari</shadedPattern>
-                        </relocation>
-
-                        <relocation>
-                            <pattern>com.cryptomorin.xseries</pattern>
-                            <shadedPattern>me.luckyraven.dependency.xseries</shadedPattern>
+                            <shadedPattern>org.luckyraven.gangland.dependency.anvilgui</shadedPattern>
                         </relocation>
 
                         <relocation>
                             <pattern>fr.mrmicky.fastboard</pattern>
-                            <shadedPattern>me.luckyraven.dependency.fastboard</shadedPattern>
-                        </relocation>
-
-                        <relocation>
-                            <pattern>net.objecthunter.exp4j</pattern>
-                            <shadedPattern>me.luckyraven.dependency.exp4j</shadedPattern>
+                            <shadedPattern>org.luckyraven.gangland.dependency.fastboard</shadedPattern>
                         </relocation>
 
                         <relocation>
                             <pattern>org.bstats</pattern>
-                            <shadedPattern>me.luckyraven.dependency.bstats</shadedPattern>
-                        </relocation>
-
-                        <relocation>
-                            <pattern>org.reflections</pattern>
-                            <shadedPattern>me.luckyraven.util.reflections</shadedPattern>
+                            <shadedPattern>org.luckyraven.gangland.dependency.bstats</shadedPattern>
                         </relocation>
                     </relocations>
 
@@ -94,8 +55,9 @@
                             <includes>
                                 <!-- AnvilGUI -->
                                 <include>net/wesjd/anvilgui/version/</include>
-                                <!-- Compatibility -->
-                                <include>me/luckyraven/</include>
+                                <!-- Project classes are discovered reflectively (beans, listeners,
+                                     repositories, NMS adapters) so minimizeJar must keep them all -->
+                                <include>org/luckyraven/</include>
                             </includes>
                         </filter>
                     </filters>
@@ -104,14 +66,18 @@
 
                     <artifactSet>
                         <includes>
-                            <include>me.luckyraven:*</include>
+                            <!-- keystone-* modules share this groupId but are provided scope, so the shade
+                                 plugin never includes them — the runtime copies come from Keystone.jar. -->
+                            <include>org.luckyraven:*</include>
                             <include>net.wesjd:anvilgui</include>
-                            <include>com.zaxxer:HikariCP</include>
-                            <include>com.github.cryptomorin:XSeries</include>
                             <include>fr.mrmicky:fastboard</include>
-                            <include>net.objecthunter:exp4j</include>
                             <include>org.bstats:*</include>
                         </includes>
+                        <excludes>
+                            <!-- Runtime modules ship as their own jars under target/modules/ (see the
+                                 maven-dependency-plugin execution below), never inside the core jar. -->
+                            <exclude>org.luckyraven:gangland-mail</exclude>
+                        </excludes>
                     </artifactSet>
                 </configuration>
 
@@ -126,163 +92,159 @@
             </plugin>
 
             <!-- Maven plugin shade (end) -->
+
+            <!-- Runtime modules: copied next to the core jar as target/modules/<artifact>-<version>.jar. Server
+                 owners drop them into plugins/Gangland_Warfare/modules/. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.8.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-runtime-modules</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/modules</outputDirectory>
+                            <stripVersion>false</stripVersion>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.luckyraven</groupId>
+                                    <artifactId>gangland-mail</artifactId>
+                                    <version>${project.version}</version>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
     <dependencies>
         <!-- Include Core -->
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>gangland-impl</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
 
-        <!-- Include NMS -->
+        <!-- Runtime modules: provided so the reactor builds them before this module and the shade (which
+             only sees compile/runtime scope) leaves them out of the core jar. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-mail</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Include NMS (MC 1.16+, matching Keystone's API floor; players on older
+             clients are handled by ViaVersion/ViaBackwards) -->
         <!-- 1.21.x -->
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_21_R7</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_21_R6</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_21_R5</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_21_R4</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_21_R3</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_21_R2</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_21_R1</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <!-- 1.20.x -->
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_20_R4</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_20_R3</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_20_R2</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_20_R1</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <!-- 1.19.x -->
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_19_R3</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_19_R2</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_19_R1</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <!-- 1.18.x -->
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_18_R2</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_18_R1</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <!-- 1.17.x -->
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_17_R1</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <!-- 1.16.x -->
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_16_R3</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_16_R2</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>version-1_16_R1</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <!-- 1.15.x -->
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>version-1_15_R1</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <!-- 1.14.x -->
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>version-1_14_R1</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <!-- 1.13.x -->
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>version-1_13_R2</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>version-1_13_R1</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <!-- 1.12.x -->
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>version-1_12_R1</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <!-- 1.11.x -->
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>version-1_11_R1</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <!-- 1.10.x -->
-        <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>version-1_10_R1</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
     </dependencies>

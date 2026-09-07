@@ -129,7 +129,7 @@ Run these greps across `gangland-impl/src/main/resources/`:
 - [ ] No inline flow maps `{ key: value }` — block style only. Reference: `feedback_yaml_inline_braces`.
 - [ ] Top-level keys are `Capitalized_Underscore_Separated`. Reference: `feedback_yaml_underscore_keys`. Lookup
   ids (weapon keys, ammo keys, shop keys) stay lowercase.
-- [ ] `Sound` fields reference string sound names via `SoundConfiguration`, never raw `Sound.X` enum literals.
+- [ ] `Sound` fields reference string sound names via `SoundEffect` (keystone `sound` package), never raw `Sound.X` enum literals.
   Reference: `feedback_sound_via_configuration`.
 - [ ] No calls to `FileConfiguration.setDefaults()` / `copyDefaults()` for YAML fallback. Reference:
   `feedback_no_bukkit_setdefaults`.

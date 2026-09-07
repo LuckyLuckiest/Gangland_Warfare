@@ -57,7 +57,7 @@ Lifecycle managed by `ScoreboardLifecycleService`.
 ## Regression Risks
 
 - `ScoreboardLifecycleService` — per-player lifecycle (attach on join, detach on leave).
-- FastBoard version compatibility across MC 1.10–1.21 NMS adapters.
+- FastBoard version compatibility across MC 1.16–1.21 NMS adapters.
 - Placeholder service — `PlaceholderService` bean (see `project_decoupling_phases`).
 
 ---

@@ -171,14 +171,38 @@ Commands:
       Invite:
          Player: "You have invited &6%player%&7 to the gang."
          Target: "You were invited to join &8[&a%gang%&8]&7."
+         Expires_Online: "&7The invitation expires in &e1 minute&7. Use &e/glw gang accept&7 to join."
+         No_Expiry: "&7They are offline — the invitation will wait until they next log in."
          Accept: "You have joined &8[&a%gang%&8]&7 gang."
          Joined: "&6%player%&7 joined the gang."
+         Accept_Multiple: "&eYou have %count% pending gang invites.&7 Use &e/glw gang accept <gang>&7 to pick — auto-selected &8[&e%gang%&8]&7."
+         No_Invite_From: "&7No pending gang invite from &8[&e%gang%&8]&7."
+         Pending:
+            None: "&7No pending invites from your gang."
+            Header: "&6&lPending invites&r &8(&e%count%&8):"
+            Entry: " &8- &b%player%"
+         Cancel:
+            None: "&7No pending invite to &6%player%&7 to cancel."
+            Sender: "Cancelled the invite to &6%player%&7."
+            Target: "Your gang invitation was cancelled."
+            Multiple: "&eYou have %count% outgoing pending invites.&7 Use &e/glw gang invite cancel <player>&7 to pick — auto-cancelled &6%player%&7."
       Ally:
          Send_Request: "Sent an alliance request to &8[&e%gang%&8]&7."
          Receive_Request: "Gang alliance was requested from &8[&e%gang%&8]&7."
          Accept_Request: "Gang alliance with &8[&e%gang%&8]&7 was &aaccepted&7."
          Reject_Request: "Gang alliance with &8[&e%gang%&8]&7 was &crejected&7."
          Abandon: "Gang alliance was abandoned with &8[&e%gang%&8]&7."
+         Accept_Multiple: "&eYou have %count% pending ally requests.&7 Use &e/glw gang ally accept <gang>&7 to pick — auto-selected &8[&e%gang%&8]&7."
+         Reject_Multiple: "&eYou have %count% pending ally requests.&7 Use &e/glw gang ally reject <gang>&7 to pick — auto-selected &8[&e%gang%&8]&7."
+         No_Request_From: "&7No pending ally request from &8[&e%gang%&8]&7."
+         Pending:
+            None: "&7No pending ally requests from your gang."
+            Header: "&6&lPending ally requests&r &8(&e%count%&8):"
+            Entry: " &8- &b%gang%"
+            Cancel:
+               None: "&7No pending ally request to that gang to cancel."
+               Sender: "Cancelled the ally request to &8[&e%gang%&8]&7."
+               Target: "&8[&e%gang%&8]&7 cancelled their ally request."
       Promote:
          Player_Success: "You have promoted &6%player%&7 to &e%rank%&7."
          Target_Success: "You have been promoted to &e%rank%&7."
@@ -189,8 +213,14 @@ Commands:
          End: "Reached the initial rank."
       Leave:
          Left: "You have left the gang."
+         Broadcast: "&6%player%&7 has left the gang."
          Owner_Rank: "Need to transfer the ownership to another user."
          Kicked: "You have kicked &6%player%&7 from the gang."
+      Transfer:
+         Request: "Confirm transferring ownership to &6%player%&7."
+         Player_Success: "You have transferred ownership to &6%player%&7."
+         Target_Success: "&6%player%&7 has transferred ownership to you."
+         No_Parent: "&cThere is no rank below the owner to demote yourself to."
       Money:
          Add: "&6%player%&7 has deposited &a%money_symbol%%amount% &7to the gang account."
          Take: "&6%player%&7 has withdrawn &a%money_symbol%%amount% &7from the gang account."
@@ -350,6 +380,69 @@ Commands:
       Drift: "&eDrift &8» &b%permission% &7(Bukkit: &f%bukkit%&7, tracked: &f%tracked%&7)"
    Loot_Chest:
       Removed: "&aLoot chest removed successfully!"
+   Turf:
+      Enter:
+         Owned: "&8» &7Entering &f%turf% &7— Controlled by &e%gang%"
+         Unclaimed: "&8» &7Entering &f%turf% &7— &8Unclaimed territory"
+         Contesting_Claim: "&8» &7Entering &f%turf% &7— &ePhase 1: securing territory &7(any gang helps)"
+         Contesting_Consolidate: "&8» &7Entering &f%turf% &7— &ePhase 2: &c%gang% &7consolidating"
+         Title: "&6&l%turf%"
+         Subtitle_Owned: "&7Controlled by &e%gang%"
+         Subtitle_Unclaimed: "&7Unclaimed Territory"
+         Subtitle_Contesting_Claim: "&ePhase 1 &7— securing territory"
+         Subtitle_Contesting_Consolidate: "&ePhase 2 &7— &c%gang% &7consolidating"
+      Exit: "&8« &7Leaving &f%turf%"
+      Presence:
+         Owned: "&f%turf% &7— Territory of &e%gang%"
+         Unclaimed: "&f%turf% &7— &8Unclaimed territory"
+      Capture:
+         BossBar_Title: "&e%gang% &7is capturing &f%turf%"
+         Unclaimed_Bossbar_Title: "&fUnclaimed Territory"
+         Cooldown_Actionbar: "&f%turf% &7— Securing territory (&b%minutes%m&7 left)"
+         Captured_Broadcast: "&6&l%gang% &7captured &f%turf%&7! &8(was &c%old_gang%&8)"
+      Wand:
+         Given: "&aReceived the turf selection wand. Left-click = pos1, right-click = pos2."
+         Pos_Set: "&7Turf &a%corner% &7set to &f(%x%, %y%, %z%)&7 in world &f%world%&7."
+      Create:
+         Success: "&aCreated turf &f%turf% &8[&7id=%id%&8] &7(&f%min%&7 to &f%max%&7 in &f%world%&7). &e(now selected — /glw turf tp)"
+      Delete:
+         Success: "&aDeleted turf &f%turf%&7."
+      SetOwner:
+         Success: "&aSet &f%turf%'s &aowner to &e%gang%&7."
+         Cleared: "&aCleared owner of &f%turf%&7."
+      Select:
+         Success: "&aSelected turf &f%turf% &8[&7id=%id%&8]&7. &7Use &e/glw turf tp&7 to teleport."
+      Tp:
+         Success: "&aTeleported to &f%turf% &8[&7id=%id%&8]&7."
+      Income:
+         Success: "&aSet &f%turf%&a income to &b%money_symbol%%amount% &aper &b%time%&a."
+      PowerupNpc:
+         Set: "&aPlaced powerup NPC for &f%turf%&7."
+         Removed: "&aRemoved powerup NPC for &f%turf%&7."
+      Garrison:
+         View: "&7Garrison on &f%turf%&7: &f%count%&7."
+         Set: "&aSet &f%turf% &agarrison to &f%count%&7."
+      Buff:
+         List_Empty: "&7No active buffs on &f%turf%&7."
+         List_Header: "&7Active buffs on &f%turf% &7(&f%count%&7):"
+         List_Row: "  &f%id% &7(%type% &fx%magnitude%&7) — &b%time% &7remaining"
+         Activated: "&aActivated &f%id% &aon &f%turf% &afor &b%duration%&7."
+      Show:
+         Started: "&aRendering turf &f%turf% &7for &b%seconds%s&7."
+      Info:
+         Header: "&6&l%turf% &8[&7id=%id%&8]"
+         Owner: " &7Owner: &e%gang%"
+         Region: " &7Region: &f(%min% → %max%) &7in &f%world%"
+         Income: " &7Income: &a%money_symbol%%amount% &7every &b%time%"
+         State: " &7State: &f%state%"
+      List:
+         Header: "&6&lTurfs &7(&e%count%&7):"
+         Row: " &8- &8[&7id=%id%&8] &f%turf% &7owned by &e%gang% &8(&b%world%&8)"
+         Empty: "&7No turfs have been defined."
+      Status:
+         Idle: "&7%turf% &7— &aIdle&7 (owner: &e%gang%&7)"
+         Contesting: "&7%turf% &7— &c%progress%%&7 by &e%gang%%phase%"
+         Cooldown: "&7%turf% &7— &6Cooldown &8(%time% left)"
 
 Errors:
    Prefix: "&4Error&7: "
@@ -375,6 +468,8 @@ Errors:
       Cannot_Exceed_Max: "You can't exceed the &cmaximum amount &7set."
       Cannot_Take_More_Than_Balance: "You can't take money more than your &cbalance&7."
       Cannot_Take_Less_Than_Zero: "You can't take money less than &czero&7."
+   Bounty:
+      Below_Minimum: "The smallest bounty you can place is &c%money_symbol%%minimum%&7."
    Bank:
       Must_Create: "Must create a Bank to continue."
       Cannot_Create: "Insufficient funds to create a &cbank account&7."
@@ -388,6 +483,7 @@ Errors:
       Doesnt_Exist: "That gang doesn't exist."
       Same_Rank: "Can't perform actions to similar ranks."
       Higher_Rank: "Can't perform actions to higher rank than yours."
+      Cannot_Act_Self: "&cYou can't perform that action on yourself."
    Rank:
       Invalid: "This rank doesn't exist."
       Invalid_Permission: "This permission doesn't exist."
@@ -478,13 +574,40 @@ Errors:
    Argument:
       Not_Implemented: "Not implemented method!"
       Confirm_Required: "Need to execute the initial statement to use this argument."
+   Turf:
+      Create:
+         Overlap: "&cThat selection overlaps turf &f%turf%&c — pick a different area."
+         No_Selection: "&cSet pos1 and pos2 first (via the wand or &e/glw turf pos1&c / &e/glw turf pos2&c)."
+         Cross_World: "&cBoth corners must be in the same world."
+         Id_Taken: "&cA turf named &f%turf%&c already exists."
+      Income:
+         Invalid: "&cInvalid income amount: &f%amount%&c. Must be a non-negative number."
+      Not_Found: "&cNo turf named &f%turf%&c."
+      Not_Inside: "&cStand inside a turf to use this command."
+      Gang_Not_Found: "&cNo gang named &f%gang%&c."
+      No_Gang: "&cYou must be in a gang to use this command."
+      No_Active: "&cNo active turf. Use &e/glw turf select <id>&c or &e/glw turf create&c first."
 
 Information:
    Prefix: "&8&l[&7Information&8&l]&7 "
    Gang:
       Request_Already_Sent: "Gang alliance to that gang is already sent!"
+      Invite_Already_Sent: "&6%player%&7 already has a pending invite from your gang."
       Already_Allied: "Already allied with that gang."
       Kicked: "You have been kicked from the gang!"
+   Mail:
+      Pending_Invites:
+         Header: "&7You have &e%count%&7 pending gang invite(s) — use &e/glw gang accept <gang>&7 to pick:"
+         Entry: " &8- &b%gang%"
+      Pending_Ally_Requests:
+         Header: "&7Your gang has &e%count%&7 pending alliance request(s) — use &e/glw gang ally accept <gang>&7 to pick:"
+         Entry: " &8- &b%gang%"
+   Turf:
+      Contest_Start_Defender: "&c⚠ Your turf &f%turf%&c is being contested by &e%gang%&c!"
+      Contest_Half_Defender: "&4⚠ &cCapture of &f%turf%&c is halfway done — defend it!"
+      Blocked:
+         Cooldown: "&7This turf is recovering. Capturable again in &e%time%&7."
+         Protected: "&7A member of &e%gang% &7was online recently — their turf is protected for &e%time%&7."
    Balance:
       Registered_Only: "Balance are for registered users"
    Argument:

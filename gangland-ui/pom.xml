@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>me.luckyraven</groupId>
+        <groupId>org.luckyraven</groupId>
         <artifactId>gangland_warfare</artifactId>
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
@@ -24,5 +24,14 @@
         <module>lootchest-api</module>
         <module>shop-api</module>
     </modules>
+
+    <dependencies>
+        <!-- Every UI module compiles against the Spigot API at provided scope. -->
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
 
 </project>

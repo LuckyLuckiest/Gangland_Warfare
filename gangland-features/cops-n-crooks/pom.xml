@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>me.luckyraven</groupId>
+        <groupId>org.luckyraven</groupId>
         <artifactId>gangland-features</artifactId>
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
@@ -16,56 +16,65 @@
     <name>Cops N Crooks</name>
 
     <dependencies>
-        <!-- Spigot Build -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-bean</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-item</artifactId>
+        </dependency>
+        <!-- Keystone shared infrastructure (provided by Keystone.jar at runtime; never shaded).
+             Declared directly: provided scope is not transitive, so it cannot arrive via gangland-core. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-common</artifactId>
+        </dependency>
+        <!-- Spigot Build (full server — needed for io.netty access) -->
         <dependency>
             <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
-            <version>${bukkit.version}</version>
+            <artifactId>spigot</artifactId>
             <scope>provided</scope>
         </dependency>
 
         <!-- Local dependencies -->
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>gangland-item</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>version-impl</artifactId>
-            <version>${project.parent.version}</version>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-persistence</artifactId>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>plugin-persistence</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>gangland-weapon</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>inventory-api</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>shop-api</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>gangland-economy</artifactId>
-            <version>${project.parent.version}</version>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-hooks</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-turf</artifactId>
         </dependency>
 
         <!-- Citizens dependency -->
         <dependency>
             <groupId>net.citizensnpcs</groupId>
             <artifactId>citizens-main</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <!-- XSeries dependency -->

@@ -1,7 +1,7 @@
 package datastructure;
 
-import me.luckyraven.core.datastructure.Tree;
-import me.luckyraven.core.datastructure.Tree.Node;
+import org.luckyraven.keystone.datastructure.Tree;
+import org.luckyraven.keystone.datastructure.Tree.Node;
 
 import java.util.Arrays;
 

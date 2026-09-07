@@ -1,0 +1,7 @@
+# Keystone module descriptor - read by Gangland's ModuleLoader from plugins/Gangland_Warfare/modules/.
+Id: mail
+Name: Gangland Mail
+Version: ${project.version}
+Main: org.luckyraven.gangland.mail.MailModule
+Host_Api: 0.8
+Artifact: org.luckyraven:gangland-mail

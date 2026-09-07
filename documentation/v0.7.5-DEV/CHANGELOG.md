@@ -499,7 +499,7 @@ against this version.
 - Listener and command packages moved inside the `bean` package for
   consistency with `@ListenerHandler` / `@CommandHandler`.
 - Autowire package folded under `bean`.
-- `gangland-core` main package renamed to `me.luckyraven.core`.
+- `gangland-core` main package renamed to `org.luckyraven.gangland.core`.
 - `BankerViewOpener` contract removed — the view is specified directly
   at the call site, dropping an unnecessary indirection.
 - Trader trait loader moved onto the shared bean lifecycle.

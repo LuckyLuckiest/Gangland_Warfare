@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>me.luckyraven</groupId>
+        <groupId>org.luckyraven</groupId>
         <artifactId>gangland-ui</artifactId>
         <version>${revision}</version>
         <relativePath>../pom.xml</relativePath>
@@ -16,42 +16,32 @@
     <name>Scoreboard API</name>
 
     <dependencies>
-        <!-- Spigot Build -->
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot-api</artifactId>
-            <version>${bukkit.version}</version>
-            <scope>provided</scope>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-bean</artifactId>
         </dependency>
-
         <dependency>
-            <groupId>me.luckyraven</groupId>
+            <groupId>org.luckyraven</groupId>
             <artifactId>gangland-core</artifactId>
-            <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>plugin-persistence</artifactId>
-            <version>${project.parent.version}</version>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-persistence</artifactId>
         </dependency>
         <dependency>
-            <groupId>me.luckyraven</groupId>
-            <artifactId>plugin-common</artifactId>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-common</artifactId>
         </dependency>
 
         <dependency>
             <groupId>fr.mrmicky</groupId>
             <artifactId>fastboard</artifactId>
-            <version>${fastboard.version}</version>
-            <scope>compile</scope>
         </dependency>
 
         <dependency>
             <groupId>com.viaversion</groupId>
             <artifactId>viaversion-api</artifactId>
-            <version>${viaversion.version}</version>
-            <scope>provided</scope>
         </dependency>
     </dependencies>
 
