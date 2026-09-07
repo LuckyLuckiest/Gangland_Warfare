@@ -7,7 +7,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.gadget.config.GadgetPhysicsConfig;
-import org.luckyraven.gangland.gadget.fuel.FuelService;
+import org.luckyraven.gangland.item.fuel.FuelService;
 import org.luckyraven.gangland.gadget.jetpack.packet.JetpackInputInterceptor;
 import org.luckyraven.keystone.nms.input.PlayerInputInterceptor;
 import org.luckyraven.gangland.item.wearable.Wearable;

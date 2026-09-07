@@ -19,7 +19,7 @@ import org.luckyraven.gangland.gadget.car.CarKey;
 import org.luckyraven.gangland.gadget.car.CarService;
 import org.luckyraven.gangland.gadget.car.ExhaustSide;
 import org.luckyraven.gangland.gadget.car.message.CarMessageContract;
-import org.luckyraven.gangland.gadget.fuel.FuelService;
+import org.luckyraven.gangland.item.fuel.FuelService;
 import org.luckyraven.gangland.item.fuel.Fuel;
 import org.luckyraven.gangland.item.fuel.FuelKey;
 

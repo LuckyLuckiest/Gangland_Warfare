@@ -17,7 +17,7 @@ import org.luckyraven.gangland.gadget.car.Car;
 import org.luckyraven.gangland.gadget.car.CarKey;
 import org.luckyraven.gangland.gadget.car.ExhaustSide;
 import org.luckyraven.gangland.gadget.car.vehicle.entity.VehicleEntity;
-import org.luckyraven.gangland.gadget.fuel.FuelService;
+import org.luckyraven.gangland.item.fuel.FuelService;
 import org.luckyraven.gangland.item.fuel.FuelKey;
 
 import java.util.UUID;

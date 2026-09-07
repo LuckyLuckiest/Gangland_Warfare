@@ -25,7 +25,7 @@ import org.luckyraven.gangland.file.configuration.lootchest.GanglandLootChestMes
 import org.luckyraven.gangland.file.configuration.lootchest.LootChestSettings;
 import org.luckyraven.gangland.file.configuration.weapon.GanglandBlockRegenerationSettings;
 import org.luckyraven.gangland.gadget.car.config.CarAddon;
-import org.luckyraven.gangland.gadget.wearable.WearableAddon;
+import org.luckyraven.gangland.weapon.wearable.WearableAddon;
 import org.luckyraven.gangland.gang.GangFilterAdapter;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberFilterAdapter;

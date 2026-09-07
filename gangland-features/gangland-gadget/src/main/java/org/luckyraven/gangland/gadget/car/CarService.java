@@ -24,7 +24,7 @@ import org.luckyraven.gangland.gadget.car.vehicle.entity.MinecartVehicle;
 import org.luckyraven.gangland.gadget.car.vehicle.entity.VehicleEntity;
 import org.luckyraven.gangland.gadget.car.vehicle.packet.VehicleInputInterceptor;
 import org.luckyraven.gangland.gadget.config.GadgetPhysicsConfig;
-import org.luckyraven.gangland.gadget.fuel.FuelService;
+import org.luckyraven.gangland.item.fuel.FuelService;
 import org.luckyraven.keystone.nms.input.PlayerInputInterceptor;
 import org.luckyraven.gangland.item.fuel.FuelKey;
 import org.luckyraven.keystone.persistence.repository.IRepository;

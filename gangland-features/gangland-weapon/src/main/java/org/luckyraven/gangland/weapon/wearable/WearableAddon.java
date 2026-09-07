@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.gadget.wearable;
+package org.luckyraven.gangland.weapon.wearable;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
@@ -15,7 +15,6 @@ import org.luckyraven.gangland.item.wearable.WearableTrait;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileInitializer;
 import org.luckyraven.keystone.persistence.FileManager;
-import org.luckyraven.gangland.weapon.wearable.WearableService;
 
 import java.io.IOException;
 import java.util.*;

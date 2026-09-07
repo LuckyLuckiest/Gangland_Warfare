@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * Narrow read-only view of the unique-item registry, used by gangland-item listeners that need to look up unique item
  * definitions without importing the gangland-impl {@code UniqueItemAddon} class (which depends on
- * {@code PermissionManager}, {@code FileManager}, and the gadget {@code FuelService} — none of which are visible from
+ * {@code PermissionManager}, {@code FileManager}, and {@code FuelService} — none of which are visible from
  * gangland-item).
  *
  * <p>The gangland-impl {@code UniqueItemAddon} class implements this interface so a single instance can satisfy

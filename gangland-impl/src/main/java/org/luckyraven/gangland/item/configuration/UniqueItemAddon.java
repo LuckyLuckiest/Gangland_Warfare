@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.util.Placeholder;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.keystone.exception.PluginException;
-import org.luckyraven.gangland.gadget.fuel.FuelService;
+import org.luckyraven.gangland.item.fuel.FuelService;
 import org.luckyraven.gangland.item.contract.UniqueItemRegistry;
 import org.luckyraven.gangland.item.fuel.Fuel;
 import org.luckyraven.gangland.item.unique.UniqueItem;

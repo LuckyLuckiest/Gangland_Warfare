@@ -10,7 +10,7 @@ import org.luckyraven.gangland.command.sub.item.unique.ItemUniqueCommand;
 import org.luckyraven.gangland.command.sub.item.wearable.ItemWearableCommand;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.command.CommandHandler;
-import org.luckyraven.gangland.gadget.wearable.WearableAddon;
+import org.luckyraven.gangland.weapon.wearable.WearableAddon;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.item.money.MoneyAddon;

@@ -1,12 +1,10 @@
-package org.luckyraven.gangland.gadget.fuel;
+package org.luckyraven.gangland.item.fuel;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.item.fuel.Fuel;
-import org.luckyraven.gangland.item.fuel.FuelContract;
 
 import java.util.Map;
 import java.util.UUID;
@@ -19,10 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>Fuel definitions are registered during initialization (typically by {@code UniqueItemAddon}).
  * Gadgets (cars, jetpacks, etc.) reference a fuel key to specify which fuel type they consume.
  *
- * <p>Implements the narrow {@code org.luckyraven.gangland.item.fuel.FuelService} contract used by the gangland-item
- * fuel
- * listeners. The interface name collides with this class's simple name, so the {@code implements} clause uses the
- * fully-qualified form.
+ * <p>Lives in gangland-item, not in a feature module: the fuel HUD listeners in this module and the core's
+ * {@code UniqueItemAddon} need the registry regardless of which gadget module is installed.
  */
 public class FuelService implements FuelContract {
 

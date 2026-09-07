@@ -10,7 +10,7 @@ import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.util.ParticleUtil;
 import org.luckyraven.keystone.util.PlayerUtil;
 import org.luckyraven.gangland.gadget.config.GadgetPhysicsConfig;
-import org.luckyraven.gangland.gadget.fuel.FuelService;
+import org.luckyraven.gangland.item.fuel.FuelService;
 import org.luckyraven.gangland.item.fuel.FuelBar;
 import org.luckyraven.gangland.item.wearable.Wearable;
 import org.luckyraven.gangland.item.wearable.WearableTrait;

@@ -6,10 +6,10 @@ import java.util.UUID;
 
 /**
  * Narrow contract used by gangland-item fuel listeners to look up registered {@link Fuel} definitions and clear
- * per-player caches without importing the concrete {@code org.luckyraven.gangland.gadget.fuel.FuelService} class (which
- * lives in gangland-gadget and carries inventory-state APIs the listeners do not need).
+ * per-player caches without importing the concrete {@code org.luckyraven.gangland.item.fuel.FuelService} class (which
+ * carries inventory-state APIs the listeners do not need).
  *
- * <p>The concrete service in gangland-gadget {@code implements} this interface so a single instance satisfies both
+ * <p>The concrete {@code FuelService} {@code implements} this interface so a single instance satisfies both
  * the in-module callers and the listener side.
  */
 public interface FuelContract {

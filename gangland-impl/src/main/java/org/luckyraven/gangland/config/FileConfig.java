@@ -16,8 +16,8 @@ import org.luckyraven.gangland.file.configuration.weapon.GanglandBlockRegenerati
 import org.luckyraven.gangland.file.configuration.weapon.WeaponLoader;
 import org.luckyraven.gangland.gadget.car.config.CarAddon;
 import org.luckyraven.gangland.gadget.config.GadgetPhysicsConfig;
-import org.luckyraven.gangland.gadget.fuel.FuelService;
-import org.luckyraven.gangland.gadget.wearable.WearableAddon;
+import org.luckyraven.gangland.item.fuel.FuelService;
+import org.luckyraven.gangland.weapon.wearable.WearableAddon;
 import org.luckyraven.gangland.gang.bounty.BountySettings;
 import org.luckyraven.gangland.gang.wanted.WantedSettings;
 import org.luckyraven.gangland.inventory.condition.BooleanExpressionEvaluator;

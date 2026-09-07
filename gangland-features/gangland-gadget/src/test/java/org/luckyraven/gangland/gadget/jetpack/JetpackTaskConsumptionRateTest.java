@@ -3,7 +3,7 @@ package org.luckyraven.gangland.gadget.jetpack;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.gadget.config.GadgetPhysicsConfig;
-import org.luckyraven.gangland.gadget.fuel.FuelService;
+import org.luckyraven.gangland.item.fuel.FuelService;
 import org.luckyraven.gangland.item.wearable.Wearable;
 import org.luckyraven.gangland.item.wearable.WearableTrait;
 import org.luckyraven.gangland.weapon.WeaponService;
