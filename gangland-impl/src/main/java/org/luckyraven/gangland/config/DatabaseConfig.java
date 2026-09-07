@@ -55,6 +55,16 @@ public class DatabaseConfig {
 		// RESOLVED type, so it connects only after this call.
 		database.setType(type);
 
+		// setType() resolves the MySQL->SQLite fallback. When MySQL is unreachable AND
+		// Database.SQLite.Failed_MySQL is disabled, the failure is swallowed and the handle is left with type MYSQL
+		// and no Database behind it — every later call (starting with createSchema()) would NPE. Fail loudly here
+		// with a message that names the settings the operator has to fix.
+		if (database.getDatabase() == null) {
+			throw new PluginException("Could not connect to the '" + Settings.getDatabaseType() +
+			                          "' database. Check Database.MySQL.Host / Port / Username / Password in " +
+			                          "settings.yml, or enable Database.SQLite.Failed_MySQL to fall back to SQLite.");
+		}
+
 		try {
 			if (database.getType() == DatabaseHandler.MYSQL) {
 				// The backend pool connects straight to the schema; make sure it exists first (idempotent).

@@ -17,7 +17,7 @@ public class WeaponSignValidator extends AbstractSignValidator {
 
 	@Override
 	protected boolean isValidContent(String content) {
-		return weaponService.getWeapons().values()
+		return weaponService.getWeaponTemplates()
 				.stream()
 				.anyMatch(w -> w.getName().equalsIgnoreCase(content));
 	}

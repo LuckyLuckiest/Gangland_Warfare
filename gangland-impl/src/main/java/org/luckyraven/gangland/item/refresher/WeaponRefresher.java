@@ -34,10 +34,11 @@ public class WeaponRefresher implements ItemRefresher {
 		String name = new ItemBuilder(source).getStringTagData(Weapon.getTagProperName(WeaponTag.WEAPON));
 		if (name == null || name.isEmpty()) return null;
 
-		Weapon weapon = weaponService.getWeapon(name);
-		if (weapon == null) return null;
+		// Transient on purpose — refresh runs on every shop/trader render, so minting a registered weapon here grew
+		// the registry (and the weapon table) without bound.
+		Weapon clone = weaponService.createTransientWeapon(name);
+		if (clone == null) return null;
 
-		Weapon    clone = weapon.clone();
 		ItemStack built = context != null ? clone.buildItem(context) : clone.buildItem();
 		if (built == null) return null;
 

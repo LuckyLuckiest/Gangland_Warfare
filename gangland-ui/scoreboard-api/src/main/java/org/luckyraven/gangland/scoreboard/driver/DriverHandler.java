@@ -8,6 +8,7 @@ import org.bukkit.entity.Player;
 import org.luckyraven.keystone.util.Placeholder;
 import org.luckyraven.gangland.scoreboard.part.Line;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +28,9 @@ public abstract class DriverHandler {
 		this.placeholder      = placeholder;
 		this.fastBoard        = new FastBoardImpl(player, viaAPI);
 		this.title            = title;
-		this.lines            = lines;
+		// UI-01: own the list. The caller used to hand in the live configuration list, and appending the title to
+		// it added one more entry per board created — once per join and per reload, without bound.
+		this.lines            = new ArrayList<>(lines);
 		this.lineUpdateCounts = new HashMap<>();
 		this.globalTickCount  = 0L;
 

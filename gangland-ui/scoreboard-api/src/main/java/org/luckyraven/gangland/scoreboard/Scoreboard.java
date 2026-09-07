@@ -21,10 +21,16 @@ public class Scoreboard {
 		});
 	}
 
+	/**
+	 * Starts the per-tick board refresh on the <b>main thread</b>. UI-02: this used to run asynchronously, and the
+	 * task body resolves placeholders (gang/user/bank lookups, PlaceholderAPI expansions) and pushes FastBoard
+	 * packets — none of which are thread-safe. Per {@code feedback_repeating_timer_async}, only flag flips and
+	 * cancels may run with {@code start(true)}.
+	 */
 	public void start() {
 		if (timer == null) return;
 
-		timer.start(true);
+		timer.start(false);
 	}
 
 	public void end() {

@@ -11,6 +11,11 @@ import org.luckyraven.keystone.exception.PluginException;
 public class DamageData implements Cloneable {
 
 	private double explosionDamage;
+	/**
+	 * AOE blast radius in blocks. Authored separately from {@link #explosionDamage}: the two were conflated before
+	 * 0.8.3, which turned a {@code Explosion_Damage: 50} rocket into a 50-block-radius blast.
+	 */
+	private double explosionRadius;
 	private int    fireTicks;
 	private double headDamage;
 	private int    criticalHitChance;

@@ -18,7 +18,6 @@ import org.luckyraven.gangland.database.tables.player.BankTable;
 import org.luckyraven.gangland.database.tables.player.MemberTable;
 import org.luckyraven.gangland.database.tables.player.UserTable;
 import org.luckyraven.gangland.events.user.UserDataInitEvent;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.user.User;
@@ -59,20 +58,16 @@ public final class CreateAccountListener implements Listener {
 		Player       player = event.getPlayer();
 		User<Player> user   = userManager.create(player);
 
-		UpdateNotifier updateChecker = gangland.getUpdateChecker();
+		notifyUpdate(player, gangland.getUpdateChecker());
 
-		if (player.hasPermission(updateChecker.getCheckPermission()) && updateChecker.updateAvailable()) {
-			player.sendMessage(GanglandChatUtil.prefixMessage(updateChecker.getUpdateMessage()));
-		}
+		// The starting balance is NOT stamped here: EconomyHandler.setAmount zeroes the real Vault account
+		// before re-depositing, so doing it on every join would wipe a returning player's money for the length
+		// of the async round-trip (permanently if the query fails). UserDataLoader applies it only when the DB
+		// confirms there is no saved row for this player.
 
-		user.getEconomy().setAmount(Settings.getUserInitialBalance());
-
-		// Remove the player from the offline user manager
-		User<OfflinePlayer> offlineUser = offlineUserManager.getUser(player);
-
-		if (offlineUser != null) {
-			offlineUserManager.remove(offlineUser);
-		}
+		// Remove the player from the offline user manager. Keyed by uuid, so the quit-time snapshot cannot
+		// survive the rejoin and overwrite the live row on the next autosave.
+		offlineUserManager.remove(player.getUniqueId());
 
 		// Add user and member to cache immediately so other systems can find them
 		userManager.add(user);
@@ -120,6 +115,30 @@ public final class CreateAccountListener implements Listener {
 				userManager.initializeUserPermission(user, finalMember);
 			});
 		});
+	}
+
+	/**
+	 * Sends the operator update notice, when there is one to send.
+	 *
+	 * <p>CM-01: {@code Gangland.updateCheckerInitializer()} returns before constructing the notifier whenever
+	 * {@code Update_Checker.Enable} is {@code false}, so {@code gangland.getUpdateChecker()} is {@code null} on
+	 * every server that disabled the updater. This handler runs at {@link EventPriority#LOWEST}, so dereferencing
+	 * it unconditionally aborted the whole join handler before {@code userManager.add(user)} and left the player
+	 * with no cached {@link User}. The null guard is the point of this seam.
+	 *
+	 * @return {@code true} when a notice was actually sent.
+	 */
+	static boolean notifyUpdate(Player player, UpdateNotifier updateChecker) {
+		if (updateChecker == null) {
+			return false;
+		}
+
+		if (!player.hasPermission(updateChecker.getCheckPermission()) || !updateChecker.updateAvailable()) {
+			return false;
+		}
+
+		player.sendMessage(GanglandChatUtil.prefixMessage(updateChecker.getUpdateMessage()));
+		return true;
 	}
 
 }

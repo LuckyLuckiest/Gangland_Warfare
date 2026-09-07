@@ -19,7 +19,8 @@ public class DetainmentTable extends Table<DetainedPlayer> {
 		Attribute<Long>    sentenceExpiresAt = new Attribute<>("sentence_expires_at", false, Long.class);
 		Attribute<Integer> wantedAtArrest    = new Attribute<>("wanted_at_arrest", false, Integer.class);
 
-		jailId.setUnique(true);
+		// jail_id is deliberately NOT unique: a cell holds up to Jail.Max_Capacity inmates, so several detainment
+		// rows legitimately share one jail_id. Uniqueness belongs to player_uuid (the primary key).
 		jailId.setCanBeNull(true);
 		jailId.setForeignKey(jailTable.get("id"), jailTable);
 

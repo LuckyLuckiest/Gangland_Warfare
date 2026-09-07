@@ -230,6 +230,9 @@ public final class DebugCommand extends Command {
 			if (sender instanceof Player player) {
 				Member member = memberManager.getMember(player.getUniqueId());
 
+				// GR-01: a player with no cached Member would NPE this debug dump.
+				if (member == null) return;
+
 				player.sendMessage(convertToJson(member.toString()));
 			} else {
 				Collection<Member> values = memberManager.getMembers().values();

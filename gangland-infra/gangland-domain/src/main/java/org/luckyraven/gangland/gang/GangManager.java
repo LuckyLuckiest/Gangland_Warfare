@@ -81,6 +81,29 @@ public class GangManager implements BeanLifecycle, GangLookupContract {
 		return Collections.unmodifiableMap(gangs);
 	}
 
+	/**
+	 * Breaks the alliance between two gangs on both sides — in memory <em>and</em> in the database.
+	 *
+	 * <p>The autosave path is upsert-only ({@code saveAll} → {@code TableBackend.upsertAll} over
+	 * {@link #buildAllAlliances()}), so a row that is only dropped from memory is never removed from
+	 * {@code gang_ally} and the alliance comes back on the next {@code loadAll} (GR-06). Every caller that ends an
+	 * alliance must go through this method instead of calling {@link Gang#removeAlly(Gang)} directly.
+	 *
+	 * @param first
+	 * 		one side of the alliance; ignored when {@code null}.
+	 * @param second
+	 * 		the other side of the alliance; ignored when {@code null}.
+	 */
+	public void breakAlliance(@Nullable Gang first, @Nullable Gang second) {
+		if (first == null || second == null) return;
+
+		deleteAllianceRows(first, second);
+		deleteAllianceRows(second, first);
+
+		first.removeAlly(second);
+		second.removeAlly(first);
+	}
+
 	// --- GangLookupContract ----------------------------------------------------------------------
 
 	@Override
@@ -94,6 +117,18 @@ public class GangManager implements BeanLifecycle, GangLookupContract {
 	}
 
 	// ---------------------------------------------------------------------------------------------
+
+	/**
+	 * Deletes every persisted alliance row pointing from {@code owner} to {@code ally}. Both directions are stored as
+	 * separate rows, so {@link #breakAlliance(Gang, Gang)} calls this once per direction.
+	 */
+	private void deleteAllianceRows(Gang owner, Gang ally) {
+		for (GangAlliance alliance : new ArrayList<>(owner.getAllies())) {
+			if (alliance.ally().getId() != ally.getId()) continue;
+
+			allianceRepository.delete(alliance);
+		}
+	}
 
 	private Collection<GangAlliance> buildAllAlliances() {
 		List<GangAlliance> allies = new ArrayList<>();

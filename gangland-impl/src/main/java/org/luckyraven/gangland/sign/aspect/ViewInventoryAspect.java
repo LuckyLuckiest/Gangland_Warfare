@@ -295,8 +295,7 @@ public class ViewInventoryAspect implements SignAspect {
 	}
 
 	private Weapon findWeapon(String identifier) {
-		return weaponService.getWeapons()
-		                    .values()
+		return weaponService.getWeaponTemplates()
 				.stream()
 				.filter(w -> w.getName().equalsIgnoreCase(identifier) ||
 				             w.getDisplayName().equalsIgnoreCase(identifier))

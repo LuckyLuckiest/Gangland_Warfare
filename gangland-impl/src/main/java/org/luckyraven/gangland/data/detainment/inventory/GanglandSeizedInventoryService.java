@@ -53,7 +53,11 @@ public final class GanglandSeizedInventoryService implements SeizedInventoryServ
 		}
 	}
 
-	private static void applyInventory(Player player, String serialized) throws Exception {
+	/**
+	 * Decodes the blob without touching the player. Kept separate from {@link #applyInventory} so a corrupt or
+	 * version-mismatched payload fails <em>before</em> the cache entry and the database row are dropped.
+	 */
+	private static Snapshot deserialize(String serialized) throws Exception {
 		byte[] bytes = Base64Coder.decodeLines(serialized);
 		try (ByteArrayInputStream in = new ByteArrayInputStream(bytes);
 		     BukkitObjectInputStream reader = new BukkitObjectInputStream(in)) {
@@ -67,12 +71,16 @@ public final class GanglandSeizedInventoryService implements SeizedInventoryServ
 
 			ItemStack offhand = (ItemStack) reader.readObject();
 
-			PlayerInventory inventory = player.getInventory();
-			inventory.setContents(main);
-			inventory.setArmorContents(armour);
-			inventory.setItemInOffHand(offhand);
-			player.updateInventory();
+			return new Snapshot(main, armour, offhand);
 		}
+	}
+
+	private static void applyInventory(Player player, Snapshot snapshot) {
+		PlayerInventory inventory = player.getInventory();
+		inventory.setContents(snapshot.main());
+		inventory.setArmorContents(snapshot.armour());
+		inventory.setItemInOffHand(snapshot.offhand());
+		player.updateInventory();
 	}
 
 	@Override
@@ -97,17 +105,24 @@ public final class GanglandSeizedInventoryService implements SeizedInventoryServ
 
 	@Override
 	public boolean restore(Player player) {
-		SeizedInventory seized = cache.remove(player.getUniqueId());
+		SeizedInventory seized = cache.get(player.getUniqueId());
 		if (seized == null) return false;
 
-		repository.delete(seized);
-
+		// Decode first: a ClassNotFoundException or a serialization-version mismatch must leave the cache entry and
+		// the database row intact so the items can still be recovered on a later attempt.
+		Snapshot snapshot;
 		try {
-			applyInventory(player, seized.getSerializedContents());
+			snapshot = deserialize(seized.getSerializedContents());
 		} catch (Exception e) {
-			log.error("Failed to restore seized inventory for {}: {}", player.getName(), e.getMessage());
+			log.error("Failed to restore seized inventory for {} (kept for retry): {}",
+			          player.getName(), e.getMessage());
 			return false;
 		}
+
+		applyInventory(player, snapshot);
+
+		cache.remove(player.getUniqueId());
+		repository.delete(seized);
 		return true;
 	}
 
@@ -128,5 +143,9 @@ public final class GanglandSeizedInventoryService implements SeizedInventoryServ
 	@SuppressWarnings("unused")
 	public SeizedInventory peek(UUID playerId) {
 		return cache.get(playerId);
+	}
+
+	/** Decoded inventory contents, held between a successful deserialize and the write onto the player. */
+	private record Snapshot(ItemStack[] main, ItemStack[] armour, ItemStack offhand) {
 	}
 }

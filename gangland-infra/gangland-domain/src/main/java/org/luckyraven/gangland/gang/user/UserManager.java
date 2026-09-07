@@ -15,17 +15,36 @@ import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 
-	private final JavaPlugin         gangland;
-	private final RepositoryRegistry repositoryRegistry;
-	private final UserFactory        userFactory;
-	private final Map<T, User<T>>    users;
+	private final JavaPlugin          gangland;
+	private final RepositoryRegistry  repositoryRegistry;
+	private final UserFactory         userFactory;
+	/**
+	 * Keyed by {@link UUID}, never by the Bukkit handle. {@code CraftEntity.equals}/{@code hashCode} compare the
+	 * entity id while {@code CraftOfflinePlayer} compares the uuid, so a {@code Player}-keyed entry could never be
+	 * found through an {@code OfflinePlayer} handle (or a fresh {@code Player} after a rejoin) and the quit-time
+	 * snapshot survived the join eviction, overwriting the live row on the next autosave.
+	 */
+	private final Map<UUID, User<T>>  users;
+
+	/**
+	 * Every manager whose cache must be persisted together with this one — always contains {@code this}, and grows
+	 * through {@link #link(UserManager)}. The {@code online} and {@code offline} beans share the <b>same</b>
+	 * {@code UserRepository} and {@code BankRepository} instances, so whichever calls {@link #initialize()} last
+	 * overwrites the other's data supplier and {@code RepositoryRegistry.saveAll()} would persist only one of the two
+	 * caches (CL-23). Supplying the union of the linked caches makes that overwrite harmless.
+	 */
+	private Set<UserManager<? extends OfflinePlayer>> cacheGroup;
 
 	public UserManager(JavaPlugin gangland,
 	                   RepositoryRegistry repositoryRegistry,
@@ -34,6 +53,26 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 		this.repositoryRegistry = repositoryRegistry;
 		this.userFactory        = userFactory;
 		this.users              = new HashMap<>();
+		this.cacheGroup         = Collections.newSetFromMap(new IdentityHashMap<>());
+
+		this.cacheGroup.add(this);
+	}
+
+	/**
+	 * Joins {@code other}'s cache to this manager's persistence group, symmetrically: after the call both managers
+	 * share one group containing both, so {@link #initialize()} on either registers a data supplier that sees every
+	 * cached user regardless of which bean initialised last.
+	 *
+	 * @param other the sibling manager to persist alongside this one; {@code null} and {@code this} are ignored
+	 */
+	public void link(UserManager<? extends OfflinePlayer> other) {
+		if (other == null || other == this) return;
+
+		this.cacheGroup.addAll(other.cacheGroup);
+
+		for (UserManager<? extends OfflinePlayer> manager : this.cacheGroup) {
+			manager.cacheGroup = this.cacheGroup;
+		}
 	}
 
 	/**
@@ -48,11 +87,38 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 		IRepository<User<? extends OfflinePlayer>> userRepository = repositoryRegistry.getGenericRepository(User.class);
 		IRepository<Bank>                          bankRepository = repositoryRegistry.getRepository(Bank.class);
 
-		userRepository.setDataSupplier(() -> users.values()
-				.stream().<User<? extends OfflinePlayer>>map(u -> u).toList());
+		userRepository.setDataSupplier(this::groupedUsers);
+		bankRepository.setDataSupplier(this::groupedBanks);
+	}
 
-		bankRepository.setDataSupplier(() -> users.values()
-				.stream().filter(User::hasBank).map(User::getBank).toList());
+	/**
+	 * @return every cached user across this manager's whole {@link #link(UserManager) linked} group.
+	 */
+	private List<User<? extends OfflinePlayer>> groupedUsers() {
+		List<User<? extends OfflinePlayer>> grouped = new ArrayList<>();
+
+		for (UserManager<? extends OfflinePlayer> manager : cacheGroup) {
+			grouped.addAll(manager.users.values());
+		}
+
+		return grouped;
+	}
+
+	/**
+	 * @return every bank held by a cached user across this manager's whole linked group.
+	 */
+	private List<Bank> groupedBanks() {
+		List<Bank> grouped = new ArrayList<>();
+
+		for (UserManager<? extends OfflinePlayer> manager : cacheGroup) {
+			for (User<? extends OfflinePlayer> user : manager.users.values()) {
+				if (!user.hasBank()) continue;
+
+				grouped.add(user.getBank());
+			}
+		}
+
+		return grouped;
 	}
 
 	public void initializeUserPermission(User<Player> user, Member member) {
@@ -73,13 +139,25 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 	}
 
 	public void add(User<T> user) {
-		users.put(user.getUser(), user);
+		users.put(user.getUuid(), user);
 	}
 
 	public void remove(@NotNull User<T> user) {
 		Preconditions.checkArgument(user != null, "User can't be null!");
 
-		users.remove(user.getUser());
+		users.remove(user.getUuid());
+	}
+
+	/**
+	 * Evicts the cached user for {@code uuid}, whichever Bukkit handle flavour it was added with.
+	 *
+	 * @return the evicted user, or {@code null} when nothing was cached for that uuid.
+	 */
+	@Nullable
+	public User<T> remove(UUID uuid) {
+		if (uuid == null) return null;
+
+		return users.remove(uuid);
 	}
 
 	public void clear() {
@@ -111,12 +189,24 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 
 	public boolean contains(User<T> user) {
 		if (user == null) return false;
-		return users.containsKey(user.getUser());
+		return users.containsKey(user.getUuid());
 	}
 
 	@Nullable
 	public User<T> getUser(T userPred) {
-		return users.get(userPred);
+		if (userPred == null) return null;
+
+		return users.get(userPred.getUniqueId());
+	}
+
+	/**
+	 * Uuid-based lookup. Prefer this over the handle-based overload when the caller only holds an id.
+	 */
+	@Nullable
+	public User<T> getUser(UUID uuid) {
+		if (uuid == null) return null;
+
+		return users.get(uuid);
 	}
 
 	public int size() {
@@ -126,13 +216,13 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 	/**
 	 * @return unmodifiable view of the cached users map.
 	 */
-	public Map<T, User<T>> getUsers() {
+	public Map<UUID, User<T>> getUsers() {
 		return Collections.unmodifiableMap(users);
 	}
 
 	@Override
 	public String toString() {
-		Map<T, User<T>> userMap = users;
+		Map<UUID, User<T>> userMap = users;
 		List<String> users = userMap.values()
 				.stream().map(User::toString).toList();
 		return "users=" + users;

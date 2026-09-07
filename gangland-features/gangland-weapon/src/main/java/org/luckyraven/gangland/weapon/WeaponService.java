@@ -13,6 +13,8 @@ import org.luckyraven.gangland.weapon.dto.AmmunitionData;
 import org.luckyraven.gangland.weapon.types.WeaponType;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,7 +71,14 @@ public abstract class WeaponService implements Comparator<Weapon> {
 		if (weaponUuid == null) return false;
 
 		// check if the uuid is in the weapons map
-		return weapons.containsKey(weaponUuid);
+		if (weapons.containsKey(weaponUuid)) return true;
+
+		// The uuid may not have been minted into the registry yet: converters, refreshers and shop deliveries build
+		// transient copies so a registry entry (and a database row) is only created once the item is actually used.
+		// Fall back to the configured catalogue so those items are still recognised as weapons.
+		String weaponName = getHeldWeaponName(item);
+
+		return weaponName != null && weaponAddon.getWeapon(weaponName) != null;
 	}
 
 	public boolean hasAmmunition(Player player, Weapon weapon) {
@@ -104,6 +113,52 @@ public abstract class WeaponService implements Comparator<Weapon> {
 			return null;
 
 		return isWeapon(offHandItem) ? new ItemBuilder(offHandItem) : null;
+	}
+
+	/**
+	 * The shared, read-only catalogue entry for {@code type} exactly as it was parsed from its YAML file.
+	 * <p/>
+	 * Unlike {@link #getWeapon(String)} this never mints a uuid and never registers anything, so it is the correct
+	 * lookup for every read-only caller (display names, death messages, sign validation). The returned instance is
+	 * shared — never hand it to a player and never mutate it; use {@link #createTransientWeapon(String)} for that.
+	 *
+	 * @param type weapon file name.
+	 *
+	 * @return the catalogue template, or {@code null} when no weapon file carries that name.
+	 */
+	@Nullable
+	public Weapon getWeaponTemplate(@Nullable String type) {
+		if (type == null || type.isEmpty()) return null;
+
+		return weaponAddon.getWeapon(type);
+	}
+
+	/**
+	 * Every catalogue template, for callers that need to scan the configured weapons by name. Previously these callers
+	 * scanned {@link #getWeapons()}, which only ever held the instances minted so far.
+	 */
+	public Collection<Weapon> getWeaponTemplates() {
+		return Collections.unmodifiableCollection(weaponAddon.getWeapons());
+	}
+
+	/**
+	 * A fresh, unregistered copy of the {@code type} template carrying a valid uuid.
+	 * <p/>
+	 * Used by item converters, refreshers and anything else that only needs an {@code ItemStack}: the instance stays
+	 * out of {@link #getWeapons()} (and therefore out of the {@code weapon} table) until the item is really picked up,
+	 * at which point {@link #validateAndGetWeapon(Player, ItemStack)} registers it under the uuid the item carries.
+	 *
+	 * @param type weapon file name.
+	 *
+	 * @return an unregistered copy, or {@code null} when no weapon file carries that name.
+	 */
+	@Nullable
+	public Weapon createTransientWeapon(@Nullable String type) {
+		Weapon template = getWeaponTemplate(type);
+
+		if (template == null) return null;
+
+		return template.copyWithUUID(mintUuid(template, type, null));
 	}
 
 	@Nullable
@@ -159,14 +214,7 @@ public abstract class WeaponService implements Comparator<Weapon> {
 
 		if (weaponAddon == null) return null;
 
-		// throwable share one UUID per type so identical items stack in inventory
-		UUID finalUuid;
-		if (weaponAddon.getCategory() == WeaponType.THROWABLE) {
-			finalUuid = UUID.nameUUIDFromBytes(("throwable:" + type).getBytes(StandardCharsets.UTF_8));
-		} else {
-			finalUuid = (uuid != null) ? uuid : UUID.randomUUID();
-			while (weapons.containsKey(finalUuid)) finalUuid = UUID.randomUUID();
-		}
+		UUID finalUuid = mintUuid(weaponAddon, type, uuid);
 
 		// mostly for new weapons
 		// when the weapon is registered in the system but not tagged with an uuid
@@ -216,6 +264,22 @@ public abstract class WeaponService implements Comparator<Weapon> {
 
 	private ItemStack itemAccordingToSlot(Player player, EquipmentSlot equipmentSlot) {
 		return player.getInventory().getItem(equipmentSlot);
+	}
+
+	/**
+	 * Derives the uuid a fresh copy of {@code template} should carry. Throwables share one deterministic uuid per type
+	 * so identical items stack in the inventory; everything else keeps the caller's uuid when there is one, otherwise
+	 * gets a random uuid that does not collide with an already registered instance.
+	 */
+	private UUID mintUuid(Weapon template, @Nullable String type, @Nullable UUID uuid) {
+		if (template.getCategory() == WeaponType.THROWABLE) {
+			return UUID.nameUUIDFromBytes(("throwable:" + type).getBytes(StandardCharsets.UTF_8));
+		}
+
+		UUID finalUuid = (uuid != null) ? uuid : UUID.randomUUID();
+		while (weapons.containsKey(finalUuid)) finalUuid = UUID.randomUUID();
+
+		return finalUuid;
 	}
 
 	private void setWeaponData(Weapon weapon, Player player) {

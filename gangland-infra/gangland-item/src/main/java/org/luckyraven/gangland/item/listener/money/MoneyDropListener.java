@@ -21,6 +21,9 @@ import org.luckyraven.gangland.item.money.*;
  * picks a variation according to the per-source weights and rolls an amount inside the variation's range. For player
  * deaths with {@code Scale_With_Balance} enabled, the rolled amount is augmented with a fraction of the dead player's
  * balance (clamped to the variation's max).
+ *
+ * <p>Player-death drops are debited from the dead player's balance before the item spawns, so the drop moves money
+ * instead of minting it; mob, cop and civilian drops stay a genuine currency source by design.
  */
 @ListenerHandler
 @AutowireTarget({MoneyAddon.class, MoneyDepositService.class, MoneyDropClassifier.class})
@@ -74,6 +77,14 @@ public class MoneyDropListener implements Listener {
 		}
 
 		if (amount <= 0) return;
+
+		if (playerOrNull != null) {
+			// A player-death drop relocates the dead player's cash; it does not create any. Debit first and
+			// drop only what the balance could actually cover.
+			amount = (int) Math.floor(depositService.withdraw(playerOrNull, amount));
+
+			if (amount <= 0) return;
+		}
 
 		World     world    = origin.getWorld();
 		Location  location = origin.getLocation();

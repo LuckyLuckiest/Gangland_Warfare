@@ -24,22 +24,27 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @CommandHandler
 public final class BalanceCommand extends Command {
 
-	private final UserManager<Player> userManager;
-	private final GanglandDatabase    ganglandDatabase;
+	private final UserManager<Player>        userManager;
+	private final UserManager<OfflinePlayer> offlineUserManager;
+	private final GanglandDatabase           ganglandDatabase;
 
 	public BalanceCommand(Gangland gangland,
 	                      @Qualifier("online") UserManager<Player> userManager,
+	                      @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
 	                      GanglandDatabase ganglandDatabase) {
 		super(gangland, "balance", false, "bal");
 
-		this.userManager      = userManager;
-		this.ganglandDatabase = ganglandDatabase;
+		this.userManager        = userManager;
+		this.offlineUserManager = offlineUserManager;
+		this.ganglandDatabase   = ganglandDatabase;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -69,9 +74,9 @@ public final class BalanceCommand extends Command {
 	@Override
 	protected void initializeArguments() {
 		Argument targetBalance = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
-			// get the target, validate if they are in the system
-			String       target = args[1];
-			User<Player> user   = userManager.getUser(Bukkit.getPlayer(target));
+			// get the target, validate if they are in the system — the caches first, the DB only as a fallback
+			String                        target = args[1];
+			User<? extends OfflinePlayer> user   = findCached(target, userManager, offlineUserManager);
 
 			if (user != null) {
 				sender.sendMessage(Messages.BALANCE_TARGET.toString()
@@ -116,38 +121,94 @@ public final class BalanceCommand extends Command {
 
 				if (!found) sender.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", target));
 			});
-		}, sender -> {
-			List<String> players = new ArrayList<>();
-
-			DatabaseHelper helper = new DatabaseHelper(getGangland(), ganglandDatabase);
-			List<Table<?>> tables = ganglandDatabase.getTables();
-
-			UserTable userTable = TableLookup.find(UserTable.class, tables);
-
-			helper.runQueries(database -> {
-				// get all the user's data
-				List<Object[]> usersData = userTable.selectAllTableQuery(database);
-
-				// get only the uuids
-				Map<UUID, Double> uuids = usersData.stream()
-						.collect(Collectors.toMap(objects -> UUID.fromString(String.valueOf(objects[0])),
-						                          objects -> (double) objects[1]));
-
-				for (UUID uuid : uuids.keySet()) {
-					OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
-					String        offlineName   = offlinePlayer.getName();
-
-					if (offlineName == null || offlineName.isEmpty()) continue;
-
-					players.add(offlineName);
-				}
-
-			});
-
-			return players;
-		});
+		}, sender -> cachedNames(userManager, offlineUserManager));
 
 		getArgument().addSubArgument(targetBalance);
+	}
+
+	/**
+	 * Tab-completion source for {@code /glw balance <target>}: the names already held by the online and offline
+	 * {@link UserManager} caches.
+	 *
+	 * <p>CM-05: the supplier used to run {@code UserTable.selectAllTableQuery} plus one
+	 * {@code Bukkit.getOfflinePlayer(uuid)} per registered user, synchronously on the main thread, for
+	 * <em>every</em> tab keystroke — a visible freeze on any sizeable user table. The offline cache is populated
+	 * from that exact table at bootstrap ({@code PlayerBootstrapService.loadOfflinePlayers}), so completing from
+	 * the caches covers the same names with no query at all.
+	 *
+	 * @return sorted, de-duplicated names; never {@code null}.
+	 */
+	static List<String> cachedNames(UserManager<Player> userManager,
+	                                UserManager<OfflinePlayer> offlineUserManager) {
+		Set<String> names = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+
+		collectNames(userManager, names);
+		collectNames(offlineUserManager, names);
+
+		return new ArrayList<>(names);
+	}
+
+	private static void collectNames(UserManager<? extends OfflinePlayer> manager, Set<String> names) {
+		if (manager == null) {
+			return;
+		}
+
+		for (User<? extends OfflinePlayer> user : manager.getUsers().values()) {
+			String name = nameOf(user);
+
+			if (name == null || name.isEmpty()) {
+				continue;
+			}
+
+			names.add(name);
+		}
+	}
+
+	/**
+	 * Resolves {@code target} against the online cache first, then the offline cache, matching on name
+	 * case-insensitively. Returns {@code null} when neither cache knows the name, which is the only case that
+	 * still falls through to the database scan.
+	 */
+	static User<? extends OfflinePlayer> findCached(String target,
+	                                                UserManager<Player> userManager,
+	                                                UserManager<OfflinePlayer> offlineUserManager) {
+		User<Player> online = findIn(target, userManager);
+
+		if (online != null) {
+			return online;
+		}
+
+		return findIn(target, offlineUserManager);
+	}
+
+	private static <T extends OfflinePlayer> User<T> findIn(String target, UserManager<T> manager) {
+		if (manager == null || target == null) {
+			return null;
+		}
+
+		for (User<T> user : manager.getUsers().values()) {
+			if (!target.equalsIgnoreCase(nameOf(user))) {
+				continue;
+			}
+
+			return user;
+		}
+
+		return null;
+	}
+
+	/**
+	 * The Bukkit-visible name of a cached user, or {@code null} when the handle is missing or has never been
+	 * resolved (a uuid Bukkit has not seen yet).
+	 */
+	private static String nameOf(User<? extends OfflinePlayer> user) {
+		if (user == null) {
+			return null;
+		}
+
+		OfflinePlayer offlinePlayer = user.getUser();
+
+		return offlinePlayer == null ? null : offlinePlayer.getName();
 	}
 
 	@Override

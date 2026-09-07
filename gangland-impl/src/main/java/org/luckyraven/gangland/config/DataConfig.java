@@ -76,11 +76,22 @@ public class DataConfig {
 		return new UserManager<>(gangland, repositoryRegistry, userFactory);
 	}
 
+	/**
+	 * Linked to the {@code online} manager: both beans hand their data supplier to the <b>same</b>
+	 * {@code UserRepository} / {@code BankRepository} instances, so without the link the second {@code initialize()}
+	 * would overwrite the first and {@code RepositoryRegistry.saveAll()} would persist only one of the two caches.
+	 * The link makes either registration supply the union of both caches.
+	 */
 	@Bean(name = "offline", isGeneric = true)
 	public UserManager<OfflinePlayer> offlineUserManager(RepositoryRegistry repositoryRegistry,
 	                                                     UserFactory userFactory,
+	                                                     @Qualifier("online") UserManager<Player> onlineUserManager,
 	                                                     @SuppressWarnings("unused") MemberManager orderingDep) {
-		return new UserManager<>(gangland, repositoryRegistry, userFactory);
+		UserManager<OfflinePlayer> manager = new UserManager<>(gangland, repositoryRegistry, userFactory);
+
+		manager.link(onlineUserManager);
+
+		return manager;
 	}
 
 	/**

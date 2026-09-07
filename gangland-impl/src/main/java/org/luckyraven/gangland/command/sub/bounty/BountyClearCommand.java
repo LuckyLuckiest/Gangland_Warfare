@@ -70,13 +70,18 @@ class BountyClearCommand extends SubArgument {
 				return;
 			}
 
-			BigDecimal amount = userBounty.getSetAmount(sender);
+			// WB-01: the ledger holds the LEVEL-SCALED figure that sits on the target's head, but the sender was
+			// only ever charged the raw amount they typed. Refunding the posted figure minted the difference, so
+			// the refund reads the paid ledger and only the messages talk about the posted figure.
+			BigDecimal posted = userBounty.getSetAmount(sender);
+			BigDecimal paid   = userBounty.getPaidAmount(sender);
+			BigDecimal refund = paid != null ? paid : posted;
 
 			// remove the user
 			userBounty.removeBounty(sender);
 
 			String string = Messages.BOUNTY_PLAYER_LIFT.toString();
-			String replace = string.replace("%amount%", Settings.formatAmount(amount))
+			String replace = string.replace("%amount%", Settings.formatAmount(posted))
 			                       .replace("%player%", playerStr);
 
 			sender.sendMessage(replace);
@@ -86,10 +91,10 @@ class BountyClearCommand extends SubArgument {
 
 				if (userSender == null) return;
 
-				userSender.getEconomy().depositAmount(amount);
+				userSender.getEconomy().depositAmount(refund);
 
 				String string1  = Messages.DEPOSIT_MONEY_PLAYER.toString();
-				String replace1 = string1.replace("%amount%", Settings.formatAmount(amount));
+				String replace1 = string1.replace("%amount%", Settings.formatAmount(refund));
 
 				senderPlayer.sendMessage(replace1);
 			}
@@ -98,7 +103,7 @@ class BountyClearCommand extends SubArgument {
 				user.sendMessage(Messages.BOUNTY_CLEAR.toString());
 			} else {
 				String string1 = Messages.BOUNTY_LIFTED.toString();
-				String replace1 = string1.replace("%amount%", Settings.formatAmount(amount))
+				String replace1 = string1.replace("%amount%", Settings.formatAmount(posted))
 				                         .replace("%bounty%", Settings.formatAmount(userBounty.getAmount()));
 
 				user.sendMessage(replace1);

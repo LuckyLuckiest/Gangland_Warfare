@@ -19,14 +19,14 @@ public class WeaponConverter extends ItemAttributes {
 			return null;
 		}
 
-		Weapon weapon = weaponService.getWeapon(modifier);
+		// A transient copy: converting an item must not mint a registry entry (and a weapon table row) for an item
+		// that may never be picked up. The instance registers itself the first time a player actually uses it.
+		Weapon newWeapon = weaponService.createTransientWeapon(modifier);
 
-		if (weapon == null) {
+		if (newWeapon == null) {
 			return null;
 		}
 
-		// clone the weapon
-		Weapon    newWeapon = weapon.clone();
 		ItemStack itemStack = newWeapon.buildItem();
 
 		applyAttributes(itemStack, attributes);

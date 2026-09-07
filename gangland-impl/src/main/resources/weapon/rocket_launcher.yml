@@ -26,6 +26,7 @@ Shoot:
       Damage:
          Base: 30
          Explosion_Damage: 50
+         Explosion_Radius: 4.0
          Fire_Ticks: 40
          Head: 0
          Critical_Hit:

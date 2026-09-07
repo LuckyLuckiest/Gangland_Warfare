@@ -78,6 +78,12 @@ public final class UserDataLoader {
 			                              (int[]) userSearch.get("type"), new String[]{"*"});
 
 			if (userData.length == 0) {
+				// First-ever join: the DB has now confirmed there is no saved balance, so this is the only safe
+				// point to stamp the configured starting balance. EconomyHandler.setAmount clears the backing
+				// Vault account before re-depositing, so doing this on every join (as CreateAccountListener used
+				// to) zeroed a returning player's money until the read came back - permanently when it failed.
+				user.getEconomy().setAmount(Settings.getUserInitialBalance());
+
 				if (!Settings.isAutoSave()) userTable.insertTableQuery(db, user);
 				return;
 			}

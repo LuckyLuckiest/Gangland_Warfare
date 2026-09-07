@@ -1,9 +1,13 @@
 package org.luckyraven.gangland.sign.aspect;
 
 import lombok.RequiredArgsConstructor;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.luckyraven.gangland.sign.model.ParsedSign;
+
+import java.util.Map;
 
 @RequiredArgsConstructor
 public class ItemTransferAspect implements SignAspect {
@@ -25,11 +29,17 @@ public class ItemTransferAspect implements SignAspect {
 		item.setAmount(amount);
 
 		if (transferType == TransferType.GIVE) {
-			if (player.getInventory().firstEmpty() == -1) {
+			// One free slot is not enough: the sign can hand over more than a single stack, and the leftover map
+			// addItem returns used to be discarded — voiding the excess after the payment had already been taken.
+			if (!hasSpaceFor(player, item, amount)) {
 				return AspectResult.failure("Your inventory is full!");
 			}
 
-			player.getInventory().addItem(item);
+			Map<Integer, ItemStack> leftover = player.getInventory().addItem(item);
+
+			// Belt and braces: if Bukkit still could not fit everything, drop the remainder at the player's feet
+			// rather than voiding items the player has been charged for.
+			dropLeftover(player, leftover);
 
 			return AspectResult.successContinue("Received " + amount + "x " + content);
 		} else {
@@ -54,7 +64,7 @@ public class ItemTransferAspect implements SignAspect {
 		}
 
 		if (transferType == TransferType.GIVE) {
-			return player.getInventory().firstEmpty() != -1;
+			return hasSpaceFor(player, item, sign.getAmount());
 		} else {
 			ItemStack cleanItem = item.clone();
 			cleanItem.setAmount(sign.getAmount());
@@ -71,6 +81,48 @@ public class ItemTransferAspect implements SignAspect {
 	@Override
 	public int getPriority() {
 		return 50;
+	}
+
+	/**
+	 * Whether the player's storage can absorb {@code amount} more of {@code item}: every empty slot counts for a full
+	 * stack, and a partially filled similar stack counts for its remaining room.
+	 */
+	private boolean hasSpaceFor(Player player, ItemStack item, int amount) {
+		if (amount <= 0) {
+			return true;
+		}
+
+		int maxStackSize = Math.max(1, item.getMaxStackSize());
+		int free         = 0;
+
+		for (ItemStack slot : player.getInventory().getStorageContents()) {
+			if (slot == null || slot.getType() == Material.AIR) {
+				free += maxStackSize;
+			} else if (isSimilarItems(player, slot, item)) {
+				free += Math.max(0, slot.getMaxStackSize() - slot.getAmount());
+			}
+
+			if (free >= amount) {
+				return true;
+			}
+		}
+
+		return free >= amount;
+	}
+
+	private void dropLeftover(Player player, Map<Integer, ItemStack> leftover) {
+		if (leftover == null || leftover.isEmpty()) {
+			return;
+		}
+
+		World world = player.getWorld();
+		if (world == null) {
+			return;
+		}
+
+		for (ItemStack drop : leftover.values()) {
+			world.dropItemNaturally(player.getLocation(), drop);
+		}
 	}
 
 	private void removeItems(Player player, ItemStack requiredItem, int amountToRemove) {

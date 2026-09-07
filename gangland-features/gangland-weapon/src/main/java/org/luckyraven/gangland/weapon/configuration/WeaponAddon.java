@@ -130,6 +130,13 @@ public class WeaponAddon {
 		return weapons.get(key);
 	}
 
+	/**
+	 * Every parsed catalogue entry. These are shared templates — copy before handing one out.
+	 */
+	public Collection<Weapon> getWeapons() {
+		return Collections.unmodifiableCollection(weapons.values());
+	}
+
 	public Set<String> getWeaponKeys() {
 		return weapons.keySet();
 	}

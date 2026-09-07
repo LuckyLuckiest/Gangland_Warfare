@@ -86,6 +86,65 @@ class BountyTest {
 	}
 
 	@Test
+	@DisplayName("WB-01: the paid ledger records what the contributor was CHARGED, not the level-scaled figure "
+	             + "posted on the target's head")
+	void getPaidAmount_recordsTheChargedAmount_notTheScaledFigure() {
+		Bounty        bounty = bounty(100, 2.0);
+		CommandSender sender = mock(CommandSender.class);
+
+		// level 5, multiplier 2.0 -> factor 2.0: the sender pays 100, the target carries 200.
+		bounty.addBounty(sender, Currency.of(100), 5);
+
+		assertEquals(Currency.of(200), bounty.getSetAmount(sender), "the posted figure is level-scaled");
+		assertEquals(Currency.of(100), bounty.getPaidAmount(sender),
+		             "Observation #1 (wanted-bounty-combat.md): /glw bounty clear refunds this figure. Refunding "
+		             + "the posted one paid back double what BountySetCommand withdrew - free money on every "
+		             + "set-then-clear round trip.");
+	}
+
+	@Test
+	@DisplayName("WB-01: paid contributions accumulate independently of the scaled total")
+	void getPaidAmount_accumulatesAcrossContributions() {
+		Bounty        bounty = bounty(100, 2.0);
+		CommandSender sender = mock(CommandSender.class);
+
+		bounty.addBounty(sender, Currency.of(100), 5);
+		bounty.addBounty(sender, Currency.of(50), 5);
+
+		assertEquals(Currency.of(300), bounty.getSetAmount(sender));
+		assertEquals(Currency.of(150), bounty.getPaidAmount(sender));
+	}
+
+	@Test
+	@DisplayName("WB-01: the two-argument addBounty charges exactly what it posts")
+	void getPaidAmount_twoArgOverload_paidEqualsPosted() {
+		Bounty        bounty = bounty(100, 2.0);
+		CommandSender sender = mock(CommandSender.class);
+
+		bounty.addBounty(sender, Currency.of(75));
+
+		assertEquals(Currency.of(75), bounty.getSetAmount(sender));
+		assertEquals(Currency.of(75), bounty.getPaidAmount(sender));
+	}
+
+	@Test
+	@DisplayName("WB-01: removeBounty and resetBounty drop the paid entry along with the posted one")
+	void paidLedger_isClearedAlongsideThePostedLedger() {
+		Bounty        bounty = bounty(100, 2.0);
+		CommandSender sender = mock(CommandSender.class);
+
+		bounty.addBounty(sender, Currency.of(100), 5);
+		bounty.removeBounty(sender);
+
+		assertNull(bounty.getPaidAmount(sender), "a removed contributor must have no refundable amount left");
+
+		bounty.addBounty(sender, Currency.of(100), 5);
+		bounty.resetBounty();
+
+		assertNull(bounty.getPaidAmount(sender));
+	}
+
+	@Test
 	@DisplayName("addBounty accumulates across multiple contributions from the same sender")
 	void addBounty_accumulatesAcrossMultipleCalls() {
 		Bounty bounty = bounty(0, 0.0); // multiplier 0 -> scale factor is always 1, isolates accumulation

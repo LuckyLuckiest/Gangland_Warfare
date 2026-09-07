@@ -73,7 +73,8 @@ class GangKickCommand extends SubArgument {
 
 		Member userMember = memberManager.getMember(player.getUniqueId());
 
-		if (!user.hasGang()) {
+		// GR-01: a player with no cached Member would NPE further down this command.
+		if (userMember == null || !user.hasGang()) {
 			return null;
 		}
 
@@ -145,7 +146,8 @@ class GangKickCommand extends SubArgument {
 
 			Member userMember = memberManager.getMember(player.getUniqueId());
 
-			if (!user.hasGang()) {
+			// GR-01: a player with no cached Member would NPE further down this command.
+			if (userMember == null || !user.hasGang()) {
 				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
 				return;
 			}

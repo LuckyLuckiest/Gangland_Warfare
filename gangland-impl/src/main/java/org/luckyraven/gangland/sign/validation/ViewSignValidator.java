@@ -29,7 +29,7 @@ public class ViewSignValidator extends AbstractSignValidator {
 		}
 
 		// Check if it's a weapon
-		Collection<Weapon> values = weaponService.getWeapons().values();
+		Collection<Weapon> values = weaponService.getWeaponTemplates();
 		boolean isWeapon = values.stream()
 				.anyMatch(weapon -> weapon.getName().equalsIgnoreCase(content) ||
 				                    weapon.getDisplayName().equalsIgnoreCase(content));

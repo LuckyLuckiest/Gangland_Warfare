@@ -57,10 +57,13 @@ public class GunWeaponParser {
 
 		NodeReader damage = NodeReader.of(damageSection, report);
 
-		int projectileDamage          = damage.get("Base").asInt().min(0).required().orDefault(0);
-		int projectileExplosionDamage = damage.get("Explosion_Damage").asInt().min(0).orDefault(0);
-		int projectileFireTicks       = damage.get("Fire_Ticks").asInt().min(0).orDefault(0);
-		int projectileHeadDamage      = damage.get("Head").asInt().min(0).orDefault(0);
+		int    projectileDamage          = damage.get("Base").asInt().min(0).required().orDefault(0);
+		int    projectileExplosionDamage = damage.get("Explosion_Damage").asInt().min(0).orDefault(0);
+		// Explosion_Radius is authored separately from Explosion_Damage. Before 0.8.3 the radius was read off the
+		// damage value, so Explosion_Damage: 50 produced a 50-block blast. Default mirrors ThrowableWeaponParser.
+		double projectileExplosionRadius = damage.get("Explosion_Radius").asDouble().min(0).orDefault(3.0);
+		int    projectileFireTicks       = damage.get("Fire_Ticks").asInt().min(0).orDefault(0);
+		int    projectileHeadDamage      = damage.get("Head").asInt().min(0).orDefault(0);
 
 		int criticalHitChance = 0;
 		int criticalHitDamage = 0;
@@ -114,6 +117,7 @@ public class GunWeaponParser {
 		gun.setAllowedSelectiveFires(parsedSelectiveFire.allowed());
 
 		gun.getDamageData().setExplosionDamage(projectileExplosionDamage);
+		gun.getDamageData().setExplosionRadius(projectileExplosionRadius);
 		gun.getDamageData().setFireTicks(projectileFireTicks);
 		gun.getDamageData().setHeadDamage(projectileHeadDamage);
 		gun.getDamageData().setCriticalHitChance(criticalHitChance);
