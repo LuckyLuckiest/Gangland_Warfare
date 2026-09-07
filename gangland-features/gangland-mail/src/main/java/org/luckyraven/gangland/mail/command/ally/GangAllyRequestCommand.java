@@ -13,6 +13,7 @@ import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.mail.MailItem;
@@ -111,6 +112,13 @@ public class GangAllyRequestCommand extends SubArgument {
 
 			if (!user.hasGang()) {
 				sender.sendMessage(Messages.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			// GR-03: proposing an alliance bound the whole gang and was open to every member.
+			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
+			                            GangPermissions.ALLY)) {
+				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
 				return;
 			}
 

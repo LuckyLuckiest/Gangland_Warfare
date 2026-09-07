@@ -16,6 +16,7 @@ import org.luckyraven.gangland.data.placeholder.PlaceholderService;
 import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.keystone.economy.bank.Bank;
 import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.gangland.file.configuration.SettingsRedaction;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.Member;
@@ -143,6 +144,9 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 	@Nullable
 	private String getSetting(String parameter) {
+		// CM-13: the placeholder map carries the MySQL credentials, and a placeholder is renderable by anyone.
+		if (SettingsRedaction.isSensitive(parameter)) return null;
+
 		Object value = Settings.getSettingsPlaceholder()
 		                       .entrySet()
 				.stream()

@@ -528,6 +528,7 @@ Waypoint:
    Cooldown: "&7Estás en enfriamiento. Espera &b%timer&7."
    Cancelled_Teleport: "&7Te moviste, ¡teletransportación cancelada!"
    List_Header: "Puntos de referencia:"
+   List_Empty: "&7No hay puntos de referencia disponibles para ti."
 
 Signs:
    Created: '¡Señal creada con éxito!'

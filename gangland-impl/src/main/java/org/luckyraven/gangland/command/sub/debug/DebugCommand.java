@@ -29,6 +29,7 @@ import org.luckyraven.gangland.data.placeholder.worker.GanglandPlaceholder;
 import org.luckyraven.gangland.data.teleportation.Waypoint;
 import org.luckyraven.gangland.data.teleportation.WaypointManager;
 import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.gangland.file.configuration.SettingsRedaction;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.Member;
@@ -405,7 +406,9 @@ public final class DebugCommand extends Command {
 	private @NotNull Argument getArgument(String[] setOpt) {
 		return new Argument(getGangland(), setOpt, getArgumentTree(), (argument, sender, args) -> {
 			var jsonFormatter = new JsonFormatter();
-			var message       = convertToJson(jsonFormatter.createJson(Settings.getSettingsMap()));
+			// CM-13: the map is built by reflection over every static field, MySQL credentials included.
+			var message       = convertToJson(
+					jsonFormatter.createJson(SettingsRedaction.redact(Settings.getSettingsMap())));
 
 			sender.sendMessage(message);
 		});
@@ -414,7 +417,9 @@ public final class DebugCommand extends Command {
 	private @NotNull Argument getSetPlaceholder() {
 		return new Argument(getGangland(), "placeholder", getArgumentTree(), (argument, sender, args) -> {
 			var jsonFormatter = new JsonFormatter();
-			var message       = convertToJson(jsonFormatter.createJson(Settings.getSettingsPlaceholder()));
+			// CM-13: the placeholder map is the same reflection dump under snake_case keys.
+			var message       = convertToJson(
+					jsonFormatter.createJson(SettingsRedaction.redact(Settings.getSettingsPlaceholder())));
 
 			sender.sendMessage(message);
 		});

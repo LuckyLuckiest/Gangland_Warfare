@@ -9,6 +9,7 @@ import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.data.teleportation.Waypoint;
+import org.luckyraven.gangland.data.teleportation.WaypointAccess;
 import org.luckyraven.gangland.data.teleportation.WaypointManager;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.user.User;
@@ -73,6 +74,13 @@ class WaypointSelectCommand extends SubArgument {
 			User<Player> user   = userManager.getUser(player);
 
 			if (user == null) return;
+
+			// LS-01: selecting by id skipped the permission/gang filter the completer applies, and a selected
+			// waypoint is what a bare /glw teleport uses.
+			if (!WaypointAccess.canAccess(user, waypoint)) {
+				user.sendMessage(Messages.WARP_NO_PERM.toString());
+				return;
+			}
 
 			waypointManager.playerSelect(player, waypoint);
 

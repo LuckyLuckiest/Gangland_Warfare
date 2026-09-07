@@ -17,6 +17,8 @@ import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.inventory.InventoryHandler;
@@ -28,15 +30,18 @@ class GangColorCommand extends SubArgument {
 
 	private final Gangland            gangland;
 	private final UserManager<Player> userManager;
+	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 
 	protected GangColorCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
-	                           UserManager<Player> userManager, GangManager gangManager) {
+	                           UserManager<Player> userManager, MemberManager memberManager,
+	                           GangManager gangManager) {
 		super(gangland, "color", tree, parent);
 
-		this.gangland    = gangland;
-		this.userManager = userManager;
-		this.gangManager = gangManager;
+		this.gangland      = gangland;
+		this.userManager   = userManager;
+		this.memberManager = memberManager;
+		this.gangManager   = gangManager;
 	}
 
 	@Override
@@ -49,6 +54,13 @@ class GangColorCommand extends SubArgument {
 
 			if (!user.hasGang()) {
 				sender.sendMessage(Messages.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			// GR-03: the gang colour picker opened for every member.
+			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
+			                            GangPermissions.COLOR)) {
+				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
 				return;
 			}
 

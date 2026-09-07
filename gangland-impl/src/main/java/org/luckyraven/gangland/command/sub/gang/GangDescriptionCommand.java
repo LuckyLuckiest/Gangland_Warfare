@@ -11,6 +11,8 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
 
@@ -21,15 +23,18 @@ class GangDescriptionCommand extends SubArgument {
 
 	private final Gangland            gangland;
 	private final UserManager<Player> userManager;
+	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 
 	protected GangDescriptionCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
-	                                 UserManager<Player> userManager, GangManager gangManager) {
+	                                 UserManager<Player> userManager, MemberManager memberManager,
+	                                 GangManager gangManager) {
 		super(gangland, new String[]{"desc", "description"}, tree, parent, "description");
 
-		this.gangland    = gangland;
-		this.userManager = userManager;
-		this.gangManager = gangManager;
+		this.gangland      = gangland;
+		this.userManager   = userManager;
+		this.memberManager = memberManager;
+		this.gangManager   = gangManager;
 	}
 
 	@Override
@@ -42,6 +47,13 @@ class GangDescriptionCommand extends SubArgument {
 
 			if (!user.hasGang()) {
 				sender.sendMessage(Messages.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			// GR-03: any member could rewrite the gang description.
+			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
+			                            GangPermissions.DESCRIPTION)) {
+				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
 				return;
 			}
 

@@ -17,6 +17,7 @@ import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
@@ -76,6 +77,12 @@ class GangDepositCommand extends SubArgument {
 			// GR-01: a player with no cached Member would NPE further down this command.
 			if (member == null || !user.hasGang()) {
 				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			// GR-03: deposits move a member's own money into the gang vault, which withdraw rights then control.
+			if (!GangPermissions.allows(member, player, GangPermissions.DEPOSIT)) {
+				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
 				return;
 			}
 

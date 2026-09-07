@@ -55,6 +55,7 @@ import org.luckyraven.gangland.sign.bulk.BulkActionManager;
 import org.luckyraven.gangland.sign.registry.SignFormatRegistry;
 import org.luckyraven.gangland.sign.registry.SignTypeRegistry;
 import org.luckyraven.gangland.sign.service.SignFormatterService;
+import org.luckyraven.gangland.sign.SignPermissions;
 import org.luckyraven.gangland.sign.service.SignInformation;
 import org.luckyraven.gangland.sign.service.SignInteraction;
 import org.luckyraven.gangland.sign.service.SignInteractionService;
@@ -245,7 +246,12 @@ public class GameplayConfig {
 
 	@Bean
 	public SignInteraction signInteraction(SignTypeRegistry signTypeRegistry, SignFormatterService signFormatterService,
-	                                       SignInformation signInformation) {
+	                                       SignInformation signInformation, PermissionManager permissionManager) {
+		// LS-19: sign creation and breaking are permission-gated; surface both nodes the same way every other
+		// gangland permission is discovered.
+		permissionManager.addPermission(SignPermissions.CREATE);
+		permissionManager.addPermission(SignPermissions.BREAK);
+
 		String prefix = Gangland.SHORT_PREFIX + "-";
 		return new SignInteraction(prefix, signTypeRegistry, signFormatterService, signInformation);
 	}

@@ -15,6 +15,7 @@ import org.luckyraven.gangland.gang.GangAlliance;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
@@ -103,6 +104,13 @@ class GangAllyAbandonCommand extends SubArgument {
 
 			if (!user.hasGang()) {
 				sender.sendMessage(Messages.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			// GR-03: any member could break an alliance the gang leadership had negotiated.
+			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
+			                            GangPermissions.ALLY)) {
+				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
 				return;
 			}
 

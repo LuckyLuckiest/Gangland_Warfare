@@ -11,6 +11,8 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
@@ -22,16 +24,19 @@ class GangDisplayCommand extends SubArgument {
 	private final Gangland            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
+	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 
 	protected GangDisplayCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
-	                             UserManager<Player> userManager, GangManager gangManager) {
+	                             UserManager<Player> userManager, MemberManager memberManager,
+	                             GangManager gangManager) {
 		super(gangland, "display", tree, parent);
 
-		this.gangland    = gangland;
-		this.tree        = tree;
-		this.userManager = userManager;
-		this.gangManager = gangManager;
+		this.gangland      = gangland;
+		this.tree          = tree;
+		this.userManager   = userManager;
+		this.memberManager = memberManager;
+		this.gangManager   = gangManager;
 
 		gangDisplay();
 	}
@@ -65,6 +70,13 @@ class GangDisplayCommand extends SubArgument {
 				return;
 			}
 
+			// GR-03: the gang display name was writable by every member.
+			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
+			                            GangPermissions.DISPLAY)) {
+				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				return;
+			}
+
 			String displayNameStr = args[2];
 			Gang   gang           = gangManager.getGang(user.getGangId());
 
@@ -92,6 +104,13 @@ class GangDisplayCommand extends SubArgument {
 
 			if (!user.hasGang()) {
 				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			// GR-03: same gate on the remove form.
+			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
+			                            GangPermissions.DISPLAY)) {
+				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
 				return;
 			}
 
