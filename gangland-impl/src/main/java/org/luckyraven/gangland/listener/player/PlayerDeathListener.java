@@ -13,7 +13,6 @@ import org.jspecify.annotations.Nullable;
 import org.luckyraven.gangland.data.economy.BankTierView;
 import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.keystone.bean.Qualifier;
-import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.datastructure.ScientificCalculator;
 import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
@@ -30,7 +29,6 @@ import org.luckyraven.gangland.gang.user.UserManager;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 
 @ListenerHandler
 public class PlayerDeathListener implements Listener {
@@ -45,8 +43,7 @@ public class PlayerDeathListener implements Listener {
 
 	public PlayerDeathListener(@Qualifier("online") UserManager<Player> userManager,
 	                           GanglandPlaceholder placeholder,
-	                           BankTiers bankTiers,
-	                           DependencyContainer container) {
+	                           BankTiers bankTiers) {
 		this.userManager       = userManager;
 		this.placeholder       = placeholder;
 		this.bankTiers         = bankTiers;
@@ -197,11 +194,20 @@ public class PlayerDeathListener implements Listener {
 
 		if (killer == null) return null;
 
-		// The weapon module owned the only module-contributed death-message hook and the only global
-		// death-message template list; both left with it. Bartizan now sets its own weapon-kill death
-		// message from its own listener at EventPriority.HIGH (after this one, which runs at LOWEST), so
-		// this listener has nothing left to synthesize and leaves the vanilla message in place.
-		return null;
+		// The weapon-owned contributor hook left with the weapon module: Bartizan sets its own weapon-kill death
+		// message from its own PlayerDeathEvent listener at EventPriority.HIGH (after this one at LOWEST). The core
+		// keeps a generic %killer%/%victim% template so every player kill is still announced - including the
+		// downed path, where the lethal damage is cancelled and PlayerDeathEvent never fires (T-C4, gate-C review B1).
+		String template = getRandomGlobalMessage(Messages.DEATH_GLOBAL.toStringList());
+		if (template == null) return null;
+
+		return ChatUtil.color(template.replace("%killer%", killer.getName())
+		                              .replace("%victim%", player.getName()));
+	}
+
+	private @Nullable String getRandomGlobalMessage(List<String> globalMessages) {
+		if (globalMessages.isEmpty()) return null;
+		return globalMessages.get(new Random().nextInt(globalMessages.size()));
 	}
 
 	private double amountDeduction(User<Player> user) {

@@ -59,7 +59,7 @@
                                 <!-- AnvilGUI -->
                                 <include>net/wesjd/anvilgui/version/</include>
                                 <!-- Project classes are discovered reflectively (beans, listeners,
-                                     repositories, NMS adapters) so minimizeJar must keep them all -->
+                                     repositories) so minimizeJar must keep them all -->
                                 <include>org/luckyraven/</include>
                             </includes>
                         </filter>

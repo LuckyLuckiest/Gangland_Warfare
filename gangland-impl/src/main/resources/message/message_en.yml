@@ -624,6 +624,9 @@ Wanted_Level:
    Paid: "Paid wanted level fees, totaling &a%money_symbol%%amount%&7."
 
 Death:
+   Global:
+      - "%killer% killed %victim%."
+      - "%victim% was killed by %killer%."
    Respawn:
       Wasted_Prefix: "&8[&cWASTED&8] "
       Click_Button: "&7[&aClick to respawn instantly&7]"

@@ -28,10 +28,6 @@ public enum Messages {
 	ARGUMENTS_WRONG("Commands.Syntax.Wrong_Arguments", Type.COMMAND),
 	ARGUMENTS_DONT_EXIST("Commands.Syntax.Doesnt_Exist", Type.COMMAND),
 
-	// commands - weapons
-	RECEIVED_AMMO("Commands.Weapons.Ammo.Received", Type.COMMAND),
-	RECEIVED_WEAPON("Commands.Weapons.Weapon.Received", Type.COMMAND),
-
 	// commands - item money
 	ITEM_MONEY_GAVE("Commands.Item.Money.Gave", Type.COMMAND),
 	ITEM_MONEY_INVALID("Commands.Item.Money.Invalid", Type.ERROR),
@@ -309,14 +305,6 @@ public enum Messages {
 	WANTED_CLEARED("Wanted_Level.Cleared", Type.PREFIX),
 	PAID_WANTED("Wanted_Level.Paid", Type.PREFIX),
 
-	// weapons
-	INVALID_AMMO("Weapons.Not_Valid_Ammo", Type.ERROR),
-	INVALID_WEAPON("Weapons.Not_Valid_Weapon", Type.ERROR),
-	INVALID_AMOUNT("Weapons.Not_Valid_Amount", Type.ERROR),
-	KILLED_PLAYER("Weapons.Killed_Player", Type.PREFIX),
-	GUN_NOT_IN_INVENTORY("Weapons.Gun_Not_In_Inventory", Type.PREFIX),
-	GUN_BOUGHT("Weapons.Gun_Bought", Type.PREFIX),
-	GUN_SOLD("Weapons.Gun_Sold", Type.PREFIX),
 	// level
 	LEVEL_STATS("Level.Stats", Type.OTHER, true),
 	LEVEL_METER_BAR("Level.Meter.Bar", Type.NO_CHANGE),
@@ -450,6 +438,7 @@ public enum Messages {
 	// death (respawn prompt)
 	DEATH_RESPAWN_WASTED_PREFIX("Death.Respawn.Wasted_Prefix", Type.OTHER),
 	DEATH_RESPAWN_BUTTON("Death.Respawn.Click_Button", Type.OTHER),
+	DEATH_GLOBAL("Death.Global", Type.OTHER, true),
 
 	// commands - update
 	UPDATE_AVAILABLE("Commands.Update.Available", Type.COMMAND),
@@ -551,10 +540,6 @@ public enum Messages {
 	ITEM_WEARABLE_INVALID("Item.Wearable.Invalid", Type.PREFIX),
 	ITEM_WEARABLE_NOT_REGISTERED("Item.Wearable.Not_Registered", Type.PREFIX),
 	ITEM_WEARABLE_NOT_WEARABLE("Item.Wearable.Not_Wearable", Type.PREFIX),
-
-	// commands - weapons (list headers)
-	WEAPON_LIST_HEADER("Commands.Weapons.Weapon.List_Header", Type.COMMAND),
-	AMMO_LIST_HEADER("Commands.Weapons.Ammo.List_Header", Type.COMMAND),
 
 	// commands - waypoint (extras)
 	WAYPOINT_LIST_HEADER("Waypoint.List_Header", Type.PREFIX),
@@ -692,6 +677,13 @@ public enum Messages {
 		}
 
 		return missing;
+	}
+
+	/**
+	 * The YAML path this member reads, e.g. {@code "Death.Global"}.
+	 */
+	public String getPath() {
+		return path;
 	}
 
 	@Override

@@ -19,17 +19,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * {@link PluginDataCleanupService} against a mocked {@link DataCleanupTask}. Proves the due/not-due branch, that
- * every registered task's {@code cleanup()} only fires on a due (or forced) scan, and that a due scan reschedules
- * via {@code PluginManager.nextPlannedDate}. Since the 0.8.4 module split, the service no longer knows about any
- * feature-specific repository or manager type directly — it iterates whatever {@link DataCleanupTask} beans the
- * container holds; the weapon module's own guard against a non-owning repository implementation is pinned by its
- * own data-cleanup-task test in that module, not here.
+ * {@link PluginDataCleanupService} against a mocked {@link PluginManager}. Proves the due/not-due branch and that a
+ * due scan reschedules via {@code PluginManager.nextPlannedDate}. Since 0.9.0 (weapon module removal), the service
+ * no longer iterates any contributed {@code DataCleanupTask} beans — it only maintains the plugin's own scan-date
+ * bookkeeping (0.8.4's {@code DataCleanupTask} SPI and its sole implementor, the weapon module, are both gone).
  *
  * <p>{@code Settings}/{@code Messages}/{@code TimeMessages} are process-wide statics with no reset hook
  * (documentation/TESTING.md §4/§8). This service reads {@code Settings.isAutoSaveDebug()} once per construction to
@@ -45,7 +41,6 @@ class PluginDataCleanupServiceTest {
 	Path tempDir;
 
 	private PluginManager    pluginManager;
-	private DataCleanupTask  task;
 	private PluginDataCleanupService service;
 
 	@BeforeEach
@@ -62,8 +57,7 @@ class PluginDataCleanupServiceTest {
 		TimeMessages.initialize();
 
 		pluginManager = mock(PluginManager.class);
-		task          = mock(DataCleanupTask.class);
-		service       = new PluginDataCleanupService(pluginManager, () -> List.of(task));
+		service       = new PluginDataCleanupService(pluginManager);
 	}
 
 	@Test
@@ -72,34 +66,29 @@ class PluginDataCleanupServiceTest {
 		when(pluginManager.getPluginDataList()).thenReturn(List.of());
 
 		assertDoesNotThrow(() -> service.checkAndPerformCleanup());
-
-		verify(task, never()).cleanup();
 	}
 
 	@Test
-	@DisplayName("scan not yet due: leaves the registered tasks and scan dates untouched")
+	@DisplayName("scan not yet due: leaves the scan dates untouched")
 	void checkAndPerformCleanup_notDue_doesNothing() {
 		PluginData future = new PluginData(1, 0L, 0L, System.currentTimeMillis() + Duration.ofDays(1).toMillis());
 		when(pluginManager.getPluginDataList()).thenReturn(List.of(future));
 
 		service.checkAndPerformCleanup();
 
-		verify(task, never()).cleanup();
+		assertEquals(0L, future.getScanDate());
 	}
 
 	@Test
-	@DisplayName("scan due: runs every registered task and reschedules via nextPlannedDate")
-	void checkAndPerformCleanup_due_runsTasksAndReschedules() {
+	@DisplayName("scan due: reschedules via nextPlannedDate")
+	void checkAndPerformCleanup_due_reschedules() {
 		PluginData due = new PluginData(1, 0L, 0L, System.currentTimeMillis() - 1_000);
 		when(pluginManager.getPluginDataList()).thenReturn(List.of(due));
-		when(task.name()).thenReturn("weapons");
-		when(task.cleanup()).thenReturn(1);
 		Date nextScan = new Date(System.currentTimeMillis() + Duration.ofDays(30).toMillis());
 		when(pluginManager.nextPlannedDate(any())).thenReturn(nextScan);
 
 		service.checkAndPerformCleanup();
 
-		verify(task).cleanup();
 		assertEquals(nextScan.getTime(), due.getScheduledScanDate());
 		assertTrue(due.getScanDate() > 0);
 	}
@@ -113,6 +102,6 @@ class PluginDataCleanupServiceTest {
 
 		service.forceCleanup();
 
-		verify(task).cleanup();
+		assertTrue(notDue.getScanDate() > 0);
 	}
 }

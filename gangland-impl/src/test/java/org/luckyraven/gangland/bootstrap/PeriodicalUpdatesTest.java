@@ -10,14 +10,11 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.data.plugin.PluginManager;
 import org.luckyraven.gangland.database.GanglandDatabase;
-import org.luckyraven.gangland.data.plugin.DataCleanupTask;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.mockito.InOrder;
-
-import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -61,7 +58,6 @@ class PeriodicalUpdatesTest {
 		container          = mock(DependencyContainer.class);
 
 		when(database.getRepositoryRegistry()).thenReturn(repositoryRegistry);
-		when(container.getAllInstances(DataCleanupTask.class)).thenReturn(List.of());
 	}
 
 	@Test
