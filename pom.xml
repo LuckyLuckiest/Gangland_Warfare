@@ -59,7 +59,7 @@
     </modules>
 
     <properties>
-        <revision>0.8.4</revision>
+        <revision>0.9.0</revision>
         <!-- Matches Keystone's release (17): the shaded jar must load on every JVM Keystone
              loads on, or the MC 1.16+ support floor is silently broken. release (not
              source/target) also validates against the Java 17 API, so building on a newer
@@ -72,7 +72,8 @@
 
         <!-- Dependencies/Libraries versions -->
         <!-- Shared infrastructure (Keystone.jar provides it at runtime — provided scope, never shaded) -->
-        <keystone.version>1.8.1</keystone.version>
+        <keystone.version>1.9.0</keystone.version>
+        <bartizan.version>0.1.0</bartizan.version>
         <nbt.version>2.15.7</nbt.version>
         <xseries.version>13.6.0</xseries.version>
         <anvilgui.version>1.10.11-SNAPSHOT</anvilgui.version>
@@ -209,6 +210,15 @@
                 <artifactId>keystone-testkit</artifactId>
                 <version>${keystone.version}</version>
                 <scope>test</scope>
+            </dependency>
+
+            <!-- Bartizan (standalone weapons plugin, plugin.yml depend: [Keystone]). Provided scope, never
+                 shaded — Bartizan.jar provides these classes at runtime. -->
+            <dependency>
+                <groupId>org.luckyraven.bartizan</groupId>
+                <artifactId>bartizan-api</artifactId>
+                <version>${bartizan.version}</version>
+                <scope>provided</scope>
             </dependency>
 
             <!-- Internal modules -->

@@ -3,5 +3,5 @@ Id: turf
 Name: Gangland Turf
 Version: ${project.version}
 Main: org.luckyraven.gangland.turf.TurfModule
-Host_Api: 0.8
+Host_Api: 0.9
 Artifact: org.luckyraven:gangland-turf

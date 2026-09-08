@@ -95,8 +95,9 @@ Database:
       Username: root
       Password: ""
    SQLite:
-      # Will create a backup if the type is mysql or sqlite
-      Backup: true
+      # Back up the SQLite database into MySQL on shutdown. Only set true when Database.MySQL points at a
+      # reachable server.
+      Backup: false
       # Will use SQLite if unable to connect to MySQL
       # It is recommended to set this true
       Failed_MySQL: true

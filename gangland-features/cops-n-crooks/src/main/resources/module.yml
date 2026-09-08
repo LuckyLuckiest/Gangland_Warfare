@@ -3,7 +3,7 @@ Id: copsncrooks
 Name: Cops N Crooks
 Version: ${project.version}
 Main: org.luckyraven.gangland.copsncrooks.CopsNCrooksModule
-Host_Api: 0.8
+Host_Api: 0.9
 Depends:
   - turf
   - weapon
