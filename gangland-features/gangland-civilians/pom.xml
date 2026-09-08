@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.luckyraven</groupId>
+        <artifactId>gangland-features</artifactId>
+        <version>${revision}</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>gangland-civilians</artifactId>
+
+    <name>Gangland Civilians</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-bean</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-item</artifactId>
+        </dependency>
+        <!-- Keystone shared infrastructure (provided by Keystone.jar at runtime; never shaded).
+             Declared directly: provided scope is not transitive, so it cannot arrive via gangland-core. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-npc</artifactId>
+        </dependency>
+        <!-- Spigot Build (full server — needed for io.netty access) -->
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Local dependencies -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-item</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-persistence</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-hooks</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-module</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-command</artifactId>
+        </dependency>
+
+        <!-- Bartizan (weapons plugin) API — provided: at runtime Bartizan is resolved through the plugin's own
+             classloader when installed (module.yml Plugins: [Bartizan]); when it is absent, BartizanNpcWeapons and
+             GanglandCombatEligibility degrade gracefully (NpcRangedAttack.NONE / CombatEligibility.DEFAULT). -->
+        <dependency>
+            <groupId>org.luckyraven.bartizan</groupId>
+            <artifactId>bartizan-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Citizens dependency -->
+        <dependency>
+            <groupId>net.citizensnpcs</groupId>
+            <artifactId>citizens-main</artifactId>
+        </dependency>
+
+        <!-- XSeries dependency -->
+        <dependency>
+            <groupId>com.github.cryptomorin</groupId>
+            <artifactId>XSeries</artifactId>
+        </dependency>
+
+        <!-- The host (core) jar. Provided: at runtime this module is loaded from plugins/Gangland_Warfare/modules/
+             by Keystone's ModuleLoader, whose parent is the host plugin's classloader, so every impl class
+             resolves from there. Dependency direction is module -> core; core never names a civilians type. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-impl</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+</project>

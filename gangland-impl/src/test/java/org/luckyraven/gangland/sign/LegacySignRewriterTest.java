@@ -54,4 +54,17 @@ class LegacySignRewriterTest {
 		assertNull(rewriter.rewrite(""));
 	}
 
+	@Test
+	@DisplayName("a null header is left untouched — never throws (gate D-G review finding B6)")
+	void nullHeader_leftUntouched() {
+		assertNull(rewriter.rewrite(null));
+	}
+
+	@Test
+	@DisplayName("a placed sign's upper-case header still matches — rewrite is case-insensitive (gate D-G review finding B6)")
+	void upperCaseHeader_stillMatches() {
+		assertEquals(new LegacySignRewriter.Rewritten("item-buy", "weapon"), rewriter.rewrite("WEAPON-BUY"));
+		assertEquals(new LegacySignRewriter.Rewritten("item-sell", "wearable"), rewriter.rewrite("Wearable-Sell"));
+	}
+
 }

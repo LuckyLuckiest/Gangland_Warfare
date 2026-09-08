@@ -1,0 +1,9 @@
+# Keystone module descriptor - read by Gangland's ModuleLoader from plugins/Gangland_Warfare/modules/.
+Id: civilians
+Name: Gangland Civilians
+Version: ${project.version}
+Main: org.luckyraven.gangland.civilians.CiviliansModule
+Host_Api: 0.9
+Plugins:
+  - Bartizan
+Artifact: org.luckyraven:gangland-civilians

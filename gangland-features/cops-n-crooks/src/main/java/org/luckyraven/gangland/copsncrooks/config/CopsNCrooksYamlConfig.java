@@ -28,7 +28,6 @@ public class CopsNCrooksYamlConfig {
 	public CopsNCrooksFiles copsNCrooksFiles(FileManager fileManager, ModuleLoader moduleLoader) {
 		ClassLoader loader = moduleLoader.classLoader();
 		fileManager.addFile(new FileHandler(gangland, "cops", "npc", ".yml", loader), true);
-		fileManager.addFile(new FileHandler(gangland, "civilians", "npc", ".yml", loader), true);
 		fileManager.addFile(new FileHandler(gangland, "trader_traits", "npc", ".yml", loader), true);
 		fileManager.addFile(new FileHandler(gangland, "bank_tiers", "npc", ".yml", loader), true);
 		fileManager.addFile(new FileHandler(gangland, "turf_npcs", "turf", ".yml", loader), true);

@@ -52,6 +52,8 @@ public class SignManager extends SignService {
 	private final UserManager<OfflinePlayer> offlineUserManager;
 	@Getter(AccessLevel.NONE)
 	private final DependencyContainer        container;
+	@Getter(AccessLevel.NONE)
+	private final LegacySignRewriter         legacyAliasRewriter;
 
 	public SignManager(Gangland gangland,
 	                   String shortPrefix,
@@ -62,18 +64,20 @@ public class SignManager extends SignService {
 	                   ItemParser itemParser,
 	                   UserManager<Player> userManager,
 	                   UserManager<OfflinePlayer> offlineUserManager,
-	                   DependencyContainer container) {
+	                   DependencyContainer container,
+	                   LegacySignRewriter legacyAliasRewriter) {
 		super(registry, signInteraction);
 
-		this.gangland           = gangland;
-		this.shortPrefix        = shortPrefix;
-		this.formatRegistry     = signInteraction.getFormatterService().getFormatRegistry();
-		this.uniqueItemAddon    = uniqueItemAddon;
-		this.serializers        = serializers;
-		this.itemParser         = itemParser;
-		this.userManager        = userManager;
-		this.offlineUserManager = offlineUserManager;
-		this.container          = container;
+		this.gangland            = gangland;
+		this.shortPrefix         = shortPrefix;
+		this.formatRegistry      = signInteraction.getFormatterService().getFormatRegistry();
+		this.uniqueItemAddon     = uniqueItemAddon;
+		this.serializers         = serializers;
+		this.itemParser          = itemParser;
+		this.userManager         = userManager;
+		this.offlineUserManager  = offlineUserManager;
+		this.container           = container;
+		this.legacyAliasRewriter = legacyAliasRewriter;
 	}
 
 	@Override
@@ -113,7 +117,8 @@ public class SignManager extends SignService {
 
 		formatRegistry.register(itemBuy.createFormat());
 
-		definitions.add(itemBuy.createDefinition());
+		SignTypeDefinition itemBuyDefinition = itemBuy.createDefinition();
+		definitions.add(itemBuyDefinition);
 
 		String   itemSellKey  = signPrefix + "item-sell";
 		SignType itemSellType = new SignType(itemSellKey, "ITEM-SELL");
@@ -121,7 +126,12 @@ public class SignManager extends SignService {
 
 		formatRegistry.register(itemSell.createFormat());
 
-		definitions.add(itemSell.createDefinition());
+		SignTypeDefinition itemSellDefinition = itemSell.createDefinition();
+		definitions.add(itemSellDefinition);
+
+		// legacy weapon/ammo/wearable headers (pre-0.9.0) — read-time redirection onto item-buy/item-sell above,
+		// so a sign placed before this stream keeps resolving once Bartizan installs the matching vocabulary (T-G4b)
+		definitions.addAll(legacyAliasDefinitions(itemBuyDefinition, itemSellDefinition, signPrefix));
 
 		// view
 		String   viewKey  = signPrefix + "view";
@@ -157,6 +167,46 @@ public class SignManager extends SignService {
 		}
 
 		return definitions;
+	}
+
+	/**
+	 * Redirects the six pre-0.9.0 weapon/ammo/wearable trade-sign headers onto the generic item-buy/item-sell
+	 * definitions built above (T-G4b): a sign placed under the old system keeps resolving once its content line is
+	 * prefixed with the alias namespace at read time — no event interception, no world scan, no mutation of the
+	 * sign text on the block. An alias whose configured header is unrecognised is skipped; {@link LegacySignRewriter}
+	 * never guesses.
+	 */
+	private List<SignTypeDefinition> legacyAliasDefinitions(SignTypeDefinition itemBuyDefinition,
+	                                                        SignTypeDefinition itemSellDefinition,
+	                                                        String signPrefix) {
+		List<SignTypeDefinition> legacyDefinitions = new ArrayList<>();
+
+		for (String legacyHeader : List.of("weapon-buy", "weapon-sell", "ammo-buy", "ammo-sell", "wearable-buy",
+		                                   "wearable-sell")) {
+			LegacySignRewriter.Rewritten rewritten = legacyAliasRewriter.rewrite(legacyHeader);
+
+			if (rewritten == null) continue;
+
+			SignTypeDefinition delegate = "item-buy".equals(rewritten.headerKey()) ? itemBuyDefinition
+			                                                                      : itemSellDefinition;
+			SignType legacyType = new SignType(signPrefix + legacyHeader, legacyHeader.toUpperCase());
+
+			LegacyAliasSignAdapter adapter = new LegacyAliasSignAdapter(legacyType, delegate.getSignType(),
+					rewritten.definitionPrefix(), delegate.getSignParser(), delegate.getSignValidator());
+
+			SignTypeDefinition legacyDefinition = SignTypeDefinition.builder()
+			                                                        .signType(legacyType)
+			                                                        .signValidator(adapter)
+			                                                        .signParser(adapter)
+			                                                        .handler(delegate.getHandler())
+			                                                        .bulkHandler(delegate.getBulkHandler())
+			                                                        .build();
+			legacyDefinition.addAllAspects(delegate.getAspects());
+
+			legacyDefinitions.add(legacyDefinition);
+		}
+
+		return legacyDefinitions;
 	}
 
 }

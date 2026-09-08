@@ -201,6 +201,12 @@
             </dependency>
             <dependency>
                 <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-npc</artifactId>
+                <version>${keystone.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>keystone-testkit</artifactId>
                 <version>${keystone.version}</version>
                 <scope>test</scope>
@@ -279,6 +285,11 @@
             <dependency>
                 <groupId>org.luckyraven</groupId>
                 <artifactId>cops-n-crooks</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>gangland-civilians</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

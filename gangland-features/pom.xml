@@ -21,6 +21,7 @@
         <module>gangland-turf</module>
         <module>gangland-mail</module>
         <module>cops-n-crooks</module>
+        <module>gangland-civilians</module>
     </modules>
 
 </project>

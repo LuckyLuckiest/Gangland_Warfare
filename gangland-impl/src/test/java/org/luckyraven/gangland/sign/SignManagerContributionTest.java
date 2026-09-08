@@ -74,9 +74,14 @@ class SignManagerContributionTest {
 		@SuppressWarnings("unchecked")
 		UserManager<org.bukkit.OfflinePlayer> offlineUsers = mock(UserManager.class);
 
+		LegacySignRewriter legacySignRewriter = new LegacySignRewriter("item-buy:weapon", "item-sell:weapon",
+		                                                               "item-buy:ammo", "item-sell:ammo",
+		                                                               "item-buy:wearable", "item-sell:wearable");
+
 		SignManager manager = new SignManager(mock(Gangland.class), "glw", new SignTypeRegistry(), signInteraction,
 		                                      mock(UniqueItemAddon.class), mock(ItemSerializerRegistry.class),
-		                                      mock(ItemParser.class), onlineUsers, offlineUsers, container);
+		                                      mock(ItemParser.class), onlineUsers, offlineUsers, container,
+		                                      legacySignRewriter);
 
 		List<SignTypeDefinition> definitions = manager.setupSigns();
 

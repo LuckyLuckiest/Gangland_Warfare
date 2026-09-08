@@ -18,6 +18,7 @@ import org.luckyraven.gangland.file.configuration.inventory.InventoryLoader;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryRuntimeContext;
 import org.luckyraven.gangland.file.configuration.inventory.itemsource.GangItemSourceProvider;
 import org.luckyraven.gangland.file.configuration.lootchest.GanglandLootChestMessages;
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.file.configuration.lootchest.LootChestSettings;
 import org.luckyraven.gangland.gang.GangFilterAdapter;
 import org.luckyraven.gangland.gang.GangManager;
@@ -43,6 +44,7 @@ import org.luckyraven.gangland.lootchest.config.LootChestLoader;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
+import org.luckyraven.gangland.sign.LegacySignRewriter;
 import org.luckyraven.gangland.sign.SignManager;
 import org.luckyraven.gangland.sign.bulk.BulkActionManager;
 import org.luckyraven.gangland.sign.registry.SignFormatRegistry;
@@ -204,15 +206,23 @@ public class GameplayConfig {
 	 * bean-construction time.
 	 */
 	@Bean
+	public LegacySignRewriter legacySignRewriter() {
+		return new LegacySignRewriter(
+				Settings.getSignsLegacyWeaponBuy(), Settings.getSignsLegacyWeaponSell(),
+				Settings.getSignsLegacyAmmoBuy(), Settings.getSignsLegacyAmmoSell(),
+				Settings.getSignsLegacyWearableBuy(), Settings.getSignsLegacyWearableSell());
+	}
+
+	@Bean
 	public SignManager signManager(SignTypeRegistry signTypeRegistry, SignInteraction signInteraction,
 	                               UniqueItemAddon uniqueItemAddon, ItemSerializerRegistry itemSerializerRegistry,
 	                               ItemParser itemParser,
 	                               @Qualifier("online") UserManager<Player> userManager,
 	                               @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
-	                               DependencyContainer container) {
+	                               DependencyContainer container, LegacySignRewriter legacySignRewriter) {
 		return new SignManager(gangland, Gangland.SHORT_PREFIX, signTypeRegistry, signInteraction,
 		                       uniqueItemAddon, itemSerializerRegistry, itemParser, userManager, offlineUserManager,
-		                       container);
+		                       container, legacySignRewriter);
 	}
 
 	@Bean

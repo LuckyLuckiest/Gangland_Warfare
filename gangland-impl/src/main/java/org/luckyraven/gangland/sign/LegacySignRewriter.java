@@ -2,6 +2,7 @@ package org.luckyraven.gangland.sign;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -39,15 +40,19 @@ public final class LegacySignRewriter {
 	}
 
 	/**
-	 * @param legacyHeader a sign-type key with the {@code <prefix>-} already stripped, e.g. {@code "weapon-buy"}
+	 * @param legacyHeader a sign-type key with the {@code <prefix>-} already stripped, e.g. {@code "weapon-buy"} or
+	 *                     {@code "WEAPON-BUY"} — matching is case-insensitive, since a placed sign's formatted header
+	 *                     line reads upper-case; may be {@code null} (never thrown on, always treated as unrecognised)
 	 *
 	 * @return the generic replacement, or {@code null} if {@code legacyHeader} does not name one of the six legacy
 	 *         headers — left untouched by design, so a non-legacy (or already-generic) sign header passes straight
 	 *         through unmodified
 	 */
 	@Nullable
-	public Rewritten rewrite(String legacyHeader) {
-		return aliases.get(legacyHeader);
+	public Rewritten rewrite(@Nullable String legacyHeader) {
+		if (legacyHeader == null) return null;
+
+		return aliases.get(legacyHeader.toLowerCase(Locale.ROOT));
 	}
 
 }
