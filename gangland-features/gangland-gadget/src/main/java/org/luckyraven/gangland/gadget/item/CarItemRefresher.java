@@ -6,7 +6,7 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.gadget.car.Car;
 import org.luckyraven.gangland.gadget.car.config.CarAddon;
-import org.luckyraven.gangland.item.ItemRefresher;
+import org.luckyraven.keystone.item.ItemRefresher;
 
 /**
  * Rebuilds a car ItemStack into a factory-fresh copy: {@link Car#buildItem(Player)} re-stamps full fuel, full

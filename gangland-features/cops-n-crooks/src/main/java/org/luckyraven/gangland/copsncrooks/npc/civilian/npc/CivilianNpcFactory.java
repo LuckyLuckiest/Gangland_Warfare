@@ -24,7 +24,7 @@ import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMark;
 import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMarkManager;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.util.ChatUtil;
-import org.luckyraven.gangland.item.ItemParser;
+import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.gangland.weapon.Weapon;
 import org.luckyraven.gangland.weapon.WeaponService;
 import org.luckyraven.gangland.weapon.ammo.Ammunition;

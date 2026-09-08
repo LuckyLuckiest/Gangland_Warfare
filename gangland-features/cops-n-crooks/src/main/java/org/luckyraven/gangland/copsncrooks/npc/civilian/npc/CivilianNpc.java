@@ -19,7 +19,7 @@ import org.luckyraven.gangland.copsncrooks.npc.civilian.CivilianState;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.config.CivilianNavigationConfig;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.config.CivilianTypeConfig;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.state.CivilianBehavior;
-import org.luckyraven.gangland.item.ItemParser;
+import org.luckyraven.keystone.item.ItemParser;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;

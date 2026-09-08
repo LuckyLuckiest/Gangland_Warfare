@@ -1,29 +1,25 @@
 package org.luckyraven.gangland.sign.type.trade;
 
-import com.cryptomorin.xseries.XMaterial;
 import org.bukkit.inventory.ItemStack;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.item.unique.UniqueItem;
 import org.luckyraven.gangland.sign.type.Sign;
-
-import java.util.Arrays;
-import java.util.Objects;
+import org.luckyraven.keystone.item.ItemParser;
 
 public abstract class BaseTradeSign implements Sign {
 
-	protected ItemStack getUniqueOrMaterialItem(String itemName, UniqueItemAddon uniqueItemAddon) {
-		// check unique items first
-		UniqueItem uniqueItem = uniqueItemAddon.getUniqueItem(itemName);
+	/**
+	 * Resolves line 3 of a trade sign. Checks the unique-item registry first by the raw content (backward compatible
+	 * with every placed sign that stores a bare unique-item key with no type prefix, exactly as the deleted
+	 * {@code getUniqueOrMaterialItem} did), then falls through to the full {@link ItemParser} grammar — which covers
+	 * a bare material name ({@code DIAMOND_SWORD}, via {@code ItemConverterRegistry#resolve}'s material fallback)
+	 * and any prefixed definition string ({@code weapon:rifle}, {@code unique:x}, {@code car:y}, {@code money:…}).
+	 */
+	protected ItemStack getDefinedItem(String content, UniqueItemAddon uniqueItemAddon, ItemParser itemParser) {
+		UniqueItem uniqueItem = uniqueItemAddon.getUniqueItem(content);
 
 		if (uniqueItem != null) return uniqueItem.buildItem();
 
-		// fall back to vanilla material
-		return Arrays.stream(XMaterial.values())
-				.map(XMaterial::get)
-				.filter(Objects::nonNull)
-				.filter(material -> material.name().equalsIgnoreCase(itemName))
-				.findFirst()
-				.map(ItemStack::new)
-				.orElse(null);
+		return itemParser.parse(content);
 	}
 }

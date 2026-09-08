@@ -780,3 +780,14 @@ Turf:
          # Flat one-shot bonus to every defender-gang member inside the turf at the moment an attack is
          # pushed back to zero (DEFENDED).
          Defense_Success_Bonus: 25.0
+# Rewrites legacy weapon/ammo/wearable sign headers onto the generic item-buy / item-sell pair, so a sign placed
+# before this stream keeps working once Bartizan is installed and publishes the matching item vocabulary. Each
+# value is "<new sign key>:<line-3 definition prefix>".
+Signs:
+   Legacy_Aliases:
+      Weapon_Buy: "item-buy:weapon"
+      Weapon_Sell: "item-sell:weapon"
+      Ammo_Buy: "item-buy:ammo"
+      Ammo_Sell: "item-sell:ammo"
+      Wearable_Buy: "item-buy:wearable"
+      Wearable_Sell: "item-sell:wearable"

@@ -242,6 +242,13 @@ public class Settings implements FileInitializer {
 	private static @Getter double      turfContributionAttackerPresenceTick;
 	private static @Getter double      turfContributionCaptureCompleteBonus;
 	private static @Getter double      turfContributionDefenseSuccessBonus;
+	// signs - legacy header aliases (rewritten onto the generic item-buy/item-sell pair)
+	private static @Getter String      signsLegacyWeaponBuy;
+	private static @Getter String      signsLegacyWeaponSell;
+	private static @Getter String      signsLegacyAmmoBuy;
+	private static @Getter String      signsLegacyAmmoSell;
+	private static @Getter String      signsLegacyWearableBuy;
+	private static @Getter String      signsLegacyWearableSell;
 	private final          FileHandler fileHandler;
 
 	public Settings(FileManager fileManager) {
@@ -772,6 +779,19 @@ public class Settings implements FileInitializer {
 		turfContributionAttackerPresenceTick = dbl(turfContributionPoints, "Attacker_Presence_Tick", 1.0);
 		turfContributionCaptureCompleteBonus = dbl(turfContributionPoints, "Capture_Complete_Bonus", 50.0);
 		turfContributionDefenseSuccessBonus  = dbl(turfContributionPoints, "Defense_Success_Bonus", 25.0);
+
+		// signs - legacy header aliases, e.g. "<prefix>weapon-buy" rewrites onto "<prefix>item-buy" plus a
+		// "weapon:" line-3 definition prefix, so a sign placed before this stream keeps working once Bartizan
+		// publishes the matching item vocabulary
+		NodeReader signs  = section(root, "Signs", report);
+		NodeReader legacy = section(signs, "Legacy_Aliases", report);
+
+		signsLegacyWeaponBuy    = str(legacy, "Weapon_Buy", "item-buy:weapon");
+		signsLegacyWeaponSell   = str(legacy, "Weapon_Sell", "item-sell:weapon");
+		signsLegacyAmmoBuy      = str(legacy, "Ammo_Buy", "item-buy:ammo");
+		signsLegacyAmmoSell     = str(legacy, "Ammo_Sell", "item-sell:ammo");
+		signsLegacyWearableBuy  = str(legacy, "Wearable_Buy", "item-buy:wearable");
+		signsLegacyWearableSell = str(legacy, "Wearable_Sell", "item-sell:wearable");
 
 		if (!report.isEmpty()) report.log(log);
 

@@ -22,7 +22,7 @@ import org.luckyraven.gangland.copsncrooks.npc.trader.view.*;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.file.configuration.shop.GanglandShopDisplayResolver;
 import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.item.ItemRefresherRegistry;
+import org.luckyraven.keystone.item.ItemRefresherRegistry;
 import org.luckyraven.gangland.shop.ShopRegistry;
 import org.luckyraven.gangland.shop.message.ShopDisplayResolver;
 import org.luckyraven.gangland.shop.message.ShopMessageContract;

@@ -29,6 +29,7 @@ import org.luckyraven.gangland.inventory.filter.*;
 import org.luckyraven.gangland.inventory.multi.ItemSourceProvider;
 import org.luckyraven.keystone.item.ItemConverterRegistry;
 import org.luckyraven.keystone.item.ItemParser;
+import org.luckyraven.keystone.item.ItemSerializerRegistry;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.item.contract.GanglandUniqueItemInteractionService;
 import org.luckyraven.gangland.item.contract.UniqueItemInteractionService;
@@ -204,12 +205,14 @@ public class GameplayConfig {
 	 */
 	@Bean
 	public SignManager signManager(SignTypeRegistry signTypeRegistry, SignInteraction signInteraction,
-	                               UniqueItemAddon uniqueItemAddon,
+	                               UniqueItemAddon uniqueItemAddon, ItemSerializerRegistry itemSerializerRegistry,
+	                               ItemParser itemParser,
 	                               @Qualifier("online") UserManager<Player> userManager,
 	                               @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
 	                               DependencyContainer container) {
 		return new SignManager(gangland, Gangland.SHORT_PREFIX, signTypeRegistry, signInteraction,
-		                       uniqueItemAddon, userManager, offlineUserManager, container);
+		                       uniqueItemAddon, itemSerializerRegistry, itemParser, userManager, offlineUserManager,
+		                       container);
 	}
 
 	@Bean
@@ -273,7 +276,6 @@ public class GameplayConfig {
 		LootChestLoader loader = new LootChestLoader(gangland, lootChestManager, new LootChestSettings(), false, null,
 		                                             fileManager);
 		fileManager.registerInitializer(loader);
-		fileManager.initializeAll();
 		return loader;
 	}
 
@@ -289,6 +291,20 @@ public class GameplayConfig {
 		InventoryLoader loader = context.get(InventoryLoader.class);
 		if (loader != null) {
 			loader.initialize();
+		}
+	}
+
+	/**
+	 * {@link LootChestLoader} can't initialize during construction for the same reason as
+	 * {@link #initializeInventoryLoader()}: {@link org.luckyraven.keystone.persistence.FileManager#initializeAll()}
+	 * eagerly resolves item strings through module/plugin converters (weapon:awp, …) that don't exist yet inside the
+	 * CONFIG phase. Deferring the call here (T-11) lets those converters register first.
+	 */
+	@PostConstruct
+	public void initializeLootChestLoader() {
+		FileManager fileManager = context.get(FileManager.class);
+		if (fileManager != null) {
+			fileManager.initializeAll();
 		}
 	}
 }

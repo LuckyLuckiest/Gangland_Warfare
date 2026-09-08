@@ -20,6 +20,8 @@ import org.luckyraven.gangland.sign.type.trade.BuySign;
 import org.luckyraven.gangland.sign.type.trade.SellSign;
 import org.luckyraven.gangland.sign.validation.SignValidationException;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
+import org.luckyraven.keystone.item.ItemParser;
+import org.luckyraven.keystone.item.ItemSerializerRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +43,10 @@ public class SignManager extends SignService {
 	@Getter(AccessLevel.NONE)
 	private final UniqueItemAddon            uniqueItemAddon;
 	@Getter(AccessLevel.NONE)
+	private final ItemSerializerRegistry     serializers;
+	@Getter(AccessLevel.NONE)
+	private final ItemParser                 itemParser;
+	@Getter(AccessLevel.NONE)
 	private final UserManager<Player>        userManager;
 	@Getter(AccessLevel.NONE)
 	private final UserManager<OfflinePlayer> offlineUserManager;
@@ -52,6 +58,8 @@ public class SignManager extends SignService {
 	                   SignTypeRegistry registry,
 	                   SignInteraction signInteraction,
 	                   UniqueItemAddon uniqueItemAddon,
+	                   ItemSerializerRegistry serializers,
+	                   ItemParser itemParser,
 	                   UserManager<Player> userManager,
 	                   UserManager<OfflinePlayer> offlineUserManager,
 	                   DependencyContainer container) {
@@ -61,6 +69,8 @@ public class SignManager extends SignService {
 		this.shortPrefix        = shortPrefix;
 		this.formatRegistry     = signInteraction.getFormatterService().getFormatRegistry();
 		this.uniqueItemAddon    = uniqueItemAddon;
+		this.serializers        = serializers;
+		this.itemParser         = itemParser;
 		this.userManager        = userManager;
 		this.offlineUserManager = offlineUserManager;
 		this.container          = container;
@@ -79,7 +89,7 @@ public class SignManager extends SignService {
 		// buy (vanilla materials + unique items)
 		String   buyKey  = signPrefix + "buy";
 		SignType buyType = new SignType(buyKey, "BUY");
-		Sign     buy     = new BuySign(userManager, uniqueItemAddon, buyType);
+		Sign     buy     = new BuySign(userManager, uniqueItemAddon, serializers, itemParser, buyType);
 
 		formatRegistry.register(buy.createFormat());
 
@@ -88,11 +98,30 @@ public class SignManager extends SignService {
 		// sell (vanilla materials + unique items)
 		String   sellKey  = signPrefix + "sell";
 		SignType sellType = new SignType(sellKey, "SELL");
-		Sign     sell     = new SellSign(userManager, uniqueItemAddon, sellType);
+		Sign     sell     = new SellSign(userManager, uniqueItemAddon, serializers, itemParser, sellType);
 
 		formatRegistry.register(sell.createFormat());
 
 		definitions.add(sell.createDefinition());
+
+		// item-buy / item-sell (generic: any item definition string — weapon:rifle, unique:x, car:y, money:…) —
+		// same BuySign/SellSign classes as buy/sell above, registered under new keys/generated names (PICK refinement
+		// 3). The existing buy/sell types stay registered too: placed signs of both eras keep working.
+		String   itemBuyKey  = signPrefix + "item-buy";
+		SignType itemBuyType = new SignType(itemBuyKey, "ITEM-BUY");
+		Sign     itemBuy     = new BuySign(userManager, uniqueItemAddon, serializers, itemParser, itemBuyType);
+
+		formatRegistry.register(itemBuy.createFormat());
+
+		definitions.add(itemBuy.createDefinition());
+
+		String   itemSellKey  = signPrefix + "item-sell";
+		SignType itemSellType = new SignType(itemSellKey, "ITEM-SELL");
+		Sign     itemSell     = new SellSign(userManager, uniqueItemAddon, serializers, itemParser, itemSellType);
+
+		formatRegistry.register(itemSell.createFormat());
+
+		definitions.add(itemSell.createDefinition());
 
 		// view
 		String   viewKey  = signPrefix + "view";

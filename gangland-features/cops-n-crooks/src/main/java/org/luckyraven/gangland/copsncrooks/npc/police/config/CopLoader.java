@@ -6,7 +6,7 @@ import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.exception.PluginException;
-import org.luckyraven.gangland.item.ItemParser;
+import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileLoader;
 import org.luckyraven.keystone.persistence.FileManager;

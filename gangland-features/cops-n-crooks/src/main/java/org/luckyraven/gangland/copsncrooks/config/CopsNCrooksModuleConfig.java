@@ -60,7 +60,7 @@ import org.luckyraven.gangland.data.teleportation.WaypointManager;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.gang.wanted.WantedKillTrackers;
-import org.luckyraven.gangland.item.ItemParser;
+import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.gangland.item.money.MoneyAddon;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.manager.TurfManager;

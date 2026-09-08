@@ -5,10 +5,9 @@ import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.file.configuration.shop.GanglandShopDisplayResolver;
 import org.luckyraven.gangland.file.configuration.shop.GanglandShopMessages;
 import org.luckyraven.gangland.file.configuration.shop.GanglandShopUiSettings;
-import org.luckyraven.gangland.file.configuration.shop.ShopDisplayNameProvider;
+import org.luckyraven.keystone.item.ItemConverterRegistry;
 import org.luckyraven.keystone.item.ItemRefresherRegistry;
 import org.luckyraven.keystone.item.ItemSerializerRegistry;
-import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
@@ -68,8 +67,9 @@ public class ShopConfig {
 	}
 
 	@Bean
-	public ShopDisplayResolver shopDisplayResolver(DependencyContainer container) {
-		return new GanglandShopDisplayResolver(() -> container.getAllInstances(ShopDisplayNameProvider.class));
+	public ShopDisplayResolver shopDisplayResolver(ItemSerializerRegistry serializerRegistry,
+	                                               ItemConverterRegistry converterRegistry) {
+		return new GanglandShopDisplayResolver(serializerRegistry, converterRegistry);
 	}
 
 	// ── Purchase / barter / sell services ────────────────────────────────

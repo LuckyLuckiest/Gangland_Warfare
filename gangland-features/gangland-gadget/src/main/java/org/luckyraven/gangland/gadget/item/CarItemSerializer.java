@@ -5,7 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.gadget.car.CarKey;
 import org.luckyraven.gangland.item.ItemKind;
-import org.luckyraven.gangland.item.ItemSerializer;
+import org.luckyraven.keystone.item.ItemSerializer;
 
 /**
  * Extracts the car registry id from {@link CarKey#CAR_ID}.

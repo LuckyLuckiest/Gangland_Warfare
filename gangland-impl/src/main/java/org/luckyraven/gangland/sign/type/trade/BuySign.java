@@ -21,36 +21,45 @@ import org.luckyraven.gangland.sign.parser.TradeSignParser;
 import org.luckyraven.gangland.sign.registry.SignTypeDefinition;
 import org.luckyraven.gangland.sign.validation.SignValidator;
 import org.luckyraven.gangland.sign.validation.trade.ItemSignValidator;
+import org.luckyraven.keystone.item.ItemParser;
+import org.luckyraven.keystone.item.ItemSerializerRegistry;
+import org.luckyraven.keystone.item.spi.ItemDefinitions;
 
 import java.util.List;
 
 public class BuySign extends BaseTradeSign implements BulkSignHandler {
 
-	private final UserManager<Player> userManager;
-	private final UniqueItemAddon     uniqueItemAddon;
-	private final SignType            signType;
+	private final UserManager<Player>    userManager;
+	private final UniqueItemAddon        uniqueItemAddon;
+	private final ItemSerializerRegistry serializers;
+	private final ItemParser             itemParser;
+	private final SignType               signType;
 
 	/**
 	 * Cached after {@link #createDefinition()} is called; used by {@link #executeBulkAction}.
 	 */
 	private SignHandler handler;
 
-	public BuySign(UserManager<Player> userManager, UniqueItemAddon uniqueItemAddon, SignType signType) {
+	public BuySign(UserManager<Player> userManager, UniqueItemAddon uniqueItemAddon,
+	               ItemSerializerRegistry serializers, ItemParser itemParser, SignType signType) {
 		this.userManager     = userManager;
 		this.uniqueItemAddon = uniqueItemAddon;
+		this.serializers     = serializers;
+		this.itemParser      = itemParser;
 		this.signType        = signType;
 	}
 
 	@Override
 	public SignTypeDefinition createDefinition() {
-		SignValidator validator = new ItemSignValidator(signType, uniqueItemAddon);
+		SignValidator validator = new ItemSignValidator(signType, uniqueItemAddon, itemParser);
 		SignParser    parser    = new TradeSignParser(signType);
 
 		SignAspect moneyAspect = new MoneyAspect(userManager, MoneyAspect.TransactionType.WITHDRAW);
 
 		SignAspect itemAspect = new ItemTransferAspect(
-				sign -> getUniqueOrMaterialItem(sign.getContent(), uniqueItemAddon),
-				ItemTransferAspect.TransferType.GIVE, (player, a, b) -> a.isSimilar(b));
+				sign -> getDefinedItem(sign.getContent(), uniqueItemAddon, itemParser),
+				ItemTransferAspect.TransferType.GIVE,
+				(player, a, b) -> ItemDefinitions.sameDefinition(serializers, a, b));
 
 		List<SignAspect> aspects = List.of(moneyAspect, itemAspect);
 
