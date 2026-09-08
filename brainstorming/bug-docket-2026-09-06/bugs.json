@@ -10309,5 +10309,26 @@
 "recheck": true,
 "case": "https://claude.ai/code/artifact/48a0fd29-5ad2-43ea-b05f-5d9c38e82196#sec-observations-potential-issues",
 "source": "test suite (2026-09-04)"
+},
+{
+"id": "T-31",
+"code": "T",
+"sys": "civilians-traders-shops",
+"sysName": "Civilians, Traders & Shops",
+"sysOrder": "09",
+"num": 31,
+"tier": "P2",
+"title": "CivilianNpcFactory.createCivilian and CivilianSpawnManager.spawnCivilian call CitizensAPI directly with no NpcSupport.available() guard, so any Citizens-dependent spawn (civilian, cop, or a turf Quartermaster/garrison-defender routed through them) throws instead of no-op when Citizens is absent",
+"fix": "Guard the top of CivilianNpcFactory.createCivilian (or CivilianSpawnManager.spawnCivilian, the shared choke point both cops and turf route through) with `if (!NpcSupport.available()) return null;`, matching the guard T-I6 added ad-hoc at TurfPowerupManager.spawn/TurfDefenderDeployer.deploy for the turf-owned callers; cops-n-crooks' own Citizens-dependent call sites (CopNpcFactory etc.) likely need the same treatment",
+"tests": "-",
+"location": "gangland-features/gangland-civilians CivilianNpcFactory.java createCivilian, CivilianSpawnManager.java spawnCivilian",
+"observation": "Found 2026-09-09 while implementing T-I6 (gangland-0.9.0.md, turf-NPC Citizens gate): civilians' own onEnabled fault report (T-H4) assumes \"the spawn tasks themselves are guarded in CivilianService#onInitialize\", but reading CivilianNpcFactory/CivilianSpawnManager shows no such guard exists anywhere in the shared spawn path — the actual protection T-I6 needed had to be added locally at the two turf-owned call sites (TurfPowerupManager.spawn, TurfDefenderDeployer.deploy) rather than relying on a deeper guard that turns out not to exist",
+"impact": null,
+"risk": "n/a",
+"confidence": "High",
+"unverified": false,
+"recheck": true,
+"case": "https://claude.ai/code/artifact/dad8da79-b977-4cdc-9712-e080406cb0b5#sec-observations-potential-issues",
+"source": "test suite (2026-09-04)"
 }
 ]
