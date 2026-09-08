@@ -3,7 +3,6 @@ package org.luckyraven.gangland.config;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.bootstrap.GanglandContext;
 import org.luckyraven.gangland.command.data.InformationManager;
-import org.luckyraven.gangland.compatibility.CompatibilityWorker;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.BeanGraph;
 import org.luckyraven.keystone.bean.Configuration;
@@ -136,17 +135,6 @@ public class KernelConfig {
 	@Bean
 	public UserFactory userFactory(PlaceholderService placeholderService, InventoryRegistry inventoryRegistry) {
 		return new UserFactory(gangland, placeholderService, inventoryRegistry);
-	}
-
-	/**
-	 * Version detection and adapter loading live in Keystone now ({@code CraftBukkitRevision} +
-	 * {@code VersionedAdapterLoader}); the worker keeps only Gangland's contract + fallback. ViaAPI is passed as a
-	 * supplier because it is still {@code null} here — {@code Gangland.dependencyHandler()} sets it after
-	 * bootstrap, and the supplier resolves it at recoil time.
-	 */
-	@Bean
-	public CompatibilityWorker compatibilityWorker() {
-		return new CompatibilityWorker(gangland::getViaAPI);
 	}
 
 	@Bean

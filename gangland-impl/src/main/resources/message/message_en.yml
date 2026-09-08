@@ -91,15 +91,6 @@ Commands:
       Wrong_Arguments: "&4Wrong Arguments&7: "
       Page_Invalid: "&4Invalid Page&7: "
       Doesnt_Exist: "&4Doesn't Exist&7: "
-   Weapons:
-      Ammo:
-         Received: "You received &8(&7%amount%&8) &e%ammo% &7ammunition."
-         Gave: "You gave &8(&7%amount%&8) &e%ammo% &7ammunition to &3%player%&7."
-         List_Header: "List of ammunition"
-      Weapon:
-         Received: "You received &8(&7%amount%&8) &e%weapon% &7weapon."
-         Gave: "You gave a &8(&7%amount%&8) &e%weapon% &7weapon to &3%player%&7."
-         List_Header: "List of weapons"
    Item:
       Money:
          Gave: "Gave &b%name% &7x&b%amount%&7."
@@ -632,23 +623,7 @@ Wanted_Level:
    Cleared: "Your wanted level has been cleared."
    Paid: "Paid wanted level fees, totaling &a%money_symbol%%amount%&7."
 
-Weapons:
-   Not_Valid_Ammo: "&cInvalid ammunition type &3%args%&c."
-   Not_Valid_Weapon: "&cInvalid weapon type &3%args%&c."
-   Not_Valid_Amount: "&cInvalid amount."
-   Killed_Player: "&7%killer% &c%gun% &7%victim%"
-   Gun_Not_In_Inventory: "You don't have the gun in your inventory!"
-   Gun_Bought: "You just bought &8(&b%gun%&8)&7 for &a%money_symbol%%amount%&7."
-   Gun_Sold: "You just sold &8(&b%gun%&8)&7 for &a%money_symbol%%amount%&7."
-   Ammo_Not_In_Inventory: "You don't have the ammo in your inventory!"
-   Ammo_Bought: "You just bought &8(&b%ammo%&ex%amount_1%&8)&7 for &a%money_symbol%%amount_2%&7."
-   Ammo_Sold: "You just sold &8(&b%ammo%&ex%amount_1%&8)&7 for &a%money_symbol%%amount_2%&7."
-   Not_Enough_Ammo: "You don't have enough ammo to sell!"
-
 Death:
-   Weapon:
-      - "%killer% killed %victim% vigorously using %item%."
-      - "%victim% was killed by %killer% using %item%."
    Respawn:
       Wasted_Prefix: "&8[&cWASTED&8] "
       Click_Button: "&7[&aClick to respawn instantly&7]"

@@ -37,8 +37,8 @@ Debug:
    # Master toggle. When false the Modules list is ignored.
    Enabled: false
    # Module names to flip to DEBUG level. Exact match (including spaces). Valid values:
-   #   Gangland, Gangland Core, Gangland Weapons, Cops N Crooks, Inventory API,
-   #   Lootchest API, Scoreboard API, Sign API, Plugin Persistence, Version Handler
+   #   Gangland, Gangland Core, Cops N Crooks, Inventory API,
+   #   Lootchest API, Scoreboard API, Sign API, Plugin Persistence
    # Leave the list empty to automatically flip every module discovered on the classpath.
    Modules: []
 
@@ -640,21 +640,6 @@ Gadgets:
       Hard_Brake_Multiplier: 3.0
       # Fuel units consumed per tick while the car is moving.
       Fuel_Consume_Per_Tick: 1
-
-# +--------------------+ #
-# | Block Regeneration | #
-# +--------------------+ #
-
-# Tuning for the weapon Break_Blocks modifier. Controls how blocks broken/cracked by gunfire
-# return to their original state. Per-weapon mode (RESTORE / CRACK_ONLY / DESTROY) is configured
-# on each weapon's Modifiers.Break_Blocks entry.
-Block_Regeneration:
-   # Ticks between a block fully breaking and reappearing in RESTORE mode (20 ticks = 1 second).
-   Restore_Delay_Ticks: 100
-   # Ticks between the last hit on a cracked block and the start of crack reverse-decay.
-   Regeneration_Delay_Ticks: 100
-   # Ticks between each crack-stage decrement during reverse-decay.
-   Regeneration_Step_Ticks: 4
 
 # +--------+ #
 # | Trader | #

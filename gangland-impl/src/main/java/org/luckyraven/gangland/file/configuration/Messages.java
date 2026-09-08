@@ -30,9 +30,7 @@ public enum Messages {
 
 	// commands - weapons
 	RECEIVED_AMMO("Commands.Weapons.Ammo.Received", Type.COMMAND),
-	GAVE_AMMO("Commands.Weapons.Ammo.Gave", Type.COMMAND),
 	RECEIVED_WEAPON("Commands.Weapons.Weapon.Received", Type.COMMAND),
-	GAVE_WEAPON("Commands.Weapons.Weapon.Gave", Type.COMMAND),
 
 	// commands - item money
 	ITEM_MONEY_GAVE("Commands.Item.Money.Gave", Type.COMMAND),
@@ -319,14 +317,6 @@ public enum Messages {
 	GUN_NOT_IN_INVENTORY("Weapons.Gun_Not_In_Inventory", Type.PREFIX),
 	GUN_BOUGHT("Weapons.Gun_Bought", Type.PREFIX),
 	GUN_SOLD("Weapons.Gun_Sold", Type.PREFIX),
-	AMMO_NOT_IN_INVENTORY("Weapons.Ammo_Not_In_Inventory", Type.PREFIX),
-	AMMO_BOUGHT("Weapons.Ammo_Bought", Type.PREFIX),
-	AMMO_SOLD("Weapons.Ammo_Sold", Type.PREFIX),
-	NOT_ENOUGH_AMMO("Weapons.Not_Enough_Ammo", Type.PREFIX),
-
-	// death
-	DEAD_USING_WEAPON("Death.Weapon", Type.OTHER, true),
-
 	// level
 	LEVEL_STATS("Level.Stats", Type.OTHER, true),
 	LEVEL_METER_BAR("Level.Meter.Bar", Type.NO_CHANGE),

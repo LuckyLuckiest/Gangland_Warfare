@@ -54,12 +54,6 @@
             <artifactId>gangland-item</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!-- Runtime module `weapon`: resolved at runtime through the module classloader. See module.yml Depends. -->
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>gangland-weapon</artifactId>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>keystone-common</artifactId>

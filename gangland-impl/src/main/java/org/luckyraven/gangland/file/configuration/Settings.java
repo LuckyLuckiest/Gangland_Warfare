@@ -190,10 +190,6 @@ public class Settings implements FileInitializer {
 	private static @Getter double     gadgetCarReverseSpeedRatio;
 	private static @Getter double     gadgetCarHardBrakeMultiplier;
 	private static @Getter int        gadgetCarFuelConsumePerTick;
-	// block regeneration (weapon Break_Blocks modifier tuning)
-	private static @Getter int        blockRestoreDelayTicks;
-	private static @Getter int        blockRegenerationDelayTicks;
-	private static @Getter int        blockRegenerationStepTicks;
 	// trader configuration
 	private static @Getter int        traderRespawnCooldownSeconds;
 	private static @Getter int        traderHeadTrackRadius;
@@ -701,12 +697,6 @@ public class Settings implements FileInitializer {
 		gadgetCarReverseSpeedRatio   = dbl(gadgetCar, "Reverse_Speed_Ratio", 0.5);
 		gadgetCarHardBrakeMultiplier = dbl(gadgetCar, "Hard_Brake_Multiplier", 3.0);
 		gadgetCarFuelConsumePerTick  = intVal(gadgetCar, "Fuel_Consume_Per_Tick", 1);
-
-		// block regeneration
-		NodeReader blockRegeneration = section(root, "Block_Regeneration", report);
-		blockRestoreDelayTicks      = intVal(blockRegeneration, "Restore_Delay_Ticks", 100);
-		blockRegenerationDelayTicks = intVal(blockRegeneration, "Regeneration_Delay_Ticks", 100);
-		blockRegenerationStepTicks  = intVal(blockRegeneration, "Regeneration_Step_Ticks", 4);
 
 		// trader
 		NodeReader trader     = section(root, "Trader", report);

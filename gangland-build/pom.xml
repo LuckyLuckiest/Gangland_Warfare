@@ -83,7 +83,6 @@
                             <exclude>org.luckyraven:cops-n-crooks</exclude>
                             <exclude>org.luckyraven:gangland-gadget</exclude>
                             <exclude>org.luckyraven:gangland-turf</exclude>
-                            <exclude>org.luckyraven:gangland-weapon</exclude>
                         </excludes>
                     </artifactSet>
                 </configuration>
@@ -137,11 +136,6 @@
                                     <artifactId>gangland-turf</artifactId>
                                     <version>${project.version}</version>
                                 </artifactItem>
-                                <artifactItem>
-                                    <groupId>org.luckyraven</groupId>
-                                    <artifactId>gangland-weapon</artifactId>
-                                    <version>${project.version}</version>
-                                </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>
@@ -182,121 +176,6 @@
             <artifactId>gangland-turf</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>gangland-weapon</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- Include NMS (MC 1.16+, matching Keystone's API floor; players on older
-             clients are handled by ViaVersion/ViaBackwards) -->
-        <!-- 1.21.x -->
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_21_R7</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_21_R6</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_21_R5</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_21_R4</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_21_R3</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_21_R2</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_21_R1</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <!-- 1.20.x -->
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_20_R4</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_20_R3</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_20_R2</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_20_R1</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <!-- 1.19.x -->
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_19_R3</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_19_R2</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_19_R1</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <!-- 1.18.x -->
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_18_R2</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_18_R1</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <!-- 1.17.x -->
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_17_R1</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <!-- 1.16.x -->
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_16_R3</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_16_R2</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>version-1_16_R1</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
 

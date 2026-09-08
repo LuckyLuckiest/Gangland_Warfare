@@ -50,12 +50,6 @@
         <module>gangland-infra</module>
         <module>gangland-ui</module>
         <module>gangland-features</module>
-
-        <!-- Compatibility (version-impl + one NMS adapter per CraftBukkit revision, MC 1.16+
-             to match Keystone's API floor). The adapter modules are listed in
-             gangland-compatibility/pom.xml, which is also their parent and centralizes the
-             shared remap pipeline. -->
-        <module>gangland-compatibility</module>
     </modules>
 
     <properties>
@@ -269,11 +263,6 @@
             </dependency>
             <dependency>
                 <groupId>org.luckyraven</groupId>
-                <artifactId>gangland-weapon</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.luckyraven</groupId>
                 <artifactId>gangland-gadget</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -290,11 +279,6 @@
             <dependency>
                 <groupId>org.luckyraven</groupId>
                 <artifactId>cops-n-crooks</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.luckyraven</groupId>
-                <artifactId>version-impl</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

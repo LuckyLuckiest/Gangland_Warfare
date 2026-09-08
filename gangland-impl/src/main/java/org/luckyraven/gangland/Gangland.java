@@ -31,7 +31,6 @@ import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.gang.vault.permission.VaultPermissionBridge;
 import org.luckyraven.keystone.vault.permission.VaultOfflinePermissionService;
 import org.luckyraven.keystone.sound.ResourcePackTracker;
-import org.luckyraven.gangland.metrics.MetricsContributor;
 import org.luckyraven.gangland.scoreboard.ScoreboardManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.keystone.update.UpdateNotifier;
@@ -144,15 +143,6 @@ public final class Gangland extends JavaPlugin {
 
 			return values;
 		}));
-
-		// Charts a runtime module contributes. bootstrap() has already run moduleLoader.enableAll(), so every module
-		// bean exists by the time onEnable() reaches here.
-		List<MetricsContributor> contributors = context.getContainer().getAllInstances(MetricsContributor.class);
-		for (MetricsContributor contributor : contributors == null ? List.<MetricsContributor>of() : contributors) {
-			for (Map.Entry<String, IntSupplier> chart : contributor.singleLineCharts().entrySet()) {
-				metrics.addCustomChart(new SingleLineChart(chart.getKey(), () -> chart.getValue().getAsInt()));
-			}
-		}
 	}
 
 	/**

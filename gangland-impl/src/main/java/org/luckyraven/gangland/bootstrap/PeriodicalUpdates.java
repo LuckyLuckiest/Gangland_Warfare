@@ -8,7 +8,6 @@ import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.timer.RepeatingTimer;
 import org.luckyraven.keystone.util.TimeUtil;
-import org.luckyraven.gangland.data.plugin.DataCleanupTask;
 import org.luckyraven.gangland.data.plugin.PluginData;
 import org.luckyraven.gangland.data.plugin.PluginDataCleanupService;
 import org.luckyraven.gangland.data.plugin.PluginManager;
@@ -196,8 +195,7 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 	}
 
 	private void initializeCleanupService() {
-		cleanupService = new PluginDataCleanupService(pluginManager,
-		                                              () -> container.getAllInstances(DataCleanupTask.class));
+		cleanupService = new PluginDataCleanupService(pluginManager);
 	}
 
 	private void task() {

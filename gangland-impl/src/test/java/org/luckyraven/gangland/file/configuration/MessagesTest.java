@@ -48,7 +48,7 @@ class MessagesTest {
 				.withString("Errors.Player.Not_Player", "console cannot run this")
 				.withString("Information.Gang.Kicked", "you were kicked")
 				.withString("Waypoint.Cooldown", "wait %n%before teleporting")
-				.withList("Death.Weapon", List.of("line1", "line2"));
+				.withList("Level.Stats", List.of("line1", "line2"));
 	}
 
 	@Test
@@ -104,7 +104,7 @@ class MessagesTest {
 	void toString_listTypedConstant_joinsWithNewline() {
 		Messages.init(fakeProvider());
 
-		assertEquals("line1\nline2", Messages.DEAD_USING_WEAPON.toString());
+		assertEquals("line1\nline2", Messages.LEVEL_STATS.toString());
 	}
 
 	@Test

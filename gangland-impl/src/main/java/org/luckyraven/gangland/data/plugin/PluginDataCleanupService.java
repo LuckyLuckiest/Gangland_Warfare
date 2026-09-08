@@ -7,7 +7,6 @@ import org.luckyraven.gangland.util.TimeMessages;
 
 import java.util.Date;
 import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * Service responsible for cleaning up unused data from the database based on the plugin's scheduled scan dates.
@@ -17,12 +16,10 @@ public final class PluginDataCleanupService {
 
 	private final boolean logDebug = Settings.isAutoSaveDebug();
 
-	private final PluginManager                   pluginManager;
-	private final Supplier<List<DataCleanupTask>> tasks;
+	private final PluginManager pluginManager;
 
-	public PluginDataCleanupService(PluginManager pluginManager, Supplier<List<DataCleanupTask>> tasks) {
+	public PluginDataCleanupService(PluginManager pluginManager) {
 		this.pluginManager = pluginManager;
-		this.tasks         = tasks;
 	}
 
 	/**
@@ -71,11 +68,6 @@ public final class PluginDataCleanupService {
 
 	private void performCleanup(PluginData pluginData) {
 		long startTime = System.currentTimeMillis();
-
-		for (DataCleanupTask task : tasks.get()) {
-			int cleared = task.cleanup();
-			if (logDebug) log.info("Cleanup task '{}' cleared {} record(s)", task.name(), cleared);
-		}
 
 		// Update plugin data with new scan dates (will be persisted by PeriodicalUpdates)
 		long now          = System.currentTimeMillis();

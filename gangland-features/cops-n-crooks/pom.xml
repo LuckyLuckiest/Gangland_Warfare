@@ -46,12 +46,6 @@
             <groupId>org.luckyraven</groupId>
             <artifactId>keystone-persistence</artifactId>
         </dependency>
-        <!-- Runtime module `weapon`: resolved at runtime through the module classloader. See module.yml Depends. -->
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>gangland-weapon</artifactId>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>inventory-api</artifactId>

@@ -17,7 +17,6 @@
     <name>Gangland Features</name>
 
     <modules>
-        <module>gangland-weapon</module>
         <module>gangland-gadget</module>
         <module>gangland-turf</module>
         <module>gangland-mail</module>

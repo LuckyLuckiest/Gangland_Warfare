@@ -12,7 +12,6 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.jspecify.annotations.Nullable;
 import org.luckyraven.gangland.data.economy.BankTierView;
 import org.luckyraven.gangland.data.economy.BankTiers;
-import org.luckyraven.gangland.listener.death.DeathMessageContributor;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
@@ -41,7 +40,6 @@ public class PlayerDeathListener implements Listener {
 	private final UserManager<Player>                       userManager;
 	private final GanglandPlaceholder                       placeholder;
 	private final BankTiers                                 bankTiers;
-	private final Supplier<List<DeathMessageContributor>>   deathContributors;
 	private final Map<UUID, Long>                           recentDeaths      = new ConcurrentHashMap<>();
 	private final Set<UUID>                                 downedBroadcasted = ConcurrentHashMap.newKeySet();
 
@@ -52,7 +50,6 @@ public class PlayerDeathListener implements Listener {
 		this.userManager       = userManager;
 		this.placeholder       = placeholder;
 		this.bankTiers         = bankTiers;
-		this.deathContributors = () -> container.getAllInstances(DeathMessageContributor.class);
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
@@ -200,31 +197,11 @@ public class PlayerDeathListener implements Listener {
 
 		if (killer == null) return null;
 
-		// ask every module's DeathMessageContributor what killed this player; first non-null claim wins
-		DeathMessageContributor.Resolved resolved = null;
-		for (DeathMessageContributor contributor : deathContributors.get()) {
-			resolved = contributor.resolve(player, killer);
-			if (resolved != null) break;
-		}
-
-		List<String> globalMessages = Messages.DEAD_USING_WEAPON.toStringList();
-
-		// prefer the contributor's own template; fall back to the global death messages if available
-		String template = resolved != null ? resolved.template() : null;
-		if (template == null) template = getRandomGlobalMessage(globalMessages);
-		if (template == null) return null;
-
-		// empty string when nothing claimed the kill
-		String itemName = resolved != null ? resolved.itemName() : "";
-
-		return ChatUtil.color(template.replace("%killer%", killer.getName())
-		                              .replace("%victim%", player.getName())
-		                              .replace("%item%", itemName));
-	}
-
-	private @Nullable String getRandomGlobalMessage(List<String> globalMessages) {
-		if (globalMessages.isEmpty()) return null;
-		return globalMessages.get(new Random().nextInt(globalMessages.size()));
+		// The weapon module owned the only module-contributed death-message hook and the only global
+		// death-message template list; both left with it. Bartizan now sets its own weapon-kill death
+		// message from its own listener at EventPriority.HIGH (after this one, which runs at LOWEST), so
+		// this listener has nothing left to synthesize and leaves the vanilla message in place.
+		return null;
 	}
 
 	private double amountDeduction(User<Player> user) {
