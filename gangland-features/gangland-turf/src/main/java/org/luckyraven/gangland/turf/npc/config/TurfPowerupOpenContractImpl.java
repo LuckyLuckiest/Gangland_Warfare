@@ -1,11 +1,11 @@
-package org.luckyraven.gangland.copsncrooks.integration.turf;
+package org.luckyraven.gangland.turf.npc.config;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.copsncrooks.npc.turf.TurfPowerupManager;
-import org.luckyraven.gangland.copsncrooks.npc.turf.TurfPowerupNpc;
-import org.luckyraven.gangland.copsncrooks.npc.turf.TurfPowerupOpenContract;
-import org.luckyraven.gangland.copsncrooks.npc.turf.view.TurfPowerupFlow;
+import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
+import org.luckyraven.gangland.turf.npc.TurfPowerupNpc;
+import org.luckyraven.gangland.turf.npc.TurfPowerupOpenContract;
+import org.luckyraven.gangland.turf.npc.view.TurfPowerupFlow;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;

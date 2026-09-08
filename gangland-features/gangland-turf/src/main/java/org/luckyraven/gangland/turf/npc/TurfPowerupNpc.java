@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.turf;
+package org.luckyraven.gangland.turf.npc;
 
 import lombok.CustomLog;
 import lombok.Getter;
@@ -8,10 +8,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.CivilianState;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.npc.CivilianNpc;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
-import org.luckyraven.gangland.copsncrooks.npc.turf.config.TurfPowerupSettings;
+import org.luckyraven.gangland.civilians.npc.CivilianState;
+import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
+import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
+import org.luckyraven.gangland.turf.npc.config.TurfPowerupSettings;
 
 import java.util.Set;
 import java.util.UUID;

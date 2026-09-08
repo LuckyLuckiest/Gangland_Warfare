@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.turf.defender;
+package org.luckyraven.gangland.turf.npc.defender;
 
 import lombok.CustomLog;
 import org.bukkit.Bukkit;
@@ -7,10 +7,11 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.CivilianService;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.CivilianState;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.npc.CivilianNpc;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
+import org.luckyraven.gangland.civilians.npc.CivilianService;
+import org.luckyraven.gangland.civilians.npc.CivilianState;
+import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
+import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
+import org.luckyraven.keystone.npc.NpcSupport;
 
 import java.util.*;
 import java.util.function.Supplier;
@@ -82,6 +83,10 @@ public final class TurfDefenderDeployer {
 	                   double targetingRadius,
 	                   int lifespanSeconds) {
 		if (count <= 0) return;
+		// T-I6: without Citizens, CivilianSpawnManager's factory reaches CitizensAPI directly and throws. The
+		// garrison stock stays consumed by the caller (GarrisonDeployListener) either way — only the NPC spawn is
+		// skipped, same contract as TurfPowerupManager#spawn.
+		if (!NpcSupport.available()) return;
 
 		Group group = byTurfId.computeIfAbsent(turfId,
 		                                       k -> new Group(challengerMembersSupplier, targetingRadius));

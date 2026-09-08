@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.listener.turf;
+package org.luckyraven.gangland.turf.listener.powerups;
 
 import lombok.RequiredArgsConstructor;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
@@ -6,9 +6,9 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.luckyraven.gangland.copsncrooks.npc.turf.TurfPowerupManager;
-import org.luckyraven.gangland.copsncrooks.npc.turf.TurfPowerupNpc;
-import org.luckyraven.gangland.copsncrooks.npc.turf.TurfPowerupOpenContract;
+import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
+import org.luckyraven.gangland.turf.npc.TurfPowerupNpc;
+import org.luckyraven.gangland.turf.npc.TurfPowerupOpenContract;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 /**

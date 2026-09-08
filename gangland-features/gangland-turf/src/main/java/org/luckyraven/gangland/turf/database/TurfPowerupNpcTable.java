@@ -1,6 +1,6 @@
-package org.luckyraven.gangland.copsncrooks.database;
+package org.luckyraven.gangland.turf.database;
 
-import org.luckyraven.gangland.copsncrooks.npc.turf.TurfPowerupData;
+import org.luckyraven.gangland.turf.npc.TurfPowerupData;
 import org.luckyraven.keystone.persistence.database.component.Attribute;
 import org.luckyraven.keystone.persistence.database.component.Table;
 

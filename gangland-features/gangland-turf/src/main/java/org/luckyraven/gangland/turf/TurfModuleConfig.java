@@ -4,8 +4,11 @@ import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.permission.PermissionManager;
+import org.luckyraven.gangland.civilians.npc.CivilianService;
+import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.gangland.turf.database.ActiveTurfBuffRepository;
 import org.luckyraven.gangland.turf.database.TurfGarrisonRepository;
+import org.luckyraven.gangland.turf.database.TurfPowerupNpcRepository;
 import org.luckyraven.gangland.turf.database.TurfRepository;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.turf.config.GanglandTurfMessages;
@@ -22,13 +25,22 @@ import org.luckyraven.gangland.turf.contract.TurfSoundContract;
 import org.luckyraven.gangland.turf.contribution.TurfContributionSettings;
 import org.luckyraven.gangland.turf.contribution.TurfContributionTickTask;
 import org.luckyraven.gangland.turf.manager.TurfManager;
+import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
+import org.luckyraven.gangland.turf.npc.TurfPowerupOpenContract;
+import org.luckyraven.gangland.turf.npc.config.TurfNpcsConfigLoader;
+import org.luckyraven.gangland.turf.npc.config.TurfPowerupOpenContractImpl;
+import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
+import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
+import org.luckyraven.gangland.turf.npc.view.TurfPowerupBuffCatalogueView;
+import org.luckyraven.gangland.turf.npc.view.TurfPowerupFlow;
+import org.luckyraven.gangland.turf.npc.view.TurfPowerupGarrisonView;
+import org.luckyraven.gangland.turf.npc.view.TurfPowerupMenuView;
 import org.luckyraven.gangland.turf.powerups.*;
 import org.luckyraven.gangland.turf.selection.WandSelectionManager;
 import org.luckyraven.gangland.turf.task.GangPresenceTracker;
 import org.luckyraven.gangland.turf.task.InactivityReleaseTask;
 import org.luckyraven.gangland.turf.task.TurfIncomeDistributor;
 import org.luckyraven.gangland.turf.task.TurfLocationTracker;
-import org.luckyraven.gangland.turf.turfnpcs.TurfNpcContracts;
 
 import java.util.List;
 
@@ -198,12 +210,73 @@ public final class TurfModuleConfig {
 	// exactly what hid the bossbar-refresh bug: the @Bean copy had its scheduler task running, but its barsByTurf
 	// was always empty because events went to the other instance.
 
-	/**
-	 * The turf → NPC bridge. Always present so GarrisonDeployListener always constructs; inert until the
-	 * cops-n-crooks module installs TurfNpcContractImpl into it (see documentation/module-loader.md, "Core seams").
-	 */
+	// ── turf-system NPCs (moved from cops-n-crooks' TurfNpcsModuleConfig, group I) ─────────────────────────────
+	// The per-turf Quartermaster (interactable powerup vendor + hostile-on-contest civilian) and the auto-deploy
+	// garrison defenders. Both spawn through the civilians module's civilian NPC infrastructure — no bespoke
+	// entity types — so model/health/equipment/AI live entirely in civilians.yml. Knobs specific to the turf
+	// system (which civilian type id, deploy radius, lifespan) live in turf/turf_npcs.yml, loaded by
+	// TurfNpcsConfigLoader. Now that both the NPC code and the civilian infrastructure it spawns through live
+	// outside cops-n-crooks, GarrisonDeployListener injects TurfDefenderDeployer/TurfPowerupManager directly — the
+	// TurfNpcContract cross-module bridge these beans used to feed has no remote implementor left (T-I4).
+
 	@Bean
-	public TurfNpcContracts turfNpcContracts() {
-		return new TurfNpcContracts();
+	public TurfNpcsConfigLoader turfNpcsConfigLoader(FileManager fileManager) {
+		return new TurfNpcsConfigLoader(fileManager);
+	}
+
+	@Bean
+	public TurfDefenderConfig turfDefenderConfig(TurfNpcsConfigLoader loader) {
+		return loader.getDefenderConfig();
+	}
+
+	@Bean
+	public TurfDefenderDeployer turfDefenderDeployer(Gangland plugin, CivilianService civilianService,
+	                                                 CivilianSpawnManager spawnManager) {
+		TurfDefenderDeployer deployer = new TurfDefenderDeployer(plugin, civilianService, spawnManager);
+		deployer.start();
+		return deployer;
+	}
+
+	@Bean
+	public TurfPowerupManager turfPowerupManager(Gangland plugin, TurfPowerupNpcRepository repository,
+	                                             TurfNpcsConfigLoader loader, CivilianSpawnManager spawnManager) {
+		return new TurfPowerupManager(plugin, repository, loader.getPowerupSettings(), spawnManager);
+	}
+
+	@Bean
+	public TurfPowerupMenuView turfPowerupMenuView(@SuppressWarnings("unused") Settings settings,
+	                                               GarrisonManager garrisons, ActiveBuffManager buffs) {
+		return new TurfPowerupMenuView(garrisons, buffs,
+		                               Settings.getInventoryFillItem(), Settings.getInventoryFillName());
+	}
+
+	@Bean
+	public TurfPowerupBuffCatalogueView turfPowerupBuffCatalogueView(@SuppressWarnings("unused") Settings settings,
+	                                                                 PowerupRegistry registry,
+	                                                                 ActiveBuffManager buffs) {
+		return new TurfPowerupBuffCatalogueView(registry, buffs,
+		                                        Settings.getInventoryFillItem(),
+		                                        Settings.getInventoryFillName());
+	}
+
+	@Bean
+	public TurfPowerupGarrisonView turfPowerupGarrisonView(@SuppressWarnings("unused") Settings settings,
+	                                                       GarrisonManager garrisons) {
+		return new TurfPowerupGarrisonView(garrisons,
+		                                   Settings.getInventoryFillItem(), Settings.getInventoryFillName());
+	}
+
+	@Bean
+	public TurfPowerupFlow turfPowerupFlow(Gangland plugin, TurfPowerupMenuView menuView,
+	                                       TurfPowerupBuffCatalogueView buffsView,
+	                                       TurfPowerupGarrisonView garrisonView) {
+		return new TurfPowerupFlow(plugin, menuView, buffsView, garrisonView);
+	}
+
+	@Bean
+	public TurfPowerupOpenContract turfPowerupOpenContract(TurfPowerupFlow flow, TurfManager turfs,
+	                                                       TurfPowerupManager npcs, GangLookupContract gangs,
+	                                                       UserLookupContract users) {
+		return new TurfPowerupOpenContractImpl(flow, turfs, npcs, gangs, users);
 	}
 }

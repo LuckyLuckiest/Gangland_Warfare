@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.turf;
+package org.luckyraven.gangland.turf.npc;
 
 import lombok.Getter;
 import lombok.Setter;

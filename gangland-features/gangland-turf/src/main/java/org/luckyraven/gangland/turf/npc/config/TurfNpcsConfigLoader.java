@@ -1,9 +1,8 @@
-package org.luckyraven.gangland.copsncrooks.integration.turf;
+package org.luckyraven.gangland.turf.npc.config;
 
 import lombok.CustomLog;
 import lombok.Getter;
-import org.luckyraven.gangland.copsncrooks.npc.turf.config.TurfPowerupSettings;
-import org.luckyraven.gangland.copsncrooks.npc.turf.defender.TurfDefenderConfig;
+import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
 import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;

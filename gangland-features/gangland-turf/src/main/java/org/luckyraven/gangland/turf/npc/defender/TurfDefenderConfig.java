@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.turf.defender;
+package org.luckyraven.gangland.turf.npc.defender;
 
 /**
  * Settings for the turf-defender deploy flow. The defender's actual entity stats (model, health, damage, AI tuning,

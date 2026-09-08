@@ -1,9 +1,12 @@
 package org.luckyraven.gangland.turf;
 
 import lombok.CustomLog;
+import org.luckyraven.keystone.diagnostics.Diagnostics;
+import org.luckyraven.keystone.diagnostics.Fault;
 import org.luckyraven.keystone.module.KeystoneModule;
 import org.luckyraven.keystone.module.ModuleContext;
 import org.luckyraven.keystone.module.ModuleRegistrar;
+import org.luckyraven.keystone.npc.NpcSupport;
 
 /**
  * Entry point of the turf module ({@code module.yml} {@code Main}). Declares what the module contributes; the
@@ -44,6 +47,19 @@ public final class TurfModule implements KeystoneModule {
 	@Override
 	public void onEnabled(ModuleContext context) {
 		log.info("Turf module {} enabled", context.module().descriptor().version());
+
+		// T-I6: since group I, turf owns the turf-NPC code (Quartermaster + garrison defenders) and its
+		// Citizens-backed spawns. The actual guards live at the spawn choke points (TurfPowerupManager#spawn,
+		// TurfDefenderDeployer#deploy — both check NpcSupport.available() and no-op) so a missing Citizens never
+		// crashes turf capture; this is the one-time, human-readable report of that same condition (smoke row D7).
+		if (!NpcSupport.available()) {
+			Diagnostics.active()
+			           .report(Fault.dependency(NpcSupport.FAULT_CITIZENS_MISSING,
+			                                    "Citizens is not installed or not enabled — turf-NPC (Quartermaster "
+			                                    + "and garrison defender) spawns will not happen; turf capture "
+			                                    + "itself still works.")
+			                        .build());
+		}
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.turf;
+package org.luckyraven.gangland.turf.npc;
 
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;

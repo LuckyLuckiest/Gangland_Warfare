@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.turf.config;
+package org.luckyraven.gangland.turf.npc.config;
 
 /**
  * Routing settings for the per-turf Quartermaster NPC. The actual NPC stats (model, health, equipment, AI tuning,

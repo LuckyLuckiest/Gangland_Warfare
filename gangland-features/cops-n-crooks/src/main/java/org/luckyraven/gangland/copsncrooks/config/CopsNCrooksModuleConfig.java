@@ -25,11 +25,9 @@ import org.luckyraven.gangland.copsncrooks.detainment.sound.DetainmentSoundContr
 import org.luckyraven.gangland.copsncrooks.detainment.transit.TransitService;
 import org.luckyraven.gangland.copsncrooks.detainment.wanted.WantedClearContract;
 import org.luckyraven.gangland.copsncrooks.command.bank.BankMenuContribution;
-import org.luckyraven.gangland.copsncrooks.command.turf.TurfPowerupNpcContribution;
 import org.luckyraven.gangland.copsncrooks.integration.config.GanglandCivilianSpawnConfigProvider;
 import org.luckyraven.gangland.copsncrooks.integration.config.GanglandDetainmentMessages;
 import org.luckyraven.gangland.copsncrooks.integration.detainment.*;
-import org.luckyraven.gangland.copsncrooks.integration.turf.TurfNpcContractImpl;
 import org.luckyraven.gangland.copsncrooks.jail.*;
 import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTier;
 import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTierRegistry;
@@ -51,7 +49,6 @@ import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawner;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 import org.luckyraven.gangland.copsncrooks.npc.police.targeting.WantedTargetingManager;
-import org.luckyraven.gangland.copsncrooks.npc.turf.TurfPowerupManager;
 import org.luckyraven.gangland.copsncrooks.seam.CopsMoneyDropSource;
 import org.luckyraven.gangland.copsncrooks.seam.KillComboWantedTracker;
 import org.luckyraven.gangland.data.economy.BankTiers;
@@ -62,10 +59,6 @@ import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.gang.wanted.WantedKillTrackers;
 import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.gangland.item.money.MoneyAddon;
-import org.luckyraven.gangland.turf.contract.TurfMessageContract;
-import org.luckyraven.gangland.turf.manager.TurfManager;
-import org.luckyraven.gangland.turf.selection.WandSelectionManager;
-import org.luckyraven.gangland.turf.turfnpcs.TurfNpcContracts;
 import org.luckyraven.gangland.weapon.WeaponManager;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
@@ -91,11 +84,13 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
  *     dependency or post-construction setter wiring needed.</li>
  * </ul>
  *
- * <p>{@link #installCoreSeams()} installs this module's delegates into the four always-present core holder beans
- * (seams 1-4: {@link GanglandMoneyDropClassifier}, {@link BankTiers}, {@link WantedKillTrackers},
- * {@link TurfNpcContracts}) once every bean above exists. It runs inside {@code BeanFactory.instantiate()}, before
- * {@code GanglandContext.runListenerPhase()} / {@code runCommandPhase()}, so every consumer — listeners, commands,
- * the placeholder bean's lazy reads — sees the installed delegate. See documentation/module-loader.md, "Core seams".
+ * <p>{@link #installCoreSeams()} installs this module's delegates into the three always-present core holder beans
+ * (seams 1-3: {@link GanglandMoneyDropClassifier}, {@link BankTiers}, {@link WantedKillTrackers}) once every bean
+ * above exists. It runs inside {@code BeanFactory.instantiate()}, before {@code GanglandContext.runListenerPhase()} /
+ * {@code runCommandPhase()}, so every consumer — listeners, commands, the placeholder bean's lazy reads — sees the
+ * installed delegate. The fourth seam, {@code TurfNpcContracts}, is gone (group I): turf owns its own NPC managers
+ * now, so {@code GarrisonDeployListener} injects {@code TurfDefenderDeployer}/{@code TurfPowerupManager} directly
+ * instead of going through a cross-module bridge. See documentation/module-loader.md, "Core seams".
  */
 @CustomLog
 @Configuration
@@ -416,19 +411,6 @@ public class CopsNCrooksModuleConfig {
 		return new BankMenuContribution(gangland, bankerFlow);
 	}
 
-	/**
-	 * Attaches {@code /glw turf powerupnpc set|remove} under the core {@code turf} command. Same gap as
-	 * {@link #bankMenuContribution} — without this bean {@link TurfPowerupNpcContribution} never reaches
-	 * {@code TurfCommand}'s {@code contributions.createFor("turf", …)} call.
-	 */
-	@Bean
-	public TurfPowerupNpcContribution turfPowerupNpcContribution(Gangland gangland, TurfManager turfs,
-	                                                             WandSelectionManager selections,
-	                                                             TurfMessageContract messages,
-	                                                             TurfPowerupManager powerupNpcs) {
-		return new TurfPowerupNpcContribution(gangland, turfs, selections, messages, powerupNpcs);
-	}
-
 	// ---------------------------------------------------------------------------------------------------------------
 	// Core seam installation
 	// ---------------------------------------------------------------------------------------------------------------
@@ -450,7 +432,5 @@ public class CopsNCrooksModuleConfig {
 		context.get(WantedKillTrackers.class)
 		       .install(new KillComboWantedTracker(context.get(KillCombo.class),
 		                                           context.get(EntityMarkManager.class)));
-
-		context.get(TurfNpcContracts.class).install(context.get(TurfNpcContractImpl.class));
 	}
 }

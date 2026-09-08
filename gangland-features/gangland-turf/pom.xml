@@ -32,6 +32,18 @@
             <groupId>org.luckyraven</groupId>
             <artifactId>keystone-module</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-npc</artifactId>
+        </dependency>
+        <!-- The moved turf-NPC managers (TurfPowerupManager, TurfDefenderDeployer) spawn through the civilians
+             module's CivilianSpawnManager/CivilianService/CivilianNpc, exactly like cops-n-crooks does (group I;
+             not named by T-I1's own task text, found necessary to compile the moved code — see status table). -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-civilians</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <!-- Spigot Build -->
         <dependency>
             <groupId>org.spigotmc</groupId>
@@ -61,6 +73,17 @@
             <groupId>org.luckyraven</groupId>
             <artifactId>gangland-domain</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <!-- Moved turf-NPC views (TurfPowerupFlow/View classes, group I) need InventoryHandler/MultiPanelInventory. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>inventory-api</artifactId>
+        </dependency>
+
+        <!-- Citizens dependency (moved turf-NPC code, group I) -->
+        <dependency>
+            <groupId>net.citizensnpcs</groupId>
+            <artifactId>citizens-main</artifactId>
         </dependency>
 
         <!-- XSeries dependency -->

@@ -1,10 +1,10 @@
-package org.luckyraven.gangland.copsncrooks.listener.turf;
+package org.luckyraven.gangland.turf.listener.powerups;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.world.ChunkLoadEvent;
-import org.luckyraven.gangland.copsncrooks.npc.turf.TurfPowerupManager;
+import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 /**

@@ -1,13 +1,12 @@
-package org.luckyraven.gangland.copsncrooks.command.turf;
+package org.luckyraven.gangland.turf.command;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.turf.command.TurfSelectionResolver;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
-import org.luckyraven.gangland.copsncrooks.npc.turf.TurfPowerupManager;
+import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;

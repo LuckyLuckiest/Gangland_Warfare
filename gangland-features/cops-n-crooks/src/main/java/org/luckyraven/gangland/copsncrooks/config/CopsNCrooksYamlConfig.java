@@ -30,7 +30,8 @@ public class CopsNCrooksYamlConfig {
 		fileManager.addFile(new FileHandler(gangland, "cops", "npc", ".yml", loader), true);
 		fileManager.addFile(new FileHandler(gangland, "trader_traits", "npc", ".yml", loader), true);
 		fileManager.addFile(new FileHandler(gangland, "bank_tiers", "npc", ".yml", loader), true);
-		fileManager.addFile(new FileHandler(gangland, "turf_npcs", "turf", ".yml", loader), true);
+		// turf_npcs.yml moved to the turf module's own TurfModuleFileConfig (group I) alongside the turf-NPC code
+		// it configures.
 		return new CopsNCrooksFiles();
 	}
 

@@ -4,4 +4,6 @@ Name: Gangland Turf
 Version: ${project.version}
 Main: org.luckyraven.gangland.turf.TurfModule
 Host_Api: 0.9
+Depends:
+  - civilians
 Artifact: org.luckyraven:gangland-turf

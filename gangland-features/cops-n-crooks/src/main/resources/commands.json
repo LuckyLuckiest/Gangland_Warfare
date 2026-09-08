@@ -122,9 +122,5 @@
 	"bank_menu": {
 		"usage": "/glw bank menu",
 		"description": "Opens the rich banker panel (Deposit / Withdraw / Upgrade / Rename / Rewards). Phone-banking entry point."
-	},
-	"turf_powerupnpc": {
-		"usage": "/glw turf powerupnpc <set|remove>",
-		"description": "Place (at your current location) or remove the per-turf Quartermaster NPC for your active-selection turf."
 	}
 }

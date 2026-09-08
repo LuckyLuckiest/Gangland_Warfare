@@ -18,6 +18,7 @@ import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.listener.GangDisplayNameResolver;
 import org.luckyraven.gangland.turf.manager.TurfManager;
+import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 import org.luckyraven.gangland.turf.powerups.PowerupRegistry;
@@ -44,9 +45,11 @@ public final class TurfCommand extends Command {
 	private final GarrisonManager      garrisons;
 	private final PowerupRegistry      powerupRegistry;
 	private final ActiveBuffManager    activeBuffs;
+	private final TurfPowerupManager   powerupNpcs;
 	/**
-	 * Sub-arguments a runtime module attaches under {@code turf} (the cops-n-crooks module contributes
-	 * {@code powerupnpc}). Empty when no module is installed — the core never names them.
+	 * Sub-arguments a runtime module attaches under {@code turf}. Empty when no module is installed — the core
+	 * never names them. {@code powerupnpc} used to come through here from cops-n-crooks; group I moved the turf-NPC
+	 * code into this module, so it is now added directly in {@link #initializeArguments()} instead.
 	 */
 	private final CommandContributions contributions;
 
@@ -60,6 +63,7 @@ public final class TurfCommand extends Command {
 	                   GarrisonManager garrisons,
 	                   PowerupRegistry powerupRegistry,
 	                   ActiveBuffManager activeBuffs,
+	                   TurfPowerupManager powerupNpcs,
 	                   DependencyContainer container) {
 		super(gangland, "turf", false);
 
@@ -72,6 +76,7 @@ public final class TurfCommand extends Command {
 		this.garrisons       = garrisons;
 		this.powerupRegistry = powerupRegistry;
 		this.activeBuffs     = activeBuffs;
+		this.powerupNpcs     = powerupNpcs;
 		this.contributions   = CommandContributions.from(container);
 
 		var list = getCommands().entrySet()
@@ -132,6 +137,8 @@ public final class TurfCommand extends Command {
 		                                                       turfs, selections, messages, garrisons);
 		TurfBuffCommand buff = new TurfBuffCommand(getGangland(), getArgumentTree(), getArgument(),
 		                                           turfs, selections, messages, powerupRegistry, activeBuffs);
+		TurfPowerupNpcCommand powerupNpc = new TurfPowerupNpcCommand(getGangland(), getArgumentTree(), getArgument(),
+		                                                             turfs, selections, messages, powerupNpcs);
 
 		List<Argument> arguments = new ArrayList<>();
 		arguments.add(wand);
@@ -149,8 +156,10 @@ public final class TurfCommand extends Command {
 		arguments.add(income);
 		arguments.add(garrison);
 		arguments.add(buff);
+		arguments.add(powerupNpc);
 
-		// powerupnpc (and anything else a module hangs under /glw turf) comes from installed modules
+		// anything else a module hangs under /glw turf comes from installed modules (powerupnpc moved off this
+		// path in group I — it is added directly above now that both it and TurfPowerupManager live in this module)
 		arguments.addAll(contributions.createFor("turf", getArgumentTree(), getArgument()));
 
 		getArgument().addAllSubArguments(arguments);

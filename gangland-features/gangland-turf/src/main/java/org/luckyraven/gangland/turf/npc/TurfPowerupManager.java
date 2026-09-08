@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.turf;
+package org.luckyraven.gangland.turf.npc;
 
 import lombok.CustomLog;
 import net.citizensnpcs.api.CitizensAPI;
@@ -8,11 +8,12 @@ import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.copsncrooks.listener.turf.TurfPowerupChunkLoadListener;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.npc.CivilianNpc;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
-import org.luckyraven.gangland.copsncrooks.npc.turf.config.TurfPowerupSettings;
+import org.luckyraven.gangland.turf.listener.powerups.TurfPowerupChunkLoadListener;
+import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
+import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
+import org.luckyraven.gangland.turf.npc.config.TurfPowerupSettings;
 import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.util.*;
@@ -158,6 +159,10 @@ public final class TurfPowerupManager implements BeanLifecycle {
 	private TurfPowerupNpc spawn(TurfPowerupData data) {
 		TurfPowerupNpc existing = byTurfId.get(data.getTurfId());
 		if (existing != null && existing.isAlive()) return existing;
+		// T-I6: without Citizens, CivilianSpawnManager's factory reaches CitizensAPI directly and throws. Skip the
+		// spawn — the data is still saved (place()'s repository.save runs before this), so the Quartermaster comes
+		// back the moment Citizens is installed and the server restarts.
+		if (!NpcSupport.available()) return null;
 		// Citizens NPC.spawn() silently no-ops when the destination chunk isn't loaded. On a fresh boot the
 		// Quartermaster's chunk may not be loaded (no player has walked there yet) — instead of force-loading
 		// and pinning the chunk in memory forever, queue the data and let TurfPowerupChunkLoadListener spawn
