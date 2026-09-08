@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.sign;
 
 import lombok.AccessLevel;
+import lombok.CustomLog;
 import lombok.Getter;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -34,6 +35,7 @@ import java.util.List;
  * convention {@code initialize()} pass, by which point every module bean is guaranteed to exist.
  */
 @Getter
+@CustomLog
 public class SignManager extends SignService {
 
 	@Getter(AccessLevel.NONE)
@@ -187,8 +189,16 @@ public class SignManager extends SignService {
 
 			if (rewritten == null) continue;
 
-			SignTypeDefinition delegate = "item-buy".equals(rewritten.headerKey()) ? itemBuyDefinition
-			                                                                      : itemSellDefinition;
+			SignTypeDefinition delegate;
+			if ("item-buy".equals(rewritten.headerKey())) {
+				delegate = itemBuyDefinition;
+			} else if ("item-sell".equals(rewritten.headerKey())) {
+				delegate = itemSellDefinition;
+			} else {
+				log.warn("Signs.Legacy_Aliases for '{}' names an unrecognised header key '{}' (expected 'item-buy' "
+				         + "or 'item-sell') — skipping this legacy alias.", legacyHeader, rewritten.headerKey());
+				continue;
+			}
 			SignType legacyType = new SignType(signPrefix + legacyHeader, legacyHeader.toUpperCase());
 
 			LegacyAliasSignAdapter adapter = new LegacyAliasSignAdapter(legacyType, delegate.getSignType(),

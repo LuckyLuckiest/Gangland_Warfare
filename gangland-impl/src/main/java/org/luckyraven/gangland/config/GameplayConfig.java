@@ -196,6 +196,14 @@ public class GameplayConfig {
 		return new BulkActionManager(gangland, signInformation);
 	}
 
+	@Bean
+	public LegacySignRewriter legacySignRewriter() {
+		return new LegacySignRewriter(
+				Settings.getSignsLegacyWeaponBuy(), Settings.getSignsLegacyWeaponSell(),
+				Settings.getSignsLegacyAmmoBuy(), Settings.getSignsLegacyAmmoSell(),
+				Settings.getSignsLegacyWearableBuy(), Settings.getSignsLegacyWearableSell());
+	}
+
 	/**
 	 * {@code manager.initialize()} is deliberately not called here: Keystone's convention pass calls
 	 * {@code initialize()} on every non-{@code FileInitializer}/non-{@code BeanLifecycle} bean automatically, once
@@ -205,14 +213,6 @@ public class GameplayConfig {
 	 * {@code SignTypeContribution}/{@code SignViewProvider} beans are not guaranteed to exist yet at CONFIG-phase
 	 * bean-construction time.
 	 */
-	@Bean
-	public LegacySignRewriter legacySignRewriter() {
-		return new LegacySignRewriter(
-				Settings.getSignsLegacyWeaponBuy(), Settings.getSignsLegacyWeaponSell(),
-				Settings.getSignsLegacyAmmoBuy(), Settings.getSignsLegacyAmmoSell(),
-				Settings.getSignsLegacyWearableBuy(), Settings.getSignsLegacyWearableSell());
-	}
-
 	@Bean
 	public SignManager signManager(SignTypeRegistry signTypeRegistry, SignInteraction signInteraction,
 	                               UniqueItemAddon uniqueItemAddon, ItemSerializerRegistry itemSerializerRegistry,

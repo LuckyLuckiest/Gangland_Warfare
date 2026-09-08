@@ -8,6 +8,8 @@ import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
@@ -21,6 +23,7 @@ import org.luckyraven.gangland.civilians.npc.state.CivilianBehavior;
 import org.luckyraven.gangland.civilians.npc.state.CivilianBehaviorFactory;
 import org.luckyraven.gangland.civilians.npc.entity.EntityMark;
 import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.npc.spi.NpcRangedAttack;
 import org.luckyraven.keystone.util.ChatUtil;
@@ -79,6 +82,8 @@ public class CivilianNpcFactory implements BeanLifecycle {
 	public CivilianNpc createCivilian(Location spawnLocation, CivilianTypeConfig typeConfig,
 	                                  @Nullable String groupId,
 	                                  @Nullable CivilianGroupConfig groupConfig) {
+		if (!NpcSupport.available()) return null;
+
 		String plainName = ChatUtil.replaceColorCodes(ChatUtil.color(typeConfig.displayName()), "");
 
 		EntityType entityType = typeConfig.entityType();
@@ -109,17 +114,25 @@ public class CivilianNpcFactory implements BeanLifecycle {
 
 		applyHealthBonus(npc, typeConfig.health(), healthBonus);
 
+		// equip() runs first so the ranged-attack block below can override its vanilla weaponPool main-hand item
+		// with the Bartizan-built weapon item, reproducing 0.8.4's heldWeapon != null ? heldWeapon.buildItem() :
+		// weaponPool precedence.
+		civilian.equip();
+
 		// Bartizan-backed ranged weapon: a random name from the type's pool, resolved through the factory hook.
-		// NpcRangedAttack.NONE (no weapon name configured, or Bartizan absent) leaves the civilian on the vanilla
-		// weaponPool fallback CivilianNpc#equip() applies.
+		// NpcRangedAttack.NONE (no weapon name configured, unresolvable name, or Bartizan absent) leaves the
+		// civilian on the vanilla weaponPool fallback CivilianNpc#equip() already applied above.
 		if (civilian.canUseRangedAttack()) {
 			String          weaponName   = pickWeaponName(typeConfig);
 			NpcRangedAttack rangedAttack = bartizanNpcWeapons.create(civilian.getEntity(), weaponName,
 			                                                        civilian.getDifficulty());
 			civilian.setRangedAttack(rangedAttack);
-		}
 
-		civilian.equip();
+			ItemStack weaponItem = bartizanNpcWeapons.buildItem(weaponName);
+			if (weaponItem != null) {
+				setMainHand(civilian.getEntity(), weaponItem);
+			}
+		}
 
 		float speedModifier = 1.0f + (float) speedBonus;
 		npc.getNavigator().getLocalParameters().speedModifier(speedModifier);
@@ -128,6 +141,13 @@ public class CivilianNpcFactory implements BeanLifecycle {
 	}
 
 	// ── Helpers ───────────────────────────────────────────────────────────────
+
+	private void setMainHand(@Nullable LivingEntity entity, ItemStack item) {
+		if (entity == null) return;
+		EntityEquipment equipment = entity.getEquipment();
+		if (equipment == null) return;
+		equipment.setItemInMainHand(item);
+	}
 
 	private void applyHealthBonus(NPC npc, double baseHealth, double bonus) {
 		Entity entity = npc.getEntity();
