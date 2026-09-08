@@ -10004,8 +10004,8 @@
 "num": 16,
 "tier": "P3",
 "title": "DatabaseManager.startBackup logs \"Failed to create a backup\" on every shutdown of the test server",
-"fix": "PARTIAL: Keystone 1.9.0 (f62a364) skips the backup when no MySQL host is configured, but the shipped Gangland defaults are Database.SQLite.Backup: true + Database.MySQL.Host: localhost, so a SQLite server still tries a MySQL DataSource on every stop (re-verified 2026-09-08 18:12 smoke on 1.9.0). Remaining fix (Gangland 0.9.0, task T-A in gangland-0.9.0.md group A): default Backup: false in settings.yml and Settings.sqliteBackup, red-first SettingsDefaultsTest, migration note. FIXED Keystone 1.9.0 (phase-h8-item-npc, commits 4a2df95 + the 3/3 commit): DatabaseManager.startBackup skips with one info line ('Backup skipped for ...: no MySQL host is configured.') instead of opening a MySQL DataSource when the SQLite backup target has no host; DatabaseManagerTest pins it red-first. Gangland picks it up with the 0.9.0 Keystone bump; on 0.8.4 the warning remains until then. CAUSE CONFIRMED 2026-09-08 by the smoke matrix (Keystone 1.8.1 now logs it): \"Failed to create a backup for 'SQLite' in 'gangland' database: PluginException: Unable to create DataSource, Communications link failure\" - the regenerated default settings.yml leaves the SQLite backup enabled while the primary is SQLite, so DatabaseManager.startBackup tries to open a MySQL DataSource that is not configured. Fix (Keystone): make startBackup a no-op with one info line when the backup target is the same engine as the primary or when no MySQL host is configured; and/or ship Gangland's settings.yml default with the backup off. Investigate why the shutdown backup fails on the test server (settings.yml regenerated with defaults on 2026-09-08 01:22; Sqlite_Backup default vs the resolved handler type after the MySQL->SQLite fallback - the switch in startBackup backs a SQLite primary up into MySQL and a MySQL primary into SQLite, and the catch block hides the exception). Log the exception at warn with its message, make a SQLite primary + no MySQL configuration a no-op (or a file copy) instead of a failing MySQL connect, and keep the setting name.",
-"tests": "-",
+"fix": "FIXED 0.9.0 (f4149f46, branch 0.9.0): settings.yml Database.SQLite.Backup defaults to false and Settings.java bool(sqlite, \"Backup\", false); Keystone 1.9.0 (0.8.1 hotfix + no-host guard) covers the MySQL-side cause. Existing servers keep their on-disk Backup: true until edited - documentation/migration-0.9.0.md must say so",
+"tests": "gangland-impl SettingsDefaultsTest (red first: expected false but was true)",
 "location": "E:/Programming/java/Keystone keystone-persistence/src/main/java/org/luckyraven/keystone/persistence/database/DatabaseManager.java:49-70 (startBackup, catch Throwable swallows the cause); triggered from closeConnections :38-47 on Gangland disable",
 "observation": "Observed 2026-09-08 01:24:14, 01:25:17 and 01:25:42 on the test server on every \"Disabling Gangland_Warfare\": \"[Keystone Persistence.DatabaseManager] Failed to create a backup for 'SQLite' in 'gangland' database.\" The warning carries no cause (catch Throwable drops it), so an admin cannot tell whether a backup was ever expected. Low impact: nothing is lost, but the shutdown path always ends with a warning.",
 "impact": null,
@@ -10056,6 +10056,27 @@
 "unverified": false,
 "recheck": true,
 "case": "https://claude.ai/code/artifact/d2dbe24f-1d3f-46ca-9353-0c2775157df9#sec-observations-potential-issues",
+"source": "test suite (2026-09-04)"
+},
+{
+"id": "T-19",
+"code": "T",
+"sys": "weapons",
+"sysName": "Weapons",
+"sysOrder": "11",
+"num": 19,
+"tier": "P3",
+"title": "RecoilManager.clone() calls super.clone() but the class does not declare implements Cloneable",
+"fix": "NOT FIXED (out of scope for bartizan.md B5, which explicitly forbids touching it): CloneNotSupportedException is always thrown at runtime since Object.clone()'s protected-native-clone contract requires the declaring type to implement Cloneable; the catch block wraps it in a PluginException, so any caller of RecoilManager.clone() (Weapon's own clone() at :422-423 in the ported bartizan-api file) always fails.",
+"tests": "none",
+"location": "bartizan-api/src/main/java/org/luckyraven/bartizan/api/weapon/recoil/RecoilManager.java (ported verbatim from Gangland 0.8.4 gangland-features/gangland-weapon/src/main/java/org/luckyraven/gangland/weapon/projectile/recoil/RecoilManager.java:72-79, same bug pre-existing there)",
+"observation": "Noticed 2026-09-08 while porting RecoilManager to Bartizan (bartizan.md B5). Not exercised by any existing test (RecoilManagerTest does not call clone()); Weapon.clone() calls source.reload/recoilManager style cloning elsewhere but nothing in the current test suite constructs two Weapon clones to trigger it.",
+"impact": null,
+"risk": "n/a",
+"confidence": "High",
+"unverified": false,
+"recheck": true,
+"case": "https://claude.ai/code/artifact/48a0fd29-5ad2-43ea-b05f-5d9c38e82196#sec-observations-potential-issues",
 "source": "test suite (2026-09-04)"
 }
 ]
