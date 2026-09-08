@@ -9,12 +9,14 @@ import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.shop.message.ShopDisplayResolver;
 
 /**
- * Default {@link ShopDisplayResolver} for gangland. Resolves an item's clean display name by rebuilding it
+ * Default {@link ShopDisplayResolver} for gangland. Resolves an item's clean display name from the <em>live</em>
+ * stack's stored display name first — required for a kind whose converter round trip is non-deterministic (a money
+ * stack's {@code pristine} rebuild re-rolls its amount into the name, review B4). Falls back to rebuilding the item
  * factory-fresh through {@link ItemDefinitions#pristine} (serialize -&gt; definition -&gt; convert) and reading
  * <em>that</em> stack's display name — this strips whatever dynamic decoration the live item picked up at runtime
  * (e.g. an ammo count baked into a weapon's name) the same way a module's {@code ShopDisplayNameProvider} used to,
- * without the core needing to know which module owns the item. Items the registries don't describe (no matching
- * serializer) fall back to the live item's own stored display name, then a humanised material name.
+ * without the core needing to know which module owns the item. Items with no display name at all, live or pristine,
+ * fall back to a humanised material name.
  */
 public final class GanglandShopDisplayResolver implements ShopDisplayResolver {
 
@@ -30,12 +32,12 @@ public final class GanglandShopDisplayResolver implements ShopDisplayResolver {
 	public String cleanDisplayName(ItemStack item) {
 		if (item == null) return "item";
 
+		String fromLiveItem = displayNameOf(item);
+		if (fromLiveItem != null) return fromLiveItem;
+
 		ItemStack pristine = ItemDefinitions.pristine(serializers, converters, item);
 		String    fromPristine = pristine == null ? null : displayNameOf(pristine);
 		if (fromPristine != null) return fromPristine;
-
-		String fromLiveItem = displayNameOf(item);
-		if (fromLiveItem != null) return fromLiveItem;
 
 		return ChatUtil.color(ChatUtil.capitalize(item.getType().name().toLowerCase().replace('_', ' ')));
 	}

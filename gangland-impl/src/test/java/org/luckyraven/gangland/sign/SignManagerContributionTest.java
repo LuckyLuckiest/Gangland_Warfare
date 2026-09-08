@@ -92,6 +92,8 @@ class SignManagerContributionTest {
 		assertTrue(typedKeys.contains("glw-stub-contrib"), "the contributed sign must be present");
 		assertTrue(typedKeys.contains("glw-buy"), "flip-stable core sign glw-buy must survive");
 		assertTrue(typedKeys.contains("glw-sell"), "flip-stable core sign glw-sell must survive");
+		assertTrue(typedKeys.contains("glw-item-buy"), "generic item-buy sign type must be registered (T-G3)");
+		assertTrue(typedKeys.contains("glw-item-sell"), "generic item-sell sign type must be registered (T-G3)");
 		assertTrue(typedKeys.contains("glw-view"), "flip-stable core sign glw-view must survive");
 		assertTrue(typedKeys.contains("glw-wanted"), "flip-stable core sign glw-wanted must survive");
 		assertTrue(typedKeys.contains("glw-bounty"), "flip-stable core sign glw-bounty must survive");

@@ -23,7 +23,6 @@ import org.luckyraven.gangland.sign.validation.SignValidator;
 import org.luckyraven.gangland.sign.validation.trade.ItemSignValidator;
 import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.keystone.item.ItemSerializerRegistry;
-import org.luckyraven.keystone.item.spi.ItemDefinitions;
 
 import java.util.List;
 
@@ -57,7 +56,7 @@ public class SellSign extends BaseTradeSign implements BulkSignHandler {
 		SignAspect itemAspect = new ItemTransferAspect(
 				sign -> getDefinedItem(sign.getContent(), uniqueItemAddon, itemParser),
 				ItemTransferAspect.TransferType.TAKE,
-				(player, a, b) -> ItemDefinitions.sameDefinition(serializers, a, b));
+				(player, a, b) -> sameTradeDefinition(serializers, a, b));
 
 		SignAspect moneyAspect = new MoneyAspect(userManager, MoneyAspect.TransactionType.DEPOSIT);
 

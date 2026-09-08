@@ -2,7 +2,9 @@ package org.luckyraven.gangland.bootstrap;
 
 import lombok.CustomLog;
 import lombok.Getter;
+import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.gangland.command.CommandManager;
@@ -18,6 +20,11 @@ import org.luckyraven.keystone.bean.Phase;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.gangland.file.configuration.SettingsLookupImpl;
 import org.luckyraven.gangland.listener.ListenerManager;
+import org.luckyraven.keystone.item.ItemConverterRegistry;
+import org.luckyraven.keystone.item.ItemRefresherRegistry;
+import org.luckyraven.keystone.item.ItemSerializerRegistry;
+import org.luckyraven.keystone.item.spi.ItemVocabularies;
+import org.luckyraven.keystone.item.spi.ItemVocabulary;
 import org.luckyraven.keystone.module.LoadedModule;
 import org.luckyraven.keystone.module.ModuleLoader;
 import org.luckyraven.keystone.persistence.FileManager;
@@ -188,12 +195,39 @@ public final class GanglandContext {
 				beanFactory.registerConfiguration(configuration);
 			}
 		}
-		beanFactory.instantiate();
+		// beforeLifecycle runs after every bean phase but BEFORE the @PostConstruct pass, so the vocabulary fold
+		// always precedes GameplayConfig's initializeInventoryLoader()/initializeLootChestLoader() @PostConstructs —
+		// unlike two @PostConstructs racing each other in configuration-scan (HashSet) order (gate D-G review B2).
+		beanFactory.instantiate(this::installItemVocabularies);
 
 		runListenerPhase();
 		runCommandPhase();
 
 		moduleLoader.enableAll(container);
+	}
+
+	/**
+	 * Folds every {@link ItemVocabulary} Bartizan (or any other plugin) published on the {@code ServicesManager} into
+	 * the core's own item registries. Run as the {@link BeanFactory#instantiate(Runnable)} {@code beforeLifecycle}
+	 * hook — after every CONFIG bean exists but strictly before the {@code @PostConstruct} pass — so it always
+	 * precedes {@code GameplayConfig.initializeInventoryLoader()}/{@code initializeLootChestLoader()}, which parse
+	 * {@code weapon:}/{@code ammo:}/{@code wearable:} item strings. Resolves the three registries at call time (not
+	 * captured as fields) since this runs before those beans are guaranteed registered by construction order.
+	 *
+	 * <p>The two log lines below are contract, not examples — smoke rows D1/D6 grep {@code Item vocabularies
+	 * installed:} and the empty variant's literal substring {@code none} (gangland-0.9.0.md T-F3).
+	 */
+	private void installItemVocabularies() {
+		List<ItemVocabulary> vocabularies = Bukkit.getServicesManager()
+				.getRegistrations(ItemVocabulary.class).stream()
+				.map(RegisteredServiceProvider::getProvider).toList();
+		ItemVocabularies.install(vocabularies,
+		                         container.getInstance(ItemConverterRegistry.class),
+		                         container.getInstance(ItemSerializerRegistry.class),
+		                         container.getInstance(ItemRefresherRegistry.class));
+		log.info(vocabularies.isEmpty()
+				? "Item vocabularies installed: none — weapon:/ammo:/wearable: item strings will not resolve"
+				: "Item vocabularies installed: " + vocabularies.stream().map(ItemVocabulary::namespace).toList());
 	}
 
 	@SuppressWarnings({"unchecked", "rawtypes"})

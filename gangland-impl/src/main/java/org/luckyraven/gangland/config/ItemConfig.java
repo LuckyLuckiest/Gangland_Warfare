@@ -1,19 +1,12 @@
 package org.luckyraven.gangland.config;
 
-import lombok.CustomLog;
-import org.bukkit.Bukkit;
-import org.bukkit.plugin.RegisteredServiceProvider;
-import org.luckyraven.gangland.bootstrap.GanglandContext;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
-import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.item.ItemConverterRegistry;
 import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.keystone.item.ItemSerializerRegistry;
 import org.luckyraven.keystone.item.ItemRefresherRegistry;
 import org.luckyraven.keystone.item.MaterialItemSerializer;
-import org.luckyraven.keystone.item.spi.ItemVocabularies;
-import org.luckyraven.keystone.item.spi.ItemVocabulary;
 import org.luckyraven.gangland.item.ItemKind;
 import org.luckyraven.gangland.item.ItemPredicates;
 import org.luckyraven.gangland.item.NbtTagCatalog;
@@ -26,8 +19,6 @@ import org.luckyraven.gangland.item.refresher.*;
 import org.luckyraven.gangland.item.serializer.*;
 import org.luckyraven.gangland.lootchest.LootChestWandTag;
 
-import java.util.List;
-
 /**
  * CONFIG-phase wiring for the item framework: every converter (string → ItemStack), serializer (ItemStack → string),
  * and refresher (live-item updater) lives here as its own bean. The three registries ({@link ItemConverterRegistry},
@@ -37,15 +28,8 @@ import java.util.List;
  * <p>Registrations are keyed by {@link ItemKind} (labels) and {@link ItemPredicates} (runtime checks). Both sides
  * share the same enum, so renaming a label flows to every converter and serializer automatically.
  */
-@CustomLog
 @Configuration
 public class ItemConfig {
-
-	private final GanglandContext context;
-
-	public ItemConfig(GanglandContext context) {
-		this.context = context;
-	}
 
 	// ── converters ───────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -151,27 +135,5 @@ public class ItemConfig {
 			catalog.register(tag.toString().toLowerCase());
 		}
 		return catalog;
-	}
-
-	// ── published vocabularies ──────────────────────────────────────────────────────────────────────────────────
-
-	/**
-	 * Bartizan (and any other plugin) publishes an {@link ItemVocabulary} on the ServicesManager; the core
-	 * folds them into its own registries. This runs as a @PostConstruct rather than a @Bean because
-	 * ItemVocabularies is a static utility with no instance to register, and because BeanFactory runs
-	 * @PostConstruct after every CONFIG bean exists — a stronger ordering guarantee than parameter edges.
-	 */
-	@PostConstruct
-	public void installItemVocabularies() {
-		List<ItemVocabulary> vocabularies = Bukkit.getServicesManager()
-				.getRegistrations(ItemVocabulary.class).stream()
-				.map(RegisteredServiceProvider::getProvider).toList();
-		ItemVocabularies.install(vocabularies,
-		                         context.get(ItemConverterRegistry.class),
-		                         context.get(ItemSerializerRegistry.class),
-		                         context.get(ItemRefresherRegistry.class));
-		log.info(vocabularies.isEmpty()
-				? "Item vocabularies installed: none — weapon:/ammo:/wearable: item strings will not resolve"
-				: "Item vocabularies installed: " + vocabularies.stream().map(ItemVocabulary::namespace).toList());
 	}
 }

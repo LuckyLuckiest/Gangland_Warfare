@@ -77,11 +77,12 @@ public class FuelRefuelListener implements Listener {
 
 		if (cursor == null || clicked == null) return;
 
-		// Cursor = fuel container (e.g. gasoline), clicked = fuel-enabled wearable (e.g. jetpack). The wearable-catalog
-		// membership check is dropped here (gangland-item must not depend on Bartizan's wearable catalog, and a
-		// jetpack wearable also stamps the FUEL_ID tag, so Fuel-level NBT checks can't tell container from wearable
-		// either) — this branch now covers any fuel-item-to-fuel-item transfer, not just container-to-wearable.
-		if (Fuel.isFuelItem(cursor) && Fuel.isFuelItem(clicked)) {
+		// Cursor = fuel container (e.g. gasoline), clicked = fuel-enabled wearable (e.g. jetpack). isFuelSink is the
+		// module-supplied wearable-catalog check (gangland-item has no catalog of its own) that keeps this branch to
+		// container→sink transfers only — without it a can→can click would drain one can into the other and a
+		// sink→sink or sink→container click would misfire too (review B3).
+		if (Fuel.isFuelItem(cursor) && !fuelContract.isFuelSink(cursor)
+				&& Fuel.isFuelItem(clicked) && fuelContract.isFuelSink(clicked)) {
 			String cursorKey  = Fuel.getFuelKey(cursor);
 			String clickedKey = Fuel.getFuelKey(clicked);
 			if (cursorKey == null || !cursorKey.equals(clickedKey)) return;
