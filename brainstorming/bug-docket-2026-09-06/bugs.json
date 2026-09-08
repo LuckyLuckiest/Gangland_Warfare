@@ -10330,5 +10330,26 @@
 "recheck": true,
 "case": "https://claude.ai/code/artifact/dad8da79-b977-4cdc-9712-e080406cb0b5#sec-observations-potential-issues",
 "source": "test suite (2026-09-04)"
+},
+{
+"id": "T-32",
+"code": "T",
+"sys": "civilians-traders-shops",
+"sysName": "Civilians, Traders & Shops",
+"sysOrder": "09",
+"num": 32,
+"tier": "P2",
+"title": "TraderManager.getByEntity/BankerManager.getByEntity call CitizensAPI.getNPCRegistry() unguarded, reached from every EntityDamageEvent/interact event via TraderDamageListener/TraderInteractListener/BankerDamageListener/BankerInteractListener (plus TraderRemoveCommand/BankerRemoveCommand), so any damage or interact anywhere on the server throws once Citizens is absent, not only when a trader/banker exists",
+"fix": "Guard the top of TraderManager.getByEntity and BankerManager.getByEntity with `if (!NpcSupport.available()) return null;`, mirroring the guard added at TraderManager.spawn/BankerManager.spawn (gangland-0.9.0.md T-J4) and at CivilianNpcFactory.createCivilian (T-HR5, closing docket #31) — same root cause, different module",
+"tests": "-",
+"location": "gangland-features/gangland-npc-shops TraderManager.java getByEntity, BankerManager.java getByEntity",
+"observation": "Found 2026-09-09 while implementing T-J4 (gangland-0.9.0.md, npc-shops Citizens gate): T-J4's own \"Do\" only named NpcShopsModule.onEnabled's diagnostic report; the actual spawn-path guard (TraderManager.spawn/BankerManager.spawn) was added following the T-HR5/T-H4/T-I6 precedent, but getByEntity — reached from four listeners and two commands on every damage/interact event, independent of whether any trader/banker NPC exists — was left unguarded since it's outside T-J4's literal scope and fixing it would need its own red-first test",
+"impact": null,
+"risk": "n/a",
+"confidence": "High",
+"unverified": false,
+"recheck": true,
+"case": "https://claude.ai/code/artifact/dad8da79-b977-4cdc-9712-e080406cb0b5#sec-observations-potential-issues",
+"source": "test suite (2026-09-04)"
 }
 ]
