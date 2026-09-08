@@ -9899,8 +9899,8 @@
 "num": 11,
 "tier": "P1",
 "title": "GameplayConfig.lootChestLoader resolves loot_chests.yml item strings synchronously inside its CONFIG-phase @Bean body, with no ordering edge to a module's item converter",
-"fix": "Defer loot chest item-string resolution to a @PostConstruct pass the same way GameplayConfig already defers InventoryLoader's initialize(), so a module-registered item converter is guaranteed to exist first. No longer purely theoretical - see the updated observation: loot_chests.yml already carries 44 weapon: and 12 wearable: refs (plus 29 ammo: refs) that are now resolved by a module CONFIG-phase bean (WeaponModuleConfig.weaponItemRegistrations) with no dependency edge from GameplayConfig.lootChestLoader.",
-"tests": "-",
+"fix": "FIXED 0.9.0 (1340d97c, branch 0.9.0): GameplayConfig.lootChestLoader no longer calls fileManager.initializeAll() eagerly - deferred to a @PostConstruct mirroring initializeInventoryLoader(); the executor also found the eager item-resolution path itself was already lazy pre-stream (SlotItemFactory/InventoryLoader resolve loot-chest item strings at roll time), so the entry's original observation is partly stale",
+"tests": "covered by the gangland-impl suite at gate G (194 tests green); no dedicated pin",
 "location": "gangland-impl config/GameplayConfig.java:272-278 (lootChestLoader) - unchanged, still synchronous",
 "observation": "lootChestLoader() calls fileManager.initializeAll() directly inside its own CONFIG-phase @Bean body (gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:272-278), taking only LootChestManager and FileManager as parameters, so loot_chests.yml item refs are parsed at that instant with no ordering edge to any module's item-converter bean. InventoryLoader already avoids this exact trap by deferring its initialize() to a @PostConstruct (GameplayConfig.java ~L287+) that runs once every CONFIG bean is registered and the ItemConverterRegistry is populated; lootChestLoader was never given the same treatment. Found 2026-09-07 during module-split planning (brainstorming/module-split-2026-09-07/gadget.md OQ-2; same triage class also covers the weapon and turf flips) and originally filed as latent, since no shipped loot_chests.yml used a car: ref. Re-verified 2026-09-08 after the gadget and weapon flips landed (commits 4304172c, 0272008b): `grep -c 'Item: \"weapon:' gangland-impl/src/main/resources/lootchests/loot_chests.yml` = 44, `Item: \"wearable:` = 12, `Item: \"ammo:` = 29, `Item: \"car:` = 0. weapon:, wearable: and ammo: refs are exactly the item kinds now registered by WeaponModuleConfig.weaponItemRegistrations (itemConverterRegistry.register(WEAPON/AMMUNITION/\"ammo\"/WEARABLE, ...)) in the weapon runtime module, a bean with no parameter dependency on GameplayConfig.lootChestLoader or vice versa - so whichever way the CONFIG-phase topological sort happens to order these two beans on a given boot, there is no guarantee weaponItemRegistrations runs before lootChestLoader. This is no longer a latent/future risk gated on a car: ref that doesn't exist yet - it is a live ordering hazard against 56 existing item refs across the majority of the game's ~20 configured loot chests, so it is raised from P2 to P1: if the sort ever lands the wrong way (e.g. after any future bean-graph change touching either side), the affected chests silently lose their weapon/wearable/ammo drops instead of failing loudly. No code change made in this task - still open.",
 "impact": null,
@@ -10182,6 +10182,27 @@
 "unverified": false,
 "recheck": true,
 "case": "https://claude.ai/code/artifact/48a0fd29-5ad2-43ea-b05f-5d9c38e82196#sec-observations-potential-issues",
+"source": "test suite (2026-09-04)"
+},
+{
+"id": "T-25",
+"code": "T",
+"sys": "gadgets-cars-fuel-jetpack",
+"sysName": "Gadgets: Cars, Fuel & Jetpack",
+"sysOrder": "12",
+"num": 25,
+"tier": "P2",
+"title": "JetpackSession.java still imports the deleted org.luckyraven.gangland.item.wearable.Wearable, missing from every group-F/L census",
+"fix": "Re-point JetpackSession's Wearable usage to Bartizan's org.luckyraven.bartizan.api.wearable.Wearable the same way group L repoints JetpackService/JetpackTask/CarDamageListener.",
+"tests": "none",
+"location": "gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackSession.java:6,16-17,41",
+"observation": "Found 2026-09-08 during the gangland-0.9.0.md group F execution (gate F): §1.2's item census and §1.3's 16-file/35-line weapon-import census both omit this file. It imports org.luckyraven.gangland.item.wearable.Wearable (deleted by T-D4, group D) - not one of the six generic keystone-item classes T-F1 re-points, and not a weapon.* import either, so no existing group F/L task claims it. Compile errors: [6,45] package org.luckyraven.gangland.item.wearable does not exist plus three cannot-find-symbol usage sites (:16-17, :41). Group L (gadget re-point onto bartizan-api) is the natural owner since Bartizan's wearable.Wearable replaces the deleted class the same way JetpackService/JetpackTask already need repointing.",
+"impact": null,
+"risk": "n/a",
+"confidence": "High",
+"unverified": false,
+"recheck": true,
+"case": "https://claude.ai/code/artifact/a3c799ae-5752-467c-b9b2-26e7e29e7882#sec-observations-potential-issues",
 "source": "test suite (2026-09-04)"
 }
 ]
