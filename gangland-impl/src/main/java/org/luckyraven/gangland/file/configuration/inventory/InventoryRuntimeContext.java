@@ -23,7 +23,7 @@ import org.luckyraven.gangland.inventory.part.ButtonTags;
 import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.inventory.part.Slot;
 import org.luckyraven.gangland.inventory.unique.UniqueItemHandler;
-import org.luckyraven.gangland.item.ItemParser;
+import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.config.*;
 

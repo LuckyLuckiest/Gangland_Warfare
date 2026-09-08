@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.luckyraven.gangland.item.ItemRefresherRegistry;
+import org.luckyraven.keystone.item.ItemRefresherRegistry;
 import org.luckyraven.gangland.shop.ShopItemEntry;
 
 import java.math.BigDecimal;

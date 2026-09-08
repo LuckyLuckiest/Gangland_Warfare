@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.item.ItemSerializerRegistry;
+import org.luckyraven.keystone.item.ItemSerializerRegistry;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

@@ -2,7 +2,14 @@ package org.luckyraven.gangland.config;
 
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
-import org.luckyraven.gangland.item.*;
+import org.luckyraven.keystone.item.ItemConverterRegistry;
+import org.luckyraven.keystone.item.ItemParser;
+import org.luckyraven.keystone.item.ItemSerializerRegistry;
+import org.luckyraven.keystone.item.ItemRefresherRegistry;
+import org.luckyraven.keystone.item.MaterialItemSerializer;
+import org.luckyraven.gangland.item.ItemKind;
+import org.luckyraven.gangland.item.ItemPredicates;
+import org.luckyraven.gangland.item.NbtTagCatalog;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.item.converter.*;
 import org.luckyraven.gangland.item.money.MoneyAddon;

@@ -3,7 +3,7 @@ package org.luckyraven.gangland.shop.view;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.inventory.flow.FlowSession;
-import org.luckyraven.gangland.item.ItemRefresherRegistry;
+import org.luckyraven.keystone.item.ItemRefresherRegistry;
 import org.luckyraven.gangland.shop.*;
 import org.luckyraven.gangland.shop.event.ShopEditedEvent;
 

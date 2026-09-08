@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.item.ItemRefresher;
+import org.luckyraven.keystone.item.ItemRefresher;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.item.unique.UniqueItem;
 import org.luckyraven.gangland.item.unique.UniqueItemUtil;

@@ -15,7 +15,6 @@ import org.luckyraven.keystone.util.ActionBarManager;
 import org.luckyraven.gangland.item.fuel.Fuel;
 import org.luckyraven.gangland.item.fuel.FuelBar;
 import org.luckyraven.gangland.item.fuel.FuelContract;
-import org.luckyraven.gangland.item.wearable.Wearable;
 
 /**
  * Handles right-click refueling: a player right-clicks a fuel item while holding the appropriate fuel material (e.g.
@@ -78,9 +77,11 @@ public class FuelRefuelListener implements Listener {
 
 		if (cursor == null || clicked == null) return;
 
-		// Cursor = fuel container (e.g. gasoline), clicked = fuel-enabled wearable (e.g. jetpack)
-		if (Fuel.isFuelItem(cursor) && !Wearable.isRegisteredWearable(cursor) && Fuel.isFuelItem(clicked) &&
-		    Wearable.isRegisteredWearable(clicked)) {
+		// Cursor = fuel container (e.g. gasoline), clicked = fuel-enabled wearable (e.g. jetpack). The wearable-catalog
+		// membership check is dropped here (gangland-item must not depend on Bartizan's wearable catalog, and a
+		// jetpack wearable also stamps the FUEL_ID tag, so Fuel-level NBT checks can't tell container from wearable
+		// either) — this branch now covers any fuel-item-to-fuel-item transfer, not just container-to-wearable.
+		if (Fuel.isFuelItem(cursor) && Fuel.isFuelItem(clicked)) {
 			String cursorKey  = Fuel.getFuelKey(cursor);
 			String clickedKey = Fuel.getFuelKey(clicked);
 			if (cursorKey == null || !cursorKey.equals(clickedKey)) return;

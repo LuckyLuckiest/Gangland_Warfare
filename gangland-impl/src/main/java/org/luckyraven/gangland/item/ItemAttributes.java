@@ -4,6 +4,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.luckyraven.keystone.color.Color;
+import org.luckyraven.keystone.item.ItemConverter;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.Arrays;

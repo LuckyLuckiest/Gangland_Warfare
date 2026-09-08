@@ -12,7 +12,7 @@ import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.gangland.hologram.HologramService;
 import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.item.ItemParser;
+import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.gangland.lootchest.config.LootChestConfig;
 import org.luckyraven.gangland.lootchest.config.LootChestMessagesProvider;
 import org.luckyraven.gangland.lootchest.data.*;

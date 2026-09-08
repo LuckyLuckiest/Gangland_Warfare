@@ -20,7 +20,7 @@ import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
 import org.luckyraven.gangland.inventory.flow.Panel;
 import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.inventory.util.InventoryUtil;
-import org.luckyraven.gangland.item.ItemRefresherRegistry;
+import org.luckyraven.keystone.item.ItemRefresherRegistry;
 import org.luckyraven.gangland.shop.BarterCategory;
 import org.luckyraven.gangland.shop.EntryKind;
 import org.luckyraven.gangland.shop.SellCategory;

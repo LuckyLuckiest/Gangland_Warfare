@@ -2,8 +2,8 @@ package org.luckyraven.gangland.lootchest.support;
 
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.item.ItemConverterRegistry;
-import org.luckyraven.gangland.item.ItemParser;
+import org.luckyraven.keystone.item.ItemConverterRegistry;
+import org.luckyraven.keystone.item.ItemParser;
 
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;

@@ -14,7 +14,7 @@ import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.inventory.util.InventoryUtil;
-import org.luckyraven.gangland.item.ItemParser;
+import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.gangland.lootchest.data.LootChestData;
 import org.luckyraven.gangland.lootchest.data.LootTable;
 import org.luckyraven.gangland.lootchest.data.LootTier;

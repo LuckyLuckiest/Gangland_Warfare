@@ -6,8 +6,8 @@ import org.luckyraven.gangland.file.configuration.shop.GanglandShopDisplayResolv
 import org.luckyraven.gangland.file.configuration.shop.GanglandShopMessages;
 import org.luckyraven.gangland.file.configuration.shop.GanglandShopUiSettings;
 import org.luckyraven.gangland.file.configuration.shop.ShopDisplayNameProvider;
-import org.luckyraven.gangland.item.ItemRefresherRegistry;
-import org.luckyraven.gangland.item.ItemSerializerRegistry;
+import org.luckyraven.keystone.item.ItemRefresherRegistry;
+import org.luckyraven.keystone.item.ItemSerializerRegistry;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.bean.Bean;

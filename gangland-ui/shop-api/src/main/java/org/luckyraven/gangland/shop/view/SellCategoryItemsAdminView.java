@@ -16,7 +16,7 @@ import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
 import org.luckyraven.gangland.inventory.flow.Panel;
-import org.luckyraven.gangland.item.ItemRefresherRegistry;
+import org.luckyraven.keystone.item.ItemRefresherRegistry;
 import org.luckyraven.gangland.shop.SellCategory;
 import org.luckyraven.gangland.shop.message.ShopDisplayResolver;
 import org.luckyraven.gangland.shop.valuation.CategorySellValuator;

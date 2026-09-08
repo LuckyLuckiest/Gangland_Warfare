@@ -5,7 +5,6 @@ import org.bukkit.inventory.ItemStack;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.item.money.MoneyItemUtil;
 import org.luckyraven.gangland.item.unique.UniqueItemKeys;
-import org.luckyraven.gangland.item.wearable.Wearable;
 
 import java.util.function.Predicate;
 
@@ -15,17 +14,14 @@ import java.util.function.Predicate;
  * registration picks it up automatically.
  *
  * <p>This class lives in {@code gangland-impl} because the predicates depend on constants from the feature modules
- * ({@code Wearable}, …) that {@code gangland-item} cannot see. The matching {@link ItemKind} enum stays in
- * {@code gangland-item} because it holds nothing but labels. The {@code CAR} predicate moved to the gadget module's
- * {@code GadgetItemPredicates}, and the {@code WEAPON}/{@code AMMUNITION} predicates to the weapon module's
- * {@code WeaponItemPredicates} (package {@code item} under the weapon module's root package) — the core cannot see
- * {@code CarKey} / {@code Weapon} / {@code Ammunition} once those features are runtime modules. {@code WEARABLE}
- * stays here: it depends only on {@code Wearable}, a {@code gangland-item} type the core can always see.
+ * that {@code gangland-item} cannot see. The matching {@link ItemKind} enum stays in {@code gangland-item} because it
+ * holds nothing but labels. The {@code CAR} predicate moved to the gadget module's {@code GadgetItemPredicates}, and
+ * the {@code WEAPON}/{@code AMMUNITION}/{@code WEARABLE} predicates left with the weapon module (0.8.4) and then with
+ * Bartizan (0.9.0) — the core no longer names {@code Weapon} / {@code Ammunition} / {@code Wearable} at all.
  */
 public final class ItemPredicates {
 
 	public static final Predicate<ItemStack> UNIQUE     = stack -> hasTag(stack, UniqueItemKeys.UNIQUE_ITEM_KEY);
-	public static final Predicate<ItemStack> WEARABLE   = stack -> hasTag(stack, Wearable.NBT_KEY);
 	public static final Predicate<ItemStack> MONEY      = stack -> hasTag(stack, MoneyItemUtil.MARKER_TAG);
 
 	/**

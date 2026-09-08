@@ -2,7 +2,7 @@ package org.luckyraven.gangland.item.money;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.item.ItemConverter;
+import org.luckyraven.keystone.item.ItemConverter;
 
 import java.util.Map;
 

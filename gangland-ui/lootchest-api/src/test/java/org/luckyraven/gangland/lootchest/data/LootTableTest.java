@@ -3,7 +3,7 @@ package org.luckyraven.gangland.lootchest.data;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.luckyraven.gangland.item.ItemParser;
+import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.gangland.lootchest.item.LootItemReference;
 import org.luckyraven.gangland.lootchest.support.TestItemParsers;
 

@@ -4,7 +4,7 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.gangland.item.ItemKind;
-import org.luckyraven.gangland.item.ItemSerializer;
+import org.luckyraven.keystone.item.ItemSerializer;
 import org.luckyraven.gangland.item.unique.UniqueItemKeys;
 
 /**

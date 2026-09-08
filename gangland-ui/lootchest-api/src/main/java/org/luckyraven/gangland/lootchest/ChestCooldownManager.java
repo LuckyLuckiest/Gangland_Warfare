@@ -11,7 +11,7 @@ import org.bukkit.util.Vector;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.hologram.Hologram;
 import org.luckyraven.gangland.hologram.HologramService;
-import org.luckyraven.gangland.item.ItemParser;
+import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.gangland.lootchest.config.LootChestMessagesProvider;
 import org.luckyraven.gangland.lootchest.data.LootChestData;
 import org.luckyraven.gangland.lootchest.data.LootTier;

@@ -7,7 +7,7 @@ import org.luckyraven.keystone.timer.CountdownTimer;
 import org.luckyraven.gangland.database.repositories.lootchest.LootChestRepository;
 import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.gangland.hologram.HologramService;
-import org.luckyraven.gangland.item.ItemParser;
+import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.gangland.lootchest.config.LootChestMessagesProvider;
 import org.luckyraven.gangland.lootchest.data.LootChestData;
 import org.luckyraven.keystone.persistence.repository.IRepository;
