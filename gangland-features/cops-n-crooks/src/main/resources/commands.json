@@ -70,57 +70,5 @@
 	"cop_spawner_teleport": {
 		"usage": "/glw cop spawner teleport <id>",
 		"description": "Teleports the player to the cop spawner with the specified id."
-	},
-	"trader": {
-		"usage": "/glw trader",
-		"description": "Shows trader admin help page."
-	},
-	"trader_help": {
-		"usage": "/glw trader help <page>",
-		"description": "Shows the specified page in trader menu."
-	},
-	"trader_create": {
-		"usage": "/glw trader create <shopKey> <traitId> [displayName]",
-		"description": "Spawns a stationary trader NPC at your location bound to <shopKey> with personality <traitId>."
-	},
-	"trader_edit_shop": {
-		"usage": "/glw trader edit shop <shopKey>",
-		"description": "Retargets the trader in your crosshair to a different shop."
-	},
-	"trader_edit_trait": {
-		"usage": "/glw trader edit trait <traitId>",
-		"description": "Changes the trait of the trader in your crosshair."
-	},
-	"trader_edit_name": {
-		"usage": "/glw trader edit name",
-		"description": "Opens an anvil GUI to rename the trader in your crosshair; supports spaces."
-	},
-	"trader_remove": {
-		"usage": "/glw trader remove",
-		"description": "Removes the trader NPC in your crosshair (within 5 blocks)."
-	},
-	"banker": {
-		"usage": "/glw banker",
-		"description": "Shows banker admin help page."
-	},
-	"banker_help": {
-		"usage": "/glw banker help <page>",
-		"description": "Shows the specified page in banker menu."
-	},
-	"banker_create": {
-		"usage": "/glw banker create [displayName]",
-		"description": "Spawns a stationary banker NPC at your location. Right-click it to open the bank GUI."
-	},
-	"banker_edit_name": {
-		"usage": "/glw banker edit name",
-		"description": "Opens an anvil GUI to rename the banker in your crosshair; supports spaces."
-	},
-	"banker_remove": {
-		"usage": "/glw banker remove",
-		"description": "Removes the banker NPC in your crosshair (within 5 blocks)."
-	},
-	"bank_menu": {
-		"usage": "/glw bank menu",
-		"description": "Opens the rich banker panel (Deposit / Withdraw / Upgrade / Rename / Rewards). Phone-banking entry point."
 	}
 }

@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.trader.config;
+package org.luckyraven.gangland.npcshops.trader.config;
 
 import org.luckyraven.gangland.shop.config.ShopUiSettings;
 

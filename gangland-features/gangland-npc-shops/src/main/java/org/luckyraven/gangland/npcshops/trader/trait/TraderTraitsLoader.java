@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.trader.trait;
+package org.luckyraven.gangland.npcshops.trader.trait;
 
 import lombok.CustomLog;
 import org.luckyraven.keystone.bean.BeanLifecycle;

@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.banker.view;
+package org.luckyraven.gangland.npcshops.banker.view;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
@@ -7,10 +7,10 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.copsncrooks.npc.banker.config.BankerSettings;
-import org.luckyraven.gangland.copsncrooks.npc.banker.economy.BankerEconomyContract;
-import org.luckyraven.gangland.copsncrooks.npc.banker.economy.BankerEconomyContract.ClaimInfo;
-import org.luckyraven.gangland.copsncrooks.npc.banker.message.BankerMessageContract;
+import org.luckyraven.gangland.npcshops.banker.config.BankerSettings;
+import org.luckyraven.gangland.npcshops.banker.economy.BankerEconomyContract;
+import org.luckyraven.gangland.npcshops.banker.economy.BankerEconomyContract.ClaimInfo;
+import org.luckyraven.gangland.npcshops.banker.message.BankerMessageContract;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.NumberUtil;

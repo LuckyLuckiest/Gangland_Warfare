@@ -1,11 +1,11 @@
-package org.luckyraven.gangland.copsncrooks.npc.trader.respawn;
+package org.luckyraven.gangland.npcshops.trader.respawn;
 
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.copsncrooks.npc.trader.TraderData;
-import org.luckyraven.gangland.copsncrooks.npc.trader.config.TraderSettings;
+import org.luckyraven.gangland.npcshops.trader.TraderData;
+import org.luckyraven.gangland.npcshops.trader.config.TraderSettings;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 
 import java.util.HashSet;

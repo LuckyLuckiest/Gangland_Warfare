@@ -1,10 +1,10 @@
-package org.luckyraven.gangland.copsncrooks.database;
+package org.luckyraven.gangland.npcshops.database;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.copsncrooks.npc.banker.BankerData;
+import org.luckyraven.gangland.npcshops.banker.BankerData;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
 import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
 import org.luckyraven.keystone.persistence.database.component.Table;

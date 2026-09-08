@@ -1,6 +1,6 @@
-package org.luckyraven.gangland.copsncrooks.integration.config;
+package org.luckyraven.gangland.npcshops.integration;
 
-import org.luckyraven.gangland.copsncrooks.npc.banker.config.BankerSettings;
+import org.luckyraven.gangland.npcshops.banker.config.BankerSettings;
 import org.luckyraven.gangland.file.configuration.Settings;
 
 import java.math.BigDecimal;

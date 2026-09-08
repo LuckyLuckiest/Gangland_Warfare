@@ -1,7 +1,7 @@
-package org.luckyraven.gangland.copsncrooks.npc.trader.view;
+package org.luckyraven.gangland.npcshops.trader.view;
 
-import org.luckyraven.gangland.copsncrooks.npc.trader.TraderNpc;
-import org.luckyraven.gangland.copsncrooks.npc.trader.trait.TraderTraitDefinition;
+import org.luckyraven.gangland.npcshops.trader.TraderNpc;
+import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitDefinition;
 import org.luckyraven.gangland.inventory.flow.FlowSession;
 import org.luckyraven.gangland.shop.ShopDefinition;
 import org.luckyraven.gangland.shop.ShopItemEntry;

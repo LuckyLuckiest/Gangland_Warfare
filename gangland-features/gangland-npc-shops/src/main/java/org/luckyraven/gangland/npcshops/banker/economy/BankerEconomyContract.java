@@ -1,8 +1,8 @@
-package org.luckyraven.gangland.copsncrooks.npc.banker.economy;
+package org.luckyraven.gangland.npcshops.banker.economy;
 
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTier;
+import org.luckyraven.gangland.npcshops.banker.tier.BankTier;
 
 import java.math.BigDecimal;
 import java.time.Instant;

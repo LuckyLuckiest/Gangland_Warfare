@@ -14,9 +14,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMark;
 import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMarkManager;
-import org.luckyraven.gangland.copsncrooks.npc.trader.TraderNpc;
 import org.luckyraven.keystone.bean.autowire.AutowireTarget;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.npc.NpcMetadata;
 import org.luckyraven.gangland.weapon.events.projectile.WeaponRaytraceImpactEvent;
 
 /**
@@ -57,8 +57,9 @@ public class NpcDamageUnprotectListener implements Listener {
 			return;
 		}
 
-		// Traders opt out of strip-protection: the Invulnerable trait needs the Citizens/Bukkit flags to stay set.
-		if (isTrader(npc)) {
+		// Traders/bankers opt out of strip-protection: the Invulnerable trait needs the Citizens/Bukkit flags to
+		// stay set.
+		if (isShopNpc(npc)) {
 			return;
 		}
 
@@ -96,7 +97,7 @@ public class NpcDamageUnprotectListener implements Listener {
 		}
 
 		NPC npc = CitizensAPI.getNPCRegistry().getNPC(entity);
-		if (isTrader(npc)) {
+		if (isShopNpc(npc)) {
 			return;
 		}
 		if (npc != null && npc.isProtected()) {
@@ -131,7 +132,7 @@ public class NpcDamageUnprotectListener implements Listener {
 		}
 
 		NPC npc = CitizensAPI.getNPCRegistry().getNPC(entity);
-		if (isTrader(npc)) {
+		if (isShopNpc(npc)) {
 			return;
 		}
 		if (npc != null) {
@@ -145,8 +146,13 @@ public class NpcDamageUnprotectListener implements Listener {
 		}
 	}
 
-	private boolean isTrader(NPC npc) {
-		return npc != null && npc.data().has(TraderNpc.METADATA_TRADER_ID);
+	/**
+	 * True for a trader or banker NPC — both opt out of strip-protection (T-J4: replaced the single trader-metadata
+	 * check, which required importing a now-cross-module npc-shops type, with the shared {@link NpcMetadata} keys;
+	 * also closes the pre-existing gap where a banker's own {@code Invulnerable} setting was never honored here).
+	 */
+	private boolean isShopNpc(NPC npc) {
+		return npc != null && (npc.data().has(NpcMetadata.TRADER_ID) || npc.data().has(NpcMetadata.BANKER_ID));
 	}
 
 	private void stripProtection(NPC npc) {

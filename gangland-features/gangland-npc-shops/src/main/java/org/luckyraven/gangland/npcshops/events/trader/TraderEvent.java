@@ -1,9 +1,9 @@
-package org.luckyraven.gangland.copsncrooks.events.trader;
+package org.luckyraven.gangland.npcshops.events.trader;
 
 import lombok.Getter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
-import org.luckyraven.gangland.copsncrooks.npc.trader.TraderNpc;
+import org.luckyraven.gangland.npcshops.trader.TraderNpc;
 
 @Getter
 public abstract class TraderEvent extends Event {

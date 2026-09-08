@@ -1,11 +1,11 @@
-package org.luckyraven.gangland.copsncrooks.npc.trader;
+package org.luckyraven.gangland.npcshops.trader;
 
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.copsncrooks.npc.trader.message.TraderMessageContract;
-import org.luckyraven.gangland.copsncrooks.npc.trader.trait.TraderTraitDefinition;
-import org.luckyraven.gangland.copsncrooks.npc.trader.view.TraderFlow;
+import org.luckyraven.gangland.npcshops.trader.message.TraderMessageContract;
+import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitDefinition;
+import org.luckyraven.gangland.npcshops.trader.view.TraderFlow;
 import org.luckyraven.gangland.shop.ShopDefinition;
 import org.luckyraven.gangland.shop.ShopRegistry;
 import org.luckyraven.gangland.shop.message.ShopMessageContract;

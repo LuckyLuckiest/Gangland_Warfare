@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.listener.trader;
+package org.luckyraven.gangland.npcshops.listener.trader;
 
 import lombok.RequiredArgsConstructor;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
@@ -6,9 +6,9 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.luckyraven.gangland.copsncrooks.npc.trader.ShopViewOpener;
-import org.luckyraven.gangland.copsncrooks.npc.trader.TraderManager;
-import org.luckyraven.gangland.copsncrooks.npc.trader.TraderNpc;
+import org.luckyraven.gangland.npcshops.trader.ShopViewOpener;
+import org.luckyraven.gangland.npcshops.trader.TraderManager;
+import org.luckyraven.gangland.npcshops.trader.TraderNpc;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 @ListenerHandler

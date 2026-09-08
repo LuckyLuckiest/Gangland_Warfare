@@ -1,6 +1,6 @@
-package org.luckyraven.gangland.copsncrooks.npc.trader.mood;
+package org.luckyraven.gangland.npcshops.trader.mood;
 
-import org.luckyraven.gangland.copsncrooks.npc.trader.trait.TraderTraitProfile;
+import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitProfile;
 
 import java.math.BigDecimal;
 import java.util.HashMap;

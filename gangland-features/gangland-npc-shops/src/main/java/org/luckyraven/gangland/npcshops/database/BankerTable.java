@@ -1,6 +1,6 @@
-package org.luckyraven.gangland.copsncrooks.database;
+package org.luckyraven.gangland.npcshops.database;
 
-import org.luckyraven.gangland.copsncrooks.npc.banker.BankerData;
+import org.luckyraven.gangland.npcshops.banker.BankerData;
 import org.luckyraven.keystone.persistence.database.component.Attribute;
 import org.luckyraven.keystone.persistence.database.component.Table;
 

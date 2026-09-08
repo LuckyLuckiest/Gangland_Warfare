@@ -1,11 +1,11 @@
-package org.luckyraven.gangland.copsncrooks.command.trader.edit;
+package org.luckyraven.gangland.npcshops.command.trader.edit;
 
 import org.bukkit.command.CommandSender;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
-import org.luckyraven.gangland.copsncrooks.npc.trader.TraderManager;
-import org.luckyraven.gangland.copsncrooks.npc.trader.trait.TraderTraitRegistry;
+import org.luckyraven.gangland.npcshops.trader.TraderManager;
+import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitRegistry;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;

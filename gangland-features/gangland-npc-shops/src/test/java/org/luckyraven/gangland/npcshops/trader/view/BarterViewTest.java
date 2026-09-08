@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.trader.view;
+package org.luckyraven.gangland.npcshops.trader.view;
 
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;

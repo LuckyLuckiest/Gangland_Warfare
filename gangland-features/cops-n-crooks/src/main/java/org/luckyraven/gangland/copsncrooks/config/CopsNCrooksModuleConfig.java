@@ -24,14 +24,10 @@ import org.luckyraven.gangland.copsncrooks.detainment.sentence.SentenceService;
 import org.luckyraven.gangland.copsncrooks.detainment.sound.DetainmentSoundContract;
 import org.luckyraven.gangland.copsncrooks.detainment.transit.TransitService;
 import org.luckyraven.gangland.copsncrooks.detainment.wanted.WantedClearContract;
-import org.luckyraven.gangland.copsncrooks.command.bank.BankMenuContribution;
 import org.luckyraven.gangland.copsncrooks.integration.config.GanglandCivilianSpawnConfigProvider;
 import org.luckyraven.gangland.copsncrooks.integration.config.GanglandDetainmentMessages;
 import org.luckyraven.gangland.copsncrooks.integration.detainment.*;
 import org.luckyraven.gangland.copsncrooks.jail.*;
-import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTier;
-import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTierRegistry;
-import org.luckyraven.gangland.copsncrooks.npc.banker.view.BankerFlow;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.CivilianNpcRegistry;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.CivilianService;
 import org.luckyraven.gangland.copsncrooks.npc.civilian.config.CivilianSettings;
@@ -51,7 +47,6 @@ import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 import org.luckyraven.gangland.copsncrooks.npc.police.targeting.WantedTargetingManager;
 import org.luckyraven.gangland.copsncrooks.seam.CopsMoneyDropSource;
 import org.luckyraven.gangland.copsncrooks.seam.KillComboWantedTracker;
-import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.gangland.data.economy.GanglandMoneyDropClassifier;
 import org.luckyraven.gangland.data.teleportation.WaypointManager;
 import org.luckyraven.gangland.file.configuration.Settings;
@@ -84,13 +79,15 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
  *     dependency or post-construction setter wiring needed.</li>
  * </ul>
  *
- * <p>{@link #installCoreSeams()} installs this module's delegates into the three always-present core holder beans
- * (seams 1-3: {@link GanglandMoneyDropClassifier}, {@link BankTiers}, {@link WantedKillTrackers}) once every bean
- * above exists. It runs inside {@code BeanFactory.instantiate()}, before {@code GanglandContext.runListenerPhase()} /
+ * <p>{@link #installCoreSeams()} installs this module's delegates into the always-present core holder beans (seam 1:
+ * {@link GanglandMoneyDropClassifier}; seam 3: {@link WantedKillTrackers}) once every bean above exists. It runs
+ * inside {@code BeanFactory.instantiate()}, before {@code GanglandContext.runListenerPhase()} /
  * {@code runCommandPhase()}, so every consumer — listeners, commands, the placeholder bean's lazy reads — sees the
- * installed delegate. The fourth seam, {@code TurfNpcContracts}, is gone (group I): turf owns its own NPC managers
- * now, so {@code GarrisonDeployListener} injects {@code TurfDefenderDeployer}/{@code TurfPowerupManager} directly
- * instead of going through a cross-module bridge. See documentation/module-loader.md, "Core seams".
+ * installed delegate. Seam 2, {@code BankTiers}, moved to {@code NpcShopsModuleConfig} in {@code gangland-npc-shops}
+ * (T-J3, group J) — banker/trader NPCs and the bank tier catalogue left with them. The fourth seam,
+ * {@code TurfNpcContracts}, is gone (group I): turf owns its own NPC managers now, so {@code GarrisonDeployListener}
+ * injects {@code TurfDefenderDeployer}/{@code TurfPowerupManager} directly instead of going through a cross-module
+ * bridge. See documentation/module-loader.md, "Core seams".
  */
 @CustomLog
 @Configuration
@@ -396,22 +393,6 @@ public class CopsNCrooksModuleConfig {
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
-	// Command contributions
-	// ---------------------------------------------------------------------------------------------------------------
-
-	/**
-	 * Attaches {@code /glw bank menu} under the core {@code bank} command. Without this bean,
-	 * {@code CommandContributions.from(container)} (which resolves via {@code getAllInstances(CommandContribution
-	 * .class)}) never sees {@link BankMenuContribution}, so {@code BankCommand.initializeArguments()}'s
-	 * {@code contributions.createFor("bank", …)} call returns nothing and the sub-argument is unreachable even
-	 * though it compiles (gap flagged by the T12 executor; added per the scrum master's instruction after T12).
-	 */
-	@Bean
-	public BankMenuContribution bankMenuContribution(Gangland gangland, BankerFlow bankerFlow) {
-		return new BankMenuContribution(gangland, bankerFlow);
-	}
-
-	// ---------------------------------------------------------------------------------------------------------------
 	// Core seam installation
 	// ---------------------------------------------------------------------------------------------------------------
 
@@ -423,11 +404,8 @@ public class CopsNCrooksModuleConfig {
 		       .install(new CopsMoneyDropSource(context.get(CopManager.class),
 		                                        context.get(CivilianNpcRegistry.class)));
 
-		BankTierRegistry tiers = context.get(BankTierRegistry.class);
-		context.get(BankTiers.class).install(bank -> {
-			BankTier tier = tiers.get(bank.getTierId());
-			return tier != null ? tier : tiers.first();
-		});
+		// Seam 2, BankTiers, moved to NpcShopsModuleConfig#installBankTiers() (T-J3, group J) — this module no
+		// longer owns banker/trader NPCs or the bank tier catalogue.
 
 		context.get(WantedKillTrackers.class)
 		       .install(new KillComboWantedTracker(context.get(KillCombo.class),

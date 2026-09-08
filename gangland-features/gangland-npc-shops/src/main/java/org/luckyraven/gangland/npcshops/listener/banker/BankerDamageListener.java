@@ -1,13 +1,13 @@
-package org.luckyraven.gangland.copsncrooks.listener.banker;
+package org.luckyraven.gangland.npcshops.listener.banker;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.luckyraven.gangland.copsncrooks.npc.banker.BankerManager;
-import org.luckyraven.gangland.copsncrooks.npc.banker.BankerNpc;
-import org.luckyraven.gangland.copsncrooks.npc.banker.config.BankerSettings;
+import org.luckyraven.gangland.npcshops.banker.BankerManager;
+import org.luckyraven.gangland.npcshops.banker.BankerNpc;
+import org.luckyraven.gangland.npcshops.banker.config.BankerSettings;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 /**

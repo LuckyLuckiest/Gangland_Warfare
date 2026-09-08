@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.listener.trader;
+package org.luckyraven.gangland.npcshops.listener.trader;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
@@ -7,7 +7,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
-import org.luckyraven.gangland.copsncrooks.npc.trader.view.BarterView;
+import org.luckyraven.gangland.npcshops.trader.view.BarterView;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
 

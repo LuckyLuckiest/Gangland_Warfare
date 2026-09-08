@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.trader;
+package org.luckyraven.gangland.npcshops.trader;
 
 import lombok.CustomLog;
 import net.citizensnpcs.api.CitizensAPI;
@@ -12,12 +12,13 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.copsncrooks.npc.trader.config.TraderSettings;
-import org.luckyraven.gangland.copsncrooks.npc.trader.mood.MoodService;
-import org.luckyraven.gangland.copsncrooks.npc.trader.respawn.TraderRespawnService;
-import org.luckyraven.gangland.copsncrooks.npc.trader.trait.TraderTraitDefinition;
-import org.luckyraven.gangland.copsncrooks.npc.trader.trait.TraderTraitRegistry;
+import org.luckyraven.gangland.npcshops.trader.config.TraderSettings;
+import org.luckyraven.gangland.npcshops.trader.mood.MoodService;
+import org.luckyraven.gangland.npcshops.trader.respawn.TraderRespawnService;
+import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitDefinition;
+import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitRegistry;
 import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.util.*;
@@ -88,6 +89,8 @@ public final class TraderManager implements BeanLifecycle {
 	}
 
 	public TraderNpc spawn(TraderData data) {
+		if (!NpcSupport.available()) return null;
+
 		TraderTraitDefinition trait = resolveTrait(data);
 		if (trait == null) {
 			log.warn("Cannot spawn trader {} — no trait registered (id={}, fallback={})",

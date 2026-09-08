@@ -294,6 +294,11 @@
             </dependency>
             <dependency>
                 <groupId>org.luckyraven</groupId>
+                <artifactId>gangland-npc-shops</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>gangland-impl</artifactId>
                 <version>${project.version}</version>
             </dependency>

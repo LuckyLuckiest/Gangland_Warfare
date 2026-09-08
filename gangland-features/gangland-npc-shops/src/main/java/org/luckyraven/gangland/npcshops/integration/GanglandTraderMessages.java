@@ -1,6 +1,6 @@
-package org.luckyraven.gangland.copsncrooks.integration.config;
+package org.luckyraven.gangland.npcshops.integration;
 
-import org.luckyraven.gangland.copsncrooks.npc.trader.message.TraderMessageContract;
+import org.luckyraven.gangland.npcshops.trader.message.TraderMessageContract;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 

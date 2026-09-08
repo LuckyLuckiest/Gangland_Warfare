@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.trader.economy;
+package org.luckyraven.gangland.npcshops.trader.economy;
 
 import org.bukkit.entity.Player;
 

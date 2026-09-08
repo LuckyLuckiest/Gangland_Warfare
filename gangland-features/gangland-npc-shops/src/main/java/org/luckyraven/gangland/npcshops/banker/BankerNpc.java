@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.banker;
+package org.luckyraven.gangland.npcshops.banker;
 
 import lombok.Getter;
 import net.citizensnpcs.api.CitizensAPI;
@@ -9,7 +9,7 @@ import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
-import org.luckyraven.gangland.copsncrooks.npc.banker.config.BankerSettings;
+import org.luckyraven.gangland.npcshops.banker.config.BankerSettings;
 
 public final class BankerNpc {
 

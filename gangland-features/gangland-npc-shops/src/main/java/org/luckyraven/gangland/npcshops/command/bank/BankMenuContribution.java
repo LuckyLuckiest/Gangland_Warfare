@@ -1,8 +1,8 @@
-package org.luckyraven.gangland.copsncrooks.command.bank;
+package org.luckyraven.gangland.npcshops.command.bank;
 
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.command.extension.CommandContribution;
-import org.luckyraven.gangland.copsncrooks.npc.banker.view.BankerFlow;
+import org.luckyraven.gangland.npcshops.banker.view.BankerFlow;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.datastructure.Tree;
 

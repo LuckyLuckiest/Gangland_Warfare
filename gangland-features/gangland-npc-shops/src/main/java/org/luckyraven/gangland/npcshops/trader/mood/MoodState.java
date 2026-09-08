@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.trader.mood;
+package org.luckyraven.gangland.npcshops.trader.mood;
 
 import lombok.Getter;
 import lombok.Setter;

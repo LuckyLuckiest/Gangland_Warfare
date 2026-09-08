@@ -1,10 +1,10 @@
-package org.luckyraven.gangland.copsncrooks.command.banker;
+package org.luckyraven.gangland.npcshops.command.banker;
 
 import org.bukkit.command.CommandSender;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
-import org.luckyraven.gangland.copsncrooks.npc.banker.BankerManager;
+import org.luckyraven.gangland.npcshops.banker.BankerManager;
 import org.luckyraven.keystone.bean.command.CommandHandler;
 
 import java.util.Map;

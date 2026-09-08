@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.luckyraven</groupId>
+        <artifactId>gangland-features</artifactId>
+        <version>${revision}</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>gangland-npc-shops</artifactId>
+
+    <name>Gangland NPC Shops</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-bean</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-item</artifactId>
+        </dependency>
+        <!-- Keystone shared infrastructure (provided by Keystone.jar at runtime; never shaded).
+             Declared directly: provided scope is not transitive, so it cannot arrive via gangland-core. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-common</artifactId>
+        </dependency>
+        <!-- Not for AbstractNpc inheritance (TraderNpc/BankerNpc hold a raw Citizens NPC directly, not an
+             AbstractNpc subclass) — needed only for NpcSupport (the runtime Citizens-availability gate) and
+             NpcMetadata (the TRADER_ID/BANKER_ID PDC keys), both of which live in this artifact. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-npc</artifactId>
+        </dependency>
+        <!-- Spigot Build (full server — needed for io.netty access) -->
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Local dependencies -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-item</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-persistence</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>inventory-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>shop-api</artifactId>
+        </dependency>
+        <!-- The module touches User/UserManager (gangland-domain hooks) directly — provided scope is not
+             transitive, so this must be declared here even though gangland-impl also carries it
+             (2026-09-07 gadget finding, repeated at T-J1's own "Watch out"). -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-hooks</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-module</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-command</artifactId>
+        </dependency>
+
+        <!-- Citizens dependency: TraderNpc/BankerNpc hold a raw Citizens NPC directly (not AbstractNpc
+             subclasses), so this module needs NpcSupport for the runtime gate but not keystone-npc. -->
+        <dependency>
+            <groupId>net.citizensnpcs</groupId>
+            <artifactId>citizens-main</artifactId>
+        </dependency>
+
+        <!-- XSeries dependency -->
+        <dependency>
+            <groupId>com.github.cryptomorin</groupId>
+            <artifactId>XSeries</artifactId>
+        </dependency>
+
+        <!-- The host (core) jar. Provided: at runtime this module is loaded from plugins/Gangland_Warfare/modules/
+             by Keystone's ModuleLoader, whose parent is the host plugin's classloader, so every impl class
+             resolves from there. Dependency direction is module -> core; core never names an npcshops type. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-impl</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+</project>

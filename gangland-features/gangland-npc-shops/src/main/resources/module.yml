@@ -1,0 +1,7 @@
+# Keystone module descriptor - read by Gangland's ModuleLoader from plugins/Gangland_Warfare/modules/.
+Id: npcshops
+Name: Gangland NPC Shops
+Version: ${project.version}
+Main: org.luckyraven.gangland.npcshops.NpcShopsModule
+Host_Api: 0.9
+Artifact: org.luckyraven:gangland-npc-shops

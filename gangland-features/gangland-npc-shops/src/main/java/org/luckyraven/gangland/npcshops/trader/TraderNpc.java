@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.trader;
+package org.luckyraven.gangland.npcshops.trader;
 
 import lombok.Getter;
 import net.citizensnpcs.api.CitizensAPI;
@@ -9,7 +9,7 @@ import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
-import org.luckyraven.gangland.copsncrooks.npc.trader.trait.TraderTraitProfile;
+import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitProfile;
 
 public final class TraderNpc {
 

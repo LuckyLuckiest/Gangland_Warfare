@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.banker.tier;
+package org.luckyraven.gangland.npcshops.banker.tier;
 
 import lombok.CustomLog;
 import org.luckyraven.keystone.bean.BeanLifecycle;

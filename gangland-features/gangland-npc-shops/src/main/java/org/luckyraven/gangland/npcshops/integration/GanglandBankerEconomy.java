@@ -1,13 +1,13 @@
-package org.luckyraven.gangland.copsncrooks.integration.config;
+package org.luckyraven.gangland.npcshops.integration;
 
 import lombok.CustomLog;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.command.sub.bank.BankCommand;
-import org.luckyraven.gangland.copsncrooks.npc.banker.config.BankerSettings;
-import org.luckyraven.gangland.copsncrooks.npc.banker.economy.BankerEconomyContract;
-import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTier;
-import org.luckyraven.gangland.copsncrooks.npc.banker.tier.BankTierRegistry;
+import org.luckyraven.gangland.npcshops.banker.config.BankerSettings;
+import org.luckyraven.gangland.npcshops.banker.economy.BankerEconomyContract;
+import org.luckyraven.gangland.npcshops.banker.tier.BankTier;
+import org.luckyraven.gangland.npcshops.banker.tier.BankTierRegistry;
 import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.keystone.economy.EconomyHandler;
 import org.luckyraven.keystone.economy.bank.Bank;

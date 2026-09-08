@@ -1,11 +1,11 @@
-package org.luckyraven.gangland.copsncrooks.command.bank;
+package org.luckyraven.gangland.npcshops.command.bank;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
-import org.luckyraven.gangland.copsncrooks.npc.banker.view.BankerFlow;
+import org.luckyraven.gangland.npcshops.banker.view.BankerFlow;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 

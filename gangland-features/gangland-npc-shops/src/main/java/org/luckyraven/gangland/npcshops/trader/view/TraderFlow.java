@@ -1,10 +1,10 @@
-package org.luckyraven.gangland.copsncrooks.npc.trader.view;
+package org.luckyraven.gangland.npcshops.trader.view;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.copsncrooks.npc.trader.TraderNpc;
-import org.luckyraven.gangland.copsncrooks.npc.trader.trait.TraderTraitDefinition;
+import org.luckyraven.gangland.npcshops.trader.TraderNpc;
+import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitDefinition;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
 import org.luckyraven.gangland.shop.ShopDefinition;
 

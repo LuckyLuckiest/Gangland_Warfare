@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.listener.banker;
+package org.luckyraven.gangland.npcshops.listener.banker;
 
 import lombok.RequiredArgsConstructor;
 import net.citizensnpcs.api.event.NPCRightClickEvent;
@@ -6,9 +6,9 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.luckyraven.gangland.copsncrooks.npc.banker.BankerManager;
-import org.luckyraven.gangland.copsncrooks.npc.banker.BankerNpc;
-import org.luckyraven.gangland.copsncrooks.npc.banker.view.BankerFlow;
+import org.luckyraven.gangland.npcshops.banker.BankerManager;
+import org.luckyraven.gangland.npcshops.banker.BankerNpc;
+import org.luckyraven.gangland.npcshops.banker.view.BankerFlow;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 @ListenerHandler

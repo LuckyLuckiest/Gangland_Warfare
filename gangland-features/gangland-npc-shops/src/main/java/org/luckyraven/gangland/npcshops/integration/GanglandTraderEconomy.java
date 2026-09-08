@@ -1,8 +1,8 @@
-package org.luckyraven.gangland.copsncrooks.integration.config;
+package org.luckyraven.gangland.npcshops.integration;
 
 import lombok.CustomLog;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.copsncrooks.npc.trader.economy.TraderEconomyContract;
+import org.luckyraven.gangland.npcshops.trader.economy.TraderEconomyContract;
 import org.luckyraven.keystone.economy.EconomyHandler;
 import org.luckyraven.keystone.economy.exception.EconomyException;
 import org.luckyraven.gangland.gang.user.User;

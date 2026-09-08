@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.banker.message;
+package org.luckyraven.gangland.npcshops.banker.message;
 
 import java.math.BigDecimal;
 

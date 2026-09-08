@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.banker.tier;
+package org.luckyraven.gangland.npcshops.banker.tier;
 
 import org.luckyraven.gangland.data.economy.BankTierView;
 

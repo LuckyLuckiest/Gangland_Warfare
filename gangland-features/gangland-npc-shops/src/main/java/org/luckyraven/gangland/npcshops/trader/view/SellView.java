@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.trader.view;
+package org.luckyraven.gangland.npcshops.trader.view;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.Getter;
@@ -9,10 +9,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.copsncrooks.events.trader.TraderSellRequestEvent;
-import org.luckyraven.gangland.copsncrooks.listener.trader.TraderSellSessionListener;
-import org.luckyraven.gangland.copsncrooks.npc.trader.config.TraderSettings;
-import org.luckyraven.gangland.copsncrooks.npc.trader.mood.MoodService;
+import org.luckyraven.gangland.npcshops.events.trader.TraderSellRequestEvent;
+import org.luckyraven.gangland.npcshops.listener.trader.TraderSellSessionListener;
+import org.luckyraven.gangland.npcshops.trader.config.TraderSettings;
+import org.luckyraven.gangland.npcshops.trader.mood.MoodService;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.sound.SoundEffect;

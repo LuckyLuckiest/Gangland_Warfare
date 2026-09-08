@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.copsncrooks.npc.banker;
+package org.luckyraven.gangland.npcshops.banker;
 
 import lombok.CustomLog;
 import net.citizensnpcs.api.CitizensAPI;
@@ -12,8 +12,9 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.copsncrooks.npc.banker.config.BankerSettings;
+import org.luckyraven.gangland.npcshops.banker.config.BankerSettings;
 import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.util.*;
@@ -73,6 +74,8 @@ public final class BankerManager implements BeanLifecycle {
 	}
 
 	public BankerNpc spawn(BankerData data) {
+		if (!NpcSupport.available()) return null;
+
 		BankerNpc existing = byId.get(data.getId());
 		if (existing != null && existing.isAlive()) return existing;
 

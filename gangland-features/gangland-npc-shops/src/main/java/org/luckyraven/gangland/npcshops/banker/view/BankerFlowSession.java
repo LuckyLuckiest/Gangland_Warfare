@@ -1,7 +1,7 @@
-package org.luckyraven.gangland.copsncrooks.npc.banker.view;
+package org.luckyraven.gangland.npcshops.banker.view;
 
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.copsncrooks.npc.banker.BankerNpc;
+import org.luckyraven.gangland.npcshops.banker.BankerNpc;
 import org.luckyraven.gangland.inventory.flow.FlowSession;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
 
