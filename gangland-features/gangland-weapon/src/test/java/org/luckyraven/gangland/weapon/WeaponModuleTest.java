@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.weapon.command.WeaponCommand;
 import org.luckyraven.gangland.weapon.database.WeaponRepository;
 import org.luckyraven.gangland.weapon.listener.player.WeaponQuitCleanupListener;
+import org.luckyraven.gangland.weapon.listener.wearable.WearableEquipListener;
 import org.luckyraven.keystone.module.ModuleRegistrations;
 
 import java.util.List;
@@ -40,5 +41,16 @@ class WeaponModuleTest {
 		assertEquals(WeaponModule.REPOSITORY_PACKAGE, WeaponRepository.class.getPackageName());
 		assertTrue(WeaponQuitCleanupListener.class.getPackageName().startsWith(WeaponModule.LISTENER_PACKAGE),
 				"WeaponQuitCleanupListener lives under a sub-package of " + WeaponModule.LISTENER_PACKAGE);
+	}
+
+	@Test
+	@DisplayName("WearableEquipListener lives under the weapon module's listener package (T-14)")
+	void wearableEquipListener_livesUnderModuleListenerPackage() {
+		// Wearables have been the weapon module's since 0.8.4; WearableEquipListener used to live in the
+		// core-compiled gangland-item module and needed WearableEquipService, a bean only this module provides,
+		// which broke a weapon-less server's boot. It was relocated here (T-14, 2026-09-08) - see
+		// ItemListenerModuleBoundaryTest in gangland-item for the matching core-side boundary guard.
+		assertTrue(WearableEquipListener.class.getPackageName().startsWith(WeaponModule.LISTENER_PACKAGE),
+				"WearableEquipListener lives under a sub-package of " + WeaponModule.LISTENER_PACKAGE);
 	}
 }

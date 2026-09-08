@@ -31,12 +31,15 @@
                     <!-- HikariCP, XSeries and exp4j are no longer shaded (Keystone migration): Keystone.jar ships
                          them unrelocated on its classpath, so Gangland's classes resolve them from there at
                          runtime. Only Gangland-exclusive libraries remain in this jar. -->
+                    <!-- AnvilGUI is NOT relocated (T-12, 2026-09-08): runtime modules ship as plain jars loaded by
+                         Keystone's parent-first ModuleClassLoader and are compiled against net.wesjd.anvilgui's
+                         original package name. Relocating it here only in the core jar broke every module that
+                         uses AnvilGUI views (cops-n-crooks banker/trader) with a boot-time
+                         NoClassDefFoundError: net/wesjd/anvilgui/AnvilGUI$StateSnapshot, because a module jar can
+                         resolve AnvilGUI only by its original name from the core jar's classpath. It still ships
+                         inside the core jar (see the artifactSet include and the shade filter below) - just
+                         unrelocated. -->
                     <relocations>
-                        <relocation>
-                            <pattern>net.wesjd.anvilgui</pattern>
-                            <shadedPattern>org.luckyraven.gangland.dependency.anvilgui</shadedPattern>
-                        </relocation>
-
                         <relocation>
                             <pattern>fr.mrmicky.fastboard</pattern>
                             <shadedPattern>org.luckyraven.gangland.dependency.fastboard</shadedPattern>

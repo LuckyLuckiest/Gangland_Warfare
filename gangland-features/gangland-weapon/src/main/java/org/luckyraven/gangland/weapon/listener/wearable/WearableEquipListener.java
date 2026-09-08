@@ -1,4 +1,4 @@
-package org.luckyraven.gangland.item.listener.wearable;
+package org.luckyraven.gangland.weapon.listener.wearable;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

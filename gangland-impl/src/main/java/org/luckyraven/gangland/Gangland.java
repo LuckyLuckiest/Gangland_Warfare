@@ -187,7 +187,11 @@ public final class Gangland extends JavaPlugin {
 			this.papiExpansion.register();
 		});
 
-		Dependency vault = new Dependency("Vault", Dependency.Type.SOFT);
+		// Two separate soft dependencies both named "Vault" (economy hook, permission hook) used to share the
+		// generic "Found Vault, linking..." / "Linked Vault" log text, so the pair printed twice per boot with no
+		// way to tell which hook either line belonged to (T-17). The label parameter keeps the plugin lookup on
+		// "Vault" for both but makes the two log lines distinct.
+		Dependency vault = new Dependency("Vault", "Vault economy", Dependency.Type.SOFT);
 		vault.validate(() -> {
 			RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
 
@@ -197,7 +201,7 @@ public final class Gangland extends JavaPlugin {
 			EconomyHandler.setVaultEconomy(rsp.getProvider());
 		});
 
-		Dependency vaultPermissions = new Dependency("Vault", Dependency.Type.SOFT);
+		Dependency vaultPermissions = new Dependency("Vault", "Vault permissions", Dependency.Type.SOFT);
 		vaultPermissions.validate(() -> {
 			// Keystone's offline-capable service owns the Vault plumbing (async dispatch for offline targets,
 			// protected default group); the domain bridge stays a thin facade over it.
@@ -243,24 +247,38 @@ public final class Gangland extends JavaPlugin {
 
 		private final Type   type;
 		private final String name;
+		private final String label;
 
 		public Dependency(String name, Type type) {
+			this(name, name, type);
+		}
+
+		/**
+		 * @param name  the Bukkit plugin name looked up via {@code getPluginManager().getPlugin(name)} - must match
+		 *              the dependency's actual plugin name.
+		 * @param label the text used in the "Found {}, linking..." / "Linked {}" log lines - defaults to
+		 *              {@code name}, but can be given a more specific value when two {@code Dependency} instances
+		 *              share the same plugin name (e.g. Vault's economy and permission hooks, T-17) so their log
+		 *              lines stay distinguishable.
+		 */
+		public Dependency(String name, String label, Type type) {
 			this.name = name;
+			this.label = label;
 			this.type = type;
 		}
 
 		public void validate(@Nullable Runnable runnable) {
 			if (Bukkit.getPluginManager().getPlugin(name) != null) {
-				if (type == Type.SOFT) log.info("Found {}, linking...", name);
+				if (type == Type.SOFT) log.info("Found {}, linking...", label);
 				if (runnable != null) runnable.run();
 
-				log.info("Linked {}", name);
+				log.info("Linked {}", label);
 				return;
 			}
 
 			if (type != Type.REQUIRED) return;
 
-			log.error("{} is a required dependency!", name);
+			log.error("{} is a required dependency!", label);
 			getPluginLoader().disablePlugin(Gangland.this);
 		}
 
