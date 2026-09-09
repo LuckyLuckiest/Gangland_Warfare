@@ -51,7 +51,7 @@ scope (enforced by gate G4's boundary greps in the Bartizan-wave checklist).
 
 ## What degrades, specifically
 
-- **Item vocabularies.** No Bartizan → `ItemConfig.itemVocabularies(...)` folds an empty list, logs
+- **Item vocabularies.** No Bartizan → `GanglandContext.installItemVocabularies(...)` folds an empty list, logs
   `"Item vocabularies installed: none — weapon:/ammo:/wearable: item strings will not resolve"`, and every
   `weapon:`/`ammo:`/`wearable:` reference in `loot_chests.yml` or on a rewritten legacy sign **silently** resolves
   to nothing. This is the single biggest risk the Bartizan-wave checklist flagged (R-1): the log line is the only

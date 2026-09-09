@@ -227,7 +227,6 @@ Cops:
       Per_Level: 1                  # Additional cops per additional wanted star (also 'perLevel' in the formula)
       Max: 8                        # Hard cap — result is always clamped to this value
 
-   Starting_Ammo_Magazines: 3      # Full magazine reloads worth of ammo given to each cop NPC on spawn
 ```
 
 ---

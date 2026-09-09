@@ -17,7 +17,7 @@
 Gangland Warfare is a multi-module Spigot/Paper plugin that lets players form gangs, accumulate wealth, build a wanted
 level, and evade — or become — the police. It features AI-driven cop NPCs, a hierarchical rank engine, loot chests,
 and a persistent economy backed by either MySQL or SQLite. Since 0.9.0 the weapon/ammo/wearable system lives in the
-standalone companion plugin **Bartizan** (optional — cops and civilians fall back to unarmed AI without it; see
+standalone companion plugin **Bartizan** (optional — cops and civilians are skipped entirely by the module loader (`module.plugin.missing`), and turf is skipped with them because it depends on civilians without it; see
 [`documentation/bartizan-integration.md`](./documentation/bartizan-integration.md)).
 
 ---
@@ -74,7 +74,7 @@ interactive mode for advanced UI use cases.
 | Keystone                                                                  | **Required** | DI/bean container, persistence, command framework. Plugin will not load without it. |
 | [NBTAPI](https://www.spigotmc.org/resources/nbt-api.7939/)                | **Required** | Custom item data (unique items, loot chests, and more).             |
 | [Citizens](https://www.spigotmc.org/resources/citizens.13811/)            | Optional     | Powers cop and civilian NPCs. Without it, NPC spawning is skipped with a logged fault — the server still boots. |
-| Bartizan                                                                  | Optional     | The companion weapons plugin (weapons, ammo, wearables, projectiles). Without it, NPCs go unarmed and weapon-related item vocabularies do not resolve. |
+| Bartizan                                                                  | Optional     | The companion weapons plugin (weapons, ammo, wearables, projectiles). Without it, the civilians, cops-n-crooks and gadget modules are skipped entirely and turf with them and weapon-related item vocabularies do not resolve. |
 | [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/) | Optional     | Placeholders in messages and scoreboards.                            |
 | [Vault](https://www.spigotmc.org/resources/vault.34315/)                  | Optional     | Economy hook for cross-plugin compatibility.                          |
 | [ViaVersion](https://www.spigotmc.org/resources/viaversion.19254/)        | Optional     | Multi-version client support.                                        |

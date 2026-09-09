@@ -238,7 +238,6 @@ Cops:
    Return:
       Max_Ticks: 600
       Station_Arrival_Distance: 3.0
-   Starting_Ammo_Magazines: 3
 ```
 
 ### Detainment
