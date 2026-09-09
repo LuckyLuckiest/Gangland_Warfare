@@ -1,7 +1,6 @@
 package org.luckyraven.gangland.civilians.listener.civilian;
 
 import lombok.RequiredArgsConstructor;
-import net.citizensnpcs.api.CitizensAPI;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -16,6 +15,7 @@ import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.config.CivilianAIBehaviorConfig;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
 
 import java.util.UUID;
@@ -46,10 +46,10 @@ public class CivilianDamageListener implements Listener {
 
 		// Player attacker (direct hit or via projectile)
 		Player playerAttacker = null;
-		if (damager instanceof Player p && !CitizensAPI.getNPCRegistry().isNPC(p)) {
+		if (damager instanceof Player p && !NpcSupport.isNpc(p)) {
 			playerAttacker = p;
 		} else if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player p
-		           && !CitizensAPI.getNPCRegistry().isNPC(p)) {
+		           && !NpcSupport.isNpc(p)) {
 			playerAttacker = p;
 		}
 

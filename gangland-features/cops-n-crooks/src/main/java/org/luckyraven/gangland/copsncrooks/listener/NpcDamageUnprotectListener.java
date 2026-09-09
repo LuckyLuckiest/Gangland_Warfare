@@ -64,7 +64,7 @@ public class NpcDamageUnprotectListener implements Listener {
 		}
 
 		NPC npc = CitizensAPI.getNPCRegistry().getNPC(entity);
-		if (isShopNpc(npc)) {
+		if (CitizensBridge.isShopNpc(npc)) {
 			return;
 		}
 		if (npc != null && npc.isProtected()) {
@@ -102,7 +102,7 @@ public class NpcDamageUnprotectListener implements Listener {
 		}
 
 		NPC npc = CitizensAPI.getNPCRegistry().getNPC(entity);
-		if (isShopNpc(npc)) {
+		if (CitizensBridge.isShopNpc(npc)) {
 			return;
 		}
 		if (npc != null) {
@@ -117,11 +117,22 @@ public class NpcDamageUnprotectListener implements Listener {
 	}
 
 	/**
-	 * True for a trader or banker NPC — both opt out of strip-protection (T-J4: replaced the single trader-metadata
-	 * check, which required importing a now-cross-module npc-shops type, with the shared {@link NpcMetadata} keys;
-	 * also closes the pre-existing gap where a banker's own {@code Invulnerable} setting was never honored here).
+	 * Citizens-typed helpers live on a nested class, not this listener directly (D2/D-fix-1): this class has no
+	 * {@code condition = "isCitizensAvailable"} gate (its two handlers take plain Bukkit/Bartizan event types and
+	 * must stay registered unconditionally), so a Citizens type in one of ITS OWN declared method signatures would
+	 * still crash the reflective listener scan on a Citizens-less server. A nested class is a separate
+	 * {@code Class} object — {@code NpcDamageUnprotectListener.class.getMethods()} never resolves it.
 	 */
-	private boolean isShopNpc(NPC npc) {
-		return npc != null && (npc.data().has(NpcMetadata.TRADER_ID) || npc.data().has(NpcMetadata.BANKER_ID));
+	private static final class CitizensBridge {
+
+		/**
+		 * True for a trader or banker NPC — both opt out of strip-protection (T-J4: replaced the single
+		 * trader-metadata check, which required importing a now-cross-module npc-shops type, with the shared
+		 * {@link NpcMetadata} keys; also closes the pre-existing gap where a banker's own {@code Invulnerable}
+		 * setting was never honored here).
+		 */
+		private static boolean isShopNpc(NPC npc) {
+			return npc != null && (npc.data().has(NpcMetadata.TRADER_ID) || npc.data().has(NpcMetadata.BANKER_ID));
+		}
 	}
 }

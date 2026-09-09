@@ -11,7 +11,12 @@ import org.luckyraven.gangland.npcshops.trader.TraderManager;
 import org.luckyraven.gangland.npcshops.trader.TraderNpc;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
-@ListenerHandler
+/**
+ * {@code condition = "isCitizensAvailable"} (D2/D-fix-1): this class's own {@code @EventHandler} parameter type is
+ * Citizens' {@link NPCRightClickEvent}, so scanning/registering it on a Citizens-less server throws
+ * {@code NoClassDefFoundError} out of the listener phase.
+ */
+@ListenerHandler(condition = "isCitizensAvailable")
 @RequiredArgsConstructor
 public class TraderInteractListener implements Listener {
 

@@ -115,6 +115,14 @@
             <artifactId>gangland-impl</artifactId>
             <scope>provided</scope>
         </dependency>
+
+        <!-- Shared test fixtures (testsupport.CitizensBlindScan / ConfigurationConstructorScan) -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-core</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>

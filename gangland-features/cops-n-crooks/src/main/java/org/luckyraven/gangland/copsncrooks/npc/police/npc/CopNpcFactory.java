@@ -94,7 +94,7 @@ public class CopNpcFactory {
 		}
 
 		if (validateAfterSpawn) {
-			scheduleDelayedSpawnValidation(npc);
+			CitizensBridge.scheduleDelayedSpawnValidation(plugin, npc, this::isSafeSpawnPosition);
 		}
 
 		if (npc.getEntity() != null) {
@@ -137,25 +137,6 @@ public class CopNpcFactory {
 		EntityEquipment equipment = entity.getEquipment();
 		if (equipment == null) return;
 		equipment.setItemInMainHand(item);
-	}
-
-	/**
-	 * Schedules a 1-tick delayed validation of the NPC's actual spawned position. This acts as a fail-safe for cases
-	 * where the entity is nudged into an unsafe location immediately after spawning.
-	 *
-	 * @param npc the spawned npc
-	 */
-	private void scheduleDelayedSpawnValidation(NPC npc) {
-		plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-			if (npc == null || !npc.isSpawned()) return;
-
-			Entity entity = npc.getEntity();
-			// Citizens PLAYER NPCs may have a null entity for a tick while initializing; skip rather than destroy.
-			if (entity == null) return;
-			if (isSafeSpawnPosition(entity)) return;
-
-			npc.destroy();
-		}, 1L);
 	}
 
 	/**
@@ -223,5 +204,38 @@ public class CopNpcFactory {
 		if (pool.isEmpty()) return null;
 
 		return pool.get(ThreadLocalRandom.current().nextInt(pool.size()));
+	}
+
+	/**
+	 * Citizens-typed helpers live on a nested class, not this factory directly (D2/D-fix-1, defense-in-depth):
+	 * {@code CopNpcFactory} is not itself Keystone-scanned today (it is plain-constructed by
+	 * {@code CopSpawnManager#rebuildFactories}, never returned from a {@code @Bean} method), but keeping every
+	 * Citizens type off this class's own declared-method signatures matches the pattern used for the confirmed-bean
+	 * {@code CivilianNpcFactory}/{@code NpcDamageUnprotectListener} and removes any risk if this factory is ever
+	 * exposed as a bean later.
+	 */
+	private static final class CitizensBridge {
+
+		/**
+		 * Schedules a 1-tick delayed validation of the NPC's actual spawned position. This acts as a fail-safe for
+		 * cases where the entity is nudged into an unsafe location immediately after spawning.
+		 *
+		 * @param plugin the owning plugin, used to schedule the delayed task
+		 * @param npc the spawned npc
+		 * @param isSafeSpawnPosition callback validating the entity's actual spawned position
+		 */
+		private static void scheduleDelayedSpawnValidation(JavaPlugin plugin, NPC npc,
+		                                                    java.util.function.Predicate<Entity> isSafeSpawnPosition) {
+			plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+				if (npc == null || !npc.isSpawned()) return;
+
+				Entity entity = npc.getEntity();
+				// Citizens PLAYER NPCs may have a null entity for a tick while initializing; skip rather than destroy.
+				if (entity == null) return;
+				if (isSafeSpawnPosition.test(entity)) return;
+
+				npc.destroy();
+			}, 1L);
+		}
 	}
 }

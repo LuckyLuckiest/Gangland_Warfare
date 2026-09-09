@@ -33,7 +33,6 @@ import org.luckyraven.keystone.item.ItemSerializerRegistry;
 import org.luckyraven.gangland.item.fuel.FuelService;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
-import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.keystone.persistence.repository.IRepository;
@@ -57,24 +56,10 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 @Configuration
 public class GadgetModuleConfig {
 
-	private final Gangland    gangland;
-	private final FuelService fuelService;
+	private final Gangland gangland;
 
-	public GadgetModuleConfig(Gangland gangland, FuelService fuelService) {
-		this.gangland    = gangland;
-		this.fuelService = fuelService;
-	}
-
-	/**
-	 * T-KR2 (review B2): installs the jetpack-refuel sink predicate onto the shared {@link FuelService} so
-	 * {@code FuelRefuelListener}'s container-to-sink click transfers fuel from a container (e.g. gasoline) into a
-	 * worn jetpack again. {@link BartizanApi} is resolved fresh from the {@code ServicesManager} on every call
-	 * (never cached in a field) — Bartizan may enable after this module, or not be installed at all
-	 * ({@code module.yml}'s {@code Plugins: [Bartizan]}), in which case the predicate simply reports "not a sink".
-	 */
-	@PostConstruct
-	public void installJetpackFuelSink() {
-		fuelService.setFuelSinkPredicate(this::isJetpackFuelSink);
+	public GadgetModuleConfig(Gangland gangland) {
+		this.gangland = gangland;
 	}
 
 	private boolean isJetpackFuelSink(ItemStack stack) {
@@ -114,8 +99,20 @@ public class GadgetModuleConfig {
 		return carService;
 	}
 
+	/**
+	 * T-KR2 (review B2, moved by B-1): installs the jetpack-refuel sink predicate onto the shared {@link FuelService}
+	 * so {@code FuelRefuelListener}'s container-to-sink click transfers fuel from a container (e.g. gasoline) into a
+	 * worn jetpack again. {@link BartizanApi} is resolved fresh from the {@code ServicesManager} on every call
+	 * (never cached in a field) — Bartizan may enable after this module, or not be installed at all
+	 * ({@code module.yml}'s {@code Plugins: [Bartizan]}), in which case the predicate simply reports "not a sink".
+	 * Done here rather than in a {@code @PostConstruct} on the {@code @Configuration} constructor: every
+	 * {@code @Configuration} is instantiated before any bean phase runs, when only
+	 * {@code GanglandContext}/{@code DependencyContainer}/{@code Gangland}/{@code ModuleLoader} are in the container —
+	 * a {@code FuelService} constructor parameter there throws {@code IllegalStateException} on bootstrap.
+	 */
 	@Bean
 	public JetpackService jetpackService(FuelService fuelService, GadgetPhysicsConfig gadgetPhysicsConfig) {
+		fuelService.setFuelSinkPredicate(this::isJetpackFuelSink);
 		return new JetpackService(fuelService, gangland, gadgetPhysicsConfig);
 	}
 

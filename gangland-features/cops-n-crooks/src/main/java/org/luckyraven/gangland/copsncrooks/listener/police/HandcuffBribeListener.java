@@ -17,8 +17,12 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
  * When a HANDCUFFED player right-clicks the specific cop NPC that is guarding them, opens the handcuff bribe GUI so
  * they can pay to walk free. Ignores right-clicks on other cops so a crook can't bribe random passers-by — the GUI is
  * scoped to the cop holding the cuff lock.
+ *
+ * <p>{@code condition = "isCitizensAvailable"} (D2/D-fix-1): this class's own {@code @EventHandler} parameter type is
+ * Citizens' {@link NPCRightClickEvent}, so scanning/registering it on a Citizens-less server throws
+ * {@code NoClassDefFoundError} out of the listener phase.
  */
-@ListenerHandler
+@ListenerHandler(condition = "isCitizensAvailable")
 @RequiredArgsConstructor
 public class HandcuffBribeListener implements Listener {
 

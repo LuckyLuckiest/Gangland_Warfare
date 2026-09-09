@@ -112,7 +112,7 @@ public class CivilianNpcFactory implements BeanLifecycle {
 		double healthBonus = groupConfig != null ? groupConfig.healthBonus() : 0.0;
 		double speedBonus  = groupConfig != null ? groupConfig.speedBonus() : 0.0;
 
-		applyHealthBonus(npc, typeConfig.health(), healthBonus);
+		applyHealthBonus(npc.getEntity(), typeConfig.health(), healthBonus);
 
 		// equip() runs first so the ranged-attack block below can override its vanilla weaponPool main-hand item
 		// with the Bartizan-built weapon item, reproducing 0.8.4's heldWeapon != null ? heldWeapon.buildItem() :
@@ -149,8 +149,9 @@ public class CivilianNpcFactory implements BeanLifecycle {
 		equipment.setItemInMainHand(item);
 	}
 
-	private void applyHealthBonus(NPC npc, double baseHealth, double bonus) {
-		Entity entity = npc.getEntity();
+	// Takes Entity (not Citizens' NPC) so this class's own getDeclaredMethods() never resolves a Citizens type when
+	// scanned as a bean on a Citizens-less server (D2/D-fix-1) — the only thing this ever needed was npc.getEntity().
+	private void applyHealthBonus(@Nullable Entity entity, double baseHealth, double bonus) {
 		if (!(entity instanceof LivingEntity living)) return;
 
 		double total = baseHealth + bonus;
