@@ -1,10 +1,10 @@
 package org.luckyraven.gangland.copsncrooks.npc.police;
 
 import lombok.Getter;
-import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMarkManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
+import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,9 +38,9 @@ public class CopGroup {
 		return cops.isEmpty();
 	}
 
-	public void destroyAll(EntityMarkManager entityMarkManager) {
+	public void destroyAll(NpcMarkManager markManager) {
 		for (CopNpc cop : cops) {
-			cop.destroy(entityMarkManager);
+			cop.destroy(entity -> markManager.removeMark(entity));
 		}
 		cops.clear();
 	}

@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.config;
 
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.copsncrooks.npc.NpcDifficulty;
+import org.luckyraven.keystone.npc.NpcDifficulty;
 
 import java.util.List;
 

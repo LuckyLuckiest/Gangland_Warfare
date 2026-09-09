@@ -8,7 +8,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.luckyraven.gangland.copsncrooks.listener.civilian.CivilianDamageListener;
+import org.luckyraven.gangland.civilians.listener.civilian.CivilianDamageListener;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupNpc;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
@@ -19,7 +19,7 @@ import org.luckyraven.gangland.gang.contract.UserLookupContract;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
-import org.luckyraven.gangland.weapon.events.projectile.WeaponRaytraceImpactEvent;
+import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
 
 /**
  * Cancels friendly fire from the owning gang against the per-turf Quartermaster and any defenders deployed for the same

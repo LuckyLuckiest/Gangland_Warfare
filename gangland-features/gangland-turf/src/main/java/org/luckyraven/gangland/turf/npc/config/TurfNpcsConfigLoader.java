@@ -15,8 +15,8 @@ import java.io.IOException;
 import java.util.Objects;
 
 /**
- * Reads {@code turf/turf_npcs.yml} into the two settings POJOs the cops-n-crooks NPC managers consume. One file, one
- * section per turf-NPC role:
+ * Reads {@code turf/turf_npcs.yml} into the two settings POJOs turf's own NPC managers consume (moved from
+ * cops-n-crooks in group I, T-I5). One file, one section per turf-NPC role:
  * <ul>
  *   <li>{@code Powerup_Npc} — the per-turf Quartermaster's display + protection settings</li>
  *   <li>{@code Defender} — deploy-side knobs only (civilian type id from {@code civilians.yml}, targeting radius,

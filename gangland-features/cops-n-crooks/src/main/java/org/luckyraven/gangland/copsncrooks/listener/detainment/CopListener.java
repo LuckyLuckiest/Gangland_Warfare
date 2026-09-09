@@ -20,8 +20,8 @@ import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
 import org.luckyraven.gangland.gang.events.wanted.WantedEndEvent;
 import org.luckyraven.gangland.gang.events.wanted.WantedLevelChangeEvent;
 import org.luckyraven.gangland.gang.events.wanted.WantedStartEvent;
-import org.luckyraven.gangland.weapon.events.projectile.WeaponRaytraceImpactEvent;
-import org.luckyraven.gangland.weapon.raytrace.WeaponRaytracer;
+import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
+import org.luckyraven.bartizan.api.raytrace.WeaponRaytracer;
 
 @ListenerHandler
 @RequiredArgsConstructor

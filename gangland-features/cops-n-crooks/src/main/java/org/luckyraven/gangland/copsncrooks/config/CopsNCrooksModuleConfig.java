@@ -24,19 +24,13 @@ import org.luckyraven.gangland.copsncrooks.detainment.sentence.SentenceService;
 import org.luckyraven.gangland.copsncrooks.detainment.sound.DetainmentSoundContract;
 import org.luckyraven.gangland.copsncrooks.detainment.transit.TransitService;
 import org.luckyraven.gangland.copsncrooks.detainment.wanted.WantedClearContract;
-import org.luckyraven.gangland.copsncrooks.integration.config.GanglandCivilianSpawnConfigProvider;
+import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
+import org.luckyraven.gangland.civilians.npc.combat.BartizanNpcWeapons;
+import org.luckyraven.gangland.civilians.npc.combat.DownedTargetFilter;
 import org.luckyraven.gangland.copsncrooks.integration.config.GanglandDetainmentMessages;
 import org.luckyraven.gangland.copsncrooks.integration.detainment.*;
 import org.luckyraven.gangland.copsncrooks.jail.*;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.CivilianNpcRegistry;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.CivilianService;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.config.CivilianSettings;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.config.CiviliansLoader;
 import org.luckyraven.keystone.permission.PermissionManager;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.npc.CivilianNpcFactory;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.spawn.CivilianSpawnManager;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.spawn.CivilianSpawner;
-import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMarkManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
@@ -54,11 +48,11 @@ import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.gang.wanted.WantedKillTrackers;
 import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.gangland.item.money.MoneyAddon;
-import org.luckyraven.gangland.weapon.WeaponManager;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.Qualifier;
+import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
@@ -67,14 +61,18 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
  * CONFIG-phase wiring for cops-n-crooks (NPCs, jails, detainment). Moved from the core {@code CopsAndGadgetsConfig}
  * (T13, module split sprint 2026-09-07); the gadget-only remainder stays in core as {@code GadgetConfig}.
  *
+ * <p>Group K (cops NPC base swap): the civilian NPC lifecycle beans this class used to declare
+ * ({@code civiliansLoader}, {@code entityMarkManager}, {@code civilianNpcRegistry}, {@code civilianNpcFactory},
+ * {@code civilianSpawnManager}, {@code civilianService}) moved to {@code gangland-civilians}'
+ * {@code CiviliansModuleConfig} in group H; cops now injects {@link NpcMarkManager}, {@link BartizanNpcWeapons},
+ * {@link DownedTargetFilter} and {@link CivilianNpcRegistry} from that module's beans through the shared container
+ * (cops declares {@code Depends: [turf, civilians]}) rather than duplicating them here.
+ *
  * <p>Highlights:
  * <ul>
- *     <li>{@link #civiliansLoader(ItemParser, CivilianSettings, FileManager)}
- *     binds + registers + loads in one go because the entity-mark manager downstream reads {@code getLoadedConfig()}
- *     immediately.</li>
- *     <li>{@link CopService} and {@link CivilianService} use no-arg constructors and a separate {@code initialize}
- *     call. The {@code @Bean} method body invokes that initializer directly so the LIFECYCLE pass doesn't try to
- *     call a non-existent zero-arg {@code initialize()}.</li>
+ *     <li>{@link CopService} uses a no-arg constructor and a separate {@code initialize} call. The {@code @Bean}
+ *     method body invokes that initializer directly so the LIFECYCLE pass doesn't try to call a non-existent
+ *     zero-arg {@code initialize()}.</li>
  *     <li>{@code CopManager} takes {@link CivilianNpcRegistry} directly via constructor injection — no circular
  *     dependency or post-construction setter wiring needed.</li>
  * </ul>
@@ -99,26 +97,6 @@ public class CopsNCrooksModuleConfig {
 	public CopsNCrooksModuleConfig(Gangland gangland, GanglandContext context) {
 		this.gangland = gangland;
 		this.context  = context;
-	}
-
-	// ---------------------------------------------------------------------------------------------------------------
-	// Civilians + entity marks
-	// ---------------------------------------------------------------------------------------------------------------
-
-	@Bean
-	public CiviliansLoader civiliansLoader(ItemParser itemParser,
-	                                       CivilianSettings civilianSettings,
-	                                       FileManager fileManager) {
-		CiviliansLoader loader = new CiviliansLoader(gangland, itemParser, civilianSettings,
-		                                             false, null, fileManager);
-		fileManager.registerInitializer(loader);
-		fileManager.initializeAll();
-		return loader;
-	}
-
-	@Bean
-	public EntityMarkManager entityMarkManager(CiviliansLoader civiliansLoader) {
-		return new EntityMarkManager(gangland, civiliansLoader);
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
@@ -309,7 +287,7 @@ public class CopsNCrooksModuleConfig {
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
-	// Cop + civilian services
+	// Cop services
 	// ---------------------------------------------------------------------------------------------------------------
 
 	@Bean
@@ -329,67 +307,32 @@ public class CopsNCrooksModuleConfig {
 	}
 
 	@Bean
-	public CivilianNpcRegistry civilianNpcRegistry() {
-		return new CivilianNpcRegistry();
-	}
-
-	@Bean
-	public CivilianNpcFactory civilianNpcFactory(EntityMarkManager entityMarkManager,
-	                                             ItemParser itemParser,
-	                                             WeaponManager weaponManager,
-	                                             CivilianSettings civilianSettings) {
-		return new CivilianNpcFactory(gangland, entityMarkManager, itemParser, weaponManager,
-		                              civilianSettings);
-	}
-
-	@Bean
 	public CopSpawnManager copSpawnManager(CopLoader copLoader,
-	                                       EntityMarkManager entityMarkManager,
-	                                       WeaponManager weaponManager,
+	                                       NpcMarkManager markManager,
+	                                       BartizanNpcWeapons bartizanNpcWeapons,
+	                                       DownedTargetFilter downedTargetFilter,
 	                                       RepositoryRegistry repositoryRegistry,
 	                                       DetainmentService detainmentService,
 	                                       CuffLockRegistry cuffLockRegistry) {
 		IRepository<CopSpawner> repo = repositoryRegistry.getRepository(CopSpawner.class);
-		return new CopSpawnManager(gangland, copLoader, entityMarkManager, weaponManager, repo, detainmentService,
-		                           cuffLockRegistry);
+		return new CopSpawnManager(gangland, copLoader, markManager, bartizanNpcWeapons, downedTargetFilter, repo,
+		                           detainmentService, cuffLockRegistry);
 	}
 
 	@Bean
 	public CopManager copManager(CopSpawnManager copSpawnManager,
 	                             WantedTargetingManager wantedTargetingManager,
 	                             CopLoader copLoader,
-	                             EntityMarkManager entityMarkManager,
+	                             NpcMarkManager markManager,
 	                             DetainmentService detainmentService,
 	                             CivilianNpcRegistry civilianNpcRegistry) {
-		return new CopManager(gangland, copSpawnManager, wantedTargetingManager, copLoader, entityMarkManager,
+		return new CopManager(gangland, copSpawnManager, wantedTargetingManager, copLoader, markManager,
 		                      detainmentService, civilianNpcRegistry);
 	}
 
 	@Bean
 	public CopService copService(CopManager copManager, WantedTargetingManager wantedTargetingManager) {
 		return new CopService(copManager, wantedTargetingManager);
-	}
-
-	@Bean
-	public CivilianSpawnManager civilianSpawnManager(CivilianNpcFactory civilianNpcFactory,
-	                                                 CivilianNpcRegistry civilianNpcRegistry,
-	                                                 CiviliansLoader civiliansLoader,
-	                                                 GanglandCivilianSpawnConfigProvider spawnConfigProvider,
-	                                                 RepositoryRegistry repositoryRegistry) {
-		IRepository<CivilianSpawner> repo = repositoryRegistry.getRepository(CivilianSpawner.class);
-		return new CivilianSpawnManager(spawnConfigProvider, repo, civilianNpcFactory, civilianNpcRegistry,
-		                                civiliansLoader);
-	}
-
-	@Bean
-	public CivilianService civilianService(CiviliansLoader civiliansLoader,
-	                                       EntityMarkManager entityMarkManager,
-	                                       CivilianSettings civilianSettings,
-	                                       CivilianNpcFactory civilianNpcFactory,
-	                                       CivilianSpawnManager civilianSpawnManager,
-	                                       CivilianNpcRegistry civilianNpcRegistry) {
-		return new CivilianService(gangland, civiliansLoader, entityMarkManager, civilianSettings,
-		                           civilianNpcFactory, civilianSpawnManager, civilianNpcRegistry);
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
@@ -409,6 +352,6 @@ public class CopsNCrooksModuleConfig {
 
 		context.get(WantedKillTrackers.class)
 		       .install(new KillComboWantedTracker(context.get(KillCombo.class),
-		                                           context.get(EntityMarkManager.class)));
+		                                           context.get(NpcMarkManager.class)));
 	}
 }

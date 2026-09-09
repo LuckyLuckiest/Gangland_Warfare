@@ -1,6 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.state;
 
-import org.luckyraven.gangland.copsncrooks.npc.NpcBehavior;
+import org.luckyraven.keystone.npc.NpcBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 
 /**

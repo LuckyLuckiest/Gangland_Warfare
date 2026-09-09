@@ -2,7 +2,7 @@ package org.luckyraven.gangland.copsncrooks.seam;
 
 import org.bukkit.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.CivilianNpcRegistry;
+import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.data.economy.NpcMoneyDropSource;
 import org.luckyraven.gangland.item.money.MoneyDropContext;

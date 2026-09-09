@@ -112,6 +112,7 @@ public final class TurfPowerupManager implements BeanLifecycle {
 
 	@Nullable
 	public TurfPowerupNpc getByEntity(Entity entity) {
+		if (!NpcSupport.available()) return null;
 		if (entity == null) return null;
 		NPC citizensNpc = CitizensAPI.getNPCRegistry().getNPC(entity);
 		if (citizensNpc == null) return null;

@@ -10,7 +10,8 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
-import org.luckyraven.gangland.copsncrooks.npc.AbstractNpc;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.keystone.npc.AbstractNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
@@ -52,18 +53,18 @@ public class CopNpc extends AbstractNpc {
 	@Setter
 	private       UUID                       guardedPlayerId;
 
-	public CopNpc(NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors,
+	public CopNpc(JavaPlugin plugin, NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors,
 	              Location spawnLocation, CopConfigProvider configProvider) {
-		super(npc, spawnLocation, configProvider, tierConfig.difficulty());
+		super(plugin, npc, spawnLocation, configProvider, tierConfig.difficulty());
 		this.tierConfig   = tierConfig;
 		this.behaviors    = behaviors;
 		this.combatForced = false;
 	}
 
-	// ── AbstractGanglandNpc contract ─────────────────────────────────────────
+	// ── AbstractNpc contract ─────────────────────────────────────────
 
 	@Override
-	public boolean canUseWeapons() {
+	public boolean canUseRangedAttack() {
 		return tierConfig.canUseWeapons();
 	}
 
@@ -86,9 +87,11 @@ public class CopNpc extends AbstractNpc {
 		equipment.setLeggings(tierConfig.leggings());
 		equipment.setBoots(tierConfig.boots());
 
-		if (heldWeapon != null) {
-			equipment.setItemInMainHand(heldWeapon.buildItem());
-		} else if (!tierConfig.weaponPool().isEmpty()) {
+		// The ranged-attack SPI (Bartizan, when installed) manages its own held-item visuals via
+		// AbstractNpc#refreshHeldItem — this vanilla-material pool is only the fallback for a cop with no ranged
+		// attack assigned (no weapon name pool, or Bartizan absent). CopNpcFactory sets the Bartizan-built weapon
+		// item into the main hand right after equip() runs, overriding this fallback (matches CivilianNpcFactory).
+		if (!tierConfig.weaponPool().isEmpty()) {
 			int index = ThreadLocalRandom.current().nextInt(tierConfig.weaponPool().size());
 			equipment.setItemInMainHand(tierConfig.weaponPool().get(index));
 		}
@@ -154,14 +157,10 @@ public class CopNpc extends AbstractNpc {
 		behavior.tick(this);
 	}
 
-	/**
-	 * Returns whether this cop is currently using a ranged weapon.
-	 */
-	@Override
-	public boolean isUsingRangedWeapon() {
-		if (!tierConfig.canUseWeapons()) return false;
-		return heldWeapon != null || isHoldingVanillaRangedWeapon();
-	}
+	// isUsingRangedWeapon() removed — AbstractNpc#isRangedAttacker() (canUseRangedAttack() &&
+	// (rangedAttack.isRanged() || isHoldingVanillaRangedWeapon())) reproduces it exactly: canUseRangedAttack()
+	// already gates on tierConfig.canUseWeapons(), and rangedAttack.isRanged() replaces the old heldWeapon != null
+	// check now that Bartizan owns weapon assignment.
 
 	/**
 	 * Attempts to cuff the target player.

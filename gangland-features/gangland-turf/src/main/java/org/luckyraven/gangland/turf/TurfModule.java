@@ -14,9 +14,13 @@ import org.luckyraven.keystone.npc.NpcSupport;
  * pipeline.
  *
  * <ul>
- *     <li>{@link TurfModuleFileConfig} - the KERNEL-phase registration of {@code turf/turf_powerups.yml}.</li>
- *     <li>{@link TurfModuleConfig} - the 21 CONFIG-phase beans (repositories, managers, capture/income tasks and
- *     the {@code TurfNpcContracts} holder) moved verbatim out of the core's {@code TurfConfig}.</li>
+ *     <li>{@link TurfModuleFileConfig} - the KERNEL-phase registration of {@code turf/turf_powerups.yml} and
+ *     {@code turf/turf_npcs.yml} (moved from cops-n-crooks in group I, T-I5).</li>
+ *     <li>{@link TurfModuleConfig} - the 29 CONFIG-phase beans: the original capture/income/repository beans moved
+ *     verbatim out of the core's {@code TurfConfig}, plus the nine turf-NPC beans folded in from the deleted
+ *     {@code TurfNpcsModuleConfig} (group I, T-I3). The {@code TurfNpcContracts} holder is gone (T-I4) —
+ *     {@link org.luckyraven.gangland.turf.listener.powerups.GarrisonDeployListener} injects
+ *     {@code TurfDefenderDeployer}/{@code TurfPowerupManager} directly instead.</li>
  *     <li>{@code turf.listener} and {@code turf.task} - both are scanned as listener packages;
  *     {@code turf.task.GangPresenceListener} carries {@code @ListenerHandler} but has not yet been relocated
  *     under {@code turf.listener} (tracked as a follow-up, not part of this flip).</li>

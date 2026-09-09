@@ -23,7 +23,7 @@ import org.luckyraven.gangland.copsncrooks.detainment.paperwork.PaperworkView;
 import org.luckyraven.gangland.copsncrooks.detainment.transit.TransitService;
 import org.luckyraven.gangland.copsncrooks.jail.JailService;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
-import org.luckyraven.gangland.weapon.events.projectile.WeaponShootEvent;
+import org.luckyraven.bartizan.api.event.WeaponShootEvent;
 
 @ListenerHandler
 @RequiredArgsConstructor

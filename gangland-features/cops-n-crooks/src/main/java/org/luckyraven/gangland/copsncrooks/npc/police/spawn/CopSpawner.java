@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.spawn;
 
 import org.bukkit.Location;
-import org.luckyraven.gangland.copsncrooks.npc.entity.EntitySpawnerPoint;
+import org.luckyraven.keystone.npc.entity.EntitySpawnerPoint;
 
 public class CopSpawner extends EntitySpawnerPoint {
 

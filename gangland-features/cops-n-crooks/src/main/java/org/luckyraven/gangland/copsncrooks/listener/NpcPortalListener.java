@@ -5,9 +5,10 @@ import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPortalEvent;
-import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMark;
-import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMarkManager;
+import org.luckyraven.gangland.civilians.npc.entity.EntityMark;
+import org.luckyraven.gangland.civilians.npc.entity.EntityMarks;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 
 /**
  * Prevents Gangland NPCs (civilians, cops) from being teleported through nether/end portals. Citizens pathfinding can
@@ -18,12 +19,12 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
 @RequiredArgsConstructor
 public class NpcPortalListener implements Listener {
 
-	private final EntityMarkManager entityMarkManager;
+	private final NpcMarkManager markManager;
 
 	@EventHandler(ignoreCancelled = true)
 	public void onEntityPortal(EntityPortalEvent event) {
 		Entity     entity = event.getEntity();
-		EntityMark mark   = entityMarkManager.getEntityMark(entity);
+		EntityMark mark   = EntityMarks.of(markManager.getMark(entity));
 
 		if (mark.isCivilian()) {
 			event.setCancelled(true);

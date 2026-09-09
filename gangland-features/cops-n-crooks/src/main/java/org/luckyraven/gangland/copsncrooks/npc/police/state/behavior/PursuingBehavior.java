@@ -68,7 +68,7 @@ public class PursuingBehavior implements CopBehavior {
 			}
 
 			// Ranged cops shoot while closing in
-			if (cop.isUsingRangedWeapon() && cop.hasLineOfSight(player) && cop.canAttack()) {
+			if (cop.isRangedAttacker() && cop.hasLineOfSight(player) && cop.canAttack()) {
 				cop.attack(player);
 			}
 		} else {
@@ -78,7 +78,7 @@ public class PursuingBehavior implements CopBehavior {
 				return;
 			}
 
-			if (cop.isUsingRangedWeapon() && cop.hasLineOfSight(target) && cop.canAttack()) {
+			if (cop.isRangedAttacker() && cop.hasLineOfSight(target) && cop.canAttack()) {
 				cop.attackEntity(target);
 			}
 		}

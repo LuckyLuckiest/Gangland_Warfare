@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.combo.KillCombo;
 import org.luckyraven.gangland.copsncrooks.combo.KillComboTracker;
 import org.luckyraven.gangland.copsncrooks.events.combo.KillComboEvent;
-import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMarkManager;
+import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.mockito.ArgumentCaptor;
 
 import java.util.ArrayList;
@@ -17,6 +17,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -25,31 +26,41 @@ import static org.mockito.Mockito.when;
 /**
  * Pins the seam-3 delegate: {@code onWantedTrigger}/{@code onComboReset}/{@code onVictimDeath} must forward through
  * to {@link KillCombo}'s three setters (translating the {@link KillComboEvent} down to the {@link Player} the core
- * {@code WantedKillTracker} contract expects), and {@code countsForWanted} must delegate to
- * {@link EntityMarkManager}. See documentation/module-loader.md, "Core seams".
+ * {@code WantedKillTracker} contract expects), and {@code countsForWanted} must delegate through
+ * {@code EntityMarks.countsForWanted} to the shared {@link NpcMarkManager}'s persisted mark. See
+ * documentation/module-loader.md, "Core seams".
  */
 @DisplayName("KillComboWantedTracker")
 class KillComboWantedTrackerTest {
 
 	private KillCombo              killCombo;
-	private EntityMarkManager      entityMarks;
+	private NpcMarkManager         markManager;
 	private KillComboWantedTracker tracker;
 
 	@BeforeEach
 	void setUp() {
 		killCombo   = mock(KillCombo.class);
-		entityMarks = mock(EntityMarkManager.class);
-		tracker     = new KillComboWantedTracker(killCombo, entityMarks);
+		markManager = mock(NpcMarkManager.class);
+		tracker     = new KillComboWantedTracker(killCombo, markManager);
 	}
 
 	@Test
-	@DisplayName("countsForWanted delegates to EntityMarkManager")
-	void countsForWanted_delegatesToEntityMarkManager() {
+	@DisplayName("countsForWanted delegates through EntityMarks to the NpcMarkManager's persisted mark")
+	void countsForWanted_delegatesToMarkManager() {
 		Entity victim = mock(Entity.class);
-		when(entityMarks.countsForWanted(victim)).thenReturn(true);
+		when(markManager.getMark(victim)).thenReturn("POLICE");
 
 		assertTrue(tracker.countsForWanted(victim));
-		verify(entityMarks).countsForWanted(victim);
+		verify(markManager).getMark(victim);
+	}
+
+	@Test
+	@DisplayName("countsForWanted is false for an unmarked entity")
+	void countsForWanted_unmarkedEntity_isFalse() {
+		Entity victim = mock(Entity.class);
+		when(markManager.getMark(victim)).thenReturn(null);
+
+		assertFalse(tracker.countsForWanted(victim));
 	}
 
 	@Test

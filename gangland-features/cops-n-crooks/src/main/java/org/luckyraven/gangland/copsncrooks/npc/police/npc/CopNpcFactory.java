@@ -8,45 +8,49 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMark;
-import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMarkManager;
+import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.civilians.npc.combat.BartizanNpcWeapons;
+import org.luckyraven.gangland.civilians.npc.combat.DownedTargetFilter;
+import org.luckyraven.gangland.civilians.npc.entity.EntityMark;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.keystone.npc.entity.NpcMarkManager;
+import org.luckyraven.keystone.npc.spi.NpcRangedAttack;
 import org.luckyraven.keystone.util.ChatUtil;
-import org.luckyraven.gangland.weapon.Weapon;
-import org.luckyraven.gangland.weapon.WeaponService;
-import org.luckyraven.gangland.weapon.ammo.Ammunition;
-import org.luckyraven.gangland.weapon.dto.AmmunitionData;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Factory for creating CopNpc instances backed by Citizens NPCs.
+ * Factory for creating CopNpc instances backed by Citizens NPCs. {@link BartizanNpcWeapons}/{@link DownedTargetFilter}/
+ * {@link NpcMarkManager} are civilians-module beans injected here through cops' {@code Depends: [civilians]} — not
+ * duplicated (see {@code gangland-civilians}' {@code CiviliansModuleConfig}).
  */
 public class CopNpcFactory {
 
 	private final CopConfigProvider  configProvider;
 	private final CopBehaviorFactory behaviorFactory;
-	private final EntityMarkManager  entityMarkManager;
+	private final NpcMarkManager     markManager;
 	private final JavaPlugin         plugin;
-	private final WeaponService      weaponService;
+	private final BartizanNpcWeapons bartizanNpcWeapons;
+	private final DownedTargetFilter downedTargetFilter;
 
 	public CopNpcFactory(JavaPlugin plugin, CopConfigProvider configProvider, CopBehaviorFactory behaviorFactory,
-	                     EntityMarkManager entityMarkManager, WeaponService weaponService) {
-		this.plugin            = plugin;
-		this.configProvider    = configProvider;
-		this.behaviorFactory   = behaviorFactory;
-		this.entityMarkManager = entityMarkManager;
-		this.weaponService     = weaponService;
+	                     NpcMarkManager markManager, BartizanNpcWeapons bartizanNpcWeapons,
+	                     DownedTargetFilter downedTargetFilter) {
+		this.plugin             = plugin;
+		this.configProvider     = configProvider;
+		this.behaviorFactory    = behaviorFactory;
+		this.markManager        = markManager;
+		this.bartizanNpcWeapons = bartizanNpcWeapons;
+		this.downedTargetFilter = downedTargetFilter;
 	}
 
 	/**
@@ -91,29 +95,45 @@ public class CopNpcFactory {
 		}
 
 		if (npc.getEntity() != null) {
-			entityMarkManager.setEntityMark(npc.getEntity(), EntityMark.POLICE);
+			markManager.setMark(npc.getEntity(), EntityMark.POLICE.name());
 		}
 
 		Map<CopState, CopBehavior> behaviors = behaviorFactory.createBehaviors();
 
-		CopNpc copNpc = new CopNpc(npc, tierConfig, behaviors, spawnLocation, configProvider);
-		// Always wire the plugin even when no weapon is assigned — navigation features
-		// (door interaction, Bukkit scheduler callbacks) need it regardless of loadout.
-		copNpc.setHeldWeapon(null, plugin);
+		CopNpc copNpc = new CopNpc(plugin, npc, tierConfig, behaviors, spawnLocation, configProvider);
+		copNpc.setTargetFilter(downedTargetFilter);
 
-		// Resolve and assign a gangland weapon when the tier supports it
+		// equip() runs first so the ranged-attack block below can override its vanilla weaponPool main-hand item
+		// with the Bartizan-built weapon item, reproducing 0.8.4's heldWeapon != null ? heldWeapon.buildItem() :
+		// weaponPool precedence (matches CivilianNpcFactory, T-HR2).
+		copNpc.equip();
+
+		// Bartizan-backed ranged weapon: a random name from the tier's pool, resolved through the factory hook.
+		// NpcRangedAttack.NONE (no weapon name configured, unresolvable name, or Bartizan absent) leaves the cop on
+		// the vanilla weaponPool fallback CopNpc#equip() already applied above. Bartizan owns the NPC magazine —
+		// no off-hand ammo item is stocked here (0.8.4's giveStartingAmmo is gone).
 		if (tierConfig.canUseWeapons()) {
-			Weapon weapon = resolveGanglandWeapon(tierConfig);
-			if (weapon != null) {
-				copNpc.setHeldWeapon(weapon, plugin);
-				giveStartingAmmo(npc, weapon);
+			String          weaponName   = pickWeaponName(tierConfig);
+			NpcRangedAttack rangedAttack = bartizanNpcWeapons.create(copNpc.getEntity(), weaponName,
+			                                                        copNpc.getDifficulty());
+			copNpc.setRangedAttack(rangedAttack);
+
+			ItemStack weaponItem = bartizanNpcWeapons.buildItem(weaponName);
+			if (weaponItem != null) {
+				setMainHand(copNpc.getEntity(), weaponItem);
 			}
 		}
 
-		copNpc.equip();
 		npc.getNavigator().getLocalParameters().speedModifier((float) tierConfig.speed());
 
 		return copNpc;
+	}
+
+	private void setMainHand(@Nullable LivingEntity entity, ItemStack item) {
+		if (entity == null) return;
+		EntityEquipment equipment = entity.getEquipment();
+		if (equipment == null) return;
+		equipment.setItemInMainHand(item);
 	}
 
 	/**
@@ -191,49 +211,14 @@ public class CopNpcFactory {
 	}
 
 	/**
-	 * Picks a random name from the tier's weapon pool and resolves it as a gangland Weapon. Names that are not
-	 * registered as gangland weapons return null (they are vanilla materials).
+	 * Picks a random weapon name from the tier's weapon name pool, or {@code null} if the pool is empty.
+	 * {@link BartizanNpcWeapons#create} handles an unresolvable name the same way as an empty pool.
 	 */
-	private Weapon resolveGanglandWeapon(CopTierConfig tierConfig) {
+	@Nullable
+	private String pickWeaponName(CopTierConfig tierConfig) {
 		List<String> pool = tierConfig.weaponNamePool();
 		if (pool.isEmpty()) return null;
 
-		// Start at a random index so each cop gets a varied pick
-		int start = ThreadLocalRandom.current().nextInt(pool.size());
-		for (int i = 0; i < pool.size(); i++) {
-			String name   = pool.get((start + i) % pool.size());
-			Weapon weapon = weaponService.createTransientWeapon(name);
-
-			if (weapon != null) return weapon;
-		}
-		return null;
-	}
-
-	/**
-	 * Gives the NPC enough ammo items (in its off-hand) to cover several full reloads. This ensures the reload system,
-	 * which reads from entity inventory, finds bullets available.
-	 */
-	private void giveStartingAmmo(NPC npc, Weapon weapon) {
-		Entity entity = npc.getEntity();
-		if (!(entity instanceof LivingEntity livingEntity)) return;
-
-		EntityEquipment equipment = livingEntity.getEquipment();
-		if (equipment == null) return;
-
-		AmmunitionData ammunitionData = weapon.getAmmunitionData();
-		if (ammunitionData == null) return;
-
-		Ammunition ammoType = ammunitionData.getAmmoType();
-		if (ammoType == null) return;
-
-		// Give enough magazines worth of ammo as configured
-		int       ammoCount = ammunitionData.getMaxMagCapacity() * configProvider.getStartingAmmoMagazines();
-		ItemStack ammoItem  = ammoType.buildItem(Math.min(ammoCount, ammoType.buildItem().getMaxStackSize()));
-
-		equipment.setItemInOffHand(ammoItem);
-
-		if (!(livingEntity instanceof Player)) {
-			equipment.setItemInOffHandDropChance(0f);
-		}
+		return pool.get(ThreadLocalRandom.current().nextInt(pool.size()));
 	}
 }

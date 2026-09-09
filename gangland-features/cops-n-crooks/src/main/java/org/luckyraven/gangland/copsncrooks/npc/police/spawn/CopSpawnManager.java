@@ -4,40 +4,44 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.civilians.npc.combat.BartizanNpcWeapons;
+import org.luckyraven.gangland.civilians.npc.combat.DownedTargetFilter;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
-import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMarkManager;
-import org.luckyraven.gangland.copsncrooks.npc.entity.EntitySpawner;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpcFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
+import org.luckyraven.keystone.npc.entity.EntitySpawner;
+import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.persistence.repository.IRepository;
-import org.luckyraven.gangland.weapon.WeaponService;
 
 public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 
-	private final JavaPlugin        plugin;
-	private final CopLoader         copLoader;
-	private final EntityMarkManager entityMarkManager;
-	private final WeaponService     weaponService;
-	private final DetainmentService detainmentService;
-	private final CuffLockRegistry  cuffLockRegistry;
+	private final JavaPlugin         plugin;
+	private final CopLoader          copLoader;
+	private final NpcMarkManager     markManager;
+	private final BartizanNpcWeapons bartizanNpcWeapons;
+	private final DownedTargetFilter downedTargetFilter;
+	private final DetainmentService  detainmentService;
+	private final CuffLockRegistry   cuffLockRegistry;
 
 	private CopNpcFactory     copNpcFactory;
 	private CopConfigProvider configProvider;
 
-	public CopSpawnManager(JavaPlugin plugin, CopLoader copLoader, EntityMarkManager entityMarkManager,
-	                       WeaponService weaponService, IRepository<CopSpawner> repository,
-	                       DetainmentService detainmentService, CuffLockRegistry cuffLockRegistry) {
+	public CopSpawnManager(JavaPlugin plugin, CopLoader copLoader, NpcMarkManager markManager,
+	                       BartizanNpcWeapons bartizanNpcWeapons, DownedTargetFilter downedTargetFilter,
+	                       IRepository<CopSpawner> repository, DetainmentService detainmentService,
+	                       CuffLockRegistry cuffLockRegistry) {
 		super(copLoader.getLoadedProvider(), repository);
-		this.plugin            = plugin;
-		this.copLoader         = copLoader;
-		this.entityMarkManager = entityMarkManager;
-		this.weaponService     = weaponService;
-		this.detainmentService = detainmentService;
-		this.cuffLockRegistry  = cuffLockRegistry;
+		this.plugin             = plugin;
+		this.copLoader          = copLoader;
+		this.markManager        = markManager;
+		this.bartizanNpcWeapons = bartizanNpcWeapons;
+		this.downedTargetFilter = downedTargetFilter;
+		this.detainmentService  = detainmentService;
+		this.cuffLockRegistry   = cuffLockRegistry;
 
 		rebuildFactories();
 	}
@@ -126,6 +130,7 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 
 		CopBehaviorFactory behaviorFactory = new CopBehaviorFactory(provider, () -> this, detainmentService,
 		                                                            cuffLockRegistry);
-		this.copNpcFactory = new CopNpcFactory(plugin, provider, behaviorFactory, entityMarkManager, weaponService);
+		this.copNpcFactory = new CopNpcFactory(plugin, provider, behaviorFactory, markManager, bartizanNpcWeapons,
+		                                       downedTargetFilter);
 	}
 }

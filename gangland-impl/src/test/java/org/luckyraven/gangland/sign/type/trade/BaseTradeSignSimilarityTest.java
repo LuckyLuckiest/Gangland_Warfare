@@ -101,6 +101,20 @@ class BaseTradeSignSimilarityTest {
 		assertTrue(BaseTradeSign.sameTradeDefinition(serializers, a, b));
 	}
 
+	@Test
+	@DisplayName("review G-R-1: a unique-tagged stack is NOT the same trade item as a plain stack of the same material")
+	void uniqueTier_vsPlainStackOfSameMaterial_notSame() {
+		ItemStack unique = new ItemStack(Material.STICK);
+		ItemStack plain  = new ItemStack(Material.STICK);
+
+		new ItemBuilder(unique).addTag(UniqueItemKeys.UNIQUE_ITEM_KEY, "widget");
+
+		// unique's description is "unique:widget", plain's is "material:stick" — the differing-description branch
+		// must reject this pair; case 2 above (two unique sticks) alone would not catch a regression to bare
+		// isSimilar, since two plain STICK stacks are always isSimilar-equal.
+		assertFalse(BaseTradeSign.sameTradeDefinition(serializers, unique, plain));
+	}
+
 	/**
 	 * Minimal {@link ItemNbtAccessor} double keyed by stack <em>identity</em> — see
 	 * {@code ItemDefinitionSimilarityTest.PerStackNbtAccessor} for the same fixture and its rationale.

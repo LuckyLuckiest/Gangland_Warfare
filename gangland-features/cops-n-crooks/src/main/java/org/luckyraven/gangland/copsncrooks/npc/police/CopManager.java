@@ -9,10 +9,9 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
+import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.CivilianNpcRegistry;
-import org.luckyraven.gangland.copsncrooks.npc.civilian.npc.CivilianNpc;
-import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMarkManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
@@ -20,6 +19,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.targeting.TargetingManager;
 import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
 import org.luckyraven.gangland.gang.wanted.Wanted;
 
@@ -36,7 +36,7 @@ public class CopManager implements BeanLifecycle {
 	private final CopSpawnManager       spawnManager;
 	private final TargetingManager      targetingManager;
 	private final CopLoader             copLoader;
-	private final EntityMarkManager     entityMarkManager;
+	private final NpcMarkManager        markManager;
 	private final DetainmentService     detainmentService;
 	private final Map<UUID, CopGroup>   groups;
 	private final Map<UUID, BukkitTask> aiTasks;
@@ -47,14 +47,14 @@ public class CopManager implements BeanLifecycle {
 	private       CopConfigProvider     configProvider;
 
 	public CopManager(JavaPlugin plugin, CopSpawnManager spawnManager, TargetingManager targetingManager,
-	                  CopLoader copLoader, EntityMarkManager entityMarkManager,
+	                  CopLoader copLoader, NpcMarkManager markManager,
 	                  DetainmentService detainmentService, CivilianNpcRegistry civilianNpcRegistry) {
 		this.plugin            = plugin;
 		this.spawnManager      = spawnManager;
 		this.targetingManager  = targetingManager;
 		this.copLoader         = copLoader;
 		this.configProvider    = copLoader.getLoadedProvider();
-		this.entityMarkManager = entityMarkManager;
+		this.markManager       = markManager;
 		this.detainmentService = detainmentService;
 
 		this.civilianNpcRegistry = civilianNpcRegistry;
@@ -353,7 +353,7 @@ public class CopManager implements BeanLifecycle {
 
 			cops.removeIf(cop -> {
 				if (cop.isMarkedForRemoval()) {
-					cop.destroy(entityMarkManager);
+					cop.destroy(entity -> markManager.removeMark(entity));
 					return true;
 				}
 				if (!cop.isValid()) {
@@ -363,7 +363,7 @@ public class CopManager implements BeanLifecycle {
 					if (npc.isSpawned() && npc.getEntity() == null) {
 						return false;
 					}
-					cop.destroy(entityMarkManager);
+					cop.destroy(entity -> markManager.removeMark(entity));
 					return true;
 				}
 				return false;
@@ -434,7 +434,7 @@ public class CopManager implements BeanLifecycle {
 				CopNpc cop = iterator.next();
 
 				if (cop.isMarkedForRemoval()) {
-					cop.destroy(entityMarkManager);
+					cop.destroy(entity -> markManager.removeMark(entity));
 					iterator.remove();
 					continue;
 				}
@@ -446,7 +446,7 @@ public class CopManager implements BeanLifecycle {
 					if (npc.isSpawned() && npc.getEntity() == null) {
 						continue;
 					}
-					cop.destroy(entityMarkManager);
+					cop.destroy(entity -> markManager.removeMark(entity));
 					iterator.remove();
 					continue;
 				}
@@ -653,6 +653,6 @@ public class CopManager implements BeanLifecycle {
 		CopGroup group = groups.remove(playerId);
 		if (group == null) return;
 
-		group.destroyAll(entityMarkManager);
+		group.destroyAll(markManager);
 	}
 }

@@ -12,12 +12,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMark;
-import org.luckyraven.gangland.copsncrooks.npc.entity.EntityMarkManager;
+import org.luckyraven.gangland.civilians.npc.entity.EntityMark;
+import org.luckyraven.gangland.civilians.npc.entity.EntityMarks;
 import org.luckyraven.keystone.bean.autowire.AutowireTarget;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.npc.NpcMetadata;
-import org.luckyraven.gangland.weapon.events.projectile.WeaponRaytraceImpactEvent;
+import org.luckyraven.keystone.npc.entity.NpcMarkManager;
+import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
 
 /**
  * Strips Citizens spawn protection from Gangland NPCs so they become damageable as quickly as possible.
@@ -37,11 +38,11 @@ import org.luckyraven.gangland.weapon.events.projectile.WeaponRaytraceImpactEven
  */
 @ListenerHandler
 @RequiredArgsConstructor
-@AutowireTarget({EntityMarkManager.class, JavaPlugin.class})
+@AutowireTarget({NpcMarkManager.class, JavaPlugin.class})
 public class NpcDamageUnprotectListener implements Listener {
 
-	private final EntityMarkManager entityMarkManager;
-	private final JavaPlugin        plugin;
+	private final NpcMarkManager markManager;
+	private final JavaPlugin     plugin;
 
 	/**
 	 * Strips protection from every Gangland NPC after spawn. Runs every tick for 20 ticks to cover the full Citizens
@@ -91,7 +92,7 @@ public class NpcDamageUnprotectListener implements Listener {
 			return;
 		}
 
-		EntityMark mark = entityMarkManager.getEntityMark(entity);
+		EntityMark mark = EntityMarks.of(markManager.getMark(entity));
 		if (mark == EntityMark.UNSET) {
 			return;
 		}
@@ -126,7 +127,7 @@ public class NpcDamageUnprotectListener implements Listener {
 			return;
 		}
 
-		EntityMark mark = entityMarkManager.getEntityMark(entity);
+		EntityMark mark = EntityMarks.of(markManager.getMark(entity));
 		if (mark == EntityMark.UNSET) {
 			return;
 		}

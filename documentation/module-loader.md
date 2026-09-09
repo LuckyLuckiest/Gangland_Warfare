@@ -141,7 +141,7 @@ seam shapes:
   `container.getAllInstances(<Type>.class)` (`CommandContribution`, `SignTypeContribution`, `SignViewProvider`).
 - **Holders** — exactly one core bean with a safe (inert/no-op) default; the module installs one delegate from a
   single `@PostConstruct` via an `install(...)` method (`GanglandMoneyDropClassifier`/`NpcMoneyDropSource`,
-  `BankTiers`/`BankTierView`, `WantedKillTrackers`/`WantedKillTracker`, `TurfNpcContracts`).
+  `BankTiers`/`BankTierView`, `WantedKillTrackers`/`WantedKillTracker`).
 
 Holders introduced by the **cops-n-crooks** flip (0.8.4):
 
@@ -150,11 +150,9 @@ Holders introduced by the **cops-n-crooks** flip (0.8.4):
 | `GanglandMoneyDropClassifier` | `NpcMoneyDropSource` | `org.luckyraven.gangland.data.economy` | classifies no NPC as a cop/civilian cash drop | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`CopsMoneyDropSource`) |
 | `BankTiers` | `BankTierView` | `org.luckyraven.gangland.data.economy` | `tierFor(...)` returns `null` — no tier cap, no daily deposit limit, no death-penalty insurance discount, empty `%..bank_tier%` placeholders | `CopsNCrooksModuleConfig`'s `installCoreSeams()` |
 | `WantedKillTrackers` | `WantedKillTracker` | `org.luckyraven.gangland.gang.wanted` (gangland-domain) | `isActive()` false — kill combo and "counts for wanted" both disabled, `EntityDamageListener` falls back to its pre-combo branches | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`KillComboWantedTracker`) |
-| `TurfNpcContracts` | `TurfNpcContract` | `org.luckyraven.gangland.turf.turfnpcs` (gangland-turf; `turfNpcContracts()` is now registered by `TurfModuleConfig` in the turf module, moved there verbatim by the turf flip) | all four methods no-op — `GarrisonDeployListener` sees an inert contract, garrison deployment silently does nothing | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`TurfNpcContractImpl`) |
 
 Contribution paths added by the cops-n-crooks flip: `BankMenuContribution` (`parent() == "bank"`, attaches
-`/glw bank menu`, queried by `BankCommand`) and `TurfPowerupNpcContribution` (`parent() == "turf"`, attaches
-`/glw turf powerupnpc`, queried by `TurfCommand`).
+`/glw bank menu`, queried by `BankCommand`).
 
 Contributions and seams added by the **gadget** flip (0.8.4):
 

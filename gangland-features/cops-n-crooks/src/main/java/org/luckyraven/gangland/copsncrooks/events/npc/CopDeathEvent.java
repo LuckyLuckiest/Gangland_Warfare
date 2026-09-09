@@ -6,6 +6,7 @@ import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.luckyraven.keystone.npc.event.NpcEvent;
 
 /**
  * Fired when a cop NPC dies. Carries the NPC and the killer (if any).
