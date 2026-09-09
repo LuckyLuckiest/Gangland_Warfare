@@ -166,6 +166,7 @@ public final class TraderManager implements BeanLifecycle {
 
 	@Nullable
 	public TraderNpc getByEntity(Entity entity) {
+		if (!NpcSupport.available()) return null;
 		if (entity == null) return null;
 
 		NPC citizensNpc = CitizensAPI.getNPCRegistry().getNPC(entity);

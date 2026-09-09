@@ -3,7 +3,7 @@ package org.luckyraven.gangland.gadget.jetpack;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.item.wearable.Wearable;
+import org.luckyraven.bartizan.api.wearable.Wearable;
 
 /**
  * Tracks the active state of a player using a jetpack. Created when the jetpack is activated (double-tap space) and

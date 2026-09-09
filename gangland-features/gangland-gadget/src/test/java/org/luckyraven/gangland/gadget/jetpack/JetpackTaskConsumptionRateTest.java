@@ -4,9 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.gadget.config.GadgetPhysicsConfig;
 import org.luckyraven.gangland.item.fuel.FuelService;
-import org.luckyraven.gangland.item.wearable.Wearable;
-import org.luckyraven.gangland.item.wearable.WearableTrait;
-import org.luckyraven.gangland.weapon.WeaponService;
+import org.luckyraven.bartizan.api.wearable.Wearable;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -15,22 +13,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 
 /**
- * Pins {@code JetpackTask.getEffectiveConsumptionRate}'s {@code WearableTrait.FUEL_EFFICIENT} discount math
+ * Pins {@code JetpackTask.getEffectiveConsumptionRate}'s {@code fuel_efficient} trait discount math
  * (gadgets-cars-fuel-jetpack.md — Test Surface bullet "JetpackTask.getEffectiveConsumptionRate — FUEL_EFFICIENT
- * levels 0/1/2/overflow, floor of 1").
+ * levels 0/1/2/overflow, floor of 1"). Re-pointed onto Bartizan's {@code Wearable} (group L, T-L2): the base rate now
+ * lives in {@code extraTags()} under {@code jetpack_fuel_consumption_rate} instead of a dedicated field, and the
+ * trait is read via {@code traitLevel("fuel_efficient")} instead of the deleted {@code WearableTrait} enum — the
+ * 10%-per-level/max-2 constants are ported verbatim (production code no longer has the enum to read them from).
  *
  * <p>The method is {@code private}, so this test reaches it via reflection rather than driving the full
  * {@code run()}/{@code applyVerticalPhysics} tick pipeline (which needs a live {@code Player}, session and fuel
  * service wired end-to-end) — the audit itself flags this method as "worth promoting to package-private for
  * testability"; reflection avoids touching production code to get there.
  */
-@DisplayName("JetpackTask.getEffectiveConsumptionRate — FUEL_EFFICIENT discount")
+@DisplayName("JetpackTask.getEffectiveConsumptionRate — fuel_efficient discount")
 class JetpackTaskConsumptionRateTest {
 
 	private static int effectiveRate(Wearable jetpack) throws Exception {
 		JetpackTask task = new JetpackTask(mock(JetpackSession.class), mock(JetpackService.class),
-		                                   mock(FuelService.class), mock(GadgetPhysicsConfig.class),
-		                                   mock(WeaponService.class));
+		                                   mock(FuelService.class), mock(GadgetPhysicsConfig.class));
 		Method method = JetpackTask.class.getDeclaredMethod("getEffectiveConsumptionRate", Wearable.class);
 		method.setAccessible(true);
 		return (int) method.invoke(task, jetpack);
@@ -39,9 +39,9 @@ class JetpackTaskConsumptionRateTest {
 	private static Wearable jetpackWithTrait(int baseRate, Integer fuelEfficientLevel) {
 		Wearable.WearableBuilder builder = Wearable.builder()
 		                                            .wearableKey("jetpack")
-		                                            .fuelConsumptionRate(baseRate);
+		                                            .extraTags(Map.of("jetpack_fuel_consumption_rate", baseRate));
 		if (fuelEfficientLevel != null) {
-			builder.traits(Map.of(WearableTrait.FUEL_EFFICIENT, fuelEfficientLevel));
+			builder.traits(Map.of("fuel_efficient", fuelEfficientLevel));
 		} else {
 			builder.traits(Map.of());
 		}
@@ -72,7 +72,7 @@ class JetpackTaskConsumptionRateTest {
 	@Test
 	@DisplayName("a level above maxLevel (3) is capped at level 2's 20% discount, not applied uncapped")
 	void levelAboveMax_cappedAtMaxLevel() throws Exception {
-		// WearableTrait.FUEL_EFFICIENT.maxLevel == 2, so level 3 is capped to 2 -> same as the level-2 case.
+		// fuel_efficient's max level is 2 (ported verbatim in JetpackTask), so level 3 is capped to 2 -> same as the level-2 case.
 		assertEquals(8, effectiveRate(jetpackWithTrait(10, 3)));
 	}
 

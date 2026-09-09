@@ -25,8 +25,6 @@ import org.luckyraven.keystone.item.ItemConverterRegistry;
 import org.luckyraven.keystone.item.ItemRefresherRegistry;
 import org.luckyraven.keystone.item.ItemSerializerRegistry;
 import org.luckyraven.gangland.item.fuel.FuelService;
-import org.luckyraven.gangland.weapon.WeaponService;
-import org.luckyraven.gangland.weapon.wearable.WearableAddon;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.Qualifier;
@@ -87,11 +85,8 @@ public class GadgetModuleConfig {
 	}
 
 	@Bean
-	public JetpackService jetpackService(FuelService fuelService,
-	                                     GadgetPhysicsConfig gadgetPhysicsConfig,
-	                                     WearableAddon wearableAddon,
-	                                     WeaponService weaponService) {
-		return new JetpackService(fuelService, gangland, gadgetPhysicsConfig, wearableAddon, weaponService);
+	public JetpackService jetpackService(FuelService fuelService, GadgetPhysicsConfig gadgetPhysicsConfig) {
+		return new JetpackService(fuelService, gangland, gadgetPhysicsConfig);
 	}
 
 	@Bean

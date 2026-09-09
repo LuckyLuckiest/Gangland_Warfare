@@ -1,8 +1,10 @@
 package org.luckyraven.gangland.gadget.jetpack;
 
 import io.netty.channel.Channel;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.bean.BeanLifecycle;
@@ -10,9 +12,9 @@ import org.luckyraven.gangland.gadget.config.GadgetPhysicsConfig;
 import org.luckyraven.gangland.item.fuel.FuelService;
 import org.luckyraven.gangland.gadget.jetpack.packet.JetpackInputInterceptor;
 import org.luckyraven.keystone.nms.input.PlayerInputInterceptor;
-import org.luckyraven.gangland.item.wearable.Wearable;
-import org.luckyraven.gangland.weapon.WeaponService;
-import org.luckyraven.gangland.weapon.wearable.WearableService;
+import org.luckyraven.bartizan.api.BartizanApi;
+import org.luckyraven.bartizan.api.wearable.Wearable;
+import org.luckyraven.bartizan.api.wearable.WearableCatalog;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -28,16 +30,21 @@ public class JetpackService implements BeanLifecycle {
 	private final FuelService               fuelService;
 	private final JavaPlugin                plugin;
 	private final GadgetPhysicsConfig       physicsConfig;
-	private final WearableService           wearableService;
-	private final WeaponService             weaponService;
 
-	public JetpackService(FuelService fuelService, JavaPlugin plugin, GadgetPhysicsConfig physicsConfig,
-	                      WearableService wearableService, WeaponService weaponService) {
-		this.fuelService     = fuelService;
-		this.plugin          = plugin;
-		this.physicsConfig   = physicsConfig;
-		this.wearableService = wearableService;
-		this.weaponService   = weaponService;
+	public JetpackService(FuelService fuelService, JavaPlugin plugin, GadgetPhysicsConfig physicsConfig) {
+		this.fuelService   = fuelService;
+		this.plugin        = plugin;
+		this.physicsConfig = physicsConfig;
+	}
+
+	/**
+	 * Resolves Bartizan's {@link WearableCatalog} lazily, never cached in a field — Bartizan may enable after this
+	 * module (or not be installed at all, per {@code module.yml}'s {@code Plugins: [Bartizan]}).
+	 */
+	@Nullable
+	private WearableCatalog wearables() {
+		RegisteredServiceProvider<BartizanApi> rsp = Bukkit.getServicesManager().getRegistration(BartizanApi.class);
+		return rsp == null ? null : rsp.getProvider().wearables();
 	}
 
 	/**
@@ -47,7 +54,7 @@ public class JetpackService implements BeanLifecycle {
 		if (activeSessions.containsKey(player.getUniqueId())) return;
 
 		JetpackSession session = new JetpackSession(player, jetpackWearable);
-		JetpackTask    task    = new JetpackTask(session, this, fuelService, physicsConfig, weaponService);
+		JetpackTask    task    = new JetpackTask(session, this, fuelService, physicsConfig);
 		session.setTask(task);
 
 		activeSessions.put(player.getUniqueId(), session);
@@ -108,10 +115,13 @@ public class JetpackService implements BeanLifecycle {
 	 */
 	public void scheduleChestplateCheck(Player player) {
 		player.getServer().getScheduler().runTask(plugin, () -> {
-			ItemStack chestplate = player.getInventory().getChestplate();
-			Wearable  wearable   = chestplate != null ? wearableService.resolveWearable(chestplate) : null;
+			WearableCatalog wearables  = wearables();
+			ItemStack       chestplate = player.getInventory().getChestplate();
+			Wearable wearable = chestplate != null && wearables != null ?
+			                   wearables.resolveWearable(chestplate) :
+			                   null;
 
-			if (wearable != null && wearable.isJetpack()) {
+			if (wearable != null && isJetpack(wearable)) {
 				activate(player, wearable);
 				return;
 			}
@@ -122,21 +132,32 @@ public class JetpackService implements BeanLifecycle {
 	}
 
 	/**
+	 * A wearable is a jetpack when it carries the {@code fuel} extra tag (P2 Q2 — jetpack data has no dedicated
+	 * {@code Wearable} fields any more, replacing the deleted {@code Wearable#isJetpack()}).
+	 */
+	private static boolean isJetpack(Wearable wearable) {
+		return wearable.extraTags().containsKey("fuel");
+	}
+
+	/**
 	 * Refreshes the {@link Wearable} definition references held by all active jetpack sessions. Must be called after
 	 * the wearable addon has been reloaded from config (e.g. on {@code /glw reload}) so that existing sessions
 	 * immediately pick up updated physics values. Sessions whose player is offline or no longer wearing a jetpack are
 	 * deactivated.
 	 */
 	public void refreshSessions() {
+		WearableCatalog wearables = wearables();
 		for (JetpackSession session : new ArrayList<>(activeSessions.values())) {
 			Player player = session.getPlayer();
 			if (!player.isOnline()) {
 				deactivate(player);
 				continue;
 			}
-			ItemStack chestplate    = player.getInventory().getChestplate();
-			Wearable  freshWearable = chestplate != null ? wearableService.resolveWearable(chestplate) : null;
-			if (freshWearable != null && freshWearable.isJetpack()) {
+			ItemStack chestplate = player.getInventory().getChestplate();
+			Wearable  freshWearable = chestplate != null && wearables != null ?
+			                         wearables.resolveWearable(chestplate) :
+			                         null;
+			if (freshWearable != null && isJetpack(freshWearable)) {
 				session.setJetpackWearable(freshWearable);
 			} else {
 				deactivate(player);

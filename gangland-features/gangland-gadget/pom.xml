@@ -76,6 +76,14 @@
             <artifactId>item-nbt-api-plugin</artifactId>
         </dependency>
 
+        <!-- Bartizan (weapons plugin) API — provided: at runtime Bartizan is resolved through the plugin's own
+             classloader when installed (module.yml Plugins: [Bartizan]). -->
+        <dependency>
+            <groupId>org.luckyraven.bartizan</groupId>
+            <artifactId>bartizan-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
         <!-- The host (core) jar. Provided: at runtime this module is loaded from plugins/Gangland_Warfare/modules/
              by Keystone's ModuleLoader, whose parent is the host plugin's classloader, so every impl class
              resolves from there. Dependency direction is module -> core; core never names a gadget type. -->

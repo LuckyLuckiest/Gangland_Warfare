@@ -4,6 +4,6 @@ Name: Gangland Gadgets
 Version: ${project.version}
 Main: org.luckyraven.gangland.gadget.GadgetModule
 Host_Api: 0.9
-Depends:
-  - weapon
+Plugins:
+  - Bartizan
 Artifact: org.luckyraven:gangland-gadget

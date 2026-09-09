@@ -15,6 +15,8 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.RegisteredServiceProvider;
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.bean.autowire.AutowireTarget;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.util.ParticleUtil;
@@ -23,11 +25,12 @@ import org.luckyraven.gangland.gadget.car.access.CarAccessPolicy;
 import org.luckyraven.gangland.gadget.car.message.CarMessageContract;
 import org.luckyraven.gangland.gadget.car.vehicle.ParkedVehicle;
 import org.luckyraven.gangland.gadget.car.vehicle.VehicleSession;
-import org.luckyraven.gangland.weapon.WeaponService;
-import org.luckyraven.gangland.weapon.events.WeaponEntityDamageEvent;
-import org.luckyraven.gangland.weapon.events.projectile.WeaponRaytraceImpactEvent;
-import org.luckyraven.gangland.weapon.types.melee.MeleeWeapon;
-import org.luckyraven.gangland.weapon.types.throwable.ThrowableAction;
+import org.luckyraven.bartizan.api.BartizanApi;
+import org.luckyraven.bartizan.api.event.WeaponEntityDamageEvent;
+import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
+import org.luckyraven.bartizan.api.weapon.MeleeWeapon;
+import org.luckyraven.bartizan.api.weapon.Weapon;
+import org.luckyraven.bartizan.api.weapon.WeaponCatalog;
 
 import java.util.Set;
 import java.util.UUID;
@@ -50,11 +53,10 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @ListenerHandler
 @RequiredArgsConstructor
-@AutowireTarget({CarService.class, WeaponService.class, CarAccessPolicy.class, CarMessageContract.class})
+@AutowireTarget({CarService.class, CarAccessPolicy.class, CarMessageContract.class})
 public class CarDamageListener implements Listener {
 
 	private final CarService         carService;
-	private final WeaponService      weaponService;
 	private final CarAccessPolicy    accessPolicy;
 	private final CarMessageContract messages;
 
@@ -64,6 +66,15 @@ public class CarDamageListener implements Listener {
 	 * fallback for a cancelled right-click interact.
 	 */
 	private final Set<UUID> pendingRightClickInteract = ConcurrentHashMap.newKeySet();
+
+	/**
+	 * Tracks vehicle entity UUIDs {@link #onWeaponEntityDamage} just applied weapon-configured explosion damage to.
+	 * {@code ThrowableAction}'s explosion still calls {@code World#createExplosion}, which fires a vanilla
+	 * {@link EntityDamageEvent}({@code ENTITY_EXPLOSION}/{@code BLOCK_EXPLOSION}) for the same vehicle right after —
+	 * {@link #onEntityDamage} consults this set to skip that vanilla event instead of double-applying damage. A plain
+	 * (non-weapon) explosion never populates this set, so it still falls through to the vanilla damage value.
+	 */
+	private final Set<UUID> recentWeaponExplosionDamage = ConcurrentHashMap.newKeySet();
 
 	// ------------------------------------------------------------------
 	// Right-click guard (prevents VehicleDamageEvent pickup false-positives)
@@ -113,8 +124,9 @@ public class CarDamageListener implements Listener {
 		// Shift + left-click on a parked car → pick it up.
 		// Guard: if VehicleDamageEvent was caused by a right-click interact (Paper quirk where cancelling
 		// PlayerInteractEntityEvent falls back to an attack packet), suppress the pickup entirely.
+		WeaponCatalog weapons = weapons();
 		if (parked != null && player.isSneaking() &&
-		    !weaponService.isWeapon(player.getInventory().getItemInMainHand())) {
+		    (weapons == null || !weapons.isWeapon(player.getInventory().getItemInMainHand()))) {
 			if (pendingRightClickInteract.remove(player.getUniqueId())) return;
 
 			// GD-06: pickup returns the car item, so an ungated pickup was outright theft.
@@ -152,20 +164,12 @@ public class CarDamageListener implements Listener {
 
 		event.setCancelled(true);
 
-		// For throwable grenade explosions, use the weapon's configured damage instead of the vanilla value
-		EntityDamageEvent.DamageCause cause = event.getCause();
-		boolean isExplosion = cause == EntityDamageEvent.DamageCause.ENTITY_EXPLOSION ||
-		                      cause == EntityDamageEvent.DamageCause.BLOCK_EXPLOSION;
-		int damage;
-		if (isExplosion) {
-			Double weaponDmg = ThrowableAction.pendingVehicleExplosionDamage.remove(entityUUID);
-			damage = weaponDmg != null ?
-			         Math.max(1, (int) Math.ceil(weaponDmg)) :
-			         Math.max(1, (int) Math.ceil(event.getDamage()));
-		} else {
-			damage = Math.max(1, (int) Math.ceil(event.getDamage()));
-		}
+		// A weapon-caused explosion already applied its configured damage via onWeaponEntityDamage, fired before
+		// ThrowableAction's World#createExplosion produces this vanilla event for the same vehicle — skip to avoid
+		// double damage. A plain (non-weapon) explosion never populates the set, so it still falls through below.
+		if (recentWeaponExplosionDamage.remove(entityUUID)) return;
 
+		int damage = Math.max(1, (int) Math.ceil(event.getDamage()));
 		applyDamage(entityUUID, session, parked, damage);
 	}
 
@@ -179,6 +183,15 @@ public class CarDamageListener implements Listener {
 		VehicleSession session    = carService.getVehicleRegistry().getByEntity(entityUUID);
 		ParkedVehicle  parked     = carService.getParkedVehicle(entityUUID);
 		if (session == null && parked == null) return;
+
+		if (event.kind() == WeaponEntityDamageEvent.DamageKind.EXPLOSION) {
+			// See recentWeaponExplosionDamage's javadoc: the vanilla EntityDamageEvent createExplosion() fires
+			// right after this event, for the same entity, must be skipped rather than double-applied.
+			recentWeaponExplosionDamage.add(entityUUID);
+			Bukkit.getScheduler()
+			      .runTaskLater(carService.getPlugin(), () -> recentWeaponExplosionDamage.remove(entityUUID), 1L);
+		}
+
 		int damage = Math.max(1, (int) Math.ceil(event.getDamage()));
 		applyDamage(entityUUID, session, parked, damage);
 	}
@@ -256,11 +269,24 @@ public class CarDamageListener implements Listener {
 	 * (vanilla punch damage).
 	 */
 	private int resolveMeleeDamage(Player player, int fallback) {
+		WeaponCatalog weapons = weapons();
+		if (weapons == null) return fallback;
+
 		ItemStack item   = player.getInventory().getItemInMainHand();
-		var       weapon = weaponService.validateAndGetWeapon(player, item);
+		Weapon    weapon = weapons.validateAndGetWeapon(player, item);
 		if (weapon instanceof MeleeWeapon melee) {
 			return (int) Math.ceil(melee.getMeleeData().getDamage());
 		}
 		return fallback;
+	}
+
+	/**
+	 * Resolves Bartizan's {@link WeaponCatalog} lazily, never cached in a field — Bartizan may enable after this
+	 * module (or not be installed at all, per {@code module.yml}'s {@code Plugins: [Bartizan]}).
+	 */
+	@Nullable
+	private WeaponCatalog weapons() {
+		RegisteredServiceProvider<BartizanApi> rsp = Bukkit.getServicesManager().getRegistration(BartizanApi.class);
+		return rsp == null ? null : rsp.getProvider().weapons();
 	}
 }
