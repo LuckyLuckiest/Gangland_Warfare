@@ -34,8 +34,8 @@ public class FuelService implements FuelContract {
 	/**
 	 * Resolves whether an item is a fuel <em>sink</em> (T-KR2 / review B2). gangland-item has no wearable catalog of
 	 * its own, so this starts as "never a sink" and a fuel-owning feature module (gadget) installs its own resolver
-	 * — see {@code GadgetModuleConfig}'s {@code @PostConstruct}, which resolves {@code BartizanApi} fresh on every
-	 * call rather than caching it.
+	 * — see {@code GadgetModuleConfig.jetpackService(...)}, which calls {@code fuelService.setFuelSinkPredicate(...)}
+	 * when wiring the {@code JetpackService} bean.
 	 */
 	private Predicate<ItemStack> fuelSinkPredicate = stack -> false;
 

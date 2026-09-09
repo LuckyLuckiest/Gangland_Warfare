@@ -3,16 +3,20 @@ package org.luckyraven.gangland.core.testsupport;
 import org.luckyraven.keystone.util.ReflectionUtil;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Simulates a Citizens-less server for a reflection-level regression test (D2/D-fix-1, smoke row D2 — Paper
@@ -65,22 +69,40 @@ public final class CitizensBlindScan {
 	 * 		package is safe on a Citizens-less server.
 	 */
 	public static List<String> findUnsafeClasses(String basePackage) {
-		ClassLoader   blind   = citizensBlindClassLoader();
+		URLClassLoader blind = citizensBlindClassLoader();
+
+		// Self-check #1: the loader must genuinely be unable to resolve Citizens types, or the scan below passes
+		// vacuously — this is exactly what the pre-fix path-based filter got wrong under Surefire's manifest-only
+		// booter jar (java.class.path is a single jar, so filtering entries containing "citizens" removed nothing).
+		assertThrows(ClassNotFoundException.class, () -> Class.forName("net.citizensnpcs.api.npc.NPC", false, blind),
+		             "the blind classloader must not be able to resolve Citizens types");
+
 		Set<Class<?>> classes = ReflectionUtil.findClasses(basePackage, blind);
 
 		Set<Class<?>> targets = new LinkedHashSet<>();
 		for (Class<?> clazz : classes) {
-			collectTargets(clazz, targets);
+			collectTargets(clazz, classes, targets);
 		}
+
+		// Self-check #2: an empty target set can never legitimately mean "safe" — it means the scan found nothing
+		// under basePackage, which would make every caller's assertTrue(unsafe.isEmpty()) pass vacuously.
+		assertFalse(targets.isEmpty(), "the scan found no scanned classes under " + basePackage);
 
 		List<String> unsafe = new ArrayList<>();
 		for (Class<?> clazz : targets) {
 			if (!isReflectionSafe(clazz)) unsafe.add(clazz.getName());
 		}
+
+		try {
+			blind.close();
+		} catch (IOException ignored) {
+			// Best-effort close of the scan's own classloader — a failure to release JAR handles here doesn't
+			// invalidate the reflection results already computed above.
+		}
 		return unsafe;
 	}
 
-	private static void collectTargets(Class<?> clazz, Set<Class<?>> targets) {
+	private static void collectTargets(Class<?> clazz, Set<Class<?>> classes, Set<Class<?>> targets) {
 		for (Annotation annotation : clazz.getAnnotations()) {
 			String annotationName = annotation.annotationType().getName();
 			if (!SCANNED_ANNOTATIONS.contains(annotationName)) continue;
@@ -94,7 +116,7 @@ public final class CitizensBlindScan {
 				// makes today, and none of this repo's @Bean factory methods put a Citizens type in their own
 				// signature — only the manager classes they return do.
 				targets.add(clazz);
-				targets.addAll(beanReturnTypes(clazz));
+				targets.addAll(beanReturnTypes(clazz, classes));
 				return;
 			}
 
@@ -109,12 +131,42 @@ public final class CitizensBlindScan {
 		}
 	}
 
-	private static List<Class<?>> beanReturnTypes(Class<?> configClass) {
+	/**
+	 * A {@code @Bean} method's DECLARED return type is not necessarily what Keystone reflects on at runtime —
+	 * {@code BeanFactory} registers and later reflects on the bean's actual runtime CLASS
+	 * ({@code target.getClass()} in {@code runPostConstruct}/{@code runInitialize}), so when the declared return
+	 * type is an interface or abstract class (e.g. {@code TraderModuleConfig.traderEconomyContract()} declares
+	 * {@code TraderEconomyContract} but returns a {@code GanglandTraderEconomy}), every scanned class assignable to
+	 * it is a target too — not just the declared type, which is never itself instantiated.
+	 */
+	private static List<Class<?>> beanReturnTypes(Class<?> configClass, Set<Class<?>> classes) {
 		List<Class<?>> types = new ArrayList<>();
-		for (Method method : configClass.getDeclaredMethods()) {
+
+		Method[] declaredMethods;
+		try {
+			declaredMethods = configClass.getDeclaredMethods();
+		} catch (NoClassDefFoundError error) {
+			// The @Configuration class itself is poisoned (its own signature names a type this blind loader can't
+			// resolve). isReflectionSafe() below independently re-attempts this same call for every target
+			// (configClass is already in targets via collectTargets) and correctly reports it as unsafe there —
+			// this guard only stops that failure from surfacing here as an uncaught test error instead of a named
+			// finding.
+			return types;
+		}
+
+		for (Method method : declaredMethods) {
 			for (Annotation annotation : method.getAnnotations()) {
-				if (BEAN_ANNOTATION.equals(annotation.annotationType().getName())) {
-					types.add(method.getReturnType());
+				if (!BEAN_ANNOTATION.equals(annotation.annotationType().getName())) continue;
+
+				Class<?> returnType = method.getReturnType();
+				types.add(returnType);
+
+				if (returnType.isInterface() || Modifier.isAbstract(returnType.getModifiers())) {
+					for (Class<?> candidate : classes) {
+						if (candidate != returnType && returnType.isAssignableFrom(candidate)) {
+							types.add(candidate);
+						}
+					}
 				}
 			}
 		}
@@ -143,11 +195,12 @@ public final class CitizensBlindScan {
 	}
 
 	private static URLClassLoader citizensBlindClassLoader() {
-		String    classpath = System.getProperty("java.class.path");
-		List<URL> urls      = new ArrayList<>();
-
-		for (String entry : classpath.split(File.pathSeparator)) {
-			if (entry.toLowerCase(Locale.ROOT).contains("citizens")) continue;
+		// Filtering by classpath ENTRY (path/jar name) doesn't work under Surefire's default manifest-only booter
+		// jar: java.class.path is then a single jar (whose manifest Class-Path attribute transitively pulls in the
+		// real classpath, citizens-main included), so a path-based "skip anything containing citizens" filter has
+		// nothing to remove. Refuse by class NAME instead — deterministic regardless of how the classpath is shaped.
+		List<URL> urls = new ArrayList<>();
+		for (String entry : System.getProperty("java.class.path").split(File.pathSeparator)) {
 			try {
 				urls.add(new File(entry).toURI().toURL());
 			} catch (MalformedURLException ignored) {
@@ -155,6 +208,12 @@ public final class CitizensBlindScan {
 			}
 		}
 
-		return new URLClassLoader(urls.toArray(new URL[0]), ClassLoader.getPlatformClassLoader());
+		return new URLClassLoader(urls.toArray(new URL[0]), ClassLoader.getPlatformClassLoader()) {
+			@Override
+			protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+				if (name.startsWith("net.citizensnpcs.")) throw new ClassNotFoundException(name);
+				return super.loadClass(name, resolve);
+			}
+		};
 	}
 }
