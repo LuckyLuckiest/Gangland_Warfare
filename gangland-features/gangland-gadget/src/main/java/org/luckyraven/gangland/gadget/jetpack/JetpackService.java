@@ -134,8 +134,12 @@ public class JetpackService implements BeanLifecycle {
 	/**
 	 * A wearable is a jetpack when it carries the {@code fuel} extra tag (P2 Q2 — jetpack data has no dedicated
 	 * {@code Wearable} fields any more, replacing the deleted {@code Wearable#isJetpack()}).
+	 *
+	 * <p>Public so {@code GadgetModuleConfig} can reuse the same predicate for
+	 * {@link org.luckyraven.gangland.item.fuel.FuelService#setFuelSinkPredicate} (T-KR2, review B2) instead of
+	 * duplicating the "fuel" tag check.
 	 */
-	private static boolean isJetpack(Wearable wearable) {
+	public static boolean isJetpack(Wearable wearable) {
 		return wearable.extraTags().containsKey("fuel");
 	}
 

@@ -1,7 +1,13 @@
 package org.luckyraven.gangland.gadget.config;
 
 import lombok.CustomLog;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.RegisteredServiceProvider;
+import org.luckyraven.bartizan.api.BartizanApi;
+import org.luckyraven.bartizan.api.wearable.Wearable;
+import org.luckyraven.bartizan.api.wearable.WearableCatalog;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.gadget.car.CarService;
 import org.luckyraven.gangland.gadget.car.ParkedCar;
@@ -27,6 +33,7 @@ import org.luckyraven.keystone.item.ItemSerializerRegistry;
 import org.luckyraven.gangland.item.fuel.FuelService;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
+import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.keystone.persistence.repository.IRepository;
@@ -50,10 +57,33 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 @Configuration
 public class GadgetModuleConfig {
 
-	private final Gangland gangland;
+	private final Gangland    gangland;
+	private final FuelService fuelService;
 
-	public GadgetModuleConfig(Gangland gangland) {
-		this.gangland = gangland;
+	public GadgetModuleConfig(Gangland gangland, FuelService fuelService) {
+		this.gangland    = gangland;
+		this.fuelService = fuelService;
+	}
+
+	/**
+	 * T-KR2 (review B2): installs the jetpack-refuel sink predicate onto the shared {@link FuelService} so
+	 * {@code FuelRefuelListener}'s container-to-sink click transfers fuel from a container (e.g. gasoline) into a
+	 * worn jetpack again. {@link BartizanApi} is resolved fresh from the {@code ServicesManager} on every call
+	 * (never cached in a field) — Bartizan may enable after this module, or not be installed at all
+	 * ({@code module.yml}'s {@code Plugins: [Bartizan]}), in which case the predicate simply reports "not a sink".
+	 */
+	@PostConstruct
+	public void installJetpackFuelSink() {
+		fuelService.setFuelSinkPredicate(this::isJetpackFuelSink);
+	}
+
+	private boolean isJetpackFuelSink(ItemStack stack) {
+		RegisteredServiceProvider<BartizanApi> rsp = Bukkit.getServicesManager().getRegistration(BartizanApi.class);
+		if (rsp == null) return false;
+
+		WearableCatalog wearables = rsp.getProvider().wearables();
+		Wearable        wearable  = wearables.resolveWearable(stack);
+		return wearable != null && JetpackService.isJetpack(wearable);
 	}
 
 	@Bean

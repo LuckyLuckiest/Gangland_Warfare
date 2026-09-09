@@ -384,9 +384,6 @@ Cops:
       # Distance to the station at which the cop considers itself arrived and attempts to despawn (blocks).
       Station_Arrival_Distance: 3.0
 
-   # Number of full magazine reloads worth of ammo given to a cop NPC on spawn.
-   Starting_Ammo_Magazines: 3
-
 # +-------------------+ #
 # | Detainment Config | #
 # +-------------------+ #

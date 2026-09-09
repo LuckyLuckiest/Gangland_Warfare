@@ -1,7 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.listener.detainment;
 
 import lombok.RequiredArgsConstructor;
-import net.citizensnpcs.api.CitizensAPI;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -16,6 +15,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
 import org.luckyraven.gangland.gang.events.wanted.WantedEndEvent;
 import org.luckyraven.gangland.gang.events.wanted.WantedLevelChangeEvent;
@@ -110,11 +110,14 @@ public class CopListener implements Listener {
 
 		Entity damager = event.getDamager();
 
+		// T-KR4 (review M4): CitizensAPI.getNPCRegistry() was unguarded here — NpcSupport.isNpc() is the T-M3
+		// established, never-throws replacement (false when Citizens is absent, so a genuine player attacker
+		// still resolves instead of falling through to the non-player branch below).
 		Player attacker;
-		if (damager instanceof Player player && !CitizensAPI.getNPCRegistry().isNPC(player)) {
+		if (damager instanceof Player player && !NpcSupport.isNpc(player)) {
 			attacker = player;
 		} else if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player player
-		           && !CitizensAPI.getNPCRegistry().isNPC(player)) {
+		           && !NpcSupport.isNpc(player)) {
 			attacker = player;
 		} else {
 			// Friendly fire: cancel damage when a cop is hit by another cop's attack
@@ -172,7 +175,7 @@ public class CopListener implements Listener {
 			return;
 		}
 
-		if (shooter instanceof Player attacker && !CitizensAPI.getNPCRegistry().isNPC(attacker)) {
+		if (shooter instanceof Player attacker && !NpcSupport.isNpc(attacker)) {
 			CopNpc cop = copManager.findCopByEntity(victim);
 			if (cop == null) return;
 			copManager.onCopAttackedAlert(cop, attacker);

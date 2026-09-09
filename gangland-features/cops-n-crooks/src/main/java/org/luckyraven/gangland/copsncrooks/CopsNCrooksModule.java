@@ -4,9 +4,12 @@ import lombok.CustomLog;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksFileConfig;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksYamlConfig;
+import org.luckyraven.keystone.diagnostics.Diagnostics;
+import org.luckyraven.keystone.diagnostics.Fault;
 import org.luckyraven.keystone.module.KeystoneModule;
 import org.luckyraven.keystone.module.ModuleContext;
 import org.luckyraven.keystone.module.ModuleRegistrar;
+import org.luckyraven.keystone.npc.NpcSupport;
 
 /**
  * Entry point of the cops-n-crooks module ({@code module.yml} {@code Main}). Declares what the module contributes;
@@ -36,6 +39,19 @@ public final class CopsNCrooksModule implements KeystoneModule {
 	@Override
 	public void onEnabled(ModuleContext context) {
 		log.info("Cops-n-crooks module {} enabled", context.module().descriptor().version());
+
+		// T-KR1: the actual guard lives at the spawn choke point (CopNpcFactory#createCop, which no-ops when
+		// Citizens is absent) — this is the one-time, human-readable report of that same condition, matching
+		// CiviliansModule/TurfModule's shape. Cops have no module-level spawn timer to skip here: unlike
+		// civilians/turf, cop AI/spawn BukkitTasks are started per-player from CopListener's wanted-event
+		// handlers (CopManager#onWantedStart), never eagerly at module enable time, so there is no
+		// CopSpawnManager/CopManager "start" call site to gate.
+		if (!NpcSupport.available()) {
+			Diagnostics.active()
+			           .report(Fault.dependency(NpcSupport.FAULT_CITIZENS_MISSING,
+			                                    "Citizens is not installed or not enabled — cop NPCs will not spawn.")
+			                        .build());
+		}
 	}
 
 	@Override

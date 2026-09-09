@@ -20,6 +20,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.npc.spi.NpcRangedAttack;
 import org.luckyraven.keystone.util.ChatUtil;
@@ -76,6 +77,8 @@ public class CopNpcFactory {
 	 * @return the created CopNpc, or null if spawning failed
 	 */
 	public CopNpc createCop(Location spawnLocation, int tier, boolean validateAfterSpawn) {
+		if (!NpcSupport.available()) return null;
+
 		CopTierConfig tierConfig = configProvider.getTierConfig(tier);
 
 		String plainName = ChatUtil.replaceColorCodes(ChatUtil.color(tierConfig.displayName()), "");

@@ -14,6 +14,7 @@ import org.luckyraven.gangland.core.testsupport.BukkitRegistryFixture;
 import org.luckyraven.gangland.item.fuel.Fuel;
 import org.luckyraven.gangland.item.fuel.FuelContract;
 import org.luckyraven.gangland.item.fuel.FuelKey;
+import org.luckyraven.gangland.item.fuel.FuelService;
 import org.luckyraven.gangland.item.support.PerStackNbtAccessor;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.item.nbt.NbtBridge;
@@ -130,6 +131,41 @@ class FuelRefuelListenerTest {
 		verify(event).setCurrentItem(currentCaptor.capture());
 		assertEquals(50, Fuel.readFuelCurrent(currentCaptor.getValue()),
 		             "the sink must receive the transferred fuel");
+
+		var cursorCaptor = org.mockito.ArgumentCaptor.forClass(ItemStack.class);
+		verify(view).setCursor(cursorCaptor.capture());
+		assertEquals(10, Fuel.readFuelCurrent(cursorCaptor.getValue()),
+		             "the container must be drained by exactly what the sink accepted");
+	}
+
+	@Test
+	@DisplayName("T-KR2: a real FuelService with an installed sink predicate still transfers container -> sink")
+	void containerToSink_viaFuelServicePredicate_transfers() {
+		// Unlike the two tests above (a mocked FuelContract), this drives the real FuelService — the gadget
+		// module's actual runtime contract — through FuelService#setFuelSinkPredicate, the seam T-KR2 adds so
+		// isFuelSink no longer always inherits the interface's `false` default (review B2: jetpack refuel from a
+		// gasoline can was dead because nothing ever installed a predicate).
+		ItemStack container = fuelItem(50, 100);
+		ItemStack wearable  = fuelItem(10, 50);
+
+		FuelService realFuelService = new FuelService();
+		// same()-style stub: plain ItemStacks with no real ItemMeta compare equal to each other (see
+		// containerToSink_stillTransfers's comment), so the predicate must key off identity, not equals.
+		realFuelService.setFuelSinkPredicate(stack -> stack == wearable);
+		FuelRefuelListener realListener = new FuelRefuelListener(realFuelService);
+
+		InventoryClickEvent event = clickEvent(container, wearable);
+
+		try (MockedStatic<ActionBarManager> ignored = mockStatic(ActionBarManager.class)) {
+			realListener.onInventoryClick(event);
+		}
+
+		verify(event).setCancelled(true);
+
+		var currentCaptor = org.mockito.ArgumentCaptor.forClass(ItemStack.class);
+		verify(event).setCurrentItem(currentCaptor.capture());
+		assertEquals(50, Fuel.readFuelCurrent(currentCaptor.getValue()),
+		             "the sink must receive the transferred fuel through the real FuelService predicate");
 
 		var cursorCaptor = org.mockito.ArgumentCaptor.forClass(ItemStack.class);
 		verify(view).setCursor(cursorCaptor.capture());

@@ -72,7 +72,6 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final double stationArrivalDistance;
 
 	// Misc
-	private final int    startingAmmoMagazines;
 	private final double guardRadius;
 
 	/**
@@ -128,8 +127,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.maxReturnTicks         = copSettings != null ? copSettings.getMaxReturnTicks() : 600;
 		this.stationArrivalDistance = copSettings != null ? copSettings.getStationArrivalDistance() : 3.0;
 
-		this.startingAmmoMagazines = copSettings != null ? copSettings.getStartingAmmoMagazines() : 3;
-		this.guardRadius           = copSettings != null ? copSettings.getGuardRadius() : 5.0;
+		this.guardRadius = copSettings != null ? copSettings.getGuardRadius() : 5.0;
 
 		loadTiers(copsReader, report, itemParser);
 		buildCopsPerWantedLevel(copSettings);
@@ -325,11 +323,6 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	@Override
 	public double getStationArrivalDistance() {
 		return stationArrivalDistance;
-	}
-
-	@Override
-	public int getStartingAmmoMagazines() {
-		return startingAmmoMagazines;
 	}
 
 	@Override

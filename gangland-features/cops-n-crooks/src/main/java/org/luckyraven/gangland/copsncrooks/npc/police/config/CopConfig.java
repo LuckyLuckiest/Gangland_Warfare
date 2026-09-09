@@ -53,9 +53,6 @@ public class CopConfig {
 	private final int    maxReturnTicks;
 	private final double stationArrivalDistance;
 
-	// Misc
-	private final int startingAmmoMagazines;
-
 	public static CopConfig fromProvider(CopConfigProvider provider) {
 		return CopConfig.builder()
 		                .tiers(loadTiers(provider))
@@ -93,7 +90,6 @@ public class CopConfig {
 		                .pursuitMaxTicks(provider.getPursuitMaxTicks())
 		                .maxReturnTicks(provider.getMaxReturnTicks())
 		                .stationArrivalDistance(provider.getStationArrivalDistance())
-		                .startingAmmoMagazines(provider.getStartingAmmoMagazines())
 		                .build();
 	}
 

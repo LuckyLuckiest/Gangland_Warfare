@@ -216,11 +216,6 @@ public class GanglandCopSettings implements CopSettings {
 	}
 
 	@Override
-	public int getStartingAmmoMagazines() {
-		return Settings.getCopStartingAmmoMagazines();
-	}
-
-	@Override
 	public double getGuardRadius() {
 		return Settings.getDetainmentGuardRadius();
 	}

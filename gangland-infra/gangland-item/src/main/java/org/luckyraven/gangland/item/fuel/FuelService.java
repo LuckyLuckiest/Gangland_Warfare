@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 
 /**
  * Central runtime API for fuel operations. Manages a registry of {@link Fuel} definitions and provides methods to
@@ -30,9 +31,30 @@ public class FuelService implements FuelContract {
 	 */
 	private final Map<UUID, Map<String, Integer>> slotCache = new ConcurrentHashMap<>();
 
+	/**
+	 * Resolves whether an item is a fuel <em>sink</em> (T-KR2 / review B2). gangland-item has no wearable catalog of
+	 * its own, so this starts as "never a sink" and a fuel-owning feature module (gadget) installs its own resolver
+	 * — see {@code GadgetModuleConfig}'s {@code @PostConstruct}, which resolves {@code BartizanApi} fresh on every
+	 * call rather than caching it.
+	 */
+	private Predicate<ItemStack> fuelSinkPredicate = stack -> false;
+
 	// =========================================================================
 	// Registry
 	// =========================================================================
+
+	/**
+	 * Installs the predicate {@link #isFuelSink(ItemStack)} delegates to. Called once by the fuel-owning module's
+	 * config bean; defaults to "never a sink" when no module installs one.
+	 */
+	public void setFuelSinkPredicate(Predicate<ItemStack> fuelSinkPredicate) {
+		this.fuelSinkPredicate = fuelSinkPredicate;
+	}
+
+	@Override
+	public boolean isFuelSink(ItemStack stack) {
+		return fuelSinkPredicate.test(stack);
+	}
 
 	/**
 	 * Registers a fuel definition. Called during config loading.

@@ -151,7 +151,6 @@ public class Settings implements FileInitializer {
 	private static @Getter int        copReturnMaxTicks;
 	private static @Getter double     copReturnStationArrivalDistance;
 	// cop misc configuration
-	private static @Getter int        copStartingAmmoMagazines;
 	private static @Getter int        jailMaxCapacity;
 	// detainment transit / guard
 	private static @Getter int        detainmentTransitDelayTicks;
@@ -639,8 +638,6 @@ public class Settings implements FileInitializer {
 
 		copReturnMaxTicks               = intVal(copsReturn, "Max_Ticks", 600);
 		copReturnStationArrivalDistance = dbl(copsReturn, "Station_Arrival_Distance", 3.0);
-
-		copStartingAmmoMagazines = intVal(cop, "Starting_Ammo_Magazines", 3);
 
 		// detainment
 		NodeReader detainment    = section(root, "Detainment", report);

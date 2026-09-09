@@ -2,7 +2,6 @@ package org.luckyraven.gangland.copsncrooks.listener;
 
 import lombok.RequiredArgsConstructor;
 import net.citizensnpcs.api.CitizensAPI;
-import net.citizensnpcs.api.event.NPCSpawnEvent;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -10,13 +9,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.luckyraven.gangland.civilians.npc.entity.EntityMark;
 import org.luckyraven.gangland.civilians.npc.entity.EntityMarks;
 import org.luckyraven.keystone.bean.autowire.AutowireTarget;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.npc.NpcMetadata;
+import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
 
@@ -25,8 +23,9 @@ import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
  *
  * <p>Protection is stripped at three points:
  * <ol>
- *   <li><b>Spawn-time</b> — a repeating task strips protection every tick for 20 ticks after spawn,
- *       covering the full Citizens trait initialization window.</li>
+ *   <li><b>Spawn-time</b> — {@link NpcSpawnUnprotectListener} (split out T-KR4, review M4: its
+ *       {@code @EventHandler} parameter type is Citizens' {@code NPCSpawnEvent}, so it needs its own
+ *       {@code condition = "isCitizensAvailable"} gate — see that class's javadoc).</li>
  *   <li><b>Pre-damage (raytrace)</b> — strips protection on {@link WeaponRaytraceImpactEvent} before
  *       the raytracer calls {@code living.damage()}.</li>
  *   <li><b>During damage</b> — a {@code LOW}-priority handler strips protection before Citizens'
@@ -38,47 +37,10 @@ import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
  */
 @ListenerHandler
 @RequiredArgsConstructor
-@AutowireTarget({NpcMarkManager.class, JavaPlugin.class})
+@AutowireTarget({NpcMarkManager.class})
 public class NpcDamageUnprotectListener implements Listener {
 
 	private final NpcMarkManager markManager;
-	private final JavaPlugin     plugin;
-
-	/**
-	 * Strips protection from every Gangland NPC after spawn. Runs every tick for 20 ticks to cover the full Citizens
-	 * trait initialization window. After this window, {@code AbstractNpc.ensureDamageable()} (every AI tick) takes
-	 * over.
-	 */
-	@EventHandler
-	public void onNpcSpawn(NPCSpawnEvent event) {
-		NPC npc = event.getNPC();
-
-		if (npc.data().get(NPC.Metadata.SHOULD_SAVE) != null
-		    && (boolean) npc.data().get(NPC.Metadata.SHOULD_SAVE)) {
-			return;
-		}
-
-		// Traders/bankers opt out of strip-protection: the Invulnerable trait needs the Citizens/Bukkit flags to
-		// stay set.
-		if (isShopNpc(npc)) {
-			return;
-		}
-
-		stripProtection(npc);
-
-		new BukkitRunnable() {
-			private int remaining = 20;
-
-			@Override
-			public void run() {
-				if (!npc.isSpawned() || remaining-- <= 0) {
-					cancel();
-					return;
-				}
-				stripProtection(npc);
-			}
-		}.runTaskTimer(plugin, 1L, 1L);
-	}
 
 	/**
 	 * Strips Citizens protection at LOW priority (before Citizens' HIGHEST handler) so that Citizens sees the NPC as
@@ -87,6 +49,10 @@ public class NpcDamageUnprotectListener implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = false)
 	public void onNpcDamage(EntityDamageEvent event) {
+		// T-KR4 (review M4): every CitizensAPI reach below is unguarded without this — the whole handler is
+		// meaningless without Citizens (there are no Citizens NPCs to strip protection from).
+		if (!NpcSupport.available()) return;
+
 		Entity entity = event.getEntity();
 		if (!CitizensAPI.getNPCRegistry().isNPC(entity)) {
 			return;
@@ -118,6 +84,9 @@ public class NpcDamageUnprotectListener implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onWeaponImpact(WeaponRaytraceImpactEvent event) {
+		// T-KR4 (review M4): every CitizensAPI reach below is unguarded without this.
+		if (!NpcSupport.available()) return;
+
 		Entity entity = event.getHitEntity();
 		if (entity == null) {
 			return;
@@ -154,19 +123,5 @@ public class NpcDamageUnprotectListener implements Listener {
 	 */
 	private boolean isShopNpc(NPC npc) {
 		return npc != null && (npc.data().has(NpcMetadata.TRADER_ID) || npc.data().has(NpcMetadata.BANKER_ID));
-	}
-
-	private void stripProtection(NPC npc) {
-		npc.setProtected(false);
-
-		Entity entity = npc.getEntity();
-		if (entity == null) return;
-
-		entity.setInvulnerable(false);
-
-		if (entity instanceof LivingEntity living) {
-			living.setMaximumNoDamageTicks(0);
-			living.setNoDamageTicks(0);
-		}
 	}
 }

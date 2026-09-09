@@ -222,11 +222,6 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 	double getStationArrivalDistance();
 
 	/**
-	 * Number of full magazine reloads worth of ammo given to a cop NPC on spawn.
-	 */
-	int getStartingAmmoMagazines();
-
-	/**
 	 * Radius (blocks) the GUARDING cop tries to stay within from the cuffed player awaiting jail transit.
 	 */
 	default double getGuardRadius() {

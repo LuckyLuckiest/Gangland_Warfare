@@ -121,6 +121,12 @@ public class CarDamageListener implements Listener {
 
 		event.setCancelled(true);
 
+		// T-KR3 (review M3): a thrown-grenade explosion damages a Minecart through VehicleDamageEvent (attacker =
+		// the thrower), not EntityDamageEvent as onEntityDamage's own javadoc assumed — see
+		// recentWeaponExplosionDamage's javadoc for the full ordering. Without this check the weapon-configured
+		// explosion damage applied by onWeaponEntityDamage was immediately doubled here as an ordinary punch.
+		if (recentWeaponExplosionDamage.remove(entityUUID)) return;
+
 		// Shift + left-click on a parked car → pick it up.
 		// Guard: if VehicleDamageEvent was caused by a right-click interact (Paper quirk where cancelling
 		// PlayerInteractEntityEvent falls back to an attack packet), suppress the pickup entirely.
