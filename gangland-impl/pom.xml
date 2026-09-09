@@ -146,10 +146,11 @@
             <artifactId>VaultAPI</artifactId>
         </dependency>
 
-        <!-- CitizenAPI -->
+        <!-- Citizens is a soft dependency everywhere (0.9.0, T-M3): the core reaches it only through
+             Keystone's NpcSupport, never the Citizens API package directly. -->
         <dependency>
-            <groupId>net.citizensnpcs</groupId>
-            <artifactId>citizens-main</artifactId>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-npc</artifactId>
         </dependency>
 
         <!-- ViaVersion -->

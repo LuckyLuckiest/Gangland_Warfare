@@ -12,6 +12,7 @@ import org.bstats.bukkit.Metrics;
 import org.bstats.charts.AdvancedPie;
 import org.bstats.charts.SingleLineChart;
 import org.bukkit.Bukkit;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -165,7 +166,9 @@ public final class Gangland extends JavaPlugin {
 		Dependency nbtApi = new Dependency("NBTAPI", Dependency.Type.REQUIRED);
 		nbtApi.validate(null);
 
-		Dependency citizens = new Dependency("Citizens", Dependency.Type.REQUIRED);
+		// Citizens is a soft dependency (0.9.0, T-M2): NPC-owning modules degrade with a readable fault
+		// (NpcSupport.FAULT_CITIZENS_MISSING) instead of the whole plugin refusing to enable.
+		Dependency citizens = new Dependency("Citizens", Dependency.Type.SOFT);
 		citizens.validate(null);
 
 		// soft dependencies
@@ -257,7 +260,10 @@ public final class Gangland extends JavaPlugin {
 		}
 
 		public void validate(@Nullable Runnable runnable) {
-			if (Bukkit.getPluginManager().getPlugin(name) != null) {
+			// A present-but-disabled plugin (e.g. Citizens failed its own enable) must not be treated as linked
+			// (T-M2) — getPlugin(name) != null alone accepts that case.
+			Plugin p = Bukkit.getPluginManager().getPlugin(name);
+			if (p != null && p.isEnabled()) {
 				if (type == Type.SOFT) log.info("Found {}, linking...", label);
 				if (runnable != null) runnable.run();
 

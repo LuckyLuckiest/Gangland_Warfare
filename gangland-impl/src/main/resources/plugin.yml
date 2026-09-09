@@ -7,11 +7,12 @@ api-version: 1.16
 depend:
    - Keystone
    - NBTAPI
-   - Citizens
 softdepend:
    - PlaceholderAPI
    - Vault
    - ViaVersion
+   - Citizens
+   - Bartizan
 author: LuckyRaven10
 description: ${project.description}
 

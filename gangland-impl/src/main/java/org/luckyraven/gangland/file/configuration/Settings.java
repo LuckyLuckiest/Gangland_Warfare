@@ -12,6 +12,7 @@ import org.luckyraven.keystone.persistence.config.ConfigReport;
 import org.luckyraven.keystone.persistence.config.FileHandlerReader;
 import org.luckyraven.keystone.persistence.config.MappingNode;
 import org.luckyraven.keystone.persistence.config.NodeReader;
+import org.luckyraven.keystone.npc.NpcSupport;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -275,6 +276,22 @@ public class Settings implements FileInitializer {
 	 */
 	public static String formatAmount(BigDecimal value) {
 		return NumberUtil.valueFormat(value);
+	}
+
+	/**
+	 * Whether Citizens is installed and enabled right now. Not a YAML-backed setting — a plain computed check —
+	 * but {@code @ListenerHandler}'s {@code condition} attribute only resolves against methods declared on this
+	 * class (see {@link #getSetting}), so a listener whose {@code @EventHandler} parameter type is a Citizens
+	 * event (e.g. {@code NPCRightClickEvent}) gates its own registration with
+	 * {@code @ListenerHandler(condition = "isCitizensAvailable")}: Bukkit's reflective scan resolves every
+	 * {@code @EventHandler} method's parameter type eagerly, and on a Citizens-less server that throws
+	 * {@code NoClassDefFoundError} uncaught out of {@code ListenerService.registerEvents()} (Keystone's own guard
+	 * catches the first attempt and falls back to Bukkit's un-guarded registration, which throws the same way) —
+	 * skipping construction/registration entirely is the only fix that does not touch Keystone
+	 * (REVIEW-gangland-RI.md finding I-2).
+	 */
+	public static boolean isCitizensAvailable() {
+		return NpcSupport.available();
 	}
 
 	public static Method getSetting(String methodName) {

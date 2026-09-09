@@ -1,6 +1,5 @@
 package org.luckyraven.gangland.listener.player;
 
-import net.citizensnpcs.api.CitizensAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -15,6 +14,7 @@ import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.datastructure.ScientificCalculator;
+import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.util.NumberUtil;
@@ -51,7 +51,7 @@ public class PlayerDeathListener implements Listener {
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onPlayerDeath(PlayerDeathEvent event) {
-		if (CitizensAPI.getNPCRegistry().isNPC(event.getEntity())) {
+		if (NpcSupport.isNpc(event.getEntity())) {
 			event.setDeathMessage(null);
 			return;
 		}
@@ -172,7 +172,7 @@ public class PlayerDeathListener implements Listener {
 		// vanilla "[NpcName] slain" message would show. Suppress it explicitly.
 		EntityDamageEvent cause = player.getLastDamageCause();
 		if (cause instanceof EntityDamageByEntityEvent byEntity
-		    && CitizensAPI.getNPCRegistry().isNPC(byEntity.getDamager())) {
+		    && NpcSupport.isNpc(byEntity.getDamager())) {
 			event.setDeathMessage(null);
 			return;
 		}

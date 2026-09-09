@@ -21,9 +21,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * {@code container.getInstance(GanglandMoneyDropClassifier.class)}, and the module's {@code @PostConstruct}
  * install hook throws at boot whenever the module is present. Found by the flip-1 code review (2026-09-07).
  *
- * <p>The {@code turfNpcContracts} holder pin moved to the turf module's own
- * {@code TurfModuleConfigHolderSeamTest} in the 0.8.4 turf flip (group C, T7): {@code TurfConfig} was deleted from
- * core when its beans moved verbatim into {@code TurfModuleConfig}, and core code may not name a module type.
+ * <p>The {@code turfNpcContracts} holder pin lived in the turf module's own {@code TurfModuleConfigHolderSeamTest}
+ * from the 0.8.4 turf flip (group C, T7) — {@code TurfConfig} was deleted from core when its beans moved verbatim
+ * into {@code TurfModuleConfig} there. In the 0.9.0 turf-NPC move (group I, T-I4) the {@code TurfNpcContracts}
+ * holder itself was deleted along with {@code TurfNpcsModuleConfig}: {@code GarrisonDeployListener} now injects
+ * {@code TurfDefenderDeployer}/{@code TurfPowerupManager} directly instead of going through a holder seam, so
+ * {@code TurfModuleConfigHolderSeamTest} was deleted with it rather than repointed — there is no successor pin.
  */
 class HolderSeamBeanTypeTest {
 

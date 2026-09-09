@@ -15,8 +15,13 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
  * Routes right-clicks on the per-turf Quartermaster NPC into the panel flow. Owner-gang gating + viewer-has-gang checks
  * happen on the {@link TurfPowerupOpenContract} side (gangland-impl), where the turf and gang modules are both visible
  * — this listener just resolves the entity → turf id and hands off.
+ *
+ * <p>{@code condition = "isCitizensAvailable"} (0.9.0, orchestrator directive off REVIEW-gangland-RI.md finding I-2):
+ * this class's own {@code @EventHandler} parameter type is Citizens' {@code NPCRightClickEvent}, so scanning/
+ * registering it on a Citizens-less server throws {@code NoClassDefFoundError} out of the listener phase — see
+ * {@link org.luckyraven.gangland.file.configuration.Settings#isCitizensAvailable()}.
  */
-@ListenerHandler
+@ListenerHandler(condition = "isCitizensAvailable")
 @RequiredArgsConstructor
 public final class TurfPowerupInteractListener implements Listener {
 

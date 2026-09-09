@@ -1,6 +1,5 @@
 package org.luckyraven.gangland.listener.player;
 
-import net.citizensnpcs.api.CitizensAPI;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -25,6 +24,7 @@ import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.command.sub.RespawnCommand;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
 import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
 import org.luckyraven.gangland.core.downed.PlayerUndownedEvent;
@@ -94,7 +94,7 @@ public class CustomPlayerDeathListener implements Listener {
 		if (!(event.getEntity() instanceof Player player)) return;
 
 		// Citizens NPCs with PLAYER entity type are instanceof Player — they must die normally.
-		if (CitizensAPI.getNPCRegistry().isNPC(player)) return;
+		if (NpcSupport.isNpc(player)) return;
 
 		UUID uuid = player.getUniqueId();
 
