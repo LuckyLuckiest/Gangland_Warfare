@@ -10393,5 +10393,26 @@
 "recheck": true,
 "case": "https://claude.ai/code/artifact/d2dbe24f-1d3f-46ca-9353-0c2775157df9#sec-observations-potential-issues",
 "source": "test suite (2026-09-04)"
+},
+{
+"id": "T-35",
+"code": "T",
+"sys": "weapons",
+"sysName": "Weapons",
+"sysOrder": "11",
+"num": 35,
+"tier": "P2",
+"title": "Bartizan shipped Database.SQLite.Backup: true with MySQL.Host: localhost, so every SQLite boot logged \"Failed to create a backup for 'SQLite' in 'bartizan' database\" on shutdown (the T-16 defect repeated in the new plugin)",
+"fix": "FIXED (Bartizan master 0e18356): BartizanSettings defaults sqliteBackup to false and settings.yml ships Backup: false with a comment to enable it only against a reachable MySQL",
+"tests": "none dedicated; phase-D smoke rows D1/D3 must_not_contain 'Failed to create a backup' (red 2026-09-09 12:58, re-run pending)",
+"location": "E:/Programming/java/Bartizan/bartizan-plugin/src/main/java/org/luckyraven/bartizan/file/BartizanSettings.java:122; bartizan-plugin/src/main/resources/settings.yml:33",
+"observation": "Found 2026-09-09 by phase-D smoke batch D0-D3 (rows D1 and D3 FAIL on the forbidden backup line; D0 PASS)",
+"impact": null,
+"risk": "n/a",
+"confidence": "High",
+"unverified": false,
+"recheck": true,
+"case": "https://claude.ai/code/artifact/48a0fd29-5ad2-43ea-b05f-5d9c38e82196#sec-observations-potential-issues",
+"source": "test suite (2026-09-04)"
 }
 ]
