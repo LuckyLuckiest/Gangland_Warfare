@@ -3,7 +3,7 @@ package org.luckyraven.gangland.command.sub.rank;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -30,12 +30,12 @@ class RankVaultGroupCommand extends SubArgument {
 
 	private static final String CLEAR_TOKEN = "clear";
 
-	private final Gangland       gangland;
+	private final JavaPlugin       gangland;
 	private final Tree<Argument> tree;
 	private final RankManager    rankManager;
 	private final MemberManager  memberManager;
 
-	protected RankVaultGroupCommand(Gangland gangland, Tree<Argument> tree, Argument parent, RankManager rankManager,
+	protected RankVaultGroupCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, RankManager rankManager,
 	                                MemberManager memberManager) {
 		super(gangland, new String[]{"vaultgroup", "vgroup"}, tree, parent);
 

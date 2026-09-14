@@ -3,7 +3,7 @@ package org.luckyraven.gangland.npcshops.command.trader;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -22,18 +22,18 @@ import java.util.UUID;
 
 class TraderCreateCommand extends SubArgument {
 
-	private final Gangland            gangland;
+	private final JavaPlugin            plugin;
 	private final Tree<Argument>      tree;
 	private final TraderManager       traderManager;
 	private final ShopRegistry        shopRegistry;
 	private final TraderTraitRegistry traitRegistry;
 
-	protected TraderCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected TraderCreateCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                              TraderManager traderManager, ShopRegistry shopRegistry,
 	                              TraderTraitRegistry traitRegistry) {
-		super(gangland, "create", tree, parent);
+		super(plugin, "create", tree, parent);
 
-		this.gangland      = gangland;
+		this.plugin      = plugin;
 		this.tree          = tree;
 		this.traderManager = traderManager;
 		this.shopRegistry  = shopRegistry;
@@ -49,15 +49,15 @@ class TraderCreateCommand extends SubArgument {
 	}
 
 	private void registerArguments() {
-		Argument shopArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> sender.sendMessage(
+		Argument shopArg = new OptionalArgument(plugin, tree, (argument, sender, args) -> sender.sendMessage(
 				GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<traitId>")),
 		                                        sender -> new ArrayList<>(shopRegistry.keys()));
 
-		Argument traitArg = new OptionalArgument(gangland, tree, (argument, sender, args) ->
+		Argument traitArg = new OptionalArgument(plugin, tree, (argument, sender, args) ->
 				spawnTrader(sender, args, null),
 		                                         sender -> new ArrayList<>(traitRegistry.ids()));
 
-		Argument displayArg = new OptionalArgument(gangland, tree, (argument, sender, args) ->
+		Argument displayArg = new OptionalArgument(plugin, tree, (argument, sender, args) ->
 				spawnTrader(sender, args, args[4]),
 		                                           sender -> List.of("<displayName>"));
 

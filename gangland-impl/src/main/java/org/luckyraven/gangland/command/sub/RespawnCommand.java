@@ -2,7 +2,7 @@ package org.luckyraven.gangland.command.sub;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.bean.command.CommandHandler;
@@ -13,7 +13,7 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 @CommandHandler
 public final class RespawnCommand extends Command {
 
-	public RespawnCommand(Gangland gangland) {
+	public RespawnCommand(JavaPlugin gangland) {
 		super(gangland, "respawn", true);
 	}
 

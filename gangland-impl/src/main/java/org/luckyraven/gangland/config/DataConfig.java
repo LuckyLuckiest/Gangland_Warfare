@@ -190,7 +190,7 @@ public class DataConfig {
 
 		// The two bank permission nodes stay registered whether or not the cops-n-crooks module is installed —
 		// they gate core /glw bank deposit|withdraw forms (moved from BankerConfig, T14).
-		permissionManager.addPermission(BankCommand.BYPASS_CAP_PERMISSION);
+		permissionManager.addPermission(BankTiers.BYPASS_CAP_PERMISSION);
 		permissionManager.addPermission(BankCommand.ADMIN_PERMISSION);
 	}
 }

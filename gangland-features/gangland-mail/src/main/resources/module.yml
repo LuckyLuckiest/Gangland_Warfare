@@ -3,5 +3,5 @@ Id: mail
 Name: Gangland Mail
 Version: ${project.version}
 Main: org.luckyraven.gangland.mail.MailModule
-Host_Api: 0.9
+Host_Api: 1.0
 Artifact: org.luckyraven:gangland-mail

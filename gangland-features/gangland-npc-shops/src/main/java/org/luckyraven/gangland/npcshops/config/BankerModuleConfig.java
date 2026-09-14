@@ -2,7 +2,7 @@ package org.luckyraven.gangland.npcshops.config;
 
 import lombok.CustomLog;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.npcshops.integration.BankerSettingsImpl;
 import org.luckyraven.gangland.npcshops.integration.GanglandBankerEconomy;
 import org.luckyraven.gangland.npcshops.integration.GanglandBankerMessages;
@@ -40,10 +40,10 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 @Configuration
 public class BankerModuleConfig {
 
-	private final Gangland gangland;
+	private final JavaPlugin plugin;
 
-	public BankerModuleConfig(Gangland gangland) {
-		this.gangland = gangland;
+	public BankerModuleConfig(JavaPlugin plugin) {
+		this.plugin = plugin;
 	}
 
 	@Bean
@@ -84,34 +84,34 @@ public class BankerModuleConfig {
 
 	@Bean
 	public BankerAmountView bankerAmountView(BankerEconomyContract economy, BankerMessageContract messages) {
-		return new BankerAmountView(gangland, economy, messages);
+		return new BankerAmountView(plugin, economy, messages);
 	}
 
 	@Bean
 	public BankerUpgradeView bankerUpgradeView(BankerSettings settings,
 	                                           BankerEconomyContract economy,
 	                                           BankerMessageContract messages) {
-		return new BankerUpgradeView(gangland, settings, economy, messages);
+		return new BankerUpgradeView(plugin, settings, economy, messages);
 	}
 
 	@Bean
 	public BankerCreateAccountView bankerCreateAccountView(BankerSettings settings,
 	                                                       BankerEconomyContract economy,
 	                                                       BankerMessageContract messages) {
-		return new BankerCreateAccountView(gangland, settings, economy, messages);
+		return new BankerCreateAccountView(plugin, settings, economy, messages);
 	}
 
 	@Bean
 	public BankerRenameAccountView bankerRenameAccountView(BankerEconomyContract economy,
 	                                                       BankerMessageContract messages) {
-		return new BankerRenameAccountView(gangland, economy, messages);
+		return new BankerRenameAccountView(plugin, economy, messages);
 	}
 
 	@Bean
 	public BankerClaimView bankerClaimView(BankerSettings settings,
 	                                       BankerEconomyContract economy,
 	                                       BankerMessageContract messages) {
-		return new BankerClaimView(gangland, settings, economy, messages);
+		return new BankerClaimView(plugin, settings, economy, messages);
 	}
 
 	@Bean
@@ -119,7 +119,7 @@ public class BankerModuleConfig {
 	                                     BankerEconomyContract economy,
 	                                     BankerMessageContract messages,
 	                                     BankerRenameAccountView renameView) {
-		BankerMenuView view = new BankerMenuView(gangland, settings, economy, messages);
+		BankerMenuView view = new BankerMenuView(plugin, settings, economy, messages);
 		view.setSubViews(renameView);
 		return view;
 	}
@@ -127,7 +127,7 @@ public class BankerModuleConfig {
 	@Bean
 	public BankerFlow bankerFlow(BankerMenuView menuPanel, BankerUpgradeView upgradePanel, BankerClaimView claimPanel,
 	                             BankerAmountView amountPanel, BankerCreateAccountView createPanel) {
-		return new BankerFlow(gangland, menuPanel, upgradePanel, claimPanel, amountPanel, createPanel);
+		return new BankerFlow(plugin, menuPanel, upgradePanel, claimPanel, amountPanel, createPanel);
 	}
 
 	// ── NPC lifecycle ───────────────────────────────────────────────────
@@ -135,7 +135,7 @@ public class BankerModuleConfig {
 	@Bean
 	public BankerManager bankerManager(BankerSettings settings, RepositoryRegistry repositoryRegistry) {
 		IRepository<BankerData> repo = repositoryRegistry.getRepository(BankerData.class);
-		return new BankerManager(gangland, repo, settings);
+		return new BankerManager(plugin, repo, settings);
 	}
 
 }

@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.command.sub.permissions;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -21,7 +21,7 @@ public final class PermissionsCommand extends Command {
 
 	private final PermissionManager permissionManager;
 
-	public PermissionsCommand(Gangland gangland, PermissionManager permissionManager) {
+	public PermissionsCommand(JavaPlugin gangland, PermissionManager permissionManager) {
 		super(gangland, "permissions", false, "perms", "perm");
 
 		this.permissionManager = permissionManager;
@@ -86,16 +86,16 @@ public final class PermissionsCommand extends Command {
 	@Override
 	protected void initializeArguments() {
 		getArgument().addSubArgument(
-				new PermissionsCategoriesSubArgument(getGangland(), getArgumentTree(), getArgument(),
+				new PermissionsCategoriesSubArgument(getPlugin(), getArgumentTree(), getArgument(),
 				                                     permissionManager));
 		getArgument().addSubArgument(
-				new PermissionsCheckSubArgument(getGangland(), getArgumentTree(), getArgument(), permissionManager));
+				new PermissionsCheckSubArgument(getPlugin(), getArgumentTree(), getArgument(), permissionManager));
 
-		Argument pageArg = new OptionalArgument(getGangland(), getArgumentTree(),
+		Argument pageArg = new OptionalArgument(getPlugin(), getArgumentTree(),
 		                                        (a, sender, args) -> sendSearch(sender, args[1], parsePage(args[2])),
 		                                        sender -> List.of("[page]"));
 
-		Argument queryArg = new OptionalArgument(getGangland(), getArgumentTree(),
+		Argument queryArg = new OptionalArgument(getPlugin(), getArgumentTree(),
 		                                         (a, sender, args) -> sendSearch(sender, args[1], 1),
 		                                         sender -> categorySuggestions(permissionManager));
 

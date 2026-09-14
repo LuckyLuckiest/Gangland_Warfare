@@ -3,7 +3,7 @@ package org.luckyraven.gangland.copsncrooks.command.cuff;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -19,8 +19,8 @@ public final class UncuffCommand extends Command {
 
 	private final DetainmentService detainmentService;
 
-	public UncuffCommand(Gangland gangland, DetainmentService detainmentService) {
-		super(gangland, "uncuff", false);
+	public UncuffCommand(JavaPlugin plugin, DetainmentService detainmentService) {
+		super(plugin, "uncuff", false);
 
 		this.detainmentService = detainmentService;
 
@@ -55,7 +55,7 @@ public final class UncuffCommand extends Command {
 	}
 
 	private Argument getPlayerArg() {
-		return new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
+		return new OptionalArgument(getPlugin(), getArgumentTree(), (argument, sender, args) -> {
 			String playerStr = args[1];
 			Player target    = Bukkit.getPlayer(playerStr);
 

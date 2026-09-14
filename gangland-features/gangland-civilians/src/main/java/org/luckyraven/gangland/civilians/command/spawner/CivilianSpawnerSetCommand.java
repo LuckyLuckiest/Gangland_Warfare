@@ -2,7 +2,7 @@ package org.luckyraven.gangland.civilians.command.spawner;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -17,16 +17,16 @@ import java.util.ArrayList;
 
 class CivilianSpawnerSetCommand extends SubArgument {
 
-	private final Gangland             gangland;
+	private final JavaPlugin             plugin;
 	private final Tree<Argument>       tree;
 	private final CivilianService      civilianService;
 	private final CivilianSpawnManager civilianSpawnManager;
 
-	CivilianSpawnerSetCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	CivilianSpawnerSetCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                          CivilianService civilianService, CivilianSpawnManager civilianSpawnManager) {
-		super(gangland, "set", tree, parent);
+		super(plugin, "set", tree, parent);
 
-		this.gangland             = gangland;
+		this.plugin             = plugin;
 		this.tree                 = tree;
 		this.civilianService      = civilianService;
 		this.civilianSpawnManager = civilianSpawnManager;
@@ -42,7 +42,7 @@ class CivilianSpawnerSetCommand extends SubArgument {
 	}
 
 	private void typeIdArgument() {
-		Argument typeArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+		Argument typeArg = new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			if (!(sender instanceof Player player)) {
 				sender.sendMessage(Messages.NOT_PLAYER.toString());
 				return;

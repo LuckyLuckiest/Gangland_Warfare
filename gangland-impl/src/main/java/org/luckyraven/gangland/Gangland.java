@@ -45,8 +45,8 @@ import java.util.Map;
 @CustomLog
 public final class Gangland extends JavaPlugin {
 
-	public static final String FULL_PREFIX  = "gangland";
-	public static final String SHORT_PREFIX = "glw";
+	public static final String FULL_PREFIX  = GanglandApi.FULL_PREFIX;
+	public static final String SHORT_PREFIX = GanglandApi.SHORT_PREFIX;
 
 	private GanglandContext      context;
 	private ReloadPlugin         reloadPlugin;

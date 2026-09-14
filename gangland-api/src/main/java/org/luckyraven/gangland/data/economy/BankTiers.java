@@ -13,6 +13,11 @@ import java.util.function.Function;
  */
 public final class BankTiers {
 
+	/**
+	 * Lets a holder deposit past the tier cap; registered by the host and honoured by every deposit path.
+	 */
+	public static final String BYPASS_CAP_PERMISSION = "gangland.bank.bypass_cap";
+
 	private volatile Function<Bank, BankTierView> lookup;
 
 	public void install(Function<Bank, BankTierView> lookup) {

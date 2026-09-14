@@ -3,7 +3,7 @@ package org.luckyraven.gangland.copsncrooks.command.jail;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -19,19 +19,19 @@ import java.util.Collection;
 
 class JailThrowCommand extends SubArgument {
 
-	private final Gangland           gangland;
+	private final JavaPlugin           plugin;
 	private final Tree<Argument>     tree;
 	private final DetainmentService  detainmentService;
 	private final DetainmentRegistry detainmentRegistry;
 	private final JailIntakeService  jailIntakeService;
 
-	protected JailThrowCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected JailThrowCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                           DetainmentService detainmentService,
 	                           DetainmentRegistry detainmentRegistry,
 	                           JailIntakeService jailIntakeService) {
-		super(gangland, "throw", tree, parent);
+		super(plugin, "throw", tree, parent);
 
-		this.gangland           = gangland;
+		this.plugin           = plugin;
 		this.tree               = tree;
 		this.detainmentService  = detainmentService;
 		this.detainmentRegistry = detainmentRegistry;
@@ -48,7 +48,7 @@ class JailThrowCommand extends SubArgument {
 	}
 
 	private void throwPlayer() {
-		Argument playerThrow = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+		Argument playerThrow = new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			String playerStr = args[2];
 			Player target    = Bukkit.getPlayer(playerStr);
 

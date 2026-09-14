@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.gadget.command;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -18,8 +18,8 @@ class CarListCommand extends SubArgument {
 
 	private final CarAddon carAddon;
 
-	CarListCommand(Gangland gangland, Tree<Argument> tree, Argument parent, CarAddon carAddon) {
-		super(gangland, "list", tree, parent);
+	CarListCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, CarAddon carAddon) {
+		super(plugin, "list", tree, parent);
 
 		this.carAddon = carAddon;
 	}

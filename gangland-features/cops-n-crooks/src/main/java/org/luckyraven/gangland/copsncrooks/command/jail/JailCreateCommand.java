@@ -4,7 +4,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.gangland.copsncrooks.jail.Jail;
@@ -20,10 +20,10 @@ class JailCreateCommand extends SubArgument {
 	private final JailService  jailService;
 	private final JailRegistry jailRegistry;
 
-	protected JailCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected JailCreateCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                            JailService jailService,
 	                            JailRegistry jailRegistry) {
-		super(gangland, "create", tree, parent);
+		super(plugin, "create", tree, parent);
 
 		this.jailService  = jailService;
 		this.jailRegistry = jailRegistry;

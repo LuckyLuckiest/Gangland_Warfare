@@ -2,7 +2,7 @@ package org.luckyraven.gangland.command.sub.fuel;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.bean.Qualifier;
@@ -18,7 +18,7 @@ public final class FuelCommand extends Command {
 
 	private final UserManager<Player> userManager;
 
-	public FuelCommand(Gangland gangland, @Qualifier("online") UserManager<Player> userManager) {
+	public FuelCommand(JavaPlugin gangland, @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "fuel", true, "fuels");
 
 		this.userManager = userManager;
@@ -40,11 +40,11 @@ public final class FuelCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument add    = new FuelAddCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
-		Argument remove = new FuelRemoveCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
-		Argument info   = new FuelInfoCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
-		Argument refuel = new FuelRefuelCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
-		Argument defuel = new FuelDefuelCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
+		Argument add    = new FuelAddCommand(getPlugin(), getArgumentTree(), getArgument(), userManager);
+		Argument remove = new FuelRemoveCommand(getPlugin(), getArgumentTree(), getArgument(), userManager);
+		Argument info   = new FuelInfoCommand(getPlugin(), getArgumentTree(), getArgument(), userManager);
+		Argument refuel = new FuelRefuelCommand(getPlugin(), getArgumentTree(), getArgument(), userManager);
+		Argument defuel = new FuelDefuelCommand(getPlugin(), getArgumentTree(), getArgument(), userManager);
 
 		List<Argument> arguments = new ArrayList<>();
 

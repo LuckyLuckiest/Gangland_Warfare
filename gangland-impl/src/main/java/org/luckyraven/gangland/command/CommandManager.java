@@ -3,7 +3,7 @@ package org.luckyraven.gangland.command;
 import lombok.CustomLog;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.SettingsLookupImpl;
 import org.luckyraven.gangland.util.GanglandChatUtil;
@@ -15,7 +15,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Gangland's dispatcher — a subclass of Keystone's {@link org.luckyraven.keystone.command.CommandManager}.
+ * JavaPlugin's dispatcher — a subclass of Keystone's {@link org.luckyraven.keystone.command.CommandManager}.
  * Keystone owns scanning, two-phase instantiation via the {@link DependencyContainer}, the instance-scoped
  * registry, visibility filtering and per-subcommand help paging; this class keeps the consumer-side behavior:
  *
@@ -32,11 +32,11 @@ import java.util.stream.Collectors;
 @CustomLog
 public final class CommandManager extends org.luckyraven.keystone.command.CommandManager {
 
-	private final Gangland gangland;
+	private final JavaPlugin gangland;
 	private final String   fullPrefix;
 	private final String   shortPrefix;
 
-	public CommandManager(Gangland gangland,
+	public CommandManager(JavaPlugin gangland,
 	                      DependencyContainer dependencyContainer,
 	                      String fullPrefix,
 	                      String shortPrefix) {

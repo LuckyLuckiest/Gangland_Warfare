@@ -3,7 +3,7 @@ package org.luckyraven.gangland.command.sub.economy;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.bean.Qualifier;
@@ -21,7 +21,7 @@ public final class EconomyCommand extends Command {
 
 	private final UserManager<Player> userManager;
 
-	public EconomyCommand(Gangland gangland, @Qualifier("online") UserManager<Player> userManager) {
+	public EconomyCommand(JavaPlugin gangland, @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "economy", false, "eco");
 
 		this.userManager = userManager;
@@ -71,12 +71,12 @@ public final class EconomyCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		EconomyDepositCommand deposit = new EconomyDepositCommand(getGangland(), getArgumentTree(), getArgument(),
+		EconomyDepositCommand deposit = new EconomyDepositCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                          userManager);
-		EconomyWithdrawCommand withdraw = new EconomyWithdrawCommand(getGangland(), getArgumentTree(), getArgument(),
+		EconomyWithdrawCommand withdraw = new EconomyWithdrawCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                             userManager);
-		EconomySetCommand set = new EconomySetCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
-		EconomyResetCommand reset = new EconomyResetCommand(getGangland(), getArgumentTree(), getArgument(),
+		EconomySetCommand set = new EconomySetCommand(getPlugin(), getArgumentTree(), getArgument(), userManager);
+		EconomyResetCommand reset = new EconomyResetCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                    userManager);
 
 		// add sub arguments

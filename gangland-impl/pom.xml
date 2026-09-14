@@ -40,6 +40,12 @@
         <!-- Bukkit/Spigot/Paper builds (end) -->
 
         <!-- Important local dependencies (start) -->
+        <!-- The module API. Compile scope: impl implements/consumes it and it is shaded into the core jar,
+             which is what makes it resolvable for a runtime module that compiles against it as provided. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>gangland-core</artifactId>

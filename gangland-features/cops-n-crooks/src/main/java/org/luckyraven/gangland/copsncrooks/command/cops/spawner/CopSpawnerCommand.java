@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.command.cops.spawner;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
@@ -15,14 +15,14 @@ import java.util.List;
 
 public class CopSpawnerCommand extends SubArgument {
 
-	private final Gangland        gangland;
+	private final JavaPlugin        plugin;
 	private final Tree<Argument>  tree;
 	private final CopSpawnManager copSpawnManager;
 
-	public CopSpawnerCommand(Gangland gangland, Tree<Argument> tree, Argument parent, CopSpawnManager copSpawnManager) {
-		super(gangland, "spawner", tree, parent);
+	public CopSpawnerCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, CopSpawnManager copSpawnManager) {
+		super(plugin, "spawner", tree, parent);
 
-		this.gangland        = gangland;
+		this.plugin        = plugin;
 		this.tree            = tree;
 		this.copSpawnManager = copSpawnManager;
 
@@ -39,11 +39,11 @@ public class CopSpawnerCommand extends SubArgument {
 	}
 
 	private void initializeArguments() {
-		Argument setArg      = new CopSpawnerSetCommand(gangland, tree, this, copSpawnManager);
-		Argument removeArg   = new CopSpawnerRemoveCommand(gangland, tree, this, copSpawnManager);
-		Argument listArg     = new CopSpawnerListCommand(gangland, tree, this, copSpawnManager);
-		Argument infoArg     = new CopSpawnerInfoCommand(gangland, tree, this, copSpawnManager);
-		Argument teleportArg = new CopSpawnerTeleportCommand(gangland, tree, this, copSpawnManager);
+		Argument setArg      = new CopSpawnerSetCommand(plugin, tree, this, copSpawnManager);
+		Argument removeArg   = new CopSpawnerRemoveCommand(plugin, tree, this, copSpawnManager);
+		Argument listArg     = new CopSpawnerListCommand(plugin, tree, this, copSpawnManager);
+		Argument infoArg     = new CopSpawnerInfoCommand(plugin, tree, this, copSpawnManager);
+		Argument teleportArg = new CopSpawnerTeleportCommand(plugin, tree, this, copSpawnManager);
 
 		List<Argument> arguments = new ArrayList<>();
 

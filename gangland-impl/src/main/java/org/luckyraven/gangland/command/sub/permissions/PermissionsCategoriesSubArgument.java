@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.command.sub.permissions;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -12,7 +12,7 @@ final class PermissionsCategoriesSubArgument extends SubArgument {
 
 	private final PermissionManager permissionManager;
 
-	PermissionsCategoriesSubArgument(Gangland gangland, Tree<Argument> tree, Argument parent,
+	PermissionsCategoriesSubArgument(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                                 PermissionManager permissionManager) {
 		super(gangland, "categories", tree, parent);
 

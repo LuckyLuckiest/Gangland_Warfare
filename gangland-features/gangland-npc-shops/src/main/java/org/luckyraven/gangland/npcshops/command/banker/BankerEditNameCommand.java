@@ -5,7 +5,7 @@ import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.gangland.npcshops.banker.BankerManager;
@@ -21,13 +21,13 @@ class BankerEditNameCommand extends SubArgument {
 
 	private static final double TARGET_RANGE = 5D;
 
-	private final Gangland      gangland;
+	private final JavaPlugin      plugin;
 	private final BankerManager bankerManager;
 
-	protected BankerEditNameCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected BankerEditNameCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                                BankerManager bankerManager) {
-		super(gangland, "name", tree, parent);
-		this.gangland      = gangland;
+		super(plugin, "name", tree, parent);
+		this.plugin      = plugin;
 		this.bankerManager = bankerManager;
 	}
 
@@ -51,7 +51,7 @@ class BankerEditNameCommand extends SubArgument {
 		String current = banker.getData().getDisplayName();
 
 		new AnvilGUI.Builder()
-				.plugin(gangland)
+				.plugin(plugin)
 				.title("Banker Name")
 				.itemLeft(new ItemStack(Material.NAME_TAG))
 				.text(current == null ? "" : current)

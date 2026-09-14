@@ -5,7 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.gangland.command.data.CommandInformation;
 import org.luckyraven.gangland.command.data.InformationManager;
 import org.luckyraven.gangland.file.configuration.Messages;
@@ -36,14 +37,11 @@ public abstract class Command extends org.luckyraven.keystone.command.Command {
 	@Setter(value = AccessLevel.PUBLIC)
 	private static InformationManager informationManager;
 
-	@Getter(value = AccessLevel.PROTECTED)
-	private final Gangland gangland;
 	private final HelpInfo helpInfo;
 
-	public Command(Gangland gangland, String label, boolean user, String... alias) {
-		super(gangland, Gangland.FULL_PREFIX, label, user, alias);
+	public Command(JavaPlugin plugin, String label, boolean user, String... alias) {
+		super(plugin, GanglandApi.FULL_PREFIX, label, user, alias);
 
-		this.gangland = gangland;
 		this.helpInfo = new HelpInfo();
 	}
 

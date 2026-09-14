@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.command.sub.rank;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.command.data.CommandInformation;
@@ -25,7 +25,7 @@ public final class RankCommand extends Command {
 	private final PermissionManager permissionManager;
 	private final MemberManager     memberManager;
 
-	public RankCommand(Gangland gangland, RankManager rankManager, GanglandDatabase ganglandDatabase,
+	public RankCommand(JavaPlugin gangland, RankManager rankManager, GanglandDatabase ganglandDatabase,
 	                   PermissionManager permissionManager, MemberManager memberManager) {
 		super(gangland, "rank", false);
 
@@ -50,16 +50,16 @@ public final class RankCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument create = new RankCreateCommand(getGangland(), getArgumentTree(), getArgument(), rankManager);
-		Argument delete = new RankDeleteCommand(getGangland(), getArgumentTree(), getArgument(), rankManager,
+		Argument create = new RankCreateCommand(getPlugin(), getArgumentTree(), getArgument(), rankManager);
+		Argument delete = new RankDeleteCommand(getPlugin(), getArgumentTree(), getArgument(), rankManager,
 		                                        ganglandDatabase);
-		Argument list = new RankListCommand(getGangland(), getArgumentTree(), getArgument(), rankManager);
-		Argument permission = new RankPermissionCommand(getGangland(), getArgumentTree(), getArgument(), rankManager,
+		Argument list = new RankListCommand(getPlugin(), getArgumentTree(), getArgument(), rankManager);
+		Argument permission = new RankPermissionCommand(getPlugin(), getArgumentTree(), getArgument(), rankManager,
 		                                                permissionManager, memberManager);
-		Argument info         = new RankInfoCommand(getGangland(), getArgumentTree(), getArgument(), rankManager);
-		Argument parent       = new RankParentCommand(getGangland(), getArgumentTree(), getArgument(), rankManager);
-		Argument traverseTree = new RankTraverseCommand(getGangland(), getArgumentTree(), getArgument(), rankManager);
-		Argument vaultGroup = new RankVaultGroupCommand(getGangland(), getArgumentTree(), getArgument(), rankManager,
+		Argument info         = new RankInfoCommand(getPlugin(), getArgumentTree(), getArgument(), rankManager);
+		Argument parent       = new RankParentCommand(getPlugin(), getArgumentTree(), getArgument(), rankManager);
+		Argument traverseTree = new RankTraverseCommand(getPlugin(), getArgumentTree(), getArgument(), rankManager);
+		Argument vaultGroup = new RankVaultGroupCommand(getPlugin(), getArgumentTree(), getArgument(), rankManager,
 		                                                memberManager);
 
 		// add sub arguments

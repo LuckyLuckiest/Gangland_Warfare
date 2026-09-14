@@ -2,7 +2,7 @@ package org.luckyraven.gangland.turf.command;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -28,19 +28,19 @@ public class TurfPowerupNpcCommand extends SubArgument {
 	private static final String ACTION_SET    = "set";
 	private static final String ACTION_REMOVE = "remove";
 
-	private final Gangland             gangland;
+	private final JavaPlugin             plugin;
 	private final Tree<Argument>       tree;
 	private final TurfManager          turfs;
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
 	private final TurfPowerupManager   powerupNpcs;
 
-	public TurfPowerupNpcCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	public TurfPowerupNpcCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                             TurfManager turfs, WandSelectionManager selections,
 	                             TurfMessageContract messages, TurfPowerupManager powerupNpcs) {
-		super(gangland, "powerupnpc", tree, parent);
+		super(plugin, "powerupnpc", tree, parent);
 
-		this.gangland    = gangland;
+		this.plugin    = plugin;
 		this.tree        = tree;
 		this.turfs       = turfs;
 		this.selections  = selections;
@@ -57,7 +57,7 @@ public class TurfPowerupNpcCommand extends SubArgument {
 	}
 
 	private OptionalArgument actionArgument() {
-		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+		return new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			Turf turf = TurfSelectionResolver.resolve(sender, turfs, selections, messages);
 			if (turf == null) return;
 

@@ -2,7 +2,7 @@ package org.luckyraven.gangland.command.sub.wanted;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.bean.Qualifier;
@@ -19,7 +19,7 @@ public final class WantedCommand extends Command {
 
 	private final UserManager<Player> userManager;
 
-	public WantedCommand(Gangland gangland, @Qualifier("online") UserManager<Player> userManager) {
+	public WantedCommand(JavaPlugin gangland, @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "wanted", true);
 
 		this.userManager = userManager;
@@ -46,11 +46,11 @@ public final class WantedCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		WantedAddCommand wantedAdd = new WantedAddCommand(getGangland(), getArgumentTree(), getArgument(),
+		WantedAddCommand wantedAdd = new WantedAddCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                  userManager);
-		WantedRemoveCommand wantedRemove = new WantedRemoveCommand(getGangland(), getArgumentTree(), getArgument(),
+		WantedRemoveCommand wantedRemove = new WantedRemoveCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                           userManager);
-		WantedClearCommand wantedClear = new WantedClearCommand(getGangland(), getArgumentTree(), getArgument(),
+		WantedClearCommand wantedClear = new WantedClearCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                        userManager);
 
 		getArgument().addSubArgument(wantedAdd);

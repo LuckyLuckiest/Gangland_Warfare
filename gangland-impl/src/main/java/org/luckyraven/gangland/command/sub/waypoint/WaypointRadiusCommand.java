@@ -2,7 +2,7 @@ package org.luckyraven.gangland.command.sub.waypoint;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -19,12 +19,12 @@ import java.util.List;
 
 class WaypointRadiusCommand extends SubArgument {
 
-	private final Gangland            gangland;
+	private final JavaPlugin            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final WaypointManager     waypointManager;
 
-	protected WaypointRadiusCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected WaypointRadiusCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                                UserManager<Player> userManager, WaypointManager waypointManager) {
 		super(gangland, "radius", tree, parent);
 

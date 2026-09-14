@@ -57,12 +57,13 @@
             <artifactId>keystone-item</artifactId>
         </dependency>
 
-        <!-- The host (core) jar. Provided: at runtime this module is loaded from plugins/Gangland_Warfare/modules/
-             by Keystone's ModuleLoader, whose parent is the host plugin's classloader, so every impl class
-             resolves from there. Dependency direction is module -> core; core never names a mail type. -->
+        <!-- The host API — the only host artifact a runtime module compiles against, so the compiler enforces the
+             contract. Provided: at runtime this module is loaded from plugins/Gangland_Warfare/modules/ by
+             Keystone's ModuleLoader, whose parent is the host plugin's classloader, so every api class resolves
+             from the shaded core jar. Dependency direction is module -> api; the host never names a module type. -->
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>gangland-impl</artifactId>
+            <artifactId>gangland-api</artifactId>
             <scope>provided</scope>
         </dependency>
     </dependencies>

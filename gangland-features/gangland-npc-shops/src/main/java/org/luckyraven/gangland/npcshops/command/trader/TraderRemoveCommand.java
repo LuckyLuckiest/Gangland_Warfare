@@ -6,7 +6,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.gangland.npcshops.trader.TraderManager;
@@ -20,9 +20,9 @@ class TraderRemoveCommand extends SubArgument {
 	private static final double        MAX_TARGET_DISTANCE = 5D;
 	private final        TraderManager traderManager;
 
-	protected TraderRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected TraderRemoveCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                              TraderManager traderManager) {
-		super(gangland, "remove", tree, parent);
+		super(plugin, "remove", tree, parent);
 		this.traderManager = traderManager;
 	}
 

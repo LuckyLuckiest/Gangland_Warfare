@@ -4,7 +4,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -24,13 +24,13 @@ import java.util.Map;
 
 class ItemMoneyGiveCommand extends SubArgument {
 
-	private final Gangland            gangland;
+	private final JavaPlugin            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final MoneyAddon          moneyAddon;
 	private final MoneyDepositService moneyDepositService;
 
-	ItemMoneyGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	ItemMoneyGiveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                     UserManager<Player> userManager,
 	                     MoneyAddon moneyAddon,
 	                     MoneyDepositService moneyDepositService) {

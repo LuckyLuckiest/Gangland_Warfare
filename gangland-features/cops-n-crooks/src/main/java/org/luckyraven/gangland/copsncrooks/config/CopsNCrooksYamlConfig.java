@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.config;
 
 import lombok.CustomLog;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.Phase;
@@ -13,10 +13,10 @@ import org.luckyraven.keystone.persistence.FileManager;
 @Configuration(phase = Phase.KERNEL)
 public class CopsNCrooksYamlConfig {
 
-	private final Gangland gangland;
+	private final JavaPlugin plugin;
 
-	public CopsNCrooksYamlConfig(Gangland gangland) {
-		this.gangland = gangland;
+	public CopsNCrooksYamlConfig(JavaPlugin plugin) {
+		this.plugin = plugin;
 	}
 
 	/**
@@ -27,7 +27,7 @@ public class CopsNCrooksYamlConfig {
 	@Bean
 	public CopsNCrooksFiles copsNCrooksFiles(FileManager fileManager, ModuleLoader moduleLoader) {
 		ClassLoader loader = moduleLoader.classLoader();
-		fileManager.addFile(new FileHandler(gangland, "cops", "npc", ".yml", loader), true);
+		fileManager.addFile(new FileHandler(plugin, "cops", "npc", ".yml", loader), true);
 		// turf_npcs.yml moved to the turf module's own TurfModuleFileConfig (group I) alongside the turf-NPC code
 		// it configures. trader_traits.yml/bank_tiers.yml moved to gangland-npc-shops' own NpcShopsYamlConfig
 		// (group J, T-J5) alongside the trader/banker code they configure.

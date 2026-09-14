@@ -2,7 +2,8 @@ package org.luckyraven.gangland.command.sub.waypoint;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.ConfirmArgument;
@@ -29,14 +30,14 @@ import java.util.concurrent.atomic.AtomicReference;
 
 class WaypointDeleteCommand extends SubArgument {
 
-	private final Gangland            gangland;
+	private final JavaPlugin            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final WaypointManager     waypointManager;
 	private final GanglandDatabase    ganglandDatabase;
 	private final PermissionManager   permissionManager;
 
-	protected WaypointDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected WaypointDeleteCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                                UserManager<Player> userManager, WaypointManager waypointManager,
 	                                GanglandDatabase ganglandDatabase, PermissionManager permissionManager) {
 		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);
@@ -89,7 +90,7 @@ class WaypointDeleteCommand extends SubArgument {
 			// inform the player
 			sender.sendMessage(Messages.WAYPOINT_DELETED.toString());
 
-			String format = String.format("%s.waypoint.%d", Gangland.FULL_PREFIX, waypoint.getUsedId());
+			String format = String.format("%s.waypoint.%d", GanglandApi.FULL_PREFIX, waypoint.getUsedId());
 
 			permissionManager.removePermission(format, true);
 

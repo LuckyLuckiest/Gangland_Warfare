@@ -2,7 +2,7 @@ package org.luckyraven.gangland.command.sub.filter;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -42,7 +42,7 @@ public final class FilterCommand extends Command {
 	private final FilterStore             store;
 	private final InventoryRuntimeContext inventoryRuntimeContext;
 
-	public FilterCommand(Gangland gangland, FilterRegistry registry, FilterStore store,
+	public FilterCommand(JavaPlugin gangland, FilterRegistry registry, FilterStore store,
 	                     InventoryRuntimeContext inventoryRuntimeContext) {
 		super(gangland, "filter", true);
 
@@ -86,7 +86,7 @@ public final class FilterCommand extends Command {
 	}
 
 	private OptionalArgument bindingArg() {
-		OptionalArgument binding = new OptionalArgument(getGangland(), getArgumentTree(),
+		OptionalArgument binding = new OptionalArgument(getPlugin(), getArgumentTree(),
 		                                                (arg, sender, args) -> {
 															// binding only — no action yet; noop
 														}, sender -> registry.all()
@@ -99,7 +99,7 @@ public final class FilterCommand extends Command {
 	// ── handlers ─────────────────────────────────────────────────────────────
 
 	private OptionalArgument actionArg() {
-		OptionalArgument action = new OptionalArgument(getGangland(), getArgumentTree(),
+		OptionalArgument action = new OptionalArgument(getPlugin(), getArgumentTree(),
 		                                               (arg, sender, args) -> handleNoValue(sender, args),
 		                                               sender -> List.of(ACTION_SORT, ACTION_CLEAR, ACTION_SEARCH,
 		                                                                 ACTION_SET, ACTION_CYCLE, ACTION_NEXT));
@@ -108,7 +108,7 @@ public final class FilterCommand extends Command {
 	}
 
 	private OptionalArgument firstValueArg() {
-		OptionalArgument first = new OptionalArgument(getGangland(), getArgumentTree(),
+		OptionalArgument first = new OptionalArgument(getPlugin(), getArgumentTree(),
 		                                              (arg, sender, args) -> handleOneValue(sender, args),
 		                                              sender -> List.of("<field|text>"));
 		first.addSubArgument(secondValueArg());
@@ -116,7 +116,7 @@ public final class FilterCommand extends Command {
 	}
 
 	private OptionalArgument secondValueArg() {
-		return new OptionalArgument(getGangland(), getArgumentTree(),
+		return new OptionalArgument(getPlugin(), getArgumentTree(),
 		                            (arg, sender, args) -> handleTwoValues(sender, args),
 		                            sender -> List.of("<text>"));
 	}

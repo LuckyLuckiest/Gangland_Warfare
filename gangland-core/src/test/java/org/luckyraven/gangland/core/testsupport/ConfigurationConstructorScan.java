@@ -11,7 +11,8 @@ import java.util.Set;
 /**
  * Pins B-1 (0.9.0, phase-D review blocker): Keystone instantiates every {@code @Configuration} class
  * ({@code BeanFactory.java:219-233}) before any bean phase runs — at that moment the container holds only
- * {@code Gangland}, {@code GanglandContext}, {@code DependencyContainer} and {@code ModuleLoader}. A
+ * {@code Gangland} (also reachable as {@code JavaPlugin}), {@code GanglandContext},
+ * {@code DependencyContainer} and {@code ModuleLoader}. A
  * {@code @Configuration} constructor asking for anything else (e.g. {@code GadgetModuleConfig}'s old
  * {@code FuelService} parameter) throws {@code IllegalStateException: Failed to instantiate @Configuration class …}
  * out of {@code BeanFactory.instantiate}, sinking the whole plugin.
@@ -25,6 +26,9 @@ public final class ConfigurationConstructorScan {
 
 	private static final Set<String> AVAILABLE_AT_CONFIGURATION_TIME = Set.of(
 			"org.luckyraven.gangland.Gangland",
+			// DependencyContainer.registerInstance walks supertypes, so the host plugin also resolves under its
+			// JavaPlugin supertype — the type a runtime module asks for now that it compiles against gangland-api.
+			"org.bukkit.plugin.java.JavaPlugin",
 			"org.luckyraven.gangland.bootstrap.GanglandContext",
 			"org.luckyraven.keystone.bean.autowire.DependencyContainer",
 			"org.luckyraven.keystone.module.ModuleLoader"
@@ -37,7 +41,7 @@ public final class ConfigurationConstructorScan {
 
 	/**
 	 * Every {@code @Configuration} class under {@code basePackage} (seen through {@code classLoader}) whose
-	 * declared constructor asks for a parameter type outside the four available at {@code @Configuration}
+	 * declared constructor asks for a parameter type outside the handful available at {@code @Configuration}
 	 * instantiation time. Empty means every configuration in the package is safe to bootstrap.
 	 *
 	 * @return {@code "<ClassName>(<paramSimpleName>)"} entries, one per offending parameter.

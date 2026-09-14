@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.command.jail;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentRegistry;
@@ -30,7 +30,7 @@ public final class JailCommand extends Command {
 	private final ReleasePipeline    releasePipeline;
 	private final JailExitService    jailExitService;
 
-	public JailCommand(Gangland gangland,
+	public JailCommand(JavaPlugin plugin,
 	                   JailService jailService,
 	                   JailRegistry jailRegistry,
 	                   DetainmentService detainmentService,
@@ -38,7 +38,7 @@ public final class JailCommand extends Command {
 	                   JailIntakeService jailIntakeService,
 	                   ReleasePipeline releasePipeline,
 	                   JailExitService jailExitService) {
-		super(gangland, "jail", false);
+		super(plugin, "jail", false);
 
 		this.jailService        = jailService;
 		this.jailRegistry       = jailRegistry;
@@ -65,18 +65,18 @@ public final class JailCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument createArg = new JailCreateCommand(getGangland(), getArgumentTree(), getArgument(), jailService,
+		Argument createArg = new JailCreateCommand(getPlugin(), getArgumentTree(), getArgument(), jailService,
 		                                           jailRegistry);
-		Argument removeArg = new JailRemoveCommand(getGangland(), getArgumentTree(), getArgument(), jailService,
+		Argument removeArg = new JailRemoveCommand(getPlugin(), getArgumentTree(), getArgument(), jailService,
 		                                           jailRegistry);
-		Argument playerArg = new JailThrowCommand(getGangland(), getArgumentTree(), getArgument(), detainmentService,
+		Argument playerArg = new JailThrowCommand(getPlugin(), getArgumentTree(), getArgument(), detainmentService,
 		                                          detainmentRegistry, jailIntakeService);
-		Argument releaseArg = new JailReleaseCommand(getGangland(), getArgumentTree(), getArgument(),
+		Argument releaseArg = new JailReleaseCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                             detainmentService, releasePipeline);
-		Argument listArg     = new JailListCommand(getGangland(), getArgumentTree(), getArgument(), jailRegistry);
-		Argument infoArg     = new JailInfoCommand(getGangland(), getArgumentTree(), getArgument(), jailRegistry);
-		Argument teleportArg = new JailTeleportCommand(getGangland(), getArgumentTree(), getArgument(), jailRegistry);
-		Argument setExitArg = new JailSetExitCommand(getGangland(), getArgumentTree(), getArgument(), jailRegistry,
+		Argument listArg     = new JailListCommand(getPlugin(), getArgumentTree(), getArgument(), jailRegistry);
+		Argument infoArg     = new JailInfoCommand(getPlugin(), getArgumentTree(), getArgument(), jailRegistry);
+		Argument teleportArg = new JailTeleportCommand(getPlugin(), getArgumentTree(), getArgument(), jailRegistry);
+		Argument setExitArg = new JailSetExitCommand(getPlugin(), getArgumentTree(), getArgument(), jailRegistry,
 		                                             jailExitService);
 
 		List<Argument> arguments = new ArrayList<>();

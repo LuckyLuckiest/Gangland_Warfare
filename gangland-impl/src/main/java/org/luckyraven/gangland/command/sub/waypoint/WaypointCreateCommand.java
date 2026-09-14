@@ -3,7 +3,8 @@ package org.luckyraven.gangland.command.sub.waypoint;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.ArgumentUtil;
 import org.luckyraven.keystone.command.argument.SubArgument;
@@ -30,13 +31,13 @@ import java.util.concurrent.atomic.AtomicReference;
 
 class WaypointCreateCommand extends SubArgument {
 
-	private final Gangland            gangland;
+	private final JavaPlugin            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final WaypointManager     waypointManager;
 	private final PermissionManager   permissionManager;
 
-	protected WaypointCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected WaypointCreateCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                                UserManager<Player> userManager, WaypointManager waypointManager,
 	                                PermissionManager permissionManager) {
 		super(gangland, "create", tree, parent);
@@ -70,7 +71,7 @@ class WaypointCreateCommand extends SubArgument {
 			if (user == null) return;
 
 			String   name     = createWaypointName.get(player).get();
-			Waypoint waypoint = new Waypoint(name, Gangland.FULL_PREFIX);
+			Waypoint waypoint = new Waypoint(name, GanglandApi.FULL_PREFIX);
 			Location location = player.getLocation();
 
 			waypoint.setCoordinates(player.getWorld().getName(), location.getX(), location.getY(), location.getZ(),
@@ -96,7 +97,7 @@ class WaypointCreateCommand extends SubArgument {
 			// select the waypoint
 			// using '/glw waypoint select <id>' command to the created waypoint, so it is selected
 			var selectedArgument = Objects.requireNonNull(tree.find(new Argument(gangland, "select", tree)));
-			var select = ArgumentUtil.getArgumentSequence(selectedArgument, Gangland.SHORT_PREFIX) + " " +
+			var select = ArgumentUtil.getArgumentSequence(selectedArgument, GanglandApi.SHORT_PREFIX) + " " +
 			             waypoint.getUsedId();
 
 			player.performCommand(select);

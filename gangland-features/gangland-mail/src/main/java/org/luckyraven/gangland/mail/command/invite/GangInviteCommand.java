@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -32,7 +32,7 @@ public class GangInviteCommand extends SubArgument {
 
 	private static final long INVITE_EXPIRY_MS = 60_000L;
 
-	private final Gangland                   gangland;
+	private final JavaPlugin                   plugin;
 	private final Tree<Argument>             tree;
 	private final Argument                   gangArgumentParent;
 	private final UserManager<Player>        userManager;
@@ -42,12 +42,12 @@ public class GangInviteCommand extends SubArgument {
 	private final RankManager                rankManager;
 	private final MailManager                mailManager;
 
-	public GangInviteCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	public GangInviteCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
 	                         UserManager<OfflinePlayer> offlineUserManager, MemberManager memberManager,
 	                         GangManager gangManager, RankManager rankManager, MailManager mailManager) {
-		super(gangland, new String[]{"invite", "add"}, tree, parent);
+		super(plugin, new String[]{"invite", "add"}, tree, parent);
 
-		this.gangland           = gangland;
+		this.plugin           = plugin;
 		this.tree               = tree;
 		this.gangArgumentParent = parent;
 		this.userManager        = userManager;
@@ -60,7 +60,7 @@ public class GangInviteCommand extends SubArgument {
 		// Add the literal `cancel` SubArgument before the `<player>` OptionalArgument so the argument tree resolves
 		// `/glw gang invite cancel` to the cancel branch instead of treating "cancel" as a target player name.
 		this.addSubArgument(
-				new GangInviteCancelCommand(gangland, tree, this, userManager, offlineUserManager, mailManager));
+				new GangInviteCancelCommand(plugin, tree, this, userManager, offlineUserManager, mailManager));
 		this.addSubArgument(invitePlayerArgument());
 	}
 
@@ -70,7 +70,7 @@ public class GangInviteCommand extends SubArgument {
 	 * this one in the argument tree.
 	 */
 	public Argument gangAccept() {
-		return new GangInviteAcceptCommand(gangland, tree, gangArgumentParent, userManager, memberManager, gangManager,
+		return new GangInviteAcceptCommand(plugin, tree, gangArgumentParent, userManager, memberManager, gangManager,
 		                                   rankManager, mailManager);
 	}
 
@@ -111,7 +111,7 @@ public class GangInviteCommand extends SubArgument {
 	}
 
 	private OptionalArgument invitePlayerArgument() {
-		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+		return new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 

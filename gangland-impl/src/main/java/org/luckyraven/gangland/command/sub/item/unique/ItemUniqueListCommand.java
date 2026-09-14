@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.command.sub.item.unique;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -18,7 +18,7 @@ class ItemUniqueListCommand extends SubArgument {
 
 	private final UniqueItemAddon uniqueItemAddon;
 
-	ItemUniqueListCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UniqueItemAddon uniqueItemAddon) {
+	ItemUniqueListCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, UniqueItemAddon uniqueItemAddon) {
 		super(gangland, "list", tree, parent);
 
 		this.uniqueItemAddon = uniqueItemAddon;

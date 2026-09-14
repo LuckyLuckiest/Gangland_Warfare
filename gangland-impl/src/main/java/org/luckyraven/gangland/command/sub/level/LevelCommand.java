@@ -3,7 +3,7 @@ package org.luckyraven.gangland.command.sub.level;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.command.sub.level.experience.LevelExperienceCommand;
@@ -24,7 +24,7 @@ public final class LevelCommand extends Command {
 
 	private final UserManager<Player> userManager;
 
-	public LevelCommand(Gangland gangland, @Qualifier("online") UserManager<Player> userManager) {
+	public LevelCommand(JavaPlugin gangland, @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "level", true);
 
 		this.userManager = userManager;
@@ -114,10 +114,10 @@ public final class LevelCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument add        = new LevelAddCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
-		Argument remove     = new LevelRemoveCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
-		Argument experience = new LevelExperienceCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
-		Argument next       = new LevelNextCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
+		Argument add        = new LevelAddCommand(getPlugin(), getArgumentTree(), getArgument(), userManager);
+		Argument remove     = new LevelRemoveCommand(getPlugin(), getArgumentTree(), getArgument(), userManager);
+		Argument experience = new LevelExperienceCommand(getPlugin(), getArgumentTree(), getArgument(), userManager);
+		Argument next       = new LevelNextCommand(getPlugin(), getArgumentTree(), getArgument(), userManager);
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();

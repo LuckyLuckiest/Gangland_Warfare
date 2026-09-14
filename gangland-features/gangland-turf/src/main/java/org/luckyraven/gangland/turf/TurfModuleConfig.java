@@ -1,6 +1,6 @@
 package org.luckyraven.gangland.turf;
 
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.permission.PermissionManager;
@@ -77,7 +77,7 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
-	public ActiveBuffManager activeBuffManager(Gangland plugin, ActiveBuffRepositoryContract repository) {
+	public ActiveBuffManager activeBuffManager(JavaPlugin plugin, ActiveBuffRepositoryContract repository) {
 		ActiveBuffManager manager = new ActiveBuffManager(plugin, repository);
 		manager.initialize();
 		return manager;
@@ -148,14 +148,14 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
-	public TurfLocationTracker turfLocationTracker(Gangland plugin, TurfManager turfs, CaptureService capture) {
+	public TurfLocationTracker turfLocationTracker(JavaPlugin plugin, TurfManager turfs, CaptureService capture) {
 		TurfLocationTracker tracker = new TurfLocationTracker(plugin, turfs, capture);
 		tracker.start();
 		return tracker;
 	}
 
 	@Bean
-	public TurfIncomeDistributor turfIncomeDistributor(Gangland plugin,
+	public TurfIncomeDistributor turfIncomeDistributor(JavaPlugin plugin,
 	                                                   TurfManager turfs,
 	                                                   GangLookupContract gangs,
 	                                                   ActiveBuffManager buffs) {
@@ -173,7 +173,7 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
-	public GangPresenceTracker gangPresenceTracker(Gangland plugin,
+	public GangPresenceTracker gangPresenceTracker(JavaPlugin plugin,
 	                                               GangLookupContract gangs,
 	                                               UserLookupContract users,
 	                                               CaptureSettings settings,
@@ -194,7 +194,7 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
-	public TurfContributionTickTask turfContributionTickTask(Gangland plugin,
+	public TurfContributionTickTask turfContributionTickTask(JavaPlugin plugin,
 	                                                         TurfManager turfs,
 	                                                         GangLookupContract gangs,
 	                                                         UserLookupContract users,
@@ -230,7 +230,7 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
-	public TurfDefenderDeployer turfDefenderDeployer(Gangland plugin, CivilianService civilianService,
+	public TurfDefenderDeployer turfDefenderDeployer(JavaPlugin plugin, CivilianService civilianService,
 	                                                 CivilianSpawnManager spawnManager) {
 		TurfDefenderDeployer deployer = new TurfDefenderDeployer(plugin, civilianService, spawnManager);
 		deployer.start();
@@ -238,7 +238,7 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
-	public TurfPowerupManager turfPowerupManager(Gangland plugin, TurfPowerupNpcRepository repository,
+	public TurfPowerupManager turfPowerupManager(JavaPlugin plugin, TurfPowerupNpcRepository repository,
 	                                             TurfNpcsConfigLoader loader, CivilianSpawnManager spawnManager) {
 		return new TurfPowerupManager(plugin, repository, loader.getPowerupSettings(), spawnManager);
 	}
@@ -267,7 +267,7 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
-	public TurfPowerupFlow turfPowerupFlow(Gangland plugin, TurfPowerupMenuView menuView,
+	public TurfPowerupFlow turfPowerupFlow(JavaPlugin plugin, TurfPowerupMenuView menuView,
 	                                       TurfPowerupBuffCatalogueView buffsView,
 	                                       TurfPowerupGarrisonView garrisonView) {
 		return new TurfPowerupFlow(plugin, menuView, buffsView, garrisonView);

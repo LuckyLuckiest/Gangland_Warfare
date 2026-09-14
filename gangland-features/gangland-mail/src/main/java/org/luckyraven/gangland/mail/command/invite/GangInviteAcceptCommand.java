@@ -2,7 +2,7 @@ package org.luckyraven.gangland.mail.command.invite;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -30,7 +30,7 @@ import java.util.Map;
 
 class GangInviteAcceptCommand extends SubArgument {
 
-	private final Gangland            gangland;
+	private final JavaPlugin            plugin;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final MemberManager       memberManager;
@@ -38,12 +38,12 @@ class GangInviteAcceptCommand extends SubArgument {
 	private final RankManager         rankManager;
 	private final MailManager         mailManager;
 
-	GangInviteAcceptCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	GangInviteAcceptCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
 	                        MemberManager memberManager, GangManager gangManager, RankManager rankManager,
 	                        MailManager mailManager) {
-		super(gangland, "accept", tree, parent);
+		super(plugin, "accept", tree, parent);
 
-		this.gangland      = gangland;
+		this.plugin      = plugin;
 		this.tree          = tree;
 		this.userManager   = userManager;
 		this.memberManager = memberManager;
@@ -122,7 +122,7 @@ class GangInviteAcceptCommand extends SubArgument {
 	}
 
 	private OptionalArgument senderGangArgument() {
-		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+		return new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			OptionalArgument optionalArgument = (OptionalArgument) argument;
 
 			Player       player = (Player) sender;

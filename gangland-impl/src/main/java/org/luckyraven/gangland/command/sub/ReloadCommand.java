@@ -3,6 +3,7 @@ package org.luckyraven.gangland.command.sub;
 import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.bootstrap.GanglandContext;
 import org.luckyraven.gangland.bootstrap.PeriodicalUpdates;
@@ -20,8 +21,12 @@ import java.util.Map;
 @CommandHandler
 public final class ReloadCommand extends Command {
 
+	private final Gangland gangland;
+
 	public ReloadCommand(Gangland gangland) {
 		super(gangland, "reload", false, "rl");
+
+		this.gangland = gangland;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -34,35 +39,35 @@ public final class ReloadCommand extends Command {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		reloadProcess("", () -> getGangland().getReloadPlugin().reload(), true);
+		reloadProcess("", () -> gangland.getReloadPlugin().reload(), true);
 	}
 
 	@Override
 	protected void initializeArguments() {
-		Argument files = new Argument(getGangland(), new String[]{"files", "file"}, getArgumentTree(),
+		Argument files = new Argument(getPlugin(), new String[]{"files", "file"}, getArgumentTree(),
 		                              (argument, sender, args) -> {
-										  reloadProcess("files", () -> getGangland().getReloadPlugin().filesReload(),
+										  reloadProcess("files", () -> gangland.getReloadPlugin().filesReload(),
 			                                            true);
 									  });
 
-		Argument scoreboard = new Argument(getGangland(), "scoreboard", getArgumentTree(), (argument, sender, args) -> {
+		Argument scoreboard = new Argument(getPlugin(), "scoreboard", getArgumentTree(), (argument, sender, args) -> {
 			reloadProcess("scoreboard", () -> {
 				if (Settings.isScoreboardEnabled()) {
-					getGangland().getReloadPlugin().scoreboardReload();
+					gangland.getReloadPlugin().scoreboardReload();
 				}
 			}, false);
 		});
 
-		GanglandContext context = getGangland().getContext();
+		GanglandContext context = gangland.getContext();
 
-		Argument inventory = new Argument(getGangland(), "inventory", getArgumentTree(), (argument, sender, args) -> {
+		Argument inventory = new Argument(getPlugin(), "inventory", getArgumentTree(), (argument, sender, args) -> {
 			reloadProcess("inventory", () -> {
 				context.get(PeriodicalUpdates.class).resetCache();
-				getGangland().getReloadPlugin().inventoryReload();
+				gangland.getReloadPlugin().inventoryReload();
 			}, false);
 		});
 
-		Argument cleanup = new Argument(getGangland(), "cleanup", getArgumentTree(), (argument, sender, args) -> {
+		Argument cleanup = new Argument(getPlugin(), "cleanup", getArgumentTree(), (argument, sender, args) -> {
 			reloadProcess("cleanup", () -> {
 				context.get(PeriodicalUpdates.class).getCleanupService().forceCleanup();
 			}, false);
@@ -90,7 +95,7 @@ public final class ReloadCommand extends Command {
 		GanglandChatUtil.sendToOperators(permission, reloading);
 
 		PeriodicalUpdates updates = forceUpdate
-		                            ? getGangland().getContext().get(PeriodicalUpdates.class)
+		                            ? gangland.getContext().get(PeriodicalUpdates.class)
 		                            : null;
 
 		if (updates == null) {
@@ -102,7 +107,7 @@ public final class ReloadCommand extends Command {
 		// loadAll() in the reload pass can race the pending writes, repopulate caches from stale DB state,
 		// and the next auto-save tick then overwrites the fresh DB rows with that stale cache.
 		updates.forceUpdate(
-				() -> Bukkit.getScheduler().runTask(getGangland(), () -> runReloadBody(permission, runnable)));
+				() -> Bukkit.getScheduler().runTask(getPlugin(), () -> runReloadBody(permission, runnable)));
 	}
 
 	private void runReloadBody(String permission, Runnable runnable) {

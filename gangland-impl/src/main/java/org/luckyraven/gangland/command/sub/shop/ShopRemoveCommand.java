@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.command.sub.shop;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -16,11 +16,11 @@ import java.util.ArrayList;
 
 class ShopRemoveCommand extends SubArgument {
 
-	private final Gangland       gangland;
+	private final JavaPlugin       gangland;
 	private final Tree<Argument> tree;
 	private final ShopRegistry   shopRegistry;
 
-	protected ShopRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent, ShopRegistry shopRegistry) {
+	protected ShopRemoveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, ShopRegistry shopRegistry) {
 		super(gangland, "remove", tree, parent);
 
 		this.gangland     = gangland;

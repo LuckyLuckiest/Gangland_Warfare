@@ -4,7 +4,7 @@ import org.bukkit.Location;
 import org.luckyraven.gangland.copsncrooks.detainment.release.ReleaseExitContract;
 import org.luckyraven.gangland.copsncrooks.jail.JailExitRegistry;
 import org.luckyraven.gangland.data.teleportation.Waypoint;
-import org.luckyraven.gangland.data.teleportation.WaypointManager;
+import org.luckyraven.gangland.data.teleportation.WaypointLookupContract;
 import org.luckyraven.gangland.file.configuration.Settings;
 
 /**
@@ -20,9 +20,9 @@ import org.luckyraven.gangland.file.configuration.Settings;
 public final class GanglandReleaseExitContract implements ReleaseExitContract {
 
 	private final JailExitRegistry jailExitRegistry;
-	private final WaypointManager  waypointManager;
+	private final WaypointLookupContract  waypointManager;
 
-	public GanglandReleaseExitContract(JailExitRegistry jailExitRegistry, WaypointManager waypointManager) {
+	public GanglandReleaseExitContract(JailExitRegistry jailExitRegistry, WaypointLookupContract waypointManager) {
 		this.jailExitRegistry = jailExitRegistry;
 		this.waypointManager  = waypointManager;
 	}

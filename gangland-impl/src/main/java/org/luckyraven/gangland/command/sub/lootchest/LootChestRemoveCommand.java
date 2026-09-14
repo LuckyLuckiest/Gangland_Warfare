@@ -4,7 +4,7 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -21,7 +21,7 @@ class LootChestRemoveCommand extends SubArgument {
 	private final LootChestManager lootChestManager;
 	private final GanglandDatabase ganglandDatabase;
 
-	protected LootChestRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected LootChestRemoveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                                 LootChestManager lootChestManager, GanglandDatabase ganglandDatabase) {
 		super(gangland, "remove", tree, parent);
 		this.lootChestManager = lootChestManager;

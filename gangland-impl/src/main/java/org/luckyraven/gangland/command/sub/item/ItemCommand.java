@@ -2,7 +2,7 @@ package org.luckyraven.gangland.command.sub.item;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.gangland.command.extension.CommandContributions;
 import org.luckyraven.keystone.command.argument.Argument;
@@ -32,7 +32,7 @@ public final class ItemCommand extends Command {
 	private final UniqueItemAddon      uniqueItemAddon;
 	private final CommandContributions contributions;
 
-	public ItemCommand(Gangland gangland,
+	public ItemCommand(JavaPlugin gangland,
 	                   @Qualifier("online") UserManager<Player> userManager,
 	                   MoneyAddon moneyAddon,
 	                   MoneyDepositService moneyDepositService,
@@ -63,9 +63,9 @@ public final class ItemCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument unique = new ItemUniqueCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		Argument unique = new ItemUniqueCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                        uniqueItemAddon);
-		Argument money = new ItemMoneyCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		Argument money = new ItemMoneyCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                      moneyAddon, moneyDepositService);
 
 		List<Argument> arguments = new ArrayList<>();

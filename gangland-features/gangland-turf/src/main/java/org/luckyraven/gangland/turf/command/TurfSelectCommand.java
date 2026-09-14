@@ -2,7 +2,7 @@ package org.luckyraven.gangland.turf.command;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -29,17 +29,17 @@ import java.util.List;
  */
 class TurfSelectCommand extends SubArgument {
 
-	private final Gangland             gangland;
+	private final JavaPlugin             plugin;
 	private final Tree<Argument>       tree;
 	private final TurfManager          turfs;
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
 
-	protected TurfSelectCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected TurfSelectCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                            TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages) {
-		super(gangland, "select", tree, parent);
+		super(plugin, "select", tree, parent);
 
-		this.gangland   = gangland;
+		this.plugin   = plugin;
 		this.tree       = tree;
 		this.turfs      = turfs;
 		this.selections = selections;
@@ -64,7 +64,7 @@ class TurfSelectCommand extends SubArgument {
 	}
 
 	private OptionalArgument idArgument() {
-		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+		return new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			if (!(sender instanceof Player player)) {
 				return;
 			}

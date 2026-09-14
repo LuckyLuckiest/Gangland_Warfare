@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.mail.command;
 
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.extension.CommandContribution;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberManager;
@@ -25,15 +25,15 @@ public final class GangAllyMailContribution implements CommandContribution {
 
 	public static final String PARENT = "gang.ally";
 
-	private final Gangland            gangland;
+	private final JavaPlugin            plugin;
 	private final UserManager<Player> userManager;
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 	private final MailManager         mailManager;
 
-	public GangAllyMailContribution(Gangland gangland, UserManager<Player> userManager, MemberManager memberManager,
+	public GangAllyMailContribution(JavaPlugin plugin, UserManager<Player> userManager, MemberManager memberManager,
 	                                GangManager gangManager, MailManager mailManager) {
-		this.gangland      = gangland;
+		this.plugin      = plugin;
 		this.userManager   = userManager;
 		this.memberManager = memberManager;
 		this.gangManager   = gangManager;
@@ -48,9 +48,9 @@ public final class GangAllyMailContribution implements CommandContribution {
 	@Override
 	public List<Argument> create(Tree<Argument> tree, Argument parent) {
 		return List.of(
-				new GangAllyRequestCommand(gangland, tree, parent, userManager, memberManager, gangManager, mailManager),
-				new GangAllyAcceptCommand(gangland, tree, parent, userManager, memberManager, gangManager, mailManager),
-				new GangAllyRejectCommand(gangland, tree, parent, userManager, memberManager, gangManager, mailManager),
-				new GangAllyPendingCommand(gangland, tree, parent, userManager, gangManager, mailManager));
+				new GangAllyRequestCommand(plugin, tree, parent, userManager, memberManager, gangManager, mailManager),
+				new GangAllyAcceptCommand(plugin, tree, parent, userManager, memberManager, gangManager, mailManager),
+				new GangAllyRejectCommand(plugin, tree, parent, userManager, memberManager, gangManager, mailManager),
+				new GangAllyPendingCommand(plugin, tree, parent, userManager, gangManager, mailManager));
 	}
 }

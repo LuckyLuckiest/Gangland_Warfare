@@ -3,7 +3,7 @@ package org.luckyraven.gangland.mail.command.ally;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -31,18 +31,18 @@ public class GangAllyRequestCommand extends SubArgument {
 
 	private static final long REQUEST_EXPIRY_MS = 60_000L;
 
-	private final Gangland            gangland;
+	private final JavaPlugin            plugin;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 	private final MailManager         mailManager;
 
-	public GangAllyRequestCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	public GangAllyRequestCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
 	                       MemberManager memberManager, GangManager gangManager, MailManager mailManager) {
-		super(gangland, "request", tree, parent);
+		super(plugin, "request", tree, parent);
 
-		this.gangland      = gangland;
+		this.plugin      = plugin;
 		this.tree          = tree;
 		this.userManager   = userManager;
 		this.memberManager = memberManager;
@@ -102,7 +102,7 @@ public class GangAllyRequestCommand extends SubArgument {
 	}
 
 	private OptionalArgument buildAllyId() {
-		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+		return new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			OptionalArgument optionalArgument = (OptionalArgument) argument;
 
 			Player       player = (Player) sender;

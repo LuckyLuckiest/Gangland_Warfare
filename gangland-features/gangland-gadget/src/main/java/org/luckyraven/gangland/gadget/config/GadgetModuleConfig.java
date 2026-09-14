@@ -8,7 +8,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.luckyraven.bartizan.api.BartizanApi;
 import org.luckyraven.bartizan.api.wearable.Wearable;
 import org.luckyraven.bartizan.api.wearable.WearableCatalog;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.gadget.car.CarService;
 import org.luckyraven.gangland.gadget.car.ParkedCar;
 import org.luckyraven.gangland.gadget.car.access.CarAccessPolicy;
@@ -56,10 +56,10 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 @Configuration
 public class GadgetModuleConfig {
 
-	private final Gangland gangland;
+	private final JavaPlugin plugin;
 
-	public GadgetModuleConfig(Gangland gangland) {
-		this.gangland = gangland;
+	public GadgetModuleConfig(JavaPlugin plugin) {
+		this.plugin = plugin;
 	}
 
 	private boolean isJetpackFuelSink(ItemStack stack) {
@@ -93,7 +93,7 @@ public class GadgetModuleConfig {
 	                             FuelService fuelService,
 	                             GadgetPhysicsConfig gadgetPhysicsConfig) {
 		IRepository<ParkedCar> parkedCarRepository = repositoryRegistry.getRepository(ParkedCar.class);
-		CarService carService = new CarService(carAddon, new VehicleRegistry(), gangland, parkedCarRepository,
+		CarService carService = new CarService(carAddon, new VehicleRegistry(), plugin, parkedCarRepository,
 		                                       fuelService, gadgetPhysicsConfig);
 		carService.reloadParkedVehicles();
 		return carService;
@@ -107,13 +107,13 @@ public class GadgetModuleConfig {
 	 * ({@code module.yml}'s {@code Plugins: [Bartizan]}), in which case the predicate simply reports "not a sink".
 	 * Done here rather than in a {@code @PostConstruct} on the {@code @Configuration} constructor: every
 	 * {@code @Configuration} is instantiated before any bean phase runs, when only
-	 * {@code GanglandContext}/{@code DependencyContainer}/{@code Gangland}/{@code ModuleLoader} are in the container —
+	 * {@code GanglandContext}/{@code DependencyContainer}/{@code JavaPlugin}/{@code ModuleLoader} are in the container —
 	 * a {@code FuelService} constructor parameter there throws {@code IllegalStateException} on bootstrap.
 	 */
 	@Bean
 	public JetpackService jetpackService(FuelService fuelService, GadgetPhysicsConfig gadgetPhysicsConfig) {
 		fuelService.setFuelSinkPredicate(this::isJetpackFuelSink);
-		return new JetpackService(fuelService, gangland, gadgetPhysicsConfig);
+		return new JetpackService(fuelService, plugin, gadgetPhysicsConfig);
 	}
 
 	@Bean
@@ -145,6 +145,6 @@ public class GadgetModuleConfig {
 
 	@Bean
 	public CarSignViewProvider carSignViewProvider(CarAddon carAddon) {
-		return new CarSignViewProvider(gangland, carAddon);
+		return new CarSignViewProvider(plugin, carAddon);
 	}
 }

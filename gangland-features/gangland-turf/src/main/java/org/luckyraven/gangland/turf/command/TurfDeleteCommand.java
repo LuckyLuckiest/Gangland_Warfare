@@ -2,7 +2,7 @@ package org.luckyraven.gangland.turf.command;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -22,9 +22,9 @@ class TurfDeleteCommand extends SubArgument {
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
 
-	protected TurfDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected TurfDeleteCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                            TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages) {
-		super(gangland, "delete", tree, parent);
+		super(plugin, "delete", tree, parent);
 
 		this.turfs      = turfs;
 		this.selections = selections;

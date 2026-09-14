@@ -3,7 +3,7 @@ package org.luckyraven.gangland.copsncrooks.command.jail;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -28,16 +28,16 @@ import java.util.List;
  */
 class JailSetExitCommand extends SubArgument {
 
-	private final Gangland        gangland;
+	private final JavaPlugin        plugin;
 	private final Tree<Argument>  tree;
 	private final JailRegistry    jailRegistry;
 	private final JailExitService jailExitService;
 
-	protected JailSetExitCommand(Gangland gangland, Tree<Argument> tree, Argument parent, JailRegistry jailRegistry,
+	protected JailSetExitCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, JailRegistry jailRegistry,
 	                             JailExitService jailExitService) {
-		super(gangland, "setexit", tree, parent);
+		super(plugin, "setexit", tree, parent);
 
-		this.gangland        = gangland;
+		this.plugin        = plugin;
 		this.tree            = tree;
 		this.jailRegistry    = jailRegistry;
 		this.jailExitService = jailExitService;
@@ -60,7 +60,7 @@ class JailSetExitCommand extends SubArgument {
 	}
 
 	private void specificJail() {
-		Argument jailIdArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+		Argument jailIdArg = new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			if (!(sender instanceof Player player)) {
 				sender.sendMessage(Messages.NOT_PLAYER.toString());
 				return;

@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.ConfirmArgument;
@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 class GangTransferCommand extends SubArgument {
 
-	private final Gangland            gangland;
+	private final JavaPlugin            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final MemberManager       memberManager;
@@ -46,7 +46,7 @@ class GangTransferCommand extends SubArgument {
 	private final HashMap<User<Player>, AtomicReference<UUID>> pendingTargets = new HashMap<>();
 	private final ConfirmArgument                              confirmTransfer;
 
-	protected GangTransferCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected GangTransferCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                              UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
 	                              RankManager rankManager) {
 		super(gangland, "transfer", tree, parent);

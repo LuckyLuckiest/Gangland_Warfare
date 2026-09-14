@@ -2,7 +2,7 @@ package org.luckyraven.gangland.command.sub.waypoint;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -18,7 +18,7 @@ class WaypointDeselectCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 	private final WaypointManager     waypointManager;
 
-	protected WaypointDeselectCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected WaypointDeselectCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                                  UserManager<Player> userManager, WaypointManager waypointManager) {
 		super(gangland, "deselect", tree, parent);
 

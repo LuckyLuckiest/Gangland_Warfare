@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.command.sub;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.gangland.command.CommandManager;
 import org.luckyraven.keystone.command.argument.Argument;
@@ -16,14 +16,14 @@ import java.util.List;
 @CommandHandler(priority = CommandPriority.LOWEST)
 public final class HelpCommand extends Command {
 
-	public HelpCommand(Gangland gangland, InformationManager informationManager, CommandManager commandManager) {
+	public HelpCommand(JavaPlugin gangland, InformationManager informationManager, CommandManager commandManager) {
 		super(gangland, "help", false, "general", "?");
 
 		List<CommandInformation> list = new ArrayList<>();
 
 		list.add(informationManager.getCommands().get("general"));
 		list.add(informationManager.getCommands().get("general_page"));
-		// Keystone's registry is typed on its own Command; help info lives on the Gangland subclass.
+		// Keystone's registry is typed on its own Command; help info lives on the JavaPlugin subclass.
 		// LOWEST priority makes this the last command constructed, so the manager's view is complete here.
 		list.addAll(commandManager.commandView()
 		                          .values()

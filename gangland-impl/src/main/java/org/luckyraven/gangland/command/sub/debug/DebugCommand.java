@@ -11,7 +11,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.permissions.Permission;
 import org.jetbrains.annotations.NotNull;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.Gangland;
+import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.gangland.bootstrap.PeriodicalUpdates;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.gangland.command.CommandManager;
@@ -70,6 +72,8 @@ public final class DebugCommand extends Command {
 	private final VillagerInventoryRegistry villagerRegistry;
 	private final CommandContributions      contributions;
 
+	private final Gangland gangland;
+
 	public DebugCommand(Gangland gangland,
 	                    @Qualifier("online") UserManager<Player> userManager,
 	                    GangManager gangManager,
@@ -82,6 +86,8 @@ public final class DebugCommand extends Command {
 	                    VillagerInventoryRegistry villagerRegistry,
 	                    DependencyContainer container) {
 		super(gangland, "debug", false);
+
+		this.gangland = gangland;
 
 		this.userManager       = userManager;
 		this.gangManager       = gangManager;
@@ -192,7 +198,7 @@ public final class DebugCommand extends Command {
 	protected void help(CommandSender sender, int page) { }
 
 	private @NotNull Argument getUserData() {
-		return new Argument(getGangland(), "user-data", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "user-data", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
 				User<Player> user = userManager.getUser(player);
 
@@ -208,7 +214,7 @@ public final class DebugCommand extends Command {
 	}
 
 	private @NotNull Argument getGangData() {
-		return new Argument(getGangland(), "gang-data", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "gang-data", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
 				User<Player> user = userManager.getUser(player);
 
@@ -231,7 +237,7 @@ public final class DebugCommand extends Command {
 	}
 
 	private @NotNull Argument getMemberData() {
-		return new Argument(getGangland(), "member-data", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "member-data", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
 				Member member = memberManager.getMember(player.getUniqueId());
 
@@ -249,7 +255,7 @@ public final class DebugCommand extends Command {
 	}
 
 	private @NotNull Argument getRankData() {
-		return new Argument(getGangland(), "rank-data", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "rank-data", getArgumentTree(), (argument, sender, args) -> {
 			Collection<Rank> values = rankManager.getRanks().values();
 			if (sender instanceof Player) {
 				for (Rank rank : values) {
@@ -264,7 +270,7 @@ public final class DebugCommand extends Command {
 	}
 
 	private @NotNull Argument getWaypointData() {
-		return new Argument(getGangland(), "waypoint-data", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "waypoint-data", getArgumentTree(), (argument, sender, args) -> {
 			Collection<Waypoint> values = waypointManager.getWaypoints().values();
 			if (sender instanceof Player) {
 				for (Waypoint waypoint : values) {
@@ -279,7 +285,7 @@ public final class DebugCommand extends Command {
 	}
 
 	private @NotNull Argument getMultiInv() {
-		return new Argument(getGangland(), "multi", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "multi", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
 				List<ItemStack> items = new ArrayList<>();
 
@@ -305,7 +311,7 @@ public final class DebugCommand extends Command {
 
 				List<ListEntry> entries = items.stream().map(ListEntry::of).toList();
 
-				MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getGangland(), player, entries,
+				MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getPlugin(), player, entries,
 				                                                                    title,
 				                                                                    false, 0, fill, buttonTags,
 				                                                                    null);
@@ -320,7 +326,7 @@ public final class DebugCommand extends Command {
 	}
 
 	private @NotNull Argument getAnvil() {
-		return new Argument(getGangland(), "anvil", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "anvil", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
 				User<Player> user = userManager.getUser(player);
 
@@ -338,7 +344,7 @@ public final class DebugCommand extends Command {
 
 					stateSnapshot.getPlayer().sendMessage(stateSnapshot.getText());
 					return List.of(AnvilGUI.ResponseAction.close());
-				}).text(text).title("Enter your answer.").plugin(getGangland()).open(player);
+				}).text(text).title("Enter your answer.").plugin(getPlugin()).open(player);
 			} else {
 				sender.sendMessage("How will you view the anvil inventory?");
 			}
@@ -346,7 +352,7 @@ public final class DebugCommand extends Command {
 	}
 
 	private @NotNull Argument getVillagerTest() {
-		return new Argument(getGangland(), "villager", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "villager", getArgumentTree(), (argument, sender, args) -> {
 			if (!(sender instanceof Player player)) {
 				sender.sendMessage("How will you see the inventory?");
 				return;
@@ -356,7 +362,7 @@ public final class DebugCommand extends Command {
 			VillagerDebugPanel.Session session = new VillagerDebugPanel.Session();
 
 			MultiPanelInventory<VillagerDebugPanel.Session> host =
-					new MultiPanelInventory<>(getGangland(), player, session);
+					new MultiPanelInventory<>(getPlugin(), player, session);
 			host.register("main", panel);
 			host.openAt("main");
 		});
@@ -388,19 +394,19 @@ public final class DebugCommand extends Command {
 	}
 
 	private @NotNull Argument getPerm() {
-		return new Argument(getGangland(), "perms", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "perms", getArgumentTree(), (argument, sender, args) -> {
 			String[] array = permissionManager.getPermissions().toArray(String[]::new);
 			sender.sendMessage(array);
 		});
 	}
 
 	private @NotNull Argument getPermOptional() {
-		return new Argument(getGangland(), "bukkit", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "bukkit", getArgumentTree(), (argument, sender, args) -> {
 			String[] permissions = Bukkit.getPluginManager()
 			                             .getPermissions()
 					.stream()
 					.map(Permission::getName)
-					.filter(name -> name.startsWith(Gangland.FULL_PREFIX))
+					.filter(name -> name.startsWith(GanglandApi.FULL_PREFIX))
 					.sorted(String::compareTo)
 					.toArray(String[]::new);
 			sender.sendMessage(permissions);
@@ -408,7 +414,7 @@ public final class DebugCommand extends Command {
 	}
 
 	private @NotNull Argument getArgument(String[] setOpt) {
-		return new Argument(getGangland(), setOpt, getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), setOpt, getArgumentTree(), (argument, sender, args) -> {
 			var jsonFormatter = new JsonFormatter();
 			// CM-13: the map is built by reflection over every static field, MySQL credentials included.
 			var message       = convertToJson(
@@ -419,7 +425,7 @@ public final class DebugCommand extends Command {
 	}
 
 	private @NotNull Argument getSetPlaceholder() {
-		return new Argument(getGangland(), "placeholder", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "placeholder", getArgumentTree(), (argument, sender, args) -> {
 			var jsonFormatter = new JsonFormatter();
 			// CM-13: the placeholder map is the same reflection dump under snake_case keys.
 			var message       = convertToJson(
@@ -430,7 +436,7 @@ public final class DebugCommand extends Command {
 	}
 
 	private @NotNull Argument getPlaceholder() {
-		return new Argument(getGangland(), "placeholder-data", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "placeholder-data", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
 				String[] placeholders = {"%player%", "%info%", "%user_gang-id%"};
 
@@ -444,13 +450,13 @@ public final class DebugCommand extends Command {
 	}
 
 	private @NotNull Argument getUpdateData() {
-		return new Argument(getGangland(), "update-data", getArgumentTree(), (argument, sender, args) -> {
-			getGangland().getContext().get(PeriodicalUpdates.class).forceUpdate();
+		return new Argument(getPlugin(), "update-data", getArgumentTree(), (argument, sender, args) -> {
+			gangland.getContext().get(PeriodicalUpdates.class).forceUpdate();
 		});
 	}
 
 	private @NotNull Argument getInventoriesData() {
-		return new Argument(getGangland(), "inv-data", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "inv-data", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
 				User<Player> user = userManager.getUser(player);
 
@@ -478,7 +484,7 @@ public final class DebugCommand extends Command {
 	}
 
 	private @NotNull Argument getSpecialInventories() {
-		return new Argument(getGangland(), "special", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "special", getArgumentTree(), (argument, sender, args) -> {
 			String[] array = InventoryHandler.getSpecialInventories().keySet()
 					.stream().map(NamespacedKey::getKey).toArray(String[]::new);
 			sender.sendMessage(array);
@@ -486,13 +492,13 @@ public final class DebugCommand extends Command {
 	}
 
 	private @NotNull Argument getCheckPerm() {
-		return new Argument(getGangland(), "check-perm", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "check-perm", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage("Missing argument <permission>");
 		});
 	}
 
 	private @NotNull Argument getCheckOptional() {
-		return new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
+		return new OptionalArgument(getPlugin(), getArgumentTree(), (argument, sender, args) -> {
 			String permission = args[2];
 
 			sender.sendMessage(permission);
@@ -502,15 +508,15 @@ public final class DebugCommand extends Command {
 	}
 
 	private @NotNull Argument getVersion() {
-		return new Argument(getGangland(), "version", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "version", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage("Server version: " + Bukkit.getVersion(), "Bukkit version: " + Bukkit.getBukkitVersion(),
-			                   "Plugin version: " + getGangland().getDescription().getVersion(),
-			                   "API version: " + getGangland().getDescription().getAPIVersion(),
+			                   "Plugin version: " + getPlugin().getDescription().getVersion(),
+			                   "API version: " + getPlugin().getDescription().getAPIVersion(),
 			                   "Bukkit version: " + Bukkit.getServer().getClass().getPackage().getName());
 
-			if (!(sender instanceof Player player && getGangland().getViaAPI() != null)) return;
+			if (!(sender instanceof Player player && gangland.getViaAPI() != null)) return;
 
-			int             playerVersion   = getGangland().getViaAPI().getPlayerVersion(player.getUniqueId());
+			int             playerVersion   = gangland.getViaAPI().getPlayerVersion(player.getUniqueId());
 			ProtocolVersion protocolVersion = ProtocolVersion.getProtocol(playerVersion);
 
 			sender.sendMessage("Client version: " + protocolVersion.getName());

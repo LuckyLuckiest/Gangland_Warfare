@@ -6,7 +6,8 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -28,7 +29,7 @@ class WaypointListCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 	private final WaypointManager     waypointManager;
 
-	protected WaypointListCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected WaypointListCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                              UserManager<Player> userManager, WaypointManager waypointManager) {
 		super(gangland, "list", tree, parent);
 
@@ -64,7 +65,7 @@ class WaypointListCommand extends SubArgument {
 
 			for (Waypoint waypoint : visible) {
 				String name      = waypoint.getName();
-				String tpCommand = String.format("/%s teleport %s", Gangland.SHORT_PREFIX, name);
+				String tpCommand = String.format("/%s teleport %s", GanglandApi.SHORT_PREFIX, name);
 				String hoverText = String.format("%s - %d, %d, %d", waypoint.getWorld(),
 				                                 (int) waypoint.getX(), (int) waypoint.getY(),
 				                                 (int) waypoint.getZ());

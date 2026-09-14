@@ -5,7 +5,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.CustomLog;
 import lombok.Getter;
-import org.luckyraven.gangland.Gangland;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -37,7 +36,7 @@ public final class InformationManager {
 
 	/** Load the core's bundled {@code commands.json} (read through the plugin classloader). */
 	public void processCommands() {
-		InputStream stream = Objects.requireNonNull(Gangland.class.getResourceAsStream("/" + COMMANDS_RESOURCE),
+		InputStream stream = Objects.requireNonNull(InformationManager.class.getResourceAsStream("/" + COMMANDS_RESOURCE),
 		                                            COMMANDS_RESOURCE + " is missing from the core jar");
 		int added = merge("core", new InputStreamReader(stream, StandardCharsets.UTF_8));
 		log.debug("Help index: {} core command(s)", added);

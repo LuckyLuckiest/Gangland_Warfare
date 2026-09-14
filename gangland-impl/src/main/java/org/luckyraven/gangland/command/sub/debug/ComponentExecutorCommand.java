@@ -5,7 +5,8 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -35,7 +36,7 @@ public final class ComponentExecutorCommand extends Command {
 	private final GangManager         gangManager;
 	private final RankManager         rankManager;
 
-	public ComponentExecutorCommand(Gangland gangland,
+	public ComponentExecutorCommand(JavaPlugin gangland,
 	                                @Qualifier("online") UserManager<Player> userManager,
 	                                MemberManager memberManager,
 	                                GangManager gangManager,
@@ -63,10 +64,10 @@ public final class ComponentExecutorCommand extends Command {
 	protected void help(CommandSender sender, int page) { }
 
 	private Argument resourcePack() {
-		Argument click = new Argument(getGangland(), "click", getArgumentTree());
+		Argument click = new Argument(getPlugin(), "click", getArgumentTree());
 
 		// glw option click resource
-		Argument resource = new Argument(getGangland(), "resource", getArgumentTree(), (argument, sender, args) -> {
+		Argument resource = new Argument(getPlugin(), "resource", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage(GanglandChatUtil.prefixMessage(
 					"&7You should first disconnect from the server and click the server tab you created, " +
 					"next click &8(&bEdit&8)&7 then change &8(&bServer Resource Packs&8)&7 to either " +
@@ -83,11 +84,11 @@ public final class ComponentExecutorCommand extends Command {
 
 	private Argument gangArgument(UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
 	                              RankManager rankManager) {
-		Argument gang = new Argument(getGangland(), "gang", getArgumentTree());
+		Argument gang = new Argument(getPlugin(), "gang", getArgumentTree());
 
-		Argument rank = new Argument(getGangland(), "rank", getArgumentTree());
+		Argument rank = new Argument(getPlugin(), "rank", getArgumentTree());
 
-		Argument target = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
+		Argument target = new OptionalArgument(getPlugin(), getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -135,7 +136,7 @@ public final class ComponentExecutorCommand extends Command {
 
 	private @NotNull Argument getRankType(UserManager<Player> userManager, MemberManager memberManager,
 	                                      GangManager gangManager, RankManager rankManager) {
-		return new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
+		return new OptionalArgument(getPlugin(), getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -175,7 +176,7 @@ public final class ComponentExecutorCommand extends Command {
 
 			// GR-08: this command used to check only "not my own rank", so anyone who could reach it could hand
 			// out the owner rank. Same force_rank override GangPromoteCommand honours.
-			String  forceRank = String.format("%s.command.gang.force_rank", Gangland.FULL_PREFIX);
+			String  forceRank = String.format("%s.command.gang.force_rank", GanglandApi.FULL_PREFIX);
 			boolean force     = player.hasPermission(forceRank);
 			boolean self      = targetMember.getUuid().equals(player.getUniqueId());
 
@@ -217,7 +218,7 @@ public final class ComponentExecutorCommand extends Command {
 			Collection<Rank> values = rankManager.getRanks().values();
 
 			// GR-08: the completer offered every rank in the tree, owner included.
-			String  forceRank = String.format("%s.command.gang.force_rank", Gangland.FULL_PREFIX);
+			String  forceRank = String.format("%s.command.gang.force_rank", GanglandApi.FULL_PREFIX);
 			boolean force     = player.hasPermission(forceRank);
 
 			if (force) return values.stream().map(Rank::getName).toList();

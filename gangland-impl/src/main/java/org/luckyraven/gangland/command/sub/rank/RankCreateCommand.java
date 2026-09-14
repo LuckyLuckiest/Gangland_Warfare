@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.command.sub.rank;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.ConfirmArgument;
@@ -22,11 +22,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 class RankCreateCommand extends SubArgument {
 
-	private final Gangland       gangland;
+	private final JavaPlugin       gangland;
 	private final Tree<Argument> tree;
 	private final RankManager    rankManager;
 
-	protected RankCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent, RankManager rankManager) {
+	protected RankCreateCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, RankManager rankManager) {
 		super(gangland, "create", tree, parent);
 
 		this.gangland = gangland;

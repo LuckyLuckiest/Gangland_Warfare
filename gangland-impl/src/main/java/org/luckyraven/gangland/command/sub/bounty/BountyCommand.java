@@ -2,7 +2,7 @@ package org.luckyraven.gangland.command.sub.bounty;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.bean.Qualifier;
@@ -21,7 +21,7 @@ public final class BountyCommand extends Command {
 
 	private final UserManager<Player> userManager;
 
-	public BountyCommand(Gangland gangland, @Qualifier("online") UserManager<Player> userManager) {
+	public BountyCommand(JavaPlugin gangland, @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "bounty", false);
 
 		this.userManager = userManager;
@@ -53,8 +53,8 @@ public final class BountyCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		BountySetCommand   set   = new BountySetCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
-		BountyClearCommand clear = new BountyClearCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
+		BountySetCommand   set   = new BountySetCommand(getPlugin(), getArgumentTree(), getArgument(), userManager);
+		BountyClearCommand clear = new BountyClearCommand(getPlugin(), getArgumentTree(), getArgument(), userManager);
 
 		List<Argument> arguments = new ArrayList<>();
 

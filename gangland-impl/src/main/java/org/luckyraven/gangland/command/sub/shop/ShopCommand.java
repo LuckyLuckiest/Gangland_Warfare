@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.command.sub.shop;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.bean.command.CommandHandler;
@@ -16,7 +16,7 @@ public class ShopCommand extends Command {
 	private final ShopRegistry  shopRegistry;
 	private final ShopAdminFlow adminFlow;
 
-	public ShopCommand(Gangland gangland, ShopRegistry shopRegistry, ShopAdminFlow adminFlow) {
+	public ShopCommand(JavaPlugin gangland, ShopRegistry shopRegistry, ShopAdminFlow adminFlow) {
 		super(gangland, "shop", true, "shops");
 		this.shopRegistry = shopRegistry;
 		this.adminFlow    = adminFlow;
@@ -37,15 +37,15 @@ public class ShopCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		getArgument().addSubArgument(new ShopCreateCommand(getGangland(), getArgumentTree(), getArgument(),
+		getArgument().addSubArgument(new ShopCreateCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                   shopRegistry));
-		getArgument().addSubArgument(new ShopEditCommand(getGangland(), getArgumentTree(), getArgument(),
+		getArgument().addSubArgument(new ShopEditCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                 shopRegistry, adminFlow));
-		getArgument().addSubArgument(new ShopListCommand(getGangland(), getArgumentTree(), getArgument(),
+		getArgument().addSubArgument(new ShopListCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                 shopRegistry));
-		getArgument().addSubArgument(new ShopRemoveCommand(getGangland(), getArgumentTree(), getArgument(),
+		getArgument().addSubArgument(new ShopRemoveCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                   shopRegistry));
-		getArgument().addSubArgument(new ShopTitleCommand(getGangland(), getArgumentTree(), getArgument(),
+		getArgument().addSubArgument(new ShopTitleCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                  shopRegistry));
 	}
 

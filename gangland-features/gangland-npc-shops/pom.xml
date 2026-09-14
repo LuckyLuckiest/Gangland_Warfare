@@ -62,7 +62,7 @@
             <artifactId>shop-api</artifactId>
         </dependency>
         <!-- The module touches User/UserManager (gangland-domain hooks) directly — provided scope is not
-             transitive, so this must be declared here even though gangland-impl also carries it
+             transitive, so this must be declared here even though the host jar also carries it
              (2026-09-07 gadget finding, repeated at T-J1's own "Watch out"). -->
         <dependency>
             <groupId>org.luckyraven</groupId>
@@ -94,12 +94,13 @@
             <artifactId>XSeries</artifactId>
         </dependency>
 
-        <!-- The host (core) jar. Provided: at runtime this module is loaded from plugins/Gangland_Warfare/modules/
-             by Keystone's ModuleLoader, whose parent is the host plugin's classloader, so every impl class
-             resolves from there. Dependency direction is module -> core; core never names an npcshops type. -->
+        <!-- The host API — the only host artifact a runtime module compiles against, so the compiler enforces
+             the contract. Provided: at runtime this module is loaded from plugins/Gangland_Warfare/modules/ by
+             Keystone's ModuleLoader, whose parent is the host plugin's classloader, so every api class resolves
+             from the shaded core jar. Dependency direction is module -> api; the host never names a npcshops type. -->
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>gangland-impl</artifactId>
+            <artifactId>gangland-api</artifactId>
             <scope>provided</scope>
         </dependency>
 

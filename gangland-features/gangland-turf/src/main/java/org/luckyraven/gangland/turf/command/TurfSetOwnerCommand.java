@@ -2,7 +2,7 @@ package org.luckyraven.gangland.turf.command;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -32,19 +32,19 @@ class TurfSetOwnerCommand extends SubArgument {
 
 	private static final String CLEAR_TOKEN = "none";
 
-	private final Gangland             gangland;
+	private final JavaPlugin             plugin;
 	private final Tree<Argument>       tree;
 	private final TurfManager          turfs;
 	private final GangLookupContract   gangs;
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
 
-	protected TurfSetOwnerCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected TurfSetOwnerCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                              TurfManager turfs, GangLookupContract gangs, WandSelectionManager selections,
 	                              TurfMessageContract messages) {
-		super(gangland, "setowner", tree, parent);
+		super(plugin, "setowner", tree, parent);
 
-		this.gangland   = gangland;
+		this.plugin   = plugin;
 		this.tree       = tree;
 		this.turfs      = turfs;
 		this.gangs      = gangs;
@@ -61,7 +61,7 @@ class TurfSetOwnerCommand extends SubArgument {
 	}
 
 	private OptionalArgument gangArgument() {
-		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+		return new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			Turf turf = TurfSelectionResolver.resolve(sender, turfs, selections, messages);
 			if (turf == null) {
 				return;

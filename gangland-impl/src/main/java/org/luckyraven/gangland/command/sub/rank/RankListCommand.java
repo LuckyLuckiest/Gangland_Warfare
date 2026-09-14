@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.command.sub.rank;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -16,7 +16,7 @@ class RankListCommand extends SubArgument {
 
 	private final RankManager rankManager;
 
-	protected RankListCommand(Gangland gangland, Tree<Argument> tree, Argument parent, RankManager rankManager) {
+	protected RankListCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, RankManager rankManager) {
 		super(gangland, "list", tree, parent);
 
 		this.rankManager = rankManager;

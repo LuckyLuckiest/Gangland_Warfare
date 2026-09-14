@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.npcshops.command.banker;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.gangland.npcshops.banker.BankerManager;
@@ -12,14 +12,14 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 
 class BankerEditCommand extends SubArgument {
 
-	private final Gangland       gangland;
+	private final JavaPlugin       plugin;
 	private final Tree<Argument> tree;
 	private final BankerManager  bankerManager;
 
-	protected BankerEditCommand(Gangland gangland, Tree<Argument> tree, Argument parent, BankerManager bankerManager) {
-		super(gangland, "edit", tree, parent);
+	protected BankerEditCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, BankerManager bankerManager) {
+		super(plugin, "edit", tree, parent);
 
-		this.gangland      = gangland;
+		this.plugin      = plugin;
 		this.tree          = tree;
 		this.bankerManager = bankerManager;
 
@@ -33,7 +33,7 @@ class BankerEditCommand extends SubArgument {
 	}
 
 	private void initializeArgument() {
-		this.addSubArgument(new BankerEditNameCommand(gangland, tree, this, bankerManager));
+		this.addSubArgument(new BankerEditNameCommand(plugin, tree, this, bankerManager));
 	}
 
 }

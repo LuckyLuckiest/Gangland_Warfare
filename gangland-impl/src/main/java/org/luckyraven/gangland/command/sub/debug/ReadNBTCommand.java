@@ -3,7 +3,7 @@ package org.luckyraven.gangland.command.sub.debug;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.item.ItemBuilder;
@@ -20,7 +20,7 @@ public final class ReadNBTCommand extends Command {
 
 	private final NbtTagCatalog nbtTagCatalog;
 
-	public ReadNBTCommand(Gangland gangland, NbtTagCatalog nbtTagCatalog) {
+	public ReadNBTCommand(JavaPlugin gangland, NbtTagCatalog nbtTagCatalog) {
 		super(gangland, "nbt", true, "read-nbt", "readnbt");
 		this.nbtTagCatalog = nbtTagCatalog;
 	}
@@ -41,7 +41,7 @@ public final class ReadNBTCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument brief = new Argument(getGangland(), "brief", getArgumentTree(), (argument, sender, args) -> {
+		Argument brief = new Argument(getPlugin(), "brief", getArgumentTree(), (argument, sender, args) -> {
 			Player    player   = (Player) sender;
 			ItemStack itemHeld = player.getInventory().getItemInMainHand();
 

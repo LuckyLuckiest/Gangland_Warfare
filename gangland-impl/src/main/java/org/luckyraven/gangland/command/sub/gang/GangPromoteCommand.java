@@ -6,7 +6,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -29,14 +30,14 @@ import java.util.Objects;
 
 class GangPromoteCommand extends SubArgument {
 
-	private final Gangland            gangland;
+	private final JavaPlugin            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 	private final RankManager         rankManager;
 
-	protected GangPromoteCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected GangPromoteCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                             UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
 	                             RankManager rankManager) {
 		super(gangland, "promote", tree, parent);
@@ -77,7 +78,7 @@ class GangPromoteCommand extends SubArgument {
 
 			Member userMember = memberManager.getMember(player.getUniqueId());
 
-			String  forceRank = String.format("%s.command.gang.force_rank", Gangland.FULL_PREFIX);
+			String  forceRank = String.format("%s.command.gang.force_rank", GanglandApi.FULL_PREFIX);
 			boolean force     = player.hasPermission(forceRank);
 
 			// GR-01: a player with no cached Member would NPE further down this command.
@@ -156,7 +157,7 @@ class GangPromoteCommand extends SubArgument {
 				for (int i = 0; i < nextRanks.size(); i++) {
 					String rank = nextRanks.get(i).getName();
 
-					var value = String.format("/%s option gang rank %s %s", Gangland.SHORT_PREFIX, targetStr, rank);
+					var value = String.format("/%s option gang rank %s %s", GanglandApi.SHORT_PREFIX, targetStr, rank);
 					var sep   = new ComponentBuilder(rank).event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, value));
 
 					ranks.append(sep.create());

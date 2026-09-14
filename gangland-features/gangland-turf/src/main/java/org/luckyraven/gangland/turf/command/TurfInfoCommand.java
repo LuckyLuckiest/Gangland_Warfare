@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.turf.command;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -27,10 +27,10 @@ class TurfInfoCommand extends SubArgument {
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
 
-	protected TurfInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected TurfInfoCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                          TurfManager turfs, GangLookupContract gangs, WandSelectionManager selections,
 	                          TurfMessageContract messages) {
-		super(gangland, "info", tree, parent);
+		super(plugin, "info", tree, parent);
 
 		this.turfs      = turfs;
 		this.gangs      = gangs;

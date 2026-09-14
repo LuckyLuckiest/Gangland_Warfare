@@ -2,7 +2,7 @@ package org.luckyraven.gangland.civilians.command;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
@@ -18,8 +18,8 @@ class CivilianListCommand extends SubArgument {
 
 	private final CivilianService civilianService;
 
-	CivilianListCommand(Gangland gangland, Tree<Argument> tree, Argument parent, CivilianService civilianService) {
-		super(gangland, "list", tree, parent);
+	CivilianListCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, CivilianService civilianService) {
+		super(plugin, "list", tree, parent);
 		this.civilianService = civilianService;
 	}
 

@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -36,7 +36,7 @@ public final class BalanceCommand extends Command {
 	private final UserManager<OfflinePlayer> offlineUserManager;
 	private final GanglandDatabase           ganglandDatabase;
 
-	public BalanceCommand(Gangland gangland,
+	public BalanceCommand(JavaPlugin gangland,
 	                      @Qualifier("online") UserManager<Player> userManager,
 	                      @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
 	                      GanglandDatabase ganglandDatabase) {
@@ -73,7 +73,7 @@ public final class BalanceCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument targetBalance = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
+		Argument targetBalance = new OptionalArgument(getPlugin(), getArgumentTree(), (argument, sender, args) -> {
 			// get the target, validate if they are in the system — the caches first, the DB only as a fallback
 			String                        target = args[1];
 			User<? extends OfflinePlayer> user   = findCached(target, userManager, offlineUserManager);
@@ -86,7 +86,7 @@ public final class BalanceCommand extends Command {
 				return;
 			}
 
-			DatabaseHelper helper = new DatabaseHelper(getGangland(), ganglandDatabase);
+			DatabaseHelper helper = new DatabaseHelper(getPlugin(), ganglandDatabase);
 			List<Table<?>> tables = ganglandDatabase.getTables();
 
 			UserTable userTable = TableLookup.find(UserTable.class, tables);

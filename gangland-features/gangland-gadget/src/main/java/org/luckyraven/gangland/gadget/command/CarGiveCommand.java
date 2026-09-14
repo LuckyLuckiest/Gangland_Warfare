@@ -4,7 +4,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -22,16 +22,16 @@ import java.util.Map;
 
 class CarGiveCommand extends SubArgument {
 
-	private final Gangland            gangland;
+	private final JavaPlugin            plugin;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final CarAddon            carAddon;
 
-	CarGiveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	CarGiveCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	               UserManager<Player> userManager, CarAddon carAddon) {
-		super(gangland, "give", tree, parent);
+		super(plugin, "give", tree, parent);
 
-		this.gangland    = gangland;
+		this.plugin    = plugin;
 		this.tree        = tree;
 		this.userManager = userManager;
 		this.carAddon    = carAddon;
@@ -46,7 +46,7 @@ class CarGiveCommand extends SubArgument {
 	}
 
 	private void carGive() {
-		Argument name = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+		Argument name = new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -65,7 +65,7 @@ class CarGiveCommand extends SubArgument {
 		}, sender -> carAddon.getCars().keySet()
 				.stream().toList());
 
-		Argument amount = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+		Argument amount = new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 

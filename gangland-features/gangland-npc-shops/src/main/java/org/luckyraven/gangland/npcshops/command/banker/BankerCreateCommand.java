@@ -3,7 +3,7 @@ package org.luckyraven.gangland.npcshops.command.banker;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -18,15 +18,15 @@ import java.util.UUID;
 
 class BankerCreateCommand extends SubArgument {
 
-	private final Gangland       gangland;
+	private final JavaPlugin       plugin;
 	private final Tree<Argument> tree;
 	private final BankerManager  bankerManager;
 
-	protected BankerCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected BankerCreateCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                              BankerManager bankerManager) {
-		super(gangland, "create", tree, parent);
+		super(plugin, "create", tree, parent);
 
-		this.gangland      = gangland;
+		this.plugin      = plugin;
 		this.tree          = tree;
 		this.bankerManager = bankerManager;
 
@@ -39,7 +39,7 @@ class BankerCreateCommand extends SubArgument {
 	}
 
 	private void registerArguments() {
-		Argument displayArg = new OptionalArgument(gangland, tree,
+		Argument displayArg = new OptionalArgument(plugin, tree,
 		                                           (argument, sender, args) -> spawnBanker(sender, args[2]),
 		                                           sender -> List.of("<displayName>"));
 		this.addSubArgument(displayArg);

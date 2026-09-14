@@ -3,7 +3,8 @@ package org.luckyraven.gangland.command.sub.lootchest;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.bean.command.CommandHandler;
@@ -20,7 +21,7 @@ public class LootChestWandCommand extends Command {
 	private final LootChestManager lootChestManager;
 	private final GanglandDatabase ganglandDatabase;
 
-	public LootChestWandCommand(Gangland gangland,
+	public LootChestWandCommand(JavaPlugin gangland,
 	                            LootChestManager lootChestManager,
 	                            GanglandDatabase ganglandDatabase) {
 		super(gangland, "lootchest", true, "wand", "lootchestwand", "chestwand", "lcwand");
@@ -41,12 +42,12 @@ public class LootChestWandCommand extends Command {
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		Player player = (Player) commandSender;
 
-		LootChestWand lootChestWand = new LootChestWand(getGangland(), lootChestManager, Gangland.SHORT_PREFIX);
+		LootChestWand lootChestWand = new LootChestWand(getPlugin(), lootChestManager, GanglandApi.SHORT_PREFIX);
 		ItemStack     wand          = lootChestWand.createWand();
 
 		player.getInventory().addItem(wand);
 
-		String command = "/" + Gangland.SHORT_PREFIX + " wand edit";
+		String command = "/" + GanglandApi.SHORT_PREFIX + " wand edit";
 		String hold    = "&7Hold the wand and use '&e" + command + "' &7to configure settings.";
 
 		player.sendMessage(GanglandChatUtil.color("&a&lLoot Chest Wand &7has been added to your inventory!",
@@ -55,9 +56,9 @@ public class LootChestWandCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument editArg = new LootChestWandEditCommand(getGangland(), getArgumentTree(), getArgument(),
+		Argument editArg = new LootChestWandEditCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                lootChestManager);
-		Argument removeArg = new LootChestRemoveCommand(getGangland(), getArgumentTree(), getArgument(),
+		Argument removeArg = new LootChestRemoveCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                lootChestManager, ganglandDatabase);
 
 		getArgument().addSubArgument(editArg);

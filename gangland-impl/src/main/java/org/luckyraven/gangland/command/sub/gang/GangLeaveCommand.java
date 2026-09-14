@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.ArgumentLock;
 import org.luckyraven.keystone.command.argument.SubArgument;
@@ -27,7 +27,7 @@ class GangLeaveCommand extends SubArgument {
 
 	private static final long CONFIRM_WINDOW_TICKS = 20L * 60L;
 
-	private final Gangland                           gangland;
+	private final JavaPlugin                           gangland;
 	private final UserManager<Player>                userManager;
 	private final MemberManager                      memberManager;
 	private final GangManager                        gangManager;
@@ -35,7 +35,7 @@ class GangLeaveCommand extends SubArgument {
 	private final ArgumentLock                       lock       = new ArgumentLock();
 	private final HashMap<CommandSender, BukkitTask> autoUnlock = new HashMap<>();
 
-	protected GangLeaveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected GangLeaveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                           UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
 	                           RankManager rankManager) {
 		super(gangland, "leave", tree, parent);

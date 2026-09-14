@@ -2,7 +2,7 @@ package org.luckyraven.gangland.command.sub.bank;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.ConfirmArgument;
@@ -28,11 +28,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 class BankCreateCommand extends SubArgument {
 
-	private final Gangland            gangland;
+	private final JavaPlugin            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
-	protected BankCreateCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected BankCreateCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                            UserManager<Player> userManager) {
 		super(gangland, "create", tree, parent);
 

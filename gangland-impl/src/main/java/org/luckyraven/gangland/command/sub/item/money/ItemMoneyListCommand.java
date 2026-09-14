@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.command.sub.item.money;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -18,7 +18,7 @@ class ItemMoneyListCommand extends SubArgument {
 
 	private final MoneyAddon moneyAddon;
 
-	ItemMoneyListCommand(Gangland gangland, Tree<Argument> tree, Argument parent, MoneyAddon moneyAddon) {
+	ItemMoneyListCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, MoneyAddon moneyAddon) {
 		super(gangland, "list", tree, parent);
 
 		this.moneyAddon = moneyAddon;

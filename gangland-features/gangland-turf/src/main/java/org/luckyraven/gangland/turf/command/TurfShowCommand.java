@@ -3,7 +3,7 @@ package org.luckyraven.gangland.turf.command;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -24,16 +24,16 @@ import org.luckyraven.gangland.turf.task.TurfVisualization;
  */
 class TurfShowCommand extends SubArgument {
 
-	private final Gangland             gangland;
+	private final JavaPlugin             plugin;
 	private final TurfManager          turfs;
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
 
-	protected TurfShowCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected TurfShowCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                          TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages) {
-		super(gangland, "show", tree, parent);
+		super(plugin, "show", tree, parent);
 
-		this.gangland   = gangland;
+		this.plugin   = plugin;
 		this.turfs      = turfs;
 		this.selections = selections;
 		this.messages   = messages;
@@ -73,7 +73,7 @@ class TurfShowCommand extends SubArgument {
 	}
 
 	private void renderTurf(Player viewer, Turf turf, int seconds, String particle) {
-		TurfVisualization.show(gangland, viewer, turf.getRegion().getWorld(), turf.getRegion(), seconds, particle);
+		TurfVisualization.show(plugin, viewer, turf.getRegion().getWorld(), turf.getRegion(), seconds, particle);
 		messages.send(viewer, "TURF_SHOW_STARTED",
 		              "turf", turf.getDisplayName(),
 		              "seconds", String.valueOf(seconds));
@@ -88,7 +88,7 @@ class TurfShowCommand extends SubArgument {
 		CuboidRegion region = new CuboidRegion(pos1.getWorld().getName(),
 		                                       pos1.getBlockX(), pos1.getBlockZ(),
 		                                       pos2.getBlockX(), pos2.getBlockZ());
-		TurfVisualization.show(gangland, viewer, region.getWorld(), region, seconds, particle);
+		TurfVisualization.show(plugin, viewer, region.getWorld(), region, seconds, particle);
 		messages.send(viewer, "TURF_SHOW_STARTED",
 		              "turf", "pending selection",
 		              "seconds", String.valueOf(seconds));

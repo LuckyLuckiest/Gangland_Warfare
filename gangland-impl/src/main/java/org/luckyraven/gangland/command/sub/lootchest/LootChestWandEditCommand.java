@@ -3,7 +3,7 @@ package org.luckyraven.gangland.command.sub.lootchest;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -16,10 +16,10 @@ import org.luckyraven.gangland.lootchest.LootChestWand;
 
 class LootChestWandEditCommand extends SubArgument {
 
-	private final Gangland         gangland;
+	private final JavaPlugin         gangland;
 	private final LootChestManager lootChestManager;
 
-	protected LootChestWandEditCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected LootChestWandEditCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                                   LootChestManager lootChestManager) {
 		super(gangland, "edit", tree, parent);
 

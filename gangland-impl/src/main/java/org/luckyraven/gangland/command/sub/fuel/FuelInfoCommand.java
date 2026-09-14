@@ -3,7 +3,7 @@ package org.luckyraven.gangland.command.sub.fuel;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -20,7 +20,7 @@ class FuelInfoCommand extends SubArgument {
 
 	private final UserManager<Player> userManager;
 
-	FuelInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager) {
+	FuelInfoCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager) {
 		super(gangland, "info", tree, parent);
 
 		this.userManager = userManager;

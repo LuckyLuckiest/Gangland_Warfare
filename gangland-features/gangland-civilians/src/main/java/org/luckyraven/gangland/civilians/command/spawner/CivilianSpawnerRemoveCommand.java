@@ -2,7 +2,7 @@ package org.luckyraven.gangland.civilians.command.spawner;
 
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -14,15 +14,15 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 
 class CivilianSpawnerRemoveCommand extends SubArgument {
 
-	private final Gangland             gangland;
+	private final JavaPlugin             plugin;
 	private final Tree<Argument>       tree;
 	private final CivilianSpawnManager civilianSpawnManager;
 
-	CivilianSpawnerRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	CivilianSpawnerRemoveCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                             CivilianSpawnManager civilianSpawnManager) {
-		super(gangland, "remove", tree, parent);
+		super(plugin, "remove", tree, parent);
 
-		this.gangland             = gangland;
+		this.plugin             = plugin;
 		this.tree                 = tree;
 		this.civilianSpawnManager = civilianSpawnManager;
 
@@ -37,7 +37,7 @@ class CivilianSpawnerRemoveCommand extends SubArgument {
 	}
 
 	private void idArgument() {
-		Argument idArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+		Argument idArg = new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			String idStr = args[3];
 			int    id;
 			try {

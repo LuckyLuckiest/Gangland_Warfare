@@ -2,7 +2,7 @@ package org.luckyraven.gangland.command.sub.waypoint;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.bean.Qualifier;
@@ -29,7 +29,7 @@ public final class WaypointCommand extends Command {
 	private final GanglandDatabase    ganglandDatabase;
 	private final PermissionManager   permissionManager;
 
-	public WaypointCommand(Gangland gangland,
+	public WaypointCommand(JavaPlugin gangland,
 	                       @Qualifier("online") UserManager<Player> userManager,
 	                       WaypointManager waypointManager,
 	                       GangManager gangManager,
@@ -72,33 +72,33 @@ public final class WaypointCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument create = new WaypointCreateCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		Argument create = new WaypointCreateCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                            waypointManager, permissionManager);
-		Argument delete = new WaypointDeleteCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		Argument delete = new WaypointDeleteCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                            waypointManager, ganglandDatabase, permissionManager);
 
-		Argument select = new WaypointSelectCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		Argument select = new WaypointSelectCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                            waypointManager);
-		Argument deselect = new WaypointDeselectCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		Argument deselect = new WaypointDeselectCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                                waypointManager);
 
-		Argument list = new WaypointListCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		Argument list = new WaypointListCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                        waypointManager);
-		Argument info = new WaypointInfoCommand(getGangland(), getArgumentTree(), getArgument(), waypointManager);
+		Argument info = new WaypointInfoCommand(getPlugin(), getArgumentTree(), getArgument(), waypointManager);
 
-		Argument type = new WaypointTypeCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		Argument type = new WaypointTypeCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                        waypointManager);
-		Argument gangId = new WaypointGangIdCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		Argument gangId = new WaypointGangIdCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                            waypointManager, gangManager);
-		Argument timer = new WaypointTimerCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		Argument timer = new WaypointTimerCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                          waypointManager);
-		Argument cooldown = new WaypointCooldownCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		Argument cooldown = new WaypointCooldownCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                                waypointManager);
-		Argument shield = new WaypointShieldCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		Argument shield = new WaypointShieldCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                            waypointManager);
-		Argument cost = new WaypointCostCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		Argument cost = new WaypointCostCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                        waypointManager);
-		Argument radius = new WaypointRadiusCommand(getGangland(), getArgumentTree(), getArgument(), userManager,
+		Argument radius = new WaypointRadiusCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                            waypointManager);
 
 		List<Argument> arguments = new ArrayList<>();

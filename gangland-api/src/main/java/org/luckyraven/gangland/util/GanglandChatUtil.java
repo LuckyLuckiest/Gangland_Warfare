@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.util;
 
 import org.apache.logging.log4j.Logger;
-import org.luckyraven.gangland.Gangland;
+import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
@@ -41,7 +41,7 @@ public final class GanglandChatUtil extends ChatUtil {
 	}
 
 	public static String commandDesign(String command) {
-		return color(command.replace("/" + Gangland.SHORT_PREFIX, "&6/" + Gangland.SHORT_PREFIX + "&7")
+		return color(command.replace("/" + GanglandApi.SHORT_PREFIX, "&6/" + GanglandApi.SHORT_PREFIX + "&7")
 		                    .replace("<", "&5<&7")
 		                    .replace(">", "&5>&7")
 		                    .replace(" - ", " &c-&r ")
@@ -49,7 +49,7 @@ public final class GanglandChatUtil extends ChatUtil {
 	}
 
 	public static String confirmCommand(String[] args) {
-		return color("&cYou need to confirm using &e/" + Gangland.SHORT_PREFIX + " " + String.join(" ", args) +
+		return color("&cYou need to confirm using &e/" + GanglandApi.SHORT_PREFIX + " " + String.join(" ", args) +
 		             " confirm &cto execute the command.");
 	}
 

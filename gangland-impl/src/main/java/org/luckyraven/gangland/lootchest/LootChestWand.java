@@ -7,7 +7,8 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ChatUtil;
@@ -43,11 +44,11 @@ public class LootChestWand {
 	private static final SoundEffect PREVIEW_PAGE_SOUND = new SoundEffect(
 			SoundEffect.SoundType.VANILLA, "UI_BUTTON_CLICK", 0.6f, 1.2f);
 
-	private final Gangland         gangland;
+	private final JavaPlugin         gangland;
 	private final LootChestManager lootChestManager;
 	private final String           prefix;
 
-	public LootChestWand(Gangland gangland, LootChestManager lootChestManager, String prefix) {
+	public LootChestWand(JavaPlugin gangland, LootChestManager lootChestManager, String prefix) {
 		this.gangland         = gangland;
 		this.lootChestManager = lootChestManager;
 		this.prefix           = prefix;
@@ -68,10 +69,10 @@ public class LootChestWand {
 		return lootTableId != null && !lootTableId.isEmpty();
 	}
 
-	public static LootChestWand getWand(ItemStack item, Gangland gangland, LootChestManager lootChestManager) {
+	public static LootChestWand getWand(ItemStack item, JavaPlugin gangland, LootChestManager lootChestManager) {
 		if (!isLootChestWand(item)) return null;
 
-		return new LootChestWand(gangland, lootChestManager, Gangland.SHORT_PREFIX);
+		return new LootChestWand(gangland, lootChestManager, GanglandApi.SHORT_PREFIX);
 	}
 
 	public ItemStack createWand() {

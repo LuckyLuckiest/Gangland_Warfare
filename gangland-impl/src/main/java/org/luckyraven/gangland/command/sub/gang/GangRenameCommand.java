@@ -2,7 +2,7 @@ package org.luckyraven.gangland.command.sub.gang;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -22,13 +22,13 @@ import java.util.List;
 
 class GangRenameCommand extends SubArgument {
 
-	private final Gangland            gangland;
+	private final JavaPlugin            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 
-	protected GangRenameCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected GangRenameCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                            UserManager<Player> userManager, MemberManager memberManager,
 	                            GangManager gangManager) {
 		super(gangland, "rename", tree, parent);

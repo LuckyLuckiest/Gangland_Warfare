@@ -2,7 +2,9 @@ package org.luckyraven.gangland.command.sub;
 
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.Gangland;
+import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.types.DoubleArgument;
@@ -16,8 +18,12 @@ import java.util.Map;
 @CommandHandler
 public final class DownloadPluginCommand extends Command {
 
+	private final Gangland gangland;
+
 	public DownloadPluginCommand(Gangland gangland) {
 		super(gangland, "update", false);
+
+		this.gangland = gangland;
 		var list = getCommands().entrySet()
 				.stream()
 				.filter(entry -> entry.getKey().startsWith("update"))
@@ -31,13 +37,13 @@ public final class DownloadPluginCommand extends Command {
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		// check if there was an update
-		boolean newUpdate = !getGangland().getUpdateChecker()
+		boolean newUpdate = !gangland.getUpdateChecker()
 		                                  .getLatestVersion()
-		                                  .equalsIgnoreCase(getGangland().getDescription().getVersion());
+		                                  .equalsIgnoreCase(getPlugin().getDescription().getVersion());
 
 		if (newUpdate) {
 			commandSender.sendMessage(Messages.UPDATE_AVAILABLE.toString()
-			                                                   .replace("%short_prefix%", Gangland.SHORT_PREFIX));
+			                                                   .replace("%short_prefix%", GanglandApi.SHORT_PREFIX));
 		} else {
 			commandSender.sendMessage(Messages.UPDATE_LATEST.toString());
 		}
@@ -56,8 +62,8 @@ public final class DownloadPluginCommand extends Command {
 	}
 
 	private @NotNull Argument getConfirm() {
-		return new DoubleArgument(getGangland(), "download", getArgumentTree(), (argument, sender, args) -> {
-			UpdateNotifier updateChecker = getGangland().getUpdateChecker();
+		return new DoubleArgument(getPlugin(), "download", getArgumentTree(), (argument, sender, args) -> {
+			UpdateNotifier updateChecker = gangland.getUpdateChecker();
 			boolean       newUpdate     = updateChecker.updateAvailable();
 
 			if (!newUpdate) {
@@ -66,7 +72,7 @@ public final class DownloadPluginCommand extends Command {
 			}
 
 			sender.sendMessage(Messages.UPDATE_DOWNLOADING.toString());
-			boolean downloadSuccess = getGangland().getUpdateChecker().downloadLatestVersion();
+			boolean downloadSuccess = gangland.getUpdateChecker().downloadLatestVersion();
 
 			if (downloadSuccess) {
 				sender.sendMessage(Messages.UPDATE_DOWNLOAD_SUCCESS.toString());

@@ -2,7 +2,7 @@ package org.luckyraven.gangland.command.sub;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.bean.command.CommandHandler;
@@ -13,7 +13,7 @@ import java.util.Map;
 @CommandHandler
 public final class DownloadResourceCommand extends Command {
 
-	public DownloadResourceCommand(Gangland gangland) {
+	public DownloadResourceCommand(JavaPlugin gangland) {
 		super(gangland, "resource", true, "download");
 
 		var list = getCommands().entrySet()

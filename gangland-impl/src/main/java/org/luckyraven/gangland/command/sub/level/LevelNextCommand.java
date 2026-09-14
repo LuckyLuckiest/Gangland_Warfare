@@ -2,7 +2,7 @@ package org.luckyraven.gangland.command.sub.level;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -16,7 +16,7 @@ class LevelNextCommand extends SubArgument {
 
 	private final UserManager<Player> userManager;
 
-	protected LevelNextCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected LevelNextCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                           UserManager<Player> userManager) {
 		super(gangland, "next", tree, parent);
 

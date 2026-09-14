@@ -2,7 +2,7 @@ package org.luckyraven.gangland.npcshops.command.bank;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.gangland.npcshops.banker.view.BankerFlow;
@@ -18,8 +18,8 @@ public final class BankMenuCommand extends SubArgument {
 
 	private final BankerFlow bankerFlow;
 
-	public BankMenuCommand(Gangland gangland, Tree<Argument> tree, Argument parent, BankerFlow bankerFlow) {
-		super(gangland, "menu", tree, parent);
+	public BankMenuCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, BankerFlow bankerFlow) {
+		super(plugin, "menu", tree, parent);
 		this.bankerFlow = bankerFlow;
 	}
 

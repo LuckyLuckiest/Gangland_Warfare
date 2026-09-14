@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.npcshops.command.trader;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.npcshops.command.trader.edit.TraderEditCommand;
@@ -19,9 +19,9 @@ public class TraderCommand extends Command {
 	private final ShopRegistry        shopRegistry;
 	private final TraderTraitRegistry traitRegistry;
 
-	public TraderCommand(Gangland gangland, TraderManager traderManager, ShopRegistry shopRegistry,
+	public TraderCommand(JavaPlugin plugin, TraderManager traderManager, ShopRegistry shopRegistry,
 	                     TraderTraitRegistry traitRegistry) {
-		super(gangland, "trader", true, "traders");
+		super(plugin, "trader", true, "traders");
 		this.traderManager = traderManager;
 		this.shopRegistry  = shopRegistry;
 		this.traitRegistry = traitRegistry;
@@ -42,11 +42,11 @@ public class TraderCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		getArgument().addSubArgument(new TraderCreateCommand(getGangland(), getArgumentTree(), getArgument(),
+		getArgument().addSubArgument(new TraderCreateCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                     traderManager, shopRegistry, traitRegistry));
-		getArgument().addSubArgument(new TraderEditCommand(getGangland(), getArgumentTree(), getArgument(),
+		getArgument().addSubArgument(new TraderEditCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                   traderManager, shopRegistry, traitRegistry));
-		getArgument().addSubArgument(new TraderRemoveCommand(getGangland(), getArgumentTree(), getArgument(),
+		getArgument().addSubArgument(new TraderRemoveCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                     traderManager));
 	}
 

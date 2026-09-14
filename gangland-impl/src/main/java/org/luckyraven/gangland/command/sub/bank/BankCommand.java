@@ -2,7 +2,7 @@ package org.luckyraven.gangland.command.sub.bank;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.command.extension.CommandContributions;
@@ -31,7 +31,6 @@ public final class BankCommand extends Command {
 	 * deposit / withdraw) and the Banker NPC GUI alike. Registered with the {@code PermissionManager} from
 	 * {@code BankerConfig} so it shows up in rank permission autocompletion.
 	 */
-	public static final String BYPASS_CAP_PERMISSION = "gangland.bank.bypass_cap";
 
 	/**
 	 * Gates the cross-player forms {@code /glw bank deposit <amount> <player>} and
@@ -52,7 +51,7 @@ public final class BankCommand extends Command {
 	 */
 	private final CommandContributions contributions;
 
-	public BankCommand(Gangland gangland,
+	public BankCommand(JavaPlugin gangland,
 	                   @Qualifier("online") UserManager<Player> userManager,
 	                   GanglandDatabase ganglandDatabase,
 	                   BankTiers bankTiers,
@@ -129,14 +128,14 @@ public final class BankCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		BankCreateCommand create = new BankCreateCommand(getGangland(), getArgumentTree(), getArgument(), userManager);
-		BankDepositCommand deposit = new BankDepositCommand(getGangland(), getArgumentTree(), getArgument(),
+		BankCreateCommand create = new BankCreateCommand(getPlugin(), getArgumentTree(), getArgument(), userManager);
+		BankDepositCommand deposit = new BankDepositCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                    userManager, ganglandDatabase, bankTiers);
-		BankWithdrawCommand withdraw = new BankWithdrawCommand(getGangland(), getArgumentTree(), getArgument(),
+		BankWithdrawCommand withdraw = new BankWithdrawCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                       userManager, ganglandDatabase);
-		BankBalanceCommand balance = new BankBalanceCommand(getGangland(), getArgumentTree(), getArgument(),
+		BankBalanceCommand balance = new BankBalanceCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                    userManager);
-		BankResetCapCommand resetCap = new BankResetCapCommand(getGangland(), getArgumentTree(), getArgument(),
+		BankResetCapCommand resetCap = new BankResetCapCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                       userManager, ganglandDatabase);
 
 		// add sub arguments

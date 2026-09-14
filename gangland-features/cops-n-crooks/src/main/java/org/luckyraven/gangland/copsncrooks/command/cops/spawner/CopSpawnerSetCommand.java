@@ -2,7 +2,7 @@ package org.luckyraven.gangland.copsncrooks.command.cops.spawner;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
@@ -14,8 +14,8 @@ class CopSpawnerSetCommand extends SubArgument {
 
 	private final CopSpawnManager copSpawnManager;
 
-	CopSpawnerSetCommand(Gangland gangland, Tree<Argument> tree, Argument parent, CopSpawnManager copSpawnManager) {
-		super(gangland, "set", tree, parent);
+	CopSpawnerSetCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, CopSpawnManager copSpawnManager) {
+		super(plugin, "set", tree, parent);
 		this.copSpawnManager = copSpawnManager;
 	}
 

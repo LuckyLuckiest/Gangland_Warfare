@@ -6,7 +6,8 @@ import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -28,9 +29,9 @@ class TurfListCommand extends SubArgument {
 	private final GangLookupContract  gangs;
 	private final TurfMessageContract messages;
 
-	protected TurfListCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected TurfListCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                          TurfManager turfs, GangLookupContract gangs, TurfMessageContract messages) {
-		super(gangland, "list", tree, parent);
+		super(plugin, "list", tree, parent);
 
 		this.turfs    = turfs;
 		this.gangs    = gangs;
@@ -48,7 +49,7 @@ class TurfListCommand extends SubArgument {
 		                                 "turf", turf.getDisplayName(),
 		                                 "gang", gangName,
 		                                 "world", turf.getRegion().getWorld());
-		String       tpCommand = String.format("/%s turf tp %d", Gangland.SHORT_PREFIX, turf.getId());
+		String       tpCommand = String.format("/%s turf tp %d", GanglandApi.SHORT_PREFIX, turf.getId());
 		CuboidRegion region    = turf.getRegion();
 		String hover = String.format("%s — (%d,%d) to (%d,%d)\nClick to teleport",
 		                             region.getWorld(),

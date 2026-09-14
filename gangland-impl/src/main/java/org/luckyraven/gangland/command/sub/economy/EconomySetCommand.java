@@ -3,7 +3,7 @@ package org.luckyraven.gangland.command.sub.economy;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -22,11 +22,11 @@ import java.util.List;
 
 class EconomySetCommand extends SubArgument {
 
-	private final Gangland            gangland;
+	private final JavaPlugin            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
-	protected EconomySetCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected EconomySetCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                            UserManager<Player> userManager) {
 		super(gangland, "set", tree, parent);
 

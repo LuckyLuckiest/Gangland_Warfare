@@ -3,7 +3,7 @@ package org.luckyraven.gangland.turf.command;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -16,9 +16,9 @@ class TurfPos2Command extends SubArgument {
 
 	private final WandSelectionManager selections;
 
-	protected TurfPos2Command(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected TurfPos2Command(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                          WandSelectionManager selections) {
-		super(gangland, "pos2", tree, parent);
+		super(plugin, "pos2", tree, parent);
 
 		this.selections = selections;
 	}

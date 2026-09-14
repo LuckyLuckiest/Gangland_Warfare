@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.luckyraven.gangland.Gangland;
+import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.gangland.command.CommandManager;
 import org.luckyraven.gangland.command.data.InformationManager;
@@ -30,7 +31,6 @@ import org.luckyraven.keystone.module.ModuleLoader;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
-import org.luckyraven.keystone.update.PluginVersion;
 
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -104,7 +104,7 @@ public final class GanglandContext {
 		this.container   = new DependencyContainer();
 		this.beanFactory = new BeanFactory(container, gangland, new SettingsLookupImpl());
 		this.moduleLoader = new ModuleLoader(gangland, gangland.getDataFolder().toPath().resolve(MODULES_FOLDER),
-		                                     hostApi(gangland));
+		                                     GanglandApi.VERSION);
 
 		// Self-register so configurations and beans can pull the context / container as a constructor parameter.
 		container.registerInstance(GanglandContext.class, this);
@@ -115,12 +115,6 @@ public final class GanglandContext {
 		// The module loader is a kernel object too: DatabaseConfig scans module repository packages through it and
 		// KernelConfig merges each module's commands.json into the help index.
 		container.registerInstance(ModuleLoader.class, moduleLoader);
-	}
-
-	/** Major.minor of the running plugin — what a module's {@code Host_Api} must match to load. */
-	private static String hostApi(Gangland gangland) {
-		PluginVersion version = PluginVersion.parse(gangland.getDescription().getVersion());
-		return version.major() + "." + version.minor();
 	}
 
 	/**

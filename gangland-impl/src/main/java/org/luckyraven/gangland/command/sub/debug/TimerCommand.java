@@ -2,7 +2,7 @@ package org.luckyraven.gangland.command.sub.debug;
 
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -17,7 +17,7 @@ public final class TimerCommand extends Command {
 	private final Map<CommandSender, SequenceTimer> timerMap;
 	private final Map<CommandSender, SequenceTimer> startedTimers;
 
-	public TimerCommand(Gangland gangland) {
+	public TimerCommand(JavaPlugin gangland) {
 		super(gangland, "timer", false);
 
 		this.timerMap      = new HashMap<>();
@@ -66,8 +66,8 @@ public final class TimerCommand extends Command {
 	protected void help(CommandSender sender, int page) { }
 
 	private @NotNull Argument getCreate() {
-		return new Argument(getGangland(), "create", getArgumentTree(), (argument, sender, args) -> {
-			SequenceTimer timer = new SequenceTimer(getGangland(), 0L, 20L, SequenceTimer.Mode.CIRCULAR);
+		return new Argument(getPlugin(), "create", getArgumentTree(), (argument, sender, args) -> {
+			SequenceTimer timer = new SequenceTimer(getPlugin(), 0L, 20L, SequenceTimer.Mode.CIRCULAR);
 
 			timerMap.put(sender, timer);
 			sender.sendMessage("Added " + timer);
@@ -75,7 +75,7 @@ public final class TimerCommand extends Command {
 	}
 
 	private @NotNull Argument getDelete() {
-		return new Argument(getGangland(), "delete", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "delete", getArgumentTree(), (argument, sender, args) -> {
 			SequenceTimer timer = timerMap.remove(sender);
 
 			startedTimers.remove(sender);
@@ -84,11 +84,11 @@ public final class TimerCommand extends Command {
 	}
 
 	private @NotNull Argument getMode() {
-		Argument mode = new Argument(getGangland(), "mode", getArgumentTree(), (argument, sender, args) -> {
+		Argument mode = new Argument(getPlugin(), "mode", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage("Missing argument, <mode>");
 		});
 
-		Argument modeOptional = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
+		Argument modeOptional = new OptionalArgument(getPlugin(), getArgumentTree(), (argument, sender, args) -> {
 			SequenceTimer timer = timerMap.get(sender);
 
 			if (timer == null) {
@@ -119,7 +119,7 @@ public final class TimerCommand extends Command {
 	}
 
 	private @NotNull Argument getStartTimer() {
-		return new Argument(getGangland(), "start", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "start", getArgumentTree(), (argument, sender, args) -> {
 			SequenceTimer timer = timerMap.get(sender);
 
 			if (timer == null) {
@@ -128,7 +128,7 @@ public final class TimerCommand extends Command {
 			}
 
 			if (startedTimers.containsKey(sender)) {
-				SequenceTimer newTimer = timer.copy(getGangland());
+				SequenceTimer newTimer = timer.copy(getPlugin());
 
 				sender.sendMessage("Created a new timer " + newTimer);
 
@@ -144,7 +144,7 @@ public final class TimerCommand extends Command {
 	}
 
 	private @NotNull Argument getStopTimer() {
-		return new Argument(getGangland(), "stop", getArgumentTree(), (argument, sender, args) -> {
+		return new Argument(getPlugin(), "stop", getArgumentTree(), (argument, sender, args) -> {
 			SequenceTimer timer = timerMap.get(sender);
 
 			if (timer == null) {
@@ -158,11 +158,11 @@ public final class TimerCommand extends Command {
 	}
 
 	private @NotNull Argument getAddInterval() {
-		Argument addInterval = new Argument(getGangland(), "add", getArgumentTree(), (argument, sender, args) -> {
+		Argument addInterval = new Argument(getPlugin(), "add", getArgumentTree(), (argument, sender, args) -> {
 			sender.sendMessage("Missing argument, <interval>");
 		});
 
-		Argument interval = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
+		Argument interval = new OptionalArgument(getPlugin(), getArgumentTree(), (argument, sender, args) -> {
 			String value = args[2];
 
 			int val;

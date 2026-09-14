@@ -3,7 +3,7 @@ package org.luckyraven.gangland.npcshops.integration;
 import lombok.CustomLog;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.command.sub.bank.BankCommand;
+import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.gangland.npcshops.banker.config.BankerSettings;
 import org.luckyraven.gangland.npcshops.banker.economy.BankerEconomyContract;
 import org.luckyraven.gangland.npcshops.banker.tier.BankTier;
@@ -133,7 +133,7 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 		BigDecimal cashBal    = user.getEconomy().getAmount();
 		if (cashBal.compareTo(normalised) < 0) return Result.INSUFFICIENT_CASH;
 
-		boolean bypass = player.hasPermission(BankCommand.BYPASS_CAP_PERMISSION);
+		boolean bypass = player.hasPermission(BankTiers.BYPASS_CAP_PERMISSION);
 
 		BigDecimal limit = tier == null ? Currency.ZERO : tier.dailyDepositLimit();
 		if (!bypass && limit.signum() > 0) {

@@ -2,7 +2,7 @@ package org.luckyraven.gangland.command.sub.rank;
 
 import lombok.CustomLog;
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.ConfirmArgument;
@@ -30,12 +30,12 @@ import java.util.concurrent.atomic.AtomicReference;
 @CustomLog
 class RankDeleteCommand extends SubArgument {
 
-	private final Gangland         gangland;
+	private final JavaPlugin         gangland;
 	private final Tree<Argument>   tree;
 	private final RankManager      rankManager;
 	private final GanglandDatabase ganglandDatabase;
 
-	protected RankDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected RankDeleteCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                            RankManager rankManager, GanglandDatabase ganglandDatabase) {
 		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);
 

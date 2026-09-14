@@ -2,8 +2,9 @@ package org.luckyraven.gangland.copsncrooks.config;
 
 import lombok.CustomLog;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.bootstrap.GanglandContext;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.GanglandApi;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.gangland.copsncrooks.combo.KillCombo;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainedPlayer;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentRegistry;
@@ -42,7 +43,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.targeting.WantedTargetingM
 import org.luckyraven.gangland.copsncrooks.seam.CopsMoneyDropSource;
 import org.luckyraven.gangland.copsncrooks.seam.KillComboWantedTracker;
 import org.luckyraven.gangland.data.economy.GanglandMoneyDropClassifier;
-import org.luckyraven.gangland.data.teleportation.WaypointManager;
+import org.luckyraven.gangland.data.teleportation.WaypointLookupContract;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.gang.wanted.WantedKillTrackers;
@@ -91,12 +92,12 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 @Configuration
 public class CopsNCrooksModuleConfig {
 
-	private final Gangland        gangland;
-	private final GanglandContext context;
+	private final JavaPlugin        plugin;
+	private final DependencyContainer container;
 
-	public CopsNCrooksModuleConfig(Gangland gangland, GanglandContext context) {
-		this.gangland = gangland;
-		this.context  = context;
+	public CopsNCrooksModuleConfig(JavaPlugin plugin, DependencyContainer container) {
+		this.plugin = plugin;
+		this.container  = container;
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
@@ -105,7 +106,7 @@ public class CopsNCrooksModuleConfig {
 
 	@Bean
 	public KillCombo killCombo(Settings settings) {
-		return new KillCombo(gangland, Settings.getWantedKillCounter());
+		return new KillCombo(plugin, Settings.getWantedKillCounter());
 	}
 
 	@Bean
@@ -134,9 +135,9 @@ public class CopsNCrooksModuleConfig {
 	public DetainmentService detainmentService(DetainmentRegistry detainmentRegistry, JailService jailService,
 	                                           DetainmentMessageContract detainmentMessages,
 	                                           PermissionManager permissionManager) {
-		DetainmentService service = new DetainmentService(gangland, detainmentRegistry, jailService,
+		DetainmentService service = new DetainmentService(plugin, detainmentRegistry, jailService,
 		                                                  jailService.getJailRegistry(), detainmentMessages,
-		                                                  Gangland.FULL_PREFIX);
+		                                                  GanglandApi.FULL_PREFIX);
 		// Register the bypass permission so permission plugins (LuckPerms, etc.) can see it.
 		permissionManager.addPermission(service.getCommandBypassPermission());
 		return service;
@@ -183,7 +184,7 @@ public class CopsNCrooksModuleConfig {
 	}
 
 	@Bean
-	public ReleaseExitContract releaseExitContract(JailExitRegistry jailExitRegistry, WaypointManager waypointManager) {
+	public ReleaseExitContract releaseExitContract(JailExitRegistry jailExitRegistry, WaypointLookupContract waypointManager) {
 		return new GanglandReleaseExitContract(jailExitRegistry, waypointManager);
 	}
 
@@ -200,13 +201,13 @@ public class CopsNCrooksModuleConfig {
 
 	@Bean
 	public PaperworkItemFactory paperworkItemFactory(DetainmentMessageContract detainmentMessages) {
-		return new PaperworkItem(gangland, detainmentMessages);
+		return new PaperworkItem(plugin, detainmentMessages);
 	}
 
 	@Bean
 	public TransitService transitService(DetainmentService detainmentService, DetainmentRegistry detainmentRegistry,
 	                                     DetainmentCostsContract costs) {
-		return new TransitService(gangland, detainmentService, detainmentRegistry, costs);
+		return new TransitService(plugin, detainmentService, detainmentRegistry, costs);
 	}
 
 	@Bean
@@ -259,21 +260,21 @@ public class CopsNCrooksModuleConfig {
 	public SentenceService sentenceService(DetainmentRegistry detainmentRegistry, DetainmentService detainmentService,
 	                                       ReleasePipeline releasePipeline, DetainmentMessageContract messages,
 	                                       DetainmentSoundContract sounds) {
-		return new SentenceService(gangland, detainmentRegistry, detainmentService, releasePipeline, messages, sounds);
+		return new SentenceService(plugin, detainmentRegistry, detainmentService, releasePipeline, messages, sounds);
 	}
 
 	@Bean
 	public BreakFreeService breakFreeService(DetainmentService detainmentService, DetainmentCostsContract costs,
 	                                         DetainmentMessageContract messages, ReleasePipeline releasePipeline,
 	                                         DetainmentSoundContract sounds) {
-		return new BreakFreeService(gangland, detainmentService, costs, messages, releasePipeline, sounds);
+		return new BreakFreeService(plugin, detainmentService, costs, messages, releasePipeline, sounds);
 	}
 
 	@Bean
 	public HandcuffBribeView handcuffBribeView(BribeService bribeService, DetainmentEconomyContract economy,
 	                                           MoneyIconProvider moneyIconProvider,
 	                                           DetainmentMessageContract messages) {
-		return new HandcuffBribeView(gangland, bribeService, economy, moneyIconProvider, messages);
+		return new HandcuffBribeView(plugin, bribeService, economy, moneyIconProvider, messages);
 	}
 
 	@Bean
@@ -282,7 +283,7 @@ public class CopsNCrooksModuleConfig {
 	                                   BribeService bribeService, SentenceService sentenceService,
 	                                   MoneyIconProvider moneyIconProvider,
 	                                   DetainmentMessageContract messages) {
-		return new PaperworkView(gangland, detainmentRegistry, costs, economy, bailService, bribeService,
+		return new PaperworkView(plugin, detainmentRegistry, costs, economy, bailService, bribeService,
 		                         sentenceService, moneyIconProvider, messages);
 	}
 
@@ -294,7 +295,7 @@ public class CopsNCrooksModuleConfig {
 	public CopLoader copLoader(ItemParser itemParser,
 	                           CopSettings copSettings,
 	                           FileManager fileManager) {
-		CopLoader loader = new CopLoader(gangland, itemParser, copSettings,
+		CopLoader loader = new CopLoader(plugin, itemParser, copSettings,
 		                                 false, null, fileManager);
 		fileManager.registerInitializer(loader);
 		fileManager.initializeAll();
@@ -315,7 +316,7 @@ public class CopsNCrooksModuleConfig {
 	                                       DetainmentService detainmentService,
 	                                       CuffLockRegistry cuffLockRegistry) {
 		IRepository<CopSpawner> repo = repositoryRegistry.getRepository(CopSpawner.class);
-		return new CopSpawnManager(gangland, copLoader, markManager, bartizanNpcWeapons, downedTargetFilter, repo,
+		return new CopSpawnManager(plugin, copLoader, markManager, bartizanNpcWeapons, downedTargetFilter, repo,
 		                           detainmentService, cuffLockRegistry);
 	}
 
@@ -326,7 +327,7 @@ public class CopsNCrooksModuleConfig {
 	                             NpcMarkManager markManager,
 	                             DetainmentService detainmentService,
 	                             CivilianNpcRegistry civilianNpcRegistry) {
-		return new CopManager(gangland, copSpawnManager, wantedTargetingManager, copLoader, markManager,
+		return new CopManager(plugin, copSpawnManager, wantedTargetingManager, copLoader, markManager,
 		                      detainmentService, civilianNpcRegistry);
 	}
 
@@ -343,15 +344,15 @@ public class CopsNCrooksModuleConfig {
 	public void installCoreSeams() {
 		// Runs inside BeanFactory.instantiate(), before GanglandContext's listener and command scans, so every
 		// consumer (listeners, commands, the placeholder bean's lazy reads) sees the delegate.
-		context.get(GanglandMoneyDropClassifier.class)
-		       .install(new CopsMoneyDropSource(context.get(CopManager.class),
-		                                        context.get(CivilianNpcRegistry.class)));
+		container.getInstance(GanglandMoneyDropClassifier.class)
+		       .install(new CopsMoneyDropSource(container.getInstance(CopManager.class),
+		                                        container.getInstance(CivilianNpcRegistry.class)));
 
 		// Seam 2, BankTiers, moved to NpcShopsModuleConfig#installBankTiers() (T-J3, group J) — this module no
 		// longer owns banker/trader NPCs or the bank tier catalogue.
 
-		context.get(WantedKillTrackers.class)
-		       .install(new KillComboWantedTracker(context.get(KillCombo.class),
-		                                           context.get(NpcMarkManager.class)));
+		container.getInstance(WantedKillTrackers.class)
+		       .install(new KillComboWantedTracker(container.getInstance(KillCombo.class),
+		                                           container.getInstance(NpcMarkManager.class)));
 	}
 }

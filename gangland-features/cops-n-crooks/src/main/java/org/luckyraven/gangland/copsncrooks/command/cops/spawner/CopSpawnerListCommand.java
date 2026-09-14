@@ -6,7 +6,8 @@ import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
@@ -19,8 +20,8 @@ class CopSpawnerListCommand extends SubArgument {
 
 	private final CopSpawnManager copSpawnManager;
 
-	CopSpawnerListCommand(Gangland gangland, Tree<Argument> tree, Argument parent, CopSpawnManager copSpawnManager) {
-		super(gangland, "list", tree, parent);
+	CopSpawnerListCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, CopSpawnManager copSpawnManager) {
+		super(plugin, "list", tree, parent);
 		this.copSpawnManager = copSpawnManager;
 	}
 
@@ -36,7 +37,7 @@ class CopSpawnerListCommand extends SubArgument {
 				String   world    = location.getWorld() != null ? location.getWorld().getName() : "?";
 
 				int    id        = spawner.getId();
-				String tpCommand = String.format("/%s cop spawner teleport %d", Gangland.SHORT_PREFIX, id);
+				String tpCommand = String.format("/%s cop spawner teleport %d", GanglandApi.SHORT_PREFIX, id);
 				String hoverText = String.format("%s - %d, %d, %d", world, x, y, z);
 
 				var message = new ComponentBuilder(GanglandChatUtil.color(" &b- &7" + id + " "))

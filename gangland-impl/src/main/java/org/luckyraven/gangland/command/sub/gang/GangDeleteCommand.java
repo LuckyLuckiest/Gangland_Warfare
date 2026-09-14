@@ -2,7 +2,7 @@ package org.luckyraven.gangland.command.sub.gang;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.ConfirmArgument;
@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 
 class GangDeleteCommand extends SubArgument {
 
-	private final Gangland            gangland;
+	private final JavaPlugin            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final MemberManager       memberManager;
@@ -56,7 +56,7 @@ class GangDeleteCommand extends SubArgument {
 
 	private final ConfirmArgument confirmDelete;
 
-	protected GangDeleteCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected GangDeleteCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                            UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
 	                            RankManager rankManager, GanglandDatabase ganglandDatabase) {
 		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);

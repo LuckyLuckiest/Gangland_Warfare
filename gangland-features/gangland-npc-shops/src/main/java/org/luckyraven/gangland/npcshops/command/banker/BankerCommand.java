@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.npcshops.command.banker;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.npcshops.banker.BankerManager;
@@ -14,8 +14,8 @@ public class BankerCommand extends Command {
 
 	private final BankerManager bankerManager;
 
-	public BankerCommand(Gangland gangland, BankerManager bankerManager) {
-		super(gangland, "banker", true, "bankers");
+	public BankerCommand(JavaPlugin plugin, BankerManager bankerManager) {
+		super(plugin, "banker", true, "bankers");
 		this.bankerManager = bankerManager;
 
 		var list = getCommands().entrySet()
@@ -34,11 +34,11 @@ public class BankerCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		getArgument().addSubArgument(new BankerCreateCommand(getGangland(), getArgumentTree(), getArgument(),
+		getArgument().addSubArgument(new BankerCreateCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                     bankerManager));
-		getArgument().addSubArgument(new BankerEditCommand(getGangland(), getArgumentTree(), getArgument(),
+		getArgument().addSubArgument(new BankerEditCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                   bankerManager));
-		getArgument().addSubArgument(new BankerRemoveCommand(getGangland(), getArgumentTree(), getArgument(),
+		getArgument().addSubArgument(new BankerRemoveCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                     bankerManager));
 	}
 

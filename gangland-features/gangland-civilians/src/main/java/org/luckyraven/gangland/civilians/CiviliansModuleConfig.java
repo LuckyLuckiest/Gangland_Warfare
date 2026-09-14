@@ -2,7 +2,7 @@ package org.luckyraven.gangland.civilians;
 
 import lombok.CustomLog;
 import org.luckyraven.bartizan.api.combat.CombatEligibility;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.civilians.integration.GanglandCivilianSpawnConfigProvider;
 import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
@@ -35,10 +35,10 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 @Configuration
 public class CiviliansModuleConfig {
 
-	private final Gangland gangland;
+	private final JavaPlugin plugin;
 
-	public CiviliansModuleConfig(Gangland gangland) {
-		this.gangland = gangland;
+	public CiviliansModuleConfig(JavaPlugin plugin) {
+		this.plugin = plugin;
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
@@ -48,7 +48,7 @@ public class CiviliansModuleConfig {
 	@Bean
 	public CiviliansLoader civiliansLoader(ItemParser itemParser, CivilianSettings civilianSettings,
 	                                       FileManager fileManager) {
-		CiviliansLoader loader = new CiviliansLoader(gangland, itemParser, civilianSettings, false, null,
+		CiviliansLoader loader = new CiviliansLoader(plugin, itemParser, civilianSettings, false, null,
 		                                             fileManager);
 		fileManager.registerInitializer(loader);
 		fileManager.initializeAll();
@@ -62,7 +62,7 @@ public class CiviliansModuleConfig {
 
 	@Bean
 	public NpcMarkManager npcMarkManager(GanglandMarkDefaults npcMarkDefaults) {
-		return new NpcMarkManager(gangland, npcMarkDefaults);
+		return new NpcMarkManager(plugin, npcMarkDefaults);
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ public class CiviliansModuleConfig {
 	                                             BartizanNpcWeapons bartizanNpcWeapons,
 	                                             DownedTargetFilter downedTargetFilter,
 	                                             CivilianSettings civilianSettings) {
-		return new CivilianNpcFactory(gangland, npcMarkManager, itemParser, bartizanNpcWeapons, downedTargetFilter,
+		return new CivilianNpcFactory(plugin, npcMarkManager, itemParser, bartizanNpcWeapons, downedTargetFilter,
 		                              civilianSettings);
 	}
 
@@ -123,7 +123,7 @@ public class CiviliansModuleConfig {
 	                                       CivilianSettings civilianSettings, CivilianNpcFactory civilianNpcFactory,
 	                                       CivilianSpawnManager civilianSpawnManager,
 	                                       CivilianNpcRegistry civilianNpcRegistry) {
-		return new CivilianService(gangland, civiliansLoader, npcMarkManager, civilianSettings, civilianNpcFactory,
+		return new CivilianService(plugin, civiliansLoader, npcMarkManager, civilianSettings, civilianNpcFactory,
 		                           civilianSpawnManager, civilianNpcRegistry);
 	}
 }

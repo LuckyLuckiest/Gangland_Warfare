@@ -6,7 +6,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.gangland.npcshops.banker.BankerManager;
@@ -21,9 +21,9 @@ class BankerRemoveCommand extends SubArgument {
 
 	private final BankerManager bankerManager;
 
-	protected BankerRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected BankerRemoveCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                              BankerManager bankerManager) {
-		super(gangland, "remove", tree, parent);
+		super(plugin, "remove", tree, parent);
 		this.bankerManager = bankerManager;
 	}
 

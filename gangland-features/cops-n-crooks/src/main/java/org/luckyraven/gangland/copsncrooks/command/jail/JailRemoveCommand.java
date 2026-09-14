@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.command.jail;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -14,17 +14,17 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 
 class JailRemoveCommand extends SubArgument {
 
-	private final Gangland       gangland;
+	private final JavaPlugin       plugin;
 	private final Tree<Argument> tree;
 	private final JailService    jailService;
 	private final JailRegistry   jailRegistry;
 
-	protected JailRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected JailRemoveCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                            JailService jailService,
 	                            JailRegistry jailRegistry) {
-		super(gangland, "remove", tree, parent);
+		super(plugin, "remove", tree, parent);
 
-		this.gangland     = gangland;
+		this.plugin     = plugin;
 		this.tree         = tree;
 		this.jailService  = jailService;
 		this.jailRegistry = jailRegistry;
@@ -40,7 +40,7 @@ class JailRemoveCommand extends SubArgument {
 	}
 
 	private void idArgument() {
-		Argument idArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+		Argument idArg = new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			String idStr = args[2];
 			int    id;
 			try {

@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.civilians;
 
 import lombok.CustomLog;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.Phase;
@@ -19,15 +19,15 @@ import org.luckyraven.keystone.persistence.FileManager;
 @Configuration(phase = Phase.KERNEL)
 public class CiviliansYamlConfig {
 
-	private final Gangland gangland;
+	private final JavaPlugin plugin;
 
-	public CiviliansYamlConfig(Gangland gangland) {
-		this.gangland = gangland;
+	public CiviliansYamlConfig(JavaPlugin plugin) {
+		this.plugin = plugin;
 	}
 
 	@Bean
 	public CiviliansFiles civiliansFiles(FileManager fileManager, ModuleLoader moduleLoader) {
-		fileManager.addFile(new FileHandler(gangland, "civilians", "npc", ".yml", moduleLoader.classLoader()), true);
+		fileManager.addFile(new FileHandler(plugin, "civilians", "npc", ".yml", moduleLoader.classLoader()), true);
 		return new CiviliansFiles();
 	}
 

@@ -2,7 +2,7 @@ package org.luckyraven.gangland.command.sub.bank;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -17,7 +17,7 @@ class BankBalanceCommand extends SubArgument {
 
 	private final UserManager<Player> userManager;
 
-	protected BankBalanceCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected BankBalanceCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                             UserManager<Player> userManager) {
 		super(gangland, new String[]{"balance", "bal"}, tree, parent);
 

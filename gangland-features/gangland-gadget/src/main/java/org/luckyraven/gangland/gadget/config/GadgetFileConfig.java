@@ -1,8 +1,8 @@
 package org.luckyraven.gangland.gadget.config;
 
 import lombok.CustomLog;
-import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.data.placeholder.PlaceholderService;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.keystone.util.Placeholder;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gadget.car.config.CarAddon;
 import org.luckyraven.gangland.gadget.contract.GadgetPhysicsConfigImpl;
@@ -24,10 +24,10 @@ import org.luckyraven.keystone.persistence.FileManager;
 @Configuration(phase = Phase.FILE)
 public class GadgetFileConfig {
 
-	private final Gangland gangland;
+	private final JavaPlugin plugin;
 
-	public GadgetFileConfig(Gangland gangland) {
-		this.gangland = gangland;
+	public GadgetFileConfig(JavaPlugin plugin) {
+		this.plugin = plugin;
 	}
 
 	@Bean
@@ -37,8 +37,8 @@ public class GadgetFileConfig {
 
 	@Bean
 	public CarAddon carAddon(PermissionManager permissionManager, FileManager fileManager,
-	                         PlaceholderService placeholderService, ModuleLoader moduleLoader) {
-		fileManager.addFile(new FileHandler(gangland, "cars", "items", ".yml", moduleLoader.classLoader()), true);
+	                         Placeholder placeholderService, ModuleLoader moduleLoader) {
+		fileManager.addFile(new FileHandler(plugin, "cars", "items", ".yml", moduleLoader.classLoader()), true);
 
 		CarAddon addon = new CarAddon(permissionManager::addPermission, fileManager, placeholderService);
 		fileManager.registerInitializer(addon);

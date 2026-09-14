@@ -3,7 +3,8 @@ package org.luckyraven.gangland.command.sub.waypoint;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -18,11 +19,11 @@ import java.util.Map;
 
 class WaypointInfoCommand extends SubArgument {
 
-	private final Gangland        gangland;
+	private final JavaPlugin        gangland;
 	private final Tree<Argument>  tree;
 	private final WaypointManager waypointManager;
 
-	protected WaypointInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected WaypointInfoCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                              WaypointManager waypointManager) {
 		super(gangland, "info", tree, parent);
 
@@ -50,7 +51,7 @@ class WaypointInfoCommand extends SubArgument {
 				return;
 			}
 
-			String tpCommand = String.format("/%s teleport %s", Gangland.SHORT_PREFIX, waypoint.getName());
+			String tpCommand = String.format("/%s teleport %s", GanglandApi.SHORT_PREFIX, waypoint.getName());
 
 			String color = GanglandChatUtil.color("&7&lWaypoint &e(&b" + waypoint.getName() + "&e)&7: ");
 			var message = new ComponentBuilder(color).append(GanglandChatUtil.color("&e(&btp&e)"))

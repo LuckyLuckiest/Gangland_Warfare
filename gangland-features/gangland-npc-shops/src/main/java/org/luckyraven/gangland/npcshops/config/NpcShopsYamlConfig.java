@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.npcshops.config;
 
 import lombok.CustomLog;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.Phase;
@@ -20,17 +20,17 @@ import org.luckyraven.keystone.persistence.FileManager;
 @Configuration(phase = Phase.KERNEL)
 public class NpcShopsYamlConfig {
 
-	private final Gangland gangland;
+	private final JavaPlugin plugin;
 
-	public NpcShopsYamlConfig(Gangland gangland) {
-		this.gangland = gangland;
+	public NpcShopsYamlConfig(JavaPlugin plugin) {
+		this.plugin = plugin;
 	}
 
 	@Bean
 	public NpcShopsFiles npcShopsFiles(FileManager fileManager, ModuleLoader moduleLoader) {
 		ClassLoader loader = moduleLoader.classLoader();
-		fileManager.addFile(new FileHandler(gangland, "trader_traits", "npc", ".yml", loader), true);
-		fileManager.addFile(new FileHandler(gangland, "bank_tiers", "npc", ".yml", loader), true);
+		fileManager.addFile(new FileHandler(plugin, "trader_traits", "npc", ".yml", loader), true);
+		fileManager.addFile(new FileHandler(plugin, "bank_tiers", "npc", ".yml", loader), true);
 		return new NpcShopsFiles();
 	}
 

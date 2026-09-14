@@ -3,7 +3,7 @@ package org.luckyraven.gangland.command.sub.item.unique;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -22,7 +22,7 @@ class ItemUniqueInfoCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 	private final UniqueItemAddon     uniqueItemAddon;
 
-	ItemUniqueInfoCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	ItemUniqueInfoCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                      UserManager<Player> userManager,
 	                      UniqueItemAddon uniqueItemAddon) {
 		super(gangland, "info", tree, parent);

@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.command.sub.rank.permission;
 
 import org.bukkit.command.CommandSender;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -20,13 +20,13 @@ import java.util.Set;
 
 class RankPermissionRemoveCommand extends SubArgument {
 
-	private final Gangland          gangland;
+	private final JavaPlugin          gangland;
 	private final Tree<Argument>    tree;
 	private final RankManager       rankManager;
 	private final PermissionManager permissionManager;
 	private final MemberManager     memberManager;
 
-	RankPermissionRemoveCommand(Gangland gangland, Tree<Argument> tree, Argument parent, RankManager rankManager,
+	RankPermissionRemoveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, RankManager rankManager,
 	                            PermissionManager permissionManager, MemberManager memberManager) {
 		super(gangland, "remove", tree, parent);
 

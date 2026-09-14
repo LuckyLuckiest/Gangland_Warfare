@@ -1,8 +1,8 @@
 package org.luckyraven.gangland.npcshops.config;
 
 import lombok.CustomLog;
-import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.bootstrap.GanglandContext;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.gangland.npcshops.banker.tier.BankTier;
 import org.luckyraven.gangland.npcshops.banker.tier.BankTierRegistry;
@@ -15,7 +15,7 @@ import org.luckyraven.keystone.bean.PostConstruct;
 /**
  * CONFIG-phase wiring that this module used to share with cops-n-crooks (T-J3, gangland-0.9.0.md group J).
  *
- * <p>{@link #bankMenuContribution(Gangland, BankerFlow)} moved verbatim, with its own {@code @Bean}, from
+ * <p>{@link #bankMenuContribution(JavaPlugin, BankerFlow)} moved verbatim, with its own {@code @Bean}, from
  * {@code CopsNCrooksModuleConfig} — without its own bean, {@code CommandContributions.from(container)} (which
  * resolves via {@code getAllInstances(CommandContribution.class)}) never sees it, and {@code
  * BankCommand.initializeArguments()}'s {@code contributions.createFor("bank", …)} call returns nothing.
@@ -31,21 +31,21 @@ import org.luckyraven.keystone.bean.PostConstruct;
 @Configuration
 public class NpcShopsModuleConfig {
 
-	private final GanglandContext context;
+	private final DependencyContainer container;
 
-	public NpcShopsModuleConfig(GanglandContext context) {
-		this.context = context;
+	public NpcShopsModuleConfig(DependencyContainer container) {
+		this.container = container;
 	}
 
 	@Bean
-	public BankMenuContribution bankMenuContribution(Gangland gangland, BankerFlow bankerFlow) {
-		return new BankMenuContribution(gangland, bankerFlow);
+	public BankMenuContribution bankMenuContribution(JavaPlugin plugin, BankerFlow bankerFlow) {
+		return new BankMenuContribution(plugin, bankerFlow);
 	}
 
 	@PostConstruct
 	public void installBankTiers() {
-		BankTierRegistry tiers = context.get(BankTierRegistry.class);
-		context.get(BankTiers.class).install(bank -> {
+		BankTierRegistry tiers = container.getInstance(BankTierRegistry.class);
+		container.getInstance(BankTiers.class).install(bank -> {
 			BankTier tier = tiers.get(bank.getTierId());
 			return tier != null ? tier : tiers.first();
 		});

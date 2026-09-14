@@ -4,7 +4,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -25,14 +26,14 @@ import java.util.Objects;
 
 class GangDemoteCommand extends SubArgument {
 
-	private final Gangland            gangland;
+	private final JavaPlugin            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 	private final RankManager         rankManager;
 
-	protected GangDemoteCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected GangDemoteCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                            UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
 	                            RankManager rankManager) {
 		super(gangland, "demote", tree, parent);
@@ -73,7 +74,7 @@ class GangDemoteCommand extends SubArgument {
 
 			Member userMember = memberManager.getMember(player.getUniqueId());
 
-			String  forceRank = String.format("%s.command.gang.force_rank", Gangland.FULL_PREFIX);
+			String  forceRank = String.format("%s.command.gang.force_rank", GanglandApi.FULL_PREFIX);
 			boolean force     = player.hasPermission(forceRank);
 
 			// GR-01: a player with no cached Member would NPE further down this command.

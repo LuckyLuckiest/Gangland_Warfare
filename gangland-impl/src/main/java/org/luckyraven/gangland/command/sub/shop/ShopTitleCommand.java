@@ -5,7 +5,7 @@ import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -22,11 +22,11 @@ import java.util.List;
 
 class ShopTitleCommand extends SubArgument {
 
-	private final Gangland       gangland;
+	private final JavaPlugin       gangland;
 	private final Tree<Argument> tree;
 	private final ShopRegistry   shopRegistry;
 
-	protected ShopTitleCommand(Gangland gangland, Tree<Argument> tree, Argument parent, ShopRegistry shopRegistry) {
+	protected ShopTitleCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, ShopRegistry shopRegistry) {
 		super(gangland, "title", tree, parent);
 
 		this.gangland     = gangland;

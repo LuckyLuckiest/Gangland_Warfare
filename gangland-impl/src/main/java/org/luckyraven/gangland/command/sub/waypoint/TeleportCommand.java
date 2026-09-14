@@ -2,7 +2,8 @@ package org.luckyraven.gangland.command.sub.waypoint;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -35,7 +36,7 @@ public final class TeleportCommand extends Command {
 	private final UserManager<Player> userManager;
 	private final WaypointManager     waypointManager;
 
-	public TeleportCommand(Gangland gangland,
+	public TeleportCommand(JavaPlugin gangland,
 	                       @Qualifier("online") UserManager<Player> userManager,
 	                       WaypointManager waypointManager) {
 		super(gangland, "teleport", true, "tp");
@@ -66,7 +67,7 @@ public final class TeleportCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument name = new OptionalArgument(getGangland(), getArgumentTree(), (argument, sender, args) -> {
+		Argument name = new OptionalArgument(getPlugin(), getArgumentTree(), (argument, sender, args) -> {
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 
@@ -135,7 +136,7 @@ public final class TeleportCommand extends Command {
 		if (waypoint.getCost() != 0D && !reconfirm.containsKey(player)) {
 			reconfirm.put(player, waypoint);
 
-			CountdownTimer timer = new CountdownTimer(getGangland(), 30, null, null, t -> {
+			CountdownTimer timer = new CountdownTimer(getPlugin(), 30, null, null, t -> {
 				reconfirm.remove(player);
 			});
 			reconfirmTimer.put(player, timer);
@@ -172,10 +173,10 @@ public final class TeleportCommand extends Command {
 		}
 
 		try {
-			var cooldownBypass = String.format("%s.command.%s.force_rank", Gangland.FULL_PREFIX, getLabel());
+			var cooldownBypass = String.format("%s.command.%s.force_rank", GanglandApi.FULL_PREFIX, getLabel());
 			if (user.getUser().hasPermission(cooldownBypass)) WaypointTeleport.removeCooldown(user.getUser());
 
-			waypoint.getWaypointTeleport().teleport(getGangland(), user, (u, t) -> {
+			waypoint.getWaypointTeleport().teleport(getPlugin(), user, (u, t) -> {
 				String time    = TimeUtil.formatTime(t.getTimeLeft(), true, TimeMessages.getInstance());
 				String message = Messages.WAYPOINT_TELEPORT_TIMER.toString().replace("%timer%", time);
 

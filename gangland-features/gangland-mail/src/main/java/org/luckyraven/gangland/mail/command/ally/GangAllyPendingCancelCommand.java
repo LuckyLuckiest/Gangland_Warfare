@@ -3,7 +3,7 @@ package org.luckyraven.gangland.mail.command.ally;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -23,17 +23,17 @@ import java.util.*;
 
 public class GangAllyPendingCancelCommand extends SubArgument {
 
-	private final Gangland            gangland;
+	private final JavaPlugin            plugin;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
 	private final MailManager         mailManager;
 
-	public GangAllyPendingCancelCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	public GangAllyPendingCancelCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                             UserManager<Player> userManager, GangManager gangManager, MailManager mailManager) {
-		super(gangland, "cancel", tree, parent);
+		super(plugin, "cancel", tree, parent);
 
-		this.gangland    = gangland;
+		this.plugin    = plugin;
 		this.tree        = tree;
 		this.userManager = userManager;
 		this.gangManager = gangManager;
@@ -89,7 +89,7 @@ public class GangAllyPendingCancelCommand extends SubArgument {
 	}
 
 	private OptionalArgument targetGangArgument() {
-		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+		return new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			OptionalArgument optionalArgument = (OptionalArgument) argument;
 
 			Player       player = (Player) sender;

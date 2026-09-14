@@ -2,8 +2,8 @@ package org.luckyraven.gangland.npcshops.config;
 
 import lombok.CustomLog;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.bootstrap.GanglandContext;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.gangland.npcshops.integration.GanglandTraderEconomy;
 import org.luckyraven.gangland.npcshops.integration.GanglandTraderMessages;
 import org.luckyraven.gangland.npcshops.integration.TraderSettingsImpl;
@@ -47,12 +47,12 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 @Configuration
 public class TraderModuleConfig {
 
-	private final Gangland        gangland;
-	private final GanglandContext context;
+	private final JavaPlugin        plugin;
+	private final DependencyContainer container;
 
-	public TraderModuleConfig(Gangland gangland, GanglandContext context) {
-		this.gangland = gangland;
-		this.context  = context;
+	public TraderModuleConfig(JavaPlugin plugin, DependencyContainer container) {
+		this.plugin = plugin;
+		this.container  = container;
 	}
 
 	/**
@@ -64,7 +64,7 @@ public class TraderModuleConfig {
 	 */
 	@PostConstruct
 	public void registerPermissions() {
-		PermissionManager permissionManager = context.get(PermissionManager.class);
+		PermissionManager permissionManager = container.getInstance(PermissionManager.class);
 		if (permissionManager != null) permissionManager.addPermission(ShopViewOpenerImpl.ADMIN_PERMISSION);
 	}
 
@@ -109,20 +109,20 @@ public class TraderModuleConfig {
 	                             ItemRefresherRegistry refresherRegistry,
 	                             ShopDisplayResolver displayResolver,
 	                             TraderSettings traderSettings) {
-		return new BarterView(gangland, moodService, barterValuator, refresherRegistry, displayResolver,
+		return new BarterView(plugin, moodService, barterValuator, refresherRegistry, displayResolver,
 		                      traderSettings);
 	}
 
 	@Bean
 	public QuantitySelectorView quantitySelectorView() {
-		return new QuantitySelectorView(gangland);
+		return new QuantitySelectorView(plugin);
 	}
 
 	@Bean
 	public NegotiationView negotiationView(MoodService moodService, TraderSettings traderSettings,
 	                                       TraderMessageContract traderMessages, TraderEconomyContract economy,
 	                                       ShopDisplayResolver displayResolver) {
-		return new NegotiationView(gangland, moodService, traderSettings, traderMessages, economy, displayResolver);
+		return new NegotiationView(plugin, moodService, traderSettings, traderMessages, economy, displayResolver);
 	}
 
 	@Bean
@@ -130,32 +130,32 @@ public class TraderModuleConfig {
 	                               ItemRefresherRegistry refresherRegistry,
 	                               TraderSettings traderSettings,
 	                               ShopDisplayResolver displayResolver) {
-		return new SellView(gangland, moodService, sellValuator, refresherRegistry,
+		return new SellView(plugin, moodService, sellValuator, refresherRegistry,
 		                    traderSettings, displayResolver);
 	}
 
 	@Bean
 	public ShopView traderShopView(MoodService moodService, TraderSettings traderSettings,
 	                               ShopDisplayResolver displayResolver) {
-		return new ShopView(gangland, moodService, traderSettings, displayResolver);
+		return new ShopView(plugin, moodService, traderSettings, displayResolver);
 	}
 
 	@Bean
 	public ModeSelectView traderModeSelectView(TraderSettings traderSettings) {
-		return new ModeSelectView(gangland, traderSettings);
+		return new ModeSelectView(plugin, traderSettings);
 	}
 
 	@Bean
 	public TraderFlow traderFlow(ModeSelectView modeSelectView, ShopView shopView, NegotiationView negotiationView,
 	                             SellView sellView, BarterView barterView, QuantitySelectorView quantityView) {
-		return new TraderFlow(gangland, modeSelectView, shopView, negotiationView, sellView, barterView, quantityView);
+		return new TraderFlow(plugin, modeSelectView, shopView, negotiationView, sellView, barterView, quantityView);
 	}
 
 	// ── Trader NPC lifecycle ─────────────────────────────────────────────
 
 	@Bean
 	public TraderRespawnService traderRespawnService(TraderSettings settings) {
-		return new TraderRespawnService(gangland, settings);
+		return new TraderRespawnService(plugin, settings);
 	}
 
 	@Bean
@@ -163,7 +163,7 @@ public class TraderModuleConfig {
 	                                   MoodService moodService, TraderRespawnService respawnService,
 	                                   RepositoryRegistry repositoryRegistry) {
 		IRepository<TraderData> repo = repositoryRegistry.getRepository(TraderData.class);
-		return new TraderManager(gangland, repo, settings, traitRegistry, moodService, respawnService);
+		return new TraderManager(plugin, repo, settings, traitRegistry, moodService, respawnService);
 	}
 
 	@Bean

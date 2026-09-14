@@ -3,8 +3,8 @@ package org.luckyraven.gangland.mail;
 import lombok.CustomLog;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.bootstrap.GanglandContext;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.rank.RankManager;
@@ -41,14 +41,14 @@ public class MailModuleConfig {
 
 	private static final long EXPIRY_TICK_INTERVAL = 20L; // 1 second
 
-	private final Gangland        gangland;
-	private final GanglandContext context;
+	private final JavaPlugin        plugin;
+	private final DependencyContainer container;
 
 	private RepeatingTimer expiryTimer;
 
-	public MailModuleConfig(Gangland gangland, GanglandContext context) {
-		this.gangland = gangland;
-		this.context  = context;
+	public MailModuleConfig(JavaPlugin plugin, DependencyContainer container) {
+		this.plugin = plugin;
+		this.container  = container;
 	}
 
 	@Bean
@@ -70,7 +70,7 @@ public class MailModuleConfig {
 	                                                 GangManager gangManager,
 	                                                 RankManager rankManager,
 	                                                 MailManager mailManager) {
-		return new GangMailContribution(gangland, userManager, offlineUserManager, memberManager, gangManager,
+		return new GangMailContribution(plugin, userManager, offlineUserManager, memberManager, gangManager,
 		                                rankManager, mailManager);
 	}
 
@@ -79,14 +79,14 @@ public class MailModuleConfig {
 	                                                         MemberManager memberManager,
 	                                                         GangManager gangManager,
 	                                                         MailManager mailManager) {
-		return new GangAllyMailContribution(gangland, userManager, memberManager, gangManager, mailManager);
+		return new GangAllyMailContribution(plugin, userManager, memberManager, gangManager, mailManager);
 	}
 
 	@PostConstruct
 	public void startExpirySweep() {
-		MailManager manager = context.get(MailManager.class);
+		MailManager manager = container.getInstance(MailManager.class);
 
-		expiryTimer = new RepeatingTimer(gangland, EXPIRY_TICK_INTERVAL, timer -> manager.expireDue());
+		expiryTimer = new RepeatingTimer(plugin, EXPIRY_TICK_INTERVAL, timer -> manager.expireDue());
 		expiryTimer.start(true);
 	}
 }

@@ -2,7 +2,7 @@ package org.luckyraven.gangland.mail.command.ally;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -25,15 +25,15 @@ public class GangAllyPendingCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final MailManager         mailManager;
 
-	public GangAllyPendingCommand(Gangland gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	public GangAllyPendingCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
 	                       GangManager gangManager, MailManager mailManager) {
-		super(gangland, "pending", tree, parent);
+		super(plugin, "pending", tree, parent);
 
 		this.userManager = userManager;
 		this.gangManager = gangManager;
 		this.mailManager = mailManager;
 
-		this.addSubArgument(new GangAllyPendingCancelCommand(gangland, tree, this, userManager, gangManager,
+		this.addSubArgument(new GangAllyPendingCancelCommand(plugin, tree, this, userManager, gangManager,
 		                                                     mailManager));
 	}
 

@@ -2,7 +2,7 @@ package org.luckyraven.gangland.mail.command;
 
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.extension.CommandContribution;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberManager;
@@ -24,7 +24,7 @@ public final class GangMailContribution implements CommandContribution {
 
 	public static final String PARENT = "gang";
 
-	private final Gangland                   gangland;
+	private final JavaPlugin                   plugin;
 	private final UserManager<Player>        userManager;
 	private final UserManager<OfflinePlayer> offlineUserManager;
 	private final MemberManager              memberManager;
@@ -32,10 +32,10 @@ public final class GangMailContribution implements CommandContribution {
 	private final RankManager                rankManager;
 	private final MailManager                mailManager;
 
-	public GangMailContribution(Gangland gangland, UserManager<Player> userManager,
+	public GangMailContribution(JavaPlugin plugin, UserManager<Player> userManager,
 	                            UserManager<OfflinePlayer> offlineUserManager, MemberManager memberManager,
 	                            GangManager gangManager, RankManager rankManager, MailManager mailManager) {
-		this.gangland           = gangland;
+		this.plugin           = plugin;
 		this.userManager        = userManager;
 		this.offlineUserManager = offlineUserManager;
 		this.memberManager      = memberManager;
@@ -51,7 +51,7 @@ public final class GangMailContribution implements CommandContribution {
 
 	@Override
 	public List<Argument> create(Tree<Argument> tree, Argument parent) {
-		GangInviteCommand invite = new GangInviteCommand(gangland, tree, parent, userManager, offlineUserManager,
+		GangInviteCommand invite = new GangInviteCommand(plugin, tree, parent, userManager, offlineUserManager,
 		                                                 memberManager, gangManager, rankManager, mailManager);
 		return List.of(invite, invite.gangAccept());
 	}

@@ -15,7 +15,7 @@ import org.luckyraven.keystone.persistence.repository.IRepository;
 import java.sql.Types;
 import java.util.*;
 
-public class WaypointManager implements BeanLifecycle {
+public class WaypointManager implements BeanLifecycle, WaypointLookupContract {
 
 	private final Gangland               gangland;
 	private final GanglandDatabase       database;

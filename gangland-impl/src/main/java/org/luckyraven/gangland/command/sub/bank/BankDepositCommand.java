@@ -3,7 +3,7 @@ package org.luckyraven.gangland.command.sub.bank;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -32,13 +32,13 @@ import java.util.NavigableSet;
 
 class BankDepositCommand extends SubArgument {
 
-	private final Gangland            gangland;
+	private final JavaPlugin            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 	private final GanglandDatabase    ganglandDatabase;
 	private final BankTiers           bankTiers;
 
-	protected BankDepositCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected BankDepositCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                             UserManager<Player> userManager, GanglandDatabase ganglandDatabase,
 	                             BankTiers bankTiers) {
 		super(gangland, "deposit", tree, parent);
@@ -105,7 +105,7 @@ class BankDepositCommand extends SubArgument {
 				return;
 			}
 
-			boolean bypass = player.hasPermission(BankCommand.BYPASS_CAP_PERMISSION);
+			boolean bypass = player.hasPermission(BankTiers.BYPASS_CAP_PERMISSION);
 			if (!bypass) {
 				bank.resetIfStale(Instant.now(), Duration.ofSeconds(Settings.getBankResetPeriodSeconds()));
 

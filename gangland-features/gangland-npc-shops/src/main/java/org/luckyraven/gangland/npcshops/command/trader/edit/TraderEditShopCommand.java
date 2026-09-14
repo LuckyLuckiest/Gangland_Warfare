@@ -2,7 +2,7 @@ package org.luckyraven.gangland.npcshops.command.trader.edit;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.Gangland;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
@@ -20,15 +20,15 @@ class TraderEditShopCommand extends SubArgument {
 
 	private static final double TARGET_RANGE = 5D;
 
-	private final Gangland       gangland;
+	private final JavaPlugin       plugin;
 	private final Tree<Argument> tree;
 	private final TraderManager  traderManager;
 	private final ShopRegistry   shopRegistry;
 
-	protected TraderEditShopCommand(Gangland gangland, Tree<Argument> tree, Argument parent,
+	protected TraderEditShopCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                                TraderManager traderManager, ShopRegistry shopRegistry) {
-		super(gangland, "shop", tree, parent);
-		this.gangland      = gangland;
+		super(plugin, "shop", tree, parent);
+		this.plugin      = plugin;
 		this.tree          = tree;
 		this.traderManager = traderManager;
 		this.shopRegistry  = shopRegistry;
@@ -43,7 +43,7 @@ class TraderEditShopCommand extends SubArgument {
 	}
 
 	private void registerValueArgument() {
-		Argument valueArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+		Argument valueArg = new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			if (!(sender instanceof Player player)) return;
 
 			String key = args[3].toLowerCase();
