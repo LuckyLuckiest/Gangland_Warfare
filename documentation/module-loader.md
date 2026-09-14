@@ -49,7 +49,8 @@ gate loading: `Depends:` (another **module**; `module.dependency.missing` when a
 
 ## How the core loads modules
 
-`GanglandContext` owns one `ModuleLoader` (`<dataFolder>/modules`, `Host_Api` = the plugin's major.minor):
+`GanglandContext` owns one `ModuleLoader` (`<dataFolder>/modules`, `Host_Api` = `GanglandApi.VERSION`, today
+`1.0`):
 
 1. `bootstrap()` calls `moduleLoader.load()` **before** the configuration scan: descriptors are read, `Host_Api`
    and `Depends` checked, every accepted jar added to one parent-first classloader, each `Main` instantiated and
@@ -64,12 +65,19 @@ gate loading: `Depends:` (another **module**; `module.dependency.missing` when a
    through the module classloader; then `moduleLoader.enableAll(container)` calls `onEnabled`.
 5. `Gangland.onDisable()` calls `context.disableModules()` after `shutdownBeans()`.
 
+`Host_Api` is the **module API line**, not the plugin version: bump its minor when the host adds API a module may
+rely on, its major only on a breaking change. A module built for `1.x` loads on any host whose API is `1.y` with
+`y >= x`; releasing Gangland 0.9.2 or 1.4.0 does not invalidate a single module jar.
+
 Modules load once. A changed `modules/` folder — including an update — takes effect on the next start.
 
 ## Writing a module
 
-A module is a Maven module under `gangland-features/` that depends on `gangland-impl` at **`provided`** scope
-(plus the Keystone modules it uses, also provided). It ships:
+A module is a Maven module under `gangland-features/` that depends on **`gangland-api`** at **`provided`** scope —
+the only host artifact a module compiles against, so the compiler (not a convention) enforces the contract. It pulls
+`gangland-core`, `gangland-domain`, `gangland-item`, `inventory-api`, `sign-api` and `shop-api` in transitively, so
+that one line replaces them all; add the Keystone modules it uses (also provided). A module never depends on
+`gangland-impl`: everything in the host jar that is *not* in `gangland-api` is deliberately out of reach. It ships:
 
 - `src/main/resources/module.yml` at the jar root (house YAML style, capitalised underscore keys):
 
@@ -78,9 +86,12 @@ A module is a Maven module under `gangland-features/` that depends on `gangland-
   Name: Gangland Mail
   Version: ${project.version}
   Main: org.luckyraven.gangland.mail.MailModule
-  Host_Api: 0.9
+  Host_Api: 1.0
   Artifact: org.luckyraven:gangland-mail
   ```
+
+  `Host_Api` is the module API line the module was built against (`GanglandApi.VERSION`), *not* the plugin
+  version — a module keeps loading across plugin releases as long as the host's API line still satisfies it.
 
   `Depends:` lists other **module** ids when needed (block-style list); the loader reports
   `module.dependency.missing` and skips the module if one is absent. `Plugins:` (since 0.9.0) lists external
@@ -116,9 +127,22 @@ A module is a Maven module under `gangland-features/` that depends on `gangland-
   later phase would race the CONFIG-phase code (`PowerupRegistryLoader`) that calls
   `fileManager.checkFileLoaded("turf_powerups")`.
 
-Modules may import core types directly (`Messages`, `Settings`, managers): the compile-time direction is
-module → core. Contract interfaces (`MailRepositoryContract`, `TurfMessageContract`, …) stay as the test seam;
-their implementations move with the module.
+Modules may import any `gangland-api` type directly (`Messages`, `Settings`, `Command`, `Waypoint`,
+`BankTiers`, the contribution interfaces …) and any Keystone type directly: the compile-time direction is
+module → api. A host manager that lives in `gangland-impl` is *not* importable — where a module genuinely needs
+one, the api carries a narrow read-only contract instead (`WaypointLookupContract` over `WaypointManager`), and a
+module resolves host beans it cannot name through the injected `DependencyContainer`
+(`container.getInstance(X.class)`) rather than through `GanglandContext`. Contract interfaces
+(`MailRepositoryContract`, `TurfMessageContract`, …) stay as the test seam; their implementations move with the
+module.
+
+### Contract rules
+
+- Within a major `Host_Api` line, `gangland-api` only **adds**: no public member is removed, renamed, or has its
+  signature changed. Anything else is a major bump, which invalidates every module jar on the server.
+- New module-specific messages and config knobs go in the **module's own YAML**, not in `Messages`/`Settings`.
+  Those two live in the api for what already exists — they are not the place to grow a module's vocabulary.
+- A module imports Keystone directly; it does not need the host to re-export it.
 
 ### Attaching sub-arguments under a core command
 
@@ -174,7 +198,7 @@ Contribution paths added by the cops-n-crooks flip, now installed by **npc-shops
 
 Contributions and seams added by the **gadget** flip (0.8.4):
 
-- **`SignTypeContribution`** (`org.luckyraven.gangland.sign.extension`, gangland-impl) — `List<Sign>
+- **`SignTypeContribution`** (`org.luckyraven.gangland.sign.extension`, gangland-api) — `List<Sign>
   signs(String signPrefix)`. `SignManager.setupSigns()` resolves `SignContributions.from(container)` once at the
   top of the method (lazily — a module bean is not guaranteed to exist yet at `SignManager`'s own construction
   time, only once Keystone's convention `initialize()` pass runs) and appends every contributed sign's format and
@@ -243,6 +267,29 @@ the `Diagnostics` hub once it exists; the loader runs before it, so during boots
 Separately, `npc.citizens.missing` (`NpcSupport.FAULT_CITIZENS_MISSING`, `keystone-npc`) is reported once by each
 NPC-owning module's own `onEnabled` when Citizens is absent — it does not skip the module (Citizens is soft, not a
 `Depends:`/`Plugins:` gate), just its NPC spawns.
+
+## Installing modules from the network
+
+`/glw module` (console-runnable, `gangland.command.module.*`) manages the `modules/` folder without an FTP client:
+
+| Command | What it does |
+|---|---|
+| `/glw module list` | Every loaded module (id, name, version, `Host_Api`) and then every jar the loader refused, with its fault code — so a module that never came up is visible without the startup log. |
+| `/glw module install <module> [version]` | Downloads a module jar. `<module>` is one of the six official ids (`mail`, `turf`, `civilians`, `copsncrooks`, `gadget`, `npcshops`) or a full `group:artifact[:version]`. Without a version the repository's newest is taken. Replacing a module that is already loaded retires the old jar the same way an update does. |
+| `/glw module update [module]` | Checks every loaded module's `Artifact` (or only the one named) against the repository and downloads what is newer. |
+| `/glw module remove <module>` | Marks a module jar for deletion at the next start. |
+
+`Modules.Repository` in `settings.yml` is the Maven-layout base URL every fetch uses (default Maven Central; a
+self-hosted mirror or a `file:///` path works too). A jar is read from
+`<Repository>/<group path>/<artifact>/<version>/<artifact>-<version>.jar` and **must publish a `.sha256` beside it** —
+a jar without a matching checksum is deleted, never installed. After the download the jar's own `module.yml` is read:
+a wrong `Host_Api` deletes it again and reports the required line versus the host's, while unmet `Depends:`/`Plugins:`
+entries are reported line by line and the jar is kept.
+
+Nothing takes effect immediately. Modules load once per start, so every install, update and removal ends in a
+restart-required line. A removal (and the retired jar of an update) is an empty `<jar>.jar.stale` marker beside the
+jar — the running loader holds the jar open, Windows locks it outright, and `ModuleLoader.discover()` deletes both
+before anything is loaded on the next start. Deleting the marker undoes the removal.
 
 ## Smoke checklist for a module change
 
