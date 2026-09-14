@@ -1,0 +1,6 @@
+{
+ "WP-01": {"status": "fixed", "note": "Confirmed fixed by the Bartizan split (0.9.0): radius and damage are two distinct config values (Bartizan WeaponShooting.java:110-114). See cross-docket-2026-09-10/bartizan/REVIEW.md.", "updatedAt": "2026-09-10"},
+ "WP-02": {"status": "fixed", "note": "Confirmed fixed by the Bartizan split (0.9.0): rocket damage is configurable via DamageData.getExplosionDamage(). See cross-docket-2026-09-10/bartizan/REVIEW.md.", "updatedAt": "2026-09-10"},
+ "WP-19": {"status": "fixed", "note": "Confirmed fixed by the Bartizan split (0.9.0): AP damage flows through the unified living.damage(dmg, shooter) with a damager. See cross-docket-2026-09-10/bartizan/REVIEW.md.", "updatedAt": "2026-09-10"},
+ "WP-06": {"status": "moved", "note": "Code moved to Bartizan in 0.9.0; re-tiered P0 -> P2 there as BZ-WM-05 (getWeapon(String) mints a row; Bartizan has no read-only path). See cross-docket-2026-09-10/bartizan/REVIEW.md.", "updatedAt": "2026-09-10"}
+}

@@ -1,0 +1,12 @@
+# no verified findings
+# The project-wide conventions sweep produced zero findings. Every rule was re-verified by the review lead:
+# io.papermc imports: none. Bukkit.getLogger calls: none. Async constructs: none (plugin is single-threaded).
+# Hard-coded version strings: none - plugin.yml uses `version: ${version}` filled by Gradle processResources expand().
+# Unguarded enum valueOf on user input: none - the only Sound.valueOf (PickerScreen.java:140) is try/catch guarded.
+# PAPI in menu-core: none, design principle 5 upheld. TraderMenu has no generic slot(int, ...), principle 2 upheld.
+# Shipped YAML keys are all snake_case, matching the naming convention.
+# Swallowed exceptions: every catch (Exception|Throwable) on a data path logs; none are silent.
+# Listener lifecycle: 7 call sites - EditorController (register line 80 / unregister lines 134 and 286) and
+# MenuFlow (register line 108 / unregister line 155) are correctly paired; MenuTrackingConfig.java:32 and
+# OrielContext.java:130 register once at bootstrap, which is normal and not a leak.
+# Findings that would have landed here by file ownership were instead filed in their owning system's file.

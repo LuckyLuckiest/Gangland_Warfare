@@ -1,0 +1,307 @@
+{
+ "CJ-01": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #33, closed). DetainmentTable drops setUnique(true) on jail_id (uniqueness belongs to the player_uuid primary key). MIGRATION: DetainmentRepository gained an idempotent migrateSchema() guarded on SchemaMigrations.hasUniqueIndex - SQLite rebuild preserving all six columns and the jail FK, MySQL ADD INDEX jail_id_idx then DROP INDEX jail_id so the FK keeps a backing index. Its migrateMysql additionally swallows MySQL error 1061 (ER_DUP_KEYNAME) so a crash between the ADD and the DROP cannot make every later startup fail - the gang_ally migration lacks this and should be back-ported. Covered by DetainmentRepositoryMigrationTest (6 cases, real SQLite, hand-built legacy DDL) + DetainmentRepositorySpiTest.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "CJ-04": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #34, closed). handleQuit no longer writes JAILED directly (which bypassed JailIntakeService.admit: no cell occupancy, no seizure, no wanted clear, and a null sentenceExpiresAt that made SentenceService.tick return early forever). The state stays HANDCUFFED with the transit expiry set to now, so DetainmentListener.onJoin -> TransitService.resumeOnJoin fires the real intake pipeline on rejoin. Chosen over calling JailIntakeService directly, which would recreate the intake->detainmentService construction cycle that TransitService.onCommit exists to break. Covered by new DetainmentServiceQuitTest (5 cases).",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "CJ-06": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #35, closed). GanglandSeizedInventoryService.restore now decodes first (applyInventory split into deserialize(String) -> Snapshot and applyInventory(Player, Snapshot)) and only removes the cache entry and deletes the row after the items are actually on the player; a failed decode logs 'kept for retry' and returns false with everything intact. Covered by new GanglandSeizedInventoryServiceTest (5 cases).",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "CJ-12": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #36, closed). DetainmentRepository read the state column with result[v++] and then advanced v AGAIN in catch (IllegalArgumentException), so one bad state string shifted transit_expires_at, sentence_expires_at and wanted_at_arrest each by one column. The column is now read once into a bounds-guarded local and the catch body is empty. Covered by unknownState_keepsFollowingColumnsAligned in DetainmentRepositorySpiTest.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "CL-01": {
+  "note": "Fixed 2026-09-07, commit f6f73626 on branch worktree-p0-wave-2 (GitHub issue #14, closed). GanglandDatabase.createSchema guards a null getDatabase() and throws a message-carrying SQLException naming Database.SQLite.Failed_MySQL; DatabaseConfig fails fast right after setType. Keystone untouched. Pinning test in GanglandDatabaseTest flipped to createSchema_afterFailedMysqlNoFallback_throwsDiagnosableSqlException.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "CL-02": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #15, closed). PeriodicalUpdates.start() now uses repeatingTimer.start(false) so every cache snapshot happens on the main thread; the duplicate direct UserTable/BankTable writes were removed, leaving the repository suppliers as the single writer (they previously raced two async tasks upserting the same rows). Covered by new PeriodicalUpdatesTest.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "CL-04": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #16, closed). New GanglandDatabase.disconnectBackend() closes the Hikari pool and nulls the reference so a reload can rebuild it; called as the LAST stage of ShutdownSequence, deliberately after closeConnections() because DatabaseManager.startBackup re-runs initialize() and needs a live backend. Covered by GanglandDatabaseTest.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "CL-05": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #17, closed). New bootstrap/ShutdownSequence runs the five disable stages (bean shutdown, module disable, force save, close connections, disconnect backend), each isolated in stage() which reports through Diagnostics.active() and continues. Covered by ShutdownSequenceTest (6 cases). CAVEAT: Keystone BeanFactory.shutdownLifecycleBeans() is still an unguarded loop upstream, so one throwing bean still skips the REMAINING beans' shutdown - only the save/close/disconnect stages are protected.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "CL-23": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #18, closed). UserManager gained an identity-based cacheGroup plus symmetric link(); initialize() registers groupedUsers()/groupedBanks() suppliers walking the whole group, so whichever bean registers last still persists both caches. DataConfig.offlineUserManager takes the online manager and links it (clean online->offline bean edge, no cycle). Pinning test bothUserManagerBeans_collideOnTheSharedRepository_lastInitializeWins replaced with linkedUserManagerBeans_eitherSupplierPersistsBothCaches.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "CM-01": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #19, closed). CreateAccountListener extracts a package-private static notifyUpdate(Player, UpdateNotifier) with a null guard, so a disabled Update_Checker no longer NPEs in the LOWEST-priority join handler before userManager.add(user). Covered by new CreateAccountListenerUpdateCheckerTest (4 cases).",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "CM-03": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #20, closed). Root cause was the lookup, not the annotation: Settings.addEachFieldReflection keys settingsMap by FIELD name (gangEnabled) while the condition string is the getter name (isGangEnabled). SettingsLookupImpl now falls back to the JavaBeans property name derived from an is/get prefix; getter-style strings are the house convention (GangMembersDamageListener uses one too). Pinning test observation3_getterNamedConditionNeverMatchesFieldNamedKey flipped to getterNamedCondition_resolvesFieldNamedKey, plus 5 new cases.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "CM-05": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #21, closed). BalanceCommand injects the offline UserManager; completion reads the two caches (zero queries) and the action body resolves via findCached (online, then offline, case-insensitive), which also fixes the exact-case-only Bukkit.getPlayer lookup. Covered by new BalanceCommandTest (7 cases). LEFT OPEN: the genuine cache-miss path still runs the main-thread DB scan - narrowing it needs a new indexed UserTable query.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "CM-13": {
+  "note": "Fixed 2026-09-07, commit 8a731fd5 on branch worktree-p0-wave-3 (no GitHub issue - the permission-hole set was deliberately never filed). New file/configuration/SettingsRedaction filters credential keys (any key whose normalised form contains password/passphrase/secret/token/credential, plus mysqlhost/mysqluser/mysqlusername) out of both readers of the reflection dump: DebugCommand's settings AND placeholder sub-arguments, and GanglandPlaceholder.getSetting. The second reader was the wider hole and is NOT in the original observation: the settings placeholder map is resolved by name, so %<prefix>_mysql_password% printed the database password to anyone who could render a placeholder (sign, hologram, chat format). The live maps are left unmutated because SettingsLookupImpl resolves real values from them for conditional beans. Covered by SettingsRedactionTest (6 cases).",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "CT-01": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #37, closed). BarterView.onConfirm computes consumedSlots from a new acceptedSlots(state) (re-valuing each stack exactly as recomputeOffer does), clears only those slots and then calls returnItemsToPlayer - the shape SellView.onConfirm already used. Previously every non-air stack was cleared and state.committed = true suppressed the onEnd return pass, destroying rejected (value 0) items. ShopBarterService treats the offered list as informational, so narrowing it is safe. Covered by new BarterViewTest (4 cases).",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "GD-06": {
+  "note": "Fixed 2026-09-07, commit 8a731fd5 on branch worktree-p0-wave-3. New gadget car/access/CarAccessPolicy + CarGangContract finally read the placer UUID that placeCar had always written to the car_placer PDC key and the parked_car row. Gate applied at all three sites: mount and fuel-can refuel in CarEntityInteractListener (one check before both, since refuel is a right-click branch), pickup in CarDamageListener's shift+left-click branch. Rule: no recorded placer -> open (cars placed before this fix must not become unusable); placer -> allowed; gang mates -> allowed; new gangland.cars.bypass -> allowed; otherwise CarMessageContract.noPermission(). The gang half comes through the contract because gangland-gadget does not depend on gangland-domain; impl side is GanglandCarGangs over MemberManager, wired in CopsAndGadgetsConfig. DEVIATION: gangland.cars.<id> is NOT used for access - it is the placement/ownership-of-the-item node that every buyer holds, so it carries no ownership signal; a dedicated bypass node replaces it. Covered by CarAccessPolicyTest (7 cases).",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "GR-01": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #27, closed). Per-site early-return guards (the existing house pattern in GangTransferCommand) across Create/Delete/Kick/Leave/Promote/Demote/Deposit/Withdraw/ComponentExecutor/Debug; GangCreateCommand guards BEFORE the fee withdrawal so a null Member cannot burn the fee; GangAllyAbandonCommand's two stream filters replaced by a new onlineGangMembers() helper. Covered by GangAllyAbandonCommandTest. STILL OPEN: the same unchecked deref survives in the mail module (GangInviteAccept, GangAllyAccept/Reject/RequestCommand) - separate area. Also unfixed and distinct: gangManager.getGang(user.getGangId()) is dereferenced unchecked in GangKick:153, GangPromote:88, GangDemote:84, ComponentExecutor:150.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "GR-02": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #28, closed). GangDeleteCommand's payout block is now runQueries (synchronous) to match the sync path that deletes the gang; it mutates gang economy and calls Bukkit.getOfflinePlayer via the Vault bridge. NO UNIT TEST, deliberately: under PluginMocks the plugin is disabled so DatabaseHelper.runQueriesAsync already falls back to the inline path and BukkitStatics runs submitted runnables inline, so a test would pass identically before and after. ADJACENT BUG, not fixed: both payout loops re-read gang.getEconomy().getAmount() INSIDE the loop while paying balance * freq/total, so the pool shrinks each iteration and members after the first are underpaid - deserves its own docket entry.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "GR-03": {
+  "note": "Fixed 2026-09-07, commit 8a731fd5 on branch worktree-p0-wave-3. New domain gang/permission/GangPermissions declares a node per mutating subcommand (gangland.gang.withdraw/deposit/rename/description/display/color/invite/ally) and one allows(member, player, node) gate: a server permission on the player (admin path), OR Member.hasPermission (rank node or Vault - which until now had NO production caller anywhere), OR the member holds the top rank. That last clause is load-bearing: the rank tree is head-rooted so the leaf is the leader, and without it every gang on an upgrading server would freeze the moment this shipped, since no existing rank carries these nodes. Applied in impl to Withdraw/Deposit/Rename/Description/Display (both the set and remove forms)/Color/AllyAbandon - Rename, Description, Display and Color had to take MemberManager, so GangCommand's wiring changed - and in the mail module to GangInvite, GangAllyRequest, GangAllyAccept and GangAllyReject. Denials use Messages.COMMAND_NO_PERM. Covered by GangPermissionsTest (7 cases). STILL OPEN: GangInviteCancelCommand and GangAllyPendingCancelCommand are not gated (they cancel your own gang's outgoing mail, lower risk); the command-level wiring has no unit seam, same limitation as US-04.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "GR-05": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #29, closed). GangAllianceTable now declares a composite (gang_id, ally_id) primary key and drops UNIQUE(ally_id) (TableBackend.primaryKeyColumns is the upsert conflict target, so the old shape collapsed every alliance a gang owned to one row). MIGRATION: Keystone SchemaDiff is add/drop-column only, so GangAllianceRepository gained an idempotent migrateSchema() (invoked per startup by RepositoryRegistry) - SQLite rebuild via SchemaMigrations.rebuildSqliteTable, MySQL adds a plain ally_id_idx before dropping the legacy UNIQUE (error 1553: the FK is backed by that index) then swaps the PK. No de-duplication needed. Covered by GangAllianceRepositorySpiTest over real SQLite (6 cases); migrateSchema itself is untested, matching the RankPermissionRepository precedent. TODO: back-port the MySQL 1061 tolerance from DetainmentRepository.migrateMysql so a crash between ADD INDEX and DROP INDEX cannot wedge every later startup.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "GR-06": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #30, closed). New GangManager.breakAlliance(Gang, Gang) deletes both direction rows through the repository contract and then clears both in-memory sides; GangAllyAbandonCommand calls it instead of the two removeAlly calls. Root cause was the autosave supplier feeding saveAll -> upsertAll, which can never delete a row. Covered by GangManagerAllianceTest + new RecordingGangAllianceRepository fake, plus delete_removesOnlyThatDirection in the SPI test.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "GR-08": {
+  "note": "Fixed 2026-09-07, commit 8a731fd5 on branch worktree-p0-wave-3. New domain gang/rank/RankAssignmentPolicy gives /glw option gang rank the hierarchy check GangPromoteCommand already had and this command lacked entirely. evaluate() returns SELF (no self-assignment, even with force_rank), SAME_RANK, TARGET_OUTRANKS_ACTOR (the actor's node must be a strict descendant of the target's in the head-rooted tree), RANK_NOT_BELOW_ACTOR (you may only hand out ranks strictly below your own - this is what blocked the recruit-grants-owner escalation) or ALLOWED; force_rank (gangland.command.gang.force_rank, the same node GangPromoteCommand honours) bypasses the hierarchy but never the self rule. ComponentExecutorCommand maps each refusal onto GANG_CANNOT_ACT_SELF / GANG_SAME_RANK_ACTION / GANG_HIGHER_RANK_ACTION, and its completer now filters through RankAssignmentPolicy.assignable instead of listing every rank including owner. Covered by RankAssignmentPolicyTest (9 cases); verified genuinely red - 5 of the 9 fail against the old not-my-own-rank rule.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "IT-01": {
+  "note": "Fixed on branch 0.8.3, commit c94fceab (GitHub issue #8). Identity moved to the uniqueItem NBT tag via new UniqueItem.matches(). Pinning tests flipped in UniqueItemUtilTest + new UniqueItemIdentityIntegrationTest.",
+  "status": "fixed",
+  "updatedAt": "2026-09-06"
+ },
+ "IT-02": {
+  "note": "Fixed on branch 0.8.3, commit c94fceab (GitHub issue #9). removeItem now clears only stacks matching the target. LoadUniqueItemTest rewritten with a 3-slot fixture + 2 new cases; integration test covers the ordering that exposes the inversion.",
+  "status": "fixed",
+  "updatedAt": "2026-09-06"
+ },
+ "IT-03": {
+  "note": "Fixed on branch 0.8.3, commit c94fceab (GitHub issue #10). compareTo rewritten onto UniqueItemKeys.UNIQUE_ITEM_KEY; non-unique stacks now sort after instead of returning 0. UniqueItemTest pins flipped, new PerStackNbtAccessor test seam.",
+  "status": "fixed",
+  "updatedAt": "2026-09-06"
+ },
+ "LS-01": {
+  "note": "Fixed 2026-09-07, commit 8a731fd5 on branch worktree-p0-wave-3. New data/teleportation/WaypointAccess holds the rule the tab-completers already used (waypoint.forGang() && same gang) || player.hasPermission(waypoint.getPermission()), and the three action bodies now call it: TeleportCommand.teleportCost (the single funnel for both the selected-waypoint and named forms, which also gained a null-user guard), WaypointSelectCommand's id leaf, and WaypointListCommand - which took a UserManager and now filters, sorts by usedId and prints a new Waypoint.List_Empty message instead of enumerating every waypoint with a click-to-run teleport and its coordinates. Console keeps the full list deliberately (already trusted with the admin waypoint commands). Denials use Messages.WARP_NO_PERM. Covered by WaypointAccessTest (7 cases).",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "LS-03": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #40, closed). ItemTransferAspect gained hasSpaceFor (empty slots count a full stack, partially-filled similar stacks count remaining room via the injected ItemSimilarityChecker) and canExecute GIVE now uses it - load-bearing because SignInteraction calls canHandle before handle, so the purchase is refused BEFORE MoneyAspect WITHDRAW (priority 100 vs 50) takes payment. execute re-checks and drops any residual at the player's feet instead of discarding addItem's leftover map. Covered by ItemTransferAspectTest (6 cases).",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "LS-19": {
+  "note": "Fixed 2026-09-07, commit 8a731fd5 on branch worktree-p0-wave-3. New sign-api SignPermissions declares gangland.sign.create and gangland.sign.break, both registered through PermissionManager in GameplayConfig.signInteraction. SignCreation checks CREATE before validating and CANCELS the event rather than returning - PlayerSignInteract identifies a plugin sign from its first line, so leaving the raw text would still have handed the player a working shop. New SignProtection listener guards BlockBreakEvent, identifying plugin signs through SignTypeRegistry.findByLine exactly as PlayerSignInteract does. DESIGN NOTE: signs store no owner anywhere (only their four lines), so the break guard is the permission node, not the owner/admin comparison the fix direction suggested - a real owner check needs a new per-sign record. SignInformation gained getSignNoPermission(), so Messages.SIGN_NO_PERM finally has a caller. Covered by SignCreationTest (3 cases, verified genuinely red against the pre-fix listener) + SignProtectionTest (4 cases).",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "T-07": {
+  "note": "0.8.4 gadget flip, commit 4304172c: explicit manager.initialize() removed from GameplayConfig.signManager(); Keystone's convention pass runs setupSigns() once. Evidence: SignManagerContributionTest.",
+  "status": "fixed",
+  "updatedAt": "2026-09-08T05:45:00+04:00"
+ },
+ "T-08": {
+  "note": "0.8.4 weapon flip, commit 0272008b: ViewSignValidator.isValidContent is now `return !content.isEmpty();` (dead weapon/ammo lookups removed, behaviour identical). No dedicated test.",
+  "status": "fixed",
+  "updatedAt": "2026-09-08T05:45:00+04:00"
+ },
+ "T-09": {
+  "note": "0.8.4 weapon flip, commit 0272008b: anvilgui removed from the weapon pom. viaversion-api was NOT unused (RecoilCompatibility references ViaAPI; RecoilManagerTest fails without it) and stays at provided scope; entry corrected.",
+  "status": "fixed",
+  "updatedAt": "2026-09-08T05:45:00+04:00"
+ },
+ "T-10": {
+  "note": "0.8.4 commits 4304172c + 0272008b: ItemSerializerRegistry and ItemRefresherRegistry gained register(..., priority) + CATCH_ALL_PRIORITY with a stable sort; weapon/wearable refreshers at 10, ammunition at 0. Tests: ItemSerializerRegistryPriorityTest, ItemRefresherRegistryPriorityTest.",
+  "status": "fixed",
+  "updatedAt": "2026-09-08T05:45:00+04:00"
+ },
+ "T-11": {
+  "note": "0.9.0 1340d97c (branch 0.9.0, unpushed): GameplayConfig.lootChestLoader no longer calls fileManager.initializeAll() eagerly - deferred to a @PostConstruct mirroring initializeInventoryLoader(). The executor found the eager item-resolution path itself was already lazy (SlotItemFactory/InventoryLoader resolve at roll time), so the original observation was partly stale. Covered by the gangland-impl suite at gate G (194 tests).",
+  "status": "fixed",
+  "updatedAt": "2026-09-08T23:25:00+04:00"
+ },
+ "T-12": {
+  "note": "0.8.4 commit 011ad30c: net.wesjd.anvilgui relocation removed from gangland-build/pom.xml; verified by unzip -l (85 original entries, 0 relocated). Smoke S4/S5 confirms boot with cops.",
+  "status": "fixed",
+  "updatedAt": "2026-09-08T12:20:00+04:00"
+ },
+ "T-13": {
+  "note": "Keystone 1.8.1 commit 23950c0 (phase-h7-module-loader): ListenerService.registerGuarded isAssignableFrom guard; ListenerServiceSiblingEventTest. Gangland root pom pinned to 1.8.1 on 0.8.4 (uncommitted).",
+  "status": "fixed",
+  "updatedAt": "2026-09-08T11:40:00+04:00"
+ },
+ "T-14": {
+  "note": "0.8.4 commit 011ad30c: WearableEquipListener moved to gangland-weapon listener.wearable; ItemListenerModuleBoundaryTest + WeaponModuleTest.",
+  "status": "fixed",
+  "updatedAt": "2026-09-08T12:20:00+04:00"
+ },
+ "T-15": {
+  "note": "Keystone 1.8.1 commit 23950c0: UpdateNotifier.start() async first check, UpdateChecker.updateAvailable(String) so one fetch per check; UpdateNotifierTest.",
+  "status": "fixed",
+  "updatedAt": "2026-09-08T11:40:00+04:00"
+ },
+ "T-16": {
+  "note": "0.9.0 f4149f46 (branch 0.9.0, unpushed): Database.SQLite.Backup defaults to false in settings.yml and Settings.isSqliteBackup(); pinned by SettingsDefaultsTest (red first). Keystone 1.9.0's no-host guard covers the MySQL side. Existing servers keep their on-disk Backup: true until edited - migration-0.9.0.md must say so.",
+  "status": "fixed",
+  "updatedAt": "2026-09-08T20:25:00+04:00"
+ },
+ "T-17": {
+  "note": "0.8.4 commit 011ad30c: Gangland.Dependency label (economy/permissions) on the two Vault lines.",
+  "status": "fixed",
+  "updatedAt": "2026-09-08T12:20:00+04:00"
+ },
+ "T-18": {
+  "note": "Real cause: message_en.yml declared Errors.Bounty twice (lines 471/494); the second block dropped Below_Minimum. Merged on 0.8.4 (uncommitted, commits at the smoke gate); MessageFileDuplicateKeysTest red→green. Tier raised P3→P2.",
+  "status": "fixed",
+  "updatedAt": "2026-09-08T13:10:00+04:00"
+ },
+ "T-25": {
+  "note": "0.9.0 7e512679 (branch 0.9.0, unpushed): JetpackSession no longer imports the deleted org.luckyraven.gangland.item.wearable.Wearable; gadget reads jetpack state from Bartizan's Wearable.extraTags().",
+  "status": "fixed",
+  "updatedAt": "2026-09-09T11:50:00+04:00"
+ },
+ "T-26": {
+  "note": "Bartizan master eb8bf8a: items/wearables.yml header comment now says bartizan.wearables.<key>.",
+  "status": "fixed",
+  "updatedAt": "2026-09-09T02:20:00+04:00"
+ },
+ "T-28": {
+  "note": "Bartizan master eb8bf8a: WeaponAutoSaveTask (Auto_Save.Time minutes, start(false)) saves the repository registry; onDisable runs shutdownBeans -> saveAll -> closeConnections -> disconnectBackend as isolated stages. Pinned by WeaponAutoSaveTaskTest. Found by the final Opus review, not by any test; the phase-D smoke checks persistence across a restart.",
+  "status": "fixed",
+  "updatedAt": "2026-09-09T02:20:00+04:00"
+ },
+ "T-29": {
+  "note": "Bartizan master eb8bf8a: WeaponDeathListener returns when event.getDeathMessage() is already null (Gangland's LOWEST listener suppresses NPC victims/killers and duplicate events) and sweeps its throwable-victim map. Pinned by WeaponDeathListenerTest (red first).",
+  "status": "fixed",
+  "updatedAt": "2026-09-09T02:20:00+04:00"
+ },
+ "T-30": {
+  "note": "Bartizan master eb8bf8a: WeaponTableImportTask writes .weapon-import-done only after a successful or unnecessary import; a caught SQLException logs and retries next boot. Pinned by WeaponTableImportTaskTest (red first with a corrupt gangland.db).",
+  "status": "fixed",
+  "updatedAt": "2026-09-09T02:20:00+04:00"
+ },
+ "T-31": {
+  "note": "0.9.0 7e10f620 (branch 0.9.0, unpushed): CivilianNpcFactory.createCivilian returns null when NpcSupport.available() is false - the single choke point for the service, spawner and command paths (task T-HR5).",
+  "status": "fixed",
+  "updatedAt": "2026-09-09T03:20:00+04:00"
+ },
+ "T-32": {
+  "note": "0.9.0 7e512679 (branch 0.9.0, unpushed): TraderManager.getByEntity and BankerManager.getByEntity return null when NpcSupport.available() is false instead of reaching CitizensAPI unguarded.",
+  "status": "fixed",
+  "updatedAt": "2026-09-09T11:50:00+04:00"
+ },
+ "T-35": {
+  "note": "Bartizan master 0e18356: Database.SQLite.Backup defaults to false (BartizanSettings + settings.yml). Found by phase-D smoke rows D1/D3.",
+  "status": "fixed",
+  "updatedAt": "2026-09-09T15:10:00+04:00"
+ },
+ "T-36": {
+  "note": "0.9.0 05996be6 + Keystone 1.9.1 (30cf528): no Citizens type in any scanned signature of the four NPC modules (CitizensBridge helpers, Entity parameters, isCitizensAvailable listener conditions); Keystone's ReflectionGuard skips an unloadable class with fault reflection.type.missing. Pinned by a Citizens-blind classloader scan per module (red first). Found by phase-D smoke row D2 (Citizens absent).",
+  "status": "fixed",
+  "updatedAt": "2026-09-09T15:10:00+04:00"
+ },
+ "T-37": {
+  "note": "0.9.0 05996be6: GadgetModuleConfig takes only Gangland; the fuel-sink predicate is installed inside the jetpackService bean. Pinned by a configuration-constructor scan across the reactor (red first). Found by the final Opus review (B-1).",
+  "status": "fixed",
+  "updatedAt": "2026-09-09T15:10:00+04:00"
+ },
+ "UI-01": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #22, closed). Line gained a copy constructor/copy()/copyAll(), StaticLine overrides it, DriverHandler defensively copies the list before appending the title, and ScoreboardManager passes per-board copies of the addon lines and title. TEST CAVEAT: LineTest pins the new copy seam rather than failing red against the pre-fix code - DriverHandler's constructor builds a FastBoard which sends NMS packets, so the original defect has no unit-testable seam without a live server. NOTE (pre-existing, not fixed): Line.hashCode returns (int) interval with no equals(), making DriverHandler.lineUpdateCounts and DriverV3.cache identity maps with heavy collisions - worth a P2 entry.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "UI-02": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #23, closed). Scoreboard now uses timer.start(false) per the repeating-timer rule (the body calls Placeholder.convert and sends FastBoard packets). The 1-tick period was deliberately KEPT: the drivers' clustersInterval counters increment once per call and encode scoreboard.yml Interval values in ticks, so widening the period would silently rescale every configured interval - that is a separate config-facing change. Covered by new ScoreboardTest (genuinely red before the fix).",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "US-01": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #24, closed). UserManager's cache is now Map<UUID, User<T>> and add/remove/contains key on getUuid(), with getUser(UUID)/remove(UUID) overloads; CreateAccountListener evicts the quit snapshot by UUID. Root cause was CraftEntity.equals comparing entity id while CraftOfflinePlayer compares UUID, so the eviction could never hit. Every getUsers() caller repo-wide uses .values()/.size() only, so the key-type change is source-compatible. Covered by UserManagerTest (4 cases).",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "US-02": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #25, closed). The unconditional setAmount(Initial_Balance) is gone from the join handler (Keystone EconomyHandler.setAmount does withdraw-entire-balance then deposit on the real Vault account); UserDataLoader stamps the starting balance only inside the userData.length == 0 branch, after the DB confirms there is no saved row and before the insert. Covered by new CreateAccountListenerTest.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "US-03": {
+  "note": "Fixed on branch 0.8.3, commit c94fceab (GitHub issue #11). New ParsedAmount is the single parse point; BankCommand.processMoney has an amount.signum() <= 0 guard. Covered by ParsedAmountTest, BankCommandTest and BankAmountGuardIntegrationTest (real SQLite).",
+  "status": "fixed",
+  "updatedAt": "2026-09-06"
+ },
+ "US-04": {
+  "note": "Fixed on branch 0.8.3, commit c94fceab (GitHub issue #12). New gangland.command.bank.admin registered in BankerConfig and checked in bankDepositTarget/bankWithdrawTarget; commands.json descriptions updated. NOTE: BankResetCapCommand has the same ungated 'Admin:' hole - follow-up.",
+  "status": "fixed",
+  "updatedAt": "2026-09-06"
+ },
+ "US-06": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #26, closed). New MoneyDepositService.withdraw(Player, double) debits up to the amount and returns what was actually taken (clamped, since EconomyHandler.withdrawAmount throws when the delta exceeds the balance); MoneyDropListener debits first on player death and drops only the returned amount, so a broke player drops nothing. Mob/cop/civilian drops are untouched and remain a currency source by design. Covered by MoneyDropListenerTest + GanglandMoneyDepositServiceTest.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "WB-01": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #31, closed). Bounty gained a userPaidBounty ledger beside userSetBounty (both overloads funnel through recordBounty; removeBounty/resetBounty clear both). BountyClearCommand refunds the PAID amount while BOUNTY_PLAYER_LIFT/BOUNTY_LIFTED keep the posted, level-scaled figure (that is the bounty coming off the target's head), with a null-safe fallback for legacy entries. Covered by 4 new BountyTest cases.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "WB-02": {
+  "note": "Fixed on branch 0.8.3, commit 61d45ddc (GitHub issue #13). BountySetCommand parses through the shared command/util/ParsedAmount; new Bounty.Minimum setting (default 0 = disabled) + Errors.Bounty.Below_Minimum in both locales. Covered by ParsedAmountTest + two new SettingsTest cases. NOTE: issue #13 was claimed by outside contributor ted8686 with owner approval before this landed - the claim needs closing out on GitHub.",
+  "status": "fixed",
+  "updatedAt": "2026-09-06"
+ },
+ "WB-09": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #32, closed). CustomPlayerDeathListener.onPlayerQuit calls a new restoreDownedState(player) in a try with cleanup(uuid) in finally: restores the saved game mode (fallback SURVIVAL), clears allowFlight/flying, restores health and food. Deliberately does NOT read Attribute.MAX_HEALTH (needs a live server via Registry) - a DEFAULT_MAX_HEALTH constant clamps instead - and does not fire PlayerUndownedEvent or teleport, since the player is leaving. Covered by new CustomPlayerDeathListenerQuitTest.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "WP-01": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #38, closed). DamageData gained a separate explosionRadius; GunWeaponParser parses Explosion_Radius (min 0, default 3.0, mirroring ThrowableWeaponParser); SteppedProjectileTask takes the damage separately, skips the blast when radius <= 0, and its hard-coded 20 is replaced by a pure falloffDamage(damage, radius, distance). GAMEPLAY CHANGE: the rocket launcher now deals its configured Explosion_Damage (50) at the centre over a new Explosion_Radius: 4.0, instead of a hard-coded 20 over 50 blocks (which also ran getNearbyEntities at 50/50/50 per rocket). Server owners should retune Explosion_Damage. Covered by SteppedProjectileTaskTest + DamageDataTest.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ },
+ "WP-06": {
+  "note": "Fixed 2026-09-07, commit f6f73626 (GitHub issue #39, closed). WeaponService gained read-only getWeaponTemplate/getWeaponTemplates and a non-registering createTransientWeapon; isWeapon falls back to the configured catalogue so a transient item still works and validateAndGetWeapon registers it on first real use under the UUID the item already carries. Converter, refresher, shop display resolver, death listener and the two NPC factories (CopNpcFactory, CivilianNpcFactory - folded in by the orchestrator) no longer mint rows; four sign/validation callers switched from the runtime registry to getWeaponTemplates(), which also fixes a latent bug where a never-minted weapon type was invisible to sign validation. Covered by WeaponServiceTest (7 cases). STILL OPEN: no pruning pass exists for weapon rows already orphaned on live servers.",
+  "status": "fixed",
+  "updatedAt": "2026-09-07"
+ }
+}

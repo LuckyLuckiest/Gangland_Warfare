@@ -1,0 +1,10 @@
+# no verified findings
+# Project-wide mechanical sweep (9 rules) over keystone-*/src/main/java. Rules 1,2,3,5,6,7,8,9 returned zero real hits:
+# no io.papermc imports, no Bukkit.getLogger/println/printStackTrace, no raw Material/Sound/Particle/PotionEffectType
+# valueOf beyond the one already filed as item-framework #1, no async task touching Bukkit world/entity API, no consumer
+# symbols in code (only the javadoc mentions already filed as diagnostics-error #8 and placeholders #7), no keystone-testkit
+# or mockito-core reachable from keystone-plugin's shade, no Java 21 language features, no post-1.16.5 Bukkit API
+# (World#getMinHeight is reflectively guarded).
+# Rule 4 produced one candidate, DefaultPlaceholderProvider.java:63 `online.getWorld().getName()`, which was CULLED:
+# Bukkit's Entity#getWorld() is declared @NotNull in the Spigot 1.16.5 API sources, so it cannot return null. The nullable
+# accessor is Bukkit.getWorld(String), which this file does not call.
