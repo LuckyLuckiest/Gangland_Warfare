@@ -32,6 +32,8 @@ public class Settings implements FileInitializer {
 	private static @Getter List<String> debugModules;
 	// update configuration
 	private static @Getter boolean      updaterEnabled, notifyPrivilegedPlayers, updaterAutoUpdate;
+	// runtime module repository
+	private static @Getter String  modulesRepository;
 	// language picked
 	private static @Getter String  languagePicked;
 	// resource pack
@@ -395,6 +397,10 @@ public class Settings implements FileInitializer {
 		updaterEnabled          = bool(updateChecker, "Enable", true);
 		notifyPrivilegedPlayers = bool(updateChecker, "Notify_Privileged_Players", false);
 		updaterAutoUpdate       = bool(updateChecker, "Auto_Download", true);
+
+		// runtime modules
+		NodeReader modules = section(root, "Modules", report);
+		modulesRepository = str(modules, "Repository", "https://repo1.maven.org/maven2/");
 
 		// language picked
 		languagePicked = str(root, "Language", "en");

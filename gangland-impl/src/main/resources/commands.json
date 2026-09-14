@@ -7,6 +7,26 @@
 		"usage": "/glw help <page>",
 		"description": "Shows the specified page in general menu."
 	},
+	"module": {
+		"usage": "/glw module",
+		"description": "Shows the runtime module help page."
+	},
+	"module_list": {
+		"usage": "/glw module list",
+		"description": "Lists every loaded runtime module and every jar the loader skipped."
+	},
+	"module_install": {
+		"usage": "/glw module install <module> [version]",
+		"description": "Installs a module from the configured Maven repository; takes effect after a restart."
+	},
+	"module_update": {
+		"usage": "/glw module update [module]",
+		"description": "Downloads a newer version of every installed module, or only the one named."
+	},
+	"module_remove": {
+		"usage": "/glw module remove <module>",
+		"description": "Marks a module jar for deletion at the next server start."
+	},
 	"reload": {
 		"usage": "/glw reload",
 		"description": "Reloads the whole plugin."

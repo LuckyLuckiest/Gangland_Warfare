@@ -5,6 +5,13 @@ import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.command.CommandManager;
 import org.luckyraven.gangland.data.economy.BankTiers;
+import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.keystone.module.ModuleLoader;
+import org.luckyraven.keystone.module.artifact.ArtifactResolver;
+import org.luckyraven.keystone.module.artifact.MavenRepository;
+import org.luckyraven.keystone.module.update.ModuleMessages;
+import org.luckyraven.keystone.module.update.ModuleUpdateService;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.Qualifier;
@@ -25,7 +32,8 @@ import org.luckyraven.gangland.listener.ListenerManager;
  * CONFIG-phase wiring for the cross-cutting plugin glue: the {@link ListenerManager} and {@link CommandManager} (which
  * are themselves consumed in the LISTENER and COMMAND post-bootstrap steps driven by {@code GanglandContext}), the
  * PlaceholderAPI bridge {@link GanglandPlaceholder}, and the legacy "dummy waypoint listener" that has to be
- * pre-registered before {@code listenerManager.registerEvents()} is called.
+ * pre-registered before {@code listenerManager.registerEvents()} is called, and the {@link ModuleUpdateService}
+ * behind {@code /glw module}.
  */
 @CustomLog
 @Configuration
@@ -51,6 +59,29 @@ public class WiringConfig {
 	@Bean
 	public CommandManager commandManager(DependencyContainer container) {
 		return new CommandManager(gangland, container, Gangland.FULL_PREFIX, Gangland.SHORT_PREFIX);
+	}
+
+	/**
+	 * The network side of the runtime module system: a resolver over the repository named by
+	 * {@code Modules.Repository}, with every operator-facing line routed through {@link Messages}. CONFIG phase, so
+	 * {@link Settings} has already been read; the modules folder is the very one {@link ModuleLoader} loaded from.
+	 */
+	@Bean
+	public ModuleUpdateService moduleUpdateService(ModuleLoader moduleLoader) {
+		ModuleMessages messages = ModuleMessages.defaults()
+				.withUpdateAvailable((id, installed, available) -> Messages.MODULE_UPDATE_AVAILABLE.toString()
+						.replace("%module%", id)
+						.replace("%installed%", installed)
+						.replace("%available%", available))
+				.withUpToDate(id -> Messages.MODULE_UP_TO_DATE.toString().replace("%module%", id))
+				.withRestartRequired(id -> Messages.MODULE_RESTART_REQUIRED.toString().replace("%module%", id))
+				.withDownloadFailed((id, reason) -> Messages.MODULE_DOWNLOAD_FAILED.toString()
+						.replace("%module%", id)
+						.replace("%reason%", reason));
+
+		return new ModuleUpdateService(gangland, new ArtifactResolver(gangland),
+		                               MavenRepository.of("modules", Settings.getModulesRepository()),
+		                               moduleLoader.modulesDirectory(), messages);
 	}
 
 	@Bean

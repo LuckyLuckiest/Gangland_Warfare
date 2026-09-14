@@ -56,6 +56,18 @@ Update_Checker:
    Auto_Download: true
 
 # +-----------------+ #
+# | Runtime Modules | #
+# +-----------------+ #
+
+# Where '/glw module install' and '/glw module update' fetch runtime module jars from.
+Modules:
+   # Maven-layout base URL. A self-hosted mirror or a 'file:///' path works too.
+   # A module jar is fetched from
+   #    <Repository>/<group path>/<artifact>/<version>/<artifact>-<version>.jar
+   # and must publish a '.sha256' beside the jar — a jar without one is refused, never installed.
+   Repository: 'https://repo1.maven.org/maven2/'
+
+# +-----------------+ #
 # | Language Config | #
 # +-----------------+ #
 
