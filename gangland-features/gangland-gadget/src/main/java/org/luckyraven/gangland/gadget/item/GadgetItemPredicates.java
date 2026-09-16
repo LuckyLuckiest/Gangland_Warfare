@@ -2,6 +2,7 @@ package org.luckyraven.gangland.gadget.item;
 
 import org.bukkit.inventory.ItemStack;
 import org.luckyraven.gangland.gadget.car.CarKey;
+import org.luckyraven.gangland.gadget.jetpack.JetpackKey;
 import org.luckyraven.keystone.item.ItemBuilder;
 
 import java.util.function.Predicate;
@@ -14,6 +15,8 @@ import java.util.function.Predicate;
 public final class GadgetItemPredicates {
 
 	public static final Predicate<ItemStack> CAR = stack -> hasTag(stack, CarKey.CAR_ID.getKey());
+
+	public static final Predicate<ItemStack> JETPACK = stack -> hasTag(stack, JetpackKey.JETPACK_ID.getKey());
 
 	private GadgetItemPredicates() {
 	}

@@ -6,6 +6,7 @@ import org.luckyraven.keystone.util.Placeholder;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gadget.car.config.CarAddon;
 import org.luckyraven.gangland.gadget.contract.GadgetPhysicsConfigImpl;
+import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.Phase;
@@ -41,6 +42,16 @@ public class GadgetFileConfig {
 		fileManager.addFile(new FileHandler(plugin, "cars", "items", ".yml", moduleLoader.classLoader()), true);
 
 		CarAddon addon = new CarAddon(permissionManager::addPermission, fileManager, placeholderService);
+		fileManager.registerInitializer(addon);
+		return addon;
+	}
+
+	@Bean
+	public JetpackAddon jetpackAddon(PermissionManager permissionManager, FileManager fileManager,
+	                                 Placeholder placeholderService, ModuleLoader moduleLoader) {
+		fileManager.addFile(new FileHandler(plugin, "jetpacks", "items", ".yml", moduleLoader.classLoader()), true);
+
+		JetpackAddon addon = new JetpackAddon(permissionManager::addPermission, fileManager, placeholderService);
 		fileManager.registerInitializer(addon);
 		return addon;
 	}

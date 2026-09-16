@@ -1,0 +1,73 @@
+#   +------------------------------------------------------+   #
+#  /     __________      _______________       ____         \  #
+# |     / ________/      \_____   _____/      / __ \         | #
+# |    | /                     | |           / /  \ \        | #
+# |    | |  _______            | |          / /____\ \       | #
+# |    | |  \_____ \           | |         / ________ \      | #
+# |    | \_______/ ||          | |        / /        \ \     | #
+# |     \__________/           |_|       /_/          \_\    | #
+# |                                                          | #
+# |                    File: jetpacks.yml                    | #
+# |                  Author: [LuckyRaven10]                  | #
+#  \                                                        /  #
+#   +------------------------------------------------------+   #
+#
+# Each entry defines a wearable jetpack that can be equipped in the chestplate slot.
+# Items are identified in-game by a hidden NBT tag embedded when built via API.
+#
+# Fields:
+#   Material                - Bukkit material name for the inventory item
+#   Name                    - display name (supports & color codes)
+#   Custom_Model_Data       - integer for resource pack model
+#   Lore                    - list of lore lines
+#
+#   Fuel_Key                - mandatory: references a fuel unique item key (e.g. "gasoline");
+#                              an entry missing this field is skipped and logged
+#   Max_Fuel                - maximum fuel capacity (default 3600)
+#   Ascend_Power             - upward thrust strength per tick (default 0.2)
+#   Max_Speed_Y             - maximum vertical speed (default 0.45)
+#   Fuel_Consumption_Rate   - fuel consumed per tick while thrusting (default 1)
+#
+#   Sounds:                 - nested Thrust/Glide sound blocks, each Sound/Volume/Pitch
+#
+#   Bartizan_Traits:        - OPTIONAL. When present AND Bartizan is installed, these values are
+#                              registered with Bartizan (as an external, damage-only entry — Bartizan
+#                              never builds/gives/serialises this item) so its damage-reduction system
+#                              applies them while the jetpack is worn. When absent, or Bartizan isn't
+#                              installed, the jetpack is a plain fuel/thrust chestplate with vanilla
+#                              armor-material protection only.
+#     Base_Damage_Reduction - flat damage reduction fraction
+#     Traits:                - trait name -> level, read the same way Bartizan's own wearables.yml does
+#
+# Permission nodes are derived automatically as "gangland.jetpacks.<key>"
+# (e.g. jetpack → gangland.jetpacks.jetpack).
+
+jetpack:
+   Material: IRON_CHESTPLATE
+   Name: "&b&lJetpack"
+   Custom_Model_Data: 0
+   Lore:
+      - "&7Strap it on and take flight"
+      - "&7Hold &bSPACE &7to fly upward"
+      - "&7Fuel: &fGasoline"
+   Fuel_Key: "gasoline"
+   Max_Fuel: 3600
+   Ascend_Power: 0.2
+   Max_Speed_Y: 0.45
+   Fuel_Consumption_Rate: 1
+   Sounds:
+      Thrust:
+         Default_Sound:
+            Sound: ENTITY_BLAZE_SHOOT
+            Volume: 0.6
+            Pitch: 1.8
+      Glide:
+         Default_Sound:
+            Sound: ITEM_ELYTRA_FLYING
+            Volume: 0.4
+            Pitch: 1.0
+   Bartizan_Traits:
+      Base_Damage_Reduction: 0.05
+      Traits:
+         REINFORCED: 1
+         LIGHTWEIGHT: 2

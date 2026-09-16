@@ -1,9 +1,7 @@
 package org.luckyraven.gangland.gadget.jetpack;
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.Nullable;
@@ -15,11 +13,6 @@ import org.luckyraven.keystone.util.PlayerUtil;
 import org.luckyraven.gangland.gadget.config.GadgetPhysicsConfig;
 import org.luckyraven.gangland.item.fuel.FuelService;
 import org.luckyraven.gangland.item.fuel.FuelBar;
-import org.luckyraven.bartizan.api.BartizanApi;
-import org.luckyraven.bartizan.api.wearable.Wearable;
-import org.luckyraven.bartizan.api.weapon.Weapon;
-import org.luckyraven.bartizan.api.weapon.WeaponCatalog;
-import org.luckyraven.bartizan.api.weapon.dto.ScopeData;
 
 import java.util.Map;
 
@@ -63,18 +56,12 @@ public class JetpackTask extends BukkitRunnable {
 
 	@Override
 	public void run() {
-		Player   player  = session.getPlayer();
-		Wearable jetpack = session.getJetpackWearable();
+		Player  player  = session.getPlayer();
+		Jetpack jetpack = session.getJetpack();
 
 		if (checkGuards(player, jetpack)) return;
 
 		boolean spaceHeld = session.isInputJump();
-		// While a held weapon is scoped, ScopeJumpListener blocks upward Y movement on PlayerMoveEvent — the jump
-		// can't happen, so the thrust path must not consume fuel either. Glide (sneak+space) is intentionally left
-		// alone since the bug is about the jump key, not the glide gesture.
-		if (spaceHeld && isScoped(player)) {
-			spaceHeld = false;
-		}
 		boolean sneakHeld = session.isInputSneak();
 		boolean hasFuel   = fuelService.hasFuelOnWearable(player);
 		boolean onGround  = PlayerUtil.isOnGround(player);
@@ -88,7 +75,7 @@ public class JetpackTask extends BukkitRunnable {
 		playFlightSounds(player, jetpack);
 	}
 
-	private boolean checkGuards(Player player, Wearable jetpack) {
+	private boolean checkGuards(Player player, Jetpack jetpack) {
 		if (!player.isOnline()) {
 			jetpackService.deactivate(player);
 			cancel();
@@ -113,7 +100,7 @@ public class JetpackTask extends BukkitRunnable {
 		}
 	}
 
-	private double applyVerticalPhysics(Player player, Wearable jetpack, double currentY, boolean hasFuel,
+	private double applyVerticalPhysics(Player player, Jetpack jetpack, double currentY, boolean hasFuel,
 	                                    boolean spaceHeld, boolean onGround) {
 		if (session.isGlideModeActive()) {
 			thrustTicks = 0;
@@ -133,8 +120,7 @@ public class JetpackTask extends BukkitRunnable {
 			ParticleUtil.spawnJetpackFlame(player);
 			session.setThrusting(true);
 			session.setGliding(false);
-			return Math.min(currentY + extraDouble(jetpack, "jetpack_ascend_power", 0) * (0.1 + 0.9 * ramp),
-			                extraDouble(jetpack, "jetpack_max_speed_y", currentY));
+			return Math.min(currentY + jetpack.getAscendPower() * (0.1 + 0.9 * ramp), jetpack.getMaxSpeedY());
 		}
 		if (!onGround) {
 			thrustTicks = 0;
@@ -212,21 +198,11 @@ public class JetpackTask extends BukkitRunnable {
 		ActionBarManager.sendBackground(player, actionBar, 10);
 	}
 
-	private int getEffectiveConsumptionRate(Wearable jetpack) {
-		int baseRate = extraInt(jetpack, "jetpack_fuel_consumption_rate", 0);
-
-		int fuelEfficientLevel = jetpack.traitLevel("fuel_efficient");
-		if (fuelEfficientLevel <= 0) return baseRate;
-
-		// fuel_efficient: max level 2, 10% reduction per level — ported verbatim from Bartizan's own
-		// Wearable.TRAIT_TABLE ("fuel_efficient", {2, 0.10}); Bartizan owns the trait table now, Gangland only reads
-		// the level back through traitLevel(String).
-		int    capped    = Math.min(fuelEfficientLevel, 2);
-		double reduction = capped * 0.10;
-		return Math.max(1, (int) (baseRate * (1.0 - reduction)));
+	private int getEffectiveConsumptionRate(Jetpack jetpack) {
+		return jetpack.getFuelConsumptionRate();
 	}
 
-	private void playFlightSounds(Player player, Wearable jetpack) {
+	private void playFlightSounds(Player player, Jetpack jetpack) {
 		soundTick++;
 		if (soundTick < SOUND_INTERVAL_TICKS) return;
 		soundTick = 0;
@@ -240,50 +216,22 @@ public class JetpackTask extends BukkitRunnable {
 		}
 	}
 
-	private boolean isWearingJetpack(Player player, Wearable jetpack) {
-		ItemStack chestplate = player.getInventory().getChestplate();
-		if (chestplate == null || chestplate.getType().isAir()) return false;
-		String key = Wearable.getWearableKey(chestplate);
-		return key != null && key.equals(jetpack.getWearableKey());
+	private boolean isWearingJetpack(Player player, Jetpack jetpack) {
+		String id = Jetpack.getJetpackId(player.getInventory().getChestplate());
+		return id != null && id.equals(jetpack.getJetpackId());
 	}
 
-	private boolean isScoped(Player player) {
-		ItemStack held = player.getInventory().getItemInMainHand();
-		if (held.getType().isAir()) return false;
-
-		RegisteredServiceProvider<BartizanApi> rsp = Bukkit.getServicesManager().getRegistration(BartizanApi.class);
-		if (rsp == null) return false;
-		WeaponCatalog weapons = rsp.getProvider().weapons();
-
-		Weapon weapon = weapons.validateAndGetWeapon(player, held);
-		if (weapon == null) return false;
-		ScopeData scope = weapon.getScopeData();
-		return scope != null && scope.isScoped();
-	}
-
-	// ── Wearable.extraTags() readers ─────────────────────────────────────────
-	// Jetpack-specific data has no dedicated Wearable fields any more (P2 Q2) — every value below is read from the
-	// generic Extra_Tags: map wearables.yml stamps onto the wearable (top-level scalars: NBT-stamped and readable
-	// here identically; the nested Sounds map: readable here only, never stamped as NBT).
-
-	private static double extraDouble(Wearable wearable, String key, double fallback) {
-		Object value = wearable.extraTags().get(key);
-		return value instanceof Number number ? number.doubleValue() : fallback;
-	}
-
-	private static int extraInt(Wearable wearable, String key, int fallback) {
-		Object value = wearable.extraTags().get(key);
-		return value instanceof Number number ? number.intValue() : fallback;
-	}
+	// ── Jetpack config readers ───────────────────────────────────────────────
 
 	/**
 	 * Reads {@code Sounds.<group>.<leaf>} (e.g. {@code Sounds.Thrust.Default_Sound}) — itself a nested
-	 * {@code {Sound, Volume, Pitch}} map, the same shape the deleted {@code WearableAddon.parseSoundConfig} used to
-	 * parse into a {@link SoundEffect} at load time. Returns {@code null} when any level of the path is absent.
+	 * {@code {Sound, Volume, Pitch}} map, parsed by {@code JetpackAddon.loadJetpacks} straight off {@code
+	 * items/jetpacks.yml}'s {@code Sounds:} block. Returns {@code null} when any level of the path is absent.
 	 */
 	@Nullable
-	private static SoundEffect soundTag(Wearable wearable, SoundEffect.SoundType type, String group, String leaf) {
-		if (!(wearable.extraTags().get("Sounds") instanceof Map<?, ?> sounds)) return null;
+	private static SoundEffect soundTag(Jetpack jetpack, SoundEffect.SoundType type, String group, String leaf) {
+		Map<String, Object> sounds = jetpack.getSounds();
+		if (sounds == null) return null;
 		if (!(sounds.get(group) instanceof Map<?, ?> groupMap)) return null;
 		if (!(groupMap.get(leaf) instanceof Map<?, ?> leafMap)) return null;
 

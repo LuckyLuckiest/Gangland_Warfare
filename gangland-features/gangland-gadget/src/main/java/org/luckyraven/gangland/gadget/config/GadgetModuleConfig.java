@@ -1,13 +1,8 @@
 package org.luckyraven.gangland.gadget.config;
 
 import lombok.CustomLog;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.RegisteredServiceProvider;
-import org.luckyraven.bartizan.api.BartizanApi;
-import org.luckyraven.bartizan.api.wearable.Wearable;
-import org.luckyraven.bartizan.api.wearable.WearableCatalog;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.gadget.car.CarService;
 import org.luckyraven.gangland.gadget.car.ParkedCar;
@@ -21,7 +16,11 @@ import org.luckyraven.gangland.gadget.item.CarConverter;
 import org.luckyraven.gangland.gadget.item.CarItemRefresher;
 import org.luckyraven.gangland.gadget.item.CarItemSerializer;
 import org.luckyraven.gangland.gadget.item.GadgetItemPredicates;
+import org.luckyraven.gangland.gadget.item.JetpackConverter;
+import org.luckyraven.gangland.gadget.item.JetpackItemRefresher;
+import org.luckyraven.gangland.gadget.item.JetpackItemSerializer;
 import org.luckyraven.gangland.gadget.jetpack.JetpackService;
+import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
 import org.luckyraven.gangland.gadget.sign.CarSignContribution;
 import org.luckyraven.gangland.gadget.sign.CarSignViewProvider;
 import org.luckyraven.gangland.gang.member.MemberManager;
@@ -63,12 +62,7 @@ public class GadgetModuleConfig {
 	}
 
 	private boolean isJetpackFuelSink(ItemStack stack) {
-		RegisteredServiceProvider<BartizanApi> rsp = Bukkit.getServicesManager().getRegistration(BartizanApi.class);
-		if (rsp == null) return false;
-
-		WearableCatalog wearables = rsp.getProvider().wearables();
-		Wearable        wearable  = wearables.resolveWearable(stack);
-		return wearable != null && JetpackService.isJetpack(wearable);
+		return GadgetItemPredicates.JETPACK.test(stack);
 	}
 
 	@Bean
@@ -102,18 +96,18 @@ public class GadgetModuleConfig {
 	/**
 	 * T-KR2 (review B2, moved by B-1): installs the jetpack-refuel sink predicate onto the shared {@link FuelService}
 	 * so {@code FuelRefuelListener}'s container-to-sink click transfers fuel from a container (e.g. gasoline) into a
-	 * worn jetpack again. {@link BartizanApi} is resolved fresh from the {@code ServicesManager} on every call
-	 * (never cached in a field) — Bartizan may enable after this module, or not be installed at all
-	 * ({@code module.yml}'s {@code Plugins: [Bartizan]}), in which case the predicate simply reports "not a sink".
+	 * worn jetpack again. Since WS7 (G3), this is a pure {@link GadgetItemPredicates#JETPACK} NBT-tag check — no
+	 * Bartizan/{@code ServicesManager} lookup involved any more.
 	 * Done here rather than in a {@code @PostConstruct} on the {@code @Configuration} constructor: every
 	 * {@code @Configuration} is instantiated before any bean phase runs, when only
 	 * {@code GanglandContext}/{@code DependencyContainer}/{@code JavaPlugin}/{@code ModuleLoader} are in the container —
 	 * a {@code FuelService} constructor parameter there throws {@code IllegalStateException} on bootstrap.
 	 */
 	@Bean
-	public JetpackService jetpackService(FuelService fuelService, GadgetPhysicsConfig gadgetPhysicsConfig) {
+	public JetpackService jetpackService(FuelService fuelService, GadgetPhysicsConfig gadgetPhysicsConfig,
+	                                     JetpackAddon jetpackAddon) {
 		fuelService.setFuelSinkPredicate(this::isJetpackFuelSink);
-		return new JetpackService(fuelService, plugin, gadgetPhysicsConfig);
+		return new JetpackService(fuelService, plugin, gadgetPhysicsConfig, jetpackAddon);
 	}
 
 	@Bean
@@ -134,6 +128,32 @@ public class GadgetModuleConfig {
 	public CarItemRefresher carItemRefresher(CarAddon carAddon, ItemRefresherRegistry itemRefresherRegistry) {
 		CarItemRefresher refresher = new CarItemRefresher(carAddon);
 		itemRefresherRegistry.register(refresher);
+		return refresher;
+	}
+
+	@Bean
+	public JetpackConverter jetpackConverter(JetpackAddon jetpackAddon, ItemConverterRegistry itemConverterRegistry) {
+		JetpackConverter converter = new JetpackConverter(jetpackAddon);
+		itemConverterRegistry.register(ItemKind.JETPACK, converter);
+		return converter;
+	}
+
+	@Bean
+	public JetpackItemSerializer jetpackItemSerializer(ItemSerializerRegistry itemSerializerRegistry) {
+		JetpackItemSerializer serializer = new JetpackItemSerializer();
+		// Priority 20: above Bartizan's wearable serializer (priority 0) so a Bartizan-tagged jetpack (WS7-D4's
+		// conditional "wearable" NBT tag) is always claimed by gadget's own serializer first, never Bartizan's —
+		// closes the WS7-D4 review's Important-3 finding on the gadget side.
+		itemSerializerRegistry.register(GadgetItemPredicates.JETPACK, serializer, 20);
+		return serializer;
+	}
+
+	@Bean
+	public JetpackItemRefresher jetpackItemRefresher(JetpackAddon jetpackAddon,
+	                                                 ItemRefresherRegistry itemRefresherRegistry) {
+		JetpackItemRefresher refresher = new JetpackItemRefresher(jetpackAddon);
+		// Priority 20: above Bartizan's wearable refresher (priority 10) — same reason as the serializer above.
+		itemRefresherRegistry.register(refresher, 20);
 		return refresher;
 	}
 

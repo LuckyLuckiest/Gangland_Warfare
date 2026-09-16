@@ -3,7 +3,6 @@ package org.luckyraven.gangland.gadget.jetpack;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.entity.Player;
-import org.luckyraven.bartizan.api.wearable.Wearable;
 
 /**
  * Tracks the active state of a player using a jetpack. Created when the jetpack is activated (double-tap space) and
@@ -12,9 +11,9 @@ import org.luckyraven.bartizan.api.wearable.Wearable;
 @Getter
 public class JetpackSession {
 
-	private final Player   player;
+	private final Player  player;
 	@Setter
-	private       Wearable jetpackWearable;
+	private       Jetpack jetpack;
 
 	@Setter
 	private          JetpackTask task;
@@ -38,9 +37,9 @@ public class JetpackSession {
 	@Setter
 	private boolean glideModeActive;
 
-	public JetpackSession(Player player, Wearable jetpackWearable) {
-		this.player          = player;
-		this.jetpackWearable = jetpackWearable;
+	public JetpackSession(Player player, Jetpack jetpack) {
+		this.player  = player;
+		this.jetpack = jetpack;
 	}
 
 }
