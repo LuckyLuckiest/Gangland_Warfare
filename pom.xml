@@ -54,7 +54,7 @@
     </modules>
 
     <properties>
-        <revision>0.9.1</revision>
+        <revision>0.9.2</revision>
         <!-- Matches Keystone's release (17): the shaded jar must load on every JVM Keystone
              loads on, or the MC 1.16+ support floor is silently broken. release (not
              source/target) also validates against the Java 17 API, so building on a newer
@@ -68,7 +68,7 @@
         <!-- Dependencies/Libraries versions -->
         <!-- Shared infrastructure (Keystone.jar provides it at runtime — provided scope, never shaded) -->
         <keystone.version>1.9.2</keystone.version>
-        <bartizan.version>0.1.0</bartizan.version>
+        <bartizan.version>0.4.0</bartizan.version>
         <nbt.version>2.15.7</nbt.version>
         <xseries.version>13.6.0</xseries.version>
         <anvilgui.version>1.10.11-SNAPSHOT</anvilgui.version>

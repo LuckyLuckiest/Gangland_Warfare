@@ -14,6 +14,7 @@ package org.luckyraven.gangland.item;
 public enum ItemKind implements org.luckyraven.keystone.item.ItemKind {
 	UNIQUE("unique"),
 	CAR("car"),
+	JETPACK("jetpack"),
 	MONEY("money"),
 	MATERIAL("material");
 

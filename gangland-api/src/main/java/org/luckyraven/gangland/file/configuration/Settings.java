@@ -12,6 +12,7 @@ import org.luckyraven.keystone.persistence.config.ConfigReport;
 import org.luckyraven.keystone.persistence.config.FileHandlerReader;
 import org.luckyraven.keystone.persistence.config.MappingNode;
 import org.luckyraven.keystone.persistence.config.NodeReader;
+import org.bukkit.Bukkit;
 import org.luckyraven.keystone.npc.NpcSupport;
 
 import java.io.IOException;
@@ -293,6 +294,17 @@ public class Settings implements FileInitializer {
 	 */
 	public static boolean isCitizensAvailable() {
 		return NpcSupport.available();
+	}
+
+	/**
+	 * Whether Bartizan is installed and enabled right now. Same shape and same reason as
+	 * {@link #isCitizensAvailable()}: a class whose method signature names a Bartizan type must gate its own
+	 * construction/registration with {@code condition = "isBartizanAvailable"} rather than rely on a null-check
+	 * inside the body, since Bukkit's reflective scan resolves every signature's parameter/return types eagerly
+	 * (WS7 — gadget's `module.yml` drops `Plugins: [Bartizan]`, so Bartizan is no longer fail-fast guaranteed).
+	 */
+	public static boolean isBartizanAvailable() {
+		return Bukkit.getPluginManager().isPluginEnabled("Bartizan");
 	}
 
 	public static Method getSetting(String methodName) {

@@ -10,7 +10,7 @@ public final class GanglandApi {
 	 * API a module may rely on, the major only on a breaking change; it is independent of the plugin version, so a
 	 * patch or feature release of Gangland does not invalidate every module jar on the server.
 	 */
-	public static final String VERSION = "1.0";
+	public static final String VERSION = "1.1";
 
 	/**
 	 * The permission namespace and long command alias ({@code /gangland}).

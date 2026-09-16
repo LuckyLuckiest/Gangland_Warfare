@@ -3,7 +3,7 @@ Id: gadget
 Name: Gangland Gadgets
 Version: ${project.version}
 Main: org.luckyraven.gangland.gadget.GadgetModule
-Host_Api: 1.0
+Host_Api: 1.1
 Plugins:
   - Bartizan
 Artifact: org.luckyraven:gangland-gadget
