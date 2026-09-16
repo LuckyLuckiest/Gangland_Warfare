@@ -7,6 +7,7 @@ import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gadget.car.config.CarAddon;
 import org.luckyraven.gangland.gadget.contract.GadgetPhysicsConfigImpl;
 import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
+import org.luckyraven.gangland.gadget.jetpack.message.JetpackMessages;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.Phase;
@@ -54,5 +55,21 @@ public class GadgetFileConfig {
 		JetpackAddon addon = new JetpackAddon(permissionManager::addPermission, fileManager, placeholderService);
 		fileManager.registerInitializer(addon);
 		return addon;
+	}
+
+	/**
+	 * WS7-G4 review I1: a module's own messages file is never the bare {@code messages} name — {@link FileManager}
+	 * resolves purely by name (no per-module namespacing of its own), so a second module registering its own
+	 * {@code messages.yml} would silently collide with gadget's. The precedent for every module: FileManager name
+	 * {@code <module>_messages}, resource {@code <module>/<module>_messages.yml}.
+	 */
+	@Bean
+	public JetpackMessages jetpackMessages(FileManager fileManager, ModuleLoader moduleLoader) {
+		fileManager.addFile(new FileHandler(plugin, "gadget_messages", "gadget", ".yml", moduleLoader.classLoader()),
+		                    true);
+
+		JetpackMessages messages = new JetpackMessages(fileManager);
+		fileManager.registerInitializer(messages);
+		return messages;
 	}
 }

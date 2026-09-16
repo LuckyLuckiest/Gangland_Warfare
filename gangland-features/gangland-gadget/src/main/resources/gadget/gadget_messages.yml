@@ -1,0 +1,5 @@
+# Jetpack-specific user-facing strings (module-API contract: a module's own new strings live in its own YAML, not
+# gangland-api's Messages/Settings). Colour codes use & — resolved through GanglandChatUtil.color at read time.
+Jetpack_No_Permission: "&cYou do not have permission to use this jetpack."
+Jetpack_Gave: "&aGave %amount% jetpack(s) '%name%'."
+Jetpack_Invalid: "&cInvalid jetpack '%name%'."

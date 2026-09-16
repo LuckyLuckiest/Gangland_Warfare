@@ -81,6 +81,11 @@ class CarGiveCommand extends SubArgument {
 				return;
 			}
 
+			if (carAmount <= 0) {
+				user.sendMessage(Messages.MUST_BE_NUMBERS.toString());
+				return;
+			}
+
 			boolean gave = giveCarItem(player, carName, carAmount);
 
 			if (gave) {
@@ -103,8 +108,12 @@ class CarGiveCommand extends SubArgument {
 
 		ItemStack       sampleItem   = car.buildItem(player);
 		int             maxStackSize = sampleItem.getMaxStackSize();
-		int             slots        = (int) Math.ceil(amount / (double) maxStackSize);
-		int             amountLeft   = amount;
+		// Defensive floor/cap (review I2): the command layer already rejects amount <= 0 before calling this
+		// method, but clamping here too means a non-positive amount can never produce a negative array size
+		// (NegativeArraySizeException) regardless of caller.
+		int             cappedAmount = Math.max(0, Math.min(amount, 36 * maxStackSize));
+		int             slots        = (int) Math.ceil(cappedAmount / (double) maxStackSize);
+		int             amountLeft   = cappedAmount;
 		PlayerInventory inventory    = player.getInventory();
 		ItemStack[]     items        = new ItemStack[slots];
 

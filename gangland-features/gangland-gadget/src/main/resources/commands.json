@@ -18,5 +18,17 @@
 	"car_list": {
 		"usage": "/glw car list",
 		"description": "Shows all registered cars."
+	},
+	"jetpack": {
+		"usage": "/glw jetpack",
+		"description": "Shows jetpack help page."
+	},
+	"jetpack_help": {
+		"usage": "/glw jetpack help <page>",
+		"description": "Shows the specified page in jetpack menu."
+	},
+	"jetpack_give": {
+		"usage": "/glw jetpack give <id> <amount>",
+		"description": "Gives the specified jetpack item."
 	}
 }
