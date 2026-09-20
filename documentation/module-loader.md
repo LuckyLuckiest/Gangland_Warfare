@@ -12,20 +12,29 @@ shared Citizens-wrapping NPC base). Six runtime modules ship today, not five —
 
 ```
 plugins/
-├── Keystone-1.9.0.jar                  + keystone-item, keystone-npc (Citizens soft)
-├── Bartizan-0.1.0.jar                  standalone weapons plugin (soft dep of the core; hard "Plugins:" dep of three modules)
-├── Gangland_Warfare-0.9.0.jar          core: impl, core, domain, item (fuel/unique-item leftovers), ui/* — no NMS
+├── Keystone-1.9.2.jar                 + keystone-item, keystone-npc (Citizens soft)
+├── Bartizan-0.4.0.jar                  standalone weapons plugin (soft dep of the core; hard "Plugins:" dep of one module)
+├── Gangland_Warfare-0.9.2.jar          core: impl, core, domain, item (fuel/unique-item leftovers), ui/* — no NMS
 └── Gangland_Warfare/
     ├── modules/
-    │   ├── gangland-mail-0.9.0.jar        mail (gang invites, alliance requests) — no Depends, no Plugins
-    │   ├── gangland-turf-0.9.0.jar        turf capture + turf-NPC powerups, Depends: [civilians]
-    │   ├── gangland-civilians-0.9.0.jar   civilian NPCs, Plugins: [Bartizan]
-    │   ├── gangland-npc-shops-0.9.0.jar   trader/banker NPC shops — no Depends, no Plugins
-    │   ├── cops-n-crooks-0.9.0.jar        cops only, Depends: [turf, civilians]; Plugins: [Bartizan]
-    │   ├── gangland-gadget-0.9.0.jar      cars and jetpacks, Plugins: [Bartizan]
+    │   ├── gangland-mail-0.9.2.jar        mail (gang invites, alliance requests) — no Depends, no Plugins
+    │   ├── gangland-turf-0.9.2.jar        turf capture + turf-NPC powerups, Depends: [civilians] (loads without Bartizan since 0.9.2)
+    │   ├── gangland-civilians-0.9.2.jar   civilian NPCs — Bartizan SOFT since 0.9.2 (WS7 G5b): no Plugins: entry, unarmed hostiles without it
+    │   ├── gangland-npc-shops-0.9.2.jar   trader/banker NPC shops — no Depends, no Plugins
+    │   ├── cops-n-crooks-0.9.2.jar        cops only, Depends: [turf, civilians]; Plugins: [Bartizan] (the only module still hard)
+    │   ├── gangland-gadget-0.9.2.jar      cars and jetpacks — Bartizan SOFT since 0.9.2 (WS7 G5): no Plugins: entry
     │   └── .stale/                        replaced jars, deleted on the next start
     └── settings.yml …
 ```
+
+**0.9.2 (WS7 gadget wave, gates G5/G5b) soft-coupled two of the three previously-hard `Plugins: [Bartizan]` edges** —
+`gangland-civilians` and `gangland-gadget` dropped the descriptor entry entirely and now load fine without Bartizan
+(degrading to unarmed civilians / vanilla car-punch damage respectively; the jetpack itself is unaffected, since it
+left Bartizan's catalog and became a gadget-owned item in the same wave, gates G2/G3 — see `CLAUDE.md`'s Keystone
+section). `cops-n-crooks` is the one holdout, still `Plugins: [Bartizan]`, still hard, since cop NPCs put a
+Bartizan-built weapon in their hand and that coupling was explicitly out of this wave's scope. `gangland-turf`
+needed zero code changes of its own — its `Depends: [civilians]` was only ever a *transitive* block, and that block
+lifted automatically the moment civilians went soft. Full story: `documentation/migration-0.9.2.md`.
 
 `mvn clean package` emits both: `target/gangland_warfare-<rev>.jar` and `target/modules/<module>-<rev>.jar`
 (`gangland-build` copies each module artifact through `maven-dependency-plugin`).
@@ -35,17 +44,18 @@ plugins/
 | Module | Jar | Status |
 |---|---|---|
 | mail — `MailManager`, gang invites, alliance requests, join/quit surfacing | `gangland-mail` | runtime module since 0.8.2 (the pilot) |
-| turf — `TurfManager`, capture, powerups/garrison, the `/glw turf` tree, and (since 0.9.0) the turf-NPC (Quartermaster/garrison defender) infrastructure moved out of cops-n-crooks | `gangland-turf` | runtime module since 0.8.4; `Depends: [civilians]` since 0.9.0 |
-| civilians — civilian NPCs, `NpcMarkManager`/`CombatEligibility`/target-filter seams cops and turf inject | `gangland-civilians` | **new runtime module, 0.9.0** (split out of cops-n-crooks); `Plugins: [Bartizan]` |
+| turf — `TurfManager`, capture, powerups/garrison, the `/glw turf` tree, and (since 0.9.0) the turf-NPC (Quartermaster/garrison defender) infrastructure moved out of cops-n-crooks | `gangland-turf` | runtime module since 0.8.4; `Depends: [civilians]` since 0.9.0 — loads without Bartizan since 0.9.2 (transitively, via civilians) |
+| civilians — civilian NPCs, `NpcMarkManager`/`CombatEligibility`/target-filter seams cops and turf inject | `gangland-civilians` | **new runtime module, 0.9.0** (split out of cops-n-crooks); Bartizan **soft** since 0.9.2 (WS7 G5b — no `Plugins:` entry; unarmed hostiles without it), `Host_Api: 1.1` |
 | npc-shops — trader/banker NPC shops (moved out of cops-n-crooks) | `gangland-npc-shops` | **new runtime module, 0.9.0** — no `Depends:`/`Plugins:` |
-| cops-n-crooks — cops, jails, detainment (civilians and turf-NPC powerups moved out in 0.9.0) | `cops-n-crooks` | runtime module since 0.8.4; `Depends: [turf, civilians]`, `Plugins: [Bartizan]` since 0.9.0 |
-| gadget — cars (`/glw car`), jetpacks | `gangland-gadget` | runtime module since 0.8.4; `Plugins: [Bartizan]` since 0.9.0 |
+| cops-n-crooks — cops, jails, detainment (civilians and turf-NPC powerups moved out in 0.9.0) | `cops-n-crooks` | runtime module since 0.8.4; `Depends: [turf, civilians]`, `Plugins: [Bartizan]` since 0.9.0 — the only module still hard-coupled after 0.9.2 |
+| gadget — cars (`/glw car`), jetpacks (`/glw jetpack`, gadget-owned item since 0.9.2, `items/jetpacks.yml`) | `gangland-gadget` | runtime module since 0.8.4; Bartizan **soft** since 0.9.2 (WS7 G5 — no `Plugins:` entry; vanilla car-punch damage without it), `Host_Api: 1.1` |
 
 Weapons, ammunition, wearables and the projectile system left the repo entirely in 0.9.0 for the standalone
 Bartizan plugin — there is no `gangland-weapon` module any more. All six modules above are runtime modules; the
 core's feature compile closure is empty and the core names no Bartizan type either. Two independent descriptor keys
 gate loading: `Depends:` (another **module**; `module.dependency.missing` when absent) and `Plugins:` (an external
-**plugin**; `module.plugin.missing` when absent) — see "Writing a module" below.
+**plugin**; `module.plugin.missing` when absent) — see "Writing a module" below. Since 0.9.2, only `cops-n-crooks`
+declares `Plugins: [Bartizan]`; the other five load on a Bartizan-less server (`documentation/migration-0.9.2.md`).
 
 ## How the core loads modules
 
@@ -100,8 +110,12 @@ that one line replaces them all; add the Keystone modules it uses (also provided
   NPE the first time it touches the plugin's API. `Artifact` is optional and only feeds the update service. Live
   examples: `gangland-turf` declares `Depends:` with `- civilians` (its turf-NPC spawns need civilians'
   `NpcMarkManager`/target-filter beans); `cops-n-crooks` declares `Depends:` with `- turf` and `- civilians`
-  **and** `Plugins:` with `- Bartizan` (cop NPCs hold a Bartizan-built weapon); `gangland-civilians` and
-  `gangland-gadget` each declare `Plugins:` with `- Bartizan` alone.
+  **and** `Plugins:` with `- Bartizan` (cop NPCs hold a Bartizan-built weapon) — the only module that still does.
+  As of 0.9.2 (WS7 G5/G5b), `gangland-civilians` and `gangland-gadget` carry **no `Plugins:` entry at all**: both
+  used to declare `Plugins:` with `- Bartizan` alone, and both were rewritten to resolve `Bartizan` softly instead
+  (`Settings.isBartizanAvailable()`, api line `1.1`, guarding every Bartizan-typed call site rather than fail-fasting
+  the whole module) — see `documentation/TESTING.md`'s `BartizanBlindScan`/`BartizanReferenceScan` section for the
+  two tests that keep this true, and `documentation/migration-0.9.2.md` for the server-owner-facing change.
 - A `Main` class implementing Keystone's `KeystoneModule`, declaring its configuration classes and listener,
   command and repository packages — see `MailModule`.
 - Its `@Configuration` class(es), its `@Repository` classes and `Table`s, its `@ListenerHandler` classes (under

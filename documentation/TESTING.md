@@ -103,6 +103,71 @@ It is idempotent (`Bukkit.setServer` refuses to redefine the singleton, so the f
 > **Upstream candidate:** this belongs in `keystone-testkit` beside `BukkitStatics`. It lives in `gangland-core` only
 > to avoid a Keystone version bump mid-initiative.
 
+## 4b. `BartizanBlindScan` / `BartizanReferenceScan` — proving a module is safe without Bartizan
+
+Both live in `gangland-core`'s test-jar (`org.luckyraven.gangland.core.testsupport`), reachable the same way as
+`BukkitRegistryFixture`/`CitizensBlindScan` (§4a — the identical `test-jar` pom dependency covers all four; no new
+dependency needed per module). Written for the WS7 gadget wave (0.9.2, gates G5/G5b) when `gangland-gadget` and
+`gangland-civilians` both dropped their hard `Plugins: [Bartizan]` module descriptor — any module whose `module.yml`
+does **not** declare `Plugins: [Bartizan]` must survive Bartizan's absence, and these two tools are how you prove it
+before a real Bartizan-less server does the proving for you.
+
+**Why two tools, not one.** They check different, complementary things:
+
+| Tool | Checks | Misses |
+|---|---|---|
+| `BartizanBlindScan` | Every `@Configuration`/`@ListenerHandler`/`@CommandHandler`/`@Repository` class's own declared method/constructor **signature** (`getDeclaredMethods()`/`getMethods()`/`getDeclaredConstructors()`), through a `URLClassLoader` that refuses to resolve `org.luckyraven.bartizan.*` by class name — exactly what Keystone's real bean/listener/repository scan does when Bartizan's jar is off the classpath, so a signature-level `NoClassDefFoundError` shows up here first, in a unit test, not on a live server. | A Bartizan type referenced only in a method **body** (a local variable, a `.class` literal, a field read) — the scan never calls `getDeclaredMethods()`'s equivalent for bytecode instructions, only for signatures. |
+| `BartizanReferenceScan` | A raw JVM class-file constant-pool parser: walks every UTF8 constant-pool entry of every compiled `.class` under `target/classes` and flags any class whose pool contains `org/luckyraven/bartizan/` **anywhere** — body references included. | Nothing about *how* a reference is used, or whether it's actually guarded — it is a coarse presence check, compared against an explicit, hand-maintained allowlist, not a correctness proof on its own. |
+
+**The lesson that motivated the second tool**: `BartizanNpcWeapons.create`/`buildItem` had Bartizan-free method
+*signatures* (`BartizanBlindScan` passed clean) but referenced `BartizanApi.class` in their *bodies*, before any
+`Settings.isBartizanAvailable()` guard — `Bukkit.getServicesManager().getRegistration(BartizanApi.class)` would fail
+to resolve that class literal on a real Bartizan-less server, and the pre-existing `rsp == null` null-check never
+got a chance to run (WS7 G5b fix round 1, review finding C2). **A Bartizan reference inside a method body needs the
+allowlist, even when the method's own signature is already clean.**
+
+**Using `BartizanBlindScan`**:
+```java
+@Test
+void noScannedClassCrashesWithoutBartizan() {
+    List<String> unsafe = BartizanBlindScan.findUnsafeClasses("org.luckyraven.gangland.<module>");
+    assertTrue(unsafe.isEmpty(), "Classes unsafe without Bartizan: " + unsafe);
+}
+```
+If a Bartizan-typed bean genuinely cannot be made signature-safe (e.g. it must return Bartizan's own interface to
+publish under it, the one Gangland→Bartizan direction reversal `CombatEligibilityConfig` uses), isolate it into its
+own small `@Configuration` class and assert the unsafe set equals exactly that one class, not empty — Keystone's
+`ReflectionGuard.orSkip` skips only that one class per-`@Configuration`, so isolating the unsafe bean keeps every
+sibling bean on a bigger config class safe. See `CiviliansBartizanBlindScanTest` for the worked example.
+
+**Using `BartizanReferenceScan`** — build the allowlist test once per module, list every class your own audit found
+that legitimately references Bartizan anywhere (signature or body):
+```java
+@Test
+void onlyAuditedClassesReferenceBartizanAnywhere() throws IOException {
+    Set<String> found = BartizanReferenceScan.findBartizanReferencingClasses(Path.of("target/classes"));
+    Set<String> allowed = Set.of(
+        "org.luckyraven.gangland.<module>....SomeClassThatMustTouchBartizan"
+        // ... every other audited class
+    );
+    assertEquals(allowed, found);
+}
+```
+`Path.of("target/classes")` resolves correctly relative to Surefire's own per-module working directory — no
+`user.dir` workaround needed. **Adding a class to the allowlist**: only after confirming (a) the reference is
+guarded by `Settings.isBartizanAvailable()` before the Bartizan-typed line is ever reached (or the class is
+condition-gated so it's never constructed at all without Bartizan) and (b) it is not merely an unaudited leak —
+then add its fully-qualified name to the `Set.of(...)` in your module's allowlist test, with a one-line comment
+saying why it's there. **Removing** a class from the allowlist (because you deleted the Bartizan-touching code or
+moved it out) should make the assertion go green with a *smaller* found set — if it doesn't, something else still
+references Bartizan and the allowlist was hiding it.
+
+Both scans should go **red first** against the un-fixed code when you add either test to a module for the first
+time — temporarily revert the production fix (via Edit, never `git stash`), run the test, confirm the exact failure
+line, then restore. See `GadgetBartizanBlindScanTest`/`GadgetBartizanReferenceAllowlistTest` and their civilians
+counterparts for worked red-then-green examples (`exec/WS7/G5-report.md`'s "Fix round 1" section has the exact
+quoted output for both).
+
 ## 5. Database tests (Windows rules — non-negotiable)
 
 Follow `RankRepositorySpiTest` (`gangland-impl/src/test/java/org/luckyraven/gangland/database/repositories/rank/`):
