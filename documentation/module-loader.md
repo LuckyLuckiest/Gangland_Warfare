@@ -22,7 +22,7 @@ plugins/
     │   ├── gangland-civilians-0.9.2.jar   civilian NPCs — Bartizan SOFT since 0.9.2 (WS7 G5b): no Plugins: entry, unarmed hostiles without it
     │   ├── gangland-npc-shops-0.9.2.jar   trader/banker NPC shops — no Depends, no Plugins
     │   ├── cops-n-crooks-0.9.2.jar        cops only, Depends: [turf, civilians]; Plugins: [Bartizan] (the only module still hard)
-    │   ├── gangland-gadget-0.9.2.jar      cars and jetpacks — Bartizan SOFT since 0.9.2 (WS7 G5): no Plugins: entry
+    │   ├── gangland-gadget-0.9.2.jar      cars, jetpacks and the grappling hook (WS8) — Bartizan SOFT since 0.9.2 (WS7 G5): no Plugins: entry
     │   └── .stale/                        replaced jars, deleted on the next start
     └── settings.yml …
 ```
@@ -48,7 +48,7 @@ lifted automatically the moment civilians went soft. Full story: `documentation/
 | civilians — civilian NPCs, `NpcMarkManager`/`CombatEligibility`/target-filter seams cops and turf inject | `gangland-civilians` | **new runtime module, 0.9.0** (split out of cops-n-crooks); Bartizan **soft** since 0.9.2 (WS7 G5b — no `Plugins:` entry; unarmed hostiles without it), `Host_Api: 1.1` |
 | npc-shops — trader/banker NPC shops (moved out of cops-n-crooks) | `gangland-npc-shops` | **new runtime module, 0.9.0** — no `Depends:`/`Plugins:` |
 | cops-n-crooks — cops, jails, detainment (civilians and turf-NPC powerups moved out in 0.9.0) | `cops-n-crooks` | runtime module since 0.8.4; `Depends: [turf, civilians]`, `Plugins: [Bartizan]` since 0.9.0 — the only module still hard-coupled after 0.9.2 |
-| gadget — cars (`/glw car`), jetpacks (`/glw jetpack`, gadget-owned item since 0.9.2, `items/jetpacks.yml`) | `gangland-gadget` | runtime module since 0.8.4; Bartizan **soft** since 0.9.2 (WS7 G5 — no `Plugins:` entry; vanilla car-punch damage without it), `Host_Api: 1.1` |
+| gadget — cars (`/glw car`), jetpacks (`/glw jetpack`, gadget-owned item since 0.9.2, `items/jetpacks.yml`), and (WS8) the grappling hook (`/glw grapple`, cooldown-only, `items/grapples.yml`) | `gangland-gadget` | runtime module since 0.8.4; Bartizan **soft** since 0.9.2 (WS7 G5 — no `Plugins:` entry; vanilla car-punch damage without it), `Host_Api: 1.1` |
 
 Weapons, ammunition, wearables and the projectile system left the repo entirely in 0.9.0 for the standalone
 Bartizan plugin — there is no `gangland-weapon` module any more. All six modules above are runtime modules; the

@@ -7,6 +7,7 @@ import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gadget.car.config.CarAddon;
 import org.luckyraven.gangland.gadget.contract.GadgetPhysicsConfigImpl;
 import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
+import org.luckyraven.gangland.gadget.grapple.message.GrappleMessages;
 import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
 import org.luckyraven.gangland.gadget.jetpack.message.JetpackMessages;
 import org.luckyraven.keystone.bean.Bean;
@@ -80,6 +81,19 @@ public class GadgetFileConfig {
 		                    true);
 
 		JetpackMessages messages = new JetpackMessages(fileManager);
+		fileManager.registerInitializer(messages);
+		return messages;
+	}
+
+	/**
+	 * Reads the same {@code gadget_messages.yml} the {@code jetpackMessages} bean above registers — the
+	 * {@code jetpackMessages} parameter is unused except to force bean-graph ordering (feedback_bean_ordering_via
+	 * _params) so that file's {@link FileHandler} is guaranteed registered before this constructor looks it up.
+	 * Never calls {@code fileManager.addFile(...)} here — that would double-register the same file name.
+	 */
+	@Bean
+	public GrappleMessages grappleMessages(FileManager fileManager, JetpackMessages jetpackMessages) {
+		GrappleMessages messages = new GrappleMessages(fileManager);
 		fileManager.registerInitializer(messages);
 		return messages;
 	}

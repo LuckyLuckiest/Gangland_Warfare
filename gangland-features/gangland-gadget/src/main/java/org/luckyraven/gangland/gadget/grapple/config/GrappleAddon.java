@@ -113,7 +113,10 @@ public class GrappleAddon implements FileInitializer {
 			int     maxDistance          = section.getInt("Max_Distance", 25);
 			double  maxPullSpeed         = section.getDouble("Max_Pull_Speed", 1.8);
 			double  pullAcceleration     = section.getDouble("Pull_Acceleration", 0.35);
-			double  arrivalDistance      = section.getDouble("Arrival_Distance", 1.5);
+			// Fix round 1 minor: Arrival_Distance <= 0 makes the anchor-relative direction vector's normalize()
+			// produce NaN velocity the tick the player reaches (0,0,0) distance from it - clamp to a small positive
+			// floor instead of trusting the YAML.
+			double  arrivalDistance      = Math.max(section.getDouble("Arrival_Distance", 1.5), 0.1);
 			int     cooldownSeconds      = section.getInt("Cooldown_Seconds", 8);
 			int     maxDurationTicks     = section.getInt("Max_Duration_Ticks", 100);
 			int     fallDamageGraceTicks = section.getInt("Fall_Damage_Grace_Ticks", 40);

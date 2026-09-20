@@ -2,12 +2,14 @@
 
 [← Back to Documentation Index](./README.md)
 
-Gangland 0.9.2 (the WS7 "gadget wave") does two things: it moves the jetpack out of Bartizan's wearable catalog and
-makes it a Gangland-owned item, and it soft-couples Bartizan for `gangland-gadget` and `gangland-civilians` — both
-now load and work on a server that doesn't run Bartizan at all, instead of refusing to boot
-(`module.plugin.missing`). Nothing about cars, gangs, turf, mail or NPC shops changes structurally; this page is
-short on purpose. For Bartizan's own side of the jetpack move (the `WearableCatalog.register` external-registration
-hook, the `items/wearables.yml` `jetpack:` entry's removal), see Bartizan's own
+Gangland 0.9.2 (the WS7 "gadget wave" + the WS8 "gadget catalogue" wave) does three things: it moves the jetpack
+out of Bartizan's wearable catalog and makes it a Gangland-owned item, it soft-couples Bartizan for
+`gangland-gadget` and `gangland-civilians` — both now load and work on a server that doesn't run Bartizan at all,
+instead of refusing to boot (`module.plugin.missing`) — and it adds the grappling hook, the first gadget item
+built from scratch (not migrated from Bartizan) on that same gadget-owned-item pattern (§8). Nothing about cars,
+gangs, turf, mail or NPC shops changes structurally; this page is short on purpose. For Bartizan's own side of the
+jetpack move (the `WearableCatalog.register` external-registration hook, the `items/wearables.yml` `jetpack:`
+entry's removal), see Bartizan's own
 [`documentation/migration.md`](../../bartizan-0.4.0/documentation/migration.md) §12.
 
 ## 1. Before you upgrade
@@ -89,6 +91,40 @@ to "one of six modules skipped" — only `cops-n-crooks` is lost, everything els
   still runs fine otherwise, it just doesn't have the new registration hook.
 - A legacy (pre-0.9.2) jetpack item keeps working with no owner action — it silently re-stamps itself on next equip,
   fuel and fuel ceiling both preserved (§2).
+
+## 8. New in this release: the grappling hook (WS8)
+
+Unlike everything else in this document, the grappling hook is **purely additive** — nothing to migrate, no
+existing item or shop row it changes the meaning of. It's included here because it ships in the same 0.9.2 build.
+
+A grapple item is a fishing rod under the hood (`items/grapples.yml`, same data-folder convention as
+`items/cars.yml`/`items/jetpacks.yml`): right-click to cast, and a hook that lands on a block pulls you toward it.
+**Cooldown only — no fuel, no durability, no Bartizan coupling of any kind** (unlike the jetpack, which still has
+an optional Bartizan armour-trait opt-in, §3 above; the grapple has nothing equivalent, by design).
+
+**Give command**: `/glw grapple give <id> [amount]` (self-give — the same shape as `/glw car give`/`/glw jetpack
+give`).
+
+**YAML knobs** (`items/grapples.yml`, per entry): `Max_Distance` (anchor range), `Max_Pull_Speed`/
+`Pull_Acceleration` (pull physics), `Arrival_Distance` (auto-stop range — clamped to a 0.1 floor internally, a 0 or
+negative value in the YAML is corrected rather than crashing the pull), `Cooldown_Seconds`, `Max_Duration_Ticks`
+(hard per-pull timeout), `Fall_Damage_Grace_Ticks` (the one-shot post-pull landing-immunity window), and
+`Require_Line_Of_Sight` (refuse the launch if a block occludes the anchor).
+
+**Two rulings server owners should know about** (documented directly in `items/grapples.yml`'s comments too):
+
+1. A wall/ceiling hit **during** an active pull is not covered by the landing grace — only the landing that
+   **ends** a pull (arrival, timeout, or a cancel trigger) gets the grace window. A mid-pull collision is not a
+   "landing" in that sense.
+2. A cancelled pull (sneak, damage, teleport, etc.) while still high above the ground **is fatal once
+   `Fall_Damage_Grace_Ticks` expires** (40 ticks / ~2 seconds by default) — the grace is a short landing window,
+   not open-ended fall immunity. This is deliberate anti-abuse, not a bug: without a bound, "grapple then cancel"
+   would be a free-fall-immunity exploit at any height. Lower `Fall_Damage_Grace_Ticks` for a stricter server.
+
+A refused launch (out of `Max_Distance`, outside the world border, or blocked line of sight) sends a shared
+`Grapple_Blocked` message (`gadget/gadget_messages.yml`, editable like every other gadget message) — once per cast
+attempt, no separate cooldown on the message itself (a cast is already a deliberate, human-paced action). A
+cooldown/already-active refusal stays silent, same as before — the player already knows about those.
 
 ## See also
 

@@ -1,5 +1,10 @@
-# Jetpack-specific user-facing strings (module-API contract: a module's own new strings live in its own YAML, not
-# gangland-api's Messages/Settings). Colour codes use & — resolved through GanglandChatUtil.color at read time.
+# Shared gadget-module user-facing strings (module-API contract: a module's own new strings live in its own YAML,
+# not gangland-api's Messages/Settings). Colour codes use & — resolved through GanglandChatUtil.color at read time.
+# Keys are prefixed per gadget (Jetpack_*, Grapple_*, ...) since this one file backs every gadget's messages.
 Jetpack_No_Permission: "&cYou do not have permission to use this jetpack."
 Jetpack_Gave: "&aGave %amount% jetpack(s) '%name%'."
 Jetpack_Invalid: "&cInvalid jetpack '%name%'."
+Grapple_No_Permission: "&cYou do not have permission to use this grapple."
+Grapple_Blocked: "&cThe grapple couldn't reach there."
+Grapple_Gave: "&aGave %amount% grapple(s) '%name%'."
+Grapple_Invalid: "&cInvalid grapple '%name%'."
