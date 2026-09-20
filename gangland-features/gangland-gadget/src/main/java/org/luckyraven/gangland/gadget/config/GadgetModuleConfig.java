@@ -15,6 +15,7 @@ import org.luckyraven.gangland.gadget.contract.GanglandCarMessages;
 import org.luckyraven.gangland.gadget.item.CarConverter;
 import org.luckyraven.gangland.gadget.item.CarItemRefresher;
 import org.luckyraven.gangland.gadget.item.CarItemSerializer;
+import org.luckyraven.gangland.gadget.grapple.GrappleService;
 import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
 import org.luckyraven.gangland.gadget.item.GadgetItemPredicates;
 import org.luckyraven.gangland.gadget.item.GrappleConverter;
@@ -121,6 +122,11 @@ public class GadgetModuleConfig {
 	                                     JetpackAddon jetpackAddon) {
 		fuelService.setFuelSinkPredicate(this::isJetpackFuelSink);
 		return new JetpackService(fuelService, plugin, gadgetPhysicsConfig, jetpackAddon);
+	}
+
+	@Bean
+	public GrappleService grappleService() {
+		return new GrappleService(plugin);
 	}
 
 	@Bean

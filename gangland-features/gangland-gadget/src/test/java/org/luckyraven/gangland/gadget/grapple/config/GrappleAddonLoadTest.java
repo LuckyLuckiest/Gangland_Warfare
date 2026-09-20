@@ -52,6 +52,11 @@ class GrappleAddonLoadTest {
 			defaults_only:
 			   Material: FISHING_ROD
 			   Display_Name: "&bDefaults Only"
+
+			zero_arrival_distance:
+			   Material: FISHING_ROD
+			   Display_Name: "&bZero Arrival Distance"
+			   Arrival_Distance: 0
 			""";
 
 	@BeforeAll
@@ -143,5 +148,17 @@ class GrappleAddonLoadTest {
 		assertEquals(30, grapple.getFallDamageGraceTicks());
 		assertEquals(false, grapple.isRequireLineOfSight());
 		assertEquals("gangland.grapples.valid_grapple", grapple.getPermission());
+	}
+
+	@Test
+	@DisplayName("fix round 1 minor: Arrival_Distance: 0 is clamped to 0.1, not loaded as 0 (0 -> normalize() NaN)")
+	void zeroArrivalDistance_clampedToPositiveFloor() {
+		GrappleAddon addon = addon();
+		addon.loadGrapples(loadYaml(YAML));
+
+		Grapple grapple = addon.getGrapple("zero_arrival_distance");
+		assertNotNull(grapple);
+
+		assertEquals(0.1, grapple.getArrivalDistance());
 	}
 }
