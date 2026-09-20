@@ -1,8 +1,8 @@
 package org.luckyraven.gangland.gang;
 
-import org.luckyraven.gangland.inventory.filter.FilterAdapter;
-import org.luckyraven.gangland.inventory.filter.FilterField;
-import org.luckyraven.gangland.inventory.filter.StandardFilterField;
+import org.luckyraven.gangland.menu.filter.FilterAdapter;
+import org.luckyraven.gangland.menu.filter.FilterField;
+import org.luckyraven.gangland.menu.filter.StandardFilterField;
 
 import java.util.Locale;
 

@@ -6,10 +6,10 @@ import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.gangland.gang.GangFilterAdapter;
 import org.luckyraven.gangland.gang.member.MemberFilterAdapter;
-import org.luckyraven.gangland.inventory.filter.FilterBinding;
-import org.luckyraven.gangland.inventory.filter.FilterRegistry;
-import org.luckyraven.gangland.inventory.filter.SortDescriptor;
-import org.luckyraven.gangland.inventory.filter.StandardFilterField;
+import org.luckyraven.gangland.menu.filter.FilterBinding;
+import org.luckyraven.gangland.menu.filter.FilterRegistry;
+import org.luckyraven.gangland.menu.filter.SortDescriptor;
+import org.luckyraven.gangland.menu.filter.StandardFilterField;
 
 import java.util.List;
 

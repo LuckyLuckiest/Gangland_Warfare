@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryRuntimeContext;
-import org.luckyraven.gangland.inventory.unique.UniqueItemHandler;
+import org.luckyraven.gangland.menu.unique.UniqueItemHandler;
 
 /**
  * Gangland-impl implementation of the {@link UniqueItemInteractionService} contract. Delegates to the injected

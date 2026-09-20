@@ -8,12 +8,12 @@ import org.bukkit.event.inventory.InventoryEvent;
 import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.inventory.InventoryData;
+import org.luckyraven.gangland.menu.InventoryData;
 import org.luckyraven.gangland.inventory.InventoryOpener;
-import org.luckyraven.gangland.inventory.handler.SlotContext;
-import org.luckyraven.gangland.inventory.handler.SlotEventHandler;
-import org.luckyraven.gangland.inventory.handler.SlotItemFactory;
-import org.luckyraven.gangland.inventory.part.Slot;
+import org.luckyraven.gangland.menu.handler.SlotContext;
+import org.luckyraven.gangland.menu.handler.SlotEventHandler;
+import org.luckyraven.gangland.menu.handler.SlotItemFactory;
+import org.luckyraven.gangland.menu.part.Slot;
 
 import java.util.ArrayList;
 import java.util.HashMap;

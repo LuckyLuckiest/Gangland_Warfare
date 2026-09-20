@@ -10,11 +10,11 @@ import org.luckyraven.gangland.data.placeholder.PlaceholderService;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionStore;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryRuntimeContext;
-import org.luckyraven.gangland.inventory.InventoryBuilder;
+import org.luckyraven.gangland.menu.InventoryBuilder;
 import org.luckyraven.gangland.inventory.InventoryOpener;
-import org.luckyraven.gangland.inventory.OpenInventory;
-import org.luckyraven.gangland.inventory.State;
-import org.luckyraven.gangland.inventory.condition.ConditionEvaluator;
+import org.luckyraven.gangland.menu.OpenInventory;
+import org.luckyraven.gangland.menu.State;
+import org.luckyraven.gangland.menu.condition.ConditionEvaluator;
 import org.luckyraven.gangland.inventory.part.Fill;
 
 import java.util.List;

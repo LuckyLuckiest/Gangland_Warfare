@@ -15,7 +15,7 @@ import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionS
 import org.luckyraven.gangland.item.fuel.FuelService;
 import org.luckyraven.gangland.gang.bounty.BountySettings;
 import org.luckyraven.gangland.gang.wanted.WantedSettings;
-import org.luckyraven.gangland.inventory.condition.BooleanExpressionEvaluator;
+import org.luckyraven.gangland.menu.condition.BooleanExpressionEvaluator;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.item.money.MoneyAddon;
 import org.luckyraven.keystone.persistence.FileManager;

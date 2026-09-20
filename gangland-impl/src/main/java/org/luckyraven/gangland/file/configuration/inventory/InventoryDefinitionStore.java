@@ -7,9 +7,9 @@ import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.inventory.InventoryBuilder;
-import org.luckyraven.gangland.inventory.handler.*;
-import org.luckyraven.gangland.inventory.unique.UniqueItemHandler;
+import org.luckyraven.gangland.menu.InventoryBuilder;
+import org.luckyraven.gangland.menu.handler.*;
+import org.luckyraven.gangland.menu.unique.UniqueItemHandler;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -14,9 +14,9 @@ import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.inventory.multi.ListEntry;
-import org.luckyraven.gangland.inventory.multi.MultiInventory;
-import org.luckyraven.gangland.inventory.part.ButtonTags;
+import org.luckyraven.gangland.menu.multi.ListEntry;
+import org.luckyraven.gangland.menu.multi.MultiInventory;
+import org.luckyraven.gangland.menu.part.ButtonTags;
 import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.sign.model.ParsedSign;
 import org.luckyraven.gangland.sign.type.BountySign;
@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import static org.luckyraven.gangland.inventory.multi.MultiInventoryCreation.dynamicMultiInventory;
+import static org.luckyraven.gangland.menu.multi.MultiInventoryCreation.dynamicMultiInventory;
 
 @RequiredArgsConstructor
 public class BountyAspect implements SignAspect {

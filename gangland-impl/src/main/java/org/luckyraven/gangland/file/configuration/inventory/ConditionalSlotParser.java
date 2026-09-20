@@ -4,9 +4,9 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.inventory.condition.ConditionalSlotData;
-import org.luckyraven.gangland.inventory.condition.SlotCondition;
-import org.luckyraven.gangland.inventory.handler.SlotItemFactory;
+import org.luckyraven.gangland.menu.condition.ConditionalSlotData;
+import org.luckyraven.gangland.menu.condition.SlotCondition;
+import org.luckyraven.gangland.menu.handler.SlotItemFactory;
 
 import java.util.HashMap;
 import java.util.List;

@@ -36,10 +36,10 @@ import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.multi.ListEntry;
-import org.luckyraven.gangland.inventory.multi.MultiInventory;
-import org.luckyraven.gangland.inventory.multi.MultiInventoryCreation;
-import org.luckyraven.gangland.inventory.part.ButtonTags;
+import org.luckyraven.gangland.menu.multi.ListEntry;
+import org.luckyraven.gangland.menu.multi.MultiInventory;
+import org.luckyraven.gangland.menu.multi.MultiInventoryCreation;
+import org.luckyraven.gangland.menu.part.ButtonTags;
 import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.inventory.util.InventoryUtil;
 

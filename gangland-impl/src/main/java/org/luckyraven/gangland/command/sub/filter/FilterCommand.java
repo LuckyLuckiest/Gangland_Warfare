@@ -8,7 +8,7 @@ import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryRuntimeContext;
-import org.luckyraven.gangland.inventory.filter.*;
+import org.luckyraven.gangland.menu.filter.*;
 
 import java.util.ArrayList;
 import java.util.List;

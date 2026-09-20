@@ -15,11 +15,11 @@ import org.luckyraven.gangland.gang.member.MemberFilterAdapter;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.inventory.filter.FilterApplier;
-import org.luckyraven.gangland.inventory.filter.FilterStore;
-import org.luckyraven.gangland.inventory.filter.SearchFilter;
-import org.luckyraven.gangland.inventory.multi.ItemSourceEntry;
-import org.luckyraven.gangland.inventory.multi.ItemSourceProvider;
+import org.luckyraven.gangland.menu.filter.FilterApplier;
+import org.luckyraven.gangland.menu.filter.FilterStore;
+import org.luckyraven.gangland.menu.filter.SearchFilter;
+import org.luckyraven.gangland.menu.multi.ItemSourceEntry;
+import org.luckyraven.gangland.menu.multi.ItemSourceProvider;
 
 import java.util.*;
 
