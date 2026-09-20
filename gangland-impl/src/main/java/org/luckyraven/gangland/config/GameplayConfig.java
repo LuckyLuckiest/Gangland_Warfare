@@ -28,6 +28,9 @@ import org.luckyraven.gangland.hologram.HologramService;
 import org.luckyraven.gangland.inventory.condition.BooleanExpressionEvaluator;
 import org.luckyraven.gangland.inventory.filter.*;
 import org.luckyraven.gangland.inventory.multi.ItemSourceProvider;
+import org.luckyraven.gangland.inventory.service.InventoryRegistry;
+import org.luckyraven.keystone.cooldown.InMemoryCooldownService;
+import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.item.ItemConverterRegistry;
 import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.keystone.item.ItemSerializerRegistry;
@@ -89,6 +92,26 @@ public class GameplayConfig {
 	// ---------------------------------------------------------------------------------------------------------------
 
 	/**
+	 * WS2 G1 (0.10.0): the core's single {@code keystone-inventory} root. A plain {@code @Bean}, own instance —
+	 * not resolved via the {@code ServicesManager}, since {@code keystone-inventory} is a {@code provided}-scope
+	 * library dependency, not a second running plugin (contrast {@link org.luckyraven.gangland.data.placeholder.worker.GanglandPlaceholder}'s
+	 * {@code PlaceholderProvider} publication, which exists precisely because Plaque IS a separate plugin).
+	 * {@code registerListeners} is called once here, at bean construction, per the module's own doc ("Keystone.jar
+	 * registers no listener of its own"). Cooldowns are in-memory only — nothing in Gangland needs a
+	 * database-backed cooldown yet; upgrade to {@code keystone-persistence}'s {@code PersistentCooldownService} if
+	 * that changes. No menu is actually built through this service until WS2 G3 retargets
+	 * {@link InventoryRuntimeContext} onto {@code ChestMenuBuilder} — until then this bean exists side by side with
+	 * the old {@code inventory-api} framework, doing nothing yet.
+	 */
+	@Bean
+	public InventoryService inventoryService() {
+		InventoryService service = new InventoryService(new InMemoryCooldownService());
+		service.registerListeners(gangland);
+		log.info("keystone-inventory service registered");
+		return service;
+	}
+
+	/**
 	 * Domain-agnostic filter plumbing — the registry tracks per-view {@link FilterBinding} specs, the store holds
 	 * per-(binding, player) {@link SearchFilter} state, and the applier is the shared filter/sort pipeline that
 	 * replaced the old hand-rolled gang-search code.
@@ -130,12 +153,14 @@ public class GameplayConfig {
 	                                                       FilterApplier filterApplier,
 	                                                       GangFilterAdapter gangFilterAdapter,
 	                                                       MemberFilterAdapter memberFilterAdapter,
-	                                                       ItemParser itemParser) {
+	                                                       ItemParser itemParser,
+	                                                       InventoryRegistry inventoryRegistry) {
 		ItemSourceProvider itemSourceProvider = new GangItemSourceProvider(userManager, gangManager, filterStore,
 		                                                                   filterApplier, gangFilterAdapter,
 		                                                                   memberFilterAdapter);
 		return new InventoryRuntimeContext(gangland, definitionStore, itemSourceProvider, conditionEvaluator,
-		                                   userManager, permissionManager, placeholderService, itemParser);
+		                                   userManager, permissionManager, placeholderService, itemParser,
+		                                   inventoryRegistry);
 	}
 
 	/**

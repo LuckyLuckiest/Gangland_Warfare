@@ -10,6 +10,12 @@ import java.util.Locale;
  * Projects {@link Gang} instances onto the canonical {@link StandardFilterField} axes that the gang-search view
  * supports. Returning {@code null} marks a field as unsupported; the applier treats unsupported fields as non-matches
  * and sorts them last.
+ *
+ * <p>Moved from {@code gangland-domain} to {@code gangland-impl} at WS2 G2 (0.10.0): {@code gangland-domain} no
+ * longer depends on {@code inventory-api} (severing the domain inversion), but this class's {@code FilterAdapter}/
+ * {@code FilterField}/{@code StandardFilterField} types still live in {@code inventory-api} until WS2 G3a moves them
+ * to {@code gangland-impl}'s own {@code menu.filter} package — so this class has to live somewhere that still
+ * depends on {@code inventory-api} in the meantime. Package unchanged, so no importer needed updating.
  */
 public final class GangFilterAdapter implements FilterAdapter<Gang> {
 

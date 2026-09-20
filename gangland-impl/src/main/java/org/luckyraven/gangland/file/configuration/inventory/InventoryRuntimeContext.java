@@ -22,6 +22,7 @@ import org.luckyraven.gangland.inventory.multi.MultiInventory;
 import org.luckyraven.gangland.inventory.part.ButtonTags;
 import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.inventory.part.Slot;
+import org.luckyraven.gangland.inventory.service.InventoryRegistry;
 import org.luckyraven.gangland.inventory.unique.UniqueItemHandler;
 import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.keystone.persistence.FileHandler;
@@ -29,6 +30,9 @@ import org.luckyraven.keystone.persistence.config.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 /**
@@ -48,6 +52,16 @@ public class InventoryRuntimeContext {
 	private final PermissionManager        permissionManager;
 	private final PlaceholderService       placeholderService;
 	private final ItemParser               itemParser;
+	private final InventoryRegistry        inventoryRegistry;
+
+	// ponytail: interim shim, deleted at WS2 G3 when menus open through the Keystone service. The shared
+	// InventoryRegistry is a superset of what this class needs for its own "is this menu already open for this
+	// player" lookup — every feature's InventoryHandler self-registers into it (sign views, wand views,
+	// PaperworkView/HandcuffBribeView, CarSignViewProvider, MultiPanelInventory panels), so filtering it by title
+	// key risked reopening a foreign handler whose key happened to collide with a core YAML menu name (review F1,
+	// ruling W38). This map is exactly what the old User.inventories field was: per-player, de-duplicated by menu
+	// name, scoped to only the menus THIS class opened.
+	private final Map<UUID, Map<String, InventoryHandler>> openInventories = new ConcurrentHashMap<>();
 
 	public InventoryRuntimeContext(Gangland gangland,
 	                               InventoryDefinitionStore definitionStore,
@@ -56,7 +70,8 @@ public class InventoryRuntimeContext {
 	                               UserManager<Player> userManager,
 	                               PermissionManager permissionManager,
 	                               PlaceholderService placeholderService,
-	                               ItemParser itemParser) {
+	                               ItemParser itemParser,
+	                               InventoryRegistry inventoryRegistry) {
 		this.gangland           = gangland;
 		this.definitionStore    = definitionStore;
 		this.itemSourceProvider = itemSourceProvider;
@@ -65,6 +80,7 @@ public class InventoryRuntimeContext {
 		this.permissionManager  = permissionManager;
 		this.placeholderService = placeholderService;
 		this.itemParser         = itemParser;
+		this.inventoryRegistry  = inventoryRegistry;
 	}
 
 	public InventoryDefinitionStore definitionStore() {
@@ -218,7 +234,8 @@ public class InventoryRuntimeContext {
 			return;
 		}
 
-		InventoryHandler existing = user.getInventory(inventoryName);
+		String           lookupKey = inventoryName.toLowerCase();
+		InventoryHandler existing  = openInventories.getOrDefault(user.getUuid(), Map.of()).get(lookupKey);
 		if (existing != null) {
 			existing.open(player);
 			return;
@@ -252,7 +269,8 @@ public class InventoryRuntimeContext {
 			                                                       fill);
 			if (multi != null) {
 				multi.open(player);
-				user.addInventory(multi);
+				inventoryRegistry.registerInventory(user.getUuid(), multi);
+				openInventories.computeIfAbsent(user.getUuid(), k -> new ConcurrentHashMap<>()).put(lookupKey, multi);
 			} else {
 				log.warn(
 						"Cannot open multi-inventory '{}' — createMultiInventory returned null (source='{}', entries={})",
@@ -262,8 +280,18 @@ public class InventoryRuntimeContext {
 			InventoryHandler handler = invBuilder.createInventory(gangland, placeholder, user.getUser(), fill, line,
 			                                                      conditionEvaluator, opener);
 			handler.open(player);
-			user.addInventory(handler);
+			inventoryRegistry.registerInventory(user.getUuid(), handler);
+			openInventories.computeIfAbsent(user.getUuid(), k -> new ConcurrentHashMap<>()).put(lookupKey, handler);
 		}
+	}
+
+	/**
+	 * Forgets every menu this class has tracked as open for {@code uuid}. Called by {@code RemoveAccountListener}
+	 * alongside its existing {@code inventoryRegistry.clear(uuid)} call, on the same quit path — parity with what
+	 * {@code User.clearInventories()} used to do for this class's own bookkeeping.
+	 */
+	public void clearPlayer(UUID uuid) {
+		openInventories.remove(uuid);
 	}
 
 	Gangland gangland() {

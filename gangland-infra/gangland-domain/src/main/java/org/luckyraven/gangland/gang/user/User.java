@@ -21,8 +21,6 @@ import org.luckyraven.gangland.gang.rank.Permission;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.wanted.Wanted;
 import org.luckyraven.gangland.gang.wanted.WantedContext;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.service.InventoryRegistry;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -42,9 +40,7 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 	private final Level                 level;
 	private final Wanted                wanted;
 	private final EconomyHandler        economy;
-	private final Set<InventoryHandler> inventories;
 	private final Placeholder           placeholder;
-	private final InventoryRegistry     inventoryRegistry;
 
 	@Nullable
 	private Bank bank;
@@ -52,10 +48,10 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 	private PermissionAttachment permissionAttachment;
 
 	/**
-	 * Instantiates a new User. Prefer constructing through {@link UserFactory} so the {@link Placeholder} and
-	 * {@link InventoryRegistry} dependencies come from the bean container.
+	 * Instantiates a new User. Prefer constructing through {@link UserFactory} so the {@link Placeholder}
+	 * dependency comes from the bean container.
 	 */
-	public User(JavaPlugin plugin, T user, Placeholder placeholder, InventoryRegistry inventoryRegistry) {
+	public User(JavaPlugin plugin, T user, Placeholder placeholder) {
 		this.user              = user;
 		this.uuid              = user.getUniqueId();
 		this.bounty            = new Bounty(GangSettings.getBountyEachKillValue(),
@@ -64,9 +60,7 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 		this.wanted            = new Wanted(plugin, GangSettings.getWantedLevelIncrement(),
 		                                    GangSettings.getWantedMaximumLevel());
 		this.economy           = new EconomyHandler(this);
-		this.inventories       = new HashSet<>();
 		this.placeholder       = placeholder;
-		this.inventoryRegistry = inventoryRegistry;
 
 		this.wanted.setOwner(user.getPlayer());
 
@@ -133,81 +127,6 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 
 	public void sendMessage(String... texts) {
 		for (String text : texts) sendMessage(text);
-	}
-
-	/**
-	 * Add the inventory to the user.
-	 *
-	 * @param inventoryHandler the inventory
-	 */
-	public void addInventory(InventoryHandler inventoryHandler) {
-		// remove the inventory if it was already generated
-		removeInventory(inventoryHandler.getTitle().getKey());
-
-		// add the inventory to the set
-		inventories.add(inventoryHandler);
-
-		// register with the global registry
-		inventoryRegistry.registerInventory(uuid, inventoryHandler);
-	}
-
-	/**
-	 * Remove the inventory from the user.
-	 *
-	 * @param inventoryHandler the inventory
-	 */
-	public void removeInventory(InventoryHandler inventoryHandler) {
-		inventories.remove(inventoryHandler);
-
-		// unregister from the global registry
-		inventoryRegistry.unregisterInventory(uuid, inventoryHandler);
-	}
-
-	/**
-	 * Remove the inventory from the user.
-	 *
-	 * @param name the name of the inventory
-	 */
-	public void removeInventory(String name) {
-		InventoryHandler inventory = getInventory(name);
-
-		if (inventory == null) return;
-
-		inventories.remove(inventory);
-	}
-
-	/**
-	 * Get the inventory from the user.
-	 *
-	 * @param name the name of the inventory
-	 *
-	 * @return the inventory if found or null
-	 */
-	@Nullable
-	public InventoryHandler getInventory(String name) {
-		return inventories.stream()
-				.filter(handler -> handler.getTitle().getKey().equals(name.toLowerCase()))
-				.findFirst()
-				.orElse(null);
-	}
-
-	/**
-	 * Clears all the inventories from the user.
-	 */
-	public void clearInventories() {
-		inventories.clear();
-
-		// clear from the global registry
-		inventoryRegistry.clear(uuid);
-	}
-
-	/**
-	 * Get the inventories from the user.
-	 *
-	 * @return a copy of the inventories registered to the user.
-	 */
-	public List<InventoryHandler> getInventories() {
-		return inventories.stream().toList();
 	}
 
 	/**

@@ -37,10 +37,6 @@
             <groupId>org.luckyraven</groupId>
             <artifactId>keystone-hooks</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>inventory-api</artifactId>
-        </dependency>
 
         <!-- XSeries -->
         <dependency>

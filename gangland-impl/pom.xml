@@ -60,6 +60,10 @@
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-inventory</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
             <artifactId>keystone-common</artifactId>
         </dependency>
         <dependency>

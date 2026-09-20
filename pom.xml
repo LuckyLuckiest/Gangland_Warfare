@@ -205,6 +205,15 @@
                 <version>${keystone.version}</version>
                 <scope>provided</scope>
             </dependency>
+            <!-- WS2 G1 (0.10.0): the basic menu mechanism (ChestMenu, MenuFlow, PagedRegion, OpenMenuTracker) —
+                 R6: gangland-api never re-exports this, unlike the old inventory-api; every menu-building module
+                 declares it directly (the bartizan-api rule). -->
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-inventory</artifactId>
+                <version>${keystone.version}</version>
+                <scope>provided</scope>
+            </dependency>
             <dependency>
                 <groupId>org.luckyraven</groupId>
                 <artifactId>keystone-testkit</artifactId>

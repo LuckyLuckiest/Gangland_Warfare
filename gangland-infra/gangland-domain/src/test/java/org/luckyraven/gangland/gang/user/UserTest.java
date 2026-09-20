@@ -11,7 +11,6 @@ import org.luckyraven.gangland.gang.GangSettings;
 import org.luckyraven.gangland.gang.rank.Permission;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.support.FakeGangSettingsContract;
-import org.luckyraven.gangland.inventory.service.InventoryRegistry;
 import org.luckyraven.keystone.util.Placeholder;
 
 import java.math.BigDecimal;
@@ -41,8 +40,7 @@ class UserTest {
 		Player player = mock(Player.class);
 		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
 		Placeholder placeholder = mock(Placeholder.class);
-		InventoryRegistry registry = new InventoryRegistry();
-		return new User<>(plugin, player, placeholder, registry);
+		return new User<>(plugin, player, placeholder);
 	}
 
 	@Test
@@ -131,7 +129,7 @@ class UserTest {
 		OfflinePlayer offline = mock(OfflinePlayer.class);
 		when(offline.getUniqueId()).thenReturn(UUID.randomUUID());
 		Placeholder placeholder = mock(Placeholder.class);
-		User<OfflinePlayer> user = new User<>(plugin, offline, placeholder, new InventoryRegistry());
+		User<OfflinePlayer> user = new User<>(plugin, offline, placeholder);
 
 		assertDoesNotThrow(() -> user.flushPermissions(new Rank("Boss", 1)));
 	}
@@ -181,7 +179,7 @@ class UserTest {
 		OfflinePlayer offline = mock(OfflinePlayer.class);
 		when(offline.getUniqueId()).thenReturn(UUID.randomUUID());
 		Placeholder placeholder = mock(Placeholder.class);
-		User<OfflinePlayer> user = new User<>(plugin, offline, placeholder, new InventoryRegistry());
+		User<OfflinePlayer> user = new User<>(plugin, offline, placeholder);
 
 		user.sendMessage("&aHello");
 

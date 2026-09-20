@@ -12,7 +12,6 @@ import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.support.FakeGangSettingsContract;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.vault.permission.VaultPermissionBridge;
-import org.luckyraven.gangland.inventory.service.InventoryRegistry;
 import org.luckyraven.keystone.util.Placeholder;
 
 import java.util.Collections;
@@ -141,10 +140,9 @@ class GangMembershipTest {
 		Player     player = mock(Player.class);
 		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
 
-		Placeholder        placeholder = mock(Placeholder.class);
-		InventoryRegistry  registry    = new InventoryRegistry();
+		Placeholder placeholder = mock(Placeholder.class);
 
-		User<Player> user = new User<>(plugin, player, placeholder, registry);
+		User<Player> user = new User<>(plugin, player, placeholder);
 
 		PermissionAttachment attachment = mock(PermissionAttachment.class);
 		when(attachment.getPermissions()).thenReturn(Collections.emptyMap());

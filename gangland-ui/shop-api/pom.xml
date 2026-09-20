@@ -45,6 +45,11 @@
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-inventory</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
             <artifactId>gangland-item</artifactId>
             <scope>provided</scope>
         </dependency>

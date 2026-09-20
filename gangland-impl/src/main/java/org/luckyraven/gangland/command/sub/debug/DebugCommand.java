@@ -52,6 +52,8 @@ import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.inventory.villager.VillagerInventory;
 import org.luckyraven.gangland.inventory.villager.VillagerInventoryRegistry;
 import org.luckyraven.gangland.inventory.villager.VillagerTrade;
+import org.luckyraven.keystone.inventory.InventoryService;
+import org.luckyraven.keystone.inventory.Menu;
 
 import java.util.*;
 
@@ -71,6 +73,7 @@ public final class DebugCommand extends Command {
 	private final CommandManager            commandManager;
 	private final VillagerInventoryRegistry villagerRegistry;
 	private final CommandContributions      contributions;
+	private final InventoryService          inventoryService;
 
 	private final Gangland gangland;
 
@@ -84,7 +87,8 @@ public final class DebugCommand extends Command {
 	                    GanglandPlaceholder placeholder,
 	                    CommandManager commandManager,
 	                    VillagerInventoryRegistry villagerRegistry,
-	                    DependencyContainer container) {
+	                    DependencyContainer container,
+	                    InventoryService inventoryService) {
 		super(gangland, "debug", false);
 
 		this.gangland = gangland;
@@ -99,6 +103,7 @@ public final class DebugCommand extends Command {
 		this.commandManager    = commandManager;
 		this.villagerRegistry  = villagerRegistry;
 		this.contributions     = CommandContributions.from(container);
+		this.inventoryService  = inventoryService;
 	}
 
 	@Override
@@ -455,6 +460,15 @@ public final class DebugCommand extends Command {
 		});
 	}
 
+	/**
+	 * WS2 G1/G2 (0.10.0, ruling W23 F7): under {@code keystone-inventory} a player has at most ONE menu open at a
+	 * time, tracked by {@link InventoryService#tracker()}'s {@code OpenMenuTracker} — a real reduction from the old
+	 * {@code inventory-api} model this replaces, which could accumulate several simultaneously-registered
+	 * {@code InventoryHandler}s per player. {@code Menu} exposes no generic title, so the class simple name stands
+	 * in as the display name. Nothing actually opens a menu through this service yet (that lands at WS2 G3, when
+	 * {@code InventoryRuntimeContext} retargets onto {@code ChestMenuBuilder}), so this argument reports "none" for
+	 * everyone until then — a known, accepted interim state, not a bug.
+	 */
 	private @NotNull Argument getInventoriesData() {
 		return new Argument(getPlugin(), "inv-data", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
@@ -462,22 +476,18 @@ public final class DebugCommand extends Command {
 
 				if (user == null) return;
 
-				user.sendMessage("Normal inventories: ");
-				user.sendMessage(user.getInventories()
-										 .stream()
-										 .map(InventoryHandler::getTitle)
-						                 .map(NamespacedKey::getKey)
-						                 .toArray(String[]::new));
+				Menu menu = inventoryService.tracker().currentMenuOf(player);
+
+				user.sendMessage("Current menu: " + (menu == null ? "none" : menu.getClass().getSimpleName()));
 			} else {
-				for (User<Player> user : userManager.getUsers().values()) {
+				for (UUID uuid : inventoryService.tracker().currentViewers()) {
+					User<Player> user = userManager.getUser(uuid);
+					if (user == null) continue;
 
-					List<String> inventories = user.getInventories()
-							.stream().map(InventoryHandler::getTitle).map(NamespacedKey::getKey).toList();
+					Menu menu = inventoryService.tracker().currentMenuOf(user.getUser());
 
-					List<String> values = new ArrayList<>(inventories);
-
-					user.sendMessage(user.getUser().getName() + ":");
-					user.sendMessage(String.valueOf(values));
+					user.sendMessage(user.getUser().getName() + ": "
+					                  + (menu == null ? "none" : menu.getClass().getSimpleName()));
 				}
 			}
 		});

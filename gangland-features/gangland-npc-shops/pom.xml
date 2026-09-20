@@ -59,6 +59,10 @@
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-inventory</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
             <artifactId>shop-api</artifactId>
         </dependency>
         <!-- The module touches User/UserManager (gangland-domain hooks) directly — provided scope is not

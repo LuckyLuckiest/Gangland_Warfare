@@ -8,7 +8,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.luckyraven.gangland.gang.support.FakeGangSettingsContract;
-import org.luckyraven.gangland.inventory.service.InventoryRegistry;
 import org.luckyraven.keystone.economy.bank.Bank;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
@@ -124,7 +123,7 @@ class UserManagerTest {
 	}
 
 	private static <T extends OfflinePlayer> User<T> newUser(T handle) {
-		return new User<>(mock(JavaPlugin.class), handle, mock(Placeholder.class), new InventoryRegistry());
+		return new User<>(mock(JavaPlugin.class), handle, mock(Placeholder.class));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -140,7 +139,6 @@ class UserManagerTest {
 
 		JavaPlugin plugin = mock(JavaPlugin.class);
 		Placeholder placeholder = mock(Placeholder.class);
-		InventoryRegistry inventoryRegistry = new InventoryRegistry();
 		UserFactory factory = mock(UserFactory.class);
 
 		UserManager<Player> onlineManager = new UserManager<>(plugin, registry, factory);
@@ -151,12 +149,12 @@ class UserManagerTest {
 
 		Player onlinePlayer = mock(Player.class);
 		when(onlinePlayer.getUniqueId()).thenReturn(UUID.randomUUID());
-		User<Player> onlineUser = new User<>(plugin, onlinePlayer, placeholder, inventoryRegistry);
+		User<Player> onlineUser = new User<>(plugin, onlinePlayer, placeholder);
 		onlineManager.add(onlineUser);
 
 		OfflinePlayer offlinePlayer = mock(OfflinePlayer.class);
 		when(offlinePlayer.getUniqueId()).thenReturn(UUID.randomUUID());
-		User<OfflinePlayer> offlineUser = new User<>(plugin, offlinePlayer, placeholder, inventoryRegistry);
+		User<OfflinePlayer> offlineUser = new User<>(plugin, offlinePlayer, placeholder);
 		offlineManager.add(offlineUser);
 
 		onlineManager.initialize();
@@ -193,14 +191,13 @@ class UserManagerTest {
 
 		JavaPlugin plugin = mock(JavaPlugin.class);
 		Placeholder placeholder = mock(Placeholder.class);
-		InventoryRegistry inventoryRegistry = new InventoryRegistry();
 		UserFactory factory = mock(UserFactory.class);
 
 		UserManager<OfflinePlayer> manager = new UserManager<>(plugin, registry, factory);
 
 		OfflinePlayer offlinePlayer = mock(OfflinePlayer.class);
 		when(offlinePlayer.getUniqueId()).thenReturn(UUID.randomUUID());
-		User<OfflinePlayer> user = new User<>(plugin, offlinePlayer, placeholder, inventoryRegistry);
+		User<OfflinePlayer> user = new User<>(plugin, offlinePlayer, placeholder);
 		manager.add(user);
 
 		manager.initialize();

@@ -13,6 +13,10 @@ import java.util.Locale;
  * {@code NAME} projection reads the {@link org.bukkit.OfflinePlayer} name (so the filter matches what's rendered in the
  * inventory), {@code DATE} uses the raw epoch-millis join timestamp for numeric sort, and {@code MEMBERS} is overloaded
  * here as the contribution value (the view's "by contribution" sort axis).
+ *
+ * <p>Moved from {@code gangland-domain} to {@code gangland-impl} at WS2 G2 (0.10.0): see
+ * {@link org.luckyraven.gangland.gang.GangFilterAdapter}'s javadoc for why. Package unchanged, so no importer
+ * needed updating.
  */
 public final class MemberFilterAdapter implements FilterAdapter<Member> {
 

@@ -107,9 +107,14 @@ public class KernelConfig {
 	}
 
 	/**
-	 * Per-player open-inventory tracker. Constructed once and threaded into the {@link UserFactory}, the four UI
-	 * listeners, and the {@link InventoryHandler} static seam (the last static seam left after Phase 2 — same
-	 * lightweight pattern as {@code Messages.init(...)}).
+	 * Per-player open-inventory tracker for the old {@code inventory-api} framework. Threaded into the four UI
+	 * listeners and the {@link InventoryHandler} static seam (the last static seam left after Phase 2 — same
+	 * lightweight pattern as {@code Messages.init(...)}). WS2 G2 (0.10.0) severed this out of {@link UserFactory}/
+	 * {@code User} (the domain inversion) —
+	 * {@link org.luckyraven.gangland.file.configuration.inventory.InventoryRuntimeContext}, {@code RemoveAccountListener}
+	 * and {@code DebugCommand}'s {@code /glw debug inv-data} argument now call this bean directly instead of going
+	 * through {@code User}. Stays alive, along with the rest of {@code inventory-api}, until WS2 CUT retargets
+	 * everything onto {@code keystone-inventory}'s {@code OpenMenuTracker}.
 	 */
 	@Bean
 	public InventoryRegistry inventoryRegistry() {
@@ -129,12 +134,13 @@ public class KernelConfig {
 	}
 
 	/**
-	 * Builds {@link User} instances with their {@link PlaceholderService} and {@link InventoryRegistry} dependencies
-	 * wired in. Replaces the static {@code User.setPlaceholder(...)} field.
+	 * Builds {@link User} instances with their {@link PlaceholderService} dependency wired in. Replaces the static
+	 * {@code User.setPlaceholder(...)} field. No longer takes {@link InventoryRegistry} (WS2 G2, 0.10.0) — severing
+	 * the domain inversion means {@code User} itself has no inventory-tracking knowledge at all any more.
 	 */
 	@Bean
-	public UserFactory userFactory(PlaceholderService placeholderService, InventoryRegistry inventoryRegistry) {
-		return new UserFactory(gangland, placeholderService, inventoryRegistry);
+	public UserFactory userFactory(PlaceholderService placeholderService) {
+		return new UserFactory(gangland, placeholderService);
 	}
 
 	@Bean
