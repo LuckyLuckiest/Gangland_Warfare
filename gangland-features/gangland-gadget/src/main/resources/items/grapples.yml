@@ -34,6 +34,16 @@
 #
 # Permission nodes are derived automatically as "gangland.grapples.<key>"
 # (e.g. grapple → gangland.grapples.grapple).
+#
+# Two rulings from the G2+G3 fix-round-1 review (W34), for server owners tuning the knobs above:
+#   - A wall/ceiling hit DURING an active pull (e.g. an elytra-equivalent "flew into a wall" stop) is NOT
+#     covered by Fall_Damage_Grace_Ticks - the grace only applies to the landing that ENDS a pull (arrival,
+#     timeout, or a cancel trigger), never to a mid-pull collision. This is deliberate, not a bug.
+#   - A sneak-cancel (or any other cancel) while still high above the ground is FATAL once
+#     Fall_Damage_Grace_Ticks (40 ticks ~= 2 seconds by default) expires - the grace is a short landing window,
+#     not permanent fall immunity for the rest of the fall. Lower Fall_Damage_Grace_Ticks toward 0 for a
+#     stricter server, or accept this as intentional anti-abuse (it prevents grapple-then-cancel from being a
+#     free-fall-immunity exploit at any height).
 
 grapple:
    Material: FISHING_ROD

@@ -171,11 +171,12 @@ class GrappleLaunchListenerTest {
 	}
 
 	@Test
-	@DisplayName("blocked LOS (a RayTraceResult hit) silently refuses the launch when Require_Line_Of_Sight is set")
+	@DisplayName("blocked LOS (a RayTraceResult hit) refuses the launch and sends Grapple_Blocked")
 	void onPlayerFish_inGroundHasPermission_blockedLos_refusesLaunch() {
 		GrappleService  grappleService  = mock(GrappleService.class);
 		GrappleAddon    grappleAddon    = mock(GrappleAddon.class);
 		GrappleMessages grappleMessages = mock(GrappleMessages.class);
+		when(grappleMessages.blocked()).thenReturn("blocked-message");
 
 		Grapple grapple = Grapple.builder().grappleId("test").requireLineOfSight(true).maxDistance(25).build();
 		when(grappleAddon.getGrapple("test")).thenReturn(grapple);
@@ -200,14 +201,16 @@ class GrappleLaunchListenerTest {
 		new GrappleLaunchListener(grappleService, grappleAddon, grappleMessages).onPlayerFish(event);
 
 		verify(grappleService, never()).start(any(), any(), any());
+		verify(player).sendMessage("blocked-message");
 	}
 
 	@Test
-	@DisplayName("outside the world border silently refuses the launch regardless of LOS")
+	@DisplayName("outside the world border refuses the launch and sends Grapple_Blocked, regardless of LOS")
 	void onPlayerFish_inGroundHasPermission_outsideBorder_refusesLaunch() {
 		GrappleService  grappleService  = mock(GrappleService.class);
 		GrappleAddon    grappleAddon    = mock(GrappleAddon.class);
 		GrappleMessages grappleMessages = mock(GrappleMessages.class);
+		when(grappleMessages.blocked()).thenReturn("blocked-message");
 
 		// requireLineOfSight left at its (false) default — the border check must refuse the launch on its own,
 		// before LOS is ever consulted.
@@ -231,14 +234,16 @@ class GrappleLaunchListenerTest {
 		new GrappleLaunchListener(grappleService, grappleAddon, grappleMessages).onPlayerFish(event);
 
 		verify(grappleService, never()).start(any(), any(), any());
+		verify(player).sendMessage("blocked-message");
 	}
 
 	@Test
-	@DisplayName("F1: an anchor at Max_Distance + 1 is refused")
+	@DisplayName("F1: an anchor at Max_Distance + 1 is refused and sends Grapple_Blocked")
 	void onPlayerFish_inGroundHasPermission_beyondMaxDistance_refusesLaunch() {
 		GrappleService  grappleService  = mock(GrappleService.class);
 		GrappleAddon    grappleAddon    = mock(GrappleAddon.class);
 		GrappleMessages grappleMessages = mock(GrappleMessages.class);
+		when(grappleMessages.blocked()).thenReturn("blocked-message");
 
 		Grapple grapple = Grapple.builder().grappleId("test").maxDistance(25).build();
 		when(grappleAddon.getGrapple("test")).thenReturn(grapple);
@@ -261,6 +266,7 @@ class GrappleLaunchListenerTest {
 		new GrappleLaunchListener(grappleService, grappleAddon, grappleMessages).onPlayerFish(event);
 
 		verify(grappleService, never()).start(any(), any(), any());
+		verify(player).sendMessage("blocked-message");
 	}
 
 	@Test

@@ -66,13 +66,24 @@ public class GrappleLaunchListener implements Listener {
 		}
 
 		Location anchor = event.getHook().getLocation();
-		if (!isWithinMaxDistance(player, grapple, anchor)) return;
-		if (!isWithinWorldBorder(anchor)) return;
-		if (grapple.isRequireLineOfSight() && !hasLineOfSight(player, anchor)) return;
+		// G4: Grapple_Blocked is sent for range/border/LOS refusals — the player did something wrong (aimed too
+		// far, at a wall, out of bounds) and needs feedback. It is deliberately NOT sent for start()'s own
+		// cooldown/already-active no-op below — the player already knows about those (they just used it, or are
+		// mid-pull), so a second message would be noise, not feedback.
+		if (!isWithinMaxDistance(player, grapple, anchor)) {
+			player.sendMessage(grappleMessages.blocked());
+			return;
+		}
+		if (!isWithinWorldBorder(anchor)) {
+			player.sendMessage(grappleMessages.blocked());
+			return;
+		}
+		if (grapple.isRequireLineOfSight() && !hasLineOfSight(player, anchor)) {
+			player.sendMessage(grappleMessages.blocked());
+			return;
+		}
 
 		grappleService.start(player, grapple, anchor);
-		// start() silently no-ops on cooldown/already-active/out-of-range/out-of-border/blocked-LOS — no message
-		// for any of them (G4 can add messages later if wanted).
 	}
 
 	/**

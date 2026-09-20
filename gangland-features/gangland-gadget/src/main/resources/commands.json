@@ -30,5 +30,17 @@
 	"jetpack_give": {
 		"usage": "/glw jetpack give <id> <amount>",
 		"description": "Gives the specified jetpack item."
+	},
+	"grapple": {
+		"usage": "/glw grapple",
+		"description": "Shows grapple help page."
+	},
+	"grapple_help": {
+		"usage": "/glw grapple help <page>",
+		"description": "Shows the specified page in grapple menu."
+	},
+	"grapple_give": {
+		"usage": "/glw grapple give <id> <amount>",
+		"description": "Gives the specified grapple item."
 	}
 }

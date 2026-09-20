@@ -47,6 +47,26 @@ public class GrappleMessages implements FileInitializer {
 		                                                           + "grapple."));
 	}
 
+	/**
+	 * G4: sent from {@code GrappleLaunchListener} on a refused launch — out of {@code Max_Distance}, outside the
+	 * world border, or a blocked line of sight. Not sent for a cooldown/already-active no-op (the player already
+	 * knows about those); once per cast attempt, no separate throttle — each attempt is a deliberate player action
+	 * ({@code PlayerFishEvent.State#IN_GROUND} fires once per landed hook, not repeatedly), the same rate the
+	 * existing permission-denial message already sends at.
+	 */
+	public String blocked() {
+		return GanglandChatUtil.color(get("Grapple_Blocked", "&cThe grapple couldn't reach there."));
+	}
+
+	public String gave(String name, String amount) {
+		return GanglandChatUtil.color(get("Grapple_Gave", "&aGave %amount% grapple(s) '%name%'.")
+				.replace("%name%", name).replace("%amount%", amount));
+	}
+
+	public String invalid(String name) {
+		return GanglandChatUtil.color(get("Grapple_Invalid", "&cInvalid grapple '%name%'.").replace("%name%", name));
+	}
+
 	private String get(String key, String fallback) {
 		return fileHandler.getFileConfiguration().getString(key, fallback);
 	}
