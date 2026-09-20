@@ -6,6 +6,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.bartizan.api.BartizanApi;
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.keystone.npc.NpcDifficulty;
 import org.luckyraven.keystone.npc.spi.NpcRangedAttack;
 
@@ -30,7 +31,10 @@ public class BartizanNpcWeapons {
 	 * that from happening.
 	 */
 	public NpcRangedAttack create(LivingEntity shooter, @Nullable String weaponName, NpcDifficulty difficulty) {
-		if (weaponName == null) return NpcRangedAttack.NONE;
+		// WS7 G5b fix round 1 (review C2): the Settings check must come before the BartizanApi.class literal below
+		// is ever reached - on a real Bartizan-less server that literal fails to resolve (NoClassDefFoundError),
+		// which the old rsp == null check never got a chance to guard against.
+		if (weaponName == null || !Settings.isBartizanAvailable()) return NpcRangedAttack.NONE;
 
 		RegisteredServiceProvider<BartizanApi> rsp = Bukkit.getServicesManager().getRegistration(BartizanApi.class);
 		if (rsp == null) return NpcRangedAttack.NONE;
@@ -49,7 +53,9 @@ public class BartizanNpcWeapons {
 	 */
 	@Nullable
 	public ItemStack buildItem(@Nullable String weaponName) {
-		if (weaponName == null) return null;
+		// WS7 G5b fix round 1 (review C2): same short-circuit as create() above - guard before the BartizanApi.class
+		// literal, not after.
+		if (weaponName == null || !Settings.isBartizanAvailable()) return null;
 
 		RegisteredServiceProvider<BartizanApi> rsp = Bukkit.getServicesManager().getRegistration(BartizanApi.class);
 		if (rsp == null) return null;

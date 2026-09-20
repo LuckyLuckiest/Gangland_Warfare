@@ -21,6 +21,7 @@ import org.luckyraven.gangland.gadget.item.JetpackItemRefresher;
 import org.luckyraven.gangland.gadget.item.JetpackItemSerializer;
 import org.luckyraven.gangland.gadget.jetpack.JetpackService;
 import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
+import org.luckyraven.gangland.gadget.listener.car.CarDamageState;
 import org.luckyraven.gangland.gadget.sign.CarSignContribution;
 import org.luckyraven.gangland.gadget.sign.CarSignViewProvider;
 import org.luckyraven.gangland.gang.member.MemberManager;
@@ -68,6 +69,15 @@ public class GadgetModuleConfig {
 	@Bean
 	public CarMessageContract carMessageContract() {
 		return new GanglandCarMessages();
+	}
+
+	/**
+	 * Shared mutable state crossing the {@code CarDamageListener}/{@code CarWeaponDamageListener} split (WS7 G5,
+	 * B6) — constructed once here and injected into both listeners.
+	 */
+	@Bean
+	public CarDamageState carDamageState() {
+		return new CarDamageState();
 	}
 
 	/**

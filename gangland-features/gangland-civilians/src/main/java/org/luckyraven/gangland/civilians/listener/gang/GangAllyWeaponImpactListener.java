@@ -5,6 +5,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.user.User;
@@ -18,11 +19,15 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
  * clouds, melee custom handlers, etc.) are still cancelled when both shooter and target are gang members or allies.
  *
  * <p>Moved from the deleted weapon module (T-H5); lives in {@code gangland-civilians} rather than the core because
- * the core carries zero {@code org.luckyraven.bartizan} references (PICK Amendments ruling (a)). The module already
- * declares {@code Plugins: [Bartizan]}, so the module loader skips this class entirely when Bartizan is absent — no
- * manual registration, no lazy-class-loading trick.
+ * the core carries zero {@code org.luckyraven.bartizan} references (PICK Amendments ruling (a)). WS7 G5b: the
+ * module dropped its hard {@code Plugins: [Bartizan]} dependency, so this class instead gates its own
+ * construction/registration with {@code @ListenerHandler(condition = "isBartizanAvailable")} — same reasoning as
+ * {@link Settings#isBartizanAvailable()}'s javadoc: Bukkit's reflective scan resolves this {@code @EventHandler}
+ * method's {@link WeaponRaytraceImpactEvent} parameter type eagerly, and on a Bartizan-less server that throws
+ * {@code NoClassDefFoundError} unless construction is skipped entirely. The gang-enabled check that used to be the
+ * gate now runs as an ordinary early-return inside the handler body.
  */
-@ListenerHandler(condition = "isGangEnabled")
+@ListenerHandler(condition = "isBartizanAvailable")
 public class GangAllyWeaponImpactListener implements Listener {
 
 	private final UserManager<Player> userManager;
@@ -36,6 +41,7 @@ public class GangAllyWeaponImpactListener implements Listener {
 
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onGangMemberWeaponImpact(WeaponRaytraceImpactEvent event) {
+		if (!Settings.isGangEnabled()) return;
 		if (!(event.getShooter() instanceof Player damager)) return;
 		if (!(event.getHitEntity() instanceof Player damaged)) return;
 

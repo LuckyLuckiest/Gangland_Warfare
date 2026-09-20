@@ -1,14 +1,12 @@
 package org.luckyraven.gangland.civilians;
 
 import lombok.CustomLog;
-import org.luckyraven.bartizan.api.combat.CombatEligibility;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.civilians.integration.GanglandCivilianSpawnConfigProvider;
 import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.combat.BartizanNpcWeapons;
 import org.luckyraven.gangland.civilians.npc.combat.DownedTargetFilter;
-import org.luckyraven.gangland.civilians.npc.combat.GanglandCombatEligibility;
 import org.luckyraven.gangland.civilians.npc.config.CivilianSettings;
 import org.luckyraven.gangland.civilians.npc.config.CiviliansLoader;
 import org.luckyraven.gangland.civilians.npc.entity.GanglandMarkDefaults;
@@ -25,11 +23,13 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 /**
  * CONFIG-phase wiring for the civilians module (T-H1/T-H3), moved out of cops-n-crooks's
- * {@code CopsNCrooksModuleConfig} "Civilians + entity marks" section (T-H2) plus the four new Bartizan/Keystone SPI
- * implementations this stream introduces (T-H3): {@link BartizanNpcWeapons} (a factory hook, not itself an
- * {@code NpcRangedAttack}), {@link DownedTargetFilter}, {@link GanglandMarkDefaults} and
- * {@link GanglandCombatEligibility} — the wave's one direction reversal, published on the {@code ServicesManager}
- * under Bartizan's {@link CombatEligibility} interface so Bartizan can pull it.
+ * {@code CopsNCrooksModuleConfig} "Civilians + entity marks" section (T-H2) plus three of the four new
+ * Bartizan/Keystone SPI implementations this stream introduces (T-H3): {@link BartizanNpcWeapons} (a factory hook,
+ * not itself an {@code NpcRangedAttack}), {@link DownedTargetFilter} and {@link GanglandMarkDefaults}. The fourth,
+ * {@code GanglandCombatEligibility}, is wired in the sibling {@link CombatEligibilityConfig} instead (WS7 G5b) —
+ * its bean return type names a Bartizan type directly, and this class must stay Bartizan-free so Keystone's
+ * per-class {@code ReflectionGuard.orSkip} never has cause to skip these 8 unrelated beans on a Bartizan-less
+ * server.
  */
 @CustomLog
 @Configuration
@@ -77,16 +77,6 @@ public class CiviliansModuleConfig {
 	@Bean
 	public DownedTargetFilter npcTargetFilter() {
 		return new DownedTargetFilter();
-	}
-
-	/**
-	 * Published under the declared return type ({@link CombatEligibility}, Bartizan's interface — never the
-	 * concrete class), per {@code BeanFactory}'s {@code publishToServicesManager} contract: Bartizan resolves it
-	 * lazily via {@code Bukkit.getServicesManager().getRegistration(CombatEligibility.class)}.
-	 */
-	@Bean(publishToServicesManager = true)
-	public CombatEligibility combatEligibility() {
-		return new GanglandCombatEligibility();
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------

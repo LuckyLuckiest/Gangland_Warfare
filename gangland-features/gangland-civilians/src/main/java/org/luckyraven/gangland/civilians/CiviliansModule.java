@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.civilians;
 
 import lombok.CustomLog;
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.keystone.diagnostics.Diagnostics;
 import org.luckyraven.keystone.diagnostics.Fault;
 import org.luckyraven.keystone.module.KeystoneModule;
@@ -17,11 +18,15 @@ import org.luckyraven.keystone.npc.NpcSupport;
  *     <li>{@link CiviliansYamlConfig} — the KERNEL-phase registration of {@code npc/civilians.yml}.</li>
  *     <li>{@link CiviliansModuleConfig} — the CONFIG-phase beans: {@code CiviliansLoader}, the Keystone
  *     {@code NpcMarkManager} + {@code GanglandMarkDefaults}, {@code BartizanNpcWeapons},
- *     {@code DownedTargetFilter}, {@code GanglandCombatEligibility}, {@code CivilianNpcRegistry},
- *     {@code CivilianNpcFactory}, {@code CivilianSpawnManager}, {@code CivilianService}.</li>
+ *     {@code DownedTargetFilter}, {@code CivilianNpcRegistry}, {@code CivilianNpcFactory},
+ *     {@code CivilianSpawnManager}, {@code CivilianService}. {@link CombatEligibilityConfig} carries the ninth bean,
+ *     {@code GanglandCombatEligibility}, and is only registered below when Bartizan is available (WS7 G5b fix round
+ *     1, review C1) — its bean return type names a Bartizan type directly, so it cannot live on this always-scanned
+ *     class without risking the other 8 beans.</li>
  *     <li>{@code civilians.listener} — {@code @ListenerHandler} classes, including
- *     {@code listener.gang.GangAllyWeaponImpactListener} (T-H5), gated for free by this module's own
- *     {@code Plugins: [Bartizan]}.</li>
+ *     {@code listener.gang.GangAllyWeaponImpactListener} (T-H5), which gates its own registration with
+ *     {@code condition = "isBartizanAvailable"} — this module's {@code module.yml} no longer carries a hard
+ *     {@code Plugins: [Bartizan]} dependency, so nothing gates it for free.</li>
  *     <li>{@code civilians.command} — the {@code /glw civilian}/{@code civiliangroups}/{@code civilianspawner}
  *     command tree.</li>
  *     <li>{@code civilians.database} — the {@code CivilianSpawner} repository and table.</li>
@@ -42,6 +47,12 @@ public final class CiviliansModule implements KeystoneModule {
 		         .listenerPackage(LISTENER_PACKAGE)
 		         .commandPackage(COMMAND_PACKAGE)
 		         .repositoryPackage(REPOSITORY_PACKAGE);
+
+		// WS7 G5b fix round 1 (review C1): CombatEligibilityConfig must actually be registered, or
+		// GanglandCombatEligibility is never published and downed players silently become hittable again.
+		if (Settings.isBartizanAvailable()) {
+			registrar.configuration(CombatEligibilityConfig.class);
+		}
 	}
 
 	@Override

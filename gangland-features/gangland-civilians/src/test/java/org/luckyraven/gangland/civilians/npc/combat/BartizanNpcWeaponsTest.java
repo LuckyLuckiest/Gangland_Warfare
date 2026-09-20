@@ -3,6 +3,7 @@ package org.luckyraven.gangland.civilians.npc.combat;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.ServicesManager;
 import org.junit.jupiter.api.DisplayName;
@@ -42,9 +43,15 @@ class BartizanNpcWeaponsTest {
 		MockedStatic<Bukkit>                   bukkit          = mockStatic(Bukkit.class);
 		ServicesManager                        servicesManager = mock(ServicesManager.class);
 		RegisteredServiceProvider<BartizanApi> rsp             = mock(RegisteredServiceProvider.class);
+		// WS7 G5b fix round 1 (review C2): create()/buildItem() now check Settings.isBartizanAvailable() (which
+		// reads Bukkit.getPluginManager()) before ever touching the ServicesManager - every test below exercises
+		// the RSP-lookup path, so Bartizan must be reported available here.
+		PluginManager pluginManager = mock(PluginManager.class);
+		when(pluginManager.isPluginEnabled("Bartizan")).thenReturn(true);
 		when(rsp.getProvider()).thenReturn(api);
 		when(servicesManager.getRegistration(BartizanApi.class)).thenReturn(rsp);
 		bukkit.when(Bukkit::getServicesManager).thenReturn(servicesManager);
+		bukkit.when(Bukkit::getPluginManager).thenReturn(pluginManager);
 		return bukkit;
 	}
 
@@ -119,12 +126,15 @@ class BartizanNpcWeaponsTest {
 	}
 
 	@Test
-	@DisplayName("buildItem() returns null when Bartizan is absent")
+	@DisplayName("buildItem() returns null when Bartizan's service registration is absent")
 	void buildItem_bartizanAbsent_returnsNull() {
 		try (MockedStatic<Bukkit> bukkit = mockStatic(Bukkit.class)) {
 			ServicesManager servicesManager = mock(ServicesManager.class);
+			PluginManager   pluginManager   = mock(PluginManager.class);
 			when(servicesManager.getRegistration(BartizanApi.class)).thenReturn(null);
+			when(pluginManager.isPluginEnabled("Bartizan")).thenReturn(true);
 			bukkit.when(Bukkit::getServicesManager).thenReturn(servicesManager);
+			bukkit.when(Bukkit::getPluginManager).thenReturn(pluginManager);
 
 			assertNull(weapons.buildItem("rifle"));
 		}
