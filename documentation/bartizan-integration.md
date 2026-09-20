@@ -78,8 +78,8 @@ scope (enforced by gate G4's boundary greps in the Bartizan-wave checklist).
 
 ## What never breaks
 
-Gang management, economy, waypoints, loot chests (aside from `weapon:`/`ammo:`/`wearable:` entries), the
-scoreboard, ranks, mail, gang alliances, turf capture's core mechanics (contribution, income, garrison — separate
+Gang management, economy, waypoints, loot chests (aside from `weapon:`/`ammo:`/`wearable:` entries), ranks,
+mail, gang alliances, turf capture's core mechanics (contribution, income, garrison — separate
 from the Quartermaster/garrison-defender NPCs, which are Citizens-gated, not Bartizan-gated directly), and trader/
 banker NPC shops (`gangland-npc-shops` carries no `Plugins:` dependency at all).
 

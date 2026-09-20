@@ -50,7 +50,7 @@ Run the checklist for any feature whose code, config, or dependencies changed th
 | 4  | [Loot Chests](./features/loot_chests.md)           | [loot_chests](../features/loot_chests.md)         |
 | 5  | [Levels](./features/levels.md)                     | [levels](../features/levels.md)                   |
 | 6  | [Unique Items](./features/unique-items.md)         | [unique-items](../features/unique-items.md)       |
-| 7  | [Scoreboard](./features/scoreboard.md)             | [scoreboard](../features/scoreboard.md)           |
+| 7  | [Scoreboard](./features/scoreboard.md)             | Moved to the standalone Plaque plugin as of 0.10.0 |
 | 8  | [Weapons](./features/weapons.md)                   | [weapons](../features/weapons.md)                 |
 | 9  | [Wanted & Bounty](./features/wanted-bounty.md)     | [wanted-bounty](../features/wanted-bounty.md)     |
 | 10 | [Trade Signs](./features/trade-signs.md)           | [trade-signs](../features/trade-signs.md)         |

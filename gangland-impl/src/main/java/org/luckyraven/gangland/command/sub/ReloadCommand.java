@@ -10,7 +10,6 @@ import org.luckyraven.gangland.bootstrap.PeriodicalUpdates;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.bean.command.CommandHandler;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.ArrayList;
@@ -50,14 +49,6 @@ public final class ReloadCommand extends Command {
 			                                            true);
 									  });
 
-		Argument scoreboard = new Argument(getPlugin(), "scoreboard", getArgumentTree(), (argument, sender, args) -> {
-			reloadProcess("scoreboard", () -> {
-				if (Settings.isScoreboardEnabled()) {
-					gangland.getReloadPlugin().scoreboardReload();
-				}
-			}, false);
-		});
-
 		GanglandContext context = gangland.getContext();
 
 		Argument inventory = new Argument(getPlugin(), "inventory", getArgumentTree(), (argument, sender, args) -> {
@@ -76,7 +67,6 @@ public final class ReloadCommand extends Command {
 		List<Argument> arguments = new ArrayList<>();
 
 		arguments.add(files);
-		arguments.add(scoreboard);
 		arguments.add(inventory);
 		arguments.add(cleanup);
 

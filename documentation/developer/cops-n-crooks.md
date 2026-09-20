@@ -1085,7 +1085,7 @@ The module fires 11 custom Bukkit events:
 public void onWantedStart(WantedStartEvent event) {
 	Player player = event.getPlayer();
 	int    level  = event.getWantedLevel();
-	// Spawn cops, update scoreboard, etc.
+	// Spawn cops, notify the player, etc.
 }
 
 @EventHandler

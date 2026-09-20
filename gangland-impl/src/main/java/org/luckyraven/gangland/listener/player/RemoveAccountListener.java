@@ -80,11 +80,6 @@ public final class RemoveAccountListener implements Listener {
 
 		if (bank != null) bankRepository.save(bank);
 
-		if (user.getScoreboard() != null) {
-			user.getScoreboard().end();
-			user.setScoreboard(null);
-		}
-
 		// add to offline user manager - copy in-memory data to avoid a redundant DB round-trip
 		User<OfflinePlayer> offlineUser = offlineUserManager.create(player);
 

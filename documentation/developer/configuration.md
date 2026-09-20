@@ -23,7 +23,6 @@ file is renamed with a `-old` suffix and a fresh default is generated.
 | `wearables.yml`    | Wearable armor definitions                   |
 | `unique_items.yml` | Unique item definitions                      |
 | `ammunition.yml`   | Ammunition type definitions                  |
-| `scoreboard.yml`   | Scoreboard layout and lines                  |
 | `plugin.yml`       | Spigot plugin metadata (not user-editable)   |
 
 ---
@@ -84,20 +83,6 @@ Database:
    Clean_Up:
       Time: 30                     # Days before old data cleanup
 ```
-
-### Scoreboard
-
-```yaml
-Scoreboard:
-  Enable: true
-  Driver: "Driver_V3"           # Driver_V1, Driver_V2, or Driver_V3
-```
-
-| Driver      | Algorithm                                         |
-|-------------|---------------------------------------------------|
-| `Driver_V1` | Clustering algorithm for similar-interval updates |
-| `Driver_V2` | Built-in library for cluster management           |
-| `Driver_V3` | Change detection caching, temporary alternative   |
 
 ### Inventory
 
@@ -510,22 +495,11 @@ ammunition:
 
 ## scoreboard.yml
 
-Scoreboard layout configuration.
-
-```yaml
-title:
-   text: "&6Gangland Warfare"
-   animated: false
-lines:
-   -  text: "&7Balance: &a%balance%"
-      update_interval: 20
-   -  text: "&7Level: &e%level%"
-      update_interval: 100
-   -  text: "&7Gang: &b%gang_name%"
-      update_interval: 60
-   -  text: "&7Wanted: %wanted_stars%"
-      update_interval: 10
-```
+Removed in 0.10.0. Scoreboard rendering moved to the standalone **Plaque** plugin
+(`E:\Programming\java\Plaque`), which owns its own `scoreboard.yml` with the identical schema
+(`Board.Title.{Interval,Lines}` / `Board.Rows.<n>.{Interval,Lines}`) against Gangland's `%gangland_*%`
+PlaceholderAPI tokens — copy `plugins/Gangland_Warfare/scoreboard.yml` to `plugins/Plaque/scoreboard.yml`
+verbatim and it loads unchanged.
 
 ---
 

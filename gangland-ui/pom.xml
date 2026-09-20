@@ -19,7 +19,6 @@
     <modules>
         <module>hologram-api</module>
         <module>inventory-api</module>
-        <module>scoreboard-api</module>
         <module>sign-api</module>
         <module>lootchest-api</module>
         <module>shop-api</module>

@@ -156,7 +156,6 @@ public class KernelConfig {
 	public FileManager fileManager() {
 		FileManager fm = new FileManager(gangland);
 		fm.addFile(new FileHandler(gangland, "settings", ".yml"), true);
-		fm.addFile(new FileHandler(gangland, "scoreboard", ".yml"), true);
 
 		fm.addFile(new FileHandler(gangland, "unique_items", "items", ".yml"), true);
 		fm.addFile(new FileHandler(gangland, "money", "items", ".yml"), true);

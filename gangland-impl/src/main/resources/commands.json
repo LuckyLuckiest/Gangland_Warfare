@@ -43,10 +43,6 @@
 		"usage": "/glw reload data",
 		"description": "Reloads the data related to the database."
 	},
-	"reload_scoreboard": {
-		"usage": "/glw reload scoreboard",
-		"description": "Reloads the scoreboard."
-	},
 	"economy": {
 		"usage": "/glw economy",
 		"description": "Shows economy help page."

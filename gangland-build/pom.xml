@@ -41,11 +41,6 @@
                          unrelocated. -->
                     <relocations>
                         <relocation>
-                            <pattern>fr.mrmicky.fastboard</pattern>
-                            <shadedPattern>org.luckyraven.gangland.dependency.fastboard</shadedPattern>
-                        </relocation>
-
-                        <relocation>
                             <pattern>org.bstats</pattern>
                             <shadedPattern>org.luckyraven.gangland.dependency.bstats</shadedPattern>
                         </relocation>
@@ -73,7 +68,6 @@
                                  plugin never includes them — the runtime copies come from Keystone.jar. -->
                             <include>org.luckyraven:*</include>
                             <include>net.wesjd:anvilgui</include>
-                            <include>fr.mrmicky:fastboard</include>
                             <include>org.bstats:*</include>
                         </includes>
                         <excludes>

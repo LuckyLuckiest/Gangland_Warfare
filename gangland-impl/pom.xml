@@ -68,10 +68,6 @@
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>scoreboard-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
             <artifactId>sign-api</artifactId>
         </dependency>
         <dependency>

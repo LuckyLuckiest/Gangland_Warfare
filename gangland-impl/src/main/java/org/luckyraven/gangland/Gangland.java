@@ -9,7 +9,6 @@ import net.milkbowl.vault.economy.Economy;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.bstats.bukkit.Metrics;
-import org.bstats.charts.AdvancedPie;
 import org.bstats.charts.SingleLineChart;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
@@ -32,14 +31,11 @@ import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.gang.vault.permission.VaultPermissionBridge;
 import org.luckyraven.keystone.vault.permission.VaultOfflinePermissionService;
 import org.luckyraven.keystone.sound.ResourcePackTracker;
-import org.luckyraven.gangland.scoreboard.ScoreboardManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.keystone.update.UpdateNotifier;
 import org.luckyraven.keystone.update.UpdateChecker;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Getter
 @CustomLog
@@ -62,6 +58,12 @@ public final class Gangland extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
+		// Symmetric teardown (mirrors Bartizan.java's onDisable): GanglandPlaceholder is registered as a
+		// PlaceholderProvider service at bean construction (WiringConfig.ganglandPlaceholder), so a disable/enable
+		// cycle must not leave a dead provider behind for an external consumer (Plaque) to resolve. First statement,
+		// before the context-null early return below, so it always runs even if onEnable() never completed.
+		getServer().getServicesManager().unregisterAll(this);
+
 		// vault soft dependency economy check
 		if (EconomyHandler.getVaultEconomy() != null) {
 			EconomyHandler.setVaultEconomy(null);
@@ -127,22 +129,6 @@ public final class Gangland extends JavaPlugin {
 		// number of waypoints
 		metrics.addCustomChart(
 				new SingleLineChart("number_of_waypoints", () -> context.get(WaypointManager.class).size()));
-
-		// scoreboard driver
-		metrics.addCustomChart(new AdvancedPie("scoreboard_driver", () -> {
-			Map<String, Integer> values = new HashMap<>();
-
-			for (String driver : ScoreboardManager.getDrivers()) {
-				if (!driver.equalsIgnoreCase(Settings.getScoreboardDriver())) {
-					values.put(driver, 0);
-					continue;
-				}
-
-				values.put(driver, 100);
-			}
-
-			return values;
-		}));
 	}
 
 	/**

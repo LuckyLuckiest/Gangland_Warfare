@@ -23,7 +23,6 @@ Run the three tests (regenerate / reload / corrupt) against each file below.
 ### Root
 
 - [ ] `settings.yml` — main runtime config (database type, auto-save interval, economy knobs).
-- [ ] `scoreboard.yml` — scoreboard layout and colours.
 - [ ] `plugin.yml` — Bukkit metadata. Changes require a restart (Bukkit limitation); do **not** expect reload to
   pick these up. Smoke test: cold-start only.
 - [ ] `commands.json` — command descriptions. Per `feedback_commands_json`, any new command added this release must

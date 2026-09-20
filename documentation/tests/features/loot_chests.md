@@ -62,7 +62,7 @@ Placeable loot chests with tiered loot tables, keys, hologram labels, and cooldo
 ## Regression Risks
 
 - `LootChestManager` — placement, roll, persistence.
-- Hologram API — spawn, update, remove on reload (see [scoreboard](./scoreboard.md) for similar concerns).
+- Hologram API — spawn, update, remove on reload.
 - Item refresher pattern — if chest delivers stateful items (like fuel-bearing cars), they must refresh via
   `ItemRefresher` per `feedback_item_refresher_pattern`.
 

@@ -35,20 +35,18 @@ This checklist exercises the enable, reload, and disable paths end-to-end.
   traders load back in.
 - [ ] NPC entities re-spawn at their saved locations (Citizens must not have a persistent copy — our repositories
   own NPC state).
-- [ ] Active scoreboard shows on every online player's screen at correct values.
 
 ---
 
 ## `/glw reload` (full reload)
 
-- [ ] While the server is running, open an inventory, equip a weapon, and have a scoreboard visible.
+- [ ] While the server is running, open an inventory and equip a weapon.
 - [ ] Run `/glw reload` as an op.
 - [ ] Console shows `context.reloadBeans()` firing in topological order.
 - [ ] After completion:
     - [ ] `/glw help` still responds.
     - [ ] The open inventory was closed or cleanly re-initialised (no ghost clicks).
     - [ ] Weapon still fires with correct stats.
-    - [ ] Scoreboard still renders.
 - [ ] Trigger an event the plugin listens to (join/leave, block place, sign interact). The handler fires **once**, not
   twice — verifies listeners did not double-register.
 
@@ -68,14 +66,6 @@ This checklist exercises the enable, reload, and disable paths end-to-end.
 - [ ] Run `/glw reload data`.
 - [ ] In-memory caches drop and re-read from DB.
 - [ ] User data for online players re-populates within one tick.
-
----
-
-## `/glw reload scoreboard`
-
-- [ ] Edit `scoreboard.yml` (e.g. change a line's colour code).
-- [ ] Run `/glw reload scoreboard`.
-- [ ] All online players see the new scoreboard immediately.
 
 ---
 

@@ -53,10 +53,10 @@ the relevant subsystem heavily.
 ## 4. Reload
 
 - [ ] `/glw reload` completes with no errors.
-- [ ] `/glw reload files`, `/glw reload data`, `/glw reload scoreboard` each individually complete cleanly.
+- [ ] `/glw reload files`, `/glw reload data` each individually complete cleanly.
 - [ ] After reload: a previously-working command still responds; a previously-registered listener fires exactly once
   (no duplicates).
-- [ ] Active player state (open inventories, equipped weapons, scoreboard) is preserved or cleanly re-initialised.
+- [ ] Active player state (open inventories, equipped weapons) is preserved or cleanly re-initialised.
 
 ---
 

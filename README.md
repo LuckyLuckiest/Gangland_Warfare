@@ -60,11 +60,6 @@ public, gang-restricted, or permission-gated.
 Randomized reward containers that unlock on a countdown timer. Five rarity tiers — Common through Legendary — with the
 upper tiers locked behind collectible keys. Rewards include money, XP, weapons, ammo, and more.
 
-### 📊 Scoreboard
-
-Live player stats with an animated title and per-row update intervals. Three rendering drivers available, including an
-interactive mode for advanced UI use cases.
-
 ---
 
 ## Requirements
@@ -75,7 +70,7 @@ interactive mode for advanced UI use cases.
 | [NBTAPI](https://www.spigotmc.org/resources/nbt-api.7939/)                | **Required** | Custom item data (unique items, loot chests, and more).             |
 | [Citizens](https://www.spigotmc.org/resources/citizens.13811/)            | Optional     | Powers cop and civilian NPCs. Without it, NPC spawning is skipped with a logged fault — the server still boots. |
 | Bartizan                                                                  | Optional     | The companion weapons plugin (weapons, ammo, wearables, projectiles). Without it, the civilians, cops-n-crooks and gadget modules are skipped entirely and turf with them and weapon-related item vocabularies do not resolve. |
-| [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/) | Optional     | Placeholders in messages and scoreboards.                            |
+| [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/) | Optional     | Placeholders in messages; also what the standalone Plaque plugin uses to render scoreboards. |
 | [Vault](https://www.spigotmc.org/resources/vault.34315/)                  | Optional     | Economy hook for cross-plugin compatibility.                          |
 | [ViaVersion](https://www.spigotmc.org/resources/viaversion.19254/)        | Optional     | Multi-version client support.                                        |
 
@@ -106,7 +101,6 @@ All commands use the `/glw` dispatcher (alias: `/gangland`).
 | `settings.yml`     | Database, economy, wanted level, bounty, gang, and level settings |
 | `cops.yml`         | Cop tier stats, AI behavior, spawn radii, and detainment options (ships inside the cops-n-crooks module jar) |
 | `unique_items.yml` | Phone, keys, lockpicks, and other special items                   |
-| `scoreboard.yml`   | Scoreboard driver, layout, and animation                          |
 
 Weapon/ammo/wearable configuration (`weapon/*.yml`, `ammunition.yml`, `wearables.yml`) is Bartizan's, generated
 under `plugins/Bartizan/` — not this plugin's config surface.
@@ -149,7 +143,6 @@ Bartizan type. Six runtime modules ship alongside it and can be dropped or added
 | `gangland-turf` (runtime module)       | Turf capture, contribution, garrison gameplay, and turf-NPC powerups         |
 | `gangland-gadget` (runtime module)     | Cars (`/glw car`) and jetpacks                                               |
 | `gangland-mail` (runtime module)       | Mail, gang invites, and alliance requests                                    |
-| `scoreboard-api`                       | FastBoard-based scoreboard rendering                                         |
 | `inventory-api`                        | Custom inventory and GUI framework                                           |
 | `sign-api`                             | Sign interaction system                                                      |
 | `lootchest-api`                        | Loot chest system with hologram support                                      |

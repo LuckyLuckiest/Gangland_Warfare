@@ -72,7 +72,6 @@
         <nbt.version>2.15.7</nbt.version>
         <xseries.version>13.6.0</xseries.version>
         <anvilgui.version>1.10.11-SNAPSHOT</anvilgui.version>
-        <fastboard.version>2.1.5</fastboard.version>
         <viaversion.version>5.8.1</viaversion.version>
         <placeholderapi.version>2.12.2</placeholderapi.version>
         <vault.version>1.7.1</vault.version>
@@ -250,11 +249,6 @@
             </dependency>
             <dependency>
                 <groupId>org.luckyraven</groupId>
-                <artifactId>scoreboard-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.luckyraven</groupId>
                 <artifactId>sign-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -368,12 +362,6 @@
                 <groupId>net.wesjd</groupId>
                 <artifactId>anvilgui</artifactId>
                 <version>${anvilgui.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>fr.mrmicky</groupId>
-                <artifactId>fastboard</artifactId>
-                <version>${fastboard.version}</version>
-                <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>org.bstats</groupId>

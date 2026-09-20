@@ -169,11 +169,6 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
 		for (User<T> user : users.values()) {
 			user.getWanted().stopTimer();
 			user.getBounty().stopTimer();
-
-			if (user.getScoreboard() == null) continue;
-
-			user.getScoreboard().end();
-			user.setScoreboard(null);
 		}
 	}
 

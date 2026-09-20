@@ -38,7 +38,7 @@ Debug:
    Enabled: false
    # Module names to flip to DEBUG level. Exact match (including spaces). Valid values:
    #   Gangland, Gangland Core, Cops N Crooks, Inventory API,
-   #   Lootchest API, Scoreboard API, Sign API, Plugin Persistence
+   #   Lootchest API, Sign API, Plugin Persistence
    # Leave the list empty to automatically flip every module discovered on the classpath.
    Modules: []
 
@@ -129,20 +129,6 @@ Database:
    Clean_Up:
       # Time to clean up the database from old data in days.
       Time: 30
-
-# +-------------------+ #
-# | Scoreboard Config | #
-# +-------------------+ #
-Scoreboard:
-   Enable: true
-   # The plugin supports multiple drivers, and each driver has its own algorithm and way of updating scoreboards.
-   # Drivers' list:
-   #  1) Driver_V1: Caches the lines into memory and uses a clustering algorithm that updates similar line intervals
-   #                each tick.
-   #  2) Driver_V2: Caches the lines into memory similar to Driver_V1 algorithm. The difference is it uses a built-in
-   #                library to manage the clusters.
-   #  3) Driver_V3: Uses interactive scoreboard to temporarily disable the main one and use the alternative scoreboard.
-   Driver: "Driver_V3"
 
 # +------------------+ #
 # | Inventory Config | #

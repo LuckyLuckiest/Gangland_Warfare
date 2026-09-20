@@ -1,7 +1,9 @@
 package org.luckyraven.gangland.config;
 
 import lombok.CustomLog;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.ServicePriority;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.command.CommandManager;
 import org.luckyraven.gangland.data.economy.BankTiers;
@@ -17,6 +19,7 @@ import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.bean.listener.ListenerPriority;
+import org.luckyraven.keystone.placeholder.PlaceholderProvider;
 import org.luckyraven.keystone.placeholder.replacer.Replacer;
 import org.luckyraven.gangland.data.placeholder.PlaceholderService;
 import org.luckyraven.gangland.data.placeholder.worker.GanglandPlaceholder;
@@ -84,6 +87,16 @@ public class WiringConfig {
 		                               moduleLoader.modulesDirectory(), messages);
 	}
 
+	/**
+	 * Also publishes {@link GanglandPlaceholder#asProvider()} as a Keystone {@link PlaceholderProvider} service on
+	 * the {@code ServicesManager} — the same publication idiom Bartizan's {@code ItemConfig.bartizanItemVocabulary}
+	 * uses for {@code ItemVocabulary} (construct, register, log, return). This is Plaque's second placeholder path
+	 * (behind real PlaceholderAPI, {@code PapiText.java}): a standalone plugin with no Gangland dependency that
+	 * resolves this service lazily, never caching it, so it degrades cleanly if Gangland is absent, disabled or
+	 * reloaded. {@code Gangland.onDisable()} unregisters every service this plugin owns via
+	 * {@code getServicesManager().unregisterAll(this)} as its first statement, so a disable/enable cycle never
+	 * leaves a dead provider behind for a consumer to resolve.
+	 */
 	@Bean
 	public GanglandPlaceholder ganglandPlaceholder(@Qualifier("online") UserManager<Player> userManager,
 	                                               MemberManager memberManager,
@@ -91,8 +104,12 @@ public class WiringConfig {
 	                                               UniqueItemAddon uniqueItemAddon,
 	                                               BankTiers bankTiers,
 	                                               PlaceholderService placeholderService) {
-		return new GanglandPlaceholder(Gangland.FULL_PREFIX, Replacer.Closure.PERCENT,
-		                               userManager, memberManager, gangManager,
-		                               uniqueItemAddon, bankTiers, placeholderService);
+		GanglandPlaceholder placeholder = new GanglandPlaceholder(Gangland.FULL_PREFIX, Replacer.Closure.PERCENT,
+		                                                          userManager, memberManager, gangManager,
+		                                                          uniqueItemAddon, bankTiers, placeholderService);
+		Bukkit.getServicesManager()
+		      .register(PlaceholderProvider.class, placeholder.asProvider(), gangland, ServicePriority.Normal);
+		log.info("Placeholder provider published for external consumers (e.g. Plaque)");
+		return placeholder;
 	}
 }

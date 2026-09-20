@@ -19,8 +19,6 @@ import org.luckyraven.gangland.inventory.condition.BooleanExpressionEvaluator;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.item.money.MoneyAddon;
 import org.luckyraven.keystone.persistence.FileManager;
-import org.luckyraven.gangland.scoreboard.ScoreboardManager;
-import org.luckyraven.gangland.scoreboard.configuration.ScoreboardAddon;
 import org.luckyraven.gangland.sign.GanglandSignInformation;
 import org.luckyraven.gangland.sign.service.SignInformation;
 import org.luckyraven.gangland.util.TimeMessages;
@@ -32,9 +30,8 @@ import org.luckyraven.gangland.util.TimeMessages;
  * construction time).
  *
  * <p>Intra-phase ordering is enforced by declaring upstream beans as parameters even when the produced bean's
- * constructor doesn't need them. For example, {@link #scoreboardAddon(FileManager, Settings)} doesn't actually use
- * {@code Settings} in the call to {@code new ScoreboardAddon(fileManager)} — but listing it as a parameter forces the
- * topological sort to put {@code Settings} first, which is the load order the legacy {@code addonsLoader()} relied on.
+ * constructor doesn't need them — listing {@link Settings} as a parameter on a downstream bean forces the
+ * topological sort to put it first, which is the load order the legacy {@code addonsLoader()} relied on.
  *
  * <p>Pure data beans (settings extension classes such as {@link GanglandCopSettings}) live here too because they
  * have no dependencies on the database / managers and naturally fit the FILE phase.
@@ -111,19 +108,6 @@ public class FileConfig {
 	// ---------------------------------------------------------------------------------------------------------------
 	// FileInitializer beans
 	// ---------------------------------------------------------------------------------------------------------------
-
-	@Bean
-	public ScoreboardAddon scoreboardAddon(FileManager fileManager, Settings settings) {
-		ScoreboardAddon addon = new ScoreboardAddon(fileManager);
-		fileManager.registerInitializer(addon);
-		return addon;
-	}
-
-	@Bean
-	public ScoreboardManager scoreboardManager(PlaceholderService placeholderService,
-	                                           ScoreboardAddon scoreboardAddon) {
-		return new ScoreboardManager(gangland, placeholderService, scoreboardAddon);
-	}
 
 	@Bean
 	public FuelService fuelService(Settings settings) {

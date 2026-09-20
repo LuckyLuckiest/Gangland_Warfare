@@ -5,7 +5,6 @@ import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.bootstrap.PeriodicalUpdates;
 import org.luckyraven.gangland.bootstrap.PlayerBootstrapService;
-import org.luckyraven.gangland.bootstrap.ScoreboardLifecycleService;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.bean.Configuration;
@@ -19,19 +18,16 @@ import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.persistence.FileManager;
-import org.luckyraven.gangland.scoreboard.ScoreboardManager;
 
 /**
- * CONFIG-phase wiring for the four lifecycle service beans that automate plugin reload, player loading, scoreboard
- * creation, and periodic auto-save. Every bean here implements {@link BeanLifecycle} and participates in the unified
+ * CONFIG-phase wiring for the lifecycle service beans that automate plugin reload, player loading, and periodic
+ * auto-save. Every bean here implements {@link BeanLifecycle} and participates in the unified
  * {@code context.reloadBeans()} / {@code context.shutdownBeans()} pipelines.
  *
  * <p>Topological ordering between these beans is enforced by declaring upstream services as constructor parameters,
  * even when the downstream bean doesn't invoke methods on them at runtime:
  * <ul>
  *     <li>{@link PlayerBootstrapService} depends on {@link FileManager} — files reload before players load</li>
- *     <li>{@link ScoreboardLifecycleService} depends on {@link PlayerBootstrapService} — players load before scoreboards
- *     are created</li>
  * </ul>
  */
 @Configuration
@@ -54,16 +50,6 @@ public class SchedulingConfig {
 	                                                     @SuppressWarnings("unused") FileManager fileManager) {
 		return new PlayerBootstrapService(gangland, ganglandDatabase, userManager, offlineUserManager, memberManager,
 		                                  userDataLoader, uniqueItemAddon);
-	}
-
-	@Bean
-	public ScoreboardLifecycleService scoreboardLifecycleService(ScoreboardManager scoreboardManager,
-	                                                             @Qualifier("online") UserManager<Player> userManager,
-	                                                             @SuppressWarnings("unused")
-																 PlayerBootstrapService playerBootstrapService) {
-		// PlayerBootstrapService needs to load before the ScoreboardLifecycleService since all the users need load
-		// before attaching the scoreboard to them
-		return new ScoreboardLifecycleService(gangland, scoreboardManager, userManager);
 	}
 
 	@Bean

@@ -28,7 +28,7 @@ public final class DownloadResourceCommand extends Command {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		if (!Settings.isScoreboardEnabled()) return;
+		if (!Settings.isResourcePackEnabled()) return;
 
 		Player player = (Player) commandSender;
 

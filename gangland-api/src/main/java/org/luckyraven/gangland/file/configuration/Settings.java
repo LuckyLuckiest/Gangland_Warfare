@@ -104,9 +104,6 @@ public class Settings implements FileInitializer {
 	private static @Getter BigDecimal gangCreateFee;
 	private static @Getter BigDecimal gangMaxBalance;
 	private static @Getter double     gangContributionRate;
-	// scoreboard configuration
-	private static @Getter boolean    scoreboardEnabled;
-	private static @Getter String     scoreboardDriver;
 	// civilian AI configuration
 	private static @Getter boolean    civilianAiEnabled;
 	private static @Getter int        civilianAiTickRate;
@@ -564,11 +561,6 @@ public class Settings implements FileInitializer {
 		gangCreateFee        = money(gangAccount, "Create_Cost", "100000");
 		gangMaxBalance       = money(gangAccount, "Maximum_Balance", "100000000000");
 		gangContributionRate = dbl(gangAccount, "Contribution_Rate", 1_000);
-
-		// scoreboard
-		NodeReader scoreboard = section(root, "Scoreboard", report);
-		scoreboardEnabled = bool(scoreboard, "Enable", true);
-		scoreboardDriver  = str(scoreboard, "Driver", "Driver_V3");
 
 		// civilian
 		NodeReader civilian                 = section(root, "Civilians", report);

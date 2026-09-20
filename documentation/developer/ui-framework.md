@@ -2,12 +2,11 @@
 
 ## Overview
 
-The Gangland Warfare UI framework is composed of five independent modules under `gangland-ui/`:
+The Gangland Warfare UI framework is composed of four independent modules under `gangland-ui/`:
 
 | Module           | Package                              | Classes | Purpose                                    |
 |------------------|--------------------------------------|---------|--------------------------------------------|
 | `inventory-api`  | `org.luckyraven.gangland.inventory`  | ~37     | Custom inventory GUIs with click handlers  |
-| `scoreboard-api` | `org.luckyraven.gangland.scoreboard` | ~8      | Per-player sidebar scoreboards             |
 | `sign-api`       | `org.luckyraven.gangland.sign`       | ~25     | Interactive sign placement and interaction |
 | `lootchest-api`  | `org.luckyraven.gangland.lootchest`  | ~35     | Loot chest sessions with cracking minigame |
 | `hologram-api`   | `org.luckyraven.gangland.hologram`   | 3       | Floating text via invisible armor stands   |
@@ -624,153 +623,9 @@ back());
 
 ## Scoreboard System
 
-### Architecture
-
-```
-ScoreboardAddon (config loader)
-    ├── reads YAML ──> Line / StaticLine objects
-    
-Scoreboard (orchestrator)
-    ├── uses ──> RepeatingTimer (tick every 1 tick)
-    ├── delegates to ──> DriverHandler (abstract)
-                            ├── DriverV1 (clustered updates)
-                            ├── DriverV2 (built-in clustering)
-                            ├── DriverV3 (minimal-diff, change detection)
-                                ├── wraps ──> FastBoard (packet-based scoreboard)
-```
-
-### Scoreboard (Orchestrator)
-
-Creates a `RepeatingTimer` that fires every tick (50ms) and calls `driver.update()`:
-
-```java
-public class Scoreboard {
-	public Scoreboard(JavaPlugin plugin, DriverHandler driver);
-
-	public void start();  // begins tick-based updates
-
-	public void end();    // stops timer and deletes FastBoard
-}
-```
-
-### DriverHandler (Abstract Base)
-
-Wraps FastBoard with ViaVersion compatibility and per-line update intervals:
-
-```java
-public abstract class DriverHandler {
-	// Fields
-	private final Placeholder     placeholder;
-	private final FastBoard       fastBoard;
-	private final List<Line>      lines;
-	private final Line            title;
-	private final Map<Line, Long> lineUpdateCounts;
-	private       long            globalTickCount;
-
-	// Abstract -- each driver version implements its own update strategy
-	public abstract void update();
-
-	// Shared helpers
-	protected String updateLine(Line line);   // resolves placeholders
-
-	protected void incrementTick();
-}
-```
-
-**ViaVersion support:** `FastBoardImpl` (inner class) overrides `hasLinesMaxLength()` to check the
-player's protocol version via ViaVersion API. Players on 1.13+ get unlimited line length.
-
-### Driver Versions
-
-**DriverV1** -- Caches lines and uses a clustering algorithm to group lines with similar update intervals,
-minimizing FastBoard API calls.
-
-**DriverV2** -- Similar to V1 with a built-in library-based clustering approach.
-
-**DriverV3** (recommended) -- Minimal-diff driver with change detection:
-
-```java
-public class DriverV3 extends DriverHandler {
-	private final Map<Long, List<Line>> clusters;        // lines grouped by interval
-	private final Map<Long, Integer>    clustersInterval; // tick counters per cluster
-	private final Map<Line, String>     cache;            // last rendered text per line
-}
-```
-
-Strategy:
-
-1. Group lines by their update interval into clusters
-2. Each tick, only process clusters whose interval counter is due
-3. Within due clusters, only send FastBoard updates for lines whose text actually changed
-4. Flash effects (`flashif:`, `flash:`) are updated every tick regardless of interval
-
-### Line / StaticLine
-
-**`Line`** -- a content unit with animated text support:
-
-```java
-public class Line {
-	private final long         interval;  // update interval in ticks (0 = static)
-	private final List<String> contents;  // rotating content frames
-	private final int          usedIndex; // position index in the scoreboard
-
-	public void addContent(String content);      // add a frame (auto-colorized)
-
-	public String getCurrentContent();           // current frame
-
-	public String update(Placeholder, Player);   // resolve placeholders, advance frame
-
-	public boolean isStatic();                   // true if interval==0 or StaticLine
-}
-```
-
-**`StaticLine`** -- extends `Line` with `interval=0`, never updates after initial render.
-
-### ScoreboardAddon (Configuration)
-
-Loads scoreboard configuration from `scoreboard.yml`:
-
-```yaml
-Board:
-   Title:
-      Interval: 20          # ticks between title frame changes
-      Lines:
-         - "&6Gangland &7Warfare"
-         - "&eGangland &7Warfare"
-   Rows:
-      1:
-         Interval: 0         # static line
-         Lines:
-            - "&7&m                    "
-      2:
-         Interval: 20        # update every second
-         Lines:
-            - "&fKills: &a%gangland_kills%"
-```
-
-**Example -- creating a scoreboard for a player:**
-
-```java
-ScoreboardAddon addon = new ScoreboardAddon(fileManager);
-
-DriverV3 driver = new DriverV3(
-		placeholder,                // Placeholder resolver
-		viaAPI,                     // ViaVersion API (nullable)
-		player,                     // target player
-		addon.getTitle(),           // title Line
-		new ArrayList<>(addon.getLines())  // content Lines
-);
-
-Scoreboard scoreboard = new Scoreboard(plugin, driver);
-scoreboard.
-
-start();
-
-// Later, on quit:
-scoreboard.
-
-end();
-```
+Removed in 0.10.0. Scoreboard rendering is no longer part of the UI framework — it now lives in the
+standalone **Plaque** plugin (`E:\Programming\java\Plaque`), which renders via PlaceholderAPI
+`%gangland_*%` tokens that Gangland's placeholder system still publishes.
 
 ---
 
@@ -1495,8 +1350,6 @@ gangland-core (Placeholder, ItemBuilder, ChatUtil, TriConsumer)
 inventory-api ─────> (standalone, depends on gangland-core)
     ^
     |
-scoreboard-api ────> (standalone, depends on gangland-core)
-    
 sign-api ──────────> (standalone, depends on gangland-core)
     
 hologram-api ───────> (standalone, depends on gangland-core)

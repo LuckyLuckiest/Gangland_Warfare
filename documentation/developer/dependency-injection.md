@@ -120,7 +120,7 @@ topological sort runs **per phase**, so cross-phase ordering is enforced by the 
 ### Phase 1: KERNEL
 
 Re-publishes the constructor-built kernel objects (`Gangland`, `FileManager`, `PermissionManager`,
-`CompatibilitySetup`, `PlaceholderService`, `DatabaseManager`, `ScoreboardManager`) so downstream phases can
+`CompatibilitySetup`, `PlaceholderService`, `DatabaseManager`) so downstream phases can
 constructor-inject them by type.
 
 **Configuration class:** `KernelConfig`
@@ -131,7 +131,7 @@ Produces `FileInitializer` implementations (Settings, LanguageLoader, weapon add
 
 **Phase hook:** After every bean in this phase is registered, `FileManager.initializeAll()` is called so the YAML file
 is loaded before the next FILE-phase bean tries to read it. This staged loading ensures that e.g. `Settings` is fully
-loaded before `ScoreboardAddon` reads `Settings.getX()` at construction time.
+loaded before the next FILE-phase addon reads `Settings.getX()` at construction time.
 
 **Configuration class:** `FileConfig`
 
@@ -212,7 +212,7 @@ public interface BeanLifecycle {
 
 | Step | Method                | Order                                        | Purpose                                          |
 |------|-----------------------|----------------------------------------------|--------------------------------------------------|
-| 1    | `onPreClear()`        | **Reverse** topological (dependents first)   | Stop timers, cancel async tasks, end scoreboards |
+| 1    | `onPreClear()`        | **Reverse** topological (dependents first)   | Stop timers, cancel async tasks                  |
 | 2    | `onClear()`           | **Reverse** topological                      | Wipe maps, reset state to post-construction      |
 | 3    | `onInitialize(false)` | **Forward** topological (dependencies first) | Re-populate from database/config files           |
 

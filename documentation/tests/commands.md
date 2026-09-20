@@ -25,7 +25,6 @@ input must be chained `OptionalArgument` nodes with tab-completion — verify ta
 | `/glw reload`            | Completes without error. See [lifecycle-and-reload](./lifecycle-and-reload.md). | —   |
 | `/glw reload files`      | Edits to `settings.yml` become visible.                                         | —   |
 | `/glw reload data`       | Caches drop and re-read.                                                        | Yes |
-| `/glw reload scoreboard` | New `scoreboard.yml` values render.                                             | —   |
 | `/glw update`            | Reports current version + latest release.                                       | —   |
 | `/glw update download`   | Skip on a dev server — only test on the designated release smoke server.        | —   |
 | `/glw resource`          | Prompts the player to download the resource pack.                               | —   |

@@ -1,6 +1,6 @@
 # Unique Items
 
-[← Levels](./levels.md) | [Back to Index](../README.md) | [Next: Scoreboard →](./scoreboard.md)
+[← Levels](./levels.md) | [Back to Index](../README.md) | [Next: Scoreboard (moved to Plaque) →](./scoreboard.md)
 
 ---
 
@@ -150,4 +150,4 @@ Any key added to `unique_items.yml` is automatically registered on load.
 
 ---
 
-[← Levels](./levels.md) | [Back to Index](../README.md) | [Next: Scoreboard →](./scoreboard.md)
+[← Levels](./levels.md) | [Back to Index](../README.md) | [Next: Scoreboard (moved to Plaque) →](./scoreboard.md)

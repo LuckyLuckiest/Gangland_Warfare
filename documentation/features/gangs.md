@@ -78,7 +78,7 @@ The gang has a shared bank account separate from all personal balances. Deposits
 | Command                       | Description                                                   |
 |-------------------------------|---------------------------------------------------------------|
 | `/glw gang rename <new name>` | Renames the gang.                                             |
-| `/glw gang display <name>`    | Sets a custom display name shown in chat and scoreboards.     |
+| `/glw gang display <name>`    | Sets a custom display name shown in chat and (via Plaque) scoreboards. |
 | `/glw gang display remove`    | Removes the custom display name, reverting to the plain name. |
 | `/glw gang desc`              | Opens an anvil GUI to write a gang description.               |
 | `/glw gang color`             | Opens a GUI to pick from 16 gang colors used in displays.     |

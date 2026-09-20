@@ -44,7 +44,7 @@ import java.util.Set;
  * <p>The bootstrap pipeline is:
  * <ol>
  *     <li><b>Kernel:</b> {@code KernelConfig} ({@link Phase#KERNEL}) produces every bootstrap-critical singleton
- *     (version detection, compatibility, permissions, file management, database, scoreboard) via standard
+ *     (version detection, compatibility, permissions, file management, database) via standard
  *     {@code @Bean} methods. Dependency ordering within the kernel phase is resolved by
  *     {@link BeanGraph} topological sort.</li>
  *     <li><b>Scan:</b> {@link #bootstrap} scans {@code org.luckyraven.gangland.config} for {@code @Configuration} classes and
@@ -127,8 +127,8 @@ public final class GanglandContext {
 	/**
 	 * Runs the reload lifecycle on all beans implementing {@link BeanLifecycle}: {@code onPreClear()} and
 	 * {@code onClear()} in reverse topological order, then {@code onInitialize(false)} in forward topological order.
-	 * Call this from the reload orchestrator after files have been reloaded and scoreboards have been killed — this
-	 * replaces the hard-coded {@code ReloadPlugin.databaseInitialize()} sequence.
+	 * Call this from the reload orchestrator after files have been reloaded — this replaces the hard-coded
+	 * {@code ReloadPlugin.databaseInitialize()} sequence.
 	 */
 	public void reloadBeans() {
 		beanFactory.reloadLifecycleBeans();

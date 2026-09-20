@@ -19,12 +19,11 @@ the module's purpose, package structure, key classes, and how it integrates with
 7. [gangland-features/cops-n-crooks](#gangland-featurescops-n-crooks)
 8. [gangland-features/gangland-weapon](#gangland-featuresgangland-weapon)
 9. [gangland-features/gangland-gadget](#gangland-featuresgangland-gadget)
-10. [gangland-ui/scoreboard-api](#gangland-uiscoreboard-api)
-11. [gangland-ui/inventory-api](#gangland-uiinventory-api)
-12. [gangland-ui/sign-api](#gangland-uisign-api)
-13. [gangland-ui/lootchest-api](#gangland-uilootchest-api)
-14. [gangland-ui/hologram-api](#gangland-uihologram-api)
-15. [gangland-compatibility](#gangland-compatibility)
+10. [gangland-ui/inventory-api](#gangland-uiinventory-api)
+11. [gangland-ui/sign-api](#gangland-uisign-api)
+12. [gangland-ui/lootchest-api](#gangland-uilootchest-api)
+13. [gangland-ui/hologram-api](#gangland-uihologram-api)
+14. [gangland-compatibility](#gangland-compatibility)
 
 ---
 
@@ -173,7 +172,7 @@ Event listeners registered via `ListenerManager` and the DI container.
 | `inventory/` | `InventoryOpenByCommand.java`, `LoadUniqueItem.java`, `UniqueItemInteract.java`, `UniqueItemInventoryRestrict.java`                                                                                                                             | Handles unique item loading on join/respawn, interaction events, and inventory restrictions.                                                                            |
 | `loot/`      | `LootChestEarnGoods.java`, `LootChestWandHandler.java`                                                                                                                                                                                          | Loot chest interaction rewards and admin wand tool.                                                                                                                     |
 | `npc/`       | `CivilianDeathRewardListener.java`                                                                                                                                                                                                              | Grants XP/money rewards when civilians are killed.                                                                                                                      |
-| `player/`    | `CreateAccount.java`, `RemoveAccount.java`, `CustomPlayerDeath.java`, `PlayerDeath.java`, `EntityDamage.java`, `BountyIncrease.java`, `LevelUp.java`, `LoadResourcePack.java`, `PlayerScoreboard.java`, `WantedChange.java`, `WantedLevel.java` | Core player lifecycle: account creation/removal on join/quit, death handling, damage processing, bounty/wanted/level events, scoreboard updates, resource pack loading. |
+| `player/`    | `CreateAccount.java`, `RemoveAccount.java`, `CustomPlayerDeath.java`, `PlayerDeath.java`, `EntityDamage.java`, `BountyIncrease.java`, `LevelUp.java`, `LoadResourcePack.java`, `WantedChange.java`, `WantedLevel.java` | Core player lifecycle: account creation/removal on join/quit, death handling, damage processing, bounty/wanted/level events, resource pack loading. |
 
 ### Package: `events/`
 
@@ -268,12 +267,6 @@ Concrete sign type implementations for the sign-api framework.
 | `LootChestWand.java`            | Admin tool for placing and configuring loot chests.                                     |
 | `LootChestWandTag.java`         | NBT tag constants for the loot chest wand item.                                         |
 
-### Package: `scoreboard/`
-
-| Class                    | Description                                                                                       |
-|--------------------------|---------------------------------------------------------------------------------------------------|
-| `ScoreboardManager.java` | Creates and manages per-player scoreboards using the scoreboard-api. Registers placeholder lines. |
-
 ### Package: `weapon/`
 
 | Class                | Description                                                                                      |
@@ -305,7 +298,6 @@ Concrete sign type implementations for the sign-api framework.
 | `civilians.yml`          | Civilian NPC types, groups, behaviors, and equipment configuration.                                                              |
 | `ammunition.yml`         | Ammunition type definitions (name, material, max stack, price).                                                                  |
 | `cars.yml`               | Vehicle type definitions (speed, fuel capacity, model).                                                                          |
-| `scoreboard.yml`         | Scoreboard layout and line definitions with placeholders.                                                                        |
 | `unique_items.yml`       | Unique item definitions (phone, tools, etc.) with slot, permission, and behavior.                                                |
 | `wearables.yml`          | Wearable armor definitions (material, traits, damage reduction, leather color).                                                  |
 | `weapon/*.yml`           | Per-weapon-type YAML files: `rifle.yml`, `knife.yml`, `grenade.yml`, `flamethrower.yml`, `syringe_gun.yml`.                      |
@@ -329,7 +321,7 @@ Concrete sign type implementations for the sign-api framework.
 
 1. Declares all Gangland modules as dependencies.
 2. The `maven-shade-plugin` merges all classes and resources into one JAR.
-3. Relocates third-party packages (e.g., HikariCP, FastBoard) to avoid classpath conflicts with other plugins.
+3. Relocates third-party packages (currently only bStats) to avoid classpath conflicts with other plugins.
 4. The output JAR is the artifact deployed to a Spigot server's `plugins/` directory.
 
 **Build command (reference only -- never run automatically):**
@@ -430,7 +422,7 @@ Advanced placeholder system with effects.
 |---------------------------------------|--------------------------------------------------------------------------------|
 | `PlaceholderHandler.java`             | Interface for resolving named placeholders to string values.                   |
 | `PlaceholderRequest.java`             | Encapsulates a placeholder resolution request (player, identifier, arguments). |
-| `effect/FlashEffect.java`             | Alternating text flash effect for scoreboard/action bar placeholders.          |
+| `effect/FlashEffect.java`             | Alternating text flash effect for action bar placeholders.                     |
 | `effect/FlashPlaceholderWrapper.java` | Wraps a placeholder with a flash animation effect.                             |
 | `effect/ConditionalFlashWrapper.java` | Flash effect that activates only when a condition is met.                      |
 | `replacer/Replacer.java`              | Functional interface for string token replacement.                             |
@@ -445,7 +437,7 @@ Scheduled task timer abstractions.
 | `Timer.java`          | Base abstract timer with start/stop lifecycle.                                     |
 | `CountdownTimer.java` | Counts down from a value to zero, firing callbacks at each tick and on completion. |
 | `CountupTimer.java`   | Counts up from zero, firing callbacks at each tick.                                |
-| `RepeatingTimer.java` | Repeats a task at a fixed interval (used by scoreboard refresh).                   |
+| `RepeatingTimer.java` | Repeats a task at a fixed interval.                                                |
 | `SequenceTimer.java`  | Executes a sequence of timed actions in order.                                     |
 
 ### Subpackage: `utilities/`
@@ -1034,26 +1026,6 @@ Event listeners (11 total).
 
 ---
 
-## gangland-ui/scoreboard-api
-
-**Purpose:** FastBoard-based scoreboard rendering system with ViaVersion compatibility and progressive optimization
-strategies.
-
-**Java Files:** 8 | **Package:** `org.luckyraven.gangland.scoreboard.*`
-
-| Class                                | Description                                                                                                                                           |
-|--------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `Scoreboard.java`                    | Main scoreboard orchestrator. Creates a per-player `DriverHandler`, manages `Line` instances, and uses `RepeatingTimer` for periodic refresh.         |
-| `configuration/ScoreboardAddon.java` | Configuration addon interface for scoreboard YAML loading (title, lines, refresh interval).                                                           |
-| `driver/DriverHandler.java`          | Abstract wrapper around FastBoard. Handles board creation, destruction, and line updates. Selects driver version based on ViaVersion player protocol. |
-| `driver/version/DriverV1.java`       | Basic driver. Full board update on every refresh tick.                                                                                                |
-| `driver/version/DriverV2.java`       | Optimized driver. Only updates lines that have changed since last refresh.                                                                            |
-| `driver/version/DriverV3.java`       | Most optimized driver. Change detection with hash comparison -- only sends packets for actually modified lines.                                       |
-| `part/Line.java`                     | Dynamic scoreboard line. Resolves placeholders on each refresh tick and caches the result.                                                            |
-| `part/StaticLine.java`               | Static scoreboard line. Resolved once on creation, never re-evaluated.                                                                                |
-
----
-
 ## gangland-ui/inventory-api
 
 **Purpose:** Custom inventory/GUI framework with YAML-driven layouts, conditional slots, multi-page navigation, and a
@@ -1406,7 +1378,6 @@ gangland-build (shade assembly)
   │     ├── cops-n-crooks
   │     ├── gangland-weapon
   │     ├── gangland-gadget
-  │     ├── scoreboard-api
   │     ├── inventory-api
   │     ├── sign-api
   │     ├── lootchest-api
@@ -1441,7 +1412,7 @@ gangland-build (shade assembly)
   │     ├── gangland-weapon
   │     ╰── plugin-common
   │
-  ├── UI modules (scoreboard, inventory, sign, lootchest, hologram)
+  ├── UI modules (inventory, sign, lootchest, hologram)
   │     ├── gangland-core
   │     ╰── plugin-common
   │
@@ -1464,7 +1435,6 @@ gangland-build (shade assembly)
 | `cops-n-crooks`       | 91         | 20       | NPC cops/civilians, wanted, bounty, jails                               |
 | `gangland-weapon`     | 83         | 17       | Weapons, projectiles, modifiers, reload                                 |
 | `gangland-gadget`     | 47         | 14       | Vehicles, jetpacks, fuel                                                |
-| `scoreboard-api`      | 8          | 3        | FastBoard scoreboards                                                   |
 | `inventory-api`       | 37         | 8        | Custom GUI framework                                                    |
 | `sign-api`            | 28         | 8        | Sign interaction framework                                              |
 | `lootchest-api`       | 33         | 7        | Loot chest system                                                       |

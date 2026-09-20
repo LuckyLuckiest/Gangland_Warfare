@@ -65,7 +65,7 @@ Server Start
     │           ├── Install DATABASE phase hook (publish repos to container)
     │           ├── Scan org.luckyraven.gangland.config for @Configuration classes
     │           ├── BeanFactory.instantiate()
-    │           │     ├── KERNEL phase   → version, compatibility, permissions, files, DB, scoreboard
+    │           │     ├── KERNEL phase   → version, compatibility, permissions, files, DB
     │           │     ├── FILE phase     → Settings, addons, file initializers (staged loading)
     │           │     ├── DATABASE phase → GanglandDatabase, RepositoryRegistry
     │           │     ├── CONFIG phase   → all managers, services, gadgets, cops, weapons
@@ -97,14 +97,14 @@ the shared `DependencyContainer`.
 | Class                  | Phase    | Beans produced                                                           |
 |------------------------|----------|--------------------------------------------------------------------------|
 | `KernelConfig`         | KERNEL   | InformationManager, VersionSetup, CompatibilitySetup, PermissionManager, |
-|                        |          | FileManager, DatabaseManager, ScoreboardManager, PlaceholderService      |
+|                        |          | FileManager, DatabaseManager, PlaceholderService                        |
 | `FileConfig`           | FILE     | Settings, LanguageLoader, 13+ FileInitializer addons                     |
 | `DatabaseConfig`       | DATABASE | GanglandDatabase, RepositoryRegistry                                     |
 | `DataConfig`           | CONFIG   | UserManager (online/offline), RankManager, GangManager, MemberManager,   |
 |                        |          | WaypointManager, PluginManager                                           |
 | `GameplayConfig`       | CONFIG   | WeaponManager, SignManager, ItemParser, LootChestManager,                |
 |                        |          | HologramService, MoneyDepositService, BlockDamageManager                 |
-| `SchedulingConfig`     | CONFIG   | PeriodicalUpdates, PlayerBootstrapService, ScoreboardLifecycleService    |
+| `SchedulingConfig`     | CONFIG   | PeriodicalUpdates, PlayerBootstrapService                                |
 | `WiringConfig`         | CONFIG   | ListenerManager, CommandManager, GanglandPlaceholder                     |
 | `CopsAndGadgetsConfig` | CONFIG   | CopService, CivilianService, JailService, DetainmentService,             |
 |                        |          | CarService, JetpackService, MoneyDropClassifier                          |
@@ -274,7 +274,7 @@ Database:
 │gangland- │  │gangland-  │   │gangland│  │version-impl│
 │features/ │  │ui/        │   │-item   │  │(interfaces)│
 │  cops    │  │ inventory │   ╰───┬────╯  ╰────────────╯
-│  weapon  │  │ scoreboard│       │
+│  weapon  │  │           │       │
 │  gadget  │  │ sign      │       │
 ╰───┬──────╯  │ lootchest │  ╭────┴────────╮
     │         │ hologram  │  │gangland-core│

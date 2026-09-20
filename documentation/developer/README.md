@@ -25,7 +25,7 @@ codebase. It covers architecture, module internals, design patterns, and impleme
 | 8  | [Gadget System](./gadgets.md)                  | Cars, jetpacks, fuel, physics                                     |
 | 9  | [Civilian NPCs](./civilians.md)                | Behavior states, spawning, trader interaction, navigation         |
 | 10 | [Item System](./items.md)                      | Item parsing, unique items, fuel, wearables                       |
-| 11 | [UI Framework](./ui-framework.md)              | Inventory, scoreboard, signs, loot chests, holograms              |
+| 11 | [UI Framework](./ui-framework.md)              | Inventory, signs, loot chests, holograms                          |
 | 12 | [Version Compatibility](./compatibility.md)    | NMS adapters, version detection, recoil implementation            |
 | 13 | [Configuration Reference](./configuration.md)  | All YAML files, settings, formulas, defaults                      |
 
@@ -64,7 +64,6 @@ gangland_warfare/
 │   ╰── gangland-gadget/        Cars, jetpacks, fuel
 ├── gangland-ui/
 │   ├── inventory-api/          Custom inventory framework
-│   ├── scoreboard-api/         FastBoard scoreboard
 │   ├── sign-api/               Sign interaction system
 │   ├── lootchest-api/          Loot chest with cracking
 │   ╰── hologram-api/           Floating text displays
@@ -91,7 +90,6 @@ gangland_warfare/
 | NPC Framework    | Citizens                    | 2.0.42  |
 | NBT Library      | NBTAPI                      | 2.15.6  |
 | Material Compat  | XSeries                     | 13.6.0  |
-| Scoreboard       | FastBoard                   | 2.1.5   |
 | Math Expressions | exp4j                       | 0.4.8   |
 | Annotations      | Lombok                      | 1.18.44 |
 | Testing          | JUnit 6.0.3, Mockito 5.23.0 | --      |
@@ -105,8 +103,8 @@ gangland_warfare/
 |-------------------------|-------------------------------------------------------------|
 | Repository              | `plugin-persistence` -- IRepository, AbstractRepository     |
 | Dependency Injection    | `gangland-core` -- BeanFactory, DependencyContainer         |
-| Template Method         | AbstractRepository, DriverHandler, LootChestService         |
-| Strategy                | Scoreboard drivers (V1/V2/V3), weapon parsers               |
+| Template Method         | AbstractRepository, LootChestService                        |
+| Strategy                | weapon parsers                                               |
 | State Machine           | Cop AI, Civilian AI behaviors                               |
 | Builder                 | Fuel, UniqueItem, Wearable, ItemBuilder                     |
 | Chain of Responsibility | Sign aspects, loot chest handlers                           |

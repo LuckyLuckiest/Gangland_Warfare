@@ -28,7 +28,7 @@ Guides for features that are part of the base plugin and not tied to a specific 
 | 4  | [Loot Chests](./features/loot_chests.md)           | Randomized reward containers, tiers, and keys                    |
 | 5  | [Levels](./features/levels.md)                     | XP system, level formulas, and skill upgrades                    |
 | 6  | [Unique Items](./features/unique-items.md)         | Phone, lockpicks, keys, and custom inventory behavior            |
-| 7  | [Scoreboard](./features/scoreboard.md)             | Live stat display, drivers, and animated titles                  |
+| 7  | [Scoreboard](./features/scoreboard.md)             | Moved to the standalone Plaque plugin as of 0.10.0                |
 | 8  | [Wanted & Bounty](./features/wanted-bounty.md)     | Wanted stars, cop scaling, and bounty system                     |
 | 9  | [Trade Signs](./features/trade-signs.md)           | In-world generic `item-buy`/`item-sell` signs (any item definition, not just weapons) |
 | 10 | [Ranks](./features/ranks.md)                       | Gang rank hierarchy and permission management                    |
@@ -60,7 +60,7 @@ In-depth technical documentation for developers working on the codebase.
 | 8  | [Civilian NPCs](./developer/civilians.md)                   | Behaviors, spawning, trader interaction (module: `gangland-civilians`, split out of cops-n-crooks in 0.9.0) |
 | 9  | NPC Shops                                                    | Trader and banker NPC shops (module: `gangland-npc-shops`, split out of cops-n-crooks in 0.9.0) — no dedicated developer-internals page yet; see the [Traders](./features/traders.md) and [Bank & Banker](./features/bank.md) feature guides |
 | 10 | [Item System](./developer/items.md)                         | Parsing, unique items, fuel (item conversion/serialization now lives in Keystone's `keystone-item`) |
-| 11 | [UI Framework](./developer/ui-framework.md)                 | Inventory, scoreboard, signs, loot chests, holograms         |
+| 11 | [UI Framework](./developer/ui-framework.md)                 | Inventory, signs, loot chests, holograms                     |
 | 12 | [Configuration Reference](./developer/configuration.md)     | All YAML files, settings, formulas, defaults                 |
 
 Bartizan integration (what the core gets from the weapons plugin, and what degrades without it) is documented in

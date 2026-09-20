@@ -303,17 +303,7 @@ In-world buy and sell signs for weapons and ammunition.
 
 ---
 
-### 15. 📋 Scoreboard
-
-Live stat display for players.
-
-- Animated titles with configurable scroll speed
-- Displays money, level, wanted stars, gang name, and other live values
-- Multiple scoreboard drivers supported
-
----
-
-### 16. 🎒 Unique Items
+### 15. 🎒 Unique Items
 
 Special items with controlled inventory behavior.
 
@@ -324,7 +314,7 @@ Special items with controlled inventory behavior.
 
 ---
 
-### 17. 🖥️ Server Infrastructure
+### 16. 🖥️ Server Infrastructure
 
 Backend features for operators and developers.
 
@@ -347,7 +337,6 @@ Backend features for operators and developers.
 - Automatic periodic data saving and cache cleanup
 - 🌐 Multi-language message support with jar-bundled fallback
 - Resource pack auto-loading on join
-- Custom scoreboard via FastBoard
 - 🧰 Public developer API with events for weapons, cops, civilians, traders,
   bounty, and more
 

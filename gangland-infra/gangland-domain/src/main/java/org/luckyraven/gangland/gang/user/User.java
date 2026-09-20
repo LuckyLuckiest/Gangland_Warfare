@@ -23,7 +23,6 @@ import org.luckyraven.gangland.gang.wanted.Wanted;
 import org.luckyraven.gangland.gang.wanted.WantedContext;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.service.InventoryRegistry;
-import org.luckyraven.gangland.scoreboard.Scoreboard;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -50,7 +49,6 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 	@Nullable
 	private Bank bank;
 	private int  kills, deaths, mobKills, gangId;
-	private Scoreboard           scoreboard;
 	private PermissionAttachment permissionAttachment;
 
 	/**
