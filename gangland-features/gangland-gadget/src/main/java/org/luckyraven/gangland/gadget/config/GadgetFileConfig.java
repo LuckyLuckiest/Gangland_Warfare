@@ -6,6 +6,7 @@ import org.luckyraven.keystone.util.Placeholder;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gadget.car.config.CarAddon;
 import org.luckyraven.gangland.gadget.contract.GadgetPhysicsConfigImpl;
+import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
 import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
 import org.luckyraven.gangland.gadget.jetpack.message.JetpackMessages;
 import org.luckyraven.keystone.bean.Bean;
@@ -53,6 +54,16 @@ public class GadgetFileConfig {
 		fileManager.addFile(new FileHandler(plugin, "jetpacks", "items", ".yml", moduleLoader.classLoader()), true);
 
 		JetpackAddon addon = new JetpackAddon(permissionManager::addPermission, fileManager, placeholderService);
+		fileManager.registerInitializer(addon);
+		return addon;
+	}
+
+	@Bean
+	public GrappleAddon grappleAddon(PermissionManager permissionManager, FileManager fileManager,
+	                                 Placeholder placeholderService, ModuleLoader moduleLoader) {
+		fileManager.addFile(new FileHandler(plugin, "grapples", "items", ".yml", moduleLoader.classLoader()), true);
+
+		GrappleAddon addon = new GrappleAddon(permissionManager::addPermission, fileManager, placeholderService);
 		fileManager.registerInitializer(addon);
 		return addon;
 	}

@@ -1,0 +1,52 @@
+#   +------------------------------------------------------+   #
+#  /     __________      _______________       ____         \  #
+# |     / ________/      \_____   _____/      / __ \         | #
+# |    | /                     | |           / /  \ \        | #
+# |    | |  _______            | |          / /____\ \       | #
+# |    | |  \_____ \           | |         / ________ \      | #
+# |    | \_______/ ||          | |        / /        \ \     | #
+# |     \__________/           |_|       /_/          \_\    | #
+# |                                                          | #
+# |                   File: grapples.yml                     | #
+# |                  Author: [LuckyRaven10]                  | #
+#  \                                                        /  #
+#   +------------------------------------------------------+   #
+#
+# Each entry defines a grappling hook launched via a fishing-rod cast (PlayerFishEvent).
+# Items are identified in-game by a hidden NBT tag embedded when built via API.
+#
+# Fields:
+#   Material                 - Bukkit material name for the inventory item
+#   Display_Name             - display name (supports & color codes)
+#   Custom_Model_Data        - integer for resource pack model
+#   Lore                     - list of lore lines
+#
+#   Max_Distance             - maximum anchor distance in blocks (default 25)
+#   Max_Pull_Speed           - maximum pull velocity per tick (default 1.8)
+#   Pull_Acceleration        - velocity gain per tick toward the anchor (default 0.35)
+#   Arrival_Distance         - distance from the anchor at which the pull auto-stops (default 1.5)
+#   Cooldown_Seconds         - seconds before the same player can launch again (default 8)
+#   Max_Duration_Ticks       - hard timeout for a single pull (default 100)
+#   Fall_Damage_Grace_Ticks  - one-shot fall-damage immunity window after a pull ends (default 40)
+#   Require_Line_Of_Sight    - cancel the pull if a block occludes the anchor (default true)
+#
+# No fuel/durability model - cooldown only (WS8-D1).
+#
+# Permission nodes are derived automatically as "gangland.grapples.<key>"
+# (e.g. grapple → gangland.grapples.grapple).
+
+grapple:
+   Material: FISHING_ROD
+   Display_Name: "&b&lGrappling Hook"
+   Custom_Model_Data: 0
+   Lore:
+      - "&7Right-click to launch. Hooks a block within range and reels you in."
+      - "&7Sneak, take damage, or wait it out to cancel mid-pull."
+   Max_Distance: 25
+   Max_Pull_Speed: 1.8
+   Pull_Acceleration: 0.35
+   Arrival_Distance: 1.5
+   Cooldown_Seconds: 8
+   Max_Duration_Ticks: 100
+   Fall_Damage_Grace_Ticks: 40
+   Require_Line_Of_Sight: true

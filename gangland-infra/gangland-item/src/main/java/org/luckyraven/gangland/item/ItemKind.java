@@ -15,6 +15,7 @@ public enum ItemKind implements org.luckyraven.keystone.item.ItemKind {
 	UNIQUE("unique"),
 	CAR("car"),
 	JETPACK("jetpack"),
+	GRAPPLE("grapple"),
 	MONEY("money"),
 	MATERIAL("material");
 

@@ -15,7 +15,10 @@ import org.luckyraven.gangland.gadget.contract.GanglandCarMessages;
 import org.luckyraven.gangland.gadget.item.CarConverter;
 import org.luckyraven.gangland.gadget.item.CarItemRefresher;
 import org.luckyraven.gangland.gadget.item.CarItemSerializer;
+import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
 import org.luckyraven.gangland.gadget.item.GadgetItemPredicates;
+import org.luckyraven.gangland.gadget.item.GrappleConverter;
+import org.luckyraven.gangland.gadget.item.GrappleItemSerializer;
 import org.luckyraven.gangland.gadget.item.JetpackConverter;
 import org.luckyraven.gangland.gadget.item.JetpackItemRefresher;
 import org.luckyraven.gangland.gadget.item.JetpackItemSerializer;
@@ -165,6 +168,20 @@ public class GadgetModuleConfig {
 		// Priority 20: above Bartizan's wearable refresher (priority 10) — same reason as the serializer above.
 		itemRefresherRegistry.register(refresher, 20);
 		return refresher;
+	}
+
+	@Bean
+	public GrappleConverter grappleConverter(GrappleAddon grappleAddon, ItemConverterRegistry itemConverterRegistry) {
+		GrappleConverter converter = new GrappleConverter(grappleAddon);
+		itemConverterRegistry.register(ItemKind.GRAPPLE, converter);
+		return converter;
+	}
+
+	@Bean
+	public GrappleItemSerializer grappleItemSerializer(ItemSerializerRegistry itemSerializerRegistry) {
+		GrappleItemSerializer serializer = new GrappleItemSerializer();
+		itemSerializerRegistry.register(GadgetItemPredicates.GRAPPLE, serializer);
+		return serializer;
 	}
 
 	@Bean
