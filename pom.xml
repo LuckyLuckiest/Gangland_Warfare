@@ -214,6 +214,16 @@
                 <version>${keystone.version}</version>
                 <scope>provided</scope>
             </dependency>
+            <!-- WS4 G1a (0.10.0): the headless shop system (ShopRegistry, purchase/sell/barter services,
+                 valuators) — R6-shaped: gangland-api never re-exports this, moved OUT of the compile-scope
+                 re-export block that shop-api used to occupy (B2); every consumer (gangland-impl,
+                 gangland-npc-shops) declares it directly, provided, not inherited transitively. -->
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-shop</artifactId>
+                <version>${keystone.version}</version>
+                <scope>provided</scope>
+            </dependency>
             <dependency>
                 <groupId>org.luckyraven</groupId>
                 <artifactId>keystone-testkit</artifactId>
@@ -269,11 +279,6 @@
             <dependency>
                 <groupId>org.luckyraven</groupId>
                 <artifactId>hologram-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.luckyraven</groupId>
-                <artifactId>shop-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

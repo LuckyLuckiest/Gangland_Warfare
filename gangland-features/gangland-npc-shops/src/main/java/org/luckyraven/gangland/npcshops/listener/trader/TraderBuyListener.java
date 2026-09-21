@@ -15,12 +15,12 @@ import org.luckyraven.keystone.economy.EconomyHandler;
 import org.luckyraven.keystone.economy.exception.EconomyException;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.shop.message.ShopDisplayResolver;
-import org.luckyraven.gangland.shop.message.ShopMessageContract;
-import org.luckyraven.gangland.shop.transaction.PaymentException;
-import org.luckyraven.gangland.shop.transaction.PaymentHandler;
-import org.luckyraven.gangland.shop.transaction.PurchaseResult;
-import org.luckyraven.gangland.shop.transaction.ShopPurchaseService;
+import org.luckyraven.keystone.shop.message.ShopDisplayResolver;
+import org.luckyraven.keystone.shop.message.ShopMessageContract;
+import org.luckyraven.keystone.shop.transaction.PaymentException;
+import org.luckyraven.keystone.shop.transaction.PaymentHandler;
+import org.luckyraven.keystone.shop.transaction.PurchaseResult;
+import org.luckyraven.keystone.shop.transaction.ShopPurchaseService;
 
 import java.math.BigDecimal;
 

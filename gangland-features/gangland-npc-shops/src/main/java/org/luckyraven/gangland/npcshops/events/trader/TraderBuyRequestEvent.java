@@ -7,7 +7,7 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 import org.luckyraven.gangland.npcshops.trader.TraderNpc;
-import org.luckyraven.gangland.shop.ShopItemEntry;
+import org.luckyraven.keystone.shop.ShopItemEntry;
 
 import java.math.BigDecimal;
 

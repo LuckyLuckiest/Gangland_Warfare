@@ -3,8 +3,8 @@ package org.luckyraven.gangland.npcshops.trader.view;
 import org.luckyraven.gangland.npcshops.trader.TraderNpc;
 import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitDefinition;
 import org.luckyraven.keystone.inventory.flow.FlowState;
-import org.luckyraven.gangland.shop.ShopDefinition;
-import org.luckyraven.gangland.shop.ShopItemEntry;
+import org.luckyraven.keystone.shop.ShopDefinition;
+import org.luckyraven.keystone.shop.ShopItemEntry;
 
 import java.math.BigDecimal;
 

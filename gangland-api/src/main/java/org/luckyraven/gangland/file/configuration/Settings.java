@@ -190,19 +190,10 @@ public class Settings implements FileInitializer {
 	private static @Getter double     gadgetCarReverseSpeedRatio;
 	private static @Getter double     gadgetCarHardBrakeMultiplier;
 	private static @Getter int        gadgetCarFuelConsumePerTick;
-	// trader configuration
-	private static @Getter int        traderRespawnCooldownSeconds;
-	private static @Getter int        traderHeadTrackRadius;
-	private static @Getter String     traderFallbackTraitId;
-	private static @Getter int        traderMaxModeMultiplier;
-	private static @Getter int        traderSellMaxOfferSlots;
-	private static @Getter double     traderMoodPerSale;
-	private static @Getter BigDecimal traderTipAmount;
-	// banker configuration
-	private static @Getter int        bankerHeadTrackRadius;
-	private static @Getter double     bankerMaxHealth;
-	private static @Getter boolean    bankerInvulnerable;
-	private static @Getter String     bankerFallbackTierId;
+	// shop configuration (WS4 G1a: Trader/Banker NPC-specific knobs moved to module-owned
+	// npc/trader_settings.yml and npc/banker_settings.yml — Max_Mode_Multiplier is the one survivor,
+	// shared by the admin editor and the trader browser, so it stays core under its own Shop: block)
+	private static @Getter int        shopMaxModeMultiplier;
 	// loot chest configuration
 	private static @Getter long       lootChestCountdownTimer;
 	private static @Getter String     lootChestOpeningSound, lootChestLockedSound, lootChestClosingSound;
@@ -380,6 +371,21 @@ public class Settings implements FileInitializer {
 	private static List<Integer> intList(NodeReader parent, String key) {
 		if (parent == null) return Collections.emptyList();
 		return parent.get(key).asList().ofInts().orEmpty();
+	}
+
+	/**
+	 * WS4 G1a fix round 1 (F2): fires a distinct, actionable warning when a legacy {@code Trader:}/{@code Banker:}
+	 * block is still present in {@code settings.yml} after those NPC-specific keys moved to module-owned YAML.
+	 * Runs once per {@link #init()} call — once at boot, once per {@code /glw reload} — naming the file the keys
+	 * moved to and the migration doc, since customised values are not auto-migrated and would otherwise silently
+	 * do nothing with no clue why.
+	 */
+	private static void warnIfLegacyShopBlockPresent(boolean present, String legacyKey, String movedTo) {
+		if (!present) return;
+		log.warn("settings.yml still has a legacy '{}:' block — those keys moved to " +
+		         "plugins/Gangland_Warfare/{} (extracted by the npc-shops module); customised values are NOT " +
+		         "auto-migrated and must be copied over by hand. See documentation/migration-0.10.0.md.",
+		         legacyKey, movedTo);
 	}
 
 	@Override
@@ -729,24 +735,18 @@ public class Settings implements FileInitializer {
 		gadgetCarHardBrakeMultiplier = dbl(gadgetCar, "Hard_Brake_Multiplier", 3.0);
 		gadgetCarFuelConsumePerTick  = intVal(gadgetCar, "Fuel_Consume_Per_Tick", 1);
 
-		// trader
-		NodeReader trader     = section(root, "Trader", report);
-		NodeReader traderSell = section(trader, "Sell", report);
+		// shop (Trader:/Banker: NPC-specific knobs moved to module-owned YAML in WS4 G1a; this is the
+		// one key both the trader browser and the admin price editor still read from core)
+		NodeReader shop = section(root, "Shop", report);
+		shopMaxModeMultiplier = intVal(shop, "Max_Mode_Multiplier", 1_000_000);
 
-		traderRespawnCooldownSeconds = intVal(trader, "Respawn_Cooldown", 60);
-		traderHeadTrackRadius        = intVal(trader, "Head_Track_Radius", 8);
-		traderFallbackTraitId        = str(trader, "Fallback_Trait_Id", "easygoing");
-		traderMaxModeMultiplier      = intVal(trader, "Max_Mode_Multiplier", 1_000_000);
-		traderSellMaxOfferSlots      = intVal(traderSell, "Max_Offer_Slots", 20);
-		traderMoodPerSale            = dbl(traderSell, "Mood_Per_Sale", 0.02);
-		traderTipAmount              = money(trader, "Tip_Amount", "100");
-
-		// banker
-		NodeReader banker = section(root, "Banker", report);
-		bankerHeadTrackRadius = intVal(banker, "Head_Track_Radius", 8);
-		bankerMaxHealth       = dbl(banker, "Max_Health", 20.0);
-		bankerInvulnerable    = bool(banker, "Invulnerable", true);
-		bankerFallbackTierId  = str(banker, "Fallback_Tier_Id", "Basic");
+		// WS4 G1a fix round 1 (F2): a leftover legacy Trader:/Banker: block is not just dead weight (unlike
+		// WS1's Scoreboard: block) — those keys had live readers before this move, so an upgrading server's
+		// customised values now silently do nothing. section() above already marked the block "touched",
+		// which suppresses the generic unknown-key sweep for it; this replaces that generic, unhelpful line
+		// with one that actually says where the keys went.
+		warnIfLegacyShopBlockPresent(section(root, "Trader", report) != null, "Trader", "npc/trader_settings.yml");
+		warnIfLegacyShopBlockPresent(section(root, "Banker", report) != null, "Banker", "npc/banker_settings.yml");
 
 		// turf
 		NodeReader turf          = section(root, "Turf", report);

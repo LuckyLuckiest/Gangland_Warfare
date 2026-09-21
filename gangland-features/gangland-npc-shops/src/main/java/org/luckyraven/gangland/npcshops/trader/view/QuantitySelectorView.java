@@ -18,7 +18,7 @@ import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.util.NumberUtil;
-import org.luckyraven.gangland.shop.ShopItemEntry;
+import org.luckyraven.keystone.shop.ShopItemEntry;
 
 import java.math.BigDecimal;
 import java.util.Collections;

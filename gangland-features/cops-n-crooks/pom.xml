@@ -60,10 +60,6 @@
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>shop-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
             <artifactId>keystone-hooks</artifactId>
         </dependency>
         <dependency>

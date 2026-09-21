@@ -20,8 +20,8 @@ import org.luckyraven.keystone.inventory.flow.Panel;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.NumberUtil;
-import org.luckyraven.gangland.shop.ShopItemEntry;
-import org.luckyraven.gangland.shop.message.ShopDisplayResolver;
+import org.luckyraven.keystone.shop.ShopItemEntry;
+import org.luckyraven.keystone.shop.message.ShopDisplayResolver;
 
 import java.math.BigDecimal;
 

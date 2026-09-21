@@ -31,6 +31,8 @@ public class NpcShopsYamlConfig {
 		ClassLoader loader = moduleLoader.classLoader();
 		fileManager.addFile(new FileHandler(plugin, "trader_traits", "npc", ".yml", loader), true);
 		fileManager.addFile(new FileHandler(plugin, "bank_tiers", "npc", ".yml", loader), true);
+		fileManager.addFile(new FileHandler(plugin, "trader_settings", "npc", ".yml", loader), true);
+		fileManager.addFile(new FileHandler(plugin, "banker_settings", "npc", ".yml", loader), true);
 		return new NpcShopsFiles();
 	}
 

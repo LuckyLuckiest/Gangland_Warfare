@@ -25,9 +25,9 @@ import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.keystone.item.ItemRefresherRegistry;
-import org.luckyraven.gangland.shop.message.ShopDisplayResolver;
-import org.luckyraven.gangland.shop.valuation.ItemValuation;
-import org.luckyraven.gangland.shop.valuation.SellValuator;
+import org.luckyraven.keystone.shop.message.ShopDisplayResolver;
+import org.luckyraven.keystone.shop.valuation.ItemValuation;
+import org.luckyraven.keystone.shop.valuation.SellValuator;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

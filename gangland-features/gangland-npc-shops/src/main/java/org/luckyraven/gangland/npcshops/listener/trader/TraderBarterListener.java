@@ -10,10 +10,10 @@ import org.luckyraven.gangland.npcshops.trader.TraderManager;
 import org.luckyraven.gangland.npcshops.trader.mood.MoodService;
 import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitDefinition;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
-import org.luckyraven.gangland.shop.message.ShopDisplayResolver;
-import org.luckyraven.gangland.shop.message.ShopMessageContract;
-import org.luckyraven.gangland.shop.transaction.BarterResult;
-import org.luckyraven.gangland.shop.transaction.ShopBarterService;
+import org.luckyraven.keystone.shop.message.ShopDisplayResolver;
+import org.luckyraven.keystone.shop.message.ShopMessageContract;
+import org.luckyraven.keystone.shop.transaction.BarterResult;
+import org.luckyraven.keystone.shop.transaction.ShopBarterService;
 
 @CustomLog
 @ListenerHandler

@@ -5,8 +5,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.bean.command.CommandHandler;
-import org.luckyraven.gangland.shop.ShopRegistry;
-import org.luckyraven.gangland.shop.view.ShopAdminFlow;
+import org.luckyraven.keystone.shop.ShopRegistry;
+import org.luckyraven.gangland.shop.admin.view.ShopAdminFlow;
 
 import java.util.Map;
 

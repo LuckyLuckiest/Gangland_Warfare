@@ -636,43 +636,16 @@ Gadgets:
       # Fuel units consumed per tick while the car is moving.
       Fuel_Consume_Per_Tick: 1
 
-# +--------+ #
-# | Trader | #
-# +--------+ #
+# +------+ #
+# | Shop | #
+# +------+ #
 
-# General trader NPC knobs. Trait-specific numbers live in plugin/trader_traits.yml.
-Trader:
-   # Seconds between a trader being killed and respawning at the same location.
-   Respawn_Cooldown: 60
-   # Blocks within which a trader will head-track the nearest player.
-   Head_Track_Radius: 8
-   # Trait id substituted at load time if a stored trait is missing from trader_traits.yml.
-   Fallback_Trait_Id: "easygoing"
+# Generic shop-admin knobs shared by every shop integration (the /glw shop admin editor and any module's own
+# browser, e.g. the trader NPC). Trader/Banker NPC-specific knobs moved to module-owned YAML in WS4 G1a
+# (npc/trader_settings.yml, npc/banker_settings.yml, shipped inside modules/gangland-npc-shops-<rev>.jar).
+Shop:
    # Upper cap on the multiplier used by the shop price-editor's +/- buttons (via the custom-mode anvil).
    Max_Mode_Multiplier: 1000000
-   # Player sell flow. Traders evaluate items dropped into the SellView against admin-defined
-   # Sell_Categories in each shop file; a friendly trader pays closer to the listed base price.
-   Sell:
-      Max_Offer_Slots: 20
-      Mood_Per_Sale: 0.02
-   # Flat tip amount paid (in currency) when the player clicks the Tip button on the NegotiationView.
-   Tip_Amount: 100.0
-
-# +--------+ #
-# | Banker | #
-# +--------+ #
-
-# General Banker NPC knobs. Every per-tier knob (max balance, daily deposit limit, interest rate, death-loss
-# discount, weekly / monthly loans) lives in plugin/npc/bank_tiers.yml.
-Banker:
-   # Blocks within which a banker will head-track the nearest player.
-   Head_Track_Radius: 8
-   # Max health in half-hearts (20 = 10 hearts). Only applied when Invulnerable is false.
-   Max_Health: 20.0
-   # If true the banker cannot be damaged. Leave enabled in production — damaged bankers have no respawn loop.
-   Invulnerable: true
-   # Tier id substituted when a player's bank has no stored tier id or references a missing tier.
-   Fallback_Tier_Id: "Basic"
 
 # +------+ #
 # | Turf | #

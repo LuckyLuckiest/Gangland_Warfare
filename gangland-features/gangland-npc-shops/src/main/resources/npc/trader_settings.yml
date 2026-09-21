@@ -1,0 +1,17 @@
+# Trader NPC knobs (WS4 G1a: moved out of the core settings.yml Trader: block — Max_Mode_Multiplier
+# stayed core, under settings.yml's Shop: block, since the admin price editor also reads it).
+# Trait-specific numbers live in npc/trader_traits.yml.
+
+# Seconds between a trader being killed and respawning at the same location.
+Respawn_Cooldown: 60
+# Blocks within which a trader will head-track the nearest player.
+Head_Track_Radius: 8
+# Trait id substituted at load time if a stored trait is missing from trader_traits.yml.
+Fallback_Trait_Id: "easygoing"
+# Player sell flow. Traders evaluate items dropped into the SellView against admin-defined
+# Sell_Categories in each shop file; a friendly trader pays closer to the listed base price.
+Sell:
+   Max_Offer_Slots: 20
+   Mood_Per_Sale: 0.02
+# Flat tip amount paid (in currency) when the player clicks the Tip button on the NegotiationView.
+Tip_Amount: 100.0

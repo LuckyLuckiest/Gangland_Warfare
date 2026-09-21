@@ -6,10 +6,10 @@ import org.bukkit.entity.Player;
 import org.luckyraven.gangland.npcshops.trader.message.TraderMessageContract;
 import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitDefinition;
 import org.luckyraven.gangland.npcshops.trader.view.TraderFlow;
-import org.luckyraven.gangland.shop.ShopDefinition;
-import org.luckyraven.gangland.shop.ShopRegistry;
-import org.luckyraven.gangland.shop.message.ShopMessageContract;
-import org.luckyraven.gangland.shop.view.ShopAdminFlow;
+import org.luckyraven.gangland.shop.ShopAdminOpener;
+import org.luckyraven.keystone.shop.ShopDefinition;
+import org.luckyraven.keystone.shop.ShopRegistry;
+import org.luckyraven.keystone.shop.message.ShopMessageContract;
 
 @CustomLog
 @RequiredArgsConstructor
@@ -20,7 +20,7 @@ public class ShopViewOpenerImpl implements ShopViewOpener {
 	private final TraderManager         traderManager;
 	private final ShopRegistry          shopRegistry;
 	private final TraderFlow            traderFlow;
-	private final ShopAdminFlow         adminFlow;
+	private final ShopAdminOpener       adminFlow;
 	private final ShopMessageContract   shopMessages;
 	private final TraderMessageContract traderMessages;
 
@@ -39,7 +39,7 @@ public class ShopViewOpenerImpl implements ShopViewOpener {
 		}
 
 		if (player.hasPermission(ADMIN_PERMISSION) && player.isSneaking()) {
-			adminFlow.start(player, def);
+			adminFlow.openAdmin(player, def);
 			return;
 		}
 
@@ -52,7 +52,7 @@ public class ShopViewOpenerImpl implements ShopViewOpener {
 			admin.sendMessage(shopMessages.shopNotDefined(shopKey));
 			return;
 		}
-		adminFlow.start(admin, def);
+		adminFlow.openAdmin(admin, def);
 	}
 
 }

@@ -7,7 +7,7 @@ import org.luckyraven.gangland.npcshops.trader.TraderNpc;
 import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitDefinition;
 import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.inventory.flow.MenuFlow;
-import org.luckyraven.gangland.shop.ShopDefinition;
+import org.luckyraven.keystone.shop.ShopDefinition;
 
 /**
  * Entry point for the trader NPC flow. Builds a fresh {@link MenuFlow} per-viewer, registers every trader panel

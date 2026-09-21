@@ -1,5 +1,11 @@
 package org.luckyraven.gangland.file.configuration;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.Property;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -8,6 +14,8 @@ import org.luckyraven.gangland.support.SettingsFixture;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -120,5 +128,82 @@ class SettingsTest {
 		assertEquals(99, Settings.getAutoSaveTime(), "the one key that was present is honoured");
 		assertTrue(Settings.isAutoSave(), "Enable was absent from the (present) Auto_Save section, so it falls " +
 				"back to its own default rather than the whole section defaulting");
+	}
+
+	@Test
+	@DisplayName("WS4 G1a fix F2: a legacy Trader: block logs a targeted warning naming npc/trader_settings.yml")
+	void initialize_legacyTraderBlock_logsTargetedMigrationWarning() throws IOException {
+		SettingsFixture.write(tempDir, """
+				Money_Symbol: '$'
+				Trader:
+				  Respawn_Cooldown: 60
+				""");
+
+		List<String> logs = captureWarnLogs(() -> SettingsFixture.initialize(tempDir));
+
+		assertTrue(logs.stream().anyMatch(m -> m.contains("Trader") && m.contains("npc/trader_settings.yml")),
+				"expected a targeted migration warning naming npc/trader_settings.yml; got: " + logs);
+	}
+
+	@Test
+	@DisplayName("WS4 G1a fix F2: a legacy Banker: block logs a targeted warning naming npc/banker_settings.yml")
+	void initialize_legacyBankerBlock_logsTargetedMigrationWarning() throws IOException {
+		SettingsFixture.write(tempDir, """
+				Money_Symbol: '$'
+				Banker:
+				  Head_Track_Radius: 8
+				""");
+
+		List<String> logs = captureWarnLogs(() -> SettingsFixture.initialize(tempDir));
+
+		assertTrue(logs.stream().anyMatch(m -> m.contains("Banker") && m.contains("npc/banker_settings.yml")),
+				"expected a targeted migration warning naming npc/banker_settings.yml; got: " + logs);
+	}
+
+	@Test
+	@DisplayName("WS4 G1a fix F2: no legacy Trader:/Banker: block means no targeted migration warning")
+	void initialize_noLegacyShopBlock_logsNoMigrationWarning() throws IOException {
+		SettingsFixture.write(tempDir, "Money_Symbol: '$'\n");
+
+		List<String> logs = captureWarnLogs(() -> SettingsFixture.initialize(tempDir));
+
+		assertTrue(logs.stream().noneMatch(m -> m.contains("npc/trader_settings.yml")
+						|| m.contains("npc/banker_settings.yml")),
+				"expected no targeted migration warning when neither legacy block is present; got: " + logs);
+	}
+
+	/**
+	 * Attaches a throwaway Log4j2 appender directly to the exact {@link Logger} instance
+	 * {@code Settings}'s own {@code @CustomLog} field resolves to (same factory call,
+	 * {@code org.luckyraven.keystone.logging.Logger.getLogger}, same name — Log4j2's {@code LogManager} hands back
+	 * the same singleton for a given name), runs {@code action}, and returns every captured message's formatted
+	 * text. No {@code log4j2.xml} exists on this reactor's test classpath, so Log4j2 falls back to its
+	 * {@code DefaultConfiguration} (root level {@code ERROR}) — a plain {@code addAppender} would silently never
+	 * see a {@code WARN}; {@link Configurator#setLevel} bumps this one logger to {@code WARN} for the duration.
+	 * Both the level and the appender are restored/detached afterward regardless of outcome, so nothing leaks into
+	 * another test.
+	 */
+	private static List<String> captureWarnLogs(Runnable action) {
+		Logger coreLogger    = (Logger) org.luckyraven.keystone.logging.Logger.getLogger(Settings.class);
+		Level  originalLevel = coreLogger.getLevel();
+		List<String> captured = new ArrayList<>();
+		AbstractAppender appender = new AbstractAppender("settings-test-capture", null, null, false,
+				Property.EMPTY_ARRAY) {
+			@Override
+			public void append(LogEvent event) {
+				captured.add(event.getMessage().getFormattedMessage());
+			}
+		};
+		appender.start();
+		coreLogger.addAppender(appender);
+		Configurator.setLevel(coreLogger, Level.WARN);
+		try {
+			action.run();
+		} finally {
+			Configurator.setLevel(coreLogger, originalLevel);
+			coreLogger.removeAppender(appender);
+			appender.stop();
+		}
+		return captured;
 	}
 }

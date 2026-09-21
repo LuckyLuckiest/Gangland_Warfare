@@ -49,8 +49,8 @@ public class BankerModuleConfig {
 
 	@Bean
 	public BankerSettings bankerSettings(@SuppressWarnings("unused") Settings settings,
-	                                     PermissionManager permissionManager) {
-		return new BankerSettingsImpl();
+	                                     PermissionManager permissionManager, FileManager fileManager) {
+		return new BankerSettingsImpl(fileManager);
 	}
 
 	@Bean

@@ -21,15 +21,14 @@ import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitRegistry;
 import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitsLoader;
 import org.luckyraven.gangland.npcshops.trader.view.*;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.file.configuration.shop.GanglandShopDisplayResolver;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.keystone.item.ItemRefresherRegistry;
-import org.luckyraven.gangland.shop.ShopRegistry;
-import org.luckyraven.gangland.shop.message.ShopDisplayResolver;
-import org.luckyraven.gangland.shop.message.ShopMessageContract;
-import org.luckyraven.gangland.shop.valuation.CategoryBarterValuator;
-import org.luckyraven.gangland.shop.valuation.SellValuator;
-import org.luckyraven.gangland.shop.view.ShopAdminFlow;
+import org.luckyraven.keystone.shop.ShopRegistry;
+import org.luckyraven.keystone.shop.message.ShopDisplayResolver;
+import org.luckyraven.keystone.shop.message.ShopMessageContract;
+import org.luckyraven.keystone.shop.valuation.CategoryBarterValuator;
+import org.luckyraven.keystone.shop.valuation.SellValuator;
+import org.luckyraven.gangland.shop.ShopAdminOpener;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.PostConstruct;
@@ -94,8 +93,8 @@ public class TraderModuleConfig {
 	// ── Settings ─────────────────────────────────────────────────────────
 
 	@Bean
-	public TraderSettings traderSettings(@SuppressWarnings("unused") Settings settings) {
-		return new TraderSettingsImpl();
+	public TraderSettings traderSettings(@SuppressWarnings("unused") Settings settings, FileManager fileManager) {
+		return new TraderSettingsImpl(fileManager);
 	}
 
 	// ── Views ────────────────────────────────────────────────────────────
@@ -171,7 +170,7 @@ public class TraderModuleConfig {
 
 	@Bean
 	public ShopViewOpener shopViewOpener(TraderManager traderManager, ShopRegistry shopRegistry,
-	                                     TraderFlow traderFlow, ShopAdminFlow adminFlow,
+	                                     TraderFlow traderFlow, ShopAdminOpener adminFlow,
 	                                     ShopMessageContract shopMessages,
 	                                     TraderMessageContract traderMessages) {
 		return new ShopViewOpenerImpl(traderManager, shopRegistry, traderFlow, adminFlow,

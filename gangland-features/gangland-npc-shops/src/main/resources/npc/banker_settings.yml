@@ -1,0 +1,12 @@
+# Banker NPC knobs (WS4 G1a: moved out of the core settings.yml Banker: block). Every per-tier knob
+# (max balance, daily deposit limit, interest rate, death-loss discount, weekly / monthly loans) lives
+# in npc/bank_tiers.yml.
+
+# Blocks within which a banker will head-track the nearest player.
+Head_Track_Radius: 8
+# Max health in half-hearts (20 = 10 hearts). Only applied when Invulnerable is false.
+Max_Health: 20.0
+# If true the banker cannot be damaged. Leave enabled in production — damaged bankers have no respawn loop.
+Invulnerable: true
+# Tier id substituted when a player's bank has no stored tier id or references a missing tier.
+Fallback_Tier_Id: "Basic"

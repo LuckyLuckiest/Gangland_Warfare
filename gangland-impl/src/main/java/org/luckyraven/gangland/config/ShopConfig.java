@@ -2,34 +2,38 @@ package org.luckyraven.gangland.config;
 
 import lombok.CustomLog;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.file.configuration.shop.GanglandShopDisplayResolver;
 import org.luckyraven.gangland.file.configuration.shop.GanglandShopMessages;
 import org.luckyraven.gangland.file.configuration.shop.GanglandShopUiSettings;
+import org.luckyraven.gangland.shop.ShopAdminOpener;
+import org.luckyraven.gangland.shop.ShopAdminOpenerImpl;
+import org.luckyraven.gangland.shop.admin.view.*;
+import org.luckyraven.gangland.shop.config.ShopUiSettings;
 import org.luckyraven.keystone.item.ItemConverterRegistry;
 import org.luckyraven.keystone.item.ItemRefresherRegistry;
 import org.luckyraven.keystone.item.ItemSerializerRegistry;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
-import org.luckyraven.gangland.shop.ShopRegistry;
-import org.luckyraven.gangland.shop.config.ShopUiSettings;
-import org.luckyraven.gangland.shop.io.ShopYamlReader;
-import org.luckyraven.gangland.shop.io.ShopYamlWriter;
-import org.luckyraven.gangland.shop.message.ShopDisplayResolver;
-import org.luckyraven.gangland.shop.message.ShopMessageContract;
-import org.luckyraven.gangland.shop.transaction.ShopBarterService;
-import org.luckyraven.gangland.shop.transaction.ShopPurchaseService;
-import org.luckyraven.gangland.shop.transaction.ShopSellService;
-import org.luckyraven.gangland.shop.valuation.CategoryBarterValuator;
-import org.luckyraven.gangland.shop.valuation.CategorySellValuator;
-import org.luckyraven.gangland.shop.valuation.SellValuator;
-import org.luckyraven.gangland.shop.view.*;
+import org.luckyraven.keystone.shop.ShopRegistry;
+import org.luckyraven.keystone.shop.io.ShopYamlReader;
+import org.luckyraven.keystone.shop.io.ShopYamlWriter;
+import org.luckyraven.keystone.shop.message.DefaultShopDisplayResolver;
+import org.luckyraven.keystone.shop.message.ShopDisplayResolver;
+import org.luckyraven.keystone.shop.message.ShopMessageContract;
+import org.luckyraven.keystone.shop.transaction.ShopBarterService;
+import org.luckyraven.keystone.shop.transaction.ShopPurchaseService;
+import org.luckyraven.keystone.shop.transaction.ShopSellService;
+import org.luckyraven.keystone.shop.valuation.CategoryBarterValuator;
+import org.luckyraven.keystone.shop.valuation.CategorySellValuator;
+import org.luckyraven.keystone.shop.valuation.SellValuator;
 
 /**
- * CONFIG-phase wiring for the shop-api layer used by both the trader NPC (cops-n-crooks module) and the admin
- * editor: registry I/O, purchase/barter/sell services, valuators and the admin views. Trader-specific beans moved
- * to {@code TraderModuleConfig} (T15, module split sprint 2026-09-07) — this class must keep working with zero
- * modules installed, since {@code ShopCommand} injects {@link ShopRegistry} and {@link ShopAdminFlow} directly.
+ * CONFIG-phase wiring for the shop layer used by both the trader NPC (cops-n-crooks module) and the admin
+ * editor: registry I/O, purchase/barter/sell services and valuators now come from Keystone's {@code keystone-shop}
+ * (WS4 G1a — {@code gangland-ui/shop-api} deleted, its 26 headless classes promoted upstream in Keystone's G0).
+ * The 5 admin-view beans stay wired to the relocated {@code gangland-impl}-local views (still on inventory-api,
+ * unchanged this gate — the {@code MenuFlow} rewrite is G1b). This class must keep working with zero modules
+ * installed, since {@code ShopCommand} injects {@link ShopRegistry} and {@link ShopAdminFlow} directly.
  *
  * <p>{@link #shopUiSettings} is constructed inline, never a {@code @Bean}: {@code TraderSettings} (cops-n-crooks)
  * extends {@link ShopUiSettings}, so a module-side {@code TraderSettings} bean would also register under
@@ -69,7 +73,7 @@ public class ShopConfig {
 	@Bean
 	public ShopDisplayResolver shopDisplayResolver(ItemSerializerRegistry serializerRegistry,
 	                                               ItemConverterRegistry converterRegistry) {
-		return new GanglandShopDisplayResolver(serializerRegistry, converterRegistry);
+		return new DefaultShopDisplayResolver(serializerRegistry, converterRegistry);
 	}
 
 	// ── Purchase / barter / sell services ────────────────────────────────
@@ -142,6 +146,15 @@ public class ShopConfig {
 	                                   BarterCategoryItemsAdminView barterCategoryPanel) {
 		return new ShopAdminFlow(gangland, refresherRegistry, adminPanel, priceEditorPanel, sellCategoryPanel,
 		                         barterCategoryPanel);
+	}
+
+	/**
+	 * WS4 G1a, B1: the module-facing seam — npc-shops (and any future module) resolves this bean type instead of
+	 * naming {@link ShopAdminFlow} directly.
+	 */
+	@Bean
+	public ShopAdminOpener shopAdminOpener(ShopAdminFlow shopAdminFlow) {
+		return new ShopAdminOpenerImpl(shopAdminFlow);
 	}
 
 }

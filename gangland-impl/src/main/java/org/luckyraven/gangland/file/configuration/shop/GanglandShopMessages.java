@@ -2,7 +2,7 @@ package org.luckyraven.gangland.file.configuration.shop;
 
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.shop.message.ShopMessageContract;
+import org.luckyraven.keystone.shop.message.ShopMessageContract;
 
 import java.math.BigDecimal;
 

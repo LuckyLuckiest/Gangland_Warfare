@@ -13,7 +13,7 @@ public final class GanglandShopUiSettings implements ShopUiSettings {
 
 	@Override
 	public int getMaxModeMultiplier() {
-		return Settings.getTraderMaxModeMultiplier();
+		return Settings.getShopMaxModeMultiplier();
 	}
 
 	@Override

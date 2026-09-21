@@ -54,6 +54,64 @@ Nothing errors. Gangland boots with no scoreboard of any kind — no fault line,
 (Plaque was never a Gangland dependency in either direction). Players simply see no scoreboard until Plaque is
 installed.
 
+## WS4 — Trader/Banker NPC settings moved out of core `settings.yml`
+
+`gangland-ui/shop-api` is gone; the headless shop system (registry, purchase/sell/barter services, valuators) now
+comes from Keystone's `keystone-shop`, and 10 NPC-specific knobs that used to live under core `settings.yml`'s
+`Trader:`/`Banker:` blocks moved into two new files shipped inside `modules/gangland-npc-shops-<rev>.jar` and
+extracted alongside the module's other defaults (same mechanism as `npc/trader_traits.yml`/`npc/bank_tiers.yml`).
+
+### 1. The 10 keys and their new files
+
+| Old (`Gangland_Warfare/settings.yml`) | New file | New key |
+|---|---|---|
+| `Trader.Respawn_Cooldown` | `plugins/Gangland_Warfare/npc/trader_settings.yml` | `Respawn_Cooldown` |
+| `Trader.Head_Track_Radius` | same | `Head_Track_Radius` |
+| `Trader.Fallback_Trait_Id` | same | `Fallback_Trait_Id` |
+| `Trader.Sell.Max_Offer_Slots` | same | `Sell.Max_Offer_Slots` |
+| `Trader.Sell.Mood_Per_Sale` | same | `Sell.Mood_Per_Sale` |
+| `Trader.Tip_Amount` | same | `Tip_Amount` |
+| `Banker.Head_Track_Radius` | `plugins/Gangland_Warfare/npc/banker_settings.yml` | `Head_Track_Radius` |
+| `Banker.Max_Health` | same | `Max_Health` |
+| `Banker.Invulnerable` | same | `Invulnerable` |
+| `Banker.Fallback_Tier_Id` | same | `Fallback_Tier_Id` |
+
+Both files are created automatically (with the same defaults the old `Trader:`/`Banker:` blocks shipped) the first
+time the npc-shops module boots, exactly like any other module-owned YAML — nothing to install by hand.
+
+### 2. `Trader.Max_Mode_Multiplier` is the one key that stayed core
+
+It moved sideways instead of out: the admin price editor (`/glw shop edit`) reads it too, not just the trader
+browser, so it stayed in core `settings.yml` under a new, small top-level block:
+
+| Old | New |
+|---|---|
+| `Trader.Max_Mode_Multiplier` | `Shop.Max_Mode_Multiplier` |
+
+### 3. Customised values are NOT auto-migrated — copy them by hand
+
+If you had changed any of the 10 keys in section 1 away from their defaults, upgrading in place does **not** carry
+those values into the new files — the new `npc/trader_settings.yml`/`npc/banker_settings.yml` are written fresh
+from the module jar's own defaults, and core `Settings` no longer reads the old `Trader:`/`Banker:` block at all.
+Open your old `settings.yml`, copy any non-default value across to the matching key in the new file, by hand,
+before or after the upgrade.
+
+### 4. The warning that tells you this needs doing
+
+A leftover `Trader:`/`Banker:` block in `settings.yml` is not silently ignored like WS1's `Scoreboard:` block —
+`Settings`' load step (`init()`, run at boot and on every `/glw reload`) fires a **targeted warning naming the new
+file**, once per block, distinct from the generic "unknown key" line the individual leaf keys underneath it still
+get:
+
+```
+[Gangland.Settings] settings.yml still has a legacy 'Trader:' block — those keys moved to
+plugins/Gangland_Warfare/npc/trader_settings.yml (extracted by the npc-shops module); customised values are NOT
+auto-migrated and must be copied over by hand. See documentation/migration-0.10.0.md.
+```
+
+Seeing this line (for `Trader:` and/or `Banker:`) is your signal to do step 3, then delete the leftover block —
+once removed, the warning stops.
+
 ## See also
 
 - [`documentation/features/scoreboard.md`](./features/scoreboard.md) — the short in-repo pointer to Plaque.
@@ -62,5 +120,5 @@ installed.
 - [`documentation/migration-0.9.2.md`](./migration-0.9.2.md) — the previous migration note (jetpack ownership,
   Bartizan going soft), unaffected by WS1.
 
-<!-- Later 0.10.0 gates (WS2 inventory-api → keystone-inventory, WS3 lootchest/hologram, WS4 shop, WS5 gang
-     module, WS6 api facade) append their own sections here as they land. -->
+<!-- Later 0.10.0 gates (WS2 inventory-api → keystone-inventory, WS3 lootchest/hologram, WS5 gang module,
+     WS6 api facade) append their own sections here as they land. -->

@@ -13,7 +13,7 @@ import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitRegistry;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.shop.ShopRegistry;
+import org.luckyraven.keystone.shop.ShopRegistry;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.ArrayList;

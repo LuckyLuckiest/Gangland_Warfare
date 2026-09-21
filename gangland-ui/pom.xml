@@ -21,7 +21,6 @@
         <module>inventory-api</module>
         <module>sign-api</module>
         <module>lootchest-api</module>
-        <module>shop-api</module>
     </modules>
 
     <dependencies>

@@ -8,7 +8,7 @@ import org.luckyraven.gangland.npcshops.command.trader.edit.TraderEditCommand;
 import org.luckyraven.gangland.npcshops.trader.TraderManager;
 import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitRegistry;
 import org.luckyraven.keystone.bean.command.CommandHandler;
-import org.luckyraven.gangland.shop.ShopRegistry;
+import org.luckyraven.keystone.shop.ShopRegistry;
 
 import java.util.Map;
 
