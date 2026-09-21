@@ -16,11 +16,13 @@ import org.luckyraven.gangland.copsncrooks.detainment.economy.DetainmentCostsCon
 import org.luckyraven.gangland.copsncrooks.detainment.economy.DetainmentEconomyContract;
 import org.luckyraven.gangland.copsncrooks.detainment.message.DetainmentMessageContract;
 import org.luckyraven.gangland.copsncrooks.detainment.sentence.SentenceService;
+import org.luckyraven.keystone.inventory.InventoryService;
+import org.luckyraven.keystone.inventory.chest.ChestMenu;
+import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
+import org.luckyraven.keystone.inventory.component.FillComponent;
+import org.luckyraven.keystone.inventory.component.ItemComponent;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.util.ChatUtil;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.part.Fill;
-import org.luckyraven.gangland.inventory.util.InventoryUtil;
 
 /**
  * Three-row menu opened when a jailed player right-clicks their Jail Paperwork item. Bail / Bribe / Sentence release
@@ -30,13 +32,14 @@ import org.luckyraven.gangland.inventory.util.InventoryUtil;
 @RequiredArgsConstructor
 public final class PaperworkView {
 
-	private static final int SIZE          = 27;
+	private static final int ROWS          = 3;
 	private static final int SLOT_BAIL     = 11;
 	private static final int SLOT_BRIBE    = 13;
 	private static final int SLOT_SENTENCE = 15;
 	private static final int SLOT_INFO     = 22;
 
 	private final JavaPlugin                plugin;
+	private final InventoryService          inventoryService;
 	private final DetainmentRegistry        detainmentRegistry;
 	private final DetainmentCostsContract   costs;
 	private final DetainmentEconomyContract economy;
@@ -51,8 +54,7 @@ public final class PaperworkView {
 	}
 
 	public void open(Player player) {
-		String           title   = ChatUtil.color(messages.paperworkGuiTitle());
-		InventoryHandler handler = new InventoryHandler(plugin, title, SIZE, player);
+		String title = ChatUtil.color(messages.paperworkGuiTitle());
 
 		double bailCost  = bailService.computeCost(player);
 		double bribeCost = bribeService.computeJailBribeCost(player);
@@ -64,16 +66,18 @@ public final class PaperworkView {
 		long   remainingSec  = sentenceService.getRemainingSeconds(player);
 		double chancePercent = costs.getJailBribeSuccessChance() * 100.0;
 
+		ChestMenuBuilder builder = ChestMenu.builder(inventoryService).title(title).rows(ROWS);
+
 		// Bail
 		ItemStack   bailIcon   = moneyIconProvider.buildIcon(bailCost);
 		ItemBuilder bailButton = new ItemBuilder(bailIcon);
 		bailButton.setDisplayName(messages.paperworkBailLabel(formatMoney(bailCost)))
 		          .setLore(messages.paperworkBailLore(formatMoney(bailCost), formatMoney(balance)));
-		handler.setItem(SLOT_BAIL, bailButton, false, (p, inv, b) -> {
-			p.closeInventory();
-			BailResult result = bailService.tryPayBail(p);
-			handleBailResult(p, result);
-		});
+		builder.slot(SLOT_BAIL, ItemComponent.of(bailButton).onAnyClick(ctx -> {
+			ctx.player().closeInventory();
+			BailResult result = bailService.tryPayBail(ctx.player());
+			handleBailResult(ctx.player(), result);
+		}));
 
 		// Bribe
 		ItemStack   bribeIcon   = moneyIconProvider.buildIcon(bribeCost);
@@ -81,11 +85,11 @@ public final class PaperworkView {
 		bribeButton.setDisplayName(messages.paperworkBribeLabel(formatMoney(bribeCost)))
 		           .setLore(messages.paperworkBribeLore(formatMoney(bribeCost),
 		                                                String.format("%.0f", chancePercent)));
-		handler.setItem(SLOT_BRIBE, bribeButton, false, (p, inv, b) -> {
-			p.closeInventory();
-			BribeResult result = bribeService.tryJailBribe(p);
-			handleBribeResult(p, result);
-		});
+		builder.slot(SLOT_BRIBE, ItemComponent.of(bribeButton).onAnyClick(ctx -> {
+			ctx.player().closeInventory();
+			BribeResult result = bribeService.tryJailBribe(ctx.player());
+			handleBribeResult(ctx.player(), result);
+		}));
 
 		// Sentence
 		ItemStack sentenceIcon = XMaterial.CLOCK.parseItem();
@@ -93,19 +97,19 @@ public final class PaperworkView {
 				sentenceIcon != null ? sentenceIcon : new ItemStack(Material.CLOCK));
 		sentenceButton.setDisplayName(messages.paperworkSentenceLabel())
 		              .setLore(messages.paperworkSentenceLore(remainingSec));
-		handler.setItem(SLOT_SENTENCE, sentenceButton, false, (p, inv, b) -> p.closeInventory());
+		builder.slot(SLOT_SENTENCE, ItemComponent.of(sentenceButton).onAnyClick(ctx -> ctx.player().closeInventory()));
 
 		// Info
 		ItemStack   infoIcon = XMaterial.PAPER.parseItem();
 		ItemBuilder info     = new ItemBuilder(infoIcon != null ? infoIcon : new ItemStack(Material.PAPER));
 		info.setDisplayName(messages.paperworkInfoLabel())
 		    .setLore(messages.paperworkInfoLore(wantedAtArrest, remainingSec, formatMoney(balance)));
-		handler.setItem(SLOT_INFO, info, false, (p, inv, b) -> { });
+		builder.slot(SLOT_INFO, ItemComponent.of(info));
 
-		InventoryUtil.fillInventory(handler, new Fill(" ", "BLACK_STAINED_GLASS_PANE"));
+		builder.fill(FillComponent.of(Material.BLACK_STAINED_GLASS_PANE).name(" "));
 
 		DetainmentGuiAccess.authorize(player.getUniqueId());
-		handler.open(player);
+		builder.build().open(player);
 	}
 
 	private void handleBailResult(Player player, BailResult result) {

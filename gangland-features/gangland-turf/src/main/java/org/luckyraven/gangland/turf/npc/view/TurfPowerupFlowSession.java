@@ -2,7 +2,7 @@ package org.luckyraven.gangland.turf.npc.view;
 
 import lombok.Getter;
 import org.luckyraven.gangland.gang.Gang;
-import org.luckyraven.gangland.inventory.flow.FlowSession;
+import org.luckyraven.keystone.inventory.flow.FlowState;
 import org.luckyraven.gangland.turf.data.Turf;
 
 /**
@@ -11,7 +11,7 @@ import org.luckyraven.gangland.turf.data.Turf;
  * bank-balance reads). Both are resolved by {@code TurfPowerupOpenContractImpl} before opening the flow — if either is
  * missing, the contract sends a deny chat and never constructs a session.
  */
-public final class TurfPowerupFlowSession implements FlowSession {
+public final class TurfPowerupFlowSession implements FlowState {
 
 	public static final String PANEL_MENU     = "menu";
 	public static final String PANEL_BUFFS    = "buffs";

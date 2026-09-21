@@ -1,18 +1,19 @@
 package org.luckyraven.gangland.turf.npc.view;
 
+import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
+import org.luckyraven.keystone.inventory.component.FillComponent;
+import org.luckyraven.keystone.inventory.component.ItemComponent;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
+import org.luckyraven.keystone.inventory.flow.Panel;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.keystone.economy.exception.EconomyException;
 import org.luckyraven.gangland.gang.Gang;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
-import org.luckyraven.gangland.inventory.flow.Panel;
-import org.luckyraven.gangland.inventory.part.Fill;
-import org.luckyraven.gangland.inventory.util.InventoryUtil;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 
@@ -30,7 +31,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSession> {
 
-	private static final int SIZE       = 27;
+	private static final int ROWS       = 3;
 	private static final int SLOT_INFO  = 4;
 	private static final int SLOT_BUY   = 13;
 	private static final int SLOT_BACK  = 18;
@@ -43,8 +44,8 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 	private final String          fillName;
 
 	@Override
-	public int size(TurfPowerupFlowSession session) {
-		return SIZE;
+	public int rows(TurfPowerupFlowSession session) {
+		return ROWS;
 	}
 
 	@Override
@@ -53,22 +54,21 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 	}
 
 	@Override
-	public void render(MultiPanelInventory<TurfPowerupFlowSession> host, InventoryHandler handler, Player viewer,
-	                   TurfPowerupFlowSession session) {
+	public void render(MenuFlow<TurfPowerupFlowSession> flow, ChestMenuBuilder builder, TurfPowerupFlowSession session) {
 		Turf turf = session.getTurf();
 		Gang gang = session.getViewerGang();
 
-		handler.setItem(SLOT_INFO, infoItem(turf, gang), false, (p, inv, b) -> { });
-		handler.setItem(SLOT_BUY, buyItem(gang), false,
-		                (p, inv, b) -> attemptBuy(host, viewer, session));
+		builder.slot(SLOT_INFO, ItemComponent.of(infoItem(turf, gang)));
+		builder.slot(SLOT_BUY, ItemComponent.of(buyItem(gang))
+		                                   .onAnyClick(ctx -> attemptBuy(flow, ctx.player(), session)));
 
 		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&7← Back");
-		handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> host.back());
+		builder.slot(SLOT_BACK, ItemComponent.of(back).onAnyClick(ctx -> flow.back()));
 
 		ItemBuilder close = new ItemBuilder(Material.BARRIER).setDisplayName("&cClose");
-		handler.setItem(SLOT_CLOSE, close, false, (p, inv, b) -> host.end());
+		builder.slot(SLOT_CLOSE, ItemComponent.of(close).onAnyClick(ctx -> flow.end()));
 
-		InventoryUtil.fillInventory(handler, new Fill(fillName, fillItem));
+		builder.fill(FillComponent.of(materialOf(fillItem)).name(fillName));
 	}
 
 	private ItemBuilder infoItem(Turf turf, Gang gang) {
@@ -92,8 +92,7 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 						          : "&cInsufficient gang funds."));
 	}
 
-	private void attemptBuy(MultiPanelInventory<TurfPowerupFlowSession> host, Player viewer,
-	                        TurfPowerupFlowSession session) {
+	private void attemptBuy(MenuFlow<TurfPowerupFlowSession> flow, Player viewer, TurfPowerupFlowSession session) {
 		Gang gang = session.getViewerGang();
 		try {
 			gang.getEconomy().withdrawAmount(PER_DEFENDER_COST);
@@ -105,6 +104,10 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 		garrisons.add(session.getTurf().getId(), 1);
 		viewer.sendMessage(ChatUtil.color("&aBought &f1 &adefender for &f"
 		                                  + session.getTurf().getDisplayName() + "&a."));
-		host.rerender();
+		flow.rerender();
+	}
+
+	private static Material materialOf(String name) {
+		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
 	}
 }

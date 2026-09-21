@@ -1,18 +1,19 @@
 package org.luckyraven.gangland.turf.npc.view;
 
+import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
+import org.luckyraven.keystone.inventory.component.FillComponent;
+import org.luckyraven.keystone.inventory.component.ItemComponent;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
+import org.luckyraven.keystone.inventory.flow.Panel;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.keystone.economy.exception.EconomyException;
 import org.luckyraven.gangland.gang.Gang;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
-import org.luckyraven.gangland.inventory.flow.Panel;
-import org.luckyraven.gangland.inventory.part.Fill;
-import org.luckyraven.gangland.inventory.util.InventoryUtil;
 import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
 import org.luckyraven.gangland.turf.powerups.PowerupDefinition;
 import org.luckyraven.gangland.turf.powerups.PowerupRegistry;
@@ -28,7 +29,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlowSession> {
 
-	private static final int SIZE       = 36;
+	private static final int ROWS       = 4;
 	private static final int BUFF_START = 9;
 	private static final int BUFF_END   = 18;
 	private static final int SLOT_BACK  = 27;
@@ -40,8 +41,8 @@ public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlow
 	private final String            fillName;
 
 	@Override
-	public int size(TurfPowerupFlowSession session) {
-		return SIZE;
+	public int rows(TurfPowerupFlowSession session) {
+		return ROWS;
 	}
 
 	@Override
@@ -50,25 +51,24 @@ public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlow
 	}
 
 	@Override
-	public void render(MultiPanelInventory<TurfPowerupFlowSession> host, InventoryHandler handler, Player viewer,
-	                   TurfPowerupFlowSession session) {
+	public void render(MenuFlow<TurfPowerupFlowSession> flow, ChestMenuBuilder builder, TurfPowerupFlowSession session) {
 		Gang gang = session.getViewerGang();
 
 		int slot = BUFF_START;
 		for (PowerupDefinition def : registry.all()) {
 			if (slot >= BUFF_END) break;
 			final PowerupDefinition captured = def;
-			handler.setItem(slot++, buffItem(captured, gang), false,
-			                (p, inv, b) -> attemptBuy(host, viewer, session, captured));
+			builder.slot(slot++, ItemComponent.of(buffItem(captured, gang))
+			                                  .onAnyClick(ctx -> attemptBuy(flow, ctx.player(), session, captured)));
 		}
 
 		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&7← Back");
-		handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> host.back());
+		builder.slot(SLOT_BACK, ItemComponent.of(back).onAnyClick(ctx -> flow.back()));
 
 		ItemBuilder close = new ItemBuilder(Material.BARRIER).setDisplayName("&cClose");
-		handler.setItem(SLOT_CLOSE, close, false, (p, inv, b) -> host.end());
+		builder.slot(SLOT_CLOSE, ItemComponent.of(close).onAnyClick(ctx -> flow.end()));
 
-		InventoryUtil.fillInventory(handler, new Fill(fillName, fillItem));
+		builder.fill(FillComponent.of(materialOf(fillItem)).name(fillName));
 	}
 
 	private ItemBuilder buffItem(PowerupDefinition def, Gang viewerGang) {
@@ -84,8 +84,8 @@ public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlow
 				.setLore(lore);
 	}
 
-	private void attemptBuy(MultiPanelInventory<TurfPowerupFlowSession> host, Player viewer,
-	                        TurfPowerupFlowSession session, PowerupDefinition def) {
+	private void attemptBuy(MenuFlow<TurfPowerupFlowSession> flow, Player viewer, TurfPowerupFlowSession session,
+	                        PowerupDefinition def) {
 		Gang gang = session.getViewerGang();
 		try {
 			gang.getEconomy().withdrawAmount(def.cost());
@@ -97,6 +97,10 @@ public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlow
 		buffs.activate(session.getTurf().getId(), def);
 		viewer.sendMessage(ChatUtil.color("&aActivated &f" + def.id() + " &aon &f"
 		                                  + session.getTurf().getDisplayName() + "&a."));
-		host.rerender();
+		flow.rerender();
+	}
+
+	private static Material materialOf(String name) {
+		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
 	}
 }

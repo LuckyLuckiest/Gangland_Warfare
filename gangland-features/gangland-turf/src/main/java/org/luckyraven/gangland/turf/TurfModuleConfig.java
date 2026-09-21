@@ -3,6 +3,7 @@ package org.luckyraven.gangland.turf;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
+import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
@@ -267,10 +268,10 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
-	public TurfPowerupFlow turfPowerupFlow(JavaPlugin plugin, TurfPowerupMenuView menuView,
-	                                       TurfPowerupBuffCatalogueView buffsView,
+	public TurfPowerupFlow turfPowerupFlow(JavaPlugin plugin, InventoryService inventoryService,
+	                                       TurfPowerupMenuView menuView, TurfPowerupBuffCatalogueView buffsView,
 	                                       TurfPowerupGarrisonView garrisonView) {
-		return new TurfPowerupFlow(plugin, menuView, buffsView, garrisonView);
+		return new TurfPowerupFlow(plugin, inventoryService, menuView, buffsView, garrisonView);
 	}
 
 	@Bean

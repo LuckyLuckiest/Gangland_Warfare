@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
+import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.gangland.copsncrooks.combo.KillCombo;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainedPlayer;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentRegistry;
@@ -271,20 +272,21 @@ public class CopsNCrooksModuleConfig {
 	}
 
 	@Bean
-	public HandcuffBribeView handcuffBribeView(BribeService bribeService, DetainmentEconomyContract economy,
+	public HandcuffBribeView handcuffBribeView(InventoryService inventoryService, BribeService bribeService,
+	                                           DetainmentEconomyContract economy,
 	                                           MoneyIconProvider moneyIconProvider,
 	                                           DetainmentMessageContract messages) {
-		return new HandcuffBribeView(plugin, bribeService, economy, moneyIconProvider, messages);
+		return new HandcuffBribeView(plugin, inventoryService, bribeService, economy, moneyIconProvider, messages);
 	}
 
 	@Bean
-	public PaperworkView paperworkView(DetainmentRegistry detainmentRegistry, DetainmentCostsContract costs,
-	                                   DetainmentEconomyContract economy, BailService bailService,
-	                                   BribeService bribeService, SentenceService sentenceService,
-	                                   MoneyIconProvider moneyIconProvider,
+	public PaperworkView paperworkView(InventoryService inventoryService, DetainmentRegistry detainmentRegistry,
+	                                   DetainmentCostsContract costs, DetainmentEconomyContract economy,
+	                                   BailService bailService, BribeService bribeService,
+	                                   SentenceService sentenceService, MoneyIconProvider moneyIconProvider,
 	                                   DetainmentMessageContract messages) {
-		return new PaperworkView(plugin, detainmentRegistry, costs, economy, bailService, bribeService,
-		                         sentenceService, moneyIconProvider, messages);
+		return new PaperworkView(plugin, inventoryService, detainmentRegistry, costs, economy, bailService,
+		                         bribeService, sentenceService, moneyIconProvider, messages);
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------

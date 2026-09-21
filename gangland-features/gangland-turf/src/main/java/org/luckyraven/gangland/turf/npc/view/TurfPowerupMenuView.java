@@ -1,16 +1,16 @@
 package org.luckyraven.gangland.turf.npc.view;
 
+import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
+import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
+import org.luckyraven.keystone.inventory.component.FillComponent;
+import org.luckyraven.keystone.inventory.component.ItemComponent;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
+import org.luckyraven.keystone.inventory.flow.Panel;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.gang.Gang;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
-import org.luckyraven.gangland.inventory.flow.Panel;
-import org.luckyraven.gangland.inventory.part.Fill;
-import org.luckyraven.gangland.inventory.util.InventoryUtil;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
@@ -26,7 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> {
 
-	private static final int SIZE          = 27;
+	private static final int ROWS         = 3;
 	private static final int SLOT_INFO     = 4;
 	private static final int SLOT_BUFFS    = 11;
 	private static final int SLOT_GARRISON = 15;
@@ -38,8 +38,8 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 	private final String            fillName;
 
 	@Override
-	public int size(TurfPowerupFlowSession session) {
-		return SIZE;
+	public int rows(TurfPowerupFlowSession session) {
+		return ROWS;
 	}
 
 	@Override
@@ -48,22 +48,21 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 	}
 
 	@Override
-	public void render(MultiPanelInventory<TurfPowerupFlowSession> host, InventoryHandler handler, Player viewer,
-	                   TurfPowerupFlowSession session) {
+	public void render(MenuFlow<TurfPowerupFlowSession> flow, ChestMenuBuilder builder, TurfPowerupFlowSession session) {
 		Turf turf       = session.getTurf();
 		Gang ownerGang  = session.getOwnerGang();
 		Gang viewerGang = session.getViewerGang();
 
-		handler.setItem(SLOT_INFO, infoItem(turf, ownerGang, viewerGang), false, (p, inv, b) -> { });
-		handler.setItem(SLOT_BUFFS, buffsButton(turf), false,
-		                (p, inv, b) -> host.switchTo(TurfPowerupFlowSession.PANEL_BUFFS));
-		handler.setItem(SLOT_GARRISON, garrisonButton(turf), false,
-		                (p, inv, b) -> host.switchTo(TurfPowerupFlowSession.PANEL_GARRISON));
+		builder.slot(SLOT_INFO, ItemComponent.of(infoItem(turf, ownerGang, viewerGang)));
+		builder.slot(SLOT_BUFFS, ItemComponent.of(buffsButton(turf))
+		                                     .onAnyClick(ctx -> flow.switchTo(TurfPowerupFlowSession.PANEL_BUFFS)));
+		builder.slot(SLOT_GARRISON, ItemComponent.of(garrisonButton(turf))
+		                                        .onAnyClick(ctx -> flow.switchTo(TurfPowerupFlowSession.PANEL_GARRISON)));
 
 		ItemBuilder close = new ItemBuilder(Material.BARRIER).setDisplayName("&cClose");
-		handler.setItem(SLOT_CLOSE, close, false, (p, inv, b) -> host.end());
+		builder.slot(SLOT_CLOSE, ItemComponent.of(close).onAnyClick(ctx -> flow.end()));
 
-		InventoryUtil.fillInventory(handler, new Fill(fillName, fillItem));
+		builder.fill(FillComponent.of(materialOf(fillItem)).name(fillName));
 	}
 
 	private ItemBuilder infoItem(Turf turf, Gang ownerGang, Gang viewerGang) {
@@ -96,5 +95,9 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> 
 				         "&7These civilian defenders auto-spawn",
 				         "&7when an enemy attacks the turf.",
 				         "&7Current stock: &f" + garrisons.count(turf.getId()));
+	}
+
+	private static Material materialOf(String name) {
+		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
 	}
 }

@@ -38,6 +38,7 @@ import org.luckyraven.gangland.item.fuel.FuelService;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.Qualifier;
+import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
@@ -197,7 +198,7 @@ public class GadgetModuleConfig {
 	}
 
 	@Bean
-	public CarSignViewProvider carSignViewProvider(CarAddon carAddon) {
-		return new CarSignViewProvider(plugin, carAddon);
+	public CarSignViewProvider carSignViewProvider(InventoryService inventoryService, CarAddon carAddon) {
+		return new CarSignViewProvider(plugin, inventoryService, carAddon);
 	}
 }
