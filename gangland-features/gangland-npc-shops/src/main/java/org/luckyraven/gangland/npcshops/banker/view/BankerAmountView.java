@@ -11,14 +11,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.npcshops.banker.economy.BankerEconomyContract;
 import org.luckyraven.gangland.npcshops.banker.economy.BankerEconomyContract.BankerSnapshot;
 import org.luckyraven.gangland.npcshops.banker.message.BankerMessageContract;
+import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
+import org.luckyraven.keystone.inventory.component.FillComponent;
+import org.luckyraven.keystone.inventory.component.ItemComponent;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
+import org.luckyraven.keystone.inventory.flow.Panel;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.keystone.economy.Currency;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
-import org.luckyraven.gangland.inventory.flow.Panel;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -27,14 +29,14 @@ import java.util.List;
 /**
  * Amount-picker panel shared between deposit and withdraw flows. Stages a {@link BigDecimal} on the flow session and
  * clamps against the remaining daily quota + source balance (cash for deposit, bank for withdraw). The anvil "custom
- * amount" detour uses {@link MultiPanelInventory#suspend()} before opening the anvil and
- * {@link MultiPanelInventory#resume()} + {@link MultiPanelInventory#switchTo(String)} from the anvil's onClose callback
- * — the staged amount (stored on {@link BankerFlowSession}) survives the detour.
+ * amount" detour uses {@link MenuFlow#suspend()} before opening the anvil and {@link MenuFlow#resume()} +
+ * {@link MenuFlow#switchTo(String)} from the anvil's onClose callback — the staged amount (stored on
+ * {@link BankerFlowSession}) survives the detour.
  */
 @RequiredArgsConstructor
 public final class BankerAmountView implements Panel<BankerFlowSession> {
 
-	private static final int SIZE            = 54;
+	private static final int ROWS            = 6;
 	private static final int SLOT_INFO       = 4;
 	private static final int SLOT_ITEM       = 22;
 	private static final int SLOT_QTY_ANVIL  = 31;
@@ -79,8 +81,8 @@ public final class BankerAmountView implements Panel<BankerFlowSession> {
 	}
 
 	@Override
-	public int size(BankerFlowSession session) {
-		return SIZE;
+	public int rows(BankerFlowSession session) {
+		return ROWS;
 	}
 
 	@Override
@@ -90,12 +92,11 @@ public final class BankerAmountView implements Panel<BankerFlowSession> {
 	}
 
 	@Override
-	public void render(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler, Player viewer,
-	                   BankerFlowSession session) {
-		BankerSnapshot snap = economy.snapshot(viewer);
+	public void render(MenuFlow<BankerFlowSession> flow, ChestMenuBuilder builder, BankerFlowSession session) {
+		BankerSnapshot snap = economy.snapshot(flow.viewer());
 
 		if (!snap.hasBank() || session.amountMode == null) {
-			renderStub(host, handler, "&cNo bank account", "&8Open an account first.");
+			renderStub(flow, builder, "&cNo bank account", "&8Open an account first.");
 			return;
 		}
 
@@ -104,7 +105,7 @@ public final class BankerAmountView implements Panel<BankerFlowSession> {
 			String line = session.amountMode == Mode.DEPOSIT
 			              ? "&8Nothing you can deposit right now."
 			              : "&8Nothing you can withdraw right now.";
-			renderStub(host, handler, "&cUnavailable", line);
+			renderStub(flow, builder, "&cUnavailable", line);
 			return;
 		}
 
@@ -114,13 +115,13 @@ public final class BankerAmountView implements Panel<BankerFlowSession> {
 		if (session.amountStaged.signum() < 0) session.amountStaged = Currency.ZERO;
 		if (session.amountStaged.compareTo(max) > 0) session.amountStaged = max;
 
-		fillGlass(handler);
-		renderInfo(handler, session, max);
-		renderItemPreview(handler, session, max);
-		renderAdjustButtons(host, handler, session, max);
-		renderCustomAnvilButton(host, handler, session, max);
-		renderModeRow(host, handler, session);
-		renderConfirmCancel(host, handler, session);
+		fillGlass(builder);
+		renderInfo(builder, session, max);
+		renderItemPreview(builder, session, max);
+		renderAdjustButtons(flow, builder, session, max);
+		renderCustomAnvilButton(flow, builder, session, max);
+		renderModeRow(flow, builder, session);
+		renderConfirmCancel(flow, builder, session);
 	}
 
 	private BigDecimal computeMax(BankerSnapshot snap, Mode mode) {
@@ -136,30 +137,28 @@ public final class BankerAmountView implements Panel<BankerFlowSession> {
 
 	// ── Rendering ────────────────────────────────────────────────────────
 
-	private void renderStub(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler, String name,
-	                        String lore) {
-		fillGlass(handler);
+	private void renderStub(MenuFlow<BankerFlowSession> flow, ChestMenuBuilder builder, String name, String lore) {
+		fillGlass(builder);
 		ItemBuilder info = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER));
 		info.setDisplayName(name).setLore(lore);
-		handler.setItem(SLOT_INFO, info, false, (p, inv, b) -> { });
+		builder.slot(SLOT_INFO, ItemComponent.of(info));
 
 		ItemBuilder back = new ItemBuilder(material(XMaterial.RED_WOOL, Material.RED_WOOL)).setDisplayName("&cBACK");
 		// Center the lone BACK button on the bottom row (slot 49) instead of reusing SLOT_CANCEL (slot 50), which is
 		// offset one column right of center and leaves the stub looking lopsided.
-		handler.setItem(SLOT_CANCEL - 1, back, false, (p, inv, b) -> {
-			host.back();
-			playSoundNextTick(p, SOUND_CANCEL);
-		});
+		builder.slot(SLOT_CANCEL - 1, ItemComponent.of(back).onAnyClick(ctx -> {
+			flow.back();
+			playSoundNextTick(ctx.player(), SOUND_CANCEL);
+		}));
 	}
 
-	private void fillGlass(InventoryHandler handler) {
+	private void fillGlass(ChestMenuBuilder builder) {
 		ItemStack pane = XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
 		if (pane == null) pane = new ItemStack(Material.STONE);
-		ItemBuilder filler = new ItemBuilder(pane).setDisplayName(" ");
-		for (int slot = 0; slot < SIZE; slot++) handler.setItem(slot, filler, false, (p, inv, b) -> { });
+		builder.fill(FillComponent.of(pane.getType()).name(" "));
 	}
 
-	private void renderInfo(InventoryHandler handler, BankerFlowSession session, BigDecimal max) {
+	private void renderInfo(ChestMenuBuilder builder, BankerFlowSession session, BigDecimal max) {
 		ItemBuilder info = new ItemBuilder(material(XMaterial.PAPER, Material.PAPER));
 		String      verb = session.amountMode == Mode.DEPOSIT ? "deposit" : "withdraw";
 		info.setDisplayName("&eChoose an amount to " + verb)
@@ -168,18 +167,18 @@ public final class BankerAmountView implements Panel<BankerFlowSession> {
 		             "&7Step: &b$" + format(stepFor(session.amountStepIndex)), " ",
 		             "&8Green adds, red subtracts.",
 		             "&8Yellow block = type an exact amount.");
-		handler.setItem(SLOT_INFO, info, false, (p, inv, b) -> { });
+		builder.slot(SLOT_INFO, ItemComponent.of(info));
 	}
 
-	private void renderItemPreview(InventoryHandler handler, BankerFlowSession session, BigDecimal max) {
+	private void renderItemPreview(ChestMenuBuilder builder, BankerFlowSession session, BigDecimal max) {
 		XMaterial   preferred = session.amountMode == Mode.DEPOSIT ? XMaterial.EMERALD_BLOCK : XMaterial.GOLD_BLOCK;
 		ItemBuilder preview   = new ItemBuilder(material(preferred, Material.STONE));
 		preview.setDisplayName("&a$" + format(session.amountStaged))
 		       .setLore("&7Step: &b$" + format(stepFor(session.amountStepIndex)), "&7Max: &f$" + format(max));
-		handler.setItem(SLOT_ITEM, preview, false, (p, inv, b) -> { });
+		builder.slot(SLOT_ITEM, ItemComponent.of(preview));
 	}
 
-	private void renderAdjustButtons(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler,
+	private void renderAdjustButtons(MenuFlow<BankerFlowSession> flow, ChestMenuBuilder builder,
 	                                 BankerFlowSession session, BigDecimal max) {
 		BigDecimal step = stepFor(session.amountStepIndex);
 
@@ -191,10 +190,10 @@ public final class BankerAmountView implements Panel<BankerFlowSession> {
 			green.setDisplayName("&a+ $" + format(greenStep))
 			     .setLore("&7Adds &a" + greenMag + " &7× &b$" + format(step));
 			final BigDecimal greenDelta = greenStep;
-			handler.setItem(GREEN_SLOTS[i], green, false, (p, inv, b) -> {
-				adjust(host, session, greenDelta, max);
-				playSoundNextTick(p, SOUND_ADD);
-			});
+			builder.slot(GREEN_SLOTS[i], ItemComponent.of(green).onAnyClick(ctx -> {
+				adjust(flow, session, greenDelta, max);
+				playSoundNextTick(ctx.player(), SOUND_ADD);
+			}));
 
 			// Mirror outward: biggest step nearest the item, smallest at the edge.
 			int        redMag  = RED_SLOTS.length - i;
@@ -204,57 +203,57 @@ public final class BankerAmountView implements Panel<BankerFlowSession> {
 			red.setDisplayName("&c- $" + format(redStep))
 			   .setLore("&7Subtracts &c" + redMag + " &7× &b$" + format(step));
 			final BigDecimal redDelta = redStep.negate();
-			handler.setItem(RED_SLOTS[i], red, false, (p, inv, b) -> {
-				adjust(host, session, redDelta, max);
-				playSoundNextTick(p, SOUND_SUB);
-			});
+			builder.slot(RED_SLOTS[i], ItemComponent.of(red).onAnyClick(ctx -> {
+				adjust(flow, session, redDelta, max);
+				playSoundNextTick(ctx.player(), SOUND_SUB);
+			}));
 		}
 	}
 
-	private void renderCustomAnvilButton(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler,
+	private void renderCustomAnvilButton(MenuFlow<BankerFlowSession> flow, ChestMenuBuilder builder,
 	                                     BankerFlowSession session, BigDecimal max) {
 		ItemBuilder button = new ItemBuilder(material(XMaterial.YELLOW_CONCRETE, Material.GOLD_BLOCK));
 		button.setDisplayName("&eCustom amount: &f$" + format(session.amountStaged))
 		      .setLore("&7Click to type an exact amount.", "&8Max: &f$" + format(max));
-		handler.setItem(SLOT_QTY_ANVIL, button, false, (p, inv, b) -> openAmountAnvil(host, p, session, max));
+		builder.slot(SLOT_QTY_ANVIL,
+		            ItemComponent.of(button).onAnyClick(ctx -> openAmountAnvil(flow, ctx.player(), session, max)));
 	}
 
-	private void renderModeRow(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler,
-	                           BankerFlowSession session) {
+	private void renderModeRow(MenuFlow<BankerFlowSession> flow, ChestMenuBuilder builder, BankerFlowSession session) {
 		ItemBuilder down = new ItemBuilder(material(XMaterial.BLUE_CONCRETE, Material.LAPIS_BLOCK));
 		down.setDisplayName("&9◄ Smaller step").setLore("&7Step: &b$" + format(stepFor(session.amountStepIndex)));
-		handler.setItem(SLOT_MODE_DOWN, down, false, (p, inv, b) -> {
-			cycleMode(host, session, false);
-			playSoundNextTick(p, SOUND_MODE_DN);
-		});
+		builder.slot(SLOT_MODE_DOWN, ItemComponent.of(down).onAnyClick(ctx -> {
+			cycleMode(flow, session, false);
+			playSoundNextTick(ctx.player(), SOUND_MODE_DN);
+		}));
 
 		ItemBuilder label = new ItemBuilder(material(XMaterial.MAGENTA_CONCRETE, Material.PURPUR_BLOCK));
 		label.setDisplayName("&dStep: &b$" + format(stepFor(session.amountStepIndex)))
 		     .setLore("&7Use the arrows to change step size.");
-		handler.setItem(SLOT_MODE_LABEL, label, false, (p, inv, b) -> { });
+		builder.slot(SLOT_MODE_LABEL, ItemComponent.of(label));
 
 		ItemBuilder up = new ItemBuilder(material(XMaterial.BLUE_CONCRETE, Material.LAPIS_BLOCK));
 		up.setDisplayName("&9Larger step ►").setLore("&7Step: &b$" + format(stepFor(session.amountStepIndex)));
-		handler.setItem(SLOT_MODE_UP, up, false, (p, inv, b) -> {
-			cycleMode(host, session, true);
-			playSoundNextTick(p, SOUND_MODE_UP);
-		});
+		builder.slot(SLOT_MODE_UP, ItemComponent.of(up).onAnyClick(ctx -> {
+			cycleMode(flow, session, true);
+			playSoundNextTick(ctx.player(), SOUND_MODE_UP);
+		}));
 	}
 
-	private void renderConfirmCancel(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler,
+	private void renderConfirmCancel(MenuFlow<BankerFlowSession> flow, ChestMenuBuilder builder,
 	                                 BankerFlowSession session) {
 		ItemBuilder confirm = new ItemBuilder(material(XMaterial.LIME_WOOL, Material.GREEN_WOOL));
 		String      verb    = session.amountMode == Mode.DEPOSIT ? "Deposit" : "Withdraw";
 		confirm.setDisplayName("&a&lCONFIRM — &f" + verb + " $" + format(session.amountStaged))
 		       .setLore("&7Click to " + verb.toLowerCase() + " &6$" + format(session.amountStaged));
-		handler.setItem(SLOT_CONFIRM, confirm, false, (p, inv, b) -> confirm(host, p, session));
+		builder.slot(SLOT_CONFIRM, ItemComponent.of(confirm).onAnyClick(ctx -> confirm(flow, ctx.player(), session)));
 
 		ItemBuilder cancel = new ItemBuilder(material(XMaterial.RED_WOOL, Material.RED_WOOL));
 		cancel.setDisplayName("&cCANCEL").setLore("&7Discard and go back.");
-		handler.setItem(SLOT_CANCEL, cancel, false, (p, inv, b) -> {
-			host.back();
-			playSoundNextTick(p, SOUND_CANCEL);
-		});
+		builder.slot(SLOT_CANCEL, ItemComponent.of(cancel).onAnyClick(ctx -> {
+			flow.back();
+			playSoundNextTick(ctx.player(), SOUND_CANCEL);
+		}));
 	}
 
 	private BigDecimal stepFor(int modeIndex) {
@@ -264,24 +263,23 @@ public final class BankerAmountView implements Panel<BankerFlowSession> {
 
 	// ── Actions ──────────────────────────────────────────────────────────
 
-	private void adjust(MultiPanelInventory<BankerFlowSession> host, BankerFlowSession session, BigDecimal delta,
-	                    BigDecimal max) {
+	private void adjust(MenuFlow<BankerFlowSession> flow, BankerFlowSession session, BigDecimal delta, BigDecimal max) {
 		BigDecimal next = session.amountStaged.add(delta);
 		if (next.signum() < 0) next = Currency.ZERO;
 		if (next.compareTo(max) > 0) next = max;
 		session.amountStaged = Currency.of(next);
-		host.rerender();
+		flow.rerender();
 	}
 
-	private void cycleMode(MultiPanelInventory<BankerFlowSession> host, BankerFlowSession session, boolean forward) {
+	private void cycleMode(MenuFlow<BankerFlowSession> flow, BankerFlowSession session, boolean forward) {
 		int cap     = Math.min(STEP_LADDER.length, MAX_MODE_CYCLE);
 		int current = session.amountStepIndex;
 		int next    = forward ? (current + 1) % cap : (current - 1 + cap) % cap;
 		session.amountStepIndex = next;
-		host.rerender();
+		flow.rerender();
 	}
 
-	private void confirm(MultiPanelInventory<BankerFlowSession> host, Player viewer, BankerFlowSession session) {
+	private void confirm(MenuFlow<BankerFlowSession> flow, Player viewer, BankerFlowSession session) {
 		BigDecimal amount = session.amountStaged;
 		if (amount == null || amount.signum() <= 0) {
 			playSoundNextTick(viewer, SOUND_DENY);
@@ -332,16 +330,16 @@ public final class BankerAmountView implements Panel<BankerFlowSession> {
 			// Reset staged + step on successful tx so the next entry starts fresh.
 			session.amountStaged    = null;
 			session.amountStepIndex = 0;
-			host.back();
+			flow.back();
 		} else {
-			host.rerender();
+			flow.rerender();
 		}
 		if (sound != null) playSoundNextTick(viewer, sound);
 	}
 
-	private void openAmountAnvil(MultiPanelInventory<BankerFlowSession> host, Player viewer, BankerFlowSession session,
+	private void openAmountAnvil(MenuFlow<BankerFlowSession> flow, Player viewer, BankerFlowSession session,
 	                             BigDecimal max) {
-		host.suspend();
+		flow.suspend();
 
 		AnvilGUI.Builder builder = new AnvilGUI.Builder();
 		builder.plugin(plugin)
@@ -371,8 +369,8 @@ public final class BankerAmountView implements Panel<BankerFlowSession> {
 				   }
 			   })
 		       .onClose(state -> Bukkit.getScheduler().runTask(plugin, () -> {
-				   host.resume();
-				   host.switchTo(BankerFlowSession.PANEL_AMOUNT);
+				   flow.resume();
+				   flow.switchTo(BankerFlowSession.PANEL_AMOUNT);
 			   }))
 		       .open(viewer);
 	}

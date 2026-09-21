@@ -11,14 +11,14 @@ import org.luckyraven.gangland.npcshops.banker.config.BankerSettings;
 import org.luckyraven.gangland.npcshops.banker.economy.BankerEconomyContract;
 import org.luckyraven.gangland.npcshops.banker.economy.BankerEconomyContract.ClaimInfo;
 import org.luckyraven.gangland.npcshops.banker.message.BankerMessageContract;
+import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
+import org.luckyraven.keystone.inventory.component.FillComponent;
+import org.luckyraven.keystone.inventory.component.ItemComponent;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
+import org.luckyraven.keystone.inventory.flow.Panel;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.NumberUtil;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
-import org.luckyraven.gangland.inventory.flow.Panel;
-import org.luckyraven.gangland.inventory.part.Fill;
-import org.luckyraven.gangland.inventory.util.InventoryUtil;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -29,12 +29,12 @@ import java.util.List;
 /**
  * Rewards-claim panel inside the banker flow. Shows the weekly + monthly bonus icons with their current
  * ready/cooldown/disabled state; clicking a ready icon grants the reward into the bank balance and
- * {@link MultiPanelInventory#rerender() rerenders} the panel so the cooldown icon updates immediately.
+ * {@link MenuFlow#rerender() rerenders} the panel so the cooldown icon updates immediately.
  */
 @RequiredArgsConstructor
 public final class BankerClaimView implements Panel<BankerFlowSession> {
 
-	private static final int SIZE         = 27;
+	private static final int ROWS         = 3;
 	private static final int SLOT_INFO    = 4;
 	private static final int SLOT_WEEKLY  = 11;
 	private static final int SLOT_MONTHLY = 15;
@@ -53,8 +53,8 @@ public final class BankerClaimView implements Panel<BankerFlowSession> {
 	private final BankerMessageContract messages;
 
 	@Override
-	public int size(BankerFlowSession session) {
-		return SIZE;
+	public int rows(BankerFlowSession session) {
+		return ROWS;
 	}
 
 	@Override
@@ -63,47 +63,45 @@ public final class BankerClaimView implements Panel<BankerFlowSession> {
 	}
 
 	@Override
-	public void render(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler, Player viewer,
-	                   BankerFlowSession session) {
-		ClaimInfo info = economy.claimInfo(viewer);
+	public void render(MenuFlow<BankerFlowSession> flow, ChestMenuBuilder builder, BankerFlowSession session) {
+		ClaimInfo info = economy.claimInfo(flow.viewer());
 
 		if (!info.hasAccount()) {
-			renderNoAccount(host, handler);
+			renderNoAccount(builder);
 		} else {
-			renderRewards(host, handler, info);
+			renderRewards(flow, builder, info);
 		}
 
 		ItemBuilder back = new ItemBuilder(material(XMaterial.ARROW, Material.ARROW)).setDisplayName("&7Back");
-		handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> {
-			host.back();
-			playSoundNextTick(p, SOUND_CANCEL);
-		});
+		builder.slot(SLOT_BACK, ItemComponent.of(back).onAnyClick(ctx -> {
+			flow.back();
+			playSoundNextTick(ctx.player(), SOUND_CANCEL);
+		}));
 
-		InventoryUtil.fillInventory(handler,
-		                            new Fill(settings.getInventoryFillName(), settings.getInventoryFillItem()));
+		builder.fill(FillComponent.of(materialOf(settings.getInventoryFillItem())).name(settings.getInventoryFillName()));
 	}
 
-	private void renderNoAccount(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler) {
+	private void renderNoAccount(ChestMenuBuilder builder) {
 		ItemBuilder infoItem = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER));
 		infoItem.setDisplayName("&cNo bank account on file")
 		        .setLore("&8Open an account first to unlock weekly + monthly rewards.");
-		handler.setItem(SLOT_INFO, infoItem, false, (p, inv, b) -> { });
+		builder.slot(SLOT_INFO, ItemComponent.of(infoItem));
 	}
 
-	private void renderRewards(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler, ClaimInfo info) {
+	private void renderRewards(MenuFlow<BankerFlowSession> flow, ChestMenuBuilder builder, ClaimInfo info) {
 		ItemBuilder infoItem = new ItemBuilder(material(XMaterial.PAPER, Material.PAPER));
 		infoItem.setDisplayName("&6&lFree Rewards")
 		        .setLore("&7Claim tier-scaled bonuses on cooldown.", "&7Grants go straight to your bank balance.");
-		handler.setItem(SLOT_INFO, infoItem, false, (p, inv, b) -> { });
+		builder.slot(SLOT_INFO, ItemComponent.of(infoItem));
 
-		renderRewardIcon(host, handler, SLOT_WEEKLY, "WEEKLY", info.weeklyAmount(), info.weeklyReadyAt(),
+		renderRewardIcon(flow, builder, SLOT_WEEKLY, "WEEKLY", info.weeklyAmount(), info.weeklyReadyAt(),
 		                 ClaimKind.WEEKLY);
-		renderRewardIcon(host, handler, SLOT_MONTHLY, "MONTHLY", info.monthlyAmount(), info.monthlyReadyAt(),
+		renderRewardIcon(flow, builder, SLOT_MONTHLY, "MONTHLY", info.monthlyAmount(), info.monthlyReadyAt(),
 		                 ClaimKind.MONTHLY);
 	}
 
-	private void renderRewardIcon(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler, int slot,
-	                              String label, BigDecimal amount, Instant readyAt, ClaimKind kind) {
+	private void renderRewardIcon(MenuFlow<BankerFlowSession> flow, ChestMenuBuilder builder, int slot, String label,
+	                              BigDecimal amount, Instant readyAt, ClaimKind kind) {
 		boolean disabled = amount == null || amount.signum() <= 0;
 		boolean ready    = !disabled && (readyAt == null || !Instant.now().isBefore(readyAt));
 
@@ -133,22 +131,22 @@ public final class BankerClaimView implements Panel<BankerFlowSession> {
 		}
 
 		ItemBuilder icon = new ItemBuilder(material(preferred, fallback)).setDisplayName(displayName).setLore(lore);
-		handler.setItem(slot, icon, false, (p, inv, b) -> {
+		builder.slot(slot, ItemComponent.of(icon).onAnyClick(ctx -> {
 			if (disabled) {
-				SOUND_DENY.playSound(p);
-				p.sendMessage(messages.loanDisabled());
+				SOUND_DENY.playSound(ctx.player());
+				ctx.player().sendMessage(messages.loanDisabled());
 				return;
 			}
 			if (!ready) {
-				SOUND_DENY.playSound(p);
-				p.sendMessage(messages.loanOnCooldown(formatDuration(Duration.between(Instant.now(), readyAt))));
+				SOUND_DENY.playSound(ctx.player());
+				ctx.player().sendMessage(messages.loanOnCooldown(formatDuration(Duration.between(Instant.now(), readyAt))));
 				return;
 			}
-			performClaim(host, p, kind);
-		});
+			performClaim(flow, ctx.player(), kind);
+		}));
 	}
 
-	private void performClaim(MultiPanelInventory<BankerFlowSession> host, Player viewer, ClaimKind kind) {
+	private void performClaim(MenuFlow<BankerFlowSession> flow, Player viewer, ClaimKind kind) {
 		BankerEconomyContract.Result result = kind == ClaimKind.WEEKLY ?
 		                                      economy.tryClaimWeekly(viewer) :
 		                                      economy.tryClaimMonthly(viewer);
@@ -185,7 +183,7 @@ public final class BankerClaimView implements Panel<BankerFlowSession> {
 		if (msg != null) viewer.sendMessage(msg);
 
 		// Re-render so cooldown icon updates immediately against the fresh ClaimInfo snapshot.
-		host.rerender();
+		flow.rerender();
 		if (sound != null) playSoundNextTick(viewer, sound);
 	}
 
@@ -204,6 +202,10 @@ public final class BankerClaimView implements Panel<BankerFlowSession> {
 	private ItemStack material(XMaterial preferred, Material fallback) {
 		ItemStack stack = preferred.parseItem();
 		return stack != null ? stack : new ItemStack(fallback);
+	}
+
+	private static Material materialOf(String name) {
+		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
 	}
 
 	/**

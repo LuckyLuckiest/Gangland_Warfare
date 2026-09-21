@@ -12,21 +12,21 @@ import org.luckyraven.gangland.npcshops.banker.economy.BankerEconomyContract;
 import org.luckyraven.gangland.npcshops.banker.economy.BankerEconomyContract.BankerSnapshot;
 import org.luckyraven.gangland.npcshops.banker.message.BankerMessageContract;
 import org.luckyraven.gangland.npcshops.banker.tier.BankTier;
+import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
+import org.luckyraven.keystone.inventory.component.FillComponent;
+import org.luckyraven.keystone.inventory.component.ItemComponent;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
+import org.luckyraven.keystone.inventory.flow.Panel;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.NumberUtil;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
-import org.luckyraven.gangland.inventory.flow.Panel;
-import org.luckyraven.gangland.inventory.part.Fill;
-import org.luckyraven.gangland.inventory.util.InventoryUtil;
 
 import java.math.BigDecimal;
 
 /**
  * Upgrade panel inside the banker flow. Previously a standalone view with its own {@code open(Player, BankerNpc)} +
  * {@code closeInventory()/menuView.open(...)} return path; now a {@link Panel} that renders into the flow's active
- * inventory handle and uses {@link MultiPanelInventory#back()} to return to the menu.
+ * inventory handle and uses {@link MenuFlow#back()} to return to the menu.
  *
  * <p>Preconditions (account present, a next tier exists) are already gated by {@link BankerMenuView}'s UPGRADE
  * button — it only shows when {@code snap.nextTier() != null}. If a race condition removes the next tier between click
@@ -35,7 +35,7 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public final class BankerUpgradeView implements Panel<BankerFlowSession> {
 
-	private static final int SIZE         = 27;
+	private static final int ROWS         = 3;
 	private static final int SLOT_CURRENT = 11;
 	private static final int SLOT_ARROW   = 13;
 	private static final int SLOT_NEXT    = 15;
@@ -59,8 +59,8 @@ public final class BankerUpgradeView implements Panel<BankerFlowSession> {
 	}
 
 	@Override
-	public int size(BankerFlowSession session) {
-		return SIZE;
+	public int rows(BankerFlowSession session) {
+		return ROWS;
 	}
 
 	@Override
@@ -69,69 +69,67 @@ public final class BankerUpgradeView implements Panel<BankerFlowSession> {
 	}
 
 	@Override
-	public void render(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler, Player viewer,
-	                   BankerFlowSession session) {
-		BankerSnapshot snap = economy.snapshot(viewer);
+	public void render(MenuFlow<BankerFlowSession> flow, ChestMenuBuilder builder, BankerFlowSession session) {
+		BankerSnapshot snap = economy.snapshot(flow.viewer());
 		BankTier       next = snap.hasBank() ? snap.nextTier() : null;
 
 		if (next == null) {
-			renderUnavailable(host, handler, snap);
+			renderUnavailable(flow, builder, snap);
 		} else {
-			renderUpgradeOffer(host, handler, snap, next, session);
+			renderUpgradeOffer(flow, builder, snap, next, session);
 		}
 
-		InventoryUtil.fillInventory(handler,
-		                            new Fill(settings.getInventoryFillName(), settings.getInventoryFillItem()));
+		builder.fill(FillComponent.of(materialOf(settings.getInventoryFillItem())).name(settings.getInventoryFillName()));
 	}
 
-	private void renderUnavailable(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler,
-	                               BankerSnapshot snap) {
+	private void renderUnavailable(MenuFlow<BankerFlowSession> flow, ChestMenuBuilder builder, BankerSnapshot snap) {
 		ItemBuilder info = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER));
 		info.setDisplayName("&7No upgrade available")
 		    .setLore(snap.hasBank() ? "&8Your account is at the top tier." : "&8Open a bank account first.");
-		handler.setItem(SLOT_CURRENT, info, false, (p, inv, b) -> { });
+		builder.slot(SLOT_CURRENT, ItemComponent.of(info));
 
 		ItemBuilder cancel = new ItemBuilder(material(XMaterial.RED_WOOL, Material.RED_WOOL));
 		cancel.setDisplayName("&cBACK");
-		handler.setItem(SLOT_CANCEL, cancel, false, (p, inv, b) -> {
-			host.back();
-			playSoundNextTick(p, SOUND_CANCEL);
-		});
+		builder.slot(SLOT_CANCEL, ItemComponent.of(cancel).onAnyClick(ctx -> {
+			flow.back();
+			playSoundNextTick(ctx.player(), SOUND_CANCEL);
+		}));
 	}
 
-	private void renderUpgradeOffer(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler,
-	                                BankerSnapshot snap, BankTier next, BankerFlowSession session) {
+	private void renderUpgradeOffer(MenuFlow<BankerFlowSession> flow, ChestMenuBuilder builder, BankerSnapshot snap,
+	                                BankTier next, BankerFlowSession session) {
 		BankTier    current     = snap.currentTier();
 		ItemBuilder currentItem = new ItemBuilder(material(XMaterial.IRON_BLOCK, Material.IRON_BLOCK));
 		currentItem.setDisplayName("&7Current: " + (current != null ? current.displayName() : "&8None"))
 		           .setLore("&7Cap: &f$" + format(current != null ? current.maxBalance() : null),
 		                    "&7Balance: &f$" + format(snap.bankBalance()));
-		handler.setItem(SLOT_CURRENT, currentItem, false, (p, inv, b) -> { });
+		builder.slot(SLOT_CURRENT, ItemComponent.of(currentItem));
 
 		ItemBuilder arrow = new ItemBuilder(material(XMaterial.ARROW, Material.ARROW));
 		arrow.setDisplayName("&e→ Upgrade").setLore("&7Pay &6$" + format(next.upgradeCost()));
-		handler.setItem(SLOT_ARROW, arrow, false, (p, inv, b) -> { });
+		builder.slot(SLOT_ARROW, ItemComponent.of(arrow));
 
 		ItemBuilder nextItem = new ItemBuilder(material(XMaterial.DIAMOND_BLOCK, Material.DIAMOND_BLOCK));
 		nextItem.setDisplayName("&aNext: " + next.displayName())
 		        .setLore("&7New cap: &f$" + format(next.maxBalance()),
 		                 "&7Upgrade cost: &6$" + format(next.upgradeCost()));
-		handler.setItem(SLOT_NEXT, nextItem, false, (p, inv, b) -> { });
+		builder.slot(SLOT_NEXT, ItemComponent.of(nextItem));
 
 		ItemBuilder confirm = new ItemBuilder(material(XMaterial.LIME_WOOL, Material.GREEN_WOOL));
 		confirm.setDisplayName("&a&lCONFIRM UPGRADE")
 		       .setLore("&7Pay &6$" + format(next.upgradeCost()) + " &7from your bank.");
-		handler.setItem(SLOT_CONFIRM, confirm, false, (p, inv, b) -> performUpgrade(host, p, session, next));
+		builder.slot(SLOT_CONFIRM,
+		            ItemComponent.of(confirm).onAnyClick(ctx -> performUpgrade(flow, ctx.player(), session, next)));
 
 		ItemBuilder cancel = new ItemBuilder(material(XMaterial.RED_WOOL, Material.RED_WOOL));
 		cancel.setDisplayName("&cCANCEL");
-		handler.setItem(SLOT_CANCEL, cancel, false, (p, inv, b) -> {
-			host.back();
-			playSoundNextTick(p, SOUND_CANCEL);
-		});
+		builder.slot(SLOT_CANCEL, ItemComponent.of(cancel).onAnyClick(ctx -> {
+			flow.back();
+			playSoundNextTick(ctx.player(), SOUND_CANCEL);
+		}));
 	}
 
-	private void performUpgrade(MultiPanelInventory<BankerFlowSession> host, Player viewer, BankerFlowSession session,
+	private void performUpgrade(MenuFlow<BankerFlowSession> flow, Player viewer, BankerFlowSession session,
 	                            BankTier next) {
 		BankerEconomyContract.Result result = economy.tryUpgrade(viewer);
 		SoundEffect           sound  = null;
@@ -158,9 +156,9 @@ public final class BankerUpgradeView implements Panel<BankerFlowSession> {
 		// After the economy mutation: on success, return to the menu so the new tier renders; on failure, re-render
 		// this panel so the offer reflects the (still) current bank state.
 		if (result == BankerEconomyContract.Result.SUCCESS) {
-			host.back();
+			flow.back();
 		} else {
-			host.rerender();
+			flow.rerender();
 		}
 		if (sound != null) playSoundNextTick(viewer, sound);
 	}
@@ -168,6 +166,10 @@ public final class BankerUpgradeView implements Panel<BankerFlowSession> {
 	private ItemStack material(XMaterial preferred, Material fallback) {
 		ItemStack stack = preferred.parseItem();
 		return stack != null ? stack : new ItemStack(fallback);
+	}
+
+	private static Material materialOf(String name) {
+		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
 	}
 
 	/**

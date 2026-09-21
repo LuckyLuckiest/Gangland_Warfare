@@ -12,16 +12,16 @@ import org.luckyraven.gangland.npcshops.banker.economy.BankerEconomyContract;
 import org.luckyraven.gangland.npcshops.banker.economy.BankerEconomyContract.RenameInfo;
 import org.luckyraven.gangland.npcshops.banker.message.BankerMessageContract;
 import org.luckyraven.keystone.sound.SoundEffect;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
-import org.luckyraven.gangland.inventory.flow.Panel;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
+import org.luckyraven.keystone.inventory.flow.Panel;
 
 import java.util.Collections;
 import java.util.List;
 
 /**
  * Anvil prompt for renaming the bank account. Not a {@link Panel} itself — it has no inventory of its own; the whole
- * interaction is one AnvilGUI popup. Invoked from {@link BankerMenuView}'s RENAME click with the active flow host so
- * the flow can be suspended for the anvil detour and resumed (returning to the menu panel) on anvil close.
+ * interaction is one AnvilGUI popup. Invoked from {@link BankerMenuView}'s RENAME click with the active flow so it
+ * can be suspended for the anvil detour and resumed (returning to the menu panel) on anvil close.
  */
 @RequiredArgsConstructor
 public final class BankerRenameAccountView {
@@ -35,7 +35,7 @@ public final class BankerRenameAccountView {
 	private final BankerEconomyContract economy;
 	private final BankerMessageContract messages;
 
-	public void open(MultiPanelInventory<BankerFlowSession> host, Player viewer) {
+	public void open(MenuFlow<BankerFlowSession> flow, Player viewer) {
 		RenameInfo info = economy.renameInfo(viewer);
 		if (!info.hasAccount()) {
 			viewer.sendMessage(messages.noAccount());
@@ -48,7 +48,7 @@ public final class BankerRenameAccountView {
 			return;
 		}
 
-		host.suspend();
+		flow.suspend();
 		new AnvilGUI.Builder()
 				.plugin(plugin)
 				.title("Rename (Fee: $" + info.fee().toPlainString() + ")")
@@ -87,8 +87,8 @@ public final class BankerRenameAccountView {
 					return List.of(AnvilGUI.ResponseAction.close());
 				})
 				.onClose(state -> Bukkit.getScheduler().runTask(plugin, () -> {
-					host.resume();
-					host.switchTo(BankerFlowSession.PANEL_MENU);
+					flow.resume();
+					flow.switchTo(BankerFlowSession.PANEL_MENU);
 				}))
 				.open(viewer);
 	}

@@ -4,7 +4,6 @@ import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.npcshops.banker.config.BankerSettings;
@@ -13,14 +12,14 @@ import org.luckyraven.gangland.npcshops.banker.economy.BankerEconomyContract.Ban
 import org.luckyraven.gangland.npcshops.banker.economy.BankerEconomyContract.CreationInfo;
 import org.luckyraven.gangland.npcshops.banker.message.BankerMessageContract;
 import org.luckyraven.gangland.npcshops.banker.tier.BankTier;
+import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
+import org.luckyraven.keystone.inventory.component.FillComponent;
+import org.luckyraven.keystone.inventory.component.ItemComponent;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
+import org.luckyraven.keystone.inventory.flow.Panel;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.NumberUtil;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
-import org.luckyraven.gangland.inventory.flow.Panel;
-import org.luckyraven.gangland.inventory.part.Fill;
-import org.luckyraven.gangland.inventory.util.InventoryUtil;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -30,13 +29,13 @@ import java.util.List;
 
 /**
  * The banker flow's root panel — the rich account menu. Every action button now pivots to another panel via
- * {@link MultiPanelInventory#switchTo(String)} (amount / upgrade / claim / create) or kicks off an anvil prompt that
- * returns to this panel on close (rename). No more legacy {@code player.closeInventory() + subview.open(...)} hops.
+ * {@link MenuFlow#switchTo(String)} (amount / upgrade / claim / create) or kicks off an anvil prompt that returns to
+ * this panel on close (rename). No more legacy {@code player.closeInventory() + subview.open(...)} hops.
  */
 @RequiredArgsConstructor
 public final class BankerMenuView implements Panel<BankerFlowSession> {
 
-	private static final int SIZE               = 27;
+	private static final int ROWS               = 3;
 	private static final int SLOT_INFO          = 4;
 	private static final int SLOT_DEPOSIT       = 10;
 	private static final int SLOT_WITHDRAW      = 12;
@@ -67,8 +66,8 @@ public final class BankerMenuView implements Panel<BankerFlowSession> {
 	}
 
 	@Override
-	public int size(BankerFlowSession session) {
-		return SIZE;
+	public int rows(BankerFlowSession session) {
+		return ROWS;
 	}
 
 	@Override
@@ -77,28 +76,26 @@ public final class BankerMenuView implements Panel<BankerFlowSession> {
 	}
 
 	@Override
-	public void render(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler, Player viewer,
-	                   BankerFlowSession session) {
-		BankerSnapshot snap = economy.snapshot(viewer);
+	public void render(MenuFlow<BankerFlowSession> flow, ChestMenuBuilder builder, BankerFlowSession session) {
+		BankerSnapshot snap = economy.snapshot(flow.viewer());
 
 		if (!snap.hasBank()) {
-			renderNoAccount(host, handler, viewer, session);
+			renderNoAccount(flow, builder, session);
 		} else {
-			renderHasAccount(host, handler, snap, session);
+			renderHasAccount(flow, builder, snap, session);
 		}
 
 		ItemBuilder close = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER)).setDisplayName("&cClose");
-		handler.setItem(SLOT_CLOSE, close, false, (p, inv, b) -> host.end());
+		builder.slot(SLOT_CLOSE, ItemComponent.of(close).onAnyClick(ctx -> flow.end()));
 
-		InventoryUtil.fillInventory(handler,
-		                            new Fill(settings.getInventoryFillName(), settings.getInventoryFillItem()));
+		builder.fill(FillComponent.of(materialOf(settings.getInventoryFillItem())).name(settings.getInventoryFillName()));
 	}
 
 	// ── No account path ────────────────────────────────────────────────────
 
-	private void renderNoAccount(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler, Player viewer,
+	private void renderNoAccount(MenuFlow<BankerFlowSession> flow, ChestMenuBuilder builder,
 	                             BankerFlowSession session) {
-		CreationInfo info = economy.creationInfo(viewer);
+		CreationInfo info = economy.creationInfo(flow.viewer());
 
 		ItemBuilder infoItem = new ItemBuilder(material(XMaterial.PAPER, Material.PAPER));
 		infoItem.setDisplayName("&b&lNo bank account on file")
@@ -106,67 +103,67 @@ public final class BankerMenuView implements Panel<BankerFlowSession> {
 		                 "&7Fee: &6$" + amount(info.fee()),
 		                 "&7Starting balance: &a$" + amount(info.initialBalance()),
 		                 "&7Your cash: &f$" + amount(info.cashBalance()));
-		handler.setItem(SLOT_INFO, infoItem, false, (p, inv, b) -> { });
+		builder.slot(SLOT_INFO, ItemComponent.of(infoItem));
 
 		ItemBuilder create = new ItemBuilder(material(XMaterial.WRITABLE_BOOK, Material.WRITABLE_BOOK));
 		create.setDisplayName("&a&lOPEN ACCOUNT")
 		      .setLore("&7Pay &6$" + amount(info.fee()) + " &7to start banking.",
 		               info.canAfford() ? "&aClick to open." : "&cYou don't have enough cash.");
-		handler.setItem(SLOT_CREATE_PROMPT, create, false, (p, inv, b) -> {
+		builder.slot(SLOT_CREATE_PROMPT, ItemComponent.of(create).onAnyClick(ctx -> {
 			if (!info.canAfford()) {
-				viewer.sendMessage(messages.createCannotAfford(info.fee()));
-				Bukkit.getScheduler().runTask(plugin, () -> SOUND_DENY.playSound(viewer));
+				ctx.player().sendMessage(messages.createCannotAfford(info.fee()));
+				Bukkit.getScheduler().runTask(plugin, () -> SOUND_DENY.playSound(ctx.player()));
 				return;
 			}
-			host.switchTo(BankerFlowSession.PANEL_CREATE);
-			Bukkit.getScheduler().runTask(plugin, () -> SOUND_PICK.playSound(p));
-		});
+			flow.switchTo(BankerFlowSession.PANEL_CREATE);
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_PICK.playSound(ctx.player()));
+		}));
 	}
 
 	// ── Existing account path ──────────────────────────────────────────────
 
-	private void renderHasAccount(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler,
-	                              BankerSnapshot snap, BankerFlowSession session) {
+	private void renderHasAccount(MenuFlow<BankerFlowSession> flow, ChestMenuBuilder builder, BankerSnapshot snap,
+	                              BankerFlowSession session) {
 		ItemBuilder info = new ItemBuilder(material(XMaterial.BOOK, Material.BOOK));
 		info.setDisplayName("&b&lBank Account").setLore(buildInfoLore(snap));
-		handler.setItem(SLOT_INFO, info, false, (p, inv, b) -> { });
+		builder.slot(SLOT_INFO, ItemComponent.of(info));
 
 		ItemBuilder deposit = new ItemBuilder(material(XMaterial.EMERALD_BLOCK, Material.EMERALD_BLOCK));
 		deposit.setDisplayName("&a&lDEPOSIT")
 		       .setLore("&7Move money from your cash to the bank.",
 		                "&7Cash: &f$" + amount(snap.cashBalance()),
 		                "&7Daily remaining: &f$" + amount(snap.remainingDailyDeposit()));
-		handler.setItem(SLOT_DEPOSIT, deposit, false, (p, inv, b) -> {
+		builder.slot(SLOT_DEPOSIT, ItemComponent.of(deposit).onAnyClick(ctx -> {
 			session.amountMode      = BankerAmountView.Mode.DEPOSIT;
 			session.amountStaged    = null;
 			session.amountStepIndex = 0;
-			host.switchTo(BankerFlowSession.PANEL_AMOUNT);
-			Bukkit.getScheduler().runTask(plugin, () -> SOUND_PICK.playSound(p));
-		});
+			flow.switchTo(BankerFlowSession.PANEL_AMOUNT);
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_PICK.playSound(ctx.player()));
+		}));
 
 		ItemBuilder withdraw = new ItemBuilder(material(XMaterial.GOLD_BLOCK, Material.GOLD_BLOCK));
 		withdraw.setDisplayName("&6&lWITHDRAW")
 		        .setLore("&7Move money from the bank to your cash.",
 		                 "&7Bank: &f$" + amount(snap.bankBalance()));
-		handler.setItem(SLOT_WITHDRAW, withdraw, false, (p, inv, b) -> {
+		builder.slot(SLOT_WITHDRAW, ItemComponent.of(withdraw).onAnyClick(ctx -> {
 			session.amountMode      = BankerAmountView.Mode.WITHDRAW;
 			session.amountStaged    = null;
 			session.amountStepIndex = 0;
-			host.switchTo(BankerFlowSession.PANEL_AMOUNT);
-			Bukkit.getScheduler().runTask(plugin, () -> SOUND_PICK.playSound(p));
-		});
+			flow.switchTo(BankerFlowSession.PANEL_AMOUNT);
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_PICK.playSound(ctx.player()));
+		}));
 
 		if (snap.nextTier() != null) {
 			ItemBuilder upgrade = new ItemBuilder(material(XMaterial.DIAMOND_BLOCK, Material.DIAMOND_BLOCK));
 			upgrade.setDisplayName("&b&lUPGRADE").setLore(buildUpgradeLore(snap));
-			handler.setItem(SLOT_UPGRADE, upgrade, false, (p, inv, b) -> {
-				host.switchTo(BankerFlowSession.PANEL_UPGRADE);
-				Bukkit.getScheduler().runTask(plugin, () -> SOUND_PICK.playSound(p));
-			});
+			builder.slot(SLOT_UPGRADE, ItemComponent.of(upgrade).onAnyClick(ctx -> {
+				flow.switchTo(BankerFlowSession.PANEL_UPGRADE);
+				Bukkit.getScheduler().runTask(plugin, () -> SOUND_PICK.playSound(ctx.player()));
+			}));
 		} else {
 			ItemBuilder maxTier = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER));
 			maxTier.setDisplayName("&7Max Tier Reached").setLore("&8Your bank is at the top of the ladder.");
-			handler.setItem(SLOT_UPGRADE, maxTier, false, (p, inv, b) -> SOUND_DENY.playSound(p));
+			builder.slot(SLOT_UPGRADE, ItemComponent.of(maxTier).onAnyClick(ctx -> SOUND_DENY.playSound(ctx.player())));
 		}
 
 		ItemBuilder rename = new ItemBuilder(material(XMaterial.NAME_TAG, Material.NAME_TAG));
@@ -174,21 +171,21 @@ public final class BankerMenuView implements Panel<BankerFlowSession> {
 		      .setLore("&7Change your account display name.",
 		               "&7Rename fee: &c$" + amount(settings.getRenameFee()),
 		               "&8Opens an anvil GUI.");
-		handler.setItem(SLOT_RENAME, rename, false, (p, inv, b) -> {
+		builder.slot(SLOT_RENAME, ItemComponent.of(rename).onAnyClick(ctx -> {
 			// Rename is an anvil-only prompt (not a panel). It suspends the flow internally, opens the anvil, and on
 			// anvil-close switches back to PANEL_MENU — no switchTo here.
-			if (renameView != null) renameView.open(host, p);
-			Bukkit.getScheduler().runTask(plugin, () -> SOUND_PICK.playSound(p));
-		});
+			if (renameView != null) renameView.open(flow, ctx.player());
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_PICK.playSound(ctx.player()));
+		}));
 
 		ItemBuilder rewards = new ItemBuilder(material(XMaterial.GOLD_INGOT, Material.GOLD_INGOT));
 		rewards.setDisplayName("&6&lREWARDS")
 		       .setLore("&7Claim free weekly + monthly bonuses.",
 		                "&8Available amounts scale with your tier.");
-		handler.setItem(SLOT_REWARDS, rewards, false, (p, inv, b) -> {
-			host.switchTo(BankerFlowSession.PANEL_CLAIM);
-			Bukkit.getScheduler().runTask(plugin, () -> SOUND_PICK.playSound(p));
-		});
+		builder.slot(SLOT_REWARDS, ItemComponent.of(rewards).onAnyClick(ctx -> {
+			flow.switchTo(BankerFlowSession.PANEL_CLAIM);
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_PICK.playSound(ctx.player()));
+		}));
 	}
 
 	private List<String> buildInfoLore(BankerSnapshot snap) {
@@ -259,6 +256,10 @@ public final class BankerMenuView implements Panel<BankerFlowSession> {
 	private ItemStack material(XMaterial preferred, Material fallback) {
 		ItemStack stack = preferred.parseItem();
 		return stack != null ? stack : new ItemStack(fallback);
+	}
+
+	private static Material materialOf(String name) {
+		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
 	}
 
 }

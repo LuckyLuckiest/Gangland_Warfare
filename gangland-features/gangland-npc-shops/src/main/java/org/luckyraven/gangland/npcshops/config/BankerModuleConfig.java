@@ -20,6 +20,7 @@ import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.economy.bank.Bank;
+import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.repository.IRepository;
@@ -125,9 +126,10 @@ public class BankerModuleConfig {
 	}
 
 	@Bean
-	public BankerFlow bankerFlow(BankerMenuView menuPanel, BankerUpgradeView upgradePanel, BankerClaimView claimPanel,
+	public BankerFlow bankerFlow(InventoryService inventoryService, BankerMenuView menuPanel,
+	                             BankerUpgradeView upgradePanel, BankerClaimView claimPanel,
 	                             BankerAmountView amountPanel, BankerCreateAccountView createPanel) {
-		return new BankerFlow(plugin, menuPanel, upgradePanel, claimPanel, amountPanel, createPanel);
+		return new BankerFlow(plugin, inventoryService, menuPanel, upgradePanel, claimPanel, amountPanel, createPanel);
 	}
 
 	// ── NPC lifecycle ───────────────────────────────────────────────────

@@ -9,13 +9,15 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.npcshops.events.trader.TraderBuyRequestEvent;
+import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
+import org.luckyraven.keystone.inventory.component.FillComponent;
+import org.luckyraven.keystone.inventory.component.ItemComponent;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
+import org.luckyraven.keystone.inventory.flow.Panel;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.util.NumberUtil;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
-import org.luckyraven.gangland.inventory.flow.Panel;
 import org.luckyraven.gangland.shop.ShopItemEntry;
 
 import java.math.BigDecimal;
@@ -25,7 +27,7 @@ import java.util.List;
 /**
  * Quantity-picker panel — decides how many copies of the currently selected {@link ShopItemEntry} to buy. Reads the
  * selected entry + unit price from {@link TraderFlowSession}; stages the copy count and step multiplier on the session
- * so the anvil detour (custom amount / multiplier) survives {@link MultiPanelInventory#suspend} / resume.
+ * so the anvil detour (custom amount / multiplier) survives {@link MenuFlow#suspend} / resume.
  *
  * <p>Formerly in shop-api; moved into cops-n-crooks alongside the other trader panels so it can be a direct
  * {@code Panel<TraderFlowSession>} without cross-module generic variance.
@@ -44,7 +46,7 @@ public final class QuantitySelectorView implements Panel<TraderFlowSession> {
 	private static final int[] GREEN_SLOTS     = {18, 19, 20, 21};
 	private static final int[] RED_SLOTS       = {23, 24, 25, 26};
 	private static final int   MAX_MODE_CYCLE  = 8;
-	private static final int   INVENTORY_SIZE  = 54;
+	private static final int   ROWS            = 6;
 	private static final int   MAX_COPIES      = 999;
 
 	private static final SoundEffect SOUND_ADD        = vanilla("UI_BUTTON_CLICK", 1.5f);
@@ -63,8 +65,8 @@ public final class QuantitySelectorView implements Panel<TraderFlowSession> {
 	}
 
 	@Override
-	public int size(TraderFlowSession session) {
-		return INVENTORY_SIZE;
+	public int rows(TraderFlowSession session) {
+		return ROWS;
 	}
 
 	@Override
@@ -73,10 +75,9 @@ public final class QuantitySelectorView implements Panel<TraderFlowSession> {
 	}
 
 	@Override
-	public void render(MultiPanelInventory<TraderFlowSession> host, InventoryHandler handler, Player viewer,
-	                   TraderFlowSession session) {
+	public void render(MenuFlow<TraderFlowSession> flow, ChestMenuBuilder builder, TraderFlowSession session) {
 		if (session.selectedEntry == null) {
-			host.back();
+			flow.back();
 			return;
 		}
 		if (session.quantityStaged < 1) session.quantityStaged = 1;
@@ -84,13 +85,13 @@ public final class QuantitySelectorView implements Panel<TraderFlowSession> {
 		if (session.quantityMode < 1) session.quantityMode = 1;
 		if (session.quantityMode > MAX_MODE_CYCLE) session.quantityMode = MAX_MODE_CYCLE;
 
-		fillGlass(handler);
-		renderInfo(handler, session);
-		renderItemPreview(handler, session);
-		renderAdjustmentButtons(host, handler, session);
-		renderCustomQtyButton(host, handler, session);
-		renderModeRow(host, handler, session);
-		renderConfirmCancel(host, handler, session);
+		fillGlass(builder);
+		renderInfo(builder, session);
+		renderItemPreview(builder, session);
+		renderAdjustmentButtons(flow, builder, session);
+		renderCustomQtyButton(flow, builder, session);
+		renderModeRow(flow, builder, session);
+		renderConfirmCancel(flow, builder, session);
 	}
 
 	// ── Rendering ────────────────────────────────────────────────────────
@@ -99,14 +100,13 @@ public final class QuantitySelectorView implements Panel<TraderFlowSession> {
 		return session.basePrice.multiply(BigDecimal.valueOf(session.moodMultiplier));
 	}
 
-	private void fillGlass(InventoryHandler handler) {
+	private void fillGlass(ChestMenuBuilder builder) {
 		ItemStack pane = XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
 		if (pane == null) pane = new ItemStack(Material.STONE);
-		ItemBuilder filler = new ItemBuilder(pane).setDisplayName(" ");
-		for (int slot = 0; slot < INVENTORY_SIZE; slot++) handler.setItem(slot, filler, false, (p, inv, b) -> { });
+		builder.fill(FillComponent.of(pane.getType()).name(" "));
 	}
 
-	private void renderInfo(InventoryHandler handler, TraderFlowSession session) {
+	private void renderInfo(ChestMenuBuilder builder, TraderFlowSession session) {
 		ItemStack  item         = session.selectedEntry.getItem();
 		int        itemsPerCopy = Math.max(1, item.getAmount());
 		int        totalItems   = itemsPerCopy * session.quantityStaged;
@@ -119,25 +119,25 @@ public final class QuantitySelectorView implements Panel<TraderFlowSession> {
 		             "&7Copies: &f" + session.quantityStaged, "&7Items total: &f" + totalItems,
 		             "&7Total cost: &6$" + NumberUtil.valueFormat(totalCost), " ", "&8Green adds, red subtracts.",
 		             "&8Yellow block = type an exact number of copies.");
-		handler.setItem(SLOT_INFO, info, false, (p, inv, b) -> { });
+		builder.slot(SLOT_INFO, ItemComponent.of(info));
 	}
 
-	private void renderItemPreview(InventoryHandler handler, TraderFlowSession session) {
+	private void renderItemPreview(ChestMenuBuilder builder, TraderFlowSession session) {
 		ItemStack  item         = session.selectedEntry.getItem();
 		int        itemsPerCopy = Math.max(1, item.getAmount());
 		int        totalItems   = itemsPerCopy * session.quantityStaged;
 		BigDecimal unit         = unitPrice(session);
 		BigDecimal totalCost    = unit.multiply(BigDecimal.valueOf(session.quantityStaged));
 
-		ItemBuilder builder = new ItemBuilder(item.clone());
-		builder.setLore("&7Per copy: &f" + itemsPerCopy + " items &7for &6$" + NumberUtil.valueFormat(unit),
+		ItemBuilder preview = new ItemBuilder(item.clone());
+		preview.setLore("&7Per copy: &f" + itemsPerCopy + " items &7for &6$" + NumberUtil.valueFormat(unit),
 		                "&7Copies: &f" + session.quantityStaged, "&7Items total: &f" + totalItems,
 		                "&7Total cost: &6$" + NumberUtil.valueFormat(totalCost),
 		                "&7Step multiplier: &b" + session.quantityMode);
-		handler.setItem(SLOT_ITEM, builder, false, (p, inv, b) -> { });
+		builder.slot(SLOT_ITEM, ItemComponent.of(preview));
 	}
 
-	private void renderAdjustmentButtons(MultiPanelInventory<TraderFlowSession> host, InventoryHandler handler,
+	private void renderAdjustmentButtons(MenuFlow<TraderFlowSession> flow, ChestMenuBuilder builder,
 	                                     TraderFlowSession session) {
 		for (int i = 0; i < GREEN_SLOTS.length; i++) {
 			int greenMagnitude = i + 1;
@@ -147,10 +147,10 @@ public final class QuantitySelectorView implements Panel<TraderFlowSession> {
 			green.setDisplayName("&a+ " + greenStep)
 			     .setLore("&7Adds &a" + greenMagnitude + " &7× &b" + session.quantityMode);
 			final int greenDelta = greenStep;
-			handler.setItem(GREEN_SLOTS[i], green, false, (p, inv, b) -> {
-				adjustQuantity(host, session, +greenDelta);
-				Bukkit.getScheduler().runTask(plugin, () -> SOUND_ADD.playSound(p));
-			});
+			builder.slot(GREEN_SLOTS[i], ItemComponent.of(green).onAnyClick(ctx -> {
+				adjustQuantity(flow, session, +greenDelta);
+				Bukkit.getScheduler().runTask(plugin, () -> SOUND_ADD.playSound(ctx.player()));
+			}));
 
 			int redMagnitude = RED_SLOTS.length - i;
 			int redStep      = redMagnitude * session.quantityMode;
@@ -159,50 +159,49 @@ public final class QuantitySelectorView implements Panel<TraderFlowSession> {
 			red.setDisplayName("&c- " + redStep)
 			   .setLore("&7Subtracts &c" + redMagnitude + " &7× &b" + session.quantityMode);
 			final int redDelta = redStep;
-			handler.setItem(RED_SLOTS[i], red, false, (p, inv, b) -> {
-				adjustQuantity(host, session, -redDelta);
-				Bukkit.getScheduler().runTask(plugin, () -> SOUND_SUB.playSound(p));
-			});
+			builder.slot(RED_SLOTS[i], ItemComponent.of(red).onAnyClick(ctx -> {
+				adjustQuantity(flow, session, -redDelta);
+				Bukkit.getScheduler().runTask(plugin, () -> SOUND_SUB.playSound(ctx.player()));
+			}));
 		}
 	}
 
-	private void renderCustomQtyButton(MultiPanelInventory<TraderFlowSession> host, InventoryHandler handler,
+	private void renderCustomQtyButton(MenuFlow<TraderFlowSession> flow, ChestMenuBuilder builder,
 	                                   TraderFlowSession session) {
 		ItemBuilder button = new ItemBuilder(material(XMaterial.YELLOW_CONCRETE, Material.GOLD_BLOCK));
 		button.setDisplayName("&eCustom copies: &f" + session.quantityStaged)
 		      .setLore("&7Click to type an exact number of copies.", "&8Max: &f" + MAX_COPIES);
-		handler.setItem(SLOT_QTY_ANVIL, button, false, (p, inv, b) -> {
-			openQuantityAnvil(host, p, session);
-			Bukkit.getScheduler().runTask(plugin, () -> SOUND_ANVIL_QTY.playSound(p));
-		});
+		builder.slot(SLOT_QTY_ANVIL, ItemComponent.of(button).onAnyClick(ctx -> {
+			openQuantityAnvil(flow, ctx.player(), session);
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_ANVIL_QTY.playSound(ctx.player()));
+		}));
 	}
 
-	private void renderModeRow(MultiPanelInventory<TraderFlowSession> host, InventoryHandler handler,
-	                           TraderFlowSession session) {
+	private void renderModeRow(MenuFlow<TraderFlowSession> flow, ChestMenuBuilder builder, TraderFlowSession session) {
 		ItemBuilder down = new ItemBuilder(material(XMaterial.BLUE_CONCRETE, Material.LAPIS_BLOCK));
 		down.setDisplayName("&9◄ Previous multiplier").setLore("&7Wraps through 1 to " + MAX_MODE_CYCLE + ".");
-		handler.setItem(SLOT_MODE_DOWN, down, false, (p, inv, b) -> {
-			cycleMode(host, session, false);
-			Bukkit.getScheduler().runTask(plugin, () -> SOUND_MODE_DOWN.playSound(p));
-		});
+		builder.slot(SLOT_MODE_DOWN, ItemComponent.of(down).onAnyClick(ctx -> {
+			cycleMode(flow, session, false);
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_MODE_DOWN.playSound(ctx.player()));
+		}));
 
 		ItemBuilder middle = new ItemBuilder(material(XMaterial.MAGENTA_CONCRETE, Material.PURPUR_BLOCK));
 		middle.setDisplayName("&dStep multiplier: &b" + session.quantityMode)
 		      .setLore("&7Click to type a custom multiplier.", "&8Max: &f" + MAX_MODE_CYCLE);
-		handler.setItem(SLOT_MODE_ANVIL, middle, false, (p, inv, b) -> {
-			openModeAnvil(host, p, session);
-			Bukkit.getScheduler().runTask(plugin, () -> SOUND_ANVIL_MODE.playSound(p));
-		});
+		builder.slot(SLOT_MODE_ANVIL, ItemComponent.of(middle).onAnyClick(ctx -> {
+			openModeAnvil(flow, ctx.player(), session);
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_ANVIL_MODE.playSound(ctx.player()));
+		}));
 
 		ItemBuilder up = new ItemBuilder(material(XMaterial.BLUE_CONCRETE, Material.LAPIS_BLOCK));
 		up.setDisplayName("&9Next multiplier ►").setLore("&7Wraps through 1 to " + MAX_MODE_CYCLE + ".");
-		handler.setItem(SLOT_MODE_UP, up, false, (p, inv, b) -> {
-			cycleMode(host, session, true);
-			Bukkit.getScheduler().runTask(plugin, () -> SOUND_MODE_UP.playSound(p));
-		});
+		builder.slot(SLOT_MODE_UP, ItemComponent.of(up).onAnyClick(ctx -> {
+			cycleMode(flow, session, true);
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_MODE_UP.playSound(ctx.player()));
+		}));
 	}
 
-	private void renderConfirmCancel(MultiPanelInventory<TraderFlowSession> host, InventoryHandler handler,
+	private void renderConfirmCancel(MenuFlow<TraderFlowSession> flow, ChestMenuBuilder builder,
 	                                 TraderFlowSession session) {
 		ItemStack  item         = session.selectedEntry.getItem();
 		int        itemsPerCopy = Math.max(1, item.getAmount());
@@ -214,34 +213,34 @@ public final class QuantitySelectorView implements Panel<TraderFlowSession> {
 		                       NumberUtil.valueFormat(totalCost))
 		       .setLore("&7Pay &6$" + NumberUtil.valueFormat(totalCost) + " &7and receive &f" + totalItems +
 		                " &7items.");
-		handler.setItem(SLOT_CONFIRM, confirm, false, (p, inv, b) -> confirm(host, p, session));
+		builder.slot(SLOT_CONFIRM, ItemComponent.of(confirm).onAnyClick(ctx -> confirm(flow, ctx.player(), session)));
 
 		ItemBuilder cancel = new ItemBuilder(material(XMaterial.RED_WOOL, Material.RED_WOOL));
 		cancel.setDisplayName("&cCANCEL").setLore("&7Discard and go back.");
-		handler.setItem(SLOT_CANCEL, cancel, false, (p, inv, b) -> {
-			host.back();
-			Bukkit.getScheduler().runTask(plugin, () -> SOUND_CANCEL.playSound(p));
-		});
+		builder.slot(SLOT_CANCEL, ItemComponent.of(cancel).onAnyClick(ctx -> {
+			flow.back();
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_CANCEL.playSound(ctx.player()));
+		}));
 	}
 
 	// ── Actions ──────────────────────────────────────────────────────────
 
-	private void adjustQuantity(MultiPanelInventory<TraderFlowSession> host, TraderFlowSession session, int delta) {
+	private void adjustQuantity(MenuFlow<TraderFlowSession> flow, TraderFlowSession session, int delta) {
 		session.quantityStaged = Math.max(1, Math.min(session.quantityStaged + delta, MAX_COPIES));
-		host.rerender();
+		flow.rerender();
 	}
 
-	private void cycleMode(MultiPanelInventory<TraderFlowSession> host, TraderFlowSession session, boolean forward) {
+	private void cycleMode(MenuFlow<TraderFlowSession> flow, TraderFlowSession session, boolean forward) {
 		int current = session.quantityMode;
 		int capped  = Math.min(current, MAX_MODE_CYCLE);
 		int next;
 		if (forward) next = (capped % MAX_MODE_CYCLE) + 1;
 		else next = ((capped - 2 + MAX_MODE_CYCLE) % MAX_MODE_CYCLE) + 1;
 		session.quantityMode = next;
-		host.rerender();
+		flow.rerender();
 	}
 
-	private void confirm(MultiPanelInventory<TraderFlowSession> host, Player viewer, TraderFlowSession session) {
+	private void confirm(MenuFlow<TraderFlowSession> flow, Player viewer, TraderFlowSession session) {
 		int        copies = session.quantityStaged;
 		BigDecimal total  = unitPrice(session).multiply(BigDecimal.valueOf(copies));
 
@@ -250,20 +249,19 @@ public final class QuantitySelectorView implements Panel<TraderFlowSession> {
 		Bukkit.getPluginManager().callEvent(event);
 
 		if (event.isCancelled()) {
-			host.back();
+			flow.back();
 			return;
 		}
 
 		// Reset picker state on successful commit so the next entry starts fresh.
 		session.quantityStaged = 1;
 		session.quantityMode   = 1;
-		host.end();
+		flow.end();
 		Bukkit.getScheduler().runTask(plugin, () -> SOUND_CONFIRM.playSound(viewer));
 	}
 
-	private void openQuantityAnvil(MultiPanelInventory<TraderFlowSession> host, Player viewer,
-	                               TraderFlowSession session) {
-		host.suspend();
+	private void openQuantityAnvil(MenuFlow<TraderFlowSession> flow, Player viewer, TraderFlowSession session) {
+		flow.suspend();
 		new AnvilGUI.Builder().plugin(plugin)
 		                      .title("Set Quantity")
 		                      .itemLeft(material(XMaterial.PAPER, Material.PAPER))
@@ -290,14 +288,14 @@ public final class QuantitySelectorView implements Panel<TraderFlowSession> {
 								  }
 							  })
 		                      .onClose(state -> Bukkit.getScheduler().runTask(plugin, () -> {
-								  host.resume();
-								  host.switchTo(TraderFlowSession.PANEL_QUANTITY);
+								  flow.resume();
+								  flow.switchTo(TraderFlowSession.PANEL_QUANTITY);
 							  }))
 		                      .open(viewer);
 	}
 
-	private void openModeAnvil(MultiPanelInventory<TraderFlowSession> host, Player viewer, TraderFlowSession session) {
-		host.suspend();
+	private void openModeAnvil(MenuFlow<TraderFlowSession> flow, Player viewer, TraderFlowSession session) {
+		flow.suspend();
 		new AnvilGUI.Builder().plugin(plugin)
 		                      .title("Set Multiplier")
 		                      .itemLeft(material(XMaterial.PAPER, Material.PAPER))
@@ -323,8 +321,8 @@ public final class QuantitySelectorView implements Panel<TraderFlowSession> {
 								  }
 							  })
 		                      .onClose(state -> Bukkit.getScheduler().runTask(plugin, () -> {
-								  host.resume();
-								  host.switchTo(TraderFlowSession.PANEL_QUANTITY);
+								  flow.resume();
+								  flow.switchTo(TraderFlowSession.PANEL_QUANTITY);
 							  }))
 		                      .open(viewer);
 	}

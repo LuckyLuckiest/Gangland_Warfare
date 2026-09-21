@@ -2,13 +2,13 @@ package org.luckyraven.gangland.npcshops.banker.view;
 
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.npcshops.banker.BankerNpc;
-import org.luckyraven.gangland.inventory.flow.FlowSession;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
+import org.luckyraven.keystone.inventory.flow.FlowState;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
 
 import java.math.BigDecimal;
 
 /**
- * Session payload for the banker {@link MultiPanelInventory}. Holds the originating {@link BankerNpc} when the player
+ * Session payload for the banker {@link MenuFlow}. Holds the originating {@link BankerNpc} when the player
  * interacted with a physical banker; {@code null} when the flow was started from the phone's online-banking screen (no
  * NPC present — display strings fall back to "Online Banking").
  *
@@ -16,7 +16,7 @@ import java.math.BigDecimal;
  * amount / mode / step index survive anvil detours because the session is owned by the flow, not by any single
  * inventory handle.
  */
-public final class BankerFlowSession implements FlowSession {
+public final class BankerFlowSession implements FlowState {
 
 	public static final String PANEL_MENU    = "menu";
 	public static final String PANEL_UPGRADE = "upgrade";

@@ -3,19 +3,19 @@ package org.luckyraven.gangland.npcshops.trader.view;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.npcshops.trader.config.TraderSettings;
 import org.luckyraven.gangland.npcshops.trader.mood.MoodService;
+import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
+import org.luckyraven.keystone.inventory.component.BorderComponent;
+import org.luckyraven.keystone.inventory.component.ItemComponent;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
+import org.luckyraven.keystone.inventory.flow.Panel;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.NumberUtil;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
-import org.luckyraven.gangland.inventory.flow.Panel;
-import org.luckyraven.gangland.inventory.part.Fill;
-import org.luckyraven.gangland.inventory.util.InventoryUtil;
+import com.cryptomorin.xseries.XMaterial;
 import org.luckyraven.gangland.shop.ShopItemEntry;
 import org.luckyraven.gangland.shop.message.ShopDisplayResolver;
 
@@ -31,7 +31,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public final class ShopView implements Panel<TraderFlowSession> {
 
-	private static final int   INVENTORY_SIZE   = 54;
+	private static final int   ROWS             = 6;
 	private static final int[] INTERIOR_SLOTS   = {
 			10, 11, 12, 13, 14, 15, 16,
 			19, 20, 21, 22, 23, 24, 25,
@@ -54,8 +54,8 @@ public final class ShopView implements Panel<TraderFlowSession> {
 	private final ShopDisplayResolver displayResolver;
 
 	@Override
-	public int size(TraderFlowSession session) {
-		return INVENTORY_SIZE;
+	public int rows(TraderFlowSession session) {
+		return ROWS;
 	}
 
 	@Override
@@ -64,13 +64,12 @@ public final class ShopView implements Panel<TraderFlowSession> {
 	}
 
 	@Override
-	public void render(MultiPanelInventory<TraderFlowSession> host, InventoryHandler handler, Player viewer,
-	                   TraderFlowSession session) {
+	public void render(MenuFlow<TraderFlowSession> flow, ChestMenuBuilder builder, TraderFlowSession session) {
 		List<ShopItemEntry> entries    = session.definition.getBuyEntries();
 		int                 totalPages = Math.max(1, (int) Math.ceil(entries.size() / (double) ENTRIES_PER_PAGE));
 		session.currentShopPage = Math.max(0, Math.min(session.currentShopPage, totalPages - 1));
 
-		double multiplier = moodService.priceMultiplier(session.trader.getData().getId(), viewer.getUniqueId(),
+		double multiplier = moodService.priceMultiplier(session.trader.getData().getId(), flow.viewer().getUniqueId(),
 		                                                session.trait.profile());
 
 		int base = session.currentShopPage * ENTRIES_PER_PAGE;
@@ -86,50 +85,49 @@ public final class ShopView implements Panel<TraderFlowSession> {
 			ItemBuilder display = buildDisplay(entry, finalPrice);
 			int         slot    = INTERIOR_SLOTS[i];
 
-			handler.setItem(slot, display, false, (clicker, inv, builder) -> {
+			builder.slot(slot, ItemComponent.of(display).onAnyClick(ctx -> {
 				session.selectedEntry  = entry;
 				session.basePrice      = entry.hasPrice() ? entry.getPrice() : BigDecimal.ZERO;
 				session.moodMultiplier = multiplier;
-				host.switchTo(TraderFlowSession.PANEL_NEGOTIATION);
-			});
+				flow.switchTo(TraderFlowSession.PANEL_NEGOTIATION);
+			}));
 		}
 
-		renderNavigation(host, handler, viewer, session, totalPages);
+		renderNavigation(flow, builder, session, totalPages);
 
-		InventoryUtil.createBoarder(handler,
-		                            new Fill(settings.getInventoryFillName(), settings.getInventoryFillItem()));
+		builder.border(BorderComponent.of(materialOf(settings.getInventoryFillItem())).name(settings.getInventoryFillName()));
 	}
 
-	private void renderNavigation(MultiPanelInventory<TraderFlowSession> host, InventoryHandler handler, Player viewer,
-	                              TraderFlowSession session, int totalPages) {
+	private void renderNavigation(MenuFlow<TraderFlowSession> flow, ChestMenuBuilder builder, TraderFlowSession session,
+	                              int totalPages) {
 		int currentPage = session.currentShopPage;
 
 		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&eBack to menu");
-		handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> host.switchTo(TraderFlowSession.PANEL_MODE_SELECT));
+		builder.slot(SLOT_BACK, ItemComponent.of(back).onAnyClick(ctx -> flow.switchTo(TraderFlowSession.PANEL_MODE_SELECT)));
 
 		if (currentPage > 0) {
 			ItemBuilder prev = new ItemBuilder(Material.ARROW).setDisplayName("&e◄ Previous page")
 			                                                  .setLore("&7Go to page " + currentPage + ".");
-			handler.setItem(SLOT_PREV, prev, false, (p, inv, b) -> {
+			builder.slot(SLOT_PREV, ItemComponent.of(prev).onAnyClick(ctx -> {
 				session.currentShopPage = currentPage - 1;
-				host.rerender();
-				Bukkit.getScheduler().runTask(plugin, () -> SOUND_PAGE.playSound(viewer));
-			});
+				flow.rerender();
+				Bukkit.getScheduler().runTask(plugin, () -> SOUND_PAGE.playSound(ctx.player()));
+			}));
 		}
 
 		ItemBuilder info = new ItemBuilder(Material.PAPER);
 		info.setDisplayName("&bPage &f" + (currentPage + 1) + "&7/&f" + totalPages)
 		    .setLore("&7" + session.definition.getBuyEntries().size() + " item(s) total.");
-		handler.setItem(SLOT_PAGE_INFO, info, false, (p, inv, b) -> { });
+		builder.slot(SLOT_PAGE_INFO, ItemComponent.of(info));
 
 		if (currentPage < totalPages - 1) {
 			ItemBuilder next = new ItemBuilder(Material.ARROW);
 			next.setDisplayName("&eNext page ►").setLore("&7Go to page " + (currentPage + 2) + ".");
-			handler.setItem(SLOT_NEXT, next, false, (p, inv, b) -> {
+			builder.slot(SLOT_NEXT, ItemComponent.of(next).onAnyClick(ctx -> {
 				session.currentShopPage = currentPage + 1;
-				host.rerender();
-				Bukkit.getScheduler().runTask(plugin, () -> SOUND_PAGE.playSound(viewer));
-			});
+				flow.rerender();
+				Bukkit.getScheduler().runTask(plugin, () -> SOUND_PAGE.playSound(ctx.player()));
+			}));
 		}
 	}
 
@@ -147,6 +145,10 @@ public final class ShopView implements Panel<TraderFlowSession> {
 
 		builder.setLore(existingLore);
 		return builder;
+	}
+
+	private static Material materialOf(String name) {
+		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
 	}
 
 }

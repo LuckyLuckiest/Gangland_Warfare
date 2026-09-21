@@ -9,13 +9,12 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.luckyraven.gangland.npcshops.trader.view.SellView;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
 
 /**
  * Singleton click / drag listener for the sell panel. Delegates to {@link SellView#handleClick} /
- * {@link SellView#handleDrag} which look up the per-player dropzone state and either route the event into the dropzone
- * or cancel it. Close handling moved onto {@link MultiPanelInventory#onEnd} inside {@link SellView#render} when the
- * panel became flow-aware, so no dedicated close event handler is needed here anymore.
+ * {@link SellView#handleDrag} which look up the per-player dropzone state and either route the event into the
+ * dropzone or cancel it. Close handling is Keystone's own item-return contract, wired via
+ * {@link SellView#onFlowEnd} — see {@link SellView}'s class doc.
  */
 @ListenerHandler
 @RequiredArgsConstructor

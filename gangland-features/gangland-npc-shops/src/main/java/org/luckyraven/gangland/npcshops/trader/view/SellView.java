@@ -7,21 +7,23 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryAction;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.npcshops.events.trader.TraderSellRequestEvent;
 import org.luckyraven.gangland.npcshops.listener.trader.TraderSellSessionListener;
 import org.luckyraven.gangland.npcshops.trader.config.TraderSettings;
 import org.luckyraven.gangland.npcshops.trader.mood.MoodService;
+import org.luckyraven.keystone.inventory.chest.ChestMenu;
+import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
+import org.luckyraven.keystone.inventory.component.FillComponent;
+import org.luckyraven.keystone.inventory.component.ItemComponent;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
+import org.luckyraven.keystone.inventory.flow.Panel;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.NumberUtil;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
-import org.luckyraven.gangland.inventory.flow.Panel;
-import org.luckyraven.gangland.inventory.part.Fill;
-import org.luckyraven.gangland.inventory.util.InventoryUtil;
 import org.luckyraven.keystone.item.ItemRefresherRegistry;
 import org.luckyraven.gangland.shop.message.ShopDisplayResolver;
 import org.luckyraven.gangland.shop.valuation.ItemValuation;
@@ -37,21 +39,22 @@ import java.util.WeakHashMap;
  * Drop-zone sell panel. Players drop items into the left dropzone slots and the valuator produces an offer; confirming
  * sells the items for the offered total.
  *
+ * <p>WS2 G4 re-point (§0d): see {@link BarterView}'s class doc — same {@link DropzoneSlotComponent}-based
+ * item-return-contract shape, same {@link #onFlowEnd(Player)} cleanup hook wired once by {@link TraderFlow}.
+ *
  * <p>The {@link SellState} is kept in a per-player {@link WeakHashMap} on this panel instance rather than on
  * {@link TraderFlowSession} — the state is large (item dropzone mirror, breakdown lines, mood multiplier) and only
- * meaningful while the viewer is actively in this panel. Entry populates the map in {@link #render}; exit paths (back /
- * confirm / natural close) return un-committed items to the player and clear the entry via the flow's
- * {@link MultiPanelInventory#onEnd onEnd} callback.
+ * meaningful while the viewer is actively in this panel. Entry populates the map in {@link #render}.
  *
  * <p>Bukkit click / drag events still flow through
  * {@link TraderSellSessionListener} which dispatches to {@link #handleClick}/{@link #handleDrag} — those look the
- * viewer up in the per-player state and update the offer display in-place (no {@link MultiPanelInventory#rerender}
- * which would {@code clear()} the dropzone).
+ * viewer up in the per-player state and update the offer display in-place (a full {@link MenuFlow#rerender()},
+ * which is now safe against dropzone contents — see {@link DropzoneSlotComponent}).
  */
 @RequiredArgsConstructor
 public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 
-	private static final int SIZE         = 54;
+	private static final int ROWS         = 6;
 	private static final int SLOT_TRAIT   = 7;
 	private static final int SLOT_OFFER   = 25;
 	private static final int SLOT_MOOD    = 34;
@@ -88,8 +91,8 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 	}
 
 	@Override
-	public int size(TraderFlowSession session) {
-		return SIZE;
+	public int rows(TraderFlowSession session) {
+		return ROWS;
 	}
 
 	@Override
@@ -98,8 +101,8 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 	}
 
 	@Override
-	public void render(MultiPanelInventory<TraderFlowSession> host, InventoryHandler handler, Player viewer,
-	                   TraderFlowSession session) {
+	public void render(MenuFlow<TraderFlowSession> flow, ChestMenuBuilder builder, TraderFlowSession session) {
+		Player    viewer   = flow.viewer();
 		SellState existing = active.get(viewer);
 		SellState state;
 		if (existing == null) {
@@ -108,34 +111,29 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 			// Sell prices are inverse: friendly mood (< 1x on buy) should pay more on sell, so invert for sell usage.
 			double sellMood = 2.0 - mood;
 			int[]  slots    = dropzoneSlots(settings.getSellMaxOfferSlots());
-			state = new SellState(handler, session, slots, sellMood, viewer, host);
+			state = new SellState(session, slots, sellMood, viewer, flow);
 			active.put(viewer, state);
-
-			// Register dropzone slots with inventory-api so the click handler doesn't auto-cancel placement clicks.
-			for (int slot : slots) handler.setItem(slot, null, true);
-
-			// Natural close / ESC / flow end: return un-committed items. Capture the handler ref at entry so the
-			// callback works even after the framework clears `current` during cleanup.
-			host.onEnd(s -> {
-				SellState st = active.remove(viewer);
-				if (st != null && !st.committed) returnItemsToPlayer(viewer, st);
-			});
 		} else {
-			state         = existing;
-			state.handler = handler;
+			state = existing;
 		}
 
-		renderChrome(state);
+		renderChrome(builder, state);
+	}
+
+	/** Wired by {@link TraderFlow} as one flow-wide {@code onEnd} callback (unconditional, harmless when this view
+	 *  was never entered) — clears the per-player state entry. The physical dropzone items are already returned by
+	 *  the time this fires, via {@link DropzoneSlotComponent}'s {@code ItemHoldingComponent} contract. */
+	public void onFlowEnd(Player viewer) {
+		active.remove(viewer);
 	}
 
 	// ── Listener bridges (invoked by TraderSellSessionListener) ──────────
 
-	public ClickOutcome handleClick(Player viewer, org.bukkit.inventory.Inventory inventory,
-	                                org.bukkit.inventory.Inventory clickedInventory, int slot, InventoryAction action,
-	                                ItemStack currentItem) {
+	public ClickOutcome handleClick(Player viewer, Inventory inventory, Inventory clickedInventory, int slot,
+	                                InventoryAction action, ItemStack currentItem) {
 		SellState state = active.get(viewer);
-		if (state == null || state.handler.getInventory() != inventory) return ClickOutcome.PASS;
-		org.bukkit.inventory.Inventory top = state.handler.getInventory();
+		Inventory top   = state == null ? null : state.inventory();
+		if (state == null || top == null || top != inventory) return ClickOutcome.PASS;
 
 		if (clickedInventory == top) {
 			if (!contains(state.dropzoneSlots, slot)) return ClickOutcome.PASS;
@@ -145,7 +143,7 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 
 		if (action == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
 			if (currentItem == null || currentItem.getType() == Material.AIR) return ClickOutcome.PASS;
-			int placed = tryPlaceInDropzone(state, currentItem.clone());
+			int placed = tryPlaceInDropzone(state, top, currentItem.clone());
 			if (placed > 0) {
 				ItemStack remaining = currentItem.clone();
 				remaining.setAmount(currentItem.getAmount() - placed);
@@ -158,12 +156,12 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 		return ClickOutcome.PASS;
 	}
 
-	public boolean handleDrag(Player viewer, org.bukkit.inventory.Inventory inventory,
-	                          java.util.Collection<Integer> rawSlots) {
+	public boolean handleDrag(Player viewer, Inventory inventory, java.util.Collection<Integer> rawSlots) {
 		SellState state = active.get(viewer);
-		if (state == null || state.handler.getInventory() != inventory) return false;
+		Inventory top   = state == null ? null : state.inventory();
+		if (state == null || top == null || top != inventory) return false;
 
-		int topSize = state.handler.getInventory().getSize();
+		int topSize = top.getSize();
 		for (int raw : rawSlots) {
 			if (raw < topSize && !contains(state.dropzoneSlots, raw)) return true;
 		}
@@ -179,7 +177,6 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 		for (Player viewer : viewers) {
 			SellState state = active.remove(viewer);
 			if (state == null) continue;
-			state.committed = true; // skip the onEnd return pass
 			returnItemsToPlayer(viewer, state);
 			try {
 				viewer.closeInventory();
@@ -189,45 +186,33 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 
 	// ── Rendering ────────────────────────────────────────────────────────
 
-	private void renderChrome(SellState state) {
-		state.handler.getInventory().setItem(SLOT_TRAIT, null);
-		state.handler.getInventory().setItem(SLOT_OFFER, null);
-		state.handler.getInventory().setItem(SLOT_MOOD, null);
-		state.handler.getInventory().setItem(SLOT_BACK, null);
-		state.handler.getInventory().setItem(SLOT_CLEAR, null);
-		state.handler.getInventory().setItem(SLOT_CONFIRM, null);
+	private void renderChrome(ChestMenuBuilder builder, SellState state) {
+		renderTrait(builder, state);
+		renderOffer(builder, state);
+		renderMood(builder, state);
+		renderBack(builder, state);
+		renderClear(builder, state);
+		renderConfirm(builder, state);
 
-		renderTrait(state);
-		renderOffer(state);
-		renderMood(state);
-		renderBack(state);
-		renderClear(state);
-		renderConfirm(state);
-
-		// Snapshot dropzone contents, fill decorative empty slots, then restore dropzones so the filler doesn't
-		// claim them (they must remain truly empty so players can drop items freely).
-		ItemStack[] preservedDropzone = new ItemStack[state.dropzoneSlots.length];
-		for (int i = 0; i < state.dropzoneSlots.length; i++) {
-			preservedDropzone[i] = state.handler.getInventory().getItem(state.dropzoneSlots[i]);
-			state.handler.getInventory().setItem(state.dropzoneSlots[i], new ItemStack(Material.BARRIER));
+		for (int slot : state.dropzoneSlots) {
+			// The builder's own permanent interactive floor (N1) — belt-and-suspenders alongside
+			// DropzoneSlotComponent's own view.interactive(true): if the component ever threw before that line ran,
+			// this floor still keeps the slot from being cleared/click-cancelled.
+			builder.interactive(slot);
+			builder.slot(slot, new DropzoneSlotComponent(slot));
 		}
 
-		InventoryUtil.fillInventory(state.handler,
-		                            new Fill(settings.getInventoryFillName(), settings.getInventoryFillItem()));
-
-		for (int i = 0; i < state.dropzoneSlots.length; i++) {
-			state.handler.getInventory().setItem(state.dropzoneSlots[i], preservedDropzone[i]);
-		}
+		builder.fill(FillComponent.of(materialOf(settings.getInventoryFillItem())).name(settings.getInventoryFillName()));
 	}
 
-	private void renderTrait(SellState state) {
+	private void renderTrait(ChestMenuBuilder builder, SellState state) {
 		ItemBuilder trait = new ItemBuilder(material(XMaterial.DIAMOND, Material.DIAMOND));
 		trait.setDisplayName("&d&lTrait: &d" + state.session.trait.displayName())
 		     .setLore("&7This trader's valuation style.", " ", "&8Drop items on the left to get an offer.");
-		state.handler.setItem(SLOT_TRAIT, trait, false, (p, inv, b) -> { });
+		builder.slot(SLOT_TRAIT, ItemComponent.of(trait));
 	}
 
-	private void renderMood(SellState state) {
+	private void renderMood(ChestMenuBuilder builder, SellState state) {
 		double      mood = 2.0 - state.sellMoodMultiplier;
 		ItemBuilder pane = new ItemBuilder(material(XMaterial.NETHER_STAR, Material.NETHER_STAR));
 		pane.setDisplayName("&b&lMood: " + moodLabel(mood))
@@ -235,7 +220,7 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 		             "&e" + String.format("%.2fx", state.sellMoodMultiplier),
 		             " ",
 		             "&8Friendlier traders pay closer to base price.");
-		state.handler.setItem(SLOT_MOOD, pane, false, (p, inv, b) -> { });
+		builder.slot(SLOT_MOOD, ItemComponent.of(pane));
 	}
 
 	private String moodLabel(double multiplier) {
@@ -243,7 +228,7 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 		return "&fNeutral";
 	}
 
-	private void renderOffer(SellState state) {
+	private void renderOffer(ChestMenuBuilder builder, SellState state) {
 		recomputeOffer(state);
 
 		ItemBuilder offer = new ItemBuilder(material(XMaterial.GOLD_INGOT, Material.GOLD_INGOT)).setDisplayName(
@@ -257,22 +242,22 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 			if (state.breakdown.size() > shown) lore.add("&8…and " + (state.breakdown.size() - shown) + " more");
 		}
 		offer.setLore(lore);
-		state.handler.setItem(SLOT_OFFER, offer, false, (p, inv, b) -> { });
+		builder.slot(SLOT_OFFER, ItemComponent.of(offer));
 	}
 
-	private void renderBack(SellState state) {
+	private void renderBack(ChestMenuBuilder builder, SellState state) {
 		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&eBack to menu")
 		                                                  .setLore("&7Return your items and go back.");
-		state.handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> onBack(p, state));
+		builder.slot(SLOT_BACK, ItemComponent.of(back).onAnyClick(ctx -> onBack(ctx.player(), state)));
 	}
 
-	private void renderClear(SellState state) {
+	private void renderClear(ChestMenuBuilder builder, SellState state) {
 		ItemBuilder clear = new ItemBuilder(material(XMaterial.HOPPER, Material.HOPPER));
 		clear.setDisplayName("&eClear offer").setLore("&7Return all offered items to your inventory.");
-		state.handler.setItem(SLOT_CLEAR, clear, false, (p, inv, b) -> onClear(p, state));
+		builder.slot(SLOT_CLEAR, ItemComponent.of(clear).onAnyClick(ctx -> onClear(ctx.player(), state)));
 	}
 
-	private void renderConfirm(SellState state) {
+	private void renderConfirm(ChestMenuBuilder builder, SellState state) {
 		boolean hasOffer = state.offeredTotal.signum() > 0;
 		ItemStack icon = hasOffer
 		                 ? material(XMaterial.LIME_WOOL, Material.GREEN_WOOL)
@@ -282,17 +267,20 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 		                       ? "&aCONFIRM — $" + NumberUtil.valueFormat(state.offeredTotal)
 		                       : "&8Nothing to sell")
 		       .setLore("&7Sell for &6$" + NumberUtil.valueFormat(state.offeredTotal) + "&7.");
-		state.handler.setItem(SLOT_CONFIRM, confirm, false, (p, inv, b) -> onConfirm(p, state));
+		builder.slot(SLOT_CONFIRM, ItemComponent.of(confirm).onAnyClick(ctx -> onConfirm(ctx.player(), state)));
 	}
 
 	// ── Offer computation ─────────────────────────────────────────────────
 
 	private void recomputeOffer(SellState state) {
+		Inventory inv = state.inventory();
+		if (inv == null) return;
+
 		BigDecimal   total     = BigDecimal.ZERO;
 		List<String> breakdown = new ArrayList<>();
 
 		for (int slot : state.dropzoneSlots) {
-			ItemStack rawStack = state.handler.getInventory().getItem(slot);
+			ItemStack rawStack = inv.getItem(slot);
 			if (rawStack == null || rawStack.getType() == Material.AIR) continue;
 
 			ItemStack decorated = refresherRegistry.decorate(rawStack, state.viewer);
@@ -319,27 +307,28 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 
 	private void onBack(Player viewer, SellState state) {
 		returnItemsToPlayer(viewer, state);
-		state.committed = true;  // suppress the onEnd return pass
 		active.remove(viewer);
-		host(state).back();
+		state.flow.back();
 		Bukkit.getScheduler().runTask(plugin, () -> SOUND_CANCEL.playSound(viewer));
 	}
 
 	private void onClear(Player viewer, SellState state) {
 		returnItemsToPlayer(viewer, state);
-		recomputeOffer(state);
-		renderChrome(state);
+		state.flow.rerender();
 	}
 
 	private void onConfirm(Player viewer, SellState state) {
 		if (state.offeredTotal.signum() <= 0) return;
+
+		Inventory inv = state.inventory();
+		if (inv == null) return;
 
 		// Walk the dropzone once, collecting only items the valuator accepted. No-offer items stay put so the return
 		// pass hands them back instead of silently consuming them on confirm.
 		List<ItemStack> soldItems = new ArrayList<>();
 		List<Integer>   soldSlots = new ArrayList<>();
 		for (int slot : state.dropzoneSlots) {
-			ItemStack rawStack = state.handler.getInventory().getItem(slot);
+			ItemStack rawStack = inv.getItem(slot);
 			if (rawStack == null || rawStack.getType() == Material.AIR) continue;
 			ItemStack decorated = refresherRegistry.decorate(rawStack, state.viewer);
 			ItemValuation valuation = valuator.value(state.session.definition, decorated,
@@ -355,31 +344,26 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 		Bukkit.getPluginManager().callEvent(event);
 		if (event.isCancelled()) return;
 
-		state.committed = true;
-		for (int slot : soldSlots) state.handler.getInventory().setItem(slot, null);
-		// committed=true skips the onEnd return pass, so hand back the no-offer leftovers explicitly.
+		for (int slot : soldSlots) inv.setItem(slot, null);
 		returnItemsToPlayer(viewer, state);
 		active.remove(viewer);
-		host(state).back();
+		state.flow.back();
 		Bukkit.getScheduler().runTask(plugin, () -> SOUND_CONFIRM.playSound(viewer));
 	}
 
 	// ── Helpers ──────────────────────────────────────────────────────────
 
-	private MultiPanelInventory<TraderFlowSession> host(SellState state) {
-		// The state captures the handler at entry; we need the host ref for back(). Stored directly on SellState.
-		return state.host;
-	}
-
 	private void returnItemsToPlayer(Player viewer, SellState state) {
+		Inventory inv = state.inventory();
+		if (inv == null) return;
 		for (int slot : state.dropzoneSlots) {
-			ItemStack stack = state.handler.getInventory().getItem(slot);
+			ItemStack stack = inv.getItem(slot);
 			if (stack == null || stack.getType() == Material.AIR) continue;
 			Map<Integer, ItemStack> leftover = viewer.getInventory().addItem(stack.clone());
 			for (ItemStack drop : leftover.values()) {
 				viewer.getWorld().dropItemNaturally(viewer.getLocation(), drop);
 			}
-			state.handler.getInventory().setItem(slot, null);
+			inv.setItem(slot, null);
 		}
 	}
 
@@ -395,18 +379,22 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 		return stack != null ? stack : new ItemStack(fallback);
 	}
 
-	private int tryPlaceInDropzone(SellState state, ItemStack stack) {
+	private static Material materialOf(String name) {
+		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
+	}
+
+	private int tryPlaceInDropzone(SellState state, Inventory inventory, ItemStack stack) {
 		int remaining  = stack.getAmount();
 		int maxPerSlot = stack.getMaxStackSize();
 
 		for (int slot : state.dropzoneSlots) {
 			if (remaining <= 0) break;
-			ItemStack current = state.handler.getInventory().getItem(slot);
+			ItemStack current = inventory.getItem(slot);
 			if (current == null || current.getType() == Material.AIR) {
 				ItemStack placed = stack.clone();
 				int       amount = Math.min(remaining, maxPerSlot);
 				placed.setAmount(amount);
-				state.handler.getInventory().setItem(slot, placed);
+				inventory.setItem(slot, placed);
 				remaining -= amount;
 			} else if (current.isSimilar(stack) && current.getAmount() < maxPerSlot) {
 				int space = maxPerSlot - current.getAmount();
@@ -421,35 +409,35 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 	private void scheduleRecompute(Player viewer, SellState state) {
 		Bukkit.getScheduler().runTask(plugin, () -> {
 			if (active.get(viewer) != state) return;
-			recomputeOffer(state);
-			renderOffer(state);
-			renderConfirm(state);
+			state.flow.rerender();
 		});
 	}
 
 	public static final class SellState {
-		final Player                                 viewer;
-		final TraderFlowSession                      session;
-		final int[]                                  dropzoneSlots;
-		final double                                 sellMoodMultiplier;
-		final MultiPanelInventory<TraderFlowSession> host;
-
-		InventoryHandler handler;
+		final Player                      viewer;
+		final TraderFlowSession           session;
+		final int[]                       dropzoneSlots;
+		final double                      sellMoodMultiplier;
+		final MenuFlow<TraderFlowSession> flow;
 
 		@Getter
 		BigDecimal baseOffer = BigDecimal.ZERO;
 		BigDecimal   offeredTotal = BigDecimal.ZERO;
 		List<String> breakdown    = new ArrayList<>();
-		boolean      committed    = false;
 
-		SellState(InventoryHandler handler, TraderFlowSession session, int[] dropzoneSlots, double sellMoodMultiplier,
-		          Player viewer, MultiPanelInventory<TraderFlowSession> host) {
+		SellState(TraderFlowSession session, int[] dropzoneSlots, double sellMoodMultiplier, Player viewer,
+		          MenuFlow<TraderFlowSession> flow) {
 			this.viewer             = viewer;
 			this.session            = session;
-			this.handler            = handler;
 			this.dropzoneSlots      = dropzoneSlots;
 			this.sellMoodMultiplier = sellMoodMultiplier;
-			this.host               = host;
+			this.flow               = flow;
+		}
+
+		/** The live top inventory for this session's menu, or {@code null} if the flow has no menu open right now. */
+		Inventory inventory() {
+			ChestMenu menu = flow.currentMenu();
+			return menu != null ? menu.bukkitInventory() : null;
 		}
 	}
 

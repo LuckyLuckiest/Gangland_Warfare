@@ -9,12 +9,14 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.luckyraven.gangland.npcshops.trader.view.BarterView;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
 
 /**
- * Singleton click / drag listener for the barter panel. Close handling moved onto {@link MultiPanelInventory#onEnd}
- * inside {@link BarterView#render} when the panel became flow-aware, so no dedicated close event handler is needed
- * here.
+ * Singleton click / drag listener for the barter panel. Runs alongside Keystone's own {@code MenuListener} (which
+ * already leaves an interactive slot's click uncancelled — see {@code DropzoneSlotComponent}); this listener adds
+ * the barter-specific behaviour Keystone's generic mechanism doesn't do on its own: multi-slot stacking placement
+ * for a shift-click from the player's inventory, and scheduling a recompute after a drop/drag lands in the
+ * dropzone. Close handling is Keystone's own item-return contract, wired via {@link BarterView#onFlowEnd} —
+ * see {@link BarterView}'s class doc.
  */
 @ListenerHandler
 @RequiredArgsConstructor

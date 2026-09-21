@@ -12,14 +12,14 @@ import org.luckyraven.gangland.npcshops.banker.config.BankerSettings;
 import org.luckyraven.gangland.npcshops.banker.economy.BankerEconomyContract;
 import org.luckyraven.gangland.npcshops.banker.economy.BankerEconomyContract.CreationInfo;
 import org.luckyraven.gangland.npcshops.banker.message.BankerMessageContract;
+import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
+import org.luckyraven.keystone.inventory.component.FillComponent;
+import org.luckyraven.keystone.inventory.component.ItemComponent;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
+import org.luckyraven.keystone.inventory.flow.Panel;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.NumberUtil;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
-import org.luckyraven.gangland.inventory.flow.Panel;
-import org.luckyraven.gangland.inventory.part.Fill;
-import org.luckyraven.gangland.inventory.util.InventoryUtil;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +32,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public final class BankerCreateAccountView implements Panel<BankerFlowSession> {
 
-	private static final int SIZE         = 27;
+	private static final int ROWS         = 3;
 	private static final int SLOT_INFO    = 4;
 	private static final int SLOT_CONFIRM = 11;
 	private static final int SLOT_CANCEL  = 15;
@@ -50,8 +50,8 @@ public final class BankerCreateAccountView implements Panel<BankerFlowSession> {
 	private final BankerMessageContract messages;
 
 	@Override
-	public int size(BankerFlowSession session) {
-		return SIZE;
+	public int rows(BankerFlowSession session) {
+		return ROWS;
 	}
 
 	@Override
@@ -60,24 +60,22 @@ public final class BankerCreateAccountView implements Panel<BankerFlowSession> {
 	}
 
 	@Override
-	public void render(MultiPanelInventory<BankerFlowSession> host, InventoryHandler handler, Player viewer,
-	                   BankerFlowSession session) {
-		CreationInfo info = economy.creationInfo(viewer);
+	public void render(MenuFlow<BankerFlowSession> flow, ChestMenuBuilder builder, BankerFlowSession session) {
+		CreationInfo info = economy.creationInfo(flow.viewer());
 
 		if (info.hasAccount()) {
 			ItemBuilder stub = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER));
 			stub.setDisplayName("&7Already have an account")
 			    .setLore("&8Use the menu instead of opening another.");
-			handler.setItem(SLOT_INFO, stub, false, (p, inv, b) -> { });
+			builder.slot(SLOT_INFO, ItemComponent.of(stub));
 
 			ItemBuilder back = new ItemBuilder(material(XMaterial.RED_WOOL, Material.RED_WOOL)).setDisplayName(
 					"&cBACK");
-			handler.setItem(SLOT_CANCEL, back, false, (p, inv, b) -> {
-				host.back();
-				playSoundNextTick(p, SOUND_DENY);
-			});
-			InventoryUtil.fillInventory(handler,
-			                            new Fill(settings.getInventoryFillName(), settings.getInventoryFillItem()));
+			builder.slot(SLOT_CANCEL, ItemComponent.of(back).onAnyClick(ctx -> {
+				flow.back();
+				playSoundNextTick(ctx.player(), SOUND_DENY);
+			}));
+			builder.fill(FillComponent.of(materialOf(settings.getInventoryFillItem())).name(settings.getInventoryFillName()));
 			return;
 		}
 
@@ -88,27 +86,26 @@ public final class BankerCreateAccountView implements Panel<BankerFlowSession> {
 		                 "&7Your cash: &f$" + NumberUtil.valueFormat(info.cashBalance()),
 		                 " ",
 		                 info.canAfford() ? "&aYou can afford this." : "&cYou don't have enough cash.");
-		handler.setItem(SLOT_INFO, infoItem, false, (p, inv, b) -> { });
+		builder.slot(SLOT_INFO, ItemComponent.of(infoItem));
 
 		ItemBuilder confirm = new ItemBuilder(material(XMaterial.LIME_WOOL, Material.GREEN_WOOL));
 		confirm.setDisplayName("&a&lOPEN ACCOUNT")
 		       .setLore("&7Click to choose a name and confirm.", "&7An anvil will open next.");
-		handler.setItem(SLOT_CONFIRM, confirm, false, (p, inv, b) -> {
+		builder.slot(SLOT_CONFIRM, ItemComponent.of(confirm).onAnyClick(ctx -> {
 			if (!info.canAfford()) {
-				viewer.sendMessage(messages.createCannotAfford(info.fee()));
-				playSoundNextTick(viewer, SOUND_DENY);
+				ctx.player().sendMessage(messages.createCannotAfford(info.fee()));
+				playSoundNextTick(ctx.player(), SOUND_DENY);
 				return;
 			}
-			openNameAnvil(host, p);
-			playSoundNextTick(p, SOUND_CLICK);
-		});
+			openNameAnvil(flow, ctx.player());
+			playSoundNextTick(ctx.player(), SOUND_CLICK);
+		}));
 
 		ItemBuilder cancel = new ItemBuilder(material(XMaterial.RED_WOOL, Material.RED_WOOL));
 		cancel.setDisplayName("&cCANCEL");
-		handler.setItem(SLOT_CANCEL, cancel, false, (p, inv, b) -> host.back());
+		builder.slot(SLOT_CANCEL, ItemComponent.of(cancel).onAnyClick(ctx -> flow.back()));
 
-		InventoryUtil.fillInventory(handler,
-		                            new Fill(settings.getInventoryFillName(), settings.getInventoryFillItem()));
+		builder.fill(FillComponent.of(materialOf(settings.getInventoryFillItem())).name(settings.getInventoryFillName()));
 	}
 
 	/**
@@ -116,8 +113,8 @@ public final class BankerCreateAccountView implements Panel<BankerFlowSession> {
 	 * escape), resumes the flow and switches back to the menu — matches the legacy view's behaviour of always returning
 	 * to the menu after the anvil closes.
 	 */
-	private void openNameAnvil(MultiPanelInventory<BankerFlowSession> host, Player viewer) {
-		host.suspend();
+	private void openNameAnvil(MenuFlow<BankerFlowSession> flow, Player viewer) {
+		flow.suspend();
 		new AnvilGUI.Builder()
 				.plugin(plugin)
 				.title("Account Name")
@@ -148,8 +145,8 @@ public final class BankerCreateAccountView implements Panel<BankerFlowSession> {
 					return List.of(AnvilGUI.ResponseAction.close());
 				})
 				.onClose(state -> Bukkit.getScheduler().runTask(plugin, () -> {
-					host.resume();
-					host.switchTo(BankerFlowSession.PANEL_MENU);
+					flow.resume();
+					flow.switchTo(BankerFlowSession.PANEL_MENU);
 				}))
 				.open(viewer);
 	}
@@ -157,6 +154,10 @@ public final class BankerCreateAccountView implements Panel<BankerFlowSession> {
 	private ItemStack material(XMaterial preferred, Material fallback) {
 		ItemStack stack = preferred.parseItem();
 		return stack != null ? stack : new ItemStack(fallback);
+	}
+
+	private static Material materialOf(String name) {
+		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
 	}
 
 	private void playSoundNextTick(Player player, SoundEffect sound) {

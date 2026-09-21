@@ -4,6 +4,7 @@ import lombok.CustomLog;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
+import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.gangland.npcshops.integration.GanglandTraderEconomy;
 import org.luckyraven.gangland.npcshops.integration.GanglandTraderMessages;
 import org.luckyraven.gangland.npcshops.integration.TraderSettingsImpl;
@@ -146,9 +147,11 @@ public class TraderModuleConfig {
 	}
 
 	@Bean
-	public TraderFlow traderFlow(ModeSelectView modeSelectView, ShopView shopView, NegotiationView negotiationView,
-	                             SellView sellView, BarterView barterView, QuantitySelectorView quantityView) {
-		return new TraderFlow(plugin, modeSelectView, shopView, negotiationView, sellView, barterView, quantityView);
+	public TraderFlow traderFlow(InventoryService inventoryService, ModeSelectView modeSelectView, ShopView shopView,
+	                             NegotiationView negotiationView, SellView sellView, BarterView barterView,
+	                             QuantitySelectorView quantityView) {
+		return new TraderFlow(plugin, inventoryService, modeSelectView, shopView, negotiationView, sellView,
+		                      barterView, quantityView);
 	}
 
 	// ── Trader NPC lifecycle ─────────────────────────────────────────────

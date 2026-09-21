@@ -2,7 +2,7 @@ package org.luckyraven.gangland.npcshops.trader.view;
 
 import org.luckyraven.gangland.npcshops.trader.TraderNpc;
 import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitDefinition;
-import org.luckyraven.gangland.inventory.flow.FlowSession;
+import org.luckyraven.keystone.inventory.flow.FlowState;
 import org.luckyraven.gangland.shop.ShopDefinition;
 import org.luckyraven.gangland.shop.ShopItemEntry;
 
@@ -12,7 +12,7 @@ import java.math.BigDecimal;
  * Mutable state shared by every panel inside the trader flow. Replaces the per-view
  * {@code WeakHashMap<Player, Session>} fields the old standalone views kept.
  */
-public final class TraderFlowSession implements FlowSession {
+public final class TraderFlowSession implements FlowState {
 
 	public static final String PANEL_MODE_SELECT = "mode_select";
 	public static final String PANEL_SHOP        = "shop";
