@@ -6,12 +6,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.inventory.InventoryService;
+import org.luckyraven.keystone.inventory.registry.MenuOpener;
 import org.luckyraven.gangland.data.placeholder.PlaceholderService;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionStore;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryRuntimeContext;
 import org.luckyraven.gangland.menu.InventoryBuilder;
-import org.luckyraven.gangland.inventory.InventoryOpener;
 import org.luckyraven.gangland.menu.OpenInventory;
 import org.luckyraven.gangland.menu.State;
 import org.luckyraven.gangland.menu.condition.ConditionEvaluator;
@@ -29,17 +30,20 @@ public class InventoryOpenByCommandListener implements Listener {
 	private final ConditionEvaluator       conditionEvaluator;
 	private final InventoryDefinitionStore definitionStore;
 	private final InventoryRuntimeContext  runtimeContext;
+	private final InventoryService         inventoryService;
 
 	public InventoryOpenByCommandListener(Gangland gangland,
 	                                      PlaceholderService placeholderService,
 	                                      ConditionEvaluator conditionEvaluator,
 	                                      InventoryDefinitionStore definitionStore,
-	                                      InventoryRuntimeContext runtimeContext) {
+	                                      InventoryRuntimeContext runtimeContext,
+	                                      InventoryService inventoryService) {
 		this.gangland           = gangland;
 		this.placeholderService = placeholderService;
 		this.conditionEvaluator = conditionEvaluator;
 		this.definitionStore    = definitionStore;
 		this.runtimeContext     = runtimeContext;
+		this.inventoryService   = inventoryService;
 	}
 
 	@EventHandler
@@ -91,12 +95,12 @@ public class InventoryOpenByCommandListener implements Listener {
 				Fill line = new Fill(Settings.getInventoryLineName(), Settings.getInventoryLineItem());
 
 				// Create the opener callback
-				InventoryOpener opener = runtimeContext::openInventoryForPlayer;
+				MenuOpener opener = runtimeContext::openInventoryForPlayer;
 
-				var inventoryHandler = builder.createInventory(gangland, placeholderService, player, fill, line,
-				                                               conditionEvaluator, opener);
+				var menu = builder.createMenu(inventoryService, gangland, placeholderService, player, fill, line,
+				                              conditionEvaluator, opener);
 
-				inventoryHandler.open(player);
+				menu.open(player);
 				event.setCancelled(true);
 				break;
 			} catch (Exception exception) {

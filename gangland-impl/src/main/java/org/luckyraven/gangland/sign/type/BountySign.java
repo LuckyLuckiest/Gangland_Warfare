@@ -5,6 +5,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.color.Color;
+import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.sign.SignType;
 import org.luckyraven.gangland.sign.aspect.BountyAspect;
@@ -28,6 +29,7 @@ public class BountySign implements Sign {
 	private final UserManager<OfflinePlayer> offlineUserManager;
 	private final UserManager<Player>        userManager;
 	private final SignType                   signType;
+	private final InventoryService           inventoryService;
 
 	@Override
 	public SignTypeDefinition createDefinition() {
@@ -36,7 +38,7 @@ public class BountySign implements Sign {
 		SignParser    parser    = new BountyParser(signType);
 
 		// aspect
-		SignAspect wantedAspect = new BountyAspect(plugin, offlineUserManager, userManager);
+		SignAspect wantedAspect = new BountyAspect(plugin, offlineUserManager, userManager, inventoryService);
 
 		// handler
 		List<SignAspect> aspects = List.of(wantedAspect);

@@ -8,8 +8,8 @@ import org.bukkit.event.inventory.InventoryEvent;
 import org.bukkit.event.player.PlayerEvent;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.keystone.inventory.registry.MenuOpener;
 import org.luckyraven.gangland.menu.InventoryData;
-import org.luckyraven.gangland.inventory.InventoryOpener;
 import org.luckyraven.gangland.menu.handler.SlotContext;
 import org.luckyraven.gangland.menu.handler.SlotEventHandler;
 import org.luckyraven.gangland.menu.handler.SlotItemFactory;
@@ -183,7 +183,7 @@ final class InventoryParser {
 
 		var rightClickSection = config.getConfigurationSection(slotsBase + "OnRightClick");
 
-		InventoryOpener             opener          = runtimeContext::openInventoryForPlayer;
+		MenuOpener                  opener          = runtimeContext::openInventoryForPlayer;
 		InventoryDefinitionStore    definitionStore = runtimeContext.definitionStore();
 		Function<String, ItemStack> itemResolver    = runtimeContext.itemResolver();
 

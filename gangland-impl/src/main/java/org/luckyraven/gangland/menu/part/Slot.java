@@ -5,9 +5,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.bukkit.entity.Player;
+import org.luckyraven.keystone.inventory.click.ClickHandler;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.keystone.util.TriConsumer;
-import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.menu.condition.ConditionEvaluator;
 import org.luckyraven.gangland.menu.condition.ConditionalSlotData;
 
@@ -23,8 +22,8 @@ public class Slot {
 	@Setter
 	private ConditionalSlotData conditionalData;
 
-	private TriConsumer<Player, InventoryHandler, ItemBuilder> clickableSlot;
-	private TriConsumer<Player, InventoryHandler, ItemBuilder> rightClickSlot;
+	private ClickHandler clickableSlot;
+	private ClickHandler rightClickSlot;
 
 	/**
 	 * Gets the appropriate item and click action based on conditions
@@ -39,25 +38,22 @@ public class Slot {
 			boolean     resolvedClickable = resolved.isClickable();
 			boolean     resolvedDraggable = resolved.isDraggable();
 
-			// Create click action from the resolved data
-			TriConsumer<Player, InventoryHandler, ItemBuilder> action = null;
-			if (resolved.getClickAction() != null) {
-				action = (p, inv, builder) -> { }; // Placeholder, will be replaced in InventoryBuilder
-			}
-
-			return new ConditionalSlotResult(resolvedItem, resolvedClickable, resolvedDraggable, action,
+			// The real click action is built from resolved.getClickAction()/getRightClickAction() by the caller
+			// (InventoryBuilder), which has the ClickContext at click time; this result just carries the raw
+			// ConditionalSlotData.ClickAction through.
+			return new ConditionalSlotResult(resolvedItem, resolvedClickable, resolvedDraggable, null,
 			                                 resolved.getClickAction(), resolved.getRightClickAction());
 		}
 
 		return new ConditionalSlotResult(item, clickable, draggable, clickableSlot, null, null);
 	}
 
-	public void setClickable(TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
+	public void setClickable(ClickHandler clickable) {
 		Preconditions.checkArgument(this.clickable, "The slot is not clickable");
 		this.clickableSlot = clickable;
 	}
 
-	public void setRightClickable(TriConsumer<Player, InventoryHandler, ItemBuilder> rightClickable) {
+	public void setRightClickable(ClickHandler rightClickable) {
 		this.rightClickSlot = rightClickable;
 	}
 

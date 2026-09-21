@@ -8,16 +8,16 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.economy.exception.EconomyException;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.menu.multi.ListEntry;
-import org.luckyraven.gangland.menu.multi.MultiInventory;
-import org.luckyraven.gangland.menu.part.ButtonTags;
 import org.luckyraven.gangland.inventory.part.Fill;
+import org.luckyraven.gangland.menu.SimplePagedMenu;
+import org.luckyraven.gangland.menu.part.ButtonTags;
 import org.luckyraven.gangland.sign.model.ParsedSign;
 import org.luckyraven.gangland.sign.type.BountySign;
 
@@ -27,14 +27,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-import static org.luckyraven.gangland.menu.multi.MultiInventoryCreation.dynamicMultiInventory;
-
 @RequiredArgsConstructor
 public class BountyAspect implements SignAspect {
 
 	private final JavaPlugin                 plugin;
 	private final UserManager<OfflinePlayer> offlinePlayerUserManager;
 	private final UserManager<Player>        onlinePlayerUserManager;
+	private final InventoryService           inventoryService;
 
 	@Override
 	public AspectResult execute(Player player, ParsedSign sign) {
@@ -113,21 +112,10 @@ public class BountyAspect implements SignAspect {
 			generateData(user, type, heads, "&cOFFLINE");
 		}
 
-		// create a multi inventory
-		String title = "&c&lBounties";
-		Fill   fill  = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
-
+		Fill       fill       = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
 		ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
 		                                       Settings.getNextPage());
-
-		List<ListEntry> headEntries = heads.stream().map(ListEntry::of).toList();
-
-		MultiInventory multiInventory = dynamicMultiInventory(plugin, player, headEntries, title, false, 0, fill,
-		                                                      buttonTags, null);
-
-		if (multiInventory == null) return;
-
-		multiInventory.open(player);
+		SimplePagedMenu.open(inventoryService, player, heads, "&c&lBounties", fill, buttonTags);
 	}
 
 	private void generateData(User<? extends OfflinePlayer> user, Material type, List<ItemStack> heads, String status) {

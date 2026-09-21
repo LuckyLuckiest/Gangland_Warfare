@@ -36,9 +36,8 @@ import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.menu.multi.ListEntry;
-import org.luckyraven.gangland.menu.multi.MultiInventory;
-import org.luckyraven.gangland.menu.multi.MultiInventoryCreation;
+import org.luckyraven.keystone.inventory.InventoryService;
+import org.luckyraven.gangland.menu.SimplePagedMenu;
 import org.luckyraven.gangland.menu.part.ButtonTags;
 import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.inventory.util.InventoryUtil;
@@ -64,6 +63,7 @@ public final class GangCommand extends Command {
 	 * invite/accept and the alliance request flow). Empty when no module is installed — the core never names them.
 	 */
 	private final CommandContributions       contributions;
+	private final InventoryService           inventoryService;
 
 	private final Gangland gangland;
 
@@ -75,7 +75,8 @@ public final class GangCommand extends Command {
 	                   RankManager rankManager,
 	                   GanglandDatabase ganglandDatabase,
 	                   UserDataLoader userDataLoader,
-	                   DependencyContainer container
+	                   DependencyContainer container,
+	                   InventoryService inventoryService
 	) {
 		super(gangland, "gang", true);
 
@@ -88,6 +89,7 @@ public final class GangCommand extends Command {
 		this.rankManager        = rankManager;
 		this.ganglandDatabase   = ganglandDatabase;
 		this.userDataLoader     = userDataLoader;
+		this.inventoryService   = inventoryService;
 		this.contributions      = CommandContributions.from(container);
 
 		var list = getCommands().entrySet()
@@ -227,8 +229,7 @@ public final class GangCommand extends Command {
 					player.performCommand(argumentSequence);
 				});
 
-		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
-
+		Fill       fill       = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
 		ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
 		                                       Settings.getNextPage());
 
@@ -265,15 +266,7 @@ public final class GangCommand extends Command {
 						items.add(itemBuilder.build());
 					}
 
-					String          title1  = "&6&lGang Members";
-					List<ListEntry> entries = items.stream().map(ListEntry::of).toList();
-					MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getPlugin(), player, entries,
-					                                                                    title1, false, 0, fill,
-					                                                                    buttonTags, null);
-
-					if (multi == null) return;
-
-					multi.open(player);
+					SimplePagedMenu.open(inventoryService, player, items, "&6&lGang Members", fill, buttonTags);
 				});
 
 		// bounty
@@ -307,16 +300,7 @@ public final class GangCommand extends Command {
 							items.add(itemBuilder.build());
 						}
 
-						String          title1  = "&6&lGang Allies";
-						List<ListEntry> entries = items.stream().map(ListEntry::of).toList();
-						MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getPlugin(), player,
-			                                                                                entries, title1, false,
-			                                                                                0,
-			                                                                                fill, buttonTags, null);
-
-						if (multi == null) return;
-
-						multi.open(player);
+						SimplePagedMenu.open(inventoryService, player, items, "&6&lGang Allies", fill, buttonTags);
 					});
 
 		// date created

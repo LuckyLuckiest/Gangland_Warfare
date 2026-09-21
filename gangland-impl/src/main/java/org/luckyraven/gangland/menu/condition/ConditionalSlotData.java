@@ -3,9 +3,9 @@ package org.luckyraven.gangland.menu.condition;
 import lombok.Getter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.keystone.inventory.click.ClickContext;
+import org.luckyraven.keystone.inventory.registry.MenuOpener;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.InventoryOpener;
 
 import java.util.List;
 
@@ -33,10 +33,16 @@ public class ConditionalSlotData {
 	}
 
 	/**
-	 * Represents a click action which can be command, inventory, or anvil
+	 * Represents a click action which can be command, inventory, or anvil. {@code opener} is the {@link MenuOpener}
+	 * captured at parse time (WS2 G3: replaces the old {@code InventoryOpener}) — Gangland's own menus are opened
+	 * through it directly rather than through {@code ClickContext.openMenu}/a registered {@code MenuRegistry}
+	 * factory, because the paginated core menus need a real {@code Player} at menu-BUILD time (to fetch that
+	 * player's filtered item-source entries before {@code PagedRegion.render} bakes them into explicit slots) and a
+	 * zero-arg {@code Supplier<Menu>} factory cannot supply one; using {@code MenuOpener} uniformly for every core
+	 * menu (paginated or not) keeps the open path consistent instead of half on the registry, half not.
 	 */
 	public interface ClickAction {
-		void execute(Player player, InventoryHandler handler, ItemBuilder builder, InventoryOpener opener);
+		void execute(ClickContext ctx, MenuOpener opener);
 	}
 
 	/**
@@ -79,22 +85,22 @@ public class ConditionalSlotData {
 
 	public record CommandAction(String command) implements ClickAction {
 		@Override
-		public void execute(Player player, InventoryHandler handler, ItemBuilder builder, InventoryOpener opener) {
+		public void execute(ClickContext ctx, MenuOpener opener) {
 			String cmd = command.startsWith("/") ? command.substring(1) : command;
-			player.performCommand(cmd);
+			ctx.player().performCommand(cmd);
 		}
 	}
 
 	public record InventoryAction(String inventoryName) implements ClickAction {
 		@Override
-		public void execute(Player player, InventoryHandler handler, ItemBuilder builder, InventoryOpener opener) {
-			opener.openInventory(player, inventoryName);
+		public void execute(ClickContext ctx, MenuOpener opener) {
+			opener.open(ctx.player(), inventoryName);
 		}
 	}
 
 	public record AnvilAction(String title, String text, String successCommand) implements ClickAction {
 		@Override
-		public void execute(Player player, InventoryHandler handler, ItemBuilder builder, InventoryOpener opener) {
+		public void execute(ClickContext ctx, MenuOpener opener) {
 			// Will be handled by InventoryBuilder with AnvilGUI
 		}
 	}

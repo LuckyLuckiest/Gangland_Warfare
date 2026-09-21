@@ -21,6 +21,7 @@ import org.luckyraven.gangland.sign.type.trade.BuySign;
 import org.luckyraven.gangland.sign.type.trade.SellSign;
 import org.luckyraven.gangland.sign.validation.SignValidationException;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
+import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.keystone.item.ItemSerializerRegistry;
 
@@ -156,7 +157,8 @@ public class SignManager extends SignService {
 		// bounty
 		String   bountyKey  = signPrefix + "bounty";
 		SignType bountyType = new SignType(bountyKey, "BOUNTY");
-		Sign     bounty     = new BountySign(gangland, offlineUserManager, userManager, bountyType);
+		Sign     bounty     = new BountySign(gangland, offlineUserManager, userManager, bountyType,
+		                                    container.getInstance(InventoryService.class));
 
 		formatRegistry.register(bounty.createFormat());
 

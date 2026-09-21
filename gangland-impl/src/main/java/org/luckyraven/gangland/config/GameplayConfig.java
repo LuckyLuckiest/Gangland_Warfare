@@ -28,7 +28,6 @@ import org.luckyraven.gangland.hologram.HologramService;
 import org.luckyraven.gangland.menu.condition.BooleanExpressionEvaluator;
 import org.luckyraven.gangland.menu.filter.*;
 import org.luckyraven.gangland.menu.multi.ItemSourceProvider;
-import org.luckyraven.gangland.inventory.service.InventoryRegistry;
 import org.luckyraven.keystone.cooldown.InMemoryCooldownService;
 import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.item.ItemConverterRegistry;
@@ -154,13 +153,13 @@ public class GameplayConfig {
 	                                                       GangFilterAdapter gangFilterAdapter,
 	                                                       MemberFilterAdapter memberFilterAdapter,
 	                                                       ItemParser itemParser,
-	                                                       InventoryRegistry inventoryRegistry) {
+	                                                       InventoryService inventoryService) {
 		ItemSourceProvider itemSourceProvider = new GangItemSourceProvider(userManager, gangManager, filterStore,
 		                                                                   filterApplier, gangFilterAdapter,
 		                                                                   memberFilterAdapter);
 		return new InventoryRuntimeContext(gangland, definitionStore, itemSourceProvider, conditionEvaluator,
 		                                   userManager, permissionManager, placeholderService, itemParser,
-		                                   inventoryRegistry);
+		                                   inventoryService);
 	}
 
 	/**

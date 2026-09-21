@@ -4,10 +4,10 @@ import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.keystone.inventory.click.ClickContext;
+import org.luckyraven.keystone.inventory.click.ClickHandler;
+import org.luckyraven.keystone.inventory.registry.MenuOpener;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.keystone.util.TriConsumer;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.InventoryOpener;
 import org.luckyraven.gangland.menu.part.Slot;
 
 import java.util.Collections;
@@ -32,7 +32,7 @@ public class ClickSlotHandler implements SlotEventHandler {
 	}
 
 	@Override
-	public Slot handle(SlotContext ctx, InventoryOpener opener) {
+	public Slot handle(SlotContext ctx, MenuOpener opener) {
 		ItemBuilder item = SlotItemFactory.create(ctx.itemResolver(), ctx.item(), ctx.itemName(), ctx.data(),
 		                                          ctx.lore(), ctx.enchanted());
 
@@ -52,11 +52,11 @@ public class ClickSlotHandler implements SlotEventHandler {
 		return slot;
 	}
 
-	private Slot buildRightClickOnly(SlotContext ctx, ItemBuilder item, InventoryOpener opener) {
+	private Slot buildRightClickOnly(SlotContext ctx, ItemBuilder item, MenuOpener opener) {
 		Slot slot = new Slot(ctx.slotLoc(), true, ctx.draggable(), item);
 
 		// Empty left-click so the slot is still registered as clickable
-		slot.setClickable((player, inv, builder) -> { });
+		slot.setClickable(clickCtx -> { });
 
 		if (ctx.rightClickSection() != null) {
 			applyRightClick(slot, ctx.rightClickSection(), opener);
@@ -65,16 +65,15 @@ public class ClickSlotHandler implements SlotEventHandler {
 		return slot;
 	}
 
-	private void applyLeftClick(Slot slot, ConfigurationSection section, InventoryOpener opener) {
+	private void applyLeftClick(Slot slot, ConfigurationSection section, MenuOpener opener) {
 		slot.setClickable(buildAction(section, opener));
 	}
 
-	private void applyRightClick(Slot slot, ConfigurationSection section, InventoryOpener opener) {
+	private void applyRightClick(Slot slot, ConfigurationSection section, MenuOpener opener) {
 		slot.setRightClickable(buildAction(section, opener));
 	}
 
-	private TriConsumer<Player, InventoryHandler, ItemBuilder>
-	buildAction(ConfigurationSection section, InventoryOpener opener) {
+	private ClickHandler buildAction(ConfigurationSection section, MenuOpener opener) {
 		String command    = section.getString("Command");
 		String permission = section.getString("Permission");
 
@@ -93,10 +92,11 @@ public class ClickSlotHandler implements SlotEventHandler {
 
 		final AnvilSpec finalAnvilSpec = anvilSpec;
 
-		return (player, inv, builder) -> {
+		return (ClickContext ctx) -> {
+			Player player = ctx.player();
 			if (permission != null && !player.hasPermission(permission)) return;
 			if (command != null) player.performCommand(stripSlash(command));
-			if (inventoryName != null) opener.openInventory(player, inventoryName);
+			if (inventoryName != null) opener.open(player, inventoryName);
 			if (finalAnvilSpec != null) openAnvil(player, finalAnvilSpec);
 		};
 	}

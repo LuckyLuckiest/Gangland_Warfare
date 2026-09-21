@@ -44,9 +44,7 @@ import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
-import org.luckyraven.gangland.menu.multi.ListEntry;
-import org.luckyraven.gangland.menu.multi.MultiInventory;
-import org.luckyraven.gangland.menu.multi.MultiInventoryCreation;
+import org.luckyraven.gangland.menu.SimplePagedMenu;
 import org.luckyraven.gangland.menu.part.ButtonTags;
 import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.menu.villager.VillagerInventory;
@@ -313,17 +311,7 @@ public final class DebugCommand extends Command {
 
 				ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
 				                                       Settings.getNextPage());
-
-				List<ListEntry> entries = items.stream().map(ListEntry::of).toList();
-
-				MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getPlugin(), player, entries,
-				                                                                    title,
-				                                                                    false, 0, fill, buttonTags,
-				                                                                    null);
-
-				if (multi == null) return;
-
-				multi.open(player);
+				SimplePagedMenu.open(inventoryService, player, items, title, fill, buttonTags);
 			} else {
 				sender.sendMessage("How will you see the inventory?");
 			}

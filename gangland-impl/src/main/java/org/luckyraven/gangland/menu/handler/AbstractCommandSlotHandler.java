@@ -1,10 +1,9 @@
 package org.luckyraven.gangland.menu.handler;
 
 import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.entity.Player;
+import org.luckyraven.keystone.inventory.click.ClickContext;
+import org.luckyraven.keystone.inventory.registry.MenuOpener;
 import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.InventoryOpener;
 import org.luckyraven.gangland.menu.part.Slot;
 
 /**
@@ -21,7 +20,7 @@ public abstract class AbstractCommandSlotHandler implements SlotEventHandler {
 	}
 
 	@Override
-	public Slot handle(SlotContext ctx, InventoryOpener opener) {
+	public Slot handle(SlotContext ctx, MenuOpener opener) {
 		ItemBuilder item = SlotItemFactory.create(ctx.itemResolver(), ctx.item(), ctx.itemName(), ctx.data(),
 		                                          ctx.lore(), ctx.enchanted());
 		Slot slot = new Slot(ctx.slotLoc(), true, ctx.draggable(), item);
@@ -34,11 +33,11 @@ public abstract class AbstractCommandSlotHandler implements SlotEventHandler {
 		String inventory  = configurationSection.getString("Inventory");
 		String permission = configurationSection.getString("Permission");
 
-		slot.setClickable((player, inv, builder) -> {
-			if (permission != null && !player.hasPermission(permission)) return;
-			if (command != null) player.performCommand(stripSlash(command));
-			if (inventory != null) opener.openInventory(player, inventory);
-			onSlotAction(player, inv, builder);
+		slot.setClickable(clickCtx -> {
+			if (permission != null && !clickCtx.player().hasPermission(permission)) return;
+			if (command != null) clickCtx.player().performCommand(stripSlash(command));
+			if (inventory != null) opener.open(clickCtx.player(), inventory);
+			onSlotAction(clickCtx);
 		});
 
 		return slot;
@@ -47,6 +46,6 @@ public abstract class AbstractCommandSlotHandler implements SlotEventHandler {
 	/**
 	 * Called after the command / inventory action. Override to add event-specific behavior.
 	 */
-	protected void onSlotAction(Player player, InventoryHandler inv, ItemBuilder builder) { }
+	protected void onSlotAction(ClickContext ctx) { }
 
 }
