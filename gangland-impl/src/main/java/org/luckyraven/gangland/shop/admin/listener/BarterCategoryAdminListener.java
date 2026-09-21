@@ -6,12 +6,12 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
 import org.luckyraven.gangland.shop.admin.view.BarterCategoryItemsAdminView;
 
 /**
- * Singleton listener for the barter-category admin editor. Mirror of {@link SellCategoryAdminListener}. Close handling
- * moved onto {@link MultiPanelInventory#onEnd} when the panel became flow-aware.
+ * Singleton listener for the barter-category admin editor. Mirror of {@link SellCategoryAdminListener}. WS4 G1b:
+ * close handling is {@link MenuFlow}'s flow-wide {@code onEnd}, wired once inside {@code ShopAdminFlow}.
  */
 @ListenerHandler
 @RequiredArgsConstructor

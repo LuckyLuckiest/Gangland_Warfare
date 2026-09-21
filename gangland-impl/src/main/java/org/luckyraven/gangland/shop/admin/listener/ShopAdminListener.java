@@ -6,15 +6,16 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
 import org.luckyraven.gangland.shop.admin.view.ShopAdminFlow;
 import org.luckyraven.gangland.shop.admin.view.ShopAdminView;
 
 /**
  * Singleton listener for the shop admin panel. Dispatches every click to
  * {@link ShopAdminView#handleClick(InventoryClickEvent)} so cursor-drop + shift-click template adding can mutate the
- * session. Close handling moved onto {@link MultiPanelInventory#onEnd} inside {@link ShopAdminFlow} — the
- * {@code ShopEditedEvent} commit fires from that hook.
+ * session. WS4 G1b: close handling is {@link MenuFlow}'s flow-wide {@code onEnd}, wired once inside
+ * {@link ShopAdminFlow} (the old per-render {@code MultiPanelInventory#onEnd} registration has no equivalent on
+ * the new immutable-at-build flow) — the {@code ShopEditedEvent} commit fires from that hook.
  */
 @ListenerHandler
 @RequiredArgsConstructor

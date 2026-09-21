@@ -10,12 +10,13 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
+import org.luckyraven.keystone.inventory.component.ItemComponent;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
+import org.luckyraven.keystone.inventory.flow.Panel;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.NumberUtil;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
-import org.luckyraven.gangland.inventory.flow.Panel;
 import org.luckyraven.keystone.item.ItemRefresherRegistry;
 import org.luckyraven.keystone.shop.BarterCategory;
 import org.luckyraven.keystone.shop.message.ShopDisplayResolver;
@@ -28,15 +29,18 @@ import java.util.WeakHashMap;
 /**
  * Panel editor for a single {@link BarterCategory}'s template items. Mirror of {@link SellCategoryItemsAdminView} —
  * same flow-session integration, same cursor-drop / shift-click add-item pattern, different target list.
+ *
+ * <p>WS4 G1b (§0d): not an item-holding slot — see {@link ShopAdminView}'s class doc / {@link
+ * SellCategoryItemsAdminView}'s class doc for the identical rationale.
  */
 @RequiredArgsConstructor
 public final class BarterCategoryItemsAdminView implements Panel<ShopAdminFlowSession> {
 
-	private static final int   INVENTORY_SIZE = 54;
-	private static final int   SLOT_BACK      = 45;
-	private static final int   SLOT_INFO      = 49;
-	private static final int   SLOT_PRICE     = 53;
-	private static final int[] ITEM_SLOTS     = {
+	private static final int   ROWS       = 6;
+	private static final int   SLOT_BACK  = 45;
+	private static final int   SLOT_INFO  = 49;
+	private static final int   SLOT_PRICE = 53;
+	private static final int[] ITEM_SLOTS = {
 			0, 1, 2, 3, 4, 5, 6, 7, 8,
 			9, 10, 11, 12, 13, 14, 15, 16, 17,
 			18, 19, 20, 21, 22, 23, 24, 25, 26,
@@ -53,8 +57,8 @@ public final class BarterCategoryItemsAdminView implements Panel<ShopAdminFlowSe
 	private final Map<Player, ActiveContext> active = new WeakHashMap<>();
 
 	@Override
-	public int size(ShopAdminFlowSession session) {
-		return INVENTORY_SIZE;
+	public int rows(ShopAdminFlowSession session) {
+		return ROWS;
 	}
 
 	@Override
@@ -64,18 +68,21 @@ public final class BarterCategoryItemsAdminView implements Panel<ShopAdminFlowSe
 	}
 
 	@Override
-	public void render(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler, Player viewer,
-	                   ShopAdminFlowSession session) {
+	public void render(MenuFlow<ShopAdminFlowSession> flow, ChestMenuBuilder builder, ShopAdminFlowSession session) {
 		if (session.barterCategoryInEdit == null) {
-			host.back();
+			flow.back();
 			return;
 		}
 
-		active.put(viewer, new ActiveContext(host, handler, session.barterCategoryInEdit));
-		host.onEnd(s -> active.remove(viewer));
+		active.put(flow.viewer(), new ActiveContext(flow, session.barterCategoryInEdit));
 
-		renderChrome(host, handler, session);
-		renderItems(host, handler, session);
+		renderChrome(flow, builder, session);
+		renderItems(flow, builder, session);
+	}
+
+	/** Called unconditionally by {@link ShopAdminFlow}'s flow-wide {@code onEnd} (see {@link ShopAdminView}). */
+	public void onFlowEnd(Player admin) {
+		active.remove(admin);
 	}
 
 	// ── Listener bridge ──────────────────────────────────────────────────
@@ -83,8 +90,8 @@ public final class BarterCategoryItemsAdminView implements Panel<ShopAdminFlowSe
 	public void handleClick(InventoryClickEvent event) {
 		if (!(event.getWhoClicked() instanceof Player admin)) return;
 		ActiveContext ctx = active.get(admin);
-		if (ctx == null) return;
-		if (event.getInventory() != ctx.handler.getInventory()) return;
+		if (ctx == null || ctx.flow.currentMenu() == null) return;
+		if (event.getInventory() != ctx.flow.currentMenu().bukkitInventory()) return;
 
 		Inventory bottom = event.getView().getBottomInventory();
 		ClickType click  = event.getClick();
@@ -99,7 +106,7 @@ public final class BarterCategoryItemsAdminView implements Panel<ShopAdminFlowSe
 			return;
 		}
 
-		if (event.getClickedInventory() == ctx.handler.getInventory()) {
+		if (event.getClickedInventory() == ctx.flow.currentMenu().bukkitInventory()) {
 			ItemStack cursor = event.getCursor();
 			if (cursor == null || cursor.getType().isAir()) return;
 
@@ -121,7 +128,7 @@ public final class BarterCategoryItemsAdminView implements Panel<ShopAdminFlowSe
 		else copy = copy.clone();
 
 		ctx.category.getItems().add(copy);
-		renderItemsDirect(ctx);
+		ctx.flow.rerender();
 	}
 
 	private boolean isItemSlot(int rawSlot) {
@@ -129,19 +136,25 @@ public final class BarterCategoryItemsAdminView implements Panel<ShopAdminFlowSe
 		return false;
 	}
 
-	private void renderChrome(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler,
+	private void renderChrome(MenuFlow<ShopAdminFlowSession> flow, ChestMenuBuilder builder,
 	                          ShopAdminFlowSession session) {
+		// Rows 4-5 (slots 36-53) are chrome; rows 0-3 (ITEM_SLOTS) stay genuinely empty wherever there's no item —
+		// see SellCategoryItemsAdminView's identical comment for why this is an explicit range loop, not a
+		// whole-inventory .fill()/.border().
 		ItemStack pane = XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
 		if (pane == null) pane = new ItemStack(Material.STONE);
 		ItemBuilder filler = new ItemBuilder(pane).setDisplayName(" ");
-		for (int slot = 36; slot < INVENTORY_SIZE; slot++) handler.setItem(slot, filler, false, (p, inv, b) -> { });
+		for (int slot = 36; slot < ROWS * 9; slot++) {
+			if (slot == SLOT_BACK || slot == SLOT_INFO || slot == SLOT_PRICE) continue;
+			builder.slot(slot, ItemComponent.of(filler));
+		}
 
 		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&eBack to barter categories")
 		                                                  .setLore("&7Save & return.");
-		handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> {
-			host.back();
-			Bukkit.getScheduler().runTask(plugin, () -> SOUND_BACK.playSound(p));
-		});
+		builder.slot(SLOT_BACK, ItemComponent.of(back).onAnyClick(ctx -> {
+			flow.back();
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_BACK.playSound(ctx.player()));
+		}));
 
 		BarterCategory category = session.barterCategoryInEdit;
 		ItemBuilder    info     = new ItemBuilder(material(XMaterial.PAPER, Material.PAPER));
@@ -150,16 +163,16 @@ public final class BarterCategoryItemsAdminView implements Panel<ShopAdminFlowSe
 		             "&7Base value: &6$" + NumberUtil.valueFormat(category.getBasePrice()), " ",
 		             "&7Drop or shift-click items to add;", "&7originals stay in your inventory.",
 		             "&aL-click &7edit per-item value  &cR-click &7remove");
-		handler.setItem(SLOT_INFO, info, false, (p, inv, b) -> { });
+		builder.slot(SLOT_INFO, ItemComponent.of(info));
 
 		ItemBuilder price = new ItemBuilder(material(XMaterial.GOLD_INGOT, Material.GOLD_INGOT));
 		price.setDisplayName("&6Edit base value")
 		     .setLore("&7Current: &6$" + NumberUtil.valueFormat(category.getBasePrice()),
 		              "&7Click to open the value editor.");
-		handler.setItem(SLOT_PRICE, price, false, (p, inv, b) -> openBasePriceEditor(host, session));
+		builder.slot(SLOT_PRICE, ItemComponent.of(price).onAnyClick(ctx -> openBasePriceEditor(flow, session)));
 	}
 
-	private void renderItems(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler,
+	private void renderItems(MenuFlow<ShopAdminFlowSession> flow, ChestMenuBuilder builder,
 	                         ShopAdminFlowSession session) {
 		BarterCategory category = session.barterCategoryInEdit;
 		int            capacity = ITEM_SLOTS.length;
@@ -168,40 +181,21 @@ public final class BarterCategoryItemsAdminView implements Panel<ShopAdminFlowSe
 			if (i < category.getItems().size()) {
 				final int   finalIndex = i;
 				ItemBuilder display    = new ItemBuilder(category.getItems().get(i).clone());
-				handler.setItem(slot, display, false,
-				                (p, inv, b) -> openPerItemPriceEditor(host, session, finalIndex),
-				                (p, inv, b) -> removeItem(host, session, finalIndex));
-			} else {
-				handler.getInventory().setItem(slot, null);
+				builder.slot(slot, ItemComponent.of(display)
+				                                .onLeftClick(ctx -> openPerItemPriceEditor(flow, session, finalIndex))
+				                                .onRightClick(ctx -> removeItem(flow, session, finalIndex)));
 			}
 		}
 	}
 
-	private void renderItemsDirect(ActiveContext ctx) {
-		int capacity = ITEM_SLOTS.length;
-		for (int i = 0; i < capacity; i++) {
-			int slot = ITEM_SLOTS[i];
-			if (i < ctx.category.getItems().size()) {
-				final int   finalIndex = i;
-				ItemBuilder display    = new ItemBuilder(ctx.category.getItems().get(i).clone());
-				ctx.handler.setItem(slot, display, false,
-				                    (p, inv, b) -> openPerItemPriceEditor(ctx.host, ctx.host.session(), finalIndex),
-				                    (p, inv, b) -> removeItem(ctx.host, ctx.host.session(), finalIndex));
-			} else {
-				ctx.handler.getInventory().setItem(slot, null);
-			}
-		}
-	}
-
-	private void removeItem(MultiPanelInventory<ShopAdminFlowSession> host, ShopAdminFlowSession session, int index) {
+	private void removeItem(MenuFlow<ShopAdminFlowSession> flow, ShopAdminFlowSession session, int index) {
 		BarterCategory category = session.barterCategoryInEdit;
 		if (category == null || index >= category.getItems().size()) return;
 		category.getItems().remove(index);
-		ActiveContext ctx = active.get(host.viewer());
-		if (ctx != null) renderItemsDirect(ctx);
+		flow.rerender();
 	}
 
-	private void openPerItemPriceEditor(MultiPanelInventory<ShopAdminFlowSession> host, ShopAdminFlowSession session,
+	private void openPerItemPriceEditor(MenuFlow<ShopAdminFlowSession> flow, ShopAdminFlowSession session,
 	                                    int index) {
 		BarterCategory category = session.barterCategoryInEdit;
 		if (category == null || index >= category.getItems().size()) return;
@@ -224,7 +218,7 @@ public final class BarterCategoryItemsAdminView implements Panel<ShopAdminFlowSe
 			currentPrice = category.getBasePrice();
 		}
 
-		ItemStack decorated = refresherRegistry.decorate(source, host.viewer());
+		ItemStack decorated = refresherRegistry.decorate(source, flow.viewer());
 		String    label     = displayResolver.cleanDisplayName(decorated);
 		session.priceEditItem        = source;
 		session.priceEditOriginal    = currentPrice;
@@ -238,10 +232,10 @@ public final class BarterCategoryItemsAdminView implements Panel<ShopAdminFlowSe
 					.addTag(CategorySellValuator.SELL_PRICE_NBT_KEY, value.toPlainString()).build();
 			category.getItems().set(index, tagged);
 		};
-		host.switchTo(ShopAdminFlowSession.PANEL_PRICE_EDITOR);
+		flow.switchTo(ShopAdminFlowSession.PANEL_PRICE_EDITOR);
 	}
 
-	private void openBasePriceEditor(MultiPanelInventory<ShopAdminFlowSession> host, ShopAdminFlowSession session) {
+	private void openBasePriceEditor(MenuFlow<ShopAdminFlowSession> flow, ShopAdminFlowSession session) {
 		BarterCategory category = session.barterCategoryInEdit;
 		if (category == null) return;
 
@@ -255,7 +249,7 @@ public final class BarterCategoryItemsAdminView implements Panel<ShopAdminFlowSe
 		session.priceEditMode        = 1;
 		session.priceEditTitleSuffix = "Barter " + category.getId();
 		session.priceEditCommit      = category::setBasePrice;
-		host.switchTo(ShopAdminFlowSession.PANEL_PRICE_EDITOR);
+		flow.switchTo(ShopAdminFlowSession.PANEL_PRICE_EDITOR);
 	}
 
 	private ItemStack material(XMaterial preferred, Material fallback) {
@@ -263,7 +257,6 @@ public final class BarterCategoryItemsAdminView implements Panel<ShopAdminFlowSe
 		return stack != null ? stack : new ItemStack(fallback);
 	}
 
-	private record ActiveContext(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler,
-	                             BarterCategory category) { }
+	private record ActiveContext(MenuFlow<ShopAdminFlowSession> flow, BarterCategory category) { }
 
 }

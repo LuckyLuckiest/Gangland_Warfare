@@ -10,9 +10,10 @@ A Trader is a stationary, damageable Citizens NPC that runs a full shop. Each Tr
 key** (the pricing / inventory catalogue) and a **trait** (the personality — how generous, how friendly, whether it
 accepts barter). Players right-click to open the shop UI and can **buy**, **barter**, **sell**, or **tip**.
 
-Traders are the player-facing surface of the **shop-api** framework in `gangland-ui/shop-api`. The shop layer is
-generic — any future surface (vending kiosks, black-market terminals, mission boards) can reuse the same shop
-definitions.
+Traders are the player-facing surface of the shop framework, which as of 0.10.0 lives in Keystone's
+`keystone-shop` (moved out of the deleted `gangland-ui/shop-api`, WS4) — the shop layer is generic — any future
+surface (vending kiosks, black-market terminals, mission boards) can reuse the same shop definitions, in any
+Keystone-based plugin, not just Gangland.
 
 ---
 

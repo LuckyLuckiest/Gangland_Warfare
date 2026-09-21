@@ -8,6 +8,7 @@ import org.luckyraven.gangland.shop.ShopAdminOpener;
 import org.luckyraven.gangland.shop.ShopAdminOpenerImpl;
 import org.luckyraven.gangland.shop.admin.view.*;
 import org.luckyraven.gangland.shop.config.ShopUiSettings;
+import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.item.ItemConverterRegistry;
 import org.luckyraven.keystone.item.ItemRefresherRegistry;
 import org.luckyraven.keystone.item.ItemSerializerRegistry;
@@ -29,11 +30,13 @@ import org.luckyraven.keystone.shop.valuation.SellValuator;
 
 /**
  * CONFIG-phase wiring for the shop layer used by both the trader NPC (cops-n-crooks module) and the admin
- * editor: registry I/O, purchase/barter/sell services and valuators now come from Keystone's {@code keystone-shop}
+ * editor: registry I/O, purchase/barter/sell services and valuators come from Keystone's {@code keystone-shop}
  * (WS4 G1a — {@code gangland-ui/shop-api} deleted, its 26 headless classes promoted upstream in Keystone's G0).
- * The 5 admin-view beans stay wired to the relocated {@code gangland-impl}-local views (still on inventory-api,
- * unchanged this gate — the {@code MenuFlow} rewrite is G1b). This class must keep working with zero modules
- * installed, since {@code ShopCommand} injects {@link ShopRegistry} and {@link ShopAdminFlow} directly.
+ * The 5 admin-view beans wire the relocated {@code gangland-impl}-local views, rebuilt in WS4 G1b onto
+ * {@code keystone-inventory}'s {@code MenuFlow}/{@code ChestMenuBuilder} — {@link #shopAdminFlow} now also takes
+ * {@link InventoryService} (the same core CONFIG-phase bean {@code GameplayConfig} already produces). This class
+ * must keep working with zero modules installed, since {@code ShopCommand} injects {@link ShopRegistry} and
+ * {@link ShopAdminFlow} directly.
  *
  * <p>{@link #shopUiSettings} is constructed inline, never a {@code @Bean}: {@code TraderSettings} (cops-n-crooks)
  * extends {@link ShopUiSettings}, so a module-side {@code TraderSettings} bean would also register under
@@ -139,13 +142,13 @@ public class ShopConfig {
 	}
 
 	@Bean
-	public ShopAdminFlow shopAdminFlow(ItemRefresherRegistry refresherRegistry,
+	public ShopAdminFlow shopAdminFlow(InventoryService inventoryService, ItemRefresherRegistry refresherRegistry,
 	                                   ShopAdminView adminPanel,
 	                                   PriceEditorView priceEditorPanel,
 	                                   SellCategoryItemsAdminView sellCategoryPanel,
 	                                   BarterCategoryItemsAdminView barterCategoryPanel) {
-		return new ShopAdminFlow(gangland, refresherRegistry, adminPanel, priceEditorPanel, sellCategoryPanel,
-		                         barterCategoryPanel);
+		return new ShopAdminFlow(gangland, inventoryService, refresherRegistry, adminPanel, priceEditorPanel,
+		                         sellCategoryPanel, barterCategoryPanel);
 	}
 
 	/**

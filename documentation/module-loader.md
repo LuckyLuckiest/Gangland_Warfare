@@ -85,8 +85,10 @@ Modules load once. A changed `modules/` folder — including an update — takes
 
 A module is a Maven module under `gangland-features/` that depends on **`gangland-api`** at **`provided`** scope —
 the only host artifact a module compiles against, so the compiler (not a convention) enforces the contract. It pulls
-`gangland-core`, `gangland-domain`, `gangland-item`, `inventory-api`, `sign-api` and `shop-api` in transitively, so
-that one line replaces them all; add the Keystone modules it uses (also provided). A module never depends on
+`gangland-core`, `gangland-domain`, `gangland-item`, `inventory-api` and `sign-api` in transitively, so
+that one line replaces them all; add the Keystone modules it uses (also provided) — `keystone-shop` and
+`keystone-inventory` are never re-exported by `gangland-api` (0.10.0, WS4/WS2), so a module that needs either
+declares it directly. A module never depends on
 `gangland-impl`: everything in the host jar that is *not* in `gangland-api` is deliberately out of reach. It ships:
 
 - `src/main/resources/module.yml` at the jar root (house YAML style, capitalised underscore keys):

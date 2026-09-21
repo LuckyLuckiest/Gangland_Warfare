@@ -8,13 +8,15 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
+import org.luckyraven.keystone.inventory.component.FillComponent;
+import org.luckyraven.keystone.inventory.component.ItemComponent;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
+import org.luckyraven.keystone.inventory.flow.Panel;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.util.NumberUtil;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
-import org.luckyraven.gangland.inventory.flow.Panel;
 import org.luckyraven.gangland.shop.config.ShopUiSettings;
 
 import java.math.BigDecimal;
@@ -24,12 +26,12 @@ import java.util.List;
 /**
  * Price-edit panel in the shop-admin flow. Reads the edit context ({@code priceEditItem}, {@code priceEditOriginal},
  * {@code priceEditStaged}, {@code priceEditCommit}, …) from the shared {@link ShopAdminFlowSession}; on SAVE it calls
- * {@code priceEditCommit.accept(staged)} and returns to the caller via {@link MultiPanelInventory#back()}. Custom price
- * / multiplier entry uses AnvilGUI with the standard {@code suspend() → anvil → resume() + switchTo} detour.
+ * {@code priceEditCommit.accept(staged)} and returns to the caller via {@link MenuFlow#back()}. Custom price /
+ * multiplier entry uses AnvilGUI with the standard {@code flow.suspend() → anvil → flow.resume() + switchTo} detour
+ * (matches {@code QuantitySelectorView}'s pattern in npc-shops).
  *
- * <p>WS4 G1a (B3): relocated bodily from {@code gangland-ui/shop-api} — still on {@code MultiPanelInventory}/
- * inventory-api unchanged. The only shop-domain type it touches, {@link ShopUiSettings}, keeps its FQCN (now hosted
- * in gangland-api). The 2 {@code host.rerender()} sites here are G1b's job, not touched in G1a.
+ * <p>WS4 G1b: rebuilt onto {@code keystone-inventory} — no item-holding slot here (this panel only ever shows a
+ * read-only preview of the item already selected on a prior panel; nothing is ever placed into it).
  */
 @RequiredArgsConstructor
 public final class PriceEditorView implements Panel<ShopAdminFlowSession> {
@@ -45,7 +47,7 @@ public final class PriceEditorView implements Panel<ShopAdminFlowSession> {
 	private static final int[] GREEN_SLOTS      = {18, 19, 20, 21};
 	private static final int[] RED_SLOTS        = {23, 24, 25, 26};
 	private static final int   MAX_MODE_CYCLE   = 10;
-	private static final int   INVENTORY_SIZE   = 54;
+	private static final int   ROWS             = 6;
 
 	private static final SoundEffect SOUND_ADD         = vanilla("UI_BUTTON_CLICK", 1.5f);
 	private static final SoundEffect SOUND_SUB         = vanilla("UI_BUTTON_CLICK", 0.8f);
@@ -64,8 +66,8 @@ public final class PriceEditorView implements Panel<ShopAdminFlowSession> {
 	}
 
 	@Override
-	public int size(ShopAdminFlowSession session) {
-		return INVENTORY_SIZE;
+	public int rows(ShopAdminFlowSession session) {
+		return ROWS;
 	}
 
 	@Override
@@ -75,61 +77,59 @@ public final class PriceEditorView implements Panel<ShopAdminFlowSession> {
 	}
 
 	@Override
-	public void render(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler, Player viewer,
-	                   ShopAdminFlowSession session) {
+	public void render(MenuFlow<ShopAdminFlowSession> flow, ChestMenuBuilder builder, ShopAdminFlowSession session) {
 		if (session.priceEditItem == null || session.priceEditCommit == null) {
 			// Shouldn't happen in practice — caller always populates before switchTo. Fall back to a stub with back.
-			renderStub(host, handler);
+			renderStub(flow, builder);
 			return;
 		}
 		if (session.priceEditStaged == null) {
 			session.priceEditStaged = session.priceEditOriginal != null ? session.priceEditOriginal : BigDecimal.ZERO;
 		}
 
-		fillGlass(handler);
-		renderInfo(handler, session);
-		renderItemPreview(handler, session);
-		renderAdjustmentButtons(host, handler, session);
-		renderCustomPriceButton(host, handler, session);
-		renderModeRow(host, handler, session);
-		renderSaveCancel(host, handler, session);
+		renderInfo(builder, session);
+		renderItemPreview(builder, session);
+		renderAdjustmentButtons(flow, builder, session);
+		renderCustomPriceButton(flow, builder, session);
+		renderModeRow(flow, builder, session);
+		renderSaveCancel(flow, builder, session);
+
+		builder.fill(FillComponent.of(fillMaterial()).name(" "));
 	}
 
 	// ── Rendering ────────────────────────────────────────────────────────
 
-	private void renderStub(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler) {
-		fillGlass(handler);
+	private void renderStub(MenuFlow<ShopAdminFlowSession> flow, ChestMenuBuilder builder) {
 		ItemBuilder info = new ItemBuilder(material(XMaterial.BARRIER, Material.BARRIER));
 		info.setDisplayName("&cNothing to edit").setLore("&8Missing edit context — returning.");
-		handler.setItem(SLOT_INFO, info, false, (p, inv, b) -> { });
+		builder.slot(SLOT_INFO, ItemComponent.of(info));
 		ItemBuilder back = new ItemBuilder(material(XMaterial.RED_WOOL, Material.RED_WOOL)).setDisplayName("&cBACK");
-		handler.setItem(SLOT_CANCEL - 1, back, false, (p, inv, b) -> host.back());
+		builder.slot(SLOT_CANCEL - 1, ItemComponent.of(back).onAnyClick(ctx -> flow.back()));
+		builder.fill(FillComponent.of(fillMaterial()).name(" "));
 	}
 
-	private void fillGlass(InventoryHandler handler) {
+	private Material fillMaterial() {
 		ItemStack pane = XMaterial.BLACK_STAINED_GLASS_PANE.parseItem();
-		if (pane == null) pane = new ItemStack(Material.STONE);
-		ItemBuilder filler = new ItemBuilder(pane).setDisplayName(" ");
-		for (int slot = 0; slot < INVENTORY_SIZE; slot++) handler.setItem(slot, filler, false, (p, inv, b) -> { });
+		return pane != null ? pane.getType() : Material.STONE;
 	}
 
-	private void renderInfo(InventoryHandler handler, ShopAdminFlowSession session) {
+	private void renderInfo(ChestMenuBuilder builder, ShopAdminFlowSession session) {
 		ItemBuilder info = new ItemBuilder(material(XMaterial.PAPER, Material.PAPER));
 		info.setDisplayName("&eSetting price")
 		    .setLore("&7Original price: &6$" + NumberUtil.valueFormat(session.priceEditOriginal),
 		             "&7Staged price: &6$" + NumberUtil.valueFormat(session.priceEditStaged), " ",
 		             "&8Use the green/red buttons to adjust,", "&8or click the yellow block for a custom value.");
-		handler.setItem(SLOT_INFO, info, false, (p, inv, b) -> { });
+		builder.slot(SLOT_INFO, ItemComponent.of(info));
 	}
 
-	private void renderItemPreview(InventoryHandler handler, ShopAdminFlowSession session) {
+	private void renderItemPreview(ChestMenuBuilder builder, ShopAdminFlowSession session) {
 		ItemBuilder preview = new ItemBuilder(session.priceEditItem.clone());
 		preview.setLore("&7Staged price: &6$" + NumberUtil.valueFormat(session.priceEditStaged),
 		                "&7Current multiplier: &b" + session.priceEditMode);
-		handler.setItem(SLOT_ITEM, preview, false, (p, inv, b) -> { });
+		builder.slot(SLOT_ITEM, ItemComponent.of(preview));
 	}
 
-	private void renderAdjustmentButtons(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler,
+	private void renderAdjustmentButtons(MenuFlow<ShopAdminFlowSession> flow, ChestMenuBuilder builder,
 	                                     ShopAdminFlowSession session) {
 		for (int i = 0; i < GREEN_SLOTS.length; i++) {
 			int greenMagnitude = i + 1;
@@ -139,10 +139,10 @@ public final class PriceEditorView implements Panel<ShopAdminFlowSession> {
 			green.setDisplayName("&a+ $" + NumberUtil.valueFormat(greenStep))
 			     .setLore("&7Adds &a" + greenMagnitude + " &7× &b" + session.priceEditMode);
 			final int greenDelta = greenStep;
-			handler.setItem(GREEN_SLOTS[i], green, false, (p, inv, b) -> {
-				adjustPrice(host, session, BigDecimal.valueOf(greenDelta));
-				Bukkit.getScheduler().runTask(plugin, () -> SOUND_ADD.playSound(p));
-			});
+			builder.slot(GREEN_SLOTS[i], ItemComponent.of(green).onAnyClick(ctx -> {
+				adjustPrice(flow, session, BigDecimal.valueOf(greenDelta));
+				Bukkit.getScheduler().runTask(plugin, () -> SOUND_ADD.playSound(ctx.player()));
+			}));
 
 			int redMagnitude = RED_SLOTS.length - i;
 			int redStep      = redMagnitude * session.priceEditMode;
@@ -151,94 +151,91 @@ public final class PriceEditorView implements Panel<ShopAdminFlowSession> {
 			red.setDisplayName("&c- $" + NumberUtil.valueFormat(redStep))
 			   .setLore("&7Subtracts &c" + redMagnitude + " &7× &b" + session.priceEditMode);
 			final int redDelta = redStep;
-			handler.setItem(RED_SLOTS[i], red, false, (p, inv, b) -> {
-				adjustPrice(host, session, BigDecimal.valueOf(-redDelta));
-				Bukkit.getScheduler().runTask(plugin, () -> SOUND_SUB.playSound(p));
-			});
+			builder.slot(RED_SLOTS[i], ItemComponent.of(red).onAnyClick(ctx -> {
+				adjustPrice(flow, session, BigDecimal.valueOf(-redDelta));
+				Bukkit.getScheduler().runTask(plugin, () -> SOUND_SUB.playSound(ctx.player()));
+			}));
 		}
 	}
 
-	private void renderCustomPriceButton(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler,
+	private void renderCustomPriceButton(MenuFlow<ShopAdminFlowSession> flow, ChestMenuBuilder builder,
 	                                     ShopAdminFlowSession session) {
 		ItemBuilder button = new ItemBuilder(material(XMaterial.YELLOW_CONCRETE, Material.GOLD_BLOCK));
 		button.setDisplayName("&eCustom price: &6$" + NumberUtil.valueFormat(session.priceEditStaged))
 		      .setLore("&7Click to type an exact price.");
-		handler.setItem(SLOT_PRICE_ANVIL, button, false, (p, inv, b) -> {
-			openPriceAnvil(host, p, session);
-			Bukkit.getScheduler().runTask(plugin, () -> SOUND_ANVIL_PRICE.playSound(p));
-		});
+		builder.slot(SLOT_PRICE_ANVIL, ItemComponent.of(button).onAnyClick(ctx -> {
+			openPriceAnvil(flow, ctx.player(), session);
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_ANVIL_PRICE.playSound(ctx.player()));
+		}));
 	}
 
-	private void renderModeRow(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler,
+	private void renderModeRow(MenuFlow<ShopAdminFlowSession> flow, ChestMenuBuilder builder,
 	                           ShopAdminFlowSession session) {
 		ItemBuilder down = new ItemBuilder(material(XMaterial.BLUE_CONCRETE, Material.LAPIS_BLOCK));
 		down.setDisplayName("&9◄ Previous multiplier").setLore("&7Wraps through 1 to " + MAX_MODE_CYCLE + ".");
-		handler.setItem(SLOT_MODE_DOWN, down, false, (p, inv, b) -> {
-			cycleMode(host, session, false);
-			Bukkit.getScheduler().runTask(plugin, () -> SOUND_MODE_DOWN.playSound(p));
-		});
+		builder.slot(SLOT_MODE_DOWN, ItemComponent.of(down).onAnyClick(ctx -> {
+			cycleMode(flow, session, false);
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_MODE_DOWN.playSound(ctx.player()));
+		}));
 
 		ItemBuilder middle = new ItemBuilder(material(XMaterial.MAGENTA_CONCRETE, Material.PURPUR_BLOCK));
 		middle.setDisplayName("&dCurrent multiplier: &b" + session.priceEditMode)
 		      .setLore("&7Click to type a custom multiplier.",
 		               "&8Max: " + NumberUtil.valueFormat(settings.getMaxModeMultiplier()));
-		handler.setItem(SLOT_MODE_ANVIL, middle, false, (p, inv, b) -> {
-			openModeAnvil(host, p, session);
-			Bukkit.getScheduler().runTask(plugin, () -> SOUND_ANVIL_MODE.playSound(p));
-		});
+		builder.slot(SLOT_MODE_ANVIL, ItemComponent.of(middle).onAnyClick(ctx -> {
+			openModeAnvil(flow, ctx.player(), session);
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_ANVIL_MODE.playSound(ctx.player()));
+		}));
 
 		ItemBuilder up = new ItemBuilder(material(XMaterial.BLUE_CONCRETE, Material.LAPIS_BLOCK));
 		up.setDisplayName("&9Next multiplier ►").setLore("&7Wraps through 1 to " + MAX_MODE_CYCLE + ".");
-		handler.setItem(SLOT_MODE_UP, up, false, (p, inv, b) -> {
-			cycleMode(host, session, true);
-			Bukkit.getScheduler().runTask(plugin, () -> SOUND_MODE_UP.playSound(p));
-		});
+		builder.slot(SLOT_MODE_UP, ItemComponent.of(up).onAnyClick(ctx -> {
+			cycleMode(flow, session, true);
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_MODE_UP.playSound(ctx.player()));
+		}));
 	}
 
-	private void renderSaveCancel(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler,
+	private void renderSaveCancel(MenuFlow<ShopAdminFlowSession> flow, ChestMenuBuilder builder,
 	                              ShopAdminFlowSession session) {
 		ItemBuilder save = new ItemBuilder(material(XMaterial.LIME_WOOL, Material.GREEN_WOOL));
 		save.setDisplayName("&aSAVE price")
 		    .setLore("&7Write &6$" + NumberUtil.valueFormat(session.priceEditStaged) + " &7to the shop.");
-		handler.setItem(SLOT_SAVE, save, false, (p, inv, b) -> {
+		builder.slot(SLOT_SAVE, ItemComponent.of(save).onAnyClick(ctx -> {
 			if (session.priceEditCommit != null) session.priceEditCommit.accept(session.priceEditStaged);
 			clearEditContext(session);
-			host.back();
-			Bukkit.getScheduler().runTask(plugin, () -> SOUND_SAVE.playSound(p));
-		});
+			flow.back();
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_SAVE.playSound(ctx.player()));
+		}));
 
 		ItemBuilder cancel = new ItemBuilder(material(XMaterial.RED_WOOL, Material.RED_WOOL));
 		cancel.setDisplayName("&cCANCEL").setLore("&7Discard changes and return.");
-		handler.setItem(SLOT_CANCEL, cancel, false, (p, inv, b) -> {
+		builder.slot(SLOT_CANCEL, ItemComponent.of(cancel).onAnyClick(ctx -> {
 			clearEditContext(session);
-			host.back();
-			Bukkit.getScheduler().runTask(plugin, () -> SOUND_CANCEL.playSound(p));
-		});
+			flow.back();
+			Bukkit.getScheduler().runTask(plugin, () -> SOUND_CANCEL.playSound(ctx.player()));
+		}));
 	}
 
 	// ── Actions ──────────────────────────────────────────────────────────
 
-	private void adjustPrice(MultiPanelInventory<ShopAdminFlowSession> host, ShopAdminFlowSession session,
-	                         BigDecimal delta) {
+	private void adjustPrice(MenuFlow<ShopAdminFlowSession> flow, ShopAdminFlowSession session, BigDecimal delta) {
 		BigDecimal next = session.priceEditStaged.add(delta);
 		session.priceEditStaged = next.signum() < 0 ? BigDecimal.ZERO : next;
-		host.rerender();
+		flow.rerender();
 	}
 
-	private void cycleMode(MultiPanelInventory<ShopAdminFlowSession> host, ShopAdminFlowSession session,
-	                       boolean forward) {
+	private void cycleMode(MenuFlow<ShopAdminFlowSession> flow, ShopAdminFlowSession session, boolean forward) {
 		int current = session.priceEditMode;
 		int capped  = Math.min(current, MAX_MODE_CYCLE);
 		int next;
 		if (forward) next = (capped % MAX_MODE_CYCLE) + 1;
 		else next = ((capped - 2 + MAX_MODE_CYCLE) % MAX_MODE_CYCLE) + 1;
 		session.priceEditMode = next;
-		host.rerender();
+		flow.rerender();
 	}
 
-	private void openPriceAnvil(MultiPanelInventory<ShopAdminFlowSession> host, Player viewer,
-	                            ShopAdminFlowSession session) {
-		host.suspend();
+	private void openPriceAnvil(MenuFlow<ShopAdminFlowSession> flow, Player viewer, ShopAdminFlowSession session) {
+		flow.suspend();
 		new AnvilGUI.Builder()
 				.plugin(plugin)
 				.title("Set Price")
@@ -261,17 +258,16 @@ public final class PriceEditorView implements Panel<ShopAdminFlowSession> {
 					}
 				})
 				.onClose(state -> Bukkit.getScheduler().runTask(plugin, () -> {
-					host.resume();
-					host.switchTo(ShopAdminFlowSession.PANEL_PRICE_EDITOR);
+					flow.resume();
+					flow.switchTo(ShopAdminFlowSession.PANEL_PRICE_EDITOR);
 				}))
 				.open(viewer);
 	}
 
-	private void openModeAnvil(MultiPanelInventory<ShopAdminFlowSession> host, Player viewer,
-	                           ShopAdminFlowSession session) {
+	private void openModeAnvil(MenuFlow<ShopAdminFlowSession> flow, Player viewer, ShopAdminFlowSession session) {
 		int cap = Math.max(1, settings.getMaxModeMultiplier());
 
-		host.suspend();
+		flow.suspend();
 		new AnvilGUI.Builder()
 				.plugin(plugin)
 				.title("Set Multiplier")
@@ -289,7 +285,7 @@ public final class PriceEditorView implements Panel<ShopAdminFlowSession> {
 						session.priceEditMode = Math.min(value, cap);
 						if (value > cap) {
 							viewer.sendMessage(ChatUtil.color(
-									"&eMultiplier capped at &f" + cap + " &e(settings Max_Mode_Multiplier)."));
+									"&eMultiplier capped at &f" + cap + " &e(settings Shop.Max_Mode_Multiplier)."));
 						}
 						return List.of(AnvilGUI.ResponseAction.close());
 					} catch (NumberFormatException e) {
@@ -298,8 +294,8 @@ public final class PriceEditorView implements Panel<ShopAdminFlowSession> {
 					}
 				})
 				.onClose(state -> Bukkit.getScheduler().runTask(plugin, () -> {
-					host.resume();
-					host.switchTo(ShopAdminFlowSession.PANEL_PRICE_EDITOR);
+					flow.resume();
+					flow.switchTo(ShopAdminFlowSession.PANEL_PRICE_EDITOR);
 				}))
 				.open(viewer);
 	}

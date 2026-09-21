@@ -6,14 +6,16 @@
 
 ## Overview
 
-Stationary, damageable Citizens NPC bound to a shop key, with data-driven traits (mood). Per
-`project_shop_api_extraction` the framework lives in `gangland-ui/shop-api`; per `project_trader_simplification_phase1`
-the trait record is simplified (no bargain, no anger, no tip-view, no propose-price); trader mood is positive-only
-(`project_trader_no_anger_loop`). Purchase flows: **buy**, **barter** (pure item-for-item swap —
-`project_barter_pure_swap`), **tip**, **sell** (trade-in). Economy wiring goes through `TraderEconomyContract` so
-feature modules never import `Settings` / `Messages` directly (`feedback_settings_contract`).
+Stationary, damageable Citizens NPC bound to a shop key, with data-driven traits (mood). The headless shop
+framework (registry, purchase/sell/barter services, valuators) moved to Keystone's `keystone-shop` in 0.10.0
+(WS4, `gangland-ui/shop-api` deleted); the admin editor UI stays in `gangland-impl` (`shop/admin/{view,listener}`).
+Per `project_trader_simplification_phase1` the trait record is simplified (no bargain, no anger, no tip-view, no
+propose-price); trader mood is positive-only (`project_trader_no_anger_loop`). Purchase flows: **buy**, **barter**
+(pure item-for-item swap — `project_barter_pure_swap`), **tip**, **sell** (trade-in). Economy wiring goes through
+`TraderEconomyContract` so feature modules never import `Settings` / `Messages` directly
+(`feedback_settings_contract`).
 
-**Modules involved:** `gangland-ui/shop-api`, `gangland-features/cops-n-crooks` (NPC + mood),
+**Modules involved:** Keystone's `keystone-shop`, `gangland-features/cops-n-crooks` (NPC + mood),
 `gangland-impl` (listeners, persistence, commands).
 
 ---
@@ -129,7 +131,8 @@ feature modules never import `Settings` / `Messages` directly (`feedback_setting
 
 ## Regression Risks
 
-- `shop-api` — views, registry, admin, persistence (extracted per `project_shop_api_extraction`).
+- `keystone-shop` (registry, purchase/sell/barter services, persistence) + `gangland-impl`'s admin-editor views
+  (0.10.0, WS4 — moved out of the deleted `gangland-ui/shop-api`).
 - `TraderEconomyContract` — currency without importing `gangland-impl`.
 - Citizens integration — stationary + damageable + not-persistent.
 - NPC base shared with cops/civilians.

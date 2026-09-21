@@ -2,7 +2,7 @@ package org.luckyraven.gangland.shop.admin.view;
 
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.inventory.flow.FlowSession;
+import org.luckyraven.keystone.inventory.flow.FlowState;
 import org.luckyraven.keystone.item.ItemRefresherRegistry;
 import org.luckyraven.keystone.shop.*;
 import org.luckyraven.keystone.shop.event.ShopEditedEvent;
@@ -21,7 +21,7 @@ import java.util.function.Consumer;
  * original {@link ShopDefinition} at flow start; a {@link ShopEditedEvent} is fired on flow end with the rebuilt
  * definition.
  */
-public final class ShopAdminFlowSession implements FlowSession {
+public final class ShopAdminFlowSession implements FlowState {
 
 	public static final String PANEL_ADMIN           = "admin";
 	public static final String PANEL_PRICE_EDITOR    = "price_editor";

@@ -142,7 +142,8 @@ millions — floating-point drift on deposits, withdrawals, and interest accrual
 - **Where BigDecimal is used:** bank-side math (deposit, withdraw, interest accrual, tier upgrade cost,
   rolling-window totals).
 - **Where `double` is still fine:** pickup money drops, cash-in-hand arithmetic (small magnitudes, single-op
-  transactions), shop transaction totals handled by shop-api.
+  transactions), shop transaction totals handled by Keystone's `keystone-shop` (0.10.0 — moved out of the deleted
+  `gangland-ui/shop-api`).
 
 When you write integrations that touch the bank, prefer the BigDecimal-returning overloads.
 

@@ -186,8 +186,8 @@ Stationary, damageable Citizens NPCs that run full shops.
 - **Pure-swap barter** — no money changes hands on a barter; items are
   valued against the trader's trait and the shop's category rates
 - **Killable traders** — `Invulnerable: false` lets players rob a shop
-- **Shop API** — the UI, persistence, and transaction pipeline live in a
-  shared `gangland-ui/shop-api` module for future shop surfaces
+- **Shop API** — the persistence and transaction pipeline live in Keystone's
+  `keystone-shop` (0.10.0), reusable by any Keystone-based plugin, not just Gangland
 - **In-game admin editing** — spawn, edit shop key, edit trait, rename
   via anvil GUI, remove — no YAML wrestling day-to-day
 

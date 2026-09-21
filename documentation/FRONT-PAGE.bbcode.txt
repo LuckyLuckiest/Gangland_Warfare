@@ -136,7 +136,7 @@ Players don't just fight — they:[/SIZE]
 [*][SIZE=4][B]Per-player mood[/B] — positive-only scalar that raises on purchases and tips; trader gives up to [B]Min_Friend_Discount[/B] off at full mood[/SIZE]
 [*][SIZE=4][B]Pure-swap barter[/B] — no money changes hands on a barter; items are valued against the trader's trait and the shop's category rates[/SIZE]
 [*][SIZE=4][B]Killable traders[/B] — [B]Invulnerable: false[/B] lets players rob a shop[/SIZE]
-[*][SIZE=4][B]Shop API[/B] — the UI, persistence, and transaction pipeline live in a shared [B]gangland-ui/shop-api[/B] module for future shop surfaces[/SIZE]
+[*][SIZE=4][B]Shop API[/B] — the persistence and transaction pipeline live in Keystone's [B]keystone-shop[/B] (0.10.0), reusable by any Keystone-based plugin, not just Gangland[/SIZE]
 [*][SIZE=4][B]In-game admin editing[/B] — spawn, edit shop key, edit trait, rename via anvil GUI, remove — no YAML wrestling day-to-day[/SIZE]
 [/LIST]
 

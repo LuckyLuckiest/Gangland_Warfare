@@ -11,15 +11,15 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
+import org.luckyraven.keystone.inventory.component.BorderComponent;
+import org.luckyraven.keystone.inventory.component.ItemComponent;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
+import org.luckyraven.keystone.inventory.flow.Panel;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.util.NumberUtil;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
-import org.luckyraven.gangland.inventory.flow.Panel;
-import org.luckyraven.gangland.inventory.part.Fill;
-import org.luckyraven.gangland.inventory.util.InventoryUtil;
 import org.luckyraven.keystone.item.ItemRefresherRegistry;
 import org.luckyraven.keystone.shop.BarterCategory;
 import org.luckyraven.keystone.shop.EntryKind;
@@ -35,16 +35,25 @@ import java.util.*;
 /**
  * Root admin panel of the shop-admin flow. Three tabs (BUY entries / SELL categories / BARTER categories) with
  * pagination; clicks navigate to {@link PriceEditorView}, {@link SellCategoryItemsAdminView} or
- * {@link BarterCategoryItemsAdminView} via {@link MultiPanelInventory#switchTo(String)}. Template drops + shift-click
- * from the admin's inventory route through the {@code ShopAdminListener} which dispatches to {@link #handleClick} on
- * the active viewer's flow host.
+ * {@link BarterCategoryItemsAdminView} via {@link MenuFlow#switchTo(String)}. Template drops + shift-click from the
+ * admin's inventory route through the {@code ShopAdminListener} which dispatches to {@link #handleClick} on the
+ * active viewer's flow.
+ *
+ * <p>WS4 G1b (§0d): the BUY-tab template-drop mechanic is <strong>not</strong> an item-holding slot — the OLD code
+ * (and this rebuild, unchanged) reads the player's cursor/shift-clicked item and {@code event.setCancelled(true)}s
+ * the click <em>before</em> cloning it into a new {@link ShopItemEntry}; the original item never leaves the
+ * player's cursor or bottom inventory, so there is nothing for Keystone's item-return contract to hold or lose —
+ * see {@link #handleClick} and the WS4-G1b-report.md slot-by-slot table. This keeps the raw-listener-bridge shape
+ * {@code BarterView}/{@code BarterSessionListener} already use in production for the parts of a click Keystone's
+ * generic {@code Panel}/{@code ItemComponent} routing doesn't cover on its own (a shift-click from the player's own
+ * inventory).
  */
 @RequiredArgsConstructor
 public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 
 	private static final BigDecimal DEFAULT_NEW_ENTRY_PRICE = BigDecimal.valueOf(100);
 
-	private static final int   INVENTORY_SIZE   = 54;
+	private static final int   ROWS             = 6;
 	private static final int[] INTERIOR_SLOTS   = {
 			10, 11, 12, 13, 14, 15, 16,
 			19, 20, 21, 22, 23, 24, 25,
@@ -72,11 +81,11 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 	private final ShopUiSettings        uiSettings;
 	private final ShopDisplayResolver   displayResolver;
 
-	private final Map<Player, ActiveContext> active = new WeakHashMap<>();
+	private final Map<Player, MenuFlow<ShopAdminFlowSession>> active = new WeakHashMap<>();
 
 	@Override
-	public int size(ShopAdminFlowSession session) {
-		return INVENTORY_SIZE;
+	public int rows(ShopAdminFlowSession session) {
+		return ROWS;
 	}
 
 	@Override
@@ -85,35 +94,40 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 	}
 
 	@Override
-	public void render(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler, Player viewer,
-	                   ShopAdminFlowSession session) {
-		active.put(viewer, new ActiveContext(host, handler));
-		host.onEnd(s -> active.remove(viewer));
-
-		for (int i = 0; i < INVENTORY_SIZE; i++) handler.getInventory().setItem(i, null);
+	public void render(MenuFlow<ShopAdminFlowSession> flow, ChestMenuBuilder builder, ShopAdminFlowSession session) {
+		active.put(flow.viewer(), flow);
 
 		switch (session.currentKind) {
-			case BUY -> renderBuyList(host, handler, session);
-			case SELL -> renderSellList(host, handler, session);
-			case BARTER -> renderBarterList(host, handler, session);
+			case BUY -> renderBuyList(flow, builder, session);
+			case SELL -> renderSellList(flow, builder, session);
+			case BARTER -> renderBarterList(flow, builder, session);
 		}
 
-		renderTabs(host, handler, session);
-		renderNavigation(host, handler, session);
+		renderTabs(flow, builder, session);
+		renderNavigation(flow, builder, session);
 
-		InventoryUtil.createBoarder(handler,
-		                            new Fill(uiSettings.getInventoryFillName(), uiSettings.getInventoryFillItem()));
+		builder.border(BorderComponent.of(materialOf(uiSettings.getInventoryFillItem()))
+		                              .name(uiSettings.getInventoryFillName()));
+	}
+
+	/**
+	 * Called unconditionally by {@link ShopAdminFlow}'s flow-wide {@code onEnd} (the old per-render
+	 * {@code MultiPanelInventory#onEnd} registration has no equivalent on {@link MenuFlow}, whose {@code onEnd} is
+	 * fixed at flow construction).
+	 */
+	public void onFlowEnd(Player admin) {
+		active.remove(admin);
 	}
 
 	// ── Listener bridge (cursor-drop + shift-click add) ─────────────────
 
 	public void handleClick(InventoryClickEvent event) {
 		if (!(event.getWhoClicked() instanceof Player admin)) return;
-		ActiveContext ctx = active.get(admin);
-		if (ctx == null) return;
-		if (event.getInventory() != ctx.handler.getInventory()) return;
+		MenuFlow<ShopAdminFlowSession> flow = active.get(admin);
+		if (flow == null || flow.currentMenu() == null) return;
+		if (event.getInventory() != flow.currentMenu().bukkitInventory()) return;
 
-		ShopAdminFlowSession session = ctx.host.session();
+		ShopAdminFlowSession session = flow.state();
 		if (session.currentKind != EntryKind.BUY) return;
 
 		Inventory top    = event.getView().getTopInventory();
@@ -126,7 +140,7 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 			if (src == null || src.getType().isAir()) return;
 
 			event.setCancelled(true);
-			appendEntryAndNavigate(ctx, session, src);
+			appendEntryAndNavigate(flow, session, src);
 			return;
 		}
 
@@ -139,11 +153,12 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 			int slot = event.getSlot();
 			if (!isInterior(slot)) return;
 
-			appendEntryAndNavigate(ctx, session, cursor);
+			appendEntryAndNavigate(flow, session, cursor);
 		}
 	}
 
-	private void appendEntryAndNavigate(ActiveContext ctx, ShopAdminFlowSession session, ItemStack source) {
+	private void appendEntryAndNavigate(MenuFlow<ShopAdminFlowSession> flow, ShopAdminFlowSession session,
+	                                    ItemStack source) {
 		ItemStack refreshed = refresherRegistry.refresh(source, null);
 		int       newIndex  = session.buyEntries.size();
 		ShopItemEntry entry = new ShopItemEntry(newIndex, EntryKind.BUY, refreshed.clone(),
@@ -152,8 +167,8 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 		session.buyEntries.add(entry);
 		session.currentPage = newIndex / ENTRIES_PER_PAGE;
 
-		ctx.host.rerender();
-		ctx.host.viewer().sendMessage(
+		flow.rerender();
+		flow.viewer().sendMessage(
 				messages.shopAdminEntryAdded(displayResolver.cleanDisplayName(refreshed), newIndex,
 				                             session.currentPage + 1));
 	}
@@ -165,7 +180,7 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 
 	// ── Rendering ────────────────────────────────────────────────────────
 
-	private void renderBuyList(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler,
+	private void renderBuyList(MenuFlow<ShopAdminFlowSession> flow, ChestMenuBuilder builder,
 	                           ShopAdminFlowSession session) {
 		int base = session.currentPage * ENTRIES_PER_PAGE;
 		for (int i = 0; i < ENTRIES_PER_PAGE; i++) {
@@ -175,13 +190,13 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 
 			ShopItemEntry entry      = session.buyEntries.get(entryIndex);
 			final int     finalIndex = entryIndex;
-			handler.setItem(slot, buildBuyEntryDisplay(entry, entryIndex), false,
-			                (p, inv, b) -> onBuyLeftClick(host, session, finalIndex),
-			                (p, inv, b) -> onBuyRightClick(host, session, finalIndex));
+			builder.slot(slot, ItemComponent.of(buildBuyEntryDisplay(entry, entryIndex))
+			                                .onLeftClick(ctx -> onBuyLeftClick(flow, session, finalIndex))
+			                                .onRightClick(ctx -> onBuyRightClick(flow, session, finalIndex)));
 		}
 	}
 
-	private void renderSellList(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler,
+	private void renderSellList(MenuFlow<ShopAdminFlowSession> flow, ChestMenuBuilder builder,
 	                            ShopAdminFlowSession session) {
 		int base = session.currentPage * ENTRIES_PER_PAGE;
 		for (int i = 0; i < ENTRIES_PER_PAGE; i++) {
@@ -191,13 +206,13 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 
 			SellCategory category   = session.sellCategories.get(categoryIndex);
 			final int    finalIndex = categoryIndex;
-			handler.setItem(slot, buildCategoryDisplay(category), false,
-			                (p, inv, b) -> onSellCategoryLeftClick(host, session, finalIndex),
-			                (p, inv, b) -> onSellCategoryRightClick(host, session, finalIndex));
+			builder.slot(slot, ItemComponent.of(buildCategoryDisplay(category))
+			                                .onLeftClick(ctx -> onSellCategoryLeftClick(flow, session, finalIndex))
+			                                .onRightClick(ctx -> onSellCategoryRightClick(flow, session, finalIndex)));
 		}
 	}
 
-	private void renderBarterList(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler,
+	private void renderBarterList(MenuFlow<ShopAdminFlowSession> flow, ChestMenuBuilder builder,
 	                              ShopAdminFlowSession session) {
 		int base = session.currentPage * ENTRIES_PER_PAGE;
 		for (int i = 0; i < ENTRIES_PER_PAGE; i++) {
@@ -207,46 +222,51 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 
 			BarterCategory category   = session.barterCategories.get(categoryIndex);
 			final int      finalIndex = categoryIndex;
-			handler.setItem(slot, buildBarterCategoryDisplay(category), false,
-			                (p, inv, b) -> onBarterCategoryLeftClick(host, session, finalIndex),
-			                (p, inv, b) -> onBarterCategoryRightClick(host, session, finalIndex));
+			builder.slot(slot, ItemComponent.of(buildBarterCategoryDisplay(category))
+			                                .onLeftClick(ctx -> onBarterCategoryLeftClick(flow, session, finalIndex))
+			                                .onRightClick(
+					                                ctx -> onBarterCategoryRightClick(flow, session, finalIndex)));
 		}
 	}
 
-	private void renderTabs(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler,
+	private void renderTabs(MenuFlow<ShopAdminFlowSession> flow, ChestMenuBuilder builder,
 	                        ShopAdminFlowSession session) {
 		boolean     buyActive = session.currentKind == EntryKind.BUY;
 		ItemBuilder buyTab    = new ItemBuilder(material(XMaterial.EMERALD, Material.EMERALD));
 		buyTab.setDisplayName(buyActive ? "&a&l» BUY entries «" : "&aBUY entries")
 		      .setLore("&7Items this trader sells to players.", buyActive ? "&e(active)" : "&8(click to switch)");
-		handler.setItem(SLOT_TAB_BUY, buyTab, false, (p, inv, b) -> switchTab(host, session, EntryKind.BUY));
+		builder.slot(SLOT_TAB_BUY, ItemComponent.of(buyTab).onAnyClick(ctx -> switchTab(flow, session, EntryKind.BUY)));
 
 		boolean     sellActive = session.currentKind == EntryKind.SELL;
 		ItemBuilder sellTab    = new ItemBuilder(material(XMaterial.GOLD_INGOT, Material.GOLD_INGOT));
 		sellTab.setDisplayName(sellActive ? "&6&l» SELL categories «" : "&6SELL categories")
 		       .setLore("&7Item groups this trader buys from players.",
 		                sellActive ? "&e(active)" : "&8(click to switch)");
-		handler.setItem(SLOT_TAB_SELL, sellTab, false, (p, inv, b) -> switchTab(host, session, EntryKind.SELL));
+		builder.slot(SLOT_TAB_SELL,
+		            ItemComponent.of(sellTab).onAnyClick(ctx -> switchTab(flow, session, EntryKind.SELL)));
 
 		boolean     barterActive = session.currentKind == EntryKind.BARTER;
 		ItemBuilder barterTab    = new ItemBuilder(material(XMaterial.DIAMOND, Material.DIAMOND));
 		barterTab.setDisplayName(barterActive ? "&b&l» BARTER categories «" : "&bBARTER categories")
 		         .setLore("&7Item groups players can offer as", "&7pure-swap payment for buy entries.",
 		                  barterActive ? "&e(active)" : "&8(click to switch)");
-		handler.setItem(SLOT_TAB_BARTER, barterTab, false, (p, inv, b) -> switchTab(host, session, EntryKind.BARTER));
+		builder.slot(SLOT_TAB_BARTER,
+		            ItemComponent.of(barterTab).onAnyClick(ctx -> switchTab(flow, session, EntryKind.BARTER)));
 
 		if (session.currentKind == EntryKind.SELL) {
 			ItemBuilder add = new ItemBuilder(material(XMaterial.LIME_CONCRETE, Material.GREEN_WOOL));
 			add.setDisplayName("&a+ Add category").setLore("&7Click to create a new sell category.");
-			handler.setItem(SLOT_ADD_CATEGORY, add, false, (p, inv, b) -> openAddSellCategoryAnvil(host, session));
+			builder.slot(SLOT_ADD_CATEGORY,
+			            ItemComponent.of(add).onAnyClick(ctx -> openAddSellCategoryAnvil(flow, session)));
 		} else if (session.currentKind == EntryKind.BARTER) {
 			ItemBuilder add = new ItemBuilder(material(XMaterial.LIME_CONCRETE, Material.GREEN_WOOL));
 			add.setDisplayName("&a+ Add category").setLore("&7Click to create a new barter category.");
-			handler.setItem(SLOT_ADD_CATEGORY, add, false, (p, inv, b) -> openAddBarterCategoryAnvil(host, session));
+			builder.slot(SLOT_ADD_CATEGORY,
+			            ItemComponent.of(add).onAnyClick(ctx -> openAddBarterCategoryAnvil(flow, session)));
 		}
 	}
 
-	private void renderNavigation(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler,
+	private void renderNavigation(MenuFlow<ShopAdminFlowSession> flow, ChestMenuBuilder builder,
 	                              ShopAdminFlowSession session) {
 		int totalPages = totalPages(session);
 		int current    = session.currentPage;
@@ -254,7 +274,7 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 		if (current > 0) {
 			ItemBuilder prev = new ItemBuilder(Material.ARROW).setDisplayName("&e◄ Previous page")
 			                                                  .setLore("&7Go to page " + current + ".");
-			handler.setItem(SLOT_PREV, prev, false, (p, inv, b) -> changePage(host, session, current - 1));
+			builder.slot(SLOT_PREV, ItemComponent.of(prev).onAnyClick(ctx -> changePage(flow, session, current - 1)));
 		}
 
 		int entryCount = entryCount(session);
@@ -262,13 +282,13 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 		ItemBuilder info = new ItemBuilder(Material.PAPER);
 		info.setDisplayName("&bPage &f" + (current + 1) + "&7/&f" + totalPages)
 		    .setLore("&7" + entryCount + " item(s) total.", "&7" + ENTRIES_PER_PAGE + " slots per page.");
-		handler.setItem(SLOT_PAGE_INFO, info, false, (p, inv, b) -> { });
+		builder.slot(SLOT_PAGE_INFO, ItemComponent.of(info));
 
 		boolean hasNext = current < totalPages - 1 || isLastPageFull(session);
 		if (hasNext) {
 			ItemBuilder next = new ItemBuilder(Material.ARROW);
 			next.setDisplayName("&eNext page ►").setLore("&7Go to page " + (current + 2) + ".");
-			handler.setItem(SLOT_NEXT, next, false, (p, inv, b) -> changePage(host, session, current + 1));
+			builder.slot(SLOT_NEXT, ItemComponent.of(next).onAnyClick(ctx -> changePage(flow, session, current + 1)));
 		}
 	}
 
@@ -291,28 +311,26 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 		return count > 0 && count % ENTRIES_PER_PAGE == 0;
 	}
 
-	private void changePage(MultiPanelInventory<ShopAdminFlowSession> host, ShopAdminFlowSession session, int newPage) {
+	private void changePage(MenuFlow<ShopAdminFlowSession> flow, ShopAdminFlowSession session, int newPage) {
 		int maxPage = totalPages(session) - 1 + (isLastPageFull(session) ? 1 : 0);
 		int clamped = Math.max(0, Math.min(newPage, maxPage));
 		if (clamped == session.currentPage) return;
 		session.currentPage = clamped;
-		host.rerender();
-		Bukkit.getScheduler().runTask(plugin, () -> SOUND_PAGE.playSound(host.viewer()));
+		flow.rerender();
+		Bukkit.getScheduler().runTask(plugin, () -> SOUND_PAGE.playSound(flow.viewer()));
 	}
 
-	private void switchTab(MultiPanelInventory<ShopAdminFlowSession> host, ShopAdminFlowSession session,
-	                       EntryKind kind) {
+	private void switchTab(MenuFlow<ShopAdminFlowSession> flow, ShopAdminFlowSession session, EntryKind kind) {
 		if (session.currentKind == kind) return;
 		session.currentKind = kind;
 		session.currentPage = 0;
-		host.rerender();
-		Bukkit.getScheduler().runTask(plugin, () -> SOUND_TAB.playSound(host.viewer()));
+		flow.rerender();
+		Bukkit.getScheduler().runTask(plugin, () -> SOUND_TAB.playSound(flow.viewer()));
 	}
 
 	// ── Click handlers ───────────────────────────────────────────────────
 
-	private void onBuyLeftClick(MultiPanelInventory<ShopAdminFlowSession> host, ShopAdminFlowSession session,
-	                            int entryIndex) {
+	private void onBuyLeftClick(MenuFlow<ShopAdminFlowSession> flow, ShopAdminFlowSession session, int entryIndex) {
 		if (session.currentKind != EntryKind.BUY) return;
 		if (entryIndex < 0 || entryIndex >= session.buyEntries.size()) return;
 
@@ -331,11 +349,10 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 			session.buyEntries.set(entryIndex,
 			                       new ShopItemEntry(entryIndex, existing.getKind(), existing.getItem(), value));
 		};
-		host.switchTo(ShopAdminFlowSession.PANEL_PRICE_EDITOR);
+		flow.switchTo(ShopAdminFlowSession.PANEL_PRICE_EDITOR);
 	}
 
-	private void onBuyRightClick(MultiPanelInventory<ShopAdminFlowSession> host, ShopAdminFlowSession session,
-	                             int entryIndex) {
+	private void onBuyRightClick(MenuFlow<ShopAdminFlowSession> flow, ShopAdminFlowSession session, int entryIndex) {
 		if (session.currentKind != EntryKind.BUY) return;
 		if (entryIndex < 0 || entryIndex >= session.buyEntries.size()) return;
 
@@ -343,21 +360,21 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 		int maxPage = totalPages(session) - 1;
 		if (session.currentPage > maxPage) session.currentPage = maxPage;
 
-		host.rerender();
-		host.viewer().sendMessage(messages.shopAdminEntryRemoved(entryIndex));
+		flow.rerender();
+		flow.viewer().sendMessage(messages.shopAdminEntryRemoved(entryIndex));
 	}
 
-	private void onSellCategoryLeftClick(MultiPanelInventory<ShopAdminFlowSession> host,
-	                                     ShopAdminFlowSession session, int categoryIndex) {
+	private void onSellCategoryLeftClick(MenuFlow<ShopAdminFlowSession> flow, ShopAdminFlowSession session,
+	                                     int categoryIndex) {
 		if (session.currentKind != EntryKind.SELL) return;
 		if (categoryIndex < 0 || categoryIndex >= session.sellCategories.size()) return;
 
 		session.sellCategoryInEdit = session.sellCategories.get(categoryIndex);
-		host.switchTo(ShopAdminFlowSession.PANEL_SELL_CATEGORY);
+		flow.switchTo(ShopAdminFlowSession.PANEL_SELL_CATEGORY);
 	}
 
-	private void onSellCategoryRightClick(MultiPanelInventory<ShopAdminFlowSession> host,
-	                                      ShopAdminFlowSession session, int categoryIndex) {
+	private void onSellCategoryRightClick(MenuFlow<ShopAdminFlowSession> flow, ShopAdminFlowSession session,
+	                                      int categoryIndex) {
 		if (session.currentKind != EntryKind.SELL) return;
 		if (categoryIndex < 0 || categoryIndex >= session.sellCategories.size()) return;
 
@@ -365,21 +382,21 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 		int          maxPage = totalPages(session) - 1;
 		if (session.currentPage > maxPage) session.currentPage = Math.max(0, maxPage);
 
-		host.rerender();
-		host.viewer().sendMessage(messages.shopAdminCategoryRemoved(removed.getId()));
+		flow.rerender();
+		flow.viewer().sendMessage(messages.shopAdminCategoryRemoved(removed.getId()));
 	}
 
-	private void onBarterCategoryLeftClick(MultiPanelInventory<ShopAdminFlowSession> host,
-	                                       ShopAdminFlowSession session, int categoryIndex) {
+	private void onBarterCategoryLeftClick(MenuFlow<ShopAdminFlowSession> flow, ShopAdminFlowSession session,
+	                                       int categoryIndex) {
 		if (session.currentKind != EntryKind.BARTER) return;
 		if (categoryIndex < 0 || categoryIndex >= session.barterCategories.size()) return;
 
 		session.barterCategoryInEdit = session.barterCategories.get(categoryIndex);
-		host.switchTo(ShopAdminFlowSession.PANEL_BARTER_CATEGORY);
+		flow.switchTo(ShopAdminFlowSession.PANEL_BARTER_CATEGORY);
 	}
 
-	private void onBarterCategoryRightClick(MultiPanelInventory<ShopAdminFlowSession> host,
-	                                        ShopAdminFlowSession session, int categoryIndex) {
+	private void onBarterCategoryRightClick(MenuFlow<ShopAdminFlowSession> flow, ShopAdminFlowSession session,
+	                                        int categoryIndex) {
 		if (session.currentKind != EntryKind.BARTER) return;
 		if (categoryIndex < 0 || categoryIndex >= session.barterCategories.size()) return;
 
@@ -387,15 +404,14 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 		int            maxPage = totalPages(session) - 1;
 		if (session.currentPage > maxPage) session.currentPage = Math.max(0, maxPage);
 
-		host.rerender();
-		host.viewer().sendMessage(messages.shopAdminCategoryRemoved(removed.getId()));
+		flow.rerender();
+		flow.viewer().sendMessage(messages.shopAdminCategoryRemoved(removed.getId()));
 	}
 
 	// ── Anvil category creation ──────────────────────────────────────────
 
-	private void openAddSellCategoryAnvil(MultiPanelInventory<ShopAdminFlowSession> host,
-	                                      ShopAdminFlowSession session) {
-		host.suspend();
+	private void openAddSellCategoryAnvil(MenuFlow<ShopAdminFlowSession> flow, ShopAdminFlowSession session) {
+		flow.suspend();
 		new AnvilGUI.Builder()
 				.plugin(plugin)
 				.title("New category id")
@@ -403,7 +419,7 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 				.text("category_id")
 				.onClick((slot, state) -> {
 					if (slot != AnvilGUI.Slot.OUTPUT) return Collections.emptyList();
-					Player admin = host.viewer();
+					Player admin = flow.viewer();
 
 					String raw = state.getText() == null ? "" : state.getText().trim();
 					if (raw.isEmpty()) {
@@ -424,15 +440,14 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 					return List.of(AnvilGUI.ResponseAction.close());
 				})
 				.onClose(state -> Bukkit.getScheduler().runTask(plugin, () -> {
-					host.resume();
-					host.switchTo(ShopAdminFlowSession.PANEL_ADMIN);
+					flow.resume();
+					flow.switchTo(ShopAdminFlowSession.PANEL_ADMIN);
 				}))
-				.open(host.viewer());
+				.open(flow.viewer());
 	}
 
-	private void openAddBarterCategoryAnvil(MultiPanelInventory<ShopAdminFlowSession> host,
-	                                        ShopAdminFlowSession session) {
-		host.suspend();
+	private void openAddBarterCategoryAnvil(MenuFlow<ShopAdminFlowSession> flow, ShopAdminFlowSession session) {
+		flow.suspend();
 		new AnvilGUI.Builder()
 				.plugin(plugin)
 				.title("New barter category id")
@@ -440,7 +455,7 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 				.text("category_id")
 				.onClick((slot, state) -> {
 					if (slot != AnvilGUI.Slot.OUTPUT) return Collections.emptyList();
-					Player admin = host.viewer();
+					Player admin = flow.viewer();
 
 					String raw = state.getText() == null ? "" : state.getText().trim();
 					if (raw.isEmpty()) {
@@ -461,10 +476,10 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 					return List.of(AnvilGUI.ResponseAction.close());
 				})
 				.onClose(state -> Bukkit.getScheduler().runTask(plugin, () -> {
-					host.resume();
-					host.switchTo(ShopAdminFlowSession.PANEL_ADMIN);
+					flow.resume();
+					flow.switchTo(ShopAdminFlowSession.PANEL_ADMIN);
 				}))
-				.open(host.viewer());
+				.open(flow.viewer());
 	}
 
 	private boolean hasSellCategory(ShopAdminFlowSession session, String id) {
@@ -529,6 +544,8 @@ public final class ShopAdminView implements Panel<ShopAdminFlowSession> {
 		return stack != null ? stack : new ItemStack(fallback);
 	}
 
-	private record ActiveContext(MultiPanelInventory<ShopAdminFlowSession> host, InventoryHandler handler) { }
+	private static Material materialOf(String name) {
+		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
+	}
 
 }
