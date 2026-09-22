@@ -26,10 +26,6 @@ import org.luckyraven.gangland.data.teleportation.WaypointManager;
 import org.luckyraven.keystone.economy.EconomyHandler;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionStore;
-import org.luckyraven.gangland.gang.GangManager;
-import org.luckyraven.gangland.gang.rank.RankManager;
-import org.luckyraven.gangland.gang.vault.permission.VaultPermissionBridge;
-import org.luckyraven.keystone.vault.permission.VaultOfflinePermissionService;
 import org.luckyraven.keystone.sound.ResourcePackTracker;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.keystone.update.UpdateNotifier;
@@ -69,10 +65,9 @@ public final class Gangland extends JavaPlugin {
 			EconomyHandler.setVaultEconomy(null);
 		}
 
-		// vault soft dependency permission check
-		if (VaultPermissionBridge.isEnabled()) {
-			VaultPermissionBridge.set(null);
-		}
+		// Vault permissions teardown moved to GangModule.onDisabled() (WS5 G2 step 16) — VaultPermissionBridge is
+		// module-owned; impl-side context.disableModules() (inside ShutdownSequence below) runs the module's
+		// onDisabled() before this method returns.
 
 		// uninstall the resource-pack tracker so custom-sound gating doesn't outlive the plugin
 		ResourcePackTracker tracker = ResourcePackTracker.active();
@@ -120,11 +115,8 @@ public final class Gangland extends JavaPlugin {
 		metrics.addCustomChart(new SingleLineChart("number_of_inventories",
 		                                           () -> context.get(InventoryDefinitionStore.class).size()));
 
-		// number of ranks
-		metrics.addCustomChart(new SingleLineChart("number_of_ranks", () -> context.get(RankManager.class).size()));
-
-		// number of gangs
-		metrics.addCustomChart(new SingleLineChart("number_of_gangs", () -> context.get(GangManager.class).size()));
+		// number_of_ranks / number_of_gangs charts dropped (WS5 G2 step 16): RankManager/GangManager are
+		// module-owned now and impl can't name them; not worth a new cross-boundary seam for two bStats counters.
 
 		// number of waypoints
 		metrics.addCustomChart(
@@ -179,16 +171,8 @@ public final class Gangland extends JavaPlugin {
 			EconomyHandler.setVaultEconomy(rsp.getProvider());
 		});
 
-		Dependency vaultPermissions = new Dependency("Vault", "Vault permissions", Dependency.Type.SOFT);
-		vaultPermissions.validate(() -> {
-			// Keystone's offline-capable service owns the Vault plumbing (async dispatch for offline targets,
-			// protected default group); the domain bridge stays a thin facade over it.
-			VaultOfflinePermissionService service = VaultOfflinePermissionService.fromServices(this);
-
-			if (service == null) return;
-
-			VaultPermissionBridge.set(service);
-		});
+		// Vault permissions linking moved to GangModule.onEnabled() (WS5 G2 step 16) — VaultPermissionBridge is
+		// module-owned; the module runs its own fromServices/set(...) once the module loader enables it.
 
 		Dependency viaVersion = new Dependency("ViaVersion", Dependency.Type.SOFT);
 		viaVersion.validate(() -> this.viaAPI = Via.getAPI());

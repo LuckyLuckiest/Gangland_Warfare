@@ -6,7 +6,7 @@ import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.database.GanglandDatabase;
-import org.luckyraven.gangland.database.tables.gang.GangTable;
+import org.luckyraven.gangland.database.tables.fk.ForeignGangTable;
 import org.luckyraven.gangland.database.tables.waypoint.WaypointTable;
 import org.luckyraven.keystone.persistence.database.Database;
 import org.luckyraven.keystone.persistence.database.DatabaseHelper;
@@ -88,7 +88,7 @@ public class WaypointManager implements BeanLifecycle, WaypointLookupContract {
 	}
 
 	public void refactorIds() {
-		WaypointTable  waypointTable = new WaypointTable(new GangTable());
+		WaypointTable  waypointTable = new WaypointTable(new ForeignGangTable());
 		DatabaseHelper helper        = new DatabaseHelper(gangland, database);
 
 		helper.runQueries(database -> {

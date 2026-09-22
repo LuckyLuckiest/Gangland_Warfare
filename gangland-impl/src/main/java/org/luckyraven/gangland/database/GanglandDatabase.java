@@ -3,11 +3,6 @@ package org.luckyraven.gangland.database;
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.database.repositories.rank.RankParentRepository;
-import org.luckyraven.gangland.database.repositories.rank.RankRepository;
-import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gang.rank.Rank;
-import org.luckyraven.gangland.gang.rank.RankParent;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
 import org.luckyraven.keystone.persistence.database.DatabaseManager;
 import org.luckyraven.keystone.persistence.database.DatabaseSettingsProvider;
@@ -16,7 +11,6 @@ import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
 import org.luckyraven.keystone.persistence.database.backend.MysqlBackend;
 import org.luckyraven.keystone.persistence.database.backend.SqliteBackend;
 import org.luckyraven.keystone.persistence.database.component.Table;
-import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 import java.io.File;
@@ -131,20 +125,14 @@ public class GanglandDatabase extends DatabaseHandler {
 		}
 	}
 
+	/**
+	 * No-op: rank seeding moved to {@code RankManager.seedInitialRanks()} (WS5 G2 step 7b) — impl can no longer
+	 * name {@code RankRepository}/{@code RankParentRepository}. This abstract method still fires once, right
+	 * after {@link #createTables()}, before any bean exists to receive module-owned seeding logic; the module's
+	 * own {@code RankManager.initialize()} (LIFECYCLE phase) seeds instead, immediately before it loads ranks.
+	 */
 	@Override
 	public void insertInitialData() throws SQLException {
-		IRepository<Rank>       rankRepo       = repositoryRegistry.getRepository(Rank.class);
-		IRepository<RankParent> rankParentRepo = repositoryRegistry.getRepository(RankParent.class);
-
-		if (!(rankRepo instanceof RankRepository repo)) return;
-		if (!(rankParentRepo instanceof RankParentRepository parentRepo)) return;
-
-		String head = Settings.getGangRankHead();
-		String tail = Settings.getGangRankTail();
-
-		int[] ids = repo.insertInitialRanks(head, tail);
-
-		parentRepo.insertInitialRelation(ids[0], ids[1]);
 	}
 
 	@Override

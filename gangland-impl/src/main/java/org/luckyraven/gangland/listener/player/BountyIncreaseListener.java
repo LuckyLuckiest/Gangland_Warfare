@@ -1,31 +1,23 @@
 package org.luckyraven.gangland.listener.player;
 
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
-import org.luckyraven.gangland.events.gang.GangBountyEvent;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.core.events.bounty.BountyEvent;
 import org.luckyraven.gangland.core.events.user.UserBountyEvent;
 import org.luckyraven.gangland.core.user.User;
-import org.luckyraven.gangland.core.user.UserManager;
 
-import java.util.List;
 import java.util.Objects;
 
+/**
+ * {@code onGangBountyIncrease} moved to the gang module's {@code GangBountyMessageListener} (WS5 G2 step 15b) —
+ * {@code GangBountyEvent} is module-owned (it carries a {@code Gang}), so impl can no longer name it.
+ */
 @ListenerHandler
 public class BountyIncreaseListener implements Listener {
-
-	private final UserManager<Player> userManager;
-
-	public BountyIncreaseListener(@Qualifier("online") UserManager<Player> userManager) {
-		this.userManager = userManager;
-	}
 
 	@EventHandler
 	public void onUserBountyIncrease(UserBountyEvent event) {
@@ -37,19 +29,6 @@ public class BountyIncreaseListener implements Listener {
 		if (event.isCancelled()) return;
 
 		Objects.requireNonNull(user.getUser().getPlayer()).sendMessage(bountyIncrement);
-	}
-
-	@EventHandler
-	public void onGangBountyIncrease(GangBountyEvent event) {
-		Gang gang = event.getGang();
-
-		if (gang == null || event.isCancelled()) return;
-
-		List<User<Player>> onlineMembers = gang.getOnlineMembers(userManager::getUser);
-
-		String bountyIncrement = getBountyIncrementMessage(event);
-
-		onlineMembers.forEach(member -> member.getUser().sendMessage(bountyIncrement));
 	}
 
 	private String getBountyIncrementMessage(BountyEvent event) {

@@ -13,7 +13,6 @@ import org.luckyraven.gangland.data.plugin.PluginManager;
 import org.luckyraven.gangland.data.user.UserDataLoader;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
@@ -44,11 +43,10 @@ public class SchedulingConfig {
 	                                                     @Qualifier("online") UserManager<Player> userManager,
 	                                                     @Qualifier("offline")
 														 UserManager<OfflinePlayer> offlineUserManager,
-	                                                     MemberManager memberManager,
 	                                                     UniqueItemAddon uniqueItemAddon,
 	                                                     UserDataLoader userDataLoader,
 	                                                     @SuppressWarnings("unused") FileManager fileManager) {
-		return new PlayerBootstrapService(gangland, ganglandDatabase, userManager, offlineUserManager, memberManager,
+		return new PlayerBootstrapService(gangland, ganglandDatabase, userManager, offlineUserManager,
 		                                  userDataLoader, uniqueItemAddon);
 	}
 

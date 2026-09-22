@@ -25,8 +25,6 @@ import org.luckyraven.gangland.data.placeholder.PlaceholderService;
 import org.luckyraven.gangland.data.placeholder.worker.GanglandPlaceholder;
 import org.luckyraven.gangland.data.teleportation.Waypoint;
 import org.luckyraven.gangland.data.teleportation.WaypointTeleport;
-import org.luckyraven.gangland.gang.GangManager;
-import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.listener.ListenerManager;
@@ -99,14 +97,13 @@ public class WiringConfig {
 	 */
 	@Bean
 	public GanglandPlaceholder ganglandPlaceholder(@Qualifier("online") UserManager<Player> userManager,
-	                                               MemberManager memberManager,
-	                                               GangManager gangManager,
 	                                               UniqueItemAddon uniqueItemAddon,
 	                                               BankTiers bankTiers,
+	                                               DependencyContainer container,
 	                                               PlaceholderService placeholderService) {
 		GanglandPlaceholder placeholder = new GanglandPlaceholder(Gangland.FULL_PREFIX, Replacer.Closure.PERCENT,
-		                                                          userManager, memberManager, gangManager,
-		                                                          uniqueItemAddon, bankTiers, placeholderService);
+		                                                          userManager, uniqueItemAddon, bankTiers,
+		                                                          container, placeholderService);
 		Bukkit.getServicesManager()
 		      .register(PlaceholderProvider.class, placeholder.asProvider(), gangland, ServicePriority.Normal);
 		log.info("Placeholder provider published for external consumers (e.g. Plaque)");

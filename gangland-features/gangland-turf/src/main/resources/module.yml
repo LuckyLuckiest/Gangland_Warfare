@@ -6,4 +6,5 @@ Main: org.luckyraven.gangland.turf.TurfModule
 Host_Api: 2.0
 Depends:
   - civilians
+  - gang
 Artifact: org.luckyraven:gangland-turf

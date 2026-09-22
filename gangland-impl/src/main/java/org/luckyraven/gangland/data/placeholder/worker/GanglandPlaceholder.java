@@ -6,22 +6,19 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.data.economy.BankTierView;
 import org.luckyraven.gangland.data.economy.BankTiers;
-import org.luckyraven.keystone.color.ColorUtil;
 import org.luckyraven.keystone.placeholder.PlaceholderHandler;
 import org.luckyraven.keystone.placeholder.effect.ConditionalFlashWrapper;
 import org.luckyraven.keystone.placeholder.effect.FlashPlaceholderWrapper;
 import org.luckyraven.keystone.placeholder.replacer.Replacer;
 import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.data.placeholder.PlaceholderService;
+import org.luckyraven.gangland.data.placeholder.extension.PlaceholderContributions;
 import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.keystone.economy.bank.Bank;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.file.configuration.SettingsRedaction;
-import org.luckyraven.gangland.gang.Gang;
-import org.luckyraven.gangland.gang.GangManager;
-import org.luckyraven.gangland.gang.member.Member;
-import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.core.user.Level;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
@@ -36,26 +33,42 @@ import java.util.Map;
 public class GanglandPlaceholder extends PlaceholderHandler {
 
 	private final UserManager<Player> userManager;
-	private final MemberManager       memberManager;
-	private final GangManager         gangManager;
 	private final UniqueItemAddon     uniqueItemAddon;
 	private final BankTiers           bankTiers;
+	private final DependencyContainer container;
+
+	// Lazily resolved on first placeholder request, not at construction: GanglandPlaceholder is a CONFIG-phase
+	// bean, and a module's PlaceholderContribution bean has no declared parameter edge forcing it to construct
+	// first within that same phase (unlike CommandContributions, which is only ever looked up from the later
+	// COMMAND phase, after every module bean is guaranteed to exist). Any placeholder request happens well after
+	// bootstrap completes, so resolving here instead is always safe. Cached forever once resolved (W54 F7): safe
+	// because modules load once per start (Keystone's ModuleLoader) — the set of installed PlaceholderContribution
+	// beans never changes after boot/reload, so there is no later point where re-resolving could see a different
+	// answer.
+	private volatile PlaceholderContributions contributions;
 
 	public GanglandPlaceholder(String prefix,
 	                           Replacer.Closure closure,
 	                           UserManager<Player> userManager,
-	                           MemberManager memberManager,
-	                           GangManager gangManager,
 	                           UniqueItemAddon uniqueItemAddon,
 	                           BankTiers bankTiers,
+	                           DependencyContainer container,
 	                           PlaceholderService placeholderService) {
 		super(prefix, closure);
-		this.userManager      = userManager;
-		this.memberManager    = memberManager;
-		this.gangManager      = gangManager;
-		this.uniqueItemAddon  = uniqueItemAddon;
-		this.bankTiers        = bankTiers;
+		this.userManager     = userManager;
+		this.uniqueItemAddon = uniqueItemAddon;
+		this.bankTiers       = bankTiers;
+		this.container       = container;
 		placeholderService.register(this);
+	}
+
+	private PlaceholderContributions contributions() {
+		PlaceholderContributions current = contributions;
+		if (current == null) {
+			current = PlaceholderContributions.from(container);
+			contributions = current;
+		}
+		return current;
 	}
 
 	private static String formatUntil(@Nullable Instant target) {
@@ -130,10 +143,12 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (param.contains("bank_")) value = getBank(player, param);
 		if (value != null) return value;
 
-		if (param.contains("gang_")) value = getGang(player, param);
+		if (param.contains("unique-item_")) value = getUniqueItem(param);
 		if (value != null) return value;
 
-		if (param.contains("unique-item_")) value = getUniqueItem(param);
+		// gang_* and the member-touching user_* placeholders (has-gang, gang-id, rank, ...) are gang-module-owned;
+		// GangPlaceholderContribution answers them when the module is installed, "NA" otherwise (S4).
+		value = contributions().resolve(player, param);
 		if (value != null) return value;
 
 		value = getSetting(param);
@@ -164,25 +179,11 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 	@Nullable
 	private String getUser(OfflinePlayer player, String parameter) {
-		// for member
-		Member member  = memberManager.getMember(player.getUniqueId());
 		String userStr = "user_";
 
-		if (member == null) return null;
-
-		if (parameter.equals(userStr + "has-gang")) return String.valueOf(member.hasGang());
-		if (parameter.equals(userStr + "gang-id")) return !member.hasGang() ? null : String.valueOf(member.getGangId());
-		if (parameter.equals(userStr + "gang-join-date"))
-			return !member.hasGang() ? null : member.getGangJoinDateString();
-		if (parameter.equals(userStr + "contribution"))
-			return !member.hasGang() ? null : Settings.formatDouble(member.getContribution());
-		if (parameter.equals(userStr + "contributed-amount")) {
-			return !member.hasGang() ?
-			       null :
-			       NumberUtil.valueFormat(Settings.getGangContributionRate() * member.getContribution());
-		}
-		if (parameter.equals(userStr + "has-rank")) return String.valueOf(member.hasRank());
-		if (parameter.equals(userStr + "rank")) return member.getRank() == null ? null : member.getRank().getName();
+		// The member-touching user_* placeholders (has-gang, gang-id, gang-join-date, contribution,
+		// contributed-amount, has-rank, rank) are gang-module-owned — GangPlaceholderContribution answers them;
+		// this method only ever sees the pure-User family below.
 
 		// for user
 		Player onlinePlayer = player.getPlayer();
@@ -275,51 +276,6 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		}
 
 		return null;
-	}
-
-	@Nullable
-	private String getGang(OfflinePlayer player, String parameter) {
-		// for gang
-		Member member = memberManager.getMember(player.getUniqueId());
-
-		if (member == null) return null;
-
-		Gang   gang    = gangManager.getGang(member.getGangId());
-		String gangStr = "gang_";
-
-		if (gang == null) return null;
-
-		// info
-		if (parameter.equals(gangStr + "id")) return String.valueOf(gang.getId());
-		if (parameter.equals(gangStr + "name")) return gang.getName();
-		if (parameter.equals(gangStr + "display-name")) return gang.getDisplayNameString();
-		if (parameter.equals(gangStr + "state")) return gang.getState().name().toLowerCase();
-		if (parameter.equals(gangStr + "color")) return gang.getColor();
-		if (parameter.equals(gangStr + "color-name")) return gang.getColor().toLowerCase().replace("_", " ");
-		if (parameter.equals(gangStr + "color-code")) return ColorUtil.getColorCode(gang.getColor());
-		if (parameter.equals(gangStr + "description")) return gang.getDescription();
-		if (parameter.equals(gangStr + "created")) return gang.getDateCreatedString();
-
-		// economy
-		if (parameter.equals(gangStr + "balance")) return NumberUtil.valueFormat(gang.getEconomy().getAmount());
-
-		// bounty
-		if (parameter.equals(gangStr + "bounty")) return NumberUtil.valueFormat(gang.getBounty().getAmount());
-		if (parameter.equals(gangStr + "has-bounty")) return String.valueOf(gang.getBounty().hasBounty());
-
-		// members
-		if (parameter.equals(gangStr + "members-size")) return String.valueOf(gang.getMembers().size());
-		if (parameter.equals(gangStr + "online-members-size"))
-			return String.valueOf(gang.getOnlineMembers(userManager::getUser).size());
-		if (parameter.equals(gangStr + "offline-members-size"))
-			return String.valueOf(gang.getMembers().size() - gang.getOnlineMembers(userManager::getUser).size());
-
-		// ally
-		if (parameter.equals(gangStr + "ally-list")) return gang.getAllyListString();
-		if (parameter.equals(gangStr + "ally-size")) return String.valueOf(gang.getAllies().size());
-
-		// level
-		return getLevelPlaceholder(parameter, gangStr, gang.getLevel());
 	}
 
 	@Nullable

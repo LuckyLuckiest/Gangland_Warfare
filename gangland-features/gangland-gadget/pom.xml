@@ -53,14 +53,9 @@
             <artifactId>gangland-core</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!-- WS5 G0 (step 4): gangland-api no longer re-exports gangland-domain, and GanglandCarGangs/CarCommand/
-             sign classes still name gang.* types (Gang/GangManager/...) that haven't moved to a module yet —
-             declare the dependency directly instead of relying on the transitive one. -->
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>gangland-domain</artifactId>
-            <scope>provided</scope>
-        </dependency>
+        <!-- WS5 G2 S1: GanglandCarGangs rewritten onto the always-present GangMembership holder (gangland-api) —
+             gadget is gang-module-free again, gangland-domain (now empty; Gang/GangManager/... moved into the
+             gang module) is no longer a dependency. -->
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>gangland-item</artifactId>

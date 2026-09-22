@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.turf.support;
 
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.gang.contract.UserLookupContract;
+import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.core.user.User;
 
 import java.util.IdentityHashMap;

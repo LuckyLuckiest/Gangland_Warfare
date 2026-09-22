@@ -8,10 +8,9 @@ import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.gangland.data.placeholder.PlaceholderService;
 import org.luckyraven.gangland.data.placeholder.worker.GanglandPlaceholder;
-import org.luckyraven.gangland.gang.GangManager;
-import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.placeholder.PlaceholderProvider;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 
@@ -45,15 +44,13 @@ class WiringConfigTest {
 
 			@SuppressWarnings("unchecked")
 			UserManager<Player> userManager        = mock(UserManager.class);
-			MemberManager       memberManager       = mock(MemberManager.class);
-			GangManager         gangManager         = mock(GangManager.class);
 			UniqueItemAddon     uniqueItemAddon     = mock(UniqueItemAddon.class);
 			BankTiers           bankTiers           = mock(BankTiers.class);
+			DependencyContainer container           = mock(DependencyContainer.class);
 			PlaceholderService  placeholderService  = mock(PlaceholderService.class);
 
-			GanglandPlaceholder placeholder = config.ganglandPlaceholder(userManager, memberManager, gangManager,
-			                                                             uniqueItemAddon, bankTiers,
-			                                                             placeholderService);
+			GanglandPlaceholder placeholder = config.ganglandPlaceholder(userManager, uniqueItemAddon, bankTiers,
+			                                                             container, placeholderService);
 
 			assertNotNull(placeholder);
 			verify(bukkit.servicesManager()).register(eq(PlaceholderProvider.class), any(PlaceholderProvider.class),

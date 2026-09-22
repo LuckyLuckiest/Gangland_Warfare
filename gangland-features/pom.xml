@@ -24,6 +24,7 @@
         <module>gangland-civilians</module>
         <module>gangland-npc-shops</module>
         <module>gangland-lootchest</module>
+        <module>gangland-gang</module>
     </modules>
 
 </project>

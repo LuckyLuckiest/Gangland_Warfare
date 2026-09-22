@@ -1,51 +1,31 @@
 package org.luckyraven.gangland.command.sub.debug;
 
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.gangland.command.Command;
+import org.luckyraven.gangland.command.extension.CommandContributions;
 import org.luckyraven.keystone.command.argument.Argument;
-import org.luckyraven.keystone.command.argument.types.OptionalArgument;
-import org.luckyraven.keystone.bean.Qualifier;
+import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.bean.command.CommandHandler;
-import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.gang.Gang;
-import org.luckyraven.gangland.gang.GangManager;
-import org.luckyraven.gangland.gang.member.Member;
-import org.luckyraven.gangland.gang.member.MemberManager;
-import org.luckyraven.gangland.gang.rank.Rank;
-import org.luckyraven.gangland.gang.rank.RankAssignmentPolicy;
-import org.luckyraven.gangland.gang.rank.RankManager;
-import org.luckyraven.gangland.core.user.User;
-import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Stream;
-
+/**
+ * {@code /glw option} — {@code click resource} (the resourcepack reconnect help text) is the only branch that
+ * stayed here; {@code gang rank <target> <rank>} moved wholesale to the gang module's
+ * {@code GangOptionContribution} (WS5 G2 step 14) — every branch it had was gang/rank logic.
+ */
 @CommandHandler
 public final class ComponentExecutorCommand extends Command {
 
-	private final UserManager<Player> userManager;
-	private final MemberManager       memberManager;
-	private final GangManager         gangManager;
-	private final RankManager         rankManager;
+	/**
+	 * Sub-arguments a runtime module attaches under {@code option} (the gang module contributes {@code gang}).
+	 * Empty when no module is installed — the core never names them.
+	 */
+	private final CommandContributions contributions;
 
-	public ComponentExecutorCommand(JavaPlugin gangland,
-	                                @Qualifier("online") UserManager<Player> userManager,
-	                                MemberManager memberManager,
-	                                GangManager gangManager,
-	                                RankManager rankManager) {
+	public ComponentExecutorCommand(JavaPlugin gangland, DependencyContainer container) {
 		super(gangland, "option", false);
-		this.userManager   = userManager;
-		this.memberManager = memberManager;
-		this.gangManager   = gangManager;
-		this.rankManager   = rankManager;
+		this.contributions = CommandContributions.from(container);
 	}
 
 	@Override
@@ -53,11 +33,10 @@ public final class ComponentExecutorCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument gang     = gangArgument(userManager, memberManager, gangManager, rankManager);
 		Argument resource = resourcePack();
 
-		getArgument().addSubArgument(gang);
 		getArgument().addSubArgument(resource);
+		getArgument().addAllSubArguments(contributions.createFor("option", getArgumentTree(), getArgument()));
 	}
 
 	@Override
@@ -80,169 +59,6 @@ public final class ComponentExecutorCommand extends Command {
 		click.addSubArgument(resource);
 
 		return click;
-	}
-
-	private Argument gangArgument(UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
-	                              RankManager rankManager) {
-		Argument gang = new Argument(getPlugin(), "gang", getArgumentTree());
-
-		Argument rank = new Argument(getPlugin(), "rank", getArgumentTree());
-
-		Argument target = new OptionalArgument(getPlugin(), getArgumentTree(), (argument, sender, args) -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-
-			if (user == null) return;
-
-			if (!user.hasGang()) {
-				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
-				return;
-			}
-
-			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<rank>"));
-		}, sender -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-
-			if (user == null) return null;
-
-			if (!user.hasGang()) {
-				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
-				return null;
-			}
-
-			// get all the members in the gang
-			Gang         userGang = gangManager.getGang(user.getGangId());
-			List<Member> members  = userGang.getMembers();
-			Stream<String> allMembers = members.stream()
-					.map(Member::getUuid)
-					.map(Bukkit::getOfflinePlayer)
-					.map(OfflinePlayer::getName);
-
-			return allMembers.toList();
-		});
-
-		rank.addSubArgument(target);
-
-		// glw option gang rank <target> <rank>
-		Argument rankType = getRankType(userManager, memberManager, gangManager, rankManager);
-
-		target.addSubArgument(rankType);
-
-		gang.addSubArgument(rank);
-
-		return gang;
-	}
-
-	private @NotNull Argument getRankType(UserManager<Player> userManager, MemberManager memberManager,
-	                                      GangManager gangManager, RankManager rankManager) {
-		return new OptionalArgument(getPlugin(), getArgumentTree(), (argument, sender, args) -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-
-			if (user == null) return;
-
-			Member userMember = memberManager.getMember(player.getUniqueId());
-
-			// GR-01: a player with no cached Member would NPE further down this command.
-			if (userMember == null || !user.hasGang()) {
-				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
-				return;
-			}
-
-			Gang userGang = gangManager.getGang(user.getGangId());
-
-			String targetStr    = args[3];
-			String rankStr      = args[4];
-			Member targetMember = null;
-			for (Member member : userGang.getMembers()) {
-				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(member.getUuid());
-				String        offlineName   = offlinePlayer.getName();
-
-				if (offlineName == null || offlineName.isEmpty() || !offlineName.equalsIgnoreCase(targetStr)) continue;
-
-				targetMember = member;
-				break;
-			}
-
-			if (targetMember == null) {
-				user.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", targetStr));
-				return;
-			}
-
-			Rank nextRank = rankManager.get(rankStr);
-
-			if (nextRank == null) return;
-
-			// GR-08: this command used to check only "not my own rank", so anyone who could reach it could hand
-			// out the owner rank. Same force_rank override GangPromoteCommand honours.
-			String  forceRank = String.format("%s.command.gang.force_rank", GanglandApi.FULL_PREFIX);
-			boolean force     = player.hasPermission(forceRank);
-			boolean self      = targetMember.getUuid().equals(player.getUniqueId());
-
-			RankAssignmentPolicy.Decision decision =
-					RankAssignmentPolicy.evaluate(rankManager.getRankTree(), userMember.getRank(),
-					                              targetMember.getRank(), nextRank, force, self);
-
-			if (decision != RankAssignmentPolicy.Decision.ALLOWED) {
-				user.sendMessage(messageFor(decision));
-				return;
-			}
-
-			memberManager.assignRank(targetMember, nextRank);
-
-			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
-			Player        onlinePlayer  = offlinePlayer.getPlayer();
-			User<Player>  onlineUser    = userManager.getUser(onlinePlayer);
-
-			if (onlinePlayer != null && onlineUser != null && offlinePlayer.isOnline()) {
-				String string  = Messages.GANG_PROMOTE_TARGET_SUCCESS.toString();
-				String replace = string.replace("%rank%", nextRank.getName());
-				onlineUser.sendMessage(replace);
-			}
-
-			user.sendMessage(Messages.GANG_PROMOTE_PLAYER_SUCCESS.toString()
-			                                                     .replace("%player%", targetStr)
-			                                                     .replace("%rank%", nextRank.getName()));
-		}, sender -> {
-			Player       player = (Player) sender;
-			User<Player> user   = userManager.getUser(player);
-
-			if (user == null) return null;
-
-			if (!user.hasGang()) {
-				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
-				return null;
-			}
-
-			Collection<Rank> values = rankManager.getRanks().values();
-
-			// GR-08: the completer offered every rank in the tree, owner included.
-			String  forceRank = String.format("%s.command.gang.force_rank", GanglandApi.FULL_PREFIX);
-			boolean force     = player.hasPermission(forceRank);
-
-			if (force) return values.stream().map(Rank::getName).toList();
-
-			Member  actor     = memberManager.getMember(player.getUniqueId());
-			Rank    actorRank = actor == null ? null : actor.getRank();
-
-			return values.stream()
-					.filter(rank -> RankAssignmentPolicy.assignable(rankManager.getRankTree(), actorRank, rank))
-					.map(Rank::getName)
-					.toList();
-		});
-	}
-
-	/**
-	 * Maps a refused {@link RankAssignmentPolicy.Decision} onto the message the player sees.
-	 */
-	private static String messageFor(RankAssignmentPolicy.Decision decision) {
-		return switch (decision) {
-			case SELF -> Messages.GANG_CANNOT_ACT_SELF.toString();
-			case SAME_RANK -> Messages.GANG_SAME_RANK_ACTION.toString();
-			case TARGET_OUTRANKS_ACTOR, RANK_NOT_BELOW_ACTOR -> Messages.GANG_HIGHER_RANK_ACTION.toString();
-			default -> Messages.COMMAND_NO_PERM.toString();
-		};
 	}
 
 }

@@ -15,31 +15,27 @@ import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.gangland.data.economy.GanglandMoneyDropClassifier;
+import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.data.plugin.PluginManager;
 import org.luckyraven.gangland.data.teleportation.WaypointManager;
 import org.luckyraven.gangland.data.user.UserDataLoader;
 import org.luckyraven.gangland.database.GanglandDatabase;
-import org.luckyraven.gangland.gang.Gang;
-import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.core.bounty.BountySettings;
-import org.luckyraven.gangland.gang.contract.*;
-import org.luckyraven.gangland.gang.member.MemberManager;
-import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserFactory;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.WantedKillTrackers;
 import org.luckyraven.gangland.core.wanted.WantedSettings;
 import org.luckyraven.gangland.item.money.MoneyDropClassifier;
-import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * CONFIG-phase wiring for the data layer: user / rank / gang / member / plugin / waypoint managers, plus the permission
- * propagation step that collects every Bukkit permission with the plugin's prefix.
+ * CONFIG-phase wiring for the data layer: user / plugin / waypoint managers, plus the permission propagation step
+ * that collects every Bukkit permission with the plugin's prefix. Rank/gang/member managers moved to the gang
+ * module's own {@code GangConfig} (WS5 G1-G3).
  *
  * <p>Both {@link UserManager} beans share the same raw class but differ by generic parameter — they're disambiguated
  * via {@link Qualifier} so consumers downstream can pick the right flavour. {@code @Bean(isGeneric = true)} flags them
@@ -66,14 +62,6 @@ public class DataConfig {
 		return database.getRepositoryRegistry();
 	}
 
-	/**
-	 * Used to declare {@code MemberManager} as a parameter purely for {@code BeanGraph} construction-order
-	 * ordering (WS5 G0, B4). Deleted: the real invariant is a phase boundary, not a construction-order edge — both
-	 * real consumers of member data ({@code UserDataLoader}, {@code PlayerBootstrapService}) already take
-	 * {@link MemberManager} as a direct, consumed constructor parameter, and {@link MemberManager#onInitialize}
-	 * (a {@code BeanLifecycle} phase) populates its cache strictly before {@code PlayerBootstrapService}'s
-	 * {@code BeanPostInitialize} phase reads it — see {@code UserDataLoaderMemberOrderingTest} for the pinned proof.
-	 */
 	@Bean(name = "online", isGeneric = true)
 	public UserManager<Player> userManager(RepositoryRegistry repositoryRegistry,
 	                                       UserFactory userFactory) {
@@ -100,40 +88,20 @@ public class DataConfig {
 	/**
 	 * Impl-side loader that hydrates a fresh {@link User} from the DB. Lives here because it reaches into concrete
 	 * {@code UserTable} / {@code BankTable} — specifically {@code BankTable.searchCriteria(User)}, which isn't on the
-	 * abstract Table contract. {@link UserManager} in the gang module stays table-agnostic.
+	 * abstract Table contract. Gang membership is read through the always-present {@link GangMembership} holder
+	 * (R9) rather than the gang module's {@code MemberManager} — impl never depends on a module.
 	 */
 	@Bean
 	public UserDataLoader userDataLoader(GanglandDatabase database,
-	                                     MemberManager memberManager,
+	                                     GangMembership gangMembership,
 	                                     BountySettings bountySettings,
 	                                     WantedSettings wantedSettings) {
-		return new UserDataLoader(gangland, database, memberManager, bountySettings, wantedSettings);
+		return new UserDataLoader(gangland, database, gangMembership, bountySettings, wantedSettings);
 	}
 
 	@Bean
 	public PluginManager pluginManager(GanglandDatabase database) {
 		return new PluginManager(database);
-	}
-
-	@Bean
-	public RankManager rankManager(RepositoryRegistry repositoryRegistry,
-	                               PermissionRegistryContract permissionRegistry) {
-		return new RankManager(repositoryRegistry, permissionRegistry);
-	}
-
-	@Bean
-	public GangManager gangManager(RepositoryRegistry repositoryRegistry,
-	                               GangAllianceRepositoryContract allianceRepository) {
-		IRepository<Gang> gangRepository = repositoryRegistry.getRepository(Gang.class);
-		return new GangManager(gangRepository, allianceRepository);
-	}
-
-	@Bean
-	public MemberManager memberManager(GanglandDatabase database,
-	                                   MemberRepositoryContract memberRepository,
-	                                   GangLookupContract gangLookup,
-	                                   RankLookupContract rankLookup) {
-		return new MemberManager(gangland, database, memberRepository, gangLookup, rankLookup);
 	}
 
 	@Bean

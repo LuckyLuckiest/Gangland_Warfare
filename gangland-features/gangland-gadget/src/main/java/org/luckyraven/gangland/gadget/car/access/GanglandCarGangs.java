@@ -1,22 +1,22 @@
 package org.luckyraven.gangland.gadget.car.access;
 
-import org.luckyraven.gangland.gang.member.Member;
-import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.data.gang.GangMembership;
 
 import java.util.UUID;
 
 /**
- * {@link CarGangContract} backed by the cached {@link MemberManager}. Two players share a gang when both have a
- * cached member row, both are in a gang, and the gang ids match.
+ * {@link CarGangContract} backed by the always-present {@link GangMembership} holder (WS5 G2 S1) — gadget stays
+ * gang-module-free, no {@code Depends: [gang]} edge. Two players share a gang when both are in <em>the same</em>
+ * gang (deliberately not {@code alliedOrSame}: GD-06 pins "shares a gang", not "same or allied").
  *
  * <p>Supports docket GD-06.
  */
 public class GanglandCarGangs implements CarGangContract {
 
-	private final MemberManager memberManager;
+	private final GangMembership membership;
 
-	public GanglandCarGangs(MemberManager memberManager) {
-		this.memberManager = memberManager;
+	public GanglandCarGangs(GangMembership membership) {
+		this.membership = membership;
 	}
 
 	@Override
@@ -24,13 +24,10 @@ public class GanglandCarGangs implements CarGangContract {
 		if (one == null || other == null) return false;
 		if (one.equals(other)) return true;
 
-		Member first  = memberManager.getMember(one);
-		Member second = memberManager.getMember(other);
+		int gangOne = membership.gangIdOf(one);
+		if (gangOne == -1) return false;
 
-		if (first == null || second == null) return false;
-		if (!first.hasGang() || !second.hasGang()) return false;
-
-		return first.getGangId() == second.getGangId();
+		return gangOne == membership.gangIdOf(other);
 	}
 
 }

@@ -7,7 +7,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
-import org.luckyraven.gangland.gang.contract.UserLookupContract;
+import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.core.user.User;
 
 /**

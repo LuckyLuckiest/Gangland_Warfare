@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.file.configuration.gang;
 
 import org.luckyraven.keystone.permission.PermissionManager;
-import org.luckyraven.gangland.gang.contract.PermissionRegistryContract;
+import org.luckyraven.gangland.core.permission.PermissionRegistryContract;
 
 /**
  * Adapter exposing impl-side {@link PermissionManager} as a {@link PermissionRegistryContract} for gang-module rank

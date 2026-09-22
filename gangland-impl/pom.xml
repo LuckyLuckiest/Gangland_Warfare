@@ -82,10 +82,8 @@
             <groupId>org.luckyraven</groupId>
             <artifactId>keystone-module</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>gangland-domain</artifactId>
-        </dependency>
+        <!-- gangland-domain dropped (W54 F6): empty since WS5 G0/G1 (Gang/Member/Rank/... moved into the gang
+             module), and nothing in gangland-impl named anything from it any more. -->
         <!-- Was reached transitively through cops-n-crooks (a compile-scope dependency there) before flip 1;
              gangland-impl's item.unique/item.fuel/item.contract usages (e.g. UniqueItemAddon) need it directly
              now that cops-n-crooks is gone from this pom. -->

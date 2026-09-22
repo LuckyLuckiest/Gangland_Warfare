@@ -33,12 +33,6 @@ import org.luckyraven.gangland.data.teleportation.Waypoint;
 import org.luckyraven.gangland.data.teleportation.WaypointManager;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.file.configuration.SettingsRedaction;
-import org.luckyraven.gangland.gang.Gang;
-import org.luckyraven.gangland.gang.GangManager;
-import org.luckyraven.gangland.gang.member.Member;
-import org.luckyraven.gangland.gang.member.MemberManager;
-import org.luckyraven.gangland.gang.rank.Rank;
-import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.menu.InventoryBuilder;
@@ -60,9 +54,6 @@ import java.util.*;
 public final class DebugCommand extends Command {
 
 	private final UserManager<Player>       userManager;
-	private final GangManager               gangManager;
-	private final MemberManager             memberManager;
-	private final RankManager               rankManager;
 	private final WaypointManager           waypointManager;
 	private final PermissionManager         permissionManager;
 	private final GanglandPlaceholder       placeholder;
@@ -75,9 +66,6 @@ public final class DebugCommand extends Command {
 
 	public DebugCommand(Gangland gangland,
 	                    @Qualifier("online") UserManager<Player> userManager,
-	                    GangManager gangManager,
-	                    MemberManager memberManager,
-	                    RankManager rankManager,
 	                    WaypointManager waypointManager,
 	                    PermissionManager permissionManager,
 	                    GanglandPlaceholder placeholder,
@@ -90,9 +78,6 @@ public final class DebugCommand extends Command {
 		this.gangland = gangland;
 
 		this.userManager       = userManager;
-		this.gangManager       = gangManager;
-		this.memberManager     = memberManager;
-		this.rankManager       = rankManager;
 		this.waypointManager   = waypointManager;
 		this.permissionManager = permissionManager;
 		this.placeholder       = placeholder;
@@ -112,13 +97,7 @@ public final class DebugCommand extends Command {
 		// user data
 		Argument userData = getUserData();
 
-		// gang data
-		Argument gangData = getGangData();
-
-		Argument memberData = getMemberData();
-
-		// rank data
-		Argument rankData = getRankData();
+		// gang-data / member-data / rank-data come from the gang module's GangDebugContribution (WS5 G2 step 14)
 
 		// waypoint data
 		Argument waypointData = getWaypointData();
@@ -169,9 +148,6 @@ public final class DebugCommand extends Command {
 		List<Argument> arguments = new ArrayList<>();
 
 		arguments.add(userData);
-		arguments.add(memberData);
-		arguments.add(gangData);
-		arguments.add(rankData);
 		arguments.add(waypointData);
 		arguments.add(multiInv);
 		arguments.add(anvil);
@@ -205,62 +181,6 @@ public final class DebugCommand extends Command {
 			} else {
 				for (User<Player> user : userManager.getUsers().values()) {
 					user.sendMessage(user.toString());
-				}
-			}
-		});
-	}
-
-	private @NotNull Argument getGangData() {
-		return new Argument(getPlugin(), "gang-data", getArgumentTree(), (argument, sender, args) -> {
-			if (sender instanceof Player player) {
-				User<Player> user = userManager.getUser(player);
-
-				if (user == null) return;
-
-				if (user.hasGang()) {
-					Gang gang = gangManager.getGang(user.getGangId());
-
-					user.sendMessage(convertToJson(gang.toString()));
-				} else {
-					user.sendMessage("Not in a gang...");
-				}
-			} else {
-				Collection<Gang> values = gangManager.getGangs().values();
-				for (Gang gang : values) {
-					sender.sendMessage(gang.toString());
-				}
-			}
-		});
-	}
-
-	private @NotNull Argument getMemberData() {
-		return new Argument(getPlugin(), "member-data", getArgumentTree(), (argument, sender, args) -> {
-			if (sender instanceof Player player) {
-				Member member = memberManager.getMember(player.getUniqueId());
-
-				// GR-01: a player with no cached Member would NPE this debug dump.
-				if (member == null) return;
-
-				player.sendMessage(convertToJson(member.toString()));
-			} else {
-				Collection<Member> values = memberManager.getMembers().values();
-				for (Member member : values) {
-					sender.sendMessage(member.toString());
-				}
-			}
-		});
-	}
-
-	private @NotNull Argument getRankData() {
-		return new Argument(getPlugin(), "rank-data", getArgumentTree(), (argument, sender, args) -> {
-			Collection<Rank> values = rankManager.getRanks().values();
-			if (sender instanceof Player) {
-				for (Rank rank : values) {
-					sender.sendMessage(convertToJson(rank.toString()));
-				}
-			} else {
-				for (Rank rank : values) {
-					sender.sendMessage(rank.toString());
 				}
 			}
 		});
@@ -317,10 +237,9 @@ public final class DebugCommand extends Command {
 
 				if (user == null) return;
 
-				Gang gang = gangManager.getGang(user.getGangId());
-
+				// Used to prefill with the player's gang description as sample text; dropped when GangManager
+				// left gangland-impl (WS5 G2, debug-only convenience, not worth a new cross-module seam).
 				String text = "";
-				if (gang != null) text = gang.getDescription();
 
 				new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
 					if (slot != AnvilGUI.Slot.OUTPUT) {

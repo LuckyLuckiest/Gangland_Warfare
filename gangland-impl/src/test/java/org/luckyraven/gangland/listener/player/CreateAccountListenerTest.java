@@ -13,8 +13,6 @@ import org.luckyraven.gangland.data.user.UserDataLoader;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.database.tables.player.BankTable;
 import org.luckyraven.gangland.database.tables.player.UserTable;
-import org.luckyraven.gangland.gang.member.Member;
-import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.support.SettingsFixture;
@@ -61,7 +59,6 @@ class CreateAccountListenerTest {
 	private Gangland                   gangland;
 	private UserManager<Player>        userManager;
 	private UserManager<OfflinePlayer> offlineUserManager;
-	private MemberManager              memberManager;
 	private UserDataLoader             userDataLoader;
 	private GanglandDatabase           ganglandDatabase;
 
@@ -81,7 +78,6 @@ class CreateAccountListenerTest {
 		gangland           = mock(Gangland.class);
 		userManager        = mock(UserManager.class);
 		offlineUserManager = mock(UserManager.class);
-		memberManager      = mock(MemberManager.class);
 		userDataLoader     = mock(UserDataLoader.class);
 		ganglandDatabase   = mock(GanglandDatabase.class);
 
@@ -98,15 +94,11 @@ class CreateAccountListenerTest {
 		// The async continuation bails out here, so the test stops where the data load hands over.
 		when(player.isOnline()).thenReturn(false);
 
-		Member member = new Member(uuid);
-		member.setGangId(7);   // hasGang() -> true, so the member-table branch is skipped
-		when(memberManager.getMember(uuid)).thenReturn(member);
-
 		user = mock(User.class);
 		when(userManager.create(player)).thenReturn(user);
 
-		listener = new CreateAccountListener(gangland, userManager, offlineUserManager, memberManager,
-		                                     userDataLoader, ganglandDatabase);
+		listener = new CreateAccountListener(gangland, userManager, offlineUserManager, userDataLoader,
+		                                     ganglandDatabase);
 	}
 
 	@AfterEach

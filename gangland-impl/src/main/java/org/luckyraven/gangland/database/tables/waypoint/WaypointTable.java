@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.database.tables.waypoint;
 
 import org.luckyraven.gangland.data.teleportation.Waypoint;
-import org.luckyraven.gangland.database.tables.gang.GangTable;
+import org.luckyraven.gangland.database.tables.fk.ForeignGangTable;
 import org.luckyraven.keystone.persistence.database.component.Attribute;
 import org.luckyraven.keystone.persistence.database.component.Table;
 
@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class WaypointTable extends Table<Waypoint> {
 
-	public WaypointTable(GangTable gangTable) {
+	public WaypointTable(ForeignGangTable gangTable) {
 		super("waypoint");
 
 		Attribute<Integer> id       = new Attribute<>("id", true, Integer.class);

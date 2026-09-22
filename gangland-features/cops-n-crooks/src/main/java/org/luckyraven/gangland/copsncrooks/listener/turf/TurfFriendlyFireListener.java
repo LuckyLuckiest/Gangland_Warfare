@@ -13,9 +13,8 @@ import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupNpc;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
-import org.luckyraven.gangland.gang.Gang;
-import org.luckyraven.gangland.gang.contract.GangLookupContract;
-import org.luckyraven.gangland.gang.contract.UserLookupContract;
+import org.luckyraven.gangland.data.gang.GangMembership;
+import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
@@ -44,7 +43,7 @@ public final class TurfFriendlyFireListener implements Listener {
 	private final TurfDefenderDeployer defenders;
 	private final TurfManager          turfs;
 	private final UserLookupContract   users;
-	private final GangLookupContract   gangs;
+	private final GangMembership       membership;
 
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onDamage(EntityDamageByEntityEvent event) {
@@ -101,9 +100,7 @@ public final class TurfFriendlyFireListener implements Listener {
 
 	private boolean isFriendly(int attackerGangId, int ownerGangId) {
 		if (attackerGangId == ownerGangId) return true;
-		Gang ownerGang    = gangs.findById(ownerGangId);
-		Gang attackerGang = gangs.findById(attackerGangId);
-		return ownerGang != null && attackerGang != null && attackerGang.isAlly(ownerGang);
+		return membership.gangsAllied(attackerGangId, ownerGangId);
 	}
 
 	private int resolveTurfId(Entity damaged) {

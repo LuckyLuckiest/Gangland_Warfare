@@ -15,7 +15,7 @@ import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.turf.config.GanglandTurfMessages;
 import org.luckyraven.gangland.turf.config.GanglandTurfSounds;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
-import org.luckyraven.gangland.gang.contract.UserLookupContract;
+import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.gangland.turf.capture.CaptureService;
 import org.luckyraven.gangland.turf.capture.CaptureSettings;

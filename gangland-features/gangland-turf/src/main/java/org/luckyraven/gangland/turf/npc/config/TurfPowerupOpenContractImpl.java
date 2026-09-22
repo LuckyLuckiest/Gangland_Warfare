@@ -9,7 +9,7 @@ import org.luckyraven.gangland.turf.npc.view.TurfPowerupFlow;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
-import org.luckyraven.gangland.gang.contract.UserLookupContract;
+import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;

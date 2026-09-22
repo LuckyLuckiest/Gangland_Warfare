@@ -11,19 +11,17 @@ import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.gangland.data.economy.GanglandMoneyDepositService;
+import org.luckyraven.gangland.data.gang.GangItemSourceContributions;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.data.placeholder.PlaceholderService;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionStore;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryLoader;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryRuntimeContext;
-import org.luckyraven.gangland.file.configuration.inventory.itemsource.GangItemSourceProvider;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gang.GangFilterAdapter;
-import org.luckyraven.gangland.gang.GangManager;
-import org.luckyraven.gangland.gang.member.MemberFilterAdapter;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.menu.condition.BooleanExpressionEvaluator;
 import org.luckyraven.gangland.menu.filter.*;
+import org.luckyraven.gangland.menu.multi.ItemSourceEntry;
 import org.luckyraven.gangland.menu.multi.ItemSourceProvider;
 import org.luckyraven.keystone.cooldown.InMemoryCooldownService;
 import org.luckyraven.keystone.inventory.InventoryService;
@@ -133,6 +131,14 @@ public class GameplayConfig {
 	 * registration + open-inventory logic needs (user manager, item source provider, condition evaluator, …). Owns the
 	 * {@code registerInventory} and {@code openInventoryForPlayer} methods that used to live as statics on
 	 * {@code InventoryAddon}.
+	 *
+	 * <p>The {@code gangs}/{@code gang_members}/{@code gang_allies} dynamic item sources are fed through
+	 * {@link GangItemSourceContributions} (W54 F1) — the gang module implements {@code GangItemSourceContribution}
+	 * (see {@code gang.menu.GangMenuItemSourceContribution}) with the exact body the deleted
+	 * {@code GangItemSourceProvider} had; this bean only translates its {@code Map<String,String>} rows into
+	 * {@link ItemSourceEntry}. Resolved lazily (cached after first use, not at construction) for the same reason
+	 * {@code GanglandPlaceholder}'s contribution cache is lazy: this is a CONFIG-phase bean, and a module's
+	 * contribution bean has no declared parameter edge forcing it to construct first within that same phase.
 	 */
 	@Bean
 	public InventoryRuntimeContext inventoryRuntimeContext(InventoryDefinitionStore definitionStore,
@@ -140,16 +146,25 @@ public class GameplayConfig {
 	                                                       PlaceholderService placeholderService,
 	                                                       PermissionManager permissionManager,
 	                                                       @Qualifier("online") UserManager<Player> userManager,
-	                                                       GangManager gangManager,
-	                                                       FilterStore filterStore,
-	                                                       FilterApplier filterApplier,
-	                                                       GangFilterAdapter gangFilterAdapter,
-	                                                       MemberFilterAdapter memberFilterAdapter,
 	                                                       ItemParser itemParser,
-	                                                       InventoryService inventoryService) {
-		ItemSourceProvider itemSourceProvider = new GangItemSourceProvider(userManager, gangManager, filterStore,
-		                                                                   filterApplier, gangFilterAdapter,
-		                                                                   memberFilterAdapter);
+	                                                       InventoryService inventoryService,
+	                                                       DependencyContainer container) {
+		ItemSourceProvider itemSourceProvider = new ItemSourceProvider() {
+			// See GanglandPlaceholder's own contribution cache for why this is safe to cache forever once
+			// resolved: modules load once per start (Keystone's ModuleLoader), so the set of installed
+			// GangItemSourceContribution beans never changes after boot/reload.
+			private volatile GangItemSourceContributions contributions;
+
+			@Override
+			public java.util.List<ItemSourceEntry> getEntries(Player player, String source) {
+				GangItemSourceContributions current = contributions;
+				if (current == null) {
+					current = GangItemSourceContributions.from(container);
+					contributions = current;
+				}
+				return current.entries(player, source).stream().map(ItemSourceEntry::new).toList();
+			}
+		};
 		return new InventoryRuntimeContext(gangland, definitionStore, itemSourceProvider, conditionEvaluator,
 		                                   userManager, permissionManager, placeholderService, itemParser,
 		                                   inventoryService);

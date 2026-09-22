@@ -3,7 +3,7 @@ package org.luckyraven.gangland.database.repositories.waypoint;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.data.teleportation.Waypoint;
-import org.luckyraven.gangland.database.tables.gang.GangTable;
+import org.luckyraven.gangland.database.tables.fk.ForeignGangTable;
 import org.luckyraven.gangland.database.tables.waypoint.WaypointTable;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
 import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
@@ -25,7 +25,7 @@ public class WaypointRepository extends AbstractRepository<Waypoint> {
 	public WaypointRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
 		super(plugin, databaseHandler, backend);
 
-		this.waypointTable = new WaypointTable(new GangTable());
+		this.waypointTable = new WaypointTable(new ForeignGangTable());
 	}
 
 	@Override

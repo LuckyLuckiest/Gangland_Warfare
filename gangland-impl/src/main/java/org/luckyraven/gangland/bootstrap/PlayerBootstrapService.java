@@ -4,20 +4,14 @@ import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
-import org.bukkit.permissions.PermissionAttachment;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.bean.BeanPostInitialize;
-import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.data.user.UserDataLoader;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.database.TableLookup;
 import org.luckyraven.gangland.database.tables.player.BankTable;
-import org.luckyraven.gangland.database.tables.player.MemberTable;
 import org.luckyraven.gangland.database.tables.player.UserTable;
 import org.luckyraven.gangland.events.user.UserDataInitEvent;
-import org.luckyraven.gangland.gang.member.Member;
-import org.luckyraven.gangland.gang.member.MemberManager;
-import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
@@ -47,7 +41,6 @@ public final class PlayerBootstrapService implements BeanPostInitialize {
 	private final GanglandDatabase           ganglandDatabase;
 	private final UserManager<Player>        userManager;
 	private final UserManager<OfflinePlayer> offlineUserManager;
-	private final MemberManager              memberManager;
 	private final UserDataLoader             userDataLoader;
 	private final UniqueItemAddon            uniqueItemAddon;
 
@@ -55,14 +48,12 @@ public final class PlayerBootstrapService implements BeanPostInitialize {
 	                              GanglandDatabase ganglandDatabase,
 	                              UserManager<Player> userManager,
 	                              UserManager<OfflinePlayer> offlineUserManager,
-	                              MemberManager memberManager,
 	                              UserDataLoader userDataLoader,
 	                              UniqueItemAddon uniqueItemAddon) {
 		this.gangland           = gangland;
 		this.ganglandDatabase   = ganglandDatabase;
 		this.userManager        = userManager;
 		this.offlineUserManager = offlineUserManager;
-		this.memberManager      = memberManager;
 		this.userDataLoader     = userDataLoader;
 		this.uniqueItemAddon    = uniqueItemAddon;
 	}
@@ -74,19 +65,18 @@ public final class PlayerBootstrapService implements BeanPostInitialize {
 	 */
 	@Override
 	public void onPostInitialize(boolean firstLoad) {
-		List<Table<?>> tables      = ganglandDatabase.getTables();
-		UserTable      userTable   = TableLookup.find(UserTable.class, tables);
-		BankTable      bankTable   = TableLookup.find(BankTable.class, tables);
-		MemberTable    memberTable = TableLookup.find(MemberTable.class, tables);
+		List<Table<?>> tables    = ganglandDatabase.getTables();
+		UserTable      userTable = TableLookup.find(UserTable.class, tables);
+		BankTable      bankTable = TableLookup.find(BankTable.class, tables);
 
-		loadOnlinePlayers(userTable, bankTable, memberTable);
+		loadOnlinePlayers(userTable, bankTable);
 		loadOfflinePlayers(userTable, bankTable);
 
 		log.debug("Player bootstrap complete: {} online, {} offline",
 		          userManager.getUsers().size(), offlineUserManager.getUsers().size());
 	}
 
-	private void loadOnlinePlayers(UserTable userTable, BankTable bankTable, MemberTable memberTable) {
+	private void loadOnlinePlayers(UserTable userTable, BankTable bankTable) {
 		var uniqueItems = uniqueItemAddon.getUniqueItems();
 
 		for (Player player : Bukkit.getOnlinePlayers()) {
@@ -113,32 +103,12 @@ public final class PlayerBootstrapService implements BeanPostInitialize {
 
 			userDataLoader.loadUserData(newUser, userTable, bankTable);
 
+			// Member row creation/lookup and rank-permission attach now live in the gang module's
+			// MemberJoinListener, reacting to this event (WS5 G2 step 11b).
 			UserDataInitEvent userDataInitEvent = new UserDataInitEvent(false, newUser);
 			Bukkit.getPluginManager().callEvent(userDataInitEvent);
 
 			userManager.add(newUser);
-
-			// initialize member data and rank permissions
-			Member member = memberManager.getMember(player.getUniqueId());
-
-			if (member != null) {
-				// ponytail: temporary inline bridge for the deleted UserManager.initializeUserPermission (WS5 G0,
-				// B2) — G2's RankPermissionApplier (gang module) replaces this once it exists.
-				Rank rank = member.getRank();
-				if (rank != null) {
-					PermissionAttachment attachment = newUser.getUser().addAttachment(gangland);
-					newUser.setPermissionAttachment(attachment);
-					for (Permission perm : rank.getPermissions()) {
-						newUser.setPermission(perm.getPermission(), true);
-					}
-					newUser.updateCommands();
-				}
-				continue;
-			}
-
-			Member newMember = new Member(player.getUniqueId());
-			memberManager.initializeMemberData(newMember, memberTable);
-			memberManager.add(newMember);
 		}
 	}
 

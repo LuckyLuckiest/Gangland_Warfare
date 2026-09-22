@@ -10,7 +10,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
-import org.luckyraven.gangland.gang.contract.UserLookupContract;
+import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.core.user.User;
 
 /**

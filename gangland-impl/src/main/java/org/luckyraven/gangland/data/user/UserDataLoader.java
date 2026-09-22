@@ -17,8 +17,7 @@ import org.luckyraven.gangland.core.bounty.BountySettings;
 import org.luckyraven.gangland.core.events.bounty.BountyEvent;
 import org.luckyraven.gangland.core.events.user.UserBountyEvent;
 import org.luckyraven.gangland.core.events.wanted.WantedEvent;
-import org.luckyraven.gangland.gang.member.Member;
-import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.core.user.Level;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
@@ -35,26 +34,27 @@ import java.util.Map;
 /**
  * Impl-side loader that hydrates a freshly-constructed {@link User} from the database. Lives in gangland-impl because
  * it consumes the concrete {@link UserTable} and {@link BankTable} types (specifically
- * {@link BankTable#searchCriteria(User)}, which isn't part of the abstract {@code Table} contract). The
- * {@link UserManager} in the gang module stays table-agnostic and focuses on cache management.
+ * {@link BankTable#searchCriteria(User)}, which isn't part of the abstract {@code Table} contract). The gang
+ * membership fact ({@code gangId}) is read through the always-present {@link GangMembership} holder (R9) rather
+ * than the gang module's {@code MemberManager}, which impl can never depend on.
  */
 @CustomLog
 public final class UserDataLoader {
 
 	private final Gangland         gangland;
 	private final GanglandDatabase database;
-	private final MemberManager    memberManager;
+	private final GangMembership   gangMembership;
 	private final BountySettings   bountySettings;
 	private final WantedSettings   wantedSettings;
 
 	public UserDataLoader(Gangland gangland,
 	                      GanglandDatabase database,
-	                      MemberManager memberManager,
+	                      GangMembership gangMembership,
 	                      BountySettings bountySettings,
 	                      WantedSettings wantedSettings) {
 		this.gangland       = gangland;
 		this.database       = database;
-		this.memberManager  = memberManager;
+		this.gangMembership = gangMembership;
 		this.bountySettings = bountySettings;
 		this.wantedSettings = wantedSettings;
 	}
@@ -104,9 +104,9 @@ public final class UserDataLoader {
 			user.getEconomy().setAmount(Currency.of(balance));
 			user.getWanted().setLevel(wanted);
 
-			Member member = memberManager.getMember(user.getUuid());
-			if (member != null) {
-				user.setGangId(member.getGangId());
+			int gangId = gangMembership.gangIdOf(user.getUuid());
+			if (gangId != -1) {
+				user.setGangId(gangId);
 			}
 
 			Map<String, Object> bankSearch = bankTable.searchCriteria(user);

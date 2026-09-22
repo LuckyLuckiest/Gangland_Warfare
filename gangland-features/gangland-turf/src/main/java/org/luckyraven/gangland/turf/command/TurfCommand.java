@@ -11,7 +11,7 @@ import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
-import org.luckyraven.gangland.gang.contract.UserLookupContract;
+import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;

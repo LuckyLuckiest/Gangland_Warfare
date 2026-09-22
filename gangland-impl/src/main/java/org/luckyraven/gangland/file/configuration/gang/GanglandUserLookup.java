@@ -2,7 +2,7 @@ package org.luckyraven.gangland.file.configuration.gang;
 
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.gang.contract.UserLookupContract;
+import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 

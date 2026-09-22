@@ -1,0 +1,7 @@
+# Keystone module descriptor - read by Gangland's ModuleLoader from plugins/Gangland_Warfare/modules/.
+Id: gang
+Name: Gangland Gangs
+Version: ${project.version}
+Main: org.luckyraven.gangland.gang.GangModule
+Host_Api: 2.0
+Artifact: org.luckyraven:gangland-gang

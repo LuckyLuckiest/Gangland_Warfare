@@ -58,10 +58,8 @@
             <groupId>org.luckyraven</groupId>
             <artifactId>keystone-hooks</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>gangland-domain</artifactId>
-        </dependency>
+        <!-- WS5 G2 S1: TurfFriendlyFireListener rewritten onto the always-present GangMembership holder
+             (gangland-api) — cops-n-crooks is gang-module-free, gangland-domain (now empty) is no longer needed. -->
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>gangland-turf</artifactId>

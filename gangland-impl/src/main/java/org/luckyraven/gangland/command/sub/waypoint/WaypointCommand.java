@@ -8,10 +8,10 @@ import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.keystone.permission.PermissionManager;
+import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.data.teleportation.Waypoint;
 import org.luckyraven.gangland.data.teleportation.WaypointManager;
 import org.luckyraven.gangland.database.GanglandDatabase;
-import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
@@ -25,23 +25,23 @@ public final class WaypointCommand extends Command {
 
 	private final UserManager<Player> userManager;
 	private final WaypointManager     waypointManager;
-	private final GangManager         gangManager;
 	private final GanglandDatabase    ganglandDatabase;
 	private final PermissionManager   permissionManager;
+	private final GangMembership      gangMembership;
 
 	public WaypointCommand(JavaPlugin gangland,
 	                       @Qualifier("online") UserManager<Player> userManager,
 	                       WaypointManager waypointManager,
-	                       GangManager gangManager,
 	                       GanglandDatabase ganglandDatabase,
-	                       PermissionManager permissionManager) {
+	                       PermissionManager permissionManager,
+	                       GangMembership gangMembership) {
 		super(gangland, "waypoint", true);
 
 		this.userManager       = userManager;
 		this.waypointManager   = waypointManager;
-		this.gangManager       = gangManager;
 		this.ganglandDatabase  = ganglandDatabase;
 		this.permissionManager = permissionManager;
+		this.gangMembership    = gangMembership;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -89,7 +89,7 @@ public final class WaypointCommand extends Command {
 		Argument type = new WaypointTypeCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                        waypointManager);
 		Argument gangId = new WaypointGangIdCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
-		                                            waypointManager, gangManager);
+		                                            waypointManager, gangMembership);
 		Argument timer = new WaypointTimerCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                          waypointManager);
 		Argument cooldown = new WaypointCooldownCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,

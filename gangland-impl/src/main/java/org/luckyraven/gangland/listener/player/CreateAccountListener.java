@@ -11,18 +11,12 @@ import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.bean.listener.ListenerPriority;
-import org.bukkit.permissions.PermissionAttachment;
-import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.data.user.UserDataLoader;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.database.TableLookup;
 import org.luckyraven.gangland.database.tables.player.BankTable;
-import org.luckyraven.gangland.database.tables.player.MemberTable;
 import org.luckyraven.gangland.database.tables.player.UserTable;
 import org.luckyraven.gangland.events.user.UserDataInitEvent;
-import org.luckyraven.gangland.gang.member.Member;
-import org.luckyraven.gangland.gang.member.MemberManager;
-import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.keystone.persistence.database.component.Table;
@@ -37,20 +31,17 @@ public final class CreateAccountListener implements Listener {
 	private final Gangland                   gangland;
 	private final UserManager<Player>        userManager;
 	private final UserManager<OfflinePlayer> offlineUserManager;
-	private final MemberManager              memberManager;
 	private final UserDataLoader             userDataLoader;
 	private final GanglandDatabase           ganglandDatabase;
 
 	public CreateAccountListener(Gangland gangland,
 	                             @Qualifier("online") UserManager<Player> userManager,
 	                             @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
-	                             MemberManager memberManager,
 	                             UserDataLoader userDataLoader,
 	                             GanglandDatabase ganglandDatabase) {
 		this.gangland           = gangland;
 		this.userManager        = userManager;
 		this.offlineUserManager = offlineUserManager;
-		this.memberManager      = memberManager;
 		this.userDataLoader     = userDataLoader;
 		this.ganglandDatabase   = ganglandDatabase;
 	}
@@ -72,19 +63,10 @@ public final class CreateAccountListener implements Listener {
 		// survive the rejoin and overwrite the live row on the next autosave.
 		offlineUserManager.remove(player.getUniqueId());
 
-		// Add user and member to cache immediately so other systems can find them
+		// Add user to cache immediately so other systems can find them
 		userManager.add(user);
 
-		Member member = memberManager.getMember(player.getUniqueId());
-
-		if (member == null) {
-			member = new Member(player.getUniqueId());
-			memberManager.add(member);
-		}
-
-		Member finalMember = member;
-
-		// Load data from DB asynchronously, then fire the init event on the main thread.
+		// Load data from DB asynchronously, then fire the init event.
 		// initializeUserData updates the same user object in-place, so the cached reference
 		// gets the DB values once the async load completes.
 		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
@@ -94,38 +76,15 @@ public final class CreateAccountListener implements Listener {
 
 			userDataLoader.loadUserData(user, userTable, bankTable);
 
-			if (!finalMember.hasGang()) {
-				MemberTable memberTable = TableLookup.find(MemberTable.class, tables);
-				memberManager.initializeMemberData(finalMember, memberTable);
-			}
-
 			if (!player.isOnline()) {
 				return;
 			}
 
-			// UserDataInitEvent is declared async (downstream listeners like LoadUniqueItem
-			// hop back to main thread themselves), so fire it here in the async context.
+			// UserDataInitEvent is declared async — downstream listeners (LoadUniqueItem, the gang module's
+			// MemberJoinListener which creates/caches the player's Member row and applies rank permissions)
+			// hop back to the main thread themselves, so fire it here in the async context.
 			UserDataInitEvent userDataInitEvent = new UserDataInitEvent(true, user);
 			Bukkit.getPluginManager().callEvent(userDataInitEvent);
-
-			// PermissionAttachment / player.updateCommands() must run on the main thread.
-			Bukkit.getScheduler().runTask(gangland, () -> {
-				if (!player.isOnline()) {
-					return;
-				}
-
-				// ponytail: temporary inline bridge for the deleted UserManager.initializeUserPermission (WS5
-				// G0, B2) — G2's RankPermissionApplier (gang module) replaces this once it exists.
-				Rank rank = finalMember.getRank();
-				if (rank != null) {
-					PermissionAttachment attachment = user.getUser().addAttachment(gangland);
-					user.setPermissionAttachment(attachment);
-					for (Permission perm : rank.getPermissions()) {
-						user.setPermission(perm.getPermission(), true);
-					}
-					user.updateCommands();
-				}
-			});
 		});
 	}
 

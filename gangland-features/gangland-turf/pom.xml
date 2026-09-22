@@ -69,9 +69,14 @@
             <groupId>org.luckyraven</groupId>
             <artifactId>keystone-hooks</artifactId>
         </dependency>
+        <!-- WS5 G1-G3: gangland-domain is empty (Gang/GangLookupContract/... moved into the gang module);
+             pointing this at gangland-gang instead is a pure retarget, no source change (package names for these
+             types stayed identical). provided, matching every other module-to-module dependency (e.g.
+             cops-n-crooks -> turf/civilians) — gang's classes come from Keystone's ModuleLoader at runtime, not
+             shaded in. module.yml's Depends now lists gang alongside civilians. -->
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>gangland-domain</artifactId>
+            <artifactId>gangland-gang</artifactId>
             <scope>provided</scope>
         </dependency>
         <!-- Moved turf-NPC views (TurfPowerupFlow/View classes, group I) need InventoryHandler/MultiPanelInventory. -->

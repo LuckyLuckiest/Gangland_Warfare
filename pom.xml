@@ -291,6 +291,11 @@
             </dependency>
             <dependency>
                 <groupId>org.luckyraven</groupId>
+                <artifactId>gangland-gang</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.luckyraven</groupId>
                 <artifactId>cops-n-crooks</artifactId>
                 <version>${project.version}</version>
             </dependency>

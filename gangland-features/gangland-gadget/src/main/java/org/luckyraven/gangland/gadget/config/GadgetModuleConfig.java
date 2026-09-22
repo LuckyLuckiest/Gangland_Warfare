@@ -28,7 +28,7 @@ import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
 import org.luckyraven.gangland.gadget.listener.car.CarDamageState;
 import org.luckyraven.gangland.gadget.sign.CarSignContribution;
 import org.luckyraven.gangland.gadget.sign.CarSignViewProvider;
-import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.item.ItemKind;
 import org.luckyraven.keystone.item.ItemConverterRegistry;
@@ -86,14 +86,15 @@ public class GadgetModuleConfig {
 	}
 
 	/**
-	 * GD-06: mount, refuel and pickup are gated on the placer's UUID. The gang half of the rule comes from
-	 * {@link MemberManager}, which the gadget module cannot see — hence the contract.
+	 * GD-06: mount, refuel and pickup are gated on the placer's UUID. The gang half of the rule comes from the
+	 * always-present {@link GangMembership} holder (WS5 G2 S1) — {@code MemberManager} lives in the gang module,
+	 * which gadget cannot see — hence the contract.
 	 */
 	@Bean
-	public CarAccessPolicy carAccessPolicy(MemberManager memberManager, PermissionManager permissionManager) {
+	public CarAccessPolicy carAccessPolicy(GangMembership membership, PermissionManager permissionManager) {
 		permissionManager.addPermission(CarAccessPolicy.BYPASS_PERMISSION);
 
-		return new CarAccessPolicy(new GanglandCarGangs(memberManager));
+		return new CarAccessPolicy(new GanglandCarGangs(membership));
 	}
 
 	@Bean

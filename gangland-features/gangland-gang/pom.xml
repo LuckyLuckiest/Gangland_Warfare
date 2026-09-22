@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.luckyraven</groupId>
+        <artifactId>gangland-features</artifactId>
+        <version>${revision}</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>gangland-gang</artifactId>
+
+    <name>Gangland Gangs</name>
+
+    <dependencies>
+        <!-- Spigot Build -->
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Keystone framework plumbing — same convention every runtime module uses (mail, turf): declared
+             directly, not re-exported through gangland-api. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-bean</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-command</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-module</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-persistence</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-hooks</artifactId>
+        </dependency>
+
+        <!-- GangColorCommand builds its color-picker/confirm menus on ChestMenuBuilder directly (code-defined,
+             not the impl-only YAML menu dialect) — same convention as npc-shops/lootchest. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-inventory</artifactId>
+        </dependency>
+
+        <!-- GangDescriptionCommand's anvil text-prompt (version comes from the root dependencyManagement,
+             matching gangland-impl's and npc-shops' own entries). -->
+        <dependency>
+            <groupId>net.wesjd</groupId>
+            <artifactId>anvilgui</artifactId>
+        </dependency>
+
+        <!-- The host API — the only Gangland-local artifact this module compiles against (WS5 G1 boundary
+             rule: never gangland-impl, never gangland-domain — the api re-exports gangland-core at compile
+             scope, so User/IdentitySettings/Messages/Settings/Command/the seam interfaces all resolve
+             transitively through this one dependency). Provided: at runtime this module is loaded from
+             plugins/Gangland_Warfare/modules/ by Keystone's ModuleLoader, whose parent is the host plugin's
+             classloader, so every api class resolves from the shaded core jar. Dependency direction is
+             module -> api; the host never names a module type. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Shared test fixtures (testsupport.BukkitRegistryFixture) -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-core</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>

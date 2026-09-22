@@ -5,7 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
-import org.luckyraven.gangland.gang.contract.UserLookupContract;
+import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.turf.contract.TurfSoundContract;
 import org.luckyraven.gangland.turf.data.Turf;

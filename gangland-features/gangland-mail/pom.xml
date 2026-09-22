@@ -36,12 +36,15 @@
             <groupId>org.luckyraven</groupId>
             <artifactId>gangland-core</artifactId>
         </dependency>
-        <!-- WS5 G0 (step 4): gangland-api no longer re-exports gangland-domain, and this module's Gang*
-             command/listener classes still name gang.* types (Gang/GangManager/Member/Rank/...) that haven't
-             moved to a module yet — declare the dependency directly instead of relying on the transitive one. -->
+        <!-- WS5 G1-G3: gangland-domain is empty (Gang/GangManager/Member/Rank/... moved into the gang module);
+             pointing this at gangland-gang instead is a pure retarget, no source change (package names stayed
+             identical). provided, matching every other module-to-module dependency — gang's classes come from
+             Keystone's ModuleLoader at runtime, not shaded in (the old unscoped/compile entry was itself already
+             inconsistent with that convention). module.yml now declares Depends: [gang]. -->
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>gangland-domain</artifactId>
+            <artifactId>gangland-gang</artifactId>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>

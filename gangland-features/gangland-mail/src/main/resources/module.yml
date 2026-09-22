@@ -4,4 +4,6 @@ Name: Gangland Mail
 Version: ${project.version}
 Main: org.luckyraven.gangland.mail.MailModule
 Host_Api: 2.0
+Depends:
+  - gang
 Artifact: org.luckyraven:gangland-mail

@@ -5,12 +5,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
+import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gang.Gang;
-import org.luckyraven.gangland.gang.GangManager;
-import org.luckyraven.gangland.core.user.User;
-import org.luckyraven.gangland.core.user.UserManager;
-import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 /**
@@ -26,17 +22,19 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
  * method's {@link WeaponRaytraceImpactEvent} parameter type eagerly, and on a Bartizan-less server that throws
  * {@code NoClassDefFoundError} unless construction is skipped entirely. The gang-enabled check that used to be the
  * gate now runs as an ordinary early-return inside the handler body.
+ *
+ * <p>Rewritten onto the always-present {@link GangMembership} holder (WS5 G2 S1) instead of {@code GangManager}/
+ * {@code UserManager} — civilians stays gang-module-free, no {@code Depends: [gang]} edge. {@code alliedOrSame}
+ * already excludes the "both gang-less" false positive (its {@code idA != -1} guard), so the old explicit
+ * {@code hasGang()} check on both sides is redundant, not dropped behaviour.
  */
 @ListenerHandler(condition = "isBartizanAvailable")
 public class GangAllyWeaponImpactListener implements Listener {
 
-	private final UserManager<Player> userManager;
-	private final GangManager         gangManager;
+	private final GangMembership membership;
 
-	public GangAllyWeaponImpactListener(@Qualifier("online") UserManager<Player> userManager,
-	                                    GangManager gangManager) {
-		this.userManager = userManager;
-		this.gangManager = gangManager;
+	public GangAllyWeaponImpactListener(GangMembership membership) {
+		this.membership = membership;
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
@@ -45,15 +43,9 @@ public class GangAllyWeaponImpactListener implements Listener {
 		if (!(event.getShooter() instanceof Player damager)) return;
 		if (!(event.getHitEntity() instanceof Player damaged)) return;
 
-		User<Player> userDamager = userManager.getUser(damager);
-		User<Player> userDamaged = userManager.getUser(damaged);
-
-		if (userDamager == null || userDamaged == null || !(userDamager.hasGang() && userDamaged.hasGang())) return;
-
-		Gang gang1 = gangManager.getGang(userDamager.getGangId());
-		Gang gang2 = gangManager.getGang(userDamaged.getGangId());
-
-		if (gang1.isAlly(gang2) || userDamager.getGangId() == userDamaged.getGangId()) event.setCancelled(true);
+		if (membership.alliedOrSame(damager.getUniqueId(), damaged.getUniqueId())) {
+			event.setCancelled(true);
+		}
 	}
 
 }

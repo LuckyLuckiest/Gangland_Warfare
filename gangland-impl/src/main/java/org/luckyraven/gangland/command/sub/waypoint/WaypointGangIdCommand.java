@@ -8,11 +8,10 @@ import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
+import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.data.teleportation.Waypoint;
 import org.luckyraven.gangland.data.teleportation.WaypointManager;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.gang.Gang;
-import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
@@ -22,24 +21,32 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * {@code /glw waypoint gangId <id>} — the real validation was always {@code user.getGangId() != id} below (a
+ * player can only ever set this to their own gang's id), so no {@code GangManager} existence re-check is
+ * needed. The display name (tab-completion + the stored waypoint lookup key) goes through the always-present
+ * {@link GangMembership#nameOf(int)} holder (W54 F4 — closes WS6 ask #2's raw-id degrade from the original W51
+ * gate) rather than {@code GangManager} directly, falling back to the raw id when no view is installed (module
+ * absent) or the id names no real gang.
+ */
 class WaypointGangIdCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
-	private final GangManager         gangManager;
 	private final WaypointManager     waypointManager;
+	private final GangMembership      gangMembership;
 
 	protected WaypointGangIdCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                                UserManager<Player> userManager, WaypointManager waypointManager,
-	                                GangManager gangManager) {
+	                                GangMembership gangMembership) {
 		super(gangland, "gangId", tree, parent, "gang_id");
 
 		this.gangland        = gangland;
 		this.tree            = tree;
 		this.userManager     = userManager;
-		this.gangManager     = gangManager;
 		this.waypointManager = waypointManager;
+		this.gangMembership  = gangMembership;
 
 		waypointGangId();
 	}
@@ -83,16 +90,10 @@ class WaypointGangIdCommand extends SubArgument {
 				return;
 			}
 
-			// check if the gang is valid
+			// check if the gang is valid — a player's gangId only ever names a real gang (set by Gang.addMember),
+			// so this is the real validation; no separate GangManager.getGang(id) existence re-check needed.
 			if (user.getGangId() != id) {
 				user.sendMessage(Messages.INVALID_GANG_NAME.toString());
-				return;
-			}
-
-			Gang gang = gangManager.getGang(id);
-
-			if (gang == null) {
-				user.sendMessage(Messages.GANG_DOESNT_EXIST.toString());
 				return;
 			}
 
@@ -109,7 +110,7 @@ class WaypointGangIdCommand extends SubArgument {
 			}
 
 			int    gangId = user.getGangId();
-			String name   = gangManager.getGang(gangId).getName();
+			String name   = gangMembership.nameOf(gangId).orElse(String.valueOf(gangId));
 
 			return new ArrayList<>(List.of(name));
 		}, sender -> {
@@ -126,7 +127,7 @@ class WaypointGangIdCommand extends SubArgument {
 
 			Map<String, String> waypoints = new HashMap<>();
 
-			String name = gangManager.getGang(gangId).getName();
+			String name = gangMembership.nameOf(gangId).orElse(String.valueOf(gangId));
 
 			waypoints.put(name, String.valueOf(gangId));
 
