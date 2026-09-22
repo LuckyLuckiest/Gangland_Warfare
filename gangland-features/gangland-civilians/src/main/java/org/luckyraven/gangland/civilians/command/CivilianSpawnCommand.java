@@ -6,6 +6,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
+import org.luckyraven.gangland.civilians.message.CivilianMessages;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
@@ -22,15 +23,18 @@ class CivilianSpawnCommand extends SubArgument {
 	private final Tree<Argument>       tree;
 	private final CivilianService      civilianService;
 	private final CivilianSpawnManager civilianSpawnManager;
+	private final CivilianMessages     civilianMessages;
 
 	CivilianSpawnCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                     CivilianService civilianService, CivilianSpawnManager civilianSpawnManager) {
+	                     CivilianService civilianService, CivilianSpawnManager civilianSpawnManager,
+	                     CivilianMessages civilianMessages) {
 		super(plugin, "spawn", tree, parent);
 
 		this.plugin             = plugin;
 		this.tree                 = tree;
 		this.civilianService      = civilianService;
 		this.civilianSpawnManager = civilianSpawnManager;
+		this.civilianMessages     = civilianMessages;
 
 		typeIdArgument();
 	}
@@ -53,11 +57,11 @@ class CivilianSpawnCommand extends SubArgument {
 			CivilianNpc npc    = civilianSpawnManager.spawnNearLocation(player, typeId);
 
 			if (npc == null) {
-				sender.sendMessage(Messages.CIVILIAN_SPAWN_FAILED.toString().replace("%type%", typeId));
+				sender.sendMessage(civilianMessages.spawnFailed(typeId));
 				return;
 			}
 
-			sender.sendMessage(Messages.CIVILIAN_SPAWNED.toString().replace("%type%", typeId));
+			sender.sendMessage(civilianMessages.spawned(typeId));
 		}, sender -> new ArrayList<>(civilianService.getCiviliansConfig().types().keySet()));
 
 		this.addSubArgument(typeArg);

@@ -6,6 +6,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
+import org.luckyraven.gangland.civilians.message.CivilianMessages;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
@@ -17,14 +18,16 @@ class CivilianSpawnerRemoveCommand extends SubArgument {
 	private final JavaPlugin             plugin;
 	private final Tree<Argument>       tree;
 	private final CivilianSpawnManager civilianSpawnManager;
+	private final CivilianMessages     civilianMessages;
 
 	CivilianSpawnerRemoveCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                             CivilianSpawnManager civilianSpawnManager) {
+	                             CivilianSpawnManager civilianSpawnManager, CivilianMessages civilianMessages) {
 		super(plugin, "remove", tree, parent);
 
 		this.plugin             = plugin;
 		this.tree                 = tree;
 		this.civilianSpawnManager = civilianSpawnManager;
+		this.civilianMessages     = civilianMessages;
 
 		idArgument();
 	}
@@ -55,7 +58,7 @@ class CivilianSpawnerRemoveCommand extends SubArgument {
 
 			civilianSpawnManager.removeSpawner(id);
 
-			sender.sendMessage(Messages.CIVILIAN_SPAWNER_REMOVED.toString().replace("%id%", String.valueOf(id)));
+			sender.sendMessage(civilianMessages.spawnerRemoved(String.valueOf(id)));
 		}, sender -> civilianSpawnManager.getSpawnerIds()
 				.stream().map(String::valueOf).toList());
 

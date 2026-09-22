@@ -1,5 +1,11 @@
 package org.luckyraven.gangland.file.configuration;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.Logger;
+import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.config.Property;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.jupiter.api.BeforeAll;
@@ -10,6 +16,7 @@ import org.luckyraven.gangland.support.FakeMessageProvider;
 import org.luckyraven.gangland.support.SettingsFixture;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -139,5 +146,55 @@ class MessagesTest {
 		List<String> missing = Messages.findMissingPaths(new YamlConfiguration());
 
 		assertEquals(Messages.values().length, missing.size());
+	}
+
+	@Test
+	@DisplayName("WS6 G3: a leftover Commands.Civilian message block logs a targeted warning naming "
+			+ "npc/civilian_messages.yml")
+	void init_legacyCivilianMessageBlock_logsTargetedMigrationWarning() {
+		List<String> logs = captureWarnLogs(() -> Messages.init(fakeProvider()
+				.withString("Commands.Civilian.List_Empty", "No civilians are currently active.")));
+
+		assertTrue(logs.stream().anyMatch(m -> m.contains("Civilian") && m.contains("npc/civilian_messages.yml")
+						&& m.contains("civilians")),
+				"expected a targeted migration warning naming npc/civilian_messages.yml; got: " + logs);
+	}
+
+	@Test
+	@DisplayName("WS6 G3: no leftover Commands.Civilian message block means no targeted migration warning")
+	void init_noLegacyCivilianMessageBlock_logsNoMigrationWarning() {
+		List<String> logs = captureWarnLogs(() -> Messages.init(fakeProvider()));
+
+		assertTrue(logs.stream().noneMatch(m -> m.contains("npc/civilian_messages.yml")),
+				"expected no targeted migration warning when the legacy block is absent; got: " + logs);
+	}
+
+	/**
+	 * {@code Messages.init(...)} logs the Civilian legacy-block warning through {@link Settings}'s own
+	 * {@code @CustomLog} field (the call is textually inside {@code Settings.warnIfLegacyShopBlockPresent}), so
+	 * this attaches to {@link Settings}'s logger — same technique as {@code SettingsTest#captureWarnLogs}.
+	 */
+	private static List<String> captureWarnLogs(Runnable action) {
+		Logger coreLogger    = (Logger) org.luckyraven.keystone.logging.Logger.getLogger(Settings.class);
+		Level  originalLevel = coreLogger.getLevel();
+		List<String> captured = new ArrayList<>();
+		AbstractAppender appender = new AbstractAppender("messages-test-capture", null, null, false,
+				Property.EMPTY_ARRAY) {
+			@Override
+			public void append(LogEvent event) {
+				captured.add(event.getMessage().getFormattedMessage());
+			}
+		};
+		appender.start();
+		coreLogger.addAppender(appender);
+		Configurator.setLevel(coreLogger, Level.WARN);
+		try {
+			action.run();
+		} finally {
+			Configurator.setLevel(coreLogger, originalLevel);
+			coreLogger.removeAppender(appender);
+			appender.stop();
+		}
+		return captured;
 	}
 }

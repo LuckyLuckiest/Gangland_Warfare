@@ -6,6 +6,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
+import org.luckyraven.gangland.civilians.message.CivilianMessages;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -21,15 +22,18 @@ class CivilianSpawnerSetCommand extends SubArgument {
 	private final Tree<Argument>       tree;
 	private final CivilianService      civilianService;
 	private final CivilianSpawnManager civilianSpawnManager;
+	private final CivilianMessages     civilianMessages;
 
 	CivilianSpawnerSetCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                          CivilianService civilianService, CivilianSpawnManager civilianSpawnManager) {
+	                          CivilianService civilianService, CivilianSpawnManager civilianSpawnManager,
+	                          CivilianMessages civilianMessages) {
 		super(plugin, "set", tree, parent);
 
 		this.plugin             = plugin;
 		this.tree                 = tree;
 		this.civilianService      = civilianService;
 		this.civilianSpawnManager = civilianSpawnManager;
+		this.civilianMessages     = civilianMessages;
 
 		typeIdArgument();
 	}
@@ -51,13 +55,13 @@ class CivilianSpawnerSetCommand extends SubArgument {
 			String typeId = args[3];
 
 			if (!civilianService.getCiviliansConfig().types().containsKey(typeId)) {
-				sender.sendMessage(Messages.CIVILIAN_TYPE_UNKNOWN.toString().replace("%type%", typeId));
+				sender.sendMessage(civilianMessages.typeUnknown(typeId));
 				return;
 			}
 
 			civilianSpawnManager.setTypeSpawnerLocation(player.getLocation(), typeId);
 
-			sender.sendMessage(Messages.CIVILIAN_SPAWNER_TYPE_SET.toString().replace("%type%", typeId));
+			sender.sendMessage(civilianMessages.spawnerTypeSet(typeId));
 		}, sender -> new ArrayList<>(civilianService.getCiviliansConfig().types().keySet()));
 
 		this.addSubArgument(typeArg);

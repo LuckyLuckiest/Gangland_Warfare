@@ -6,6 +6,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
+import org.luckyraven.gangland.civilians.message.CivilianMessages;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.keystone.util.TriConsumer;
@@ -21,15 +22,18 @@ class CivilianSpawnerSetGroupCommand extends SubArgument {
 	private final Tree<Argument>       tree;
 	private final CivilianService      civilianService;
 	private final CivilianSpawnManager civilianSpawnManager;
+	private final CivilianMessages     civilianMessages;
 
 	CivilianSpawnerSetGroupCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                               CivilianService civilianService, CivilianSpawnManager civilianSpawnManager) {
+	                               CivilianService civilianService, CivilianSpawnManager civilianSpawnManager,
+	                               CivilianMessages civilianMessages) {
 		super(plugin, "setgroup", tree, parent);
 
 		this.plugin             = plugin;
 		this.tree                 = tree;
 		this.civilianService      = civilianService;
 		this.civilianSpawnManager = civilianSpawnManager;
+		this.civilianMessages     = civilianMessages;
 
 		groupIdArgument();
 	}
@@ -51,13 +55,13 @@ class CivilianSpawnerSetGroupCommand extends SubArgument {
 			String groupId = args[3];
 
 			if (!civilianService.getCiviliansConfig().groups().containsKey(groupId)) {
-				sender.sendMessage(Messages.CIVILIAN_GROUP_UNKNOWN.toString().replace("%group%", groupId));
+				sender.sendMessage(civilianMessages.groupUnknown(groupId));
 				return;
 			}
 
 			civilianSpawnManager.setGroupSpawnerLocation(player.getLocation(), groupId);
 
-			sender.sendMessage(Messages.CIVILIAN_SPAWNER_GROUP_SET.toString().replace("%group%", groupId));
+			sender.sendMessage(civilianMessages.spawnerGroupSet(groupId));
 		}, sender -> new ArrayList<>(civilianService.getCiviliansConfig().groups().keySet()));
 
 		this.addSubArgument(groupArg);

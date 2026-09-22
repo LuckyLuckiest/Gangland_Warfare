@@ -489,19 +489,8 @@ public enum Messages {
 	CAR_NOT_A_CAR("Gadgets.Car.Not_A_Car", Type.PREFIX),
 	CAR_NOT_REGISTERED("Gadgets.Car.Not_Registered", Type.PREFIX),
 
-	// commands - civilians
-	CIVILIAN_LIST_EMPTY("Commands.Civilian.List_Empty", Type.COMMAND),
-	CIVILIAN_GROUPS_EMPTY("Commands.Civilian.Groups_Empty", Type.COMMAND),
-	CIVILIAN_SPAWNED("Commands.Civilian.Spawned", Type.COMMAND),
-	CIVILIAN_GROUP_SPAWNED("Commands.Civilian.Group_Spawned", Type.COMMAND),
-	CIVILIAN_GROUP_UNKNOWN("Commands.Civilian.Group_Unknown", Type.COMMAND),
-	CIVILIAN_TYPE_UNKNOWN("Commands.Civilian.Type_Unknown", Type.COMMAND),
-	CIVILIAN_SPAWNER_REMOVED("Commands.Civilian.Spawner_Removed", Type.COMMAND),
-	CIVILIAN_SPAWNER_TELEPORTED("Commands.Civilian.Spawner_Teleported", Type.COMMAND),
-	CIVILIAN_SPAWN_FAILED("Commands.Civilian.Spawn_Failed", Type.COMMAND),
-	CIVILIAN_SPAWNER_TYPE_SET("Commands.Civilian.Spawner_Type_Set", Type.COMMAND),
-	CIVILIAN_SPAWNER_GROUP_SET("Commands.Civilian.Spawner_Group_Set", Type.COMMAND),
-	CIVILIAN_SPAWNER_LIST_HEADER("Civilian.Spawner_List_Header", Type.PREFIX),
+	// commands - civilians: moved to the civilians module's own npc/civilian_messages.yml (WS6 G3 worked example,
+	// CivilianMessages/LocalizedModuleYaml) — no longer in gangland-api.
 
 	// commands - shop (admin)
 	SHOP_REMOVED("Commands.Shop.Removed", Type.COMMAND),
@@ -652,6 +641,13 @@ public enum Messages {
 	 */
 	public static void init(MessageProvider messageProvider) {
 		provider = messageProvider;
+
+		// WS6 G3: the 12 CIVILIAN_* constants (Commands.Civilian.*, Civilian.Spawner_List_Header) moved to the
+		// civilians module's own npc/civilian_messages.yml. A leftover Commands.Civilian: block in
+		// message_<lang>.yml is silent dead weight the same way Trader:/Banker:/Loot_Chest: were in settings.yml —
+		// reuse the same targeted warning (generalized to accept a source file other than settings.yml).
+		Settings.warnIfLegacyShopBlockPresent(provider.getString("Commands.Civilian.List_Empty") != null, "Civilian",
+		                                      "npc/civilian_messages.yml", "civilians", "message_<lang>.yml");
 	}
 
 	/**

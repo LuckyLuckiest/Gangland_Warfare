@@ -1,0 +1,15 @@
+# Civilians module — player-facing strings. Moved off gangland-api's Messages enum (WS6 G3): module-owned
+# strings live in the module's own YAML, never the core message file. Spanish variant: civilian_messages_es.yml,
+# picked by Settings.Language (see CivilianMessages/LocalizedModuleYaml).
+List_Empty: "No civilians are currently active."
+Groups_Empty: "No civilian groups are currently active."
+Spawned: "&aCivilian &e%type%&a spawned near you."
+Group_Spawned: "&aCivilian group &e%group%&a spawned at your location."
+Group_Unknown: "&cUnknown group &e%group%&c."
+Type_Unknown: "&cUnknown type &e%type%&c."
+Spawner_Removed: "&aCivilian spawner &e%id%&a removed."
+Spawner_Teleported: "Teleported to civilian spawner &e(&b%id%&e)&7."
+Spawn_Failed: "&cFailed to spawn civilian. Check that type &e%type%&c is valid and a location was found."
+Spawner_Type_Set: "&aCivilian spawner &e%type%&a set at your location."
+Spawner_Group_Set: "&aGroup spawner &e%group%&a set at your location."
+Spawner_List_Header: "Civilian spawners:"

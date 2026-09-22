@@ -3,6 +3,7 @@ package org.luckyraven.gangland.civilians;
 import lombok.CustomLog;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.civilians.integration.GanglandCivilianSpawnConfigProvider;
+import org.luckyraven.gangland.civilians.message.CivilianMessages;
 import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.combat.BartizanNpcWeapons;
@@ -39,6 +40,17 @@ public class CiviliansModuleConfig {
 
 	public CiviliansModuleConfig(JavaPlugin plugin) {
 		this.plugin = plugin;
+	}
+
+	// ---------------------------------------------------------------------------------------------------------------
+	// Messages (WS6 G3 worked example)
+	// ---------------------------------------------------------------------------------------------------------------
+
+	@Bean
+	public CivilianMessages civilianMessages(FileManager fileManager) {
+		CivilianMessages messages = new CivilianMessages(fileManager);
+		fileManager.registerInitializer(messages);
+		return messages;
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------

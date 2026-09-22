@@ -1,0 +1,15 @@
+# Civilians module — player-facing strings (Spanish). Moved off gangland-api's message_es.yml (WS6 G3): the
+# strings deleted from core's message_es.yml live here now, not lost. Picked when Settings.Language is "es" (see
+# CivilianMessages/LocalizedModuleYaml); falls back to civilian_messages.yml (English) otherwise.
+List_Empty: "No hay civiles activos actualmente."
+Groups_Empty: "No hay grupos de civiles activos actualmente."
+Spawned: "&aCivil &e%type%&a generado cerca de ti."
+Group_Spawned: "&aGrupo de civiles &e%group%&a generado en tu ubicación."
+Group_Unknown: "&cGrupo desconocido &e%group%&c."
+Type_Unknown: "&cTipo desconocido &e%type%&c."
+Spawner_Removed: "&aGenerador de civiles &e%id%&a eliminado."
+Spawner_Teleported: "Teletransportado al generador de civiles &e(&b%id%&e)&7."
+Spawn_Failed: "&cError al generar civil. Verifica que el tipo &e%type%&c sea válido y se encontró una ubicación."
+Spawner_Type_Set: "&aGenerador de civiles &e%type%&a colocado en tu ubicación."
+Spawner_Group_Set: "&aGenerador de grupo &e%group%&a colocado en tu ubicación."
+Spawner_List_Header: "Generadores de civiles:"

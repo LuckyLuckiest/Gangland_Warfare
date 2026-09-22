@@ -270,4 +270,68 @@ The 4 entries (`lootchest`, `lootchest_help`, `lootchest_edit`, `lootchest_remov
 `commands.json` into the module's own, at its jar root — no server-owner action; `/glw help lootchest` and
 `/glw lootchest help` keep working identically once the module jar is present.
 
-<!-- Later 0.10.0 gates (WS5 gang module, WS6 api facade) append their own sections here as they land. -->
+## WS6 G3 — civilians' 12 `Messages.CIVILIAN_*` strings moved to the module's own YAML (worked example)
+
+This section covers only **G3** of the WS6 (api facade) plan — the module-owned `Messages`/`Settings`-to-YAML
+migration mechanism's worked example. WS6's other gates (the `GanglandApi` facade, the events audit, the docs
+pass) are separate landings and are not covered here.
+
+The 12 `Messages.CIVILIAN_*` constants (11 `Commands.Civilian.*` command strings + 1 top-level
+`Civilian.Spawner_List_Header`) are gone from `gangland-api`. They now live in two files shipped inside
+`modules/gangland-civilians-<rev>.jar` and extracted alongside the module's other defaults (same mechanism as
+`npc/civilians.yml`):
+
+- `plugins/Gangland_Warfare/npc/civilian_messages.yml` — English, always shipped.
+- `plugins/Gangland_Warfare/npc/civilian_messages_es.yml` — Spanish, shipped alongside it (both languages ship,
+  matching the W53/WS3 precedent for `gangland-lootchest` — no translation was dropped).
+
+### 1. The 12 keys and their new file
+
+| Old (`gangland-api` `Messages` constant) | Old path (`message_en.yml`/`message_es.yml`) | New key (both new files) |
+|---|---|---|
+| `CIVILIAN_LIST_EMPTY` | `Commands.Civilian.List_Empty` | `List_Empty` |
+| `CIVILIAN_GROUPS_EMPTY` | `Commands.Civilian.Groups_Empty` | `Groups_Empty` |
+| `CIVILIAN_SPAWNED` | `Commands.Civilian.Spawned` | `Spawned` |
+| `CIVILIAN_GROUP_SPAWNED` | `Commands.Civilian.Group_Spawned` | `Group_Spawned` |
+| `CIVILIAN_GROUP_UNKNOWN` | `Commands.Civilian.Group_Unknown` | `Group_Unknown` |
+| `CIVILIAN_TYPE_UNKNOWN` | `Commands.Civilian.Type_Unknown` | `Type_Unknown` |
+| `CIVILIAN_SPAWNER_REMOVED` | `Commands.Civilian.Spawner_Removed` | `Spawner_Removed` |
+| `CIVILIAN_SPAWNER_TELEPORTED` | `Commands.Civilian.Spawner_Teleported` | `Spawner_Teleported` |
+| `CIVILIAN_SPAWN_FAILED` | `Commands.Civilian.Spawn_Failed` | `Spawn_Failed` |
+| `CIVILIAN_SPAWNER_TYPE_SET` | `Commands.Civilian.Spawner_Type_Set` | `Spawner_Type_Set` |
+| `CIVILIAN_SPAWNER_GROUP_SET` | `Commands.Civilian.Spawner_Group_Set` | `Spawner_Group_Set` |
+| `CIVILIAN_SPAWNER_LIST_HEADER` | `Civilian.Spawner_List_Header` (top-level) | `Spawner_List_Header` |
+
+Every accessor on the new `CivilianMessages` holder keeps the exact `Type`/formatting the deleted constant used
+(all `Type.COMMAND` except `Spawner_List_Header`, which was `Type.PREFIX`), so player-visible output is byte
+identical to before this move — only the source file changed.
+
+### 2. New shared mechanism: `LocalizedModuleYaml` (`gangland-api`)
+
+`CivilianMessages` is built on a new small base class, `org.luckyraven.gangland.file.configuration
+.LocalizedModuleYaml`, extracted from the language-fallback logic WS3 G4 fix round 1 (W53/F1) proved for
+`gangland-lootchest`'s `GanglandLootChestMessages`: `<baseName>_es.yml` is picked over `<baseName>.yml` whenever
+`Settings.Language` is `es` **and** that file is registered, falling back to English otherwise. This is a
+reusable piece, not a fourth copy — `gangland-lootchest`'s `GanglandLootChestMessages` and gadget's
+`JetpackMessages` predate this class and keep their own copy of the same logic for now; migrating them onto this
+base is a follow-up, not part of this gate.
+
+### 3. A leftover legacy `Commands.Civilian:` block now warns
+
+Unlike the loot-chest case noted in the WS3 section above ("no equivalent warning" for a leftover message-file
+block), this gate closes that specific gap for the civilians module: if an upgrading server's
+`message_en.yml`/`message_es.yml` still has a `Commands.Civilian:` block after upgrading, boot (and every
+`/glw reload`) now logs a targeted warning, reusing the same `Settings.warnIfLegacyShopBlockPresent` helper
+WS4/WS3 introduced for `settings.yml` (generalized to accept a source file other than `settings.yml`):
+
+```
+[Gangland.Settings] message_<lang>.yml still has a legacy 'Civilian:' block — those keys moved to
+plugins/Gangland_Warfare/npc/civilian_messages.yml (extracted by the civilians module); customised values are
+NOT auto-migrated and must be copied over by hand. See documentation/migration-0.10.0.md.
+```
+
+As with every other block this family of warnings covers, a customised civilian message string in the old
+`message_en.yml`/`message_es.yml` is **not** auto-migrated — copy it into the new
+`npc/civilian_messages.yml`/`npc/civilian_messages_es.yml` by hand.
+
+<!-- Later 0.10.0 gates (WS5 gang module, WS6's remaining G1/G2/G4 gates) append their own sections here as they land. -->

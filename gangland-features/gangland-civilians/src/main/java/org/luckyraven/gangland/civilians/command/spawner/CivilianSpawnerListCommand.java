@@ -10,26 +10,28 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
+import org.luckyraven.gangland.civilians.message.CivilianMessages;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
-import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 class CivilianSpawnerListCommand extends SubArgument {
 
 	private final CivilianSpawnManager civilianSpawnManager;
+	private final CivilianMessages     civilianMessages;
 
 	CivilianSpawnerListCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                           CivilianSpawnManager civilianSpawnManager) {
+	                           CivilianSpawnManager civilianSpawnManager, CivilianMessages civilianMessages) {
 		super(plugin, "list", tree, parent);
 		this.civilianSpawnManager = civilianSpawnManager;
+		this.civilianMessages     = civilianMessages;
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, strings) -> {
-			sender.sendMessage(Messages.CIVILIAN_SPAWNER_LIST_HEADER.toString());
+			sender.sendMessage(civilianMessages.spawnerListHeader());
 			civilianSpawnManager.getSpawners().forEach(spawner -> {
 				Location location = spawner.getLocation();
 				int      x        = location.getBlockX();

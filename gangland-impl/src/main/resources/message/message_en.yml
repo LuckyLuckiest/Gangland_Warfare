@@ -375,18 +375,6 @@ Commands:
    Car:
       Gave: "Gave &b%name% &7x&b%amount%&7."
       List_Header: "List of cars"
-   Civilian:
-      List_Empty: "No civilians are currently active."
-      Groups_Empty: "No civilian groups are currently active."
-      Spawned: "&aCivilian &e%type%&a spawned near you."
-      Group_Spawned: "&aCivilian group &e%group%&a spawned at your location."
-      Group_Unknown: "&cUnknown group &e%group%&c."
-      Type_Unknown: "&cUnknown type &e%type%&c."
-      Spawner_Removed: "&aCivilian spawner &e%id%&a removed."
-      Spawner_Teleported: "Teleported to civilian spawner &e(&b%id%&e)&7."
-      Spawn_Failed: "&cFailed to spawn civilian. Check that type &e%type%&c is valid and a location was found."
-      Spawner_Type_Set: "&aCivilian spawner &e%type%&a set at your location."
-      Spawner_Group_Set: "&aGroup spawner &e%group%&a set at your location."
    Permissions:
       Overview_Header: "&7Tracked permissions: &b%total%&7 across &b%categories%&7 categories. Use &e/glw permissions <category>&7 to filter."
       Overview_Category: "&7- &b%category% &8(&a%count%&8)"
@@ -796,9 +784,6 @@ Jail:
 
 Cop:
    Spawner_List_Header: "Cop spawners:"
-
-Civilian:
-   Spawner_List_Header: "Civilian spawners:"
 
 Item:
    Unique:

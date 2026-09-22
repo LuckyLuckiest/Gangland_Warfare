@@ -5,22 +5,25 @@ import org.bukkit.entity.Entity;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
+import org.luckyraven.gangland.civilians.message.CivilianMessages;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
-import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.Collection;
 
 class CivilianListCommand extends SubArgument {
 
-	private final CivilianService civilianService;
+	private final CivilianService  civilianService;
+	private final CivilianMessages civilianMessages;
 
-	CivilianListCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, CivilianService civilianService) {
+	CivilianListCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, CivilianService civilianService,
+	                    CivilianMessages civilianMessages) {
 		super(plugin, "list", tree, parent);
-		this.civilianService = civilianService;
+		this.civilianService  = civilianService;
+		this.civilianMessages = civilianMessages;
 	}
 
 	@Override
@@ -29,7 +32,7 @@ class CivilianListCommand extends SubArgument {
 			Collection<CivilianNpc> npcs = civilianService.getActiveNpcs();
 
 			if (npcs.isEmpty()) {
-				sender.sendMessage(Messages.CIVILIAN_LIST_EMPTY.toString());
+				sender.sendMessage(civilianMessages.listEmpty());
 				return;
 			}
 

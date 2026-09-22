@@ -5,6 +5,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.civilians.command.spawner.CivilianSpawnerCommand;
+import org.luckyraven.gangland.civilians.message.CivilianMessages;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.keystone.bean.command.CommandHandler;
@@ -18,14 +19,17 @@ public class CivilianCommand extends Command {
 
 	private final CivilianService      civilianService;
 	private final CivilianSpawnManager civilianSpawnManager;
+	private final CivilianMessages     civilianMessages;
 
 	public CivilianCommand(JavaPlugin plugin,
 	                       CivilianService civilianService,
-	                       CivilianSpawnManager civilianSpawnManager) {
+	                       CivilianSpawnManager civilianSpawnManager,
+	                       CivilianMessages civilianMessages) {
 		super(plugin, "civilian", false, "civ");
 
 		this.civilianService      = civilianService;
 		this.civilianSpawnManager = civilianSpawnManager;
+		this.civilianMessages     = civilianMessages;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -44,13 +48,15 @@ public class CivilianCommand extends Command {
 	@Override
 	protected void initializeArguments() {
 		Argument spawner = new CivilianSpawnerCommand(getPlugin(), getArgumentTree(), getArgument(), civilianService,
-		                                              civilianSpawnManager);
-		Argument list   = new CivilianListCommand(getPlugin(), getArgumentTree(), getArgument(), civilianService);
-		Argument groups = new CivilianGroupsCommand(getPlugin(), getArgumentTree(), getArgument(), civilianService);
+		                                              civilianSpawnManager, civilianMessages);
+		Argument list   = new CivilianListCommand(getPlugin(), getArgumentTree(), getArgument(), civilianService,
+		                                          civilianMessages);
+		Argument groups = new CivilianGroupsCommand(getPlugin(), getArgumentTree(), getArgument(), civilianService,
+		                                            civilianMessages);
 		Argument spawn = new CivilianSpawnCommand(getPlugin(), getArgumentTree(), getArgument(), civilianService,
-		                                          civilianSpawnManager);
+		                                          civilianSpawnManager, civilianMessages);
 		Argument spawnGroup = new CivilianSpawnGroupCommand(getPlugin(), getArgumentTree(), getArgument(),
-		                                                    civilianService);
+		                                                    civilianService, civilianMessages);
 
 		List<Argument> arguments = new ArrayList<>();
 

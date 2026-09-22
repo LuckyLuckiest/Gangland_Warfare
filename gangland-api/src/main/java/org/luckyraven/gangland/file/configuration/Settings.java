@@ -367,20 +367,23 @@ public class Settings implements FileInitializer {
 	}
 
 	/**
-	 * WS4 G1a fix round 1 (F2): fires a distinct, actionable warning when a legacy block is still present in
-	 * {@code settings.yml} after those keys moved to a module-owned YAML. Runs once per {@link #init()} call —
-	 * once at boot, once per {@code /glw reload} — naming the file the keys moved to, the module that extracted
-	 * them and the migration doc, since customised values are not auto-migrated and would otherwise silently do
-	 * nothing with no clue why. Generalized in WS3 G4 (0.10.0) from the Trader:/Banker:-only helper WS4 G1a
-	 * introduced — {@code module} is now a parameter instead of a hard-coded {@code "npc-shops"}.
+	 * WS4 G1a fix round 1 (F2): fires a distinct, actionable warning when a legacy block is still present in a
+	 * core-owned file after those keys moved to a module-owned YAML. Runs once per {@link #init()} call (settings
+	 * call sites) — once at boot, once per {@code /glw reload} — naming the file the keys moved to, the module
+	 * that extracted them and the migration doc, since customised values are not auto-migrated and would
+	 * otherwise silently do nothing with no clue why. Generalized in WS3 G4 (0.10.0) from the Trader:/Banker:-only
+	 * helper WS4 G1a introduced (module became a parameter instead of a hard-coded {@code "npc-shops"}), and
+	 * again in WS6 G3 so a legacy <b>message</b> block ({@code message_<lang>.yml}, not just {@code settings.yml})
+	 * can reuse it too — {@code sourceFile} is now a parameter instead of a hard-coded {@code "settings.yml"};
+	 * package-private (not private) so {@link Messages#init} can call it for the civilians worked example.
 	 */
-	private static void warnIfLegacyShopBlockPresent(boolean present, String legacyKey, String movedTo,
-	                                                  String module) {
+	static void warnIfLegacyShopBlockPresent(boolean present, String legacyKey, String movedTo, String module,
+	                                          String sourceFile) {
 		if (!present) return;
-		log.warn("settings.yml still has a legacy '{}:' block — those keys moved to " +
+		log.warn("{} still has a legacy '{}:' block — those keys moved to " +
 		         "plugins/Gangland_Warfare/{} (extracted by the {} module); customised values are NOT " +
 		         "auto-migrated and must be copied over by hand. See documentation/migration-0.10.0.md.",
-		         legacyKey, movedTo, module);
+		         sourceFile, legacyKey, movedTo, module);
 	}
 
 	@Override
@@ -727,12 +730,12 @@ public class Settings implements FileInitializer {
 		// which suppresses the generic unknown-key sweep for it; this replaces that generic, unhelpful line
 		// with one that actually says where the keys went.
 		warnIfLegacyShopBlockPresent(section(root, "Trader", report) != null, "Trader", "npc/trader_settings.yml",
-		                             "npc-shops");
+		                             "npc-shops", "settings.yml");
 		warnIfLegacyShopBlockPresent(section(root, "Banker", report) != null, "Banker", "npc/banker_settings.yml",
-		                             "npc-shops");
+		                             "npc-shops", "settings.yml");
 		warnIfLegacyShopBlockPresent(section(root, "Loot_Chest", report) != null, "Loot_Chest",
 		                             "lootchests/loot_chest_settings.yml and lootchests/lootchest_messages.yml",
-		                             "gangland-lootchest");
+		                             "gangland-lootchest", "settings.yml");
 
 		// turf
 		NodeReader turf          = section(root, "Turf", report);
