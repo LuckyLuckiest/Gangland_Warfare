@@ -7,8 +7,9 @@ import org.luckyraven.gangland.lootchest.data.LootTier;
 /**
  * Provides all player-facing messages and hologram text used by the loot chest system.
  * <p>
- * Implementations live in {@code gangland-impl} and read from the configured messages file via {@code MessageAddon}.
- * lootchest-api never accesses message files directly.
+ * The implementation ({@code GanglandLootChestMessages}, WS3 G4) lives in this module and reads its own
+ * {@code lootchests/lootchest_messages.yml} — module-owned strings never live in {@code gangland-api}'s
+ * {@code Messages} enum (module API contract).
  */
 public interface LootChestMessagesProvider {
 	/**
@@ -105,4 +106,24 @@ public interface LootChestMessagesProvider {
 	 * Time-unit label provider used when formatting the cooldown countdown in chat.
 	 */
 	TimeMessagesProvider getTimeMessages();
+
+	/**
+	 * Sent by {@code /glw lootchest remove} when the player isn't looking at a block close enough to target.
+	 */
+	String getMustLookAtBlock();
+
+	/**
+	 * Sent by {@code /glw lootchest remove} when the targeted block isn't a registered loot chest.
+	 */
+	String getNoChestAtLocation();
+
+	/**
+	 * Sent by {@code /glw lootchest wand edit} when the player isn't holding a loot chest wand.
+	 */
+	String getRequiresWand();
+
+	/**
+	 * Sent by {@code /glw lootchest remove} once the chest has been unregistered and deleted.
+	 */
+	String getRemoved();
 }

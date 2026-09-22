@@ -4,13 +4,15 @@
 
 `gangland-ui/inventory-api` was deleted outright at the 0.10.0 WS2 CUT gate — every menu in this repo now builds
 on Keystone's `keystone-inventory` library plus a thin Gangland-only YAML dialect living in `gangland-impl`'s own
-`org.luckyraven.gangland.menu.*` package. Three independent modules remain under `gangland-ui/`:
+`org.luckyraven.gangland.menu.*` package. `gangland-ui/hologram-api` was deleted at the 0.10.0 WS3 G1 gate —
+holograms moved to Keystone's own `keystone-hologram` module (`org.luckyraven.keystone.hologram.*`). `lootchest-api`
+became the `gangland-features/gangland-lootchest` runtime module at the WS3 G2 gate (folded in whole with the
+`gangland-impl`-side classes it used to pair with — package stays `org.luckyraven.gangland.lootchest.*`). One
+module remains under `gangland-ui/`:
 
 | Module           | Package                              | Classes | Purpose                                    |
 |------------------|--------------------------------------|---------|--------------------------------------------|
 | `sign-api`       | `org.luckyraven.gangland.sign`       | ~25     | Interactive sign placement and interaction |
-| `lootchest-api`  | `org.luckyraven.gangland.lootchest`  | ~35     | Loot chest sessions with cracking minigame |
-| `hologram-api`   | `org.luckyraven.gangland.hologram`   | 3       | Floating text via invisible armor stands   |
 
 All modules are event-driven using Bukkit listeners. Listeners are annotated with `@ListenerHandler` for
 auto-registration via the `DependencyContainer` scan.
@@ -920,16 +922,20 @@ The chest-opening view is **not** a menu — it's a plain shared Bukkit `Invento
 open at once, with clicks handled directly by `LootChestListener`'s raw `InventoryClickEvent`/`InventoryCloseEvent`
 dispatch (unrelated to the `ChestMenu`/`ClickHandler` model above). At the CUT gate, `LootChestSession` (and
 `LootChestService`'s `sharedChestInventories` map) swapped the deleted `InventoryHandler` for a small,
-module-owned `SharedLootInventory` wrapper (~40 lines, `gangland-ui/lootchest-api/.../lootchest/
-SharedLootInventory.java`) around a raw `Bukkit.createInventory(...)` — no menu framework needed for this path.
-Take/deposit policy is unchanged either way: any viewer can freely take or place items, and a cursor-held stack on
-close/disconnect is returned or dropped by stock CraftBukkit `InventoryView`-close behavior, which neither the old
-`InventoryHandler` nor the new `SharedLootInventory` ever intercepted (see the CUT report for the full evidence
-trail). Items are placed at random slots, and the inventory state is synced back to `LootChestData` on close for
-persistence across sessions. The admin wand-preview screen (`LootChestWand`/`LootChestWandEditCommand`, both
-`gangland-impl`, not `lootchest-api`) is a real menu, rebuilt onto `ChestMenuBuilder`/`PagedRegion` at the same
-gate — `gangland-impl` already depends on `keystone-inventory` for its own core menus, so no new pom dependency
-was needed for this.
+module-owned `SharedLootInventory` wrapper (~40 lines, now `gangland-features/gangland-lootchest/.../lootchest/
+SharedLootInventory.java` — `lootchest-api` folded into that module at the WS3 G2 gate) around a raw
+`Bukkit.createInventory(...)` — no menu framework needed for this path. **Take-only policy** (CUT fix round, ruling
+ref "Lootchest policy" in the CUT report): `LootChestListener.onInventoryClick`/`onInventoryDrag` cancel every
+deposit-shaped action onto the chest's top inventory or a shift-click FROM the player's inventory INTO it
+(`PLACE_ALL`/`PLACE_ONE`/`PLACE_SOME`/`SWAP_WITH_CURSOR`/`HOTBAR_SWAP`/`HOTBAR_MOVE_AND_READD`, or
+`MOVE_TO_OTHER_INVENTORY` originating in the bottom inventory, plus any drag touching a top slot); every take path
+(`PICKUP_ALL`, a shift-click OUT of the chest, …) is left untouched — stricter than the old `InventoryHandler`'s
+loot-slot-only deposit rule, see `documentation/migration-0.10.0.md`. Items are placed at random slots, and the
+inventory state is synced back to `LootChestData` on close for persistence across sessions. The admin
+wand-preview screen (`LootChestWand`/`LootChestWandEditCommand`, both now in `gangland-features/gangland-lootchest`,
+not `gangland-impl`) is a real menu, rebuilt onto `ChestMenuBuilder`/`PagedRegion` at the same CUT gate — the
+module declares its own `keystone-inventory` dependency directly (every menu-building module does, `gangland-api`
+never re-exports it).
 
 ### Inventory + Sign
 
@@ -943,16 +949,18 @@ Sign interactions that open a menu go through `MenuOpener` (see above) rather th
 gangland-core (Placeholder, ItemBuilder, ChatUtil, TriConsumer)
     ^
     |
-sign-api ──────────> (standalone, depends on gangland-core)
-    
-hologram-api ───────> (standalone, depends on gangland-core)
+sign-api ──────────────────────> (standalone, depends on gangland-core)
+
+keystone-hologram (Keystone) ──> (standalone, depends on keystone-common/keystone-bean; not gangland-core)
     ^
     |
-lootchest-api ──────> (depends on hologram-api, gangland-core; no inventory-api dependency any more)
+gangland-features/gangland-lootchest ─> (depends on keystone-hologram, keystone-inventory, gangland-core;
+                                          no inventory-api dependency any more)
 ```
 
-All UI modules depend on `gangland-core` for shared utilities (`Placeholder`, `ItemBuilder`, `ChatUtil`,
-`ColorUtil`, `TriConsumer`). `lootchest-api` additionally depends on `hologram-api` (for hologram labels); its own
-chest-opening view is a raw Bukkit `Inventory` (`SharedLootInventory`), so it needs no Keystone menu dependency at
-all. The admin wand-preview screen (`gangland-impl`'s `LootChestWand`) is the only loot-chest GUI on
-`keystone-inventory`. All other modules are independent of each other.
+`sign-api` depends on `gangland-core` for shared utilities (`Placeholder`, `ItemBuilder`, `ChatUtil`, `ColorUtil`,
+`TriConsumer`). `gangland-features/gangland-lootchest` additionally depends on Keystone's `keystone-hologram` (for
+hologram labels, WS3 G1) and declares `keystone-inventory` directly for its admin wand-preview screen
+(`LootChestWand`/`LootChestWandEditCommand`, now inside the same module) — its chest-opening view is still a raw
+Bukkit `Inventory` (`SharedLootInventory`), needing no menu dependency of its own. All other modules are
+independent of each other.

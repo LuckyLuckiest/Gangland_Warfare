@@ -326,34 +326,6 @@ public enum Messages {
 	SIGN_BULK_EXPIRED("Signs.Bulk.Expired", Type.ERROR),
 	SIGN_BULK_CANCELLED("Signs.Bulk.Cancelled", Type.ERROR),
 
-	// loot chests - player messages
-	LOOT_CHEST_CRACKING_STARTED("Loot_Chest.Cracking_Started", Type.OTHER),
-	LOOT_CHEST_ALREADY_IN_SESSION("Loot_Chest.Already_In_Session", Type.ERROR),
-	LOOT_CHEST_ON_COOLDOWN("Loot_Chest.On_Cooldown", Type.ERROR),
-	LOOT_CHEST_REQUIRES_LOCKPICK("Loot_Chest.Requires_Lockpick", Type.ERROR),
-	LOOT_CHEST_REQUIRES_KEY("Loot_Chest.Requires_Key", Type.ERROR),
-	LOOT_CHEST_NO_PERMISSION("Loot_Chest.No_Permission", Type.ERROR),
-	LOOT_CHEST_INVALID_LOOT_TABLE("Loot_Chest.Invalid_Loot_Table", Type.ERROR),
-	LOOT_CHEST_INVALID_CHEST("Loot_Chest.Invalid_Chest", Type.ERROR),
-	LOOT_CHEST_NO_ITEM_PROVIDER("Loot_Chest.No_Item_Provider", Type.ERROR),
-	LOOT_CHEST_ALREADY_LOOTED("Loot_Chest.Already_Looted", Type.ERROR),
-
-	// loot chests - hologram text
-	LOOT_CHEST_HOLOGRAM_COOLDOWN("Loot_Chest.Hologram.Cooldown_Status", Type.OTHER),
-	LOOT_CHEST_HOLOGRAM_AVAILABLE("Loot_Chest.Hologram.Available_Status", Type.OTHER),
-	LOOT_CHEST_HOLOGRAM_HINT("Loot_Chest.Hologram.Available_Hint", Type.OTHER),
-	LOOT_CHEST_HOLOGRAM_LOCKED_REQUIRES("Loot_Chest.Hologram.Locked_Requires", Type.OTHER),
-	LOOT_CHEST_HOLOGRAM_LOCKED_PERMISSION("Loot_Chest.Hologram.Locked_Permission", Type.OTHER),
-	LOOT_CHEST_HOLOGRAM_UNLOCKED("Loot_Chest.Hologram.Unlocked", Type.OTHER),
-
-	// loot chests - time units for cooldown countdown
-	LOOT_CHEST_TIME_YEAR("Loot_Chest.Time_Units.Year", Type.NO_CHANGE),
-	LOOT_CHEST_TIME_WEEK("Loot_Chest.Time_Units.Week", Type.NO_CHANGE),
-	LOOT_CHEST_TIME_DAY("Loot_Chest.Time_Units.Day", Type.NO_CHANGE),
-	LOOT_CHEST_TIME_HOUR("Loot_Chest.Time_Units.Hour", Type.NO_CHANGE),
-	LOOT_CHEST_TIME_MINUTE("Loot_Chest.Time_Units.Minute", Type.NO_CHANGE),
-	LOOT_CHEST_TIME_SECOND("Loot_Chest.Time_Units.Second", Type.NO_CHANGE),
-
 	// shop framework (reusable across any shop integration)
 	SHOP_PURCHASE_SUCCESS("Commands.Shop.Purchase.Success", Type.COMMAND),
 	SHOP_PURCHASE_STACK_SUCCESS("Commands.Shop.Purchase.Stack_Success", Type.COMMAND),
@@ -570,12 +542,6 @@ public enum Messages {
 	WAYPOINT_LIST_EMPTY("Waypoint.List_Empty", Type.PREFIX),
 	WAYPOINT_DELETED("Commands.Waypoint.Deleted", Type.COMMAND),
 	WAYPOINT_TYPE_INVALID_HEADER("Errors.Waypoint.Invalid_Type_Header", Type.ERROR),
-
-	// commands - loot chest (admin)
-	LOOT_CHEST_MUST_LOOK_AT_BLOCK("Errors.Loot_Chest.Must_Look_At_Block", Type.ERROR),
-	LOOT_CHEST_NO_CHEST_AT_LOCATION("Errors.Loot_Chest.No_Chest_At_Location", Type.ERROR),
-	LOOT_CHEST_REQUIRES_WAND("Errors.Loot_Chest.Requires_Wand", Type.ERROR),
-	LOOT_CHEST_REMOVED("Commands.Loot_Chest.Removed", Type.COMMAND),
 
 	// commands - wanted / balance
 	WANTED_STATUS_HEADER("Commands.Wanted.Status_Header", Type.COMMAND),

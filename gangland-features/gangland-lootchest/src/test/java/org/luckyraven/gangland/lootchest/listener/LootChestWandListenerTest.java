@@ -13,13 +13,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.lootchest.LootChestManager;
 import org.luckyraven.gangland.lootchest.LootChestWandTag;
+import org.luckyraven.gangland.lootchest.config.LootChestSettingsProvider;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.item.nbt.NbtBridge;
 import org.luckyraven.keystone.testkit.RecordingNbtAccessor;
-import org.mockito.MockedStatic;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +26,6 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -62,13 +60,14 @@ class LootChestWandListenerTest {
 	@Test
 	@DisplayName("allow-list [\"CHEST\"] rejects a right-clicked TRAPPED_CHEST instead of substring-matching it")
 	void allowListOfChest_rejectsTrappedChest_exactMatchNotSubstring() {
-		JavaPlugin           gangland  = mock(JavaPlugin.class);
-		LootChestManager     manager   = mock(LootChestManager.class);
-		Player               player    = mock(Player.class);
-		PlayerInventory      inventory = mock(PlayerInventory.class);
-		Block                block     = mock(Block.class);
-		Location             location  = new Location(null, 10, 64, 10);
-		PlayerInteractEvent  event     = mock(PlayerInteractEvent.class);
+		JavaPlugin               gangland         = mock(JavaPlugin.class);
+		LootChestManager         manager          = mock(LootChestManager.class);
+		LootChestSettingsProvider settingsProvider = mock(LootChestSettingsProvider.class);
+		Player                   player           = mock(Player.class);
+		PlayerInventory          inventory        = mock(PlayerInventory.class);
+		Block                    block            = mock(Block.class);
+		Location                 location         = new Location(null, 10, 64, 10);
+		PlayerInteractEvent      event            = mock(PlayerInteractEvent.class);
 
 		ItemStack wand = configuredWandItem();
 
@@ -80,14 +79,11 @@ class LootChestWandListenerTest {
 		when(block.getType()).thenReturn(Material.TRAPPED_CHEST);
 		when(block.getLocation()).thenReturn(location);
 		when(manager.getChestAt(location)).thenReturn(Optional.empty());
+		when(settingsProvider.getAllowedBlocks()).thenReturn(List.of("CHEST"));
 
-		LootChestWandListener listener = new LootChestWandListener(gangland, manager);
+		LootChestWandListener listener = new LootChestWandListener(gangland, manager, settingsProvider);
 
-		try (MockedStatic<Settings> settings = mockStatic(Settings.class)) {
-			settings.when(Settings::getLootChestAllowedBlocks).thenReturn(List.of("CHEST"));
-
-			listener.onPlayerInteract(event);
-		}
+		listener.onPlayerInteract(event);
 
 		// The observable effect of the bug: a TRAPPED_CHEST wrongly treated as an allowed "CHEST" gets a loot
 		// chest registered at its location. The fix must never reach registerChest for this block/allow-list pair.

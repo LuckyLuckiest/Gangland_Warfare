@@ -8,21 +8,23 @@ import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
-import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.lootchest.LootChestManager;
 import org.luckyraven.gangland.lootchest.LootChestWand;
+import org.luckyraven.gangland.lootchest.config.LootChestMessagesProvider;
 
 class LootChestWandEditCommand extends SubArgument {
 
-	private final JavaPlugin         gangland;
-	private final LootChestManager lootChestManager;
+	private final JavaPlugin              gangland;
+	private final LootChestManager        lootChestManager;
+	private final LootChestMessagesProvider messagesProvider;
 
 	protected LootChestWandEditCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                                   LootChestManager lootChestManager) {
+	                                   LootChestManager lootChestManager, LootChestMessagesProvider messagesProvider) {
 		super(gangland, "edit", tree, parent);
 
 		this.gangland         = gangland;
 		this.lootChestManager = lootChestManager;
+		this.messagesProvider = messagesProvider;
 	}
 
 	@Override
@@ -33,7 +35,7 @@ class LootChestWandEditCommand extends SubArgument {
 			ItemStack heldItem = player.getInventory().getItemInMainHand();
 
 			if (!LootChestWand.isLootChestWand(heldItem)) {
-				player.sendMessage(Messages.LOOT_CHEST_REQUIRES_WAND.toString());
+				player.sendMessage(messagesProvider.getRequiresWand());
 				return;
 			}
 

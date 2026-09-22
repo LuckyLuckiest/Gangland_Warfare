@@ -194,13 +194,6 @@ public class Settings implements FileInitializer {
 	// npc/trader_settings.yml and npc/banker_settings.yml — Max_Mode_Multiplier is the one survivor,
 	// shared by the admin editor and the trader browser, so it stays core under its own Shop: block)
 	private static @Getter int        shopMaxModeMultiplier;
-	// loot chest configuration
-	private static @Getter long       lootChestCountdownTimer;
-	private static @Getter String     lootChestOpeningSound, lootChestLockedSound, lootChestClosingSound;
-	private static @Getter List<String> lootChestAllowedBlocks;
-	private static @Getter double       lootChestRewardMoneyMinimum, lootChestRewardMoneyMaximum,
-			lootChestRewardExperienceMinimum, lootChestRewardExperienceMaximum;
-	private static @Getter List<String>  lootChestRewardCommands;
 	// money drop (cash items dropped by mobs / cops / civilians / players on death)
 	private static @Getter boolean       moneyDropEnabled;
 	// turf configuration
@@ -374,18 +367,20 @@ public class Settings implements FileInitializer {
 	}
 
 	/**
-	 * WS4 G1a fix round 1 (F2): fires a distinct, actionable warning when a legacy {@code Trader:}/{@code Banker:}
-	 * block is still present in {@code settings.yml} after those NPC-specific keys moved to module-owned YAML.
-	 * Runs once per {@link #init()} call — once at boot, once per {@code /glw reload} — naming the file the keys
-	 * moved to and the migration doc, since customised values are not auto-migrated and would otherwise silently
-	 * do nothing with no clue why.
+	 * WS4 G1a fix round 1 (F2): fires a distinct, actionable warning when a legacy block is still present in
+	 * {@code settings.yml} after those keys moved to a module-owned YAML. Runs once per {@link #init()} call —
+	 * once at boot, once per {@code /glw reload} — naming the file the keys moved to, the module that extracted
+	 * them and the migration doc, since customised values are not auto-migrated and would otherwise silently do
+	 * nothing with no clue why. Generalized in WS3 G4 (0.10.0) from the Trader:/Banker:-only helper WS4 G1a
+	 * introduced — {@code module} is now a parameter instead of a hard-coded {@code "npc-shops"}.
 	 */
-	private static void warnIfLegacyShopBlockPresent(boolean present, String legacyKey, String movedTo) {
+	private static void warnIfLegacyShopBlockPresent(boolean present, String legacyKey, String movedTo,
+	                                                  String module) {
 		if (!present) return;
 		log.warn("settings.yml still has a legacy '{}:' block — those keys moved to " +
-		         "plugins/Gangland_Warfare/{} (extracted by the npc-shops module); customised values are NOT " +
+		         "plugins/Gangland_Warfare/{} (extracted by the {} module); customised values are NOT " +
 		         "auto-migrated and must be copied over by hand. See documentation/migration-0.10.0.md.",
-		         legacyKey, movedTo);
+		         legacyKey, movedTo, module);
 	}
 
 	@Override
@@ -696,24 +691,10 @@ public class Settings implements FileInitializer {
 		detainmentTransitCommitSound    = str(detainSounds, "Transit_Commit", "BLOCK_IRON_DOOR_CLOSE");
 		detainmentSentenceCompleteSound = str(detainSounds, "Sentence_Complete", "BLOCK_BELL_USE");
 
-		// loot chest
-		NodeReader lootChest        = section(root, "Loot_Chest", report);
-		NodeReader lootChestSound   = section(lootChest, "Sound", report);
-		NodeReader lootChestRewards = section(lootChest, "Rewards", report);
-		NodeReader lootRewardMoney  = section(lootChestRewards, "Money", report);
-		NodeReader lootRewardExp    = section(lootChestRewards, "Experience", report);
-
-		lootChestCountdownTimer = intVal(lootChest, "Countdown_Timer", 300);
-		lootChestOpeningSound   = str(lootChestSound, "Opening", "BLOCK_CHEST_OPEN");
-		lootChestLockedSound    = str(lootChestSound, "Locked", "BLOCK_CHEST_LOCKED");
-		lootChestClosingSound   = str(lootChestSound, "Closing", "BLOCK_CHEST_CLOSE");
-		lootChestAllowedBlocks  = strList(lootChest, "Allowed_Blocks");
-
-		lootChestRewardMoneyMinimum      = dbl(lootRewardMoney, "Minimum", 10);
-		lootChestRewardMoneyMaximum      = dbl(lootRewardMoney, "Maximum", 1_000);
-		lootChestRewardExperienceMinimum = dbl(lootRewardExp, "Minimum", 5);
-		lootChestRewardExperienceMaximum = dbl(lootRewardExp, "Maximum", 100);
-		lootChestRewardCommands          = strList(lootChestRewards, "Commands");
+		// loot chest — Countdown_Timer/Sound/Allowed_Blocks/Rewards all moved to the gangland-lootchest module's
+		// own lootchests/loot_chest_settings.yml (WS3 G4); a leftover legacy block gets the same targeted warning
+		// WS4 G1a introduced for Trader:/Banker:, not silent dead weight — see the warnIfLegacyShopBlockPresent
+		// call below.
 
 		// money drop — optional section; defaults true when missing
 		MappingNode moneyDropNode = root.get("Money_Drop").asMapping().orNull();
@@ -745,8 +726,13 @@ public class Settings implements FileInitializer {
 		// customised values now silently do nothing. section() above already marked the block "touched",
 		// which suppresses the generic unknown-key sweep for it; this replaces that generic, unhelpful line
 		// with one that actually says where the keys went.
-		warnIfLegacyShopBlockPresent(section(root, "Trader", report) != null, "Trader", "npc/trader_settings.yml");
-		warnIfLegacyShopBlockPresent(section(root, "Banker", report) != null, "Banker", "npc/banker_settings.yml");
+		warnIfLegacyShopBlockPresent(section(root, "Trader", report) != null, "Trader", "npc/trader_settings.yml",
+		                             "npc-shops");
+		warnIfLegacyShopBlockPresent(section(root, "Banker", report) != null, "Banker", "npc/banker_settings.yml",
+		                             "npc-shops");
+		warnIfLegacyShopBlockPresent(section(root, "Loot_Chest", report) != null, "Loot_Chest",
+		                             "lootchests/loot_chest_settings.yml and lootchests/lootchest_messages.yml",
+		                             "gangland-lootchest");
 
 		// turf
 		NodeReader turf          = section(root, "Turf", report);

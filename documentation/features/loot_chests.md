@@ -110,36 +110,41 @@ The following block types can be designated as loot chests:
 
 ## Configuration
 
-In `settings.yml`:
+Loot chests are a runtime module (`gangland-features/gangland-lootchest`, `modules/gangland-lootchest-<rev>.jar`)
+since 0.10.0 WS3 — its settings, messages and loot data all live in its own YAML files under the plugin's
+`lootchests/` data folder, not core `settings.yml`/the message files. Upgrading a server that customised the old
+`settings.yml` `Loot_Chest:` block gets a targeted warning naming the new file (see
+`documentation/migration-0.10.0.md`); customised values must be copied over by hand.
+
+In `lootchests/loot_chest_settings.yml`:
 
 ```yaml
-Loot_Chest:
-   Countdown_Timer: 300          # Seconds before the chest opens (default: 5 minutes)
+Countdown_Timer: 300          # Seconds before the chest opens (default: 5 minutes)
 
-   Sound:
-      Opening: "BLOCK_CHEST_OPEN"
-      Locked: "BLOCK_CHEST_LOCKED"
-      Closing: "BLOCK_CHEST_CLOSE"
+Sound:
+   Opening: "BLOCK_CHEST_OPEN"
+   Locked: "BLOCK_CHEST_LOCKED"
+   Closing: "BLOCK_CHEST_CLOSE"
 
-   Allowed_Blocks:
-      - "CHEST"
-      - "TRAPPED_CHEST"
-      - "BARREL"
-      - "SHULKER_BOX"
-      - "ENDER_CHEST"
+Allowed_Blocks:
+   - "CHEST"
+   - "TRAPPED_CHEST"
+   - "BARREL"
+   - "SHULKER_BOX"
+   - "ENDER_CHEST"
 
-   Rewards:
-      Money:
-         Minimum: 10
-         Maximum: 1_000            # Random amount drawn between min and max
-      Experience:
-         Minimum: 5
-         Maximum: 100
-      Commands:
-         - ""                      # Optional: server commands executed on open
+Rewards:
+   Money:
+      Minimum: 10
+      Maximum: 1_000            # Random amount drawn between min and max
+   Experience:
+      Minimum: 5
+      Maximum: 100
+   Commands:
+      - ""                      # Optional: server commands executed on open
 ```
 
-Tier definitions and base rarity weights live in `loot/tiers.yml`:
+Tier definitions and base rarity weights live in `lootchests/tiers.yml`:
 
 ```yaml
 Rarity:
@@ -167,7 +172,7 @@ Tiers:
       Unlock_Item: "legendary_key"
 ```
 
-Per-table item drops and per-table rarity overrides live in `loot/loot_chests.yml`:
+Per-table item drops and per-table rarity overrides live in `lootchests/loot_chests.yml`:
 
 ```yaml
 Loot_Tables:

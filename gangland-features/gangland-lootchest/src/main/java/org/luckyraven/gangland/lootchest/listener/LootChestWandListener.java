@@ -12,9 +12,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.util.ChatUtil;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.lootchest.LootChestManager;
 import org.luckyraven.gangland.lootchest.LootChestWand;
+import org.luckyraven.gangland.lootchest.config.LootChestSettingsProvider;
 
 import java.util.List;
 
@@ -22,8 +22,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LootChestWandListener implements Listener {
 
-	private final JavaPlugin       gangland;
-	private final LootChestManager lootChestManager;
+	private final JavaPlugin                gangland;
+	private final LootChestManager          lootChestManager;
+	private final LootChestSettingsProvider settingsProvider;
 
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onPlayerInteract(PlayerInteractEvent event) {
@@ -62,7 +63,7 @@ public class LootChestWandListener implements Listener {
 		event.setCancelled(true);
 
 		// Check if block is allowed
-		List<String> allowedBlocks = Settings.getLootChestAllowedBlocks();
+		List<String> allowedBlocks = settingsProvider.getAllowedBlocks();
 		if (allowedBlocks.isEmpty()) {
 			allowedBlocks = List.of("CHEST", "TRAPPED_CHEST", "BARREL", "ENDER_CHEST");
 		}

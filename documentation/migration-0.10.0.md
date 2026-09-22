@@ -193,8 +193,81 @@ from the player's own inventory) and every drag that touches a chest slot, leavi
 `COLLECT_TO_CURSOR`, shift-click out of the chest) untouched. No deposit slot exists any more — not even onto
 generated loot. This is deliberate, not a missed case: a loot chest regenerates on cooldown/respawn, which would
 silently void anything a player had deposited into it, and a free deposit slot would make loot chests double as
-an unintended shared stash. Covered by
-`gangland-ui/lootchest-api/src/test/java/org/luckyraven/gangland/lootchest/listener/LootChestListenerTest.java`.
+an unintended shared stash. Covered by `LootChestListenerTest` — moved from `gangland-ui/lootchest-api` into
+`gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/listener/` at the WS3 G2
+gate below (package unchanged), and extended at WS3 G5 with the three deposit-action cases (`PLACE_ONE`,
+`PLACE_SOME`, `HOTBAR_MOVE_AND_READD`) the original coverage list above didn't individually pin.
 
-<!-- Later 0.10.0 gates (WS3 lootchest module extraction / hologram → keystone-hologram, WS5 gang module,
-     WS6 api facade) append their own sections here as they land. -->
+<!-- Later 0.10.0 gates (WS5 gang module, WS6 api facade) append their own sections here as they land. -->
+
+## WS3 — loot chests and holograms leave `gangland-ui`
+
+Two independent moves, both from the decoupling wave's WS3 stream:
+
+- **Holograms → Keystone (G1).** `gangland-ui/hologram-api` is deleted outright; armor-stand holograms are now
+  Keystone's own `keystone-hologram` module (`org.luckyraven.keystone.hologram.*`, package renamed from
+  `org.luckyraven.gangland.hologram.*`). Nothing server-owner-visible changes — no config, no command, no data
+  file. If you have custom code embedding the old Gangland-owned hologram classes directly (not the loot chest
+  feature, which is unaffected), repoint the import.
+- **Loot chests → a runtime module (G2).** `gangland-ui/lootchest-api` (the library) plus the `gangland-impl`-side
+  loot chest classes it always shipped alongside (`LootChestManager`, the admin wand, the repository/table, the
+  `/glw lootchest*` commands, the loot/wand listeners) are gone; loot chests are now the runtime module
+  `gangland-features/gangland-lootchest`, shipped as `modules/gangland-lootchest-<rev>.jar` and loaded from
+  `plugins/Gangland_Warfare/modules/` like any other module (see `documentation/module-loader.md`). **This module
+  is not optional** in the sense the other five are — there is no fallback behaviour; without the jar present,
+  `/glw lootchest` simply doesn't exist and no chest data loads. Drop the jar in alongside the others.
+
+### 1. Settings and messages move into the module's own YAML (G4)
+
+The `settings.yml` `Loot_Chest:` block (10 keys) and 26 `Messages` entries (`Loot_Chest.*` player/hologram/
+time-unit strings, `Errors.Loot_Chest.*`/`Commands.Loot_Chest.Removed` admin strings) both moved into two new
+files the module ships and auto-creates on first boot, at the same `lootchests/` data-folder path the existing
+`loot_chests.yml`/`tiers.yml` already use:
+
+| Old | New file | New key(s) |
+|---|---|---|
+| `settings.yml` `Loot_Chest.Countdown_Timer` | `plugins/Gangland_Warfare/lootchests/loot_chest_settings.yml` | `Countdown_Timer` |
+| `settings.yml` `Loot_Chest.Sound.*` (3 keys) | same | `Sound.Opening`/`Sound.Locked`/`Sound.Closing` |
+| `settings.yml` `Loot_Chest.Allowed_Blocks` | same | `Allowed_Blocks` |
+| `settings.yml` `Loot_Chest.Rewards.*` (5 keys: Money/Experience min/max, Commands) | same | `Rewards.Money.*`/`Rewards.Experience.*`/`Rewards.Commands` |
+| `message_en.yml` `Loot_Chest.*` (16 keys: 10 player + 6 hologram) | `plugins/Gangland_Warfare/lootchests/lootchest_messages.yml` | same leaf names, flattened to the file's top level (e.g. `Loot_Chest.Hologram.Cooldown_Status` → `Hologram.Cooldown_Status`) |
+| `message_en.yml` `Loot_Chest.Time_Units.*` (6 keys) | same | `Time_Units.*` |
+| `message_en.yml` `Errors.Loot_Chest.*` (3 keys), `Commands.Loot_Chest.Removed` | same | `Must_Look_At_Block`/`No_Chest_At_Location`/`Requires_Wand`/`Removed` |
+| `message_es.yml` `Loot_Chest.*`/`Loot_Chest.Time_Units.*`/`Errors.Loot_Chest.*`/`Commands.Loot_Chest.Removed` (same 26 keys) | `plugins/Gangland_Warfare/lootchests/lootchest_messages_es.yml` | same leaf names as the English file above |
+
+**Both languages ship** (fix round 1, W53 F1) — `GanglandLootChestMessages` picks between the two files by the
+same `Settings.Language` setting (`settings.yml` `Language: es`) Keystone's `LanguageLoader` already uses to pick
+between core's own `message_en.yml`/`message_es.yml`, falling back to the English file whenever the language
+isn't `es` or the Spanish file isn't present. No new config knob — it reuses `Settings.getLanguagePicked()`.
+
+### 2. Customised values are NOT auto-migrated — copy them by hand
+
+Same story as WS4's Trader/Banker move above: if you had changed any of the 10 settings keys or 26 message
+strings away from their defaults, upgrading in place does not carry those values into the new files — they are
+written fresh from the module jar's own defaults, and core `Settings`/`Messages` no longer read the old block at
+all. Copy your customised values across by hand, using the table above to find the new key.
+
+### 3. The warning that tells you the settings need doing
+
+A leftover `Loot_Chest:` block in `settings.yml` fires the same targeted warning WS4 introduced for `Trader:`/
+`Banker:` (the helper is now shared across all three, `Settings.warnIfLegacyShopBlockPresent`, parameterised by
+module name):
+
+```
+[Gangland.Settings] settings.yml still has a legacy 'Loot_Chest:' block — those keys moved to
+plugins/Gangland_Warfare/lootchests/loot_chest_settings.yml and lootchests/lootchest_messages.yml (extracted by
+the gangland-lootchest module); customised values are NOT auto-migrated and must be copied over by hand. See
+documentation/migration-0.10.0.md.
+```
+
+There is no equivalent warning for a leftover `message_en.yml`/`message_es.yml` `Loot_Chest:` block — the message
+loader doesn't have WS4's/WS3's targeted-warning hook, only the generic per-key "unknown key" line. A leftover
+block there is harmless dead weight (never read), same as WS1's `Scoreboard:` block was.
+
+### 4. `/glw lootchest*` commands.json entries moved into the module jar
+
+The 4 entries (`lootchest`, `lootchest_help`, `lootchest_edit`, `lootchest_remove`) moved from the core's
+`commands.json` into the module's own, at its jar root — no server-owner action; `/glw help lootchest` and
+`/glw lootchest help` keep working identically once the module jar is present.
+
+<!-- Later 0.10.0 gates (WS5 gang module, WS6 api facade) append their own sections here as they land. -->

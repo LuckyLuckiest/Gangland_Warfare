@@ -12,6 +12,7 @@ import org.luckyraven.gangland.core.events.level.LevelUpEvent;
 import org.luckyraven.gangland.core.user.Level;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.lootchest.config.LootChestSettingsProvider;
 import org.luckyraven.gangland.lootchest.data.LootChestSession;
 import org.luckyraven.gangland.lootchest.events.lootchest.LootChestCooldownCompleteEvent;
 import org.luckyraven.gangland.lootchest.events.lootchest.LootChestOpenEvent;
@@ -26,13 +27,16 @@ import java.util.concurrent.ConcurrentHashMap;
 @ListenerHandler
 public class LootChestEarnGoodsListener implements Listener {
 
-	private final Random                 random;
-	private final UserManager<Player>    userManager;
-	private final Map<Player, Set<UUID>> openedLootChests;
+	private final Random                    random;
+	private final UserManager<Player>       userManager;
+	private final LootChestSettingsProvider settingsProvider;
+	private final Map<Player, Set<UUID>>    openedLootChests;
 
-	public LootChestEarnGoodsListener(@Qualifier("online") UserManager<Player> userManager) {
+	public LootChestEarnGoodsListener(@Qualifier("online") UserManager<Player> userManager,
+	                                  LootChestSettingsProvider settingsProvider) {
 		this.random           = new Random();
 		this.userManager      = userManager;
+		this.settingsProvider = settingsProvider;
 		this.openedLootChests = new ConcurrentHashMap<>();
 	}
 
@@ -54,11 +58,11 @@ public class LootChestEarnGoodsListener implements Listener {
 		openedLootChests.computeIfAbsent(player, k -> ConcurrentHashMap.newKeySet()).add(chestId);
 
 		// add experience and money
-		double money = random.nextDouble(Settings.getLootChestRewardMoneyMinimum(),
-		                                 Settings.getLootChestRewardMoneyMaximum());
+		double money = random.nextDouble(settingsProvider.getRewardMoneyMinimum(),
+		                                 settingsProvider.getRewardMoneyMaximum());
 
-		double exp = random.nextDouble(Settings.getLootChestRewardExperienceMinimum(),
-		                               Settings.getLootChestRewardExperienceMaximum());
+		double exp = random.nextDouble(settingsProvider.getRewardExperienceMinimum(),
+		                               settingsProvider.getRewardExperienceMaximum());
 
 		// deposit money
 		user.getEconomy().depositAmount(Currency.of(money));
@@ -74,7 +78,7 @@ public class LootChestEarnGoodsListener implements Listener {
 				String.format("&c-> &a%s +%s", Settings.getMoneySymbol(), Settings.formatDouble(money))));
 		player.sendMessage(GanglandChatUtil.color(String.format("&c-> &aXP +%.2f", exp)));
 
-		for (String command : Settings.getLootChestRewardCommands()) {
+		for (String command : settingsProvider.getRewardCommands()) {
 			if (command.isEmpty()) continue;
 			if (command.startsWith("/")) command = command.substring(1);
 

@@ -11,6 +11,7 @@ import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 import org.luckyraven.gangland.lootchest.LootChestManager;
 import org.luckyraven.gangland.lootchest.LootChestWand;
+import org.luckyraven.gangland.lootchest.config.LootChestMessagesProvider;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.Map;
@@ -18,16 +19,19 @@ import java.util.Map;
 @CommandHandler
 public class LootChestWandCommand extends Command {
 
-	private final LootChestManager   lootChestManager;
-	private final RepositoryRegistry repositoryRegistry;
+	private final LootChestManager        lootChestManager;
+	private final RepositoryRegistry      repositoryRegistry;
+	private final LootChestMessagesProvider messagesProvider;
 
 	public LootChestWandCommand(JavaPlugin gangland,
 	                            LootChestManager lootChestManager,
-	                            RepositoryRegistry repositoryRegistry) {
+	                            RepositoryRegistry repositoryRegistry,
+	                            LootChestMessagesProvider messagesProvider) {
 		super(gangland, "lootchest", true, "wand", "lootchestwand", "chestwand", "lcwand");
 
 		this.lootChestManager   = lootChestManager;
 		this.repositoryRegistry = repositoryRegistry;
+		this.messagesProvider   = messagesProvider;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -57,9 +61,9 @@ public class LootChestWandCommand extends Command {
 	@Override
 	protected void initializeArguments() {
 		Argument editArg = new LootChestWandEditCommand(getPlugin(), getArgumentTree(), getArgument(),
-		                                                lootChestManager);
+		                                                lootChestManager, messagesProvider);
 		Argument removeArg = new LootChestRemoveCommand(getPlugin(), getArgumentTree(), getArgument(),
-		                                                lootChestManager, repositoryRegistry);
+		                                                lootChestManager, repositoryRegistry, messagesProvider);
 
 		getArgument().addSubArgument(editArg);
 		getArgument().addSubArgument(removeArg);

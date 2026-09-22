@@ -172,6 +172,33 @@ class SettingsTest {
 				"expected no targeted migration warning when neither legacy block is present; got: " + logs);
 	}
 
+	@Test
+	@DisplayName("WS3 G4: a legacy Loot_Chest: block logs a targeted warning naming the gangland-lootchest module's own YAML")
+	void initialize_legacyLootChestBlock_logsTargetedMigrationWarning() throws IOException {
+		SettingsFixture.write(tempDir, """
+				Money_Symbol: '$'
+				Loot_Chest:
+				  Countdown_Timer: 60
+				""");
+
+		List<String> logs = captureWarnLogs(() -> SettingsFixture.initialize(tempDir));
+
+		assertTrue(logs.stream().anyMatch(m -> m.contains("Loot_Chest") && m.contains("loot_chest_settings.yml")
+						&& m.contains("gangland-lootchest")),
+				"expected a targeted migration warning naming the module's own settings file; got: " + logs);
+	}
+
+	@Test
+	@DisplayName("WS3 G4: no legacy Loot_Chest: block means no targeted migration warning")
+	void initialize_noLegacyLootChestBlock_logsNoMigrationWarning() throws IOException {
+		SettingsFixture.write(tempDir, "Money_Symbol: '$'\n");
+
+		List<String> logs = captureWarnLogs(() -> SettingsFixture.initialize(tempDir));
+
+		assertTrue(logs.stream().noneMatch(m -> m.contains("loot_chest_settings.yml")),
+				"expected no targeted migration warning when the legacy block is absent; got: " + logs);
+	}
+
 	/**
 	 * Attaches a throwaway Log4j2 appender directly to the exact {@link Logger} instance
 	 * {@code Settings}'s own {@code @CustomLog} field resolves to (same factory call,

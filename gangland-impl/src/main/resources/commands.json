@@ -459,22 +459,6 @@
 		"usage": "/glw update download",
 		"description": "If there was an update it would try to download it."
 	},
-	"lootchest": {
-		"usage": "/glw lootchest",
-		"description": "Get a loot chest wand."
-	},
-	"lootchest_help": {
-		"usage": "/glw lootchest help <page>",
-		"description": "Shows the specified page in loot chest menu."
-	},
-	"lootchest_edit": {
-		"usage": "/glw lootchest edit",
-		"description": "Edit wand settings while holding it."
-	},
-	"lootchest_remove": {
-		"usage": "/glw lootchest remove",
-		"description": "Removes the loot chest you are looking at."
-	},
 	"fuel": {
 		"usage": "/glw fuel",
 		"description": "Shows fuel help page."

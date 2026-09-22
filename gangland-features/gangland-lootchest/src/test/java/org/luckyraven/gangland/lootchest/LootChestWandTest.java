@@ -99,10 +99,95 @@ class LootChestWandTest {
 		verify(inventory, never()).setItem(eq(WAND_SLOT), any());
 	}
 
+	@Test
+	@DisplayName("setWandNBT resolves its target from the captured wandSlot, never from the current main hand")
+	void setWandNBT_resolvesTargetFromCapturedWandSlot_notFromCurrentMainHand() throws Exception {
+		LootChestWand wand = new LootChestWand(mock(JavaPlugin.class), mock(LootChestManager.class), "glw");
+
+		ItemStack notAWand      = new ItemStack(Material.DIRT);
+		ItemStack wandInMainHand = taggedWandItem();
+
+		Player          player    = mock(Player.class);
+		PlayerInventory inventory = mock(PlayerInventory.class);
+		when(player.getInventory()).thenReturn(inventory);
+		when(inventory.getItem(WAND_SLOT)).thenReturn(notAWand);
+		when(inventory.getHeldItemSlot()).thenReturn(CURRENT_HELD_SLOT);
+		when(inventory.getItemInMainHand()).thenReturn(wandInMainHand);
+
+		invokeSetWandNBT(wand, player, WAND_SLOT, LootChestWandTag.TIER_ID.toString(), "gold");
+
+		// setWandNBT bails out (never reaches NBT.modify, which needs a live server) once getItem(wandSlot) shows
+		// the captured slot no longer holds a wand — it must never fall back to the current main hand.
+		verify(inventory).getItem(WAND_SLOT);
+		verify(inventory, never()).getItemInMainHand();
+	}
+
+	@Test
+	@DisplayName("handleInvSizeChange resolves its target from the captured wandSlot, never from the current main hand")
+	void handleInvSizeChange_resolvesTargetFromCapturedWandSlot_notFromCurrentMainHand() throws Exception {
+		LootChestWand wand = new LootChestWand(mock(JavaPlugin.class), mock(LootChestManager.class), "glw");
+
+		ItemStack notAWand      = new ItemStack(Material.DIRT);
+		ItemStack wandInMainHand = taggedWandItem();
+
+		Player          player    = mock(Player.class);
+		PlayerInventory inventory = mock(PlayerInventory.class);
+		when(player.getInventory()).thenReturn(inventory);
+		when(inventory.getItem(WAND_SLOT)).thenReturn(notAWand);
+		when(inventory.getHeldItemSlot()).thenReturn(CURRENT_HELD_SLOT);
+		when(inventory.getItemInMainHand()).thenReturn(wandInMainHand);
+
+		invokeHandleInvSizeChange(wand, player, true, "BLACK_STAINED_GLASS_PANE", " ", WAND_SLOT);
+
+		// handleInvSizeChange bails out (never reaches setWandNBT/openConfigInventory) once getItem(wandSlot)
+		// shows the captured slot no longer holds a wand — it must never fall back to the current main hand.
+		verify(inventory).getItem(WAND_SLOT);
+		verify(inventory, never()).getItemInMainHand();
+	}
+
+	@Test
+	@DisplayName("openConfigInventory resolves its target from the freshly-captured wandSlot, never from getItemInMainHand()")
+	void openConfigInventory_resolvesTargetFromCapturedWandSlot_notFromGetItemInMainHand() {
+		LootChestWand wand = new LootChestWand(mock(JavaPlugin.class), mock(LootChestManager.class), "glw");
+
+		ItemStack notAWand = new ItemStack(Material.DIRT);
+
+		Player          player    = mock(Player.class);
+		PlayerInventory inventory = mock(PlayerInventory.class);
+		when(player.getInventory()).thenReturn(inventory);
+		when(inventory.getHeldItemSlot()).thenReturn(WAND_SLOT);
+		when(inventory.getItem(WAND_SLOT)).thenReturn(notAWand);
+
+		wand.openConfigInventory(player, "BLACK_STAINED_GLASS_PANE", " ");
+
+		// openConfigInventory captures wandSlot once via getHeldItemSlot(), then reads the held item through
+		// getItem(wandSlot) — the LS-30 fix's entry point. It must never call getItemInMainHand() itself; every
+		// later read/write in this class re-derives from the same captured wandSlot, never a fresh main-hand read.
+		verify(inventory).getItem(WAND_SLOT);
+		verify(inventory, never()).getItemInMainHand();
+	}
+
 	private static void invokeUpdateWandLore(LootChestWand wand, Player player, int wandSlot) throws Exception {
 		Method method = LootChestWand.class.getDeclaredMethod("updateWandLore", Player.class, int.class);
 		method.setAccessible(true);
 		method.invoke(wand, player, wandSlot);
+	}
+
+	private static void invokeSetWandNBT(LootChestWand wand, Player player, int wandSlot, String key, Object value)
+			throws Exception {
+		Method method = LootChestWand.class.getDeclaredMethod("setWandNBT", Player.class, int.class, String.class,
+		                                                      Object.class);
+		method.setAccessible(true);
+		method.invoke(wand, player, wandSlot, key, value);
+	}
+
+	private static void invokeHandleInvSizeChange(LootChestWand wand, Player player, boolean increase,
+	                                              String fillMaterial, String fillName, int wandSlot)
+			throws Exception {
+		Method method = LootChestWand.class.getDeclaredMethod("handleInvSizeChange", Player.class, boolean.class,
+		                                                      String.class, String.class, int.class);
+		method.setAccessible(true);
+		method.invoke(wand, player, increase, fillMaterial, fillName, wandSlot);
 	}
 
 	/** Same tag shape {@link LootChestWand#createWand()} stamps, built by hand to dodge {@code XMaterial}. */

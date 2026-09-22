@@ -18,7 +18,6 @@
 
     <modules>
         <module>sign-api</module>
-        <module>lootchest-api</module>
     </modules>
 
     <dependencies>

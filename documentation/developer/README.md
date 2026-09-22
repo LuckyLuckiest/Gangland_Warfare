@@ -62,10 +62,9 @@ gangland_warfare/
 │   ├── cops-n-crooks/          Police NPCs, civilians, wanted/bounty, jail
 │   ├── gangland-weapon/        Weapon engine, projectiles, modifiers
 │   ╰── gangland-gadget/        Cars, jetpacks, fuel
-├── gangland-ui/
-│   ├── sign-api/               Sign interaction system
-│   ├── lootchest-api/          Loot chest with cracking
-│   ╰── hologram-api/           Floating text displays
+├── gangland-ui/                (lootchest-api -> gangland-features/gangland-lootchest, hologram-api -> Keystone's
+│                                 keystone-hologram, both at 0.10.0 WS3)
+│   ╰── sign-api/               Sign interaction system
 ├── gangland-compatibility/
 │   ├── version-impl/           Adapter interfaces
 │   ╰── version-1_16_R1..1_21_R7/  20 NMS adapter modules (MC 1.16+)

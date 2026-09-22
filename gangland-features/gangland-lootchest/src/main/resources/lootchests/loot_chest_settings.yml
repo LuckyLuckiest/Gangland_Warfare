@@ -1,0 +1,28 @@
+# Loot chest module — runtime knobs. Moved off gangland-impl's settings.yml (WS3 G4): module-owned config lives
+# in the module's own YAML, never the core settings file.
+# The amount of time to wait before opening the loot chest in seconds.
+Countdown_Timer: 300
+# The sounds when interacting with a loot chest.
+Sound:
+   Opening: BLOCK_CHEST_OPEN
+   Locked: BLOCK_CHEST_LOCKED
+   Closing: BLOCK_CHEST_CLOSE
+# The blocks that can be used as loot chests.
+Allowed_Blocks:
+   - CHEST
+   - TRAPPED_CHEST
+   - BARREL
+   - SHULKER_BOX
+   - ENDER_CHEST
+Rewards:
+   # The amount of money to reward players for opening a loot chest.
+   Money:
+      Minimum: 10
+      Maximum: 1_000
+   # The amount of experience to reward players for opening a loot chest.
+   Experience:
+      Minimum: 5
+      Maximum: 100
+   # The commands to execute when a player opens a loot chest.
+   Commands:
+      - ""

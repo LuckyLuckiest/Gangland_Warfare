@@ -276,16 +276,6 @@
             </dependency>
             <dependency>
                 <groupId>org.luckyraven</groupId>
-                <artifactId>lootchest-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.luckyraven</groupId>
-                <artifactId>hologram-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.luckyraven</groupId>
                 <artifactId>gangland-gadget</artifactId>
                 <version>${project.version}</version>
             </dependency>

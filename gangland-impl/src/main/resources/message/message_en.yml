@@ -392,8 +392,6 @@ Commands:
       Overview_Category: "&7- &b%category% &8(&a%count%&8)"
       Registered: "&aRegistered &8» &b%permission%"
       Drift: "&eDrift &8» &b%permission% &7(Bukkit: &f%bukkit%&7, tracked: &f%tracked%&7)"
-   Loot_Chest:
-      Removed: "&aLoot chest removed successfully!"
    Turf:
       Enter:
          Owned: "&8» &7Entering &f%turf% &7— Controlled by &e%gang%"
@@ -580,10 +578,6 @@ Errors:
       Already_Jailed: "Player is already jailed!"
       Not_Jailed: "&cPlayer &e%target%&c is not jailed."
       Exists_Nearby: "A jail already exists within %blocks% blocks of this location!"
-   Loot_Chest:
-      Must_Look_At_Block: "&cYou must be looking at a block within 5 blocks!"
-      No_Chest_At_Location: "&cNo loot chest found at that location!"
-      Requires_Wand: "You must be holding a Loot Chest Wand to edit settings!"
    Argument:
       Not_Implemented: "Not implemented method!"
       Confirm_Required: "Need to execute the initial statement to use this argument."
@@ -815,30 +809,3 @@ Item:
       Invalid: "Invalid wearable: &c%name%"
       Not_Registered: "Wearable not registered: &c%key%"
       Not_Wearable: "Not a registered wearable!"
-
-Loot_Chest:
-   Cracking_Started: "&eCracking the chest... Complete the minigame!"
-   Already_In_Session: "You are already opening a chest!"
-   On_Cooldown: "This chest is empty and on cooldown! &7(%time%)"
-   Requires_Lockpick: "You need a lockpick to open this chest!"
-   Requires_Key: "You need a key to open this chest!"
-   No_Permission: "You don't have permission to open this chest!"
-   Invalid_Loot_Table: "This chest has an invalid loot table!"
-   Invalid_Chest: "This chest is invalid!"
-   No_Item_Provider: "Loot system is not configured properly!"
-   Already_Looted: "This chest has already been looted!"
-   Hologram:
-      Cooldown_Status: "&c&lON COOLDOWN"
-      Available_Status: "&a&lAVAILABLE"
-      Available_Hint: "&7Right-click to open"
-      # Lock-state lines. %item% is substituted with the tier's Unlock_Item_Display.
-      Locked_Requires: "&c🔒 Requires &e%item%"
-      Locked_Permission: "&c🔒 Permission Only"
-      Unlocked: "&a🔓 Unlocked"
-   Time_Units:
-      Year: "y"
-      Week: "w"
-      Day: "d"
-      Hour: "h"
-      Minute: "m"
-      Second: "s"

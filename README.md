@@ -144,7 +144,7 @@ Bartizan type. Six runtime modules ship alongside it and can be dropped or added
 | `gangland-gadget` (runtime module)     | Cars (`/glw car`) and jetpacks                                               |
 | `gangland-mail` (runtime module)       | Mail, gang invites, and alliance requests                                    |
 | `sign-api`                             | Sign interaction system                                                      |
-| `lootchest-api`                        | Loot chest system with hologram support                                      |
+| `gangland-lootchest` (runtime module)  | Loot chest system (hologram support via Keystone's `keystone-hologram`) — was the `gangland-ui/lootchest-api` library, split 0.10.0 |
 | `gangland-build`                       | Shade assembly — produces the final deployable JAR                           |
 
 The weapon system (`gangland-weapon`) and the recoil NMS adapters (`gangland-compatibility/version-*`) left this

@@ -10,22 +10,25 @@ import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
-import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.lootchest.LootChestManager;
+import org.luckyraven.gangland.lootchest.config.LootChestMessagesProvider;
 import org.luckyraven.gangland.lootchest.data.LootChestData;
 
 import java.util.Optional;
 
 class LootChestRemoveCommand extends SubArgument {
 
-	private final LootChestManager   lootChestManager;
-	private final RepositoryRegistry repositoryRegistry;
+	private final LootChestManager        lootChestManager;
+	private final RepositoryRegistry      repositoryRegistry;
+	private final LootChestMessagesProvider messagesProvider;
 
 	protected LootChestRemoveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                                 LootChestManager lootChestManager, RepositoryRegistry repositoryRegistry) {
+	                                 LootChestManager lootChestManager, RepositoryRegistry repositoryRegistry,
+	                                 LootChestMessagesProvider messagesProvider) {
 		super(gangland, "remove", tree, parent);
 		this.lootChestManager   = lootChestManager;
 		this.repositoryRegistry = repositoryRegistry;
+		this.messagesProvider   = messagesProvider;
 	}
 
 	@Override
@@ -37,7 +40,7 @@ class LootChestRemoveCommand extends SubArgument {
 			Block targetBlock = player.getTargetBlockExact(5);
 
 			if (targetBlock == null) {
-				player.sendMessage(Messages.LOOT_CHEST_MUST_LOOK_AT_BLOCK.toString());
+				player.sendMessage(messagesProvider.getMustLookAtBlock());
 				return;
 			}
 
@@ -46,7 +49,7 @@ class LootChestRemoveCommand extends SubArgument {
 			Optional<LootChestData> chestOptional = lootChestManager.getChestAt(location);
 
 			if (chestOptional.isEmpty()) {
-				player.sendMessage(Messages.LOOT_CHEST_NO_CHEST_AT_LOCATION.toString());
+				player.sendMessage(messagesProvider.getNoChestAtLocation());
 				return;
 			}
 
@@ -59,7 +62,7 @@ class LootChestRemoveCommand extends SubArgument {
 			var lootChestRepository = repositoryRegistry.getRepository(LootChestData.class);
 			lootChestRepository.delete(chestData);
 
-			player.sendMessage(Messages.LOOT_CHEST_REMOVED.toString());
+			player.sendMessage(messagesProvider.getRemoved());
 		});
 	}
 

@@ -1,0 +1,31 @@
+# Loot chest module — player-facing strings, Spanish. Same keys as lootchest_messages.yml (English, the fallback
+# when this file is absent or the server's Language setting isn't "es"). Moved verbatim off gangland-impl's
+# message_es.yml (WS3 G4 fix round 1, W53 F1) — the 26 strings that were deleted from there are these, unchanged.
+Cracking_Started: "&e¡Forzando el cofre... ¡Completa el minijuego!"
+Already_In_Session: "¡Ya estás abriendo un cofre!"
+On_Cooldown: "¡Este cofre está vacío y en recarga! &7(%time%)"
+Requires_Lockpick: "¡Necesitas una ganzúa para abrir este cofre!"
+Requires_Key: "¡Necesitas una llave para abrir este cofre!"
+No_Permission: "¡No tienes permiso para abrir este cofre!"
+Invalid_Loot_Table: "¡Este cofre tiene una tabla de botín no válida!"
+Invalid_Chest: "¡Este cofre no es válido!"
+No_Item_Provider: "¡El sistema de botín no está configurado correctamente!"
+Already_Looted: "¡Este cofre ya ha sido saqueado!"
+Must_Look_At_Block: "&c¡Debes estar mirando un bloque a menos de 5 bloques de distancia!"
+No_Chest_At_Location: "&c¡No se encontró un cofre de botín en esa ubicación!"
+Requires_Wand: "¡Debes estar sosteniendo una Varita de Cofre de Botín para editar la configuración!"
+Removed: "&a¡Cofre de botín eliminado exitosamente!"
+Hologram:
+   Cooldown_Status: "&c&lEN RECARGA"
+   Available_Status: "&a&lDISPONIBLE"
+   Available_Hint: "&7Clic derecho para abrir"
+   Locked_Requires: "&c🔒 Requiere &e%item%"
+   Locked_Permission: "&c🔒 Solo con permiso"
+   Unlocked: "&a🔓 Desbloqueado"
+Time_Units:
+   Year: "a"
+   Week: "sem"
+   Day: "d"
+   Hour: "h"
+   Minute: "m"
+   Second: "s"

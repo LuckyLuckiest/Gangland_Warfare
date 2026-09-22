@@ -18,8 +18,10 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 /**
  * CONFIG-phase wiring for the loot chest module: the {@code keystone-hologram} bean (armor-stand holograms,
  * promoted out of Gangland's own {@code hologram-api} — WS3 G1), {@link LootChestManager}, its
- * {@link LootChestLoader} and the {@link NbtTagCatalog} tag registration (all moved out of the core's
- * {@code GameplayConfig}/{@code ItemConfig} — WS3 G2).
+ * {@link LootChestLoader}, the module's own {@link LootChestMessagesProvider}/{@link LootChestSettingsProvider}
+ * beans (WS3 G4 — read {@code lootchests/lootchest_messages.yml}/{@code loot_chest_settings.yml} instead of
+ * {@code gangland-api}'s {@code Messages}/{@code Settings}) and the {@link NbtTagCatalog} tag registration (all
+ * moved out of the core's {@code GameplayConfig}/{@code ItemConfig} — WS3 G2).
  *
  * <p>{@link #lootChestLoader} calls {@code fileManager.registerInitializer(loader); fileManager.initializeAll();}
  * inline (B1) rather than a separate {@code @PostConstruct} — the exact precedent {@code CopsNCrooksModuleConfig}'s
@@ -45,11 +47,36 @@ public class LootChestModuleConfig {
 		return service;
 	}
 
+	/**
+	 * Registered as {@code FileInitializer} (G4) so it's reachable from the module's own listener/command beans
+	 * ({@code LootChestEarnGoodsListener}, {@code LootChestWandListener}, {@code LootChestWandCommand}) by
+	 * constructor injection, not just from {@link #lootChestManager}.
+	 */
+	@Bean
+	public LootChestMessagesProvider lootChestMessages(FileManager fileManager) {
+		GanglandLootChestMessages messages = new GanglandLootChestMessages(fileManager);
+		fileManager.registerInitializer(messages);
+		return messages;
+	}
+
+	/**
+	 * Registered as {@code FileInitializer} (G4) so it's reachable from the module's own listener beans
+	 * ({@code LootChestEarnGoodsListener}, {@code LootChestWandListener}) by constructor injection, not just from
+	 * {@link #lootChestLoader}.
+	 */
+	@Bean
+	public LootChestSettingsProvider lootChestSettings(FileManager fileManager) {
+		LootChestSettings settings = new LootChestSettings(fileManager);
+		fileManager.registerInitializer(settings);
+		return settings;
+	}
+
 	@Bean
 	public LootChestManager lootChestManager(HologramService hologramService, RepositoryRegistry repositoryRegistry,
-	                                         ItemParser itemParser, InventoryService inventoryService) {
+	                                         ItemParser itemParser, InventoryService inventoryService,
+	                                         LootChestMessagesProvider messagesProvider) {
 		return new LootChestManager(plugin, GanglandApi.FULL_PREFIX, hologramService, repositoryRegistry, itemParser,
-		                            new GanglandLootChestMessages(), inventoryService);
+		                            messagesProvider, inventoryService);
 	}
 
 	@Bean
@@ -58,8 +85,9 @@ public class LootChestModuleConfig {
 	}
 
 	@Bean
-	public LootChestLoader lootChestLoader(LootChestManager lootChestManager, FileManager fileManager) {
-		LootChestLoader loader = new LootChestLoader(plugin, lootChestManager, new LootChestSettings(), false, null,
+	public LootChestLoader lootChestLoader(LootChestManager lootChestManager, FileManager fileManager,
+	                                       LootChestSettingsProvider settingsProvider) {
+		LootChestLoader loader = new LootChestLoader(plugin, lootChestManager, settingsProvider, false, null,
 		                                             fileManager);
 		fileManager.registerInitializer(loader);
 		fileManager.initializeAll();

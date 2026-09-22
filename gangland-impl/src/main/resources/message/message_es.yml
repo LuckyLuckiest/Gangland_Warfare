@@ -362,8 +362,6 @@ Commands:
       Overview_Category: "&7- &b%category% &8(&a%count%&8)"
       Registered: "&aRegistrado &8» &b%permission%"
       Drift: "&eDesincronizado &8» &b%permission% &7(Bukkit: &f%bukkit%&7, rastreado: &f%tracked%&7)"
-   Loot_Chest:
-      Removed: "&a¡Cofre de botín eliminado exitosamente!"
 
 Errors:
    Prefix: "&4Error&7: "
@@ -464,10 +462,6 @@ Errors:
       Already_Jailed: "¡El jugador ya está encarcelado!"
       Not_Jailed: "&cEl jugador &e%target%&c no está encarcelado."
       Exists_Nearby: "¡Ya existe una cárcel dentro de %blocks% bloques de esta ubicación!"
-   Loot_Chest:
-      Must_Look_At_Block: "&c¡Debes estar mirando un bloque a menos de 5 bloques de distancia!"
-      No_Chest_At_Location: "&c¡No se encontró un cofre de botín en esa ubicación!"
-      Requires_Wand: "¡Debes estar sosteniendo una Varita de Cofre de Botín para editar la configuración!"
    Argument:
       Not_Implemented: "¡Método no implementado!"
       Confirm_Required: "Necesitas ejecutar la instrucción inicial para usar este argumento."
@@ -687,29 +681,3 @@ Item:
       Invalid: "Objeto vestible inválido: &c%name%"
       Not_Registered: "Objeto vestible no registrado: &c%key%"
       Not_Wearable: "¡No es un objeto vestible registrado!"
-
-Loot_Chest:
-   Cracking_Started: "&e¡Forzando el cofre... ¡Completa el minijuego!"
-   Already_In_Session: "¡Ya estás abriendo un cofre!"
-   On_Cooldown: "¡Este cofre está vacío y en recarga! &7(%time%)"
-   Requires_Lockpick: "¡Necesitas una ganzúa para abrir este cofre!"
-   Requires_Key: "¡Necesitas una llave para abrir este cofre!"
-   No_Permission: "¡No tienes permiso para abrir este cofre!"
-   Invalid_Loot_Table: "¡Este cofre tiene una tabla de botín no válida!"
-   Invalid_Chest: "¡Este cofre no es válido!"
-   No_Item_Provider: "¡El sistema de botín no está configurado correctamente!"
-   Already_Looted: "¡Este cofre ya ha sido saqueado!"
-   Hologram:
-      Cooldown_Status: "&c&lEN RECARGA"
-      Available_Status: "&a&lDISPONIBLE"
-      Available_Hint: "&7Clic derecho para abrir"
-      Locked_Requires: "&c🔒 Requiere &e%item%"
-      Locked_Permission: "&c🔒 Solo con permiso"
-      Unlocked: "&a🔓 Desbloqueado"
-   Time_Units:
-      Year: "a"
-      Week: "sem"
-      Day: "d"
-      Hour: "h"
-      Minute: "m"
-      Second: "s"

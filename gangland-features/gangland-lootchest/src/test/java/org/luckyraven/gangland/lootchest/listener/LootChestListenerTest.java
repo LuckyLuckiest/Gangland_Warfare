@@ -117,9 +117,39 @@ class LootChestListenerTest {
 	}
 
 	@Test
+	@DisplayName("PLACE_ONE onto a top slot is cancelled (deposit into the chest)")
+	void placeOne_ontoTopSlot_isCancelled() {
+		InventoryClickEvent event = clickEvent(InventoryAction.PLACE_ONE, topInventory, 4);
+
+		listener.onInventoryClick(event);
+
+		verify(event).setCancelled(true);
+	}
+
+	@Test
+	@DisplayName("PLACE_SOME onto a top slot is cancelled (deposit into the chest)")
+	void placeSome_ontoTopSlot_isCancelled() {
+		InventoryClickEvent event = clickEvent(InventoryAction.PLACE_SOME, topInventory, 6);
+
+		listener.onInventoryClick(event);
+
+		verify(event).setCancelled(true);
+	}
+
+	@Test
 	@DisplayName("HOTBAR_SWAP onto a top slot is cancelled (deposit into the chest)")
 	void hotbarSwap_ontoTopSlot_isCancelled() {
 		InventoryClickEvent event = clickEvent(InventoryAction.HOTBAR_SWAP, topInventory, 2);
+
+		listener.onInventoryClick(event);
+
+		verify(event).setCancelled(true);
+	}
+
+	@Test
+	@DisplayName("HOTBAR_MOVE_AND_READD onto a top slot is cancelled (deposit into the chest)")
+	void hotbarMoveAndReadd_ontoTopSlot_isCancelled() {
+		InventoryClickEvent event = clickEvent(InventoryAction.HOTBAR_MOVE_AND_READD, topInventory, 8);
 
 		listener.onInventoryClick(event);
 

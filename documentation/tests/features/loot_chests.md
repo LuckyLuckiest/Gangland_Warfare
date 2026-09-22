@@ -7,10 +7,13 @@
 ## Overview
 
 Placeable loot chests with tiered loot tables, keys, hologram labels, and cooldowns. Managed by `LootChestManager`
-(module `gangland-ui/lootchest-api`) with hologram support from `gangland-ui/hologram-api`. Configured via
-`lootchests/loot_chests.yml` and `lootchests/tiers.yml`.
+(runtime module `gangland-features/gangland-lootchest`, was `gangland-ui/lootchest-api` before 0.10.0 WS3) with
+hologram support from Keystone's `keystone-hologram` (was `gangland-ui/hologram-api`). Configured via the module's
+own `lootchests/loot_chests.yml`, `lootchests/tiers.yml`, `lootchests/loot_chest_settings.yml` and
+`lootchests/lootchest_messages.yml` (settings/messages moved out of core `settings.yml`/`Messages` at WS3 G4).
 
-**Modules involved:** `gangland-ui/lootchest-api`, `gangland-ui/hologram-api`, `gangland-impl`.
+**Modules involved:** `gangland-features/gangland-lootchest` (runtime module, loaded from `modules/`), Keystone's
+`keystone-hologram`.
 
 ---
 

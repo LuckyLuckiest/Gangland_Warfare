@@ -21,8 +21,8 @@ the module's purpose, package structure, key classes, and how it integrates with
 9. [gangland-features/gangland-gadget](#gangland-featuresgangland-gadget)
 10. [gangland-ui/inventory-api](#gangland-uiinventory-api) — deleted at the 0.10.0 WS2 CUT gate, kept as a stub
 11. [gangland-ui/sign-api](#gangland-uisign-api)
-12. [gangland-ui/lootchest-api](#gangland-uilootchest-api)
-13. [gangland-ui/hologram-api](#gangland-uihologram-api)
+12. [gangland-ui/lootchest-api](#gangland-uilootchest-api) — became the `gangland-features/gangland-lootchest` runtime module at the 0.10.0 WS3 G2 gate
+13. [gangland-ui/hologram-api](#gangland-uihologram-api) — deleted at the 0.10.0 WS3 G1 gate, kept as a stub
 14. [gangland-compatibility](#gangland-compatibility)
 
 ---
@@ -1126,19 +1126,28 @@ Bulk sign operations.
 
 ## gangland-ui/lootchest-api
 
-**Purpose:** Loot chest system with cracking mini-game, cooldown management, hologram integration, tiered loot tables,
-and a comprehensive event lifecycle.
+**Became the `gangland-features/gangland-lootchest` runtime module at the 0.10.0 WS3 G2 gate** (folded in whole,
+along with the `gangland-impl`-side classes it used to depend on — `LootChestManager`, `LootChestWand`,
+`LootChestWandTag`, the repository/table, the command/listener classes — no library jar survives). The package
+stays `org.luckyraven.gangland.lootchest.*` unchanged. G4 additionally moved the module's messages/settings off
+`gangland-api`'s `Messages`/`Settings` onto its own `lootchests/lootchest_messages.yml`/`loot_chest_settings.yml`
+(new `config/LootChestFileConfig`, `config/LootChestModuleConfig`, plus concrete `GanglandLootChestMessages`/
+`LootChestSettings` implementations that read those files instead of core statics) and its 4 `/glw lootchest*`
+commands.json entries into the module's own `commands.json`. See
+[`documentation/module-loader.md`](module-loader.md) for the module-loader mechanics and
+[`brainstorming/decoupling-wave-2026-09-14/exec/WS3/`](../../brainstorming/decoupling-wave-2026-09-14/exec/WS3/)
+for the move's own reports. This section stays only as a historical pointer to the pre-move library layout (33
+files); the class-by-class table it used to hold described `gangland-ui/lootchest-api` and the `gangland-impl`
+classes separately — they are now one module, **48 files** total.
 
-**Java Files:** 33 | **Package:** `org.luckyraven.gangland.lootchest.*`
-
-### Root Classes
+### Root Classes (pre-move layout, historical)
 
 | Class                       | Description                                                                                                                                                                                |
-|-----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `LootChestService.java`     | Abstract service managing the loot chest lifecycle: handler registration, cooldown tracking, hologram display, cracking session orchestration. Concrete implementation in `gangland-impl`. |
+|-----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `LootChestService.java`     | Abstract service managing the loot chest lifecycle: handler registration, cooldown tracking, hologram display, cracking session orchestration. Concrete implementation (`LootChestManager`) now lives in the same module, not `gangland-impl`. |
 | `ChestCooldownManager.java` | Tracks per-chest cooldown timers. Prevents re-opening chests before cooldown expires.                                                                                                      |
 
-### Subpackage: `config/`
+### Subpackage: `config/` (pre-move layout; `LootChestFileConfig`/`LootChestModuleConfig` added in G4, not shown here)
 
 | Class                            | Description                                                                                     |
 |----------------------------------|-------------------------------------------------------------------------------------------------|
@@ -1197,25 +1206,32 @@ Custom events (8 total + 1 base).
 | `lootchest/LootChestCooldownCompleteEvent.java` | Fired when a chest's cooldown expires.                  |
 | `lootchest/LootChestDuringCooldownEvent.java`   | Fired each tick during cooldown (for hologram updates). |
 
-### Subpackage: `listener/`
+### Subpackage: `listener/` (pre-move layout; `LootChestEarnGoodsListener`/`LootChestWandListener` moved in from
+`gangland-impl` at the same G2 gate, not shown here)
 
 | Class                    | Description                                                            |
 |--------------------------|------------------------------------------------------------------------|
 | `LootChestListener.java` | Bukkit event listener routing chest interactions to the handler chain. |
 
+### Subpackage: `command/` and `database/` (new in G2, moved in from `gangland-impl`)
+
+| Class                                    | Description                                                                                   |
+|-------------------------------------------|------------------------------------------------------------------------------------------------|
+| `command/LootChestWandCommand.java`        | Root `/glw lootchest` command; gives the admin wand.                                           |
+| `command/LootChestRemoveCommand.java`      | `/glw lootchest remove` — unregisters the chest the player is looking at.                      |
+| `command/LootChestWandEditCommand.java`    | `/glw lootchest wand edit` — opens the wand's config menu for the held wand.                   |
+| `database/LootChestRepository.java`        | `AbstractRepository<LootChestData>`, table `loot_chest` (name/schema unchanged by the move).   |
+| `database/LootChestTable.java`             | Table definition for `database/LootChestRepository`.                                           |
+
 ---
 
 ## gangland-ui/hologram-api
 
-**Purpose:** Minimal hologram display system for floating text above loot chests, waypoints, and other world markers.
-
-**Java Files:** 3 | **Package:** `org.luckyraven.gangland.hologram.*`
-
-| Class                             | Description                                                                                                     |
-|-----------------------------------|-----------------------------------------------------------------------------------------------------------------|
-| `HologramService.java`            | Creates, updates, and removes holograms at world locations. Manages hologram entity lifecycle and text updates. |
-| `Hologram.java`                   | Hologram data model (location, lines, visibility range). Wraps armor stand entities with invisible bodies.      |
-| `HologramProtectionListener.java` | Prevents players from interacting with or damaging hologram armor stand entities.                               |
+**Deleted at the 0.10.0 WS3 G1 gate.** Holograms moved to Keystone's own `keystone-hologram` module
+(`org.luckyraven.keystone.hologram.*`, package renamed from `org.luckyraven.gangland.hologram.*`) — see
+`Keystone/docs/keystone-hologram.md` in the sibling Keystone repo for the current architecture. This section stays
+only as a historical pointer; the class-by-class table it used to hold (3 files) described a module that no longer
+exists in this repo.
 
 ---
 
@@ -1287,8 +1303,7 @@ gangland-build (shade assembly)
   │     ├── gangland-weapon
   │     ├── gangland-gadget
   │     ├── sign-api
-  │     ├── lootchest-api
-  │     ├── hologram-api
+  │     ├── gangland-features/gangland-lootchest (was lootchest-api, 0.10.0 WS3 G2)
   │     ├── version-impl
   │     ╰── version-1_10_R1 ... version-1_21_R7
   │
@@ -1319,7 +1334,7 @@ gangland-build (shade assembly)
   │     ├── gangland-weapon
   │     ╰── plugin-common
   │
-  ├── UI modules (inventory, sign, lootchest, hologram)
+  ├── UI modules (inventory — deleted 0.10.0 WS2; sign)
   │     ├── gangland-core
   │     ╰── plugin-common
   │
@@ -1343,8 +1358,7 @@ gangland-build (shade assembly)
 | `gangland-weapon`     | 83         | 17       | Weapons, projectiles, modifiers, reload                                 |
 | `gangland-gadget`     | 47         | 14       | Vehicles, jetpacks, fuel                                                |
 | `sign-api`            | 28         | 8        | Sign interaction framework                                              |
-| `lootchest-api`       | 33         | 7        | Loot chest system                                                       |
-| `hologram-api`        | 3          | 1        | Floating text holograms                                                 |
+| `gangland-features/gangland-lootchest` (was `lootchest-api`) | 48 | 8 | Loot chest system (runtime module since 0.10.0 WS3 G2; `hologram-api` folded out to Keystone, not counted here) |
 | `version-impl`        | 6          | 2        | Compatibility interfaces                                                |
 | Version modules (x27) | 54         | 27       | NMS adapters                                                            |
 | **Total**             | **~791**   | **~170** |                                                                         |
