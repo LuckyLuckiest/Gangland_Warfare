@@ -17,14 +17,11 @@ import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionS
 import org.luckyraven.gangland.file.configuration.inventory.InventoryLoader;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryRuntimeContext;
 import org.luckyraven.gangland.file.configuration.inventory.itemsource.GangItemSourceProvider;
-import org.luckyraven.gangland.file.configuration.lootchest.GanglandLootChestMessages;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.file.configuration.lootchest.LootChestSettings;
 import org.luckyraven.gangland.gang.GangFilterAdapter;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberFilterAdapter;
 import org.luckyraven.gangland.core.user.UserManager;
-import org.luckyraven.gangland.hologram.HologramService;
 import org.luckyraven.gangland.menu.condition.BooleanExpressionEvaluator;
 import org.luckyraven.gangland.menu.filter.*;
 import org.luckyraven.gangland.menu.multi.ItemSourceProvider;
@@ -40,12 +37,8 @@ import org.luckyraven.gangland.item.contract.UniqueItemRegistry;
 import org.luckyraven.gangland.item.listener.money.MoneyProximityPickupTask;
 import org.luckyraven.gangland.item.money.MoneyAddon;
 import org.luckyraven.gangland.item.money.MoneyDepositService;
-import org.luckyraven.gangland.lootchest.LootChestManager;
-import org.luckyraven.gangland.lootchest.LootChestService;
-import org.luckyraven.gangland.lootchest.config.LootChestLoader;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
-import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 import org.luckyraven.gangland.sign.LegacySignRewriter;
 import org.luckyraven.gangland.sign.SignManager;
 import org.luckyraven.gangland.sign.bulk.BulkActionManager;
@@ -58,9 +51,10 @@ import org.luckyraven.gangland.sign.service.SignInteraction;
 import org.luckyraven.gangland.sign.service.SignInteractionService;
 
 /**
- * CONFIG-phase wiring for the gameplay-side managers: signs, items, inventory, hologram, loot chest, money. The
- * weapon/wearable system's own CONFIG-phase beans live in the weapon module's {@code WeaponModuleConfig}. Every
- * bean here can constructor-inject any FILE-phase or DATABASE-phase bean by type.
+ * CONFIG-phase wiring for the gameplay-side managers: signs, items, inventory, money. The hologram + loot chest
+ * beans that used to live here moved to the {@code gangland-lootchest} module's own {@code LootChestModuleConfig}
+ * (WS3 G2, 0.10.0). The weapon/wearable system's own CONFIG-phase beans live in the weapon module's
+ * {@code WeaponModuleConfig}. Every bean here can constructor-inject any FILE-phase or DATABASE-phase bean by type.
  *
  * <p>The structural ordering inside the topo sort:
  * <ol>
@@ -68,8 +62,7 @@ import org.luckyraven.gangland.sign.service.SignInteractionService;
  *     and {@link BulkActionManager}.</li>
  *     <li>Money + items: {@link MoneyDepositService} (must precede the parser; {@code MoneyConverter} resolves the
  *     currency symbol via the contract on instantiation), then the converter beans → {@link ItemConverterRegistry}
- *     → {@link ItemParser}, which the loot chest + cops-n-crooks beans transitively consume.</li>
- *     <li>Loot chest: {@link HologramService} → {@link LootChestManager} → {@link LootChestLoader}.</li>
+ *     → {@link ItemParser}, which cops-n-crooks and the loot chest module transitively consume.</li>
  * </ol>
  *
  * <p>Tiny bridge / contract beans live here too because they're trivial wrappers over the managers they bind to.
@@ -284,35 +277,6 @@ public class GameplayConfig {
 		return new GanglandUniqueItemInteractionService(inventoryRuntimeContext);
 	}
 
-	// ---------------------------------------------------------------------------------------------------------------
-	// Hologram + loot chest
-	// ---------------------------------------------------------------------------------------------------------------
-
-	@Bean
-	public HologramService hologramService() {
-		return new HologramService(gangland);
-	}
-
-	@Bean
-	public LootChestManager lootChestManager(HologramService hologramService, RepositoryRegistry repositoryRegistry,
-	                                         ItemParser itemParser, InventoryService inventoryService) {
-		return new LootChestManager(gangland, Gangland.FULL_PREFIX, hologramService, repositoryRegistry, itemParser,
-		                            new GanglandLootChestMessages(), inventoryService);
-	}
-
-	@Bean
-	public LootChestService lootChestService(LootChestManager lootChestManager) {
-		return lootChestManager;
-	}
-
-	@Bean
-	public LootChestLoader lootChestLoader(LootChestManager lootChestManager, FileManager fileManager) {
-		LootChestLoader loader = new LootChestLoader(gangland, lootChestManager, new LootChestSettings(), false, null,
-		                                             fileManager);
-		fileManager.registerInitializer(loader);
-		return loader;
-	}
-
 	/**
 	 * {@link InventoryLoader} can't initialize during construction because its load callback parses prefixed item refs
 	 * (weapon:awp, wearable:police_vest, …) via {@link ItemParser}, which is also a CONFIG-phase bean. By the time this
@@ -329,13 +293,17 @@ public class GameplayConfig {
 	}
 
 	/**
-	 * {@link LootChestLoader} can't initialize during construction for the same reason as
-	 * {@link #initializeInventoryLoader()}: {@link org.luckyraven.keystone.persistence.FileManager#initializeAll()}
-	 * eagerly resolves item strings through module/plugin converters (weapon:awp, …) that don't exist yet inside the
-	 * CONFIG phase. Deferring the call here (T-11) lets those converters register first.
+	 * Global CONFIG-phase initializer for every core-registered {@link org.luckyraven.keystone.persistence.FileLoader}
+	 * (not lootchest-specific despite the name it carried before WS3 G2 moved the loot chest loader itself into the
+	 * {@code gangland-lootchest} module's own {@code LootChestModuleConfig}, which calls
+	 * {@code fileManager.initializeAll()} inline — B1). Kept, renamed from {@code initializeLootChestLoader}:
+	 * {@link org.luckyraven.keystone.persistence.FileManager#initializeAll()} eagerly resolves item strings through
+	 * module/plugin converters (weapon:awp, …) that don't exist yet inside the CONFIG phase, so this still has to run
+	 * once every CONFIG bean (core and module) exists (T-11) — a second {@code initializeAll()} call is a no-op for
+	 * files a module's own inline call already loaded.
 	 */
 	@PostConstruct
-	public void initializeLootChestLoader() {
+	public void initializeDeferredLoaders() {
 		FileManager fileManager = context.get(FileManager.class);
 		if (fileManager != null) {
 			fileManager.initializeAll();

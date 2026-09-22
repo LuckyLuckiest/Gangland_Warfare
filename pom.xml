@@ -205,6 +205,14 @@
                 <version>${keystone.version}</version>
                 <scope>provided</scope>
             </dependency>
+            <!-- WS3 G1 (0.10.0): holograms, promoted out of Gangland's own hologram-api into Keystone
+                 (keystone-hologram, ArmorStand-only, Spigot 1.16.5 floor). -->
+            <dependency>
+                <groupId>org.luckyraven</groupId>
+                <artifactId>keystone-hologram</artifactId>
+                <version>${keystone.version}</version>
+                <scope>provided</scope>
+            </dependency>
             <!-- WS2 G1 (0.10.0): the basic menu mechanism (ChestMenu, MenuFlow, PagedRegion, OpenMenuTracker) —
                  R6: gangland-api never re-exports this, unlike the old inventory-api; every menu-building module
                  declares it directly (the bartizan-api rule). -->

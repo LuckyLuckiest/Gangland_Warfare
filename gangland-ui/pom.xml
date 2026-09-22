@@ -17,7 +17,6 @@
     <name>Gangland UI</name>
 
     <modules>
-        <module>hologram-api</module>
         <module>sign-api</module>
         <module>lootchest-api</module>
     </modules>

@@ -1,0 +1,7 @@
+# Keystone module descriptor - read by Gangland's ModuleLoader from plugins/Gangland_Warfare/modules/.
+Id: lootchest
+Name: Gangland Loot Chests
+Version: ${project.version}
+Main: org.luckyraven.gangland.lootchest.LootChestModule
+Host_Api: 2.0
+Artifact: org.luckyraven:gangland-lootchest

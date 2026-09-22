@@ -36,8 +36,7 @@
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>hologram-api</artifactId>
-            <scope>provided</scope>
+            <artifactId>keystone-hologram</artifactId>
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>

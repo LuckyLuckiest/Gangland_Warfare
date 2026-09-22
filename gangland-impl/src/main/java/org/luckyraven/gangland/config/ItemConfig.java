@@ -17,7 +17,6 @@ import org.luckyraven.gangland.item.money.MoneyConverter;
 import org.luckyraven.gangland.item.money.MoneyDepositService;
 import org.luckyraven.gangland.item.refresher.*;
 import org.luckyraven.gangland.item.serializer.*;
-import org.luckyraven.gangland.lootchest.LootChestWandTag;
 
 /**
  * CONFIG-phase wiring for the item framework: every converter (string → ItemStack), serializer (ItemStack → string),
@@ -128,12 +127,13 @@ public class ItemConfig {
 
 	// ── nbt tag catalogue ───────────────────────────────────────────────────────────────────────────────────────
 
+	/**
+	 * The loot chest module (if present) registers its own {@code LootChestWandTag} values into this catalog via
+	 * registry injection (WS3 G2, {@code documentation/module-loader.md}'s {@code NbtTagCatalog} entry) — the core
+	 * only ever produces the empty catalog itself.
+	 */
 	@Bean
 	public NbtTagCatalog nbtTagCatalog() {
-		NbtTagCatalog catalog = new NbtTagCatalog();
-		for (LootChestWandTag tag : LootChestWandTag.values()) {
-			catalog.register(tag.toString().toLowerCase());
-		}
-		return catalog;
+		return new NbtTagCatalog();
 	}
 }

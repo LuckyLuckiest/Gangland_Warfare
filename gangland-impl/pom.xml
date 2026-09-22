@@ -52,7 +52,7 @@
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>hologram-api</artifactId>
+            <artifactId>keystone-hologram</artifactId>
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
