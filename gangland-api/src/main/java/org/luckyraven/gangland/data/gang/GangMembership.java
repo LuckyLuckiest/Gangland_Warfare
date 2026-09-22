@@ -23,6 +23,17 @@ public final class GangMembership {
 	}
 
 	/**
+	 * @return whether the gang module has installed a live view. Lets a caller distinguish "the module isn't
+	 * installed, so this holder can't answer either way" from "the module answered no" — {@link #nameOf(int)}
+	 * alone can't tell those apart, since both return an absent result (W54 second re-review: restores
+	 * {@code WaypointGangIdCommand}'s old {@code gang == null -> GANG_DOESNT_EXIST} guard, which only fires when
+	 * there's an actual answer to distrust).
+	 */
+	public boolean isInstalled() {
+		return this.view != null;
+	}
+
+	/**
 	 * @return the gang id {@code uuid} currently belongs to, or {@code -1} when it belongs to none or no view is
 	 * installed (module absent).
 	 */

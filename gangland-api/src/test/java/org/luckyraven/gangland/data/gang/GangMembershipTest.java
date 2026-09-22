@@ -116,6 +116,18 @@ class GangMembershipTest {
 		assertTrue(membership.nameOf(8).isEmpty(), "an id the view doesn't know is still empty, not a NPE");
 	}
 
+	@Test
+	@DisplayName("isInstalled is false before any view is installed, true once one is")
+	void isInstalled_reflectsWhetherAViewExists() {
+		GangMembership membership = new GangMembership();
+
+		assertFalse(membership.isInstalled());
+
+		membership.install(view(u -> -1, (a, b) -> false, id -> Optional.empty()));
+
+		assertTrue(membership.isInstalled());
+	}
+
 	private GangMembershipView fixedView(UUID uuid, int gangId) {
 		return view(u -> u.equals(uuid) ? gangId : -1, (a, b) -> false, id -> Optional.empty());
 	}

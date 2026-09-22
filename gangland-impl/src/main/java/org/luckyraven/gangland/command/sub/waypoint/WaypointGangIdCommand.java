@@ -22,12 +22,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * {@code /glw waypoint gangId <id>} — the real validation was always {@code user.getGangId() != id} below (a
- * player can only ever set this to their own gang's id), so no {@code GangManager} existence re-check is
- * needed. The display name (tab-completion + the stored waypoint lookup key) goes through the always-present
- * {@link GangMembership#nameOf(int)} holder (W54 F4 — closes WS6 ask #2's raw-id degrade from the original W51
- * gate) rather than {@code GangManager} directly, falling back to the raw id when no view is installed (module
- * absent) or the id names no real gang.
+ * {@code /glw waypoint gangId <id>} — {@code user.getGangId() != id} is the primary validation (a player can
+ * only ever set this to their own gang's id), but the original {@code gang == null -> GANG_DOESNT_EXIST} guard
+ * is restored on top of it (W54 second re-review) for the rare desync window where a player's cached
+ * {@code User.gangId} still names a gang that was deleted (or otherwise stopped existing) in the same tick —
+ * {@link #gangUnknown(GangMembership, int)} is the decision, only ever firing when the module is actually
+ * installed (an uninstalled module can't tell "no gang" from "don't know," so the raw-id path is trusted
+ * instead there). The display name (tab-completion + the stored waypoint lookup key) goes through the
+ * always-present {@link GangMembership#nameOf(int)} holder (W54 F4 — closes WS6 ask #2's raw-id degrade from
+ * the original W51 gate) rather than {@code GangManager} directly, falling back to the raw id when no view is
+ * installed (module absent) or the id names no real gang.
  */
 class WaypointGangIdCommand extends SubArgument {
 
@@ -91,9 +95,16 @@ class WaypointGangIdCommand extends SubArgument {
 			}
 
 			// check if the gang is valid — a player's gangId only ever names a real gang (set by Gang.addMember),
-			// so this is the real validation; no separate GangManager.getGang(id) existence re-check needed.
+			// so this is the primary validation.
 			if (user.getGangId() != id) {
 				user.sendMessage(Messages.INVALID_GANG_NAME.toString());
+				return;
+			}
+
+			// Defensive re-check for the rare desync window (the gang was deleted after User.gangId was set but
+			// before it was reset) — see the class javadoc and gangUnknown's own javadoc.
+			if (gangUnknown(gangMembership, id)) {
+				user.sendMessage(Messages.GANG_DOESNT_EXIST.toString());
 				return;
 			}
 
@@ -135,6 +146,18 @@ class WaypointGangIdCommand extends SubArgument {
 		});
 
 		this.addSubArgument(optional);
+	}
+
+	/**
+	 * @return whether {@code id} should be rejected as unknown. Only ever true when the gang module is actually
+	 * installed ({@link GangMembership#isInstalled()}) <em>and</em> it confirms {@code id} names no real gang
+	 * ({@link GangMembership#nameOf(int)} empty) — {@code isInstalled()} is the piece that distinguishes "the
+	 * module answered no" from "there's no module to ask," since {@code nameOf} alone returns the same absent
+	 * result either way. When no module is installed this always returns {@code false}, trusting the raw-id
+	 * path (the same behaviour a server without the gang module gets everywhere else in this command).
+	 */
+	static boolean gangUnknown(GangMembership gangMembership, int id) {
+		return gangMembership.isInstalled() && gangMembership.nameOf(id).isEmpty();
 	}
 
 }
