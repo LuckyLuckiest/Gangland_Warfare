@@ -2,7 +2,7 @@ package org.luckyraven.gangland.database.repositories.plugin;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.database.tables.plugin.PermissionTable;
-import org.luckyraven.gangland.gang.rank.Permission;
+import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
 import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
 import org.luckyraven.keystone.persistence.database.component.Table;

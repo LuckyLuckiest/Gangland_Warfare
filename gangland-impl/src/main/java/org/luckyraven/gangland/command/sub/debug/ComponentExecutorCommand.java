@@ -20,8 +20,8 @@ import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankAssignmentPolicy;
 import org.luckyraven.gangland.gang.rank.RankManager;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.Collection;

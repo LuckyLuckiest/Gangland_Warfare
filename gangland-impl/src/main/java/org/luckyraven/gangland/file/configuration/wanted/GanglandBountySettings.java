@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.file.configuration.wanted;
 
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gang.bounty.BountySettings;
+import org.luckyraven.gangland.core.bounty.BountySettings;
 
 import java.math.BigDecimal;
 

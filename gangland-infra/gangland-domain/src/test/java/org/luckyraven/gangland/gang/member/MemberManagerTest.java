@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.contract.MemberRepositoryContract;
 import org.luckyraven.gangland.gang.contract.RankLookupContract;
-import org.luckyraven.gangland.gang.rank.Permission;
+import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.vault.permission.VaultPermissionBridge;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;

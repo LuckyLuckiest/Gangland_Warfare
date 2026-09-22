@@ -3,7 +3,9 @@ package org.luckyraven.gangland.gang;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.core.user.IdentitySettings;
 import org.luckyraven.gangland.gang.support.FakeGangSettingsContract;
+import org.luckyraven.gangland.gang.support.FakeIdentitySettingsContract;
 
 import java.util.HashSet;
 
@@ -25,6 +27,7 @@ class GangAllianceTest {
 	@BeforeEach
 	void bindSettings() {
 		GangSettings.bind(new FakeGangSettingsContract());
+		IdentitySettings.bind(new FakeIdentitySettingsContract());
 	}
 
 	@Test

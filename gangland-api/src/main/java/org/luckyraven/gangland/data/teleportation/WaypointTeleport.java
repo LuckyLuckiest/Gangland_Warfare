@@ -12,7 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.timer.CountdownTimer;
 import org.luckyraven.gangland.events.teleportation.TeleportEvent;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.gang.user.User;
+import org.luckyraven.gangland.core.user.User;
 
 import java.util.HashMap;
 import java.util.Map;

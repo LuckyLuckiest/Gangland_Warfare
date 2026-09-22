@@ -21,7 +21,7 @@ import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitRegistry;
 import org.luckyraven.gangland.npcshops.trader.trait.TraderTraitsLoader;
 import org.luckyraven.gangland.npcshops.trader.view.*;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.keystone.item.ItemRefresherRegistry;
 import org.luckyraven.keystone.shop.ShopRegistry;
 import org.luckyraven.keystone.shop.message.ShopDisplayResolver;

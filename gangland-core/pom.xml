@@ -27,6 +27,20 @@
             <groupId>org.luckyraven</groupId>
             <artifactId>keystone-common</artifactId>
         </dependency>
+        <!-- WS5 G0: the identity slice (User/UserManager/Level/Bounty/Wanted, moved from gangland-domain) needs
+             BeanLifecycle, the repository registry, and Keystone's economy/timer utilities. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-bean</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-persistence</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-hooks</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

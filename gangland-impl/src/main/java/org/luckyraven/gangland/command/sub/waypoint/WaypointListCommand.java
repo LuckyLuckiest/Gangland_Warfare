@@ -16,8 +16,8 @@ import org.luckyraven.gangland.data.teleportation.Waypoint;
 import org.luckyraven.gangland.data.teleportation.WaypointAccess;
 import org.luckyraven.gangland.data.teleportation.WaypointManager;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.Collection;

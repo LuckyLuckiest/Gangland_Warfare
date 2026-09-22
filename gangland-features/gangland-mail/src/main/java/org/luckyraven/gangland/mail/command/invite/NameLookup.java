@@ -3,8 +3,8 @@ package org.luckyraven.gangland.mail.command.invite;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 
 /**
  * Resolves a player by name through the cached {@link UserManager} maps instead of {@link org.bukkit.Bukkit}'s

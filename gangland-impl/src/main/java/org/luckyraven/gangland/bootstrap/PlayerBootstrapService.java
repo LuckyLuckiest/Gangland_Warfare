@@ -4,8 +4,10 @@ import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.permissions.PermissionAttachment;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.bean.BeanPostInitialize;
+import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.data.user.UserDataLoader;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.database.TableLookup;
@@ -15,8 +17,9 @@ import org.luckyraven.gangland.database.tables.player.UserTable;
 import org.luckyraven.gangland.events.user.UserDataInitEvent;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.gang.rank.Rank;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.item.unique.UniqueItemUtil;
 import org.luckyraven.keystone.persistence.FileManager;
@@ -119,7 +122,17 @@ public final class PlayerBootstrapService implements BeanPostInitialize {
 			Member member = memberManager.getMember(player.getUniqueId());
 
 			if (member != null) {
-				userManager.initializeUserPermission(newUser, member);
+				// ponytail: temporary inline bridge for the deleted UserManager.initializeUserPermission (WS5 G0,
+				// B2) — G2's RankPermissionApplier (gang module) replaces this once it exists.
+				Rank rank = member.getRank();
+				if (rank != null) {
+					PermissionAttachment attachment = newUser.getUser().addAttachment(gangland);
+					newUser.setPermissionAttachment(attachment);
+					for (Permission perm : rank.getPermissions()) {
+						newUser.setPermission(perm.getPermission(), true);
+					}
+					newUser.updateCommands();
+				}
 				continue;
 			}
 

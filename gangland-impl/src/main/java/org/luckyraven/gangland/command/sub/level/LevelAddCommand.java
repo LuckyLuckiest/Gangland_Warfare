@@ -11,9 +11,9 @@ import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.events.user.UserLevelUpEvent;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.gang.events.level.LevelUpEvent;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.events.level.LevelUpEvent;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.List;

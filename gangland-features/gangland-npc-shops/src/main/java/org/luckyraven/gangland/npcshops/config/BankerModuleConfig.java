@@ -15,7 +15,7 @@ import org.luckyraven.gangland.npcshops.banker.tier.BankTierRegistry;
 import org.luckyraven.gangland.npcshops.banker.tier.BankTiersLoader;
 import org.luckyraven.gangland.npcshops.banker.view.*;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.Qualifier;

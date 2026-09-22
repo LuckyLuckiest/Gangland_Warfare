@@ -9,11 +9,12 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.color.Color;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.economy.EconomyHandler;
-import org.luckyraven.gangland.gang.bounty.Bounty;
+import org.luckyraven.gangland.core.bounty.Bounty;
+import org.luckyraven.gangland.core.user.IdentitySettings;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.rank.Rank;
-import org.luckyraven.gangland.gang.user.Level;
-import org.luckyraven.gangland.gang.user.User;
+import org.luckyraven.gangland.core.user.Level;
+import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.gang.vault.permission.VaultPermissionBridge;
 
 import java.text.SimpleDateFormat;
@@ -64,7 +65,7 @@ public class Gang {
 		this.id      = id;
 		this.allies  = new HashSet<>();
 		this.level   = new Level();
-		this.bounty  = new Bounty(GangSettings.getBountyEachKillValue(), GangSettings.getBountyTimerMultiple());
+		this.bounty  = new Bounty(IdentitySettings.getBountyEachKillValue(), IdentitySettings.getBountyTimerMultiple());
 		this.economy = new EconomyHandler(null);
 		this.members = new ArrayList<>();
 
@@ -134,7 +135,15 @@ public class Gang {
 	public void removeMember(User<? extends OfflinePlayer> user, Member member) {
 		if (!members.contains(member)) return;
 
-		user.flushPermissions(null);
+		// ponytail: temporary inline bridge for the deleted User.flushPermissions(Rank) (WS5 G0, B2) — revokes
+		// every currently-granted node since a removed member has no rank left. unsetPermission (not
+		// setPermission(_, false), WS5 G0 fix round 1 F1) so a Vault/LuckPerms group grant still applies. G2's
+		// RankPermissionApplier (gang module) replaces this once it exists.
+		for (String permission : user.grantedPermissionNames()) {
+			user.unsetPermission(permission);
+		}
+		user.updateCommands();
+
 		user.resetGang();
 		removeMember(member);
 	}

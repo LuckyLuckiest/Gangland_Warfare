@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.gang.member.Member;
-import org.luckyraven.gangland.gang.rank.Permission;
+import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.keystone.vault.permission.OfflinePermissionService;
 import org.luckyraven.keystone.vault.permission.VaultOfflinePermissionService;

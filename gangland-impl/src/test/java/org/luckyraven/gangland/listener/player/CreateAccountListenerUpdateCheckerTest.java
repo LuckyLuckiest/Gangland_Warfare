@@ -7,7 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.gang.user.User;
+import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.support.FakeMessageProvider;
 import org.luckyraven.gangland.support.SettingsFixture;
 import org.luckyraven.keystone.update.UpdateNotifier;

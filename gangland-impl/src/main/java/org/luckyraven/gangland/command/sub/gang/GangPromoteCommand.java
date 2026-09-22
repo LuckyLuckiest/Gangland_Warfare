@@ -16,12 +16,13 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankManager;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.ArrayList;
@@ -176,7 +177,19 @@ class GangPromoteCommand extends SubArgument {
 					// remove the previous rank attachments
 					User<Player> onlineUser = userManager.getUser(onlinePlayer);
 
-					if (onlineUser != null) onlineUser.flushPermissions(first);
+					if (onlineUser != null) {
+						// ponytail: temporary inline bridge for the deleted User.flushPermissions(Rank) (WS5 G0,
+						// B2) — unsetPermission (not setPermission(_, false), WS5 G0 fix round 1 F1) so a
+						// Vault/LuckPerms group grant still applies. G2's RankPermissionApplier (gang module)
+						// replaces this once it exists.
+						for (String node : onlineUser.grantedPermissionNames()) {
+							onlineUser.unsetPermission(node);
+						}
+						for (Permission perm : first.getPermissions()) {
+							onlineUser.setPermission(perm.getPermission(), true);
+						}
+						onlineUser.updateCommands();
+					}
 
 					Objects.requireNonNull(onlinePlayer).sendMessage(message);
 				}

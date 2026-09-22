@@ -7,7 +7,7 @@ import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.command.CommandHandler;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.UserManager;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -8,7 +8,7 @@ import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.item.money.MoneyAddon;
 import org.luckyraven.gangland.item.money.MoneyDepositService;
 import org.luckyraven.gangland.util.GanglandChatUtil;

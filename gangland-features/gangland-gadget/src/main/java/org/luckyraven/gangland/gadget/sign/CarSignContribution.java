@@ -2,7 +2,7 @@ package org.luckyraven.gangland.gadget.sign;
 
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.gadget.car.CarManager;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.sign.SignType;
 import org.luckyraven.gangland.sign.extension.SignTypeContribution;
 import org.luckyraven.gangland.sign.type.Sign;

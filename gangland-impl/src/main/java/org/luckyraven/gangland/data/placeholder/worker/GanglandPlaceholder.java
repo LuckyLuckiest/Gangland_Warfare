@@ -21,10 +21,10 @@ import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
-import org.luckyraven.gangland.gang.user.Level;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.gang.wanted.Wanted;
+import org.luckyraven.gangland.core.user.Level;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.item.unique.UniqueItem;
 

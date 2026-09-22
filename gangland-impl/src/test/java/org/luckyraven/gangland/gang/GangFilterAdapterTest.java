@@ -4,7 +4,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
+import org.luckyraven.gangland.core.user.IdentitySettings;
 import org.luckyraven.gangland.file.configuration.gang.GanglandGangSettings;
+import org.luckyraven.gangland.file.configuration.identity.GanglandIdentitySettings;
 import org.luckyraven.gangland.menu.filter.StandardFilterField;
 import org.luckyraven.gangland.support.SettingsFixture;
 
@@ -30,9 +32,11 @@ class GangFilterAdapterTest {
 
 	@BeforeEach
 	void setUp() {
-		// Gang()'s Bounty field reads GangSettings (bound to the static Settings reader) at construction time.
+		// Gang()'s Bounty field reads IdentitySettings (bound to the static Settings reader) at construction time;
+		// GangSettings is bound too for the getGangDisplayNameChar()-derived fields this adapter also projects.
 		SettingsFixture.initializeMinimal(tempDir);
 		GangSettings.bind(new GanglandGangSettings());
+		IdentitySettings.bind(new GanglandIdentitySettings());
 	}
 
 	@Test

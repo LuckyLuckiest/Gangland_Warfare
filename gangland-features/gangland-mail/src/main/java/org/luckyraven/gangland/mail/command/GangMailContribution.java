@@ -7,7 +7,7 @@ import org.luckyraven.gangland.command.extension.CommandContribution;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.rank.RankManager;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.mail.MailManager;
 import org.luckyraven.gangland.mail.command.invite.GangInviteCommand;
 import org.luckyraven.keystone.command.argument.Argument;

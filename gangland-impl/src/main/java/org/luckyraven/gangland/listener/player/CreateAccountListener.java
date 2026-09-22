@@ -11,6 +11,8 @@ import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.bean.listener.ListenerPriority;
+import org.bukkit.permissions.PermissionAttachment;
+import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.data.user.UserDataLoader;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.database.TableLookup;
@@ -20,8 +22,9 @@ import org.luckyraven.gangland.database.tables.player.UserTable;
 import org.luckyraven.gangland.events.user.UserDataInitEvent;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.gang.rank.Rank;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.keystone.persistence.database.component.Table;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.keystone.update.UpdateNotifier;
@@ -105,14 +108,23 @@ public final class CreateAccountListener implements Listener {
 			UserDataInitEvent userDataInitEvent = new UserDataInitEvent(true, user);
 			Bukkit.getPluginManager().callEvent(userDataInitEvent);
 
-			// PermissionAttachment / player.updateCommands() inside initializeUserPermission
-			// must run on the main thread.
+			// PermissionAttachment / player.updateCommands() must run on the main thread.
 			Bukkit.getScheduler().runTask(gangland, () -> {
 				if (!player.isOnline()) {
 					return;
 				}
 
-				userManager.initializeUserPermission(user, finalMember);
+				// ponytail: temporary inline bridge for the deleted UserManager.initializeUserPermission (WS5
+				// G0, B2) — G2's RankPermissionApplier (gang module) replaces this once it exists.
+				Rank rank = finalMember.getRank();
+				if (rank != null) {
+					PermissionAttachment attachment = user.getUser().addAttachment(gangland);
+					user.setPermissionAttachment(attachment);
+					for (Permission perm : rank.getPermissions()) {
+						user.setPermission(perm.getPermission(), true);
+					}
+					user.updateCommands();
+				}
 			});
 		});
 	}

@@ -2,7 +2,7 @@ package org.luckyraven.gangland.gang.contract;
 
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.gang.user.User;
+import org.luckyraven.gangland.core.user.User;
 
 /**
  * Read-side contract for looking up online users by Bukkit player handle. Exposed so sibling feature modules can

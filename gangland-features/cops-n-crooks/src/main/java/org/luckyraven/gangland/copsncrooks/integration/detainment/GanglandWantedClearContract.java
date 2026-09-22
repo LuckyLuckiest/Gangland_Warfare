@@ -3,9 +3,9 @@ package org.luckyraven.gangland.copsncrooks.integration.detainment;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.copsncrooks.detainment.wanted.WantedClearContract;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.gang.wanted.Wanted;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.core.wanted.Wanted;
 
 import java.util.UUID;
 

@@ -13,14 +13,15 @@ import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankManager;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.ArrayList;
@@ -176,7 +177,18 @@ class GangTransferCommand extends SubArgument {
 			memberManager.assignRank(targetMember, tail);
 
 			// Refresh runtime permission attachments for online users so the rank swap takes effect immediately.
-			if (user.getPermissionAttachment() != null) user.flushPermissions(tailParent);
+			// ponytail: temporary inline bridge for the deleted User.flushPermissions(Rank) (WS5 G0, B2) —
+			// unsetPermission (not setPermission(_, false), WS5 G0 fix round 1 F1) so a Vault/LuckPerms group
+			// grant still applies. G2's RankPermissionApplier (gang module) replaces this once it exists.
+			if (user.getPermissionAttachment() != null) {
+				for (String node : user.grantedPermissionNames()) {
+					user.unsetPermission(node);
+				}
+				for (Permission perm : tailParent.getPermissions()) {
+					user.setPermission(perm.getPermission(), true);
+				}
+				user.updateCommands();
+			}
 
 			OfflinePlayer offlineTarget = Bukkit.getOfflinePlayer(targetUuid);
 			String        targetName    = offlineTarget.getName() != null ? offlineTarget.getName() : "?";
@@ -185,7 +197,19 @@ class GangTransferCommand extends SubArgument {
 				Player       onlineTarget = offlineTarget.getPlayer();
 				User<Player> targetUser   = onlineTarget == null ? null : userManager.getUser(onlineTarget);
 
-				if (targetUser != null) targetUser.flushPermissions(tail);
+				if (targetUser != null) {
+					// ponytail: temporary inline bridge for the deleted User.flushPermissions(Rank) (WS5 G0, B2) —
+					// unsetPermission (not setPermission(_, false), WS5 G0 fix round 1 F1) so a Vault/LuckPerms
+					// group grant still applies. G2's RankPermissionApplier (gang module) replaces this once it
+					// exists.
+					for (String node : targetUser.grantedPermissionNames()) {
+						targetUser.unsetPermission(node);
+					}
+					for (Permission perm : tail.getPermissions()) {
+						targetUser.setPermission(perm.getPermission(), true);
+					}
+					targetUser.updateCommands();
+				}
 
 				if (onlineTarget != null) {
 					onlineTarget.sendMessage(Messages.GANG_TRANSFER_TARGET_SUCCESS.toString()

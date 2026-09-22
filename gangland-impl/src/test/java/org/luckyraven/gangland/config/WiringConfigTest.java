@@ -10,7 +10,7 @@ import org.luckyraven.gangland.data.placeholder.PlaceholderService;
 import org.luckyraven.gangland.data.placeholder.worker.GanglandPlaceholder;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberManager;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.keystone.placeholder.PlaceholderProvider;
 import org.luckyraven.keystone.testkit.BukkitStatics;

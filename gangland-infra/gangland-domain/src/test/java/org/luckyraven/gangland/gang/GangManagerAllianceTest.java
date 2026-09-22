@@ -3,9 +3,11 @@ package org.luckyraven.gangland.gang;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.core.user.IdentitySettings;
 import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.support.FakeGangSettingsContract;
+import org.luckyraven.gangland.gang.support.FakeIdentitySettingsContract;
 import org.luckyraven.gangland.gang.support.RecordingGangAllianceRepository;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
@@ -32,6 +34,7 @@ class GangManagerAllianceTest {
 	@BeforeEach
 	void setUp() {
 		GangSettings.bind(new FakeGangSettingsContract());
+		IdentitySettings.bind(new FakeIdentitySettingsContract());
 
 		allianceRepository = new RecordingGangAllianceRepository();
 		gangManager        = new GangManager(mock(IRepository.class), allianceRepository);

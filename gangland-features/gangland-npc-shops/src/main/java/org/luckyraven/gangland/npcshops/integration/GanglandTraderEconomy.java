@@ -5,8 +5,8 @@ import org.bukkit.entity.Player;
 import org.luckyraven.gangland.npcshops.trader.economy.TraderEconomyContract;
 import org.luckyraven.keystone.economy.EconomyHandler;
 import org.luckyraven.keystone.economy.exception.EconomyException;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 
 import java.math.BigDecimal;
 

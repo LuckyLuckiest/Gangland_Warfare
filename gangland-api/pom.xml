@@ -24,14 +24,13 @@
         </dependency>
 
         <!-- Host libraries re-exported at compile scope: a runtime module gets all of them
-             transitively from the single gangland-api dependency in its own pom. -->
+             transitively from the single gangland-api dependency in its own pom.
+             WS5 G0 (B6): the gangland-domain re-export is gone — the 4 api files that used to need gang.* types
+             (WaypointTeleport, TeleportEvent, UserLevelUpEvent, MoneyAspect) only ever needed the identity slice
+             (User/Level/UserLevelUpEvent), which is now gangland-core, already listed below. -->
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>gangland-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
-            <artifactId>gangland-domain</artifactId>
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>

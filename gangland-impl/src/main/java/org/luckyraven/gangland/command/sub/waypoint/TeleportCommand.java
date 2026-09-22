@@ -19,8 +19,8 @@ import org.luckyraven.gangland.data.teleportation.WaypointTeleport;
 import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.gangland.util.TimeMessages;
 

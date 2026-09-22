@@ -8,8 +8,8 @@ import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.data.placeholder.PlaceholderService;
 import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.item.money.MoneyAddon;
 import org.luckyraven.gangland.item.money.MoneyDepositService;
 

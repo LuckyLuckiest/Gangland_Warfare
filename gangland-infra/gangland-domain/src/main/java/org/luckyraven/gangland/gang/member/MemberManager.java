@@ -3,7 +3,7 @@ package org.luckyraven.gangland.gang.member;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.bean.BeanLifecycle;
-import org.luckyraven.gangland.gang.GangSettings;
+import org.luckyraven.gangland.core.user.IdentitySettings;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.contract.MemberRepositoryContract;
 import org.luckyraven.gangland.gang.contract.RankLookupContract;
@@ -59,7 +59,7 @@ public class MemberManager implements BeanLifecycle {
 
 			// create member data into a database
 			if (memberInfo.length == 0) {
-				if (!GangSettings.isAutoSave()) memberTable.insertTableQuery(db, member);
+				if (!IdentitySettings.isAutoSave()) memberTable.insertTableQuery(db, member);
 			} else {
 				int    v            = 1;
 				int    gangId       = (int) memberInfo[v++];

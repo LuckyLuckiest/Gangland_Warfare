@@ -1,6 +1,6 @@
 package org.luckyraven.gangland.database.tables.plugin;
 
-import org.luckyraven.gangland.gang.rank.Permission;
+import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.keystone.persistence.database.component.Attribute;
 import org.luckyraven.keystone.persistence.database.component.Table;
 

@@ -11,7 +11,7 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.contract.UserLookupContract;
-import org.luckyraven.gangland.gang.user.User;
+import org.luckyraven.gangland.core.user.User;
 
 /**
  * Keeps each gang's {@code lastMemberOnlineAt} timestamp tight around real online transitions instead of drifting with

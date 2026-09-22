@@ -4,6 +4,7 @@ import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.datastructure.Tree;
+import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.luckyraven.gangland.gang.contract.PermissionRegistryContract;
 import org.luckyraven.keystone.persistence.repository.IRepository;

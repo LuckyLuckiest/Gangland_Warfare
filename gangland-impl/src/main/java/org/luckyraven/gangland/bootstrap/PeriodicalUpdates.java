@@ -13,7 +13,7 @@ import org.luckyraven.gangland.data.plugin.PluginDataCleanupService;
 import org.luckyraven.gangland.data.plugin.PluginManager;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 

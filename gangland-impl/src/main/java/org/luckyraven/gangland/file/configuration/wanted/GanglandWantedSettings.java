@@ -2,7 +2,7 @@ package org.luckyraven.gangland.file.configuration.wanted;
 
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gang.wanted.WantedSettings;
+import org.luckyraven.gangland.core.wanted.WantedSettings;
 
 import java.math.BigDecimal;
 

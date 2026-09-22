@@ -11,7 +11,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
 import org.luckyraven.gangland.data.teleportation.WaypointManager;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.support.SettingsFixture;
 
 import java.nio.file.Path;

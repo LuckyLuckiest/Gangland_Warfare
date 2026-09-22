@@ -6,8 +6,8 @@ import org.luckyraven.gangland.copsncrooks.detainment.economy.DetainmentEconomyC
 import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.keystone.economy.EconomyHandler;
 import org.luckyraven.keystone.economy.exception.EconomyException;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 
 import java.math.BigDecimal;
 

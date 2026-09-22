@@ -6,7 +6,7 @@ import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
-import org.luckyraven.gangland.gang.user.User;
+import org.luckyraven.gangland.core.user.User;
 
 @Getter
 public class UserDataInitEvent extends Event implements Cancellable {

@@ -21,7 +21,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.targeting.TargetingManager
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
-import org.luckyraven.gangland.gang.wanted.Wanted;
+import org.luckyraven.gangland.core.wanted.Wanted;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

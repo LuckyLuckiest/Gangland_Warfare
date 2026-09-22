@@ -14,11 +14,11 @@ import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.keystone.economy.exception.EconomyException;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gang.bounty.Bounty;
-import org.luckyraven.gangland.gang.events.bounty.BountyEvent;
-import org.luckyraven.gangland.gang.events.user.UserBountyEvent;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.bounty.Bounty;
+import org.luckyraven.gangland.core.events.bounty.BountyEvent;
+import org.luckyraven.gangland.core.events.user.UserBountyEvent;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.math.BigDecimal;

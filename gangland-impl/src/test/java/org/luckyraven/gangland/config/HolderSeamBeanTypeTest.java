@@ -3,7 +3,7 @@ package org.luckyraven.gangland.config;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.gangland.data.economy.GanglandMoneyDropClassifier;
-import org.luckyraven.gangland.gang.wanted.WantedKillTrackers;
+import org.luckyraven.gangland.core.wanted.WantedKillTrackers;
 import org.luckyraven.gangland.item.NbtTagCatalog;
 import org.luckyraven.keystone.bean.Bean;
 

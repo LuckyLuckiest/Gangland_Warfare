@@ -2,7 +2,7 @@ package org.luckyraven.gangland.turf.support;
 
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.gang.Gang;
-import org.luckyraven.gangland.gang.user.User;
+import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.turf.capture.CaptureSettings;
 
 import java.util.UUID;

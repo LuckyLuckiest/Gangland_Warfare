@@ -10,10 +10,10 @@ import org.luckyraven.gangland.events.gang.GangBountyEvent;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
-import org.luckyraven.gangland.gang.events.bounty.BountyEvent;
-import org.luckyraven.gangland.gang.events.user.UserBountyEvent;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.events.bounty.BountyEvent;
+import org.luckyraven.gangland.core.events.user.UserBountyEvent;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 
 import java.util.List;
 import java.util.Objects;

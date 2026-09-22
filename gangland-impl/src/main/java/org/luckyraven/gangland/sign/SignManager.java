@@ -6,7 +6,7 @@ import lombok.Getter;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.sign.extension.SignContributions;
 import org.luckyraven.gangland.sign.registry.SignFormatRegistry;

@@ -4,7 +4,7 @@ import lombok.Getter;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 import org.luckyraven.gangland.gang.Gang;
-import org.luckyraven.gangland.gang.events.bounty.BountyEvent;
+import org.luckyraven.gangland.core.events.bounty.BountyEvent;
 
 import java.math.BigDecimal;
 

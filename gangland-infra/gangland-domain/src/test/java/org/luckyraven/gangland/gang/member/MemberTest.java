@@ -4,7 +4,7 @@ import org.bukkit.OfflinePlayer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.luckyraven.gangland.gang.rank.Permission;
+import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.vault.permission.VaultPermissionBridge;
 import org.luckyraven.keystone.testkit.BukkitStatics;

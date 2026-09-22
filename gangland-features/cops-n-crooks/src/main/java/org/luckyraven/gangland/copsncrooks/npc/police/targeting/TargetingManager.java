@@ -2,7 +2,7 @@ package org.luckyraven.gangland.copsncrooks.npc.police.targeting;
 
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.gang.wanted.Wanted;
+import org.luckyraven.gangland.core.wanted.Wanted;
 
 import java.util.UUID;
 

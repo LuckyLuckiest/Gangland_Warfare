@@ -29,7 +29,7 @@ import org.luckyraven.gangland.gadget.listener.car.CarDamageState;
 import org.luckyraven.gangland.gadget.sign.CarSignContribution;
 import org.luckyraven.gangland.gadget.sign.CarSignViewProvider;
 import org.luckyraven.gangland.gang.member.MemberManager;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.item.ItemKind;
 import org.luckyraven.keystone.item.ItemConverterRegistry;
 import org.luckyraven.keystone.item.ItemRefresherRegistry;

@@ -8,9 +8,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
+import org.luckyraven.gangland.core.user.IdentitySettings;
 import org.luckyraven.gangland.database.tables.gang.GangAllianceTable;
 import org.luckyraven.gangland.database.tables.gang.GangTable;
 import org.luckyraven.gangland.file.configuration.gang.GanglandGangSettings;
+import org.luckyraven.gangland.file.configuration.identity.GanglandIdentitySettings;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangAlliance;
 import org.luckyraven.gangland.gang.GangSettings;
@@ -65,6 +67,7 @@ class GangAllianceRepositorySpiTest {
 	void setUp() throws SQLException {
 		SettingsFixture.initializeMinimal(tempDir);
 		GangSettings.bind(new GanglandGangSettings());
+		IdentitySettings.bind(new GanglandIdentitySettings());
 
 		backend = new SqliteBackend();
 		backend.connect(SqliteDbs.file(tempDir.resolve("alliances.db")));

@@ -21,15 +21,15 @@ import org.luckyraven.gangland.data.user.UserDataLoader;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
-import org.luckyraven.gangland.gang.bounty.BountySettings;
+import org.luckyraven.gangland.core.bounty.BountySettings;
 import org.luckyraven.gangland.gang.contract.*;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.rank.RankManager;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserFactory;
-import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.gang.wanted.WantedKillTrackers;
-import org.luckyraven.gangland.gang.wanted.WantedSettings;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserFactory;
+import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.core.wanted.WantedKillTrackers;
+import org.luckyraven.gangland.core.wanted.WantedSettings;
 import org.luckyraven.gangland.item.money.MoneyDropClassifier;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
@@ -67,17 +67,16 @@ public class DataConfig {
 	}
 
 	/**
-	 * Both UserManager beans declare {@code MemberManager} as a parameter purely for ordering. The constructor doesn't
-	 * consume it, but the dep edge forces BeanGraph to topologically sort {@code UserManager} <b>after</b>
-	 * {@link MemberManager} (and transitively after {@link GangManager} / {@link RankManager}), so by the time user
-	 * loading runs in {@code PlayerBootstrapService} the member / gang caches are already populated. Dropping the
-	 * parameter re-creates the pre-0.8.0 bug where members loaded after users and every member's gang link self-healed
-	 * to -1 on startup.
+	 * Used to declare {@code MemberManager} as a parameter purely for {@code BeanGraph} construction-order
+	 * ordering (WS5 G0, B4). Deleted: the real invariant is a phase boundary, not a construction-order edge — both
+	 * real consumers of member data ({@code UserDataLoader}, {@code PlayerBootstrapService}) already take
+	 * {@link MemberManager} as a direct, consumed constructor parameter, and {@link MemberManager#onInitialize}
+	 * (a {@code BeanLifecycle} phase) populates its cache strictly before {@code PlayerBootstrapService}'s
+	 * {@code BeanPostInitialize} phase reads it — see {@code UserDataLoaderMemberOrderingTest} for the pinned proof.
 	 */
 	@Bean(name = "online", isGeneric = true)
 	public UserManager<Player> userManager(RepositoryRegistry repositoryRegistry,
-	                                       UserFactory userFactory,
-	                                       @SuppressWarnings("unused") MemberManager orderingDep) {
+	                                       UserFactory userFactory) {
 		return new UserManager<>(gangland, repositoryRegistry, userFactory);
 	}
 
@@ -90,8 +89,7 @@ public class DataConfig {
 	@Bean(name = "offline", isGeneric = true)
 	public UserManager<OfflinePlayer> offlineUserManager(RepositoryRegistry repositoryRegistry,
 	                                                     UserFactory userFactory,
-	                                                     @Qualifier("online") UserManager<Player> onlineUserManager,
-	                                                     @SuppressWarnings("unused") MemberManager orderingDep) {
+	                                                     @Qualifier("online") UserManager<Player> onlineUserManager) {
 		UserManager<OfflinePlayer> manager = new UserManager<>(gangland, repositoryRegistry, userFactory);
 
 		manager.link(onlineUserManager);

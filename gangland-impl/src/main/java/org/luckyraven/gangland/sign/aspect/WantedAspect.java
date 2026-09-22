@@ -3,9 +3,9 @@ package org.luckyraven.gangland.sign.aspect;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.gang.wanted.Wanted;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.sign.model.ParsedSign;
 import org.luckyraven.gangland.sign.type.WantedSign;
 

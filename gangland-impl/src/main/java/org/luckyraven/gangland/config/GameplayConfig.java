@@ -23,7 +23,7 @@ import org.luckyraven.gangland.file.configuration.lootchest.LootChestSettings;
 import org.luckyraven.gangland.gang.GangFilterAdapter;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberFilterAdapter;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.hologram.HologramService;
 import org.luckyraven.gangland.menu.condition.BooleanExpressionEvaluator;
 import org.luckyraven.gangland.menu.filter.*;

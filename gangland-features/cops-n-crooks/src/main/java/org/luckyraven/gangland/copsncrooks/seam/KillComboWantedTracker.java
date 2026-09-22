@@ -4,8 +4,8 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.civilians.npc.entity.EntityMarks;
 import org.luckyraven.gangland.copsncrooks.combo.KillCombo;
-import org.luckyraven.gangland.gang.wanted.Wanted;
-import org.luckyraven.gangland.gang.wanted.WantedKillTracker;
+import org.luckyraven.gangland.core.wanted.Wanted;
+import org.luckyraven.gangland.core.wanted.WantedKillTracker;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 
 import java.util.UUID;

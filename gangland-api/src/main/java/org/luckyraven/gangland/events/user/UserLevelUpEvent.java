@@ -3,9 +3,9 @@ package org.luckyraven.gangland.events.user;
 import lombok.Getter;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
-import org.luckyraven.gangland.gang.events.level.LevelUpEvent;
-import org.luckyraven.gangland.gang.user.Level;
-import org.luckyraven.gangland.gang.user.User;
+import org.luckyraven.gangland.core.events.level.LevelUpEvent;
+import org.luckyraven.gangland.core.user.Level;
+import org.luckyraven.gangland.core.user.User;
 
 public class UserLevelUpEvent extends LevelUpEvent {
 

@@ -11,7 +11,7 @@ import org.luckyraven.gangland.command.sub.item.unique.ItemUniqueCommand;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.bean.command.CommandHandler;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.item.money.MoneyAddon;
 import org.luckyraven.gangland.item.money.MoneyDepositService;

@@ -9,7 +9,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.gang.user.User;
+import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.support.FakeMessageProvider;
 import org.luckyraven.gangland.support.SettingsFixture;
 import org.luckyraven.keystone.economy.EconomyHandler;

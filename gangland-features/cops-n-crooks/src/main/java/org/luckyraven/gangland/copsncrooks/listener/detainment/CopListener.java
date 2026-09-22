@@ -17,9 +17,9 @@ import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
-import org.luckyraven.gangland.gang.events.wanted.WantedEndEvent;
-import org.luckyraven.gangland.gang.events.wanted.WantedLevelChangeEvent;
-import org.luckyraven.gangland.gang.events.wanted.WantedStartEvent;
+import org.luckyraven.gangland.core.events.wanted.WantedEndEvent;
+import org.luckyraven.gangland.core.events.wanted.WantedLevelChangeEvent;
+import org.luckyraven.gangland.core.events.wanted.WantedStartEvent;
 import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
 import org.luckyraven.bartizan.api.raytrace.WeaponRaytracer;
 

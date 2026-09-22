@@ -3,8 +3,8 @@ package org.luckyraven.gangland.file.configuration.gang;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.gang.contract.UserLookupContract;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 
 /**
  * Adapter over the impl-side {@link UserManager} so feature modules can resolve a {@link User} through

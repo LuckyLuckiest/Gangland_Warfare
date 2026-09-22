@@ -36,6 +36,13 @@
             <groupId>org.luckyraven</groupId>
             <artifactId>gangland-core</artifactId>
         </dependency>
+        <!-- WS5 G0 (step 4): gangland-api no longer re-exports gangland-domain, and this module's Gang*
+             command/listener classes still name gang.* types (Gang/GangManager/Member/Rank/...) that haven't
+             moved to a module yet — declare the dependency directly instead of relying on the transitive one. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-domain</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>keystone-bean</artifactId>

@@ -13,10 +13,10 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.bean.listener.ListenerPriority;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.keystone.economy.bank.Bank;
-import org.luckyraven.gangland.gang.bounty.Bounty;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.gang.wanted.Wanted;
+import org.luckyraven.gangland.core.bounty.Bounty;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
 @ListenerHandler(priority = ListenerPriority.LOW)

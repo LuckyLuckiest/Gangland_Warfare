@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.core.testsupport.BukkitRegistryFixture;
 import org.luckyraven.gangland.gadget.car.Car;
 import org.luckyraven.gangland.gadget.car.config.CarAddon;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.mockito.ArgumentCaptor;

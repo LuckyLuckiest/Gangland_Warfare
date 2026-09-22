@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.gang.GangSettings;
 import org.luckyraven.gangland.gang.contract.PermissionRegistryContract;
 import org.luckyraven.gangland.gang.support.FakeGangSettingsContract;

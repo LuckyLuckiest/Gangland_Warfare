@@ -2,7 +2,7 @@ package org.luckyraven.gangland.data.teleportation;
 
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.gangland.gang.user.User;
+import org.luckyraven.gangland.core.user.User;
 
 import java.util.Collection;
 import java.util.List;

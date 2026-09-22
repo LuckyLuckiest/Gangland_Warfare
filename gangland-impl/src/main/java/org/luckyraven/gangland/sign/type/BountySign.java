@@ -6,7 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.color.Color;
 import org.luckyraven.keystone.inventory.InventoryService;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.sign.SignType;
 import org.luckyraven.gangland.sign.aspect.BountyAspect;
 import org.luckyraven.gangland.sign.aspect.SignAspect;

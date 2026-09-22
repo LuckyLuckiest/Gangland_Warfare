@@ -2,6 +2,7 @@ package org.luckyraven.gangland.gang.rank;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.core.permission.Permission;
 
 import java.util.List;
 

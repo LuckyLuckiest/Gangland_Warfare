@@ -8,7 +8,7 @@ import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.rank.RankManager;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.mail.command.GangAllyMailContribution;
 import org.luckyraven.gangland.mail.command.GangMailContribution;
 import org.luckyraven.gangland.mail.contract.MailRepositoryContract;

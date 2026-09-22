@@ -10,10 +10,10 @@ import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.events.user.UserLevelUpEvent;
-import org.luckyraven.gangland.gang.events.level.LevelUpEvent;
-import org.luckyraven.gangland.gang.user.Level;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.events.level.LevelUpEvent;
+import org.luckyraven.gangland.core.user.Level;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 
 /**
  * Awards level XP to the killer when a civilian NPC dies. Decoupled from the cops-n-crooks module via

@@ -24,8 +24,8 @@ import org.luckyraven.keystone.economy.EconomyHandler;
 import org.luckyraven.keystone.economy.bank.Bank;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.gang.user.User;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

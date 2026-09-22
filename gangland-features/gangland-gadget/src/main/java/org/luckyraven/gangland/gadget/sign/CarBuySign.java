@@ -4,7 +4,7 @@ import org.bukkit.entity.Player;
 import org.luckyraven.keystone.color.Color;
 import org.luckyraven.gangland.gadget.car.Car;
 import org.luckyraven.gangland.gadget.car.CarManager;
-import org.luckyraven.gangland.gang.user.UserManager;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.sign.SignType;
 import org.luckyraven.gangland.sign.aspect.AspectResult;
 import org.luckyraven.gangland.sign.aspect.ItemTransferAspect;
