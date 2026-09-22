@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.luckyraven</groupId>
+        <artifactId>gangland-features</artifactId>
+        <version>${revision}</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>gangland-lootchest</artifactId>
+
+    <name>Gangland Loot Chests</name>
+
+    <dependencies>
+        <!-- Spigot Build -->
+        <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Local dependencies -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-persistence</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-bean</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-command</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-module</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-hooks</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-item</artifactId>
+        </dependency>
+        <!-- WS3 G1/G2 (0.10.0): holograms, promoted out of Gangland's own hologram-api into Keystone. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-hologram</artifactId>
+        </dependency>
+
+        <!-- CUT gate (rebase, 0.10.0): inventory-api is gone entirely. LootChestWand's admin preview and
+             LootChestWandEditCommand now build on keystone-inventory's ChestMenuBuilder/PagedRegion directly —
+             every menu-building module declares it itself (R6, gangland-api never re-exports it), same as
+             gadget/turf/cops-n-crooks. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-inventory</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.cryptomorin</groupId>
+            <artifactId>XSeries</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tr7zw</groupId>
+            <artifactId>item-nbt-api-plugin</artifactId>
+        </dependency>
+        <!-- LootChestWand's anvil rename prompt used net.wesjd:anvilgui directly but only ever picked it up
+             transitively through inventory-api's own compile-scope dependency on it (same finding as npc-shops'
+             CUT-gate pom note) — now that inventory-api is deleted, this module needs its own direct declaration. -->
+        <dependency>
+            <groupId>net.wesjd</groupId>
+            <artifactId>anvilgui</artifactId>
+        </dependency>
+
+        <!-- The host API — the only host artifact a runtime module compiles against, so the compiler enforces the
+             contract. Provided: at runtime this module is loaded from plugins/Gangland_Warfare/modules/ by
+             Keystone's ModuleLoader, whose parent is the host plugin's classloader, so every api class resolves
+             from the shaded core jar. Dependency direction is module -> api; the host never names a module type. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Test-only: LootChestWandTest/LootChestListenerTest bootstrap BukkitRegistryFixture (gangland-core's
+             shared test support, published as its test-jar — same dependency the CUT lead added to lootchest-api's
+             pom for the same reason). -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-core</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <!-- Test-only: LootChestWandListenerTest (LS-31 pin) uses keystone-testkit's RecordingNbtAccessor. -->
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>keystone-testkit</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

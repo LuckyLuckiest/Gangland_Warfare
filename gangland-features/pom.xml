@@ -23,6 +23,7 @@
         <module>cops-n-crooks</module>
         <module>gangland-civilians</module>
         <module>gangland-npc-shops</module>
+        <module>gangland-lootchest</module>
     </modules>
 
 </project>

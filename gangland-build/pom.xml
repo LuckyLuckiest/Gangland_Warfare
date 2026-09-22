@@ -79,6 +79,7 @@
                             <exclude>org.luckyraven:gangland-turf</exclude>
                             <exclude>org.luckyraven:gangland-civilians</exclude>
                             <exclude>org.luckyraven:gangland-npc-shops</exclude>
+                            <exclude>org.luckyraven:gangland-lootchest</exclude>
                         </excludes>
                     </artifactSet>
                 </configuration>
@@ -142,6 +143,11 @@
                                     <artifactId>gangland-npc-shops</artifactId>
                                     <version>${project.version}</version>
                                 </artifactItem>
+                                <artifactItem>
+                                    <groupId>org.luckyraven</groupId>
+                                    <artifactId>gangland-lootchest</artifactId>
+                                    <version>${project.version}</version>
+                                </artifactItem>
                             </artifactItems>
                         </configuration>
                     </execution>
@@ -192,6 +198,12 @@
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>gangland-npc-shops</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.luckyraven</groupId>
+            <artifactId>gangland-lootchest</artifactId>
             <version>${project.parent.version}</version>
             <scope>provided</scope>
         </dependency>
