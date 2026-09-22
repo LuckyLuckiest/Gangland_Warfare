@@ -20,8 +20,6 @@ import org.luckyraven.keystone.diagnostics.Diagnostics;
 import org.luckyraven.keystone.diagnostics.LoggingSink;
 import org.luckyraven.keystone.diagnostics.RecentFaultsSink;
 import org.luckyraven.gangland.gang.user.UserFactory;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.service.InventoryRegistry;
 import org.luckyraven.gangland.menu.villager.VillagerInventory;
 import org.luckyraven.gangland.menu.villager.VillagerInventoryListener;
 import org.luckyraven.gangland.menu.villager.VillagerInventoryRegistry;
@@ -104,23 +102,6 @@ public class KernelConfig {
 		// so inventory/scoreboard templates keep rendering — now with the configured symbol.
 		service.register((player, text) -> text.replace("%money_symbol%", Settings.getMoneySymbol()));
 		return service;
-	}
-
-	/**
-	 * Per-player open-inventory tracker for the old {@code inventory-api} framework. Threaded into the four UI
-	 * listeners and the {@link InventoryHandler} static seam (the last static seam left after Phase 2 — same
-	 * lightweight pattern as {@code Messages.init(...)}). WS2 G2 (0.10.0) severed this out of {@link UserFactory}/
-	 * {@code User} (the domain inversion) —
-	 * {@link org.luckyraven.gangland.file.configuration.inventory.InventoryRuntimeContext}, {@code RemoveAccountListener}
-	 * and {@code DebugCommand}'s {@code /glw debug inv-data} argument now call this bean directly instead of going
-	 * through {@code User}. Stays alive, along with the rest of {@code inventory-api}, until WS2 CUT retargets
-	 * everything onto {@code keystone-inventory}'s {@code OpenMenuTracker}.
-	 */
-	@Bean
-	public InventoryRegistry inventoryRegistry() {
-		InventoryRegistry registry = new InventoryRegistry();
-		InventoryHandler.setRegistry(registry);
-		return registry;
 	}
 
 	/**

@@ -9,8 +9,6 @@ import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.lootchest.LootChestManager;
 import org.luckyraven.gangland.lootchest.LootChestWand;
 
@@ -44,8 +42,7 @@ class LootChestWandEditCommand extends SubArgument {
 
 			if (wand == null) return;
 
-			Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
-			wand.openConfigInventory(player, fill);
+			wand.openConfigInventory(player, "BLACK_STAINED_GLASS_PANE", " ");
 		});
 	}
 

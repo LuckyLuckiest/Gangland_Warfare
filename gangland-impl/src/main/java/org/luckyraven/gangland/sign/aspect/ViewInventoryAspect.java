@@ -1,15 +1,19 @@
 package org.luckyraven.gangland.sign.aspect;
 
+import com.cryptomorin.xseries.XMaterial;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.part.Fill;
-import org.luckyraven.gangland.inventory.util.InventoryUtil;
+import org.luckyraven.gangland.menu.InventoryBuilder;
 import org.luckyraven.gangland.sign.extension.SignContributions;
 import org.luckyraven.gangland.sign.model.ParsedSign;
+import org.luckyraven.keystone.inventory.InventoryService;
+import org.luckyraven.keystone.inventory.chest.ChestMenu;
+import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
+import org.luckyraven.keystone.inventory.component.FillComponent;
+import org.luckyraven.keystone.inventory.component.ItemComponent;
+import org.luckyraven.keystone.item.ItemBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +23,7 @@ public class ViewInventoryAspect implements SignAspect {
 
 	private final JavaPlugin        plugin;
 	private final SignContributions contributions;
+	private final InventoryService  inventoryService;
 
 	@Override
 	public AspectResult execute(Player player, ParsedSign sign) {
@@ -45,8 +50,6 @@ public class ViewInventoryAspect implements SignAspect {
 	private void openGenericItemView(Player player, String itemName) {
 		String title = "&6View: &e" + itemName;
 
-		InventoryHandler inventory = new InventoryHandler(plugin, title, 9, player);
-
 		// Try to create item from material name
 		Material material = Material.matchMaterial(itemName.toUpperCase().replace(" ", "_"));
 		if (material == null) {
@@ -58,13 +61,18 @@ public class ViewInventoryAspect implements SignAspect {
 		lore.add("");
 		lore.add("&cThis item is not configured");
 
-		inventory.setItem(4, material, "&e" + itemName, lore, false, false, null);
+		ItemBuilder item = new ItemBuilder(material).setDisplayName("&e" + itemName).setLore(lore);
 
-		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
+		ChestMenuBuilder builder = ChestMenu.builder(inventoryService).title(title).rows(1);
+		builder.slot(4, ItemComponent.of(item));
+		builder.fill(FillComponent.of(materialOf(InventoryBuilder.DEFAULT_FILL_ITEM))
+		                          .name(InventoryBuilder.DEFAULT_FILL_NAME));
 
-		InventoryUtil.fillInventory(inventory, fill);
+		builder.build().open(player);
+	}
 
-		inventory.open(player);
+	private static Material materialOf(String name) {
+		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
 	}
 
 }

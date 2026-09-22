@@ -15,7 +15,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.core.testsupport.BukkitRegistryFixture;
-import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.menu.part.ButtonTags;
 import org.luckyraven.keystone.cooldown.CooldownService;
 import org.luckyraven.keystone.inventory.InventoryService;
@@ -96,7 +95,6 @@ class SimplePagedMenuTest {
 		Player           player           = mock(Player.class);
 		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
 
-		Fill fill = new Fill(" ", "BLACK_STAINED_GLASS_PANE");
 		// Empty tags: InventoryBuilder.headItem (shared with SimplePagedMenu, fix round 1 F1) calls
 		// ItemBuilder.customHead(tag), which needs com.mojang.authlib (XSkull) — real-server-only, absent from a
 		// plain unit-test JVM (documentation/TESTING.md §1 forbids a test dependency to paper over it; the
@@ -115,7 +113,8 @@ class SimplePagedMenuTest {
 			when(player.getOpenInventory()).thenReturn(view);
 			when(view.getTopInventory()).thenReturn(mock(Inventory.class));
 
-			SimplePagedMenu.open(inventoryService, player, items, "&6&lTest List", fill, buttonTags);
+			SimplePagedMenu.open(inventoryService, player, items, "&6&lTest List", InventoryBuilder.DEFAULT_FILL_ITEM,
+			                     InventoryBuilder.DEFAULT_FILL_NAME, buttonTags);
 
 			Menu tracked = inventoryService.tracker().currentMenuOf(player);
 			ChestMenu menu = assertInstanceOf(ChestMenu.class, tracked, "InventoryService must track the opened menu");

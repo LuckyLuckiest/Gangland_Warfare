@@ -2,11 +2,12 @@
 
 ## Overview
 
-The Gangland Warfare UI framework is composed of four independent modules under `gangland-ui/`:
+`gangland-ui/inventory-api` was deleted outright at the 0.10.0 WS2 CUT gate — every menu in this repo now builds
+on Keystone's `keystone-inventory` library plus a thin Gangland-only YAML dialect living in `gangland-impl`'s own
+`org.luckyraven.gangland.menu.*` package. Three independent modules remain under `gangland-ui/`:
 
 | Module           | Package                              | Classes | Purpose                                    |
 |------------------|--------------------------------------|---------|--------------------------------------------|
-| `inventory-api`  | `org.luckyraven.gangland.inventory`  | ~37     | Custom inventory GUIs with click handlers  |
 | `sign-api`       | `org.luckyraven.gangland.sign`       | ~25     | Interactive sign placement and interaction |
 | `lootchest-api`  | `org.luckyraven.gangland.lootchest`  | ~35     | Loot chest sessions with cracking minigame |
 | `hologram-api`   | `org.luckyraven.gangland.hologram`   | 3       | Floating text via invisible armor stands   |
@@ -18,606 +19,190 @@ auto-registration via the `DependencyContainer` scan.
 
 ## Inventory System
 
-### Architecture
+As of 0.10.0 (WS2 CUT gate), the old `gangland-ui/inventory-api` module is gone. Every menu in this repo builds
+on Keystone's **`keystone-inventory`** library (`org.luckyraven.keystone.inventory.*`, `provided` scope, declared
+directly by any pom that builds a menu — never re-exported by `gangland-api`, R6: the `bartizan-api` rule) plus a
+thin Gangland-only YAML dialect that lives in `gangland-impl`'s own `org.luckyraven.gangland.menu.*` package
+(moved there at WS2 G3a, retargeted onto `ChestMenuBuilder` at G3). See
+`E:\Programming\java\wt\keystone-1.11.0\docs\keystone-inventory.md` in the Keystone repo for the full consumer
+guide this section summarizes.
+
+### Two layers
 
 ```
-InventoryBuilder (record)
-    ├── creates ──> InventoryHandler (core runtime object)
-    ├── creates ──> MultiInventory (paginated variant)
+Keystone (org.luckyraven.keystone.inventory.*)
+    ChestMenu / ChestMenuBuilder       — builds one menu: slots, fill/border/line decoration
+    ItemComponent / FillComponent /
+      BorderComponent / LineComponent  — per-slot/region primitives
+    ClickContext / ClickHandler        — ctx.player(), ctx.closeMenu(), ctx.menu(); the click callback shape
+    PageConfig / PagedRegion           — pagination math + rendering a list into a fixed interior grid
+    MenuFlow<S> / Panel<S> / FlowState — multi-screen flows (was MultiPanelInventory / Panel / FlowSession)
+    InventoryService / OpenMenuTracker — the per-consumer bean; tracks each player's one currently-open menu
+    MenuOpener / MenuRegistry          — name -> menu lookup for command/sign-driven opens
+    ItemHoldingComponent               — the item-return contract (see below)
 
-MultiPanelInventory<S> (multi-screen flow host, builds on InventoryHandler)
-    ├── owns ──> Panel<S> registry + back-stack
-    ├── owns ──> typed FlowSession (survives panel swaps)
-
-InventoryHandler
-    ├── registered in ──> InventoryRegistry (singleton, per-player tracking)
-    ├── events routed by ──> InventoryClickHandler, InventoryCloseHandler, InventoryDragHandler
-    
-Slot (data model)
-    ├── evaluated by ──> ConditionEvaluator / BooleanExpressionEvaluator
-    ├── produces ──> ConditionalSlotResult (resolved item + actions)
+Gangland's own YAML dialect (gangland-impl, org.luckyraven.gangland.menu.*)
+    InventoryBuilder (record)  — builds a ChestMenu / paginated ChestMenu from parsed InventoryData
+    InventoryData / Slot / OpenInventory / State
+    menu.condition.*   — the %placeholder%-driven True/False slot-condition tree
+    menu.filter.*       — canonical filter-button click handlers (sort/clear/cycle-enum)
+    menu.handler.*      — YAML OnClick/OnInteract -> ClickHandler dispatch
+    menu.multi.*         — ItemSourceProvider/ItemSourceEntry (paginated item sources)
+    menu.part.*          — ButtonTags, ConditionalSlotResult, Slot
+    menu.unique.*        — UniqueItemHandler (Open.Event.UniqueItem wiring)
+    menu.villager.*      — the native-Bukkit-Merchant wrapper (unrelated to ChestMenu; unchanged since G3a)
+    SimplePagedMenu       — a small static helper for a flat List<ItemStack> paginated view with no YAML
+                            behind it (see below)
 ```
 
-### InventoryHandler (Core Class)
+Every core menu is built **fresh** per open (`InventoryRuntimeContext.openInventoryForPlayer`) — there is no
+cached `MenuRegistry` factory for YAML menus, because the real viewing `Player` is always in hand, and paginated
+menus need it before `.build()` to fetch that player's filtered/sorted item source. `MenuOpener` (a plain
+`(Player, String) -> void` functional interface, structurally identical to the deleted `InventoryOpener`) is what
+YAML `OnClick.Inventory: <name>` navigation and command/sign-triggered opens both resolve against — Keystone's
+own `MenuRegistry` is not populated by this dialect at all (a deliberate WS2 G3 choice: a registered
+`Supplier<Menu>` factory is zero-arg and cannot supply the player a paginated menu's item-source fetch needs).
 
-`InventoryHandler` manages a single Bukkit `Inventory` with per-slot click callbacks, drag control, and
-lifecycle management.
+### `InventoryBuilder`
 
-**Constructor overloads:**
-
-| Constructor                                                         | Purpose                                                       |
-|---------------------------------------------------------------------|---------------------------------------------------------------|
-| `(String title, int size, NamespacedKey, UUID owner)`               | Base constructor. Creates raw inventory.                      |
-| `(JavaPlugin, String title, int size, Player)`                      | Player-bound. Auto-registers in `InventoryRegistry`.          |
-| `(JavaPlugin, String title, int size)`                              | Global/special inventory. Added to `SPECIAL_INVENTORIES` map. |
-| `(JavaPlugin, String title, int size, String special, boolean add)` | Named special inventory with optional registration.           |
-| `(String title, int size, Player, NamespacedKey)`                   | Player-bound with explicit key.                               |
-
-**Size normalization:** The `size` is rounded up to the nearest multiple of 9, capped at `MAX_SLOTS = 54`.
-
-**Static registry:** `SPECIAL_INVENTORIES` is a `Map<NamespacedKey, InventoryHandler>` for globally-accessible
-inventories (e.g., shop menus shared across players).
-
-**Key methods:**
+`InventoryBuilder(InventoryData inventoryData, String permission)` — a record, not the old `InventoryHandler`
+wrapper — exposes two build methods:
 
 ```java
-// Set an item with a left-click handler
-handler.setItem(int slot, ItemBuilder item, boolean draggable,
-                TriConsumer<Player, InventoryHandler, ItemBuilder> clickAction);
+ChestMenu createMenu(InventoryService inventoryService, JavaPlugin plugin, Placeholder placeholder, Player player,
+                     String fillMaterial, String fillName, String lineMaterial, String lineName,
+                     ConditionEvaluator evaluator, MenuOpener opener);
 
-// Set an item with separate left-click and right-click handlers
-handler.
-
-setItem(int slot, ItemBuilder item, boolean draggable,
-        TriConsumer<Player, InventoryHandler, ItemBuilder> leftClick,
-        TriConsumer<Player, InventoryHandler, ItemBuilder> rightClick);
-
-// Set a raw ItemStack (no click handler)
-handler.
-
-setItem(int slot, ItemStack itemStack, boolean draggable);
-
-// Remove an item and its handlers from a slot
-handler.
-
-removeItem(int slot);
-
-// Open the inventory for a player (re-registers in InventoryRegistry)
-handler.open(Player player);
-
-// Close the inventory for a player
-		handler.close(Player player);
-
-// Rename the inventory (re-creates the Bukkit Inventory, preserves contents)
-		handler.rename(JavaPlugin plugin,String name);
-
-// Copy contents from another handler, resolving placeholders
-		handler.copyContent(Placeholder placeholder,InventoryHandler source,Player player);
-
-// Clear all items
-		handler.clear();
+ChestMenu createPagedMenu(InventoryService inventoryService, JavaPlugin plugin, Placeholder placeholder,
+                          Player player, ConditionEvaluator evaluator, String fillMaterial, String fillName,
+                          ButtonTags buttonTags, ItemSourceProvider itemSourceProvider, MenuOpener opener, int page);
 ```
 
-**Example -- creating a simple inventory programmatically:**
+The old `Fill` record (`org.luckyraven.gangland.inventory.part.Fill`, a 2-field `(name, material)` wrapper) was
+deleted along with the rest of `inventory-api` and is **not** replaced by an equivalent type in `menu.part` — call
+sites pass the material and name as two plain `String`s instead. `InventoryBuilder.DEFAULT_FILL_ITEM` /
+`DEFAULT_FILL_NAME` / `DEFAULT_LINE_ITEM` / `DEFAULT_LINE_NAME` are literal copies of the `settings.yml`
+`Inventory.Fill`/`Inventory.Line` block's shipped defaults, used by every core dialect call site that used to
+build a `Fill` from `Settings.getInventoryFillItem()` etc. `ButtonTags.DEFAULT` is the equivalent for the three
+paginated-nav-button head textures. **That `settings.yml` `Inventory:` block itself was *not* deleted** — despite
+the original WS2 plan's text, it is still load-bearing for many already-shipped G4/G5/WS4 files outside the CUT
+gate's scope (Banker/Trader views, `TurfModuleConfig`, `ShopAdminView` — see the CUT report's deviation note for
+the full list); it stays live for everyone who still reads it, the core dialect simply no longer does.
+
+Row/column arithmetic (`computeRows`), border/fill/line priority, and per-slot NBT-tag resolution (`color`/`head`
+tags) are all ported 1:1 from the deleted `InventoryHandler`/`InventoryUtil` — see `InventoryBuilder`'s own
+javadoc for exact provenance notes per method.
+
+### `SimplePagedMenu`
+
+A no-static-items, no-per-entry-click paginated `ChestMenu` of plain `ItemStack`s — the shape three real call
+sites built via the old `MultiInventoryCreation.dynamicMultiInventory(...)` call: `DebugCommand`'s `multi` debug
+argument, `GangCommand`'s member/ally lists, and `BountyAspect.openBountyView`. (`GangCommand` also had a fourth,
+`gangStat()`/`itemToBalance()` — found to be genuinely dead code with zero callers anywhere in the reactor at the
+CUT gate, and deleted rather than ported; `/glw gang info` is served by the YAML-driven `gang_info.yml` menu
+through the generic dialect above, not that method.) Next/prev/home buttons rebuild the target page and swap it
+into the already-open menu via `ChestMenu#adoptComponentsFrom` — no close/reopen flicker, a free improvement over
+the old chained-Bukkit-inventory model.
 
 ```java
-InventoryHandler menu = new InventoryHandler(plugin, "My Menu", 27, player);
-
-// Glass pane border item (not draggable, no click action)
-ItemBuilder glass = new ItemBuilder(Material.BLACK_STAINED_GLASS_PANE)
-		.setDisplayName(" ");
-menu.
-
-setItem(0,glass, false,null);
-
-// Clickable item
-ItemBuilder diamond = new ItemBuilder(Material.DIAMOND)
-		.setDisplayName("&bClick Me")
-		.setLore("&7Left-click to execute", "&7Right-click for info");
-
-menu.
-
-setItem(13,diamond, false,
-		// Left-click
-		(p, inv, item) ->{
-		p.
-
-performCommand("glw shop buy diamond");
-        p.
-
-closeInventory();
-    },
-			// Right-click
-			(p,inv,item)->{
-		p.
-
-sendMessage("This diamond costs $500!");
-    }
-			);
-
-			menu.open(player);
+SimplePagedMenu.open(InventoryService inventoryService, Player player, List<ItemStack> items, String title,
+                     String fillMaterial, String fillName, ButtonTags buttonTags);
 ```
 
-### InventoryBuilder (Record)
+### `Multi.*` YAML pagination (`Type: multi-inventory`)
 
-`InventoryBuilder` is a `record(InventoryData inventoryData, String permission)` that creates `InventoryHandler`
-or `MultiInventory` instances from YAML-parsed `InventoryData`.
+Rebuilt on Keystone's `PageConfig`/`PagedRegion` at WS2 G3 — the old chained-Bukkit-inventory model
+(`MultiInventory`/`MultiInventoryCreation`/`MultiInventoryNavigation`, all deleted) is now one fixed-size
+`ChestMenu` whose interior grid renders per page. `Information.Multi.Item_Source` still selects an
+`ItemSourceProvider` registration; **`Multi.Per_Page` is gone** (docket T-43, fixed at the CUT gate — it was
+parsed into `InventoryData.perPage` but never read even before WS2 G3's rebuild, and `PageConfig`'s own
+arithmetic drives page size, not a YAML override; the dead key was removed from `alliance_stat.yml`,
+`phone_gang_search.yml` and `user_stat.yml`, and the dead field from `InventoryData`/`InventoryParser`).
 
-**`createInventory` method:**
+### The item-return contract (interactive/draggable slots)
+
+None of the 9 core YAML menus declare `Draggable: true` (grep-verified, round-trip-tested), so the core dialect
+never needs to think about this — but any consumer that builds an `interactive` slot (`builder.interactive(slot)`
+/ `ItemComponent.interactive(true)`) **must** either model it as an `ItemHoldingComponent` or return the slot's
+contents itself on close. Keystone's `InventoryService`/`ChestMenu.close(...)` only auto-returns items sitting in
+a declared `ItemHoldingComponent` on close (Escape, disconnect, `/glw reload`, a differently-sized/titled
+`MenuFlow.switchTo`) — a plain `interactive` slot with no such component silently discards whatever the player
+physically has in it. This is WS2 §0d's consumer rule, and it drove two real design decisions in this wave:
+
+- **`DropzoneSlotComponent`** (`gangland-features/gangland-npc-shops/.../trader/view/DropzoneSlotComponent.java`)
+  — shared by `BarterView`/`SellView`'s 20 dropzone slots. Its `renderInto` calls only `view.interactive(true)`,
+  never `setItem` — a render pass never touches whatever the player physically has in the slot, because Bukkit's
+  own uncancelled click/drag handling already writes straight into the live `Inventory`, which *is* the state, so
+  there is nothing to snapshot or restore. `heldItems(player)`/`clearHeld(player)` read/clear that same live slot
+  directly, captured via `RenderContext.menu()` at render time. **Copy this pattern** — not a `setItem`-based
+  "snapshot and restore" dance — for any new drop-target slot that must survive a close.
+- `ShopAdminView`'s BUY-tab drop target and `SellCategoryItemsAdminView`/`BarterCategoryItemsAdminView`'s item
+  grids are **not** item-holding at all: `event.setCancelled(true)` fires before the drop physically applies, the
+  source item is read via `event.getCursor()`/`event.getCurrentItem()` and cloned, and the original item never
+  leaves the player. Read every click handler before assuming a drop-target slot needs `ItemHoldingComponent` —
+  most of this codebase's "drop an item onto a slot to add it" UIs are peek-and-clone, not item-holding.
+
+### YAML menus
+
+The 9 core menus under `plugins/Gangland_Warfare/menus/` (`gangland-impl/src/main/resources/inventory/*.yml`)
+load through an **unchanged schema** — WS2 kept Gangland's own YAML shape rather than migrating onto a foreign
+one at any point. `Information.{Name,Display_Name,Size,Permission,Type,Open}`,
+`Information.Configuration.{Fill,Border,Line}`, `Slots.<N>.{Item,Name,Lore,Enchanted,Draggable,Condition,
+OnClick,OnInteract}`, `Static_Items`, `Information.Multi.Item_Source`, `Information.Item_Template` all parse
+exactly as before (`InventoryRuntimeContext.registerInventory` / `InventoryParser`), just building a `ChestMenu`
+instead of the deleted `InventoryHandler`.
+
+### `/glw debug inv-data`
+
+Reads `InventoryService.tracker()` (Keystone's `OpenMenuTracker`) live — one tracked menu per player, not the old
+model's several-simultaneously-registered `InventoryHandler`s. `/glw debug inv-data special` (which used to list
+`InventoryHandler.SPECIAL_INVENTORIES`, a static per-key registry) is gone — `keystone-inventory`'s per-open
+`ChestMenu` model has no equivalent singleton registry to list (docket-recorded fixed-by-WS2, along with the
+static `InventoryRegistry` seam `RemoveAccountListener`/`KernelConfig` used to wire and clear on quit/reload).
+
+### Multi-screen flows (`MenuFlow<S>` / `Panel<S>` / `FlowState`)
+
+Replaces the deleted `org.luckyraven.gangland.inventory.flow.{MultiPanelInventory, Panel, FlowSession}` trio with
+Keystone's `org.luckyraven.keystone.inventory.flow.{MenuFlow, Panel, FlowState}` — same shape, different package:
 
 ```java
-InventoryHandler createInventory(
-		JavaPlugin plugin,
-		Placeholder placeholder,    // resolves %placeholder% tokens
-		Player player,
-		Fill fill,                  // border/fill material
-		Fill line,                  // vertical/horizontal line material
-		ConditionEvaluator evaluator,
-		InventoryOpener inventoryOpener
-)
-```
+public interface FlowState { }   // marker — feature modules implement on their own session record
 
-Processing pipeline per slot:
-
-1. Evaluate slot conditions via `slot.getConditionalResult(player, evaluator)`
-2. Resolve `color` NBT tag to dynamic material color (e.g., gang color -> wool color)
-3. Resolve `head` NBT tag to player skull owner
-4. Apply placeholder resolution to display name and lore
-5. Handle enchantment glow effects
-6. Wire click actions (command, inventory-open, or anvil GUI)
-7. Apply vertical/horizontal lines and border/fill
-
-**`createMultiInventory` method:**
-
-```java
-MultiInventory createMultiInventory(
-		JavaPlugin plugin,
-		Placeholder placeholder,
-		Player player,
-		List<ItemStack> items,      // dynamic item list to paginate
-		ButtonTags buttonTags,      // custom head textures for nav buttons
-		Fill fill
-)
-```
-
-### InventoryData
-
-Parsed from YAML configuration. Contains:
-
-| Field              | Type                  | Description                                                       |
-|--------------------|-----------------------|-------------------------------------------------------------------|
-| `name`             | `String`              | Internal identifier                                               |
-| `displayName`      | `String`              | Title shown to player (supports `&` color codes and placeholders) |
-| `size`             | `int`                 | Inventory size (normalized to factor of 9)                        |
-| `slots`            | `List<Slot>`          | All configured slots                                              |
-| `permission`       | `String`              | Required permission to open                                       |
-| `border`           | `boolean`             | Whether to draw a glass-pane border                               |
-| `fill`             | `boolean`             | Whether to fill empty slots                                       |
-| `verticalLine`     | `List<Integer>`       | Columns to draw vertical lines                                    |
-| `horizontalLine`   | `List<Integer>`       | Rows to draw horizontal lines                                     |
-| `isMultiInventory` | `boolean`             | Whether this is a paginated inventory                             |
-| `staticItems`      | `Map<Integer, Slot>`  | Fixed items in multi-inventory pages                              |
-| `openInventories`  | `List<OpenInventory>` | Nested inventories that can be opened from this one               |
-
-### Slot
-
-Each slot in an inventory is represented by a `Slot` object:
-
-```java
-public class Slot {
-	private final int         slot;       // slot index (0-53)
-	private final boolean     clickable;  // whether click events fire
-	private final boolean     draggable;  // whether item can be dragged out
-	private final ItemBuilder item;       // the displayed item
-
-	// Optional conditional display logic
-	private ConditionalSlotData conditionalData;
-
-	// Click handlers
-	private TriConsumer<Player, InventoryHandler, ItemBuilder> clickableSlot;     // left-click
-	private TriConsumer<Player, InventoryHandler, ItemBuilder> rightClickSlot;    // right-click
-}
-```
-
-**Conditional resolution:** When `conditionalData` is set, calling `getConditionalResult(player, evaluator)` walks
-the condition tree (which supports nesting) and returns a `ConditionalSlotResult` containing the resolved item,
-click actions, and draggable state.
-
-### Condition System
-
-The condition system enables YAML-driven dynamic slot content based on player state.
-
-**`SlotCondition`** -- wraps a placeholder expression string (e.g., `%gangland_has_gang%`):
-
-```java
-public record SlotCondition(String valueExpression) {
-	public boolean evaluate(Player player, ConditionEvaluator evaluator) {
-		return evaluator.evaluate(player, valueExpression);
-	}
-}
-```
-
-**`ConditionEvaluator`** -- interface for evaluating condition expressions:
-
-```java
-public interface ConditionEvaluator {
-	boolean evaluate(Player player, String expression);
-}
-```
-
-**`BooleanExpressionEvaluator`** -- default implementation that resolves placeholders and parses the result
-as boolean (`true`/`yes`/`1` = true, `false`/`no`/`0`/`na` = false, non-zero numbers = true, non-empty strings = true).
-
-**`ConditionalSlotData`** -- tree structure with True/False branches:
-
-```java
-public class ConditionalSlotData {
-	private final SlotCondition condition;
-	private final BranchData    trueData;   // shown when condition is true
-	private final BranchData    falseData;  // shown when condition is false
-}
-```
-
-Each `BranchData` can contain a `nestedCondition` for chaining:
-
-```
-Condition: %gangland_has_gang%
-  True -> show "Gang Info" button
-    Nested Condition: %gangland_is_leader%
-      True -> show "Manage Gang" button
-      False -> show "Leave Gang" button
-  False -> show "Create Gang" button
-```
-
-**Click action types** (inner classes of `ConditionalSlotData`):
-
-| Type      | Record                                                          | Behavior                                            |
-|-----------|-----------------------------------------------------------------|-----------------------------------------------------|
-| Command   | `CommandAction(String command)`                                 | Executes command as the player                      |
-| Inventory | `InventoryAction(String inventoryName)`                         | Opens another named inventory via `InventoryOpener` |
-| Anvil     | `AnvilAction(String title, String text, String successCommand)` | Opens AnvilGUI with text input                      |
-
-### Multi-Inventory (Pagination)
-
-`MultiInventory` extends `InventoryHandler` and manages a `LinkedList<InventoryHandler>` of pages.
-
-**Page layout:**
-
-- Items are placed in the interior grid (rows 2-5, columns 2-8), avoiding the border
-- With static items, column 1 is reserved for fixed sidebar items, column 2 is a divider line
-- Navigation buttons use custom player head textures
-
-**Navigation methods:**
-
-```java
-InventoryHandler nextPage();      // advance to next page
-
-InventoryHandler previousPage();  // go back one page
-
-InventoryHandler homePage();      // return to page 0
-
-boolean hasNextPage();            // check if more pages exist
-```
-
-**`MultiInventoryCreation`** -- factory that computes `PageConfig` and builds all pages:
-
-```java
-static MultiInventory dynamicMultiInventory(
-		JavaPlugin plugin,
-		Player player,
-		List<ItemStack> items,
-		String title,
-		boolean staticItemsAllowed,
-		boolean fixedSize,
-		Fill fill,
-		ButtonTags buttonTags,
-		Map<ItemStack, TriConsumer<...>>staticItems
-)
-```
-
-**`PageConfig`** -- pagination math:
-
-```java
-public record PageConfig(
-		int maxRows,          // usable rows per page (typically 4)
-		int maxColumns,       // usable columns (7 without static items, 6 with)
-		int perPage,          // items per page (maxRows * maxColumns)
-		int pages,            // total page count
-		int remainingAmount,  // items on the last page
-		int finalPage,        // slot count for the last page
-		int initialPage       // slot count for non-final pages (usually MAX_SLOTS=54)
-)
-```
-
-**`MultiInventoryNavigation`** -- adds previous/next/home player-head buttons to the bottom row:
-
-| Position                   | Button             | Condition         |
-|----------------------------|--------------------|-------------------|
-| `size - 1` (bottom-right)  | Next Page `->`     | Not on last page  |
-| `size - 9` (bottom-left)   | Previous Page `<-` | Not on first page |
-| `size - 5` (bottom-center) | Home Page          | Not on first page |
-
-Each button plays `BLOCK_WOODEN_BUTTON_CLICK_ON` on click.
-
-**`ButtonTags`** -- custom head textures for navigation:
-
-```java
-public record ButtonTags(String previousPage, String homePage, String nextPage) { }
-```
-
-**`Fill`** -- border/line material:
-
-```java
-public record Fill(String name, String material) { }
-```
-
-### Slot Event Handlers
-
-Slot event handlers build `Slot` objects from YAML configuration sections. They are used during inventory
-parsing to wire behavior to slots.
-
-**`SlotEventHandler`** (interface):
-
-```java
-public interface SlotEventHandler {
-	Slot handle(SlotContext context, InventoryOpener opener);
-}
-```
-
-**`SlotContext`** (record) -- carries all per-slot data from YAML:
-
-```java
-public record SlotContext(
-		ConfigurationSection eventSection,      // left-click config
-		ConfigurationSection rightClickSection, // right-click config
-		int slotLoc,                            // slot position
-		String item,                            // material name
-		String itemName,                        // display name
-		Map<String, Object> data,              // NBT tag data (color, head)
-		List<String> lore,                      // lore lines
-		boolean enchanted,                      // enchantment glow
-		boolean draggable                       // can be dragged
-) { }
-```
-
-**`ClickSlotHandler`** -- the standard handler for `OnClick`/`OnInteract` events:
-
-- Reads `Command`, `Inventory`, `Permission` from the YAML section
-- Supports both left-click and right-click actions independently
-- Permission-gated execution
-
-**`AbstractCommandSlotHandler`** -- template-method base class:
-
-```java
-public abstract class AbstractCommandSlotHandler implements SlotEventHandler {
-	// Reads Command/Inventory/Permission from config, then calls:
-	protected void onSlotAction(Player player, InventoryHandler inv, ItemBuilder builder) {
-		// Override in subclasses for additional behavior
-	}
-}
-```
-
-**`SlotItemFactory`** -- builds `ItemBuilder` from raw YAML values, handling material validation,
-color tags, data tags, enchantments.
-
-### Listeners
-
-| Listener                 | Event                 | Behavior                                                                                       |
-|--------------------------|-----------------------|------------------------------------------------------------------------------------------------|
-| `InventoryClickHandler`  | `InventoryClickEvent` | Routes clicks to registered left/right-click handlers. Cancels event unless slot is draggable. |
-| `InventoryCloseHandler`  | `InventoryCloseEvent` | Routes to close handlers                                                                       |
-| `InventoryDragHandler`   | `InventoryDragEvent`  | Prevents dragging in custom inventories                                                        |
-| `PlayerInventoryCleanup` | `PlayerQuitEvent`     | Clears player from `InventoryRegistry`                                                         |
-
-**Click routing logic (simplified):**
-
-```java
-// In InventoryClickHandler.onInventoryClick:
-InventoryHandler inv = InventoryRegistry.getInstance().findByInventory(topInventory);
-
-if(event.
-
-isRightClick()){
-var rightClickAction = inv.getRightClickSlots().get(rawSlot);
-    if(rightClickAction !=null){
-		rightClickAction.
-
-accept(player, inv, itemBuilder);
-        event.
-
-setCancelled(!inv.getDraggableSlots().
-
-contains(rawSlot));
-		return;
-		}
-		}
-
-var leftClickAction = inv.getClickableSlots().get(rawSlot);
-leftClickAction.
-
-accept(player, inv, itemBuilder);
-event.
-
-setCancelled(!inv.getDraggableSlots().
-
-contains(rawSlot));
-```
-
-### InventoryRegistry (Singleton Service)
-
-Thread-safe per-player inventory tracking using `ConcurrentHashMap`:
-
-```java
-InventoryRegistry.getInstance().
-
-registerInventory(UUID, InventoryHandler);
-InventoryRegistry.
-
-getInstance().
-
-unregisterInventory(UUID, InventoryHandler);
-InventoryRegistry.
-
-getInstance().
-
-findByInventory(Inventory);  // reverse lookup
-InventoryRegistry.
-
-getInstance().
-
-getInventories(UUID);         // all inventories for player
-InventoryRegistry.
-
-getInstance().
-
-clear(UUID);                  // cleanup on quit
-```
-
-### InventoryOpener
-
-Functional interface that decouples `inventory-api` from `gangland-impl`:
-
-```java
-
-@FunctionalInterface
-public interface InventoryOpener {
-	void openInventory(Player player, String inventoryName);
-}
-```
-
-The implementation in `gangland-impl` resolves the inventory name from the YAML-configured inventory map
-and opens it for the player.
-
-### Multi-Panel Flow (`org.luckyraven.gangland.inventory.flow`)
-
-`MultiPanelInventory<S>` is the seamless-flow enhancement layered on top of the in-place updates
-already provided by `InventoryHandler.rename()` and `MultiInventory.updateItems()`. Those swap
-*content* inside one fixed window; `MultiPanelInventory` keeps a single open window across a
-sequence of fully distinct screens (`Panel<S>`) — each with its own size, title, and slot layout —
-while threading one typed `FlowSession` through every screen.
-
-```
-MultiPanelInventory<S extends FlowSession> (host)
-    ├── owns ──> S session                             (typed payload, survives panel swaps)
-    ├── owns ──> Map<String, Panel<S>> panels          (registered screens)
-    ├── owns ──> Deque<String> backStack               (push on switchTo, pop on back)
-    ├── owns ──> InventoryHandler current              (rebuilt on size/title change)
-    ├── implements ──> Listener (InventoryCloseEvent)  (auto-cleanup on natural close)
-```
-
-#### Why it exists
-
-The legacy way to chain GUIs was `player.closeInventory(); next.open(player)`, which:
-
-- destroyed any in-flight session state between screens,
-- fired a real `InventoryCloseEvent`, so close-handlers had to be defensively guarded,
-- could not cleanly recover after an anvil/chat detour returned to the flow.
-
-`MultiPanelInventory` solves all three: the session is held by the host, swaps are wrapped in a
-`suppressClose()` latch, and side-effect detours have first-class `suspend()` / `resume()` hooks.
-
-#### Contracts
-
-```java
-public interface FlowSession { }   // marker — feature modules implement on their own session record
-
-public interface Panel<S extends FlowSession> {
-	int size(S session);
+public interface Panel<S extends FlowState> {
+	int rows(S session);            // was size(session) — pixel count -> row count
 
 	String title(S session);
 
-	void render(MultiPanelInventory<S> host, InventoryHandler handler, Player viewer, S session);
+	void render(MenuFlow<S> flow, ChestMenuBuilder builder, S session);   // was (host, InventoryHandler, viewer, session)
 }
 ```
 
-#### Host API
-
-| Method                                                      | Purpose                                                                     |
-|-------------------------------------------------------------|-----------------------------------------------------------------------------|
-| `register(id, panel)`                                       | Register a panel under a string id. Returns `this` for chaining.            |
-| `openAt(id)`                                                | Open at the given panel; registers the close listener on first open.        |
-| `switchTo(id)`                                              | Push current panel onto the back-stack and switch.                          |
-| `back()`                                                    | Pop back-stack; calls `end()` if empty.                                     |
-| `rerender()`                                                | Re-run the current panel's render against the same handle.                  |
-| `suspend()` / `resume()`                                    | Bracket external UIs (anvil, chat) so the close listener no-ops.            |
-| `suppressClose()`                                           | True while switching or suspended — checked by the internal close listener. |
-| `end()`                                                     | Close the inventory, fire `onEnd`, unregister listener.                     |
-| `onEnd(Consumer<S>)`                                        | Register a teardown callback that runs once on flow end.                    |
-| `viewer()` / `session()` / `handler()` / `currentPanelId()` | Accessors for use inside `Panel.render`.                                    |
-
-#### Switch path — re-render vs. rebuild
-
-Bukkit fixes an inventory's size at construction, so `switchTo` chooses a path automatically:
-
-1. **Re-render in place** — when the target panel's `size(session)` and `title(session)` match the
-   current handle, the host calls `current.clear()` and `panel.render(...)`. No new inventory is
-   opened; the viewer's screen never flickers.
-2. **Rebuild** — when size or title differ, the host constructs a new `InventoryHandler`, renders
-   into it, and opens it for the viewer. The `switching` flag is held across the open call so the
-   `InventoryCloseEvent` Bukkit fires for the previous handle is treated as suppressed.
-
-#### Side-effect detours
-
-External UIs (AnvilGUI, chat-prompt, BarterView) fire their own close events when they take over the
-screen. Wrapping the detour with `suspend()` / `resume()` does two things: nulls out `current` so the
-incoming close event is a no-op, and forces the next `switchTo` after `resume()` to take the rebuild
-path (the old Bukkit handle is gone). Re-enter the flow from the side-effect's completion callback.
-
 ```java
-flow.suspend();
-new AnvilGUI.
-
-Builder()
-        .
-
-onClick((slot, snapshot) ->{
-		flow.
-
-resume();
-            flow.
-
-session().
-
-setBidAmount(parse(snapshot.getText()));
-		flow.
-
-switchTo("buy");
-            return List.
-
-of(AnvilGUI.ResponseAction.close());
-		})
-		.open(player);
+MenuFlow<TraderFlowSession> flow = MenuFlow.builder(inventoryService, plugin, viewer, session)
+                                           .panel(TraderFlowSession.PANEL_MODE_SELECT, modeSelectPanel)
+                                           .panel(TraderFlowSession.PANEL_SHOP, shopPanel)
+                                           .onEnd(s -> sellPanel.onFlowEnd(viewer))   // fixed at build time —
+                                           .build();                                   // unlike the old per-render
+flow.openAt(TraderFlowSession.PANEL_MODE_SELECT);                                     // onEnd registration
 ```
 
-#### Example wiring
+`switchTo`/`back`/`end`/`rerender`/`suspend`/`resume` are unchanged names on `MenuFlow`. The one real behavior
+difference from the old host: `MultiPanelInventory#onEnd` used to be re-registered by whichever panel was entered
+last (each render call could overwrite it); `MenuFlow`'s `onEnd` is a `Consumer<S>` fixed once at `.build()` time
+— a flow with several panels that each need teardown work wires **one** flow-wide `onEnd` that calls every
+panel's own no-op-unless-entered cleanup method (see `TraderFlow`'s `onEnd` for the pattern).
 
-```java
-public record TraderFlowSession(Trader trader, Player buyer, ...) implements FlowSession { }
+`InventoryUtil`'s old "preserve dropzone, blank-fill, restore" dance and `aroundSlot`'s "clear ring, then
+recolor" dance are both **gone, not ported** — Keystone's fill/border/line primitives already skip interactive
+and already-occupied (explicitly `.slot()`-assigned) slots by construction, and every `Panel.render()` call
+starts from a fresh, empty `ChestMenuBuilder`, so there is no stale prior-render state to clean up first.
 
-MultiPanelInventory<TraderFlowSession> flow =
-		new MultiPanelInventory<>(plugin, player, new TraderFlowSession(trader, player))
-				.register("menu", new TraderMenuPanel())
-				.register("buy", new TraderBuyPanel())
-				.register("barter", new TraderBarterPanel())
-				.onEnd(session -> trader.releaseHold(session.buyer()));
+### `.claude/skills/panel-create/`
 
-flow.
-
-openAt("menu");
-```
-
-Inside a panel's `render`, slot click handlers drive navigation:
-
-```java
-handler.setItem(13,buyButton, false,(p, inv, item) ->flow.
-
-switchTo("buy"));
-		handler.
-
-setItem(22,backButton, false,(p, inv, item) ->flow.
-
-back());
-```
+Retargeted at the CUT gate to scaffold Keystone's `Panel<S extends FlowState>` (the shape above), not Oriel's or
+the deleted `org.luckyraven.gangland.inventory.flow.Panel<S extends FlowSession>` — the field/method names in its
+generated skeletons, the `MenuFlow` wiring snippet, and the "Shared conventions" section's `Panel<SomeFlowSession>`
+wording were all updated to match.
 
 ---
 
@@ -1038,11 +623,11 @@ Manages an active player-chest interaction:
 
 ```java
 public class LootChestSession {
-	private final UUID             sessionId;
-	private final Player           player;
-	private final LootChestData    chestData;
-	private final InventoryHandler inventory;
-	private final List<ItemStack>  generatedLoot;
+	private final UUID                sessionId;
+	private final Player              player;
+	private final LootChestData       chestData;
+	private final SharedLootInventory inventory;   // was InventoryHandler — CUT gate, see below
+	private final List<ItemStack>     generatedLoot;
 	private final boolean          usingSharedInventory;
 	private       int[]            slotMapping;
 	private       SessionState     state;
@@ -1331,13 +916,24 @@ status, and cooldown timers. When a chest enters cooldown, an updating hologram 
 
 ### Loot Chest + Inventory
 
-`LootChestSession` wraps an `InventoryHandler` to display the chest contents. Items are placed at random
-slots, and the inventory state is synced back to `LootChestData` on close for persistence across sessions.
+The chest-opening view is **not** a menu — it's a plain shared Bukkit `Inventory` any number of players can have
+open at once, with clicks handled directly by `LootChestListener`'s raw `InventoryClickEvent`/`InventoryCloseEvent`
+dispatch (unrelated to the `ChestMenu`/`ClickHandler` model above). At the CUT gate, `LootChestSession` (and
+`LootChestService`'s `sharedChestInventories` map) swapped the deleted `InventoryHandler` for a small,
+module-owned `SharedLootInventory` wrapper (~40 lines, `gangland-ui/lootchest-api/.../lootchest/
+SharedLootInventory.java`) around a raw `Bukkit.createInventory(...)` — no menu framework needed for this path.
+Take/deposit policy is unchanged either way: any viewer can freely take or place items, and a cursor-held stack on
+close/disconnect is returned or dropped by stock CraftBukkit `InventoryView`-close behavior, which neither the old
+`InventoryHandler` nor the new `SharedLootInventory` ever intercepted (see the CUT report for the full evidence
+trail). Items are placed at random slots, and the inventory state is synced back to `LootChestData` on close for
+persistence across sessions. The admin wand-preview screen (`LootChestWand`/`LootChestWandEditCommand`, both
+`gangland-impl`, not `lootchest-api`) is a real menu, rebuilt onto `ChestMenuBuilder`/`PagedRegion` at the same
+gate — `gangland-impl` already depends on `keystone-inventory` for its own core menus, so no new pom dependency
+was needed for this.
 
 ### Inventory + Sign
 
-Both systems support the `InventoryOpener` functional interface to open inventories by name, enabling
-sign interactions that open custom inventory GUIs.
+Sign interactions that open a menu go through `MenuOpener` (see above) rather than the deleted `InventoryOpener`.
 
 ---
 
@@ -1347,17 +943,16 @@ sign interactions that open custom inventory GUIs.
 gangland-core (Placeholder, ItemBuilder, ChatUtil, TriConsumer)
     ^
     |
-inventory-api ─────> (standalone, depends on gangland-core)
-    ^
-    |
 sign-api ──────────> (standalone, depends on gangland-core)
     
 hologram-api ───────> (standalone, depends on gangland-core)
     ^
     |
-lootchest-api ──────> (depends on inventory-api, hologram-api, gangland-core)
+lootchest-api ──────> (depends on hologram-api, gangland-core; no inventory-api dependency any more)
 ```
 
 All UI modules depend on `gangland-core` for shared utilities (`Placeholder`, `ItemBuilder`, `ChatUtil`,
-`ColorUtil`, `TriConsumer`). The `lootchest-api` additionally depends on `inventory-api` (for `InventoryHandler`)
-and `hologram-api` (for hologram labels). All other modules are independent of each other.
+`ColorUtil`, `TriConsumer`). `lootchest-api` additionally depends on `hologram-api` (for hologram labels); its own
+chest-opening view is a raw Bukkit `Inventory` (`SharedLootInventory`), so it needs no Keystone menu dependency at
+all. The admin wand-preview screen (`gangland-impl`'s `LootChestWand`) is the only loot-chest GUI on
+`keystone-inventory`. All other modules are independent of each other.

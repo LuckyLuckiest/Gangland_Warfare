@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.luckyraven.gangland.inventory.InventoryHandler;
+import org.luckyraven.gangland.lootchest.SharedLootInventory;
 
 import java.util.*;
 
@@ -14,12 +14,12 @@ import java.util.*;
 @Getter
 public class LootChestSession {
 
-	private final UUID             sessionId;
-	private final Player           player;
-	private final LootChestData    chestData;
-	private final InventoryHandler inventory;
-	private final List<ItemStack>  generatedLoot;
-	private final boolean          usingSharedInventory;
+	private final UUID                sessionId;
+	private final Player              player;
+	private final LootChestData       chestData;
+	private final SharedLootInventory inventory;
+	private final List<ItemStack>     generatedLoot;
+	private final boolean             usingSharedInventory;
 
 	// Slot mapping: maps inventory slot -> generated loot index
 	private int[] slotMapping;
@@ -35,7 +35,7 @@ public class LootChestSession {
 	@Setter
 	private long    crackingStartTime;
 
-	public LootChestSession(Player player, LootChestData chestData, InventoryHandler inventory,
+	public LootChestSession(Player player, LootChestData chestData, SharedLootInventory inventory,
 	                        List<ItemStack> generatedLoot, boolean usingSharedInventory) {
 		this.sessionId            = UUID.randomUUID();
 		this.player               = player;
@@ -144,7 +144,7 @@ public class LootChestSession {
 
 			if (item == null) continue;
 
-			inventory.setItem(slot, item.clone(), true);
+			inventory.setItem(slot, item.clone());
 		}
 	}
 
@@ -176,7 +176,7 @@ public class LootChestSession {
 			if (itemIndex >= availableSlots.size()) break;
 
 			int slot = availableSlots.get(itemIndex);
-			inventory.setItem(slot, item.clone(), true);
+			inventory.setItem(slot, item.clone());
 			slotMapping[slot] = itemIndex;
 			itemIndex++;
 		}

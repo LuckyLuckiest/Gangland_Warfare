@@ -9,10 +9,13 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.Inventory;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ChatUtil;
@@ -75,6 +78,15 @@ public class LootChestListener implements Listener {
 
 		manager.getActiveSession(player).ifPresent(session -> {
 			if (session.getState() != LootChestSession.SessionState.LOOTING) return;
+			if (event.getView().getTopInventory().getHolder() != session.getInventory()) return;
+
+			// Loot chests are take-only: any click that would deposit the cursor/clicked item into the chest
+			// is blocked here; everything else (take paths) falls through untouched.
+			if (isDepositAction(event)) {
+				event.setCancelled(true);
+				return;
+			}
+
 			// Check if player is taking an item (clicking on the chest inventory, not their own)
 			if (event.getRawSlot() >= session.getInventory().getSize()) return;
 			// Player clicked on the loot chest inventory
@@ -89,6 +101,47 @@ public class LootChestListener implements Listener {
 			       .getScheduler()
 			       .runTask(manager.getPlugin(), session::syncInventoryToChestData);
 		});
+	}
+
+	/**
+	 * A drag distributes the cursor item across every slot it spans — it can only ever place items, never take
+	 * them, so any drag that touches a loot chest's top inventory at all is a deposit and gets cancelled outright.
+	 */
+	@EventHandler
+	public void onInventoryDrag(InventoryDragEvent event) {
+		if (!(event.getWhoClicked() instanceof Player player)) return;
+
+		manager.getActiveSession(player).ifPresent(session -> {
+			if (session.getState() != LootChestSession.SessionState.LOOTING) return;
+
+			Inventory top = event.getView().getTopInventory();
+
+			if (top.getHolder() != session.getInventory()) return;
+			if (event.getRawSlots().stream().noneMatch(slot -> slot < top.getSize())) return;
+
+			event.setCancelled(true);
+		});
+	}
+
+	/**
+	 * True for any {@link InventoryClickEvent} that would place an item into the loot chest's top inventory:
+	 * either the clicked slot itself is a top slot and the action places/swaps something into it, or the click is
+	 * a shift-click ({@code MOVE_TO_OTHER_INVENTORY}) originating in the player's own inventory, which moves an
+	 * item FROM the bottom inventory INTO the chest. The reverse shift-click (out of the chest) and every pickup
+	 * action are take paths and must return {@code false} here.
+	 */
+	private boolean isDepositAction(InventoryClickEvent event) {
+		Inventory       top    = event.getView().getTopInventory();
+		InventoryAction action = event.getAction();
+
+		if (event.getClickedInventory() == top) {
+			return switch (action) {
+				case PLACE_ALL, PLACE_ONE, PLACE_SOME, SWAP_WITH_CURSOR, HOTBAR_SWAP, HOTBAR_MOVE_AND_READD -> true;
+				default -> false;
+			};
+		}
+
+		return action == InventoryAction.MOVE_TO_OTHER_INVENTORY && event.getClickedInventory() != top;
 	}
 
 	@EventHandler

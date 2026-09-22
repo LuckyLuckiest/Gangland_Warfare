@@ -21,9 +21,11 @@ public class InventoryData {
 	private List<Integer> verticalLine, horizontalLine;
 
 	// multi inventory
+	// T-43 (docket, fixed): Multi.Per_Page/`perPage` was already unread before WS2, and WS2 G3's PagedRegion
+	// rebuild replaced the whole Multi.* paginated stack outright, so the field and its YAML key are now fully
+	// dead — deleted at the CUT gate rather than carried forward.
 	private boolean isMultiInventory;
 	private String  itemSource;
-	private int     perPage;
 
 	private Map<Integer, Slot> staticItems;
 

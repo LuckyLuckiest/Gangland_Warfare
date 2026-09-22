@@ -7,10 +7,14 @@
 ## Overview
 
 Custom GUI / menu framework used by phones, gang info screens, user stats, shop admin, traders, and more. Menus are
-defined in `inventory/*.yml`. Helpers like `InventoryUtil.fillInventory`, `createBoarder`, `horizontalLine`,
-`aroundSlot` are the canonical way to paint slots (`feedback_inventory_util_fillers`, `feedback_aroundslot_noclear`).
+defined in `inventory/*.yml`. As of 0.10.0 (WS2 CUT gate) this builds on Keystone's `keystone-inventory` +
+`gangland-impl`'s own `org.luckyraven.gangland.menu.*` YAML dialect, not the deleted `gangland-ui/inventory-api`
+module — `ChestMenuBuilder.fill()/border()/line()` + `FillComponent`/`BorderComponent`/`LineComponent` are the
+canonical way to paint slots now (the old `InventoryUtil.fillInventory`/`createBoarder`/`horizontalLine`/
+`aroundSlot` helpers are gone; `feedback_inventory_util_fillers`/`feedback_aroundslot_noclear` describe the
+pre-0.10.0 conventions those replaced).
 
-**Modules involved:** `gangland-ui/inventory-api`, `gangland-impl`.
+**Modules involved:** `gangland-impl` (`menu.*` package), `keystone-inventory` (Keystone).
 
 ---
 

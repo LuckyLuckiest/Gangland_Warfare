@@ -7,7 +7,6 @@ Information:
       Border: true
    Multi:
       Item_Source: "gang_members"
-      Per_Page: 28
    Item_Template:
       Item:
          Type: PLAYER_HEAD

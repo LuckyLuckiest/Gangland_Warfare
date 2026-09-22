@@ -67,7 +67,7 @@
 
         <!-- Dependencies/Libraries versions -->
         <!-- Shared infrastructure (Keystone.jar provides it at runtime — provided scope, never shaded) -->
-        <keystone.version>1.11.0</keystone.version>
+        <keystone.version>1.11.1</keystone.version>
         <bartizan.version>0.4.0</bartizan.version>
         <nbt.version>2.15.7</nbt.version>
         <xseries.version>13.6.0</xseries.version>
@@ -259,11 +259,6 @@
             <dependency>
                 <groupId>org.luckyraven</groupId>
                 <artifactId>gangland-item</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.luckyraven</groupId>
-                <artifactId>inventory-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

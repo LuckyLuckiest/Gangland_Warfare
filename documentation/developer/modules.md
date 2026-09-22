@@ -19,7 +19,7 @@ the module's purpose, package structure, key classes, and how it integrates with
 7. [gangland-features/cops-n-crooks](#gangland-featurescops-n-crooks)
 8. [gangland-features/gangland-weapon](#gangland-featuresgangland-weapon)
 9. [gangland-features/gangland-gadget](#gangland-featuresgangland-gadget)
-10. [gangland-ui/inventory-api](#gangland-uiinventory-api)
+10. [gangland-ui/inventory-api](#gangland-uiinventory-api) — deleted at the 0.10.0 WS2 CUT gate, kept as a stub
 11. [gangland-ui/sign-api](#gangland-uisign-api)
 12. [gangland-ui/lootchest-api](#gangland-uilootchest-api)
 13. [gangland-ui/hologram-api](#gangland-uihologram-api)
@@ -1028,105 +1028,13 @@ Event listeners (11 total).
 
 ## gangland-ui/inventory-api
 
-**Purpose:** Custom inventory/GUI framework with YAML-driven layouts, conditional slots, multi-page navigation, and a
-comprehensive event handling system.
-
-**Java Files:** 37 | **Package:** `org.luckyraven.gangland.inventory.*`
-
-### Root Classes
-
-| Class                   | Description                                                                                                                                              |
-|-------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `InventoryHandler.java` | Core inventory manager. Manages slot callbacks, size normalization (multiples of 9), item placement, and event routing.                                  |
-| `InventoryBuilder.java` | Fluent API for constructing inventories from YAML. Supports placeholder resolution, conditional slot evaluation, fill patterns, and slot action binding. |
-| `InventoryData.java`    | Inventory metadata (title, size, fill item, slots map).                                                                                                  |
-| `InventoryOpener.java`  | Opens a built inventory for a player with optional state injection.                                                                                      |
-| `OpenInventory.java`    | Tracks a currently open inventory for a player (handler reference, page state).                                                                          |
-| `State.java`            | Key-value state container passed to inventory handlers for dynamic content.                                                                              |
-
-### Subpackage: `condition/`
-
-Conditional slot visibility system.
-
-| Class                             | Description                                                                                         |
-|-----------------------------------|-----------------------------------------------------------------------------------------------------|
-| `BooleanExpressionEvaluator.java` | Evaluates boolean expressions (AND, OR, NOT) for conditional slot visibility.                       |
-| `ConditionEvaluator.java`         | Evaluates individual conditions against player state (permissions, gang membership, balance, etc.). |
-| `ConditionalSlotData.java`        | Data model for a slot with visibility conditions and alternate items.                               |
-| `SlotCondition.java`              | Single condition definition (type, operator, value).                                                |
-
-### Subpackage: `handler/`
-
-Slot event handler interfaces and implementations.
-
-| Class                             | Description                                                                                                                                 |
-|-----------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|
-| `SlotEventHandler.java`           | Base interface for slot event handlers.                                                                                                     |
-| `SlotContext.java`                | Context object passed to slot handlers (player, slot, click type, inventory state).                                                         |
-| `SlotItemFactory.java`            | Static utility that builds `ItemBuilder` from raw YAML slot values; optional `itemResolver` handles prefixed item refs (e.g. `weapon:awp`). |
-| `ClickSlotHandler.java`           | Handler for inventory click events on a specific slot.                                                                                      |
-| `CloseSlotHandler.java`           | Handler for inventory close events.                                                                                                         |
-| `DropSlotHandler.java`            | Handler for item drop events from a slot.                                                                                                   |
-| `SwapHandSlotHandler.java`        | Handler for off-hand swap events.                                                                                                           |
-| `JoinSlotHandler.java`            | Handler for player join events (loads persistent inventory state).                                                                          |
-| `QuitSlotHandler.java`            | Handler for player quit events (saves inventory state).                                                                                     |
-| `PlayerInteractSlotHandler.java`  | Handler for player interact events while holding an inventory item.                                                                         |
-| `AbstractCommandSlotHandler.java` | Base handler that executes a command when a slot is clicked.                                                                                |
-
-### Subpackage: `listener/`
-
-Bukkit event listeners for inventory interaction.
-
-| Class                         | Description                                                                                   |
-|-------------------------------|-----------------------------------------------------------------------------------------------|
-| `InventoryClickHandler.java`  | Routes `InventoryClickEvent` to the appropriate slot handler. Prevents default item movement. |
-| `InventoryCloseHandler.java`  | Routes `InventoryCloseEvent` to close handlers. Cleans up open inventory tracking.            |
-| `InventoryDragHandler.java`   | Cancels drag events in custom inventories.                                                    |
-| `PlayerInventoryCleanup.java` | Cleans up inventory tracking data on player quit.                                             |
-
-### Subpackage: `multi/`
-
-Multi-page inventory support.
-
-| Class                           | Description                                                                                               |
-|---------------------------------|-----------------------------------------------------------------------------------------------------------|
-| `MultiInventory.java`           | Multi-page inventory container. Manages page list and current page index.                                 |
-| `MultiInventoryCreation.java`   | Creates paginated inventories from a data source with configurable items-per-page and navigation buttons. |
-| `MultiInventoryNavigation.java` | Handles next/previous page navigation button clicks.                                                      |
-| `ItemSourceProvider.java`       | Interface for providing dynamic item lists for paginated inventories.                                     |
-
-### Subpackage: `part/`
-
-Inventory building blocks.
-
-| Class                        | Description                                                                |
-|------------------------------|----------------------------------------------------------------------------|
-| `Slot.java`                  | Slot definition with position, item, click action, and conditions.         |
-| `Fill.java`                  | Fill pattern for empty slots (material, name).                             |
-| `ButtonTags.java`            | Constants for navigation button identifiers (NEXT_PAGE, PREV_PAGE, CLOSE). |
-| `PageConfig.java`            | Page configuration (items per page, navigation slot positions).            |
-| `ConditionalSlotResult.java` | Result of evaluating a conditional slot (visible/hidden, resolved item).   |
-
-### Subpackage: `service/`
-
-| Class                    | Description                                                                                  |
-|--------------------------|----------------------------------------------------------------------------------------------|
-| `InventoryRegistry.java` | Global registry of all custom inventories. Maps inventory IDs to handlers for event routing. |
-
-### Subpackage: `unique/`
-
-| Class                    | Description                                                               |
-|--------------------------|---------------------------------------------------------------------------|
-| `UniqueItemHandler.java` | Handles unique item interaction events (right-click to open phone, etc.). |
-
-### Subpackage: `util/`
-
-| Class                | Description                                                                             |
-|----------------------|-----------------------------------------------------------------------------------------|
-| `InventoryUtil.java` | Utility methods for inventory manipulation (find empty slot, check space, count items). |
+**Deleted at the 0.10.0 WS2 CUT gate.** Every menu now builds on Keystone's `keystone-inventory` library plus
+a thin YAML dialect in `gangland-impl`'s `org.luckyraven.gangland.menu.*` package — see
+[`documentation/developer/ui-framework.md`](ui-framework.md) for the current architecture. This section stays
+only as a historical pointer; the class-by-class table it used to hold (37 files, `org.luckyraven.gangland.inventory.*`)
+described a module that no longer exists in this repo.
 
 ---
-
 ## gangland-ui/sign-api
 
 **Purpose:** Sign interaction framework using the Chain of Responsibility pattern. Supports composable sign behaviors
@@ -1378,7 +1286,6 @@ gangland-build (shade assembly)
   │     ├── cops-n-crooks
   │     ├── gangland-weapon
   │     ├── gangland-gadget
-  │     ├── inventory-api
   │     ├── sign-api
   │     ├── lootchest-api
   │     ├── hologram-api
@@ -1435,7 +1342,6 @@ gangland-build (shade assembly)
 | `cops-n-crooks`       | 91         | 20       | NPC cops/civilians, wanted, bounty, jails                               |
 | `gangland-weapon`     | 83         | 17       | Weapons, projectiles, modifiers, reload                                 |
 | `gangland-gadget`     | 47         | 14       | Vehicles, jetpacks, fuel                                                |
-| `inventory-api`       | 37         | 8        | Custom GUI framework                                                    |
 | `sign-api`            | 28         | 8        | Sign interaction framework                                              |
 | `lootchest-api`       | 33         | 7        | Loot chest system                                                       |
 | `hologram-api`        | 3          | 1        | Floating text holograms                                                 |

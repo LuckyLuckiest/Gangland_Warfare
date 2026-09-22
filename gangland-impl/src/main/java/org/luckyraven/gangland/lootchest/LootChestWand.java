@@ -9,13 +9,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.GanglandApi;
+import org.luckyraven.keystone.inventory.chest.ChestMenu;
+import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
+import org.luckyraven.keystone.inventory.click.ClickContext;
+import org.luckyraven.keystone.inventory.component.BorderComponent;
+import org.luckyraven.keystone.inventory.component.FillComponent;
+import org.luckyraven.keystone.inventory.component.ItemComponent;
+import org.luckyraven.keystone.inventory.page.PageConfig;
+import org.luckyraven.keystone.inventory.page.PagedRegion;
 import org.luckyraven.keystone.item.ItemBuilder;
+import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.ChatUtil;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.part.Fill;
-import org.luckyraven.gangland.inventory.util.InventoryUtil;
-import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.gangland.lootchest.data.LootChestData;
 import org.luckyraven.gangland.lootchest.data.LootTable;
 import org.luckyraven.gangland.lootchest.data.LootTier;
@@ -27,14 +32,15 @@ import static org.luckyraven.gangland.lootchest.LootChestWandTag.*;
 
 public class LootChestWand {
 
-	private static final int   PREVIEW_SIZE             = 54;
-	private static final int[] PREVIEW_INTERIOR_SLOTS   = {
-			10, 11, 12, 13, 14, 15, 16,
-			19, 20, 21, 22, 23, 24, 25,
-			28, 29, 30, 31, 32, 33, 34,
-			37, 38, 39, 40, 41, 42, 43
-	};
-	private static final int   PREVIEW_ENTRIES_PER_PAGE = PREVIEW_INTERIOR_SLOTS.length;
+	private static final int PREVIEW_SIZE = 54;
+	private static final int PREVIEW_ROWS = PREVIEW_SIZE / 9;
+
+	// PagedRegion interior grid: rows 1..4, cols 1..7 (28 entries per page) — same footprint the old
+	// hand-rolled PREVIEW_INTERIOR_SLOTS array covered, now driven by PageConfig/PagedRegion math (LS migration).
+	private static final int PREVIEW_FIRST_ROW = 1;
+	private static final int PREVIEW_LAST_ROW  = 4;
+	private static final int PREVIEW_FIRST_COL = 1;
+	private static final int PREVIEW_LAST_COL  = 7;
 
 	private static final int PREVIEW_SLOT_BACK      = 45;
 	private static final int PREVIEW_SLOT_PREV      = 48;
@@ -44,7 +50,7 @@ public class LootChestWand {
 	private static final SoundEffect PREVIEW_PAGE_SOUND = new SoundEffect(
 			SoundEffect.SoundType.VANILLA, "UI_BUTTON_CLICK", 0.6f, 1.2f);
 
-	private final JavaPlugin         gangland;
+	private final JavaPlugin       gangland;
 	private final LootChestManager lootChestManager;
 	private final String           prefix;
 
@@ -96,8 +102,17 @@ public class LootChestWand {
 		                  .build();
 	}
 
-	public void openConfigInventory(Player player, Fill fill) {
-		ItemStack heldItem = player.getInventory().getItemInMainHand();
+	/**
+	 * Opens the wand config menu. {@code fillMaterial}/{@code fillName} replace the old {@code Fill} record (deleted
+	 * with {@code gangland-ui/inventory-api}). LS-30: the wand being configured is identified once here, by the
+	 * hotbar slot it occupied at the moment this menu opened ({@code wandSlot}), and threaded through every nested
+	 * screen/anvil prompt below — every read/write re-fetches {@code player.getInventory().getItem(wandSlot)}
+	 * rather than {@code getItemInMainHand()}, so switching the held hotbar slot mid-configuration can no longer
+	 * misdirect an edit onto whatever the player happens to be holding when they finally click "save".
+	 */
+	public void openConfigInventory(Player player, String fillMaterial, String fillName) {
+		int       wandSlot = player.getInventory().getHeldItemSlot();
+		ItemStack heldItem = player.getInventory().getItem(wandSlot);
 
 		if (!LootChestWand.isLootChestWand(heldItem)) {
 			player.sendMessage(ChatUtil.color("&cYou must be holding a Loot Chest Wand!"));
@@ -115,76 +130,75 @@ public class LootChestWand {
 		if (currentInvSize == 0) currentInvSize = 27;
 		if (currentDisplayName == null || currentDisplayName.isEmpty()) currentDisplayName = "&eLoot Chest";
 
-		// Create config inventory
-		InventoryHandler inventory = new InventoryHandler(gangland, "&6&lLoot Chest Wand Config", 45, player);
+		ChestMenuBuilder builder = ChestMenu.builder(lootChestManager.getInventoryService())
+		                                    .title("&6&lLoot Chest Wand Config")
+		                                    .rows(5);
 
 		// Loot Table Selection (slot 11)
 		var lootTableDisplay = currentLootTable.isEmpty() ? "&cNone Selected" : "&a" + currentLootTable;
-		var lore             = List.of("&7Current: " + lootTableDisplay, "", "&aClick to select a loot table");
-		var lootTableItem    = new ItemBuilder(Material.BOOK).setDisplayName("&e&lLoot Table").setLore(lore).build();
+		var lootTableLore    = List.of("&7Current: " + lootTableDisplay, "", "&aClick to select a loot table");
+		var lootTableItem    = new ItemBuilder(Material.BOOK).setDisplayName("&e&lLoot Table").setLore(lootTableLore);
 
-		inventory.setItem(11, new ItemBuilder(lootTableItem), false, (p, inv, builder) -> {
-			openLootTableSelection(p, fill);
-		});
+		builder.slot(11, ItemComponent.of(lootTableItem).onAnyClick(ctx ->
+				openLootTableSelection(ctx.player(), fillMaterial, fillName, wandSlot)));
 
 		// Tier Selection (slot 13)
 		var tierDisplay = currentTier.isEmpty() ? "&7None (Optional)" : "&a" + currentTier;
-		var lore1       = List.of("&7Current: " + tierDisplay, "", "&aClick to select a tier");
-		var tierItem    = new ItemBuilder(Material.DIAMOND).setDisplayName("&b&lTier").setLore(lore1).build();
+		var tierLore     = List.of("&7Current: " + tierDisplay, "", "&aClick to select a tier");
+		var tierItem     = new ItemBuilder(Material.DIAMOND).setDisplayName("&b&lTier").setLore(tierLore);
 
-		inventory.setItem(13, new ItemBuilder(tierItem), false, (p, inv, builder) -> {
-			openTierSelection(p, fill);
-		});
+		builder.slot(13, ItemComponent.of(tierItem).onAnyClick(ctx ->
+				openTierSelection(ctx.player(), fillMaterial, fillName, wandSlot)));
 
 		// Display Name (slot 15)
 		var finalDisplayName = currentDisplayName;
-		var lore2            = List.of("&7Current: " + currentDisplayName, "", "&aClick to set display name");
-		var displayNameItem = new ItemBuilder(Material.NAME_TAG).setDisplayName("&d&lDisplay Name")
-		                                                        .setLore(lore2)
-		                                                        .build();
+		var displayNameLore  = List.of("&7Current: " + currentDisplayName, "", "&aClick to set display name");
+		var displayNameItem  = new ItemBuilder(Material.NAME_TAG).setDisplayName("&d&lDisplay Name")
+		                                                         .setLore(displayNameLore);
 
-		inventory.setItem(15, new ItemBuilder(displayNameItem), false, (p, inv, builder) -> {
-			p.closeInventory();
-			openAnvilInput(p, "Display Name", finalDisplayName, DISPLAY_NAME.toString(), fill);
-		});
+		builder.slot(15, ItemComponent.of(displayNameItem).onAnyClick(ctx -> {
+			ctx.closeMenu();
+			openAnvilInput(ctx.player(), "Display Name", finalDisplayName, DISPLAY_NAME.toString(), fillMaterial,
+			               fillName, wandSlot);
+		}));
 
 		// Inventory Size (slot 29)
-		var lore3 = List.of("&7Current: &a" + currentInvSize, "", "&aLeft-click to increase",
-		                    "&cRight-click to decrease");
-		var invSizeItem = new ItemBuilder(Material.CHEST).setDisplayName("&6&lInventory Size").setLore(lore3).build();
+		var invSizeLore = List.of("&7Current: &a" + currentInvSize, "", "&aLeft-click to increase",
+		                         "&cRight-click to decrease");
+		var invSizeItem = new ItemBuilder(Material.CHEST).setDisplayName("&6&lInventory Size").setLore(invSizeLore);
 
-		inventory.setItem(29, new ItemBuilder(invSizeItem), false, (p, inv, builder) -> {
-			handleInvSizeChange(p, true, fill);
-		}, (p, inv, builder) -> {
-			handleInvSizeChange(p, false, fill);
-		});
+		builder.slot(29, ItemComponent.of(invSizeItem)
+		                              .onLeftClick(ctx ->
+				handleInvSizeChange(ctx.player(), true, fillMaterial, fillName, wandSlot))
+		                              .onRightClick(ctx ->
+				handleInvSizeChange(ctx.player(), false, fillMaterial, fillName, wandSlot)));
 
 		// Respawn Time (slot 31)
-		var lore4 = List.of("&7Current: &a" + getRespawnTimeFromWand(heldItem) + " seconds", "",
-		                    "&aClick to set respawn time");
-		var respawnTimeItem = new ItemBuilder(Material.CLOCK).setDisplayName("&c&lRespawn Time").setLore(lore4).build();
+		long respawnTime    = getRespawnTimeFromWand(heldItem);
+		var  respawnTimeLore = List.of("&7Current: &a" + respawnTime + " seconds", "", "&aClick to set respawn time");
+		var  respawnTimeItem = new ItemBuilder(Material.CLOCK).setDisplayName("&c&lRespawn Time")
+		                                                      .setLore(respawnTimeLore);
 
-		inventory.setItem(31, new ItemBuilder(respawnTimeItem), false, (p, inv, builder) -> {
-			p.closeInventory();
-			openAnvilInput(p, "Respawn Time (seconds)", String.valueOf(getRespawnTimeFromWand(heldItem)),
-			               RESPAWN_TIME.toString(), fill);
-		});
+		builder.slot(31, ItemComponent.of(respawnTimeItem).onAnyClick(ctx -> {
+			ctx.closeMenu();
+			openAnvilInput(ctx.player(), "Respawn Time (seconds)", String.valueOf(respawnTime),
+			               RESPAWN_TIME.toString(), fillMaterial, fillName, wandSlot);
+		}));
 
 		// Confirm Button (slot 40)
-		var lore5 = List.of("&7Click to save settings", "&7to your wand.");
+		var confirmLore = List.of("&7Click to save settings", "&7to your wand.");
 		var confirmItem = new ItemBuilder(XMaterial.LIME_WOOL.get()).setDisplayName("&a&lSave Configuration")
-		                                                            .setLore(lore5)
-		                                                            .build();
+		                                                            .setLore(confirmLore);
 
-		inventory.setItem(40, new ItemBuilder(confirmItem), false, (p, inv, builder) -> {
-			p.closeInventory();
-			updateWandLore(p);
-			p.sendMessage(ChatUtil.color("&aWand configuration saved!"));
-		});
+		builder.slot(40, ItemComponent.of(confirmItem).onAnyClick(ctx -> {
+			ctx.closeMenu();
+			updateWandLore(ctx.player(), wandSlot);
+			ctx.player().sendMessage(ChatUtil.color("&aWand configuration saved!"));
+		}));
 
-		InventoryUtil.fillInventory(inventory, fill);
+		builder.fill(FillComponent.of(materialOf(fillMaterial)).name(fillName));
 
-		player.openInventory(inventory.getInventory());
+		builder.build().open(player);
 	}
 
 	public void createLootChestFromWand(Player player, ItemStack wand, Location location) {
@@ -229,90 +243,91 @@ public class LootChestWand {
 				ChatUtil.color("&7Tier: &f" + (tierId == null || tierId.isEmpty() ? "None" : tierId)));
 	}
 
-	private void openLootTableSelection(Player player, Fill fill) {
+	private void openLootTableSelection(Player player, String fillMaterial, String fillName, int wandSlot) {
 		Collection<LootTable> lootTables = lootChestManager.getAllLootTables();
 
-		var size      = Math.min(54, ((lootTables.size() / 9) + 1) * 9 + 9);
-		var inventory = new InventoryHandler(gangland, "&6&lSelect Loot Table", size, player);
+		int size = Math.min(54, ((lootTables.size() / 9) + 1) * 9 + 9);
+		int rows = size / 9;
+
+		ChestMenuBuilder builder = ChestMenu.builder(lootChestManager.getInventoryService())
+		                                    .title("&6&lSelect Loot Table")
+		                                    .rows(rows);
 
 		int slot = 0;
 		for (LootTable table : lootTables) {
 			var lore = List.of("&7ID: &f" + table.getId(), "&7Items: &f" + table.getItemReferences().size(),
 			                   "&7Min Items: &f" + table.getMinItems(), "&7Max Items: &f" + table.getMaxItems(), "",
 			                   "&aLeft-click to select", "&bRight-click to preview contents");
-			var item = new ItemBuilder(Material.PAPER).setDisplayName("&e" + table.getDisplayName())
-			                                          .setLore(lore)
-			                                          .build();
+			var item = new ItemBuilder(Material.PAPER).setDisplayName("&e" + table.getDisplayName()).setLore(lore);
 
 			String tableId = table.getId();
-			inventory.setItem(slot++, new ItemBuilder(item), false,
-			                  (p, inv, builder) -> {
-								  setWandNBT(p, LOOT_TABLE_ID.toString(), tableId);
-								  p.sendMessage(ChatUtil.color("&aSelected loot table: &e" + tableId));
-								  openConfigInventory(p, fill);
-							  },
-			                  (p, inv, builder) -> {
-								  openLootTablePreview(p, tableId, fill, 0);
-							  });
+			builder.slot(slot++, ItemComponent.of(item)
+			                                  .onLeftClick(ctx -> {
+				setWandNBT(ctx.player(), wandSlot, LOOT_TABLE_ID.toString(), tableId);
+				ctx.player().sendMessage(ChatUtil.color("&aSelected loot table: &e" + tableId));
+				openConfigInventory(ctx.player(), fillMaterial, fillName);
+			                                  })
+			                                  .onRightClick(ctx ->
+					openLootTablePreview(ctx.player(), tableId, fillMaterial, fillName, wandSlot, 0)));
 
 			if (slot >= size - 9) break;
 		}
 
 		// Back button
-		ItemStack backItem = new ItemBuilder(Material.ARROW).setDisplayName("&c&lBack").build();
-		inventory.setItem(size - 5, new ItemBuilder(backItem), false, (p, inv, builder) -> {
-			openConfigInventory(p, fill);
-		});
+		var backItem = new ItemBuilder(Material.ARROW).setDisplayName("&c&lBack");
+		builder.slot(size - 5, ItemComponent.of(backItem).onAnyClick(ctx ->
+				openConfigInventory(ctx.player(), fillMaterial, fillName)));
 
-		player.openInventory(inventory.getInventory());
+		builder.build().open(player);
 	}
 
-	private void openTierSelection(Player player, Fill fill) {
+	private void openTierSelection(Player player, String fillMaterial, String fillName, int wandSlot) {
 		Collection<LootTier> tiers = lootChestManager.getAllTiers();
 
-		var size      = Math.min(54, ((tiers.size() / 9) + 2) * 9);
-		var inventory = new InventoryHandler(gangland, "&b&lSelect Tier", size, player);
+		int size = Math.min(54, ((tiers.size() / 9) + 2) * 9);
+		int rows = size / 9;
+
+		ChestMenuBuilder builder = ChestMenu.builder(lootChestManager.getInventoryService())
+		                                    .title("&b&lSelect Tier")
+		                                    .rows(rows);
 
 		// None option
 		var lore     = List.of("&7Remove tier requirement", "", "&aClick to select");
-		var noneItem = new ItemBuilder(Material.BARRIER).setDisplayName("&7&lNo Tier").setLore(lore).build();
+		var noneItem = new ItemBuilder(Material.BARRIER).setDisplayName("&7&lNo Tier").setLore(lore);
 
-		inventory.setItem(0, new ItemBuilder(noneItem), false, (p, inv, builder) -> {
-			setWandNBT(p, TIER_ID.toString(), "");
-			p.sendMessage(ChatUtil.color("&aTier removed from wand."));
-			openConfigInventory(p, fill);
-		});
+		builder.slot(0, ItemComponent.of(noneItem).onAnyClick(ctx -> {
+			setWandNBT(ctx.player(), wandSlot, TIER_ID.toString(), "");
+			ctx.player().sendMessage(ChatUtil.color("&aTier removed from wand."));
+			openConfigInventory(ctx.player(), fillMaterial, fillName);
+		}));
 
 		int slot = 1;
 		for (LootTier tier : tiers) {
 			var lore1 = List.of("&7ID: &f" + tier.id(), "&7Level: &f" + tier.level(),
 			                    "&7Unlock: &f" + tier.unlockRequirement().name(), "", "&aClick to select");
-			var item = new ItemBuilder(Material.DIAMOND).setDisplayName("&b" + tier.displayName())
-			                                            .setLore(lore1)
-			                                            .build();
+			var item = new ItemBuilder(Material.DIAMOND).setDisplayName("&b" + tier.displayName()).setLore(lore1);
 
 			String tierId = tier.id();
 
-			inventory.setItem(slot++, new ItemBuilder(item), false, (p, inv, builder) -> {
-				setWandNBT(p, TIER_ID.toString(), tierId);
-				p.sendMessage(ChatUtil.color("&aSelected tier: &e" + tierId));
-				openConfigInventory(p, fill);
-			});
+			builder.slot(slot++, ItemComponent.of(item).onAnyClick(ctx -> {
+				setWandNBT(ctx.player(), wandSlot, TIER_ID.toString(), tierId);
+				ctx.player().sendMessage(ChatUtil.color("&aSelected tier: &e" + tierId));
+				openConfigInventory(ctx.player(), fillMaterial, fillName);
+			}));
 
 			if (slot >= size - 9) break;
 		}
 
 		// Back button
-		ItemStack backItem = new ItemBuilder(Material.ARROW).setDisplayName("&c&lBack").build();
+		var backItem = new ItemBuilder(Material.ARROW).setDisplayName("&c&lBack");
+		builder.slot(size - 5, ItemComponent.of(backItem).onAnyClick(ctx ->
+				openConfigInventory(ctx.player(), fillMaterial, fillName)));
 
-		inventory.setItem(size - 5, new ItemBuilder(backItem), false, (p, inv, builder) -> {
-			openConfigInventory(p, fill);
-		});
-
-		player.openInventory(inventory.getInventory());
+		builder.build().open(player);
 	}
 
-	private void openAnvilInput(Player player, String title, String defaultText, String nbtKey, Fill fill) {
+	private void openAnvilInput(Player player, String title, String defaultText, String nbtKey, String fillMaterial,
+	                            String fillName, int wandSlot) {
 		new AnvilGUI.Builder().onClick((slot, stateSnapshot) -> {
 			if (slot != AnvilGUI.Slot.OUTPUT) {
 				return Collections.emptyList();
@@ -323,31 +338,32 @@ public class LootChestWand {
 			if (nbtKey.equals(RESPAWN_TIME.toString())) {
 				try {
 					long respawnTime = Long.parseLong(input);
-					setWandNBT(stateSnapshot.getPlayer(), nbtKey, respawnTime);
+					setWandNBT(stateSnapshot.getPlayer(), wandSlot, nbtKey, respawnTime);
 					stateSnapshot.getPlayer()
 					             .sendMessage(
-										 ChatUtil.color(
-												 "&aRespawn time set to: &e" + respawnTime + " seconds"));
+									 ChatUtil.color(
+											 "&aRespawn time set to: &e" + respawnTime + " seconds"));
 				} catch (NumberFormatException e) {
 					stateSnapshot.getPlayer()
 					             .sendMessage(ChatUtil.color("&cInvalid number! Please enter a valid number."));
 				}
 			} else {
-				setWandNBT(stateSnapshot.getPlayer(), nbtKey, input);
+				setWandNBT(stateSnapshot.getPlayer(), wandSlot, nbtKey, input);
 				stateSnapshot.getPlayer().sendMessage(ChatUtil.color("&a" + title + " set to: &e" + input));
 			}
 
 			return List.of(AnvilGUI.ResponseAction.close(), AnvilGUI.ResponseAction.run(() -> {
 				// Delay to ensure inventory closes properly
 				gangland.getServer().getScheduler().runTaskLater(gangland, () -> {
-					openConfigInventory(stateSnapshot.getPlayer(), fill);
+					openConfigInventory(stateSnapshot.getPlayer(), fillMaterial, fillName);
 				}, 1L);
 			}));
 		}).text(ChatUtil.color(defaultText)).title(ChatUtil.color(title)).plugin(gangland).open(player);
 	}
 
-	private void handleInvSizeChange(Player player, boolean increase, Fill fill) {
-		ItemStack heldItem = player.getInventory().getItemInMainHand();
+	private void handleInvSizeChange(Player player, boolean increase, String fillMaterial, String fillName,
+	                                 int wandSlot) {
+		ItemStack heldItem = player.getInventory().getItem(wandSlot);
 		if (!LootChestWand.isLootChestWand(heldItem)) return;
 
 		ItemBuilder builder     = new ItemBuilder(heldItem);
@@ -360,9 +376,9 @@ public class LootChestWand {
 			currentSize = Math.max(9, currentSize - 9);
 		}
 
-		setWandNBT(player, INVENTORY_SIZE.toString(), currentSize);
+		setWandNBT(player, wandSlot, INVENTORY_SIZE.toString(), currentSize);
 		player.sendMessage(ChatUtil.color("&aInventory size set to: &e" + currentSize));
-		openConfigInventory(player, fill);
+		openConfigInventory(player, fillMaterial, fillName);
 	}
 
 	private long getRespawnTimeFromWand(ItemStack item) {
@@ -374,8 +390,8 @@ public class LootChestWand {
 		return value == 0 ? 300L : value;
 	}
 
-	private void updateWandLore(Player player) {
-		ItemStack heldItem = player.getInventory().getItemInMainHand();
+	private void updateWandLore(Player player, int wandSlot) {
+		ItemStack heldItem = player.getInventory().getItem(wandSlot);
 		if (!LootChestWand.isLootChestWand(heldItem)) return;
 
 		ItemBuilder builder = new ItemBuilder(heldItem);
@@ -411,79 +427,94 @@ public class LootChestWand {
 		lore.add("&7while holding to configure.");
 
 		builder.setLore(lore);
-		setWandNBT(player, CONFIGURED.toString(), configured);
+		setWandNBT(player, wandSlot, CONFIGURED.toString(), configured);
 
-		// Update the item in the player's hand
-		player.getInventory().setItemInMainHand(builder.build());
+		// Update the item at the slot that opened this config session (LS-30 — not blindly "whatever is
+		// currently in main hand", which may have changed since the config menu was opened).
+		player.getInventory().setItem(wandSlot, builder.build());
 	}
 
-	private void openLootTablePreview(Player player, String tableId, Fill fill, int page) {
+	private void openLootTablePreview(Player player, String tableId, String fillMaterial, String fillName,
+	                                  int wandSlot, int page) {
+		ChestMenu menu = buildLootTablePreview(player, tableId, fillMaterial, fillName, wandSlot, page);
+		if (menu != null) menu.open(player);
+	}
+
+	private ChestMenu buildLootTablePreview(Player player, String tableId, String fillMaterial, String fillName,
+	                                        int wandSlot, int page) {
 		LootTable table = lootChestManager.getLootTable(tableId).orElse(null);
 		if (table == null) {
 			player.sendMessage(ChatUtil.color("&cLoot table '&e" + tableId + "&c' no longer exists."));
-			openLootTableSelection(player, fill);
-			return;
+			openLootTableSelection(player, fillMaterial, fillName, wandSlot);
+			return null;
 		}
-
-		List<LootItemReference> entries = table.getItemReferences();
-		int totalPages = Math.max(1, (int) Math.ceil(
-				entries.size() / (double) PREVIEW_ENTRIES_PER_PAGE));
-		int currentPage = Math.max(0, Math.min(page, totalPages - 1));
-
-		String           title     = "&6&lPreview: &e" + table.getDisplayName();
-		InventoryHandler inventory = new InventoryHandler(gangland, title, PREVIEW_SIZE, player);
 
 		ItemParser parser = lootChestManager.getItemParser();
 
-		int base = currentPage * PREVIEW_ENTRIES_PER_PAGE;
-		for (int i = 0; i < PREVIEW_ENTRIES_PER_PAGE; i++) {
-			int entryIndex = base + i;
-			if (entryIndex >= entries.size()) break;
+		List<PagedRegion.Entry> entries = table.getItemReferences().stream()
+				.map(entry -> new PagedRegion.Entry(buildPreviewDisplay(entry, parser).build()))
+				.toList();
 
-			LootItemReference entry   = entries.get(entryIndex);
-			ItemBuilder       display = buildPreviewDisplay(entry, parser);
+		PageConfig pageConfig  = PageConfig.forSize(PREVIEW_ROWS, PREVIEW_FIRST_ROW, PREVIEW_LAST_ROW,
+		                                            PREVIEW_FIRST_COL, PREVIEW_LAST_COL, entries.size());
+		int        currentPage = Math.max(0, Math.min(page, pageConfig.pageCount() - 1));
 
-			inventory.setItem(PREVIEW_INTERIOR_SLOTS[i], display, false, (p, inv, b) -> {
-			});
-		}
+		String title = "&6&lPreview: &e" + table.getDisplayName();
 
-		renderPreviewNavigation(player, fill, tableId, table, inventory, currentPage, totalPages);
+		ChestMenuBuilder builder = ChestMenu.builder(lootChestManager.getInventoryService())
+		                                    .title(title)
+		                                    .rows(PREVIEW_ROWS);
 
-		InventoryUtil.createBoarder(inventory, fill);
+		PagedRegion.render(builder, pageConfig, entries, currentPage);
 
-		player.openInventory(inventory.getInventory());
+		renderPreviewNavigation(builder, fillMaterial, fillName, wandSlot, tableId, table, currentPage,
+		                        pageConfig.pageCount());
+
+		builder.border(BorderComponent.of(materialOf(fillMaterial)).name(fillName));
+
+		return builder.build();
 	}
 
-	private void renderPreviewNavigation(Player player, Fill fill, String tableId, LootTable table,
-	                                     InventoryHandler inventory, int currentPage, int totalPages) {
-		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&eBack to loot tables");
-		inventory.setItem(PREVIEW_SLOT_BACK, back, false, (p, inv, b) -> {
-			openLootTableSelection(p, fill);
-		});
+	private void renderPreviewNavigation(ChestMenuBuilder builder, String fillMaterial, String fillName,
+	                                     int wandSlot, String tableId, LootTable table, int currentPage,
+	                                     int totalPages) {
+		var back = new ItemBuilder(Material.ARROW).setDisplayName("&eBack to loot tables");
+		builder.slot(PREVIEW_SLOT_BACK, ItemComponent.of(back).onAnyClick(ctx ->
+				openLootTableSelection(ctx.player(), fillMaterial, fillName, wandSlot)));
 
 		if (currentPage > 0) {
-			ItemBuilder prev = new ItemBuilder(Material.ARROW).setDisplayName("&e◄ Previous page")
-			                                                  .setLore("&7Go to page " + currentPage + ".");
-			inventory.setItem(PREVIEW_SLOT_PREV, prev, false, (p, inv, b) -> {
-				PREVIEW_PAGE_SOUND.playSound(p);
-				openLootTablePreview(p, tableId, fill, currentPage - 1);
-			});
+			var prev = new ItemBuilder(Material.ARROW).setDisplayName("&e◄ Previous page")
+			                                          .setLore("&7Go to page " + currentPage + ".");
+			builder.slot(PREVIEW_SLOT_PREV, ItemComponent.of(prev).onAnyClick(ctx -> {
+				ChestMenu fresh = buildLootTablePreview(ctx.player(), tableId, fillMaterial, fillName, wandSlot,
+				                                        currentPage - 1);
+				swapPreviewPage(ctx, fresh);
+			}));
 		}
 
-		ItemBuilder info = new ItemBuilder(Material.PAPER)
+		var info = new ItemBuilder(Material.PAPER)
 				.setDisplayName("&bPage &f" + (currentPage + 1) + "&7/&f" + totalPages)
 				.setLore("&7" + table.getItemReferences().size() + " item(s) total.");
-		inventory.setItem(PREVIEW_SLOT_PAGE_INFO, info, false, (p, inv, b) -> {
-		});
+		builder.slot(PREVIEW_SLOT_PAGE_INFO, ItemComponent.of(info));
 
 		if (currentPage < totalPages - 1) {
-			ItemBuilder next = new ItemBuilder(Material.ARROW).setDisplayName("&eNext page ►")
-			                                                  .setLore("&7Go to page " + (currentPage + 2) + ".");
-			inventory.setItem(PREVIEW_SLOT_NEXT, next, false, (p, inv, b) -> {
-				PREVIEW_PAGE_SOUND.playSound(p);
-				openLootTablePreview(p, tableId, fill, currentPage + 1);
-			});
+			var next = new ItemBuilder(Material.ARROW).setDisplayName("&eNext page ►")
+			                                          .setLore("&7Go to page " + (currentPage + 2) + ".");
+			builder.slot(PREVIEW_SLOT_NEXT, ItemComponent.of(next).onAnyClick(ctx -> {
+				ChestMenu fresh = buildLootTablePreview(ctx.player(), tableId, fillMaterial, fillName, wandSlot,
+				                                        currentPage + 1);
+				swapPreviewPage(ctx, fresh);
+			}));
 		}
+	}
+
+	/** Swaps the freshly-built page into the already-open menu in place (no close/reopen flicker) — same
+	 *  {@code ChestMenu#adoptComponentsFrom} pattern {@code SimplePagedMenu}/{@code InventoryBuilder} use for
+	 *  their own next/previous buttons. */
+	private static void swapPreviewPage(ClickContext ctx, ChestMenu fresh) {
+		if (fresh == null) return;
+		if (ctx.menu() instanceof ChestMenu current) current.adoptComponentsFrom(fresh);
+		PREVIEW_PAGE_SOUND.playSound(ctx.player());
 	}
 
 	private ItemBuilder buildPreviewDisplay(LootItemReference entry, ItemParser parser) {
@@ -520,8 +551,8 @@ public class LootChestWand {
 		return builder;
 	}
 
-	private void setWandNBT(Player player, String key, Object value) {
-		ItemStack heldItem = player.getInventory().getItemInMainHand();
+	private void setWandNBT(Player player, int wandSlot, String key, Object value) {
+		ItemStack heldItem = player.getInventory().getItem(wandSlot);
 		if (!LootChestWand.isLootChestWand(heldItem)) return;
 
 		NBT.modify(heldItem, nbt -> {
@@ -535,6 +566,10 @@ public class LootChestWand {
 				nbt.setBoolean(key, (Boolean) value);
 			}
 		});
+	}
+
+	private static Material materialOf(String name) {
+		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
 	}
 
 }

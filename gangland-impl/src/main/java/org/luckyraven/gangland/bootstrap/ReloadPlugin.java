@@ -3,7 +3,6 @@ package org.luckyraven.gangland.bootstrap;
 import lombok.CustomLog;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryLoader;
-import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.keystone.persistence.FileManager;
 
 /**
@@ -49,11 +48,12 @@ public final class ReloadPlugin {
 	}
 
 	/**
-	 * Inventory-only reload: removes all special inventories and re-initializes the inventory loader. Used by
-	 * {@code /glw reload inventory}.
+	 * Inventory-only reload: re-initializes the inventory loader. Used by {@code /glw reload inventory}. Used to
+	 * also clear the old {@code InventoryHandler}'s static {@code SPECIAL_INVENTORIES} map (CUT gate — that
+	 * registry leaked across reloads, docket-recorded fixed-by-WS2; {@code keystone-inventory}'s per-open
+	 * {@code ChestMenu} model has no equivalent singleton registry to clear).
 	 */
 	public void inventoryReload() {
-		InventoryHandler.removeAllSpecialInventories();
 		InventoryLoader inventoryLoader = context.get(InventoryLoader.class);
 		inventoryLoader.clear();
 		inventoryLoader.initialize();

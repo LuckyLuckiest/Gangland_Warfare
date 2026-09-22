@@ -13,7 +13,6 @@ import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.file.configuration.Settings;
-import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.lootchest.LootChestManager;
 import org.luckyraven.gangland.lootchest.LootChestWand;
 
@@ -34,7 +33,6 @@ public class LootChestWandListener implements Listener {
 		if (!LootChestWand.isLootChestWand(heldItem)) return;
 
 		Action action = event.getAction();
-		Fill   fill   = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
 
 		// Handle left click - open configuration menu
 		if (action == Action.LEFT_CLICK_BLOCK || action == Action.LEFT_CLICK_AIR) {
@@ -42,7 +40,7 @@ public class LootChestWandListener implements Listener {
 			LootChestWand wand = LootChestWand.getWand(heldItem, gangland, lootChestManager);
 
 			if (wand != null) {
-				wand.openConfigInventory(player, fill);
+				wand.openConfigInventory(player, "BLACK_STAINED_GLASS_PANE", " ");
 			}
 
 			return;
@@ -70,7 +68,7 @@ public class LootChestWandListener implements Listener {
 		}
 
 		boolean isAllowed = allowedBlocks.stream()
-				.anyMatch(allowed -> block.getType().name().toUpperCase().contains(allowed.toUpperCase()));
+				.anyMatch(allowed -> block.getType().name().equalsIgnoreCase(allowed));
 
 		if (!isAllowed) {
 			player.sendMessage(ChatUtil.color("&cThis block type is not allowed for loot chests!"));
@@ -86,7 +84,7 @@ public class LootChestWandListener implements Listener {
 		if (!LootChestWand.isConfigured(heldItem)) {
 			player.sendMessage(ChatUtil.color("&cYour wand is not configured yet!"));
 			player.sendMessage(ChatUtil.color("&7Opening configuration menu..."));
-			wand.openConfigInventory(player, fill);
+			wand.openConfigInventory(player, "BLACK_STAINED_GLASS_PANE", " ");
 			return;
 		}
 

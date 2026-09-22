@@ -295,9 +295,9 @@ public class GameplayConfig {
 
 	@Bean
 	public LootChestManager lootChestManager(HologramService hologramService, RepositoryRegistry repositoryRegistry,
-	                                         ItemParser itemParser) {
+	                                         ItemParser itemParser, InventoryService inventoryService) {
 		return new LootChestManager(gangland, Gangland.FULL_PREFIX, hologramService, repositoryRegistry, itemParser,
-		                            new GanglandLootChestMessages());
+		                            new GanglandLootChestMessages(), inventoryService);
 	}
 
 	@Bean

@@ -1,8 +1,10 @@
 package org.luckyraven.gangland.lootchest;
 
 import lombok.CustomLog;
+import lombok.Getter;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.timer.CountdownTimer;
 import org.luckyraven.gangland.database.repositories.lootchest.LootChestRepository;
 import org.luckyraven.keystone.exception.PluginException;
@@ -21,16 +23,23 @@ public class LootChestManager extends LootChestService implements BeanLifecycle 
 	private final Gangland           gangland;
 	private final RepositoryRegistry repositoryRegistry;
 
+	// Threaded through to LootChestWand's config/preview menus so they can call ChestMenu.builder(inventoryService)
+	// without their own constructor needing one (WS: gangland-ui/inventory-api → keystone-inventory migration).
+	@Getter
+	private final InventoryService inventoryService;
+
 	private CountdownTimer pendingStartupTimer;
 
 	public LootChestManager(Gangland gangland, String prefix, HologramService hologramService,
 	                        RepositoryRegistry repositoryRegistry,
 	                        ItemParser itemParser,
-	                        LootChestMessagesProvider messagesProvider) {
+	                        LootChestMessagesProvider messagesProvider,
+	                        InventoryService inventoryService) {
 		super(gangland, hologramService, prefix, itemParser, messagesProvider);
 
 		this.gangland           = gangland;
 		this.repositoryRegistry = repositoryRegistry;
+		this.inventoryService   = inventoryService;
 	}
 
 	public void initialize(LootChestRepository repository, boolean reload) {

@@ -4,10 +4,8 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gadget.car.Car;
 import org.luckyraven.gangland.gadget.car.CarManager;
-import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.sign.extension.SignViewProvider;
 import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.inventory.chest.ChestMenu;
@@ -68,11 +66,13 @@ public class CarSignViewProvider implements SignViewProvider {
 
 		ItemStack carItem = new ItemBuilder(car.buildItem(player)).setLore(lore).build();
 
-		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
-
+		// CUT gate: the shared settings.yml Inventory.Fill.* getters were deleted along with gangland-ui/inventory-api
+		// (a module cannot depend on gangland-impl, so these defaults are gadget's own literal copy of the values
+		// that block always shipped — see InventoryBuilder.DEFAULT_FILL_ITEM/NAME in gangland-impl for the same
+		// constants' impl-side home).
 		ChestMenuBuilder builder = ChestMenu.builder(inventoryService).title(title).rows(1);
 		builder.slot(SLOT_ITEM, ItemComponent.of(carItem));
-		builder.fill(FillComponent.of(materialOf(fill.material())).name(fill.name()));
+		builder.fill(FillComponent.of(materialOf("BLACK_STAINED_GLASS_PANE")).name(" "));
 
 		builder.build().open(player);
 	}

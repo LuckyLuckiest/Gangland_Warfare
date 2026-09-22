@@ -12,7 +12,6 @@ import org.luckyraven.keystone.inventory.component.BorderComponent;
 import org.luckyraven.keystone.inventory.component.ItemComponent;
 import org.luckyraven.keystone.inventory.page.PageConfig;
 import org.luckyraven.keystone.inventory.page.PagedRegion;
-import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.menu.part.ButtonTags;
 
 import java.util.List;
@@ -32,12 +31,13 @@ public final class SimplePagedMenu {
 
 	/** Builds and opens page 0 for {@code player}. */
 	public static void open(InventoryService inventoryService, Player player, List<ItemStack> items, String title,
-	                        Fill fill, ButtonTags buttonTags) {
-		build(inventoryService, player, items, title, fill, buttonTags, 0).open(player);
+	                        String fillMaterial, String fillName, ButtonTags buttonTags) {
+		build(inventoryService, player, items, title, fillMaterial, fillName, buttonTags, 0).open(player);
 	}
 
 	private static ChestMenu build(InventoryService inventoryService, Player player, List<ItemStack> items,
-	                               String title, Fill fill, ButtonTags buttonTags, int page) {
+	                               String title, String fillMaterial, String fillName, ButtonTags buttonTags,
+	                               int page) {
 		List<PagedRegion.Entry> entries = items.stream().map(PagedRegion.Entry::new).toList();
 
 		// Mirrors the old computeConfigForCreation(itemsCount, size=0, staticItemCount=0, staticItemsAllowed=false):
@@ -52,27 +52,29 @@ public final class SimplePagedMenu {
 		ChestMenuBuilder builder = ChestMenu.builder(inventoryService).title(pagedTitle).rows(rows);
 		PagedRegion.render(builder, pageConfig, entries, resolvedPage);
 
-		Material fillMaterial = XMaterial.matchXMaterial(fill.material()).map(XMaterial::get)
-		                                 .orElse(Material.BLACK_STAINED_GLASS_PANE);
-		builder.border(BorderComponent.of(fillMaterial).name(fill.name()));
+		Material resolvedFillMaterial = XMaterial.matchXMaterial(fillMaterial).map(XMaterial::get)
+		                                         .orElse(Material.BLACK_STAINED_GLASS_PANE);
+		builder.border(BorderComponent.of(resolvedFillMaterial).name(fillName));
 
 		int size = rows * 9;
 		if (resolvedPage < pageConfig.pageCount() - 1) {
 			String lore = String.format("&7(%d/%d)", resolvedPage + 2, pageConfig.pageCount());
 			builder.slot(size - 1, ItemComponent.of(InventoryBuilder.headItem("&a->", buttonTags.nextPage(), lore))
 			                                    .onLeftClick(ctx ->
-					swap(ctx, build(inventoryService, player, items, title, fill, buttonTags, resolvedPage + 1))));
+					swap(ctx, build(inventoryService, player, items, title, fillMaterial, fillName, buttonTags,
+					                resolvedPage + 1))));
 		}
 		if (resolvedPage > 0) {
 			// Home button at size-5 on every page after the first, matching the old MultiInventoryNavigation.
 			builder.slot(size - 5, ItemComponent.of(InventoryBuilder.headItem("&cBack to " + title,
 			                                                                 buttonTags.homePage()))
 			                                    .onLeftClick(ctx ->
-					swap(ctx, build(inventoryService, player, items, title, fill, buttonTags, 0))));
+					swap(ctx, build(inventoryService, player, items, title, fillMaterial, fillName, buttonTags, 0))));
 			String lore = String.format("&7(%d/%d)", resolvedPage, pageConfig.pageCount());
 			builder.slot(size - 9, ItemComponent.of(InventoryBuilder.headItem("&c<-", buttonTags.previousPage(), lore))
 			                                    .onLeftClick(ctx ->
-					swap(ctx, build(inventoryService, player, items, title, fill, buttonTags, resolvedPage - 1))));
+					swap(ctx, build(inventoryService, player, items, title, fillMaterial, fillName, buttonTags,
+					                resolvedPage - 1))));
 		}
 
 		return builder.build();

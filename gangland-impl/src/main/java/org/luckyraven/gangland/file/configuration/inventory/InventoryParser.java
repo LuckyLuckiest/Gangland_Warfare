@@ -70,11 +70,9 @@ final class InventoryParser {
 	static void configureMultiInventory(InventoryRuntimeContext runtimeContext, FileConfiguration config,
 	                                    ConfigurationSection information, InventoryData inventoryData) {
 		String itemSource = information.getString("Multi.Item_Source");
-		int    perPage    = information.getInt("Multi.Per_Page", 28);
 
 		inventoryData.setMultiInventory(true);
 		inventoryData.setItemSource(itemSource);
-		inventoryData.setPerPage(perPage);
 
 		configureItemTemplate(runtimeContext, information, inventoryData);
 

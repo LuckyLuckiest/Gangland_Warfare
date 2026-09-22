@@ -7,7 +7,6 @@ Information:
       Border: true
    Multi:
       Item_Source: "gang_allies"
-      Per_Page: 28
    Item_Template:
       Item: REDSTONE
       Name: "&b%ally_name%"

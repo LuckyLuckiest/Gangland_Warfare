@@ -120,5 +120,81 @@ once removed, the warning stops.
 - [`documentation/migration-0.9.2.md`](./migration-0.9.2.md) — the previous migration note (jetpack ownership,
   Bartizan going soft), unaffected by WS1.
 
-<!-- Later 0.10.0 gates (WS2 inventory-api → keystone-inventory, WS3 lootchest/hologram, WS5 gang module,
+## WS2 — the custom inventory/GUI framework is gone; every menu runs on Keystone's `keystone-inventory`
+
+`gangland-ui/inventory-api` (the `InventoryHandler`/`InventoryBuilder`/`MultiInventory`/`MultiPanelInventory`
+framework) has been deleted outright. Every menu — the 9 core YAML menus, trader/banker flows, shop admin views,
+turf/cops-n-crooks/gadget menus, the loot-chest admin wand preview — now builds on Keystone's `keystone-inventory`
+library, either directly or through `gangland-impl`'s own thin YAML dialect
+(`org.luckyraven.gangland.menu.*`, moved out of `inventory-api` at G3a). See
+[`documentation/developer/ui-framework.md`](./developer/ui-framework.md) for the architecture.
+
+### 1. Nothing to do for the 9 core YAML menus
+
+`gangland-impl/src/main/resources/inventory/*.yml` (`phone.yml`, `gang_info.yml`, `gang_stat.yml`,
+`user_stat.yml`, `alliance_stat.yml`, `phone_gang_search.yml`, `phone_banking.yml`, …) load through an
+**unchanged schema** — no key renames, no reformatting, no server-owner action. They render through
+`ChestMenuBuilder` now instead of the deleted `InventoryHandler`, but the YAML you already have keeps working
+byte-for-byte.
+
+### 2. One dead YAML key removed: `Configuration.Multi.Per_Page`
+
+`alliance_stat.yml`, `phone_gang_search.yml` and `user_stat.yml` each had a `Multi.Per_Page: 28` key
+(docket **T-43**). It was parsed but never actually read — even before this gate, and doubly so now that
+pagination runs on Keystone's `PageConfig`/`PagedRegion`, whose own arithmetic drives page size. The key has been
+removed from the 3 shipped files; if a server owner customized it in their own copy, the value is simply ignored
+(was already ignored before 0.10.0 too) and can be deleted with no behavior change.
+
+### 3. `settings.yml`'s `Inventory:` block is unchanged — still there, still read
+
+Unlike most of this wave's deletions, the `Inventory:` block (`Fill.Item/Name`, `Line.Item/Name`,
+`Multi_Inventory.{Next_Page,Previous_Page,Home_Page}` head textures) was **not** removed. It is still read by
+several already-shipped module views (trader/banker/turf/shop-admin fill colors) that never went through
+`inventory-api` in the first place. If you customized this block, your customization still applies to those
+views. The 9 core YAML menus and `SimplePagedMenu`'s 3 call sites (`/glw debug multi`, gang member/ally lists,
+the bounty sign view) no longer read it — they render with the same shipped defaults
+(`BLACK_STAINED_GLASS_PANE`/`WHITE_STAINED_GLASS_PANE`, both named `" "`) as literal constants instead, so nothing
+visibly changes there either way.
+
+### 4. `.claude/skills/panel-create/`
+
+If you use this Claude Code skill to scaffold new panels, it now generates Keystone's `Panel<S extends
+FlowState>`/`MenuFlow<S>` shape, not the deleted `org.luckyraven.gangland.inventory.flow.Panel<S extends
+FlowSession>`/`MultiPanelInventory<S>` shape. No action needed unless you have local, uncommitted panel scaffolds
+mid-generation from before this gate.
+
+### 5. Loot chests: the admin wand preview moved GUIs, the chest-opening view did not change shape
+
+The chest-opening view (what a player sees when they open a placed loot chest) was already a plain shared Bukkit
+inventory, not a menu — it stays that way, just on a small internal `SharedLootInventory` wrapper instead of the
+deleted `InventoryHandler`. Cooldown and persistence are unchanged. The admin **wand preview** screen (`/glw
+lootchest wand`, `/glw lootchest edit`) is a real menu and now renders through
+`ChestMenuBuilder`/`PagedRegion` — same paginated 28-slot grid, same Back/Prev/PageInfo/Next layout. Two
+longstanding bugs were fixed as a free side effect of that rewrite (both were already docket-tracked, P3):
+
+- **LS-30**: the wand used to write edits to whatever item was currently in the admin's main hand at click time,
+  not the item the wand's own GUI slot showed — a hotbar-slot switch mid-edit could silently misdirect or drop an
+  edit. Fixed: edits now always target the exact inventory slot the wand was in when the config screen opened.
+- **LS-31**: the "is this block type allowed for a loot chest" check used a substring match, so e.g. `CHEST`
+  wrongly matched `TRAPPED_CHEST`/`ENDER_CHEST`. Fixed: exact match against the configured allow-list.
+
+No server-owner action needed for either — both are pure bugfixes, no config shape change.
+
+**Deposit policy: loot chests are take-only, full stop.** The old (deleted) `InventoryHandler` framework never let
+a player deposit into a loot chest except onto the chest's own generated-loot slots, via a `draggableSlots`
+allowlist its click listener checked on every click/shift-click — and `LootChestSession` never marked an empty
+slot as draggable, so in practice nothing could ever be placed into a loot chest, full or empty. When the
+opening view moved onto the bare `SharedLootInventory` wrapper this gate introduced, that gate carried over no
+click guard at all, so a loot chest silently became placeable/shared storage until a later review caught it.
+Fixed: `SharedLootInventory` now implements `InventoryHolder` (identity, not title matching) and
+`LootChestListener` cancels every deposit-shaped click (`PLACE_ALL`/`PLACE_ONE`/`PLACE_SOME`/`SWAP_WITH_CURSOR`/
+`HOTBAR_SWAP`/`HOTBAR_MOVE_AND_READD` onto the chest, plus a shift-click `MOVE_TO_OTHER_INVENTORY` originating
+from the player's own inventory) and every drag that touches a chest slot, leaving every take path (`PICKUP_*`,
+`COLLECT_TO_CURSOR`, shift-click out of the chest) untouched. No deposit slot exists any more — not even onto
+generated loot. This is deliberate, not a missed case: a loot chest regenerates on cooldown/respawn, which would
+silently void anything a player had deposited into it, and a free deposit slot would make loot chests double as
+an unintended shared stash. Covered by
+`gangland-ui/lootchest-api/src/test/java/org/luckyraven/gangland/lootchest/listener/LootChestListenerTest.java`.
+
+<!-- Later 0.10.0 gates (WS3 lootchest module extraction / hologram → keystone-hologram, WS5 gang module,
      WS6 api facade) append their own sections here as they land. -->

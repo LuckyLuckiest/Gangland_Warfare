@@ -139,7 +139,7 @@ public class SignManager extends SignService {
 		// view
 		String   viewKey  = signPrefix + "view";
 		SignType viewType = new SignType(viewKey, "VIEW");
-		Sign view = new ViewSign(gangland, contributions, viewType);
+		Sign view = new ViewSign(gangland, contributions, viewType, container.getInstance(InventoryService.class));
 
 		formatRegistry.register(view.createFormat());
 

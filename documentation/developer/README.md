@@ -63,7 +63,6 @@ gangland_warfare/
 │   ├── gangland-weapon/        Weapon engine, projectiles, modifiers
 │   ╰── gangland-gadget/        Cars, jetpacks, fuel
 ├── gangland-ui/
-│   ├── inventory-api/          Custom inventory framework
 │   ├── sign-api/               Sign interaction system
 │   ├── lootchest-api/          Loot chest with cracking
 │   ╰── hologram-api/           Floating text displays

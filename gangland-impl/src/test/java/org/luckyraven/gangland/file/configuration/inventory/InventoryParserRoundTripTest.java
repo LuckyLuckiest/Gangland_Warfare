@@ -301,12 +301,11 @@ class InventoryParserRoundTripTest {
 		InventoryBuilder builder = definitionStore.getInventory(name);
 		assertNotNull(builder, name + " must be registered in the definition store");
 
-		var fill = new org.luckyraven.gangland.inventory.part.Fill(" ", "BLACK_STAINED_GLASS_PANE");
-		var line = new org.luckyraven.gangland.inventory.part.Fill(" ", "WHITE_STAINED_GLASS_PANE");
-
 		try (BukkitStatics ignored = installBukkit()) {
-			ChestMenu menu = builder.createMenu(inventoryService, plugin, placeholderOf(), player, fill,
-			                                    line, conditionEvaluatorOf(), opener);
+			ChestMenu menu = builder.createMenu(inventoryService, plugin, placeholderOf(), player,
+			                                    InventoryBuilder.DEFAULT_FILL_ITEM, InventoryBuilder.DEFAULT_FILL_NAME,
+			                                    InventoryBuilder.DEFAULT_LINE_ITEM, InventoryBuilder.DEFAULT_LINE_NAME,
+			                                    conditionEvaluatorOf(), opener);
 			open(menu, player);
 			withinBukkitScope.accept(menu);
 			return menu;
@@ -440,7 +439,6 @@ class InventoryParserRoundTripTest {
 		InventoryBuilder builder = definitionStore.getInventory("phone_gang_search");
 		assertNotNull(builder);
 
-		var fill       = new org.luckyraven.gangland.inventory.part.Fill(" ", "BLACK_STAINED_GLASS_PANE");
 		var buttonTags = new org.luckyraven.gangland.menu.part.ButtonTags("prev", "home", "next");
 
 		try (BukkitStatics ignored = installBukkit()) {
@@ -453,7 +451,8 @@ class InventoryParserRoundTripTest {
 			ItemSourceProvider provider = (p, source) -> java.util.List.of();
 
 			ChestMenu menu = builder.createPagedMenu(inventoryService, plugin, placeholderOf(), player,
-			                                         conditionEvaluatorOf(), fill, buttonTags, provider, opener, 0);
+			                                         conditionEvaluatorOf(), InventoryBuilder.DEFAULT_FILL_ITEM,
+			                                         InventoryBuilder.DEFAULT_FILL_NAME, buttonTags, provider, opener, 0);
 			open(menu, player);
 
 			// 54-slot region -> rows clamp to 6; static filter buttons at slots 9/18/19/27/28/36 per the YAML.
@@ -476,7 +475,6 @@ class InventoryParserRoundTripTest {
 		InventoryBuilder builder = definitionStore.getInventory("user_stat");
 		assertNotNull(builder);
 
-		var fill       = new org.luckyraven.gangland.inventory.part.Fill(" ", "BLACK_STAINED_GLASS_PANE");
 		var buttonTags = new org.luckyraven.gangland.menu.part.ButtonTags("prev", "home", "next");
 
 		try (BukkitStatics ignored = installBukkit()) {
@@ -485,7 +483,8 @@ class InventoryParserRoundTripTest {
 			ItemSourceProvider provider = (p, source) -> java.util.List.of();
 
 			ChestMenu menu = builder.createPagedMenu(inventoryService, plugin, placeholderOf(), player,
-			                                         conditionEvaluatorOf(), fill, buttonTags, provider, opener, 0);
+			                                         conditionEvaluatorOf(), InventoryBuilder.DEFAULT_FILL_ITEM,
+			                                         InventoryBuilder.DEFAULT_FILL_NAME, buttonTags, provider, opener, 0);
 			open(menu, player);
 
 			assertEquals(54, menu.bukkitInventory().getSize());
@@ -502,7 +501,6 @@ class InventoryParserRoundTripTest {
 		InventoryBuilder builder = definitionStore.getInventory("alliance_stat");
 		assertNotNull(builder);
 
-		var fill       = new org.luckyraven.gangland.inventory.part.Fill(" ", "BLACK_STAINED_GLASS_PANE");
 		var buttonTags = new org.luckyraven.gangland.menu.part.ButtonTags("prev", "home", "next");
 
 		try (BukkitStatics ignored = installBukkit()) {
@@ -511,7 +509,8 @@ class InventoryParserRoundTripTest {
 					entry("ally_total", "3"), entry("ally_created", "today"));
 
 			ChestMenu menu = builder.createPagedMenu(inventoryService, plugin, placeholderOf(), player,
-			                                         conditionEvaluatorOf(), fill, buttonTags, provider, opener, 0);
+			                                         conditionEvaluatorOf(), InventoryBuilder.DEFAULT_FILL_ITEM,
+			                                         InventoryBuilder.DEFAULT_FILL_NAME, buttonTags, provider, opener, 0);
 			open(menu, player);
 
 			assertTrue(menu.bukkitInventory().getSize() >= 27); // rows clamped to [3,6]
@@ -525,7 +524,6 @@ class InventoryParserRoundTripTest {
 		InventoryBuilder builder = definitionStore.getInventory("alliance_stat");
 		assertNotNull(builder);
 
-		var fill = new org.luckyraven.gangland.inventory.part.Fill(" ", "BLACK_STAINED_GLASS_PANE");
 		// Empty tags: InventoryBuilder.headItem's real texture threading (fix round 1, F1) calls
 		// ItemBuilder.customHead(tag), which needs com.mojang.authlib (XSkull) — the same real-server-only,
 		// classpath-absent dependency the paginated Item_Template tests already work around (empty entries).
@@ -546,7 +544,8 @@ class InventoryParserRoundTripTest {
 			ItemSourceProvider provider = (p, source) -> thirtyEntries;
 
 			ChestMenu page0 = builder.createPagedMenu(inventoryService, plugin, placeholderOf(), player,
-			                                          conditionEvaluatorOf(), fill, buttonTags, provider, opener, 0);
+			                                          conditionEvaluatorOf(), InventoryBuilder.DEFAULT_FILL_ITEM,
+			                                          InventoryBuilder.DEFAULT_FILL_NAME, buttonTags, provider, opener, 0);
 			open(page0, player);
 
 			assertEquals(54, page0.bukkitInventory().getSize());
@@ -565,7 +564,8 @@ class InventoryParserRoundTripTest {
 			            "no prev button on page 0 - still border fill");
 
 			ChestMenu page1 = builder.createPagedMenu(inventoryService, plugin, placeholderOf(), player,
-			                                          conditionEvaluatorOf(), fill, buttonTags, provider, opener, 1);
+			                                          conditionEvaluatorOf(), InventoryBuilder.DEFAULT_FILL_ITEM,
+			                                          InventoryBuilder.DEFAULT_FILL_NAME, buttonTags, provider, opener, 1);
 			open(page1, player);
 
 			// Last-page remainder: only the 29th entry (index 28) renders, in the region's first cell; the last

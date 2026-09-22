@@ -9,14 +9,12 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.inventory.registry.MenuOpener;
 import org.luckyraven.gangland.data.placeholder.PlaceholderService;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionStore;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryRuntimeContext;
 import org.luckyraven.gangland.menu.InventoryBuilder;
 import org.luckyraven.gangland.menu.OpenInventory;
 import org.luckyraven.gangland.menu.State;
 import org.luckyraven.gangland.menu.condition.ConditionEvaluator;
-import org.luckyraven.gangland.inventory.part.Fill;
 
 import java.util.List;
 import java.util.Set;
@@ -91,13 +89,12 @@ public class InventoryOpenByCommandListener implements Listener {
 			if (openInventory.permission() != null && !player.hasPermission(openInventory.permission())) break;
 
 			try {
-				Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
-				Fill line = new Fill(Settings.getInventoryLineName(), Settings.getInventoryLineItem());
-
 				// Create the opener callback
 				MenuOpener opener = runtimeContext::openInventoryForPlayer;
 
-				var menu = builder.createMenu(inventoryService, gangland, placeholderService, player, fill, line,
+				var menu = builder.createMenu(inventoryService, gangland, placeholderService, player,
+				                              InventoryBuilder.DEFAULT_FILL_ITEM, InventoryBuilder.DEFAULT_FILL_NAME,
+				                              InventoryBuilder.DEFAULT_LINE_ITEM, InventoryBuilder.DEFAULT_LINE_NAME,
 				                              conditionEvaluator, opener);
 
 				menu.open(player);

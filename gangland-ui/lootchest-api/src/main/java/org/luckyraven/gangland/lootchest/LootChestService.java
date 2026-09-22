@@ -3,7 +3,6 @@ package org.luckyraven.gangland.lootchest;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -11,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.gangland.hologram.HologramService;
-import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.gangland.lootchest.config.LootChestConfig;
 import org.luckyraven.gangland.lootchest.config.LootChestMessagesProvider;
@@ -49,7 +47,7 @@ public abstract class LootChestService {
 	private final Map<String, LootTier>            tiers;
 	private final Map<UUID, CrackingSession>       crackingSessions;
 	private final Map<UUID, Set<LootChestSession>> activeSessionsByChest;
-	private final Map<UUID, InventoryHandler>      sharedChestInventories;
+	private final Map<UUID, SharedLootInventory>   sharedChestInventories;
 
 	@Getter
 	private final HologramService      hologramService;
@@ -550,9 +548,9 @@ public abstract class LootChestService {
 		UUID chestId = chestData.getId();
 
 		// Check if there's already a shared inventory for this chest
-		InventoryHandler inventory = sharedChestInventories.get(chestId);
-		List<ItemStack>  items;
-		boolean          isShared  = false;
+		SharedLootInventory inventory = sharedChestInventories.get(chestId);
+		List<ItemStack>     items;
+		boolean             isShared  = false;
 
 		if (inventory != null) {
 			// Reuse existing shared inventory - another player has it open
@@ -571,9 +569,8 @@ public abstract class LootChestService {
 			}
 
 			// Create new shared inventory
-			String        title = chestData.getDisplayName();
-			NamespacedKey key   = new NamespacedKey(plugin, "loot_chest_" + chestId.toString());
-			inventory = new InventoryHandler(title, chestData.getInventorySize(), key, player.getUniqueId());
+			String title = chestData.getDisplayName();
+			inventory = new SharedLootInventory(title, chestData.getInventorySize());
 			sharedChestInventories.put(chestId, inventory);
 		}
 

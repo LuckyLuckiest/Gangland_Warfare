@@ -143,7 +143,6 @@ Bartizan type. Six runtime modules ship alongside it and can be dropped or added
 | `gangland-turf` (runtime module)       | Turf capture, contribution, garrison gameplay, and turf-NPC powerups         |
 | `gangland-gadget` (runtime module)     | Cars (`/glw car`) and jetpacks                                               |
 | `gangland-mail` (runtime module)       | Mail, gang invites, and alliance requests                                    |
-| `inventory-api`                        | Custom inventory and GUI framework                                           |
 | `sign-api`                             | Sign interaction system                                                      |
 | `lootchest-api`                        | Loot chest system with hologram support                                      |
 | `gangland-build`                       | Shade assembly — produces the final deployable JAR                           |

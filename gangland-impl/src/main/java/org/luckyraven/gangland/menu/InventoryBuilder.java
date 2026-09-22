@@ -32,7 +32,6 @@ import org.luckyraven.gangland.menu.condition.ConditionalSlotData;
 import org.luckyraven.gangland.menu.multi.ItemSourceEntry;
 import org.luckyraven.gangland.menu.multi.ItemSourceProvider;
 import org.luckyraven.gangland.menu.part.ButtonTags;
-import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.menu.part.ConditionalSlotResult;
 import org.luckyraven.gangland.menu.part.Slot;
 
@@ -59,6 +58,17 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 	private static final String HEAD_TAG  = "head";
 	private static final String DATA_TAG  = "data";
 
+	/**
+	 * Replaces the deleted {@code settings.yml} {@code Inventory:} block (CUT gate — the block and its
+	 * {@code Settings} getters were deleted outright, per the plan, rather than migrated). These are the exact
+	 * default values that block always shipped, so every menu renders identically to before; the block's
+	 * configurability is what's lost (never observed to be customized away from these defaults in this repo).
+	 */
+	public static final String DEFAULT_FILL_ITEM = "BLACK_STAINED_GLASS_PANE";
+	public static final String DEFAULT_FILL_NAME = " ";
+	public static final String DEFAULT_LINE_ITEM = "WHITE_STAINED_GLASS_PANE";
+	public static final String DEFAULT_LINE_NAME = " ";
+
 	/** Matches the old {@code MultiInventoryNavigation.buttonClickSound}'s {@code XSound.BLOCK_WOODEN_BUTTON_CLICK_ON},
 	 *  routed through Keystone's {@link SoundEffect} instead of a raw {@code XSound}/{@code Sound} call.
 	 *  Package-visible: reused by {@link SimplePagedMenu}'s own next/previous/home buttons. */
@@ -72,7 +82,8 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 	 * already-occupied slots.
 	 */
 	public ChestMenu createMenu(InventoryService inventoryService, JavaPlugin plugin, Placeholder placeholder,
-	                            Player player, Fill fill, Fill line, ConditionEvaluator evaluator, MenuOpener opener) {
+	                            Player player, String fillMaterial, String fillName, String lineMaterial,
+	                            String lineName, ConditionEvaluator evaluator, MenuOpener opener) {
 		String title = placeholder.convert(player, inventoryData.getDisplayName());
 		int    rows  = Math.max(1, Math.min(6, inventoryData.getSize() / 9));
 
@@ -111,7 +122,7 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 			builder.slot(slot.getSlot(), component);
 		}
 
-		applyDecoration(builder, fill, line);
+		applyDecoration(builder, fillMaterial, fillName, lineMaterial, lineName);
 
 		return builder.build();
 	}
@@ -124,8 +135,9 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 	 * {@link ChestMenu#adoptComponentsFrom} — an in-place render, no close/reopen flicker.
 	 */
 	public ChestMenu createPagedMenu(InventoryService inventoryService, JavaPlugin plugin, Placeholder placeholder,
-	                                 Player player, ConditionEvaluator evaluator, Fill fill, ButtonTags buttonTags,
-	                                 ItemSourceProvider itemSourceProvider, MenuOpener opener, int page) {
+	                                 Player player, ConditionEvaluator evaluator, String fillMaterial, String fillName,
+	                                 ButtonTags buttonTags, ItemSourceProvider itemSourceProvider, MenuOpener opener,
+	                                 int page) {
 		Map<Integer, Slot> staticItems = inventoryData.getStaticItems();
 		boolean             hasStatic  = staticItems != null && !staticItems.isEmpty();
 
@@ -178,26 +190,27 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 			}
 			// Visual separator between the static-items column and the paged entries, matching the old
 			// InventoryUtil.verticalLine(multi, fill, 2, true) call (1-indexed column 2 = 0-indexed column 1).
-			builder.line(LineComponent.vertical(1, materialOf(fill.material())).name(fill.name()));
+			builder.line(LineComponent.vertical(1, materialOf(fillMaterial)).name(fillName));
 		}
 
 		PagedRegion.render(builder, pageConfig, entries, resolvedPage);
 
-		addNavigationButtons(builder, inventoryService, plugin, placeholder, player, evaluator, fill, buttonTags,
-		                     itemSourceProvider, opener, rows, resolvedPage, pageConfig.pageCount());
+		addNavigationButtons(builder, inventoryService, plugin, placeholder, player, evaluator, fillMaterial, fillName,
+		                     buttonTags, itemSourceProvider, opener, rows, resolvedPage, pageConfig.pageCount());
 
 		// The old MultiInventoryCreation.dynamicMultiInventory always called InventoryUtil.createBoarder(multi,
 		// fill) unconditionally — the paged path never consulted Configuration.Fill/Border at all, unlike the
 		// single-menu path below (applyDecoration). Keep that: phone_gang_search.yml (Fill: true, Border: false)
 		// must still render with a border only, not a fully filled grid.
-		builder.border(BorderComponent.of(materialOf(fill.material())).name(fill.name()));
+		builder.border(BorderComponent.of(materialOf(fillMaterial)).name(fillName));
 
 		return builder.build();
 	}
 
 	private void addNavigationButtons(ChestMenuBuilder builder, InventoryService inventoryService, JavaPlugin plugin,
-	                                  Placeholder placeholder, Player player, ConditionEvaluator evaluator, Fill fill,
-	                                  ButtonTags buttonTags, ItemSourceProvider itemSourceProvider, MenuOpener opener,
+	                                  Placeholder placeholder, Player player, ConditionEvaluator evaluator,
+	                                  String fillMaterial, String fillName, ButtonTags buttonTags,
+	                                  ItemSourceProvider itemSourceProvider, MenuOpener opener,
 	                                  int rows, int page, int pageCount) {
 		int size = rows * 9;
 
@@ -206,8 +219,8 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 			String lore = String.format("&7(%d/%d)", page + 2, pageCount);
 			builder.slot(size - 1, ItemComponent.of(headItem("&a->", buttonTags.nextPage(), lore))
 			                                    .onLeftClick(ctx -> {
-				var fresh = createPagedMenu(inventoryService, plugin, placeholder, player, evaluator, fill,
-				                            buttonTags, itemSourceProvider, opener, page + 1);
+				var fresh = createPagedMenu(inventoryService, plugin, placeholder, player, evaluator, fillMaterial,
+				                            fillName, buttonTags, itemSourceProvider, opener, page + 1);
 				swapInPlace(ctx, fresh);
 			}));
 		}
@@ -217,8 +230,8 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 			                                                                                   inventoryData.getDisplayName()),
 			                                                 buttonTags.homePage()))
 			                                    .onLeftClick(ctx -> {
-				var fresh = createPagedMenu(inventoryService, plugin, placeholder, player, evaluator, fill,
-				                            buttonTags, itemSourceProvider, opener, 0);
+				var fresh = createPagedMenu(inventoryService, plugin, placeholder, player, evaluator, fillMaterial,
+				                            fillName, buttonTags, itemSourceProvider, opener, 0);
 				swapInPlace(ctx, fresh);
 			}));
 			// Old addPreviousPageItem's lore: the page it's going BACK to, 1-indexed (== page, since page here is
@@ -226,8 +239,8 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 			String lore = String.format("&7(%d/%d)", page, pageCount);
 			builder.slot(size - 9, ItemComponent.of(headItem("&c<-", buttonTags.previousPage(), lore))
 			                                    .onLeftClick(ctx -> {
-				var fresh = createPagedMenu(inventoryService, plugin, placeholder, player, evaluator, fill,
-				                            buttonTags, itemSourceProvider, opener, page - 1);
+				var fresh = createPagedMenu(inventoryService, plugin, placeholder, player, evaluator, fillMaterial,
+				                            fillName, buttonTags, itemSourceProvider, opener, page - 1);
 				swapInPlace(ctx, fresh);
 			}));
 		}
@@ -240,8 +253,17 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 		NAV_CLICK_SOUND.playSound(ctx.player());
 	}
 
-	/** Package-visible: reused by {@link SimplePagedMenu}'s own next/previous/home buttons. */
-	static ItemStack headItem(String name, String base64Texture, String... lore) {
+	/** Ports the old {@code InventoryHandler.factorOfNine}: rounds a requested slot count up to the next multiple
+	 *  of 9 (the deleted class's own inventory-size rounding rule). Public: reused by
+	 *  {@code InventoryRuntimeContext} and any other CUT-gate caller that used to reach the static helper on the
+	 *  now-deleted {@code InventoryHandler}. */
+	public static int factorOfNine(int value) {
+		return (int) Math.ceil((double) value / 9) * 9;
+	}
+
+	/** Public: reused by {@link SimplePagedMenu}'s own next/previous/home buttons and by other CUT-gate consumers
+	 *  outside this package (e.g. {@code LootChestWand}'s admin preview) that need the same head-item shape. */
+	public static ItemStack headItem(String name, String base64Texture, String... lore) {
 		ItemBuilder item = new ItemBuilder(Material.PLAYER_HEAD).setDisplayName(name);
 		if (lore.length > 0) item.setLore(lore);
 		item.customHead(base64Texture);
@@ -322,23 +344,24 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 		return result;
 	}
 
-	private void applyDecoration(ChestMenuBuilder builder, Fill fill, Fill line) {
+	private void applyDecoration(ChestMenuBuilder builder, String fillMaterial, String fillName, String lineMaterial,
+	                             String lineName) {
 		List<Integer> verticalLine   = inventoryData.getVerticalLine();
 		List<Integer> horizontalLine = inventoryData.getHorizontalLine();
 
 		if (verticalLine != null) {
 			// YAML columns are 1-indexed (old InventoryUtil.verticalLine convention); Keystone's LineComponent is
 			// 0-indexed.
-			for (int l : verticalLine) builder.line(LineComponent.vertical(l - 1, materialOf(line.material())).name(line.name()));
+			for (int l : verticalLine) builder.line(LineComponent.vertical(l - 1, materialOf(lineMaterial)).name(lineName));
 		}
 		if (horizontalLine != null) {
-			for (int l : horizontalLine) builder.line(LineComponent.horizontal(l - 1, materialOf(line.material())).name(line.name()));
+			for (int l : horizontalLine) builder.line(LineComponent.horizontal(l - 1, materialOf(lineMaterial)).name(lineName));
 		}
 
 		if (inventoryData.isBorder()) {
-			builder.border(BorderComponent.of(materialOf(fill.material())).name(fill.name()));
+			builder.border(BorderComponent.of(materialOf(fillMaterial)).name(fillName));
 		} else if (inventoryData.isFill()) {
-			builder.fill(FillComponent.of(materialOf(fill.material())).name(fill.name()));
+			builder.fill(FillComponent.of(materialOf(fillMaterial)).name(fillName));
 		}
 	}
 

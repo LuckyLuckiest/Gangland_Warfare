@@ -15,7 +15,7 @@ import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.inventory.part.Fill;
+import org.luckyraven.gangland.menu.InventoryBuilder;
 import org.luckyraven.gangland.menu.SimplePagedMenu;
 import org.luckyraven.gangland.menu.part.ButtonTags;
 import org.luckyraven.gangland.sign.model.ParsedSign;
@@ -112,10 +112,8 @@ public class BountyAspect implements SignAspect {
 			generateData(user, type, heads, "&cOFFLINE");
 		}
 
-		Fill       fill       = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
-		ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
-		                                       Settings.getNextPage());
-		SimplePagedMenu.open(inventoryService, player, heads, "&c&lBounties", fill, buttonTags);
+		SimplePagedMenu.open(inventoryService, player, heads, "&c&lBounties", InventoryBuilder.DEFAULT_FILL_ITEM,
+		                     InventoryBuilder.DEFAULT_FILL_NAME, ButtonTags.DEFAULT);
 	}
 
 	private void generateData(User<? extends OfflinePlayer> user, Material type, List<ItemStack> heads, String status) {

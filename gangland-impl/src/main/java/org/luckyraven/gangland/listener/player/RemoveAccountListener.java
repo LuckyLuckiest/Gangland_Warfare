@@ -17,7 +17,6 @@ import org.luckyraven.gangland.gang.bounty.Bounty;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
 import org.luckyraven.gangland.gang.wanted.Wanted;
-import org.luckyraven.gangland.inventory.service.InventoryRegistry;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
 @ListenerHandler(priority = ListenerPriority.LOW)
@@ -27,18 +26,15 @@ public final class RemoveAccountListener implements Listener {
 	private final GanglandDatabase           ganglandDatabase;
 	private final UserManager<Player>        userManager;
 	private final UserManager<OfflinePlayer> offlineUserManager;
-	private final InventoryRegistry          inventoryRegistry;
 
 	public RemoveAccountListener(Gangland gangland,
 	                             GanglandDatabase ganglandDatabase,
 	                             @Qualifier("online") UserManager<Player> userManager,
-	                             @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
-	                             InventoryRegistry inventoryRegistry) {
+	                             @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager) {
 		this.gangland                = gangland;
 		this.ganglandDatabase        = ganglandDatabase;
 		this.userManager             = userManager;
 		this.offlineUserManager      = offlineUserManager;
-		this.inventoryRegistry       = inventoryRegistry;
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST)
@@ -50,13 +46,10 @@ public final class RemoveAccountListener implements Listener {
 		if (user == null) return;
 
 		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
-			// Remove all the legacy InventoryHandler entries this player registered (WS2 G2: severed off User,
-			// goes through the registry bean directly) — still needed for the not-yet-migrated module/legacy
-			// InventoryHandler views (WS2 G4/G5). The 9 core YAML menus themselves no longer register here at
-			// all: since WS2 G3 they open through keystone-inventory's InventoryService, whose own
-			// MenuListener.onQuit returns any held items and untracks the player automatically.
-			inventoryRegistry.clear(user.getUuid());
-
+			// CUT gate: the legacy InventoryHandler/InventoryRegistry clear() call that used to run here is gone —
+			// every menu now opens through keystone-inventory's InventoryService, whose own MenuListener.onQuit
+			// already returns any held items and untracks the player automatically (docket-recorded fixed-by-WS2:
+			// the static InventoryRegistry registry leaked across reloads, this call site was its last consumer).
 			user.getWanted().stopTimer();
 			user.getBounty().stopTimer();
 		});

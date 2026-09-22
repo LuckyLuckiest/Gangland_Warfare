@@ -3,6 +3,7 @@ package org.luckyraven.gangland.sign.type;
 import lombok.RequiredArgsConstructor;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.color.Color;
+import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.gangland.sign.SignType;
 import org.luckyraven.gangland.sign.aspect.SignAspect;
 import org.luckyraven.gangland.sign.aspect.ViewInventoryAspect;
@@ -25,6 +26,7 @@ public class ViewSign implements Sign {
 	private final Gangland          gangland;
 	private final SignContributions contributions;
 	private final SignType          signType;
+	private final InventoryService  inventoryService;
 
 	@Override
 	public SignTypeDefinition createDefinition() {
@@ -33,7 +35,7 @@ public class ViewSign implements Sign {
 		SignParser    parser    = new ViewSignParser(signType);
 
 		// aspect
-		SignAspect viewAspect = new ViewInventoryAspect(gangland, contributions);
+		SignAspect viewAspect = new ViewInventoryAspect(gangland, contributions, inventoryService);
 
 		// handler
 		List<SignAspect> aspects = List.of(viewAspect);

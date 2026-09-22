@@ -37,7 +37,7 @@ Debug:
    # Master toggle. When false the Modules list is ignored.
    Enabled: false
    # Module names to flip to DEBUG level. Exact match (including spaces). Valid values:
-   #   Gangland, Gangland Core, Cops N Crooks, Inventory API,
+   #   Gangland, Gangland Core, Cops N Crooks,
    #   Lootchest API, Sign API, Plugin Persistence
    # Leave the list empty to automatically flip every module discovered on the classpath.
    Modules: []
@@ -133,6 +133,16 @@ Database:
 # +------------------+ #
 # | Inventory Config | #
 # +------------------+ #
+# NOT deleted at the WS2 CUT gate (deviation from the plan's §5/§4 text — see CUT-report.md): grepped every
+# Settings.getInventoryFillItem/Name/LineItem/LineName/NextPage/PreviousPage/HomePage() caller across the whole
+# reactor before touching this block and found it still load-bearing for many already-shipped G4/G5/WS4 files
+# that never imported org.luckyraven.gangland.inventory.* in the first place (BankerSettingsImpl/TraderSettingsImpl
+# in npc-shops, TurfModuleConfig, GanglandShopUiSettings + ShopAdminView in gangland-impl, every Banker/Trader
+# view's own settings.getInventoryFillItem()/getInventoryFillName() delegation) — none of those are in the CUT
+# gate's 22-file `org.luckyraven.gangland.inventory.*` grep scope, so deleting this block now would break the
+# build well outside this gate's boundary. The 22 files this gate actually touched use their own local default
+# constants instead (InventoryBuilder.DEFAULT_FILL_ITEM/NAME/LINE_ITEM/NAME, ButtonTags.DEFAULT, CarSignViewProvider's
+# own literals) and no longer read this block, but it stays live for everyone who still does.
 Inventory:
    # Inventory fill item and its name
    Fill:

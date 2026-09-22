@@ -13,10 +13,8 @@ import org.luckyraven.keystone.util.Pair;
 import org.luckyraven.keystone.util.Placeholder;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.data.placeholder.PlaceholderService;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.inventory.InventoryHandler;
 import org.luckyraven.gangland.menu.InventoryBuilder;
 import org.luckyraven.gangland.menu.InventoryData;
 import org.luckyraven.gangland.menu.OpenInventory;
@@ -24,7 +22,6 @@ import org.luckyraven.gangland.menu.State;
 import org.luckyraven.gangland.menu.condition.ConditionEvaluator;
 import org.luckyraven.gangland.menu.multi.ItemSourceProvider;
 import org.luckyraven.gangland.menu.part.ButtonTags;
-import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.menu.part.Slot;
 import org.luckyraven.gangland.menu.unique.UniqueItemHandler;
 import org.luckyraven.keystone.item.ItemParser;
@@ -167,7 +164,7 @@ public class InventoryRuntimeContext {
 		List<Slot> slots        = new ArrayList<>();
 		var        slotsSection = config.getConfigurationSection("Slots");
 		if (slotsSection != null) {
-			InventoryParser.configureSlots(this, InventoryHandler.factorOfNine(size), slotsSection.getName(), config,
+			InventoryParser.configureSlots(this, InventoryBuilder.factorOfNine(size), slotsSection.getName(), config,
 			                               slots);
 		}
 
@@ -244,20 +241,18 @@ public class InventoryRuntimeContext {
 			return;
 		}
 
-		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
-		Fill line = new Fill(Settings.getInventoryLineName(), Settings.getInventoryLineItem());
-
 		MenuOpener  opener      = this::openInventoryForPlayer;
 		Placeholder placeholder = placeholderService;
 
 		if (invBuilder.inventoryData().isMultiInventory()) {
-			ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
-			                                       Settings.getNextPage());
 			var menu = invBuilder.createPagedMenu(inventoryService, gangland, placeholder, player, conditionEvaluator,
-			                                      fill, buttonTags, itemSourceProvider, opener, 0);
+			                                      InventoryBuilder.DEFAULT_FILL_ITEM, InventoryBuilder.DEFAULT_FILL_NAME,
+			                                      ButtonTags.DEFAULT, itemSourceProvider, opener, 0);
 			menu.open(player);
 		} else {
-			var menu = invBuilder.createMenu(inventoryService, gangland, placeholder, player, fill, line,
+			var menu = invBuilder.createMenu(inventoryService, gangland, placeholder, player,
+			                                 InventoryBuilder.DEFAULT_FILL_ITEM, InventoryBuilder.DEFAULT_FILL_NAME,
+			                                 InventoryBuilder.DEFAULT_LINE_ITEM, InventoryBuilder.DEFAULT_LINE_NAME,
 			                                 conditionEvaluator, opener);
 			menu.open(player);
 		}

@@ -5,7 +5,6 @@ import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -42,16 +41,15 @@ import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.gang.user.User;
 import org.luckyraven.gangland.gang.user.UserManager;
-import org.luckyraven.gangland.inventory.InventoryHandler;
-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
+import org.luckyraven.gangland.menu.InventoryBuilder;
 import org.luckyraven.gangland.menu.SimplePagedMenu;
 import org.luckyraven.gangland.menu.part.ButtonTags;
-import org.luckyraven.gangland.inventory.part.Fill;
 import org.luckyraven.gangland.menu.villager.VillagerInventory;
 import org.luckyraven.gangland.menu.villager.VillagerInventoryRegistry;
 import org.luckyraven.gangland.menu.villager.VillagerTrade;
 import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.inventory.Menu;
+import org.luckyraven.keystone.inventory.flow.MenuFlow;
 
 import java.util.*;
 
@@ -158,10 +156,6 @@ public final class DebugCommand extends Command {
 
 		// all-inventory name space key data
 		Argument inventoriesData = getInventoriesData();
-
-		Argument specialInventories = getSpecialInventories();
-
-		inventoriesData.addSubArgument(specialInventories);
 
 		Argument checkPerm = getCheckPerm();
 
@@ -307,11 +301,9 @@ public final class DebugCommand extends Command {
 				items.addAll(swords.stream().map(ItemStack::new).toList());
 
 				String title = "&6&lDebug items";
-				Fill   fill  = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
 
-				ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
-				                                       Settings.getNextPage());
-				SimplePagedMenu.open(inventoryService, player, items, title, fill, buttonTags);
+				SimplePagedMenu.open(inventoryService, player, items, title, InventoryBuilder.DEFAULT_FILL_ITEM,
+				                     InventoryBuilder.DEFAULT_FILL_NAME, ButtonTags.DEFAULT);
 			} else {
 				sender.sendMessage("How will you see the inventory?");
 			}
@@ -351,13 +343,13 @@ public final class DebugCommand extends Command {
 				return;
 			}
 
-			VillagerDebugPanel         panel   = new VillagerDebugPanel(this::openDebugVillager);
-			VillagerDebugPanel.Session session = new VillagerDebugPanel.Session();
+			VillagerDebugPanel panel = new VillagerDebugPanel(this::openDebugVillager);
 
-			MultiPanelInventory<VillagerDebugPanel.Session> host =
-					new MultiPanelInventory<>(getPlugin(), player, session);
-			host.register("main", panel);
-			host.openAt("main");
+			MenuFlow<VillagerDebugPanel.Session> flow =
+					MenuFlow.builder(inventoryService, getPlugin(), player, new VillagerDebugPanel.Session())
+					        .panel("main", panel)
+					        .build();
+			flow.openAt("main");
 		});
 	}
 
@@ -478,14 +470,6 @@ public final class DebugCommand extends Command {
 					                  + (menu == null ? "none" : menu.getClass().getSimpleName()));
 				}
 			}
-		});
-	}
-
-	private @NotNull Argument getSpecialInventories() {
-		return new Argument(getPlugin(), "special", getArgumentTree(), (argument, sender, args) -> {
-			String[] array = InventoryHandler.getSpecialInventories().keySet()
-					.stream().map(NamespacedKey::getKey).toArray(String[]::new);
-			sender.sendMessage(array);
 		});
 	}
 

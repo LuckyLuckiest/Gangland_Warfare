@@ -1,9 +1,7 @@
 package org.luckyraven.gangland.menu.filter;
 
 import org.bukkit.entity.Player;
-import org.luckyraven.keystone.item.ItemBuilder;
-import org.luckyraven.keystone.util.TriConsumer;
-import org.luckyraven.gangland.inventory.InventoryHandler;
+import org.luckyraven.keystone.inventory.click.ClickHandler;
 
 import java.util.List;
 import java.util.function.BiConsumer;
@@ -23,8 +21,9 @@ public final class SearchButtonFactory {
 		this.registry = registry;
 	}
 
-	public TriConsumer<Player, InventoryHandler, ItemBuilder> sortClick(String bindingId, Consumer<Player> reopen) {
-		return (player, inv, b) -> {
+	public ClickHandler sortClick(String bindingId, Consumer<Player> reopen) {
+		return ctx -> {
+			Player player = ctx.player();
 			FilterBinding binding = registry.get(bindingId);
 			if (binding == null) return;
 			SearchFilter current = store.get(bindingId, player);
@@ -34,8 +33,9 @@ public final class SearchButtonFactory {
 		};
 	}
 
-	public TriConsumer<Player, InventoryHandler, ItemBuilder> clearClick(String bindingId, Consumer<Player> reopen) {
-		return (player, inv, b) -> {
+	public ClickHandler clearClick(String bindingId, Consumer<Player> reopen) {
+		return ctx -> {
+			Player player = ctx.player();
 			FilterBinding binding = registry.get(bindingId);
 			if (binding == null) return;
 			store.set(bindingId, player, binding.empty());
@@ -62,10 +62,11 @@ public final class SearchButtonFactory {
 	 * Cycles an enum-valued field through the provided option list; after the last option the field is cleared so the
 	 * player can escape the filter.
 	 */
-	public TriConsumer<Player, InventoryHandler, ItemBuilder> cycleEnumClick(String bindingId, FilterField field,
-	                                                                         List<String> values,
-	                                                                         Consumer<Player> reopen) {
-		return (player, inv, b) -> {
+	public ClickHandler cycleEnumClick(String bindingId, FilterField field,
+	                                   List<String> values,
+	                                   Consumer<Player> reopen) {
+		return ctx -> {
+			Player player = ctx.player();
 			SearchFilter current  = store.get(bindingId, player);
 			FilterValue  existing = current.get(field);
 			int          idx      = -1;

@@ -55,10 +55,6 @@
         </dependency>
         <dependency>
             <groupId>org.luckyraven</groupId>
-            <artifactId>inventory-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.luckyraven</groupId>
             <artifactId>keystone-inventory</artifactId>
         </dependency>
         <dependency>
@@ -83,6 +79,15 @@
         <dependency>
             <groupId>org.luckyraven</groupId>
             <artifactId>keystone-command</artifactId>
+        </dependency>
+        <!-- CUT gate: this module's QuantitySelectorView/BankerAmountView/BankerCreateAccountView/
+             BankerRenameAccountView (anvil-prompt panels) and BankerEditNameCommand/TraderEditNameCommand used
+             net.wesjd:anvilgui directly but only ever picked it up transitively through inventory-api's own
+             compile-scope dependency on it — now that inventory-api is deleted, this module needs its own direct
+             declaration (version comes from the root dependencyManagement, matching gangland-impl's own entry). -->
+        <dependency>
+            <groupId>net.wesjd</groupId>
+            <artifactId>anvilgui</artifactId>
         </dependency>
 
         <!-- Citizens dependency: TraderNpc/BankerNpc hold a raw Citizens NPC directly (not AbstractNpc

@@ -9,7 +9,6 @@ Information:
       Border: false
    Multi:
       Item_Source: "gangs"
-      Per_Page: 28
    Item_Template:
       Item:
          Type: PLAYER_HEAD
