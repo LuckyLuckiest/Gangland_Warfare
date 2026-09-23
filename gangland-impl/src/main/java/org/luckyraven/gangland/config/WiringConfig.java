@@ -5,8 +5,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.ServicePriority;
 import org.luckyraven.gangland.Gangland;
+import org.luckyraven.gangland.GanglandApi;
+import org.luckyraven.gangland.GanglandApiImpl;
 import org.luckyraven.gangland.command.CommandManager;
+import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.data.economy.BankTiers;
+import org.luckyraven.gangland.data.gang.GangMembership;
+import org.luckyraven.gangland.data.teleportation.WaypointLookupContract;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.keystone.module.ModuleLoader;
@@ -108,5 +113,23 @@ public class WiringConfig {
 		      .register(PlaceholderProvider.class, placeholder.asProvider(), gangland, ServicePriority.Normal);
 		log.info("Placeholder provider published for external consumers (e.g. Plaque)");
 		return placeholder;
+	}
+
+	/**
+	 * WS6 G1: publishes {@link GanglandApiImpl} as a {@link GanglandApi} service on the {@code ServicesManager} —
+	 * same publication idiom as {@link #ganglandPlaceholder} just above (construct, register, log, return). The
+	 * only consumer is an external plugin (no runtime module resolves the facade this way — modules already have
+	 * constructor injection); it must resolve fresh on every call, never cache the reference, exactly like
+	 * Bartizan's own facade documents, since Gangland may disable, reload or not be installed at all.
+	 * {@code Gangland.onDisable()}'s {@code getServicesManager().unregisterAll(this)} (already the first statement,
+	 * added for {@link #ganglandPlaceholder} — WS1) covers this registration too; nothing further to add there.
+	 */
+	@Bean
+	public GanglandApiImpl ganglandApi(UserLookupContract users, GangMembership gangs,
+	                                   WaypointLookupContract waypoints, BankTiers bankTiers) {
+		GanglandApiImpl api = new GanglandApiImpl(users, gangs, waypoints, bankTiers);
+		Bukkit.getServicesManager().register(GanglandApi.class, api, gangland, ServicePriority.Normal);
+		log.info("GanglandApi facade published for external consumers");
+		return api;
 	}
 }

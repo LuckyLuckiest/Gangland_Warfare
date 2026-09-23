@@ -277,6 +277,47 @@ contribution paths (`/glw debug weapon`, `/glw item wearable`, both gone), and t
 `UniqueItemRefresher` — all removed along with `WeaponModuleConfig`. None of these interfaces exist in the 0.9.0
 tree; do not reintroduce them for a new module without re-reading whether `ItemVocabulary` already covers the need.
 
+Contributions and a holder added by **WS5** (the gang domain becoming the `gangland-gang` runtime module,
+0.10.0):
+
+- **`PlaceholderContribution`** (`org.luckyraven.gangland.data.placeholder.extension`, gangland-api) —
+  `@Nullable String resolve(OfflinePlayer player, String parameter)`. The core cannot name a module type, so
+  `gang_*` and the member-touching `user_has-gang`/`user_gang-id`/`user_rank` placeholder family are answered by
+  the gang module's own contribution bean instead; `GanglandPlaceholder` queries every registered contribution
+  once its own built-in prefixes (user/bank/unique-item) have missed. Modelled on `CommandContribution`.
+- **`GangItemSourceContribution`** (`org.luckyraven.gangland.data.gang`, gangland-api) —
+  `boolean supports(String source)` / `List<Map<String, String>> entries(Player player, String source)`. Dynamic
+  item-source rows (e.g. `gang_members`) a YAML menu references; `GameplayConfig.inventoryRuntimeContext`'s
+  `ItemSourceProvider` delegates here instead of naming `Gang`/`Member`/`GangManager` directly (W54 F1, replacing
+  the deleted `GangItemSourceProvider`). Rows are `Map<String, String>`, not the impl-only `ItemSourceEntry`
+  record, so the module never imports `menu.multi.*`.
+- **`GangMembership`** (`org.luckyraven.gangland.data.gang`, gangland-api) — the core-owned "is/which gang" fact
+  Holder (R9): `int gangIdOf(UUID)`, `boolean gangsAllied(int, int)` (strict, never same-gang — pinned so cops'
+  turf friendly-fire keeps its semantics), the derived `boolean alliedOrSame(UUID, UUID)`, `Optional<String>
+  nameOf(int)`, `boolean isInstalled()`. Sibling of `BankTiers`: always a core bean (`IdentityContractConfig
+  .gangMembership()`, zero-arg), inert (every query answers its documented absent-default) until the gang
+  module's `GangMembershipInstaller` calls `install(...)` from its `@PostConstruct`. Lets `gadget`, `civilians`
+  and `cops-n-crooks` read gang facts without ever declaring `Depends: [gang]` — replaces the earlier
+  `MembershipLookupContract` sketch (one holder instead of a narrower per-module contract).
+
+Mechanism added by **WS6 G3** (module-owned Messages/Settings migration, civilians worked example, 0.10.0):
+
+- **`LocalizedModuleYaml`** (`org.luckyraven.gangland.file.configuration`, gangland-api, abstract class, not an
+  interface — there is only ever one implementation per module, so a "Contributions"/"Holder" shape doesn't fit)
+  — the shared base a module's own message/config YAML reader extends: `<baseName>_es.yml` is picked over
+  `<baseName>.yml` when `Settings.getLanguagePicked()` is `"es"` and the localized file is registered, falling
+  back to English otherwise; every read formats through `GanglandChatUtil`. `CivilianMessages` (civilians) is its
+  first consumer; `GanglandLootChestMessages` (lootchest) and `JetpackMessages`/`GrappleMessages` (gadget) predate
+  it and still carry their own copy of the identical logic — migrating them onto this base is a follow-up.
+
+Facade added by **WS6 G1** (0.10.0) — not a module-facing seam, listed here for completeness since it lives
+beside the seams above in `gangland-api`:
+
+- **`GanglandApi`** (`org.luckyraven.gangland`, gangland-api) — an interface now (was a constants-only
+  `final class`), published on Bukkit's `ServicesManager` by `WiringConfig.ganglandApi(...)` for an **external
+  plugin** to resolve (never cached); a runtime module still uses constructor injection, unaffected by this
+  facade. Full detail: [`documentation/gangland-api.md`](./gangland-api.md).
+
 Later flips append their own holders/contributions as new rows in this section rather than starting a new one.
 
 ## Faults you will see in the console

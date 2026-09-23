@@ -384,4 +384,23 @@ As with every other block this family of warnings covers, a customised civilian 
 `message_en.yml`/`message_es.yml` is **not** auto-migrated — copy it into the new
 `npc/civilian_messages.yml`/`npc/civilian_messages_es.yml` by hand.
 
-<!-- Later 0.10.0 gates (WS5 gang module, WS6's remaining G1/G2/G4 gates) append their own sections here as they land. -->
+## WS6 G1/G2/G4 — the `GanglandApi` facade (for module/external-plugin authors, not server owners)
+
+No server-owner action needed for this section — it changes what a plugin author can compile against, not
+anything in `settings.yml`, `commands.json` or a data folder.
+
+`GanglandApi` is an `interface` now (was a constants-only `final class`); every existing static-constant read
+(`GanglandApi.VERSION`/`.FULL_PREFIX`/`.SHORT_PREFIX`, 31 call sites across 25 files, reactor-wide) compiles
+unchanged. It gains four accessors — `users()`, `gangs()` (the core-owned `GangMembership` holder, never `null`,
+inert until the `gangland-gang` module installs a view — **no `ranks()`**, that type lives inside the gang
+module, not this api), `waypoints()`, `bankTiers()` — published on Bukkit's `ServicesManager` by
+`WiringConfig.ganglandApi(...)` for an **external plugin** to resolve fresh on every call (never cached), exactly
+Bartizan's own facade pattern. A runtime **module** is unaffected — it still uses constructor injection, not this
+facade. Full detail, the service table and the api-contract additions list: `documentation/gangland-api.md`.
+
+The events census was also corrected: `gangland-api`'s `events/` package holds `TeleportEvent`,
+`UserLevelUpEvent` (both public api) and `UserDataInitEvent` (physically colocated, explicitly **not** public
+api — an internal bootstrap-timing event). No gang/wanted/bounty event was promoted into this api; those moved
+into the `gangland-gang` module with the rest of `gang.*` (WS5).
+
+<!-- Later 0.10.0 gates append their own sections here as they land. -->
