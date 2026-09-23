@@ -67,26 +67,40 @@ The command system dispatches all player commands through a single `/glw` root c
 | `data/CommandInformation.java`         | Metadata DTO for a command (name, description, usage, permission).                               |
 | `data/InformationManager.java`         | Loads command metadata from `commands.json` resource file.                                       |
 
-**Sub-Command Groups (16 groups + 8 standalone):**
+**Sub-Command Groups still in `gangland-impl`:**
 
-| Group            | Commands                                                                                                                                                                                                                                                                                                                                      | Description                                                         |
-|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
-| `sub/bank/`      | `BankCommand`, `BankBalanceCommand`, `BankCreateCommand`, `BankDeleteCommand`, `BankDepositCommand`, `BankWithdrawCommand`                                                                                                                                                                                                                    | Player bank account management.                                     |
-| `sub/bounty/`    | `BountyCommand`, `BountyClearCommand`, `BountySetCommand`                                                                                                                                                                                                                                                                                     | Bounty placement and clearing on players.                           |
-| `sub/car/`       | `CarCommand`, `CarGiveCommand`, `CarInfoCommand`, `CarListCommand`                                                                                                                                                                                                                                                                            | Vehicle spawning and management.                                    |
-| `sub/civilians/` | `CivilianCommand`, `CivilianGroupsCommand`, `CivilianListCommand`, `CivilianSpawnCommand`, `CivilianSpawnerCommand`, `CivilianSpawnerInfoCommand`, `CivilianSpawnerListCommand`, `CivilianSpawnerRemoveCommand`, `CivilianSpawnerSetCommand`, `CivilianSpawnerSetGroupCommand`, `CivilianSpawnerTeleportCommand`, `CivilianSpawnGroupCommand` | Civilian NPC spawner administration.                                |
-| `sub/cops/`      | `CopCommand`, `CopListCommand`, `CopSpawnerCommand`, `CopSpawnerInfoCommand`, `CopSpawnerListCommand`, `CopSpawnerRemoveCommand`, `CopSpawnerSetCommand`, `CopSpawnerTeleportCommand`                                                                                                                                                         | Cop NPC spawner administration.                                     |
-| `sub/cuff/`      | `CuffCommand`, `UncuffCommand`                                                                                                                                                                                                                                                                                                                | Handcuff/uncuff players as a cop.                                   |
-| `sub/debug/`     | Debug commands                                                                                                                                                                                                                                                                                                                                | Developer diagnostics and testing utilities.                        |
-| `sub/fuel/`      | Fuel commands                                                                                                                                                                                                                                                                                                                                 | Fuel management for vehicles and jetpacks.                          |
-| `sub/gang/`      | Gang commands                                                                                                                                                                                                                                                                                                                                 | Gang creation, invitation, kicking, promotion, alliance management. |
-| `sub/item/`      | Item commands                                                                                                                                                                                                                                                                                                                                 | Custom item giving and manipulation.                                |
-| `sub/jail/`      | Jail commands                                                                                                                                                                                                                                                                                                                                 | Jail location setup and prisoner management.                        |
-| `sub/lootchest/` | Loot chest commands                                                                                                                                                                                                                                                                                                                           | Loot chest placement and configuration.                             |
-| `sub/rank/`      | Rank commands                                                                                                                                                                                                                                                                                                                                 | Rank creation, permission assignment, hierarchy management.         |
-| `sub/wanted/`    | Wanted commands                                                                                                                                                                                                                                                                                                                               | Wanted level manipulation for players.                              |
-| `sub/waypoint/`  | Waypoint commands                                                                                                                                                                                                                                                                                                                             | Teleportation waypoint creation and management.                     |
-| `sub/weapon/`    | Weapon commands                                                                                                                                                                                                                                                                                                                               | Weapon giving and configuration.                                    |
+Several groups that used to live here moved into runtime modules as those features were split out (see the
+"Moved to a runtime module" table below) or, for weapons, left the repo entirely in 0.9.0. What remains under
+`gangland-impl`'s `command/sub/` (car/civilians/cops/cuff/jail/lootchest/gang/rank/weapon removed from this table
+— see below):
+
+| Group            | Commands                                                                                                                    | Description                                                         |
+|------------------|-------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| `sub/bank/`      | `BankCommand`, `BankBalanceCommand`, `BankCreateCommand`, `BankDeleteCommand`, `BankDepositCommand`, `BankWithdrawCommand`    | Player bank account management.                                     |
+| `sub/bounty/`    | `BountyCommand`, `BountyClearCommand`, `BountySetCommand`                                                                     | Bounty placement and clearing on players.                           |
+| `sub/debug/`     | Debug commands                                                                                                                | Developer diagnostics and testing utilities.                        |
+| `sub/fuel/`      | `FuelCommand`, `FuelAddCommand`, `FuelDefuelCommand`, `FuelInfoCommand`, `FuelRefuelCommand`, `FuelRemoveCommand`             | Fuel management for vehicles and jetpacks (still core-owned — not moved). |
+| `sub/item/`      | Item commands                                                                                                                 | Custom item giving and manipulation.                                |
+| `sub/wanted/`    | Wanted commands                                                                                                               | Wanted level manipulation for players.                              |
+| `sub/waypoint/`  | Waypoint commands                                                                                                              | Teleportation waypoint creation and management.                     |
+
+**Command groups moved to a runtime module** (still reachable under `/glw`, wired via each module's
+`CommandContribution` bean + its own `commands.json` — see "Module API contract" in the root `CLAUDE.md`):
+
+| Group (was `gangland-impl/command/sub/...`) | Owning module           | Package now                                              | Description                            |
+|----------------------------------------------|--------------------------|-----------------------------------------------------------|-----------------------------------------|
+| `sub/car/`                                    | `gangland-gadget`        | `org.luckyraven.gangland.gadget.command`                  | Vehicle spawning and management.        |
+| `sub/civilians/`                              | `gangland-civilians`     | `org.luckyraven.gangland.civilians.command`(`.spawner`)   | Civilian NPC spawner administration.    |
+| `sub/cops/`                                   | `cops-n-crooks`          | `org.luckyraven.gangland.copsncrooks.command.cops`(`.spawner`) | Cop NPC spawner administration.    |
+| `sub/cuff/`                                   | `cops-n-crooks`          | `org.luckyraven.gangland.copsncrooks.command.cuff`         | Handcuff/uncuff players as a cop.       |
+| `sub/jail/`                                   | `cops-n-crooks`          | `org.luckyraven.gangland.copsncrooks.command.jail`         | Jail location setup and prisoner management. |
+| `sub/lootchest/`                              | `gangland-lootchest`     | `org.luckyraven.gangland.lootchest.command`                | Loot chest placement and configuration. |
+| `sub/gang/`                                   | `gangland-gang` (WS5, 0.10.0) | `org.luckyraven.gangland.command.sub.gang`            | Gang creation, invitation, kicking, promotion, alliance management. |
+| `sub/rank/`                                   | `gangland-gang` (WS5, 0.10.0) | `org.luckyraven.gangland.command.sub.rank`            | Rank creation, permission assignment, hierarchy management. |
+
+**`sub/weapon/` — deleted, not moved.** Weapons left the Gangland repo entirely in 0.9.0 to the standalone sibling
+plugin Bartizan; there is no `/glw weapon` command in this repo any more (see the Keystone/Bartizan section of the
+root `CLAUDE.md`).
 
 **Standalone Commands:**
 
@@ -130,38 +144,42 @@ Concrete database connection and all repository/table implementations.
 | `GanglandDatabase.java`         | Wraps HikariCP. Supports MySQL and SQLite, selected via `Settings`. Manages connection pooling and table creation. |
 | `GanglandDatabaseSettings.java` | Implements `DatabaseSettingsProvider` contract from `plugin-persistence`, pulling values from `Settings`.          |
 
-**Repositories (`database/repositories/`):**
+**Repositories (`database/repositories/`) still in `gangland-impl`:**
 
 All repositories implement `AbstractRepository<T>` from `plugin-persistence` and are annotated with `@Repository` for
-auto-discovery.
+auto-discovery. `car/`, `copsncrooks/`, `gang/`, `lootchest/`, `rank/` and `weapon/` are gone from this package —
+see the table below.
 
-| Subpackage     | Repository                                                                                    | Entity Type                                      |
-|----------------|-----------------------------------------------------------------------------------------------|--------------------------------------------------|
-| `car/`         | `ParkedCarRepository`                                                                         | `ParkedCar`                                      |
-| `copsncrooks/` | `CivilianSpawnerRepository`, `CopSpawnerRepository`, `DetainmentRepository`, `JailRepository` | Spawner points, detained players, jail locations |
-| `gang/`        | `GangRepository`, `GangAllianceRepository`                                                    | `Gang`, `GangAlliance`                           |
-| `lootchest/`   | `LootChestRepository`                                                                         | `LootChestData`                                  |
-| `player/`      | `UserRepository`, `MemberRepository`, `BankRepository`                                        | `User`, `Member`, `Bank`                         |
-| `plugin/`      | `PluginDataRepository`, `PermissionRepository`                                                | `PluginData`, `Permission`                       |
-| `rank/`        | `RankRepository`, `RankParentRepository`, `RankPermissionRepository`                          | `Rank`, `RankParent`, `RankPermission`           |
-| `waypoint/`    | `WaypointRepository`                                                                          | `Waypoint`                                       |
-| `weapon/`      | `WeaponRepository`                                                                            | `Weapon`                                         |
+| Subpackage     | Repository                                       | Entity Type                |
+|----------------|---------------------------------------------------|------------------------------|
+| `player/`      | `UserRepository`, `BankRepository`                | `User`, `Bank`              |
+| `plugin/`      | `PluginDataRepository`, `PermissionRepository`    | `PluginData`, `Permission`  |
+| `waypoint/`    | `WaypointRepository`                              | `Waypoint`                  |
 
-**Tables (`database/tables/`):**
+**Repositories moved to a runtime module, or deleted:**
 
-Each table class extends `Table<T>` and defines the SQL schema, search criteria, and column mappings.
+| Was `database/repositories/...`                                            | Now                                                                                                  |
+|-------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------|
+| `car/ParkedCarRepository`                                                    | `gangland-gadget`, `org.luckyraven.gangland.gadget.database.ParkedCarRepository`                        |
+| `copsncrooks/CivilianSpawnerRepository`                                     | `gangland-civilians`, `org.luckyraven.gangland.civilians.database.CivilianSpawnerRepository`            |
+| `copsncrooks/{CopSpawnerRepository, DetainmentRepository, JailRepository}` | `cops-n-crooks`, `org.luckyraven.gangland.copsncrooks.database.*`                                       |
+| `gang/{GangRepository, GangAllianceRepository}`, `player/MemberRepository` | `gangland-gang` (WS5, 0.10.0), `org.luckyraven.gangland.gang.database.repositories.{gang,member}.*`     |
+| `lootchest/LootChestRepository`                                              | `gangland-lootchest`, `org.luckyraven.gangland.lootchest.database.LootChestRepository`                  |
+| `rank/{RankRepository, RankParentRepository, RankPermissionRepository}`    | `gangland-gang` (WS5, 0.10.0), `org.luckyraven.gangland.gang.database.repositories.rank.*`              |
+| `weapon/WeaponRepository`                                                    | deleted — weapon persistence left the repo entirely in 0.9.0 with Bartizan                              |
 
-| Subpackage     | Tables                                                                    |
-|----------------|---------------------------------------------------------------------------|
-| `car/`         | `ParkedCarTable`                                                          |
-| `copsncrooks/` | `CivilianSpawnerTable`, `CopSpawnerTable`, `DetainmentTable`, `JailTable` |
-| `gang/`        | `GangTable`, `GangAllianceTable`                                          |
-| `lootchest/`   | `LootChestTable`                                                          |
-| `player/`      | `UserTable`, `MemberTable`, `BankTable`                                   |
-| `plugin/`      | `PluginDataTable`, `PermissionTable`                                      |
-| `rank/`        | `RankTable`, `RankParentTable`, `RankPermissionTable`                     |
-| `waypoint/`    | `WaypointTable`                                                           |
-| `weapon/`      | `WeaponTable`                                                             |
+**Tables (`database/tables/`) still in `gangland-impl`:**
+
+Each table class extends `Table<T>` and defines the SQL schema, search criteria, and column mappings. The same
+`car/`, `copsncrooks/`, `gang/`, `lootchest/`, `rank/`, `weapon/` subpackages moved or were deleted alongside their
+repositories above.
+
+| Subpackage     | Tables                              |
+|----------------|----------------------------------------|
+| `fk/`          | `ForeignGangTable`                     |
+| `player/`      | `UserTable`, `BankTable`               |
+| `plugin/`      | `PluginDataTable`, `PermissionTable`   |
+| `waypoint/`    | `WaypointTable`                        |
 
 ### Package: `listener/`
 
@@ -170,20 +188,27 @@ Event listeners registered via `ListenerManager` and the DI container.
 | Subpackage   | Listeners                                                                                                                                                                                                                                       | Description                                                                                                                                                             |
 |--------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `listener/`  | `ListenerManager.java`                                                                                                                                                                                                                          | Scans packages for `@ListenerHandler`-annotated classes and registers them via `DependencyContainer`.                                                                   |
-| `gang/`      | `GangMembersDamage.java`                                                                                                                                                                                                                        | Prevents friendly fire between gang members and allies.                                                                                                                 |
 | `inventory/` | `InventoryOpenByCommand.java`, `LoadUniqueItem.java`, `UniqueItemInteract.java`, `UniqueItemInventoryRestrict.java`                                                                                                                             | Handles unique item loading on join/respawn, interaction events, and inventory restrictions.                                                                            |
-| `loot/`      | `LootChestEarnGoods.java`, `LootChestWandHandler.java`                                                                                                                                                                                          | Loot chest interaction rewards and admin wand tool.                                                                                                                     |
-| `npc/`       | `CivilianDeathRewardListener.java`                                                                                                                                                                                                              | Grants XP/money rewards when civilians are killed.                                                                                                                      |
 | `player/`    | `CreateAccount.java`, `RemoveAccount.java`, `CustomPlayerDeath.java`, `PlayerDeath.java`, `EntityDamage.java`, `BountyIncrease.java`, `LevelUp.java`, `LoadResourcePack.java`, `WantedChange.java`, `WantedLevel.java` | Core player lifecycle: account creation/removal on join/quit, death handling, damage processing, bounty/wanted/level events, resource pack loading. |
+
+`gang/`, `loot/` and `npc/` are gone from this package (moved to a module, renamed in the
+process, not just relocated):
+
+| Was `listener/...`                     | Now                                                                                                  |
+|-------------------------------------------|-----------------------------------------------------------------------------------------------------|
+| `gang/GangMembersDamage.java`          | `gangland-gang`, `org.luckyraven.gangland.listener.gang.GangMembersDamageListener`                  |
+| `loot/LootChestEarnGoods.java`         | `gangland-lootchest`, `org.luckyraven.gangland.lootchest.listener.LootChestEarnGoodsListener`       |
+| `loot/LootChestWandHandler.java`       | `gangland-lootchest`, `org.luckyraven.gangland.lootchest.listener.LootChestWandListener`            |
+| `npc/CivilianDeathRewardListener.java` | `gangland-civilians`, `org.luckyraven.gangland.civilians.listener.npc.CivilianDeathRewardListener`  |
 
 ### Package: `events/`
 
-Custom Bukkit events fired by the plugin for inter-system communication.
+Custom Bukkit events fired by the plugin for inter-system communication. `gang/GangBountyEvent.java` and
+`gang/GangLevelUpEvent.java` moved to the `gangland-gang` module (WS5, 0.10.0) —
+`org.luckyraven.gangland.events.gang.*` there, package name unchanged, jar changed.
 
 | Event                              | Description                                                   |
 |------------------------------------|---------------------------------------------------------------|
-| `gang/GangBountyEvent.java`        | Fired when a gang collectively earns bounty.                  |
-| `gang/GangLevelUpEvent.java`       | Fired when a gang levels up.                                  |
 | `level/LevelUpEvent.java`          | Base level-up event.                                          |
 | `teleportation/TeleportEvent.java` | Fired when a player uses a waypoint.                          |
 | `user/UserBountyEvent.java`        | Fired when a player's bounty changes.                         |
@@ -210,104 +235,123 @@ Configuration loading and contract implementations.
 | `configuration/Settings.java`                                        | Static accessor for `settings.yml` values (database type, auto-save interval, economy, etc.).   |
 | `configuration/Messages.java`                                        | Static accessor for localized message strings.                                                  |
 | `configuration/GadgetPhysicsConfigImpl.java`                         | Implements `GadgetPhysicsConfig` for the gadget module.                                         |
-| `configuration/copsncrooks/GanglandBountySettings.java`              | Implements `BountySettings` contract.                                                           |
-| `configuration/copsncrooks/GanglandCivilianSettings.java`            | Implements `CivilianSettings` contract.                                                         |
-| `configuration/copsncrooks/GanglandCivilianSpawnConfigProvider.java` | Implements `SpawnConfigProvider` for civilian spawners.                                         |
-| `configuration/copsncrooks/GanglandCopSettings.java`                 | Implements `CopSettings` contract.                                                              |
-| `configuration/copsncrooks/GanglandWantedSettings.java`              | Implements `WantedSettings` contract.                                                           |
+| `configuration/wanted/GanglandBountySettings.java`                   | Implements `BountySettings` contract. (Moved from `configuration/copsncrooks/` to `configuration/wanted/` — bounty/wanted stayed core-owned.) |
+| `configuration/wanted/GanglandWantedSettings.java`                   | Implements `WantedSettings` contract. (Same move as above.)                                     |
 | `configuration/inventory/ConditionalSlotParser.java`                 | Parses conditional slot definitions from inventory YAML.                                        |
 | `configuration/inventory/InventoryDefinitionStore.java`              | Pure-data half of the former `InventoryAddon`: holds inventory and unique-item lookup maps.     |
 | `configuration/inventory/InventoryRuntimeContext.java`               | Runtime half of the former `InventoryAddon`: service refs, registration + open-inventory logic. |
 | `configuration/inventory/InventoryLoader.java`                       | Loads inventory layout definitions from YAML files.                                             |
-| `configuration/inventory/InventoryParser.java`                       | Parses inventory YAML into `InventoryHandler` instances.                                        |
-| `configuration/inventory/itemsource/GangItemSourceProvider.java`     | Provides gang-specific items for paginated inventory GUIs.                                      |
-| `configuration/lootchest/GanglandLootChestMessages.java`             | Implements `LootChestMessagesProvider` contract.                                                |
-| `configuration/lootchest/LootChestSettings.java`                     | Implements `LootChestSettingsProvider` contract.                                                |
-| `configuration/weapon/WeaponLoader.java`                             | Loads weapon definitions from per-weapon YAML files in `weapon/`.                               |
+| `configuration/inventory/InventoryParser.java`                       | Parses inventory YAML into a Keystone `ChestMenu` (via `InventoryBuilder`/`ChestMenuBuilder`, not the deleted `InventoryHandler` — see `documentation/developer/ui-framework.md`). |
+
+**Moved to a runtime module, or deleted:**
+
+| Was `file/configuration/...`                                            | Now                                                                                                    |
+|------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|
+| `copsncrooks/GanglandCivilianSettings.java`, `copsncrooks/GanglandCivilianSpawnConfigProvider.java` | `gangland-civilians`, `org.luckyraven.gangland.civilians.integration.*`         |
+| `copsncrooks/GanglandCopSettings.java`                                       | `cops-n-crooks`, `org.luckyraven.gangland.copsncrooks.integration.config.GanglandCopSettings`          |
+| `inventory/itemsource/GangItemSourceProvider.java`                          | `gangland-gang` (WS5, 0.10.0), renamed to `org.luckyraven.gangland.gang.menu.GangMenuItemSourceContribution` |
+| `lootchest/GanglandLootChestMessages.java`, `lootchest/LootChestSettings.java` | `gangland-lootchest` (WS3 G2, 0.10.0), `org.luckyraven.gangland.lootchest.config.*`                  |
+| `weapon/WeaponLoader.java`                                                   | deleted — weapon config loading left the repo entirely in 0.9.0 with Bartizan                          |
 
 ### Package: `item/`
 
-Item conversion and parsing implementations.
+Item conversion and parsing implementations. `converter/CarConverter.java` and `converter/WeaponConverter.java`
+named car/weapon domains directly - car moved, weapon was deleted:
 
 | Class                                | Description                                                          |
-|--------------------------------------|----------------------------------------------------------------------|
+|----------------------------------------|--------------------------------------------------------------------|
 | `ItemAttributes.java`                | Constants for custom item NBT attribute keys.                        |
 | `ItemConverterRegistry.java`         | Holds all `ItemConverter` implementations keyed by type string.      |
-| `ItemParser.java`                    | Parses item strings (e.g. `weapon:awp{attr=val}`) via the registry.  |
+| `ItemParser.java`                    | Parses item strings (e.g. `MATERIAL_NAME{attr=val}`) via the registry. |
 | `configuration/UniqueItemAddon.java` | Loads unique item definitions from `unique_items.yml`.               |
 | `converter/AmmunitionConverter.java` | Converts `"ammo:ak47"` format strings to ammunition `ItemStack`.     |
-| `converter/CarConverter.java`        | Converts `"car:sports_car"` format strings to car spawn items.       |
 | `converter/MaterialConverter.java`   | Converts standard `"MATERIAL_NAME"` strings to vanilla `ItemStack`.  |
-| `converter/WeaponConverter.java`     | Converts `"weapon:rifle"` format strings to weapon `ItemStack`.      |
 | `converter/WearableConverter.java`   | Converts `"wearable:kevlar"` format strings to wearable `ItemStack`. |
+
+> **Note:** this whole `item/` listing predates the 0.9.0 `keystone-item` promotion and is independently stale -
+> `ItemConverterRegistry.java`/`ItemParser.java` no longer exist under this package (the generic item framework
+> moved into Keystone's `keystone-item`); out of scope for this pass, which only touches the car/weapon rows.
+> `converter/CarConverter.java` moved to `gangland-gadget`
+> (`org.luckyraven.gangland.gadget.item.CarConverter`); `converter/WeaponConverter.java` was deleted - weapon
+> items left the repo entirely in 0.9.0 with Bartizan.
 
 ### Package: `sign/`
 
-Concrete sign type implementations for the sign-api framework.
+Concrete sign type implementations for the sign-api framework. The whole ammo/car/weapon/wearable trade-sign
+family (all four `type/trade/*` subpackages below) left this package with the Bartizan split (0.9.0) except car,
+which moved on to `gangland-gadget` rather than being deleted:
 
-| Subpackage             | Key Classes                                                                                                                        | Description                                                                                                     |
-|------------------------|------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
-| Root                   | `SignManager.java`, `GanglandSignInformation.java`                                                                                 | Registers all sign types and provides sign metadata.                                                            |
-| `aspect/`              | `BountyAspect`, `MoneyAspect`, `ItemTransferAspect`, `ViewInventoryAspect`, `WantedAspect`                                         | Composable sign behaviors: bounty check, money transfer, item trading, inventory viewing, wanted level display. |
-| `model/`               | `BountyParsedSign`, `ViewParsedSign`, `WantedParsedSign`, `WeaponParsedSign`                                                       | Parsed sign data models extending `BaseParsedSign`.                                                             |
-| `parser/`              | `BountyParser`, `TradeSignParser`, `ViewSignParser`, `WantedParser`                                                                | Sign text parsers extending `AbstractSignParser`.                                                               |
-| `type/`                | `Sign`, `BountySign`, `ViewSign`, `WantedSign`                                                                                     | Core sign type implementations.                                                                                 |
-| `type/trade/`          | `BaseTradeSign`, `BuySign`, `SellSign`                                                                                             | Base buy/sell sign logic.                                                                                       |
-| `type/trade/ammo/`     | `AmmoBuySign`, `AmmoSellSign`                                                                                                      | Ammunition trading signs.                                                                                       |
-| `type/trade/car/`      | `CarBuySign`, `CarSellSign`                                                                                                        | Vehicle trading signs.                                                                                          |
-| `type/trade/weapon/`   | `WeaponBuySign`, `WeaponSellSign`                                                                                                  | Weapon trading signs.                                                                                           |
-| `type/trade/wearable/` | `WearableBuySign`, `WearableSellSign`                                                                                              | Wearable armor trading signs.                                                                                   |
-| `validation/`          | `BountySignValidator`, `ViewSignValidator`, `WantedSignValidator`                                                                  | Input validation for sign creation.                                                                             |
-| `validation/trade/`    | `TradeSignValidator`, `ItemSignValidator`, `AmmoSignValidator`, `CarSignValidator`, `WeaponSignValidator`, `WearableSignValidator` | Trade sign input validation.                                                                                    |
+| Subpackage             | Key Classes                                                                         | Description                                                                                                      |
+|--------------------------|----------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+| Root                   | `SignManager.java`, `GanglandSignInformation.java`                                 | Registers all sign types and provides sign metadata.                                                            |
+| `aspect/`              | `BountyAspect`, `ViewInventoryAspect`, `WantedAspect`                              | Composable sign behaviors: bounty check, item trading, inventory viewing, wanted level display.                 |
+| `model/`               | `BountyParsedSign`, `ViewParsedSign`, `WantedParsedSign`                           | Parsed sign data models extending `BaseParsedSign`. (`WeaponParsedSign` deleted with the weapon module.)        |
+| `parser/`              | `BountyParser`, `ViewSignParser`, `WantedParser`                                   | Sign text parsers extending `AbstractSignParser`.                                                               |
+| `type/`                | `BountySign`, `ViewSign`, `WantedSign`                                             | Core sign type implementations.                                                                                 |
+| `type/trade/`          | `BuySign`, `SellSign`                                                              | Base buy/sell sign logic (the generic `item-buy`/`item-sell` signs route through this widened core pair).       |
+| `validation/`          | `BountySignValidator`, `ViewSignValidator`, `WantedSignValidator`                  | Input validation for sign creation.                                                                             |
+| `validation/trade/`    | `ItemSignValidator`                                                                | Trade sign input validation.                                                                                    |
 
-### Package: `lootchest/`
+**Trade-sign subpackages moved to a runtime module, or deleted (all gone from `gangland-impl`):**
 
-| Class                           | Description                                                                             |
-|---------------------------------|-----------------------------------------------------------------------------------------|
-| `LootChestManager.java`         | Extends `LootChestService`, wiring gangland-specific item providers and configuration.  |
-| `GanglandLootItemProvider.java` | Implements `LootItemProvider` to resolve weapons, ammo, and wearables from loot tables. |
-| `LootChestWand.java`            | Admin tool for placing and configuring loot chests.                                     |
-| `LootChestWandTag.java`         | NBT tag constants for the loot chest wand item.                                         |
+| Was `sign/type/trade/...`                        | Now                                                                                          |
+|------------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| `car/{CarBuySign, CarSellSign}`                      | `gangland-gadget`, `org.luckyraven.gangland.gadget.sign.*`                                       |
+| `ammo/{AmmoBuySign, AmmoSellSign}`                   | deleted - left the repo entirely in 0.9.0 with Bartizan                                          |
+| `weapon/{WeaponBuySign, WeaponSellSign}`             | deleted - left the repo entirely in 0.9.0 with Bartizan                                          |
+| `wearable/{WearableBuySign, WearableSellSign}`       | deleted - left the repo entirely in 0.9.0 with Bartizan                                          |
+| `validation/trade/{TradeSignValidator, AmmoSignValidator, WearableSignValidator}` | deleted alongside the ammo/wearable sign types above |
+| `validation/trade/CarSignValidator`                  | `gangland-gadget`, `org.luckyraven.gangland.gadget.sign.CarSignValidator`                        |
+| `validation/trade/WeaponSignValidator`               | deleted - left the repo entirely in 0.9.0 with Bartizan                                          |
 
-### Package: `weapon/`
+### `lootchest/` and `weapon/` packages - gone from `gangland-impl`
 
-| Class                | Description                                                                                      |
-|----------------------|--------------------------------------------------------------------------------------------------|
-| `WeaponManager.java` | Loads weapon configurations from YAML, manages the weapon registry, and provides lookup by name. |
+Both packages moved out wholesale rather than row-by-row:
+
+| Was                                                          | Now                                                                                                      |
+|------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
+| `lootchest/{LootChestManager, GanglandLootItemProvider, LootChestWand, LootChestWandTag}` | `gangland-lootchest` runtime module (WS3 G2, 0.10.0), `org.luckyraven.gangland.lootchest.*` |
+| `weapon/WeaponManager.java`                                      | deleted - weapon config loading left the repo entirely in 0.9.0 with Bartizan                            |
 
 ### Package: `updater/`
 
 | Class                | Description                                                         |
-|----------------------|---------------------------------------------------------------------|
+|----------------------|-----------------------------------------------------------------------|
 | `UpdateChecker.java` | Checks for plugin updates from a remote source and notifies admins. |
 
 ### Package: `util/`
 
 | Class                   | Description                                                                |
-|-------------------------|----------------------------------------------------------------------------|
+|---------------------------|----------------------------------------------------------------------------|
 | `GanglandChatUtil.java` | Plugin-specific chat formatting extending core `ChatUtil`.                 |
 | `TimeMessages.java`     | Implements `TimeMessagesProvider` for localized time duration strings.     |
 | `ray/RayTrace.java`     | Ray-tracing utility for projectile hit detection and line-of-sight checks. |
 
 ### Resource Files
 
+Resource files owned by a module that moved (cops/civilians NPC config, car/weapon/ammo/wearable item YAML, loot
+chest YAML) ship inside that module's own jar now, at the same path as its data folder - not under
+`gangland-impl/src/main/resources/` any more (see "YAML rule" in the root `CLAUDE.md`):
+
 | File                     | Description                                                                                                                      |
-|--------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+|----------------------------|------------------------------------------------------------------------------------------------------------------------------------|
 | `plugin.yml`             | Spigot plugin metadata. Required dependencies: `NBTAPI`, `Citizens`. Soft dependencies: `PlaceholderAPI`, `Vault`, `ViaVersion`. |
 | `settings.yml`           | Main runtime configuration (database type, auto-save interval, economy settings, world settings).                                |
 | `commands.json`          | Command metadata (descriptions, usage, permissions) for the help system.                                                         |
-| `cops.yml`               | Cop NPC tiers, equipment, and spawn configuration.                                                                               |
-| `civilians.yml`          | Civilian NPC types, groups, behaviors, and equipment configuration.                                                              |
-| `ammunition.yml`         | Ammunition type definitions (name, material, max stack, price).                                                                  |
-| `cars.yml`               | Vehicle type definitions (speed, fuel capacity, model).                                                                          |
 | `unique_items.yml`       | Unique item definitions (phone, tools, etc.) with slot, permission, and behavior.                                                |
-| `wearables.yml`          | Wearable armor definitions (material, traits, damage reduction, leather color).                                                  |
-| `weapon/*.yml`           | Per-weapon-type YAML files: `rifle.yml`, `knife.yml`, `grenade.yml`, `flamethrower.yml`, `syringe_gun.yml`.                      |
-| `loot/loot_chests.yml`   | Loot chest definitions (location, tier, cooldown).                                                                               |
-| `loot/tiers.yml`         | Loot tier definitions (rarity weights, item pools).                                                                              |
 | `inventory/*.yml`        | GUI layout definitions: `phone.yml`, `phone_gang.yml`, `gang_info.yml`, `gang_stat.yml`, `alliance_stat.yml`, `user_stat.yml`.   |
 | `message/message_en.yml` | English message strings.                                                                                                         |
 | `message/message_es.yml` | Spanish message strings.                                                                                                         |
+
+**Resource files moved into a module's own jar, or deleted:**
+
+| Was `gangland-impl/src/main/resources/...`  | Now                                                                                          |
+|------------------------------------------------|---------------------------------------------------------------------------------------------|
+| `cops.yml`                                     | ships inside `modules/cops-n-crooks-<rev>.jar`                                              |
+| `civilians.yml`                                | ships inside `modules/gangland-civilians-<rev>.jar`                                         |
+| `cars.yml`                                     | ships inside `modules/gangland-gadget-<rev>.jar`                                            |
+| `loot/loot_chests.yml`, `loot/tiers.yml`       | ship inside `modules/gangland-lootchest-<rev>.jar`                                          |
+| `ammunition.yml`, `wearables.yml`, `weapon/*.yml` | deleted - left the repo entirely in 0.9.0 with Bartizan (ship inside Bartizan's own jar) |
 
 ---
 

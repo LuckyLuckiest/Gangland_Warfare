@@ -109,7 +109,7 @@ gangland_warfare/
 | Observer/Event          | Bukkit events + 30+ custom events                           |
 | Registry                | RepositoryRegistry, ItemConverterRegistry, SignTypeRegistry |
 | Adapter                 | NMS version compatibility modules                           |
-| Factory                 | MultiInventoryCreation, SlotItemFactory                     |
+| Factory                 | SlotItemFactory (`MultiInventoryCreation` deleted, WS2 0.10.0 — see `documentation/developer/ui-framework.md`) |
 | Command                 | Argument tree command dispatch                              |
 
 ---

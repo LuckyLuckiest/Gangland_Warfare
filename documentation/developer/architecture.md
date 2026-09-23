@@ -199,10 +199,10 @@ Cop spawns   → CopService.spawnCopsFor(player) → create NPC → start AI loo
 
 | Suffix      | Role                        | Examples                                  |
 |-------------|-----------------------------|-------------------------------------------|
-| `*Manager`  | Cache + persistence         | UserManager, GangManager, WeaponManager   |
+| `*Manager`  | Cache + persistence         | UserManager, WaypointManager (`GangManager` moved to the `gangland-gang` module, WS5 0.10.0; `WeaponManager` deleted, 0.9.0) |
 | `*Service`  | Business logic              | CopService, DetainmentService, CarService |
 | `*Registry` | Type/instance lookup        | RepositoryRegistry, SignTypeRegistry      |
-| `*Handler`  | Event/request processing    | InventoryHandler, DatabaseHandler         |
+| `*Handler`  | Event/request processing    | DatabaseHandler, FileHandler              |
 | `*Executor` | Scheduled/triggered actions | WantedExecutor, BountyExecutor            |
 
 ---

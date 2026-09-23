@@ -213,7 +213,7 @@ Holders introduced by the **cops-n-crooks** flip (0.8.4); `BankTiers`' installer
 |---|---|---|---|---|
 | `GanglandMoneyDropClassifier` | `NpcMoneyDropSource` | `org.luckyraven.gangland.data.economy` | classifies no NPC as a cop/civilian cash drop | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`CopsMoneyDropSource`) |
 | `BankTiers` | `BankTierView` | `org.luckyraven.gangland.data.economy` | `tierFor(...)` returns `null` — no tier cap, no daily deposit limit, no death-penalty insurance discount, empty `%..bank_tier%` placeholders | `NpcShopsModuleConfig`'s `installBankTiers()` (0.9.0; was `CopsNCrooksModuleConfig`'s `installCoreSeams()` before the npc-shops split) |
-| `WantedKillTrackers` | `WantedKillTracker` | `org.luckyraven.gangland.gang.wanted` (gangland-domain) | `isActive()` false — kill combo and "counts for wanted" both disabled, `EntityDamageListener` falls back to its pre-combo branches | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`KillComboWantedTracker`) |
+| `WantedKillTrackers` | `WantedKillTracker` | `org.luckyraven.gangland.core.wanted` (`gangland-core` — moved out of the deleted `gangland-infra/gangland-domain` at WS5, 0.10.0) | `isActive()` false — kill combo and "counts for wanted" both disabled, `EntityDamageListener` falls back to its pre-combo branches | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`KillComboWantedTracker`) |
 
 Contribution paths added by the cops-n-crooks flip, now installed by **npc-shops** (0.9.0 split):
 `BankMenuContribution` (`parent() == "bank"`, attaches `/glw bank menu`, queried by `BankCommand`).
