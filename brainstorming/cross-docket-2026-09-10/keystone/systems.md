@@ -14,6 +14,8 @@
 | SC | scheduling-cooldowns | Timers, cooldowns & updates | keystone-common: {timer,cooldown,update}/** + keystone-persistence: cooldown/** | 14 | Timer, Cooldown, UpdateService | Async timer scheduling, cooldown expiration tracking, version checking, timer cancellation on reload |
 | DG | diagnostics-error | Diagnostics, error handling & NMS | keystone-common: {diagnostics,result,nms,nms/internal,nms/input}/** + keystone-persistence: message/** | 27 | ConfigReport (108 edges), Fault (79 edges), Diagnostics, Result (50 edges), SourceLocation (55 edges), NmsVersion, NmsCache | Error categorization via Fault, diagnostic pipeline collection, packet handling, NMS reflection-first detection, version branching |
 | PH | placeholders | Placeholder templates & providers | keystone-common: placeholder/** | 12 | PlaceholderRegistry, PlaceholderEffect, PlaceholderProvider, PlaceholderReplacer | Template parsing with recursive expansions, provider chain resolution, effect application order, nested placeholder cycles |
+| IV | menu-inventory | Menu / inventory framework (Phase E6, added 2026-09-17) | keystone-inventory: org/luckyraven/keystone/inventory/** | 37 | Menu, MenuBuilder, ChestMenu, ChestMenuBuilder, MenuListener, InventoryService, MenuFlow | Held-item loss on close/veto/disconnect, interactive-slot flag lifecycle, click-policy edge cases (COLLECT_TO_CURSOR), extension-point shape for Oriel's rebase |
+| SH | keystone-shop | Shop framework, headless (Phase H10, added 2026-09-20; promoted from Gangland's gangland-ui/shop-api) | keystone-shop: org/luckyraven/keystone/shop/** | 27 | ShopRegistry, ShopYamlReader, ShopYamlWriter, ShopPurchaseService, ShopBarterService, ShopSellService, DefaultShopDisplayResolver, CategorySellValuator, CategoryBarterValuator | Purchase/barter/sell transaction correctness (overflow, slot/size validation), display-name resolution (live vs. pristine precedence), YAML round-trip, concurrent admin saves (last-writer-wins) |
 
 ## Package -> system (every main package once)
 
@@ -88,6 +90,26 @@
 
 ### keystone-testkit
 - org/luckyraven/keystone/testkit -> UC
+
+### keystone-shop (Phase H10, added 2026-09-20)
+- org/luckyraven/keystone/shop -> SH
+- org/luckyraven/keystone/shop/io -> SH
+- org/luckyraven/keystone/shop/message -> SH
+- org/luckyraven/keystone/shop/transaction -> SH
+- org/luckyraven/keystone/shop/valuation -> SH
+- org/luckyraven/keystone/shop/event -> SH
+
+### keystone-inventory (Phase E6, added 2026-09-17)
+- org/luckyraven/keystone/inventory -> IV
+- org/luckyraven/keystone/inventory/chest -> IV
+- org/luckyraven/keystone/inventory/click -> IV
+- org/luckyraven/keystone/inventory/component -> IV
+- org/luckyraven/keystone/inventory/flow -> IV
+- org/luckyraven/keystone/inventory/listener -> IV
+- org/luckyraven/keystone/inventory/page -> IV
+- org/luckyraven/keystone/inventory/registry -> IV
+- org/luckyraven/keystone/inventory/spi -> IV
+- org/luckyraven/keystone/inventory/tracking -> IV
 
 ## Scanner briefing per system
 
@@ -339,4 +361,52 @@ Template placeholder system: `PlaceholderRegistry` holds providers (PlaceholderP
 
 **Tests that exist for it:**
 PlaceholderRegistryTest, PlaceholderReplacerTest, PlaceholderEffectTest, RecursivePlaceholderTest, PlaceholderParseErrorTest, (4-6 tests in keystone-common suite)
+
+---
+
+### IV menu-inventory (Phase E6, added 2026-09-17)
+**What it does:**
+Holder-identified chest-menu framework extracted from Oriel/Gangland duplication: `Menu`/`MenuBuilder` contract, `ChestMenu`/`ChestMenuBuilder` chest-backed implementation, one `MenuListener` per `InventoryService` (per-consumer, not a singleton), `Component`/`RenderContext`/`SlotView` render pipeline with an `ItemHoldingComponent` seam for deposit-style slots, `MenuFlow`/`Panel` multi-screen navigation, `OpenMenuTracker`/`NavigationHistory` tracking. Non-final extension points (`createListener`, `newMenu`, `applyBorder`/`applyLine`, `renderOne`, `dispatchOnOpen`, context factories) exist specifically so Oriel can subclass instead of duplicating.
+
+**Entry points to start from:**
+- `InventoryService` — per-consumer bean owning the `MenuListener`/tracker/registry
+- `ChestMenuBuilder.build()` / `MenuBuilder` — menu construction
+- `MenuListener` — the one Bukkit listener per service (close/click/drag/quit dispatch)
+- `MenuFlow.switchTo(String)`/`.rerender()`/`.back()` — multi-panel navigation
+
+**Where money/items/persistence/threading/permissions live:**
+- Items: `ItemHoldingComponent` holds a player's staged deposit inside a slot; no persistence — session-only, returned on close/veto/disconnect/reload via `InventoryService`'s pending-reopen registry
+- Threading: single-threaded, Bukkit main-thread listener dispatch only
+- Permissions: none (consumer's own `Component`/click handlers gate)
+
+**Config/YAML files it reads:**
+- None (pure API layer; a consumer's own YAML loader builds `Menu`/`Component` trees)
+
+**Tests that exist for it:**
+ChestMenuTest, ChestMenuBuilderTest, MenuListenerTest, MenuFlowTest, InventoryServiceLifecycleTest, ExtensionPointsTest, ClickKindTest, SlotHandlersTest, PageConfigTest, PagedRegionTest, DefaultOpenMenuTrackerTest, (72 module tests as of E6.1 commit 53de9e6)
+
+---
+
+### SH keystone-shop (Phase H10, added 2026-09-20)
+**What it does:**
+Headless shop framework promoted out of Gangland's `gangland-ui/shop-api` (26 classes, no keystone-bean dependency, no GUI type): `ShopRegistry` (definition store, keyed off a `JavaPlugin` owner not a concrete plugin type), `ShopYamlReader`/`ShopYamlWriter` (round-trip persistence), `ShopPurchaseService`/`ShopBarterService`/`ShopSellService` (transaction execution), `CategorySellValuator`/`CategoryBarterValuator` (pricing), `DefaultShopDisplayResolver` (live-vs-pristine item display-name precedence), `ShopMessageContract`/`ShopDisplayResolver`/`ShopEditedEvent` (consumer seams). A consumer plugin (Gangland's `ShopConfig`) wires these as beans and supplies its own admin-editor UI and message implementation on top.
+
+**Entry points to start from:**
+- `ShopRegistry.register(ShopDefinition)` / `.get(String)` — definition store
+- `ShopPurchaseService.purchase(...)` / `ShopBarterService.barter(...)` / `ShopSellService.sell(...)` — transaction entry points
+- `ShopYamlReader.read(File)` / `ShopYamlWriter.write(ShopDefinition, File)` — persistence round-trip
+- `DefaultShopDisplayResolver.cleanDisplayName(...)` — live/pristine name resolution
+
+**Where money/items/persistence/threading/permissions live:**
+- Items: purchase/sell/barter services mutate player inventories directly; overflow handling is a known gap (CT-07)
+- Persistence: YAML file only (no database); definitions held in-memory in `ShopRegistry` between saves
+- Threading: single-threaded, no locking around concurrent admin saves (CT-23)
+- Economy: delegates to a consumer-supplied `PaymentHandler`, no direct Vault/economy code here
+- Permissions: none (consumer's own command/UI layer gates access)
+
+**Config/YAML files it reads:**
+- Consumer-owned shop definition YAML files (Gangland ships these under its own data folder; the reader/writer are format-only, no fixed path)
+
+**Tests that exist for it:**
+ShopDefinitionTest, ShopYamlReaderTest (carries Gangland's CT-06 pin forward), ShopPurchaseServiceTest (carries CT-07's pin forward), ShopBarterServiceTest, ShopSellServiceTest, CategorySellValuatorTest, CategoryBarterValuatorTest, DefaultShopDisplayResolverTest (new in keystone-shop; gained the live/pristine two-source-conflict case in commit b706f30, see KS-SH-01), (59 tests carried over from the deleted gangland-ui/shop-api suite plus new coverage)
 

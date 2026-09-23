@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.lootchest;
 
+import java.lang.reflect.Method;
 import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -281,9 +282,30 @@ public class ChestCooldownManager {
 		item.setInvulnerable(true);
 		item.setSilent(true);
 		item.setPersistent(false);
-		item.setUnlimitedLifetime(true);
+		setUnlimitedLifetime(item);
 
 		chestIcons.put(chestData.getId(), item);
+	}
+
+	// Item#setUnlimitedLifetime is 1.19.4+; the compile floor is 1.16.5, so it is reached reflectively.
+	// ponytail: below 1.19.4 the icon despawns with the vanilla 5-minute item lifetime; respawn it on a timer if anyone runs one.
+	private static final Method SET_UNLIMITED_LIFETIME = lookupSetUnlimitedLifetime();
+
+	private static Method lookupSetUnlimitedLifetime() {
+		try {
+			return Item.class.getMethod("setUnlimitedLifetime", boolean.class);
+		} catch (NoSuchMethodException absent) {
+			return null;
+		}
+	}
+
+	private static void setUnlimitedLifetime(Item item) {
+		if (SET_UNLIMITED_LIFETIME == null) return;
+		try {
+			SET_UNLIMITED_LIFETIME.invoke(item, true);
+		} catch (ReflectiveOperationException e) {
+			throw new IllegalStateException("Item#setUnlimitedLifetime is present but not invokable", e);
+		}
 	}
 
 	private void removeChestIcon(UUID chestId) {

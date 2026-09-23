@@ -405,15 +405,22 @@ public final class DebugCommand extends Command {
 			sender.sendMessage(permission);
 			sender.sendMessage("hasPermission: " + sender.hasPermission(permission));
 			sender.sendMessage("isPermissionSet: " + sender.isPermissionSet(permission));
-		}, sender -> List.of("<permission>"));
+		}, this::permissionSuggestions);
+	}
+
+	private List<String> permissionSuggestions(CommandSender sender) {
+		Set<String> permissions = permissionManager.getPermissions();
+
+		return permissions.isEmpty() ? List.of("<permission>") : permissions.stream().toList();
 	}
 
 	private @NotNull Argument getVersion() {
 		return new Argument(getPlugin(), "version", getArgumentTree(), (argument, sender, args) -> {
-			sender.sendMessage("Server version: " + Bukkit.getVersion(), "Bukkit version: " + Bukkit.getBukkitVersion(),
+			// CommandSender#sendMessage(String[]) is a plain array on the 1.16.5 compile floor (the varargs overload came later).
+			sender.sendMessage(new String[]{"Server version: " + Bukkit.getVersion(), "Bukkit version: " + Bukkit.getBukkitVersion(),
 			                   "Plugin version: " + getPlugin().getDescription().getVersion(),
 			                   "API version: " + getPlugin().getDescription().getAPIVersion(),
-			                   "Bukkit version: " + Bukkit.getServer().getClass().getPackage().getName());
+			                   "Bukkit version: " + Bukkit.getServer().getClass().getPackage().getName()});
 
 			if (!(sender instanceof Player player && gangland.getViaAPI() != null)) return;
 

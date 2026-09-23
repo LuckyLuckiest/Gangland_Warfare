@@ -1,10 +1,10 @@
 package org.luckyraven.gangland.npcshops.trader;
 
+import com.cryptomorin.xseries.XAttribute;
 import lombok.Getter;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Location;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -43,7 +43,7 @@ public final class TraderNpc {
 			living.setGravity(false);
 
 			double            hp   = Math.max(1.0, trait.maxHealth());
-			AttributeInstance attr = living.getAttribute(Attribute.MAX_HEALTH);
+			AttributeInstance attr = living.getAttribute(XAttribute.MAX_HEALTH.get());
 			if (attr != null) attr.setBaseValue(hp);
 			living.setHealth(hp);
 		}

@@ -1,15 +1,15 @@
 1~~P1~~destroyAll pass 1 ejects are cancelled by the dismount listener~~Unregister the sessions (or set a bypass flag) before ejecting so the listener lets the eject through.~~-
 2~~P2~~The CarQuitListener eject is dead code~~Same fix as GD-01; remove the dead eject.~~-
 3~~P1~~The car item is destroyed when the inventory is full on pickup or destroy~~Drop leftovers like CarGiveCommand.giveCarItem does.~~-
-4~~P1~~An empty jetpack grants permanent fall immunity~~Cancel fall damage only while hasFuel (and recently flying).~~-
-5~~P1~~A zero-fuel jetpack still glides and steers~~Gate the descent cap and air control on hasFuel.~~-
+4~~P1~~An empty jetpack grants permanent fall immunity~~Cancel fall damage only while hasFuel (and recently flying).~~STILL OPEN 0.9.2 WS8 (2026-09-20): unrelated to this row's jetpack code, but noted because the new grappling hook (gate G2-G3, commit 122bf53d) was deliberately designed to avoid the same failure shape - its landing grace is one-shot and bounded by Fall_Damage_Grace_Ticks rather than an unconditional/permanent immunity. The jetpack's own fall-immunity bug is untouched by WS8.
+5~~P1~~A zero-fuel jetpack still glides and steers~~Gate the descent cap and air control on hasFuel.~~STILL OPEN 0.9.2 WS8 (2026-09-20): unrelated to this row's jetpack code, but noted because the new grappling hook (gate G2-G3, commit 122bf53d) was deliberately designed to avoid the same failure shape - GrappleService.isActive is bounded by Max_Duration_Ticks with no glide/steer mechanic at all. The jetpack's own zero-fuel glide/steer bug is untouched by WS8.
 6~~P0~~Any player can mount, pick up or refuel any placed car~~Check car_owner/placer_uuid (and gangland.cars.<id>) on mount, pickup and refuel; allow gang members and an admin bypass.~~FIXED 0.8.3 wave 3, commit 8a731fd5; CarAccessPolicy + CarGangContract on mount/refuel/pickup; CarAccessPolicyTest
 7~~P1~~The wearable permission is only checked on inventory clicks~~Validate on right-click equip, InventoryDrag and dispenser paths, and strip unpermitted armour periodically.~~-
 8~~P2~~The input packet class is missing on 1.16 and jetpack input is inert below 1.21.2~~Fall back to PlayerToggleSneakEvent/PlayerMoveEvent for jetpack input and log when the interceptor is unavailable.~~-
 9~~P1~~Refuelling a stack of cans fuels all N (duplication)~~Split one can off the stack before writing the fuel NBT.~~-
 10~~P2~~Car items carry FUEL_ID and pass as fuel cans~~Use a distinct tag or check for the car tag in Fuel.isFuelItem.~~CarNbtIdentityTest (pins; flip when fixed)
 11~~P2~~ParkedCar yaw Float/double mismatch on MySQL~~Use Number casts.~~-
-12~~P2~~A jetpack without Fuel_Key starts a session that never flies~~Treat an empty Fuel_Key as "not a jetpack" or fail the load.~~-
+12~~P2~~A jetpack without Fuel_Key starts a session that never flies~~Treat an empty Fuel_Key as "not a jetpack" or fail the load.~~FIXED 0.9.2 gate G2 (jetpack rehomed from Bartizan's WearableAddon into gadget's own JetpackAddon), commit 4d4ffa28: JetpackAddon.loadJetpacks now treats a missing/blank Fuel_Key as a load error (warn + skip the entry) instead of silently starting a dead fuel session. JetpackAddonLoadTest ("Fuel_Key" mandatory, field round-trip).
 13~~P2~~Orphan minecarts across chunk boundaries produce duplicates~~Search neighbouring chunks (or by entity UUID) and remove orphans with no record.~~-
 14~~P3~~destroyCar's early return leaks the registry entry~~Unregister before the task null check.~~-
 15~~P2~~setAllowFlight(false) is unconditional (creative, downed)~~Restore the previous allowFlight state.~~-
@@ -17,12 +17,12 @@
 17~~P3~~Hardcoded English strings~~Route through Messages / CarMessageContract.~~-
 18~~P2~~No car placement limit, validity check or cooldown~~Add Max_Cars per player and a spawn validity check.~~-
 19~~P3~~A null UUID could NPE in the tick task (theoretical)~~Guard it.~~-
-20~~P3~~Car.maxHealth and glideDescentRate are dead config~~Implement or remove them.~~-
+20~~P3~~Car.maxHealth and glideDescentRate are dead config~~Implement or remove them.~~PARTIALLY MOOT 0.9.2 (WS7 G6 docket review): the glideDescentRate/jetpack half is MOOT, not fixed - WearableAddon.glideDescentRate no longer exists in that form since the jetpack moved to gadget's own JetpackAddon/Jetpack domain type (gate G2, commit 4d4ffa28); whether JetpackAddon carries its own live-or-dead glide field was not audited and should not be assumed fixed. UPDATE 2026-09-20 (WS8 G1 side check): now verified directly - Jetpack.java and JetpackAddon.java carry no glide-descent-rate field at all (only a Sounds.Glide sound block, unrelated to descent, and a runtime-only glideModeActive toggle in JetpackSession/JetpackTask with no config-driven rate); the specific dead-config instance this row named is confirmed gone, not merely unaudited. The Car.maxHealth/CarAddon half is UNCHANGED by this wave and remains open.
 21~~P3~~The fuel_refuel_amount help entry is missing~~Add it to commands.json.~~-
 22~~P3~~setChestplate on every fuel tick~~Batch the NBT writes (every N ticks).~~-
 23~~P3~~A chunk is force-loaded per parked car at startup~~Load lazily on ChunkLoadEvent.~~-
 24~~P2~~Non-sneak dismounts are cancelled for every cause~~Cancel only player-initiated dismounts (plugin-eject flag / not dead).~~-
 25~~P3~~Fuel and durability are not persisted while driving; per-hit writes when parked~~Periodic session save; debounce parked writes.~~-
 26~~P3~~MinecartVehicle.getLocation may return null~~Guard the callers.~~-
-27~~P3~~pendingRightClickInteract token race~~Consume the token in one place.~~-
+27~~P3~~pendingRightClickInteract token race~~Consume the token in one place.~~STILL OPEN 0.9.2 (WS7 G6 docket review): the field moved from CarDamageListener to the new shared CarDamageState (gate G5, commit d136fc8d), centralizing read/consume across both CarDamageListener and the new CarWeaponDamageListener - this prevents the G5 listener split from making the race structurally worse but does NOT fix the underlying race (two events still race on the same game tick). Fix direction unchanged.
 28~~P3~~slotCache is cleared only on quit~~Add an expiry.~~-

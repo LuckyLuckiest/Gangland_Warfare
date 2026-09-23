@@ -27,8 +27,8 @@
 27~~P3~~createWaypointName.get(player).get() can NPE~~Null-guard.~~-
 28~~P1~~Invulnerability is never cleared on quit or reload~~Clear on quit and in onShutdown/onPreClear.~~-
 29~~P3~~The Countdown_Timer config key is unread~~Use it or remove it.~~-
-30~~P3~~The wand writes to the currently held item, not the GUI's item~~Capture the ItemStack at GUI open.~~-
-31~~P3~~Allowed-block substring match~~Use an exact Material match.~~-
+30~~P3~~The wand writes to the currently held item, not the GUI's item~~Capture the ItemStack at GUI open.~~FIXED 0.10.0 CUT, commit 5d6cbefc: openConfigInventory captures wandSlot once (getHeldItemSlot()) and threads it through every nested screen instead of re-reading getItemInMainHand()/setItemInMainHand(); pinned on updateWandLore only (LootChestWandTest) - setWandNBT/handleInvSizeChange/openConfigInventory read getItem(wandSlot) but are unpinned, thin pins owed by WS3 G5 (orchestrator ruling W50). Relocated to gangland-features/gangland-lootchest (branch 0.10.0-ws3, commit ab589b4d)
+31~~P3~~Allowed-block substring match~~Use an exact Material match.~~FIXED 0.10.0 CUT, commit 5d6cbefc: LootChestWandListener's allowed-block check changed from .contains(allowed.toUpperCase()) to .equalsIgnoreCase(allowed) - CHEST no longer wrongly matches TRAPPED_CHEST/ENDER_CHEST; LootChestWandListenerTest (red via contains()). Relocated to gangland-features/gangland-lootchest (branch 0.10.0-ws3, commit ab589b4d)
 32~~P3~~Zero-weight tables always return the last entry~~Fall back to a uniform choice.~~LootTableTest
 33~~P3~~Bulk actions are identical to single clicks~~Implement a quantity or drop the feature.~~-
 34~~P2~~One bad sign format aborts all remaining registrations~~Catch per format and continue.~~-

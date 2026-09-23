@@ -63,7 +63,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- The version used to run the plugin -->
-        <bukkit.version>1.21.11-R0.1-SNAPSHOT</bukkit.version>
+        <bukkit.version>1.16.5-R0.1-SNAPSHOT</bukkit.version>
 
         <!-- Dependencies/Libraries versions -->
         <!-- Shared infrastructure (Keystone.jar provides it at runtime — provided scope, never shaded) -->

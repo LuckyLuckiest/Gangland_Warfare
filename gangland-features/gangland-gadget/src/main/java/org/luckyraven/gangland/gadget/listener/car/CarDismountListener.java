@@ -9,7 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDismountEvent;
+import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.luckyraven.keystone.bean.autowire.AutowireTarget;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
@@ -20,6 +20,10 @@ import org.luckyraven.gangland.gadget.car.vehicle.VehicleSession;
  * Handles the player exiting a car vehicle. Parks the vehicle in the world (keeps the entity alive) so the player can
  * later right-click to remount or shift+right-click to pick it up. Teleports the player to a safe exit position to
  * prevent block-clipping on dismount.
+ *
+ * <p>Listens to {@link VehicleExitEvent} rather than {@code EntityDismountEvent}: cars are minecarts, i.e.
+ * {@code Vehicle}s, and the dismount event lives in {@code org.spigotmc} on the 1.16.5 compile floor but in
+ * {@code org.bukkit} from 1.20.3 — no single class name compiles against the floor and loads on both.
  */
 @ListenerHandler
 @AutowireTarget({CarService.class})
@@ -32,10 +36,10 @@ public class CarDismountListener implements Listener {
 	}
 
 	@EventHandler(priority = EventPriority.NORMAL)
-	public void onDismount(EntityDismountEvent event) {
-		if (!(event.getEntity() instanceof Player player)) return;
+	public void onDismount(VehicleExitEvent event) {
+		if (!(event.getExited() instanceof Player player)) return;
 
-		Entity vehicle = event.getDismounted();
+		Entity vehicle = event.getVehicle();
 
 		VehicleSession session = carService.getVehicleRegistry().getByEntity(vehicle.getUniqueId());
 		if (session == null) return;

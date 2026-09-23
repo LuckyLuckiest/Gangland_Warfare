@@ -16,7 +16,7 @@
 16~~P2~~Deposit silently discards cash when the user is not cached~~Check the user before removing the item entity; notify or log otherwise.~~-
 17~~P1~~Holding money cancels every interact (chests, doors, block placement)~~Cancel only when the action is the money use itself; skip creative mode.~~-
 18~~P2~~Bounty and wanted timers are started async from an async DB task~~Start the timers with start(false) from a main-thread task.~~-
-19~~P1~~UserDataInitEvent is fired async and the scoreboard is created off-thread~~Fire the event from a sync task after the async load completes.~~-
+19~~P1~~UserDataInitEvent is fired async and the scoreboard is created off-thread~~Fire the event from a sync task after the async load completes.~~STILL OPEN 0.10.0 WS1 G3 (2026-09-20): the scoreboard-side subscriber (PlayerScoreboardListener) was deleted along with the whole scoreboard module, so that specific off-thread scoreboard-creation symptom is gone, but the root cause is untouched - CreateAccountListener.java:105 still constructs `new UserDataInitEvent(true, user)` (async) unconditionally, which still reaches PlayerItemInitBridgeListener.java:20 (org.luckyraven.gangland.listener.bridge) -> PlayerItemInitEvent -> LoadUniqueItem.java:37 off-thread. The docket's fix direction (fire the event from a sync task after the async load completes) is still unaddressed.
 20~~P2~~On quit the async clearInventories races the sync save~~Run clearInventories synchronously in the same handler.~~-
 21~~P2~~A banker with a missing world NPEs on every head-track tick~~Skip rows whose world is missing (log) and guard getWorld() in findClosestPlayer.~~-
 22~~P3~~Two reloads within two seconds queue two banker spawn passes~~Cancel the pending spawn task in onPreClear.~~-

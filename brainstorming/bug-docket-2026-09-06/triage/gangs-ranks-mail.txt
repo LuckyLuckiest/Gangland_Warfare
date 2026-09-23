@@ -15,7 +15,7 @@
 15~~P2~~GangMembersDamageListener uses getGang without a null check~~Null-check and treat as no gang.~~-
 16~~P2~~alliance_stat.yml button runs a non-existent "ally info" argument~~Register a gang ally info sub-argument or remove the click (re-checked on 0.8.2: still missing).~~-
 17~~P2~~gang_stat.yml has no Slots block~~Same as UI-22.~~-
-18~~P3~~GangCommand.gangStat is dead code (~140 lines)~~Delete it or wire it to the stat button.~~-
+18~~P3~~GangCommand.gangStat is dead code (~140 lines)~~Delete it or wire it to the stat button.~~FIXED 0.10.0 CUT, commit 5d6cbefc: gangStat()/itemToBalance() deleted, zero callers anywhere in the reactor, commands.json, /glw help output, or gang_info.yml (which serves /glw gang info through the YAML-driven dialect instead)
 19~~P2~~GangBountyEvent and GangLevelUpEvent are never constructed, so the features are inert~~Fire the events from the bounty/level flows or delete the listeners and events.~~-
 20~~P2~~SQL NULL becomes the literal "null" string in GangRepository~~Map null columns to null or a fallback explicitly.~~-
 21~~P1~~New rank ids come from totalRanks()+1 and collide after a delete~~Use max(id)+1 or DB autoincrement.~~-

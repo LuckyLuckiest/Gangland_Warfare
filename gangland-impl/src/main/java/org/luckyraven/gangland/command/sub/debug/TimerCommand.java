@@ -33,7 +33,8 @@ public final class TimerCommand extends Command {
 			return;
 		}
 
-		commandSender.sendMessage("Timer: " + timer, "Running: " + timer.isRunning(), "Mode: " + timer.getMode());
+		// CommandSender#sendMessage(String[]) is a plain array on the 1.16.5 compile floor (the varargs overload came later).
+		commandSender.sendMessage(new String[]{"Timer: " + timer, "Running: " + timer.isRunning(), "Mode: " + timer.getMode()});
 	}
 
 	@Override
