@@ -1,9 +1,9 @@
 package org.luckyraven.gangland.civilians.npc.npc;
 
+import com.cryptomorin.xseries.XAttribute;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Location;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -156,7 +156,7 @@ public class CivilianNpcFactory implements BeanLifecycle {
 
 		double total = baseHealth + bonus;
 
-		AttributeInstance maxHealth = living.getAttribute(Attribute.MAX_HEALTH);
+		AttributeInstance maxHealth = living.getAttribute(XAttribute.MAX_HEALTH.get());
 		if (maxHealth != null) {
 			maxHealth.setBaseValue(total);
 		}

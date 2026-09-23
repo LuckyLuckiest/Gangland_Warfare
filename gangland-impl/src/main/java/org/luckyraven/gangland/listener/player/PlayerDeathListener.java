@@ -8,7 +8,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.jspecify.annotations.Nullable;
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.data.economy.BankTierView;
 import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.keystone.bean.Qualifier;

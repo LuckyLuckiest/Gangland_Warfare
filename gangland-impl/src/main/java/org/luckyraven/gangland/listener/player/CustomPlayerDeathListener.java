@@ -1,9 +1,9 @@
 package org.luckyraven.gangland.listener.player;
 
+import com.cryptomorin.xseries.XAttribute;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -54,7 +54,7 @@ public class CustomPlayerDeathListener implements Listener {
 
 	/**
 	 * Vanilla default max health. {@link #restoreDownedState(Player)} clamps to this instead of reading
-	 * {@code Attribute.MAX_HEALTH}: the quit path runs while the player is already leaving, and the configured
+	 * {@code XAttribute.MAX_HEALTH.get()}: the quit path runs while the player is already leaving, and the configured
 	 * respawn health is itself expressed in vanilla hearts.
 	 */
 	private static final double DEFAULT_MAX_HEALTH = 20.0;
@@ -271,7 +271,7 @@ public class CustomPlayerDeathListener implements Listener {
 
 		DownedPlayerRegistry.remove(uuid);
 
-		double maxHealth = Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue();
+		double maxHealth = Objects.requireNonNull(player.getAttribute(XAttribute.MAX_HEALTH.get())).getValue();
 		double amount    = Math.min(Settings.getRespawnHealthAmount(), maxHealth);
 
 		player.setHealth(amount);

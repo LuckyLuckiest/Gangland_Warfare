@@ -180,10 +180,12 @@ public class DetainmentService {
 	}
 
 	private void applyEffect(Player player, XPotion potion, int amplifier) {
+		// PotionEffect.INFINITE_DURATION (-1) is 1.19.4+; the compile floor is 1.16.5. Integer.MAX_VALUE ticks never
+		// runs out on any version, and removeEffect clears it explicitly.
 		XPotion.of(potion.name())
 		       .map(XPotion::getPotionEffectType)
 		       .ifPresent(type -> player.addPotionEffect(
-					   new PotionEffect(type, PotionEffect.INFINITE_DURATION, amplifier)));
+					   new PotionEffect(type, Integer.MAX_VALUE, amplifier)));
 	}
 
 	private void removeEffect(Player player, XPotion potion) {

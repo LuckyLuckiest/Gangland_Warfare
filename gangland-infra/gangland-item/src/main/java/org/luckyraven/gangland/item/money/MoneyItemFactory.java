@@ -1,6 +1,6 @@
 package org.luckyraven.gangland.item.money;
 
-import org.bukkit.enchantments.Enchantment;
+import com.cryptomorin.xseries.XEnchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.luckyraven.keystone.item.ItemBuilder;
@@ -71,7 +71,7 @@ public final class MoneyItemFactory {
 		}
 
 		if (variation.isGlow()) {
-			builder.addEnchantment(Enchantment.UNBREAKING, 1);
+			builder.addEnchantment(XEnchantment.UNBREAKING.get(), 1);
 			builder.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 		}
 

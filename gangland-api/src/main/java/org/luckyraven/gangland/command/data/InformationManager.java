@@ -54,7 +54,9 @@ public final class InformationManager {
 
 	public int merge(String source, Reader json) {
 		try {
-			JsonElement root = JsonParser.parseReader(json);
+			// Gson 2.8.0 API on purpose: Spigot 1.16.5 (the compile floor) bundles that Gson, where the static
+			// JsonParser.parseReader (2.8.6+) and JsonObject.keySet (2.8.1+) do not exist yet.
+			JsonElement root = new JsonParser().parse(json);
 			if (!root.isJsonObject()) {
 				log.warn("Help index: {} {} is not a JSON object; skipped", source, COMMANDS_RESOURCE);
 				return 0;
@@ -62,8 +64,9 @@ public final class InformationManager {
 
 			JsonObject object = root.getAsJsonObject();
 			int        added  = 0;
-			for (String key : object.keySet()) {
-				JsonObject entry = object.get(key).getAsJsonObject();
+			for (Map.Entry<String, JsonElement> member : object.entrySet()) {
+				String     key   = member.getKey();
+				JsonObject entry = member.getValue().getAsJsonObject();
 				commands.put(key, new CommandInformation(entry.get("usage").getAsString(),
 				                                         entry.get("description").getAsString()));
 				added++;
