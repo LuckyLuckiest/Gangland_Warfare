@@ -504,7 +504,13 @@ public final class DebugCommand extends Command {
 			sender.sendMessage(permission);
 			sender.sendMessage("hasPermission: " + sender.hasPermission(permission));
 			sender.sendMessage("isPermissionSet: " + sender.isPermissionSet(permission));
-		}, sender -> List.of("<permission>"));
+		}, this::permissionSuggestions);
+	}
+
+	private List<String> permissionSuggestions(CommandSender sender) {
+		Set<String> permissions = permissionManager.getPermissions();
+
+		return permissions.isEmpty() ? List.of("<permission>") : permissions.stream().toList();
 	}
 
 	private @NotNull Argument getVersion() {

@@ -12,6 +12,7 @@ import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.List;
+import java.util.Set;
 
 final class PermissionsCheckSubArgument extends SubArgument {
 
@@ -38,9 +39,15 @@ final class PermissionsCheckSubArgument extends SubArgument {
 
 	private void registerArguments() {
 		Argument permArg = new OptionalArgument(gangland, tree, (argument, sender, args) -> check(sender, args[2]),
-		                                        sender -> List.of("<permission>"));
+		                                        this::permissionSuggestions);
 
 		this.addSubArgument(permArg);
+	}
+
+	private List<String> permissionSuggestions(CommandSender sender) {
+		Set<String> permissions = permissionManager.getPermissions();
+
+		return permissions.isEmpty() ? List.of("<permission>") : permissions.stream().toList();
 	}
 
 	private void check(CommandSender sender, String raw) {
