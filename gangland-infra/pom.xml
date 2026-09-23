@@ -17,7 +17,6 @@
     <name>Gangland Infrastructure</name>
 
     <modules>
-        <module>gangland-domain</module>
         <module>gangland-item</module>
     </modules>
 

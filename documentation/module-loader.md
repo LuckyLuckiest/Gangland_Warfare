@@ -85,8 +85,13 @@ Modules load once. A changed `modules/` folder — including an update — takes
 
 A module is a Maven module under `gangland-features/` that depends on **`gangland-api`** at **`provided`** scope —
 the only host artifact a module compiles against, so the compiler (not a convention) enforces the contract. It pulls
-`gangland-core`, `gangland-domain`, `gangland-item` and `sign-api` in transitively, so
-that one line replaces them all; add the Keystone modules it uses (also provided) — `keystone-shop` and
+`gangland-core`, `gangland-item` and `sign-api` in transitively, so
+that one line replaces them all (`gangland-domain` is gone entirely as of WS5, 0.10.0 — every type it held moved
+either into `gangland-core`, at WS5 G0, or into the `gangland-gang` module itself, at WS5 G1-G3; a module that
+names `Gang`/`GangManager`/`Member`/`Rank` directly needs its own `provided`-scope dependency on
+`gangland-gang` and a `Depends: [gang]` line in its `module.yml`, e.g. `gangland-mail`/`gangland-turf` — most
+modules instead read gang facts through `gangland-api`'s `GangMembership` holder and never need the
+dependency at all); add the Keystone modules it uses (also provided) — `keystone-shop` and
 `keystone-inventory` are never re-exported by `gangland-api` (0.10.0, WS4/WS2 — `gangland-ui/inventory-api` itself
 was deleted outright at the WS2 CUT gate, so there is nothing left to re-export there either), so a module that
 needs either declares it directly. A module never depends on

@@ -147,9 +147,12 @@ repo) resolve automatically.
 
 ### Phase 4: CONFIG
 
-The bulk manager phase. Produces all domain managers and services: `UserManager`, `GangManager`, `MemberManager`,
-`RankManager`, `WaypointManager`, `WeaponManager`, `SignManager`, `CarService`, `CopService`, `LootChestManager`,
-`PeriodicalUpdates`, `ListenerManager`, `CommandManager`, and many more.
+The bulk manager phase. Produces all domain managers and services: `UserManager`, `WaypointManager`,
+`SignManager`, `CarService`, `CopService`, `LootChestManager`, `PeriodicalUpdates`, `ListenerManager`,
+`CommandManager`, and many more — plus, since a runtime module's own `@Configuration` class is registered
+alongside the core's and runs in the same CONFIG phase (WS5, 0.10.0), module-owned managers such as
+`GangManager`/`MemberManager`/`RankManager` (`gangland-gang`) too. Both sets are produced the identical way;
+the only difference is which jar the `@Configuration` class lives in.
 
 Beans implementing `BeanLifecycle` have their `onInitialize(true)` called immediately after registration (in topo
 order), so each bean is populated with data before the next bean in the order is constructed.

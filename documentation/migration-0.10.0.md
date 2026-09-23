@@ -270,6 +270,56 @@ The 4 entries (`lootchest`, `lootchest_help`, `lootchest_edit`, `lootchest_remov
 `commands.json` into the module's own, at its jar root — no server-owner action; `/glw help lootchest` and
 `/glw lootchest help` keep working identically once the module jar is present.
 
+## WS5 — gangs, gang membership and ranks become the `gangland-gang` runtime module
+
+`Gang`, `GangAlliance`, `Member` and `Rank` (plus their managers, `GangManager`/`MemberManager`/`RankManager`)
+leave `gangland-impl`/`gangland-infra/gangland-domain` (now deleted outright, G5 — see §3 below) and become the
+runtime module `gangland-features/gangland-gang`, shipped as `modules/gangland-gang-<rev>.jar` and loaded from
+`plugins/Gangland_Warfare/modules/` like any other module (see `documentation/module-loader.md`). **This module
+is effectively required** for any gang/rank functionality: `/glw gang*`, `/glw rank*`, the gang bank, gang
+alliances, and every gang-touching menu (`gang_info.yml`, `gang_stat.yml`, `phone_gang.yml`,
+`phone_gang_search.yml`, `alliance_stat.yml`, `user_stat.yml`) all live in this jar now.
+
+### 1. Database tables are unchanged — no migration
+
+The `gang`, `gang_ally`, `member` and `rank`/`rank_parent`/`rank_permission` tables keep their exact names,
+columns and data. Moving the Java classes into a module changed nothing about the schema or how rows are
+read/written (still through the same `DatabaseBackend` SPI, via repositories that now live in the module jar
+instead of the core one). Upgrading in place with the module jar present needs no manual step here.
+
+### 2. What a server owner sees without the module installed
+
+Unlike loot chests (WS3, above), a missing `gangland-gang` jar does not simply make `/glw gang`/`/glw rank`
+disappear quietly — the failure mode depends on which other module is asking:
+
+- **`gangland-turf` and `gangland-mail` refuse to load entirely.** Both declare `Depends: [gang]` in their own
+  `module.yml` (they name `Gang`/`GangManager`/etc. directly), so Keystone's `ModuleLoader` rejects them with
+  `module.dependency.missing` at boot — `/glw turf*`/`/glw mail*` and gang invites/alliance requests are all
+  unavailable, not just the gang commands themselves.
+- **Every other module degrades instead of failing.** `gangland-civilians`, `cops-n-crooks` and
+  `gangland-gadget` were deliberately kept gang-module-free (no `Depends:` edge at all) — they read gang facts
+  (same gang / allied gangs) through `gangland-api`'s always-present `GangMembership` holder, which simply goes
+  inert (every query answers "no", "-1", or empty) when nothing installs a live view into it. Turf's
+  friendly-fire exemption between gang allies, civilians' weapon-impact ally check, and the car-sharing check in
+  gadget all silently stop recognising allies/gangmates — no error, no fault logged, just the
+  "no gang installed" default.
+- **`/glw gang*`/`/glw rank*` themselves simply don't exist** (same as any other missing module's commands) —
+  their `commands.json` entries live in the module jar, not the core's.
+- **The gang menus** (`gang_info.yml`, `gang_stat.yml`, `phone_gang.yml`, `phone_gang_search.yml`,
+  `alliance_stat.yml`, `user_stat.yml`) still open — they're core YAML menus — but every dynamic row (the member
+  list, the ally list, the gang-search results) is empty, since their `ItemSourceProvider` also resolves through
+  a now-inert contribution.
+
+Drop the jar in alongside the others (`plugins/Gangland_Warfare/modules/gangland-gang-<rev>.jar`) and restart to
+restore everything above.
+
+### 3. `gangland-infra/gangland-domain` is gone (G5)
+
+The now-empty shell module (everything it held moved out across WS5 G0 — identity (`User`/`Level`/`Bounty`/
+`Wanted`) → `gangland-core` — and G1-G3 — gangs/ranks → this module) is deleted from the reactor entirely along
+with its `<module>` line and every remaining pom reference. No server-owner action — this is a build-time-only
+change; nothing it ever produced was itself deployed to a running server.
+
 ## WS6 G3 — civilians' 12 `Messages.CIVILIAN_*` strings moved to the module's own YAML (worked example)
 
 This section covers only **G3** of the WS6 (api facade) plan — the module-owned `Messages`/`Settings`-to-YAML

@@ -100,8 +100,7 @@ the shared `DependencyContainer`.
 |                        |          | FileManager, DatabaseManager, PlaceholderService                        |
 | `FileConfig`           | FILE     | Settings, LanguageLoader, 13+ FileInitializer addons                     |
 | `DatabaseConfig`       | DATABASE | GanglandDatabase, RepositoryRegistry                                     |
-| `DataConfig`           | CONFIG   | UserManager (online/offline), RankManager, GangManager, MemberManager,   |
-|                        |          | WaypointManager, PluginManager                                           |
+| `DataConfig`           | CONFIG   | UserManager (online/offline), WaypointManager, PluginManager             |
 | `GameplayConfig`       | CONFIG   | WeaponManager, SignManager, ItemParser, LootChestManager,                |
 |                        |          | HologramService, MoneyDepositService, BlockDamageManager                 |
 | `SchedulingConfig`     | CONFIG   | PeriodicalUpdates, PlayerBootstrapService                                |

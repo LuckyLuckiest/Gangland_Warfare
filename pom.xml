@@ -261,11 +261,6 @@
             </dependency>
             <dependency>
                 <groupId>org.luckyraven</groupId>
-                <artifactId>gangland-domain</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.luckyraven</groupId>
                 <artifactId>gangland-item</artifactId>
                 <version>${project.version}</version>
             </dependency>

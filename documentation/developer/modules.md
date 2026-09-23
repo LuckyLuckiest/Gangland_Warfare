@@ -103,19 +103,21 @@ The command system dispatches all player commands through a single `/glw` root c
 
 ### Package: `data/`
 
-Domain models, managers, and services for core gameplay entities.
+Domain models, managers, and services for core gameplay entities. Gangs, gang membership and ranks are **not**
+part of this package any more (WS5, 0.10.0) — `Gang`/`GangAlliance`/`GangManager`, `Member`/`MemberManager` and
+`Rank`/`RankManager`/`RankParent`/`RankPermission` all moved into the `gangland-gang` runtime module (see
+`documentation/module-loader.md`); `Permission` (the plain node, not the rank-permission link) stayed behind in
+`gangland-core`. A core class that needs a gang/membership fact without depending on the module reads it
+through `gangland-api`'s `GangMembership` holder instead.
 
 | Subpackage             | Key Classes                                                                                       | Description                                                                                                                                       |
 |------------------------|---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
 | `account/`             | `Bank.java`                                                                                       | Player bank account with balance, interest, and transaction history.                                                                              |
-| `account/gang/`        | `Gang.java`, `GangAlliance.java`, `GangManager.java`                                              | Gang entity (name, tag, level, XP, bank), alliance tracking, and gang lifecycle management.                                                       |
-| `account/gang/member/` | `Member.java`, `MemberManager.java`                                                               | Gang membership model and cache with join/leave/promote operations.                                                                               |
 | `account/user/`        | `User.java`, `UserManager.java`                                                                   | Player profile (level, XP, balance, bounty, kills, deaths, wanted level). `UserManager` handles online/offline caching with async DB persistence. |
 | `economy/`             | `EconomyHandler.java`, `EconomyException.java`                                                    | Vault-compatible economy interface with balance checks and transfer validation.                                                                   |
 | `permission/`          | `PermissionHandler.java`, `PermissionManager.java`, `PermissionWorker.java`                       | Runtime permission attachment and rank-based permission resolution.                                                                               |
 | `placeholder/`         | `PlaceholderService.java`, `GanglandPlaceholder.java`, `PlaceholderAPIExpansion.java`             | PlaceholderAPI integration. Exposes player stats, gang info, and economy data as `%gangland_*%` placeholders.                                     |
 | `plugin/`              | `PluginData.java`, `PluginDataCleanupService.java`, `PluginManager.java`                          | Global plugin state tracking and periodic cleanup of stale data.                                                                                  |
-| `rank/`                | `Rank.java`, `RankManager.java`, `RankParent.java`, `RankPermission.java`, `Permission.java`      | Hierarchical rank system with inheritance. Ranks have parents, permissions, and display prefixes.                                                 |
 | `teleportation/`       | `Waypoint.java`, `WaypointManager.java`, `WaypointTeleport.java`, `IllegalTeleportException.java` | Named teleportation waypoints with warmup timers and movement cancellation.                                                                       |
 | `HelpInfo.java`        | —                                                                                                 | Help page data structure for the `/glw help` command.                                                                                             |
 
