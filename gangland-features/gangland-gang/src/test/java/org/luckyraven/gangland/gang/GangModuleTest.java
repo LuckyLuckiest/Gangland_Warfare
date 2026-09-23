@@ -27,7 +27,9 @@ class GangModuleTest {
 
 		new GangModule().configure(registrations);
 
-		assertEquals(List.of(GangConfig.class, GangMembershipInstaller.class), registrations.configurations());
+		// GangMembershipInstaller is no longer its own @Configuration class (T-53, W55) — it's a @Bean produced
+		// inside GangConfig now, so only one configuration class is registered.
+		assertEquals(List.of(GangConfig.class), registrations.configurations());
 		assertEquals(List.of(GangModule.LISTENER_PACKAGE), registrations.listenerPackages());
 		assertEquals(List.of(GangModule.GANG_COMMAND_PACKAGE, GangModule.RANK_COMMAND_PACKAGE),
 		            registrations.commandPackages());

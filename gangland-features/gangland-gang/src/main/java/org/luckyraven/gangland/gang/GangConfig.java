@@ -12,6 +12,7 @@ import org.luckyraven.gangland.gang.contract.RankLookupContract;
 import org.luckyraven.gangland.command.extension.CommandContribution;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.data.gang.GangItemSourceContribution;
+import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.data.placeholder.extension.PlaceholderContribution;
 import org.luckyraven.gangland.gang.command.debug.GangDebugContribution;
 import org.luckyraven.gangland.gang.command.option.GangOptionContribution;
@@ -177,5 +178,19 @@ public final class GangConfig {
 	                                                              MemberFilterAdapter memberFilterAdapter) {
 		return new GangMenuItemSourceContribution(userManager, gangManager, filterStore, filterApplier,
 		                                          gangFilterAdapter, memberFilterAdapter);
+	}
+
+	/**
+	 * Wires the core-owned {@link GangMembership} holder (T-53, W55) — see {@link GangMembershipInstaller}'s
+	 * javadoc for why this has to be a {@code @Bean}-produced value rather than its own bare
+	 * {@code @Configuration} class: these 3 parameters are the real ordering edges that guarantee
+	 * {@code IdentityContractConfig.gangMembership()} and this class's own {@code gangManager}/
+	 * {@code memberManager} beans have already run by the time this factory method is invoked.
+	 * {@code @PostConstruct install()} still fires automatically once this bean is registered.
+	 */
+	@Bean
+	public GangMembershipInstaller gangMembershipInstaller(GangMembership gangMembership, MemberManager memberManager,
+	                                                        GangManager gangManager) {
+		return new GangMembershipInstaller(gangMembership, memberManager, gangManager);
 	}
 }

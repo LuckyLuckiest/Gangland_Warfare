@@ -15,8 +15,9 @@ import org.luckyraven.keystone.vault.permission.VaultOfflinePermissionService;
  * <ul>
  *     <li>{@link GangConfig} - the module-owned contract beans (GangMessageContract, GangPermissionBridgeContract,
  *     GangSettingsContract, GangAllianceRepositoryContract's own binding, MemberRepositoryContract's own binding)
- *     plus {@code GangMembershipInstaller}'s {@code @PostConstruct} wiring of the core-owned
- *     {@code GangMembership} holder.</li>
+ *     plus the {@code @Bean}-produced {@code GangMembershipInstaller} whose {@code @PostConstruct} wires the
+ *     core-owned {@code GangMembership} holder (T-53, W55: not registered as its own {@code @Configuration}
+ *     class — see its javadoc for why that broke boot with the module deployed).</li>
  *     <li>{@code gang.command.sub} - the {@code /glw gang} and {@code /glw rank} command trees (31 commands).</li>
  *     <li>{@code gang.listener} - {@code GangMembersDamageListener}.</li>
  *     <li>{@code gang.database} - the gang/rank/member repositories and their tables, scanned through the module
@@ -34,7 +35,6 @@ public final class GangModule implements KeystoneModule {
 	@Override
 	public void configure(ModuleRegistrar registrar) {
 		registrar.configuration(GangConfig.class)
-		         .configuration(GangMembershipInstaller.class)
 		         .listenerPackage(LISTENER_PACKAGE)
 		         .commandPackage(GANG_COMMAND_PACKAGE)
 		         .commandPackage(RANK_COMMAND_PACKAGE)

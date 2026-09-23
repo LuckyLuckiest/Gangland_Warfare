@@ -1,7 +1,7 @@
-package org.luckyraven.gangland.database.repositories.plugin;
+package org.luckyraven.gangland.gang.database.repositories.permission;
 
 import org.bukkit.plugin.java.JavaPlugin;
-import org.luckyraven.gangland.database.tables.plugin.PermissionTable;
+import org.luckyraven.gangland.gang.database.tables.permission.PermissionTable;
 import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
 import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
@@ -15,6 +15,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * Moved from gangland-impl (T-54, W55): {@code Permission}'s only caller is the gang module's
+ * {@code RankManager} ({@code repositoryRegistry.getRepository(Permission.class)}); when the module isn't
+ * deployed, nothing ever called {@link #setDataSupplier}, so this repository sat in core's unconditional
+ * scan as an orphan and logged "No data supplier set" on every autosave. Scanned now only by
+ * {@code GangModule.REPOSITORY_PACKAGE}'s module-loader pass. The {@link Permission} entity itself and the
+ * {@code permission} table name are unchanged.
+ */
 @Repository(Permission.class)
 public class PermissionRepository extends AbstractRepository<Permission> {
 
