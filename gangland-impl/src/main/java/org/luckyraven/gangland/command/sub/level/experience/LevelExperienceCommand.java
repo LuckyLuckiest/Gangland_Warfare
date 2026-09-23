@@ -14,6 +14,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 public class LevelExperienceCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -21,7 +23,7 @@ public class LevelExperienceCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 
 	public LevelExperienceCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                              UserManager<Player> userManager) {
+	                              @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, new String[]{"experience", "exp"}, tree, parent);
 
 		this.gangland    = gangland;

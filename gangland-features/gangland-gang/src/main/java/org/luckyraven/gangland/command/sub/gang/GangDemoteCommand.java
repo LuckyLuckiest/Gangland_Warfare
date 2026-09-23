@@ -25,6 +25,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.Objects;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class GangDemoteCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -35,7 +37,7 @@ class GangDemoteCommand extends SubArgument {
 	private final RankManager         rankManager;
 
 	protected GangDemoteCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                            UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+	                            @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
 	                            RankManager rankManager) {
 		super(gangland, "demote", tree, parent);
 

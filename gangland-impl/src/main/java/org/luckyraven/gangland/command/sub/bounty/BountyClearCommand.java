@@ -18,6 +18,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.math.BigDecimal;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class BountyClearCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -25,7 +27,7 @@ class BountyClearCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 
 	public BountyClearCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                          UserManager<Player> userManager) {
+	                          @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, new String[]{"clear", "remove", "delete", "del"}, tree, parent);
 
 		this.gangland    = gangland;

@@ -15,13 +15,15 @@ import org.luckyraven.gangland.core.wanted.Wanted;
 
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class WantedAddCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
-	public WantedAddCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager) {
+	public WantedAddCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "add", tree, parent);
 
 		this.gangland = gangland;

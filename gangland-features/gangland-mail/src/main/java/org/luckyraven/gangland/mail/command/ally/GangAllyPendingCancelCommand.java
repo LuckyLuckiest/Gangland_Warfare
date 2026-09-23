@@ -19,6 +19,7 @@ import org.luckyraven.gangland.mail.MailManager;
 import org.luckyraven.gangland.mail.MailType;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
+import org.luckyraven.keystone.bean.Qualifier;
 import java.util.*;
 
 public class GangAllyPendingCancelCommand extends SubArgument {
@@ -30,7 +31,7 @@ public class GangAllyPendingCancelCommand extends SubArgument {
 	private final MailManager         mailManager;
 
 	public GangAllyPendingCancelCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                             UserManager<Player> userManager, GangManager gangManager, MailManager mailManager) {
+	                             @Qualifier("online") UserManager<Player> userManager, GangManager gangManager, MailManager mailManager) {
 		super(plugin, "cancel", tree, parent);
 
 		this.plugin    = plugin;

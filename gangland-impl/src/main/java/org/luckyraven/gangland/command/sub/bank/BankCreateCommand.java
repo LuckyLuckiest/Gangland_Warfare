@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class BankCreateCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -33,7 +35,7 @@ class BankCreateCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 
 	protected BankCreateCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                            UserManager<Player> userManager) {
+	                            @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "create", tree, parent);
 
 		this.gangland = gangland;

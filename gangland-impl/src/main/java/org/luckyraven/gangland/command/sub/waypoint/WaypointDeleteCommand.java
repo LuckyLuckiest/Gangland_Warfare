@@ -28,6 +28,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class WaypointDeleteCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -38,7 +40,7 @@ class WaypointDeleteCommand extends SubArgument {
 	private final PermissionManager   permissionManager;
 
 	protected WaypointDeleteCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                                UserManager<Player> userManager, WaypointManager waypointManager,
+	                                @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager,
 	                                GanglandDatabase ganglandDatabase, PermissionManager permissionManager) {
 		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);
 

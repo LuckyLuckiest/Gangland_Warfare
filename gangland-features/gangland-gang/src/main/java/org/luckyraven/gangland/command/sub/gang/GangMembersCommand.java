@@ -18,13 +18,15 @@ import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class GangMembersCommand extends SubArgument {
 
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
 
 	protected GangMembersCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                             UserManager<Player> userManager, GangManager gangManager) {
+	                             @Qualifier("online") UserManager<Player> userManager, GangManager gangManager) {
 		super(gangland, new String[]{"members", "list"}, tree, parent);
 
 		this.userManager = userManager;

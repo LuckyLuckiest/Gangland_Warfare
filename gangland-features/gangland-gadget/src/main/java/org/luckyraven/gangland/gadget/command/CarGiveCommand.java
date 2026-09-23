@@ -20,6 +20,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 import java.util.List;
 import java.util.Map;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class CarGiveCommand extends SubArgument {
 
 	private final JavaPlugin            plugin;
@@ -28,7 +30,7 @@ class CarGiveCommand extends SubArgument {
 	private final CarAddon            carAddon;
 
 	CarGiveCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	               UserManager<Player> userManager, CarAddon carAddon) {
+	               @Qualifier("online") UserManager<Player> userManager, CarAddon carAddon) {
 		super(plugin, "give", tree, parent);
 
 		this.plugin    = plugin;

@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.luckyraven.keystone.bean.Qualifier;
 /**
  * {@code /glw waypoint gangId <id>} — {@code user.getGangId() != id} is the primary validation (a player can
  * only ever set this to their own gang's id), but the original {@code gang == null -> GANG_DOESNT_EXIST} guard
@@ -42,7 +43,7 @@ class WaypointGangIdCommand extends SubArgument {
 	private final GangMembership      gangMembership;
 
 	protected WaypointGangIdCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                                UserManager<Player> userManager, WaypointManager waypointManager,
+	                                @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager,
 	                                GangMembership gangMembership) {
 		super(gangland, "gangId", tree, parent, "gang_id");
 

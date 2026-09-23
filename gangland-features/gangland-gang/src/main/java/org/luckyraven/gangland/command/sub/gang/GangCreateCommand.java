@@ -32,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class GangCreateCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -43,7 +45,7 @@ class GangCreateCommand extends SubArgument {
 	private final RepositoryRegistry  repositoryRegistry;
 
 	protected GangCreateCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                            UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+	                            @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
 	                            RankManager rankManager, RepositoryRegistry repositoryRegistry) {
 		super(gangland, "create", tree, parent);
 

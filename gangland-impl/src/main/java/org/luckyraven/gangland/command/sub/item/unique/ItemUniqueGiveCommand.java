@@ -20,6 +20,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 import java.util.List;
 import java.util.Map;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class ItemUniqueGiveCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -28,7 +30,7 @@ class ItemUniqueGiveCommand extends SubArgument {
 	private final UniqueItemAddon     uniqueItemAddon;
 
 	ItemUniqueGiveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                      UserManager<Player> userManager,
+	                      @Qualifier("online") UserManager<Player> userManager,
 	                      UniqueItemAddon uniqueItemAddon) {
 		super(gangland, "give", tree, parent);
 

@@ -25,6 +25,8 @@ import org.luckyraven.gangland.sign.validation.SignValidator;
 
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 public class CarSellSign extends BaseTradeSign implements BulkSignHandler {
 
 	private final UserManager<Player> userManager;
@@ -33,7 +35,7 @@ public class CarSellSign extends BaseTradeSign implements BulkSignHandler {
 
 	private SignHandler handler;
 
-	public CarSellSign(UserManager<Player> userManager, CarManager carManager, SignType signType) {
+	public CarSellSign(@Qualifier("online") UserManager<Player> userManager, CarManager carManager, SignType signType) {
 		this.userManager = userManager;
 		this.carManager  = carManager;
 		this.signType    = signType;

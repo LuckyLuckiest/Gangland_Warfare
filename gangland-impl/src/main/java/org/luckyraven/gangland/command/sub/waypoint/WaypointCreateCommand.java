@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class WaypointCreateCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -38,7 +40,7 @@ class WaypointCreateCommand extends SubArgument {
 	private final PermissionManager   permissionManager;
 
 	protected WaypointCreateCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                                UserManager<Player> userManager, WaypointManager waypointManager,
+	                                @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager,
 	                                PermissionManager permissionManager) {
 		super(gangland, "create", tree, parent);
 

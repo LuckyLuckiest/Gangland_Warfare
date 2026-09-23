@@ -19,6 +19,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class GangDisplayCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -28,7 +30,7 @@ class GangDisplayCommand extends SubArgument {
 	private final GangManager         gangManager;
 
 	protected GangDisplayCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                             UserManager<Player> userManager, MemberManager memberManager,
+	                             @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
 	                             GangManager gangManager) {
 		super(gangland, "display", tree, parent);
 

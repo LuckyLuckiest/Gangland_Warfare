@@ -16,6 +16,7 @@ import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
+import org.luckyraven.keystone.bean.Qualifier;
 import java.util.*;
 
 class WaypointSelectCommand extends SubArgument {
@@ -26,7 +27,7 @@ class WaypointSelectCommand extends SubArgument {
 	private final WaypointManager     waypointManager;
 
 	protected WaypointSelectCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                                UserManager<Player> userManager, WaypointManager waypointManager) {
+	                                @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager) {
 		super(gangland, new String[]{"select", "selects"}, tree, parent);
 
 		this.gangland        = gangland;

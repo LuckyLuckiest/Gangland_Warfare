@@ -17,6 +17,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class WaypointTimerCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -25,7 +27,7 @@ class WaypointTimerCommand extends SubArgument {
 	private final WaypointManager     waypointManager;
 
 	protected WaypointTimerCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                               UserManager<Player> userManager, WaypointManager waypointManager) {
+	                               @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager) {
 		super(gangland, "timer", tree, parent);
 
 		this.gangland        = gangland;

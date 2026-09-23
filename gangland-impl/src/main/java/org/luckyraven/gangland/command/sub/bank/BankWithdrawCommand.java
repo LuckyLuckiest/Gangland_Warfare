@@ -26,6 +26,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.NavigableSet;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class BankWithdrawCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -34,7 +36,7 @@ class BankWithdrawCommand extends SubArgument {
 	private final GanglandDatabase    ganglandDatabase;
 
 	protected BankWithdrawCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                              UserManager<Player> userManager, GanglandDatabase ganglandDatabase) {
+	                              @Qualifier("online") UserManager<Player> userManager, GanglandDatabase ganglandDatabase) {
 		super(gangland, "withdraw", tree, parent);
 
 		this.gangland         = gangland;

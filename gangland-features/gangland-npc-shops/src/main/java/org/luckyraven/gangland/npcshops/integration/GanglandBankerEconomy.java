@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 
+import org.luckyraven.keystone.bean.Qualifier;
 /**
  * Gangland-side implementation of {@link BankerEconomyContract}. Bridges the cops-n-crooks banker views to the real
  * {@link UserManager} + {@link Bank} entities + tier registry + Bank repository. Every entry point routes through
@@ -36,7 +37,7 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
 	private final BankerSettings      settings;
 	private final IRepository<Bank>   bankRepository;
 
-	public GanglandBankerEconomy(UserManager<Player> userManager, BankTierRegistry tierRegistry,
+	public GanglandBankerEconomy(@Qualifier("online") UserManager<Player> userManager, BankTierRegistry tierRegistry,
 	                             BankerSettings settings, IRepository<Bank> bankRepository) {
 		this.userManager    = userManager;
 		this.tierRegistry   = tierRegistry;

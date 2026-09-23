@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class GangKickCommand extends SubArgument {
 
 	private final JavaPlugin                   gangland;
@@ -36,7 +38,7 @@ class GangKickCommand extends SubArgument {
 	private final RankManager                rankManager;
 
 	protected GangKickCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                          UserManager<Player> userManager, UserManager<OfflinePlayer> offlineUserManager,
+	                          @Qualifier("online") UserManager<Player> userManager, @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
 	                          MemberManager memberManager, GangManager gangManager, RankManager rankManager) {
 		super(gangland, "kick", tree, parent);
 

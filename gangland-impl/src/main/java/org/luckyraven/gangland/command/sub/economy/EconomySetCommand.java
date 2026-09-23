@@ -20,6 +20,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class EconomySetCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -27,7 +29,7 @@ class EconomySetCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 
 	protected EconomySetCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                            UserManager<Player> userManager) {
+	                            @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "set", tree, parent);
 
 		this.gangland    = gangland;

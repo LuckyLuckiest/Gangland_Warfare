@@ -9,11 +9,13 @@ import org.luckyraven.gangland.core.wanted.Wanted;
 
 import java.util.UUID;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 public final class GanglandWantedClearContract implements WantedClearContract {
 
 	private final UserManager<Player> userManager;
 
-	public GanglandWantedClearContract(UserManager<Player> userManager) {
+	public GanglandWantedClearContract(@Qualifier("online") UserManager<Player> userManager) {
 		this.userManager = userManager;
 	}
 

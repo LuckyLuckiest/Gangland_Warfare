@@ -20,6 +20,7 @@ import org.luckyraven.gangland.mail.MailItem;
 import org.luckyraven.gangland.mail.MailManager;
 import org.luckyraven.gangland.mail.MailType;
 
+import org.luckyraven.keystone.bean.Qualifier;
 import java.util.*;
 
 public class GangAllyRejectCommand extends SubArgument {
@@ -31,7 +32,7 @@ public class GangAllyRejectCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final MailManager         mailManager;
 
-	public GangAllyRejectCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	public GangAllyRejectCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
 	                      MemberManager memberManager, GangManager gangManager, MailManager mailManager) {
 		super(plugin, "reject", tree, parent);
 

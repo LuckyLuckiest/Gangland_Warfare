@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 public class GangInviteCommand extends SubArgument {
 
 	private static final long INVITE_EXPIRY_MS = 60_000L;
@@ -42,8 +44,8 @@ public class GangInviteCommand extends SubArgument {
 	private final RankManager                rankManager;
 	private final MailManager                mailManager;
 
-	public GangInviteCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
-	                         UserManager<OfflinePlayer> offlineUserManager, MemberManager memberManager,
+	public GangInviteCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
+	                         @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager, MemberManager memberManager,
 	                         GangManager gangManager, RankManager rankManager, MailManager mailManager) {
 		super(plugin, new String[]{"invite", "add"}, tree, parent);
 

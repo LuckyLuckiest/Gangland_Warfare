@@ -31,6 +31,7 @@ import org.luckyraven.gangland.menu.filter.FilterStore;
 import org.bukkit.entity.Player;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
+import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
@@ -122,7 +123,7 @@ public final class GangConfig {
 	 * 12, S4) — see {@link GangPlaceholderContribution}'s javadoc.
 	 */
 	@Bean
-	public PlaceholderContribution gangPlaceholderContribution(UserManager<Player> userManager,
+	public PlaceholderContribution gangPlaceholderContribution(@Qualifier("online") UserManager<Player> userManager,
 	                                                           MemberManager memberManager, GangManager gangManager) {
 		return new GangPlaceholderContribution(userManager, memberManager, gangManager);
 	}
@@ -132,7 +133,8 @@ public final class GangConfig {
 	 * step 14) — see {@link GangOptionContribution}'s javadoc.
 	 */
 	@Bean
-	public CommandContribution gangOptionContribution(JavaPlugin plugin, UserManager<Player> userManager,
+	public CommandContribution gangOptionContribution(JavaPlugin plugin,
+	                                                   @Qualifier("online") UserManager<Player> userManager,
 	                                                   MemberManager memberManager, GangManager gangManager,
 	                                                   RankManager rankManager) {
 		return new GangOptionContribution(plugin, userManager, memberManager, gangManager, rankManager);
@@ -143,7 +145,8 @@ public final class GangConfig {
 	 * step 14) — see {@link GangDebugContribution}'s javadoc.
 	 */
 	@Bean
-	public CommandContribution gangDebugContribution(JavaPlugin plugin, UserManager<Player> userManager,
+	public CommandContribution gangDebugContribution(JavaPlugin plugin,
+	                                                  @Qualifier("online") UserManager<Player> userManager,
 	                                                  GangManager gangManager, MemberManager memberManager,
 	                                                  RankManager rankManager) {
 		return new GangDebugContribution(plugin, userManager, gangManager, memberManager, rankManager);
@@ -171,7 +174,7 @@ public final class GangConfig {
 	 * other cross-boundary bean (e.g. {@code RepositoryRegistry}, {@code PermissionManager}).
 	 */
 	@Bean
-	public GangItemSourceContribution gangItemSourceContribution(UserManager<Player> userManager,
+	public GangItemSourceContribution gangItemSourceContribution(@Qualifier("online") UserManager<Player> userManager,
 	                                                              GangManager gangManager, FilterStore filterStore,
 	                                                              FilterApplier filterApplier,
 	                                                              GangFilterAdapter gangFilterAdapter,

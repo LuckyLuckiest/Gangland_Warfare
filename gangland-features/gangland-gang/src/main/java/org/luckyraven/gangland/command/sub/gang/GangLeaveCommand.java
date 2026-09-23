@@ -23,6 +23,8 @@ import org.luckyraven.gangland.core.user.UserManager;
 
 import java.util.HashMap;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class GangLeaveCommand extends SubArgument {
 
 	private static final long CONFIRM_WINDOW_TICKS = 20L * 60L;
@@ -36,7 +38,7 @@ class GangLeaveCommand extends SubArgument {
 	private final HashMap<CommandSender, BukkitTask> autoUnlock = new HashMap<>();
 
 	protected GangLeaveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                           UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+	                           @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
 	                           RankManager rankManager) {
 		super(gangland, "leave", tree, parent);
 

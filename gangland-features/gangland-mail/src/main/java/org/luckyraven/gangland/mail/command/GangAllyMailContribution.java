@@ -16,6 +16,7 @@ import org.luckyraven.keystone.datastructure.Tree;
 
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
 /**
  * Attaches the mail-backed alliance flow - {@code request}, {@code accept}, {@code reject}, {@code pending}
  * ({@code + cancel}) - under the core's {@code /glw gang ally} argument. {@code abandon} is not mail and stays in
@@ -31,7 +32,7 @@ public final class GangAllyMailContribution implements CommandContribution {
 	private final GangManager         gangManager;
 	private final MailManager         mailManager;
 
-	public GangAllyMailContribution(JavaPlugin plugin, UserManager<Player> userManager, MemberManager memberManager,
+	public GangAllyMailContribution(JavaPlugin plugin, @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
 	                                GangManager gangManager, MailManager mailManager) {
 		this.plugin      = plugin;
 		this.userManager   = userManager;

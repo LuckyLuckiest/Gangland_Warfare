@@ -14,6 +14,8 @@ import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class EconomyResetCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -21,7 +23,7 @@ class EconomyResetCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 
 	protected EconomyResetCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                              UserManager<Player> userManager) {
+	                              @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "reset", tree, parent);
 
 		this.gangland    = gangland;

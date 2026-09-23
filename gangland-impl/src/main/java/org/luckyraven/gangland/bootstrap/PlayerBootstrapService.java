@@ -6,6 +6,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.bean.BeanPostInitialize;
+import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.gangland.data.user.UserDataLoader;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.database.TableLookup;
@@ -46,8 +47,8 @@ public final class PlayerBootstrapService implements BeanPostInitialize {
 
 	public PlayerBootstrapService(Gangland gangland,
 	                              GanglandDatabase ganglandDatabase,
-	                              UserManager<Player> userManager,
-	                              UserManager<OfflinePlayer> offlineUserManager,
+	                              @Qualifier("online") UserManager<Player> userManager,
+	                              @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
 	                              UserDataLoader userDataLoader,
 	                              UniqueItemAddon uniqueItemAddon) {
 		this.gangland           = gangland;

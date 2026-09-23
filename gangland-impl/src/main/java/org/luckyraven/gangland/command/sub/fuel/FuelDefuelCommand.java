@@ -16,13 +16,15 @@ import org.luckyraven.gangland.item.fuel.Fuel;
 
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class FuelDefuelCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
-	FuelDefuelCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager) {
+	FuelDefuelCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "defuel", tree, parent);
 
 		this.gangland    = gangland;

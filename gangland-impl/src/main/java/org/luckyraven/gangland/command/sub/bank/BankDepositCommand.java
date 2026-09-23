@@ -30,6 +30,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.NavigableSet;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class BankDepositCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -39,7 +41,7 @@ class BankDepositCommand extends SubArgument {
 	private final BankTiers           bankTiers;
 
 	protected BankDepositCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                             UserManager<Player> userManager, GanglandDatabase ganglandDatabase,
+	                             @Qualifier("online") UserManager<Player> userManager, GanglandDatabase ganglandDatabase,
 	                             BankTiers bankTiers) {
 		super(gangland, "deposit", tree, parent);
 

@@ -14,6 +14,7 @@ import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.keystone.color.ColorUtil;
 import org.luckyraven.keystone.util.NumberUtil;
 
+import org.luckyraven.keystone.bean.Qualifier;
 /**
  * Answers the {@code gang_*} placeholders and the member-touching {@code user_*} family (has-gang, gang-id,
  * gang-join-date, contribution, contributed-amount, has-rank, rank) that used to live inline in
@@ -30,7 +31,7 @@ public final class GangPlaceholderContribution implements PlaceholderContributio
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 
-	public GangPlaceholderContribution(UserManager<Player> userManager, MemberManager memberManager,
+	public GangPlaceholderContribution(@Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
 	                                   GangManager gangManager) {
 		this.userManager   = userManager;
 		this.memberManager = memberManager;

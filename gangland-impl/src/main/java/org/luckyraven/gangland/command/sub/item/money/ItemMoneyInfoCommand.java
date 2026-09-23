@@ -18,6 +18,8 @@ import org.luckyraven.gangland.item.money.MoneyItem;
 import org.luckyraven.gangland.item.money.MoneyItemUtil;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class ItemMoneyInfoCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -26,7 +28,7 @@ class ItemMoneyInfoCommand extends SubArgument {
 	private final MoneyAddon          moneyAddon;
 
 	ItemMoneyInfoCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                     UserManager<Player> userManager,
+	                     @Qualifier("online") UserManager<Player> userManager,
 	                     MoneyAddon moneyAddon) {
 		super(gangland, "info", tree, parent);
 

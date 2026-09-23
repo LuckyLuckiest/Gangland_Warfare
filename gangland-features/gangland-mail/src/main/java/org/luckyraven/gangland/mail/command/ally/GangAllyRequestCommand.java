@@ -27,6 +27,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 public class GangAllyRequestCommand extends SubArgument {
 
 	private static final long REQUEST_EXPIRY_MS = 60_000L;
@@ -38,7 +40,7 @@ public class GangAllyRequestCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final MailManager         mailManager;
 
-	public GangAllyRequestCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	public GangAllyRequestCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
 	                       MemberManager memberManager, GangManager gangManager, MailManager mailManager) {
 		super(plugin, "request", tree, parent);
 

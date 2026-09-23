@@ -38,6 +38,8 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class GangDeleteCommand extends SubArgument {
 
 	private final JavaPlugin                   gangland;
@@ -55,7 +57,7 @@ class GangDeleteCommand extends SubArgument {
 	private final ConfirmArgument confirmDelete;
 
 	protected GangDeleteCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                            UserManager<Player> userManager, UserManager<OfflinePlayer> offlineUserManager,
+	                            @Qualifier("online") UserManager<Player> userManager, @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
 	                            MemberManager memberManager, GangManager gangManager,
 	                            RankManager rankManager, RepositoryRegistry repositoryRegistry) {
 		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);

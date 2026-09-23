@@ -18,6 +18,7 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
 /**
  * {@code /glw gang ally}. The core owns {@code abandon}; the request/accept/reject/pending flow is mail and arrives
  * through the {@code gang.ally} {@link CommandContributions} when the mail module is installed.
@@ -33,7 +34,7 @@ public class GangAllyCommand extends SubArgument {
 	private final GangManager          gangManager;
 	private final CommandContributions contributions;
 
-	public GangAllyCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	public GangAllyCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
 	                       MemberManager memberManager, GangManager gangManager, CommandContributions contributions) {
 		super(gangland, "ally", tree, parent);
 

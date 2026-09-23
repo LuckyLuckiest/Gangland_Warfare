@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.luckyraven.keystone.bean.Qualifier;
 /**
  * Feeds the {@code gangs}/{@code gang_members}/{@code gang_allies} YAML menu item sources (W54 F1) — the direct
  * port of the deleted {@code GangItemSourceProvider}'s body, rows returned as plain
@@ -51,7 +52,7 @@ public final class GangMenuItemSourceContribution implements GangItemSourceContr
 	private final GangFilterAdapter   gangFilterAdapter;
 	private final MemberFilterAdapter memberFilterAdapter;
 
-	public GangMenuItemSourceContribution(UserManager<Player> userManager, GangManager gangManager,
+	public GangMenuItemSourceContribution(@Qualifier("online") UserManager<Player> userManager, GangManager gangManager,
 	                                      FilterStore filterStore, FilterApplier filterApplier,
 	                                      GangFilterAdapter gangFilterAdapter, MemberFilterAdapter memberFilterAdapter) {
 		this.userManager         = userManager;

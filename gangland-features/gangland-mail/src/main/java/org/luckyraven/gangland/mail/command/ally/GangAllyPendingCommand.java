@@ -19,13 +19,15 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 public class GangAllyPendingCommand extends SubArgument {
 
 	private final UserManager<Player> userManager;
 	private final GangManager         gangManager;
 	private final MailManager         mailManager;
 
-	public GangAllyPendingCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	public GangAllyPendingCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
 	                       GangManager gangManager, MailManager mailManager) {
 		super(plugin, "pending", tree, parent);
 

@@ -26,6 +26,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.NavigableSet;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class GangDepositCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -35,7 +37,7 @@ class GangDepositCommand extends SubArgument {
 	private final GangManager         gangManager;
 
 	protected GangDepositCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                             UserManager<Player> userManager, MemberManager memberManager,
+	                             @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
 	                             GangManager gangManager) {
 		super(gangland, "deposit", tree, parent);
 

@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.gang;
 
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,6 +51,18 @@ import static org.mockito.Mockito.when;
  * class than the one that needs it — without violating it. Every other {@code GangConfig} dependency
  * (repositories, plugin, database handler, user manager, filter plumbing) is mocked, matching every other
  * config-class bean test's rig in this codebase.
+ *
+ * <p>Also pins T-55 (W55, P0): {@code setUp()} registers <b>two</b> {@code UserManager} mocks named
+ * {@code online}/{@code offline} — exactly like the real {@code DataConfig} does ({@code isGeneric = true} on
+ * both {@code @Bean} methods, both stored under the same erased {@code UserManager.class} key) — so this rig
+ * can reproduce the real "2 candidates registered" ambiguity a {@code @Bean} method parameter with no
+ * {@code @Qualifier} hits (confirmed against {@code BeanFactory.resolveParameter}: unlike constructor
+ * injection, which silently falls back to "first registered" via {@code DependencyContainer.getInstance} and
+ * never throws, a {@code @Bean} method parameter resolves through {@code container.getAllInstances(type)} and
+ * throws {@code IllegalStateException} the moment more than one distinct candidate comes back). Before this
+ * gate's fix, {@code GangConfig.gangPlaceholderContribution}/{@code gangOptionContribution}/
+ * {@code gangDebugContribution}/{@code gangItemSourceContribution} all took a bare, unqualified
+ * {@code UserManager<Player>} parameter and hit exactly this; all four now carry {@code @Qualifier("online")}.
  */
 @DisplayName("GangConfig bean graph - real BeanFactory wiring (T-53)")
 class GangConfigBeanGraphTest {
@@ -73,6 +86,13 @@ class GangConfigBeanGraphTest {
 		@SuppressWarnings("unchecked")
 		UserManager<Player> userManager = mock(UserManager.class);
 		container.registerInstance("online", UserManager.class, userManager);
+
+		// T-55 (W55): DataConfig registers TWO UserManager beans under the raw erased type (online/offline,
+		// isGeneric = true) — both must be present here too, or this rig can never reproduce the "2 candidates
+		// registered" ambiguity a consumer with no @Qualifier hits in the real container.
+		@SuppressWarnings("unchecked")
+		UserManager<OfflinePlayer> offlineUserManager = mock(UserManager.class);
+		container.registerInstance("offline", UserManager.class, offlineUserManager);
 
 		factory.registerConfiguration(FixtureGangMembershipProducer.class);
 		factory.registerConfiguration(GangConfig.class);
@@ -125,6 +145,51 @@ class GangConfigBeanGraphTest {
 	}
 
 	/**
+	 * Pins T-55 directly: with two {@code UserManager} beans registered (online/offline, as {@code DataConfig}
+	 * does), every one of {@link GangConfig}'s {@code @Bean} methods must resolve without ambiguity. This
+	 * exercises the same {@code factory.instantiate()} call as {@link #gangMembershipInstaller_resolvesAndInstalls()}
+	 * — kept as its own named test so the T-55 regression has a dedicated, discoverable pin rather than riding
+	 * along on a test named for a different bug.
+	 */
+	@Test
+	@DisplayName("every GangConfig @Bean method resolves UserManager unambiguously with online+offline both registered (T-55)")
+	void gangConfig_userManagerConsumers_resolveUnambiguously() {
+		assertDoesNotThrow(() -> factory.instantiate(),
+		                   "GangConfig's gangPlaceholderContribution/gangOptionContribution/gangDebugContribution/"
+		                   + "gangItemSourceContribution must all qualify their UserManager<Player> parameter");
+	}
+
+	/**
+	 * Standalone repro of T-55's failure mode in isolation, independent of whatever {@link GangConfig} does or
+	 * stops doing: an unqualified {@code @Bean} method parameter of an ambiguously-registered type throws
+	 * exactly the "Ambiguous bean ... N candidates registered" error {@code BeanFactory.resolveParameter}
+	 * produces — mirrors {@link #bareConfigurationClass_constructorInjectingABeanProducedType_fails()}'s pattern
+	 * for T-53.
+	 */
+	@Test
+	@DisplayName("an unqualified @Bean method parameter of an ambiguously-registered type fails with the T-55 error")
+	void unqualifiedBeanParameter_ofAmbiguouslyRegisteredType_fails() {
+		DependencyContainer isolated       = new DependencyContainer();
+		BeanFactory          isolatedFactory = new BeanFactory(isolated, mock(JavaPlugin.class), key -> false);
+
+		@SuppressWarnings("unchecked")
+		UserManager<Player> online = mock(UserManager.class);
+		isolated.registerInstance("online", UserManager.class, online);
+
+		@SuppressWarnings("unchecked")
+		UserManager<OfflinePlayer> offline = mock(UserManager.class);
+		isolated.registerInstance("offline", UserManager.class, offline);
+
+		isolatedFactory.registerConfiguration(UnqualifiedUserManagerConsumer.class);
+
+		IllegalStateException thrown =
+				assertThrows(IllegalStateException.class, isolatedFactory::instantiate);
+		assertTrue(thrown.getMessage().contains("Ambiguous bean")
+		           && thrown.getMessage().contains("2 candidates registered"),
+		           thrown.getMessage());
+	}
+
+	/**
 	 * Reproduces the exact pre-fix crash: a bare {@code @Configuration} class construction-injecting a
 	 * {@code @Bean}-produced type. Standalone from the test above so a reader can run just this one to see the
 	 * failure mode in isolation.
@@ -163,6 +228,18 @@ class GangConfigBeanGraphTest {
 
 		public BareConfigurationNeedingABeanProducedType(GangMembership gangMembership) {
 			// unused — the point is that this constructor can never resolve, regardless of body
+		}
+	}
+
+	/** Minimal repro fixture for the T-55 isolation test: a {@code @Bean} method parameter of type
+	 * {@code UserManager<Player>} with no {@code @Qualifier}, exactly the shape all four of
+	 * {@link GangConfig}'s affected methods used to have. */
+	@Configuration
+	public static final class UnqualifiedUserManagerConsumer {
+
+		@Bean
+		public String consumer(UserManager<Player> userManager) {
+			return "unused";
 		}
 	}
 

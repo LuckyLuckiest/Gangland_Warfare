@@ -17,13 +17,15 @@ import org.luckyraven.gangland.item.unique.UniqueItem;
 import org.luckyraven.gangland.item.unique.UniqueItemUtil;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class ItemUniqueInfoCommand extends SubArgument {
 
 	private final UserManager<Player> userManager;
 	private final UniqueItemAddon     uniqueItemAddon;
 
 	ItemUniqueInfoCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                      UserManager<Player> userManager,
+	                      @Qualifier("online") UserManager<Player> userManager,
 	                      UniqueItemAddon uniqueItemAddon) {
 		super(gangland, "info", tree, parent);
 

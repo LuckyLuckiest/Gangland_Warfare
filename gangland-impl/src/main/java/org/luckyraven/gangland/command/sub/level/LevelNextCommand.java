@@ -12,12 +12,14 @@ import org.luckyraven.gangland.core.user.Level;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class LevelNextCommand extends SubArgument {
 
 	private final UserManager<Player> userManager;
 
 	protected LevelNextCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                           UserManager<Player> userManager) {
+	                           @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "next", tree, parent);
 
 		this.userManager = userManager;

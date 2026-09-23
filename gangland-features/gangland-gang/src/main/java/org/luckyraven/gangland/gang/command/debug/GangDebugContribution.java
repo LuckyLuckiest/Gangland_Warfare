@@ -18,6 +18,7 @@ import org.luckyraven.keystone.datastructure.Tree;
 import java.util.Collection;
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
 /**
  * Attaches {@code /glw debug gang-data|member-data|rank-data} under the core's {@code debug} command (WS5 G2 step
  * 14) — moved out of gangland-impl's {@code DebugCommand} wholesale; impl can no longer name
@@ -31,7 +32,7 @@ public final class GangDebugContribution implements CommandContribution {
 	private final MemberManager       memberManager;
 	private final RankManager         rankManager;
 
-	public GangDebugContribution(JavaPlugin plugin, UserManager<Player> userManager, GangManager gangManager,
+	public GangDebugContribution(JavaPlugin plugin, @Qualifier("online") UserManager<Player> userManager, GangManager gangManager,
 	                             MemberManager memberManager, RankManager rankManager) {
 		this.plugin        = plugin;
 		this.userManager   = userManager;

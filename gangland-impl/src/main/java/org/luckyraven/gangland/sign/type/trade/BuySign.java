@@ -26,6 +26,8 @@ import org.luckyraven.keystone.item.ItemSerializerRegistry;
 
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 public class BuySign extends BaseTradeSign implements BulkSignHandler {
 
 	private final UserManager<Player>    userManager;
@@ -39,7 +41,7 @@ public class BuySign extends BaseTradeSign implements BulkSignHandler {
 	 */
 	private SignHandler handler;
 
-	public BuySign(UserManager<Player> userManager, UniqueItemAddon uniqueItemAddon,
+	public BuySign(@Qualifier("online") UserManager<Player> userManager, UniqueItemAddon uniqueItemAddon,
 	               ItemSerializerRegistry serializers, ItemParser itemParser, SignType signType) {
 		this.userManager     = userManager;
 		this.uniqueItemAddon = uniqueItemAddon;

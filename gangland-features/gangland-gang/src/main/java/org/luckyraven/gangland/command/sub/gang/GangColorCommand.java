@@ -30,6 +30,8 @@ import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class GangColorCommand extends SubArgument {
 
 	// Mirrors gangland-impl's menu.InventoryBuilder.DEFAULT_FILL_ITEM/DEFAULT_FILL_NAME/DEFAULT_LINE_NAME — that
@@ -46,7 +48,7 @@ class GangColorCommand extends SubArgument {
 	private final InventoryService    inventoryService;
 
 	protected GangColorCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                           UserManager<Player> userManager, MemberManager memberManager,
+	                           @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
 	                           GangManager gangManager, InventoryService inventoryService) {
 		super(gangland, "color", tree, parent);
 

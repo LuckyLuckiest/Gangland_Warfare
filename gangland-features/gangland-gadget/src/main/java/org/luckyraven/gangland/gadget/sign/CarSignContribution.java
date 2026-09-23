@@ -9,6 +9,7 @@ import org.luckyraven.gangland.sign.type.Sign;
 
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
 /**
  * Adds the {@code car-buy} and {@code car-sell} sign types to the core catalogue. Rebuilds exactly what
  * {@code SignManager.setupSigns()} used to build inline before the sign extension seam existed.
@@ -18,7 +19,7 @@ public class CarSignContribution implements SignTypeContribution {
 	private final UserManager<Player> userManager;
 	private final CarManager          carManager;
 
-	public CarSignContribution(UserManager<Player> userManager, CarManager carManager) {
+	public CarSignContribution(@Qualifier("online") UserManager<Player> userManager, CarManager carManager) {
 		this.userManager = userManager;
 		this.carManager  = carManager;
 	}

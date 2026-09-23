@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.luckyraven.keystone.bean.Qualifier;
 /**
  * {@code /glw gang transfer <player>} → confirm via {@code /glw gang transfer confirm} → swaps the gang's owner rank
  * onto the target player and demotes the original owner to the rank directly below owner. Mirrors the
@@ -48,7 +49,7 @@ class GangTransferCommand extends SubArgument {
 	private final ConfirmArgument                              confirmTransfer;
 
 	protected GangTransferCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                              UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+	                              @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
 	                              RankManager rankManager) {
 		super(gangland, "transfer", tree, parent);
 

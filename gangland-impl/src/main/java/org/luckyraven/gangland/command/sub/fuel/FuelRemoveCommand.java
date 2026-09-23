@@ -17,13 +17,15 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class FuelRemoveCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
 
-	FuelRemoveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager) {
+	FuelRemoveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "remove", tree, parent);
 
 		this.gangland    = gangland;

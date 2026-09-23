@@ -16,13 +16,15 @@ import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class CarInfoCommand extends SubArgument {
 
 	private final UserManager<Player> userManager;
 	private final CarAddon            carAddon;
 
 	CarInfoCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	               UserManager<Player> userManager, CarAddon carAddon) {
+	               @Qualifier("online") UserManager<Player> userManager, CarAddon carAddon) {
 		super(plugin, "info", tree, parent);
 
 		this.userManager = userManager;

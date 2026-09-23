@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class GangPromoteCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -39,7 +41,7 @@ class GangPromoteCommand extends SubArgument {
 	private final RankManager         rankManager;
 
 	protected GangPromoteCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                             UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+	                             @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
 	                             RankManager rankManager) {
 		super(gangland, "promote", tree, parent);
 

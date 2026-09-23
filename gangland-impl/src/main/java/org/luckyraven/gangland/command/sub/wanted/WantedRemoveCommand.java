@@ -15,6 +15,8 @@ import org.luckyraven.gangland.core.wanted.Wanted;
 
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class WantedRemoveCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -22,7 +24,7 @@ class WantedRemoveCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 
 	public WantedRemoveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                           UserManager<Player> userManager) {
+	                           @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "remove", tree, parent);
 
 		this.gangland = gangland;

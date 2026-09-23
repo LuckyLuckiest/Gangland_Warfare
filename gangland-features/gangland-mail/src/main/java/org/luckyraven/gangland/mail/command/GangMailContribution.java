@@ -15,6 +15,7 @@ import org.luckyraven.keystone.datastructure.Tree;
 
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
 /**
  * Attaches {@code /glw gang invite [cancel] <player>} and its sibling {@code /glw gang accept} under the core's
  * {@code gang} command. Registered as a bean by {@link org.luckyraven.gangland.mail.MailModuleConfig}; without the
@@ -32,8 +33,8 @@ public final class GangMailContribution implements CommandContribution {
 	private final RankManager                rankManager;
 	private final MailManager                mailManager;
 
-	public GangMailContribution(JavaPlugin plugin, UserManager<Player> userManager,
-	                            UserManager<OfflinePlayer> offlineUserManager, MemberManager memberManager,
+	public GangMailContribution(JavaPlugin plugin, @Qualifier("online") UserManager<Player> userManager,
+	                            @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager, MemberManager memberManager,
 	                            GangManager gangManager, RankManager rankManager, MailManager mailManager) {
 		this.plugin           = plugin;
 		this.userManager        = userManager;

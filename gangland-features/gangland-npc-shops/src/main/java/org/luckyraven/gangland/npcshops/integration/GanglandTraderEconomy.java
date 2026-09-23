@@ -10,12 +10,13 @@ import org.luckyraven.gangland.core.user.UserManager;
 
 import java.math.BigDecimal;
 
+import org.luckyraven.keystone.bean.Qualifier;
 @CustomLog
 public final class GanglandTraderEconomy implements TraderEconomyContract {
 
 	private final UserManager<Player> userManager;
 
-	public GanglandTraderEconomy(UserManager<Player> userManager) {
+	public GanglandTraderEconomy(@Qualifier("online") UserManager<Player> userManager) {
 		this.userManager = userManager;
 	}
 

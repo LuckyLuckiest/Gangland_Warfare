@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class GangInviteCancelCommand extends SubArgument {
 
 	private final JavaPlugin                   plugin;
@@ -30,8 +32,8 @@ class GangInviteCancelCommand extends SubArgument {
 	private final UserManager<OfflinePlayer> offlineUserManager;
 	private final MailManager                mailManager;
 
-	GangInviteCancelCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
-	                        UserManager<OfflinePlayer> offlineUserManager, MailManager mailManager) {
+	GangInviteCancelCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
+	                        @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager, MailManager mailManager) {
 		super(plugin, "cancel", tree, parent);
 
 		this.plugin           = plugin;

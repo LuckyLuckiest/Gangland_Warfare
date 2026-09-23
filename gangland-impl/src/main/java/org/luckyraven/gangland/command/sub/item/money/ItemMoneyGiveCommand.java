@@ -22,6 +22,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 import java.util.List;
 import java.util.Map;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class ItemMoneyGiveCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -31,7 +33,7 @@ class ItemMoneyGiveCommand extends SubArgument {
 	private final MoneyDepositService moneyDepositService;
 
 	ItemMoneyGiveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                     UserManager<Player> userManager,
+	                     @Qualifier("online") UserManager<Player> userManager,
 	                     MoneyAddon moneyAddon,
 	                     MoneyDepositService moneyDepositService) {
 		super(gangland, "give", tree, parent);

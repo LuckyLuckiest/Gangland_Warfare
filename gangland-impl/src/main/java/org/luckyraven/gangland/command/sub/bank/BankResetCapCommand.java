@@ -20,6 +20,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class BankResetCapCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -28,7 +30,7 @@ class BankResetCapCommand extends SubArgument {
 	private final GanglandDatabase    ganglandDatabase;
 
 	protected BankResetCapCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                              UserManager<Player> userManager, GanglandDatabase ganglandDatabase) {
+	                              @Qualifier("online") UserManager<Player> userManager, GanglandDatabase ganglandDatabase) {
 		super(gangland, "resetcap", tree, parent);
 
 		this.gangland         = gangland;

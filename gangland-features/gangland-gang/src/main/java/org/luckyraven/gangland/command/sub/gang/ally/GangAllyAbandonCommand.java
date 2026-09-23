@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class GangAllyAbandonCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -34,7 +36,7 @@ class GangAllyAbandonCommand extends SubArgument {
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 
-	GangAllyAbandonCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	GangAllyAbandonCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
 	                       MemberManager memberManager, GangManager gangManager) {
 		super(gangland, "abandon", tree, parent);
 

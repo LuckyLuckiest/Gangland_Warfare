@@ -28,6 +28,7 @@ import org.luckyraven.keystone.item.ItemSerializerRegistry;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
 /**
  * Builds the core sign catalogue and, through {@link SignContributions}, whatever car/weapon/wearable sign types
  * runtime modules contribute. {@code setupSigns()} resolves {@link SignContributions#from(DependencyContainer)}
@@ -65,8 +66,8 @@ public class SignManager extends SignService {
 	                   UniqueItemAddon uniqueItemAddon,
 	                   ItemSerializerRegistry serializers,
 	                   ItemParser itemParser,
-	                   UserManager<Player> userManager,
-	                   UserManager<OfflinePlayer> offlineUserManager,
+	                   @Qualifier("online") UserManager<Player> userManager,
+	                   @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
 	                   DependencyContainer container,
 	                   LegacySignRewriter legacyAliasRewriter) {
 		super(registry, signInteraction);

@@ -6,6 +6,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.timer.RepeatingTimer;
 import org.luckyraven.keystone.util.TimeUtil;
 import org.luckyraven.gangland.data.plugin.PluginData;
@@ -43,8 +44,8 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 	public PeriodicalUpdates(Gangland gangland,
 	                         GanglandDatabase database,
 	                         PluginManager pluginManager,
-	                         UserManager<Player> userManager,
-	                         UserManager<OfflinePlayer> offlineUserManager,
+	                         @Qualifier("online") UserManager<Player> userManager,
+	                         @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
 	                         DependencyContainer container,
 	                         long interval) {
 		this(gangland, database, pluginManager, userManager, offlineUserManager, container);
@@ -54,8 +55,8 @@ public final class PeriodicalUpdates implements BeanLifecycle {
 	public PeriodicalUpdates(Gangland gangland,
 	                         GanglandDatabase database,
 	                         PluginManager pluginManager,
-	                         UserManager<Player> userManager,
-	                         UserManager<OfflinePlayer> offlineUserManager,
+	                         @Qualifier("online") UserManager<Player> userManager,
+	                         @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
 	                         DependencyContainer container) {
 		this.gangland           = gangland;
 		this.database           = database;

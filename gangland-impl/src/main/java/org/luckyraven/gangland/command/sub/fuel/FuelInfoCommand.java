@@ -16,11 +16,13 @@ import org.luckyraven.gangland.item.fuel.Fuel;
 import org.luckyraven.gangland.item.fuel.FuelBar;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class FuelInfoCommand extends SubArgument {
 
 	private final UserManager<Player> userManager;
 
-	FuelInfoCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager) {
+	FuelInfoCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "info", tree, parent);
 
 		this.userManager = userManager;

@@ -19,6 +19,8 @@ import org.luckyraven.gangland.core.user.UserManager;
 import java.util.Collections;
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class GangDescriptionCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -27,7 +29,7 @@ class GangDescriptionCommand extends SubArgument {
 	private final GangManager         gangManager;
 
 	protected GangDescriptionCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                                 UserManager<Player> userManager, MemberManager memberManager,
+	                                 @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
 	                                 GangManager gangManager) {
 		super(gangland, new String[]{"desc", "description"}, tree, parent, "description");
 

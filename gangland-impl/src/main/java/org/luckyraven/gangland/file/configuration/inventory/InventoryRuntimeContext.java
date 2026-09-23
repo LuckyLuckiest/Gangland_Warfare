@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+import org.luckyraven.keystone.bean.Qualifier;
 /**
  * Runtime half of the former static {@code InventoryAddon}: holds the service references that registration and
  * open-inventory logic need. Lives in the CONFIG phase because some of its dependencies (e.g. {@link UserManager},
@@ -61,7 +62,7 @@ public class InventoryRuntimeContext {
 	                               InventoryDefinitionStore definitionStore,
 	                               ItemSourceProvider itemSourceProvider,
 	                               ConditionEvaluator conditionEvaluator,
-	                               UserManager<Player> userManager,
+	                               @Qualifier("online") UserManager<Player> userManager,
 	                               PermissionManager permissionManager,
 	                               PlaceholderService placeholderService,
 	                               ItemParser itemParser,

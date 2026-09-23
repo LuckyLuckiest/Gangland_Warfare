@@ -13,12 +13,14 @@ import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class BankBalanceCommand extends SubArgument {
 
 	private final UserManager<Player> userManager;
 
 	protected BankBalanceCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                             UserManager<Player> userManager) {
+	                             @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, new String[]{"balance", "bal"}, tree, parent);
 
 		this.userManager = userManager;

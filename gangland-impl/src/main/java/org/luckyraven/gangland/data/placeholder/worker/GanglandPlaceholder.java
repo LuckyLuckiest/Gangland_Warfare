@@ -30,6 +30,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 public class GanglandPlaceholder extends PlaceholderHandler {
 
 	private final UserManager<Player> userManager;
@@ -49,7 +51,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 	public GanglandPlaceholder(String prefix,
 	                           Replacer.Closure closure,
-	                           UserManager<Player> userManager,
+	                           @Qualifier("online") UserManager<Player> userManager,
 	                           UniqueItemAddon uniqueItemAddon,
 	                           BankTiers bankTiers,
 	                           DependencyContainer container,

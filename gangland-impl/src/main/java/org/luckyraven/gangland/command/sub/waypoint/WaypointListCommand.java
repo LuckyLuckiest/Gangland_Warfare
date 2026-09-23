@@ -24,13 +24,15 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class WaypointListCommand extends SubArgument {
 
 	private final UserManager<Player> userManager;
 	private final WaypointManager     waypointManager;
 
 	protected WaypointListCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                              UserManager<Player> userManager, WaypointManager waypointManager) {
+	                              @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager) {
 		super(gangland, "list", tree, parent);
 
 		this.userManager     = userManager;

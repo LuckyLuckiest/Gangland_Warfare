@@ -13,13 +13,15 @@ import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class WaypointDeselectCommand extends SubArgument {
 
 	private final UserManager<Player> userManager;
 	private final WaypointManager     waypointManager;
 
 	protected WaypointDeselectCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                                  UserManager<Player> userManager, WaypointManager waypointManager) {
+	                                  @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager) {
 		super(gangland, "deselect", tree, parent);
 
 		this.userManager     = userManager;

@@ -14,6 +14,8 @@ import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class WantedClearCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -21,7 +23,7 @@ class WantedClearCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 
 	public WantedClearCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                          UserManager<Player> userManager) {
+	                          @Qualifier("online") UserManager<Player> userManager) {
 		super(gangland, "clear", tree, parent);
 
 		this.gangland = gangland;

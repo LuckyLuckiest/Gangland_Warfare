@@ -28,6 +28,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.luckyraven.keystone.bean.Qualifier;
+
 class GangInviteAcceptCommand extends SubArgument {
 
 	private final JavaPlugin            plugin;
@@ -38,7 +40,7 @@ class GangInviteAcceptCommand extends SubArgument {
 	private final RankManager         rankManager;
 	private final MailManager         mailManager;
 
-	GangInviteAcceptCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+	GangInviteAcceptCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
 	                        MemberManager memberManager, GangManager gangManager, RankManager rankManager,
 	                        MailManager mailManager) {
 		super(plugin, "accept", tree, parent);
