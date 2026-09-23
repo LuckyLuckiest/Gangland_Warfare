@@ -1,19 +1,19 @@
 1~~P0~~Scoreboard driver appends the title to one shared live line list per board created~~Deep-copy scoreboardAddon.getLines() per board so Line state and growth are per player.~~-
 2~~P0~~Scoreboard updater runs async every tick, touching placeholders and FastBoard~~Use timer.start(false) with a configurable interval; keep only pure string formatting off-thread.~~-
 3~~P1~~rerender/switchTo reuse leaves stale clickable and draggable slots~~Clear clickableSlots, rightClickSlots, clickableItems and draggableSlots in InventoryHandler.clear() before re-rendering.~~-
-4~~P1~~InventoryRegistry never unregisters handlers and findByInventory scans everything~~Unregister in User.removeInventory and on close, register multi pages through the user, and index handlers by Inventory identity.~~-
+4~~P1~~InventoryRegistry never unregisters handlers and findByInventory scans everything~~Unregister in User.removeInventory and on close, register multi pages through the user, and index handlers by Inventory identity.~~FIXED-BY-WS2 0.10.0 CUT, commit 5d6cbefc: InventoryRegistry deleted outright; RemoveAccountListener/KernelConfig no longer construct or clear it; replaced by keystone-inventory's InventoryService/OpenMenuTracker (InventoryHolder-identity-based, no linear scan, auto-untracks on quit via its own MenuListener)
 5~~P2~~Per-user inventory cache hits or misses depending on title/name coincidence~~Key the cache by the YAML name consistently and invalidate on open (or drop the cache).~~-
 6~~P2~~InventoryOpenByCommandListener return values are inverted and render failures are swallowed~~Return true on success and log the exception in the catch.~~-
 7~~P2~~Dangling else in MultiInventory.removePage~~Add braces so the else-if binds to the outer if.~~-
 8~~P2~~Click consumer runs before event.setCancelled~~Cancel first, then run the consumer; defer inventory opens by one tick.~~-
 9~~P2~~Out-of-range Line values throw at open time from a click handler~~Validate Line.Vertical/Horizontal at parse time and wrap openInventoryForPlayer in try/catch with a log.~~-
-10~~P3~~SPECIAL_INVENTORIES handlers would not cancel clicks (dormant)~~Register special inventories in InventoryRegistry or delete the mechanism.~~-
+10~~P3~~SPECIAL_INVENTORIES handlers would not cancel clicks (dormant)~~Register special inventories in InventoryRegistry or delete the mechanism.~~FIXED-BY-WS2 0.10.0 CUT, commit 5d6cbefc: InventoryHandler.SPECIAL_INVENTORIES and its getSpecialInventories() accessor deleted with the class; DebugCommand's /glw debug inv-data special argument (its only reader) deleted too
 11~~P2~~A suspended flow is never cleaned up when the anvil is abandoned~~On quit or close during suspend, run cleanup()/onEnd and add a timeout.~~-
 12~~P3~~VillagerInventory recipe lookup by identity may miss CraftMerchantRecipe~~Match by recipe index or result instead of identity.~~-
 13~~P2~~Chest hologram removal bypasses HologramService and leaks map entries~~Call hologramService.removeHologram(id) in ChestCooldownManager.~~-
 14~~P1~~Holograms vanish after a chunk unload and never respawn~~Make the armour stands persistent or respawn them on ChunkLoadEvent/update() when isArmorStandDead.~~-
 15~~P3~~hologramsByLocation is keyed by the caller's mutable Location~~Clone the key on insert and reject a second hologram at the same location.~~-
-16~~P1~~DriverV1/V2 skip rows that share the title's interval (Wanted never refreshes)~~Update every line in the cluster; remove the title-only branch.~~-
+16~~P1~~DriverV1/V2 skip rows that share the title's interval (Wanted never refreshes)~~Update every line in the cluster; remove the title-only branch.~~WONTFIX/MOVED 0.10.0 WS1 G3 (2026-09-20): DriverV1/DriverV2 (the buggy classes this row describes) were deleted outright along with all of gangland-ui/scoreboard-api when the scoreboard left Gangland for the standalone Plaque plugin (decision WS1-D1(b)) - there is no code left anywhere in this repo matching the row's description. Plaque's own port carries only DriverV3 (already fixed pre-port, per the original docket's own §11 carry-forward table); this row does not apply to Plaque.
 17~~P2~~An empty Lines list throws every tick~~Guard empty contents in Line and validate scoreboard.yml at load.~~-
 18~~P3~~Multi.Per_Page is parsed but never read~~Use perPage in computeConfigForCreation or remove the key from the three YAMLs.~~-
 19~~P3~~Home_Page head texture key is read but missing from settings.yml~~Add Inventory.Multi_Inventory.Home_Page to settings.yml.~~-
