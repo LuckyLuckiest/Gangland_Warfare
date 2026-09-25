@@ -9,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.sign.model.ParsedSign;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -139,6 +140,30 @@ class ItemTransferAspectTest {
 
 		assertFalse(result.isSuccess());
 		verify(inventory, never()).addItem(any(ItemStack[].class));
+	}
+
+	@Test
+	@DisplayName("failureReason names an unknown item instead of the generic fallback")
+	void failureReason_unknownItem_namesIt() {
+		ItemTransferAspect aspect = new ItemTransferAspect(sign -> null, ItemTransferAspect.TransferType.GIVE,
+		                                                   (p, a, b) -> a == b);
+
+		assertEquals("Invalid item: diamond", aspect.failureReason(player, sign(1)));
+	}
+
+	@Test
+	@DisplayName("failureReason on a TAKE sign names the missing item")
+	void failureReason_take_namesTheMissingItem() {
+		ItemTransferAspect aspect = new ItemTransferAspect(sign -> item, ItemTransferAspect.TransferType.TAKE,
+		                                                   (p, a, b) -> a == b);
+
+		assertEquals("You don't have enough diamond!", aspect.failureReason(player, sign(1)));
+	}
+
+	@Test
+	@DisplayName("failureReason on a GIVE sign says the inventory is full")
+	void failureReason_give_saysInventoryFull() {
+		assertEquals("Your inventory is full!", giveAspect().failureReason(player, sign(1)));
 	}
 
 }

@@ -455,6 +455,7 @@ Errors:
       Spawn: "&cYou don't have permission to teleport to this spawn!"
       Warp: "&cYou don't have permission to teleport to this warp!"
       Sign: "&cYou don't have permission to use this sign!"
+      Sign_Break: "&cYou don't have permission to break this sign!"
       Other: "&cYou don't have permission to use this!"
       Not_Found: "&cPermission &e%permission% &cis not registered."
       List_Empty: "&cNo permissions matched &e%query%&c."

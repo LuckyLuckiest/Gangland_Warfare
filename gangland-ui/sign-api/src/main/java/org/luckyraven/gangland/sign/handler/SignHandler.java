@@ -26,4 +26,11 @@ public interface SignHandler {
 	 */
 	boolean canHandle(Player player, ParsedSign sign);
 
+	/**
+	 * Why {@link #canHandle} refused, shown to the player; {@code null} falls back to a generic message.
+	 */
+	default String failureReason(Player player, ParsedSign sign) {
+		return null;
+	}
+
 }

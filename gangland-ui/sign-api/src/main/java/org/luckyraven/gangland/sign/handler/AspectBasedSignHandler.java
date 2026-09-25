@@ -7,6 +7,7 @@ import org.luckyraven.gangland.sign.model.ParsedSign;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class AspectBasedSignHandler implements SignHandler {
 
@@ -41,5 +42,15 @@ public class AspectBasedSignHandler implements SignHandler {
 	@Override
 	public boolean canHandle(Player player, ParsedSign sign) {
 		return aspects.stream().allMatch(aspect -> aspect.canExecute(player, sign));
+	}
+
+	@Override
+	public String failureReason(Player player, ParsedSign sign) {
+		return aspects.stream()
+		              .filter(aspect -> !aspect.canExecute(player, sign))
+		              .map(aspect -> aspect.failureReason(player, sign))
+		              .filter(Objects::nonNull)
+		              .findFirst()
+		              .orElse(null);
 	}
 }

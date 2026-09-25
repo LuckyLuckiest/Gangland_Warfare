@@ -20,6 +20,11 @@ public interface SignInformation {
 	/** Shown when a player may not create or break a plugin sign (docket LS-19). */
 	String getSignNoPermission();
 
+	/** Shown when a player may not break a plugin sign; defaults to {@link #getSignNoPermission()}. */
+	default String getSignBreakNoPermission() {
+		return getSignNoPermission();
+	}
+
 	String getBulkConfirmExpired();
 
 	String getBulkConfirmRequest(BulkActionPreview preview, int confirmWindowSeconds);

@@ -362,6 +362,7 @@ Errors:
       Spawn: "&c¡No tienes permiso para teletransportarte a este punto de aparición!"
       Warp: "&c¡No tienes permiso para teletransportarte a este warp!"
       Sign: "&c¡No tienes permiso para usar este letrero!"
+      Sign_Break: "&c¡No tienes permiso para romper este letrero!"
       Other: "&c¡No tienes permiso para usar esto!"
       Not_Found: "&cEl permiso &e%permission% &cno está registrado."
       List_Empty: "&cNingún permiso coincide con &e%query%&c."
