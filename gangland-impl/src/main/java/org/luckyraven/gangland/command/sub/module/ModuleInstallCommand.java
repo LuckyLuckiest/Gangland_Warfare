@@ -77,7 +77,7 @@ class ModuleInstallCommand extends SubArgument {
 	}
 
 	/** Main thread: parse, snapshot what the verdict needs, then hand the network work to the async scheduler. */
-	private void start(CommandSender sender, String moduleArgument, @Nullable String version) {
+	void start(CommandSender sender, String moduleArgument, @Nullable String version) {
 		ArtifactCoordinate parsed = ModuleInstalls.coordinate(moduleArgument);
 
 		if (parsed == null) {
@@ -128,10 +128,10 @@ class ModuleInstallCommand extends SubArgument {
 			target = target.withVersion(newest);
 		}
 
-		LoadedModule installed  = alreadyInstalled(moduleArgument, target);
-		Result<Path> downloaded = installed == null
+		ModuleDescriptor installed  = alreadyInstalled(moduleArgument, target);
+		Result<Path>     downloaded = installed == null
 				? resolver.download(repository, target, moduleLoader.modulesDirectory())
-				: updateService.downloadNow(update(installed.descriptor(), target));
+				: updateService.downloadNow(update(installed, target));
 
 		if (downloaded.isFailure()) {
 			lines.add(failed(downloaded));
@@ -188,21 +188,20 @@ class ModuleInstallCommand extends SubArgument {
 	}
 
 	/**
-	 * The loaded module this coordinate would replace, matched on the descriptor's own {@code Artifact} or on the id
-	 * the operator typed — {@code null} when this is a fresh install.
+	 * The installed jar this coordinate would replace, matched on the descriptor's own {@code Artifact} or on the id
+	 * the operator typed — {@code null} when this is a fresh install. Read from disk, not {@code loaded()}: a jar the
+	 * loader refused (e.g. host-incompatible) must be retired too, or it stays beside the download for good.
 	 */
-	private @Nullable LoadedModule alreadyInstalled(String moduleArgument, ArtifactCoordinate target) {
-		for (LoadedModule module : moduleLoader.loaded()) {
-			ModuleDescriptor descriptor = module.descriptor();
-
-			if (descriptor.id().equalsIgnoreCase(moduleArgument)) return module;
+	private @Nullable ModuleDescriptor alreadyInstalled(String moduleArgument, ArtifactCoordinate target) {
+		for (ModuleDescriptor descriptor : ModuleInstalls.onDisk(moduleLoader.modulesDirectory())) {
+			if (descriptor.id().equalsIgnoreCase(moduleArgument)) return descriptor;
 			if (descriptor.artifact() == null) continue;
 
 			ArtifactCoordinate declared = ModuleInstalls.coordinate(descriptor.artifact());
 
 			if (declared == null) continue;
 			if (declared.groupId().equals(target.groupId()) && declared.artifactId().equals(target.artifactId())) {
-				return module;
+				return descriptor;
 			}
 		}
 

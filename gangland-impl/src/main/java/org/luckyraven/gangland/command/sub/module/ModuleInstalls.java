@@ -2,14 +2,20 @@ package org.luckyraven.gangland.command.sub.module;
 
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.module.ModuleDescriptor;
+import org.luckyraven.keystone.module.ModuleDescriptorReader;
 import org.luckyraven.keystone.module.artifact.ArtifactCoordinate;
 import org.luckyraven.keystone.update.PluginVersion;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /**
  * The decision logic behind {@code /glw module install}, kept free of Bukkit and of the network so it can be tested:
@@ -75,6 +81,22 @@ final class ModuleInstalls {
 				.toList();
 
 		return new Verdict(true, depends, plugins);
+	}
+
+	/**
+	 * Every jar in the modules folder that carries a readable descriptor — read from disk rather than from
+	 * {@code loaded()} so a jar the loader skipped (wrong host API, missing dependency) is still seen by install and
+	 * remove.
+	 */
+	static List<ModuleDescriptor> onDisk(Path modulesDirectory) {
+		try (Stream<Path> jars = Files.list(modulesDirectory)) {
+			return jars.filter(path -> path.getFileName().toString().endsWith(".jar"))
+					.map(path -> ModuleDescriptorReader.read(path).fold(descriptor -> descriptor, fault -> null))
+					.filter(Objects::nonNull)
+					.toList();
+		} catch (IOException exception) {
+			return List.of();
+		}
 	}
 
 }
