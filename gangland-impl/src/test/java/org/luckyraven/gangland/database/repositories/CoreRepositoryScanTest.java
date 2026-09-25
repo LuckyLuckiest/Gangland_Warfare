@@ -7,8 +7,14 @@ import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.data.plugin.PluginData;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
 import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+import org.luckyraven.keystone.persistence.database.component.Table;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -53,5 +59,31 @@ class CoreRepositoryScanTest {
 		// Sanity: the scan itself still works and still finds a repository that legitimately stayed in core.
 		assertTrue(registry.hasRepository(PluginData.class),
 		          "the scan should still register sibling core repositories that were not moved");
+	}
+
+	@Test
+	@DisplayName("every foreign key a core table declares points at a table the core scan itself registers")
+	void coreScan_foreignKeysStayInsideCore() {
+		RepositoryRegistry registry = new RepositoryRegistry(mock(JavaPlugin.class), mock(DatabaseHandler.class),
+		                                                      mock(DatabaseBackend.class));
+
+		registry.scanAndRegisterRepositories("org.luckyraven.gangland.database.repositories",
+		                                     getClass().getClassLoader());
+
+		Set<String> core = registry.getRegisteredTables().stream().map(Table::getName).collect(Collectors.toSet());
+		List<String> dangling = registry.getRegisteredTables()
+				.stream()
+				.flatMap(table -> table.getAttributes()
+						.values()
+						.stream()
+						.filter(column -> column.getAssociatedTable() != null
+						                  && !core.contains(column.getAssociatedTable().getName()))
+						.map(column -> table.getName() + "." + column.getName() + " -> "
+						               + column.getAssociatedTable().getName()))
+				.toList();
+
+		assertEquals(List.of(), dangling,
+		             "a core FK into a module-owned table never resolves without that module: the table sort warns "
+		             + "\"Possible circular dependency\" every boot and MySQL refuses the CREATE TABLE outright");
 	}
 }

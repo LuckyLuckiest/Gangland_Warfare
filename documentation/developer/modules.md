@@ -176,7 +176,6 @@ repositories above.
 
 | Subpackage     | Tables                              |
 |----------------|----------------------------------------|
-| `fk/`          | `ForeignGangTable`                     |
 | `player/`      | `UserTable`, `BankTable`               |
 | `plugin/`      | `PluginDataTable`, `PermissionTable`   |
 | `waypoint/`    | `WaypointTable`                        |
