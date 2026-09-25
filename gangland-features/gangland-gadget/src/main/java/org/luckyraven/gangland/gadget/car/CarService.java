@@ -207,8 +207,9 @@ public class CarService implements BeanLifecycle {
 
 		int maxFuel = parked.getMaxFuel();
 
-		VehicleSession session = new VehicleSession(entity, car, player, parked.getDurability(), parked.getFuel(),
-		                                            maxFuel, parked.getExhaustSide());
+		VehicleSession session = new VehicleSession(entity, car, player, parked.getPlacerUUID(),
+		                                            parked.getDurability(), parked.getFuel(), maxFuel,
+		                                            parked.getExhaustSide());
 		VehicleMovementTask task = new VehicleMovementTask(session, this, physicsConfig);
 		session.setTask(task);
 
@@ -251,7 +252,7 @@ public class CarService implements BeanLifecycle {
 
 		int  durability  = session.getCurrentDurability();
 		int  currentFuel = session.getCurrentFuel();
-		UUID placerUUID  = session.getDriverUUID();
+		UUID placerUUID  = session.getPlacerUUID();
 
 		int maxFuel = session.getMaxFuel();
 
@@ -315,7 +316,7 @@ public class CarService implements BeanLifecycle {
 
 		int  durability  = session.getCurrentDurability();
 		int  currentFuel = session.getCurrentFuel();
-		UUID placerUUID  = session.getDriverUUID();
+		UUID placerUUID  = session.getPlacerUUID();
 		int  maxFuel     = session.getMaxFuel();
 
 		vehicleRegistry.unregister(entityUUID);
@@ -394,7 +395,7 @@ public class CarService implements BeanLifecycle {
 		if (parked.getExhaustSide() != null) {
 			builder.addTag(CarKey.CAR_EXHAUST_SIDE.getKey(), parked.getExhaustSide().name());
 		}
-		player.getInventory().addItem(builder.build());
+		giveOrDrop(player, builder.build());
 	}
 
 	// ------------------------------------------------------------------
@@ -426,7 +427,7 @@ public class CarService implements BeanLifecycle {
 			session.getEntity().despawn();
 
 			if (returnItem && session.getDriver().isOnline() && !session.isDestroyed()) {
-				session.getDriver().getInventory().addItem(session.buildReturnItem());
+				giveOrDrop(session.getDriver(), session.buildReturnItem());
 			}
 
 			ParkedCar record = parkedCarRecords.remove(entityUUID);
@@ -486,7 +487,7 @@ public class CarService implements BeanLifecycle {
 
 			int  durability  = session.getCurrentDurability();
 			int  currentFuel = session.getCurrentFuel();
-			UUID placerUUID  = session.getDriverUUID();
+			UUID placerUUID  = session.getPlacerUUID();
 
 			ParkedVehicle pv = new ParkedVehicle(session.getEntity(), session.getCar(), placerUUID, currentFuel,
 			                                     session.getMaxFuel(), durability, session.getExhaustSide());
@@ -518,6 +519,14 @@ public class CarService implements BeanLifecycle {
 			}
 		}
 		vehicleRegistry.clear();
+
+		// Persist every already-parked record synchronously (plugin.isEnabled() is false in onShutdown, so
+		// AbstractRepository.save runs inline) before despawning/clearing. A park queued just before shutdown by
+		// CarQuitListener is still async while the plugin was enabled and can be cancelled by
+		// Server.getScheduler().cancelTasks right after disablePlugin returns; this closes that race (gi=53).
+		for (ParkedCar record : parkedCarRecords.values()) {
+			parkedCarRepository.save(record);
+		}
 
 		for (ParkedVehicle parked : parkedVehicles.values()) {
 			parked.getEntity().despawn();
@@ -775,6 +784,19 @@ public class CarService implements BeanLifecycle {
 		Entity entity = vehicleEntity.getBukkitEntity();
 		if (entity == null) return;
 		entity.getPersistentDataContainer().set(pdcExhaustSide, PersistentDataType.STRING, exhaustSide.name());
+	}
+
+	/**
+	 * Gives {@code item} to {@code player}'s inventory, dropping at their feet whatever doesn't fit instead of
+	 * discarding {@code Inventory.addItem}'s overflow (gi=50 — pickupCar/destroyCar used to lose the car item
+	 * outright on a full inventory, after the parked entity and DB row were already removed). Mirrors
+	 * {@code CarGiveCommand.giveCarItem}'s existing drop-leftover pattern.
+	 */
+	private void giveOrDrop(Player player, ItemStack item) {
+		Map<Integer, ItemStack> left = player.getInventory().addItem(item);
+		for (ItemStack leftover : left.values()) {
+			player.getWorld().dropItemNaturally(player.getLocation(), leftover);
+		}
 	}
 
 	private void removeInputHandler(Player player) {
