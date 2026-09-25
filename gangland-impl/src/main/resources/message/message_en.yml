@@ -231,6 +231,7 @@ Commands:
       Remove:
          Removed_Rank: "Rank &8[&a%rank%&8]&7 has been removed successfully."
          Confirm_Timer: "You have &a%timer%&7 to confirm deleting the rank."
+         In_Use: "Rank &8[&a%rank%&8]&7 is a default rank, still held by members, or has ranks above it, so it can't be removed."
       Rank_Exists: "This rank is already created!"
       Permission:
          Add: "You have added &8[&a%permission%&8]&7 to &8[&a%rank%&8]&7 rank."
@@ -488,6 +489,7 @@ Errors:
       Invalid_Permission: "This permission doesn't exist."
       Invalid_Parent: "This parent doesn't exist."
       Parent_Same: "This parent can't be the same as the rank."
+      Parent_Placed: "&b%parent%&7 already has a place in the rank hierarchy, so it can't go above &b%rank%&7."
    Vault:
       Permission_Not_Available: "&cVault's permission service isn't available. Install a permission plugin (e.g. LuckPerms) and Vault to use this feature."
    Bounty:

@@ -297,6 +297,83 @@ class RankManagerTest {
 	}
 
 	@Nested
+	@DisplayName("addParent / removeParent / remove - the rank hierarchy edits")
+	class HierarchyEditTest {
+
+		private Rank owner;
+		private Rank member;
+
+		/** Default seeded hierarchy: member (head, root) -> owner (tail). */
+		@BeforeEach
+		void loadDefaultTree() {
+			owner  = new Rank("owner", 1);
+			member = new Rank("member", 2);
+			when(rankRepo.loadAll()).thenReturn(List.of(owner, member));
+			when(rankParentRepo.loadAll()).thenReturn(Set.of(new RankParent(2, 1)));
+			when(rankPermissionRepo.loadAll()).thenReturn(Set.of(new RankPermission(1, 9), new RankPermission(2, 9)));
+			when(permissionRepo.loadAll()).thenReturn(List.of(new Permission(9, "shared.node")));
+			manager.initialize();
+		}
+
+		@Test
+		@DisplayName("GR-04: a new parent link is kept in ranksParent and persisted, so it survives a restart")
+		void addParent_persistsTheLink() {
+			Rank officer = new Rank("officer", 3);
+			manager.add(officer);
+
+			assertTrue(manager.addParent(member, officer));
+
+			assertTrue(member.getNode().getChildren().contains(officer.getNode()));
+			assertTrue(manager.getRanksParent().contains(new RankParent(2, 3)));
+			verify(rankParentRepo).save(new RankParent(2, 3));
+		}
+
+		@Test
+		@DisplayName("a link that would close a loop is refused instead of overflowing the stack on every traversal")
+		void addParent_cycle_isRefused() {
+			assertFalse(manager.addParent(owner, member), "member already sits below owner");
+
+			assertTrue(owner.getNode().getChildren().isEmpty());
+			assertEquals(2, assertDoesNotThrow(() -> manager.getRankTree().getAllNodes()).size());
+			verify(rankParentRepo, never()).save(any());
+		}
+
+		@Test
+		@DisplayName("a rank that already sits above another rank cannot be placed above a second one")
+		void addParent_alreadyPlaced_isRefused() {
+			Rank officer = new Rank("officer", 3);
+			manager.add(officer);
+
+			assertFalse(manager.addParent(officer, owner), "owner already sits above member");
+
+			assertSame(member.getNode(), owner.getNode().getParent());
+			verify(rankParentRepo, never()).save(any());
+		}
+
+		@Test
+		@DisplayName("GR-04: removing a link drops it from ranksParent and deletes that one row")
+		void removeParent_deletesTheLink() {
+			manager.removeParent(member, owner);
+
+			assertTrue(member.getNode().getChildren().isEmpty());
+			assertNull(owner.getNode().getParent(), "owner is free to be placed elsewhere");
+			assertFalse(manager.getRanksParent().contains(new RankParent(2, 1)));
+			verify(rankParentRepo).delete(new RankParent(2, 1));
+		}
+
+		@Test
+		@DisplayName("remove(rank) prunes its parent and permission links so the next autosave cannot resurrect them")
+		void remove_prunesLinksAndDetachesTheNode() {
+			assertTrue(manager.remove(owner));
+
+			assertTrue(manager.getRanksParent().isEmpty(), "the member -> owner link names the removed rank");
+			assertEquals(Set.of(new RankPermission(2, 9)), manager.getRanksPermissions());
+			assertTrue(member.getNode().getChildren().isEmpty(), "the removed rank is no longer promotable");
+		}
+
+	}
+
+	@Nested
 	@DisplayName("clear() reload semantics - Observation #12 (gangs-ranks-mail.md)")
 	class ClearReloadTest {
 

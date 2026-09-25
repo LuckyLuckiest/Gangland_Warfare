@@ -26,6 +26,7 @@ public class RankManager implements BeanLifecycle {
 	private final @Getter Tree<Rank>                  rankTree;
 	private               IRepository<Permission>     permissionRepo;
 	private               IRepository<RankPermission> rankPermissionRepo;
+	private               IRepository<RankParent>     rankParentRepo;
 
 	public RankManager(RepositoryRegistry repositoryRegistry,
 	                   PermissionRegistryContract permissionRegistry) {
@@ -40,7 +41,7 @@ public class RankManager implements BeanLifecycle {
 
 	public void initialize() {
 		IRepository<Rank>       rankRepo       = repositoryRegistry.getRepository(Rank.class);
-		IRepository<RankParent> rankParentRepo = repositoryRegistry.getRepository(RankParent.class);
+		this.rankParentRepo     = repositoryRegistry.getRepository(RankParent.class);
 		this.permissionRepo     = repositoryRegistry.getRepository(Permission.class);
 		this.rankPermissionRepo = repositoryRegistry.getRepository(RankPermission.class);
 
@@ -241,9 +242,53 @@ public class RankManager implements BeanLifecycle {
 		if (permissionRepo != null) permissionRepo.delete(perm);
 	}
 
+	/**
+	 * Places {@code parent} directly above {@code rank} and persists the link right away.
+	 *
+	 * @return {@code false} when {@code parent} already has a place above another rank (a rank sits above one rank
+	 *         only) or already sits below {@code rank}, which would close a loop that every tree walk recurses into
+	 */
+	public boolean addParent(Rank rank, Rank parent) {
+		Tree.Node<Rank> parentNode = parent.getNode();
+
+		if (parentNode.getParent() != null || rankTree.isDescendant(parentNode, rank.getNode())) return false;
+
+		rank.getNode().add(parentNode);
+
+		RankParent link = new RankParent(rank.getUsedId(), parent.getUsedId());
+		ranksParent.add(link);
+		if (rankParentRepo != null) rankParentRepo.save(link);
+
+		return true;
+	}
+
+	/**
+	 * Removes the link placing {@code parent} directly above {@code rank} and deletes it right away.
+	 */
+	public void removeParent(Rank rank, Rank parent) {
+		if (!rank.getNode().remove(parent.getNode())) return;
+
+		parent.getNode().setParent(null);
+
+		RankParent link = new RankParent(rank.getUsedId(), parent.getUsedId());
+		ranksParent.remove(link);
+		if (rankParentRepo != null) rankParentRepo.delete(link);
+	}
+
+	/**
+	 * Drops the rank, detaches it from the tree and prunes every parent/permission link naming it, so the next
+	 * autosave cannot write those rows back. The caller deletes the rows themselves.
+	 */
 	public boolean remove(Rank rank) {
-		Rank r = ranks.remove(rank.getUsedId());
-		return r != null;
+		int id = rank.getUsedId();
+
+		Tree.Node<Rank> parent = rank.getNode().getParent();
+		if (parent != null) parent.remove(rank.getNode());
+
+		ranksParent.removeIf(link -> link.rankId() == id || link.parentId() == id);
+		ranksPermissions.removeIf(link -> link.rankId() == id);
+
+		return ranks.remove(id) != null;
 	}
 
 	public void clear() {

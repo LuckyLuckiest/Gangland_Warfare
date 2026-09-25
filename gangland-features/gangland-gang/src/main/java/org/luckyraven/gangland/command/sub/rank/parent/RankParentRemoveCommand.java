@@ -81,7 +81,7 @@ class RankParentRemoveCommand extends SubArgument {
 				return;
 			}
 
-			rank.getNode().remove(childRank.getNode());
+			rankManager.removeParent(rank, childRank);
 
 			String string  = Messages.RANK_PARENT_REMOVE.toString();
 			String replace = string.replace("%parent%", childRank.getName()).replace("%rank%", rank.getName());
