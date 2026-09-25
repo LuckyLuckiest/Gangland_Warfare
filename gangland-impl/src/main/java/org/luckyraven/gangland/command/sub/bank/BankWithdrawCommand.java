@@ -157,29 +157,40 @@ class BankWithdrawCommand extends SubArgument {
 				return;
 			}
 
-			ParsedAmount parsed = ParsedAmount.of(args[2]);
-
-			if (!parsed.isValid()) {
-				sender.sendMessage(parsed.failureMessage(args[2]));
-				return;
-			}
-
-			BigDecimal argAmount = parsed.require();
-
-			Bank       bank     = target.getBank();
-			BigDecimal current  = bank.getEconomy().getAmount();
-			BigDecimal newValue = current.subtract(argAmount).max(Currency.ZERO);
-			BigDecimal taken    = current.subtract(newValue);
-
-			bank.getEconomy().setAmount(Currency.of(newValue));
-
-			IRepository<Bank> repo = ganglandDatabase.getRepositoryRegistry().getRepository(Bank.class);
-			repo.save(bank);
-
-			target.getUser().sendMessage(Messages.BANK_MONEY_WITHDRAW_PLAYER.toString()
-			                                                                .replace("%amount%",
-			                                                                         Settings.formatAmount(taken)));
+			applyWithdrawTarget(sender, args[2], target, ganglandDatabase);
 		}, sender -> Bukkit.getOnlinePlayers()
 				.stream().map(Player::getName).toList());
+	}
+
+	static void applyWithdrawTarget(CommandSender sender, String rawAmount, User<Player> target,
+	                                GanglandDatabase ganglandDatabase) {
+		ParsedAmount parsed = ParsedAmount.of(rawAmount);
+
+		if (!parsed.isValid()) {
+			sender.sendMessage(parsed.failureMessage(rawAmount));
+			return;
+		}
+
+		BigDecimal argAmount = parsed.require();
+
+		Bank       bank     = target.getBank();
+		BigDecimal current  = bank.getEconomy().getAmount();
+		BigDecimal newValue = current.subtract(argAmount).max(Currency.ZERO);
+		BigDecimal taken    = current.subtract(newValue);
+
+		bank.getEconomy().setAmount(Currency.of(newValue));
+
+		IRepository<Bank> repo = ganglandDatabase.getRepositoryRegistry().getRepository(Bank.class);
+		repo.save(bank);
+
+		target.getUser().sendMessage(Messages.BANK_MONEY_WITHDRAW_PLAYER.toString()
+		                                                                .replace("%amount%",
+		                                                                         Settings.formatAmount(taken)));
+
+		if (sender != target.getUser()) {
+			sender.sendMessage(Messages.BANK_MONEY_WITHDRAW_TARGET.toString()
+			                                                      .replace("%target%", target.getUser().getName())
+			                                                      .replace("%amount%", Settings.formatAmount(taken)));
+		}
 	}
 }

@@ -90,6 +90,12 @@ class EconomyWithdrawCommand extends SubArgument {
 
 		target.getUser().sendMessage(Messages.WITHDRAW_MONEY_PLAYER.toString()
 		                                                           .replace("%amount%", Settings.formatAmount(taken)));
+
+		if (sender != target.getUser()) {
+			sender.sendMessage(Messages.WITHDRAW_MONEY_TARGET.toString()
+			                                                 .replace("%target%", target.getUser().getName())
+			                                                 .replace("%amount%", Settings.formatAmount(taken)));
+		}
 	}
 
 }

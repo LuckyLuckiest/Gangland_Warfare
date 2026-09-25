@@ -71,7 +71,7 @@ class EconomySetCommand extends SubArgument {
 				.stream().map(Player::getName).toList());
 	}
 
-	private void applySet(CommandSender sender, String rawAmount, User<Player> target) {
+	static void applySet(CommandSender sender, String rawAmount, User<Player> target) {
 		BigDecimal argAmount;
 
 		try {
@@ -89,6 +89,12 @@ class EconomySetCommand extends SubArgument {
 
 		target.getUser().sendMessage(Messages.SET_MONEY_PLAYER.toString()
 		                                                      .replace("%amount%", Settings.formatAmount(newValue)));
+
+		if (sender != target.getUser()) {
+			sender.sendMessage(Messages.SET_MONEY_TARGET.toString()
+			                                            .replace("%target%", target.getUser().getName())
+			                                            .replace("%amount%", Settings.formatAmount(newValue)));
+		}
 	}
 
 }

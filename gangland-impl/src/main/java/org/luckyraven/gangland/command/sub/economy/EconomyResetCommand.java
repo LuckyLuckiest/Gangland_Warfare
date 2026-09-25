@@ -40,7 +40,7 @@ class EconomyResetCommand extends SubArgument {
 
 			if (target == null) return;
 
-			applyReset(target);
+			applyReset(sender, target);
 		};
 	}
 
@@ -50,14 +50,18 @@ class EconomyResetCommand extends SubArgument {
 
 			if (target == null) return;
 
-			applyReset(target);
+			applyReset(sender, target);
 		}, sender -> Bukkit.getOnlinePlayers()
 				.stream().map(Player::getName).toList());
 	}
 
-	private void applyReset(User<Player> target) {
+	static void applyReset(CommandSender sender, User<Player> target) {
 		target.getEconomy().setAmount(Currency.ZERO);
 		target.getUser().sendMessage(Messages.RESET_MONEY_PLAYER.toString());
+
+		if (sender != target.getUser()) {
+			sender.sendMessage(Messages.RESET_MONEY_TARGET.toString().replace("%target%", target.getUser().getName()));
+		}
 	}
 
 }

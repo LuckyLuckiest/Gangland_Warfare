@@ -91,6 +91,12 @@ class EconomyDepositCommand extends SubArgument {
 
 		target.getUser().sendMessage(Messages.DEPOSIT_MONEY_PLAYER.toString()
 		                                                          .replace("%amount%", Settings.formatAmount(granted)));
+
+		if (sender != target.getUser()) {
+			sender.sendMessage(Messages.DEPOSIT_MONEY_TARGET.toString()
+			                                                .replace("%target%", target.getUser().getName())
+			                                                .replace("%amount%", Settings.formatAmount(granted)));
+		}
 	}
 
 }
