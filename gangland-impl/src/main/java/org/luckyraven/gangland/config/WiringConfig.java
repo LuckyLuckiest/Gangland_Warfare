@@ -87,7 +87,7 @@ public class WiringConfig {
 
 		return new ModuleUpdateService(gangland, new ArtifactResolver(gangland),
 		                               MavenRepository.of("modules", Settings.getModulesRepository()),
-		                               moduleLoader.modulesDirectory(), messages);
+		                               moduleLoader.modulesDirectory(), messages, moduleLoader.hostApi());
 	}
 
 	/**
