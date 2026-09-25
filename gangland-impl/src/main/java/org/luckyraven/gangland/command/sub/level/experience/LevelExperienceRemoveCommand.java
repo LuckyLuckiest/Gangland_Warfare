@@ -68,12 +68,17 @@ class LevelExperienceRemoveCommand extends SubArgument {
 				.stream().map(Player::getName).toList());
 	}
 
-	private void applyRemove(CommandSender sender, String rawAmount, User<Player> target) {
+	static void applyRemove(CommandSender sender, String rawAmount, User<Player> target) {
 		double argAmount;
 
 		try {
 			argAmount = Double.parseDouble(rawAmount);
 		} catch (NumberFormatException exception) {
+			sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", rawAmount));
+			return;
+		}
+
+		if (!Double.isFinite(argAmount)) {
 			sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", rawAmount));
 			return;
 		}

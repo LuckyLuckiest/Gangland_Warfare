@@ -252,13 +252,15 @@ public class Settings implements FileInitializer {
 	}
 
 	/**
-	 * BigDecimal-aware currency formatter. Delegates to {@link #formatDouble(double)} via {@code doubleValue()} so
-	 * existing formatter config (thousand separators, decimal places) applies unchanged; values beyond {@code 2^53}
-	 * lose precision in the rendered string but still round-trip through the DB via
-	 * {@link Currency#plainString(BigDecimal)}.
+	 * BigDecimal-aware currency formatter. When {@code Balance_Format.Enable} is on, delegates to
+	 * {@link #formatDouble(double)} via {@code doubleValue()} so the configured {@code Format} pattern applies
+	 * (exact amount, no K/M/B suffix); values beyond {@code 2^53} lose precision in the rendered string but still
+	 * round-trip through the DB via {@link Currency#plainString(BigDecimal)}. When disabled, falls back to the
+	 * compact K/M/B notation.
 	 */
 	public static String formatAmount(BigDecimal value) {
-		return NumberUtil.valueFormat(value);
+		if (!balanceFormatEnabled) return NumberUtil.valueFormat(value);
+		return formatDouble(value == null ? 0D : value.doubleValue());
 	}
 
 	/**

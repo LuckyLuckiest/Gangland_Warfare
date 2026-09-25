@@ -25,7 +25,7 @@ public final class LevelCommand extends Command {
 	private final UserManager<Player> userManager;
 
 	public LevelCommand(JavaPlugin gangland, @Qualifier("online") UserManager<Player> userManager) {
-		super(gangland, "level", true);
+		super(gangland, "level", false);
 
 		this.userManager = userManager;
 
@@ -69,8 +69,12 @@ public final class LevelCommand extends Command {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		Player       player = (Player) commandSender;
-		User<Player> user   = userManager.getUser(player);
+		if (!(commandSender instanceof Player player)) {
+			commandSender.sendMessage(Messages.NOT_PLAYER.toString());
+			return;
+		}
+
+		User<Player> user = userManager.getUser(player);
 
 		if (user == null) return;
 
@@ -91,6 +95,7 @@ public final class LevelCommand extends Command {
 
 		char bar            = Messages.LEVEL_METER_BAR.toString().charAt(0);
 		int  completeBars   = (int) (totalBars * (exp / requiredExp));
+		completeBars = Math.max(0, Math.min(totalBars, completeBars));
 		int  incompleteBars = totalBars - completeBars;
 
 		for (int i = 0; i < completeBars; i++)
