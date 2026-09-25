@@ -18,6 +18,7 @@ import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.permission.RankPermissionApplier;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankManager;
@@ -81,8 +82,7 @@ class GangPromoteCommand extends SubArgument {
 
 			Member userMember = memberManager.getMember(player.getUniqueId());
 
-			String  forceRank = String.format("%s.command.gang.force_rank", GanglandApi.FULL_PREFIX);
-			boolean force     = player.hasPermission(forceRank);
+			boolean force = player.hasPermission(GangPermissions.FORCE_RANK);
 
 			// GR-01: a player with no cached Member would NPE further down this command.
 			if (userMember == null || !user.hasGang()) {
