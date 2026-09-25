@@ -79,12 +79,12 @@ class CarGiveCommand extends SubArgument {
 			try {
 				carAmount = Integer.parseInt(args[3]);
 			} catch (NumberFormatException exception) {
-				user.sendMessage(Messages.MUST_BE_NUMBERS.toString());
+				user.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", args[3]));
 				return;
 			}
 
 			if (carAmount <= 0) {
-				user.sendMessage(Messages.MUST_BE_NUMBERS.toString());
+				user.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", args[3]));
 				return;
 			}
 
