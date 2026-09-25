@@ -10,9 +10,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Pins {@link Level}'s XP-curve arithmetic and the boundary behaviours flagged by the
- * users-levels-economy-bank.md audit (Observation #8: {@code addLevels} clamps on iteration count, not the
- * resulting level, and a reused/cancelled event still consumes XP; Observation #9: {@code getPercentage} divides
- * by zero when the formula evaluates to 0).
+ * users-levels-economy-bank.md audit (Observation #8: {@code addLevels} now clamps on the resulting level
+ * instead of the iteration count (GI 3), though a reused/cancelled event still consumes XP every iteration -
+ * that half of #8 is untouched here; Observation #9: {@code getPercentage} divides by zero when the formula
+ * evaluates to 0).
  *
  * <p>Uses the {@code Level(int maxLevel, double baseAmount)} constructor with an explicit
  * {@link Level#setFormula(String)} throughout, so none of these tests need {@code GangSettings} bound.
