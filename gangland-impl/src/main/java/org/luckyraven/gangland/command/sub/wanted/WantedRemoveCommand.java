@@ -65,6 +65,11 @@ class WantedRemoveCommand extends SubArgument {
 			try {
 				amount = Integer.parseInt(amountStr);
 			} catch (NumberFormatException exception) {
+				amount = 0;
+			}
+
+			// A negative amount would raise the level while still reporting it as decreased.
+			if (amount <= 0) {
 				sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", amountStr));
 				return;
 			}
