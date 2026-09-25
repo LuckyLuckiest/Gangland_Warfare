@@ -8,6 +8,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -144,10 +145,8 @@ class SellViewItemSurvivalTest {
 		when(player.getInventory()).thenReturn(playerInventory);
 		when(playerInventory.addItem(any(ItemStack.class))).thenReturn(new HashMap<>());
 		when(player.getWorld()).thenReturn(mock(World.class));
-		// No player.getOpenInventory() stub: ChestMenu.close(Player) reads it, but the read itself throws
-		// IncompatibleClassChangeError against this mock regardless of what it's stubbed to return (a pre-existing
-		// Keystone-vs-Gangland bukkit.version mismatch — see closeIgnoringKnownBukkitVersionGap below), so any stub
-		// here is unreachable.
+		// See BarterViewItemSurvivalTest#buildRig's identical stub for why this is needed now.
+		when(player.getOpenInventory()).thenReturn(mock(InventoryView.class));
 
 		@SuppressWarnings("unchecked")
 		MenuFlow<TraderFlowSession> flow = mock(MenuFlow.class);
@@ -207,14 +206,13 @@ class SellViewItemSurvivalTest {
 		}
 	}
 
-	/** See {@link BarterViewItemSurvivalTest#closeIgnoringKnownBukkitVersionGap} — same pre-existing, cross-repo
-	 *  Keystone (bukkit.version 1.16.5) vs. Gangland (1.21.11) {@code InventoryView} class/interface test-only gap;
-	 *  the item-return this test checks already completed by the time this throws. */
+	/** See {@link BarterViewItemSurvivalTest#closeIgnoringKnownBukkitVersionGap} — kept as a defensive net only;
+	 *  the {@link #buildRig} stub above means the item-return this test checks never actually needs it. */
 	private void closeIgnoringKnownBukkitVersionGap(Rig rig, CloseReason reason) {
 		try {
 			rig.menu().close(rig.player(), reason);
 		} catch (IncompatibleClassChangeError knownBukkitVersionGap) {
-			// expected in this environment — see javadoc above.
+			// defensive only — see javadoc above.
 		}
 	}
 

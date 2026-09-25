@@ -8,6 +8,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -153,10 +154,11 @@ class BarterViewItemSurvivalTest {
 		when(player.getInventory()).thenReturn(playerInventory);
 		when(playerInventory.addItem(any(ItemStack.class))).thenReturn(new HashMap<>());
 		when(player.getWorld()).thenReturn(mock(World.class));
-		// No player.getOpenInventory() stub: ChestMenu.close(Player) reads it, but the read itself throws
-		// IncompatibleClassChangeError against this mock regardless of what it's stubbed to return (a pre-existing
-		// Keystone-vs-Gangland bukkit.version mismatch — see closeIgnoringKnownBukkitVersionGap below), so any stub
-		// here is unreachable.
+		// ChestMenu.close(Player) reads player.getOpenInventory().getTopInventory() for its own bookkeeping; since
+		// Gangland's compile floor dropped to match Keystone's bukkit.version (1.16.5, 2026-09-16) both resolve the
+		// same InventoryView shape, so a plain unstubbed mock() (getTopInventory() answers null, never equal to the
+		// real inventory) is enough — the branch that would call player.closeInventory() just doesn't fire.
+		when(player.getOpenInventory()).thenReturn(mock(InventoryView.class));
 
 		@SuppressWarnings("unchecked")
 		MenuFlow<TraderFlowSession> flow = mock(MenuFlow.class);
@@ -223,21 +225,17 @@ class BarterViewItemSurvivalTest {
 
 	/**
 	 * {@code ChestMenu.close(Player, CloseReason)} runs {@code returnHeldItems(...)} (the part this test verifies)
-	 * FIRST, then unconditionally calls the 1-arg {@code close(Player)}, whose
-	 * {@code player.getOpenInventory().getTopInventory()} bookkeeping check throws
-	 * {@code IncompatibleClassChangeError} in this module's unit-test environment: {@code keystone-inventory} is
-	 * compiled against Keystone's {@code bukkit.version} floor (1.16.5, where {@code InventoryView} is a class),
-	 * while Gangland's own test classpath resolves the 1.21.11 spigot-api (where it is an interface) — a
-	 * pre-existing, cross-repo API-version gap unrelated to this re-point (real CraftBukkit servers don't hit it;
-	 * only Mockito's compile-time-shaped proxy does). The item-return this test cares about has already completed
-	 * by the time this throws, so it's caught and ignored here rather than worked around by skipping the real
-	 * {@code close(Player, CloseReason)} entry point entirely.
+	 * FIRST, then unconditionally calls the 1-arg {@code close(Player)}. The name/catch predate the 2026-09-16
+	 * compile-floor alignment (Gangland now builds against the same {@code bukkit.version} as Keystone), which
+	 * closed the {@code InventoryView} class/interface gap this used to paper over; kept as a defensive net in case
+	 * the floors ever diverge again, but the {@link #buildRig} stub above means the item-return this test checks
+	 * never actually needs it.
 	 */
 	private void closeIgnoringKnownBukkitVersionGap(Rig rig, CloseReason reason) {
 		try {
 			rig.menu().close(rig.player(), reason);
 		} catch (IncompatibleClassChangeError knownBukkitVersionGap) {
-			// expected in this environment — see javadoc above.
+			// defensive only — see javadoc above.
 		}
 	}
 
