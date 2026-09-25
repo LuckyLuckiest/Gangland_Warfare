@@ -13,7 +13,6 @@ import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 import org.luckyraven.gangland.turf.selection.WandSelectionManager;
-import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.List;
 
@@ -59,21 +58,30 @@ class TurfGarrisonCommand extends SubArgument {
 		};
 	}
 
+	// Package-private (not private) so TurfGarrisonCommandTest can pin GI-40 directly.
+	static Integer parseCount(String raw) {
+		try {
+			return Integer.parseInt(raw);
+		} catch (NumberFormatException exception) {
+			return null;
+		}
+	}
+
 	private OptionalArgument countArgument() {
 		return new OptionalArgument(plugin, tree, (argument, sender, args) -> {
-			Turf turf = TurfSelectionResolver.resolve(sender, turfs, selections, messages);
-			if (turf == null) return;
-			int count;
-			try {
-				count = Integer.parseInt(args[2]);
-			} catch (NumberFormatException exception) {
-				sender.sendMessage(GanglandChatUtil.setArguments(
-						Messages.ARGUMENTS_MISSING.toString(), "<count>"));
+			// GI-35: nested SubArgument permissions only add onto the base "gangland.command.turf" node — they
+			// never require the stricter admin one on their own.
+			if (!sender.hasPermission(WandSelectionManager.ADMIN_PERMISSION)) {
+				sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
 				return;
 			}
-			if (count < 0) {
-				sender.sendMessage(GanglandChatUtil.setArguments(
-						Messages.ARGUMENTS_MISSING.toString(), "<count>"));
+			Turf turf = TurfSelectionResolver.resolve(sender, turfs, selections, messages);
+			if (turf == null) return;
+			// GI-40: an argument WAS supplied here, just invalid — TURF_GARRISON_INVALID (mirroring
+			// TurfIncomeCommand's TURF_INCOME_INVALID) says so instead of the generic "missing arguments".
+			Integer count = parseCount(args[2]);
+			if (count == null || count < 0) {
+				messages.send(sender, "TURF_GARRISON_INVALID", "count", args[2]);
 				return;
 			}
 			int current = garrisons.count(turf.getId());

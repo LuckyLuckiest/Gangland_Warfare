@@ -26,6 +26,12 @@ class TurfPos2Command extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
+			// GI-35: see TurfWandCommand — pos1/pos2 chat commands must not bypass the admin gate the physical
+			// wand click already enforces (WandListener).
+			if (!sender.hasPermission(WandSelectionManager.ADMIN_PERMISSION)) {
+				sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				return;
+			}
 			if (!(sender instanceof Player player)) {
 				return;
 			}
