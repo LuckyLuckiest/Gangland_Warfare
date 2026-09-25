@@ -165,20 +165,15 @@ public abstract class LootChestService {
 		registeredChests.put(chestData.getId(), chestData);
 		chestsByLocation.put(normalizeLocation(chestData.getLocation()), chestData.getId());
 
-		// Show initial hologram if chest is available
-		if (!chestData.isOnCooldown() && !chestData.isLooted()) {
+		// Not on cooldown (fresh, or the persisted cooldown ran out while unloaded): the chest is available
+		if (!chestData.isOnCooldown()) {
+			if (chestData.isLooted()) chestData.respawn();
 			cooldownManager.showAvailableHologram(chestData);
 			return;
 		}
 
-		if (!chestData.isOnCooldown()) return;
-
-		// Resume cooldown timer if chest was on cooldown
-		long remaining = chestData.getRemainingCooldownSeconds();
-
-		if (remaining <= 0) return;
-
-		cooldownManager.startCooldown(chestData, remaining);
+		// Resume the persisted cooldown timer
+		cooldownManager.startCooldown(chestData, chestData.getRemainingCooldownSeconds());
 	}
 
 	public void unregisterChest(UUID chestId) {

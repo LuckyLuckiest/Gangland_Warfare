@@ -52,7 +52,8 @@ public class LootChestRepository extends AbstractRepository<LootChestData> {
 			int     inventorySize = (int) result[v++];
 			String  displayName   = String.valueOf(result[v++]);
 			long    lastOpened    = ((Number) result[v++]).longValue();
-			boolean isLooted      = result[v] instanceof Boolean ? (boolean) result[v] : (int) result[v] == 1;
+			boolean isLooted      = result[v] instanceof Boolean ? (boolean) result[v++] : (int) result[v++] == 1;
+			long    cooldownEnd   = ((Number) result[v]).longValue();
 
 			World    world    = Bukkit.getWorld(worldName);
 			Location location = new Location(world, x, y, z);
@@ -74,6 +75,7 @@ public class LootChestRepository extends AbstractRepository<LootChestData> {
 			                                 .displayName(displayName)
 			                                 .lastOpened(lastOpened)
 			                                 .isLooted(isLooted)
+			                                 .cooldownEndTime(cooldownEnd)
 			                                 .build();
 
 			list.add(lootChestData);
