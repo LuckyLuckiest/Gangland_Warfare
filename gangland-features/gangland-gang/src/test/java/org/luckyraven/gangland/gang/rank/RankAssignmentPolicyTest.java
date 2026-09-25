@@ -47,61 +47,73 @@ class RankAssignmentPolicyTest {
 	@DisplayName("a recruit cannot hand out the owner rank - the GR-08 privilege escalation")
 	void recruitCannotAssignOwnerRank() {
 		assertEquals(RankAssignmentPolicy.Decision.TARGET_OUTRANKS_ACTOR,
-		             RankAssignmentPolicy.evaluate(tree, recruit, officer, boss, false, false));
+		             RankAssignmentPolicy.evaluate(tree, recruit, officer, boss, false, false, null));
 	}
 
 	@Test
 	@DisplayName("a recruit cannot promote a rankless member straight to owner either")
 	void recruitCannotAssignRankAboveOwnEvenToARanklessTarget() {
 		assertEquals(RankAssignmentPolicy.Decision.RANK_NOT_BELOW_ACTOR,
-		             RankAssignmentPolicy.evaluate(tree, recruit, null, boss, false, false));
+		             RankAssignmentPolicy.evaluate(tree, recruit, null, boss, false, false, null));
 	}
 
 	@Test
 	@DisplayName("nobody may set their own rank, not even with force_rank")
 	void selfAssignmentIsAlwaysRefused() {
 		assertEquals(RankAssignmentPolicy.Decision.SELF,
-		             RankAssignmentPolicy.evaluate(tree, boss, boss, boss, false, true));
+		             RankAssignmentPolicy.evaluate(tree, boss, boss, boss, false, true, null));
 		assertEquals(RankAssignmentPolicy.Decision.SELF,
-		             RankAssignmentPolicy.evaluate(tree, boss, boss, boss, true, true));
+		             RankAssignmentPolicy.evaluate(tree, boss, boss, boss, true, true, null));
 	}
 
 	@Test
 	@DisplayName("equal ranks cannot act on each other")
 	void sameRankIsRefused() {
 		assertEquals(RankAssignmentPolicy.Decision.SAME_RANK,
-		             RankAssignmentPolicy.evaluate(tree, officer, officer, recruit, false, false));
+		             RankAssignmentPolicy.evaluate(tree, officer, officer, recruit, false, false, null));
 	}
 
 	@Test
 	@DisplayName("the boss may promote a recruit to officer - a rank strictly below their own")
 	void leaderMayAssignBelowTheirOwnRank() {
 		assertEquals(RankAssignmentPolicy.Decision.ALLOWED,
-		             RankAssignmentPolicy.evaluate(tree, boss, recruit, officer, false, false));
+		             RankAssignmentPolicy.evaluate(tree, boss, recruit, officer, false, false, null));
 	}
 
 	@Test
 	@DisplayName("nobody may hand out their own rank - that is a transfer, not a promotion")
 	void assigningOwnRankIsRefused() {
 		assertEquals(RankAssignmentPolicy.Decision.RANK_NOT_BELOW_ACTOR,
-		             RankAssignmentPolicy.evaluate(tree, boss, recruit, boss, false, false));
+		             RankAssignmentPolicy.evaluate(tree, boss, recruit, boss, false, false, null));
 	}
 
 	@Test
 	@DisplayName("force_rank keeps the staff override GangPromoteCommand already honoured")
 	void forceRankBypassesTheHierarchy() {
 		assertEquals(RankAssignmentPolicy.Decision.ALLOWED,
-		             RankAssignmentPolicy.evaluate(tree, recruit, officer, boss, true, false));
+		             RankAssignmentPolicy.evaluate(tree, recruit, officer, boss, true, false, null));
+	}
+
+	@Test
+	@DisplayName("the owner (Tail) rank is never handed out, not even with force_rank - ownership moves by transfer")
+	void ownerRankIsNeverAssigned() {
+		// Default tree is member -> owner, so a plain promote by an op owner used to mint a co-owner.
+		assertEquals(RankAssignmentPolicy.Decision.OWNER_RANK,
+		             RankAssignmentPolicy.evaluate(tree, boss, recruit, boss, false, false, boss));
+		assertEquals(RankAssignmentPolicy.Decision.OWNER_RANK,
+		             RankAssignmentPolicy.evaluate(tree, boss, recruit, boss, true, false, boss));
+		assertEquals(RankAssignmentPolicy.Decision.ALLOWED,
+		             RankAssignmentPolicy.evaluate(tree, boss, recruit, officer, false, false, boss));
 	}
 
 	@Test
 	void missingActorRankOrTreeIsRefused() {
 		assertEquals(RankAssignmentPolicy.Decision.NO_ACTOR_RANK,
-		             RankAssignmentPolicy.evaluate(tree, null, recruit, officer, false, false));
+		             RankAssignmentPolicy.evaluate(tree, null, recruit, officer, false, false, null));
 		assertEquals(RankAssignmentPolicy.Decision.NO_ACTOR_RANK,
-		             RankAssignmentPolicy.evaluate(null, boss, recruit, officer, false, false));
+		             RankAssignmentPolicy.evaluate(null, boss, recruit, officer, false, false, null));
 		assertEquals(RankAssignmentPolicy.Decision.NO_ACTOR_RANK,
-		             RankAssignmentPolicy.evaluate(tree, boss, recruit, null, false, false));
+		             RankAssignmentPolicy.evaluate(tree, boss, recruit, null, false, false, null));
 	}
 
 	@Test

@@ -11,6 +11,7 @@ import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.GangSettings;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.permission.GangPermissions;
@@ -155,10 +156,11 @@ public final class GangOptionContribution implements CommandContribution {
 
 			RankAssignmentPolicy.Decision decision =
 					RankAssignmentPolicy.evaluate(rankManager.getRankTree(), userMember.getRank(),
-					                              targetMember.getRank(), nextRank, force, self);
+					                              targetMember.getRank(), nextRank, force, self,
+					                              rankManager.get(GangSettings.getGangRankTail()));
 
 			if (decision != RankAssignmentPolicy.Decision.ALLOWED) {
-				user.sendMessage(messageFor(decision));
+				user.sendMessage(RankAssignmentPolicy.message(decision));
 				return;
 			}
 
@@ -203,18 +205,6 @@ public final class GangOptionContribution implements CommandContribution {
 					.map(Rank::getName)
 					.toList();
 		});
-	}
-
-	/**
-	 * Maps a refused {@link RankAssignmentPolicy.Decision} onto the message the player sees.
-	 */
-	private static String messageFor(RankAssignmentPolicy.Decision decision) {
-		return switch (decision) {
-			case SELF -> Messages.GANG_CANNOT_ACT_SELF.toString();
-			case SAME_RANK -> Messages.GANG_SAME_RANK_ACTION.toString();
-			case TARGET_OUTRANKS_ACTOR, RANK_NOT_BELOW_ACTOR -> Messages.GANG_HIGHER_RANK_ACTION.toString();
-			default -> Messages.COMMAND_NO_PERM.toString();
-		};
 	}
 
 }

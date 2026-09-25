@@ -16,11 +16,13 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.GangSettings;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.permission.RankPermissionApplier;
 import org.luckyraven.gangland.gang.rank.Rank;
+import org.luckyraven.gangland.gang.rank.RankAssignmentPolicy;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
@@ -115,42 +117,30 @@ class GangPromoteCommand extends SubArgument {
 				return;
 			}
 
-			// change the user rank by proceeding to the next node
-			Rank currentRank = targetMember.getRank();
-			// in the case there are more than one child then give options to the promoter
-			if (!force) {
-				Rank userMemberRank = userMember.getRank();
-
-				if (userMemberRank == null || currentRank == null) return;
-
-				// cannot promote more than your rank
-				if (userMemberRank.equals(targetMember.getRank())) {
-					user.sendMessage(Messages.GANG_SAME_RANK_ACTION.toString());
-					return;
-				}
-
-				// check if target has higher rank than user
-				// Tree is head-rooted (lowest rank = root, tail/owner = deepest leaf), so "user outranks target"
-				// means userNode is a descendant of targetNode. Mirrors the (correct) pattern in GangDemoteCommand.
-				Tree.Node<Rank> userNode   = userMemberRank.getNode();
-				Tree.Node<Rank> targetNode = currentRank.getNode();
-
-				if (!rankManager.getRankTree().isDescendant(targetNode, userNode)) {
-					user.sendMessage(Messages.GANG_HIGHER_RANK_ACTION.toString());
-					return;
-				}
+			if (targetMember.getRank() == null) {
+				user.sendMessage(Messages.INVALID_RANK.toString());
+				return;
 			}
 
-			// navigate the ranks first
-			List<Rank> nextRanks = Objects.requireNonNull(rankManager.getRankTree().find(currentRank))
-			                              .getNode()
-			                              .getChildren()
-					.stream()
-					.map(Tree.Node::getData)
-					.toList();
+			// change the user rank by proceeding to the next node
+			Tree<Rank> rankTree    = rankManager.getRankTree();
+			Rank       currentRank = Objects.requireNonNull(rankTree.find(targetMember.getRank()));
+			Rank       tail        = rankManager.get(GangSettings.getGangRankTail());
+
+			// Only the next ranks this caller may hand out: strictly below their own, never the owner (Tail) rank.
+			List<Rank>                    nextRanks = new ArrayList<>();
+			RankAssignmentPolicy.Decision refusal   = null;
+			for (Tree.Node<Rank> child : currentRank.getNode().getChildren()) {
+				RankAssignmentPolicy.Decision decision = RankAssignmentPolicy.evaluate(
+						rankTree, userMember.getRank(), currentRank, child.getData(), force, false, tail);
+
+				if (decision == RankAssignmentPolicy.Decision.ALLOWED) nextRanks.add(child.getData());
+				else if (refusal == null) refusal = decision;
+			}
 
 			if (nextRanks.isEmpty()) {
-				user.sendMessage(Messages.GANG_PROMOTE_END.toString());
+				user.sendMessage(refusal == null ? Messages.GANG_PROMOTE_END.toString()
+				                                 : RankAssignmentPolicy.message(refusal));
 				return;
 			}
 
@@ -167,6 +157,8 @@ class GangPromoteCommand extends SubArgument {
 
 					if (i < nextRanks.size() - 1) ranks.append("  ");
 				}
+
+				player.spigot().sendMessage(ranks.create());
 			} else {
 				OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(targetMember.getUuid());
 				String        offlineName   = offlinePlayer.getName();
