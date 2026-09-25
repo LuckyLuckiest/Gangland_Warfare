@@ -124,3 +124,6 @@ buildNumber.properties
 
 # Common working directory
 run/
+
+# log4j2's bundled Paper/Spigot config rolls test-run server logs here, relative to whatever module surefire forks in
+logs/
