@@ -23,7 +23,8 @@ public final class FuelBar {
 	 * @return a color-coded fuel bar string
 	 */
 	public static String render(int currentFuel, int maxFuel) {
-		if (maxFuel <= 0) return "&6⛽ Fuel &fUnlimited";
+		// No separate maxFuel<=0 "Unlimited" branch: every write path clamps currentFuel<=maxFuel, so a
+		// zero/negative capacity always implies currentFuel<=0 too - the branch below already covers it (gi=56).
 		if (currentFuel <= 0) return "&6⛽ Fuel &cEmpty";
 
 		int filled = (int) Math.round((double) currentFuel / maxFuel * BAR_LENGTH);

@@ -341,7 +341,7 @@
 	},
 	"fuel_add": {
 		"usage": "/glw fuel add <amount>",
-		"description": "Adds fuel to the item in hand."
+		"description": "Increases the max fuel capacity of the item in hand."
 	},
 	"fuel_info": {
 		"usage": "/glw fuel info",
@@ -353,7 +353,7 @@
 	},
 	"fuel_remove": {
 		"usage": "/glw fuel remove <amount>",
-		"description": "Removes fuel from the item in hand."
+		"description": "Decreases the max fuel capacity of the item in hand."
 	},
 	"fuel_defuel": {
 		"usage": "/glw fuel defuel",
