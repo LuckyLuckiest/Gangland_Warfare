@@ -54,13 +54,13 @@ class CarGiveCommand extends SubArgument {
 
 			if (user == null) return;
 
-			String  carName = args[2];
-			boolean gave    = giveCarItem(player, carName, 1);
+			String carName = args[2];
+			int    gave    = giveCarItem(player, carName, 1);
 
-			if (gave) {
+			if (gave >= 0) {
 				user.sendMessage(Messages.CAR_GAVE.toString()
 				                                  .replace("%name%", carName)
-				                                  .replace("%amount%", "1"));
+				                                  .replace("%amount%", String.valueOf(gave)));
 			} else {
 				user.sendMessage(Messages.CAR_INVALID.toString().replace("%car%", carName));
 			}
@@ -88,12 +88,12 @@ class CarGiveCommand extends SubArgument {
 				return;
 			}
 
-			boolean gave = giveCarItem(player, carName, carAmount);
+			int gave = giveCarItem(player, carName, carAmount);
 
-			if (gave) {
+			if (gave >= 0) {
 				user.sendMessage(Messages.CAR_GAVE.toString()
 				                                  .replace("%name%", carName)
-				                                  .replace("%amount%", String.valueOf(carAmount)));
+				                                  .replace("%amount%", String.valueOf(gave)));
 			} else {
 				user.sendMessage(Messages.CAR_INVALID.toString().replace("%car%", carName));
 			}
@@ -103,10 +103,13 @@ class CarGiveCommand extends SubArgument {
 		this.addSubArgument(name);
 	}
 
-	private boolean giveCarItem(Player player, String name, int amount) {
+	/**
+	 * @return the actual number of items given (after the 36-stack cap), or {@code -1} if {@code name} names no car
+	 */
+	private int giveCarItem(Player player, String name, int amount) {
 		Car car = carAddon.getCar(name);
 
-		if (car == null) return false;
+		if (car == null) return -1;
 
 		ItemStack       sampleItem   = car.buildItem(player);
 		int             maxStackSize = sampleItem.getMaxStackSize();
@@ -136,7 +139,7 @@ class CarGiveCommand extends SubArgument {
 			player.getWorld().dropItemNaturally(player.getLocation(), item);
 		}
 
-		return true;
+		return cappedAmount;
 	}
 
 }
