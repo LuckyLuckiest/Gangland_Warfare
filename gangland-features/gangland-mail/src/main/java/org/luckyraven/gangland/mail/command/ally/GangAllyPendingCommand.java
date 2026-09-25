@@ -10,6 +10,7 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.mail.MailItem;
@@ -28,14 +29,14 @@ public class GangAllyPendingCommand extends SubArgument {
 	private final MailManager         mailManager;
 
 	public GangAllyPendingCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
-	                       GangManager gangManager, MailManager mailManager) {
+	                       MemberManager memberManager, GangManager gangManager, MailManager mailManager) {
 		super(plugin, "pending", tree, parent);
 
 		this.userManager = userManager;
 		this.gangManager = gangManager;
 		this.mailManager = mailManager;
 
-		this.addSubArgument(new GangAllyPendingCancelCommand(plugin, tree, this, userManager, gangManager,
+		this.addSubArgument(new GangAllyPendingCancelCommand(plugin, tree, this, userManager, memberManager, gangManager,
 		                                                     mailManager));
 	}
 

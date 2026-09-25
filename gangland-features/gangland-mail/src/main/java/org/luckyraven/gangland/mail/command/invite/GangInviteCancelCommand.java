@@ -11,6 +11,8 @@ import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.mail.MailItem;
@@ -30,16 +32,19 @@ class GangInviteCancelCommand extends SubArgument {
 	private final Tree<Argument>             tree;
 	private final UserManager<Player>        userManager;
 	private final UserManager<OfflinePlayer> offlineUserManager;
+	private final MemberManager              memberManager;
 	private final MailManager                mailManager;
 
 	GangInviteCancelCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
-	                        @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager, MailManager mailManager) {
+	                        @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager, MemberManager memberManager,
+	                        MailManager mailManager) {
 		super(plugin, "cancel", tree, parent);
 
 		this.plugin           = plugin;
 		this.tree               = tree;
 		this.userManager        = userManager;
 		this.offlineUserManager = offlineUserManager;
+		this.memberManager      = memberManager;
 		this.mailManager        = mailManager;
 
 		this.addSubArgument(targetPlayerArgument());
@@ -56,6 +61,12 @@ class GangInviteCancelCommand extends SubArgument {
 
 			if (!user.hasGang()) {
 				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
+			                            GangPermissions.INVITE)) {
+				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
 				return;
 			}
 
@@ -88,6 +99,12 @@ class GangInviteCancelCommand extends SubArgument {
 
 			if (!user.hasGang()) {
 				user.sendMessage(Messages.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
+			                            GangPermissions.INVITE)) {
+				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
 				return;
 			}
 

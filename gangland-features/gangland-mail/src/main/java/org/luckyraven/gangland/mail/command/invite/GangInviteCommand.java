@@ -62,7 +62,8 @@ public class GangInviteCommand extends SubArgument {
 		// Add the literal `cancel` SubArgument before the `<player>` OptionalArgument so the argument tree resolves
 		// `/glw gang invite cancel` to the cancel branch instead of treating "cancel" as a target player name.
 		this.addSubArgument(
-				new GangInviteCancelCommand(plugin, tree, this, userManager, offlineUserManager, mailManager));
+				new GangInviteCancelCommand(plugin, tree, this, userManager, offlineUserManager, memberManager,
+				                            mailManager));
 		this.addSubArgument(invitePlayerArgument());
 	}
 
