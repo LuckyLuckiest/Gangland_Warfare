@@ -26,6 +26,13 @@ Slots:
       Name: "&a&lPlace Bounty"
       Lore:
          - "&7Put a hit on a player"
+      OnClick:
+         Inventory:
+            Type: anvil
+            Title: "Place Bounty"
+            Text: "Player Amount"
+            Success:
+               Command: "/glw bounty set %gangland_anvil_output%"
    49:
       Item: ARROW
       Name: "&c&lBack"

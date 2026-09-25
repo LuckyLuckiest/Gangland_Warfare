@@ -415,6 +415,11 @@ class InventoryParserRoundTripTest {
 			menu.dispatchClick(clickEvent(menu, 49), player);
 			verify(player, times(2)).openInventory(any(Inventory.class));
 		});
+
+		// UI-21: "Place Bounty" was a dead, unclickable slot; it now opens the /glw bounty set anvil.
+		assertTrue(definitionStore.getInventory("phone_bounty").inventoryData().getSlots().stream()
+		                          .anyMatch(slot -> slot.getSlot() == 40 && slot.isClickable()),
+		           "slot 40 (Place Bounty) must be clickable");
 	}
 
 	@Test
