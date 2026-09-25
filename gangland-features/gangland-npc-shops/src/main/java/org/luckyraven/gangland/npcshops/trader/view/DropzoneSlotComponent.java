@@ -27,11 +27,14 @@ import java.util.List;
  * hook, which had no equivalent on the new immutable-at-build {@code MenuFlow} (its {@code onEnd} is set once via
  * {@code MenuFlowBuilder}, not re-settable per-panel-entry the way {@code MultiPanelInventory#onEnd} was).
  *
- * <p>One instance per slot, created fresh on every {@code Panel.render()} call (cheap, stateless besides the
- * {@link #inventory} reference it captures during its own render so a later {@code heldItems}/{@code clearHeld}
- * call — potentially long after render, on close — can still reach the live slot); {@code returnHeldItems} iterates
- * the menu's component map by slot, so one instance per slot (never shared across slots) is required for a correct
- * per-slot return — a single instance covering all 20 dropzone slots would return the same items once per slot.
+ * <p>One instance per slot, kept in the view's per-session state and reused by every {@code Panel.render()}:
+ * since Keystone 1.11.2 (KS-IV-11) {@code ChestMenu.adoptComponentsFrom} — {@code MenuFlow.rerender()}'s body —
+ * returns a holding component's items whenever a different instance takes its slot, so a fresh instance per render
+ * would hand the offer back on every rerender. Stateless besides the {@link #inventory} reference it captures during
+ * its own render so a later {@code heldItems}/{@code clearHeld} call — potentially long after render, on close — can
+ * still reach the live slot; {@code returnHeldItems} iterates the menu's component map by slot, so one instance per
+ * slot (never shared across slots) is required for a correct per-slot return — a single instance covering all 20
+ * dropzone slots would return the same items once per slot.
  */
 final class DropzoneSlotComponent implements Component<DropzoneSlotComponent>, ItemHoldingComponent {
 
