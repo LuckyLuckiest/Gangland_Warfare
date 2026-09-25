@@ -12,6 +12,7 @@ import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.timer.CountdownTimer;
 import org.luckyraven.keystone.util.TimeUtil;
+import org.luckyraven.gangland.events.gang.GangDeleteEvent;
 import org.luckyraven.gangland.gang.database.repositories.gang.GangAllianceRepository;
 import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.gangland.file.configuration.Messages;
@@ -282,6 +283,7 @@ class GangDeleteCommand extends SubArgument {
 			}
 
 			gangManager.remove(gang);
+			Bukkit.getPluginManager().callEvent(new GangDeleteEvent(gang));
 			deleteGangName.remove(user);
 
 			CountdownTimer timer = deleteGangTimer.get(sender);

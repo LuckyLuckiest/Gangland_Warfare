@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.core.user.IdentitySettings;
+import org.luckyraven.gangland.events.gang.GangDeleteEvent;
 import org.luckyraven.gangland.core.support.FakeIdentitySettingsContract;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
@@ -47,6 +48,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -67,6 +69,7 @@ class GangDeleteCommandTest {
 	private       MockedStatic<Settings>  settings;
 	private       JavaPlugin              plugin;
 	private       BukkitScheduler         scheduler;
+	private       PluginManager           pluginManager;
 	private       UserManager<Player>        userManager;
 	private       UserManager<OfflinePlayer> offlineUserManager;
 	private       MemberManager           memberManager;
@@ -107,8 +110,8 @@ class GangDeleteCommandTest {
 		scheduler = mock(BukkitScheduler.class);
 		when(scheduler.runTaskTimer(any(JavaPlugin.class), any(Runnable.class), anyLong(), anyLong())).thenReturn(
 				mock(BukkitTask.class));
-		PluginManager pluginManager = mock(PluginManager.class);
-		Server        server        = mock(Server.class);
+		pluginManager = mock(PluginManager.class);
+		Server server = mock(Server.class);
 		when(server.getPluginManager()).thenReturn(pluginManager);
 		bukkit = mockStatic(Bukkit.class);
 		bukkit.when(Bukkit::getServer).thenReturn(server);
@@ -229,6 +232,15 @@ class GangDeleteCommandTest {
 
 		assertEquals(1, savedBalance.size(), "the offline User row must be saved once");
 		assertEquals(0, new BigDecimal("500").compareTo(savedBalance.get(0)), "saved balance " + savedBalance);
+	}
+
+	@Test
+	@DisplayName("disband announces the deleted gang so other modules (mail) can drop what points at it")
+	void disband_firesGangDeleteEvent() {
+		disband(owner(1.0));
+
+		verify(pluginManager).callEvent(argThat(event -> event instanceof GangDeleteEvent deleted
+		                                                 && deleted.getGang() == gang));
 	}
 
 	@Test
