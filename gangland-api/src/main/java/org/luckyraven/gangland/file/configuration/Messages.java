@@ -197,6 +197,7 @@ public enum Messages {
 	BOUNTY_LIFTED("Commands.Bounty.Lifted", Type.COMMAND),
 	BOUNTY_PLAYER_LIFT("Commands.Bounty.Player_Lift", Type.COMMAND),
 	BOUNTY_SET("Commands.Bounty.Bounty_Set", Type.COMMAND),
+	BOUNTY_CLAIMED("Commands.Bounty.Claimed", Type.COMMAND),
 
 	// commands - level
 	LEVEL_EXP_ADD("Commands.Level.Experience.Add", Type.COMMAND),

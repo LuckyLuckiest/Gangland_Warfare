@@ -242,6 +242,7 @@ Commands:
       Player_Lift: "Has reclamado &a%money_symbol%%amount%&7 de &6%player%&7."
       Lifted: "&a%money_symbol%%amount%&7 ha sido reclamado de tu recompensa.%n%&4&lRecompensa &c%money_symbol%%bounty%"
       Clear: "¡Tu recompensa ha sido eliminada!"
+      Claimed: "Cobraste la recompensa de &a%money_symbol%%amount%&7 por &6%player%&7."
    Level:
       Experience:
          Add: "Se añadió &b%experience%&7 de experiencia a tu nivel."
