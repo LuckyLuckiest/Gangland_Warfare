@@ -8,6 +8,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -165,6 +168,27 @@ public class LootChestListener implements Listener {
 		if (!manager.getCooldownManager().isChestIcon(event.getItem())) return;
 
 		event.setCancelled(true);
+	}
+
+	// A registered chest block is indestructible: breaking it would leave a ghost registration that any container
+	// placed back on the spot reactivates. Admins remove chests with the lootchest remove command.
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onBlockBreak(BlockBreakEvent event) {
+		if (isLootChest(event.getBlock())) event.setCancelled(true);
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onEntityExplode(EntityExplodeEvent event) {
+		event.blockList().removeIf(this::isLootChest);
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onBlockExplode(BlockExplodeEvent event) {
+		event.blockList().removeIf(this::isLootChest);
+	}
+
+	private boolean isLootChest(Block block) {
+		return manager.getChestAt(block.getLocation()).isPresent();
 	}
 
 	private void handleOpenResult(Player player, LootChestService.OpenResult result, LootChestData chestData) {
