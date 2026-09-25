@@ -726,9 +726,10 @@ public class Settings implements FileInitializer {
 
 		// WS4 G1a fix round 1 (F2): a leftover legacy Trader:/Banker: block is not just dead weight (unlike
 		// WS1's Scoreboard: block) — those keys had live readers before this move, so an upgrading server's
-		// customised values now silently do nothing. section() above already marked the block "touched",
-		// which suppresses the generic unknown-key sweep for it; this replaces that generic, unhelpful line
-		// with one that actually says where the keys went.
+		// customised values now silently do nothing. section() below touches the block's own root key, so the
+		// generic root-level unknown-key line is replaced by this one that actually says where the keys went.
+		// It does not silence the leaf keys: section() also registers a reader for the block that nothing reads,
+		// so each leaf still gets its own unknown-key line (documented in migration-0.10.0.md section 4).
 		warnIfLegacyShopBlockPresent(section(root, "Trader", report) != null, "Trader", "npc/trader_settings.yml",
 		                             "npc-shops", "settings.yml");
 		warnIfLegacyShopBlockPresent(section(root, "Banker", report) != null, "Banker", "npc/banker_settings.yml",
