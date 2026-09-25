@@ -357,6 +357,9 @@ public final class BarterView implements Panel<TraderFlowSession>, BeanLifecycle
 	}
 
 	private void onConfirm(Player viewer, BarterState state) {
+		// The cached offer is only refreshed on the next tick; a same-tick dropzone swap would otherwise be paid at
+		// the stale value while only the live items are handed over.
+		recomputeOffer(state);
 		if (state.offeredValue.compareTo(state.askingValue) < 0 || state.offeredValue.signum() <= 0) return;
 
 		Inventory inv = state.inventory();
