@@ -31,6 +31,10 @@ class CivilianSpawnerListCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, strings) -> {
+			if (civilianSpawnManager.getSpawners().isEmpty()) {
+				sender.sendMessage(civilianMessages.spawnerListEmpty());
+				return;
+			}
 			sender.sendMessage(civilianMessages.spawnerListHeader());
 			civilianSpawnManager.getSpawners().forEach(spawner -> {
 				Location location = spawner.getLocation();

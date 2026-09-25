@@ -13,3 +13,4 @@ Spawn_Failed: "&cFailed to spawn civilian. Check that type &e%type%&c is valid a
 Spawner_Type_Set: "&aCivilian spawner &e%type%&a set at your location."
 Spawner_Group_Set: "&aGroup spawner &e%group%&a set at your location."
 Spawner_List_Header: "Civilian spawners:"
+Spawner_List_Empty: "No civilian spawners are currently set."
