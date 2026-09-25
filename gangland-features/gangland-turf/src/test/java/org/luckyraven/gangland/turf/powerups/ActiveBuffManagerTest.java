@@ -145,4 +145,38 @@ class ActiveBuffManagerTest {
 			assertTrue(repository.loadAll().contains(activated));
 		}
 	}
+
+	@Test
+	@DisplayName("GI-34: removeAll clears every active buff for the turf and deletes each persisted row (turf-delete cascade)")
+	void removeAll_clearsInMemoryAndPersistedRows() {
+		long farFuture = System.currentTimeMillis() + 3_600_000L;
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			manager.initialize();
+			manager.activate(5, new PowerupDefinition("a", "&aA", java.math.BigDecimal.ONE,
+			                                          EffectType.INCOME_MULTIPLIER, 1.25, 3600));
+			manager.activate(5, new PowerupDefinition("b", "&aB", java.math.BigDecimal.ONE,
+			                                          EffectType.GARRISON_DISCOUNT, 0.8, 3600));
+			manager.activate(6, new PowerupDefinition("c", "&aC", java.math.BigDecimal.ONE,
+			                                          EffectType.INCOME_MULTIPLIER, 1.5, 3600));
+			assertEquals(2, manager.active(5).size());
+
+			manager.removeAll(5);
+
+			assertTrue(manager.active(5).isEmpty(), "a fresh turf reusing id 5 must not inherit the old buffs");
+			assertEquals(1, manager.active(6).size(), "an unrelated turf's buffs are untouched");
+			assertEquals(2, repository.deleted.size(), "both of turf 5's rows are deleted from the repository");
+		}
+	}
+
+	@Test
+	@DisplayName("GI-34: removeAll on a turf with no active buffs is a no-op, not an error")
+	void removeAll_noExistingBuffs_isNoOp() {
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			manager.initialize();
+			manager.removeAll(99);
+
+			assertTrue(manager.active(99).isEmpty());
+			assertTrue(repository.deleted.isEmpty());
+		}
+	}
 }

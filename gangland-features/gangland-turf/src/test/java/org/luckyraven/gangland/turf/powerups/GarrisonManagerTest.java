@@ -111,4 +111,24 @@ class GarrisonManagerTest {
 		assertEquals(0, secondConsume);
 		assertEquals(0, manager.count(1));
 	}
+
+	@Test
+	@DisplayName("GI-34: remove clears the in-memory count and deletes the persisted row (turf-delete cascade)")
+	void remove_clearsInMemoryAndPersistedRow() {
+		manager.add(5, 3);
+		assertEquals(3, manager.count(5));
+
+		manager.remove(5);
+
+		assertEquals(0, manager.count(5), "a fresh turf reusing id 5 must not inherit the old stock");
+		assertTrue(repository.loadAll().isEmpty(), "the persisted garrison row must be gone too");
+	}
+
+	@Test
+	@DisplayName("GI-34: remove on a turf with no garrison row is a no-op, not an error")
+	void remove_noExistingRow_isNoOp() {
+		manager.remove(99);
+
+		assertEquals(0, manager.count(99));
+	}
 }
