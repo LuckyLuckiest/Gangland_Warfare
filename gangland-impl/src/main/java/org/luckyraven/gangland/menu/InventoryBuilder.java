@@ -1,10 +1,11 @@
 package org.luckyraven.gangland.menu;
 
-import com.cryptomorin.xseries.XEnchantment;
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -471,7 +472,8 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 
 	private static void applyEnchantGlint(ItemBuilder target, ItemBuilder source) {
 		if (!source.getEnchantments().isEmpty()) {
-			target.addEnchantment(XEnchantment.UNBREAKING.get(), 1)
+			// Enchantment.getByKey, not XEnchantment: see SlotItemFactory.create for why.
+			target.addEnchantment(Enchantment.getByKey(NamespacedKey.minecraft("unbreaking")), 1)
 			      .addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
 		}
 	}
