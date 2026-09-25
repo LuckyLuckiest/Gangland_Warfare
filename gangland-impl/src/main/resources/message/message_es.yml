@@ -313,6 +313,7 @@ Commands:
       Update_Available: "&8- &e%module% &7%installed% &8-> &a%available%"
       Up_To_Date: "&f%module% &7is up to date."
       All_Up_To_Date: "&7Every module is up to date."
+      Update_Skipped: "&e%count% &7module jar(s) were skipped at startup and not checked&8; &f/glw module list &7shows why."
       Restart_Required: "&a%module% &7was updated. Restart the server to load the new version."
       Download_Failed: "&c%module% &7could not be downloaded&8: &f%reason%"
       Remove_Marked: "&f%module% &7is removed at the next restart. Delete &f%marker% &7to undo it."

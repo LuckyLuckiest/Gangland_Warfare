@@ -439,6 +439,7 @@ public enum Messages {
 	MODULE_UPDATE_AVAILABLE("Commands.Module.Update_Available", Type.COMMAND),
 	MODULE_UP_TO_DATE("Commands.Module.Up_To_Date", Type.COMMAND),
 	MODULE_ALL_UP_TO_DATE("Commands.Module.All_Up_To_Date", Type.COMMAND),
+	MODULE_UPDATE_SKIPPED("Commands.Module.Update_Skipped", Type.COMMAND),
 	MODULE_RESTART_REQUIRED("Commands.Module.Restart_Required", Type.COMMAND),
 	MODULE_DOWNLOAD_FAILED("Commands.Module.Download_Failed", Type.COMMAND),
 	MODULE_REMOVE_MARKED("Commands.Module.Remove_Marked", Type.COMMAND),

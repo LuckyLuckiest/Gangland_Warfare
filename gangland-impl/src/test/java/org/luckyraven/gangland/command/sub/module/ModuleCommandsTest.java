@@ -8,11 +8,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.support.FakeMessageProvider;
 import org.luckyraven.gangland.support.ModuleRepoFixture;
+import org.luckyraven.gangland.support.SettingsFixture;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.datastructure.Tree;
+import org.luckyraven.keystone.diagnostics.Fault;
 import org.luckyraven.keystone.module.ModuleLoader;
 import org.luckyraven.keystone.module.artifact.ArtifactResolver;
 import org.luckyraven.keystone.module.artifact.MavenRepository;
@@ -28,14 +31,16 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Drives {@code /glw module install|remove} against a real modules folder and a {@code file:} repository, for the
+ * Drives {@code /glw module install|remove|update} against a real modules folder and a {@code file:} repository, for the
  * jars the loader refused at boot (host-incompatible, so absent from {@code loaded()}) but that still sit on disk.
  */
-@DisplayName("/glw module install|remove - jars the loader refused")
+@DisplayName("/glw module install|remove|update - jars the loader refused")
 class ModuleCommandsTest {
 
 	private static final PluginVersion HOST = PluginVersion.parse("1.0");
@@ -57,6 +62,7 @@ class ModuleCommandsTest {
 		modules = dir.resolve("modules");
 		bukkit  = BukkitStatics.install();
 		when(bukkit.pluginManager().getPlugins()).thenReturn(new Plugin[0]);
+		SettingsFixture.initializeMinimal(dir);
 		Messages.init(new FakeMessageProvider());
 
 		plugin       = mock(JavaPlugin.class);
@@ -100,6 +106,28 @@ class ModuleCommandsTest {
 		assertTrue(Files.exists(modules.resolve("gangland-gadget-0.10.0.jar" + ModuleLoader.STALE_MARKER_SUFFIX)));
 		assertTrue(Files.exists(modules.resolve("gangland-gadget-0.9.1.jar" + ModuleLoader.STALE_MARKER_SUFFIX)),
 		           "the refused jar must be removed too, or the module survives the restart");
+	}
+
+	@Test
+	@DisplayName("update with nothing loaded says so and points at /glw module list, not 'every module is up to date'")
+	void update_nothingLoaded_reportsEmptyAndSkipped() {
+		Messages.init(new FakeMessageProvider()
+				              .withString("Commands.Module.List_Empty", "no modules loaded")
+				              .withString("Commands.Module.All_Up_To_Date", "every module is up to date")
+				              .withString("Commands.Module.Update_Skipped", "%count% skipped, see /glw module list"));
+		when(moduleLoader.faults()).thenReturn(List.of(
+				Fault.userError("module.host.incompatible", "gadget needs Host_Api 9.0").build()));
+
+		new ModuleUpdateCommand(plugin, new Tree<>(), mock(Argument.class), moduleLoader, updateService)
+				.start(sender, null);
+
+		ArgumentCaptor<String> sent = ArgumentCaptor.forClass(String.class);
+		verify(sender, atLeastOnce()).sendMessage(sent.capture());
+		List<String> lines = sent.getAllValues();
+		assertTrue(lines.stream().noneMatch(line -> line.contains("every module is up to date")),
+		           "nothing was checked, so nothing is known to be up to date; got " + lines);
+		assertTrue(lines.stream().anyMatch(line -> line.contains("no modules loaded")), "got " + lines);
+		assertTrue(lines.stream().anyMatch(line -> line.contains("1 skipped, see /glw module list")), "got " + lines);
 	}
 
 	private List<String> jars() throws IOException {
