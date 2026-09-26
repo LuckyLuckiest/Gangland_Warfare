@@ -4,6 +4,7 @@ import lombok.CustomLog;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
@@ -13,6 +14,7 @@ import org.luckyraven.gangland.civilians.npc.npc.CivilianNpcFactory;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawner;
 import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.timer.RepeatingTimer;
@@ -35,6 +37,11 @@ public class CivilianService implements BeanLifecycle {
 	private final CivilianNpcFactory   npcFactory;
 	private final CivilianSpawnManager spawnManager;
 	private final CivilianNpcRegistry  registry;
+	/**
+	 * Combat squads, one per faction and target (player or entity uuid): created on the first hit, dropped when empty
+	 * or when their target dies or goes down.
+	 */
+	private final Map<SquadKey, NpcSquad> squads = new HashMap<>();
 
 	@Getter
 	private CiviliansConfig civiliansConfig;
@@ -124,6 +131,75 @@ public class CivilianService implements BeanLifecycle {
 		return registry.getActiveGroups();
 	}
 
+	// ── Combat squads ─────────────────────────────────────────────────────────
+
+	/**
+	 * A hostile civilian was hit: it joins its faction's squad against the attacker and reports where the attacker is.
+	 * Every other active, combat-enabled hostile civilian of the same faction within its own
+	 * {@code AI.Combat.Alert_Range} of the victim that is not already fighting someone else takes the attacker as its
+	 * target, enters {@link CivilianState#COMBAT} and joins the squad. One hop: joining does not alert anyone else; a
+	 * later hit on any member alerts that member's neighbours.
+	 *
+	 * @param victim the civilian that was hit, already targeting {@code attacker}
+	 * @param attacker the player or entity that hit it
+	 * @param playerAttacker whether {@code attacker} is a real player (allies target it by player id) rather than an
+	 * 		NPC or mob (allies put it at the front of their entity target queue)
+	 */
+	public void alertFaction(CivilianNpc victim, LivingEntity attacker, boolean playerAttacker) {
+		UUID     attackerId = attacker.getUniqueId();
+		String   faction    = victim.getTypeConfig().faction();
+		NpcSquad squad      = squads.computeIfAbsent(new SquadKey(faction, attackerId), key -> new NpcSquad());
+
+		victim.joinSquad(squad, attackerId);
+		squad.reportSighting(attacker.getLocation());
+
+		LivingEntity victimEntity = victim.getEntity();
+		if (victimEntity == null) return;
+
+		// ponytail: scans every active civilian per hit; add a spatial index if active civilians reach the hundreds
+		for (CivilianNpc ally : registry.getActiveNpcs()) {
+			if (ally == victim || !ally.isValid() || ally.isMarkedForRemoval()) continue;
+			if (!ally.isHostile() || !ally.getTypeConfig().ai().combatEnabled()) continue;
+			if (!faction.equals(ally.getTypeConfig().faction())) continue;
+			if (ally.distanceTo(victimEntity) > ally.getTypeConfig().ai().alertRange()) continue;
+			if (isFightingAnother(ally, attackerId)) continue;
+
+			if (playerAttacker) {
+				ally.setTargetPlayerId(attackerId);
+			} else {
+				ally.addEntityTargetToFront(attacker);
+			}
+			ally.joinSquad(squad, attackerId);
+			if (ally.getCurrentState() != CivilianState.COMBAT) {
+				ally.transitionTo(CivilianState.COMBAT);
+			}
+		}
+	}
+
+	/**
+	 * Forgets every faction's squad hunting {@code targetId} (the target died or went down).
+	 */
+	public void dropSquads(UUID targetId) {
+		squads.keySet().removeIf(key -> key.targetId().equals(targetId));
+	}
+
+	/**
+	 * Whether {@code npc} is already in combat against a target other than {@code targetId}.
+	 */
+	private static boolean isFightingAnother(CivilianNpc npc, UUID targetId) {
+		if (npc.getCurrentState() != CivilianState.COMBAT) return false;
+
+		LivingEntity entityTarget = npc.getTargetEntity();
+		UUID         current      = entityTarget != null ? entityTarget.getUniqueId() : npc.getTargetPlayerId();
+		return current != null && !current.equals(targetId);
+	}
+
+	/**
+	 * One faction's hunt for one target.
+	 */
+	private record SquadKey(String faction, UUID targetId) {
+	}
+
 	// ── Group spawning ────────────────────────────────────────────────────────
 
 	/**
@@ -190,6 +266,7 @@ public class CivilianService implements BeanLifecycle {
 			}
 		}
 		registry.clear();
+		squads.clear();
 	}
 
 	// ── Proximity spawners ────────────────────────────────────────────────────
@@ -342,5 +419,8 @@ public class CivilianService implements BeanLifecycle {
 			group.pruneDeadMembers();
 			return group.isEmpty();
 		});
+
+		// Squads every member has left (gave up, died, despawned)
+		squads.values().removeIf(NpcSquad::isEmpty);
 	}
 }
