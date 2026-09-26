@@ -1,8 +1,9 @@
 # Cross-project bug docket — 2026-09-10
 
-One docket for Gangland Warfare (0.9.0), Keystone (phase-h8-item-npc, 1.9.1), Bartizan (master, 0.1.x) and
-Oriel (0.7.0). Orchestrated by Fable: haiku mappers -> opus per-project leads (who scope and order
-sonnet/haiku scanners) -> Fable verification -> one artifact with a per-project filter.
+One docket for Gangland Warfare (0.9.0), Keystone (phase-h8-item-npc, 1.9.1), Bartizan (master, 0.1.x),
+Oriel (0.7.0) and Plaque (added 2026-09-26 as the fifth project, test-server wave 1). Orchestrated by
+Fable: haiku mappers -> opus per-project leads (who scope and order sonnet/haiku scanners) -> Fable
+verification -> one artifact with a per-project filter.
 
 Layout
 - `<project>/systems.md` — phase 1: system-code mapping (code, slug, name, packages, hubs, risk hotspots)
@@ -17,7 +18,7 @@ Layout
 - `prompts/` — the exact prompts handed to each agent (audit trail)
 
 Ids: Gangland keeps its ids (`CL-01`, `T-35`). New projects: `KS-<code>-<nn>` Keystone, `BZ-<code>-<nn>`
-Bartizan, `OR-<code>-<nn>` Oriel. Published page: https://claude.ai/code/artifact/4a903fb6-cbdd-4810-90b8-88a863e9013c ("LuckyRaven Bug Docket", 702 entries: Gangland 498, Keystone 103, Bartizan 64, Oriel 37).
+Bartizan, `OR-<code>-<nn>` Oriel, `PQ-<code>-<nn>` Plaque. Published page: https://claude.ai/code/artifact/4a903fb6-cbdd-4810-90b8-88a863e9013c ("LuckyRaven Bug Docket", 702 entries: Gangland 498, Keystone 103, Bartizan 64, Oriel 37).
 Status/notes live in that artifact's shared db (collection `bugs`,
 doc id = bug id, `{status, note, updatedAt}`); Gangland rows were seeded from the old artifact.
 

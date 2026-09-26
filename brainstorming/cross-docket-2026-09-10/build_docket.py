@@ -21,6 +21,7 @@ PROJECTS = collections.OrderedDict([
     ("keystone", ("KS", "Keystone",         "2", r"E:\Programming\java\Keystone",  "mvn -pl <module> test (then mvn clean install so consumers see it)")),
     ("bartizan", ("BZ", "Bartizan",         "3", r"E:\Programming\java\Bartizan",  "mvn -pl bartizan-plugin -am test")),
     ("oriel",    ("OR", "Oriel",            "4", r"E:\Programming\java\Oriel",     "./gradlew :<module>:test")),
+    ("plaque",   ("PQ", "Plaque",           "5", r"E:\Programming\java\Plaque",    "mvn test")),
 ])
 
 def git(path, *args):
@@ -113,8 +114,8 @@ def patch_template(meta, counts):
     rep('<div class="tb-meta"><span>branch 0.8.2</span><span class="dot"></span><span>HEAD 66eeb647</span><span class="dot"></span><span>Keystone 1.8.0</span><span class="dot"></span><span>audit 2026-09-02 · tests 2026-09-04 · docket 2026-09-06</span></div>',
         '<div class="tb-meta"><span>' + hm + '</span><span class="dot"></span><span>docket 2026-09-10</span></div>')
     rep('<span class="eyebrow">Bug docket · every observation from the 13 case files, triaged</span>',
-        '<span class="eyebrow">Cross-project bug docket · four repositories, one warrant list</span>')
-    rep("<h1>What has to be fixed, in the order it should be fixed</h1>", "<h1>What has to be fixed across the four plugins, in the order it should be fixed</h1>")
+        '<span class="eyebrow">Cross-project bug docket · five repositories, one warrant list</span>')
+    rep("<h1>What has to be fixed, in the order it should be fixed</h1>", "<h1>What has to be fixed across the five plugins, in the order it should be fixed</h1>")
     rep('<p class="lede">Each entry is one observation from the 2026-09-02 workflow audit, re-read with the 2026-09-04 test suite beside it and given a fix tier, a one-line fix direction and the test that pins it. Open an entry, copy its brief, hand it to an agent, then mark it fixed here so the next agent sees the live state.</p>',
         '<p class="lede">Gangland Warfare keeps its 2026-09-06 docket entries and their live statuses. Keystone, Bartizan and Oriel were scanned on 2026-09-10: a mapper split each repository into systems, a review lead ordered one scanner per system, then re-read every finding against the code before it entered this list. Filter by project, open an entry, copy its brief, hand it to an agent, then mark it fixed here so the next agent sees the live state.</p>')
     rep('<p class="fine">P0 and P1 are the immediate docket:', '<p class="fine">Counts: ' + counts + '. P0 and P1 are the immediate docket:')
@@ -207,7 +208,7 @@ def seed_statuses(bugs):
 def main():
     bugs = load_gangland()
     problems = []
-    for p in ("keystone", "bartizan", "oriel"):
+    for p in ("keystone", "bartizan", "oriel", "plaque"):
         b, pr = load_findings(p); bugs += b; problems += pr
     meta = head_meta()
     per = collections.OrderedDict()
