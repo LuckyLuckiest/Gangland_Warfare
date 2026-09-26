@@ -73,4 +73,8 @@ public class CivilianMessages extends LocalizedModuleYaml {
 		return prefix("Spawner_List_Header", "Civilian spawners:");
 	}
 
+	public String spawnerListEmpty() {
+		return prefix("Spawner_List_Empty", "No civilian spawners are registered.");
+	}
+
 }

@@ -784,9 +784,11 @@ Fuel:
 
 Jail:
    List_Header: "Jails:"
+   List_Empty: "&7No jails are registered."
 
 Cop:
    Spawner_List_Header: "Cop spawners:"
+   Spawner_List_Empty: "&7No cop spawners are registered."
 
 Item:
    Unique:

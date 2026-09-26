@@ -472,6 +472,7 @@ public enum Messages {
 	JAIL_EXIT_SET_GLOBAL("Commands.Jail.Exit_Set_Global", Type.COMMAND),
 	JAIL_TELEPORTED("Commands.Jail.Teleported", Type.COMMAND),
 	JAIL_LIST_HEADER("Jail.List_Header", Type.PREFIX),
+	JAIL_LIST_EMPTY("Jail.List_Empty", Type.PREFIX),
 	JAIL_NO_EMPTY("Errors.Jail.No_Empty", Type.ERROR),
 	JAIL_ALREADY_JAILED("Errors.Jail.Already_Jailed", Type.ERROR),
 	JAIL_NOT_JAILED("Errors.Jail.Not_Jailed", Type.ERROR),
@@ -484,6 +485,7 @@ public enum Messages {
 	COP_SPAWNER_REMOVED("Commands.Cop.Spawner.Removed", Type.COMMAND),
 	COP_SPAWNER_TELEPORTED("Commands.Cop.Spawner.Teleported", Type.COMMAND),
 	COP_SPAWNER_LIST_HEADER("Cop.Spawner_List_Header", Type.PREFIX),
+	COP_SPAWNER_LIST_EMPTY("Cop.Spawner_List_Empty", Type.PREFIX),
 
 	// commands - car
 	CAR_GAVE("Commands.Car.Gave", Type.COMMAND),

@@ -13,3 +13,4 @@ Spawn_Failed: "&cError al generar civil. Verifica que el tipo &e%type%&c sea vá
 Spawner_Type_Set: "&aGenerador de civiles &e%type%&a colocado en tu ubicación."
 Spawner_Group_Set: "&aGenerador de grupo &e%group%&a colocado en tu ubicación."
 Spawner_List_Header: "Generadores de civiles:"
+Spawner_List_Empty: "No hay generadores de civiles registrados."
