@@ -319,11 +319,11 @@
 		"usage": "/glw waypoint radius <amount>",
 		"description": "Sets the radius of affect for that waypoint."
 	},
-	"waypoint_teleport": {
+	"teleport_teleport": {
 		"usage": "/glw tp",
 		"description": "Teleport to the selected waypoint."
 	},
-	"waypoint_teleport_unknown": {
+	"teleport_teleport_unknown": {
 		"usage": "/glw tp <name>",
 		"description": "Teleport to the waypoint specified."
 	},
