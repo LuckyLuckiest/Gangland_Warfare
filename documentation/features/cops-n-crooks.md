@@ -55,20 +55,20 @@ shares what its members see.
 ### Squad awareness
 
 A cop knows where the player is only through a sighting — its own or any squad member's. A cop *sees* the player when
-he is within `Alert_Range` (default 40 blocks) and in its line of sight. The crime scene counts as the first
-sighting, and a player who hits a cop gives his position away to the whole squad.
+they are within `Alert_Range` (default 40 blocks) and in its line of sight. The crime scene counts as the first
+sighting, and a player who hits a cop gives their position away to the whole squad.
 
-- **Seen in the last 1.5 seconds:** the squad chases him. Melee cops spread around him instead of queueing behind
+- **Seen in the last 1.5 seconds:** the squad chases them. Melee cops spread around them instead of queueing behind
   each other; armed cops hold a firing spot 7–12 blocks away while they have a clear shot.
-- **Out of sight:** the squad goes to where he was last seen, then fans out and searches in widening circles until
-  someone spots him again.
+- **Out of sight:** the squad goes to where they were last seen, then fans out and searches in widening circles until
+  someone spots them again.
 
 ### Pursuit
 
 The cop is closing in to cuff the player. When the direct path fails — stairs on the far side of a building, a closed
 door, a long approach — the squad plans a route starting from the player's side (a rooftop is searched from the top
 down), shares it between its members, opens doors and climbs ladders on the way. If no route exists at all, the cops
-wait at the foot of the structure, facing the player, for as long as he is wanted.
+wait at the foot of the structure, facing the player, for as long as they are wanted.
 
 A cop leaves a pursuit in only two cases, and the spawner then replaces it: it stayed stuck for `Pursuit.Max_Ticks`
 AI ticks while no squad member could see the player, or the player got farther away than `Pursuit.Max_Distance`.
@@ -76,8 +76,8 @@ AI ticks while no squad member could see the player, or the player got farther a
 ### Combat
 
 Within 12 blocks (ranged) or 4 blocks (melee), the cop switches to combat mode. Armed cops fire their configured weapon
-with proper reload cycles: they hold position while they see the player inside their firing band and climb after him
-like any other cop once he steps out of view. When one cop is attacked, every cop in its group joins the fight.
+with proper reload cycles: they hold position while they see the player inside their firing band and climb after them
+like any other cop once they step out of view. When one cop is attacked, every cop in its group joins the fight.
 
 ### Cuffing
 

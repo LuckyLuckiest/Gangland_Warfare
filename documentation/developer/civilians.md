@@ -118,7 +118,7 @@ Hostile civilians fight as squads (Keystone `NpcSquad`, one per faction and targ
    anyone in the squad sees the target (within `Alert_Range`, line of sight), otherwise they search from the
    last-known position.
 4. **Give up.** When nobody in the squad has seen the target for `AI.Combat.Search_Seconds`, a member clears its target,
-   leaves the squad and goes `IDLE`. A player who dies or goes down drops every squad hunting him.
+   leaves the squad and goes `IDLE`. A player who dies or goes down drops every squad hunting them.
 
 Squads are created on the first hit and removed once empty. A civilian that enters `COMBAT` without a hit (turf
 defenders, the Quartermaster, the idle re-engage) hunts in a squad of its own, seeded with the target's position.
@@ -133,15 +133,20 @@ Pedestrians (combat disabled) never join a squad.
 Each civilian type is defined with its own behavior parameters:
 
 ```yaml
-civilian_types:
-   street_vendor:
-      display_name: "&eStreet Vendor"
-      skin: "vendor_skin_data"
-      behaviour:
-         wander_range: 10.0
-         flee_range: 20.0
-         combat_enabled: false
-         look_range: 8.0
+Types:
+   gang_member:
+      Display_Name: "&c&lGang Member"
+      Entity_Type: PLAYER
+      Hostile: true
+      Faction: gang_member          # Side it fights for (default: the type id)
+      AI:
+         Combat:
+            Enabled: true
+            Attack_Damage: 4.0
+            Attack_Range: 12.0
+            Attack_Interval_Ticks: 20
+            Alert_Range: 16.0        # Sight range + how far it hears a faction member being hit (default 16.0)
+            Search_Seconds: 20       # Squad unseen this long -> give up (default 20)
 ```
 
 ### CivilianNavigationConfig (12 methods)

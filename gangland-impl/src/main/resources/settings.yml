@@ -382,7 +382,7 @@ Cops:
    Pursuit:
       # Horizontal distance from the target (blocks) beyond which the pursuing cop gives up.
       Max_Distance: 80.0
-      # AI ticks a pursuing cop may stay stuck while no cop chasing the same player can see him before it gives up
+      # AI ticks a pursuing cop may stay stuck while no cop chasing the same player can see them before it gives up
       # (the spawner replaces it). Ticks where it moves or anyone sees the player reset the count.
       # Default 120 = ~60 s at AI_Tick_Rate: 10 (10 game ticks per AI tick, 20 TPS).
       Max_Ticks: 120

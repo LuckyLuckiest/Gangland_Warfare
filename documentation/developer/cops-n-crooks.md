@@ -258,7 +258,7 @@ sighting time, routes). A cop joins it in `CopGroup.add` when the spawn task ass
 `CopNpc.squadFor(target)` returns the group squad only when `target` is the group's wanted player; for an entity target
 or a player the cop retargeted to it returns `null`, and Keystone then uses the cop's private squad.
 
-Sightings are reported by `onWantedStart` (the crime scene), `onCopAttackedAlert` (the attacker, when he is the group's
+Sightings are reported by `onWantedStart` (the crime scene), `onCopAttackedAlert` (the attacker, when they are the group's
 target), `IdleBehavior` (`cop.canSee(target, alertRange)`) and by Keystone's `AbstractNpc.pursue`, which every
 `PURSUING` and `COMBAT` tick calls with `Cops.Behaviour.Alert_Range` as the sight range.
 
