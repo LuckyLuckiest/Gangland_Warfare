@@ -11,6 +11,7 @@ import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.keystone.economy.EconomyHandler;
+import org.luckyraven.gangland.command.util.ParsedAmount;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.core.user.User;
@@ -71,17 +72,16 @@ class EconomyWithdrawCommand extends SubArgument {
 				.stream().map(Player::getName).toList());
 	}
 
-	private void applyWithdraw(CommandSender sender, String rawAmount, User<Player> target) {
-		BigDecimal argAmount;
+	static void applyWithdraw(CommandSender sender, String rawAmount, User<Player> target) {
+		ParsedAmount parsed = ParsedAmount.of(rawAmount);
 
-		try {
-			argAmount = Currency.parse(rawAmount);
-		} catch (NumberFormatException exception) {
-			sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", rawAmount));
+		if (!parsed.isValid()) {
+			sender.sendMessage(parsed.failureMessage(rawAmount));
 			return;
 		}
 
-		EconomyHandler economy  = target.getEconomy();
+		BigDecimal     argAmount = parsed.require();
+		EconomyHandler economy   = target.getEconomy();
 		BigDecimal     current  = economy.getAmount();
 		BigDecimal     newValue = current.subtract(argAmount).max(Currency.ZERO);
 		BigDecimal     taken    = current.subtract(newValue);
@@ -90,6 +90,12 @@ class EconomyWithdrawCommand extends SubArgument {
 
 		target.getUser().sendMessage(Messages.WITHDRAW_MONEY_PLAYER.toString()
 		                                                           .replace("%amount%", Settings.formatAmount(taken)));
+
+		if (sender != target.getUser()) {
+			sender.sendMessage(Messages.WITHDRAW_MONEY_TARGET.toString()
+			                                                 .replace("%target%", target.getUser().getName())
+			                                                 .replace("%amount%", Settings.formatAmount(taken)));
+		}
 	}
 
 }
