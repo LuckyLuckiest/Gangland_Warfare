@@ -53,11 +53,11 @@ public final class ShopAdminFlow {
 				.panel(ShopAdminFlowSession.PANEL_SELL_CATEGORY, sellCategoryPanel)
 				.panel(ShopAdminFlowSession.PANEL_BARTER_CATEGORY, barterCategoryPanel)
 				// Persist-on-end: rebuild the definition from the working copies and fire ShopEditedEvent so the
-				// shop registry (or whoever listens) can write the updated shop to disk. Fires regardless of
-				// whether the flow ended via the close button, ESC, or flow.end() — and regardless of which
-				// panel was open at the time. Also clears the three raw-listener-tracked views' per-admin state.
+				// shop registry (or whoever listens) can write the updated shop to disk — only when something was
+				// edited, however the flow ended (close button, ESC, flow.end()) and whichever panel was open. Also
+				// clears the three raw-listener-tracked views' per-admin state.
 				.onEnd(s -> {
-					Bukkit.getPluginManager().callEvent(new ShopEditedEvent(admin, s.buildNewDefinition()));
+					if (s.isDirty()) Bukkit.getPluginManager().callEvent(new ShopEditedEvent(admin, s.buildNewDefinition()));
 					adminPanel.onFlowEnd(admin);
 					sellCategoryPanel.onFlowEnd(admin);
 					barterCategoryPanel.onFlowEnd(admin);

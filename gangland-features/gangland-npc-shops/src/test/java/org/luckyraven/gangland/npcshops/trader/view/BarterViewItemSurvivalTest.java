@@ -6,8 +6,12 @@ import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemFactory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -16,6 +20,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.core.testsupport.BukkitRegistryFixture;
+import org.luckyraven.gangland.npcshops.events.trader.TraderBarterEvent;
 import org.luckyraven.gangland.npcshops.trader.TraderData;
 import org.luckyraven.gangland.npcshops.trader.TraderNpc;
 import org.luckyraven.gangland.npcshops.trader.config.TraderSettings;
@@ -36,17 +41,21 @@ import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
 import org.luckyraven.keystone.inventory.flow.MenuFlow;
 import org.luckyraven.keystone.item.ItemRefresherRegistry;
 import org.luckyraven.keystone.testkit.BukkitStatics;
+import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -98,7 +107,7 @@ class BarterViewItemSurvivalTest {
 
 	private record Rig(BarterView view, TraderFlowSession session, InventoryService inventoryService,
 	                   MenuFlow<TraderFlowSession> flow, ChestMenu menu, int dropzoneSlot, Player player,
-	                   ItemStack dropped) { }
+	                   ItemStack dropped, CategoryBarterValuator valuator) { }
 
 	/** Builds a real {@code BarterView}, renders it into a real {@link ChestMenu}, opens it, and drops one item
 	 *  directly into its first dropzone slot — exactly what an uncancelled Bukkit click on an interactive slot
@@ -153,10 +162,8 @@ class BarterViewItemSurvivalTest {
 		when(player.getInventory()).thenReturn(playerInventory);
 		when(playerInventory.addItem(any(ItemStack.class))).thenReturn(new HashMap<>());
 		when(player.getWorld()).thenReturn(mock(World.class));
-		// No player.getOpenInventory() stub: ChestMenu.close(Player) reads it, but the read itself throws
-		// IncompatibleClassChangeError against this mock regardless of what it's stubbed to return (a pre-existing
-		// Keystone-vs-Gangland bukkit.version mismatch — see closeIgnoringKnownBukkitVersionGap below), so any stub
-		// here is unreachable.
+		// ChestMenu.close(Player) reads getOpenInventory().getTopInventory(); unstubbed it NPEs on Keystone 1.11.2.
+		when(player.getOpenInventory()).thenReturn(mock(InventoryView.class));
 
 		@SuppressWarnings("unchecked")
 		MenuFlow<TraderFlowSession> flow = mock(MenuFlow.class);
@@ -176,7 +183,7 @@ class BarterViewItemSurvivalTest {
 		ItemStack dropped      = new ItemStack(Material.GOLD_INGOT, 3);
 		menu.bukkitInventory().setItem(dropzoneSlot, dropped);
 
-		return new Rig(view, session, inventoryService, flow, menu, dropzoneSlot, player, dropped);
+		return new Rig(view, session, inventoryService, flow, menu, dropzoneSlot, player, dropped, valuator);
 	}
 
 	@Test
@@ -263,6 +270,76 @@ class BarterViewItemSurvivalTest {
 			assertEquals(rig.dropped(), rig.menu().bukkitInventory().getItem(rig.dropzoneSlot()),
 			            "adoptComponentsFrom (MenuFlow.rerender()'s real body) must not disturb a physically-dropped item");
 		}
+	}
+
+	@Test
+	@DisplayName("confirm re-values the live dropzone: a same-tick swap to worthless items trades nothing")
+	void confirm_afterSameTickSwapToWorthless_tradesNothing() {
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			Rig rig = buildRig(bukkit);
+			valueGoldAt5(rig);
+			rerender(rig); // offer now shows 3 gold = $15 >= asking $10
+
+			// Same tick, before the scheduled rerender runs: the gold is swapped for something the trader won't take.
+			rig.menu().bukkitInventory().setItem(rig.dropzoneSlot(), new ItemStack(Material.DIRT, 64));
+			clickConfirm(rig);
+
+			assertTrue(firedEvents(bukkit, TraderBarterEvent.class).isEmpty(),
+			           "a $0 live offer must not reach the trader, whatever the stale cached offer said");
+			ItemStack kept = rig.menu().bukkitInventory().getItem(rig.dropzoneSlot());
+			assertEquals(Material.DIRT, kept.getType());
+			assertEquals(64, kept.getAmount());
+		}
+	}
+
+	@Test
+	@DisplayName("conservation: the value confirm forwards is exactly the value of the items it consumes")
+	void confirm_forwardsValueOfConsumedItems() {
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			Rig rig = buildRig(bukkit);
+			valueGoldAt5(rig);
+			rerender(rig); // 3 gold = $15
+
+			rig.menu().bukkitInventory().setItem(rig.dropzoneSlot(), new ItemStack(Material.GOLD_INGOT, 2)); // $10
+			clickConfirm(rig);
+
+			List<TraderBarterEvent> events = firedEvents(bukkit, TraderBarterEvent.class);
+			assertEquals(1, events.size());
+			int consumed = events.get(0).getOffered().stream().mapToInt(ItemStack::getAmount).sum();
+			assertEquals(2, consumed);
+			assertEquals(0, new BigDecimal(5 * consumed).compareTo(events.get(0).getOfferedValue()),
+			             "offered value " + events.get(0).getOfferedValue() + " != value of consumed items");
+			assertNull(rig.menu().bukkitInventory().getItem(rig.dropzoneSlot()), "the consumed gold leaves the dropzone");
+		}
+	}
+
+	private static void valueGoldAt5(Rig rig) {
+		when(rig.valuator().value(any(), any(), anyDouble(), anyDouble())).thenAnswer(
+				invocation -> invocation.<ItemStack>getArgument(1).getType() == Material.GOLD_INGOT
+				              ? new ItemValuation(BigDecimal.valueOf(5), ItemValuation.Source.CATEGORY, "gold")
+				              : ItemValuation.UNKNOWN);
+	}
+
+	/** The literal body of {@code MenuFlow.rerender()} — see {@link #roundTrip_survivesRerender()}. */
+	private static void rerender(Rig rig) {
+		ChestMenuBuilder fresh = ChestMenu.builder(rig.inventoryService())
+		                                  .title(rig.view().title(rig.session()))
+		                                  .rows(rig.view().rows(rig.session()));
+		rig.view().render(rig.flow(), fresh, rig.session());
+		rig.menu().adoptComponentsFrom(fresh.build());
+	}
+
+	private static void clickConfirm(Rig rig) {
+		InventoryClickEvent click = mock(InventoryClickEvent.class);
+		when(click.getRawSlot()).thenReturn(52); // BarterView.SLOT_CONFIRM
+		when(click.getClick()).thenReturn(ClickType.LEFT);
+		rig.menu().dispatchClick(click, rig.player());
+	}
+
+	private static <E extends Event> List<E> firedEvents(BukkitStatics bukkit, Class<E> type) {
+		ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+		verify(bukkit.pluginManager(), atLeast(0)).callEvent(captor.capture());
+		return captor.getAllValues().stream().filter(type::isInstance).map(type::cast).toList();
 	}
 
 }

@@ -28,6 +28,10 @@ public class CivilianMessages extends LocalizedModuleYaml {
 		return command("Groups_Empty", "No civilian groups are currently active.");
 	}
 
+	public String spawnerListEmpty() {
+		return command("Spawner_List_Empty", "No civilian spawners are currently set.");
+	}
+
 	public String spawned(String type) {
 		return command("Spawned", "&aCivilian &e%type%&a spawned near you.").replace("%type%", type);
 	}

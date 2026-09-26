@@ -9,6 +9,7 @@ import org.luckyraven.keystone.shop.event.ShopEditedEvent;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -18,7 +19,7 @@ import java.util.function.Consumer;
  * than maintaining its own per-player session map — one inventory handle, one session, smooth transitions.
  *
  * <p>Working copies of {@code buyEntries}, {@code sellCategories}, {@code barterCategories} are deep-copied from the
- * original {@link ShopDefinition} at flow start; a {@link ShopEditedEvent} is fired on flow end with the rebuilt
+ * original {@link ShopDefinition} at flow start; a {@link ShopEditedEvent} is fired on flow end, if any was edited, with the rebuilt
  * definition.
  */
 public final class ShopAdminFlowSession implements FlowState {
@@ -66,6 +67,29 @@ public final class ShopAdminFlowSession implements FlowState {
 		this.buyEntries        = new ArrayList<>(buyEntries);
 		this.sellCategories    = sellCategories;
 		this.barterCategories  = barterCategories;
+	}
+
+	/**
+	 * Whether any working copy differs from {@link #original}. Checked on flow end so an open + close with no edits
+	 * does not resave the shop (a resave drops every entry the reader skipped at load). Entries are compared by
+	 * reference and category items by {@code ItemStack.equals}: untouched ones are the originals, every edit replaces.
+	 */
+	public boolean isDirty() {
+		return !buyEntries.equals(original.getBuyEntries())
+		       || !sellKeys(sellCategories).equals(sellKeys(original.getSellCategories()))
+		       || !barterKeys(barterCategories).equals(barterKeys(original.getBarterCategories()));
+	}
+
+	private static List<List<Object>> sellKeys(List<SellCategory> categories) {
+		return categories.stream()
+		                 .map(c -> Arrays.<Object>asList(c.getId(), c.getDisplayName(), c.getBasePrice(), c.getItems()))
+		                 .toList();
+	}
+
+	private static List<List<Object>> barterKeys(List<BarterCategory> categories) {
+		return categories.stream()
+		                 .map(c -> Arrays.<Object>asList(c.getId(), c.getDisplayName(), c.getBasePrice(), c.getItems()))
+		                 .toList();
 	}
 
 	/**

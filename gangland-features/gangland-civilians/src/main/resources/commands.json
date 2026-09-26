@@ -20,7 +20,7 @@
 		"description": "Spawns a civilian group of the specified id at your location."
 	},
 	"civilian_spawner_set": {
-		"usage": "/glw civilian spawner set",
+		"usage": "/glw civilian spawner set <typeId>",
 		"description": "Sets a civilian spawner at your current location."
 	},
 	"civilian_spawner_setgroup": {
