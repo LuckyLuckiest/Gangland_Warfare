@@ -60,7 +60,7 @@ class FuelAddCommand extends SubArgument {
 			try {
 				increase = Integer.parseInt(args[2]);
 			} catch (NumberFormatException exception) {
-				user.sendMessage(Messages.MUST_BE_NUMBERS.toString());
+				user.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", args[2]));
 				return;
 			}
 

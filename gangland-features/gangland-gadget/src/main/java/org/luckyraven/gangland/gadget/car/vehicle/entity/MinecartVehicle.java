@@ -45,12 +45,14 @@ public class MinecartVehicle implements VehicleEntity {
 		World world = location.getWorld();
 		if (world == null) return;
 
-		minecart = world.spawn(location.clone(), Minecart.class, cart -> {
-			// Use a high internal max-speed ceiling so our manually applied velocity is never capped.
-			// We manage speed entirely via setVelocity each tick.
-			cart.setMaxSpeed(10.0);
-			cart.setSlowWhenEmpty(false);
-		});
+		// 2-arg World.spawn(Location, Class) — the 3-arg org.bukkit.util.Consumer overload was replaced by a
+		// java.util.function.Consumer overload with a different descriptor on Paper 1.20.2+, so the old one
+		// throws NoSuchMethodError there. This overload is stable across 1.16.5-1.21.x.
+		minecart = world.spawn(location.clone(), Minecart.class);
+		// Use a high internal max-speed ceiling so our manually applied velocity is never capped.
+		// We manage speed entirely via setVelocity each tick.
+		minecart.setMaxSpeed(10.0);
+		minecart.setSlowWhenEmpty(false);
 	}
 
 	@Override

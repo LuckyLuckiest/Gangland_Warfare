@@ -36,6 +36,13 @@ public class VehicleSession {
 	private final VehicleEntity       entity;
 	private final Player              driver;
 	private final UUID                driverUUID;
+	/**
+	 * UUID of the player who originally placed the car (from {@code ParkedVehicle.getPlacerUUID()}), carried over
+	 * unchanged for the life of the session regardless of who is currently driving. {@code CarAccessPolicy} gates
+	 * mount/refuel/pickup on this identity, so it must never be replaced by {@link #driverUUID} when persisting —
+	 * that silently reassigns ownership to whoever last drove the car (gi=51).
+	 */
+	private final UUID                placerUUID;
 	private final BossBar             healthBar;
 	private final int                 maxFuel;
 	private final ExhaustSide         exhaustSide;
@@ -61,16 +68,19 @@ public class VehicleSession {
 	private volatile boolean inputRight;
 
 	/**
+	 * @param placerUUID UUID of the player who originally placed the car, carried over from the {@code ParkedVehicle}
+	 * 		being mounted — not necessarily {@code driver}
 	 * @param initialDurability durability carried over from the parked vehicle
 	 * @param initialFuel fuel carried over from the parked vehicle (entity PDC / DB record)
 	 * @param maxFuel maximum fuel capacity from the car's fuel definition
 	 */
-	public VehicleSession(VehicleEntity entity, Car car, Player driver, int initialDurability, int initialFuel,
-	                      int maxFuel, @Nullable ExhaustSide exhaustSide) {
+	public VehicleSession(VehicleEntity entity, Car car, Player driver, UUID placerUUID, int initialDurability,
+	                      int initialFuel, int maxFuel, @Nullable ExhaustSide exhaustSide) {
 		this.entity            = entity;
 		this.car               = car;
 		this.driver            = driver;
 		this.driverUUID        = driver.getUniqueId();
+		this.placerUUID        = placerUUID;
 		this.currentDurability = initialDurability;
 		this.currentFuel       = initialFuel;
 		this.maxFuel           = maxFuel;

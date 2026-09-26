@@ -37,6 +37,14 @@ public class JetpackSession {
 	@Setter
 	private boolean glideModeActive;
 
+	/**
+	 * {@code player.getAllowFlight()} captured just before {@code JetpackService.activate} forces it {@code true}.
+	 * Restored on deactivation instead of hardcoding {@code false}, so a creative player's native mayfly (or any
+	 * other plugin's grant) survives an equip/unequip cycle (gi=52).
+	 */
+	@Setter
+	private boolean previousAllowFlight;
+
 	public JetpackSession(Player player, Jetpack jetpack) {
 		this.player  = player;
 		this.jetpack = jetpack;

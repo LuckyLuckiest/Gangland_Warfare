@@ -54,11 +54,11 @@ class JetpackGiveCommand extends SubArgument {
 		Argument name = new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			Player player = (Player) sender;
 
-			String  jetpackId = args[2];
-			boolean gave      = giveJetpackItem(player, jetpackId, 1);
+			String jetpackId = args[2];
+			int    gave      = giveJetpackItem(player, jetpackId, 1);
 
-			if (gave) {
-				player.sendMessage(messages.gave(jetpackId, "1"));
+			if (gave >= 0) {
+				player.sendMessage(messages.gave(jetpackId, String.valueOf(gave)));
 			} else {
 				player.sendMessage(messages.invalid(jetpackId));
 			}
@@ -73,19 +73,19 @@ class JetpackGiveCommand extends SubArgument {
 			try {
 				jetpackAmount = Integer.parseInt(args[3]);
 			} catch (NumberFormatException exception) {
-				player.sendMessage(Messages.MUST_BE_NUMBERS.toString());
+				player.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", args[3]));
 				return;
 			}
 
 			if (jetpackAmount <= 0) {
-				player.sendMessage(Messages.MUST_BE_NUMBERS.toString());
+				player.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", args[3]));
 				return;
 			}
 
-			boolean gave = giveJetpackItem(player, jetpackId, jetpackAmount);
+			int gave = giveJetpackItem(player, jetpackId, jetpackAmount);
 
-			if (gave) {
-				player.sendMessage(messages.gave(jetpackId, String.valueOf(jetpackAmount)));
+			if (gave >= 0) {
+				player.sendMessage(messages.gave(jetpackId, String.valueOf(gave)));
 			} else {
 				player.sendMessage(messages.invalid(jetpackId));
 			}
@@ -95,10 +95,14 @@ class JetpackGiveCommand extends SubArgument {
 		this.addSubArgument(name);
 	}
 
-	private boolean giveJetpackItem(Player player, String name, int amount) {
+	/**
+	 * @return the actual number of items given (after the 36-stack cap), or {@code -1} if {@code name} names no
+	 * 		jetpack
+	 */
+	private int giveJetpackItem(Player player, String name, int amount) {
 		Jetpack jetpack = jetpackAddon.getJetpack(name);
 
-		if (jetpack == null) return false;
+		if (jetpack == null) return -1;
 
 		ItemStack       sampleItem   = jetpack.buildItem(player);
 		int             maxStackSize = sampleItem.getMaxStackSize();
@@ -131,7 +135,7 @@ class JetpackGiveCommand extends SubArgument {
 			}
 		}
 
-		return true;
+		return cappedAmount;
 	}
 
 }

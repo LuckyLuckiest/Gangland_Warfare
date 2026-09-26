@@ -68,7 +68,8 @@ class VehicleSessionTest {
 		Player driver = mock(Player.class);
 		when(driver.getUniqueId()).thenReturn(UUID.randomUUID());
 
-		return new VehicleSession(entity, car, driver, initialDurability, initialFuel, maxFuel, ExhaustSide.LEFT);
+		return new VehicleSession(entity, car, driver, driver.getUniqueId(), initialDurability, initialFuel, maxFuel,
+		                          ExhaustSide.LEFT);
 	}
 
 	@Test
@@ -143,7 +144,7 @@ class VehicleSessionTest {
 		Player driver = mock(Player.class);
 		when(driver.getUniqueId()).thenReturn(UUID.randomUUID());
 
-		VehicleSession session = new VehicleSession(entity, car, driver, 500, 0, 0, null);
+		VehicleSession session = new VehicleSession(entity, car, driver, driver.getUniqueId(), 500, 0, 0, null);
 
 		assertTrue(session.getExhaustSide() != null);
 	}
