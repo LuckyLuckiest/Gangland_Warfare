@@ -52,7 +52,7 @@ class RankInfoCommand extends SubArgument {
 			StringBuilder    permBuilder = new StringBuilder();
 			List<Permission> permissions = rank.getPermissions();
 			for (int i = 0; i < permissions.size(); i++) {
-				permBuilder.append(permissions.get(i));
+				permBuilder.append(permissions.get(i).getPermission());
 				if (i < permissions.size() - 1) permBuilder.append(", ");
 			}
 

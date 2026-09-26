@@ -40,7 +40,10 @@ Ranks between Head and Tail are filled in by the server admin using the `/glw ra
 the [Ranks guide](./ranks.md) for how to build a hierarchy.
 
 When a member is promoted or demoted, the system traverses up or down the rank tree automatically — there is no need to
-specify which rank to promote to, it always moves to the next defined rank in the chain.
+specify which rank to promote to, it always moves to the next defined rank in the chain. When a rank has several ranks
+above it, the promoter gets a clickable list to choose from. A promotion only hands out ranks below the promoter's own
+and never the Tail rank: ownership moves with `/glw gang transfer`. Staff holding `gangland.admin.gang.force_rank`
+(op by default) skip the rank checks, but still cannot promote anyone to the Tail rank.
 
 ---
 

@@ -44,7 +44,7 @@ All rank commands require appropriate admin permissions.
 | Command                   | Description                             |
 |---------------------------|-----------------------------------------|
 | `/glw rank create <name>` | Creates a new rank with the given name. |
-| `/glw rank delete <name>` | Permanently deletes a rank.             |
+| `/glw rank delete <name>` | Permanently deletes a rank. The Head and Tail ranks, a rank a member still holds, and a rank with ranks above it are refused. |
 | `/glw rank list`          | Lists all configured ranks.             |
 | `/glw rank info <name>`   | Shows a rank's permissions and parent.  |
 
@@ -59,7 +59,7 @@ All rank commands require appropriate admin permissions.
 
 | Command                                   | Description                                          |
 |-------------------------------------------|------------------------------------------------------|
-| `/glw rank parent add <rank> <parent>`    | Sets a parent rank, enabling permission inheritance. |
+| `/glw rank parent add <rank> <parent>`    | Sets a parent rank, enabling permission inheritance. A rank sits above one rank only, and a rank already below `<rank>` is refused. |
 | `/glw rank parent remove <rank> <parent>` | Removes the parent relationship.                     |
 | `/glw rank traverse`                      | Displays a visual tree of the entire rank hierarchy. |
 

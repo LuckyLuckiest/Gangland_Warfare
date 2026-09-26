@@ -215,6 +215,7 @@ Commands:
       Remove:
          Removed_Rank: "El rango &8[&a%rank%&8]&7 ha sido eliminado exitosamente."
          Confirm_Timer: "Tienes &a%timer%&7 para confirmar la eliminación del rango."
+         In_Use: "El rango &8[&a%rank%&8]&7 es un rango por defecto, aún lo tienen miembros o tiene rangos por encima, así que no se puede eliminar."
       Rank_Exists: "¡Este rango ya fue creado!"
       Permission:
          Add: "Has añadido &8[&a%permission%&8]&7 al rango &8[&a%rank%&8]&7."
@@ -398,6 +399,7 @@ Errors:
       Invalid_Permission: "Este permiso no existe."
       Invalid_Parent: "Este padre no existe."
       Parent_Same: "Esta madre no puede ser la misma que el rango."
+      Parent_Placed: "&b%parent%&7 ya tiene un lugar en la jerarquía de rangos, así que no puede ir por encima de &b%rank%&7."
    Vault:
       Permission_Not_Available: "&cEl servicio de permisos de Vault no está disponible. Instala un plugin de permisos (p. ej. LuckPerms) y Vault para usar esta función."
    Bounty:

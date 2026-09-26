@@ -1,21 +1,26 @@
 package org.luckyraven.gangland.gang.database.repositories.rank;
 
+import lombok.CustomLog;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.gang.database.tables.rank.RankParentTable;
 import org.luckyraven.gangland.gang.database.tables.rank.RankTable;
 import org.luckyraven.gangland.gang.rank.RankParent;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+import org.luckyraven.keystone.persistence.database.SchemaMigrations;
 import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
 import org.luckyraven.keystone.persistence.database.component.Table;
 import org.luckyraven.keystone.persistence.repository.AbstractRepository;
 import org.luckyraven.keystone.persistence.repository.Repository;
 
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
+@CustomLog
 @Repository(RankParent.class)
 public class RankParentRepository extends AbstractRepository<RankParent> {
 
@@ -42,6 +47,47 @@ public class RankParentRepository extends AbstractRepository<RankParent> {
 		if (existing == null) {
 			tableBackend().insert(new RankParent(headId, tailId));
 		}
+	}
+
+	/**
+	 * Deletes every rank_parent row naming the given rank on either side. Used when a rank itself is being removed.
+	 */
+	public void deleteAllForRank(int rankId) throws SQLException {
+		tableBackend().delete("id = ? OR parent_id = ?", rankId, rankId);
+	}
+
+	/**
+	 * Flips legacy {@code rank_parent} tables (sole PK on {@code id}) to a composite primary key on
+	 * {@code (id, parent_id)}, so one rank can hold several links; the old key made every save of a second link
+	 * overwrite the first. Rows are preserved. Idempotent: returns early once {@code parent_id} is in the key.
+	 */
+	@Override
+	public void migrateSchema() throws SQLException {
+		Connection conn   = getDatabase().getConnection();
+		int        dbType = getDatabaseHandler().getType();
+		String     table  = rankParentTable.getName();
+
+		if (conn == null) return;
+		if (SchemaMigrations.isColumnInPrimaryKey(conn, dbType, table, "parent_id")) return;
+
+		log.warn("Detected legacy {} schema. Migrating to composite primary key...", table);
+
+		switch (dbType) {
+			case DatabaseHandler.SQLITE -> SchemaMigrations.rebuildSqliteTable(conn, table, "CREATE TABLE " + table +
+			                                                                                "_migration (" +
+			                                                                                "id INTEGER NOT NULL, " +
+			                                                                                "parent_id INTEGER NOT NULL UNIQUE, " +
+			                                                                                "PRIMARY KEY (id, parent_id), " +
+			                                                                                "FOREIGN KEY (parent_id) REFERENCES rank_tree(id))",
+			                                                                   "id", "parent_id");
+			case DatabaseHandler.MYSQL -> {
+				try (Statement stmt = conn.createStatement()) {
+					stmt.execute("ALTER TABLE " + table + " DROP PRIMARY KEY, ADD PRIMARY KEY (id, parent_id)");
+				}
+			}
+		}
+
+		log.info("{} migration complete.", table);
 	}
 
 	@Override
@@ -71,6 +117,6 @@ public class RankParentRepository extends AbstractRepository<RankParent> {
 
 	@Override
 	protected void doDelete(RankParent data) throws SQLException {
-		tableBackend().delete("id = ?", data.rankId());
+		tableBackend().delete("id = ? AND parent_id = ?", data.rankId(), data.parentId());
 	}
 }

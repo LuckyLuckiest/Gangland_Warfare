@@ -81,7 +81,12 @@ class RankParentAddCommand extends SubArgument {
 				return;
 			}
 
-			rank.getNode().add(childRank.getNode());
+			if (!rankManager.addParent(rank, childRank)) {
+				sender.sendMessage(Messages.RANK_PARENT_PLACED.toString()
+				                                              .replace("%parent%", childRank.getName())
+				                                              .replace("%rank%", rank.getName()));
+				return;
+			}
 
 			String string  = Messages.RANK_PARENT_ADD.toString();
 			String replace = string.replace("%parent%", childRank.getName()).replace("%rank%", rank.getName());

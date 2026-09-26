@@ -16,6 +16,7 @@ import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
@@ -119,7 +120,7 @@ public final class GangCommand extends Command {
 		Argument color = new GangColorCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                      memberManager, gangManager, inventoryService);
 
-		permissionManager.addPermission(getPermission() + ".force_rank");
+		permissionManager.addPermission(GangPermissions.FORCE_RANK);
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();

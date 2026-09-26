@@ -173,6 +173,7 @@ public enum Messages {
 	RANK_CREATE_CONFIRM("Commands.Rank.Create.Confirm_Timer", Type.COMMAND),
 	RANK_REMOVED("Commands.Rank.Remove.Removed_Rank", Type.COMMAND),
 	RANK_REMOVE_CONFIRM("Commands.Rank.Remove.Confirm_Timer", Type.COMMAND),
+	RANK_REMOVE_IN_USE("Commands.Rank.Remove.In_Use", Type.ERROR),
 	RANK_EXIST("Commands.Rank.Rank_Exists", Type.COMMAND),
 	RANK_PERMISSION_ADD("Commands.Rank.Permission.Add", Type.COMMAND),
 	RANK_PERMISSION_REMOVE("Commands.Rank.Permission.Remove", Type.COMMAND),
@@ -262,6 +263,7 @@ public enum Messages {
 	INVALID_RANK_PERMISSION("Errors.Rank.Invalid_Permission", Type.ERROR),
 	INVALID_RANK_PARENT("Errors.Rank.Invalid_Parent", Type.ERROR),
 	RANK_PARENT_SAME("Errors.Rank.Parent_Same", Type.ERROR),
+	RANK_PARENT_PLACED("Errors.Rank.Parent_Placed", Type.ERROR),
 
 	// errors - teleportation
 	LOCATION_NOT_FOUND("Errors.Teleportation.Location.Not_Found", Type.ERROR),

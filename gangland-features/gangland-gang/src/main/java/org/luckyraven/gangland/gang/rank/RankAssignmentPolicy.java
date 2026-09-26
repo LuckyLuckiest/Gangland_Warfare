@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.gang.rank;
 
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.keystone.datastructure.Tree;
 
 /**
@@ -33,7 +34,9 @@ public final class RankAssignmentPolicy {
 		/** The target's rank is equal to or above the caller's. */
 		TARGET_OUTRANKS_ACTOR,
 		/** The requested rank is not strictly below the caller's own rank. */
-		RANK_NOT_BELOW_ACTOR
+		RANK_NOT_BELOW_ACTOR,
+		/** The requested rank is the gang's owner (Tail) rank, which only moves through a transfer. */
+		OWNER_RANK
 	}
 
 	private RankAssignmentPolicy() {
@@ -44,16 +47,21 @@ public final class RankAssignmentPolicy {
 	 * @param actorRank the caller's rank
 	 * @param targetRank the target's current rank; {@code null} is treated as "below everything"
 	 * @param requested the rank being assigned
-	 * @param force the caller holds {@code gangland.command.gang.force_rank}, the same staff override
+	 * @param force the caller holds {@code GangPermissions.FORCE_RANK}, the same staff override
 	 *              {@code GangPromoteCommand} honours
 	 * @param self the caller and the target are the same member
+	 * @param tail the gang's owner (Tail) rank; {@code null} skips the owner-rank rule
 	 *
 	 * @return the decision; {@link Decision#ALLOWED} means the caller may assign {@code requested}
 	 */
 	public static Decision evaluate(@Nullable Tree<Rank> tree, @Nullable Rank actorRank, @Nullable Rank targetRank,
-	                                @Nullable Rank requested, boolean force, boolean self) {
+	                                @Nullable Rank requested, boolean force, boolean self,
+	                                @Nullable Rank tail) {
 		// Self-action is a domain rule, never a permission decision — the same ordering GangPromoteCommand uses.
 		if (self) return Decision.SELF;
+
+		// A second holder of the Tail rank is a co-owner the delete/transfer gates cannot tell apart.
+		if (tail != null && requested != null && requested.match(tail.getUsedId())) return Decision.OWNER_RANK;
 
 		if (force) return Decision.ALLOWED;
 
@@ -73,6 +81,19 @@ public final class RankAssignmentPolicy {
 		}
 
 		return Decision.ALLOWED;
+	}
+
+	/**
+	 * Maps a refused {@link Decision} onto the message the player sees.
+	 */
+	public static String message(Decision decision) {
+		return switch (decision) {
+			case SELF -> Messages.GANG_CANNOT_ACT_SELF.toString();
+			case SAME_RANK -> Messages.GANG_SAME_RANK_ACTION.toString();
+			case TARGET_OUTRANKS_ACTOR, RANK_NOT_BELOW_ACTOR -> Messages.GANG_HIGHER_RANK_ACTION.toString();
+			case OWNER_RANK -> Messages.GANG_TRANSFER_OWNERSHIP.toString();
+			default -> Messages.COMMAND_NO_PERM.toString();
+		};
 	}
 
 	/**

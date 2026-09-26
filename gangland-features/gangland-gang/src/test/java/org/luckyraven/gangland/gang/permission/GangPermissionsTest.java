@@ -151,4 +151,14 @@ class GangPermissionsTest {
 		assertTrue(nodes.stream().distinct().count() == nodes.size(), "no two subcommands share a node");
 	}
 
+	@Test
+	@DisplayName("the force_rank staff override sits outside every namespace players are granted")
+	void forceRank_isOutsidePlayerWildcards() {
+		// Players get gangland.command.* to use /glw and ranks carry gangland.gang.* nodes: an override under either
+		// wildcard let any member demote the owner.
+		assertFalse(GangPermissions.FORCE_RANK.startsWith("gangland.command."));
+		assertFalse(GangPermissions.FORCE_RANK.startsWith("gangland.gang."));
+		assertTrue(GangPermissions.FORCE_RANK.endsWith("force_rank"));
+	}
+
 }
