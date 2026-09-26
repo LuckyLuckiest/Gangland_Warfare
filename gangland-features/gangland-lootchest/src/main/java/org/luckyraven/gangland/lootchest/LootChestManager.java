@@ -95,6 +95,10 @@ public class LootChestManager extends LootChestService implements BeanLifecycle 
 	}
 
 	private void registerLootChests(IRepository<LootChestData> repository) {
+		// Checked here, not in LootChestLoader: the loader runs in the CONFIG phase, before plugin item
+		// vocabularies (weapon:, ammo:) are installed, so every such entry would be a false alarm there.
+		findUnresolvedItems().forEach(entry -> log.warn("Loot table item does not resolve: {}", entry));
+
 		Collection<LootChestData> chestDataList = repository.loadAll();
 
 		for (LootChestData chestData : chestDataList) {

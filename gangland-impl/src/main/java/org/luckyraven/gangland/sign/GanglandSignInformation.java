@@ -45,6 +45,11 @@ public class GanglandSignInformation implements SignInformation {
 	}
 
 	@Override
+	public String getSignBreakNoPermission() {
+		return Messages.SIGN_BREAK_NO_PERM.toString();
+	}
+
+	@Override
 	public String getBulkConfirmExpired() {
 		return Messages.SIGN_BULK_CONFIRM_EXPIRED.toString();
 	}

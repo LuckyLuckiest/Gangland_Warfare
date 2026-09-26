@@ -24,12 +24,14 @@ public class LootChestTable extends Table<LootChestData> {
 		Attribute<String>  displayName   = new Attribute<>("display_name", false, String.class);
 		Attribute<Long>    lastOpened    = new Attribute<>("last_opened", false, Long.class);
 		Attribute<Boolean> isLooted      = new Attribute<>("is_looted", false, Boolean.class);
+		Attribute<Long>    cooldownEnd   = new Attribute<>("cooldown_end_time", false, Long.class);
 
 		tierId.setCanBeNull(true);
 		lastOpened.setDefaultValue(0L);
 		isLooted.setDefaultValue(false);
 		inventorySize.setDefaultValue(27);
 		respawnTime.setDefaultValue(0L);
+		cooldownEnd.setDefaultValue(0L);
 
 		this.addAttribute(id);
 		this.addAttribute(world);
@@ -43,6 +45,7 @@ public class LootChestTable extends Table<LootChestData> {
 		this.addAttribute(displayName);
 		this.addAttribute(lastOpened);
 		this.addAttribute(isLooted);
+		this.addAttribute(cooldownEnd);
 	}
 
 	@Override
@@ -52,7 +55,7 @@ public class LootChestTable extends Table<LootChestData> {
 		                    data.getLocation().getX(), data.getLocation().getY(), data.getLocation().getZ(),
 		                    data.getLootTableId(), data.getTier() != null ? data.getTier().id() : null,
 		                    data.getRespawnTime(), data.getInventorySize(), data.getDisplayName(), data.getLastOpened(),
-		                    data.isLooted()};
+		                    data.isLooted(), data.getCooldownEndTime()};
 	}
 
 	@Override

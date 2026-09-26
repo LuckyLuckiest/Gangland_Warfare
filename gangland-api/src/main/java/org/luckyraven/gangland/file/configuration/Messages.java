@@ -227,6 +227,7 @@ public enum Messages {
 	SPAWN_NO_PERM("Errors.Permissions.Spawn", Type.ERROR),
 	WARP_NO_PERM("Errors.Permissions.Warp", Type.ERROR),
 	SIGN_NO_PERM("Errors.Permissions.Sign", Type.ERROR),
+	SIGN_BREAK_NO_PERM("Errors.Permissions.Sign_Break", Type.ERROR),
 	OTHER_NO_PERM("Errors.Permissions.Other", Type.ERROR),
 
 	// errors - player

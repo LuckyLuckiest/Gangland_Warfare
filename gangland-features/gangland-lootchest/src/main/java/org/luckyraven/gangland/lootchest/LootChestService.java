@@ -27,6 +27,7 @@ import org.luckyraven.gangland.lootchest.handler.lootchest.ChestCooldownComplete
 import org.luckyraven.gangland.lootchest.handler.lootchest.ChestCooldownTickHandler;
 import org.luckyraven.gangland.lootchest.handler.lootchest.SessionCompleteHandler;
 import org.luckyraven.gangland.lootchest.handler.lootchest.SessionStartHandler;
+import org.luckyraven.gangland.lootchest.item.LootItemReference;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -165,20 +166,15 @@ public abstract class LootChestService {
 		registeredChests.put(chestData.getId(), chestData);
 		chestsByLocation.put(normalizeLocation(chestData.getLocation()), chestData.getId());
 
-		// Show initial hologram if chest is available
-		if (!chestData.isOnCooldown() && !chestData.isLooted()) {
+		// Not on cooldown (fresh, or the persisted cooldown ran out while unloaded): the chest is available
+		if (!chestData.isOnCooldown()) {
+			if (chestData.isLooted()) chestData.respawn();
 			cooldownManager.showAvailableHologram(chestData);
 			return;
 		}
 
-		if (!chestData.isOnCooldown()) return;
-
-		// Resume cooldown timer if chest was on cooldown
-		long remaining = chestData.getRemainingCooldownSeconds();
-
-		if (remaining <= 0) return;
-
-		cooldownManager.startCooldown(chestData, remaining);
+		// Resume the persisted cooldown timer
+		cooldownManager.startCooldown(chestData, chestData.getRemainingCooldownSeconds());
 	}
 
 	public void unregisterChest(UUID chestId) {
@@ -393,6 +389,24 @@ public abstract class LootChestService {
 
 	public Collection<LootTable> getAllLootTables() {
 		return Collections.unmodifiableCollection(lootTables.values());
+	}
+
+	/**
+	 * Loot-table entries whose item string does not resolve, one "table/item (string): reason" line each. Generation
+	 * skips such entries silently, so this is the only place a typo among valid entries surfaces.
+	 */
+	public List<String> findUnresolvedItems() {
+		List<String> unresolved = new ArrayList<>();
+		if (itemParser == null) return unresolved;
+
+		for (LootTable table : lootTables.values()) {
+			for (LootItemReference ref : table.getItemReferences()) {
+				itemParser.tryParse(ref.getItemString())
+				          .onFailure(fault -> unresolved.add(table.getId() + "/" + ref.getId() + " ("
+				                                             + ref.getItemString() + "): " + fault.message()));
+			}
+		}
+		return unresolved;
 	}
 
 	/**

@@ -36,7 +36,8 @@ public class SignInteraction extends SignInteractionService {
 		SignHandler        handler = def.getHandler();
 
 		if (!handler.canHandle(player, sign)) {
-			information.sendError(player, "Might be missing something!");
+			String reason = handler.failureReason(player, sign);
+			information.sendError(player, reason != null ? reason : "Might be missing something!");
 			return false;
 		}
 

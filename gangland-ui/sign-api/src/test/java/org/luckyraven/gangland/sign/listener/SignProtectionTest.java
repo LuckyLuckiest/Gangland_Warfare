@@ -45,6 +45,7 @@ class SignProtectionTest {
 
 		when(service.getRegistry()).thenReturn(registry);
 		when(information.getSignNoPermission()).thenReturn("no permission");
+		when(information.getSignBreakNoPermission()).thenReturn("no permission to break");
 
 		listener = new SignProtection(service, information);
 	}
@@ -78,7 +79,7 @@ class SignProtectionTest {
 		listener.onSignBreak(event);
 
 		verify(event).setCancelled(true);
-		verify(player).sendMessage("no permission");
+		verify(player).sendMessage("no permission to break");
 	}
 
 	@Test

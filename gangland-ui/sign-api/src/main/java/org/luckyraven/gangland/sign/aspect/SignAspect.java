@@ -30,6 +30,13 @@ public interface SignAspect {
 	boolean canExecute(Player player, ParsedSign sign);
 
 	/**
+	 * Why {@link #canExecute} refused, shown to the player; {@code null} falls back to a generic message.
+	 */
+	default String failureReason(Player player, ParsedSign sign) {
+		return null;
+	}
+
+	/**
 	 * Name of this aspect for logging/debugging
 	 */
 	String getName();

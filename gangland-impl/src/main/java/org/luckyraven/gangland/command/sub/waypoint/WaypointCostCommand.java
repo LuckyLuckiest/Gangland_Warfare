@@ -70,12 +70,21 @@ class WaypointCostCommand extends SubArgument {
 				return;
 			}
 
-			// update the timer
+			// a negative cost passes TeleportCommand's balance check and then fails the withdraw: a free teleport
+			if (!validCost(changedValue)) {
+				sender.sendMessage(Messages.CANNOT_TAKE_LESS_THAN_ZERO.toString());
+				return;
+			}
+
 			waypoint.setCost(changedValue);
 			user.sendMessage(Messages.WAYPOINT_CONFIGURATION_SUCCESS.toString());
 		}, sender -> List.of("<cost>"));
 
 		this.addSubArgument(optional);
+	}
+
+	static boolean validCost(double cost) {
+		return Double.isFinite(cost) && cost >= 0;
 	}
 
 }
