@@ -58,6 +58,12 @@ public class TurfPowerupNpcCommand extends SubArgument {
 
 	private OptionalArgument actionArgument() {
 		return new OptionalArgument(plugin, tree, (argument, sender, args) -> {
+			// GI-35: nested SubArgument permissions only add onto the base "gangland.command.turf" node — they
+			// never require the stricter admin one on their own.
+			if (!sender.hasPermission(WandSelectionManager.ADMIN_PERMISSION)) {
+				sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				return;
+			}
 			Turf turf = TurfSelectionResolver.resolve(sender, turfs, selections, messages);
 			if (turf == null) return;
 

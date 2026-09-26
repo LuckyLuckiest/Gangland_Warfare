@@ -9,6 +9,7 @@ import org.luckyraven.keystone.persistence.repository.Repository;
 import org.luckyraven.gangland.turf.contract.TurfRepositoryContract;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
+import org.luckyraven.keystone.economy.Currency;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -54,7 +55,7 @@ public class TurfRepository extends AbstractRepository<Turf> implements TurfRepo
 					displayName,
 					region,
 					ownerGangId == null ? null : (Integer) ownerGangId,
-					BigDecimal.valueOf(incomeAmount),
+					sanitizeIncomeAmount(incomeAmount),
 					createdAt,
 					lastCaptureTimestamp);
 
@@ -62,6 +63,16 @@ public class TurfRepository extends AbstractRepository<Turf> implements TurfRepo
 		}
 
 		return turfs;
+	}
+
+	/**
+	 * GI-32: guards a persisted {@code income_amount} that somehow reached the database as {@code Infinity}/{@code
+	 * NaN} (pre-fix input, hand-edited row). {@code BigDecimal.valueOf} throws {@link NumberFormatException} for
+	 * either, which — unguarded — disabled the plugin on every future boot until the row was manually repaired.
+	 * Package-private (not private) so TurfRepositoryTest can pin it directly.
+	 */
+	static BigDecimal sanitizeIncomeAmount(double raw) {
+		return Double.isFinite(raw) ? BigDecimal.valueOf(raw) : Currency.ZERO;
 	}
 
 	@Override

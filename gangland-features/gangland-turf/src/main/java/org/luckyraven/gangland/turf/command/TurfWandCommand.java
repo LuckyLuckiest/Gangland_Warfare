@@ -30,6 +30,12 @@ class TurfWandCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
+			// GI-35: nested SubArgument permissions only add onto the base "gangland.command.turf" node — they
+			// never require the stricter admin one on their own, so the wand must gate on it explicitly.
+			if (!sender.hasPermission(WandSelectionManager.ADMIN_PERMISSION)) {
+				sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				return;
+			}
 			if (!(sender instanceof Player player)) {
 				return;
 			}

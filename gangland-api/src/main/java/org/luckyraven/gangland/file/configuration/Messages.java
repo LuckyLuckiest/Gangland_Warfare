@@ -575,6 +575,7 @@ public enum Messages {
 	TURF_POWERUPNPC_REMOVED("Commands.Turf.PowerupNpc.Removed", Type.COMMAND),
 	TURF_GARRISON_VIEW("Commands.Turf.Garrison.View", Type.OTHER),
 	TURF_GARRISON_SET("Commands.Turf.Garrison.Set", Type.COMMAND),
+	TURF_GARRISON_INVALID("Errors.Turf.Garrison.Invalid", Type.ERROR),
 	TURF_BUFF_LIST_EMPTY("Commands.Turf.Buff.List_Empty", Type.OTHER),
 	TURF_BUFF_LIST_HEADER("Commands.Turf.Buff.List_Header", Type.OTHER),
 	TURF_BUFF_LIST_ROW("Commands.Turf.Buff.List_Row", Type.OTHER),

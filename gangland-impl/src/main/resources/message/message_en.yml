@@ -581,6 +581,8 @@ Errors:
          Id_Taken: "&cA turf named &f%turf%&c already exists."
       Income:
          Invalid: "&cInvalid income amount: &f%amount%&c. Must be a non-negative number."
+      Garrison:
+         Invalid: "&cInvalid garrison count: &f%count%&c. Must be a non-negative whole number."
       Not_Found: "&cNo turf named &f%turf%&c."
       Not_Inside: "&cStand inside a turf to use this command."
       Gang_Not_Found: "&cNo gang named &f%gang%&c."
