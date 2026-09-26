@@ -345,11 +345,10 @@ class InventoryParserRoundTripTest {
 
 		registerAndBuild("phone", menu -> {
 			assertEquals(54, menu.bukkitInventory().getSize());
-			// Type: LEATHER_CHESTPLATE + Color: GREEN goes through the same color-swap path as the old
-			// InventoryBuilder.createInventory: "LEATHER_CHESTPLATE" doesn't contain any MaterialType name, so the
-			// resolver falls back to its WOOL default and yields GREEN_WOOL — pinned here exactly as ported, not as
-			// a new design choice.
-			assertEquals(Material.GREEN_WOOL, menu.bukkitInventory().getItem(20).getType());
+			// Type: LEATHER_CHESTPLATE + Color: GREEN: "LEATHER_CHESTPLATE" doesn't contain any MaterialType name
+			// (color/MaterialType.java has no LEATHER family), so resolveColorMaterial leaves the material
+			// unchanged rather than defaulting to WOOL/GREEN_WOOL (gi=72 fix).
+			assertEquals(Material.LEATHER_CHESTPLATE, menu.bukkitInventory().getItem(20).getType());
 			assertEquals(Material.FURNACE, menu.bukkitInventory().getItem(22).getType());
 			assertEquals(Material.PAPER, menu.bukkitInventory().getItem(24).getType());
 			assertEquals(Material.EMERALD, menu.bukkitInventory().getItem(40).getType());
@@ -358,6 +357,20 @@ class InventoryParserRoundTripTest {
 			menu.dispatchClick(clickEvent(menu, 20), player);
 			verify(player, times(2)).openInventory(any(Inventory.class));
 		});
+	}
+
+	@Test
+	@DisplayName("openInventoryForPlayer tells the player when Permission denies the open, not just the server log")
+	void openInventoryForPlayer_permissionDenied_notifiesPlayer() throws IOException {
+		// phone.yml declares Permission: gangland.inventory.phone (unrelated to the other tests' default
+		// hasPermission(anyString())=true stub, overridden here for this exact node).
+		org.luckyraven.gangland.file.configuration.Messages.init(new org.luckyraven.gangland.support.FakeMessageProvider());
+		when(player.hasPermission("gangland.inventory.phone")).thenReturn(false);
+
+		context.registerInventory(load("phone"));
+		context.openInventoryForPlayer(player, "phone");
+
+		verify(player).sendMessage(org.luckyraven.gangland.file.configuration.Messages.OTHER_NO_PERM.toString());
 	}
 
 	@Test

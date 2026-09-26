@@ -459,14 +459,17 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 		return newItem.build();
 	}
 
+	/**
+	 * Only swaps the material when {@code type}'s name actually names one of {@link MaterialType}'s color families
+	 * (WOOL, CONCRETE, ...); an item outside those families (e.g. LEATHER_CHESTPLATE) keeps its own material - it
+	 * used to default to WOOL and yield a nonsensical *_WOOL swap for anything unrecognized (gi=72).
+	 */
 	private static Material resolveColorMaterial(Material type, String colorValue) {
-		MaterialType material = MaterialType.WOOL;
 		for (MaterialType materialType : MaterialType.values()) {
 			if (!type.name().contains(materialType.name())) continue;
-			material = materialType;
-			break;
+			return ColorUtil.getMaterialByColor(colorValue, materialType.name());
 		}
-		return ColorUtil.getMaterialByColor(colorValue, material.name());
+		return type;
 	}
 
 	private static void applyEnchantGlint(ItemBuilder target, ItemBuilder source) {
