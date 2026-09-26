@@ -15,7 +15,11 @@ import org.luckyraven.keystone.util.TriConsumer;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * {@code /glw module remove <module>} — mark a module jar for deletion at the next start. The running loader holds the
@@ -49,11 +53,11 @@ class ModuleRemoveCommand extends SubArgument {
 	}
 
 	void remove(CommandSender sender, String id) {
-		Path directory = moduleLoader.modulesDirectory().toAbsolutePath().normalize();
+		Path                    directory   = moduleLoader.modulesDirectory().toAbsolutePath().normalize();
+		List<ModuleDescriptor>  descriptors = ModuleInstalls.onDisk(moduleLoader.modulesDirectory());
 		// Every jar carrying the id, not whichever one Files.list returns first: a jar the loader refused can sit
 		// beside the one it loaded, and leaving it behind means the module survives the restart.
-		List<Path> jars = ModuleInstalls.onDisk(moduleLoader.modulesDirectory())
-				.stream()
+		List<Path> jars = descriptors.stream()
 				.filter(descriptor -> descriptor.id().equalsIgnoreCase(id))
 				.map(ModuleDescriptor::jar)
 				.toList();
@@ -63,9 +67,37 @@ class ModuleRemoveCommand extends SubArgument {
 			return;
 		}
 
+		// Warn about every direct and transitive dependant before marking - the same cascade ModuleResolution's
+		// dependency fixpoint would otherwise apply silently at next boot (missing-dependency fault), with no sign
+		// at removal time (gi=84).
+		List<String> dependants = dependants(id, descriptors);
+		if (!dependants.isEmpty()) {
+			sender.sendMessage(Messages.MODULE_REMOVE_DEPENDANTS_WARNING.toString()
+					                   .replace("%module%", id)
+					                   .replace("%dependants%", String.join(", ", dependants)));
+		}
+
 		for (Path jar : jars) {
 			mark(sender, id, directory, jar);
 		}
+	}
+
+	/** Every module id (direct or transitive) whose {@code Depends} chain reaches {@code id}, in discovery order. */
+	private static List<String> dependants(String id, List<ModuleDescriptor> descriptors) {
+		Set<String>   affected = new LinkedHashSet<>();
+		Deque<String> queue    = new ArrayDeque<>(List.of(id));
+
+		while (!queue.isEmpty()) {
+			String current = queue.poll();
+
+			for (ModuleDescriptor descriptor : descriptors) {
+				boolean dependsOnCurrent = descriptor.depends().stream().anyMatch(dep -> dep.equalsIgnoreCase(current));
+
+				if (dependsOnCurrent && affected.add(descriptor.id())) queue.add(descriptor.id());
+			}
+		}
+
+		return List.copyOf(affected);
 	}
 
 	private static void mark(CommandSender sender, String id, Path directory, Path jar) {

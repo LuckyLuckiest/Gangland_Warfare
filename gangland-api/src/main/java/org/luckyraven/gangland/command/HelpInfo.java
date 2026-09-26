@@ -41,6 +41,11 @@ public final class HelpInfo {
 		list.remove(element);
 	}
 
+	/** Empties the list - for a consumer that rebuilds its aggregate view on every render (e.g. {@code HelpCommand}). */
+	public void clear() {
+		list.clear();
+	}
+
 	public int size() {
 		return list.size();
 	}

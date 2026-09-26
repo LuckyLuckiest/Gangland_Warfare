@@ -108,7 +108,8 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 		if (player == null) {
 			String value = getSetting(param);
-			return value == null ? "NA" : value;
+			if (value != null) return value;
+			return isGanglandOwnedPrefix(param) ? "NA" : null;
 		}
 
 		if (ConditionalFlashWrapper.isConditionalFlash(param)) {
@@ -154,9 +155,17 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (value != null) return value;
 
 		value = getSetting(param);
-		if (value == null) return "NA";
+		if (value != null) return value;
 
-		return value;
+		// "NA" is reserved for a Gangland-owned prefix left unanswered (S4 above, or a settings key that legitimately
+		// has no value) - a genuinely foreign/typo'd token (nothing here claims it) returns null instead, so the
+		// replacer leaves the raw %token% visible rather than masking it as "NA" (gi=80).
+		return isGanglandOwnedPrefix(param) ? "NA" : null;
+	}
+
+	private static boolean isGanglandOwnedPrefix(String param) {
+		return param.contains("user_") || param.contains("bank_") || param.contains("unique-item_")
+		       || param.contains("gang_");
 	}
 
 	@Nullable

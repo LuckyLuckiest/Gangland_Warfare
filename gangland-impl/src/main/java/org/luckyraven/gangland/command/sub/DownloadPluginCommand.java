@@ -36,10 +36,10 @@ public final class DownloadPluginCommand extends Command {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		// check if there was an update
-		boolean newUpdate = !gangland.getUpdateChecker()
-		                                  .getLatestVersion()
-		                                  .equalsIgnoreCase(getPlugin().getDescription().getVersion());
+		// check if there was an update - same semantic-version compare getConfirm() below already uses, not raw
+		// string inequality (a fetched version string that merely differs, including a textually-older one, is
+		// not necessarily an update).
+		boolean newUpdate = gangland.getUpdateChecker().updateAvailable();
 
 		if (newUpdate) {
 			commandSender.sendMessage(Messages.UPDATE_AVAILABLE.toString()

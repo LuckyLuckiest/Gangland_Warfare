@@ -41,21 +41,21 @@ class GanglandChatUtilTest {
 	}
 
 	@Test
-	@DisplayName("commandDesign colours /glw, angle brackets and the dash separator, and strips [ ] ,")
+	@DisplayName("commandDesign colours /glw, angle brackets and the dash separator, and keeps [ ] ,")
 	void commandDesign_appliesAllFourTransformations() {
 		String input           = "/glw help <page> - Shows help [aliases]";
-		String expectedPreColor = "&6/glw&7 help &5<&7page&5>&7 &c-&r Shows help aliases";
+		String expectedPreColor = "&6/glw&7 help &5<&7page&5>&7 &c-&r Shows help [aliases]";
 
 		assertEquals(ChatColor.translateAlternateColorCodes('&', expectedPreColor),
 				GanglandChatUtil.commandDesign(input));
 	}
 
 	@Test
-	@DisplayName("commandDesign strips every bracket and comma even without a /glw prefix")
-	void commandDesign_stripsBracketsAndCommasFromPlainText() {
+	@DisplayName("commandDesign keeps every bracket and comma - optional-arg notation like [player] must survive")
+	void commandDesign_keepsBracketsAndCommasFromPlainText() {
 		String result = GanglandChatUtil.commandDesign("[a, b, c]");
 
-		assertEquals("a b c", result); // no ampersand codes present, so color() is a no-op besides the strip
+		assertEquals("[a, b, c]", result); // no ampersand codes present, so color() is a no-op
 	}
 
 	@Test

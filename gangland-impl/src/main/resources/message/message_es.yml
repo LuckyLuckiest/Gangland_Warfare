@@ -299,6 +299,7 @@ Commands:
    Module:
       List_Header: "&6Loaded modules &8(&f%count%&8)&7:"
       List_Entry: "&8- &e%id% &7%name% &fv%version% &8(Host_Api %host_api%)"
+      List_Entry_Pending: "&8- &e%id% &7%name% &fv%version% &8(Host_Api %host_api%) &c[pending removal]&7"
       List_Empty: "&7No runtime modules are loaded."
       Fault_Header: "&cSkipped &8(&f%count%&8)&7:"
       Fault_Entry: "&8- &c%code% &7%message%"
@@ -320,6 +321,7 @@ Commands:
       Download_Failed: "&c%module% &7could not be downloaded&8: &f%reason%"
       Remove_Marked: "&f%module% &7is removed at the next restart. Delete &f%marker% &7to undo it."
       Remove_Failed: "&cCould not mark &f%module% &7for removal&8: &f%reason%"
+      Remove_Dependants_Warning: "&c%module% &7is depended on by&8: &c%dependants%&7. Removing it will drop them too at the next restart."
    Fuel:
       Capacity_Increased: "Capacidad máxima de combustible aumentada en &b%amount%&7. Nuevo máximo: &b%new_max%&7."
       Capacity_Decreased: "Capacidad máxima de combustible reducida en &b%amount%&7. Nuevo máximo: &b%new_max%&7."
@@ -658,9 +660,11 @@ Fuel:
 
 Jail:
    List_Header: "Cárceles:"
+   List_Empty: "&7No hay cárceles registradas."
 
 Cop:
    Spawner_List_Header: "Generadores de policía:"
+   Spawner_List_Empty: "&7No hay generadores de policía registrados."
 
 Item:
    Unique:

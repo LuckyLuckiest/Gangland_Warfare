@@ -28,8 +28,15 @@ class CopSpawnerListCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, strings) -> {
+			var spawners = copSpawnManager.getSpawners();
+
+			if (spawners.isEmpty()) {
+				sender.sendMessage(Messages.COP_SPAWNER_LIST_EMPTY.toString());
+				return;
+			}
+
 			sender.sendMessage(Messages.COP_SPAWNER_LIST_HEADER.toString());
-			copSpawnManager.getSpawners().forEach(spawner -> {
+			spawners.forEach(spawner -> {
 				Location location = spawner.getLocation();
 				int      x        = location.getBlockX();
 				int      y        = location.getBlockY();

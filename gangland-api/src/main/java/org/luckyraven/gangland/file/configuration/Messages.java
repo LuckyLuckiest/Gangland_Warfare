@@ -427,6 +427,7 @@ public enum Messages {
 	// commands - runtime modules
 	MODULE_LIST_HEADER("Commands.Module.List_Header", Type.COMMAND),
 	MODULE_LIST_ENTRY("Commands.Module.List_Entry", Type.COMMAND),
+	MODULE_LIST_ENTRY_PENDING("Commands.Module.List_Entry_Pending", Type.COMMAND),
 	MODULE_LIST_EMPTY("Commands.Module.List_Empty", Type.COMMAND),
 	MODULE_FAULT_HEADER("Commands.Module.Fault_Header", Type.COMMAND),
 	MODULE_FAULT_ENTRY("Commands.Module.Fault_Entry", Type.COMMAND),
@@ -448,6 +449,7 @@ public enum Messages {
 	MODULE_DOWNLOAD_FAILED("Commands.Module.Download_Failed", Type.COMMAND),
 	MODULE_REMOVE_MARKED("Commands.Module.Remove_Marked", Type.COMMAND),
 	MODULE_REMOVE_FAILED("Commands.Module.Remove_Failed", Type.COMMAND),
+	MODULE_REMOVE_DEPENDANTS_WARNING("Commands.Module.Remove_Dependants_Warning", Type.COMMAND),
 
 	// commands - fuel
 	FUEL_CAPACITY_INCREASED("Commands.Fuel.Capacity_Increased", Type.COMMAND),
@@ -474,6 +476,7 @@ public enum Messages {
 	JAIL_EXIT_SET_GLOBAL("Commands.Jail.Exit_Set_Global", Type.COMMAND),
 	JAIL_TELEPORTED("Commands.Jail.Teleported", Type.COMMAND),
 	JAIL_LIST_HEADER("Jail.List_Header", Type.PREFIX),
+	JAIL_LIST_EMPTY("Jail.List_Empty", Type.PREFIX),
 	JAIL_NO_EMPTY("Errors.Jail.No_Empty", Type.ERROR),
 	JAIL_ALREADY_JAILED("Errors.Jail.Already_Jailed", Type.ERROR),
 	JAIL_NOT_JAILED("Errors.Jail.Not_Jailed", Type.ERROR),
@@ -486,6 +489,7 @@ public enum Messages {
 	COP_SPAWNER_REMOVED("Commands.Cop.Spawner.Removed", Type.COMMAND),
 	COP_SPAWNER_TELEPORTED("Commands.Cop.Spawner.Teleported", Type.COMMAND),
 	COP_SPAWNER_LIST_HEADER("Cop.Spawner_List_Header", Type.PREFIX),
+	COP_SPAWNER_LIST_EMPTY("Cop.Spawner_List_Empty", Type.PREFIX),
 
 	// commands - car
 	CAR_GAVE("Commands.Car.Gave", Type.COMMAND),

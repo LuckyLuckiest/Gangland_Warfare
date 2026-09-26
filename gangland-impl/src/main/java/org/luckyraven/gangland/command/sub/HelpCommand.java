@@ -16,25 +16,14 @@ import java.util.List;
 @CommandHandler(priority = CommandPriority.LOWEST)
 public final class HelpCommand extends Command {
 
+	private final InformationManager informationManager;
+	private final CommandManager     commandManager;
+
 	public HelpCommand(JavaPlugin gangland, InformationManager informationManager, CommandManager commandManager) {
 		super(gangland, "help", false, "general", "?");
 
-		List<CommandInformation> list = new ArrayList<>();
-
-		list.add(informationManager.getCommands().get("general"));
-		list.add(informationManager.getCommands().get("general_page"));
-		// Keystone's registry is typed on its own Command; help info lives on the JavaPlugin subclass.
-		// LOWEST priority makes this the last command constructed, so the manager's view is complete here.
-		list.addAll(commandManager.commandView()
-		                          .values()
-		                          .parallelStream()
-		                          .filter(Command.class::isInstance)
-		                          .map(Command.class::cast)
-		                          .flatMap(entry -> entry.getHelpInfo().getList()
-										  .stream())
-		                          .toList());
-
-		getHelpInfo().addAll(list);
+		this.informationManager = informationManager;
+		this.commandManager     = commandManager;
 	}
 
 	@Override
@@ -51,7 +40,33 @@ public final class HelpCommand extends Command {
 
 	@Override
 	protected void help(CommandSender sender, int page) {
+		refreshHelpInfo();
 		getHelpInfo().displayHelp(sender, page, "Help");
+	}
+
+	/**
+	 * Rebuilds the aggregate list on every render instead of once at construction time: this command is built during
+	 * the CORE package scan (LOWEST priority only orders it last <em>within that scan</em>), but every module's own
+	 * commands register in separate, later {@code scanAndRegisterCommands} calls - a one-time constructor snapshot
+	 * would permanently miss every module command's help entries.
+	 */
+	private void refreshHelpInfo() {
+		List<CommandInformation> list = new ArrayList<>();
+
+		list.add(informationManager.getCommands().get("general"));
+		list.add(informationManager.getCommands().get("general_page"));
+		// Keystone's registry is typed on its own Command; help info lives on the JavaPlugin subclass.
+		list.addAll(commandManager.commandView()
+		                          .values()
+		                          .parallelStream()
+		                          .filter(Command.class::isInstance)
+		                          .map(Command.class::cast)
+		                          .flatMap(entry -> entry.getHelpInfo().getList()
+										  .stream())
+		                          .toList());
+
+		getHelpInfo().clear();
+		getHelpInfo().addAll(list);
 	}
 
 }
