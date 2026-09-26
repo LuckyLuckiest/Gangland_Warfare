@@ -90,6 +90,11 @@ class GangWithdrawCommand extends SubArgument {
 
 			try {
 				BigDecimal argAmount = Currency.parse(args[2]);
+				if (argAmount.signum() <= 0) {
+					user.sendMessage(Messages.CANNOT_TAKE_LESS_THAN_ZERO.toString());
+					return;
+				}
+
 				Gang       gang      = gangManager.getGang(user.getGangId());
 
 				double rate   = Settings.getGangContributionRate();

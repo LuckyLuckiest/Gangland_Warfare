@@ -12,6 +12,8 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.mail.MailItem;
@@ -27,16 +29,19 @@ public class GangAllyPendingCancelCommand extends SubArgument {
 	private final JavaPlugin            plugin;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
+	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
 	private final MailManager         mailManager;
 
 	public GangAllyPendingCancelCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                             @Qualifier("online") UserManager<Player> userManager, GangManager gangManager, MailManager mailManager) {
+	                             @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
+	                             GangManager gangManager, MailManager mailManager) {
 		super(plugin, "cancel", tree, parent);
 
 		this.plugin    = plugin;
 		this.tree        = tree;
-		this.userManager = userManager;
+		this.userManager   = userManager;
+		this.memberManager = memberManager;
 		this.gangManager = gangManager;
 		this.mailManager = mailManager;
 
@@ -100,6 +105,12 @@ public class GangAllyPendingCancelCommand extends SubArgument {
 
 			if (!user.hasGang()) {
 				sender.sendMessage(Messages.MUST_CREATE_GANG.toString());
+				return;
+			}
+
+			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
+			                            GangPermissions.ALLY)) {
+				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
 				return;
 			}
 
