@@ -132,7 +132,7 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
 	 * @return the kd ratio
 	 */
 	public double getKillDeathRatio() {
-		return deaths == 0 ? 0D : (double) kills / deaths;
+		return (double) kills / Math.max(deaths, 1);
 	}
 
 	/**

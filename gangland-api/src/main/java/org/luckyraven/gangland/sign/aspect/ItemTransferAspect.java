@@ -74,6 +74,15 @@ public class ItemTransferAspect implements SignAspect {
 	}
 
 	@Override
+	public String failureReason(Player player, ParsedSign sign) {
+		if (itemProvider.getItem(sign) == null) return "Invalid item: " + sign.getContent();
+
+		return transferType == TransferType.GIVE ?
+		       "Your inventory is full!" :
+		       "You don't have enough " + sign.getContent() + "!";
+	}
+
+	@Override
 	public String getName() {
 		return "ItemTransferAspect-" + transferType;
 	}

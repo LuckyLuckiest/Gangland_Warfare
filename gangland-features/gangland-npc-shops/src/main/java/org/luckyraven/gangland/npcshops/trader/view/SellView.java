@@ -31,6 +31,7 @@ import org.luckyraven.keystone.shop.valuation.SellValuator;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -199,7 +200,7 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 			// DropzoneSlotComponent's own view.interactive(true): if the component ever threw before that line ran,
 			// this floor still keeps the slot from being cleared/click-cancelled.
 			builder.interactive(slot);
-			builder.slot(slot, new DropzoneSlotComponent(slot));
+			builder.slot(slot, state.dropzone.computeIfAbsent(slot, DropzoneSlotComponent::new));
 		}
 
 		builder.fill(FillComponent.of(materialOf(settings.getInventoryFillItem())).name(settings.getInventoryFillName()));
@@ -318,6 +319,9 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 	}
 
 	private void onConfirm(Player viewer, SellState state) {
+		// The cached offer is only refreshed on the next tick; a same-tick dropzone swap would otherwise be paid at
+		// the stale value while only the live items are handed over.
+		recomputeOffer(state);
 		if (state.offeredTotal.signum() <= 0) return;
 
 		Inventory inv = state.inventory();
@@ -419,6 +423,8 @@ public final class SellView implements Panel<TraderFlowSession>, BeanLifecycle {
 		final int[]                       dropzoneSlots;
 		final double                      sellMoodMultiplier;
 		final MenuFlow<TraderFlowSession> flow;
+		/** One component per dropzone slot, reused by every re-render (see {@link DropzoneSlotComponent}). */
+		final Map<Integer, DropzoneSlotComponent> dropzone = new HashMap<>();
 
 		@Getter
 		BigDecimal baseOffer = BigDecimal.ZERO;

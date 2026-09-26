@@ -2,6 +2,7 @@ package org.luckyraven.gangland.lootchest.listener;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
@@ -9,6 +10,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,12 +21,14 @@ import org.luckyraven.gangland.lootchest.config.LootChestSettingsProvider;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.item.nbt.NbtBridge;
 import org.luckyraven.keystone.testkit.RecordingNbtAccessor;
+import org.mockito.ArgumentCaptor;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -89,6 +93,43 @@ class LootChestWandListenerTest {
 		// chest registered at its location. The fix must never reach registerChest for this block/allow-list pair.
 		verify(manager, never()).registerChest(any());
 		verify(player).sendMessage(contains("not allowed"));
+	}
+
+	@Test
+	@DisplayName("creating a chest is deferred a tick so LootChestListener (HIGHEST) does not open it on the same click")
+	void createClick_registersNextTick_notDuringTheEvent() {
+		JavaPlugin                gangland         = mock(JavaPlugin.class);
+		Server                    server           = mock(Server.class);
+		BukkitScheduler           scheduler        = mock(BukkitScheduler.class);
+		LootChestManager          manager          = mock(LootChestManager.class);
+		LootChestSettingsProvider settingsProvider = mock(LootChestSettingsProvider.class);
+		Player                    player           = mock(Player.class);
+		PlayerInventory           inventory        = mock(PlayerInventory.class);
+		Block                     block            = mock(Block.class);
+		Location                  location         = new Location(null, 10, 64, 10);
+		PlayerInteractEvent       event            = mock(PlayerInteractEvent.class);
+
+		when(gangland.getServer()).thenReturn(server);
+		when(server.getScheduler()).thenReturn(scheduler);
+		when(event.getPlayer()).thenReturn(player);
+		when(event.getAction()).thenReturn(Action.RIGHT_CLICK_BLOCK);
+		when(event.getClickedBlock()).thenReturn(block);
+		when(player.getInventory()).thenReturn(inventory);
+		when(inventory.getItemInMainHand()).thenReturn(configuredWandItem());
+		when(block.getType()).thenReturn(Material.CHEST);
+		when(block.getLocation()).thenReturn(location);
+		when(manager.getChestAt(location)).thenReturn(Optional.empty());
+		when(settingsProvider.getAllowedBlocks()).thenReturn(List.of("CHEST"));
+
+		new LootChestWandListener(gangland, manager, settingsProvider).onPlayerInteract(event);
+
+		verify(manager, never()).registerChest(any());
+
+		ArgumentCaptor<Runnable> task = ArgumentCaptor.forClass(Runnable.class);
+		verify(scheduler).runTask(eq(gangland), task.capture());
+		task.getValue().run();
+
+		verify(manager).registerChest(any());
 	}
 
 	private static ItemStack configuredWandItem() {

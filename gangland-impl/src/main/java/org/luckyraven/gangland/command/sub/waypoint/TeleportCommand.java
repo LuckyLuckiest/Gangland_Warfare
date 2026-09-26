@@ -49,7 +49,7 @@ public final class TeleportCommand extends Command {
 
 		var list = getCommands().entrySet()
 				.stream()
-				.filter(entry -> entry.getKey().startsWith("waypoint"))
+				.filter(entry -> entry.getKey().startsWith("teleport"))
 				.sorted(Map.Entry.comparingByKey())
 				.map(Map.Entry::getValue)
 				.toList();

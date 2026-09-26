@@ -62,6 +62,17 @@ public final class GarrisonManager {
 		return actual;
 	}
 
+	/**
+	 * GI-34 (TF-03): drops this turf's garrison row entirely, in-memory and persisted. Called from the turf-delete
+	 * cascade so a fresh turf that later reuses the freed id (TF-05) does not inherit orphaned stock.
+	 */
+	public void remove(int turfId) {
+		Garrison g = byTurf.remove(turfId);
+		if (g != null) {
+			repository.delete(g);
+		}
+	}
+
 	private Collection<Garrison> snapshot() {
 		return byTurf.values();
 	}

@@ -114,4 +114,23 @@ class RankRepositorySpiTest {
 		assertEquals(2, names.size());
 	}
 
+	@Test
+	@DisplayName("unlinked ranks persist on a legacy vault_group NOT NULL column")
+	void unlinkedRanks_persistOnLegacyNotNullColumn() throws SQLException {
+		// Databases created before vault_group became nullable keep the NOT NULL constraint: applySchema only
+		// diffs column names, so the legacy DDL survives every restart.
+		backend.execute("DROP TABLE rank_tree");
+		backend.execute("CREATE TABLE rank_tree (id INTEGER PRIMARY KEY NOT NULL, name TEXT NOT NULL, " +
+		                "vault_group TEXT NOT NULL DEFAULT '')");
+		backend.applySchema(TableSchemas.fromTable(new RankTable()));
+
+		repository.insertInitialRanks("owner", "member");
+		repository.save(new Rank("officer", 3));
+
+		Collection<Rank> loaded = repository.loadAll();
+		assertEquals(3, loaded.size());
+		assertTrue(loaded.stream().allMatch(rank -> rank.getVaultGroup() == null),
+		           "an unlinked rank must still load with a null vault group");
+	}
+
 }

@@ -142,6 +142,11 @@ public class GangAllyRequestCommand extends SubArgument {
 				return;
 			}
 
+			if (receiving.getId() == user.getGangId()) {
+				user.sendMessage(Messages.GANG_CANNOT_ACT_SELF.toString());
+				return;
+			}
+
 			if (receiving.isAlly(sending)) {
 				user.sendMessage(Messages.ALREADY_ALLIED_GANG.toString());
 				return;

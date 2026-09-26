@@ -116,7 +116,8 @@ public final class TurfCommand extends Command {
 		TurfCreateCommand create = new TurfCreateCommand(getPlugin(), getArgumentTree(), getArgument(), turfs,
 		                                                 selections, messages);
 		TurfDeleteCommand delete = new TurfDeleteCommand(getPlugin(), getArgumentTree(), getArgument(),
-		                                                 turfs, selections, messages);
+		                                                 turfs, selections, messages,
+		                                                 garrisons, activeBuffs, powerupNpcs);
 		TurfSetOwnerCommand setOwner = new TurfSetOwnerCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                       turfs, gangs, selections, messages);
 		TurfListCommand listSub = new TurfListCommand(getPlugin(), getArgumentTree(), getArgument(), turfs, gangs,

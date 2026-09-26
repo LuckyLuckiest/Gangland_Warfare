@@ -53,7 +53,8 @@ public class JetpackService implements BeanLifecycle {
 		if (!player.hasPermission(jetpack.getPermission())) return;
 
 		JetpackSession session = new JetpackSession(player, jetpack);
-		JetpackTask    task    = new JetpackTask(session, this, fuelService, physicsConfig);
+		session.setPreviousAllowFlight(player.getAllowFlight());
+		JetpackTask task = new JetpackTask(session, this, fuelService, physicsConfig);
 		session.setTask(task);
 
 		activeSessions.put(player.getUniqueId(), session);
@@ -84,7 +85,7 @@ public class JetpackService implements BeanLifecycle {
 
 		if (player.isOnline()) {
 			player.setFlying(false);
-			player.setAllowFlight(false);
+			player.setAllowFlight(session.isPreviousAllowFlight());
 
 			Channel channel = PlayerInputInterceptor.getChannel(player);
 			if (channel != null && channel.pipeline().get(JetpackInputInterceptor.HANDLER_NAME) != null) {
@@ -189,7 +190,7 @@ public class JetpackService implements BeanLifecycle {
 			Player player = session.getPlayer();
 			if (player.isOnline()) {
 				player.setFlying(false);
-				player.setAllowFlight(false);
+				player.setAllowFlight(session.isPreviousAllowFlight());
 
 				Channel channel = PlayerInputInterceptor.getChannel(player);
 				if (channel != null && channel.pipeline().get(JetpackInputInterceptor.HANDLER_NAME) != null) {

@@ -13,6 +13,7 @@ import org.bstats.charts.SingleLineChart;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.plugin.ServicesManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,6 +33,7 @@ import org.luckyraven.keystone.update.UpdateNotifier;
 import org.luckyraven.keystone.update.UpdateChecker;
 
 import java.util.List;
+import java.util.function.BooleanSupplier;
 
 @Getter
 @CustomLog
@@ -155,6 +157,7 @@ public final class Gangland extends JavaPlugin {
 			GanglandPlaceholder placeholder = context.get(GanglandPlaceholder.class);
 			this.papiExpansion = new PapiExpansionAdapter(this, FULL_PREFIX, placeholder);
 			this.papiExpansion.register();
+			return true;
 		});
 
 		// Two separate soft dependencies both named "Vault" (economy hook, permission hook) used to share the
@@ -162,20 +165,35 @@ public final class Gangland extends JavaPlugin {
 		// way to tell which hook either line belonged to (T-17). The label parameter keeps the plugin lookup on
 		// "Vault" for both but makes the two log lines distinct.
 		Dependency vault = new Dependency("Vault", "Vault economy", Dependency.Type.SOFT);
-		vault.validate(() -> {
-			RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
-
-			if (rsp == null) return;
-
-			// set the vault economy
-			EconomyHandler.setVaultEconomy(rsp.getProvider());
-		});
+		vault.validate(() -> linkVaultEconomy(getServer().getServicesManager()));
 
 		// Vault permissions linking moved to GangModule.onEnabled() (WS5 G2 step 16) — VaultPermissionBridge is
 		// module-owned; the module runs its own fromServices/set(...) once the module loader enables it.
 
 		Dependency viaVersion = new Dependency("ViaVersion", Dependency.Type.SOFT);
-		viaVersion.validate(() -> this.viaAPI = Via.getAPI());
+		viaVersion.validate(() -> {
+			this.viaAPI = Via.getAPI();
+			return true;
+		});
+	}
+
+	/**
+	 * Binds Vault's economy provider when one is registered. Vault alone is not an economy: without a provider plugin
+	 * (Essentials, CMI...) nothing is linked and Gangland keeps its internal balances, so say that instead of letting
+	 * {@code Dependency.validate} claim a link (same shape as {@code GangModule.linkVaultPermissions}).
+	 *
+	 * @return whether an economy was linked.
+	 */
+	static boolean linkVaultEconomy(ServicesManager services) {
+		RegisteredServiceProvider<Economy> rsp = services.getRegistration(Economy.class);
+
+		if (rsp == null) {
+			log.info("Vault is present but no economy provider is registered; Gangland keeps its internal balances");
+			return false;
+		}
+
+		EconomyHandler.setVaultEconomy(rsp.getProvider());
+		return true;
 	}
 
 	/**
@@ -229,15 +247,14 @@ public final class Gangland extends JavaPlugin {
 			this.type = type;
 		}
 
-		public void validate(@Nullable Runnable runnable) {
+		/** @param linker links the dependency and reports whether it did; {@code "Linked"} is logged only then. */
+		public void validate(@Nullable BooleanSupplier linker) {
 			// A present-but-disabled plugin (e.g. Citizens failed its own enable) must not be treated as linked
 			// (T-M2) — getPlugin(name) != null alone accepts that case.
 			Plugin p = Bukkit.getPluginManager().getPlugin(name);
 			if (p != null && p.isEnabled()) {
 				if (type == Type.SOFT) log.info("Found {}, linking...", label);
-				if (runnable != null) runnable.run();
-
-				log.info("Linked {}", label);
+				if (linker == null || linker.getAsBoolean()) log.info("Linked {}", label);
 				return;
 			}
 

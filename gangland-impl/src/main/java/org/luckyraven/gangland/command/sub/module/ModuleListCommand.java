@@ -12,6 +12,7 @@ import org.luckyraven.keystone.module.ModuleDescriptor;
 import org.luckyraven.keystone.module.ModuleLoader;
 import org.luckyraven.keystone.util.TriConsumer;
 
+import java.nio.file.Files;
 import java.util.List;
 
 /**
@@ -41,8 +42,13 @@ class ModuleListCommand extends SubArgument {
 
 				for (LoadedModule module : loaded) {
 					ModuleDescriptor descriptor = module.descriptor();
+					// A pending /glw module remove leaves the running loader's own view unaware (it only reads the
+					// marker again at next boot) - render it here instead of quietly showing a normal entry (gi=84).
+					boolean          pending    = Files.exists(descriptor.jar()
+							.resolveSibling(descriptor.jar().getFileName() + ModuleLoader.STALE_MARKER_SUFFIX));
+					Messages         entry      = pending ? Messages.MODULE_LIST_ENTRY_PENDING : Messages.MODULE_LIST_ENTRY;
 
-					sender.sendMessage(Messages.MODULE_LIST_ENTRY.toString()
+					sender.sendMessage(entry.toString()
 							                   .replace("%id%", descriptor.id())
 							                   .replace("%name%", descriptor.name())
 							                   .replace("%version%", descriptor.version())

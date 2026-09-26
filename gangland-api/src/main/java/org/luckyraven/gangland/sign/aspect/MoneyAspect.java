@@ -66,6 +66,16 @@ public class MoneyAspect implements SignAspect {
 	}
 
 	@Override
+	public String failureReason(Player player, ParsedSign sign) {
+		if (userManager.getUser(player) == null) return Messages.PLAYER_NOT_FOUND.toString();
+
+		return Messages.SHOP_PURCHASE_INSUFFICIENT_FUNDS.toString()
+		                                                .replace("%money_symbol%", Settings.getMoneySymbol())
+		                                                .replace("%price%",
+		                                                         Settings.formatAmount(Currency.of(sign.getPrice())));
+	}
+
+	@Override
 	public String getName() {
 		return "MoneyAspect-" + transactionType;
 	}

@@ -52,6 +52,6 @@ public final class GangAllyMailContribution implements CommandContribution {
 				new GangAllyRequestCommand(plugin, tree, parent, userManager, memberManager, gangManager, mailManager),
 				new GangAllyAcceptCommand(plugin, tree, parent, userManager, memberManager, gangManager, mailManager),
 				new GangAllyRejectCommand(plugin, tree, parent, userManager, memberManager, gangManager, mailManager),
-				new GangAllyPendingCommand(plugin, tree, parent, userManager, gangManager, mailManager));
+				new GangAllyPendingCommand(plugin, tree, parent, userManager, memberManager, gangManager, mailManager));
 	}
 }

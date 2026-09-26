@@ -1,8 +1,12 @@
 package org.luckyraven.gangland.lootchest.listener;
 
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -18,11 +22,17 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.core.testsupport.BukkitRegistryFixture;
 import org.luckyraven.gangland.lootchest.LootChestService;
 import org.luckyraven.gangland.lootchest.SharedLootInventory;
+import org.luckyraven.gangland.lootchest.data.LootChestData;
 import org.luckyraven.gangland.lootchest.data.LootChestSession;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -227,6 +237,52 @@ class LootChestListenerTest {
 		listener.onInventoryDrag(event);
 
 		verify(event, never()).setCancelled(true);
+	}
+
+	@Test
+	@DisplayName("breaking a registered loot chest block is cancelled, so no ghost registration is left behind")
+	void breakRegisteredChest_isCancelled() {
+		Block block = blockAt(new Location(null, 1, 2, 3));
+		when(manager.getChestAt(block.getLocation())).thenReturn(Optional.of(mock(LootChestData.class)));
+		BlockBreakEvent event = new BlockBreakEvent(block, player);
+
+		listener.onBlockBreak(event);
+
+		assertTrue(event.isCancelled());
+	}
+
+	@Test
+	@DisplayName("breaking an ordinary block is left alone")
+	void breakOrdinaryBlock_isNotCancelled() {
+		Block block = blockAt(new Location(null, 4, 5, 6));
+		when(manager.getChestAt(block.getLocation())).thenReturn(Optional.empty());
+		BlockBreakEvent event = new BlockBreakEvent(block, player);
+
+		listener.onBlockBreak(event);
+
+		assertFalse(event.isCancelled());
+	}
+
+	@Test
+	@DisplayName("an explosion spares registered loot chest blocks but still destroys the rest")
+	void explosion_sparesLootChestBlocks() {
+		Block chest = blockAt(new Location(null, 1, 2, 3));
+		Block dirt  = blockAt(new Location(null, 4, 5, 6));
+		when(manager.getChestAt(chest.getLocation())).thenReturn(Optional.of(mock(LootChestData.class)));
+		when(manager.getChestAt(dirt.getLocation())).thenReturn(Optional.empty());
+		List<Block>       blocks = new ArrayList<>(List.of(chest, dirt));
+		EntityExplodeEvent event = mock(EntityExplodeEvent.class);
+		when(event.blockList()).thenReturn(blocks);
+
+		listener.onEntityExplode(event);
+
+		assertEquals(List.of(dirt), blocks);
+	}
+
+	private static Block blockAt(Location location) {
+		Block block = mock(Block.class);
+		when(block.getLocation()).thenReturn(location);
+		return block;
 	}
 
 	private static ItemStack itemStackOf(Material material) {

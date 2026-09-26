@@ -1,10 +1,11 @@
 package org.luckyraven.gangland.menu;
 
-import com.cryptomorin.xseries.XEnchantment;
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -459,19 +460,23 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
 		return newItem.build();
 	}
 
+	/**
+	 * Only swaps the material when {@code type}'s name actually names one of {@link MaterialType}'s color families
+	 * (WOOL, CONCRETE, ...); an item outside those families (e.g. LEATHER_CHESTPLATE) keeps its own material - it
+	 * used to default to WOOL and yield a nonsensical *_WOOL swap for anything unrecognized (gi=72).
+	 */
 	private static Material resolveColorMaterial(Material type, String colorValue) {
-		MaterialType material = MaterialType.WOOL;
 		for (MaterialType materialType : MaterialType.values()) {
 			if (!type.name().contains(materialType.name())) continue;
-			material = materialType;
-			break;
+			return ColorUtil.getMaterialByColor(colorValue, materialType.name());
 		}
-		return ColorUtil.getMaterialByColor(colorValue, material.name());
+		return type;
 	}
 
 	private static void applyEnchantGlint(ItemBuilder target, ItemBuilder source) {
 		if (!source.getEnchantments().isEmpty()) {
-			target.addEnchantment(XEnchantment.UNBREAKING.get(), 1)
+			// Enchantment.getByKey, not XEnchantment: see SlotItemFactory.create for why.
+			target.addEnchantment(Enchantment.getByKey(NamespacedKey.minecraft("unbreaking")), 1)
 			      .addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
 		}
 	}

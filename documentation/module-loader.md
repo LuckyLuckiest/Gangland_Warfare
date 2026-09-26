@@ -338,9 +338,9 @@ NPC-owning module's own `onEnabled` when Citizens is absent — it does not skip
 | Command | What it does |
 |---|---|
 | `/glw module list` | Every loaded module (id, name, version, `Host_Api`) and then every jar the loader refused, with its fault code — so a module that never came up is visible without the startup log. |
-| `/glw module install <module> [version]` | Downloads a module jar. `<module>` is one of the six official ids (`mail`, `turf`, `civilians`, `copsncrooks`, `gadget`, `npcshops`) or a full `group:artifact[:version]`. Without a version the repository's newest is taken. Replacing a module that is already loaded retires the old jar the same way an update does. |
+| `/glw module install <module> [version]` | Downloads a module jar. `<module>` is one of the six official ids (`mail`, `turf`, `civilians`, `copsncrooks`, `gadget`, `npcshops`) or a full `group:artifact[:version]`. Without a version the repository's newest is taken. Replacing a module already in the folder (loaded, or refused at startup) retires the old jar the same way an update does. |
 | `/glw module update [module]` | Checks every loaded module's `Artifact` (or only the one named) against the repository and downloads what is newer. |
-| `/glw module remove <module>` | Marks a module jar for deletion at the next start. |
+| `/glw module remove <module>` | Marks every jar carrying that module id for deletion at the next start. |
 
 `Modules.Repository` in `settings.yml` is the Maven-layout base URL every fetch uses (default Maven Central; a
 self-hosted mirror or a `file:///` path works too). A jar is read from

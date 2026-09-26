@@ -5,15 +5,16 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
-import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.gangland.command.extension.CommandContribution;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.GangSettings;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankAssignmentPolicy;
 import org.luckyraven.gangland.gang.rank.RankManager;
@@ -150,16 +151,16 @@ public final class GangOptionContribution implements CommandContribution {
 
 			// GR-08: this command used to check only "not my own rank", so anyone who could reach it could hand
 			// out the owner rank. Same force_rank override GangPromoteCommand honours.
-			String  forceRank = String.format("%s.command.gang.force_rank", GanglandApi.FULL_PREFIX);
-			boolean force     = player.hasPermission(forceRank);
+			boolean force     = player.hasPermission(GangPermissions.FORCE_RANK);
 			boolean self      = targetMember.getUuid().equals(player.getUniqueId());
 
 			RankAssignmentPolicy.Decision decision =
 					RankAssignmentPolicy.evaluate(rankManager.getRankTree(), userMember.getRank(),
-					                              targetMember.getRank(), nextRank, force, self);
+					                              targetMember.getRank(), nextRank, force, self,
+					                              rankManager.get(GangSettings.getGangRankTail()));
 
 			if (decision != RankAssignmentPolicy.Decision.ALLOWED) {
-				user.sendMessage(messageFor(decision));
+				user.sendMessage(RankAssignmentPolicy.message(decision));
 				return;
 			}
 
@@ -192,8 +193,7 @@ public final class GangOptionContribution implements CommandContribution {
 			Collection<Rank> values = rankManager.getRanks().values();
 
 			// GR-08: the completer offered every rank in the tree, owner included.
-			String  forceRank = String.format("%s.command.gang.force_rank", GanglandApi.FULL_PREFIX);
-			boolean force     = player.hasPermission(forceRank);
+			boolean force     = player.hasPermission(GangPermissions.FORCE_RANK);
 
 			if (force) return values.stream().map(Rank::getName).toList();
 
@@ -205,18 +205,6 @@ public final class GangOptionContribution implements CommandContribution {
 					.map(Rank::getName)
 					.toList();
 		});
-	}
-
-	/**
-	 * Maps a refused {@link RankAssignmentPolicy.Decision} onto the message the player sees.
-	 */
-	private static String messageFor(RankAssignmentPolicy.Decision decision) {
-		return switch (decision) {
-			case SELF -> Messages.GANG_CANNOT_ACT_SELF.toString();
-			case SAME_RANK -> Messages.GANG_SAME_RANK_ACTION.toString();
-			case TARGET_OUTRANKS_ACTOR, RANK_NOT_BELOW_ACTOR -> Messages.GANG_HIGHER_RANK_ACTION.toString();
-			default -> Messages.COMMAND_NO_PERM.toString();
-		};
 	}
 
 }

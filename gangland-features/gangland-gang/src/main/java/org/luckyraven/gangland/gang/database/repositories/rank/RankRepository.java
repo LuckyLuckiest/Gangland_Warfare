@@ -74,7 +74,8 @@ public class RankRepository extends AbstractRepository<Rank> {
 		for (Object[] result : data) {
 			int    id         = (int) result[0];
 			String name       = String.valueOf(result[1]);
-			String vaultGroup = result.length > 2 && result[2] != null ? String.valueOf(result[2]) : null;
+			String vaultGroup = result.length > 2 && result[2] != null ? String.valueOf(result[2]) : "";
+			if (vaultGroup.isEmpty()) vaultGroup = null; // '' is how RankTable stores an unlinked rank
 
 			Rank rank = new Rank(name, id);
 			rank.setVaultGroup(vaultGroup);

@@ -45,9 +45,13 @@ class TurfIncomeCommand extends SubArgument {
 		this.addSubArgument(amountArgument());
 	}
 
-	private static BigDecimal parseAmount(String raw) {
+	// Package-private (not private) so TurfIncomeCommandTest can pin GI-32 directly. Routes through Currency.parse
+	// (not a raw `new BigDecimal(raw)`) so an unbounded exponent like "1e999" is rejected here instead of surviving
+	// as a BigDecimal that later overflows to Infinity via TurfTable.getData()'s doubleValue() and crashes every
+	// future boot in TurfRepository.doLoadAll() (BigDecimal.valueOf(Infinity) throws NumberFormatException).
+	static BigDecimal parseAmount(String raw) {
 		try {
-			return new BigDecimal(raw);
+			return Currency.parse(raw);
 		} catch (NumberFormatException exception) {
 			return null;
 		}
@@ -61,6 +65,12 @@ class TurfIncomeCommand extends SubArgument {
 
 	private OptionalArgument amountArgument() {
 		return new OptionalArgument(plugin, tree, (argument, sender, args) -> {
+			// GI-35: nested SubArgument permissions only add onto the base "gangland.command.turf" node — they
+			// never require the stricter admin one on their own.
+			if (!sender.hasPermission(WandSelectionManager.ADMIN_PERMISSION)) {
+				sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				return;
+			}
 			Turf turf = TurfSelectionResolver.resolve(sender, turfs, selections, messages);
 			if (turf == null) {
 				return;

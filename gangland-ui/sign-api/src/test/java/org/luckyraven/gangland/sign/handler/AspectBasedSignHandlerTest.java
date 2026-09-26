@@ -13,6 +13,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Proves {@link AspectBasedSignHandler#handle}/{@code #canHandle} (Test Surface,
@@ -86,6 +87,18 @@ class AspectBasedSignHandlerTest {
 
 		assertTrue(allPass.canHandle(player, sign));
 		assertFalse(onePasses.canHandle(player, sign));
+	}
+
+	@Test
+	@DisplayName("failureReason is the first blocked aspect's reason")
+	void failureReason_isTheFirstBlockedAspectsReason() {
+		FakeAspect ok = new FakeAspect("ok", new ArrayList<>(), true, AspectResult.successContinue(""), 0);
+		SignAspect blocked = mock(SignAspect.class);
+		when(blocked.canExecute(player, sign)).thenReturn(false);
+		when(blocked.failureReason(player, sign)).thenReturn("You don't have enough stone!");
+
+		assertEquals("You don't have enough stone!",
+		             new AspectBasedSignHandler(List.of(ok, blocked)).failureReason(player, sign));
 	}
 
 	@Test

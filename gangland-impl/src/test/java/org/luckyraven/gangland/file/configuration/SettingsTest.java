@@ -86,6 +86,35 @@ class SettingsTest {
 	}
 
 	@Test
+	@DisplayName("formatAmount honors Balance_Format when enabled instead of always using the compact K/M/B form")
+	void formatAmount_balanceFormatEnabled_usesConfiguredFormat() throws IOException {
+		SettingsFixture.write(tempDir, """
+				Money_Symbol: '$'
+				Balance_Format:
+				  Enable: true
+				  Format: '%,.2f'
+				""");
+
+		SettingsFixture.initialize(tempDir);
+
+		assertEquals("12,345", Settings.formatAmount(new BigDecimal("12345")));
+	}
+
+	@Test
+	@DisplayName("formatAmount keeps the compact K/M/B form when Balance_Format is disabled")
+	void formatAmount_balanceFormatDisabled_usesCompactForm() throws IOException {
+		SettingsFixture.write(tempDir, """
+				Money_Symbol: '$'
+				Balance_Format:
+				  Enable: false
+				""");
+
+		SettingsFixture.initialize(tempDir);
+
+		assertEquals("12.35K", Settings.formatAmount(new BigDecimal("12345")));
+	}
+
+	@Test
 	@DisplayName("WB-02: Bounty.Minimum is read from the YAML and drives the bounty floor")
 	void initialize_bountyMinimum_isReadFromYaml() throws IOException {
 		SettingsFixture.write(tempDir, """

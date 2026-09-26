@@ -231,6 +231,7 @@ Commands:
       Remove:
          Removed_Rank: "Rank &8[&a%rank%&8]&7 has been removed successfully."
          Confirm_Timer: "You have &a%timer%&7 to confirm deleting the rank."
+         In_Use: "Rank &8[&a%rank%&8]&7 is a default rank, still held by members, or has ranks above it, so it can't be removed."
       Rank_Exists: "This rank is already created!"
       Permission:
          Add: "You have added &8[&a%permission%&8]&7 to &8[&a%rank%&8]&7 rank."
@@ -258,6 +259,7 @@ Commands:
       Player_Lift: "You have lifted &a%money_symbol%%amount%&7 from &6%player%&7."
       Lifted: "&a%money_symbol%%amount%&7 has been lifted from your bounty.%n%&4&lBounty &c%money_symbol%%bounty%"
       Clear: "Your bounty was cleared!"
+      Claimed: "You claimed the &a%money_symbol%%amount%&7 bounty on &6%player%&7."
    Level:
       Experience:
          Add: "Added &b%experience%&7 exp to your level."
@@ -327,6 +329,7 @@ Commands:
    Module:
       List_Header: "&6Loaded modules &8(&f%count%&8)&7:"
       List_Entry: "&8- &e%id% &7%name% &fv%version% &8(Host_Api %host_api%)"
+      List_Entry_Pending: "&8- &e%id% &7%name% &fv%version% &8(Host_Api %host_api%) &c[pending removal]&7"
       List_Empty: "&7No runtime modules are loaded."
       Fault_Header: "&cSkipped &8(&f%count%&8)&7:"
       Fault_Entry: "&8- &c%code% &7%message%"
@@ -343,10 +346,12 @@ Commands:
       Update_Available: "&8- &e%module% &7%installed% &8-> &a%available%"
       Up_To_Date: "&f%module% &7is up to date."
       All_Up_To_Date: "&7Every module is up to date."
+      Update_Skipped: "&e%count% &7module jar(s) were skipped at startup and not checked&8; &f/glw module list &7shows why."
       Restart_Required: "&a%module% &7was updated. Restart the server to load the new version."
       Download_Failed: "&c%module% &7could not be downloaded&8: &f%reason%"
       Remove_Marked: "&f%module% &7is removed at the next restart. Delete &f%marker% &7to undo it."
       Remove_Failed: "&cCould not mark &f%module% &7for removal&8: &f%reason%"
+      Remove_Dependants_Warning: "&c%module% &7is depended on by&8: &c%dependants%&7. Removing it will drop them too at the next restart."
    Fuel:
       Capacity_Increased: "Max fuel capacity increased by &b%amount%&7. New max: &b%new_max%&7."
       Capacity_Decreased: "Max fuel capacity decreased by &b%amount%&7. New max: &b%new_max%&7."
@@ -454,6 +459,7 @@ Errors:
       Spawn: "&cYou don't have permission to teleport to this spawn!"
       Warp: "&cYou don't have permission to teleport to this warp!"
       Sign: "&cYou don't have permission to use this sign!"
+      Sign_Break: "&cYou don't have permission to break this sign!"
       Other: "&cYou don't have permission to use this!"
       Not_Found: "&cPermission &e%permission% &cis not registered."
       List_Empty: "&cNo permissions matched &e%query%&c."
@@ -487,6 +493,7 @@ Errors:
       Invalid_Permission: "This permission doesn't exist."
       Invalid_Parent: "This parent doesn't exist."
       Parent_Same: "This parent can't be the same as the rank."
+      Parent_Placed: "&b%parent%&7 already has a place in the rank hierarchy, so it can't go above &b%rank%&7."
    Vault:
       Permission_Not_Available: "&cVault's permission service isn't available. Install a permission plugin (e.g. LuckPerms) and Vault to use this feature."
    Bounty:
@@ -577,6 +584,8 @@ Errors:
          Id_Taken: "&cA turf named &f%turf%&c already exists."
       Income:
          Invalid: "&cInvalid income amount: &f%amount%&c. Must be a non-negative number."
+      Garrison:
+         Invalid: "&cInvalid garrison count: &f%count%&c. Must be a non-negative whole number."
       Not_Found: "&cNo turf named &f%turf%&c."
       Not_Inside: "&cStand inside a turf to use this command."
       Gang_Not_Found: "&cNo gang named &f%gang%&c."
@@ -781,9 +790,11 @@ Fuel:
 
 Jail:
    List_Header: "Jails:"
+   List_Empty: "&7No jails are registered."
 
 Cop:
    Spawner_List_Header: "Cop spawners:"
+   Spawner_List_Empty: "&7No cop spawners are registered."
 
 Item:
    Unique:

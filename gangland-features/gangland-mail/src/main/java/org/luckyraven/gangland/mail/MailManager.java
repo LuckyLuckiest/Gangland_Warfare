@@ -169,6 +169,16 @@ public final class MailManager {
 	}
 
 	/**
+	 * Cancels every pending mail sent by or addressed to {@code gangId}; called when that gang is disbanded.
+	 */
+	public void cancelForGang(int gangId) {
+		for (MailItem mail : mailById.values()) {
+			if (mail.getStatus() != MailStatus.PENDING) continue;
+			if (mail.getSenderGangId() == gangId || mail.getRecipientGangId() == gangId) cancel(mail);
+		}
+	}
+
+	/**
 	 * Sweeps every PENDING mail whose {@code expiresAt} has passed and deletes it. Called from the periodic update
 	 * tick; safe to call frequently (cheap when nothing is due).
 	 */

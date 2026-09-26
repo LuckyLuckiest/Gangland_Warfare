@@ -15,8 +15,8 @@ import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.rank.RankManager;
-import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
@@ -79,12 +79,8 @@ public final class GangCommand extends Command {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		Player       player = (Player) commandSender;
-		User<Player> user   = userManager.getUser(player);
-
-		if (user == null) return;
-
-		if (!user.hasGang()) help(commandSender, 1);
+		// The gang_info.yml menu takes /glw gang before this runs; whoever it didn't open for still gets an answer.
+		help(commandSender, 1);
 	}
 
 	@Override
@@ -124,7 +120,7 @@ public final class GangCommand extends Command {
 		Argument color = new GangColorCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                      memberManager, gangManager, inventoryService);
 
-		permissionManager.addPermission(getPermission() + ".force_rank");
+		permissionManager.addPermission(GangPermissions.FORCE_RANK);
 
 		// add sub arguments
 		List<Argument> arguments = new ArrayList<>();

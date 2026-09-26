@@ -215,6 +215,7 @@ Commands:
       Remove:
          Removed_Rank: "El rango &8[&a%rank%&8]&7 ha sido eliminado exitosamente."
          Confirm_Timer: "Tienes &a%timer%&7 para confirmar la eliminación del rango."
+         In_Use: "El rango &8[&a%rank%&8]&7 es un rango por defecto, aún lo tienen miembros o tiene rangos por encima, así que no se puede eliminar."
       Rank_Exists: "¡Este rango ya fue creado!"
       Permission:
          Add: "Has añadido &8[&a%permission%&8]&7 al rango &8[&a%rank%&8]&7."
@@ -242,6 +243,7 @@ Commands:
       Player_Lift: "Has reclamado &a%money_symbol%%amount%&7 de &6%player%&7."
       Lifted: "&a%money_symbol%%amount%&7 ha sido reclamado de tu recompensa.%n%&4&lRecompensa &c%money_symbol%%bounty%"
       Clear: "¡Tu recompensa ha sido eliminada!"
+      Claimed: "Cobraste la recompensa de &a%money_symbol%%amount%&7 por &6%player%&7."
    Level:
       Experience:
          Add: "Se añadió &b%experience%&7 de experiencia a tu nivel."
@@ -297,6 +299,7 @@ Commands:
    Module:
       List_Header: "&6Loaded modules &8(&f%count%&8)&7:"
       List_Entry: "&8- &e%id% &7%name% &fv%version% &8(Host_Api %host_api%)"
+      List_Entry_Pending: "&8- &e%id% &7%name% &fv%version% &8(Host_Api %host_api%) &c[pending removal]&7"
       List_Empty: "&7No runtime modules are loaded."
       Fault_Header: "&cSkipped &8(&f%count%&8)&7:"
       Fault_Entry: "&8- &c%code% &7%message%"
@@ -313,10 +316,12 @@ Commands:
       Update_Available: "&8- &e%module% &7%installed% &8-> &a%available%"
       Up_To_Date: "&f%module% &7is up to date."
       All_Up_To_Date: "&7Every module is up to date."
+      Update_Skipped: "&e%count% &7module jar(s) were skipped at startup and not checked&8; &f/glw module list &7shows why."
       Restart_Required: "&a%module% &7was updated. Restart the server to load the new version."
       Download_Failed: "&c%module% &7could not be downloaded&8: &f%reason%"
       Remove_Marked: "&f%module% &7is removed at the next restart. Delete &f%marker% &7to undo it."
       Remove_Failed: "&cCould not mark &f%module% &7for removal&8: &f%reason%"
+      Remove_Dependants_Warning: "&c%module% &7is depended on by&8: &c%dependants%&7. Removing it will drop them too at the next restart."
    Fuel:
       Capacity_Increased: "Capacidad máxima de combustible aumentada en &b%amount%&7. Nuevo máximo: &b%new_max%&7."
       Capacity_Decreased: "Capacidad máxima de combustible reducida en &b%amount%&7. Nuevo máximo: &b%new_max%&7."
@@ -361,6 +366,7 @@ Errors:
       Spawn: "&c¡No tienes permiso para teletransportarte a este punto de aparición!"
       Warp: "&c¡No tienes permiso para teletransportarte a este warp!"
       Sign: "&c¡No tienes permiso para usar este letrero!"
+      Sign_Break: "&c¡No tienes permiso para romper este letrero!"
       Other: "&c¡No tienes permiso para usar esto!"
       Not_Found: "&cEl permiso &e%permission% &cno está registrado."
       List_Empty: "&cNingún permiso coincide con &e%query%&c."
@@ -396,6 +402,7 @@ Errors:
       Invalid_Permission: "Este permiso no existe."
       Invalid_Parent: "Este padre no existe."
       Parent_Same: "Esta madre no puede ser la misma que el rango."
+      Parent_Placed: "&b%parent%&7 ya tiene un lugar en la jerarquía de rangos, así que no puede ir por encima de &b%rank%&7."
    Vault:
       Permission_Not_Available: "&cEl servicio de permisos de Vault no está disponible. Instala un plugin de permisos (p. ej. LuckPerms) y Vault para usar esta función."
    Bounty:
@@ -653,9 +660,11 @@ Fuel:
 
 Jail:
    List_Header: "Cárceles:"
+   List_Empty: "&7No hay cárceles registradas."
 
 Cop:
    Spawner_List_Header: "Generadores de policía:"
+   Spawner_List_Empty: "&7No hay generadores de policía registrados."
 
 Item:
    Unique:

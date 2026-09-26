@@ -173,6 +173,7 @@ public enum Messages {
 	RANK_CREATE_CONFIRM("Commands.Rank.Create.Confirm_Timer", Type.COMMAND),
 	RANK_REMOVED("Commands.Rank.Remove.Removed_Rank", Type.COMMAND),
 	RANK_REMOVE_CONFIRM("Commands.Rank.Remove.Confirm_Timer", Type.COMMAND),
+	RANK_REMOVE_IN_USE("Commands.Rank.Remove.In_Use", Type.ERROR),
 	RANK_EXIST("Commands.Rank.Rank_Exists", Type.COMMAND),
 	RANK_PERMISSION_ADD("Commands.Rank.Permission.Add", Type.COMMAND),
 	RANK_PERMISSION_REMOVE("Commands.Rank.Permission.Remove", Type.COMMAND),
@@ -197,6 +198,7 @@ public enum Messages {
 	BOUNTY_LIFTED("Commands.Bounty.Lifted", Type.COMMAND),
 	BOUNTY_PLAYER_LIFT("Commands.Bounty.Player_Lift", Type.COMMAND),
 	BOUNTY_SET("Commands.Bounty.Bounty_Set", Type.COMMAND),
+	BOUNTY_CLAIMED("Commands.Bounty.Claimed", Type.COMMAND),
 
 	// commands - level
 	LEVEL_EXP_ADD("Commands.Level.Experience.Add", Type.COMMAND),
@@ -225,6 +227,7 @@ public enum Messages {
 	SPAWN_NO_PERM("Errors.Permissions.Spawn", Type.ERROR),
 	WARP_NO_PERM("Errors.Permissions.Warp", Type.ERROR),
 	SIGN_NO_PERM("Errors.Permissions.Sign", Type.ERROR),
+	SIGN_BREAK_NO_PERM("Errors.Permissions.Sign_Break", Type.ERROR),
 	OTHER_NO_PERM("Errors.Permissions.Other", Type.ERROR),
 
 	// errors - player
@@ -261,6 +264,7 @@ public enum Messages {
 	INVALID_RANK_PERMISSION("Errors.Rank.Invalid_Permission", Type.ERROR),
 	INVALID_RANK_PARENT("Errors.Rank.Invalid_Parent", Type.ERROR),
 	RANK_PARENT_SAME("Errors.Rank.Parent_Same", Type.ERROR),
+	RANK_PARENT_PLACED("Errors.Rank.Parent_Placed", Type.ERROR),
 
 	// errors - teleportation
 	LOCATION_NOT_FOUND("Errors.Teleportation.Location.Not_Found", Type.ERROR),
@@ -423,6 +427,7 @@ public enum Messages {
 	// commands - runtime modules
 	MODULE_LIST_HEADER("Commands.Module.List_Header", Type.COMMAND),
 	MODULE_LIST_ENTRY("Commands.Module.List_Entry", Type.COMMAND),
+	MODULE_LIST_ENTRY_PENDING("Commands.Module.List_Entry_Pending", Type.COMMAND),
 	MODULE_LIST_EMPTY("Commands.Module.List_Empty", Type.COMMAND),
 	MODULE_FAULT_HEADER("Commands.Module.Fault_Header", Type.COMMAND),
 	MODULE_FAULT_ENTRY("Commands.Module.Fault_Entry", Type.COMMAND),
@@ -439,10 +444,12 @@ public enum Messages {
 	MODULE_UPDATE_AVAILABLE("Commands.Module.Update_Available", Type.COMMAND),
 	MODULE_UP_TO_DATE("Commands.Module.Up_To_Date", Type.COMMAND),
 	MODULE_ALL_UP_TO_DATE("Commands.Module.All_Up_To_Date", Type.COMMAND),
+	MODULE_UPDATE_SKIPPED("Commands.Module.Update_Skipped", Type.COMMAND),
 	MODULE_RESTART_REQUIRED("Commands.Module.Restart_Required", Type.COMMAND),
 	MODULE_DOWNLOAD_FAILED("Commands.Module.Download_Failed", Type.COMMAND),
 	MODULE_REMOVE_MARKED("Commands.Module.Remove_Marked", Type.COMMAND),
 	MODULE_REMOVE_FAILED("Commands.Module.Remove_Failed", Type.COMMAND),
+	MODULE_REMOVE_DEPENDANTS_WARNING("Commands.Module.Remove_Dependants_Warning", Type.COMMAND),
 
 	// commands - fuel
 	FUEL_CAPACITY_INCREASED("Commands.Fuel.Capacity_Increased", Type.COMMAND),
@@ -469,6 +476,7 @@ public enum Messages {
 	JAIL_EXIT_SET_GLOBAL("Commands.Jail.Exit_Set_Global", Type.COMMAND),
 	JAIL_TELEPORTED("Commands.Jail.Teleported", Type.COMMAND),
 	JAIL_LIST_HEADER("Jail.List_Header", Type.PREFIX),
+	JAIL_LIST_EMPTY("Jail.List_Empty", Type.PREFIX),
 	JAIL_NO_EMPTY("Errors.Jail.No_Empty", Type.ERROR),
 	JAIL_ALREADY_JAILED("Errors.Jail.Already_Jailed", Type.ERROR),
 	JAIL_NOT_JAILED("Errors.Jail.Not_Jailed", Type.ERROR),
@@ -481,6 +489,7 @@ public enum Messages {
 	COP_SPAWNER_REMOVED("Commands.Cop.Spawner.Removed", Type.COMMAND),
 	COP_SPAWNER_TELEPORTED("Commands.Cop.Spawner.Teleported", Type.COMMAND),
 	COP_SPAWNER_LIST_HEADER("Cop.Spawner_List_Header", Type.PREFIX),
+	COP_SPAWNER_LIST_EMPTY("Cop.Spawner_List_Empty", Type.PREFIX),
 
 	// commands - car
 	CAR_GAVE("Commands.Car.Gave", Type.COMMAND),
@@ -571,6 +580,7 @@ public enum Messages {
 	TURF_POWERUPNPC_REMOVED("Commands.Turf.PowerupNpc.Removed", Type.COMMAND),
 	TURF_GARRISON_VIEW("Commands.Turf.Garrison.View", Type.OTHER),
 	TURF_GARRISON_SET("Commands.Turf.Garrison.Set", Type.COMMAND),
+	TURF_GARRISON_INVALID("Errors.Turf.Garrison.Invalid", Type.ERROR),
 	TURF_BUFF_LIST_EMPTY("Commands.Turf.Buff.List_Empty", Type.OTHER),
 	TURF_BUFF_LIST_HEADER("Commands.Turf.Buff.List_Header", Type.OTHER),
 	TURF_BUFF_LIST_ROW("Commands.Turf.Buff.List_Row", Type.OTHER),

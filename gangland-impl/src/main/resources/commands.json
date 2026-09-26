@@ -39,9 +39,13 @@
 		"usage": "/glw reload files",
 		"description": "Reloads the files."
 	},
-	"reload_database": {
-		"usage": "/glw reload data",
-		"description": "Reloads the data related to the database."
+	"reload_inventory": {
+		"usage": "/glw reload inventory",
+		"description": "Reloads the inventory menus."
+	},
+	"reload_cleanup": {
+		"usage": "/glw reload cleanup",
+		"description": "Forces the periodical cleanup service to run."
 	},
 	"economy": {
 		"usage": "/glw economy",
@@ -315,11 +319,11 @@
 		"usage": "/glw waypoint radius <amount>",
 		"description": "Sets the radius of affect for that waypoint."
 	},
-	"waypoint_teleport": {
+	"teleport_teleport": {
 		"usage": "/glw tp",
 		"description": "Teleport to the selected waypoint."
 	},
-	"waypoint_teleport_unknown": {
+	"teleport_teleport_unknown": {
 		"usage": "/glw tp <name>",
 		"description": "Teleport to the waypoint specified."
 	},
@@ -341,7 +345,7 @@
 	},
 	"fuel_add": {
 		"usage": "/glw fuel add <amount>",
-		"description": "Adds fuel to the item in hand."
+		"description": "Increases the max fuel capacity of the item in hand."
 	},
 	"fuel_info": {
 		"usage": "/glw fuel info",
@@ -353,7 +357,7 @@
 	},
 	"fuel_remove": {
 		"usage": "/glw fuel remove <amount>",
-		"description": "Removes fuel from the item in hand."
+		"description": "Decreases the max fuel capacity of the item in hand."
 	},
 	"fuel_defuel": {
 		"usage": "/glw fuel defuel",

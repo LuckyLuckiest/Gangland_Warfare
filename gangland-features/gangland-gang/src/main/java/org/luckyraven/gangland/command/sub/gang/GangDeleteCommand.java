@@ -12,6 +12,7 @@ import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.timer.CountdownTimer;
 import org.luckyraven.keystone.util.TimeUtil;
+import org.luckyraven.gangland.events.gang.GangDeleteEvent;
 import org.luckyraven.gangland.gang.database.repositories.gang.GangAllianceRepository;
 import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.gangland.file.configuration.Messages;
@@ -33,6 +34,7 @@ import org.luckyraven.gangland.util.TimeMessages;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -125,7 +127,7 @@ class GangDeleteCommand extends SubArgument {
 					if (time.getTimeLeft() % 20 != 0) return;
 
 					String string = Messages.GANG_REMOVE_CONFIRM.toString();
-					String replace = string.replace("%timer%", TimeUtil.formatTime(time.getPeriod(), true,
+					String replace = string.replace("%timer%", TimeUtil.formatTime(time.getTimeLeft(), true,
 					                                                               TimeMessages.getInstance()));
 					s.sendMessage(replace);
 				}, time -> {
@@ -181,11 +183,12 @@ class GangDeleteCommand extends SubArgument {
 			// change the data directly from the database, and collect the online players ONLY!
 			List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager::getUser);
 
-			// get the contribution frequency for each user, and return that frequency according to the current balance
-			double total = gang.getMembers()
-					.stream().mapToDouble(Member::getContribution).sum();
+			Map<UUID, BigDecimal> payouts = payouts(gang.getEconomy().getAmount(), gang.getMembers(),
+			                                        player.getUniqueId());
 
-			IRepository<Member> memberRepository = repositoryRegistry.getRepository(Member.class);
+			IRepository<Member>                        memberRepository = repositoryRegistry.getRepository(Member.class);
+			IRepository<User<? extends OfflinePlayer>> userRepository   = repositoryRegistry.getGenericRepository(
+					User.class);
 
 			// Track online UUIDs so the offline loop below skips them
 			Set<UUID> onlineUuids = gangOnlineMembers.stream()
@@ -202,16 +205,12 @@ class GangDeleteCommand extends SubArgument {
 				// halfway through the disband (GR-01).
 				if (mem == null) continue;
 
-				// Capture contribution before removeMember zeros it
-				double     freq    = mem.getContribution();
-				BigDecimal balance = gang.getEconomy().getAmount();
-				BigDecimal amount = Math.round(total) == 0 ? Currency.ZERO
-				                                           : Currency.multiply(balance, freq / total);
-
-				gang.removeMember(gangUser, mem);
+				BigDecimal amount = payouts.getOrDefault(currentPlayer.getUniqueId(), Currency.ZERO);
 
 				gang.getEconomy().withdrawAmount(amount);
 				gangUser.getEconomy().depositAmount(amount);
+
+				gang.removeMember(gangUser, mem);
 
 				// Persist the member reset (gang_id, contribution, rank cleared by removeMember)
 				memberRepository.save(mem);
@@ -235,9 +234,9 @@ class GangDeleteCommand extends SubArgument {
 			// Deliberately synchronous, still on the calling thread (GR-02): this block mutates gang.getEconomy()
 			// and the member's rank/gang_id, and the gang row / in-memory gang are torn down a few lines below.
 			// Running it off-thread raced the disband and both duplicated and lost money. Disband is a rare,
-			// confirm-gated command, so a short main-thread loop is the right trade for a deterministic payout —
-			// same durability trade the online branch above already makes (its economy change also lands on the
-			// next periodic autosave, not immediately).
+			// confirm-gated command, so a short main-thread loop is the right trade for a deterministic payout.
+			// Each offline User row is saved on the spot: a rejoin evicts the cached offline User before the next
+			// autosave, which would otherwise discard the payout.
 			for (Member mem : gang.getMembers()) {
 				if (onlineUuids.contains(mem.getUuid())) continue;
 
@@ -249,15 +248,13 @@ class GangDeleteCommand extends SubArgument {
 					offlineUserManager.add(offlineUser);
 				}
 
-				double     freq   = mem.getContribution();
-				BigDecimal gangBal = gang.getEconomy().getAmount();
-				BigDecimal amount = Math.round(total) == 0 ? Currency.ZERO
-				                                           : Currency.multiply(gangBal, freq / total);
-
-				gang.removeMember(offlineUser, mem);
+				BigDecimal amount = payouts.getOrDefault(mem.getUuid(), Currency.ZERO);
 
 				gang.getEconomy().withdrawAmount(amount);
 				offlineUser.getEconomy().depositAmount(amount);
+				userRepository.save(offlineUser);
+
+				gang.removeMember(offlineUser, mem);
 
 				memberRepository.save(mem);
 			}
@@ -286,6 +283,7 @@ class GangDeleteCommand extends SubArgument {
 			}
 
 			gangManager.remove(gang);
+			Bukkit.getPluginManager().callEvent(new GangDeleteEvent(gang));
 			deleteGangName.remove(user);
 
 			CountdownTimer timer = deleteGangTimer.get(sender);
@@ -294,6 +292,26 @@ class GangDeleteCommand extends SubArgument {
 				deleteGangTimer.remove(sender);
 			}
 		});
+	}
+
+	/**
+	 * Splits the whole vault pro rata on each member's contribution, a negative contribution counting as zero. The
+	 * disbanding owner also takes whatever a zero total or rounding leaves, so the shares sum to exactly {@code pool}.
+	 */
+	static Map<UUID, BigDecimal> payouts(BigDecimal pool, List<Member> members, UUID owner) {
+		double                total  = members.stream().mapToDouble(m -> Math.max(0, m.getContribution())).sum();
+		Map<UUID, BigDecimal> shares = new HashMap<>();
+		BigDecimal            left   = pool;
+
+		for (Member member : members) {
+			BigDecimal share = total > 0 ? Currency.multiply(pool, Math.max(0, member.getContribution()) / total)
+			                                       .min(left) : Currency.ZERO;
+			shares.put(member.getUuid(), share);
+			left = left.subtract(share);
+		}
+
+		shares.merge(owner, left, BigDecimal::add);
+		return shares;
 	}
 
 }

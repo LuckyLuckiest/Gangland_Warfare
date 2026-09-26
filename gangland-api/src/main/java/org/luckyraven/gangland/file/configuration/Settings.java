@@ -252,13 +252,15 @@ public class Settings implements FileInitializer {
 	}
 
 	/**
-	 * BigDecimal-aware currency formatter. Delegates to {@link #formatDouble(double)} via {@code doubleValue()} so
-	 * existing formatter config (thousand separators, decimal places) applies unchanged; values beyond {@code 2^53}
-	 * lose precision in the rendered string but still round-trip through the DB via
-	 * {@link Currency#plainString(BigDecimal)}.
+	 * BigDecimal-aware currency formatter. When {@code Balance_Format.Enable} is on, delegates to
+	 * {@link #formatDouble(double)} via {@code doubleValue()} so the configured {@code Format} pattern applies
+	 * (exact amount, no K/M/B suffix); values beyond {@code 2^53} lose precision in the rendered string but still
+	 * round-trip through the DB via {@link Currency#plainString(BigDecimal)}. When disabled, falls back to the
+	 * compact K/M/B notation.
 	 */
 	public static String formatAmount(BigDecimal value) {
-		return NumberUtil.valueFormat(value);
+		if (!balanceFormatEnabled) return NumberUtil.valueFormat(value);
+		return formatDouble(value == null ? 0D : value.doubleValue());
 	}
 
 	/**
@@ -726,9 +728,10 @@ public class Settings implements FileInitializer {
 
 		// WS4 G1a fix round 1 (F2): a leftover legacy Trader:/Banker: block is not just dead weight (unlike
 		// WS1's Scoreboard: block) — those keys had live readers before this move, so an upgrading server's
-		// customised values now silently do nothing. section() above already marked the block "touched",
-		// which suppresses the generic unknown-key sweep for it; this replaces that generic, unhelpful line
-		// with one that actually says where the keys went.
+		// customised values now silently do nothing. section() below touches the block's own root key, so the
+		// generic root-level unknown-key line is replaced by this one that actually says where the keys went.
+		// It does not silence the leaf keys: section() also registers a reader for the block that nothing reads,
+		// so each leaf still gets its own unknown-key line (documented in migration-0.10.0.md section 4).
 		warnIfLegacyShopBlockPresent(section(root, "Trader", report) != null, "Trader", "npc/trader_settings.yml",
 		                             "npc-shops", "settings.yml");
 		warnIfLegacyShopBlockPresent(section(root, "Banker", report) != null, "Banker", "npc/banker_settings.yml",

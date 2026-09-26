@@ -69,7 +69,8 @@ class CarMeleeWeaponLookupGuardTest {
 		when(driver.getUniqueId()).thenReturn(UUID.randomUUID());
 
 		int initialDurability = 100;
-		VehicleSession session = new VehicleSession(entity, car, driver, initialDurability, 0, 0, ExhaustSide.LEFT);
+		VehicleSession session = new VehicleSession(entity, car, driver, driver.getUniqueId(), initialDurability, 0,
+		                                            0, ExhaustSide.LEFT);
 
 		UUID            entityUUID      = UUID.randomUUID();
 		VehicleRegistry vehicleRegistry = mock(VehicleRegistry.class);

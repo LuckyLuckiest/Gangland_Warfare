@@ -57,7 +57,7 @@ public class SignProtection implements Listener {
 		}
 
 		event.setCancelled(true);
-		player.sendMessage(information.getSignNoPermission());
+		player.sendMessage(information.getSignBreakNoPermission());
 	}
 
 }

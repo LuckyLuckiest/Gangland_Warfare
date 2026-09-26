@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.Gangland;
+import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.inventory.registry.MenuOpener;
 import org.luckyraven.keystone.util.Pair;
@@ -239,6 +240,7 @@ public class InventoryRuntimeContext {
 		if (invBuilder.permission() != null && !player.hasPermission(invBuilder.permission())) {
 			log.warn("Player {} denied inventory '{}' — missing permission '{}'", player.getName(), inventoryName,
 			         invBuilder.permission());
+			player.sendMessage(Messages.OTHER_NO_PERM.toString());
 			return;
 		}
 

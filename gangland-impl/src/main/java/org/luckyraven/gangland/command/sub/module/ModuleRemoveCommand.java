@@ -9,16 +9,17 @@ import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.module.ModuleDescriptor;
-import org.luckyraven.keystone.module.ModuleDescriptorReader;
 import org.luckyraven.keystone.module.ModuleLoader;
 import org.luckyraven.keystone.util.TriConsumer;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Stream;
+import java.util.Set;
 
 /**
  * {@code /glw module remove <module>} — mark a module jar for deletion at the next start. The running loader holds the
@@ -36,7 +37,8 @@ class ModuleRemoveCommand extends SubArgument {
 
 		OptionalArgument module = new OptionalArgument(gangland, tree,
 		                                               (argument, sender, args) -> remove(sender, args[2]),
-		                                               sender -> descriptors().stream()
+		                                               sender -> ModuleInstalls.onDisk(moduleLoader.modulesDirectory())
+				                                               .stream()
 				                                               .map(ModuleDescriptor::id)
 				                                               .toList());
 		module.setDisplayName("module");
@@ -50,19 +52,55 @@ class ModuleRemoveCommand extends SubArgument {
 				sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<module>"));
 	}
 
-	private void remove(CommandSender sender, String id) {
-		Path directory = moduleLoader.modulesDirectory().toAbsolutePath().normalize();
-		Path jar = descriptors().stream()
+	void remove(CommandSender sender, String id) {
+		Path                    directory   = moduleLoader.modulesDirectory().toAbsolutePath().normalize();
+		List<ModuleDescriptor>  descriptors = ModuleInstalls.onDisk(moduleLoader.modulesDirectory());
+		// Every jar carrying the id, not whichever one Files.list returns first: a jar the loader refused can sit
+		// beside the one it loaded, and leaving it behind means the module survives the restart.
+		List<Path> jars = descriptors.stream()
 				.filter(descriptor -> descriptor.id().equalsIgnoreCase(id))
 				.map(ModuleDescriptor::jar)
-				.findFirst()
-				.orElse(null);
+				.toList();
 
-		if (jar == null) {
+		if (jars.isEmpty()) {
 			sender.sendMessage(Messages.MODULE_UNKNOWN.toString().replace("%module%", id));
 			return;
 		}
 
+		// Warn about every direct and transitive dependant before marking - the same cascade ModuleResolution's
+		// dependency fixpoint would otherwise apply silently at next boot (missing-dependency fault), with no sign
+		// at removal time (gi=84).
+		List<String> dependants = dependants(id, descriptors);
+		if (!dependants.isEmpty()) {
+			sender.sendMessage(Messages.MODULE_REMOVE_DEPENDANTS_WARNING.toString()
+					                   .replace("%module%", id)
+					                   .replace("%dependants%", String.join(", ", dependants)));
+		}
+
+		for (Path jar : jars) {
+			mark(sender, id, directory, jar);
+		}
+	}
+
+	/** Every module id (direct or transitive) whose {@code Depends} chain reaches {@code id}, in discovery order. */
+	private static List<String> dependants(String id, List<ModuleDescriptor> descriptors) {
+		Set<String>   affected = new LinkedHashSet<>();
+		Deque<String> queue    = new ArrayDeque<>(List.of(id));
+
+		while (!queue.isEmpty()) {
+			String current = queue.poll();
+
+			for (ModuleDescriptor descriptor : descriptors) {
+				boolean dependsOnCurrent = descriptor.depends().stream().anyMatch(dep -> dep.equalsIgnoreCase(current));
+
+				if (dependsOnCurrent && affected.add(descriptor.id())) queue.add(descriptor.id());
+			}
+		}
+
+		return List.copyOf(affected);
+	}
+
+	private static void mark(CommandSender sender, String id, Path directory, Path jar) {
 		Path resolved = jar.toAbsolutePath().normalize();
 
 		if (!resolved.startsWith(directory)) {
@@ -83,21 +121,6 @@ class ModuleRemoveCommand extends SubArgument {
 			sender.sendMessage(Messages.MODULE_REMOVE_FAILED.toString()
 					                   .replace("%module%", id)
 					                   .replace("%reason%", String.valueOf(exception.getMessage())));
-		}
-	}
-
-	/**
-	 * Every jar in the modules folder that carries a readable descriptor — read from disk rather than from
-	 * {@code loaded()} so a jar the loader skipped (wrong host API, missing dependency) can still be removed.
-	 */
-	private List<ModuleDescriptor> descriptors() {
-		try (Stream<Path> jars = Files.list(moduleLoader.modulesDirectory())) {
-			return jars.filter(path -> path.getFileName().toString().endsWith(".jar"))
-					.map(path -> ModuleDescriptorReader.read(path).fold(descriptor -> descriptor, fault -> null))
-					.filter(Objects::nonNull)
-					.toList();
-		} catch (IOException exception) {
-			return List.of();
 		}
 	}
 

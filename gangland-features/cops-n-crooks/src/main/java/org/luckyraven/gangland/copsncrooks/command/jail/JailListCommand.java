@@ -29,8 +29,15 @@ class JailListCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
+			var cells = jailRegistry.getCells();
+
+			if (cells.isEmpty()) {
+				sender.sendMessage(Messages.JAIL_LIST_EMPTY.toString());
+				return;
+			}
+
 			sender.sendMessage(Messages.JAIL_LIST_HEADER.toString());
-			jailRegistry.getCells().forEach(jail -> {
+			cells.forEach(jail -> {
 				Location location = jail.getLocation();
 				int      x        = location.getBlockX();
 				int      y        = location.getBlockY();

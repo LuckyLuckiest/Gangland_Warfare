@@ -59,11 +59,23 @@ class ModuleUpdateCommand extends SubArgument {
 		return (argument, sender, args) -> start(sender, null);
 	}
 
-	private void start(CommandSender sender, @Nullable String name) {
+	void start(CommandSender sender, @Nullable String name) {
 		List<LoadedModule> targets;
 
 		if (name == null) {
 			targets = moduleLoader.loaded();
+
+			// Nothing to check is not "every module is up to date": say so, and point at the jars the loader refused.
+			if (targets.isEmpty()) {
+				sender.sendMessage(Messages.MODULE_LIST_EMPTY.toString());
+
+				int skipped = moduleLoader.faults().size();
+				if (skipped > 0) {
+					sender.sendMessage(Messages.MODULE_UPDATE_SKIPPED.toString()
+							                   .replace("%count%", String.valueOf(skipped)));
+				}
+				return;
+			}
 		} else {
 			LoadedModule module = moduleLoader.find(name).orElse(null);
 

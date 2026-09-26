@@ -95,8 +95,11 @@ public class LootChestWandListener implements Listener {
 			return;
 		}
 
-		// Create the loot chest
-		wand.createLootChestFromWand(player, heldItem, block.getLocation());
+		// Create next tick: registering now would let LootChestListener (HIGHEST, same event) open the new chest
+		gangland.getServer().getScheduler().runTask(gangland, () -> {
+			if (lootChestManager.getChestAt(block.getLocation()).isPresent()) return;
+			wand.createLootChestFromWand(player, heldItem, block.getLocation());
+		});
 	}
 
 }

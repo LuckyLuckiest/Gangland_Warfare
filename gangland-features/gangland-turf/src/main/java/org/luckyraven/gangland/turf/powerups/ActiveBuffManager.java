@@ -115,6 +115,20 @@ public final class ActiveBuffManager {
 		return list == null ? Collections.emptyList() : Collections.unmodifiableList(list);
 	}
 
+	/**
+	 * GI-34 (TF-03): drops every active buff on this turf, in-memory and persisted. Called from the turf-delete
+	 * cascade so a fresh turf that later reuses the freed id (TF-05) does not inherit orphaned buffs.
+	 */
+	public void removeAll(int turfId) {
+		List<ActiveTurfBuff> list = byTurf.remove(turfId);
+		if (list == null) {
+			return;
+		}
+		for (ActiveTurfBuff buff : list) {
+			repository.delete(buff);
+		}
+	}
+
 	private Collection<ActiveTurfBuff> snapshotAll() {
 		List<ActiveTurfBuff> all = new ArrayList<>();
 		for (List<ActiveTurfBuff> list : byTurf.values()) {

@@ -59,6 +59,12 @@ public class GangAllyRejectCommand extends SubArgument {
 				return;
 			}
 
+			if (!GangPermissions.allows(memberManager.getMember(player.getUniqueId()), player,
+			                            GangPermissions.ALLY)) {
+				user.sendMessage(Messages.COMMAND_NO_PERM.toString());
+				return;
+			}
+
 			Gang userGang = gangManager.getGang(user.getGangId());
 			if (userGang == null) return;
 

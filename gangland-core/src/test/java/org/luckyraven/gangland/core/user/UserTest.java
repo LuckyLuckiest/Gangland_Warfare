@@ -64,10 +64,20 @@ class UserTest {
 	}
 
 	@Test
-	@DisplayName("getKillDeathRatio() returns 0 (not NaN/Infinity) when deaths is 0, regardless of kills")
-	void getKillDeathRatio_zeroDeaths_returnsZeroNotInfinity() {
+	@DisplayName("getKillDeathRatio() returns the kill count (not 0) when deaths is 0 - a live player has a KD, not a zeroed one")
+	void getKillDeathRatio_zeroDeaths_returnsKills() {
 		User<Player> user = newOnlineUser();
 		user.setKills(10);
+		user.setDeaths(0);
+
+		assertEquals(10D, user.getKillDeathRatio());
+	}
+
+	@Test
+	@DisplayName("getKillDeathRatio() is 0 (not NaN/Infinity) when both kills and deaths are 0")
+	void getKillDeathRatio_zeroKillsZeroDeaths_returnsZero() {
+		User<Player> user = newOnlineUser();
+		user.setKills(0);
 		user.setDeaths(0);
 
 		assertEquals(0D, user.getKillDeathRatio());

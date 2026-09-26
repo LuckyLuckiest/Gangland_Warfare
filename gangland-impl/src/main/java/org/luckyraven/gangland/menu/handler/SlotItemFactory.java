@@ -1,7 +1,8 @@
 package org.luckyraven.gangland.menu.handler;
 
-import com.cryptomorin.xseries.XEnchantment;
 import com.cryptomorin.xseries.XMaterial;
+import org.bukkit.NamespacedKey;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -66,7 +67,11 @@ public final class SlotItemFactory {
 		}
 
 		if (enchanted) {
-			itemBuilder.addEnchantment(XEnchantment.UNBREAKING.get(), 1).addItemFlags(ItemFlag.HIDE_ENCHANTS);
+			// Enchantment.getByKey, not XEnchantment: XSeries' compat wrapper walks every Enchantment and calls
+			// toString() on it at class-init time, which NPEs when no live server has registered the vanilla
+			// enchantments (e.g. plain unit tests). The vanilla key is stable since the 1.13 rename.
+			itemBuilder.addEnchantment(Enchantment.getByKey(NamespacedKey.minecraft("unbreaking")), 1)
+			           .addItemFlags(ItemFlag.HIDE_ENCHANTS);
 		}
 
 		return itemBuilder;

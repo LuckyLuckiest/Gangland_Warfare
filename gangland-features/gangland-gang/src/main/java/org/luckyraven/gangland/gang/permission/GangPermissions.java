@@ -45,6 +45,13 @@ public final class GangPermissions {
 	/** Request, accept, reject or abandon an alliance. */
 	public static final String ALLY = PREFIX + "ally";
 
+	/**
+	 * Staff override that skips the rank-hierarchy checks of promote, demote and {@code option gang rank}. Kept out of
+	 * {@code gangland.command.*} (granted to players so they can use /glw) and {@code gangland.gang.*} (carried by
+	 * ranks), since either wildcard would hand it to every member.
+	 */
+	public static final String FORCE_RANK = "gangland.admin.gang.force_rank";
+
 	private GangPermissions() {
 	}
 

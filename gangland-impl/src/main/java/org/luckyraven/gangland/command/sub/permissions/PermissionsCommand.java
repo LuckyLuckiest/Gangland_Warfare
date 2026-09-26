@@ -33,8 +33,6 @@ public final class PermissionsCommand extends Command {
 				.map(Map.Entry::getValue)
 				.toList();
 		getHelpInfo().addAll(list);
-
-		getHelpInfo().addAll(list);
 	}
 
 	static void sendOverview(CommandSender sender, PermissionManager permissionManager) {

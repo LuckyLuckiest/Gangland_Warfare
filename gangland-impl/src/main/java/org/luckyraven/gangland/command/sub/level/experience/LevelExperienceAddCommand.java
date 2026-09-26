@@ -70,12 +70,17 @@ class LevelExperienceAddCommand extends SubArgument {
 				.stream().map(Player::getName).toList());
 	}
 
-	private void applyAdd(CommandSender sender, String rawAmount, User<Player> target) {
+	static void applyAdd(CommandSender sender, String rawAmount, User<Player> target) {
 		double argAmount;
 
 		try {
 			argAmount = Double.parseDouble(rawAmount);
 		} catch (NumberFormatException exception) {
+			sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", rawAmount));
+			return;
+		}
+
+		if (!Double.isFinite(argAmount)) {
 			sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", rawAmount));
 			return;
 		}

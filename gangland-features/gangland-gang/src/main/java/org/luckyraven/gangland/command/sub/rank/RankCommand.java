@@ -52,7 +52,7 @@ public final class RankCommand extends Command {
 	protected void initializeArguments() {
 		Argument create = new RankCreateCommand(getPlugin(), getArgumentTree(), getArgument(), rankManager);
 		Argument delete = new RankDeleteCommand(getPlugin(), getArgumentTree(), getArgument(), rankManager,
-		                                        repositoryRegistry);
+		                                        repositoryRegistry, memberManager);
 		Argument list = new RankListCommand(getPlugin(), getArgumentTree(), getArgument(), rankManager);
 		Argument permission = new RankPermissionCommand(getPlugin(), getArgumentTree(), getArgument(), rankManager,
 		                                                permissionManager, memberManager);

@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.core.user;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.Bukkit;
@@ -17,6 +18,7 @@ public class Level {
 	private final int    maxLevel;
 	private final double baseAmount;
 
+	@Setter(AccessLevel.NONE)
 	private double experience;
 	private int    levelValue;
 
@@ -34,6 +36,7 @@ public class Level {
 	}
 
 	public void addExperience(double experience, boolean levelUp, @Nullable LevelUpEvent event) {
+		if (!Double.isFinite(experience)) return;
 		this.experience += experience;
 		if (levelUp) handleLevelProgression(event);
 	}
@@ -43,7 +46,17 @@ public class Level {
 	}
 
 	public void removeExperience(double experience) {
+		if (!Double.isFinite(experience)) return;
 		this.experience = Math.max(this.experience - experience, 0);
+	}
+
+	/**
+	 * Sets the raw experience value, mapping a non-finite input (NaN/Infinity - e.g. a row poisoned by a past
+	 * {@code addExperience}/{@code removeExperience} call before those guards existed) to {@code 0} instead of
+	 * storing it back.
+	 */
+	public void setExperience(double experience) {
+		this.experience = Double.isFinite(experience) ? experience : 0D;
 	}
 
 	public int nextLevel() {
@@ -61,11 +74,9 @@ public class Level {
 	public int addLevels(int levels, LevelUpEvent event) {
 		int counter = 0;
 
-		while (levels > 0) {
+		while (levels > 0 && levelValue < maxLevel) {
 			double requiredExp = experienceCalculation(nextLevel());
 			if (experience >= requiredExp) experience -= requiredExp;
-
-			if (counter >= maxLevel) break;
 
 			Bukkit.getPluginManager().callEvent(event);
 

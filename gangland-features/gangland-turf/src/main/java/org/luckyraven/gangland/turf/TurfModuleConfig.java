@@ -77,11 +77,13 @@ public final class TurfModuleConfig {
 		return repository;
 	}
 
+	// GI-82: no explicit manager.initialize() here (same bug class already fixed once for SignManager, commit
+	// 4304172c) — Gangland never disables BeanFactory's LIFECYCLE convention pass, which already calls every
+	// bean's public initialize() after construction. Calling it here too double-scheduled ActiveBuffManager's 1Hz
+	// prune task, leaking the first BukkitTask handle.
 	@Bean
 	public ActiveBuffManager activeBuffManager(JavaPlugin plugin, ActiveBuffRepositoryContract repository) {
-		ActiveBuffManager manager = new ActiveBuffManager(plugin, repository);
-		manager.initialize();
-		return manager;
+		return new ActiveBuffManager(plugin, repository);
 	}
 
 	@Bean

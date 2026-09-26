@@ -180,7 +180,7 @@ public final class DebugCommand extends Command {
 				user.sendMessage(convertToJson(user.toString()));
 			} else {
 				for (User<Player> user : userManager.getUsers().values()) {
-					user.sendMessage(user.toString());
+					sender.sendMessage(user.toString());
 				}
 			}
 		});
@@ -342,7 +342,7 @@ public final class DebugCommand extends Command {
 	private @NotNull Argument getPlaceholder() {
 		return new Argument(getPlugin(), "placeholder-data", getArgumentTree(), (argument, sender, args) -> {
 			if (sender instanceof Player player) {
-				String[] placeholders = {"%player%", "%info%", "%user_gang-id%"};
+				String[] placeholders = {"%gangland_user_balance%", "%gangland_user_level%", "%gangland_user_has-gang%"};
 
 				Arrays.stream(placeholders)
 						.forEach(string -> sender.sendMessage(

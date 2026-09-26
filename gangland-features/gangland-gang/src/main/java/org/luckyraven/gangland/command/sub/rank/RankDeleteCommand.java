@@ -11,8 +11,11 @@ import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.timer.CountdownTimer;
 import org.luckyraven.keystone.util.TimeUtil;
+import org.luckyraven.gangland.gang.database.repositories.rank.RankParentRepository;
 import org.luckyraven.gangland.gang.database.repositories.rank.RankPermissionRepository;
 import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.gang.GangSettings;
+import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.gangland.gang.rank.RankManager;
 import org.luckyraven.gangland.gang.rank.RankParent;
@@ -33,15 +36,18 @@ class RankDeleteCommand extends SubArgument {
 	private final Tree<Argument>    tree;
 	private final RankManager       rankManager;
 	private final RepositoryRegistry repositoryRegistry;
+	private final MemberManager      memberManager;
 
 	protected RankDeleteCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                            RankManager rankManager, RepositoryRegistry repositoryRegistry) {
+	                            RankManager rankManager, RepositoryRegistry repositoryRegistry,
+	                            MemberManager memberManager) {
 		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);
 
 		this.gangland           = gangland;
 		this.tree               = tree;
 		this.rankManager        = rankManager;
 		this.repositoryRegistry = repositoryRegistry;
+		this.memberManager      = memberManager;
 
 		rankDelete();
 	}
@@ -59,7 +65,7 @@ class RankDeleteCommand extends SubArgument {
 		ConfirmArgument confirmDelete = new ConfirmArgument(gangland, tree, (argument, sender, args) -> {
 			Rank rank = rankManager.get(deleteRankName.get(sender).get());
 
-			if (rank != null) {
+			if (rank != null && !refuseInUse(sender, rank)) {
 				var rankRepository           = repositoryRegistry.getRepository(Rank.class);
 				var rankParentRepository     = repositoryRegistry.getRepository(RankParent.class);
 				var rankPermissionRepository = repositoryRegistry.getRepository(RankPermission.class);
@@ -75,7 +81,15 @@ class RankDeleteCommand extends SubArgument {
 						         rank.getName(), exception.getMessage());
 					}
 				}
-				rankParentRepository.delete(new RankParent(rank.getUsedId(), 0));
+				// Both sides: a leftover row naming this rank as parent_id breaks the tree rebuild on the next load
+				if (rankParentRepository instanceof RankParentRepository concrete) {
+					try {
+						concrete.deleteAllForRank(rank.getUsedId());
+					} catch (java.sql.SQLException exception) {
+						log.warn("Failed to purge rank_parent rows for rank {}: {}",
+						         rank.getName(), exception.getMessage());
+					}
+				}
 				rankRepository.delete(rank);
 
 				String string  = Messages.RANK_REMOVED.toString();
@@ -100,6 +114,8 @@ class RankDeleteCommand extends SubArgument {
 				sender.sendMessage(Messages.INVALID_RANK.toString());
 				return;
 			}
+
+			if (refuseInUse(sender, rank)) return;
 
 			if (confirmDelete.isLocked(sender)) return;
 
@@ -132,6 +148,23 @@ class RankDeleteCommand extends SubArgument {
 		});
 
 		this.addSubArgument(deleteName);
+	}
+
+	/**
+	 * Refuses the default Head/Tail ranks, a rank a member still holds (left rankless, they could neither leave nor be
+	 * kicked) and a rank with ranks above it (they would drop out of the tree).
+	 */
+	private boolean refuseInUse(CommandSender sender, Rank rank) {
+		boolean inUse = rank.getName().equalsIgnoreCase(GangSettings.getGangRankHead()) ||
+		                rank.getName().equalsIgnoreCase(GangSettings.getGangRankTail()) ||
+		                !rank.getNode().getChildren().isEmpty() ||
+		                memberManager.getMembers().values().stream()
+		                             .anyMatch(member -> member.getRank() != null &&
+		                                                 member.getRank().match(rank.getUsedId()));
+
+		if (inUse) sender.sendMessage(Messages.RANK_REMOVE_IN_USE.toString().replace("%rank%", rank.getName()));
+
+		return inUse;
 	}
 
 }

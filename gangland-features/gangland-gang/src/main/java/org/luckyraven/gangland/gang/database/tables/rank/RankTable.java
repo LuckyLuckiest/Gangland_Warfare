@@ -16,8 +16,9 @@ public class RankTable extends Table<Rank> {
 		Attribute<String>  name       = new Attribute<>("name", false, String.class);
 		Attribute<String>  vaultGroup = new Attribute<>("vault_group", false, String.class);
 
-		// The domain treats an unlinked rank as vault_group = null (doLoadAll reads it nullable; initial
-		// head/tail ranks are inserted without one), so the column must not be declared NOT NULL.
+		// The domain treats an unlinked rank as vault_group = null. Databases created before this flag keep a
+		// legacy NOT NULL DEFAULT '' column (applySchema never relaxes a constraint), so getData stores an
+		// unlinked rank as '' and RankRepository.doLoadAll maps '' back to null.
 		vaultGroup.setCanBeNull(true);
 
 		this.addAttribute(id);
@@ -27,7 +28,8 @@ public class RankTable extends Table<Rank> {
 
 	@Override
 	public Object[] getData(Rank data) {
-		return new Object[]{data.getUsedId(), data.getName(), data.getVaultGroup()};
+		String vaultGroup = data.getVaultGroup();
+		return new Object[]{data.getUsedId(), data.getName(), vaultGroup == null ? "" : vaultGroup};
 	}
 
 	@Override
