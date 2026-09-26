@@ -192,7 +192,7 @@ button { font: inherit; color: inherit; }
 
 <header class="topbar">
   <span class="tb-home"><span class="eyebrow">Warrant list</span><span class="tb-title">Gangland · Keystone · Bartizan · Oriel</span></span>
-  <div class="tb-meta"><span>Gangland Warfare master@333f52e3 · Keystone master@e67e180 · Bartizan master@56abf1b · Oriel master@445d0e5 · Plaque master@3662228</span><span class="dot"></span><span>docket 2026-09-10</span></div>
+  <div class="tb-meta"><span>Gangland Warfare master@a0d87737 · Keystone master@e67e180 · Bartizan master@56abf1b · Oriel master@1fdb434 · Plaque master@3662228</span><span class="dot"></span><span>docket 2026-09-10</span></div>
   <span class="sync" id="sync" data-state="idle">status: connecting</span>
 </header>
 
@@ -263,7 +263,7 @@ button { font: inherit; color: inherit; }
 
   /* ---------- state ---------- */
   var PROJECTS = [["gangland", "Gangland Warfare"], ["keystone", "Keystone"], ["bartizan", "Bartizan"], ["oriel", "Oriel"], ["plaque", "Plaque"]];
-  var REPO_LINE = {"gangland": "Repo: E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded] (branch master, HEAD 333f52e3), Keystone-based, Spigot API only. Run graphify query first, then open the cited files. Verify with mvn -pl <module> -am test.", "keystone": "Repo: E:\\Programming\\java\\Keystone (branch master, HEAD e67e180), Keystone-based, Spigot API only. Run graphify query first, then open the cited files. Verify with mvn -pl <module> test (then mvn clean install so consumers see it).", "bartizan": "Repo: E:\\Programming\\java\\Bartizan (branch master, HEAD 56abf1b), Keystone-based, Spigot API only. Run graphify query first, then open the cited files. Verify with mvn -pl bartizan-plugin -am test.", "oriel": "Repo: E:\\Programming\\java\\Oriel (branch master, HEAD 445d0e5), Keystone-based, Spigot API only. Run graphify query first, then open the cited files. Verify with ./gradlew :<module>:test.", "plaque": "Repo: E:\\Programming\\java\\Plaque (branch master, HEAD 3662228), Keystone-based, Spigot API only. Run graphify query first, then open the cited files. Verify with mvn test."};
+  var REPO_LINE = {"gangland": "Repo: E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded] (branch master, HEAD a0d87737), Keystone-based, Spigot API only. Run graphify query first, then open the cited files. Verify with mvn -pl <module> -am test.", "keystone": "Repo: E:\\Programming\\java\\Keystone (branch master, HEAD e67e180), Keystone-based, Spigot API only. Run graphify query first, then open the cited files. Verify with mvn -pl <module> test (then mvn clean install so consumers see it).", "bartizan": "Repo: E:\\Programming\\java\\Bartizan (branch master, HEAD 56abf1b), Keystone-based, Spigot API only. Run graphify query first, then open the cited files. Verify with mvn -pl bartizan-plugin -am test.", "oriel": "Repo: E:\\Programming\\java\\Oriel (branch master, HEAD 1fdb434), Keystone-based, Spigot API only. Run graphify query first, then open the cited files. Verify with ./gradlew :<module>:test.", "plaque": "Repo: E:\\Programming\\java\\Plaque (branch master, HEAD 3662228), Keystone-based, Spigot API only. Run graphify query first, then open the cited files. Verify with mvn test."};
   var state = { q: "", projects: { gangland: true, keystone: true, bartizan: true, oriel: true }, tiers: { P0: true, P1: true, P2: true, P3: true, X: false }, sys: "", status: "", testOnly: false, group: "tier", open: {} };
   var statusMap = {};   // id -> {status, note, updatedAt}
   var db = null, mode = "idle";
