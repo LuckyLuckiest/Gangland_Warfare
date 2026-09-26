@@ -104,8 +104,6 @@ class BountySetCommand extends SubArgument {
 			Bounty      userBounty  = user.getBounty();
 			BountyEvent bountyEvent = new UserBountyEvent(false, user, value);
 
-			if (userBounty.size() == 0) user.sendMessage(Messages.BOUNTY_SET.toString());
-
 			// call the event
 			if (sender instanceof Player senderPlayer) {
 				User<Player> userSender = userManager.getUser(senderPlayer);
@@ -137,7 +135,12 @@ class BountySetCommand extends SubArgument {
 			Bukkit.getPluginManager().callEvent(bountyEvent);
 
 			if (!bountyEvent.isCancelled()) {
-				userBounty.addBounty(sender, value, user.getLevel().getLevelValue());
+				// Tell the target only once the bounty is really booked, not before the sender's checks can refuse it.
+				if (userBounty.size() == 0) user.sendMessage(Messages.BOUNTY_SET.toString());
+
+				// Post exactly what the sender paid: the kill pays out the posted figure, so a level-scaled post
+				// minted the difference (1000 paid on a level-100 target paid out 21000).
+				userBounty.addBounty(sender, value);
 			}
 		}, sender -> List.of("<amount>"));
 

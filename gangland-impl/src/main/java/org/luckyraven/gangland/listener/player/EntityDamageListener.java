@@ -129,8 +129,9 @@ public class EntityDamageListener implements Listener {
 			damagerUser.getEconomy().depositAmount(amount);
 			bounty.resetBounty();
 
-			String message = Messages.BANK_MONEY_DEPOSIT_PLAYER.toString();
-			String replace = message.replace("%amount%", Settings.formatAmount(amount));
+			String message = Messages.BOUNTY_CLAIMED.toString();
+			String replace = message.replace("%amount%", Settings.formatAmount(amount))
+			                        .replace("%player%", deadPlayer.getName());
 
 			damagerUser.sendMessage(replace);
 

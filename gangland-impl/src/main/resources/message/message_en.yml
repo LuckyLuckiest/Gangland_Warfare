@@ -258,6 +258,7 @@ Commands:
       Player_Lift: "You have lifted &a%money_symbol%%amount%&7 from &6%player%&7."
       Lifted: "&a%money_symbol%%amount%&7 has been lifted from your bounty.%n%&4&lBounty &c%money_symbol%%bounty%"
       Clear: "Your bounty was cleared!"
+      Claimed: "You claimed the &a%money_symbol%%amount%&7 bounty on &6%player%&7."
    Level:
       Experience:
          Add: "Added &b%experience%&7 exp to your level."
