@@ -44,8 +44,7 @@ public final class GanglandChatUtil extends ChatUtil {
 		return color(command.replace("/" + GanglandApi.SHORT_PREFIX, "&6/" + GanglandApi.SHORT_PREFIX + "&7")
 		                    .replace("<", "&5<&7")
 		                    .replace(">", "&5>&7")
-		                    .replace(" - ", " &c-&r ")
-		                    .replaceAll("[\\[\\],]", ""));
+		                    .replace(" - ", " &c-&r "));
 	}
 
 	public static String confirmCommand(String[] args) {
