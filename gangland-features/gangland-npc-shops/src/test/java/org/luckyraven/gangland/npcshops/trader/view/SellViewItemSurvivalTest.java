@@ -152,7 +152,7 @@ class SellViewItemSurvivalTest {
 		when(player.getInventory()).thenReturn(playerInventory);
 		when(playerInventory.addItem(any(ItemStack.class))).thenReturn(new HashMap<>());
 		when(player.getWorld()).thenReturn(mock(World.class));
-		// ChestMenu.close(Player) reads getOpenInventory().getTopInventory(); unstubbed it NPEs on Keystone 1.11.2.
+		// See BarterViewItemSurvivalTest#buildRig's identical stub for why this is needed now.
 		when(player.getOpenInventory()).thenReturn(mock(InventoryView.class));
 
 		@SuppressWarnings("unchecked")
@@ -213,14 +213,13 @@ class SellViewItemSurvivalTest {
 		}
 	}
 
-	/** See {@link BarterViewItemSurvivalTest#closeIgnoringKnownBukkitVersionGap} — same pre-existing, cross-repo
-	 *  Keystone (bukkit.version 1.16.5) vs. Gangland (1.21.11) {@code InventoryView} class/interface test-only gap;
-	 *  the item-return this test checks already completed by the time this throws. */
+	/** See {@link BarterViewItemSurvivalTest#closeIgnoringKnownBukkitVersionGap} — kept as a defensive net only;
+	 *  the {@link #buildRig} stub above means the item-return this test checks never actually needs it. */
 	private void closeIgnoringKnownBukkitVersionGap(Rig rig, CloseReason reason) {
 		try {
 			rig.menu().close(rig.player(), reason);
 		} catch (IncompatibleClassChangeError knownBukkitVersionGap) {
-			// expected in this environment — see javadoc above.
+			// defensive only — see javadoc above.
 		}
 	}
 
