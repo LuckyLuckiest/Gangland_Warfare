@@ -16,10 +16,12 @@ import java.util.UUID;
 public class CombatBehavior implements CopBehavior {
 
 	private final double            combatRange;
+	private final double            alertRange;
 	private final DetainmentService detainmentService;
 
-	public CombatBehavior(double combatRange, DetainmentService detainmentService) {
+	public CombatBehavior(double combatRange, double alertRange, DetainmentService detainmentService) {
 		this.combatRange       = combatRange;
+		this.alertRange        = alertRange;
 		this.detainmentService = detainmentService;
 	}
 
@@ -48,17 +50,10 @@ public class CombatBehavior implements CopBehavior {
 			}
 		}
 
-		// Ranged cops hold their firing position; melee cops close in.
-		// pauseNavigation (not stopNavigation) preserves stuck counters so a LOS-lost
-		// flicker can still escalate to isNavigationHopeless() and trigger a re-path
-		// around obstacles — matches CivilianCombatBehavior.
-		if (cop.shouldHoldPursuitPosition(target)) {
-			cop.pauseNavigation();
-		} else if (cop.isNavigationHopeless()) {
-			cop.navigateTo(cop.resolveHopelessFallbackLocation(target));
-		} else {
-			cop.navigateTo(cop.resolvePursuitLocation(target));
-		}
+		// Keystone's squad pursuit: ranged cops hold while they see the target inside their firing band, everyone else
+		// closes in, routes around obstacles or searches from the last-known position. squadFor returns null for an
+		// entity target (hostile NPC), which then uses the cop's private squad.
+		cop.pursue(target, cop.squadFor(target), alertRange);
 	}
 
 	@Override
