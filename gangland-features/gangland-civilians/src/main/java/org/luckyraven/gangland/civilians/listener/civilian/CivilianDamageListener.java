@@ -24,9 +24,10 @@ import java.util.UUID;
  * Reacts to damage dealt to civilian NPCs:
  * <ul>
  *   <li>Non-hostile civilians flee toward safety.</li>
- *   <li>Hostile civilians enter combat against their attacker.</li>
+ *   <li>Hostile civilians enter combat against their attacker (player, or NPC/mob) and alert their faction through
+ *   {@link CivilianService#alertFaction}.</li>
  * </ul>
- * Only player attackers trigger AI state changes.
+ * A player who dies or goes down is dropped as a target, and every squad hunting him is forgotten.
  */
 @ListenerHandler
 @RequiredArgsConstructor
@@ -59,6 +60,7 @@ public class CivilianDamageListener implements Listener {
 				if (npc.getCurrentState() != CivilianState.COMBAT) {
 					npc.transitionTo(CivilianState.COMBAT);
 				}
+				civilianService.alertFaction(npc, playerAttacker, true);
 			} else if (!npc.isHostile() && ai.fleeEnabled()) {
 				if (npc.getCurrentState() != CivilianState.FLEEING) {
 					npc.setLastAttackerLocation(playerAttacker.getLocation().clone());
@@ -84,6 +86,7 @@ public class CivilianDamageListener implements Listener {
 				if (npc.getCurrentState() != CivilianState.COMBAT) {
 					npc.transitionTo(CivilianState.COMBAT);
 				}
+				civilianService.alertFaction(npc, entityAttacker, false);
 			} else if (!npc.isHostile() && ai.fleeEnabled()) {
 				if (npc.getCurrentState() != CivilianState.FLEEING) {
 					npc.setLastAttackerLocation(entityAttacker.getLocation().clone());
@@ -104,6 +107,7 @@ public class CivilianDamageListener implements Listener {
 	}
 
 	private void clearCivilianTargets(UUID playerId) {
+		civilianService.dropSquads(playerId);
 		for (CivilianNpc npc : civilianService.getActiveNpcs()) {
 			if (playerId.equals(npc.getTargetPlayerId())) {
 				npc.transitionTo(CivilianState.IDLE);

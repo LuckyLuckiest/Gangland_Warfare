@@ -93,9 +93,11 @@ public class YamlCiviliansConfigProvider {
 
 			CivilianAIBehaviorConfig ai = parseAI(type.get("AI").asMapping().orNull(), report, typeId);
 
+			String faction = type.get("Faction").asString().orDefault(typeId);
+
 			result.put(typeId, new CivilianTypeConfig(typeId, displayName, entityType, health, hostile,
 			                                          wearables, itemPool, weaponNamePool, weaponPool,
-			                                          drops, ai));
+			                                          drops, ai, faction));
 		}
 
 		return result;
@@ -192,7 +194,7 @@ public class YamlCiviliansConfigProvider {
 
 	private CivilianAIBehaviorConfig parseAI(@Nullable MappingNode aiSection, ConfigReport report, String typeId) {
 		if (aiSection == null) {
-			return new CivilianAIBehaviorConfig(false, 0, false, 0, false, 0.0, 0.0, 0, NpcDifficulty.NORMAL);
+			return new CivilianAIBehaviorConfig(false, 0, false, 0, false, 0.0, 0.0, 0, NpcDifficulty.NORMAL, 16.0, 20);
 		}
 
 		NodeReader ai = NodeReader.of(aiSection, report);
@@ -231,8 +233,13 @@ public class YamlCiviliansConfigProvider {
 		NpcDifficulty difficulty = parseDifficulty(combat == null ? null : combat.get("Difficulty").asString().orNull(),
 		                                           "civilian type '" + typeId + "'");
 
+		// Squad keys (0.11.0): sight range / faction hearing radius, and how long the squad may go without a sighting
+		double alertRange    = combat == null ? 16.0 : combat.get("Alert_Range").asDouble().min(0).orDefault(16.0);
+		int    searchSeconds = combat == null ? 20 : combat.get("Search_Seconds").asInt().min(0).orDefault(20);
+
 		return new CivilianAIBehaviorConfig(wanderEnabled, wanderRange, fleeEnabled, fleeRange,
-		                                    combatEnabled, attackDamage, attackRange, attackIntervalTicks, difficulty);
+		                                    combatEnabled, attackDamage, attackRange, attackIntervalTicks, difficulty,
+		                                    alertRange, searchSeconds);
 	}
 
 	private boolean dottedBool(NodeReader parent, String section, String key, ConfigReport report, boolean def) {
