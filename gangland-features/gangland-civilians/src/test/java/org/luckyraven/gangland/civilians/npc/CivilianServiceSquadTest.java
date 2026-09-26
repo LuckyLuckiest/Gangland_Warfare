@@ -93,6 +93,26 @@ class CivilianServiceSquadTest {
 	}
 
 	@Test
+	@DisplayName("the attacker itself is not recruited as its own ally")
+	void hit_attackerIsNotRecruitedAsAlly() {
+		CivilianNpc  victim         = civilian("gang", 0.0);
+		CivilianNpc  attackerNpc    = civilian("gang", 2.0);
+		LivingEntity attackerEntity = mock(LivingEntity.class);
+		when(attackerEntity.getUniqueId()).thenReturn(attackerId);
+		when(attackerEntity.getLocation()).thenReturn(new Location(mock(World.class), 1, 64, 1));
+		when(attackerNpc.getEntity()).thenReturn(attackerEntity);
+		when(victim.getEntity()).thenReturn(victimEntity);
+		when(registry.getActiveNpcs()).thenReturn(List.of(victim, attackerNpc));
+
+		service.alertFaction(victim, attackerEntity, false);
+
+		verify(attackerNpc, never()).setTargetPlayerId(any());
+		verify(attackerNpc, never()).addEntityTargetToFront(any());
+		verify(attackerNpc, never()).joinSquad(any(), any());
+		verify(attackerNpc, never()).transitionTo(any());
+	}
+
+	@Test
 	@DisplayName("an ally already fighting another target is not pulled off it")
 	void hit_skipsAllyBusyWithAnotherTarget() {
 		CivilianNpc victim = civilian("gang", 0.0);

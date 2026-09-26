@@ -159,6 +159,7 @@ public class CivilianService implements BeanLifecycle {
 		// ponytail: scans every active civilian per hit; add a spatial index if active civilians reach the hundreds
 		for (CivilianNpc ally : registry.getActiveNpcs()) {
 			if (ally == victim || !ally.isValid() || ally.isMarkedForRemoval()) continue;
+			if (ally.getEntity() != null && attackerId.equals(ally.getEntity().getUniqueId())) continue;
 			if (!ally.isHostile() || !ally.getTypeConfig().ai().combatEnabled()) continue;
 			if (!faction.equals(ally.getTypeConfig().faction())) continue;
 			if (ally.distanceTo(victimEntity) > ally.getTypeConfig().ai().alertRange()) continue;

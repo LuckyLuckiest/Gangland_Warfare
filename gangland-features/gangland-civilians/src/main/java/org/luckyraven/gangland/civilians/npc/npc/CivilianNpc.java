@@ -251,6 +251,7 @@ public class CivilianNpc extends AbstractNpc {
 	protected void cleanupTransientState() {
 		entityTargetQueue.clear();
 		wantedByPolice = false;
+		leaveSquad();
 		CivilianBehavior behavior = behaviors.get(currentState);
 		if (behavior == null) return;
 		behavior.onExit(this);
