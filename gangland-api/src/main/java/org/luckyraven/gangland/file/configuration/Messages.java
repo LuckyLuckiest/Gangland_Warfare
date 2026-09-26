@@ -423,6 +423,7 @@ public enum Messages {
 	// commands - runtime modules
 	MODULE_LIST_HEADER("Commands.Module.List_Header", Type.COMMAND),
 	MODULE_LIST_ENTRY("Commands.Module.List_Entry", Type.COMMAND),
+	MODULE_LIST_ENTRY_PENDING("Commands.Module.List_Entry_Pending", Type.COMMAND),
 	MODULE_LIST_EMPTY("Commands.Module.List_Empty", Type.COMMAND),
 	MODULE_FAULT_HEADER("Commands.Module.Fault_Header", Type.COMMAND),
 	MODULE_FAULT_ENTRY("Commands.Module.Fault_Entry", Type.COMMAND),
@@ -444,6 +445,7 @@ public enum Messages {
 	MODULE_DOWNLOAD_FAILED("Commands.Module.Download_Failed", Type.COMMAND),
 	MODULE_REMOVE_MARKED("Commands.Module.Remove_Marked", Type.COMMAND),
 	MODULE_REMOVE_FAILED("Commands.Module.Remove_Failed", Type.COMMAND),
+	MODULE_REMOVE_DEPENDANTS_WARNING("Commands.Module.Remove_Dependants_Warning", Type.COMMAND),
 
 	// commands - fuel
 	FUEL_CAPACITY_INCREASED("Commands.Fuel.Capacity_Increased", Type.COMMAND),

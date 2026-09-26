@@ -21,13 +21,23 @@ public final class ModuleRepoFixture {
 	private ModuleRepoFixture() {
 	}
 
-	/** Writes a jar at {@code jar} whose {@code module.yml} carries the given id, version and {@code Host_Api}. */
-	public static Path moduleJar(Path jar, String id, String version, String hostApi) throws IOException {
-		return TestJars.builder(jar)
-		               .text(ModuleDescriptorReader.DESCRIPTOR_ENTRY,
-		                     "Id: " + id + "\nVersion: " + version + "\nMain: org.example." + id + ".Main\nHost_Api: "
-		                     + hostApi + "\n")
-		               .write();
+	/**
+	 * Writes a jar at {@code jar} whose {@code module.yml} carries the given id, version and {@code Host_Api}, and
+	 * (optionally) a {@code Depends} list - for tests driving the remove-warns-dependants path (gi=84).
+	 */
+	public static Path moduleJar(Path jar, String id, String version, String hostApi, String... depends)
+			throws IOException {
+		StringBuilder yaml = new StringBuilder("Id: ").append(id)
+				.append("\nVersion: ").append(version)
+				.append("\nMain: org.example.").append(id).append(".Main")
+				.append("\nHost_Api: ").append(hostApi).append('\n');
+
+		if (depends.length > 0) {
+			yaml.append("Depends:\n");
+			for (String depend : depends) yaml.append("  - ").append(depend).append('\n');
+		}
+
+		return TestJars.builder(jar).text(ModuleDescriptorReader.DESCRIPTOR_ENTRY, yaml.toString()).write();
 	}
 
 	/** Publishes a module jar plus its {@code .sha256} under {@code repoRoot} at a versioned {@code coordinate}. */
