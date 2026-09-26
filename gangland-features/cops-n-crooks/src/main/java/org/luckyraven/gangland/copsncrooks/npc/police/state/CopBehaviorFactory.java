@@ -47,6 +47,7 @@ public class CopBehaviorFactory {
 
 		behaviors.put(CopState.IDLE, new IdleBehavior(configProvider.getAlertRange()));
 		behaviors.put(CopState.PURSUING, new PursuingBehavior(configProvider.getCuffRadius(),
+		                                                      configProvider.getAlertRange(),
 		                                                      configProvider.getPursuitMaxDistance(),
 		                                                      configProvider.getPursuitMaxTicks(),
 		                                                      detainmentService));

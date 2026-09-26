@@ -7,22 +7,31 @@ import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.keystone.npc.NpcSquad;
 
 import java.util.UUID;
 
 /**
  * Cop actively navigates toward a wanted player to attempt cuffing.
+ * <p>
+ * Navigation is Keystone's squad pursuit ({@code cop.pursue}): chase while anyone in the squad sees the target, route
+ * around obstacles, search from the last-known position, wait below an unreachable target. A failed path never sends
+ * the cop back. It is rotated out ({@link CopState#RETURNING}, replaced by the spawner) only after
+ * {@code maxPursuitTicks} AI ticks stuck while nobody in its squad sees the target, or when the target is farther than
+ * {@code maxPursuitDistance}.
  */
 public class PursuingBehavior implements CopBehavior {
 
 	private final double            cuffRadius;
+	private final double            alertRange;
 	private final double            maxPursuitDistance;
 	private final int               maxPursuitTicks;
 	private final DetainmentService detainmentService;
 
-	public PursuingBehavior(double cuffRadius, double maxPursuitDistance, int maxPursuitTicks,
+	public PursuingBehavior(double cuffRadius, double alertRange, double maxPursuitDistance, int maxPursuitTicks,
 	                        DetainmentService detainmentService) {
 		this.cuffRadius         = cuffRadius;
+		this.alertRange         = alertRange;
 		this.maxPursuitDistance = maxPursuitDistance;
 		this.maxPursuitTicks    = maxPursuitTicks;
 		this.detainmentService  = detainmentService;
@@ -36,9 +45,14 @@ public class PursuingBehavior implements CopBehavior {
 			return;
 		}
 
-		// Give up if we've been pursuing too long — stuck/unreachable cops must free the spawn cap
-		cop.setPursuitTicks(cop.getPursuitTicks() + 1);
-		if (cop.getPursuitTicks() >= maxPursuitTicks) {
+		NpcSquad squad = cop.squadFor(target);
+
+		// Rotation: only ticks spent stuck while nobody in the squad sees the target count toward giving up
+		// (an entity target has no shared squad, so the cop's own sight decides)
+		boolean seen       = squad != null ? squad.hasFreshSighting() : cop.canSee(target, alertRange);
+		int     stuckTicks = cop.isNavigationStuck() && !seen ? cop.getPursuitTicks() + 1 : 0;
+		cop.setPursuitTicks(stuckTicks);
+		if (stuckTicks >= maxPursuitTicks) {
 			cop.transitionTo(CopState.RETURNING);
 			return;
 		}
@@ -83,13 +97,7 @@ public class PursuingBehavior implements CopBehavior {
 			}
 		}
 
-		// Pathfinding has permanently given up — return instead of flailing toward unreachable fallbacks
-		if (cop.isNavigationHopeless()) {
-			cop.transitionTo(CopState.RETURNING);
-			return;
-		}
-
-		cop.navigateTo(cop.resolvePursuitLocation(target));
+		cop.pursue(target, squad, alertRange);
 	}
 
 	@Override
