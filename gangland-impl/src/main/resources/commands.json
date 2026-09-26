@@ -39,9 +39,13 @@
 		"usage": "/glw reload files",
 		"description": "Reloads the files."
 	},
-	"reload_database": {
-		"usage": "/glw reload data",
-		"description": "Reloads the data related to the database."
+	"reload_inventory": {
+		"usage": "/glw reload inventory",
+		"description": "Reloads the inventory menus."
+	},
+	"reload_cleanup": {
+		"usage": "/glw reload cleanup",
+		"description": "Forces the periodical cleanup service to run."
 	},
 	"economy": {
 		"usage": "/glw economy",

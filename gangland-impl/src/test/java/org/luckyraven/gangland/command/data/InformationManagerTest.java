@@ -38,7 +38,7 @@ class InformationManagerTest {
 
 		manager.processCommands();
 
-		assertEquals(117, manager.getCommands().size(),
+		assertEquals(118, manager.getCommands().size(),
 				"pins the current entry count (225 minus the 43 cops/banker/trader/civilian/jail/cuff keys that "
 				+ "moved to the cops-n-crooks module's own commands.json in 0.8.4, minus the 5 car* keys that moved "
 				+ "to the gadget module's own commands.json in 0.8.4, minus the 16 turf entries that moved to the "
@@ -47,8 +47,8 @@ class InformationManagerTest {
 				+ "/glw module in 0.9.1, minus the reload_scoreboard key removed in WS1 G3 (0.10.0, scoreboard moved "
 				+ "to the standalone Plaque plugin), minus the 4 lootchest* keys that moved to the gangland-lootchest "
 				+ "module's own commands.json in WS3 G4 (0.10.0), minus the 32 gang/rank keys that moved to the gang "
-				+ "module's own commands.json in WS5 G2 (0.10.0); update this alongside any deliberate commands.json "
-				+ "edit");
+				+ "module's own commands.json in WS5 G2 (0.10.0), plus the reload_cleanup key added for the "
+				+ "gi=83 reload help/dispatch drift fix; update this alongside any deliberate commands.json edit");
 		assertTrue(manager.getCommands().containsKey("general"));
 		assertTrue(manager.getCommands().containsKey("general_page"));
 	}
