@@ -49,19 +49,35 @@ and carry better equipment.
 
 ## Cop AI Behavior
 
-Cops follow a state machine with three primary states:
+Cops follow a state machine with three primary states. All cops hunting the same wanted player form one **squad** that
+shares what its members see.
+
+### Squad awareness
+
+A cop knows where the player is only through a sighting — its own or any squad member's. A cop *sees* the player when
+he is within `Alert_Range` (default 40 blocks) and in its line of sight. The crime scene counts as the first
+sighting, and a player who hits a cop gives his position away to the whole squad.
+
+- **Seen in the last 1.5 seconds:** the squad chases him. Melee cops spread around him instead of queueing behind
+  each other; armed cops hold a firing spot 7–12 blocks away while they have a clear shot.
+- **Out of sight:** the squad goes to where he was last seen, then fans out and searches in widening circles until
+  someone spots him again.
 
 ### Pursuit
 
-The cop has spotted a wanted player and is actively navigating toward them. Navigation recalculates every 10 ticks. If a
-cop gets stuck — determined by detecting no meaningful movement across several consecutive checks — it retries
-pathfinding and eventually uses a fallback position.
+The cop is closing in to cuff the player. When the direct path fails — stairs on the far side of a building, a closed
+door, a long approach — the squad plans a route starting from the player's side (a rooftop is searched from the top
+down), shares it between its members, opens doors and climbs ladders on the way. If no route exists at all, the cops
+wait at the foot of the structure, facing the player, for as long as he is wanted.
+
+A cop leaves a pursuit in only two cases, and the spawner then replaces it: it stayed stuck for `Pursuit.Max_Ticks`
+AI ticks while no squad member could see the player, or the player got farther away than `Pursuit.Max_Distance`.
 
 ### Combat
 
 Within 12 blocks (ranged) or 4 blocks (melee), the cop switches to combat mode. Armed cops fire their configured weapon
-with proper reload cycles. When one cop enters combat range and alerts the squad, all nearby cops in the group become
-aware of the player's location.
+with proper reload cycles: they hold position while they see the player inside their firing band and climb after him
+like any other cop once he steps out of view. When one cop is attacked, every cop in its group joins the fight.
 
 ### Cuffing
 
@@ -158,7 +174,7 @@ Cops:
       Cuff_Radius: 3.0              # Default cuff radius in blocks (individual tiers override this)
       Max_Cuff_Attempts: 3          # Cuff attempts before the cop gives up and switches to combat
       Cuff_Cooldown_Ticks: 100      # Ticks between consecutive cuffing attempts
-      Alert_Range: 40.0             # Blocks within which an idle cop detects a wanted player
+      Alert_Range: 40.0             # Sight range: a cop sees a wanted player this close with line of sight; shared by the squad
       Combat_Range: 4.0             # Melee attack range in blocks (ranged range is derived from this)
       Attack_Cooldown_Ticks: 20     # Ticks between melee attacks
 ```
@@ -199,6 +215,17 @@ Cops:
       Ranged_Min_Distance: 7.0      # Ranged cops hold their firing position when target is closer than this
       Ranged_Max_Distance: 12.0     # Ranged cops hold position when target is farther than this
       Min_Repath_After_Loss_Ticks: 2.0  # Minimum AI ticks before the cop re-paths after losing combat
+```
+
+---
+
+### Pursuit Settings (`settings.yml` → `Cops.Pursuit`)
+
+```yaml
+Cops:
+   Pursuit:
+      Max_Distance: 80.0            # A pursuing cop farther than this from the player (blocks) is rotated out and replaced
+      Max_Ticks: 120                # AI ticks a cop may stay stuck while no squad member sees the player (120 ≈ 60 s)
 ```
 
 ---

@@ -205,7 +205,7 @@ Cops:
       Cuff_Radius: 3.0
       Max_Cuff_Attempts: 3
       Cuff_Cooldown_Ticks: 100
-      Alert_Range: 40.0
+      Alert_Range: 40.0            # Sight range (blocks, line of sight); every sighting is shared by the player's cops
       Combat_Range: 4.0
       Attack_Cooldown_Ticks: 20
    Spawn:
@@ -220,6 +220,9 @@ Cops:
       Visibility_Check_Distance: 48.0
       Phase1_Attempts: 20
       Phase2_Attempts: 15
+   Pursuit:
+      Max_Distance: 80.0           # Rotate a pursuing cop out beyond this distance from the player
+      Max_Ticks: 120               # AI ticks stuck with no squad sighting before a cop is rotated out
    Return:
       Max_Ticks: 600
       Station_Arrival_Distance: 3.0
@@ -382,31 +385,38 @@ tiers:
 
 ## civilians.yml
 
-Defines civilian NPC types and spawner configurations.
+Defines civilian NPC types and groups; ships inside `modules/gangland-civilians-<rev>.jar` as `npc/civilians.yml`.
+Abridged example with the combat-squad keys added in 0.11.0:
 
 ```yaml
-types:
-   street_vendor:
-      display_name: "&eStreet Vendor"
-      skin: "texture_data"
-      behaviour:
-         wander_range: 10.0
-         flee_range: 20.0
-         combat_enabled: false
-      inventory:
-         title: "&6Street Vendor"
-         size: 27
-         items:
-            0: "weapon:pistol{amount=1}"
-            1: "ammo:9mm{amount=32}"
-
-   pedestrian:
-      display_name: "&7Pedestrian"
-      behaviour:
-         wander_range: 15.0
-         flee_range: 25.0
-         combat_enabled: false
+Types:
+   gang_member:
+      Display_Name: "&c&lGang Member"
+      Entity_Type: PLAYER
+      Health: 25.0
+      Hostile: true
+      Faction: gang_member          # Side it fights for (default: the type id)
+      Weapon_Pool:
+         - "weapon:pistol"
+      AI:
+         Wander:
+            Enabled: true
+            Range: 10
+         Combat:
+            Enabled: true
+            Attack_Damage: 4.0
+            Attack_Range: 12.0
+            Attack_Interval_Ticks: 20
+            Difficulty: NORMAL
+            Alert_Range: 16.0        # Sight range, and how far it hears a faction member being hit (default 16.0)
+            Search_Seconds: 20       # Give up after the squad has not seen the target this long (default 20)
 ```
+
+| Key                        | Default     | Meaning                                                                                   |
+|----------------------------|-------------|-------------------------------------------------------------------------------------------|
+| `Faction`                  | the type id | Hostile NPCs of one faction fight as a squad; a hit alerts the victim's faction           |
+| `AI.Combat.Alert_Range`    | `16.0`      | Sight range, and how far (from the victim) a faction member hears the hit                 |
+| `AI.Combat.Search_Seconds` | `20`        | Seconds the squad may go without seeing its target before a member gives up and goes idle |
 
 ---
 

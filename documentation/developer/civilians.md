@@ -39,6 +39,8 @@ Central service for civilian NPC lifecycle management.
 - Maintain active civilian registry (UUID -> CivilianNpc)
 - Coordinate spawning/despawning based on player proximity
 - Provide NPC lookup for event handlers
+- Hold the combat squads: one Keystone `NpcSquad` per (faction, target) — see
+  [Factions and combat squads](#factions-and-combat-squads)
 
 **Key Methods:**
 
@@ -49,6 +51,8 @@ Central service for civilian NPC lifecycle management.
 | `despawnCivilian(UUID)`    | Remove a specific civilian          |
 | `despawnAll()`             | Remove all active civilians         |
 | `getActiveCivilians()`     | Get all currently spawned civilians |
+| `alertFaction(victim, attacker, playerAttacker)` | Squad a hit civilian and alert its faction (one hop) |
+| `dropSquads(UUID)`         | Forget every squad hunting a target |
 
 ---
 
@@ -93,8 +97,32 @@ Each `CivilianNpc` operates as a finite state machine with 5 states:
 - **IDLE/WANDER -> FLEE:** Gunfire or wanted player nearby
 - **IDLE/WANDER -> COMBAT:** Attacked and civilian is armed
 - **FLEE -> IDLE:** Threat leaves area, cooldown expires
-- **COMBAT -> IDLE:** Attacker dies, leaves range, or combat timeout
+- **COMBAT -> IDLE:** Target dies, goes down or offline, or nobody in the civilian's squad has seen it for
+  `AI.Combat.Search_Seconds`
 - **WANDER -> IDLE:** Wander destination reached or timeout
+
+---
+
+## Factions and combat squads
+
+Hostile civilians fight as squads (Keystone `NpcSquad`, one per faction and target, held by `CivilianService`):
+
+1. **Hit.** `CivilianDamageListener` puts the victim in `COMBAT` against its attacker — a player, or an NPC/mob keyed
+   by its entity UUID — and calls `CivilianService.alertFaction`: the victim joins its faction's squad against that
+   attacker and reports a sighting at the attacker's position.
+2. **One-hop alert.** Every other active, combat-enabled hostile civilian of the same `Faction` within **its own**
+   `AI.Combat.Alert_Range` of the victim, and not already fighting someone else, takes the attacker as its target,
+   enters `COMBAT` and joins the squad. Joining does not alert anyone further; a later hit on any member alerts that
+   member's neighbours.
+3. **Hunt.** `CivilianCombatBehavior` moves through `npc.pursue(target, squad, Alert_Range)`: members chase while
+   anyone in the squad sees the target (within `Alert_Range`, line of sight), otherwise they search from the
+   last-known position.
+4. **Give up.** When nobody in the squad has seen the target for `AI.Combat.Search_Seconds`, a member clears its target,
+   leaves the squad and goes `IDLE`. A player who dies or goes down drops every squad hunting him.
+
+Squads are created on the first hit and removed once empty. A civilian that enters `COMBAT` without a hit (turf
+defenders, the Quartermaster, the idle re-engage) hunts in a squad of its own, seeded with the target's position.
+Pedestrians (combat disabled) never join a squad.
 
 ---
 
@@ -195,6 +223,7 @@ Uses the same `EntitySpawner` as cops, with a two-phase algorithm:
 | Listener                | Events Handled     | Purpose                       |
 |-------------------------|--------------------|-------------------------------|
 | `CivilianDeathListener` | `EntityDeathEvent` | Drop handling, event dispatch |
+| `CivilianDamageListener` | `EntityDamageByEntityEvent`, `PlayerDownedEvent`, `PlayerDeathEvent` | Combat/flee reaction, faction alert, squad drop on death or downed |
 
 ---
 

@@ -334,7 +334,8 @@ Cops:
       Max_Cuff_Attempts: 3
       # Game ticks the cop waits between consecutive cuff attempts.
       Cuff_Cooldown_Ticks: 100
-      # Distance at which an idle cop detects a wanted player and begins pursuit (blocks).
+      # Sight range (blocks): a cop sees a wanted player within this distance when it has line of sight, and
+      # every sighting is shared with the other cops chasing that player.
       Alert_Range: 40.0
       # Base melee engagement range (blocks). Ranged attack range is derived from this value.
       Combat_Range: 4.0
@@ -381,7 +382,8 @@ Cops:
    Pursuit:
       # Horizontal distance from the target (blocks) beyond which the pursuing cop gives up.
       Max_Distance: 80.0
-      # Maximum AI ticks a cop spends in PURSUING before giving up.
+      # AI ticks a pursuing cop may stay stuck while no cop chasing the same player can see him before it gives up
+      # (the spawner replaces it). Ticks where it moves or anyone sees the player reset the count.
       # Default 120 = ~60 s at AI_Tick_Rate: 10 (10 game ticks per AI tick, 20 TPS).
       Max_Ticks: 120
 
