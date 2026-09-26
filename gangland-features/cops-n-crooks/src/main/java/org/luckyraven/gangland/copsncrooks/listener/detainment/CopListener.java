@@ -200,6 +200,8 @@ public class CopListener implements Listener {
 
 		CopNpc cop = copManager.findCopByEntity(event.getEntity());
 		if (cop != null) {
+			// Spec 4.9: a killed cop leaves its group's squad immediately, not on the next AI sweep
+			cop.leaveSquad();
 			cop.destroy();
 		}
 
