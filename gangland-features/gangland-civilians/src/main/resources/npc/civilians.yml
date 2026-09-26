@@ -35,6 +35,8 @@ Default_Entities:
 # Entity_Type   — Bukkit EntityType name for the Citizens NPC body (e.g. VILLAGER, PLAYER).
 # Health        — Max health in half-hearts.
 # Hostile       — If true the NPC will attack nearby players and use its Weapon_Pool.
+# Faction       — Side the NPC fights for (default: the type id). When a hostile NPC is hit, every combat-enabled
+#                 NPC of the same faction within its own AI.Combat.Alert_Range joins the fight as one squad.
 # Wearables     — ItemParser strings for armor slots. Use "" for empty.
 #                 Supported prefixes: material:, wearable:
 # Item_Pool     — Items randomly given to the NPC on spawn (not weapons).
@@ -48,6 +50,9 @@ Default_Entities:
 #                 Technical navigation settings (recalculation ticks, stuck detection) live in settings.yml.
 #                 Combat.Difficulty selects a combat profile (EASY, NORMAL, HARD, DEADLY) that scales
 #                 aim error, reaction time, fire rate, and melee damage. Defaults to NORMAL when omitted.
+#                 Combat.Alert_Range (default 16.0) is the NPC's sight range and how far it hears a faction member
+#                 being hit. Combat.Search_Seconds (default 20) is how long its squad may go without seeing the
+#                 target before the NPC gives up.
 
 Types:
    pedestrian:
@@ -87,6 +92,7 @@ Types:
       Entity_Type: PLAYER
       Health: 25.0
       Hostile: true
+      Faction: gang_member
       Wearables:
          Helmet: ""
          Chestplate: "LEATHER_CHESTPLATE"
@@ -115,6 +121,8 @@ Types:
             Attack_Range: 12.0
             Attack_Interval_Ticks: 20
             Difficulty: NORMAL
+            Alert_Range: 16.0
+            Search_Seconds: 20
 
    trader:
       Display_Name: "&e&lTrader"
@@ -149,6 +157,7 @@ Types:
       Entity_Type: PLAYER
       Health: 30.0
       Hostile: true
+      Faction: turf_defender
       Wearables:
          Helmet: ""
          Chestplate: "IRON_CHESTPLATE"
@@ -173,12 +182,15 @@ Types:
             Attack_Range: 14.0
             Attack_Interval_Ticks: 18
             Difficulty: NORMAL
+            Alert_Range: 16.0
+            Search_Seconds: 20
 
    quartermaster:
       Display_Name: "&6&lQuartermaster"
       Entity_Type: PLAYER
       Health: 40.0
       Hostile: true
+      Faction: quartermaster
       Wearables:
          Helmet: "GOLDEN_HELMET"
          Chestplate: "GOLDEN_CHESTPLATE"
@@ -203,6 +215,8 @@ Types:
             Attack_Range: 14.0
             Attack_Interval_Ticks: 16
             Difficulty: HARD
+            Alert_Range: 16.0
+            Search_Seconds: 20
 
 # +--------+ #
 # | Groups | #
