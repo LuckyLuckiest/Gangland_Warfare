@@ -19,6 +19,8 @@ import java.util.List;
  * @param weaponPool vanilla material weapon ItemStacks for random selection (fallback)
  * @param drops death-drop configuration
  * @param ai per-type AI behavior settings
+ * @param faction side this type fights for ({@code Faction}, default: the type id); a hit on one of its hostile NPCs
+ * 		alerts the same faction
  */
 public record CivilianTypeConfig(
 		String typeId,
@@ -31,6 +33,7 @@ public record CivilianTypeConfig(
 		List<String> weaponNamePool,
 		List<ItemStack> weaponPool,
 		CivilianDropConfig drops,
-		CivilianAIBehaviorConfig ai
+		CivilianAIBehaviorConfig ai,
+		String faction
 ) {
 }

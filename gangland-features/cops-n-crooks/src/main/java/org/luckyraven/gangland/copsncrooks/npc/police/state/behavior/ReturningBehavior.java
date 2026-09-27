@@ -15,12 +15,13 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Cop navigates back to the nearest registered spawn station. Once arrived, or after a timeout, the cop despawns - but
- * only when no other player is looking.
+ * Cop navigates back to the nearest registered spawn station. {@link #tryDespawn} marks the cop for removal - and it
+ * despawns - on arrival or after {@code Return.Max_Ticks}.
  * <p>
- * If the target player is freed before the cop reaches its station (e.g. via admin command), the cop immediately
- * re-engages - returning to {@link CopState#COMBAT} when {@code combatForced} is set, otherwise
- * {@link CopState#PURSUING}.
+ * Only a cop sent back because its target was restrained or jailed re-engages: if that target is freed before the cop
+ * reaches its station (e.g. via admin command), the cop returns to {@link CopState#COMBAT} when {@code combatForced}
+ * is set, otherwise {@link CopState#PURSUING}. Every other return - rotated out of a pursuit, target gone or no longer
+ * wanted - is final: re-engaging a free target from here bounced cops between PURSUING and RETURNING forever (D1).
  */
 public class ReturningBehavior implements CopBehavior {
 
@@ -30,6 +31,11 @@ public class ReturningBehavior implements CopBehavior {
 	private final double            stationArrivalDistance;
 
 	private Location selectedStation;
+	/**
+	 * Whether this return started because the target was restrained or jailed: only then does a released target pull the
+	 * cop back. Set on entry; behaviours are per cop ({@code CopBehaviorFactory#createBehaviors} runs per spawn).
+	 */
+	private boolean  reengageOnRelease;
 
 	public ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService, int maxReturnTicks,
 	                         double stationArrivalDistance) {
@@ -42,8 +48,8 @@ public class ReturningBehavior implements CopBehavior {
 	@Override
 	public void tick(CopNpc cop) {
 		Player target = cop.getTargetPlayerId() != null ? Bukkit.getPlayer(cop.getTargetPlayerId()) : null;
-		// Re-engage if the target has been freed (e.g. admin uncuff command)
-		if (target != null && target.isOnline() && !detainmentService.isRestrained(target)) {
+		// Re-engage only a restrained or jailed target that has been freed (e.g. admin uncuff command)
+		if (reengageOnRelease && target != null && target.isOnline() && !detainmentService.isRestrained(target)) {
 			cop.transitionTo(cop.isCombatForced() ? CopState.COMBAT : CopState.PURSUING);
 			return;
 		}
@@ -87,6 +93,10 @@ public class ReturningBehavior implements CopBehavior {
 	public void onEnter(CopNpc cop) {
 		cop.setDespawnTicks(0);
 		selectedStation = null;
+		cop.leaveSquad();
+
+		Player target = cop.getTargetPlayerId() != null ? Bukkit.getPlayer(cop.getTargetPlayerId()) : null;
+		reengageOnRelease = target != null && detainmentService.isRestrained(target);
 	}
 
 	@Override

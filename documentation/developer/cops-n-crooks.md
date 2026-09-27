@@ -193,10 +193,10 @@ The central orchestrator with ~20 methods managing cop lifecycle:
 
 | Method                                          | Purpose                                                              |
 |-------------------------------------------------|----------------------------------------------------------------------|
-| `onWantedStart(Player, Wanted)`                 | Registers wanted player, starts spawn + AI tasks                     |
+| `onWantedStart(Player, Wanted)`                 | Registers wanted player, reports the crime scene to the group's squad, sends the group's returning cops back to pursuit, starts spawn + AI tasks |
 | `onWantedEnd(Player)`                           | Unregisters target, lets cops organically find new targets or return |
 | `onWantedLevelChange(Player, Wanted, old, new)` | Routes to start/end based on level transitions                       |
-| `onCopAttackedAlert(CopNpc, Player)`            | Alerts ALL cops in group -- forces combat mode                       |
+| `onCopAttackedAlert(CopNpc, Player)`            | Alerts ALL cops in group -- forces combat mode; reports a sighting when the attacker is the group's target |
 | `onCopAttacked(CopNpc, Player)`                 | Forces single cop into combat with attacker                          |
 | `removeCopAttacker(UUID)`                       | Clears attacker from registry (death/leave), clears cop targets      |
 | `getCopsForPlayer(UUID)`                        | Returns all cops assigned to a player                                |
@@ -250,6 +250,19 @@ Every AI tick:
 7. No target found -> transition to RETURNING
 ```
 
+#### Squads (Keystone `NpcSquad`, 0.11.0)
+
+Each `CopGroup` owns one Keystone `NpcSquad`: the group's shared awareness of its wanted player (last-known position,
+sighting time, routes). A cop joins it in `CopGroup.add` when the spawn task assigns it, leaves it on
+`ReturningBehavior` entry, and is dropped from it by `CopGroup.release` when it is despawned, killed or invalid.
+`CopNpc.squadFor(target)` returns the group squad only when `target` is the group's wanted player; for an entity target
+or a player the cop retargeted to it returns a squad of the cop's own, seeded with the target's position when the cop
+is handed that target and replaced when the target changes.
+
+Sightings are reported by `onWantedStart` (the crime scene), `onCopAttackedAlert` (the attacker, when they are the group's
+target), `IdleBehavior` (`cop.canSee(target, alertRange)`) and by Keystone's `AbstractNpc.pursue`, which every
+`PURSUING` and `COMBAT` tick calls with `Cops.Behaviour.Alert_Range` as the sight range.
+
 ### CopNpc
 
 Individual cop NPC extending `AbstractNpc`. Key additions:
@@ -266,6 +279,9 @@ Individual cop NPC extending `AbstractNpc`. Key additions:
 | `transitionTo(CopState)`                     | State machine transition with exit/enter callbacks          |
 | `tick(LivingEntity)`                         | Runs one AI tick with current behavior                      |
 | `attemptCuff(Player)`                        | Returns true if within cuff radius and has line of sight    |
+| `CopGroup group`                             | Group the cop was assigned to; its squad is the group's     |
+| `squadFor(LivingEntity)`                     | The group squad for the group's target, else the cop's own squad for that target |
+| `leaveSquad()`                               | Leaves the group squad (called when returning)              |
 
 ### CopTierConfig
 
@@ -309,8 +325,8 @@ Higher tiers (e.g., SWAT, Military) have `skipCuffing = true` -- they engage in 
 │ Waits for no      │              │ closing distance.         │
 │ observers, then   │              ╰───────────────────────────╯
 │ despawns.         │                   │                │
-│ Re-engages if     │      within cuffRadius       combatForced
-│ target freed.     │      + has LOS               OR skipCuffing
+│ Re-engages only a │      within cuffRadius       combatForced
+│ freed prisoner.   │      + has LOS               OR skipCuffing
 ╰───────────────────╯           │                        │
        ^                        v                        v
        │               ╭──────────────────╮    ╭──────────────────╮
@@ -337,18 +353,21 @@ Higher tiers (e.g., SWAT, Military) have `skipCuffing = true` -- they engage in 
 **IDLE** (`IdleBehavior`)
 
 - Stands at spawn position with navigation stopped
-- Each tick: checks if resolved target is within `alertRange` and has line of sight
-- Transition: `IDLE -> PURSUING` when target detected
+- Each tick: `cop.canSee(target, alertRange)` reports a sighting to the cop's squad
+- Transition: `IDLE -> PURSUING` when the cop sees the target or its squad has a fresh sighting
 
 **PURSUING** (`PursuingBehavior`)
 
-- Navigates toward target using `resolvePursuitLocation()`
-- Falls back to `resolveHopelessFallbackLocation()` when navigation is permanently stuck
+- Navigates with `cop.pursue(target, cop.squadFor(target), alertRange)` — Keystone's squad pursuit (chase, route,
+  search, wait below an unreachable target); a failed path never sends the cop back
 - Ranged cops fire while closing distance (`cop.attack()` called when LOS + canAttack)
 - Transition conditions when within `cuffRadius` + has LOS:
     - `skipCuffing` or `combatForced` -> `COMBAT`
     - Otherwise -> `CUFFING`
 - Transition: `PURSUING -> RETURNING` when target goes offline/dies/is detained
+- Rotation: `pursuitTicks` counts only AI ticks where `isNavigationStuck()` and nobody in the squad has a fresh
+  sighting (an entity target: the cop itself cannot see it), and resets otherwise; reaching `Pursuit.Max_Ticks`, or
+  a target farther than `Pursuit.Max_Distance`, sends the cop to `RETURNING` for good and the spawner replaces it
 
 **CUFFING** (`CuffingBehavior`)
 
@@ -364,19 +383,21 @@ Higher tiers (e.g., SWAT, Military) have `skipCuffing = true` -- they engage in 
 **COMBAT** (`CombatBehavior`)
 
 - Attacks target within `combatRange` (melee) or `combatRange * 3` (ranged)
-- Ranged cops hold firing position via `shouldHoldPursuitPosition()`; melee cops close distance
-- Uses hopeless fallback when navigation fails
+- Navigates with `cop.pursue(target, cop.squadFor(target), alertRange)`: ranged cops hold while they see the target
+  inside their firing band, everyone else closes in (any other target uses the cop's own squad, seeded where the cop
+  was handed it)
 - Transition: `COMBAT -> RETURNING` when target goes offline/dies/is detained
 
 **RETURNING** (`ReturningBehavior`)
 
+- On enter: leaves the squad (frees its slot and any route plan it owns)
 - Finds nearest registered spawner location (or falls back to NPC's spawn location)
 - Navigates to station; considers itself arrived at `stationArrivalDistance`
-- Before despawning, checks if other players are watching (60-degree cone check)
-    - If observed: delays despawn up to `maxReturnTicks * 2`
-    - If not observed or timeout exceeded: `markForRemoval()`
-- Re-engagement: if target player is freed (no longer restrained) before reaching station,
-  transitions back to `COMBAT` (if combatForced) or `PURSUING`
+- Despawns (`markForRemoval()`) on arrival or after `maxReturnTicks`
+- Re-engagement: only a cop that entered `RETURNING` because its target was restrained or jailed re-engages when the
+  target is freed before it reaches the station (`COMBAT` if combatForced, otherwise `PURSUING`). A cop rotated out
+  of a pursuit never re-engages — that bounce froze cops below unreachable targets before 0.11.0 (D1). A new wanted
+  start for the same player (`onWantedStart`) sends every returning cop of the group back to `PURSUING`.
 
 ### CuffLockRegistry
 
@@ -487,6 +508,8 @@ Key methods:
 | `getActiveNpcs()`               | Returns all active civilian NPCs                  |
 | `spawnGroup(Location, groupId)` | Spawns a complete group from civilians.yml config |
 | `shutdown()`                    | Destroys all NPCs and clears registries           |
+| `alertFaction(npc, attacker, playerAttacker)` | Squads a hit civilian and alerts its faction (one hop) |
+| `dropSquads(UUID)`              | Forgets every squad hunting a dead or downed target |
 
 ### CivilianNpc
 
@@ -507,6 +530,8 @@ Individual civilian NPC extending `AbstractNpc`. Key additions:
 | `tick()`                                | Runs one AI tick                                       |
 | `isHostile()`                           | Whether this NPC type is configured as hostile         |
 | `addEntityTargetToFront(LivingEntity)`  | Bumps attacker to front of entity target queue         |
+| `NpcSquad squad` / `UUID squadTargetId` | Combat squad and the target it hunts (nullable)        |
+| `joinSquad(NpcSquad, UUID)` / `leaveSquad()` | Squad membership (COMBAT leaves on exit)          |
 
 The `wantedByPolice` flag is automatically set when a hostile civilian transitions to `COMBAT` and cleared when
 leaving `COMBAT`. Cops use `CivilianNpc.isWantedByPolice()` to identify civilians to pursue.
@@ -527,7 +552,8 @@ record CivilianTypeConfig(
 		List<String> weaponNamePool,           // Gangland weapon names (hostile types)
 		List<ItemStack> weaponPool,            // Vanilla weapon fallback
 		CivilianDropConfig drops,              // Death drop config
-		CivilianAIBehaviorConfig ai            // Per-type AI settings
+		CivilianAIBehaviorConfig ai,           // Per-type AI settings
+		String faction                         // Side it fights for (default: the type id)
 )
 ```
 
@@ -544,7 +570,10 @@ record CivilianAIBehaviorConfig(
 		boolean combatEnabled,       // Whether NPC engages in combat
 		double attackDamage,        // Base damage per attack
 		double attackRange,         // Detection/attack range (blocks)
-		int attackIntervalTicks  // Server ticks between attacks
+		int attackIntervalTicks, // Server ticks between attacks
+		NpcDifficulty difficulty,    // Combat profile
+		double alertRange,          // Sight range + faction hearing radius (default 16.0)
+		int searchSeconds        // Squad unseen this long -> give up (default 20)
 )
 ```
 
@@ -572,8 +601,8 @@ record CivilianAIBehaviorConfig(
            │ return to group │   │ Entity targets  │
            │ center if       │   │ take priority   │
            │ straying.       │   │ (self-defense). │
-           ╰─────────────────╯   │ Gives up at 4x  │
-                  │              │ attackRange.    │
+           ╰─────────────────╯   │ Gives up after  │
+                  │              │ Search_Seconds. │
            arrival or            ╰─────────────────╯
            stuck x3                    │
                   │              target lost or
@@ -632,10 +661,14 @@ record CivilianAIBehaviorConfig(
 
 - Only available for hostile civilian types
 - Target resolution: entity target queue (self-defense priority) > player target (fallback)
-- Navigates toward target; ranged NPCs hold firing position via `shouldHoldPursuitPosition()`
-- Attacks when within `attackRange` and cooldown elapsed
-- Gives up at `4 * attackRange` distance
-- On exit: preserves targets so `IDLE` can re-engage if target returns
+- Navigates with `npc.pursue(target, squad, ai.alertRange())` — Keystone's squad pursuit; ranged NPCs hold while
+  they see the target inside their firing band
+- Squad: the `(faction, target)` squad `CivilianService.alertFaction` put it in; a civilian that entered combat another
+  way (turf defender retarget, idle re-engage) or whose target switched hunts in a squad of its own, seeded with the
+  target's current position
+- Attacks when within `attackRange`, with line of sight, and cooldown elapsed
+- Gives up (clears its target, `IDLE`) when nobody in its squad has seen the target for `AI.Combat.Search_Seconds`
+- On exit: leaves its squad; targets are otherwise preserved so `IDLE` can re-engage if the target returns
 
 ### CivilianGroup
 

@@ -17,6 +17,9 @@ import org.luckyraven.keystone.npc.NpcDifficulty;
  * @param attackRange range in blocks within which a combat target is detected
  * @param attackIntervalTicks server ticks between attacks
  * @param difficulty difficulty profile that scales aim error, reaction time, fire rate, and melee damage
+ * @param alertRange sight range in blocks, and how far a faction member being hit is heard ({@code Combat.Alert_Range})
+ * @param searchSeconds seconds the NPC's squad may go without seeing its target before it gives up
+ * 		({@code Combat.Search_Seconds})
  */
 public record CivilianAIBehaviorConfig(
 		boolean wanderEnabled,
@@ -27,6 +30,8 @@ public record CivilianAIBehaviorConfig(
 		double attackDamage,
 		double attackRange,
 		int attackIntervalTicks,
-		NpcDifficulty difficulty
+		NpcDifficulty difficulty,
+		double alertRange,
+		int searchSeconds
 ) {
 }

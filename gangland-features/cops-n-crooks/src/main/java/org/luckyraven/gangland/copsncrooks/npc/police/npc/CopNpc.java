@@ -11,7 +11,10 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.npc.AbstractNpc;
+import org.luckyraven.keystone.npc.NpcSquad;
+import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
@@ -52,6 +55,19 @@ public class CopNpc extends AbstractNpc {
 	@Getter
 	@Setter
 	private       UUID                       guardedPlayerId;
+	/**
+	 * The group this cop was assigned to ({@link CopGroup#add}); its squad is the group's shared awareness of the
+	 * wanted player. {@code null} until assigned.
+	 */
+	@Setter
+	private @Nullable CopGroup               group;
+	/**
+	 * This cop's own squad for a target outside the group (an attacker, a retarget, a wanted civilian): seeded with
+	 * that target's position when it is first handed to the cop, replaced when the target changes. {@code null} until
+	 * {@link #squadFor} is called with such a target.
+	 */
+	private @Nullable NpcSquad               soloSquad;
+	private @Nullable UUID                   soloTargetId;
 
 	public CopNpc(JavaPlugin plugin, NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors,
 	              Location spawnLocation, CopConfigProvider configProvider) {
@@ -169,6 +185,37 @@ public class CopNpc extends AbstractNpc {
 		if (!isValid() || player == null) return false;
 		if (!hasLineOfSight(player)) return false;
 		return !(distanceTo(player) > tierConfig.cuffRadius());
+	}
+
+	/**
+	 * The squad to pursue {@code target} with: the group's squad when {@code target} is the group's wanted player,
+	 * otherwise a squad of this cop's own, seeded with {@code target}'s position when it is first handed to the cop and
+	 * replaced when the target changes. An entity target, or a player this cop retargeted to, must never feed the
+	 * group's last-known position.
+	 */
+	public NpcSquad squadFor(LivingEntity target) {
+		UUID id = target.getUniqueId();
+		if (group != null && id.equals(group.getTargetPlayerId())) {
+			soloTargetId = null;
+			return group.getSquad();
+		}
+		leaveSquad();
+		if (!id.equals(soloTargetId)) {
+			// ponytail: one squad per cop for a non-group target (an attacker, a retarget, a wanted civilian), seeded
+			// like the crime scene; share one per (group, target) if cops must coordinate on attackers
+			soloSquad    = new NpcSquad();
+			soloSquad.reportSighting(target.getLocation());
+			soloTargetId = id;
+		}
+		return soloSquad;
+	}
+
+	/**
+	 * Leaves the group's squad: a cop that stops hunting frees its slot and any route plan it owns. {@code pursue}
+	 * re-adds it if it re-engages.
+	 */
+	public void leaveSquad() {
+		if (group != null) group.getSquad().remove(this);
 	}
 
 	/**

@@ -76,7 +76,18 @@ public class CopManager implements BeanLifecycle {
 		if (!wanted.isWanted()) return;
 
 		targetingManager.registerWanted(player, wanted);
-		groups.computeIfAbsent(playerId, CopGroup::new);
+		// The crime scene is known: the group's squad starts from where the player is now
+		CopGroup group = groups.computeIfAbsent(playerId, CopGroup::new);
+		group.getSquad().reportSighting(player.getLocation());
+
+		// A new wanted start is a new episode: pull the group's returning cops back into the hunt instead of letting
+		// them walk home for up to Return.Max_Ticks. "Never give up while wanted" outranks the D1 re-engage rule,
+		// which only guards against a per-tick bounce inside a single episode.
+		for (CopNpc cop : group.getCops()) {
+			if (!cop.isValid() || cop.getCurrentState() != CopState.RETURNING) continue;
+			cop.setTargetPlayerId(playerId);
+			cop.transitionTo(CopState.PURSUING);
+		}
 
 		startSpawnTask(playerId, wanted);
 		startAITask(playerId);
@@ -148,6 +159,11 @@ public class CopManager implements BeanLifecycle {
 		// rely on groups.get(targetPlayerId). Instead, find the group containing this cop.
 		CopGroup group = findGroupContaining(copNpc);
 		if (group == null || group.isEmpty()) return;
+
+		// Hitting a cop gives the group's target away: the whole squad learns where he is
+		if (attacker.getUniqueId().equals(group.getTargetPlayerId())) {
+			group.getSquad().reportSighting(attacker.getLocation());
+		}
 
 		activeCombatAlerts.add(group.getTargetPlayerId());
 
@@ -306,6 +322,13 @@ public class CopManager implements BeanLifecycle {
 	}
 
 	/**
+	 * The group hunting {@code playerId}, or {@code null}. Package-private test seam.
+	 */
+	CopGroup groupFor(UUID playerId) {
+		return groups.get(playerId);
+	}
+
+	/**
 	 * Clears the combat alert for a player when wanted status ends.
 	 *
 	 * @param playerId the player UUID
@@ -353,7 +376,7 @@ public class CopManager implements BeanLifecycle {
 
 			cops.removeIf(cop -> {
 				if (cop.isMarkedForRemoval()) {
-					cop.destroy(entity -> markManager.removeMark(entity));
+					group.release(cop, markManager);
 					return true;
 				}
 				if (!cop.isValid()) {
@@ -363,7 +386,7 @@ public class CopManager implements BeanLifecycle {
 					if (npc.isSpawned() && npc.getEntity() == null) {
 						return false;
 					}
-					cop.destroy(entity -> markManager.removeMark(entity));
+					group.release(cop, markManager);
 					return true;
 				}
 				return false;
@@ -384,7 +407,7 @@ public class CopManager implements BeanLifecycle {
 				newCop.setCombatForced(hasCombatAlert(playerId));
 				newCop.transitionTo(CopState.PURSUING);
 
-				cops.add(newCop);
+				group.add(newCop);
 				currentCount++;
 			}
 		}, 20L, configProvider.getSpawnCheckRate());
@@ -434,7 +457,7 @@ public class CopManager implements BeanLifecycle {
 				CopNpc cop = iterator.next();
 
 				if (cop.isMarkedForRemoval()) {
-					cop.destroy(entity -> markManager.removeMark(entity));
+					group.release(cop, markManager);
 					iterator.remove();
 					continue;
 				}
@@ -446,7 +469,7 @@ public class CopManager implements BeanLifecycle {
 					if (npc.isSpawned() && npc.getEntity() == null) {
 						continue;
 					}
-					cop.destroy(entity -> markManager.removeMark(entity));
+					group.release(cop, markManager);
 					iterator.remove();
 					continue;
 				}

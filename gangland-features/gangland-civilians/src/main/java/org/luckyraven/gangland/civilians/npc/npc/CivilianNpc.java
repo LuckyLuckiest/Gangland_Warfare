@@ -15,6 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.npc.AbstractNpc;
+import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.gangland.civilians.npc.CivilianGroup;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.config.CivilianNavigationConfig;
@@ -71,6 +72,15 @@ public class CivilianNpc extends AbstractNpc {
 	@Getter
 	@Setter
 	private @Nullable Integer spawnerId;
+
+	/**
+	 * The combat squad this civilian hunts with, and the id of the target that squad hunts; set by
+	 * {@link #joinSquad(NpcSquad, UUID)}, cleared by {@link #leaveSquad()} (the COMBAT behavior leaves on exit).
+	 */
+	@Getter
+	private @Nullable NpcSquad squad;
+	@Getter
+	private @Nullable UUID     squadTargetId;
 
 	public CivilianNpc(JavaPlugin plugin, NPC npc, CivilianTypeConfig typeConfig, @Nullable String groupId,
 	                   Map<CivilianState, CivilianBehavior> behaviors, Location spawnLocation,
@@ -216,10 +226,32 @@ public class CivilianNpc extends AbstractNpc {
 		entityTargetQueue.addFirst(entity);
 	}
 
+	// ── Combat squad ──────────────────────────────────────────────────────────
+
+	/**
+	 * Joins {@code squad}, which hunts {@code targetId}, leaving any other squad first.
+	 */
+	public void joinSquad(NpcSquad squad, UUID targetId) {
+		if (this.squad != squad) leaveSquad();
+		squad.add(this);
+		this.squad         = squad;
+		this.squadTargetId = targetId;
+	}
+
+	/**
+	 * Leaves the current squad, if any: frees its slot and any route plan it owns.
+	 */
+	public void leaveSquad() {
+		if (squad != null) squad.remove(this);
+		squad         = null;
+		squadTargetId = null;
+	}
+
 	@Override
 	protected void cleanupTransientState() {
 		entityTargetQueue.clear();
 		wantedByPolice = false;
+		leaveSquad();
 		CivilianBehavior behavior = behaviors.get(currentState);
 		if (behavior == null) return;
 		behavior.onExit(this);
