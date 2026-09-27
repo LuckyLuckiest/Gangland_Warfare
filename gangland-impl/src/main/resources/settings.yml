@@ -301,6 +301,35 @@ Wanted:
          - 10
          - 15
          - 20
+   # Line-of-sight evasion (0.12): escaping is a skill. While the cops chasing you have a fresh sighting your stars
+   # stay solid. Once nobody has seen you for Lost_Sight_Seconds, a search zone opens around your last known
+   # position and an evasion clock starts; stay unseen until it runs out and you lose stars.
+   # While evasion handles a chase, the Repeating_Timer above is paused for that player; it stays the fallback for
+   # players no cop could be sent after (e.g. no valid spawn location). Enable: false keeps the old decay only.
+   Evasion:
+      Enable: true
+      # Seconds without a squad sighting before the search starts.
+      Lost_Sight_Seconds: 3
+      # What the clock takes when it runs out: ONE_STAR (then the search restarts at the new level) or ALL_STARS.
+      Drop_Mode: ONE_STAR
+      # Search zone radius in blocks, per star (first entry = 1 star). The last entry is reused above the list.
+      Search_Radius:
+         - 40
+         - 60
+         - 90
+         - 130
+         - 180
+      # Unseen seconds needed to drop a star, per star (first entry = 1 star).
+      Seconds_To_Drop:
+         - 10
+         - 20
+         - 30
+         - 45
+         - 60
+      # Clock speed while you are outside the search zone (1.0 = normal).
+      Outside_Zone_Speed: 2.0
+      # Reserved for hideouts (0.14): read but not used yet.
+      Hideout_Speed: 1.5
 
 # +-------------+ #
 # | Cops Config | #

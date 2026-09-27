@@ -9,6 +9,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
@@ -267,6 +268,18 @@ public class CopManager implements BeanLifecycle {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * The group hunting the given player, if any. The group outlives the wanted episode while its cops walk home, so a
+	 * non-null group does not mean the player is still wanted. Safe to call off the main thread (read-only lookup).
+	 *
+	 * @param playerId the player UUID
+	 *
+	 * @return the group, or null if no cop group was ever formed for the player
+	 */
+	public @Nullable CopGroup getGroup(UUID playerId) {
+		return groups.get(playerId);
 	}
 
 	/**

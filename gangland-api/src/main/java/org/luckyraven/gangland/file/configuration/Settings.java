@@ -97,6 +97,12 @@ public class Settings implements FileInitializer {
 			wantedKillComboEnabled;
 	private static @Getter int wantedTimerTime, wantedLevelIncrement, wantedMaximumLevel, wantedKillComboResetAfter;
 	private static @Getter List<Integer> wantedKillCounter;
+	// wanted evasion configuration (0.12): line-of-sight evasion and search zone, read by cops-n-crooks
+	private static @Getter boolean       wantedEvasionEnabled;
+	private static @Getter int           wantedEvasionLostSightSeconds;
+	private static @Getter String        wantedEvasionDropMode;
+	private static @Getter List<Integer> wantedEvasionSearchRadius, wantedEvasionSecondsToDrop;
+	private static @Getter double        wantedEvasionOutsideZoneSpeed, wantedEvasionHideoutSpeed;
 	// gang configuration
 	private static @Getter boolean       gangEnabled, gangNameDuplicates;
 	private static @Getter String gangRankHead, gangRankTail, gangDisplayNameChar;
@@ -552,6 +558,20 @@ public class Settings implements FileInitializer {
 		wantedKillComboEnabled       = bool(wantedKillComboSec, "Enable", true);
 		wantedKillComboResetAfter    = intVal(wantedKillComboSec, "Reset_After", 10);
 		wantedKillCounter            = intList(wantedKillComboSec, "Kill_Counter");
+
+		// wanted evasion (0.12): a missing block keeps evasion on with the shipped values; an empty list falls back to
+		// the shipped per-star values. Hideout_Speed is reserved for 0.14 (parsed, unused).
+		NodeReader    wantedEvasion      = section(wanted, "Evasion", report);
+		List<Integer> evasionRadius      = intList(wantedEvasion, "Search_Radius");
+		List<Integer> evasionSecondsDrop = intList(wantedEvasion, "Seconds_To_Drop");
+
+		wantedEvasionEnabled          = bool(wantedEvasion, "Enable", true);
+		wantedEvasionLostSightSeconds = intVal(wantedEvasion, "Lost_Sight_Seconds", 3);
+		wantedEvasionDropMode         = str(wantedEvasion, "Drop_Mode", "ONE_STAR");
+		wantedEvasionSearchRadius     = evasionRadius.isEmpty() ? List.of(40, 60, 90, 130, 180) : evasionRadius;
+		wantedEvasionSecondsToDrop    = evasionSecondsDrop.isEmpty() ? List.of(10, 20, 30, 45, 60) : evasionSecondsDrop;
+		wantedEvasionOutsideZoneSpeed = dbl(wantedEvasion, "Outside_Zone_Speed", 2.0);
+		wantedEvasionHideoutSpeed     = dbl(wantedEvasion, "Hideout_Speed", 1.5);
 
 		// gang
 		NodeReader gang        = section(root, "Gang", report);

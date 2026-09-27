@@ -26,6 +26,7 @@ import org.luckyraven.gangland.copsncrooks.detainment.sentence.SentenceService;
 import org.luckyraven.gangland.copsncrooks.detainment.sound.DetainmentSoundContract;
 import org.luckyraven.gangland.copsncrooks.detainment.transit.TransitService;
 import org.luckyraven.gangland.copsncrooks.detainment.wanted.WantedClearContract;
+import org.luckyraven.gangland.copsncrooks.evasion.EvasionService;
 import org.luckyraven.gangland.copsncrooks.heat.HeatService;
 import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
 import org.luckyraven.gangland.civilians.npc.combat.BartizanNpcWeapons;
@@ -49,6 +50,7 @@ import org.luckyraven.gangland.data.teleportation.WaypointLookupContract;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.WantedKillTrackers;
+import org.luckyraven.gangland.core.wanted.WantedSettings;
 import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.gangland.item.money.MoneyAddon;
 import org.luckyraven.gangland.turf.manager.TurfManager;
@@ -349,6 +351,16 @@ public class CopsNCrooksModuleConfig {
 	                               CopLoader copLoader) {
 		return new HeatService(killCombo, markManager, HeatService.contestedTurf(turfManager),
 		                       copLoader::getLoadedHeatConfig);
+	}
+
+	// ---------------------------------------------------------------------------------------------------------------
+	// Line-of-sight evasion (0.12 F2)
+	// ---------------------------------------------------------------------------------------------------------------
+
+	@Bean
+	public EvasionService evasionService(CopManager copManager, @Qualifier("online") UserManager<Player> userManager,
+	                                     DetainmentService detainmentService, WantedSettings wantedSettings) {
+		return new EvasionService(plugin, copManager, userManager, detainmentService, wantedSettings);
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------

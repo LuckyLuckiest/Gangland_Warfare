@@ -24,6 +24,9 @@ import java.util.UUID;
  * sighting time, routes). A cop joins it when {@link #add(CopNpc) assigned} and leaves it when
  * {@link #release(CopNpc, NpcMarkManager) released} (despawned, killed or invalid) or when it starts returning
  * ({@link CopNpc#leaveSquad()}).
+ * <p>
+ * {@link #isStaffed()} turns true once the first cop is {@link #add(CopNpc) assigned} and stays true: line-of-sight
+ * evasion (0.12) only takes over a chase from the old decay timer once a cop has actually been sent after the player.
  */
 @Getter
 public class CopGroup {
@@ -31,6 +34,8 @@ public class CopGroup {
 	private final UUID         targetPlayerId;
 	private final List<CopNpc> cops;
 	private final NpcSquad     squad;
+
+	private volatile boolean staffed;
 
 	public CopGroup(UUID targetPlayerId) {
 		this.targetPlayerId = targetPlayerId;
@@ -42,6 +47,7 @@ public class CopGroup {
 		cops.add(cop);
 		squad.add(cop);
 		cop.setGroup(this);
+		staffed = true;
 	}
 
 	/**
