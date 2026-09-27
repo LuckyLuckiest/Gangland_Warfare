@@ -88,13 +88,38 @@ public class WantedHudService implements BeanLifecycle {
 		if (!config.isEnabled()) return;
 		if (!config.isBossBar() && !config.isSearchZoneRing() && !config.isEscapeCompass()) return;
 
+		setup(player, config);
+		refresh(player, config);
+	}
+
+	/**
+	 * Like {@link #show(Player)}, but renders {@code level}/{@code maxLevel} directly instead of reading
+	 * {@link Wanted#getLevel()}. {@link org.luckyraven.gangland.core.events.wanted.WantedLevelChangeEvent} fires (and
+	 * so reaches listeners) before {@link Wanted#setLevel} applies the new level to the {@code Wanted} object itself,
+	 * so {@link #onStarGained}/{@link #onStarLost} handling that event must not go through the level the live
+	 * {@code Wanted} still reports — for any n -&gt; m change with n &gt; 0 that would render the stale, pre-change
+	 * level for up to a tick (0.12 review).
+	 *
+	 * @param player the wanted player
+	 * @param level the level to render
+	 * @param maxLevel the wanted maximum level
+	 */
+	private void show(Player player, int level, int maxLevel) {
+		HudConfig config = config();
+		if (!config.isEnabled()) return;
+		if (!config.isBossBar() && !config.isSearchZoneRing() && !config.isEscapeCompass()) return;
+
+		setup(player, config);
+		refresh(player, config, level, maxLevel);
+	}
+
+	private void setup(Player player, HudConfig config) {
 		UUID id = player.getUniqueId();
 		tracked.add(id);
 		if (config.isBossBar()) {
 			bars.computeIfAbsent(id, key -> createBar(player));
 		}
 		startTask();
-		refresh(player, config);
 	}
 
 	/**
@@ -124,7 +149,7 @@ public class WantedHudService implements BeanLifecycle {
 		HudConfig config = config();
 		if (!config.isEnabled()) return;
 
-		show(player);
+		show(player, newLevel, maxLevel);
 		if (config.isStarGainTitle()) {
 			String title    = GanglandChatUtil.color(config.getStarGainedTitle());
 			String subtitle = GanglandChatUtil.color(HudFormat.apply(config.getStarGainedSubtitle(),
@@ -148,7 +173,7 @@ public class WantedHudService implements BeanLifecycle {
 		if (!config.isEnabled()) return;
 
 		starLostUntil.put(player.getUniqueId(), System.currentTimeMillis() + STAR_LOST_MILLIS);
-		show(player);
+		show(player, newLevel, maxLevel);
 	}
 
 	/**
@@ -229,8 +254,6 @@ public class WantedHudService implements BeanLifecycle {
 	}
 
 	private void refresh(Player player, HudConfig config) {
-		UUID id = player.getUniqueId();
-
 		User<Player> user = users.getUser(player);
 		Wanted       wanted = user == null ? null : user.getWanted();
 		if (wanted == null || !wanted.isWanted()) {
@@ -238,8 +261,11 @@ public class WantedHudService implements BeanLifecycle {
 			return;
 		}
 
-		int level    = wanted.getLevel();
-		int maxLevel = wanted.getMaxLevel();
+		refresh(player, config, wanted.getLevel(), wanted.getMaxLevel());
+	}
+
+	private void refresh(Player player, HudConfig config, int level, int maxLevel) {
+		UUID id = player.getUniqueId();
 
 		// Only present when Boss_Bar is on; every showXxx helper below tolerates a null bar (0.12 review).
 		BossBar bar = bars.get(id);

@@ -428,8 +428,15 @@ public class CopManager implements BeanLifecycle {
 				currentByTier.merge(cop.getTierConfig().tier(), 1, Integer::sum);
 			}
 
-			Map<Integer, Integer> deficits = RosterPlanner.deficits(roster, currentByTier, cops.size(),
-			                                                        configProvider.getMaxCopsPerPlayer());
+			// The Max_Per_Player cap applies as-is to a configured multi-tier roster. For the single-tier fallback
+			// roster (no Cops.Rosters entry for this star) it is additionally clamped to that roster's own target
+			// count, so cops left over from an earlier, lower wanted level count against the new roster instead of
+			// stacking a whole new squad on top of them (0.12 F4).
+			int cap = configProvider.getMaxCopsPerPlayer();
+			if (configProvider.getRoster(wantedLevel).isEmpty()) {
+				cap = Math.min(cap, spawnManager.getTargetCopCount(wantedLevel));
+			}
+			Map<Integer, Integer> deficits = RosterPlanner.deficits(roster, currentByTier, cops.size(), cap);
 
 			long now = System.currentTimeMillis();
 

@@ -17,17 +17,16 @@ public final class RosterPlanner {
 
 	/**
 	 * The per-tier counts still missing from {@code currentByTier} to reach {@code roster}, in ascending tier order,
-	 * with the total clamped so {@code currentTotal} plus the returned counts never exceeds {@code maxTotal}, nor the
-	 * roster's own total. The roster-total clamp matters for the single-tier fallback roster
-	 * ({@code CopSpawnManager#getRosterForWantedLevel}): without it, cops left over from an earlier, lower wanted
-	 * level (and not covered by the current roster's tier at all) are never counted against the new roster, so each
-	 * star rise stacks a whole new squad on top instead of reaching the roster's total the way the pre-0.12 single-tier
-	 * target count did.
+	 * with the total clamped so {@code currentTotal} plus the returned counts never exceeds {@code maxTotal}.
+	 * {@code maxTotal} is the caller's total cap for this call — for a configured multi-tier roster that is simply
+	 * {@code Max_Per_Player}, but for the single-tier fallback roster ({@code CopSpawnManager#getRosterForWantedLevel})
+	 * the caller additionally clamps it to the roster's own target count, so cops left over from an earlier, lower
+	 * wanted level count against the new roster instead of stacking a whole new squad on top of them.
 	 *
 	 * @param roster the target roster, {@code tier -> count}; a {@code null} or empty roster yields no deficits
 	 * @param currentByTier how many cops of each tier are currently assigned
 	 * @param currentTotal the group's current total cop count (all tiers)
-	 * @param maxTotal the hard cap on the group's total cop count ({@code Max_Per_Player})
+	 * @param maxTotal the hard cap on the group's total cop count for this call
 	 *
 	 * @return the deficit per tier, ascending tier order; empty when nothing is missing or no room remains
 	 */
@@ -36,9 +35,7 @@ public final class RosterPlanner {
 		Map<Integer, Integer> result = new LinkedHashMap<>();
 		if (roster == null || roster.isEmpty()) return result;
 
-		int rosterTotal = roster.values().stream().mapToInt(Integer::intValue).sum();
-		int cap         = Math.min(maxTotal, rosterTotal);
-		int room        = cap - currentTotal;
+		int room = maxTotal - currentTotal;
 		if (room <= 0) return result;
 
 		List<Integer> tiers = new ArrayList<>(roster.keySet());

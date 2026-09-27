@@ -71,21 +71,22 @@ class RosterPlannerTest {
 	}
 
 	@Test
-	@DisplayName("deficits clamps to the roster's own total, not just maxTotal, for the single-tier fallback roster")
+	@DisplayName("deficits clamps to maxTotal alone; the roster-total clamp for the single-tier fallback is the caller's job")
 	void deficits_clampsToRosterTotal_singleTierFallback() {
 		// CopSpawnManager#getRosterForWantedLevel single-tier fallback: 1 star -> tier 1 x2, 2 stars -> tier 2 x3.
 		// 2 leftover tier-1 cops from 1 star must count against the 2-star roster's total (3), not stack a full new
-		// squad on top of them (0.12 F4 regression).
+		// squad on top of them (0.12 F4 regression). CopManager#startSpawnTask achieves this by passing the roster's
+		// own target count (3) as maxTotal for the fallback case, rather than the raw Max_Per_Player.
 		Map<Integer, Integer> roster        = Map.of(2, 3);
 		Map<Integer, Integer> currentByTier = Map.of(1, 2);
 
-		Map<Integer, Integer> deficits = RosterPlanner.deficits(roster, currentByTier, 2, 10);
+		Map<Integer, Integer> deficits = RosterPlanner.deficits(roster, currentByTier, 2, 3);
 
 		assertEquals(Map.of(2, 1), deficits, "only 1 more tier-2 cop is spawned, matching the pre-0.12 total of 3");
 	}
 
 	@Test
-	@DisplayName("deficits still honors a shipped multi-tier roster larger than the leftover total")
+	@DisplayName("deficits does not clamp a configured multi-tier roster to its own total, only to maxTotal")
 	void deficits_multiTierRoster_notClampedBelowItsOwnTotal() {
 		Map<Integer, Integer> roster        = new LinkedHashMap<>();
 		roster.put(1, 2);
@@ -94,6 +95,26 @@ class RosterPlannerTest {
 		Map<Integer, Integer> deficits = RosterPlanner.deficits(roster, Map.of(1, 2), 2, 10);
 
 		assertEquals(Map.of(2, 1), deficits);
+	}
+
+	@Test
+	@DisplayName("deficits does not clamp a multi-tier roster to its own total across a star transition (0.12 F4 regression)")
+	void deficits_multiTierRoster_starTransition_notClampedToRosterTotal() {
+		// Shipped Cops.Rosters: 2 stars -> {1:2, 2:2} (total 4), 3 stars -> {2:2, 3:2} (total 4). Max_Per_Player 8.
+		// Carrying over 4 cops from 2 stars (2 tier-1, 2 tier-2) into the 3-star roster must not be clamped to the
+		// 3-star roster's own total (4): with maxTotal honored alone there is still room (8 - 4 = 4) for the 2
+		// missing tier-3 cops, so the higher tier actually spawns as stars rise.
+		Map<Integer, Integer> roster        = new LinkedHashMap<>();
+		roster.put(2, 2);
+		roster.put(3, 2);
+
+		Map<Integer, Integer> currentByTier = new LinkedHashMap<>();
+		currentByTier.put(1, 2);
+		currentByTier.put(2, 2);
+
+		Map<Integer, Integer> deficits = RosterPlanner.deficits(roster, currentByTier, 4, 8);
+
+		assertEquals(Map.of(3, 2), deficits);
 	}
 
 	@Test
