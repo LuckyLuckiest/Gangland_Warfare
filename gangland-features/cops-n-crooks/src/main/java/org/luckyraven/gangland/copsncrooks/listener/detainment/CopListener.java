@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.listener.detainment;
 
 import lombok.RequiredArgsConstructor;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -12,6 +13,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.luckyraven.gangland.copsncrooks.events.npc.CopDeathEvent;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
@@ -190,7 +192,8 @@ public class CopListener implements Listener {
 	}
 
 	/**
-	 * Clears drops when a cop NPC is killed.
+	 * Clears drops when a cop NPC is killed. Fires {@link CopDeathEvent} (0.12 F6 pursuit report) before the NPC is
+	 * destroyed, so listeners can still read its state.
 	 *
 	 * @param event the death event
 	 */
@@ -200,6 +203,7 @@ public class CopListener implements Listener {
 
 		CopNpc cop = copManager.findCopByEntity(event.getEntity());
 		if (cop != null) {
+			Bukkit.getPluginManager().callEvent(new CopDeathEvent(cop, event.getEntity().getKiller()));
 			cop.destroy();
 		}
 

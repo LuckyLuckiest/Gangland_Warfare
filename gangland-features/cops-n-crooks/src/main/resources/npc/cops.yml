@@ -188,3 +188,36 @@ Hud:
       Star_Lost: "%stars% &a&lSTAR LOST"
       Star_Gained_Title: "&c&lWANTED"
       Star_Gained_Subtitle: "%stars%"
+
+# ============================================
+# Pursuit_Report (0.12): a short chat report sent when a chase ends, and a server-wide "breaking news" line for a
+# chase that ran long or hot.
+#
+#   Enable:                     the whole feature no-ops when false: no report, no broadcast
+#   Breaking_News.Enable:       the server-wide broadcast
+#   Breaking_News.Min_Stars:    broadcasts when the chase's top star reaches this level...
+#   Breaking_News.Min_Duration_Seconds:  ...or when the chase ran at least this long
+#   Breaking_News.Cooldown_Seconds:      global cooldown between broadcasts
+#   Messages.Report:            the report's lines, sent to the player in order. %outcome%, %duration% (m:ss),
+#                                %stars%, %cops%
+#   Messages.Outcome_Escaped/Busted/Wasted:  the colored %outcome% value for each outcome
+#   Messages.Breaking_News:     the broadcast line. %player%, %outcome_plain% (a plain, uncolored verb phrase),
+#                                %duration%, %stars%, %cops%
+# ============================================
+Pursuit_Report:
+   Enable: true
+   Breaking_News:
+      Enable: true
+      Min_Stars: 4
+      Min_Duration_Seconds: 120
+      Cooldown_Seconds: 300
+   Messages:
+      Report:
+         - "&8&m----------&r &c&lPURSUIT REPORT &8&m----------"
+         - "&7Outcome: %outcome%"
+         - "&7Duration: &f%duration%  &7Top stars: %stars%"
+         - "&7Cops down: &f%cops%"
+      Outcome_Escaped: "&aESCAPED"
+      Outcome_Busted: "&9BUSTED"
+      Outcome_Wasted: "&4WASTED"
+      Breaking_News: "&c&lBREAKING NEWS &7» &f%player% %outcome_plain% after a %duration% chase at %stars%&f, %cops% officers down."
