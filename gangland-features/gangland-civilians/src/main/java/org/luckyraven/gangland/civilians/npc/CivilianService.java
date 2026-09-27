@@ -156,6 +156,13 @@ public class CivilianService implements BeanLifecycle {
 		LivingEntity victimEntity = victim.getEntity();
 		if (victimEntity == null) return;
 
+		// Friendly fire: a same-faction civilian's stray hit must not rally the faction against its own member. The
+		// victim still fights back (joinSquad/reportSighting above already ran) - only recruiting allies is skipped.
+		CivilianNpc attackerNpc = registry.getNpc(attackerId);
+		if (attackerNpc != null && attackerNpc.isValid() && faction.equals(attackerNpc.getTypeConfig().faction())) {
+			return;
+		}
+
 		// ponytail: scans every active civilian per hit; add a spatial index if active civilians reach the hundreds
 		for (CivilianNpc ally : registry.getActiveNpcs()) {
 			if (ally == victim || !ally.isValid() || ally.isMarkedForRemoval()) continue;

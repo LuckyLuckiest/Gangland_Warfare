@@ -77,7 +77,17 @@ public class CopManager implements BeanLifecycle {
 
 		targetingManager.registerWanted(player, wanted);
 		// The crime scene is known: the group's squad starts from where the player is now
-		groups.computeIfAbsent(playerId, CopGroup::new).getSquad().reportSighting(player.getLocation());
+		CopGroup group = groups.computeIfAbsent(playerId, CopGroup::new);
+		group.getSquad().reportSighting(player.getLocation());
+
+		// A new wanted start is a new episode: pull the group's returning cops back into the hunt instead of letting
+		// them walk home for up to Return.Max_Ticks. "Never give up while wanted" outranks the D1 re-engage rule,
+		// which only guards against a per-tick bounce inside a single episode.
+		for (CopNpc cop : group.getCops()) {
+			if (!cop.isValid() || cop.getCurrentState() != CopState.RETURNING) continue;
+			cop.setTargetPlayerId(playerId);
+			cop.transitionTo(CopState.PURSUING);
+		}
 
 		startSpawnTask(playerId, wanted);
 		startAITask(playerId);

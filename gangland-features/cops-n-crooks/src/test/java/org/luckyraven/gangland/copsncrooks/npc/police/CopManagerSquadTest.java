@@ -16,6 +16,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
+import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.targeting.TargetingManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.keystone.npc.NpcSquad;
@@ -29,6 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -97,6 +100,30 @@ class CopManagerSquadTest {
 		manager.onCopAttackedAlert(cop, player);
 
 		assertEquals(new Location(world, 40, 70, 40), manager.groupFor(playerId).getSquad().lastKnownLocation());
+	}
+
+	@Test
+	@DisplayName("a new wanted start sends the group's returning cops back to pursuit; other states are untouched")
+	void wantedStart_sendsReturningCopsBackToPursuit() {
+		manager.onWantedStart(player, wanted());
+		CopGroup group = manager.groupFor(playerId);
+
+		CopNpc returningCop = mock(CopNpc.class);
+		when(returningCop.isValid()).thenReturn(true);
+		when(returningCop.getCurrentState()).thenReturn(CopState.RETURNING);
+		group.add(returningCop);
+
+		CopNpc pursuingCop = mock(CopNpc.class);
+		when(pursuingCop.isValid()).thenReturn(true);
+		when(pursuingCop.getCurrentState()).thenReturn(CopState.PURSUING);
+		group.add(pursuingCop);
+
+		manager.onWantedStart(player, wanted());
+
+		verify(returningCop).setTargetPlayerId(playerId);
+		verify(returningCop).transitionTo(CopState.PURSUING);
+		verify(pursuingCop, never()).setTargetPlayerId(any());
+		verify(pursuingCop, never()).transitionTo(any());
 	}
 
 	private static Wanted wanted() {

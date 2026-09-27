@@ -380,7 +380,7 @@ Cops:
    # Controls when a pursuing cop gives up chasing its target and transitions to RETURNING.
    # Acts as a final-fallback leash so stuck/unreachable cops don't occupy the per-player cap forever.
    Pursuit:
-      # Horizontal distance from the target (blocks) beyond which the pursuing cop gives up.
+      # Distance from the target (blocks) beyond which the pursuing cop gives up.
       Max_Distance: 80.0
       # AI ticks a pursuing cop may stay stuck while no cop chasing the same player can see them before it gives up
       # (the spawner replaces it). Ticks where it moves or anyone sees the player reset the count.
@@ -389,7 +389,7 @@ Cops:
 
    # Controls how a cop returns to its station and despawns after the target is detained.
    Return:
-      # Maximum AI ticks the cop waits before being force-despawned. (600 = ~30 s at default AI tick rate)
+      # Maximum AI ticks the cop waits before being force-despawned. (600 = ~300 s at the default AI_Tick_Rate: 10)
       Max_Ticks: 600
       # Distance to the station at which the cop considers itself arrived and attempts to despawn (blocks).
       Station_Arrival_Distance: 3.0

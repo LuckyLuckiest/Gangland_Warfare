@@ -49,8 +49,8 @@ public class CopGroup {
 	 * it from {@link #getCops()}: both call sites are iterating that list.
 	 */
 	public void release(CopNpc cop, NpcMarkManager markManager) {
-		cop.destroy(entity -> markManager.removeMark(entity));
 		squad.remove(cop);
+		cop.destroy(entity -> markManager.removeMark(entity));
 	}
 
 	public boolean isEmpty() {

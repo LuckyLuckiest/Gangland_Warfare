@@ -113,6 +113,29 @@ class CivilianServiceSquadTest {
 	}
 
 	@Test
+	@DisplayName("a same-faction civilian's stray hit does not rally the faction against its own member")
+	void hit_bySameFactionCivilian_doesNotRallyFaction() {
+		CivilianNpc  victim         = civilian("gang", 0.0);
+		CivilianNpc  ally           = civilian("gang", 5.0);
+		CivilianNpc  attackerNpc    = civilian("gang", 2.0);
+		LivingEntity attackerEntity = mock(LivingEntity.class);
+		UUID         attackerNpcId  = UUID.randomUUID();
+		when(attackerEntity.getUniqueId()).thenReturn(attackerNpcId);
+		when(attackerEntity.getLocation()).thenReturn(new Location(mock(World.class), 1, 64, 1));
+		when(attackerNpc.getEntity()).thenReturn(attackerEntity);
+		when(victim.getEntity()).thenReturn(victimEntity);
+		when(registry.getNpc(attackerNpcId)).thenReturn(attackerNpc);
+		when(registry.getActiveNpcs()).thenReturn(List.of(victim, ally, attackerNpc));
+
+		service.alertFaction(victim, attackerEntity, false);
+
+		verify(ally, never()).setTargetPlayerId(any());
+		verify(ally, never()).addEntityTargetToFront(any());
+		verify(ally, never()).joinSquad(any(), any());
+		verify(ally, never()).transitionTo(CivilianState.COMBAT);
+	}
+
+	@Test
 	@DisplayName("an ally already fighting another target is not pulled off it")
 	void hit_skipsAllyBusyWithAnotherTarget() {
 		CivilianNpc victim = civilian("gang", 0.0);

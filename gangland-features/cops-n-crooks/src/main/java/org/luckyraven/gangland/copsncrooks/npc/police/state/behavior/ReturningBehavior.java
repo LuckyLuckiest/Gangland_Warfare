@@ -15,8 +15,8 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Cop navigates back to the nearest registered spawn station. Once arrived, or after a timeout, the cop despawns - but
- * only when no other player is looking.
+ * Cop navigates back to the nearest registered spawn station. {@link #tryDespawn} marks the cop for removal - and it
+ * despawns - on arrival or after {@code Return.Max_Ticks}.
  * <p>
  * Only a cop sent back because its target was restrained or jailed re-engages: if that target is freed before the cop
  * reaches its station (e.g. via admin command), the cop returns to {@link CopState#COMBAT} when {@code combatForced}

@@ -193,7 +193,7 @@ The central orchestrator with ~20 methods managing cop lifecycle:
 
 | Method                                          | Purpose                                                              |
 |-------------------------------------------------|----------------------------------------------------------------------|
-| `onWantedStart(Player, Wanted)`                 | Registers wanted player, reports the crime scene to the group's squad, starts spawn + AI tasks |
+| `onWantedStart(Player, Wanted)`                 | Registers wanted player, reports the crime scene to the group's squad, sends the group's returning cops back to pursuit, starts spawn + AI tasks |
 | `onWantedEnd(Player)`                           | Unregisters target, lets cops organically find new targets or return |
 | `onWantedLevelChange(Player, Wanted, old, new)` | Routes to start/end based on level transitions                       |
 | `onCopAttackedAlert(CopNpc, Player)`            | Alerts ALL cops in group -- forces combat mode; reports a sighting when the attacker is the group's target |
@@ -256,7 +256,8 @@ Each `CopGroup` owns one Keystone `NpcSquad`: the group's shared awareness of it
 sighting time, routes). A cop joins it in `CopGroup.add` when the spawn task assigns it, leaves it on
 `ReturningBehavior` entry, and is dropped from it by `CopGroup.release` when it is despawned, killed or invalid.
 `CopNpc.squadFor(target)` returns the group squad only when `target` is the group's wanted player; for an entity target
-or a player the cop retargeted to it returns `null`, and Keystone then uses the cop's private squad.
+or a player the cop retargeted to it returns a squad of the cop's own, seeded with the target's position when the cop
+is handed that target and replaced when the target changes.
 
 Sightings are reported by `onWantedStart` (the crime scene), `onCopAttackedAlert` (the attacker, when they are the group's
 target), `IdleBehavior` (`cop.canSee(target, alertRange)`) and by Keystone's `AbstractNpc.pursue`, which every
@@ -279,7 +280,7 @@ Individual cop NPC extending `AbstractNpc`. Key additions:
 | `tick(LivingEntity)`                         | Runs one AI tick with current behavior                      |
 | `attemptCuff(Player)`                        | Returns true if within cuff radius and has line of sight    |
 | `CopGroup group`                             | Group the cop was assigned to; its squad is the group's     |
-| `squadFor(LivingEntity)`                     | The group squad for the group's target, else `null`         |
+| `squadFor(LivingEntity)`                     | The group squad for the group's target, else the cop's own squad for that target |
 | `leaveSquad()`                               | Leaves the group squad (called when returning)              |
 
 ### CopTierConfig
@@ -383,7 +384,8 @@ Higher tiers (e.g., SWAT, Military) have `skipCuffing = true` -- they engage in 
 
 - Attacks target within `combatRange` (melee) or `combatRange * 3` (ranged)
 - Navigates with `cop.pursue(target, cop.squadFor(target), alertRange)`: ranged cops hold while they see the target
-  inside their firing band, everyone else closes in (entity targets use the cop's private squad)
+  inside their firing band, everyone else closes in (any other target uses the cop's own squad, seeded where the cop
+  was handed it)
 - Transition: `COMBAT -> RETURNING` when target goes offline/dies/is detained
 
 **RETURNING** (`ReturningBehavior`)
@@ -394,7 +396,8 @@ Higher tiers (e.g., SWAT, Military) have `skipCuffing = true` -- they engage in 
 - Despawns (`markForRemoval()`) on arrival or after `maxReturnTicks`
 - Re-engagement: only a cop that entered `RETURNING` because its target was restrained or jailed re-engages when the
   target is freed before it reaches the station (`COMBAT` if combatForced, otherwise `PURSUING`). A cop rotated out
-  of a pursuit never re-engages — that bounce froze cops below unreachable targets before 0.11.0 (D1).
+  of a pursuit never re-engages — that bounce froze cops below unreachable targets before 0.11.0 (D1). A new wanted
+  start for the same player (`onWantedStart`) sends every returning cop of the group back to `PURSUING`.
 
 ### CuffLockRegistry
 

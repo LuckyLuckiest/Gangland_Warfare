@@ -71,16 +71,18 @@ class CombatBehaviorTest {
 	}
 
 	@Test
-	@DisplayName("an entity target (hostile NPC) is pursued with the cop's private squad")
+	@DisplayName("an entity target (hostile NPC) is pursued with the cop's own squad")
 	void entityTarget_pursuesWithPrivateSquad() {
 		LivingEntity civilian = mock(LivingEntity.class);
 		when(civilian.isValid()).thenReturn(true);
 		when(cop.getTargetEntity()).thenReturn(civilian);
 		when(cop.distanceTo(civilian)).thenReturn(30.0);
+		NpcSquad squad = new NpcSquad();
+		when(cop.squadFor(civilian)).thenReturn(squad);
 
 		behavior.tick(cop);
 
-		verify(cop).pursue(civilian, null, ALERT_RANGE);
+		verify(cop).pursue(civilian, squad, ALERT_RANGE);
 		verify(cop, never()).navigateTo(any());
 	}
 }

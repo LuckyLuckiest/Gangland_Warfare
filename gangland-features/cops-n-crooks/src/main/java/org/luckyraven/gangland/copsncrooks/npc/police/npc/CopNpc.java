@@ -61,6 +61,13 @@ public class CopNpc extends AbstractNpc {
 	 */
 	@Setter
 	private @Nullable CopGroup               group;
+	/**
+	 * This cop's own squad for a target outside the group (an attacker, a retarget, a wanted civilian): seeded with
+	 * that target's position when it is first handed to the cop, replaced when the target changes. {@code null} until
+	 * {@link #squadFor} is called with such a target.
+	 */
+	private @Nullable NpcSquad               soloSquad;
+	private @Nullable UUID                   soloTargetId;
 
 	public CopNpc(JavaPlugin plugin, NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors,
 	              Location spawnLocation, CopConfigProvider configProvider) {
@@ -182,12 +189,25 @@ public class CopNpc extends AbstractNpc {
 
 	/**
 	 * The squad to pursue {@code target} with: the group's squad when {@code target} is the group's wanted player,
-	 * otherwise {@code null} (Keystone then uses this cop's own private squad). An entity target, or a player this cop
-	 * retargeted to, must never feed the group's last-known position.
+	 * otherwise a squad of this cop's own, seeded with {@code target}'s position when it is first handed to the cop and
+	 * replaced when the target changes. An entity target, or a player this cop retargeted to, must never feed the
+	 * group's last-known position.
 	 */
-	public @Nullable NpcSquad squadFor(LivingEntity target) {
-		if (group == null || !target.getUniqueId().equals(group.getTargetPlayerId())) return null;
-		return group.getSquad();
+	public NpcSquad squadFor(LivingEntity target) {
+		UUID id = target.getUniqueId();
+		if (group != null && id.equals(group.getTargetPlayerId())) {
+			soloTargetId = null;
+			return group.getSquad();
+		}
+		leaveSquad();
+		if (!id.equals(soloTargetId)) {
+			// ponytail: one squad per cop for a non-group target (an attacker, a retarget, a wanted civilian), seeded
+			// like the crime scene; share one per (group, target) if cops must coordinate on attackers
+			soloSquad    = new NpcSquad();
+			soloSquad.reportSighting(target.getLocation());
+			soloTargetId = id;
+		}
+		return soloSquad;
 	}
 
 	/**
