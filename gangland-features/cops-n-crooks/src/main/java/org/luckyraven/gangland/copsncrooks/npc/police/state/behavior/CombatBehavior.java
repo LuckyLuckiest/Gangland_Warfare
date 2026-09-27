@@ -51,8 +51,8 @@ public class CombatBehavior implements CopBehavior {
 		}
 
 		// Keystone's squad pursuit: ranged cops hold while they see the target inside their firing band, everyone else
-		// closes in, routes around obstacles or searches from the last-known position. squadFor returns null for an
-		// entity target (hostile NPC), which then uses the cop's private squad.
+		// closes in, routes around obstacles or searches from the last-known position. squadFor gives the group squad
+		// for the group's player and the cop's own squad, seeded where it was handed the target, for anyone else.
 		cop.pursue(target, cop.squadFor(target), alertRange);
 	}
 
