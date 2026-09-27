@@ -64,12 +64,25 @@ In-depth technical documentation for developers working on the codebase.
 | 12 | [Configuration Reference](./developer/configuration.md)     | All YAML files, settings, formulas, defaults                 |
 
 Bartizan integration (what the core gets from the weapons plugin, and what degrades without it) is documented in
-[`bartizan-integration.md`](./bartizan-integration.md); server-owner migration notes are in
-[`migration-0.9.0.md`](./migration-0.9.0.md). Recoil is documented in
+[`bartizan-integration.md`](./bartizan-integration.md). Recoil is documented in
 [Version Compatibility](./developer/compatibility.md), now a Bartizan-side reflective packet call rather than an
 NMS adapter this repo ships.
 
 [Full Developer Docs Index](./developer/README.md)
+
+---
+
+### Migration Guides
+
+Server-owner guides for upgrading from one version to the next. Each covers new config keys, changed behavior, and optional tuning.
+
+| From | To | Guide | Summary |
+|------|----|----|---------|
+| 0.11.x | 0.12.0 | [migration-0.12.0.md](./migration-0.12.0.md) | Heat ledger, line-of-sight evasion, HUD, rosters, backup waves, new evasion/heat config |
+| 0.10.x | 0.11.0 | [migration-0.11.0.md](./migration-0.11.0.md) | Squad awareness, route planning, new cop behavior (Keystone 1.12.0) |
+| 0.9.x | 0.10.0 | [migration-0.10.0.md](./migration-0.10.0.md) | Economy refactor, database unification, command changes |
+| 0.9.1 | 0.9.2 | [migration-0.9.2.md](./migration-0.9.2.md) | Bug fixes, config tuning |
+| 0.8.x | 0.9.0 | [migration-0.9.0.md](./migration-0.9.0.md) | Bartizan split-out, citizens spawner changes, config reorganization |
 
 ---
 

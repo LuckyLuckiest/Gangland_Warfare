@@ -120,6 +120,7 @@ Full documentation is available in the [`documentation/`](./documentation/) fold
 | [Bartizan integration](./documentation/bartizan-integration.md)  | What the weapons plugin provides, and what degrades without it |
 | [0.9.0 migration notes](./documentation/migration-0.9.0.md)      | Server-owner upgrade guide from 0.8.x             |
 | [0.11.0 migration notes](./documentation/migration-0.11.0.md)    | Upgrade guide from 0.10.x: squad navigation       |
+| [0.12.0 migration notes](./documentation/migration-0.12.0.md)    | Upgrade guide from 0.11.x: heat ledger, evasion, HUD, rosters |
 | [Gangs](./documentation/features/gangs.md)                       | Creation, ranks, bank, and alliances              |
 | [Economy](./documentation/features/economy.md)                   | Balances, bank, death penalty, and admin commands |
 | [Waypoints](./documentation/features/waypoints.md)               | Types, teleportation, and safe zones              |
