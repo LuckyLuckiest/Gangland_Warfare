@@ -80,6 +80,9 @@ public class CopManager implements BeanLifecycle {
 		targetingManager.registerWanted(player, wanted);
 		// The crime scene is known: the group's squad starts from where the player is now
 		CopGroup group = groups.computeIfAbsent(playerId, CopGroup::new);
+		// A reused group (its cops still walking home from a previous episode) must not carry over the previous
+		// episode's backup-wave bookkeeping into this fresh one (0.12 F4).
+		group.resetEpisode();
 		group.getSquad().reportSighting(player.getLocation());
 
 		// A new wanted start is a new episode: pull the group's returning cops back into the hunt instead of letting
@@ -388,17 +391,16 @@ public class CopManager implements BeanLifecycle {
 
 			List<CopNpc> cops = group.getCops();
 
-			// Same removal rules as before F4, but counted: a cop lost here after the initial response is a backup
-			// wave, not an immediate respawn (0.12 F4).
-			int              lost = 0;
-			Iterator<CopNpc> it   = cops.iterator();
+			// Same removal rules as before F4. Losses are counted inside CopGroup.release() itself rather than here,
+			// since the AI task (startAITask below) ticks far more often and usually prunes a dead cop before this
+			// pass ever sees it — counting only this loop's own removals left `lost` at 0 almost every time (0.12 F4).
+			Iterator<CopNpc> it = cops.iterator();
 			while (it.hasNext()) {
 				CopNpc cop = it.next();
 
 				if (cop.isMarkedForRemoval()) {
 					group.release(cop, markManager);
 					it.remove();
-					lost++;
 					continue;
 				}
 				if (!cop.isValid()) {
@@ -410,10 +412,10 @@ public class CopManager implements BeanLifecycle {
 					}
 					group.release(cop, markManager);
 					it.remove();
-					lost++;
 				}
 			}
 
+			int lost = group.drainLost();
 			if (lost > 0 && group.isInitialResponseDone()) {
 				int delaySeconds = spawnManager.getBackupDelaySeconds(wantedLevel);
 				group.addLosses(lost, System.currentTimeMillis() + delaySeconds * 1000L);

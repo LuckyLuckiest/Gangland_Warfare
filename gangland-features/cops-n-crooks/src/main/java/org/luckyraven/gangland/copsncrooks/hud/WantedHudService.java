@@ -13,6 +13,7 @@ import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.evasion.EvasionService;
 import org.luckyraven.gangland.copsncrooks.evasion.EvasionSnapshot;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
@@ -26,6 +27,7 @@ import org.luckyraven.keystone.bean.Qualifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,7 +35,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * The wanted HUD (0.12 F3): a per-player boss bar (red while SEEN, yellow with the countdown while SEARCHING),
  * flashing stars, the search-zone particle ring and the escape compass. Reads {@link EvasionService#getSnapshot(UUID)}
  * for state and drives everything from one lazy 20-tick sync task, started on the first {@link #show(Player)} and
- * stopped once no player has a bar. The whole service no-ops when {@code Hud.Enable} is {@code false}.
+ * stopped once no player is tracked. The whole service no-ops when {@code Hud.Enable} is {@code false}.
+ * <p>
+ * {@code Hud.Boss_Bar}, {@code Hud.Search_Zone_Ring} and {@code Hud.Escape_Compass} are independent toggles: which
+ * players are ticked ({@link #tracked}) is decided by whether any of them is on, while {@link #bars} only ever holds
+ * an entry when {@code Boss_Bar} itself is on. {@link #refresh} and the {@code showXxx} helpers below therefore treat
+ * the {@link BossBar} as possibly {@code null} and skip only the bar-specific calls when it is.
  */
 @CustomLog
 public class WantedHudService implements BeanLifecycle {
@@ -50,6 +57,7 @@ public class WantedHudService implements BeanLifecycle {
 	private final CopLoader           copLoader;
 	private final EscapeCompass       compass;
 
+	private final Set<UUID>          tracked;
 	private final Map<UUID, BossBar> bars;
 	private final Map<UUID, Long>    starLostUntil;
 
@@ -63,22 +71,45 @@ public class WantedHudService implements BeanLifecycle {
 		this.users         = users;
 		this.copLoader     = copLoader;
 		this.compass       = new EscapeCompass();
+		this.tracked       = ConcurrentHashMap.newKeySet();
 		this.bars          = new ConcurrentHashMap<>();
 		this.starLostUntil = new ConcurrentHashMap<>();
 	}
 
 	/**
-	 * Creates (or refreshes) {@code player}'s boss bar. Called on every wanted start and evasion state change so the
-	 * HUD reflects the new state immediately instead of waiting for the next tick.
+	 * Starts (or refreshes) the HUD for {@code player}: registers them for ticking and creates the boss bar when
+	 * {@code Boss_Bar} is on. Called on every wanted start and evasion state change so the HUD reflects the new state
+	 * immediately instead of waiting for the next tick.
 	 *
 	 * @param player the wanted player
 	 */
 	public void show(Player player) {
 		HudConfig config = config();
-		if (!config.isEnabled() || !config.isBossBar()) return;
+		if (!config.isEnabled()) return;
+		if (!config.isBossBar() && !config.isSearchZoneRing() && !config.isEscapeCompass()) return;
 
-		bars.computeIfAbsent(player.getUniqueId(), id -> createBar(player));
+		UUID id = player.getUniqueId();
+		tracked.add(id);
+		if (config.isBossBar()) {
+			bars.computeIfAbsent(id, key -> createBar(player));
+		}
 		startTask();
+		refresh(player, config);
+	}
+
+	/**
+	 * Refreshes {@code player}'s HUD only if it is already being tracked; otherwise a no-op. Used for updates that
+	 * should never themselves start showing the HUD to a player who isn't already seeing it (e.g. an evasion state
+	 * change delivered after the player has already quit or stopped being wanted).
+	 *
+	 * @param player the player
+	 */
+	public void refreshIfShown(Player player) {
+		if (!tracked.contains(player.getUniqueId())) return;
+
+		HudConfig config = config();
+		if (!config.isEnabled()) return;
+
 		refresh(player, config);
 	}
 
@@ -121,19 +152,21 @@ public class WantedHudService implements BeanLifecycle {
 	}
 
 	/**
-	 * Removes {@code player}'s boss bar and restores their compass. Called on wanted end, quit, death and downed.
+	 * Stops tracking {@code player}, removes their boss bar (if any) and restores their compass. Called on wanted
+	 * end, quit, death and downed.
 	 *
 	 * @param player the player
 	 */
 	public void hide(Player player) {
 		UUID id = player.getUniqueId();
 
+		tracked.remove(id);
 		BossBar bar = bars.remove(id);
 		if (bar != null) bar.removeAll();
 		starLostUntil.remove(id);
 		compass.restore(player);
 
-		if (bars.isEmpty()) stopTask();
+		if (tracked.isEmpty()) stopTask();
 	}
 
 	@Override
@@ -153,8 +186,14 @@ public class WantedHudService implements BeanLifecycle {
 
 	private void clearAll() {
 		stopTask();
+		// Restore compasses before dropping `tracked`: offline players are simply skipped by EscapeCompass.
+		for (UUID id : tracked) {
+			Player player = Bukkit.getPlayer(id);
+			if (player != null) compass.restore(player);
+		}
 		bars.values().forEach(BossBar::removeAll);
 		bars.clear();
+		tracked.clear();
 		starLostUntil.clear();
 	}
 
@@ -167,12 +206,14 @@ public class WantedHudService implements BeanLifecycle {
 			return;
 		}
 
-		// Copy: hide() removes from `bars` while we iterate a stale/offline player out
-		List<UUID> ids = new ArrayList<>(bars.keySet());
+		// Copy: hide() removes from `tracked` while we iterate a stale/offline player out
+		List<UUID> ids = new ArrayList<>(tracked);
 		for (UUID id : ids) {
 			Player player = Bukkit.getPlayer(id);
 			if (player == null || !player.isOnline()) {
-				bars.remove(id);
+				tracked.remove(id);
+				BossBar bar = bars.remove(id);
+				if (bar != null) bar.removeAll();
 				starLostUntil.remove(id);
 				continue;
 			}
@@ -184,13 +225,11 @@ public class WantedHudService implements BeanLifecycle {
 			}
 		}
 
-		if (bars.isEmpty()) stopTask();
+		if (tracked.isEmpty()) stopTask();
 	}
 
 	private void refresh(Player player, HudConfig config) {
-		UUID    id  = player.getUniqueId();
-		BossBar bar = bars.get(id);
-		if (bar == null) return;
+		UUID id = player.getUniqueId();
 
 		User<Player> user = users.getUser(player);
 		Wanted       wanted = user == null ? null : user.getWanted();
@@ -201,6 +240,9 @@ public class WantedHudService implements BeanLifecycle {
 
 		int level    = wanted.getLevel();
 		int maxLevel = wanted.getMaxLevel();
+
+		// Only present when Boss_Bar is on; every showXxx helper below tolerates a null bar (0.12 review).
+		BossBar bar = bars.get(id);
 
 		Long lostUntil = starLostUntil.get(id);
 		if (lostUntil != null) {
@@ -220,37 +262,46 @@ public class WantedHudService implements BeanLifecycle {
 		}
 	}
 
-	private void showSeen(BossBar bar, int level, int maxLevel, HudConfig config, Player player) {
-		bar.setColor(BarColor.RED);
-		bar.setProgress(1D);
-		bar.setTitle(title(config.getInSightMessage(), level, maxLevel, false, 0D));
+	private void showSeen(@Nullable BossBar bar, int level, int maxLevel, HudConfig config, Player player) {
+		if (bar != null) {
+			bar.setColor(BarColor.RED);
+			bar.setProgress(1D);
+			bar.setTitle(title(config.getInSightMessage(), level, maxLevel, false, 0D));
+		}
 		compass.restore(player);
 	}
 
-	private void showWanted(BossBar bar, int level, int maxLevel, HudConfig config, Player player) {
-		bar.setColor(BarColor.RED);
-		bar.setProgress(1D);
-		bar.setTitle(title(config.getWantedMessage(), level, maxLevel, false, 0D));
+	private void showWanted(@Nullable BossBar bar, int level, int maxLevel, HudConfig config, Player player) {
+		if (bar != null) {
+			bar.setColor(BarColor.RED);
+			bar.setProgress(1D);
+			bar.setTitle(title(config.getWantedMessage(), level, maxLevel, false, 0D));
+		}
 		compass.restore(player);
 	}
 
-	private void showStarLost(BossBar bar, int level, int maxLevel, HudConfig config) {
+	private void showStarLost(@Nullable BossBar bar, int level, int maxLevel, HudConfig config) {
+		if (bar == null) return;
+
 		bar.setColor(BarColor.GREEN);
 		bar.setProgress(1D);
 		bar.setTitle(title(config.getStarLostMessage(), level, maxLevel, false, 0D));
 	}
 
-	private void showSearching(BossBar bar, Player player, int level, int maxLevel, EvasionSnapshot snapshot,
-	                           HudConfig config) {
+	private void showSearching(@Nullable BossBar bar, Player player, int level, int maxLevel,
+	                           EvasionSnapshot snapshot, HudConfig config) {
 		double total     = Math.max(snapshot.totalSeconds(), 0.0001D);
 		double remaining = Math.max(0D, Math.min(snapshot.remainingSeconds(), total));
-		double progress  = remaining / total;
 
-		bar.setColor(BarColor.YELLOW);
-		bar.setProgress(Math.max(0D, Math.min(1D, progress)));
+		if (bar != null) {
+			double progress = remaining / total;
 
-		boolean flashOff = (tickCount & 1L) == 0L;
-		bar.setTitle(title(config.getSearchingMessage(), level, maxLevel, flashOff, remaining));
+			bar.setColor(BarColor.YELLOW);
+			bar.setProgress(Math.max(0D, Math.min(1D, progress)));
+
+			boolean flashOff = (tickCount & 1L) == 0L;
+			bar.setTitle(title(config.getSearchingMessage(), level, maxLevel, flashOff, remaining));
+		}
 
 		Location center = snapshot.zoneCenter();
 		if (center == null) return;

@@ -36,6 +36,10 @@ public class WantedHudListener implements Listener {
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onWantedLevelChange(WantedLevelChangeEvent event) {
 		if (event.getNewLevel() <= 0) return; // WantedEndEvent hides the HUD
+		// A 0 -> n start is handled by onWantedStart above. This event also fires (before Wanted.setLevel actually
+		// applies the new level), so handling it here too would both double the star-gain title/sound and read the
+		// still-old level/wanted state through show()/refresh().
+		if (event.getOldLevel() == 0) return;
 
 		Player player   = event.getPlayer();
 		int    maxLevel = event.getWanted().getMaxLevel();
@@ -49,7 +53,11 @@ public class WantedHudListener implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onEvasionStateChange(EvasionStateChangeEvent event) {
-		hudService.show(event.getPlayer());
+		// refreshIfShown, not show(): EvasionService#untrack fires this synchronously from within WantedEndEvent /
+		// PlayerQuitEvent handling (see EvasionListener), which can run before or after this listener's own
+		// onWantedEnd/onPlayerQuit at the same priority. Calling show() here would recreate a bar for a player whose
+		// HUD this listener already just hid, on the ordering where EvasionListener's handler runs second.
+		hudService.refreshIfShown(event.getPlayer());
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)

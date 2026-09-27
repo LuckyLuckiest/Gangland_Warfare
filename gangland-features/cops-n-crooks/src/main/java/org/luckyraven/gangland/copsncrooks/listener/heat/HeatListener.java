@@ -10,7 +10,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.Nullable;
-import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
 import org.luckyraven.gangland.copsncrooks.heat.HeatService;
 import org.luckyraven.gangland.core.events.wanted.WantedEndEvent;
 import org.luckyraven.gangland.core.events.wanted.WantedLevelChangeEvent;
@@ -24,10 +23,12 @@ import org.luckyraven.keystone.npc.NpcSupport;
  * Drives the 0.12 heat ledger outside of kills (kills score through the core seam, see
  * {@code KillComboWantedTracker}):
  * <ul>
- *     <li>{@code Assault_Cop} — any non-lethal damage a real player deals to a cop NPC, via melee/projectiles
- *     ({@link EntityDamageByEntityEvent}) or the weapon system ({@link WeaponRaytraceImpactEvent}). The per player and
- *     cop cooldown in {@link HeatService#recordAssault} keeps one fight from stacking heat every hit and dedups a
- *     shot delivered through both events.</li>
+ *     <li>{@code Assault_Cop} — any non-lethal damage a real player deals to a cop NPC via melee/projectiles
+ *     ({@link EntityDamageByEntityEvent}), including weapon-system shots: {@code WeaponRaytracer} delivers raytrace
+ *     damage through this same event too (see {@code CopListener#onCopDamaged}'s
+ *     {@code WeaponRaytracer.isRaytraceDamageInProgress()} guard), so there is only ever one event to score here. The
+ *     per player and cop cooldown in {@link HeatService#recordAssault} keeps one fight from stacking heat every hit.
+ *     A lethal hit is excluded — it scores {@code Kill_Cop} through the kill path instead.</li>
  *     <li>Star loss (evasion, decay, admin) lowers heat to the floor of the new level.</li>
  *     <li>Chase over or quit forgets the player's heat.</li>
  * </ul>
@@ -55,18 +56,6 @@ public class HeatListener implements Listener {
 
 		// A lethal hit scores Kill_Cop through the kill path instead.
 		if (victim instanceof LivingEntity living && living.getHealth() <= event.getFinalDamage()) return;
-
-		recordAssault(attacker, victim);
-	}
-
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public void onCopShot(WeaponRaytraceImpactEvent event) {
-		if (!heatService.isEnabled()) return;
-
-		Entity victim = event.getHitEntity();
-		if (victim == null || !heatService.isCop(victim)) return;
-
-		if (!(event.getShooter() instanceof Player attacker) || NpcSupport.isNpc(attacker)) return;
 
 		recordAssault(attacker, victim);
 	}

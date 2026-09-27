@@ -71,6 +71,32 @@ class RosterPlannerTest {
 	}
 
 	@Test
+	@DisplayName("deficits clamps to the roster's own total, not just maxTotal, for the single-tier fallback roster")
+	void deficits_clampsToRosterTotal_singleTierFallback() {
+		// CopSpawnManager#getRosterForWantedLevel single-tier fallback: 1 star -> tier 1 x2, 2 stars -> tier 2 x3.
+		// 2 leftover tier-1 cops from 1 star must count against the 2-star roster's total (3), not stack a full new
+		// squad on top of them (0.12 F4 regression).
+		Map<Integer, Integer> roster        = Map.of(2, 3);
+		Map<Integer, Integer> currentByTier = Map.of(1, 2);
+
+		Map<Integer, Integer> deficits = RosterPlanner.deficits(roster, currentByTier, 2, 10);
+
+		assertEquals(Map.of(2, 1), deficits, "only 1 more tier-2 cop is spawned, matching the pre-0.12 total of 3");
+	}
+
+	@Test
+	@DisplayName("deficits still honors a shipped multi-tier roster larger than the leftover total")
+	void deficits_multiTierRoster_notClampedBelowItsOwnTotal() {
+		Map<Integer, Integer> roster        = new LinkedHashMap<>();
+		roster.put(1, 2);
+		roster.put(2, 1);
+
+		Map<Integer, Integer> deficits = RosterPlanner.deficits(roster, Map.of(1, 2), 2, 10);
+
+		assertEquals(Map.of(2, 1), deficits);
+	}
+
+	@Test
 	@DisplayName("cap holds the total at 'allowed', keeping tier priority")
 	void cap_holdsTotal() {
 		Map<Integer, Integer> deficits = new LinkedHashMap<>();

@@ -33,6 +33,11 @@ import java.util.UUID;
  * spawn task only lets the queued count through once {@link #isBackupDue(long)} says the delay has elapsed. The
  * initial response to a fresh wanted episode is unaffected: {@link #markInitialResponseDone()} is only set after
  * that first spawn pass, and losses are queued only once it is set.
+ * <p>
+ * Losses are counted in {@link #release(CopNpc, NpcMarkManager)} itself, not by whichever loop happens to remove the
+ * cop: {@link CopManager}'s AI task (ticks far more often than the spawn task, and starts immediately) usually prunes
+ * a dead cop long before the spawn task's own pass ever sees it, so counting only the spawn task's removals would
+ * leave {@link #drainLost()} at zero almost every time. Both call sites reach {@link #release} either way.
  */
 @Getter
 public class CopGroup {
@@ -46,6 +51,7 @@ public class CopGroup {
 	private int     pendingBackup;
 	private long    backupDueAt;
 	private boolean initialResponseDone;
+	private int     lostSinceSpawnCheck;
 
 	public CopGroup(UUID targetPlayerId) {
 		this.targetPlayerId = targetPlayerId;
@@ -101,12 +107,38 @@ public class CopGroup {
 	}
 
 	/**
+	 * Resets this group's backup-wave bookkeeping for a fresh wanted episode. A {@link CopGroup} can outlive the
+	 * wanted episode that created it while its cops walk home, and {@link CopManager#onWantedStart} reuses it via
+	 * {@code computeIfAbsent} instead of always creating a new one. Without this reset, a new chase that starts
+	 * within {@code Backup_Delay_Seconds} of the previous one would inherit the previous episode's pending backup
+	 * wave and {@link #isInitialResponseDone()} flag, cutting its own initial response short.
+	 */
+	public void resetEpisode() {
+		clearBackup();
+		initialResponseDone = false;
+	}
+
+	/**
 	 * Destroys a cop that left the group (despawned, killed or invalid) and drops it from the squad. The caller removes
-	 * it from {@link #getCops()}: both call sites are iterating that list.
+	 * it from {@link #getCops()}: both call sites are iterating that list. Counts towards {@link #drainLost()}.
 	 */
 	public void release(CopNpc cop, NpcMarkManager markManager) {
 		squad.remove(cop);
 		cop.destroy(entity -> markManager.removeMark(entity));
+		lostSinceSpawnCheck++;
+	}
+
+	/**
+	 * Reads and resets the count of cops lost (via {@link #release}) since the last time this was called. The spawn
+	 * task calls this once per pass instead of counting only the cops its own removal loop finds, since the AI task's
+	 * much more frequent pruning usually removes a dead cop first (0.12 F4).
+	 *
+	 * @return how many cops were lost since the last call
+	 */
+	public int drainLost() {
+		int lost = lostSinceSpawnCheck;
+		lostSinceSpawnCheck = 0;
+		return lost;
 	}
 
 	public boolean isEmpty() {

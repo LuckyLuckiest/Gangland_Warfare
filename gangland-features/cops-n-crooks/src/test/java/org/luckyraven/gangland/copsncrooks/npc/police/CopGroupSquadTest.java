@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -117,5 +118,43 @@ class CopGroupSquadTest {
 
 		assertSame(boom, thrown);
 		assertTrue(group.getSquad().isEmpty());
+	}
+
+	@Test
+	@DisplayName("0.12 F4: release counts towards drainLost, from either call site, until it is drained")
+	void release_countsTowardsDrainLost() {
+		CopGroup       group       = new CopGroup(UUID.randomUUID());
+		NpcMarkManager markManager = mock(NpcMarkManager.class);
+
+		CopNpc first  = mock(CopNpc.class);
+		CopNpc second = mock(CopNpc.class);
+		group.add(first);
+		group.add(second);
+
+		assertEquals(0, group.drainLost(), "nothing lost yet");
+
+		group.release(first, markManager);
+		group.release(second, markManager);
+
+		assertEquals(2, group.drainLost(), "both release() calls counted, regardless of which loop made them");
+		assertEquals(0, group.drainLost(), "drainLost resets the count");
+	}
+
+	@Test
+	@DisplayName("0.12 F4: resetEpisode clears a reused group's backup bookkeeping for a fresh wanted episode")
+	void resetEpisode_clearsBackupBookkeeping() {
+		CopGroup group = new CopGroup(UUID.randomUUID());
+
+		group.markInitialResponseDone();
+		group.addLosses(3, System.currentTimeMillis() + 60_000L);
+
+		assertTrue(group.isInitialResponseDone());
+		assertEquals(3, group.getPendingBackup());
+
+		group.resetEpisode();
+
+		assertFalse(group.isInitialResponseDone(), "the new episode's initial response has not happened yet");
+		assertEquals(0, group.getPendingBackup());
+		assertFalse(group.isBackupDue(System.currentTimeMillis() + 60_000L));
 	}
 }

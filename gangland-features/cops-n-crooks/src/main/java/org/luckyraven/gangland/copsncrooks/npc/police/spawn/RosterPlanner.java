@@ -17,7 +17,12 @@ public final class RosterPlanner {
 
 	/**
 	 * The per-tier counts still missing from {@code currentByTier} to reach {@code roster}, in ascending tier order,
-	 * with the total clamped so {@code currentTotal} plus the returned counts never exceeds {@code maxTotal}.
+	 * with the total clamped so {@code currentTotal} plus the returned counts never exceeds {@code maxTotal}, nor the
+	 * roster's own total. The roster-total clamp matters for the single-tier fallback roster
+	 * ({@code CopSpawnManager#getRosterForWantedLevel}): without it, cops left over from an earlier, lower wanted
+	 * level (and not covered by the current roster's tier at all) are never counted against the new roster, so each
+	 * star rise stacks a whole new squad on top instead of reaching the roster's total the way the pre-0.12 single-tier
+	 * target count did.
 	 *
 	 * @param roster the target roster, {@code tier -> count}; a {@code null} or empty roster yields no deficits
 	 * @param currentByTier how many cops of each tier are currently assigned
@@ -29,8 +34,12 @@ public final class RosterPlanner {
 	public static Map<Integer, Integer> deficits(Map<Integer, Integer> roster, Map<Integer, Integer> currentByTier,
 	                                             int currentTotal, int maxTotal) {
 		Map<Integer, Integer> result = new LinkedHashMap<>();
-		int                   room   = maxTotal - currentTotal;
-		if (room <= 0 || roster == null || roster.isEmpty()) return result;
+		if (roster == null || roster.isEmpty()) return result;
+
+		int rosterTotal = roster.values().stream().mapToInt(Integer::intValue).sum();
+		int cap         = Math.min(maxTotal, rosterTotal);
+		int room        = cap - currentTotal;
+		if (room <= 0) return result;
 
 		List<Integer> tiers = new ArrayList<>(roster.keySet());
 		Collections.sort(tiers);
