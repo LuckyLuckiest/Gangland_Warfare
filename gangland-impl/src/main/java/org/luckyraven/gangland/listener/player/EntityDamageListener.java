@@ -107,7 +107,7 @@ public class EntityDamageListener implements Listener {
 
 			// Only increase wanted if this NPC counts towards wanted (cops should, civilians may, etc.)
 			if (wantedKills.countsForWanted(deadPlayer)) {
-				if (wantedKills.isActive() && Settings.isWantedKillComboEnabled()) {
+				if (routeThroughTracker()) {
 					wantedKills.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
 					                       Settings.getWantedKillComboResetAfter());
 				} else {
@@ -136,13 +136,13 @@ public class EntityDamageListener implements Listener {
 			damagerUser.sendMessage(replace);
 
 			// Reset kill combo if player was killed by someone with bounty
-			if (wantedKills.isActive() && Settings.isWantedKillComboEnabled()) {
+			if (routeThroughTracker()) {
 				wantedKills.resetCombo(deadPlayer.getUniqueId());
 			}
 		} else handleBounty(damagerUser);
 
 		// increase the wanted level for killing another player
-		if (wantedKills.isActive() && Settings.isWantedKillComboEnabled()) {
+		if (routeThroughTracker()) {
 			wantedKills.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
 			                       Settings.getWantedKillComboResetAfter());
 		} else handleWanted(damagerUser);
@@ -157,7 +157,7 @@ public class EntityDamageListener implements Listener {
 		if (!wantedKills.countsForWanted(victim)) return false;
 
 		// Record kill in combo system if enabled
-		if (wantedKills.isActive() && Settings.isWantedKillComboEnabled()) {
+		if (routeThroughTracker()) {
 			wantedKills.recordKill(attacker.getUser(), attacker.getWanted(), victim,
 			                       Settings.getWantedKillComboResetAfter());
 		} else handleWanted(attacker);
@@ -173,6 +173,15 @@ public class EntityDamageListener implements Listener {
 		wantedKills.onWantedTrigger(this::onKillComboWantedTrigger);
 		wantedKills.onComboReset(this::onKillComboReset);
 		wantedKills.onVictimDeath(this::onPlayerDeathResetWanted);
+		wantedKills.onHeatStarTrigger(this::onHeatStarTrigger);
+	}
+
+	/**
+	 * Kills go through the installed tracker when the kill combo is enabled or when the tracker scores every kill
+	 * itself (the 0.12 heat ledger); otherwise each kill adds a flat {@code Wanted.Increments}.
+	 */
+	private boolean routeThroughTracker() {
+		return wantedKills.isActive() && (Settings.isWantedKillComboEnabled() || wantedKills.isHeatActive());
 	}
 
 	private void onKillComboWantedTrigger(Player player) {
@@ -182,6 +191,15 @@ public class EntityDamageListener implements Listener {
 
 		// Apply wanted level increase based on kill combo
 		handleWanted(damagerUser);
+	}
+
+	private void onHeatStarTrigger(Player player, Integer targetLevel) {
+		User<Player> damagerUser = userManager.getUser(player);
+
+		if (damagerUser == null || targetLevel == null) return;
+
+		// Raise the wanted level to the star the player's heat now reaches
+		handleWanted(damagerUser, targetLevel);
 	}
 
 	private void onKillComboReset(Player player) {
@@ -204,11 +222,27 @@ public class EntityDamageListener implements Listener {
 	}
 
 	private void handleWanted(User<Player> damagerUser) {
+		Wanted wanted = damagerUser.getWanted();
+
+		// Increment wanted level (same target as Wanted.incrementLevel())
+		handleWanted(damagerUser, wanted.getLevel() + wanted.getIncrements());
+	}
+
+	/**
+	 * The single path every star gain goes through: raises the wanted level to {@code targetLevel} (which fires the
+	 * wanted events cops react to), then starts the wanted/bounty timers and adds the auto bounty.
+	 *
+	 * @param damagerUser the offender
+	 * @param targetLevel the level to raise to; ignored unless above the current level
+	 */
+	private void handleWanted(User<Player> damagerUser, int targetLevel) {
 		Wanted      wanted      = damagerUser.getWanted();
 		WantedEvent wantedEvent = new WantedEvent(true, wanted);
 
-		// Increment wanted level
-		wanted.incrementLevel();
+		if (targetLevel <= wanted.getLevel()) return;
+
+		// Raise wanted level
+		wanted.setLevel(targetLevel);
 
 		// Start wanted timer if enabled
 		if (Settings.isWantedTimerEnabled() && wanted.isWanted()) {

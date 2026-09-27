@@ -6,12 +6,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Pins the seam-3 holder's inert-by-default contract: {@code EntityDamageListener} always constructs against
@@ -75,5 +78,49 @@ class WantedKillTrackersTest {
 		verify(delegate).countsForWanted(victim);
 		verify(delegate).recordKill(killer, wanted, victim, 30);
 		verify(delegate).resetCombo(victimId);
+	}
+
+	@Test
+	@DisplayName("a heat star trigger registered before install is replayed onto the delegate")
+	void heatStarTriggerRegisteredBeforeInstall_isReplayed() {
+		WantedKillTrackers trackers = new WantedKillTrackers();
+		WantedKillTracker  delegate = mock(WantedKillTracker.class);
+
+		@SuppressWarnings("unchecked")
+		BiConsumer<Player, Integer> heatTrigger = mock(BiConsumer.class);
+
+		trackers.onHeatStarTrigger(heatTrigger);
+		trackers.install(delegate);
+
+		verify(delegate).onHeatStarTrigger(heatTrigger);
+	}
+
+	@Test
+	@DisplayName("a heat star trigger registered after install forwards straight to the delegate")
+	void heatStarTriggerRegisteredAfterInstall_forwards() {
+		WantedKillTrackers trackers = new WantedKillTrackers();
+		WantedKillTracker  delegate = mock(WantedKillTracker.class);
+		trackers.install(delegate);
+
+		@SuppressWarnings("unchecked")
+		BiConsumer<Player, Integer> heatTrigger = mock(BiConsumer.class);
+		trackers.onHeatStarTrigger(heatTrigger);
+
+		verify(delegate).onHeatStarTrigger(heatTrigger);
+	}
+
+	@Test
+	@DisplayName("isHeatActive is false with no delegate and mirrors the delegate's scoresAllKills otherwise")
+	void isHeatActive_mirrorsDelegate() {
+		WantedKillTrackers trackers = new WantedKillTrackers();
+		assertFalse(trackers.isHeatActive());
+
+		WantedKillTracker delegate = mock(WantedKillTracker.class);
+		when(delegate.scoresAllKills()).thenReturn(false);
+		trackers.install(delegate);
+		assertFalse(trackers.isHeatActive());
+
+		when(delegate.scoresAllKills()).thenReturn(true);
+		assertTrue(trackers.isHeatActive());
 	}
 }

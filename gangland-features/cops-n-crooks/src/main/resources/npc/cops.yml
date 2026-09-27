@@ -120,3 +120,31 @@ Cops:
             Chestplate: "DIAMOND_CHESTPLATE"
             Leggings: "DIAMOND_LEGGINGS"
             Boots: "DIAMOND_BOOTS"
+
+# ============================================
+# Heat (0.12): every crime adds heat; stars follow heat thresholds instead of flat per-kill steps.
+#
+#   Enable:                        false = kills raise wanted as before (Wanted.Level.Increment per kill, or the
+#                                  Wanted.Kill_Combo.Kill_Counter thresholds when the kill combo is enabled)
+#   Star_Thresholds:               heat needed for each star (1st entry = 1 star). A shorter list than
+#                                  Wanted.Level.Maximum is stretched linearly
+#   Streak_Bonus:                  multiplier for a crime committed while the kill combo is still running
+#                                  (within Wanted.Kill_Combo.Reset_After seconds of the previous kill)
+#   Turf_War_Multiplier:           multiplier for a kill whose victim stands inside a contested turf
+#   Assault_Cop_Cooldown_Seconds:  one Assault_Cop per player and cop per window, so a single fight does not
+#                                  stack heat every hit
+#   Crimes:                        heat weight of each crime. Assault_Cop is any non-lethal damage to a cop
+#
+# Killing a hostile civilian that is fighting back (self-defence) never adds heat.
+# ============================================
+Heat:
+   Enable: true
+   Star_Thresholds: [100, 250, 450, 700, 1000]
+   Streak_Bonus: 1.5
+   Turf_War_Multiplier: 0.5
+   Assault_Cop_Cooldown_Seconds: 10
+   Crimes:
+      Kill_Player: 80
+      Kill_Civilian: 100
+      Kill_Cop: 150
+      Assault_Cop: 100

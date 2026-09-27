@@ -5,8 +5,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.luckyraven.gangland.civilians.events.CivilianDeathEvent;
-import org.luckyraven.gangland.civilians.npc.CivilianState;
-import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.events.user.UserLevelUpEvent;
@@ -18,6 +16,11 @@ import org.luckyraven.gangland.core.user.UserManager;
 /**
  * Awards level XP to the killer when a civilian NPC dies. Decoupled from the cops-n-crooks module via
  * {@link CivilianDeathEvent}.
+ *
+ * <p>This listener does not touch wanted. A civilian kill raises wanted only through {@code EntityDamageListener} via
+ * the core {@code WantedKillTrackers} seam, which applies the self-defence exemption (a hostile civilian in
+ * {@code COMBAT}) and starts the wanted timer and bounty; raising it here as well counted the same kill twice and left
+ * the extra star without a decay timer (fixed in 0.12).
  */
 @ListenerHandler
 public class CivilianDeathRewardListener implements Listener {
@@ -43,9 +46,5 @@ public class CivilianDeathRewardListener implements Listener {
 			level.addExperience(event.getExperience(), levelUpEvent);
 		}
 
-		CivilianNpc civilianNpc = event.getCivilianNpc();
-		if (!(civilianNpc.isHostile() && civilianNpc.getCurrentState() == CivilianState.COMBAT)) {
-			user.getWanted().incrementLevel();
-		}
 	}
 }

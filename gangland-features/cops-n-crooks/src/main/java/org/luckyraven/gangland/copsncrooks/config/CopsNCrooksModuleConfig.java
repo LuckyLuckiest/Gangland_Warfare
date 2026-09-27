@@ -26,6 +26,7 @@ import org.luckyraven.gangland.copsncrooks.detainment.sentence.SentenceService;
 import org.luckyraven.gangland.copsncrooks.detainment.sound.DetainmentSoundContract;
 import org.luckyraven.gangland.copsncrooks.detainment.transit.TransitService;
 import org.luckyraven.gangland.copsncrooks.detainment.wanted.WantedClearContract;
+import org.luckyraven.gangland.copsncrooks.heat.HeatService;
 import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
 import org.luckyraven.gangland.civilians.npc.combat.BartizanNpcWeapons;
 import org.luckyraven.gangland.civilians.npc.combat.DownedTargetFilter;
@@ -50,6 +51,7 @@ import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.WantedKillTrackers;
 import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.gangland.item.money.MoneyAddon;
+import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.PostConstruct;
@@ -339,6 +341,17 @@ public class CopsNCrooksModuleConfig {
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
+	// Heat ledger (0.12 F1)
+	// ---------------------------------------------------------------------------------------------------------------
+
+	@Bean
+	public HeatService heatService(KillCombo killCombo, NpcMarkManager markManager, TurfManager turfManager,
+	                               CopLoader copLoader) {
+		return new HeatService(killCombo, markManager, HeatService.contestedTurf(turfManager),
+		                       copLoader::getLoadedHeatConfig);
+	}
+
+	// ---------------------------------------------------------------------------------------------------------------
 	// Core seam installation
 	// ---------------------------------------------------------------------------------------------------------------
 
@@ -353,8 +366,12 @@ public class CopsNCrooksModuleConfig {
 		// Seam 2, BankTiers, moved to NpcShopsModuleConfig#installBankTiers() (T-J3, group J) — this module no
 		// longer owns banker/trader NPCs or the bank tier catalogue.
 
+		// Heat ledger (0.12): kills score in heat when Heat.Enable is on, and the civilian self-defence exemption
+		// (hostile civilian in COMBAT) applies on the one path that raises wanted for a civilian kill.
 		container.getInstance(WantedKillTrackers.class)
 		       .install(new KillComboWantedTracker(container.getInstance(KillCombo.class),
-		                                           container.getInstance(NpcMarkManager.class)));
+		                                           container.getInstance(NpcMarkManager.class),
+		                                           container.getInstance(CivilianNpcRegistry.class),
+		                                           container.getInstance(HeatService.class)));
 	}
 }

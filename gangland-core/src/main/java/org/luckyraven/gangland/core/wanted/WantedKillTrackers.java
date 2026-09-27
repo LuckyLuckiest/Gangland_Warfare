@@ -4,6 +4,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -16,12 +17,22 @@ public final class WantedKillTrackers {
 
 	private volatile WantedKillTracker delegate;
 
-	private Consumer<Player> wantedTrigger;
-	private Consumer<Player> comboReset;
-	private Consumer<UUID>   victimDeath;
+	private Consumer<Player>            wantedTrigger;
+	private Consumer<Player>            comboReset;
+	private Consumer<UUID>              victimDeath;
+	private BiConsumer<Player, Integer> heatStarTrigger;
 
 	public boolean isActive() {
 		return delegate != null;
+	}
+
+	/**
+	 * Whether the installed delegate scores every kill through the heat ledger (0.12). {@code false} while no delegate
+	 * is installed, so the host keeps its flat per-kill increment.
+	 */
+	public boolean isHeatActive() {
+		WantedKillTracker current = this.delegate;
+		return current != null && current.scoresAllKills();
 	}
 
 	/**
@@ -33,6 +44,7 @@ public final class WantedKillTrackers {
 		if (wantedTrigger != null) tracker.onWantedTrigger(wantedTrigger);
 		if (comboReset != null) tracker.onComboReset(comboReset);
 		if (victimDeath != null) tracker.onVictimDeath(victimDeath);
+		if (heatStarTrigger != null) tracker.onHeatStarTrigger(heatStarTrigger);
 	}
 
 	public boolean countsForWanted(Entity victim) {
@@ -66,5 +78,11 @@ public final class WantedKillTrackers {
 		this.victimDeath = handler;
 		WantedKillTracker current = this.delegate;
 		if (current != null) current.onVictimDeath(handler);
+	}
+
+	public void onHeatStarTrigger(BiConsumer<Player, Integer> handler) {
+		this.heatStarTrigger = handler;
+		WantedKillTracker current = this.delegate;
+		if (current != null) current.onHeatStarTrigger(handler);
 	}
 }

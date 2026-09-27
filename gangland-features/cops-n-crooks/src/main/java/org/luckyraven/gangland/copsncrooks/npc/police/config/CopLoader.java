@@ -5,6 +5,7 @@ import lombok.CustomLog;
 import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.copsncrooks.heat.HeatConfig;
 import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.keystone.persistence.FileHandler;
@@ -30,6 +31,11 @@ public class CopLoader extends FileLoader<CopConfig> {
 
 	private CopConfig         loadedConfig;
 	private CopConfigProvider loadedProvider;
+	/**
+	 * The {@code Heat:} section (0.12 heat ledger); {@code null} until loaded, consumers fall back to
+	 * {@link HeatConfig#defaults()}.
+	 */
+	private HeatConfig        loadedHeatConfig;
 
 	public CopLoader(JavaPlugin plugin, @Nullable ItemParser itemParser, @Nullable CopSettings copSettings,
 	                 boolean disable, @Nullable Consumer<CopConfig> consumer, FileManager fileManager) {
@@ -40,8 +46,9 @@ public class CopLoader extends FileLoader<CopConfig> {
 
 	@Override
 	public void clear() {
-		loadedConfig   = null;
-		loadedProvider = null;
+		loadedConfig     = null;
+		loadedProvider   = null;
+		loadedHeatConfig = null;
 	}
 
 	@Override
@@ -66,6 +73,8 @@ public class CopLoader extends FileLoader<CopConfig> {
 
 		loadedProvider = new YamlCopConfigProvider(reader, report, copSettings, itemParser);
 		loadedConfig   = CopConfig.fromProvider(loadedProvider);
+
+		loadedHeatConfig = HeatConfig.parse(reader, report);
 
 		if (!report.isEmpty()) report.log(log);
 

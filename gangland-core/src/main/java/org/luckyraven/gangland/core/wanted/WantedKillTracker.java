@@ -4,6 +4,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -24,4 +25,22 @@ public interface WantedKillTracker {
 	void onComboReset(Consumer<Player> handler);
 
 	void onVictimDeath(Consumer<UUID> handler);
+
+	/**
+	 * Whether this tracker scores every wanted-relevant kill itself (the 0.12 heat ledger). When {@code true} the host
+	 * routes every kill through {@link #recordKill} even with {@code Wanted.Kill_Combo} disabled, and star gains come
+	 * back through {@link #onHeatStarTrigger} instead of a flat per-kill increment.
+	 *
+	 * @return {@code true} when kills are scored by heat; {@code false} (the default) keeps the pre-0.12 behaviour
+	 */
+	default boolean scoresAllKills() {
+		return false;
+	}
+
+	/**
+	 * Registers the handler that raises a player's wanted level to a heat-derived target.
+	 *
+	 * @param handler receives the offending player and the star level their heat now reaches
+	 */
+	default void onHeatStarTrigger(BiConsumer<Player, Integer> handler) { }
 }

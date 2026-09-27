@@ -39,13 +39,26 @@ public class KillCombo {
 	 * @param killed The entity that was killed
 	 */
 	public void recordKill(Player killer, Wanted wantedKiller, Entity killed, int wantedKillComboResetAfter) {
+		recordKill(killer, wantedKiller, killed, wantedKillComboResetAfter, 1, true);
+	}
+
+	/**
+	 * Records a kill worth {@code points} for the given player.
+	 *
+	 * @param killer The player who made the kill
+	 * @param wantedKiller The killer's wanted state
+	 * @param killed The entity that was killed
+	 * @param wantedKillComboResetAfter Seconds without a kill before the combo resets
+	 * @param points The points this kill adds to the combo (heat points when the heat ledger scores kills)
+	 * @param checkThresholds Whether to test the legacy {@code Wanted.Kill_Combo.Kill_Counter} thresholds; the heat
+	 * ledger passes {@code false} because it raises stars itself
+	 */
+	public void recordKill(Player killer, Wanted wantedKiller, Entity killed, int wantedKillComboResetAfter, int points,
+	                       boolean checkThresholds) {
 		UUID playerId = killer.getUniqueId();
 
 		var killComboTracker = new KillComboTracker(plugin, killer, this::handleComboReset, wantedKillComboResetAfter);
 		var tracker          = activeTrackers.computeIfAbsent(playerId, id -> killComboTracker);
-
-		// Determine kill points based on entity type
-		int points = 1;
 
 		// Increment the combo
 		tracker.addKill(killed, points);
@@ -57,7 +70,7 @@ public class KillCombo {
 		}
 
 		// Check if wanted level should be triggered
-		checkWantedLevelTrigger(killer, wantedKiller, tracker);
+		if (checkThresholds) checkWantedLevelTrigger(killer, wantedKiller, tracker);
 
 		// Restart the countdown timer
 		tracker.restartTimer();
