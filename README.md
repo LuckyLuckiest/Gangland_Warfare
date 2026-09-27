@@ -68,7 +68,7 @@ upper tiers locked behind collectible keys. Rewards include money, XP, weapons, 
 |---------------------------------------------------------------------------|--------------|-----------------------------------------------------------------------|
 | Keystone                                                                  | **Required** | DI/bean container, persistence, command framework. Plugin will not load without it. |
 | [NBTAPI](https://www.spigotmc.org/resources/nbt-api.7939/)                | **Required** | Custom item data (unique items, loot chests, and more).             |
-| [Citizens](https://www.spigotmc.org/resources/citizens.13811/)            | Optional     | Powers cop and civilian NPCs. Without it, NPC spawning is skipped with a logged fault — the server still boots. |
+| [Citizens](https://www.spigotmc.org/resources/citizens.13811/)            | Optional     | Powers cop and civilian NPCs (2.0.41+ for route planning). Without it, NPC spawning is skipped with a logged fault — the server still boots. |
 | Bartizan                                                                  | Optional     | The companion weapons plugin (weapons, ammo, wearables, projectiles). Without it, the civilians, cops-n-crooks and gadget modules are skipped entirely and turf with them and weapon-related item vocabularies do not resolve. |
 | [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/) | Optional     | Placeholders in messages; also what the standalone Plaque plugin uses to render scoreboards. |
 | [Vault](https://www.spigotmc.org/resources/vault.34315/)                  | Optional     | Economy hook for cross-plugin compatibility.                          |
@@ -119,6 +119,7 @@ Full documentation is available in the [`documentation/`](./documentation/) fold
 | [Trade Signs](./documentation/features/trade-signs.md)           | Generic `item-buy`/`item-sell` sign format and setup |
 | [Bartizan integration](./documentation/bartizan-integration.md)  | What the weapons plugin provides, and what degrades without it |
 | [0.9.0 migration notes](./documentation/migration-0.9.0.md)      | Server-owner upgrade guide from 0.8.x             |
+| [0.11.0 migration notes](./documentation/migration-0.11.0.md)    | Upgrade guide from 0.10.x: squad navigation       |
 | [Gangs](./documentation/features/gangs.md)                       | Creation, ranks, bank, and alliances              |
 | [Economy](./documentation/features/economy.md)                   | Balances, bank, death penalty, and admin commands |
 | [Waypoints](./documentation/features/waypoints.md)               | Types, teleportation, and safe zones              |
