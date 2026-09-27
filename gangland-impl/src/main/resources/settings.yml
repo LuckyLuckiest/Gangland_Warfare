@@ -216,12 +216,10 @@ User:
                - "/glw eco withdraw %player% 20"
          # When the user dies, they will either lose or gain money according to the value set
          Lose_Money: true
-         # The formula used when calculating the value to lose/gain.
-
-         # There are only five variables that can be used for the formula
-         # [balance: current balance, level: current level, experience: current experience, bounty: current
-         #  withholding bounty, wanted: current wanted level]
-         # Be careful that some values might be equal to zero
+         # The formula used when calculating the value to lose/gain on death.
+         # Five variables available: balance (current balance), level (player level), experience (current XP),
+         # bounty (current withholding bounty), wanted (current wanted level). All may be zero.
+         # Example: balance * 0.15 + wanted * 500  (standard loss + per-star fine)
          Formula: "balance * 0.15"
          # The amount of money the user should at most have to not lose/gain money
          Threshold: 1_000
@@ -271,8 +269,10 @@ Bounty:
 Wanted:
    Enable: true
    Take_Money:
-      # The amount of money taken from the player when they are wanted.
-      Amount: 50
+      # DEPRECATED (0.12): Legacy per-star drain charged by the fallback decay timer.
+      # Set to 0 to disable. Servers that deleted this key use the code default (50).
+      # For 0.12+, use User.Death.Money.Formula with the 'wanted' variable instead.
+      Amount: 0
       # The multiplier used to calculate the amount of money taken from the player.
       # (amount * multiplier ^ stars)
       Multiplier: 5

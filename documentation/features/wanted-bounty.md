@@ -46,23 +46,20 @@ players and gangs put a price on each other's heads.
 
 ### Cost of Being Wanted
 
-Each wanted star also takes money from the player at regular intervals. The formula is:
+In 0.12+, costs for being wanted come from **death penalties**, not per-star drains during a chase. When a player dies
+while wanted, the death formula may include the `wanted` level as a variable, allowing custom per-star fines:
 
 ```
-money taken = Amount * Multiplier ^ stars
+loss on death = balance * 0.15 + wanted * 500   (example; adjust to taste)
 ```
 
-With defaults (`Amount: 50`, `Multiplier: 5`):
+The legacy `Wanted.Take_Money` setting (per-star drain from the fallback decay timer) defaults to `0` and is disabled.
+When evasion is enabled (0.12 default), the repeating decay timer is cancelled during an active chase, leaving the
+player's balance untouched unless they die or get arrested. Servers can still enable the legacy drain by setting
+`Take_Money.Amount` to a non-zero value in `settings.yml`.
 
-| Stars   | Money taken per tick |
-|---------|----------------------|
-| 1 ★     | 50 × 5¹ = 250        |
-| 2 ★★    | 50 × 5² = 1,250      |
-| 3 ★★★   | 50 × 5³ = 6,250      |
-| 4 ★★★★  | 50 × 5⁴ = 31,250     |
-| 5 ★★★★★ | 50 × 5⁵ = 156,250    |
-
-Both values are configurable in `settings.yml`.
+Arrest fines are separate: bail, bribe, and sentence costs scale by wanted level and are configurable under
+`Detainment:` in `settings.yml`.
 
 ---
 
@@ -106,12 +103,12 @@ Wanted:
    Enable: true
 
    Take_Money:
-      Amount: 50              # Base money deducted per tick while wanted
+      Amount: 0               # DEPRECATED (0.12): Legacy per-star drain. Set to 0 (disabled).
       Multiplier: 5           # Exponent base in the formula: Amount * Multiplier ^ stars
 
    Repeating_Timer:
       Enable: true
-      Time: 120               # Base decay interval in seconds (at 1 star)
+      Time: 120               # Base decay interval in seconds (at 1 star) — fallback when evasion disengages
       Multiplier:
          Enable: true
          Amount: 1.1           # Decay timer scales as: Time * Amount ^ stars
