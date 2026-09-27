@@ -163,3 +163,28 @@ Heat:
       Kill_Civilian: 100
       Kill_Cop: 150
       Assault_Cop: 100
+
+# ============================================
+# Hud (0.12): the wanted boss bar, flashing stars, the search-zone particle ring and the escape compass.
+#
+#   Enable:            the whole HUD service no-ops when false
+#   Boss_Bar:          the wanted boss bar (red while IN SIGHT/WANTED, yellow with the countdown while SEARCHING)
+#   Search_Zone_Ring:  a sparse red-dust ring on the search zone edge while SEARCHING, seen only by the wanted player
+#   Escape_Compass:    points the compass outside the search zone while SEARCHING; restored once the chase leaves it
+#   Star_Gain_Title:   a title/subtitle + sound on every star gained
+#   Messages:          %stars% is the star string (flashes filled/grey every second while SEARCHING), %time% is the
+#                      remaining search countdown as m:ss. Color codes use '&'
+# ============================================
+Hud:
+   Enable: true
+   Boss_Bar: true
+   Search_Zone_Ring: true
+   Escape_Compass: true
+   Star_Gain_Title: true
+   Messages:
+      In_Sight: "%stars% &c&lIN SIGHT"
+      Searching: "%stars% &e&lSEARCHING %time%"
+      Wanted: "%stars% &c&lWANTED"
+      Star_Lost: "%stars% &a&lSTAR LOST"
+      Star_Gained_Title: "&c&lWANTED"
+      Star_Gained_Subtitle: "%stars%"

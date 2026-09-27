@@ -6,6 +6,7 @@ import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.heat.HeatConfig;
+import org.luckyraven.gangland.copsncrooks.hud.HudConfig;
 import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.keystone.persistence.FileHandler;
@@ -36,6 +37,11 @@ public class CopLoader extends FileLoader<CopConfig> {
 	 * {@link HeatConfig#defaults()}.
 	 */
 	private HeatConfig        loadedHeatConfig;
+	/**
+	 * The {@code Hud:} section (0.12 HUD); {@code null} until loaded, consumers fall back to
+	 * {@link HudConfig#defaults()}.
+	 */
+	private HudConfig         loadedHudConfig;
 
 	public CopLoader(JavaPlugin plugin, @Nullable ItemParser itemParser, @Nullable CopSettings copSettings,
 	                 boolean disable, @Nullable Consumer<CopConfig> consumer, FileManager fileManager) {
@@ -49,6 +55,7 @@ public class CopLoader extends FileLoader<CopConfig> {
 		loadedConfig     = null;
 		loadedProvider   = null;
 		loadedHeatConfig = null;
+		loadedHudConfig  = null;
 	}
 
 	@Override
@@ -75,6 +82,7 @@ public class CopLoader extends FileLoader<CopConfig> {
 		loadedConfig   = CopConfig.fromProvider(loadedProvider);
 
 		loadedHeatConfig = HeatConfig.parse(reader, report);
+		loadedHudConfig  = HudConfig.parse(reader, report);
 
 		if (!report.isEmpty()) report.log(log);
 

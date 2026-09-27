@@ -28,6 +28,7 @@ import org.luckyraven.gangland.copsncrooks.detainment.transit.TransitService;
 import org.luckyraven.gangland.copsncrooks.detainment.wanted.WantedClearContract;
 import org.luckyraven.gangland.copsncrooks.evasion.EvasionService;
 import org.luckyraven.gangland.copsncrooks.heat.HeatService;
+import org.luckyraven.gangland.copsncrooks.hud.WantedHudService;
 import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
 import org.luckyraven.gangland.civilians.npc.combat.BartizanNpcWeapons;
 import org.luckyraven.gangland.civilians.npc.combat.DownedTargetFilter;
@@ -361,6 +362,17 @@ public class CopsNCrooksModuleConfig {
 	public EvasionService evasionService(CopManager copManager, @Qualifier("online") UserManager<Player> userManager,
 	                                     DetainmentService detainmentService, WantedSettings wantedSettings) {
 		return new EvasionService(plugin, copManager, userManager, detainmentService, wantedSettings);
+	}
+
+	// ---------------------------------------------------------------------------------------------------------------
+	// Wanted HUD (0.12 F3)
+	// ---------------------------------------------------------------------------------------------------------------
+
+	@Bean
+	public WantedHudService wantedHudService(EvasionService evasionService,
+	                                         @Qualifier("online") UserManager<Player> userManager,
+	                                         CopLoader copLoader) {
+		return new WantedHudService(plugin, evasionService, userManager, copLoader);
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
