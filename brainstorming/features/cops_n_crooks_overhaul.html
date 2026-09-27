@@ -1,0 +1,1465 @@
+<title>Cops N Crooks Overhaul</title>
+<meta name="description" content="A staged feature plan for Gangland Warfare's police system, borrowing wanted, witness, chase and bounty mechanics from GTA V, GTA 6's trailers and Red Dead Redemption 2.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Pixelify+Sans:wght@400;600&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+<style>
+:root {
+  --display: "Big Shoulders Display", "Oswald", "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
+  --body: "Public Sans", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pixel: "Pixelify Sans", "IBM Plex Mono", ui-monospace, monospace;
+
+  --bg: #F1F3F7;
+  --surface: #FFFFFF;
+  --surface-2: #E6EAF1;
+  --ink: #111726;
+  --ink-2: #353F54;
+  --muted: #5E687E;
+  --line: #D4DAE4;
+  --line-strong: #B6BFCE;
+  --red: #C0122E;
+  --blue: #1A4ED6;
+  --gold: #8C6100;
+  --star: #E0A200;
+  --star-off: #C3CAD6;
+  --green: #16744A;
+  --red-tint: #FBE8EB;
+  --blue-tint: #E8EEFD;
+  --gold-tint: #FAF1D5;
+  --green-tint: #E2F3E9;
+  --code-bg: #0E1424;
+  --code-ink: #E3E8F2;
+  --code-key: #93B4FF;
+  --code-val: #FFCB6B;
+  --code-comment: #8290AA;
+  --code-edge: #0E1424;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0A0E19;
+    --surface: #111827;
+    --surface-2: #19223A;
+    --ink: #E8ECF4;
+    --ink-2: #C4CBD9;
+    --muted: #8F9AB0;
+    --line: #232D44;
+    --line-strong: #34415E;
+    --red: #FF5A6E;
+    --blue: #7AA5FF;
+    --gold: #F3BF4A;
+    --star: #FFC53D;
+    --star-off: #3B4661;
+    --green: #4CC48C;
+    --red-tint: #33161F;
+    --blue-tint: #142241;
+    --gold-tint: #332910;
+    --green-tint: #10291E;
+    --code-bg: #060A13;
+    --code-ink: #E3E8F2;
+    --code-key: #93B4FF;
+    --code-val: #FFCB6B;
+    --code-comment: #7F8CA6;
+    --code-edge: #232D44;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0A0E19;
+  --surface: #111827;
+  --surface-2: #19223A;
+  --ink: #E8ECF4;
+  --ink-2: #C4CBD9;
+  --muted: #8F9AB0;
+  --line: #232D44;
+  --line-strong: #34415E;
+  --red: #FF5A6E;
+  --blue: #7AA5FF;
+  --gold: #F3BF4A;
+  --star: #FFC53D;
+  --star-off: #3B4661;
+  --green: #4CC48C;
+  --red-tint: #33161F;
+  --blue-tint: #142241;
+  --gold-tint: #332910;
+  --green-tint: #10291E;
+  --code-bg: #060A13;
+  --code-ink: #E3E8F2;
+  --code-key: #93B4FF;
+  --code-val: #FFCB6B;
+  --code-comment: #7F8CA6;
+  --code-edge: #232D44;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--blue); text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 2px; }
+code {
+  font-family: var(--mono);
+  font-size: .84em;
+  background: var(--surface-2);
+  color: var(--ink);
+  padding: 1px 5px;
+  border-radius: 3px;
+  overflow-wrap: anywhere;
+}
+h1, h2, h3 { text-wrap: balance; }
+
+/* Police lightbar: flashes a few times on load, then rests */
+.lightbar { display: grid; grid-template-columns: 1fr 1fr; height: 6px; }
+.lightbar span:first-child { background: var(--red); box-shadow: 0 0 18px 2px color-mix(in srgb, var(--red) 55%, transparent); animation: barL .5s steps(1, end) 0s 6; }
+.lightbar span:last-child { background: var(--blue); box-shadow: 0 0 18px 2px color-mix(in srgb, var(--blue) 55%, transparent); animation: barR .5s steps(1, end) 0s 6; }
+@keyframes barL { 50% { opacity: .2; } }
+@keyframes barR { 0% { opacity: .2; } 50% { opacity: 1; } }
+
+.page { max-width: 1240px; margin: 0 auto; padding-inline: 20px; }
+@media (max-width: 480px) { .page { padding-inline: 16px; } }
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: .72rem;
+  font-weight: 500;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+
+/* Masthead */
+.masthead { display: grid; grid-template-columns: minmax(0, 1fr); gap: 32px; padding-block: 40px 36px; align-items: center; }
+@media (min-width: 980px) { .masthead { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: 52px; padding-block: 64px 48px; } }
+h1 {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(3rem, 2.1rem + 4.2vw, 5.6rem);
+  line-height: .9;
+  letter-spacing: .005em;
+  text-transform: uppercase;
+  margin: 0 0 22px;
+}
+h1 .cops { color: var(--blue); }
+h1 .crooks { color: var(--red); }
+h1 .over { display: block; }
+.lede { font-size: clamp(1.06rem, 1rem + .35vw, 1.22rem); color: var(--ink-2); max-width: 58ch; margin: 0 0 22px; }
+.facts-line { display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--mono); font-size: .78rem; color: var(--muted); margin: 0 0 22px; padding: 0; list-style: none; }
+.facts-line b { color: var(--ink); font-weight: 500; }
+.legend { display: grid; gap: 6px; margin: 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); font-size: .88rem; max-width: 60ch; }
+.legend div { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; }
+.legend dt { font-family: var(--mono); font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); padding-top: 3px; }
+.legend dd { margin: 0; color: var(--ink-2); }
+
+/* Minecraft HUD mock (a game screen, so it keeps one look in both themes) */
+.hud { margin: 0; }
+.hud-screen {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  width: 100%;
+  max-width: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+  background: linear-gradient(#070c1f 0%, #111b3a 55%, #1d2746 100%);
+  color: #FFFFFF;
+  font-family: var(--pixel);
+  box-shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 12px 30px -18px rgba(5, 10, 30, .7);
+}
+.hud-screen svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.mc { text-shadow: 1px 1px 0 #2a2a2a; }
+.bossbar { position: absolute; top: 5%; left: 50%; transform: translateX(-50%); width: 60%; text-align: center; }
+.bb-title { font-size: clamp(10px, .55rem + .6vw, 15px); white-space: nowrap; letter-spacing: .02em; }
+.bb-bar { position: relative; height: 5px; margin-top: 4px; background: #3c3a14; }
+.bb-bar i { position: absolute; inset: 0 auto 0 0; width: 62%; background: #F2DF3F; }
+.bb-bar::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(0,0,0,.5) calc(10% - 1px) 10%); }
+.s-on { color: #FFAA00; }
+.s-off { color: #555555; }
+.s-flash { color: #FFAA00; animation: starflash 1s steps(1, end) infinite; }
+@keyframes starflash { 50% { color: #555555; } }
+.c-yel { color: #FFFF55; }
+.c-red { color: #FF5555; }
+.c-blue { color: #5F7BFF; }
+.c-aqua { color: #55FFFF; }
+.c-gray { color: #BBBBBB; }
+.c-green { color: #55FF55; }
+.chat { position: absolute; left: 2%; bottom: 25%; width: 74%; display: grid; gap: 1px; font-size: clamp(8.5px, .4rem + .45vw, 12.5px); line-height: 1.35; }
+.chat p { margin: 0; background: rgba(0,0,0,.42); padding: 1px 6px; }
+.actionbar { position: absolute; left: 50%; bottom: 14.5%; transform: translateX(-50%); font-size: clamp(9px, .45rem + .5vw, 13px); white-space: nowrap; }
+.hotbar {
+  position: absolute; left: 50%; bottom: 3%; transform: translateX(-50%);
+  width: 54%; aspect-ratio: 9 / 1;
+  display: grid; grid-template-columns: repeat(9, 1fr);
+  background: rgba(20, 20, 20, .55); border: 2px solid rgba(0,0,0,.65);
+}
+.hotbar span { position: relative; border: 1px solid rgba(255,255,255,.14); }
+.hotbar span.sel { outline: 2px solid #F4F4F4; outline-offset: -1px; z-index: 1; }
+.hotbar .gun::before { content: ""; position: absolute; left: 22%; top: 34%; width: 58%; height: 18%; background: #6b6f78; }
+.hotbar .gun::after { content: ""; position: absolute; left: 26%; top: 48%; width: 16%; height: 30%; background: #4d5058; }
+.hotbar .flag::before { content: ""; position: absolute; left: 30%; top: 18%; width: 7%; height: 66%; background: #8a6a3a; }
+.hotbar .flag::after { content: ""; position: absolute; left: 37%; top: 18%; width: 38%; height: 44%; background: #f2f2f2; }
+.hotbar .compass::before { content: ""; position: absolute; inset: 20%; border-radius: 50%; background: #9aa0a8; box-shadow: inset 0 0 0 2px #5e636b; }
+.hotbar .compass::after { content: ""; position: absolute; left: 47%; top: 26%; width: 7%; height: 26%; background: #FF3B3B; transform-origin: 50% 100%; transform: rotate(-38deg); }
+.hud figcaption { font-size: .82rem; color: var(--muted); margin-top: 10px; max-width: 60ch; }
+
+/* Layout with sticky contents on wide screens */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; padding-bottom: 72px; }
+@media (min-width: 1120px) { .layout { grid-template-columns: 176px minmax(0, 1fr); gap: 48px; } }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; align-content: start; }
+.toc a {
+  font-family: var(--mono); font-size: .74rem; letter-spacing: .03em;
+  color: var(--ink-2); text-decoration: none;
+  padding: 5px 9px; border: 1px solid var(--line-strong); border-radius: 4px; background: var(--surface);
+}
+.toc a b { color: var(--muted); font-weight: 500; margin-right: 4px; }
+.toc a[aria-current="true"] { color: var(--ink); border-color: var(--ink); }
+@media (min-width: 1120px) {
+  .toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; flex-direction: column; flex-wrap: nowrap; gap: 0; border-left: 1px solid var(--line-strong); }
+  .toc a { border: 0; background: none; border-radius: 0; padding: 6px 0 6px 14px; margin-left: -1px; border-left: 2px solid transparent; }
+  .toc a:hover { color: var(--ink); }
+  .toc a[aria-current="true"] { border-left-color: var(--red); }
+}
+main { min-width: 0; }
+section { scroll-margin-top: 20px; }
+
+/* Section headings */
+.sec { padding-block: 56px 8px; }
+.sec:first-child { padding-top: 8px; }
+h2 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(2rem, 1.55rem + 1.8vw, 2.9rem);
+  line-height: 1;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+  margin: 0;
+}
+.intro { font-size: 1.04rem; color: var(--ink-2); max-width: 66ch; margin: 12px 0 0; }
+.stage-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 18px; align-items: start; }
+.stage-no {
+  font-family: var(--display); font-weight: 800;
+  font-size: clamp(4rem, 3.2rem + 3vw, 5.6rem); line-height: .78;
+  color: var(--muted);
+}
+@supports (-webkit-text-stroke: 1px black) {
+  .stage-no { color: transparent; -webkit-text-stroke: 1.5px var(--ink); }
+}
+
+/* Diagnosis */
+ol.chase { list-style: none; counter-reset: step; padding: 0; margin: 22px 0 0; }
+ol.chase li { counter-increment: step; display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 0 14px; padding-block: 14px; border-top: 1px solid var(--line); }
+ol.chase li:last-child { border-bottom: 1px solid var(--line); }
+ol.chase li::before { content: counter(step); font-family: var(--display); font-weight: 800; font-size: 1.9rem; line-height: 1; color: var(--red); }
+ol.chase p { margin: 0; max-width: 68ch; }
+.ref { display: block; margin-top: 5px; font-size: .8rem; color: var(--muted); }
+.ref code { font-size: .92em; }
+.subhead { font-family: var(--mono); font-size: .74rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 30px 0 10px; }
+ul.plain { margin: 0; padding-left: 1.1em; max-width: 70ch; display: grid; gap: 8px; }
+ul.plain li::marker { color: var(--red); }
+.keep { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px 28px; margin: 0; padding: 0; list-style: none; }
+@media (min-width: 720px) { .keep { grid-template-columns: 1fr 1fr; } }
+.keep li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; }
+.keep li::before { content: "✓"; color: var(--green); font-weight: 700; }
+.keep p { margin: 0; color: var(--ink-2); }
+.keep b { color: var(--ink); }
+.callout { margin-top: 30px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 8px; background: var(--blue-tint); max-width: 76ch; }
+.callout h3 { margin: 0 0 6px; font-size: 1.08rem; }
+.callout p { margin: 0; color: var(--ink-2); }
+
+/* Chase loop */
+ol.loop { list-style: none; padding: 0; margin: 26px 0 0; position: relative; display: grid; gap: 18px; max-width: 820px; }
+ol.loop::before { content: ""; position: absolute; left: 17px; top: 10px; bottom: 10px; width: 2px; background: var(--line-strong); }
+ol.loop > li { position: relative; display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 0 16px; }
+.node { width: 36px; height: 36px; border-radius: 50%; background: var(--bg); border: 2px solid var(--ink); display: grid; place-items: center; font-family: var(--display); font-weight: 800; font-size: 1.15rem; position: relative; z-index: 1; }
+.loop h3 { margin: 5px 0 2px; font-size: 1.06rem; }
+.loop h3 a { font-family: var(--mono); font-weight: 400; font-size: .72rem; letter-spacing: .05em; text-transform: uppercase; margin-left: 8px; }
+.loop p { margin: 0; color: var(--ink-2); max-width: 66ch; }
+.duo { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; margin-top: 10px; }
+.duo > div { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; background: var(--surface); }
+.duo b { display: block; font-family: var(--mono); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 2px; }
+.duo .seen b { color: var(--red); }
+.duo .search b { color: var(--gold); }
+.duo .swap { align-self: center; font-size: 1.4rem; color: var(--muted); border: 0; background: none; padding: 0; }
+.duo p { font-size: .92rem; }
+@media (max-width: 560px) { .duo { grid-template-columns: minmax(0, 1fr); } .duo .swap { justify-self: center; transform: rotate(90deg); line-height: 1; } }
+.outcomes { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 8px; padding: 0; list-style: none; }
+.outcomes li { font-family: var(--mono); font-size: .74rem; letter-spacing: .07em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line-strong); }
+.o-escaped { color: var(--green); background: var(--green-tint); }
+.o-surrender { color: var(--gold); background: var(--gold-tint); }
+.o-busted { color: var(--blue); background: var(--blue-tint); }
+.o-wasted { color: var(--red); background: var(--red-tint); }
+.loopback { margin-top: 8px !important; font-family: var(--mono); font-size: .78rem; color: var(--muted) !important; }
+
+/* Star ladder */
+.table-wrap { overflow-x: auto; margin-top: 22px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 820px; font-size: .9rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 10px 12px; border-top: 1px solid var(--line); vertical-align: top; }
+thead th { font-family: var(--mono); font-size: .67rem; font-weight: 500; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); background: var(--surface-2); border-top: 0; }
+thead tr.grp th { font-size: .7rem; color: var(--ink); background: var(--surface); border-bottom: 1px solid var(--line); }
+thead tr.grp th.g-today { color: var(--muted); }
+th.g-new, td.first-new { border-left: 1px solid var(--line-strong); }
+td.today { color: var(--muted); }
+td.stars, th.stars { white-space: nowrap; }
+.stars-v { font-size: 1.02rem; letter-spacing: 1px; }
+.stars-v .on { color: var(--star); }
+.stars-v .off { color: var(--star-off); }
+td .num { white-space: nowrap; }
+.table-note { font-size: .82rem; color: var(--muted); margin: 10px 0 0; max-width: 76ch; }
+
+/* Features */
+.features { margin-top: 22px; }
+.feature { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px 30px; padding-block: 26px; border-top: 1px solid var(--line); scroll-margin-top: 20px; }
+@media (min-width: 760px) { .feature { grid-template-columns: 214px minmax(0, 1fr); } }
+.feature > *, .masthead > *, .roadmap > li > * { min-width: 0; }
+.feature h3 { font-size: 1.16rem; line-height: 1.28; margin: 0 0 9px; font-weight: 700; }
+.tag-head { display: inline-block; font-family: var(--mono); font-size: .66rem; letter-spacing: .09em; text-transform: uppercase; color: var(--red); margin-bottom: 6px; }
+.src { list-style: none; padding: 0; margin: 0 0 10px; display: flex; flex-wrap: wrap; gap: 4px; }
+.src li { font-family: var(--mono); font-size: .66rem; letter-spacing: .04em; text-transform: uppercase; padding: 2px 6px; border: 1px solid var(--line-strong); border-radius: 3px; color: var(--ink-2); background: var(--surface); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0; font-family: var(--mono); font-size: .7rem; color: var(--muted); }
+.meta div { display: flex; align-items: center; gap: 6px; }
+.meta dt { text-transform: uppercase; letter-spacing: .07em; }
+.meta dd { margin: 0; color: var(--ink); display: flex; align-items: center; gap: 5px; }
+.meta a { color: var(--ink); }
+.effort { display: inline-flex; gap: 2px; }
+.effort i { width: 6px; height: 11px; background: var(--line-strong); }
+.effort[data-e="1"] i:nth-child(-n+1),
+.effort[data-e="2"] i:nth-child(-n+2),
+.effort[data-e="3"] i { background: var(--ink); }
+.body p { margin: 0 0 10px; max-width: 68ch; }
+.body .play { font-size: 1.02rem; color: var(--ink); }
+.body .how { color: var(--ink-2); }
+.body ul { margin: 0 0 12px; padding-left: 1.1em; max-width: 68ch; display: grid; gap: 6px; color: var(--ink-2); }
+.body ul b { color: var(--ink); }
+.hooks { font-size: .84rem; color: var(--muted) !important; margin-bottom: 0 !important; }
+.hooks .lbl { font-family: var(--mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; margin-right: 6px; color: var(--ink-2); }
+.feature.headline { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 26px 24px; margin-block: 4px 10px; }
+.feature.headline + .feature { border-top: 0; }
+@media (max-width: 480px) { .feature.headline { padding: 20px 16px; } }
+.target { margin: 12px 0 12px !important; padding: 10px 14px; border-radius: 6px; background: var(--gold-tint); color: var(--ink) !important; font-size: .95rem; }
+
+/* Code */
+pre.code {
+  margin: 14px 0 12px; padding: 14px 16px; border-radius: 6px; overflow-x: auto; max-width: 100%;
+  background: var(--code-bg); color: var(--code-ink); border: 1px solid var(--code-edge);
+  font-family: var(--mono); font-size: .79rem; line-height: 1.6;
+}
+pre.code code { background: none; padding: 0; font-size: inherit; color: inherit; overflow-wrap: normal; }
+.code .k { color: var(--code-key); }
+.code .v { color: var(--code-val); }
+.code .c { color: var(--code-comment); }
+.code-cap { font-family: var(--mono); font-size: .7rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 14px 0 -6px !important; }
+
+/* In-game snippets */
+.mc-chat { margin: 14px 0 12px; padding: 10px; border-radius: 6px; background: linear-gradient(#10182f, #1b2544); display: grid; gap: 2px; font-family: var(--pixel); color: #FFFFFF; font-size: .86rem; line-height: 1.4; max-width: 640px; }
+.mc-chat p { margin: 0 !important; background: rgba(0,0,0,.4); padding: 2px 8px; color: #FFFFFF !important; max-width: none !important; }
+.bars { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin: 14px 0 12px; }
+@media (min-width: 620px) { .bars { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.bars figure { margin: 0; }
+.bars .scr { padding: 12px 10px 10px; border-radius: 6px; background: linear-gradient(#10182f, #1b2544); font-family: var(--pixel); color: #FFFFFF; text-align: center; }
+.bars .t { font-size: .8rem; white-space: nowrap; }
+.bars .b { position: relative; height: 5px; margin-top: 5px; background: rgba(255,255,255,.12); }
+.bars .b i { position: absolute; inset: 0 auto 0 0; }
+.bars .b::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(0,0,0,.5) calc(10% - 1px) 10%); }
+.bars figcaption { font-family: var(--mono); font-size: .68rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+.sheet { margin: 14px 0 12px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--bg); max-width: 560px; overflow-x: auto; }
+.sheet-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 8px 12px; border-bottom: 1px solid var(--line-strong); font-family: var(--mono); font-size: .72rem; letter-spacing: .07em; text-transform: uppercase; color: var(--ink-2); }
+.sheet-head b { color: var(--red); font-weight: 500; }
+.sheet table { min-width: 0; font-size: .82rem; }
+.sheet th, .sheet td { padding: 6px 12px; }
+.sheet thead th { background: transparent; }
+.sheet td.r, .sheet th.r { text-align: right; }
+.sheet-foot { padding: 8px 12px; border-top: 1px solid var(--line-strong); font-size: .8rem; color: var(--ink-2); }
+
+/* Roadmap */
+ol.roadmap { list-style: none; padding: 0; margin: 22px 0 0; }
+.roadmap > li { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px 26px; padding-block: 22px; border-top: 1px solid var(--line); scroll-margin-top: 20px; }
+.roadmap > li:last-child { border-bottom: 1px solid var(--line); }
+@media (min-width: 860px) { .roadmap > li { grid-template-columns: 132px minmax(0, 1.25fr) minmax(0, 1fr); } }
+.rel-v { font-family: var(--display); font-weight: 800; font-size: 2.5rem; line-height: .9; }
+.rel-name { font-family: var(--mono); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+.rel-goal { font-weight: 700; margin: 0 0 10px; }
+.rel-items { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 0; }
+.rel-items a { display: inline-block; font-size: .82rem; padding: 3px 8px; border: 1px solid var(--line-strong); border-radius: 4px; text-decoration: none; color: var(--ink); background: var(--surface); }
+.rel-items a:hover { border-color: var(--ink); }
+.done { margin: 0; font-size: .93rem; color: var(--ink-2); }
+.done span { display: block; font-family: var(--mono); font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+.why-order { margin: 16px 0 0; font-size: .92rem; color: var(--ink-2); max-width: 70ch; }
+
+/* Guardrails */
+.two { display: grid; grid-template-columns: minmax(0, 1fr); gap: 30px; margin-top: 22px; }
+@media (min-width: 900px) { .two { grid-template-columns: 1fr 1fr; gap: 40px; } }
+.two h3 { font-size: 1.05rem; margin: 0 0 10px; }
+.two ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+.two li p { margin: 0; color: var(--ink-2); }
+.two li b { color: var(--ink); }
+footer { border-top: 1px solid var(--line); padding-block: 20px 36px; font-size: .82rem; color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lightbar span, .s-flash { animation: none !important; }
+}
+</style>
+
+<div class="lightbar" aria-hidden="true"><span></span><span></span></div>
+
+<div class="page">
+  <header class="masthead">
+    <div>
+      <p class="eyebrow">Gangland Warfare · cops-n-crooks module · feature plan</p>
+      <h1><span class="cops">Cops</span> N <span class="crooks">Crooks</span> <span class="over">Overhaul</span></h1>
+      <p class="lede">Right now the cheapest way to lose five stars is to jump off a roof. This plan makes the police something you outplay. Crimes need a witness, units arrive from a station, stars fade only when you break line of sight, and whatever you get away with follows you afterwards.</p>
+      <ul class="facts-line">
+        <li>Written against <b>0.11.0</b></li>
+        <li><b>30</b> features in six stages</li>
+        <li><b>5</b> releases, 0.12 to 0.16</li>
+      </ul>
+      <dl class="legend">
+        <div><dt>Inspired by</dt><dd>The game each mechanic borrows from.</dd></div>
+        <div><dt>Effort</dt><dd>S fits in existing classes. M adds a service, NPC state or menu. L adds an NPC type, world edits or cross-module work.</dd></div>
+        <div><dt>Ships in</dt><dd>The release it lands in on the <a href="#roadmap">roadmap</a>.</dd></div>
+      </dl>
+    </div>
+
+    <figure class="hud">
+      <div class="hud-screen" role="img" aria-label="Mock-up of the proposed Minecraft HUD during a police search">
+        <svg viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <rect x="262" y="18" width="10" height="10" fill="#e9e6cf" opacity=".9"/>
+          <polygon points="236,40 188,172 286,172" fill="#fff4c2" opacity=".09"/>
+          <g fill="#05081a">
+            <rect x="226" y="31" width="22" height="8"/>
+            <rect x="248" y="33" width="16" height="3"/>
+            <rect x="262" y="29" width="3" height="7"/>
+            <rect x="219" y="27" width="36" height="1.6"/>
+            <rect x="235" y="28" width="2" height="3"/>
+          </g>
+          <g fill="#162044">
+            <rect x="0" y="92" width="34" height="80"/>
+            <rect x="38" y="70" width="28" height="102"/>
+            <rect x="70" y="104" width="40" height="68"/>
+            <rect x="114" y="82" width="24" height="90"/>
+            <rect x="142" y="112" width="36" height="60"/>
+            <rect x="182" y="96" width="30" height="76"/>
+            <rect x="216" y="120" width="44" height="52"/>
+            <rect x="264" y="88" width="30" height="84"/>
+            <rect x="298" y="106" width="22" height="66"/>
+          </g>
+          <g fill="#ffd66b" opacity=".55">
+            <rect x="44" y="80" width="4" height="4"/><rect x="54" y="92" width="4" height="4"/><rect x="44" y="116" width="4" height="4"/>
+            <rect x="120" y="94" width="4" height="4"/><rect x="128" y="120" width="4" height="4"/>
+            <rect x="188" y="106" width="4" height="4"/><rect x="200" y="130" width="4" height="4"/>
+            <rect x="270" y="98" width="4" height="4"/><rect x="282" y="122" width="4" height="4"/>
+            <rect x="8" y="104" width="4" height="4"/><rect x="80" y="116" width="4" height="4"/>
+          </g>
+          <g fill="#0c1330">
+            <rect x="0" y="136" width="58" height="36"/>
+            <rect x="96" y="128" width="46" height="44"/>
+            <rect x="236" y="140" width="52" height="32"/>
+          </g>
+          <rect x="0" y="172" width="320" height="28" fill="#1a2242"/>
+          <ellipse cx="128" cy="180" rx="104" ry="11" fill="none" stroke="#FF5555" stroke-width="1.6" stroke-dasharray="1.6 5" opacity=".9"/>
+        </svg>
+
+        <div class="bossbar mc">
+          <div class="bb-title"><span class="s-flash">★★★</span><span class="s-off">☆☆</span>&nbsp; <span class="c-yel">SEARCHING</span>&nbsp; 0:23</div>
+          <div class="bb-bar"><i></i></div>
+        </div>
+
+        <div class="chat mc">
+          <p><span class="c-blue">[Dispatch]</span> Suspect on foot, heading north past the <span class="c-yel">Docks</span>.</p>
+          <p><span class="c-blue">[Unit 4]</span> <span class="c-gray">Lost visual. Searching the market.</span></p>
+          <p><span class="c-aqua">[Air 1]</span> <span class="c-gray">Sweeping from the east.</span></p>
+        </div>
+
+        <div class="actionbar mc c-yel">⚠ Chopper overhead. Get under a roof.</div>
+
+        <div class="hotbar" aria-hidden="true">
+          <span class="gun sel"></span><span class="flag"></span><span></span><span></span><span></span><span></span><span></span><span></span><span class="compass"></span>
+        </div>
+      </div>
+      <figcaption>The proposed HUD mid-chase. Stars flash with a search countdown in the boss bar, radio calls land in chat, the action bar warns about the chopper, red particles mark the search zone, and the phone (already a compass) points the way out.</figcaption>
+    </figure>
+  </header>
+
+  <div class="layout">
+    <nav class="toc" aria-label="Sections">
+      <a href="#today">Today</a>
+      <a href="#loop">The loop</a>
+      <a href="#ladder">Star ladder</a>
+      <a href="#crime"><b>1</b>The crime</a>
+      <a href="#response"><b>2</b>The response</a>
+      <a href="#chase"><b>3</b>The chase</a>
+      <a href="#ending"><b>4</b>The ending</a>
+      <a href="#record"><b>5</b>The record</a>
+      <a href="#sides"><b>6</b>Both sides</a>
+      <a href="#roadmap">Roadmap</a>
+      <a href="#guardrails">Guardrails</a>
+    </nav>
+
+    <main>
+
+      <!-- TODAY -->
+      <section id="today" class="sec">
+        <p class="eyebrow">Where 0.11.0 stands</p>
+        <h2>A chase today</h2>
+        <p class="intro">The police AI is in good shape. Squads share what they see, route around buildings and climb after you. The rules around the AI are what make chases feel flat. Here is a five-star chase played by the current code.</p>
+
+        <ol class="chase">
+          <li><p><b>You take out a rival.</b> Nothing happens. The first star needs two kills inside 10 seconds, and every victim is worth one point, whether it was a player or a cop.<span class="ref"><code>KillCombo.recordKill</code> passes <code>int points = 1</code> · <code>Kill_Counter: [2, 5, 10, 15, 20]</code></span></p></li>
+          <li><p><b>You drop a second one.</b> One star. Two Officers appear about a second later, 10 to 50 blocks away or at a spawner within 80, already heading for you.<span class="ref"><code>CopManager.onWantedStart</code> · <code>startSpawnTask</code></span></p></li>
+          <li><p><b>You punch an officer.</b> The whole group turns on you. Your stars don't move, because hitting a cop is not a crime.<span class="ref"><code>CopManager.onCopAttackedAlert</code></span></p></li>
+          <li><p><b>You wipe the squad.</b> It's back at full strength on the next spawn check, two seconds later.<span class="ref"><code>startSpawnTask</code> refills every missing cop in one pass</span></p></li>
+          <li><p><b>You reach five stars.</b> Six Military NPCs. Each star is one tier in bigger numbers, and nothing new ever shows up.<span class="ref"><code>CopSpawnManager.getTierForWantedLevel</code></span></p></li>
+          <li><p><b>You hide in a basement.</b> It makes no difference. A star drops every 193 seconds whether anyone can see you or not, and each drop takes 50 × 5<sup>stars</sup> cash, which is 156,250 at five stars.<span class="ref"><code>WantedExecutor</code> · <code>Wanted.Take_Money</code></span></p></li>
+          <li><p><b>You jump off a roof.</b> Every star is gone for 15% of your cash. Waiting it out would take about 16 minutes and 195,250, so dying is the smart play.<span class="ref"><code>WantedLevelListener.onPlayerDowned</code> · <code>User.Death.Money.Formula: "balance * 0.15"</code></span></p></li>
+          <li><p><b>Or they catch you.</b> Up to eight minutes in a cell under Slowness IV and Blindness, with nothing to do.<span class="ref"><code>DetainmentService.applyVisuals</code> runs for the cuffed and jailed states alike</span></p></li>
+        </ol>
+
+        <p class="subhead">Also missing</p>
+        <ul class="plain">
+          <li>Kills are the only crime. Robbery, car theft, assault, gunfire, safe cracking and trespassing raise nothing. The only other sources are <code>[WANTED]</code> signs and admin commands.</li>
+          <li>A pedestrian kill adds a star on the spot through a second listener (<code>CivilianDeathRewardListener</code>), and that star never starts the decay timer. That one is a bug worth fixing on its own.</li>
+          <li>Heat has no HUD. Stars show up in chat lines and placeholders, with no boss bar, action bar or title.</li>
+        </ul>
+
+        <p class="subhead">Already working, and worth keeping</p>
+        <ul class="keep">
+          <li><p><b>Squad awareness.</b> Cops share sightings, chase what they've seen, and search outward from where you were last seen.</p></li>
+          <li><p><b>Route planning.</b> Doors, ladders, rooftops searched from the top down, and a patient wait below anything unreachable.</p></li>
+          <li><p><b>Tiers with teeth.</b> Difficulty profiles from EASY to DEADLY, Bartizan weapons, and ranged cops who hold a 7 to 12 block firing band.</p></li>
+          <li><p><b>A full arrest pipeline.</b> Cuffs, transit, jail, handcuff bribes, break-free, bail, jail bribes and sentences, all released through one <code>ReleasePipeline</code>.</p></li>
+          <li><p><b>Living civilians.</b> Faction squads that alert each other, and cops that already hunt hostile civilians.</p></li>
+          <li><p><b>Events to hang things on.</b> <code>WantedStartEvent</code>, <code>WantedLevelChangeEvent</code>, <code>CopDeathEvent</code>, <code>CuffedEvent</code> and <code>KillComboEvent</code> are ready for new listeners.</p></li>
+        </ul>
+
+        <div class="callout">
+          <h3>The biggest lever is already built</h3>
+          <p>Every AI tick, each squad knows whether anyone has seen you in the last 1.5 seconds and where you were last seen (<code>NpcSquad.hasFreshSighting()</code>). The cops use it to choose between chasing and searching. Nothing connects it to your stars. Wiring the two together turns escaping into a skill, so it is the first thing on the roadmap.</p>
+        </div>
+      </section>
+
+      <!-- LOOP -->
+      <section id="loop" class="sec">
+        <p class="eyebrow">The target</p>
+        <h2>The chase loop</h2>
+        <p class="intro">Each feature below fits one step of this loop, and the stage numbers follow the same order. Stage 6 then puts players on the police side of it.</p>
+
+        <ol class="loop">
+          <li>
+            <span class="node">1</span>
+            <div>
+              <h3>Crime <a href="#crime">Stage 1</a></h3>
+              <p>Heat is weighted, so a punch, a robbery and a dead cop are different things. It only counts once a cop, a chopper, a dog or a witness sees it.</p>
+            </div>
+          </li>
+          <li>
+            <span class="node">2</span>
+            <div>
+              <h3>Response <a href="#response">Stage 2</a></h3>
+              <p>Witnesses call it in. The nearest patrol answers first, then units leave the closest station. Each star adds a new kind of unit.</p>
+            </div>
+          </li>
+          <li>
+            <span class="node">3</span>
+            <div>
+              <h3>Pursuit and search <a href="#chase">Stage 3</a></h3>
+              <div class="duo">
+                <div class="seen"><b>Seen</b><p>Stars stay solid. The squad closes in and calls out your position.</p></div>
+                <span class="swap" aria-hidden="true">⇄</span>
+                <div class="search"><b>Unseen</b><p>Stars flash. A search zone forms around your last known position and the evasion clock runs.</p></div>
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="node">4</span>
+            <div>
+              <h3>Ending <a href="#ending">Stage 4</a></h3>
+              <ul class="outcomes">
+                <li class="o-escaped">Escaped</li>
+                <li class="o-surrender">Surrendered</li>
+                <li class="o-busted">Busted</li>
+                <li class="o-wasted">Wasted</li>
+              </ul>
+              <p>Every ending gets a pursuit report, and none of them is free.</p>
+            </div>
+          </li>
+          <li>
+            <span class="node">5</span>
+            <div>
+              <h3>Record <a href="#record">Stage 5</a></h3>
+              <p>What you escaped stays on your record as a bounty. Posters go up, hunters ride out, and cops in that district recognize you on sight.</p>
+              <p class="loopback">↺ Back to step 1. A recognized player needs no witness.</p>
+            </div>
+          </li>
+        </ol>
+      </section>
+
+      <!-- LADDER -->
+      <section id="ladder" class="sec">
+        <p class="eyebrow">Escalation</p>
+        <h2>What each star means</h2>
+        <p class="intro">Today each star is one tier in bigger numbers, and a star drops on a fixed clock. The proposal gives every star its own mix of units and something new to deal with, and lets you shake it by staying out of sight. Treat the numbers as starting values to tune.</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr class="grp">
+                <th></th>
+                <th colspan="2" class="g-today">Today</th>
+                <th colspan="4" class="g-new">Proposed</th>
+              </tr>
+              <tr>
+                <th class="stars">Stars</th>
+                <th>Squad</th>
+                <th>A star drops after</th>
+                <th class="g-new">Squad</th>
+                <th>New at this star</th>
+                <th>Search zone</th>
+                <th>Unseen time to drop</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="stars"><span class="stars-v"><span class="on">★</span><span class="off">★★★★</span></span></td>
+                <td class="today">2 Officers</td>
+                <td class="today"><span class="num">132 s</span>, seen or not<br><span class="num">−250</span> cash</td>
+                <td class="first-new">2 Officers, nearest patrol first</td>
+                <td>Radio chatter, warnings, witnesses</td>
+                <td><span class="num">40 blocks</span></td>
+                <td><span class="num">10 s</span></td>
+              </tr>
+              <tr>
+                <td class="stars"><span class="stars-v"><span class="on">★★</span><span class="off">★★★</span></span></td>
+                <td class="today">3 Sergeants</td>
+                <td class="today"><span class="num">145 s</span><br><span class="num">−1,250</span> cash</td>
+                <td class="first-new">2 Officers, 2 Sergeants</td>
+                <td>Dogs in foot chases, mounted units in open country</td>
+                <td><span class="num">60 blocks</span></td>
+                <td><span class="num">20 s</span></td>
+              </tr>
+              <tr>
+                <td class="stars"><span class="stars-v"><span class="on">★★★</span><span class="off">★★</span></span></td>
+                <td class="today">4 Lieutenants</td>
+                <td class="today"><span class="num">160 s</span><br><span class="num">−6,250</span> cash</td>
+                <td class="first-new">2 Sergeants, 2 Lieutenants with rifles</td>
+                <td>Chopper, roadblocks. Last star you can surrender at</td>
+                <td><span class="num">90 blocks</span></td>
+                <td><span class="num">30 s</span></td>
+              </tr>
+              <tr>
+                <td class="stars"><span class="stars-v"><span class="on">★★★★</span><span class="off">★</span></span></td>
+                <td class="today">5 SWAT</td>
+                <td class="today"><span class="num">176 s</span><br><span class="num">−31,250</span> cash</td>
+                <td class="first-new">2 Lieutenants, 4 SWAT</td>
+                <td>Spike strips, a second dog, no cuffing</td>
+                <td><span class="num">130 blocks</span></td>
+                <td><span class="num">45 s</span></td>
+              </tr>
+              <tr>
+                <td class="stars"><span class="stars-v"><span class="on">★★★★★</span></span></td>
+                <td class="today">6 Military</td>
+                <td class="today"><span class="num">193 s</span><br><span class="num">−156,250</span> cash</td>
+                <td class="first-new">3 SWAT, 4 Military</td>
+                <td>Two choppers, checkpoints, Dead or Alive</td>
+                <td><span class="num">180 blocks</span></td>
+                <td><span class="num">60 s</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="table-note">Today's interval is 120 × 1.1<sup>stars</sup> seconds, fixed by the last star you gained, so a five-star player waits 193 seconds for every drop and pays at each one. Squad sizes come from <code>Cops.Count</code> (Base 2, Per_Level 1).</p>
+      </section>
+
+      <!-- STAGE 1 -->
+      <section id="crime" class="sec">
+        <div class="stage-head">
+          <span class="stage-no" aria-hidden="true">1</span>
+          <div>
+            <p class="eyebrow">Stage 1 · Before the chase</p>
+            <h2>The crime</h2>
+            <p class="intro">More crimes worth committing, weighed by how serious they are, and counted only when someone sees them.</p>
+          </div>
+        </div>
+
+        <div class="features">
+          <article class="feature headline" id="f-heat">
+            <div>
+              <span class="tag-head">Headline</span>
+              <h3>Heat ledger</h3>
+              <ul class="src"><li>GTA V</li><li>RDR2</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="1" aria-hidden="true"><i></i><i></i><i></i></span>S</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r012">0.12</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Every crime pays out heat, and heat turns into stars. Shooting a cop lights you up at once. Shoving a stranger barely registers. Crimes chained inside a few seconds still stack up fast, so the kill combo keeps its bite.</p>
+              <p class="how">Replace the one-point-per-kill combo with a table of crime weights. Star thresholds move from kill counts to heat, and the combo window becomes a streak bonus. Crimes a cop sees skip any report delay. Routing pedestrian kills through the ledger also retires the separate, timer-less star in <code>CivilianDeathRewardListener</code>.</p>
+              <p class="code-cap">Sketch for the module's own config</p>
+<pre class="code"><code><span class="k">Heat</span>:
+   <span class="k">Star_Thresholds</span>: <span class="v">[100, 250, 450, 700, 1000]</span>
+   <span class="k">Streak_Bonus</span>: <span class="v">1.5</span>               <span class="c"># crimes chained inside Kill_Combo.Reset_After</span>
+   <span class="k">Seen_By_Cop_Multiplier</span>: <span class="v">1.5</span>
+   <span class="k">Turf_War_Multiplier</span>: <span class="v">0.5</span>        <span class="c"># kills inside a contested turf</span>
+   <span class="k">Crimes</span>:
+      <span class="k">Brandish_Near_Cop</span>: <span class="v">25</span>        <span class="c"># only after an ignored warning</span>
+      <span class="k">Assault_Civilian</span>: <span class="v">30</span>
+      <span class="k">Car_Theft</span>: <span class="v">60</span>
+      <span class="k">Kill_Player</span>: <span class="v">80</span>
+      <span class="k">Kill_Civilian</span>: <span class="v">100</span>
+      <span class="k">Assault_Cop</span>: <span class="v">100</span>             <span class="c"># one hit is enough for the first star</span>
+      <span class="k">Resisting_Arrest</span>: <span class="v">100</span>
+      <span class="k">Kill_Cop</span>: <span class="v">150</span>
+      <span class="k">Safe_Cracking</span>: <span class="v">150</span>
+      <span class="k">Store_Robbery</span>: <span class="v">200</span>
+      <span class="k">Trespass_Restricted</span>: <span class="v">300</span>
+      <span class="k">Jailbreak</span>: <span class="v">450</span></code></pre>
+              <p class="hooks"><span class="lbl">Builds on</span><code>KillComboTracker.addKill(entity, points)</code> already takes points, and <code>KillCombo.recordKill</code> always passes 1 · <code>Wanted.Kill_Combo.Kill_Counter</code> becomes <code>Star_Thresholds</code> · <code>EntityDamageListener.handleWanted</code></p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-crimes">
+            <div>
+              <h3>Crimes worth committing</h3>
+              <ul class="src"><li>GTA V</li><li>RDR2</li><li>GTA 6 trailers</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="2" aria-hidden="true"><i></i><i></i><i></i></span>M</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r013">0.13</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Give players reasons to get wanted besides killing. Each of these ends in a chase if someone sees it.</p>
+              <ul>
+                <li><b>Store hold-ups.</b> Aim a gun at a trader and hold. The clerk fills a bag over about ten seconds, and a trader who already dislikes you trips the silent alarm sooner. Traders are invulnerable today and respawn after 60 seconds, so the loop already fits.</li>
+                <li><b>Hotwiring.</b> Use the lockpick on a car you don't own. It works on a timer, marks the car as stolen, and any cop who sees it takes an interest. Today <code>CarAccessPolicy</code> simply refuses.</li>
+                <li><b>Safe cracking.</b> Wire the unused <code>LootChestCracking*</code> events to an alarm. Cracking the <code>police_armory</code> or <code>military_vault</code> chest counts as robbing the state.</li>
+                <li><b>Trespassing.</b> Mark the police station, the jail and the vaults as restricted. Walking in is an instant three stars, the way Fort Zancudo is in GTA V.</li>
+              </ul>
+              <p class="hooks"><span class="lbl">Builds on</span>trader mood and <code>TraderBuyRequest</code> events · <code>CarAccessPolicy</code>, <code>ParkedCarRepository</code> · <code>CrackingSession</code>, not yet wired to a minigame · the <code>lockpick</code> unique item</p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-witnesses">
+            <div>
+              <h3>Witnesses and 911 calls</h3>
+              <ul class="src"><li>RDR2</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="2" aria-hidden="true"><i></i><i></i><i></i></span>M</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r013">0.13</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">A pedestrian who sees a crime runs, pulls out a phone and calls it in. You have about eight seconds to stop them. Aim at them to scare them off, pay them, or chase them down. Killing a witness is a new crime, and anyone else watching becomes the next caller.</p>
+              <p class="how">Crimes with no cop in sight turn into stars only when a call completes. The report sends the squad to the crime scene, which gives a head start to anyone who has already moved on. Callers hold a phone and are marked with particles so players can spot them.</p>
+              <p class="hooks"><span class="lbl">Builds on</span>civilians already flee attackers (<code>CivilianFleeBehavior</code>) and alert their faction (<code>alertFaction</code>) · the sight checks cops use (<code>CopNpc.canSee</code>) · <code>CopGroup.getSquad().reportSighting(...)</code></p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-disguise">
+            <div>
+              <h3>Masks, outfits and disguises</h3>
+              <ul class="src"><li>RDR2</li><li>Hitman</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="2" aria-hidden="true"><i></i><i></i><i></i></span>M</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r013">0.13</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Wear a mask during a crime and the report says "unknown suspect in a black mask". Lose the cops, change your jacket and take the mask off out of sight, and the squad is now looking for someone else. Put on a looted police helmet and vest, and low-star cops walk right past you until they catch you doing something.</p>
+              <p class="how">Each report carries a description: head item, chest color, held weapon and car. Cops lock on only while you still match it. Wearing a mask near cops earns a warning. The police disguise works up to two stars and breaks on any crime.</p>
+              <p class="hooks"><span class="lbl">Builds on</span>Bartizan wearables · <code>police_helmet</code> and <code>police_vest</code> already drop from loot chests and do nothing yet · the report from witnesses</p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-patrols">
+            <div>
+              <h3>Patrols, warnings and pull-overs</h3>
+              <ul class="src"><li>RDR2</li><li>GTA V</li><li>Mafia</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="2" aria-hidden="true"><i></i><i></i><i></i></span>M</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r013">0.13</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Cops walk beats around stations even when nobody is wanted. Walk past one with a rifle out and you hear "Put that away!" with five seconds to comply. Speed past a patrol in a car and you get pulled over. Stop and pay a small fine, or floor it and take a star.</p>
+              <p class="how">Add <code>PATROL</code> and <code>WARNING</code> states. Patrols walk routes anchored on cop spawners and only exist while a player is within about 60 blocks, the same proximity rule civilian spawners use. A crime in front of a patrol is answered by that patrol first.</p>
+              <p class="hooks"><span class="lbl">Builds on</span><code>CopState</code> · <code>IdleBehavior</code> already scans for targets · civilian <code>Spawner_Proximity.Activation_Radius</code> · car speed from <code>MinecartVehicle</code></p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- STAGE 2 -->
+      <section id="response" class="sec">
+        <div class="stage-head">
+          <span class="stage-no" aria-hidden="true">2</span>
+          <div>
+            <p class="eyebrow">Stage 2 · The law answers</p>
+            <h2>The response</h2>
+            <p class="intro">Units come from somewhere, and every star puts something new on screen.</p>
+          </div>
+        </div>
+
+        <div class="features">
+          <article class="feature headline" id="f-dispatch">
+            <div>
+              <span class="tag-head">Headline</span>
+              <h3>Dispatch from stations</h3>
+              <ul class="src"><li>GTA V</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="2" aria-hidden="true"><i></i><i></i><i></i></span>M</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r013">0.13</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">The first response comes from whichever patrol is nearby. Everyone else leaves the nearest station, and the radio tells you they're coming. A crime next to a precinct is answered at once. A crime out in the hills buys you time.</p>
+              <p class="how">Squad members spawn at the nearest station (a cop spawner) and travel from there. With no station in range, they appear beyond the player's view after a delay based on distance. The first sighting is the crime scene, not your live position. Radio lines use the server's own place names from turfs and waypoints, plus your heading and whether you're on foot or driving. The phone keeps a log of the last calls.</p>
+              <div class="mc-chat" role="img" aria-label="Example police radio lines in Minecraft chat">
+                <p><span class="c-blue">[Dispatch]</span> 10-71, shots fired in <span class="c-yel">Market</span> turf. Units respond.</p>
+                <p><span class="c-blue">[Dispatch]</span> Units 4 and 7 en route from <span class="c-yel">Northside Station</span>, ETA 20 s.</p>
+                <p><span class="c-blue">[Unit 4]</span> Visual on suspect. On foot, heading north to the <span class="c-yel">Docks</span>.</p>
+                <p><span class="c-blue">[Unit 7]</span> <span class="c-gray">Lost visual. Searching the last known position.</span></p>
+              </div>
+              <p class="hooks"><span class="lbl">Builds on</span><code>CopSpawnManager.findClosestSpawnerLocation</code> and <code>Spawner_Preference_Radius</code> (80) · <code>Visibility_Check_Distance</code> · <code>CopManager.onWantedStart</code>, which seeds the first sighting · turf and waypoint names</p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-rosters">
+            <div>
+              <h3>Mixed squads and backup waves</h3>
+              <ul class="src"><li>GTA V</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="1" aria-hidden="true"><i></i><i></i><i></i></span>S</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r012">0.12</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Three stars looks different from two. Sergeants push in while lieutenants with rifles hang back. Wipe a squad and you get a real breather before backup arrives, and the radio tells you it's on the way.</p>
+              <p class="how">Give each star a roster of tiers instead of one tier. Replace the refill-everything loop with a backup delay that shrinks as stars rise, for example 15 seconds at one star down to 6 at five.</p>
+              <p class="hooks"><span class="lbl">Builds on</span><code>CopSpawnManager.getTierForWantedLevel</code>, one tier per star today · <code>CopManager.startSpawnTask</code>, which refills the squad every 40 ticks · <code>Cops.Count</code></p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-chopper">
+            <div>
+              <h3>Police chopper</h3>
+              <ul class="src"><li>GTA V</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="3" aria-hidden="true"><i></i><i></i><i></i></span>L</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r014">0.14</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">From three stars, a helicopter circles overhead. Out in the open its spotlight finds you, you glow for everyone to see, and the squad always knows where you are. Get under a roof, into a tunnel or beneath thick trees and it loses you. Shoot it down to buy half a minute, at a heavy heat cost.</p>
+              <p class="how">A flying Citizens NPC holds about 25 blocks above your last known position. It sees you when nothing solid is above your head inside its sweep radius, reports sightings to the squad, and sets the glowing effect while you're lit.</p>
+              <p class="hooks"><span class="lbl">Builds on</span>Citizens flyable NPCs · <code>World#getHighestBlockYAt</code> for the roof check · <code>NpcSquad.reportSighting</code> · <code>Entity#setGlowing</code></p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-k9">
+            <div>
+              <h3>K9 units</h3>
+              <ul class="src"><li>New idea</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="2" aria-hidden="true"><i></i><i></i><i></i></span>M</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r014">0.14</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Dogs don't need to see you. They follow your trail from the last place you were seen and bark when they find you, even in a sealed room. Swim across water to break the scent.</p>
+              <p class="how">Record a trail for the wanted player (one position per second for the last minute). A wolf NPC walks it from the last known position, and the trail ends wherever you swam. A bark within six blocks counts as a sighting for the squad. Dogs join foot chases from two stars.</p>
+              <p class="hooks"><span class="lbl">Builds on</span>Citizens <code>WOLF</code> NPCs · squad sightings · Keystone route planning</p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-roadblocks">
+            <div>
+              <h3>Roadblocks and spike strips</h3>
+              <ul class="src"><li>GTA V</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="3" aria-hidden="true"><i></i><i></i><i></i></span>L</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r014">0.14</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">At three stars, cops block the road ahead of you with barriers and parked police cars. At four, spike strips. Roll over one and your car limps along at half speed. Go around, ram the weak side, or ditch the car.</p>
+              <p class="how">Place a temporary roadblock on road blocks ahead of your direction of travel, staff it with two cops, and restore the blocks after a minute. A spike strip is a row of tripwire hooks that damages cars and caps their speed until they're repaired.</p>
+              <p class="hooks"><span class="lbl">Builds on</span><code>MinecartVehicle</code> speed and <code>VehicleSession</code> health · the gadget module fires no events yet, so it needs a car move or damage event first · <code>CopSpawnManager.spawnAtLocation</code></p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-mounted">
+            <div>
+              <h3>Mounted units</h3>
+              <ul class="src"><li>RDR2</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="2" aria-hidden="true"><i></i><i></i><i></i></span>M</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r014">0.14</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Out in open country, lawmen come on horseback, and they're faster than you on foot. Knock one out of the saddle and the horse is yours, for the price of one more crime.</p>
+              <p class="how">Seat cops on Citizens horse NPCs when the chase is far from any station or in open biomes. Horse theft becomes its own line in the heat ledger.</p>
+              <p class="hooks"><span class="lbl">Builds on</span>Citizens NPC mounting · <code>CopTierConfig</code> (add a <code>Mount</code> field) · the heat ledger</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- STAGE 3 -->
+      <section id="chase" class="sec">
+        <div class="stage-head">
+          <span class="stage-no" aria-hidden="true">3</span>
+          <div>
+            <p class="eyebrow">Stage 3 · Getting away</p>
+            <h2>The chase</h2>
+            <p class="intro">Stars fade when you break line of sight and stay out of it. Everything in this stage helps players do that, or read how close they are.</p>
+          </div>
+        </div>
+
+        <div class="features">
+          <article class="feature headline" id="f-evasion">
+            <div>
+              <span class="tag-head">Headline</span>
+              <h3>Line-of-sight evasion and the search zone</h3>
+              <ul class="src"><li>GTA V</li><li>GTA IV</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="2" aria-hidden="true"><i></i><i></i><i></i></span>M</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r012">0.12</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">While any cop, chopper or dog has eyes on you, your stars stay solid. Break line of sight and they start to flash as a search zone forms around the last place you were seen. Stay unseen and the clock runs. Get out of the zone and it runs faster. When it finishes you lose a star. Get spotted and the zone snaps back onto you.</p>
+              <p class="how">The squad already knows, every AI tick, whether anyone saw you in the last 1.5 seconds and where. Tie that to the stars: the repeating decay timer becomes an evasion clock that only runs while the squad has no fresh sighting. The old timer stays as a safety net for chases where no cop can spawn. The per-star cash drain goes away (see <a href="#f-fines">fines and bills</a>).</p>
+              <div class="bars" role="group" aria-label="Boss bar states">
+                <figure>
+                  <div class="scr"><div class="t"><span class="s-on">★★★</span><span class="s-off">☆☆</span> <span class="c-red">IN SIGHT</span></div><div class="b"><i style="width:100%;background:#FF5555"></i></div></div>
+                  <figcaption>Seen</figcaption>
+                </figure>
+                <figure>
+                  <div class="scr"><div class="t"><span class="s-flash">★★★</span><span class="s-off">☆☆</span> <span class="c-yel">SEARCHING</span> 0:23</div><div class="b"><i style="width:62%;background:#F2DF3F"></i></div></div>
+                  <figcaption>Searching</figcaption>
+                </figure>
+                <figure>
+                  <div class="scr"><div class="t"><span class="s-on">★★</span><span class="s-off">☆☆☆</span> <span class="c-green">STAR LOST</span></div><div class="b"><i style="width:100%;background:#55FF55"></i></div></div>
+                  <figcaption>Evaded</figcaption>
+                </figure>
+              </div>
+              <p class="code-cap">Sketch for the wanted config</p>
+<pre class="code"><code><span class="k">Wanted</span>:
+   <span class="k">Evasion</span>:
+      <span class="k">Enable</span>: <span class="v">true</span>
+      <span class="k">Lost_Sight_Seconds</span>: <span class="v">3</span>                  <span class="c"># stars flash after this long unseen</span>
+      <span class="k">Drop_Mode</span>: <span class="v">ONE_STAR</span>                    <span class="c"># ALL_STARS plays by GTA V rules</span>
+      <span class="k">Search_Radius</span>: <span class="v">[40, 60, 90, 130, 180]</span>  <span class="c"># blocks, per star</span>
+      <span class="k">Seconds_To_Drop</span>: <span class="v">[10, 20, 30, 45, 60]</span>  <span class="c"># unseen time, per star</span>
+      <span class="k">Outside_Zone_Speed</span>: <span class="v">2.0</span>
+      <span class="k">Hideout_Speed</span>: <span class="v">1.5</span>
+   <span class="k">Take_Money</span>:
+      <span class="k">Amount</span>: <span class="v">0</span>                              <span class="c"># no more chase tax</span></code></pre>
+              <p class="target">A clean five-star escape takes about three minutes of staying unseen (10 + 20 + 30 + 45 + 60 seconds), less if you leave each zone. Today it takes 16 minutes and 195,250 cash, or one death.</p>
+              <p class="hooks"><span class="lbl">Builds on</span>Keystone <code>NpcSquad</code> (<code>hasFreshSighting</code>, <code>reportSighting</code>, last known position) through <code>CopGroup.getSquad()</code> · <code>WantedExecutor</code> · <code>Wanted.decrementLevel()</code></p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-hud">
+            <div>
+              <h3>Flashing stars, boss bar and escape compass</h3>
+              <ul class="src"><li>GTA V</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="1" aria-hidden="true"><i></i><i></i><i></i></span>S</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r012">0.12</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">One glance tells you where you stand. The boss bar shows your stars in red while you're seen, flashing yellow with a countdown while they search, and green when a star drops. Red particles trace the edge of the search zone, visible only to you. Your phone, which is already a compass, points at the nearest way out.</p>
+              <p class="how">A per-player boss bar, <code>Player#spawnParticle</code> for the ring so other players never see it, and <code>Player#setCompassTarget</code> for the phone. Every star gained gets a title flash and a siren sound. Turf contests and car health already use boss bars, so the wanted bar goes on top.</p>
+              <p class="hooks"><span class="lbl">Builds on</span><code>Wanted.buildStars</code> · <code>%gangland_user_wanted%</code> · the phone item in <code>unique_items.yml</code> (<code>Material: COMPASS</code>)</p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-scanner">
+            <div>
+              <h3>Scanner map</h3>
+              <ul class="src"><li>GTA V</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="2" aria-hidden="true"><i></i><i></i><i></i></span>M</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r014">0.14</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Hold a scanner map in your off hand for a live minimap, like the one in GTA V. Blue markers for cops, a white one for the chopper, the red search circle and green hideouts. Buy it from a black-market trader. On-duty police get their own version.</p>
+              <p class="how">A contextual <code>MapRenderer</code> draws a 128 × 128 top-down view per player and uses map cursors for units. It needs no client mod and no packets.</p>
+              <p class="hooks"><span class="lbl">Builds on</span>Bukkit <code>MapView</code> and <code>MapRenderer</code> · <code>CopManager.getCopsForPlayer</code> · the squad's last known position</p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-hideouts">
+            <div>
+              <h3>Hideouts and cooldown spots</h3>
+              <ul class="src"><li>NFS Most Wanted</li><li>GTA V</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="1" aria-hidden="true"><i></i><i></i><i></i></span>S</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r014">0.14</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Barns, underpasses and gang garages are marked hiding spots. Duck into one while unseen and the search clock runs faster. Your gang's waypoints and owned turf count as hideouts for members.</p>
+              <p class="how">Admin-placed areas with a multiplier on the evasion clock. They do nothing if you arrive while seen, so they reward breaking contact first.</p>
+              <p class="hooks"><span class="lbl">Builds on</span>gang waypoints (<code>WaypointType.GANG</code>) · turf <code>CuboidRegion</code> · the evasion clock</p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-breakers">
+            <div>
+              <h3>Pursuit breakers</h3>
+              <ul class="src"><li>NFS Most Wanted</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="2" aria-hidden="true"><i></i><i></i><i></i></span>M</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r014">0.14</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Shoot the target block on a scaffold, a water tower or a market stall and it comes down on the cops behind you. Units caught under it are stunned, and the street stays blocked for a while.</p>
+              <p class="how">Admins mark a structure and its trigger with a command. When triggered, its blocks become falling blocks, cops in range are slowed and hurt, and the structure rebuilds after one to two minutes. Each one shows up on the pursuit report.</p>
+              <p class="hooks"><span class="lbl">Builds on</span><code>ProjectileHitEvent</code> on target blocks · <code>FallingBlock</code> · block snapshots for the rebuild</p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-contacts">
+            <div>
+              <h3>Crooked contacts and bribe stars</h3>
+              <ul class="src"><li>GTA Online</li><li>GTA San Andreas</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="1" aria-hidden="true"><i></i><i></i><i></i></span>S</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r013">0.13</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Call a crooked desk sergeant from your phone to wipe a star or two, at a price and on a cooldown. It only works while nobody is looking at you. Or find the police bribe stars hidden around the map. Grab one and lose a star.</p>
+              <p class="how">A contacts app on the phone with a price per star and a 10-minute cooldown. Bribe stars are floating pickups at admin-set points that respawn on a timer. The <code>[WANTED]</code> sign already sells star removal. This moves it into the world and the phone, with limits.</p>
+              <p class="hooks"><span class="lbl">Builds on</span><code>inventory/phone.yml</code> · <code>WantedSign</code> · the loot chest spawn-point pattern</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- STAGE 4 -->
+      <section id="ending" class="sec">
+        <div class="stage-head">
+          <span class="stage-no" aria-hidden="true">4</span>
+          <div>
+            <p class="eyebrow">Stage 4 · How it ends</p>
+            <h2>The ending</h2>
+            <p class="intro">Every chase ends with a choice and a story. Fighting, running and giving up should each have a clear price.</p>
+          </div>
+        </div>
+
+        <div class="features">
+          <article class="feature headline" id="f-surrender">
+            <div>
+              <span class="tag-head">Headline</span>
+              <h3>Surrender</h3>
+              <ul class="src"><li>RDR2</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="1" aria-hidden="true"><i></i><i></i><i></i></span>S</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r013">0.13</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Raise a white banner, or crouch with empty hands, while a cop can see you. The cops stop firing and cuff you calmly. You serve half the sentence, pay less bail and keep your legal items. Swing at them after surrendering and it counts as resisting arrest.</p>
+              <p class="how">Allowed up to three stars. SWAT and Military already skip cuffing, and that becomes the Dead or Alive tier. A surrender goes through the normal cuff, transit and jail pipeline with multipliers on sentence and bail, and shows a BUSTED title to match the existing WASTED screen.</p>
+<pre class="code"><code><span class="k">Detainment</span>:
+   <span class="k">Surrender</span>:
+      <span class="k">Max_Stars</span>: <span class="v">3</span>                  <span class="c"># tiers 4 and 5 already skip cuffing</span>
+      <span class="k">Sentence_Multiplier</span>: <span class="v">0.5</span>
+      <span class="k">Bail_Multiplier</span>: <span class="v">0.75</span>
+      <span class="k">Keep_Legal_Items</span>: <span class="v">true</span>
+      <span class="k">Resist_Window_Seconds</span>: <span class="v">10</span>     <span class="c"># attacking inside it adds Resisting_Arrest</span></code></pre>
+              <p class="hooks"><span class="lbl">Builds on</span><code>CuffingBehavior</code> · <code>SentenceService</code> · <code>BailService.computeCost</code> · <code>SeizedInventoryService</code> · tier <code>Skip_Cuffing</code></p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-crew">
+            <div>
+              <h3>Crew heat and rescues</h3>
+              <ul class="src"><li>GTA Online</li><li>GTA 6 trailers</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="2" aria-hidden="true"><i></i><i></i><i></i></span>M</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r015">0.15</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Pull a job with your gang and the heat is shared. Everyone near the crime, or in the same car, gets the stars, and the police split up to chase each of you. If a crewmate gets cuffed, take down the guarding cop and hold right-click on them for three seconds to break them free.</p>
+              <p class="how">An accomplice radius of about 16 blocks, plus shared vehicles, decides who shares the crime. A rescue during transit releases the prisoner through a new <code>RESCUED</code> release reason and gives both players a star for aiding an escape.</p>
+              <p class="hooks"><span class="lbl">Builds on</span>gang membership · one <code>CopGroup</code> per target · <code>GuardingBehavior</code> and <code>Transit.Guard_Radius</code> · <code>CuffLockRegistry</code> · <code>ReleasePipeline</code></p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-report">
+            <div>
+              <h3>Pursuit report and breaking news</h3>
+              <ul class="src"><li>NFS Most Wanted</li><li>RDR2</li><li>GTA 6 trailers</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="1" aria-hidden="true"><i></i><i></i><i></i></span>S</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r012">0.12</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">When a chase ends you get the rundown: how long it lasted, top stars, cops down, roadblocks broken, choppers downed and the cost to the city. Big chases go out server-wide as breaking news, and a daily paper at spawn remembers the best ones.</p>
+              <p class="how">Collect the numbers from events the module already fires. Broadcast at four stars or after two minutes, with a cooldown. The cost to the city feeds the bounty now, and the record once stage 5 lands.</p>
+              <p class="hooks"><span class="lbl">Builds on</span><code>CopDeathEvent</code>, <code>WantedLevelChangeEvent</code>, <code>CuffedEvent</code>, <code>PlayerDownedEvent</code> · <code>BountyExecutor</code> · a written book on a lectern for the paper</p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-fines">
+            <div>
+              <h3>Fines and bills instead of a chase tax</h3>
+              <ul class="src"><li>GTA V</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="1" aria-hidden="true"><i></i><i></i><i></i></span>S</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r012">0.12</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Being chased no longer drains your wallet every time a star falls. You pay when it ends. Busted means a fine, wasted means a hospital bill, and getting away costs nothing up front, though the bounty comes later.</p>
+              <p class="how">Default <code>Wanted.Take_Money.Amount</code> to 0. The death formula already accepts <code>wanted</code> and <code>bounty</code>, so a hospital bill that grows with stars is a config change, such as <code>balance * 0.15 + wanted * 500</code>. Arrest fines reuse the bail formula.</p>
+              <p class="hooks"><span class="lbl">Builds on</span><code>WantedExecutor</code> · <code>User.Death.Money.Formula</code> · <code>DetainmentCostsContract</code></p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- STAGE 5 -->
+      <section id="record" class="sec">
+        <div class="stage-head">
+          <span class="stage-no" aria-hidden="true">5</span>
+          <div>
+            <p class="eyebrow">Stage 5 · After the chase</p>
+            <h2>The record</h2>
+            <p class="intro">What you got away with today should still matter tomorrow.</p>
+          </div>
+        </div>
+
+        <div class="features">
+          <article class="feature headline" id="f-record">
+            <div>
+              <span class="tag-head">Headline</span>
+              <h3>Criminal record and district bounties</h3>
+              <ul class="src"><li>RDR2</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="2" aria-hidden="true"><i></i><i></i><i></i></span>M</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r015">0.15</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Escape, and the crimes stay on your record as a bounty in that district. Cops there recognize you on sight, so you start at one star the moment one spots you. Push it high enough and you're Wanted Dead or Alive, and they shoot first. Pay it off at a police station, serve time, or lie low while it cools.</p>
+              <p class="how">A record table stores each crime with its heat, district and time. A district is a turf or an admin region. Two thresholds set Recognized and Dead or Alive. Paying off uses the same paperwork screen as bail, the bounty cools by a set share each real day, and <code>/glw record</code> opens the sheet.</p>
+              <div class="sheet" role="img" aria-label="Example rap sheet">
+                <div class="sheet-head"><span>Rap sheet · Steve</span><b>Recognized in Market</b></div>
+                <table>
+                  <thead><tr><th>District</th><th>Crime</th><th class="r">Heat</th><th class="r">Bounty</th></tr></thead>
+                  <tbody>
+                    <tr><td>Market</td><td>Kill_Cop ×2</td><td class="r">300</td><td class="r">3,000</td></tr>
+                    <tr><td>Docks</td><td>Store_Robbery</td><td class="r">200</td><td class="r">2,000</td></tr>
+                    <tr><td>Northside</td><td>Car_Theft</td><td class="r">60</td><td class="r">600</td></tr>
+                  </tbody>
+                </table>
+                <div class="sheet-foot">Dead or Alive in Market at 10,000. Pay off at Northside Station.</div>
+              </div>
+              <p class="hooks"><span class="lbl">Builds on</span><code>Bounty</code> and <code>BountyExecutor</code> · <code>PaperworkView</code> · the <code>DetainmentRepository</code> pattern · turf <code>CuboidRegion</code></p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-posters">
+            <div>
+              <h3>Wanted posters and bounty hunters</h3>
+              <ul class="src"><li>RDR2</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="2" aria-hidden="true"><i></i><i></i><i></i></span>M</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r015">0.15</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Your face goes up on notice boards with the price on your head. While your bounty is high, NPC bounty hunters come after you every so often. They aren't police, so they ignore stars and try to bring you in, alive if they can.</p>
+              <p class="how">Posters use player heads and signs on admin notice boards, the way the bounty sign already shows heads. The phone's Wanted List button, which does nothing today, opens the same board. Hunters are an independent NPC posse that spawns 60 or more blocks away, tracks your last known position, and cuffs you when you go down.</p>
+              <p class="hooks"><span class="lbl">Builds on</span><code>BountySign</code> (VIEW shows player heads) · <code>phone_bounty.yml</code> · hostile civilian types and faction squads · the cuff pipeline and the downed state</p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-jail">
+            <div>
+              <h3>Playable jail</h3>
+              <ul class="src"><li>GTA 6 trailers</li><li>RDR2</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="2" aria-hidden="true"><i></i><i></i><i></i></span>M</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r015">0.15</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Jail becomes a place instead of a black screen. Blindness lifts once you're in the cell block. Work the quarry to cut your sentence, buy snacks at the commissary, settle scores in the yard, and look for the way out. A smuggled lockpick and a loose wall can mean a jailbreak.</p>
+              <p class="how">Keep Slowness and Blindness for the cuffed and transit states only. Each quarry block broken takes seconds off the sentence. Yard fights raise no heat. A successful escape is a Jailbreak crime worth three stars and a record entry. A failed one adds time.</p>
+              <p class="hooks"><span class="lbl">Builds on</span><code>DetainmentService.applyVisuals</code>, which keeps both effects for the whole sentence today · <code>SentenceService</code> · <code>JailRegistry</code> and jail capacity · <code>ReleaseReason</code> (add <code>ESCAPED</code>)</p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-transport">
+            <div>
+              <h3>Prisoner transport and jailbreaks</h3>
+              <ul class="src"><li>RDR2</li><li>GTA V</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="3" aria-hidden="true"><i></i><i></i><i></i></span>L</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r015">0.15</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">After the cuffs, you're walked to a van and driven to the station. That drive is your gang's chance. Ambush the transport and you're free, with stars for everyone involved. Or storm the jail itself.</p>
+              <p class="how">The 20-second transit becomes a visible trip with guards, and gang mates get a phone alert with the route. The jail is a restricted zone, so an assault starts at three stars, and cell doors open with a lockpick.</p>
+              <p class="hooks"><span class="lbl">Builds on</span><code>TransitService</code> · <code>Transit.Delay_Ticks</code> (400, a teleport today) · <code>GuardingBehavior</code> · the mail module for alerts</p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-gangheat">
+            <div>
+              <h3>Gang heat, police raids and the precinct payroll</h3>
+              <ul class="src"><li>GTA Online</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="2" aria-hidden="true"><i></i><i></i><i></i></span>M</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r015">0.15</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Crimes on your own turf heat up the whole gang. Let it boil over and the police raid the turf. Squads storm in, your garrison fights back, and losing costs income. Keep a precinct on the payroll from the gang bank and they arrive late and search less.</p>
+              <p class="how">Each gang gets a heat meter, fed by members' crimes inside owned turf and cooling over time. Crossing a threshold schedules a raid against the turf's defenders. The payroll is a turf powerup paid from the gang bank that adds dispatch delay and shrinks search zones inside that turf. Your turf spec already lists reduced cop heat and cop raids as later phases.</p>
+              <p class="hooks"><span class="lbl">Builds on</span><code>GarrisonManager</code> and <code>TurfDefenderDeployer</code> · <code>turf_powerups.yml</code> <code>Effect_Type</code> · the gang bank · <code>GangBountyEvent</code>, defined but never fired · <code>gang_turfs_spec.md</code>, "Out of Scope (later phases)"</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- STAGE 6 -->
+      <section id="sides" class="sec">
+        <div class="stage-head">
+          <span class="stage-no" aria-hidden="true">6</span>
+          <div>
+            <p class="eyebrow">Stage 6 · The other side of the badge</p>
+            <h2>Both sides</h2>
+            <p class="intro">Players as the law. Everything above works with NPC cops alone, and this stage lets players join in on the other side.</p>
+          </div>
+        </div>
+
+        <div class="features">
+          <article class="feature headline" id="f-duty">
+            <div>
+              <span class="tag-head">Headline</span>
+              <h3>On-duty police</h3>
+              <ul class="src"><li>GTA IV</li><li>GTA V roleplay</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="3" aria-hidden="true"><i></i><i></i><i></i></span>L</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r016">0.16</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Clock in at a station to join the force. You get a uniform, cuffs, a radio and a scanner map. You see the same search zones the NPC squads work from, get 911 calls as they come in, and earn a salary plus a cut of every bounty you bring in alive. NPC cops treat you as backup.</p>
+              <p class="how">An on-duty flag with a kit and a cooldown on switching sides. Nobody can clock in while wanted or with a record over the threshold. Arrests go through the same <code>DetainmentService.handcuff</code> path NPC cops use, with a hold-to-cuff interaction.</p>
+              <p class="hooks"><span class="lbl">Builds on</span><code>DetainmentService</code> · <code>CuffingListener</code> and <code>CuffedEvent</code> · the dispatch queue and witness calls · the <a href="#f-scanner">scanner map</a></p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-corruption">
+            <div>
+              <h3>Corruption and Internal Affairs</h3>
+              <ul class="src"><li>Your notes</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="2" aria-hidden="true"><i></i><i></i><i></i></span>M</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r016">0.16</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">A cuffed crook can offer a player cop a bribe on the same screen NPC cops use. Take it and the money is yours, and a hidden corruption meter ticks up. Dirty cops can also scrub a record entry for cash. Internal Affairs audits them, and a cop caught dirty loses the badge and gains three stars.</p>
+              <p class="how">Reuse the bribe view and service with a player as the recipient. Each accepted bribe raises the chance of an audit. This is the "good and bad officers with a meter" idea from <code>brainstorming/OldIdeas.txt</code>.</p>
+              <p class="hooks"><span class="lbl">Builds on</span><code>HandcuffBribeView</code> · <code>BribeService</code> · <code>PaperworkView</code></p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-hunters">
+            <div>
+              <h3>Bounty hunter license</h3>
+              <ul class="src"><li>Red Dead Online</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="2" aria-hidden="true"><i></i><i></i><i></i></span>M</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r016">0.16</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">Buy a license, take contracts from the bounty board, and track your mark with a compass that points at their last reported position. When they go down, cuff them before they respawn. Alive pays in full, dead pays half.</p>
+              <p class="how">Contracts come from the record (players over the threshold) and from the hostile civilians the police already hunt. The downed state is the capture window, the way hogtying works in Red Dead. Deliver the prisoner to a jail to get paid.</p>
+              <p class="hooks"><span class="lbl">Builds on</span><code>DownedPlayerRegistry</code> and the WASTED countdown · <code>Bounty</code> · <code>DetainmentService.jail</code> · <code>phone_bounty.yml</code>, whose Active Bounties button has no action yet</p>
+            </div>
+          </article>
+
+          <article class="feature" id="f-event">
+            <div>
+              <h3>Cops 'n' Crooks event</h3>
+              <ul class="src"><li>GTA IV</li></ul>
+              <dl class="meta">
+                <div><dt>Effort</dt><dd><span class="effort" data-e="3" aria-hidden="true"><i></i><i></i><i></i></span>L</dd></div>
+                <div><dt>Ships in</dt><dd><a href="#r016">0.16</a></dd></div>
+              </dl>
+            </div>
+            <div class="body">
+              <p class="play">A scheduled server event based on GTA IV's multiplayer mode of the same name. One gang's boss has to reach a getaway point across the map, and the police, on-duty players plus NPC units, have ten minutes to stop them. The cops see the boss's search zone. The crooks see nothing.</p>
+              <p class="how">An event scheduler builds two teams from a gang and the duty roster, picks an extraction waypoint, and pays out to the gang bank or the police payroll. Breaking news covers it live.</p>
+              <p class="hooks"><span class="lbl">Builds on</span>waypoints · gangs and the gang bank · <a href="#f-duty">on-duty police</a> · <a href="#f-report">the pursuit report</a></p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- ROADMAP -->
+      <section id="roadmap" class="sec">
+        <p class="eyebrow">Order of work</p>
+        <h2>Roadmap</h2>
+        <p class="intro">Five releases, each playable on its own. Every release has a test you can run in game to know it's done.</p>
+
+        <ol class="roadmap">
+          <li id="r012">
+            <div><div class="rel-v">0.12</div><div class="rel-name">Heat</div></div>
+            <div>
+              <p class="rel-goal">Escaping becomes a skill.</p>
+              <ul class="rel-items">
+                <li><a href="#f-heat">Heat ledger</a></li>
+                <li><a href="#f-evasion">Line-of-sight evasion</a></li>
+                <li><a href="#f-hud">Boss bar and compass</a></li>
+                <li><a href="#f-rosters">Mixed squads and waves</a></li>
+                <li><a href="#f-fines">Fines and bills</a></li>
+                <li><a href="#f-report">Pursuit report</a></li>
+              </ul>
+            </div>
+            <p class="done"><span>Done when</span>A three-star chase can be shaken in under a minute by breaking line of sight, and dying is never the cheapest way out.</p>
+          </li>
+          <li id="r013">
+            <div><div class="rel-v">0.13</div><div class="rel-name">Dispatch</div></div>
+            <div>
+              <p class="rel-goal">The law comes from somewhere.</p>
+              <ul class="rel-items">
+                <li><a href="#f-witnesses">Witnesses</a></li>
+                <li><a href="#f-dispatch">Dispatch from stations</a></li>
+                <li><a href="#f-patrols">Patrols and warnings</a></li>
+                <li><a href="#f-crimes">New crimes</a></li>
+                <li><a href="#f-disguise">Masks and disguises</a></li>
+                <li><a href="#f-surrender">Surrender</a></li>
+                <li><a href="#f-contacts">Crooked contacts</a></li>
+              </ul>
+            </div>
+            <p class="done"><span>Done when</span>An unwitnessed crime costs nothing, a crime beside a station is answered within seconds, and any chase up to three stars can end in a surrender.</p>
+          </li>
+          <li id="r014">
+            <div><div class="rel-v">0.14</div><div class="rel-name">Special units</div></div>
+            <div>
+              <p class="rel-goal">Every star changes the plan.</p>
+              <ul class="rel-items">
+                <li><a href="#f-chopper">Chopper</a></li>
+                <li><a href="#f-k9">K9 units</a></li>
+                <li><a href="#f-roadblocks">Roadblocks</a></li>
+                <li><a href="#f-mounted">Mounted units</a></li>
+                <li><a href="#f-breakers">Pursuit breakers</a></li>
+                <li><a href="#f-hideouts">Hideouts</a></li>
+                <li><a href="#f-scanner">Scanner map</a></li>
+              </ul>
+            </div>
+            <p class="done"><span>Done when</span>Three and four stars need different escape routes: roofs against the chopper, water against the dogs, side streets against roadblocks.</p>
+          </li>
+          <li id="r015">
+            <div><div class="rel-v">0.15</div><div class="rel-name">Rap sheet</div></div>
+            <div>
+              <p class="rel-goal">Consequences outlive the chase.</p>
+              <ul class="rel-items">
+                <li><a href="#f-record">Criminal record</a></li>
+                <li><a href="#f-posters">Posters and hunters</a></li>
+                <li><a href="#f-jail">Playable jail</a></li>
+                <li><a href="#f-transport">Transport and jailbreaks</a></li>
+                <li><a href="#f-crew">Crew heat and rescues</a></li>
+                <li><a href="#f-gangheat">Gang heat and raids</a></li>
+              </ul>
+            </div>
+            <p class="done"><span>Done when</span>Getting away still costs something a day later, and an arrest can turn into a rescue.</p>
+          </li>
+          <li id="r016">
+            <div><div class="rel-v">0.16</div><div class="rel-name">On duty</div></div>
+            <div>
+              <p class="rel-goal">Players on both sides.</p>
+              <ul class="rel-items">
+                <li><a href="#f-duty">On-duty police</a></li>
+                <li><a href="#f-corruption">Corruption</a></li>
+                <li><a href="#f-hunters">Bounty hunters</a></li>
+                <li><a href="#f-event">Cops 'n' Crooks event</a></li>
+              </ul>
+            </div>
+            <p class="done"><span>Done when</span>A player cop can take a player crook from 911 call to cell, and the bounty board has real players on it.</p>
+          </li>
+        </ol>
+        <p class="why-order">0.12 goes first because it only touches the cops-n-crooks module and the core wanted classes. It needs no new NPC types and no world edits, and it fixes the thing players notice most.</p>
+      </section>
+
+      <!-- GUARDRAILS -->
+      <section id="guardrails" class="sec">
+        <p class="eyebrow">Constraints</p>
+        <h2>Guardrails</h2>
+        <div class="two">
+          <div>
+            <h3>Rules for every feature</h3>
+            <ul>
+              <li><p><b>Behind a toggle.</b> Each feature gets its own <code>Enable</code> key in the module's own config, which is where the module API rules put new settings.</p></li>
+              <li><p><b>Stock APIs only.</b> Boss bars, per-player particles, map renderers, compass targets and Citizens NPCs cover everything here. The core jar ships no NMS, and this plan doesn't need any.</p></li>
+              <li><p><b>Inside the AI budget.</b> Choppers, dogs and roadblock cops count toward <code>Max_Per_Player</code>, and their sight checks run on the existing <code>AI_Tick_Rate</code> of 10 ticks.</p></li>
+              <li><p><b>Fair PvP.</b> No bounty payouts between gang mates or allies, a cooldown on switching sides, no clocking in while wanted, and a per-target cooldown on hunter contracts.</p></li>
+              <li><p><b>Additive API.</b> New events such as <code>CrimeCommittedEvent</code>, <code>WitnessReportEvent</code> and <code>EvasionStateChangeEvent</code> are additions, which <code>gangland-api</code> allows within a major version.</p></li>
+            </ul>
+          </div>
+          <div>
+            <h3>Decisions for you</h3>
+            <ul>
+              <li><p><b>One star at a time, or all at once?</b> GTA V clears every star when you evade. The plan drops one star per clock and leaves <code>Drop_Mode</code> to switch.</p></li>
+              <li><p><b>Should death still wipe stars?</b> GTA says yes and RDR2 keeps the bounty. The plan does both: death clears the stars and the record stays.</p></li>
+              <li><p><b>Do turf wars draw the police?</b> The plan halves heat for kills inside a contested turf. Zero would keep turf fights police-free.</p></li>
+              <li><p><b>Police as a faction or a shift?</b> The plan uses shifts anyone can clock into, so nobody is locked out of crime for good.</p></li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        Code references are to Gangland Warfare 0.11.0 (commit 716b4fe). GTA 6 references come from its public trailers.
+      </footer>
+    </main>
+  </div>
+</div>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+  if (!('IntersectionObserver' in window) || !links.length) return;
+  var byId = {};
+  links.forEach(function (a) { byId[a.getAttribute('href').slice(1)] = a; });
+  var observer = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      var link = byId[entry.target.id];
+      if (!link) return;
+      links.forEach(function (l) { l.removeAttribute('aria-current'); });
+      link.setAttribute('aria-current', 'true');
+    });
+  }, { rootMargin: '-15% 0px -75% 0px' });
+  Object.keys(byId).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) observer.observe(el);
+  });
+})();
+</script>
