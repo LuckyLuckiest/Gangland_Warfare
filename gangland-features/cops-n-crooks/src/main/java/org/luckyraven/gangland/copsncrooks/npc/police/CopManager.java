@@ -17,6 +17,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
+import org.luckyraven.gangland.copsncrooks.npc.police.spawn.RosterPlanner;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.targeting.TargetingManager;
 import org.luckyraven.keystone.bean.BeanLifecycle;
@@ -387,42 +388,79 @@ public class CopManager implements BeanLifecycle {
 
 			List<CopNpc> cops = group.getCops();
 
-			cops.removeIf(cop -> {
+			// Same removal rules as before F4, but counted: a cop lost here after the initial response is a backup
+			// wave, not an immediate respawn (0.12 F4).
+			int              lost = 0;
+			Iterator<CopNpc> it   = cops.iterator();
+			while (it.hasNext()) {
+				CopNpc cop = it.next();
+
 				if (cop.isMarkedForRemoval()) {
 					group.release(cop, markManager);
-					return true;
+					it.remove();
+					lost++;
+					continue;
 				}
 				if (!cop.isValid()) {
 					// PLAYER-type Citizens NPCs may have a null entity for a tick or two while initializing —
 					// keep in list so the count is not artificially low, causing a spawn loop.
 					NPC npc = cop.getNpc();
 					if (npc.isSpawned() && npc.getEntity() == null) {
-						return false;
+						continue;
 					}
 					group.release(cop, markManager);
-					return true;
+					it.remove();
+					lost++;
 				}
-				return false;
-			});
-
-			int targetCount  = spawnManager.getTargetCopCount(wantedLevel);
-			int currentCount = cops.size();
-			int tier         = spawnManager.getTierForWantedLevel(wantedLevel);
-
-			// Spawn all missing cops in one pass so a full wipe is recovered in a single interval
-			while (currentCount < targetCount && currentCount < configProvider.getMaxCopsPerPlayer()) {
-				CopNpc newCop = spawnManager.spawnNearPlayer(player, tier);
-				if (newCop == null) break; // no valid location found - stop trying this interval
-
-				newCop.setTargetPlayerId(playerId);
-
-				// New spawns pursue immediately; combatForced flag causes them to enter COMBAT once in range
-				newCop.setCombatForced(hasCombatAlert(playerId));
-				newCop.transitionTo(CopState.PURSUING);
-
-				group.add(newCop);
-				currentCount++;
 			}
+
+			if (lost > 0 && group.isInitialResponseDone()) {
+				int delaySeconds = spawnManager.getBackupDelaySeconds(wantedLevel);
+				group.addLosses(lost, System.currentTimeMillis() + delaySeconds * 1000L);
+			}
+
+			Map<Integer, Integer> roster = spawnManager.getRosterForWantedLevel(wantedLevel);
+
+			Map<Integer, Integer> currentByTier = new HashMap<>();
+			for (CopNpc cop : cops) {
+				currentByTier.merge(cop.getTierConfig().tier(), 1, Integer::sum);
+			}
+
+			Map<Integer, Integer> deficits = RosterPlanner.deficits(roster, currentByTier, cops.size(),
+			                                                        configProvider.getMaxCopsPerPlayer());
+
+			long now = System.currentTimeMillis();
+
+			Map<Integer, Integer> toSpawn;
+			if (group.isBackupDue(now)) {
+				toSpawn = deficits;
+				group.clearBackup();
+			} else {
+				int totalDeficit = deficits.values().stream().mapToInt(Integer::intValue).sum();
+				int allowedNow   = totalDeficit - group.getPendingBackup();
+				toSpawn = RosterPlanner.cap(deficits, allowedNow);
+			}
+
+			// Spawn tier by tier; stop that tier's loop (not the whole pass) once no valid location is found
+			for (Map.Entry<Integer, Integer> entry : toSpawn.entrySet()) {
+				int tier  = entry.getKey();
+				int count = entry.getValue();
+
+				for (int i = 0; i < count; i++) {
+					CopNpc newCop = spawnManager.spawnNearPlayer(player, tier);
+					if (newCop == null) break; // no valid location found - stop trying this tier this interval
+
+					newCop.setTargetPlayerId(playerId);
+
+					// New spawns pursue immediately; combatForced flag causes them to enter COMBAT once in range
+					newCop.setCombatForced(hasCombatAlert(playerId));
+					newCop.transitionTo(CopState.PURSUING);
+
+					group.add(newCop);
+				}
+			}
+
+			group.markInitialResponseDone();
 		}, 20L, configProvider.getSpawnCheckRate());
 
 		spawnTasks.put(playerId, task);

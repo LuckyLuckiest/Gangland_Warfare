@@ -33,8 +33,23 @@
 #     Boots:        Armor piece for the feet slot; leave blank for none
 #   Difficulty:     Combat profile that scales aim error, reaction time, fire rate, and melee
 #                   damage. One of EASY, NORMAL, HARD, DEADLY. Defaults to NORMAL when omitted.
+#
+# Rosters (0.12): mixed-squad composition per wanted star, star -> { tier: count }. A star with no entry here
+# falls back to the pre-0.12 single-tier roster (one tier from Tiers, sized by Wanted.Level counts), still
+# clamped by Max_Per_Player either way.
+#
+# Backup_Delay_Seconds (0.12): a cop lost from the roster (killed, despawned) does not respawn on the very next
+# spawn check — it queues behind this per-star delay instead, so a chase gets a breather instead of an instant
+# replacement. The initial response when a player first becomes wanted is never delayed.
 # ============================================
 Cops:
+   Rosters:
+      1: { 1: 2 }
+      2: { 1: 2, 2: 2 }
+      3: { 2: 2, 3: 2 }
+      4: { 3: 2, 4: 4 }
+      5: { 4: 3, 5: 4 }
+   Backup_Delay_Seconds: [15, 12, 10, 8, 6]
    Tiers:
       1:
          Display_Name: "&9Officer"

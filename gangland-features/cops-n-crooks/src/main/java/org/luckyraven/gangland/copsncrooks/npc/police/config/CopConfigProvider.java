@@ -3,6 +3,7 @@ package org.luckyraven.gangland.copsncrooks.npc.police.config;
 import org.luckyraven.keystone.npc.NpcNavigationConfig;
 import org.luckyraven.keystone.npc.entity.SpawnConfigProvider;
 
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -226,5 +227,29 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 	 */
 	default double getGuardRadius() {
 		return 5.0;
+	}
+
+	/**
+	 * The mixed-squad roster for the given wanted level (0.12 F4): {@code tier -> count}. Empty when no
+	 * {@code Cops.Rosters} entry exists for the level, so the caller falls back to
+	 * {@code getTierForWantedLevel}/{@code getCopsPerWantedLevel}.
+	 *
+	 * @param wantedLevel the player's wanted level
+	 *
+	 * @return the roster, or an empty map when unconfigured for this level
+	 */
+	default Map<Integer, Integer> getRoster(int wantedLevel) {
+		return Collections.emptyMap();
+	}
+
+	/**
+	 * Seconds a lost cop's backup wave waits before respawning, for the given wanted level (0.12 F4).
+	 *
+	 * @param wantedLevel the player's wanted level
+	 *
+	 * @return the delay in seconds
+	 */
+	default int getBackupDelaySeconds(int wantedLevel) {
+		return 0;
 	}
 }

@@ -24,8 +24,13 @@ import java.util.*;
 @CustomLog
 public class YamlCopConfigProvider implements CopConfigProvider {
 
-	private final Map<Integer, CopTierConfig> tiers;
-	private final Map<Integer, Integer>       copsPerWantedLevel;
+	/** Default backup-wave delay per star (0.12 F4), used when {@code Cops.Backup_Delay_Seconds} is missing/short. */
+	public static final List<Integer> DEFAULT_BACKUP_DELAY_SECONDS = List.of(15, 12, 10, 8, 6);
+
+	private final Map<Integer, CopTierConfig>         tiers;
+	private final Map<Integer, Integer>               copsPerWantedLevel;
+	private final Map<Integer, Map<Integer, Integer>> rosters;
+	private final List<Integer>                       backupDelaySeconds;
 
 	private final int    maxCopsPerPlayer;
 	private final int    aiTickRate;
@@ -86,6 +91,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	                             @Nullable CopSettings copSettings, @Nullable ItemParser itemParser) {
 		this.tiers              = new LinkedHashMap<>();
 		this.copsPerWantedLevel = new LinkedHashMap<>();
+		this.rosters            = new LinkedHashMap<>();
 
 		this.maxCopsPerPlayer    = copSettings != null ? copSettings.getMaxCopsPerPlayer() : 8;
 		this.aiTickRate          = copSettings != null ? copSettings.getAiTickRate() : 10;
@@ -131,6 +137,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 		loadTiers(copsReader, report, itemParser);
 		buildCopsPerWantedLevel(copSettings);
+		this.backupDelaySeconds = loadRosters(copsReader, report);
 	}
 
 	@Override
@@ -330,6 +337,17 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		return guardRadius;
 	}
 
+	@Override
+	public Map<Integer, Integer> getRoster(int wantedLevel) {
+		return rosters.getOrDefault(wantedLevel, Collections.emptyMap());
+	}
+
+	@Override
+	public int getBackupDelaySeconds(int wantedLevel) {
+		int index = Math.min(Math.max(wantedLevel, 1), backupDelaySeconds.size()) - 1;
+		return backupDelaySeconds.get(index);
+	}
+
 	private void loadTiers(NodeReader copsReader, ConfigReport report, @Nullable ItemParser itemParser) {
 		MappingNode copsSection = copsReader.get("Cops").asMapping().required().orNull();
 		if (copsSection == null) return;
@@ -403,6 +421,61 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 			log.warn("Unknown NPC difficulty '{}' for {} — defaulting to NORMAL.", raw, contextLabel);
 			return NpcDifficulty.NORMAL;
 		}
+	}
+
+	/**
+	 * Reads {@code Cops.Rosters} (mixed-squad composition per star) and {@code Cops.Backup_Delay_Seconds} (0.12 F4).
+	 * A star with no roster entry is simply absent from {@link #rosters}, so {@link #getRoster(int)} falls back to
+	 * the empty map and the caller uses the legacy tier/count logic for that star.
+	 *
+	 * @return the parsed backup-delay list, or {@link #DEFAULT_BACKUP_DELAY_SECONDS} when missing/empty
+	 */
+	private List<Integer> loadRosters(NodeReader copsReader, ConfigReport report) {
+		MappingNode copsSection = copsReader.get("Cops").asMapping().orNull();
+		if (copsSection == null) return DEFAULT_BACKUP_DELAY_SECONDS;
+
+		NodeReader cops = NodeReader.of(copsSection, report);
+
+		MappingNode rostersSection = cops.get("Rosters").asMapping().orNull();
+		if (rostersSection != null) {
+			NodeReader rostersReader = NodeReader.of(rostersSection, report);
+
+			for (String starKey : rostersReader.keys()) {
+				int star;
+				try {
+					star = Integer.parseInt(starKey);
+				} catch (NumberFormatException e) {
+					log.warn("Cop roster star key '{}' is not an integer — skipping", starKey);
+					continue;
+				}
+
+				MappingNode tierCounts = rostersReader.get(starKey).asMapping().orNull();
+				if (tierCounts == null) continue;
+
+				NodeReader           tierReader = NodeReader.of(tierCounts, report);
+				Map<Integer, Integer> counts     = new LinkedHashMap<>();
+
+				for (String tierKey : tierReader.keys()) {
+					int tier;
+					try {
+						tier = Integer.parseInt(tierKey);
+					} catch (NumberFormatException e) {
+						log.warn("Cop roster tier key '{}' for star {} is not an integer — skipping", tierKey, star);
+						continue;
+					}
+
+					int count = tierReader.get(tierKey).asInt().orDefault(0);
+					if (count < 0) continue;
+
+					counts.put(tier, count);
+				}
+
+				if (!counts.isEmpty()) rosters.put(star, Collections.unmodifiableMap(counts));
+			}
+		}
+
+		List<Integer> delays = cops.get("Backup_Delay_Seconds").asList().ofInts().orEmpty();
+		return delays.isEmpty() ? DEFAULT_BACKUP_DELAY_SECONDS : delays;
 	}
 
 	private void buildCopsPerWantedLevel(@Nullable CopSettings copSettings) {

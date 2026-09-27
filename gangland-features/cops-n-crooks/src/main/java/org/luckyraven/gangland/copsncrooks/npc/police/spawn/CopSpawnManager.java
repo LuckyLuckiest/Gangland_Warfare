@@ -17,6 +17,8 @@ import org.luckyraven.keystone.npc.entity.EntitySpawner;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
+import java.util.Map;
+
 public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 
 	private final JavaPlugin         plugin;
@@ -117,6 +119,33 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	 */
 	public int getTierForWantedLevel(int wantedLevel) {
 		return Math.min(wantedLevel, configProvider.getMaxTier());
+	}
+
+	/**
+	 * The mixed-squad roster to hold at the given wanted level (0.12 F4): {@code tier -> count}. Falls back to today's
+	 * single-tier roster ({@link #getTierForWantedLevel} / {@link #getTargetCopCount}) when {@code Cops.Rosters} has
+	 * no entry for this level.
+	 *
+	 * @param wantedLevel the player's wanted level
+	 *
+	 * @return the roster to spawn towards
+	 */
+	public Map<Integer, Integer> getRosterForWantedLevel(int wantedLevel) {
+		Map<Integer, Integer> roster = configProvider.getRoster(wantedLevel);
+		if (!roster.isEmpty()) return roster;
+
+		return Map.of(getTierForWantedLevel(wantedLevel), getTargetCopCount(wantedLevel));
+	}
+
+	/**
+	 * Seconds a backup wave waits before replacing cops lost from the roster at the given wanted level (0.12 F4).
+	 *
+	 * @param wantedLevel the player's wanted level
+	 *
+	 * @return the delay in seconds
+	 */
+	public int getBackupDelaySeconds(int wantedLevel) {
+		return configProvider.getBackupDelaySeconds(wantedLevel);
 	}
 
 	@Override

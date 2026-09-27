@@ -27,6 +27,12 @@ import java.util.UUID;
  * <p>
  * {@link #isStaffed()} turns true once the first cop is {@link #add(CopNpc) assigned} and stays true: line-of-sight
  * evasion (0.12) only takes over a chase from the old decay timer once a cop has actually been sent after the player.
+ * <p>
+ * Backup waves (0.12 F4): cops lost from the roster (killed, invalidated) do not respawn on the very next spawn
+ * check — {@link #addLosses(int, long)} queues them behind {@code Backup_Delay_Seconds}, and {@link CopManager}'s
+ * spawn task only lets the queued count through once {@link #isBackupDue(long)} says the delay has elapsed. The
+ * initial response to a fresh wanted episode is unaffected: {@link #markInitialResponseDone()} is only set after
+ * that first spawn pass, and losses are queued only once it is set.
  */
 @Getter
 public class CopGroup {
@@ -36,6 +42,10 @@ public class CopGroup {
 	private final NpcSquad     squad;
 
 	private volatile boolean staffed;
+
+	private int     pendingBackup;
+	private long    backupDueAt;
+	private boolean initialResponseDone;
 
 	public CopGroup(UUID targetPlayerId) {
 		this.targetPlayerId = targetPlayerId;
@@ -48,6 +58,46 @@ public class CopGroup {
 		squad.add(cop);
 		cop.setGroup(this);
 		staffed = true;
+	}
+
+	/**
+	 * Queues {@code count} cops lost from the roster to respawn once their backup wave is due. Does nothing to the
+	 * due time if a wave is already queued: several loss ticks before the first wave lands must not keep pushing the
+	 * deadline back.
+	 *
+	 * @param count how many cops were just lost
+	 * @param dueAt the {@link System#currentTimeMillis()} timestamp at which the wave may spawn
+	 */
+	public void addLosses(int count, long dueAt) {
+		if (count <= 0) return;
+
+		pendingBackup += count;
+		if (backupDueAt <= 0) backupDueAt = dueAt;
+	}
+
+	/**
+	 * @param now the current {@link System#currentTimeMillis()}
+	 *
+	 * @return {@code true} once a queued backup wave's delay has elapsed
+	 */
+	public boolean isBackupDue(long now) {
+		return pendingBackup > 0 && backupDueAt > 0 && now >= backupDueAt;
+	}
+
+	/**
+	 * Clears the queued backup wave. Called once its cops have been (re)spawned.
+	 */
+	public void clearBackup() {
+		pendingBackup = 0;
+		backupDueAt   = 0;
+	}
+
+	/**
+	 * Marks the group's initial response to the current wanted episode as sent, so future losses are queued as
+	 * backup waves instead of respawning on the next spawn check.
+	 */
+	public void markInitialResponseDone() {
+		initialResponseDone = true;
 	}
 
 	/**
