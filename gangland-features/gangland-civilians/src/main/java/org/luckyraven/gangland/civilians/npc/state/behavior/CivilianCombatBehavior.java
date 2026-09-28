@@ -5,6 +5,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.npc.AbstractNpc;
+import org.luckyraven.keystone.npc.NpcCoverStatus;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.FactionSquads;
@@ -42,19 +43,17 @@ public class CivilianCombatBehavior implements CivilianBehavior {
 			return;
 		}
 
-		CivilianAIBehaviorConfig ai = npc.getTypeConfig().ai();
+		CivilianAIBehaviorConfig ai    = npc.getTypeConfig().ai();
+		NpcSquad                 squad = squadFor(npc, target);
 
-		// Badly hurt: break off and take cover instead of pursuing/attacking this tick (radioed as Fall_Back/In_Cover
-		// through the squad listener once Keystone picks a spot) - "when" is this class's call, per takeCover's contract.
+		// Badly hurt: break off and take cover instead of pursuing/attacking (radioed as Fall_Back/In_Cover through the
+		// squad listener once Keystone picks a spot) - "when" is this class's call, per takeCover's contract. No cover
+		// within Radius (FAILED): fight on rather than stand still.
 		LivingEntity self = npc.getEntity();
-		if (self != null && ai.retreat().shouldRetreat(self.getHealth(), self.getMaxHealth())) {
-			npc.takeCover(target, ai.retreat().radius());
-			return;
-		}
+		boolean inCover = self != null && ai.retreat().shouldRetreat(self.getHealth(), self.getMaxHealth())
+		                  && npc.takeCover(target, ai.retreat().radius()) != NpcCoverStatus.FAILED;
 
-		NpcSquad squad = squadFor(npc, target);
-
-		npc.pursue(target, squad, ai.alertRange());
+		if (!inCover) npc.pursue(target, squad, ai.alertRange());
 
 		// Search window: nobody in the squad has seen the target for too long - give up (onExit leaves the squad)
 		if (squad.millisSinceSighting() > ai.searchSeconds() * 1000L) {
@@ -62,6 +61,7 @@ public class CivilianCombatBehavior implements CivilianBehavior {
 			npc.transitionTo(CivilianState.IDLE);
 			return;
 		}
+		if (inCover) return;
 
 		// Attack gate: melee within Attack_Range; ranged at anything it can see within Alert_Range (issue 4 critic
 		// fix - a ranged civilian must not have a dead zone between Attack_Range and its engage band).

@@ -15,6 +15,7 @@ import org.luckyraven.gangland.civilians.npc.config.CivilianTypeConfig;
 import org.luckyraven.gangland.civilians.npc.config.CivilianWearableConfig;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.npc.RetreatSettings;
+import org.luckyraven.keystone.npc.NpcCoverStatus;
 import org.luckyraven.keystone.npc.NpcDifficulty;
 import org.luckyraven.keystone.npc.NpcMeleeProfile;
 import org.luckyraven.keystone.npc.NpcSquad;
@@ -179,11 +180,66 @@ class CivilianCombatBehaviorTest {
 		when(self.getHealth()).thenReturn(5.0);
 		when(self.getMaxHealth()).thenReturn(20.0);
 		when(npc.getEntity()).thenReturn(self);
+		when(npc.takeCover(target, 12.0)).thenReturn(NpcCoverStatus.MOVING);
 
 		new CivilianCombatBehavior().tick(npc);
 
 		verify(npc).takeCover(target, 12.0);
 		verify(npc, never()).pursue(any(), any(), anyDouble());
+	}
+
+	@Test
+	@DisplayName("badly hurt but no cover within Radius (FAILED): fights on - pursues and attacks")
+	void badlyHurt_noCover_fightsOn() {
+		badlyHurt();
+		when(npc.takeCover(target, 12.0)).thenReturn(NpcCoverStatus.FAILED);
+		NpcSquad squad = new NpcSquad();
+		squad.reportSighting(new Location(world, 5, 64, 5));
+		inSquad(squad);
+		when(npc.distanceTo(target)).thenReturn(2.0);
+		when(npc.canAttack()).thenReturn(true);
+		when(npc.hasLineOfSight(target)).thenReturn(true);
+
+		new CivilianCombatBehavior().tick(npc);
+
+		verify(npc).pursue(target, squad, ALERT_RANGE);
+		verify(npc).attackEntity(target);
+	}
+
+	@Test
+	@DisplayName("badly hurt and hiding: still gives up once nobody has seen the target for Search_Seconds")
+	void badlyHurt_hiding_stillGivesUpAfterSearchWindow() {
+		badlyHurt();
+		when(npc.takeCover(target, 12.0)).thenReturn(NpcCoverStatus.ARRIVED);
+		inSquad(new NpcSquad()); // never sighted
+
+		new CivilianCombatBehavior().tick(npc);
+
+		verify(npc).transitionTo(CivilianState.IDLE);
+	}
+
+	@Test
+	@DisplayName("badly hurt on entering combat: still joins its faction squad, so its retreat is heard")
+	void badlyHurt_onEntry_joinsFactionSquad() {
+		badlyHurt();
+		when(npc.takeCover(target, 12.0)).thenReturn(NpcCoverStatus.MOVING);
+		FactionSquads factionSquads = mock(FactionSquads.class);
+		NpcSquad       squad        = new NpcSquad();
+		squad.reportSighting(new Location(world, 5, 64, 5));
+		when(factionSquads.squadFor(npc, target)).thenReturn(squad);
+		when(npc.getFactionSquads()).thenReturn(factionSquads);
+
+		new CivilianCombatBehavior().tick(npc);
+
+		verify(factionSquads).squadFor(npc, target);
+		verify(npc).takeCover(target, 12.0);
+	}
+
+	private void badlyHurt() {
+		LivingEntity self = mock(LivingEntity.class);
+		when(self.getHealth()).thenReturn(5.0);
+		when(self.getMaxHealth()).thenReturn(20.0);
+		when(npc.getEntity()).thenReturn(self);
 	}
 
 	@Test
