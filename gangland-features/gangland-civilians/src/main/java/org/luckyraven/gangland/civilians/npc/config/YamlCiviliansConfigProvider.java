@@ -7,6 +7,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.gangland.npc.TacticsConfig;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
 import org.luckyraven.keystone.npc.NpcDifficulty;
@@ -31,9 +32,14 @@ public class YamlCiviliansConfigProvider {
 
 	private final CiviliansConfig config;
 
+	/** No {@code Fire_Rate_Multiplier}: one weapon tick per AI tick, the cadence before 1.13 moved guns onto server ticks. */
+	private final double defaultFireRateMultiplier;
+
 	public YamlCiviliansConfigProvider(NodeReader reader, ConfigReport report,
 	                                   boolean aiEnabled, int aiTickRate,
 	                                   @Nullable ItemParser itemParser) {
+		this.defaultFireRateMultiplier = 1.0 / Math.max(1, aiTickRate);
+
 		List<String> defaultCivilian = loadDefaultEntities(reader, "Civilian");
 		List<String> defaultPolice   = loadDefaultEntities(reader, "Police");
 
@@ -206,7 +212,8 @@ public class YamlCiviliansConfigProvider {
 	private CivilianAIBehaviorConfig parseAI(@Nullable MappingNode aiSection, ConfigReport report, String typeId) {
 		if (aiSection == null) {
 			return new CivilianAIBehaviorConfig(false, 0, false, 0, false, 0.0, 0.0, 0, NpcDifficulty.NORMAL, 16.0, 20,
-			                                    TacticsConfig.DEFAULT, NpcMeleeProfile.DEFAULT);
+			                                    TacticsConfig.DEFAULT, NpcMeleeProfile.DEFAULT, defaultFireRateMultiplier,
+			                                    RetreatSettings.DEFAULT);
 		}
 
 		NodeReader ai = NodeReader.of(aiSection, report);
@@ -253,10 +260,15 @@ public class YamlCiviliansConfigProvider {
 		// cooldown is always the attack interval, never a separate key.
 		TacticsConfig   tactics = parseTactics(combat, report);
 		NpcMeleeProfile melee   = parseMelee(combat, report, attackIntervalTicks);
+		double fireRateMultiplier = combat == null ? defaultFireRateMultiplier
+				: combat.get("Fire_Rate_Multiplier").asDouble().min(0.01).orDefault(defaultFireRateMultiplier);
+		MappingNode     retreatSection = combat == null ? null : combat.get("Retreat").asMapping().orNull();
+		RetreatSettings retreat = RetreatSettings.read(retreatSection != null ? NodeReader.of(retreatSection, report)
+		                                                                      : null, report, RetreatSettings.DEFAULT);
 
 		return new CivilianAIBehaviorConfig(wanderEnabled, wanderRange, fleeEnabled, fleeRange,
 		                                    combatEnabled, attackDamage, attackRange, attackIntervalTicks, difficulty,
-		                                    alertRange, searchSeconds, tactics, melee);
+		                                    alertRange, searchSeconds, tactics, melee, fireRateMultiplier, retreat);
 	}
 
 	private TacticsConfig parseTactics(@Nullable NodeReader combat, ConfigReport report) {

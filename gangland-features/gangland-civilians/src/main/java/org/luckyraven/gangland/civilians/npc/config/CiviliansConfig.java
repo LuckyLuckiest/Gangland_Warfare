@@ -37,7 +37,7 @@ public record CiviliansConfig(
 					Map.entry("Push", 10000L), Map.entry("Flank_Left", 10000L), Map.entry("Flank_Right", 10000L),
 					Map.entry("Search", 15000L), Map.entry("No_Route", 15000L), Map.entry("Check_Fire", 8000L),
 					Map.entry("Reloading", 10000L), Map.entry("Man_Down", 5000L), Map.entry("Leader_Down", 5000L),
-					Map.entry("Rally", 6000L)),
+					Map.entry("Rally", 6000L), Map.entry("Fall_Back", 5000L), Map.entry("In_Cover", 10000L)),
 			java.util.Set.of("Contact", "Man_Down", "Leader_Down", "Rally"), null, 1.0f, 1.0f);
 
 	/** Legacy 6-argument constructor, kept for existing callers: defaults {@link #shouts} to {@link #DEFAULT_SHOUTS}. */

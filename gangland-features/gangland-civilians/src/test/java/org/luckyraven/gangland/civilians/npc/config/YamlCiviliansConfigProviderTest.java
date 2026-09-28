@@ -2,6 +2,7 @@ package org.luckyraven.gangland.civilians.npc.config;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.gangland.npc.TacticsConfig;
 import org.luckyraven.keystone.persistence.config.ConfigDocument;
 import org.luckyraven.keystone.persistence.config.ConfigParser;
@@ -113,6 +114,12 @@ class YamlCiviliansConfigProviderTest {
 		assertEquals(24.0, config.shouts().range());
 		assertEquals(140.0, config.types().get("gang_member").ai().tactics().formationArc());
 		assertEquals(0.20, config.types().get("gang_member").ai().melee().damageSpread());
+		for (String type : List.of("gang_member", "turf_defender", "quartermaster")) {
+			assertEquals(0.05, config.types().get(type).ai().fireRateMultiplier(), 1e-9, type);
+			assertTrue(config.types().get(type).ai().retreat().enabled(), type);
+		}
+		assertTrue(config.shouts().cooldownFor("Fall_Back") > 0);
+		assertTrue(config.shouts().cooldownFor("In_Cover") > 0);
 	}
 
 	@Test
@@ -202,6 +209,44 @@ class YamlCiviliansConfigProviderTest {
 	}
 
 	@Test
+	@DisplayName("AI.Combat.Fire_Rate_Multiplier and AI.Combat.Retreat parse; omitted they default")
+	void fireRateAndRetreat_parsed() {
+		CiviliansConfig config = parse(new StringReader("""
+				Types:
+				   gang_member:
+				      Hostile: true
+				      AI:
+				         Combat:
+				            Enabled: true
+				            Attack_Damage: 4.0
+				            Attack_Range: 12.0
+				            Attack_Interval_Ticks: 20
+				            Fire_Rate_Multiplier: 0.2
+				            Retreat:
+				               Enabled: false
+				               Health_Fraction: 0.4
+				               Radius: 8.0
+				   turf_defender:
+				      Hostile: true
+				      AI:
+				         Combat:
+				            Enabled: true
+				            Attack_Damage: 4.0
+				            Attack_Range: 12.0
+				            Attack_Interval_Ticks: 20
+				"""), new ConfigReport());
+
+		CivilianAIBehaviorConfig gang = config.types().get("gang_member").ai();
+		assertEquals(0.2, gang.fireRateMultiplier());
+		assertEquals(new RetreatSettings(false, 0.4, 8.0), gang.retreat());
+
+		// no key: 1 / AI_Tick_Rate (20 here), the pre-1.13 cadence of one weapon tick per AI tick
+		CivilianAIBehaviorConfig turf = config.types().get("turf_defender").ai();
+		assertEquals(0.05, turf.fireRateMultiplier(), 1e-9);
+		assertEquals(RetreatSettings.DEFAULT, turf.retreat());
+	}
+
+	@Test
 	@DisplayName("the legacy 11-argument CivilianAIBehaviorConfig constructor defaults tactics and melee")
 	void legacyCtor_defaults() {
 		CivilianAIBehaviorConfig ai = new CivilianAIBehaviorConfig(false, 0, false, 0, true, 4.0, 12.0, 20,
@@ -214,6 +259,8 @@ class YamlCiviliansConfigProviderTest {
 		assertEquals(20, ai.melee().cooldownTicks());
 		assertEquals(0.15, ai.melee().damageSpread());
 		assertEquals(0.7, ai.melee().edgeDamage());
+		assertEquals(1.0, ai.fireRateMultiplier());
+		assertEquals(RetreatSettings.DEFAULT, ai.retreat());
 	}
 
 	private static CiviliansConfig parse(Reader yaml, ConfigReport report) {

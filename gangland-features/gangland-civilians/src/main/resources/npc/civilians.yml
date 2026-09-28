@@ -69,6 +69,8 @@ Shouts:
       Man_Down: 100
       Leader_Down: 100
       Rally: 120
+      Fall_Back: 100
+      In_Cover: 200
 
 # +----------------+ #
 # | Civilian Types | #
@@ -100,6 +102,11 @@ Shouts:
 #                 fire at anything they see within Alert_Range. Combat.Tactics (formation arc, engagement) and
 #                 Combat.Melee (reach, approach, damage falloff; the cooldown is always Attack_Interval_Ticks) tune
 #                 squad behaviour (phase H12) — defaults below apply when a type omits either block.
+#                 Combat.Fire_Rate_Multiplier is the gun cadence as a fraction of the weapon's own (player) fire
+#                 rate, on top of Difficulty (> 0; omitted = 1 / settings.yml Civilians.Behaviour.AI_Tick_Rate). The
+#                 shipped 0.05 keeps the pre-0.12 time-to-kill: NPC guns used to advance one weapon tick per civilian AI
+#                 tick (AI_Tick_Rate: 20), i.e. a twentieth of the weapon's rate. Combat.Retreat sends a badly hurt
+#                 member to cover out of the target's sight (shouted as Fall_Back / In_Cover).
 
 Types:
    pedestrian:
@@ -171,6 +178,16 @@ Types:
             Difficulty: NORMAL
             Alert_Range: 16.0
             Search_Seconds: 20
+            # Gun cadence: a fraction of the weapon's own fire rate (see the header). Must be above 0.
+            Fire_Rate_Multiplier: 0.05
+            # A badly hurt member breaks off and takes cover out of the target's sight.
+            Retreat:
+               # Set to false and this type fights on until it drops.
+               Enabled: true
+               # Retreat at or below this fraction of max health (0-1; 0.3 = 30%).
+               Health_Fraction: 0.3
+               # Blocks searched around the NPC for a spot the target cannot see (2-32).
+               Radius: 12.0
             Tactics:
                Formation_Arc: 140.0
                Strafe_Degrees: 12.0
@@ -243,6 +260,16 @@ Types:
             Difficulty: NORMAL
             Alert_Range: 16.0
             Search_Seconds: 20
+            # Gun cadence: a fraction of the weapon's own fire rate (see the header). Must be above 0.
+            Fire_Rate_Multiplier: 0.05
+            # A badly hurt member breaks off and takes cover out of the target's sight.
+            Retreat:
+               # Set to false and this type fights on until it drops.
+               Enabled: true
+               # Retreat at or below this fraction of max health (0-1; 0.3 = 30%).
+               Health_Fraction: 0.3
+               # Blocks searched around the NPC for a spot the target cannot see (2-32).
+               Radius: 12.0
             Tactics:
                Formation_Arc: 100.0
                Strafe_Degrees: 8.0
@@ -282,6 +309,16 @@ Types:
             Difficulty: HARD
             Alert_Range: 16.0
             Search_Seconds: 20
+            # Gun cadence: a fraction of the weapon's own fire rate (see the header). Must be above 0.
+            Fire_Rate_Multiplier: 0.05
+            # A badly hurt member breaks off and takes cover out of the target's sight.
+            Retreat:
+               # Set to false and this type fights on until it drops.
+               Enabled: true
+               # Retreat at or below this fraction of max health (0-1; 0.3 = 30%).
+               Health_Fraction: 0.3
+               # Blocks searched around the NPC for a spot the target cannot see (2-32).
+               Radius: 12.0
             Tactics:
                Formation_Arc: 120.0
                Strafe_Degrees: 10.0

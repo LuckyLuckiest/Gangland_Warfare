@@ -15,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.combat.BartizanNpcWeapons;
 import org.luckyraven.gangland.civilians.npc.combat.DownedTargetFilter;
+import org.luckyraven.gangland.civilians.npc.config.CivilianAIBehaviorConfig;
 import org.luckyraven.gangland.civilians.npc.config.CivilianGroupConfig;
 import org.luckyraven.gangland.civilians.npc.config.CivilianNavigationConfig;
 import org.luckyraven.gangland.civilians.npc.config.CivilianSettings;
@@ -107,8 +108,7 @@ public class CivilianNpcFactory implements BeanLifecycle {
 		CivilianNpc civilian = new CivilianNpc(plugin, npc, typeConfig, groupId, behaviors,
 		                                       spawnLocation, navConfig, itemParser);
 		civilian.setTargetFilter(downedTargetFilter);
-		civilian.setEngagement(typeConfig.ai().tactics().engagement());
-		civilian.setMeleeProfile(typeConfig.ai().melee());
+		applyTuning(civilian, typeConfig.ai());
 
 		// Apply group trait bonuses before equipping
 		double healthBonus = groupConfig != null ? groupConfig.healthBonus() : 0.0;
@@ -163,6 +163,13 @@ public class CivilianNpcFactory implements BeanLifecycle {
 			maxHealth.setBaseValue(total);
 		}
 		living.setHealth(total);
+	}
+
+	/** Squad engagement, melee band and gun cadence from the type's AI config ({@code Fire_Rate_Multiplier} inverted). */
+	static void applyTuning(CivilianNpc civilian, CivilianAIBehaviorConfig ai) {
+		civilian.setEngagement(ai.tactics().engagement());
+		civilian.setMeleeProfile(ai.melee());
+		civilian.setFireRateScale(1.0 / ai.fireRateMultiplier());
 	}
 
 	/**
