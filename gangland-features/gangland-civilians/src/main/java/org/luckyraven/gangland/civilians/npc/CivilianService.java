@@ -93,6 +93,7 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 		this.npcFactory       = npcFactory;
 		this.spawnManager     = spawnManager;
 		this.registry         = registry;
+		registry.factionSquads = this;
 		this.shouts           = new SquadRadio(() -> civiliansConfig.shouts(), civilianMessages,
 		                                       System::currentTimeMillis,
 		                                       () -> ThreadLocalRandom.current().nextDouble(),
@@ -160,7 +161,6 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 	// ── Registry delegates ───────────────────────────────────────────────────
 
 	public void register(CivilianNpc npc) {
-		npc.setFactionSquads(this);
 		registry.register(npc);
 	}
 
@@ -275,6 +275,7 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 			double range = Math.max(ally.getTypeConfig().ai().alertRange(), minRange);
 			if (ally.distanceTo(callerEntity) > range) continue;
 			if (isFightingAnother(ally, attackerId)) continue;
+			if (ally.getSquad() == squad) continue; // already in this fight: not a new recruit
 
 			if (playerAttacker) {
 				ally.setTargetPlayerId(attackerId);
@@ -313,7 +314,9 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 				continue; // never rally a faction against its own member
 			}
 
-			int n = recruit(pending.caller(), target, target instanceof Player, squad, civiliansConfig.shouts().range());
+			// a Citizens PLAYER-typed NPC (a cop) is an entity target: Bukkit.getPlayer cannot resolve it
+			boolean player = target instanceof Player p && !NpcSupport.isNpc(p);
+			int     n      = recruit(pending.caller(), target, player, squad, civiliansConfig.shouts().range());
 			if (n == 0) continue;
 
 			LivingEntity callerEntity = pending.caller().getEntity();

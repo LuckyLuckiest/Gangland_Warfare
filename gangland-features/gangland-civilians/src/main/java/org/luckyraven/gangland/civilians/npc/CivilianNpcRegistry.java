@@ -20,12 +20,19 @@ public class CivilianNpcRegistry {
 	private final Map<String, CivilianGroup> activeGroups = new HashMap<>();
 
 	/**
+	 * Handed to every civilian on {@link #register}, so all spawn paths (spawners, groups, turf defenders, powerups)
+	 * share faction squads. Installed by {@link CivilianService}, which cannot be a dependency of the spawners.
+	 */
+	@Nullable FactionSquads factionSquads;
+
+	/**
 	 * Registers an already-spawned civilian NPC so it is tracked by the system.
 	 */
 	public void register(CivilianNpc npc) {
 		if (npc == null || !npc.isValid()) return;
 		Entity entity = npc.getEntity();
 		if (entity == null) return;
+		if (factionSquads != null) npc.setFactionSquads(factionSquads);
 		activeNpcs.put(entity.getUniqueId(), npc);
 	}
 
