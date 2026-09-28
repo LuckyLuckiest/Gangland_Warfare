@@ -5,14 +5,17 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.npc.AbstractNpc;
+import org.luckyraven.keystone.npc.NpcCoverStatus;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
+import org.luckyraven.gangland.civilians.npc.FactionSquads;
 import org.luckyraven.gangland.civilians.npc.config.CivilianAIBehaviorConfig;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.npc.state.CivilianBehavior;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
 
 import java.util.UUID;
+import java.util.function.LongSupplier;
 
 /**
  * Combat behavior: the civilian hunts and attacks its designated target (player or NPC entity) together with its
@@ -26,6 +29,21 @@ import java.util.UUID;
  * target for {@code AI.Combat.Search_Seconds}.
  */
 public class CivilianCombatBehavior implements CivilianBehavior {
+
+	/** Matches Keystone's own cover retry window: a FAILED takeCover is not asked again before this. */
+	static final long COVER_RETRY_MS = 5_000;
+
+	private final LongSupplier clock;
+	/** One behavior instance per NPC ({@code CivilianBehaviorFactory}), so this is per-NPC state. */
+	private long coverRetryAt = Long.MIN_VALUE;
+
+	public CivilianCombatBehavior() {
+		this(System::currentTimeMillis);
+	}
+
+	CivilianCombatBehavior(LongSupplier clock) {
+		this.clock = clock;
+	}
 
 	@Override
 	public void onEnter(CivilianNpc npc) {
@@ -44,7 +62,22 @@ public class CivilianCombatBehavior implements CivilianBehavior {
 		CivilianAIBehaviorConfig ai    = npc.getTypeConfig().ai();
 		NpcSquad                 squad = squadFor(npc, target);
 
-		npc.pursue(target, squad, ai.alertRange());
+		// Badly hurt: break off and take cover instead of pursuing/attacking (radioed as Fall_Back/In_Cover through the
+		// squad listener once Keystone picks a spot) - "when" is this class's call, per takeCover's contract. No cover
+		// within Radius (FAILED): fight on rather than stand still, and do not ask again for COVER_RETRY_MS - every
+		// takeCover call wipes the fan post and path first, so asking each tick would repath instead of fighting.
+		LivingEntity self    = npc.getEntity();
+		long         now     = clock.getAsLong();
+		boolean      inCover = false;
+		if (self != null && now >= coverRetryAt
+		    && ai.retreat().shouldRetreat(self.getHealth(), self.getMaxHealth())) {
+			// Keystone radios the retreat to the squad of the last pursue: none yet this stint means a silent retreat
+			if (npc.getCurrentSquad() != squad) npc.pursue(target, squad, ai.alertRange());
+			inCover = npc.takeCover(target, ai.retreat().radius()) != NpcCoverStatus.FAILED;
+			if (!inCover) coverRetryAt = now + COVER_RETRY_MS;
+		}
+
+		if (!inCover) npc.pursue(target, squad, ai.alertRange());
 
 		// Search window: nobody in the squad has seen the target for too long - give up (onExit leaves the squad)
 		if (squad.millisSinceSighting() > ai.searchSeconds() * 1000L) {
@@ -52,9 +85,14 @@ public class CivilianCombatBehavior implements CivilianBehavior {
 			npc.transitionTo(CivilianState.IDLE);
 			return;
 		}
+		if (inCover) return;
+
+		// Attack gate: melee within Attack_Range; ranged at anything it can see within Alert_Range (issue 4 critic
+		// fix - a ranged civilian must not have a dead zone between Attack_Range and its engage band).
+		double range = npc.isRangedAttacker() ? ai.alertRange() : ai.attackRange();
 
 		// Attack only with line of sight - never through a wall (matches the cops' LOS gate)
-		if (npc.distanceTo(target) <= ai.attackRange() && npc.canAttack() && npc.hasLineOfSight(target)) {
+		if (npc.distanceTo(target) <= range && npc.canAttack() && npc.hasLineOfSight(target)) {
 			if (target instanceof Player player) {
 				npc.attack(player);
 			} else {
@@ -73,16 +111,17 @@ public class CivilianCombatBehavior implements CivilianBehavior {
 	// ── Helpers ───────────────────────────────────────────────────────────────
 
 	/**
-	 * The civilian's squad against {@code target}: the faction squad a hit put it in, or - when it entered combat
-	 * another way (turf defender retarget, idle re-engage) or its target switched - a squad of its own, told where the
-	 * target is now (the civilian counterpart of a cop's wanted start).
+	 * The civilian's squad against {@code target}: the faction squad a hit put it in (or its target switched onto), or
+	 * - when it entered combat another way (turf defender retarget, idle re-engage) - the shared faction squad
+	 * {@link CivilianNpc#getFactionSquads()} resolves, falling back to a private squad of its own when none is wired.
 	 */
 	private NpcSquad squadFor(CivilianNpc npc, LivingEntity target) {
 		NpcSquad squad = npc.getSquad();
 		if (squad != null && target.getUniqueId().equals(npc.getSquadTargetId())) return squad;
 
-		// ponytail: a civilian that entered combat without a hit hunts alone (defenders of one turf do not share a
-		// squad); route those entries through CivilianService's faction squads if they should team up
+		FactionSquads factionSquads = npc.getFactionSquads();
+		if (factionSquads != null) return factionSquads.squadFor(npc, target);
+
 		NpcSquad own = new NpcSquad();
 		own.reportSighting(target.getLocation());
 		npc.joinSquad(own, target.getUniqueId());

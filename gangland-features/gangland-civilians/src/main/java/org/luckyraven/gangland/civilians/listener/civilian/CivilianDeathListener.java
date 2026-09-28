@@ -17,6 +17,7 @@ import org.luckyraven.gangland.civilians.npc.config.CivilianDropConfig;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.item.ItemParser;
+import org.luckyraven.keystone.npc.NpcSquad;
 
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -38,6 +39,11 @@ public class CivilianDeathListener implements Listener {
 
 		CivilianNpc npc = civilianService.getNpc(entity.getUniqueId());
 		if (npc == null) return;
+
+		// Squad casualty (MAN_DOWN/LEADER_DOWN, phase H12) before drops, so a squad-mate radios/shouts it over the
+		// body rather than an empty spot.
+		NpcSquad squad = npc.getSquad();
+		if (squad != null) squad.memberDown(npc);
 
 		// Suppress vanilla drops and XP — we control them entirely
 		event.getDrops().clear();
