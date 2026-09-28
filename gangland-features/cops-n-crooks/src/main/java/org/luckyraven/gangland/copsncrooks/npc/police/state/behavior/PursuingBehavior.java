@@ -7,6 +7,7 @@ import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 import org.luckyraven.keystone.npc.NpcSquad;
 
 import java.util.UUID;
@@ -27,14 +28,16 @@ public class PursuingBehavior implements CopBehavior {
 	private final double            maxPursuitDistance;
 	private final int               maxPursuitTicks;
 	private final DetainmentService detainmentService;
+	private final CuffLockRegistry  cuffLocks;
 
 	public PursuingBehavior(double cuffRadius, double alertRange, double maxPursuitDistance, int maxPursuitTicks,
-	                        DetainmentService detainmentService) {
+	                        DetainmentService detainmentService, CuffLockRegistry cuffLocks) {
 		this.cuffRadius         = cuffRadius;
 		this.alertRange         = alertRange;
 		this.maxPursuitDistance = maxPursuitDistance;
 		this.maxPursuitTicks    = maxPursuitTicks;
 		this.detainmentService  = detainmentService;
+		this.cuffLocks          = cuffLocks;
 	}
 
 	@Override
@@ -75,10 +78,13 @@ public class PursuingBehavior implements CopBehavior {
 			if (distance <= cuffRadius && cop.hasLineOfSight(player)) {
 				if (cop.getTierConfig().skipCuffing() || cop.isCombatForced()) {
 					cop.transitionTo(CopState.COMBAT);
-				} else {
-					cop.transitionTo(CopState.CUFFING);
+					return;
 				}
-				return;
+				// Another officer is cuffing him: hold this cop's surround post instead of bouncing off the lock
+				if (!cuffLocks.isHeldByOther(player.getUniqueId(), cop.getNpc().getUniqueId())) {
+					cop.transitionTo(CopState.CUFFING);
+					return;
+				}
 			}
 
 			// Ranged cops shoot while closing in

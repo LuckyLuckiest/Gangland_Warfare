@@ -11,7 +11,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 
@@ -42,6 +44,7 @@ class PursuingBehaviorTest {
 	private Player           player;
 	private NpcSquad         squad;
 	private PursuingBehavior behavior;
+	private CuffLockRegistry cuffLocks;
 
 	@BeforeEach
 	void setUp() {
@@ -59,7 +62,9 @@ class PursuingBehaviorTest {
 		when(cop.squadFor(player)).thenReturn(squad);
 		when(cop.distanceTo((LivingEntity) player)).thenReturn(20.0);
 
-		behavior = new PursuingBehavior(CUFF_RADIUS, ALERT_RANGE, MAX_DISTANCE, MAX_TICKS, mock(DetainmentService.class));
+		cuffLocks = new CuffLockRegistry();
+		behavior  = new PursuingBehavior(CUFF_RADIUS, ALERT_RANGE, MAX_DISTANCE, MAX_TICKS, mock(DetainmentService.class),
+		                                 cuffLocks);
 	}
 
 	@AfterEach
@@ -126,5 +131,48 @@ class PursuingBehaviorTest {
 
 		verify(cop).transitionTo(CopState.RETURNING);
 		verify(cop, never()).pursue(any(), any(), anyDouble());
+	}
+
+	@Test
+	@DisplayName("in cuff range while another officer holds the cuff lock: stay pursuing on the surround post, no CUFFING bounce")
+	void lockHeldByOther_staysPursuing_noCuffingBounce() {
+		inCuffRange();
+		cuffLocks.tryAcquire(player.getUniqueId(), UUID.randomUUID());
+
+		behavior.tick(cop);
+
+		verify(cop, never()).transitionTo(any());
+		verify(cop).pursue(player, squad, ALERT_RANGE);
+	}
+
+	@Test
+	@DisplayName("in cuff range with the lock free: CUFFING")
+	void lockFree_entersCuffing() {
+		inCuffRange();
+
+		behavior.tick(cop);
+
+		verify(cop).transitionTo(CopState.CUFFING);
+	}
+
+	@Test
+	@DisplayName("in cuff range once the suspect resisted (combat forced): COMBAT, even with the lock held")
+	void combatForced_entersCombat() {
+		inCuffRange();
+		cuffLocks.tryAcquire(player.getUniqueId(), UUID.randomUUID());
+		when(cop.isCombatForced()).thenReturn(true);
+
+		behavior.tick(cop);
+
+		verify(cop).transitionTo(CopState.COMBAT);
+	}
+
+	private void inCuffRange() {
+		when(cop.distanceTo((LivingEntity) player)).thenReturn(CUFF_RADIUS - 1);
+		when(cop.hasLineOfSight(player)).thenReturn(true);
+		when(cop.getTierConfig()).thenReturn(mock(CopTierConfig.class));
+		net.citizensnpcs.api.npc.NPC npc = mock(net.citizensnpcs.api.npc.NPC.class);
+		when(npc.getUniqueId()).thenReturn(UUID.randomUUID());
+		when(cop.getNpc()).thenReturn(npc);
 	}
 }

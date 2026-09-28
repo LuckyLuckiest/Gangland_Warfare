@@ -50,14 +50,14 @@ public class CopBehaviorFactory {
 		                                                      configProvider.getAlertRange(),
 		                                                      configProvider.getPursuitMaxDistance(),
 		                                                      configProvider.getPursuitMaxTicks(),
-		                                                      detainmentService));
+		                                                      detainmentService, cuffLockRegistry));
 		behaviors.put(CopState.CUFFING,
 		              new CuffingBehavior(configProvider.getCuffRadius(), configProvider.getMaxCuffAttempts(),
 		                                  cuffAiTicks, aiTickRate, cuffLockRegistry, detainmentService));
 		behaviors.put(CopState.GUARDING,
 		              new GuardingBehavior(configProvider.getGuardRadius(), cuffLockRegistry, detainmentService));
 		behaviors.put(CopState.COMBAT, new CombatBehavior(configProvider.getCombatRange(), configProvider.getAlertRange(),
-		                                                  detainmentService));
+		                                                  detainmentService, configProvider.getRetreatSettings()));
 		behaviors.put(CopState.RETURNING, new ReturningBehavior(spawnManagerSupplier.get(), detainmentService,
 		                                                        configProvider.getMaxReturnTicks(),
 		                                                        configProvider.getStationArrivalDistance()));

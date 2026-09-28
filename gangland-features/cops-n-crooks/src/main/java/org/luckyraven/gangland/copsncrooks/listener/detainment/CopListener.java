@@ -12,9 +12,11 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
+import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
 import org.luckyraven.gangland.core.events.wanted.WantedEndEvent;
@@ -190,18 +192,23 @@ public class CopListener implements Listener {
 	}
 
 	/**
-	 * Clears drops when a cop NPC is killed.
+	 * Reports a killed cop down to its squads (the radio's "Officer down" and a backup request), destroys it and
+	 * clears its drops. The dying entity is already invalid here, so the cop is found without a validity check.
 	 *
 	 * @param event the death event
 	 */
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onCopDeath(EntityDeathEvent event) {
-		if (!copManager.isCopNpc(event.getEntity())) return;
+		CopNpc cop = copManager.findDyingCop(event.getEntity());
+		if (cop == null) return;
 
-		CopNpc cop = copManager.findCopByEntity(event.getEntity());
-		if (cop != null) {
-			cop.destroy();
+		NpcSquad squad = cop.getCurrentSquad();
+		if (squad != null) squad.memberDown(cop);
+		CopGroup group = cop.getGroup();
+		if (group != null && group.getSquad() != squad && group.getSquad().members().contains(cop)) {
+			group.getSquad().memberDown(cop);
 		}
+		cop.destroy();
 
 		event.getDrops().clear();
 		event.setDroppedExp(0);
