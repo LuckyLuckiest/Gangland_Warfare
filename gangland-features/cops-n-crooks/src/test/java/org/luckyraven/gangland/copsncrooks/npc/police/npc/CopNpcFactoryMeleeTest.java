@@ -7,6 +7,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.npc.TacticsConfig;
 import org.luckyraven.keystone.npc.NpcDifficulty;
 import org.luckyraven.keystone.npc.NpcMeleeProfile;
+import org.luckyraven.keystone.npc.spi.NpcRangedAttack;
 
 import java.util.List;
 
@@ -50,13 +51,27 @@ class CopNpcFactoryMeleeTest {
 		CopTierConfig     tier     = tierWithCuffRadius(4.0);
 		CopConfigProvider provider = mock(CopConfigProvider.class);
 		when(provider.getMeleeProfile()).thenReturn(NpcMeleeProfile.DEFAULT);
-		CopNpc copNpc = mock(CopNpc.class);
+		CopNpc          copNpc   = mock(CopNpc.class);
+		NpcRangedAttack bartizan = mock(NpcRangedAttack.class);
+		when(bartizan.isRanged()).thenReturn(true);
 
-		CopNpcFactory.applyTuning(copNpc, tier, provider);
+		CopNpcFactory.applyTuning(copNpc, tier, provider, bartizan);
 
 		verify(copNpc).setEngagement(tier.tactics().engagement());
 		verify(copNpc).setMeleeProfile(CopNpcFactory.meleeFor(NpcMeleeProfile.DEFAULT, tier));
 		verify(copNpc).setFireRateScale(4.0); // Fire_Rate_Multiplier 0.25 = a quarter of the weapon's own rate
+	}
+
+	@Test
+	@DisplayName("a cop on the vanilla bow/crossbow fallback gets half the scale, keeping 0.11's crossbow cadence")
+	void applyTuning_vanillaBowGetsHalfScale() {
+		CopConfigProvider provider = mock(CopConfigProvider.class);
+		when(provider.getMeleeProfile()).thenReturn(NpcMeleeProfile.DEFAULT);
+		CopNpc copNpc = mock(CopNpc.class);
+
+		CopNpcFactory.applyTuning(copNpc, tierWithCuffRadius(4.0), provider, NpcRangedAttack.NONE);
+
+		verify(copNpc).setFireRateScale(2.0); // 0.25 on Keystone's 30-tick vanilla base = 0.11's 15-AI-tick base
 	}
 
 	private static CopTierConfig tierWithCuffRadius(double cuffRadius) {

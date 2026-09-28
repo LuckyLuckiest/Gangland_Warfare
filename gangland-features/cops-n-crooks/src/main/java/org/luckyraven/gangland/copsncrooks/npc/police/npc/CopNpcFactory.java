@@ -20,6 +20,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.gangland.npc.NpcFireRate;
 import org.luckyraven.keystone.npc.NpcMeleeProfile;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
@@ -106,7 +107,6 @@ public class CopNpcFactory {
 
 		CopNpc copNpc = new CopNpc(plugin, npc, tierConfig, behaviors, spawnLocation, configProvider);
 		copNpc.setTargetFilter(downedTargetFilter);
-		applyTuning(copNpc, tierConfig, configProvider);
 
 		// equip() runs first so the ranged-attack block below can override its vanilla weaponPool main-hand item
 		// with the Bartizan-built weapon item, reproducing 0.8.4's heldWeapon != null ? heldWeapon.buildItem() :
@@ -117,10 +117,10 @@ public class CopNpcFactory {
 		// NpcRangedAttack.NONE (no weapon name configured, unresolvable name, or Bartizan absent) leaves the cop on
 		// the vanilla weaponPool fallback CopNpc#equip() already applied above. Bartizan owns the NPC magazine —
 		// no off-hand ammo item is stocked here (0.8.4's giveStartingAmmo is gone).
+		NpcRangedAttack rangedAttack = NpcRangedAttack.NONE;
 		if (tierConfig.canUseWeapons()) {
-			String          weaponName   = pickWeaponName(tierConfig);
-			NpcRangedAttack rangedAttack = bartizanNpcWeapons.create(copNpc.getEntity(), weaponName,
-			                                                        copNpc.getDifficulty());
+			String weaponName = pickWeaponName(tierConfig);
+			rangedAttack = bartizanNpcWeapons.create(copNpc.getEntity(), weaponName, copNpc.getDifficulty());
 			copNpc.setRangedAttack(rangedAttack);
 
 			ItemStack weaponItem = bartizanNpcWeapons.buildItem(weaponName);
@@ -129,16 +129,19 @@ public class CopNpcFactory {
 			}
 		}
 
+		applyTuning(copNpc, tierConfig, configProvider, rangedAttack);
+
 		npc.getNavigator().getLocalParameters().speedModifier((float) tierConfig.speed());
 
 		return copNpc;
 	}
 
-	/** Squad engagement, melee band and gun cadence from the tier's config ({@code Fire_Rate_Multiplier} inverted). */
-	static void applyTuning(CopNpc copNpc, CopTierConfig tierConfig, CopConfigProvider configProvider) {
+	/** Squad engagement, melee band and gun cadence from the tier's config ({@link NpcFireRate#scale}). */
+	static void applyTuning(CopNpc copNpc, CopTierConfig tierConfig, CopConfigProvider configProvider,
+	                        NpcRangedAttack rangedAttack) {
 		copNpc.setEngagement(tierConfig.tactics().engagement());
 		copNpc.setMeleeProfile(meleeFor(configProvider.getMeleeProfile(), tierConfig));
-		copNpc.setFireRateScale(1.0 / tierConfig.fireRateMultiplier());
+		copNpc.setFireRateScale(NpcFireRate.scale(tierConfig.fireRateMultiplier(), rangedAttack));
 	}
 
 	/**

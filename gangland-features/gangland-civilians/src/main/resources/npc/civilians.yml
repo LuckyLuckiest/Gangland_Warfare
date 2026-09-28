@@ -105,7 +105,8 @@ Shouts:
 #                 Combat.Fire_Rate_Multiplier is the gun cadence as a fraction of the weapon's own (player) fire
 #                 rate, on top of Difficulty (> 0; omitted = 1 / settings.yml Civilians.Behaviour.AI_Tick_Rate). The
 #                 shipped 0.05 keeps the pre-0.12 time-to-kill: NPC guns used to advance one weapon tick per civilian AI
-#                 tick (AI_Tick_Rate: 20), i.e. a twentieth of the weapon's rate. Combat.Retreat sends a badly hurt
+#                 tick (AI_Tick_Rate: 20), i.e. a twentieth of the weapon's rate (a vanilla BOW/CROSSBOW counts from
+#                 a 15-tick base, so 0.05 fires every 300 ticks, as before). Combat.Retreat sends a badly hurt
 #                 member to cover out of the target's sight (shouted as Fall_Back / In_Cover).
 
 Types:

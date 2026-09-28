@@ -23,6 +23,7 @@ import org.luckyraven.gangland.civilians.npc.config.CivilianTypeConfig;
 import org.luckyraven.gangland.civilians.npc.state.CivilianBehavior;
 import org.luckyraven.gangland.civilians.npc.state.CivilianBehaviorFactory;
 import org.luckyraven.gangland.civilians.npc.entity.EntityMark;
+import org.luckyraven.gangland.npc.NpcFireRate;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
@@ -108,7 +109,6 @@ public class CivilianNpcFactory implements BeanLifecycle {
 		CivilianNpc civilian = new CivilianNpc(plugin, npc, typeConfig, groupId, behaviors,
 		                                       spawnLocation, navConfig, itemParser);
 		civilian.setTargetFilter(downedTargetFilter);
-		applyTuning(civilian, typeConfig.ai());
 
 		// Apply group trait bonuses before equipping
 		double healthBonus = groupConfig != null ? groupConfig.healthBonus() : 0.0;
@@ -124,10 +124,10 @@ public class CivilianNpcFactory implements BeanLifecycle {
 		// Bartizan-backed ranged weapon: a random name from the type's pool, resolved through the factory hook.
 		// NpcRangedAttack.NONE (no weapon name configured, unresolvable name, or Bartizan absent) leaves the
 		// civilian on the vanilla weaponPool fallback CivilianNpc#equip() already applied above.
+		NpcRangedAttack rangedAttack = NpcRangedAttack.NONE;
 		if (civilian.canUseRangedAttack()) {
-			String          weaponName   = pickWeaponName(typeConfig);
-			NpcRangedAttack rangedAttack = bartizanNpcWeapons.create(civilian.getEntity(), weaponName,
-			                                                        civilian.getDifficulty());
+			String weaponName = pickWeaponName(typeConfig);
+			rangedAttack = bartizanNpcWeapons.create(civilian.getEntity(), weaponName, civilian.getDifficulty());
 			civilian.setRangedAttack(rangedAttack);
 
 			ItemStack weaponItem = bartizanNpcWeapons.buildItem(weaponName);
@@ -135,6 +135,8 @@ public class CivilianNpcFactory implements BeanLifecycle {
 				setMainHand(civilian.getEntity(), weaponItem);
 			}
 		}
+
+		applyTuning(civilian, typeConfig.ai(), rangedAttack);
 
 		float speedModifier = 1.0f + (float) speedBonus;
 		npc.getNavigator().getLocalParameters().speedModifier(speedModifier);
@@ -165,11 +167,11 @@ public class CivilianNpcFactory implements BeanLifecycle {
 		living.setHealth(total);
 	}
 
-	/** Squad engagement, melee band and gun cadence from the type's AI config ({@code Fire_Rate_Multiplier} inverted). */
-	static void applyTuning(CivilianNpc civilian, CivilianAIBehaviorConfig ai) {
+	/** Squad engagement, melee band and gun cadence from the type's AI config ({@link NpcFireRate#scale}). */
+	static void applyTuning(CivilianNpc civilian, CivilianAIBehaviorConfig ai, NpcRangedAttack rangedAttack) {
 		civilian.setEngagement(ai.tactics().engagement());
 		civilian.setMeleeProfile(ai.melee());
-		civilian.setFireRateScale(1.0 / ai.fireRateMultiplier());
+		civilian.setFireRateScale(NpcFireRate.scale(ai.fireRateMultiplier(), rangedAttack));
 	}
 
 	/**

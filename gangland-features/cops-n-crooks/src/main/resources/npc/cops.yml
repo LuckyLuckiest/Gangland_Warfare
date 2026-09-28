@@ -38,8 +38,9 @@
 #                   Difficulty's fire rate. 1.0 = as fast as a player holding the gun; 0.1 = a tenth as often.
 #                   Must be above 0. When omitted, 1 / settings.yml Cops.Behaviour.AI_Tick_Rate.
 #                   The shipped 0.1 keeps the pre-0.12 time-to-kill: NPC guns used to advance one weapon tick
-#                   per cop AI tick (AI_Tick_Rate: 10), i.e. a tenth of the weapon's rate. Vanilla CROSSBOW picks
-#                   fire every 30 x 10 = 300 ticks at NORMAL (15 s), half as often as before.
+#                   per cop AI tick (AI_Tick_Rate: 10), i.e. a tenth of the weapon's rate. A vanilla BOW/CROSSBOW
+#                   (no Bartizan weapon) counts from a 15-tick base, so 0.1 fires every 150 ticks at NORMAL (7.5 s),
+#                   exactly as before.
 # ============================================
 Cops:
    # Melee band for every cop swing. The cooldown is settings.yml Cops.Behaviour.Attack_Cooldown_Ticks.
