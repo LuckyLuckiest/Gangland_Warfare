@@ -92,6 +92,13 @@ non-default `AI_Tick_Rate` and copy the new files, set the multiplier to `1 / yo
 The multiplier is applied on top of the NPC's `Difficulty` (harder difficulties already fire faster). Raising it
 above the default makes NPCs fire faster than 0.11 and shortens time-to-kill.
 
+"Exactly" covers **gun cadence only**, not time-to-kill. Two other 0.12.0 changes shorten time-to-kill whatever the
+multiplier says: reaction times are real server ticks now (a `NORMAL` NPC reacts in 15 server ticks instead of 150,
+`HARD` in 5 instead of 50), and the cop melee cooldown is `Attack_Cooldown_Ticks` (20 by default) times the
+difficulty factor instead of 50 server ticks times it. The sandbox measurement in §9 found ranged tiers within the
+noise of 0.11 and melee tiers killing about twice as fast. `Cops.Behaviour.Attack_Cooldown_Ticks: 50` brings back roughly the
+0.11 melee cadence.
+
 ## 6. Behaviour players (and admins) will notice
 
 - **Squads no longer freeze in a line.** Ranged members spread across their formation arc at staggered ranges, keep
@@ -153,3 +160,49 @@ above the default makes NPCs fire faster than 0.11 and shortens time-to-kill.
 - Keystone **>= 1.13.0** (required).
 - Bartizan **>= 0.6.0** (required for the move-while-shooting fix when Bartizan weapons are in use; see §1. A
   server without Bartizan needs nothing, since its NPCs use vanilla bows and crossbows).
+
+## 9. Sandbox acceptance: time-to-kill against 0.11
+
+Measured 2026-09-28 on two fresh flat-world clones of the test server (Paper 1.21.11, mobs, daylight cycle and natural
+regeneration off). **0.11**: Keystone 1.12.0, Gangland 0.11.0, Bartizan 0.5.1. **0.12**: Keystone 1.13.0, Gangland
+0.12.0, Bartizan 0.6.0. Both kept the server's own 0.10-era `cops.yml`, so 0.12 ran on the code defaults: a
+multiplier of 0.1, arcs of 200/270/330. That is the real upgrade path.
+
+A bot with 100 HP stood still, with `/glw wanted add <level>` set 250 blocks from the previous trial. Wanted level
+*n* spawns tier *n* (*n* + 1 cops). For the melee tiers the bot punched the first cop within 3 blocks once, since a
+passive suspect is only ever cuffed. "Combat" is the time from the first damage to death. DPS is damage per second
+over that span. There were 3 to 6 valid trials per tier and version. Excluded: trials where no cop ever engaged (1 on
+0.11, 2 on 0.12), trials where the bot was cuffed and jailed, and trials run while a jail sentence from an earlier
+trial was still active.
+
+| Tier | 0.11 | 0.12 | Verdict |
+|---|---|---|---|
+| 1 Officer (EASY, melee) | DPS 0.37 / 0.37 / 0.71; first damage 26-33 s after the wanted level | DPS 0.75 / 1.33 / 0.82; first damage 15-18 s | **~2.2x faster**: a 20 HP player dies after ~24 s of combat instead of ~54 s |
+| 2 Sergeant (EASY, melee) | DPS 1.08 / 1.08 / 1.60; the bot survived all 3 trials (90 s) | DPS 1.39 / 1.75 / 1.90; the bot died in all 3 (63-86 s total) | **~1.6x faster** (20 HP: ~11 s instead of ~19 s) |
+| 3 Lieutenant (NORMAL, rifle) | combat to death 32.5 / 20.0 / 15.0 s (median 20.0); total 32 s | combat 17.5 / 27.5 s (median 22.5); total 32 s | **same** |
+| 4 SWAT (HARD, rifle) | combat 15.0 / 5.0 / 13.0 / 10.0 s (median 11.5); total 16 s | combat 10.5 / 20.0 / 15.0 s (median 15.0); total 23 s | **same or slightly slower** |
+| 5 Military (DEADLY, rifle) | combat 7.5 / 7.5 / 75 / 5.0 / 10.0 s (median 7.5); total 12.8 s | combat 38 / 17.5 / 10.0 / 7.5 / 5.0 s (median 10.0); total 11.9 s | **same** |
+
+- **Ranged tiers keep the 0.11 time-to-kill.** The shorter reaction times do not show: the gun cooldown, which
+  `Fire_Rate_Multiplier` restores exactly, is the bottleneck. Moving aim error and check-fire, if anything, lengthen
+  it a little. Damage per hit is unchanged (SWAT about 12-14, Military about 20-25 on a 100 HP bot). **Pass.**
+- **Melee tiers kill about 1.6-2.2x faster and engage about twice as soon.** This comes from the real
+  `Attack_Cooldown_Ticks` (20 instead of 50 server ticks before the difficulty factor) and from server-tick reaction
+  times. The 3-block reach band and the miss chance only partly offset it. **Owner call:** leave it (the shipped
+  `Attack_Cooldown_Ticks: 20` is what `settings.yml` always said), or set `Attack_Cooldown_Ticks: 50` to get roughly the 0.11
+  melee pace back.
+- **Lieutenants now sometimes arrest a passive suspect.** A lieutenant has `Skip_Cuffing: false`. In 2 of 6 level-3
+  trials on 0.12 it walked into cuff range and cuffed the standing bot (jailed about 20 s later). This happened in
+  0 of 6 trials on 0.11, where shooters froze at the edge of their firing band. SWAT and Military (`Skip_Cuffing:
+  true`) never cuffed.
+- **Seen working in the same runs:** dispatch lines, `Eyes on`, flank orders with `Copy.` acknowledgements, `Moving,
+  cover me!`, `Check your fire, friendly in the line!`, `Changing position!`, `Suspect is resisting! Take him down!`
+  after the punch, and `Suspect cleared` on `/glw wanted clear`. All were heard by the bot through chat.
+- **Harness artefact, not a plugin bug:** twice the bot "fell from a high place" right after a jail or jail-release
+  teleport, because the copied jail location has no floor in a flat world.
+
+**Not covered by this run**, and still to do by hand or in a later harness pass: the KS-1 ladder exit, the BZ-1
+trigger release (a real 1.21.11 client is needed for the use-state path), the civilian and faction scenarios (GL-4),
+radio responders across groups, and backup expiry. Harness: `testserver-work/harness/run-ttk.js`,
+`gl5r2-prep.sh`, `scen-gl5r2-ttk.json` (all tiers) and `scen-gl5r2-ttk-ranged.json` (tiers 3-5 rerun with a jail
+release between trials). Outputs are in `runs/gl5r2-{old,new}` and `runs/gl5r2-{old,new}-pass1`.
