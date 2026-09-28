@@ -1,9 +1,11 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.npc;
 
+import com.cryptomorin.xseries.XAttribute;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -108,6 +110,8 @@ public class CopNpcFactory {
 		CopNpc copNpc = new CopNpc(plugin, npc, tierConfig, behaviors, spawnLocation, configProvider);
 		copNpc.setTargetFilter(downedTargetFilter);
 
+		applyHealthBonus(copNpc.getEntity(), tierConfig.health());
+
 		// equip() runs first so the ranged-attack block below can override its vanilla weaponPool main-hand item
 		// with the Bartizan-built weapon item, reproducing 0.8.4's heldWeapon != null ? heldWeapon.buildItem() :
 		// weaponPool precedence (matches CivilianNpcFactory, T-HR2).
@@ -152,6 +156,17 @@ public class CopNpcFactory {
 		double approach = Math.max(0.5, Math.min(profile.approach(), tier.cuffRadius() - 0.5));
 		return new NpcMeleeProfile(profile.reach(), approach, profile.cooldownTicks(), profile.damageSpread(),
 		                           profile.edgeDamage());
+	}
+
+	/** Applies the tier's configured {@code Health} as both the max-health attribute base and current health. */
+	static void applyHealthBonus(@Nullable Entity entity, double health) {
+		if (!(entity instanceof LivingEntity living)) return;
+
+		AttributeInstance maxHealth = living.getAttribute(XAttribute.MAX_HEALTH.get());
+		if (maxHealth != null) {
+			maxHealth.setBaseValue(health);
+		}
+		living.setHealth(health);
 	}
 
 	private void setMainHand(@Nullable LivingEntity entity, ItemStack item) {
