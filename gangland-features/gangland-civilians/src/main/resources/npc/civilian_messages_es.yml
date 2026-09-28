@@ -60,6 +60,11 @@ Shouts:
          - "¡Le dieron a %member%!"
       Leader_Down:
          - "¡El jefe cayó! %unit%, tú lideras!"
+      Fall_Back:
+         - "¡Me dieron! ¡Cúbranme!"
+         - "¡Me echo para atrás!"
+      In_Cover:
+         - "¡Estoy a cubierto!"
       Ack: []
       Responding: []
       Rally:

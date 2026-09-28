@@ -65,6 +65,13 @@ Shouts:
          - "They got %member%!"
       Leader_Down:
          - "Boss is down! %unit%, you lead!"
+      # A badly hurt member breaks off to cover (AI.Combat.Retreat in civilians.yml).
+      Fall_Back:
+         - "I'm hit! Cover me!"
+         - "Pulling back!"
+      # The retreating member reached cover.
+      In_Cover:
+         - "I'm behind cover!"
       # Gangs don't run radio drills — no acknowledgements.
       Ack: []
       # Gangs don't announce responders.

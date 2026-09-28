@@ -44,6 +44,8 @@ public class CivilianMessages extends LocalizedModuleYaml implements RadioLines 
 			Map.entry("Reloading", List.of("Reloading!")),
 			Map.entry("Man_Down", List.of("They got %member%!")),
 			Map.entry("Leader_Down", List.of("Boss is down! %unit%, you lead!")),
+			Map.entry("Fall_Back", List.of("I'm hit! Cover me!", "Pulling back!")),
+			Map.entry("In_Cover", List.of("I'm behind cover!")),
 			Map.entry("Ack", List.of()),
 			Map.entry("Responding", List.of()),
 			Map.entry("Rally", List.of("%faction%! They're hitting us, %count% on the way!")));

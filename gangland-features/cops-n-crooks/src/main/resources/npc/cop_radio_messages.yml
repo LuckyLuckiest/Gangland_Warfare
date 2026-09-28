@@ -97,6 +97,14 @@ Lines:
    Responding:
       - "%unit% responding, en route!"
       - "Copy, moving to assist!"
+   # A badly hurt cop breaks off to cover (Cops.Retreat in cops.yml).
+   Fall_Back:
+      - "Taking fire, falling back to cover!"
+      - "I'm hit! Pulling back!"
+   # The retreating cop reached cover.
+   In_Cover:
+      - "In cover!"
+      - "I'm behind cover, keep him busy!"
    # A cuffed suspect's escape attempts exhaust Max_Cuff_Attempts; the group switches to combat.
    Resisting:
       - "Suspect is resisting! Take him down!"

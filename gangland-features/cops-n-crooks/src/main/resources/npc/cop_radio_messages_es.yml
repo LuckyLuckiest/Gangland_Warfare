@@ -67,6 +67,12 @@ Lines:
    Responding:
       - "¡%unit% responde, en camino!"
       - "¡Copiado, voy a asistir!"
+   Fall_Back:
+      - "¡Me disparan, me repliego a cubierto!"
+      - "¡Estoy herido! ¡Me retiro!"
+   In_Cover:
+      - "¡A cubierto!"
+      - "¡Estoy a cubierto, manténganlo ocupado!"
    Resisting:
       - "¡El sospechoso se resiste! ¡Redúzcanlo!"
    Backup:

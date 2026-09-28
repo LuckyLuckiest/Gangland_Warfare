@@ -46,6 +46,8 @@ public class CopRadioMessages extends LocalizedModuleYaml implements RadioLines 
 			Map.entry("Leader_Down", List.of("%member% is down! %unit% taking point!")),
 			Map.entry("Ack", List.of("Copy.", "Moving.", "On it.")),
 			Map.entry("Responding", List.of("%unit% responding, en route!", "Copy, moving to assist!")),
+			Map.entry("Fall_Back", List.of("Taking fire, falling back to cover!", "I'm hit! Pulling back!")),
+			Map.entry("In_Cover", List.of("In cover!", "I'm behind cover, keep him busy!")),
 			Map.entry("Resisting", List.of("Suspect is resisting! Take him down!")),
 			Map.entry("Backup", List.of("Requesting backup at my location!", "Need more units here, now!")),
 			Map.entry("Dispatch_Wanted", List.of("All units, be advised: %target% is wanted, level %level%.")),
