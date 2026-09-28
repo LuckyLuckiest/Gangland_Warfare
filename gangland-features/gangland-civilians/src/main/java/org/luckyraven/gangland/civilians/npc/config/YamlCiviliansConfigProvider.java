@@ -212,7 +212,7 @@ public class YamlCiviliansConfigProvider {
 	private CivilianAIBehaviorConfig parseAI(@Nullable MappingNode aiSection, ConfigReport report, String typeId) {
 		if (aiSection == null) {
 			return new CivilianAIBehaviorConfig(false, 0, false, 0, false, 0.0, 0.0, 0, NpcDifficulty.NORMAL, 16.0, 20,
-			                                    TacticsConfig.DEFAULT, NpcMeleeProfile.DEFAULT, defaultFireRateMultiplier,
+			                                    CivilianAIBehaviorConfig.DEFAULT_TACTICS, NpcMeleeProfile.DEFAULT, defaultFireRateMultiplier,
 			                                    RetreatSettings.DEFAULT);
 		}
 
@@ -274,7 +274,7 @@ public class YamlCiviliansConfigProvider {
 	private TacticsConfig parseTactics(@Nullable NodeReader combat, ConfigReport report) {
 		MappingNode tacticsSection = combat == null ? null : combat.get("Tactics").asMapping().orNull();
 		NodeReader  tactics        = tacticsSection != null ? NodeReader.of(tacticsSection, report) : null;
-		return TacticsConfig.read(tactics, report, TacticsConfig.DEFAULT);
+		return TacticsConfig.read(tactics, report, CivilianAIBehaviorConfig.DEFAULT_TACTICS);
 	}
 
 	private NpcMeleeProfile parseMelee(@Nullable NodeReader combat, ConfigReport report, int cooldownTicks) {

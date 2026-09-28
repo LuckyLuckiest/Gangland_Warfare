@@ -76,6 +76,7 @@ class YamlCiviliansConfigProviderTest {
 			assertEquals(typeId, type.faction(), typeId);
 			assertEquals(16.0, type.ai().alertRange(), typeId);
 			assertEquals(20, type.ai().searchSeconds(), typeId);
+			assertEquals(120.0, type.ai().tactics().formationArc(), typeId + ": civilian arc stays in 100-140");
 		}
 	}
 
@@ -253,7 +254,8 @@ class YamlCiviliansConfigProviderTest {
 		                                                           org.luckyraven.keystone.npc.NpcDifficulty.NORMAL,
 		                                                           16.0, 20);
 
-		assertEquals(TacticsConfig.DEFAULT, ai.tactics());
+		assertEquals(CivilianAIBehaviorConfig.DEFAULT_TACTICS, ai.tactics());
+		assertEquals(120.0, ai.tactics().formationArc());
 		assertEquals(3.0, ai.melee().reach());
 		assertEquals(2.0, ai.melee().approach());
 		assertEquals(20, ai.melee().cooldownTicks());

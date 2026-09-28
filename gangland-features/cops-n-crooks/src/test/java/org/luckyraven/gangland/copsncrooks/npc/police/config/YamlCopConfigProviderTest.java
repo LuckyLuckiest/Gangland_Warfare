@@ -104,9 +104,46 @@ class YamlCopConfigProviderTest {
 				         Display_Name: "&9Officer"
 				         Health: 20.0
 				         Damage: 2.0
+				      5:
+				         Display_Name: "&4Military"
+				         Health: 40.0
+				         Damage: 6.0
 				""");
 
 		assertEquals(200.0, provider.getTierConfig(1).tactics().formationArc());
+		assertEquals(200.0, provider.getTierConfig(5).tactics().formationArc(),
+		             "an operator's Cops.Tactics wins over the per-tier code default");
+	}
+
+	@Test
+	@DisplayName("a 0.11-shaped cops.yml (no Tactics anywhere) still gets the decided cop arcs 270/200/270/330")
+	void legacyFile_noTactics_getsCopArcs() {
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Tiers:
+				      1:
+				         Display_Name: "&9Officer"
+				         Health: 20.0
+				         Damage: 2.0
+				      3:
+				         Display_Name: "&9Lieutenant"
+				         Health: 30.0
+				         Damage: 4.0
+				      4:
+				         Display_Name: "&8SWAT"
+				         Health: 35.0
+				         Damage: 5.0
+				      5:
+				         Display_Name: "&4Military"
+				         Health: 40.0
+				         Damage: 6.0
+				""");
+
+		assertEquals(270.0, provider.getTierConfig(1).tactics().formationArc());
+		assertEquals(200.0, provider.getTierConfig(3).tactics().formationArc());
+		assertEquals(270.0, provider.getTierConfig(4).tactics().formationArc());
+		assertEquals(330.0, provider.getTierConfig(5).tactics().formationArc());
+		assertTrue(provider.getTierConfig(5).tactics().engagement().enabled());
 	}
 
 	@Test
@@ -237,7 +274,7 @@ class YamlCopConfigProviderTest {
 
 		assertEquals(3.0, provider.getMeleeProfile().reach());
 		assertEquals(0.7, provider.getMeleeProfile().edgeDamage());
-		assertEquals(160.0, provider.getTierConfig(1).tactics().formationArc());
+		assertEquals(270.0, provider.getTierConfig(1).tactics().formationArc());
 		assertTrue(provider.getTierConfig(1).tactics().engagement().enabled());
 		assertTrue(provider.getRadioSettings().enabled());
 		assertEquals(2, provider.getRadioSettings().responderMax());

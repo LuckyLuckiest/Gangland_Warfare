@@ -28,6 +28,15 @@ import java.util.*;
 @CustomLog
 public class YamlCopConfigProvider implements CopConfigProvider {
 
+	/**
+	 * Code defaults for a cops.yml with no Tactics blocks (a 0.11 copy is never replaced on upgrade): Cops.Tactics
+	 * falls back to a 270-degree arc, and a tier with no Tactics block of its own, under a file with no Cops.Tactics
+	 * either, takes its decided arc here (Lieutenant 200, SWAT 270, Military 330). An operator's Cops.Tactics always
+	 * wins over these.
+	 */
+	static final TacticsConfig        COP_TACTICS_DEFAULT = new TacticsConfig(TacticsConfig.DEFAULT.engagement(), 270.0);
+	static final Map<Integer, Double> TIER_ARC_DEFAULTS   = Map.of(3, 200.0, 4, 270.0, 5, 330.0);
+
 	private final Map<Integer, CopTierConfig> tiers;
 	private final Map<Integer, Integer>       copsPerWantedLevel;
 
@@ -392,7 +401,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private TacticsConfig parseTacticsDefault(@Nullable NodeReader cops, ConfigReport report) {
 		MappingNode tacticsSection = cops == null ? null : cops.get("Tactics").asMapping().orNull();
 		NodeReader  tactics        = tacticsSection != null ? NodeReader.of(tacticsSection, report) : null;
-		return TacticsConfig.read(tactics, report, TacticsConfig.DEFAULT);
+		return TacticsConfig.read(tactics, report, COP_TACTICS_DEFAULT);
 	}
 
 	private RadioSettings parseRadioSettings(@Nullable NodeReader cops, ConfigReport report) {
@@ -424,6 +433,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		if (tiersSection == null) return;
 
 		NodeReader tiersReader = NodeReader.of(tiersSection, report);
+		boolean    hasCopsTactics = cops.get("Tactics").asMapping().orNull() != null;
 
 		for (String key : tiersReader.keys()) {
 			MappingNode tierNode = tiersReader.get(key).asMapping().required().orNull();
@@ -477,7 +487,9 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 					parseItem(wear == null ? null : wear.get("Leggings").asString().orNull(), itemParser),
 					parseItem(wear == null ? null : wear.get("Boots").asString().orNull(), itemParser),
 					parseDifficulty(difficultyStr, "tier " + tierNum),
-					TacticsConfig.read(tierTactics, report, tacticsDefault),
+					TacticsConfig.read(tierTactics, report, hasCopsTactics ? tacticsDefault
+							: new TacticsConfig(tacticsDefault.engagement(),
+							                    TIER_ARC_DEFAULTS.getOrDefault(tierNum, tacticsDefault.formationArc()))),
 					// no key: one weapon tick per AI tick, the cadence cops had before 1.13 moved guns onto server ticks
 					tier.get("Fire_Rate_Multiplier").asDouble().min(0.01).orDefault(1.0 / Math.max(1, aiTickRate)));
 

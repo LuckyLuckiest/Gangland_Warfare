@@ -49,15 +49,21 @@ public record CivilianAIBehaviorConfig(
 		RetreatSettings retreat
 ) {
 
-	/** Legacy 11-argument constructor, kept for existing callers: default tactics, a melee profile built from the
-	 *  attack interval and the documented civilian defaults (reach 3.0, approach 2.0, spread 0.15, edge 0.7), fire-rate
+	/**
+	 * Civilian code default when a type has no {@code AI.Combat.Tactics} block (a 0.11 civilians.yml is never
+	 * replaced on upgrade): fan posts on, a 120-degree arc, inside the decided civilian 100-140 band.
+	 */
+	public static final TacticsConfig DEFAULT_TACTICS = new TacticsConfig(TacticsConfig.DEFAULT.engagement(), 120.0);
+
+	/** Legacy 11-argument constructor, kept for existing callers: {@link #DEFAULT_TACTICS}, a melee profile built from
+	 *  the attack interval and the documented civilian defaults (reach 3.0, approach 2.0, spread 0.15, edge 0.7), fire-rate
 	 *  multiplier 1.0 and {@link RetreatSettings#DEFAULT}. */
 	public CivilianAIBehaviorConfig(boolean wanderEnabled, int wanderRange, boolean fleeEnabled, int fleeRange,
 	                                boolean combatEnabled, double attackDamage, double attackRange,
 	                                int attackIntervalTicks, NpcDifficulty difficulty, double alertRange,
 	                                int searchSeconds) {
 		this(wanderEnabled, wanderRange, fleeEnabled, fleeRange, combatEnabled, attackDamage, attackRange,
-		     attackIntervalTicks, difficulty, alertRange, searchSeconds, TacticsConfig.DEFAULT,
+		     attackIntervalTicks, difficulty, alertRange, searchSeconds, DEFAULT_TACTICS,
 		     new NpcMeleeProfile(3.0, 2.0, Math.max(1, attackIntervalTicks), 0.15, 0.7), 1.0, RetreatSettings.DEFAULT);
 	}
 }
