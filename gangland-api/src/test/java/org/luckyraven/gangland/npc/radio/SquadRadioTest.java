@@ -376,6 +376,27 @@ class SquadRadioTest {
 	}
 
 	@Test
+	@DisplayName("a scheduled ack reads the live settings when it fires, not the order-time snapshot")
+	void ackReadsLiveSettingsAtDelay() {
+		settings = new RadioSettings(true, 20, 40, 0, 0, 25, 2, Map.of(), Set.of(), null, 1f, 1f);
+		AbstractNpc leader = newMember(0, 64, 0, "SWAT-1");
+		AbstractNpc member = newMember(2, 64, 0, "SWAT-2");
+		Player      p      = newPlayer(1, 64, 0);
+		when(world.getPlayers()).thenReturn(List.of(p));
+		NpcSquad squad = new NpcSquad();
+		squad.add(leader);
+		squad.add(member);
+
+		radio.listener(voice).onSignal(squad, NpcSquadSignal.FLANK_LEFT, member, new Location(world, 2, 64, 0));
+		assertEquals(1, scheduled.size());
+
+		settings = new RadioSettings(false, 20, 40, 0, 0, 25, 2, Map.of(), Set.of(), null, 1f, 1f); // reload: off
+		((Runnable) scheduled.get(0)[0]).run();
+
+		verify(p, times(1)).sendMessage(anyString());
+	}
+
+	@Test
 	@DisplayName("MAN_DOWN is spoken by the surviving leader, naming the downed member")
 	void manDown_spokenByLeader_namingDowned() {
 		AbstractNpc leader = newMember(0, 64, 0, "SWAT-1");

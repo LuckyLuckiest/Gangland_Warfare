@@ -121,9 +121,10 @@ public final class SquadRadio {
 		                          member.getEntity(), Map.of("member", memberCallsign), false);
 
 		if (delivered && !lines.lines("Ack").isEmpty()) {
+			// Live settings when the ack fires: a reload during the delay must apply to it like to any other line.
 			later.accept(() -> {
 				if (member.isValid()) {
-					speak(cfg, voice, squad, member.getEntity(), memberCallsign, "Ack", "Format", null, null,
+					speak(settings.get(), voice, squad, member.getEntity(), memberCallsign, "Ack", "Format", null, null,
 					     Map.of(), true);
 				}
 			}, cfg.ackDelayTicks());
