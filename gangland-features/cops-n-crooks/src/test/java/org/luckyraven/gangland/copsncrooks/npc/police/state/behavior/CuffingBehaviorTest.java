@@ -136,6 +136,47 @@ class CuffingBehaviorTest {
 		verify(cop, never()).transitionTo(CopState.COMBAT);
 	}
 
+	@Test
+	@DisplayName("three break-outs from three different officers: the group escalates on the third")
+	void threeEscapesAcrossDifferentOfficers_escalatesOnce() {
+		CopNpc          second  = officer();
+		CopNpc          third   = officer();
+		CuffingBehavior secondCuffing = new CuffingBehavior(CUFF_RADIUS, MAX_ATTEMPTS, 2, 5, locks,
+		                                              mock(DetainmentService.class));
+		CuffingBehavior thirdCuffing  = new CuffingBehavior(CUFF_RADIUS, MAX_ATTEMPTS, 2, 5, locks,
+		                                              mock(DetainmentService.class));
+
+		escape();
+		escape(second, secondCuffing);
+		verify(cop, never()).transitionTo(CopState.COMBAT);
+		verify(second, never()).transitionTo(CopState.COMBAT);
+		assertFalse(group.isCombatAlert());
+
+		escape(third, thirdCuffing);
+
+		verify(third).transitionTo(CopState.COMBAT);
+		assertTrue(group.isCombatAlert());
+		assertTrue(group.pollResisting());
+		assertFalse(group.pollResisting());
+	}
+
+	private CopNpc officer() {
+		CopNpc officer = mock(CopNpc.class);
+		NPC    npc     = mock(NPC.class);
+		when(npc.getUniqueId()).thenReturn(UUID.randomUUID());
+		when(officer.getNpc()).thenReturn(npc);
+		when(officer.getTargetPlayerId()).thenReturn(playerId);
+		when(officer.getGroup()).thenReturn(group);
+		when(officer.distanceTo(player)).thenReturn(CUFF_RADIUS + 1);
+		return officer;
+	}
+
+	private static void escape(CopNpc officer, CuffingBehavior cuffing) {
+		cuffing.onEnter(officer);
+		cuffing.tick(officer);
+		cuffing.onExit(officer);
+	}
+
 	/** The cop claims the lock, and the suspect is already out of reach: one broken cuff. */
 	private void escape() {
 		when(cop.distanceTo(player)).thenReturn(CUFF_RADIUS + 1);

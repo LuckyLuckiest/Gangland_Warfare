@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.events.police.CuffedEvent;
 import org.luckyraven.gangland.copsncrooks.events.police.DuringCuffingEvent;
+import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
@@ -32,7 +33,10 @@ public class CuffingBehavior implements CopBehavior {
 
 	private long cuffingTicks;
 	private UUID claimedPlayer;
-	/** Cuff attempts on {@link #failTarget} that failed or that he broke out of; kept across re-entries. */
+	/**
+	 * Cuff attempts on {@link #failTarget} that failed or that he broke out of; kept across re-entries. Only used for a
+	 * cop without a group: a group counts them for all its officers ({@link CopGroup#recordCuffFailure}).
+	 */
 	private int  failedCuffs;
 	private UUID failTarget;
 
@@ -118,6 +122,7 @@ public class CuffingBehavior implements CopBehavior {
 			UUID cuffedTargetId = claimedPlayer;
 			claimedPlayer = null;
 			failedCuffs   = 0;
+			if (cop.getGroup() != null) cop.getGroup().resetCuffFailures(cuffedTargetId);
 			cop.setGuardedPlayerId(cuffedTargetId);
 			cop.transitionTo(CopState.GUARDING);
 			return;
@@ -130,16 +135,24 @@ public class CuffingBehavior implements CopBehavior {
 
 	/**
 	 * A cuff failed or the target broke out of it: back to pursuit, or, after {@code Max_Cuff_Attempts} of them, he is
-	 * resisting and the group fights (CJ-23).
+	 * resisting and the group fights (CJ-23). The escapes are counted per group, not per officer: the cuff lock passes
+	 * to whichever surrounding officer takes it next.
 	 */
 	private void failCuff(CopNpc cop, UUID targetId) {
-		if (++failedCuffs < maxAttempts) {
+		CopGroup group = cop.getGroup();
+		boolean  resisting;
+		if (group != null) {
+			resisting = group.recordCuffFailure(targetId, maxAttempts);
+		} else {
+			resisting = ++failedCuffs >= maxAttempts;
+			if (resisting) failedCuffs = 0;
+		}
+		if (!resisting) {
 			cop.transitionTo(CopState.PURSUING);
 			return;
 		}
 
-		failedCuffs = 0;
-		if (cop.getGroup() != null) cop.getGroup().escalate(targetId);
+		if (group != null) group.escalate(targetId);
 		cop.setCombatForced(true);
 		cop.transitionTo(CopState.COMBAT);
 	}

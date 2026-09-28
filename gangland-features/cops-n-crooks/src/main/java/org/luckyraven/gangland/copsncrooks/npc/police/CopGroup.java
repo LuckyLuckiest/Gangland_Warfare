@@ -57,6 +57,9 @@ public class CopGroup {
 
 	private long backupUntil;
 	private long backupReadyAt;
+	/** Cuffs each suspect broke out of, across every officer of the group (the lock passes between them). */
+	private final Map<UUID, Integer> cuffFailures = new HashMap<>();
+
 	/** Backup cops still to send home after a backup ran out; kept until enough are free to go. */
 	@Setter
 	private int  pendingRelease;
@@ -164,10 +167,26 @@ public class CopGroup {
 		return pending;
 	}
 
+	/**
+	 * One more cuff {@code target} broke out of, whichever officer tried; {@code true} (and the count restarts) when
+	 * it reaches {@code max}.
+	 */
+	public boolean recordCuffFailure(UUID target, int max) {
+		if (cuffFailures.merge(target, 1, Integer::sum) < max) return false;
+		cuffFailures.remove(target);
+		return true;
+	}
+
+	/** {@code target} was cuffed: his break-out count restarts. */
+	public void resetCuffFailures(UUID target) {
+		cuffFailures.remove(target);
+	}
+
 	/** The suspect is no longer wanted: a new episode starts calm. */
 	public void clearCombatAlert() {
 		combatAlert      = false;
 		resistingPending = false;
+		cuffFailures.clear();
 	}
 
 	public boolean isEmpty() {
