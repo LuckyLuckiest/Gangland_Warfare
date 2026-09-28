@@ -60,6 +60,56 @@ class CopListenerDeathTest {
 	}
 
 	@Test
+	@DisplayName("a cop killed while cuffing (no current squad, still in the group squad) is still reported down")
+	void onCopDeath_midCuff_noCurrentSquad_groupSquadStillReportsDown() {
+		CopManager   manager = mock(CopManager.class);
+		LivingEntity body    = mock(LivingEntity.class);
+		CopNpc       cop     = mock(CopNpc.class);
+		when(manager.findDyingCop(body)).thenReturn(cop);
+
+		CopGroup         group    = new CopGroup(UUID.randomUUID());
+		NpcSquadListener listener = mock(NpcSquadListener.class);
+		group.setListener(listener);
+		group.add(cop);
+		group.add(mock(CopNpc.class));
+		when(cop.getGroup()).thenReturn(group);
+		when(cop.getCurrentSquad()).thenReturn(null); // CUFFING: stopNavigation cleared the pursuit's squad
+
+		new CopListener(manager).onCopDeath(deathOf(body));
+
+		verify(listener).onSignal(eq(group.getSquad()), any(NpcSquadSignal.class), eq(cop), any());
+		assertFalse(group.getSquad().members().contains(cop));
+		verify(cop).destroy();
+	}
+
+	@Test
+	@DisplayName("a cop killed fighting an attacker is reported down once, to the attacker squad only")
+	void onCopDeath_inAttackerSquad_notInGroupSquad_reportedOnceToAttackerSquad() {
+		CopManager   manager = mock(CopManager.class);
+		LivingEntity body    = mock(LivingEntity.class);
+		CopNpc       cop     = mock(CopNpc.class);
+		when(manager.findDyingCop(body)).thenReturn(cop);
+
+		CopGroup         group    = new CopGroup(UUID.randomUUID());
+		NpcSquadListener listener = mock(NpcSquadListener.class);
+		group.setListener(listener);
+		group.add(cop);
+		group.add(mock(CopNpc.class));
+		group.getSquad().remove(cop); // squadFor moved it to the attacker squad
+		NpcSquad attackers = group.attackerSquad(UUID.randomUUID(), null);
+		attackers.add(cop);
+		attackers.add(mock(CopNpc.class));
+		when(cop.getGroup()).thenReturn(group);
+		when(cop.getCurrentSquad()).thenReturn(attackers);
+
+		new CopListener(manager).onCopDeath(deathOf(body));
+
+		verify(listener).onSignal(eq(attackers), any(NpcSquadSignal.class), eq(cop), any());
+		verify(listener, never()).onSignal(eq(group.getSquad()), any(), any(), any());
+		verify(cop).destroy();
+	}
+
+	@Test
 	@DisplayName("a death that is not a cop's is left alone")
 	void nonCopDeath_untouched() {
 		CopManager   manager = mock(CopManager.class);
