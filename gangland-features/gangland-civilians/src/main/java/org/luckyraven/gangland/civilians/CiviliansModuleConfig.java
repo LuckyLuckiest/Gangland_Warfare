@@ -124,8 +124,8 @@ public class CiviliansModuleConfig {
 	public CivilianService civilianService(CiviliansLoader civiliansLoader, NpcMarkManager npcMarkManager,
 	                                       CivilianSettings civilianSettings, CivilianNpcFactory civilianNpcFactory,
 	                                       CivilianSpawnManager civilianSpawnManager,
-	                                       CivilianNpcRegistry civilianNpcRegistry) {
+	                                       CivilianNpcRegistry civilianNpcRegistry, CivilianMessages civilianMessages) {
 		return new CivilianService(plugin, civiliansLoader, npcMarkManager, civilianSettings, civilianNpcFactory,
-		                           civilianSpawnManager, civilianNpcRegistry);
+		                           civilianSpawnManager, civilianNpcRegistry, civilianMessages);
 	}
 }

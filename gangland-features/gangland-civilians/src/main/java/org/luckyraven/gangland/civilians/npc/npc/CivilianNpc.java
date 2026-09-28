@@ -17,7 +17,9 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.npc.AbstractNpc;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.gangland.civilians.npc.CivilianGroup;
+import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
+import org.luckyraven.gangland.civilians.npc.FactionSquads;
 import org.luckyraven.gangland.civilians.npc.config.CivilianNavigationConfig;
 import org.luckyraven.gangland.civilians.npc.config.CivilianTypeConfig;
 import org.luckyraven.gangland.civilians.npc.state.CivilianBehavior;
@@ -81,6 +83,15 @@ public class CivilianNpc extends AbstractNpc {
 	private @Nullable NpcSquad squad;
 	@Getter
 	private @Nullable UUID     squadTargetId;
+
+	/**
+	 * Resolves the shared faction squad for a combat entry that did not come from a hit (turf-defender retarget, idle
+	 * re-engage); {@code null} falls back to a private squad of the NPC's own. Set by {@link CivilianService} on
+	 * {@link CivilianService#register}, injected here rather than constructor-wired to avoid a bean cycle.
+	 */
+	@Getter
+	@Setter
+	private @Nullable FactionSquads factionSquads;
 
 	public CivilianNpc(JavaPlugin plugin, NPC npc, CivilianTypeConfig typeConfig, @Nullable String groupId,
 	                   Map<CivilianState, CivilianBehavior> behaviors, Location spawnLocation,
