@@ -14,14 +14,18 @@ import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.keystone.npc.NpcCoverStatus;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.testkit.BukkitStatics;
+import org.mockito.InOrder;
 
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -136,6 +140,7 @@ class CombatBehaviorTest {
 		when(self.getHealth()).thenReturn(5.0);
 		when(self.getMaxHealth()).thenReturn(20.0);
 		when(cop.getEntity()).thenReturn(self);
+		when(cop.getCurrentSquad()).thenReturn(new NpcSquad());
 		when(cop.takeCover(player, RetreatSettings.DEFAULT.radius())).thenReturn(NpcCoverStatus.MOVING);
 
 		behavior.tick(cop);
@@ -152,6 +157,7 @@ class CombatBehaviorTest {
 		when(self.getHealth()).thenReturn(5.0);
 		when(self.getMaxHealth()).thenReturn(20.0);
 		when(cop.getEntity()).thenReturn(self);
+		when(cop.getCurrentSquad()).thenReturn(new NpcSquad());
 		when(cop.takeCover(player, RetreatSettings.DEFAULT.radius())).thenReturn(NpcCoverStatus.FAILED);
 
 		behavior.tick(cop);
@@ -174,6 +180,75 @@ class CombatBehaviorTest {
 
 		verify(cop, never()).takeCover(any(), anyDouble());
 		verify(cop).pursue(eq(player), any(), eq(ALERT_RANGE));
+	}
+
+	@Test
+	@DisplayName("still hurt after the cover time limit: the cop comes out and pursues again, and stays in the fight")
+	void badlyHurt_afterCoverLimit_pursuesAgain() {
+		AtomicLong now = new AtomicLong(1_000);
+		behavior = new CombatBehavior(COMBAT_RANGE, ALERT_RANGE, mock(DetainmentService.class), RetreatSettings.DEFAULT,
+		                              now::get);
+		Player player = badlyHurtCopFacing();
+		when(cop.getCurrentSquad()).thenReturn(new NpcSquad());
+		when(cop.takeCover(player, RetreatSettings.DEFAULT.radius())).thenReturn(NpcCoverStatus.ARRIVED);
+
+		behavior.tick(cop);
+		now.addAndGet(CombatBehavior.MAX_COVER_MS - 1);
+		behavior.tick(cop);
+		verify(cop, never()).pursue(any(), any(), anyDouble());
+
+		now.addAndGet(1);
+		behavior.tick(cop);
+		now.addAndGet(60_000);
+		behavior.tick(cop);
+
+		verify(cop, times(2)).takeCover(player, RetreatSettings.DEFAULT.radius());
+		verify(cop, times(2)).pursue(eq(player), any(), eq(ALERT_RANGE));
+	}
+
+	@Test
+	@DisplayName("a new COMBAT episode gets a fresh retreat: leaving COMBAT resets the cover time limit")
+	void onExit_resetsCoverLimit() {
+		AtomicLong now = new AtomicLong(1_000);
+		behavior = new CombatBehavior(COMBAT_RANGE, ALERT_RANGE, mock(DetainmentService.class), RetreatSettings.DEFAULT,
+		                              now::get);
+		Player player = badlyHurtCopFacing();
+		when(cop.getCurrentSquad()).thenReturn(new NpcSquad());
+		when(cop.takeCover(player, RetreatSettings.DEFAULT.radius())).thenReturn(NpcCoverStatus.ARRIVED);
+
+		behavior.tick(cop);
+		now.addAndGet(CombatBehavior.MAX_COVER_MS);
+		behavior.onExit(cop);
+		behavior.tick(cop);
+
+		verify(cop, times(2)).takeCover(player, RetreatSettings.DEFAULT.radius());
+		verify(cop, never()).pursue(any(), any(), anyDouble());
+	}
+
+	@Test
+	@DisplayName("hurt on its first COMBAT tick (no Keystone squad yet): the cop joins its squad before taking cover, so Fall_Back is radioed")
+	void badlyHurt_withoutSquad_joinsSquadBeforeCover() {
+		Player player = badlyHurtCopFacing();
+		NpcSquad squad = new NpcSquad();
+		when(cop.squadFor(player)).thenReturn(squad);
+		when(cop.getCurrentSquad()).thenReturn(null);
+		when(cop.takeCover(player, RetreatSettings.DEFAULT.radius())).thenReturn(NpcCoverStatus.MOVING);
+
+		behavior.tick(cop);
+
+		InOrder order = inOrder(cop);
+		order.verify(cop).pursue(player, squad, ALERT_RANGE);
+		order.verify(cop).takeCover(player, RetreatSettings.DEFAULT.radius());
+		verify(cop, times(1)).pursue(any(), any(), anyDouble());
+	}
+
+	private Player badlyHurtCopFacing() {
+		Player       player = targetAt(10.0);
+		LivingEntity self   = mock(LivingEntity.class);
+		when(self.getHealth()).thenReturn(5.0);
+		when(self.getMaxHealth()).thenReturn(20.0);
+		when(cop.getEntity()).thenReturn(self);
+		return player;
 	}
 
 	private Player targetAt(double distance) {

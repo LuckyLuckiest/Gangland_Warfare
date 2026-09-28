@@ -127,7 +127,8 @@ Cops:
       Duration_Ticks: 600
       # Minimum gap between two backup requests from one group (1200 = 60 s).
       Cooldown_Ticks: 1200
-   # A badly hurt cop breaks off, radios it (Lines.Fall_Back / In_Cover) and takes cover out of the suspect's sight.
+   # A badly hurt cop breaks off, radios it (Lines.Fall_Back / In_Cover) and takes cover out of the suspect's sight
+   # for up to 10 seconds, then comes back out and fights on.
    Retreat:
       # Set to false and cops fight on until they drop.
       Enabled: true
