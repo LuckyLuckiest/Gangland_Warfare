@@ -20,6 +20,7 @@ import org.luckyraven.keystone.npc.NpcDifficulty;
 import org.luckyraven.keystone.npc.NpcMeleeProfile;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 
 import java.util.List;
 import java.util.UUID;
@@ -28,8 +29,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -181,6 +184,10 @@ class CivilianCombatBehaviorTest {
 		when(self.getMaxHealth()).thenReturn(20.0);
 		when(npc.getEntity()).thenReturn(self);
 		when(npc.takeCover(target, 12.0)).thenReturn(NpcCoverStatus.MOVING);
+		NpcSquad squad = new NpcSquad();
+		squad.reportSighting(new Location(world, 5, 64, 5));
+		inSquad(squad);
+		when(npc.getCurrentSquad()).thenReturn(squad); // already hunting with it: Keystone radios to it
 
 		new CivilianCombatBehavior().tick(npc);
 
@@ -196,6 +203,7 @@ class CivilianCombatBehaviorTest {
 		NpcSquad squad = new NpcSquad();
 		squad.reportSighting(new Location(world, 5, 64, 5));
 		inSquad(squad);
+		when(npc.getCurrentSquad()).thenReturn(squad);
 		when(npc.distanceTo(target)).thenReturn(2.0);
 		when(npc.canAttack()).thenReturn(true);
 		when(npc.hasLineOfSight(target)).thenReturn(true);
@@ -232,7 +240,36 @@ class CivilianCombatBehaviorTest {
 		new CivilianCombatBehavior().tick(npc);
 
 		verify(factionSquads).squadFor(npc, target);
-		verify(npc).takeCover(target, 12.0);
+		// Keystone radios Fall_Back/In_Cover to the squad of the last pursue (none yet this stint): hunt with the
+		// faction squad first, so the retreat is heard
+		InOrder order = inOrder(npc);
+		order.verify(npc).pursue(target, squad, ALERT_RANGE);
+		order.verify(npc).takeCover(target, 12.0);
+	}
+
+	@Test
+	@DisplayName("badly hurt, no cover (FAILED): not asked again for 5 s, so it works its post instead of repathing")
+	void badlyHurt_noCover_retriesOnlyAfterWindow() {
+		badlyHurt();
+		when(npc.takeCover(target, 12.0)).thenReturn(NpcCoverStatus.FAILED);
+		NpcSquad squad = new NpcSquad();
+		squad.reportSighting(new Location(world, 5, 64, 5));
+		inSquad(squad);
+		when(npc.getCurrentSquad()).thenReturn(squad);
+		long[]                 now      = {1_000};
+		CivilianCombatBehavior behavior = new CivilianCombatBehavior(() -> now[0]);
+
+		behavior.tick(npc);
+		now[0] += 4_999;
+		behavior.tick(npc);
+
+		verify(npc, times(1)).takeCover(target, 12.0);
+		verify(npc, times(2)).pursue(target, squad, ALERT_RANGE);
+
+		now[0] += 1;
+		behavior.tick(npc);
+
+		verify(npc, times(2)).takeCover(target, 12.0);
 	}
 
 	private void badlyHurt() {

@@ -15,6 +15,7 @@ import org.luckyraven.gangland.civilians.npc.state.CivilianBehavior;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
 
 import java.util.UUID;
+import java.util.function.LongSupplier;
 
 /**
  * Combat behavior: the civilian hunts and attacks its designated target (player or NPC entity) together with its
@@ -28,6 +29,21 @@ import java.util.UUID;
  * target for {@code AI.Combat.Search_Seconds}.
  */
 public class CivilianCombatBehavior implements CivilianBehavior {
+
+	/** Matches Keystone's own cover retry window: a FAILED takeCover is not asked again before this. */
+	static final long COVER_RETRY_MS = 5_000;
+
+	private final LongSupplier clock;
+	/** One behavior instance per NPC ({@code CivilianBehaviorFactory}), so this is per-NPC state. */
+	private long coverRetryAt = Long.MIN_VALUE;
+
+	public CivilianCombatBehavior() {
+		this(System::currentTimeMillis);
+	}
+
+	CivilianCombatBehavior(LongSupplier clock) {
+		this.clock = clock;
+	}
 
 	@Override
 	public void onEnter(CivilianNpc npc) {
@@ -48,10 +64,18 @@ public class CivilianCombatBehavior implements CivilianBehavior {
 
 		// Badly hurt: break off and take cover instead of pursuing/attacking (radioed as Fall_Back/In_Cover through the
 		// squad listener once Keystone picks a spot) - "when" is this class's call, per takeCover's contract. No cover
-		// within Radius (FAILED): fight on rather than stand still.
-		LivingEntity self = npc.getEntity();
-		boolean inCover = self != null && ai.retreat().shouldRetreat(self.getHealth(), self.getMaxHealth())
-		                  && npc.takeCover(target, ai.retreat().radius()) != NpcCoverStatus.FAILED;
+		// within Radius (FAILED): fight on rather than stand still, and do not ask again for COVER_RETRY_MS - every
+		// takeCover call wipes the fan post and path first, so asking each tick would repath instead of fighting.
+		LivingEntity self    = npc.getEntity();
+		long         now     = clock.getAsLong();
+		boolean      inCover = false;
+		if (self != null && now >= coverRetryAt
+		    && ai.retreat().shouldRetreat(self.getHealth(), self.getMaxHealth())) {
+			// Keystone radios the retreat to the squad of the last pursue: none yet this stint means a silent retreat
+			if (npc.getCurrentSquad() != squad) npc.pursue(target, squad, ai.alertRange());
+			inCover = npc.takeCover(target, ai.retreat().radius()) != NpcCoverStatus.FAILED;
+			if (!inCover) coverRetryAt = now + COVER_RETRY_MS;
+		}
 
 		if (!inCover) npc.pursue(target, squad, ai.alertRange());
 
