@@ -54,7 +54,7 @@ public record TacticsConfig(NpcEngagement engagement, double formationArc) {
 		return new TacticsConfig(engagement, formationArc);
 	}
 
-	private static double readClampedDouble(NodeReader node, ConfigReport report, String key, double fallback,
+	static double readClampedDouble(NodeReader node, ConfigReport report, String key, double fallback,
 	                                        double min, double max) {
 		NodeReader.NodeAccess access = node.get(key);
 		double                value  = access.asDouble().orDefault(fallback);
