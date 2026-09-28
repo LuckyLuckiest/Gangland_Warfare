@@ -408,7 +408,7 @@ Cops:
 | Key | Default | Meaning |
 |---|---|---|
 | `Melee.*` | see above | Swing reach, surround distance (capped at `Cuff_Radius - 0.5`), damage spread and edge falloff |
-| `Tactics.*` | see above | Formation arc, strafe, reposition interval and moving aim error; `Enabled: false` = 0.11 behaviour |
+| `Tactics.*` | see above | Formation arc, strafe, reposition interval and moving aim error; `Enabled: false` = 0.11 positioning only (radio, backup, retreat keep their own switches) |
 | `Tiers.<n>.Tactics` | none | Overrides `Tactics` key by key. Shipped arcs: Lieutenant 200, SWAT 270, Military 330 |
 | `Tiers.<n>.Fire_Rate_Multiplier` | `1 / AI_Tick_Rate` | Gun cadence as a fraction of the weapon's own rate; the default keeps 0.11's cadence |
 | `Radio.*` | see above | Police radio in chat: who hears it, throttling, ack delay, `Responder_Max` cross-group responders |

@@ -280,7 +280,12 @@ fire-rate scale from `NpcFireRate.scale(Fire_Rate_Multiplier, rangedAttack)`: `1
 weapon, half that for the vanilla bow/crossbow fallback, so `1 / AI_Tick_Rate` keeps the 0.11 cadence on both paths.
 The group squad's formation arc comes from the group's tier (shipped: Lieutenant 200, SWAT 270, Military 330);
 Keystone ignores the arc for melee members, which always surround at 360/n. `Tactics.Enabled: false` puts the tier
-on `NpcEngagement.LEGACY`: 0.11's freeze-in-band, with no formation and no squad signals.
+on `NpcEngagement.LEGACY`: 0.11's freeze-in-band, with no formation and no order / `CONTACT` / `RELOADING` /
+`CHECK_FIRE` / retreat signals. It is positioning only: `NpcSquad.memberDown` still sends `MAN_DOWN` /
+`LEADER_DOWN` (so casualty radio, backup and responders still fire), Gangland's own `Dispatch_Wanted` / `Escalate` /
+`Resisting` / `Stand_Down` lines still go out, and `CombatBehavior` still retreats a hurt cop to cover (its radio line
+is suppressed). Those are switched by `Radio.Enabled`, `Backup.Enabled`, `Radio.Responder_Max` and
+`Retreat.Enabled`, not by `Tactics.Enabled`.
 
 #### Police radio, orders and acks (0.12.0)
 

@@ -55,7 +55,8 @@ Cops:
       Edge_Damage: 0.7
    # Squad tactics defaults for every tier. A tier's own Tactics block overrides these key by key.
    Tactics:
-      # false = the 1.12 behaviour: shooters freeze in their firing band, no formation, no radio signals.
+      # false = 0.11 positioning only: shooters freeze in their firing band, no formation, no order/contact/reload
+      # radio. Casualty/backup/dispatch radio and retreat stay on (Radio, Backup and Retreat have their own switches).
       Enabled: true
       # Degrees the squad's shooters spread over around the target (0-360). Cop-on-cop damage is cancelled, so cops
       # default to a wide horseshoe; melee tiers always surround.

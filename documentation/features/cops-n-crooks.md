@@ -111,8 +111,10 @@ shoulder to shoulder on one side. Melee tiers always surround the player evenly,
 | Military   | Ranged | 330°          | 20°    | every 2 s  |
 
 A shooter that is walking aims a little worse (`Moving_Aim_Error`). Set `Tactics.Enabled: false` (for every tier, or
-in one tier's own `Tactics` block) to restore the 0.11 behaviour: shooters freeze in their firing band, with no
-formation and no radio signals.
+in one tier's own `Tactics` block) to restore 0.11's positioning only: shooters freeze in their firing band, with no
+formation, no strafing and no order / contact / reload / check-fire radio lines. It is not a full rollback to 0.11:
+casualty, backup and dispatch radio, retreat to cover and the cuff-then-fight escalation stay on. Switch those off
+with `Radio.Enabled: false`, `Backup.Enabled: false`, `Retreat.Enabled: false` and `Radio.Responder_Max: 0`.
 
 ---
 
@@ -237,7 +239,7 @@ Cops:
       Damage_Spread: 0.15          # Damage varies by up to +/-15%
       Edge_Damage: 0.7             # Fraction of full damage at the edge of Reach
    Tactics:                        # Defaults for every tier; a tier's own Tactics block overrides key by key
-      Enabled: true                # false = the 0.11 freeze-in-band behaviour
+      Enabled: true                # false = 0.11 positioning only (freeze in band); radio/backup/retreat stay on
       Formation_Arc: 270.0         # Degrees the shooters spread over (melee tiers always surround)
       Strafe_Degrees: 15.0         # Side-step per reposition
       Reposition_Ticks: 60         # Server ticks between repositions (+/-25%)

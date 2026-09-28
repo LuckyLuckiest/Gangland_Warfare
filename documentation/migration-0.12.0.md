@@ -28,7 +28,7 @@ before except where a "behaviour changed" note below applies.
 | `Melee.Approach` | `2.0` | Melee cops stop and surround here; capped at each tier's `Cuff_Radius - 0.5`. Full damage inside this distance. |
 | `Melee.Damage_Spread` | `0.15` | Melee damage varies by up to this fraction either way. |
 | `Melee.Edge_Damage` | `0.7` | Fraction of full damage a swing deals at the very edge of `Reach`, falling linearly from `Approach`. |
-| `Tactics.Enabled` | `true` | `false` restores the 0.11.0 behaviour for every tier that doesn't override it: shooters freeze in their firing band, no formation, no radio signals. |
+| `Tactics.Enabled` | `true` | `false` restores 0.11 **positioning only**: shooters freeze in their firing band, no formation, no strafing, and no order / contact / reload / check-fire radio lines, for every tier that doesn't override it. It is not a full rollback to 0.11: see §6. |
 | `Tactics.Formation_Arc` | `270.0` | Degrees the squad's shooters spread over around the target (0–360). Melee tiers ignore this and always surround at 360/n. |
 | `Tactics.Strafe_Degrees` | `15.0` | Degrees a shooter side-steps along its ring at each reposition (`0` = walk to its slot and stand). |
 | `Tactics.Reposition_Ticks` | `60` | Server ticks between a shooter's repositions, jittered ±25%. |
@@ -97,7 +97,17 @@ above the default makes NPCs fire faster than 0.11 and shortens time-to-kill.
 - **Squads no longer freeze in a line.** Ranged members spread across their formation arc at staggered ranges, keep
   moving while they fire, and check their fire when a squad-mate is in the way. Melee members surround the target.
   Set `Tactics.Enabled: false` (default per tier, or under `Cops.Tactics` / a type's `AI.Combat.Tactics` for
-  everyone) to restore the exact 0.11.0 freeze-in-band behaviour for that scope.
+  everyone) to restore 0.11's **positioning only** for that scope: freeze in the firing band, no formation, no
+  strafing, and no order / contact / reload / check-fire radio lines. It is **not** a rollback to 0.11. These stay
+  on and have their own switches:
+  - casualty radio (Man Down / Leader Down), dispatch, escalate, resisting and stand-down lines — `Radio.Enabled: false`
+    silences them for players;
+  - backup requests after a cop goes down — `Backup.Enabled: false`;
+  - responders pulled in from other groups — `Radio.Responder_Max: 0`;
+  - retreat to cover when badly hurt — `Retreat.Enabled: false`.
+
+  Cuff-then-fight escalation, ranged cops firing at anything seen within `Alert_Range`, the melee reach / hit-chance
+  band and the server-tick reaction times have no switch; they stay on either way.
 - **Real melee.** A swing only lands within `Melee.Reach` (3 blocks), can miss (the NPC's `Difficulty` sets the hit
   chance), and does less damage the further out it lands. Reaction times and cooldowns are now real server ticks
   instead of being silently divided by the AI tick rate — an EASY cop's first swing now comes in about 1.5 s

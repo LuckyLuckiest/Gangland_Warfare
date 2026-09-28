@@ -13,7 +13,8 @@ import org.luckyraven.keystone.persistence.config.Severity;
  * reads no YAML.
  *
  * @param engagement  how a ranged member works its firing band; {@link NpcEngagement#LEGACY} when {@code Enabled} is
- *                    {@code false} in YAML (the exact 1.12.0 pursuit, no formation, no signals).
+ *                    {@code false} in YAML (the 1.12.0 pursuit positioning: no formation and no
+ *                    order/contact/reload/check-fire signals; {@code NpcSquad.memberDown} still signals casualties).
  * @param formationArc degrees the squad's shooters fan out over around the target (0-360), passed to
  *                    {@link NpcSquad#setFormationArc}. Melee members always surround at 360/n regardless of this
  *                    value.
