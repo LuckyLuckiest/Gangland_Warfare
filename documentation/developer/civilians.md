@@ -10,8 +10,8 @@ The civilian NPC system provides AI-driven non-player characters that populate t
 creating an immersive urban environment. Civilians wander, react to threats, and can serve as
 traders with configurable inventories.
 
-**Module:** `gangland-features/cops-n-crooks`  
-**Package:** `org.luckyraven.gangland.copsncrooks.npc.civilian.*`
+**Module:** `gangland-features/gangland-civilians`  
+**Package:** `org.luckyraven.gangland.civilians.npc.*`
 
 ---
 
@@ -120,9 +120,39 @@ Hostile civilians fight as squads (Keystone `NpcSquad`, one per faction and targ
 4. **Give up.** When nobody in the squad has seen the target for `AI.Combat.Search_Seconds`, a member clears its target,
    leaves the squad and goes `IDLE`. A player who dies or goes down drops every squad hunting them.
 
-Squads are created on the first hit and removed once empty. A civilian that enters `COMBAT` without a hit (turf
-defenders, the Quartermaster, the idle re-engage) hunts in a squad of its own, seeded with the target's position.
-Pedestrians (combat disabled) never join a squad.
+Squads are created on the first hit and pruned once every member has left. Since 0.12.0 a civilian that enters
+`COMBAT` without a hit (turf defenders, the Quartermaster, the idle re-engage) joins the same shared squad through
+`FactionSquads` (implemented by `CivilianService`, injected into every `CivilianNpc`): one squad per faction and
+target, whatever the entry path. Pedestrians (combat disabled) never join a squad.
+
+### Tactics, melee and retreat (0.12.0)
+
+`CivilianNpcFactory.applyTuning` gives each civilian its type's `AI.Combat.Tactics` engagement, `AI.Combat.Melee`
+profile (cooldown = `Attack_Interval_Ticks`) and a fire-rate scale from `NpcFireRate.scale(Fire_Rate_Multiplier,
+rangedAttack)`. A new squad takes the type's formation arc. The shipped arcs are narrow (gang_member 140,
+turf_defender 100, quartermaster 120) because same-faction damage is not cancelled. `CivilianCombatBehavior` fires a
+ranged attack at a target seen within `Alert_Range`; `Attack_Range` is the melee engage distance only. A member at
+or below `AI.Combat.Retreat.Health_Fraction` calls Keystone's `takeCover` and stays in its squad. With no cover in
+reach it fights on and asks again after 5 s.
+
+### Shouts and recruitment (0.12.0)
+
+Each faction squad's listener (`CivilianService.squadListener`) does two things:
+
+1. **Shouts.** It speaks the squad's `NpcSquadSignal`s as faction shouts in chat through a gangland-api `SquadRadio`,
+   the same engine as the police radio. Delivery tuning is the top-level `Shouts` block of `civilians.yml`, and the
+   lines are the `Shouts` block of `npc/civilian_messages(_es).yml`, with `%faction%` added. Gangs ship several kinds
+   muted (`Reposition`, `Route`, `Ack` and `Responding` are `[]`).
+2. **Recruitment.** A `CONTACT` edge queues its spotter (never recruiting from inside the listener, which must not
+   mutate its own squad). `tickAll` drains the queue after the NPC loop: `drainPendingRecruits` pulls every active,
+   combat-enabled hostile civilian of the spotter's faction within `max(its own Alert_Range, Shouts.Range)` that
+   isn't already fighting someone else onto the target, in the same squad. `Shouts.Range` (24) is above
+   `Alert_Range` (16), so a shout reaches allies that haven't seen the fight. When at least one new ally was
+   recruited, a `Rally` line reports the count (`%count%`). This runs with no player in range. `Shouts.Enabled:
+   false` silences the chat lines but keeps recruitment.
+
+`CivilianDeathListener` calls `memberDown` on the dying civilian's squad before its drops, so `Man_Down` /
+`Leader_Down` are shouted. Shutdown clears the squad reverse index and any queued recruits.
 
 ---
 
@@ -143,11 +173,30 @@ Types:
          Combat:
             Enabled: true
             Attack_Damage: 4.0
-            Attack_Range: 12.0
+            Attack_Range: 12.0       # Melee engage distance; ranged types fire within Alert_Range (0.12.0)
             Attack_Interval_Ticks: 20
             Alert_Range: 16.0        # Sight range + how far it hears a faction member being hit (default 16.0)
             Search_Seconds: 20       # Squad unseen this long -> give up (default 20)
+            Fire_Rate_Multiplier: 0.05   # Gun cadence; default 1 / Civilians.Behaviour.AI_Tick_Rate (0.12.0)
+            Retreat:                 # (0.12.0)
+               Enabled: true
+               Health_Fraction: 0.3
+               Radius: 12.0
+            Tactics:                 # (0.12.0) same keys as Cops.Tactics
+               Formation_Arc: 140.0
+               Strafe_Degrees: 12.0
+               Reposition_Ticks: 60
+               Moving_Aim_Error: 0.15
+            Melee:                   # (0.12.0) same keys as Cops.Melee
+               Reach: 3.0
+               Approach: 2.0
+               Damage_Spread: 0.20
+               Edge_Damage: 0.7
 ```
+
+The top-level `Shouts` block (`Enabled`,
+`Range`, `Target_Range`, gap, cooldown and priority keys) tunes shout delivery. See
+[Migrating to 0.12.0](../migration-0.12.0.md), section 3, for every key and default.
 
 ### CivilianNavigationConfig (12 methods)
 

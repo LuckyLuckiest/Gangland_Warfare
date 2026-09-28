@@ -58,8 +58,9 @@ A cop knows where the player is only through a sighting — its own or any squad
 they are within `Alert_Range` (default 40 blocks) and in its line of sight. The crime scene counts as the first
 sighting, and a player who hits a cop gives their position away to the whole squad.
 
-- **Seen in the last 1.5 seconds:** the squad chases them. Melee cops spread around them instead of queueing behind
-  each other; armed cops hold a firing spot 7–12 blocks away while they have a clear shot.
+- **Seen in the last 1.5 seconds:** the squad chases them. Melee cops surround them instead of queueing behind
+  each other; armed cops spread across their tier's formation arc 7–12 blocks away and keep moving while they fire
+  (see [Squad Tactics](#squad-tactics)).
 - **Out of sight:** the squad goes to where they were last seen, then fans out and searches in widening circles until
   someone spots them again.
 
@@ -75,15 +76,70 @@ AI ticks while no squad member could see the player, or the player got farther a
 
 ### Combat
 
-Within 12 blocks (ranged) or 4 blocks (melee), the cop switches to combat mode. Armed cops fire their configured weapon
-with proper reload cycles: they hold position while they see the player inside their firing band and climb after them
-like any other cop once they step out of view. When one cop is attacked, every cop in its group joins the fight.
+Armed cops fire at the player whenever they can see them within `Alert_Range`, with proper reload cycles. Inside
+their firing band they work a post on the squad's formation and side-step to a new spot every few seconds while
+they keep shooting; out of view they climb after the player like any other cop. A shooter holds its shot while a
+squad-mate stands in its line of fire.
+
+Melee cops start a swing within `Combat_Range` (4 blocks), but a swing only lands within `Melee.Reach` (3 blocks). It
+can miss (the tier's `Difficulty` sets the hit chance), does less damage the further out it lands, and varies by
+`Melee.Damage_Spread`. When one cop is attacked, every cop in its group joins the fight.
+
+A badly hurt cop (30% health or less by default) breaks off, radios it, and takes cover out of the player's sight for
+up to 10 seconds before it comes back out and fights on. A cop with no cover nearby keeps fighting.
 
 ### Cuffing
 
-Lower-tier cops that reach the player attempt to cuff rather than kill. A cop makes up to 3 cuffing attempts with a
-cooldown between each. If all attempts fail, the cop falls back to combat mode. Only one cop can attempt to cuff a
-player at a time — the others stand by.
+Officers and sergeants cuff first, then fight. While one cop cuffs the player, the rest of the group holds posts
+around them. Only one cop can cuff a player at a time. Every cuff the player breaks out of counts against the whole
+group: after `Max_Cuff_Attempts` escapes (3 by default), or as soon as the player hits a cop, the whole group stops
+cuffing, switches to combat and radios "Suspect is resisting!" The group stays hostile until the wanted level clears.
+
+---
+
+## Squad Tactics
+
+Every tier fights as a squad. Shooters spread over a **formation arc** around the player, so they never stand
+shoulder to shoulder on one side. Melee tiers always surround the player evenly, whatever the arc says.
+
+| Tier       | Role   | Formation arc | Strafe | Reposition |
+|------------|--------|---------------|--------|------------|
+| Officer    | Melee  | surround      | 10°    | every 4 s  |
+| Sergeant   | Melee  | surround      | 10°    | every 4 s  |
+| Lieutenant | Ranged | 200°          | 10°    | every 4 s  |
+| SWAT       | Ranged | 270°          | 15°    | every 3 s  |
+| Military   | Ranged | 330°          | 20°    | every 2 s  |
+
+A shooter that is walking aims a little worse (`Moving_Aim_Error`). Set `Tactics.Enabled: false` (for every tier, or
+in one tier's own `Tactics` block) to restore the 0.11 behaviour: shooters freeze in their firing band, with no
+formation and no radio signals.
+
+---
+
+## Police Radio
+
+Cops talk on the radio, and the lines show up in chat. Every player within `Radio.Range` (32 blocks) of the speaking
+cop hears them, bystanders included. The hunted player hears their own pursuers from `Radio.Target_Range` (64
+blocks). Each line plays a short click sound.
+
+- **Contacts:** a cop that spots the player calls out the distance and direction, and the squad calls it when it
+  loses sight of them.
+- **Orders and acknowledgements:** the squad leader orders members to push in or take a flank, and the ordered cop
+  answers ("Copy.") a moment later. Shooters also call out repositioning, reloading and check-fire.
+- **Casualties:** "Officer down!" when a cop dies, or a leader change when the leader dies.
+- **Dispatch:** a new wanted level, a tier escalation, and the stand-down when the player is cleared.
+- **Responders:** a Contact, Officer Down or Backup call pulls in up to `Radio.Responder_Max` (2) nearby cops within
+  `Radio.Range`. Only cops that are idle, walking home or chasing a civilian answer, including cops from another
+  wanted player's group. A cop that is cuffing, guarding or hunting a player of its own never leaves it. This is the
+  cops hearing each other, so it works even when no player is near.
+- **Backup:** when a cop goes down, the squad requests `Backup.Extra_Cops` (1) extra cops for
+  `Backup.Duration_Ticks` (30 s), at most once per `Backup.Cooldown_Ticks` (60 s). When the backup runs out, the
+  surplus cops that aren't fighting walk home.
+- **Resisting** and **retreat** lines, as described above.
+
+Lines are throttled per squad and per player, so chat never floods. Every line is in `npc/cop_radio_messages.yml`
+(Spanish: `_es.yml`). Each key is a list that one entry is picked from at random, and `[]` silences that line.
+`Radio.Enabled: false` silences the radio for players but keeps responders and backup working.
 
 ---
 
@@ -147,6 +203,10 @@ Cops:
          Cuff_Radius: 3.0            # Blocks from target at which this tier can attempt a cuff
          Can_Use_Weapons: false      # Whether this tier fires Gangland ranged weapons
          Skip_Cuffing: false         # If true, skips cuffing entirely and goes straight to lethal combat
+         Difficulty: EASY            # EASY / NORMAL / HARD / DEADLY: aim error, reaction time, fire rate, melee hit chance
+         Fire_Rate_Multiplier: 0.1   # Gun cadence as a fraction of the weapon's own fire rate (0.1 = the 0.11 cadence)
+         Tactics:                    # Overrides Cops.Tactics key by key for this tier
+            Formation_Arc: 200.0
          Weapon_Pool: # Items the cop can carry. One is selected randomly on spawn.
             - "WOODEN_SWORD"          # Vanilla Bukkit material name
             - "weapon:rifle"          # Custom Gangland weapon — prefix with "weapon:" then the weapon name
@@ -156,10 +216,51 @@ Cops:
          Boots: ""                   # Vanilla armor material for the boots slot
 ```
 
+`Fire_Rate_Multiplier` defaults to `1 / Cops.Behaviour.AI_Tick_Rate`, which keeps the 0.11 cadence. A vanilla
+`BOW`/`CROSSBOW` counts from a 15-tick base, so at `0.1` it fires every 150 ticks before `Difficulty`. See
+[Migrating to 0.12.0](../migration-0.12.0.md), section 5.
+
 `Weapon_Pool` accepts two formats:
 
 - Plain vanilla material (e.g., `IRON_SWORD`, `CROSSBOW`) — gives the NPC that vanilla item.
 - `weapon:<name>` (e.g., `weapon:rifle`) — gives the NPC a configured Gangland weapon from the `weapon/` folder.
+
+---
+
+### Tactics, Melee, Radio, Backup and Retreat (`cops.yml`)
+
+```yaml
+Cops:
+   Melee:
+      Reach: 3.0                   # A swing lands only within this many blocks
+      Approach: 2.0                # Melee cops surround here (capped at Cuff_Radius - 0.5); full damage inside it
+      Damage_Spread: 0.15          # Damage varies by up to +/-15%
+      Edge_Damage: 0.7             # Fraction of full damage at the edge of Reach
+   Tactics:                        # Defaults for every tier; a tier's own Tactics block overrides key by key
+      Enabled: true                # false = the 0.11 freeze-in-band behaviour
+      Formation_Arc: 270.0         # Degrees the shooters spread over (melee tiers always surround)
+      Strafe_Degrees: 15.0         # Side-step per reposition
+      Reposition_Ticks: 60         # Server ticks between repositions (+/-25%)
+      Moving_Aim_Error: 0.10       # Extra aim error while walking
+   Radio:
+      Enabled: true                # false silences chat; responders and backup still work
+      Range: 32.0                  # Who hears a line, and how far other cops hear a call
+      Target_Range: 64.0           # How far the hunted player hears their pursuers
+      Squad_Gap_Ticks: 30          # Gap between two lines of one squad (priority lines and acks skip it)
+      Player_Gap_Ticks: 20         # Gap between two low-priority lines reaching one player
+      Ack_Delay_Ticks: 25          # Delay before an ordered cop answers
+      Responder_Max: 2             # Nearby cops pulled in per call (0 = none)
+      # Priority (line kinds that skip the gaps), Cooldown_Ticks (per-kind repeat cooldown) and Sound: see the file
+   Backup:
+      Enabled: true
+      Extra_Cops: 1                # On top of the wanted-level count, capped by Max_Per_Player
+      Duration_Ticks: 600          # 30 s; afterwards the surplus cops that aren't fighting walk home
+      Cooldown_Ticks: 1200         # 60 s between requests from one group
+   Retreat:
+      Enabled: true
+      Health_Fraction: 0.3         # Retreat at or below 30% health
+      Radius: 12.0                 # Blocks searched for cover the player can't see
+```
 
 ---
 
@@ -172,11 +273,11 @@ Cops:
       AI_Tick_Rate: 10              # Ticks between each AI decision cycle. Lower = faster reactions, more CPU.
       Spawn_Check_Rate: 40          # Ticks between checks that decide whether to spawn more cops
       Cuff_Radius: 3.0              # Default cuff radius in blocks (individual tiers override this)
-      Max_Cuff_Attempts: 3          # Cuff attempts before the cop gives up and switches to combat
+      Max_Cuff_Attempts: 3          # Cuffs the player may break out of (across the group) before the group fights
       Cuff_Cooldown_Ticks: 100      # Ticks between consecutive cuffing attempts
       Alert_Range: 40.0             # Sight range: a cop sees a wanted player this close with line of sight; shared by the squad
-      Combat_Range: 4.0             # Melee attack range in blocks (ranged range is derived from this)
-      Attack_Cooldown_Ticks: 20     # Ticks between melee attacks
+      Combat_Range: 4.0             # Distance at which a melee cop starts a swing (ranged cops fire within Alert_Range)
+      Attack_Cooldown_Ticks: 20     # Server ticks between melee swings
 ```
 
 ---

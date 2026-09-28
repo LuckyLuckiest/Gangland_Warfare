@@ -12,9 +12,11 @@ before except where a "behaviour changed" note below applies.
 
 - **Keystone 1.13.0.** Replace `Keystone-<version>.jar` in `plugins/`. Gangland 0.12.0 is built against Keystone's
   new squad-engagement, melee-band and squad-signal APIs and needs it.
-- **Bartizan 0.6.0** if you use Bartizan weapons on cops or civilians. It adds server-tick NPC gun cadence and lets
-  an NPC re-aim mid-burst while it strafes. On an older Bartizan the new Keystone overrides are simply never called
-  — NPCs still shoot, just at the old (much slower) cadence and without the moving re-aim.
+- **Bartizan 0.6.0** if you use Bartizan weapons on cops or civilians. It is required for the "move while shooting"
+  fix: it counts NPC gun cadence in server ticks, re-aims each shot of a burst at a moving target, and reports
+  reloads (the squad's `Reloading` radio line and the shooter backing off to reload). On Bartizan 0.5.x the new
+  Keystone hooks are never called: NPCs still shoot at the same cadence as 0.11 (`Fire_Rate_Multiplier` has no
+  effect on their Bartizan guns), but without the moving re-aim or the reload signal.
 - **Citizens 2.0.42 or newer** is recommended (unchanged floor from 0.11.0); it adds the look-at-target visual while
   an NPC is repositioning. An older Citizens still works, just without that visual — the aim itself is unaffected.
 
@@ -71,15 +73,24 @@ These keys don't apply to `pedestrian` or `trader` (both have `Combat.Enabled: f
 
 `civilians.yml`'s per-type `Attack_Range` keys have the same "melee-only, ranged fires within `Alert_Range`" change.
 
-## 5. Gun cadence: server ticks, ~5× faster, offset by `Fire_Rate_Multiplier`
+## 5. Gun cadence: server ticks, offset exactly by `Fire_Rate_Multiplier`
 
 Keystone 1.13.0 and Bartizan 0.6.0 move NPC gun cadence from "one weapon tick per AI tick" to real server ticks, so
-an NPC's gun now advances while it strafes instead of only on its own AI heartbeat. On its own that's roughly a 5×
-cadence increase (cops today: ~0.4 rounds/s → ~2/s; civilians: ~0.2/s → ~1/s). The shipped `Fire_Rate_Multiplier`
-defaults (`0.1` for cops, `0.05` for civilians) are tuned to cancel that out and land back near today's time-to-kill;
-confirm this on your own server, since it depends on your weapon mix — a `Fire_Rate_Multiplier` of `1.0` means "as
-fast as a player holding the same gun." The value is a fraction of the weapon's own fire rate, applied on top of the
-NPC's `Difficulty` (harder difficulties already fire faster).
+an NPC's gun now advances while it strafes instead of only on its own AI heartbeat. On its own that would multiply
+the cadence by the AI tick rate: **10× for cops** (`Cops.Behaviour.AI_Tick_Rate: 10`) and **20× for civilians**
+(`Civilians.Behaviour.AI_Tick_Rate: 20`). `Fire_Rate_Multiplier` cancels it. The shipped defaults (`0.1` for cops,
+`0.05` for civilians) are exactly `1 / AI_Tick_Rate`, which restores the 0.11 cadence exactly, not approximately.
+A `cops.yml`/`civilians.yml` without the key gets `1 / AI_Tick_Rate` for whatever tick rate you run. If you run a
+non-default `AI_Tick_Rate` and copy the new files, set the multiplier to `1 / your AI_Tick_Rate`.
+
+- **Bartizan guns:** the multiplier is a fraction of the weapon's own (player) fire rate: `1.0` = as fast as a player
+  holding the same gun, `0.1` = a tenth as often.
+- **Vanilla `BOW` / `CROSSBOW`** (a `Weapon_Pool` entry without `weapon:`, or any ranged NPC on a server without
+  Bartizan): counted from a 15-server-tick base, so the default still fires every 150 ticks (7.5 s) for cops and
+  every 300 ticks (15 s) for civilians before `Difficulty`, the same as 0.11.
+
+The multiplier is applied on top of the NPC's `Difficulty` (harder difficulties already fire faster). Raising it
+above the default makes NPCs fire faster than 0.11 and shortens time-to-kill.
 
 ## 6. Behaviour players (and admins) will notice
 
@@ -130,5 +141,5 @@ NPC's `Difficulty` (harder difficulties already fire faster).
 ## 8. Required versions
 
 - Keystone **>= 1.13.0** (required).
-- Bartizan **>= 0.6.0** (optional — only needed for the server-tick NPC gun cadence and moving re-aim on Bartizan
-  weapons; an older Bartizan still works, just at the old cadence).
+- Bartizan **>= 0.6.0** (required for the move-while-shooting fix when Bartizan weapons are in use; see §1. A
+  server without Bartizan needs nothing, since its NPCs use vanilla bows and crossbows).
