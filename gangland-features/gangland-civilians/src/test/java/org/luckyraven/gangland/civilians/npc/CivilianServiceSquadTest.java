@@ -447,6 +447,23 @@ class CivilianServiceSquadTest {
 	}
 
 	@Test
+	@DisplayName("shutdown (every reload's onPreClear) forgets the reverse index and queued recruits with the squads")
+	void shutdown_clearsReverseIndexAndPendingRecruits() {
+		CivilianNpc victim = civilian("gang", 0.0);
+		when(victim.getEntity()).thenReturn(victimEntity);
+		when(registry.getActiveNpcs()).thenReturn(List.of(victim));
+		service.alertFaction(victim, attacker, true);
+
+		ArgumentCaptor<NpcSquad> squad = ArgumentCaptor.forClass(NpcSquad.class);
+		verify(victim).joinSquad(squad.capture(), eq(attackerId));
+		service.squadListener.onSignal(squad.getValue(), NpcSquadSignal.CONTACT, victim, attacker.getLocation());
+
+		service.shutdown();
+
+		assertEquals(Map.of(), service.voice.extras(squad.getValue()), "no stale reverse-index entry survives");
+	}
+
+	@Test
 	@DisplayName("a civilian spawned through CivilianSpawnManager ends up with the service as its FactionSquads")
 	void spawnPath_wiresFactionSquads() {
 		CivilianNpcRegistry realRegistry = new CivilianNpcRegistry();

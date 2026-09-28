@@ -450,6 +450,8 @@ public class CivilianService implements BeanLifecycle, FactionSquads {
 		}
 		registry.clear();
 		squads.clear();
+		keyOf.clear();           // survives reloads otherwise: nothing prunes an entry whose squad left squads
+		pendingRecruits.clear();
 	}
 
 	// ── Proximity spawners ────────────────────────────────────────────────────
