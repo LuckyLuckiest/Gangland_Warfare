@@ -106,8 +106,7 @@ public class CopNpcFactory {
 
 		CopNpc copNpc = new CopNpc(plugin, npc, tierConfig, behaviors, spawnLocation, configProvider);
 		copNpc.setTargetFilter(downedTargetFilter);
-		copNpc.setEngagement(tierConfig.tactics().engagement());
-		copNpc.setMeleeProfile(meleeFor(configProvider.getMeleeProfile(), tierConfig));
+		applyTuning(copNpc, tierConfig, configProvider);
 
 		// equip() runs first so the ranged-attack block below can override its vanilla weaponPool main-hand item
 		// with the Bartizan-built weapon item, reproducing 0.8.4's heldWeapon != null ? heldWeapon.buildItem() :
@@ -133,6 +132,13 @@ public class CopNpcFactory {
 		npc.getNavigator().getLocalParameters().speedModifier((float) tierConfig.speed());
 
 		return copNpc;
+	}
+
+	/** Squad engagement, melee band and gun cadence from the tier's config ({@code Fire_Rate_Multiplier} inverted). */
+	static void applyTuning(CopNpc copNpc, CopTierConfig tierConfig, CopConfigProvider configProvider) {
+		copNpc.setEngagement(tierConfig.tactics().engagement());
+		copNpc.setMeleeProfile(meleeFor(configProvider.getMeleeProfile(), tierConfig));
+		copNpc.setFireRateScale(1.0 / tierConfig.fireRateMultiplier());
 	}
 
 	/**

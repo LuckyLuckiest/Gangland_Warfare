@@ -5,6 +5,7 @@ import lombok.CustomLog;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.gangland.npc.TacticsConfig;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
 import org.luckyraven.keystone.npc.NpcDifficulty;
@@ -82,6 +83,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final TacticsConfig   tacticsDefault;
 	private final RadioSettings   radioSettings;
 	private final BackupSettings  backupSettings;
+	private final RetreatSettings retreatSettings;
 
 	/**
 	 * Primary positional-config constructor.
@@ -145,6 +147,9 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.tacticsDefault = parseTacticsDefault(cops, report);
 		this.radioSettings  = parseRadioSettings(cops, report);
 		this.backupSettings = parseBackupSettings(cops, report);
+		MappingNode retreatSection = cops == null ? null : cops.get("Retreat").asMapping().orNull();
+		this.retreatSettings = RetreatSettings.read(retreatSection != null ? NodeReader.of(retreatSection, report) : null,
+		                                            report, RetreatSettings.DEFAULT);
 
 		loadTiers(cops, report, itemParser);
 		buildCopsPerWantedLevel(copSettings);
@@ -362,6 +367,11 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		return backupSettings;
 	}
 
+	@Override
+	public RetreatSettings getRetreatSettings() {
+		return retreatSettings;
+	}
+
 	private NpcMeleeProfile parseMeleeProfile(@Nullable NodeReader cops, ConfigReport report) {
 		NpcMeleeProfile defaults = NpcMeleeProfile.DEFAULT;
 		MappingNode meleeSection = cops == null ? null : cops.get("Melee").asMapping().orNull();
@@ -467,7 +477,9 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 					parseItem(wear == null ? null : wear.get("Leggings").asString().orNull(), itemParser),
 					parseItem(wear == null ? null : wear.get("Boots").asString().orNull(), itemParser),
 					parseDifficulty(difficultyStr, "tier " + tierNum),
-					TacticsConfig.read(tierTactics, report, tacticsDefault));
+					TacticsConfig.read(tierTactics, report, tacticsDefault),
+					// no key: one weapon tick per AI tick, the cadence cops had before 1.13 moved guns onto server ticks
+					tier.get("Fire_Rate_Multiplier").asDouble().min(0.01).orDefault(1.0 / Math.max(1, aiTickRate)));
 
 			tiers.put(tierNum, tierConfig);
 		}

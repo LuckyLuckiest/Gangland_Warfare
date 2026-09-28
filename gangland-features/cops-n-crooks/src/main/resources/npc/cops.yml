@@ -34,6 +34,12 @@
 #   Difficulty:     Combat profile that scales aim error, reaction time, fire rate, and melee
 #                   damage. One of EASY, NORMAL, HARD, DEADLY. Defaults to NORMAL when omitted.
 #   Tactics:        Per-tier squad-tactics override, read over Cops.Tactics below (see its own comments).
+#   Fire_Rate_Multiplier: Gun cadence as a fraction of the weapon's own (player) fire rate, on top of the
+#                   Difficulty's fire rate. 1.0 = as fast as a player holding the gun; 0.1 = a tenth as often.
+#                   Must be above 0. When omitted, 1 / settings.yml Cops.Behaviour.AI_Tick_Rate.
+#                   The shipped 0.1 keeps the pre-0.12 time-to-kill: NPC guns used to advance one weapon tick
+#                   per cop AI tick (AI_Tick_Rate: 10), i.e. a tenth of the weapon's rate. Vanilla CROSSBOW picks
+#                   fire every 30 x 10 = 300 ticks at NORMAL (15 s), half as often as before.
 # ============================================
 Cops:
    # Melee band for every cop swing. The cooldown is settings.yml Cops.Behaviour.Attack_Cooldown_Ticks.
@@ -105,6 +111,8 @@ Cops:
          Backup: 400
          Responding: 100
          Ack: 40
+         Fall_Back: 100
+         In_Cover: 200
       # Short click played to each listener with every line (SoundConfiguration shape).
       Sound:
          Name: BLOCK_NOTE_BLOCK_HAT
@@ -119,6 +127,14 @@ Cops:
       Duration_Ticks: 600
       # Minimum gap between two backup requests from one group (1200 = 60 s).
       Cooldown_Ticks: 1200
+   # A badly hurt cop breaks off, radios it (Lines.Fall_Back / In_Cover) and takes cover out of the suspect's sight.
+   Retreat:
+      # Set to false and cops fight on until they drop.
+      Enabled: true
+      # Retreat at or below this fraction of max health (0-1; 0.3 = 30%).
+      Health_Fraction: 0.3
+      # Blocks searched around the cop for a spot the suspect cannot see (2-32).
+      Radius: 12.0
    Tiers:
       1:
          Display_Name: "&9Officer"
@@ -129,6 +145,8 @@ Cops:
          Can_Use_Weapons: false
          Skip_Cuffing: false
          Difficulty: EASY
+         # Gun cadence: a fraction of the weapon's own fire rate (see the header). Only used with Can_Use_Weapons.
+         Fire_Rate_Multiplier: 0.1
          # Accepts vanilla materials (IRON_SWORD) or custom items (weapon:rifle, LEATHER_HELMET{color=blue})
          Weapon_Pool:
             - "WOODEN_SWORD"
@@ -151,6 +169,8 @@ Cops:
          Can_Use_Weapons: false
          Skip_Cuffing: false
          Difficulty: EASY
+         # Gun cadence: a fraction of the weapon's own fire rate (see the header). Only used with Can_Use_Weapons.
+         Fire_Rate_Multiplier: 0.1
          Weapon_Pool:
             - "STONE_SWORD"
          Wearables:
@@ -172,6 +192,8 @@ Cops:
          Can_Use_Weapons: true
          Skip_Cuffing: false
          Difficulty: NORMAL
+         # Gun cadence: a fraction of the weapon's own fire rate (see the header). Only used with Can_Use_Weapons.
+         Fire_Rate_Multiplier: 0.1
          Weapon_Pool:
             - "weapon:rifle"
             - "CROSSBOW"
@@ -194,6 +216,8 @@ Cops:
          Can_Use_Weapons: true
          Skip_Cuffing: true
          Difficulty: HARD
+         # Gun cadence: a fraction of the weapon's own fire rate (see the header). Only used with Can_Use_Weapons.
+         Fire_Rate_Multiplier: 0.1
          Weapon_Pool:
             - "weapon:rifle"
             - "CROSSBOW"
@@ -216,6 +240,8 @@ Cops:
          Can_Use_Weapons: true
          Skip_Cuffing: true
          Difficulty: DEADLY
+         # Gun cadence: a fraction of the weapon's own fire rate (see the header). Only used with Can_Use_Weapons.
+         Fire_Rate_Multiplier: 0.1
          Weapon_Pool:
             - "weapon:rifle"
             - "CROSSBOW"

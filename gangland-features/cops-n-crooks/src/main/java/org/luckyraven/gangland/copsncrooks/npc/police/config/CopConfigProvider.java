@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.config;
 
+import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
 import org.luckyraven.keystone.npc.NpcMeleeProfile;
 import org.luckyraven.keystone.npc.NpcNavigationConfig;
@@ -27,7 +28,8 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 					Map.entry("Reposition", 5000L), Map.entry("Search", 15000L), Map.entry("Route", 15000L),
 					Map.entry("No_Route", 15000L), Map.entry("Check_Fire", 8000L), Map.entry("Reloading", 8000L),
 					Map.entry("Man_Down", 5000L), Map.entry("Leader_Down", 5000L), Map.entry("Resisting", 10000L),
-					Map.entry("Backup", 20000L), Map.entry("Responding", 5000L), Map.entry("Ack", 2000L)),
+					Map.entry("Backup", 20000L), Map.entry("Responding", 5000L), Map.entry("Ack", 2000L),
+					Map.entry("Fall_Back", 5000L), Map.entry("In_Cover", 10000L)),
 			Set.of("Contact", "Man_Down", "Leader_Down", "Backup", "Resisting", "Dispatch_Wanted", "Escalate",
 			      "Stand_Down"),
 			"BLOCK_NOTE_BLOCK_HAT", 0.4f, 1.8f);
@@ -263,5 +265,10 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 	/** Backup-request tuning ({@code Cops.Backup}). */
 	default BackupSettings getBackupSettings() {
 		return BackupSettings.DEFAULT;
+	}
+
+	/** When a badly hurt cop breaks off to cover ({@code Cops.Retreat}). */
+	default RetreatSettings getRetreatSettings() {
+		return RetreatSettings.DEFAULT;
 	}
 }
