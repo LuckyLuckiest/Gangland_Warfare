@@ -30,9 +30,10 @@ import java.util.function.Supplier;
  * for lines a consumer speaks itself (dispatch, backup, resisting, ...).
  * <p>
  * Every line clears the same gauntlet ({@link #speak}): disabled or an empty line pool silences it outright; a
- * non-priority, non-ack line respects the squad gap; every line (including priority ones and acks) respects its own
- * per-key cooldown; and, per listening player, a non-priority line respects the player gap. Nothing is queued —
- * a throttled line is dropped, never delayed.
+ * non-priority, non-ack line respects the squad gap (only a delivered non-priority line restarts it); every line
+ * (including priority ones and acks) respects its own per-key cooldown; and, per listening player, a non-priority
+ * line respects the player gap. Voice extras and call extras fill both the line and its format. Nothing is queued
+ * — a throttled line is dropped, never delayed.
  *
  * @since 1.13.0
  */
@@ -158,7 +159,9 @@ public final class SquadRadio {
 
 		List<String> formatPool = lines.lines(formatKey);
 		String       format     = formatPool.isEmpty() ? "%line%" : formatPool.get(0);
-		String       text = GanglandChatUtil.color(format.replace("%line%", filled).replace("%unit%", callsign));
+		// %line% last, so text inside the filled line is never re-substituted.
+		String       text = GanglandChatUtil.color(
+				withExtras(format.replace("%unit%", callsign), merged).replace("%line%", filled));
 
 		int delivered = 0;
 		for (Player player : world.getPlayers()) {
@@ -186,7 +189,9 @@ public final class SquadRadio {
 		pruneLastHeard(now);
 
 		if (delivered == 0) return false;
-		state.lastLineAt = now;
+		// A priority line skips the squad gap, so it does not restart it either: the order that follows a Contact
+		// in the same tick must still get through.
+		if (!priority) state.lastLineAt = now;
 		state.lastByKey.put(key, now);
 		return true;
 	}
@@ -201,10 +206,14 @@ public final class SquadRadio {
 		                        .replace("%direction%", directionOf(origin, spot))
 		                        .replace("%side%", sideOf(hunted, spot));
 
+		return withExtras(filled, extra);
+	}
+
+	private static String withExtras(String text, Map<String, String> extra) {
 		for (Map.Entry<String, String> entry : extra.entrySet()) {
-			filled = filled.replace("%" + entry.getKey() + "%", entry.getValue());
+			text = text.replace("%" + entry.getKey() + "%", entry.getValue());
 		}
-		return filled;
+		return text;
 	}
 
 	private String distanceOf(Location origin, @Nullable Location spot) {

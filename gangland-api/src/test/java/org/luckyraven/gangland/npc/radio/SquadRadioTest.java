@@ -499,4 +499,61 @@ class SquadRadioTest {
 			assertTrue(mapped.add(key), "duplicate radio key for " + signal);
 		}
 	}
+
+	@Test
+	@DisplayName("voice extras fill the Format wrapper too, not just the line")
+	void voiceExtras_fillFormat() {
+		settings = new RadioSettings(true, 20, 40, 1500, 0, 25, 2, Map.of(), Set.of(), null, 1f, 1f);
+		lines    = key -> key.equals("Format") ? List.of("[%faction%] %unit%: %line%")
+		                                       : LINE_POOLS.getOrDefault(key, List.of());
+		radio    = new SquadRadio(() -> settings, lines, clock::get, () -> rngValue[0], (r, d) -> {});
+		RadioVoice gangVoice = new RadioVoice() {
+			@Override
+			public String callsign(AbstractNpc npc) {
+				return "G-1";
+			}
+
+			@Override
+			public LivingEntity hunted(NpcSquad squad) {
+				return null;
+			}
+
+			@Override
+			public Map<String, String> extras(NpcSquad squad) {
+				return Map.of("faction", "Ballas");
+			}
+		};
+		AbstractNpc member = newMember(0, 64, 0, "G-1");
+		Player      p      = newPlayer(1, 64, 0);
+		when(world.getPlayers()).thenReturn(List.of(p));
+		NpcSquad squad = new NpcSquad();
+		squad.add(member);
+
+		radio.say(squad, gangVoice, member.getEntity(), "G-1", "Check_Fire", "Format", null, null, Map.of());
+
+		ArgumentCaptor<String> text = ArgumentCaptor.forClass(String.class);
+		verify(p).sendMessage(text.capture());
+		assertTrue(text.getValue().contains("[Ballas]"), text.getValue());
+	}
+
+	@Test
+	@DisplayName("a priority Contact does not eat the squad gap: the order right after it is delivered and acked")
+	void priorityContact_doesNotBlockFollowingOrder() {
+		AbstractNpc leader = newMember(0, 64, 0, "SWAT-1");
+		AbstractNpc member = newMember(2, 64, 0, "SWAT-2");
+		Player      p      = newPlayer(1, 64, 0);
+		when(world.getPlayers()).thenReturn(List.of(p));
+		NpcSquad squad = new NpcSquad();
+		squad.add(leader);
+		squad.add(member);
+
+		assertTrue(radio.say(squad, voice, leader.getEntity(), "SWAT-1", "Contact", "Format",
+		                     new Location(world, 10, 64, 0), null, Map.of()));
+		settings = new RadioSettings(true, 20, 40, 1500, 0, 25, 2, Map.of("Contact", 8000L), Set.of("Contact"),
+		                             null, 1f, 1f); // player gap 0: this test is about the squad gap alone
+		radio.listener(voice).onSignal(squad, NpcSquadSignal.FLANK_LEFT, member, new Location(world, 2, 64, 0));
+
+		verify(p, times(2)).sendMessage(anyString());
+		assertEquals(1, scheduled.size());
+	}
 }
