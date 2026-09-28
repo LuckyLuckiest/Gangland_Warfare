@@ -107,6 +107,8 @@ public class CivilianNpcFactory implements BeanLifecycle {
 		CivilianNpc civilian = new CivilianNpc(plugin, npc, typeConfig, groupId, behaviors,
 		                                       spawnLocation, navConfig, itemParser);
 		civilian.setTargetFilter(downedTargetFilter);
+		civilian.setEngagement(typeConfig.ai().tactics().engagement());
+		civilian.setMeleeProfile(typeConfig.ai().melee());
 
 		// Apply group trait bonuses before equipping
 		double healthBonus = groupConfig != null ? groupConfig.healthBonus() : 0.0;

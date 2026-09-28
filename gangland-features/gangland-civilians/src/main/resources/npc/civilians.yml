@@ -26,6 +26,50 @@ Default_Entities:
       - "PLAYER"
    Police: []
 
+# +---------+ #
+# | Shouts  | #
+# +---------+ #
+#
+# Faction-shout delivery tuning (phase H12). The shouted text itself lives in civilian_messages.yml's own
+# Shouts block. Same shape as cops.yml's Cops.Radio, minus the Sound/Dispatch pieces gangs don't use.
+Shouts:
+   # Set to false to silence faction shouts (recruitment by shout still works).
+   Enabled: true
+   # Players within this many blocks of the shouting NPC hear it. A Contact shout also recruits same-faction allies
+   # this close to the shouter. Keep it above Alert_Range so a shout reaches further than sight.
+   Range: 24.0
+   # The hunted player hears the shouts from this far away.
+   Target_Range: 32.0
+   # Minimum gap between two lines from one squad (priority lines and acks skip it).
+   Squad_Gap_Ticks: 30
+   # Minimum gap between two low-priority lines reaching one player, across all squads.
+   Player_Gap_Ticks: 20
+   # Ticks before an ordered member acknowledges a delivered order. Forced to at least Player_Gap_Ticks + 5.
+   Ack_Delay_Ticks: 25
+   # Nearby allies pulled in per shout. Gangs recruit through the Contact shout itself, not this counter.
+   Responder_Max: 0
+   # Line kinds that skip the squad and player gaps (they still respect their own cooldown).
+   Priority:
+      - "Contact"
+      - "Man_Down"
+      - "Leader_Down"
+      - "Rally"
+   # One squad never repeats the same kind of line within this many ticks.
+   Cooldown_Ticks:
+      Contact: 160
+      Contact_Lost: 200
+      Engage: 300
+      Push: 200
+      Flank_Left: 200
+      Flank_Right: 200
+      Search: 300
+      No_Route: 300
+      Check_Fire: 160
+      Reloading: 200
+      Man_Down: 100
+      Leader_Down: 100
+      Rally: 120
+
 # +----------------+ #
 # | Civilian Types | #
 # +----------------+ #
@@ -52,7 +96,10 @@ Default_Entities:
 #                 aim error, reaction time, fire rate, and melee damage. Defaults to NORMAL when omitted.
 #                 Combat.Alert_Range (default 16.0) is the NPC's sight range and how far it hears a faction member
 #                 being hit. Combat.Search_Seconds (default 20) is how long its squad may go without seeing the
-#                 target before the NPC gives up.
+#                 target before the NPC gives up. Combat.Attack_Range is the melee engage distance; ranged types
+#                 fire at anything they see within Alert_Range. Combat.Tactics (formation arc, engagement) and
+#                 Combat.Melee (reach, approach, damage falloff; the cooldown is always Attack_Interval_Ticks) tune
+#                 squad behaviour (phase H12) — defaults below apply when a type omits either block.
 
 Types:
    pedestrian:
@@ -118,11 +165,22 @@ Types:
          Combat:
             Enabled: true
             Attack_Damage: 4.0
+            # Melee engage distance; ranged types (this one carries a rifle) fire at anything seen within Alert_Range.
             Attack_Range: 12.0
             Attack_Interval_Ticks: 20
             Difficulty: NORMAL
             Alert_Range: 16.0
             Search_Seconds: 20
+            Tactics:
+               Formation_Arc: 140.0
+               Strafe_Degrees: 12.0
+               Reposition_Ticks: 60
+               Moving_Aim_Error: 0.15
+            Melee:
+               Reach: 3.0
+               Approach: 2.0
+               Damage_Spread: 0.20
+               Edge_Damage: 0.7
 
    trader:
       Display_Name: "&e&lTrader"
@@ -179,11 +237,17 @@ Types:
          Combat:
             Enabled: true
             Attack_Damage: 5.0
+            # Melee engage distance; ranged types fire at anything they see within Alert_Range.
             Attack_Range: 14.0
             Attack_Interval_Ticks: 18
             Difficulty: NORMAL
             Alert_Range: 16.0
             Search_Seconds: 20
+            Tactics:
+               Formation_Arc: 100.0
+               Strafe_Degrees: 8.0
+               Reposition_Ticks: 80
+               Moving_Aim_Error: 0.12
 
    quartermaster:
       Display_Name: "&6&lQuartermaster"
@@ -212,11 +276,17 @@ Types:
          Combat:
             Enabled: true
             Attack_Damage: 6.0
+            # Melee engage distance; ranged types fire at anything they see within Alert_Range.
             Attack_Range: 14.0
             Attack_Interval_Ticks: 16
             Difficulty: HARD
             Alert_Range: 16.0
             Search_Seconds: 20
+            Tactics:
+               Formation_Arc: 120.0
+               Strafe_Degrees: 10.0
+               Reposition_Ticks: 70
+               Moving_Aim_Error: 0.12
 
 # +--------+ #
 # | Groups | #
