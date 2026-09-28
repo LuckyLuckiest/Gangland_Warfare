@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.npc.AbstractNpc;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
+import org.luckyraven.gangland.civilians.npc.FactionSquads;
 import org.luckyraven.gangland.civilians.npc.config.CivilianAIBehaviorConfig;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.npc.state.CivilianBehavior;
@@ -41,8 +42,17 @@ public class CivilianCombatBehavior implements CivilianBehavior {
 			return;
 		}
 
-		CivilianAIBehaviorConfig ai    = npc.getTypeConfig().ai();
-		NpcSquad                 squad = squadFor(npc, target);
+		CivilianAIBehaviorConfig ai = npc.getTypeConfig().ai();
+
+		// Badly hurt: break off and take cover instead of pursuing/attacking this tick (radioed as Fall_Back/In_Cover
+		// through the squad listener once Keystone picks a spot) - "when" is this class's call, per takeCover's contract.
+		LivingEntity self = npc.getEntity();
+		if (self != null && ai.retreat().shouldRetreat(self.getHealth(), self.getMaxHealth())) {
+			npc.takeCover(target, ai.retreat().radius());
+			return;
+		}
+
+		NpcSquad squad = squadFor(npc, target);
 
 		npc.pursue(target, squad, ai.alertRange());
 
@@ -53,8 +63,12 @@ public class CivilianCombatBehavior implements CivilianBehavior {
 			return;
 		}
 
+		// Attack gate: melee within Attack_Range; ranged at anything it can see within Alert_Range (issue 4 critic
+		// fix - a ranged civilian must not have a dead zone between Attack_Range and its engage band).
+		double range = npc.isRangedAttacker() ? ai.alertRange() : ai.attackRange();
+
 		// Attack only with line of sight - never through a wall (matches the cops' LOS gate)
-		if (npc.distanceTo(target) <= ai.attackRange() && npc.canAttack() && npc.hasLineOfSight(target)) {
+		if (npc.distanceTo(target) <= range && npc.canAttack() && npc.hasLineOfSight(target)) {
 			if (target instanceof Player player) {
 				npc.attack(player);
 			} else {
@@ -73,16 +87,17 @@ public class CivilianCombatBehavior implements CivilianBehavior {
 	// ── Helpers ───────────────────────────────────────────────────────────────
 
 	/**
-	 * The civilian's squad against {@code target}: the faction squad a hit put it in, or - when it entered combat
-	 * another way (turf defender retarget, idle re-engage) or its target switched - a squad of its own, told where the
-	 * target is now (the civilian counterpart of a cop's wanted start).
+	 * The civilian's squad against {@code target}: the faction squad a hit put it in (or its target switched onto), or
+	 * - when it entered combat another way (turf defender retarget, idle re-engage) - the shared faction squad
+	 * {@link CivilianNpc#getFactionSquads()} resolves, falling back to a private squad of its own when none is wired.
 	 */
 	private NpcSquad squadFor(CivilianNpc npc, LivingEntity target) {
 		NpcSquad squad = npc.getSquad();
 		if (squad != null && target.getUniqueId().equals(npc.getSquadTargetId())) return squad;
 
-		// ponytail: a civilian that entered combat without a hit hunts alone (defenders of one turf do not share a
-		// squad); route those entries through CivilianService's faction squads if they should team up
+		FactionSquads factionSquads = npc.getFactionSquads();
+		if (factionSquads != null) return factionSquads.squadFor(npc, target);
+
 		NpcSquad own = new NpcSquad();
 		own.reportSighting(target.getLocation());
 		npc.joinSquad(own, target.getUniqueId());
