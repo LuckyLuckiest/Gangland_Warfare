@@ -127,4 +127,19 @@ class RadioSettingsReadTest {
 		assertEquals(0.9f, settings.volume());
 		assertEquals(DEFAULTS.pitch(), settings.pitch());
 	}
+
+	@Test
+	@DisplayName("a partial Cooldown_Ticks block overrides only the keys it names; the rest keep their default")
+	void partialCooldownTicks_mergesOverDefaults() {
+		RadioSettings defaults = new RadioSettings(true, 32.0, 64.0, 1500, 1000, 25, 2,
+		                                           Map.of("Contact", 8000L, "Man_Down", 4000L), Set.of("Contact"),
+		                                           null, 0.4f, 1.8f);
+		ConfigReport report = new ConfigReport();
+		NodeReader   reader = readerOf(Map.of("Cooldown_Ticks", Map.of("Contact", 40)), report);
+
+		RadioSettings settings = RadioSettings.read(reader, report, defaults);
+
+		assertEquals(2000L, settings.cooldownFor("Contact"));
+		assertEquals(4000L, settings.cooldownFor("Man_Down"));
+	}
 }

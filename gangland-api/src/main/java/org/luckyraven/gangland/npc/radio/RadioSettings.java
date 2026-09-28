@@ -110,7 +110,7 @@ public record RadioSettings(boolean enabled, double range, double targetRange, l
 		if (mapping == null) return fallback;
 
 		NodeReader         cooldowns = NodeReader.of(mapping, report);
-		Map<String, Long> result    = new LinkedHashMap<>();
+		Map<String, Long> result    = new LinkedHashMap<>(fallback); // key by key: unnamed keys keep their default
 		for (String key : cooldowns.keys()) {
 			int ticks = readClampedInt(cooldowns, report, key, 0);
 			result.put(key, ticks * MS_PER_TICK);
