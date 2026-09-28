@@ -20,6 +20,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.keystone.npc.NpcMeleeProfile;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.npc.spi.NpcRangedAttack;
@@ -105,6 +106,8 @@ public class CopNpcFactory {
 
 		CopNpc copNpc = new CopNpc(plugin, npc, tierConfig, behaviors, spawnLocation, configProvider);
 		copNpc.setTargetFilter(downedTargetFilter);
+		copNpc.setEngagement(tierConfig.tactics().engagement());
+		copNpc.setMeleeProfile(meleeFor(configProvider.getMeleeProfile(), tierConfig));
 
 		// equip() runs first so the ranged-attack block below can override its vanilla weaponPool main-hand item
 		// with the Bartizan-built weapon item, reproducing 0.8.4's heldWeapon != null ? heldWeapon.buildItem() :
@@ -130,6 +133,16 @@ public class CopNpcFactory {
 		npc.getNavigator().getLocalParameters().speedModifier((float) tierConfig.speed());
 
 		return copNpc;
+	}
+
+	/**
+	 * The tier's melee profile, with {@code approach} clamped below the tier's own {@code Cuff_Radius} — a melee cop
+	 * that surrounds and cuffs first must not settle further out than it can reach to cuff.
+	 */
+	static NpcMeleeProfile meleeFor(NpcMeleeProfile profile, CopTierConfig tier) {
+		double approach = Math.max(0.5, Math.min(profile.approach(), tier.cuffRadius() - 0.5));
+		return new NpcMeleeProfile(profile.reach(), approach, profile.cooldownTicks(), profile.damageSpread(),
+		                           profile.edgeDamage());
 	}
 
 	private void setMainHand(@Nullable LivingEntity entity, ItemStack item) {

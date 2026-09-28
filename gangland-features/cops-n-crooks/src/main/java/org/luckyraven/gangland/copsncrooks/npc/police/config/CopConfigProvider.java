@@ -1,9 +1,12 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.config;
 
+import org.luckyraven.gangland.npc.radio.RadioSettings;
+import org.luckyraven.keystone.npc.NpcMeleeProfile;
 import org.luckyraven.keystone.npc.NpcNavigationConfig;
 import org.luckyraven.keystone.npc.entity.SpawnConfigProvider;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Provides all cop-related configuration values.
@@ -12,6 +15,22 @@ import java.util.Map;
  * cop config without any additional adapter.
  */
 public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvider {
+
+	/**
+	 * Cop radio defaults, matching the shipped {@code cops.yml}'s own {@code Cops.Radio} block: this is also what
+	 * {@link #getRadioSettings()} returns when a provider doesn't override it.
+	 */
+	RadioSettings COP_RADIO_DEFAULTS = new RadioSettings(true, 32.0, 64.0, 1500L, 1000L, 25L, 2,
+			Map.ofEntries(
+					Map.entry("Contact", 8000L), Map.entry("Contact_Lost", 8000L), Map.entry("Engage", 15000L),
+					Map.entry("Push", 10000L), Map.entry("Flank_Left", 10000L), Map.entry("Flank_Right", 10000L),
+					Map.entry("Reposition", 5000L), Map.entry("Search", 15000L), Map.entry("Route", 15000L),
+					Map.entry("No_Route", 15000L), Map.entry("Check_Fire", 8000L), Map.entry("Reloading", 8000L),
+					Map.entry("Man_Down", 5000L), Map.entry("Leader_Down", 5000L), Map.entry("Resisting", 10000L),
+					Map.entry("Backup", 20000L), Map.entry("Responding", 5000L), Map.entry("Ack", 2000L)),
+			Set.of("Contact", "Man_Down", "Leader_Down", "Backup", "Resisting", "Dispatch_Wanted", "Escalate",
+			      "Stand_Down"),
+			"BLOCK_NOTE_BLOCK_HAT", 0.4f, 1.8f);
 
 	/**
 	 * Returns the cop tier configuration for the given tier level.
@@ -226,5 +245,23 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 	 */
 	default double getGuardRadius() {
 		return 5.0;
+	}
+
+	/**
+	 * Melee tuning shared by every tier's swings (reach, approach, damage falloff). A tier's own approach is then
+	 * clamped below its {@code Cuff_Radius} at spawn time — see {@code CopNpcFactory#meleeFor}.
+	 */
+	default NpcMeleeProfile getMeleeProfile() {
+		return NpcMeleeProfile.DEFAULT;
+	}
+
+	/** Police-radio delivery tuning ({@code Cops.Radio}). */
+	default RadioSettings getRadioSettings() {
+		return COP_RADIO_DEFAULTS;
+	}
+
+	/** Backup-request tuning ({@code Cops.Backup}). */
+	default BackupSettings getBackupSettings() {
+		return BackupSettings.DEFAULT;
 	}
 }

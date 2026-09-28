@@ -33,8 +33,92 @@
 #     Boots:        Armor piece for the feet slot; leave blank for none
 #   Difficulty:     Combat profile that scales aim error, reaction time, fire rate, and melee
 #                   damage. One of EASY, NORMAL, HARD, DEADLY. Defaults to NORMAL when omitted.
+#   Tactics:        Per-tier squad-tactics override, read over Cops.Tactics below (see its own comments).
 # ============================================
 Cops:
+   # Melee band for every cop swing. The cooldown is settings.yml Cops.Behaviour.Attack_Cooldown_Ticks.
+   Melee:
+      # A swing lands only when the cop is at most this many blocks from the target (feet to feet).
+      Reach: 3.0
+      # Melee cops stop and surround here. Capped at each tier's Cuff_Radius - 0.5. Full damage inside this distance.
+      Approach: 2.0
+      # Melee damage varies by up to this fraction either way (0.15 = +/-15%).
+      Damage_Spread: 0.15
+      # Fraction of full damage a swing deals at the very edge of Reach (falls linearly from Approach).
+      Edge_Damage: 0.7
+   # Squad tactics defaults for every tier. A tier's own Tactics block overrides these key by key.
+   Tactics:
+      # false = the 1.12 behaviour: shooters freeze in their firing band, no formation, no radio signals.
+      Enabled: true
+      # Degrees the squad's shooters spread over around the target (0-360). Cop-on-cop damage is cancelled, so cops
+      # default to a wide horseshoe; melee tiers always surround.
+      Formation_Arc: 270.0
+      # Degrees a shooter side-steps along its ring at each reposition (0 = walk to its slot and stand).
+      Strafe_Degrees: 15.0
+      # Server ticks between a shooter's repositions (jittered +/-25%, minimum 20).
+      Reposition_Ticks: 60
+      # Extra aim error while the cop is walking (same unit as the Difficulty aim error).
+      Moving_Aim_Error: 0.10
+   Radio:
+      # Set to false to silence the police radio for players (cops still respond to each other).
+      Enabled: true
+      # Players within this many blocks of the speaking cop, or of the addressed cop, hear the line. Also how far
+      # other cops hear a Contact / Man_Down / Backup call and respond.
+      Range: 32.0
+      # The hunted player hears their own pursuers from this far away.
+      Target_Range: 64.0
+      # Minimum gap between two lines from one squad (priority lines and acks skip it).
+      Squad_Gap_Ticks: 30
+      # Minimum gap between two low-priority lines reaching one player, across all squads.
+      Player_Gap_Ticks: 20
+      # Ticks before an ordered cop acknowledges a delivered order. Forced to at least Player_Gap_Ticks + 5.
+      Ack_Delay_Ticks: 25
+      # Nearby cops (returning, idle or chasing a civilian) pulled in per radio call. 0 = none.
+      Responder_Max: 2
+      # Line kinds that skip the squad and player gaps (they still respect their own cooldown).
+      Priority:
+         - "Contact"
+         - "Man_Down"
+         - "Leader_Down"
+         - "Backup"
+         - "Resisting"
+         - "Dispatch_Wanted"
+         - "Escalate"
+         - "Stand_Down"
+      # One squad never repeats the same kind of line within this many ticks.
+      Cooldown_Ticks:
+         Contact: 160
+         Contact_Lost: 160
+         Engage: 300
+         Push: 200
+         Flank_Left: 200
+         Flank_Right: 200
+         Reposition: 100
+         Search: 300
+         Route: 300
+         No_Route: 300
+         Check_Fire: 160
+         Reloading: 160
+         Man_Down: 100
+         Leader_Down: 100
+         Resisting: 200
+         Backup: 400
+         Responding: 100
+         Ack: 40
+      # Short click played to each listener with every line (SoundConfiguration shape).
+      Sound:
+         Name: BLOCK_NOTE_BLOCK_HAT
+         Volume: 0.4
+         Pitch: 1.8
+   Backup:
+      # When a cop goes down, the squad radios for backup.
+      Enabled: true
+      # Extra cops on top of the wanted-level count (still capped by Behaviour.Max_Per_Player).
+      Extra_Cops: 1
+      # How long the extra cops stay requested (600 = 30 s). Afterwards the surplus cops that are not fighting walk home.
+      Duration_Ticks: 600
+      # Minimum gap between two backup requests from one group (1200 = 60 s).
+      Cooldown_Ticks: 1200
    Tiers:
       1:
          Display_Name: "&9Officer"
@@ -53,6 +137,11 @@ Cops:
             Chestplate: ""
             Leggings: ""
             Boots: ""
+         # Melee tier: the formation arc is ignored (melee always surrounds at 360/n).
+         Tactics:
+            Strafe_Degrees: 10.0
+            Reposition_Ticks: 80
+            Moving_Aim_Error: 0.15
       2:
          Display_Name: "&9Sergeant"
          Health: 25.0
@@ -69,6 +158,11 @@ Cops:
             Chestplate: ""
             Leggings: ""
             Boots: ""
+         # Melee tier: the formation arc is ignored (melee always surrounds at 360/n).
+         Tactics:
+            Strafe_Degrees: 10.0
+            Reposition_Ticks: 80
+            Moving_Aim_Error: 0.15
       3:
          Display_Name: "&1Lieutenant"
          Health: 30.0
@@ -86,6 +180,11 @@ Cops:
             Chestplate: "CHAINMAIL_CHESTPLATE"
             Leggings: ""
             Boots: ""
+         Tactics:
+            Formation_Arc: 200.0
+            Strafe_Degrees: 10.0
+            Reposition_Ticks: 80
+            Moving_Aim_Error: 0.12
       4:
          Display_Name: "&1SWAT"
          Health: 40.0
@@ -103,6 +202,11 @@ Cops:
             Chestplate: "IRON_CHESTPLATE"
             Leggings: "IRON_LEGGINGS"
             Boots: "IRON_BOOTS"
+         Tactics:
+            Formation_Arc: 270.0
+            Strafe_Degrees: 15.0
+            Reposition_Ticks: 60
+            Moving_Aim_Error: 0.10
       5:
          Display_Name: "&4Military"
          Health: 60.0
@@ -120,3 +224,8 @@ Cops:
             Chestplate: "DIAMOND_CHESTPLATE"
             Leggings: "DIAMOND_LEGGINGS"
             Boots: "DIAMOND_BOOTS"
+         Tactics:
+            Formation_Arc: 330.0
+            Strafe_Degrees: 20.0
+            Reposition_Ticks: 40
+            Moving_Aim_Error: 0.08

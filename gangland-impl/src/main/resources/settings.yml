@@ -337,7 +337,8 @@ Cops:
       # Sight range (blocks): a cop sees a wanted player within this distance when it has line of sight, and
       # every sighting is shared with the other cops chasing that player.
       Alert_Range: 40.0
-      # Base melee engagement range (blocks). Ranged attack range is derived from this value.
+      # Distance at which a MELEE cop may start an attack. Ranged cops fire at anything they can see within
+      # Alert_Range. A swing lands only within Cops.Melee.Reach (cops.yml).
       Combat_Range: 4.0
       # Game ticks between melee attacks.
       Attack_Cooldown_Ticks: 20
