@@ -38,6 +38,8 @@ class CopRadioRespondersTest {
 	private CopManager        manager;
 	private Player            player;
 	private CopGroup          group;
+	/** Another wanted player's group, far away: responders come from other groups (owner decision 6). */
+	private CopGroup          donor;
 
 	@BeforeEach
 	void setUp() {
@@ -47,6 +49,9 @@ class CopRadioRespondersTest {
 		manager.onWantedStart(player, CopManagerFixture.wanted(2));
 		group = manager.groupFor(player.getUniqueId());
 		when(fx.radio.huntedOf(group, group.getSquad())).thenReturn(player);
+		Player far = fx.player(-500, -500);
+		manager.onWantedStart(far, CopManagerFixture.wanted(1));
+		donor = manager.groupFor(far.getUniqueId());
 	}
 
 	@AfterEach
@@ -145,14 +150,16 @@ class CopRadioRespondersTest {
 		assertEquals(CopState.PURSUING, middle.getCurrentState());
 		assertEquals(CopState.RETURNING, far.getCurrentState(), "Responder_Max is 2");
 
-		near.transitionTo(CopState.RETURNING);
-		middle.transitionTo(CopState.RETURNING);
-		when(fx.provider.getMaxCopsPerPlayer()).thenReturn(1);
+		CopNpc near2   = fx.cop(CopState.RETURNING, 5, 0);
+		CopNpc middle2 = fx.cop(CopState.RETURNING, 15, 0);
+		join(near2);
+		join(middle2);
+		when(fx.provider.getMaxCopsPerPlayer()).thenReturn(3); // near and middle already fill two
 
 		call();
 
-		assertEquals(CopState.PURSUING, near.getCurrentState());
-		assertEquals(CopState.RETURNING, middle.getCurrentState(), "room for one under Max_Per_Player");
+		assertEquals(CopState.PURSUING, near2.getCurrentState());
+		assertEquals(CopState.RETURNING, middle2.getCurrentState(), "room for one under Max_Per_Player");
 	}
 
 	@Test
@@ -211,10 +218,47 @@ class CopRadioRespondersTest {
 		assertTrue(cop.isCombatForced());
 	}
 
-	/** Adds {@code cop} to the calling group; a returning cop has already left the squad (ReturningBehavior.onEnter). */
-	private void join(CopNpc cop) {
+	@Test
+	@DisplayName("a backup cop of the calling group sent home after the backup ran out is not pulled back by a contact")
+	void sameGroupReleasedBackupCop_notPulledBack() {
+		group.requestBackup(fx.clock[0], fx.provider.getBackupSettings());
+		manager.spawnTick(player.getUniqueId(), CopManagerFixture.wanted(2));
+		java.util.List<CopNpc> cops = java.util.List.copyOf(group.getCops());
+		assertEquals(3, cops.size());
+		for (CopNpc cop : cops) cop.transitionTo(CopState.PURSUING);
+		fx.clock[0] += 31_000;
+		manager.spawnTick(player.getUniqueId(), CopManagerFixture.wanted(2));
+		CopNpc released = cops.get(2);
+		assertEquals(CopState.RETURNING, released.getCurrentState());
+		group.getSquad().remove(released); // ReturningBehavior.onEnter leaves the squad
+
+		call();
+
+		assertEquals(CopState.RETURNING, released.getCurrentState());
+		assertEquals(0, group.getPendingRelease());
+	}
+
+	@Test
+	@DisplayName("a cop of the calling group rotated out of the pursuit stays on its way home (no D1 bounce)")
+	void sameGroupRotatedOutCop_notPulledBack() {
+		CopNpc cop = fx.cop(CopState.RETURNING, 10, 0);
 		group.add(cop);
-		if (cop.getCurrentState() == CopState.RETURNING) group.getSquad().remove(cop);
+		group.getSquad().remove(cop);
+		cop.setTargetPlayerId(player.getUniqueId());
+
+		call();
+
+		assertEquals(CopState.RETURNING, cop.getCurrentState());
+		verify(fx.radio, never()).respond(any(), any(), any());
+	}
+
+	/**
+	 * Adds {@code cop} to another group's cops (responders come from other groups); a returning cop has already left
+	 * that group's squad (ReturningBehavior.onEnter).
+	 */
+	private void join(CopNpc cop) {
+		donor.add(cop);
+		if (cop.getCurrentState() == CopState.RETURNING) donor.getSquad().remove(cop);
 	}
 
 	private void call() {

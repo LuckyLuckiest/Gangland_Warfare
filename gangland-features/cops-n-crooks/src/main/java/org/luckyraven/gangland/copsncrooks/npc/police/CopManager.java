@@ -615,8 +615,8 @@ public class CopManager implements BeanLifecycle {
 	}
 
 	/**
-	 * Answers the radio calls heard this tick: up to {@code Responder_Max} cops within {@code Range} of a call, that are
-	 * walking home, idle or chasing a civilian, join the calling squad. A cop cuffing, guarding or hunting a player is
+	 * Answers the radio calls heard this tick: up to {@code Responder_Max} cops of other groups within {@code Range} of
+	 * a call, that are walking home, idle or chasing a civilian, join the calling squad. A cop cuffing, guarding or hunting a player is
 	 * never pulled; nor is anyone sent after a suspect already restrained.
 	 */
 	void drainRadioCalls() {
@@ -670,7 +670,11 @@ public class CopManager implements BeanLifecycle {
 		}
 	}
 
-	/** The nearest cops of any group free to answer {@code call}, at most {@code limit}. */
+	/**
+	 * The nearest cops of other groups free to answer {@code call}, at most {@code limit}. The calling group's own cops
+	 * are never pulled: one walking home was released after a backup or rotated out, and pulling it back would undo
+	 * that (a released backup never leaving, or the D1 PURSUING/RETURNING bounce).
+	 */
 	private List<CopNpc> responders(RadioCall call, double range, int limit) {
 		Location     origin     = call.origin();
 		NpcSquad     squad      = call.squad();
@@ -678,6 +682,7 @@ public class CopManager implements BeanLifecycle {
 		Map<CopNpc, Double> distances = new HashMap<>();
 
 		for (CopGroup group : groups.values()) {
+			if (group == call.group()) continue;
 			synchronized (group.getCops()) {
 				for (CopNpc cop : group.getCops()) {
 					if (!cop.isValid() || cop.isMarkedForRemoval() || squad.members().contains(cop)) continue;
