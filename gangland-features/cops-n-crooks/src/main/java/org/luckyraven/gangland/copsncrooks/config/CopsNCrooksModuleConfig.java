@@ -34,6 +34,8 @@ import org.luckyraven.gangland.copsncrooks.integration.detainment.*;
 import org.luckyraven.gangland.copsncrooks.jail.*;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
+import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
+import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadioMessages;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopSettings;
@@ -323,14 +325,27 @@ public class CopsNCrooksModuleConfig {
 	}
 
 	@Bean
+	public CopRadioMessages copRadioMessages(FileManager fileManager) {
+		CopRadioMessages messages = new CopRadioMessages(fileManager);
+		fileManager.registerInitializer(messages);
+		return messages;
+	}
+
+	@Bean
+	public CopRadio copRadio(CopLoader copLoader, CopRadioMessages copRadioMessages) {
+		return new CopRadio(plugin, copLoader, copRadioMessages);
+	}
+
+	@Bean
 	public CopManager copManager(CopSpawnManager copSpawnManager,
 	                             WantedTargetingManager wantedTargetingManager,
 	                             CopLoader copLoader,
 	                             NpcMarkManager markManager,
 	                             DetainmentService detainmentService,
-	                             CivilianNpcRegistry civilianNpcRegistry) {
+	                             CivilianNpcRegistry civilianNpcRegistry,
+	                             CopRadio copRadio) {
 		return new CopManager(plugin, copSpawnManager, wantedTargetingManager, copLoader, markManager,
-		                      detainmentService, civilianNpcRegistry);
+		                      detainmentService, civilianNpcRegistry, copRadio);
 	}
 
 	@Bean
