@@ -14,3 +14,53 @@ Spawner_Type_Set: "&aGenerador de civiles &e%type%&a colocado en tu ubicación."
 Spawner_Group_Set: "&aGenerador de grupo &e%group%&a colocado en tu ubicación."
 Spawner_List_Header: "Generadores de civiles:"
 Spawner_List_Empty: "No hay generadores de civiles colocados actualmente."
+
+# Gritos de facción (fase H12). Mismas claves que civilian_messages.yml (inglés); si falta una, se usa el inglés.
+Shouts:
+   Format: "&c[%faction%] &f%unit%&7: &f%line%"
+   Compass:
+      - "norte"
+      - "noreste"
+      - "este"
+      - "sureste"
+      - "sur"
+      - "suroeste"
+      - "oeste"
+      - "noroeste"
+   Sides:
+      - "frente"
+      - "izquierda"
+      - "derecha"
+      - "espalda"
+   Lines:
+      Contact:
+         - "¡Ahí está! ¡Al %direction%!"
+         - "¡Por aquí!"
+      Contact_Lost:
+         - "¿A dónde se fue?"
+      Engage:
+         - "¡Dénle duro!"
+      Push:
+         - "¡%member%, métete ahí!"
+      Flank_Left:
+         - "¡%member%, rodea por su %side%!"
+      Flank_Right:
+         - "¡%member%, rodea por su %side%!"
+      Reposition: []
+      Search:
+         - "¡Búsquenlo!"
+      Route: []
+      No_Route:
+         - "¡Está allá arriba! Espérenlo."
+      Check_Fire:
+         - "¡Cuidado, casi me das!"
+      Reloading:
+         - "¡Recargando!"
+      Man_Down:
+         - "¡Le dieron a %member%!"
+      Leader_Down:
+         - "¡El jefe cayó! %unit%, tú lideras!"
+      Ack: []
+      Responding: []
+      Rally:
+         - "¡%faction%! ¡Nos atacan, %count% en camino!"

@@ -14,3 +14,60 @@ Spawner_Type_Set: "&aCivilian spawner &e%type%&a set at your location."
 Spawner_Group_Set: "&aGroup spawner &e%group%&a set at your location."
 Spawner_List_Header: "Civilian spawners:"
 Spawner_List_Empty: "No civilian spawners are currently set."
+
+# Faction shouts (phase H12). Delivery tuning (Range, cooldowns, ...) lives in civilians.yml's own Shouts block;
+# this is only the shouted text. Every Lines key is a list; one line is picked at random. [] mutes that kind.
+# Placeholders: %unit% speaker, %member% addressed member, %target% suspect name, %distance%/%direction%/%side%
+# same as police radio, %faction% the shouter's faction, %count% allies recruited (Rally only).
+Shouts:
+   Format: "&c[%faction%] &f%unit%&7: &f%line%"
+   Compass:
+      - "north"
+      - "north-east"
+      - "east"
+      - "south-east"
+      - "south"
+      - "south-west"
+      - "west"
+      - "north-west"
+   Sides:
+      - "front"
+      - "left"
+      - "right"
+      - "back"
+   Lines:
+      Contact:
+         - "There he is! %direction%!"
+         - "Over here!"
+      Contact_Lost:
+         - "Where'd he go?"
+      Engage:
+         - "Light him up!"
+      Push:
+         - "%member%, get in there!"
+      Flank_Left:
+         - "%member%, go round his %side%!"
+      Flank_Right:
+         - "%member%, go round his %side%!"
+      # Gangs don't call out repositions.
+      Reposition: []
+      Search:
+         - "Find him!"
+      # Gangs don't call out taking a route.
+      Route: []
+      No_Route:
+         - "He's up there! Wait for him!"
+      Check_Fire:
+         - "Watch it, you almost hit me!"
+      Reloading:
+         - "Reloading!"
+      Man_Down:
+         - "They got %member%!"
+      Leader_Down:
+         - "Boss is down! %unit%, you lead!"
+      # Gangs don't run radio drills — no acknowledgements.
+      Ack: []
+      # Gangs don't announce responders.
+      Responding: []
+      Rally:
+         - "%faction%! They're hitting us, %count% on the way!"
