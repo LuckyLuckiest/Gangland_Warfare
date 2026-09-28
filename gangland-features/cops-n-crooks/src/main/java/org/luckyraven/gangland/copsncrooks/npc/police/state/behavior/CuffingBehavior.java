@@ -32,6 +32,9 @@ public class CuffingBehavior implements CopBehavior {
 
 	private long cuffingTicks;
 	private UUID claimedPlayer;
+	/** Cuff attempts on {@link #failTarget} that failed or that he broke out of; kept across re-entries. */
+	private int  failedCuffs;
+	private UUID failTarget;
 
 	public CuffingBehavior(double cuffRadius, int maxAttempts, long cuffingCooldown, int aiTickRate,
 	                       CuffLockRegistry cuffLockRegistry, DetainmentService detainmentService) {
@@ -66,6 +69,10 @@ public class CuffingBehavior implements CopBehavior {
 
 		UUID copId    = cop.getNpc().getUniqueId();
 		UUID targetId = target.getUniqueId();
+		if (!targetId.equals(failTarget)) {
+			failTarget  = targetId;
+			failedCuffs = 0;
+		}
 
 		if (claimedPlayer == null) {
 			if (!cuffLockRegistry.tryAcquire(targetId, copId)) {
@@ -83,9 +90,9 @@ public class CuffingBehavior implements CopBehavior {
 
 		double distance = cop.distanceTo(target);
 
-		// Only leave cuffing if the target actually escapes the cuffing zone
+		// Only leave cuffing if the target actually escapes the cuffing zone; breaking out of a started cuff counts
 		if (distance > cuffRadius || !cop.hasLineOfSight(target)) {
-			cop.transitionTo(CopState.PURSUING);
+			failCuff(cop, targetId);
 			return;
 		}
 
@@ -110,6 +117,7 @@ public class CuffingBehavior implements CopBehavior {
 			// target on the cop for GuardingBehavior to pick up.
 			UUID cuffedTargetId = claimedPlayer;
 			claimedPlayer = null;
+			failedCuffs   = 0;
 			cop.setGuardedPlayerId(cuffedTargetId);
 			cop.transitionTo(CopState.GUARDING);
 			return;
@@ -117,7 +125,23 @@ public class CuffingBehavior implements CopBehavior {
 
 		// Target moved out of range or lost LOS at the last moment.
 		// Release the lock and return to pursuit so the next closest cop may try.
-		cop.transitionTo(CopState.PURSUING);
+		failCuff(cop, targetId);
+	}
+
+	/**
+	 * A cuff failed or the target broke out of it: back to pursuit, or, after {@code Max_Cuff_Attempts} of them, he is
+	 * resisting and the group fights (CJ-23).
+	 */
+	private void failCuff(CopNpc cop, UUID targetId) {
+		if (++failedCuffs < maxAttempts) {
+			cop.transitionTo(CopState.PURSUING);
+			return;
+		}
+
+		failedCuffs = 0;
+		if (cop.getGroup() != null) cop.getGroup().escalate(targetId);
+		cop.setCombatForced(true);
+		cop.transitionTo(CopState.COMBAT);
 	}
 
 	@Override

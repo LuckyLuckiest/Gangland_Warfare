@@ -7,6 +7,7 @@ import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.gangland.npc.RetreatSettings;
 
 import java.util.UUID;
 
@@ -18,11 +19,14 @@ public class CombatBehavior implements CopBehavior {
 	private final double            combatRange;
 	private final double            alertRange;
 	private final DetainmentService detainmentService;
+	private final RetreatSettings   retreat;
 
-	public CombatBehavior(double combatRange, double alertRange, DetainmentService detainmentService) {
+	public CombatBehavior(double combatRange, double alertRange, DetainmentService detainmentService,
+	                      RetreatSettings retreat) {
 		this.combatRange       = combatRange;
 		this.alertRange        = alertRange;
 		this.detainmentService = detainmentService;
+		this.retreat           = retreat;
 	}
 
 	@Override
@@ -39,8 +43,11 @@ public class CombatBehavior implements CopBehavior {
 			return;
 		}
 
+		// A ranged cop fires at anything it can see within its sight range, as in PURSUING: its firing band reaches
+		// past Combat_Range, and a narrower gate would leave a stretch of the band where it holds without firing.
+		// Melee tiers start a swing within Combat_Range; it lands only within the Keystone melee reach.
 		double distance    = cop.distanceTo(target);
-		double attackRange = cop.getTierConfig().canUseWeapons() ? (combatRange * 3) : combatRange;
+		double attackRange = cop.isRangedAttacker() ? alertRange : combatRange;
 
 		if (distance <= attackRange && cop.canAttack() && cop.hasLineOfSight(target)) {
 			if (target instanceof Player player) {
@@ -50,9 +57,16 @@ public class CombatBehavior implements CopBehavior {
 			}
 		}
 
-		// Keystone's squad pursuit: ranged cops hold while they see the target inside their firing band, everyone else
-		// closes in, routes around obstacles or searches from the last-known position. squadFor gives the group squad
-		// for the group's player and the cop's own squad, seeded where it was handed the target, for anyone else.
+		// Badly hurt: break off to cover (the squad radios Fall_Back / In_Cover) and keep firing from there when seen
+		LivingEntity self = cop.getEntity();
+		if (self != null && retreat.shouldRetreat(self.getHealth(), self.getMaxHealth())) {
+			cop.takeCover(target, retreat.radius());
+			return;
+		}
+
+		// Keystone's squad pursuit: ranged cops work their post on the squad's fan while they see the target inside
+		// their firing band, everyone else closes in, routes around obstacles or searches from the last-known position.
+		// squadFor gives the group squad for the group's player and the group's shared squad against anyone else.
 		cop.pursue(target, cop.squadFor(target), alertRange);
 	}
 

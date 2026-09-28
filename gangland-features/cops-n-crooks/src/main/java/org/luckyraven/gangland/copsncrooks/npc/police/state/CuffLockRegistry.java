@@ -33,6 +33,13 @@ public final class CuffLockRegistry {
 		return copId.equals(ownerByTarget.get(targetId));
 	}
 
+	/** Whether another cop than {@code copId} holds the lock for the target. */
+	public boolean isHeldByOther(UUID targetId, UUID copId) {
+		if (targetId == null) return false;
+		UUID owner = ownerByTarget.get(targetId);
+		return owner != null && !owner.equals(copId);
+	}
+
 	/**
 	 * Releases the lock only if it is owned by the given cop.
 	 */
