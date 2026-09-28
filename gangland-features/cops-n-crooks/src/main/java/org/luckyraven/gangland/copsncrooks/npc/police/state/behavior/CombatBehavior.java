@@ -8,6 +8,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.npc.RetreatSettings;
+import org.luckyraven.keystone.npc.NpcCoverStatus;
 
 import java.util.UUID;
 
@@ -57,10 +58,11 @@ public class CombatBehavior implements CopBehavior {
 			}
 		}
 
-		// Badly hurt: break off to cover (the squad radios Fall_Back / In_Cover) and keep firing from there when seen
+		// Badly hurt: break off to cover (the squad radios Fall_Back / In_Cover) and keep firing from there when seen.
+		// No cover within the radius (open ground): keep fighting rather than freeze on the spot.
 		LivingEntity self = cop.getEntity();
-		if (self != null && retreat.shouldRetreat(self.getHealth(), self.getMaxHealth())) {
-			cop.takeCover(target, retreat.radius());
+		if (self != null && retreat.shouldRetreat(self.getHealth(), self.getMaxHealth()) &&
+		    cop.takeCover(target, retreat.radius()) != NpcCoverStatus.FAILED) {
 			return;
 		}
 

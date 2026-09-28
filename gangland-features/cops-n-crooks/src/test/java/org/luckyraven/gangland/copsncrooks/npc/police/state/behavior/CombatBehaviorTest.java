@@ -11,6 +11,7 @@ import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.npc.RetreatSettings;
+import org.luckyraven.keystone.npc.NpcCoverStatus;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 
@@ -135,11 +136,27 @@ class CombatBehaviorTest {
 		when(self.getHealth()).thenReturn(5.0);
 		when(self.getMaxHealth()).thenReturn(20.0);
 		when(cop.getEntity()).thenReturn(self);
+		when(cop.takeCover(player, RetreatSettings.DEFAULT.radius())).thenReturn(NpcCoverStatus.MOVING);
 
 		behavior.tick(cop);
 
 		verify(cop).takeCover(player, RetreatSettings.DEFAULT.radius());
 		verify(cop, never()).pursue(any(), any(), anyDouble());
+	}
+
+	@Test
+	@DisplayName("badly hurt but no cover within the radius (open ground): the cop still pursues")
+	void badlyHurt_noCoverFound_stillPursues() {
+		Player       player = targetAt(10.0);
+		LivingEntity self   = mock(LivingEntity.class);
+		when(self.getHealth()).thenReturn(5.0);
+		when(self.getMaxHealth()).thenReturn(20.0);
+		when(cop.getEntity()).thenReturn(self);
+		when(cop.takeCover(player, RetreatSettings.DEFAULT.radius())).thenReturn(NpcCoverStatus.FAILED);
+
+		behavior.tick(cop);
+
+		verify(cop).pursue(eq(player), any(), eq(ALERT_RANGE));
 	}
 
 	@Test
