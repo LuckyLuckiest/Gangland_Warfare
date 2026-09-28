@@ -127,7 +127,7 @@ public class CivilianNpcFactory implements BeanLifecycle {
 		NpcRangedAttack rangedAttack = NpcRangedAttack.NONE;
 		if (civilian.canUseRangedAttack()) {
 			String weaponName = pickWeaponName(typeConfig);
-			rangedAttack = bartizanNpcWeapons.create(civilian.getEntity(), weaponName, civilian.getDifficulty());
+			rangedAttack = bartizanNpcWeapons.create(civilian::getEntity, weaponName, civilian.getDifficulty());
 			civilian.setRangedAttack(rangedAttack);
 
 			ItemStack weaponItem = bartizanNpcWeapons.buildItem(weaponName);

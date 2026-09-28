@@ -16,9 +16,12 @@ import org.luckyraven.keystone.npc.NpcDifficulty;
 import org.luckyraven.keystone.npc.spi.NpcRangedAttack;
 import org.mockito.MockedStatic;
 
+import java.util.function.Supplier;
+
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -66,7 +69,7 @@ class BartizanNpcWeaponsTest {
 		when(items.isValidWeaponName("bogus")).thenReturn(false);
 
 		try (MockedStatic<Bukkit> ignored = mockBukkit(api)) {
-			NpcRangedAttack result = weapons.create(mock(LivingEntity.class), "bogus", NpcDifficulty.NORMAL);
+			NpcRangedAttack result = weapons.create(() -> mock(LivingEntity.class), "bogus", NpcDifficulty.NORMAL);
 
 			assertSame(NpcRangedAttack.NONE, result);
 			verify(api, never()).npcWeapons();
@@ -74,13 +77,13 @@ class BartizanNpcWeaponsTest {
 	}
 
 	@Test
-	@DisplayName("create() resolves the factory's controller for a name Bartizan recognises")
-	void create_validWeaponName_resolvesController() {
+	@DisplayName("create() hands Bartizan the live-entity supplier, so rounds follow a Citizens entity swap")
+	void create_validWeaponName_usesSupplierOverload() {
 		BartizanApi         api        = mock(BartizanApi.class);
 		WeaponItemApi       items      = mock(WeaponItemApi.class);
 		NpcWeaponFactory    factory    = mock(NpcWeaponFactory.class);
 		NpcWeaponController controller = mock(NpcWeaponController.class);
-		LivingEntity         shooter    = mock(LivingEntity.class);
+		Supplier<LivingEntity> shooter = () -> mock(LivingEntity.class);
 		when(api.items()).thenReturn(items);
 		when(items.isValidWeaponName("rifle")).thenReturn(true);
 		when(api.npcWeapons()).thenReturn(factory);
@@ -91,6 +94,28 @@ class BartizanNpcWeaponsTest {
 			NpcRangedAttack result = weapons.create(shooter, "rifle", NpcDifficulty.NORMAL);
 
 			assertSame(controller, result);
+			verify(factory, never()).create(any(LivingEntity.class), any(), anyDouble(), anyDouble());
+		}
+	}
+
+	@Test
+	@DisplayName("create() falls back to the entity overload on a Bartizan that predates the supplier one (0.5.x)")
+	void create_preSupplierBartizan_fallsBackToEntityOverload() {
+		BartizanApi         api        = mock(BartizanApi.class);
+		WeaponItemApi       items      = mock(WeaponItemApi.class);
+		NpcWeaponFactory    factory    = mock(NpcWeaponFactory.class);
+		NpcWeaponController controller = mock(NpcWeaponController.class);
+		LivingEntity         entity     = mock(LivingEntity.class);
+		Supplier<LivingEntity> shooter = () -> entity;
+		double rate = NpcDifficulty.NORMAL.getFireRateMultiplier(), aim = NpcDifficulty.NORMAL.getAimError();
+		when(api.items()).thenReturn(items);
+		when(items.isValidWeaponName("rifle")).thenReturn(true);
+		when(api.npcWeapons()).thenReturn(factory);
+		when(factory.create(shooter, "rifle", rate, aim)).thenThrow(new UnsupportedOperationException());
+		when(factory.create(entity, "rifle", rate, aim)).thenReturn(controller);
+
+		try (MockedStatic<Bukkit> ignored = mockBukkit(api)) {
+			assertSame(controller, weapons.create(shooter, "rifle", NpcDifficulty.NORMAL));
 		}
 	}
 

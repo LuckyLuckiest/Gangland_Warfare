@@ -124,7 +124,7 @@ public class CopNpcFactory {
 		NpcRangedAttack rangedAttack = NpcRangedAttack.NONE;
 		if (tierConfig.canUseWeapons()) {
 			String weaponName = pickWeaponName(tierConfig);
-			rangedAttack = bartizanNpcWeapons.create(copNpc.getEntity(), weaponName, copNpc.getDifficulty());
+			rangedAttack = bartizanNpcWeapons.create(copNpc::getEntity, weaponName, copNpc.getDifficulty());
 			copNpc.setRangedAttack(rangedAttack);
 
 			ItemStack weaponItem = bartizanNpcWeapons.buildItem(weaponName);

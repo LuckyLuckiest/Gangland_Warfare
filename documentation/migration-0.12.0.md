@@ -14,7 +14,9 @@ before except where a "behaviour changed" note below applies.
   new squad-engagement, melee-band and squad-signal APIs and needs it.
 - **Bartizan 0.6.0** if you use Bartizan weapons on cops or civilians. It is required for the "move while shooting"
   fix: it counts NPC gun cadence in server ticks, re-aims each shot of a burst at a moving target, and reports
-  reloads (the squad's `Reloading` radio line and the shooter backing off to reload). On Bartizan 0.5.x the new
+  reloads (the squad's `Reloading` radio line and the shooter backing off to reload). It also fires from the NPC's
+  current entity after Citizens replaces it (the first cop group after a boot otherwise shot from its stale spawn
+  position; on 0.5.x it still does). On Bartizan 0.5.x the new
   Keystone hooks are never called: NPCs still shoot at the same cadence as 0.11 (`Fire_Rate_Multiplier` has no
   effect on their Bartizan guns), but without the moving re-aim or the reload signal.
 - **Citizens 2.0.42 or newer** is recommended (unchanged floor from 0.11.0); it adds the look-at-target visual while
