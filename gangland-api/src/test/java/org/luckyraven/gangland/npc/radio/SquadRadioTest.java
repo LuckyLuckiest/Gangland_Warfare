@@ -48,6 +48,9 @@ class SquadRadioTest {
 			Map.entry("Check_Fire", List.of("Check your fire!")),
 			Map.entry("Search", List.of("Spread out, find him!", "Sweep the area!")),
 			Map.entry("Reposition", List.of()),
+			Map.entry("Route", List.of("Cutting round!")),
+			Map.entry("Route_High", List.of("He's up high!")),
+			Map.entry("Climb", List.of("Taking the ladder!")),
 			Map.entry("Format", List.of("[RADIO] %unit%: %line%")),
 			Map.entry("Compass",
 			         List.of("north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west")),
@@ -500,6 +503,43 @@ class SquadRadioTest {
 		ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
 		verify(p).sendMessage(captor.capture());
 		assertTrue(captor.getValue().contains("Sweep"));
+	}
+
+	private String heardFor(NpcSquadSignal signal, double memberY, double goalY) {
+		AbstractNpc member = newMember(0, memberY, 0, "SWAT-1");
+		Player      p      = newPlayer(1, memberY, 0);
+		when(world.getPlayers()).thenReturn(List.of(p));
+		NpcSquad squad = new NpcSquad();
+		squad.add(member);
+
+		radio.listener(voice).onSignal(squad, signal, member, new Location(world, 5, goalY, 0));
+
+		ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+		verify(p).sendMessage(captor.capture());
+		return captor.getValue();
+	}
+
+	@Test
+	@DisplayName("a flat route speaks the neutral line, never the ladder or up-high ones")
+	void route_flat_isNeutral() {
+		String text = heardFor(NpcSquadSignal.ROUTE, 64, 64);
+		assertTrue(text.contains("Cutting round"));
+		assertFalse(text.contains("ladder"));
+		assertFalse(text.contains("up high"));
+	}
+
+	@Test
+	@DisplayName("a route to an elevated goal says he is up high; the ladder waits for CLIMB")
+	void route_elevated_saysUpHigh() {
+		String text = heardFor(NpcSquadSignal.ROUTE, 64, 70);
+		assertTrue(text.contains("up high"));
+		assertFalse(text.contains("ladder"));
+	}
+
+	@Test
+	@DisplayName("CLIMB speaks the ladder line")
+	void climb_saysLadder() {
+		assertTrue(heardFor(NpcSquadSignal.CLIMB, 64, 70).contains("Taking the ladder"));
 	}
 
 	@Test

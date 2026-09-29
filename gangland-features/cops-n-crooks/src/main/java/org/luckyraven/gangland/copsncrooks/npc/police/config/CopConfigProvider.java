@@ -26,6 +26,7 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 					Map.entry("Contact", 8000L), Map.entry("Contact_Lost", 8000L), Map.entry("Engage", 15000L),
 					Map.entry("Push", 10000L), Map.entry("Flank_Left", 10000L), Map.entry("Flank_Right", 10000L),
 					Map.entry("Reposition", 5000L), Map.entry("Search", 15000L), Map.entry("Route", 15000L),
+					Map.entry("Route_High", 15000L), Map.entry("Climb", 15000L), Map.entry("Stand_Down", 10000L),
 					Map.entry("No_Route", 15000L), Map.entry("Check_Fire", 8000L), Map.entry("Reloading", 8000L),
 					Map.entry("Man_Down", 5000L), Map.entry("Leader_Down", 5000L), Map.entry("Resisting", 10000L),
 					Map.entry("Backup", 20000L), Map.entry("Responding", 5000L), Map.entry("Ack", 2000L),

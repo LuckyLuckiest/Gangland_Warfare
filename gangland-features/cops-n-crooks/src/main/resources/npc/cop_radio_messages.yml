@@ -66,10 +66,17 @@ Lines:
    Search:
       - "Spread out, find him!"
       - "Sweep the area!"
-   # A member starts following a route to a suspect it cannot see directly (e.g. up a ladder).
+   # A member starts following a route to a suspect it cannot see directly, on level ground.
    Route:
+      - "Going round, finding a way to him."
+      - "Cutting round to him!"
+   # The same, when the suspect is well above the member.
+   Route_High:
       - "He's up high, finding a way up."
+   # A member starts climbing a ladder, vine or scaffolding on its route.
+   Climb:
       - "Taking the ladder!"
+      - "Going up!"
    # A member finds no route to the suspect and waits at the nearest reachable spot.
    No_Route:
       - "Can't reach him, surround the building!"
