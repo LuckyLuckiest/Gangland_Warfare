@@ -104,6 +104,8 @@ Cops:
          Reposition: 100
          Search: 300
          Route: 300
+         Route_High: 300
+         Climb: 300
          No_Route: 300
          Check_Fire: 160
          Reloading: 160
@@ -115,6 +117,7 @@ Cops:
          Ack: 40
          Fall_Back: 100
          In_Cover: 200
+         Stand_Down: 200
       # Short click played to each listener with every line (SoundConfiguration shape).
       Sound:
          Name: BLOCK_NOTE_BLOCK_HAT

@@ -84,7 +84,8 @@ public class CombatBehavior implements CopBehavior {
 		if (self != null && retreat.shouldRetreat(self.getHealth(), self.getMaxHealth()) && retreatTimeLeft(cop)) {
 			// Fresh from PURSUING, stopNavigation cleared the Keystone squad: join it first so the retreat is radioed.
 			if (cop.getCurrentSquad() == null) cop.pursue(target, cop.squadFor(target), alertRange);
-			if (cop.takeCover(target, retreat.radius()) != NpcCoverStatus.FAILED) return;
+			// The squad is passed so the first-tick Fall_Back is radioed too.
+			if (cop.takeCover(target, retreat.radius(), cop.squadFor(target)) != NpcCoverStatus.FAILED) return;
 		}
 
 		// Keystone's squad pursuit: ranged cops work their post on the squad's fan while they see the target inside

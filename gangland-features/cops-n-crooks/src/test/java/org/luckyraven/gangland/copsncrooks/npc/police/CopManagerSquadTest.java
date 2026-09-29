@@ -253,4 +253,18 @@ class CopManagerSquadTest {
 		verify(fx.radio).sayFromLeader(group, "Stand_Down");
 		assertFalse(group.isCombatAlert());
 	}
+
+	@Test
+	@DisplayName("one wanted clear (WantedEndEvent then the level change to 0) announces Stand_Down once")
+	void wantedEnd_calledTwice_saysStandDownOnce() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		group.add(fx.cop(CopState.PURSUING, 0, 0));
+		group.escalate(playerId);
+
+		manager.onWantedEnd(player);
+		manager.onWantedEnd(player);
+
+		verify(fx.radio, times(1)).sayFromLeader(group, "Stand_Down");
+	}
 }

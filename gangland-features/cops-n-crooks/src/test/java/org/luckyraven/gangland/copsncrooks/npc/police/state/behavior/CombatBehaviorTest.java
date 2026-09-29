@@ -141,11 +141,11 @@ class CombatBehaviorTest {
 		when(self.getMaxHealth()).thenReturn(20.0);
 		when(cop.getEntity()).thenReturn(self);
 		when(cop.getCurrentSquad()).thenReturn(new NpcSquad());
-		when(cop.takeCover(player, RetreatSettings.DEFAULT.radius())).thenReturn(NpcCoverStatus.MOVING);
+		when(cop.takeCover(eq(player), eq(RetreatSettings.DEFAULT.radius()), any())).thenReturn(NpcCoverStatus.MOVING);
 
 		behavior.tick(cop);
 
-		verify(cop).takeCover(player, RetreatSettings.DEFAULT.radius());
+		verify(cop).takeCover(eq(player), eq(RetreatSettings.DEFAULT.radius()), any());
 		verify(cop, never()).pursue(any(), any(), anyDouble());
 	}
 
@@ -158,7 +158,7 @@ class CombatBehaviorTest {
 		when(self.getMaxHealth()).thenReturn(20.0);
 		when(cop.getEntity()).thenReturn(self);
 		when(cop.getCurrentSquad()).thenReturn(new NpcSquad());
-		when(cop.takeCover(player, RetreatSettings.DEFAULT.radius())).thenReturn(NpcCoverStatus.FAILED);
+		when(cop.takeCover(eq(player), eq(RetreatSettings.DEFAULT.radius()), any())).thenReturn(NpcCoverStatus.FAILED);
 
 		behavior.tick(cop);
 
@@ -178,7 +178,7 @@ class CombatBehaviorTest {
 
 		behavior.tick(cop);
 
-		verify(cop, never()).takeCover(any(), anyDouble());
+		verify(cop, never()).takeCover(any(), anyDouble(), any());
 		verify(cop).pursue(eq(player), any(), eq(ALERT_RANGE));
 	}
 
@@ -190,7 +190,7 @@ class CombatBehaviorTest {
 		                              now::get);
 		Player player = badlyHurtCopFacing();
 		when(cop.getCurrentSquad()).thenReturn(new NpcSquad());
-		when(cop.takeCover(player, RetreatSettings.DEFAULT.radius())).thenReturn(NpcCoverStatus.ARRIVED);
+		when(cop.takeCover(eq(player), eq(RetreatSettings.DEFAULT.radius()), any())).thenReturn(NpcCoverStatus.ARRIVED);
 
 		behavior.tick(cop);
 		now.addAndGet(CombatBehavior.MAX_COVER_MS - 1);
@@ -202,7 +202,7 @@ class CombatBehaviorTest {
 		now.addAndGet(60_000);
 		behavior.tick(cop);
 
-		verify(cop, times(2)).takeCover(player, RetreatSettings.DEFAULT.radius());
+		verify(cop, times(2)).takeCover(eq(player), eq(RetreatSettings.DEFAULT.radius()), any());
 		verify(cop, times(2)).pursue(eq(player), any(), eq(ALERT_RANGE));
 	}
 
@@ -214,14 +214,14 @@ class CombatBehaviorTest {
 		                              now::get);
 		Player player = badlyHurtCopFacing();
 		when(cop.getCurrentSquad()).thenReturn(new NpcSquad());
-		when(cop.takeCover(player, RetreatSettings.DEFAULT.radius())).thenReturn(NpcCoverStatus.ARRIVED);
+		when(cop.takeCover(eq(player), eq(RetreatSettings.DEFAULT.radius()), any())).thenReturn(NpcCoverStatus.ARRIVED);
 
 		behavior.tick(cop);
 		now.addAndGet(CombatBehavior.MAX_COVER_MS);
 		behavior.onExit(cop);
 		behavior.tick(cop);
 
-		verify(cop, times(2)).takeCover(player, RetreatSettings.DEFAULT.radius());
+		verify(cop, times(2)).takeCover(eq(player), eq(RetreatSettings.DEFAULT.radius()), any());
 		verify(cop, never()).pursue(any(), any(), anyDouble());
 	}
 
@@ -232,13 +232,13 @@ class CombatBehaviorTest {
 		NpcSquad squad = new NpcSquad();
 		when(cop.squadFor(player)).thenReturn(squad);
 		when(cop.getCurrentSquad()).thenReturn(null);
-		when(cop.takeCover(player, RetreatSettings.DEFAULT.radius())).thenReturn(NpcCoverStatus.MOVING);
+		when(cop.takeCover(player, RetreatSettings.DEFAULT.radius(), squad)).thenReturn(NpcCoverStatus.MOVING);
 
 		behavior.tick(cop);
 
 		InOrder order = inOrder(cop);
 		order.verify(cop).pursue(player, squad, ALERT_RANGE);
-		order.verify(cop).takeCover(player, RetreatSettings.DEFAULT.radius());
+		order.verify(cop).takeCover(player, RetreatSettings.DEFAULT.radius(), squad);
 		verify(cop, times(1)).pursue(any(), any(), anyDouble());
 	}
 

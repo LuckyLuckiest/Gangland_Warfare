@@ -45,8 +45,13 @@ Lines:
       - "¡Sepárense y búsquenlo!"
       - "¡Rastreen la zona!"
    Route:
+      - "Rodeando, buscando cómo llegar a él."
+      - "¡Cortándole el paso!"
+   Route_High:
       - "Está en lo alto, buscando cómo subir."
+   Climb:
       - "¡Usando la escalera!"
+      - "¡Subiendo!"
    No_Route:
       - "¡No puedo llegar a él, rodeen el edificio!"
       - "¡Cubran las salidas!"

@@ -46,6 +46,8 @@ public class CopManager implements BeanLifecycle {
 	private final NpcMarkManager        markManager;
 	private final DetainmentService     detainmentService;
 	private final Map<UUID, CopGroup>   groups;
+	/** Players whose current wanted clear has already been announced with Stand_Down; reset by the next wanted start. */
+	private final java.util.Set<UUID>    stoodDown = new java.util.HashSet<>();
 	private final Map<UUID, BukkitTask> aiTasks;
 	private final Map<UUID, BukkitTask> spawnTasks;
 	private final Set<UUID>             activeCombatAlerts;
@@ -91,6 +93,7 @@ public class CopManager implements BeanLifecycle {
 		if (!wanted.isWanted()) return;
 
 		targetingManager.registerWanted(player, wanted);
+		stoodDown.remove(playerId);
 		// The crime scene is known: the group's squad starts from where the player is now. Dispatch announces a new
 		// hunt, or one whose trail went cold, before the squad hears of it.
 		CopGroup existing = groups.get(playerId);
@@ -136,7 +139,8 @@ public class CopManager implements BeanLifecycle {
 			return;
 		}
 
-		copRadio.sayFromLeader(group, "Stand_Down");
+		// WantedEndEvent and the level change to 0 both land here for one clear: announce it once per episode.
+		if (stoodDown.add(playerId)) copRadio.sayFromLeader(group, "Stand_Down");
 
 		// Clear targeting only for cops still pointing at the now-unwanted player.
 		// Cops that already retargeted to an attacker keep their state so resolveTarget

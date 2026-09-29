@@ -127,9 +127,9 @@ public class CopNpc extends AbstractNpc {
 	 * Transitions the cop to a new AI state, invoking exit/enter callbacks.
 	 */
 	public void transitionTo(CopState newState) {
+		if (currentState == newState) return;
 		log.debug("Transitioning cop {}-{} from {} state to {} state.", npc.getName(), npc.getId(),
 		          currentState, newState);
-		if (currentState == newState) return;
 
 		CopBehavior oldBehavior = behaviors.get(currentState);
 		if (oldBehavior != null) oldBehavior.onExit(this);

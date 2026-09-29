@@ -42,6 +42,9 @@ public final class SquadRadio {
 	/** Before any line, so the first line from a fresh squad or a fresh listener is never throttled. */
 	private static final long NEVER = Long.MIN_VALUE / 2;
 
+	/** A route goal this many blocks above the member counts as "up high". */
+	private static final double ELEVATED_BLOCKS = 2.0;
+
 	/** {@link #lastHeard} is pruned once it grows past this many entries. */
 	private static final int PRUNE_ABOVE = 256;
 
@@ -106,9 +109,19 @@ public final class SquadRadio {
 				speak(cfg, voice, squad, speaker.getEntity(), voice.callsign(speaker), key, "Format", where, null,
 				     Map.of("member", voice.callsign(member)), false);
 			}
+			// A route is neutral ("Route") unless its goal is well above the member ("Route_High"); the ladder line is
+			// CLIMB's own ("Climb"), so it plays only when a climb really starts.
+			case ROUTE -> speak(cfg, voice, squad, member.getEntity(), voice.callsign(member),
+			                    isElevated(member, where) ? "Route_High" : key, "Format", where, null, Map.of(),
+			                    false);
 			default -> speak(cfg, voice, squad, member.getEntity(), voice.callsign(member), key, "Format", where,
 			                 null, Map.of(), false);
 		}
+	}
+
+	private static boolean isElevated(AbstractNpc member, @Nullable Location goal) {
+		LivingEntity entity = member.getEntity();
+		return entity != null && goal != null && goal.getY() - entity.getLocation().getY() >= ELEVATED_BLOCKS;
 	}
 
 	private void orderFrom(RadioSettings cfg, RadioVoice voice, NpcSquad squad, AbstractNpc member,
