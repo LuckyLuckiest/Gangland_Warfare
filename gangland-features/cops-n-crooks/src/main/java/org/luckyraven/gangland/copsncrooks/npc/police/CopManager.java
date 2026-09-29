@@ -498,7 +498,9 @@ public class CopManager implements BeanLifecycle {
 
 		int targetCount  = Math.min(spawnManager.getTargetCopCount(wantedLevel) + group.backupExtra(now, backup),
 		                            configProvider.getMaxCopsPerPlayer());
-		int currentCount = cops.size();
+		// A RETURNING cop beyond the pursuit range cannot engage: it is walking home, not part of this hunt's count.
+		double maxDist = configProvider.getPursuitMaxDistance();
+		int currentCount = (int) cops.stream().filter(c -> !isStrandedReturning(c, player, maxDist)).count();
 
 		// Spawn all missing cops in one pass so a full wipe is recovered in a single interval
 		while (currentCount < targetCount) {
@@ -518,6 +520,12 @@ public class CopManager implements BeanLifecycle {
 		group.consumeBackupExpiry(now, backup);
 		if (group.getPendingRelease() > 0) releaseSurplus(group, targetCount);
 		group.pruneAttackerSquads();
+	}
+
+	private static boolean isStrandedReturning(CopNpc cop, Player player, double maxDist) {
+		if (cop.getCurrentState() != CopState.RETURNING || cop.getEntity() == null) return false;
+		Location at = cop.getEntity().getLocation();
+		return at.getWorld() != player.getWorld() || at.distanceSquared(player.getLocation()) > maxDist * maxDist;
 	}
 
 	/**
