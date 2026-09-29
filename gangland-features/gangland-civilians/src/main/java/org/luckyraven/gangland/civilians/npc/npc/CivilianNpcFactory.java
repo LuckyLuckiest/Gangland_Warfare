@@ -1,7 +1,6 @@
 package org.luckyraven.gangland.civilians.npc.npc;
 
 import com.cryptomorin.xseries.XAttribute;
-import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Location;
 import org.bukkit.attribute.AttributeInstance;
@@ -89,7 +88,7 @@ public class CivilianNpcFactory implements BeanLifecycle {
 		String plainName = ChatUtil.replaceColorCodes(ChatUtil.color(typeConfig.displayName()), "");
 
 		EntityType entityType = typeConfig.entityType();
-		NPC        npc        = CitizensAPI.getNPCRegistry().createNPC(entityType, plainName);
+		NPC        npc        = CitizensNpcs.create(entityType, plainName);
 		npc.setProtected(false);
 		npc.data().setPersistent(NPC.Metadata.SHOULD_SAVE, false);
 		npc.data().setPersistent(NPC.Metadata.USE_MINECRAFT_AI, false);

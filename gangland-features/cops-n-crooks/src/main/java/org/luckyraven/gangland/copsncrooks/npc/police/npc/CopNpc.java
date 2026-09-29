@@ -1,11 +1,13 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.npc;
 
+import com.cryptomorin.xseries.XAttribute;
 import lombok.CustomLog;
 import lombok.Getter;
 import lombok.Setter;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Location;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -157,16 +159,22 @@ public class CopNpc extends AbstractNpc {
 	}
 
 	/**
-	 * Re-applies the loadout when Citizens has replaced the NPC's entity. Citizens respawns a PLAYER NPC once its
-	 * name-based default skin arrives from Mojang ({@code Skin.applyAndRespawn}: despawn + spawn, new entity ID). The
-	 * skin cache is in-memory, so this hits the first cops after every boot, ~1-2 s after spawn — the replacement
-	 * starts at 20 max health with no armour, weapon or police mark.
+	 * Re-applies the loadout when Citizens has replaced the NPC's entity (a respawn, e.g. on chunk reload — the
+	 * name-based skin-fetch respawn is disabled at creation by {@code CitizensNpcs}). The replacement starts at 20 max
+	 * health with no armour, weapon or police mark; its current health is carried over from the old entity rather than
+	 * refilled to the tier max, so a respawn never heals a damaged cop.
 	 */
 	public void refreshLoadout() {
 		Entity entity = npc.getEntity();
 		if (loadout == null || entity == loadoutEntity || !(entity instanceof LivingEntity living)) return;
+		Entity previous = loadoutEntity;
 		loadoutEntity = entity;
 		loadout.accept(living);
+		if (previous instanceof LivingEntity old && old.getHealth() > 0) {
+			AttributeInstance max = living.getAttribute(XAttribute.MAX_HEALTH.get());
+			living.setHealth(max == null ? Math.min(old.getHealth(), living.getHealth())
+			                             : Math.min(old.getHealth(), max.getValue()));
+		}
 	}
 
 	// ── Cop-specific state machine ────────────────────────────────────────────

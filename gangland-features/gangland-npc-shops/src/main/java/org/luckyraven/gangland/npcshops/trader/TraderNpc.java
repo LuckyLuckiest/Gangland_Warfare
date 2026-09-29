@@ -4,6 +4,7 @@ import com.cryptomorin.xseries.XAttribute;
 import lombok.Getter;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
+import net.citizensnpcs.trait.SkinTrait;
 import org.bukkit.Location;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Entity;
@@ -29,6 +30,9 @@ public final class TraderNpc {
 		String name = data.getDisplayName() != null ? data.getDisplayName() : "Trader";
 
 		NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, name);
+		// No name-based Mojang skin fetch: its arrival despawns/respawns the NPC (Skin.applyAndRespawn) into a new
+		// entity without the health/gravity/invulnerability set below (same fix as civilians' CitizensNpcs).
+		npc.getOrAddTrait(SkinTrait.class).setFetchDefaultSkin(false);
 		// Citizens must NOT persist our traders in its own saves.yml — TraderRepository is the sole
 		// source of truth. Matches the pattern used for cops in CopNpcFactory.java:81.
 		npc.data().setPersistent(NPC.Metadata.SHOULD_SAVE, false);
