@@ -192,8 +192,12 @@ public class CopListener implements Listener {
 	}
 
 	/**
-	 * Reports a killed cop down to its squads (the radio's "Officer down" and a backup request), destroys it and
-	 * clears its drops. The dying entity is already invalid here, so the cop is found without a validity check.
+	 * Reports a killed cop down to its squads (the radio's "Officer down" and a backup request), marks it for removal
+	 * and clears its drops. The dying entity is already invalid here, so the cop is found without a validity check.
+	 * <p>
+	 * The cop is marked, not destroyed: {@code destroy()} despawns with reason PLUGIN, which deletes the body mid-death
+	 * (no death animation). Citizens' own LOW handler despawns it with reason DEATH and keeps the body; the next AI tick
+	 * releases the marked cop.
 	 * <p>
 	 * Runs at LOWEST: Citizens' own death listener (LOW) despawns the NPC, after which {@code getNpc().getEntity()}
 	 * is null and the dying cop can no longer be matched to its entity. A cop walking home (RETURNING) left every
@@ -214,7 +218,7 @@ public class CopListener implements Listener {
 			if (squad == null) groupSquad.add(cop); // RETURNING: in no squad, still the group's casualty
 			if (groupSquad.members().contains(cop)) groupSquad.memberDown(cop);
 		}
-		cop.destroy();
+		cop.markForRemoval();
 
 		event.getDrops().clear();
 		event.setDroppedExp(0);
