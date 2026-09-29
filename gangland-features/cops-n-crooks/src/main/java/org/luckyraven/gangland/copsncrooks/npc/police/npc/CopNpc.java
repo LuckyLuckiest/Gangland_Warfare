@@ -80,6 +80,10 @@ public class CopNpc extends AbstractNpc {
 	private @Nullable Consumer<LivingEntity> loadout;
 	/** The entity {@link #loadout} was last applied to. */
 	private @Nullable Entity                 loadoutEntity;
+	/** {@code "&9Officer &fBob &7#1592"} as configured ({@code Cops.Names}); {@code null} for tests and stray spawns. */
+	@Getter
+	@Setter
+	private @Nullable String                 callsign;
 
 	public CopNpc(JavaPlugin plugin, NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors,
 	              Location spawnLocation, CopConfigProvider configProvider) {

@@ -16,7 +16,7 @@
 # Tiers are assigned to spawn points and determine NPC stats and equipment.
 #
 # Fields:
-#   Display_Name:   Name shown above the NPC (supports & color codes)
+#   Display_Name:   The cop's rank, the %rank% in Cops.Names.Format (supports & color codes)
 #   Health:         Max health in half-hearts (20.0 = 10 hearts)
 #   Damage:         Melee damage dealt per hit
 #   Speed:          Movement speed multiplier (1.0 = default walk speed)
@@ -143,6 +143,41 @@ Cops:
       Health_Fraction: 0.3
       # Blocks searched around the cop for a spot the suspect cannot see (2-32).
       Radius: 12.0
+   # Every cop gets a callsign such as "Officer Bob #1592", shown above its head and used on the radio.
+   Names:
+      # %rank% = the tier's Display_Name, %name% = a first name from First_Names, %badge% = 1000 + the NPC id
+      # (unique among live NPCs).
+      Format: "%rank% &f%name% &7#%badge%"
+      # Leave the list empty ([]) for no first name ("Officer #1592"); remove the key for the built-in names.
+      First_Names:
+         - Bob
+         - Jim
+         - Carl
+         - Dave
+         - Frank
+         - Mike
+         - Tony
+         - Steve
+         - Ray
+         - Eddie
+         - Gus
+         - Hank
+         - Joe
+         - Lou
+         - Marty
+         - Nick
+         - Pete
+         - Rick
+         - Sam
+         - Vince
+         - Walt
+         - Ann
+         - Kate
+         - Linda
+         - Maria
+         - Rosa
+         - Sue
+         - Tina
    Tiers:
       1:
          Display_Name: "&9Officer"

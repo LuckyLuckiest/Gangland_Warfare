@@ -272,4 +272,9 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 	default RetreatSettings getRetreatSettings() {
 		return RetreatSettings.DEFAULT;
 	}
+
+	/** Cop callsigns ({@code Cops.Names}). */
+	default CopNames getNames() {
+		return CopNames.DEFAULT;
+	}
 }

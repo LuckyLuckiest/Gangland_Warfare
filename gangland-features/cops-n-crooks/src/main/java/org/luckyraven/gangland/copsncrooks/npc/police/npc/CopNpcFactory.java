@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.npc.police.npc;
 
 import com.cryptomorin.xseries.XAttribute;
 import net.citizensnpcs.api.npc.NPC;
+import net.citizensnpcs.trait.HologramTrait;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.attribute.AttributeInstance;
@@ -18,6 +19,7 @@ import org.luckyraven.gangland.civilians.npc.combat.DownedTargetFilter;
 import org.luckyraven.gangland.civilians.npc.entity.EntityMark;
 import org.luckyraven.gangland.civilians.npc.npc.CitizensNpcs;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopNames;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
@@ -31,6 +33,7 @@ import org.luckyraven.keystone.util.ChatUtil;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
@@ -86,11 +89,15 @@ public class CopNpcFactory {
 
 		CopTierConfig tierConfig = configProvider.getTierConfig(tier);
 
-		String plainName = ChatUtil.replaceColorCodes(ChatUtil.color(tierConfig.displayName()), "");
+		CopNames names = configProvider.getNames() != null ? configProvider.getNames() : CopNames.DEFAULT;
 
-		NPC npc = CitizensNpcs.create(EntityType.PLAYER, plainName);
+		// Created under a placeholder: the badge is the Citizens id, only known once the NPC exists.
+		NPC    npc      = CitizensNpcs.create(EntityType.PLAYER, "Officer");
+		String callsign = CitizensBridge.nameplate(npc, names, tierConfig.displayName(), ThreadLocalRandom.current());
 		npc.setProtected(false);
 		npc.data().setPersistent(NPC.Metadata.SHOULD_SAVE, false);
+		// The callsign hologram line stands in for the nameplate (CitizensBridge#nameplate).
+		npc.data().setPersistent(NPC.Metadata.NAMEPLATE_VISIBLE, false);
 		npc.spawn(spawnLocation);
 
 		if (!npc.isSpawned()) {
@@ -105,6 +112,7 @@ public class CopNpcFactory {
 		Map<CopState, CopBehavior> behaviors = behaviorFactory.createBehaviors();
 
 		CopNpc copNpc = new CopNpc(plugin, npc, tierConfig, behaviors, spawnLocation, configProvider);
+		copNpc.setCallsign(callsign);
 		copNpc.setTargetFilter(downedTargetFilter);
 
 		// Bartizan-backed ranged weapon: a random name from the tier's pool, resolved through the factory hook.
@@ -254,7 +262,25 @@ public class CopNpcFactory {
 	 * {@code CivilianNpcFactory}/{@code NpcDamageUnprotectListener} and removes any risk if this factory is ever
 	 * exposed as a bean later.
 	 */
-	private static final class CitizensBridge {
+	static final class CitizensBridge {
+
+		/**
+		 * Names the cop before it spawns and returns its coloured callsign ({@code Cops.Names}). The Citizens name is
+		 * the short plain {@code "Bob #1592"}: at 16 characters or fewer with no colour Citizens keeps it as the
+		 * entity's profile name, so {@code Player#getName()} (death and kill messages, tab) never shows the
+		 * {@code CIT-...} team name. The caller hides the nameplate ({@code NAMEPLATE_VISIBLE}) and the full coloured
+		 * callsign is hologram line 0 in its place ({@code HologramTrait} stacks lines upward from the hidden plate, so a line inserted at 0, e.g. the
+		 * healthbars module's bar, sits directly under the callsign).
+		 */
+		static String nameplate(NPC npc, CopNames names, String rank, Random random) {
+			String firstName = names.pickName(random);
+			int    badge     = CopNames.badge(npc.getId());
+			String callsign  = names.callsign(rank, firstName, badge);
+
+			npc.setName(CopNames.shortName(firstName, badge));
+			npc.getOrAddTrait(HologramTrait.class).addLine(ChatUtil.color(callsign));
+			return callsign;
+		}
 
 		/**
 		 * Schedules a 1-tick delayed validation of the NPC's actual spawned position. This acts as a fail-safe for
