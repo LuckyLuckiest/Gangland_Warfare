@@ -143,6 +143,26 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("RETURNING cops beyond the pursuit range do not fill the spawn count; nearby ones do")
+	void spawnTask_ignoresStrandedReturningCops() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		group.add(fx.cop(CopState.RETURNING, 500, 500));
+		group.add(fx.cop(CopState.RETURNING, 500, -500));
+
+		manager.spawnTick(playerId, wanted);
+
+		assertEquals(4, group.getCops().size(), "two fresh cops despite two stranded returners");
+
+		CopGroup near = manager.groupFor(playerId);
+		near.getCops().clear();
+		near.add(fx.cop(CopState.RETURNING, 10, 10));
+		near.add(fx.cop(CopState.RETURNING, 12, 10));
+		manager.spawnTick(playerId, wanted);
+		assertEquals(2, near.getCops().size(), "nearby returners still count");
+	}
+
+	@Test
 	@DisplayName("a tier rise is announced once by dispatch; the first spawn and a steady tier are not")
 	void tierRise_dispatchesEscalateOnce() {
 		manager.onWantedStart(player, wanted);

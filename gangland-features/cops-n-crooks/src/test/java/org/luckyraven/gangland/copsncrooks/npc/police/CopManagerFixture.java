@@ -69,6 +69,7 @@ final class CopManagerFixture implements AutoCloseable {
 				.thenReturn(mock(BukkitTask.class));
 
 		when(provider.getMaxCopsPerPlayer()).thenReturn(6);
+		when(provider.getPursuitMaxDistance()).thenReturn(80.0);
 		when(provider.getBackupSettings()).thenReturn(new BackupSettings(true, 1, 30_000, 60_000));
 		when(provider.getRadioSettings()).thenReturn(CopConfigProvider.COP_RADIO_DEFAULTS);
 		CopTierConfig tierConfig = mock(CopTierConfig.class);
