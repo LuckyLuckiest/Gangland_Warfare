@@ -54,7 +54,7 @@
     </modules>
 
     <properties>
-        <revision>0.12.0</revision>
+        <revision>0.13.0</revision>
         <!-- Matches Keystone's release (17): the shaded jar must load on every JVM Keystone
              loads on, or the MC 1.16+ support floor is silently broken. release (not
              source/target) also validates against the Java 17 API, so building on a newer
