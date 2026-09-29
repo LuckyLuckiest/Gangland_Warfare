@@ -568,5 +568,70 @@
   "status": "fixed",
   "note": "Fixed in Gangland 0.12.0 (branch npc-squad-tactics, commit 804e2b15): documentation/developer/civilians.md now names the real module and package. Not merged: master, publish and deploy wait for the owner's approval.",
   "updatedAt": "2026-09-29"
+ },
+ "T-126": {
+  "status": "fixed",
+  "note": "Fixed in Gangland 0.12.0 (branch npc-squad-tactics, f80dd7c0 + d46cfbcf). Re-accepted: 0 replaced entities in 17 runs, SWAT max_health 40.0 on 80/80. Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-09-29"
+ },
+ "T-127": {
+  "status": "fixed",
+  "note": "Fixed in Gangland 0.12.0 (branch npc-squad-tactics, 6dd6f4b8). Re-accepted: 23/23 tagged deaths radioed. Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-09-29"
+ },
+ "T-128": {
+  "status": "fixed",
+  "note": "Fixed in Gangland 0.12.0 (branch npc-squad-tactics, c9bd3ee4). Re-accepted: 1 line per clear per listener. Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-09-29"
+ },
+ "T-129": {
+  "status": "fixed",
+  "note": "Fixed in Gangland 0.12.0 (branch npc-squad-tactics, c9bd3ee4) + Keystone 475e31c. Re-accepted: 0 misleading lines in 19 runs. Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-09-29"
+ },
+ "T-130": {
+  "status": "fixed",
+  "note": "Fixed in Gangland 0.12.0 (branch npc-squad-tactics, 5c4ce008). Re-accepted: fresh cops in 1.9 s. Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-09-29"
+ },
+ "T-132": {
+  "status": "fixed",
+  "note": "Fixed in Gangland 0.12.0 (branch npc-squad-tactics, c9bd3ee4). Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-09-29"
+ },
+ "KS-NP-37": {
+  "status": "fixed",
+  "note": "Fixed in Keystone 1.13.0 (branch phase-h12-npc-tactics, 2ac5dd8). Re-accepted: 0 frozen cops in 14 windows. Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-09-29"
+ },
+ "KS-NP-38": {
+  "status": "fixed",
+  "note": "Fixed in Keystone 1.13.0 (branch phase-h12-npc-tactics, 2ac5dd8/ef29b4a/475e31c). Re-accepted: swing median 2.10, 76-78% in reach. Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-09-29"
+ },
+ "BZ-NU-8": {
+  "status": "fixed",
+  "note": "Fixed in Bartizan 0.6.0 (branch npc-fire-while-moving, 86e1519; the consumer passes copNpc::getEntity, Gangland 841ff175). Re-accepted: 0 stale-entity trails in 17 runs. Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-09-29"
+ },
+ "T-121": {
+  "status": "fixed",
+  "note": "Fixed in Gangland 0.12.0 (branch npc-squad-tactics, 6dd6f4b8): a RETURNING cop in no squad is reported down through its group squad (CopListenerDeathTest.onCopDeath_returningCopInNoSquad_reportedDownToGroupSquad). Re-acceptance radioed 23/23 deaths (T-127); the RETURNING case itself is covered by the unit test only. Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-09-29"
+ },
+ "KS-NP-33": {
+  "status": "fixed",
+  "note": "Fixed in Keystone 1.13.0 (branch phase-h12-npc-tactics, d24e6ea): takeCover(threat, radius, squad) joins the NPC to the given squad and signals FALL_BACK / IN_COVER through it, so a retreat before any pursue() (or after stopNavigation) is heard; Gangland CombatBehavior now uses it (c9bd3ee4). Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-09-29"
+ },
+ "KS-NP-34": {
+  "status": "fixed",
+  "note": "Fixed in Keystone 1.13.0 (branch phase-h12-npc-tactics, d24e6ea): a takeCover call inside the cover retry window returns FAILED before touching mode, order, post or path, so the formation survives until the next pursue(). Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-09-29"
+ },
+ "KS-NP-31": {
+  "status": "progress",
+  "note": "Partly addressed in Keystone 1.13.0 (branch phase-h12-npc-tactics, 2ac5dd8): a walk Citizens stopped 1.5+ blocks short of its spot or post is now issued again. A genuinely stuck NPC within ARRIVED_DISTANCE (2 blocks) of the destination still reads as arrived; row stays open for that case.",
+  "updatedAt": "2026-09-29"
  }
 }
