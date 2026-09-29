@@ -1,6 +1,6 @@
 # Gangland Health Bars: a health bar over Gangland's own Citizens NPCs (cops, civilians) while they are hurt.
 # The bar sits directly under a cop's callsign line, or above the head of an NPC without one, and is hidden at
-# full health. Persistent (saved) and protected Citizens NPCs, such as traders and bankers, never show one.
+# full health. Persistent (saved) and protected Citizens NPCs, such as invulnerable traders and bankers, never show one.
 # Every key is optional: a missing key uses the default shown here.
 
 # Set to false to turn the bars off without removing the module.
