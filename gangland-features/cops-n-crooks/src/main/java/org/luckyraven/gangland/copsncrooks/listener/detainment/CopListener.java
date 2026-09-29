@@ -194,10 +194,14 @@ public class CopListener implements Listener {
 	/**
 	 * Reports a killed cop down to its squads (the radio's "Officer down" and a backup request), destroys it and
 	 * clears its drops. The dying entity is already invalid here, so the cop is found without a validity check.
+	 * <p>
+	 * Runs at LOWEST: Citizens' own death listener (LOW) despawns the NPC, after which {@code getNpc().getEntity()}
+	 * is null and the dying cop can no longer be matched to its entity. A cop walking home (RETURNING) left every
+	 * squad, so it is reported down to its group's squad (T-121).
 	 *
 	 * @param event the death event
 	 */
-	@EventHandler(priority = EventPriority.MONITOR)
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onCopDeath(EntityDeathEvent event) {
 		CopNpc cop = copManager.findDyingCop(event.getEntity());
 		if (cop == null) return;
@@ -205,8 +209,10 @@ public class CopListener implements Listener {
 		NpcSquad squad = cop.getCurrentSquad();
 		if (squad != null) squad.memberDown(cop);
 		CopGroup group = cop.getGroup();
-		if (group != null && group.getSquad() != squad && group.getSquad().members().contains(cop)) {
-			group.getSquad().memberDown(cop);
+		if (group != null && group.getSquad() != squad) {
+			NpcSquad groupSquad = group.getSquad();
+			if (squad == null) groupSquad.add(cop); // RETURNING: in no squad, still the group's casualty
+			if (groupSquad.members().contains(cop)) groupSquad.memberDown(cop);
 		}
 		cop.destroy();
 
