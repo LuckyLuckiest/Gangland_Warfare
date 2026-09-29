@@ -1,6 +1,8 @@
 package org.luckyraven.gangland.copsncrooks.listener.detainment;
 
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -106,6 +109,38 @@ class CopListenerDeathTest {
 
 		verify(listener).onSignal(eq(attackers), any(NpcSquadSignal.class), eq(cop), any());
 		verify(listener, never()).onSignal(eq(group.getSquad()), any(), any(), any());
+		verify(cop).destroy();
+	}
+
+	@Test
+	@DisplayName("the death is handled before Citizens (LOW) despawns the NPC and detaches its entity")
+	void onCopDeath_runsBeforeCitizensDespawn() throws NoSuchMethodException {
+		EventHandler handler = CopListener.class.getMethod("onCopDeath", EntityDeathEvent.class)
+		                                        .getAnnotation(EventHandler.class);
+		assertEquals(EventPriority.LOWEST, handler.priority());
+	}
+
+	@Test
+	@DisplayName("T-121: a cop killed walking home (in no squad) is still reported down to its group squad")
+	void onCopDeath_returningCopInNoSquad_reportedDownToGroupSquad() {
+		CopManager   manager = mock(CopManager.class);
+		LivingEntity body    = mock(LivingEntity.class);
+		CopNpc       cop     = mock(CopNpc.class);
+		when(manager.findDyingCop(body)).thenReturn(cop);
+
+		CopGroup         group    = new CopGroup(UUID.randomUUID());
+		NpcSquadListener listener = mock(NpcSquadListener.class);
+		group.setListener(listener);
+		group.add(cop);
+		group.add(mock(CopNpc.class));
+		group.getSquad().remove(cop); // RETURNING: leaveSquad() dropped it from every squad
+		when(cop.getGroup()).thenReturn(group);
+		when(cop.getCurrentSquad()).thenReturn(null);
+
+		new CopListener(manager).onCopDeath(deathOf(body));
+
+		verify(listener).onSignal(eq(group.getSquad()), eq(NpcSquadSignal.MAN_DOWN), eq(cop), any());
+		assertFalse(group.getSquad().members().contains(cop));
 		verify(cop).destroy();
 	}
 
