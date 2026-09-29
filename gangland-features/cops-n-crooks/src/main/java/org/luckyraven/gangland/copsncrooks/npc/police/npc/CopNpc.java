@@ -24,6 +24,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.concurrent.ThreadLocalRandom;
 
 @CustomLog
@@ -70,6 +71,13 @@ public class CopNpc extends AbstractNpc {
 	private @Nullable UUID                   soloTargetId;
 	/** The squad {@link #squadFor} last handed out; left when the next one differs, so no squad keeps a stale member. */
 	private @Nullable NpcSquad               lastSquad;
+	/**
+	 * Everything {@link CopNpcFactory} puts on the entity itself (tier Health, police mark, armour, held weapon) — all
+	 * of it lives on the Bukkit entity, not the Citizens NPC, so it is lost when Citizens swaps the entity out.
+	 */
+	private @Nullable Consumer<LivingEntity> loadout;
+	/** The entity {@link #loadout} was last applied to. */
+	private @Nullable Entity                 loadoutEntity;
 
 	public CopNpc(JavaPlugin plugin, NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors,
 	              Location spawnLocation, CopConfigProvider configProvider) {
@@ -141,6 +149,26 @@ public class CopNpc extends AbstractNpc {
 		newBehavior.onEnter(this);
 	}
 
+	/** Sets the entity-level loadout and applies it to the current entity. */
+	public void setLoadout(Consumer<LivingEntity> loadout) {
+		this.loadout       = loadout;
+		this.loadoutEntity = null;
+		refreshLoadout();
+	}
+
+	/**
+	 * Re-applies the loadout when Citizens has replaced the NPC's entity. Citizens respawns a PLAYER NPC once its
+	 * name-based default skin arrives from Mojang ({@code Skin.applyAndRespawn}: despawn + spawn, new entity ID). The
+	 * skin cache is in-memory, so this hits the first cops after every boot, ~1-2 s after spawn — the replacement
+	 * starts at 20 max health with no armour, weapon or police mark.
+	 */
+	public void refreshLoadout() {
+		Entity entity = npc.getEntity();
+		if (loadout == null || entity == loadoutEntity || !(entity instanceof LivingEntity living)) return;
+		loadoutEntity = entity;
+		loadout.accept(living);
+	}
+
 	// ── Cop-specific state machine ────────────────────────────────────────────
 
 	/**
@@ -155,6 +183,7 @@ public class CopNpc extends AbstractNpc {
 			markForRemoval();
 			return;
 		}
+		refreshLoadout();
 
 		// Store target so behaviors can access it.
 		// PLAYER-type NPC entities pass instanceof Player but must be stored as entity targets —

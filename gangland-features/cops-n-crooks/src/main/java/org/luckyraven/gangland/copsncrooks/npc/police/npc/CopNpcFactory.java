@@ -101,37 +101,34 @@ public class CopNpcFactory {
 			CitizensBridge.scheduleDelayedSpawnValidation(plugin, npc, this::isSafeSpawnPosition);
 		}
 
-		if (npc.getEntity() != null) {
-			markManager.setMark(npc.getEntity(), EntityMark.POLICE.name());
-		}
-
 		Map<CopState, CopBehavior> behaviors = behaviorFactory.createBehaviors();
 
 		CopNpc copNpc = new CopNpc(plugin, npc, tierConfig, behaviors, spawnLocation, configProvider);
 		copNpc.setTargetFilter(downedTargetFilter);
 
-		applyHealthBonus(copNpc.getEntity(), tierConfig.health());
-
-		// equip() runs first so the ranged-attack block below can override its vanilla weaponPool main-hand item
-		// with the Bartizan-built weapon item, reproducing 0.8.4's heldWeapon != null ? heldWeapon.buildItem() :
-		// weaponPool precedence (matches CivilianNpcFactory, T-HR2).
-		copNpc.equip();
-
 		// Bartizan-backed ranged weapon: a random name from the tier's pool, resolved through the factory hook.
 		// NpcRangedAttack.NONE (no weapon name configured, unresolvable name, or Bartizan absent) leaves the cop on
-		// the vanilla weaponPool fallback CopNpc#equip() already applied above. Bartizan owns the NPC magazine —
-		// no off-hand ammo item is stocked here (0.8.4's giveStartingAmmo is gone).
+		// the vanilla weaponPool fallback CopNpc#equip() applies. Bartizan owns the NPC magazine — no off-hand ammo
+		// item is stocked here (0.8.4's giveStartingAmmo is gone). The supplier keeps Bartizan on the live entity.
 		NpcRangedAttack rangedAttack = NpcRangedAttack.NONE;
+		ItemStack       weaponItem   = null;
 		if (tierConfig.canUseWeapons()) {
 			String weaponName = pickWeaponName(tierConfig);
 			rangedAttack = bartizanNpcWeapons.create(copNpc::getEntity, weaponName, copNpc.getDifficulty());
 			copNpc.setRangedAttack(rangedAttack);
-
-			ItemStack weaponItem = bartizanNpcWeapons.buildItem(weaponName);
-			if (weaponItem != null) {
-				setMainHand(copNpc.getEntity(), weaponItem);
-			}
+			weaponItem = bartizanNpcWeapons.buildItem(weaponName);
 		}
+
+		// Everything on the entity itself goes through the loadout, which CopNpc re-applies to a replacement entity
+		// (Citizens' skin-fetch respawn). equip() runs before the weapon item so the Bartizan-built item overrides
+		// its vanilla weaponPool main hand, reproducing 0.8.4's heldWeapon precedence (matches CivilianNpcFactory).
+		ItemStack heldWeapon = weaponItem;
+		copNpc.setLoadout(entity -> {
+			markManager.setMark(entity, EntityMark.POLICE.name());
+			applyHealthBonus(entity, tierConfig.health());
+			copNpc.equip();
+			if (heldWeapon != null) setMainHand(entity, heldWeapon.clone());
+		});
 
 		applyTuning(copNpc, tierConfig, configProvider, rangedAttack);
 
