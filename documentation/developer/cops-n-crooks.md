@@ -336,9 +336,14 @@ returning) to `COMBAT`; cops spawned later fight too.
 
 #### Retreat to cover (0.12.0)
 
-`CombatBehavior` checks `RetreatSettings` (`Cops.Retreat`) each COMBAT tick. A cop at or below `Health_Fraction` of
-max health calls Keystone's `takeCover(target, Radius)`, which sends `FALL_BACK`/`IN_COVER`. A retreat lasts at most
-`MAX_COVER_MS` (10 s) per COMBAT episode. `FAILED` (no cover in reach) keeps the cop fighting.
+`CopRetreat` checks `RetreatSettings` (`Cops.Retreat`) each tick of every state that fights: `CombatBehavior`, and
+`PursuingBehavior` for ranged cops (a band shooter hunting a wanted player stays in PURSUING and never reaches COMBAT
+unless the player attacks). A melee cop in PURSUING is chasing to cuff, not fighting, so it does not retreat, and a
+cop with the suspect in cuff range still cuffs. A cop at or below `Health_Fraction` of max health calls Keystone's
+`takeCover(target, Radius, squad)`, which joins the squad and sends `FALL_BACK`/`IN_COVER`. A retreat lasts at most
+`CopRetreat.MAX_COVER_MS` (10 s) per state episode. `FAILED` (no cover in reach) keeps the cop fighting.
+`Fall_Back` and `In_Cover` are `Radio.Priority` kinds, so a same-tick `Resisting` from the hit that caused the
+retreat cannot drop them through the per-player gap.
 
 A killed cop is found with `findDyingCop` (its entity is no longer valid during `EntityDeathEvent`), and
 `CopListener` calls `memberDown` on its current squad and on the group squad, so the Man Down line, backup and

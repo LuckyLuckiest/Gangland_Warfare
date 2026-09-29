@@ -32,7 +32,7 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 					Map.entry("Backup", 20000L), Map.entry("Responding", 5000L), Map.entry("Ack", 2000L),
 					Map.entry("Fall_Back", 5000L), Map.entry("In_Cover", 10000L)),
 			Set.of("Contact", "Man_Down", "Leader_Down", "Backup", "Resisting", "Dispatch_Wanted", "Escalate",
-			      "Stand_Down"),
+			      "Stand_Down", "Fall_Back", "In_Cover"),
 			"BLOCK_NOTE_BLOCK_HAT", 0.4f, 1.8f);
 
 	/**

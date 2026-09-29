@@ -14,7 +14,6 @@ import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.keystone.npc.NpcCoverStatus;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.testkit.BukkitStatics;
-import org.mockito.InOrder;
 
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
@@ -22,7 +21,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -193,7 +191,7 @@ class CombatBehaviorTest {
 		when(cop.takeCover(eq(player), eq(RetreatSettings.DEFAULT.radius()), any())).thenReturn(NpcCoverStatus.ARRIVED);
 
 		behavior.tick(cop);
-		now.addAndGet(CombatBehavior.MAX_COVER_MS - 1);
+		now.addAndGet(CopRetreat.MAX_COVER_MS - 1);
 		behavior.tick(cop);
 		verify(cop, never()).pursue(any(), any(), anyDouble());
 
@@ -217,7 +215,7 @@ class CombatBehaviorTest {
 		when(cop.takeCover(eq(player), eq(RetreatSettings.DEFAULT.radius()), any())).thenReturn(NpcCoverStatus.ARRIVED);
 
 		behavior.tick(cop);
-		now.addAndGet(CombatBehavior.MAX_COVER_MS);
+		now.addAndGet(CopRetreat.MAX_COVER_MS);
 		behavior.onExit(cop);
 		behavior.tick(cop);
 
@@ -226,8 +224,8 @@ class CombatBehaviorTest {
 	}
 
 	@Test
-	@DisplayName("hurt on its first COMBAT tick (no Keystone squad yet): the cop joins its squad before taking cover, so Fall_Back is radioed")
-	void badlyHurt_withoutSquad_joinsSquadBeforeCover() {
+	@DisplayName("hurt on its first COMBAT tick (no Keystone squad yet): takeCover joins the squad itself, so Fall_Back is radioed with no pursue first (T-133)")
+	void badlyHurt_withoutSquad_takesCoverThroughSquad_noPursue() {
 		Player player = badlyHurtCopFacing();
 		NpcSquad squad = new NpcSquad();
 		when(cop.squadFor(player)).thenReturn(squad);
@@ -236,10 +234,8 @@ class CombatBehaviorTest {
 
 		behavior.tick(cop);
 
-		InOrder order = inOrder(cop);
-		order.verify(cop).pursue(player, squad, ALERT_RANGE);
-		order.verify(cop).takeCover(player, RetreatSettings.DEFAULT.radius(), squad);
-		verify(cop, times(1)).pursue(any(), any(), anyDouble());
+		verify(cop).takeCover(player, RetreatSettings.DEFAULT.radius(), squad);
+		verify(cop, never()).pursue(any(), any(), anyDouble());
 	}
 
 	private Player badlyHurtCopFacing() {

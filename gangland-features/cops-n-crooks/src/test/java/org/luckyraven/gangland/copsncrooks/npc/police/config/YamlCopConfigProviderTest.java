@@ -307,6 +307,21 @@ class YamlCopConfigProviderTest {
 		assertTrue(provider.getRadioSettings().cooldownFor("In_Cover") > 0);
 	}
 
+	@Test
+	@DisplayName("Fall_Back and In_Cover are priority lines in the shipped cops.yml and the code defaults, so a same-tick Resisting cannot drop them (T-134)")
+	void retreatLines_arePriority() throws IOException {
+		String yaml;
+		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("npc/cops.yml"))) {
+			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+		}
+		CopConfigProvider provider = parse(yaml);
+
+		for (String key : new String[]{"Fall_Back", "In_Cover"}) {
+			assertTrue(provider.getRadioSettings().isPriority(key), key);
+			assertTrue(CopConfigProvider.COP_RADIO_DEFAULTS.isPriority(key), key);
+		}
+	}
+
 	private static CopConfigProvider parse(String yaml) {
 		ConfigReport   report   = new ConfigReport();
 		Reader         reader   = new StringReader(yaml);

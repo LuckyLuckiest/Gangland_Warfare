@@ -14,15 +14,19 @@ import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
+import org.luckyraven.gangland.npc.RetreatSettings;
+import org.luckyraven.keystone.npc.NpcCoverStatus;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -45,6 +49,7 @@ class PursuingBehaviorTest {
 	private NpcSquad         squad;
 	private PursuingBehavior behavior;
 	private CuffLockRegistry cuffLocks;
+	private final AtomicLong now = new AtomicLong(1_000);
 
 	@BeforeEach
 	void setUp() {
@@ -64,7 +69,7 @@ class PursuingBehaviorTest {
 
 		cuffLocks = new CuffLockRegistry();
 		behavior  = new PursuingBehavior(CUFF_RADIUS, ALERT_RANGE, MAX_DISTANCE, MAX_TICKS, mock(DetainmentService.class),
-		                                 cuffLocks);
+		                                 cuffLocks, RetreatSettings.DEFAULT, now::get);
 	}
 
 	@AfterEach
@@ -165,6 +170,79 @@ class PursuingBehaviorTest {
 		behavior.tick(cop);
 
 		verify(cop).transitionTo(CopState.COMBAT);
+	}
+
+	@Test
+	@DisplayName("a badly hurt shooter breaks off to cover through its squad instead of holding its post (T-135)")
+	void badlyHurtShooter_takesCover() {
+		badlyHurtShooter();
+		when(cop.takeCover(player, RetreatSettings.DEFAULT.radius(), squad)).thenReturn(NpcCoverStatus.MOVING);
+
+		behavior.tick(cop);
+
+		verify(cop).takeCover(player, RetreatSettings.DEFAULT.radius(), squad);
+		verify(cop, never()).pursue(any(), any(), anyDouble());
+		verify(cop, never()).transitionTo(any());
+	}
+
+	@Test
+	@DisplayName("a badly hurt shooter with no cover in reach (open ground) keeps pursuing")
+	void badlyHurtShooter_noCover_pursues() {
+		badlyHurtShooter();
+		when(cop.takeCover(player, RetreatSettings.DEFAULT.radius(), squad)).thenReturn(NpcCoverStatus.FAILED);
+
+		behavior.tick(cop);
+
+		verify(cop).pursue(player, squad, ALERT_RANGE);
+	}
+
+	@Test
+	@DisplayName("a badly hurt melee cop does not fight while pursuing: it keeps chasing to cuff, no retreat")
+	void badlyHurtMelee_keepsPursuing() {
+		badlyHurtShooter();
+		when(cop.isRangedAttacker()).thenReturn(false);
+
+		behavior.tick(cop);
+
+		verify(cop, never()).takeCover(any(), anyDouble(), any());
+		verify(cop).pursue(player, squad, ALERT_RANGE);
+	}
+
+	@Test
+	@DisplayName("a badly hurt shooter with the suspect in cuff range still cuffs: the retreat never breaks cuffing")
+	void badlyHurtShooter_inCuffRange_stillCuffs() {
+		badlyHurtShooter();
+		inCuffRange();
+
+		behavior.tick(cop);
+
+		verify(cop).transitionTo(CopState.CUFFING);
+		verify(cop, never()).takeCover(any(), anyDouble(), any());
+	}
+
+	@Test
+	@DisplayName("the cover time limit holds in PURSUING and a new pursuit (onExit) gets a fresh retreat")
+	void badlyHurtShooter_coverLimit_andResetOnExit() {
+		badlyHurtShooter();
+		when(cop.takeCover(player, RetreatSettings.DEFAULT.radius(), squad)).thenReturn(NpcCoverStatus.ARRIVED);
+
+		behavior.tick(cop);
+		now.addAndGet(CopRetreat.MAX_COVER_MS);
+		behavior.tick(cop);
+		verify(cop, times(1)).takeCover(any(), anyDouble(), any());
+		verify(cop, times(1)).pursue(player, squad, ALERT_RANGE);
+
+		behavior.onExit(cop);
+		behavior.tick(cop);
+		verify(cop, times(2)).takeCover(any(), anyDouble(), any());
+	}
+
+	private void badlyHurtShooter() {
+		LivingEntity self = mock(LivingEntity.class);
+		when(self.getHealth()).thenReturn(5.0);
+		when(self.getMaxHealth()).thenReturn(20.0);
+		when(cop.getEntity()).thenReturn(self);
+		when(cop.isRangedAttacker()).thenReturn(true);
 	}
 
 	private void inCuffRange() {

@@ -8,11 +8,8 @@ import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.npc.RetreatSettings;
-import org.luckyraven.keystone.npc.NpcCoverStatus;
 
-import java.util.Map;
 import java.util.UUID;
-import java.util.WeakHashMap;
 import java.util.function.LongSupplier;
 
 /**
@@ -20,20 +17,10 @@ import java.util.function.LongSupplier;
  */
 public class CombatBehavior implements CopBehavior {
 
-	/**
-	 * How long one retreat lasts: a cop still hurt after this long in cover comes out and fights on for the rest of
-	 * its COMBAT episode, so hurt cops cannot hide (and hold their spawn slot) until the wanted level ends.
-	 */
-	// ponytail: code constant, a Retreat.Max_Cover_Ticks key when owners want to tune it
-	static final long MAX_COVER_MS = 10_000;
-
 	private final double            combatRange;
 	private final double            alertRange;
 	private final DetainmentService detainmentService;
-	private final RetreatSettings   retreat;
-	private final LongSupplier      clock;
-	/** When each cop's retreat of this COMBAT episode began; cleared on exit. Weak: a despawned cop drops out. */
-	private final Map<CopNpc, Long> retreatStartedAt = new WeakHashMap<>();
+	private final CopRetreat        retreat;
 
 	public CombatBehavior(double combatRange, double alertRange, DetainmentService detainmentService,
 	                      RetreatSettings retreat) {
@@ -45,8 +32,7 @@ public class CombatBehavior implements CopBehavior {
 		this.combatRange       = combatRange;
 		this.alertRange        = alertRange;
 		this.detainmentService = detainmentService;
-		this.retreat           = retreat;
-		this.clock             = clock;
+		this.retreat           = new CopRetreat(retreat, clock);
 	}
 
 	@Override
@@ -77,16 +63,9 @@ public class CombatBehavior implements CopBehavior {
 			}
 		}
 
-		// Badly hurt: break off to cover (the squad radios Fall_Back / In_Cover) and keep firing from there when seen,
-		// for at most MAX_COVER_MS per COMBAT episode. No cover within the radius (open ground): keep fighting rather
-		// than freeze on the spot.
-		LivingEntity self = cop.getEntity();
-		if (self != null && retreat.shouldRetreat(self.getHealth(), self.getMaxHealth()) && retreatTimeLeft(cop)) {
-			// Fresh from PURSUING, stopNavigation cleared the Keystone squad: join it first so the retreat is radioed.
-			if (cop.getCurrentSquad() == null) cop.pursue(target, cop.squadFor(target), alertRange);
-			// The squad is passed so the first-tick Fall_Back is radioed too.
-			if (cop.takeCover(target, retreat.radius(), cop.squadFor(target)) != NpcCoverStatus.FAILED) return;
-		}
+		// Badly hurt: break off to cover and keep firing from there when seen, for at most CopRetreat.MAX_COVER_MS per
+		// COMBAT episode. No cover within the radius (open ground): keep fighting rather than freeze on the spot.
+		if (retreat.takeCover(cop, target)) return;
 
 		// Keystone's squad pursuit: ranged cops work their post on the squad's fan while they see the target inside
 		// their firing band, everyone else closes in, routes around obstacles or searches from the last-known position.
@@ -100,14 +79,8 @@ public class CombatBehavior implements CopBehavior {
 
 	@Override
 	public void onExit(CopNpc cop) {
-		retreatStartedAt.remove(cop);
+		retreat.reset(cop);
 		cop.stopNavigation();
-	}
-
-	/** Starts the cop's retreat clock on first call; whether its retreat of this COMBAT episode still has time. */
-	private boolean retreatTimeLeft(CopNpc cop) {
-		long now = clock.getAsLong();
-		return now - retreatStartedAt.computeIfAbsent(cop, c -> now) < MAX_COVER_MS;
 	}
 
 	private LivingEntity resolveTarget(CopNpc cop) {

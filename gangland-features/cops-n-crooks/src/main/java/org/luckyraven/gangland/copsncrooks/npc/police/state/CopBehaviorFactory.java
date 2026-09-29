@@ -50,7 +50,8 @@ public class CopBehaviorFactory {
 		                                                      configProvider.getAlertRange(),
 		                                                      configProvider.getPursuitMaxDistance(),
 		                                                      configProvider.getPursuitMaxTicks(),
-		                                                      detainmentService, cuffLockRegistry));
+		                                                      detainmentService, cuffLockRegistry,
+		                                                      configProvider.getRetreatSettings()));
 		behaviors.put(CopState.CUFFING,
 		              new CuffingBehavior(configProvider.getCuffRadius(), configProvider.getMaxCuffAttempts(),
 		                                  cuffAiTicks, aiTickRate, cuffLockRegistry, detainmentService));

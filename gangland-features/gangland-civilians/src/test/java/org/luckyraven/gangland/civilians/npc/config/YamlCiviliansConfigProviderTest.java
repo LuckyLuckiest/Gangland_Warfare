@@ -121,6 +121,11 @@ class YamlCiviliansConfigProviderTest {
 		}
 		assertTrue(config.shouts().cooldownFor("Fall_Back") > 0);
 		assertTrue(config.shouts().cooldownFor("In_Cover") > 0);
+		// T-134: a retreat shout survives a same-tick priority line (Rally, Contact) and the per-player gap
+		for (String key : List.of("Fall_Back", "In_Cover")) {
+			assertTrue(config.shouts().isPriority(key), key);
+			assertTrue(CiviliansConfig.DEFAULT_SHOUTS.isPriority(key), key);
+		}
 	}
 
 	@Test
