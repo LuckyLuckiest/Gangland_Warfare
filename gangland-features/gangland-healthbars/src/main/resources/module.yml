@@ -1,0 +1,9 @@
+# Keystone module descriptor - read by Gangland's ModuleLoader from plugins/Gangland_Warfare/modules/.
+Id: healthbars
+Name: Gangland Health Bars
+Version: ${project.version}
+Main: org.luckyraven.gangland.healthbars.HealthBarsModule
+Host_Api: 2.0
+Plugins:
+  - Citizens
+Artifact: org.luckyraven:gangland-healthbars
