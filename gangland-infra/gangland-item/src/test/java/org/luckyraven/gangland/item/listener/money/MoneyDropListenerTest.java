@@ -44,7 +44,10 @@ import static org.mockito.Mockito.when;
  *
  * <p>A player-death drop must now <em>move</em> money: debit first through
  * {@link MoneyDepositService#withdraw(Player, double)} and drop only what came back. Mob, cop and civilian
- * drops stay a genuine currency source by design, which the last test guards against an over-eager fix.
+ * drops stay a genuine currency source by design, which the mob test guards against an over-eager fix.
+ *
+ * <p>B1 (phase H13): Citizens PLAYER-type NPCs die through the same {@link PlayerDeathEvent}, so the listener
+ * classifies every death and debits only a real player.
  */
 @DisplayName("MoneyDropListener - player deaths move money, they never mint it")
 class MoneyDropListenerTest {
@@ -63,6 +66,16 @@ class MoneyDropListenerTest {
 			    MOB:
 			      Enabled: true
 			      Scale_With_Balance: false
+			      Variations:
+			        small:
+			          weight: 1
+			    COP:
+			      Enabled: true
+			      Variations:
+			        small:
+			          weight: 1
+			    CIVILIAN:
+			      Enabled: true
 			      Variations:
 			        small:
 			          weight: 1
@@ -124,7 +137,9 @@ class MoneyDropListenerTest {
 		return player;
 	}
 
-	private PlayerDeathEvent playerDeath(Player player) {
+	/** A player death classified as {@code context}; a Citizens PLAYER-type NPC dies through the same event. */
+	private PlayerDeathEvent playerDeath(Player player, MoneyDropContext context) {
+		when(classifier.classify(player)).thenReturn(context);
 		PlayerDeathEvent event = mock(PlayerDeathEvent.class);
 		when(event.getEntity()).thenReturn(player);
 		return event;
@@ -142,7 +157,7 @@ class MoneyDropListenerTest {
 		Player player = deadPlayer();
 		when(depositService.withdraw(player, 100D)).thenReturn(100D);
 
-		listener.onPlayerDeath(playerDeath(player));
+		listener.onEntityDeath(playerDeath(player, MoneyDropContext.PLAYER));
 
 		verify(depositService).withdraw(player, 100D);
 
@@ -158,7 +173,7 @@ class MoneyDropListenerTest {
 		Player player = deadPlayer();
 		when(depositService.withdraw(player, 100D)).thenReturn(40D);
 
-		listener.onPlayerDeath(playerDeath(player));
+		listener.onEntityDeath(playerDeath(player, MoneyDropContext.PLAYER));
 
 		assertEquals(40, MoneyItemUtil.readAmount(capturedDrop()),
 		             "the drop is clamped to the debit, otherwise the difference is minted");
@@ -170,7 +185,7 @@ class MoneyDropListenerTest {
 		Player player = deadPlayer();
 		when(depositService.withdraw(player, 100D)).thenReturn(0D);
 
-		listener.onPlayerDeath(playerDeath(player));
+		listener.onEntityDeath(playerDeath(player, MoneyDropContext.PLAYER));
 
 		verify(world, never()).dropItemNaturally(any(Location.class), any(ItemStack.class));
 	}
@@ -190,6 +205,39 @@ class MoneyDropListenerTest {
 
 		verify(depositService, never()).withdraw(any(), anyDouble());
 		assertEquals(100, MoneyItemUtil.readAmount(capturedDrop()));
+	}
+
+	@Test
+	@DisplayName("B1: a PLAYER-type cop NPC drops COP cash and debits nobody")
+	void playerTypeCopNpc_dropsWithoutDebit() {
+		Player cop = deadPlayer();
+
+		listener.onEntityDeath(playerDeath(cop, MoneyDropContext.COP));
+
+		verify(depositService, never()).withdraw(any(), anyDouble());
+		assertEquals(100, MoneyItemUtil.readAmount(capturedDrop()));
+	}
+
+	@Test
+	@DisplayName("B1: a PLAYER-type civilian NPC drops CIVILIAN cash and debits nobody")
+	void playerTypeCivilianNpc_dropsWithoutDebit() {
+		Player civilian = deadPlayer();
+
+		listener.onEntityDeath(playerDeath(civilian, MoneyDropContext.CIVILIAN));
+
+		verify(depositService, never()).withdraw(any(), anyDouble());
+		assertEquals(100, MoneyItemUtil.readAmount(capturedDrop()));
+	}
+
+	@Test
+	@DisplayName("B1: an unrecognised NPC (trader, banker, foreign plugin) drops no cash while no NPC source is set")
+	void unrecognisedNpc_dropsNothing() {
+		Player trader = deadPlayer();
+
+		listener.onEntityDeath(playerDeath(trader, MoneyDropContext.NPC));
+
+		verify(depositService, never()).withdraw(any(), anyDouble());
+		verify(world, never()).dropItemNaturally(any(Location.class), any(ItemStack.class));
 	}
 
 }

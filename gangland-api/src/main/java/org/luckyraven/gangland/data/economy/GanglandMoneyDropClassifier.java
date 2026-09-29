@@ -4,6 +4,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.item.money.MoneyDropClassifier;
 import org.luckyraven.gangland.item.money.MoneyDropContext;
+import org.luckyraven.keystone.npc.NpcSupport;
 
 /**
  * Classifier implementation that recognises players and, once a module installs one, cops-n-crooks NPCs too. Lives
@@ -18,16 +19,19 @@ public class GanglandMoneyDropClassifier implements MoneyDropClassifier {
 		this.npcSource = source;
 	}
 
+	/**
+	 * The module source goes first: a Citizens PLAYER-type NPC (every cop, some civilians) is a {@link Player}.
+	 * PLAYER is kept for real players, and an NPC nobody recognises is {@link MoneyDropContext#NPC}.
+	 */
 	@Override
 	public MoneyDropContext classify(LivingEntity entity) {
-		if (entity instanceof Player) return MoneyDropContext.PLAYER;
-
 		NpcMoneyDropSource source = this.npcSource;
 		if (source != null) {
 			MoneyDropContext context = source.classify(entity);
 			if (context != null) return context;
 		}
-		return MoneyDropContext.MOB;
+		if (NpcSupport.isNpc(entity)) return MoneyDropContext.NPC;
+		return entity instanceof Player ? MoneyDropContext.PLAYER : MoneyDropContext.MOB;
 	}
 
 }

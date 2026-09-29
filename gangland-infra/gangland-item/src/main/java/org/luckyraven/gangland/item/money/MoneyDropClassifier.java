@@ -12,8 +12,9 @@ public interface MoneyDropClassifier {
 	/**
 	 * Classifies the dead entity into a {@link MoneyDropContext}. Implementations should return
 	 * {@link MoneyDropContext#PLAYER} for real players, {@link MoneyDropContext#COP} or
-	 * {@link MoneyDropContext#CIVILIAN} for the corresponding NPC types, and {@link MoneyDropContext#MOB} for
-	 * everything else.
+	 * {@link MoneyDropContext#CIVILIAN} for the corresponding NPC types, {@link MoneyDropContext#NPC} for any other
+	 * Citizens NPC (a PLAYER-type NPC is a {@code Player} too, but never {@code PLAYER}), and
+	 * {@link MoneyDropContext#MOB} for everything else.
 	 */
 	MoneyDropContext classify(LivingEntity entity);
 
