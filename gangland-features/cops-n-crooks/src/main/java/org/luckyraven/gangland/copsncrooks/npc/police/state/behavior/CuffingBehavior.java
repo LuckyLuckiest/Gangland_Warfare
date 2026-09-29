@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.events.police.CuffedEvent;
 import org.luckyraven.gangland.copsncrooks.events.police.DuringCuffingEvent;
+import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
@@ -32,6 +33,12 @@ public class CuffingBehavior implements CopBehavior {
 
 	private long cuffingTicks;
 	private UUID claimedPlayer;
+	/**
+	 * Cuff attempts on {@link #failTarget} that failed or that he broke out of; kept across re-entries. Only used for a
+	 * cop without a group: a group counts them for all its officers ({@link CopGroup#recordCuffFailure}).
+	 */
+	private int  failedCuffs;
+	private UUID failTarget;
 
 	public CuffingBehavior(double cuffRadius, int maxAttempts, long cuffingCooldown, int aiTickRate,
 	                       CuffLockRegistry cuffLockRegistry, DetainmentService detainmentService) {
@@ -66,6 +73,10 @@ public class CuffingBehavior implements CopBehavior {
 
 		UUID copId    = cop.getNpc().getUniqueId();
 		UUID targetId = target.getUniqueId();
+		if (!targetId.equals(failTarget)) {
+			failTarget  = targetId;
+			failedCuffs = 0;
+		}
 
 		if (claimedPlayer == null) {
 			if (!cuffLockRegistry.tryAcquire(targetId, copId)) {
@@ -83,9 +94,9 @@ public class CuffingBehavior implements CopBehavior {
 
 		double distance = cop.distanceTo(target);
 
-		// Only leave cuffing if the target actually escapes the cuffing zone
+		// Only leave cuffing if the target actually escapes the cuffing zone; breaking out of a started cuff counts
 		if (distance > cuffRadius || !cop.hasLineOfSight(target)) {
-			cop.transitionTo(CopState.PURSUING);
+			failCuff(cop, targetId);
 			return;
 		}
 
@@ -110,6 +121,8 @@ public class CuffingBehavior implements CopBehavior {
 			// target on the cop for GuardingBehavior to pick up.
 			UUID cuffedTargetId = claimedPlayer;
 			claimedPlayer = null;
+			failedCuffs   = 0;
+			if (cop.getGroup() != null) cop.getGroup().resetCuffFailures(cuffedTargetId);
 			cop.setGuardedPlayerId(cuffedTargetId);
 			cop.transitionTo(CopState.GUARDING);
 			return;
@@ -117,7 +130,31 @@ public class CuffingBehavior implements CopBehavior {
 
 		// Target moved out of range or lost LOS at the last moment.
 		// Release the lock and return to pursuit so the next closest cop may try.
-		cop.transitionTo(CopState.PURSUING);
+		failCuff(cop, targetId);
+	}
+
+	/**
+	 * A cuff failed or the target broke out of it: back to pursuit, or, after {@code Max_Cuff_Attempts} of them, he is
+	 * resisting and the group fights (CJ-23). The escapes are counted per group, not per officer: the cuff lock passes
+	 * to whichever surrounding officer takes it next.
+	 */
+	private void failCuff(CopNpc cop, UUID targetId) {
+		CopGroup group = cop.getGroup();
+		boolean  resisting;
+		if (group != null) {
+			resisting = group.recordCuffFailure(targetId, maxAttempts);
+		} else {
+			resisting = ++failedCuffs >= maxAttempts;
+			if (resisting) failedCuffs = 0;
+		}
+		if (!resisting) {
+			cop.transitionTo(CopState.PURSUING);
+			return;
+		}
+
+		if (group != null) group.escalate(targetId);
+		cop.setCombatForced(true);
+		cop.transitionTo(CopState.COMBAT);
 	}
 
 	@Override

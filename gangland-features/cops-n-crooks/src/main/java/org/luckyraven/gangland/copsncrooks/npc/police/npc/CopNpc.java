@@ -1,11 +1,13 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.npc;
 
+import com.cryptomorin.xseries.XAttribute;
 import lombok.CustomLog;
 import lombok.Getter;
 import lombok.Setter;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Location;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -24,6 +26,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.concurrent.ThreadLocalRandom;
 
 @CustomLog
@@ -59,15 +62,24 @@ public class CopNpc extends AbstractNpc {
 	 * The group this cop was assigned to ({@link CopGroup#add}); its squad is the group's shared awareness of the
 	 * wanted player. {@code null} until assigned.
 	 */
+	@Getter
 	@Setter
 	private @Nullable CopGroup               group;
 	/**
-	 * This cop's own squad for a target outside the group (an attacker, a retarget, a wanted civilian): seeded with
-	 * that target's position when it is first handed to the cop, replaced when the target changes. {@code null} until
-	 * {@link #squadFor} is called with such a target.
+	 * This cop's own squad for a target outside any group (a cop with no group: tests, stray spawns): seeded with that
+	 * target's position when it is first handed to the cop, replaced when the target changes.
 	 */
 	private @Nullable NpcSquad               soloSquad;
 	private @Nullable UUID                   soloTargetId;
+	/** The squad {@link #squadFor} last handed out; left when the next one differs, so no squad keeps a stale member. */
+	private @Nullable NpcSquad               lastSquad;
+	/**
+	 * Everything {@link CopNpcFactory} puts on the entity itself (tier Health, police mark, armour, held weapon) — all
+	 * of it lives on the Bukkit entity, not the Citizens NPC, so it is lost when Citizens swaps the entity out.
+	 */
+	private @Nullable Consumer<LivingEntity> loadout;
+	/** The entity {@link #loadout} was last applied to. */
+	private @Nullable Entity                 loadoutEntity;
 
 	public CopNpc(JavaPlugin plugin, NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors,
 	              Location spawnLocation, CopConfigProvider configProvider) {
@@ -125,9 +137,9 @@ public class CopNpc extends AbstractNpc {
 	 * Transitions the cop to a new AI state, invoking exit/enter callbacks.
 	 */
 	public void transitionTo(CopState newState) {
+		if (currentState == newState) return;
 		log.debug("Transitioning cop {}-{} from {} state to {} state.", npc.getName(), npc.getId(),
 		          currentState, newState);
-		if (currentState == newState) return;
 
 		CopBehavior oldBehavior = behaviors.get(currentState);
 		if (oldBehavior != null) oldBehavior.onExit(this);
@@ -137,6 +149,32 @@ public class CopNpc extends AbstractNpc {
 		CopBehavior newBehavior = behaviors.get(currentState);
 		if (newBehavior == null) return;
 		newBehavior.onEnter(this);
+	}
+
+	/** Sets the entity-level loadout and applies it to the current entity. */
+	public void setLoadout(Consumer<LivingEntity> loadout) {
+		this.loadout       = loadout;
+		this.loadoutEntity = null;
+		refreshLoadout();
+	}
+
+	/**
+	 * Re-applies the loadout when Citizens has replaced the NPC's entity (a respawn, e.g. on chunk reload — the
+	 * name-based skin-fetch respawn is disabled at creation by {@code CitizensNpcs}). The replacement starts at 20 max
+	 * health with no armour, weapon or police mark; its current health is carried over from the old entity rather than
+	 * refilled to the tier max, so a respawn never heals a damaged cop.
+	 */
+	public void refreshLoadout() {
+		Entity entity = npc.getEntity();
+		if (loadout == null || entity == loadoutEntity || !(entity instanceof LivingEntity living)) return;
+		Entity previous = loadoutEntity;
+		loadoutEntity = entity;
+		loadout.accept(living);
+		if (previous instanceof LivingEntity old && old.getHealth() > 0) {
+			AttributeInstance max = living.getAttribute(XAttribute.MAX_HEALTH.get());
+			living.setHealth(max == null ? Math.min(old.getHealth(), living.getHealth())
+			                             : Math.min(old.getHealth(), max.getValue()));
+		}
 	}
 
 	// ── Cop-specific state machine ────────────────────────────────────────────
@@ -153,6 +191,7 @@ public class CopNpc extends AbstractNpc {
 			markForRemoval();
 			return;
 		}
+		refreshLoadout();
 
 		// Store target so behaviors can access it.
 		// PLAYER-type NPC entities pass instanceof Player but must be stored as entity targets —
@@ -189,33 +228,42 @@ public class CopNpc extends AbstractNpc {
 
 	/**
 	 * The squad to pursue {@code target} with: the group's squad when {@code target} is the group's wanted player,
-	 * otherwise a squad of this cop's own, seeded with {@code target}'s position when it is first handed to the cop and
-	 * replaced when the target changes. An entity target, or a player this cop retargeted to, must never feed the
-	 * group's last-known position.
+	 * otherwise the group's shared squad against that target (an attacker, a retarget, a wanted civilian), seeded with
+	 * its position when first opened. An entity target, or a player this cop retargeted to, must never feed the
+	 * group's last-known position. The previous squad is left whenever the answer changes.
 	 */
 	public NpcSquad squadFor(LivingEntity target) {
-		UUID id = target.getUniqueId();
-		if (group != null && id.equals(group.getTargetPlayerId())) {
-			soloTargetId = null;
-			return group.getSquad();
+		UUID     id = target.getUniqueId();
+		NpcSquad next;
+		if (group != null) {
+			next = id.equals(group.getTargetPlayerId()) ? group.getSquad() : group.attackerSquad(id, target.getLocation());
+			if (next != group.getSquad()) group.getSquad().remove(this);
+		} else {
+			if (!id.equals(soloTargetId)) {
+				soloSquad = new NpcSquad();
+				soloSquad.reportSighting(target.getLocation());
+				soloTargetId = id;
+			}
+			next = soloSquad;
 		}
-		leaveSquad();
-		if (!id.equals(soloTargetId)) {
-			// ponytail: one squad per cop for a non-group target (an attacker, a retarget, a wanted civilian), seeded
-			// like the crime scene; share one per (group, target) if cops must coordinate on attackers
-			soloSquad    = new NpcSquad();
-			soloSquad.reportSighting(target.getLocation());
-			soloTargetId = id;
-		}
-		return soloSquad;
+		if (lastSquad != null && lastSquad != next) lastSquad.remove(this);
+		lastSquad = next;
+		return next;
 	}
 
 	/**
-	 * Leaves the group's squad: a cop that stops hunting frees its slot and any route plan it owns. {@code pursue}
-	 * re-adds it if it re-engages.
+	 * Leaves every squad: a cop that stops hunting frees its slot and any route plan it owns. {@code pursue} re-adds it
+	 * if it re-engages.
 	 */
 	public void leaveSquad() {
-		if (group != null) group.getSquad().remove(this);
+		if (group != null) {
+			group.getSquad().remove(this);
+			group.leaveAttackerSquads(this);
+		}
+		if (lastSquad != null) {
+			lastSquad.remove(this);
+			lastSquad = null;
+		}
 	}
 
 	/**

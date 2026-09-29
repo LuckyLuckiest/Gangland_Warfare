@@ -59,6 +59,8 @@ public class WantedExecutor extends Executor {
 			moneyTaken = Currency.multiply(takeAmount, factor);
 		}
 
+		// One event instance serves every tick: a listener's cancel applies to this tick only.
+		event.setCancelled(false);
 		Bukkit.getPluginManager().callEvent(event);
 
 		if (event.isCancelled()) return;

@@ -7,6 +7,7 @@ import org.luckyraven.keystone.persistence.FileInitializer;
 import org.luckyraven.keystone.persistence.FileManager;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Base for a module-owned, localized message/config YAML: {@code <baseName>.yml} (English) is always required,
@@ -89,6 +90,21 @@ public abstract class LocalizedModuleYaml implements FileInitializer {
 
 	protected final String prefix(String key, String fallback) {
 		return GanglandChatUtil.prefixMessage(raw(key, fallback));
+	}
+
+	/**
+	 * A list-valued key, for the "one line at random" shape {@link org.luckyraven.gangland.npc.radio.RadioLines}
+	 * consumes. An explicit {@code key: []} means silent — it returns the empty list, not {@code fallback}. A
+	 * scalar value ({@code key: "single line"}) is wrapped in a one-element list. A missing key returns
+	 * {@code fallback}.
+	 */
+	protected final List<String> list(String key, List<String> fallback) {
+		var config = fileHandler.getFileConfiguration();
+		if (!config.isSet(key)) return fallback;
+		if (config.isList(key)) return config.getStringList(key);
+
+		String scalar = config.getString(key);
+		return scalar != null ? List.of(scalar) : fallback;
 	}
 
 }

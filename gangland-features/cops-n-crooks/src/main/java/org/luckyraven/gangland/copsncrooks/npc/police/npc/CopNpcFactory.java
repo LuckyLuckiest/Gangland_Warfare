@@ -1,9 +1,10 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.npc;
 
-import net.citizensnpcs.api.CitizensAPI;
+import com.cryptomorin.xseries.XAttribute;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -15,11 +16,14 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.civilians.npc.combat.BartizanNpcWeapons;
 import org.luckyraven.gangland.civilians.npc.combat.DownedTargetFilter;
 import org.luckyraven.gangland.civilians.npc.entity.EntityMark;
+import org.luckyraven.gangland.civilians.npc.npc.CitizensNpcs;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.gangland.npc.NpcFireRate;
+import org.luckyraven.keystone.npc.NpcMeleeProfile;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.npc.spi.NpcRangedAttack;
@@ -28,6 +32,7 @@ import org.luckyraven.keystone.util.ChatUtil;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 
 /**
  * Factory for creating CopNpc instances backed by Citizens NPCs. {@link BartizanNpcWeapons}/{@link DownedTargetFilter}/
@@ -83,7 +88,7 @@ public class CopNpcFactory {
 
 		String plainName = ChatUtil.replaceColorCodes(ChatUtil.color(tierConfig.displayName()), "");
 
-		NPC npc = CitizensAPI.getNPCRegistry().createNPC(EntityType.PLAYER, plainName);
+		NPC npc = CitizensNpcs.create(EntityType.PLAYER, plainName);
 		npc.setProtected(false);
 		npc.data().setPersistent(NPC.Metadata.SHOULD_SAVE, false);
 		npc.spawn(spawnLocation);
@@ -97,42 +102,77 @@ public class CopNpcFactory {
 			CitizensBridge.scheduleDelayedSpawnValidation(plugin, npc, this::isSafeSpawnPosition);
 		}
 
-		if (npc.getEntity() != null) {
-			markManager.setMark(npc.getEntity(), EntityMark.POLICE.name());
-		}
-
 		Map<CopState, CopBehavior> behaviors = behaviorFactory.createBehaviors();
 
 		CopNpc copNpc = new CopNpc(plugin, npc, tierConfig, behaviors, spawnLocation, configProvider);
 		copNpc.setTargetFilter(downedTargetFilter);
 
-		// equip() runs first so the ranged-attack block below can override its vanilla weaponPool main-hand item
-		// with the Bartizan-built weapon item, reproducing 0.8.4's heldWeapon != null ? heldWeapon.buildItem() :
-		// weaponPool precedence (matches CivilianNpcFactory, T-HR2).
-		copNpc.equip();
-
 		// Bartizan-backed ranged weapon: a random name from the tier's pool, resolved through the factory hook.
 		// NpcRangedAttack.NONE (no weapon name configured, unresolvable name, or Bartizan absent) leaves the cop on
-		// the vanilla weaponPool fallback CopNpc#equip() already applied above. Bartizan owns the NPC magazine —
-		// no off-hand ammo item is stocked here (0.8.4's giveStartingAmmo is gone).
+		// the vanilla weaponPool fallback CopNpc#equip() applies. Bartizan owns the NPC magazine — no off-hand ammo
+		// item is stocked here (0.8.4's giveStartingAmmo is gone). The supplier keeps Bartizan on the live entity.
+		NpcRangedAttack rangedAttack = NpcRangedAttack.NONE;
+		ItemStack       weaponItem   = null;
 		if (tierConfig.canUseWeapons()) {
-			String          weaponName   = pickWeaponName(tierConfig);
-			NpcRangedAttack rangedAttack = bartizanNpcWeapons.create(copNpc.getEntity(), weaponName,
-			                                                        copNpc.getDifficulty());
+			String weaponName = pickWeaponName(tierConfig);
+			rangedAttack = bartizanNpcWeapons.create(copNpc::getEntity, weaponName, copNpc.getDifficulty());
 			copNpc.setRangedAttack(rangedAttack);
-
-			ItemStack weaponItem = bartizanNpcWeapons.buildItem(weaponName);
-			if (weaponItem != null) {
-				setMainHand(copNpc.getEntity(), weaponItem);
-			}
+			weaponItem = bartizanNpcWeapons.buildItem(weaponName);
 		}
+
+		// Everything on the entity itself goes through the loadout, which CopNpc re-applies to a replacement entity
+		// (any Citizens respawn, e.g. a chunk reload; the skin-fetch respawn is stopped at source in CitizensNpcs). equip() runs before the weapon item so the Bartizan-built item overrides
+		// its vanilla weaponPool main hand, reproducing 0.8.4's heldWeapon precedence (matches CivilianNpcFactory).
+		copNpc.setLoadout(loadout(copNpc, tierConfig, markManager, weaponItem));
+
+		applyTuning(copNpc, tierConfig, configProvider, rangedAttack);
 
 		npc.getNavigator().getLocalParameters().speedModifier((float) tierConfig.speed());
 
 		return copNpc;
 	}
 
-	private void setMainHand(@Nullable LivingEntity entity, ItemStack item) {
+	/** The entity-level loadout: POLICE mark, tier health, {@link CopNpc#equip()} armour, then the held weapon item. */
+	static Consumer<LivingEntity> loadout(CopNpc copNpc, CopTierConfig tierConfig, NpcMarkManager markManager,
+	                                      @Nullable ItemStack heldWeapon) {
+		return entity -> {
+			markManager.setMark(entity, EntityMark.POLICE.name());
+			applyHealthBonus(entity, tierConfig.health());
+			copNpc.equip();
+			if (heldWeapon != null) setMainHand(entity, heldWeapon.clone());
+		};
+	}
+
+	/** Squad engagement, melee band and gun cadence from the tier's config ({@link NpcFireRate#scale}). */
+	static void applyTuning(CopNpc copNpc, CopTierConfig tierConfig, CopConfigProvider configProvider,
+	                        NpcRangedAttack rangedAttack) {
+		copNpc.setEngagement(tierConfig.tactics().engagement());
+		copNpc.setMeleeProfile(meleeFor(configProvider.getMeleeProfile(), tierConfig));
+		copNpc.setFireRateScale(NpcFireRate.scale(tierConfig.fireRateMultiplier(), rangedAttack));
+	}
+
+	/**
+	 * The tier's melee profile, with {@code approach} clamped below the tier's own {@code Cuff_Radius} — a melee cop
+	 * that surrounds and cuffs first must not settle further out than it can reach to cuff.
+	 */
+	static NpcMeleeProfile meleeFor(NpcMeleeProfile profile, CopTierConfig tier) {
+		double approach = Math.max(0.5, Math.min(profile.approach(), tier.cuffRadius() - 0.5));
+		return new NpcMeleeProfile(profile.reach(), approach, profile.cooldownTicks(), profile.damageSpread(),
+		                           profile.edgeDamage());
+	}
+
+	/** Applies the tier's configured {@code Health} as both the max-health attribute base and current health. */
+	static void applyHealthBonus(@Nullable Entity entity, double health) {
+		if (!(entity instanceof LivingEntity living)) return;
+
+		AttributeInstance maxHealth = living.getAttribute(XAttribute.MAX_HEALTH.get());
+		if (maxHealth != null) {
+			maxHealth.setBaseValue(health);
+		}
+		living.setHealth(health);
+	}
+
+	private static void setMainHand(@Nullable LivingEntity entity, ItemStack item) {
 		if (entity == null) return;
 		EntityEquipment equipment = entity.getEquipment();
 		if (equipment == null) return;

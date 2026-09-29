@@ -12,13 +12,20 @@ import org.bukkit.scheduler.BukkitTask;
 import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
+import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio.RadioCall;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.targeting.TargetingManager;
 import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.jetbrains.annotations.Nullable;
+import org.luckyraven.keystone.npc.NpcSquad;
+import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
 import org.luckyraven.gangland.core.wanted.Wanted;
@@ -39,16 +46,25 @@ public class CopManager implements BeanLifecycle {
 	private final NpcMarkManager        markManager;
 	private final DetainmentService     detainmentService;
 	private final Map<UUID, CopGroup>   groups;
+	/** Players whose current wanted clear has already been announced with Stand_Down; reset by the next wanted start. */
+	private final java.util.Set<UUID>    stoodDown = new java.util.HashSet<>();
 	private final Map<UUID, BukkitTask> aiTasks;
 	private final Map<UUID, BukkitTask> spawnTasks;
 	private final Set<UUID>             activeCombatAlerts;
 	private final Set<UUID>             copAttackers;
 	private final CivilianNpcRegistry   civilianNpcRegistry;
+	private final CopRadio              copRadio;
+	/**
+	 * Radio calls heard since the last AI tick; answered after the tick's cop loop so a listener never changes a cop
+	 * list that is being iterated.
+	 */
+	private final Deque<RadioCall>      pendingCalls = new ArrayDeque<>();
 	private       CopConfigProvider     configProvider;
 
 	public CopManager(JavaPlugin plugin, CopSpawnManager spawnManager, TargetingManager targetingManager,
 	                  CopLoader copLoader, NpcMarkManager markManager,
-	                  DetainmentService detainmentService, CivilianNpcRegistry civilianNpcRegistry) {
+	                  DetainmentService detainmentService, CivilianNpcRegistry civilianNpcRegistry,
+	                  CopRadio copRadio) {
 		this.plugin            = plugin;
 		this.spawnManager      = spawnManager;
 		this.targetingManager  = targetingManager;
@@ -56,6 +72,7 @@ public class CopManager implements BeanLifecycle {
 		this.configProvider    = copLoader.getLoadedProvider();
 		this.markManager       = markManager;
 		this.detainmentService = detainmentService;
+		this.copRadio          = copRadio;
 
 		this.civilianNpcRegistry = civilianNpcRegistry;
 		this.groups              = new ConcurrentHashMap<>();
@@ -76,8 +93,14 @@ public class CopManager implements BeanLifecycle {
 		if (!wanted.isWanted()) return;
 
 		targetingManager.registerWanted(player, wanted);
-		// The crime scene is known: the group's squad starts from where the player is now
-		CopGroup group = groups.computeIfAbsent(playerId, CopGroup::new);
+		stoodDown.remove(playerId);
+		// The crime scene is known: the group's squad starts from where the player is now. Dispatch announces a new
+		// hunt, or one whose trail went cold, before the squad hears of it.
+		CopGroup existing = groups.get(playerId);
+		CopGroup group    = groups.computeIfAbsent(playerId, this::newGroup);
+		if (existing == null || !group.getSquad().hasFreshSighting()) {
+			copRadio.dispatch(group, player, "Dispatch_Wanted", wanted.getLevel(), tierNameFor(wanted.getLevel()));
+		}
 		group.getSquad().reportSighting(player.getLocation());
 
 		// A new wanted start is a new episode: pull the group's returning cops back into the hunt instead of letting
@@ -106,11 +129,18 @@ public class CopManager implements BeanLifecycle {
 		clearCombatAlert(playerId);
 
 		CopGroup group = groups.get(playerId);
+		if (group != null) {
+			group.clearCombatAlert();
+			pendingCalls.removeIf(call -> call.group() == group);
+		}
 		if (group == null || group.isEmpty()) {
 			stopAITask(playerId);
 			groups.remove(playerId);
 			return;
 		}
+
+		// WantedEndEvent and the level change to 0 both land here for one clear: announce it once per episode.
+		if (stoodDown.add(playerId)) copRadio.sayFromLeader(group, "Stand_Down");
 
 		// Clear targeting only for cops still pointing at the now-unwanted player.
 		// Cops that already retargeted to an attacker keep their state so resolveTarget
@@ -160,9 +190,10 @@ public class CopManager implements BeanLifecycle {
 		CopGroup group = findGroupContaining(copNpc);
 		if (group == null || group.isEmpty()) return;
 
-		// Hitting a cop gives the group's target away: the whole squad learns where he is
+		// Hitting a cop gives the group's target away: the whole squad learns where he is, and he is resisting
 		if (attacker.getUniqueId().equals(group.getTargetPlayerId())) {
 			group.getSquad().reportSighting(attacker.getLocation());
+			group.escalate(attacker.getUniqueId());
 		}
 
 		activeCombatAlerts.add(group.getTargetPlayerId());
@@ -270,6 +301,22 @@ public class CopManager implements BeanLifecycle {
 	}
 
 	/**
+	 * The cop whose entity is {@code entity}, even while that entity is dying: {@link #findCopByEntity} requires a
+	 * valid entity, and an entity is no longer valid during its {@code EntityDeathEvent}.
+	 */
+	public @Nullable CopNpc findDyingCop(Entity entity) {
+		for (CopGroup group : groups.values()) {
+			synchronized (group.getCops()) {
+				for (CopNpc cop : group.getCops()) {
+					Entity copEntity = cop.getNpc().getEntity();
+					if (copEntity != null && copEntity.getUniqueId().equals(entity.getUniqueId())) return cop;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Shuts down all cops and cancels all tasks. Called on plugin disable.
 	 */
 	public void shutdown() {
@@ -297,6 +344,7 @@ public class CopManager implements BeanLifecycle {
 		spawnTasks.clear();
 		activeCombatAlerts.clear();
 		copAttackers.clear();
+		pendingCalls.clear();
 		configProvider = null;
 	}
 
@@ -328,6 +376,22 @@ public class CopManager implements BeanLifecycle {
 		return groups.get(playerId);
 	}
 
+	/** A new group whose squads speak on the police radio and queue its calls here. */
+	private CopGroup newGroup(UUID playerId) {
+		CopGroup group = new CopGroup(playerId);
+		group.setListener(copRadio.listenerFor(group, pendingCalls::add));
+		return group;
+	}
+
+	private String tierNameFor(int wantedLevel) {
+		return CopRadio.tierName(configProvider.getTierConfig(spawnManager.getTierForWantedLevel(wantedLevel)));
+	}
+
+	private BackupSettings backupSettings() {
+		BackupSettings backup = configProvider.getBackupSettings();
+		return backup != null ? backup : BackupSettings.DEFAULT;
+	}
+
 	/**
 	 * Clears the combat alert for a player when wanted status ends.
 	 *
@@ -350,67 +414,8 @@ public class CopManager implements BeanLifecycle {
 	private void startSpawnTask(UUID playerId, Wanted wanted) {
 		if (spawnTasks.containsKey(playerId)) return;
 
-		BukkitTask task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-			Player player = Bukkit.getPlayer(playerId);
-			if (player == null || !player.isOnline()) {
-				stopSpawnTask(playerId);
-				despawnAllForPlayer(playerId);
-				return;
-			}
-
-			int wantedLevel = wanted.getLevel();
-			if (wantedLevel <= 0) {
-				stopSpawnTask(playerId);
-				return;
-			}
-
-			// check if the player was detained before spawning a new cop
-			if (detainmentService.isRestrained(player)) {
-				return;
-			}
-
-			CopGroup group = groups.get(playerId);
-			if (group == null) return;
-
-			List<CopNpc> cops = group.getCops();
-
-			cops.removeIf(cop -> {
-				if (cop.isMarkedForRemoval()) {
-					group.release(cop, markManager);
-					return true;
-				}
-				if (!cop.isValid()) {
-					// PLAYER-type Citizens NPCs may have a null entity for a tick or two while initializing —
-					// keep in list so the count is not artificially low, causing a spawn loop.
-					NPC npc = cop.getNpc();
-					if (npc.isSpawned() && npc.getEntity() == null) {
-						return false;
-					}
-					group.release(cop, markManager);
-					return true;
-				}
-				return false;
-			});
-
-			int targetCount  = spawnManager.getTargetCopCount(wantedLevel);
-			int currentCount = cops.size();
-			int tier         = spawnManager.getTierForWantedLevel(wantedLevel);
-
-			// Spawn all missing cops in one pass so a full wipe is recovered in a single interval
-			while (currentCount < targetCount && currentCount < configProvider.getMaxCopsPerPlayer()) {
-				CopNpc newCop = spawnManager.spawnNearPlayer(player, tier);
-				if (newCop == null) break; // no valid location found - stop trying this interval
-
-				newCop.setTargetPlayerId(playerId);
-
-				// New spawns pursue immediately; combatForced flag causes them to enter COMBAT once in range
-				newCop.setCombatForced(hasCombatAlert(playerId));
-				newCop.transitionTo(CopState.PURSUING);
-
-				group.add(newCop);
-				currentCount++;
-			}
-		}, 20L, configProvider.getSpawnCheckRate());
+		BukkitTask task = Bukkit.getScheduler().runTaskTimer(plugin, () -> spawnTick(playerId, wanted), 20L,
+		                                                     configProvider.getSpawnCheckRate());
 
 		spawnTasks.put(playerId, task);
 	}
@@ -433,53 +438,291 @@ public class CopManager implements BeanLifecycle {
 	private void startAITask(UUID playerId) {
 		if (aiTasks.containsKey(playerId)) return;
 
-		BukkitTask task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-			Player player = Bukkit.getPlayer(playerId);
-			if (player == null || !player.isOnline()) {
-				stopAITask(playerId);
-				return;
-			}
-
-			CopGroup group = groups.get(playerId);
-			if (group == null || group.isEmpty()) {
-				// Self-cleanup: player is no longer wanted and all cops are gone
-				if (!targetingManager.isWanted(playerId)) {
-					stopAITask(playerId);
-					groups.remove(playerId);
-				}
-				return;
-			}
-
-			List<CopNpc> cops = group.getCops();
-
-			Iterator<CopNpc> iterator = cops.iterator();
-			while (iterator.hasNext()) {
-				CopNpc cop = iterator.next();
-
-				if (cop.isMarkedForRemoval()) {
-					group.release(cop, markManager);
-					iterator.remove();
-					continue;
-				}
-
-				if (!cop.isValid()) {
-					// PLAYER-type Citizens NPCs may have a null entity for a tick or two while initializing —
-					// skip this tick instead of destroying so the NPC gets a chance to fully spawn.
-					NPC npc = cop.getNpc();
-					if (npc.isSpawned() && npc.getEntity() == null) {
-						continue;
-					}
-					group.release(cop, markManager);
-					iterator.remove();
-					continue;
-				}
-
-				LivingEntity target = resolveTarget(cop, player);
-				cop.tick(target);
-			}
-		}, 0L, configProvider.getAiTickRate());
+		BukkitTask task = Bukkit.getScheduler().runTaskTimer(plugin, () -> aiTick(playerId), 0L,
+		                                                     configProvider.getAiTickRate());
 
 		aiTasks.put(playerId, task);
+	}
+
+	/** One spawn-task run for {@code playerId}'s group. Package-private test seam. */
+	void spawnTick(UUID playerId, Wanted wanted) {
+		Player player = Bukkit.getPlayer(playerId);
+		if (player == null || !player.isOnline()) {
+			stopSpawnTask(playerId);
+			despawnAllForPlayer(playerId);
+			return;
+		}
+
+		int wantedLevel = wanted.getLevel();
+		if (wantedLevel <= 0) {
+			stopSpawnTask(playerId);
+			return;
+		}
+
+		// check if the player was detained before spawning a new cop
+		if (detainmentService.isRestrained(player)) {
+			return;
+		}
+
+		CopGroup group = groups.get(playerId);
+		if (group == null) return;
+
+		List<CopNpc> cops = group.getCops();
+
+		cops.removeIf(cop -> {
+			if (cop.isMarkedForRemoval()) {
+				group.release(cop, markManager);
+				return true;
+			}
+			if (!cop.isValid()) {
+				// PLAYER-type Citizens NPCs may have a null entity for a tick or two while initializing —
+				// keep in list so the count is not artificially low, causing a spawn loop.
+				NPC npc = cop.getNpc();
+				if (npc.isSpawned() && npc.getEntity() == null) {
+					return false;
+				}
+				group.release(cop, markManager);
+				return true;
+			}
+			return false;
+		});
+
+		long           now        = copRadio.now();
+		BackupSettings backup     = backupSettings();
+		int            tier       = spawnManager.getTierForWantedLevel(wantedLevel);
+		CopTierConfig  tierConfig = configProvider.getTierConfig(tier);
+
+		if (tierConfig != null) group.getSquad().setFormationArc(tierConfig.tactics().formationArc());
+		group.setLevel(wantedLevel);
+		group.setTierName(CopRadio.tierName(tierConfig));
+		if (group.getLastTier() > 0 && tier > group.getLastTier()) {
+			copRadio.dispatch(group, player, "Escalate", wantedLevel, group.getTierName());
+		}
+		group.setLastTier(tier);
+
+		int targetCount  = Math.min(spawnManager.getTargetCopCount(wantedLevel) + group.backupExtra(now, backup),
+		                            configProvider.getMaxCopsPerPlayer());
+		// A RETURNING cop beyond the pursuit range cannot engage: it is walking home, not part of this hunt's count.
+		double maxDist = configProvider.getPursuitMaxDistance();
+		int currentCount = (int) cops.stream().filter(c -> !isStrandedReturning(c, player, maxDist)).count();
+
+		// Spawn all missing cops in one pass so a full wipe is recovered in a single interval
+		while (currentCount < targetCount) {
+			CopNpc newCop = spawnManager.spawnNearPlayer(player, tier);
+			if (newCop == null) break; // no valid location found - stop trying this interval
+
+			newCop.setTargetPlayerId(playerId);
+
+			// New spawns pursue immediately; combatForced flag causes them to enter COMBAT once in range
+			newCop.setCombatForced(hasCombatAlert(playerId) || group.isCombatAlert());
+			newCop.transitionTo(CopState.PURSUING);
+
+			group.add(newCop);
+			currentCount++;
+		}
+
+		group.consumeBackupExpiry(now, backup);
+		if (group.getPendingRelease() > 0) releaseSurplus(group, targetCount);
+		group.pruneAttackerSquads();
+	}
+
+	private static boolean isStrandedReturning(CopNpc cop, Player player, double maxDist) {
+		if (cop.getCurrentState() != CopState.RETURNING || cop.getEntity() == null) return false;
+		Location at = cop.getEntity().getLocation();
+		return at.getWorld() != player.getWorld() || at.distanceSquared(player.getLocation()) > maxDist * maxDist;
+	}
+
+	/**
+	 * Sends the newest free cops home once a backup ran out, until the group is back to {@code targetCount}. A cop in
+	 * a fight, cuffing or guarding is never sent; what cannot go this run is retried on the next.
+	 */
+	private void releaseSurplus(CopGroup group, int targetCount) {
+		List<CopNpc> live = new ArrayList<>();
+		synchronized (group.getCops()) {
+			for (CopNpc cop : group.getCops())
+				if (cop.isValid() && cop.getCurrentState() != CopState.RETURNING) live.add(cop);
+		}
+
+		int surplus = live.size() - targetCount;
+		if (surplus <= 0) {
+			group.setPendingRelease(0);
+			return;
+		}
+
+		for (int i = live.size() - 1; i >= 0 && surplus > 0 && group.getPendingRelease() > 0; i--) {
+			CopNpc   cop   = live.get(i);
+			CopState state = cop.getCurrentState();
+			if (state != CopState.PURSUING && state != CopState.IDLE) continue;
+
+			cop.transitionTo(CopState.RETURNING);
+			group.setPendingRelease(group.getPendingRelease() - 1);
+			surplus--;
+		}
+	}
+
+	/** One AI-task run for {@code playerId}'s group. Package-private test seam. */
+	void aiTick(UUID playerId) {
+		Player player = Bukkit.getPlayer(playerId);
+		if (player == null || !player.isOnline()) {
+			stopAITask(playerId);
+			return;
+		}
+
+		CopGroup group = groups.get(playerId);
+		if (group == null || group.isEmpty()) {
+			// Self-cleanup: player is no longer wanted and all cops are gone
+			if (!targetingManager.isWanted(playerId)) {
+				stopAITask(playerId);
+				groups.remove(playerId);
+			}
+			drainRadioCalls();
+			return;
+		}
+
+		List<CopNpc> cops = group.getCops();
+
+		Iterator<CopNpc> iterator = cops.iterator();
+		while (iterator.hasNext()) {
+			CopNpc cop = iterator.next();
+
+			if (cop.isMarkedForRemoval()) {
+				group.release(cop, markManager);
+				iterator.remove();
+				continue;
+			}
+
+			if (!cop.isValid()) {
+				// PLAYER-type Citizens NPCs may have a null entity for a tick or two while initializing —
+				// skip this tick instead of destroying so the NPC gets a chance to fully spawn.
+				NPC npc = cop.getNpc();
+				if (npc.isSpawned() && npc.getEntity() == null) {
+					continue;
+				}
+				group.release(cop, markManager);
+				iterator.remove();
+				continue;
+			}
+
+			LivingEntity target = resolveTarget(cop, player);
+			cop.tick(target);
+		}
+
+		if (group.pollResisting()) {
+			copRadio.sayFromLeader(group, "Resisting");
+			fightResisting(group);
+		}
+		drainRadioCalls();
+	}
+
+	/** The suspect resisted: every cop still after him turns from cuffing to fighting. */
+	private void fightResisting(CopGroup group) {
+		for (CopNpc cop : new ArrayList<>(group.getCops())) {
+			if (!cop.isValid() || !group.getTargetPlayerId().equals(cop.getTargetPlayerId())) continue;
+			CopState state = cop.getCurrentState();
+			if (state == CopState.GUARDING || state == CopState.RETURNING) continue;
+
+			cop.setCombatForced(true);
+			cop.transitionTo(CopState.COMBAT);
+		}
+	}
+
+	/**
+	 * Answers the radio calls heard this tick: up to {@code Responder_Max} cops of other groups within {@code Range} of
+	 * a call, that are walking home, idle or chasing a civilian, join the calling squad. A cop cuffing, guarding or hunting a player is
+	 * never pulled; nor is anyone sent after a suspect already restrained.
+	 */
+	void drainRadioCalls() {
+		RadioCall call;
+		while ((call = pendingCalls.poll()) != null) {
+			CopGroup group = call.group();
+			if (groups.get(group.getTargetPlayerId()) != group) continue;
+
+			LivingEntity hunted = copRadio.huntedOf(group, call.squad());
+			if (hunted == null || !hunted.isValid() || hunted.isDead()) continue;
+			if (hunted instanceof Player huntedPlayer && detainmentService.isRestrained(huntedPlayer)) continue;
+
+			var settings = configProvider.getRadioSettings();
+			int max      = settings != null ? settings.responderMax() : 0;
+			if (max <= 0) continue;
+			double range = settings.range();
+
+			int live = 0;
+			synchronized (group.getCops()) {
+				for (CopNpc cop : group.getCops())
+					if (cop.isValid() && cop.getCurrentState() != CopState.RETURNING) live++;
+			}
+			int room = configProvider.getMaxCopsPerPlayer() - live;
+			if (room <= 0) continue;
+
+			for (CopNpc responder : responders(call, range, Math.min(max, room))) {
+				CopGroup from = responder.getGroup();
+				if (from != group) {
+					if (from != null) from.detach(responder);
+					group.add(responder);
+				}
+
+				// An entity target outranks everything in resolveTarget: drop the civilian first
+				responder.setTargetEntity(null);
+				UUID groupTarget = group.getTargetPlayerId();
+				if (groupTarget.equals(hunted.getUniqueId())) {
+					responder.setTargetPlayerId(groupTarget);
+					responder.setCombatForced(hasCombatAlert(groupTarget) || group.isCombatAlert());
+					responder.transitionTo(CopState.PURSUING);
+				} else {
+					if (hunted instanceof Player attacker && !NpcSupport.isNpc(attacker)) {
+						responder.setTargetPlayerId(attacker.getUniqueId());
+					} else {
+						responder.setTargetEntity(hunted);
+					}
+					responder.setCombatForced(true);
+					responder.transitionTo(CopState.COMBAT);
+				}
+				copRadio.respond(group, call.squad(), responder);
+			}
+		}
+	}
+
+	/**
+	 * The nearest cops of other groups free to answer {@code call}, at most {@code limit}. The calling group's own cops
+	 * are never pulled: one walking home was released after a backup or rotated out, and pulling it back would undo
+	 * that (a released backup never leaving, or the D1 PURSUING/RETURNING bounce).
+	 */
+	private List<CopNpc> responders(RadioCall call, double range, int limit) {
+		Location     origin     = call.origin();
+		NpcSquad     squad      = call.squad();
+		List<CopNpc> candidates = new ArrayList<>();
+		Map<CopNpc, Double> distances = new HashMap<>();
+
+		for (CopGroup group : groups.values()) {
+			if (group == call.group()) continue;
+			synchronized (group.getCops()) {
+				for (CopNpc cop : group.getCops()) {
+					if (!cop.isValid() || cop.isMarkedForRemoval() || squad.members().contains(cop)) continue;
+					if (!isFreeToRespond(cop)) continue;
+
+					LivingEntity entity = cop.getEntity();
+					if (entity == null || origin.getWorld() == null ||
+					    !origin.getWorld().equals(entity.getWorld())) continue;
+					double distSq = entity.getLocation().distanceSquared(origin);
+					if (distSq > range * range) continue;
+
+					candidates.add(cop);
+					distances.put(cop, distSq);
+				}
+			}
+		}
+
+		candidates.sort(Comparator.comparingDouble(distances::get));
+		return candidates.subList(0, Math.min(limit, candidates.size()));
+	}
+
+	/** Walking home, idle, or chasing a civilian; never cuffing, guarding or hunting a player. */
+	private static boolean isFreeToRespond(CopNpc cop) {
+		return switch (cop.getCurrentState()) {
+			case RETURNING, IDLE -> true;
+			case PURSUING, COMBAT -> cop.getTargetEntity() != null && cop.getTargetPlayerId() == null;
+			default -> false;
+		};
 	}
 
 	/**

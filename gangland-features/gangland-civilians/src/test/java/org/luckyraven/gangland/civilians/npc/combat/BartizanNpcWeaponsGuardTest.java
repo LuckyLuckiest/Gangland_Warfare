@@ -42,7 +42,7 @@ class BartizanNpcWeaponsGuardTest {
 		BartizanNpcWeapons weapons = new BartizanNpcWeapons();
 		LivingEntity        shooter = mock(LivingEntity.class);
 
-		NpcRangedAttack result = weapons.create(shooter, "some_weapon", NpcDifficulty.NORMAL);
+		NpcRangedAttack result = weapons.create(() -> shooter, "some_weapon", NpcDifficulty.NORMAL);
 
 		assertEquals(NpcRangedAttack.NONE, result);
 	}

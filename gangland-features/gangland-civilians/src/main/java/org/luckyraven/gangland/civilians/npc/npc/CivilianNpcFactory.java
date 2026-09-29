@@ -1,7 +1,6 @@
 package org.luckyraven.gangland.civilians.npc.npc;
 
 import com.cryptomorin.xseries.XAttribute;
-import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Location;
 import org.bukkit.attribute.AttributeInstance;
@@ -15,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.combat.BartizanNpcWeapons;
 import org.luckyraven.gangland.civilians.npc.combat.DownedTargetFilter;
+import org.luckyraven.gangland.civilians.npc.config.CivilianAIBehaviorConfig;
 import org.luckyraven.gangland.civilians.npc.config.CivilianGroupConfig;
 import org.luckyraven.gangland.civilians.npc.config.CivilianNavigationConfig;
 import org.luckyraven.gangland.civilians.npc.config.CivilianSettings;
@@ -22,6 +22,7 @@ import org.luckyraven.gangland.civilians.npc.config.CivilianTypeConfig;
 import org.luckyraven.gangland.civilians.npc.state.CivilianBehavior;
 import org.luckyraven.gangland.civilians.npc.state.CivilianBehaviorFactory;
 import org.luckyraven.gangland.civilians.npc.entity.EntityMark;
+import org.luckyraven.gangland.npc.NpcFireRate;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
@@ -87,7 +88,7 @@ public class CivilianNpcFactory implements BeanLifecycle {
 		String plainName = ChatUtil.replaceColorCodes(ChatUtil.color(typeConfig.displayName()), "");
 
 		EntityType entityType = typeConfig.entityType();
-		NPC        npc        = CitizensAPI.getNPCRegistry().createNPC(entityType, plainName);
+		NPC        npc        = CitizensNpcs.create(entityType, plainName);
 		npc.setProtected(false);
 		npc.data().setPersistent(NPC.Metadata.SHOULD_SAVE, false);
 		npc.data().setPersistent(NPC.Metadata.USE_MINECRAFT_AI, false);
@@ -122,10 +123,10 @@ public class CivilianNpcFactory implements BeanLifecycle {
 		// Bartizan-backed ranged weapon: a random name from the type's pool, resolved through the factory hook.
 		// NpcRangedAttack.NONE (no weapon name configured, unresolvable name, or Bartizan absent) leaves the
 		// civilian on the vanilla weaponPool fallback CivilianNpc#equip() already applied above.
+		NpcRangedAttack rangedAttack = NpcRangedAttack.NONE;
 		if (civilian.canUseRangedAttack()) {
-			String          weaponName   = pickWeaponName(typeConfig);
-			NpcRangedAttack rangedAttack = bartizanNpcWeapons.create(civilian.getEntity(), weaponName,
-			                                                        civilian.getDifficulty());
+			String weaponName = pickWeaponName(typeConfig);
+			rangedAttack = bartizanNpcWeapons.create(civilian::getEntity, weaponName, civilian.getDifficulty());
 			civilian.setRangedAttack(rangedAttack);
 
 			ItemStack weaponItem = bartizanNpcWeapons.buildItem(weaponName);
@@ -133,6 +134,8 @@ public class CivilianNpcFactory implements BeanLifecycle {
 				setMainHand(civilian.getEntity(), weaponItem);
 			}
 		}
+
+		applyTuning(civilian, typeConfig.ai(), rangedAttack);
 
 		float speedModifier = 1.0f + (float) speedBonus;
 		npc.getNavigator().getLocalParameters().speedModifier(speedModifier);
@@ -161,6 +164,13 @@ public class CivilianNpcFactory implements BeanLifecycle {
 			maxHealth.setBaseValue(total);
 		}
 		living.setHealth(total);
+	}
+
+	/** Squad engagement, melee band and gun cadence from the type's AI config ({@link NpcFireRate#scale}). */
+	static void applyTuning(CivilianNpc civilian, CivilianAIBehaviorConfig ai, NpcRangedAttack rangedAttack) {
+		civilian.setEngagement(ai.tactics().engagement());
+		civilian.setMeleeProfile(ai.melee());
+		civilian.setFireRateScale(NpcFireRate.scale(ai.fireRateMultiplier(), rangedAttack));
 	}
 
 	/**

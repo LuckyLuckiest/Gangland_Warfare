@@ -5,7 +5,11 @@ import lombok.CustomLog;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.npc.RetreatSettings;
+import org.luckyraven.gangland.npc.TacticsConfig;
+import org.luckyraven.gangland.npc.radio.RadioSettings;
 import org.luckyraven.keystone.npc.NpcDifficulty;
+import org.luckyraven.keystone.npc.NpcMeleeProfile;
 import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.keystone.persistence.config.ConfigReport;
 import org.luckyraven.keystone.persistence.config.MappingNode;
@@ -23,6 +27,15 @@ import java.util.*;
  */
 @CustomLog
 public class YamlCopConfigProvider implements CopConfigProvider {
+
+	/**
+	 * Code defaults for a cops.yml with no Tactics blocks (a 0.11 copy is never replaced on upgrade): Cops.Tactics
+	 * falls back to a 270-degree arc, and a tier with no Tactics block of its own, under a file with no Cops.Tactics
+	 * either, takes its decided arc here (Lieutenant 200, SWAT 270, Military 330). An operator's Cops.Tactics always
+	 * wins over these.
+	 */
+	static final TacticsConfig        COP_TACTICS_DEFAULT = new TacticsConfig(TacticsConfig.DEFAULT.engagement(), 270.0);
+	static final Map<Integer, Double> TIER_ARC_DEFAULTS   = Map.of(3, 200.0, 4, 270.0, 5, 330.0);
 
 	private final Map<Integer, CopTierConfig> tiers;
 	private final Map<Integer, Integer>       copsPerWantedLevel;
@@ -73,6 +86,13 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	// Misc
 	private final double guardRadius;
+
+	// Squad tactics / melee / radio / backup (phase H12)
+	private final NpcMeleeProfile meleeProfile;
+	private final TacticsConfig   tacticsDefault;
+	private final RadioSettings   radioSettings;
+	private final BackupSettings  backupSettings;
+	private final RetreatSettings retreatSettings;
 
 	/**
 	 * Primary positional-config constructor.
@@ -129,7 +149,18 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 		this.guardRadius = copSettings != null ? copSettings.getGuardRadius() : 5.0;
 
-		loadTiers(copsReader, report, itemParser);
+		MappingNode copsSection = copsReader.get("Cops").asMapping().required().orNull();
+		NodeReader  cops        = copsSection != null ? NodeReader.of(copsSection, report) : null;
+
+		this.meleeProfile   = parseMeleeProfile(cops, report);
+		this.tacticsDefault = parseTacticsDefault(cops, report);
+		this.radioSettings  = parseRadioSettings(cops, report);
+		this.backupSettings = parseBackupSettings(cops, report);
+		MappingNode retreatSection = cops == null ? null : cops.get("Retreat").asMapping().orNull();
+		this.retreatSettings = RetreatSettings.read(retreatSection != null ? NodeReader.of(retreatSection, report) : null,
+		                                            report, RetreatSettings.DEFAULT);
+
+		loadTiers(cops, report, itemParser);
 		buildCopsPerWantedLevel(copSettings);
 	}
 
@@ -330,16 +361,79 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		return guardRadius;
 	}
 
-	private void loadTiers(NodeReader copsReader, ConfigReport report, @Nullable ItemParser itemParser) {
-		MappingNode copsSection = copsReader.get("Cops").asMapping().required().orNull();
-		if (copsSection == null) return;
+	@Override
+	public NpcMeleeProfile getMeleeProfile() {
+		return meleeProfile;
+	}
 
-		NodeReader cops = NodeReader.of(copsSection, report);
+	@Override
+	public RadioSettings getRadioSettings() {
+		return radioSettings;
+	}
+
+	@Override
+	public BackupSettings getBackupSettings() {
+		return backupSettings;
+	}
+
+	@Override
+	public RetreatSettings getRetreatSettings() {
+		return retreatSettings;
+	}
+
+	private NpcMeleeProfile parseMeleeProfile(@Nullable NodeReader cops, ConfigReport report) {
+		NpcMeleeProfile defaults = NpcMeleeProfile.DEFAULT;
+		MappingNode meleeSection = cops == null ? null : cops.get("Melee").asMapping().orNull();
+		if (meleeSection == null) {
+			return new NpcMeleeProfile(defaults.reach(), defaults.approach(), attackCooldownTicks,
+			                           defaults.damageSpread(), defaults.edgeDamage());
+		}
+
+		NodeReader melee = NodeReader.of(meleeSection, report);
+		return new NpcMeleeProfile(
+				melee.get("Reach").asDouble().min(0).orDefault(defaults.reach()),
+				melee.get("Approach").asDouble().min(0).orDefault(defaults.approach()),
+				attackCooldownTicks,
+				melee.get("Damage_Spread").asDouble().orDefault(defaults.damageSpread()),
+				melee.get("Edge_Damage").asDouble().orDefault(defaults.edgeDamage()));
+	}
+
+	private TacticsConfig parseTacticsDefault(@Nullable NodeReader cops, ConfigReport report) {
+		MappingNode tacticsSection = cops == null ? null : cops.get("Tactics").asMapping().orNull();
+		NodeReader  tactics        = tacticsSection != null ? NodeReader.of(tacticsSection, report) : null;
+		return TacticsConfig.read(tactics, report, COP_TACTICS_DEFAULT);
+	}
+
+	private RadioSettings parseRadioSettings(@Nullable NodeReader cops, ConfigReport report) {
+		MappingNode radioSection = cops == null ? null : cops.get("Radio").asMapping().orNull();
+		NodeReader  radio        = radioSection != null ? NodeReader.of(radioSection, report) : null;
+		return RadioSettings.read(radio, report, COP_RADIO_DEFAULTS);
+	}
+
+	private BackupSettings parseBackupSettings(@Nullable NodeReader cops, ConfigReport report) {
+		BackupSettings defaults     = BackupSettings.DEFAULT;
+		MappingNode    backupSection = cops == null ? null : cops.get("Backup").asMapping().orNull();
+		if (backupSection == null) return defaults;
+
+		NodeReader backup = NodeReader.of(backupSection, report);
+		boolean    enabled   = backup.get("Enabled").asBool().orDefault(defaults.enabled());
+		int        extraCops = backup.get("Extra_Cops").asInt().min(0).orDefault(defaults.extraCops());
+		long durationTicks = backup.get("Duration_Ticks").asInt().min(0)
+				.orDefault((int) (defaults.durationMs() / 50L));
+		long cooldownTicks = backup.get("Cooldown_Ticks").asInt().min(0)
+				.orDefault((int) (defaults.cooldownMs() / 50L));
+
+		return new BackupSettings(enabled, extraCops, durationTicks * 50L, cooldownTicks * 50L);
+	}
+
+	private void loadTiers(@Nullable NodeReader cops, ConfigReport report, @Nullable ItemParser itemParser) {
+		if (cops == null) return;
 
 		MappingNode tiersSection = cops.get("Tiers").asMapping().required().orNull();
 		if (tiersSection == null) return;
 
 		NodeReader tiersReader = NodeReader.of(tiersSection, report);
+		boolean    hasCopsTactics = cops.get("Tactics").asMapping().orNull() != null;
 
 		for (String key : tiersReader.keys()) {
 			MappingNode tierNode = tiersReader.get(key).asMapping().required().orNull();
@@ -375,6 +469,9 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 			MappingNode wearSection = tier.get("Wearables").asMapping().orNull();
 			NodeReader  wear        = wearSection != null ? NodeReader.of(wearSection, report) : null;
 
+			MappingNode tierTacticsSection = tier.get("Tactics").asMapping().orNull();
+			NodeReader  tierTactics = tierTacticsSection != null ? NodeReader.of(tierTacticsSection, report) : null;
+
 			CopTierConfig tierConfig = new CopTierConfig(
 					tierNum,
 					tier.get("Display_Name").asString().required().orDefault("&9Police"),
@@ -389,7 +486,12 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 					parseItem(wear == null ? null : wear.get("Chestplate").asString().orNull(), itemParser),
 					parseItem(wear == null ? null : wear.get("Leggings").asString().orNull(), itemParser),
 					parseItem(wear == null ? null : wear.get("Boots").asString().orNull(), itemParser),
-					parseDifficulty(difficultyStr, "tier " + tierNum));
+					parseDifficulty(difficultyStr, "tier " + tierNum),
+					TacticsConfig.read(tierTactics, report, hasCopsTactics ? tacticsDefault
+							: new TacticsConfig(tacticsDefault.engagement(),
+							                    TIER_ARC_DEFAULTS.getOrDefault(tierNum, tacticsDefault.formationArc()))),
+					// no key: one weapon tick per AI tick, the cadence cops had before 1.13 moved guns onto server ticks
+					tier.get("Fire_Rate_Multiplier").asDouble().min(0.01).orDefault(1.0 / Math.max(1, aiTickRate)));
 
 			tiers.put(tierNum, tierConfig);
 		}

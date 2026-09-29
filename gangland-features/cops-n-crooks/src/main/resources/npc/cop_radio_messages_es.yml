@@ -1,0 +1,91 @@
+# Cops N Crooks: líneas de radio policial (español). Se usa cuando Settings.Language es "es"; si falta una clave,
+# se recurre a cop_radio_messages.yml (inglés). Mismas claves y marcadores que el archivo en inglés.
+Format: "&9&l[RADIO] &b%unit%&8: &7%line%"
+Dispatch_Format: "&9&l[DESPACHO] &7%line%"
+
+Compass:
+   - "norte"
+   - "noreste"
+   - "este"
+   - "sureste"
+   - "sur"
+   - "suroeste"
+   - "oeste"
+   - "noroeste"
+
+Sides:
+   - "frente"
+   - "izquierda"
+   - "derecha"
+   - "espalda"
+
+Lines:
+   Contact:
+      - "¡Contacto! Sospechoso a %distance% bloques al %direction%!"
+      - "¡Tengo a %target% a la vista, al %direction%!"
+   Contact_Lost:
+      - "¡Perdí el contacto visual! Revisa su última posición."
+      - "¡¿A dónde se fue?!"
+   Engage:
+      - "¡Sospechoso a la vista, atacando!"
+      - "¡Disparos, atacando!"
+   Push:
+      - "¡%member%, avanza sobre él!"
+      - "¡%member%, cierra la distancia!"
+   Flank_Left:
+      - "¡%member%, cubre su %side%!"
+      - "¡%member%, rodea y cubre su %side%!"
+   Flank_Right:
+      - "¡%member%, cubre su %side%!"
+      - "¡%member%, córtale el paso por su %side%!"
+   Reposition:
+      - "¡Me muevo, cúbreme!"
+      - "¡Cambiando de posición!"
+   Search:
+      - "¡Sepárense y búsquenlo!"
+      - "¡Rastreen la zona!"
+   Route:
+      - "Rodeando, buscando cómo llegar a él."
+      - "¡Cortándole el paso!"
+   Route_High:
+      - "Está en lo alto, buscando cómo subir."
+   Climb:
+      - "¡Usando la escalera!"
+      - "¡Subiendo!"
+   No_Route:
+      - "¡No puedo llegar a él, rodeen el edificio!"
+      - "¡Cubran las salidas!"
+   Check_Fire:
+      - "¡Alto el fuego, hay un compañero en la línea de tiro!"
+   Reloading:
+      - "¡Recargando, cúbreme!"
+      - "¡Cambiando cargador!"
+   Man_Down:
+      - "¡Oficial herido! ¡%member% está caído!"
+      - "¡Hombre caído!"
+   Leader_Down:
+      - "¡%member% está caído! %unit% toma el mando!"
+   Ack:
+      - "Copiado."
+      - "En camino."
+      - "Entendido."
+   Responding:
+      - "¡%unit% responde, en camino!"
+      - "¡Copiado, voy a asistir!"
+   Fall_Back:
+      - "¡Me disparan, me repliego a cubierto!"
+      - "¡Estoy herido! ¡Me retiro!"
+   In_Cover:
+      - "¡A cubierto!"
+      - "¡Estoy a cubierto, manténganlo ocupado!"
+   Resisting:
+      - "¡El sospechoso se resiste! ¡Redúzcanlo!"
+   Backup:
+      - "¡Solicito refuerzos en mi ubicación!"
+      - "¡Necesito más unidades aquí, ya!"
+   Dispatch_Wanted:
+      - "Atención a todas las unidades: %target% está buscado, nivel %level%."
+   Escalate:
+      - "Unidades %tier% en camino hacia %target%."
+   Stand_Down:
+      - "Sospechoso liberado. Volviendo a patrullar."

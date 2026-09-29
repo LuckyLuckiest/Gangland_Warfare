@@ -1,0 +1,130 @@
+# Cops N Crooks: police radio lines. Every Lines key is a list; one line is picked at random. [] mutes that kind.
+# Spanish variant: cop_radio_messages_es.yml, picked by Settings.Language (see CopRadioMessages/LocalizedModuleYaml).
+#
+# Placeholders:
+#   %unit%      speaker callsign, e.g. SWAT-17
+#   %member%    the addressed or downed cop
+#   %target%    suspect name
+#   %distance%  blocks from the speaker to the spot
+#   %direction% compass word from the speaker to the spot
+#   %side%      the spot relative to the way the suspect faces
+#   %tier%, %level% dispatch lines only
+
+# Line-wrapping template for an ordinary radio line.
+Format: "&9&l[RADIO] &b%unit%&8: &7%line%"
+# Line-wrapping template for a Dispatch-origin line (Dispatch_Wanted, Escalate).
+Dispatch_Format: "&9&l[DISPATCH] &7%line%"
+
+# Compass words for %direction%, starting at north and going clockwise.
+Compass:
+   - "north"
+   - "north-east"
+   - "east"
+   - "south-east"
+   - "south"
+   - "south-west"
+   - "west"
+   - "north-west"
+
+# Words for %side%, relative to the way the suspect faces.
+Sides:
+   - "front"
+   - "left"
+   - "right"
+   - "back"
+
+Lines:
+   # A spotter first sees the suspect while the squad is not already in contact.
+   Contact:
+      - "Contact! Suspect %distance% blocks %direction%!"
+      - "Eyes on %target%, %direction%!"
+   # No member has seen the suspect for a while after contact.
+   Contact_Lost:
+      - "Lost visual! Check his last known."
+      - "Where'd he go?!"
+   # A ranged shooter's order becomes the squad's fan centre.
+   Engage:
+      - "Suspect in sight, engaging!"
+      - "Shots fired, engaging!"
+   # The leader orders a member to close in.
+   Push:
+      - "%member%, move in on him!"
+      - "%member%, close the distance!"
+   # The leader orders a member to the left flank.
+   Flank_Left:
+      - "%member%, take his %side%!"
+      - "%member%, swing round and cover his %side%!"
+   # The leader orders a member to the right flank.
+   Flank_Right:
+      - "%member%, take his %side%!"
+      - "%member%, cut him off on his %side%!"
+   # A shooter strafes to a new fan post (not its first).
+   Reposition:
+      - "Moving, cover me!"
+      - "Changing position!"
+   # The leader orders the squad to search around the last-known position.
+   Search:
+      - "Spread out, find him!"
+      - "Sweep the area!"
+   # A member starts following a route to a suspect it cannot see directly, on level ground.
+   Route:
+      - "Going round, finding a way to him."
+      - "Cutting round to him!"
+   # The same, when the suspect is well above the member.
+   Route_High:
+      - "He's up high, finding a way up."
+   # A member starts climbing a ladder, vine or scaffolding on its route.
+   Climb:
+      - "Taking the ladder!"
+      - "Going up!"
+   # A member finds no route to the suspect and waits at the nearest reachable spot.
+   No_Route:
+      - "Can't reach him, surround the building!"
+      - "Hold the exits!"
+   # A shooter holds a shot because a squad-mate stands in its line of fire.
+   Check_Fire:
+      - "Check your fire, friendly in the line!"
+   # A shooter starts reloading.
+   Reloading:
+      - "Reloading, cover me!"
+      - "Changing mags!"
+   # A non-leader member goes down.
+   Man_Down:
+      - "Officer down! %member% is down!"
+      - "Man down!"
+   # The leader goes down and a new leader takes point.
+   Leader_Down:
+      - "%member% is down! %unit% taking point!"
+   # An ordered member acknowledges a delivered order.
+   Ack:
+      - "Copy."
+      - "Moving."
+      - "On it."
+   # A nearby cop pulled in by a radio call announces itself.
+   Responding:
+      - "%unit% responding, en route!"
+      - "Copy, moving to assist!"
+   # A badly hurt cop breaks off to cover (Cops.Retreat in cops.yml).
+   Fall_Back:
+      - "Taking fire, falling back to cover!"
+      - "I'm hit! Pulling back!"
+   # The retreating cop reached cover.
+   In_Cover:
+      - "In cover!"
+      - "I'm behind cover, keep him busy!"
+   # A cuffed suspect's escape attempts exhaust Max_Cuff_Attempts; the group switches to combat.
+   Resisting:
+      - "Suspect is resisting! Take him down!"
+   # A cop goes down and the squad radios for backup.
+   Backup:
+      - "Requesting backup at my location!"
+      - "Need more units here, now!"
+   # Dispatch announces a fresh wanted level.
+   Dispatch_Wanted:
+      - "All units, be advised: %target% is wanted, level %level%."
+   # Dispatch announces a wanted-tier escalation.
+   Escalate:
+      - "%tier% units en route to %target%."
+   # Dispatch announces the wanted level clearing.
+   Stand_Down:
+      - "Suspect cleared. Returning to patrol."

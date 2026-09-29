@@ -143,8 +143,12 @@ npc/police/
     YamlCopConfigProvider   YAML-backed implementation
     CopConfig           Raw parsed YAML data
     CopLoader           YAML loader
-    CopTierConfig       Per-tier record (health, damage, speed, armor, weapons)
+    CopTierConfig       Per-tier record (health, damage, speed, armor, weapons, difficulty, tactics, fire rate)
     CopSettings         Settings.yml cop section contract
+    BackupSettings      Cops.Backup record (0.12.0)
+  radio/
+    CopRadio            The police radio: squad signals -> chat lines, dispatch, responder calls (0.12.0)
+    CopRadioMessages    npc/cop_radio_messages(_es).yml lines, via LocalizedModuleYaml (0.12.0)
   npc/
     CopNpc              Individual cop NPC instance
     CopNpcFactory       Creates and equips CopNpc instances
@@ -263,6 +267,88 @@ Sightings are reported by `onWantedStart` (the crime scene), `onCopAttackedAlert
 target), `IdleBehavior` (`cop.canSee(target, alertRange)`) and by Keystone's `AbstractNpc.pursue`, which every
 `PURSUING` and `COMBAT` tick calls with `Cops.Behaviour.Alert_Range` as the sight range.
 
+Since 0.12.0 a group also opens one **attacker squad** per other target its cops turn on (an attacker, a retarget, a
+wanted civilian): `CopGroup.attackerSquad(id, seed)`. `CopNpc.squadFor(target)` hands out the group squad for the
+group's player and the group's attacker squad for anyone else, so cops of one group coordinate on an attacker too.
+Only a cop with no group still gets a squad of its own. The previous squad is left whenever the answer changes.
+
+#### Squad tactics per tier (0.12.0)
+
+`CopNpcFactory.applyTuning` gives every cop its tier's `TacticsConfig` engagement (`Cops.Tactics`, overridden key by
+key by `Tiers.<n>.Tactics`), the `Cops.Melee` profile (`Approach` clamped to `Cuff_Radius - 0.5`) and a Keystone
+fire-rate scale from `NpcFireRate.scale(Fire_Rate_Multiplier, rangedAttack)`: `1 / multiplier` for a Bartizan
+weapon, half that for the vanilla bow/crossbow fallback, so `1 / AI_Tick_Rate` keeps the 0.11 cadence on both paths.
+The group squad's formation arc comes from the group's tier (shipped: Lieutenant 200, SWAT 270, Military 330);
+Keystone ignores the arc for melee members, which always surround at 360/n. `Tactics.Enabled: false` puts the tier
+on `NpcEngagement.LEGACY`: 0.11's freeze-in-band, with no formation and no order / `CONTACT` / `RELOADING` /
+`CHECK_FIRE` / retreat signals. It is positioning only: `NpcSquad.memberDown` still sends `MAN_DOWN` /
+`LEADER_DOWN` (so casualty radio, backup and responders still fire), Gangland's own `Dispatch_Wanted` / `Escalate` /
+`Resisting` / `Stand_Down` lines still go out, and `CombatBehavior` still retreats a hurt cop to cover (its radio line
+is suppressed). Those are switched by `Radio.Enabled`, `Backup.Enabled`, `Radio.Responder_Max` and
+`Retreat.Enabled`, not by `Tactics.Enabled`.
+
+#### Police radio, orders and acks (0.12.0)
+
+`CopRadio` wraps one gangland-api `SquadRadio` (package `org.luckyraven.gangland.npc.radio`, shared with the civilian
+shouts) for every `CopGroup`. `CopManager.newGroup` installs `copRadio.listenerFor(group, pendingCalls::add)` on the
+group squad and every attacker squad (`CopGroup.setListener`), so each Keystone `NpcSquadSignal` becomes a chat line
+keyed by the signal name (`CONTACT` -> `Lines.Contact`, `FLANK_LEFT` -> `Lines.Flank_Left`, ...).
+
+- **Delivery:** a line reaches every player within `Radio.Range` of the speaker or the addressed cop, plus the hunted
+  player within `Radio.Target_Range`. `SquadRadio.speak` drops (never queues) a line that fails a gate: radio
+  disabled or an empty line list, the squad gap (`Squad_Gap_Ticks`, skipped by `Priority` kinds and acks), the
+  per-kind `Cooldown_Ticks`, and per listening player the player gap (`Player_Gap_Ticks`, skipped by priority kinds).
+- **Orders and acks:** `PUSH`, `FLANK_LEFT`, `FLANK_RIGHT`, `SEARCH` and `NO_ROUTE` are spoken as orders: the squad
+  leader speaks them to the member (`%member%`), and a leader never orders itself. `MAN_DOWN`/`LEADER_DOWN` are also
+  spoken by the leader; every other signal by the member itself. A delivered order schedules the member's `Ack` after
+  `Ack_Delay_Ticks` (forced to at least `Player_Gap_Ticks + 5`, so the ack isn't throttled by its own order).
+- **Direct lines:** `CopRadio.dispatch` (`Dispatch_Wanted` on `onWantedStart`, `Escalate` when the group's tier rises)
+  and `CopRadio.sayFromLeader` (`Stand_Down`, `Resisting`) speak outside the signal flow.
+- `CopRadio.callsign` is the tier's stripped display name plus the Citizens id (`SWAT-17`).
+
+#### Radio responders (0.12.0)
+
+A `CONTACT`, `MAN_DOWN` or `LEADER_DOWN` signal queues a `RadioCall(group, squad, origin)`. `CopManager` answers
+the queue in `drainRadioCalls()` after the AI tick's cop loop, so no listener changes a cop list mid-iteration. For
+each call it takes up to `Radio.Responder_Max` (and no more than the group's room under `Max_Per_Player`) of the
+nearest cops within `Radio.Range` of the origin that belong to
+**another** group and are `RETURNING`, `IDLE` or chasing a civilian (never cuffing, guarding or hunting a player).
+The responder is `detach`ed from its group, added to the calling group, speaks `Responding` and joins the hunt. The
+calling group's own cops are never pulled back: a cop walking home was released after a backup or rotated out.
+No call is answered once the suspect is restrained. Everything here is NPC hearing and runs with no player in range.
+
+#### Backup (0.12.0)
+
+On `MAN_DOWN`/`LEADER_DOWN` the listener also calls `CopGroup.requestBackup(now, BackupSettings)`. It is granted unless
+`Backup.Enabled` is off, `Extra_Cops` is 0 or `Cooldown_Ticks` has not passed, and a granted request is radioed
+(`Backup`). While it lasts (`Duration_Ticks`), the spawn task's target count adds `backupExtra` (still capped by
+`Max_Per_Player`). `consumeBackupExpiry` then adds `Extra_Cops` to `pendingRelease`, and the spawn task sends the
+newest free cops home (never one fighting, cuffing or guarding), retrying next run until enough have gone.
+
+#### Resisting (0.12.0)
+
+`CuffingBehavior.failCuff` counts every failed or broken cuff per group (`CopGroup.recordCuffFailure`), because the
+cuff lock passes between the surrounding officers. At `Max_Cuff_Attempts`, or when the suspect hits a cop
+(`onCopAttackedAlert`), `CopGroup.escalate` sets the group's combat alert. At the end of the next AI tick
+`pollResisting` radios `Resisting` once and `fightResisting` moves every cop still after the suspect (not guarding or
+returning) to `COMBAT`; cops spawned later fight too.
+`clearCombatAlert` resets it when the player is no longer wanted.
+
+#### Retreat to cover (0.12.0)
+
+`CopRetreat` checks `RetreatSettings` (`Cops.Retreat`) each tick of every state that fights: `CombatBehavior`, and
+`PursuingBehavior` for ranged cops (a band shooter hunting a wanted player stays in PURSUING and never reaches COMBAT
+unless the player attacks). A melee cop in PURSUING is chasing to cuff, not fighting, so it does not retreat, and a
+cop with the suspect in cuff range still cuffs. A cop at or below `Health_Fraction` of max health calls Keystone's
+`takeCover(target, Radius, squad)`, which joins the squad and sends `FALL_BACK`/`IN_COVER`. A retreat lasts at most
+`CopRetreat.MAX_COVER_MS` (10 s) per state episode. `FAILED` (no cover in reach) keeps the cop fighting.
+`Fall_Back` and `In_Cover` are `Radio.Priority` kinds, so a same-tick `Resisting` from the hit that caused the
+retreat cannot drop them through the per-player gap.
+
+A killed cop is found with `findDyingCop` (its entity is no longer valid during `EntityDeathEvent`), and
+`CopListener` calls `memberDown` on its current squad and on the group squad, so the Man Down line, backup and
+responders fire even for a cop killed mid-navigation (T-111).
+
 ### CopNpc
 
 Individual cop NPC extending `AbstractNpc`. Key additions:
@@ -299,7 +385,10 @@ record CopTierConfig(
 		boolean skipCuffing,         // Whether this tier skips cuffing (goes straight to combat)
 		List<String> weaponNamePool, // Gangland weapon names for random selection
 		List<ItemStack> weaponPool,  // Vanilla weapon fallbacks
-		ItemStack helmet, chestplate, leggings, boots  // Armor
+		ItemStack helmet, chestplate, leggings, boots, // Armor
+		NpcDifficulty difficulty,    // Aim error, reaction time, fire rate, melee hit chance
+		TacticsConfig tactics,       // Cops.Tactics overridden by Tiers.<n>.Tactics (0.12.0)
+		double fireRateMultiplier    // Fire_Rate_Multiplier, default 1 / AI_Tick_Rate (0.12.0)
 )
 ```
 
@@ -375,17 +464,21 @@ Higher tiers (e.g., SWAT, Military) have `skipCuffing = true` -- they engage in 
 - On enter: attempts to acquire cuff lock; if another cop holds it -> `PURSUING`
 - Wind-up timer counts down `cuffingCooldown` AI ticks, firing `DuringCuffingEvent` each tick
 - On wind-up complete: calls `cop.attemptCuff(player)`
-    - Success -> fires `CuffedEvent`, transitions to `RETURNING`
-    - Failure (target moved out of range) -> releases lock, transitions to `PURSUING`
+    - Success -> fires `CuffedEvent`, resets the group's escape count, transitions to `RETURNING`
+    - Failure, or the target breaks out of the zone -> `failCuff`: counted per group; below `Max_Cuff_Attempts` the cop
+      goes back to `PURSUING`, at the limit the group escalates and the cop goes to `COMBAT` (see Resisting above)
+- The other cops of the group hold their surround posts in `PURSUING` while the lock is held by someone else
 - Entity targets (hostile civilians) bypass cuffing entirely -> `COMBAT`
 - On exit: always releases the cuff lock
 
 **COMBAT** (`CombatBehavior`)
 
-- Attacks target within `combatRange` (melee) or `combatRange * 3` (ranged)
-- Navigates with `cop.pursue(target, cop.squadFor(target), alertRange)`: ranged cops hold while they see the target
-  inside their firing band, everyone else closes in (any other target uses the cop's own squad, seeded where the cop
-  was handed it)
+- Attacks a target within `alertRange` (a ranged cop, `isRangedAttacker()`) or `combatRange` (melee; the swing lands
+  only within `Cops.Melee.Reach`)
+- A badly hurt cop retreats to cover first (see Retreat to cover above)
+- Navigates with `cop.pursue(target, cop.squadFor(target), alertRange)`: ranged cops work their formation post and
+  strafe while they see the target inside their firing band, melee cops surround, everyone else closes in (any other
+  target uses the group's attacker squad for it)
 - Transition: `COMBAT -> RETURNING` when target goes offline/dies/is detained
 
 **RETURNING** (`ReturningBehavior`)
@@ -1199,11 +1292,11 @@ Cops:
       ai_tick_rate: 4            # Ticks between AI evaluations
       spawn_check_rate: 60       # Ticks between spawn checks
       cuff_radius: 3.5           # Blocks
-      max_cuff_attempts: 3
+      max_cuff_attempts: 3       # Escapes across the group before it fights (0.12.0)
       cuff_cooldown_ticks: 40    # Wind-up duration
-      alert_range: 32.0          # Blocks
-      combat_range: 5.0          # Melee range (ranged = 3x)
-      attack_cooldown_ticks: 10
+      alert_range: 32.0          # Blocks; ranged cops fire at anything seen this close (0.12.0)
+      combat_range: 5.0          # Melee engage distance only (0.12.0)
+      attack_cooldown_ticks: 10  # Melee swing cooldown, server ticks (read since 0.12.0)
    spawn:
       min_distance: 20.0
       max_distance: 45.0
@@ -1257,7 +1350,10 @@ Civilians:
 
 ### cops.yml
 
-Per-tier cop configuration loaded by `CopLoader`:
+Per-tier cop configuration loaded by `CopLoader`. Since 0.12.0 `Cops` also carries the `Melee`, `Tactics`, `Radio`,
+`Backup` and `Retreat` blocks, and each tier `Difficulty`, `Fire_Rate_Multiplier` and an optional `Tactics` override.
+The shipped file and [the feature doc](../features/cops-n-crooks.md) list every key; the radio lines live in
+`npc/cop_radio_messages.yml`. The abridged example below predates those keys:
 
 ```yaml
 tiers:

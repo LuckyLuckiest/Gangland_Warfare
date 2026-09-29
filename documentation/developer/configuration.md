@@ -203,11 +203,12 @@ Cops:
       AI_Tick_Rate: 10             # Ticks between AI cycles
       Spawn_Check_Rate: 40
       Cuff_Radius: 3.0
-      Max_Cuff_Attempts: 3
+      Max_Cuff_Attempts: 3         # Cuffs broken out of, across the group, before the whole group fights (0.12.0)
       Cuff_Cooldown_Ticks: 100
-      Alert_Range: 40.0            # Sight range (blocks, line of sight); every sighting is shared by the player's cops
-      Combat_Range: 4.0
-      Attack_Cooldown_Ticks: 20
+      Alert_Range: 40.0            # Sight range (blocks, line of sight); every sighting is shared by the player's cops.
+                                   # Ranged cops fire at anything they see within it (0.12.0)
+      Combat_Range: 4.0            # Melee engage distance only (0.12.0)
+      Attack_Cooldown_Ticks: 20    # Melee swing cooldown in server ticks (applied since 0.12.0)
    Spawn:
       Min_Distance: 10.0
       Max_Distance: 50.0
@@ -350,36 +351,72 @@ Gadgets:
 
 ## cops.yml
 
-Defines per-tier cop NPC configurations. Each tier has its own equipment, stats, and
-behavior overrides.
+Defines the cop tiers and, since 0.12.0, the squad tactics, melee band, police radio, backup and retreat tuning;
+ships inside the cops-n-crooks module jar as `npc/cops.yml`. Abridged:
 
 ```yaml
-# Example tier structure
-tiers:
-   officer:
-      display_name: "&9Officer"
-      health: 20.0
-      damage: 4.0
-      armor:
-         helmet: IRON_HELMET
-         chestplate: IRON_CHESTPLATE
-      weapons:
-         - "pistol"
-      can_cuff: true
-      cuff_priority: 0.8
-
-   swat:
-      display_name: "&4SWAT"
-      health: 40.0
-      damage: 8.0
-      armor:
-         helmet: DIAMOND_HELMET
-         chestplate: DIAMOND_CHESTPLATE
-      weapons:
-         - "assault_rifle"
-         - "shotgun"
-      can_cuff: false
+Cops:
+   Melee:
+      Reach: 3.0
+      Approach: 2.0
+      Damage_Spread: 0.15
+      Edge_Damage: 0.7
+   Tactics:
+      Enabled: true
+      Formation_Arc: 270.0
+      Strafe_Degrees: 15.0
+      Reposition_Ticks: 60
+      Moving_Aim_Error: 0.10
+   Radio:
+      Enabled: true
+      Range: 32.0
+      Target_Range: 64.0
+      Squad_Gap_Ticks: 30
+      Player_Gap_Ticks: 20
+      Ack_Delay_Ticks: 25
+      Responder_Max: 2
+      # Priority, Cooldown_Ticks and Sound: see the shipped file
+   Backup:
+      Enabled: true
+      Extra_Cops: 1
+      Duration_Ticks: 600
+      Cooldown_Ticks: 1200
+   Retreat:
+      Enabled: true
+      Health_Fraction: 0.3
+      Radius: 12.0
+   Tiers:
+      4:
+         Display_Name: "&1SWAT"
+         Health: 40.0
+         Damage: 5.0
+         Speed: 1.3
+         Cuff_Radius: 4.5
+         Can_Use_Weapons: true
+         Skip_Cuffing: true
+         Difficulty: HARD
+         Fire_Rate_Multiplier: 0.1
+         Weapon_Pool:
+            - "weapon:rifle"
+            - "CROSSBOW"
+         Wearables:
+            Helmet: "IRON_HELMET"
+         Tactics:
+            Formation_Arc: 270.0
 ```
+
+| Key | Default | Meaning |
+|---|---|---|
+| `Melee.*` | see above | Swing reach, surround distance (capped at `Cuff_Radius - 0.5`), damage spread and edge falloff |
+| `Tactics.*` | see above | Formation arc, strafe, reposition interval and moving aim error; `Enabled: false` = 0.11 positioning only (radio, backup, retreat keep their own switches) |
+| `Tiers.<n>.Tactics` | none | Overrides `Tactics` key by key. Shipped arcs: Lieutenant 200, SWAT 270, Military 330 |
+| `Tiers.<n>.Fire_Rate_Multiplier` | `1 / AI_Tick_Rate` | Gun cadence as a fraction of the weapon's own rate; the default keeps 0.11's cadence |
+| `Radio.*` | see above | Police radio in chat: who hears it, throttling, ack delay, `Responder_Max` cross-group responders |
+| `Backup.*` | see above | Extra cops requested when a cop goes down, for how long, and how often |
+| `Retreat.*` | see above | When a hurt cop breaks off to cover, and how far it looks |
+
+The radio lines are in `npc/cop_radio_messages.yml` (Spanish `_es.yml`). See
+[Cops N Crooks](../features/cops-n-crooks.md) and [Migrating to 0.12.0](../migration-0.12.0.md).
 
 ---
 
@@ -417,6 +454,14 @@ Types:
 | `Faction`                  | the type id | Hostile NPCs of one faction fight as a squad; a hit alerts the victim's faction           |
 | `AI.Combat.Alert_Range`    | `16.0`      | Sight range, and how far (from the victim) a faction member hears the hit                 |
 | `AI.Combat.Search_Seconds` | `20`        | Seconds the squad may go without seeing its target before a member gives up and goes idle |
+| `AI.Combat.Attack_Range`   | per type    | Melee engage distance only since 0.12.0; ranged types fire at anything seen within `Alert_Range` |
+| `AI.Combat.Fire_Rate_Multiplier` | `1 / AI_Tick_Rate` | Gun cadence as a fraction of the weapon's own rate; the default (`0.05` at tick rate 20) keeps 0.11's cadence (0.12.0) |
+| `AI.Combat.Tactics.*`      | arc 160     | Same keys as `Cops.Tactics`; shipped arcs gang_member 140, turf_defender 100, quartermaster 120 (0.12.0) |
+| `AI.Combat.Melee.*`        | reach 3.0   | Same keys as `Cops.Melee`; the cooldown is `Attack_Interval_Ticks` (0.12.0) |
+| `AI.Combat.Retreat.*`      | 0.3 / 12.0  | Same keys as `Cops.Retreat` (0.12.0) |
+| `Shouts.*` (top level)     | range 24.0  | Faction shouts in chat, same shape as `Cops.Radio`. A Contact shout also recruits same-faction allies within `Shouts.Range` (0.12.0) |
+
+Shout lines are in the `Shouts` block of `npc/civilian_messages.yml` (Spanish `_es.yml`).
 
 ---
 

@@ -7,7 +7,11 @@ import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.npc.RetreatSettings;
+import org.luckyraven.gangland.npc.TacticsConfig;
+import org.luckyraven.gangland.npc.radio.RadioSettings;
 import org.luckyraven.keystone.npc.NpcDifficulty;
+import org.luckyraven.keystone.npc.NpcMeleeProfile;
 import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.keystone.persistence.config.ConfigReport;
 import org.luckyraven.keystone.persistence.config.MappingNode;
@@ -28,16 +32,23 @@ public class YamlCiviliansConfigProvider {
 
 	private final CiviliansConfig config;
 
+	/** No {@code Fire_Rate_Multiplier}: one weapon tick per AI tick, the cadence before 1.13 moved guns onto server ticks. */
+	private final double defaultFireRateMultiplier;
+
 	public YamlCiviliansConfigProvider(NodeReader reader, ConfigReport report,
 	                                   boolean aiEnabled, int aiTickRate,
 	                                   @Nullable ItemParser itemParser) {
+		this.defaultFireRateMultiplier = 1.0 / Math.max(1, aiTickRate);
+
 		List<String> defaultCivilian = loadDefaultEntities(reader, "Civilian");
 		List<String> defaultPolice   = loadDefaultEntities(reader, "Police");
 
 		Map<String, CivilianTypeConfig>  types  = loadTypes(reader, report, itemParser);
 		Map<String, CivilianGroupConfig> groups = loadGroups(reader, report);
+		RadioSettings                    shouts = loadShouts(reader, report);
 
-		this.config = new CiviliansConfig(defaultCivilian, defaultPolice, types, groups, aiEnabled, aiTickRate);
+		this.config = new CiviliansConfig(defaultCivilian, defaultPolice, types, groups, aiEnabled, aiTickRate,
+		                                  shouts);
 	}
 
 	// ── Loaders ───────────────────────────────────────────────────────────────
@@ -141,6 +152,12 @@ public class YamlCiviliansConfigProvider {
 		return result;
 	}
 
+	private RadioSettings loadShouts(NodeReader reader, ConfigReport report) {
+		MappingNode shoutsSection = reader.get("Shouts").asMapping().orNull();
+		NodeReader  shouts        = shoutsSection != null ? NodeReader.of(shoutsSection, report) : null;
+		return RadioSettings.read(shouts, report, CiviliansConfig.DEFAULT_SHOUTS);
+	}
+
 	// ── Parse helpers ─────────────────────────────────────────────────────────
 
 	private CivilianWearableConfig parseWearables(NodeReader typeReader, ConfigReport report) {
@@ -194,7 +211,9 @@ public class YamlCiviliansConfigProvider {
 
 	private CivilianAIBehaviorConfig parseAI(@Nullable MappingNode aiSection, ConfigReport report, String typeId) {
 		if (aiSection == null) {
-			return new CivilianAIBehaviorConfig(false, 0, false, 0, false, 0.0, 0.0, 0, NpcDifficulty.NORMAL, 16.0, 20);
+			return new CivilianAIBehaviorConfig(false, 0, false, 0, false, 0.0, 0.0, 0, NpcDifficulty.NORMAL, 16.0, 20,
+			                                    CivilianAIBehaviorConfig.DEFAULT_TACTICS, NpcMeleeProfile.DEFAULT, defaultFireRateMultiplier,
+			                                    RetreatSettings.DEFAULT);
 		}
 
 		NodeReader ai = NodeReader.of(aiSection, report);
@@ -237,9 +256,42 @@ public class YamlCiviliansConfigProvider {
 		double alertRange    = combat == null ? 16.0 : combat.get("Alert_Range").asDouble().min(0).orDefault(16.0);
 		int    searchSeconds = combat == null ? 20 : combat.get("Search_Seconds").asInt().min(0).orDefault(20);
 
+		// Squad tactics (phase H12): formation arc / engagement, and melee reach/approach/damage falloff. The melee
+		// cooldown is always the attack interval, never a separate key.
+		TacticsConfig   tactics = parseTactics(combat, report);
+		NpcMeleeProfile melee   = parseMelee(combat, report, attackIntervalTicks);
+		double fireRateMultiplier = combat == null ? defaultFireRateMultiplier
+				: combat.get("Fire_Rate_Multiplier").asDouble().min(0.01).orDefault(defaultFireRateMultiplier);
+		MappingNode     retreatSection = combat == null ? null : combat.get("Retreat").asMapping().orNull();
+		RetreatSettings retreat = RetreatSettings.read(retreatSection != null ? NodeReader.of(retreatSection, report)
+		                                                                      : null, report, RetreatSettings.DEFAULT);
+
 		return new CivilianAIBehaviorConfig(wanderEnabled, wanderRange, fleeEnabled, fleeRange,
 		                                    combatEnabled, attackDamage, attackRange, attackIntervalTicks, difficulty,
-		                                    alertRange, searchSeconds);
+		                                    alertRange, searchSeconds, tactics, melee, fireRateMultiplier, retreat);
+	}
+
+	private TacticsConfig parseTactics(@Nullable NodeReader combat, ConfigReport report) {
+		MappingNode tacticsSection = combat == null ? null : combat.get("Tactics").asMapping().orNull();
+		NodeReader  tactics        = tacticsSection != null ? NodeReader.of(tacticsSection, report) : null;
+		return TacticsConfig.read(tactics, report, CivilianAIBehaviorConfig.DEFAULT_TACTICS);
+	}
+
+	private NpcMeleeProfile parseMelee(@Nullable NodeReader combat, ConfigReport report, int cooldownTicks) {
+		NpcMeleeProfile defaults    = NpcMeleeProfile.DEFAULT;
+		MappingNode     meleeSection = combat == null ? null : combat.get("Melee").asMapping().orNull();
+		if (meleeSection == null) {
+			return new NpcMeleeProfile(defaults.reach(), defaults.approach(), Math.max(1, cooldownTicks),
+			                           defaults.damageSpread(), defaults.edgeDamage());
+		}
+
+		NodeReader melee = NodeReader.of(meleeSection, report);
+		return new NpcMeleeProfile(
+				melee.get("Reach").asDouble().min(0).orDefault(defaults.reach()),
+				melee.get("Approach").asDouble().min(0).orDefault(defaults.approach()),
+				Math.max(1, cooldownTicks),
+				melee.get("Damage_Spread").asDouble().orDefault(defaults.damageSpread()),
+				melee.get("Edge_Damage").asDouble().orDefault(defaults.edgeDamage()));
 	}
 
 	private boolean dottedBool(NodeReader parent, String section, String key, ConfigReport report, boolean def) {

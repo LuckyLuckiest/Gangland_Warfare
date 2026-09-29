@@ -6,9 +6,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.bartizan.api.BartizanApi;
+import org.luckyraven.bartizan.api.npc.NpcWeaponFactory;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.keystone.npc.NpcDifficulty;
 import org.luckyraven.keystone.npc.spi.NpcRangedAttack;
+
+import java.util.function.Supplier;
 
 /**
  * A factory hook, <strong>not</strong> an {@link NpcRangedAttack} implementation (PICK Amendments ruling (b)):
@@ -29,8 +32,14 @@ public class BartizanNpcWeapons {
 	 * commit {@code 38913d5}), so an unvalidated {@code material:}/bare-material pool entry would abort the spawn —
 	 * the {@link org.luckyraven.bartizan.api.item.WeaponItemApi#isValidWeaponName(String)} guard below is what keeps
 	 * that from happening.
+	 *
+	 * <p>{@code shooter} is read on every shot (pass {@code npc::getEntity}): Citizens can replace an NPC's entity
+	 * after spawn, and a controller bound to the spawn-time entity fires from its stale spot on Bartizan 0.5.x and
+	 * goes silent on 0.6.0+. A Bartizan older than 0.6.0 lacks the supplier overload, so the entity overload is the
+	 * fallback there.
 	 */
-	public NpcRangedAttack create(LivingEntity shooter, @Nullable String weaponName, NpcDifficulty difficulty) {
+	public NpcRangedAttack create(Supplier<? extends LivingEntity> shooter, @Nullable String weaponName,
+	                              NpcDifficulty difficulty) {
 		// WS7 G5b fix round 1 (review C2): the Settings check must come before the BartizanApi.class literal below
 		// is ever reached - on a real Bartizan-less server that literal fails to resolve (NoClassDefFoundError),
 		// which the old rsp == null check never got a chance to guard against.
@@ -42,8 +51,16 @@ public class BartizanNpcWeapons {
 		BartizanApi api = rsp.getProvider();
 		if (!api.items().isValidWeaponName(weaponName)) return NpcRangedAttack.NONE;
 
-		return api.npcWeapons()
-		          .create(shooter, weaponName, difficulty.getFireRateMultiplier(), difficulty.getAimError());
+		NpcWeaponFactory factory = api.npcWeapons();
+		double           rate    = difficulty.getFireRateMultiplier();
+		double           aim     = difficulty.getAimError();
+		try {
+			return factory.create(shooter, weaponName, rate, aim);
+		} catch (NoSuchMethodError | UnsupportedOperationException preSupplierBartizan) {
+			// NoSuchMethodError: a 0.5.x bartizan-api interface; UnsupportedOperationException: the 0.6.0 default
+			// on a factory implementation that predates it.
+			return factory.create(shooter.get(), weaponName, rate, aim);
+		}
 	}
 
 	/**

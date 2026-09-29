@@ -71,6 +71,16 @@
             <groupId>org.luckyraven</groupId>
             <artifactId>keystone-npc</artifactId>
         </dependency>
+        <!-- Test-scope only: gangland-api's own production code never touches Citizens (SquadRadio/RadioVoice only
+             name AbstractNpc/NpcSquad as types), but Mockito's inline mock maker walks AbstractNpc's whole field
+             hierarchy — including its private Citizens NPC field — so the real class must resolve at test time,
+             same as CitizensBlindScan/CitizensAndConfigSafetyTest's provided-scope copy does for the NPC feature
+             modules. -->
+        <dependency>
+            <groupId>net.citizensnpcs</groupId>
+            <artifactId>citizens-main</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- WS4 G1a: keystone-shop, B2 — provided here (not re-exported at compile scope like shop-api was). -->
         <dependency>
             <groupId>org.luckyraven</groupId>
