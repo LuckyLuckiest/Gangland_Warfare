@@ -176,9 +176,11 @@ public class CopNpc extends AbstractNpc {
 
 		currentState = newState;
 
-		// care is a fighting-state thing: a cop leaving PURSUING/COMBAT (cuffing, walking home) drops it on both sides
+		// care and retreat are fighting-state things: a cop leaving PURSUING/COMBAT (cuffing, walking home) drops care
+		// on both sides and its walk to cover; a hop between the two keeps them
 		if (newState != CopState.PURSUING && newState != CopState.COMBAT) {
-			patient = null;
+			patient       = null;
+			movingToCover = false;
 			if (underCare) setUnderCare(false);
 		}
 

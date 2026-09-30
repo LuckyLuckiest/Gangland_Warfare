@@ -114,11 +114,13 @@ public class PursuingBehavior implements CopBehavior {
 			}
 		}
 
-		if (CombatBehavior.holdsForFieldCare(cop)) return;
-
 		// A hurt shooter fights from PURSUING (a band cop never reaches COMBAT unless attacked), so it retreats here as
-		// in COMBAT. Melee cops chase to cuff rather than fight; cuff range was already handled above.
-		if (cop.isRangedAttacker() && retreat.takeCover(cop, target)) return;
+		// in COMBAT. Melee cops chase to cuff rather than fight (cuff range was handled above) and never retreat here:
+		// a walk to cover begun in COMBAT ends on the hop.
+		boolean shooter = cop.isRangedAttacker();
+		if (!shooter) cop.setMovingToCover(false);
+		if (CombatBehavior.holdsForFieldCare(cop, () -> shooter && retreat.takeCover(cop, target))) return;
+		if (shooter && retreat.takeCover(cop, target)) return;
 
 		cop.pursue(target, squad, alertRange);
 	}

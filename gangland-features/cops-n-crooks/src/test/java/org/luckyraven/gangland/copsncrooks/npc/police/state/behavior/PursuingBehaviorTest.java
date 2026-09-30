@@ -206,6 +206,8 @@ class PursuingBehaviorTest {
 
 		verify(cop, never()).takeCover(any(), anyDouble(), any());
 		verify(cop).pursue(player, squad, ALERT_RANGE);
+		// a walk to cover begun in COMBAT ends on the hop here, so field care can treat it
+		verify(cop).setMovingToCover(false);
 	}
 
 	@Test

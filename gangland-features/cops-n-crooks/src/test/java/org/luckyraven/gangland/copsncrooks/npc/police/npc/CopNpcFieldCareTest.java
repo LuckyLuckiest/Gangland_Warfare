@@ -71,20 +71,23 @@ class CopNpcFieldCareTest {
 	}
 
 	@Test
-	@DisplayName("a state change outside PURSUING/COMBAT ends care on both sides; PURSUING -> COMBAT keeps it")
+	@DisplayName("a state change outside PURSUING/COMBAT ends care on both sides and any walk to cover; PURSUING -> COMBAT keeps them")
 	void transition_endsCareOutsideFightingStates() {
 		CopNpc patient = mock(CopNpc.class);
 		cop.setPatient(patient);
 		cop.setUnderCare(true);
 
 		cop.transitionTo(CopState.PURSUING);
+		cop.setMovingToCover(true);
 		cop.transitionTo(CopState.COMBAT);
 		assertSame(patient, cop.getPatient());
 		assertTrue(cop.isUnderCare());
+		assertTrue(cop.isMovingToCover(), "field care must still see the walk to cover on the hop");
 
 		cop.transitionTo(CopState.RETURNING);
 		assertNull(cop.getPatient());
 		assertFalse(cop.isUnderCare());
+		assertFalse(cop.isMovingToCover());
 		verify(sneak).setSneaking(false);
 	}
 

@@ -10,6 +10,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.npc.RetreatSettings;
 
 import java.util.UUID;
+import java.util.function.BooleanSupplier;
 import java.util.function.LongSupplier;
 
 /**
@@ -63,10 +64,9 @@ public class CombatBehavior implements CopBehavior {
 			}
 		}
 
-		if (holdsForFieldCare(cop)) return;
-
 		// Badly hurt: break off to cover and keep firing from there when seen, for at most CopRetreat.MAX_COVER_MS per
 		// COMBAT episode. No cover within the radius (open ground): keep fighting rather than freeze on the spot.
+		if (holdsForFieldCare(cop, () -> retreat.takeCover(cop, target))) return;
 		if (retreat.takeCover(cop, target)) return;
 
 		// Keystone's squad pursuit: ranged cops work their post on the squad's fan while they see the target inside
@@ -87,11 +87,19 @@ public class CombatBehavior implements CopBehavior {
 
 	/**
 	 * Field care moves this cop, never the fight: a medic with a patient is walked by {@code CopFieldCare}, and a
-	 * patient under care holds still. Both still fire (the attack above has already run).
+	 * patient under care holds still. Both still fire (the attack above has already run). A patient whose
+	 * {@code retreat} now sends it walking to cover (shot below its retreat line, its group falling back) stands up and
+	 * goes rather than crouch in the open; field care waits for it in cover.
+	 *
+	 * @return {@code true} when the caller skips its own movement this tick.
 	 */
-	static boolean holdsForFieldCare(CopNpc cop) {
+	static boolean holdsForFieldCare(CopNpc cop, BooleanSupplier retreat) {
 		if (cop.getPatient() != null) return true;
 		if (!cop.isUnderCare()) return false;
+		if (retreat.getAsBoolean() && cop.isMovingToCover()) {
+			cop.setUnderCare(false);
+			return true;
+		}
 		cop.pauseNavigation();
 		return true;
 	}

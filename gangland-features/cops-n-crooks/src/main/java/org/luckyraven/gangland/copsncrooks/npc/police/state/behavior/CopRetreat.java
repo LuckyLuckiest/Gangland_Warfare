@@ -66,9 +66,12 @@ final class CopRetreat {
 		return status != NpcCoverStatus.FAILED;
 	}
 
-	/** A new episode gets a fresh retreat. */
+	/**
+	 * A new episode gets a fresh retreat. The moving-to-cover mark stays: on a PURSUING/COMBAT hop the walk goes on in
+	 * the next state, and field care, later in the same AI tick, must not treat the cop in the open (the next
+	 * {@link #takeCover} refreshes it; {@link CopNpc#transitionTo} drops it when the cop leaves the fight).
+	 */
 	void reset(CopNpc cop) {
 		startedAt.remove(cop);
-		cop.setMovingToCover(false);
 	}
 }

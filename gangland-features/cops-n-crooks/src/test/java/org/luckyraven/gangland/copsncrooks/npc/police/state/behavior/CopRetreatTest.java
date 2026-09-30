@@ -66,7 +66,7 @@ class CopRetreatTest {
 	}
 
 	@Test
-	@DisplayName("a cop is marked moving to cover while it walks there; not once in cover, healthy again, or its episode ends")
+	@DisplayName("a cop is marked moving to cover while it walks there; not once in cover or healthy again; a state hop keeps the mark")
 	void movingToCover_markedOnlyOnTheWay() {
 		CopNpc        cop    = cop(5.0, null);
 		AtomicBoolean moving = new AtomicBoolean();
@@ -88,9 +88,11 @@ class CopRetreatTest {
 		retreat.takeCover(cop, target);
 		assertFalse(moving.get(), "healthy again: no longer retreating");
 
+		// PURSUING <-> COMBAT: the walk goes on in the next state, and field care, later in the same AI tick, must
+		// still see it (CopNpc.transitionTo drops the mark when the cop leaves the fight)
 		moving.set(true);
 		retreat.reset(cop);
-		assertFalse(moving.get(), "a new state episode starts with no walk to cover");
+		assertTrue(moving.get());
 	}
 
 	private static CopNpc cop(double health, CopRole role) {
