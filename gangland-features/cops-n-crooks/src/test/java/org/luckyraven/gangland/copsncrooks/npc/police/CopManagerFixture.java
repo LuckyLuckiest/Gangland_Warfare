@@ -23,12 +23,14 @@ import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.targeting.TargetingManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.npc.TacticsConfig;
 import org.luckyraven.keystone.npc.NpcMeleeProfile;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.npc.spi.NpcSquadListener;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -66,6 +68,7 @@ final class CopManagerFixture implements AutoCloseable {
 	final Map<CopGroup, NpcSquadListener>    listeners = new HashMap<>();
 
 	CopManagerFixture() {
+		primeMoneySymbol();
 		bukkit = BukkitStatics.install();
 		when(bukkit.scheduler().runTaskTimer(any(Plugin.class), any(Runnable.class), anyLong(), anyLong()))
 				.thenReturn(mock(BukkitTask.class));
@@ -175,5 +178,20 @@ final class CopManagerFixture implements AutoCloseable {
 	@Override
 	public void close() {
 		bukkit.close();
+	}
+
+	/**
+	 * {@code CopManager#onWantedStart} colours the tier name through {@code GanglandChatUtil}, which NPEs on an unset
+	 * {@code Settings.moneySymbol}; a CopManager test run on its own (no earlier test set the static) failed in setUp.
+	 * Poked directly, as SquadRadioTest does.
+	 */
+	private static void primeMoneySymbol() {
+		try {
+			Field field = Settings.class.getDeclaredField("moneySymbol");
+			field.setAccessible(true);
+			if (field.get(null) == null) field.set(null, "$");
+		} catch (ReflectiveOperationException exception) {
+			throw new IllegalStateException(exception);
+		}
 	}
 }
