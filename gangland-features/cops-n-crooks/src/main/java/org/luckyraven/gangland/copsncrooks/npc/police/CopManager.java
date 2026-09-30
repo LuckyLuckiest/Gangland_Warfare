@@ -545,7 +545,8 @@ public class CopManager implements BeanLifecycle {
 		if (at.getWorld() == player.getWorld()) {
 			// a melee cop knocked off its surround slot keeps its clock running though it can hit him
 			if (at.distance(player.getLocation()) <= configProvider.getMeleeProfile().reach()) return false;
-			if (inView(player, body, stuck.viewDistance())) return false;
+			// as far out as bystanders are protected (isVisibleToOtherPlayers) and never under 24 blocks
+			if (inView(player, body, Math.max(24.0, configProvider.getVisibilityCheckDistance()))) return false;
 		}
 		if (spawnManager.isVisibleToOtherPlayers(at, player)) return false;
 

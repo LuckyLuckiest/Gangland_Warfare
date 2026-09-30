@@ -147,10 +147,9 @@ Cops:
       # Set to false and a cop that cannot reach the suspect stays where it is.
       Enabled: true
       # Seconds a cop may find no way to the suspect before it is taken off the map and a new one is sent from a
-      # spot closer to his level (at least 1). A cop he is looking at is never taken off.
+      # spot closer to his level (at least 1). A cop he is looking at (in front of him, clear line, within
+      # Cops.Spawn.Visibility_Check_Distance of settings.yml) is never taken off.
       Recycle_Seconds: 12
-      # Blocks within which a cop in front of the suspect with a clear line to him counts as seen (0-128).
-      View_Distance: 24.0
       # Seconds the spawner a recycled cop came from is skipped for its replacements (0 = never skipped).
       Avoid_Spawner_Seconds: 60
    Tiers:

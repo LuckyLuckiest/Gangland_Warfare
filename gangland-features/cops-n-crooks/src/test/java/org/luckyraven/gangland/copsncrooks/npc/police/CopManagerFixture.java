@@ -75,6 +75,7 @@ final class CopManagerFixture implements AutoCloseable {
 		when(provider.getBackupSettings()).thenReturn(new BackupSettings(true, 1, 30_000, 60_000));
 		when(provider.getRadioSettings()).thenReturn(CopConfigProvider.COP_RADIO_DEFAULTS);
 		when(provider.getStuckSettings()).thenReturn(StuckSettings.DEFAULT);
+		when(provider.getVisibilityCheckDistance()).thenReturn(48.0);
 		when(provider.getMeleeProfile()).thenReturn(NpcMeleeProfile.DEFAULT);
 		CopTierConfig tierConfig = mock(CopTierConfig.class);
 		when(tierConfig.displayName()).thenReturn("SWAT");

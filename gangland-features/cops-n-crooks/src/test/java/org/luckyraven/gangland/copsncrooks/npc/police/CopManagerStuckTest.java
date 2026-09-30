@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
 /**
  * Phase H13 (B2): a cop that has been stranded ({@code millisUnreachable()}) for {@code Cops.Stuck.Recycle_Seconds}
  * while the suspect cannot see it is despawned and replaced in the same spawn run, away from the spawner it came from.
- * "Can see" is a view cone plus line of sight within {@code View_Distance}, not a bare ray: a cop on a ledge above the
+ * "Can see" is a view cone plus line of sight within {@code Visibility_Check_Distance} (the bystanders' radius), not a bare ray: a cop on a ledge above the
  * suspect's head is out of view even though the ray is open.
  */
 @DisplayName("CopManager - recycling stranded cops out of view")
@@ -109,7 +109,7 @@ class CopManagerStuckTest {
 	}
 
 	@Test
-	@DisplayName("a stranded cop the suspect is looking at within View_Distance is never recycled, however long")
+	@DisplayName("a stranded cop the suspect is looking at is never recycled, however long")
 	void strandedInView_kept() {
 		CopNpc stuck = stranded(CopState.PURSUING, 10, 66, 30, 600_000);
 
@@ -120,10 +120,20 @@ class CopManagerStuckTest {
 	}
 
 	@Test
-	@DisplayName("in the cone but behind a wall, or beyond View_Distance, counts as out of view")
+	@DisplayName("the suspect is protected as far out as bystanders are (Visibility_Check_Distance), never less")
+	void strandedInView_asFarAsBystanders_kept() {
+		CopNpc stuck = stranded(CopState.PURSUING, 10, 66, 45, 600_000); // 35 blocks in front of him
+
+		manager.spawnTick(playerId, wanted);
+
+		assertTrue(group.getCops().contains(stuck));
+	}
+
+	@Test
+	@DisplayName("in the cone but behind a wall, or beyond Visibility_Check_Distance, counts as out of view")
 	void inConeButBlockedOrFar_recycled() {
 		CopNpc blocked = stranded(CopState.PURSUING, 10, 66, 30, 13_000);
-		CopNpc far     = stranded(CopState.PURSUING, 11, 66, 40, 13_000);
+		CopNpc far     = stranded(CopState.PURSUING, 11, 66, 70, 13_000);
 		when(player.hasLineOfSight(blocked.getEntity())).thenReturn(false);
 
 		manager.spawnTick(playerId, wanted);
@@ -174,7 +184,7 @@ class CopManagerStuckTest {
 	@Test
 	@DisplayName("Cops.Stuck.Enabled false recycles nothing")
 	void disabled_recyclesNothing() {
-		when(fx.provider.getStuckSettings()).thenReturn(new StuckSettings(false, 12, 24.0, 60));
+		when(fx.provider.getStuckSettings()).thenReturn(new StuckSettings(false, 12, 60));
 		CopNpc stuck = stranded(CopState.PURSUING, 10, 64, 0, 600_000);
 
 		manager.spawnTick(playerId, wanted);

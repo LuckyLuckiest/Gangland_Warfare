@@ -261,14 +261,13 @@ class YamlCopConfigProviderTest {
 	}
 
 	@Test
-	@DisplayName("Cops.Stuck parses Enabled/Recycle_Seconds/View_Distance/Avoid_Spawner_Seconds")
+	@DisplayName("Cops.Stuck parses Enabled/Recycle_Seconds/Avoid_Spawner_Seconds")
 	void stuckBlock_parsed() {
 		CopConfigProvider provider = parse("""
 				Cops:
 				   Stuck:
 				      Enabled: false
 				      Recycle_Seconds: 30
-				      View_Distance: 16.0
 				      Avoid_Spawner_Seconds: 90
 				   Tiers:
 				      1:
@@ -277,7 +276,7 @@ class YamlCopConfigProviderTest {
 				         Damage: 2.0
 				""");
 
-		assertEquals(new StuckSettings(false, 30, 16.0, 90), provider.getStuckSettings());
+		assertEquals(new StuckSettings(false, 30, 90), provider.getStuckSettings());
 	}
 
 	@Test
@@ -301,7 +300,7 @@ class YamlCopConfigProviderTest {
 		assertTrue(provider.getBackupSettings().enabled());
 		assertEquals(1, provider.getBackupSettings().extraCops());
 		assertEquals(RetreatSettings.DEFAULT, provider.getRetreatSettings());
-		assertEquals(new StuckSettings(true, 12, 24.0, 60), provider.getStuckSettings());
+		assertEquals(new StuckSettings(true, 12, 60), provider.getStuckSettings());
 		assertEquals(StuckSettings.DEFAULT, provider.getStuckSettings());
 	}
 
