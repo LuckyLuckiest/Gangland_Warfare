@@ -296,8 +296,8 @@ keyed by the signal name (`CONTACT` -> `Lines.Contact`, `FLANK_LEFT` -> `Lines.F
 
 - **Delivery:** a line reaches every player within `Radio.Range` of the speaker or the addressed cop, plus the hunted
   player within `Radio.Target_Range`. `SquadRadio.speak` drops (never queues) a line that fails a gate: radio
-  disabled or an empty line list, the squad gap (`Squad_Gap_Ticks`, skipped by `Priority` kinds and acks), the
-  per-kind `Cooldown_Ticks`, and per listening player the player gap (`Player_Gap_Ticks`, skipped by priority kinds).
+  disabled or an empty line list, the squad gap (`Squad_Gap_Ticks`, skipped by `Priority` kinds, acks and
+  `SquadRadio.sayLater` follow-ups), the per-kind `Cooldown_Ticks`, and per listening player the player gap (`Player_Gap_Ticks`, skipped by priority kinds).
 - **Orders and acks:** `PUSH`, `FLANK_LEFT`, `FLANK_RIGHT`, `SEARCH` and `NO_ROUTE` are spoken as orders: the squad
   leader speaks them to the member (`%member%`), and a leader never orders itself. `MAN_DOWN`/`LEADER_DOWN` are also
   spoken by the leader; every other signal by the member itself. A delivered order schedules the member's `Ack` after
@@ -371,9 +371,11 @@ own behaviours. It reads `FieldCareSettings` (`Cops.Field_Care`, gangland-api) a
   clones the defaults into the locals on every new path). The rising edge radios `Hit` through `CopRadio.sayAs`;
   `DAMAGE_INDICATOR` particles spawn every AI tick while hurt.
 - **Assignment:** a hurt PURSUING/COMBAT cop with no medic gets the nearest cop whose `CopRole.medic()` is set, that
-  is fighting, not hurt and free, within `Medic_Radius`. The medic gets `CopNpc.setPatient`, radios `Medic_Moving`;
-  `Covering_Fire` comes from the squad leader unless it is the medic or the patient (then any other fighting cop,
-  else nobody). Covering fire is a radio line only.
+  is fighting, not hurt and free, within `Medic_Radius`. The medic gets `CopNpc.setPatient` and radios `Medic_Moving`
+  one ack delay later; `Covering_Fire`, two ack delays later, comes from the squad leader unless it is the medic or
+  the patient (then any other fighting cop, else nobody). Covering fire is a radio line only. Both go through
+  `CopRadio.sayAsLater` (`SquadRadio.sayLater`: past the squad gap, each step one `Ack_Delay_Ticks`), because said in
+  the same tick as the patient's `Hit` the squad and player gaps would drop them.
 - **Treatment:** while `getPatient() != null`, `CombatBehavior.holdsForFieldCare` makes the fighting behaviours return
   after their attack, so `CopFieldCare` walks the medic (`navigateTo`, a direct route to the patient, no cover
   search). Within `Heal_Range` both are paused on the same tick (`pauseNavigation()` on medic and patient) and the

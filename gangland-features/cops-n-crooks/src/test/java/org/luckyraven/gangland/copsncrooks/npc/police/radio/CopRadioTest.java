@@ -1,7 +1,5 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.radio;
 
-import org.luckyraven.keystone.npc.NpcFanPlacement;
-import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -12,28 +10,38 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.copsncrooks.npc.police.CopFieldCare;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio.RadioCall;
+import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.gangland.npc.FieldCareSettings;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
+import org.luckyraven.keystone.npc.NpcFanPlacement;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.NpcSquadSignal;
 import org.luckyraven.keystone.testkit.BukkitStatics;
+import org.mockito.InOrder;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -237,6 +245,57 @@ class CopRadioTest {
 		assertFalse(radio.sayAs(group, medic, "Hit", Map.of()));
 
 		verify(bystander, never()).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("field care on a real radio: Hit, then Medic_Moving and Covering_Fire all reach a listener, past the squad and player gaps")
+	void fieldCare_hitThenMedicLines_allHeard() {
+		List<Map.Entry<Runnable, Long>> tasks = new ArrayList<>();
+		radio = new CopRadio(() -> provider, key -> switch (key) {
+			case "Format" -> List.of("[%unit%] %line%");
+			default -> List.of(key + " line");
+		}, () -> clock[0], (task, ticks) -> tasks.add(Map.entry(task, ticks)));
+		when(provider.getFieldCareSettings()).thenReturn(FieldCareSettings.DEFAULT);
+		when(provider.getAiTickRate()).thenReturn(10);
+		Player bystander = listener(10, 0);
+		CopNpc leader    = careCop(1, 20.0, null, 4, 0);
+		CopNpc patient   = careCop(2, 8.0, null, 6, 0);
+		CopNpc medic     = careCop(3, 20.0, new CopRole("Medic", "Medic", NpcFanPlacement.CENTER, 8.0, 12.0, 1.0, null,
+		                                                0, null, 1.0, 0, null, 0, 60, true, false), 8, 0);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(10.0);
+
+		new CopFieldCare(() -> provider, radio, () -> clock[0]).tick(group);
+		long start = clock[0];
+		tasks.sort(Map.Entry.comparingByValue());
+		for (Map.Entry<Runnable, Long> task : tasks) {
+			clock[0] = start + task.getValue() * 50;
+			task.getKey().run();
+		}
+
+		InOrder order = inOrder(bystander);
+		order.verify(bystander).sendMessage("[SWAT-2] Hit line");
+		order.verify(bystander).sendMessage("[SWAT-3] Medic_Moving line");
+		order.verify(bystander).sendMessage("[SWAT-1] Covering_Fire line");
+		assertSame(patient, medic.getPatient());
+		assertSame(leader, group.getSquad().leader());
+	}
+
+	/** A group cop for field care: health out of 20, a fighting state, a role and stateful care slots. */
+	private CopNpc careCop(int id, double health, CopRole role, double x, double z) {
+		CopNpc cop = cop(id, "SWAT", x, z);
+		when(cop.getEntity().getHealth()).thenReturn(health);
+		when(cop.getEntity().getMaxHealth()).thenReturn(20.0);
+		when(cop.getCurrentState()).thenReturn(CopState.PURSUING);
+		when(cop.getRole()).thenReturn(role);
+		when(cop.getGroup()).thenReturn(group);
+		AtomicReference<CopNpc> patient = new AtomicReference<>();
+		doAnswer(i -> {
+			patient.set(i.getArgument(0));
+			return null;
+		}).when(cop).setPatient(any());
+		when(cop.getPatient()).thenAnswer(i -> patient.get());
+		group.add(cop);
+		return cop;
 	}
 
 	private Player player(double x, double z) {

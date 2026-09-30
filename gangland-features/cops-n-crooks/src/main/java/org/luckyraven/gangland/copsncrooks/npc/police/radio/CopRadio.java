@@ -133,6 +133,11 @@ public class CopRadio {
 		return radio.say(group.getSquad(), voice(group), self, callsign(cop), key, "Format", null, null, extra);
 	}
 
+	/** {@link #sayAs}, {@code steps} ack delays later and past the squad gap ({@link SquadRadio#sayLater}). */
+	public void sayAsLater(CopGroup group, CopNpc cop, String key, Map<String, String> extra, int steps) {
+		radio.sayLater(group.getSquad(), voice(group), cop, key, extra, steps);
+	}
+
 	/** Who {@code squad} of {@code group} hunts: the wanted player, or the attacker the squad was opened for. */
 	public @Nullable LivingEntity huntedOf(CopGroup group, NpcSquad squad) {
 		return voice(group).hunted(squad);

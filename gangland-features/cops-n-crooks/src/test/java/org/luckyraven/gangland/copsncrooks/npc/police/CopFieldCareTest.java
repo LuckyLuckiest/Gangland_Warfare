@@ -137,13 +137,13 @@ class CopFieldCareTest {
 		care.tick(group);
 
 		assertSame(patient, medic.getPatient());
-		verify(radio).sayAs(group, medic, "Medic_Moving", Map.of("member", CopRadio.callsign(patient)));
-		verify(radio).sayAs(eq(group), eq(leader), eq("Covering_Fire"), anyMap());
+		verify(radio).sayAsLater(group, medic, "Medic_Moving", Map.of("member", CopRadio.callsign(patient)), 1);
+		verify(radio).sayAsLater(eq(group), eq(leader), eq("Covering_Fire"), anyMap(), eq(2));
 		verify(medic).navigateTo(patient.getEntity().getLocation());
 
 		care.tick(group);
 		assertSame(patient, medic.getPatient());
-		verify(radio, never()).sayAs(group, medic, "Medic_Moving", Map.of("member", CopRadio.callsign(other)));
+		verify(radio, never()).sayAsLater(group, medic, "Medic_Moving", Map.of("member", CopRadio.callsign(other)), 1);
 	}
 
 	@Test
@@ -162,7 +162,7 @@ class CopFieldCareTest {
 		assertNull(plain.getPatient());
 		assertNull(cuffing.getPatient());
 		assertNull(far.getPatient());
-		verify(radio, never()).sayAs(any(), any(), eq("Medic_Moving"), anyMap());
+		verify(radio, never()).sayAsLater(any(), any(), eq("Medic_Moving"), anyMap(), anyInt());
 	}
 
 	@Test
@@ -208,7 +208,7 @@ class CopFieldCareTest {
 		verify(radio, never()).sayAs(any(), any(), eq("Patched_Up"), anyMap());
 
 		for (int i = 0; i < 6; i++) care.tick(group); // no re-assignment loop behind the refusal
-		verify(radio, times(1)).sayAs(eq(group), eq(medic), eq("Medic_Moving"), anyMap());
+		verify(radio, times(1)).sayAsLater(eq(group), eq(medic), eq("Medic_Moving"), anyMap(), anyInt());
 		assertNull(medic.getPatient());
 	}
 
@@ -321,14 +321,14 @@ class CopFieldCareTest {
 		when(squad.leader()).thenReturn(medic);
 
 		care.tick(group);
-		verify(radio, never()).sayAs(eq(group), any(), eq("Covering_Fire"), anyMap());
+		verify(radio, never()).sayAsLater(eq(group), any(), eq("Covering_Fire"), anyMap(), anyInt());
 
 		CopNpc rifle = cop(3, 20.0, CopState.PURSUING, null);
 		medic.setPatient(null);
 		care.tick(group); // the stale treatment ends (medic dropped its patient)
 		care.tick(group); // re-assigned
-		verify(radio).sayAs(eq(group), eq(rifle), eq("Covering_Fire"), anyMap());
-		verify(radio, never()).sayAs(eq(group), eq(patient), eq("Covering_Fire"), anyMap());
+		verify(radio).sayAsLater(eq(group), eq(rifle), eq("Covering_Fire"), anyMap(), anyInt());
+		verify(radio, never()).sayAsLater(eq(group), eq(patient), eq("Covering_Fire"), anyMap(), anyInt());
 	}
 
 	@Test

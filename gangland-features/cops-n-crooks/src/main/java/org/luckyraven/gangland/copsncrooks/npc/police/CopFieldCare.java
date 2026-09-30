@@ -140,7 +140,8 @@ public class CopFieldCare {
 			medic.setPatient(patient);
 			treatments.put(medic, new Treatment(patient, now, medic.getEntity().getHealth()));
 			log.debug("{} treats {}", CopRadio.callsign(medic), CopRadio.callsign(patient));
-			radio.sayAs(group, medic, "Medic_Moving", Map.of("member", CopRadio.callsign(patient)));
+			// follow-ups to the patient's Hit, one ack delay apart: said now, the squad and player gaps swallow them
+			radio.sayAsLater(group, medic, "Medic_Moving", Map.of("member", CopRadio.callsign(patient)), 1);
 			coveringFire(group, cops, medic, patient);
 		}
 	}
@@ -170,7 +171,7 @@ public class CopFieldCare {
 			CopNpc cop = it.next();
 			if (cop != medic && cop != patient && cop.isValid() && fighting(cop)) speaker = cop;
 		}
-		if (speaker != null) radio.sayAs(group, speaker, "Covering_Fire", Map.of());
+		if (speaker != null) radio.sayAsLater(group, speaker, "Covering_Fire", Map.of(), 2);
 	}
 
 	/** Ends every treatment whose medic or patient belongs to {@code group}: the group is being dropped. */
