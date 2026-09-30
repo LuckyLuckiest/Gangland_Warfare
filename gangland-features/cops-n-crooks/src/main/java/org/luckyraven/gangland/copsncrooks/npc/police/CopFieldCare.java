@@ -227,7 +227,7 @@ public class CopFieldCare {
 	/**
 	 * Out of {@code Heal_Range} (plus {@link #HOLD_MARGIN} once under care): walks the medic over by a direct route,
 	 * patient free to move. In range: both hold still, the patient under care, and the channel advances by one AI
-	 * tick; a hit on the medic starts it over.
+	 * tick from the tick after the arrival; a hit on the medic starts it over.
 	 *
 	 * @return {@code true} once the patient is healed, or its heal was cancelled (the treatment is over).
 	 */
@@ -250,12 +250,15 @@ public class CopFieldCare {
 		// both stop this tick: the patient's own behaviour would only pause it on the next AI tick
 		medic.pauseNavigation();
 		patient.pauseNavigation();
-		if (!patient.isUnderCare()) patient.setUnderCare(true);
+		boolean arriving = !patient.isUnderCare();
+		if (arriving) patient.setUnderCare(true);
 		if (hit) {
 			treatment.progressTicks = 0;
 			radio.sayAs(group, medic, "Medic_Pinned", Map.of("member", CopRadio.callsign(patient)));
 			return false;
 		}
+		// the channel starts on the arrival tick: no time has passed yet, so the heal lands a full Channel_Ticks later
+		if (arriving) return false;
 
 		treatment.progressTicks += aiTickRate;
 		if (treatment.progressTicks < settings.channelTicks()) return false;

@@ -198,18 +198,19 @@ class CopFieldCareTest {
 	}
 
 	@Test
-	@DisplayName("within Heal_Range: the medic stops, the patient holds still under care; Channel_Ticks later it is healed by half of max")
+	@DisplayName("within Heal_Range: the medic stops, the patient holds still under care; a full Channel_Ticks after the arrival tick it is healed by half of max")
 	void channel_healsHalfOfMax_firesRegainEvent_endsCare() {
 		CopNpc patient = cop(1, 8.0, CopState.PURSUING, null);
 		CopNpc medic   = cop(2, 20.0, CopState.COMBAT, MEDIC);
 		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(2.0);
 
-		for (int i = 0; i < 5; i++) care.tick(group); // assigned and treated from the first tick
+		care.tick(group); // assigned and in range: the arrival tick, where the channel starts (no time has passed)
+		for (int i = 0; i < 5; i++) care.tick(group); // 50 of 60 ticks
 		assertTrue(patient.isUnderCare());
 		verify(medic, atLeastOnce()).pauseNavigation();
 		verify(patient.getEntity(), never()).setHealth(anyDouble());
 
-		care.tick(group); // 6th channel tick: 60 ticks at an AI tick rate of 10
+		care.tick(group); // 60 ticks after the arrival at an AI tick rate of 10
 
 		verify(patient.getEntity()).setHealth(18.0);
 		ArgumentCaptor<Event> event = ArgumentCaptor.forClass(Event.class);
@@ -233,7 +234,7 @@ class CopFieldCareTest {
 			return null;
 		}).when(bukkit.pluginManager()).callEvent(any());
 
-		for (int i = 0; i < 6; i++) care.tick(group);
+		for (int i = 0; i < 7; i++) care.tick(group); // arrival, then Channel_Ticks
 
 		verify(patient.getEntity(), never()).setHealth(anyDouble());
 		assertNull(medic.getPatient());
@@ -255,6 +256,8 @@ class CopFieldCareTest {
 		verify(patient).pauseNavigation();
 
 		for (int i = 0; i < 5; i++) care.tick(group);
+		verify(patient.getEntity(), never()).setHealth(anyDouble());
+		care.tick(group);
 		verify(patient.getEntity()).setHealth(18.0);
 	}
 
@@ -295,7 +298,7 @@ class CopFieldCareTest {
 		verify(medic, atLeastOnce()).navigateTo(patient.getEntity().getLocation());
 
 		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(2.0);
-		for (int i = 0; i < 4; i++) care.tick(group); // 40 of 60 ticks
+		for (int i = 0; i < 4; i++) care.tick(group); // arrival, then 30 of 60 ticks
 		when(medic.getEntity().getHealth()).thenReturn(16.0);
 		care.tick(group); // hit: back to 0
 

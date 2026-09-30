@@ -384,7 +384,8 @@ own behaviours. It reads `FieldCareSettings` (`Cops.Field_Care`, gangland-api) a
   search). Within `Heal_Range` both are paused on the same tick (`pauseNavigation()` on medic and patient) and the
   patient gets `setUnderCare(true)` (SneakTrait crouch; from then on its behaviours `pauseNavigation()` and return,
   melee included). Once under care the patient may drift `CopFieldCare.HOLD_MARGIN` (1 block) past `Heal_Range`
-  before the channel resets. Progress advances by `getAiTickRate()` per AI tick; a medic health drop resets it
+  before the channel resets. The channel starts on the arrival tick and advances by `getAiTickRate()` on each AI
+  tick after it, so the heal lands a full `Channel_Ticks` after the medic arrives; a medic health drop resets it
   (`Medic_Pinned`). At `Channel_Ticks` an `EntityRegainHealthEvent(CUSTOM)` is fired and its amount applied
   (`Patched_Up`); a cancelled event ends the treatment silently and keeps that patient out of assignment for
   `GIVE_UP_MS`.
