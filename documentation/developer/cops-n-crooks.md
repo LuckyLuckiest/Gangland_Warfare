@@ -375,14 +375,20 @@ own behaviours. It reads `FieldCareSettings` (`Cops.Field_Care`, gangland-api) a
   `Covering_Fire` comes from the squad leader unless it is the medic or the patient (then any other fighting cop,
   else nobody). Covering fire is a radio line only.
 - **Treatment:** while `getPatient() != null`, `CombatBehavior.holdsForFieldCare` makes the fighting behaviours return
-  after their attack, so `CopFieldCare` walks the medic (`navigateTo`). Within `Heal_Range` the medic pauses and the
-  patient gets `setUnderCare(true)` (SneakTrait crouch; the behaviours `pauseNavigation()` and return, melee
-  included). Progress advances by `getAiTickRate()` per AI tick; a medic health drop resets it (`Medic_Pinned`). At
-  `Channel_Ticks` an `EntityRegainHealthEvent(CUSTOM)` is fired and, unless cancelled, its amount applied
-  (`Patched_Up`).
+  after their attack, so `CopFieldCare` walks the medic (`navigateTo`, a direct route to the patient, no cover
+  search). Within `Heal_Range` both are paused on the same tick (`pauseNavigation()` on medic and patient) and the
+  patient gets `setUnderCare(true)` (SneakTrait crouch; from then on its behaviours `pauseNavigation()` and return,
+  melee included). Once under care the patient may drift `CopFieldCare.HOLD_MARGIN` (1 block) past `Heal_Range`
+  before the channel resets. Progress advances by `getAiTickRate()` per AI tick; a medic health drop resets it
+  (`Medic_Pinned`). At `Channel_Ticks` an `EntityRegainHealthEvent(CUSTOM)` is fired and its amount applied
+  (`Patched_Up`); a cancelled event ends the treatment silently and keeps that patient out of assignment for
+  `GIVE_UP_MS`.
 - **Ending:** either cop invalid or out of the group, out of PURSUING/COMBAT, the patient no longer hurt, the medic
   hurt, or `CopFieldCare.GIVE_UP_MS` (15 s). `CopNpc.transitionTo` also drops both care slots whenever a cop leaves
-  PURSUING/COMBAT, so nothing survives a group being dropped or a reload.
+  PURSUING/COMBAT. A treatment holds no group: it runs on its medic's group's tick, and one whose medic is invalid or
+  has left its patient's group (a radio responder) is ended by whichever group ticks next. `CopManager` calls
+  `CopFieldCare.clear(group)` when it drops a group (`despawnAllForPlayer`, so also shutdown and reload, and the
+  empty-group self-cleanup), which ends that group's treatments on both sides.
 
 Radio cooldowns for the five keys are milliseconds in `COP_RADIO_DEFAULTS` and ticks in `cops.yml`. The medic stays in
 its squad while treating (so `MAN_DOWN` still fires if it dies), and its old fan post stays reserved until the next
