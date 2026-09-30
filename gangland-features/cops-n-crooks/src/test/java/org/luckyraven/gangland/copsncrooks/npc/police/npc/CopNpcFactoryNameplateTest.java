@@ -6,6 +6,8 @@ import org.bukkit.ChatColor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopNames;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
+import org.luckyraven.keystone.npc.NpcFanPlacement;
 import org.mockito.ArgumentCaptor;
 
 import java.util.List;
@@ -42,5 +44,23 @@ class CopNpcFactoryNameplateTest {
 		assertFalse(name.getValue().contains("§"));
 
 		verify(hologram).addLine(ChatColor.translateAlternateColorCodes('&', "&9Officer &fBob &7#1592"));
+	}
+
+	@Test
+	@DisplayName("%rank% is the role's display name in the tier's colour; the tier's Display_Name without a role")
+	void rank_roleDisplayNameInTierColour() {
+		CopRole medic = new CopRole("Medic", "Medic", NpcFanPlacement.CENTER, null, null, 1.0, null, 0, null, 1.0, 0,
+		                            null, 0, 60, true, false);
+
+		assertEquals("§9Medic", CopNpcFactory.rank("&9Officer", medic));
+		assertEquals("&9Officer", CopNpcFactory.rank("&9Officer", null));
+
+		NPC npc = mock(NPC.class);
+		when(npc.getId()).thenReturn(592);
+		when(npc.getOrAddTrait(HologramTrait.class)).thenReturn(mock(HologramTrait.class));
+		String callsign = CopNpcFactory.CitizensBridge.nameplate(npc, new CopNames(CopNames.DEFAULT.format(),
+		                                                                           List.of("Bob")),
+		                                                         CopNpcFactory.rank("&1SWAT", medic), new Random(1));
+		assertEquals("§1Medic &fBob &7#1592", callsign);
 	}
 }

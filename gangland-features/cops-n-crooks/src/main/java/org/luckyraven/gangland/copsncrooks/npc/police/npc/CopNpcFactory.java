@@ -3,6 +3,7 @@ package org.luckyraven.gangland.copsncrooks.npc.police.npc;
 import com.cryptomorin.xseries.XAttribute;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.trait.HologramTrait;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.attribute.AttributeInstance;
@@ -106,7 +107,8 @@ public class CopNpcFactory {
 
 		// Created under a placeholder: the badge is the Citizens id, only known once the NPC exists.
 		NPC    npc      = CitizensNpcs.create(EntityType.PLAYER, "Officer");
-		String callsign = CitizensBridge.nameplate(npc, names, tierConfig.displayName(), ThreadLocalRandom.current());
+		String callsign = CitizensBridge.nameplate(npc, names, rank(baseTier.displayName(), role),
+		                                                  ThreadLocalRandom.current());
 		npc.setProtected(false);
 		npc.data().setPersistent(NPC.Metadata.SHOULD_SAVE, false);
 		// The callsign hologram line stands in for the nameplate (CitizensBridge#nameplate).
@@ -172,6 +174,15 @@ public class CopNpcFactory {
 			if (role != null && role.offHand() != null && entity.getEquipment() != null)
 				entity.getEquipment().setItemInOffHand(role.offHand().clone());
 		};
+	}
+
+	/**
+	 * The callsign's {@code %rank%}: the role's display name in the tier's colour ("&9Officer" + Medic = "§9Medic"), or
+	 * the tier's {@code Display_Name} for a cop with no role.
+	 */
+	static String rank(String tierDisplayName, @Nullable CopRole role) {
+		if (role == null) return tierDisplayName;
+		return ChatColor.getLastColors(ChatUtil.color(tierDisplayName)) + role.displayName();
 	}
 
 	/**

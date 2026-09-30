@@ -16,7 +16,8 @@
 # Tiers are assigned to spawn points and determine NPC stats and equipment.
 #
 # Fields:
-#   Display_Name:   The cop's rank, the %rank% in Cops.Names.Format (supports & color codes)
+#   Display_Name:   The cop's rank (supports & color codes): the %rank% in Cops.Names.Format for a cop with no
+#                   role; a cop with a role shows the role's Display_Name in this name's colour
 #   Health:         Max health in half-hearts (20.0 = 10 hearts)
 #   Damage:         Melee damage dealt per hit
 #   Speed:          Movement speed multiplier (1.0 = default walk speed)
@@ -152,8 +153,8 @@ Cops:
       Radius: 12.0
    # Every cop gets a callsign such as "Officer Bob #1592", shown above its head and used on the radio.
    Names:
-      # %rank% = the tier's Display_Name, %name% = a first name from First_Names, %badge% = 1000 + the NPC id
-      # (unique among live NPCs).
+      # %rank% = the role's Display_Name in the tier's colour (the tier's Display_Name with roles off),
+      # %name% = a first name from First_Names, %badge% = 1000 + the NPC id (unique among live NPCs).
       Format: "%rank% &f%name% &7#%badge%"
       # Leave the list empty ([]) for no first name ("Officer #1592"); remove the key for the built-in names.
       First_Names:
@@ -219,7 +220,7 @@ Cops:
    Roles_Enabled: true
    # Role catalogue. A cops.yml without this block uses these same built-in roles; an entry here is read key by key
    # over the built-in role of the same name (or over a plain role for a new name). Every key is optional:
-   #   Display_Name:        The role's label (default: its name). Never replaces the tier's Display_Name.
+   #   Display_Name:        The role's label (default: its name); the %rank% in Names.Format, in the tier's colour.
    #   Fan_Placement:       ANY, CENTER or FLANK: where on the squad's firing fan the cop prefers to stand.
    #   Ranged_Min_Distance: The cop's own firing band in blocks (0-64), set together with Ranged_Max_Distance.
    #   Ranged_Max_Distance: Unset = settings.yml's band. Always clamped under the held gun's Projectile Distance.

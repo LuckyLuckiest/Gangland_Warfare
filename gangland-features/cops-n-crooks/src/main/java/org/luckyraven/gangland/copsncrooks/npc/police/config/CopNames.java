@@ -10,7 +10,8 @@ import java.util.Random;
  * (colours stripped) its radio callsign; {@link #shortName} is the plain Citizens name, kept at 16 characters or fewer
  * so Citizens never swaps the entity's profile name for its {@code CIT-...} scoreboard team name.
  *
- * @param format {@code %rank%} (the tier's {@code Display_Name}), {@code %name%} and {@code %badge%}
+ * @param format {@code %rank%} (the role's {@code Display_Name} in the tier's colour, or the tier's
+ *               {@code Display_Name} for a cop with no role), {@code %name%} and {@code %badge%}
  * @param firstNames the first-name pool; empty means no first name ({@code "Officer #1592"})
  */
 public record CopNames(String format, List<String> firstNames) {
