@@ -12,6 +12,9 @@
 #  \                                                        /  #
 #   +------------------------------------------------------+   #
 #
+# Note: an NPC that no module recognises drops no cash at all (this includes civilians when the
+# cops-n-crooks module is absent); only players and plain mobs use the rules below.
+#
 # Cash drop variations and per-source drop rules. Dropped cash items carry an
 # NBT amount; walking over (or right-clicking) one deposits the value.
 #

@@ -199,8 +199,9 @@ public class CopListener implements Listener {
 	 * (no death animation). Citizens' own LOW handler despawns it with reason DEATH and keeps the body; the next AI tick
 	 * releases the marked cop.
 	 * <p>
-	 * Runs at LOWEST: Citizens' own death listener (LOW) despawns the NPC, after which {@code getNpc().getEntity()}
-	 * is null and the dying cop can no longer be matched to its entity. A cop walking home (RETURNING) left every
+	 * Runs at LOWEST so the squad is told the cop is down, and the cop is marked, before Citizens' own death listener
+	 * (LOW) despawns the NPC. The cop is still matched after that despawn through the Citizens registry (see
+	 * {@code findDyingCop}). A cop walking home (RETURNING) left every
 	 * squad, so it is reported down to its group's squad (T-121).
 	 *
 	 * @param event the death event
