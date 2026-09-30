@@ -55,6 +55,10 @@ class CopManagerSquadTest {
 	                                                 0, null, 1.0, 0, null, 0, 60, true, false);
 	private static final CopRole COMMANDER = new CopRole("Commander", "Commander", NpcFanPlacement.ANY, null, null,
 	                                                     1.0, null, 10, null, 1.0, 0, null, 0, 60, false, true);
+	private static final CopRole POINTMAN  = new CopRole("Pointman", "Pointman", NpcFanPlacement.ANY, null, null,
+	                                                     1.0, null, 5, null, 1.0, 0, null, 0, 60, false, false);
+	private static final CopRole ASSAULT   = new CopRole("Assault", "Assault", NpcFanPlacement.ANY, null, null,
+	                                                     1.0, null, 0, null, 1.0, 0, null, 0, 60, false, false);
 
 	private CopManagerFixture fx;
 	private CopManager        manager;
@@ -270,22 +274,75 @@ class CopManagerSquadTest {
 	}
 
 	@Test
-	@DisplayName("when backup runs out the Commander is never sent home, even as the newest free cop (T-146)")
-	void backupExpired_commanderNeverReleased() {
+	@DisplayName("when backup runs out the backup's extra goes home, not a Commander replacement spawned mid-backup (T-146)")
+	void backupExpired_commanderReplacementStays() {
+		CopNpc[] squad = replacedMidBackup(COMMANDER, ASSAULT);
+
+		assertEquals(CopState.PURSUING, squad[2].getCurrentState(), "the new Commander stays");
+		assertEquals(CopState.RETURNING, squad[1].getCurrentState(), "the backup's Assault goes");
+		assertEquals(CopState.PURSUING, squad[0].getCurrentState());
+	}
+
+	@Test
+	@DisplayName("when backup runs out a Pointman replacement spawned mid-backup stays (it leads at L1/L2); the extra Assault goes")
+	void backupExpired_pointmanReplacementStays() {
+		CopNpc[] squad = replacedMidBackup(POINTMAN, ASSAULT);
+
+		assertEquals(CopState.PURSUING, squad[2].getCurrentState(), "the new Pointman stays");
+		assertEquals(CopState.RETURNING, squad[1].getCurrentState(), "the backup's Assault goes");
+	}
+
+	@Test
+	@DisplayName("a composition ending in Commander: the backup's extra Commander goes home, not the base Assault")
+	void backupExpired_extraCommanderGoes() {
+		squadComposition(ASSAULT, COMMANDER);
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		group.requestBackup(fx.clock[0], fx.provider.getBackupSettings());
+		manager.spawnTick(playerId, wanted);
+		List<CopNpc> cops = List.copyOf(group.getCops()); // Assault, Commander, Commander (backup)
+
+		fx.clock[0] += 31_000;
+		manager.spawnTick(playerId, wanted);
+
+		assertEquals(CopState.RETURNING, cops.get(2).getCurrentState(), "the backup's Commander goes");
+		assertEquals(CopState.PURSUING, cops.get(1).getCurrentState());
+		assertEquals(CopState.PURSUING, cops.get(0).getCurrentState(), "the base Assault stays");
+		assertEquals(0, group.getPendingRelease());
+	}
+
+	/**
+	 * Base squad {@code lead, extra} plus one backup {@code extra}; {@code lead} is killed mid-backup and replaced, then
+	 * the backup runs out. Returns the surviving base {@code extra}, the backup {@code extra} and the replacement.
+	 */
+	private CopNpc[] replacedMidBackup(CopRole lead, CopRole extra) {
+		squadComposition(lead, extra);
 		manager.onWantedStart(player, wanted);
 		CopGroup group = manager.groupFor(playerId);
 		group.requestBackup(fx.clock[0], fx.provider.getBackupSettings());
 		manager.spawnTick(playerId, wanted);
 		List<CopNpc> cops = List.copyOf(group.getCops());
-		assertEquals(3, cops.size());
-		when(cops.get(2).getRole()).thenReturn(COMMANDER); // the replacement for a Commander killed mid-backup
+		assertEquals(List.of(lead, extra, extra), cops.stream().map(CopNpc::getRole).toList());
+
+		group.detach(cops.get(0)); // killed mid-backup
+		manager.spawnTick(playerId, wanted);
+		CopNpc replacement = group.getCops().get(2);
+		assertSame(lead, replacement.getRole());
 
 		fx.clock[0] += 31_000;
 		manager.spawnTick(playerId, wanted);
-
-		assertEquals(CopState.PURSUING, cops.get(2).getCurrentState(), "the Commander stays");
-		assertEquals(CopState.RETURNING, cops.get(1).getCurrentState(), "the newest other free cop goes");
 		assertEquals(0, group.getPendingRelease());
+		return new CopNpc[] {cops.get(1), cops.get(2), replacement};
+	}
+
+	/** Squads fill {@code composition} ({@code Cops.Squad_Composition}); each spawn gets the role it was asked for. */
+	private void squadComposition(CopRole... composition) {
+		when(fx.provider.getSquadComposition(anyInt())).thenReturn(List.of(composition));
+		when(fx.spawner.spawnNearPlayer(any(), anyInt(), any(), any())).thenAnswer(inv -> {
+			CopNpc cop = fx.cop(CopState.IDLE, 0, 0);
+			when(cop.getRole()).thenReturn(inv.getArgument(3));
+			return cop;
+		});
 	}
 
 	@Test
