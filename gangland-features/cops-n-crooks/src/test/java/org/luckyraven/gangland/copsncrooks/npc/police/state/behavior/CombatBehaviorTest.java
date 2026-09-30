@@ -247,6 +247,35 @@ class CombatBehaviorTest {
 		return player;
 	}
 
+	@Test
+	@DisplayName("a medic with a patient still fires but neither pursues nor retreats: CopFieldCare walks it")
+	void medicWithPatient_firesButLeavesMovementToFieldCare() {
+		Player player = targetAt(10.0);
+		when(cop.isRangedAttacker()).thenReturn(true);
+		when(cop.getPatient()).thenReturn(mock(CopNpc.class));
+
+		behavior.tick(cop);
+
+		verify(cop).attack(player);
+		verify(cop, never()).pursue(any(), any(), anyDouble());
+		verify(cop, never()).takeCover(any(), anyDouble(), any());
+	}
+
+	@Test
+	@DisplayName("a patient under care still fires but holds still: navigation paused, no pursuit or retreat")
+	void patientUnderCare_firesAndHoldsStill() {
+		Player player = targetAt(10.0);
+		when(cop.isRangedAttacker()).thenReturn(true);
+		when(cop.isUnderCare()).thenReturn(true);
+
+		behavior.tick(cop);
+
+		verify(cop).attack(player);
+		verify(cop).pauseNavigation();
+		verify(cop, never()).pursue(any(), any(), anyDouble());
+		verify(cop, never()).takeCover(any(), anyDouble(), any());
+	}
+
 	private Player targetAt(double distance) {
 		UUID   playerId = UUID.randomUUID();
 		Player player   = mock(Player.class);

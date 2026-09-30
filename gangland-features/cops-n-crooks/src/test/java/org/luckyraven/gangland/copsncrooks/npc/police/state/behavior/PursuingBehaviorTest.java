@@ -237,6 +237,32 @@ class PursuingBehaviorTest {
 		verify(cop, times(2)).takeCover(any(), anyDouble(), any());
 	}
 
+	@Test
+	@DisplayName("a medic with a patient still fires while pursuing but neither pursues nor retreats")
+	void medicWithPatient_firesButLeavesMovementToFieldCare() {
+		badlyHurtShooter();
+		when(cop.hasLineOfSight(player)).thenReturn(true);
+		when(cop.canAttack()).thenReturn(true);
+		when(cop.getPatient()).thenReturn(mock(CopNpc.class));
+
+		behavior.tick(cop);
+
+		verify(cop).attack(player);
+		verify(cop, never()).pursue(any(), any(), anyDouble());
+		verify(cop, never()).takeCover(any(), anyDouble(), any());
+	}
+
+	@Test
+	@DisplayName("a melee patient under care holds still too (melee cops never retreat, so this is its only stop)")
+	void meleePatientUnderCare_holdsStill() {
+		when(cop.isUnderCare()).thenReturn(true);
+
+		behavior.tick(cop);
+
+		verify(cop).pauseNavigation();
+		verify(cop, never()).pursue(any(), any(), anyDouble());
+	}
+
 	private void badlyHurtShooter() {
 		LivingEntity self = mock(LivingEntity.class);
 		when(self.getHealth()).thenReturn(5.0);

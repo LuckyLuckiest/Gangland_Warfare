@@ -63,6 +63,8 @@ public class CombatBehavior implements CopBehavior {
 			}
 		}
 
+		if (holdsForFieldCare(cop)) return;
+
 		// Badly hurt: break off to cover and keep firing from there when seen, for at most CopRetreat.MAX_COVER_MS per
 		// COMBAT episode. No cover within the radius (open ground): keep fighting rather than freeze on the spot.
 		if (retreat.takeCover(cop, target)) return;
@@ -81,6 +83,17 @@ public class CombatBehavior implements CopBehavior {
 	public void onExit(CopNpc cop) {
 		retreat.reset(cop);
 		cop.stopNavigation();
+	}
+
+	/**
+	 * Field care moves this cop, never the fight: a medic with a patient is walked by {@code CopFieldCare}, and a
+	 * patient under care holds still. Both still fire (the attack above has already run).
+	 */
+	static boolean holdsForFieldCare(CopNpc cop) {
+		if (cop.getPatient() != null) return true;
+		if (!cop.isUnderCare()) return false;
+		cop.pauseNavigation();
+		return true;
 	}
 
 	private LivingEntity resolveTarget(CopNpc cop) {

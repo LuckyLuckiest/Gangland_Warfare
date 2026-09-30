@@ -65,6 +65,9 @@ Lines:
       - "¡Hombre caído!"
    Leader_Down:
       - "¡%member% está caído! %unit% toma el mando!"
+   Commander_Down:
+      - "¡Comandante caído! ¡Retirada, retirada!"
+      - "¡Perdimos a %member%! ¡A cubierto!"
    Ack:
       - "Copiado."
       - "En camino."
@@ -74,10 +77,24 @@ Lines:
       - "¡Copiado, voy a asistir!"
    Fall_Back:
       - "¡Me disparan, me repliego a cubierto!"
-      - "¡Estoy herido! ¡Me retiro!"
+      - "¡Me retiro, cúbranme!"
    In_Cover:
       - "¡A cubierto!"
       - "¡Estoy a cubierto, manténganlo ocupado!"
+   Hit:
+      - "¡Me dieron!"
+      - "¡Estoy herido, me desangro!"
+   Medic_Moving:
+      - "¡%member%, aguanta, voy hacia ti!"
+      - "¡Avanzando hacia %member%!"
+   Covering_Fire:
+      - "¡Cubran al médico, fuego a discreción!"
+      - "¡Fuego de cobertura!"
+   Medic_Pinned:
+      - "¡Estoy inmovilizado, no llego hasta %member%!"
+   Patched_Up:
+      - "¡%member% curado, de vuelta a la acción!"
+      - "¡Estás bien, vuelve ahí!"
    Resisting:
       - "¡El sospechoso se resiste! ¡Redúzcanlo!"
    Backup:

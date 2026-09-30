@@ -116,6 +116,53 @@ formation, no strafing and no order / contact / reload / check-fire radio lines.
 casualty, backup and dispatch radio, retreat to cover and the cuff-then-fight escalation stay on. Switch those off
 with `Radio.Enabled: false`, `Backup.Enabled: false`, `Retreat.Enabled: false` and `Radio.Responder_Max: 0`.
 
+### Squad Roles (0.13.0)
+
+Each new cop takes a **role** inside its squad, laid over its tier: the tier still decides weapons, armour and the
+formation arc, the role decides where the cop stands and how it fights. Roles fill in the order of the wanted level's
+`Squad_Composition`; cops past the end of the list (backup, extra cops) take its last role.
+
+| Role      | From level | Does                                                                                   |
+|-----------|------------|----------------------------------------------------------------------------------------|
+| Pointman  | 1          | Front and centre, close in; the squad's radio voice while no Commander is on it        |
+| Assault   | 1          | The fan's ends, pushing in and strafing wide                                           |
+| Commander | 3          | Radio voice from the rear of the band; when it goes down: "Commander down!", fall back |
+| Defender  | 3          | Holds the centre post up front; its shield takes half of every hit from its front      |
+| Marksman  | 3          | The back of the fan (never past its gun's reach), slower but surer shots               |
+| Medic     | 4          | Walks over to hurt squad mates and patches them up (see Field Care below)             |
+
+A `cops.yml` without `Roles` / `Squad_Composition` blocks (every file from before 0.13.0) gets exactly this built-in
+catalogue. Set `Cops.Roles_Enabled: false` to spawn every cop as its plain tier again.
+
+The Defender's front cone is judged from whoever dealt the damage: the shooter for a bullet or arrow, the attacker for
+anything else. Area damage (a grenade, fire) is credited to its thrower, so a blast behind a Defender is still halved
+while the thrower stands in front of it. The Commander fall-back is a retreat: `Cops.Retreat.Enabled: false` turns it
+off, and each cop that falls back may radio the Fall_Back line right after "Commander down!".
+
+### Field Care (0.13.0)
+
+A cop at or below `Field_Care.Health_Fraction` (half) of its max health is **hurt**: it limps (`Limp_Speed`, 0.7 of its
+tier speed), bleeds (dark heart particles) and radios "I'm hit!" once. A **Medic** cop of the same squad within
+`Medic_Radius` (24 blocks) walks straight over to it (a direct route, not from cover to cover), and the squad calls
+"Covering fire!". Once the medic is within `Heal_Range` (2.5 blocks) both hold still: the patient crouches and both
+keep shooting. After `Channel_Ticks` (3 s) the patient gets `Heal_Fraction` (half) of its max health back, with heart
+particles and "Patched up". A hit on the medic starts the 3 s over ("Pinned down"). A squad without a Medic cop never
+heals; a medic that cannot reach its patient within 15 s gives up. If another plugin cancels the heal, the treatment
+ends quietly and that cop is not treated again for 15 s.
+
+| Key (`Cops.Field_Care`) | Default | Does                                                     |
+|-------------------------|---------|----------------------------------------------------------|
+| `Enabled`               | true    | false: no limp, bleeding or treatment                    |
+| `Health_Fraction`       | 0.5     | Hurt at or below this share of max health (0-1)          |
+| `Limp_Speed`            | 0.7     | A hurt cop's speed, as a share of its tier speed (0.1-1) |
+| `Medic_Enabled`         | true    | false: cops still get hurt, but nobody treats them       |
+| `Medic_Radius`          | 24.0    | Blocks a medic answers a hurt squad mate within (2-64)   |
+| `Heal_Range`            | 2.5     | Blocks from the patient the medic treats it from (1-6)   |
+| `Channel_Ticks`         | 60      | Ticks one treatment takes                                |
+| `Heal_Fraction`         | 0.5     | Share of max health one treatment restores (0-1)         |
+
+Every key is optional: a `cops.yml` without the block gets these defaults.
+
 ---
 
 ## Police Radio
@@ -137,7 +184,7 @@ blocks). Each line plays a short click sound.
 - **Backup:** when a cop goes down, the squad requests `Backup.Extra_Cops` (1) extra cops for
   `Backup.Duration_Ticks` (30 s), at most once per `Backup.Cooldown_Ticks` (60 s). When the backup runs out, the
   surplus cops that aren't fighting walk home.
-- **Resisting** and **retreat** lines, as described above.
+- **Resisting**, **retreat** and **field care** lines, as described above.
 
 Lines are throttled per squad and per player, so chat never floods. Every line is in `npc/cop_radio_messages.yml`
 (Spanish: `_es.yml`). Each key is a list that one entry is picked from at random, and `[]` silences that line.
@@ -276,6 +323,41 @@ the ring around the player at his level (for a player indoors, the street outsid
 count and `Max_Per_Player` still cap the total.
 
 ---
+
+### Roles and Squad_Composition (`cops.yml`, 0.13.0)
+
+Every key is optional; an entry under `Roles` is read key by key over the built-in role of the same name. The shipped
+`cops.yml` lists the whole catalogue with a comment per key.
+
+```yaml
+Cops:
+   Roles_Enabled: true
+   Roles:
+      Defender:
+         Fan_Placement: CENTER       # ANY, CENTER or FLANK
+         Ranged_Min_Distance: 4.0    # the role's own firing band, clamped under the gun's Projectile Distance
+         Ranged_Max_Distance: 7.0
+         Health_Multiplier: 1.5
+         Off_Hand: "SHIELD"          # cosmetic, never dropped
+         Strafe_Degrees: 0.0         # replaces the tier's Tactics.Strafe_Degrees
+         Block_Fraction: 0.5         # damage taken off a hit from inside the front cone
+         Block_Cone_Degrees: 60.0
+         Retreat:
+            Health_Fraction: 0.15    # read over Cops.Retreat
+      Marksman:
+         Fire_Rate_Scale: 0.6        # multiplies the tier's Fire_Rate_Multiplier
+         Difficulty_Bonus: 1         # steps above the tier's Difficulty
+      Commander:
+         Leader_Priority: 2          # the highest live priority speaks for the squad
+         Commander: true             # its death (leading or not): Commander_Down, the squad falls back for 5 s
+   Squad_Composition:
+      3:
+         - "Commander"
+         - "Pointman"
+         - "Defender"
+         - "Marksman"
+         - "Assault"
+```
 
 ### AI Settings (`settings.yml` → `Cops.Behaviour`)
 

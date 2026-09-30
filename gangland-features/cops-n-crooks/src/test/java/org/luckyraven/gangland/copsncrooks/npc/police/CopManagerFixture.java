@@ -77,6 +77,8 @@ final class CopManagerFixture implements AutoCloseable {
 		when(provider.getStuckSettings()).thenReturn(StuckSettings.DEFAULT);
 		when(provider.getVisibilityCheckDistance()).thenReturn(48.0);
 		when(provider.getMeleeProfile()).thenReturn(NpcMeleeProfile.DEFAULT);
+		when(provider.getFieldCareSettings()).thenReturn(org.luckyraven.gangland.npc.FieldCareSettings.DEFAULT);
+		when(provider.getAiTickRate()).thenReturn(10);
 		CopTierConfig tierConfig = mock(CopTierConfig.class);
 		when(tierConfig.displayName()).thenReturn("SWAT");
 		when(tierConfig.tactics()).thenReturn(new TacticsConfig(TacticsConfig.DEFAULT.engagement(), 270.0));
@@ -84,7 +86,7 @@ final class CopManagerFixture implements AutoCloseable {
 
 		when(spawner.getTargetCopCount(anyInt())).thenReturn(2);
 		when(spawner.getTierForWantedLevel(anyInt())).thenAnswer(inv -> tier[0]);
-		when(spawner.spawnNearPlayer(any(), anyInt(), any())).thenAnswer(inv -> cop(CopState.IDLE, 0, 0));
+		when(spawner.spawnNearPlayer(any(), anyInt(), any(), any())).thenAnswer(inv -> cop(CopState.IDLE, 0, 0));
 
 		when(radio.now()).thenAnswer(inv -> clock[0]);
 		when(radio.listenerFor(any(), any())).thenAnswer(inv -> {

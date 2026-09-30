@@ -62,6 +62,13 @@ public class CopGroup {
 	/** Spawn origins of recycled cops, and until when replacements skip them. */
 	private final Map<Location, Long> avoidedSpawns = new HashMap<>();
 
+	/**
+	 * Until when (the radio clock, ms) the group's cops fall back to cover, hurt or not: the squad just lost its
+	 * Commander ({@code CopRetreat}). 0 when not falling back.
+	 */
+	@Setter
+	private long fallBackUntil;
+
 	/** Backup cops still to send home after a backup ran out; kept until enough are free to go. */
 	@Setter
 	private int  pendingRelease;
@@ -132,6 +139,10 @@ public class CopGroup {
 
 	public void pruneAttackerSquads() {
 		attackerSquads.values().removeIf(NpcSquad::isEmpty);
+	}
+
+	public boolean isFallingBack(long now) {
+		return now < fallBackUntil;
 	}
 
 	/** Grants a backup request unless backup is off or the last one is still cooling down. */

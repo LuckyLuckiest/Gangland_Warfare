@@ -85,6 +85,22 @@ public final class SquadRadio {
 		return speak(settings.get(), voice, squad, speaker, callsign, key, formatKey, where, addressee, extra, false);
 	}
 
+	/**
+	 * Speaks a follow-up line {@code steps} ack delays ({@code Ack_Delay_Ticks}) from now and past the squad gap, the
+	 * way an ack follows its order: a line said in the same moment as another (a medic answering a cop's "hit") would
+	 * otherwise be swallowed by the squad and player gaps. Each step clears one player gap, so a chain of follow-ups
+	 * uses steps 1, 2, and so on. Silent when {@code speaker} is no longer valid by then; live settings apply.
+	 */
+	public void sayLater(NpcSquad squad, RadioVoice voice, AbstractNpc speaker, String key, Map<String, String> extra,
+	                     int steps) {
+		later.accept(() -> {
+			if (speaker.isValid()) {
+				speak(settings.get(), voice, squad, speaker.getEntity(), voice.callsign(speaker), key, "Format", null,
+				      null, extra, true);
+			}
+		}, settings.get().ackDelayTicks() * steps);
+	}
+
 	/** {@code CONTACT_LOST} -> {@code "Contact_Lost"}, and so on, for every current and future signal value. */
 	public static String keyOf(NpcSquadSignal signal) {
 		String[]      parts  = signal.name().split("_");

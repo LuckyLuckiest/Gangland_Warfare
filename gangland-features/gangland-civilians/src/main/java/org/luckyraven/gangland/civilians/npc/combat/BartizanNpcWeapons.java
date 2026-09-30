@@ -7,6 +7,8 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.bartizan.api.BartizanApi;
 import org.luckyraven.bartizan.api.npc.NpcWeaponFactory;
+import org.luckyraven.bartizan.api.weapon.GunWeapon;
+import org.luckyraven.bartizan.api.weapon.Weapon;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.keystone.npc.NpcDifficulty;
 import org.luckyraven.keystone.npc.spi.NpcRangedAttack;
@@ -81,6 +83,26 @@ public class BartizanNpcWeapons {
 		if (!api.items().isValidWeaponName(weaponName)) return null;
 
 		return api.items().buildItem(weaponName);
+	}
+
+	/**
+	 * How far {@code weaponName}'s rounds fly on their straight line ({@code Projectile.Distance}), in blocks, so a
+	 * caller can keep an NPC's firing band inside it; {@code null} when Bartizan is absent, the name is {@code null} or
+	 * unknown, or the weapon is not a gun with a positive distance.
+	 */
+	@Nullable
+	public Double reach(@Nullable String weaponName) {
+		// same guard order as create(): no BartizanApi literal before the availability check
+		if (weaponName == null || !Settings.isBartizanAvailable()) return null;
+
+		RegisteredServiceProvider<BartizanApi> rsp = Bukkit.getServicesManager().getRegistration(BartizanApi.class);
+		if (rsp == null) return null;
+
+		Weapon weapon = rsp.getProvider().weapons().getWeaponTemplate(weaponName);
+		if (!(weapon instanceof GunWeapon gun) || gun.getProjectileData() == null) return null;
+
+		int distance = gun.getProjectileData().getDistance();
+		return distance > 0 ? (double) distance : null;
 	}
 
 }

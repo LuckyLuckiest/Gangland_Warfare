@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -116,16 +117,16 @@ class CopSpawnManagerFallbackTest {
 		Location spawner = new Location(world, 5.5, GROUND_Y + 10, 5.5); // within Spawner_Max_Y_Diff 16
 		spawnManager.setSpawnerLocation(spawner);
 
-		spawnManager.spawnNearPlayer(player, 2, loc -> false);
+		spawnManager.spawnNearPlayer(player, 2, loc -> false, null);
 
 		ArgumentCaptor<Location> ring = ArgumentCaptor.forClass(Location.class);
-		verify(factory).createCop(ring.capture(), eq(2), eq(true));
-		verify(factory, never()).createCop(any(), anyInt());
+		verify(factory).createCop(ring.capture(), eq(2), eq(true), isNull());
+		verify(factory, never()).createCop(any(), anyInt(), eq(false), any());
 		assertTrue(ring.getValue().distance(spawner) > 3, "the ring spot, not the avoided spawner");
 
-		spawnManager.spawnNearPlayer(player, 2, loc -> true);
+		spawnManager.spawnNearPlayer(player, 2, loc -> true, null);
 
-		verify(factory).createCop(spawner, 2);
+		verify(factory).createCop(spawner, 2, false, null);
 	}
 
 	/** Solid below {@link #GROUND_Y}, air at and above it. */

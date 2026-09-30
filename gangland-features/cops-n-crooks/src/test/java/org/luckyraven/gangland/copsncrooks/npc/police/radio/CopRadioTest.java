@@ -10,27 +10,38 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.copsncrooks.npc.police.CopFieldCare;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio.RadioCall;
+import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.gangland.npc.FieldCareSettings;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
+import org.luckyraven.keystone.npc.NpcFanPlacement;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.NpcSquadSignal;
 import org.luckyraven.keystone.testkit.BukkitStatics;
+import org.mockito.InOrder;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -137,6 +148,61 @@ class CopRadioTest {
 	}
 
 	@Test
+	@DisplayName("the Commander going down: the new leader radios Commander_Down instead of Leader_Down, the group falls back briefly, backup is still requested")
+	void commanderDown_saysCommanderDown_groupFallsBack() {
+		Player bystander = listener(10, 0);
+		CopNpc commander = cop(1, "SWAT", 4, 0);
+		CopNpc pointman  = cop(2, "SWAT", 6, 0);
+		when(commander.getRole()).thenReturn(new CopRole("Commander", "Commander", NpcFanPlacement.ANY, null, null,
+		                                                 1.0, null, 2, null, 1.0, 0, null, 0, 60, false, true));
+		group.add(commander);
+		group.add(pointman);
+
+		group.getSquad().memberDown(commander);
+
+		verify(bystander).sendMessage("[SWAT-2] Commander_Down line");
+		verify(bystander, never()).sendMessage("[SWAT-2] Leader_Down line");
+		verify(bystander).sendMessage("[SWAT-2] Backup line");
+		assertEquals(1, calls.size());
+		assertTrue(group.isFallingBack(clock[0]));
+		assertFalse(group.isFallingBack(clock[0] + CopRadio.COMMANDER_FALL_BACK_MS));
+	}
+
+	@Test
+	@DisplayName("a Commander that is not the squad leader (Leader_Priority 0) still radios Commander_Down and falls the group back when it dies as a man down")
+	void commanderNotLeader_manDown_saysCommanderDown_groupFallsBack() {
+		Player bystander = listener(10, 0);
+		CopNpc leader    = cop(1, "SWAT", 4, 0);
+		CopNpc commander = cop(2, "SWAT", 6, 0);
+		when(commander.getRole()).thenReturn(new CopRole("Commander", "Commander", NpcFanPlacement.ANY, null, null,
+		                                                 1.0, null, 0, null, 1.0, 0, null, 0, 60, false, true));
+		group.add(leader);
+		group.add(commander);
+
+		group.getSquad().memberDown(commander);
+
+		verify(bystander).sendMessage("[SWAT-1] Commander_Down line");
+		verify(bystander, never()).sendMessage("[SWAT-1] Man_Down line");
+		verify(bystander).sendMessage("[SWAT-1] Backup line");
+		assertEquals(1, calls.size());
+		assertTrue(group.isFallingBack(clock[0]));
+	}
+
+	@Test
+	@DisplayName("any other leader going down is Leader_Down, and the group does not fall back")
+	void plainLeaderDown_saysLeaderDown_noFallBack() {
+		Player bystander = listener(10, 0);
+		CopNpc leader    = cop(1, "SWAT", 4, 0);
+		group.add(leader);
+		group.add(cop(2, "SWAT", 6, 0));
+
+		group.getSquad().memberDown(leader);
+
+		verify(bystander).sendMessage("[SWAT-2] Leader_Down line");
+		assertFalse(group.isFallingBack(clock[0]));
+	}
+
+	@Test
 	@DisplayName("with no human in range, a contact still queues a call for the cops")
 	void noHumanInRange_stillQueuesCall() {
 		CopNpc   cop   = cop(1, "SWAT", 4, 0);
@@ -160,6 +226,85 @@ class CopRadioTest {
 
 		verify(near).sendMessage("[DISPATCH] Dispatch_Wanted line");
 		verify(far, never()).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("sayAs: the cop speaks the key itself, with its callsign and the extras filling the line")
+	void sayAs_speaksFromTheCopWithExtras() {
+		radio = new CopRadio(() -> provider, key -> switch (key) {
+			case "Format" -> List.of("[%unit%] %line%");
+			default -> List.of(key + " to %member%");
+		}, () -> clock[0], (task, ticks) -> { });
+		Player bystander = listener(10, 0);
+		CopNpc medic     = cop(3, "SWAT", 4, 0);
+		group.add(medic);
+
+		assertTrue(radio.sayAs(group, medic, "Medic_Moving", Map.of("member", "SWAT-9")));
+
+		verify(bystander).sendMessage("[SWAT-3] Medic_Moving to SWAT-9");
+	}
+
+	@Test
+	@DisplayName("sayAs: a cop with no entity says nothing")
+	void sayAs_noEntity_silent() {
+		Player bystander = listener(10, 0);
+		CopNpc medic     = cop(3, "SWAT", 4, 0);
+		when(medic.getEntity()).thenReturn(null);
+
+		assertFalse(radio.sayAs(group, medic, "Hit", Map.of()));
+
+		verify(bystander, never()).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("field care on a real radio: Hit, then Medic_Moving and Covering_Fire all reach a listener, past the squad and player gaps")
+	void fieldCare_hitThenMedicLines_allHeard() {
+		List<Map.Entry<Runnable, Long>> tasks = new ArrayList<>();
+		radio = new CopRadio(() -> provider, key -> switch (key) {
+			case "Format" -> List.of("[%unit%] %line%");
+			default -> List.of(key + " line");
+		}, () -> clock[0], (task, ticks) -> tasks.add(Map.entry(task, ticks)));
+		when(provider.getFieldCareSettings()).thenReturn(FieldCareSettings.DEFAULT);
+		when(provider.getAiTickRate()).thenReturn(10);
+		Player bystander = listener(10, 0);
+		CopNpc leader    = careCop(1, 20.0, null, 4, 0);
+		CopNpc patient   = careCop(2, 8.0, null, 6, 0);
+		CopNpc medic     = careCop(3, 20.0, new CopRole("Medic", "Medic", NpcFanPlacement.CENTER, 8.0, 12.0, 1.0, null,
+		                                                0, null, 1.0, 0, null, 0, 60, true, false), 8, 0);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(10.0);
+
+		new CopFieldCare(() -> provider, radio, () -> clock[0]).tick(group);
+		long start = clock[0];
+		tasks.sort(Map.Entry.comparingByValue());
+		for (Map.Entry<Runnable, Long> task : tasks) {
+			clock[0] = start + task.getValue() * 50;
+			task.getKey().run();
+		}
+
+		InOrder order = inOrder(bystander);
+		order.verify(bystander).sendMessage("[SWAT-2] Hit line");
+		order.verify(bystander).sendMessage("[SWAT-3] Medic_Moving line");
+		order.verify(bystander).sendMessage("[SWAT-1] Covering_Fire line");
+		assertSame(patient, medic.getPatient());
+		assertSame(leader, group.getSquad().leader());
+	}
+
+	/** A group cop for field care: health out of 20, a fighting state, a role and stateful care slots. */
+	private CopNpc careCop(int id, double health, CopRole role, double x, double z) {
+		CopNpc cop = cop(id, "SWAT", x, z);
+		when(cop.getEntity().getHealth()).thenReturn(health);
+		when(cop.getEntity().getMaxHealth()).thenReturn(20.0);
+		when(cop.getCurrentState()).thenReturn(CopState.PURSUING);
+		when(cop.getRole()).thenReturn(role);
+		when(cop.getGroup()).thenReturn(group);
+		AtomicReference<CopNpc> patient = new AtomicReference<>();
+		doAnswer(i -> {
+			patient.set(i.getArgument(0));
+			return null;
+		}).when(cop).setPatient(any());
+		when(cop.getPatient()).thenAnswer(i -> patient.get());
+		group.add(cop);
+		return cop;
 	}
 
 	private Player player(double x, double z) {

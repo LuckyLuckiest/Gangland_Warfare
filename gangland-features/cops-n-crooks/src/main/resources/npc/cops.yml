@@ -88,6 +88,7 @@ Cops:
          - "Contact"
          - "Man_Down"
          - "Leader_Down"
+         - "Commander_Down"
          - "Backup"
          - "Resisting"
          - "Dispatch_Wanted"
@@ -113,6 +114,7 @@ Cops:
          Reloading: 160
          Man_Down: 100
          Leader_Down: 100
+         Commander_Down: 100
          Resisting: 200
          Backup: 400
          Responding: 100
@@ -120,6 +122,11 @@ Cops:
          Fall_Back: 100
          In_Cover: 200
          Stand_Down: 200
+         Hit: 100
+         Medic_Moving: 100
+         Covering_Fire: 200
+         Medic_Pinned: 160
+         Patched_Up: 100
       # Short click played to each listener with every line (SoundConfiguration shape).
       Sound:
          Name: BLOCK_NOTE_BLOCK_HAT
@@ -137,7 +144,7 @@ Cops:
    # A badly hurt cop breaks off, radios it (Lines.Fall_Back / In_Cover) and takes cover out of the suspect's sight
    # for up to 10 seconds, then comes back out and fights on.
    Retreat:
-      # Set to false and cops fight on until they drop.
+      # Set to false and cops fight on until they drop (no fall-back after a Commander goes down either).
       Enabled: true
       # Retreat at or below this fraction of max health (0-1; 0.3 = 30%).
       Health_Fraction: 0.3
@@ -187,6 +194,119 @@ Cops:
       Recycle_Seconds: 12
       # Seconds the spawner a recycled cop came from is skipped for its replacements (0 = never skipped).
       Avoid_Spawner_Seconds: 60
+   # Field care: a hurt cop limps and bleeds and radios Lines.Hit; a Medic-role cop of its squad walks over and treats
+   # it. The patient holds still and crouches while treated (it keeps firing), and a hit on the medic starts the
+   # treatment over (Lines.Medic_Pinned). A squad without a Medic cop never heals. Every key is optional.
+   Field_Care:
+      # Set to false: no limp, bleeding or treatment at all.
+      Enabled: true
+      # Hurt at or below this fraction of max health (0-1; 0.5 = 50%). Keep it above Retreat.Health_Fraction.
+      Health_Fraction: 0.5
+      # A hurt cop's walking speed, as a fraction of its tier Speed (0.1-1).
+      Limp_Speed: 0.7
+      # Set to false: cops still get hurt, but no medic treats them.
+      Medic_Enabled: true
+      # Blocks a medic answers a hurt squad mate within (2-64).
+      Medic_Radius: 24.0
+      # Blocks from the patient the medic treats it from (1-6).
+      Heal_Range: 2.5
+      # Ticks one treatment takes (60 = 3 s).
+      Channel_Ticks: 60
+      # Share of max health one treatment restores (0-1).
+      Heal_Fraction: 0.5
+   # Squad roles: each new cop takes the next unfilled role of its wanted level's Squad_Composition, laid over its tier
+   # (the tier still decides weapons, armour and the formation arc). Set to false and every cop spawns as its plain tier.
+   Roles_Enabled: true
+   # Role catalogue. A cops.yml without this block uses these same built-in roles; an entry here is read key by key
+   # over the built-in role of the same name (or over a plain role for a new name). Every key is optional:
+   #   Display_Name:        The role's label (default: its name). Never replaces the tier's Display_Name.
+   #   Fan_Placement:       ANY, CENTER or FLANK: where on the squad's firing fan the cop prefers to stand.
+   #   Ranged_Min_Distance: The cop's own firing band in blocks (0-64), set together with Ranged_Max_Distance.
+   #   Ranged_Max_Distance: Unset = settings.yml's band. Always clamped under the held gun's Projectile Distance.
+   #   Health_Multiplier:   Multiplies the tier's Health (0.1-10).
+   #   Off_Hand:            An item held in the off hand, e.g. SHIELD (cosmetic, never dropped); "" = none.
+   #   Leader_Priority:     The squad's radio voice is its live cop with the highest priority (ties: the first to join).
+   #   Strafe_Degrees:      Replaces the tier's Tactics.Strafe_Degrees (0-180; 0 = holds its post).
+   #   Fire_Rate_Scale:     Multiplies the tier's Fire_Rate_Multiplier (below 1 fires slower; 0.05-10).
+   #   Difficulty_Bonus:    Steps above the tier's Difficulty (0-3), capped at DEADLY: better aim.
+   #   Retreat:             Enabled / Health_Fraction / Radius, read over Cops.Retreat above.
+   #   Block_Fraction:      Share of each hit taken off when it comes from inside the front cone (0-1; 0 = none).
+   #   Block_Cone_Degrees:  The front cone's full width (0-360).
+   #   Medic:               true = the role treats hurt squad mates.
+   #   Commander:           true = when this cop goes down its squad radios Commander_Down and falls back briefly.
+   Roles:
+      # Front and centre, close in; leads the squad whenever no Commander is on it.
+      Pointman:
+         Fan_Placement: CENTER
+         Ranged_Min_Distance: 4.0
+         Ranged_Max_Distance: 8.0
+         Leader_Priority: 1
+      # The fan's ends, pushing in and strafing wide.
+      Assault:
+         Fan_Placement: FLANK
+         Ranged_Min_Distance: 5.0
+         Ranged_Max_Distance: 9.0
+         Strafe_Degrees: 20.0
+         Retreat:
+            Health_Fraction: 0.25
+      # Holds the centre post up front behind a shield that takes half of every hit from its front.
+      Defender:
+         Fan_Placement: CENTER
+         Ranged_Min_Distance: 4.0
+         Ranged_Max_Distance: 7.0
+         Health_Multiplier: 1.5
+         Off_Hand: "SHIELD"
+         Strafe_Degrees: 0.0
+         Block_Fraction: 0.5
+         Block_Cone_Degrees: 60.0
+         Retreat:
+            Health_Fraction: 0.15
+      # The back of the fan: slower but surer shots. The band is clamped under the gun's reach (rifle: 10 blocks).
+      Marksman:
+         Ranged_Min_Distance: 14.0
+         Ranged_Max_Distance: 22.0
+         Fire_Rate_Scale: 0.6
+         Difficulty_Bonus: 1
+         Retreat:
+            Health_Fraction: 0.4
+      Medic:
+         Fan_Placement: CENTER
+         Ranged_Min_Distance: 8.0
+         Ranged_Max_Distance: 12.0
+         Medic: true
+         Retreat:
+            Health_Fraction: 0.5
+      # Leads from the rear of the band; the squad falls back briefly when it goes down.
+      Commander:
+         Ranged_Min_Distance: 10.0
+         Ranged_Max_Distance: 14.0
+         Leader_Priority: 2
+         Commander: true
+         Retreat:
+            Health_Fraction: 0.4
+   # The roles a squad fills, in order, per wanted level. A level with no entry uses the highest lower one; cops past
+   # the end of the list (backup, extra cops) take its last role. Without this block these same compositions apply.
+   Squad_Composition:
+      1:
+         - "Pointman"
+         - "Assault"
+      2:
+         - "Pointman"
+         - "Assault"
+         - "Assault"
+      3:
+         - "Commander"
+         - "Pointman"
+         - "Defender"
+         - "Marksman"
+         - "Assault"
+      4:
+         - "Commander"
+         - "Pointman"
+         - "Defender"
+         - "Marksman"
+         - "Medic"
+         - "Assault"
    Tiers:
       1:
          Display_Name: "&9Officer"

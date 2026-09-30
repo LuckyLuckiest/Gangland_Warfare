@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
+import net.citizensnpcs.trait.SneakTrait;
 import org.bukkit.Location;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Entity;
@@ -18,6 +19,7 @@ import org.luckyraven.keystone.npc.AbstractNpc;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
@@ -65,6 +67,23 @@ public class CopNpc extends AbstractNpc {
 	@Getter
 	@Setter
 	private @Nullable CopGroup               group;
+	/**
+	 * The squad role this cop spawned with ({@link CopNpcFactory}); its {@link #getTierConfig() tier config} already
+	 * has the role laid over it. {@code null} with roles off.
+	 */
+	@Getter
+	@Setter
+	private @Nullable CopRole                role;
+	/**
+	 * The hurt squad mate this medic is treating ({@code CopFieldCare}), {@code null} when none. While set, the
+	 * fighting behaviours leave this cop's movement to field care (it still fires).
+	 */
+	@Getter
+	@Setter
+	private @Nullable CopNpc                 patient;
+	/** Whether a medic is treating this cop right now: it holds still and crouches ({@link #setUnderCare}). */
+	@Getter
+	private           boolean                underCare;
 	/**
 	 * This cop's own squad for a target outside any group (a cop with no group: tests, stray spawns): seeded with that
 	 * target's position when it is first handed to the cop, replaced when the target changes.
@@ -150,6 +169,12 @@ public class CopNpc extends AbstractNpc {
 
 		currentState = newState;
 
+		// care is a fighting-state thing: a cop leaving PURSUING/COMBAT (cuffing, walking home) drops it on both sides
+		if (newState != CopState.PURSUING && newState != CopState.COMBAT) {
+			patient = null;
+			if (underCare) setUnderCare(false);
+		}
+
 		CopBehavior newBehavior = behaviors.get(currentState);
 		if (newBehavior == null) return;
 		newBehavior.onEnter(this);
@@ -179,6 +204,25 @@ public class CopNpc extends AbstractNpc {
 			living.setHealth(max == null ? Math.min(old.getHealth(), living.getHealth())
 			                             : Math.min(old.getHealth(), max.getValue()));
 		}
+	}
+
+	/**
+	 * Sets the walking speed to the tier's {@code Speed} times {@code multiplier} (1 = normal, below 1 = the hurt
+	 * limp). Both parameter sets: Citizens clones the default ones into the local ones on every new path, and hands
+	 * out the default ones as the local ones while the NPC is not navigating.
+	 */
+	public void applySpeed(double multiplier) {
+		float speed = (float) (tierConfig.speed() * multiplier);
+		npc.getNavigator().getDefaultParameters().speedModifier(speed);
+		npc.getNavigator().getLocalParameters().speedModifier(speed);
+		log.debug("Cop {}-{} speed modifier {} (x{}).", npc.getName(), npc.getId(), speed, multiplier);
+	}
+
+	/** Marks this cop as being treated or not; it crouches while it is (SneakTrait survives an entity swap). */
+	public void setUnderCare(boolean underCare) {
+		this.underCare = underCare;
+		npc.getOrAddTrait(SneakTrait.class).setSneaking(underCare);
+		log.debug("Cop {}-{} under care: {} (sneaking).", npc.getName(), npc.getId(), underCare);
 	}
 
 	// ── Cop-specific state machine ────────────────────────────────────────────

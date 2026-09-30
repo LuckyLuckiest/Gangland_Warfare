@@ -1,11 +1,14 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.config;
 
+import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.npc.FieldCareSettings;
 import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
 import org.luckyraven.keystone.npc.NpcMeleeProfile;
 import org.luckyraven.keystone.npc.NpcNavigationConfig;
 import org.luckyraven.keystone.npc.entity.SpawnConfigProvider;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,11 +31,15 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 					Map.entry("Reposition", 5000L), Map.entry("Search", 15000L), Map.entry("Route", 15000L),
 					Map.entry("Route_High", 15000L), Map.entry("Climb", 15000L), Map.entry("Stand_Down", 10000L),
 					Map.entry("No_Route", 15000L), Map.entry("Check_Fire", 8000L), Map.entry("Reloading", 8000L),
-					Map.entry("Man_Down", 5000L), Map.entry("Leader_Down", 5000L), Map.entry("Resisting", 10000L),
-					Map.entry("Backup", 20000L), Map.entry("Responding", 5000L), Map.entry("Ack", 2000L),
-					Map.entry("Fall_Back", 5000L), Map.entry("In_Cover", 10000L)),
-			Set.of("Contact", "Man_Down", "Leader_Down", "Backup", "Resisting", "Dispatch_Wanted", "Escalate",
-			      "Stand_Down", "Fall_Back", "In_Cover"),
+					Map.entry("Man_Down", 5000L), Map.entry("Leader_Down", 5000L), Map.entry("Commander_Down", 5000L),
+					Map.entry("Resisting", 10000L), Map.entry("Backup", 20000L), Map.entry("Responding", 5000L),
+					Map.entry("Ack", 2000L),
+					Map.entry("Fall_Back", 5000L), Map.entry("In_Cover", 10000L),
+					// field care (CopFieldCare); milliseconds here, ticks (x50) in cops.yml's Cooldown_Ticks
+					Map.entry("Hit", 5000L), Map.entry("Medic_Moving", 5000L), Map.entry("Covering_Fire", 10000L),
+					Map.entry("Medic_Pinned", 8000L), Map.entry("Patched_Up", 5000L)),
+			Set.of("Contact", "Man_Down", "Leader_Down", "Commander_Down", "Backup", "Resisting", "Dispatch_Wanted",
+			      "Escalate", "Stand_Down", "Fall_Back", "In_Cover"),
 			"BLOCK_NOTE_BLOCK_HAT", 0.4f, 1.8f);
 
 	/**
@@ -281,5 +288,18 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 	/** When a cop that cannot reach its suspect is recycled out of his view ({@code Cops.Stuck}). */
 	default StuckSettings getStuckSettings() {
 		return StuckSettings.DEFAULT;
+	}
+
+	/** Hurt cops limping and bleeding, and medics patching them up ({@code Cops.Field_Care}). */
+	default FieldCareSettings getFieldCareSettings() {
+		return FieldCareSettings.DEFAULT;
+	}
+
+	/**
+	 * The roles a squad hunting at {@code wantedLevel} fills, in order ({@code Cops.Squad_Composition}, see
+	 * {@link CopRole#nextRole}); {@code null} with roles off, so every cop spawns as its plain tier.
+	 */
+	default @Nullable List<CopRole> getSquadComposition(int wantedLevel) {
+		return null;
 	}
 }

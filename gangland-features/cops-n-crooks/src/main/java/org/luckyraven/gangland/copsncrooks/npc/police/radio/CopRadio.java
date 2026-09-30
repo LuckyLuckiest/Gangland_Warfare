@@ -43,6 +43,10 @@ public class CopRadio {
 	/** A call nearby cops answer: {@code squad} of {@code group} needs help at {@code origin}. */
 	public record RadioCall(CopGroup group, NpcSquad squad, Location origin) { }
 
+	/** How long a squad falls back to cover after its Commander goes down ({@link CopGroup#isFallingBack}). */
+	// ponytail: code constant, a Commander role key when owners want to tune it
+	public static final long COMMANDER_FALL_BACK_MS = 5_000;
+
 	private final Supplier<CopConfigProvider> provider;
 	private final SquadRadio                  radio;
 	private final LongSupplier                clock;
@@ -67,13 +71,18 @@ public class CopRadio {
 
 	/**
 	 * The listener for {@code group}'s squads: speaks their signals, queues a {@link RadioCall} on a contact or a
-	 * casualty, and on a casualty requests backup, announcing it when granted.
+	 * casualty, and on a casualty requests backup, announcing it when granted. A Commander going down (leading or not)
+	 * is {@code Commander_Down} rather than {@code Leader_Down} / {@code Man_Down}, and the group falls back to cover
+	 * for {@link #COMMANDER_FALL_BACK_MS}.
 	 */
 	public NpcSquadListener listenerFor(CopGroup group, Consumer<RadioCall> onCall) {
 		RadioVoice       voice = voice(group);
 		NpcSquadListener speak = radio.listener(voice);
 		return (squad, signal, member, where) -> {
-			speak.onSignal(squad, signal, member, where);
+			boolean down = signal == NpcSquadSignal.MAN_DOWN || signal == NpcSquadSignal.LEADER_DOWN;
+			if (down && member instanceof CopNpc cop && cop.getRole() != null && cop.getRole().commander())
+				commanderDown(group, squad, voice, member, where);
+			else speak.onSignal(squad, signal, member, where);
 			switch (signal) {
 				case CONTACT, MAN_DOWN, LEADER_DOWN -> {
 					Location origin = where != null ? where : locationOf(member);
@@ -114,6 +123,21 @@ public class CopRadio {
 		                 Map.of());
 	}
 
+	/**
+	 * {@code cop} speaks {@code key} itself on its group's radio, {@code extra} filling the line (field care's
+	 * {@code %member%}). Silent for a cop with no entity.
+	 */
+	public boolean sayAs(CopGroup group, CopNpc cop, String key, Map<String, String> extra) {
+		LivingEntity self = cop.getEntity();
+		if (self == null) return false;
+		return radio.say(group.getSquad(), voice(group), self, callsign(cop), key, "Format", null, null, extra);
+	}
+
+	/** {@link #sayAs}, {@code steps} ack delays later and past the squad gap ({@link SquadRadio#sayLater}). */
+	public void sayAsLater(CopGroup group, CopNpc cop, String key, Map<String, String> extra, int steps) {
+		radio.sayLater(group.getSquad(), voice(group), cop, key, extra, steps);
+	}
+
 	/** Who {@code squad} of {@code group} hunts: the wanted player, or the attacker the squad was opened for. */
 	public @Nullable LivingEntity huntedOf(CopGroup group, NpcSquad squad) {
 		return voice(group).hunted(squad);
@@ -137,6 +161,16 @@ public class CopRadio {
 		if (tier == null || tier.displayName() == null) return "";
 		String plain = ChatColor.stripColor(GanglandChatUtil.color(tier.displayName()));
 		return plain != null ? plain : "";
+	}
+
+	/** The squad's new leader radios the Commander's fall; everyone falls back briefly ({@code CopRetreat}). */
+	private void commanderDown(CopGroup group, NpcSquad squad, RadioVoice voice, AbstractNpc commander,
+	                           @Nullable Location where) {
+		group.setFallBackUntil(now() + COMMANDER_FALL_BACK_MS);
+		AbstractNpc speaker = squad.leader();
+		if (speaker == null) return;
+		radio.say(squad, voice, speaker.getEntity(), callsign(speaker), "Commander_Down", "Format", where, null,
+		          Map.of("member", callsign(commander)));
 	}
 
 	private void requestBackup(CopGroup group, NpcSquad squad, RadioVoice voice, AbstractNpc downed,

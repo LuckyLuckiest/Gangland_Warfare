@@ -14,6 +14,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.npc.NpcSquad;
@@ -102,15 +103,18 @@ public class CopListener implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
 	public void onCopDamaged(EntityDamageByEntityEvent event) {
-		// Weapon-system shots route through WeaponRaytraceImpactEvent (see onWeaponRaytraceImpact below).
-		// Skip here to avoid double-processing the same shot via two separate code paths.
-		if (WeaponRaytracer.isRaytraceDamageInProgress()) return;
-
 		Entity victim = event.getEntity();
 
 		if (!copManager.isCopNpc(victim)) return;
 
 		Entity damager = event.getDamager();
+		// Before the raytrace skip: Bartizan applies a shot's damage through victim.damage(amount, shooter), which
+		// lands here, so this one guard covers melee, arrows and gunfire alike.
+		shieldBlock(event, victim, damager);
+
+		// Weapon-system shots route through WeaponRaytraceImpactEvent (see onWeaponRaytraceImpact below).
+		// Skip here to avoid double-processing the same shot via two separate code paths.
+		if (WeaponRaytracer.isRaytraceDamageInProgress()) return;
 
 		// T-KR4 (review M4): CitizensAPI.getNPCRegistry() was unguarded here — NpcSupport.isNpc() is the T-M3
 		// established, never-throws replacement (false when Citizens is absent, so a genuine player attacker
@@ -152,6 +156,22 @@ public class CopListener implements Listener {
 
 		// Alert system: put ALL cops for this player into combat mode
 		copManager.onCopAttackedAlert(cop, attacker);
+	}
+
+	/**
+	 * A cop whose role blocks (the Defender's shield) takes {@code Block_Fraction} off a hit coming from inside its
+	 * front cone. Where the hit comes from is the shooter for a projectile, else the damager. Bartizan credits area
+	 * damage (explosions, fire, beams) to the shooter, so the cone is judged by who attacked, not where it landed.
+	 */
+	private void shieldBlock(EntityDamageByEntityEvent event, Entity victim, Entity damager) {
+		CopNpc  cop  = copManager.findCopByEntity(victim);
+		CopRole role = cop != null ? cop.getRole() : null;
+		if (role == null) return;
+
+		Entity source = damager instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter
+		                ? shooter : damager;
+		if (role.blocks(victim.getLocation(), source.getLocation()))
+			event.setDamage(event.getDamage() * (1 - role.blockFraction()));
 	}
 
 	/**

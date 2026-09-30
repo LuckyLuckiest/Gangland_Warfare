@@ -5,15 +5,19 @@ import lombok.CustomLog;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.npc.FieldCareSettings;
 import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.gangland.npc.TacticsConfig;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
 import org.luckyraven.keystone.npc.NpcDifficulty;
+import org.luckyraven.keystone.npc.NpcFanPlacement;
 import org.luckyraven.keystone.npc.NpcMeleeProfile;
 import org.luckyraven.keystone.item.ItemParser;
 import org.luckyraven.keystone.persistence.config.ConfigReport;
 import org.luckyraven.keystone.persistence.config.MappingNode;
 import org.luckyraven.keystone.persistence.config.NodeReader;
+import org.luckyraven.keystone.persistence.config.Severity;
+import org.luckyraven.keystone.persistence.config.SourceLocation;
 
 import java.util.*;
 
@@ -36,6 +40,17 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	 */
 	static final TacticsConfig        COP_TACTICS_DEFAULT = new TacticsConfig(TacticsConfig.DEFAULT.engagement(), 270.0);
 	static final Map<Integer, Double> TIER_ARC_DEFAULTS   = Map.of(3, 200.0, 4, 270.0, 5, 330.0);
+
+	/**
+	 * Code default for a cops.yml with no Squad_Composition block (every pre-0.13 copy): roles are on, filled in this
+	 * order per wanted level from the {@link #builtInRoles built-in catalogue}. A Commander leads from level 3; Assault
+	 * comes last, so backup and extra cops past the list are Assault.
+	 */
+	static final Map<Integer, List<String>> COMPOSITION_DEFAULTS = Map.of(
+			1, List.of("Pointman", "Assault"),
+			2, List.of("Pointman", "Assault", "Assault"),
+			3, List.of("Commander", "Pointman", "Defender", "Marksman", "Assault"),
+			4, List.of("Commander", "Pointman", "Defender", "Marksman", "Medic", "Assault"));
 
 	private final Map<Integer, CopTierConfig> tiers;
 	private final Map<Integer, Integer>       copsPerWantedLevel;
@@ -95,6 +110,10 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final RetreatSettings retreatSettings;
 	private final CopNames        names;
 	private final StuckSettings   stuckSettings;
+	private final FieldCareSettings fieldCareSettings;
+
+	// Roles (phase H13): the composition per wanted level; empty with roles off
+	private final TreeMap<Integer, List<CopRole>> compositions = new TreeMap<>();
 
 	/**
 	 * Primary positional-config constructor.
@@ -164,8 +183,12 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.names = parseNames(cops, report);
 		MappingNode stuckSection = cops == null ? null : cops.get("Stuck").asMapping().orNull();
 		this.stuckSettings = StuckSettings.read(stuckSection != null ? NodeReader.of(stuckSection, report) : null);
+		MappingNode careSection = cops == null ? null : cops.get("Field_Care").asMapping().orNull();
+		this.fieldCareSettings = FieldCareSettings.read(careSection != null ? NodeReader.of(careSection, report) : null,
+		                                                report, FieldCareSettings.DEFAULT);
 
 		loadTiers(cops, report, itemParser);
+		loadRoles(cops, report, itemParser);
 		buildCopsPerWantedLevel(copSettings);
 	}
 
@@ -394,6 +417,153 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	@Override
 	public StuckSettings getStuckSettings() {
 		return stuckSettings;
+	}
+
+	@Override
+	public FieldCareSettings getFieldCareSettings() {
+		return fieldCareSettings;
+	}
+
+	@Override
+	public @Nullable List<CopRole> getSquadComposition(int wantedLevel) {
+		Map.Entry<Integer, List<CopRole>> entry = compositions.floorEntry(wantedLevel);
+		return entry != null ? entry.getValue() : null;
+	}
+
+	/**
+	 * The built-in role catalogue: what an old cops.yml gets, and what a {@code Cops.Roles.<Name>} entry of the same
+	 * name is read over. Each role's retreat threshold is laid over {@code retreat} ({@code Cops.Retreat}).
+	 */
+	static Map<String, CopRole> builtInRoles(RetreatSettings retreat) {
+		Map<String, CopRole> roles = new LinkedHashMap<>();
+		// front and centre, close in; leads (radio voice) whenever no Commander is on the squad
+		roles.put("Pointman", new CopRole("Pointman", "Pointman", NpcFanPlacement.CENTER, 4.0, 8.0, 1.0, null, 1, null,
+		                                  1.0, 0, null, 0, 60, false, false));
+		// the fan's ends, pushing and strafing wide
+		roles.put("Assault", new CopRole("Assault", "Assault", NpcFanPlacement.FLANK, 5.0, 9.0, 1.0, null, 0, 20.0, 1.0,
+		                                 0, retreatAt(retreat, 0.25), 0, 60, false, false));
+		// holds the centre post up front behind a shield that takes half of every hit from the front
+		roles.put("Defender", new CopRole("Defender", "Defender", NpcFanPlacement.CENTER, 4.0, 7.0, 1.5,
+		                                  new ItemStack(Material.SHIELD), 0, 0.0, 1.0, 0, retreatAt(retreat, 0.15), 0.5,
+		                                  60, false, false));
+		// the back of the fan (band clamped under the weapon's reach at spawn), slower but surer shots
+		roles.put("Marksman", new CopRole("Marksman", "Marksman", NpcFanPlacement.ANY, 14.0, 22.0, 1.0, null, 0, null,
+		                                  0.6, 1, retreatAt(retreat, 0.4), 0, 60, false, false));
+		roles.put("Medic", new CopRole("Medic", "Medic", NpcFanPlacement.CENTER, 8.0, 12.0, 1.0, null, 0, null, 1.0, 0,
+		                               retreatAt(retreat, 0.5), 0, 60, true, false));
+		// leads from the rear of the band; the squad falls back briefly when it goes down
+		roles.put("Commander", new CopRole("Commander", "Commander", NpcFanPlacement.ANY, 10.0, 14.0, 1.0, null, 2,
+		                                   null, 1.0, 0, retreatAt(retreat, 0.4), 0, 60, false, true));
+		return roles;
+	}
+
+	private static RetreatSettings retreatAt(RetreatSettings retreat, double healthFraction) {
+		return new RetreatSettings(retreat.enabled(), healthFraction, retreat.radius());
+	}
+
+	/**
+	 * {@code Cops.Roles} read over {@link #builtInRoles}, then {@code Cops.Squad_Composition} (or
+	 * {@link #COMPOSITION_DEFAULTS} without one). {@code Cops.Roles_Enabled: false} turns roles off.
+	 */
+	private void loadRoles(@Nullable NodeReader cops, ConfigReport report, @Nullable ItemParser itemParser) {
+		if (cops != null && !cops.get("Roles_Enabled").asBool().orDefault(true)) {
+			// read but unused: switching roles off must not turn the shipped blocks into unknown keys
+			cops.get("Roles");
+			cops.get("Squad_Composition");
+			return;
+		}
+
+		Map<String, CopRole> roles        = builtInRoles(retreatSettings);
+		MappingNode          rolesSection = cops == null ? null : cops.get("Roles").asMapping().orNull();
+		if (rolesSection != null) {
+			NodeReader rolesReader = NodeReader.of(rolesSection, report);
+			for (String name : rolesReader.keys()) {
+				MappingNode roleNode = rolesReader.get(name).asMapping().required().orNull();
+				if (roleNode == null) continue;
+				CopRole base = roles.getOrDefault(name, new CopRole(name, name, NpcFanPlacement.ANY, null, null, 1.0,
+				                                                    null, 0, null, 1.0, 0, null, 0, 60, false, false));
+				roles.put(name, readRole(NodeReader.of(roleNode, report), report, base, itemParser));
+			}
+		}
+
+		MappingNode compositionSection = cops == null ? null : cops.get("Squad_Composition").asMapping().orNull();
+		if (compositionSection == null) {
+			COMPOSITION_DEFAULTS.forEach((level, names) -> compositions.put(level, names.stream().map(roles::get).toList()));
+			return;
+		}
+
+		NodeReader composition = NodeReader.of(compositionSection, report);
+		for (String key : composition.keys()) {
+			NodeReader.NodeAccess access = composition.get(key);
+			int                   level;
+			try {
+				level = Integer.parseInt(key.trim());
+			} catch (NumberFormatException e) {
+				report.add(Severity.WARNING, locationOf(access, composition), "Cops.Squad_Composition." + key,
+				           "wanted level '" + key + "' is not a number, skipped", "config.type");
+				continue;
+			}
+
+			List<CopRole> list = new ArrayList<>();
+			for (String name : access.asList().ofStrings().orEmpty()) {
+				CopRole role = name != null ? roles.get(name.trim()) : null;
+				if (role != null) list.add(role);
+				else report.add(Severity.WARNING, locationOf(access, composition), "Cops.Squad_Composition." + key,
+				                "unknown role '" + name + "' skipped (not under Cops.Roles or built in)",
+				                "config.unknown_role");
+			}
+			if (!list.isEmpty()) compositions.put(level, List.copyOf(list));
+		}
+	}
+
+	/** One {@code Cops.Roles.<Name>} entry, each absent or invalid key keeping {@code base}'s value. */
+	private CopRole readRole(NodeReader role, ConfigReport report, CopRole base, @Nullable ItemParser itemParser) {
+		NpcFanPlacement placement = base.placement();
+		String          rawPlacement = role.get("Fan_Placement").asString().orNull();
+		if (rawPlacement != null) {
+			try {
+				placement = NpcFanPlacement.valueOf(rawPlacement.trim().toUpperCase(Locale.ROOT));
+			} catch (IllegalArgumentException e) {
+				report.add(Severity.WARNING, locationOf(role.get("Fan_Placement"), role), "Fan_Placement",
+				           "unknown Fan_Placement '" + rawPlacement + "' (ANY, CENTER or FLANK), ignored",
+				           "config.enum");
+			}
+		}
+
+		MappingNode     retreatNode = role.get("Retreat").asMapping().orNull();
+		RetreatSettings retreat     = retreatNode == null ? base.retreat()
+		                              : RetreatSettings.read(NodeReader.of(retreatNode, report), report,
+		                                                     base.retreat() != null ? base.retreat() : retreatSettings);
+
+		return new CopRole(base.name(),
+		                   role.get("Display_Name").asString().orDefault(base.displayName()),
+		                   placement,
+		                   optionalDouble(role, "Ranged_Min_Distance", 0, 64, base.rangedMin()),
+		                   optionalDouble(role, "Ranged_Max_Distance", 0, 64, base.rangedMax()),
+		                   role.get("Health_Multiplier").asDouble().min(0.1).max(10).orDefault(base.healthMultiplier()),
+		                   role.has("Off_Hand") ? parseItem(role.get("Off_Hand").asString().orNull(), itemParser)
+		                                        : base.offHand(),
+		                   role.get("Leader_Priority").asInt().orDefault(base.leaderPriority()),
+		                   optionalDouble(role, "Strafe_Degrees", 0, 180, base.strafeDegrees()),
+		                   role.get("Fire_Rate_Scale").asDouble().min(0.05).max(10).orDefault(base.fireRateScale()),
+		                   role.get("Difficulty_Bonus").asInt().min(0).max(3).orDefault(base.difficultyBonus()),
+		                   retreat,
+		                   role.get("Block_Fraction").asDouble().min(0).max(1).orDefault(base.blockFraction()),
+		                   role.get("Block_Cone_Degrees").asDouble().min(0).max(360).orDefault(base.blockConeDegrees()),
+		                   role.get("Medic").asBool().orDefault(base.medic()),
+		                   role.get("Commander").asBool().orDefault(base.commander()));
+	}
+
+	/** A number that may stay unset: {@code def} when absent or out of {@code [min, max]} (reported). */
+	private static @Nullable Double optionalDouble(NodeReader node, String key, double min, double max,
+	                                               @Nullable Double def) {
+		if (!node.has(key)) return def;
+		double value = node.get(key).asDouble().min(min).max(max).orDefault(Double.NaN);
+		return Double.isNaN(value) ? def : value;
+	}
+
+	private static SourceLocation locationOf(NodeReader.NodeAccess access, NodeReader parent) {
+		return access.node() != null ? access.node().location() : parent.mapping().location();
 	}
 
 	private NpcMeleeProfile parseMeleeProfile(@Nullable NodeReader cops, ConfigReport report) {

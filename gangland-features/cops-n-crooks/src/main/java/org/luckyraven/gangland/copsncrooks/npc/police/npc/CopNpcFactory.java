@@ -20,6 +20,7 @@ import org.luckyraven.gangland.civilians.npc.entity.EntityMark;
 import org.luckyraven.gangland.civilians.npc.npc.CitizensNpcs;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopNames;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
@@ -85,9 +86,21 @@ public class CopNpcFactory {
 	 * @return the created CopNpc, or null if spawning failed
 	 */
 	public CopNpc createCop(Location spawnLocation, int tier, boolean validateAfterSpawn) {
+		return createCop(spawnLocation, tier, validateAfterSpawn, null);
+	}
+
+	/**
+	 * Creates a new cop NPC with {@code role} laid over its tier ({@link CopRole#overlay}): the role's health,
+	 * difficulty, fire rate and strafe reach the cop through the tier config, its placement, leader priority and band
+	 * through {@link #applyRole}, its off-hand item through the loadout.
+	 *
+	 * @param role the cop's squad role; {@code null} spawns the plain tier
+	 */
+	public CopNpc createCop(Location spawnLocation, int tier, boolean validateAfterSpawn, @Nullable CopRole role) {
 		if (!NpcSupport.available()) return null;
 
-		CopTierConfig tierConfig = configProvider.getTierConfig(tier);
+		CopTierConfig baseTier   = configProvider.getTierConfig(tier);
+		CopTierConfig tierConfig = role != null ? role.overlay(baseTier) : baseTier;
 
 		CopNames names = configProvider.getNames() != null ? configProvider.getNames() : CopNames.DEFAULT;
 
@@ -114,6 +127,7 @@ public class CopNpcFactory {
 		CopNpc copNpc = new CopNpc(plugin, npc, tierConfig, behaviors, spawnLocation, configProvider);
 		copNpc.setCallsign(callsign);
 		copNpc.setTargetFilter(downedTargetFilter);
+		copNpc.setRole(role);
 
 		// Bartizan-backed ranged weapon: a random name from the tier's pool, resolved through the factory hook.
 		// NpcRangedAttack.NONE (no weapon name configured, unresolvable name, or Bartizan absent) leaves the cop on
@@ -121,8 +135,9 @@ public class CopNpcFactory {
 		// item is stocked here (0.8.4's giveStartingAmmo is gone). The supplier keeps Bartizan on the live entity.
 		NpcRangedAttack rangedAttack = NpcRangedAttack.NONE;
 		ItemStack       weaponItem   = null;
+		String          weaponName   = null;
 		if (tierConfig.canUseWeapons()) {
-			String weaponName = pickWeaponName(tierConfig);
+			weaponName = pickWeaponName(tierConfig);
 			rangedAttack = bartizanNpcWeapons.create(copNpc::getEntity, weaponName, copNpc.getDifficulty());
 			copNpc.setRangedAttack(rangedAttack);
 			weaponItem = bartizanNpcWeapons.buildItem(weaponName);
@@ -134,13 +149,18 @@ public class CopNpcFactory {
 		copNpc.setLoadout(loadout(copNpc, tierConfig, markManager, weaponItem));
 
 		applyTuning(copNpc, tierConfig, configProvider, rangedAttack);
+		applyRole(copNpc, role, bartizanNpcWeapons.reach(weaponName));
 
-		npc.getNavigator().getLocalParameters().speedModifier((float) tierConfig.speed());
+		copNpc.applySpeed(1.0);
 
 		return copNpc;
 	}
 
-	/** The entity-level loadout: POLICE mark, tier health, {@link CopNpc#equip()} armour, then the held weapon item. */
+	/**
+	 * The entity-level loadout: POLICE mark, tier health, {@link CopNpc#equip()} armour, the held weapon item, then the
+	 * role's off-hand item (the Defender's shield). No drop chance is set for it: cops are PLAYER entities, whose
+	 * drop-chance setters throw, and a dead cop's drops are cleared anyway.
+	 */
 	static Consumer<LivingEntity> loadout(CopNpc copNpc, CopTierConfig tierConfig, NpcMarkManager markManager,
 	                                      @Nullable ItemStack heldWeapon) {
 		return entity -> {
@@ -148,7 +168,22 @@ public class CopNpcFactory {
 			applyHealthBonus(entity, tierConfig.health());
 			copNpc.equip();
 			if (heldWeapon != null) setMainHand(entity, heldWeapon.clone());
+			CopRole role = copNpc.getRole();
+			if (role != null && role.offHand() != null && entity.getEquipment() != null)
+				entity.getEquipment().setItemInOffHand(role.offHand().clone());
 		};
+	}
+
+	/**
+	 * The role's formation hooks: where on the fan the cop stands, its claim to lead the squad, and its own firing band
+	 * clamped under {@code reach} (the held gun's range, {@code null} when unknown). Nothing for no role.
+	 */
+	static void applyRole(CopNpc copNpc, @Nullable CopRole role, @Nullable Double reach) {
+		if (role == null) return;
+		copNpc.setFanPlacement(role.placement());
+		copNpc.setLeaderPriority(role.leaderPriority());
+		double[] band = role.rangedBand(reach);
+		if (band != null) copNpc.setRangedBand(band[0], band[1]);
 	}
 
 	/** Squad engagement, melee band and gun cadence from the tier's config ({@link NpcFireRate#scale}). */

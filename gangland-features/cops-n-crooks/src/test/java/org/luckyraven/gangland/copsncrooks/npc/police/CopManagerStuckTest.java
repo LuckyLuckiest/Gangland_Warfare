@@ -94,7 +94,7 @@ class CopManagerStuckTest {
 		verify(stuck).destroy(any());
 
 		@SuppressWarnings("unchecked") ArgumentCaptor<Predicate<Location>> allowed = ArgumentCaptor.forClass(Predicate.class);
-		verify(fx.spawner, atLeastOnce()).spawnNearPlayer(eq(player), anyInt(), allowed.capture());
+		verify(fx.spawner, atLeastOnce()).spawnNearPlayer(eq(player), anyInt(), allowed.capture(), any());
 		assertFalse(allowed.getValue().test(spawner.clone()), "the recycled cop's spawner is avoided");
 		assertTrue(allowed.getValue().test(new Location(fx.world, -149.8, 80, 155.7)));
 	}

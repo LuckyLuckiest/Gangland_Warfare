@@ -296,8 +296,8 @@ keyed by the signal name (`CONTACT` -> `Lines.Contact`, `FLANK_LEFT` -> `Lines.F
 
 - **Delivery:** a line reaches every player within `Radio.Range` of the speaker or the addressed cop, plus the hunted
   player within `Radio.Target_Range`. `SquadRadio.speak` drops (never queues) a line that fails a gate: radio
-  disabled or an empty line list, the squad gap (`Squad_Gap_Ticks`, skipped by `Priority` kinds and acks), the
-  per-kind `Cooldown_Ticks`, and per listening player the player gap (`Player_Gap_Ticks`, skipped by priority kinds).
+  disabled or an empty line list, the squad gap (`Squad_Gap_Ticks`, skipped by `Priority` kinds, acks and
+  `SquadRadio.sayLater` follow-ups), the per-kind `Cooldown_Ticks`, and per listening player the player gap (`Player_Gap_Ticks`, skipped by priority kinds).
 - **Orders and acks:** `PUSH`, `FLANK_LEFT`, `FLANK_RIGHT`, `SEARCH` and `NO_ROUTE` are spoken as orders: the squad
   leader speaks them to the member (`%member%`), and a leader never orders itself. `MAN_DOWN`/`LEADER_DOWN` are also
   spoken by the leader; every other signal by the member itself. A delivered order schedules the member's `Ack` after
@@ -344,6 +344,57 @@ cop with the suspect in cuff range still cuffs. A cop at or below `Health_Fracti
 `CopRetreat.MAX_COVER_MS` (10 s) per state episode. `FAILED` (no cover in reach) keeps the cop fighting.
 `Fall_Back` and `In_Cover` are `Radio.Priority` kinds, so a same-tick `Resisting` from the hit that caused the
 retreat cannot drop them through the per-player gap.
+
+#### Squad roles (0.13.0)
+
+`CopRole` (`Cops.Roles`, built-in catalogue in `YamlCopConfigProvider.builtInRoles`) is picked per spawn by
+`CopRole.nextRole(getSquadComposition(level), liveRoles)` in `CopManager.spawnTick`, counting only the cops the spawn
+count counts (a stranded RETURNING cop's role is refilled). `CopNpcFactory.createCop(..., role)` spawns the tier with
+`role.overlay(tier)` (health, difficulty, fire rate, strafe), then `applyRole` sets the Keystone 1.14.0 hooks:
+`setFanPlacement`, `setLeaderPriority` and `setRangedBand` clamped under `BartizanNpcWeapons.reach(weapon)`. The
+off-hand item goes on through the loadout with no drop-chance call (PLAYER entities throw on those). `CopNpc.getRole()`
+exposes the role (`medic()`, `commander()`, `displayName()`); the callsign still reads the tier's display name.
+
+The Defender's block is one guard at the top of `CopListener.onCopDamaged`, ahead of the raytrace skip: Bartizan
+applies gunfire through `victim.damage(amount, shooter)`, so melee, arrows and guns all reach it. A Commander's
+`LEADER_DOWN` is voiced as `Commander_Down` by the squad's new leader, and `CopGroup.setFallBackUntil` makes
+`CopRetreat.takeCover` send every cop of the group to cover for `CopRadio.COMMANDER_FALL_BACK_MS`, outside its own
+cover budget.
+
+#### Field care (0.13.0)
+
+`CopFieldCare` (one per `CopManager`, no static state) runs `tick(group)` at the end of each `aiTick`, after the cops'
+own behaviours. It reads `FieldCareSettings` (`Cops.Field_Care`, gangland-api) and keeps its per-cop state weak-keyed:
+
+- **Hurt edge:** `isHurt` (false with `Enabled: false`, so switching it off is a falling edge) flips
+  `CopNpc.applySpeed(Limp_Speed | 1.0)`, which writes the Citizens navigator's default AND local parameters (Citizens
+  clones the defaults into the locals on every new path). The rising edge radios `Hit` through `CopRadio.sayAs`;
+  `DAMAGE_INDICATOR` particles spawn every AI tick while hurt.
+- **Assignment:** a hurt PURSUING/COMBAT cop with no medic gets the nearest cop whose `CopRole.medic()` is set, that
+  is fighting, not hurt and free, within `Medic_Radius`. The medic gets `CopNpc.setPatient` and radios `Medic_Moving`
+  one ack delay later; `Covering_Fire`, two ack delays later, comes from the squad leader unless it is the medic or
+  the patient (then any other fighting cop, else nobody). Covering fire is a radio line only. Both go through
+  `CopRadio.sayAsLater` (`SquadRadio.sayLater`: past the squad gap, each step one `Ack_Delay_Ticks`), because said in
+  the same tick as the patient's `Hit` the squad and player gaps would drop them.
+- **Treatment:** while `getPatient() != null`, `CombatBehavior.holdsForFieldCare` makes the fighting behaviours return
+  after their attack, so `CopFieldCare` walks the medic (`navigateTo`, a direct route to the patient, no cover
+  search). Within `Heal_Range` both are paused on the same tick (`pauseNavigation()` on medic and patient) and the
+  patient gets `setUnderCare(true)` (SneakTrait crouch; from then on its behaviours `pauseNavigation()` and return,
+  melee included). Once under care the patient may drift `CopFieldCare.HOLD_MARGIN` (1 block) past `Heal_Range`
+  before the channel resets. Progress advances by `getAiTickRate()` per AI tick; a medic health drop resets it
+  (`Medic_Pinned`). At `Channel_Ticks` an `EntityRegainHealthEvent(CUSTOM)` is fired and its amount applied
+  (`Patched_Up`); a cancelled event ends the treatment silently and keeps that patient out of assignment for
+  `GIVE_UP_MS`.
+- **Ending:** either cop invalid or out of the group, out of PURSUING/COMBAT, the patient no longer hurt, the medic
+  hurt, or `CopFieldCare.GIVE_UP_MS` (15 s). `CopNpc.transitionTo` also drops both care slots whenever a cop leaves
+  PURSUING/COMBAT. A treatment holds no group: it runs on its medic's group's tick, and one whose medic is invalid or
+  has left its patient's group (a radio responder) is ended by whichever group ticks next. `CopManager` calls
+  `CopFieldCare.clear(group)` when it drops a group (`despawnAllForPlayer`, so also shutdown and reload, and the
+  empty-group self-cleanup), which ends that group's treatments on both sides.
+
+Radio cooldowns for the five keys are milliseconds in `COP_RADIO_DEFAULTS` and ticks in `cops.yml`. The medic stays in
+its squad while treating (so `MAN_DOWN` still fires if it dies), and its old fan post stays reserved until the next
+pursue.
 
 A killed cop is found with `findDyingCop` (its entity is no longer valid during `EntityDeathEvent`), and
 `CopListener` calls `memberDown` on its current squad and on the group squad, so the Man Down line, backup and

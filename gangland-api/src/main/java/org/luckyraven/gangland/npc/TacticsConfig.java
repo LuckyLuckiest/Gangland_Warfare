@@ -69,8 +69,8 @@ public record TacticsConfig(NpcEngagement engagement, double formationArc) {
 		return value;
 	}
 
-	private static int readClampedInt(NodeReader node, ConfigReport report, String key, int fallback, int min,
-	                                  int max) {
+	static int readClampedInt(NodeReader node, ConfigReport report, String key, int fallback, int min,
+	                          int max) {
 		NodeReader.NodeAccess access = node.get(key);
 		int                   value  = access.asInt().orDefault(fallback);
 		if (value < min || value > max) {

@@ -1,6 +1,9 @@
 package org.luckyraven.gangland.copsncrooks.npc.police;
 
+import org.luckyraven.keystone.npc.NpcFanPlacement;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.bukkit.Location;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,18 +15,27 @@ import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.NpcSquadSignal;
+import org.mockito.InOrder;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -38,6 +50,9 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("CopManager - squads, radio, backup and escalation")
 class CopManagerSquadTest {
+
+	private static final CopRole MEDIC = new CopRole("Medic", "Medic", NpcFanPlacement.CENTER, 8.0, 12.0, 1.0, null,
+	                                                 0, null, 1.0, 0, null, 0, 60, true, false);
 
 	private CopManagerFixture fx;
 	private CopManager        manager;
@@ -163,6 +178,34 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("each new cop gets the composition's next role; a stranded RETURNING cop does not hold its role")
+	void spawnTask_fillsCompositionRoles_strandedRoleRefilled() {
+		CopRole pointman = role("Pointman");
+		CopRole assault  = role("Assault");
+		when(fx.provider.getSquadComposition(2)).thenReturn(List.of(pointman, assault));
+		manager.onWantedStart(player, wanted);
+		CopGroup group    = manager.groupFor(playerId);
+		CopNpc   stranded = fx.cop(CopState.RETURNING, 500, 500);
+		when(stranded.getRole()).thenReturn(pointman);
+		group.add(stranded);
+
+		manager.spawnTick(playerId, wanted);
+
+		verify(fx.spawner).spawnNearPlayer(eq(player), eq(3), any(), eq(pointman));
+		verify(fx.spawner).spawnNearPlayer(eq(player), eq(3), any(), eq(assault));
+	}
+
+	@Test
+	@DisplayName("with roles off (no composition) cops spawn with no role")
+	void spawnTask_noComposition_noRole() {
+		manager.onWantedStart(player, wanted);
+
+		manager.spawnTick(playerId, wanted);
+
+		verify(fx.spawner, times(2)).spawnNearPlayer(eq(player), eq(3), any(), isNull());
+	}
+
+	@Test
 	@DisplayName("a tier rise is announced once by dispatch; the first spawn and a steady tier are not")
 	void tierRise_dispatchesEscalateOnce() {
 		manager.onWantedStart(player, wanted);
@@ -247,6 +290,23 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("each AI tick runs field care on the group: a cop at half health limps and radios Hit")
+	void aiTick_runsFieldCare() {
+		manager.onWantedStart(player, wanted);
+		CopGroup     group = manager.groupFor(playerId);
+		CopNpc       cop   = fx.cop(CopState.PURSUING, 0, 0);
+		org.bukkit.entity.LivingEntity body = cop.getEntity();
+		when(body.getHealth()).thenReturn(10.0);
+		when(body.getMaxHealth()).thenReturn(20.0);
+		group.add(cop);
+
+		manager.aiTick(playerId);
+
+		verify(cop).applySpeed(0.7);
+		verify(fx.radio).sayAs(group, cop, "Hit", java.util.Map.of());
+	}
+
+	@Test
 	@DisplayName("the wanted player hitting one of his pursuers is resisting too")
 	void groupTargetHitsCop_escalates() {
 		manager.onWantedStart(player, wanted);
@@ -286,5 +346,75 @@ class CopManagerSquadTest {
 		manager.onWantedEnd(player);
 
 		verify(fx.radio, times(1)).sayFromLeader(group, "Stand_Down");
+	}
+
+	@Test
+	@DisplayName("shutdown ends field care before the cops are destroyed: the medic is freed, the patient stands up")
+	void shutdown_endsFieldCare_beforeDestroy() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group   = manager.groupFor(playerId);
+		CopNpc   patient = careCop(group, 10.0, null);
+		CopNpc   medic   = careCop(group, 20.0, MEDIC);
+		manager.aiTick(playerId);
+		assertSame(patient, medic.getPatient());
+		assertTrue(patient.isUnderCare());
+
+		manager.shutdown();
+
+		InOrder medicOrder   = inOrder(medic);
+		InOrder patientOrder = inOrder(patient);
+		medicOrder.verify(medic).setPatient(null);
+		medicOrder.verify(medic).destroy(any());
+		patientOrder.verify(patient).setUnderCare(false);
+		patientOrder.verify(patient).destroy(any());
+	}
+
+	@Test
+	@DisplayName("a group the AI tick drops (empty, player no longer wanted) ends its field care: the medic is freed, the patient stands up")
+	void emptyGroupDropped_endsFieldCare() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group   = manager.groupFor(playerId);
+		CopNpc   patient = careCop(group, 10.0, null);
+		CopNpc   medic   = careCop(group, 20.0, MEDIC);
+		manager.aiTick(playerId);
+		assertSame(patient, medic.getPatient());
+
+		group.getCops().clear();
+		when(fx.targeting.isWanted(playerId)).thenReturn(false);
+		manager.aiTick(playerId);
+
+		assertNull(manager.groupFor(playerId));
+		assertNull(medic.getPatient());
+		assertFalse(patient.isUnderCare());
+	}
+
+	/** A cop of {@code group} chasing the player, next to the others, at {@code health} of 20, with stateful care slots. */
+	private CopNpc careCop(CopGroup group, double health, CopRole role) {
+		CopNpc       cop  = fx.cop(CopState.PURSUING, 0, 0);
+		cop.setTargetPlayerId(playerId);
+		LivingEntity body = cop.getEntity();
+		when(body.getHealth()).thenReturn(health);
+		when(body.getMaxHealth()).thenReturn(20.0);
+		when(cop.getRole()).thenReturn(role);
+		when(cop.distanceTo(any(LivingEntity.class))).thenReturn(1.0);
+		AtomicReference<CopNpc> patient = new AtomicReference<>();
+		doAnswer(i -> {
+			patient.set(i.getArgument(0));
+			return null;
+		}).when(cop).setPatient(any());
+		when(cop.getPatient()).thenAnswer(i -> patient.get());
+		AtomicBoolean underCare = new AtomicBoolean();
+		doAnswer(i -> {
+			underCare.set(i.getArgument(0));
+			return null;
+		}).when(cop).setUnderCare(anyBoolean());
+		when(cop.isUnderCare()).thenAnswer(i -> underCare.get());
+		group.add(cop);
+		return cop;
+	}
+
+	private static CopRole role(String name) {
+		return new CopRole(name, name, NpcFanPlacement.ANY, null, null, 1.0, null, 0, null, 1.0, 0, null, 0, 60, false,
+		                   false);
 	}
 }

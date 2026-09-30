@@ -95,6 +95,10 @@ Lines:
    # The leader goes down and a new leader takes point.
    Leader_Down:
       - "%member% is down! %unit% taking point!"
+   # The squad's Commander goes down: the new leader calls it and the squad falls back to cover briefly.
+   Commander_Down:
+      - "Commander down! Fall back, fall back!"
+      - "We lost %member%! Pull back to cover!"
    # An ordered member acknowledges a delivered order.
    Ack:
       - "Copy."
@@ -107,11 +111,30 @@ Lines:
    # A badly hurt cop breaks off to cover (Cops.Retreat in cops.yml).
    Fall_Back:
       - "Taking fire, falling back to cover!"
-      - "I'm hit! Pulling back!"
+      - "Pulling back, cover me!"
    # The retreating cop reached cover.
    In_Cover:
       - "In cover!"
       - "I'm behind cover, keep him busy!"
+   # Field care (Cops.Field_Care in cops.yml). A cop drops to its hurt threshold.
+   Hit:
+      - "I'm hit!"
+      - "Taking hits, I'm bleeding!"
+   # A medic sets off for a hurt squad mate (%member%).
+   Medic_Moving:
+      - "%member%, hold on, I'm coming to you!"
+      - "Moving up to %member%!"
+   # The squad covers the medic (said by the leader, or another cop when the leader is the medic or the patient).
+   Covering_Fire:
+      - "Cover the medic, lay it down!"
+      - "Covering fire!"
+   # A hit on the medic starts the treatment over.
+   Medic_Pinned:
+      - "Pinned down, can't reach %member%!"
+   # The medic finished treating %member%.
+   Patched_Up:
+      - "%member% patched up, back in it!"
+      - "You're good, get back in there!"
    # A cuffed suspect's escape attempts exhaust Max_Cuff_Attempts; the group switches to combat.
    Resisting:
       - "Suspect is resisting! Take him down!"

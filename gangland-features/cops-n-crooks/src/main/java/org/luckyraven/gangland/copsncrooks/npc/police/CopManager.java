@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.npc.police;
 
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import lombok.Getter;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Bukkit;
@@ -56,6 +57,7 @@ public class CopManager implements BeanLifecycle {
 	private final Set<UUID>             copAttackers;
 	private final CivilianNpcRegistry   civilianNpcRegistry;
 	private final CopRadio              copRadio;
+	private final CopFieldCare          fieldCare;
 	/**
 	 * Radio calls heard since the last AI tick; answered after the tick's cop loop so a listener never changes a cop
 	 * list that is being iterated.
@@ -75,6 +77,7 @@ public class CopManager implements BeanLifecycle {
 		this.markManager       = markManager;
 		this.detainmentService = detainmentService;
 		this.copRadio          = copRadio;
+		this.fieldCare         = new CopFieldCare(copLoader::getLoadedProvider, copRadio, copRadio::now);
 
 		this.civilianNpcRegistry = civilianNpcRegistry;
 		this.groups              = new ConcurrentHashMap<>();
@@ -512,11 +515,17 @@ public class CopManager implements BeanLifecycle {
 		                            configProvider.getMaxCopsPerPlayer());
 		// A RETURNING cop beyond the pursuit range cannot engage: it is walking home, not part of this hunt's count.
 		double maxDist = configProvider.getPursuitMaxDistance();
-		int currentCount = (int) cops.stream().filter(c -> !isStrandedReturning(c, player, maxDist)).count();
+		List<CopNpc> counted = cops.stream().filter(c -> !isStrandedReturning(c, player, maxDist)).toList();
+		int currentCount = counted.size();
+		// Each new cop takes the composition's first role no counted cop holds, so a stranded one's role is refilled.
+		List<CopRole> composition = configProvider.getSquadComposition(wantedLevel);
+		List<CopRole> liveRoles   = new ArrayList<>();
+		for (CopNpc cop : counted) liveRoles.add(cop.getRole());
 
 		// Spawn all missing cops in one pass so a full wipe is recovered in a single interval
 		while (currentCount < targetCount) {
-			CopNpc newCop = spawnManager.spawnNearPlayer(player, tier, loc -> !group.isAvoided(loc, now));
+			CopRole role   = CopRole.nextRole(composition, liveRoles);
+			CopNpc  newCop = spawnManager.spawnNearPlayer(player, tier, loc -> !group.isAvoided(loc, now), role);
 			if (newCop == null) break; // no valid location found - stop trying this interval
 
 			newCop.setTargetPlayerId(playerId);
@@ -526,6 +535,7 @@ public class CopManager implements BeanLifecycle {
 			newCop.transitionTo(CopState.PURSUING);
 
 			group.add(newCop);
+			liveRoles.add(role);
 			currentCount++;
 		}
 
@@ -628,6 +638,7 @@ public class CopManager implements BeanLifecycle {
 			if (!targetingManager.isWanted(playerId)) {
 				stopAITask(playerId);
 				groups.remove(playerId);
+				if (group != null) fieldCare.clear(group);
 			}
 			drainRadioCalls();
 			return;
@@ -660,6 +671,7 @@ public class CopManager implements BeanLifecycle {
 			LivingEntity target = resolveTarget(cop, player);
 			cop.tick(target);
 		}
+		fieldCare.tick(group);
 
 		if (group.pollResisting()) {
 			copRadio.sayFromLeader(group, "Resisting");
@@ -973,6 +985,7 @@ public class CopManager implements BeanLifecycle {
 		CopGroup group = groups.remove(playerId);
 		if (group == null) return;
 
+		fieldCare.clear(group);
 		group.destroyAll(markManager);
 	}
 }
