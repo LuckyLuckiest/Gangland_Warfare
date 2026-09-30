@@ -23,6 +23,9 @@ import java.util.Objects;
  * {@code insertLine} respawns every line of the NPC once (a single blink when the bar appears), so later hits only
  * {@code setLine}. {@code removeLine} alone leaves the remaining lines where they were until the NPC moves, so a
  * removal is followed by {@code onDespawn()}, which re-renders them at their new heights on the next tick.
+ * <p>Known limit: both edges blink. When the bar appears or disappears, Citizens despawns the NPC's other lines (a
+ * cop's callsign) and respawns them about 300 ms (6 ticks) later; hits in between update in place with no blink. The
+ * only way around it inside Citizens' API, a permanent empty line 0, would lift the callsign one line for good.
  */
 public final class NpcHealthBar {
 
