@@ -584,6 +584,7 @@ public class CopManager implements BeanLifecycle {
 			if (!targetingManager.isWanted(playerId)) {
 				stopAITask(playerId);
 				groups.remove(playerId);
+				if (group != null) fieldCare.clear(group);
 			}
 			drainRadioCalls();
 			return;
@@ -930,6 +931,7 @@ public class CopManager implements BeanLifecycle {
 		CopGroup group = groups.remove(playerId);
 		if (group == null) return;
 
+		fieldCare.clear(group);
 		group.destroyAll(markManager);
 	}
 }
