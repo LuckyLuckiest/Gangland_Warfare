@@ -41,6 +41,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class CopManager implements BeanLifecycle {
 
+	/** Past twice {@code Recycle_Seconds}, only a view within this many blocks keeps a stranded cop. */
+	private static final double OVERDUE_VIEW_BLOCKS = 24.0;
+
 	private final JavaPlugin            plugin;
 	@Getter
 	private final CopSpawnManager       spawnManager;
@@ -548,7 +551,8 @@ public class CopManager implements BeanLifecycle {
 	 * A cop hunting the group's suspect that has found no way to him for {@code Cops.Stuck.Recycle_Seconds}
 	 * ({@link CopNpc#millisUnreachable()}) and that no one is looking at is taken off the map; its spawner is skipped
 	 * for {@code Avoid_Spawner_Seconds} so the replacement spawned in the same run comes from elsewhere. Past twice
-	 * {@code Recycle_Seconds} the suspect's own view only protects a cop within 24 blocks of him.
+	 * {@code Recycle_Seconds} a view only protects a cop within {@link #OVERDUE_VIEW_BLOCKS} of the eyes it is in,
+	 * the suspect's and every other player's alike.
 	 */
 	private boolean recycles(CopNpc cop, CopGroup group, Player player, long now) {
 		StuckSettings stuck = configProvider.getStuckSettings();
@@ -558,7 +562,8 @@ public class CopManager implements BeanLifecycle {
 		if (!player.getUniqueId().equals(cop.getTargetPlayerId())) return false;
 		if (cop.millisUnreachable() < stuck.recycleSeconds() * 1000L) return false;
 
-		Location at = body.getLocation();
+		Location at      = body.getLocation();
+		boolean  overdue = cop.millisUnreachable() >= 2L * stuck.recycleSeconds() * 1000L;
 		if (at.getWorld() == player.getWorld()) {
 			// a melee cop knocked off its surround slot keeps its clock running though it can hit him - not through
 			// a ceiling or a wall: one a floor up or in the next room is within the distance but cannot reach him
@@ -567,11 +572,13 @@ public class CopManager implements BeanLifecycle {
 			    Math.abs(at.getY() - feet.getY()) <= 1.5 && player.hasLineOfSight(body)) return false;
 			// as far out as bystanders are protected (isVisibleToOtherPlayers) and never under 24 blocks; past twice
 			// the threshold only the 24 blocks hold, so a cop at a far window he keeps watching is not kept forever
-			boolean overdue = cop.millisUnreachable() >= 2L * stuck.recycleSeconds() * 1000L;
-			double  protect = overdue ? 24.0 : Math.max(24.0, configProvider.getVisibilityCheckDistance());
+			double protect = overdue ? OVERDUE_VIEW_BLOCKS
+			                         : Math.max(OVERDUE_VIEW_BLOCKS, configProvider.getVisibilityCheckDistance());
 			if (inView(player, body, protect)) return false;
 		}
-		if (spawnManager.isVisibleToOtherPlayers(at, player)) return false;
+		// the same bound for bystanders: the spawner's yaw-only check sees through walls to Visibility_Check_Distance
+		if (overdue ? inViewOfBystander(at, body, player) : spawnManager.isVisibleToOtherPlayers(at, player))
+			return false;
 
 		Location origin = cop.getSpawnLocation();
 		if (origin != null && stuck.avoidSpawnerSeconds() > 0)
@@ -579,9 +586,18 @@ public class CopManager implements BeanLifecycle {
 		return true;
 	}
 
+	/** A real player other than {@code suspect} has {@code body} {@link #inView} within {@link #OVERDUE_VIEW_BLOCKS}. */
+	private static boolean inViewOfBystander(Location at, LivingEntity body, Player suspect) {
+		if (at.getWorld() == null) return false;
+		for (Player other : at.getWorld().getPlayers())
+			if (!other.equals(suspect) && !other.hasMetadata("NPC") && inView(other, body, OVERDUE_VIEW_BLOCKS))
+				return true;
+		return false;
+	}
+
 	/**
-	 * {@code body} is in front of the suspect's eyes (within 60 degrees of where he looks, up and down included) with
-	 * a clear line within {@code maxDistance}. A bare line of sight would keep every cop on a ledge above his head.
+	 * {@code body} is in front of {@code player}'s eyes (within 60 degrees of where he looks, up and down included)
+	 * with a clear line within {@code maxDistance}. A bare line of sight would keep every cop on a ledge above his head.
 	 */
 	private static boolean inView(Player player, LivingEntity body, double maxDistance) {
 		Location eye    = player.getEyeLocation();

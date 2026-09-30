@@ -36,7 +36,7 @@ import static org.mockito.Mockito.when;
  * while the suspect cannot see it is despawned and replaced in the same spawn run, away from the spawner it came from.
  * "Can see" is a view cone plus line of sight within {@code Visibility_Check_Distance} (the bystanders' radius), not a
  * bare ray: a cop on a ledge above the suspect's head is out of view even though the ray is open. Past twice
- * {@code Recycle_Seconds} only a cop in view within 24 blocks is kept.
+ * {@code Recycle_Seconds} only a cop in view within 24 blocks is kept, of the suspect or of any other player.
  */
 @DisplayName("CopManager - recycling stranded cops out of view")
 class CopManagerStuckTest {
@@ -135,17 +135,6 @@ class CopManagerStuckTest {
 	}
 
 	@Test
-	@DisplayName("a stranded cop the suspect is looking at is never recycled, however long")
-	void strandedInView_kept() {
-		CopNpc stuck = stranded(CopState.PURSUING, 10, 66, 30, 600_000);
-
-		manager.spawnTick(playerId, wanted);
-
-		assertTrue(group.getCops().contains(stuck));
-		verify(stuck, never()).destroy(any());
-	}
-
-	@Test
 	@DisplayName("in view beyond 24 blocks is protected as far out as bystanders are, until twice Recycle_Seconds")
 	void strandedInView_beyond24_keptUntilTwiceThreshold() {
 		CopNpc young = stranded(CopState.PURSUING, 10, 66, 40, 13_000); // 30 blocks in front of him
@@ -165,6 +154,7 @@ class CopManagerStuckTest {
 		manager.spawnTick(playerId, wanted);
 
 		assertTrue(group.getCops().contains(stuck));
+		verify(stuck, never()).destroy(any());
 	}
 
 	@Test
@@ -237,6 +227,43 @@ class CopManagerStuckTest {
 		manager.spawnTick(playerId, wanted);
 
 		assertTrue(group.getCops().contains(stuck));
+	}
+
+	@Test
+	@DisplayName("past twice Recycle_Seconds a bystander's far glance no longer keeps a stranded cop")
+	void strandedSeenByFarBystander_recycledOnceOverdue() {
+		CopNpc young = stranded(CopState.PURSUING, 10, 64, -25, 13_000); // 35 blocks behind him
+		CopNpc old   = stranded(CopState.PURSUING, 11, 64, -25, 25_000);
+		when(fx.spawner.isVisibleToOtherPlayers(any(), eq(player))).thenReturn(true);
+
+		manager.spawnTick(playerId, wanted);
+
+		assertTrue(group.getCops().contains(young));
+		assertFalse(group.getCops().contains(old));
+	}
+
+	@Test
+	@DisplayName("past twice Recycle_Seconds a player watching within 24 blocks still keeps it; a watching NPC does not")
+	void overdue_nearBystanderKeeps_npcDoesNot() {
+		CopNpc watched = stranded(CopState.PURSUING, 10, 64, 0, 25_000);   // behind the suspect
+		CopNpc byNpc   = stranded(CopState.PURSUING, -20, 64, -5, 25_000);
+		Player other   = bystander(10, -5);   // looks along +Z at `watched`, 5 blocks off
+		Player npc     = bystander(-20, -10); // looks along +Z at `byNpc`
+		when(npc.hasMetadata("NPC")).thenReturn(true);
+		when(fx.world.getPlayers()).thenReturn(List.of(player, other, npc));
+
+		manager.spawnTick(playerId, wanted);
+
+		assertTrue(group.getCops().contains(watched));
+		assertFalse(group.getCops().contains(byNpc));
+	}
+
+	/** Another online player at (x, 64, z), looking along +Z with a clear line to everything. */
+	private Player bystander(double x, double z) {
+		Player other = fx.player(x, z);
+		when(other.getEyeLocation()).thenReturn(new Location(fx.world, x, 65.62, z, 0f, 0f));
+		when(other.hasLineOfSight(any())).thenReturn(true);
+		return other;
 	}
 
 	@Test
