@@ -375,7 +375,8 @@ own behaviours. It reads `FieldCareSettings` (`Cops.Field_Care`, gangland-api) a
   one ack delay later; `Covering_Fire`, two ack delays later, comes from the squad leader unless it is the medic or
   the patient (then any other fighting cop, else nobody). Covering fire is a radio line only. Both go through
   `CopRadio.sayAsLater` (`SquadRadio.sayLater`: past the squad gap, each step one `Ack_Delay_Ticks`), because said in
-  the same tick as the patient's `Hit` the squad and player gaps would drop them.
+  the same tick as the patient's `Hit` the squad and player gaps would drop them. Each is dropped when it comes due
+  if the treatment is over by then (patient dead, medic out of the fight or reassigned).
 - **Treatment:** while `getPatient() != null`, `CombatBehavior.holdsForFieldCare` makes the fighting behaviours return
   after their attack, so `CopFieldCare` walks the medic (`navigateTo`, a direct route to the patient, no cover
   search). Within `Heal_Range` both are paused on the same tick (`pauseNavigation()` on medic and patient) and the
@@ -584,7 +585,8 @@ spawnNearPlayer(target, tier, allowed, role):   -- role: CopRole.nextRole in Cop
 Recycling (Cops.Stuck): each spawn run, a PURSUING/COMBAT cop hunting the group's player whose
 millisUnreachable() >= Recycle_Seconds is released unless the player sees it (60-degree cone plus clear line
 within max(24, Visibility_Check_Distance); past 2x Recycle_Seconds within 24 only), it is within melee reach on his
-level (|dy| <= 1.5), or another player faces it. The same run refills the group, capped at Max_Per_Player.
+level (|dy| <= 1.5, clear line), or another player faces it (past 2x Recycle_Seconds: another real player with it in
+his cone, clear line, within 24). The same run refills the group, capped at Max_Per_Player.
 
 Tier selection: `tier = min(wantedLevel, maxTier)`
 
