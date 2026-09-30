@@ -11,11 +11,14 @@ import org.luckyraven.keystone.npc.NpcCoverStatus;
 import org.luckyraven.keystone.npc.NpcFanPlacement;
 
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -60,6 +63,34 @@ class CopRetreatTest {
 		group.setFallBackUntil(clock[0] + 5_000);
 
 		assertFalse(off.takeCover(cop, target));
+	}
+
+	@Test
+	@DisplayName("a cop is marked moving to cover while it walks there; not once in cover, healthy again, or its episode ends")
+	void movingToCover_markedOnlyOnTheWay() {
+		CopNpc        cop    = cop(5.0, null);
+		AtomicBoolean moving = new AtomicBoolean();
+		doAnswer(i -> {
+			moving.set(i.getArgument(0));
+			return null;
+		}).when(cop).setMovingToCover(anyBoolean());
+
+		retreat.takeCover(cop, target);
+		assertTrue(moving.get());
+
+		when(cop.takeCover(any(), anyDouble(), any())).thenReturn(NpcCoverStatus.ARRIVED);
+		retreat.takeCover(cop, target);
+		assertFalse(moving.get());
+
+		when(cop.takeCover(any(), anyDouble(), any())).thenReturn(NpcCoverStatus.MOVING);
+		retreat.takeCover(cop, target);
+		when(cop.getEntity().getHealth()).thenReturn(20.0);
+		retreat.takeCover(cop, target);
+		assertFalse(moving.get(), "healthy again: no longer retreating");
+
+		moving.set(true);
+		retreat.reset(cop);
+		assertFalse(moving.get(), "a new state episode starts with no walk to cover");
 	}
 
 	private static CopNpc cop(double health, CopRole role) {

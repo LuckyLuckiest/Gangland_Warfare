@@ -44,6 +44,7 @@ final class CopRetreat {
 	 * when healthy, out of cover time, or with no cover in reach (open ground: fight on rather than freeze).
 	 */
 	boolean takeCover(CopNpc cop, LivingEntity target) {
+		cop.setMovingToCover(false);   // set again by cover() while the walk is on
 		LivingEntity self = cop.getEntity();
 		if (self == null) return false;
 
@@ -60,11 +61,14 @@ final class CopRetreat {
 	}
 
 	private static boolean cover(CopNpc cop, LivingEntity target, RetreatSettings retreat) {
-		return cop.takeCover(target, retreat.radius(), cop.squadFor(target)) != NpcCoverStatus.FAILED;
+		NpcCoverStatus status = cop.takeCover(target, retreat.radius(), cop.squadFor(target));
+		cop.setMovingToCover(status == NpcCoverStatus.MOVING);
+		return status != NpcCoverStatus.FAILED;
 	}
 
 	/** A new episode gets a fresh retreat. */
 	void reset(CopNpc cop) {
 		startedAt.remove(cop);
+		cop.setMovingToCover(false);
 	}
 }

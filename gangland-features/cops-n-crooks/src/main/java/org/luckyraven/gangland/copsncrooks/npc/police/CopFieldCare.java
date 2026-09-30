@@ -226,8 +226,9 @@ public class CopFieldCare {
 
 	/**
 	 * Out of {@code Heal_Range} (plus {@link #HOLD_MARGIN} once under care): walks the medic over by a direct route,
-	 * patient free to move. In range: both hold still, the patient under care, and the channel advances by one AI
-	 * tick from the tick after the arrival; a hit on the medic starts it over.
+	 * patient free to move. In range of a patient still walking to cover: the medic waits. In range otherwise: both
+	 * hold still, the patient under care, and the channel advances by one AI tick from the tick after the arrival; a
+	 * hit on the medic starts it over.
 	 *
 	 * @return {@code true} once the patient is healed, or its heal was cancelled (the treatment is over).
 	 */
@@ -244,6 +245,13 @@ public class CopFieldCare {
 			if (patient.isUnderCare()) patient.setUnderCare(false);
 			treatment.progressTicks = 0;
 			medic.navigateTo(patientBody.getLocation());
+			return false;
+		}
+		// a patient still walking to cover walks on (never frozen in the open): the medic waits in range and the channel
+		// starts once it is in cover, its retreat is over or failed; CopRetreat.MAX_COVER_MS and GIVE_UP_MS bound the wait
+		if (patient.isMovingToCover()) {
+			medic.pauseNavigation();
+			treatment.progressTicks = 0;
 			return false;
 		}
 

@@ -85,6 +85,13 @@ public class CopNpc extends AbstractNpc {
 	@Getter
 	private           boolean                underCare;
 	/**
+	 * Whether this cop's last retreat tick was still walking to cover ({@code CopRetreat}): field care lets it walk on
+	 * and starts the channel once it is in cover.
+	 */
+	@Getter
+	@Setter
+	private           boolean                movingToCover;
+	/**
 	 * This cop's own squad for a target outside any group (a cop with no group: tests, stray spawns): seeded with that
 	 * target's position when it is first handed to the cop, replaced when the target changes.
 	 */

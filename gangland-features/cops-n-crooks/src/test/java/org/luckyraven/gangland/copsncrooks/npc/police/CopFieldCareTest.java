@@ -262,6 +262,29 @@ class CopFieldCareTest {
 	}
 
 	@Test
+	@DisplayName("a patient still walking to cover is never held: the medic waits in range, the channel starts once it is in cover")
+	void retreatingPatient_walksOn_channelStartsInCover() {
+		CopNpc patient = cop(1, 8.0, CopState.COMBAT, null);
+		CopNpc medic   = cop(2, 20.0, CopState.COMBAT, MEDIC);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(2.0);
+		when(patient.isMovingToCover()).thenReturn(true);
+
+		for (int i = 0; i < 8; i++) care.tick(group); // longer than Channel_Ticks
+		assertFalse(patient.isUnderCare());
+		verify(patient, never()).pauseNavigation();
+		verify(medic, atLeastOnce()).pauseNavigation();
+		verify(patient.getEntity(), never()).setHealth(anyDouble());
+
+		when(patient.isMovingToCover()).thenReturn(false); // in cover
+		care.tick(group); // the arrival tick
+		assertTrue(patient.isUnderCare());
+		for (int i = 0; i < 5; i++) care.tick(group);
+		verify(patient.getEntity(), never()).setHealth(anyDouble());
+		care.tick(group);
+		verify(patient.getEntity()).setHealth(18.0);
+	}
+
+	@Test
 	@DisplayName("clear(group) ends its treatments; a medic moved to another group is let go by that group's tick")
 	void clearAndDetach_endTreatments() {
 		CopNpc patient = cop(1, 8.0, CopState.PURSUING, null);
