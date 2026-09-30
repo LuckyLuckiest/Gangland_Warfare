@@ -12,6 +12,9 @@
 #  \                                                        /  #
 #   +------------------------------------------------------+   #
 #
+# Note: an NPC that no module recognises drops no cash at all (this includes civilians when the
+# cops-n-crooks module is absent); only players and plain mobs use the rules below.
+#
 # Cash drop variations and per-source drop rules. Dropped cash items carry an
 # NBT amount; walking over (or right-clicking) one deposits the value.
 #
@@ -29,6 +32,8 @@
 #     Pickup_Chat_Message   - chat line shown on pickup (& color codes)
 #     Pickup_Action_Bar     - action bar flash on pickup (empty to disable)
 #     Drop_Sources          - per-source weight and balance-scale rules
+#                             (PLAYER, COP, CIVILIAN, MOB, NPC; NPC = a Citizens NPC no module
+#                             recognises, e.g. traders and bankers. Absent source = no cash drop.)
 #
 #   Variations:
 #     Material              - Bukkit material name for the dropped item

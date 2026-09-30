@@ -24,6 +24,12 @@ public enum MoneyDropContext {
 	/**
 	 * Any other living entity (vanilla mob, etc.).
 	 */
-	MOB
+	MOB,
+
+	/**
+	 * A Citizens NPC no module recognises (traders, bankers, other plugins' NPCs). {@code money.yml} ships no
+	 * {@code NPC} drop source, so these drop no cash unless one is configured.
+	 */
+	NPC
 
 }

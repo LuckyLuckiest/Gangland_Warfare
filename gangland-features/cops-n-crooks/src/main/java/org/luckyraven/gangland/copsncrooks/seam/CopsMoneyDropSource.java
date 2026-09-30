@@ -8,9 +8,10 @@ import org.luckyraven.gangland.data.economy.NpcMoneyDropSource;
 import org.luckyraven.gangland.item.money.MoneyDropContext;
 
 /**
- * Seam 1 delegate: recognises cop and civilian NPCs for cash-drop classification. Installed into the core
- * {@code GanglandMoneyDropClassifier} holder by {@code CopsNCrooksModuleConfig.installCoreSeams()}. See
- * documentation/module-loader.md, "Core seams".
+ * Seam 1 delegate: recognises cop and civilian NPCs for cash-drop classification. Runs at MONITOR on a dying body,
+ * so cops are matched with the dying-safe {@link CopManager#findDyingCop} (never {@code isCopNpc}, which needs a
+ * valid entity). Installed into the core {@code GanglandMoneyDropClassifier} holder by
+ * {@code CopsNCrooksModuleConfig.installCoreSeams()}. See documentation/module-loader.md, "Core seams".
  */
 public final class CopsMoneyDropSource implements NpcMoneyDropSource {
 
@@ -25,7 +26,7 @@ public final class CopsMoneyDropSource implements NpcMoneyDropSource {
 	@Override
 	@Nullable
 	public MoneyDropContext classify(LivingEntity entity) {
-		if (copManager != null && copManager.isCopNpc(entity)) return MoneyDropContext.COP;
+		if (copManager != null && copManager.findDyingCop(entity) != null) return MoneyDropContext.COP;
 		if (civilianNpcRegistry != null && civilianNpcRegistry.getNpc(entity.getUniqueId()) != null) {
 			return MoneyDropContext.CIVILIAN;
 		}

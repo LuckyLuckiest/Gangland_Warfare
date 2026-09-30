@@ -8,7 +8,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.luckyraven.keystone.bean.autowire.AutowireTarget;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
@@ -40,23 +39,20 @@ public class MoneyDropListener implements Listener {
 		this.classifier     = classifier;
 	}
 
+	/**
+	 * Handles every death, {@code PlayerDeathEvent} included: a Citizens PLAYER-type NPC dies through that event too,
+	 * so the classifier, not the event type, decides whether a real player is debited.
+	 */
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onEntityDeath(EntityDeathEvent event) {
 		if (!moneyAddon.isEnabled()) return;
-		if (event instanceof PlayerDeathEvent) return; // handled by the player-specific overload below
 
 		LivingEntity     entity  = event.getEntity();
 		MoneyDropContext context = classifier.classify(entity);
 
-		dropForContext(entity, context, null);
-	}
+		Player playerOrNull = context == MoneyDropContext.PLAYER && entity instanceof Player player ? player : null;
 
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public void onPlayerDeath(PlayerDeathEvent event) {
-		if (!moneyAddon.isEnabled()) return;
-
-		Player player = event.getEntity();
-		dropForContext(player, MoneyDropContext.PLAYER, player);
+		dropForContext(entity, context, playerOrNull);
 	}
 
 	private void dropForContext(LivingEntity origin, MoneyDropContext context, Player playerOrNull) {

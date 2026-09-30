@@ -32,14 +32,15 @@ import static org.mockito.Mockito.when;
 /**
  * T-111: a cop's entity is no longer valid during its own {@link EntityDeathEvent}, so the old
  * {@code isCopNpc} gate (which requires a valid entity) skipped every cop death. The dying cop is found without the
- * validity check, reported down to its squads, then destroyed.
+ * validity check, reported down to its squads, then marked for removal: destroying it inside the event would
+ * despawn it with reason PLUGIN and delete the body before its death animation.
  */
 @DisplayName("CopListener - cop deaths")
 class CopListenerDeathTest {
 
 	@Test
-	@DisplayName("a dying (already invalid) cop is found, reported down to its squad, then destroyed")
-	void onCopDeath_findsDyingCopWhileInvalid_callsMemberDownThenDestroy() {
+	@DisplayName("a dying (already invalid) cop is found, reported down to its squad, then marked for removal (body kept)")
+	void onCopDeath_findsDyingCopWhileInvalid_callsMemberDownThenMarksForRemoval() {
 		CopManager   manager = mock(CopManager.class);
 		LivingEntity body    = mock(LivingEntity.class);
 		CopNpc       cop     = mock(CopNpc.class);
@@ -58,7 +59,8 @@ class CopListenerDeathTest {
 
 		InOrder order = inOrder(listener, cop);
 		order.verify(listener).onSignal(eq(group.getSquad()), any(NpcSquadSignal.class), eq(cop), any());
-		order.verify(cop).destroy();
+		order.verify(cop).markForRemoval();
+		verify(cop, never()).destroy(); // destroy() despawns with PLUGIN and deletes the body mid-death
 		assertFalse(group.getSquad().members().contains(cop));
 	}
 
@@ -82,7 +84,8 @@ class CopListenerDeathTest {
 
 		verify(listener).onSignal(eq(group.getSquad()), any(NpcSquadSignal.class), eq(cop), any());
 		assertFalse(group.getSquad().members().contains(cop));
-		verify(cop).destroy();
+		verify(cop).markForRemoval();
+		verify(cop, never()).destroy();
 	}
 
 	@Test
@@ -109,7 +112,8 @@ class CopListenerDeathTest {
 
 		verify(listener).onSignal(eq(attackers), any(NpcSquadSignal.class), eq(cop), any());
 		verify(listener, never()).onSignal(eq(group.getSquad()), any(), any(), any());
-		verify(cop).destroy();
+		verify(cop).markForRemoval();
+		verify(cop, never()).destroy();
 	}
 
 	@Test
@@ -141,7 +145,8 @@ class CopListenerDeathTest {
 
 		verify(listener).onSignal(eq(group.getSquad()), eq(NpcSquadSignal.MAN_DOWN), eq(cop), any());
 		assertFalse(group.getSquad().members().contains(cop));
-		verify(cop).destroy();
+		verify(cop).markForRemoval();
+		verify(cop, never()).destroy();
 	}
 
 	@Test

@@ -302,12 +302,18 @@ public class CopManager implements BeanLifecycle {
 
 	/**
 	 * The cop whose entity is {@code entity}, even while that entity is dying: {@link #findCopByEntity} requires a
-	 * valid entity, and an entity is no longer valid during its {@code EntityDeathEvent}.
+	 * valid entity, and an entity is no longer valid during its {@code EntityDeathEvent}. Once Citizens has despawned
+	 * the NPC (its LOW death handler) {@code getNpc().getEntity()} is null, so the body is also resolved through the
+	 * Citizens registry, which reads the NPC straight off the body.
 	 */
 	public @Nullable CopNpc findDyingCop(Entity entity) {
+		// no lambda: its synthetic method would put a Citizens type in this class's signatures (CitizensBlindScan)
+		var registry = NpcSupport.registry();
+		NPC bodyNpc  = registry.isPresent() ? registry.get().getNPC(entity) : null;
 		for (CopGroup group : groups.values()) {
 			synchronized (group.getCops()) {
 				for (CopNpc cop : group.getCops()) {
+					if (bodyNpc != null && cop.getNpc() == bodyNpc) return cop;
 					Entity copEntity = cop.getNpc().getEntity();
 					if (copEntity != null && copEntity.getUniqueId().equals(entity.getUniqueId())) return cop;
 				}
