@@ -14,6 +14,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -305,6 +306,7 @@ class YamlCopConfigProviderTest {
 		assertTrue(provider.getRetreatSettings().enabled());
 		assertTrue(provider.getRadioSettings().cooldownFor("Fall_Back") > 0);
 		assertTrue(provider.getRadioSettings().cooldownFor("In_Cover") > 0);
+		assertEquals(CopNames.DEFAULT, provider.getNames());
 	}
 
 	@Test
@@ -320,6 +322,37 @@ class YamlCopConfigProviderTest {
 			assertTrue(provider.getRadioSettings().isPriority(key), key);
 			assertTrue(CopConfigProvider.COP_RADIO_DEFAULTS.isPriority(key), key);
 		}
+	}
+
+	@Test
+	@DisplayName("Cops.Names parses Format and First_Names; absent gives the defaults, [] an empty pool")
+	void namesBlock_parsed() {
+		String tiers = """
+				   Tiers:
+				      1:
+				         Display_Name: "&9Officer"
+				         Health: 20.0
+				         Damage: 2.0
+				""";
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Names:
+				      Format: "%rank% %name%"
+				      First_Names:
+				         - Bob
+				         - " "
+				""" + tiers);
+		assertEquals(new CopNames("%rank% %name%", List.of("Bob")), provider.getNames());
+
+		assertEquals(CopNames.DEFAULT, parse("Cops:\n" + tiers).getNames());
+
+		CopNames empty = parse("""
+				Cops:
+				   Names:
+				      First_Names: []
+				""" + tiers).getNames();
+		assertEquals(CopNames.DEFAULT.format(), empty.format());
+		assertTrue(empty.firstNames().isEmpty());
 	}
 
 	private static CopConfigProvider parse(String yaml) {

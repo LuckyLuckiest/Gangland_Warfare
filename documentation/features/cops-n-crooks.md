@@ -198,7 +198,7 @@ Tiers are numbered `1` through `5` under `Cops.Tiers`. Each tier defines the sta
 Cops:
    Tiers:
       1:
-         Display_Name: "&9Officer"   # Name shown above the NPC (supports & color codes)
+         Display_Name: "&9Officer"   # The %rank% in Cops.Names.Format (supports & color codes)
          Health: 20.0                # Max health points
          Damage: 2.0                 # Melee damage per attack
          Speed: 1.0                  # Movement speed multiplier (1.0 = normal player speed)

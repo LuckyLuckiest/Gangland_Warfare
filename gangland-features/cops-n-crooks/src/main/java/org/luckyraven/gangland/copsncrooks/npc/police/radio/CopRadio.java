@@ -119,8 +119,15 @@ public class CopRadio {
 		return voice(group).hunted(squad);
 	}
 
-	/** {@code "SWAT-17"}: the tier's display name without colours, then the Citizens id. */
+	/**
+	 * The cop's own callsign without colours ({@code "Officer Bob #1592"}, the same text as its hologram line), or
+	 * {@code "SWAT-17"} for a cop without one: the tier's display name without colours, then the Citizens id.
+	 */
 	public static String callsign(AbstractNpc npc) {
+		if (npc instanceof CopNpc cop && cop.getCallsign() != null) {
+			String plain = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', cop.getCallsign()));
+			if (plain != null) return plain;
+		}
 		String tier = npc instanceof CopNpc cop && cop.getTierConfig() != null ? tierName(cop.getTierConfig()) : "Unit";
 		return tier + "-" + npc.getNpc().getId();
 	}

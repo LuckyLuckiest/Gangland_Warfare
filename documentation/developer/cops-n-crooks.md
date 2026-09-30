@@ -304,7 +304,7 @@ keyed by the signal name (`CONTACT` -> `Lines.Contact`, `FLANK_LEFT` -> `Lines.F
   `Ack_Delay_Ticks` (forced to at least `Player_Gap_Ticks + 5`, so the ack isn't throttled by its own order).
 - **Direct lines:** `CopRadio.dispatch` (`Dispatch_Wanted` on `onWantedStart`, `Escalate` when the group's tier rises)
   and `CopRadio.sayFromLeader` (`Stand_Down`, `Resisting`) speak outside the signal flow.
-- `CopRadio.callsign` is the tier's stripped display name plus the Citizens id (`SWAT-17`).
+- `CopRadio.callsign` is the cop's own callsign with colours stripped (`Officer Bob #1592`), falling back to `SWAT-17` (tier name plus Citizens id) when a cop has none.
 
 #### Radio responders (0.12.0)
 

@@ -93,6 +93,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final RadioSettings   radioSettings;
 	private final BackupSettings  backupSettings;
 	private final RetreatSettings retreatSettings;
+	private final CopNames        names;
 
 	/**
 	 * Primary positional-config constructor.
@@ -159,6 +160,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		MappingNode retreatSection = cops == null ? null : cops.get("Retreat").asMapping().orNull();
 		this.retreatSettings = RetreatSettings.read(retreatSection != null ? NodeReader.of(retreatSection, report) : null,
 		                                            report, RetreatSettings.DEFAULT);
+		this.names = parseNames(cops, report);
 
 		loadTiers(cops, report, itemParser);
 		buildCopsPerWantedLevel(copSettings);
@@ -381,6 +383,11 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		return retreatSettings;
 	}
 
+	@Override
+	public CopNames getNames() {
+		return names;
+	}
+
 	private NpcMeleeProfile parseMeleeProfile(@Nullable NodeReader cops, ConfigReport report) {
 		NpcMeleeProfile defaults = NpcMeleeProfile.DEFAULT;
 		MappingNode meleeSection = cops == null ? null : cops.get("Melee").asMapping().orNull();
@@ -408,6 +415,19 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		MappingNode radioSection = cops == null ? null : cops.get("Radio").asMapping().orNull();
 		NodeReader  radio        = radioSection != null ? NodeReader.of(radioSection, report) : null;
 		return RadioSettings.read(radio, report, COP_RADIO_DEFAULTS);
+	}
+
+	/** {@code Cops.Names}: an absent {@code First_Names} keeps the built-in pool, {@code []} means no first name. */
+	private CopNames parseNames(@Nullable NodeReader cops, ConfigReport report) {
+		MappingNode namesSection = cops == null ? null : cops.get("Names").asMapping().orNull();
+		if (namesSection == null) return CopNames.DEFAULT;
+
+		NodeReader   names  = NodeReader.of(namesSection, report);
+		String       format = names.get("Format").asString().orDefault(CopNames.DEFAULT.format());
+		List<String> pool   = names.get("First_Names").asList().ofStrings().orNull();
+		if (pool == null) return new CopNames(format, CopNames.DEFAULT.firstNames());
+
+		return new CopNames(format, pool.stream().map(String::trim).filter(name -> !name.isEmpty()).toList());
 	}
 
 	private BackupSettings parseBackupSettings(@Nullable NodeReader cops, ConfigReport report) {

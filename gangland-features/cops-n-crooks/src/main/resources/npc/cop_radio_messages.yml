@@ -2,7 +2,7 @@
 # Spanish variant: cop_radio_messages_es.yml, picked by Settings.Language (see CopRadioMessages/LocalizedModuleYaml).
 #
 # Placeholders:
-#   %unit%      speaker callsign, e.g. SWAT-17
+#   %unit%      speaker callsign, e.g. Officer Bob #1592
 #   %member%    the addressed or downed cop
 #   %target%    suspect name
 #   %distance%  blocks from the speaker to the spot

@@ -12,6 +12,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopService;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.targeting.TargetingManager;
+import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
@@ -80,7 +81,8 @@ class CopListCommand extends SubArgument {
 					GanglandChatUtil.color("&7Player &e" + target.getName() + "&7 is being chased by cops:"));
 			cops.forEach(cop -> {
 				NPC npc = cop.getNpc();
-				sender.sendMessage(GanglandChatUtil.color("&b- &a" + npc.getName() + "&7 (" + npc.getUniqueId() + ")"));
+				sender.sendMessage(
+						GanglandChatUtil.color("&b- &a" + CopRadio.callsign(cop) + "&7 (" + npc.getUniqueId() + ")"));
 			});
 		}, sender -> Bukkit.getOnlinePlayers()
 				.stream()

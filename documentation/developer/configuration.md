@@ -385,6 +385,11 @@ Cops:
       Enabled: true
       Health_Fraction: 0.3
       Radius: 12.0
+   Names:                            # (0.13.0)
+      Format: "%rank% &f%name% &7#%badge%"
+      First_Names:
+         - Bob
+         - Kate
    Tiers:
       4:
          Display_Name: "&1SWAT"
@@ -414,6 +419,8 @@ Cops:
 | `Radio.*` | see above | Police radio in chat: who hears it, throttling, ack delay, `Responder_Max` cross-group responders |
 | `Backup.*` | see above | Extra cops requested when a cop goes down, for how long, and how often |
 | `Retreat.*` | see above | When a hurt cop breaks off to cover, and how far it looks |
+| `Names.Format` | `%rank% &f%name% &7#%badge%` | The callsign above the cop's head and on the radio. `%rank%` = the tier's `Display_Name`, `%badge%` = 1000 + the Citizens id. The Citizens name itself is the short plain `Bob #1592` |
+| `Names.First_Names` | 28 built-in names | First-name pool; `[]` = no first name, a missing key = the built-in pool |
 
 The radio lines are in `npc/cop_radio_messages.yml` (Spanish `_es.yml`). See
 [Cops N Crooks](../features/cops-n-crooks.md) and [Migrating to 0.12.0](../migration-0.12.0.md).

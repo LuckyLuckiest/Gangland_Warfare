@@ -92,6 +92,15 @@ class CopRadioTest {
 	}
 
 	@Test
+	@DisplayName("a cop with a badge callsign speaks under it, colours stripped")
+	void callsign_usesCopsOwnCallsignStripped() {
+		CopNpc cop = cop(17, "&9&lSWAT", 5, 0);
+		when(cop.getCallsign()).thenReturn("&9Officer &fBob &7#1017");
+
+		assertEquals("Officer Bob #1017", CopRadio.callsign(cop));
+	}
+
+	@Test
 	@DisplayName("the group squad hunts the wanted player; an attacker squad hunts its attacker")
 	void hunted_groupTargetOrAttacker() {
 		Player   attacker = player(3, 3);
