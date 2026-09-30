@@ -458,6 +458,22 @@ class YamlCopConfigProviderTest {
 	}
 
 	@Test
+	@DisplayName("the shipped cops.yml with Roles_Enabled: false - no composition, and its Roles / Squad_Composition blocks are not unknown keys")
+	void shippedFile_rolesDisabled_noUnknownKeys() throws IOException {
+		String yaml;
+		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("npc/cops.yml"))) {
+			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+		}
+		assertTrue(yaml.contains("Roles_Enabled: true"));
+		ConfigReport      report   = new ConfigReport();
+		CopConfigProvider provider = parse(yaml.replace("Roles_Enabled: true", "Roles_Enabled: false"), report);
+
+		assertNull(provider.getSquadComposition(3));
+		assertTrue(report.issues().stream().noneMatch(issue -> "config.unknown_key".equals(issue.code())),
+		           () -> "unknown keys: " + report.issues());
+	}
+
+	@Test
 	@DisplayName("the shipped cops.yml declares the role catalogue: a Commander from level 3, Assault last")
 	void shippedFile_rolesAndComposition() throws IOException {
 		String yaml;

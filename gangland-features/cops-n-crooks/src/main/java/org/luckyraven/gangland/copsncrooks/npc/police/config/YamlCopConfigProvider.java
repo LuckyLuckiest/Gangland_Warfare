@@ -441,7 +441,12 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	 * {@link #COMPOSITION_DEFAULTS} without one). {@code Cops.Roles_Enabled: false} turns roles off.
 	 */
 	private void loadRoles(@Nullable NodeReader cops, ConfigReport report, @Nullable ItemParser itemParser) {
-		if (cops != null && !cops.get("Roles_Enabled").asBool().orDefault(true)) return;
+		if (cops != null && !cops.get("Roles_Enabled").asBool().orDefault(true)) {
+			// read but unused: switching roles off must not turn the shipped blocks into unknown keys
+			cops.get("Roles");
+			cops.get("Squad_Composition");
+			return;
+		}
 
 		Map<String, CopRole> roles        = builtInRoles(retreatSettings);
 		MappingNode          rolesSection = cops == null ? null : cops.get("Roles").asMapping().orNull();
