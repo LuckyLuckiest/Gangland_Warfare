@@ -103,6 +103,24 @@ class CopManagerStuckTest {
 	}
 
 	@Test
+	@DisplayName("a recycle tips the squad off to where the suspect is now; a run with no recycle keeps its lead")
+	void recycle_tipsTheSquadOffToTheSuspectsSpot() {
+		// he left an unreachable pillar top unseen: without the tip every replacement hunts it until recycled in turn
+		Location deadLead = new Location(fx.world, -137.5, 115, 108.5);
+		group.getSquad().reportSighting(deadLead);
+		CopNpc stuck = stranded(CopState.PURSUING, 10, 64, 0, 11_000);
+
+		manager.spawnTick(playerId, wanted);
+		assertEquals(deadLead, group.getSquad().lastKnownLocation(), "no recycle, no tip");
+
+		when(stuck.millisUnreachable()).thenReturn(13_000L);
+		manager.spawnTick(playerId, wanted);
+
+		assertFalse(group.getCops().contains(stuck));
+		assertEquals(player.getLocation(), group.getSquad().lastKnownLocation());
+	}
+
+	@Test
 	@DisplayName("the replacement takes the recycled cop's squad role")
 	void strandedRecycled_replacementTakesFreedRole() {
 		CopRole pointman = role("Pointman");

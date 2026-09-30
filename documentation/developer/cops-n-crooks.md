@@ -589,7 +589,9 @@ Recycling (Cops.Stuck): each spawn run, a PURSUING/COMBAT cop hunting the group'
 millisUnreachable() >= Recycle_Seconds is released unless the player sees it (60-degree cone plus clear line
 within max(24, Visibility_Check_Distance); past 2x Recycle_Seconds within 24 only), it is within melee reach on his
 level (|dy| <= 1.5, clear line), or another player faces it (past 2x Recycle_Seconds: another real player with it in
-his cone, clear line, within 24). The same run refills the group, capped at Max_Per_Player.
+his cone, clear line, within 24). A recycle also tips the group's squad off to the player's spot now
+(NpcSquad.reportSighting), so the replacements do not hunt a last-known spot nobody could reach. The same run
+refills the group, capped at Max_Per_Player.
 
 Tier selection: `tier = min(wantedLevel, maxTier)`
 

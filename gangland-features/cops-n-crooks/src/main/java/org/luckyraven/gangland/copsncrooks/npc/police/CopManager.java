@@ -550,9 +550,10 @@ public class CopManager implements BeanLifecycle {
 	/**
 	 * A cop hunting the group's suspect that has found no way to him for {@code Cops.Stuck.Recycle_Seconds}
 	 * ({@link CopNpc#millisUnreachable()}) and that no one is looking at is taken off the map; its spawner is skipped
-	 * for {@code Avoid_Spawner_Seconds} so the replacement spawned in the same run comes from elsewhere. Past twice
-	 * {@code Recycle_Seconds} a view only protects a cop within {@link #OVERDUE_VIEW_BLOCKS} of the eyes it is in,
-	 * the suspect's and every other player's alike.
+	 * for {@code Avoid_Spawner_Seconds} so the replacement spawned in the same run comes from elsewhere, and dispatch
+	 * tips the squad off to where the suspect is now: its lead is dead, and a replacement hunting it would be recycled
+	 * in turn before it could find him (lane STUCK 2b-ii). Past twice {@code Recycle_Seconds} a view only protects a
+	 * cop within {@link #OVERDUE_VIEW_BLOCKS} of the eyes it is in, the suspect's and every other player's alike.
 	 */
 	private boolean recycles(CopNpc cop, CopGroup group, Player player, long now) {
 		StuckSettings stuck = configProvider.getStuckSettings();
@@ -583,6 +584,7 @@ public class CopManager implements BeanLifecycle {
 		Location origin = cop.getSpawnLocation();
 		if (origin != null && stuck.avoidSpawnerSeconds() > 0)
 			group.avoid(origin, now + stuck.avoidSpawnerSeconds() * 1000L);
+		group.getSquad().reportSighting(player.getLocation());
 		return true;
 	}
 
