@@ -149,11 +149,12 @@ off, and each cop that falls back may radio the Fall_Back line right after "Comm
 A cop at or below `Field_Care.Health_Fraction` (half) of its max health is **hurt**: it limps (`Limp_Speed`, 0.7 of its
 tier speed), bleeds (dark heart particles) and radios "I'm hit!" once. A **Medic** cop of the same squad within
 `Medic_Radius` (24 blocks) walks straight over to it (a direct route, not from cover to cover), and the squad calls
-"Covering fire!". Once the medic is within `Heal_Range` (2.5 blocks) both hold still: the patient crouches and both
-keep shooting. After `Channel_Ticks` (3 s) the patient gets `Heal_Fraction` (half) of its max health back, with heart
-particles and "Patched up". A hit on the medic starts the 3 s over ("Pinned down"). A squad without a Medic cop never
-heals; a medic that cannot reach its patient within 15 s gives up. If another plugin cancels the heal, the treatment
-ends quietly and that cop is not treated again for 15 s.
+"Covering fire!". Once the medic is within `Heal_Range` (2.5 blocks) both hold still: the patient crouches and both keep
+shooting. A patient on its way to cover is treated once it gets there, never held in the open; the time it spends
+walking there does not count toward the 15 s below. After `Channel_Ticks` (3 s) the patient gets `Heal_Fraction` (half)
+of its max health back, with heart particles and "Patched up". A hit on the medic starts the 3 s over ("Pinned down"). A
+squad without a Medic cop never heals; a medic that cannot reach its patient within 15 s gives up. If another plugin
+cancels the heal, the treatment ends quietly and that cop is not treated again for 15 s.
 
 | Key (`Cops.Field_Care`) | Default | Does                                                     |
 |-------------------------|---------|----------------------------------------------------------|

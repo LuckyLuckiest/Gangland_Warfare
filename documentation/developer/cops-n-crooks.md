@@ -322,8 +322,12 @@ No call is answered once the suspect is restrained. Everything here is NPC heari
 On `MAN_DOWN`/`LEADER_DOWN` the listener also calls `CopGroup.requestBackup(now, BackupSettings)`. It is granted unless
 `Backup.Enabled` is off, `Extra_Cops` is 0 or `Cooldown_Ticks` has not passed, and a granted request is radioed
 (`Backup`). While it lasts (`Duration_Ticks`), the spawn task's target count adds `backupExtra` (still capped by
-`Max_Per_Player`). `consumeBackupExpiry` then adds `Extra_Cops` to `pendingRelease`, and the spawn task sends the
-newest free cops home (never one fighting, cuffing or guarding), retrying next run until enough have gone.
+`Max_Per_Player`). `consumeBackupExpiry` then adds `Extra_Cops` to `pendingRelease`, and the spawn task
+(`releaseSurplus`) sends home the newest free cops of a role the group holds more of than its base squad for the
+current target count (`CopRole.nextRole` over the wanted level's `Squad_Composition`; roles off, any cop). A
+replacement spawned mid-backup for a fallen Commander or Pointman therefore stays and the backup's extra goes (T-146),
+and the group's last Commander is never sent, even once the wanted level has fallen to a composition without one. A cop
+fighting, cuffing or guarding is never sent; the release retries next run until enough have gone.
 
 #### Resisting (0.12.0)
 
@@ -380,19 +384,24 @@ own behaviours. It reads `FieldCareSettings` (`Cops.Field_Care`, gangland-api) a
   the same tick as the patient's `Hit` the squad and player gaps would drop them. Each is dropped when it comes due
   if the treatment is over by then (patient dead, medic out of the fight or reassigned).
 - **Treatment:** while `getPatient() != null`, `CombatBehavior.holdsForFieldCare` makes the fighting behaviours return
-  after their attack, so `CopFieldCare` walks the medic (`navigateTo`, a direct route to the patient, no cover
-  search). Within `Heal_Range` both are paused on the same tick (`pauseNavigation()` on medic and patient) and the
+  after their attack, so `CopFieldCare` walks the medic (`navigateTo`, a direct route to the patient, no cover search).
+  A patient walking to cover (`isMovingToCover()`) is never paused: the medic follows it, waits within `Heal_Range`
+  (`pauseNavigation()` on the medic only), and the channel starts once the patient is in cover or its retreat is over.
+  Otherwise, within `Heal_Range` both are paused on the same tick (`pauseNavigation()` on medic and patient) and the
   patient gets `setUnderCare(true)` (SneakTrait crouch; from then on its behaviours `pauseNavigation()` and return,
-  melee included). Once under care the patient may drift `CopFieldCare.HOLD_MARGIN` (1 block) past `Heal_Range`
-  before the channel resets. The channel starts on the arrival tick and advances by `getAiTickRate()` on each AI
-  tick after it, so the heal lands a full `Channel_Ticks` after the medic arrives; a medic health drop resets it
+  melee included). A patient under care whose retreat now sends it to cover (shot below its retreat line, or its group
+  falling back) stands up and goes: `holdsForFieldCare` asks the retreat first, in PURSUING and COMBAT alike, and drops
+  `underCare` instead of pausing. Once under care the patient may drift `CopFieldCare.HOLD_MARGIN` (1 block) past
+  `Heal_Range` before the channel resets. The channel starts on the arrival tick and advances by `getAiTickRate()` on
+  each AI tick after it, so the heal lands a full `Channel_Ticks` after the medic arrives; a medic health drop resets it
   (`Medic_Pinned`). At `Channel_Ticks` an `EntityRegainHealthEvent(CUSTOM)` is fired and its amount applied
   (`Patched_Up`); a cancelled event ends the treatment silently and keeps that patient out of assignment for
   `GIVE_UP_MS`.
 - **Ending:** either cop invalid or out of the group, out of PURSUING/COMBAT, the patient no longer hurt, the medic
-  hurt, or `CopFieldCare.GIVE_UP_MS` (15 s). `CopNpc.transitionTo` also drops both care slots whenever a cop leaves
-  PURSUING/COMBAT. A treatment holds no group: it runs on its medic's group's tick, and one whose medic is invalid or
-  has left its patient's group (a radio responder) is ended by whichever group ticks next. `CopManager` calls
+  hurt, or `CopFieldCare.GIVE_UP_MS` (15 s from when the medic takes the patient on, restarted on every tick the patient
+  walks to cover, so the walk never costs the treatment). `CopNpc.transitionTo` also drops both care slots whenever a
+  cop leaves PURSUING/COMBAT. A treatment holds no group: it runs on its medic's group's tick, and one whose medic is
+  invalid or has left its patient's group (a radio responder) is ended by whichever group ticks next. `CopManager` calls
   `CopFieldCare.clear(group)` when it drops a group (`despawnAllForPlayer`, so also shutdown and reload, and the
   empty-group self-cleanup), which ends that group's treatments on both sides.
 
