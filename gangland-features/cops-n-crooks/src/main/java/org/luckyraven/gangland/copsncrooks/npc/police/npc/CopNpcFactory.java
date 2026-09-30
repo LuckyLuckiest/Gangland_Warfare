@@ -268,9 +268,10 @@ public class CopNpcFactory {
 		 * Names the cop before it spawns and returns its coloured callsign ({@code Cops.Names}). The Citizens name is
 		 * the short plain {@code "Bob #1592"}: at 16 characters or fewer with no colour Citizens keeps it as the
 		 * entity's profile name, so {@code Player#getName()} (death and kill messages, tab) never shows the
-		 * {@code CIT-...} team name. The caller hides the nameplate ({@code NAMEPLATE_VISIBLE}) and the full coloured
-		 * callsign is hologram line 0 in its place ({@code HologramTrait} stacks lines upward from the hidden plate, so a line inserted at 0, e.g. the
-		 * healthbars module's bar, sits directly under the callsign).
+		 * {@code CIT-...} team name. The caller hides the nameplate ({@code NAMEPLATE_VISIBLE}; not set here because
+		 * {@code NPC.Metadata} cannot be class-loaded in unit tests) and the full coloured callsign is hologram
+		 * line 0 in its place ({@code HologramTrait} stacks lines upward from the hidden plate, so a line inserted
+		 * at 0, e.g. the healthbars module's bar, sits directly under the callsign).
 		 */
 		static String nameplate(NPC npc, CopNames names, String rank, Random random) {
 			String firstName = names.pickName(random);

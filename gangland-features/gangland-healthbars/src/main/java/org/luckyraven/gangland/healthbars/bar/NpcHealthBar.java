@@ -21,7 +21,8 @@ import java.util.Objects;
  * A cop hides its nameplate and carries its callsign as line 0, so the bar inserted at index 0 sits directly under
  * the callsign and above the head; an NPC with no lines (a civilian) gets the bar just above its own nameplate.
  * {@code insertLine} respawns every line of the NPC once (a single blink when the bar appears), so later hits only
- * {@code setLine}. After {@code removeLine(0)} the callsign drops back into place on the NPC's next move.
+ * {@code setLine}. {@code removeLine} alone leaves the remaining lines where they were until the NPC moves, so a
+ * removal is followed by {@code onDespawn()}, which re-renders them at their new heights on the next tick.
  */
 public final class NpcHealthBar {
 
@@ -36,8 +37,18 @@ public final class NpcHealthBar {
 		NPC npc = CitizensAPI.getNPCRegistry().getNPC(entity);
 		if (npc == null || !npc.isSpawned() || npc.isProtected() || !isTransient(npc)) return;
 
-		HologramTrait hologram = npc.getOrAddTrait(HologramTrait.class);
-		show(hologram, npc.data(), settings.enabled() ? barFor(npc.getEntity(), settings) : null);
+		apply(npc, settings);
+	}
+
+	/** Draws or clears the bar; an NPC with nothing to draw and no hologram trait never gets an empty trait. */
+	static void apply(NPC npc, HealthBarSettings settings) {
+		String bar = settings.enabled() ? barFor(npc.getEntity(), settings) : null;
+
+		HologramTrait hologram = bar == null ? npc.getTraitNullable(HologramTrait.class)
+		                                     : npc.getOrAddTrait(HologramTrait.class);
+		if (hologram == null) return;
+
+		show(hologram, npc.data(), bar);
 	}
 
 	/**
@@ -48,7 +59,10 @@ public final class NpcHealthBar {
 		boolean shown = data.has(BAR_KEY) && !hologram.getLines().isEmpty();
 
 		if (bar == null) {
-			if (shown) hologram.removeLine(0);
+			if (shown) {
+				hologram.removeLine(0);
+				hologram.onDespawn();
+			}
 			data.remove(BAR_KEY);
 			return;
 		}

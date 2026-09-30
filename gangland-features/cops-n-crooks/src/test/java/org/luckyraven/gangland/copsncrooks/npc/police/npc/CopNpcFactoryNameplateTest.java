@@ -18,7 +18,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@DisplayName("CopNpcFactory nameplate - short Citizens name, hidden nameplate, coloured callsign line (phase H13)")
+@DisplayName("CopNpcFactory nameplate - short Citizens name, coloured callsign line (phase H13)")
 class CopNpcFactoryNameplateTest {
 
 	@Test

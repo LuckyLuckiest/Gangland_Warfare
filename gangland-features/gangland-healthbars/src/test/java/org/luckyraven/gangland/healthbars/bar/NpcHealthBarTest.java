@@ -92,6 +92,7 @@ class NpcHealthBarTest {
 		assertEquals(List.of("Officer Bob #1592"), lines);
 		assertFalse(metadata.containsKey(NpcHealthBar.BAR_KEY));
 		verify(hologram).removeLine(0);
+		verify(hologram).onDespawn();
 	}
 
 	@Test
@@ -112,5 +113,19 @@ class NpcHealthBarTest {
 
 		verify(hologram, never()).removeLine(anyInt());
 		assertEquals(List.of("Officer Bob #1592"), lines);
+	}
+
+	@Test
+	@DisplayName("nothing to draw on an NPC without a hologram trait never attaches an empty one")
+	void nothingToDraw_attachesNoTrait() {
+		net.citizensnpcs.api.npc.NPC npc    = mock(net.citizensnpcs.api.npc.NPC.class);
+		org.bukkit.entity.LivingEntity living = mock(org.bukkit.entity.LivingEntity.class);
+		when(npc.getEntity()).thenReturn(living);
+		when(npc.data()).thenReturn(data);
+		when(living.getHealth()).thenReturn(20.0);
+
+		NpcHealthBar.apply(npc, mock(org.luckyraven.gangland.healthbars.config.HealthBarSettings.class));
+
+		verify(npc, never()).getOrAddTrait(HologramTrait.class);
 	}
 }
