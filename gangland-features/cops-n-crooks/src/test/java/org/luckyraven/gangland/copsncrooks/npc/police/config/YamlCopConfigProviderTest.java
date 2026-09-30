@@ -573,7 +573,7 @@ class YamlCopConfigProviderTest {
 	}
 
 	@Test
-	@DisplayName("the field-care radio cooldowns: milliseconds in the code defaults, the shipped cops.yml's ticks x50 agree")
+	@DisplayName("the field-care radio cooldowns: milliseconds in the code defaults, the shipped cops.yml's ticks x50 agree; Hit and Patched_Up are priority lines")
 	void fieldCareRadioCooldowns_millisecondsInCode_ticksInYaml() throws IOException {
 		Map<String, Long> expected = Map.of("Hit", 5000L, "Medic_Moving", 5000L, "Covering_Fire", 10000L,
 		                                    "Medic_Pinned", 8000L, "Patched_Up", 5000L);
@@ -586,7 +586,10 @@ class YamlCopConfigProviderTest {
 		expected.forEach((key, ms) -> {
 			assertEquals(ms, CopConfigProvider.COP_RADIO_DEFAULTS.cooldownFor(key), key);
 			assertEquals(ms, shipped.getRadioSettings().cooldownFor(key), key);
-			assertFalse(CopConfigProvider.COP_RADIO_DEFAULTS.isPriority(key), key);
+			// said at once through sayAs, the gaps would drop them; the follow-ups go through sayLater instead
+			boolean priority = key.equals("Hit") || key.equals("Patched_Up");
+			assertEquals(priority, CopConfigProvider.COP_RADIO_DEFAULTS.isPriority(key), key);
+			assertEquals(priority, shipped.getRadioSettings().isPriority(key), key);
 		});
 		assertEquals(FieldCareSettings.DEFAULT, shipped.getFieldCareSettings());
 	}

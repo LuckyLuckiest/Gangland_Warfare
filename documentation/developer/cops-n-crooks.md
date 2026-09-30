@@ -368,7 +368,9 @@ own behaviours. It reads `FieldCareSettings` (`Cops.Field_Care`, gangland-api) a
 
 - **Hurt edge:** `isHurt` (false with `Enabled: false`, so switching it off is a falling edge) flips
   `CopNpc.applySpeed(Limp_Speed | 1.0)`, which writes the Citizens navigator's default AND local parameters (Citizens
-  clones the defaults into the locals on every new path). The rising edge radios `Hit` through `CopRadio.sayAs`;
+  clones the defaults into the locals on every new path). The rising edge radios `Hit` through `CopRadio.sayAs`
+  (`Hit` and `Patched_Up` are `Radio.Priority` kinds, so a squad line just before cannot drop them through the squad
+  or player gap; their own 5 s cooldowns still stop repeats);
   `DAMAGE_INDICATOR` particles spawn every AI tick while hurt.
 - **Assignment:** a hurt PURSUING/COMBAT cop with no medic gets the nearest cop whose `CopRole.medic()` is set, that
   is fighting, not hurt and free, within `Medic_Radius`. The medic gets `CopNpc.setPatient` and radios `Medic_Moving`

@@ -96,6 +96,8 @@ Cops:
          - "Stand_Down"
          - "Fall_Back"
          - "In_Cover"
+         - "Hit"
+         - "Patched_Up"
       # One squad never repeats the same kind of line within this many ticks.
       Cooldown_Ticks:
          Contact: 160

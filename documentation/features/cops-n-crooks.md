@@ -168,6 +168,9 @@ ends quietly and that cop is not treated again for 15 s.
 
 Every key is optional: a `cops.yml` without the block gets these defaults.
 
+"I'm hit!" and "Patched up" are `Radio.Priority` lines, so other squad chatter never swallows them. A `cops.yml` from
+before 0.13.0 keeps its own `Radio.Priority` list: add `"Hit"` and `"Patched_Up"` to it.
+
 ---
 
 ## Police Radio
