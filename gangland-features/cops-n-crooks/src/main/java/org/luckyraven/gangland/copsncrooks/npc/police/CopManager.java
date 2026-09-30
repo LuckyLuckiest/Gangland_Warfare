@@ -617,8 +617,9 @@ public class CopManager implements BeanLifecycle {
 	/**
 	 * Sends the backup's extras home once it ran out, until the group is back to {@code targetCount}: the newest free
 	 * cops of a role the group holds more of than its base squad of {@code targetCount} ({@link CopRole#nextRole}), so a
-	 * replacement spawned mid-backup for a fallen Commander or Pointman stays (T-146). A cop in a fight, cuffing or
-	 * guarding is never sent; what cannot go this run is retried on the next.
+	 * replacement spawned mid-backup for a fallen Commander or Pointman stays (T-146). The group's last Commander is
+	 * never sent, even when the wanted level fell to a composition without one. A cop in a fight, cuffing or guarding
+	 * is never sent; what cannot go this run is retried on the next.
 	 */
 	private void releaseSurplus(CopGroup group, int targetCount, @Nullable List<CopRole> composition) {
 		List<CopNpc> live = new ArrayList<>();
@@ -639,18 +640,27 @@ public class CopManager implements BeanLifecycle {
 		List<CopRole> base = new ArrayList<>();
 		for (int i = 0; i < targetCount; i++) base.add(CopRole.nextRole(composition, base));
 		for (CopRole role : base) excess.merge(roleName(role), -1, Integer::sum);
+		long commanders = live.stream().filter(CopManager::isCommander).count();
 
 		for (int i = live.size() - 1; i >= 0 && surplus > 0 && group.getPendingRelease() > 0; i--) {
 			CopNpc   cop   = live.get(i);
 			CopState state = cop.getCurrentState();
 			String   role  = roleName(cop.getRole());
 			if (state != CopState.PURSUING && state != CopState.IDLE || excess.get(role) <= 0) continue;
+			if (isCommander(cop)) {
+				if (commanders <= 1) continue; // the squad's leader stays (T-146)
+				commanders--;
+			}
 
 			excess.merge(role, -1, Integer::sum);
 			cop.transitionTo(CopState.RETURNING);
 			group.setPendingRelease(group.getPendingRelease() - 1);
 			surplus--;
 		}
+	}
+
+	private static boolean isCommander(CopNpc cop) {
+		return cop.getRole() != null && cop.getRole().commander();
 	}
 
 	private static @Nullable String roleName(@Nullable CopRole role) {

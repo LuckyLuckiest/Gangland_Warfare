@@ -311,6 +311,31 @@ class CopManagerSquadTest {
 		assertEquals(0, group.getPendingRelease());
 	}
 
+	@Test
+	@DisplayName("the wanted level dropping to a Commander-less composition mid-backup never sends the last Commander home (T-146)")
+	void backupExpired_levelDropped_lastCommanderStays() {
+		squadComposition(COMMANDER, POINTMAN, role("Defender"), role("Marksman"), ASSAULT);
+		when(fx.provider.getSquadComposition(2)).thenReturn(List.of(POINTMAN, ASSAULT, ASSAULT));
+		when(fx.spawner.getTargetCopCount(3)).thenReturn(5);
+		when(fx.spawner.getTargetCopCount(2)).thenReturn(3);
+		Wanted level3 = CopManagerFixture.wanted(3);
+		manager.onWantedStart(player, level3);
+		CopGroup group = manager.groupFor(playerId);
+		group.requestBackup(fx.clock[0], fx.provider.getBackupSettings());
+		manager.spawnTick(playerId, level3);
+		group.detach(group.getCops().get(0)); // the Commander is killed mid-backup
+		manager.spawnTick(playerId, level3);
+		CopNpc replacement = group.getCops().get(5);
+		assertSame(COMMANDER, replacement.getRole());
+
+		fx.clock[0] += 31_000;
+		manager.spawnTick(playerId, CopManagerFixture.wanted(2)); // the level fell to 2 before the backup ran out
+
+		assertEquals(CopState.PURSUING, replacement.getCurrentState(), "the squad's only Commander stays");
+		assertEquals(0, group.getPendingRelease());
+		assertEquals(1, group.getCops().stream().filter(c -> c.getCurrentState() == CopState.RETURNING).count());
+	}
+
 	/**
 	 * Base squad {@code lead, extra} plus one backup {@code extra}; {@code lead} is killed mid-backup and replaced, then
 	 * the backup runs out. Returns the surviving base {@code extra}, the backup {@code extra} and the replacement.
