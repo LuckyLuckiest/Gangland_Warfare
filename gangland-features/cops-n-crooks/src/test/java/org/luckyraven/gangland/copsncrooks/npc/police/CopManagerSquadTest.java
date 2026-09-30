@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.npc.police;
 
+import org.luckyraven.keystone.npc.NpcFanPlacement;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.AfterEach;
@@ -163,6 +165,34 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("each new cop gets the composition's next role; a stranded RETURNING cop does not hold its role")
+	void spawnTask_fillsCompositionRoles_strandedRoleRefilled() {
+		CopRole pointman = role("Pointman");
+		CopRole assault  = role("Assault");
+		when(fx.provider.getSquadComposition(2)).thenReturn(List.of(pointman, assault));
+		manager.onWantedStart(player, wanted);
+		CopGroup group    = manager.groupFor(playerId);
+		CopNpc   stranded = fx.cop(CopState.RETURNING, 500, 500);
+		when(stranded.getRole()).thenReturn(pointman);
+		group.add(stranded);
+
+		manager.spawnTick(playerId, wanted);
+
+		verify(fx.spawner).spawnNearPlayer(player, 3, pointman);
+		verify(fx.spawner).spawnNearPlayer(player, 3, assault);
+	}
+
+	@Test
+	@DisplayName("with roles off (no composition) cops spawn with no role")
+	void spawnTask_noComposition_noRole() {
+		manager.onWantedStart(player, wanted);
+
+		manager.spawnTick(playerId, wanted);
+
+		verify(fx.spawner, times(2)).spawnNearPlayer(player, 3, null);
+	}
+
+	@Test
 	@DisplayName("a tier rise is announced once by dispatch; the first spawn and a steady tier are not")
 	void tierRise_dispatchesEscalateOnce() {
 		manager.onWantedStart(player, wanted);
@@ -286,5 +316,10 @@ class CopManagerSquadTest {
 		manager.onWantedEnd(player);
 
 		verify(fx.radio, times(1)).sayFromLeader(group, "Stand_Down");
+	}
+
+	private static CopRole role(String name) {
+		return new CopRole(name, name, NpcFanPlacement.ANY, null, null, 1.0, null, 0, null, 1.0, 0, null, 0, 60, false,
+		                   false);
 	}
 }

@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.spawn;
 
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -69,17 +70,29 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	 */
 	@Nullable
 	public CopNpc spawnNearPlayer(Player target, int tier) {
+		return spawnNearPlayer(target, tier, null);
+	}
+
+	/**
+	 * Spawns a cop NPC near the given player with the specified tier and squad role.
+	 *
+	 * @param role the cop's squad role ({@link CopRole#nextRole}); {@code null} spawns the plain tier
+	 *
+	 * @return the spawned CopNpc, or null if no valid location was found
+	 */
+	@Nullable
+	public CopNpc spawnNearPlayer(Player target, int tier, @Nullable CopRole role) {
 		Location spawnLoc = findClosestSpawnerLocation(target);
 
 		if (spawnLoc != null) {
-			return copNpcFactory.createCop(spawnLoc, tier);
+			return copNpcFactory.createCop(spawnLoc, tier, false, role);
 		}
 
 		spawnLoc = findSpawnLocation(target);
 
 		if (spawnLoc == null) return null;
 
-		return copNpcFactory.createCop(spawnLoc, tier, true);
+		return copNpcFactory.createCop(spawnLoc, tier, true, role);
 	}
 
 	/**

@@ -18,6 +18,7 @@ import org.luckyraven.keystone.npc.AbstractNpc;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
@@ -65,6 +66,13 @@ public class CopNpc extends AbstractNpc {
 	@Getter
 	@Setter
 	private @Nullable CopGroup               group;
+	/**
+	 * The squad role this cop spawned with ({@link CopNpcFactory}); its {@link #getTierConfig() tier config} already
+	 * has the role laid over it. {@code null} with roles off.
+	 */
+	@Getter
+	@Setter
+	private @Nullable CopRole                role;
 	/**
 	 * This cop's own squad for a target outside any group (a cop with no group: tests, stray spawns): seeded with that
 	 * target's position when it is first handed to the cop, replaced when the target changes.
