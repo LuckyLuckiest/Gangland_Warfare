@@ -139,7 +139,7 @@ Cops:
    # A badly hurt cop breaks off, radios it (Lines.Fall_Back / In_Cover) and takes cover out of the suspect's sight
    # for up to 10 seconds, then comes back out and fights on.
    Retreat:
-      # Set to false and cops fight on until they drop.
+      # Set to false and cops fight on until they drop (no fall-back after a Commander goes down either).
       Enabled: true
       # Retreat at or below this fraction of max health (0-1; 0.3 = 30%).
       Health_Fraction: 0.3
