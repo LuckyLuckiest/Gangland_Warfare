@@ -1,11 +1,13 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.config;
 
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
 import org.luckyraven.keystone.npc.NpcMeleeProfile;
 import org.luckyraven.keystone.npc.NpcNavigationConfig;
 import org.luckyraven.keystone.npc.entity.SpawnConfigProvider;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -271,5 +273,13 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 	/** When a badly hurt cop breaks off to cover ({@code Cops.Retreat}). */
 	default RetreatSettings getRetreatSettings() {
 		return RetreatSettings.DEFAULT;
+	}
+
+	/**
+	 * The roles a squad hunting at {@code wantedLevel} fills, in order ({@code Cops.Squad_Composition}, see
+	 * {@link CopRole#nextRole}); {@code null} with roles off, so every cop spawns as its plain tier.
+	 */
+	default @Nullable List<CopRole> getSquadComposition(int wantedLevel) {
+		return null;
 	}
 }

@@ -2,7 +2,9 @@ package org.luckyraven.gangland.copsncrooks.npc.police.config;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.bukkit.Material;
 import org.luckyraven.gangland.npc.RetreatSettings;
+import org.luckyraven.keystone.npc.NpcFanPlacement;
 import org.luckyraven.keystone.persistence.config.ConfigDocument;
 import org.luckyraven.keystone.persistence.config.ConfigParser;
 import org.luckyraven.keystone.persistence.config.ConfigReport;
@@ -14,10 +16,14 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("YamlCopConfigProvider - Melee/Tactics/Radio/Backup (phase H12)")
@@ -322,8 +328,164 @@ class YamlCopConfigProviderTest {
 		}
 	}
 
+
+	// ── Roles and Squad_Composition (phase H13) ───────────────────────────────
+
+	private static final String ONE_TIER = """
+			   Tiers:
+			      1:
+			         Display_Name: "&9Officer"
+			         Health: 20.0
+			         Damage: 2.0
+			""";
+
+	@Test
+	@DisplayName("no Roles/Squad_Composition blocks (every old cops.yml): the built-in catalogue and compositions")
+	void noRoleBlocks_builtInCatalogue() {
+		CopConfigProvider provider = parse("Cops:\n" + ONE_TIER);
+
+		assertEquals(List.of("Pointman", "Assault"), names(provider.getSquadComposition(1)));
+		assertEquals(List.of("Pointman", "Assault", "Assault"), names(provider.getSquadComposition(2)));
+		assertEquals(List.of("Commander", "Pointman", "Defender", "Marksman", "Assault"),
+		             names(provider.getSquadComposition(3)));
+		assertEquals(List.of("Commander", "Pointman", "Defender", "Marksman", "Medic", "Assault"),
+		             names(provider.getSquadComposition(5))); // a level with no entry uses the highest lower one
+		assertNull(provider.getSquadComposition(0));
+
+		Map<String, CopRole> roles = byName(provider.getSquadComposition(5));
+		CopRole defender = roles.get("Defender");
+		assertEquals(NpcFanPlacement.CENTER, defender.placement());
+		assertEquals(Material.SHIELD, defender.offHand().getType());
+		assertEquals(0.5, defender.blockFraction());
+		assertEquals(60.0, defender.blockConeDegrees());
+		assertEquals(0.0, defender.strafeDegrees());
+
+		CopRole marksman = roles.get("Marksman");
+		assertTrue(marksman.fireRateScale() < 1.0);
+		assertEquals(1, marksman.difficultyBonus());
+		assertTrue(marksman.rangedMin() > roles.get("Pointman").rangedMax()); // the back of the fan
+
+		CopRole commander = roles.get("Commander");
+		assertTrue(commander.commander());
+		assertTrue(commander.leaderPriority() > roles.get("Pointman").leaderPriority());
+		assertTrue(roles.get("Pointman").leaderPriority() > roles.get("Assault").leaderPriority());
+		assertTrue(roles.get("Medic").medic());
+		assertEquals(NpcFanPlacement.FLANK, roles.get("Assault").placement());
+		for (CopRole role : roles.values()) assertEquals(role.name(), role.displayName());
+	}
+
+	@Test
+	@DisplayName("a Roles entry is read key by key over the built-in role of that name; a new role over a plain one")
+	void rolesBlock_overridesKeyByKey() {
+		ConfigReport report = new ConfigReport();
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Retreat:
+				      Health_Fraction: 0.3
+				      Radius: 9.0
+				   Roles:
+				      Marksman:
+				         Display_Name: "Sniper"
+				         Ranged_Max_Distance: 30.0
+				         Fire_Rate_Scale: 0.8
+				      Breacher:
+				         Fan_Placement: FLANK
+				         Health_Multiplier: 20.0
+				         Off_Hand: "SHIELD"
+				         Block_Fraction: 0.25
+				         Retreat:
+				            Health_Fraction: 0.2
+				   Squad_Composition:
+				      1:
+				         - "Marksman"
+				         - "Breacher"
+				""" + ONE_TIER, report);
+
+		Map<String, CopRole> roles = byName(provider.getSquadComposition(1));
+		CopRole marksman = roles.get("Marksman");
+		assertEquals("Sniper", marksman.displayName());
+		assertEquals(30.0, marksman.rangedMax());
+		assertEquals(14.0, marksman.rangedMin());          // built-in
+		assertEquals(0.8, marksman.fireRateScale());
+		assertEquals(1, marksman.difficultyBonus());       // built-in
+
+		CopRole breacher = roles.get("Breacher");
+		assertEquals("Breacher", breacher.displayName());
+		assertEquals(NpcFanPlacement.FLANK, breacher.placement());
+		assertEquals(1.0, breacher.healthMultiplier());    // 20 is out of range: reported, default kept
+		assertEquals(0.25, breacher.blockFraction());
+		assertEquals(60.0, breacher.blockConeDegrees());
+		assertNull(breacher.rangedMin());
+		assertEquals(new RetreatSettings(true, 0.2, 9.0), breacher.retreat()); // read over Cops.Retreat
+		assertTrue(report.issues().stream().anyMatch(i -> "config.range".equals(i.code())), report.issues()::toString);
+		assertTrue(report.issues().stream().noneMatch(i -> "config.unknown_key".equals(i.code())),
+		           report.issues()::toString);
+	}
+
+	@Test
+	@DisplayName("an unknown role in a composition is reported and skipped; an unknown Fan_Placement is reported and ignored")
+	void composition_unknownRole_reportedAndSkipped() {
+		ConfigReport report = new ConfigReport();
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Roles:
+				      Assault:
+				         Fan_Placement: SIDEWAYS
+				   Squad_Composition:
+				      2:
+				         - "Pointman"
+				         - "Ghost"
+				         - "Assault"
+				""" + ONE_TIER, report);
+
+		assertEquals(List.of("Pointman", "Assault"), names(provider.getSquadComposition(2)));
+		assertEquals(List.of("Pointman", "Assault"), names(provider.getSquadComposition(9)));
+		assertNull(provider.getSquadComposition(1)); // below the first declared level: no roles
+		assertEquals(NpcFanPlacement.FLANK, byName(provider.getSquadComposition(2)).get("Assault").placement()); // kept
+		assertTrue(report.issues().stream().anyMatch(i -> i.message().contains("Ghost")), report.issues()::toString);
+		assertTrue(report.issues().stream().anyMatch(i -> i.message().contains("SIDEWAYS")),
+		           report.issues()::toString);
+	}
+
+	@Test
+	@DisplayName("Roles_Enabled: false turns roles off - every cop spawns as its plain tier")
+	void rolesDisabled_noComposition() {
+		CopConfigProvider provider = parse("Cops:\n   Roles_Enabled: false\n" + ONE_TIER);
+
+		assertNull(provider.getSquadComposition(3));
+	}
+
+	@Test
+	@DisplayName("the shipped cops.yml declares the role catalogue: a Commander from level 3, Assault last")
+	void shippedFile_rolesAndComposition() throws IOException {
+		String yaml;
+		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("npc/cops.yml"))) {
+			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+		}
+		CopConfigProvider provider = parse(yaml);
+
+		assertEquals(List.of("Pointman", "Assault"), names(provider.getSquadComposition(1)));
+		assertEquals("Commander", provider.getSquadComposition(3).get(0).name());
+		List<CopRole> top = provider.getSquadComposition(5);
+		assertEquals("Assault", top.get(top.size() - 1).name());
+		assertEquals(Material.SHIELD, byName(provider.getSquadComposition(3)).get("Defender").offHand().getType());
+	}
+
+	private static List<String> names(List<CopRole> roles) {
+		return roles.stream().map(CopRole::name).toList();
+	}
+
+	private static Map<String, CopRole> byName(List<CopRole> roles) {
+		Map<String, CopRole> result = new LinkedHashMap<>();
+		for (CopRole role : roles) result.putIfAbsent(role.name(), role);
+		return result;
+	}
+
 	private static CopConfigProvider parse(String yaml) {
-		ConfigReport   report   = new ConfigReport();
+		return parse(yaml, new ConfigReport());
+	}
+
+	private static CopConfigProvider parse(String yaml, ConfigReport report) {
 		Reader         reader   = new StringReader(yaml);
 		ConfigDocument document = new ConfigParser().parse(Path.of("cops.yml"), reader, report);
 		return new YamlCopConfigProvider(NodeReader.of(document.root(), report), report, null, null);
