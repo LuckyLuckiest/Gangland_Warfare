@@ -116,6 +116,24 @@ formation, no strafing and no order / contact / reload / check-fire radio lines.
 casualty, backup and dispatch radio, retreat to cover and the cuff-then-fight escalation stay on. Switch those off
 with `Radio.Enabled: false`, `Backup.Enabled: false`, `Retreat.Enabled: false` and `Radio.Responder_Max: 0`.
 
+### Squad Roles (0.13.0)
+
+Each new cop takes a **role** inside its squad, laid over its tier: the tier still decides weapons, armour and the
+formation arc, the role decides where the cop stands and how it fights. Roles fill in the order of the wanted level's
+`Squad_Composition`; cops past the end of the list (backup, extra cops) take its last role.
+
+| Role      | From level | Does                                                                                   |
+|-----------|------------|----------------------------------------------------------------------------------------|
+| Pointman  | 1          | Front and centre, close in; the squad's radio voice while no Commander is on it        |
+| Assault   | 1          | The fan's ends, pushing in and strafing wide                                           |
+| Commander | 3          | Radio voice from the rear of the band; when it goes down: "Commander down!", fall back |
+| Defender  | 3          | Holds the centre post up front; its shield takes half of every hit from its front      |
+| Marksman  | 3          | The back of the fan (never past its gun's reach), slower but surer shots               |
+| Medic     | 4          | Treats hurt squad mates                                                                |
+
+A `cops.yml` without `Roles` / `Squad_Composition` blocks (every file from before 0.13.0) gets exactly this built-in
+catalogue. Set `Cops.Roles_Enabled: false` to spawn every cop as its plain tier again.
+
 ---
 
 ## Police Radio
@@ -265,6 +283,36 @@ Cops:
 ```
 
 ---
+
+### Roles and Squad_Composition (`cops.yml`, 0.13.0)
+
+Every key is optional; an entry under `Roles` is read key by key over the built-in role of the same name. The shipped
+`cops.yml` lists the whole catalogue with a comment per key.
+
+```yaml
+Cops:
+   Roles_Enabled: true
+   Roles:
+      Defender:
+         Fan_Placement: CENTER       # ANY, CENTER or FLANK
+         Ranged_Min_Distance: 4.0    # the role's own firing band, clamped under the gun's Projectile Distance
+         Ranged_Max_Distance: 7.0
+         Health_Multiplier: 1.5
+         Off_Hand: "SHIELD"          # cosmetic, never dropped
+         Strafe_Degrees: 0.0         # replaces the tier's Tactics.Strafe_Degrees
+         Block_Fraction: 0.5         # damage taken off a hit from inside the front cone
+         Block_Cone_Degrees: 60.0
+         Retreat:
+            Health_Fraction: 0.15    # read over Cops.Retreat
+      Marksman:
+         Fire_Rate_Scale: 0.6        # multiplies the tier's Fire_Rate_Multiplier
+         Difficulty_Bonus: 1         # steps above the tier's Difficulty
+      Commander:
+         Leader_Priority: 2          # the highest live priority speaks for the squad
+         Commander: true             # its death: Commander_Down, the squad falls back for 5 s
+   Squad_Composition:
+      3: ["Commander", "Pointman", "Defender", "Marksman", "Assault"]
+```
 
 ### AI Settings (`settings.yml` → `Cops.Behaviour`)
 

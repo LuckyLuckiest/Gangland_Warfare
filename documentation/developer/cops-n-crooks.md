@@ -345,6 +345,22 @@ cop with the suspect in cuff range still cuffs. A cop at or below `Health_Fracti
 `Fall_Back` and `In_Cover` are `Radio.Priority` kinds, so a same-tick `Resisting` from the hit that caused the
 retreat cannot drop them through the per-player gap.
 
+#### Squad roles (0.13.0)
+
+`CopRole` (`Cops.Roles`, built-in catalogue in `YamlCopConfigProvider.builtInRoles`) is picked per spawn by
+`CopRole.nextRole(getSquadComposition(level), liveRoles)` in `CopManager.spawnTick`, counting only the cops the spawn
+count counts (a stranded RETURNING cop's role is refilled). `CopNpcFactory.createCop(..., role)` spawns the tier with
+`role.overlay(tier)` (health, difficulty, fire rate, strafe), then `applyRole` sets the Keystone 1.14.0 hooks:
+`setFanPlacement`, `setLeaderPriority` and `setRangedBand` clamped under `BartizanNpcWeapons.reach(weapon)`. The
+off-hand item goes on through the loadout with no drop-chance call (PLAYER entities throw on those). `CopNpc.getRole()`
+exposes the role (`medic()`, `commander()`, `displayName()`); the callsign still reads the tier's display name.
+
+The Defender's block is one guard at the top of `CopListener.onCopDamaged`, ahead of the raytrace skip: Bartizan
+applies gunfire through `victim.damage(amount, shooter)`, so melee, arrows and guns all reach it. A Commander's
+`LEADER_DOWN` is voiced as `Commander_Down` by the squad's new leader, and `CopGroup.setFallBackUntil` makes
+`CopRetreat.takeCover` send every cop of the group to cover for `CopRadio.COMMANDER_FALL_BACK_MS`, outside its own
+cover budget.
+
 A killed cop is found with `findDyingCop` (its entity is no longer valid during `EntityDeathEvent`), and
 `CopListener` calls `memberDown` on its current squad and on the group squad, so the Man Down line, backup and
 responders fire even for a cop killed mid-navigation (T-111).
