@@ -93,6 +93,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final RadioSettings   radioSettings;
 	private final BackupSettings  backupSettings;
 	private final RetreatSettings retreatSettings;
+	private final StuckSettings   stuckSettings;
 
 	/**
 	 * Primary positional-config constructor.
@@ -159,6 +160,8 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		MappingNode retreatSection = cops == null ? null : cops.get("Retreat").asMapping().orNull();
 		this.retreatSettings = RetreatSettings.read(retreatSection != null ? NodeReader.of(retreatSection, report) : null,
 		                                            report, RetreatSettings.DEFAULT);
+		MappingNode stuckSection = cops == null ? null : cops.get("Stuck").asMapping().orNull();
+		this.stuckSettings = StuckSettings.read(stuckSection != null ? NodeReader.of(stuckSection, report) : null);
 
 		loadTiers(cops, report, itemParser);
 		buildCopsPerWantedLevel(copSettings);
@@ -379,6 +382,11 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	@Override
 	public RetreatSettings getRetreatSettings() {
 		return retreatSettings;
+	}
+
+	@Override
+	public StuckSettings getStuckSettings() {
+		return stuckSettings;
 	}
 
 	private NpcMeleeProfile parseMeleeProfile(@Nullable NodeReader cops, ConfigReport report) {
