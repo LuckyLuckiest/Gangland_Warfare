@@ -268,9 +268,10 @@ Cops:
       Avoid_Spawner_Seconds: 60    # Its spawner is skipped for replacements this long (0 = never)
 ```
 
-A stranded cop is never replaced while the player is looking at it (in front of him, clear line, within
+A stranded cop is not replaced while the player is looking at it (in front of him, clear line, within
 `Cops.Spawn.Visibility_Check_Distance`, never less than 24 blocks), while another player faces it, or while it is within
-melee reach. With its spawner skipped, the replacement comes from the next spawner within `Spawner_Max_Y_Diff`, or from
+melee reach on his level. Once it has been stranded for twice `Recycle_Seconds`, the player's own view only keeps it
+within 24 blocks. With its spawner skipped, the replacement comes from the next spawner within `Spawner_Max_Y_Diff`, or from
 the ring around the player at his level (for a player indoors, the street outside counts too). The wanted-level cop
 count and `Max_Per_Player` still cap the total.
 
