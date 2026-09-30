@@ -167,6 +167,16 @@ class CopManagerStuckTest {
 	}
 
 	@Test
+	@DisplayName("a stranded cop within melee distance but a floor above the suspect is recycled")
+	void strandedOverheadWithinReach_recycled() {
+		CopNpc stuck = stranded(CopState.PURSUING, 10, 67, 10, 600_000); // 3 blocks straight up, slab between
+
+		manager.spawnTick(playerId, wanted);
+
+		assertFalse(group.getCops().contains(stuck));
+	}
+
+	@Test
 	@DisplayName("a stranded cop another player is looking at is kept")
 	void strandedSeenByBystander_kept() {
 		CopNpc stuck = stranded(CopState.PURSUING, 10, 64, 0, 13_000);

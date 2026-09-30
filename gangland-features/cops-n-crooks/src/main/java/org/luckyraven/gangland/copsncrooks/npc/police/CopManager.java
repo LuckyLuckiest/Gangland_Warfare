@@ -544,8 +544,11 @@ public class CopManager implements BeanLifecycle {
 
 		Location at = body.getLocation();
 		if (at.getWorld() == player.getWorld()) {
-			// a melee cop knocked off its surround slot keeps its clock running though it can hit him
-			if (at.distance(player.getLocation()) <= configProvider.getMeleeProfile().reach()) return false;
+			// a melee cop knocked off its surround slot keeps its clock running though it can hit him - not through
+			// a ceiling: one parked at his XZ a floor up is within the distance but cannot reach him
+			Location feet = player.getLocation();
+			if (at.distance(feet) <= configProvider.getMeleeProfile().reach() && Math.abs(at.getY() - feet.getY()) <= 1.5)
+				return false;
 			// as far out as bystanders are protected (isVisibleToOtherPlayers) and never under 24 blocks; past twice
 			// the threshold only the 24 blocks hold, so a cop at a far window he keeps watching is not kept forever
 			boolean overdue = cop.millisUnreachable() >= 2L * stuck.recycleSeconds() * 1000L;
