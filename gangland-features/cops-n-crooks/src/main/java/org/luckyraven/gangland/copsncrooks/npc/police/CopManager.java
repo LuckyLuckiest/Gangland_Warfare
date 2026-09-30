@@ -531,7 +531,8 @@ public class CopManager implements BeanLifecycle {
 	/**
 	 * A cop hunting the group's suspect that has found no way to him for {@code Cops.Stuck.Recycle_Seconds}
 	 * ({@link CopNpc#millisUnreachable()}) and that no one is looking at is taken off the map; its spawner is skipped
-	 * for {@code Avoid_Spawner_Seconds} so the replacement spawned in the same run comes from elsewhere.
+	 * for {@code Avoid_Spawner_Seconds} so the replacement spawned in the same run comes from elsewhere. Past twice
+	 * {@code Recycle_Seconds} the suspect's own view only protects a cop within 24 blocks of him.
 	 */
 	private boolean recycles(CopNpc cop, CopGroup group, Player player, long now) {
 		StuckSettings stuck = configProvider.getStuckSettings();
@@ -545,8 +546,11 @@ public class CopManager implements BeanLifecycle {
 		if (at.getWorld() == player.getWorld()) {
 			// a melee cop knocked off its surround slot keeps its clock running though it can hit him
 			if (at.distance(player.getLocation()) <= configProvider.getMeleeProfile().reach()) return false;
-			// as far out as bystanders are protected (isVisibleToOtherPlayers) and never under 24 blocks
-			if (inView(player, body, Math.max(24.0, configProvider.getVisibilityCheckDistance()))) return false;
+			// as far out as bystanders are protected (isVisibleToOtherPlayers) and never under 24 blocks; past twice
+			// the threshold only the 24 blocks hold, so a cop at a far window he keeps watching is not kept forever
+			boolean overdue = cop.millisUnreachable() >= 2L * stuck.recycleSeconds() * 1000L;
+			double  protect = overdue ? 24.0 : Math.max(24.0, configProvider.getVisibilityCheckDistance());
+			if (inView(player, body, protect)) return false;
 		}
 		if (spawnManager.isVisibleToOtherPlayers(at, player)) return false;
 

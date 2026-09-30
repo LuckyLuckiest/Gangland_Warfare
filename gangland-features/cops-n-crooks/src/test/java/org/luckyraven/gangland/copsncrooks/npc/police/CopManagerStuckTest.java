@@ -31,8 +31,9 @@ import static org.mockito.Mockito.when;
 /**
  * Phase H13 (B2): a cop that has been stranded ({@code millisUnreachable()}) for {@code Cops.Stuck.Recycle_Seconds}
  * while the suspect cannot see it is despawned and replaced in the same spawn run, away from the spawner it came from.
- * "Can see" is a view cone plus line of sight within {@code Visibility_Check_Distance} (the bystanders' radius), not a bare ray: a cop on a ledge above the
- * suspect's head is out of view even though the ray is open.
+ * "Can see" is a view cone plus line of sight within {@code Visibility_Check_Distance} (the bystanders' radius), not a
+ * bare ray: a cop on a ledge above the suspect's head is out of view even though the ray is open. Past twice
+ * {@code Recycle_Seconds} only a cop in view within 24 blocks is kept.
  */
 @DisplayName("CopManager - recycling stranded cops out of view")
 class CopManagerStuckTest {
@@ -120,9 +121,21 @@ class CopManagerStuckTest {
 	}
 
 	@Test
-	@DisplayName("the suspect is protected as far out as bystanders are (Visibility_Check_Distance), never less")
-	void strandedInView_asFarAsBystanders_kept() {
-		CopNpc stuck = stranded(CopState.PURSUING, 10, 66, 45, 600_000); // 35 blocks in front of him
+	@DisplayName("in view beyond 24 blocks is protected as far out as bystanders are, until twice Recycle_Seconds")
+	void strandedInView_beyond24_keptUntilTwiceThreshold() {
+		CopNpc young = stranded(CopState.PURSUING, 10, 66, 40, 13_000); // 30 blocks in front of him
+		CopNpc old   = stranded(CopState.PURSUING, 11, 66, 40, 25_000);
+
+		manager.spawnTick(playerId, wanted);
+
+		assertTrue(group.getCops().contains(young));
+		assertFalse(group.getCops().contains(old), "past 2x Recycle_Seconds only the 24-block view protects");
+	}
+
+	@Test
+	@DisplayName("in view within 24 blocks is kept at any age")
+	void strandedInView_within24_keptAtAnyAge() {
+		CopNpc stuck = stranded(CopState.PURSUING, 10, 66, 30, 600_000); // 20 blocks in front of him
 
 		manager.spawnTick(playerId, wanted);
 

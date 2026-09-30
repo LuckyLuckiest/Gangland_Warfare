@@ -7,7 +7,8 @@ import org.luckyraven.keystone.persistence.config.NodeReader;
 /**
  * When a cop that cannot reach its suspect ({@link AbstractNpc#millisUnreachable()}) is taken off the map and sent
  * again from a better spot ({@code Cops.Stuck}). A cop the suspect is looking at within
- * {@code Cops.Spawn.Visibility_Check_Distance} (the radius bystanders are protected in) is never recycled.
+ * {@code Cops.Spawn.Visibility_Check_Distance} (the radius bystanders are protected in) is not recycled; past twice
+ * {@code Recycle_Seconds} that protection shrinks to 24 blocks.
  *
  * @param enabled             {@code false} never recycles.
  * @param recycleSeconds      seconds stranded before the cop is recycled.
