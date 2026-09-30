@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BooleanSupplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -137,13 +138,44 @@ class CopFieldCareTest {
 		care.tick(group);
 
 		assertSame(patient, medic.getPatient());
-		verify(radio).sayAsLater(group, medic, "Medic_Moving", Map.of("member", CopRadio.callsign(patient)), 1);
-		verify(radio).sayAsLater(eq(group), eq(leader), eq("Covering_Fire"), anyMap(), eq(2));
+		Map<String, String> toPatient = Map.of("member", CopRadio.callsign(patient));
+		Map<String, String> toOther   = Map.of("member", CopRadio.callsign(other));
+		verify(radio).sayAsLater(eq(group), eq(medic), eq("Medic_Moving"), eq(toPatient), eq(1), any());
+		verify(radio).sayAsLater(eq(group), eq(leader), eq("Covering_Fire"), anyMap(), eq(2), any());
 		verify(medic).navigateTo(patient.getEntity().getLocation());
 
 		care.tick(group);
 		assertSame(patient, medic.getPatient());
-		verify(radio, never()).sayAsLater(group, medic, "Medic_Moving", Map.of("member", CopRadio.callsign(other)), 1);
+		verify(radio, never()).sayAsLater(eq(group), eq(medic), eq("Medic_Moving"), eq(toOther), eq(1), any());
+	}
+
+	@Test
+	@DisplayName("Medic_Moving and Covering_Fire go out only while the treatment stands: not once the patient dies or the medic moves on")
+	@SuppressWarnings("unchecked")
+	void delayedLines_silentOnceTreatmentIsOver() {
+		CopNpc patient = cop(1, 10.0, CopState.PURSUING, null);
+		CopNpc medic   = cop(3, 20.0, CopState.PURSUING, MEDIC);
+		CopNpc leader  = cop(4, 20.0, CopState.PURSUING, null);
+		when(squad.leader()).thenReturn(leader);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(10.0);
+
+		care.tick(group);
+
+		ArgumentCaptor<BooleanSupplier> moving   = ArgumentCaptor.forClass(BooleanSupplier.class);
+		ArgumentCaptor<BooleanSupplier> covering = ArgumentCaptor.forClass(BooleanSupplier.class);
+		verify(radio).sayAsLater(eq(group), eq(medic), eq("Medic_Moving"), anyMap(), eq(1), moving.capture());
+		verify(radio).sayAsLater(eq(group), eq(leader), eq("Covering_Fire"), anyMap(), eq(2), covering.capture());
+		assertTrue(moving.getValue().getAsBoolean());
+		assertTrue(covering.getValue().getAsBoolean());
+
+		when(patient.isValid()).thenReturn(false); // killed; Man_Down is already on the radio
+		assertFalse(moving.getValue().getAsBoolean());
+		assertFalse(covering.getValue().getAsBoolean());
+
+		when(patient.isValid()).thenReturn(true);
+		medic.setPatient(null); // left the fight or reassigned
+		assertFalse(moving.getValue().getAsBoolean());
+		assertFalse(covering.getValue().getAsBoolean());
 	}
 
 	@Test
@@ -162,7 +194,7 @@ class CopFieldCareTest {
 		assertNull(plain.getPatient());
 		assertNull(cuffing.getPatient());
 		assertNull(far.getPatient());
-		verify(radio, never()).sayAsLater(any(), any(), eq("Medic_Moving"), anyMap(), anyInt());
+		verify(radio, never()).sayAsLater(any(), any(), eq("Medic_Moving"), anyMap(), anyInt(), any());
 	}
 
 	@Test
@@ -208,7 +240,7 @@ class CopFieldCareTest {
 		verify(radio, never()).sayAs(any(), any(), eq("Patched_Up"), anyMap());
 
 		for (int i = 0; i < 6; i++) care.tick(group); // no re-assignment loop behind the refusal
-		verify(radio, times(1)).sayAsLater(eq(group), eq(medic), eq("Medic_Moving"), anyMap(), anyInt());
+		verify(radio, times(1)).sayAsLater(eq(group), eq(medic), eq("Medic_Moving"), anyMap(), anyInt(), any());
 		assertNull(medic.getPatient());
 	}
 
@@ -321,14 +353,14 @@ class CopFieldCareTest {
 		when(squad.leader()).thenReturn(medic);
 
 		care.tick(group);
-		verify(radio, never()).sayAsLater(eq(group), any(), eq("Covering_Fire"), anyMap(), anyInt());
+		verify(radio, never()).sayAsLater(eq(group), any(), eq("Covering_Fire"), anyMap(), anyInt(), any());
 
 		CopNpc rifle = cop(3, 20.0, CopState.PURSUING, null);
 		medic.setPatient(null);
 		care.tick(group); // the stale treatment ends (medic dropped its patient)
 		care.tick(group); // re-assigned
-		verify(radio).sayAsLater(eq(group), eq(rifle), eq("Covering_Fire"), anyMap(), anyInt());
-		verify(radio, never()).sayAsLater(eq(group), eq(patient), eq("Covering_Fire"), anyMap(), anyInt());
+		verify(radio).sayAsLater(eq(group), eq(rifle), eq("Covering_Fire"), anyMap(), anyInt(), any());
+		verify(radio, never()).sayAsLater(eq(group), eq(patient), eq("Covering_Fire"), anyMap(), anyInt(), any());
 	}
 
 	@Test

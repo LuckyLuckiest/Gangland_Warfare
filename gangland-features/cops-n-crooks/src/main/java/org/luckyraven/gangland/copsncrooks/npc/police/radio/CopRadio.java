@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
@@ -133,9 +134,13 @@ public class CopRadio {
 		return radio.say(group.getSquad(), voice(group), self, callsign(cop), key, "Format", null, null, extra);
 	}
 
-	/** {@link #sayAs}, {@code steps} ack delays later and past the squad gap ({@link SquadRadio#sayLater}). */
-	public void sayAsLater(CopGroup group, CopNpc cop, String key, Map<String, String> extra, int steps) {
-		radio.sayLater(group.getSquad(), voice(group), cop, key, extra, steps);
+	/**
+	 * {@link #sayAs}, {@code steps} ack delays later and past the squad gap ({@link SquadRadio#sayLater}); silent if
+	 * {@code stillRelevant} is {@code false} by then.
+	 */
+	public void sayAsLater(CopGroup group, CopNpc cop, String key, Map<String, String> extra, int steps,
+	                       BooleanSupplier stillRelevant) {
+		radio.sayLater(group.getSquad(), voice(group), cop, key, extra, steps, stillRelevant);
 	}
 
 	/** Who {@code squad} of {@code group} hunts: the wanted player, or the attacker the squad was opened for. */

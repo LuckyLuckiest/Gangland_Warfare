@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.function.BooleanSupplier;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
@@ -140,9 +141,12 @@ public class CopFieldCare {
 			medic.setPatient(patient);
 			treatments.put(medic, new Treatment(patient, now, medic.getEntity().getHealth()));
 			log.debug("{} treats {}", CopRadio.callsign(medic), CopRadio.callsign(patient));
-			// follow-ups to the patient's Hit, one ack delay apart: said now, the squad and player gaps swallow them
-			radio.sayAsLater(group, medic, "Medic_Moving", Map.of("member", CopRadio.callsign(patient)), 1);
-			coveringFire(group, cops, medic, patient);
+			// follow-ups to the patient's Hit, one ack delay apart: said now, the squad and player gaps swallow them;
+			// dropped if the treatment is over by then (patient killed, medic out of the fight or reassigned)
+			CopNpc          healer   = medic;
+			BooleanSupplier standing = () -> healer.isValid() && patient.isValid() && healer.getPatient() == patient;
+			radio.sayAsLater(group, medic, "Medic_Moving", Map.of("member", CopRadio.callsign(patient)), 1, standing);
+			coveringFire(group, cops, medic, patient, standing);
 		}
 	}
 
@@ -163,7 +167,8 @@ public class CopFieldCare {
 	 * The squad covers the medic: a radio line only ({@code Covering_Fire}), from the leader unless it is the medic or
 	 * the patient, then from any other fighting cop of the group, else nobody.
 	 */
-	private void coveringFire(CopGroup group, List<CopNpc> cops, CopNpc medic, CopNpc patient) {
+	private void coveringFire(CopGroup group, List<CopNpc> cops, CopNpc medic, CopNpc patient,
+	                          BooleanSupplier standing) {
 		AbstractNpc leader  = group.getSquad().leader();
 		CopNpc      speaker = leader instanceof CopNpc cop && cop != medic && cop != patient && cop.isValid() ? cop
 		                                                                                                  : null;
@@ -171,7 +176,7 @@ public class CopFieldCare {
 			CopNpc cop = it.next();
 			if (cop != medic && cop != patient && cop.isValid() && fighting(cop)) speaker = cop;
 		}
-		if (speaker != null) radio.sayAsLater(group, speaker, "Covering_Fire", Map.of(), 2);
+		if (speaker != null) radio.sayAsLater(group, speaker, "Covering_Fire", Map.of(), 2, standing);
 	}
 
 	/** Ends every treatment whose medic or patient belongs to {@code group}: the group is being dropped. */

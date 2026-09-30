@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -628,8 +629,8 @@ class SquadRadioTest {
 		NpcSquad squad = new NpcSquad();
 		squad.add(medic);
 
-		radio.sayLater(squad, voice, medic, "Check_Fire", Map.of(), 1);
-		radio.sayLater(squad, voice, medic, "Search", Map.of(), 2);
+		radio.sayLater(squad, voice, medic, "Check_Fire", Map.of(), 1, () -> true);
+		radio.sayLater(squad, voice, medic, "Search", Map.of(), 2, () -> true);
 		assertEquals(25L, scheduled.get(0)[1]);
 		assertEquals(50L, scheduled.get(1)[1]);
 		verify(p, never()).sendMessage(anyString());
@@ -637,6 +638,24 @@ class SquadRadioTest {
 		when(medic.isValid()).thenReturn(false);
 		((Runnable) scheduled.get(0)[0]).run();
 		((Runnable) scheduled.get(1)[0]).run();
+
+		verify(p, never()).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("sayLater stays silent when the moment passed during the delay (stillRelevant false by then)")
+	void sayLater_silentWhenNoLongerRelevant() {
+		settings = new RadioSettings(true, 20, 40, 0, 0, 25, 2, Map.of(), Set.of(), null, 1f, 1f);
+		AbstractNpc medic = newMember(0, 64, 0, "SWAT-2");
+		Player      p     = newPlayer(1, 64, 0);
+		when(world.getPlayers()).thenReturn(List.of(p));
+		NpcSquad squad = new NpcSquad();
+		squad.add(medic);
+		AtomicBoolean patientAlive = new AtomicBoolean(true);
+
+		radio.sayLater(squad, voice, medic, "Search", Map.of(), 1, patientAlive::get);
+		patientAlive.set(false);
+		((Runnable) scheduled.get(0)[0]).run();
 
 		verify(p, never()).sendMessage(anyString());
 	}
@@ -655,8 +674,8 @@ class SquadRadioTest {
 
 		assertTrue(radio.say(squad, voice, leader.getEntity(), "SWAT-1", "Check_Fire", "Format", null, null,
 		                     Map.of()));
-		radio.sayLater(squad, voice, medic, "Search", Map.of(), 1);
-		radio.sayLater(squad, voice, medic, "Search", Map.of(), 2);
+		radio.sayLater(squad, voice, medic, "Search", Map.of(), 1, () -> true);
+		radio.sayLater(squad, voice, medic, "Search", Map.of(), 2, () -> true);
 
 		clock.addAndGet(100); // inside the 1500 ms squad gap
 		((Runnable) scheduled.get(0)[0]).run();
@@ -681,7 +700,7 @@ class SquadRadioTest {
 
 		assertTrue(radio.say(squad, voice, leader.getEntity(), "SWAT-1", "Check_Fire", "Format", null, null,
 		                     Map.of()));
-		radio.sayLater(squad, voice, medic, "Search", Map.of(), 1);
+		radio.sayLater(squad, voice, medic, "Search", Map.of(), 1, () -> true);
 
 		clock.addAndGet(100); // inside the 5000 ms player gap
 		((Runnable) scheduled.get(0)[0]).run();

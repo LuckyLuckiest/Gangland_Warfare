@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.WeakHashMap;
 import java.util.function.BiConsumer;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
@@ -30,10 +31,11 @@ import java.util.function.Supplier;
  * for lines a consumer speaks itself (dispatch, backup, resisting, ...).
  * <p>
  * Every line clears the same gauntlet ({@link #speak}): disabled or an empty line pool silences it outright; a
- * non-priority, non-ack line respects the squad gap (only a delivered non-priority line restarts it); every line
- * (including priority ones and acks) respects its own per-key cooldown; and, per listening player, a non-priority
- * line respects the player gap. Voice extras and call extras fill both the line and its format. Nothing is queued
- * — a throttled line is dropped, never delayed.
+ * line that is neither priority, nor an ack, nor a {@link #sayLater} follow-up respects the squad gap (only a
+ * delivered non-priority line restarts it); every line (including priority ones, acks and follow-ups) respects its
+ * own per-key cooldown; and, per listening player, a non-priority line respects the player gap. Voice extras and
+ * call extras fill both the line and its format. Acks and follow-ups are scheduled speaks, timed on purpose; nothing
+ * is queued for a retry — a line throttled when it is spoken is dropped.
  *
  * @since 1.13.0
  */
@@ -89,12 +91,13 @@ public final class SquadRadio {
 	 * Speaks a follow-up line {@code steps} ack delays ({@code Ack_Delay_Ticks}) from now and past the squad gap, the
 	 * way an ack follows its order: a line said in the same moment as another (a medic answering a cop's "hit") would
 	 * otherwise be swallowed by the squad and player gaps. Each step clears one player gap, so a chain of follow-ups
-	 * uses steps 1, 2, and so on. Silent when {@code speaker} is no longer valid by then; live settings apply.
+	 * uses steps 1, 2, and so on. Silent when {@code speaker} is no longer valid by then, or {@code stillRelevant}
+	 * says the moment has passed (a medic's patient killed during the delay); live settings apply.
 	 */
 	public void sayLater(NpcSquad squad, RadioVoice voice, AbstractNpc speaker, String key, Map<String, String> extra,
-	                     int steps) {
+	                     int steps, BooleanSupplier stillRelevant) {
 		later.accept(() -> {
-			if (speaker.isValid()) {
+			if (speaker.isValid() && stillRelevant.getAsBoolean()) {
 				speak(settings.get(), voice, squad, speaker.getEntity(), voice.callsign(speaker), key, "Format", null,
 				      null, extra, true);
 			}

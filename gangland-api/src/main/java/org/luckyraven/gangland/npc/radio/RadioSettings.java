@@ -19,7 +19,8 @@ import java.util.Set;
  *                      squad signals that drive them.
  * @param range         blocks a player must be within the speaker (or the addressee) to hear a line.
  * @param targetRange   blocks the hunted player hears their own pursuers from.
- * @param squadGapMs    minimum gap between two lines from one squad; priority lines and acks skip it.
+ * @param squadGapMs    minimum gap between two lines from one squad; priority lines, acks and
+ *                      {@link SquadRadio#sayLater} follow-ups skip it.
  * @param playerGapMs   minimum gap between two low-priority lines reaching one player, across every squad.
  * @param ackDelayTicks ticks before an ordered member acknowledges a delivered order; always at least
  *                      {@code Player_Gap_Ticks + 5} so a squad's own player gap can never swallow its own ack.
