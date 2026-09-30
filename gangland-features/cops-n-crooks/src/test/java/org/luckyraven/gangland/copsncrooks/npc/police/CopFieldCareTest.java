@@ -288,6 +288,17 @@ class CopFieldCareTest {
 		verify(radio, never()).sayAs(eq(group), eq(patient), eq("Covering_Fire"), anyMap());
 	}
 
+	@Test
+	@DisplayName("a cop left under care with no treatment (its medic died and was collected) stands up again")
+	void underCareWithoutMedic_standsUp() {
+		CopNpc patient = cop(1, 8.0, CopState.PURSUING, null);
+		patient.setUnderCare(true);
+
+		care.tick(group);
+
+		assertFalse(patient.isUnderCare());
+	}
+
 	/** A cop of {@link #group} at {@code health} of 20, with working patient / under-care slots. */
 	private CopNpc cop(int id, double health, CopState state, CopRole role) {
 		CopNpc       cop  = mock(CopNpc.class);

@@ -84,7 +84,11 @@ public class CopFieldCare {
 		synchronized (group.getCops()) {
 			cops = new ArrayList<>(group.getCops());
 		}
-		for (CopNpc cop : cops) updateHurt(group, cop, settings);
+		for (CopNpc cop : cops) {
+			// a medic killed and collected before end() ran leaves no treatment behind: stand its patient up
+			if (cop.isUnderCare() && !hasMedic(cop)) cop.setUnderCare(false);
+			updateHurt(group, cop, settings);
+		}
 		if (settings.medicEnabled()) assign(group, cops, settings);
 		step(group, settings, cfg.getAiTickRate());
 	}

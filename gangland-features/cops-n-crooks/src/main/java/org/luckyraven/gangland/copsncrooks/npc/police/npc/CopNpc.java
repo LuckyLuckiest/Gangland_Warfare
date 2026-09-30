@@ -211,12 +211,14 @@ public class CopNpc extends AbstractNpc {
 		float speed = (float) (tierConfig.speed() * multiplier);
 		npc.getNavigator().getDefaultParameters().speedModifier(speed);
 		npc.getNavigator().getLocalParameters().speedModifier(speed);
+		log.debug("Cop {}-{} speed modifier {} (x{}).", npc.getName(), npc.getId(), speed, multiplier);
 	}
 
 	/** Marks this cop as being treated or not; it crouches while it is (SneakTrait survives an entity swap). */
 	public void setUnderCare(boolean underCare) {
 		this.underCare = underCare;
 		npc.getOrAddTrait(SneakTrait.class).setSneaking(underCare);
+		log.debug("Cop {}-{} under care: {} (sneaking).", npc.getName(), npc.getId(), underCare);
 	}
 
 	// ── Cop-specific state machine ────────────────────────────────────────────
