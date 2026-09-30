@@ -20,8 +20,8 @@ import java.util.Map;
  * fights. Picked per spawn from {@code Cops.Squad_Composition} by {@link #nextRole}.
  *
  * @param name             the role's key under {@code Cops.Roles}; compositions refer to it.
- * @param displayName      the role's label ({@code Display_Name}, default the name): the callsign's {@code %rank%},
- *                         drawn in the tier's {@code Display_Name} colour.
+ * @param displayName      the role's label ({@code Display_Name}, default the name): the callsign's optional
+ *                         {@code %role%}. Never replaces the tier's {@code Display_Name}, the {@code %rank%}.
  * @param placement        where on the squad's fan the cop prefers to stand.
  * @param rangedMin        the cop's own firing band, {@code null} for the settings.yml band; set together with
  *                         {@code rangedMax}.

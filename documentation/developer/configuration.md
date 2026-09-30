@@ -423,7 +423,7 @@ Cops:
 | `Radio.*` | see above | Police radio in chat: who hears it, throttling, ack delay, `Responder_Max` cross-group responders |
 | `Backup.*` | see above | Extra cops requested when a cop goes down, for how long, and how often |
 | `Retreat.*` | see above | When a hurt cop breaks off to cover, and how far it looks |
-| `Names.Format` | `%rank% &f%name% &7#%badge%` | The callsign above the cop's head and on the radio. `%rank%` = the role's `Display_Name` in the tier's colour (the tier's `Display_Name` with no role), `%badge%` = 1000 + the Citizens id. The Citizens name itself is the short plain `Bob #1592` |
+| `Names.Format` | `%rank% &f%name% &7#%badge%` | The callsign above the cop's head and on the radio. `%rank%` = the tier's `Display_Name`, `%badge%` = 1000 + the Citizens id, optional `%role%` = the squad role's `Display_Name` (empty, with its colour code and the doubled space dropped, for a cop with no role; the default `Format` has none, e.g. `%rank% &e%role% &f%name% &7#%badge%` reads `Officer Medic Bob #1592`). The Citizens name itself is the short plain `Bob #1592` |
 | `Names.First_Names` | 28 built-in names | First-name pool; `[]` = no first name, a missing key = the built-in pool |
 | `Stuck.*` | see above | Optional (0.13.0). A cop that has found no way to its player for `Recycle_Seconds` (at least 1), out of his view (cone plus clear line within `Cops.Spawn.Visibility_Check_Distance`, never under 24 blocks; past twice `Recycle_Seconds` within 24 blocks only), unseen by other players and outside melee reach on his level, is replaced; its spawner is skipped for `Avoid_Spawner_Seconds` (0 = never). `Enabled: false` never replaces |
 

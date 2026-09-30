@@ -353,7 +353,7 @@ count counts (a stranded RETURNING cop's role is refilled). `CopNpcFactory.creat
 `role.overlay(tier)` (health, difficulty, fire rate, strafe), then `applyRole` sets the Keystone 1.14.0 hooks:
 `setFanPlacement`, `setLeaderPriority` and `setRangedBand` clamped under `BartizanNpcWeapons.reach(weapon)`. The
 off-hand item goes on through the loadout with no drop-chance call (PLAYER entities throw on those). `CopNpc.getRole()`
-exposes the role (`medic()`, `commander()`, `displayName()`); the callsign still reads the tier's display name.
+exposes the role (`medic()`, `commander()`, `displayName()`); the callsign reads the tier's display name as `%rank%` and the role's as the optional `%role%` (`CopNames.callsign`; empty for no role).
 
 The Defender's block is one guard at the top of `CopListener.onCopDamaged`, ahead of the raytrace skip: Bartizan
 applies gunfire through `victim.damage(amount, shooter)`, so melee, arrows and guns all reach it. A Commander's

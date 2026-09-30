@@ -134,6 +134,11 @@ formation arc, the role decides where the cop stands and how it fights. Roles fi
 A `cops.yml` without `Roles` / `Squad_Composition` blocks (every file from before 0.13.0) gets exactly this built-in
 catalogue. Set `Cops.Roles_Enabled: false` to spawn every cop as its plain tier again.
 
+A role never renames the tier: the callsign's `%rank%` stays the tier's `Display_Name` (`Officer Bob #1592`). The
+role's own `Display_Name` (default: its name) is the optional `%role%` in `Cops.Names.Format`, empty for a cop with no
+role, and left out of the default `Format`. Put it where you want it, e.g. `"%rank% &e%role% &f%name% &7#%badge%"`
+reads `Officer Medic Bob #1592` above the head and on the radio.
+
 The Defender's front cone is judged from whoever dealt the damage: the shooter for a bullet or arrow, the attacker for
 anything else. Area damage (a grenade, fire) is credited to its thrower, so a blast behind a Defender is still halved
 while the thrower stands in front of it. The Commander fall-back is a retreat: `Cops.Retreat.Enabled: false` turns it
@@ -245,7 +250,7 @@ Tiers are numbered `1` through `5` under `Cops.Tiers`. Each tier defines the sta
 Cops:
    Tiers:
       1:
-         Display_Name: "&9Officer"   # The %rank% colour; the %rank% itself with roles off (supports & color codes)
+         Display_Name: "&9Officer"   # The %rank% in Cops.Names.Format (supports & color codes)
          Health: 20.0                # Max health points
          Damage: 2.0                 # Melee damage per attack
          Speed: 1.0                  # Movement speed multiplier (1.0 = normal player speed)

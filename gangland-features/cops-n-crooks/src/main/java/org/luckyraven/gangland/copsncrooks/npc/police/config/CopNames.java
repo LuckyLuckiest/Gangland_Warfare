@@ -10,8 +10,9 @@ import java.util.Random;
  * (colours stripped) its radio callsign; {@link #shortName} is the plain Citizens name, kept at 16 characters or fewer
  * so Citizens never swaps the entity's profile name for its {@code CIT-...} scoreboard team name.
  *
- * @param format {@code %rank%} (the role's {@code Display_Name} in the tier's colour, or the tier's
- *               {@code Display_Name} for a cop with no role), {@code %name%} and {@code %badge%}
+ * @param format {@code %rank%} (the tier's {@code Display_Name}, in its colour), {@code %name%}, {@code %badge%} and the
+ *               optional {@code %role%} (the squad role's {@code Display_Name}; empty for a cop with no role, its
+ *               colour code and the doubled space dropped with it). The default format has no {@code %role%}.
  * @param firstNames the first-name pool; empty means no first name ({@code "Officer #1592"})
  */
 public record CopNames(String format, List<String> firstNames) {
@@ -51,12 +52,15 @@ public record CopNames(String format, List<String> firstNames) {
 	}
 
 	/**
-	 * The coloured callsign. An empty first name takes its own colour code with it and repeated spaces collapse, so
-	 * it still reads cleanly.
+	 * The coloured callsign. An empty first name or role takes its own colour code with it and repeated spaces
+	 * collapse, so it still reads cleanly.
 	 */
-	public String callsign(String rank, String firstName, int badge) {
-		String text = firstName.isEmpty() ? format.replaceAll("(&[0-9a-fk-orA-FK-OR])*%name%", "") : format;
+	public String callsign(String rank, String role, String firstName, int badge) {
+		String text = format;
+		if (firstName.isEmpty()) text = text.replaceAll("(&[0-9a-fk-orA-FK-OR])*%name%", "");
+		if (role.isEmpty()) text = text.replaceAll("(&[0-9a-fk-orA-FK-OR])*%role%", "");
 		return text.replace("%rank%", rank)
+		           .replace("%role%", role)
 		           .replace("%name%", firstName)
 		           .replace("%badge%", String.valueOf(badge))
 		           .replaceAll(" {2,}", " ")

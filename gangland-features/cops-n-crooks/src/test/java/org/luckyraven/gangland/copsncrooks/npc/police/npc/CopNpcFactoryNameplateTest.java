@@ -32,7 +32,7 @@ class CopNpcFactoryNameplateTest {
 		when(npc.getOrAddTrait(HologramTrait.class)).thenReturn(hologram);
 
 		String callsign = CopNpcFactory.CitizensBridge.nameplate(npc, new CopNames(CopNames.DEFAULT.format(),
-		                                                                           List.of("Bob")), "&9Officer",
+		                                                                           List.of("Bob")), "&9Officer", "",
 		                                                         new Random(1));
 
 		assertEquals("&9Officer &fBob &7#1592", callsign);
@@ -47,20 +47,35 @@ class CopNpcFactoryNameplateTest {
 	}
 
 	@Test
-	@DisplayName("%rank% is the role's display name in the tier's colour; the tier's Display_Name without a role")
-	void rank_roleDisplayNameInTierColour() {
+	@DisplayName("%rank% stays the tier's Display_Name in its colour for a cop with a role; the default Format ignores the role")
+	void rank_staysTierDisplayName_withRole() {
 		CopRole medic = new CopRole("Medic", "Medic", NpcFanPlacement.CENTER, null, null, 1.0, null, 0, null, 1.0, 0,
 		                            null, 0, 60, true, false);
-
-		assertEquals("§9Medic", CopNpcFactory.rank("&9Officer", medic));
-		assertEquals("&9Officer", CopNpcFactory.rank("&9Officer", null));
 
 		NPC npc = mock(NPC.class);
 		when(npc.getId()).thenReturn(592);
 		when(npc.getOrAddTrait(HologramTrait.class)).thenReturn(mock(HologramTrait.class));
 		String callsign = CopNpcFactory.CitizensBridge.nameplate(npc, new CopNames(CopNames.DEFAULT.format(),
-		                                                                           List.of("Bob")),
-		                                                         CopNpcFactory.rank("&1SWAT", medic), new Random(1));
-		assertEquals("§1Medic &fBob &7#1592", callsign);
+		                                                                           List.of("Bob")), "&1SWAT",
+		                                                         medic.displayName(), new Random(1));
+		assertEquals("&1SWAT &fBob &7#1592", callsign);
+	}
+
+	@Test
+	@DisplayName("%role% is the role's display name on the hologram line; empty and collapsed for a cop with no role")
+	void role_placeholder_onLineOrCollapsed() {
+		CopNames names = new CopNames("%rank% &e%role% &f%name% &7#%badge%", List.of("Bob"));
+
+		NPC           npc      = mock(NPC.class);
+		HologramTrait hologram = mock(HologramTrait.class);
+		when(npc.getId()).thenReturn(592);
+		when(npc.getOrAddTrait(HologramTrait.class)).thenReturn(hologram);
+
+		assertEquals("&9Officer &eMedic &fBob &7#1592",
+		             CopNpcFactory.CitizensBridge.nameplate(npc, names, "&9Officer", "Medic", new Random(1)));
+		verify(hologram).addLine(ChatColor.translateAlternateColorCodes('&', "&9Officer &eMedic &fBob &7#1592"));
+
+		assertEquals("&9Officer &fBob &7#1592",
+		             CopNpcFactory.CitizensBridge.nameplate(npc, names, "&9Officer", "", new Random(1)));
 	}
 }

@@ -16,13 +16,31 @@ class CopNamesTest {
 	@Test
 	@DisplayName("the callsign fills %rank%, %name% and %badge%, colours kept")
 	void callsign_fillsPlaceholders() {
-		assertEquals("&9Officer &fBob &7#1592", CopNames.DEFAULT.callsign("&9Officer", "Bob", 1592));
+		assertEquals("&9Officer &fBob &7#1592", CopNames.DEFAULT.callsign("&9Officer", "", "Bob", 1592));
 	}
 
 	@Test
 	@DisplayName("an empty first name collapses to a single space")
 	void callsign_emptyName_singleSpace() {
-		assertEquals("&9Officer &7#1592", CopNames.DEFAULT.callsign("&9Officer", "", 1592));
+		assertEquals("&9Officer &7#1592", CopNames.DEFAULT.callsign("&9Officer", "", "", 1592));
+	}
+
+	@Test
+	@DisplayName("%role% is optional: the default Format has none, a Format that names it fills it")
+	void callsign_roleIsOptional() {
+		assertEquals("&9Officer &fBob &7#1592", CopNames.DEFAULT.callsign("&9Officer", "Medic", "Bob", 1592));
+		assertEquals("&9Officer Medic &fBob &7#1592",
+		             new CopNames("%rank% %role% &f%name% &7#%badge%", List.of()).callsign("&9Officer", "Medic", "Bob",
+		                                                                                       1592));
+	}
+
+	@Test
+	@DisplayName("no role: %role% and its colour code vanish and the doubled space collapses")
+	void callsign_emptyRole_collapses() {
+		CopNames names = new CopNames("%rank% &e%role% &f%name% &7#%badge%", List.of());
+
+		assertEquals("&9Officer &fBob &7#1592", names.callsign("&9Officer", "", "Bob", 1592));
+		assertEquals("&9Officer &7#1592", names.callsign("&9Officer", "", "", 1592));
 	}
 
 	@Test
