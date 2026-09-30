@@ -106,8 +106,7 @@ public class CopNpcFactory {
 
 		// Created under a placeholder: the badge is the Citizens id, only known once the NPC exists.
 		NPC    npc      = CitizensNpcs.create(EntityType.PLAYER, "Officer");
-		String callsign = CitizensBridge.nameplate(npc, names, tierConfig.displayName(),
-		                                           role != null ? role.displayName() : "", ThreadLocalRandom.current());
+		String callsign = CitizensBridge.nameplate(npc, names, baseTier, role, ThreadLocalRandom.current());
 		npc.setProtected(false);
 		npc.data().setPersistent(NPC.Metadata.SHOULD_SAVE, false);
 		// The callsign hologram line stands in for the nameplate (CitizensBridge#nameplate).
@@ -307,12 +306,14 @@ public class CopNpcFactory {
 		 * {@code CIT-...} team name. The caller hides the nameplate ({@code NAMEPLATE_VISIBLE}; not set here because
 		 * {@code NPC.Metadata} cannot be class-loaded in unit tests) and the full coloured callsign is hologram
 		 * line 0 in its place ({@code HologramTrait} stacks lines upward from the hidden plate, so a line inserted
-		 * at 0, e.g. the healthbars module's bar, sits directly under the callsign).
+		 * at 0, e.g. the healthbars module's bar, sits directly under the callsign). {@code %rank%} is always the
+		 * tier's {@code Display_Name}; the role only fills the optional {@code %role%} (empty with no role).
 		 */
-		static String nameplate(NPC npc, CopNames names, String rank, String role, Random random) {
+		static String nameplate(NPC npc, CopNames names, CopTierConfig tier, @Nullable CopRole role, Random random) {
 			String firstName = names.pickName(random);
 			int    badge     = CopNames.badge(npc.getId());
-			String callsign  = names.callsign(rank, role, firstName, badge);
+			String callsign  = names.callsign(tier.displayName(), role != null ? role.displayName() : "", firstName,
+			                                  badge);
 
 			npc.setName(CopNames.shortName(firstName, badge));
 			npc.getOrAddTrait(HologramTrait.class).addLine(ChatUtil.color(callsign));

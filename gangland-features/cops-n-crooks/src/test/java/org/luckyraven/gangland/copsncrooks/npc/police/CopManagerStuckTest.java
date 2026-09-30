@@ -103,7 +103,7 @@ class CopManagerStuckTest {
 	}
 
 	@Test
-	@DisplayName("the replacement takes the recycled cop's squad role (and, through createCop, a callsign)")
+	@DisplayName("the replacement takes the recycled cop's squad role")
 	void strandedRecycled_replacementTakesFreedRole() {
 		CopRole pointman = role("Pointman");
 		CopRole assault  = role("Assault");
