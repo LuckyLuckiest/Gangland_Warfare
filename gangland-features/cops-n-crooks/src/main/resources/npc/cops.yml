@@ -88,6 +88,7 @@ Cops:
          - "Contact"
          - "Man_Down"
          - "Leader_Down"
+         - "Commander_Down"
          - "Backup"
          - "Resisting"
          - "Dispatch_Wanted"
@@ -113,6 +114,7 @@ Cops:
          Reloading: 160
          Man_Down: 100
          Leader_Down: 100
+         Commander_Down: 100
          Resisting: 200
          Backup: 400
          Responding: 100

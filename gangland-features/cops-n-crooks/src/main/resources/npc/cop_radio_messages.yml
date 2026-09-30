@@ -95,6 +95,10 @@ Lines:
    # The leader goes down and a new leader takes point.
    Leader_Down:
       - "%member% is down! %unit% taking point!"
+   # The squad's Commander goes down: the new leader calls it and the squad falls back to cover briefly.
+   Commander_Down:
+      - "Commander down! Fall back, fall back!"
+      - "We lost %member%! Pull back to cover!"
    # An ordered member acknowledges a delivered order.
    Ack:
       - "Copy."

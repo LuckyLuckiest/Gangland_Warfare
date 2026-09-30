@@ -65,6 +65,9 @@ Lines:
       - "¡Hombre caído!"
    Leader_Down:
       - "¡%member% está caído! %unit% toma el mando!"
+   Commander_Down:
+      - "¡Comandante caído! ¡Retirada, retirada!"
+      - "¡Perdimos a %member%! ¡A cubierto!"
    Ack:
       - "Copiado."
       - "En camino."

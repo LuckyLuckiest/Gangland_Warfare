@@ -322,9 +322,11 @@ class YamlCopConfigProviderTest {
 		}
 		CopConfigProvider provider = parse(yaml);
 
-		for (String key : new String[]{"Fall_Back", "In_Cover"}) {
+		for (String key : new String[]{"Fall_Back", "In_Cover", "Commander_Down"}) {
 			assertTrue(provider.getRadioSettings().isPriority(key), key);
 			assertTrue(CopConfigProvider.COP_RADIO_DEFAULTS.isPriority(key), key);
+			assertTrue(provider.getRadioSettings().cooldownFor(key) > 0, key);
+			assertTrue(CopConfigProvider.COP_RADIO_DEFAULTS.cooldownFor(key) > 0, key);
 		}
 	}
 

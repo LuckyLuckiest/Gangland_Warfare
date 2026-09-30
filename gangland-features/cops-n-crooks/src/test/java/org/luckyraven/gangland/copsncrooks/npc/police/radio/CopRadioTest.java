@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.radio;
 
+import org.luckyraven.keystone.npc.NpcFanPlacement;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -28,6 +30,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -125,6 +128,41 @@ class CopRadioTest {
 
 		assertEquals(2, calls.size(), "the casualty is still heard by nearby cops");
 		verify(bystander, org.mockito.Mockito.times(1)).sendMessage("[SWAT-1] Backup line");
+	}
+
+	@Test
+	@DisplayName("the Commander going down: the new leader radios Commander_Down instead of Leader_Down, the group falls back briefly, backup is still requested")
+	void commanderDown_saysCommanderDown_groupFallsBack() {
+		Player bystander = listener(10, 0);
+		CopNpc commander = cop(1, "SWAT", 4, 0);
+		CopNpc pointman  = cop(2, "SWAT", 6, 0);
+		when(commander.getRole()).thenReturn(new CopRole("Commander", "Commander", NpcFanPlacement.ANY, null, null,
+		                                                 1.0, null, 2, null, 1.0, 0, null, 0, 60, false, true));
+		group.add(commander);
+		group.add(pointman);
+
+		group.getSquad().memberDown(commander);
+
+		verify(bystander).sendMessage("[SWAT-2] Commander_Down line");
+		verify(bystander, never()).sendMessage("[SWAT-2] Leader_Down line");
+		verify(bystander).sendMessage("[SWAT-2] Backup line");
+		assertEquals(1, calls.size());
+		assertTrue(group.isFallingBack(clock[0]));
+		assertFalse(group.isFallingBack(clock[0] + CopRadio.COMMANDER_FALL_BACK_MS));
+	}
+
+	@Test
+	@DisplayName("any other leader going down is Leader_Down, and the group does not fall back")
+	void plainLeaderDown_saysLeaderDown_noFallBack() {
+		Player bystander = listener(10, 0);
+		CopNpc leader    = cop(1, "SWAT", 4, 0);
+		group.add(leader);
+		group.add(cop(2, "SWAT", 6, 0));
+
+		group.getSquad().memberDown(leader);
+
+		verify(bystander).sendMessage("[SWAT-2] Leader_Down line");
+		assertFalse(group.isFallingBack(clock[0]));
 	}
 
 	@Test

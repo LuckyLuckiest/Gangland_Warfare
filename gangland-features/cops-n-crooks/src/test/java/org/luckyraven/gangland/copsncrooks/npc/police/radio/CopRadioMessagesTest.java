@@ -92,15 +92,11 @@ class CopRadioMessagesTest {
 	}
 
 	@Test
-	@DisplayName("Fall_Back and In_Cover (retreat to cover) have English defaults and lines in both shipped files")
+	@DisplayName("Fall_Back, In_Cover (retreat to cover) and Commander_Down have English defaults and lines in both shipped files")
 	void retreatLines_presentInDefaultsAndShippedFiles() throws IOException {
+		String[]         keys     = {"Fall_Back", "In_Cover", "Commander_Down"};
 		CopRadioMessages fallback = build("Lines: {}\n");
-		assertFalse(fallback.lines("Fall_Back").isEmpty());
-		assertFalse(fallback.lines("In_Cover").isEmpty());
-
-		CopRadioMessages english = build(shipped("npc/cop_radio_messages.yml"));
-		assertFalse(english.lines("Fall_Back").isEmpty());
-		assertFalse(english.lines("In_Cover").isEmpty());
+		CopRadioMessages english  = build(shipped("npc/cop_radio_messages.yml"));
 
 		initializeSettingsLanguage("es");
 		JavaPlugin  plugin      = PluginMocks.plugin(tempDir);
@@ -109,10 +105,12 @@ class CopRadioMessagesTest {
 		writeFile(fileManager, plugin, "cop_radio_messages_es.yml", shipped("npc/cop_radio_messages_es.yml"));
 		CopRadioMessages spanish = new CopRadioMessages(fileManager);
 
-		assertFalse(spanish.lines("Fall_Back").isEmpty());
-		assertFalse(spanish.lines("In_Cover").isEmpty());
-		assertNotEquals(english.lines("Fall_Back"), spanish.lines("Fall_Back"));
-		assertNotEquals(english.lines("In_Cover"), spanish.lines("In_Cover"));
+		for (String key : keys) {
+			assertFalse(fallback.lines(key).isEmpty(), key);
+			assertFalse(english.lines(key).isEmpty(), key);
+			assertFalse(spanish.lines(key).isEmpty(), key);
+			assertNotEquals(english.lines(key), spanish.lines(key), key);
+		}
 	}
 
 	private String shipped(String resource) throws IOException {
