@@ -3,6 +3,7 @@ package org.luckyraven.gangland.copsncrooks.npc.police.config;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.bukkit.Material;
+import org.luckyraven.gangland.npc.FieldCareSettings;
 import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.keystone.npc.NpcFanPlacement;
 import org.luckyraven.keystone.persistence.config.ConfigDocument;
@@ -487,6 +488,54 @@ class YamlCopConfigProviderTest {
 		List<CopRole> top = provider.getSquadComposition(5);
 		assertEquals("Assault", top.get(top.size() - 1).name());
 		assertEquals(Material.SHIELD, byName(provider.getSquadComposition(3)).get("Defender").offHand().getType());
+	}
+
+	// ── Field care (phase H13) ─────────────────────────────────────────────────
+
+	@Test
+	@DisplayName("Cops.Field_Care is parsed; a cops.yml without it gets FieldCareSettings.DEFAULT with no unknown keys")
+	void fieldCare_parsed_andDefaultWhenAbsent() {
+		ConfigReport      report   = new ConfigReport();
+		CopConfigProvider provider = parse("Cops:\n" + ONE_TIER, report);
+		assertEquals(FieldCareSettings.DEFAULT, provider.getFieldCareSettings());
+		assertTrue(report.issues().stream().noneMatch(i -> "config.unknown_key".equals(i.code())),
+		           report.issues()::toString);
+
+		ConfigReport parsedReport = new ConfigReport();
+		CopConfigProvider parsed = parse("""
+				Cops:
+				   Field_Care:
+				      Enabled: true
+				      Health_Fraction: 0.4
+				      Limp_Speed: 0.6
+				      Medic_Enabled: false
+				      Medic_Radius: 20.0
+				      Heal_Range: 3.0
+				      Channel_Ticks: 80
+				      Heal_Fraction: 0.3
+				""" + ONE_TIER, parsedReport);
+		assertEquals(new FieldCareSettings(true, 0.4, 0.6, false, 20.0, 3.0, 80, 0.3), parsed.getFieldCareSettings());
+		assertTrue(parsedReport.issues().stream().noneMatch(i -> "config.unknown_key".equals(i.code())),
+		           parsedReport.issues()::toString);
+	}
+
+	@Test
+	@DisplayName("the field-care radio cooldowns: milliseconds in the code defaults, the shipped cops.yml's ticks x50 agree")
+	void fieldCareRadioCooldowns_millisecondsInCode_ticksInYaml() throws IOException {
+		Map<String, Long> expected = Map.of("Hit", 5000L, "Medic_Moving", 5000L, "Covering_Fire", 10000L,
+		                                    "Medic_Pinned", 8000L, "Patched_Up", 5000L);
+		String yaml;
+		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("npc/cops.yml"))) {
+			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+		}
+		CopConfigProvider shipped = parse(yaml);
+
+		expected.forEach((key, ms) -> {
+			assertEquals(ms, CopConfigProvider.COP_RADIO_DEFAULTS.cooldownFor(key), key);
+			assertEquals(ms, shipped.getRadioSettings().cooldownFor(key), key);
+			assertFalse(CopConfigProvider.COP_RADIO_DEFAULTS.isPriority(key), key);
+		});
+		assertEquals(FieldCareSettings.DEFAULT, shipped.getFieldCareSettings());
 	}
 
 	private static List<String> names(List<CopRole> roles) {

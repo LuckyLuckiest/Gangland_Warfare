@@ -5,6 +5,7 @@ import lombok.CustomLog;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.npc.FieldCareSettings;
 import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.gangland.npc.TacticsConfig;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
@@ -107,6 +108,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final RadioSettings   radioSettings;
 	private final BackupSettings  backupSettings;
 	private final RetreatSettings retreatSettings;
+	private final FieldCareSettings fieldCareSettings;
 
 	// Roles (phase H13): the composition per wanted level; empty with roles off
 	private final TreeMap<Integer, List<CopRole>> compositions = new TreeMap<>();
@@ -176,6 +178,9 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		MappingNode retreatSection = cops == null ? null : cops.get("Retreat").asMapping().orNull();
 		this.retreatSettings = RetreatSettings.read(retreatSection != null ? NodeReader.of(retreatSection, report) : null,
 		                                            report, RetreatSettings.DEFAULT);
+		MappingNode careSection = cops == null ? null : cops.get("Field_Care").asMapping().orNull();
+		this.fieldCareSettings = FieldCareSettings.read(careSection != null ? NodeReader.of(careSection, report) : null,
+		                                                report, FieldCareSettings.DEFAULT);
 
 		loadTiers(cops, report, itemParser);
 		loadRoles(cops, report, itemParser);
@@ -397,6 +402,11 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	@Override
 	public RetreatSettings getRetreatSettings() {
 		return retreatSettings;
+	}
+
+	@Override
+	public FieldCareSettings getFieldCareSettings() {
+		return fieldCareSettings;
 	}
 
 	@Override

@@ -123,6 +123,16 @@ public class CopRadio {
 		                 Map.of());
 	}
 
+	/**
+	 * {@code cop} speaks {@code key} itself on its group's radio, {@code extra} filling the line (field care's
+	 * {@code %member%}). Silent for a cop with no entity.
+	 */
+	public boolean sayAs(CopGroup group, CopNpc cop, String key, Map<String, String> extra) {
+		LivingEntity self = cop.getEntity();
+		if (self == null) return false;
+		return radio.say(group.getSquad(), voice(group), self, callsign(cop), key, "Format", null, null, extra);
+	}
+
 	/** Who {@code squad} of {@code group} hunts: the wanted player, or the attacker the squad was opened for. */
 	public @Nullable LivingEntity huntedOf(CopGroup group, NpcSquad squad) {
 		return voice(group).hunted(squad);

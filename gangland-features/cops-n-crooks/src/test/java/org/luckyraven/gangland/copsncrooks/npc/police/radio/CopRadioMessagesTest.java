@@ -92,9 +92,10 @@ class CopRadioMessagesTest {
 	}
 
 	@Test
-	@DisplayName("Fall_Back, In_Cover (retreat to cover) and Commander_Down have English defaults and lines in both shipped files")
+	@DisplayName("Fall_Back, In_Cover (retreat to cover), Commander_Down and the field-care lines have English defaults and lines in both shipped files")
 	void retreatLines_presentInDefaultsAndShippedFiles() throws IOException {
-		String[]         keys     = {"Fall_Back", "In_Cover", "Commander_Down"};
+		String[]         keys     = {"Fall_Back", "In_Cover", "Commander_Down", "Hit", "Medic_Moving",
+		                             "Covering_Fire", "Medic_Pinned", "Patched_Up"};
 		CopRadioMessages fallback = build("Lines: {}\n");
 		CopRadioMessages english  = build(shipped("npc/cop_radio_messages.yml"));
 
@@ -111,6 +112,16 @@ class CopRadioMessagesTest {
 			assertFalse(spanish.lines(key).isEmpty(), key);
 			assertNotEquals(english.lines(key), spanish.lines(key), key);
 		}
+	}
+
+	@Test
+	@DisplayName("Fall_Back no longer says \"I'm hit\": that is the field-care Hit line, and one hit crossing both thresholds must not say it twice")
+	void fallBack_doesNotDuplicateHit() throws IOException {
+		CopRadioMessages fallback = build("Lines: {}\n");
+		CopRadioMessages english  = build(shipped("npc/cop_radio_messages.yml"));
+
+		assertTrue(fallback.lines("Fall_Back").stream().noneMatch(line -> line.contains("I'm hit")));
+		assertTrue(english.lines("Fall_Back").stream().noneMatch(line -> line.contains("I'm hit")));
 	}
 
 	private String shipped(String resource) throws IOException {

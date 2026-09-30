@@ -122,6 +122,11 @@ Cops:
          Fall_Back: 100
          In_Cover: 200
          Stand_Down: 200
+         Hit: 100
+         Medic_Moving: 100
+         Covering_Fire: 200
+         Medic_Pinned: 160
+         Patched_Up: 100
       # Short click played to each listener with every line (SoundConfiguration shape).
       Sound:
          Name: BLOCK_NOTE_BLOCK_HAT
@@ -145,6 +150,26 @@ Cops:
       Health_Fraction: 0.3
       # Blocks searched around the cop for a spot the suspect cannot see (2-32).
       Radius: 12.0
+   # Field care: a hurt cop limps and bleeds and radios Lines.Hit; a Medic-role cop of its squad walks over and treats
+   # it. The patient holds still and crouches while treated (it keeps firing), and a hit on the medic starts the
+   # treatment over (Lines.Medic_Pinned). A squad without a Medic cop never heals. Every key is optional.
+   Field_Care:
+      # Set to false: no limp, bleeding or treatment at all.
+      Enabled: true
+      # Hurt at or below this fraction of max health (0-1; 0.5 = 50%). Keep it above Retreat.Health_Fraction.
+      Health_Fraction: 0.5
+      # A hurt cop's walking speed, as a fraction of its tier Speed (0.1-1).
+      Limp_Speed: 0.7
+      # Set to false: cops still get hurt, but no medic treats them.
+      Medic_Enabled: true
+      # Blocks a medic answers a hurt squad mate within (2-64).
+      Medic_Radius: 24.0
+      # Blocks from the patient the medic treats it from (1-6).
+      Heal_Range: 2.5
+      # Ticks one treatment takes (60 = 3 s).
+      Channel_Ticks: 60
+      # Share of max health one treatment restores (0-1).
+      Heal_Fraction: 0.5
    # Squad roles: each new cop takes the next unfilled role of its wanted level's Squad_Composition, laid over its tier
    # (the tier still decides weapons, armour and the formation arc). Set to false and every cop spawns as its plain tier.
    Roles_Enabled: true

@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.config;
 
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.npc.FieldCareSettings;
 import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
 import org.luckyraven.keystone.npc.NpcMeleeProfile;
@@ -33,7 +34,10 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 					Map.entry("Man_Down", 5000L), Map.entry("Leader_Down", 5000L), Map.entry("Commander_Down", 5000L),
 					Map.entry("Resisting", 10000L), Map.entry("Backup", 20000L), Map.entry("Responding", 5000L),
 					Map.entry("Ack", 2000L),
-					Map.entry("Fall_Back", 5000L), Map.entry("In_Cover", 10000L)),
+					Map.entry("Fall_Back", 5000L), Map.entry("In_Cover", 10000L),
+					// field care (CopFieldCare); milliseconds here, ticks (x50) in cops.yml's Cooldown_Ticks
+					Map.entry("Hit", 5000L), Map.entry("Medic_Moving", 5000L), Map.entry("Covering_Fire", 10000L),
+					Map.entry("Medic_Pinned", 8000L), Map.entry("Patched_Up", 5000L)),
 			Set.of("Contact", "Man_Down", "Leader_Down", "Commander_Down", "Backup", "Resisting", "Dispatch_Wanted",
 			      "Escalate", "Stand_Down", "Fall_Back", "In_Cover"),
 			"BLOCK_NOTE_BLOCK_HAT", 0.4f, 1.8f);
@@ -274,6 +278,11 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 	/** When a badly hurt cop breaks off to cover ({@code Cops.Retreat}). */
 	default RetreatSettings getRetreatSettings() {
 		return RetreatSettings.DEFAULT;
+	}
+
+	/** Hurt cops limping and bleeding, and medics patching them up ({@code Cops.Field_Care}). */
+	default FieldCareSettings getFieldCareSettings() {
+		return FieldCareSettings.DEFAULT;
 	}
 
 	/**

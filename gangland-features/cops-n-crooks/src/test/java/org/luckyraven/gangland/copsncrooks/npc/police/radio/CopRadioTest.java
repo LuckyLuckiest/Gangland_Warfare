@@ -211,6 +211,34 @@ class CopRadioTest {
 		verify(far, never()).sendMessage(anyString());
 	}
 
+	@Test
+	@DisplayName("sayAs: the cop speaks the key itself, with its callsign and the extras filling the line")
+	void sayAs_speaksFromTheCopWithExtras() {
+		radio = new CopRadio(() -> provider, key -> switch (key) {
+			case "Format" -> List.of("[%unit%] %line%");
+			default -> List.of(key + " to %member%");
+		}, () -> clock[0], (task, ticks) -> { });
+		Player bystander = listener(10, 0);
+		CopNpc medic     = cop(3, "SWAT", 4, 0);
+		group.add(medic);
+
+		assertTrue(radio.sayAs(group, medic, "Medic_Moving", Map.of("member", "SWAT-9")));
+
+		verify(bystander).sendMessage("[SWAT-3] Medic_Moving to SWAT-9");
+	}
+
+	@Test
+	@DisplayName("sayAs: a cop with no entity says nothing")
+	void sayAs_noEntity_silent() {
+		Player bystander = listener(10, 0);
+		CopNpc medic     = cop(3, "SWAT", 4, 0);
+		when(medic.getEntity()).thenReturn(null);
+
+		assertFalse(radio.sayAs(group, medic, "Hit", Map.of()));
+
+		verify(bystander, never()).sendMessage(anyString());
+	}
+
 	private Player player(double x, double z) {
 		UUID   id     = UUID.randomUUID();
 		Player player = mock(Player.class);
