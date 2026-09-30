@@ -285,6 +285,28 @@ class CopFieldCareTest {
 	}
 
 	@Test
+	@DisplayName("a 12 s wait for a patient walking to cover does not use up the treatment: one Medic_Moving, then the channel heals")
+	void longWaitForCover_keepsTheTreatment() {
+		CopNpc patient = cop(1, 8.0, CopState.COMBAT, null);
+		CopNpc medic   = cop(2, 20.0, CopState.COMBAT, MEDIC);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(2.0);
+		when(patient.isMovingToCover()).thenReturn(true);
+
+		for (int i = 0; i < 24; i++) { // 12 s of AI ticks on the way to cover
+			care.tick(group);
+			clock.addAndGet(500);
+		}
+		when(patient.isMovingToCover()).thenReturn(false); // in cover
+		for (int i = 0; i < 7; i++) { // the arrival tick, then Channel_Ticks
+			care.tick(group);
+			clock.addAndGet(500);
+		}
+
+		verify(patient.getEntity()).setHealth(18.0);
+		verify(radio, times(1)).sayAsLater(eq(group), eq(medic), eq("Medic_Moving"), anyMap(), eq(1), any());
+	}
+
+	@Test
 	@DisplayName("clear(group) ends its treatments; a medic moved to another group is let go by that group's tick")
 	void clearAndDetach_endTreatments() {
 		CopNpc patient = cop(1, 8.0, CopState.PURSUING, null);

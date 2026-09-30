@@ -39,7 +39,7 @@ import java.util.function.Supplier;
 @CustomLog
 public class CopFieldCare {
 
-	/** A medic that has not finished a treatment this long after taking it on gives up. */
+	/** A medic that has not finished a treatment this long after taking it on gives up (walks to cover aside). */
 	// ponytail: code constant, a Field_Care.Give_Up_Ticks key when owners want to tune it
 	static final long GIVE_UP_MS  = 15_000;
 	/** Once treating, the patient may drift this far past {@code Heal_Range} before the channel starts over. */
@@ -61,7 +61,8 @@ public class CopFieldCare {
 	/** The treatment's group is the medic's ({@link CopNpc#getGroup()}): no group reference is held here. */
 	private static final class Treatment {
 		final CopNpc patient;
-		final long   startedAt;
+		/** When the medic took it on, or last waited for it to reach cover: the {@link #GIVE_UP_MS} clock. */
+		long         startedAt;
 		int          progressTicks;
 		double       lastMedicHealth;
 
@@ -239,6 +240,9 @@ public class CopFieldCare {
 		double       health      = medic.getEntity().getHealth();
 		boolean      hit         = health < treatment.lastMedicHealth;
 		treatment.lastMedicHealth = health;
+		// the walk to cover is not the medic's delay: GIVE_UP_MS counts from its end (the retreat's own bounds end it)
+		boolean retreating = patient.isMovingToCover();
+		if (retreating) treatment.startedAt = clock.getAsLong();
 
 		double reach = patient.isUnderCare() ? settings.healRange() + HOLD_MARGIN : settings.healRange();
 		if (medic.distanceTo(patientBody) > reach) {
@@ -248,8 +252,8 @@ public class CopFieldCare {
 			return false;
 		}
 		// a patient still walking to cover walks on (never frozen in the open): the medic waits in range and the channel
-		// starts once it is in cover, its retreat is over or failed; CopRetreat.MAX_COVER_MS and GIVE_UP_MS bound the wait
-		if (patient.isMovingToCover()) {
+		// starts once it is in cover, its retreat is over or failed (CopRetreat.MAX_COVER_MS)
+		if (retreating) {
 			medic.pauseNavigation();
 			treatment.progressTicks = 0;
 			return false;
