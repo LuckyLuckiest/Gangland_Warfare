@@ -385,6 +385,10 @@ Cops:
       Enabled: true
       Health_Fraction: 0.3
       Radius: 12.0
+   Stuck:
+      Enabled: true
+      Recycle_Seconds: 12
+      Avoid_Spawner_Seconds: 60
    Tiers:
       4:
          Display_Name: "&1SWAT"
@@ -414,6 +418,7 @@ Cops:
 | `Radio.*` | see above | Police radio in chat: who hears it, throttling, ack delay, `Responder_Max` cross-group responders |
 | `Backup.*` | see above | Extra cops requested when a cop goes down, for how long, and how often |
 | `Retreat.*` | see above | When a hurt cop breaks off to cover, and how far it looks |
+| `Stuck.*` | see above | Optional (0.13.0). A cop that has found no way to its player for `Recycle_Seconds` (at least 1), out of his view (cone plus clear line within `Cops.Spawn.Visibility_Check_Distance`, never under 24 blocks), unseen by other players and outside melee reach, is replaced; its spawner is skipped for `Avoid_Spawner_Seconds` (0 = never). `Enabled: false` never replaces |
 
 The radio lines are in `npc/cop_radio_messages.yml` (Spanish `_es.yml`). See
 [Cops N Crooks](../features/cops-n-crooks.md) and [Migrating to 0.12.0](../migration-0.12.0.md).
