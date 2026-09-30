@@ -32,8 +32,8 @@ import java.util.function.Supplier;
  * while treated, and after {@code Channel_Ticks} in range the patient gets {@code Heal_Fraction} of its max health
  * back. A hit on the medic starts the channel over ({@code Medic_Pinned}). No medic in the group, no healing.
  * <p>
- * No static state: per-cop state is weak-keyed, and every treatment ends here or on a cop leaving the fight
- * ({@link CopNpc#transitionTo} drops the care slots on both sides).
+ * No static state: per-cop state is weak-keyed, and every treatment ends here, on a cop leaving the fight
+ * ({@link CopNpc#transitionTo} drops the care slots on both sides) or through {@link #clear} when its group is dropped.
  */
 @CustomLog
 public class CopFieldCare {
@@ -41,6 +41,8 @@ public class CopFieldCare {
 	/** A medic that has not finished a treatment this long after taking it on gives up. */
 	// ponytail: code constant, a Field_Care.Give_Up_Ticks key when owners want to tune it
 	static final long GIVE_UP_MS  = 15_000;
+	/** Once treating, the patient may drift this far past {@code Heal_Range} before the channel starts over. */
+	static final double HOLD_MARGIN = 1.0;
 	/** Bleed particles per AI tick while hurt. */
 	private static final int BLEED_COUNT = 3;
 
@@ -52,16 +54,17 @@ public class CopFieldCare {
 	private final Set<CopNpc>            hurt       = Collections.newSetFromMap(new WeakHashMap<>());
 	/** Active treatments, keyed by medic: the medic may already be gone from its group's cop list. */
 	private final Map<CopNpc, Treatment> treatments = new WeakHashMap<>();
+	/** Patients whose heal another plugin cancelled, and when: not treated again for {@link #GIVE_UP_MS}. */
+	private final Map<CopNpc, Long>      refused    = new WeakHashMap<>();
 
+	/** The treatment's group is the medic's ({@link CopNpc#getGroup()}): no group reference is held here. */
 	private static final class Treatment {
-		final CopGroup group;
-		final CopNpc   patient;
-		final long     startedAt;
-		int            progressTicks;
-		double         lastMedicHealth;
+		final CopNpc patient;
+		final long   startedAt;
+		int          progressTicks;
+		double       lastMedicHealth;
 
-		Treatment(CopGroup group, CopNpc patient, long startedAt, double medicHealth) {
-			this.group           = group;
+		Treatment(CopNpc patient, long startedAt, double medicHealth) {
 			this.patient         = patient;
 			this.startedAt       = startedAt;
 			this.lastMedicHealth = medicHealth;
@@ -115,9 +118,12 @@ public class CopFieldCare {
 
 	/** Each hurt, fighting cop with no medic yet gets the nearest free medic of its group within Medic_Radius. */
 	private void assign(CopGroup group, List<CopNpc> cops, FieldCareSettings settings) {
+		long now = clock.getAsLong();
 		for (CopNpc patient : cops) {
 			LivingEntity body = patient.getEntity();
 			if (!hurt.contains(patient) || !fighting(patient) || body == null || hasMedic(patient)) continue;
+			Long refusedAt = refused.get(patient);
+			if (refusedAt != null && now - refusedAt < GIVE_UP_MS) continue;
 
 			CopNpc medic   = null;
 			double nearest = settings.medicRadius();
@@ -132,7 +138,7 @@ public class CopFieldCare {
 			if (medic == null) continue;
 
 			medic.setPatient(patient);
-			treatments.put(medic, new Treatment(group, patient, clock.getAsLong(), medic.getEntity().getHealth()));
+			treatments.put(medic, new Treatment(patient, now, medic.getEntity().getHealth()));
 			log.debug("{} treats {}", CopRadio.callsign(medic), CopRadio.callsign(patient));
 			radio.sayAs(group, medic, "Medic_Moving", Map.of("member", CopRadio.callsign(patient)));
 			coveringFire(group, cops, medic, patient);
@@ -167,14 +173,30 @@ public class CopFieldCare {
 		if (speaker != null) radio.sayAs(group, speaker, "Covering_Fire", Map.of());
 	}
 
-	/** Walks, channels or ends each of {@code group}'s treatments. */
+	/** Ends every treatment whose medic or patient belongs to {@code group}: the group is being dropped. */
+	public void clear(CopGroup group) {
+		for (Iterator<Map.Entry<CopNpc, Treatment>> it = treatments.entrySet().iterator(); it.hasNext(); ) {
+			Map.Entry<CopNpc, Treatment> entry = it.next();
+			CopNpc medic = entry.getKey();
+			if (medic == null || medic.getGroup() != group && entry.getValue().patient.getGroup() != group) continue;
+			end(medic, entry.getValue());
+			it.remove();
+		}
+	}
+
+	/**
+	 * Walks, channels or ends each of {@code group}'s treatments. A treatment whose medic is gone, or no longer in its
+	 * patient's group (a radio responder moved on), is ended by whichever group ticks first.
+	 */
 	private void step(CopGroup group, FieldCareSettings settings, int aiTickRate) {
 		long now = clock.getAsLong();
 		for (Iterator<Map.Entry<CopNpc, Treatment>> it = treatments.entrySet().iterator(); it.hasNext(); ) {
 			Map.Entry<CopNpc, Treatment> entry = it.next();
 			CopNpc    medic     = entry.getKey();
 			Treatment treatment = entry.getValue();
-			if (medic == null || treatment.group != group) continue;
+			if (medic == null) continue;
+			CopGroup own = medic.getGroup();
+			if (own != group && medic.isValid() && own != null && own == treatment.patient.getGroup()) continue;
 
 			if (!ongoing(group, medic, treatment, settings, now) || channel(group, medic, treatment, settings,
 			                                                                aiTickRate)) {
@@ -197,10 +219,11 @@ public class CopFieldCare {
 	}
 
 	/**
-	 * Out of {@code Heal_Range}: walks the medic over, patient free to move. In range: both hold still, the patient
-	 * under care, and the channel advances by one AI tick; a hit on the medic starts it over.
+	 * Out of {@code Heal_Range} (plus {@link #HOLD_MARGIN} once under care): walks the medic over by a direct route,
+	 * patient free to move. In range: both hold still, the patient under care, and the channel advances by one AI
+	 * tick; a hit on the medic starts it over.
 	 *
-	 * @return {@code true} once the patient is healed (the treatment is over).
+	 * @return {@code true} once the patient is healed, or its heal was cancelled (the treatment is over).
 	 */
 	private boolean channel(CopGroup group, CopNpc medic, Treatment treatment, FieldCareSettings settings,
 	                        int aiTickRate) {
@@ -210,14 +233,17 @@ public class CopFieldCare {
 		boolean      hit         = health < treatment.lastMedicHealth;
 		treatment.lastMedicHealth = health;
 
-		if (medic.distanceTo(patientBody) > settings.healRange()) {
+		double reach = patient.isUnderCare() ? settings.healRange() + HOLD_MARGIN : settings.healRange();
+		if (medic.distanceTo(patientBody) > reach) {
 			if (patient.isUnderCare()) patient.setUnderCare(false);
 			treatment.progressTicks = 0;
 			medic.navigateTo(patientBody.getLocation());
 			return false;
 		}
 
+		// both stop this tick: the patient's own behaviour would only pause it on the next AI tick
 		medic.pauseNavigation();
+		patient.pauseNavigation();
 		if (!patient.isUnderCare()) patient.setUnderCare(true);
 		if (hit) {
 			treatment.progressTicks = 0;
@@ -228,7 +254,11 @@ public class CopFieldCare {
 		treatment.progressTicks += aiTickRate;
 		if (treatment.progressTicks < settings.channelTicks()) return false;
 
-		heal(patientBody, settings.healFraction());
+		if (!heal(patientBody, settings.healFraction())) {
+			refused.put(patient, clock.getAsLong());
+			log.debug("heal of {} cancelled", CopRadio.callsign(patient));
+			return true;
+		}
 		radio.sayAs(group, medic, "Patched_Up", Map.of("member", CopRadio.callsign(patient)));
 		return true;
 	}
@@ -236,17 +266,20 @@ public class CopFieldCare {
 	/**
 	 * Gives {@code body} {@code fraction} of its max health back, through an {@link EntityRegainHealthEvent}
 	 * ({@code CUSTOM}) so health displays refresh and other plugins may change or cancel it.
+	 *
+	 * @return {@code false} when the event was cancelled (nothing healed).
 	 */
-	private static void heal(LivingEntity body, double fraction) {
+	private static boolean heal(LivingEntity body, double fraction) {
 		double max = body.getMaxHealth();
 		EntityRegainHealthEvent event = new EntityRegainHealthEvent(body, max * fraction,
 		                                                            EntityRegainHealthEvent.RegainReason.CUSTOM);
 		Bukkit.getPluginManager().callEvent(event);
-		if (event.isCancelled()) return;
+		if (event.isCancelled()) return false;
 
 		body.setHealth(Math.min(max, body.getHealth() + event.getAmount()));
 		log.debug("healed to {}/{}", body.getHealth(), max);
 		particles(body, XParticle.HEART, 5);
+		return true;
 	}
 
 	/** Ends a treatment on both sides: the medic free again, the patient standing up. */

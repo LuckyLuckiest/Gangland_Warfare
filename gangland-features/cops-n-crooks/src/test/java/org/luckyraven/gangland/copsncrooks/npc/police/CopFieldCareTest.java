@@ -205,6 +205,49 @@ class CopFieldCareTest {
 
 		verify(patient.getEntity(), never()).setHealth(anyDouble());
 		assertNull(medic.getPatient());
+		verify(radio, never()).sayAs(any(), any(), eq("Patched_Up"), anyMap());
+
+		for (int i = 0; i < 6; i++) care.tick(group); // no re-assignment loop behind the refusal
+		verify(radio, times(1)).sayAs(eq(group), eq(medic), eq("Medic_Moving"), anyMap());
+		assertNull(medic.getPatient());
+	}
+
+	@Test
+	@DisplayName("a moving patient is paused on the first in-range tick and small drift past Heal_Range keeps the channel")
+	void movingPatient_pausedAtOnce_progressSurvivesDrift() {
+		CopNpc patient = cop(1, 8.0, CopState.PURSUING, null);
+		CopNpc medic   = cop(2, 20.0, CopState.COMBAT, MEDIC);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(2.0, 2.0, 3.0, 2.0, 3.0, 2.0, 3.0); // assignment, then the channel
+
+		care.tick(group);
+		verify(patient).pauseNavigation();
+
+		for (int i = 0; i < 5; i++) care.tick(group);
+		verify(patient.getEntity()).setHealth(18.0);
+	}
+
+	@Test
+	@DisplayName("clear(group) ends its treatments; a medic moved to another group is let go by that group's tick")
+	void clearAndDetach_endTreatments() {
+		CopNpc patient = cop(1, 8.0, CopState.PURSUING, null);
+		CopNpc medic   = cop(2, 20.0, CopState.COMBAT, MEDIC);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(2.0);
+		care.tick(group);
+		assertTrue(patient.isUnderCare());
+
+		care.clear(group);
+		assertNull(medic.getPatient());
+		assertFalse(patient.isUnderCare());
+
+		care.tick(group); // re-assigned
+		assertSame(patient, medic.getPatient());
+		CopGroup other = mock(CopGroup.class);
+		when(other.getCops()).thenReturn(new ArrayList<>());
+		when(other.getSquad()).thenReturn(squad);
+		when(medic.getGroup()).thenReturn(other); // a radio responder now
+		care.tick(other);
+		assertNull(medic.getPatient());
+		assertFalse(patient.isUnderCare());
 	}
 
 	@Test
