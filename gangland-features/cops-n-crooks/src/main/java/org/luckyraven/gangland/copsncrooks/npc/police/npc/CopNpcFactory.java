@@ -143,7 +143,7 @@ public class CopNpcFactory {
 		applyTuning(copNpc, tierConfig, configProvider, rangedAttack);
 		applyRole(copNpc, role, bartizanNpcWeapons.reach(weaponName));
 
-		npc.getNavigator().getLocalParameters().speedModifier((float) tierConfig.speed());
+		copNpc.applySpeed(1.0);
 
 		return copNpc;
 	}
