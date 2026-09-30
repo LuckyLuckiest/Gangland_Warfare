@@ -277,4 +277,9 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 	default CopNames getNames() {
 		return CopNames.DEFAULT;
 	}
+
+	/** When a cop that cannot reach its suspect is recycled out of his view ({@code Cops.Stuck}). */
+	default StuckSettings getStuckSettings() {
+		return StuckSettings.DEFAULT;
+	}
 }

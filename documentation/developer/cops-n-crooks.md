@@ -513,17 +513,27 @@ void releaseByCop(UUID copId)                // Release all held by cop (on cop 
 Extends `EntitySpawner<CopSpawner>`. Spawn location strategy:
 
 ```
-spawnNearPlayer(target, tier):
-  1. findClosestSpawnerLocation(target) -- check registered spawner within preference radius
+spawnNearPlayer(target, tier, allowed):
+  1. findClosestSpawnerLocation(target, allowed) -- closest registered spawner within preference radius and
+     Spawner_Max_Y_Diff that `allowed` accepts (CopManager passes loc -> !group.isAvoided(loc, now): the spawner
+     of a recycled cop is skipped for Cops.Stuck.Avoid_Spawner_Seconds)
      Success -> copNpcFactory.createCop(location, tier)
 
-  2. findSpawnLocation(target) -- two-phase random search
+  2. findRingLocation(target) -- findSpawnLocation, a two-phase random search
      Phase 1: preferred ring behind player (p1MinDistance to maxDistance)
      Phase 2: shrinking radius fallback (maxDistance down to minDistance)
+     Each spot is within Spawn.Max_Y_Diff of the player and as indoor/outdoor as he is. A player under a roof
+     with only open street around him gets a second search that takes either kind (isOutdoor overridden to true
+     while it runs), still within Max_Y_Diff.
      Success -> copNpcFactory.createCop(location, tier, behindPlayer=true)
 
   3. Return null -- no valid location this interval
 ```
+
+Recycling (Cops.Stuck): each spawn run, a PURSUING/COMBAT cop hunting the group's player whose
+millisUnreachable() >= Recycle_Seconds is released unless the player sees it (60-degree cone plus clear line
+within max(24, Visibility_Check_Distance); past 2x Recycle_Seconds within 24 only), it is within melee reach on his
+level (|dy| <= 1.5), or another player faces it. The same run refills the group, capped at Max_Per_Player.
 
 Tier selection: `tier = min(wantedLevel, maxTier)`
 

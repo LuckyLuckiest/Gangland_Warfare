@@ -262,6 +262,25 @@ class YamlCopConfigProviderTest {
 	}
 
 	@Test
+	@DisplayName("Cops.Stuck parses Enabled/Recycle_Seconds/Avoid_Spawner_Seconds")
+	void stuckBlock_parsed() {
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Stuck:
+				      Enabled: false
+				      Recycle_Seconds: 30
+				      Avoid_Spawner_Seconds: 90
+				   Tiers:
+				      1:
+				         Display_Name: "&9Officer"
+				         Health: 20.0
+				         Damage: 2.0
+				""");
+
+		assertEquals(new StuckSettings(false, 30, 90), provider.getStuckSettings());
+	}
+
+	@Test
 	@DisplayName("missing Melee/Tactics/Radio/Backup blocks fall back to their documented defaults")
 	void missingBlocks_defaults() {
 		CopConfigProvider provider = parse("""
@@ -282,6 +301,8 @@ class YamlCopConfigProviderTest {
 		assertTrue(provider.getBackupSettings().enabled());
 		assertEquals(1, provider.getBackupSettings().extraCops());
 		assertEquals(RetreatSettings.DEFAULT, provider.getRetreatSettings());
+		assertEquals(new StuckSettings(true, 12, 60), provider.getStuckSettings());
+		assertEquals(StuckSettings.DEFAULT, provider.getStuckSettings());
 	}
 
 	@Test
@@ -304,6 +325,7 @@ class YamlCopConfigProviderTest {
 		assertEquals(330.0, provider.getTierConfig(5).tactics().formationArc());
 		assertEquals(0.1, provider.getTierConfig(4).fireRateMultiplier(), 1e-9);
 		assertTrue(provider.getRetreatSettings().enabled());
+		assertEquals(StuckSettings.DEFAULT, provider.getStuckSettings());
 		assertTrue(provider.getRadioSettings().cooldownFor("Fall_Back") > 0);
 		assertTrue(provider.getRadioSettings().cooldownFor("In_Cover") > 0);
 		assertEquals(CopNames.DEFAULT, provider.getNames());

@@ -94,6 +94,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final BackupSettings  backupSettings;
 	private final RetreatSettings retreatSettings;
 	private final CopNames        names;
+	private final StuckSettings   stuckSettings;
 
 	/**
 	 * Primary positional-config constructor.
@@ -161,6 +162,8 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.retreatSettings = RetreatSettings.read(retreatSection != null ? NodeReader.of(retreatSection, report) : null,
 		                                            report, RetreatSettings.DEFAULT);
 		this.names = parseNames(cops, report);
+		MappingNode stuckSection = cops == null ? null : cops.get("Stuck").asMapping().orNull();
+		this.stuckSettings = StuckSettings.read(stuckSection != null ? NodeReader.of(stuckSection, report) : null);
 
 		loadTiers(cops, report, itemParser);
 		buildCopsPerWantedLevel(copSettings);
@@ -386,6 +389,11 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	@Override
 	public CopNames getNames() {
 		return names;
+	}
+
+	@Override
+	public StuckSettings getStuckSettings() {
+		return stuckSettings;
 	}
 
 	private NpcMeleeProfile parseMeleeProfile(@Nullable NodeReader cops, ConfigReport report) {

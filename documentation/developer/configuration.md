@@ -390,6 +390,10 @@ Cops:
       First_Names:
          - Bob
          - Kate
+   Stuck:
+      Enabled: true
+      Recycle_Seconds: 12
+      Avoid_Spawner_Seconds: 60
    Tiers:
       4:
          Display_Name: "&1SWAT"
@@ -421,6 +425,7 @@ Cops:
 | `Retreat.*` | see above | When a hurt cop breaks off to cover, and how far it looks |
 | `Names.Format` | `%rank% &f%name% &7#%badge%` | The callsign above the cop's head and on the radio. `%rank%` = the tier's `Display_Name`, `%badge%` = 1000 + the Citizens id. The Citizens name itself is the short plain `Bob #1592` |
 | `Names.First_Names` | 28 built-in names | First-name pool; `[]` = no first name, a missing key = the built-in pool |
+| `Stuck.*` | see above | Optional (0.13.0). A cop that has found no way to its player for `Recycle_Seconds` (at least 1), out of his view (cone plus clear line within `Cops.Spawn.Visibility_Check_Distance`, never under 24 blocks; past twice `Recycle_Seconds` within 24 blocks only), unseen by other players and outside melee reach on his level, is replaced; its spawner is skipped for `Avoid_Spawner_Seconds` (0 = never). `Enabled: false` never replaces |
 
 The radio lines are in `npc/cop_radio_messages.yml` (Spanish `_es.yml`). See
 [Cops N Crooks](../features/cops-n-crooks.md) and [Migrating to 0.12.0](../migration-0.12.0.md).
