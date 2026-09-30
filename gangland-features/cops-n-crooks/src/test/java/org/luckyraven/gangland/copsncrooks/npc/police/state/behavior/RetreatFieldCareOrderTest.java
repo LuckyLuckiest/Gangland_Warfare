@@ -41,8 +41,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -141,6 +144,24 @@ class RetreatFieldCareOrderTest {
 		aiTick(patient);
 		aiTick(patient);
 		assertTrue(patient.isUnderCare(), "in cover it stays under care");
+	}
+
+	@Test
+	@DisplayName("a band shooter under care in PURSUING shot below its retreat line stands up and walks to cover, unpaused")
+	void pursuingUnderCare_shotBelowRetreatLine_walksToCover() {
+		CopNpc patient = shooter(9.0, CopState.PURSUING);
+		medicInRange();
+		aiTick(patient);
+		assertTrue(patient.isUnderCare());
+
+		when(patient.getEntity().getHealth()).thenReturn(5.0);
+		when(patient.takeCover(player, RADIUS, squad)).thenReturn(NpcCoverStatus.MOVING);
+		clearInvocations(patient);
+		aiTick(patient);
+		assertEquals(CopState.PURSUING, patient.getCurrentState());
+		assertFalse(patient.isUnderCare(), "it breaks off to cover rather than crouch in the open");
+		assertTrue(patient.isMovingToCover());
+		verify(patient, never()).pauseNavigation();
 	}
 
 	@Test
