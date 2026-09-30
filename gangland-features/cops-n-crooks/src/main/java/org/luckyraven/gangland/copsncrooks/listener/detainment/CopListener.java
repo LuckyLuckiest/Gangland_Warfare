@@ -160,7 +160,8 @@ public class CopListener implements Listener {
 
 	/**
 	 * A cop whose role blocks (the Defender's shield) takes {@code Block_Fraction} off a hit coming from inside its
-	 * front cone. Where the hit comes from is the shooter for a projectile, else the damager.
+	 * front cone. Where the hit comes from is the shooter for a projectile, else the damager. Bartizan credits area
+	 * damage (explosions, fire, beams) to the shooter, so the cone is judged by who attacked, not where it landed.
 	 */
 	private void shieldBlock(EntityDamageByEntityEvent event, Entity victim, Entity damager) {
 		CopNpc  cop  = copManager.findCopByEntity(victim);

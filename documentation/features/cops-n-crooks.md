@@ -129,10 +129,15 @@ formation arc, the role decides where the cop stands and how it fights. Roles fi
 | Commander | 3          | Radio voice from the rear of the band; when it goes down: "Commander down!", fall back |
 | Defender  | 3          | Holds the centre post up front; its shield takes half of every hit from its front      |
 | Marksman  | 3          | The back of the fan (never past its gun's reach), slower but surer shots               |
-| Medic     | 4          | Treats hurt squad mates                                                                |
+| Medic     | 4          | Treats hurt squad mates (needs field care; without it a Medic fights as a plain cop)   |
 
 A `cops.yml` without `Roles` / `Squad_Composition` blocks (every file from before 0.13.0) gets exactly this built-in
 catalogue. Set `Cops.Roles_Enabled: false` to spawn every cop as its plain tier again.
+
+The Defender's front cone is judged from whoever dealt the damage: the shooter for a bullet or arrow, the attacker for
+anything else. Area damage (a grenade, fire) is credited to its thrower, so a blast behind a Defender is still halved
+while the thrower stands in front of it. The Commander fall-back is a retreat: `Cops.Retreat.Enabled: false` turns it
+off, and each cop that falls back may radio the Fall_Back line right after "Commander down!".
 
 ---
 
@@ -309,9 +314,14 @@ Cops:
          Difficulty_Bonus: 1         # steps above the tier's Difficulty
       Commander:
          Leader_Priority: 2          # the highest live priority speaks for the squad
-         Commander: true             # its death: Commander_Down, the squad falls back for 5 s
+         Commander: true             # its death (leading or not): Commander_Down, the squad falls back for 5 s
    Squad_Composition:
-      3: ["Commander", "Pointman", "Defender", "Marksman", "Assault"]
+      3:
+         - "Commander"
+         - "Pointman"
+         - "Defender"
+         - "Marksman"
+         - "Assault"
 ```
 
 ### AI Settings (`settings.yml` → `Cops.Behaviour`)
