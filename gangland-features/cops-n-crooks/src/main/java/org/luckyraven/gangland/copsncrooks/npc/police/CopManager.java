@@ -616,7 +616,7 @@ public class CopManager implements BeanLifecycle {
 
 	/**
 	 * Sends the newest free cops home once a backup ran out, until the group is back to {@code targetCount}. A cop in
-	 * a fight, cuffing or guarding is never sent; what cannot go this run is retried on the next.
+	 * a fight, cuffing or guarding is never sent, nor the Commander; what cannot go this run is retried on the next.
 	 */
 	private void releaseSurplus(CopGroup group, int targetCount) {
 		List<CopNpc> live = new ArrayList<>();
@@ -635,6 +635,8 @@ public class CopManager implements BeanLifecycle {
 			CopNpc   cop   = live.get(i);
 			CopState state = cop.getCurrentState();
 			if (state != CopState.PURSUING && state != CopState.IDLE) continue;
+			// the Commander leads the squad: a replacement spawned mid-backup is the newest cop, never the surplus (T-146)
+			if (cop.getRole() != null && cop.getRole().commander()) continue;
 
 			cop.transitionTo(CopState.RETURNING);
 			group.setPendingRelease(group.getPendingRelease() - 1);

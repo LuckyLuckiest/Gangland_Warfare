@@ -53,6 +53,8 @@ class CopManagerSquadTest {
 
 	private static final CopRole MEDIC = new CopRole("Medic", "Medic", NpcFanPlacement.CENTER, 8.0, 12.0, 1.0, null,
 	                                                 0, null, 1.0, 0, null, 0, 60, true, false);
+	private static final CopRole COMMANDER = new CopRole("Commander", "Commander", NpcFanPlacement.ANY, null, null,
+	                                                     1.0, null, 10, null, 1.0, 0, null, 0, 60, false, true);
 
 	private CopManagerFixture fx;
 	private CopManager        manager;
@@ -265,6 +267,25 @@ class CopManagerSquadTest {
 		assertEquals(CopState.COMBAT, cops.get(0).getCurrentState());
 		assertEquals(0, group.getPendingRelease());
 		assertEquals(3, group.getCops().size(), "it despawns on its own, not replaced meanwhile");
+	}
+
+	@Test
+	@DisplayName("when backup runs out the Commander is never sent home, even as the newest free cop (T-146)")
+	void backupExpired_commanderNeverReleased() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		group.requestBackup(fx.clock[0], fx.provider.getBackupSettings());
+		manager.spawnTick(playerId, wanted);
+		List<CopNpc> cops = List.copyOf(group.getCops());
+		assertEquals(3, cops.size());
+		when(cops.get(2).getRole()).thenReturn(COMMANDER); // the replacement for a Commander killed mid-backup
+
+		fx.clock[0] += 31_000;
+		manager.spawnTick(playerId, wanted);
+
+		assertEquals(CopState.PURSUING, cops.get(2).getCurrentState(), "the Commander stays");
+		assertEquals(CopState.RETURNING, cops.get(1).getCurrentState(), "the newest other free cop goes");
+		assertEquals(0, group.getPendingRelease());
 	}
 
 	@Test
