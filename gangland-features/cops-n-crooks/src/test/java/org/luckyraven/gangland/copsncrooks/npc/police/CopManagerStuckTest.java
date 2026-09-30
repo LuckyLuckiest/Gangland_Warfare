@@ -7,13 +7,16 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.StuckSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.core.wanted.Wanted;
+import org.luckyraven.keystone.npc.NpcFanPlacement;
 import org.luckyraven.keystone.npc.NpcSquadSignal;
 import org.mockito.ArgumentCaptor;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Predicate;
 
@@ -97,6 +100,28 @@ class CopManagerStuckTest {
 		verify(fx.spawner, atLeastOnce()).spawnNearPlayer(eq(player), anyInt(), allowed.capture(), any());
 		assertFalse(allowed.getValue().test(spawner.clone()), "the recycled cop's spawner is avoided");
 		assertTrue(allowed.getValue().test(new Location(fx.world, -149.8, 80, 155.7)));
+	}
+
+	@Test
+	@DisplayName("the replacement takes the recycled cop's squad role (and, through createCop, a callsign)")
+	void strandedRecycled_replacementTakesFreedRole() {
+		CopRole pointman = role("Pointman");
+		CopRole assault  = role("Assault");
+		when(fx.provider.getSquadComposition(anyInt())).thenReturn(List.of(pointman, assault));
+		CopNpc stuck = stranded(CopState.PURSUING, 10, 64, 0, 13_000);
+		CopNpc fine  = stranded(CopState.PURSUING, 10, 64, 20, 0);
+		when(stuck.getRole()).thenReturn(assault);
+		when(fine.getRole()).thenReturn(pointman);
+
+		manager.spawnTick(playerId, wanted);
+
+		assertFalse(group.getCops().contains(stuck));
+		verify(fx.spawner).spawnNearPlayer(eq(player), anyInt(), any(), eq(assault));
+	}
+
+	private static CopRole role(String name) {
+		return new CopRole(name, name, NpcFanPlacement.ANY, null, null, 1.0, null, 0, null, 1.0, 0, null, 0, 60, false,
+		                   false);
 	}
 
 	@Test
