@@ -59,6 +59,14 @@ class BartizanNpcWeaponsGuardTest {
 		assertNull(result);
 	}
 
+	@Test
+	@DisplayName("reach(): Bartizan unavailable returns null without touching the ServicesManager")
+	void reach_bartizanUnavailable_returnsNull() {
+		stubBartizanUnavailable();
+
+		assertNull(new BartizanNpcWeapons().reach("some_weapon"));
+	}
+
 	private static void stubBartizanUnavailable() {
 		PluginManager pluginManager = mock(PluginManager.class);
 		when(pluginManager.isPluginEnabled("Bartizan")).thenReturn(false);

@@ -12,12 +12,17 @@ import org.luckyraven.bartizan.api.BartizanApi;
 import org.luckyraven.bartizan.api.item.WeaponItemApi;
 import org.luckyraven.bartizan.api.npc.NpcWeaponController;
 import org.luckyraven.bartizan.api.npc.NpcWeaponFactory;
+import org.luckyraven.bartizan.api.weapon.GunWeapon;
+import org.luckyraven.bartizan.api.weapon.MeleeWeapon;
+import org.luckyraven.bartizan.api.weapon.WeaponCatalog;
+import org.luckyraven.bartizan.api.weapon.dto.ProjectileData;
 import org.luckyraven.keystone.npc.NpcDifficulty;
 import org.luckyraven.keystone.npc.spi.NpcRangedAttack;
 import org.mockito.MockedStatic;
 
 import java.util.function.Supplier;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
@@ -169,6 +174,32 @@ class BartizanNpcWeaponsTest {
 	@DisplayName("buildItem() returns null for a null weapon name")
 	void buildItem_nullWeaponName_returnsNull() {
 		assertNull(weapons.buildItem(null));
+	}
+
+
+	// ── reach() (phase H13: a role's band never outranges the weapon) ───────────
+
+	@Test
+	@DisplayName("reach() is a gun's projectile Distance; null for a non-gun, an unknown name, a zero distance or no name")
+	void reach_gunDistance_elseNull() {
+		BartizanApi   api     = mock(BartizanApi.class);
+		WeaponCatalog catalog = mock(WeaponCatalog.class);
+		GunWeapon     rifle   = mock(GunWeapon.class);
+		GunWeapon     broken  = mock(GunWeapon.class);
+		when(api.weapons()).thenReturn(catalog);
+		when(catalog.getWeaponTemplate("rifle")).thenReturn(rifle);
+		when(rifle.getProjectileData()).thenReturn(ProjectileData.builder().distance(10).build());
+		when(catalog.getWeaponTemplate("broken")).thenReturn(broken);
+		when(broken.getProjectileData()).thenReturn(ProjectileData.builder().distance(0).build());
+		when(catalog.getWeaponTemplate("knife")).thenReturn(mock(MeleeWeapon.class));
+
+		try (MockedStatic<Bukkit> ignored = mockBukkit(api)) {
+			assertEquals(10.0, weapons.reach("rifle"));
+			assertNull(weapons.reach("broken"));
+			assertNull(weapons.reach("knife"));
+			assertNull(weapons.reach("bogus"));
+			assertNull(weapons.reach(null));
+		}
 	}
 
 }
