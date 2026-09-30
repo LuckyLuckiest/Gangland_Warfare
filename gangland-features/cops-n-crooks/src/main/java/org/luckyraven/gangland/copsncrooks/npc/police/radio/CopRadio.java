@@ -71,16 +71,17 @@ public class CopRadio {
 
 	/**
 	 * The listener for {@code group}'s squads: speaks their signals, queues a {@link RadioCall} on a contact or a
-	 * casualty, and on a casualty requests backup, announcing it when granted. A Commander going down is
-	 * {@code Commander_Down} rather than {@code Leader_Down}, and the group falls back to cover for
-	 * {@link #COMMANDER_FALL_BACK_MS}.
+	 * casualty, and on a casualty requests backup, announcing it when granted. A Commander going down (leading or not)
+	 * is {@code Commander_Down} rather than {@code Leader_Down} / {@code Man_Down}, and the group falls back to cover
+	 * for {@link #COMMANDER_FALL_BACK_MS}.
 	 */
 	public NpcSquadListener listenerFor(CopGroup group, Consumer<RadioCall> onCall) {
 		RadioVoice       voice = voice(group);
 		NpcSquadListener speak = radio.listener(voice);
 		return (squad, signal, member, where) -> {
-			if (signal == NpcSquadSignal.LEADER_DOWN && member instanceof CopNpc cop && cop.getRole() != null
-			    && cop.getRole().commander()) commanderDown(group, squad, voice, member, where);
+			boolean down = signal == NpcSquadSignal.MAN_DOWN || signal == NpcSquadSignal.LEADER_DOWN;
+			if (down && member instanceof CopNpc cop && cop.getRole() != null && cop.getRole().commander())
+				commanderDown(group, squad, voice, member, where);
 			else speak.onSignal(squad, signal, member, where);
 			switch (signal) {
 				case CONTACT, MAN_DOWN, LEADER_DOWN -> {

@@ -152,6 +152,26 @@ class CopRadioTest {
 	}
 
 	@Test
+	@DisplayName("a Commander that is not the squad leader (Leader_Priority 0) still radios Commander_Down and falls the group back when it dies as a man down")
+	void commanderNotLeader_manDown_saysCommanderDown_groupFallsBack() {
+		Player bystander = listener(10, 0);
+		CopNpc leader    = cop(1, "SWAT", 4, 0);
+		CopNpc commander = cop(2, "SWAT", 6, 0);
+		when(commander.getRole()).thenReturn(new CopRole("Commander", "Commander", NpcFanPlacement.ANY, null, null,
+		                                                 1.0, null, 0, null, 1.0, 0, null, 0, 60, false, true));
+		group.add(leader);
+		group.add(commander);
+
+		group.getSquad().memberDown(commander);
+
+		verify(bystander).sendMessage("[SWAT-1] Commander_Down line");
+		verify(bystander, never()).sendMessage("[SWAT-1] Man_Down line");
+		verify(bystander).sendMessage("[SWAT-1] Backup line");
+		assertEquals(1, calls.size());
+		assertTrue(group.isFallingBack(clock[0]));
+	}
+
+	@Test
 	@DisplayName("any other leader going down is Leader_Down, and the group does not fall back")
 	void plainLeaderDown_saysLeaderDown_noFallBack() {
 		Player bystander = listener(10, 0);
