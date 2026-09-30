@@ -203,6 +203,17 @@ class CopManagerStuckTest {
 	}
 
 	@Test
+	@DisplayName("a stranded cop within melee distance on his level but behind a wall is recycled")
+	void strandedBehindWallWithinReach_recycled() {
+		CopNpc stuck = stranded(CopState.PURSUING, 10, 64, 8, 600_000); // 2 blocks behind him, wall between
+		when(player.hasLineOfSight(stuck.getEntity())).thenReturn(false);
+
+		manager.spawnTick(playerId, wanted);
+
+		assertFalse(group.getCops().contains(stuck));
+	}
+
+	@Test
 	@DisplayName("the refill after a recycle never goes above Max_Per_Player")
 	void recycleRefill_clampedToMaxPerPlayer() {
 		when(fx.spawner.getTargetCopCount(anyInt())).thenReturn(5);
