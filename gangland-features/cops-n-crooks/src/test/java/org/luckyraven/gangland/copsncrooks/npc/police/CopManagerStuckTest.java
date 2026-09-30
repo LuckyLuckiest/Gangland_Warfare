@@ -177,6 +177,21 @@ class CopManagerStuckTest {
 	}
 
 	@Test
+	@DisplayName("the refill after a recycle never goes above Max_Per_Player")
+	void recycleRefill_clampedToMaxPerPlayer() {
+		when(fx.spawner.getTargetCopCount(anyInt())).thenReturn(5);
+		when(fx.provider.getMaxCopsPerPlayer()).thenReturn(3);
+		CopNpc stuck = stranded(CopState.PURSUING, 10, 64, 0, 13_000);
+		stranded(CopState.PURSUING, 11, 64, 20, 0);
+		stranded(CopState.PURSUING, 12, 64, 20, 0);
+
+		manager.spawnTick(playerId, wanted);
+
+		assertFalse(group.getCops().contains(stuck));
+		assertEquals(3, group.getCops().size());
+	}
+
+	@Test
 	@DisplayName("a stranded cop another player is looking at is kept")
 	void strandedSeenByBystander_kept() {
 		CopNpc stuck = stranded(CopState.PURSUING, 10, 64, 0, 13_000);
