@@ -15,6 +15,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.StuckSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio.RadioCall;
@@ -23,6 +24,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.targeting.TargetingManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.npc.TacticsConfig;
+import org.luckyraven.keystone.npc.NpcMeleeProfile;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.npc.spi.NpcSquadListener;
 import org.luckyraven.keystone.testkit.BukkitStatics;
@@ -72,6 +74,8 @@ final class CopManagerFixture implements AutoCloseable {
 		when(provider.getPursuitMaxDistance()).thenReturn(80.0);
 		when(provider.getBackupSettings()).thenReturn(new BackupSettings(true, 1, 30_000, 60_000));
 		when(provider.getRadioSettings()).thenReturn(CopConfigProvider.COP_RADIO_DEFAULTS);
+		when(provider.getStuckSettings()).thenReturn(StuckSettings.DEFAULT);
+		when(provider.getMeleeProfile()).thenReturn(NpcMeleeProfile.DEFAULT);
 		CopTierConfig tierConfig = mock(CopTierConfig.class);
 		when(tierConfig.displayName()).thenReturn("SWAT");
 		when(tierConfig.tactics()).thenReturn(new TacticsConfig(TacticsConfig.DEFAULT.engagement(), 270.0));
@@ -79,7 +83,7 @@ final class CopManagerFixture implements AutoCloseable {
 
 		when(spawner.getTargetCopCount(anyInt())).thenReturn(2);
 		when(spawner.getTierForWantedLevel(anyInt())).thenAnswer(inv -> tier[0]);
-		when(spawner.spawnNearPlayer(any(), anyInt())).thenAnswer(inv -> cop(CopState.IDLE, 0, 0));
+		when(spawner.spawnNearPlayer(any(), anyInt(), any())).thenAnswer(inv -> cop(CopState.IDLE, 0, 0));
 
 		when(radio.now()).thenAnswer(inv -> clock[0]);
 		when(radio.listenerFor(any(), any())).thenAnswer(inv -> {

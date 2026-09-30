@@ -17,6 +17,8 @@ import org.luckyraven.keystone.npc.entity.EntitySpawner;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
+import java.util.function.Predicate;
+
 public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 
 	private final JavaPlugin         plugin;
@@ -29,6 +31,8 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 
 	private CopNpcFactory     copNpcFactory;
 	private CopConfigProvider configProvider;
+	/** While set, every spot counts as outdoor: the ring takes indoor and outdoor spots alike. */
+	private boolean           anyRoof;
 
 	public CopSpawnManager(JavaPlugin plugin, CopLoader copLoader, NpcMarkManager markManager,
 	                       BartizanNpcWeapons bartizanNpcWeapons, DownedTargetFilter downedTargetFilter,
@@ -60,26 +64,53 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	}
 
 	/**
-	 * Spawns a cop NPC near the given player with the specified tier.
+	 * Spawns a cop NPC near the given player with the specified tier: at the closest registered spawner whose location
+	 * {@code allowed} accepts, else somewhere on the ring around him.
 	 *
 	 * @param target the player to spawn near
 	 * @param tier the cop tier
+	 * @param allowed which spawner locations may be used (a recycled cop's spawner is skipped for a while)
 	 *
 	 * @return the spawned CopNpc, or null if no valid location was found
 	 */
 	@Nullable
-	public CopNpc spawnNearPlayer(Player target, int tier) {
-		Location spawnLoc = findClosestSpawnerLocation(target);
+	public CopNpc spawnNearPlayer(Player target, int tier, Predicate<Location> allowed) {
+		Location spawnLoc = findClosestSpawnerLocation(target, allowed);
 
 		if (spawnLoc != null) {
 			return copNpcFactory.createCop(spawnLoc, tier);
 		}
 
-		spawnLoc = findSpawnLocation(target);
+		spawnLoc = findRingLocation(target);
 
 		if (spawnLoc == null) return null;
 
 		return copNpcFactory.createCop(spawnLoc, tier, true);
+	}
+
+	/**
+	 * A spot on the ring around {@code target}. The ring only takes spots as indoor or outdoor as the suspect, so a
+	 * suspect under a roof with nothing but open street around him got none, and no cop ever came; for him the ring
+	 * is searched again taking either kind (still at his level, within {@code Spawn.Max_Y_Diff}).
+	 */
+	@Nullable
+	Location findRingLocation(Player target) {
+		Location spot = findSpawnLocation(target);
+		if (spot != null || isOutdoor(target.getLocation())) return spot;
+
+		anyRoof = true;
+		try {
+			return findSpawnLocation(target);
+		} finally {
+			anyRoof = false;
+		}
+	}
+
+	// ponytail: leans on EntitySpawner judging both the suspect and each ring spot through isOutdoor; a Keystone ring
+	// option (match indoor/outdoor or not) replaces this if that ever changes.
+	@Override
+	protected boolean isOutdoor(Location location) {
+		return anyRoof || super.isOutdoor(location);
 	}
 
 	/**

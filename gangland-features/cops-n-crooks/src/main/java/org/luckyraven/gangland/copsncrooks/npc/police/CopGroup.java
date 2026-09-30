@@ -59,6 +59,8 @@ public class CopGroup {
 	private long backupReadyAt;
 	/** Cuffs each suspect broke out of, across every officer of the group (the lock passes between them). */
 	private final Map<UUID, Integer> cuffFailures = new HashMap<>();
+	/** Spawn origins of recycled cops, and until when replacements skip them. */
+	private final Map<Location, Long> avoidedSpawns = new HashMap<>();
 
 	/** Backup cops still to send home after a backup ran out; kept until enough are free to go. */
 	@Setter
@@ -187,6 +189,19 @@ public class CopGroup {
 		combatAlert      = false;
 		resistingPending = false;
 		cuffFailures.clear();
+	}
+
+	/** Replacements skip {@code spawn} (the spawner a recycled cop came from) until {@code until}. */
+	public void avoid(Location spawn, long until) {
+		avoidedSpawns.put(spawn.clone(), until);
+	}
+
+	/** {@code location} is within 3 blocks of a spawn origin still {@link #avoid avoided} at {@code now}. */
+	public boolean isAvoided(Location location, long now) {
+		avoidedSpawns.values().removeIf(until -> now >= until);
+		for (Location spawn : avoidedSpawns.keySet())
+			if (spawn.getWorld() == location.getWorld() && spawn.distanceSquared(location) <= 9) return true;
+		return false;
 	}
 
 	public boolean isEmpty() {

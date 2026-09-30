@@ -9,6 +9,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Vector;
 import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
@@ -16,6 +17,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.StuckSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio.RadioCall;
@@ -468,9 +470,10 @@ public class CopManager implements BeanLifecycle {
 		if (group == null) return;
 
 		List<CopNpc> cops = group.getCops();
+		long         now  = copRadio.now();
 
 		cops.removeIf(cop -> {
-			if (cop.isMarkedForRemoval()) {
+			if (cop.isMarkedForRemoval() || recycles(cop, group, player, now)) {
 				group.release(cop, markManager);
 				return true;
 			}
@@ -487,7 +490,6 @@ public class CopManager implements BeanLifecycle {
 			return false;
 		});
 
-		long           now        = copRadio.now();
 		BackupSettings backup     = backupSettings();
 		int            tier       = spawnManager.getTierForWantedLevel(wantedLevel);
 		CopTierConfig  tierConfig = configProvider.getTierConfig(tier);
@@ -508,7 +510,7 @@ public class CopManager implements BeanLifecycle {
 
 		// Spawn all missing cops in one pass so a full wipe is recovered in a single interval
 		while (currentCount < targetCount) {
-			CopNpc newCop = spawnManager.spawnNearPlayer(player, tier);
+			CopNpc newCop = spawnManager.spawnNearPlayer(player, tier, loc -> !group.isAvoided(loc, now));
 			if (newCop == null) break; // no valid location found - stop trying this interval
 
 			newCop.setTargetPlayerId(playerId);
@@ -524,6 +526,44 @@ public class CopManager implements BeanLifecycle {
 		group.consumeBackupExpiry(now, backup);
 		if (group.getPendingRelease() > 0) releaseSurplus(group, targetCount);
 		group.pruneAttackerSquads();
+	}
+
+	/**
+	 * A cop hunting the group's suspect that has found no way to him for {@code Cops.Stuck.Recycle_Seconds}
+	 * ({@link CopNpc#millisUnreachable()}) and that no one is looking at is taken off the map; its spawner is skipped
+	 * for {@code Avoid_Spawner_Seconds} so the replacement spawned in the same run comes from elsewhere.
+	 */
+	private boolean recycles(CopNpc cop, CopGroup group, Player player, long now) {
+		StuckSettings stuck = configProvider.getStuckSettings();
+		CopState      state = cop.getCurrentState();
+		LivingEntity  body  = cop.getEntity();
+		if (!stuck.enabled() || body == null || (state != CopState.PURSUING && state != CopState.COMBAT)) return false;
+		if (!player.getUniqueId().equals(cop.getTargetPlayerId())) return false;
+		if (cop.millisUnreachable() < stuck.recycleSeconds() * 1000L) return false;
+
+		Location at = body.getLocation();
+		if (at.getWorld() == player.getWorld()) {
+			// a melee cop knocked off its surround slot keeps its clock running though it can hit him
+			if (at.distance(player.getLocation()) <= configProvider.getMeleeProfile().reach()) return false;
+			if (inView(player, body, stuck.viewDistance())) return false;
+		}
+		if (spawnManager.isVisibleToOtherPlayers(at, player)) return false;
+
+		Location origin = cop.getSpawnLocation();
+		if (origin != null && stuck.avoidSpawnerSeconds() > 0)
+			group.avoid(origin, now + stuck.avoidSpawnerSeconds() * 1000L);
+		return true;
+	}
+
+	/**
+	 * {@code body} is in front of the suspect's eyes (within 60 degrees of where he looks, up and down included) with
+	 * a clear line within {@code maxDistance}. A bare line of sight would keep every cop on a ledge above his head.
+	 */
+	private static boolean inView(Player player, LivingEntity body, double maxDistance) {
+		Location eye    = player.getEyeLocation();
+		Vector   toward = body.getLocation().toVector().add(new Vector(0, 1, 0)).subtract(eye.toVector());
+		if (toward.lengthSquared() > maxDistance * maxDistance) return false;
+		return eye.getDirection().angle(toward) < Math.PI / 3 && player.hasLineOfSight(body);
 	}
 
 	private static boolean isStrandedReturning(CopNpc cop, Player player, double maxDist) {
