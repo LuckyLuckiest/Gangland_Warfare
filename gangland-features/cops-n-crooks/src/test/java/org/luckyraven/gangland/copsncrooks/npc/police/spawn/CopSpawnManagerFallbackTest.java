@@ -14,21 +14,28 @@ import org.luckyraven.gangland.civilians.npc.combat.DownedTargetFilter;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpcFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.persistence.repository.IRepository;
+import org.mockito.ArgumentCaptor;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
  * Phase H13 (B2): with the only spawner in range avoided (a cop recycled from it), a replacement comes from the ring
  * around the suspect. The ring only takes spots with the suspect's own indoor/outdoor state, so a suspect indoors on
  * street level found no spot at all and no replacement ever came; the fallback then accepts the street outside.
+ * {@code spawnNearPlayer} passes its filter to the spawner search, so a rejected spawner hands over to that ring.
  */
 @DisplayName("CopSpawnManager - ring fallback for a suspect indoors")
 class CopSpawnManagerFallbackTest {
@@ -98,6 +105,27 @@ class CopSpawnManagerFallbackTest {
 		});
 
 		assertNull(spawnManager.findRingLocation(player));
+	}
+
+	@Test
+	@DisplayName("with the only in-range spawner avoided, spawnNearPlayer takes the ring; allowed, the spawner")
+	void spawnNearPlayer_avoidedSpawner_fallsBackToRing() {
+		roofElsewhere = GROUND_Y - 1;
+		CopNpcFactory factory = mock(CopNpcFactory.class);
+		spawnManager.copNpcFactory = factory;
+		Location spawner = new Location(world, 5.5, GROUND_Y + 10, 5.5); // within Spawner_Max_Y_Diff 16
+		spawnManager.setSpawnerLocation(spawner);
+
+		spawnManager.spawnNearPlayer(player, 2, loc -> false);
+
+		ArgumentCaptor<Location> ring = ArgumentCaptor.forClass(Location.class);
+		verify(factory).createCop(ring.capture(), eq(2), eq(true));
+		verify(factory, never()).createCop(any(), anyInt());
+		assertTrue(ring.getValue().distance(spawner) > 3, "the ring spot, not the avoided spawner");
+
+		spawnManager.spawnNearPlayer(player, 2, loc -> true);
+
+		verify(factory).createCop(spawner, 2);
 	}
 
 	/** Solid below {@link #GROUND_Y}, air at and above it. */

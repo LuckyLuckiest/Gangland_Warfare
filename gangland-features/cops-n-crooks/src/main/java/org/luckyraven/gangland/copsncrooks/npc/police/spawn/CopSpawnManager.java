@@ -29,7 +29,7 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	private final DetainmentService  detainmentService;
 	private final CuffLockRegistry   cuffLockRegistry;
 
-	private CopNpcFactory     copNpcFactory;
+	CopNpcFactory             copNpcFactory; // package-private: tests swap in a mock
 	private CopConfigProvider configProvider;
 	/** While set, every spot counts as outdoor: the ring takes indoor and outdoor spots alike. */
 	private boolean           anyRoof;
