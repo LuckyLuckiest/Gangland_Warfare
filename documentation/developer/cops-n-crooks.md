@@ -361,6 +361,33 @@ applies gunfire through `victim.damage(amount, shooter)`, so melee, arrows and g
 `CopRetreat.takeCover` send every cop of the group to cover for `CopRadio.COMMANDER_FALL_BACK_MS`, outside its own
 cover budget.
 
+#### Field care (0.13.0)
+
+`CopFieldCare` (one per `CopManager`, no static state) runs `tick(group)` at the end of each `aiTick`, after the cops'
+own behaviours. It reads `FieldCareSettings` (`Cops.Field_Care`, gangland-api) and keeps its per-cop state weak-keyed:
+
+- **Hurt edge:** `isHurt` (false with `Enabled: false`, so switching it off is a falling edge) flips
+  `CopNpc.applySpeed(Limp_Speed | 1.0)`, which writes the Citizens navigator's default AND local parameters (Citizens
+  clones the defaults into the locals on every new path). The rising edge radios `Hit` through `CopRadio.sayAs`;
+  `DAMAGE_INDICATOR` particles spawn every AI tick while hurt.
+- **Assignment:** a hurt PURSUING/COMBAT cop with no medic gets the nearest cop whose `CopRole.medic()` is set, that
+  is fighting, not hurt and free, within `Medic_Radius`. The medic gets `CopNpc.setPatient`, radios `Medic_Moving`;
+  `Covering_Fire` comes from the squad leader unless it is the medic or the patient (then any other fighting cop,
+  else nobody). Covering fire is a radio line only.
+- **Treatment:** while `getPatient() != null`, `CombatBehavior.holdsForFieldCare` makes the fighting behaviours return
+  after their attack, so `CopFieldCare` walks the medic (`navigateTo`). Within `Heal_Range` the medic pauses and the
+  patient gets `setUnderCare(true)` (SneakTrait crouch; the behaviours `pauseNavigation()` and return, melee
+  included). Progress advances by `getAiTickRate()` per AI tick; a medic health drop resets it (`Medic_Pinned`). At
+  `Channel_Ticks` an `EntityRegainHealthEvent(CUSTOM)` is fired and, unless cancelled, its amount applied
+  (`Patched_Up`).
+- **Ending:** either cop invalid or out of the group, out of PURSUING/COMBAT, the patient no longer hurt, the medic
+  hurt, or `CopFieldCare.GIVE_UP_MS` (15 s). `CopNpc.transitionTo` also drops both care slots whenever a cop leaves
+  PURSUING/COMBAT, so nothing survives a group being dropped or a reload.
+
+Radio cooldowns for the five keys are milliseconds in `COP_RADIO_DEFAULTS` and ticks in `cops.yml`. The medic stays in
+its squad while treating (so `MAN_DOWN` still fires if it dies), and its old fan post stays reserved until the next
+pursue.
+
 A killed cop is found with `findDyingCop` (its entity is no longer valid during `EntityDeathEvent`), and
 `CopListener` calls `memberDown` on its current squad and on the group squad, so the Man Down line, backup and
 responders fire even for a cop killed mid-navigation (T-111).
