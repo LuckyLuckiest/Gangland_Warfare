@@ -14,8 +14,10 @@ import org.luckyraven.gangland.civilians.npc.combat.DownedTargetFilter;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpcFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
+import org.luckyraven.keystone.npc.NpcFanPlacement;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.mockito.ArgumentCaptor;
@@ -26,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -42,6 +43,9 @@ import static org.mockito.Mockito.when;
 class CopSpawnManagerFallbackTest {
 
 	private static final int GROUND_Y = 64;
+
+	private static final CopRole MEDIC = new CopRole("Medic", "Medic", NpcFanPlacement.CENTER, null, null, 1.0, null, 0,
+	                                                 null, 1.0, 0, null, 0, 60, true, false);
 
 	private World           world;
 	private Player          player;
@@ -109,7 +113,7 @@ class CopSpawnManagerFallbackTest {
 	}
 
 	@Test
-	@DisplayName("with the only in-range spawner avoided, spawnNearPlayer takes the ring; allowed, the spawner")
+	@DisplayName("an avoided spawner hands over to the ring, an allowed one is used; the role reaches createCop on both")
 	void spawnNearPlayer_avoidedSpawner_fallsBackToRing() {
 		roofElsewhere = GROUND_Y - 1;
 		CopNpcFactory factory = mock(CopNpcFactory.class);
@@ -117,16 +121,16 @@ class CopSpawnManagerFallbackTest {
 		Location spawner = new Location(world, 5.5, GROUND_Y + 10, 5.5); // within Spawner_Max_Y_Diff 16
 		spawnManager.setSpawnerLocation(spawner);
 
-		spawnManager.spawnNearPlayer(player, 2, loc -> false, null);
+		spawnManager.spawnNearPlayer(player, 2, loc -> false, MEDIC);
 
 		ArgumentCaptor<Location> ring = ArgumentCaptor.forClass(Location.class);
-		verify(factory).createCop(ring.capture(), eq(2), eq(true), isNull());
+		verify(factory).createCop(ring.capture(), eq(2), eq(true), eq(MEDIC));
 		verify(factory, never()).createCop(any(), anyInt(), eq(false), any());
 		assertTrue(ring.getValue().distance(spawner) > 3, "the ring spot, not the avoided spawner");
 
-		spawnManager.spawnNearPlayer(player, 2, loc -> true, null);
+		spawnManager.spawnNearPlayer(player, 2, loc -> true, MEDIC);
 
-		verify(factory).createCop(spawner, 2, false, null);
+		verify(factory).createCop(spawner, 2, false, MEDIC);
 	}
 
 	/** Solid below {@link #GROUND_Y}, air at and above it. */

@@ -564,11 +564,11 @@ void releaseByCop(UUID copId)                // Release all held by cop (on cop 
 Extends `EntitySpawner<CopSpawner>`. Spawn location strategy:
 
 ```
-spawnNearPlayer(target, tier, allowed):
+spawnNearPlayer(target, tier, allowed, role):   -- role: CopRole.nextRole in CopManager.spawnTick (null = plain tier)
   1. findClosestSpawnerLocation(target, allowed) -- closest registered spawner within preference radius and
      Spawner_Max_Y_Diff that `allowed` accepts (CopManager passes loc -> !group.isAvoided(loc, now): the spawner
      of a recycled cop is skipped for Cops.Stuck.Avoid_Spawner_Seconds)
-     Success -> copNpcFactory.createCop(location, tier)
+     Success -> copNpcFactory.createCop(location, tier, false, role)
 
   2. findRingLocation(target) -- findSpawnLocation, a two-phase random search
      Phase 1: preferred ring behind player (p1MinDistance to maxDistance)
@@ -576,7 +576,7 @@ spawnNearPlayer(target, tier, allowed):
      Each spot is within Spawn.Max_Y_Diff of the player and as indoor/outdoor as he is. A player under a roof
      with only open street around him gets a second search that takes either kind (isOutdoor overridden to true
      while it runs), still within Max_Y_Diff.
-     Success -> copNpcFactory.createCop(location, tier, behindPlayer=true)
+     Success -> copNpcFactory.createCop(location, tier, validateAfterSpawn=true, role)
 
   3. Return null -- no valid location this interval
 ```
