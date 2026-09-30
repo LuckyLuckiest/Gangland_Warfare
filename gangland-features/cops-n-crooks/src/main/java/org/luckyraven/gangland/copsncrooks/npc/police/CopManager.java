@@ -55,6 +55,7 @@ public class CopManager implements BeanLifecycle {
 	private final Set<UUID>             copAttackers;
 	private final CivilianNpcRegistry   civilianNpcRegistry;
 	private final CopRadio              copRadio;
+	private final CopFieldCare          fieldCare;
 	/**
 	 * Radio calls heard since the last AI tick; answered after the tick's cop loop so a listener never changes a cop
 	 * list that is being iterated.
@@ -74,6 +75,7 @@ public class CopManager implements BeanLifecycle {
 		this.markManager       = markManager;
 		this.detainmentService = detainmentService;
 		this.copRadio          = copRadio;
+		this.fieldCare         = new CopFieldCare(copLoader::getLoadedProvider, copRadio, copRadio::now);
 
 		this.civilianNpcRegistry = civilianNpcRegistry;
 		this.groups              = new ConcurrentHashMap<>();
@@ -614,6 +616,7 @@ public class CopManager implements BeanLifecycle {
 			LivingEntity target = resolveTarget(cop, player);
 			cop.tick(target);
 		}
+		fieldCare.tick(group);
 
 		if (group.pollResisting()) {
 			copRadio.sayFromLeader(group, "Resisting");

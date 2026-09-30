@@ -277,6 +277,23 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("each AI tick runs field care on the group: a cop at half health limps and radios Hit")
+	void aiTick_runsFieldCare() {
+		manager.onWantedStart(player, wanted);
+		CopGroup     group = manager.groupFor(playerId);
+		CopNpc       cop   = fx.cop(CopState.PURSUING, 0, 0);
+		org.bukkit.entity.LivingEntity body = cop.getEntity();
+		when(body.getHealth()).thenReturn(10.0);
+		when(body.getMaxHealth()).thenReturn(20.0);
+		group.add(cop);
+
+		manager.aiTick(playerId);
+
+		verify(cop).applySpeed(0.7);
+		verify(fx.radio).sayAs(group, cop, "Hit", java.util.Map.of());
+	}
+
+	@Test
 	@DisplayName("the wanted player hitting one of his pursuers is resisting too")
 	void groupTargetHitsCop_escalates() {
 		manager.onWantedStart(player, wanted);

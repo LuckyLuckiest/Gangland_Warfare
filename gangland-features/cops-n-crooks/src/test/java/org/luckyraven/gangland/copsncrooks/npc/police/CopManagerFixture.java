@@ -72,6 +72,8 @@ final class CopManagerFixture implements AutoCloseable {
 		when(provider.getPursuitMaxDistance()).thenReturn(80.0);
 		when(provider.getBackupSettings()).thenReturn(new BackupSettings(true, 1, 30_000, 60_000));
 		when(provider.getRadioSettings()).thenReturn(CopConfigProvider.COP_RADIO_DEFAULTS);
+		when(provider.getFieldCareSettings()).thenReturn(org.luckyraven.gangland.npc.FieldCareSettings.DEFAULT);
+		when(provider.getAiTickRate()).thenReturn(10);
 		CopTierConfig tierConfig = mock(CopTierConfig.class);
 		when(tierConfig.displayName()).thenReturn("SWAT");
 		when(tierConfig.tactics()).thenReturn(new TacticsConfig(TacticsConfig.DEFAULT.engagement(), 270.0));
