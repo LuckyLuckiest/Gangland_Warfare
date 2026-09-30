@@ -36,7 +36,9 @@ final class CopRetreat {
 	/**
 	 * Sends a badly hurt cop to cover (its squad radios Fall_Back / In_Cover; takeCover joins the squad itself), by
 	 * its role's {@code Retreat} when it has one. While its group falls back (its Commander went down) every cop takes
-	 * cover, hurt or not, without spending its own cover time.
+	 * cover, hurt or not, without spending its own cover time; {@code Retreat.Enabled: false} turns that off too.
+	 * Keystone's cover primitive fires {@code FALL_BACK} for each of them, so healthy cops may radio the Fall_Back
+	 * line right after Commander_Down.
 	 *
 	 * @return {@code true} while the cop is retreating, so the caller skips its own pursuit this tick; {@code false}
 	 * when healthy, out of cover time, or with no cover in reach (open ground: fight on rather than freeze).
@@ -49,7 +51,7 @@ final class CopRetreat {
 		RetreatSettings retreat  = role != null && role.retreat() != null ? role.retreat() : settings;
 		long            now      = clock.getAsLong();
 		CopGroup        group    = cop.getGroup();
-		if (group != null && group.isFallingBack(now)) return cover(cop, target, retreat);
+		if (group != null && group.isFallingBack(now)) return retreat.enabled() && cover(cop, target, retreat);
 
 		if (!retreat.shouldRetreat(self.getHealth(), self.getMaxHealth())) return false;
 		if (now - startedAt.computeIfAbsent(cop, c -> now) >= MAX_COVER_MS) return false;

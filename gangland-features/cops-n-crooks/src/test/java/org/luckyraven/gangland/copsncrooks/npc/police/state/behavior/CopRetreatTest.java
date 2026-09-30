@@ -50,6 +50,18 @@ class CopRetreatTest {
 		assertFalse(retreat.takeCover(cop, target));
 	}
 
+	@Test
+	@DisplayName("Retreat.Enabled: false also turns off the Commander-down fall-back")
+	void groupFallBack_retreatDisabled_fightsOn() {
+		CopRetreat off   = new CopRetreat(new RetreatSettings(false, 0.3, 12.0), () -> clock[0]);
+		CopGroup   group = new CopGroup(UUID.randomUUID());
+		CopNpc     cop   = cop(20.0, null);
+		when(cop.getGroup()).thenReturn(group);
+		group.setFallBackUntil(clock[0] + 5_000);
+
+		assertFalse(off.takeCover(cop, target));
+	}
+
 	private static CopNpc cop(double health, CopRole role) {
 		CopNpc       cop  = mock(CopNpc.class);
 		LivingEntity self = mock(LivingEntity.class);
