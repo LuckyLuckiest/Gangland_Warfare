@@ -11,11 +11,11 @@
 Enabled: true
 # How many hearts the bar has (1-40). Each heart is max health / Hearts; health rounds up to the next half heart.
 Hearts: 10
-# The three heart glyphs, with & colour codes. The vanilla font has no half-heart glyph, so the three are three
-# distinct shapes: a solid red heart (full), a tilted red heart (half) and a grey outline heart (empty).
-# Swap in any glyph you prefer.
+# The three heart glyphs, with & colour codes (&#RRGGBB hex works too). The vanilla font has no half-heart glyph,
+# so a half heart is the full heart in a faded red: a red heart (full), a faded red heart (half) and a grey outline
+# heart (empty). Swap in any glyph or colour you prefer.
 Full_Heart: "&c❤"
-Half_Heart: "&c❥"
+Half_Heart: "&#FFAAAA❤"
 Empty_Heart: "&8♡"
 # The line shown. %bar% = the hearts, %health% / %max% = current / max health (one decimal), e.g. "%bar% &7%health%".
 # Plain text and & colour codes only: Citizens reads "<...>" as a tag.

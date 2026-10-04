@@ -59,7 +59,7 @@ public class HealthBarSettings implements FileInitializer {
 		int               half     = halves % 2;
 
 		String bar = config.getString("Full_Heart", "&c❤").repeat(full)
-		             + config.getString("Half_Heart", "&c❥").repeat(half)
+		             + config.getString("Half_Heart", "&#FFAAAA❤").repeat(half)
 		             + config.getString("Empty_Heart", "&8♡").repeat(hearts - full - half);
 
 		return ChatUtil.color(config.getString("Format", "%bar%")

@@ -1,11 +1,11 @@
 package org.luckyraven.gangland.healthbars.config;
 
-import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
+import org.luckyraven.keystone.util.ChatUtil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 @DisplayName("HealthBarSettings - bar rendering from healthbars.yml (phase H13)")
 class HealthBarSettingsTest {
 
-	private static final String F = "&c❤", H = "&c❥", E = "&8♡";
+	private static final String F = "&c❤", H = "&#FFAAAA❤", E = "&8♡";
 
 	private static String hearts(int full, int half) {
 		return color(F.repeat(full) + H.repeat(half) + E.repeat(10 - full - half));
@@ -95,7 +95,7 @@ class HealthBarSettingsTest {
 	}
 
 	private static String color(String text) {
-		return ChatColor.translateAlternateColorCodes('&', text);
+		return ChatUtil.color(text);
 	}
 
 	private static HealthBarSettings settings(YamlConfiguration yaml) {
