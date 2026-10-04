@@ -82,13 +82,17 @@ final class BleedEffect {
 	private record Resolved(Particle particle, Object data) {
 	}
 
+	/** Cached for a name that resolves to nothing, so it is not retried every burst. */
+	private static final Resolved NONE = new Resolved(null, null);
+
 	private static final Map<String, Resolved> CACHE = new ConcurrentHashMap<>();
 
 	private static Resolved resolve(String configured) {
-		return CACHE.computeIfAbsent(configured == null ? "" : configured, key -> {
+		Resolved found = CACHE.computeIfAbsent(configured == null ? "" : configured, key -> {
 			String name = resolveName(key, BleedEffect::particleExists);
-			return name == null ? null : new Resolved(Particle.valueOf(name), data(name));
+			return name == null ? NONE : new Resolved(Particle.valueOf(name), data(name));
 		});
+		return found == NONE ? null : found;
 	}
 
 	/** Emits one burst on {@code body}: {@code scale} multiplies the count (a hit while hurt passes more than 1). */

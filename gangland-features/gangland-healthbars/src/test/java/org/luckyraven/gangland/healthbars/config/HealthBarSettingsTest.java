@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 @DisplayName("HealthBarSettings - bar rendering from healthbars.yml (phase H13)")
 class HealthBarSettingsTest {
 
-	private static final String F = "&c❤", H = "&6❤", E = "&8❤";
+	private static final String F = "&c❤", H = "&c♡", E = "&8❤";
 
 	private static String hearts(int full, int half) {
 		return color(F.repeat(full) + H.repeat(half) + E.repeat(10 - full - half));
@@ -49,6 +49,12 @@ class HealthBarSettingsTest {
 		HealthBarSettings settings = settings(new YamlConfiguration());
 		assertEquals(hearts(0, 1), settings.render(0.2, 20));
 		assertEquals(hearts(5, 1), settings.render(11, 20));
+	}
+
+	@Test
+	@DisplayName("a hurt NPC never reads as full, even at 99%")
+	void hurtNeverFull() {
+		assertEquals(hearts(9, 1), settings(new YamlConfiguration()).render(19.8, 20));
 	}
 
 	@Test
