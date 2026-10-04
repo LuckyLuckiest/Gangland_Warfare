@@ -118,10 +118,26 @@ class CopRadioTest {
 		when(cop.getCallsign()).thenReturn("&9Officer &c✚ Medic &fBob &7#1592");
 		CopRole medic = mock(CopRole.class);
 		when(medic.symbol()).thenReturn("✚");
+		when(medic.displayName()).thenReturn("Medic");
 		when(cop.getRole()).thenReturn(medic);
 
 		assertEquals("Officer Medic Bob #1592", CopRadio.callsign(cop));
 		assertEquals("&9Officer &c✚ Medic &fBob &7#1592", cop.getCallsign());
+	}
+
+	@Test
+	@DisplayName("only the role's own symbol is removed, never a look-alike inside the name or tier word; no stray edge space")
+	void callsign_symbolRemovalIsAnchored() {
+		CopNpc cop = cop(17, "&9&lSWAT", 5, 0);
+		when(cop.getCallsign()).thenReturn("&9Alpha &ca Medic &fBea &7#1");
+		CopRole medic = mock(CopRole.class);
+		when(medic.symbol()).thenReturn("a");
+		when(medic.displayName()).thenReturn("Medic");
+		when(cop.getRole()).thenReturn(medic);
+		assertEquals("Alpha Medic Bea #1", CopRadio.callsign(cop));
+
+		when(cop.getCallsign()).thenReturn("&ca Medic &fBob");
+		assertEquals("Medic Bob", CopRadio.callsign(cop));
 	}
 
 	@Test

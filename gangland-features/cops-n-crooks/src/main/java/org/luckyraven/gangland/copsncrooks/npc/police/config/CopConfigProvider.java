@@ -41,9 +41,8 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 					// role lines and field-care follow-ups
 					Map.entry("Overwatch_Set", 20000L), Map.entry("Marksman_Spotted", 8000L),
 					Map.entry("Marksman_Lost", 8000L), Map.entry("Marksman_Reloading", 8000L), Map.entry("Shield_Up", 20000L),
-					Map.entry("Flanking", 10000L), Map.entry("Flanking_Undirected", 10000L),
-					Map.entry("Commander_Orders_Undirected", 20000L), Map.entry("Commander_Orders", 20000L),
-					Map.entry("Commander_Orders_Basic", 20000L), Map.entry("Status_Check", 20000L),
+					Map.entry("Flanking", 10000L), Map.entry("Commander_Orders", 20000L),
+					Map.entry("Status_Check", 20000L),
 					Map.entry("Pull_Back", 15000L),
 					Map.entry("Medic_Treating", 10000L)),
 			Set.of("Contact", "Man_Down", "Leader_Down", "Commander_Down", "Backup", "Resisting", "Dispatch_Wanted",

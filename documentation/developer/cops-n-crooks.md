@@ -321,7 +321,7 @@ generic lines. Every kind below has its own `Lines.<Key>` (2-3 variants, English
 | `Shield_Up` | a Defender `ENGAGE`s (replaces `Engage`) | `%role%` |
 | `Flanking` | an Assault cop is ordered to a flank; said two ack delays later, after its `Ack` | `%direction%` |
 | `Commander_Orders` | any `ENGAGE` with a live Commander and a Defender, an Assault and a Marksman in the squad; the Commander speaks one ack delay later | `%direction%` |
-| `Commander_Orders_Undirected` / `Flanking_Undirected` | the orders / flank call when the signal has no spot to name a direction for (their own cooldowns); a Marksman line with no spot falls back to the generic one | none |
+| `Commander_Orders_Undirected` / `Flanking_Undirected` | the orders / flank call when the signal has no spot to name a direction for (they share the base pool's cooldown: `Flanking` / `Commander_Orders`); a Marksman line with no spot falls back to the generic one | none |
 | `Commander_Orders_Basic` | the same `ENGAGE` when the squad lacks one of those roles: orders without role names | `%direction%` |
 | `Status_Check` | `CONTACT_LOST` with a live Commander | none |
 | `Pull_Back` | `MAN_DOWN` / `LEADER_DOWN` of a non-Commander with a live Commander | `%member%` |

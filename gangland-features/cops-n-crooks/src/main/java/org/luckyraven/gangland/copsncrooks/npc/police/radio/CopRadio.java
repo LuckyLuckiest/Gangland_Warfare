@@ -169,14 +169,20 @@ public class CopRadio {
 		if (npc instanceof CopNpc cop && cop.getCallsign() != null) {
 			String plain = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', cop.getCallsign()));
 			// the role's symbol is for the nameplate; the radio keeps the role word ("Officer Medic Bob #1592")
-			String symbol = cop.getRole() != null && cop.getRole().symbol() != null ? cop.getRole().symbol() : "";
-			if (plain != null && !symbol.isEmpty())
-				plain = plain.replace(ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', symbol)), "")
-				             .replaceAll(" {2,}", " ");
+			CopRole role   = cop.getRole();
+			String  symbol = role != null && role.symbol() != null ? role.symbol() : "";
+			// CopRole.display() builds color + symbol + ' ' + word: drop that symbol only, anchored on the word
+			if (plain != null && !symbol.isEmpty() && role.displayName() != null)
+				plain = plain.replace(strip(symbol) + " " + role.displayName(), role.displayName());
+			if (plain != null) plain = plain.replaceAll(" {2,}", " ").trim();
 			if (plain != null) return plain;
 		}
 		String tier = npc instanceof CopNpc cop && cop.getTierConfig() != null ? tierName(cop.getTierConfig()) : "Unit";
 		return tier + "-" + npc.getNpc().getId();
+	}
+
+	private static String strip(String colored) {
+		return ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', colored));
 	}
 
 	/** The tier's display name without colours; empty for no tier. */
