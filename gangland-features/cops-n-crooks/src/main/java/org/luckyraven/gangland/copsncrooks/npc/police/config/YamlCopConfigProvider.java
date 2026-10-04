@@ -699,22 +699,25 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 	/**
 	 * One {@code Gear} slot: a material name, or a block with {@code Material}, {@code Leather_Color} ({@code #RRGGBB}
-	 * or {@code R, G, B}) and {@code Glow}. {@code ""} empties the slot; an unknown material is reported and skipped.
+	 * or {@code R, G, B}) and {@code Glow}. {@code ""} empties the slot; an unknown material is reported and skipped,
+	 * and so is a colour on a piece that is not leather.
 	 */
 	private static @Nullable Gear readGear(@Nullable NodeReader gear, String slot, ConfigReport report) {
 		if (gear == null || !gear.has(slot)) return null;
 
 		NodeReader.NodeAccess access = gear.get(slot);
 		String                material;
-		Color                 color = null;
-		boolean               glow  = false;
+		Color                 color   = null;
+		SourceLocation        colorAt = null;
+		boolean               glow    = false;
 		if (access.node() instanceof MappingNode mapping) {
 			NodeReader piece = NodeReader.of(mapping, report);
 			material = piece.get("Material").asString().required().orNull();
 			glow     = piece.get("Glow").asBool().orDefault(false);
 			String rawColor = piece.get("Leather_Color").asString().orNull();
+			colorAt = locationOf(piece.get("Leather_Color"), piece);
 			if (rawColor != null && (color = parseColor(rawColor)) == null)
-				report.add(Severity.WARNING, locationOf(piece.get("Leather_Color"), piece), slot + ".Leather_Color",
+				report.add(Severity.WARNING, colorAt, slot + ".Leather_Color",
 				           "Leather_Color '" + rawColor + "' is not #RRGGBB or R, G, B, ignored", "config.type");
 		} else {
 			material = access.asString().orNull();
@@ -727,6 +730,11 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 			report.add(Severity.WARNING, locationOf(access, gear), slot,
 			           "unknown material '" + material + "', slot left to the tier", "config.enum");
 			return null;
+		}
+		if (color != null && !type.name().startsWith("LEATHER_")) {
+			report.add(Severity.WARNING, colorAt, slot + ".Leather_Color",
+			           "Leather_Color only applies to LEATHER_* gear, not " + type.name() + ", ignored", "config.type");
+			color = null;
 		}
 		return new Gear(type, color, glow);
 	}

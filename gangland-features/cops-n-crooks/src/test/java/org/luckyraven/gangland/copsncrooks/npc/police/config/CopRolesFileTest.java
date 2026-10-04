@@ -234,6 +234,28 @@ class CopRolesFileTest {
 	}
 
 	@Test
+	@DisplayName("Leather_Color on a piece that is not leather is reported and dropped, so the edit is not silently lost")
+	void leatherColor_onNonLeather_reported() {
+		ConfigReport report = new ConfigReport();
+		CopConfigProvider provider = provider(TIERS, """
+				Roles:
+				   Defender:
+				      Gear:
+				         Helmet:
+				            Material: IRON_HELMET
+				            Leather_Color: "#FF0000"
+				Squad_Composition:
+				   1:
+				      - "Defender"
+				""", report);
+
+		assertEquals(new CopRole.Gear(Material.IRON_HELMET, null, false),
+		             byName(provider.getSquadComposition(1)).get("Defender").kit().helmet());
+		assertTrue(report.issues().stream().anyMatch(i -> i.message().contains("only applies to LEATHER_")),
+		           report.issues()::toString);
+	}
+
+	@Test
 	@DisplayName("Tiers.<level or tier name>: read over the built-in tier kit; an unknown tier is reported")
 	void tierKits_byLevelOrName() {
 		ConfigReport report = new ConfigReport();

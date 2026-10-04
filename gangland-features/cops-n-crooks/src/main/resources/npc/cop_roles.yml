@@ -34,7 +34,8 @@
 #   Gear:                Helmet, Chestplate, Leggings, Boots and Off_Hand. Each one is a material name
 #                        (IRON_CHESTPLATE), "" (nothing in that slot, the tier's piece taken off too), or a block:
 #     Material:          The item, e.g. LEATHER_HELMET.
-#     Leather_Color:     Dye for leather armour: "#RRGGBB" or "R, G, B" (e.g. "#B02E26" or "176, 46, 38").
+#     Leather_Color:     Dye for leather armour: "#RRGGBB" or "R, G, B" (e.g. "#B02E26" or "176, 46, 38"). LEATHER_*
+#                        pieces only: on any other material it is reported and ignored.
 #     Glow:              true = an enchantment glint.
 #   Tiers:               Per tier, by number (5) or by the tier's Display_Name without colours (Military): a
 #                        Weapon_Pool and/or Gear for that tier only, read over the role's own.
