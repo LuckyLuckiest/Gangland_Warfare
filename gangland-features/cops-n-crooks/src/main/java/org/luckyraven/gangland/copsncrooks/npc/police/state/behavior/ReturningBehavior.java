@@ -14,6 +14,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.LongSupplier;
 
 /**
  * Cop navigates back to the nearest registered spawn station. {@link #tryDespawn} marks the cop for removal - and it
@@ -39,12 +40,18 @@ public class ReturningBehavior implements CopBehavior {
 	 * cop back. Set on entry; behaviours are per cop ({@code CopBehaviorFactory#createBehaviors} runs per spawn).
 	 */
 	private boolean  reengageOnRelease;
-	/** The pursuit-phase unreachable clock and wall time at entry, so only the return leg's stranded time counts. */
-	private long     entryUnreachableMillis;
-	private long     entryMillis;
+	private final LongSupplier  clock;
+	/** Wall time the way home first read unreachable on this leg; 0 while it reads reachable. */
+	private long     strandedSince;
 
 	public ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService, int maxReturnTicks,
 	                         double stationArrivalDistance, StuckSettings stuck) {
+		this(spawnManager, detainmentService, maxReturnTicks, stationArrivalDistance, stuck, System::currentTimeMillis);
+	}
+
+	ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService, int maxReturnTicks,
+	                  double stationArrivalDistance, StuckSettings stuck, LongSupplier clock) {
+		this.clock                  = clock;
 		this.stuck                  = stuck;
 		this.spawnManager           = spawnManager;
 		this.detainmentService      = detainmentService;
@@ -106,8 +113,7 @@ public class ReturningBehavior implements CopBehavior {
 		cop.setDespawnTicks(0);
 		selectedStation = null;
 		cop.leaveSquad();
-		entryUnreachableMillis = cop.millisUnreachable();
-		entryMillis            = System.currentTimeMillis();
+		strandedSince = 0;
 
 		Player target = cop.getTargetPlayerId() != null ? Bukkit.getPlayer(cop.getTargetPlayerId()) : null;
 		reengageOnRelease = target != null && detainmentService.isRestrained(target);
@@ -121,15 +127,18 @@ public class ReturningBehavior implements CopBehavior {
 	}
 
 	/**
-	 * Whether the way home has been unreachable for the stuck window. The clock may have been running since the pursuit
-	 * (it reads more than the time since entry only if it never stopped), so that carry-over is subtracted.
+	 * Whether the way home has been unreachable for the stuck window, counted from the first return-leg tick that read
+	 * it unreachable (the pursuit's own clock may predate entry, or be set aside, so its value is never trusted).
 	 */
 	private boolean strandedOnReturn(CopNpc cop) {
 		if (!stuck.enabled()) return false;
-		long millis  = cop.millisUnreachable();
-		long elapsed = System.currentTimeMillis() - entryMillis;
-		long leg     = millis > elapsed ? millis - entryUnreachableMillis : millis;
-		return leg >= stuck.recycleSeconds() * 1000L;
+		if (cop.millisUnreachable() <= 0) {
+			strandedSince = 0;
+			return false;
+		}
+		long now = clock.getAsLong();
+		if (strandedSince == 0) strandedSince = now;
+		return now - strandedSince >= stuck.recycleSeconds() * 1000L;
 	}
 
 	/**

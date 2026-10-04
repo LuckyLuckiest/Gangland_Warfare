@@ -104,13 +104,30 @@ class ReturningBehaviorTest {
 		behavior = new ReturningBehavior(spawns, detainmentService, 600, 3.0, StuckSettings.DEFAULT);
 	}
 
+	private long now;
+
+	private void withClock(StuckSettings settings) {
+		CopSpawnManager spawns = mock(CopSpawnManager.class);
+		World world = mock(World.class);
+		when(spawns.getSpawnerLocations()).thenReturn(java.util.List.of(new Location(world, 100, 64, 0)));
+		LivingEntity body = mock(LivingEntity.class);
+		when(body.getWorld()).thenReturn(world);
+		when(body.getLocation()).thenReturn(new Location(world, 0, 64, 0));
+		when(cop.getEntity()).thenReturn(body);
+		now      = 1_000_000L;
+		behavior = new ReturningBehavior(spawns, detainmentService, 600, 3.0, settings, () -> now);
+	}
+
 	@Test
 	@DisplayName("a return unreachable for the stuck window despawns the stranded cop")
 	void unreachableLongerThanWindow_removed() {
-		farFromStation();
+		withClock(StuckSettings.DEFAULT);
 		behavior.onEnter(cop);
-		when(cop.millisUnreachable()).thenReturn(13_000L);
+		when(cop.millisUnreachable()).thenReturn(1_000L);
+		behavior.tick(cop);
+		verify(cop, never()).markForRemoval();
 
+		now += StuckSettings.DEFAULT.recycleSeconds() * 1000L;
 		behavior.tick(cop);
 
 		verify(cop).markForRemoval();
@@ -119,24 +136,71 @@ class ReturningBehaviorTest {
 	@Test
 	@DisplayName("a return unreachable for less than the window keeps walking")
 	void unreachableShorterThanWindow_keepsWalking() {
-		farFromStation();
+		withClock(StuckSettings.DEFAULT);
 		behavior.onEnter(cop);
-		when(cop.millisUnreachable()).thenReturn(5_000L);
-
+		when(cop.millisUnreachable()).thenReturn(1_000L);
+		behavior.tick(cop);
+		now += 5_000L;
 		behavior.tick(cop);
 
 		verify(cop, never()).markForRemoval();
-		verify(cop).navigateTo(any());
+		verify(cop, times(2)).navigateTo(any());
 	}
 
 	@Test
 	@DisplayName("a reachable route is not removed before arrival")
 	void reachable_notRemoved() {
-		farFromStation();
+		withClock(StuckSettings.DEFAULT);
 		behavior.onEnter(cop);
 		when(cop.millisUnreachable()).thenReturn(0L);
-
 		behavior.tick(cop);
+		now += 60_000L;
+		behavior.tick(cop);
+
+		verify(cop, never()).markForRemoval();
+	}
+
+	@Test
+	@DisplayName("a set-aside clock (reads 0 at entry) that later reads its old pre-entry value does not remove at once")
+	void asideClockResurfaces_notRemovedAtOnce() {
+		withClock(StuckSettings.DEFAULT);
+		when(cop.millisUnreachable()).thenReturn(0L);
+		behavior.onEnter(cop);
+		now += 3_000L;
+		when(cop.millisUnreachable()).thenReturn(40_000L);
+		behavior.tick(cop);
+		behavior.tick(cop);
+
+		verify(cop, never()).markForRemoval();
+	}
+
+	@Test
+	@DisplayName("a clock that reads reachable again restarts the stranded measurement")
+	void resetThenRestart_countsFromRestart() {
+		withClock(StuckSettings.DEFAULT);
+		behavior.onEnter(cop);
+		when(cop.millisUnreachable()).thenReturn(1_000L);
+		behavior.tick(cop);
+		now += 10_000L;
+		when(cop.millisUnreachable()).thenReturn(0L);
+		behavior.tick(cop);
+		now += 10_000L;
+		when(cop.millisUnreachable()).thenReturn(1_000L);
+		behavior.tick(cop);
+		now += 5_000L;
+		behavior.tick(cop);
+
+		verify(cop, never()).markForRemoval();
+	}
+
+	@Test
+	@DisplayName("with the stuck recycler disabled a stranded return only despawns on the backstop")
+	void stuckDisabled_notRemoved() {
+		withClock(new StuckSettings(false, 12, 60));
+		behavior.onEnter(cop);
+		when(cop.millisUnreachable()).thenReturn(1_000L);
+		behavior.tick(cop);
+		now += 600_000L;
 		behavior.tick(cop);
 
 		verify(cop, never()).markForRemoval();
@@ -145,7 +209,7 @@ class ReturningBehaviorTest {
 	@Test
 	@DisplayName("a pursuit-phase unreachable clock already over the window at entry does not remove a cop with a route home")
 	void pursuitClockOverWindowAtEntry_notRemoved() {
-		farFromStation();
+		withClock(StuckSettings.DEFAULT);
 		when(cop.millisUnreachable()).thenReturn(20_000L);
 		behavior.onEnter(cop);
 
