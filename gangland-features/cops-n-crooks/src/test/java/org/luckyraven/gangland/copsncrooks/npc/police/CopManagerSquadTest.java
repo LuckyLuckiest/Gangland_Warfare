@@ -406,7 +406,7 @@ class CopManagerSquadTest {
 		manager.aiTick(playerId);
 
 		verify(cop).applySpeed(0.7);
-		verify(fx.radio).sayAs(group, cop, "Hit", java.util.Map.of());
+		verify(fx.radio).sayAs(group, cop, "Hit", java.util.Map.of("health", "50"));
 	}
 
 	@Test

@@ -37,9 +37,14 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 					Map.entry("Fall_Back", 5000L), Map.entry("In_Cover", 10000L),
 					// field care (CopFieldCare); milliseconds here, ticks (x50) in cops.yml's Cooldown_Ticks
 					Map.entry("Hit", 5000L), Map.entry("Medic_Moving", 5000L), Map.entry("Covering_Fire", 10000L),
-					Map.entry("Medic_Pinned", 8000L), Map.entry("Patched_Up", 5000L)),
+					Map.entry("Medic_Pinned", 8000L), Map.entry("Patched_Up", 5000L),
+					// role lines and field-care follow-ups
+					Map.entry("Overwatch_Set", 20000L), Map.entry("Marksman_Spotted", 8000L), Map.entry("Marksman_Lost", 8000L),
+					Map.entry("Marksman_Reloading", 8000L), Map.entry("Shield_Up", 20000L), Map.entry("Flanking", 10000L), Map.entry("Flanking_Undirected", 10000L), Map.entry("Commander_Orders_Undirected", 20000L),
+					Map.entry("Commander_Orders", 20000L), Map.entry("Commander_Orders_Basic", 20000L), Map.entry("Status_Check", 20000L), Map.entry("Pull_Back", 15000L),
+					Map.entry("Medic_Treating", 10000L)),
 			Set.of("Contact", "Man_Down", "Leader_Down", "Commander_Down", "Backup", "Resisting", "Dispatch_Wanted",
-			      "Escalate", "Stand_Down", "Fall_Back", "In_Cover", "Hit", "Patched_Up"),
+			      "Escalate", "Stand_Down", "Fall_Back", "In_Cover", "Hit", "Patched_Up", "Marksman_Spotted"),
 			"BLOCK_NOTE_BLOCK_HAT", 0.4f, 1.8f);
 
 	/**

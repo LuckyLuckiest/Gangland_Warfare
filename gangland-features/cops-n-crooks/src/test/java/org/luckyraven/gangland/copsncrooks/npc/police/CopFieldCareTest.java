@@ -101,7 +101,7 @@ class CopFieldCareTest {
 		care.tick(group);
 
 		verify(cop, times(1)).applySpeed(0.7);
-		verify(radio, times(1)).sayAs(group, cop, "Hit", Map.of());
+		verify(radio, times(1)).sayAs(group, cop, "Hit", Map.of("health", "50"));
 		// barely hurt: one burst (1-2 spots) on the first tick, the next only after the cadence, never hearts
 		long bursts = spawns();
 		org.junit.jupiter.api.Assertions.assertTrue(bursts >= 1 && bursts <= 2, "bursts: " + bursts);
@@ -112,7 +112,7 @@ class CopFieldCareTest {
 		care.tick(group);
 
 		verify(cop).applySpeed(1.0);
-		verify(radio, times(1)).sayAs(group, cop, "Hit", Map.of());
+		verify(radio, times(1)).sayAs(group, cop, "Hit", Map.of("health", "50"));
 	}
 
 	@Test
@@ -177,8 +177,8 @@ class CopFieldCareTest {
 		care.tick(group);
 
 		assertSame(patient, medic.getPatient());
-		Map<String, String> toPatient = Map.of("member", CopRadio.callsign(patient));
-		Map<String, String> toOther   = Map.of("member", CopRadio.callsign(other));
+		Map<String, String> toPatient = Map.of("member", CopRadio.callsign(patient), "distance", "10", "eta", "2");
+		Map<String, String> toOther   = Map.of("member", CopRadio.callsign(other), "distance", "10", "eta", "2");
 		verify(radio).sayAsLater(eq(group), eq(medic), eq("Medic_Moving"), eq(toPatient), eq(1), any());
 		verify(radio).sayAsLater(eq(group), eq(leader), eq("Covering_Fire"), anyMap(), eq(2), any());
 		verify(medic).navigateTo(patient.getEntity().getLocation());
@@ -257,9 +257,64 @@ class CopFieldCareTest {
 		EntityRegainHealthEvent regain = (EntityRegainHealthEvent) event.getValue();
 		assertEquals(EntityRegainHealthEvent.RegainReason.CUSTOM, regain.getRegainReason());
 		assertEquals(10.0, regain.getAmount());
-		verify(radio).sayAs(group, medic, "Patched_Up", Map.of("member", CopRadio.callsign(patient)));
+		verify(radio).sayAs(group, medic, "Patched_Up", Map.of("member", CopRadio.callsign(patient), "health", "90"));
+		verify(radio, times(1)).sayAs(group, medic, "Medic_Treating", Map.of("member", CopRadio.callsign(patient), "health", "40"));
 		assertNull(medic.getPatient());
 		assertFalse(patient.isUnderCare());
+	}
+
+	@Test
+	@DisplayName("a medic pinned on its arrival tick still says Medic_Treating, once, when the channel first progresses")
+	void pinnedOnArrival_treatingStillAnnounced() {
+		CopNpc patient = cop(1, 8.0, CopState.PURSUING, null);
+		CopNpc medic   = cop(2, 20.0, CopState.COMBAT, MEDIC);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(10.0);
+		care.tick(group); // assigned, walking over
+
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(2.0);
+		when(medic.getEntity().getHealth()).thenReturn(16.0);
+		care.tick(group); // arrives and is hit on the same tick
+		verify(radio).sayAs(group, medic, "Medic_Pinned", Map.of("member", CopRadio.callsign(patient)));
+		verify(radio, never()).sayAs(any(), any(), eq("Medic_Treating"), anyMap());
+
+		care.tick(group);
+		care.tick(group);
+		verify(radio, times(1)).sayAs(group, medic, "Medic_Treating",
+		                              Map.of("member", CopRadio.callsign(patient), "health", "40"));
+	}
+
+	@Test
+	@DisplayName("reaching out and re-arriving does not repeat Medic_Treating within one treatment")
+	void reachOutAndBack_treatingOnce() {
+		cop(1, 8.0, CopState.PURSUING, null);
+		CopNpc medic = cop(2, 20.0, CopState.COMBAT, MEDIC);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(2.0);
+		care.tick(group);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(9.0);
+		care.tick(group);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(2.0);
+		care.tick(group);
+		care.tick(group);
+
+		verify(radio, times(1)).sayAs(any(), eq(medic), eq("Medic_Treating"), anyMap());
+	}
+
+	@Test
+	@DisplayName("the medic's ETA follows its tier speed: a fast tier arrives sooner than a slow one")
+	void eta_followsTierSpeed() {
+		CopNpc patient = cop(1, 10.0, CopState.PURSUING, null);
+		CopNpc medic   = cop(3, 20.0, CopState.PURSUING, MEDIC);
+		org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig tier =
+				mock(org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig.class);
+		when(tier.speed()).thenReturn(0.5);
+		when(medic.getTierConfig()).thenReturn(tier);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(10.0);
+
+		Map<String, String> expected = Map.of("member", CopRadio.callsign(patient), "distance", "10", "eta", "5");
+
+		care.tick(group);
+
+		verify(radio).sayAsLater(eq(group), eq(medic), eq("Medic_Moving"), eq(expected), eq(1), any());
 	}
 
 	@Test

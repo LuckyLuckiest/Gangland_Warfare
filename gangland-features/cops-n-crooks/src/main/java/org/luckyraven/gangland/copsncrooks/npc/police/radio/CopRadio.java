@@ -12,19 +12,28 @@ import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.npc.radio.RadioLines;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
+import org.luckyraven.gangland.npc.radio.RadioSides;
 import org.luckyraven.gangland.npc.radio.RadioVoice;
 import org.luckyraven.gangland.npc.radio.SquadRadio;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.keystone.npc.AbstractNpc;
+import org.luckyraven.keystone.npc.NpcFanPlacement;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.NpcSquadSignal;
 import org.luckyraven.keystone.npc.spi.NpcSquadListener;
 
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiConsumer;
@@ -51,6 +60,7 @@ public class CopRadio {
 	private final Supplier<CopConfigProvider> provider;
 	private final SquadRadio                  radio;
 	private final LongSupplier                clock;
+	private final RadioLines                  lines;
 
 	public CopRadio(JavaPlugin plugin, CopLoader copLoader, CopRadioMessages messages) {
 		this(copLoader::getLoadedProvider, messages, System::currentTimeMillis,
@@ -61,6 +71,7 @@ public class CopRadio {
 	         BiConsumer<Runnable, Long> later) {
 		this.provider = provider;
 		this.clock    = clock;
+		this.lines    = lines;
 		this.radio    = new SquadRadio(this::settings, lines, clock, () -> ThreadLocalRandom.current().nextDouble(),
 		                               later);
 	}
@@ -83,7 +94,8 @@ public class CopRadio {
 			boolean down = signal == NpcSquadSignal.MAN_DOWN || signal == NpcSquadSignal.LEADER_DOWN;
 			if (down && member instanceof CopNpc cop && cop.getRole() != null && cop.getRole().commander())
 				commanderDown(group, squad, voice, member, where);
-			else speak.onSignal(squad, signal, member, where);
+			else if (!roleLine(squad, voice, signal, member, where)) speak.onSignal(squad, signal, member, where);
+			followUps(group, squad, voice, signal, member, where);
 			switch (signal) {
 				case CONTACT, MAN_DOWN, LEADER_DOWN -> {
 					Location origin = where != null ? where : locationOf(member);
@@ -166,6 +178,168 @@ public class CopRadio {
 		if (tier == null || tier.displayName() == null) return "";
 		String plain = ChatColor.stripColor(GanglandChatUtil.color(tier.displayName()));
 		return plain != null ? plain : "";
+	}
+
+	/** A firing band starting this far out is a Marksman's: the shipped Marksman's is 14 to 22, an Assault's 5 to 9. */
+	private static final double MARKSMAN_MIN_BAND = 12.0;
+
+	/** The squad flavours a role's radio lines by: its own words for a few signals (see {@link #roleKey}). */
+	enum RoleKind { COMMANDER, MEDIC, DEFENDER, MARKSMAN, ASSAULT }
+
+	/**
+	 * What a role does in the squad, for its radio lines: the {@code Medic}/{@code Commander} flags, a block cone
+	 * (a Defender), a flank placement (an Assault) and a long firing band (a Marksman) read from the role itself, the
+	 * role's name only as a last resort; {@code null} (generic lines)
+	 * for any other role, so an owner's custom role still speaks the ordinary lines.
+	 */
+	static @Nullable RoleKind kindOf(@Nullable CopRole role) {
+		if (role == null) return null;
+		if (role.commander()) return RoleKind.COMMANDER;
+		if (role.medic()) return RoleKind.MEDIC;
+		if (role.blockFraction() > 0) return RoleKind.DEFENDER;
+		// a renamed or custom role is read by what it does: the fan's ends flank, a long firing band overwatches
+		if (role.placement() == NpcFanPlacement.FLANK) return RoleKind.ASSAULT;
+		if (role.rangedMin() != null && role.rangedMin() >= MARKSMAN_MIN_BAND) return RoleKind.MARKSMAN;
+		return switch (role.name().toLowerCase(Locale.ROOT)) {
+			case "marksman" -> RoleKind.MARKSMAN;
+			case "assault" -> RoleKind.ASSAULT;
+			default -> null;
+		};
+	}
+
+	/** The line kind a role says instead of the generic one for {@code signal}, or {@code null} for the generic. */
+	static @Nullable String roleKey(@Nullable RoleKind kind, NpcSquadSignal signal) {
+		if (kind == null) return null;
+		return switch (kind) {
+			case MARKSMAN -> switch (signal) {
+				case ENGAGE -> "Overwatch_Set";
+				case CONTACT -> "Marksman_Spotted";
+				case CONTACT_LOST -> "Marksman_Lost";
+				case RELOADING -> "Marksman_Reloading";
+				default -> null;
+			};
+			case DEFENDER -> signal == NpcSquadSignal.ENGAGE ? "Shield_Up" : null;
+			default -> null;
+		};
+	}
+
+	/**
+	 * A Marksman or Defender speaks its own line for the signal. {@code true} when the role has a line pool for it
+	 * (spoken or throttled), {@code false} to fall back to the generic line.
+	 */
+	private boolean roleLine(NpcSquad squad, RadioVoice voice, NpcSquadSignal signal, AbstractNpc member,
+	                         @Nullable Location where) {
+		String key = member instanceof CopNpc cop ? roleKey(kindOf(cop.getRole()), signal) : null;
+		// a role line names a spot (direction, distance): with none the generic line is said instead
+		if (key == null || lines.lines(key).isEmpty() || directionTo(member, where).isEmpty()) return false;
+
+		// the spot's distance and direction are said only when there is a spot: with none, SquadRadio would measure to
+		// the speaker's own position ("0 blocks north")
+		Map<String, String> extra = new HashMap<>(roleExtras(member));
+		extra.put("direction", directionTo(member, where));
+		extra.put("distance", distanceTo(member, where));
+		radio.say(squad, voice, member.getEntity(), callsign(member), key, "Format", where, null, extra);
+		return true;
+	}
+
+	/**
+	 * What the rest of the squad says in answer to a signal, one ack delay later and past the gaps: the Commander
+	 * orders the squad on an engage, checks status when contact is lost and pulls the squad back on a man down; an
+	 * Assault cop ordered to a flank calls its move. Each fires on the signal's edge once, and every kind has its own
+	 * cooldown.
+	 */
+	private void followUps(CopGroup group, NpcSquad squad, RadioVoice voice, NpcSquadSignal signal,
+	                       AbstractNpc member, @Nullable Location where) {
+		switch (signal) {
+			// orders addressed to roles go out only when the squad has them all; else the neutral variant
+			case ENGAGE -> commanderSays(group, squad, voice,
+			                             hasRoles(group, RoleKind.DEFENDER, RoleKind.ASSAULT, RoleKind.MARKSMAN)
+			                             ? "Commander_Orders" : "Commander_Orders_Basic", where, Map.of());
+			case CONTACT_LOST -> commanderSays(group, squad, voice, "Status_Check", where, Map.of());
+			case MAN_DOWN, LEADER_DOWN -> commanderSays(group, squad, voice, "Pull_Back", where,
+			                                            Map.of("member", callsign(member)), member);
+			case FLANK_LEFT, FLANK_RIGHT -> {
+				AbstractNpc leader = squad.leader();
+				if (leader == null || leader == member || !(member instanceof CopNpc cop) ||
+				    kindOf(cop.getRole()) != RoleKind.ASSAULT) return;
+				// step 2: past the leader's order (step 0) and the member's own ack (step 1)
+				Map<String, String> extra = new HashMap<>(roleExtras(member));
+				extra.put("direction", directionTo(member, where));
+				radio.sayLater(squad, voice, member, undirected("Flanking", extra.get("direction")), extra, 2,
+				               member::isValid);
+			}
+			default -> { }
+		}
+	}
+
+	private void commanderSays(CopGroup group, NpcSquad squad, RadioVoice voice, String key, @Nullable Location where,
+	                           Map<String, String> extra, AbstractNpc... except) {
+		CopNpc commander = liveCommander(group);
+		if (commander == null || Arrays.asList(except).contains(commander)) return;
+
+		Map<String, String> merged = new HashMap<>(roleExtras(commander));
+		merged.putAll(extra);
+		merged.put("direction", directionTo(commander, where));
+		if (key.startsWith("Commander_Orders")) key = undirected("Commander_Orders", merged.get("direction"), key);
+		radio.sayLater(squad, voice, commander, key, merged, 1, commander::isValid);
+	}
+
+	/** {@code key}, or its {@code _Undirected} pool when there is no direction to name (a signal without a spot). */
+	private String undirected(String key, String direction) {
+		return undirected(key, direction, key);
+	}
+
+	private String undirected(String pool, String direction, String otherwise) {
+		return direction.isEmpty() && !lines.lines(pool + "_Undirected").isEmpty() ? pool + "_Undirected" : otherwise;
+	}
+
+	private static boolean hasRoles(CopGroup group, RoleKind... wanted) {
+		Set<RoleKind> present = EnumSet.noneOf(RoleKind.class);
+		synchronized (group.getCops()) {
+			for (CopNpc cop : group.getCops())
+				if (cop.isValid() && kindOf(cop.getRole()) != null) present.add(kindOf(cop.getRole()));
+		}
+		return present.containsAll(Arrays.asList(wanted));
+	}
+
+	private static @Nullable CopNpc liveCommander(CopGroup group) {
+		synchronized (group.getCops()) {
+			for (CopNpc cop : group.getCops())
+				if (cop.isValid() && cop.getEntity() != null && kindOf(cop.getRole()) == RoleKind.COMMANDER) return cop;
+		}
+		return null;
+	}
+
+	/** {@code %role%}: the speaker's role key ({@code Medic}, {@code Marksman}), empty for a role-less cop. */
+	private Map<String, String> roleExtras(AbstractNpc npc) {
+		CopRole role = npc instanceof CopNpc cop ? cop.getRole() : null;
+		if (role == null) return Map.of("role", "");
+		// the language file may name the role (Lines.Role_<key>); the key itself otherwise
+		List<String> named = lines.lines("Role_" + role.name());
+		return Map.of("role", named.isEmpty() ? role.name() : named.get(0));
+	}
+
+	/** The compass word ({@code Compass} lines) from {@code from} to {@code where}; empty with either missing. */
+	private String directionTo(AbstractNpc from, @Nullable Location where) {
+		LivingEntity self = from.getEntity();
+		List<String> compass = lines.lines("Compass");
+		if (self == null || where == null || compass.isEmpty() || where.getWorld() == null ||
+		    !where.getWorld().equals(self.getWorld())) return "";
+		return compass.get(RadioSides.compass8(self.getLocation(), where) % compass.size());
+	}
+
+	/** The whole blocks from {@code from} to {@code where}; empty with either missing or in another world. */
+	private static String distanceTo(AbstractNpc from, @Nullable Location where) {
+		LivingEntity self = from.getEntity();
+		if (self == null || where == null || where.getWorld() == null || !where.getWorld().equals(self.getWorld()))
+			return "";
+		return String.valueOf(Math.round(self.getLocation().distance(where)));
+	}
+
+	/** {@code body}'s health as a whole percent of its max, for {@code %health%}. */
+	public static String percent(LivingEntity body) {
+		double max = body.getMaxHealth();
+		return String.valueOf(max <= 0 ? 0 : Math.round(body.getHealth() / max * 100));
 	}
 
 	/** The squad's new leader radios the Commander's fall; everyone falls back briefly ({@code CopRetreat}). */

@@ -9,6 +9,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
@@ -46,6 +47,9 @@ public class CopFieldCare {
 	/** Once treating, the patient may drift this far past {@code Heal_Range} before the channel starts over. */
 	static final double HOLD_MARGIN = 1.0;
 	private static final Random RANDOM = new Random();
+	/** Citizens' walking pace at speed modifier 1.0, in blocks per second; the medic's tier {@code Speed} scales it. */
+	// ponytail: approximate (terrain, the route and the limp are ignored), Medic_Moving only claims a rough ETA
+	private static final double BASE_BLOCKS_PER_SECOND = 4.3;
 
 	private final Supplier<CopConfigProvider> provider;
 	private final CopRadio                    radio;
@@ -69,6 +73,8 @@ public class CopFieldCare {
 		long         startedAt;
 		int          progressTicks;
 		double       lastMedicHealth;
+		/** Whether the medic has said Medic_Treating: once per treatment, not per arrival. */
+		boolean      announced;
 
 		Treatment(CopNpc patient, long startedAt, double medicHealth) {
 			this.patient         = patient;
@@ -114,7 +120,7 @@ public class CopFieldCare {
 				hurt.add(cop);
 				log.debug("{} hurt ({}/{}), limping at x{}", CopRadio.callsign(cop), self.getHealth(),
 				          self.getMaxHealth(), settings.limpSpeed());
-				radio.sayAs(group, cop, "Hit", Map.of());
+				radio.sayAs(group, cop, "Hit", Map.of("health", CopRadio.percent(self)));
 			} else {
 				hurt.remove(cop);
 			}
@@ -163,9 +169,19 @@ public class CopFieldCare {
 			// dropped if the treatment is over by then (patient killed, medic out of the fight or reassigned)
 			CopNpc          healer   = medic;
 			BooleanSupplier standing = () -> healer.isValid() && patient.isValid() && healer.getPatient() == patient;
-			radio.sayAsLater(group, medic, "Medic_Moving", Map.of("member", CopRadio.callsign(patient)), 1, standing);
+			double distance = nearest;
+			radio.sayAsLater(group, medic, "Medic_Moving",
+			                 Map.of("member", CopRadio.callsign(patient), "distance", String.valueOf(Math.round(distance)),
+			                        "eta", String.valueOf(Math.max(1, Math.round(distance / pace(medic))))),
+			                 1, standing);
 			coveringFire(group, cops, medic, patient, standing);
 		}
+	}
+
+	/** The medic's walking pace in blocks per second: Citizens' base pace times its tier speed. */
+	private static double pace(CopNpc medic) {
+		CopTierConfig tier = medic.getTierConfig();
+		return BASE_BLOCKS_PER_SECOND * (tier != null && tier.speed() > 0 ? tier.speed() : 1.0);
 	}
 
 	/** A live, fighting Medic-role cop that is neither hurt nor busy with a treatment. */
@@ -287,17 +303,25 @@ public class CopFieldCare {
 			return false;
 		}
 		// the channel starts on the arrival tick: no time has passed yet, so the heal lands a full Channel_Ticks later
+		if (!treatment.announced) {
+			treatment.announced = true;
+			radio.sayAs(group, medic, "Medic_Treating",
+			            Map.of("member", CopRadio.callsign(patient), "health", CopRadio.percent(patientBody)));
+		}
 		if (arriving) return false;
 
 		treatment.progressTicks += aiTickRate;
 		if (treatment.progressTicks < settings.channelTicks()) return false;
 
-		if (!heal(patientBody, settings.healFraction())) {
+		double healed = heal(patientBody, settings.healFraction());
+		if (Double.isNaN(healed)) {
 			refused.put(patient, clock.getAsLong());
 			log.debug("heal of {} cancelled", CopRadio.callsign(patient));
 			return true;
 		}
-		radio.sayAs(group, medic, "Patched_Up", Map.of("member", CopRadio.callsign(patient)));
+		radio.sayAs(group, medic, "Patched_Up",
+		            Map.of("member", CopRadio.callsign(patient),
+		                   "health", String.valueOf(Math.round(healed / patientBody.getMaxHealth() * 100))));
 		return true;
 	}
 
@@ -305,19 +329,20 @@ public class CopFieldCare {
 	 * Gives {@code body} {@code fraction} of its max health back, through an {@link EntityRegainHealthEvent}
 	 * ({@code CUSTOM}) so health displays refresh and other plugins may change or cancel it.
 	 *
-	 * @return {@code false} when the event was cancelled (nothing healed).
+	 * @return the new health, or {@code NaN} when the event was cancelled (nothing healed).
 	 */
-	private static boolean heal(LivingEntity body, double fraction) {
+	private static double heal(LivingEntity body, double fraction) {
 		double max = body.getMaxHealth();
 		EntityRegainHealthEvent event = new EntityRegainHealthEvent(body, max * fraction,
 		                                                            EntityRegainHealthEvent.RegainReason.CUSTOM);
 		Bukkit.getPluginManager().callEvent(event);
-		if (event.isCancelled()) return false;
+		if (event.isCancelled()) return Double.NaN;
 
-		body.setHealth(Math.min(max, body.getHealth() + event.getAmount()));
-		log.debug("healed to {}/{}", body.getHealth(), max);
+		double healed = Math.min(max, body.getHealth() + event.getAmount());
+		body.setHealth(healed);
+		log.debug("healed to {}/{}", healed, max);
 		particles(body, XParticle.HEART, 5);
-		return true;
+		return healed;
 	}
 
 	/** Ends a treatment on both sides: the medic free again, the patient standing up. */
