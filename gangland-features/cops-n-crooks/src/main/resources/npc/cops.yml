@@ -137,6 +137,7 @@ Cops:
          Shield_Up: 400
          Flanking: 200
          Commander_Orders: 400
+         Commander_Orders_Basic: 400
          Status_Check: 400
          Pull_Back: 300
          Medic_Treating: 200

@@ -124,6 +124,40 @@ class CopRadioMessagesTest {
 		assertTrue(english.lines("Fall_Back").stream().noneMatch(line -> line.contains("I'm hit")));
 	}
 
+	@Test
+	@DisplayName("the code defaults, the English file and the Spanish file carry the same line kinds, each with the same placeholders")
+	void defaultsEnglishAndSpanish_haveParity() throws IOException {
+		String english = shipped("npc/cop_radio_messages.yml");
+		java.util.Set<String> keys = new java.util.TreeSet<>();
+		java.util.regex.Matcher m = java.util.regex.Pattern.compile("(?m)^ {3}([A-Z][A-Za-z_]+):\\s*$").matcher(
+				english.substring(english.indexOf("\nLines:")));
+		while (m.find()) keys.add(m.group(1));
+		assertFalse(keys.isEmpty());
+
+		CopRadioMessages fallback = build("Lines: {}\n");
+		CopRadioMessages en       = build(english);
+		initializeSettingsLanguage("es");
+		JavaPlugin  plugin      = PluginMocks.plugin(tempDir);
+		FileManager fileManager = new FileManager(plugin);
+		writeFile(fileManager, plugin, "cop_radio_messages.yml", english);
+		writeFile(fileManager, plugin, "cop_radio_messages_es.yml", shipped("npc/cop_radio_messages_es.yml"));
+		CopRadioMessages es = new CopRadioMessages(fileManager);
+
+		for (String key : keys) {
+			assertFalse(fallback.lines(key).isEmpty(), "no code default for " + key);
+			assertFalse(es.lines(key).isEmpty(), "no Spanish lines for " + key);
+			assertEquals(placeholders(fallback.lines(key)), placeholders(en.lines(key)), "default vs English: " + key);
+			assertEquals(placeholders(en.lines(key)), placeholders(es.lines(key)), "English vs Spanish: " + key);
+		}
+	}
+
+	private static java.util.Set<String> placeholders(List<String> pool) {
+		java.util.Set<String> found = new java.util.TreeSet<>();
+		java.util.regex.Matcher m = java.util.regex.Pattern.compile("%[a-z_]+%").matcher(String.join("\n", pool));
+		while (m.find()) found.add(m.group());
+		return found;
+	}
+
 	private String shipped(String resource) throws IOException {
 		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(resource))) {
 			return new String(in.readAllBytes(), StandardCharsets.UTF_8);

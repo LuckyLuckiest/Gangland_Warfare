@@ -225,6 +225,60 @@ class CopFieldCareTest {
 	}
 
 	@Test
+	@DisplayName("a medic pinned on its arrival tick still says Medic_Treating, once, when the channel first progresses")
+	void pinnedOnArrival_treatingStillAnnounced() {
+		CopNpc patient = cop(1, 8.0, CopState.PURSUING, null);
+		CopNpc medic   = cop(2, 20.0, CopState.COMBAT, MEDIC);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(10.0);
+		care.tick(group); // assigned, walking over
+
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(2.0);
+		when(medic.getEntity().getHealth()).thenReturn(16.0);
+		care.tick(group); // arrives and is hit on the same tick
+		verify(radio).sayAs(group, medic, "Medic_Pinned", Map.of("member", CopRadio.callsign(patient)));
+		verify(radio, never()).sayAs(any(), any(), eq("Medic_Treating"), anyMap());
+
+		care.tick(group);
+		care.tick(group);
+		verify(radio, times(1)).sayAs(group, medic, "Medic_Treating",
+		                              Map.of("member", CopRadio.callsign(patient), "health", "40"));
+	}
+
+	@Test
+	@DisplayName("reaching out and re-arriving does not repeat Medic_Treating within one treatment")
+	void reachOutAndBack_treatingOnce() {
+		cop(1, 8.0, CopState.PURSUING, null);
+		CopNpc medic = cop(2, 20.0, CopState.COMBAT, MEDIC);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(2.0);
+		care.tick(group);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(9.0);
+		care.tick(group);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(2.0);
+		care.tick(group);
+		care.tick(group);
+
+		verify(radio, times(1)).sayAs(any(), eq(medic), eq("Medic_Treating"), anyMap());
+	}
+
+	@Test
+	@DisplayName("the medic's ETA follows its tier speed: a fast tier arrives sooner than a slow one")
+	void eta_followsTierSpeed() {
+		CopNpc patient = cop(1, 10.0, CopState.PURSUING, null);
+		CopNpc medic   = cop(3, 20.0, CopState.PURSUING, MEDIC);
+		org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig tier =
+				mock(org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig.class);
+		when(tier.speed()).thenReturn(0.5);
+		when(medic.getTierConfig()).thenReturn(tier);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(10.0);
+
+		Map<String, String> expected = Map.of("member", CopRadio.callsign(patient), "distance", "10", "eta", "5");
+
+		care.tick(group);
+
+		verify(radio).sayAsLater(eq(group), eq(medic), eq("Medic_Moving"), eq(expected), eq(1), any());
+	}
+
+	@Test
 	@DisplayName("a cancelled regain event heals nothing, but the treatment still ends")
 	void cancelledRegain_noHeal() {
 		CopNpc patient = cop(1, 8.0, CopState.PURSUING, null);

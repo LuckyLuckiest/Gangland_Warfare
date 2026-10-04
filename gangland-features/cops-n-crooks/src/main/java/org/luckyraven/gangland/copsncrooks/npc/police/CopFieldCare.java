@@ -9,6 +9,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
@@ -44,9 +45,9 @@ public class CopFieldCare {
 	static final long GIVE_UP_MS  = 15_000;
 	/** Once treating, the patient may drift this far past {@code Heal_Range} before the channel starts over. */
 	static final double HOLD_MARGIN = 1.0;
-	/** Walking pace the medic's {@code %eta%} assumes, in blocks per second. */
-	// ponytail: code constant, the medic's real speed is not known here; a Field_Care key if owners want to tune it
-	private static final double MEDIC_BLOCKS_PER_SECOND = 5.0;
+	/** Citizens' walking pace at speed modifier 1.0, in blocks per second; the medic's tier {@code Speed} scales it. */
+	// ponytail: approximate (terrain, the route and the limp are ignored), Medic_Moving only claims a rough ETA
+	private static final double BASE_BLOCKS_PER_SECOND = 4.3;
 	/** Bleed particles per AI tick while hurt. */
 	private static final int BLEED_COUNT = 3;
 
@@ -68,6 +69,8 @@ public class CopFieldCare {
 		long         startedAt;
 		int          progressTicks;
 		double       lastMedicHealth;
+		/** Whether the medic has said Medic_Treating: once per treatment, not per arrival. */
+		boolean      announced;
 
 		Treatment(CopNpc patient, long startedAt, double medicHealth) {
 			this.patient         = patient;
@@ -152,10 +155,16 @@ public class CopFieldCare {
 			double distance = nearest;
 			radio.sayAsLater(group, medic, "Medic_Moving",
 			                 Map.of("member", CopRadio.callsign(patient), "distance", String.valueOf(Math.round(distance)),
-			                        "eta", String.valueOf(Math.max(1, Math.round(distance / MEDIC_BLOCKS_PER_SECOND)))),
+			                        "eta", String.valueOf(Math.max(1, Math.round(distance / pace(medic))))),
 			                 1, standing);
 			coveringFire(group, cops, medic, patient, standing);
 		}
+	}
+
+	/** The medic's walking pace in blocks per second: Citizens' base pace times its tier speed. */
+	private static double pace(CopNpc medic) {
+		CopTierConfig tier = medic.getTierConfig();
+		return BASE_BLOCKS_PER_SECOND * (tier != null && tier.speed() > 0 ? tier.speed() : 1.0);
 	}
 
 	/** A live, fighting Medic-role cop that is neither hurt nor busy with a treatment. */
@@ -277,11 +286,12 @@ public class CopFieldCare {
 			return false;
 		}
 		// the channel starts on the arrival tick: no time has passed yet, so the heal lands a full Channel_Ticks later
-		if (arriving) {
+		if (!treatment.announced) {
+			treatment.announced = true;
 			radio.sayAs(group, medic, "Medic_Treating",
 			            Map.of("member", CopRadio.callsign(patient), "health", CopRadio.percent(patientBody)));
-			return false;
 		}
+		if (arriving) return false;
 
 		treatment.progressTicks += aiTickRate;
 		if (treatment.progressTicks < settings.channelTicks()) return false;

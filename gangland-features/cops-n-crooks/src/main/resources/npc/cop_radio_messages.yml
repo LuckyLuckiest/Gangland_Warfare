@@ -171,11 +171,16 @@ Lines:
       - "Moving to flank, %direction%!"
       - "Going wide %direction%, I'll get behind him!"
       - "Flanking %direction%, keep him busy!"
-   # The squad starts engaging and a Commander is alive: it orders the roles into place.
+   # The squad starts engaging, a Commander is alive and the squad has a Defender, an Assault and a Marksman: it
+   # orders those roles into place. Without all three the role-neutral Commander_Orders_Basic is said instead.
    Commander_Orders:
       - "Defender, hold the line! Assault, flank %direction%! Marksman, overwatch!"
       - "All units, engage! Defender up front, Assault go wide %direction%!"
       - "Squad, positions! Defender hold, Assault flank, Marksman take the high ground!"
+   Commander_Orders_Basic:
+      - "All units, engage! Stay together and cover each other!"
+      - "Squad, positions! Watch your sectors, %direction% first!"
+      - "Contact ahead, %direction%! Spread out and keep him pinned!"
    # The squad loses the suspect and a Commander is alive: it calls the squad in.
    Status_Check:
       - "Lost him! All units, sound off - report your status."

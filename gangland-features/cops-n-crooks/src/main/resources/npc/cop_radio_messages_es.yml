@@ -126,6 +126,10 @@ Lines:
       - "¡Defensor, aguanta la línea! ¡Asalto, flanquea al %direction%! ¡Francotirador, vigilancia!"
       - "¡Todas las unidades, ataquen! Defensor al frente, Asalto rodee por el %direction%."
       - "¡Escuadrón, posiciones! Defensor aguanta, Asalto flanquea, Francotirador a lo alto."
+   Commander_Orders_Basic:
+      - "¡Todas las unidades, ataquen! Juntos y cúbranse entre ustedes."
+      - "¡Escuadrón, posiciones! Vigilen sus sectores, primero el %direction%."
+      - "¡Contacto al %direction%! Sepárense y manténganlo clavado."
    Status_Check:
       - "¡Lo perdimos! Todas las unidades, reporten su estado."
       - "Contacto perdido, repórtense, ¿quién está herido?"

@@ -48,7 +48,8 @@ class CopRadioRolesTest {
 
 	private static final Map<String, Long> COOLDOWNS = Map.ofEntries(
 			Map.entry("Overwatch_Set", 20_000L), Map.entry("Marksman_Spotted", 8_000L),
-			Map.entry("Commander_Orders", 20_000L), Map.entry("Flanking", 10_000L));
+			Map.entry("Commander_Orders", 20_000L), Map.entry("Commander_Orders_Basic", 20_000L),
+			Map.entry("Flanking", 10_000L));
 
 	private static final RadioSettings SETTINGS = new RadioSettings(true, 32, 64, 1500, 1000, 25, 2, COOLDOWNS,
 	                                                                Set.of("Marksman_Spotted"), null, 1f, 1f);
@@ -88,6 +89,7 @@ class CopRadioRolesTest {
 				"Flanking", List.of("FLANK %direction%"),
 				"Commander_Orders", List.of("ORDERS %direction%"),
 				"Pull_Back", List.of("BACK %member%")));
+		pools.put("Commander_Orders_Basic", List.of("BASIC ORDERS"));
 		pools.put("Status_Check", List.of("STATUS"));
 		pools.put("Engage", List.of("Engage line"));
 		pools.put("Contact", List.of("Contact line"));
@@ -190,6 +192,9 @@ class CopRadioRolesTest {
 		CopNpc pointman  = cop(2, 6, 0, null);
 		group.add(commander);
 		group.add(pointman);
+		group.add(cop(3, 7, 0, defenderRole()));
+		group.add(cop(4, 8, 0, assaultRole()));
+		group.add(cop(5, 9, 0, marksmanRole()));
 		Location target = new Location(world, 14, 64, 0);
 
 		signal(NpcSquadSignal.ENGAGE, pointman, target);
@@ -199,6 +204,75 @@ class CopRadioRolesTest {
 		tasks.get(0).run();
 
 		verify(bystander).sendMessage("[SWAT-1] ORDERS " + compass(commander, target));
+	}
+
+	@Test
+	@DisplayName("a squad missing a Defender, Assault or Marksman gets the role-neutral orders, never an order to a role it lacks")
+	void engage_missingRoles_basicOrders() {
+		CopNpc commander = cop(1, 4, 0, commanderRole());
+		CopNpc pointman  = cop(2, 6, 0, null);
+		group.add(commander);
+		group.add(pointman);
+		group.add(cop(3, 7, 0, defenderRole()));
+
+		signal(NpcSquadSignal.ENGAGE, pointman, new Location(world, 14, 64, 0));
+		clock[0] += 1_250;
+		tasks.get(0).run();
+
+		verify(bystander).sendMessage("[SWAT-1] BASIC ORDERS");
+		verify(bystander, never()).sendMessage("[SWAT-1] ORDERS " + compass(commander, new Location(world, 14, 64, 0)));
+	}
+
+	@Test
+	@DisplayName("a renamed or custom role is read by its traits: a long firing band is a Marksman, a flank placement an Assault")
+	void customRoles_kindFromTraits() {
+		CopRole sniper   = new CopRole("Sniper", "Sniper", NpcFanPlacement.ANY, 14.0, 22.0, 1.0, null, 0, null, 1.0, 0,
+		                               null, 0, 60, false, false);
+		CopRole breacher = new CopRole("Breacher", "Breacher", NpcFanPlacement.FLANK, 5.0, 9.0, 1.0, null, 0, null,
+		                               1.0, 0, null, 0, 60, false, false);
+		CopRole pointman = new CopRole("Pointman", "Pointman", NpcFanPlacement.CENTER, 4.0, 8.0, 1.0, null, 1, null,
+		                               1.0, 0, null, 0, 60, false, false);
+		assertEquals(CopRadio.RoleKind.MARKSMAN, CopRadio.kindOf(sniper));
+		assertEquals(CopRadio.RoleKind.ASSAULT, CopRadio.kindOf(breacher));
+		assertNull(CopRadio.kindOf(pointman));
+
+		CopNpc cop = cop(1, 4, 0, sniper);
+		group.add(cop);
+		signal(NpcSquadSignal.ENGAGE, cop, new Location(world, 14, 64, 0));
+		verify(bystander).sendMessage("[SWAT-1] OW 10 " + compass(cop, new Location(world, 14, 64, 0)) + " Sniper");
+	}
+
+	@Test
+	@DisplayName("a role line with no spot never invents a distance or direction from the speaker's own position")
+	void roleLine_noSpot_noInventedPlaceholders() {
+		CopNpc marksman = cop(1, 4, 0, marksmanRole());
+		group.add(marksman);
+
+		signal(NpcSquadSignal.ENGAGE, marksman, null);
+
+		verify(bystander).sendMessage("[SWAT-1] OW   Marksman");
+	}
+
+	@Test
+	@DisplayName("a throttled Flanking is dropped for good: the same order after the cooldown speaks again, one per edge")
+	void flanking_throttled_thenAgain() {
+		CopNpc leader  = cop(1, 4, 0, null);
+		CopNpc assault = cop(2, 6, 0, assaultRole());
+		group.add(leader);
+		group.add(assault);
+		Location spot = new Location(world, 14, 64, 0);
+
+		signal(NpcSquadSignal.FLANK_LEFT, assault, spot);
+		clock[0] += 100;
+		signal(NpcSquadSignal.FLANK_LEFT, assault, spot);
+		runTasks();
+		verify(bystander, times(1)).sendMessage("[SWAT-2] FLANK " + compass(assault, spot));
+
+		clock[0] += 30_000;
+		tasks.clear();
+		signal(NpcSquadSignal.FLANK_LEFT, assault, spot);
+		runTasks();
+		verify(bystander, times(2)).sendMessage("[SWAT-2] FLANK " + compass(assault, spot));
 	}
 
 	@Test
@@ -304,6 +378,13 @@ class CopRadioRolesTest {
 		assertEquals(CopRadio.RoleKind.ASSAULT, CopRadio.kindOf(assaultRole()));
 		assertNull(CopRadio.kindOf(role("Sniper", 0, false, false)));
 		assertNull(CopRadio.kindOf(null));
+	}
+
+	private void runTasks() {
+		for (Runnable task : new ArrayList<>(tasks)) {
+			clock[0] += 1_250;
+			task.run();
+		}
 	}
 
 	private void signal(NpcSquadSignal signal, CopNpc member, Location where) {
