@@ -118,26 +118,34 @@ with `Radio.Enabled: false`, `Backup.Enabled: false`, `Retreat.Enabled: false` a
 
 ### Squad Roles (0.13.0)
 
-Each new cop takes a **role** inside its squad, laid over its tier: the tier still decides weapons, armour and the
-formation arc, the role decides where the cop stands and how it fights. Roles fill in the order of the wanted level's
-`Squad_Composition`; cops past the end of the list (backup, extra cops) take its last role.
+Each new cop takes a **role** inside its squad, laid over its tier: the role decides how the cop is dressed and armed,
+where it stands and how it fights, and it shows in the cop's name. Roles fill in the order of the wanted level's
+`Squad_Composition`; cops past the end of the list (backup, extra cops) take its last role. Everything about the roles
+lives in its own file, `npc/cop_roles.yml`, written on first start when it is missing (an older `cops.yml` is never
+touched). Delete the file and the same built-in roles apply.
 
-| Role      | From level | Does                                                                                   |
-|-----------|------------|----------------------------------------------------------------------------------------|
-| Pointman  | 1          | Front and centre, close in; the squad's radio voice while no Commander is on it        |
-| Assault   | 1          | The fan's ends, pushing in and strafing wide                                           |
-| Commander | 3          | Radio voice from the rear of the band; when it goes down: "Commander down!", fall back |
-| Defender  | 3          | Holds the centre post up front; its shield takes half of every hit from its front      |
-| Marksman  | 3          | The back of the fan (never past its gun's reach), slower but surer shots               |
-| Medic     | 4          | Walks over to hurt squad mates and patches them up (see Field Care below)             |
+| Role         | From level | Looks like                                    | Gun by tier (3 / 4 / 5)        | Does                                                                                   |
+|--------------|------------|-----------------------------------------------|--------------------------------|----------------------------------------------------------------------------------------|
+| ➤ Pointman   | 1          | Blue leather cap                              | rifle / steyr_aug / steyr_aug  | Front and centre, close in; the squad's radio voice while no Commander is on it        |
+| ⚔ Assault    | 1          | Black balaclava, chainmail                    | mp5 / steyr_aug / golden_ak47  | The fan's ends, pushing in and strafing wide                                           |
+| ★ Commander  | 3          | Glinting gold helmet                          | revolver / revolver / golden_ak47 | Radio voice from the rear of the band; when it goes down: "Commander down!", fall back |
+| ⛨ Defender   | 3          | Shield, the squad's heaviest armour           | shotgun / shotgun / sawn_off or shotgun | Holds the centre post up front; its shield takes half of every hit from its front |
+| ⌖ Marksman   | 3          | Green ghillie hood and leggings               | scout / scout / awp            | Stands 22-32 blocks out, far behind the rest; slower but surer shots                   |
+| ✚ Medic      | 4          | Red cap, white leather, a golden apple        | revolver / mp5 / mp5 or steyr_aug | Walks over to hurt squad mates and patches them up (see Field Care below)          |
 
-A `cops.yml` without `Roles` / `Squad_Composition` blocks (every file from before 0.13.0) gets exactly this built-in
-catalogue. Set `Cops.Roles_Enabled: false` to spawn every cop as its plain tier again.
+Every role keeps its identity piece on every tier, while its armour and gun grow with the tier: Officer and Sergeant
+light (leather/chain), Lieutenant chain/iron, SWAT iron/diamond, Military diamond/netherite. The Medic always carries
+the weakest gun of its squad, but never a weak one at Military. Tiers 1 and 2 are melee (`Can_Use_Weapons: false`):
+their cops keep the tier's melee weapon whatever the role's `Weapon_Pool` says.
 
-A role never renames the tier: the callsign's `%rank%` stays the tier's `Display_Name` (`Officer Bob #1592`). The
-role's own `Display_Name` (default: its name) is the optional `%role%` in `Cops.Names.Format`, empty for a cop with no
-role, and left out of the default `Format`. Put it where you want it, e.g. `"%rank% &e%role% &f%name% &7#%badge%"`
-reads `Officer Medic Bob #1592` above the head and on the radio.
+The Marksman's band is clamped under its gun's reach (`Projectile.Distance`), so it only stands far with a long gun:
+the scout (100) and the awp (120) leave its 22-32 band whole, the M4 rifle (10) would pull it in to 8-10.
+
+The default callsign `Format` is `"%rank% %role% &f%name% &7#%badge%"`: `Officer ✚ Medic Bob #1592` above the head,
+with the role's colour and symbol from its `Display` block. `%rank%` stays the tier's `Display_Name`; for a cop with
+no role (`Roles_Enabled: false`) `%role%` disappears with its space. The radio uses the same text without colours.
+Remove `%role%` from `Cops.Names.Format` to hide the role. Set `Roles_Enabled: false` in `cop_roles.yml` to spawn
+every cop as its plain tier again.
 
 The Defender's front cone is judged from whoever dealt the damage: the shooter for a bullet or arrow, the attacker for
 anything else. Area damage (a grenade, fire) is credited to its thrower, so a blast behind a Defender is still halved
@@ -334,40 +342,67 @@ player who slipped away unseen from a spot the stranded cops could not reach is 
 
 ---
 
-### Roles and Squad_Composition (`cops.yml`, 0.13.0)
+### Roles and Squad_Composition (`npc/cop_roles.yml`, 0.13.0)
 
-Every key is optional; an entry under `Roles` is read key by key over the built-in role of the same name. The shipped
-`cops.yml` lists the whole catalogue with a comment per key.
+Every key is optional; an entry under `Roles` is read key by key over the built-in role of the same name (a new name
+starts from a plain role). The shipped file lists the whole catalogue with a comment per key. A bad value (an unknown
+material, a colour that is not `#RRGGBB` or `R, G, B`, a number out of range) is reported at startup and the built-in
+value kept.
 
 ```yaml
-Cops:
-   Roles_Enabled: true
-   Roles:
-      Defender:
-         Fan_Placement: CENTER       # ANY, CENTER or FLANK
-         Ranged_Min_Distance: 4.0    # the role's own firing band, clamped under the gun's Projectile Distance
-         Ranged_Max_Distance: 7.0
-         Health_Multiplier: 1.5
-         Off_Hand: "SHIELD"          # cosmetic, never dropped
-         Strafe_Degrees: 0.0         # replaces the tier's Tactics.Strafe_Degrees
-         Block_Fraction: 0.5         # damage taken off a hit from inside the front cone
-         Block_Cone_Degrees: 60.0
-         Retreat:
-            Health_Fraction: 0.15    # read over Cops.Retreat
-      Marksman:
-         Fire_Rate_Scale: 0.6        # multiplies the tier's Fire_Rate_Multiplier
-         Difficulty_Bonus: 1         # steps above the tier's Difficulty
-      Commander:
-         Leader_Priority: 2          # the highest live priority speaks for the squad
-         Commander: true             # its death (leading or not): Commander_Down, the squad falls back for 5 s
-   Squad_Composition:
-      3:
-         - "Commander"
-         - "Pointman"
-         - "Defender"
-         - "Marksman"
-         - "Assault"
+Roles_Enabled: true
+Roles:
+   Medic:
+      Display:
+         Name: "Medic"               # the word, also used by radio lines
+         Color: "&c"
+         Symbol: "✚"                 # "" = none
+      Fan_Placement: CENTER          # ANY, CENTER or FLANK
+      Ranged_Min_Distance: 8.0       # the role's own firing band, clamped under the gun's Projectile Distance
+      Ranged_Max_Distance: 12.0
+      Health_Multiplier: 1.0
+      Leader_Priority: 0             # the highest live priority speaks for the squad
+      Strafe_Degrees: 15.0           # replaces the tier's Tactics.Strafe_Degrees
+      Fire_Rate_Scale: 1.0           # multiplies the tier's Fire_Rate_Multiplier
+      Difficulty_Bonus: 0            # steps above the tier's Difficulty
+      Block_Fraction: 0.0            # damage taken off a hit from inside the front cone (the Defender: 0.5)
+      Block_Cone_Degrees: 60.0
+      Medic: true                    # treats hurt squad mates
+      Commander: false               # its death: Commander_Down, the squad falls back for 5 s
+      Retreat:
+         Health_Fraction: 0.5        # read over cops.yml Cops.Retreat
+      Weapon_Pool:                   # weapon:<Bartizan weapon>; other entries are vanilla items held without Bartizan
+         - "weapon:pistol"
+      Gear:                          # Helmet, Chestplate, Leggings, Boots, Off_Hand
+         Helmet:
+            Material: LEATHER_HELMET
+            Leather_Color: "#B02E26" # or "176, 46, 38"
+            Glow: false
+         Off_Hand: GOLDEN_APPLE      # a plain material name works too; "" empties the slot
+      Tiers:                         # by level number or the tier's Display_Name without colours (Military)
+         5:
+            Weapon_Pool:
+               - "weapon:mp5"
+               - "weapon:steyr_aug"
+            Gear:
+               Chestplate: NETHERITE_CHESTPLATE
+Squad_Composition:
+   3:
+      - "Commander"
+      - "Pointman"
+      - "Defender"
+      - "Marksman"
+      - "Assault"
 ```
+
+Which gear a cop wears, slot by slot, and which weapon pool it draws from:
+
+1. the role's entry for the cop's tier (`Roles.<Name>.Tiers.<tier>`),
+2. else the role's own `Gear` / `Weapon_Pool`,
+3. else the tier's own `Wearables` / `Weapon_Pool` from `cops.yml`.
+
+On a melee tier step 2's `Weapon_Pool` is skipped (the cop keeps its melee weapon). A role pool with no vanilla item
+keeps the tier's vanilla items, which the cop holds when no Bartizan weapon resolves (Bartizan missing, unknown name).
 
 ### AI Settings (`settings.yml` → `Cops.Behaviour`)
 

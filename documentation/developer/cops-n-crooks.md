@@ -304,7 +304,7 @@ keyed by the signal name (`CONTACT` -> `Lines.Contact`, `FLANK_LEFT` -> `Lines.F
   `Ack_Delay_Ticks` (forced to at least `Player_Gap_Ticks + 5`, so the ack isn't throttled by its own order).
 - **Direct lines:** `CopRadio.dispatch` (`Dispatch_Wanted` on `onWantedStart`, `Escalate` when the group's tier rises)
   and `CopRadio.sayFromLeader` (`Stand_Down`, `Resisting`) speak outside the signal flow.
-- `CopRadio.callsign` is the cop's own callsign with colours stripped (`Officer Bob #1592`), falling back to `SWAT-17` (tier name plus Citizens id) when a cop has none.
+- `CopRadio.callsign` is the cop's own callsign with colours stripped (`Officer ✚ Medic Bob #1592`), falling back to `SWAT-17` (tier name plus Citizens id) when a cop has none.
 
 #### Radio responders (0.12.0)
 
@@ -351,13 +351,25 @@ retreat cannot drop them through the per-player gap.
 
 #### Squad roles (0.13.0)
 
-`CopRole` (`Cops.Roles`, built-in catalogue in `YamlCopConfigProvider.builtInRoles`) is picked per spawn by
-`CopRole.nextRole(getSquadComposition(level), liveRoles)` in `CopManager.spawnTick`, counting only the cops the spawn
-count counts (a stranded RETURNING cop's role is refilled). `CopNpcFactory.createCop(..., role)` spawns the tier with
-`role.overlay(tier)` (health, difficulty, fire rate, strafe), then `applyRole` sets the Keystone 1.14.0 hooks:
-`setFanPlacement`, `setLeaderPriority` and `setRangedBand` clamped under `BartizanNpcWeapons.reach(weapon)`. The
-off-hand item goes on through the loadout with no drop-chance call (PLAYER entities throw on those). `CopNpc.getRole()`
-exposes the role (`medic()`, `commander()`, `displayName()`); the callsign reads the tier's display name as `%rank%` and the role's as the optional `%role%` (`CopNames.callsign`; empty for no role).
+`CopRole` (`npc/cop_roles.yml` `Roles`, built-in catalogue in `YamlCopConfigProvider.builtInRoles`) is picked per
+spawn by `CopRole.nextRole(getSquadComposition(level), liveRoles)` in `CopManager.spawnTick`, counting only the cops the
+spawn count counts (a stranded RETURNING cop's role is refilled). The roles file is its own `FileHandler`
+(`CopsNCrooksYamlConfig`, written from the module jar when missing); `CopLoader` hands its reader to
+`YamlCopConfigProvider` next to the `cops.yml` one, and a missing file (`null` reader) means the built-ins. The shipped
+file and `builtInRoles` must stay equal (`CopRolesFileTest.shippedFile_matchesBuiltIns`).
+
+A role carries a `Kit` (`Weapon_Pool` + `Gear`) and per-tier `tierKits`; `CopRole.kitFor(tier, canUseWeapons)` reads
+the tier's kit slot by slot over the role's (the role's own pool dropped on a melee tier). `Gear` is a description
+(material, leather `Color`, glow) turned into an `ItemStack` only at spawn (`Gear.toItem`), so config parsing never
+needs a server. `CopNpcFactory.createCop(..., role)` spawns the tier with `role.overlay(tier)` (health, difficulty, fire
+rate, strafe, and the kit's armour and weapon pool replacing the tier's slot by slot, the tier's vanilla items kept as
+the no-Bartizan fallback), so `CopNpc.equip()` and the entity-replacement `refreshLoadout` path dress the cop with no
+role code of their own. `applyRole` then sets the Keystone 1.14.0 hooks: `setFanPlacement`, `setLeaderPriority` and
+`setRangedBand` clamped under `BartizanNpcWeapons.reach(weapon)` of the gun actually picked from the role's pool. The
+off-hand item (`CopRole.offHandFor(tier)`) goes on through the loadout with no drop-chance call (PLAYER entities throw
+on those). `CopNpc.getRole()` exposes the role (`medic()`, `commander()`, `displayName()` for the plain word,
+`display()` for the coloured symbol and word); the callsign reads the tier's display name as `%rank%` and
+`role.display()` as `%role%` (`CopNames.callsign`; empty for no role), which the default `Format` shows.
 
 The Defender's block is one guard at the top of `CopListener.onCopDamaged`, ahead of the raytrace skip: Bartizan
 applies gunfire through `victim.damage(amount, shooter)`, so melee, arrows and guns all reach it. A Commander's
