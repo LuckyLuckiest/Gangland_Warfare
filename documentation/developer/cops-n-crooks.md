@@ -366,7 +366,10 @@ rate, strafe, and the kit's armour and weapon pool replacing the tier's slot by 
 the no-Bartizan fallback), so `CopNpc.equip()` and the entity-replacement `refreshLoadout` path dress the cop with no
 role code of their own. `applyRole` then sets the Keystone 1.14.0 hooks: `setFanPlacement`, `setLeaderPriority` and
 `setRangedBand` clamped under `BartizanNpcWeapons.reach(weapon)` of the gun actually picked from the role's pool. The
-off-hand item (`CopRole.offHandFor(tier)`) goes on through the loadout with no drop-chance call (PLAYER entities throw
+band needs a resolved gun: with `NpcRangedAttack.NONE` (Bartizan missing, an unknown name, a melee tier) the cop keeps
+the settings band, and a name Bartizan does not know is reported once per factory as `cops.role.weapon_unknown`.
+`readGear` reports and drops a `Leather_Color` on a non-`LEATHER_*` piece. Only leather takes a dye, so the shipped
+role-coloured pieces stay leather on every tier and glint (`Glow`) from SWAT up. The off-hand item (`CopRole.offHandFor(tier)`) goes on through the loadout with no drop-chance call (PLAYER entities throw
 on those). `CopNpc.getRole()` exposes the role (`medic()`, `commander()`, `displayName()` for the plain word,
 `display()` for the coloured symbol and word); the callsign reads the tier's display name as `%rank%` and
 `role.display()` as `%role%` (`CopNames.callsign`; empty for no role), which the default `Format` shows.
