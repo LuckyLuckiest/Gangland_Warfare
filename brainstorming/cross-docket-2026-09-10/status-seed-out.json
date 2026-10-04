@@ -826,18 +826,18 @@
  },
  "T-168": {
   "status": "open",
-  "note": "Not verified fixed (low): 47042f07 makes post lines wait for the post, stagger them and share one orders cooldown, aimed at the Defender line being dropped behind the Commander order and the Marksman Overwatch_Set; it was committed after the lane that measured 1/16 and has not been re-measured. Re-run the Defender lane; if still rare give Shield_Up its own cooldown key Not merged: master, publish and deploy wait for the owner's approval.",
-  "updatedAt": "2026-10-04"
+  "note": "Not fixed (0.13.0, branch npc-roles-medics): 47042f07 (post lines wait for the post, stagger, shared orders cooldown) and 92fa1614 (Shield_Up said as a staggered sayAsLater follow-up) did not move it: the re-run lane heard Shield_Up in 1 of 14 Defender engagements. Next: instrument which gate drops the follow-up (player gap, cooldown behind the Commander and Marksman lines), then give Shield_Up its own cooldown key or make it a priority line; its stillRelevant is a constant true, so it can also be said after the Defender died Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-10-05"
  },
  "T-169": {
-  "status": "open",
-  "note": "Not fixed: CopFieldCare passes only member and health to radio.sayAs, so the variant '%role% here, applying pressure, hold still, %member%!' prints the raw placeholder about 1 time in 3. Fix in CopRadio.sayAs: merge roleExtras(cop) into extra (as the other role lines do), so every sayAs line gets %role% Not merged: master, publish and deploy wait for the owner's approval.",
-  "updatedAt": "2026-10-04"
+  "status": "fixed",
+  "note": "Fixed (0.13.0, branch npc-roles-medics, 92fa1614): CopRadio.sayAs and sayAsLater now fill %role%, so Medic_Treating and every other sayAs line print the role; the last-fix-round lane found no unfilled %placeholder% in any [RADIO] line Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-10-05"
  },
  "T-170": {
-  "status": "open",
-  "note": "By design, noted for the owner: a Marksman 26.7 blocks from the Medic (Medic_Radius 24) bled untreated for 41 s. Raise Cops.Field_Care.Medic_Radius, or let the medic close in on a far patient, if that reads wrong live Not merged: master, publish and deploy wait for the owner's approval.",
-  "updatedAt": "2026-10-04"
+  "status": "fixed",
+  "note": "Fixed (0.13.0, branch npc-roles-medics, 5d5c092a): the Cops.Field_Care.Medic_Radius default is raised 24 -> 36 so a medic reaches a Marksman holding its far post (band 22-32); the last-fix-round lane saw the wounded far Marksman get a medic. A server that sets Medic_Radius explicitly keeps its value Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-10-05"
  },
  "T-171": {
   "status": "open",
