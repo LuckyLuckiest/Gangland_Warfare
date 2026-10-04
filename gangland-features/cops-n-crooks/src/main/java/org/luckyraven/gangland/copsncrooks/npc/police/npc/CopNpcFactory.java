@@ -25,16 +25,21 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.npc.NpcFireRate;
+import org.luckyraven.keystone.diagnostics.Diagnostics;
+import org.luckyraven.keystone.diagnostics.Fault;
 import org.luckyraven.keystone.npc.NpcMeleeProfile;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.npc.spi.NpcRangedAttack;
 import org.luckyraven.keystone.util.ChatUtil;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 
@@ -45,12 +50,17 @@ import java.util.function.Consumer;
  */
 public class CopNpcFactory {
 
+	/** A role's {@code Weapon_Pool} names a gun Bartizan does not know (a typo, a deleted weapon file). */
+	public static final String FAULT_ROLE_WEAPON_UNKNOWN = "cops.role.weapon_unknown";
+
 	private final CopConfigProvider  configProvider;
 	private final CopBehaviorFactory behaviorFactory;
 	private final NpcMarkManager     markManager;
 	private final JavaPlugin         plugin;
 	private final BartizanNpcWeapons bartizanNpcWeapons;
 	private final DownedTargetFilter downedTargetFilter;
+	/** Gun names already reported by {@link #reportUnresolvedWeapon}: once per name for this factory (one config load). */
+	private final Set<String>        reportedWeapons = new HashSet<>();
 
 	public CopNpcFactory(JavaPlugin plugin, CopConfigProvider configProvider, CopBehaviorFactory behaviorFactory,
 	                     NpcMarkManager markManager, BartizanNpcWeapons bartizanNpcWeapons,
@@ -149,7 +159,9 @@ public class CopNpcFactory {
 		copNpc.setLoadout(loadout(copNpc, tierConfig, markManager, weaponItem));
 
 		applyTuning(copNpc, tierConfig, configProvider, rangedAttack);
-		applyRole(copNpc, role, bartizanNpcWeapons.reach(weaponName));
+		applyRole(copNpc, role, rangedAttack, bartizanNpcWeapons.reach(weaponName));
+		if (role != null && weaponName != null && rangedAttack == NpcRangedAttack.NONE &&
+		    Settings.isBartizanAvailable()) reportUnresolvedWeapon(role, weaponName);
 
 		copNpc.applySpeed(1.0);
 
@@ -177,14 +189,34 @@ public class CopNpcFactory {
 
 	/**
 	 * The role's formation hooks: where on the fan the cop stands, its claim to lead the squad, and its own firing band
-	 * clamped under {@code reach} (the held gun's range, {@code null} when unknown). Nothing for no role.
+	 * clamped under {@code reach} (the held gun's range, {@code null} when unknown). The band needs a gun: with
+	 * {@code rangedAttack} {@link NpcRangedAttack#NONE} (Bartizan missing, an unknown {@code Weapon_Pool} name, a
+	 * melee tier) the cop keeps the settings.yml band, so a Marksman never stands 22-32 blocks off holding an item it
+	 * cannot fire. Nothing for no role.
 	 */
-	static void applyRole(CopNpc copNpc, @Nullable CopRole role, @Nullable Double reach) {
+	static void applyRole(CopNpc copNpc, @Nullable CopRole role, NpcRangedAttack rangedAttack,
+	                      @Nullable Double reach) {
 		if (role == null) return;
 		copNpc.setFanPlacement(role.placement());
 		copNpc.setLeaderPriority(role.leaderPriority());
+		if (rangedAttack == NpcRangedAttack.NONE) return;
 		double[] band = role.rangedBand(reach);
 		if (band != null) copNpc.setRangedBand(band[0], band[1]);
+	}
+
+	/**
+	 * Reports, once per gun name, a role gun Bartizan does not know: the cop holds its vanilla fallback and keeps the
+	 * settings.yml band ({@link #applyRole}), which is otherwise silent.
+	 */
+	void reportUnresolvedWeapon(CopRole role, String weaponName) {
+		if (!reportedWeapons.add(weaponName)) return;
+		Diagnostics hub = Diagnostics.active();
+		if (hub == null) return;
+		hub.report(Fault.userError(FAULT_ROLE_WEAPON_UNKNOWN,
+		                           "A " + role.name() + " cop drew 'weapon:" + weaponName + "' from its Weapon_Pool " +
+		                           "(npc/cop_roles.yml, or the tier's in cops.yml), which Bartizan does not know: " +
+		                           "it holds its vanilla fallback and keeps the settings.yml firing band")
+		                .build());
 	}
 
 	/** Squad engagement, melee band and gun cadence from the tier's config ({@link NpcFireRate#scale}). */
