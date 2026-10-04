@@ -454,7 +454,8 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	 * of the same name is read over. Each role's retreat threshold is laid over {@code retreat} ({@code Cops.Retreat}).
 	 * Each role keeps its identity piece (a dyed leather or gold helmet, the Medic's apple, the Defender's shield) on
 	 * every tier; its tier kits carry the armour and the gun up the levels (Lieutenant chain/iron, SWAT iron/diamond,
-	 * Military diamond/netherite). The shipped cop_roles.yml spells out exactly this.
+	 * Military diamond/netherite). Only leather takes a dye, so a role-coloured piece stays leather and glints from SWAT
+	 * up. The shipped cop_roles.yml spells out exactly this.
 	 */
 	public static Map<String, CopRole> builtInRoles(RetreatSettings retreat) {
 		Map<String, CopRole> roles = new LinkedHashMap<>();
@@ -463,14 +464,16 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		                                  0, null, 0, 60, false, false, "&e", "\u27A4",
 		                                  kit(List.of("rifle"), leather(Material.LEATHER_HELMET, BLUE),
 		                                      leather(Material.LEATHER_CHESTPLATE, BLUE), null, null, null),
-		                                  tierBodies(null, List.of("steyr_aug"), List.of("steyr_aug"))));
+		                                  tierBodies(glint(Material.LEATHER_HELMET, BLUE), null, List.of("steyr_aug"),
+		                                             List.of("steyr_aug"))));
 		// the fan's ends, pushing and strafing wide. A black balaclava over chainmail, an MP5
 		roles.put("Assault", new CopRole("Assault", "Assault", NpcFanPlacement.FLANK, 5.0, 9.0, 1.0, 0, 20.0, 1.0, 0,
 		                                 retreatAt(retreat, 0.25), 0, 60, false, false, "&4", "\u2694",
 		                                 kit(List.of("mp5"), leather(Material.LEATHER_HELMET, BLACK),
 		                                     piece(Material.CHAINMAIL_CHESTPLATE), piece(Material.CHAINMAIL_LEGGINGS),
 		                                     null, null),
-		                                 tierBodies(null, List.of("steyr_aug"), List.of("golden_ak47"))));
+		                                 tierBodies(glint(Material.LEATHER_HELMET, BLACK), null,
+		                                            List.of("steyr_aug"), List.of("golden_ak47"))));
 		// holds the centre post up front behind a shield that takes half of every hit from the front; the heaviest
 		// armour of the squad, a shotgun
 		roles.put("Defender", new CopRole("Defender", "Defender", NpcFanPlacement.CENTER, 4.0, 7.0, 1.5, 0, 0.0, 1.0,
@@ -495,12 +498,16 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		                                      leather(Material.LEATHER_BOOTS, GREEN), null),
 		                                  Map.of(3, kit(null, null, piece(Material.IRON_CHESTPLATE), null,
 		                                                piece(Material.CHAINMAIL_BOOTS), null),
-		                                         4, kit(null, null, piece(Material.DIAMOND_CHESTPLATE), null,
+		                                         4, kit(null, glint(Material.LEATHER_HELMET, GREEN),
+		                                                piece(Material.DIAMOND_CHESTPLATE),
+		                                                glint(Material.LEATHER_LEGGINGS, GREEN),
 		                                                piece(Material.IRON_BOOTS), null),
-		                                         5, kit(List.of("awp"), null, piece(Material.NETHERITE_CHESTPLATE), null,
+		                                         5, kit(List.of("awp"), glint(Material.LEATHER_HELMET, GREEN),
+		                                                piece(Material.NETHERITE_CHESTPLATE),
+		                                                glint(Material.LEATHER_LEGGINGS, GREEN),
 		                                                piece(Material.DIAMOND_BOOTS), null))));
 		// patches up hurt squad mates. Red cap and white leather (the cap and boots stay on every tier), a golden apple
-		// in the off hand, the weakest gun of the squad
+		// in the off hand, the weakest gun of the squad: an MP5 at Military, under every other role's
 		roles.put("Medic", new CopRole("Medic", "Medic", NpcFanPlacement.CENTER, 8.0, 12.0, 1.0, 0, null, 1.0, 0,
 		                               retreatAt(retreat, 0.5), 0, 60, true, false, "&c", "\u271A",
 		                               kit(List.of("pistol"), leather(Material.LEATHER_HELMET, RED),
@@ -509,18 +516,21 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		                                   leather(Material.LEATHER_BOOTS, WHITE), piece(Material.GOLDEN_APPLE)),
 		                               Map.of(3, kit(List.of("revolver"), null, piece(Material.IRON_CHESTPLATE),
 		                                             piece(Material.CHAINMAIL_LEGGINGS), null, null),
-		                                      4, kit(List.of("mp5"), null, piece(Material.DIAMOND_CHESTPLATE),
-		                                             piece(Material.IRON_LEGGINGS), null, null),
-		                                      5, kit(List.of("mp5", "steyr_aug"), null,
+		                                      4, kit(List.of("mp5"), glint(Material.LEATHER_HELMET, RED),
+		                                             piece(Material.DIAMOND_CHESTPLATE),
+		                                             piece(Material.IRON_LEGGINGS), glint(Material.LEATHER_BOOTS, WHITE),
+		                                             null),
+		                                      5, kit(List.of("mp5"), glint(Material.LEATHER_HELMET, RED),
 		                                             piece(Material.NETHERITE_CHESTPLATE),
-		                                             piece(Material.DIAMOND_LEGGINGS), null, null))));
+		                                             piece(Material.DIAMOND_LEGGINGS),
+		                                             glint(Material.LEATHER_BOOTS, WHITE), null))));
 		// leads from the rear of the band; the squad falls back briefly when it goes down. A gold helmet, a revolver
 		roles.put("Commander", new CopRole("Commander", "Commander", NpcFanPlacement.ANY, 10.0, 14.0, 1.0, 2, null,
 		                                   1.0, 0, retreatAt(retreat, 0.4), 0, 60, false, true, "&6", "\u2605",
 		                                   kit(List.of("revolver"), new Gear(Material.GOLDEN_HELMET, null, true),
 		                                       piece(Material.IRON_CHESTPLATE), piece(Material.CHAINMAIL_LEGGINGS),
 		                                       null, null),
-		                                   tierBodies(null, null, List.of("golden_ak47"))));
+		                                   tierBodies(null, null, null, List.of("golden_ak47"))));
 		return roles;
 	}
 
@@ -532,19 +542,27 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		return new Gear(material, color, false);
 	}
 
+	/** A dyed leather piece with an enchantment glint: a role colour at SWAT and Military. */
+	private static Gear glint(Material material, Color color) {
+		return new Gear(material, color, true);
+	}
+
 	private static Kit kit(@Nullable List<String> guns, @Nullable Gear helmet, @Nullable Gear chestplate,
 	                       @Nullable Gear leggings, @Nullable Gear boots, @Nullable Gear offHand) {
 		return new Kit(guns, List.of(), helmet, chestplate, leggings, boots, offHand);
 	}
 
-	/** The common body armour per gun tier (3 chain/iron, 4 iron/diamond, 5 diamond/netherite) and its guns. */
-	private static Map<Integer, Kit> tierBodies(@Nullable List<String> guns3, @Nullable List<String> guns4,
-	                                            @Nullable List<String> guns5) {
+	/**
+	 * The common body armour per gun tier (3 chain/iron, 4 iron/diamond, 5 diamond/netherite) and its guns;
+	 * {@code cap} is the helmet at 4 and 5 ({@code null}: the role's own).
+	 */
+	private static Map<Integer, Kit> tierBodies(@Nullable Gear cap, @Nullable List<String> guns3,
+	                                            @Nullable List<String> guns4, @Nullable List<String> guns5) {
 		return Map.of(3, kit(guns3, null, piece(Material.IRON_CHESTPLATE), piece(Material.CHAINMAIL_LEGGINGS),
 		                     piece(Material.CHAINMAIL_BOOTS), null),
-		              4, kit(guns4, null, piece(Material.DIAMOND_CHESTPLATE), piece(Material.IRON_LEGGINGS),
+		              4, kit(guns4, cap, piece(Material.DIAMOND_CHESTPLATE), piece(Material.IRON_LEGGINGS),
 		                     piece(Material.IRON_BOOTS), null),
-		              5, kit(guns5, null, piece(Material.NETHERITE_CHESTPLATE), piece(Material.DIAMOND_LEGGINGS),
+		              5, kit(guns5, cap, piece(Material.NETHERITE_CHESTPLATE), piece(Material.DIAMOND_LEGGINGS),
 		                     piece(Material.DIAMOND_BOOTS), null));
 	}
 

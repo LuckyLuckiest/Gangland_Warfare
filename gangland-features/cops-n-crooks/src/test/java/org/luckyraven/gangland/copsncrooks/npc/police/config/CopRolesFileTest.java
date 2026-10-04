@@ -295,14 +295,26 @@ class CopRolesFileTest {
 		CopRole.Kit swatMedic = medic.kitFor(4, true), militaryMedic = medic.kitFor(5, true);
 		assertEquals(List.of("pistol"), medic.kitFor(2, true).weaponNames()); // a weak gun at the low tiers
 		assertEquals(List.of("mp5"), swatMedic.weaponNames());
-		assertEquals(List.of("mp5", "steyr_aug"), militaryMedic.weaponNames());   // never weak at Military
+		assertEquals(List.of("mp5"), militaryMedic.weaponNames());   // never weak at Military
 		assertEquals(Material.NETHERITE_CHESTPLATE, militaryMedic.chestplate().material());
 		assertEquals(Material.DIAMOND_LEGGINGS, militaryMedic.leggings().material());
 		for (int tier = 1; tier <= 5; tier++) { // the red leather helmet and the golden apple at every tier
 			CopRole.Kit kit = medic.kitFor(tier, true);
-			assertEquals(new CopRole.Gear(Material.LEATHER_HELMET, Color.fromRGB(0xB02E26), false), kit.helmet());
+			assertEquals(new CopRole.Gear(Material.LEATHER_HELMET, Color.fromRGB(0xB02E26), tier >= 4), kit.helmet());
 			assertEquals(Material.GOLDEN_APPLE, kit.offHand().material());
 		}
+		for (CopRole role : roles.values()) // the Military Medic's gun is strictly below every other role's
+			if (role != medic)
+				for (String gun : role.kitFor(5, true).weaponNames())
+					assertFalse(militaryMedic.weaponNames().contains(gun), role.name() + " shares " + gun);
+		for (CopRole role : roles.values()) // SWAT and Military never wear plain leather: a role-coloured piece glints
+			for (int tier = 4; tier <= 5; tier++) {
+				CopRole.Kit kit = role.kitFor(tier, true);
+				for (CopRole.Gear piece : new CopRole.Gear[]{kit.helmet(), kit.chestplate(), kit.leggings(),
+				                                             kit.boots()})
+					if (piece != null && piece.material().name().startsWith("LEATHER"))
+						assertTrue(piece.glow(), role.name() + " tier " + tier + " " + piece);
+			}
 
 		CopRole marksman = roles.get("Marksman");
 		assertEquals(List.of("scout"), marksman.kitFor(3, true).weaponNames());

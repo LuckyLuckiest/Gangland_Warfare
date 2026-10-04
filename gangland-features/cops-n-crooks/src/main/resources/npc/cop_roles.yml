@@ -64,6 +64,9 @@
 # The shipped roles keep one identity piece on every tier (a dyed leather cap or the Commander's gold helmet, the
 # Medic's golden apple, the Defender's shield) and wear stronger armour and guns as the tier rises: Officer and
 # Sergeant light (leather/chain), Lieutenant chain/iron, SWAT iron/diamond, Military diamond/netherite.
+# Only leather takes a Leather_Color, so a role-coloured piece is leather on every tier: from SWAT up it glints
+# (Glow), and the body armour and the tier's Health carry the strength. Swap it for a stronger piece under Tiers if
+# you would rather lose the colour than the armour.
 # ============================================
 # Set to false and every cop spawns as its plain tier: no roles, gear or role names.
 Roles_Enabled: true
@@ -97,6 +100,10 @@ Roles:
             Weapon_Pool:
                - "weapon:steyr_aug"
             Gear:
+               Helmet:
+                  Material: LEATHER_HELMET
+                  Leather_Color: "#3C44AA"
+                  Glow: true
                Chestplate: DIAMOND_CHESTPLATE
                Leggings: IRON_LEGGINGS
                Boots: IRON_BOOTS
@@ -104,6 +111,10 @@ Roles:
             Weapon_Pool:
                - "weapon:steyr_aug"
             Gear:
+               Helmet:
+                  Material: LEATHER_HELMET
+                  Leather_Color: "#3C44AA"
+                  Glow: true
                Chestplate: NETHERITE_CHESTPLATE
                Leggings: DIAMOND_LEGGINGS
                Boots: DIAMOND_BOOTS
@@ -137,6 +148,10 @@ Roles:
             Weapon_Pool:
                - "weapon:steyr_aug"
             Gear:
+               Helmet:
+                  Material: LEATHER_HELMET
+                  Leather_Color: "#1D1D21"
+                  Glow: true
                Chestplate: DIAMOND_CHESTPLATE
                Leggings: IRON_LEGGINGS
                Boots: IRON_BOOTS
@@ -144,6 +159,10 @@ Roles:
             Weapon_Pool:
                - "weapon:golden_ak47"
             Gear:
+               Helmet:
+                  Material: LEATHER_HELMET
+                  Leather_Color: "#1D1D21"
+                  Glow: true
                Chestplate: NETHERITE_CHESTPLATE
                Leggings: DIAMOND_LEGGINGS
                Boots: DIAMOND_BOOTS
@@ -187,7 +206,7 @@ Roles:
                Leggings: NETHERITE_LEGGINGS
                Boots: DIAMOND_BOOTS
    # Far behind the fan with slower but surer shots: the scout, the awp for Military. A green ghillie whose hood and
-   # leggings stay on every tier.
+   # leggings stay on every tier, glinting from SWAT up.
    Marksman:
       Display:
          Name: "Marksman"
@@ -221,16 +240,33 @@ Roles:
                Boots: CHAINMAIL_BOOTS
          4:
             Gear:
+               Helmet:
+                  Material: LEATHER_HELMET
+                  Leather_Color: "#5E7C16"
+                  Glow: true
                Chestplate: DIAMOND_CHESTPLATE
+               Leggings:
+                  Material: LEATHER_LEGGINGS
+                  Leather_Color: "#5E7C16"
+                  Glow: true
                Boots: IRON_BOOTS
          5:
             Weapon_Pool:
                - "weapon:awp"
             Gear:
+               Helmet:
+                  Material: LEATHER_HELMET
+                  Leather_Color: "#5E7C16"
+                  Glow: true
                Chestplate: NETHERITE_CHESTPLATE
+               Leggings:
+                  Material: LEATHER_LEGGINGS
+                  Leather_Color: "#5E7C16"
+                  Glow: true
                Boots: DIAMOND_BOOTS
-   # Patches up hurt squad mates. A red cap and white leather (the cap and the boots stay on every tier), a golden
-   # apple in the off hand, and the weakest gun of the squad: never a weak one at Military.
+   # Patches up hurt squad mates. A red cap and white leather (the cap and the boots stay on every tier, glinting from
+   # SWAT up), a golden apple in the off hand, and the weakest gun of the squad: the MP5 at Military, under every
+   # other role's gun there but never a weak one.
    Medic:
       Display:
          Name: "Medic"
@@ -269,15 +305,30 @@ Roles:
             Weapon_Pool:
                - "weapon:mp5"
             Gear:
+               Helmet:
+                  Material: LEATHER_HELMET
+                  Leather_Color: "#B02E26"
+                  Glow: true
                Chestplate: DIAMOND_CHESTPLATE
                Leggings: IRON_LEGGINGS
+               Boots:
+                  Material: LEATHER_BOOTS
+                  Leather_Color: "#F9FFFE"
+                  Glow: true
          5:
             Weapon_Pool:
                - "weapon:mp5"
-               - "weapon:steyr_aug"
             Gear:
+               Helmet:
+                  Material: LEATHER_HELMET
+                  Leather_Color: "#B02E26"
+                  Glow: true
                Chestplate: NETHERITE_CHESTPLATE
                Leggings: DIAMOND_LEGGINGS
+               Boots:
+                  Material: LEATHER_BOOTS
+                  Leather_Color: "#F9FFFE"
+                  Glow: true
    # Leads from the rear of the band; the squad falls back briefly when it goes down. A glinting gold helmet, the
    # revolver, the golden AK-47 for Military.
    Commander:
