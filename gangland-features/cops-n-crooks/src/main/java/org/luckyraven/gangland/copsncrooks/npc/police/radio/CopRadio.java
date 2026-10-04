@@ -252,16 +252,19 @@ public class CopRadio {
 	                       AbstractNpc member, @Nullable Location where) {
 		switch (signal) {
 			// orders addressed to roles go out only when the squad has them all; else the neutral variant
-			case ENGAGE -> commanderSays(group, squad, voice,
+			// the first contact orders too: on open ground the squad's first orders are flanks, no member ever gets the
+			// ENGAGE centre order, and a leader order or the Contact line takes the squad gap first
+			case CONTACT, ENGAGE -> commanderSays(group, squad, voice,
 			                             hasRoles(group, RoleKind.DEFENDER, RoleKind.ASSAULT, RoleKind.MARKSMAN)
 			                             ? "Commander_Orders" : "Commander_Orders_Basic", where, Map.of());
 			case CONTACT_LOST -> commanderSays(group, squad, voice, "Status_Check", where, Map.of());
 			case MAN_DOWN, LEADER_DOWN -> commanderSays(group, squad, voice, "Pull_Back", where,
 			                                            Map.of("member", callsign(member)), member);
-			case FLANK_LEFT, FLANK_RIGHT -> {
+			case FLANK_LEFT, FLANK_RIGHT, PUSH -> {
+				postLine(squad, voice, member);
 				AbstractNpc leader = squad.leader();
-				if (leader == null || leader == member || !(member instanceof CopNpc cop) ||
-				    kindOf(cop.getRole()) != RoleKind.ASSAULT) return;
+				if (signal == NpcSquadSignal.PUSH || leader == null || leader == member ||
+				    !(member instanceof CopNpc cop) || kindOf(cop.getRole()) != RoleKind.ASSAULT) return;
 				// step 2: past the leader's order (step 0) and the member's own ack (step 1)
 				Map<String, String> extra = new HashMap<>(roleExtras(member));
 				extra.put("direction", directionTo(member, where));
@@ -270,6 +273,25 @@ public class CopRadio {
 			}
 			default -> { }
 		}
+	}
+
+	/**
+	 * A Marksman or Defender whose order puts it on a post other than the fan's centre ({@code ENGAGE} is
+	 * {@link #roleLine}'s) calls it: {@code Overwatch_Set} / {@code Shield_Up}, measured to the hunted target, two ack
+	 * delays out (past the leader's order and the member's ack). Cooldowns keep it to once per engagement.
+	 */
+	private void postLine(NpcSquad squad, RadioVoice voice, AbstractNpc member) {
+		RoleKind kind = member instanceof CopNpc cop ? kindOf(cop.getRole()) : null;
+		String   key  = kind == RoleKind.MARKSMAN ? "Overwatch_Set" : kind == RoleKind.DEFENDER ? "Shield_Up" : null;
+		LivingEntity hunted = voice.hunted(squad);
+		if (key == null || lines.lines(key).isEmpty() || hunted == null) return;
+
+		Location spot = hunted.getLocation();
+		if (directionTo(member, spot).isEmpty()) return;
+		Map<String, String> extra = new HashMap<>(roleExtras(member));
+		extra.put("direction", directionTo(member, spot));
+		extra.put("distance", distanceTo(member, spot));
+		radio.sayLater(squad, voice, member, key, extra, 2, member::isValid);
 	}
 
 	private void commanderSays(CopGroup group, NpcSquad squad, RadioVoice voice, String key, @Nullable Location where,

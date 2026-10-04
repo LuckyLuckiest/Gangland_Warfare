@@ -52,7 +52,7 @@ class CopRadioRolesTest {
 	private static final Map<String, Long> COOLDOWNS = Map.ofEntries(
 			Map.entry("Overwatch_Set", 20_000L), Map.entry("Marksman_Spotted", 8_000L),
 			Map.entry("Commander_Orders", 20_000L), Map.entry("Commander_Orders_Basic", 20_000L),
-			Map.entry("Flanking", 10_000L));
+			Map.entry("Flanking", 10_000L), Map.entry("Shield_Up", 20_000L));
 
 	private static final RadioSettings SETTINGS = new RadioSettings(true, 32, 64, 1500, 1000, 25, 2, COOLDOWNS,
 	                                                                Set.of("Marksman_Spotted"), null, 1f, 1f);
@@ -212,6 +212,59 @@ class CopRadioRolesTest {
 		tasks.get(0).run();
 
 		verify(bystander).sendMessage("[SWAT-1] ORDERS " + compass(commander, target));
+	}
+
+	@Test
+	@DisplayName("the squad's first contact makes the Commander order it, a follow-up past the gaps; on open ground no ENGAGE is needed")
+	void contact_commanderOrders() {
+		CopNpc commander = cop(1, 4, 0, commanderRole());
+		CopNpc pointman  = cop(2, 6, 0, null);
+		group.add(commander);
+		group.add(pointman);
+		group.add(cop(3, 7, 0, defenderRole()));
+		group.add(cop(4, 8, 0, assaultRole()));
+		group.add(cop(5, 9, 0, marksmanRole()));
+		Location spot = new Location(world, 14, 64, 0);
+
+		signal(NpcSquadSignal.CONTACT, pointman, spot);
+		runTasks();
+
+		verify(bystander).sendMessage("[SWAT-2] Contact line");
+		verify(bystander).sendMessage("[SWAT-1] ORDERS " + compass(commander, spot));
+	}
+
+	@Test
+	@DisplayName("a Marksman ordered to a flank post still calls Overwatch_Set, a follow-up measured to the hunted target")
+	void marksmanFlank_overwatchFollowUp() {
+		CopNpc leader   = cop(1, 4, 0, null);
+		CopNpc marksman = cop(2, 6, 0, marksmanRole());
+		group.add(leader);
+		group.add(marksman);
+		Location post = new Location(world, 6, 64, 12);
+
+		signal(NpcSquadSignal.FLANK_LEFT, marksman, post);
+		runTasks();
+
+		Location suspect = new Location(world, 0, 64, 0);
+		verify(bystander).sendMessage("[SWAT-2] OW 6 " + compass(marksman, suspect) + " Marksman");
+	}
+
+	@Test
+	@DisplayName("a Defender taking a post (flank or push order) calls Shield_Up once inside the cooldown")
+	void defenderOrder_shieldUpFollowUp() {
+		CopNpc leader   = cop(1, 4, 0, null);
+		CopNpc defender = cop(2, 6, 0, defenderRole());
+		group.add(leader);
+		group.add(defender);
+
+		signal(NpcSquadSignal.PUSH, defender, new Location(world, 6, 64, 12));
+		runTasks();
+		clock[0] += 100;
+		tasks.clear();
+		signal(NpcSquadSignal.FLANK_RIGHT, defender, new Location(world, 6, 64, 12));
+		runTasks();
+
+		verify(bystander, times(1)).sendMessage("[SWAT-2] SHIELD Defender");
 	}
 
 	@Test
