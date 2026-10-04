@@ -101,7 +101,7 @@ class CopFieldCareTest {
 		care.tick(group);
 
 		verify(cop, times(1)).applySpeed(0.7);
-		verify(radio, times(1)).sayAs(group, cop, "Hit", Map.of());
+		verify(radio, times(1)).sayAs(group, cop, "Hit", Map.of("health", "50"));
 		verify(world, times(3)).spawnParticle(any(Particle.class), any(Location.class), anyInt(), anyDouble(),
 		                                      anyDouble(), anyDouble(), anyDouble());
 
@@ -109,7 +109,7 @@ class CopFieldCareTest {
 		care.tick(group);
 
 		verify(cop).applySpeed(1.0);
-		verify(radio, times(1)).sayAs(group, cop, "Hit", Map.of());
+		verify(radio, times(1)).sayAs(group, cop, "Hit", Map.of("health", "50"));
 	}
 
 	@Test
@@ -138,8 +138,8 @@ class CopFieldCareTest {
 		care.tick(group);
 
 		assertSame(patient, medic.getPatient());
-		Map<String, String> toPatient = Map.of("member", CopRadio.callsign(patient));
-		Map<String, String> toOther   = Map.of("member", CopRadio.callsign(other));
+		Map<String, String> toPatient = Map.of("member", CopRadio.callsign(patient), "distance", "10", "eta", "2");
+		Map<String, String> toOther   = Map.of("member", CopRadio.callsign(other), "distance", "10", "eta", "2");
 		verify(radio).sayAsLater(eq(group), eq(medic), eq("Medic_Moving"), eq(toPatient), eq(1), any());
 		verify(radio).sayAsLater(eq(group), eq(leader), eq("Covering_Fire"), anyMap(), eq(2), any());
 		verify(medic).navigateTo(patient.getEntity().getLocation());
@@ -218,7 +218,8 @@ class CopFieldCareTest {
 		EntityRegainHealthEvent regain = (EntityRegainHealthEvent) event.getValue();
 		assertEquals(EntityRegainHealthEvent.RegainReason.CUSTOM, regain.getRegainReason());
 		assertEquals(10.0, regain.getAmount());
-		verify(radio).sayAs(group, medic, "Patched_Up", Map.of("member", CopRadio.callsign(patient)));
+		verify(radio).sayAs(group, medic, "Patched_Up", Map.of("member", CopRadio.callsign(patient), "health", "90"));
+		verify(radio, times(1)).sayAs(group, medic, "Medic_Treating", Map.of("member", CopRadio.callsign(patient), "health", "40"));
 		assertNull(medic.getPatient());
 		assertFalse(patient.isUnderCare());
 	}

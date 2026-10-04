@@ -306,6 +306,30 @@ keyed by the signal name (`CONTACT` -> `Lines.Contact`, `FLANK_LEFT` -> `Lines.F
   and `CopRadio.sayFromLeader` (`Stand_Down`, `Resisting`) speak outside the signal flow.
 - `CopRadio.callsign` is the cop's own callsign with colours stripped (`Officer Bob #1592`), falling back to `SWAT-17` (tier name plus Citizens id) when a cop has none.
 
+#### Role radio lines (0.13.0, H13b)
+
+`CopRadio.kindOf(CopRole)` maps a role to a radio kind: the `Medic` / `Commander` flags and a block cone (Defender) come
+from the role itself, `Marksman` and `Assault` from the role's name (case-insensitive); any other role speaks the
+generic lines. Every kind below has its own `Lines.<Key>` (2-3 variants, English and Spanish), its own
+`Cooldown_Ticks` (code default in `COP_RADIO_DEFAULTS`, in milliseconds) and fires once per signal edge.
+
+| Key | Fires when | Placeholders |
+|---|---|---|
+| `Overwatch_Set` | a Marksman `ENGAGE`s (replaces `Engage`) | `%distance%` `%direction%` `%target%` `%role%` |
+| `Marksman_Spotted` | a Marksman's `CONTACT` (replaces `Contact`; priority) | `%distance%` `%direction%` `%target%` |
+| `Marksman_Lost` / `Marksman_Reloading` | a Marksman's `CONTACT_LOST` / `RELOADING` | `%direction%` |
+| `Shield_Up` | a Defender `ENGAGE`s (replaces `Engage`) | `%role%` |
+| `Flanking` | an Assault cop is ordered to a flank; said two ack delays later, after its `Ack` | `%direction%` |
+| `Commander_Orders` | any `ENGAGE` with a live Commander; the Commander speaks one ack delay later | `%direction%` |
+| `Status_Check` | `CONTACT_LOST` with a live Commander | none |
+| `Pull_Back` | `MAN_DOWN` / `LEADER_DOWN` of a non-Commander with a live Commander | `%member%` |
+| `Medic_Treating` | the medic reaches the patient and starts the channel | `%member%` `%health%` `%role%` |
+
+`Hit`, `Medic_Moving` and `Patched_Up` gained `%health%` (whole percent, `Patched_Up` after the heal), `%distance%` and
+`%eta%` (seconds at 5 blocks/s, `Medic_Moving`). A role pool that is muted (`[]`) falls back to the generic line.
+Extras now fill a line before the built-in `%distance%` / `%direction%`, so a caller-measured value wins over the
+speaker-to-spot one. Only `Marksman_Spotted` joins the priority set.
+
 #### Radio responders (0.12.0)
 
 A `CONTACT`, `MAN_DOWN` or `LEADER_DOWN` signal queues a `RadioCall(group, squad, origin)`. `CopManager` answers

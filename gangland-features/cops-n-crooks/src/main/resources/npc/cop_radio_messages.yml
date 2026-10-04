@@ -5,9 +5,12 @@
 #   %unit%      speaker callsign, e.g. Officer Bob #1592
 #   %member%    the addressed or downed cop
 #   %target%    suspect name
-#   %distance%  blocks from the speaker to the spot
+#   %distance%  blocks from the speaker to the spot (Medic_Moving: to the patient)
 #   %direction% compass word from the speaker to the spot
 #   %side%      the spot relative to the way the suspect faces
+#   %health%    a cop's health in percent (Hit, Medic_Treating, Patched_Up)
+#   %eta%       seconds the medic needs to reach the patient (Medic_Moving)
+#   %role%      the speaker's role, e.g. Medic, Marksman
 #   %tier%, %level% dispatch lines only
 
 # Line-wrapping template for an ordinary radio line.
@@ -118,12 +121,14 @@ Lines:
       - "I'm behind cover, keep him busy!"
    # Field care (Cops.Field_Care in cops.yml). A cop drops to its hurt threshold.
    Hit:
-      - "I'm hit!"
-      - "Taking hits, I'm bleeding!"
+      - "I'm hit! I'm at %health%%, need a medic!"
+      - "Taking hits, I'm bleeding - %health%% left, need a medic!"
+      - "Hit, I'm at %health%%, somebody cover me!"
    # A medic sets off for a hurt squad mate (%member%).
    Medic_Moving:
-      - "%member%, hold on, I'm coming to you!"
-      - "Moving up to %member%!"
+      - "Medic en route to %member%, %distance% blocks out, ETA %eta% seconds!"
+      - "%member%, hold on, %distance% blocks out, I'm coming to you!"
+      - "Moving up to %member%, %distance% blocks, stay down!"
    # The squad covers the medic (said by the leader, or another cop when the leader is the medic or the patient).
    Covering_Fire:
       - "Cover the medic, lay it down!"
@@ -133,8 +138,59 @@ Lines:
       - "Pinned down, can't reach %member%!"
    # The medic finished treating %member%.
    Patched_Up:
-      - "%member% patched up, back in it!"
-      - "You're good, get back in there!"
+      - "%member% is stable at %health%%, back in it!"
+      - "Patient stable, %health%% health. You're good, get back in there!"
+      - "%member% patched up - %health%%. Back in the fight!"
+   # A Marksman starts engaging: it has taken its overwatch post (replaces Engage for that role).
+   Overwatch_Set:
+      - "Overwatch in position, %distance% blocks %direction%, I have eyes on the suspect."
+      - "%role% set, %distance% blocks %direction%. Eyes on %target%."
+      - "In the nest, %distance% blocks %direction%. Clear line on the suspect."
+   # A Marksman first sees the suspect while the squad is not in contact (replaces Contact for that role).
+   Marksman_Spotted:
+      - "Target spotted, %distance% blocks %direction%! Holding for the shot."
+      - "I have eyes on %target%, %distance% blocks %direction%!"
+      - "Visual on the suspect, %direction%, range %distance%."
+   # A Marksman loses sight of the suspect (replaces Contact_Lost for that role).
+   Marksman_Lost:
+      - "Lost the target! Scanning %direction%."
+      - "Target's out of my scope, last seen %direction%."
+      - "No visual from overwatch, check %direction%!"
+   # A Marksman starts reloading (replaces Reloading for that role).
+   Marksman_Reloading:
+      - "Overwatch reloading, I'm blind for a few seconds!"
+      - "Changing mags, someone watch my sector!"
+      - "Reloading the rifle, keep his head down!"
+   # A Defender starts engaging (replaces Engage for that role).
+   Shield_Up:
+      - "Shield up, holding the line!"
+      - "%role% up front, nobody gets past me!"
+      - "Covering the squad, shields up!"
+   # An Assault cop is ordered to a flank and calls its move, after its ack.
+   Flanking:
+      - "Moving to flank, %direction%!"
+      - "Going wide %direction%, I'll get behind him!"
+      - "Flanking %direction%, keep him busy!"
+   # The squad starts engaging and a Commander is alive: it orders the roles into place.
+   Commander_Orders:
+      - "Defender, hold the line! Assault, flank %direction%! Marksman, overwatch!"
+      - "All units, engage! Defender up front, Assault go wide %direction%!"
+      - "Squad, positions! Defender hold, Assault flank, Marksman take the high ground!"
+   # The squad loses the suspect and a Commander is alive: it calls the squad in.
+   Status_Check:
+      - "Lost him! All units, sound off - report your status."
+      - "Contact broken, check in, who's hurt?"
+      - "Regroup on me and report your status."
+   # A cop goes down and a Commander is alive: it pulls the squad back.
+   Pull_Back:
+      - "%member% is down! Everyone fall back to cover and regroup on me!"
+      - "Man down, %member%! Pull back to cover, medic on him!"
+      - "We lost %member%! Don't bunch up, fall back and cover each other!"
+   # The medic reaches the patient and starts the treatment.
+   Medic_Treating:
+      - "Applying field dressing, %member%, stay with me."
+      - "Hold still %member%, patching you up. You're at %health%%."
+      - "%role% here, applying pressure, hold still, %member%!"
    # A cuffed suspect's escape attempts exhaust Max_Cuff_Attempts; the group switches to combat.
    Resisting:
       - "Suspect is resisting! Take him down!"

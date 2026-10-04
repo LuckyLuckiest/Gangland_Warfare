@@ -82,19 +82,62 @@ Lines:
       - "¡A cubierto!"
       - "¡Estoy a cubierto, manténganlo ocupado!"
    Hit:
-      - "¡Me dieron!"
-      - "¡Estoy herido, me desangro!"
+      - "¡Me dieron! Estoy al %health%%, ¡necesito un médico!"
+      - "Me están dando, me desangro, me queda el %health%%, ¡necesito un médico!"
+      - "Herido, estoy al %health%%, ¡que alguien me cubra!"
    Medic_Moving:
-      - "¡%member%, aguanta, voy hacia ti!"
-      - "¡Avanzando hacia %member%!"
+      - "¡Médico en camino hacia %member%, a %distance% bloques, llego en %eta% segundos!"
+      - "¡%member%, aguanta, estoy a %distance% bloques, voy hacia ti!"
+      - "Avanzando hacia %member%, a %distance% bloques, ¡agáchate!"
    Covering_Fire:
       - "¡Cubran al médico, fuego a discreción!"
       - "¡Fuego de cobertura!"
    Medic_Pinned:
       - "¡Estoy inmovilizado, no llego hasta %member%!"
    Patched_Up:
-      - "¡%member% curado, de vuelta a la acción!"
-      - "¡Estás bien, vuelve ahí!"
+      - "¡%member% estable al %health%%, de vuelta a la acción!"
+      - "Paciente estable, %health%% de salud. Estás bien, ¡vuelve ahí!"
+      - "%member% curado: %health%%. ¡De vuelta al combate!"
+   Overwatch_Set:
+      - "Vigilancia en posición, a %distance% bloques al %direction%, tengo al sospechoso a la vista."
+      - "%role% listo, a %distance% bloques al %direction%. Tengo a %target% en la mira."
+      - "En mi puesto, a %distance% bloques al %direction%. Línea despejada al sospechoso."
+   Marksman_Spotted:
+      - "¡Objetivo localizado, a %distance% bloques al %direction%! Esperando el disparo."
+      - "¡Tengo a %target% a la vista, a %distance% bloques al %direction%!"
+      - "Contacto visual con el sospechoso, al %direction%, distancia %distance%."
+   Marksman_Lost:
+      - "¡Perdí al objetivo! Escaneando al %direction%."
+      - "El objetivo salió de mi mira, visto por última vez al %direction%."
+      - "Sin contacto visual desde la vigilancia, ¡revisen al %direction%!"
+   Marksman_Reloading:
+      - "¡Vigilancia recargando, estaré ciego unos segundos!"
+      - "Cambiando cargador, ¡que alguien cubra mi sector!"
+      - "Recargando el rifle, ¡manténganle la cabeza agachada!"
+   Shield_Up:
+      - "¡Escudo arriba, aguantando la línea!"
+      - "¡%role% al frente, nadie pasa de mí!"
+      - "Cubriendo al escuadrón, ¡escudos arriba!"
+   Flanking:
+      - "¡Flanqueando por el %direction%!"
+      - "Rodeando por el %direction%, ¡le caigo por detrás!"
+      - "Flanqueo al %direction%, ¡manténganlo ocupado!"
+   Commander_Orders:
+      - "¡Defensor, aguanta la línea! ¡Asalto, flanquea al %direction%! ¡Francotirador, vigilancia!"
+      - "¡Todas las unidades, ataquen! Defensor al frente, Asalto rodee por el %direction%."
+      - "¡Escuadrón, posiciones! Defensor aguanta, Asalto flanquea, Francotirador a lo alto."
+   Status_Check:
+      - "¡Lo perdimos! Todas las unidades, reporten su estado."
+      - "Contacto perdido, repórtense, ¿quién está herido?"
+      - "Reagrúpense conmigo y reporten su estado."
+   Pull_Back:
+      - "¡%member% cayó! Todos a cubierto y reagrúpense conmigo."
+      - "¡Agente caído, %member%! Retirada a cubierto, ¡médico con él!"
+      - "¡Perdimos a %member%! No se amontonen, retrocedan y cúbranse."
+   Medic_Treating:
+      - "Aplicando vendaje de campaña, %member%, quédate conmigo."
+      - "Quieto %member%, te estoy curando. Estás al %health%%."
+      - "¡%role% aquí, aplicando presión, quédate quieto, %member%!"
    Resisting:
       - "¡El sospechoso se resiste! ¡Redúzcanlo!"
    Backup:

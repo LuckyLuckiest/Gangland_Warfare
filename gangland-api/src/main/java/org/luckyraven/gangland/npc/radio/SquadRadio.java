@@ -233,13 +233,13 @@ public final class SquadRadio {
 	                    @Nullable Location where, Map<String, String> extra) {
 		Location spot = where != null ? where : origin;
 
-		String filled = template.replace("%unit%", callsign)
-		                        .replace("%target%", hunted != null ? hunted.getName() : "")
-		                        .replace("%distance%", distanceOf(origin, spot))
-		                        .replace("%direction%", directionOf(origin, spot))
-		                        .replace("%side%", sideOf(hunted, spot));
-
-		return withExtras(filled, extra);
+		// extras first: a caller-supplied %distance%/%direction% (a medic's, measured to its patient) beats the
+		// speaker-to-spot one, which is 0/"north" when the line has no spot
+		return withExtras(template, extra).replace("%unit%", callsign)
+		                                  .replace("%target%", hunted != null ? hunted.getName() : "")
+		                                  .replace("%distance%", distanceOf(origin, spot))
+		                                  .replace("%direction%", directionOf(origin, spot))
+		                                  .replace("%side%", sideOf(hunted, spot));
 	}
 
 	private static String withExtras(String text, Map<String, String> extra) {
