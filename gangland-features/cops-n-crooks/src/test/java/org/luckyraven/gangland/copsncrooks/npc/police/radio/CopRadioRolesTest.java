@@ -354,6 +354,32 @@ class CopRadioRolesTest {
 	}
 
 	@Test
+	@DisplayName("the squad's first contact makes a living Defender call Shield_Up once; no Defender, nothing")
+	void contact_defenderShieldUp() {
+		CopNpc pointman = cop(1, 4, 0, null);
+		group.add(pointman);
+		Location target = new Location(world, 14, 64, 0);
+
+		signal(NpcSquadSignal.CONTACT, pointman, target);
+		runTasks();
+		verify(bystander, never()).sendMessage("[SWAT-2] SHIELD Defender");
+
+		CopNpc defender = cop(2, 6, 0, defenderRole());
+		group.add(defender);
+		tasks.clear();
+		clock[0] += 60_000;
+		signal(NpcSquadSignal.CONTACT, pointman, target);
+		runTasks();
+		verify(bystander, times(1)).sendMessage("[SWAT-2] SHIELD Defender");
+
+		tasks.clear();
+		clock[0] += 5_000;
+		signal(NpcSquadSignal.CONTACT, pointman, target);
+		runTasks();
+		verify(bystander, times(1)).sendMessage("[SWAT-2] SHIELD Defender");
+	}
+
+	@Test
 	@DisplayName("a squad missing a Defender, Assault or Marksman gets the role-neutral orders, never an order to a role it lacks")
 	void engage_missingRoles_basicOrders() {
 		CopNpc commander = cop(1, 4, 0, commanderRole());

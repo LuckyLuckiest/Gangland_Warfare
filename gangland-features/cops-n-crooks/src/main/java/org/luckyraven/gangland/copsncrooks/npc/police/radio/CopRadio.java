@@ -261,7 +261,7 @@ public class CopRadio {
 		// a Defender's Shield_Up is a follow-up, three ack delays out: said at once it lands behind the Commander's
 		// order and the Marksman's Overwatch_Set in the squad gap and is dropped (order: 1 Commander, 2 Flanking, 3 this)
 		if (kindOf(((CopNpc) member).getRole()) == RoleKind.DEFENDER)
-			radio.sayLater(squad, voice, member, key, extra, 3, () -> true);
+			radio.sayLater(squad, voice, member, key, extra, 3, () -> shieldRelevant(member, squad, voice));
 		else radio.say(squad, voice, member.getEntity(), callsign(member), key, "Format", where, null, extra);
 		return true;
 	}
@@ -278,9 +278,12 @@ public class CopRadio {
 			// orders addressed to roles go out only when the squad has them all; else the neutral variant
 			// the first contact orders too: on open ground the squad's first orders are flanks, no member ever gets the
 			// ENGAGE centre order, and a leader order or the Contact line takes the squad gap first
-			case CONTACT, ENGAGE -> commanderSays(group, squad, voice,
+			case CONTACT, ENGAGE -> {
+				if (signal == NpcSquadSignal.CONTACT) shieldUp(group, squad, voice, where);
+				commanderSays(group, squad, voice,
 			                             hasRoles(group, RoleKind.DEFENDER, RoleKind.ASSAULT, RoleKind.MARKSMAN)
 			                             ? "Commander_Orders" : "Commander_Orders_Basic", where, Map.of());
+			}
 			case CONTACT_LOST -> commanderSays(group, squad, voice, "Status_Check", where, Map.of());
 			case MAN_DOWN, LEADER_DOWN -> commanderSays(group, squad, voice, "Pull_Back", where,
 			                                            Map.of("member", callsign(member)), member);
@@ -334,6 +337,36 @@ public class CopRadio {
 		                                                 : role != null && role.rangedMax() != null
 		                                                   ? role.rangedMax() + POST_SLACK_BLOCKS : MARKSMAN_POST_BLOCKS;
 		return self.getLocation().distance(hunted.getLocation()) <= max;
+	}
+
+	/**
+	 * The squad's first contact makes a living Defender call {@code Shield_Up}: a Defender holding the fan's centre
+	 * post almost never gets {@code ENGAGE}, so the contact is the edge it can rely on. Same step as the post line,
+	 * past the Commander's order and the Marksman's overwatch; the per-key cooldown keeps it to once per engagement.
+	 */
+	private void shieldUp(CopGroup group, NpcSquad squad, RadioVoice voice, @Nullable Location where) {
+		CopNpc defender = null;
+		synchronized (group.getCops()) {
+			for (CopNpc cop : group.getCops())
+				if (cop.isValid() && cop.getEntity() != null && kindOf(cop.getRole()) == RoleKind.DEFENDER) {
+					defender = cop;
+					break;
+				}
+		}
+		LivingEntity hunted = voice.hunted(squad);
+		Location     spot   = hunted != null ? hunted.getLocation() : where;
+		if (defender == null || lines.lines("Shield_Up").isEmpty() || directionTo(defender, spot).isEmpty()) return;
+
+		Map<String, String> extra = new HashMap<>(roleExtras(defender));
+		extra.put("direction", directionTo(defender, spot));
+		extra.put("distance", distanceTo(defender, spot));
+		CopNpc speaker = defender;
+		radio.sayLater(squad, voice, speaker, "Shield_Up", extra, 3, () -> shieldRelevant(speaker, squad, voice));
+	}
+
+	/** A Shield_Up is still worth saying while its Defender lives and the squad still hunts. */
+	private static boolean shieldRelevant(AbstractNpc defender, NpcSquad squad, RadioVoice voice) {
+		return defender.isValid() && voice.hunted(squad) != null;
 	}
 
 	private void commanderSays(CopGroup group, NpcSquad squad, RadioVoice voice, String key, @Nullable Location where,
