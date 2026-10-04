@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 @DisplayName("HealthBarSettings - bar rendering from healthbars.yml (phase H13)")
 class HealthBarSettingsTest {
 
-	private static final String F = "&c❤", H = "&c♡", E = "&8❤";
+	private static final String F = "&c❤", H = "&c❥", E = "&8♡";
 
 	private static String hearts(int full, int half) {
 		return color(F.repeat(full) + H.repeat(half) + E.repeat(10 - full - half));
