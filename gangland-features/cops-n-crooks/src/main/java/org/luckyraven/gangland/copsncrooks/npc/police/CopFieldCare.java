@@ -299,7 +299,9 @@ public class CopFieldCare {
 		if (arriving) patient.setUnderCare(true);
 		if (hit) {
 			treatment.progressTicks = 0;
-			radio.sayAs(group, medic, "Medic_Pinned", Map.of("member", CopRadio.callsign(patient)));
+			// a follow-up (past the squad and player gaps): the hit that pinned the medic just spoke, e.g. a Hit line
+			radio.sayAsLater(group, medic, "Medic_Pinned", Map.of("member", CopRadio.callsign(patient)), 1,
+			                 () -> medic.getPatient() == patient);
 			return false;
 		}
 		// the channel starts on the arrival tick: no time has passed yet, so the heal lands a full Channel_Ticks later

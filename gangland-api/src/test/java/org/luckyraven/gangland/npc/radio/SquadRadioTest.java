@@ -47,6 +47,7 @@ class SquadRadioTest {
 			Map.entry("Flank_Right", List.of("%member%, take his %side%!")),
 			Map.entry("Ack", List.of("Copy.")),
 			Map.entry("Check_Fire", List.of("Check your fire!")),
+			Map.entry("Hit", List.of("I'm hit!")),
 			Map.entry("Search", List.of("Spread out, find him!", "Sweep the area!")),
 			Map.entry("Reposition", List.of()),
 			Map.entry("Route", List.of("Cutting round!")),
@@ -687,8 +688,8 @@ class SquadRadioTest {
 	}
 
 	@Test
-	@DisplayName("a sayLater line still respects the player gap")
-	void sayLater_respectsPlayerGap() {
+	@DisplayName("a sayLater line skips the player gap too: the line that set it up cannot swallow it")
+	void sayLater_bypassesPlayerGap() {
 		settings = new RadioSettings(true, 20, 40, 0, 5000, 25, 2, Map.of(), Set.of(), null, 1f, 1f);
 		AbstractNpc leader = newMember(0, 64, 0, "SWAT-1");
 		AbstractNpc medic  = newMember(2, 64, 0, "SWAT-2");
@@ -705,6 +706,28 @@ class SquadRadioTest {
 		clock.addAndGet(100); // inside the 5000 ms player gap
 		((Runnable) scheduled.get(0)[0]).run();
 
-		verify(p, times(1)).sendMessage(anyString());
+		verify(p, times(2)).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("Hit cools down per speaker: a second wounded cop reports inside the first one's cooldown")
+	void hit_cooldownIsPerSpeaker() {
+		settings = new RadioSettings(true, 20, 40, 1500, 1000, 25, 2, Map.of("Hit", 5000L), Set.of("Hit"), null, 1f,
+		                             1f);
+		AbstractNpc a = newMember(0, 64, 0, "SWAT-1");
+		AbstractNpc b = newMember(2, 64, 0, "SWAT-2");
+		when(a.getEntity().getUniqueId()).thenReturn(UUID.randomUUID());
+		when(b.getEntity().getUniqueId()).thenReturn(UUID.randomUUID());
+		Player p = newPlayer(1, 64, 0);
+		when(world.getPlayers()).thenReturn(List.of(p));
+		NpcSquad squad = new NpcSquad();
+		squad.add(a);
+		squad.add(b);
+
+		assertTrue(radio.say(squad, voice, a.getEntity(), "SWAT-1", "Hit", "Format", null, null, Map.of()));
+		clock.addAndGet(100);
+		assertTrue(radio.say(squad, voice, b.getEntity(), "SWAT-2", "Hit", "Format", null, null, Map.of()));
+		clock.addAndGet(100);
+		assertFalse(radio.say(squad, voice, a.getEntity(), "SWAT-1", "Hit", "Format", null, null, Map.of()));
 	}
 }

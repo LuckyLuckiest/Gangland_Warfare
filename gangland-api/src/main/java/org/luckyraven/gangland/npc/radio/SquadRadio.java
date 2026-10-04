@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
 import java.util.function.BiConsumer;
@@ -46,6 +47,12 @@ public final class SquadRadio {
 
 	/** A route goal this many blocks above the member counts as "up high". */
 	private static final double ELEVATED_BLOCKS = 2.0;
+
+	/**
+	 * Lines whose cooldown runs per speaker rather than per squad: each unit reports its own state once (a second
+	 * wounded cop must still call itself in within the first one's cooldown).
+	 */
+	private static final Set<String> PER_SPEAKER_KEYS = Set.of("Hit");
 
 	/** {@link #lastHeard} is pruned once it grows past this many entries. */
 	private static final int PRUNE_ABOVE = 256;
@@ -84,14 +91,15 @@ public final class SquadRadio {
 	public boolean say(NpcSquad squad, RadioVoice voice, @Nullable LivingEntity speaker, String callsign, String key,
 	                   String formatKey, @Nullable Location where, @Nullable LivingEntity addressee,
 	                   Map<String, String> extra) {
-		return speak(settings.get(), voice, squad, speaker, callsign, key, formatKey, where, addressee, extra, false);
+		return speak(settings.get(), voice, squad, speaker, callsign, key, formatKey, where, addressee, extra, false,
+		             false);
 	}
 
 	/**
 	 * Speaks a follow-up line {@code steps} ack delays ({@code Ack_Delay_Ticks}) from now and past the squad gap, the
 	 * way an ack follows its order: a line said in the same moment as another (a medic answering a cop's "hit") would
-	 * otherwise be swallowed by the squad and player gaps. Each step clears one player gap, so a chain of follow-ups
-	 * uses steps 1, 2, and so on. Silent when {@code speaker} is no longer valid by then, or {@code stillRelevant}
+	 * otherwise be swallowed by the squad and player gaps. A follow-up skips the player gap too: it is scheduled on
+	 * purpose, so the line that set it up cannot swallow it. Steps still order a chain of follow-ups (1, 2, ...). Silent when {@code speaker} is no longer valid by then, or {@code stillRelevant}
 	 * says the moment has passed (a medic's patient killed during the delay); live settings apply.
 	 */
 	public void sayLater(NpcSquad squad, RadioVoice voice, AbstractNpc speaker, String key, Map<String, String> extra,
@@ -99,7 +107,7 @@ public final class SquadRadio {
 		later.accept(() -> {
 			if (speaker.isValid() && stillRelevant.getAsBoolean()) {
 				speak(settings.get(), voice, squad, speaker.getEntity(), voice.callsign(speaker), key, "Format", null,
-				      null, extra, true);
+				      null, extra, true, true);
 			}
 		}, settings.get().ackDelayTicks() * steps);
 	}
@@ -126,15 +134,15 @@ public final class SquadRadio {
 				AbstractNpc speaker = squad.leader();
 				if (speaker == null) return;
 				speak(cfg, voice, squad, speaker.getEntity(), voice.callsign(speaker), key, "Format", where, null,
-				     Map.of("member", voice.callsign(member)), false);
+				     Map.of("member", voice.callsign(member)), false, false);
 			}
 			// A route is neutral ("Route") unless its goal is well above the member ("Route_High"); the ladder line is
 			// CLIMB's own ("Climb"), so it plays only when a climb really starts.
 			case ROUTE -> speak(cfg, voice, squad, member.getEntity(), voice.callsign(member),
 			                    isElevated(member, where) ? "Route_High" : key, "Format", where, null, Map.of(),
-			                    false);
+			                    false, false);
 			default -> speak(cfg, voice, squad, member.getEntity(), voice.callsign(member), key, "Format", where,
-			                 null, Map.of(), false);
+			                 null, Map.of(), false, false);
 		}
 	}
 
@@ -150,14 +158,14 @@ public final class SquadRadio {
 
 		String  memberCallsign = voice.callsign(member);
 		boolean delivered = speak(cfg, voice, squad, leader.getEntity(), voice.callsign(leader), key, "Format", where,
-		                          member.getEntity(), Map.of("member", memberCallsign), false);
+		                          member.getEntity(), Map.of("member", memberCallsign), false, false);
 
 		if (delivered && !lines.lines("Ack").isEmpty()) {
 			// Live settings when the ack fires: a reload during the delay must apply to it like to any other line.
 			later.accept(() -> {
 				if (member.isValid()) {
 					speak(settings.get(), voice, squad, member.getEntity(), memberCallsign, "Ack", "Format", null, null,
-					     Map.of(), true);
+					     Map.of(), true, false);
 				}
 			}, cfg.ackDelayTicks());
 		}
@@ -165,7 +173,8 @@ public final class SquadRadio {
 
 	private boolean speak(RadioSettings cfg, RadioVoice voice, NpcSquad squad, @Nullable LivingEntity speaker,
 	                      String callsign, String key, String formatKey, @Nullable Location where,
-	                      @Nullable LivingEntity addressee, Map<String, String> extra, boolean bypassSquadGap) {
+	                      @Nullable LivingEntity addressee, Map<String, String> extra, boolean bypassSquadGap,
+	                      boolean bypassPlayerGap) {
 		List<String> pool = lines.lines(key);
 		if (!cfg.enabled() || pool.isEmpty()) return false;
 
@@ -174,7 +183,8 @@ public final class SquadRadio {
 
 		SquadState state = states.computeIfAbsent(squad, s -> new SquadState());
 		if (!priority && !bypassSquadGap && now - state.lastLineAt < cfg.squadGapMs()) return false;
-		if (now - state.lastByKey.getOrDefault(key, NEVER) < cfg.cooldownFor(key)) return false;
+		String cooldownKey = PER_SPEAKER_KEYS.contains(key) && speaker != null ? key + "@" + speaker.getUniqueId() : key;
+		if (now - state.lastByKey.getOrDefault(cooldownKey, NEVER) < cfg.cooldownFor(key)) return false;
 
 		Location origin = speaker != null ? speaker.getLocation() : where;
 		World    world  = origin != null ? origin.getWorld() : null;
@@ -206,7 +216,7 @@ public final class SquadRadio {
 			                 withinRange(player.getLocation(), origin, cfg.targetRange()));
 			if (!heard) continue;
 
-			if (!priority) {
+			if (!priority && !bypassPlayerGap) {
 				Long last = lastHeard.get(player.getUniqueId());
 				if (last != null && now - last < cfg.playerGapMs()) continue;
 			}
@@ -225,7 +235,7 @@ public final class SquadRadio {
 		// A priority line skips the squad gap, so it does not restart it either: the order that follows a Contact
 		// in the same tick must still get through.
 		if (!priority) state.lastLineAt = now;
-		state.lastByKey.put(key, now);
+		state.lastByKey.put(cooldownKey, now);
 		return true;
 	}
 

@@ -274,7 +274,8 @@ class CopFieldCareTest {
 		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(2.0);
 		when(medic.getEntity().getHealth()).thenReturn(16.0);
 		care.tick(group); // arrives and is hit on the same tick
-		verify(radio).sayAs(group, medic, "Medic_Pinned", Map.of("member", CopRadio.callsign(patient)));
+		Map<String, String> pinned = Map.of("member", CopRadio.callsign(patient));
+		verify(radio).sayAsLater(eq(group), eq(medic), eq("Medic_Pinned"), eq(pinned), eq(1), any());
 		verify(radio, never()).sayAs(any(), any(), eq("Medic_Treating"), anyMap());
 
 		care.tick(group);
@@ -441,7 +442,8 @@ class CopFieldCareTest {
 		when(medic.getEntity().getHealth()).thenReturn(16.0);
 		care.tick(group); // hit: back to 0
 
-		verify(radio).sayAs(group, medic, "Medic_Pinned", Map.of("member", CopRadio.callsign(patient)));
+		Map<String, String> pinned = Map.of("member", CopRadio.callsign(patient));
+		verify(radio).sayAsLater(eq(group), eq(medic), eq("Medic_Pinned"), eq(pinned), eq(1), any());
 		for (int i = 0; i < 5; i++) care.tick(group);
 		verify(patient.getEntity(), never()).setHealth(anyDouble());
 		care.tick(group);

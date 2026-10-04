@@ -328,7 +328,7 @@ generic lines. Every kind below has its own `Lines.<Key>` (2-3 variants, English
 | `Medic_Treating` | the medic's channel first progresses, once per treatment (also after being pinned on arrival) | `%member%` `%health%` `%role%` |
 
 `Hit`, `Medic_Moving` and `Patched_Up` gained `%health%` (whole percent, `Patched_Up` after the heal), `%distance%` and
-`%eta%` (rough seconds, `Medic_Moving`: 4.3 blocks/s times the medic's tier `Speed`). A role's radio kind comes from its traits (Commander/Medic flags, a block cone is a Defender, a `FLANK` placement an Assault, a firing band from 12 blocks out a Marksman), the role name only as a fallback, so renamed roles keep their lines. Marksman/Defender lines say `%distance%`/`%direction%` only when the signal carries a spot. A role pool that is muted (`[]`) falls back to the generic line.
+`%eta%` (rough seconds, `Medic_Moving`: 4.3 blocks/s times the medic's tier `Speed`). A role's radio kind comes from its traits (Commander/Medic flags, a block cone is a Defender, a `FLANK` placement an Assault, a firing band from 12 blocks out a Marksman), the role name only as a fallback, so renamed roles keep their lines. Marksman/Defender lines say `%distance%`/`%direction%` only when the signal carries a spot. A role pool that is muted (`[]`) falls back to the generic line. `Commander_Orders` goes out on the squad's first `CONTACT` as well as on `ENGAGE`; a Marksman's `Overwatch_Set` and a Defender's `Shield_Up` also fire as a follow-up when its flank or push order arrives (distance and direction measured to the hunted target), so they are heard on open ground where no member takes the fan's centre.
 Extras now fill a line before the built-in `%distance%` / `%direction%`, so a caller-measured value wins over the
 speaker-to-spot one. Only `Marksman_Spotted` joins the priority set.
 
@@ -422,7 +422,10 @@ own behaviours. It reads `FieldCareSettings` (`Cops.Field_Care`, gangland-api) a
   one ack delay later; `Covering_Fire`, two ack delays later, comes from the squad leader unless it is the medic or
   the patient (then any other fighting cop, else nobody). Covering fire is a radio line only. Both go through
   `CopRadio.sayAsLater` (`SquadRadio.sayLater`: past the squad gap, each step one `Ack_Delay_Ticks`), because said in
-  the same tick as the patient's `Hit` the squad and player gaps would drop them. Each is dropped when it comes due
+  the same tick as the patient's `Hit` the squad and player gaps would drop them. One rule for every scheduled
+  follow-up (`sayLater`, which `Medic_Pinned`, the Commander's orders and the role post lines also use): it skips the
+  squad gap and the player gap, and keeps only its own key's cooldown. `Hit` cools down per speaker, so every wounded
+  cop reports its own hurt edge. Each is dropped when it comes due
   if the treatment is over by then (patient dead, medic out of the fight or reassigned).
 - **Treatment:** while `getPatient() != null`, `CombatBehavior.holdsForFieldCare` makes the fighting behaviours return
   after their attack, so `CopFieldCare` walks the medic (`navigateTo`, a direct route to the patient, no cover search).
