@@ -28,6 +28,8 @@ public class CopsNCrooksYamlConfig {
 	public CopsNCrooksFiles copsNCrooksFiles(FileManager fileManager, ModuleLoader moduleLoader) {
 		ClassLoader loader = moduleLoader.classLoader();
 		fileManager.addFile(new FileHandler(plugin, "cops", "npc", ".yml", loader), true);
+		// Squad roles (0.13.0): its own file, so a server with an older cops.yml still gets the commented catalogue.
+		fileManager.addFile(new FileHandler(plugin, "cop_roles", "npc", ".yml", loader), true);
 		// Police-radio lines (phase H12), module-owned like civilians' civilian_messages.yml — picked by
 		// Settings.getLanguagePicked() via CopRadioMessages/LocalizedModuleYaml.
 		fileManager.addFile(new FileHandler(plugin, "cop_radio_messages", "npc", ".yml", loader), true);

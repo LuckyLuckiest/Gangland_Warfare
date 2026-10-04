@@ -1,0 +1,341 @@
+#   +------------------------------------------------------+   #
+#  /     __________      _______________       ____         \  #
+# |     //________/      \_____(!)_____/      //__\\         | #
+# |    |// |              |    |_|    |      ///  \\\        | #
+# |    ||| o_______       |    |_|    |     ///____\\\       | #
+# |    |||  \_____,\      |    |_|    |    //________\\      | #
+# |    |\\_______/ ||     o    |_|    o   /// |    | \\\     | #
+# |     \__________/           |_|       /_/  o    o  \_\    | #
+# |                                                          | #
+# |                   File: cop_roles.yml                    | #
+# |                  Author: [LuckyRaven10]                  | #
+#  \                                                        /  #
+#   +------------------------------------------------------+   #
+#
+# Squad roles. Each new cop takes the next unfilled role of its wanted level's Squad_Composition (at the bottom),
+# laid over its cops.yml tier: the role decides how the cop is dressed and armed, where it stands and how it fights,
+# and shows in its name (%role% in cops.yml Cops.Names.Format, e.g. "Officer ✚ Medic Bob #1592").
+#
+# This file is written once when it is missing and never overwritten, so your edits stay. Every key is optional:
+# delete this file and the same built-in roles apply. An entry under Roles is read key by key over the built-in role
+# of the same name (or over a plain role for a new name).
+#
+# Role keys:
+#   Display:             How the role shows in the cop's name.
+#     Name:              The role's word (default: its name). Radio lines use it too.
+#     Color:             Colour code(s) put before the symbol and the word, e.g. "&c".
+#     Symbol:            A character put before the word, e.g. "✚"; "" = none.
+#   Weapon_Pool:         One is picked at random when the cop spawns. "weapon:<name>" = a Bartizan weapon (the file
+#                        name in plugins/Bartizan/weapon); any other entry is a vanilla item (IRON_SWORD, BOW) held only
+#                        when no Bartizan weapon can be used (Bartizan missing, unknown name). A role pool with no
+#                        vanilla item keeps the tier's vanilla items for that case.
+#                        On a melee tier (cops.yml Can_Use_Weapons: false) the role's own pool is skipped and the cop
+#                        keeps the tier's melee weapon, unless that tier's own entry under Tiers names a pool.
+#   Gear:                Helmet, Chestplate, Leggings, Boots and Off_Hand. Each one is a material name
+#                        (IRON_CHESTPLATE), "" (nothing in that slot, the tier's piece taken off too), or a block:
+#     Material:          The item, e.g. LEATHER_HELMET.
+#     Leather_Color:     Dye for leather armour: "#RRGGBB" or "R, G, B" (e.g. "#B02E26" or "176, 46, 38").
+#     Glow:              true = an enchantment glint.
+#   Tiers:               Per tier, by number (5) or by the tier's Display_Name without colours (Military): a
+#                        Weapon_Pool and/or Gear for that tier only, read over the role's own.
+#   Ranged_Min_Distance: The cop's own firing band in blocks (0-64), set together with Ranged_Max_Distance.
+#   Ranged_Max_Distance: Unset = settings.yml's band. Always clamped under the held gun's Projectile Distance, so a
+#                        far band needs a long gun (scout: 100, awp: 120; the M4 rifle only reaches 10).
+#   Health_Multiplier:   Multiplies the tier's Health (0.1-10).
+#   Fan_Placement:       ANY, CENTER or FLANK: where on the squad's firing fan the cop prefers to stand. Placement is
+#                        ignored while a fan is a full ring: every melee squad, and a shooters' fan whose Formation_Arc
+#                        is at least 360 * (n - 1) / n for n shooters. With the shipped tiers, Military (arc 330) never
+#                        applies it to its ranged squads, and SWAT (arc 270) applies it once a fifth shooter joins.
+#   Leader_Priority:     The squad's radio voice is its live cop with the highest priority (ties: the first to join).
+#   Strafe_Degrees:      Replaces the tier's Tactics.Strafe_Degrees (0-180; 0 = holds its post).
+#   Fire_Rate_Scale:     Multiplies the tier's Fire_Rate_Multiplier (below 1 fires slower; 0.05-10).
+#   Difficulty_Bonus:    Steps above the tier's Difficulty (0-3), capped at DEADLY: better aim.
+#   Retreat:             Enabled / Health_Fraction / Radius, read over cops.yml Cops.Retreat.
+#   Block_Fraction:      Share of each hit taken off when it comes from inside the front cone (0-1; 0 = none).
+#   Block_Cone_Degrees:  The front cone's full width (0-360).
+#   Medic:               true = the role treats hurt squad mates (cops.yml Cops.Field_Care).
+#   Commander:           true = when this cop goes down its squad radios Commander_Down and falls back briefly.
+#
+# Which gear a cop wears, slot by slot (the same order for the Weapon_Pool):
+#   1. the role's entry for the cop's tier (Roles.<Name>.Tiers.<tier>.Gear),
+#   2. else the role's own Gear (Roles.<Name>.Gear),
+#   3. else the tier's own Wearables from cops.yml.
+# The shipped roles keep one identity piece on every tier (a dyed leather cap or the Commander's gold helmet, the
+# Medic's golden apple, the Defender's shield) and wear stronger armour and guns as the tier rises: Officer and
+# Sergeant light (leather/chain), Lieutenant chain/iron, SWAT iron/diamond, Military diamond/netherite.
+# ============================================
+# Set to false and every cop spawns as its plain tier: no roles, gear or role names.
+Roles_Enabled: true
+Roles:
+   # Front and centre, close in; leads the squad whenever no Commander is on it. Blue leather, the M4 rifle.
+   Pointman:
+      Display:
+         Name: "Pointman"
+         Color: "&e"
+         Symbol: "➤"
+      Fan_Placement: CENTER
+      Ranged_Min_Distance: 4.0
+      Ranged_Max_Distance: 8.0
+      Leader_Priority: 1
+      Weapon_Pool:
+         - "weapon:rifle"
+      Gear:
+         Helmet:
+            Material: LEATHER_HELMET
+            Leather_Color: "#3C44AA"
+         Chestplate:
+            Material: LEATHER_CHESTPLATE
+            Leather_Color: "#3C44AA"
+      Tiers:
+         3:
+            Gear:
+               Chestplate: IRON_CHESTPLATE
+               Leggings: CHAINMAIL_LEGGINGS
+               Boots: CHAINMAIL_BOOTS
+         4:
+            Weapon_Pool:
+               - "weapon:steyr_aug"
+            Gear:
+               Chestplate: DIAMOND_CHESTPLATE
+               Leggings: IRON_LEGGINGS
+               Boots: IRON_BOOTS
+         5:
+            Weapon_Pool:
+               - "weapon:steyr_aug"
+            Gear:
+               Chestplate: NETHERITE_CHESTPLATE
+               Leggings: DIAMOND_LEGGINGS
+               Boots: DIAMOND_BOOTS
+   # The fan's ends, pushing in and strafing wide. A black balaclava over chainmail, the MP5.
+   Assault:
+      Display:
+         Name: "Assault"
+         Color: "&4"
+         Symbol: "⚔"
+      Fan_Placement: FLANK
+      Ranged_Min_Distance: 5.0
+      Ranged_Max_Distance: 9.0
+      Strafe_Degrees: 20.0
+      Retreat:
+         Health_Fraction: 0.25
+      Weapon_Pool:
+         - "weapon:mp5"
+      Gear:
+         Helmet:
+            Material: LEATHER_HELMET
+            Leather_Color: "#1D1D21"
+         Chestplate: CHAINMAIL_CHESTPLATE
+         Leggings: CHAINMAIL_LEGGINGS
+      Tiers:
+         3:
+            Gear:
+               Chestplate: IRON_CHESTPLATE
+               Leggings: CHAINMAIL_LEGGINGS
+               Boots: CHAINMAIL_BOOTS
+         4:
+            Weapon_Pool:
+               - "weapon:steyr_aug"
+            Gear:
+               Chestplate: DIAMOND_CHESTPLATE
+               Leggings: IRON_LEGGINGS
+               Boots: IRON_BOOTS
+         5:
+            Weapon_Pool:
+               - "weapon:golden_ak47"
+            Gear:
+               Chestplate: NETHERITE_CHESTPLATE
+               Leggings: DIAMOND_LEGGINGS
+               Boots: DIAMOND_BOOTS
+   # Holds the centre post up front behind a shield that takes half of every hit from its front. The heaviest armour
+   # of the squad, a pump shotgun.
+   Defender:
+      Display:
+         Name: "Defender"
+         Color: "&9"
+         Symbol: "⛨"
+      Fan_Placement: CENTER
+      Ranged_Min_Distance: 4.0
+      Ranged_Max_Distance: 7.0
+      Health_Multiplier: 1.5
+      Strafe_Degrees: 0.0
+      Block_Fraction: 0.5
+      Block_Cone_Degrees: 60.0
+      Retreat:
+         Health_Fraction: 0.15
+      Weapon_Pool:
+         - "weapon:shotgun"
+      Gear:
+         Helmet: IRON_HELMET
+         Chestplate: IRON_CHESTPLATE
+         Leggings: IRON_LEGGINGS
+         Boots: IRON_BOOTS
+         Off_Hand: SHIELD
+      Tiers:
+         4:
+            Gear:
+               Helmet: DIAMOND_HELMET
+               Chestplate: DIAMOND_CHESTPLATE
+               Leggings: DIAMOND_LEGGINGS
+         5:
+            Weapon_Pool:
+               - "weapon:sawn_off"
+               - "weapon:shotgun"
+            Gear:
+               Helmet: DIAMOND_HELMET
+               Chestplate: NETHERITE_CHESTPLATE
+               Leggings: NETHERITE_LEGGINGS
+               Boots: DIAMOND_BOOTS
+   # Far behind the fan with slower but surer shots: the scout, the awp for Military. A green ghillie whose hood and
+   # leggings stay on every tier.
+   Marksman:
+      Display:
+         Name: "Marksman"
+         Color: "&2"
+         Symbol: "⌖"
+      Ranged_Min_Distance: 22.0
+      Ranged_Max_Distance: 32.0
+      Fire_Rate_Scale: 0.6
+      Difficulty_Bonus: 1
+      Retreat:
+         Health_Fraction: 0.4
+      Weapon_Pool:
+         - "weapon:scout"
+      Gear:
+         Helmet:
+            Material: LEATHER_HELMET
+            Leather_Color: "#5E7C16"
+         Chestplate:
+            Material: LEATHER_CHESTPLATE
+            Leather_Color: "#5E7C16"
+         Leggings:
+            Material: LEATHER_LEGGINGS
+            Leather_Color: "#5E7C16"
+         Boots:
+            Material: LEATHER_BOOTS
+            Leather_Color: "#5E7C16"
+      Tiers:
+         3:
+            Gear:
+               Chestplate: IRON_CHESTPLATE
+               Boots: CHAINMAIL_BOOTS
+         4:
+            Gear:
+               Chestplate: DIAMOND_CHESTPLATE
+               Boots: IRON_BOOTS
+         5:
+            Weapon_Pool:
+               - "weapon:awp"
+            Gear:
+               Chestplate: NETHERITE_CHESTPLATE
+               Boots: DIAMOND_BOOTS
+   # Patches up hurt squad mates. A red cap and white leather (the cap and the boots stay on every tier), a golden
+   # apple in the off hand, and the weakest gun of the squad: never a weak one at Military.
+   Medic:
+      Display:
+         Name: "Medic"
+         Color: "&c"
+         Symbol: "✚"
+      Fan_Placement: CENTER
+      Ranged_Min_Distance: 8.0
+      Ranged_Max_Distance: 12.0
+      Medic: true
+      Retreat:
+         Health_Fraction: 0.5
+      Weapon_Pool:
+         - "weapon:pistol"
+      Gear:
+         Helmet:
+            Material: LEATHER_HELMET
+            Leather_Color: "#B02E26"
+         Chestplate:
+            Material: LEATHER_CHESTPLATE
+            Leather_Color: "#F9FFFE"
+         Leggings:
+            Material: LEATHER_LEGGINGS
+            Leather_Color: "#F9FFFE"
+         Boots:
+            Material: LEATHER_BOOTS
+            Leather_Color: "#F9FFFE"
+         Off_Hand: GOLDEN_APPLE
+      Tiers:
+         3:
+            Weapon_Pool:
+               - "weapon:revolver"
+            Gear:
+               Chestplate: IRON_CHESTPLATE
+               Leggings: CHAINMAIL_LEGGINGS
+         4:
+            Weapon_Pool:
+               - "weapon:mp5"
+            Gear:
+               Chestplate: DIAMOND_CHESTPLATE
+               Leggings: IRON_LEGGINGS
+         5:
+            Weapon_Pool:
+               - "weapon:mp5"
+               - "weapon:steyr_aug"
+            Gear:
+               Chestplate: NETHERITE_CHESTPLATE
+               Leggings: DIAMOND_LEGGINGS
+   # Leads from the rear of the band; the squad falls back briefly when it goes down. A glinting gold helmet, the
+   # revolver, the golden AK-47 for Military.
+   Commander:
+      Display:
+         Name: "Commander"
+         Color: "&6"
+         Symbol: "★"
+      Ranged_Min_Distance: 10.0
+      Ranged_Max_Distance: 14.0
+      Leader_Priority: 2
+      Commander: true
+      Retreat:
+         Health_Fraction: 0.4
+      Weapon_Pool:
+         - "weapon:revolver"
+      Gear:
+         Helmet:
+            Material: GOLDEN_HELMET
+            Glow: true
+         Chestplate: IRON_CHESTPLATE
+         Leggings: CHAINMAIL_LEGGINGS
+      Tiers:
+         3:
+            Gear:
+               Chestplate: IRON_CHESTPLATE
+               Leggings: CHAINMAIL_LEGGINGS
+               Boots: CHAINMAIL_BOOTS
+         4:
+            Gear:
+               Chestplate: DIAMOND_CHESTPLATE
+               Leggings: IRON_LEGGINGS
+               Boots: IRON_BOOTS
+         5:
+            Weapon_Pool:
+               - "weapon:golden_ak47"
+            Gear:
+               Chestplate: NETHERITE_CHESTPLATE
+               Leggings: DIAMOND_LEGGINGS
+               Boots: DIAMOND_BOOTS
+# The roles a squad fills, in order, per wanted level. A level with no entry uses the highest lower one; cops past the
+# end of the list (backup, extra cops) take its last role.
+Squad_Composition:
+   1:
+      - "Pointman"
+      - "Assault"
+   2:
+      - "Pointman"
+      - "Assault"
+      - "Assault"
+   3:
+      - "Commander"
+      - "Pointman"
+      - "Defender"
+      - "Marksman"
+      - "Assault"
+   4:
+      - "Commander"
+      - "Pointman"
+      - "Defender"
+      - "Marksman"
+      - "Medic"
+      - "Assault"

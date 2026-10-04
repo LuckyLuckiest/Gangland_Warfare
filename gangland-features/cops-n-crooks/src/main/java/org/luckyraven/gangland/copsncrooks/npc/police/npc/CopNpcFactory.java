@@ -157,8 +157,9 @@ public class CopNpcFactory {
 	}
 
 	/**
-	 * The entity-level loadout: POLICE mark, tier health, {@link CopNpc#equip()} armour, the held weapon item, then the
-	 * role's off-hand item (the Defender's shield). No drop chance is set for it: cops are PLAYER entities, whose
+	 * The entity-level loadout: POLICE mark, tier health, {@link CopNpc#equip()} armour (the role's kit for the tier
+	 * already laid over it, {@link CopRole#overlay}), the held weapon item, then the off-hand item of the role's kit for
+	 * the tier (the Defender's shield, the Medic's apple). No drop chance is set for it: cops are PLAYER entities, whose
 	 * drop-chance setters throw, and a dead cop's drops are cleared anyway.
 	 */
 	static Consumer<LivingEntity> loadout(CopNpc copNpc, CopTierConfig tierConfig, NpcMarkManager markManager,
@@ -168,9 +169,9 @@ public class CopNpcFactory {
 			applyHealthBonus(entity, tierConfig.health());
 			copNpc.equip();
 			if (heldWeapon != null) setMainHand(entity, heldWeapon.clone());
-			CopRole role = copNpc.getRole();
-			if (role != null && role.offHand() != null && entity.getEquipment() != null)
-				entity.getEquipment().setItemInOffHand(role.offHand().clone());
+			CopRole   role    = copNpc.getRole();
+			ItemStack offHand = role != null ? role.offHandFor(tierConfig.tier()) : null;
+			if (offHand != null && entity.getEquipment() != null) entity.getEquipment().setItemInOffHand(offHand);
 		};
 	}
 

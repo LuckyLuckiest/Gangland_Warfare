@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.YamlCopConfigProvider;
+import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.gangland.npc.TacticsConfig;
 import org.luckyraven.keystone.npc.NpcDifficulty;
 import org.luckyraven.keystone.npc.NpcFanPlacement;
@@ -82,6 +84,47 @@ class CopNpcFactoryRoleTest {
 		verify(defender).setRangedBand(4.0, 7.0);
 		verify(marksman).setFanPlacement(NpcFanPlacement.ANY);
 		verify(marksman).setRangedBand(8.0, 10.0);
+	}
+
+	@Test
+	@DisplayName("the built-in Marksman holds 22-32 blocks out with a scout (Distance 100) or an awp (120): far behind every other role")
+	void applyRole_builtInMarksman_holdsFar() {
+		CopRole marksman = YamlCopConfigProvider.builtInRoles(RetreatSettings.DEFAULT).get("Marksman");
+		CopNpc  scout    = mock(CopNpc.class);
+		CopNpc  awp      = mock(CopNpc.class);
+
+		CopNpcFactory.applyRole(scout, marksman, 100.0);
+		CopNpcFactory.applyRole(awp, marksman, 120.0);
+
+		verify(scout).setRangedBand(22.0, 32.0);
+		verify(awp).setRangedBand(22.0, 32.0);
+	}
+
+	@Test
+	@DisplayName("the loadout puts the off hand of the role's kit for the cop's own tier (the Medic's golden apple at Military)")
+	void loadout_offHandFromTierKit() {
+		NPC             npc       = mock(NPC.class, RETURNS_DEEP_STUBS);
+		Player          entity    = mock(Player.class);
+		EntityEquipment equipment = mock(EntityEquipment.class);
+		when(entity.getEquipment()).thenReturn(equipment);
+		when(entity.getAttribute(XAttribute.MAX_HEALTH.get())).thenReturn(mock(AttributeInstance.class));
+		when(npc.isSpawned()).thenReturn(true);
+		when(npc.getEntity()).thenReturn(entity);
+		CopTierConfig military = new CopTierConfig(5, "&4Military", 60.0, 7.0, 1.4, 5.0, true, true, List.of(),
+		                                           List.of(), null, null, null, null, NpcDifficulty.DEADLY,
+		                                           TacticsConfig.DEFAULT, 0.1);
+		CopNpc cop = new CopNpc(mock(JavaPlugin.class), npc, military, Map.of(), new Location(null, 0, 0, 0),
+		                        mock(CopConfigProvider.class));
+		cop.setRole(new CopRole("Medic", "Medic", NpcFanPlacement.CENTER, null, null, 1.0, 0, null, 1.0, 0, null, 0,
+		                        60, true, false, "&c", "", CopRole.Kit.EMPTY,
+		                        Map.of(5, new CopRole.Kit(null, List.of(), null, null, null, null,
+		                                                  new CopRole.Gear(Material.GOLDEN_APPLE, null, false)))));
+
+		cop.setLoadout(CopNpcFactory.loadout(cop, military, mock(NpcMarkManager.class), null));
+
+		ArgumentCaptor<ItemStack> offHand = ArgumentCaptor.forClass(ItemStack.class);
+		verify(equipment).setItemInOffHand(offHand.capture());
+		assertEquals(Material.GOLDEN_APPLE, offHand.getValue().getType());
 	}
 
 	@Test
