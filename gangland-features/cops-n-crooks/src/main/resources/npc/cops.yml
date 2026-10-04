@@ -223,8 +223,8 @@ Cops:
       Limp_Speed: 0.7
       # Set to false: cops still get hurt, but no medic treats them.
       Medic_Enabled: true
-      # Blocks a medic answers a hurt squad mate within (2-64).
-      Medic_Radius: 24.0
+      # Blocks a medic answers a hurt squad mate within (2-64). 36 reaches a Marksman holding its far post.
+      Medic_Radius: 36.0
       # Blocks from the patient the medic treats it from (1-6).
       Heal_Range: 2.5
       # Ticks one treatment takes (60 = 3 s).

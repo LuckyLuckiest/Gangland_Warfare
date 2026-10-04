@@ -30,8 +30,8 @@ public record FieldCareSettings(boolean enabled, double healthFraction, double l
 		     BleedSettings.DEFAULT);
 	}
 
-	/** Hurt at half health, limping at 0.7; a medic within 24 blocks heals half of max after 3 s from 2.5 blocks. */
-	public static final FieldCareSettings DEFAULT = new FieldCareSettings(true, 0.5, 0.7, true, 24.0, 2.5, 60, 0.5,
+	/** Hurt at half health, limping at 0.7; a medic within 36 blocks (covers a Marksman holding its far post) heals half of max after 3 s from 2.5 blocks. */
+	public static final FieldCareSettings DEFAULT = new FieldCareSettings(true, 0.5, 0.7, true, 36.0, 2.5, 60, 0.5,
 	                                                                BleedSettings.DEFAULT);
 
 	/**

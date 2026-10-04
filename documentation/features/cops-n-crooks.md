@@ -156,7 +156,7 @@ off, and each cop that falls back may radio the Fall_Back line right after "Comm
 
 A cop at or below `Field_Care.Health_Fraction` (half) of its max health is **hurt**: it limps (`Limp_Speed`, 0.7 of its
 tier speed), bleeds (redstone-block blood at random body spots, denser the more hurt, with a heavier burst on every hit taken) and radios "I'm hit!" once. A **Medic** cop of the same squad within
-`Medic_Radius` (24 blocks) walks straight over to it (a direct route, not from cover to cover), and the squad calls
+`Medic_Radius` (36 blocks, enough to reach a Marksman at its far post) walks straight over to it (a direct route, not from cover to cover), and the squad calls
 "Covering fire!". Once the medic is within `Heal_Range` (2.5 blocks) both hold still: the patient crouches and both keep
 shooting. A patient on its way to cover is treated once it gets there, never held in the open; the time it spends
 walking there does not count toward the 15 s below. After `Channel_Ticks` (3 s) the patient gets `Heal_Fraction` (half)
@@ -170,7 +170,7 @@ cancels the heal, the treatment ends quietly and that cop is not treated again f
 | `Health_Fraction`       | 0.5     | Hurt at or below this share of max health (0-1)          |
 | `Limp_Speed`            | 0.7     | A hurt cop's speed, as a share of its tier speed (0.1-1) |
 | `Medic_Enabled`         | true    | false: cops still get hurt, but nobody treats them       |
-| `Medic_Radius`          | 24.0    | Blocks a medic answers a hurt squad mate within (2-64)   |
+| `Medic_Radius`          | 36.0    | Blocks a medic answers a hurt squad mate within (2-64)   |
 | `Heal_Range`            | 2.5     | Blocks from the patient the medic treats it from (1-6)   |
 | `Channel_Ticks`         | 60      | Ticks one treatment takes                                |
 | `Heal_Fraction`         | 0.5     | Share of max health one treatment restores (0-1)         |

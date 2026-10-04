@@ -31,7 +31,7 @@ class FieldCareSettingsTest {
 		assertEquals(0.5, d.healthFraction());
 		assertEquals(0.7, d.limpSpeed());
 		assertTrue(d.medicEnabled());
-		assertEquals(24.0, d.medicRadius());
+		assertEquals(36.0, d.medicRadius());
 		assertEquals(2.5, d.healRange());
 		assertEquals(60, d.channelTicks());
 		assertEquals(0.5, d.healFraction());
