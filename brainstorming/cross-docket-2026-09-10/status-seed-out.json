@@ -825,8 +825,8 @@
   "updatedAt": "2026-10-04"
  },
  "T-168": {
-  "status": "open",
-  "note": "Not fixed (0.13.0, branch npc-roles-medics): 47042f07 (post lines wait for the post, stagger, shared orders cooldown) and 92fa1614 (Shield_Up said as a staggered sayAsLater follow-up) did not move it: the re-run lane heard Shield_Up in 1 of 14 Defender engagements. Next: instrument which gate drops the follow-up (player gap, cooldown behind the Commander and Marksman lines), then give Shield_Up its own cooldown key or make it a priority line; its stillRelevant is a constant true, so it can also be said after the Defender died Not merged: master, publish and deploy wait for the owner's approval.",
+  "status": "fixed",
+  "note": "Fixed (0.13.0, branch npc-roles-medics, 884ab1ab): Shield_Up now fires on the squad's first CONTACT from a living Defender (like Commander_Orders), and the ENGAGE path gets a real stillRelevant (Defender valid, squad hunting); the final lane heard it in most Defender engagements (>=6 at L3-5). Review lows: no test covers the shieldRelevant predicate on the CONTACT/ENGAGE schedule, and both paths share one per-key cooldown applied when the line is said, not scheduled Not merged: master, publish and deploy wait for the owner's approval.",
   "updatedAt": "2026-10-05"
  },
  "T-169": {
@@ -853,5 +853,10 @@
   "status": "open",
   "note": "Not fixed, noted: the default half heart is a tilted glyph the default Minecraft font lacks and the client draws from unifont; a resource pack font or a client without the fallback may show a box. Change Half_Heart in healthbars.yml for such a pack Not merged: master, publish and deploy wait for the owner's approval.",
   "updatedAt": "2026-10-04"
+ },
+ "T-174": {
+  "status": "open",
+  "note": "Not fixed (low): not a regression; both lines still heard in 11 of 14 engagements. Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-10-05"
  }
 }
