@@ -16,11 +16,14 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
 import org.luckyraven.gangland.npc.radio.RadioSides;
 import org.luckyraven.keystone.npc.NpcFanPlacement;
 import org.luckyraven.keystone.npc.NpcSquadSignal;
 import org.luckyraven.keystone.testkit.BukkitStatics;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +57,7 @@ class CopRadioRolesTest {
 	private static final RadioSettings SETTINGS = new RadioSettings(true, 32, 64, 1500, 1000, 25, 2, COOLDOWNS,
 	                                                                Set.of("Marksman_Spotted"), null, 1f, 1f);
 
+	private MockedStatic<Settings>     settings;
 	private BukkitStatics               bukkit;
 	private World                       world;
 	private List<Player>                listeners;
@@ -68,6 +72,9 @@ class CopRadioRolesTest {
 
 	@BeforeEach
 	void setUp() {
+		// colouring a line reads Settings.getMoneySymbol(), which only a loaded settings.yml sets
+		settings = Mockito.mockStatic(Settings.class);
+		settings.when(Settings::getMoneySymbol).thenReturn("$");
 		bukkit    = BukkitStatics.install();
 		world     = mock(World.class);
 		listeners = new ArrayList<>();
@@ -111,6 +118,7 @@ class CopRadioRolesTest {
 	@AfterEach
 	void tearDown() {
 		bukkit.close();
+		settings.close();
 	}
 
 	@Test
@@ -243,14 +251,50 @@ class CopRadioRolesTest {
 	}
 
 	@Test
-	@DisplayName("a role line with no spot never invents a distance or direction from the speaker's own position")
+	@DisplayName("a role line with no spot is not said: the generic line is, with no invented distance or direction")
 	void roleLine_noSpot_noInventedPlaceholders() {
 		CopNpc marksman = cop(1, 4, 0, marksmanRole());
 		group.add(marksman);
 
 		signal(NpcSquadSignal.ENGAGE, marksman, null);
 
-		verify(bystander).sendMessage("[SWAT-1] OW   Marksman");
+		verify(bystander).sendMessage("[SWAT-1] Engage line");
+	}
+
+	@Test
+	@DisplayName("orders and flank call with no spot use the Undirected pools, never a blank direction")
+	void noSpot_undirectedVariants() {
+		pools.put("Commander_Orders_Undirected", List.of("ORDERS ANYWHERE"));
+		pools.put("Flanking_Undirected", List.of("FLANK ANYWHERE"));
+		CopNpc commander = cop(1, 4, 0, commanderRole());
+		CopNpc pointman  = cop(2, 6, 0, null);
+		CopNpc assault   = cop(3, 7, 0, assaultRole());
+		group.add(commander);
+		group.add(pointman);
+		group.add(assault);
+
+		signal(NpcSquadSignal.ENGAGE, pointman, null);
+		clock[0] += 1_250;
+		tasks.get(0).run();
+		verify(bystander).sendMessage("[SWAT-1] ORDERS ANYWHERE");
+
+		tasks.clear();
+		signal(NpcSquadSignal.FLANK_LEFT, assault, null);
+		runTasks();
+		verify(bystander).sendMessage("[SWAT-3] FLANK ANYWHERE");
+	}
+
+	@Test
+	@DisplayName("%role% is the language file's Role_<key> name when it has one, the key otherwise")
+	void roleName_localised() {
+		pools.put("Role_Marksman", List.of("Francotirador"));
+		CopNpc marksman = cop(1, 4, 0, marksmanRole());
+		group.add(marksman);
+		Location target = new Location(world, 14, 64, 0);
+
+		signal(NpcSquadSignal.ENGAGE, marksman, target);
+
+		verify(bystander).sendMessage("[SWAT-1] OW 10 " + compass(marksman, target) + " Francotirador");
 	}
 
 	@Test

@@ -146,7 +146,8 @@ Lines:
       - "Overwatch in position, %distance% blocks %direction%, I have eyes on the suspect."
       - "%role% set, %distance% blocks %direction%. Eyes on %target%."
       - "In the nest, %distance% blocks %direction%. Clear line on the suspect."
-   # A Marksman first sees the suspect while the squad is not in contact (replaces Contact for that role).
+   # A Marksman sights the suspect (replaces Contact for that role; a throttled one stays silent, the generic Contact
+   # is not said in its place).
    Marksman_Spotted:
       - "Target spotted, %distance% blocks %direction%! Holding for the shot."
       - "I have eyes on %target%, %distance% blocks %direction%!"
@@ -166,7 +167,8 @@ Lines:
       - "Shield up, holding the line!"
       - "%role% up front, nobody gets past me!"
       - "Covering the squad, shields up!"
-   # An Assault cop is ordered to a flank and calls its move, after its ack.
+   # An Assault cop is ordered to a flank and calls its move two ack delays later (the order itself may have been
+   # throttled, the call still goes out).
    Flanking:
       - "Moving to flank, %direction%!"
       - "Going wide %direction%, I'll get behind him!"
@@ -177,6 +179,15 @@ Lines:
       - "Defender, hold the line! Assault, flank %direction%! Marksman, overwatch!"
       - "All units, engage! Defender up front, Assault go wide %direction%!"
       - "Squad, positions! Defender hold, Assault flank, Marksman take the high ground!"
+   # The same two lines when the signal carries no spot (nothing to name a direction for).
+   Commander_Orders_Undirected:
+      - "All units, engage! Stay together and cover each other!"
+      - "Squad, positions! Watch your sectors!"
+      - "Contact ahead! Spread out and keep him pinned!"
+   Flanking_Undirected:
+      - "Moving to flank!"
+      - "Going wide, I'll get behind him!"
+      - "Flanking, keep him busy!"
    Commander_Orders_Basic:
       - "All units, engage! Stay together and cover each other!"
       - "Squad, positions! Watch your sectors, %direction% first!"

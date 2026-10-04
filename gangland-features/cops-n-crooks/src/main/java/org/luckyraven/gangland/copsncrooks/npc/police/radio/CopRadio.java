@@ -230,7 +230,8 @@ public class CopRadio {
 	private boolean roleLine(NpcSquad squad, RadioVoice voice, NpcSquadSignal signal, AbstractNpc member,
 	                         @Nullable Location where) {
 		String key = member instanceof CopNpc cop ? roleKey(kindOf(cop.getRole()), signal) : null;
-		if (key == null || lines.lines(key).isEmpty()) return false;
+		// a role line names a spot (direction, distance): with none the generic line is said instead
+		if (key == null || lines.lines(key).isEmpty() || directionTo(member, where).isEmpty()) return false;
 
 		// the spot's distance and direction are said only when there is a spot: with none, SquadRadio would measure to
 		// the speaker's own position ("0 blocks north")
@@ -264,7 +265,8 @@ public class CopRadio {
 				// step 2: past the leader's order (step 0) and the member's own ack (step 1)
 				Map<String, String> extra = new HashMap<>(roleExtras(member));
 				extra.put("direction", directionTo(member, where));
-				radio.sayLater(squad, voice, member, "Flanking", extra, 2, member::isValid);
+				radio.sayLater(squad, voice, member, undirected("Flanking", extra.get("direction")), extra, 2,
+				               member::isValid);
 			}
 			default -> { }
 		}
@@ -278,7 +280,17 @@ public class CopRadio {
 		Map<String, String> merged = new HashMap<>(roleExtras(commander));
 		merged.putAll(extra);
 		merged.put("direction", directionTo(commander, where));
+		if (key.startsWith("Commander_Orders")) key = undirected("Commander_Orders", merged.get("direction"), key);
 		radio.sayLater(squad, voice, commander, key, merged, 1, commander::isValid);
+	}
+
+	/** {@code key}, or its {@code _Undirected} pool when there is no direction to name (a signal without a spot). */
+	private String undirected(String key, String direction) {
+		return undirected(key, direction, key);
+	}
+
+	private String undirected(String pool, String direction, String otherwise) {
+		return direction.isEmpty() && !lines.lines(pool + "_Undirected").isEmpty() ? pool + "_Undirected" : otherwise;
 	}
 
 	private static boolean hasRoles(CopGroup group, RoleKind... wanted) {
@@ -299,9 +311,12 @@ public class CopRadio {
 	}
 
 	/** {@code %role%}: the speaker's role key ({@code Medic}, {@code Marksman}), empty for a role-less cop. */
-	private static Map<String, String> roleExtras(AbstractNpc npc) {
+	private Map<String, String> roleExtras(AbstractNpc npc) {
 		CopRole role = npc instanceof CopNpc cop ? cop.getRole() : null;
-		return Map.of("role", role != null ? role.name() : "");
+		if (role == null) return Map.of("role", "");
+		// the language file may name the role (Lines.Role_<key>); the key itself otherwise
+		List<String> named = lines.lines("Role_" + role.name());
+		return Map.of("role", named.isEmpty() ? role.name() : named.get(0));
 	}
 
 	/** The compass word ({@code Compass} lines) from {@code from} to {@code where}; empty with either missing. */

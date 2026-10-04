@@ -64,6 +64,8 @@ public class CopRadioMessages extends LocalizedModuleYaml implements RadioLines 
 			Map.entry("Shield_Up", List.of("Shield up, holding the line!", "%role% up front, nobody gets past me!", "Covering the squad, shields up!")),
 			Map.entry("Flanking", List.of("Moving to flank, %direction%!", "Going wide %direction%, I'll get behind him!", "Flanking %direction%, keep him busy!")),
 			Map.entry("Commander_Orders", List.of("Defender, hold the line! Assault, flank %direction%! Marksman, overwatch!", "All units, engage! Defender up front, Assault go wide %direction%!", "Squad, positions! Defender hold, Assault flank, Marksman take the high ground!")),
+			Map.entry("Commander_Orders_Undirected", List.of("All units, engage! Stay together and cover each other!", "Squad, positions! Watch your sectors!", "Contact ahead! Spread out and keep him pinned!")),
+			Map.entry("Flanking_Undirected", List.of("Moving to flank!", "Going wide, I'll get behind him!", "Flanking, keep him busy!")),
 			Map.entry("Commander_Orders_Basic", List.of("All units, engage! Stay together and cover each other!", "Squad, positions! Watch your sectors, %direction% first!", "Contact ahead, %direction%! Spread out and keep him pinned!")),
 			Map.entry("Status_Check", List.of("Lost him! All units, sound off - report your status.", "Contact broken, check in, who's hurt?", "Regroup on me and report your status.")),
 			Map.entry("Pull_Back", List.of("%member% is down! Everyone fall back to cover and regroup on me!", "Man down, %member%! Pull back to cover, medic on him!", "We lost %member%! Don't bunch up, fall back and cover each other!")),
