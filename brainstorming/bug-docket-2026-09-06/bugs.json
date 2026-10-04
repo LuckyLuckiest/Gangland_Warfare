@@ -13333,5 +13333,26 @@
 "recheck": true,
 "case": "https://claude.ai/code/artifact/7b91103f-1e4a-45b8-91eb-25e5c47775c1#sec-observations-potential-issues",
 "source": "test suite (2026-09-04)"
+},
+{
+"id": "T-175",
+"code": "T",
+"sys": "cops-detainment-jail",
+"sysName": "Cops, Detainment & Jail",
+"sysOrder": "08",
+"num": 175,
+"tier": "P2",
+"title": "Cops freeze after the wanted player dies when the route to the nearest spawner is unreachable",
+"fix": "Fixed (0.13.0, branch npc-roles-medics, b308a52d, 28b8c714): a returning cop with no route home despawns after the stuck window, counting its own unreachable time on an injectable clock, instead of waiting out Return.Max_Ticks (about 5 minutes) standing at the respawn point. Live-round-2 lane: stand-down after death with an unreachable far spawner pass, reachable spawner about 40 blocks away (control) pass",
+"tests": "ReturningBehaviorTest",
+"location": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/state/behavior/ReturningBehavior.java",
+"observation": "[found 2026-10-05, owner live report round 2] \"Once you get killed and taken to respawn, I found out that they stay over there not moving at all.\" RETURNING walks to the nearest spawner; with no route the cop stood still until Return.Max_Ticks.",
+"impact": null,
+"risk": "n/a",
+"confidence": "High",
+"unverified": false,
+"recheck": true,
+"case": "https://claude.ai/code/artifact/7b91103f-1e4a-45b8-91eb-25e5c47775c1#sec-observations-potential-issues",
+"source": "test suite (2026-09-04)"
 }
 ]
