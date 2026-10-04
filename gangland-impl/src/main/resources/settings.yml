@@ -391,6 +391,7 @@ Cops:
    # Controls how a cop returns to its station and despawns after the target is detained.
    Return:
       # Maximum AI ticks the cop waits before being force-despawned. (600 = ~300 s at the default AI_Tick_Rate: 10)
+      # A cop whose way back to the station has no route despawns sooner, after Cops.Stuck.Recycle_Seconds.
       Max_Ticks: 600
       # Distance to the station at which the cop considers itself arrived and attempts to despawn (blocks).
       Station_Arrival_Distance: 3.0

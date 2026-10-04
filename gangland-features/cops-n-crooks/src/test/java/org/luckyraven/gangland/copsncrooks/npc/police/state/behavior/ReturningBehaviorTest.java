@@ -1,12 +1,16 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.state.behavior;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.StuckSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
@@ -16,6 +20,7 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -47,7 +52,8 @@ class ReturningBehaviorTest {
 		when(cop.getTargetPlayerId()).thenReturn(playerId);
 
 		detainmentService = mock(DetainmentService.class);
-		behavior          = new ReturningBehavior(mock(CopSpawnManager.class), detainmentService, 600, 3.0);
+		behavior          = new ReturningBehavior(mock(CopSpawnManager.class), detainmentService, 600, 3.0,
+		                                     StuckSettings.DEFAULT);
 	}
 
 	@AfterEach
@@ -83,5 +89,69 @@ class ReturningBehaviorTest {
 		behavior.onEnter(cop);
 
 		verify(cop).leaveSquad();
+	}
+
+	/** Wires a cop standing 100 blocks from a lone station so the behaviour is walking, not arriving. */
+	private void farFromStation() {
+		World world = mock(World.class);
+		Location station = new Location(world, 100, 64, 0);
+		CopSpawnManager spawns = mock(CopSpawnManager.class);
+		when(spawns.getSpawnerLocations()).thenReturn(java.util.List.of(station));
+		LivingEntity body = mock(LivingEntity.class);
+		when(body.getWorld()).thenReturn(world);
+		when(body.getLocation()).thenReturn(new Location(world, 0, 64, 0));
+		when(cop.getEntity()).thenReturn(body);
+		behavior = new ReturningBehavior(spawns, detainmentService, 600, 3.0, StuckSettings.DEFAULT);
+	}
+
+	@Test
+	@DisplayName("a return unreachable for the stuck window despawns the stranded cop")
+	void unreachableLongerThanWindow_removed() {
+		farFromStation();
+		behavior.onEnter(cop);
+		when(cop.millisUnreachable()).thenReturn(13_000L);
+
+		behavior.tick(cop);
+
+		verify(cop).markForRemoval();
+	}
+
+	@Test
+	@DisplayName("a return unreachable for less than the window keeps walking")
+	void unreachableShorterThanWindow_keepsWalking() {
+		farFromStation();
+		behavior.onEnter(cop);
+		when(cop.millisUnreachable()).thenReturn(5_000L);
+
+		behavior.tick(cop);
+
+		verify(cop, never()).markForRemoval();
+		verify(cop).navigateTo(any());
+	}
+
+	@Test
+	@DisplayName("a reachable route is not removed before arrival")
+	void reachable_notRemoved() {
+		farFromStation();
+		behavior.onEnter(cop);
+		when(cop.millisUnreachable()).thenReturn(0L);
+
+		behavior.tick(cop);
+		behavior.tick(cop);
+
+		verify(cop, never()).markForRemoval();
+	}
+
+	@Test
+	@DisplayName("a pursuit-phase unreachable clock already over the window at entry does not remove a cop with a route home")
+	void pursuitClockOverWindowAtEntry_notRemoved() {
+		farFromStation();
+		when(cop.millisUnreachable()).thenReturn(20_000L);
+		behavior.onEnter(cop);
+
+		behavior.tick(cop);
+		behavior.tick(cop);
+
+		verify(cop, never()).markForRemoval();
 	}
 }

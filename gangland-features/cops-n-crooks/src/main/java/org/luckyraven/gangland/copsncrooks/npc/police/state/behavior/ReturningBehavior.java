@@ -6,6 +6,7 @@ import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.StuckSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehavior;
@@ -16,7 +17,8 @@ import java.util.List;
 
 /**
  * Cop navigates back to the nearest registered spawn station. {@link #tryDespawn} marks the cop for removal - and it
- * despawns - on arrival or after {@code Return.Max_Ticks}.
+ * despawns - on arrival, after {@code Return.Max_Ticks}, or once the way home has been unreachable for
+ * {@code Stuck.Recycle_Seconds} (a stranded cop would otherwise stand frozen where its target died).
  * <p>
  * Only a cop sent back because its target was restrained or jailed re-engages: if that target is freed before the cop
  * reaches its station (e.g. via admin command), the cop returns to {@link CopState#COMBAT} when {@code combatForced}
@@ -29,6 +31,7 @@ public class ReturningBehavior implements CopBehavior {
 	private final DetainmentService detainmentService;
 	private final int               maxReturnTicks;
 	private final double            stationArrivalDistance;
+	private final StuckSettings     stuck;
 
 	private Location selectedStation;
 	/**
@@ -36,9 +39,13 @@ public class ReturningBehavior implements CopBehavior {
 	 * cop back. Set on entry; behaviours are per cop ({@code CopBehaviorFactory#createBehaviors} runs per spawn).
 	 */
 	private boolean  reengageOnRelease;
+	/** The pursuit-phase unreachable clock and wall time at entry, so only the return leg's stranded time counts. */
+	private long     entryUnreachableMillis;
+	private long     entryMillis;
 
 	public ReturningBehavior(CopSpawnManager spawnManager, DetainmentService detainmentService, int maxReturnTicks,
-	                         double stationArrivalDistance) {
+	                         double stationArrivalDistance, StuckSettings stuck) {
+		this.stuck                  = stuck;
 		this.spawnManager           = spawnManager;
 		this.detainmentService      = detainmentService;
 		this.maxReturnTicks         = maxReturnTicks;
@@ -81,6 +88,11 @@ public class ReturningBehavior implements CopBehavior {
 			}
 
 			cop.navigateTo(selectedStation);
+
+			if (strandedOnReturn(cop)) {
+				tryDespawn(cop);
+				return;
+			}
 		}
 
 		// Timeout - despawn regardless of whether the station was reached
@@ -94,6 +106,8 @@ public class ReturningBehavior implements CopBehavior {
 		cop.setDespawnTicks(0);
 		selectedStation = null;
 		cop.leaveSquad();
+		entryUnreachableMillis = cop.millisUnreachable();
+		entryMillis            = System.currentTimeMillis();
 
 		Player target = cop.getTargetPlayerId() != null ? Bukkit.getPlayer(cop.getTargetPlayerId()) : null;
 		reengageOnRelease = target != null && detainmentService.isRestrained(target);
@@ -104,6 +118,18 @@ public class ReturningBehavior implements CopBehavior {
 		cop.stopNavigation();
 		cop.setDespawnTicks(0);
 		selectedStation = null;
+	}
+
+	/**
+	 * Whether the way home has been unreachable for the stuck window. The clock may have been running since the pursuit
+	 * (it reads more than the time since entry only if it never stopped), so that carry-over is subtracted.
+	 */
+	private boolean strandedOnReturn(CopNpc cop) {
+		if (!stuck.enabled()) return false;
+		long millis  = cop.millisUnreachable();
+		long elapsed = System.currentTimeMillis() - entryMillis;
+		long leg     = millis > elapsed ? millis - entryUnreachableMillis : millis;
+		return leg >= stuck.recycleSeconds() * 1000L;
 	}
 
 	/**

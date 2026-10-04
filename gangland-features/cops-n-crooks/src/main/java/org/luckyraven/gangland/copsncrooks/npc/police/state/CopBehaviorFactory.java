@@ -61,7 +61,8 @@ public class CopBehaviorFactory {
 		                                                  detainmentService, configProvider.getRetreatSettings()));
 		behaviors.put(CopState.RETURNING, new ReturningBehavior(spawnManagerSupplier.get(), detainmentService,
 		                                                        configProvider.getMaxReturnTicks(),
-		                                                        configProvider.getStationArrivalDistance()));
+		                                                        configProvider.getStationArrivalDistance(),
+		                                                        configProvider.getStuckSettings()));
 
 		return behaviors;
 	}
