@@ -51,14 +51,14 @@ public class HealthBarSettings implements FileInitializer {
 	 */
 	public String render(double health, double max) {
 		FileConfiguration config   = config();
-		int               hearts   = Math.max(1, Math.min(40, config.getInt("Hearts", 10)));
+		int               hearts   = Math.max(1, Math.min(40, config.getInt("Hearts", config.getInt("Segments", 10))));
 		double            fraction = max <= 0 ? 0 : Math.max(0, Math.min(1, health / max));
 		int               halves   = (int) Math.ceil(hearts * 2 * fraction - 1e-9);
 		int               full     = halves / 2;
 		int               half     = halves % 2;
 
 		String bar = config.getString("Full_Heart", "&c❤").repeat(full)
-		             + config.getString("Half_Heart", "&c♡").repeat(half)
+		             + config.getString("Half_Heart", "&6❤").repeat(half)
 		             + config.getString("Empty_Heart", "&8❤").repeat(hearts - full - half);
 
 		return ChatUtil.color(config.getString("Format", "%bar%")

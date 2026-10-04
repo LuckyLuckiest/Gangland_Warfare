@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 @DisplayName("HealthBarSettings - bar rendering from healthbars.yml (phase H13)")
 class HealthBarSettingsTest {
 
-	private static final String F = "&c❤", H = "&c♡", E = "&8❤";
+	private static final String F = "&c❤", H = "&6❤", E = "&8❤";
 
 	private static String hearts(int full, int half) {
 		return color(F.repeat(full) + H.repeat(half) + E.repeat(10 - full - half));
@@ -71,13 +71,15 @@ class HealthBarSettingsTest {
 	}
 
 	@Test
-	@DisplayName("legacy Segments / Symbol keys are ignored: hearts are drawn")
-	void legacyKeysIgnored() {
+	@DisplayName("legacy Segments maps to Hearts when Hearts is absent; an explicit Hearts wins; Symbol is ignored")
+	void legacyKeys() {
 		YamlConfiguration yaml = new YamlConfiguration();
 		yaml.set("Segments", 3);
 		yaml.set("Symbol", "|");
+		assertEquals(color("&c❤&c❤&c❤"), settings(yaml).render(20, 20));
 
-		assertEquals(hearts(10, 0), settings(yaml).render(20, 20));
+		yaml.set("Hearts", 2);
+		assertEquals(color("&c❤&c❤"), settings(yaml).render(20, 20));
 	}
 
 	@Test

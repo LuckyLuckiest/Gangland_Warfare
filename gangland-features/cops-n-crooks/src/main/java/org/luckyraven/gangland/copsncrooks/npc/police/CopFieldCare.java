@@ -59,6 +59,8 @@ public class CopFieldCare {
 	private final Map<CopNpc, Long>      refused    = new WeakHashMap<>();
 	/** A hurt cop's health at its last tick: a drop is a hit taken while hurt. */
 	private final Map<CopNpc, Double>    lastHealth = new WeakHashMap<>();
+	/** AI ticks a cop has bled for since it got hurt: the bleed cadence counts on it. */
+	private final Map<CopNpc, Integer>   bleedTicks = new WeakHashMap<>();
 
 	/** The treatment's group is the medic's ({@link CopNpc#getGroup()}): no group reference is held here. */
 	private static final class Treatment {
@@ -119,12 +121,16 @@ public class CopFieldCare {
 		}
 		if (!isHurt) {
 			lastHealth.remove(cop);
+			bleedTicks.remove(cop);
 			return;
 		}
 		double health   = self.getHealth();
 		Double before   = lastHealth.put(cop, health);
 		double severity = BleedEffect.severity(health, self.getMaxHealth(), settings.healthFraction());
-		BleedEffect.burst(self, settings.bleed(), severity, 1.0, RANDOM);
+		// the burst rate scales with how hurt: every 4th AI tick at the threshold, every tick at death's door
+		int ticks = bleedTicks.merge(cop, 1, Integer::sum);
+		if ((ticks - 1) % BleedEffect.interval(severity) == 0)
+			BleedEffect.burst(self, settings.bleed(), severity, 1.0, RANDOM);
 		// a hit taken while hurt: a second, heavier burst, like the vanilla damage feel
 		if (before != null && health < before) BleedEffect.burst(self, settings.bleed(), severity, 2.0, RANDOM);
 	}

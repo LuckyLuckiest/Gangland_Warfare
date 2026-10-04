@@ -3,16 +3,16 @@
 # full health. Persistent (saved) and protected Citizens NPCs, such as invulnerable traders and bankers, never show one.
 # Every key is optional: a missing key uses the default shown here.
 #
-# Upgrading from the first 0.13.0 builds: Segments, Symbol, High_Color, Medium_Color, Low_Color and Empty_Color are
+# Upgrading from the first 0.13.0 builds: Segments is used as Hearts when Hearts is absent; Symbol, High_Color, Medium_Color, Low_Color and Empty_Color are
 # no longer read (the colour now lives in each heart glyph below) and are ignored if still present.
 
 # Set to false to turn the bars off without removing the module.
 Enabled: true
 # How many hearts the bar has (1-40). Each heart is max health / Hearts; health rounds up to the next half heart.
 Hearts: 10
-# The three heart glyphs, with & colour codes. Half_Heart is a hollow heart: the vanilla font has no half-heart glyph.
+# The three heart glyphs, with & colour codes. The vanilla font has no half-heart glyph, so a half heart is the same heart in gold (a deliberate style choice).
 Full_Heart: "&c❤"
-Half_Heart: "&c♡"
+Half_Heart: "&6❤"
 Empty_Heart: "&8❤"
 # The line shown. %bar% = the hearts, %health% / %max% = current / max health (one decimal), e.g. "%bar% &7%health%".
 # Plain text and & colour codes only: Citizens reads "<...>" as a tag.

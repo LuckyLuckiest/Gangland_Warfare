@@ -12,6 +12,8 @@ import org.luckyraven.gangland.npc.BleedSpot;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Random;
 import java.util.function.Predicate;
 
@@ -71,28 +73,57 @@ final class BleedEffect {
 		return out;
 	}
 
+	/** AI ticks between bursts: every 4th at the hurt threshold, every tick at death's door. */
+	static int interval(double severity) {
+		return (int) Math.round(4 - 3 * Math.max(0, Math.min(1, severity)));
+	}
+
+	/** A resolved particle with its data; resolved once per configured name (a pure function of the name). */
+	private record Resolved(Particle particle, Object data) {
+	}
+
+	private static final Map<String, Resolved> CACHE = new ConcurrentHashMap<>();
+
+	private static Resolved resolve(String configured) {
+		return CACHE.computeIfAbsent(configured == null ? "" : configured, key -> {
+			String name = resolveName(key, BleedEffect::particleExists);
+			return name == null ? null : new Resolved(Particle.valueOf(name), data(name));
+		});
+	}
+
 	/** Emits one burst on {@code body}: {@code scale} multiplies the count (a hit while hurt passes more than 1). */
 	static void burst(LivingEntity body, BleedSettings settings, double severity, double scale, Random random) {
 		if (body.getWorld() == null) return;
-		String name = resolveName(settings.particle(), BleedEffect::particleExists);
-		if (name == null) return;
-		Particle particle = Particle.valueOf(name);
-		Object   data     = data(name);
-		Location base     = body.getLocation();
-		int      count    = Math.max(1, (int) Math.round(amount(settings.count(), severity) * scale));
+		Resolved resolved = resolve(settings.particle());
+		if (resolved == null) return;
+		Location base  = body.getLocation();
+		int      count = Math.max(1, (int) Math.round(amount(settings.count(), severity) * scale));
 		for (BleedSpot spot : pickSpots(settings.spots(), severity, random)) {
 			double[] offset = spot.offset(base.getYaw());
 			Location at     = base.clone().add(offset[0], offset[1], offset[2]);
-			if (data == null) body.getWorld().spawnParticle(particle, at, count, 0.08, 0.08, 0.08, 0);
-			else body.getWorld().spawnParticle(particle, at, count, 0.08, 0.08, 0.08, 0, data);
+			try {
+				spawn(body, resolved, at, count);
+			} catch (IllegalArgumentException e) {
+				// a valid particle that needs data we cannot give (item crack): remember the block-crack blood instead
+				Resolved fallback = resolve("BLOCK_CRACK");
+				if (fallback == null || fallback == resolved) return;
+				CACHE.put(settings.particle() == null ? "" : settings.particle(), fallback);
+				spawn(body, fallback, at, count);
+			}
 		}
+	}
+
+	private static void spawn(LivingEntity body, Resolved r, Location at, int count) {
+		if (r.data() == null) body.getWorld().spawnParticle(r.particle(), at, count, 0.08, 0.08, 0.08, 0);
+		else body.getWorld().spawnParticle(r.particle(), at, count, 0.08, 0.08, 0.08, 0, r.data());
 	}
 
 	/** Block data for the block-crack pair, dust options for red dust, none for any other particle. */
 	private static Object data(String name) {
 		if (name.equals("BLOCK_CRACK") || name.equals("BLOCK")) {
 			try {
-				return Bukkit.createBlockData(Material.REDSTONE_BLOCK);
+				Object blood = Bukkit.createBlockData(Material.REDSTONE_BLOCK);
+				return blood != null ? blood : new Particle.DustOptions(Color.RED, 1.0f);
 			} catch (RuntimeException | LinkageError e) {
 				return new Particle.DustOptions(Color.RED, 1.0f);
 			}

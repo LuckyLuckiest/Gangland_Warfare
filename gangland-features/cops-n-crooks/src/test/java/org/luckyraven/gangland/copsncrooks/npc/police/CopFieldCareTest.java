@@ -92,7 +92,7 @@ class CopFieldCareTest {
 	}
 
 	@Test
-	@DisplayName("dropping to half health: limp 0.7, bleeding every tick, one Hit line; back above: normal speed")
+	@DisplayName("dropping to half health: limp 0.7, bleeding on a cadence, one Hit line; back above: normal speed")
 	void hurtEdge_limpsBleedsAndSaysHitOnce() {
 		CopNpc cop = cop(1, 10.0, CopState.PURSUING, null);
 
@@ -102,10 +102,9 @@ class CopFieldCareTest {
 
 		verify(cop, times(1)).applySpeed(0.7);
 		verify(radio, times(1)).sayAs(group, cop, "Hit", Map.of());
-		// one or two body spots per tick, never the old damage-indicator hearts
-		long bursts = org.mockito.Mockito.mockingDetails(world).getInvocations().stream()
-				.filter(i -> i.getMethod().getName().equals("spawnParticle")).count();
-		org.junit.jupiter.api.Assertions.assertTrue(bursts >= 3 && bursts <= 6, "bursts: " + bursts);
+		// barely hurt: one burst (1-2 spots) on the first tick, the next only after the cadence, never hearts
+		long bursts = spawns();
+		org.junit.jupiter.api.Assertions.assertTrue(bursts >= 1 && bursts <= 2, "bursts: " + bursts);
 		org.mockito.Mockito.mockingDetails(world).getInvocations().forEach(
 				i -> org.junit.jupiter.api.Assertions.assertNotEquals("HEART", String.valueOf(i.getArguments()[0])));
 
@@ -114,6 +113,42 @@ class CopFieldCareTest {
 
 		verify(cop).applySpeed(1.0);
 		verify(radio, times(1)).sayAs(group, cop, "Hit", Map.of());
+	}
+
+	@Test
+	@DisplayName("bleeding is throttled: a barely hurt cop bleeds less often than one at death's door")
+	void bleedCadence_scalesWithSeverity() {
+		cop(1, 10.0, CopState.PURSUING, null);
+		for (int i = 0; i < 8; i++) care.tick(group);
+		long barely = spawns();
+
+		org.mockito.Mockito.clearInvocations(world);
+		cops.clear();
+		cop(2, 1.0, CopState.PURSUING, null);
+		for (int i = 0; i < 8; i++) care.tick(group);
+		long dying = spawns();
+
+		org.junit.jupiter.api.Assertions.assertTrue(barely <= 4, "barely hurt: " + barely);
+		org.junit.jupiter.api.Assertions.assertTrue(dying >= 8, "dying: " + dying);
+	}
+
+	@Test
+	@DisplayName("a hit taken while hurt adds a burst even between cadence ticks")
+	void hitWhileHurt_extraBurst() {
+		CopNpc cop = cop(1, 10.0, CopState.PURSUING, null);
+		care.tick(group);
+		care.tick(group);
+		long before = spawns();
+
+		when(cop.getEntity().getHealth()).thenReturn(9.0);
+		care.tick(group);
+
+		org.junit.jupiter.api.Assertions.assertTrue(spawns() > before, "no burst on the hit");
+	}
+
+	private long spawns() {
+		return org.mockito.Mockito.mockingDetails(world).getInvocations().stream()
+				.filter(i -> i.getMethod().getName().equals("spawnParticle")).count();
 	}
 
 	@Test

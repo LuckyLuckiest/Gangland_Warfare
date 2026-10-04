@@ -54,4 +54,40 @@ class BleedEffectTest {
 		assertTrue(sawOne && sawTwo);
 		assertEquals(1, BleedEffect.pickSpots(List.of(BleedSpot.HEAD), 1.0, random).size());
 	}
+
+	@Test
+	@DisplayName("the cadence runs from every 4th tick at the threshold down to every tick at death's door")
+	void interval() {
+		assertEquals(4, BleedEffect.interval(0));
+		assertEquals(1, BleedEffect.interval(1));
+		assertTrue(BleedEffect.interval(0.5) < 4 && BleedEffect.interval(0.5) > 1);
+	}
+
+	@Test
+	@DisplayName("a particle that needs data we cannot give falls back to the block-crack blood instead of throwing")
+	void dataParticle_fallsBack() {
+		org.junit.jupiter.api.Assumptions.assumeTrue(
+				java.util.Arrays.stream(org.bukkit.Particle.values()).anyMatch(p -> p.name().equals("ITEM_CRACK")));
+		org.bukkit.World world = org.mockito.Mockito.mock(org.bukkit.World.class);
+		org.bukkit.entity.LivingEntity body = org.mockito.Mockito.mock(org.bukkit.entity.LivingEntity.class);
+		org.mockito.Mockito.when(body.getWorld()).thenReturn(world);
+		org.mockito.Mockito.when(body.getLocation()).thenReturn(new org.bukkit.Location(world, 0, 64, 0));
+		org.mockito.Mockito.doThrow(new IllegalArgumentException("data required")).when(world).spawnParticle(
+				org.mockito.ArgumentMatchers.eq(org.bukkit.Particle.valueOf("ITEM_CRACK")),
+				org.mockito.ArgumentMatchers.any(org.bukkit.Location.class), org.mockito.ArgumentMatchers.anyInt(),
+				org.mockito.ArgumentMatchers.anyDouble(), org.mockito.ArgumentMatchers.anyDouble(),
+				org.mockito.ArgumentMatchers.anyDouble(), org.mockito.ArgumentMatchers.anyDouble());
+
+		org.luckyraven.gangland.npc.BleedSettings settings = new org.luckyraven.gangland.npc.BleedSettings(
+				"ITEM_CRACK", 4, List.of(BleedSpot.CHEST));
+		BleedEffect.burst(body, settings, 0, 1, new Random(1));
+
+		org.mockito.Mockito.verify(world, org.mockito.Mockito.atLeastOnce()).spawnParticle(
+				org.mockito.ArgumentMatchers.argThat((org.bukkit.Particle p) -> p.name().startsWith("BLOCK")
+				                                                                 || p.name().equals("REDSTONE")),
+				org.mockito.ArgumentMatchers.any(org.bukkit.Location.class), org.mockito.ArgumentMatchers.anyInt(),
+				org.mockito.ArgumentMatchers.anyDouble(), org.mockito.ArgumentMatchers.anyDouble(),
+				org.mockito.ArgumentMatchers.anyDouble(), org.mockito.ArgumentMatchers.anyDouble(),
+				org.mockito.ArgumentMatchers.any());
+	}
 }
