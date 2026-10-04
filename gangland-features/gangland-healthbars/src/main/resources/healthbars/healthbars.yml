@@ -1,20 +1,21 @@
-# Gangland Health Bars: a health bar over Gangland's own Citizens NPCs (cops, civilians) while they are hurt.
+# Gangland Health Bars: a heart bar over Gangland's own Citizens NPCs (cops, civilians) while they are hurt.
 # The bar sits directly under a cop's callsign line, or above the head of an NPC without one, and is hidden at
 # full health. Persistent (saved) and protected Citizens NPCs, such as invulnerable traders and bankers, never show one.
 # Every key is optional: a missing key uses the default shown here.
+#
+# Upgrading from the first 0.13.0 builds: Segments is used as Hearts when Hearts is absent.
+# Symbol, High_Color, Medium_Color, Low_Color and Empty_Color are no longer read (the colour now lives in
+# each heart glyph below) and are ignored if still present.
 
 # Set to false to turn the bars off without removing the module.
 Enabled: true
-# How many cells the bar has.
-Segments: 10
-# The cell character; "❤" gives a row of hearts.
-Symbol: "|"
-# The line shown. %bar% = the bar, %health% / %max% = current / max health (one decimal), e.g. "%bar% &7%health%".
+# How many hearts the bar has (1-40). Each heart is max health / Hearts; health rounds up to the next half heart.
+Hearts: 10
+# The three heart glyphs, with & colour codes. The vanilla font has no half-heart glyph, so a half heart is a
+# red OUTLINE heart between the solid red (full) and solid grey (empty) ones. Swap in any glyph you prefer.
+Full_Heart: "&c❤"
+Half_Heart: "&c♡"
+Empty_Heart: "&8❤"
+# The line shown. %bar% = the hearts, %health% / %max% = current / max health (one decimal), e.g. "%bar% &7%health%".
 # Plain text and & colour codes only: Citizens reads "<...>" as a tag.
 Format: "%bar%"
-# Colour of the filled cells above 50% health, above 25% health, and at 25% or below.
-High_Color: "&a"
-Medium_Color: "&e"
-Low_Color: "&c"
-# Colour of the empty cells.
-Empty_Color: "&8"

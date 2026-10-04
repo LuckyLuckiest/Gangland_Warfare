@@ -23,7 +23,7 @@ plugins/
     │   ├── gangland-npc-shops-0.9.2.jar   trader/banker NPC shops — no Depends, no Plugins
     │   ├── cops-n-crooks-0.9.2.jar        cops only, Depends: [turf, civilians]; Plugins: [Bartizan] (the only module still hard)
     │   ├── gangland-gadget-0.9.2.jar      cars, jetpacks and the grappling hook (WS8) — Bartizan SOFT since 0.9.2 (WS7 G5): no Plugins: entry
-    │   ├── gangland-healthbars-<rev>.jar  (0.13.0, optional) NPC health bar under the cop callsign — Plugins: [Citizens]; config healthbars/healthbars.yml
+    │   ├── gangland-healthbars-<rev>.jar  (0.13.0, optional) NPC heart bar (Hearts, Full_Heart/Half_Heart/Empty_Heart) under the cop callsign — Plugins: [Citizens]; config healthbars/healthbars.yml
     │   └── .stale/                        replaced jars, deleted on the next start
     └── settings.yml …
 ```

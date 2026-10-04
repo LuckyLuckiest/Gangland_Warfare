@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.function.BooleanSupplier;
@@ -44,8 +45,7 @@ public class CopFieldCare {
 	static final long GIVE_UP_MS  = 15_000;
 	/** Once treating, the patient may drift this far past {@code Heal_Range} before the channel starts over. */
 	static final double HOLD_MARGIN = 1.0;
-	/** Bleed particles per AI tick while hurt. */
-	private static final int BLEED_COUNT = 3;
+	private static final Random RANDOM = new Random();
 
 	private final Supplier<CopConfigProvider> provider;
 	private final CopRadio                    radio;
@@ -57,6 +57,10 @@ public class CopFieldCare {
 	private final Map<CopNpc, Treatment> treatments = new WeakHashMap<>();
 	/** Patients whose heal another plugin cancelled, and when: not treated again for {@link #GIVE_UP_MS}. */
 	private final Map<CopNpc, Long>      refused    = new WeakHashMap<>();
+	/** A hurt cop's health at its last tick: a drop is a hit taken while hurt. */
+	private final Map<CopNpc, Double>    lastHealth = new WeakHashMap<>();
+	/** AI ticks a cop has bled for since it got hurt: the bleed cadence counts on it. */
+	private final Map<CopNpc, Integer>   bleedTicks = new WeakHashMap<>();
 
 	/** The treatment's group is the medic's ({@link CopNpc#getGroup()}): no group reference is held here. */
 	private static final class Treatment {
@@ -115,7 +119,20 @@ public class CopFieldCare {
 				hurt.remove(cop);
 			}
 		}
-		if (isHurt) particles(self, XParticle.DAMAGE_INDICATOR, BLEED_COUNT);
+		if (!isHurt) {
+			lastHealth.remove(cop);
+			bleedTicks.remove(cop);
+			return;
+		}
+		double health   = self.getHealth();
+		Double before   = lastHealth.put(cop, health);
+		double severity = BleedEffect.severity(health, self.getMaxHealth(), settings.healthFraction());
+		// the burst rate scales with how hurt: every 4th AI tick at the threshold, every tick at death's door
+		int ticks = bleedTicks.merge(cop, 1, Integer::sum);
+		if ((ticks - 1) % BleedEffect.interval(severity) == 0)
+			BleedEffect.burst(self, settings.bleed(), severity, 1.0, RANDOM);
+		// a hit taken while hurt: a second, heavier burst, like the vanilla damage feel
+		if (before != null && health < before) BleedEffect.burst(self, settings.bleed(), severity, 2.0, RANDOM);
 	}
 
 	/** Each hurt, fighting cop with no medic yet gets the nearest free medic of its group within Medic_Radius. */
