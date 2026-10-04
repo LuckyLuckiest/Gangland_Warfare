@@ -308,13 +308,13 @@ public class CopNpcFactory {
 		 * {@code NPC.Metadata} cannot be class-loaded in unit tests) and the full coloured callsign is hologram
 		 * line 0 in its place ({@code HologramTrait} stacks lines upward from the hidden plate, so a line inserted
 		 * at 0, e.g. the healthbars module's bar, sits directly under the callsign). {@code %rank%} is always the
-		 * tier's {@code Display_Name}; the role only fills the optional {@code %role%} (empty with no role).
+		 * tier's {@code Display_Name}; {@code %role%} is the role's coloured {@link CopRole#display()} (empty with no
+		 * role), so the radio callsign, the same text without colours, carries the role word too.
 		 */
 		static String nameplate(NPC npc, CopNames names, CopTierConfig tier, @Nullable CopRole role, Random random) {
 			String firstName = names.pickName(random);
 			int    badge     = CopNames.badge(npc.getId());
-			String callsign  = names.callsign(tier.displayName(), role != null ? role.displayName() : "", firstName,
-			                                  badge);
+			String callsign  = names.callsign(tier.displayName(), role != null ? role.display() : "", firstName, badge);
 
 			npc.setName(CopNames.shortName(firstName, badge));
 			npc.getOrAddTrait(HologramTrait.class).addLine(ChatUtil.color(callsign));

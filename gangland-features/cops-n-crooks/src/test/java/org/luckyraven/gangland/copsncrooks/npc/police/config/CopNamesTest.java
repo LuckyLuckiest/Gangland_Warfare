@@ -26,9 +26,12 @@ class CopNamesTest {
 	}
 
 	@Test
-	@DisplayName("%role% is optional: the default Format has none, a Format that names it fills it")
-	void callsign_roleIsOptional() {
-		assertEquals("&9Officer &fBob &7#1592", CopNames.DEFAULT.callsign("&9Officer", "Medic", "Bob", 1592));
+	@DisplayName("the default Format shows the role's coloured display between the rank and the name")
+	void callsign_defaultShowsRole() {
+		assertEquals("%rank% %role% &f%name% &7#%badge%", CopNames.DEFAULT.format());
+		assertEquals("&9Officer &c✚ Medic &fBob &7#1592",
+		             CopNames.DEFAULT.callsign("&9Officer", "&c✚ Medic", "Bob", 1592));
+		assertEquals("&9Officer &fBob &7#1592", CopNames.DEFAULT.callsign("&9Officer", "", "Bob", 1592));
 		assertEquals("&9Officer Medic &fBob &7#1592",
 		             new CopNames("%rank% %role% &f%name% &7#%badge%", List.of()).callsign("&9Officer", "Medic", "Bob",
 		                                                                                       1592));

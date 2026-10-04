@@ -26,8 +26,9 @@ import static org.mockito.Mockito.when;
 @DisplayName("CopNpcFactory nameplate - short Citizens name, coloured callsign line (phase H13)")
 class CopNpcFactoryNameplateTest {
 
-	private static final CopRole MEDIC = new CopRole("Medic", "Medic", NpcFanPlacement.CENTER, null, null, 1.0, null, 0,
-	                                                 null, 1.0, 0, null, 0, 60, true, false);
+	private static final CopRole MEDIC = new CopRole("Medic", "Medic", NpcFanPlacement.CENTER, null, null, 1.0, 0, null,
+	                                                 1.0, 0, null, 0, 60, true, false, "&c", "✚",
+	                                                 CopRole.Kit.EMPTY, java.util.Map.of());
 
 	private static CopTierConfig tier(String displayName) {
 		return new CopTierConfig(3, displayName, 30.0, 4.0, 1.2, 4.0, true, false, List.of(), List.of(), null, null,
@@ -63,14 +64,16 @@ class CopNpcFactoryNameplateTest {
 	}
 
 	@Test
-	@DisplayName("%rank% stays the tier's Display_Name in its colour for a cop with a role; the default Format ignores the role")
-	void rank_staysTierDisplayName_withRole() {
+	@DisplayName("%rank% stays the tier's Display_Name; the default Format shows the role's coloured display; the radio callsign is the plain text")
+	void rank_staysTierDisplayName_roleShown() {
 		String callsign = CopNpcFactory.CitizensBridge.nameplate(npc(mock(HologramTrait.class)),
 		                                                         new CopNames(CopNames.DEFAULT.format(),
 		                                                                      List.of("Bob")), tier("&1SWAT"), MEDIC,
 		                                                         new Random(1));
 
-		assertEquals("&1SWAT &fBob &7#1592", callsign);
+		assertEquals("&1SWAT &c✚ Medic &fBob &7#1592", callsign);
+		assertEquals("SWAT ✚ Medic Bob #1592",
+		             ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', callsign)));
 	}
 
 	@Test
@@ -80,9 +83,9 @@ class CopNpcFactoryNameplateTest {
 		HologramTrait hologram = mock(HologramTrait.class);
 		NPC           npc      = npc(hologram);
 
-		assertEquals("&1SWAT &eMedic &fBob &7#1592",
+		assertEquals("&1SWAT &e&c✚ Medic &fBob &7#1592",
 		             CopNpcFactory.CitizensBridge.nameplate(npc, names, tier("&1SWAT"), MEDIC, new Random(1)));
-		verify(hologram).addLine(ChatColor.translateAlternateColorCodes('&', "&1SWAT &eMedic &fBob &7#1592"));
+		verify(hologram).addLine(ChatColor.translateAlternateColorCodes('&', "&1SWAT &e&c✚ Medic &fBob &7#1592"));
 
 		assertEquals("&1SWAT &fBob &7#1592",
 		             CopNpcFactory.CitizensBridge.nameplate(npc, names, tier("&1SWAT"), null, new Random(1)));
