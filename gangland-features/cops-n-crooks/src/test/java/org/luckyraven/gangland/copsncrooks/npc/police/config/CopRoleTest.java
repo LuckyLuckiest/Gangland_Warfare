@@ -1,15 +1,23 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.config;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemFactory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.npc.TacticsConfig;
 import org.luckyraven.keystone.npc.NpcDifficulty;
 import org.luckyraven.keystone.npc.NpcEngagement;
 import org.luckyraven.keystone.npc.NpcFanPlacement;
+import org.mockito.MockedStatic;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,6 +25,11 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @DisplayName("CopRole - tier overlay, squad composition, firing band and the Defender's front cone")
 class CopRoleTest {
@@ -116,6 +129,99 @@ class CopRoleTest {
 		assertFalse(defender.blocks(self, new Location(null, 10, 64, 10))); // 45 degrees off
 		assertFalse(defender.blocks(self, new Location(null, 0, 64, -10))); // behind
 		assertFalse(POINTMAN.blocks(self, new Location(null, 0, 64, 10)));  // no Block_Fraction
+	}
+
+	// ── gear and weapons per role and tier (live feedback round) ──────────────
+
+	private static CopRole.Gear gear(Material material) {
+		return new CopRole.Gear(material, null, false);
+	}
+
+	private static CopRole kitted(CopRole.Kit kit, Map<Integer, CopRole.Kit> tierKits) {
+		return new CopRole("Medic", "Medic", NpcFanPlacement.CENTER, null, null, 1.0, 0, null, 1.0, 0, null, 0, 60,
+		                   true, false, "&c", "✚", kit, tierKits);
+	}
+
+	private static CopTierConfig armoured(int number, boolean canUseWeapons) {
+		return new CopTierConfig(number, "&4Military", 60.0, 7.0, 1.4, 5.0, canUseWeapons, true,
+		                         List.of("rifle", "CROSSBOW"), List.of(new ItemStack(Material.CROSSBOW)),
+		                         new ItemStack(Material.DIAMOND_HELMET), new ItemStack(Material.DIAMOND_CHESTPLATE),
+		                         new ItemStack(Material.DIAMOND_LEGGINGS), new ItemStack(Material.DIAMOND_BOOTS),
+		                         NpcDifficulty.DEADLY, TacticsConfig.DEFAULT, 0.1);
+	}
+
+	@Test
+	@DisplayName("overlay: a slot from the tier's own kit beats the role's kit, which beats the tier's armour; same for the weapon pool")
+	void overlay_tierKitBeatsRoleKitBeatsTierArmour() {
+		CopRole.Kit roleKit = new CopRole.Kit(List.of("pistol"), List.of(), gear(Material.IRON_HELMET),
+		                                      gear(Material.IRON_CHESTPLATE), null, CopRole.Gear.NONE,
+		                                      gear(Material.SHIELD));
+		CopRole.Kit military = new CopRole.Kit(List.of("mp5"), List.of(), null, gear(Material.NETHERITE_CHESTPLATE),
+		                                       null, null, null);
+		CopRole role = kitted(roleKit, Map.of(5, military));
+
+		CopTierConfig top = role.overlay(armoured(5, true));
+		assertEquals(Material.IRON_HELMET, top.helmet().getType());             // role kit
+		assertEquals(Material.NETHERITE_CHESTPLATE, top.chestplate().getType()); // tier kit
+		assertEquals(Material.DIAMOND_LEGGINGS, top.leggings().getType());      // tier armour
+		assertNull(top.boots());                                                  // role kit: explicitly empty
+		assertEquals(List.of("mp5"), top.weaponNamePool());
+		assertEquals(Material.CROSSBOW, top.weaponPool().get(0).getType()); // no vanilla item of its own: the tier's
+		assertEquals(Material.SHIELD, role.offHandFor(5).getType());
+
+		CopTierConfig lower = role.overlay(armoured(4, true)); // no kit of its own for tier 4
+		assertEquals(Material.IRON_CHESTPLATE, lower.chestplate().getType());
+		assertEquals(List.of("pistol"), lower.weaponNamePool());
+	}
+
+	@Test
+	@DisplayName("overlay on a melee tier keeps the tier's melee weapon unless that tier's own kit names one")
+	void overlay_meleeTier_keepsTierWeapon() {
+		CopRole.Kit roleKit = new CopRole.Kit(List.of("pistol"), List.of(), null, null, null, null, null);
+		CopRole.Kit officer = new CopRole.Kit(List.of(), List.of(new ItemStack(Material.STONE_SWORD)), null, null,
+		                                      null, null, null);
+		CopRole role = kitted(roleKit, Map.of(1, officer));
+
+		CopTierConfig sergeant = role.overlay(armoured(2, false));
+		assertEquals(List.of("rifle", "CROSSBOW"), sergeant.weaponNamePool());
+		assertEquals(Material.CROSSBOW, sergeant.weaponPool().get(0).getType());
+
+		CopTierConfig first = role.overlay(armoured(1, false));
+		assertEquals(List.of(), first.weaponNamePool());
+		assertEquals(Material.STONE_SWORD, first.weaponPool().get(0).getType());
+	}
+
+	@Test
+	@DisplayName("a role with no kit (the pre-gear constructor) leaves the tier's weapons and armour alone")
+	void overlay_noKit_tierUnchanged() {
+		CopTierConfig tier   = armoured(5, true);
+		CopTierConfig result = POINTMAN.overlay(tier);
+
+		assertEquals(tier.weaponNamePool(), result.weaponNamePool());
+		assertSame(tier.weaponPool(), result.weaponPool());
+		assertSame(tier.helmet(), result.helmet());
+		assertSame(tier.boots(), result.boots());
+		assertNull(POINTMAN.offHandFor(5));
+	}
+
+	@Test
+	@DisplayName("Gear.toItem: NONE is no item, a plain piece needs no meta, a dyed and glowing one sets its meta")
+	void gear_toItem() {
+		assertNull(CopRole.Gear.NONE.toItem());
+		assertEquals(Material.IRON_HELMET, gear(Material.IRON_HELMET).toItem().getType());
+
+		ItemFactory      factory = mock(ItemFactory.class);
+		LeatherArmorMeta meta    = mock(LeatherArmorMeta.class);
+		when(factory.getItemMeta(any())).thenReturn(meta);
+		try (MockedStatic<Bukkit> bukkit = mockStatic(Bukkit.class)) {
+			bukkit.when(Bukkit::getItemFactory).thenReturn(factory);
+
+			ItemStack item = new CopRole.Gear(Material.LEATHER_HELMET, Color.RED, true).toItem();
+
+			assertEquals(Material.LEATHER_HELMET, item.getType());
+			verify(meta).setColor(Color.RED);
+			verify(meta).addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
+		}
 	}
 
 	private static CopRole role(String name) {

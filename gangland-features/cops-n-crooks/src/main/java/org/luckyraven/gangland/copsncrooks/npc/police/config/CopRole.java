@@ -1,7 +1,14 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.config;
 
+import org.bukkit.Color;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.gangland.npc.TacticsConfig;
@@ -15,19 +22,17 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A cop's job inside its squad ({@code cops.yml} {@code Cops.Roles.<Name>}), laid over its tier when it spawns: the
- * tier still decides weapons, armour and the formation arc, the role only shifts where the cop stands and how it
- * fights. Picked per spawn from {@code Cops.Squad_Composition} by {@link #nextRole}.
+ * A cop's job inside its squad ({@code npc/cop_roles.yml} {@code Roles.<Name>}), laid over its tier when it spawns: the
+ * role shifts where the cop stands and how it fights, and its {@link Kit kits} dress and arm it. Picked per spawn from
+ * {@code Squad_Composition} by {@link #nextRole}.
  *
- * @param name             the role's key under {@code Cops.Roles}; compositions refer to it.
- * @param displayName      the role's label ({@code Display_Name}, default the name): the callsign's optional
- *                         {@code %role%}. Never replaces the tier's {@code Display_Name}, the {@code %rank%}.
+ * @param name             the role's key under {@code Roles}; compositions refer to it.
+ * @param displayName      the role's plain word ({@code Display.Name}, default the name), e.g. for radio lines.
  * @param placement        where on the squad's fan the cop prefers to stand.
  * @param rangedMin        the cop's own firing band, {@code null} for the settings.yml band; set together with
  *                         {@code rangedMax}.
  * @param rangedMax        see {@code rangedMin}; clamped under the held weapon's reach at spawn ({@link #rangedBand}).
  * @param healthMultiplier multiplies the tier's {@code Health}.
- * @param offHand          an item held in the off hand (the Defender's shield); cosmetic, never dropped.
  * @param leaderPriority   the cop's claim to lead its squad (radio voice, {@code Leader_Down}); the highest leads.
  * @param strafeDegrees    replaces the tier's {@code Tactics.Strafe_Degrees}, {@code null} keeps it.
  * @param fireRateScale    multiplies the tier's {@code Fire_Rate_Multiplier} (below 1 fires slower).
@@ -37,6 +42,10 @@ import java.util.Map;
  * @param blockConeDegrees the front cone's full width, in degrees.
  * @param medic            the role treats hurt squad mates (field care).
  * @param commander        the squad falls back briefly and radios {@code Commander_Down} when this cop dies.
+ * @param color            {@code Display.Color}, put before the symbol and the word in {@link #display()}.
+ * @param symbol           {@code Display.Symbol}, e.g. the Medic's cross; empty for none.
+ * @param kit              the role's own weapons and gear ({@code Weapon_Pool} / {@code Gear}), on every tier.
+ * @param tierKits         per tier number ({@code Tiers.<level or tier name>}), read over {@code kit} on that tier.
  */
 public record CopRole(
 		String name,
@@ -45,7 +54,6 @@ public record CopRole(
 		@Nullable Double rangedMin,
 		@Nullable Double rangedMax,
 		double healthMultiplier,
-		@Nullable ItemStack offHand,
 		int leaderPriority,
 		@Nullable Double strafeDegrees,
 		double fireRateScale,
@@ -54,16 +62,61 @@ public record CopRole(
 		double blockFraction,
 		double blockConeDegrees,
 		boolean medic,
-		boolean commander
+		boolean commander,
+		String color,
+		String symbol,
+		Kit kit,
+		Map<Integer, Kit> tierKits
 ) {
 
 	/** The narrowest band a reach clamp leaves: the Keystone band must keep {@code min < max}. */
 	static final double MIN_BAND_WIDTH = 2.0;
 
+	public CopRole {
+		tierKits = Map.copyOf(tierKits);
+	}
+
+	/** The pre-gear shape: a plain display, no tier kits, and {@code offHand} as the role's only gear. */
+	public CopRole(String name, String displayName, NpcFanPlacement placement, @Nullable Double rangedMin,
+	               @Nullable Double rangedMax, double healthMultiplier, @Nullable ItemStack offHand, int leaderPriority,
+	               @Nullable Double strafeDegrees, double fireRateScale, int difficultyBonus,
+	               @Nullable RetreatSettings retreat, double blockFraction, double blockConeDegrees, boolean medic,
+	               boolean commander) {
+		this(name, displayName, placement, rangedMin, rangedMax, healthMultiplier, leaderPriority, strafeDegrees,
+		     fireRateScale, difficultyBonus, retreat, blockFraction, blockConeDegrees, medic, commander, "", "",
+		     offHand == null ? Kit.EMPTY : new Kit(null, List.of(), null, null, null, null,
+		                                           new Gear(offHand.getType(), null, false)),
+		     Map.of());
+	}
+
+	/** {@code "&c\u271A Medic"}: the colour, the symbol and the word, the callsign's {@code %role%}. */
+	public String display() {
+		return color + (symbol.isEmpty() ? "" : symbol + " ") + displayName;
+	}
+
+	/**
+	 * The kit a cop of this role wears on tier {@code tier}: that tier's own kit read slot by slot over the role's.
+	 * On a melee tier ({@code canUseWeapons} false) the role's own {@code Weapon_Pool} is skipped, so the cop keeps the
+	 * tier's melee weapon, unless the tier's own kit names one.
+	 */
+	public Kit kitFor(int tier, boolean canUseWeapons) {
+		Kit base = canUseWeapons ? kit : kit.withoutWeapons();
+		Kit own  = tierKits.get(tier);
+		return own != null ? own.over(base) : base;
+	}
+
+	/** The item the cop holds in its off hand on tier {@code tier} (the Defender's shield); {@code null} for none. */
+	public @Nullable ItemStack offHandFor(int tier) {
+		Gear offHand = kitFor(tier, true).offHand();
+		return offHand != null ? offHand.toItem() : null;
+	}
+
 	/**
 	 * The tier with this role laid over it: {@code Health} multiplied, {@code Difficulty} stepped up,
-	 * {@code Fire_Rate_Multiplier} scaled and {@code Strafe_Degrees} replaced; a LEGACY tier stays LEGACY. Every other
-	 * field, the display name included, is the tier's.
+	 * {@code Fire_Rate_Multiplier} scaled and {@code Strafe_Degrees} replaced; a LEGACY tier stays LEGACY. The
+	 * {@link #kitFor kit} for the tier replaces each armour slot it sets and the weapon pool (a pool with no vanilla
+	 * item keeps the tier's vanilla items, the fallback when no Bartizan gun resolves). Every other field, the display
+	 * name included, is the tier's.
 	 */
 	public CopTierConfig overlay(CopTierConfig tier) {
 		NpcEngagement engagement = tier.tactics().engagement();
@@ -74,10 +127,17 @@ public record CopRole(
 		NpcDifficulty difficulty = difficulties[Math.min(difficulties.length - 1,
 		                                                 tier.difficulty().ordinal() + difficultyBonus)];
 
+		Kit     worn = kitFor(tier.tier(), tier.canUseWeapons());
+		boolean pool = worn.weaponNames() != null;
+
 		return new CopTierConfig(tier.tier(), tier.displayName(), tier.health() * healthMultiplier, tier.damage(),
 		                         tier.speed(), tier.cuffRadius(), tier.canUseWeapons(), tier.skipCuffing(),
-		                         tier.weaponNamePool(), tier.weaponPool(), tier.helmet(), tier.chestplate(),
-		                         tier.leggings(), tier.boots(), difficulty,
+		                         pool ? worn.weaponNames() : tier.weaponNamePool(),
+		                         pool && !worn.weaponItems().isEmpty() ? worn.weaponItems() : tier.weaponPool(),
+		                         Gear.wear(worn.helmet(), tier.helmet()),
+		                         Gear.wear(worn.chestplate(), tier.chestplate()),
+		                         Gear.wear(worn.leggings(), tier.leggings()), Gear.wear(worn.boots(), tier.boots()),
+		                         difficulty,
 		                         new TacticsConfig(engagement, tier.tactics().formationArc()),
 		                         tier.fireRateMultiplier() * fireRateScale);
 	}
@@ -129,5 +189,71 @@ public record CopRole(
 			held.put(role.name(), count - 1);
 		}
 		return composition.get(composition.size() - 1);
+	}
+
+	/**
+	 * Weapons and clothes ({@code Weapon_Pool} and {@code Gear}), for a whole role or one of its tiers. A {@code null}
+	 * slot or pool is not set here and falls through ({@link #over}); {@link Gear#NONE} empties a slot.
+	 *
+	 * @param weaponNames the Bartizan guns ({@code weapon:<name>} entries, prefix removed); {@code null}: no pool here.
+	 * @param weaponItems the pool's vanilla items: held when no Bartizan gun resolves.
+	 */
+	public record Kit(@Nullable List<String> weaponNames, List<ItemStack> weaponItems, @Nullable Gear helmet,
+	                  @Nullable Gear chestplate, @Nullable Gear leggings, @Nullable Gear boots,
+	                  @Nullable Gear offHand) {
+
+		public static final Kit EMPTY = new Kit(null, List.of(), null, null, null, null, null);
+
+		public Kit {
+			weaponNames = weaponNames == null ? null : List.copyOf(weaponNames);
+			weaponItems = List.copyOf(weaponItems);
+		}
+
+		/** This kit with every slot and the pool it leaves unset taken from {@code base}. */
+		public Kit over(Kit base) {
+			boolean pool = weaponNames != null;
+			return new Kit(pool ? weaponNames : base.weaponNames, pool ? weaponItems : base.weaponItems,
+			               helmet != null ? helmet : base.helmet, chestplate != null ? chestplate : base.chestplate,
+			               leggings != null ? leggings : base.leggings, boots != null ? boots : base.boots,
+			               offHand != null ? offHand : base.offHand);
+		}
+
+		Kit withoutWeapons() {
+			return new Kit(null, List.of(), helmet, chestplate, leggings, boots, offHand);
+		}
+	}
+
+	/**
+	 * One piece of gear: a material, a leather dye ({@code Leather_Color}, leather only) and an enchantment glow. Kept
+	 * as a description and built per spawn ({@link #toItem}), so reading the config never needs a server.
+	 */
+	public record Gear(Material material, @Nullable Color leatherColor, boolean glow) {
+
+		/** An explicitly empty slot ({@code ""}): it takes the tier's armour off too. */
+		public static final Gear NONE = new Gear(Material.AIR, null, false);
+
+		/** The item for this piece; {@code null} for {@link #NONE}. */
+		public @Nullable ItemStack toItem() {
+			if (material == Material.AIR) return null;
+			ItemStack item = new ItemStack(material);
+			if (leatherColor == null && !glow) return item;
+
+			ItemMeta meta = item.getItemMeta();
+			if (meta == null) return item;
+			if (leatherColor != null && meta instanceof LeatherArmorMeta leather) leather.setColor(leatherColor);
+			if (glow) {
+				// getByKey, not XEnchantment: the vanilla key is stable since the 1.13 rename (see SlotItemFactory)
+				Enchantment unbreaking = Enchantment.getByKey(NamespacedKey.minecraft("unbreaking"));
+				if (unbreaking != null) meta.addEnchant(unbreaking, 1, true);
+				meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+			}
+			item.setItemMeta(meta);
+			return item;
+		}
+
+		/** {@code piece}'s item when set, else the tier's own {@code fallback}. */
+		static @Nullable ItemStack wear(@Nullable Gear piece, @Nullable ItemStack fallback) {
+			return piece != null ? piece.toItem() : fallback;
+		}
 	}
 }

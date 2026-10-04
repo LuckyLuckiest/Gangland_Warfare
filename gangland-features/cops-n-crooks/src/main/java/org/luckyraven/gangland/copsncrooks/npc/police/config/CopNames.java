@@ -6,18 +6,18 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Cop callsigns ({@code Cops.Names}): {@code "Officer Bob #1592"}. The coloured callsign is the cop's hologram line and
- * (colours stripped) its radio callsign; {@link #shortName} is the plain Citizens name, kept at 16 characters or fewer
- * so Citizens never swaps the entity's profile name for its {@code CIT-...} scoreboard team name.
+ * Cop callsigns ({@code Cops.Names}): {@code "Officer ✚ Medic Bob #1592"}. The coloured callsign is the cop's hologram
+ * line and (colours stripped) its radio callsign; {@link #shortName} is the plain Citizens name, kept at 16 characters
+ * or fewer so Citizens never swaps the entity's profile name for its {@code CIT-...} scoreboard team name.
  *
- * @param format {@code %rank%} (the tier's {@code Display_Name}, in its colour), {@code %name%}, {@code %badge%} and the
- *               optional {@code %role%} (the squad role's {@code Display_Name}; empty for a cop with no role, its
- *               colour code and the doubled space dropped with it). The default format has no {@code %role%}.
+ * @param format {@code %rank%} (the tier's {@code Display_Name}, in its colour), {@code %role%} (the squad role's
+ *               coloured display with its symbol, {@code "&c✚ Medic"}; empty for a cop with no role, its colour code
+ *               and the doubled space dropped with it), {@code %name%} and {@code %badge%}.
  * @param firstNames the first-name pool; empty means no first name ({@code "Officer #1592"})
  */
 public record CopNames(String format, List<String> firstNames) {
 
-	public static final CopNames DEFAULT = new CopNames("%rank% &f%name% &7#%badge%",
+	public static final CopNames DEFAULT = new CopNames("%rank% %role% &f%name% &7#%badge%",
 	                                                    List.of("Bob", "Jim", "Carl", "Dave", "Frank", "Mike", "Tony",
 	                                                            "Steve", "Ray", "Eddie", "Gus", "Hank", "Joe", "Lou",
 	                                                            "Marty", "Nick", "Pete", "Rick", "Sam", "Vince", "Walt",

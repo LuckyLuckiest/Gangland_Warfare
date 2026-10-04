@@ -396,7 +396,7 @@ class YamlCopConfigProviderTest {
 			""";
 
 	@Test
-	@DisplayName("no Roles/Squad_Composition blocks (every old cops.yml): the built-in catalogue and compositions")
+	@DisplayName("no cop_roles.yml (the cops.yml-only constructor): the built-in catalogue and compositions")
 	void noRoleBlocks_builtInCatalogue() {
 		CopConfigProvider provider = parse("Cops:\n" + ONE_TIER);
 
@@ -411,7 +411,7 @@ class YamlCopConfigProviderTest {
 		Map<String, CopRole> roles = byName(provider.getSquadComposition(5));
 		CopRole defender = roles.get("Defender");
 		assertEquals(NpcFanPlacement.CENTER, defender.placement());
-		assertEquals(Material.SHIELD, defender.offHand().getType());
+		assertEquals(Material.SHIELD, defender.kit().offHand().material());
 		assertEquals(0.5, defender.blockFraction());
 		assertEquals(60.0, defender.blockConeDegrees());
 		assertEquals(0.0, defender.strafeDegrees());
@@ -428,119 +428,6 @@ class YamlCopConfigProviderTest {
 		assertTrue(roles.get("Medic").medic());
 		assertEquals(NpcFanPlacement.FLANK, roles.get("Assault").placement());
 		for (CopRole role : roles.values()) assertEquals(role.name(), role.displayName());
-	}
-
-	@Test
-	@DisplayName("a Roles entry is read key by key over the built-in role of that name; a new role over a plain one")
-	void rolesBlock_overridesKeyByKey() {
-		ConfigReport report = new ConfigReport();
-		CopConfigProvider provider = parse("""
-				Cops:
-				   Retreat:
-				      Health_Fraction: 0.3
-				      Radius: 9.0
-				   Roles:
-				      Marksman:
-				         Display_Name: "Sniper"
-				         Ranged_Max_Distance: 30.0
-				         Fire_Rate_Scale: 0.8
-				      Breacher:
-				         Fan_Placement: FLANK
-				         Health_Multiplier: 20.0
-				         Off_Hand: "SHIELD"
-				         Block_Fraction: 0.25
-				         Retreat:
-				            Health_Fraction: 0.2
-				   Squad_Composition:
-				      1:
-				         - "Marksman"
-				         - "Breacher"
-				""" + ONE_TIER, report);
-
-		Map<String, CopRole> roles = byName(provider.getSquadComposition(1));
-		CopRole marksman = roles.get("Marksman");
-		assertEquals("Sniper", marksman.displayName());
-		assertEquals(30.0, marksman.rangedMax());
-		assertEquals(14.0, marksman.rangedMin());          // built-in
-		assertEquals(0.8, marksman.fireRateScale());
-		assertEquals(1, marksman.difficultyBonus());       // built-in
-
-		CopRole breacher = roles.get("Breacher");
-		assertEquals("Breacher", breacher.displayName());
-		assertEquals(NpcFanPlacement.FLANK, breacher.placement());
-		assertEquals(1.0, breacher.healthMultiplier());    // 20 is out of range: reported, default kept
-		assertEquals(0.25, breacher.blockFraction());
-		assertEquals(60.0, breacher.blockConeDegrees());
-		assertNull(breacher.rangedMin());
-		assertEquals(new RetreatSettings(true, 0.2, 9.0), breacher.retreat()); // read over Cops.Retreat
-		assertTrue(report.issues().stream().anyMatch(i -> "config.range".equals(i.code())), report.issues()::toString);
-		assertTrue(report.issues().stream().noneMatch(i -> "config.unknown_key".equals(i.code())),
-		           report.issues()::toString);
-	}
-
-	@Test
-	@DisplayName("an unknown role in a composition is reported and skipped; an unknown Fan_Placement is reported and ignored")
-	void composition_unknownRole_reportedAndSkipped() {
-		ConfigReport report = new ConfigReport();
-		CopConfigProvider provider = parse("""
-				Cops:
-				   Roles:
-				      Assault:
-				         Fan_Placement: SIDEWAYS
-				   Squad_Composition:
-				      2:
-				         - "Pointman"
-				         - "Ghost"
-				         - "Assault"
-				""" + ONE_TIER, report);
-
-		assertEquals(List.of("Pointman", "Assault"), names(provider.getSquadComposition(2)));
-		assertEquals(List.of("Pointman", "Assault"), names(provider.getSquadComposition(9)));
-		assertNull(provider.getSquadComposition(1)); // below the first declared level: no roles
-		assertEquals(NpcFanPlacement.FLANK, byName(provider.getSquadComposition(2)).get("Assault").placement()); // kept
-		assertTrue(report.issues().stream().anyMatch(i -> i.message().contains("Ghost")), report.issues()::toString);
-		assertTrue(report.issues().stream().anyMatch(i -> i.message().contains("SIDEWAYS")),
-		           report.issues()::toString);
-	}
-
-	@Test
-	@DisplayName("Roles_Enabled: false turns roles off - every cop spawns as its plain tier")
-	void rolesDisabled_noComposition() {
-		CopConfigProvider provider = parse("Cops:\n   Roles_Enabled: false\n" + ONE_TIER);
-
-		assertNull(provider.getSquadComposition(3));
-	}
-
-	@Test
-	@DisplayName("the shipped cops.yml with Roles_Enabled: false - no composition, and its Roles / Squad_Composition blocks are not unknown keys")
-	void shippedFile_rolesDisabled_noUnknownKeys() throws IOException {
-		String yaml;
-		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("npc/cops.yml"))) {
-			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-		}
-		assertTrue(yaml.contains("Roles_Enabled: true"));
-		ConfigReport      report   = new ConfigReport();
-		CopConfigProvider provider = parse(yaml.replace("Roles_Enabled: true", "Roles_Enabled: false"), report);
-
-		assertNull(provider.getSquadComposition(3));
-		assertTrue(report.issues().stream().noneMatch(issue -> "config.unknown_key".equals(issue.code())),
-		           () -> "unknown keys: " + report.issues());
-	}
-
-	@Test
-	@DisplayName("the shipped cops.yml declares the role catalogue: a Commander from level 3, Assault last")
-	void shippedFile_rolesAndComposition() throws IOException {
-		String yaml;
-		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("npc/cops.yml"))) {
-			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-		}
-		CopConfigProvider provider = parse(yaml);
-
-		assertEquals(List.of("Pointman", "Assault"), names(provider.getSquadComposition(1)));
-		assertEquals("Commander", provider.getSquadComposition(3).get(0).name());
-		List<CopRole> top = provider.getSquadComposition(5);
-		assertEquals("Assault", top.get(top.size() - 1).name());
-		assertEquals(Material.SHIELD, byName(provider.getSquadComposition(3)).get("Defender").offHand().getType());
 	}
 
 	// ── Field care (phase H13) ─────────────────────────────────────────────────

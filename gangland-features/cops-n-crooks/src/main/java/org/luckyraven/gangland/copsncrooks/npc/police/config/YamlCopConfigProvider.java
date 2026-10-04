@@ -2,9 +2,13 @@ package org.luckyraven.gangland.copsncrooks.npc.police.config;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.CustomLog;
+import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole.Gear;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole.Kit;
 import org.luckyraven.gangland.npc.FieldCareSettings;
 import org.luckyraven.gangland.npc.RetreatSettings;
 import org.luckyraven.gangland.npc.TacticsConfig;
@@ -42,7 +46,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	static final Map<Integer, Double> TIER_ARC_DEFAULTS   = Map.of(3, 200.0, 4, 270.0, 5, 330.0);
 
 	/**
-	 * Code default for a cops.yml with no Squad_Composition block (every pre-0.13 copy): roles are on, filled in this
+	 * Code default for a cop_roles.yml with no Squad_Composition block (or no such file): roles are on, filled in this
 	 * order per wanted level from the {@link #builtInRoles built-in catalogue}. A Commander leads from level 3; Assault
 	 * comes last, so backup and extra cops past the list are Assault.
 	 */
@@ -51,6 +55,13 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 			2, List.of("Pointman", "Assault", "Assault"),
 			3, List.of("Commander", "Pointman", "Defender", "Marksman", "Assault"),
 			4, List.of("Commander", "Pointman", "Defender", "Marksman", "Medic", "Assault"));
+
+	/** The built-in roles' leather dyes (the vanilla dye colours). */
+	private static final Color RED   = Color.fromRGB(0xB02E26);
+	private static final Color WHITE = Color.fromRGB(0xF9FFFE);
+	private static final Color GREEN = Color.fromRGB(0x5E7C16);
+	private static final Color BLUE  = Color.fromRGB(0x3C44AA);
+	private static final Color BLACK = Color.fromRGB(0x1D1D21);
 
 	private final Map<Integer, CopTierConfig> tiers;
 	private final Map<Integer, Integer>       copsPerWantedLevel;
@@ -115,15 +126,23 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	// Roles (phase H13): the composition per wanted level; empty with roles off
 	private final TreeMap<Integer, List<CopRole>> compositions = new TreeMap<>();
 
+	/** {@link #YamlCopConfigProvider(NodeReader, NodeReader, ConfigReport, CopSettings, ItemParser)} with no roles file. */
+	public YamlCopConfigProvider(NodeReader copsReader, ConfigReport report,
+	                             @Nullable CopSettings copSettings, @Nullable ItemParser itemParser) {
+		this(copsReader, null, report, copSettings, itemParser);
+	}
+
 	/**
 	 * Primary positional-config constructor.
 	 *
 	 * @param copsReader positional reader over the cops.yml root mapping
+	 * @param rolesReader positional reader over the npc/cop_roles.yml root mapping; {@code null} (no file) gives the
+	 * 		built-in roles and compositions
 	 * @param report issue collector drained by the enclosing loader
 	 * @param copSettings cop-count-per-wanted-level provider (may be {@code null})
 	 * @param itemParser item parser for weapon pool and armor entries (may be {@code null})
 	 */
-	public YamlCopConfigProvider(NodeReader copsReader, ConfigReport report,
+	public YamlCopConfigProvider(NodeReader copsReader, @Nullable NodeReader rolesReader, ConfigReport report,
 	                             @Nullable CopSettings copSettings, @Nullable ItemParser itemParser) {
 		this.tiers              = new LinkedHashMap<>();
 		this.copsPerWantedLevel = new LinkedHashMap<>();
@@ -188,7 +207,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		                                                report, FieldCareSettings.DEFAULT);
 
 		loadTiers(cops, report, itemParser);
-		loadRoles(cops, report, itemParser);
+		loadRoles(rolesReader, report, itemParser);
 		buildCopsPerWantedLevel(copSettings);
 	}
 
@@ -431,30 +450,120 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	}
 
 	/**
-	 * The built-in role catalogue: what an old cops.yml gets, and what a {@code Cops.Roles.<Name>} entry of the same
-	 * name is read over. Each role's retreat threshold is laid over {@code retreat} ({@code Cops.Retreat}).
+	 * The built-in role catalogue: what a server without npc/cop_roles.yml gets, and what a {@code Roles.<Name>} entry
+	 * of the same name is read over. Each role's retreat threshold is laid over {@code retreat} ({@code Cops.Retreat}).
+	 * Each role keeps its identity piece (a dyed leather or gold helmet, the Medic's apple, the Defender's shield) on
+	 * every tier; its tier kits carry the armour and the gun up the levels (Lieutenant chain/iron, SWAT iron/diamond,
+	 * Military diamond/netherite). Only leather takes a dye, so a role-coloured piece stays leather and glints from SWAT
+	 * up. The shipped cop_roles.yml spells out exactly this.
 	 */
-	static Map<String, CopRole> builtInRoles(RetreatSettings retreat) {
+	public static Map<String, CopRole> builtInRoles(RetreatSettings retreat) {
 		Map<String, CopRole> roles = new LinkedHashMap<>();
-		// front and centre, close in; leads (radio voice) whenever no Commander is on the squad
-		roles.put("Pointman", new CopRole("Pointman", "Pointman", NpcFanPlacement.CENTER, 4.0, 8.0, 1.0, null, 1, null,
-		                                  1.0, 0, null, 0, 60, false, false));
-		// the fan's ends, pushing and strafing wide
-		roles.put("Assault", new CopRole("Assault", "Assault", NpcFanPlacement.FLANK, 5.0, 9.0, 1.0, null, 0, 20.0, 1.0,
-		                                 0, retreatAt(retreat, 0.25), 0, 60, false, false));
-		// holds the centre post up front behind a shield that takes half of every hit from the front
-		roles.put("Defender", new CopRole("Defender", "Defender", NpcFanPlacement.CENTER, 4.0, 7.0, 1.5,
-		                                  new ItemStack(Material.SHIELD), 0, 0.0, 1.0, 0, retreatAt(retreat, 0.15), 0.5,
-		                                  60, false, false));
-		// the back of the fan (band clamped under the weapon's reach at spawn), slower but surer shots
-		roles.put("Marksman", new CopRole("Marksman", "Marksman", NpcFanPlacement.ANY, 14.0, 22.0, 1.0, null, 0, null,
-		                                  0.6, 1, retreatAt(retreat, 0.4), 0, 60, false, false));
-		roles.put("Medic", new CopRole("Medic", "Medic", NpcFanPlacement.CENTER, 8.0, 12.0, 1.0, null, 0, null, 1.0, 0,
-		                               retreatAt(retreat, 0.5), 0, 60, true, false));
-		// leads from the rear of the band; the squad falls back briefly when it goes down
-		roles.put("Commander", new CopRole("Commander", "Commander", NpcFanPlacement.ANY, 10.0, 14.0, 1.0, null, 2,
-		                                   null, 1.0, 0, retreatAt(retreat, 0.4), 0, 60, false, true));
+		// front and centre, close in; leads (radio voice) whenever no Commander is on the squad. Blue leather, a rifle
+		roles.put("Pointman", new CopRole("Pointman", "Pointman", NpcFanPlacement.CENTER, 4.0, 8.0, 1.0, 1, null, 1.0,
+		                                  0, null, 0, 60, false, false, "&e", "\u27A4",
+		                                  kit(List.of("rifle"), leather(Material.LEATHER_HELMET, BLUE),
+		                                      leather(Material.LEATHER_CHESTPLATE, BLUE), null, null, null),
+		                                  tierBodies(glint(Material.LEATHER_HELMET, BLUE), null, List.of("steyr_aug"),
+		                                             List.of("steyr_aug"))));
+		// the fan's ends, pushing and strafing wide. A black balaclava over chainmail, an MP5
+		roles.put("Assault", new CopRole("Assault", "Assault", NpcFanPlacement.FLANK, 5.0, 9.0, 1.0, 0, 20.0, 1.0, 0,
+		                                 retreatAt(retreat, 0.25), 0, 60, false, false, "&4", "\u2694",
+		                                 kit(List.of("mp5"), leather(Material.LEATHER_HELMET, BLACK),
+		                                     piece(Material.CHAINMAIL_CHESTPLATE), piece(Material.CHAINMAIL_LEGGINGS),
+		                                     null, null),
+		                                 tierBodies(glint(Material.LEATHER_HELMET, BLACK), null,
+		                                            List.of("steyr_aug"), List.of("golden_ak47"))));
+		// holds the centre post up front behind a shield that takes half of every hit from the front; the heaviest
+		// armour of the squad, a shotgun
+		roles.put("Defender", new CopRole("Defender", "Defender", NpcFanPlacement.CENTER, 4.0, 7.0, 1.5, 0, 0.0, 1.0,
+		                                  0, retreatAt(retreat, 0.15), 0.5, 60, false, false, "&9", "\u26E8",
+		                                  kit(List.of("shotgun"), piece(Material.IRON_HELMET),
+		                                      piece(Material.IRON_CHESTPLATE), piece(Material.IRON_LEGGINGS),
+		                                      piece(Material.IRON_BOOTS), piece(Material.SHIELD)),
+		                                  Map.of(4, kit(null, piece(Material.DIAMOND_HELMET),
+		                                                piece(Material.DIAMOND_CHESTPLATE),
+		                                                piece(Material.DIAMOND_LEGGINGS), null, null),
+		                                         5, kit(List.of("sawn_off", "shotgun"), piece(Material.DIAMOND_HELMET),
+		                                                piece(Material.NETHERITE_CHESTPLATE),
+		                                                piece(Material.NETHERITE_LEGGINGS),
+		                                                piece(Material.DIAMOND_BOOTS), null))));
+		// far behind the fan (band clamped under the weapon's reach at spawn: scout 100, awp 120), slower but surer
+		// shots. A green ghillie: hood and leggings stay leather on every tier
+		roles.put("Marksman", new CopRole("Marksman", "Marksman", NpcFanPlacement.ANY, 22.0, 32.0, 1.0, 0, null, 0.6,
+		                                  1, retreatAt(retreat, 0.4), 0, 60, false, false, "&2", "\u2316",
+		                                  kit(List.of("scout"), leather(Material.LEATHER_HELMET, GREEN),
+		                                      leather(Material.LEATHER_CHESTPLATE, GREEN),
+		                                      leather(Material.LEATHER_LEGGINGS, GREEN),
+		                                      leather(Material.LEATHER_BOOTS, GREEN), null),
+		                                  Map.of(3, kit(null, null, piece(Material.IRON_CHESTPLATE), null,
+		                                                piece(Material.CHAINMAIL_BOOTS), null),
+		                                         4, kit(null, glint(Material.LEATHER_HELMET, GREEN),
+		                                                piece(Material.DIAMOND_CHESTPLATE),
+		                                                glint(Material.LEATHER_LEGGINGS, GREEN),
+		                                                piece(Material.IRON_BOOTS), null),
+		                                         5, kit(List.of("awp"), glint(Material.LEATHER_HELMET, GREEN),
+		                                                piece(Material.NETHERITE_CHESTPLATE),
+		                                                glint(Material.LEATHER_LEGGINGS, GREEN),
+		                                                piece(Material.DIAMOND_BOOTS), null))));
+		// patches up hurt squad mates. Red cap and white leather (the cap and boots stay on every tier), a golden apple
+		// in the off hand, the weakest gun of the squad: an MP5 at Military, under every other role's
+		roles.put("Medic", new CopRole("Medic", "Medic", NpcFanPlacement.CENTER, 8.0, 12.0, 1.0, 0, null, 1.0, 0,
+		                               retreatAt(retreat, 0.5), 0, 60, true, false, "&c", "\u271A",
+		                               kit(List.of("pistol"), leather(Material.LEATHER_HELMET, RED),
+		                                   leather(Material.LEATHER_CHESTPLATE, WHITE),
+		                                   leather(Material.LEATHER_LEGGINGS, WHITE),
+		                                   leather(Material.LEATHER_BOOTS, WHITE), piece(Material.GOLDEN_APPLE)),
+		                               Map.of(3, kit(List.of("revolver"), null, piece(Material.IRON_CHESTPLATE),
+		                                             piece(Material.CHAINMAIL_LEGGINGS), null, null),
+		                                      4, kit(List.of("mp5"), glint(Material.LEATHER_HELMET, RED),
+		                                             piece(Material.DIAMOND_CHESTPLATE),
+		                                             piece(Material.IRON_LEGGINGS), glint(Material.LEATHER_BOOTS, WHITE),
+		                                             null),
+		                                      5, kit(List.of("mp5"), glint(Material.LEATHER_HELMET, RED),
+		                                             piece(Material.NETHERITE_CHESTPLATE),
+		                                             piece(Material.DIAMOND_LEGGINGS),
+		                                             glint(Material.LEATHER_BOOTS, WHITE), null))));
+		// leads from the rear of the band; the squad falls back briefly when it goes down. A gold helmet, a revolver
+		roles.put("Commander", new CopRole("Commander", "Commander", NpcFanPlacement.ANY, 10.0, 14.0, 1.0, 2, null,
+		                                   1.0, 0, retreatAt(retreat, 0.4), 0, 60, false, true, "&6", "\u2605",
+		                                   kit(List.of("revolver"), new Gear(Material.GOLDEN_HELMET, null, true),
+		                                       piece(Material.IRON_CHESTPLATE), piece(Material.CHAINMAIL_LEGGINGS),
+		                                       null, null),
+		                                   tierBodies(null, null, null, List.of("golden_ak47"))));
 		return roles;
+	}
+
+	private static Gear piece(Material material) {
+		return new Gear(material, null, false);
+	}
+
+	private static Gear leather(Material material, Color color) {
+		return new Gear(material, color, false);
+	}
+
+	/** A dyed leather piece with an enchantment glint: a role colour at SWAT and Military. */
+	private static Gear glint(Material material, Color color) {
+		return new Gear(material, color, true);
+	}
+
+	private static Kit kit(@Nullable List<String> guns, @Nullable Gear helmet, @Nullable Gear chestplate,
+	                       @Nullable Gear leggings, @Nullable Gear boots, @Nullable Gear offHand) {
+		return new Kit(guns, List.of(), helmet, chestplate, leggings, boots, offHand);
+	}
+
+	/**
+	 * The common body armour per gun tier (3 chain/iron, 4 iron/diamond, 5 diamond/netherite) and its guns;
+	 * {@code cap} is the helmet at 4 and 5 ({@code null}: the role's own).
+	 */
+	private static Map<Integer, Kit> tierBodies(@Nullable Gear cap, @Nullable List<String> guns3,
+	                                            @Nullable List<String> guns4, @Nullable List<String> guns5) {
+		return Map.of(3, kit(guns3, null, piece(Material.IRON_CHESTPLATE), piece(Material.CHAINMAIL_LEGGINGS),
+		                     piece(Material.CHAINMAIL_BOOTS), null),
+		              4, kit(guns4, cap, piece(Material.DIAMOND_CHESTPLATE), piece(Material.IRON_LEGGINGS),
+		                     piece(Material.IRON_BOOTS), null),
+		              5, kit(guns5, cap, piece(Material.NETHERITE_CHESTPLATE), piece(Material.DIAMOND_LEGGINGS),
+		                     piece(Material.DIAMOND_BOOTS), null));
 	}
 
 	private static RetreatSettings retreatAt(RetreatSettings retreat, double healthFraction) {
@@ -462,31 +571,32 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	}
 
 	/**
-	 * {@code Cops.Roles} read over {@link #builtInRoles}, then {@code Cops.Squad_Composition} (or
-	 * {@link #COMPOSITION_DEFAULTS} without one). {@code Cops.Roles_Enabled: false} turns roles off.
+	 * {@code Roles} (npc/cop_roles.yml) read over {@link #builtInRoles}, then {@code Squad_Composition} (or
+	 * {@link #COMPOSITION_DEFAULTS} without one). {@code Roles_Enabled: false} turns roles off. No file: the built-ins.
 	 */
-	private void loadRoles(@Nullable NodeReader cops, ConfigReport report, @Nullable ItemParser itemParser) {
-		if (cops != null && !cops.get("Roles_Enabled").asBool().orDefault(true)) {
+	private void loadRoles(@Nullable NodeReader file, ConfigReport report, @Nullable ItemParser itemParser) {
+		if (file != null && !file.get("Roles_Enabled").asBool().orDefault(true)) {
 			// read but unused: switching roles off must not turn the shipped blocks into unknown keys
-			cops.get("Roles");
-			cops.get("Squad_Composition");
+			file.get("Roles");
+			file.get("Squad_Composition");
 			return;
 		}
 
 		Map<String, CopRole> roles        = builtInRoles(retreatSettings);
-		MappingNode          rolesSection = cops == null ? null : cops.get("Roles").asMapping().orNull();
+		MappingNode          rolesSection = file == null ? null : file.get("Roles").asMapping().orNull();
 		if (rolesSection != null) {
 			NodeReader rolesReader = NodeReader.of(rolesSection, report);
 			for (String name : rolesReader.keys()) {
 				MappingNode roleNode = rolesReader.get(name).asMapping().required().orNull();
 				if (roleNode == null) continue;
-				CopRole base = roles.getOrDefault(name, new CopRole(name, name, NpcFanPlacement.ANY, null, null, 1.0,
-				                                                    null, 0, null, 1.0, 0, null, 0, 60, false, false));
+				CopRole base = roles.getOrDefault(name, new CopRole(name, name, NpcFanPlacement.ANY, null, null, 1.0, 0,
+				                                                    null, 1.0, 0, null, 0, 60, false, false, "", "",
+				                                                    Kit.EMPTY, Map.of()));
 				roles.put(name, readRole(NodeReader.of(roleNode, report), report, base, itemParser));
 			}
 		}
 
-		MappingNode compositionSection = cops == null ? null : cops.get("Squad_Composition").asMapping().orNull();
+		MappingNode compositionSection = file == null ? null : file.get("Squad_Composition").asMapping().orNull();
 		if (compositionSection == null) {
 			COMPOSITION_DEFAULTS.forEach((level, names) -> compositions.put(level, names.stream().map(roles::get).toList()));
 			return;
@@ -499,7 +609,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 			try {
 				level = Integer.parseInt(key.trim());
 			} catch (NumberFormatException e) {
-				report.add(Severity.WARNING, locationOf(access, composition), "Cops.Squad_Composition." + key,
+				report.add(Severity.WARNING, locationOf(access, composition), "Squad_Composition." + key,
 				           "wanted level '" + key + "' is not a number, skipped", "config.type");
 				continue;
 			}
@@ -508,15 +618,15 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 			for (String name : access.asList().ofStrings().orEmpty()) {
 				CopRole role = name != null ? roles.get(name.trim()) : null;
 				if (role != null) list.add(role);
-				else report.add(Severity.WARNING, locationOf(access, composition), "Cops.Squad_Composition." + key,
-				                "unknown role '" + name + "' skipped (not under Cops.Roles or built in)",
+				else report.add(Severity.WARNING, locationOf(access, composition), "Squad_Composition." + key,
+				                "unknown role '" + name + "' skipped (not under Roles or built in)",
 				                "config.unknown_role");
 			}
 			if (!list.isEmpty()) compositions.put(level, List.copyOf(list));
 		}
 	}
 
-	/** One {@code Cops.Roles.<Name>} entry, each absent or invalid key keeping {@code base}'s value. */
+	/** One {@code Roles.<Name>} entry, each absent or invalid key keeping {@code base}'s value. */
 	private CopRole readRole(NodeReader role, ConfigReport report, CopRole base, @Nullable ItemParser itemParser) {
 		NpcFanPlacement placement = base.placement();
 		String          rawPlacement = role.get("Fan_Placement").asString().orNull();
@@ -535,14 +645,34 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		                              : RetreatSettings.read(NodeReader.of(retreatNode, report), report,
 		                                                     base.retreat() != null ? base.retreat() : retreatSettings);
 
+		MappingNode displayNode = role.get("Display").asMapping().orNull();
+		NodeReader  display     = displayNode != null ? NodeReader.of(displayNode, report) : null;
+
+		Map<Integer, Kit> tierKits  = new HashMap<>(base.tierKits());
+		MappingNode       tiersNode = role.get("Tiers").asMapping().orNull();
+		if (tiersNode != null) {
+			NodeReader tiersReader = NodeReader.of(tiersNode, report);
+			for (String key : tiersReader.keys()) {
+				Integer     number  = tierNumber(key);
+				MappingNode kitNode = tiersReader.get(key).asMapping().required().orNull();
+				if (number == null) {
+					report.add(Severity.WARNING, locationOf(tiersReader.get(key), tiersReader), "Tiers." + key,
+					           "unknown tier '" + key + "' (a level number or a cops.yml tier Display_Name), skipped",
+					           "config.unknown_tier");
+				} else if (kitNode != null) {
+					tierKits.merge(number, readKit(NodeReader.of(kitNode, report), report, itemParser),
+					               (old, read) -> read.over(old));
+				}
+			}
+		}
+
 		return new CopRole(base.name(),
-		                   role.get("Display_Name").asString().orDefault(base.displayName()),
+		                   display == null ? base.displayName()
+		                                   : display.get("Name").asString().orDefault(base.displayName()),
 		                   placement,
 		                   optionalDouble(role, "Ranged_Min_Distance", 0, 64, base.rangedMin()),
 		                   optionalDouble(role, "Ranged_Max_Distance", 0, 64, base.rangedMax()),
 		                   role.get("Health_Multiplier").asDouble().min(0.1).max(10).orDefault(base.healthMultiplier()),
-		                   role.has("Off_Hand") ? parseItem(role.get("Off_Hand").asString().orNull(), itemParser)
-		                                        : base.offHand(),
 		                   role.get("Leader_Priority").asInt().orDefault(base.leaderPriority()),
 		                   optionalDouble(role, "Strafe_Degrees", 0, 180, base.strafeDegrees()),
 		                   role.get("Fire_Rate_Scale").asDouble().min(0.05).max(10).orDefault(base.fireRateScale()),
@@ -551,7 +681,110 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		                   role.get("Block_Fraction").asDouble().min(0).max(1).orDefault(base.blockFraction()),
 		                   role.get("Block_Cone_Degrees").asDouble().min(0).max(360).orDefault(base.blockConeDegrees()),
 		                   role.get("Medic").asBool().orDefault(base.medic()),
-		                   role.get("Commander").asBool().orDefault(base.commander()));
+		                   role.get("Commander").asBool().orDefault(base.commander()),
+		                   display == null ? base.color() : display.get("Color").asString().orDefault(base.color()),
+		                   display == null ? base.symbol() : display.get("Symbol").asString().orDefault(base.symbol()),
+		                   readKit(role, report, itemParser).over(base.kit()),
+		                   tierKits);
+	}
+
+	/**
+	 * A {@code Weapon_Pool} and a {@code Gear} block. {@code weapon:<name>} entries are the Bartizan guns, any other
+	 * entry a vanilla item held when no gun resolves. An absent pool or slot stays unset ({@code null}).
+	 */
+	private Kit readKit(NodeReader node, ConfigReport report, @Nullable ItemParser itemParser) {
+		List<String>    guns  = null;
+		List<ItemStack> items = new ArrayList<>();
+		if (node.has("Weapon_Pool")) {
+			guns = new ArrayList<>();
+			for (String entry : node.get("Weapon_Pool").asList().ofStrings().orEmpty()) {
+				if (entry == null || entry.isBlank()) continue;
+				if (entry.toLowerCase(Locale.ROOT).startsWith("weapon:")) {
+					guns.add(entry.substring("weapon:".length()).trim());
+				} else {
+					ItemStack item = parseItem(entry, itemParser);
+					if (item != null) items.add(item);
+				}
+			}
+		}
+
+		MappingNode gearNode = node.get("Gear").asMapping().orNull();
+		NodeReader  gear     = gearNode != null ? NodeReader.of(gearNode, report) : null;
+		return new Kit(guns, items, readGear(gear, "Helmet", report), readGear(gear, "Chestplate", report),
+		               readGear(gear, "Leggings", report), readGear(gear, "Boots", report),
+		               readGear(gear, "Off_Hand", report));
+	}
+
+	/**
+	 * One {@code Gear} slot: a material name, or a block with {@code Material}, {@code Leather_Color} ({@code #RRGGBB}
+	 * or {@code R, G, B}) and {@code Glow}. {@code ""} empties the slot; an unknown material is reported and skipped,
+	 * and so is a colour on a piece that is not leather.
+	 */
+	private static @Nullable Gear readGear(@Nullable NodeReader gear, String slot, ConfigReport report) {
+		if (gear == null || !gear.has(slot)) return null;
+
+		NodeReader.NodeAccess access = gear.get(slot);
+		String                material;
+		Color                 color   = null;
+		SourceLocation        colorAt = null;
+		boolean               glow    = false;
+		if (access.node() instanceof MappingNode mapping) {
+			NodeReader piece = NodeReader.of(mapping, report);
+			material = piece.get("Material").asString().required().orNull();
+			glow     = piece.get("Glow").asBool().orDefault(false);
+			String rawColor = piece.get("Leather_Color").asString().orNull();
+			colorAt = locationOf(piece.get("Leather_Color"), piece);
+			if (rawColor != null && (color = parseColor(rawColor)) == null)
+				report.add(Severity.WARNING, colorAt, slot + ".Leather_Color",
+				           "Leather_Color '" + rawColor + "' is not #RRGGBB or R, G, B, ignored", "config.type");
+		} else {
+			material = access.asString().orNull();
+		}
+
+		if (material == null) return null;
+		if (material.isBlank()) return Gear.NONE;
+		Material type = Material.matchMaterial(material.trim());
+		if (type == null) {
+			report.add(Severity.WARNING, locationOf(access, gear), slot,
+			           "unknown material '" + material + "', slot left to the tier", "config.enum");
+			return null;
+		}
+		if (color != null && !type.name().startsWith("LEATHER_")) {
+			report.add(Severity.WARNING, colorAt, slot + ".Leather_Color",
+			           "Leather_Color only applies to LEATHER_* gear, not " + type.name() + ", ignored", "config.type");
+			color = null;
+		}
+		return new Gear(type, color, glow);
+	}
+
+	/** {@code #RRGGBB}, {@code RRGGBB} or {@code R, G, B}; {@code null} when it is none of those. */
+	static @Nullable Color parseColor(String raw) {
+		String text = raw.trim();
+		try {
+			if (text.contains(",")) {
+				String[] parts = text.split(",");
+				if (parts.length != 3) return null;
+				return Color.fromRGB(Integer.parseInt(parts[0].trim()), Integer.parseInt(parts[1].trim()),
+				                     Integer.parseInt(parts[2].trim()));
+			}
+			return Color.fromRGB(Integer.parseInt(text.startsWith("#") ? text.substring(1) : text, 16));
+		} catch (IllegalArgumentException e) { // NumberFormatException, or a channel out of range
+			return null;
+		}
+	}
+
+	/** A {@code Tiers} key: a number, or a cops.yml tier's {@code Display_Name} without colours ({@code Military}). */
+	private @Nullable Integer tierNumber(String key) {
+		try {
+			return Integer.parseInt(key.trim());
+		} catch (NumberFormatException ignored) {
+			String wanted = key.replace('_', ' ').trim();
+			for (CopTierConfig tier : tiers.values()) {
+				String plain = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', tier.displayName()));
+				if (plain != null && plain.trim().equalsIgnoreCase(wanted)) return tier.tier();
+			}
+			return null;
+		}
 	}
 
 	/** A number that may stay unset: {@code def} when absent or out of {@code [min, max]} (reported). */
