@@ -99,8 +99,10 @@ public final class SquadRadio {
 	 * Speaks a follow-up line {@code steps} ack delays ({@code Ack_Delay_Ticks}) from now and past the squad gap, the
 	 * way an ack follows its order: a line said in the same moment as another (a medic answering a cop's "hit") would
 	 * otherwise be swallowed by the squad and player gaps. A follow-up skips the player gap too: it is scheduled on
-	 * purpose, so the line that set it up cannot swallow it. Steps still order a chain of follow-ups (1, 2, ...). Silent when {@code speaker} is no longer valid by then, or {@code stillRelevant}
-	 * says the moment has passed (a medic's patient killed during the delay); live settings apply.
+	 * purpose, so the line that set it up cannot swallow it. Steps still order a chain of follow-ups (1, 2, ...), so
+	 * give each follow-up of one moment its own step. Silent when {@code speaker} is no longer valid by then, or
+	 * {@code stillRelevant} says the moment has passed (a medic's patient killed during the delay); live settings
+	 * apply.
 	 */
 	public void sayLater(NpcSquad squad, RadioVoice voice, AbstractNpc speaker, String key, Map<String, String> extra,
 	                     int steps, BooleanSupplier stillRelevant) {
@@ -183,8 +185,8 @@ public final class SquadRadio {
 
 		SquadState state = states.computeIfAbsent(squad, s -> new SquadState());
 		if (!priority && !bypassSquadGap && now - state.lastLineAt < cfg.squadGapMs()) return false;
-		String cooldownKey = PER_SPEAKER_KEYS.contains(key) && speaker != null ? key + "@" + speaker.getUniqueId() : key;
-		if (now - state.lastByKey.getOrDefault(cooldownKey, NEVER) < cfg.cooldownFor(key)) return false;
+		String cooldownKey = cooldownKeyOf(key, speaker);
+		if (now - state.lastByKey.getOrDefault(cooldownKey, NEVER) < cfg.cooldownFor(baseKeyOf(key))) return false;
 
 		Location origin = speaker != null ? speaker.getLocation() : where;
 		World    world  = origin != null ? origin.getWorld() : null;
@@ -237,6 +239,20 @@ public final class SquadRadio {
 		if (!priority) state.lastLineAt = now;
 		state.lastByKey.put(cooldownKey, now);
 		return true;
+	}
+
+	/**
+	 * The key a line's last-heard time is stored under: a pool's {@code _Undirected} / {@code _Basic} variants share
+	 * the base pool's cooldown (the commander's orders are said once, whichever variant the signal picked); a
+	 * per-speaker line adds the speaker.
+	 */
+	private static String cooldownKeyOf(String key, @Nullable LivingEntity speaker) {
+		String base = baseKeyOf(key);
+		return PER_SPEAKER_KEYS.contains(base) && speaker != null ? base + "@" + speaker.getUniqueId() : base;
+	}
+
+	private static String baseKeyOf(String key) {
+		return key.replaceFirst("_(Undirected|Basic)$", "");
 	}
 
 	private String fill(String template, String callsign, @Nullable LivingEntity hunted, Location origin,

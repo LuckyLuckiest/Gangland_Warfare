@@ -283,8 +283,10 @@ public class CopRadio {
 
 	/**
 	 * A Marksman or Defender whose order puts it on a post other than the fan's centre ({@code ENGAGE} is
-	 * {@link #roleLine}'s) calls it: {@code Overwatch_Set} / {@code Shield_Up}, measured to the hunted target, two ack
-	 * delays out (past the leader's order and the member's ack). Cooldowns keep it to once per engagement.
+	 * {@link #roleLine}'s) calls it: {@code Overwatch_Set} / {@code Shield_Up}, measured to the hunted target, three
+	 * ack delays out (past the leader's order, the member's ack and an Assault's {@code Flanking}). There is no
+	 * arrival signal from the squad, so "reached its post" is approximated: the line goes out only if the cop is then
+	 * within its band of the target ({@link #atPost}). Cooldowns keep it to once per engagement.
 	 */
 	private void postLine(NpcSquad squad, RadioVoice voice, AbstractNpc member) {
 		RoleKind kind = member instanceof CopNpc cop ? kindOf(cop.getRole()) : null;
@@ -297,7 +299,23 @@ public class CopRadio {
 		Map<String, String> extra = new HashMap<>(roleExtras(member));
 		extra.put("direction", directionTo(member, spot));
 		extra.put("distance", distanceTo(member, spot));
-		radio.sayLater(squad, voice, member, key, extra, 2, member::isValid);
+		radio.sayLater(squad, voice, member, key, extra, 3, () -> atPost((CopNpc) member, voice.hunted(squad)));
+	}
+
+	/** The Defender's front post is up close; a Marksman's is inside its own band (a little slack past the max). */
+	private static final double DEFENDER_POST_BLOCKS = 12.0;
+	private static final double MARKSMAN_POST_BLOCKS = 40.0;
+	private static final double POST_SLACK_BLOCKS    = 2.0;
+
+	private static boolean atPost(CopNpc cop, @Nullable LivingEntity hunted) {
+		LivingEntity self = cop.getEntity();
+		if (self == null || hunted == null || !self.getWorld().equals(hunted.getWorld())) return false;
+
+		CopRole role = cop.getRole();
+		double  max  = kindOf(role) == RoleKind.DEFENDER ? DEFENDER_POST_BLOCKS
+		                                                 : role != null && role.rangedMax() != null
+		                                                   ? role.rangedMax() + POST_SLACK_BLOCKS : MARKSMAN_POST_BLOCKS;
+		return self.getLocation().distance(hunted.getLocation()) <= max;
 	}
 
 	private void commanderSays(CopGroup group, NpcSquad squad, RadioVoice voice, String key, @Nullable Location where,

@@ -677,6 +677,9 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 			           rangedMin != null ? "Ranged_Min_Distance" : "Ranged_Max_Distance",
 			           "a firing band needs both Ranged_Min_Distance and Ranged_Max_Distance and this role has no " +
 			           "base band: the settings.yml band is used", "config.incomplete_band");
+			// store neither, so the role is classified (CopRadio#kindOf) by the band that is actually applied
+			rangedMin = null;
+			rangedMax = null;
 		}
 
 		return new CopRole(base.name(),

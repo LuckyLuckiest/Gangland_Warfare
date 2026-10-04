@@ -250,6 +250,50 @@ class CopRadioRolesTest {
 	}
 
 	@Test
+	@DisplayName("a Marksman still walking to a post far from the target does not announce Overwatch_Set")
+	void marksmanFlank_farFromTarget_silent() {
+		group.add(cop(1, 4, 0, null));
+		CopNpc marksman = cop(2, 90, 0, marksmanRole());
+		group.add(marksman);
+
+		signal(NpcSquadSignal.FLANK_LEFT, marksman, new Location(world, 90, 64, 12));
+		runTasks();
+
+		verify(bystander, never()).sendMessage(org.mockito.ArgumentMatchers.startsWith("[SWAT-2] OW"));
+	}
+
+	@Test
+	@DisplayName("post lines come a step after Flanking, so first contact is not a same-tick wall of lines")
+	void postLine_staggeredAfterFlanking() {
+		group.add(cop(1, 4, 0, null));
+		CopNpc marksman = cop(2, 6, 0, marksmanRole());
+		group.add(marksman);
+
+		signal(NpcSquadSignal.FLANK_LEFT, marksman, new Location(world, 6, 64, 12));
+
+		assertEquals(List.of(25L, 75L), delays, "the ack, then the Overwatch_Set line");
+	}
+
+	@Test
+	@DisplayName("the commander's orders are said once whether the signal had a spot or not")
+	void commanderOrders_directedAndUndirectedShareCooldown() {
+		pools.put("Commander_Orders_Undirected", List.of("ORDERS ANYWHERE"));
+		CopNpc commander = cop(1, 4, 0, commanderRole());
+		CopNpc pointman  = cop(2, 6, 0, null);
+		group.add(commander);
+		group.add(pointman);
+
+		signal(NpcSquadSignal.CONTACT, pointman, new Location(world, 14, 64, 0));
+		runTasks();
+		tasks.clear();
+		clock[0] += 1_000;
+		signal(NpcSquadSignal.ENGAGE, pointman, null);
+		runTasks();
+
+		verify(bystander, never()).sendMessage("[SWAT-1] ORDERS ANYWHERE");
+	}
+
+	@Test
 	@DisplayName("a Defender taking a post (flank or push order) calls Shield_Up once inside the cooldown")
 	void defenderOrder_shieldUpFollowUp() {
 		CopNpc leader   = cop(1, 4, 0, null);

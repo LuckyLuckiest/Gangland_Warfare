@@ -146,7 +146,9 @@ public class CopNpcFactory {
 		NpcRangedAttack rangedAttack = NpcRangedAttack.NONE;
 		ItemStack       weaponItem   = null;
 		String          weaponName   = null;
+		boolean         rolePool     = false;
 		if (tierConfig.canUseWeapons()) {
+			rolePool   = role != null && role.kitFor(tierConfig.tier(), true).weaponNames() != null;
 			weaponName = pickWeaponName(tierConfig);
 			rangedAttack = bartizanNpcWeapons.create(copNpc::getEntity, weaponName, copNpc.getDifficulty());
 			copNpc.setRangedAttack(rangedAttack);
@@ -161,7 +163,7 @@ public class CopNpcFactory {
 		applyTuning(copNpc, tierConfig, configProvider, rangedAttack);
 		applyRole(copNpc, role, rangedAttack, bartizanNpcWeapons.reach(weaponName));
 		if (role != null && weaponName != null && rangedAttack == NpcRangedAttack.NONE &&
-		    Settings.isBartizanAvailable()) reportUnresolvedWeapon(role, weaponName, role.kitFor(tierConfig.tier(), true).weaponNames() != null);
+		    Settings.isBartizanAvailable()) reportUnresolvedWeapon(role, weaponName, rolePool);
 
 		copNpc.applySpeed(1.0);
 
@@ -205,8 +207,9 @@ public class CopNpcFactory {
 	}
 
 	/**
-	 * Reports, once per gun name, a gun Bartizan does not know, naming the pool that drew it (the role's or the tier's): the cop holds its vanilla fallback and keeps the
-	 * settings.yml band ({@link #applyRole}), which is otherwise silent.
+	 * Reports, once per gun name, a gun Bartizan does not know, naming the pool that drew it (the role's or the
+	 * tier's): the cop holds its vanilla fallback and keeps the settings.yml band ({@link #applyRole}), which is
+	 * otherwise silent.
 	 */
 	void reportUnresolvedWeapon(CopRole role, String weaponName, boolean fromRolePool) {
 		if (!reportedWeapons.add(weaponName)) return;

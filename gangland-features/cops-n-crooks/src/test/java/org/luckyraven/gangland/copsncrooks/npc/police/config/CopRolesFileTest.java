@@ -324,7 +324,7 @@ class CopRolesFileTest {
 		             "the built-in Pointman has a band: no report");
 
 		report = new ConfigReport();
-		provider(TIERS, """
+		CopConfigProvider halfSet = provider(TIERS, """
 				Roles:
 				   Custom_Scout:
 				      Ranged_Min_Distance: 6.0
@@ -335,6 +335,9 @@ class CopRolesFileTest {
 		ConfigReport finalReport = report;
 		assertTrue(finalReport.issues().stream().anyMatch(i -> "config.incomplete_band".equals(i.code())),
 		           finalReport.issues()::toString);
+		CopRole scout = byName(halfSet.getSquadComposition(1)).get("Custom_Scout");
+		assertNull(scout.rangedMin(), "a half-set band is dropped, so the role is classified by the band applied");
+		assertNull(scout.rangedMax());
 	}
 
 	// ── tier scaling of the built-in catalogue ─────────────────────────────────
