@@ -173,6 +173,43 @@ class CopRadioRolesTest {
 	}
 
 	@Test
+	@DisplayName("sayAs and sayAsLater fill %role% with the speaker's role, so a field-care line can name it")
+	void sayAs_fillsRole() {
+		pools.put("Medic_Treating", List.of("TREAT %role% %member%"));
+		CopNpc medic = cop(1, 4, 0, role("Medic", 0, true, false));
+		group.add(medic);
+
+		assertTrue(radio.sayAs(group, medic, "Medic_Treating", Map.of("member", "SWAT-9")));
+		verify(bystander).sendMessage("[SWAT-1] TREAT Medic SWAT-9");
+
+		pools.put("Medic_Pinned", List.of("PINNED %role%"));
+		radio.sayAsLater(group, medic, "Medic_Pinned", Map.of(), 1, () -> true);
+		runTasks();
+		verify(bystander).sendMessage("[SWAT-1] PINNED Medic");
+	}
+
+	@Test
+	@DisplayName("a Defender's Shield_Up survives the Commander's order and the Marksman's Overwatch_Set of the same engagement")
+	void defenderShieldUp_heardAmongTheEngageLines() {
+		CopNpc commander = cop(1, 4, 0, commanderRole());
+		CopNpc defender  = cop(3, 7, 0, defenderRole());
+		CopNpc marksman  = cop(5, 9, 0, marksmanRole());
+		group.add(commander);
+		group.add(defender);
+		group.add(cop(4, 8, 0, assaultRole()));
+		group.add(marksman);
+		Location target = new Location(world, 14, 64, 0);
+
+		signal(NpcSquadSignal.ENGAGE, marksman, target);
+		signal(NpcSquadSignal.ENGAGE, defender, target);
+		runTasks();
+
+		verify(bystander).sendMessage("[SWAT-5] OW 5 " + compass(marksman, target) + " Marksman");
+		verify(bystander).sendMessage("[SWAT-1] ORDERS " + compass(commander, target));
+		verify(bystander).sendMessage("[SWAT-3] SHIELD Defender");
+	}
+
+	@Test
 	@DisplayName("a Defender engaging says Shield_Up; the same line repeated inside its cooldown stays silent, then returns")
 	void defenderEngage_shieldUp_respectsCooldown() {
 		pools.put("Shield_Up", List.of("SHIELD %role%"));
@@ -184,12 +221,17 @@ class CopRadioRolesTest {
 		when(provider.getRadioSettings()).thenReturn(withCooldown);
 
 		signal(NpcSquadSignal.ENGAGE, defender, target);
+		runTasks();
+		tasks.clear();
 		clock[0] += 5_000;
 		signal(NpcSquadSignal.ENGAGE, defender, target);
+		runTasks();
+		tasks.clear();
 		verify(bystander, times(1)).sendMessage("[SWAT-1] SHIELD Defender");
 
 		clock[0] += 20_000;
 		signal(NpcSquadSignal.ENGAGE, defender, target);
+		runTasks();
 		verify(bystander, times(2)).sendMessage("[SWAT-1] SHIELD Defender");
 	}
 

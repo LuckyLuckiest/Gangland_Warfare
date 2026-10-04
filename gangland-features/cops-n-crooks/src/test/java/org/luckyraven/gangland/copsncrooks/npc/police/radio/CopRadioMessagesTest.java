@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -148,6 +149,59 @@ class CopRadioMessagesTest {
 			assertFalse(es.lines(key).isEmpty(), "no Spanish lines for " + key);
 			assertEquals(placeholders(fallback.lines(key)), placeholders(en.lines(key)), "default vs English: " + key);
 			assertEquals(placeholders(en.lines(key)), placeholders(es.lines(key)), "English vs Spanish: " + key);
+		}
+	}
+
+	/** What each caller fills beyond the radio's own %unit%, %target%, %distance%, %direction%, %side%, %tier%, %level%. */
+	private static final Map<String, java.util.Set<String>> CALLER_EXTRAS = Map.ofEntries(
+			Map.entry("Push", java.util.Set.of("member")), Map.entry("Flank_Left", java.util.Set.of("member")),
+			Map.entry("Flank_Right", java.util.Set.of("member")), Map.entry("Man_Down", java.util.Set.of("member")),
+			Map.entry("Leader_Down", java.util.Set.of("member")),
+			Map.entry("Commander_Down", java.util.Set.of("member")),
+			Map.entry("Pull_Back", java.util.Set.of("member", "role")),
+			Map.entry("Hit", java.util.Set.of("health", "role")),
+			Map.entry("Medic_Moving", java.util.Set.of("member", "eta", "role")),
+			Map.entry("Covering_Fire", java.util.Set.of("role")),
+			Map.entry("Medic_Pinned", java.util.Set.of("member", "role")),
+			Map.entry("Medic_Treating", java.util.Set.of("member", "health", "role")),
+			Map.entry("Patched_Up", java.util.Set.of("member", "health", "role")),
+			Map.entry("Overwatch_Set", java.util.Set.of("role")), Map.entry("Marksman_Spotted", java.util.Set.of("role")),
+			Map.entry("Marksman_Lost", java.util.Set.of("role")),
+			Map.entry("Marksman_Reloading", java.util.Set.of("role")), Map.entry("Shield_Up", java.util.Set.of("role")),
+			Map.entry("Flanking", java.util.Set.of("role")), Map.entry("Flanking_Undirected", java.util.Set.of("role")),
+			Map.entry("Commander_Orders", java.util.Set.of("role")),
+			Map.entry("Commander_Orders_Undirected", java.util.Set.of("role")),
+			Map.entry("Commander_Orders_Basic", java.util.Set.of("role")),
+			Map.entry("Status_Check", java.util.Set.of("role")));
+
+	private static final java.util.Set<String> ALWAYS = java.util.Set.of("%unit%", "%target%", "%distance%",
+	                                                                      "%direction%", "%side%", "%tier%", "%level%");
+
+	@Test
+	@DisplayName("no variant of any line, in the code defaults, the English file or the Spanish file, names a placeholder its caller does not fill")
+	void everyVariant_usesOnlyPlaceholdersItsCallerFills() throws IOException {
+		String english = shipped("npc/cop_radio_messages.yml");
+		java.util.Set<String> keys = new java.util.TreeSet<>();
+		java.util.regex.Matcher m = java.util.regex.Pattern.compile("(?m)^ {3}([A-Z][A-Za-z_]+):\\s*$").matcher(
+				english.substring(english.indexOf("\nLines:")));
+		while (m.find()) keys.add(m.group(1));
+
+		CopRadioMessages fallback = build("Lines: {}\n");
+		CopRadioMessages en       = build(english);
+		initializeSettingsLanguage("es");
+		JavaPlugin  plugin      = PluginMocks.plugin(tempDir);
+		FileManager fileManager = new FileManager(plugin);
+		writeFile(fileManager, plugin, "cop_radio_messages.yml", english);
+		writeFile(fileManager, plugin, "cop_radio_messages_es.yml", shipped("npc/cop_radio_messages_es.yml"));
+		CopRadioMessages es = new CopRadioMessages(fileManager);
+
+		for (String key : keys) {
+			java.util.Set<String> filled = new java.util.HashSet<>(ALWAYS);
+			CALLER_EXTRAS.getOrDefault(key, java.util.Set.of()).forEach(name -> filled.add("%" + name + "%"));
+			for (CopRadioMessages source : List.of(fallback, en, es))
+				for (String line : source.lines(key))
+					for (String used : placeholders(List.of(line)))
+						assertTrue(filled.contains(used), key + " uses " + used + " that no caller fills: " + line);
 		}
 	}
 

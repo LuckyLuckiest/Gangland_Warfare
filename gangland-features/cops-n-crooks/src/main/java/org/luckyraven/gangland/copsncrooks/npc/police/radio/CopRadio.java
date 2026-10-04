@@ -143,7 +143,8 @@ public class CopRadio {
 	public boolean sayAs(CopGroup group, CopNpc cop, String key, Map<String, String> extra) {
 		LivingEntity self = cop.getEntity();
 		if (self == null) return false;
-		return radio.say(group.getSquad(), voice(group), self, callsign(cop), key, "Format", null, null, extra);
+		return radio.say(group.getSquad(), voice(group), self, callsign(cop), key, "Format", null, null,
+		                 withRole(cop, extra));
 	}
 
 	/**
@@ -152,7 +153,7 @@ public class CopRadio {
 	 */
 	public void sayAsLater(CopGroup group, CopNpc cop, String key, Map<String, String> extra, int steps,
 	                       BooleanSupplier stillRelevant) {
-		radio.sayLater(group.getSquad(), voice(group), cop, key, extra, steps, stillRelevant);
+		radio.sayLater(group.getSquad(), voice(group), cop, key, withRole(cop, extra), steps, stillRelevant);
 	}
 
 	/** Who {@code squad} of {@code group} hunts: the wanted player, or the attacker the squad was opened for. */
@@ -197,6 +198,13 @@ public class CopRadio {
 
 	/** The squad flavours a role's radio lines by: its own words for a few signals (see {@link #roleKey}). */
 	enum RoleKind { COMMANDER, MEDIC, DEFENDER, MARKSMAN, ASSAULT }
+
+	/** {@code extra} over the speaker's {@code %role%}, so any line a cop says itself may name its role. */
+	private Map<String, String> withRole(AbstractNpc cop, Map<String, String> extra) {
+		Map<String, String> merged = new HashMap<>(roleExtras(cop));
+		merged.putAll(extra);
+		return merged;
+	}
 
 	/**
 	 * What a role does in the squad, for its radio lines: the {@code Medic}/{@code Commander} flags, a block cone
@@ -250,7 +258,11 @@ public class CopRadio {
 		Map<String, String> extra = new HashMap<>(roleExtras(member));
 		extra.put("direction", directionTo(member, where));
 		extra.put("distance", distanceTo(member, where));
-		radio.say(squad, voice, member.getEntity(), callsign(member), key, "Format", where, null, extra);
+		// a Defender's Shield_Up is a follow-up, three ack delays out: said at once it lands behind the Commander's
+		// order and the Marksman's Overwatch_Set in the squad gap and is dropped (order: 1 Commander, 2 Flanking, 3 this)
+		if (kindOf(((CopNpc) member).getRole()) == RoleKind.DEFENDER)
+			radio.sayLater(squad, voice, member, key, extra, 3, () -> true);
+		else radio.say(squad, voice, member.getEntity(), callsign(member), key, "Format", where, null, extra);
 		return true;
 	}
 

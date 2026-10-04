@@ -226,7 +226,7 @@ class CopFieldCareTest {
 		CopNpc far      = cop(4, 20.0, CopState.COMBAT, MEDIC);
 		when(plain.distanceTo(any(LivingEntity.class))).thenReturn(5.0);
 		when(cuffing.distanceTo(any(LivingEntity.class))).thenReturn(5.0);
-		when(far.distanceTo(any(LivingEntity.class))).thenReturn(30.0);
+		when(far.distanceTo(any(LivingEntity.class))).thenReturn(40.0);
 
 		care.tick(group);
 
