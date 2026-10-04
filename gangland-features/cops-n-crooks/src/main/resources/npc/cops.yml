@@ -218,6 +218,22 @@ Cops:
       Channel_Ticks: 60
       # Share of max health one treatment restores (0-1).
       Heal_Fraction: 0.5
+      # The blood a hurt cop sheds: redstone-block particles at random body spots (1-2 per burst), denser the more hurt,
+      # plus a heavier burst on every hit taken while hurt.
+      Hurt:
+         # Particle type. BLOCK_CRACK (BLOCK on 1.20.5+) is drawn with redstone-block data; any other name that is not
+         # found falls back to the block particle, then to red dust.
+         Bleed_Particle: BLOCK_CRACK
+         # Particles per spot at the hurt threshold (1-50); up to double that at death's door.
+         Bleed_Count: 6
+         # Spots a burst picks from: HEAD, CHEST, LEFT_ARM, RIGHT_ARM, LEFT_LEG, RIGHT_LEG.
+         Bleed_Spots:
+            - HEAD
+            - CHEST
+            - LEFT_ARM
+            - RIGHT_ARM
+            - LEFT_LEG
+            - RIGHT_LEG
    # Squad roles: each new cop takes the next unfilled role of its wanted level's Squad_Composition, laid over its tier
    # (the tier still decides weapons, armour and the formation arc). Set to false and every cop spawns as its plain tier.
    Roles_Enabled: true

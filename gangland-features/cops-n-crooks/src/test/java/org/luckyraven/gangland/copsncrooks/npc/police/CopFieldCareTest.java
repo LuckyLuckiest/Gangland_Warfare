@@ -102,8 +102,12 @@ class CopFieldCareTest {
 
 		verify(cop, times(1)).applySpeed(0.7);
 		verify(radio, times(1)).sayAs(group, cop, "Hit", Map.of());
-		verify(world, times(3)).spawnParticle(any(Particle.class), any(Location.class), anyInt(), anyDouble(),
-		                                      anyDouble(), anyDouble(), anyDouble());
+		// one or two body spots per tick, never the old damage-indicator hearts
+		long bursts = org.mockito.Mockito.mockingDetails(world).getInvocations().stream()
+				.filter(i -> i.getMethod().getName().equals("spawnParticle")).count();
+		org.junit.jupiter.api.Assertions.assertTrue(bursts >= 3 && bursts <= 6, "bursts: " + bursts);
+		org.mockito.Mockito.mockingDetails(world).getInvocations().forEach(
+				i -> org.junit.jupiter.api.Assertions.assertNotEquals("HEART", String.valueOf(i.getArguments()[0])));
 
 		when(cop.getEntity().getHealth()).thenReturn(15.0);
 		care.tick(group);

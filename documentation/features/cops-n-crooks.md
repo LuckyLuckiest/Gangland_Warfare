@@ -147,7 +147,7 @@ off, and each cop that falls back may radio the Fall_Back line right after "Comm
 ### Field Care (0.13.0)
 
 A cop at or below `Field_Care.Health_Fraction` (half) of its max health is **hurt**: it limps (`Limp_Speed`, 0.7 of its
-tier speed), bleeds (dark heart particles) and radios "I'm hit!" once. A **Medic** cop of the same squad within
+tier speed), bleeds (redstone-block blood at random body spots, denser the more hurt, with a heavier burst on every hit taken) and radios "I'm hit!" once. A **Medic** cop of the same squad within
 `Medic_Radius` (24 blocks) walks straight over to it (a direct route, not from cover to cover), and the squad calls
 "Covering fire!". Once the medic is within `Heal_Range` (2.5 blocks) both hold still: the patient crouches and both keep
 shooting. A patient on its way to cover is treated once it gets there, never held in the open; the time it spends
@@ -166,6 +166,9 @@ cancels the heal, the treatment ends quietly and that cop is not treated again f
 | `Heal_Range`            | 2.5     | Blocks from the patient the medic treats it from (1-6)   |
 | `Channel_Ticks`         | 60      | Ticks one treatment takes                                |
 | `Heal_Fraction`         | 0.5     | Share of max health one treatment restores (0-1)         |
+| `Hurt.Bleed_Particle`   | BLOCK_CRACK | Blood particle; drawn with redstone-block data (`BLOCK` on 1.20.5+), falls back to red dust |
+| `Hurt.Bleed_Count`      | 6       | Particles per spot (1-50), up to double at death's door  |
+| `Hurt.Bleed_Spots`      | all six | HEAD, CHEST, LEFT_ARM, RIGHT_ARM, LEFT_LEG, RIGHT_LEG; a burst picks 1-2 |
 
 Every key is optional: a `cops.yml` without the block gets these defaults.
 
