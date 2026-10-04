@@ -161,12 +161,18 @@ public class CopRadio {
 	}
 
 	/**
-	 * The cop's own callsign without colours ({@code "Officer Bob #1592"}, the same text as its hologram line), or
+	 * The cop's own callsign without colours or the role's symbol ({@code "Officer Medic Bob #1592"}, its hologram
+	 * line less the {@code Display.Symbol}), or
 	 * {@code "SWAT-17"} for a cop without one: the tier's display name without colours, then the Citizens id.
 	 */
 	public static String callsign(AbstractNpc npc) {
 		if (npc instanceof CopNpc cop && cop.getCallsign() != null) {
 			String plain = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', cop.getCallsign()));
+			// the role's symbol is for the nameplate; the radio keeps the role word ("Officer Medic Bob #1592")
+			String symbol = cop.getRole() != null && cop.getRole().symbol() != null ? cop.getRole().symbol() : "";
+			if (plain != null && !symbol.isEmpty())
+				plain = plain.replace(ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', symbol)), "")
+				             .replaceAll(" {2,}", " ");
 			if (plain != null) return plain;
 		}
 		String tier = npc instanceof CopNpc cop && cop.getTierConfig() != null ? tierName(cop.getTierConfig()) : "Unit";

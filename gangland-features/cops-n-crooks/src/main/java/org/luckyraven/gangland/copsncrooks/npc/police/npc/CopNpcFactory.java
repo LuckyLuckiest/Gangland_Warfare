@@ -161,7 +161,7 @@ public class CopNpcFactory {
 		applyTuning(copNpc, tierConfig, configProvider, rangedAttack);
 		applyRole(copNpc, role, rangedAttack, bartizanNpcWeapons.reach(weaponName));
 		if (role != null && weaponName != null && rangedAttack == NpcRangedAttack.NONE &&
-		    Settings.isBartizanAvailable()) reportUnresolvedWeapon(role, weaponName);
+		    Settings.isBartizanAvailable()) reportUnresolvedWeapon(role, weaponName, role.kitFor(tierConfig.tier(), true).weaponNames() != null);
 
 		copNpc.applySpeed(1.0);
 
@@ -205,17 +205,19 @@ public class CopNpcFactory {
 	}
 
 	/**
-	 * Reports, once per gun name, a role gun Bartizan does not know: the cop holds its vanilla fallback and keeps the
+	 * Reports, once per gun name, a gun Bartizan does not know, naming the pool that drew it (the role's or the tier's): the cop holds its vanilla fallback and keeps the
 	 * settings.yml band ({@link #applyRole}), which is otherwise silent.
 	 */
-	void reportUnresolvedWeapon(CopRole role, String weaponName) {
+	void reportUnresolvedWeapon(CopRole role, String weaponName, boolean fromRolePool) {
 		if (!reportedWeapons.add(weaponName)) return;
 		Diagnostics hub = Diagnostics.active();
 		if (hub == null) return;
 		hub.report(Fault.userError(FAULT_ROLE_WEAPON_UNKNOWN,
-		                           "A " + role.name() + " cop drew 'weapon:" + weaponName + "' from its Weapon_Pool " +
-		                           "(npc/cop_roles.yml, or the tier's in cops.yml), which Bartizan does not know: " +
-		                           "it holds its vanilla fallback and keeps the settings.yml firing band")
+		                           "A " + role.name() + " cop drew 'weapon:" + weaponName + "' from " +
+		                           (fromRolePool ? "the role's Weapon_Pool (npc/cop_roles.yml)"
+		                                         : "the tier's Weapon_Pool (npc/cops.yml)") +
+		                           ", which Bartizan does not know: it holds its vanilla fallback and keeps the " +
+		                           "settings.yml firing band")
 		                .build());
 	}
 

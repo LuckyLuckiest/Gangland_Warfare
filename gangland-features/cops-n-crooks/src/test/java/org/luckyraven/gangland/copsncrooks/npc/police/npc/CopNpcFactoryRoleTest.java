@@ -175,13 +175,17 @@ class CopNpcFactoryRoleTest {
 			                                          mock(CopBehaviorFactory.class), mock(NpcMarkManager.class),
 			                                          mock(BartizanNpcWeapons.class), mock(DownedTargetFilter.class));
 
-			factory.reportUnresolvedWeapon(MARKSMAN, "scuot");
-			factory.reportUnresolvedWeapon(MARKSMAN, "scuot");
-			factory.reportUnresolvedWeapon(DEFENDER, "shotgnu");
+			factory.reportUnresolvedWeapon(MARKSMAN, "scuot", true);
+			factory.reportUnresolvedWeapon(MARKSMAN, "scuot", true);
+			factory.reportUnresolvedWeapon(DEFENDER, "shotgnu", false);
 
 			assertEquals(2, faults.size(), faults::toString);
 			assertTrue(faults.get(0).message().contains("scuot") && faults.get(0).message().contains("Marksman"),
 			           faults.get(0)::message);
+			assertTrue(faults.get(0).message().contains("cop_roles.yml") && !faults.get(0).message().contains("cops.yml"),
+			           faults.get(0)::message);
+			assertTrue(faults.get(1).message().contains("npc/cops.yml") && !faults.get(1).message().contains("cop_roles"),
+			           faults.get(1)::message);
 		} finally {
 			Diagnostics.uninstall(hub);
 		}

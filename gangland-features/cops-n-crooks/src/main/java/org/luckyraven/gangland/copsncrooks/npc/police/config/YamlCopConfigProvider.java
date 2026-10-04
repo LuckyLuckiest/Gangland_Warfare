@@ -659,6 +659,9 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 					report.add(Severity.WARNING, locationOf(tiersReader.get(key), tiersReader), "Tiers." + key,
 					           "unknown tier '" + key + "' (a level number or a cops.yml tier Display_Name), skipped",
 					           "config.unknown_tier");
+				} else if (!tiers.isEmpty() && !tiers.containsKey(number)) {
+					report.add(Severity.WARNING, locationOf(tiersReader.get(key), tiersReader), "Tiers." + key,
+					           "tier " + number + " is not declared in cops.yml, skipped", "config.unknown_tier");
 				} else if (kitNode != null) {
 					tierKits.merge(number, readKit(NodeReader.of(kitNode, report), report, itemParser),
 					               (old, read) -> read.over(old));
@@ -666,12 +669,21 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 			}
 		}
 
+		Double rangedMin = optionalDouble(role, "Ranged_Min_Distance", 0, 64, base.rangedMin());
+		Double rangedMax = optionalDouble(role, "Ranged_Max_Distance", 0, 64, base.rangedMax());
+		if ((rangedMin == null) != (rangedMax == null)) {
+			report.add(Severity.WARNING, locationOf(role.get(rangedMin != null ? "Ranged_Min_Distance"
+			                                                                   : "Ranged_Max_Distance"), role),
+			           rangedMin != null ? "Ranged_Min_Distance" : "Ranged_Max_Distance",
+			           "a firing band needs both Ranged_Min_Distance and Ranged_Max_Distance and this role has no " +
+			           "base band: the settings.yml band is used", "config.incomplete_band");
+		}
+
 		return new CopRole(base.name(),
 		                   display == null ? base.displayName()
 		                                   : display.get("Name").asString().orDefault(base.displayName()),
 		                   placement,
-		                   optionalDouble(role, "Ranged_Min_Distance", 0, 64, base.rangedMin()),
-		                   optionalDouble(role, "Ranged_Max_Distance", 0, 64, base.rangedMax()),
+		                   rangedMin, rangedMax,
 		                   role.get("Health_Multiplier").asDouble().min(0.1).max(10).orDefault(base.healthMultiplier()),
 		                   role.get("Leader_Priority").asInt().orDefault(base.leaderPriority()),
 		                   optionalDouble(role, "Strafe_Degrees", 0, 180, base.strafeDegrees()),

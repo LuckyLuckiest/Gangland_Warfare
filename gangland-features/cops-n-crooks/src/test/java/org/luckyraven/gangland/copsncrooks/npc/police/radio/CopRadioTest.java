@@ -112,6 +112,19 @@ class CopRadioTest {
 	}
 
 	@Test
+	@DisplayName("the radio callsign keeps the role word but not its symbol; the nameplate keeps both")
+	void callsign_dropsRoleSymbol() {
+		CopNpc cop = cop(17, "&9&lSWAT", 5, 0);
+		when(cop.getCallsign()).thenReturn("&9Officer &c✚ Medic &fBob &7#1592");
+		CopRole medic = mock(CopRole.class);
+		when(medic.symbol()).thenReturn("✚");
+		when(cop.getRole()).thenReturn(medic);
+
+		assertEquals("Officer Medic Bob #1592", CopRadio.callsign(cop));
+		assertEquals("&9Officer &c✚ Medic &fBob &7#1592", cop.getCallsign());
+	}
+
+	@Test
 	@DisplayName("the group squad hunts the wanted player; an attacker squad hunts its attacker")
 	void hunted_groupTargetOrAttacker() {
 		Player   attacker = player(3, 3);

@@ -36,6 +36,14 @@ class CopRolesFileTest {
 			         Display_Name: "&9Officer"
 			         Health: 20.0
 			         Damage: 2.0
+			      3:
+			         Display_Name: "&5Lieutenant"
+			         Health: 30.0
+			         Damage: 4.0
+			      4:
+			         Display_Name: "&cSWAT"
+			         Health: 40.0
+			         Damage: 5.0
 			      5:
 			         Display_Name: "&4Military"
 			         Health: 60.0
@@ -282,6 +290,51 @@ class CopRolesFileTest {
 		assertEquals(List.of("golden_ak47"), military.weaponNames());                 // built-in tier 5 kept
 		assertTrue(report.issues().stream().anyMatch(i -> i.message().contains("Space_Marine")),
 		           report.issues()::toString);
+	}
+
+	@Test
+	@DisplayName("a Tiers key naming a tier cops.yml does not declare is reported and skipped")
+	void tierKits_undeclaredTierNumber_reported() {
+		ConfigReport report = new ConfigReport();
+		CopConfigProvider provider = provider(TIERS, """
+				Roles:
+				   Assault:
+				      Tiers:
+				         2:
+				            Weapon_Pool:
+				               - "STONE_SWORD"
+				""", report);
+
+		assertTrue(report.issues().stream().anyMatch(i -> "config.unknown_tier".equals(i.code())
+		                                                  && i.message().contains("tier 2")),
+		           report.issues()::toString);
+		assertEquals(List.of("golden_ak47"), byName(provider.getSquadComposition(5)).get("Assault").kitFor(5, true).weaponNames());
+	}
+
+	@Test
+	@DisplayName("a role setting only one of Ranged_Min_Distance / Ranged_Max_Distance with no base band is reported")
+	void halfBand_reported() {
+		ConfigReport report = new ConfigReport();
+		provider(TIERS, """
+				Roles:
+				   Pointman:
+				      Ranged_Min_Distance: 6.0
+				""", report);
+		assertEquals(0, report.issues().stream().filter(i -> "config.incomplete_band".equals(i.code())).count(),
+		             "the built-in Pointman has a band: no report");
+
+		report = new ConfigReport();
+		provider(TIERS, """
+				Roles:
+				   Custom_Scout:
+				      Ranged_Min_Distance: 6.0
+				Squad_Composition:
+				   1:
+				      - "Custom_Scout"
+				""", report);
+		ConfigReport finalReport = report;
+		assertTrue(finalReport.issues().stream().anyMatch(i -> "config.incomplete_band".equals(i.code())),
+		           finalReport.issues()::toString);
 	}
 
 	// ── tier scaling of the built-in catalogue ─────────────────────────────────
