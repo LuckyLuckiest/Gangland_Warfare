@@ -14,6 +14,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.RegroupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.npc.radio.RadioLines;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
@@ -96,6 +97,7 @@ public class CopRadio {
 				commanderDown(group, squad, voice, member, where);
 			else if (!roleLine(squad, voice, signal, member, where)) speak.onSignal(squad, signal, member, where);
 			followUps(group, squad, voice, signal, member, where);
+			if (down) regroupCheck(group);
 			switch (signal) {
 				case CONTACT, MAN_DOWN, LEADER_DOWN -> {
 					Location origin = where != null ? where : locationOf(member);
@@ -115,6 +117,13 @@ public class CopRadio {
 
 	/** The group's leader (or, with the squad empty, any live cop of the group) speaks {@code key}. */
 	public boolean sayFromLeader(CopGroup group, String key) {
+		AbstractNpc speaker = leaderSpeaker(group);
+		if (speaker == null) return false;
+		return radio.say(group.getSquad(), voice(group), speaker.getEntity(), callsign(speaker), key, "Format", null,
+		                 null, Map.of());
+	}
+
+	private @Nullable AbstractNpc leaderSpeaker(CopGroup group) {
 		AbstractNpc speaker = group.getSquad().leader();
 		if (speaker == null) {
 			synchronized (group.getCops()) {
@@ -125,9 +134,29 @@ public class CopRadio {
 					}
 			}
 		}
-		if (speaker == null) return false;
-		return radio.say(group.getSquad(), voice(group), speaker.getEntity(), callsign(speaker), key, "Format", null,
-		                 null, Map.of());
+		return speaker;
+	}
+
+	/**
+	 * {@link #sayFromLeader}'s speaker, {@code steps} ack delays later, past the squad and player gaps
+	 * ({@link SquadRadio#sayLater}; key cooldowns still apply); silent with no speaker or once {@code stillRelevant}
+	 * is {@code false}.
+	 */
+	public void sayFromLeaderLater(CopGroup group, String key, int steps, BooleanSupplier stillRelevant) {
+		AbstractNpc speaker = leaderSpeaker(group);
+		if (speaker == null) return;
+		radio.sayLater(group.getSquad(), voice(group), speaker, key, Map.of(), steps, stillRelevant);
+	}
+
+	/** A casualty counts toward a regroup; the second one inside the window sends the squad to cover. */
+	private void regroupCheck(CopGroup group) {
+		CopConfigProvider cfg = provider.get();
+		RegroupSettings   r   = cfg != null && cfg.getRegroupSettings() != null ? cfg.getRegroupSettings()
+		                                                                       : RegroupSettings.DEFAULT;
+		group.recordCasualty(now());
+		if (!group.shouldRegroup(now(), r)) return;
+		group.startRegroup(now(), r);
+		sayFromLeaderLater(group, "Regroup", 2, group::isRegrouping);
 	}
 
 	/** {@code cop} answers a call from {@code squad}. */
@@ -442,7 +471,7 @@ public class CopRadio {
 	/** The squad's new leader radios the Commander's fall; everyone falls back briefly ({@code CopRetreat}). */
 	private void commanderDown(CopGroup group, NpcSquad squad, RadioVoice voice, AbstractNpc commander,
 	                           @Nullable Location where) {
-		group.setFallBackUntil(now() + COMMANDER_FALL_BACK_MS);
+		group.setFallBackUntil(Math.max(group.getFallBackUntil(), now() + COMMANDER_FALL_BACK_MS));
 		AbstractNpc speaker = squad.leader();
 		if (speaker == null) return;
 		radio.say(squad, voice, speaker.getEntity(), callsign(speaker), "Commander_Down", "Format", where, null,
