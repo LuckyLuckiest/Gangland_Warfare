@@ -98,7 +98,8 @@ public class JailIntakeService {
 	 */
 	private int chargeSheet(Player player, DetainedPlayer detained, int wantedLevel, List<CrimeRecord> crimes) {
 		ChargeSheetSettings sheet = chase.get().chargeSheet();
-		if (!sheet.enabled()) return 0;
+		// nothing to charge: an admin throw of a player with no stars and no crimes is not a bust
+		if (!sheet.enabled() || (wantedLevel <= 0 && crimes.isEmpty())) return 0;
 
 		double fine = sheet.fineFor(wantedLevel);
 		if (fine <= 0) return 0;

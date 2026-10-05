@@ -249,6 +249,21 @@ class JailIntakeServiceTest {
 	}
 
 	@Test
+	@DisplayName("an admin throw of a 0-star player with no crimes charges no sheet and adds no time")
+	void zeroStarsNoCrimes_chargesNoSheet() {
+		level           = 0;
+		economy.balance = 5000;
+
+		intake.admit(player);
+
+		assertNull(row().getFinePaid());
+		assertNull(row().getFineExtraSeconds());
+		assertEquals(5000, economy.balance);
+		assertEquals(120, sentenceSeconds(), "the base sentence only");
+		assertTrue(chat.isEmpty());
+	}
+
+	@Test
 	@DisplayName("crimes are listed once each, with counts, in first-seen order")
 	void crimesAreListedGroupedInFirstSeenOrder() {
 		for (String id : List.of("car_theft", "kill_cop", "car_theft", "brandish_near_cop", "kill_cop", "car_theft")) {

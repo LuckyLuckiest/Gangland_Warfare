@@ -358,6 +358,10 @@ public class CopManager implements BeanLifecycle {
 		}
 		for (UUID playerId : new HashSet<>(groups.keySet())) {
 			despawnAllForPlayer(playerId);
+
+			// the stopped AI task can no longer tell the hooks the group is gone (the evasion clock turns OFF there)
+			Player player = Bukkit.getPlayer(playerId);
+			if (player != null) runAiTickHooks(player, null);
 		}
 		copAttackers.clear();
 	}

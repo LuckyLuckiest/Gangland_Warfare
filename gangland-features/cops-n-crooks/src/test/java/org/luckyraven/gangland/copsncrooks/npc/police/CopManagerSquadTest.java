@@ -539,6 +539,22 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("a reload tears the groups down and tells the AI-tick hooks the chase has no group (evasion turns OFF)")
+	void preClear_runsTheAiTickHooksWithNoGroup() {
+		manager.onWantedStart(player, wanted);
+		manager.groupFor(playerId).add(fx.cop(CopState.PURSUING, 0, 0));
+		List<Object[]> calls = new java.util.ArrayList<>();
+		manager.addAiTickHook((who, g) -> calls.add(new Object[]{who, g}));
+
+		manager.onPreClear();
+
+		assertEquals(1, calls.size());
+		assertSame(player, calls.get(0)[0]);
+		assertNull(calls.get(0)[1], "the group is gone");
+		assertNull(manager.groupOf(playerId));
+	}
+
+	@Test
 	@DisplayName("a hook that throws is skipped: later hooks and the rest of the tick still run")
 	void throwingAiTickHook_doesNotStopTheTick() {
 		manager.onWantedStart(player, wanted);

@@ -110,7 +110,8 @@ automatically.
   `npc/wanted.yml`, at most `Maximum`. Whatever the wallet could not cover is added to the sentence
   (`Seconds_Per_Unpaid` seconds per unit of money, at most `Max_Extra_Seconds`). Example at 2 stars with the defaults:
   fine 700; a player holding 300 pays 300 and serves the 400 he could not pay as 40 extra seconds. A player who is dead
-  at intake (the death bill was already paid) is not fined, and `Charge_Sheet.Enable: false` turns the whole thing off.
+  at intake (the death bill was already paid) is not fined, nor is a player with no stars and no crimes (an admin
+  `/glw jail throw` of an innocent player), and `Charge_Sheet.Enable: false` turns the whole thing off.
   The paperwork screen shows the fine paid and the extra time; both are saved on the detainment row
   (`fine_paid`, `fine_extra_seconds`).
 - **Wanted level at jail** — jailing clears the stars with the cause `ARREST`; the heat of the chase is forgotten.
