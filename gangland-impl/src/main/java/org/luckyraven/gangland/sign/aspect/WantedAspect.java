@@ -6,6 +6,8 @@ import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
+import org.luckyraven.gangland.core.wanted.WantedCause;
+import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.gangland.sign.model.ParsedSign;
 import org.luckyraven.gangland.sign.type.WantedSign;
 
@@ -13,6 +15,7 @@ import org.luckyraven.gangland.sign.type.WantedSign;
 public class WantedAspect implements SignAspect {
 
 	private final UserManager<Player> userManager;
+	private final WantedStars         wantedStars;
 
 	@Override
 	public AspectResult execute(Player player, ParsedSign sign) {
@@ -23,13 +26,13 @@ public class WantedAspect implements SignAspect {
 		Wanted wanted = user.getWanted();
 		int    amount = sign.getAmount();
 
-		WantedSign.WantedType wantedType = WantedSign.WantedType.valueOf(sign.getContent().toUpperCase());
+		WantedSign.WantedType wantedType = parseType(sign);
+
+		if (wantedType == null) return AspectResult.failure("Unknown wanted operation type");
 
 		switch (wantedType) {
 			case INCREASE -> {
-				int currentLevel = wanted.getLevel();
-
-				wanted.setLevel(currentLevel + amount);
+				wantedStars.raise(user, amount, WantedCause.SIGN);
 
 				String string = Messages.WANTED_INCREASED.toString(Messages.Type.NO_CHANGE);
 				String replace = string.replace("%amount%", String.valueOf(amount))
@@ -37,9 +40,7 @@ public class WantedAspect implements SignAspect {
 				return AspectResult.success(replace);
 			}
 			case REMOVE -> {
-				for (int i = 0; i < amount; i++) {
-					wanted.decrementLevel();
-				}
+				wanted.setLevel(Math.max(0, wanted.getLevel() - amount), WantedCause.SIGN);
 
 				String string = Messages.WANTED_DECREASED.toString(Messages.Type.NO_CHANGE);
 				String replace = string.replace("%amount%", String.valueOf(amount))
@@ -47,7 +48,7 @@ public class WantedAspect implements SignAspect {
 				return AspectResult.success(replace);
 			}
 			case CLEAR -> {
-				wanted.reset();
+				wanted.reset(WantedCause.SIGN);
 
 				String string  = Messages.WANTED_CLEARED.toString(Messages.Type.NO_CHANGE);
 				String replace = string.replace("%stars%", wanted.getLevelStars());
@@ -67,7 +68,9 @@ public class WantedAspect implements SignAspect {
 			return false;
 		}
 
-		WantedSign.WantedType wantedType = WantedSign.WantedType.valueOf(sign.getContent().toUpperCase());
+		WantedSign.WantedType wantedType = parseType(sign);
+
+		if (wantedType == null) return false;
 
 		if (wantedType != WantedSign.WantedType.INCREASE) {
 			Wanted wanted = user.getWanted();
@@ -76,6 +79,18 @@ public class WantedAspect implements SignAspect {
 		}
 
 		return true;
+	}
+
+	/** The sign's operation, or {@code null} when its content is not one (a hand-edited or stale sign). */
+	private static WantedSign.WantedType parseType(ParsedSign sign) {
+		String content = sign.getContent();
+		if (content == null) return null;
+
+		try {
+			return WantedSign.WantedType.valueOf(content.toUpperCase());
+		} catch (IllegalArgumentException exception) {
+			return null;
+		}
 	}
 
 	@Override

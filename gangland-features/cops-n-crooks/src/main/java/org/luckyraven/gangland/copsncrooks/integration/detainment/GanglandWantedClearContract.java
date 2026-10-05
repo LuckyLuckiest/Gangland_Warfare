@@ -6,6 +6,7 @@ import org.luckyraven.gangland.copsncrooks.detainment.wanted.WantedClearContract
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
+import org.luckyraven.gangland.core.wanted.WantedCause;
 
 import java.util.UUID;
 
@@ -29,11 +30,16 @@ public final class GanglandWantedClearContract implements WantedClearContract {
 
 	@Override
 	public void clearWanted(UUID playerId) {
+		clearWanted(playerId, WantedCause.UNKNOWN);
+	}
+
+	@Override
+	public void clearWanted(UUID playerId, WantedCause cause) {
 		User<Player> user = lookup(playerId);
 		if (user == null) return;
 		Wanted wanted = user.getWanted();
 		if (wanted == null) return;
-		wanted.setLevel(0);
+		wanted.setLevel(0, cause);
 	}
 
 	private User<Player> lookup(UUID playerId) {

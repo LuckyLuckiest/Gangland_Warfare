@@ -25,13 +25,13 @@ import org.luckyraven.gangland.core.bounty.BountyExecutor;
 import org.luckyraven.gangland.core.bounty.BountySettings;
 import org.luckyraven.gangland.core.events.bounty.BountyEvent;
 import org.luckyraven.gangland.core.events.user.UserBountyEvent;
-import org.luckyraven.gangland.core.events.wanted.WantedEvent;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
-import org.luckyraven.gangland.core.wanted.WantedExecutor;
+import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.gangland.core.wanted.WantedKillTrackers;
 import org.luckyraven.gangland.core.wanted.WantedSettings;
+import org.luckyraven.gangland.core.wanted.WantedStars;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -43,18 +43,19 @@ public class EntityDamageListener implements Listener {
 	private final UserManager<Player> userManager;
 	private final WantedKillTrackers  wantedKills;
 	private final BountySettings      bountySettings;
-	private final WantedSettings      wantedSettings;
+	private final WantedStars         wantedStars;
 
 	public EntityDamageListener(Gangland gangland,
 	                            @Qualifier("online") UserManager<Player> userManager,
 	                            WantedKillTrackers wantedKills,
 	                            BountySettings bountySettings,
-	                            WantedSettings wantedSettings) {
+	                            WantedSettings wantedSettings,
+	                            WantedStars wantedStars) {
 		this.gangland          = gangland;
 		this.userManager       = userManager;
 		this.wantedKills       = wantedKills;
 		this.bountySettings    = bountySettings;
-		this.wantedSettings    = wantedSettings;
+		this.wantedStars       = wantedStars;
 		setupKillComboCallbacks();
 	}
 
@@ -107,7 +108,7 @@ public class EntityDamageListener implements Listener {
 
 			// Only increase wanted if this NPC counts towards wanted (cops should, civilians may, etc.)
 			if (wantedKills.countsForWanted(deadPlayer)) {
-				if (wantedKills.isActive() && Settings.isWantedKillComboEnabled()) {
+				if (wantedKills.isActive()) {
 					wantedKills.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
 					                       Settings.getWantedKillComboResetAfter());
 				} else {
@@ -136,13 +137,13 @@ public class EntityDamageListener implements Listener {
 			damagerUser.sendMessage(replace);
 
 			// Reset kill combo if player was killed by someone with bounty
-			if (wantedKills.isActive() && Settings.isWantedKillComboEnabled()) {
+			if (wantedKills.isActive()) {
 				wantedKills.resetCombo(deadPlayer.getUniqueId());
 			}
 		} else handleBounty(damagerUser);
 
 		// increase the wanted level for killing another player
-		if (wantedKills.isActive() && Settings.isWantedKillComboEnabled()) {
+		if (wantedKills.isActive()) {
 			wantedKills.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
 			                       Settings.getWantedKillComboResetAfter());
 		} else handleWanted(damagerUser);
@@ -157,7 +158,7 @@ public class EntityDamageListener implements Listener {
 		if (!wantedKills.countsForWanted(victim)) return false;
 
 		// Record kill in combo system if enabled
-		if (wantedKills.isActive() && Settings.isWantedKillComboEnabled()) {
+		if (wantedKills.isActive()) {
 			wantedKills.recordKill(attacker.getUser(), attacker.getWanted(), victim,
 			                       Settings.getWantedKillComboResetAfter());
 		} else handleWanted(attacker);
@@ -194,29 +195,24 @@ public class EntityDamageListener implements Listener {
 	}
 
 	private void onPlayerDeathResetWanted(UUID deadPlayerId) {
-		Player       deadPlayer = Bukkit.getPlayer(deadPlayerId);
-		User<Player> deadUser   = userManager.getUser(deadPlayer);
+		Player deadPlayer = Bukkit.getPlayer(deadPlayerId);
+
+		// The player may have left between the death and this callback
+		if (deadPlayer == null) return;
+
+		User<Player> deadUser = userManager.getUser(deadPlayer);
 
 		if (deadUser == null) return;
 
 		// Reset the wanted level no matter how the player died
-		deadUser.getWanted().reset();
+		deadUser.getWanted().reset(WantedCause.DEATH);
 	}
 
 	private void handleWanted(User<Player> damagerUser) {
-		Wanted      wanted      = damagerUser.getWanted();
-		WantedEvent wantedEvent = new WantedEvent(true, wanted);
+		Wanted wanted = damagerUser.getWanted();
 
-		// Increment wanted level
-		wanted.incrementLevel();
-
-		// Start wanted timer if enabled
-		if (Settings.isWantedTimerEnabled() && wanted.isWanted()) {
-			Executor executor = new WantedExecutor(gangland, wantedEvent, damagerUser, wantedSettings);
-			Timer    timer    = executor.createTimer();
-
-			timer.start(true);
-		}
+		// Raise the level and (re)start the decay clock
+		wantedStars.raise(damagerUser, wanted.getIncrements(), WantedCause.CRIME);
 
 		// Update bounty based on new wanted level
 		int wantedLevel = wanted.getLevel();
@@ -242,7 +238,7 @@ public class EntityDamageListener implements Listener {
 		                              Settings.getMoneySymbol(), Settings.formatAmount(autoBounty));
 		String message = ChatUtil.color(format);
 
-		damagerUser.sendMessage(message);
+		if (wantedStars.isStarChat()) damagerUser.sendMessage(message);
 	}
 
 	private void handleBounty(User<Player> damagerUser) {

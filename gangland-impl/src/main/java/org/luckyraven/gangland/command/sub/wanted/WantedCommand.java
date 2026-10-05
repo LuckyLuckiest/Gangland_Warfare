@@ -10,6 +10,7 @@ import org.luckyraven.keystone.bean.command.CommandHandler;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.Map;
@@ -18,11 +19,14 @@ import java.util.Map;
 public final class WantedCommand extends Command {
 
 	private final UserManager<Player> userManager;
+	private final WantedStars         wantedStars;
 
-	public WantedCommand(JavaPlugin gangland, @Qualifier("online") UserManager<Player> userManager) {
+	public WantedCommand(JavaPlugin gangland, @Qualifier("online") UserManager<Player> userManager,
+	                      WantedStars wantedStars) {
 		super(gangland, "wanted", true);
 
 		this.userManager = userManager;
+		this.wantedStars = wantedStars;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -47,11 +51,11 @@ public final class WantedCommand extends Command {
 	@Override
 	protected void initializeArguments() {
 		WantedAddCommand wantedAdd = new WantedAddCommand(getPlugin(), getArgumentTree(), getArgument(),
-		                                                  userManager);
+		                                                  userManager, wantedStars);
 		WantedRemoveCommand wantedRemove = new WantedRemoveCommand(getPlugin(), getArgumentTree(), getArgument(),
-		                                                           userManager);
+		                                                           userManager, wantedStars);
 		WantedClearCommand wantedClear = new WantedClearCommand(getPlugin(), getArgumentTree(), getArgument(),
-		                                                        userManager);
+		                                                        userManager, wantedStars);
 
 		getArgument().addSubArgument(wantedAdd);
 		getArgument().addSubArgument(wantedRemove);
