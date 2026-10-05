@@ -120,4 +120,32 @@ class DetainmentRepositorySpiTest {
 		assertNull(loaded.getSentenceExpiresAt());
 		assertEquals(4, loaded.getWantedAtArrest());
 	}
+
+	@Test
+	@DisplayName("the charge-sheet columns round-trip")
+	void roundTrip_keepsTheFineColumns() {
+		DetainedPlayer row = new DetainedPlayer(ALICE, 1, DetainmentState.JAILED, null, 5_000L, 2);
+		row.setFinePaid(300.5);
+		row.setFineExtraSeconds(40);
+		repository.save(row);
+
+		DetainedPlayer loaded = repository.loadAll().iterator().next();
+
+		assertEquals(300.5, loaded.getFinePaid());
+		assertEquals(40, loaded.getFineExtraSeconds());
+		assertEquals(2, loaded.getWantedAtArrest());
+	}
+
+	@Test
+	@DisplayName("a row written without the fine columns reads null fines")
+	void legacyRows_readNullFines() throws SQLException {
+		backend.execute("INSERT INTO detainment (player_uuid, jail_id, state, wanted_at_arrest) VALUES (?, ?, ?, ?)",
+		                BOB.toString(), 1, "JAILED", 3);
+
+		DetainedPlayer loaded = repository.loadAll().iterator().next();
+
+		assertNull(loaded.getFinePaid());
+		assertNull(loaded.getFineExtraSeconds());
+		assertEquals(3, loaded.getWantedAtArrest());
+	}
 }

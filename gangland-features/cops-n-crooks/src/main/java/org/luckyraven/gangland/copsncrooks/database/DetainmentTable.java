@@ -18,6 +18,8 @@ public class DetainmentTable extends Table<DetainedPlayer> {
 		Attribute<Long>    transitExpiresAt  = new Attribute<>("transit_expires_at", false, Long.class);
 		Attribute<Long>    sentenceExpiresAt = new Attribute<>("sentence_expires_at", false, Long.class);
 		Attribute<Integer> wantedAtArrest    = new Attribute<>("wanted_at_arrest", false, Integer.class);
+		Attribute<Double>  finePaid          = new Attribute<>("fine_paid", false, Double.class);
+		Attribute<Integer> fineExtraSeconds  = new Attribute<>("fine_extra_seconds", false, Integer.class);
 
 		// jail_id is deliberately NOT unique: a cell holds up to Jail.Max_Capacity inmates, so several detainment
 		// rows legitimately share one jail_id. Uniqueness belongs to player_uuid (the primary key).
@@ -27,6 +29,8 @@ public class DetainmentTable extends Table<DetainedPlayer> {
 		transitExpiresAt.setCanBeNull(true);
 		sentenceExpiresAt.setCanBeNull(true);
 		wantedAtArrest.setCanBeNull(true);
+		finePaid.setCanBeNull(true);
+		fineExtraSeconds.setCanBeNull(true);
 
 		this.addAttribute(playerUuid);
 		this.addAttribute(jailId);
@@ -34,12 +38,15 @@ public class DetainmentTable extends Table<DetainedPlayer> {
 		this.addAttribute(transitExpiresAt);
 		this.addAttribute(sentenceExpiresAt);
 		this.addAttribute(wantedAtArrest);
+		this.addAttribute(finePaid);
+		this.addAttribute(fineExtraSeconds);
 	}
 
 	@Override
 	public Object[] getData(DetainedPlayer data) {
 		return new Object[]{data.getPlayerId().toString(), data.getJailId(), data.getState().name(),
-		                    data.getTransitExpiresAt(), data.getSentenceExpiresAt(), data.getWantedAtArrest()};
+		                    data.getTransitExpiresAt(), data.getSentenceExpiresAt(), data.getWantedAtArrest(),
+		                    data.getFinePaid(), data.getFineExtraSeconds()};
 	}
 
 	@Override

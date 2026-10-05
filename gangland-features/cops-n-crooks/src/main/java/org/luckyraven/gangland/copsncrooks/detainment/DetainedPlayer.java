@@ -26,6 +26,13 @@ public class DetainedPlayer {
 	 * stable after the wanted clear on jail entry. Null when not arrested.
 	 */
 	private       Integer         wantedAtArrest;
+	/**
+	 * Money the charge sheet took from the wallet at intake. Null on rows written before 0.15 or when no sheet was
+	 * charged.
+	 */
+	private       Double          finePaid;
+	/** Jail seconds added for the unpaid part of the fine. Null like {@link #finePaid}. */
+	private       Integer         fineExtraSeconds;
 
 	public DetainedPlayer(UUID playerId, Integer jailId, DetainmentState state) {
 		this(playerId, jailId, state, null, null, null);
