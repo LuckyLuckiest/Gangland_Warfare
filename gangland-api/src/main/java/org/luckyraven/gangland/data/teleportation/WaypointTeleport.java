@@ -6,6 +6,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -19,7 +20,6 @@ import org.luckyraven.gangland.core.user.User;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,7 +31,8 @@ public class WaypointTeleport implements Listener {
 	private static final Map<Player, CountdownTimer> teleportCooldown = new HashMap<>();
 	private static final Map<Player, CountdownTimer> countdownTimer   = new HashMap<>();
 	private static final Map<Player, Double>         totalDistance    = new HashMap<>();
-	private static final Set<UUID>                   shielded         = ConcurrentHashMap.newKeySet();
+	// the shield timer runs sync (start(false)); concurrent anyway so an off-thread caller can never corrupt it
+	private static final Map<UUID, CountdownTimer>   shielded         = new ConcurrentHashMap<>();
 
 	private final Waypoint waypoint;
 
@@ -117,15 +118,23 @@ public class WaypointTeleport implements Listener {
 	}
 
 	/**
-	 * The waypoint shield: cancels every damage a shielded player takes except void, matching what the entity
-	 * {@code Invulnerable} flag used to block.
+	 * The waypoint shield: cancels every damage a shielded player takes except void and {@code /kill}, matching what
+	 * the entity {@code Invulnerable} flag used to block.
 	 */
 	@EventHandler(ignoreCancelled = true)
 	public void onShieldedDamage(EntityDamageEvent event) {
-		if (event.getCause() == EntityDamageEvent.DamageCause.VOID) return;
-		if (!shielded.contains(event.getEntity().getUniqueId())) return;
+		if (shieldIgnores(event.getCause().name())) return;
+		if (!shielded.containsKey(event.getEntity().getUniqueId())) return;
 
 		event.setCancelled(true);
+	}
+
+	/**
+	 * Compared by name: {@code KILL} (Paper 1.20.4+ {@code /kill}, damage type {@code genericKill}) does not exist in
+	 * the 1.16.5 API this compiles against.
+	 */
+	static boolean shieldIgnores(String causeName) {
+		return "VOID".equals(causeName) || "KILL".equals(causeName);
 	}
 
 	/**
@@ -133,8 +142,13 @@ public class WaypointTeleport implements Listener {
 	 * {@code player.dat}, so a quit, crash, stop or reload before its timer fired left the player permanently immune
 	 * to fall and mob damage ({@code /data} cannot edit players). Gangland no longer sets that flag on a player, so a
 	 * player who joins with it set is carrying that leftover.
+	 * <p>
+	 * Deliberate migration: this clears <b>every</b> persistent {@code Invulnerable} flag on join, including one another
+	 * plugin or an admin set, because the leftover cannot be told apart from those. It runs at {@code LOWEST} so a
+	 * plugin that grants the flag on join re-applies it afterwards. Remove this handler once deployed servers have
+	 * healed.
 	 */
-	@EventHandler
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void onJoin(PlayerJoinEvent event) {
 		Player player = event.getPlayer();
 		if (!player.isInvulnerable()) return;
@@ -182,10 +196,12 @@ public class WaypointTeleport implements Listener {
 		// create a shield timer - in memory only, never the entity Invulnerable flag (docket LS-28)
 		if (waypoint.getShield() != 0) {
 			UUID uuid = player.getUniqueId();
+			// only the timer that still owns the entry may end it, so an earlier shield never cuts a later one short
 			CountdownTimer countdownTimer = new CountdownTimer(plugin, waypoint.getShield(), null, null,
-			                                                   time -> shielded.remove(uuid));
+			                                                   time -> shielded.remove(uuid, time));
 
-			shielded.add(uuid);
+			CountdownTimer previous = shielded.put(uuid, countdownTimer);
+			if (previous != null) previous.stop();
 
 			countdownTimer.start(false);
 		}

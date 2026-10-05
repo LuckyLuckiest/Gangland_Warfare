@@ -4,6 +4,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.PluginManager;
@@ -21,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -132,6 +135,65 @@ class WaypointTeleportShieldTest {
 		listener().onJoin(new PlayerJoinEvent(player, "joined"));
 
 		verify(player).setInvulnerable(false);
+	}
+
+	@Test
+	@DisplayName("a player joining without the Invulnerable flag is left alone")
+	void joinLeavesVulnerablePlayerAlone() {
+		when(player.isInvulnerable()).thenReturn(false);
+
+		listener().onJoin(new PlayerJoinEvent(player, "joined"));
+
+		verify(player, never()).setInvulnerable(any(Boolean.class));
+	}
+
+	@Test
+	@DisplayName("the join heal runs at LOWEST so a plugin granting Invulnerable on join runs after it")
+	void joinHealRunsAtLowestPriority() throws NoSuchMethodException {
+		EventHandler handler = WaypointTeleport.class.getMethod("onJoin", PlayerJoinEvent.class)
+		                                             .getAnnotation(EventHandler.class);
+
+		assertEquals(EventPriority.LOWEST, handler.priority());
+	}
+
+	@Test
+	@DisplayName("the shield lets /kill (KILL, Paper 1.20.4+) and void through, like the old Invulnerable flag")
+	void shieldIgnoresKillAndVoid() {
+		assertTrue(WaypointTeleport.shieldIgnores("KILL"));
+		assertTrue(WaypointTeleport.shieldIgnores("VOID"));
+	}
+
+	@Test
+	@DisplayName("the shield cancels every other damage cause")
+	void shieldCancelsOtherCauses() throws IllegalTeleportException {
+		teleportWithShield(5);
+
+		for (EntityDamageEvent.DamageCause cause : new EntityDamageEvent.DamageCause[]{
+				EntityDamageEvent.DamageCause.FALL, EntityDamageEvent.DamageCause.ENTITY_ATTACK,
+				EntityDamageEvent.DamageCause.LAVA, EntityDamageEvent.DamageCause.SUICIDE}) {
+			EntityDamageEvent event = new EntityDamageEvent(player, cause, 4.0);
+			listener().onShieldedDamage(event);
+
+			assertTrue(event.isCancelled(), cause.name());
+		}
+	}
+
+	@Test
+	@DisplayName("an earlier shield's timer running out does not end a later shield")
+	void earlierShieldExpiryKeepsLaterShield() throws IllegalTeleportException {
+		teleportWithShield(2);
+		Runnable firstShield = scheduled.remove(0);
+
+		teleportWithShield(2);
+
+		// the first shield's timer reaches its after-callback after the second shield started
+		for (int i = 0; i < 3; i++) {
+			firstShield.run();
+		}
+
+		EntityDamageEvent event = fall();
+		listener().onShieldedDamage(event);
+		assertTrue(event.isCancelled());
 	}
 
 	private WaypointTeleport listener() {
