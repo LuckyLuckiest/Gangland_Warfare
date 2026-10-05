@@ -57,12 +57,21 @@ public class Wanted {
 	}
 
 	public void setLevel(int level) {
+		setLevel(level, WantedCause.UNKNOWN);
+	}
+
+	/**
+	 * The single choke point every star change goes through. Fires {@link WantedLevelChangeEvent} (cancellable, BEFORE
+	 * the level mutates) and then {@link WantedStartEvent} / {@link WantedEndEvent}, all carrying {@code cause}, when an
+	 * owner is set. Off the main thread with an owner it re-schedules itself there and returns.
+	 */
+	public void setLevel(int level, WantedCause cause) {
 		int oldLevel = this.level;
 		int newLevel = Math.max(0, Math.min(level, maxLevel));
 
 		// Fire change event if owner is set
 		if (owner != null && oldLevel != newLevel) {
-			WantedLevelChangeEvent changeEvent = new WantedLevelChangeEvent(owner, this, oldLevel, newLevel);
+			WantedLevelChangeEvent changeEvent = new WantedLevelChangeEvent(owner, this, oldLevel, newLevel, cause);
 
 			// Must call event synchronously
 			if (Bukkit.isPrimaryThread()) {
@@ -70,7 +79,7 @@ public class Wanted {
 				if (changeEvent.isCancelled()) return;
 			} else {
 				// Schedule sync and return - the sync task will handle the level change
-				Bukkit.getScheduler().runTask(plugin, () -> setLevel(level));
+				Bukkit.getScheduler().runTask(plugin, () -> setLevel(level, cause));
 				return;
 			}
 		}
@@ -82,19 +91,27 @@ public class Wanted {
 		// Fire start/end events
 		if (owner != null) {
 			if (!wasWanted && this.wanted) {
-				Bukkit.getPluginManager().callEvent(new WantedStartEvent(owner, this, this.level));
+				Bukkit.getPluginManager().callEvent(new WantedStartEvent(owner, this, this.level, cause));
 			} else if (wasWanted && !this.wanted) {
-				Bukkit.getPluginManager().callEvent(new WantedEndEvent(owner, this));
+				Bukkit.getPluginManager().callEvent(new WantedEndEvent(owner, this, cause));
 			}
 		}
 	}
 
 	public void incrementLevel() {
-		setLevel(increments + level);
+		incrementLevel(WantedCause.UNKNOWN);
+	}
+
+	public void incrementLevel(WantedCause cause) {
+		setLevel(level + increments, cause);
 	}
 
 	public void decrementLevel() {
-		setLevel(level - 1);
+		decrementLevel(WantedCause.UNKNOWN);
+	}
+
+	public void decrementLevel(WantedCause cause) {
+		setLevel(level - 1, cause);
 	}
 
 	public String getLevelStars() {
@@ -102,7 +119,11 @@ public class Wanted {
 	}
 
 	public void reset() {
-		setLevel(0);
+		reset(WantedCause.UNKNOWN);
+	}
+
+	public void reset(WantedCause cause) {
+		setLevel(0, cause);
 		stopTimer();
 	}
 

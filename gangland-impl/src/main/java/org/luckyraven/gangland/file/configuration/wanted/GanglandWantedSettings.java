@@ -12,6 +12,11 @@ import java.math.BigDecimal;
 public class GanglandWantedSettings implements WantedSettings {
 
 	@Override
+	public boolean isTimerEnabled() {
+		return Settings.isWantedTimerEnabled();
+	}
+
+	@Override
 	public boolean isTimerMultiplierEnabled() {
 		return Settings.isWantedTimerMultiplierEnabled();
 	}

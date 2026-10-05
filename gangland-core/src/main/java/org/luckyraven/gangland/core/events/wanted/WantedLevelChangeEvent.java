@@ -7,6 +7,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 import org.luckyraven.gangland.core.wanted.Wanted;
+import org.luckyraven.gangland.core.wanted.WantedCause;
 
 @Getter
 public class WantedLevelChangeEvent extends Event implements Cancellable {
@@ -16,18 +17,24 @@ public class WantedLevelChangeEvent extends Event implements Cancellable {
 	private final Player player;
 	private final Wanted wanted;
 
-	private final int oldLevel;
-	private final int newLevel;
+	private final int         oldLevel;
+	private final int         newLevel;
+	private final WantedCause cause;
 
 	private boolean cancelled;
 
 	public WantedLevelChangeEvent(Player player, Wanted wanted, int oldLevel, int newLevel) {
+		this(player, wanted, oldLevel, newLevel, WantedCause.UNKNOWN);
+	}
+
+	public WantedLevelChangeEvent(Player player, Wanted wanted, int oldLevel, int newLevel, WantedCause cause) {
 		super(false);
 
 		this.player    = player;
 		this.wanted    = wanted;
 		this.oldLevel  = oldLevel;
 		this.newLevel  = newLevel;
+		this.cause     = cause;
 		this.cancelled = false;
 	}
 

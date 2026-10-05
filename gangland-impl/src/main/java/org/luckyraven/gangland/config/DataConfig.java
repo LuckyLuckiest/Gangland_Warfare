@@ -26,6 +26,7 @@ import org.luckyraven.gangland.core.user.UserFactory;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.WantedKillTrackers;
 import org.luckyraven.gangland.core.wanted.WantedSettings;
+import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.gangland.item.money.MoneyDropClassifier;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
@@ -136,6 +137,16 @@ public class DataConfig {
 	@Bean
 	public WantedKillTrackers wantedKillTrackers() {
 		return new WantedKillTrackers();
+	}
+
+	/**
+	 * The one star-raising / star-dropping service ({@code raise}, {@code drop}, {@code restore}) and the decay-policy
+	 * holder cops-n-crooks' evasion clock installs into. Always present; with no policy installed the Repeating_Timer
+	 * safety net decays as before.
+	 */
+	@Bean
+	public WantedStars wantedStars(WantedSettings wantedSettings) {
+		return new WantedStars(gangland, wantedSettings);
 	}
 
 	/**
