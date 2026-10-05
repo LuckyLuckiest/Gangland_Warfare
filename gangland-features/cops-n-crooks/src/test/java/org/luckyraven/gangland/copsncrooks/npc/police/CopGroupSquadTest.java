@@ -273,6 +273,34 @@ class CopGroupSquadTest {
 	}
 
 	@Test
+	@DisplayName("regroup grants its own backup past the backup cooldown, and waits for an active one")
+	void regroupGrantsBackup_ignoringTheCooldown() {
+		org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings b =
+				org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings.DEFAULT;
+		CopGroup group = fighting();
+
+		assertTrue(group.requestBackup(0L, b), "a casualty's backup request");
+		// that backup ran out but its cooldown is still running
+		long later = b.durationMs() + 1_000L;
+		assertEquals(0, group.backupExtra(later, b));
+		assertFalse(group.requestBackup(later, b), "the plain request is still cooling down");
+
+		assertTrue(group.grantRegroupBackup(later, b), "the regroup grants it anyway");
+		assertEquals(b.extraCops(), group.backupExtra(later, b));
+		assertTrue(group.grantRegroupBackup(later + 1_000L, b), "active backup: just waits");
+		assertEquals(b.extraCops(), group.backupExtra(later + 1_000L, b));
+	}
+
+	@Test
+	@DisplayName("regroup with backup switched off grants nothing")
+	void regroupBackupOff_grantsNothing() {
+		org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings off =
+				new org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings(false, 1, 1000L, 1000L);
+
+		assertFalse(fighting().grantRegroupBackup(0L, off));
+	}
+
+	@Test
 	@DisplayName("twoCasualtiesInside20s_whileFighting_shouldRegroup")
 	void twoCasualtiesInside20s_whileFighting_shouldRegroup() {
 		CopGroup group = fighting();
