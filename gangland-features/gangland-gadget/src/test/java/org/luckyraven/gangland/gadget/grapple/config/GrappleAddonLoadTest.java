@@ -42,6 +42,10 @@ class GrappleAddonLoadTest {
 			   Max_Duration_Ticks: 120
 			   Fall_Damage_Grace_Ticks: 30
 			   Require_Line_Of_Sight: false
+			   Shot_Speed: 4.0
+			   Miss_Cooldown_Ticks: 0
+			   Fire_Sound: "ENTITY_ARROW_SHOOT"
+			   Attach_Sound: ""
 
 			missing_display_name:
 			   Material: FISHING_ROD
@@ -57,6 +61,12 @@ class GrappleAddonLoadTest {
 			   Material: FISHING_ROD
 			   Display_Name: "&bZero Arrival Distance"
 			   Arrival_Distance: 0
+
+			out_of_range:
+			   Material: FISHING_ROD
+			   Display_Name: "&bOut Of Range"
+			   Max_Distance: 64
+			   Shot_Speed: 0
 			""";
 
 	@BeforeAll
@@ -124,6 +134,10 @@ class GrappleAddonLoadTest {
 		assertEquals(100, grapple.getMaxDurationTicks());
 		assertEquals(40, grapple.getFallDamageGraceTicks());
 		assertTrue(grapple.isRequireLineOfSight());
+		assertEquals(5.0, grapple.getShotSpeed());
+		assertEquals(10, grapple.getMissCooldownTicks());
+		assertEquals("ITEM_CROSSBOW_SHOOT", grapple.getFireSound().sound());
+		assertEquals("ENTITY_ARROW_HIT", grapple.getAttachSound().sound());
 	}
 
 	@Test
@@ -147,6 +161,10 @@ class GrappleAddonLoadTest {
 		assertEquals(120, grapple.getMaxDurationTicks());
 		assertEquals(30, grapple.getFallDamageGraceTicks());
 		assertEquals(false, grapple.isRequireLineOfSight());
+		assertEquals(4.0, grapple.getShotSpeed());
+		assertEquals(0, grapple.getMissCooldownTicks());
+		assertEquals("ENTITY_ARROW_SHOOT", grapple.getFireSound().sound());
+		assertNull(grapple.getAttachSound(), "an empty sound name means silent");
 		assertEquals("gangland.grapples.valid_grapple", grapple.getPermission());
 	}
 
@@ -160,5 +178,18 @@ class GrappleAddonLoadTest {
 		assertNotNull(grapple);
 
 		assertEquals(0.1, grapple.getArrivalDistance());
+	}
+
+	@Test
+	@DisplayName("Max_Distance past the vanilla 32-block hook limit is clamped to 32; Shot_Speed 0 floors at 0.5")
+	void outOfRange_clamped() {
+		GrappleAddon addon = addon();
+		addon.loadGrapples(loadYaml(YAML));
+
+		Grapple grapple = addon.getGrapple("out_of_range");
+		assertNotNull(grapple);
+
+		assertEquals(32, grapple.getMaxDistance());
+		assertEquals(0.5, grapple.getShotSpeed());
 	}
 }

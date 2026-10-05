@@ -7,6 +7,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.item.ItemBuilder;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.Placeholder;
 
 import java.util.ArrayList;
@@ -38,6 +39,14 @@ public class Grapple {
 	private final int     maxDurationTicks;
 	private final int     fallDamageGraceTicks;
 	private final boolean requireLineOfSight;
+	private final double  shotSpeed;
+	private final int     missCooldownTicks;
+
+	// Null = silent.
+	@Nullable
+	private final SoundEffect fireSound;
+	@Nullable
+	private final SoundEffect attachSound;
 
 	/**
 	 * Placeholder resolver injected by {@code GrappleAddon} via the builder so {@link #buildItem(Player)} can
