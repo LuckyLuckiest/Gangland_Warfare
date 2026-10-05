@@ -1,18 +1,24 @@
 package org.luckyraven.gangland.copsncrooks.listener.detainment;
 
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.copsncrooks.events.npc.CopDeathEvent;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.NpcSquadSignal;
 import org.luckyraven.keystone.npc.spi.NpcSquadListener;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 
 import java.util.ArrayList;
@@ -21,6 +27,8 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
@@ -37,6 +45,18 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("CopListener - cop deaths")
 class CopListenerDeathTest {
+
+	private BukkitStatics bukkit;
+
+	@BeforeEach
+	void installBukkit() {
+		bukkit = BukkitStatics.install(); // onCopDeath ends by firing CopDeathEvent through Bukkit
+	}
+
+	@AfterEach
+	void closeBukkit() {
+		bukkit.close();
+	}
 
 	@Test
 	@DisplayName("a dying (already invalid) cop is found, reported down to its squad, then marked for removal (body kept)")
@@ -161,6 +181,38 @@ class CopListenerDeathTest {
 
 		verify(manager, never()).findCopByEntity(any());
 		assertFalse(event.getDrops().isEmpty());
+	}
+
+	@Test
+	@DisplayName("a cop death fires CopDeathEvent through Bukkit with the killer (CJ-39)")
+	void copDeath_firesCopDeathEvent_withTheKiller() {
+		CopManager   manager = mock(CopManager.class);
+		LivingEntity body    = mock(LivingEntity.class);
+		Player       killer  = mock(Player.class);
+		CopNpc       cop     = mock(CopNpc.class);
+		when(manager.findDyingCop(body)).thenReturn(cop);
+		when(body.getKiller()).thenReturn(killer);
+
+		new CopListener(manager).onCopDeath(deathOf(body));
+
+		ArgumentCaptor<CopDeathEvent> captor = ArgumentCaptor.forClass(CopDeathEvent.class);
+		verify(bukkit.pluginManager()).callEvent(captor.capture());
+		assertSame(killer, captor.getValue().getKiller());
+	}
+
+	@Test
+	@DisplayName("a cop that died to the world (no killer) still fires CopDeathEvent, with a null killer")
+	void copDeath_noKiller_firesWithNull() {
+		CopManager   manager = mock(CopManager.class);
+		LivingEntity body    = mock(LivingEntity.class);
+		CopNpc       cop     = mock(CopNpc.class);
+		when(manager.findDyingCop(body)).thenReturn(cop);
+
+		new CopListener(manager).onCopDeath(deathOf(body));
+
+		ArgumentCaptor<CopDeathEvent> captor = ArgumentCaptor.forClass(CopDeathEvent.class);
+		verify(bukkit.pluginManager()).callEvent(captor.capture());
+		assertNull(captor.getValue().getKiller());
 	}
 
 	private static EntityDeathEvent deathOf(LivingEntity body) {

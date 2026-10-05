@@ -9,6 +9,7 @@ import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.gangland.GanglandApiImpl;
 import org.luckyraven.gangland.command.CommandManager;
 import org.luckyraven.gangland.core.user.UserLookupContract;
+import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.data.teleportation.WaypointLookupContract;
@@ -49,6 +50,11 @@ public class WiringConfig {
 
 	public WiringConfig(Gangland gangland) {
 		this.gangland = gangland;
+	}
+
+	@Bean
+	public CrimeService crimeService() {
+		return new CrimeService();
 	}
 
 	@Bean

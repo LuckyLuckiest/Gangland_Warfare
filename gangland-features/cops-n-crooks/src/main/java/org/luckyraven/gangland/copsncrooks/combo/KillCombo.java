@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.combo;
 
 import lombok.Setter;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -22,7 +23,6 @@ public class KillCombo {
 	private final List<Integer>               wantedKillCounter;
 
 	private Consumer<KillComboEvent> onWantedLevelTrigger;
-	private Consumer<KillComboEvent> onComboIncrement;
 	private Consumer<KillComboEvent> onComboReset;
 	private Consumer<UUID>           onPlayerDeath;
 
@@ -50,11 +50,8 @@ public class KillCombo {
 		// Increment the combo
 		tracker.addKill(killed, points);
 
-		// Trigger combo increment callback
-		if (onComboIncrement != null) {
-			KillComboEvent event = new KillComboEvent(killer, tracker);
-			onComboIncrement.accept(event);
-		}
+		// Announce the increment publicly (WB-28: the old in-process increment consumer had no setter caller)
+		Bukkit.getPluginManager().callEvent(new KillComboEvent(killer, tracker, KillComboEvent.Kind.INCREMENT));
 
 		// Check if wanted level should be triggered
 		checkWantedLevelTrigger(killer, wantedKiller, tracker);
@@ -117,9 +114,11 @@ public class KillCombo {
 
 		// Check against configured thresholds
 		if (!shouldTriggerWantedLevel(wantedKiller, pointKillCount)) return;
+
+		KillComboEvent event = new KillComboEvent(killer, tracker, KillComboEvent.Kind.WANTED_TRIGGER);
+		Bukkit.getPluginManager().callEvent(event);
 		if (onWantedLevelTrigger == null) return;
 
-		KillComboEvent event = new KillComboEvent(killer, tracker);
 		onWantedLevelTrigger.accept(event);
 	}
 
@@ -143,9 +142,13 @@ public class KillCombo {
 	private void handleComboReset(KillComboTracker tracker) {
 		activeTrackers.remove(tracker.getPlayer().getUniqueId());
 
+		KillComboEvent event = new KillComboEvent(tracker.getPlayer(), tracker, KillComboEvent.Kind.RESET);
+
+		// the tracker's countdown timer runs async, so the public event hops to the main thread
+		Bukkit.getScheduler().runTask(plugin, () -> Bukkit.getPluginManager().callEvent(event));
+
 		if (onComboReset == null) return;
 
-		KillComboEvent event = new KillComboEvent(tracker.getPlayer(), tracker);
 		onComboReset.accept(event);
 	}
 
