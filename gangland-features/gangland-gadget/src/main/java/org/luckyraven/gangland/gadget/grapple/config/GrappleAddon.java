@@ -7,10 +7,12 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.gadget.grapple.Grapple;
+import org.luckyraven.gangland.gadget.grapple.GrappleService;
 import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileInitializer;
 import org.luckyraven.keystone.persistence.FileManager;
+import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.util.Placeholder;
 
 import java.io.IOException;
@@ -29,6 +31,12 @@ import java.util.function.Consumer;
  */
 @CustomLog
 public class GrappleAddon implements FileInitializer {
+
+	/** The client clamps every axis of a velocity packet to this many blocks per tick. */
+	private static final double MAX_PACKET_SPEED = 3.9;
+
+	/** Vanilla kicks a player after 80 ticks of non-descending air movement on an allow-flight=false server. */
+	private static final int MAX_AIRBORNE_TICKS = 79;
 
 	private final Map<String, Grapple> grapples = new HashMap<>();
 
@@ -110,17 +118,35 @@ public class GrappleAddon implements FileInitializer {
 			int          customModelData = section.getInt("Custom_Model_Data", 0);
 			List<String> lore            = section.getStringList("Lore");
 
-			int     maxDistance          = section.getInt("Max_Distance", 25);
-			double  maxPullSpeed         = section.getDouble("Max_Pull_Speed", 1.8);
-			double  pullAcceleration     = section.getDouble("Pull_Acceleration", 0.35);
+			int maxDistance = section.getInt("Max_Distance", 25);
+			if (maxDistance > GrappleService.HOOK_RANGE_LIMIT) {
+				log.warn("Grapple '{}' Max_Distance {} is too close to the vanilla fishing-hook limit (32 blocks) - "
+				         + "clamped to {}.", key, maxDistance, GrappleService.HOOK_RANGE_LIMIT);
+				maxDistance = GrappleService.HOOK_RANGE_LIMIT;
+			}
+
+			// Velocity packets clamp each axis to 3.9 blocks/tick client-side, so nothing faster ever arrives.
+			double  maxPullSpeed         = clamp(section.getDouble("Max_Pull_Speed", 1.8), 0.1, MAX_PACKET_SPEED);
+			double  pullAcceleration     = Math.max(section.getDouble("Pull_Acceleration", 0.05), 0.01);
+			double  reelSpeed            = Math.max(section.getDouble("Reel_Speed", 0.3), 0.01);
+			double  minRopeLength        = Math.max(section.getDouble("Min_Rope_Length", 3.0), 0.5);
 			// Fix round 1 minor: Arrival_Distance <= 0 makes the anchor-relative direction vector's normalize()
 			// produce NaN velocity the tick the player reaches (0,0,0) distance from it - clamp to a small positive
 			// floor instead of trusting the YAML.
-			double  arrivalDistance      = Math.max(section.getDouble("Arrival_Distance", 1.5), 0.1);
+			double  arrivalDistance      = Math.max(section.getDouble("Arrival_Distance", 3.5), 0.1);
 			int     cooldownSeconds      = section.getInt("Cooldown_Seconds", 8);
-			int     maxDurationTicks     = section.getInt("Max_Duration_Ticks", 100);
+			int     maxDurationTicks     = section.getInt("Max_Duration_Ticks", 70);
+			if (maxDurationTicks > MAX_AIRBORNE_TICKS) {
+				log.warn("Grapple '{}' Max_Duration_Ticks {} would keep players airborne long enough to be kicked for "
+				         + "flying (allow-flight=false) - clamped to {}.", key, maxDurationTicks, MAX_AIRBORNE_TICKS);
+				maxDurationTicks = MAX_AIRBORNE_TICKS;
+			}
 			int     fallDamageGraceTicks = section.getInt("Fall_Damage_Grace_Ticks", 40);
 			boolean requireLineOfSight   = section.getBoolean("Require_Line_Of_Sight", true);
+			// Floor keeps a typo'd 0 from leaving the hook hanging in the air until Max_Duration_Ticks.
+			double  shotSpeed            = clamp(section.getDouble("Shot_Speed", MAX_PACKET_SPEED), 0.5,
+			                                     MAX_PACKET_SPEED);
+			int     missCooldownTicks    = Math.max(section.getInt("Miss_Cooldown_Ticks", 10), 0);
 
 			Grapple grapple = Grapple.builder()
 			                         .grappleId(key)
@@ -131,11 +157,17 @@ public class GrappleAddon implements FileInitializer {
 			                         .maxDistance(maxDistance)
 			                         .maxPullSpeed(maxPullSpeed)
 			                         .pullAcceleration(pullAcceleration)
+			                         .reelSpeed(reelSpeed)
+			                         .minRopeLength(minRopeLength)
 			                         .arrivalDistance(arrivalDistance)
 			                         .cooldownSeconds(cooldownSeconds)
 			                         .maxDurationTicks(maxDurationTicks)
 			                         .fallDamageGraceTicks(fallDamageGraceTicks)
 			                         .requireLineOfSight(requireLineOfSight)
+			                         .shotSpeed(shotSpeed)
+			                         .missCooldownTicks(missCooldownTicks)
+			                         .fireSound(sound(section, "Fire_Sound", "ITEM_CROSSBOW_SHOOT"))
+			                         .attachSound(sound(section, "Attach_Sound", "ENTITY_ARROW_HIT"))
 			                         .placeholder(placeholder)
 			                         .build();
 
@@ -146,5 +178,19 @@ public class GrappleAddon implements FileInitializer {
 
 		log.debug("Loaded the following grapples:");
 		log.debug(loaded);
+	}
+
+	private static double clamp(double value, double min, double max) {
+		return Math.max(min, Math.min(value, max));
+	}
+
+	/**
+	 * A vanilla sound name (resolved through XSound at play time), or null for an empty value, which means silent.
+	 */
+	@Nullable
+	private static SoundEffect sound(ConfigurationSection section, String key, String fallback) {
+		String name = section.getString(key, fallback);
+		if (name == null || name.isBlank()) return null;
+		return new SoundEffect(SoundEffect.SoundType.VANILLA, name, 1.0f, 1.0f);
 	}
 }

@@ -28,11 +28,12 @@ class GrappleFallDamageListenerTest {
 	}
 
 	@Test
-	@DisplayName("FALL is cancelled while isActive(player) is true, without consulting landing grace")
-	void onFallDamage_activePull_cancelsWithoutConsumingGrace() {
+	@DisplayName("FALL is cancelled while the rope is taut (isHolding), without consulting landing grace")
+	void onFallDamage_tautRope_cancelsWithoutConsumingGrace() {
 		GrappleService service = mock(GrappleService.class);
 		Player         player  = mock(Player.class);
 		when(service.isActive(player)).thenReturn(true);
+		when(service.isHolding(player)).thenReturn(true);
 
 		EntityDamageEvent event = fallEvent(player);
 
@@ -43,11 +44,27 @@ class GrappleFallDamageListenerTest {
 	}
 
 	@Test
+	@DisplayName("a slack attached rope holds nothing: the landing still hurts (no wider immunity than a plain fall)")
+	void onFallDamage_slackRope_notCancelled() {
+		GrappleService service = mock(GrappleService.class);
+		Player         player  = mock(Player.class);
+		when(service.isActive(player)).thenReturn(true);
+		when(service.isHolding(player)).thenReturn(false);
+		when(service.consumeLandingGrace(player)).thenReturn(false);
+
+		EntityDamageEvent event = fallEvent(player);
+
+		new GrappleFallDamageListener(service).onFallDamage(event);
+
+		verify(event, never()).setCancelled(true);
+	}
+
+	@Test
 	@DisplayName("FALL is cancelled exactly once via the one-shot landing grace, not on a second fall")
 	void onFallDamage_landingGrace_cancelsOnceThenNotAgain() {
 		GrappleService service = mock(GrappleService.class);
 		Player         player  = mock(Player.class);
-		when(service.isActive(player)).thenReturn(false);
+		when(service.isHolding(player)).thenReturn(false);
 
 		GrappleFallDamageListener listener = new GrappleFallDamageListener(service);
 
@@ -67,7 +84,7 @@ class GrappleFallDamageListenerTest {
 	void onFallDamage_inactiveNoGrace_notCancelled() {
 		GrappleService service = mock(GrappleService.class);
 		Player         player  = mock(Player.class);
-		when(service.isActive(player)).thenReturn(false);
+		when(service.isHolding(player)).thenReturn(false);
 		when(service.consumeLandingGrace(player)).thenReturn(false);
 
 		EntityDamageEvent event = fallEvent(player);
