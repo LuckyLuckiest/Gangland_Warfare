@@ -7,6 +7,7 @@ import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio.RadioCall;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.npc.FieldCareSettings;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
 import org.luckyraven.keystone.npc.NpcFanPlacement;
@@ -27,6 +29,7 @@ import org.luckyraven.keystone.npc.NpcSquadSignal;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.mockito.InOrder;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -116,9 +119,7 @@ class CopRadioTest {
 	void callsign_dropsRoleSymbol() {
 		CopNpc cop = cop(17, "&9&lSWAT", 5, 0);
 		when(cop.getCallsign()).thenReturn("&9Officer &c✚ Medic &fBob &7#1592");
-		CopRole medic = mock(CopRole.class);
-		when(medic.symbol()).thenReturn("✚");
-		when(medic.displayName()).thenReturn("Medic");
+		CopRole medic = role("Medic", "✚");
 		when(cop.getRole()).thenReturn(medic);
 
 		assertEquals("Officer Medic Bob #1592", CopRadio.callsign(cop));
@@ -130,9 +131,7 @@ class CopRadioTest {
 	void callsign_symbolRemovalIsAnchored() {
 		CopNpc cop = cop(17, "&9&lSWAT", 5, 0);
 		when(cop.getCallsign()).thenReturn("&9Alpha &ca Medic &fBea &7#1");
-		CopRole medic = mock(CopRole.class);
-		when(medic.symbol()).thenReturn("a");
-		when(medic.displayName()).thenReturn("Medic");
+		CopRole medic = role("Medic", "a");
 		when(cop.getRole()).thenReturn(medic);
 		assertEquals("Alpha Medic Bea #1", CopRadio.callsign(cop));
 
@@ -334,6 +333,22 @@ class CopRadioTest {
 		when(cop.getPatient()).thenAnswer(i -> patient.get());
 		group.add(cop);
 		return cop;
+	}
+
+	/** A real role: {@link CopRole} is a record, which Mockito cannot mock. */
+	private static CopRole role(String displayName, String symbol) {
+		return new CopRole(displayName, displayName, NpcFanPlacement.ANY, null, null, 1.0, 0, null, 1.0, 0, null, 0, 60,
+		                   false, false, "", symbol, CopRole.Kit.EMPTY, Map.of());
+	}
+
+	/** Colouring a line reads {@code Settings.moneySymbol}, which only a loaded settings.yml sets. */
+	@BeforeAll
+	static void primeMoneySymbol() throws ReflectiveOperationException {
+		Field field = Settings.class.getDeclaredField("moneySymbol");
+		field.setAccessible(true);
+		if (field.get(null) == null) {
+			field.set(null, "$");
+		}
 	}
 
 	private Player player(double x, double z) {
