@@ -6,6 +6,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainedPlayer;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentRegistry;
 import org.luckyraven.gangland.copsncrooks.detainment.bail.BailResult;
@@ -16,6 +17,8 @@ import org.luckyraven.gangland.copsncrooks.detainment.economy.DetainmentCostsCon
 import org.luckyraven.gangland.copsncrooks.detainment.economy.DetainmentEconomyContract;
 import org.luckyraven.gangland.copsncrooks.detainment.message.DetainmentMessageContract;
 import org.luckyraven.gangland.copsncrooks.detainment.sentence.SentenceService;
+import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.inventory.chest.ChestMenu;
 import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
@@ -23,6 +26,11 @@ import org.luckyraven.keystone.inventory.component.FillComponent;
 import org.luckyraven.keystone.inventory.component.ItemComponent;
 import org.luckyraven.keystone.item.ItemBuilder;
 import org.luckyraven.keystone.util.ChatUtil;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Three-row menu opened when a jailed player right-clicks their Jail Paperwork item. Bail / Bribe / Sentence release
@@ -48,9 +56,21 @@ public final class PaperworkView {
 	private final SentenceService           sentenceService;
 	private final MoneyIconProvider         moneyIconProvider;
 	private final DetainmentMessageContract messages;
+	private final WantedMessages            wantedMessages;
 
 	private static String formatMoney(double amount) {
 		return String.format("%,.2f", amount);
+	}
+
+	/** The charge-sheet line for the info lore, or null for a row with no fine recorded (pre-0.15 or no sheet). */
+	static @Nullable String fineLine(WantedMessages m, DetainedPlayer detained) {
+		if (detained.getFinePaid() == null) return null;
+
+		int extra = detained.getFineExtraSeconds() == null ? 0 : detained.getFineExtraSeconds();
+		return m.format(WantedMessages.Key.PAPERWORK_FINE,
+		                Map.of("money_symbol", Settings.getMoneySymbol(), "paid",
+		                       Settings.formatAmount(BigDecimal.valueOf(detained.getFinePaid())), "time",
+		                       WantedMessages.duration(extra)));
 	}
 
 	public void open(Player player) {
@@ -103,13 +123,22 @@ public final class PaperworkView {
 		ItemStack   infoIcon = XMaterial.PAPER.parseItem();
 		ItemBuilder info     = new ItemBuilder(infoIcon != null ? infoIcon : new ItemStack(Material.PAPER));
 		info.setDisplayName(messages.paperworkInfoLabel())
-		    .setLore(messages.paperworkInfoLore(wantedAtArrest, remainingSec, formatMoney(balance)));
+		    .setLore(infoLore(detained, wantedAtArrest, remainingSec, balance));
 		builder.slot(SLOT_INFO, ItemComponent.of(info));
 
 		builder.fill(FillComponent.of(Material.BLACK_STAINED_GLASS_PANE).name(" "));
 
 		DetainmentGuiAccess.authorize(player.getUniqueId());
 		builder.build().open(player);
+	}
+
+	private List<String> infoLore(@Nullable DetainedPlayer detained, int wantedAtArrest, long remainingSec,
+	                              double balance) {
+		List<String> lore = new ArrayList<>(messages.paperworkInfoLore(wantedAtArrest, remainingSec,
+		                                                               formatMoney(balance)));
+		String fine = detained == null ? null : fineLine(wantedMessages, detained);
+		if (fine != null) lore.add(fine);
+		return lore;
 	}
 
 	private void handleBailResult(Player player, BailResult result) {

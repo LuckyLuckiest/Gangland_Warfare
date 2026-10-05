@@ -63,6 +63,8 @@ class DetainmentRepositoryMigrationTest {
 			"transit_expires_at BIGINT, " +
 			"sentence_expires_at BIGINT, " +
 			"wanted_at_arrest INTEGER, " +
+			"fine_paid REAL, " +
+			"fine_extra_seconds INTEGER, " +
 			"PRIMARY KEY (player_uuid), " +
 			"FOREIGN KEY (jail_id) REFERENCES jail(id))";
 
@@ -196,6 +198,24 @@ class DetainmentRepositoryMigrationTest {
 		repository.save(new DetainedPlayer(BOB, 1, DetainmentState.JAILED));
 
 		assertEquals(2, repository.loadAll().size());
+	}
+
+	@Test
+	@DisplayName("the SQLite rebuild keeps values held in the fine columns")
+	void sqliteRebuild_keepsTheFineColumns() throws SQLException {
+		try (Statement stmt = legacyConnection.createStatement()) {
+			stmt.execute(LEGACY_DETAINMENT_DDL);
+			stmt.execute("INSERT INTO detainment (player_uuid, jail_id, state, sentence_expires_at, wanted_at_arrest, " +
+			             "fine_paid, fine_extra_seconds) VALUES ('" + ALICE + "', 1, 'JAILED', 5000, 3, 300.5, 40)");
+		}
+
+		repository.migrateSchema();
+
+		assertFalse(jailIdStillUnique());
+		DetainedPlayer loaded = repository.loadAll().iterator().next();
+		assertEquals(300.5, loaded.getFinePaid());
+		assertEquals(40, loaded.getFineExtraSeconds());
+		assertEquals(3, loaded.getWantedAtArrest());
 	}
 
 	@Test

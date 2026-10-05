@@ -72,12 +72,15 @@ public class DetainmentRepository extends AbstractRepository<DetainedPlayer> {
 			                                                                   "transit_expires_at BIGINT, " +
 			                                                                   "sentence_expires_at BIGINT, " +
 			                                                                   "wanted_at_arrest INTEGER, " +
+			                                                                   "fine_paid REAL, " +
+			                                                                   "fine_extra_seconds INTEGER, " +
 			                                                                   "PRIMARY KEY (player_uuid), " +
 			                                                                   "FOREIGN KEY (jail_id) REFERENCES jail(id))",
 			                                                                   "player_uuid", "jail_id", "state",
 			                                                                   "transit_expires_at",
 			                                                                   "sentence_expires_at",
-			                                                                   "wanted_at_arrest");
+			                                                                   "wanted_at_arrest", "fine_paid",
+			                                                                   "fine_extra_seconds");
 			case DatabaseHandler.MYSQL -> migrateMysql(conn);
 		}
 
@@ -107,12 +110,17 @@ public class DetainmentRepository extends AbstractRepository<DetainedPlayer> {
 
 			Object  rawTransit  = v < result.length ? result[v++] : null;
 			Object  rawSentence = v < result.length ? result[v++] : null;
-			Object  rawWanted   = v < result.length ? result[v] : null;
+			Object  rawWanted   = v < result.length ? result[v++] : null;
+			Object  rawFine     = v < result.length ? result[v++] : null;
+			Object  rawExtra    = v < result.length ? result[v] : null;
 			Long    transitAt   = rawTransit == null ? null : ((Number) rawTransit).longValue();
 			Long    sentenceAt  = rawSentence == null ? null : ((Number) rawSentence).longValue();
 			Integer wantedLevel = rawWanted == null ? null : ((Number) rawWanted).intValue();
 
-			detained.add(new DetainedPlayer(uuid, jailId, state, transitAt, sentenceAt, wantedLevel));
+			DetainedPlayer row = new DetainedPlayer(uuid, jailId, state, transitAt, sentenceAt, wantedLevel);
+			row.setFinePaid(rawFine == null ? null : ((Number) rawFine).doubleValue());
+			row.setFineExtraSeconds(rawExtra == null ? null : ((Number) rawExtra).intValue());
+			detained.add(row);
 		}
 
 		return detained;

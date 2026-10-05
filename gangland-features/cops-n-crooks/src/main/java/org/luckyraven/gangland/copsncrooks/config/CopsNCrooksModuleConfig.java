@@ -45,6 +45,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 import org.luckyraven.gangland.copsncrooks.npc.police.targeting.WantedTargetingManager;
 import org.luckyraven.gangland.copsncrooks.seam.CopsMoneyDropSource;
 import org.luckyraven.gangland.copsncrooks.seam.HeatWantedTracker;
+import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.crime.CrimeService;
@@ -239,10 +240,13 @@ public class CopsNCrooksModuleConfig {
 	                                           PaperworkItemFactory paperworkItemFactory,
 	                                           DetainmentCostsContract costs,
 	                                           TransitService transitService,
-	                                           DetainmentSoundContract sounds) {
+	                                           DetainmentSoundContract sounds, DetainmentEconomyContract economy,
+	                                           ChaseConfigLoader chase, HeatLedger ledger,
+	                                           WantedMessages messages) {
 		JailIntakeService intake = new JailIntakeService(detainmentService, detainmentRegistry, jailService,
 		                                                 jailRegistry, seizedInventoryService, wantedClearContract,
-		                                                 paperworkItemFactory, costs, sounds);
+		                                                 paperworkItemFactory, costs, sounds, economy, chase, ledger,
+		                                                 messages);
 		// Wire the transit→intake callback here to break the construction cycle
 		// (TransitService already exists as a bean; its onCommit is set lazily.)
 		transitService.setOnCommit(intake::admit);
@@ -292,9 +296,9 @@ public class CopsNCrooksModuleConfig {
 	                                   DetainmentCostsContract costs, DetainmentEconomyContract economy,
 	                                   BailService bailService, BribeService bribeService,
 	                                   SentenceService sentenceService, MoneyIconProvider moneyIconProvider,
-	                                   DetainmentMessageContract messages) {
+	                                   DetainmentMessageContract messages, WantedMessages wantedMessages) {
 		return new PaperworkView(plugin, inventoryService, detainmentRegistry, costs, economy, bailService,
-		                         bribeService, sentenceService, moneyIconProvider, messages);
+		                         bribeService, sentenceService, moneyIconProvider, messages, wantedMessages);
 	}
 
 	// ---------------------------------------------------------------------------------------------------------------
