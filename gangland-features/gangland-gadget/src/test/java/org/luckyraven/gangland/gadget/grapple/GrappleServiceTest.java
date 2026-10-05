@@ -30,6 +30,7 @@ import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -484,21 +485,27 @@ class GrappleServiceTest {
 	void rope_integratesGravityServerSide() {
 		GrappleService service = new GrappleService(mock(JavaPlugin.class));
 		World          world   = openWorld();
-		Player         player  = player(world, new Location[]{new Location(world, 0, 64, 0)});
-		// A level 10-block rope, the player held still (the position delta stays zero).
+		Location[]     where   = {new Location(world, 0, 64, 0)};
+		Player         player  = player(world, where);
+		Vector[]       sent    = {null};
+		// The client moves exactly as told, like a real one with nothing in the way.
+		doAnswer(invocation -> {
+			sent[0] = invocation.<Vector>getArgument(0).clone();
+			where[0].add(sent[0]);
+			return null;
+		}).when(player).setVelocity(any(Vector.class));
+		// A level 10-block rope from a standing start.
 		GrappleSession session = attached(service, player, grapple(), new Location(world, 10, 64.9, 0));
 
 		service.tickSession(session);
-		service.tickSession(session);
-
-		ArgumentCaptor<Vector> sent = ArgumentCaptor.forClass(Vector.class);
-		verify(player, times(2)).setVelocity(sent.capture());
-		Vector first = sent.getAllValues().get(0);
+		Vector first = sent[0];
 		assertEquals(0.05, first.getX(), 1e-9, "only the reeled excess pulls inward");
 		assertEquals(-0.08 * 0.98, first.getY(), 1e-9, "gravity is the server's job while the rope holds you");
-		Vector second = sent.getAllValues().get(1);
-		assertEquals(0.05 * 0.98 + 0.15, second.getX(), 1e-9);
-		assertEquals((-0.08 * 0.98 - 0.08) * 0.98, second.getY(), 1e-9, "the fall keeps building, tick on tick");
+
+		service.tickSession(session);
+		Vector second = sent[0];
+		assertEquals(0.1493, second.getX(), 1e-3);
+		assertEquals(-0.1544, second.getY(), 1e-3, "the fall keeps building, tick on tick");
 	}
 
 	@Test
@@ -508,17 +515,35 @@ class GrappleServiceTest {
 		World          world   = openWorld();
 		Location[]     where   = {new Location(world, 0, 64, 0)};
 		Player         player  = player(world, where);
-		hitAt(world, new Vector(12, 64.9, 0), BlockFace.WEST);
+		hitAt(world, new Vector(0.5, 75, 0), BlockFace.DOWN);   // 10 blocks straight overhead
 
 		service.fire(player, grapple(), flyingHook(world, new Location(world, 0, 65.62, 0)));
 		GrappleSession session = service.getSession(player);
 		where[0] = new Location(world, 0.5, 64, 0);   // running at 0.5 b/t when the hook hits
 		service.tickSession(session);
-		service.tickSession(session);                  // first rope tick; the player is then held still
+		where[0] = new Location(world, 1.0, 64, 0);   // and still running on the first rope tick
+		service.tickSession(session);
 
 		ArgumentCaptor<Vector> sent = ArgumentCaptor.forClass(Vector.class);
 		verify(player).setVelocity(sent.capture());
-		assertEquals(0.5 * 0.98 + 0.05, sent.getValue().getX(), 1e-9, "the run-up carries into the swing");
+		assertTrue(sent.getValue().getX() > 0.4, "the run-up carries into the swing, got " + sent.getValue());
+	}
+
+	@Test
+	@DisplayName("a client stopped by a wall loses that axis of the rope velocity instead of being pushed into it")
+	void rope_clientBlockedOnAxis_velocityCollapses() {
+		GrappleService service = new GrappleService(mock(JavaPlugin.class));
+		World          world   = openWorld();
+		Player         player  = player(world, new Location[]{new Location(world, 0, 64, 0)});
+		GrappleSession session = attached(service, player, grapple(), new Location(world, 0, 74.9, 0));
+		// The rope had the player swinging at 1.5 b/t along x, but the client did not move: it hit a wall.
+		session.setRopeVelocity(new Vector(1.5, 0, 0));
+
+		service.tickSession(session);
+
+		ArgumentCaptor<Vector> sent = ArgumentCaptor.forClass(Vector.class);
+		verify(player).setVelocity(sent.capture());
+		assertEquals(0, sent.getValue().getX(), 1e-9, "no phantom push into the wall, got " + sent.getValue());
 	}
 
 	@Test
@@ -553,7 +578,39 @@ class GrappleServiceTest {
 		}
 
 		assertTrue(service.isActive(player));
+		assertFalse(service.isHolding(player), "a slack rope holds nothing, so fall damage is not cancelled");
 		verify(player, never()).setFallDistance(anyFloat());
+	}
+
+	@Test
+	@DisplayName("a slack rope that reaches Arrival_Distance (a fall onto an anchor below) grants no landing grace")
+	void slackArrival_noLandingGrace() {
+		GrappleService service = new GrappleService(mock(JavaPlugin.class));
+		World          world   = openWorld();
+		Location[]     where   = {new Location(world, 0, 90, 0)};
+		Player         player  = player(world, where);
+		GrappleSession session = attached(service, player, grapple(), new Location(world, 0, 64.1, 0));
+
+		for (int i = 0; i < 30 && service.getSession(player) != null; i++) {
+			where[0].add(0, -1.5, 0);   // a lethal free fall the whole way down to the anchor
+			service.tickSession(session);
+		}
+
+		assertNull(service.getSession(player), "arrival ends the session");
+		assertFalse(service.consumeLandingGrace(player), "the rope never held the fall, so the landing still hurts");
+	}
+
+	@Test
+	@DisplayName("isHolding is true only after a tick on which the rope was taut")
+	void isHolding_onlyWhileTaut() {
+		GrappleService service = new GrappleService(mock(JavaPlugin.class));
+		World          world   = openWorld();
+		Player         player  = player(world, new Location[]{new Location(world, 0, 64, 0)});
+		GrappleSession session = attached(service, player, grapple(), new Location(world, 10, 64.9, 0));
+
+		assertFalse(service.isHolding(player), "not until the rope has actually held the player");
+		service.tickSession(session);
+		assertTrue(service.isHolding(player));
 	}
 
 	@Test
@@ -580,6 +637,7 @@ class GrappleServiceTest {
 		Location[]     where   = {new Location(world, 0, 64, 0)};
 		Player         player  = player(world, where);
 		GrappleSession session = attached(service, player, grapple(), new Location(world, 10, 64, 0));
+		service.tickSession(session);   // the rope takes the strain
 
 		where[0] = new Location(world, 10, 64, 1);
 		service.tickSession(session);
@@ -597,6 +655,7 @@ class GrappleServiceTest {
 		Player         player  = player(world, where);
 		GrappleSession session = attached(service, player, grappleBuilder().arrivalDistance(1.5).build(),
 		                                  new Location(world, 0, 67.9, 0));
+		service.tickSession(session);   // the rope takes the strain
 
 		where[0] = new Location(world, 0, 65.9, 0);   // feet 2.0 below the anchor, body centre 1.1
 		service.tickSession(session);
@@ -606,12 +665,14 @@ class GrappleServiceTest {
 	}
 
 	@Test
-	@DisplayName("release (cancel) of an attached rope keeps momentum, removes the hook, keeps the full cooldown")
+	@DisplayName("release (cancel) of a taut rope keeps momentum, removes the hook, keeps the full cooldown")
 	void release_keepsMomentum_oneShotGrace() {
 		GrappleService service = new GrappleService(mock(JavaPlugin.class));
 		World          world   = openWorld();
 		Player         player  = player(world, new Location[]{new Location(world, 0, 64, 0)});
 		GrappleSession session = attached(service, player, grapple(), new Location(world, 10, 64, 0));
+		service.tickSession(session);   // the rope takes the strain
+		clearInvocations(player);
 
 		service.cancel(player);
 

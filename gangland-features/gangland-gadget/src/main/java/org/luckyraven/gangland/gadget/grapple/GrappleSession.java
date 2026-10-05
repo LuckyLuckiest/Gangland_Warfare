@@ -42,6 +42,10 @@ public class GrappleSession {
 	@Setter
 	private Vector ropeVelocity = new Vector();
 
+	/** Whether the rope held the player on its last tick; a slack rope holds nothing, so it forgives no fall. */
+	@Setter
+	private boolean taut = false;
+
 	@Setter
 	private int elapsedTicks = 0;
 

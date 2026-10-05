@@ -16,14 +16,14 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
  * jetpack "active" has no expiry of its own — an empty/zero-fuel jetpack stays active until the player manually
  * takes it off, so the immunity is effectively permanent for as long as it's worn.
  * <p>
- * Here, {@link GrappleService#isActive(Player)} is only true for the duration of a live pull, which is inherently
- * bounded — {@code Max_Duration_Ticks} forces it to end, and G2/G3 wire multiple independent cancel triggers
- * (damage, sneak, chunk-unload, teleport, world-change, death) on top of that timeout. There is no way to stay
- * "active" indefinitely the way an inert-but-worn jetpack can.
+ * Here, {@link GrappleService#isHolding(Player)} is only true while an attached rope is taut — actually holding the
+ * player — which is inherently bounded: {@code Max_Duration_Ticks} forces the session to end, and multiple
+ * independent cancel triggers (damage, sneak, chunk-unload, teleport, world-change, death) sit on top of that
+ * timeout. A slack rope (falling toward an anchor below) holds nothing, so that fall is never forgiven.
  * <p>
  * The post-pull grace ({@link GrappleService#consumeLandingGrace(Player)}) is intentionally a separate, one-shot
- * flag rather than an extension of {@code isActive}: {@code GrappleService.cancel(...)} grants it exactly once
- * per pull-end, and consuming it removes it from the map immediately, so it can absorb at most a single
+ * flag: {@code GrappleService.cancel(...)} grants it only when a taut rope lets go, exactly once per pull-end, and
+ * consuming it removes it from the map immediately, so it can absorb at most a single
  * fall-damage event no matter how long the player keeps holding the grapple item afterward — the opposite of
  * GD-04's unbounded, indefinitely re-usable immunity.
  */
@@ -42,7 +42,7 @@ public class GrappleFallDamageListener implements Listener {
 		if (!(event.getEntity() instanceof Player player)) return;
 		if (event.getCause() != EntityDamageEvent.DamageCause.FALL) return;
 
-		if (grappleService.isActive(player)) {
+		if (grappleService.isHolding(player)) {
 			event.setCancelled(true);
 			return;
 		}

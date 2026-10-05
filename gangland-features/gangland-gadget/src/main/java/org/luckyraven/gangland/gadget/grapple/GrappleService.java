@@ -25,8 +25,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * when an attached rope lets go. Ticked by a single shared sync {@link RepeatingTimer} (it touches entities, so never
  * async). Cooldown only (WS8-D1): no fuel/durability.
  * <p>
- * {@link #isActive(Player)} is true only while the rope is attached: a shot still in flight has not moved the player,
- * so it grants no fall immunity and no landing grace.
+ * {@link #isActive(Player)} is true only while the rope is attached: a shot still in flight has not moved the player.
+ * Fall immunity ({@link #isHolding(Player)}) and the landing grace need more: a rope that was taut, actually holding
+ * the player, on its last tick.
  */
 public class GrappleService implements BeanLifecycle {
 
@@ -81,8 +82,9 @@ public class GrappleService implements BeanLifecycle {
 	/**
 	 * Ends the session for any reason (arrival, timeout, release by sneak or right-click, damage, teleport, world
 	 * change, death, item switch) and removes the hook. Never touches the player's velocity, so a release keeps the
-	 * velocity the client already has. An attached rope grants the one-shot landing grace; a shot that never attached
-	 * (miss, retract) only gets the short miss cooldown instead. A no-op without a session.
+	 * velocity the client already has. A rope that was taut on its last tick grants the one-shot landing grace; a slack
+	 * one held nothing, so the fall still counts. A shot that never attached (miss, retract) only gets the short miss
+	 * cooldown instead. A no-op without a session.
 	 */
 	public void cancel(Player player) {
 		UUID           uuid    = player.getUniqueId();
@@ -97,6 +99,7 @@ public class GrappleService implements BeanLifecycle {
 			cooldownExpiryMs.put(uuid, now + grapple.getMissCooldownTicks() * MILLIS_PER_TICK);
 			return;
 		}
+		if (!session.isTaut()) return;
 		landingGraceExpiryMs.put(uuid, now + grapple.getFallDamageGraceTicks() * MILLIS_PER_TICK);
 	}
 
@@ -121,6 +124,15 @@ public class GrappleService implements BeanLifecycle {
 	public boolean isActive(Player player) {
 		GrappleSession session = activeSessions.get(player.getUniqueId());
 		return session != null && session.isAttached();
+	}
+
+	/**
+	 * True only while an attached rope is taut, i.e. actually holding the player up. A slack rope (falling toward an
+	 * anchor below) holds nothing, so it must not forgive the fall.
+	 */
+	public boolean isHolding(Player player) {
+		GrappleSession session = activeSessions.get(player.getUniqueId());
+		return session != null && session.isAttached() && session.isTaut();
 	}
 
 	public boolean isOnCooldown(Player player) {
@@ -274,11 +286,12 @@ public class GrappleService implements BeanLifecycle {
 		Vector moved = position.clone().subtract(session.getLastPosition());
 		session.setLastPosition(position);
 
-		Vector velocity = session.getRopeVelocity().clone();
+		Vector velocity = collided(session.getRopeVelocity(), moved);
 		velocity.setY(velocity.getY() - GRAVITY).multiply(DRAG);
 
 		Vector constrained = GrappleRope.constrain(position, velocity, anchorAt, session.getRopeLength(),
 		                                           grapple.getMaxPullSpeed());
+		session.setTaut(constrained != null);
 		if (constrained == null) {
 			session.setRopeVelocity(moved);
 		} else {
@@ -293,6 +306,22 @@ public class GrappleService implements BeanLifecycle {
 		FishHook hook = session.getHook();
 		hook.teleport(anchor);
 		hook.setVelocity(new Vector());
+	}
+
+	/**
+	 * The rope velocity rebased on what the client really did: on any axis where it moved less than half of what it
+	 * was sent, something stopped it (a wall, the floor), and vanilla zeroes that axis of its own motion too, so the
+	 * server takes the measured movement instead of pushing on into the block.
+	 */
+	// ponytail: per-axis half-speed heuristic; under heavy latency it can shave a little speed at a swing's turning
+	// point. Replace with a real collision query against the player's bounding box if that ever shows.
+	private static Vector collided(Vector ropeVelocity, Vector moved) {
+		return new Vector(collided(ropeVelocity.getX(), moved.getX()), collided(ropeVelocity.getY(), moved.getY()),
+		                  collided(ropeVelocity.getZ(), moved.getZ()));
+	}
+
+	private static double collided(double sent, double moved) {
+		return Math.abs(moved) < Math.abs(sent) / 2 ? moved : sent;
 	}
 
 	/** Rope maths run from the middle of the body, so a ceiling anchor straight overhead is reachable. */
