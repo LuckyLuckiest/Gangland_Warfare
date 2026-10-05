@@ -162,6 +162,19 @@ public class CopGroup {
 		return true;
 	}
 
+	/**
+	 * A regroup waits for backup, so it grants it itself when none is active, ignoring the backup cooldown (the
+	 * regroup's own cooldown stops spam). With a backup already active it just waits for that one.
+	 * {@code true} when backup is, or now is, on its way.
+	 */
+	public boolean grantRegroupBackup(long now, BackupSettings b) {
+		if (!b.enabled() || b.extraCops() <= 0) return false;
+		if (backupExtra(now, b) > 0) return true;
+		backupUntil   = now + b.durationMs();
+		backupReadyAt = Math.max(backupReadyAt, now + b.cooldownMs());
+		return true;
+	}
+
 	/** Cops added on top of the wanted-level count while a granted backup lasts. */
 	public int backupExtra(long now, BackupSettings b) {
 		return backupUntil != 0 && now < backupUntil ? b.extraCops() : 0;

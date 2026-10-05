@@ -57,7 +57,10 @@ public final class StarCard {
 		};
 	}
 
-	/** The point on the zone edge towards {@code from}, at {@code from}'s height; from the centre itself, +X. */
+	/**
+	 * The way out of the zone: the edge point towards {@code from} while inside, and once outside a point a zone radius
+	 * further along the same line (away from the centre). At {@code from}'s height; from the centre itself, +X.
+	 */
 	public static Location exitPoint(Location centre, double radius, Location from) {
 		double dx    = from.getX() - centre.getX();
 		double dz    = from.getZ() - centre.getZ();
@@ -65,7 +68,9 @@ public final class StarCard {
 		double unitX = len < 1.0E-9 ? 1.0 : dx / len;
 		double unitZ = len < 1.0E-9 ? 0.0 : dz / len;
 
-		return new Location(centre.getWorld(), centre.getX() + unitX * radius, from.getY(),
-		                    centre.getZ() + unitZ * radius);
+		double reach = len > radius ? len + radius : radius;
+
+		return new Location(centre.getWorld(), centre.getX() + unitX * reach, from.getY(),
+		                    centre.getZ() + unitZ * reach);
 	}
 }

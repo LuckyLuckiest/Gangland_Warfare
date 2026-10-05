@@ -663,6 +663,19 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("with Backup.Enabled false the regroup ends without the Regroup_Push line announcing backup")
+	void regroup_backupOff_pushesWithoutRegroupPush() {
+		when(fx.provider.getBackupSettings()).thenReturn(new BackupSettings(false, 1, 30_000, 60_000));
+		CopGroup group = regroupingGroup(100, 100);
+
+		fx.clock[0] += 15_000;
+		manager.spawnTick(playerId, wanted);
+
+		assertFalse(group.isRegrouping());
+		verify(fx.radio, never()).sayFromLeaderLater(any(), eq("Regroup_Push"), anyInt(), any());
+	}
+
+	@Test
 	@DisplayName("regroup_holdsWhileOnlyOneOfTwoCopsHasArrived")
 	void regroup_holdsWhileOnlyOneOfTwoCopsHasArrived() {
 		manager.onWantedStart(player, wanted);

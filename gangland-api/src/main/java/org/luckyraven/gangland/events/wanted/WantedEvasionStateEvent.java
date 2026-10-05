@@ -35,6 +35,11 @@ public class WantedEvasionStateEvent extends Event {
 		this.zoneRadius  = zoneRadius;
 	}
 
+	/** A copy: the evasion clock's own centre never leaves it, so a listener cannot move the zone. */
+	public @Nullable Location getZoneCentre() {
+		return zoneCentre == null ? null : zoneCentre.clone();
+	}
+
 	public static HandlerList getHandlerList() {
 		return HANDLERS;
 	}

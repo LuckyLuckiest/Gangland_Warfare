@@ -367,6 +367,39 @@ class EntityDamageListenerTest {
 	}
 
 	@Test
+	@DisplayName("hits from an NPC attacker are not recorded in the fight map")
+	void npcAttackerHits_areNotRecorded() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+		Player               npc      = player("Cop");
+
+		hit(listener, npc, alice);
+
+		assertEquals(0, listener.trackedFights());
+	}
+
+	@Test
+	@DisplayName("fights older than the 30 s window are pruned by the next recorded hit, and a quit forgets the player")
+	void staleFights_arePruned_andQuitForgets() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+		long[] now = {0L};
+		listener.clock = () -> now[0];
+		Player carol = player("Carol");
+		Player dave  = player("Dave");
+		when(userManager.getUser(carol)).thenReturn(aliceUser);
+		when(userManager.getUser(dave)).thenReturn(bobUser);
+
+		hit(listener, alice, bob);
+		assertEquals(1, listener.trackedFights());
+
+		now[0] = 31_000L;
+		hit(listener, carol, dave);
+		assertEquals(1, listener.trackedFights(), "the alice/bob fight is pruned, only carol/dave remains");
+
+		listener.onPlayerQuit(new org.bukkit.event.player.PlayerQuitEvent(carol, "bye"));
+		assertEquals(0, listener.trackedFights());
+	}
+
+	@Test
 	@DisplayName("self-defence holds with an installed tracker too: the tracker is never told")
 	void selfDefence_alsoHoldsWithoutTheTracker() {
 		WantedKillTrackers trackers = new WantedKillTrackers();

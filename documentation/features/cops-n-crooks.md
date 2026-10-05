@@ -224,8 +224,10 @@ The chase around a wanted player is configured in `npc/wanted.yml` (heat, evasio
   cop has seen you" from the squad's last sighting, and a cop that is walking home (`RETURNING`) does not count as
   pursuit. When no live hunting cop is left the evasion state turns off and the fixed decay timer takes over.
 - **Regroup.** When `Regroup.Casualties` (2) cops of one squad die within `Regroup.Window_Seconds` (20), the whole squad
-  falls back to cover for at most `Regroup.Fall_Back_Seconds` (15), radios for backup, and pushes together once backup
-  is within `Regroup.Arrival_Radius` (24) blocks. One regroup per `Regroup.Cooldown_Seconds` (60) and squad; a squad
+  falls back to cover for at most `Regroup.Fall_Back_Seconds` (15), radios for backup (the regroup grants it itself
+  when none is active), and pushes together once all of it, backup included, is within `Regroup.Arrival_Radius` (24)
+  blocks of the suspect, or when `Fall_Back_Seconds` runs out. With `Backup.Enabled: false` it falls back and pushes
+  without the two radio lines. One regroup per `Regroup.Cooldown_Seconds` (60) and squad; a squad
   that cuffs first never regroups. `Regroup.Enabled: false` keeps the 0.13.0 behaviour. A Commander call for a fall-back
   during a regroup keeps the longer of the two.
 - **Shot noise.** A Bartizan weapon fired by a wanted player inside `Shot_Noise.Radius` of a cop of his squad (GUN 48,
@@ -359,7 +361,7 @@ Cops:
       Window_Seconds: 20
       Fall_Back_Seconds: 15        # Longest stay in cover before the squad pushes anyway
       Cooldown_Seconds: 60         # One regroup per squad per this long
-      Arrival_Radius: 24.0         # Push together once backup is this close
+      Arrival_Radius: 24.0         # Push once the whole squad, backup included, is this close
    Shot_Noise:                     # 0.15.0
       Enabled: true
       Radius:                      # Blocks a cop hears a shot, by weapon type; 0 or unlisted = silent

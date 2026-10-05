@@ -134,7 +134,19 @@ class BountySetCommand extends SubArgument {
 
 			Bukkit.getPluginManager().callEvent(bountyEvent);
 
-			if (!bountyEvent.isCancelled()) {
+			if (bountyEvent.isCancelled()) {
+				// the poster already paid: give it back, a cancelled post must not eat the money
+				if (sender instanceof Player senderPlayer) {
+					User<Player> refundee = userManager.getUser(senderPlayer);
+
+					if (refundee != null) {
+						refundee.getEconomy().depositAmount(value);
+						senderPlayer.sendMessage(Messages.DEPOSIT_MONEY_PLAYER.toString()
+						                                                      .replace("%amount%",
+						                                                               Settings.formatAmount(value)));
+					}
+				}
+			} else {
 				// Tell the target only once the bounty is really booked, not before the sender's checks can refuse it.
 				if (userBounty.size() == 0) user.sendMessage(Messages.BOUNTY_SET.toString());
 

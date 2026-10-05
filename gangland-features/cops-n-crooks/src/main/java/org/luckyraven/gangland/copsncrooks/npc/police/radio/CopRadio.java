@@ -156,6 +156,10 @@ public class CopRadio {
 		group.recordCasualty(now());
 		if (!group.shouldRegroup(now(), r)) return;
 		group.startRegroup(now(), r);
+		BackupSettings backup = cfg != null && cfg.getBackupSettings() != null ? cfg.getBackupSettings()
+		                                                                       : BackupSettings.DEFAULT;
+		boolean        coming = group.grantRegroupBackup(now(), backup);
+		if (!coming) return; // backup off: no radio line promising it
 		sayFromLeaderLater(group, "Regroup", 2, group::isRegrouping);
 	}
 

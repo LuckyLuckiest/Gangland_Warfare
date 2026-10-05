@@ -62,7 +62,8 @@ class BountySetCommandTest {
 		Messages.init(new FakeMessageProvider()
 				              .withString("Commands.Bounty.Bounty_Set", "BOUNTY-SET")
 				              .withString("Commands.Bounty.Claimed", "BOUNTY-CLAIMED %amount% %player%")
-				              .withString("Commands.Bank.Money.Player_Add", "BANK-DEPOSIT %amount%"));
+				              .withString("Commands.Bank.Money.Player_Add", "BANK-DEPOSIT %amount%")
+				              .withString("Commands.Economy.Money.Player.Add", "MONEY-ADD %amount%"));
 		EconomyHandler.setVaultEconomy(null);
 
 		// The shipped Bounty.Repeating_Timer.Multiple is 2, the multiplier the test server ran with.
@@ -123,6 +124,24 @@ class BountySetCommandTest {
 
 		verify(bob, never()).sendMessage(contains("BOUNTY-SET"));
 		assertEquals(0, bobUser.getBounty().getAmount().signum());
+	}
+
+	@Test
+	@DisplayName("a listener cancelling the bounty event refunds the poster, money is never lost")
+	void set_eventCancelled_refundsThePoster() {
+		aliceUser.getEconomy().setAmount(Currency.of(100));
+		org.bukkit.plugin.PluginManager pluginManager = mock(org.bukkit.plugin.PluginManager.class);
+		org.mockito.Mockito.doAnswer(invocation -> {
+			((org.bukkit.event.Cancellable) invocation.getArgument(0)).setCancelled(true);
+			return null;
+		}).when(pluginManager).callEvent(org.mockito.ArgumentMatchers.any());
+		bukkit.statics().when(Bukkit::getPluginManager).thenReturn(pluginManager);
+
+		setBounty(alice, "Bob", "50");
+
+		assertEquals(0, bobUser.getBounty().getAmount().signum(), "cancelled: nothing booked");
+		assertEquals(0, Currency.of(100).compareTo(aliceUser.getEconomy().getAmount()), "cancelled: refunded");
+		verify(alice).sendMessage(contains("MONEY-ADD"));
 	}
 
 	@Test

@@ -354,6 +354,39 @@ class CopRadioTest {
 	}
 
 	@Test
+	@DisplayName("a regroup grants its own backup while the backup cooldown still runs, and radios Regroup")
+	void regroup_duringBackupCooldown_grantsBackup_andRadiosRegroup() {
+		Player         bystander = listener(10, 0);
+		List<Runnable> tasks     = new ArrayList<>();
+		captureLater(tasks);
+		// an earlier backup came and went 5 s ago; its 60 s cooldown still runs, so no casualty may request one
+		clock[0] = 100_000;
+		assertTrue(group.requestBackup(clock[0] - 35_000, provider.getBackupSettings()));
+		assertEquals(0, group.backupExtra(clock[0], provider.getBackupSettings()));
+
+		twoDown(bystander, tasks);
+		tasks.forEach(Runnable::run);
+
+		assertEquals(1, group.backupExtra(clock[0], provider.getBackupSettings()));
+		verify(bystander).sendMessage("[SWAT-1] Regroup line");
+	}
+
+	@Test
+	@DisplayName("with Backup.Enabled false the squad still regroups but never radios the Regroup line")
+	void regroup_backupOff_regroupsSilently() {
+		when(provider.getBackupSettings()).thenReturn(new BackupSettings(false, 1, 30_000, 60_000));
+		Player         bystander = listener(10, 0);
+		List<Runnable> tasks     = new ArrayList<>();
+		captureLater(tasks);
+
+		twoDown(bystander, tasks);
+		tasks.forEach(Runnable::run);
+
+		assertTrue(group.isRegrouping());
+		verify(bystander, never()).sendMessage("[SWAT-1] Regroup line");
+	}
+
+	@Test
 	@DisplayName("regroupLine_isDelivered_withAPreUpgradePriorityList")
 	void regroupLine_isDelivered_withAPreUpgradePriorityList() {
 		// SETTINGS' Priority set names Man_Down, Backup and Dispatch_Wanted only: no Regroup entry
