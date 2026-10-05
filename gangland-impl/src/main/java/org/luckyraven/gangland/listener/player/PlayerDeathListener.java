@@ -13,9 +13,9 @@ import org.luckyraven.gangland.data.economy.BankTierView;
 import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
-import org.luckyraven.keystone.datastructure.ScientificCalculator;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
+import org.luckyraven.gangland.core.money.MoneyFormula;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.util.NumberUtil;
 import org.luckyraven.gangland.data.placeholder.worker.GanglandPlaceholder;
@@ -27,6 +27,7 @@ import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -128,11 +129,14 @@ public class PlayerDeathListener implements Listener {
 		return false;
 	}
 
-	private void handleMoney(User<Player> user) {
-		EconomyHandler economy = user.getEconomy();
-		double         deduct  = amountDeduction(user);
+	// package-private: test seam
+	void handleMoney(User<Player> user) {
+		// false = dying costs nothing and pays nothing
+		if (!Settings.isDeathLoseMoney()) return;
 
-		String type;
+		double balance = user.getEconomy().getAmount().doubleValue();
+		double deduct = MoneyFormula.evaluate(Settings.getDeathLoseMoneyFormula(), MoneyFormula.userVariables(user),
+		                                      balance * 0.15);
 
 		// ignore it if there was no money to be deducted
 		if (deduct == 0) return;
@@ -145,19 +149,14 @@ public class PlayerDeathListener implements Listener {
 		}
 		if (deduct <= 0D) return;
 
-		if (Settings.isDeathLoseMoney()) {
-			type = "&c&l-";
-			economy.withdrawAmount(Currency.of(deduct));
-		} else {
-			type = "&a&l+";
-			economy.depositAmount(Currency.of(deduct));
-		}
+		// clamped to the wallet, never throws
+		BigDecimal taken = user.withdraw(Currency.of(deduct));
+		if (taken.signum() == 0) return;
 
 		// inform the player
-		String info    = type + Settings.getMoneySymbol() + NumberUtil.valueFormat(deduct);
-		String message = "&3Death penalty: " + info;
+		String info = "&c&l-" + Settings.getMoneySymbol() + NumberUtil.valueFormat(taken.doubleValue());
 
-		user.sendMessage(ChatUtil.color(message));
+		user.sendMessage(ChatUtil.color("&3Death penalty: " + info));
 	}
 
 	private double bankInsuranceDiscount(User<Player> user) {
@@ -208,22 +207,6 @@ public class PlayerDeathListener implements Listener {
 	private @Nullable String getRandomGlobalMessage(List<String> globalMessages) {
 		if (globalMessages.isEmpty()) return null;
 		return globalMessages.get(new Random().nextInt(globalMessages.size()));
-	}
-
-	private double amountDeduction(User<Player> user) {
-		Map<String, Double> variables = new HashMap<>();
-
-		variables.put("balance", user.getEconomy().getAmount().doubleValue());
-		variables.put("level", (double) user.getLevel().getLevelValue());
-		variables.put("experience", user.getLevel().getExperience());
-		variables.put("bounty", user.getBounty().getAmount().doubleValue());
-		variables.put("wanted", (double) user.getWanted().getLevel());
-
-		String formula = Settings.getDeathLoseMoneyFormula();
-
-		ScientificCalculator calculator = new ScientificCalculator(formula, variables);
-
-		return calculator.evaluate();
 	}
 
 }

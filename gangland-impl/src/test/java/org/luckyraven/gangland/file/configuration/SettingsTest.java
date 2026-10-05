@@ -262,4 +262,60 @@ class SettingsTest {
 		}
 		return captured;
 	}
+
+	@Test
+	@DisplayName("an upgraded settings.yml without Take_Money.Enable reads false")
+	void takeMoneyEnable_absent_isFalse() throws IOException {
+		SettingsFixture.write(tempDir, "Money_Symbol: '$'\nWanted:\n  Take_Money:\n    Amount: 50\n");
+
+		SettingsFixture.initialize(tempDir);
+
+		assertFalse(Settings.isWantedTakeMoneyEnabled());
+	}
+
+	@Test
+	@DisplayName("an absent Take_Money.Formula reads the shipped default")
+	void takeMoneyFormula_absent_isTheDefault() throws IOException {
+		SettingsFixture.write(tempDir, "Money_Symbol: '$'\n");
+
+		SettingsFixture.initialize(tempDir);
+
+		assertEquals("amount * multiplier ^ wanted", Settings.getWantedTakeMoneyFormula());
+	}
+
+	@Test
+	@DisplayName("Take_Money.Enable: true is read")
+	void takeMoneyEnable_true_isRead() throws IOException {
+		SettingsFixture.write(tempDir, "Money_Symbol: '$'\nWanted:\n  Take_Money:\n    Enable: true\n"
+		                               + "    Formula: \"amount * wanted\"\n");
+
+		SettingsFixture.initialize(tempDir);
+
+		assertTrue(Settings.isWantedTakeMoneyEnabled());
+		assertEquals("amount * wanted", Settings.getWantedTakeMoneyFormula());
+	}
+
+	@Test
+	@DisplayName("an absent Bounty.Pay_Notoriety reads false")
+	void payNotoriety_absent_isFalse() throws IOException {
+		SettingsFixture.write(tempDir, "Money_Symbol: '$'\n");
+
+		SettingsFixture.initialize(tempDir);
+
+		assertFalse(Settings.isBountyPayNotoriety());
+	}
+
+	@Test
+	@DisplayName("the bundled settings.yml ships the star-drop charge and notoriety payout off")
+	void bundledSettings_takeMoneyOffByDefault() throws IOException {
+		try (java.io.InputStream in = SettingsTest.class.getResourceAsStream("/settings.yml")) {
+			java.nio.file.Files.write(tempDir.resolve("settings.yml"), in.readAllBytes());
+		}
+
+		SettingsFixture.initialize(tempDir);
+
+		assertFalse(Settings.isWantedTakeMoneyEnabled());
+		assertFalse(Settings.isBountyPayNotoriety());
+		assertEquals("amount * multiplier ^ wanted", Settings.getWantedTakeMoneyFormula());
+	}
 }

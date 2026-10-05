@@ -214,7 +214,8 @@ User:
             # The server executes all the executables.
             Executable:
                - "/glw eco withdraw %player% 20"
-         # When the user dies, they will either lose or gain money according to the value set
+         # true = dying costs the formula amount below. false = dying costs nothing (no charge, no payout).
+         # Use Command above for a payout.
          Lose_Money: true
          # The formula used when calculating the value to lose/gain.
 
@@ -251,6 +252,8 @@ Bounty:
    # The smallest bounty a player may place with [/glw bounty set]. Set to 0 to disable the check.
    # Amounts of zero or less are always rejected, regardless of this value.
    Minimum: 0
+   # true also pays the server-made notoriety part on a kill, as before 0.15.0.
+   Pay_Notoriety: false
    Kill:
       # Each kill committed will be added on the total bounty amount.
       Each: 5
@@ -270,11 +273,30 @@ Bounty:
 # +---------------+ #
 Wanted:
    Enable: true
+   # Money taken from a player each time one of their stars drops.
    Take_Money:
-      # The amount of money taken from the player when they are wanted.
+      # The on/off switch. Off by default, and a missing key counts as false.
+      # Set to true to charge on every star drop.
+      Enable: false
+      # The price of one star drop. Variables you can use:
+      #   amount     - the Amount below
+      #   multiplier - the Multiplier below
+      #   wanted     - the player's stars before this drop
+      #   balance    - the player's wallet (never the bank)
+      #   level      - the player's level
+      #   experience - the player's current experience
+      #   bounty     - the bounty on the player
+      # Amount and Multiplier are only numbers for the formula.
+      # They do not switch the charge on or off.
+      # The default gives 50 * 5 ^ stars: $250 at 1 star, $156,250 at 5.
+      # Gentler examples: "amount * wanted" or "balance * 0.02 * wanted".
+      # A price of 0 charges nothing.
+      # If the formula is broken, or its result is negative or not a number,
+      # the console warns once and amount * multiplier ^ wanted is used
+      # instead, never below 0.
+      # The star always drops, and a wallet never goes below zero.
+      Formula: "amount * multiplier ^ wanted"
       Amount: 50
-      # The multiplier used to calculate the amount of money taken from the player.
-      # (amount * multiplier ^ stars)
       Multiplier: 5
    # A timer that reduces the wanted level after the specified time.
    Repeating_Timer:
