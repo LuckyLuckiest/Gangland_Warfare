@@ -164,6 +164,11 @@ public class Bounty {
 		return userPaidBounty.values().stream().reduce(Currency.ZERO, BigDecimal::add);
 	}
 
+	/** The escrow everyone but {@code posterId} ({@link #posterId(CommandSender)}) put up. */
+	public BigDecimal getPostedAmountExcluding(String posterId) {
+		return getPostedAmount().subtract(userPaidBounty.getOrDefault(posterId, Currency.ZERO));
+	}
+
 	/** The server-made part of the total (auto bounty, kill bounty, timer growth). */
 	public BigDecimal getNotoriety() {
 		BigDecimal rest = amount.subtract(getPostedAmount());

@@ -122,6 +122,9 @@ public class EntityDamageListener implements Listener {
 	}
 
 	private void handlePlayerKills(Player deadPlayer, User<Player> damagerUser) {
+		// killing yourself (your own arrow) is no kill: no claim on your own head, no crime
+		if (deadPlayer.getUniqueId().equals(damagerUser.getUser().getUniqueId())) return;
+
 		User<Player> deadUser = userManager.getUser(deadPlayer);
 
 		// If the "player" isn't a real User, treat it as an NPC death (e.g., cop NPC),
@@ -151,6 +154,8 @@ public class EntityDamageListener implements Listener {
 		Bounty     bounty   = deadUser.getBounty();
 		boolean    payAll   = Settings.isBountyPayNotoriety();
 		BigDecimal posted   = bounty.getPostedAmount();
+		// the killer's own escrow comes back to him, but only other players' money makes the kill a takedown
+		BigDecimal byOthers = bounty.getPostedAmountExcluding(Bounty.posterId(damagerUser.getUser()));
 		BigDecimal payout   = payAll ? bounty.getAmount() : posted;
 		boolean    allied   = gangs.alliedOrSame(damagerUser.getUser().getUniqueId(), deadPlayer.getUniqueId());
 		boolean    paid     = !allied && payout.signum() > 0;
@@ -172,8 +177,8 @@ public class EntityDamageListener implements Listener {
 				wantedKills.resetCombo(deadPlayer.getUniqueId());
 			}
 
-			// a takedown of a posted bounty is not a crime
-			if (posted.signum() > 0) return;
+			// a takedown of a bounty other players posted is not a crime
+			if (byOthers.signum() > 0) return;
 		}
 
 		// defending yourself is not a crime, with or without the cop module
@@ -281,8 +286,8 @@ public class EntityDamageListener implements Listener {
 	private void handleWanted(User<Player> damagerUser) {
 		Wanted wanted = damagerUser.getWanted();
 
-		// Raise the level and (re)start the decay clock
-		wantedStars.raise(damagerUser, wanted.getIncrements(), WantedCause.CRIME);
+		// Raise the level and (re)start the decay clock; no star landed (maximum, cancelled) = no auto bounty
+		if (wantedStars.raise(damagerUser, wanted.getIncrements(), WantedCause.CRIME) == 0) return;
 
 		// Update bounty based on new wanted level
 		int wantedLevel = wanted.getLevel();

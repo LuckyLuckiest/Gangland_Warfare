@@ -17,6 +17,7 @@ import org.luckyraven.gangland.Gangland;
 import org.bukkit.command.CommandSender;
 import org.luckyraven.gangland.core.bounty.Bounty;
 import org.luckyraven.gangland.core.bounty.BountySettings;
+import org.luckyraven.gangland.core.events.user.UserBountyEvent;
 import org.luckyraven.gangland.core.events.wanted.WantedLevelChangeEvent;
 import org.luckyraven.gangland.core.user.IdentitySettings;
 import org.luckyraven.gangland.core.user.IdentitySettingsContract;
@@ -30,6 +31,7 @@ import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.data.gang.GangMembershipView;
 import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.support.FakeMessageProvider;
 import org.luckyraven.gangland.support.SettingsFixture;
 import org.luckyraven.keystone.economy.EconomyHandler;
@@ -346,6 +348,109 @@ class EntityDamageListenerTest {
 		hit(inactive, bob, alice);
 		kill(inactive, alice, bob);
 		assertEquals(0, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("a player killing himself (his own arrow) claims nothing, keeps the ledger and commits no crime")
+	void selfKill_claimsNothing() {
+		post(bobUser, "poster", 1000);
+
+		kill(listener(new WantedKillTrackers()), bob, bob);
+
+		assertEquals(0, bobUser.getEconomy().getAmount().signum(), "no payout to himself");
+		assertEquals(0, BigDecimal.valueOf(1000).compareTo(bobUser.getBounty().getPostedAmount()), "ledger kept");
+		assertEquals(0, bobUser.getWanted().getLevel());
+		assertEquals(0, bobUser.getKills());
+	}
+
+	@Test
+	@DisplayName("a bounty the killer posted himself pays his escrow back, but the kill is still a crime")
+	void selfPostedBounty_killIsStillACrime() {
+		bobUser.getBounty().addBounty(alice, BigDecimal.valueOf(100));
+
+		kill(listener(new WantedKillTrackers()), alice, bob);
+
+		assertEquals(0, BigDecimal.valueOf(100).compareTo(aliceUser.getEconomy().getAmount()), "own money back");
+		assertEquals(1, aliceUser.getWanted().getLevel(), "only other players' escrow makes a takedown");
+	}
+
+	@Test
+	@DisplayName("a kill at the maximum stars adds no auto bounty: no star landed")
+	void killAtMaxWanted_addsNoAutoBounty() {
+		aliceUser.getWanted().setLevel(5);
+		aliceUser.getBounty().setBaseAmount(BigDecimal.TEN);
+
+		kill(listener(new WantedKillTrackers()), alice, bob);
+
+		assertEquals(5, aliceUser.getWanted().getLevel());
+		assertEquals(0, killEach(aliceUser).compareTo(aliceUser.getBounty().getNotoriety()),
+		             "only the Kill.Each part, no auto bounty for a star that never landed");
+	}
+
+	@Test
+	@DisplayName("WB-14: with the repeating timer on, a crime kill adds the Kill.Each notoriety and starts a SYNC timer")
+	void killWithTimerOn_addsKillEachNotoriety_andStartsTheTimer() throws IOException {
+		bountySettings("""
+				  Repeating_Timer:
+				    Enable: true
+				""");
+
+		kill(listener(new WantedKillTrackers()), alice, bob);
+
+		assertEquals(1, killEach(aliceUser).signum(), "fixture sanity: Kill.Each is positive");
+		assertEquals(0, killEach(aliceUser).compareTo(aliceUser.getBounty().getNotoriety()));
+		assertNotNull(aliceUser.getBounty().getRepeatingTimer(), "the notoriety timer runs");
+		verify(bukkit.scheduler(), never()).runTaskTimerAsynchronously(any(Plugin.class), any(Runnable.class),
+		                                                               anyLong(), anyLong());
+	}
+
+	@Test
+	@DisplayName("WB-14: a Kill.Each that would pass Kill.Maximum is skipped")
+	void killEach_overKillMaximum_isSkipped() throws IOException {
+		bountySettings("""
+				  Kill:
+				    Each: 5
+				    Maximum: 3
+				  Repeating_Timer:
+				    Enable: false
+				""");
+
+		kill(listener(new WantedKillTrackers()), alice, bob);
+
+		assertEquals(0, aliceUser.getBounty().getNotoriety().signum());
+		assertTrue(events.stream().noneMatch(UserBountyEvent.class::isInstance), "no bounty event either");
+	}
+
+	@Test
+	@DisplayName("WB-14: a cancelled bounty event adds no Kill.Each notoriety")
+	void cancelledBountyEvent_addsNothing() {
+		doAnswer(invocation -> {
+			Event event = invocation.getArgument(0);
+			if (event instanceof UserBountyEvent bounty) bounty.setCancelled(true);
+			events.add(event);
+			return null;
+		}).when(bukkit.pluginManager()).callEvent(any());
+
+		kill(listener(new WantedKillTrackers()), alice, bob);
+
+		assertEquals(0, aliceUser.getBounty().getNotoriety().signum());
+	}
+
+	private static BigDecimal killEach(User<Player> killer) {
+		return killer.getBounty().calculateLevelScaledBounty(Settings.getBountyEachKillValue(),
+		                                                     killer.getLevel().getLevelValue());
+	}
+
+	/** Re-reads settings.yml with {@code bountyBlock} (2-space indented keys) under {@code Bounty:}. */
+	private void bountySettings(String bountyBlock) throws IOException {
+		SettingsFixture.write(dir, """
+				Money_Symbol: '$'
+				Database:
+				  Auto_Save:
+				    Debug: false
+				Bounty:
+				""" + bountyBlock);
+		SettingsFixture.initialize(dir);
 	}
 
 	private void post(User<Player> target, String poster, int amount) {
