@@ -34,6 +34,9 @@ public class CopsNCrooksYamlConfig {
 		// Settings.getLanguagePicked() via CopRadioMessages/LocalizedModuleYaml.
 		fileManager.addFile(new FileHandler(plugin, "cop_radio_messages", "npc", ".yml", loader), true);
 		fileManager.addFile(new FileHandler(plugin, "cop_radio_messages_es", "npc", ".yml", loader), true);
+		// Chase tuning and HUD/charge-sheet text (0.15.0): heat, evasion, HUD, charge sheet.
+		fileManager.addFile(new FileHandler(plugin, "wanted", "npc", ".yml", loader), true);
+		fileManager.addFile(new FileHandler(plugin, "wanted_messages", "npc", ".yml", loader), true);
 		// turf_npcs.yml moved to the turf module's own TurfModuleFileConfig (group I) alongside the turf-NPC code
 		// it configures. trader_traits.yml/bank_tiers.yml moved to gangland-npc-shops' own NpcShopsYamlConfig
 		// (group J, T-J5) alongside the trader/banker code they configure.

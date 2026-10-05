@@ -1,0 +1,63 @@
+#   +------------------------------------------------------+   #
+# |                File: wanted_messages.yml                 | #
+#   +------------------------------------------------------+   #
+#
+# The text of the chase HUD and the charge sheet. & colour codes work. Placeholders in %percent% signs are filled in
+# by the plugin: %stars%, %time%, %crime%, %tier%, %stance%, %count%, %amount%, %paid%, %money_symbol%.
+
+# The boss bar, the title and the star card
+Hud:
+   Bar:
+      # A cop can see you
+      Seen: "&c%stars% &4&lIN SIGHT"
+      # No cop can see you, the search is on
+      Searching: "&e%stars% &6&lSEARCHING %time%"
+      # A star was just lost
+      Evaded: "&a%stars% &2&lSTAR LOST"
+   # The star count flashed on the screen
+   Title: "&c%stars%"
+   Card:
+      # Why a star was raised, with the tier of cop on the way
+      Raise: "&f%crime%&7: &e%tier% &7inbound, %stance%"
+      # %stance% when the cops want to cuff you
+      Stance_Cuffs: "they still want you in cuffs"
+      # %stance% when the cops shoot first
+      Stance_Shoot: "they shoot first"
+      # A star dropped because you stayed out of sight
+      Drop_Evasion: "&aYou stayed out of sight"
+      # A star dropped because the timer ran out
+      Drop_Decay: "&aThe trail went cold"
+      # A star dropped for any other reason
+      Drop_Other: "&aA star is gone"
+
+# What an arrest costs
+Charge_Sheet:
+   # First line
+   Header: "&8&m-----&r &6&lCHARGE SHEET &8&m-----"
+   # One line per crime
+   Crime: "&7- &f%crime% &8x%count%"
+   # The fine
+   Total: "&7Fine: &c%money_symbol%%amount%"
+   # What the wallet covered
+   Paid: "&7Paid from your wallet: &a%money_symbol%%amount%"
+   # Jail time added for what the wallet could not cover
+   Extra_Time: "&7Unpaid &c%money_symbol%%amount% &7served as &c+%time%"
+   # The line on the paperwork screen
+   Paperwork: "&7Fine paid: &a%money_symbol%%paid% &8| &7Extra time: &c%time%"
+
+# Crime names used on the charge sheet and the star card
+Crimes:
+   Brandish_Near_Cop: "Brandishing a weapon near an officer"
+   Assault_Civilian: "Assault"
+   Car_Theft: "Car theft"
+   Kill_Player: "Murder"
+   Kill_Civilian: "Killing a civilian"
+   Assault_Cop: "Assault on an officer"
+   Resisting_Arrest: "Resisting arrest"
+   Kill_Cop: "Killing an officer"
+   Safe_Cracking: "Safe cracking"
+   Store_Robbery: "Store robbery"
+   Trespass_Restricted: "Trespassing"
+   Jailbreak: "Jailbreak"
+   # The star card's text when no crime is on record, for example a sign or an admin raise
+   Unknown_Crime: "Reported crime"
