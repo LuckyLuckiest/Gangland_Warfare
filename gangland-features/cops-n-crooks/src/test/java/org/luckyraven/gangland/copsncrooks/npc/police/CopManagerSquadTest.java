@@ -491,6 +491,95 @@ class CopManagerSquadTest {
 		assertFalse(patient.isUnderCare());
 	}
 
+	@Test
+	@DisplayName("an AI-tick hook runs once per aiTick with the player and his group")
+	void aiTickHook_runsOncePerAiTick_withTheGroup() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		group.add(fx.cop(CopState.PURSUING, 0, 0));
+		List<Object[]> calls = new java.util.ArrayList<>();
+		manager.addAiTickHook((who, g) -> calls.add(new Object[]{who, g}));
+
+		manager.aiTick(playerId);
+
+		assertEquals(1, calls.size());
+		assertSame(player, calls.get(0)[0]);
+		assertSame(group, calls.get(0)[1]);
+	}
+
+	@Test
+	@DisplayName("the hook also runs for a wanted player whose group has no cops, before the early return")
+	void aiTickHook_runsForAnEmptyGroup_beforeTheEarlyReturn() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		assertTrue(group.isEmpty());
+		List<CopGroup> seen = new java.util.ArrayList<>();
+		manager.addAiTickHook((who, g) -> seen.add(g));
+
+		manager.aiTick(playerId);
+
+		assertEquals(1, seen.size());
+		assertSame(group, seen.get(0));
+	}
+
+	@Test
+	@DisplayName("with no group at all the hook gets a null group")
+	void aiTickHook_runsWithNullWhenNoGroupExists() {
+		List<Object> seen = new java.util.ArrayList<>();
+		boolean[]    ran  = {false};
+		manager.addAiTickHook((who, g) -> {
+			ran[0] = true;
+			seen.add(g);
+		});
+
+		manager.aiTick(playerId);
+
+		assertTrue(ran[0]);
+		assertNull(seen.get(0));
+	}
+
+	@Test
+	@DisplayName("a hook that throws is skipped: later hooks and the rest of the tick still run")
+	void throwingAiTickHook_doesNotStopTheTick() {
+		manager.onWantedStart(player, wanted);
+		manager.groupFor(playerId).add(fx.cop(CopState.PURSUING, 0, 0));
+		int[] later = {0};
+		manager.addAiTickHook((who, g) -> {
+			throw new IllegalStateException("boom");
+		});
+		manager.addAiTickHook((who, g) -> later[0]++);
+
+		manager.aiTick(playerId);
+
+		assertEquals(1, later[0]);
+	}
+
+	@Test
+	@DisplayName("a cop-attacked hook receives the cop and the attacker")
+	void copAttackedHook_receivesTheCopAndTheAttacker() {
+		manager.onWantedStart(player, wanted);
+		CopNpc cop = fx.cop(CopState.PURSUING, 0, 0);
+		manager.groupFor(playerId).add(cop);
+		List<Object[]> calls = new java.util.ArrayList<>();
+		manager.addCopAttackedHook((c, attacker) -> calls.add(new Object[]{c, attacker}));
+
+		manager.onCopAttackedAlert(cop, player);
+
+		assertEquals(1, calls.size());
+		assertSame(cop, calls.get(0)[0]);
+		assertSame(player, calls.get(0)[1]);
+	}
+
+	@Test
+	@DisplayName("groupOf returns the group hunting the player, null for anyone else")
+	void groupOf_returnsTheHuntedGroup() {
+		manager.onWantedStart(player, wanted);
+
+		assertSame(manager.groupFor(playerId), manager.groupOf(playerId));
+		assertNotNull(manager.groupOf(playerId));
+		assertNull(manager.groupOf(UUID.randomUUID()));
+	}
+
 	/** A cop of {@code group} chasing the player, next to the others, at {@code health} of 20, with stateful care slots. */
 	private CopNpc careCop(CopGroup group, double health, CopRole role) {
 		CopNpc       cop  = fx.cop(CopState.PURSUING, 0, 0);

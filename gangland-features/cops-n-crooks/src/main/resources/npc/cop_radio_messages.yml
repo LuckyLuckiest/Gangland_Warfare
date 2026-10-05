@@ -226,3 +226,15 @@ Lines:
    # Dispatch announces the wanted level clearing.
    Stand_Down:
       - "Suspect cleared. Returning to patrol."
+   # The squad lost men fast and falls back to cover until backup arrives.
+   Regroup:
+      - "Two down! Pull back to cover, backup is coming!"
+      - "We're losing men, fall back and wait for backup!"
+   # Backup has arrived: the squad pushes together.
+   Regroup_Push:
+      - "Backup's here! All units, push together!"
+      - "Everyone move in, now!"
+   # Cops heard a shot and converge on it.
+   Shots_Fired:
+      - "Shots fired! Converge on the sound!"
+      - "Gunfire, he's close! Move in!"

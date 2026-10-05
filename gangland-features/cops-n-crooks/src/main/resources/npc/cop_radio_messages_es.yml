@@ -172,3 +172,12 @@ Lines:
       - "Unidades %tier% en camino hacia %target%."
    Stand_Down:
       - "Sospechoso liberado. Volviendo a patrullar."
+   Regroup:
+      - "¡Dos caídos! ¡Replieguen a cubierto, viene refuerzo!"
+      - "¡Estamos perdiendo hombres, retrocedan y esperen refuerzos!"
+   Regroup_Push:
+      - "¡Llegó el refuerzo! ¡Todas las unidades, avancen juntas!"
+      - "¡Todos adelante, ya!"
+   Shots_Fired:
+      - "¡Disparos! ¡Converjan hacia el sonido!"
+      - "¡Tiros, está cerca! ¡Avancen!"

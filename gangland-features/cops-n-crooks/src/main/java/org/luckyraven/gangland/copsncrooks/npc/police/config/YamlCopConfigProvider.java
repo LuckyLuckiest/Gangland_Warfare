@@ -118,6 +118,8 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final TacticsConfig   tacticsDefault;
 	private final RadioSettings   radioSettings;
 	private final BackupSettings  backupSettings;
+	private final RegroupSettings regroupSettings;
+	private final ShotNoiseSettings shotNoiseSettings;
 	private final RetreatSettings retreatSettings;
 	private final CopNames        names;
 	private final StuckSettings   stuckSettings;
@@ -196,6 +198,8 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		this.tacticsDefault = parseTacticsDefault(cops, report);
 		this.radioSettings  = parseRadioSettings(cops, report);
 		this.backupSettings = parseBackupSettings(cops, report);
+		this.regroupSettings = parseRegroupSettings(cops, report);
+		this.shotNoiseSettings = parseShotNoiseSettings(cops, report);
 		MappingNode retreatSection = cops == null ? null : cops.get("Retreat").asMapping().orNull();
 		this.retreatSettings = RetreatSettings.read(retreatSection != null ? NodeReader.of(retreatSection, report) : null,
 		                                            report, RetreatSettings.DEFAULT);
@@ -421,6 +425,16 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	@Override
 	public BackupSettings getBackupSettings() {
 		return backupSettings;
+	}
+
+	@Override
+	public RegroupSettings getRegroupSettings() {
+		return regroupSettings;
+	}
+
+	@Override
+	public ShotNoiseSettings getShotNoiseSettings() {
+		return shotNoiseSettings;
 	}
 
 	@Override
@@ -870,6 +884,43 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 				.orDefault((int) (defaults.cooldownMs() / 50L));
 
 		return new BackupSettings(enabled, extraCops, durationTicks * 50L, cooldownTicks * 50L);
+	}
+
+	private RegroupSettings parseRegroupSettings(@Nullable NodeReader cops, ConfigReport report) {
+		RegroupSettings defaults = RegroupSettings.DEFAULT;
+		MappingNode     section  = cops == null ? null : cops.get("Regroup").asMapping().orNull();
+		if (section == null) return defaults;
+
+		NodeReader regroup = NodeReader.of(section, report);
+		boolean    enabled = regroup.get("Enabled").asBool().orDefault(defaults.enabled());
+		int        casualties = regroup.get("Casualties").asInt().min(1).orDefault(defaults.casualties());
+		int windowSeconds = regroup.get("Window_Seconds").asInt().min(0).orDefault((int) (defaults.windowMs() / 1000L));
+		int fallBackSeconds = regroup.get("Fall_Back_Seconds").asInt().min(0)
+				.orDefault((int) (defaults.fallBackMs() / 1000L));
+		int cooldownSeconds = regroup.get("Cooldown_Seconds").asInt().min(0)
+				.orDefault((int) (defaults.cooldownMs() / 1000L));
+		double arrival = regroup.get("Arrival_Radius").asDouble().min(0.0).orDefault(defaults.arrivalRadius());
+
+		return new RegroupSettings(enabled, casualties, windowSeconds * 1000L, fallBackSeconds * 1000L,
+		                           cooldownSeconds * 1000L, arrival);
+	}
+
+	private ShotNoiseSettings parseShotNoiseSettings(@Nullable NodeReader cops, ConfigReport report) {
+		ShotNoiseSettings defaults = ShotNoiseSettings.DEFAULT;
+		MappingNode       section  = cops == null ? null : cops.get("Shot_Noise").asMapping().orNull();
+		if (section == null) return defaults;
+
+		NodeReader noise   = NodeReader.of(section, report);
+		boolean    enabled = noise.get("Enabled").asBool().orDefault(defaults.enabled());
+		MappingNode radiusSection = noise.get("Radius").asMapping().orNull();
+		if (radiusSection == null) return new ShotNoiseSettings(enabled, defaults.radius());
+
+		NodeReader          radiusReader = NodeReader.of(radiusSection, report);
+		Map<String, Double> radius       = new HashMap<>();
+		for (String type : radiusReader.keys()) {
+			radius.put(type.toUpperCase(Locale.ROOT), radiusReader.get(type).asDouble().min(0.0).orDefault(0.0));
+		}
+		return new ShotNoiseSettings(enabled, Map.copyOf(radius));
 	}
 
 	private void loadTiers(@Nullable NodeReader cops, ConfigReport report, @Nullable ItemParser itemParser) {

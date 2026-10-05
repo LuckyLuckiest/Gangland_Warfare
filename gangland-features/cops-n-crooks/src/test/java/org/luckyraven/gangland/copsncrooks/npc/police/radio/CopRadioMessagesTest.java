@@ -116,6 +116,22 @@ class CopRadioMessagesTest {
 	}
 
 	@Test
+	@DisplayName("Regroup, Regroup_Push and Shots_Fired have lines in the code, English and Spanish, none needing a member")
+	void newLines_exist_andNeedNoMember() throws IOException {
+		CopRadioMessages fallback = build("Lines: {}\n");
+		CopRadioMessages english  = build(shipped("npc/cop_radio_messages.yml"));
+		String           spanish  = shipped("npc/cop_radio_messages_es.yml");
+
+		for (String key : new String[]{"Regroup", "Regroup_Push", "Shots_Fired"}) {
+			assertFalse(fallback.lines(key).isEmpty(), "default " + key);
+			assertFalse(english.lines(key).isEmpty(), "English " + key);
+			assertTrue(spanish.contains("\n   " + key + ":"), "Spanish " + key);
+			assertTrue(fallback.lines(key).stream().noneMatch(line -> line.contains("%member%")), key);
+			assertTrue(english.lines(key).stream().noneMatch(line -> line.contains("%member%")), key);
+		}
+	}
+
+	@Test
 	@DisplayName("Fall_Back no longer says \"I'm hit\": that is the field-care Hit line, and one hit crossing both thresholds must not say it twice")
 	void fallBack_doesNotDuplicateHit() throws IOException {
 		CopRadioMessages fallback = build("Lines: {}\n");

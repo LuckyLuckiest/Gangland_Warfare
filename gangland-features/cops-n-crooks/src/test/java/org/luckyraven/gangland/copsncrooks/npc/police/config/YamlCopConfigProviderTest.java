@@ -481,6 +481,112 @@ class YamlCopConfigProviderTest {
 		assertEquals(FieldCareSettings.DEFAULT, shipped.getFieldCareSettings());
 	}
 
+	@Test
+	@DisplayName("absent Regroup / Shot_Noise blocks give the documented defaults")
+	void absentBlocks_areDefault() {
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Tiers:
+				      1:
+				         Display_Name: "&9Officer"
+				         Health: 20.0
+				         Damage: 2.0
+				""");
+
+		assertEquals(RegroupSettings.DEFAULT, provider.getRegroupSettings());
+		assertEquals(ShotNoiseSettings.DEFAULT, provider.getShotNoiseSettings());
+		assertEquals(48.0, provider.getShotNoiseSettings().radiusFor("GUN"));
+	}
+
+	@Test
+	@DisplayName("Cops.Regroup is parsed, seconds becoming milliseconds")
+	void regroup_isParsed_secondsToMillis() {
+		RegroupSettings regroup = parse("""
+				Cops:
+				   Regroup:
+				      Enabled: false
+				      Casualties: 3
+				      Window_Seconds: 10
+				      Fall_Back_Seconds: 5
+				      Cooldown_Seconds: 90
+				      Arrival_Radius: 12.5
+				""").getRegroupSettings();
+
+		assertEquals(new RegroupSettings(false, 3, 10_000L, 5_000L, 90_000L, 12.5), regroup);
+	}
+
+	@Test
+	@DisplayName("Shot_Noise.Radius lookups ignore case and an unlisted weapon type is 0")
+	void shotNoise_radiusFor_isCaseInsensitive_unlistedIsZero() {
+		ShotNoiseSettings noise = parse("""
+				Cops:
+				   Shot_Noise:
+				      Enabled: true
+				      Radius:
+				         GUN: 30
+				         throwable: 7.5
+				""").getShotNoiseSettings();
+
+		assertEquals(30.0, noise.radiusFor("gun"));
+		assertEquals(7.5, noise.radiusFor("THROWABLE"));
+		assertEquals(0.0, noise.radiusFor("MELEE"), "unlisted");
+		assertEquals(0.0, noise.radiusFor("BIOLOGICAL"), "unlisted");
+	}
+
+	@Test
+	@DisplayName("Shot_Noise.Enabled false makes every radius 0")
+	void shotNoiseDisabled_radiusIsZero() {
+		ShotNoiseSettings noise = parse("""
+				Cops:
+				   Shot_Noise:
+				      Enabled: false
+				      Radius:
+				         GUN: 48
+				""").getShotNoiseSettings();
+
+		assertEquals(0.0, noise.radiusFor("GUN"));
+	}
+
+	@Test
+	@DisplayName("the shipped cops.yml's Regroup / Shot_Noise equal the code defaults, with no unknown keys")
+	void bundledCopsYml_equalsDefaults() throws IOException {
+		String yaml;
+		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("npc/cops.yml"))) {
+			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+		}
+		assertTrue(yaml.contains("   Regroup:") && yaml.contains("   Shot_Noise:"), "blocks must be declared");
+
+		ConfigReport      report   = new ConfigReport();
+		CopConfigProvider provider = parse(yaml, report);
+
+		assertTrue(report.issues().stream().noneMatch(issue -> "config.unknown_key".equals(issue.code())),
+		          () -> "unknown keys: " + report.issues());
+		assertEquals(RegroupSettings.DEFAULT, provider.getRegroupSettings());
+		assertEquals(ShotNoiseSettings.DEFAULT, provider.getShotNoiseSettings());
+		for (String key : List.of("Regroup", "Regroup_Push", "Shots_Fired")) {
+			assertEquals(CopConfigProvider.COP_RADIO_DEFAULTS.cooldownFor(key), provider.getRadioSettings().cooldownFor(key), key);
+		}
+	}
+
+	@Test
+	@DisplayName("a pre-upgrade Cops.Radio block (no Regroup/Shots_Fired keys) still gets the new cooldowns as defaults")
+	void preUpgradeRadioBlock_getsTheNewCooldownsAsDefaults() {
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Radio:
+				      Priority:
+				         - "Contact"
+				      Cooldown_Ticks:
+				         Contact: 160
+				""");
+
+		assertEquals(160 * 50L, provider.getRadioSettings().cooldownFor("Contact"));
+		assertEquals(60_000L, provider.getRadioSettings().cooldownFor("Regroup"));
+		assertEquals(60_000L, provider.getRadioSettings().cooldownFor("Regroup_Push"));
+		assertEquals(3_000L, provider.getRadioSettings().cooldownFor("Shots_Fired"));
+		assertFalse(provider.getRadioSettings().isPriority("Regroup"), "priority list stays as the file wrote it");
+	}
+
 	private static List<String> names(List<CopRole> roles) {
 		return roles.stream().map(CopRole::name).toList();
 	}

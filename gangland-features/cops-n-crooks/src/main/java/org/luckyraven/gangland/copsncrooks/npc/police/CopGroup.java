@@ -73,6 +73,9 @@ public class CopGroup {
 	@Setter
 	private int  pendingRelease;
 
+	/** Radio-clock ms of the latest stuck-recycle tip-off; 0 when none. */
+	private long tipOffAt;
+
 	public CopGroup(UUID targetPlayerId) {
 		this.targetPlayerId = targetPlayerId;
 		this.cops           = Collections.synchronizedList(new ArrayList<>());
@@ -213,6 +216,16 @@ public class CopGroup {
 		for (Location spawn : avoidedSpawns.keySet())
 			if (spawn.getWorld() == location.getWorld() && spawn.distanceSquared(location) <= 9) return true;
 		return false;
+	}
+
+	/** Stamps the latest stuck-recycle tip-off at {@code now} (radio-clock ms). */
+	public void markTipOff(long now) {
+		tipOffAt = now;
+	}
+
+	/** A tip-off was stamped no more than {@code windowMs} before {@code now}. */
+	public boolean tippedOffWithin(long now, long windowMs) {
+		return tipOffAt > 0 && now - tipOffAt <= windowMs;
 	}
 
 	public boolean isEmpty() {

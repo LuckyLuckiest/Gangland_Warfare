@@ -15,6 +15,8 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.RegroupSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.ShotNoiseSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.StuckSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
@@ -78,6 +80,8 @@ final class CopManagerFixture implements AutoCloseable {
 		when(provider.getBackupSettings()).thenReturn(new BackupSettings(true, 1, 30_000, 60_000));
 		when(provider.getRadioSettings()).thenReturn(CopConfigProvider.COP_RADIO_DEFAULTS);
 		when(provider.getStuckSettings()).thenReturn(StuckSettings.DEFAULT);
+		when(provider.getRegroupSettings()).thenReturn(RegroupSettings.DEFAULT);
+		when(provider.getShotNoiseSettings()).thenReturn(ShotNoiseSettings.DEFAULT);
 		when(provider.getVisibilityCheckDistance()).thenReturn(48.0);
 		when(provider.getMeleeProfile()).thenReturn(NpcMeleeProfile.DEFAULT);
 		when(provider.getFieldCareSettings()).thenReturn(org.luckyraven.gangland.npc.FieldCareSettings.DEFAULT);
