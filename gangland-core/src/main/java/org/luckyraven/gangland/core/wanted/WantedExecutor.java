@@ -4,30 +4,37 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.core.feature.Executor;
 import org.luckyraven.keystone.timer.Timer;
-import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.gangland.core.events.wanted.WantedEvent;
 
-import java.math.BigDecimal;
-
 /**
- * Drives the periodic wanted-level decrease cycle for a single player.
+ * Drives the periodic wanted-level decrease cycle for a single player: the Repeating_Timer safety net.
  * <p>
- * Configuration is supplied via {@link WantedSettings} and the owning player's data via {@link WantedContext}, keeping
- * this class free of direct {@code gangland-impl} dependencies.
+ * Each tick stays out of the way while an installed {@link WantedDecayPolicy} handles the player's decay, otherwise
+ * fires the {@link WantedEvent} and drops one star through {@link WantedStars#drop} with {@link WantedCause#DECAY}
+ * (which also charges the star-drop price and sends the messages). Configuration is supplied via
+ * {@link WantedSettings} and the owning player's data via {@link WantedContext}, keeping this class free of direct
+ * {@code gangland-impl} dependencies.
  */
 public class WantedExecutor extends Executor {
 
 	private final WantedEvent    event;
 	private final WantedContext  context;
 	private final WantedSettings settings;
+	private final WantedStars    stars;
 
-	public WantedExecutor(JavaPlugin plugin, WantedEvent event, WantedContext context,
-	                      WantedSettings settings) {
+	public WantedExecutor(JavaPlugin plugin, WantedEvent event, WantedContext context, WantedSettings settings,
+	                      WantedStars stars) {
 		super(plugin, "wanted");
 
 		this.event    = event;
 		this.context  = context;
 		this.settings = settings;
+		this.stars    = stars;
+	}
+
+	public WantedExecutor(JavaPlugin plugin, WantedEvent event, WantedContext context,
+	                      WantedSettings settings) {
+		this(plugin, event, context, settings, new WantedStars(plugin, settings));
 	}
 
 	@Override
@@ -50,14 +57,7 @@ public class WantedExecutor extends Executor {
 		Wanted wanted = context.getWanted();
 
 		if (isWanted(timer, wanted)) return;
-
-		BigDecimal takeAmount = settings.getTakeMoneyAmount();
-		BigDecimal moneyTaken = Currency.ZERO;
-
-		if (takeAmount.signum() > 0) {
-			double factor = Math.pow(settings.getTakeMoneyMultiplier(), wanted.getLevel());
-			moneyTaken = Currency.multiply(takeAmount, factor);
-		}
+		if (stars.isDecayHandled(wanted)) return;
 
 		// One event instance serves every tick: a listener's cancel applies to this tick only.
 		event.setCancelled(false);
@@ -65,26 +65,7 @@ public class WantedExecutor extends Executor {
 
 		if (event.isCancelled()) return;
 
-		if (moneyTaken.signum() != 0) {
-			moneyTaken = context.withdraw(moneyTaken);
-		}
-
-		// Compute the post-decrement level up-front: Wanted.setLevel reschedules to the
-		// primary thread when called off-thread (this executor runs async), so reading
-		// wanted.getLevel() right after decrementLevel() would return the stale value.
-		int newLevel = Math.max(0, wanted.getLevel() - 1);
-
-		wanted.decrementLevel();
-
-		String message = settings.getWantedDecreasedMessageTemplate()
-		                         .replace("%level%", String.valueOf(newLevel))
-		                         .replace("%stars%", Wanted.buildStars(newLevel, wanted.getMaxLevel()));
-
-		context.sendMessage(message);
-
-		if (moneyTaken.signum() != 0) {
-			context.sendMessage(settings.formatMoneyLoss(moneyTaken));
-		}
+		stars.drop(context, 1, WantedCause.DECAY);
 
 		isWanted(timer, wanted);
 	}

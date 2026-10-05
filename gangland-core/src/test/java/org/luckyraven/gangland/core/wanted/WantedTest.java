@@ -1,9 +1,29 @@
 package org.luckyraven.gangland.core.wanted;
 
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.core.events.wanted.WantedEndEvent;
+import org.luckyraven.gangland.core.events.wanted.WantedLevelChangeEvent;
+import org.luckyraven.gangland.core.events.wanted.WantedStartEvent;
+import org.luckyraven.keystone.testkit.BukkitStatics;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Proves {@link Wanted#buildStars(int, int)} and {@link Wanted#setLevel(int)}'s clamping / wanted-flag
@@ -15,10 +35,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * different agent for Maven runs in this initiative; this suite could not be compiled or executed
  * and is reported as an unverified draft.
  *
- * <p>Every test here builds a {@code Wanted} with {@code owner == null} (never set), so
+ * <p>The clamping tests build a {@code Wanted} with {@code owner == null} (never set), so
  * {@code setLevel}'s event-firing branches (which all guard on {@code owner != null}) are never
- * reached and no {@code Bukkit} static is touched — matching the audit's suggested seam-free
- * approach for this class.
+ * reached and no {@code Bukkit} static is touched. The cause tests (CONTRACTS C2) set an owner and
+ * capture the fired events through {@link BukkitStatics}.
  */
 @DisplayName("Wanted - star rendering and level clamping")
 class WantedTest {
@@ -130,6 +150,96 @@ class WantedTest {
 		assertEquals(0, wanted.getLevel());
 		assertFalse(wanted.isWanted());
 		assertDoesNotThrow(wanted::stopTimer, "stopTimer must no-op safely when no timer was ever created");
+	}
+
+	@Test
+	@DisplayName("setLevel with a cause passes it to the change, start and end events")
+	void setLevelWithCause_changeStartAndEndEventsCarryTheCause() {
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			bukkit.statics().when(Bukkit::isPrimaryThread).thenReturn(true);
+			List<Event> events = capture(bukkit);
+			Wanted      wanted = owned(mock(JavaPlugin.class));
+
+			wanted.setLevel(2, WantedCause.CRIME);
+			wanted.setLevel(0, WantedCause.ARREST);
+
+			assertEquals(4, events.size(), events.toString());
+			WantedLevelChangeEvent up = assertInstanceOf(WantedLevelChangeEvent.class, events.get(0));
+			assertEquals(WantedCause.CRIME, up.getCause());
+			assertEquals(WantedCause.CRIME, assertInstanceOf(WantedStartEvent.class, events.get(1)).getCause());
+			WantedLevelChangeEvent down = assertInstanceOf(WantedLevelChangeEvent.class, events.get(2));
+			assertEquals(WantedCause.ARREST, down.getCause());
+			assertEquals(WantedCause.ARREST, assertInstanceOf(WantedEndEvent.class, events.get(3)).getCause());
+		}
+	}
+
+	@Test
+	@DisplayName("setLevel off the main thread re-schedules itself with the same cause")
+	void setLevelOffThread_reschedulesWithTheSameCause() {
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			bukkit.statics().when(Bukkit::isPrimaryThread).thenReturn(false, true);
+			List<Event> events = capture(bukkit);
+			JavaPlugin  plugin = mock(JavaPlugin.class);
+			Wanted      wanted = owned(plugin);
+
+			wanted.setLevel(3, WantedCause.SIGN);
+
+			verify(bukkit.scheduler()).runTask(eq(plugin), any(Runnable.class));
+			assertEquals(3, wanted.getLevel());
+			assertEquals(WantedCause.SIGN, assertInstanceOf(WantedLevelChangeEvent.class, events.get(0)).getCause());
+			assertEquals(WantedCause.SIGN, assertInstanceOf(WantedStartEvent.class, events.get(1)).getCause());
+		}
+	}
+
+	@Test
+	@DisplayName("reset with a cause fires the end event with it and stops the decay timer")
+	void resetWithCause_endEventCarriesItAndStopsTheTimer() {
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			bukkit.statics().when(Bukkit::isPrimaryThread).thenReturn(true);
+			BukkitTask task = mock(BukkitTask.class);
+			when(bukkit.scheduler().runTaskTimer(any(Plugin.class), any(Runnable.class), anyLong(), anyLong()))
+					.thenReturn(task);
+			Wanted wanted = new Wanted(mock(JavaPlugin.class), 1, 5);
+			wanted.setLevel(2);
+			wanted.setOwner(mock(Player.class));
+			wanted.createTimer(10, timer -> {
+			}).start(false);
+			List<Event> events = capture(bukkit);
+
+			wanted.reset(WantedCause.DEATH);
+
+			assertEquals(0, wanted.getLevel());
+			assertEquals(WantedCause.DEATH, assertInstanceOf(WantedEndEvent.class, events.get(1)).getCause());
+			assertNull(wanted.getRepeatingTimer());
+			verify(task).cancel();
+		}
+	}
+
+	@Test
+	@DisplayName("the legacy no-cause setLevel fires its events with UNKNOWN")
+	void legacySetLevel_firesUnknownCause() {
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			bukkit.statics().when(Bukkit::isPrimaryThread).thenReturn(true);
+			List<Event> events = capture(bukkit);
+			Wanted      wanted = owned(mock(JavaPlugin.class));
+
+			wanted.setLevel(2);
+
+			assertEquals(WantedCause.UNKNOWN, assertInstanceOf(WantedLevelChangeEvent.class, events.get(0)).getCause());
+			assertEquals(WantedCause.UNKNOWN, assertInstanceOf(WantedStartEvent.class, events.get(1)).getCause());
+		}
+	}
+
+	private static Wanted owned(JavaPlugin plugin) {
+		Wanted wanted = new Wanted(plugin, 1, 5);
+		wanted.setOwner(mock(Player.class));
+		return wanted;
+	}
+
+	private static List<Event> capture(BukkitStatics bukkit) {
+		List<Event> events = new ArrayList<>();
+		doAnswer(invocation -> events.add(invocation.getArgument(0))).when(bukkit.pluginManager()).callEvent(any());
+		return events;
 	}
 
 }

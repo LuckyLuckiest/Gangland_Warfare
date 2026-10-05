@@ -13,6 +13,14 @@ import java.math.BigDecimal;
 public interface WantedSettings {
 
 	/**
+	 * Whether the Repeating_Timer safety-net decay clock runs at all ({@code Wanted.Repeating_Timer.Enable}). A default
+	 * so mocks and older implementations keep compiling; note a Mockito mock still answers {@code false}.
+	 */
+	default boolean isTimerEnabled() {
+		return true;
+	}
+
+	/**
 	 * Whether the timer interval should scale with the wanted level.
 	 */
 	boolean isTimerMultiplierEnabled();
