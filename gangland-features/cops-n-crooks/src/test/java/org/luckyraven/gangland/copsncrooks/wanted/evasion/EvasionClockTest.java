@@ -244,8 +244,8 @@ class EvasionClockTest {
 	}
 
 	@Test
-	@DisplayName("disabled, or only returning cops: the clock does not handle decay and a tracked player turns OFF")
-	void disabled_orOnlyReturningCops_doesNotHandleDecay_andTurnsOff() {
+	@DisplayName("only returning cops: the clock does not handle decay and a tracked player turns OFF")
+	void onlyReturningCops_doesNotHandleDecay_andTurnsOff() {
 		unseenMs = 10_000;
 		tickSeconds(1);
 		assertTrue(clock.handlesDecay(player, wanted));
@@ -256,26 +256,55 @@ class EvasionClockTest {
 		tickSeconds(1);
 		assertEquals(EvasionState.OFF, states().get(states().size() - 1).getState());
 		assertNull(clock.snapshot(id));
+	}
 
-		List<CopNpc> hunters = List.of(cop(CopState.PURSUING));
-		when(group.getCops()).thenReturn(hunters);
+	@Test
+	@DisplayName("evasion disabled: the clock does not handle decay, a tracked player turns OFF once and no star drops")
+	void disabled_doesNotHandleDecay_turnsOffOnce_andNeverDrops() {
+		unseenMs = 10_000;
+		tickSeconds(1);
+		assertTrue(clock.handlesDecay(player, wanted));
+
 		settings = new EvasionSettings(false, 3, DropMode.ONE_STAR, settings.searchRadius(), settings.secondsToDrop(),
 		                               2.0);
+		assertFalse(clock.handlesDecay(player, wanted));
+		tickSeconds(40);
+
+		assertEquals(1, stateNames().stream().filter(EvasionState.OFF::equals).count());
+		assertNull(clock.snapshot(id));
+		verify(stars, never()).drop(any(), anyInt(), any());
+	}
+
+	@Test
+	@DisplayName("a SEARCHING player whose cops are all gone turns OFF once and decay is no longer handled")
+	void emptyGroup_whileSearching_turnsOff() {
+		unseenMs = 10_000;
+		tickSeconds(2);
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
+
+		when(group.getCops()).thenReturn(List.of());
+		tickSeconds(3);
+
+		assertEquals(1, stateNames().stream().filter(EvasionState.OFF::equals).count());
+		assertNull(clock.snapshot(id));
 		assertFalse(clock.handlesDecay(player, wanted));
 	}
 
 	@Test
-	@DisplayName("a SEARCHING player whose group is gone or empty turns OFF once and decay is no longer handled")
-	void emptyOrNullGroup_whileSearching_turnsOff() {
+	@DisplayName("a SEARCHING player whose group is gone (null) turns OFF once")
+	void nullGroup_whileSearching_turnsOff() {
 		unseenMs = 10_000;
 		tickSeconds(2);
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
 
-		clock.tick(player, null);
-		clock.tick(player, group);
-		when(group.getCops()).thenReturn(List.of());
-		when(copManager.groupOf(id)).thenReturn(null);
+		for (int i = 0; i < 3; i++) {
+			now[0] += 1000;
+			clock.tick(player, null);
+		}
 
 		assertEquals(1, stateNames().stream().filter(EvasionState.OFF::equals).count());
+		assertNull(clock.snapshot(id));
+		when(copManager.groupOf(id)).thenReturn(null);
 		assertFalse(clock.handlesDecay(player, wanted));
 	}
 
