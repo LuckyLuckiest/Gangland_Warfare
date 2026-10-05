@@ -126,6 +126,23 @@ class BountySetCommandTest {
 	}
 
 	@Test
+	@DisplayName("a listener cancelling the bounty event refunds the poster, money is never lost")
+	void set_eventCancelled_refundsThePoster() {
+		aliceUser.getEconomy().setAmount(Currency.of(100));
+		org.bukkit.plugin.PluginManager pluginManager = mock(org.bukkit.plugin.PluginManager.class);
+		org.mockito.Mockito.doAnswer(invocation -> {
+			((org.bukkit.event.Cancellable) invocation.getArgument(0)).setCancelled(true);
+			return null;
+		}).when(pluginManager).callEvent(org.mockito.ArgumentMatchers.any());
+		bukkit.statics().when(Bukkit::getPluginManager).thenReturn(pluginManager);
+
+		setBounty(alice, "Bob", "50");
+
+		assertEquals(0, bobUser.getBounty().getAmount().signum(), "cancelled: nothing booked");
+		assertEquals(0, Currency.of(100).compareTo(aliceUser.getEconomy().getAmount()), "cancelled: refunded");
+	}
+
+	@Test
 	@DisplayName("the first successful bounty tells the target once")
 	void set_success_targetNotifiedOnce() {
 		aliceUser.getEconomy().setAmount(Currency.of(100));
