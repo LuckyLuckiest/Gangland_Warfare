@@ -1027,16 +1027,23 @@ boolean wanted        // Derived: level > 0
 Player owner         // The owning player
 
 // Key methods:
-void setLevel(int level)     // Clamps [0, maxLevel], fires events
+void setLevel(int level)     // Clamps [0, maxLevel], fires events; cause UNKNOWN (legacy form)
 
-void incrementLevel()        // setLevel(level + increments)
+void setLevel(int level, WantedCause cause)   // 0.15.0: the one choke point; the cause rides on all three events
 
-void decrementLevel()        // setLevel(level - 1)
+void incrementLevel()        // setLevel(level + increments); also incrementLevel(cause)
+
+void decrementLevel()        // setLevel(level - 1); also decrementLevel(cause)
 
 String getLevelStars()         // e.g. "★★★☆☆" for 3/5
 
-void reset()                 // Sets level to 0 and stops timer
+void reset()                 // Sets level to 0 and stops timer; also reset(cause)
 ```
+
+`WantedCause` (`org.luckyraven.gangland.core.wanted`, since 0.15.0): `CRIME`, `SIGN`, `ADMIN`, `RESTORE`, `DECAY`,
+`EVASION`, `BRIBE`, `ARREST`, `DEATH`, `UNKNOWN`. Every star change outside core names one. `WantedLevelChangeEvent`,
+`WantedStartEvent` and `WantedEndEvent` expose it as `getCause()`; the change event still fires before the level
+mutates and is cancellable.
 
 When `setLevel()` changes the level:
 
@@ -1047,9 +1054,42 @@ When `setLevel()` changes the level:
 Events are always fired synchronously on the main thread. If called from an async thread, the level change is
 deferred via `Bukkit.getScheduler().runTask()`.
 
+### WantedStars
+
+`org.luckyraven.gangland.core.wanted.WantedStars` (core bean, 0.15.0) is the one place stars are raised, dropped and
+restored, so the decay clock, the star-drop charge and the messages cannot drift apart. `WantedContext` is the
+user-and-wanted pair the callers already hold.
+
+```java
+int raise(WantedContext context, int stars, WantedCause origin)   // main thread; stars added (0 at max or cancelled)
+int drop(WantedContext context, int stars, WantedCause cause)     // any thread (hops); stars actually dropped
+void restore(WantedContext context, int level)                    // login: sets the saved level, cause RESTORE
+Timer startDecayClock(WantedContext context)                      // the sync WantedExecutor timer
+void installDecayPolicy(WantedDecayPolicy policy)                 // holder seam, installed by cops-n-crooks
+void suppressStarChat(BooleanSupplier whileTrue)                  // the HUD hides the plain chat line
+```
+
+`drop` order: pick the target level, `setLevel(target, cause)` (a cancelled change ends the call, nothing is charged),
+withdraw the summed star price once, send the decreased message for the new level, stop the timer at 0. The price of one
+star is `MoneyFormula.evaluate(Take_Money.Formula, vars, amount * multiplier ^ wanted)` and is charged only when
+`Wanted.Take_Money.Enable` is true.
+
+### WantedDecayPolicy
+
+A functional interface in core: `boolean handlesDecay(Player owner, Wanted wanted)`. `WantedExecutor`'s tick asks
+`stars.isDecayHandled(wanted)`; when an installed policy answers true the tick drops nothing (the safety-net timer keeps
+running). cops-n-crooks installs `EvasionClock` from `EvasionModuleConfig`'s `@PostConstruct`.
+
+### MoneyFormula
+
+`org.luckyraven.gangland.core.money.MoneyFormula.evaluate(formula, variables, fallback)` never throws: a syntax error,
+unknown variable, division by zero, NaN, infinity or negative result logs one warning per distinct formula and returns
+the fallback, clamped to >= 0. `userVariables(user)` builds `balance`, `level`, `experience`, `bounty`, `wanted`. Used
+by `WantedStars` and `PlayerDeathListener`.
+
 ### WantedExecutor
 
-Drives the periodic wanted-level decrease timer. Configuration comes via `WantedSettings`:
+Drives the periodic wanted-level decrease timer (the safety net since 0.15.0). Configuration comes via `WantedSettings`:
 
 ```
 Timer interval = timerTime * (timerMultiplierAmount ^ currentLevel)
@@ -1057,11 +1097,10 @@ Timer interval = timerTime * (timerMultiplierAmount ^ currentLevel)
 
 Each timer tick:
 
-1. Optionally withdraw money: `takeMoneyAmount * (takeMoneyMultiplier ^ level)`
+1. If an installed `WantedDecayPolicy` handles decay for this player, do nothing
 2. Fire `WantedEvent` (cancellable)
-3. Decrement wanted level by 1
-4. Send level-decrease message with star display
-5. Stop timer when level reaches 0
+3. `stars.drop(context, 1, DECAY)` (charges the price when enabled, sends the message, fires the events)
+4. Stop timer when level reaches 0
 
 ### WantedSettings Contract
 
@@ -1073,11 +1112,34 @@ boolean isTimerMultiplierEnabled()   // Whether to scale interval by level
 
 double getTimerMultiplierAmount()    // Multiplier base (e.g. 1.5)
 
-// Money loss:
-double getTakeMoneyAmount()          // Base money taken per tick
+boolean isTimerEnabled()             // 0.15.0, default true; Settings.isWantedTimerEnabled()
 
-double getTakeMoneyMultiplier()      // Money scaling multiplier per level
+// Money loss (0.15.0: charged only when enabled):
+boolean isTakeMoneyEnabled()         // Wanted.Take_Money.Enable, default false
+
+String getTakeMoneyFormula()         // Wanted.Take_Money.Formula
+
+BigDecimal getTakeMoneyAmount()      // Numbers fed to the formula
+
+double getTakeMoneyMultiplier()
 ```
+
+### The chase (cops-n-crooks, 0.15.0)
+
+Package `org.luckyraven.gangland.copsncrooks.wanted`, configured by `ChaseConfig` (`npc/wanted.yml`, loaded by
+`ChaseConfigLoader`) and `WantedMessages` (`npc/wanted_messages.yml`); the beans live in `ChaseModuleConfig`,
+`HeatModuleConfig` and `EvasionModuleConfig`.
+
+| Piece | Class | Role |
+|---|---|---|
+| Crime bus | `CrimeService.commit(player, crimeId, location[, seenByCop, witnesses])` in `gangland-api` | Main thread; fires `CrimeCommittedEvent`; false when a listener cancelled it |
+| Heat | `wanted.heat.HeatLedger`, `CrimeRecord`; `HeatListener` | Records crimes with the multipliers, keeps the per-chase list the charge sheet reads, and replays the core star trigger while heat is above the next threshold. Cleared on `WantedEndEvent` |
+| Kill seam | `seam.HeatWantedTracker` (replaces `KillComboWantedTracker`) | Installed into core's `WantedKillTrackers` holder. Heat on: kills become `Kill_Cop` / `Kill_Player` crimes (`Kill_Civilian` is published by gangland-civilians); heat off: the kill combo or one star per kill. A defender killing inside their own contested turf is dropped first |
+| Evasion | `wanted.evasion.EvasionClock` (a `WantedDecayPolicy`), `EvasionListener` | Runs on the cop AI tick; fires `WantedEvasionStateEvent`; drops through `WantedStars.drop(.., EVASION)` |
+| HUD | `wanted.hud.WantedHud`, `StarCard`, `listener.wanted.WantedHudListener` | Boss bar, card, title, siren, ring and compass; a 10-tick timer; reads the events only |
+| Charge sheet | `detainment.intake.JailIntakeService` | Reads `ledger.chaseCrimes` before the ARREST clear |
+| Regroup | `CopGroup` casualty state + `CopRadio` | See the squad sections above |
+| Shot noise | `listener.police.ShotNoiseListener` | Bartizan `WeaponShootEvent` at MONITOR |
 
 ---
 
@@ -1164,6 +1226,14 @@ double calculateLevelScaledBounty(base, level)       // base * (1 + level * mult
 double getAutoBountyIncrease(userLevel, wantedLevel) // baseAmount * wantedLevel, then scaled
 
 void resetBounty()                                  // Clear all
+
+// 0.15.0 posted/notoriety split (the ledger is keyed by Bounty.posterId(sender)):
+BigDecimal getPostedAmount()     // sum of what players actually paid in
+BigDecimal getNotoriety()        // max(0, amount - posted): the server-made part
+void addNotoriety(BigDecimal x)
+BigDecimal claimPosted()         // returns the posted escrow, leaves the notoriety, clears the ledger
+String serializeLedger()         // "id=posted:paid;..." stored in user.bounty_posters
+void restoreLedger(String s)     // null = pre-0.15 row: the whole amount counts as posted, once
 ```
 
 ### BountyExecutor
@@ -1179,6 +1249,9 @@ Each tick:
   3. Fire BountyEvent (cancellable)
   4. Apply increase to bounty amount
 ```
+
+Since 0.15.0 the timer grows **notoriety only** (it stops when the notoriety is 0 or reaches the cap) and runs on the
+main thread. A claim pays `getPostedAmount()` unless `Bounty.Pay_Notoriety` is true.
 
 ---
 
@@ -1286,15 +1359,17 @@ void reload()                                 // Clear + reload from database
 
 ## Events
 
-The module fires 11 custom Bukkit events:
+The module fires these custom Bukkit events (two chase events, `CrimeCommittedEvent` and `WantedEvasionStateEvent`, live in `gangland-api`):
 
 ### Wanted Events (`events.wanted`)
 
 | Event                    | When Fired                                    | Key Fields                                 | Cancellable |
 |--------------------------|-----------------------------------------------|--------------------------------------------|-------------|
-| `WantedStartEvent`       | Player's wanted level goes from 0 to positive | `player`, `wanted`, `wantedLevel`          | No          |
-| `WantedLevelChangeEvent` | Any wanted level change                       | `player`, `wanted`, `oldLevel`, `newLevel` | Yes         |
-| `WantedEndEvent`         | Wanted level reaches 0                        | `player`, `wanted`                         | No          |
+| `WantedStartEvent`       | Player's wanted level goes from 0 to positive | `player`, `wanted`, `wantedLevel`, `cause`          | No          |
+| `WantedLevelChangeEvent` | Any wanted level change                       | `player`, `wanted`, `oldLevel`, `newLevel`, `cause` | Yes         |
+| `WantedEndEvent`         | Wanted level reaches 0                        | `player`, `wanted`, `cause`                         | No          |
+| `WantedEvasionStateEvent` (gangland-api, `events.wanted`) | 0.15.0: the evasion clock changes state (`SEEN`, `SEARCHING`, `EVADED`, `OFF`) or the search countdown changes | `player`, `state`, `level`, `secondsLeft`, `zoneCentre`, `zoneRadius` | No |
+| `CrimeCommittedEvent` (gangland-api, `events.crime`) | 0.15.0: `CrimeService.commit` | `player`, `crimeId`, `location`, `seenByCop`, `witnesses` | Yes |
 | `WantedEvent`            | Periodic timer tick (before decrement)        | Inherits from base event                   | Yes         |
 
 ### Bounty Events (`events.bounty`)
@@ -1307,7 +1382,7 @@ The module fires 11 custom Bukkit events:
 
 | Event            | When Fired                        | Key Fields          | Cancellable |
 |------------------|-----------------------------------|---------------------|-------------|
-| `KillComboEvent` | Combo increment or wanted trigger | `player`, `tracker` | No          |
+| `KillComboEvent` | Combo increment, wanted trigger or reset (0.15.0: fired through Bukkit; `Kind` is `INCREMENT`, `WANTED_TRIGGER` or `RESET`) | `player`, `tracker`, `kind` | No          |
 
 ### Police Events (`events.police`)
 
@@ -1388,9 +1463,9 @@ Wanted:
    repeating_timer: 60          # Base interval (seconds) for wanted decay
    timer_multiplier_enabled: true
    timer_multiplier: 1.5        # Timer interval scales by multiplier^level
-   take_money: true
-   take_money_amount: 100.0     # Base money lost per decay tick
-   take_money_multiplier: 1.2   # Money scales by multiplier^level
+   take_money: false            # 0.15.0: Take_Money.Enable, default false
+   take_money_amount: 100.0     # Numbers for Take_Money.Formula; the formula prices a star drop
+   take_money_multiplier: 1.2
    max_level: 5                 # Maximum wanted stars
    increments: 1                # Stars added per incrementLevel()
    kill_combo:

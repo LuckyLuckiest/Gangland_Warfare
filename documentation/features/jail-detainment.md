@@ -105,6 +105,15 @@ automatically.
 
 - **Duration** — `Sentence.Base_Seconds + (wanted_at_arrest × Sentence.Per_Wanted_Level_Seconds)`. Default: 3
   minutes base + 1 minute per wanted star. A five-star fugitive serves 8 minutes.
+- **Charge sheet (0.15.0)** — the arresting cops read out the crimes of the chase and fine the player from the
+  **wallet only** (never the bank, never below zero): `Wanted.Charge_Sheet.Base + Per_Wanted_Level x stars` in
+  `npc/wanted.yml`, at most `Maximum`. Whatever the wallet could not cover is added to the sentence
+  (`Seconds_Per_Unpaid` seconds per unit of money, at most `Max_Extra_Seconds`). Example at 2 stars with the defaults:
+  fine 700; a player holding 300 pays 300 and serves the 400 he could not pay as 40 extra seconds. A player who is dead
+  at intake (the death bill was already paid) is not fined, and `Charge_Sheet.Enable: false` turns the whole thing off.
+  The paperwork screen shows the fine paid and the extra time; both are saved on the detainment row
+  (`fine_paid`, `fine_extra_seconds`).
+- **Wanted level at jail** — jailing clears the stars with the cause `ARREST`; the heat of the chase is forgotten.
 - **Completion sound** — `Detainment.Sounds.Sentence_Complete` plays on release.
 - **Released exit waypoint** — falls back to `Detainment.Fallback_Exit_Waypoint` if the jail has no per-jail
   exit configured.
@@ -182,6 +191,10 @@ Detainment:
       Transit_Commit: "BLOCK_IRON_DOOR_CLOSE"
       Sentence_Complete: "BLOCK_BELL_USE"
 ```
+
+The fine itself is configured in `npc/wanted.yml` under `Wanted.Charge_Sheet` (`Enable`, `Base`, `Per_Wanted_Level`,
+`Maximum`, `Seconds_Per_Unpaid`, `Max_Extra_Seconds`); its text is in `npc/wanted_messages.yml`. See the
+[Configuration Reference](../developer/configuration.md#wantedyml-npcwantedyml).
 
 Cuffing behavior (cop-side radius, attempts, cooldown) is configured per cop tier in `cops.yml`. See
 the [Cops N Crooks guide](./cops-n-crooks.md#configuration).

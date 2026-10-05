@@ -214,7 +214,20 @@ Holders introduced by the **cops-n-crooks** flip (0.8.4); `BankTiers`' installer
 |---|---|---|---|---|
 | `GanglandMoneyDropClassifier` | `NpcMoneyDropSource` | `org.luckyraven.gangland.data.economy` | classifies no NPC as a cop/civilian cash drop | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`CopsMoneyDropSource`) |
 | `BankTiers` | `BankTierView` | `org.luckyraven.gangland.data.economy` | `tierFor(...)` returns `null` — no tier cap, no daily deposit limit, no death-penalty insurance discount, empty `%..bank_tier%` placeholders | `NpcShopsModuleConfig`'s `installBankTiers()` (0.9.0; was `CopsNCrooksModuleConfig`'s `installCoreSeams()` before the npc-shops split) |
-| `WantedKillTrackers` | `WantedKillTracker` | `org.luckyraven.gangland.core.wanted` (`gangland-core` — moved out of the deleted `gangland-infra/gangland-domain` at WS5, 0.10.0) | `isActive()` false — kill combo and "counts for wanted" both disabled, `EntityDamageListener` falls back to its pre-combo branches | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`KillComboWantedTracker`) |
+| `WantedKillTrackers` | `WantedKillTracker` | `org.luckyraven.gangland.core.wanted` (`gangland-core` — moved out of the deleted `gangland-infra/gangland-domain` at WS5, 0.10.0) | `isActive()` false — kill combo and "counts for wanted" both disabled, `EntityDamageListener` falls back to its pre-combo branches | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`HeatWantedTracker`; 0.15.0, replaced `KillComboWantedTracker`) |
+
+**Wanted seams (0.15.0).** Two more seams on the wanted spine, both in `gangland-core` (`org.luckyraven.gangland.core.wanted`):
+
+- **`WantedStars`** (core bean) is the single path for raising, dropping and restoring stars; every call names a
+  `WantedCause`. It also owns the **decay-policy holder**: exactly one `WantedDecayPolicy` (`handlesDecay(owner, wanted)`),
+  default none, installed with `installDecayPolicy(...)`. `WantedExecutor`'s safety-net tick asks it and drops nothing
+  while the policy says it handles decay. cops-n-crooks installs `EvasionClock` from `EvasionModuleConfig`'s
+  `@PostConstruct`. Same shape as the other holders: one core bean, a safe default (no policy = the fixed timer decays
+  as before), the module installs.
+- **`CrimeService`** (`gangland-api`, `org.luckyraven.gangland.crime`, bean `WiringConfig.crimeService()`) is a
+  **contribution-style event bus**, not a holder: any module calls `commit(player, crimeId, location, ...)` and any module
+  listens to the Bukkit `CrimeCommittedEvent`. cops-n-crooks' `HeatLedger` listens; gangland-civilians publishes
+  `Kill_Civilian`. A module never needs a handle on the ledger. Heat is a cops-n-crooks concept the core never names.
 
 Contribution paths added by the cops-n-crooks flip, now installed by **npc-shops** (0.9.0 split):
 `BankMenuContribution` (`parent() == "bank"`, attaches `/glw bank menu`, queried by `BankCommand`).

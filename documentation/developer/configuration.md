@@ -150,6 +150,7 @@ User:
 
 ```yaml
 Bounty:
+   Pay_Notoriety: false           # 0.15.0: true also pays the server-made part of a bounty on a kill
    Kill:
       Each: 5                      # Bounty added per kill
       Maximum: 50_000
@@ -166,8 +167,10 @@ Bounty:
 Wanted:
    Enable: true
    Take_Money:
-      Amount: 50
-      Multiplier: 5                # amount * multiplier ^ stars
+      Enable: false                # 0.15.0: off by default; a missing key counts as false
+      Formula: "amount * multiplier ^ wanted"   # Price of one star drop; broken = fallback, warned once
+      Amount: 50                   # Numbers for the formula only
+      Multiplier: 5
    Repeating_Timer:
       Enable: true
       Time: 120                    # Default seconds between level reduction
@@ -423,12 +426,62 @@ Cops:
 | `Radio.*` | see above | Police radio in chat: who hears it, throttling, ack delay, `Responder_Max` cross-group responders |
 | `Backup.*` | see above | Extra cops requested when a cop goes down, for how long, and how often |
 | `Retreat.*` | see above | When a hurt cop breaks off to cover, and how far it looks |
+| `Regroup.Enabled` | `true` | 0.15.0. `false` = no pull-back after casualties |
+| `Regroup.Casualties` | `2` | Cops lost inside `Window_Seconds` that trigger the pull-back |
+| `Regroup.Window_Seconds` | `20` | The window for those casualties |
+| `Regroup.Fall_Back_Seconds` | `15` | Longest stay in cover before the squad pushes anyway |
+| `Regroup.Cooldown_Seconds` | `60` | One regroup per squad per this long |
+| `Regroup.Arrival_Radius` | `24.0` | Blocks; the squad pushes together once backup is this close |
+| `Shot_Noise.Enabled` | `true` | 0.15.0. `false` = shots never reveal the shooter |
+| `Shot_Noise.Radius.<TYPE>` | `GUN` 48, `THROWABLE` 16, `MELEE` 0 | Blocks a cop hears a Bartizan weapon of that category; `0` or an unlisted type = silent |
+| `Radio.Cooldown_Ticks.Regroup` / `Regroup_Push` / `Shots_Fired` | `1200` / `1200` / `60` | 0.15.0 per-kind repeat cooldowns. The three lines need no `Radio.Priority` entry (they bypass the gaps) |
 | `Names.Format` | `%rank% &f%name% &7#%badge%` | The callsign above the cop's head and on the radio. `%rank%` = the tier's `Display_Name`, `%badge%` = 1000 + the Citizens id, optional `%role%` = the squad role's `Display_Name` (empty, with its colour code and the doubled space dropped, for a cop with no role; the default `Format` has none, e.g. `%rank% &e%role% &f%name% &7#%badge%` reads `Officer Medic Bob #1592`). The Citizens name itself is the short plain `Bob #1592` |
 | `Names.First_Names` | 28 built-in names | First-name pool; `[]` = no first name, a missing key = the built-in pool |
 | `Stuck.*` | see above | Optional (0.13.0). A cop that has found no way to its player for `Recycle_Seconds` (at least 1), out of his view (cone plus clear line within `Cops.Spawn.Visibility_Check_Distance`, never under 24 blocks; past twice `Recycle_Seconds` within 24 blocks only), unseen by other players (past twice `Recycle_Seconds` the same 24-block view rule) and outside melee reach on his level with a clear line, is replaced; its spawner is skipped for `Avoid_Spawner_Seconds` (0 = never). `Enabled: false` never replaces |
 
 The radio lines are in `npc/cop_radio_messages.yml` (Spanish `_es.yml`). See
 [Cops N Crooks](../features/cops-n-crooks.md) and [Migrating to 0.12.0](../migration-0.12.0.md).
+
+---
+
+## wanted.yml (`npc/wanted.yml`)
+
+New in 0.15.0; ships inside the cops-n-crooks module jar and is copied to `plugins/Gangland_Warfare/npc/` on first boot.
+Every key falls back to the value shown, a bad value is reported once and defaulted, and each feature's `Enable: false`
+restores the 0.13.0 behaviour of that piece. Texts are in `npc/wanted_messages.yml` (below).
+
+| Key | Default | Meaning |
+|---|---|---|
+| `Wanted.Heat.Enable` | `true` | `false` = no heat ledger; stars rise by the kill combo or one per counted kill |
+| `Wanted.Heat.Star_Thresholds` | `100, 250, 450, 700, 1000` | Heat needed for star 1, 2, 3 ...; a shorter list is stretched to the max level |
+| `Wanted.Heat.Streak_Bonus` | `1.5` | Multiplier for a crime inside `settings.yml` `Wanted.Kill_Combo.Reset_After` of the last |
+| `Wanted.Heat.Seen_By_Cop_Multiplier` | `1.5` | Multiplier when a cop saw the crime |
+| `Wanted.Heat.Turf_War_Multiplier` | `0.5` | Multiplier for a player kill inside a contested turf |
+| `Wanted.Heat.Assault_Repeat_Seconds` | `10` | Hitting the same cop again inside this is not a new crime |
+| `Wanted.Heat.Crimes.<Id>` | see below | Heat per crime. Merged key by key over the defaults |
+| `Wanted.Evasion.Enable` | `true` | `false` = only the fixed decay timer |
+| `Wanted.Evasion.Lost_Sight_Seconds` | `3` | No cop sighting for this long opens the search zone |
+| `Wanted.Evasion.Drop_Mode` | `ONE_STAR` | `ONE_STAR` or `ALL_STARS` per completed evasion; an unknown value warns and uses `ONE_STAR` |
+| `Wanted.Evasion.Search_Radius` | `40, 60, 90, 130, 180` | Zone radius in blocks by wanted level |
+| `Wanted.Evasion.Seconds_To_Drop` | `10, 20, 30, 45, 60` | Seconds hidden for a drop, by wanted level |
+| `Wanted.Evasion.Outside_Zone_Speed` | `2.0` | Clock speed outside the zone |
+| `Wanted.Hud.Boss_Bar.Enable`, `Star_Card.Enable`, `Title.Enable`, `Zone_Ring.Enable`, `Compass.Enable` | `true` | Each switch removes only its own piece |
+| `Wanted.Hud.Siren.Enable` / `Sound` / `Volume` / `Pitch` | `true` / `BLOCK_NOTE_BLOCK_BELL` / `1.0` / `0.5` | The siren when stars rise |
+| `Wanted.Hud.Zone_Ring.Particle` / `Points` | `DUST` / `48` | The ring around the search zone; an unknown particle uses `DUST` |
+| `Wanted.Charge_Sheet.Enable` | `true` | `false` = no fine |
+| `Wanted.Charge_Sheet.Base` / `Per_Wanted_Level` / `Maximum` | `200` / `250` / `10000` | Fine = `Base + Per_Wanted_Level x stars`, capped; paid from the wallet only |
+| `Wanted.Charge_Sheet.Seconds_Per_Unpaid` / `Max_Extra_Seconds` | `0.1` / `600` | Unpaid money becomes extra jail seconds, capped |
+
+Shipped crime weights (`Heat.Crimes`): `Brandish_Near_Cop` 25, `Assault_Civilian` 30, `Car_Theft` 60, `Kill_Player` 80,
+`Kill_Civilian` 100, `Assault_Cop` 100, `Resisting_Arrest` 100, `Kill_Cop` 150, `Safe_Cracking` 150, `Store_Robbery` 200,
+`Trespass_Restricted` 300, `Jailbreak` 450. 0.15.0 reports `Kill_Player`, `Kill_Civilian`, `Kill_Cop`, `Assault_Cop`
+and `Resisting_Arrest`; the others are read by later releases. A weight of 0 ignores that crime.
+
+`npc/wanted_messages.yml` holds `Hud.Bar.Seen` / `Searching` / `Evaded`, `Hud.Title`, `Hud.Card.Raise` /
+`Stance_Cuffs` / `Stance_Shoot` / `Drop_Evasion` / `Drop_Decay` / `Drop_Other`, `Charge_Sheet.Header` / `Crime` / `Total` /
+`Paid` / `Extra_Time` / `Paperwork`, and `Crimes.<Id>` (including `Crimes.Unknown_Crime`, the card text when no crime is
+on record). Placeholders: `%stars%`, `%time%`, `%crime%`, `%tier%`, `%stance%`, `%count%`, `%amount%`, `%paid%`,
+`%money_symbol%`.
 
 ---
 
