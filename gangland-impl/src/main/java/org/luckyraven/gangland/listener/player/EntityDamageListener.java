@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
@@ -52,8 +53,7 @@ public class EntityDamageListener implements Listener {
 
 	private static final long FIGHT_WINDOW_MS = 30_000L;
 
-	// ponytail: fixed 30 s fight window, first hit wins, pairs that never meet again linger until restart;
-	// a config key / quit-time prune when it shows
+	// ponytail: fixed 30 s fight window, first hit wins; stale pairs are pruned on every recorded hit and on quit
 	private final Map<String, Long> firstHit     = new HashMap<>();   // value = hit order, so same-millisecond hits still sort
 	private long                    hitOrder;
 	private final Map<String, Long> lastExchange = new HashMap<>();
@@ -92,7 +92,8 @@ public class EntityDamageListener implements Listener {
 		createBloodParticle(entity, event.getDamage());
 
 		// who struck first decides self-defence; recorded for every hit, before the death check
-		if (entity instanceof Player struck && struck != damager && userManager.getUser(struck) != null) {
+		if (entity instanceof Player struck && struck != damager && userManager.getUser(struck) != null &&
+		    userManager.getUser(damager) != null) {
 			recordHit(damager.getUniqueId(), struck.getUniqueId());
 		}
 
@@ -203,8 +204,34 @@ public class EntityDamageListener implements Listener {
 		lastExchange.remove(pair(a, b));
 	}
 
+	/** Player-vs-player fights currently remembered (test seam). */
+	int trackedFights() {
+		return lastExchange.size();
+	}
+
+	@EventHandler
+	public void onPlayerQuit(PlayerQuitEvent event) {
+		String id = event.getPlayer().getUniqueId().toString();
+
+		lastExchange.keySet().removeIf(key -> key.contains(id));
+		firstHit.keySet().removeIf(key -> key.contains(id));
+	}
+
+	private void pruneStale(long now) {
+		lastExchange.entrySet().removeIf(entry -> {
+			if (now - entry.getValue() <= FIGHT_WINDOW_MS) return false;
+
+			String[] ids = entry.getKey().split("\\|");
+			firstHit.remove(ids[0] + ">" + ids[1]);
+			firstHit.remove(ids[1] + ">" + ids[0]);
+			return true;
+		});
+	}
+
 	private void recordHit(UUID attacker, UUID victim) {
 		long now = clock.getAsLong();
+
+		pruneStale(now);
 		Long last = lastExchange.get(pair(attacker, victim));
 
 		if (last != null && now - last > FIGHT_WINDOW_MS) forgetFight(attacker, victim);
