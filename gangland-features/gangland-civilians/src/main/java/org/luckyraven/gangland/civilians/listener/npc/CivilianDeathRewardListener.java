@@ -7,6 +7,8 @@ import org.bukkit.event.Listener;
 import org.luckyraven.gangland.civilians.events.CivilianDeathEvent;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
+import org.luckyraven.gangland.crime.CrimeService;
+import org.luckyraven.gangland.crime.Crimes;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.gangland.events.user.UserLevelUpEvent;
@@ -23,9 +25,11 @@ import org.luckyraven.gangland.core.user.UserManager;
 public class CivilianDeathRewardListener implements Listener {
 
 	private final UserManager<Player> userManager;
+	private final CrimeService        crimes;
 
-	public CivilianDeathRewardListener(@Qualifier("online") UserManager<Player> userManager) {
+	public CivilianDeathRewardListener(@Qualifier("online") UserManager<Player> userManager, CrimeService crimes) {
 		this.userManager = userManager;
+		this.crimes      = crimes;
 	}
 
 	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
@@ -45,7 +49,7 @@ public class CivilianDeathRewardListener implements Listener {
 
 		CivilianNpc civilianNpc = event.getCivilianNpc();
 		if (!(civilianNpc.isHostile() && civilianNpc.getCurrentState() == CivilianState.COMBAT)) {
-			user.getWanted().incrementLevel();
+			crimes.commit(killer, Crimes.KILL_CIVILIAN, killer.getLocation());
 		}
 	}
 }

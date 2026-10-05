@@ -44,7 +44,13 @@ import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawner;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 import org.luckyraven.gangland.copsncrooks.npc.police.targeting.WantedTargetingManager;
 import org.luckyraven.gangland.copsncrooks.seam.CopsMoneyDropSource;
-import org.luckyraven.gangland.copsncrooks.seam.KillComboWantedTracker;
+import org.luckyraven.gangland.copsncrooks.seam.HeatWantedTracker;
+import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
+import org.luckyraven.gangland.crime.CrimeService;
+import org.luckyraven.gangland.data.gang.GangMembership;
+import org.luckyraven.gangland.turf.data.Turf;
+import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.data.economy.GanglandMoneyDropClassifier;
 import org.luckyraven.gangland.data.teleportation.WaypointLookupContract;
 import org.luckyraven.gangland.file.configuration.Settings;
@@ -269,8 +275,8 @@ public class CopsNCrooksModuleConfig {
 	@Bean
 	public BreakFreeService breakFreeService(DetainmentService detainmentService, DetainmentCostsContract costs,
 	                                         DetainmentMessageContract messages, ReleasePipeline releasePipeline,
-	                                         DetainmentSoundContract sounds) {
-		return new BreakFreeService(plugin, detainmentService, costs, messages, releasePipeline, sounds);
+	                                         DetainmentSoundContract sounds, CrimeService crimes) {
+		return new BreakFreeService(plugin, detainmentService, costs, messages, releasePipeline, sounds, crimes);
 	}
 
 	@Bean
@@ -368,8 +374,19 @@ public class CopsNCrooksModuleConfig {
 		// Seam 2, BankTiers, moved to NpcShopsModuleConfig#installBankTiers() (T-J3, group J) — this module no
 		// longer owns banker/trader NPCs or the bank tier catalogue.
 
+		TurfManager    turfs = container.getInstance(TurfManager.class);
+		GangMembership gangs = container.getInstance(GangMembership.class);
+
 		container.getInstance(WantedKillTrackers.class)
-		       .install(new KillComboWantedTracker(container.getInstance(KillCombo.class),
-		                                           container.getInstance(NpcMarkManager.class)));
+		       .install(new HeatWantedTracker(container.getInstance(ChaseConfigLoader.class),
+		                                      container.getInstance(HeatLedger.class),
+		                                      container.getInstance(CrimeService.class),
+		                                      container.getInstance(KillCombo.class),
+		                                      container.getInstance(NpcMarkManager.class), (killer, at) -> {
+			                                      Turf turf = HeatLedger.contestedTurfAt(turfs, at);
+			                                      int  gang = gangs.gangIdOf(killer.getUniqueId());
+			                                      return turf != null && turf.getOwnerGangId() != null && gang != -1
+			                                             && turf.getOwnerGangId() == gang;
+		                                      }));
 	}
 }
