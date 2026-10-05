@@ -1,0 +1,133 @@
+#   +------------------------------------------------------+   #
+# |                    File: wanted.yml                      | #
+#   +------------------------------------------------------+   #
+#
+# The chase: how crimes add up to stars (Heat), how losing the cops takes them away (Evasion), what the player sees
+# (Hud) and what an arrest costs (Charge_Sheet). Every feature has its own Enable key; switching one off restores
+# the behaviour from before 0.15.0.
+
+Wanted:
+   # Crimes add heat; heat becomes stars.
+   Heat:
+      # false = no heat ledger, stars rise the way they did before 0.15.0
+      Enable: true
+      # Heat needed for star 1, 2, 3, ... A shorter list than the max wanted level is stretched evenly
+      Star_Thresholds:
+         - 100
+         - 250
+         - 450
+         - 700
+         - 1000
+      # Multiplier for crimes chained inside settings.yml Wanted.Kill_Combo.Reset_After
+      Streak_Bonus: 1.5
+      # Multiplier when a cop saw the crime
+      Seen_By_Cop_Multiplier: 1.5
+      # Multiplier for a crime inside a contested turf
+      Turf_War_Multiplier: 0.5
+      # Seconds before hitting the same victim counts as a new assault
+      Assault_Repeat_Seconds: 10
+      # Heat per crime. Kill_*, Assault_Cop and Resisting_Arrest are reported in 0.15.0; the rest are read by later
+      # releases
+      Crimes:
+         # Aiming a weapon with a cop close by
+         Brandish_Near_Cop: 25
+         # Hitting a civilian
+         Assault_Civilian: 30
+         # Stealing a car
+         Car_Theft: 60
+         # Killing another player
+         Kill_Player: 80
+         # Killing a civilian
+         Kill_Civilian: 100
+         # Hitting a cop
+         Assault_Cop: 100
+         # Fighting off an arrest
+         Resisting_Arrest: 100
+         # Killing a cop
+         Kill_Cop: 150
+         # Cracking a safe
+         Safe_Cracking: 150
+         # Robbing a store
+         Store_Robbery: 200
+         # Entering a restricted place
+         Trespass_Restricted: 300
+         # Breaking out of jail
+         Jailbreak: 450
+
+   # Losing the cops takes stars away.
+   Evasion:
+      # false = the old fixed decay timer only. Replaces the fixed decay timer while cops hunt you; settings.yml
+      # Wanted.Repeating_Timer stays as the safety net
+      Enable: true
+      # Seconds with no cop seeing you before the search zone appears
+      Lost_Sight_Seconds: 3
+      # What a completed evasion takes: ONE_STAR or ALL_STARS
+      Drop_Mode: ONE_STAR
+      # Search zone radius in blocks for wanted level 1, 2, 3, ...
+      Search_Radius:
+         - 40
+         - 60
+         - 90
+         - 130
+         - 180
+      # Seconds to stay hidden for wanted level 1, 2, 3, ...
+      Seconds_To_Drop:
+         - 10
+         - 20
+         - 30
+         - 45
+         - 60
+      # How much faster the timer runs while you are outside the search zone
+      Outside_Zone_Speed: 2.0
+
+   # What the player sees and hears while chased.
+   Hud:
+      # The boss bar with the stars and the state of the chase
+      Boss_Bar:
+         # false = no boss bar
+         Enable: true
+      # The line explaining why a star was raised or lost
+      Star_Card:
+         # false = no star card
+         Enable: true
+      # The star count flashed on the screen
+      Title:
+         # false = no title
+         Enable: true
+      # The siren sound when the cops spot you
+      Siren:
+         # false = silent
+         Enable: true
+         # Sound name
+         Sound: "BLOCK_NOTE_BLOCK_BELL"
+         # Loudness
+         Volume: 1.0
+         # Pitch
+         Pitch: 0.5
+      # The ring of particles marking the search zone
+      Zone_Ring:
+         # false = no ring
+         Enable: true
+         # Particle name
+         Particle: "DUST"
+         # Particles drawn around the ring
+         Points: 48
+      # The compass pointing at the nearest hunting cop
+      Compass:
+         # false = no compass
+         Enable: true
+
+   # The fine charged when you are arrested. Wallet only, never the bank, never below zero.
+   Charge_Sheet:
+      # false = no fine
+      Enable: true
+      # Fine at no stars
+      Base: 200
+      # Added to the fine per wanted level
+      Per_Wanted_Level: 250
+      # The fine never exceeds this
+      Maximum: 10000
+      # Extra jail seconds per unpaid money
+      Seconds_Per_Unpaid: 0.1
+      # The extra jail time never exceeds this many seconds
+      Max_Extra_Seconds: 600
