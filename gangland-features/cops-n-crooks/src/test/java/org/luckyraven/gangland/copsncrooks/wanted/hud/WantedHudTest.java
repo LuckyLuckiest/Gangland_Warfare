@@ -256,6 +256,20 @@ class WantedHudTest {
 
 		verify(player, never()).setCompassTarget(any(Location.class));
 		verify(player, never()).getCompassTarget();
+		verify(bar, never()).setTitle(org.mockito.ArgumentMatchers.contains("50m"));
+	}
+
+	@Test
+	@DisplayName("searching adds the arrow and the blocks to the way out to the bar, seen from where the player faces")
+	void searching_barShowsTheWayOut() {
+		Player    player = player();
+		WantedHud hud    = hud();
+		hud.show(player, 2, "**");
+
+		// at x 110 facing +Z in a 60-block zone centred on x 100: the exit is 50 blocks east, to the player's left
+		hud.state(player, EvasionState.SEARCHING, 2, 10, centre(), 60);
+
+		verify(bar).setTitle(org.mockito.ArgumentMatchers.contains("← 50m"));
 	}
 
 	@Test

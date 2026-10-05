@@ -105,7 +105,7 @@ Wanted:
          Volume: 1.0
          # Pitch
          Pitch: 0.5
-      # The ring of particles marking the search zone
+      # The ring of particles marking the search zone, seen only by the chased player
       Zone_Ring:
          # false = no ring
          Enable: true
@@ -113,9 +113,10 @@ Wanted:
          Particle: "DUST"
          # Particles drawn around the ring
          Points: 48
-      # The compass pointing the way out of the search zone (it never shows where the cops are)
+      # The way out of the search zone: an arrow and the distance in the boss bar, and the needle of a compass (or the
+      # phone) in your hand. It never shows where the cops are
       Compass:
-         # false = no compass
+         # false = no arrow, and a held compass keeps its own target
          Enable: true
 
    # The fine charged when you are arrested. Wallet only, never the bank, never below zero.

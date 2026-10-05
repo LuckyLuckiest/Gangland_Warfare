@@ -16,13 +16,15 @@ import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.config.HudSettings;
 import org.luckyraven.gangland.events.wanted.EvasionState;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * The per-player chase HUD: a boss bar (red seen, yellow/white searching, green for a lost star), the zone ring and
- * the compass. Driven by {@link #state} events and a half-second {@link #tick()}. Touches no action bar.
+ * The per-player chase HUD: a boss bar (red seen, yellow/white searching with an arrow out of the zone, green for a
+ * lost star), the zone ring only the chased player sees, and the compass. Driven by {@link #state} events and a
+ * half-second {@link #tick()}. Touches no action bar.
  *
  * @since 0.15.0
  */
@@ -30,6 +32,12 @@ public class WantedHud {
 
 	/** A lost star shows green for this many ticks (one tick is half a second). */
 	private static final int EVADED_TICKS = 6;
+
+	/**
+	 * {@code Player#spawnParticle(..., data, force)}, newer than the 1.16.5 API this compiles against; null where the
+	 * server lacks it. Force lifts the client's 32-block particle cut-off, so the far side of the ring still shows.
+	 */
+	private static final @Nullable Method FORCED_PARTICLE = forcedParticle();
 
 	private final ChaseConfigLoader chase;
 	private final WantedMessages    messages;
@@ -125,7 +133,12 @@ public class WantedHud {
 	private void render(Entry entry) {
 		if (entry.bar == null) return;
 
-		entry.bar.setTitle(StarCard.barTitle(messages, entry.state, entry.stars, entry.secondsLeft));
+		String title = StarCard.barTitle(messages, entry.state, entry.stars, entry.secondsLeft);
+		if (showsWay(entry)) {
+			title += StarCard.wayHint(messages, entry.centre, entry.radius, entry.player.getLocation());
+		}
+
+		entry.bar.setTitle(title);
 		entry.bar.setColor(StarCard.barColor(entry.state, tickCount % 2 == 0));
 		entry.bar.setProgress(progress(entry));
 	}
@@ -136,6 +149,13 @@ public class WantedHud {
 		int total = chase.get().evasion().secondsToDropFor(entry.level);
 
 		return total <= 0 ? 0.0 : Math.max(0.0, Math.min(1.0, (double) entry.secondsLeft / total));
+	}
+
+	private boolean showsWay(Entry entry) {
+		Location centre = entry.centre;
+
+		return entry.state == EvasionState.SEARCHING && chase.get().hud().compass() && centre != null
+		       && centre.getWorld() != null && centre.getWorld().equals(entry.player.getWorld());
 	}
 
 	private void aimCompass(Entry entry) {
@@ -179,7 +199,30 @@ public class WantedHud {
 			Location at    = new Location(world, centre.getX() + Math.cos(angle) * entry.radius, y,
 			                              centre.getZ() + Math.sin(angle) * entry.radius);
 
-			entry.player.spawnParticle(particle, at, 1, 0, 0, 0, 0, data);
+			spawnForced(entry.player, particle, at, data);
+		}
+	}
+
+	/** Sent to {@code player} alone; forced where the server supports it. */
+	private static void spawnForced(Player player, Particle particle, Location at, @Nullable Object data) {
+		if (FORCED_PARTICLE != null) {
+			try {
+				FORCED_PARTICLE.invoke(player, particle, at, 1, 0D, 0D, 0D, 0D, data, true);
+				return;
+			} catch (ReflectiveOperationException exception) {
+				// fall back to the unforced call
+			}
+		}
+
+		player.spawnParticle(particle, at, 1, 0, 0, 0, 0, data);
+	}
+
+	private static @Nullable Method forcedParticle() {
+		try {
+			return Player.class.getMethod("spawnParticle", Particle.class, Location.class, int.class, double.class,
+			                              double.class, double.class, double.class, Object.class, boolean.class);
+		} catch (NoSuchMethodException exception) {
+			return null;
 		}
 	}
 

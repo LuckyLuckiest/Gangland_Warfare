@@ -131,4 +131,33 @@ class StarCardTest {
 		assertEquals(200, out.getX(), 1.0E-9);
 		assertEquals(100, out.getZ(), 1.0E-9);
 	}
+
+	@Test
+	@DisplayName("the arrow is relative to where the player faces: ahead, right, behind, left and the diagonals")
+	void arrow_isRelativeToTheFacing() {
+		// yaw 0 faces +Z; turning right raises the yaw, so facing +Z the player's right is -X
+		assertEquals("↑", StarCard.arrow(0, 0, 10));
+		assertEquals("→", StarCard.arrow(0, -10, 0));
+		assertEquals("↓", StarCard.arrow(0, 0, -10));
+		assertEquals("←", StarCard.arrow(0, 10, 0));
+		assertEquals("↗", StarCard.arrow(0, -10, 10));
+		assertEquals("↖", StarCard.arrow(0, 10, 10));
+
+		// facing -X (yaw 90) the same -X target is straight ahead; negative yaws wrap
+		assertEquals("↑", StarCard.arrow(90, -10, 0));
+		assertEquals("↑", StarCard.arrow(-270, -10, 0));
+		assertEquals("↓", StarCard.arrow(-90, -10, 0));
+	}
+
+	@Test
+	@DisplayName("the way hint shows the arrow and the blocks to the zone edge")
+	void wayHint_arrowAndDistance() throws IOException {
+		WantedMessages messages = HudFixtures.messages(tempDir);
+		World          world    = mock(World.class);
+		Location       centre   = new Location(world, 100, 64, 100);
+		Location       from     = new Location(world, 110, 64, 100, -90, 0);
+
+		// facing +X, 30 blocks short of the east edge
+		assertEquals("↑ 30m", plain(StarCard.wayHint(messages, centre, 40, from)).trim());
+	}
 }

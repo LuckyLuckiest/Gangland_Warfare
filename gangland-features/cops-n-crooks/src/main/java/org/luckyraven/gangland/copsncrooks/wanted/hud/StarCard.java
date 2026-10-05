@@ -10,12 +10,16 @@ import org.luckyraven.gangland.events.wanted.EvasionState;
 import java.util.Map;
 
 /**
- * The text and geometry of the chase HUD: the star card, the boss bar title and colour, and the zone-edge point the
- * compass aims at. Pure, so every line is testable without a server.
+ * The text and geometry of the chase HUD: the star card, the boss bar title and colour, the way-out arrow and the
+ * zone-edge point it and the compass aim at. Pure, so every line is testable without a server.
  *
  * @since 0.15.0
  */
 public final class StarCard {
+
+	/** Straight ahead first, then clockwise in 45 degree steps. */
+	private static final String[] ARROWS = {"↑", "↗", "→", "↘", "↓", "↙", "←",
+	                                        "↖"};
 
 	private StarCard() {
 	}
@@ -46,6 +50,24 @@ public final class StarCard {
 			case EVADED -> messages.format(Key.BAR_EVADED, Map.of("stars", stars));
 			default -> messages.format(Key.BAR_SEEN, Map.of("stars", stars));
 		};
+	}
+
+	/** The searching bar's way out: an arrow seen from where {@code from} faces, and the blocks to the exit point. */
+	public static String wayHint(WantedMessages messages, Location centre, double radius, Location from) {
+		Location exit = exitPoint(centre, radius, from);
+		double   dx   = exit.getX() - from.getX();
+		double   dz   = exit.getZ() - from.getZ();
+
+		return messages.format(Key.BAR_WAY, Map.of("arrow", arrow(from.getYaw(), dx, dz), "distance",
+		                                           String.valueOf(Math.round(Math.sqrt(dx * dx + dz * dz)))));
+	}
+
+	/** One of eight arrows for the direction ({@code dx}, {@code dz}) to someone facing {@code yaw} (0 = +Z). */
+	static String arrow(float yaw, double dx, double dz) {
+		double bearing  = Math.toDegrees(Math.atan2(-dx, dz));
+		double relative = ((bearing - yaw) % 360 + 360) % 360;
+
+		return ARROWS[(int) Math.round(relative / 45) % ARROWS.length];
 	}
 
 	/** Red when seen, yellow and white alternating while searching, green once a star is lost. */

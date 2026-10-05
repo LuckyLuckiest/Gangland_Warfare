@@ -3,7 +3,8 @@
 #   +------------------------------------------------------+   #
 #
 # The text of the chase HUD and the charge sheet. & colour codes work. Placeholders in %percent% signs are filled in
-# by the plugin: %stars%, %time%, %crime%, %tier%, %stance%, %count%, %amount%, %paid%, %money_symbol%.
+# by the plugin: %stars%, %time%, %arrow%, %distance%, %crime%, %tier%, %stance%, %count%, %amount%, %paid%,
+# %money_symbol%.
 
 # The boss bar, the title and the star card
 Hud:
@@ -14,6 +15,9 @@ Hud:
       Searching: "&e%stars% &6&lSEARCHING %time%"
       # A star was just lost
       Evaded: "&a%stars% &2&lSTAR LOST"
+      # Added after Searching while Wanted.Hud.Compass is on: an arrow to the way out of the search zone, seen from
+      # where you face, and the blocks to go
+      Way: "   &f%arrow% %distance%m"
    # The star count flashed on the screen
    Title: "&c%stars%"
    Card:
