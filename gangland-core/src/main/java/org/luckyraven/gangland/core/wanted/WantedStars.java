@@ -169,9 +169,7 @@ public final class WantedStars {
 	 */
 	private BigDecimal starPrice(WantedContext context, int level) {
 		if (!settings.isTakeMoneyEnabled()) return Currency.ZERO;
-
 		BigDecimal amount = settings.getTakeMoneyAmount();
-		if (amount.signum() <= 0) return Currency.ZERO;
 
 		double multiplier = settings.getTakeMoneyMultiplier();
 		double fallback   = Currency.toDouble(amount) * Math.pow(multiplier, level);

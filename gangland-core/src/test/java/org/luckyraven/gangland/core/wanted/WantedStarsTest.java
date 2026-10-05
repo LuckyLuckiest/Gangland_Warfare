@@ -221,6 +221,20 @@ class WantedStarsTest {
 	}
 
 	@Test
+	@DisplayName("Amount 0 does not switch the charge off: Enable is the only switch")
+	void chargeOn_zeroAmount_formulaStillCharges() {
+		mainThread();
+		chargeOn("wanted * 100");
+		when(settings.getTakeMoneyAmount()).thenReturn(BigDecimal.ZERO);
+		ownedAt(2);
+
+		assertEquals(1, stars.drop(context, 1, WantedCause.DECAY));
+
+		assertEquals(1, context.withdrawals.size());
+		assertMoney("200", context.withdrawals.get(0));
+	}
+
+	@Test
 	@DisplayName("a broken formula charges the fallback price and the star still drops")
 	void chargeOn_brokenFormula_chargesTheFallback_andTheStarStillDrops() {
 		mainThread();
@@ -284,8 +298,7 @@ class WantedStarsTest {
 	@DisplayName("a cancelled level change charges nothing and sends nothing")
 	void drop_cancelledChange_chargesNothing() {
 		mainThread();
-		when(settings.getTakeMoneyAmount()).thenReturn(new BigDecimal("50"));
-		when(settings.getTakeMoneyMultiplier()).thenReturn(5.0);
+		chargeOn("amount * multiplier ^ wanted");
 		ownedAt(2);
 		cancelChanges = true;
 
