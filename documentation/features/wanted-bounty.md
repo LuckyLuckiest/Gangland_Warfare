@@ -25,7 +25,8 @@ adds heat, and the heat crosses `Star_Thresholds` (100, 250, 450, 700, 1000) to 
 | Hit a cop | 100 | | Fight off an arrest | 100 |
 | Kill a cop | 150 | | Other crimes in the file | read by later releases |
 
-- A crime chained within `Kill_Combo.Reset_After` seconds of the last one is multiplied by `Streak_Bonus` (1.5).
+- A crime chained within `Kill_Combo.Reset_After` seconds of the last one is multiplied by `Streak_Bonus` (1.5), only
+  while `Kill_Combo.Enable` is true.
 - A crime a cop saw is multiplied by `Seen_By_Cop_Multiplier` (1.5).
 - A player kill inside a contested turf is multiplied by `Turf_War_Multiplier` (0.5).
 - Hitting the same cop again within `Assault_Repeat_Seconds` (10) is not a new crime.

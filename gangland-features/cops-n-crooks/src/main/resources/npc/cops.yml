@@ -142,7 +142,7 @@ Cops:
          Status_Check: 400
          Pull_Back: 300
          Medic_Treating: 200
-         # Squad pulls back after casualties, then pushes when backup arrives (one regroup per Cooldown_Seconds).
+         # Squad pulls back after casualties, then pushes once it is regrouped with its backup (see Cops.Regroup).
          Regroup: 1200
          Regroup_Push: 1200
          # A shot heard by cops; one squad hunts one player, so this is the per-shooter throttle (60 = 3 s).
@@ -162,8 +162,9 @@ Cops:
       # Minimum gap between two backup requests from one group (1200 = 60 s).
       Cooldown_Ticks: 1200
    # A squad that loses Casualties cops within Window_Seconds falls back to cover (Lines.Regroup) for up to
-   # Fall_Back_Seconds, then pushes together (Lines.Regroup_Push) once the whole squad is within Arrival_Radius blocks of the suspect. A regroup also grants
-   # the backup it waits for (past the Backup cooldown) unless one is already active.
+   # Fall_Back_Seconds, then pushes together (Lines.Regroup_Push) once the whole squad, backup included, is within
+   # Arrival_Radius blocks of the suspect. A regroup also grants the backup it waits for (past the Backup cooldown)
+   # unless one is already active. With Backup off (or Extra_Cops 0) the squad still falls back and pushes, silently.
    # One regroup per Cooldown_Seconds; squads set to cuff first never regroup.
    Regroup:
       Enabled: true
@@ -173,8 +174,8 @@ Cops:
       Cooldown_Seconds: 60
       Arrival_Radius: 24.0
    # How far cops hear a shot, in blocks, by weapon type (0 = silent). Unlisted types are silent. The ids below are
-   # weapon-type enum names (GUN, THROWABLE, MELEE) that the loader matches exactly: keep them upper case, they are
-   # not config keys in the Capitalized_Underscore style.
+   # weapon-type enum names (GUN, THROWABLE, MELEE), matched case-insensitively; they are not config keys in the
+   # Capitalized_Underscore style.
    Shot_Noise:
       Enabled: true
       Radius:

@@ -62,7 +62,8 @@ class BountySetCommandTest {
 		Messages.init(new FakeMessageProvider()
 				              .withString("Commands.Bounty.Bounty_Set", "BOUNTY-SET")
 				              .withString("Commands.Bounty.Claimed", "BOUNTY-CLAIMED %amount% %player%")
-				              .withString("Commands.Bank.Money.Player_Add", "BANK-DEPOSIT %amount%"));
+				              .withString("Commands.Bank.Money.Player_Add", "BANK-DEPOSIT %amount%")
+				              .withString("Commands.Economy.Money.Player.Add", "MONEY-ADD %amount%"));
 		EconomyHandler.setVaultEconomy(null);
 
 		// The shipped Bounty.Repeating_Timer.Multiple is 2, the multiplier the test server ran with.
@@ -140,6 +141,7 @@ class BountySetCommandTest {
 
 		assertEquals(0, bobUser.getBounty().getAmount().signum(), "cancelled: nothing booked");
 		assertEquals(0, Currency.of(100).compareTo(aliceUser.getEconomy().getAmount()), "cancelled: refunded");
+		verify(alice).sendMessage(contains("MONEY-ADD"));
 	}
 
 	@Test

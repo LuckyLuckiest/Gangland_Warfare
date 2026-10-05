@@ -597,7 +597,9 @@ public class CopManager implements BeanLifecycle {
 			long arrived = cops.stream().filter(c -> isArrived(c, player, r.arrivalRadius())).count();
 			if (arrived >= targetCount || !group.isFallingBack(now)) {
 				group.endRegroup();
-				copRadio.sayFromLeaderLater(group, "Regroup_Push", 1, () -> true);
+				// Backup off: the fall-back was silent (no Regroup line), so no "backup's here" push either
+				if (backup.enabled() && backup.extraCops() > 0)
+					copRadio.sayFromLeaderLater(group, "Regroup_Push", 1, () -> true);
 			}
 		}
 

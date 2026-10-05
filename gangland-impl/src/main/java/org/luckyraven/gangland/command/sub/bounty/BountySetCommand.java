@@ -139,7 +139,12 @@ class BountySetCommand extends SubArgument {
 				if (sender instanceof Player senderPlayer) {
 					User<Player> refundee = userManager.getUser(senderPlayer);
 
-					if (refundee != null) refundee.getEconomy().depositAmount(value);
+					if (refundee != null) {
+						refundee.getEconomy().depositAmount(value);
+						senderPlayer.sendMessage(Messages.DEPOSIT_MONEY_PLAYER.toString()
+						                                                      .replace("%amount%",
+						                                                               Settings.formatAmount(value)));
+					}
 				}
 			} else {
 				// Tell the target only once the bounty is really booked, not before the sender's checks can refuse it.

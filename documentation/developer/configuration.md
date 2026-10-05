@@ -431,7 +431,7 @@ Cops:
 | `Regroup.Window_Seconds` | `20` | The window for those casualties |
 | `Regroup.Fall_Back_Seconds` | `15` | Longest stay in cover before the squad pushes anyway |
 | `Regroup.Cooldown_Seconds` | `60` | One regroup per squad per this long |
-| `Regroup.Arrival_Radius` | `24.0` | Blocks; the squad pushes together once backup is this close |
+| `Regroup.Arrival_Radius` | `24.0` | Blocks; the squad pushes together once all of it, backup included, is this close to the suspect, or when `Fall_Back_Seconds` runs out. The regroup grants backup itself when none is active |
 | `Shot_Noise.Enabled` | `true` | 0.15.0. `false` = shots never reveal the shooter |
 | `Shot_Noise.Radius.<TYPE>` | `GUN` 48, `THROWABLE` 16, `MELEE` 0 | Blocks a cop hears a Bartizan weapon of that category; `0` or an unlisted type = silent |
 | `Radio.Cooldown_Ticks.Regroup` / `Regroup_Push` / `Shots_Fired` | `1200` / `1200` / `60` | 0.15.0 per-kind repeat cooldowns. None needs a `Radio.Priority` entry: the two regroup lines bypass the gaps; `Shots_Fired` respects them (the squad still converges on the shot), so add it to `Priority` if it must always be heard |
@@ -454,7 +454,7 @@ restores the 0.13.0 behaviour of that piece. Texts are in `npc/wanted_messages.y
 |---|---|---|
 | `Wanted.Heat.Enable` | `true` | `false` = no heat ledger; stars rise by the kill combo or one per counted kill |
 | `Wanted.Heat.Star_Thresholds` | `100, 250, 450, 700, 1000` | Heat needed for star 1, 2, 3 ...; a shorter list is stretched to the max level |
-| `Wanted.Heat.Streak_Bonus` | `1.5` | Multiplier for a crime inside `settings.yml` `Wanted.Kill_Combo.Reset_After` of the last |
+| `Wanted.Heat.Streak_Bonus` | `1.5` | Multiplier for a crime inside `settings.yml` `Wanted.Kill_Combo.Reset_After` of the last; only while `Wanted.Kill_Combo.Enable` is true |
 | `Wanted.Heat.Seen_By_Cop_Multiplier` | `1.5` | Multiplier when a cop saw the crime |
 | `Wanted.Heat.Turf_War_Multiplier` | `0.5` | Multiplier for a player kill inside a contested turf |
 | `Wanted.Heat.Assault_Repeat_Seconds` | `10` | Hitting the same cop again inside this is not a new crime |

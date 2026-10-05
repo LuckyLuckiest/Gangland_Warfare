@@ -96,7 +96,7 @@ Three columns are added automatically at the first boot; no SQL and no backup st
 | `detainment.fine_extra_seconds` | integer, nullable | Jail seconds added for the part the wallet could not cover. |
 
 **Every bounty that exists before the upgrade is read as fully posted**: the first kill after the upgrade pays it in
-full, once, whoever the killer is and whatever `Pay_Notoriety` says. Bounties created from then on follow the rules in §6.
+full, once, whoever the killer is (except a gangmate, an ally or the victim's own arrow) and whatever `Pay_Notoriety` says. Bounties created from then on follow the rules in §6.
 Rows without the new columns keep working (a missing fine reads as none).
 
 ## 6. Behaviour that changed
@@ -153,7 +153,8 @@ Rows without the new columns keep working (a missing fine reads as none).
   removes it.
 - **Regroup.** After `Casualties` cops fall inside `Window_Seconds` the squad falls back to cover, radios for backup
   (if none is active the regroup grants it itself, past the backup cooldown) and pushes together once the whole squad,
-  backup included, is within `Arrival_Radius` of you or `Fall_Back_Seconds` run out.
+  backup included, is within `Arrival_Radius` of you or `Fall_Back_Seconds` run out. With `Backup.Enabled: false` the
+  squad falls back and pushes without the two radio lines.
 - **Shots give you away.** A gun, or a throwable, fired within the `Shot_Noise` radius of a cop of your squad reports
   your position to the squad, which counts as a sighting, and the nearest cop says "shots fired".
 - **Wanted HUD.** A boss bar with the stars (red in sight, yellow and searching with a countdown, green for three

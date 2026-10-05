@@ -49,7 +49,9 @@ Managed by `CopService`, `CopSpawnManager`, `DetainmentService`, `JailManager`. 
 - [ ] Cops hunting you lose sight of you for `Lost_Sight_Seconds`: the squad radios the lost contact, the zone ring
       shows, and a star drops after `Seconds_To_Drop` out of sight (see the Wanted & Bounty checklist).
 - [ ] Kill two cops in quick succession (`Regroup.Casualties` inside `Window_Seconds`): the rest pull back to cover with the
-      Regroup line, radio for backup, and push together with the Regroup_Push line when backup is within `Arrival_Radius`.
+      Regroup line, radio for backup, and push together with the Regroup_Push line once all of them, backup included,
+      are within `Arrival_Radius` of you (or after `Fall_Back_Seconds`). With `Cops.Backup.Enabled: false` they fall
+      back and push without either line.
 - [ ] `Cops.Regroup.Enabled: false`: the squad keeps fighting as in 0.13.0. A squad set to cuff first never regroups.
 - [ ] Fire a Bartizan gun within 48 blocks of a cop of your squad: the squad turns to your position (counts as a sighting)
       and the nearest cop says the Shots_Fired line, at most once per 3 s.
