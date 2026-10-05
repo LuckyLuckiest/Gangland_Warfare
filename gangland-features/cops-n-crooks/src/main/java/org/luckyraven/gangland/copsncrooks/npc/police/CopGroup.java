@@ -5,6 +5,7 @@ import lombok.Setter;
 import org.bukkit.Location;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.RegroupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
@@ -75,6 +76,11 @@ public class CopGroup {
 
 	/** Radio-clock ms of the latest stuck-recycle tip-off; 0 when none. */
 	private long tipOffAt;
+
+	/** Radio-clock ms of recent casualties, for {@link #shouldRegroup}. */
+	private final List<Long> casualtyTimes = new ArrayList<>();
+	private       boolean    regrouping;
+	private       long       regroupReadyAt;
 
 	public CopGroup(UUID targetPlayerId) {
 		this.targetPlayerId = targetPlayerId;
@@ -226,6 +232,37 @@ public class CopGroup {
 	/** A tip-off was stamped no more than {@code windowMs} before {@code now}. */
 	public boolean tippedOffWithin(long now, long windowMs) {
 		return tipOffAt > 0 && now - tipOffAt <= windowMs;
+	}
+
+	/** A cop of the group went down at {@code now}; casualties older than the longest window are not kept. */
+	public void recordCasualty(long now) {
+		casualtyTimes.add(now);
+		// ponytail: fixed 5 min cap, so a window longer than that is cut short; windows are seconds
+		casualtyTimes.removeIf(at -> now - at > 300_000L);
+	}
+
+	/** A fighting group lost {@code r.casualties()} cops inside the window and its regroup is off cooldown. */
+	public boolean shouldRegroup(long now, RegroupSettings r) {
+		if (!r.enabled() || !combatAlert || regrouping || now < regroupReadyAt) return false;
+		return casualtyTimes.stream().filter(at -> now - at <= r.windowMs()).count() >= r.casualties();
+	}
+
+	/** The group pulls back to cover for up to {@code r.fallBackMs()} and waits for backup. */
+	public void startRegroup(long now, RegroupSettings r) {
+		regrouping     = true;
+		fallBackUntil  = Math.max(fallBackUntil, now + r.fallBackMs());
+		regroupReadyAt = now + r.cooldownMs();
+		casualtyTimes.clear();
+	}
+
+	public boolean isRegrouping() {
+		return regrouping;
+	}
+
+	/** The regroup is over: the cops leave cover on their next AI tick. */
+	public void endRegroup() {
+		regrouping    = false;
+		fallBackUntil = 0;
 	}
 
 	public boolean isEmpty() {

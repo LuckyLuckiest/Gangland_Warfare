@@ -318,6 +318,96 @@ class CopRadioTest {
 	}
 
 	/** A group cop for field care: health out of 20, a fighting state, a role and stateful care slots. */
+	/** Rebuilds {@link #radio} and {@link #group} so scheduled follow-ups land in {@code tasks}. */
+	private void captureLater(List<Runnable> tasks) {
+		radio = new CopRadio(() -> provider, key -> key.equals("Format") ? List.of("[%unit%] %line%")
+		                                                                  : List.of(key + " line"),
+		                     () -> clock[0], (task, ticks) -> tasks.add(task));
+		group = new CopGroup(suspect.getUniqueId());
+		group.setListener(radio.listenerFor(group, calls::add));
+	}
+
+	private void twoDown(Player bystander, List<Runnable> tasks) {
+		group.escalate(suspect.getUniqueId());
+		for (int id = 1; id <= 4; id++) group.add(cop(id, "SWAT", 4 + id, 0));
+		List<CopNpc> cops = group.getCops();
+		group.getSquad().memberDown(cops.get(1));
+		clock[0] += 5_000;
+		group.getSquad().memberDown(cops.get(2));
+	}
+
+	@Test
+	@DisplayName("secondManDownInside20s_radiosRegroup_andFallsBack")
+	void secondManDownInside20s_radiosRegroup_andFallsBack() {
+		Player         bystander = listener(10, 0);
+		List<Runnable> tasks     = new ArrayList<>();
+		captureLater(tasks);
+
+		twoDown(bystander, tasks);
+		tasks.forEach(Runnable::run);
+
+		assertTrue(group.isRegrouping());
+		assertTrue(group.isFallingBack(clock[0]));
+		InOrder order = inOrder(bystander);
+		order.verify(bystander, org.mockito.Mockito.atLeastOnce()).sendMessage("[SWAT-1] Man_Down line");
+		order.verify(bystander).sendMessage("[SWAT-1] Regroup line");
+	}
+
+	@Test
+	@DisplayName("regroupLine_isDelivered_withAPreUpgradePriorityList")
+	void regroupLine_isDelivered_withAPreUpgradePriorityList() {
+		// SETTINGS' Priority set names Man_Down, Backup and Dispatch_Wanted only: no Regroup entry
+		assertFalse(SETTINGS.priority().contains("Regroup"));
+		Player         bystander = listener(10, 0);
+		List<Runnable> tasks     = new ArrayList<>();
+		captureLater(tasks);
+
+		twoDown(bystander, tasks);
+		verify(bystander, never()).sendMessage("[SWAT-1] Regroup line");
+		tasks.forEach(Runnable::run);
+
+		verify(bystander).sendMessage("[SWAT-1] Regroup line");
+	}
+
+	@Test
+	@DisplayName("commanderDownDuringARegroup_keepsTheLongerFallBack")
+	void commanderDownDuringARegroup_keepsTheLongerFallBack() {
+		listener(10, 0);
+		List<Runnable> tasks = new ArrayList<>();
+		captureLater(tasks);
+		group.escalate(suspect.getUniqueId());
+		CopNpc commander = cop(1, "SWAT", 4, 0);
+		when(commander.getRole()).thenReturn(new CopRole("Commander", "Commander", NpcFanPlacement.ANY, null, null,
+		                                                 1.0, null, 2, null, 1.0, 0, null, 0, 60, false, true));
+		group.add(commander);
+		group.add(cop(2, "SWAT", 6, 0));
+		group.startRegroup(clock[0], org.luckyraven.gangland.copsncrooks.npc.police.config.RegroupSettings.DEFAULT);
+		long regroupEnd = group.getFallBackUntil();
+
+		group.getSquad().memberDown(commander);
+
+		assertEquals(regroupEnd, group.getFallBackUntil());
+		assertTrue(regroupEnd > clock[0] + CopRadio.COMMANDER_FALL_BACK_MS);
+	}
+
+	@Test
+	@DisplayName("cuffFirstSquad_radiosNoRegroup")
+	void cuffFirstSquad_radiosNoRegroup() {
+		Player         bystander = listener(10, 0);
+		List<Runnable> tasks     = new ArrayList<>();
+		captureLater(tasks);
+
+		for (int id = 1; id <= 4; id++) group.add(cop(id, "SWAT", 4 + id, 0));
+		List<CopNpc> cops = group.getCops();
+		group.getSquad().memberDown(cops.get(1));
+		clock[0] += 5_000;
+		group.getSquad().memberDown(cops.get(2));
+		tasks.forEach(Runnable::run);
+
+		assertFalse(group.isRegrouping());
+		verify(bystander, never()).sendMessage("[SWAT-1] Regroup line");
+	}
+
 	private CopNpc careCop(int id, double health, CopRole role, double x, double z) {
 		CopNpc cop = cop(id, "SWAT", x, z);
 		when(cop.getEntity().getHealth()).thenReturn(health);

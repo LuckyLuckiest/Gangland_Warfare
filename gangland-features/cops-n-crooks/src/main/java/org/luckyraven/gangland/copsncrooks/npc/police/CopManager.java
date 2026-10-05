@@ -19,6 +19,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.RegroupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.StuckSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
@@ -586,9 +587,26 @@ public class CopManager implements BeanLifecycle {
 			currentCount++;
 		}
 
+		if (group.isRegrouping()) {
+			RegroupSettings r = configProvider.getRegroupSettings() != null ? configProvider.getRegroupSettings()
+			                                                                 : RegroupSettings.DEFAULT;
+			long arrived = cops.stream().filter(c -> isArrived(c, player, r.arrivalRadius())).count();
+			if (arrived >= targetCount || !group.isFallingBack(now)) {
+				group.endRegroup();
+				copRadio.sayFromLeaderLater(group, "Regroup_Push", 1, () -> true);
+			}
+		}
+
 		group.consumeBackupExpiry(now, backup);
 		if (group.getPendingRelease() > 0) releaseSurplus(group, targetCount, composition);
 		group.pruneAttackerSquads();
+	}
+
+	/** A valid, non-returning cop in the player's world within {@code radius} of him. */
+	private static boolean isArrived(CopNpc cop, Player player, double radius) {
+		LivingEntity body = cop.getEntity();
+		return cop.isValid() && cop.getCurrentState() != CopState.RETURNING && body != null &&
+		       body.getWorld() == player.getWorld() && body.getLocation().distance(player.getLocation()) <= radius;
 	}
 
 	/**

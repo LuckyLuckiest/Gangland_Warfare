@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.RegroupSettings;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.NpcSquadSignal;
 import org.luckyraven.keystone.npc.spi.NpcSquadListener;
@@ -261,5 +262,87 @@ class CopGroupSquadTest {
 		assertTrue(group.tippedOffWithin(5_000L, 0L));
 		assertTrue(group.tippedOffWithin(9_000L, 4_000L), "edge of the window");
 		assertFalse(group.tippedOffWithin(9_001L, 4_000L), "past the window");
+	}
+
+	private static final RegroupSettings R = RegroupSettings.DEFAULT;
+
+	private static CopGroup fighting() {
+		CopGroup group = new CopGroup(UUID.randomUUID());
+		group.escalate(group.getTargetPlayerId());
+		return group;
+	}
+
+	@Test
+	@DisplayName("twoCasualtiesInside20s_whileFighting_shouldRegroup")
+	void twoCasualtiesInside20s_whileFighting_shouldRegroup() {
+		CopGroup group = fighting();
+		group.recordCasualty(1_000L);
+		group.recordCasualty(15_000L);
+
+		assertTrue(group.shouldRegroup(15_000L, R));
+	}
+
+	@Test
+	@DisplayName("oneCasualty_doesNot")
+	void oneCasualty_doesNot() {
+		CopGroup group = fighting();
+		group.recordCasualty(1_000L);
+
+		assertFalse(group.shouldRegroup(1_000L, R));
+	}
+
+	@Test
+	@DisplayName("casualtiesOutsideTheWindow_doNot")
+	void casualtiesOutsideTheWindow_doNot() {
+		CopGroup group = fighting();
+		group.recordCasualty(1_000L);
+		group.recordCasualty(21_001L);
+
+		assertFalse(group.shouldRegroup(21_001L, R));
+	}
+
+	@Test
+	@DisplayName("cuffFirstSquad_neverRegroups")
+	void cuffFirstSquad_neverRegroups() {
+		CopGroup group = new CopGroup(UUID.randomUUID());
+		group.recordCasualty(1_000L);
+		group.recordCasualty(2_000L);
+
+		assertFalse(group.shouldRegroup(2_000L, R));
+	}
+
+	@Test
+	@DisplayName("secondRegroup_waits60s")
+	void secondRegroup_waits60s() {
+		CopGroup group = fighting();
+		group.recordCasualty(1_000L);
+		group.recordCasualty(2_000L);
+		group.startRegroup(2_000L, R);
+		group.endRegroup();
+		group.recordCasualty(3_000L);
+		group.recordCasualty(4_000L);
+
+		assertFalse(group.shouldRegroup(4_000L, R), "inside the cooldown");
+
+		group.recordCasualty(61_999L);
+		group.recordCasualty(62_000L);
+
+		assertTrue(group.shouldRegroup(62_000L, R), "cooldown over");
+	}
+
+	@Test
+	@DisplayName("startRegroup_fallsBack15s_endRegroupClearsIt")
+	void startRegroup_fallsBack15s_endRegroupClearsIt() {
+		CopGroup group = fighting();
+		group.startRegroup(10_000L, R);
+
+		assertTrue(group.isRegrouping());
+		assertTrue(group.isFallingBack(24_999L));
+		assertFalse(group.isFallingBack(25_000L));
+
+		group.endRegroup();
+
+		assertFalse(group.isRegrouping());
+		assertFalse(group.isFallingBack(10_001L));
 	}
 }

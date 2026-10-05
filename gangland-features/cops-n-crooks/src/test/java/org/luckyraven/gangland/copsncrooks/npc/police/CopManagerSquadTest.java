@@ -609,4 +609,53 @@ class CopManagerSquadTest {
 		return new CopRole(name, name, NpcFanPlacement.ANY, null, null, 1.0, null, 0, null, 1.0, 0, null, 0, 60, false,
 		                   false);
 	}
+
+	private CopGroup regroupingGroup(double copX, double copZ) {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		group.add(fx.cop(CopState.PURSUING, copX, copZ));
+		group.add(fx.cop(CopState.PURSUING, copX, copZ));
+		group.startRegroup(fx.clock[0], org.luckyraven.gangland.copsncrooks.npc.police.config.RegroupSettings.DEFAULT);
+		return group;
+	}
+
+	@Test
+	@DisplayName("regroup_endsWhenArrivedCopsReachTheTarget_andRadiosPushOnce")
+	void regroup_endsWhenArrivedCopsReachTheTarget_andRadiosPushOnce() {
+		CopGroup group = regroupingGroup(12, 10);
+
+		manager.spawnTick(playerId, wanted);
+		manager.spawnTick(playerId, wanted);
+
+		assertFalse(group.isRegrouping());
+		assertFalse(group.isFallingBack(fx.clock[0]));
+		verify(fx.radio, times(1)).sayFromLeaderLater(eq(group), eq("Regroup_Push"), eq(1), any());
+	}
+
+	@Test
+	@DisplayName("regroup_endsAtTheFallBackTimeout")
+	void regroup_endsAtTheFallBackTimeout() {
+		CopGroup group = regroupingGroup(100, 100);
+		manager.spawnTick(playerId, wanted);
+		assertTrue(group.isRegrouping());
+
+		fx.clock[0] += 15_000;
+		manager.spawnTick(playerId, wanted);
+
+		assertFalse(group.isRegrouping());
+		verify(fx.radio).sayFromLeaderLater(eq(group), eq("Regroup_Push"), eq(1), any());
+	}
+
+	@Test
+	@DisplayName("regroup_holdsWhileReinforcementsAreStillFar")
+	void regroup_holdsWhileReinforcementsAreStillFar() {
+		CopGroup group = regroupingGroup(100, 100);
+
+		fx.clock[0] += 14_000;
+		manager.spawnTick(playerId, wanted);
+
+		assertTrue(group.isRegrouping());
+		assertTrue(group.isFallingBack(fx.clock[0]));
+		verify(fx.radio, never()).sayFromLeaderLater(any(), eq("Regroup_Push"), anyInt(), any());
+	}
 }
