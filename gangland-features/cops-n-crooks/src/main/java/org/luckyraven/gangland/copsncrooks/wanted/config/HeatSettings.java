@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.wanted.config;
 
 import org.luckyraven.keystone.util.NumberUtil;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,6 +21,27 @@ import java.util.Map;
 public record HeatSettings(boolean enabled, List<Integer> starThresholds, double streakBonus,
                            double seenByCopMultiplier, double turfWarMultiplier, int assaultRepeatSeconds,
                            Map<String, Integer> crimeWeights) {
+	/** The shipped {@code Wanted.Heat}. */
+	public static final HeatSettings DEFAULT = new HeatSettings(true, List.of(100, 250, 450, 700, 1000), 1.5, 1.5, 0.5,
+	                                                            10, defaultCrimes());
+
+	private static Map<String, Integer> defaultCrimes() {
+		Map<String, Integer> crimes = new LinkedHashMap<>();
+		crimes.put("Brandish_Near_Cop", 25);
+		crimes.put("Assault_Civilian", 30);
+		crimes.put("Car_Theft", 60);
+		crimes.put("Kill_Player", 80);
+		crimes.put("Kill_Civilian", 100);
+		crimes.put("Assault_Cop", 100);
+		crimes.put("Resisting_Arrest", 100);
+		crimes.put("Kill_Cop", 150);
+		crimes.put("Safe_Cracking", 150);
+		crimes.put("Store_Robbery", 200);
+		crimes.put("Trespass_Restricted", 300);
+		crimes.put("Jailbreak", 450);
+		return Map.copyOf(crimes);
+	}
+
 
 	/** The heat weight of {@code crimeId} (exact, case-sensitive), 0 when it has none. */
 	public int weightOf(String crimeId) {

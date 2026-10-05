@@ -20,38 +20,8 @@ import java.util.Map;
 public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSettings hud,
                           ChargeSheetSettings chargeSheet) {
 
-	private static final HeatSettings HEAT_DEFAULT = new HeatSettings(true, List.of(100, 250, 450, 700, 1000), 1.5,
-	                                                                  1.5, 0.5, 10, defaultCrimes());
-
-	private static final EvasionSettings EVASION_DEFAULT = new EvasionSettings(true, 3, DropMode.ONE_STAR,
-	                                                                           List.of(40, 60, 90, 130, 180),
-	                                                                           List.of(10, 20, 30, 45, 60), 2.0);
-
-	private static final HudSettings HUD_DEFAULT = new HudSettings(true, true, true, true, "BLOCK_NOTE_BLOCK_BELL",
-	                                                               1.0f, 0.5f, true, "DUST", 48, true);
-
-	private static final ChargeSheetSettings CHARGE_SHEET_DEFAULT = new ChargeSheetSettings(true, 200, 250, 10000, 0.1,
-	                                                                                        600);
-
-	public static final ChaseConfig DEFAULT = new ChaseConfig(HEAT_DEFAULT, EVASION_DEFAULT, HUD_DEFAULT,
-	                                                          CHARGE_SHEET_DEFAULT);
-
-	private static Map<String, Integer> defaultCrimes() {
-		Map<String, Integer> crimes = new LinkedHashMap<>();
-		crimes.put("Brandish_Near_Cop", 25);
-		crimes.put("Assault_Civilian", 30);
-		crimes.put("Car_Theft", 60);
-		crimes.put("Kill_Player", 80);
-		crimes.put("Kill_Civilian", 100);
-		crimes.put("Assault_Cop", 100);
-		crimes.put("Resisting_Arrest", 100);
-		crimes.put("Kill_Cop", 150);
-		crimes.put("Safe_Cracking", 150);
-		crimes.put("Store_Robbery", 200);
-		crimes.put("Trespass_Restricted", 300);
-		crimes.put("Jailbreak", 450);
-		return Map.copyOf(crimes);
-	}
+	public static final ChaseConfig DEFAULT = new ChaseConfig(HeatSettings.DEFAULT, EvasionSettings.DEFAULT,
+	                                                          HudSettings.DEFAULT, ChargeSheetSettings.DEFAULT);
 
 	/** Reads the {@code Wanted} section; a null section, or a missing block or key, is its default. */
 	public static ChaseConfig parse(@Nullable NodeReader wantedRoot, ConfigReport report) {
@@ -71,9 +41,9 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 	}
 
 	private static HeatSettings heat(@Nullable NodeReader n) {
-		if (n == null) return HEAT_DEFAULT;
+		if (n == null) return HeatSettings.DEFAULT;
 
-		HeatSettings  d          = HEAT_DEFAULT;
+		HeatSettings  d          = HeatSettings.DEFAULT;
 		List<Integer> thresholds = n.get("Star_Thresholds").asList().ofInts().orEmpty();
 
 		Map<String, Integer> crimes    = new LinkedHashMap<>(d.crimeWeights());
@@ -94,9 +64,9 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 	}
 
 	private static EvasionSettings evasion(@Nullable NodeReader n, ConfigReport report) {
-		if (n == null) return EVASION_DEFAULT;
+		if (n == null) return EvasionSettings.DEFAULT;
 
-		EvasionSettings d      = EVASION_DEFAULT;
+		EvasionSettings d      = EvasionSettings.DEFAULT;
 		List<Integer>   radius = n.get("Search_Radius").asList().ofInts().orEmpty();
 		List<Integer>   drops  = n.get("Seconds_To_Drop").asList().ofInts().orEmpty();
 
@@ -110,7 +80,7 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 	private static DropMode dropMode(NodeReader n, ConfigReport report) {
 		NodeReader.NodeAccess access = n.get("Drop_Mode");
 		String                text   = access.asString().orNull();
-		if (text == null) return EVASION_DEFAULT.dropMode();
+		if (text == null) return EvasionSettings.DEFAULT.dropMode();
 
 		for (DropMode mode : DropMode.values()) {
 			if (mode.name().equalsIgnoreCase(text.trim())) return mode;
@@ -123,9 +93,9 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 	}
 
 	private static HudSettings hud(@Nullable NodeReader n, ConfigReport report) {
-		if (n == null) return HUD_DEFAULT;
+		if (n == null) return HudSettings.DEFAULT;
 
-		HudSettings d     = HUD_DEFAULT;
+		HudSettings d     = HudSettings.DEFAULT;
 		NodeReader  siren = block(n, "Siren", report);
 		NodeReader  ring  = block(n, "Zone_Ring", report);
 
@@ -150,9 +120,9 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 	}
 
 	private static ChargeSheetSettings chargeSheet(@Nullable NodeReader n) {
-		if (n == null) return CHARGE_SHEET_DEFAULT;
+		if (n == null) return ChargeSheetSettings.DEFAULT;
 
-		ChargeSheetSettings d = CHARGE_SHEET_DEFAULT;
+		ChargeSheetSettings d = ChargeSheetSettings.DEFAULT;
 		return new ChargeSheetSettings(n.get("Enable").asBool().orDefault(d.enabled()),
 		                               n.get("Base").asDouble().min(0).orDefault(d.base()),
 		                               n.get("Per_Wanted_Level").asDouble().min(0).orDefault(d.perWantedLevel()),

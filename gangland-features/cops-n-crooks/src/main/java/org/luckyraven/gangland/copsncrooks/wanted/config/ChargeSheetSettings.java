@@ -7,6 +7,9 @@ package org.luckyraven.gangland.copsncrooks.wanted.config;
  */
 public record ChargeSheetSettings(boolean enabled, double base, double perWantedLevel, double maximum,
                                   double secondsPerUnpaid, int maxExtraSeconds) {
+	/** The shipped {@code Wanted.Charge_Sheet}. */
+	public static final ChargeSheetSettings DEFAULT = new ChargeSheetSettings(true, 200, 250, 10000, 0.1, 600);
+
 
 	/** The fine at {@code wantedLevel} stars. */
 	public double fineFor(int wantedLevel) {

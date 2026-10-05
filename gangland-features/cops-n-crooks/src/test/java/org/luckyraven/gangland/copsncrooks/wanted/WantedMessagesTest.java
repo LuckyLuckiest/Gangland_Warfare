@@ -59,6 +59,14 @@ class WantedMessagesTest {
 	}
 
 	@Test
+	@DisplayName("the shipped file's Unknown_Crime line is the one crimeName(\"Unknown_Crime\") reads")
+	void shippedUnknownCrime_isReadable() throws IOException {
+		String shipped = Files.readString(Path.of("src/main/resources/npc/wanted_messages.yml"), StandardCharsets.UTF_8);
+
+		assertEquals("Reported crime", messages(shipped).crimeName("Unknown_Crime"));
+	}
+
+	@Test
 	@DisplayName("crimeName reads Crimes.<id>, else the id with spaces")
 	void crimeName_fallsBackToTheSpacedId() throws IOException {
 		WantedMessages messages = messages("Crimes:\n   Kill_Cop: \"Killing an officer\"\n");

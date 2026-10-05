@@ -59,6 +59,5 @@ Crimes:
    Store_Robbery: "Store robbery"
    Trespass_Restricted: "Trespassing"
    Jailbreak: "Jailbreak"
-
-# The star card's text when no crime is on record, for example a sign or an admin raise
-Unknown_Crime: "Reported crime"
+   # The star card's text when no crime is on record, for example a sign or an admin raise
+   Unknown_Crime: "Reported crime"

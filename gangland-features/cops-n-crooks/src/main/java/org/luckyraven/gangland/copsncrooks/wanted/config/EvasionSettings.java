@@ -15,6 +15,11 @@ import java.util.List;
  */
 public record EvasionSettings(boolean enabled, int lostSightSeconds, DropMode dropMode, List<Integer> searchRadius,
                               List<Integer> secondsToDrop, double outsideZoneSpeed) {
+	/** The shipped {@code Wanted.Evasion}. */
+	public static final EvasionSettings DEFAULT = new EvasionSettings(true, 3, DropMode.ONE_STAR,
+	                                                                  List.of(40, 60, 90, 130, 180),
+	                                                                  List.of(10, 20, 30, 45, 60), 2.0);
+
 
 	/** Search radius at {@code level}, the level clamped into the list. */
 	public int radiusFor(int level) {
