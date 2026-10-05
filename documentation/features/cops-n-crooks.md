@@ -231,7 +231,9 @@ The chase around a wanted player is configured in `npc/wanted.yml` (heat, evasio
 - **Shot noise.** A Bartizan weapon fired by a wanted player inside `Shot_Noise.Radius` of a cop of his squad (GUN 48,
   THROWABLE 16, MELEE 0 = silent; a type that is not listed is silent) reports the shooter's position to the squad.
   The squad counts it as a sighting, so evasion resets, and the nearest cop calls "Shots fired!" (throttled to once
-  per `Cooldown_Ticks.Shots_Fired`, 3 s, per shooter). Players who are not wanted, and NPC shooters, are ignored.
+  per `Cooldown_Ticks.Shots_Fired`, 3 s, per shooter). The line respects the radio gaps like any line outside
+  `Radio.Priority`, so it can be dropped right after another squad line; the sighting always lands. Players who are not
+  wanted, and NPC shooters, are ignored.
 - **Wanted HUD.** The boss bar, star card, title, siren, zone ring and compass are shown to the hunted player only and
   disappear when the chase ends.
 

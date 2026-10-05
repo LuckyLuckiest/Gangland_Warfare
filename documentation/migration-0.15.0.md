@@ -11,9 +11,10 @@ otherwise. No command was added, renamed or removed.
 ## 1. Update the dependencies
 
 - **Keystone 1.14.0.** Replace `Keystone-<version>.jar` in `plugins/`.
-- **Bartizan 0.6.x** if you use Bartizan weapons on cops or civilians (unchanged floor from 0.12.0). The shot-noise
-  rule listens to Bartizan's weapon shot event, so without Bartizan nobody fires a weapon that cops can hear. Nothing
-  else in this release needs it.
+- **Bartizan 0.6.x** (unchanged floor from 0.12.0). `cops-n-crooks` still declares `Plugins: [Bartizan]`, so on a
+  server without Bartizan the module loader skips it (`module.plugin.missing`) and the whole 0.15.0 chase goes with
+  it: heat, evasion, the wanted HUD, the charge sheet, regroup and shot noise. `gangland-civilians` loads without
+  Bartizan, but with no `cops-n-crooks` to hear its `Kill_Civilian` crime a civilian kill raises no star.
 - **Module jars.** Replace the jars in `plugins/Gangland_Warfare/modules/` with the 0.15.0 builds. `cops-n-crooks` and
   `gangland-civilians` now declare `Host_Api: 2.1` (the module API gained the crime bus, see
   [gangland-api.md](./gangland-api.md)), so they need a 0.15.0 core. The other modules keep `Host_Api: 2.0` and still
@@ -56,8 +57,11 @@ identical to the value the 0.15.0 file ships. Copy a block in only if you want t
 | `Cops.Radio.Cooldown_Ticks.Regroup_Push` | `1200` | Repeat cooldown of the push radio line. |
 | `Cops.Radio.Cooldown_Ticks.Shots_Fired` | `60` | Per-shooter throttle of the shots-fired line (3 s). |
 
-The three new radio lines (`Regroup`, `Regroup_Push`, `Shots_Fired`) need **no** `Radio.Priority` edit: they bypass the
-radio gaps on their own. The new line texts are in `npc/cop_radio_messages.yml` / `_es.yml`; as with 0.12.0, an
+The three new radio lines (`Regroup`, `Regroup_Push`, `Shots_Fired`) need **no** `Radio.Priority` edit. The two
+regroup lines bypass the radio gaps on their own. `Shots_Fired` does not: like any line outside `Radio.Priority`, it is
+dropped when the squad spoke within `Squad_Gap_Ticks` or the player heard a line within `Player_Gap_Ticks`. The squad
+still converges on the shot, because the sighting it reports is silent and always lands. Add `Shots_Fired` to
+`Radio.Priority` if the line must always be heard. The new line texts are in `npc/cop_radio_messages.yml` / `_es.yml`; as with 0.12.0, an
 existing copy of those files is not rewritten, so a missing line falls back to the default text.
 
 Squads whose tier is set to cuff first (`Skip_Cuffing: false` and still attempting to cuff) never regroup.
@@ -78,7 +82,8 @@ To keep today's charge exactly: `Take_Money.Enable: true`, `Amount: 50`, `Multip
 gives 50 x 5^stars per star dropped: $250 at 1 star, $156,250 at 5. Gentler examples: `"amount * wanted"` or
 `"balance * 0.02 * wanted"`. A price of 0 charges nothing. If the formula is broken, or its result is negative or not a
 number, the console warns once and `amount * multiplier ^ wanted` is used instead (never below 0). The star always
-drops, and a wallet never goes below zero. The same formula engine now prices the death bill, with the same fallback.
+drops, and a wallet never goes below zero. The same formula engine now prices the death bill; its fallback is 15% of
+the wallet (`balance * 0.15`).
 
 ## 5. Database
 
@@ -117,8 +122,9 @@ Rows without the new columns keep working (a missing fine reads as none).
 - **A civilian kill counts once.** It used to add a star twice (once in the damage listener, once in the civilian
   reward listener); it is now one crime.
 - **Not crimes:** a kill in self-defence (the other player struck first inside a 30 second fight window), a kill that
-  claims a bounty players posted, and a turf defender killing a raider inside their own gang's contested turf. These
-  mint no star and no combo step.
+  claims a bounty other players posted, and a turf defender killing a raider inside their own gang's contested turf.
+  These mint no star, no combo step and no kill notoriety (`Bounty.Kill.Each`). A bounty the killer posted himself
+  pays his own money back but does not make the kill a takedown. A player killed by his own arrow claims nothing.
 
 **Bounties**
 
@@ -127,6 +133,8 @@ Rows without the new columns keep working (a missing fine reads as none).
   is true. The repeating timer now grows notoriety only, so a claim can no longer pay money that was never posted.
 - **Gangmates collect nothing.** A killer in the same gang as the victim, or in an allied gang, gets no payout and the
   bounty stays.
+- **No auto bounty without a star.** A kill at the maximum stars, or a raise a plugin cancelled, no longer
+  adds the per-star auto bounty: only a star that actually lands adds it.
 - **Notoriety is kept through death and arrest.** Nothing in 0.15.0 clears the server-made part of a bounty on death
   or arrest; only a paid claim (with `Pay_Notoriety: true`), `/glw bounty clear` or a sign removes it. This is
   deliberate for now and is flagged for the owner to confirm.
@@ -139,7 +147,8 @@ Rows without the new columns keep working (a missing fine reads as none).
 - **Charge sheet.** On arrest the cops read the crimes of the chase, fine the player (`Base + Per_Wanted_Level x stars`,
   at most `Maximum`) from the **wallet only**, never the bank and never below zero, and turn the part the wallet could
   not cover into extra jail time (`Seconds_Per_Unpaid` per unit, at most `Max_Extra_Seconds`). A player who is dead at
-  intake is not fined again. The paperwork screen shows the fine paid and the extra time. `Charge_Sheet.Enable: false`
+  intake is not fined again, and neither is a player with no stars and no crimes (an admin `/glw jail throw`). The
+  paperwork screen shows the fine paid and the extra time. `Charge_Sheet.Enable: false`
   removes it.
 - **Regroup.** After `Casualties` cops fall inside `Window_Seconds` the squad falls back to cover, radios for backup
   and pushes together when backup is within `Arrival_Radius`.
@@ -159,7 +168,8 @@ events gain `getCause()`. `KillComboEvent` and `CopDeathEvent` are now actually 
 ## 8. Required versions
 
 - Keystone **>= 1.14.0** (required).
-- Bartizan **>= 0.6.0** for armed cops and the shot-noise rule; a server without Bartizan needs nothing.
+- Bartizan **>= 0.6.0**, required by `cops-n-crooks` (`Plugins: [Bartizan]`): without it the whole 0.15.0 chase is
+  skipped. `gangland-civilians` still loads, but its civilian kills raise no stars.
 - Modules: `cops-n-crooks` and `gangland-civilians` 0.15.0 (`Host_Api: 2.1`); the other modules may stay on their
   0.13.0 jars (`Host_Api: 2.0`).
 

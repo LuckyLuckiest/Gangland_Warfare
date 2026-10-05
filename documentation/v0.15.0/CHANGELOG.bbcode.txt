@@ -28,7 +28,7 @@ Cops N Crooks gets a proper chase. Crimes add [B]heat[/B], heat becomes [B]stars
 
 [LIST]
 [*][B]Star-drop charge is off by default[/B] — [ICODE]Wanted.Take_Money.Enable[/ICODE] is now the single switch and defaults to false. When on, the price comes from [ICODE]Wanted.Take_Money.Formula[/ICODE].
-[*][B]Death bill rules[/B] — [ICODE]Lose_Money: false[/ICODE] really means no money moves on death. The death [ICODE]Formula[/ICODE] is evaluated safely: a broken formula costs nothing instead of throwing, and a bill above your balance is clamped to your balance.
+[*][B]Death bill rules[/B] — [ICODE]Lose_Money: false[/ICODE] really means no money moves on death. The death [ICODE]Formula[/ICODE] is evaluated safely: a broken formula warns once and charges 15% of the wallet instead of throwing, and a bill above your balance is clamped to your balance.
 [*][B]Decay clock[/B] — The wanted decay clock is always started on the main thread through one path, on login as well as on every raise, and yields to evasion while evasion is handling the player's decay.
 [*][B]Self-defence and own-turf defence kills are not crimes[/B] — Killing a player who struck you first raises no star, and a turf defender killing inside their own contested turf mints nothing. Civilian kills count once, not twice.
 [/LIST]
@@ -46,8 +46,8 @@ Cops N Crooks gets a proper chase. Crimes add [B]heat[/B], heat becomes [B]stars
 [*][B]WB-28, WB-29[/B] — Kill-combo increments are signalled, and the combo events fire.
 [*][B]CJ-39[/B] — [ICODE]CopDeathEvent[/ICODE] now fires when a cop dies.
 [*][B]US-05[/B] — Death money loss is clamped to the wallet.
-[*][B]TF-49[/B] — A defender's kill in their own contested turf mints nothing.
-[*][B]New rows[/B] — The star-drop charge was withdrawn before the level change, so a cancelled change still cost money. [ICODE]Lose_Money: false[/ICODE] paid the player on every death. A broken death formula threw. The bounty timer doubled the posted escrow, so a claim minted money. Killing in self-defence raised a star. A civilian kill counted twice toward wanted.
+[*][B]TF-49[/B] — A defender's kill in their own contested turf mints nothing: no star, no combo step, no kill notoriety.
+[*][B]New rows[/B] — The star-drop charge was withdrawn before the level change, so a cancelled change still cost money. [ICODE]Lose_Money: false[/ICODE] paid the player on every death. A broken death formula threw. The bounty timer doubled the posted escrow, so a claim minted money. Killing in self-defence raised a star. A civilian kill counted twice toward wanted. A player killed by his own arrow claimed the bounty on his own head. A token bounty the killer posted himself made his kill crime-free. A kill at the maximum stars still added the auto bounty. A bounty posted on a player while his row was loading was wiped with the poster's money. An admin jail throw of a player with no stars charged the base fine. A reload in the middle of a chase froze the evasion HUD.
 [/LIST]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -81,4 +81,5 @@ Cops N Crooks gets a proper chase. Crimes add [B]heat[/B], heat becomes [B]stars
 [*][B]Database[/B] — [ICODE]detainment[/ICODE] gains nullable [ICODE]fine_paid[/ICODE] and [ICODE]fine_extra_seconds[/ICODE]; [ICODE]users[/ICODE] gains nullable [ICODE]bounty_posters[/ICODE]. Both migrate on first boot.
 [*][B]Existing bounties[/B] — Bounties saved before 0.15 are treated as posted money, with no notoriety.
 [*][B]Behaviour change[/B] — If you relied on the star-drop charge, set [ICODE]Wanted.Take_Money.Enable: true[/ICODE].
+[*][B]Bartizan[/B] — [ICODE]cops-n-crooks[/ICODE] still needs Bartizan 0.6.0 or newer; without it the whole chase (heat, evasion, HUD, charge sheet, regroup, shot noise) is skipped.
 [/LIST]
