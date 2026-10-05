@@ -166,16 +166,51 @@ class EntityDamageListenerTest {
 	}
 
 	@Test
-	@DisplayName("Kill_Combo.Enable false no longer bypasses an installed tracker: it still gets the kill")
+	@DisplayName("Kill_Combo.Enable false does not bypass a tracker that applies the switch itself: it gets the kill")
 	void comboDisabled_activeTracker_stillGetsTheKill() {
 		WantedKillTrackers trackers = new WantedKillTrackers();
 		WantedKillTracker  tracker  = mock(WantedKillTracker.class);
+		when(tracker.appliesComboSwitch()).thenReturn(true);
 		trackers.install(tracker);
 
 		kill(listener(trackers), alice, bob);
 
 		verify(tracker).recordKill(eq(alice), eq(aliceUser.getWanted()), eq(bob), anyInt());
 		assertEquals(0, aliceUser.getWanted().getLevel(), "the tracker decides the stars, not the listener");
+	}
+
+	@Test
+	@DisplayName("a pre-0.15 tracker (Host_Api 2.0 jar) keeps the core's Kill_Combo.Enable gate: combo off = one star")
+	void comboDisabled_trackerWithoutTheSwitch_keepsTheCoreGate() {
+		WantedKillTrackers trackers = new WantedKillTrackers();
+		WantedKillTracker  tracker  = mock(WantedKillTracker.class);   // appliesComboSwitch() answers false
+		trackers.install(tracker);
+
+		kill(listener(trackers), alice, bob);
+
+		verify(tracker, never()).recordKill(any(), any(), any(), anyInt());
+		assertEquals(1, aliceUser.getWanted().getLevel(), "the legacy one-star-per-kill path");
+	}
+
+	@Test
+	@DisplayName("TF-49: a kill the tracker exempts (defending your own turf) adds no notoriety and starts no timer")
+	void turfDefenderKill_addsNoNotoriety_andStartsNoBountyTimer() throws IOException {
+		bountySettings("""
+				  Repeating_Timer:
+				    Enable: true
+				""");
+		WantedKillTrackers trackers = new WantedKillTrackers();
+		WantedKillTracker  tracker  = mock(WantedKillTracker.class);
+		when(tracker.appliesComboSwitch()).thenReturn(true);
+		when(tracker.exemptsKill(alice, bob)).thenReturn(true);
+		trackers.install(tracker);
+
+		kill(listener(trackers), alice, bob);
+
+		assertEquals(0, aliceUser.getBounty().getNotoriety().signum(), "no Kill.Each notoriety");
+		assertNull(aliceUser.getBounty().getRepeatingTimer(), "no bounty timer");
+		verify(tracker, never()).recordKill(any(), any(), any(), anyInt());
+		assertEquals(1, aliceUser.getKills(), "still a kill on the scoreboard");
 	}
 
 	@Test

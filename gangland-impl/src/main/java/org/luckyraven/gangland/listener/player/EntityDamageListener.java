@@ -134,7 +134,7 @@ public class EntityDamageListener implements Listener {
 
 			// Only increase wanted if this NPC counts towards wanted (cops should, civilians may, etc.)
 			if (wantedKills.countsForWanted(deadPlayer)) {
-				if (wantedKills.isActive()) {
+				if (wantedKills.routesKills(Settings.isWantedKillComboEnabled())) {
 					wantedKills.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
 					                       Settings.getWantedKillComboResetAfter());
 				} else {
@@ -181,13 +181,13 @@ public class EntityDamageListener implements Listener {
 			if (byOthers.signum() > 0) return;
 		}
 
-		// defending yourself is not a crime, with or without the cop module
-		if (defence) return;
+		// defending yourself is not a crime, with or without the cop module; nor is defending your own turf (TF-49)
+		if (defence || wantedKills.exemptsKill(damagerUser.getUser(), deadPlayer)) return;
 
 		if (!paid) handleBounty(damagerUser);
 
 		// increase the wanted level for killing another player
-		if (wantedKills.isActive()) {
+		if (wantedKills.routesKills(Settings.isWantedKillComboEnabled())) {
 			wantedKills.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
 			                       Settings.getWantedKillComboResetAfter());
 		} else handleWanted(damagerUser);
@@ -233,7 +233,7 @@ public class EntityDamageListener implements Listener {
 		if (!wantedKills.countsForWanted(victim)) return false;
 
 		// Record kill in combo system if enabled
-		if (wantedKills.isActive()) {
+		if (wantedKills.routesKills(Settings.isWantedKillComboEnabled())) {
 			wantedKills.recordKill(attacker.getUser(), attacker.getWanted(), victim,
 			                       Settings.getWantedKillComboResetAfter());
 		} else handleWanted(attacker);

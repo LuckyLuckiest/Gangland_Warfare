@@ -280,6 +280,23 @@ class HeatWantedTrackerTest {
 	}
 
 	@Test
+	@DisplayName("the core asks before the kill bounty: a player kill defending your own turf is exempt (TF-49)")
+	void exemptsKill_onlyAPlayerKillDefendingYourOwnTurf() {
+		defending = true;
+		assertTrue(tracker.exemptsKill(killer, playerVictim()));
+		assertFalse(tracker.exemptsKill(killer, marked("POLICE")), "a cop kill there keeps full heat");
+
+		defending = false;
+		assertFalse(tracker.exemptsKill(killer, playerVictim()));
+	}
+
+	@Test
+	@DisplayName("the tracker applies Wanted.Kill_Combo.Enable itself, so the core routes every counted kill to it")
+	void appliesComboSwitch_isTrue() {
+		assertTrue(tracker.appliesComboSwitch());
+	}
+
+	@Test
 	@DisplayName("an attacker's kill inside a contested turf still commits Kill_Player")
 	void attackerKillInsideAContestedTurf_stillCommitsKillPlayer() {
 		defending = false;

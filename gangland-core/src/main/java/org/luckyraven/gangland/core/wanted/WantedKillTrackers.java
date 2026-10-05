@@ -40,6 +40,17 @@ public final class WantedKillTrackers {
 		return current != null && current.countsForWanted(victim);
 	}
 
+	/** True when a delegate gets the counted kills: always one that applies the combo switch, else only with the combo on. */
+	public boolean routesKills(boolean comboEnabled) {
+		WantedKillTracker current = this.delegate;
+		return current != null && (comboEnabled || current.appliesComboSwitch());
+	}
+
+	public boolean exemptsKill(Player killer, Entity victim) {
+		WantedKillTracker current = this.delegate;
+		return current != null && current.exemptsKill(killer, victim);
+	}
+
 	public void recordKill(Player killer, Wanted wanted, Entity victim, int resetAfterSeconds) {
 		WantedKillTracker current = this.delegate;
 		if (current != null) current.recordKill(killer, wanted, victim, resetAfterSeconds);

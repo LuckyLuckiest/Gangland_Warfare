@@ -24,4 +24,25 @@ public interface WantedKillTracker {
 	void onComboReset(Consumer<Player> handler);
 
 	void onVictimDeath(Consumer<UUID> handler);
+
+	/**
+	 * True when this kill is no crime at all (0.15.0: a player kill defending your own contested turf), so the core
+	 * adds no kill notoriety and starts no bounty timer either. A delegate built before 0.15.0 exempts nothing.
+	 *
+	 * @since gangland-api 2.1
+	 */
+	default boolean exemptsKill(Player killer, Entity victim) {
+		return false;
+	}
+
+	/**
+	 * True when the delegate applies {@code Wanted.Kill_Combo.Enable} itself (0.15.0's heat tracker), so the core sends
+	 * it every counted kill. A delegate built before 0.15.0 answers false and the core keeps the switch for it: with the
+	 * combo off its kills take the core's one-star path, as on a 2.0 host.
+	 *
+	 * @since gangland-api 2.1
+	 */
+	default boolean appliesComboSwitch() {
+		return false;
+	}
 }

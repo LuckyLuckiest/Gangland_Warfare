@@ -52,10 +52,21 @@ public final class HeatWantedTracker implements WantedKillTracker {
 	}
 
 	@Override
+	public boolean exemptsKill(Player killer, Entity victim) {
+		return victim instanceof Player && !NpcSupport.isNpc(victim)
+		       && defendingOwnTurf.test(killer, victim.getLocation());
+	}
+
+	@Override
+	public boolean appliesComboSwitch() {
+		return true;
+	}
+
+	@Override
 	public void recordKill(Player killer, Wanted wanted, Entity victim, int resetAfterSeconds) {
 		boolean realPlayer = victim instanceof Player && !NpcSupport.isNpc(victim);
 
-		if (realPlayer && defendingOwnTurf.test(killer, victim.getLocation())) return;
+		if (exemptsKill(killer, victim)) return;
 
 		if (!config.get().heat().enabled()) {
 			if (Settings.isWantedKillComboEnabled()) {
