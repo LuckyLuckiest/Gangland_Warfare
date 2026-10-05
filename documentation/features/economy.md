@@ -124,7 +124,7 @@ User:
             Enable: false         # If true, runs the commands below instead of the formula. The formula is ignored.
             Executable:           # Server commands run on player death (%player% = the dead player's name)
                - "/glw eco withdraw %player% 20"
-         Lose_Money: true         # If false, death gives money instead of taking it (formula still applies)
+         Lose_Money: true         # If false, death costs nothing (since 0.15.0; it used to pay the formula amount)
          Formula: "balance * 0.15"
                                   # Expression evaluated to determine money lost/gained.
                                   # Variables: balance, level, experience, bounty, wanted
