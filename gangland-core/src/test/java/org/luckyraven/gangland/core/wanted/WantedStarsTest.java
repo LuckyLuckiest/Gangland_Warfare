@@ -12,12 +12,18 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.core.events.wanted.WantedLevelChangeEvent;
 import org.luckyraven.gangland.core.events.wanted.WantedStartEvent;
+import org.luckyraven.gangland.core.support.FakeIdentitySettingsContract;
+import org.luckyraven.gangland.core.user.IdentitySettings;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.keystone.economy.Currency;
+import org.luckyraven.keystone.util.Placeholder;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.luckyraven.keystone.timer.Timer;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -157,25 +163,121 @@ class WantedStarsTest {
 	}
 
 	@Test
-	@DisplayName("each dropped star costs Amount x Multiplier ^ (level before it falls), summed into one withdraw")
-	void drop_chargesAmountTimesMultiplierPowLevelPerStar() {
+	@DisplayName("with the charge off (the default) a drop moves no money, whatever Amount is")
+	void chargeOff_byDefault_movesNoMoney() {
 		mainThread();
 		when(settings.getTakeMoneyAmount()).thenReturn(new BigDecimal("50"));
 		when(settings.getTakeMoneyMultiplier()).thenReturn(5.0);
+		ownedAt(3);
+
+		assertEquals(1, stars.drop(context, 1, WantedCause.DECAY));
+
+		assertTrue(context.withdrawals.isEmpty());
+		assertEquals(1, context.messages.size(), "only the decreased line");
+	}
+
+	@Test
+	@DisplayName("charge on with the default formula charges Amount x Multiplier ^ level, one withdraw per drop")
+	void chargeOn_defaultFormula_chargesTodaysPrice() {
+		mainThread();
+		chargeOn("amount * multiplier ^ wanted");
 
 		ownedAt(2);
 		assertEquals(1, stars.drop(context, 1, WantedCause.DECAY));
-		assertEquals(1, wanted.getLevel());
+		wanted.setLevel(5);
+		assertEquals(1, stars.drop(context, 1, WantedCause.DECAY));
 
-		wanted.setLevel(2);
-		assertEquals(2, stars.drop(context, 2, WantedCause.EVASION));
-		assertEquals(0, wanted.getLevel());
-
-		assertEquals(2, context.withdrawals.size(), "one withdraw per drop, not per star");
-		assertMoney("1250", context.withdrawals.get(0));   // 50 * 5^2
-		assertMoney("1500", context.withdrawals.get(1));   // 50 * 5^2 + 50 * 5^1
+		assertEquals(2, context.withdrawals.size());
+		assertMoney("1250", context.withdrawals.get(0));     // 50 * 5^2
+		assertMoney("156250", context.withdrawals.get(1));   // 50 * 5^5
 		assertTrue(context.messages.contains("-1250.00"), context.messages.toString());
-		assertTrue(context.messages.contains("-1500.00"), context.messages.toString());
+		assertTrue(context.messages.contains("-156250.00"), context.messages.toString());
+	}
+
+	@Test
+	@DisplayName("a custom formula sees amount, multiplier and wanted (the level before the star falls)")
+	void chargeOn_customFormulaUsesAmountMultiplierAndWanted() {
+		mainThread();
+		chargeOn("amount * multiplier + wanted");
+		ownedAt(2);
+
+		stars.drop(context, 1, WantedCause.DECAY);
+
+		assertMoney("252", context.withdrawals.get(0));   // 50 * 5 + 2, not the 1,250 fallback
+	}
+
+	@Test
+	@DisplayName("a zero Amount charges nothing and sends no money line")
+	void chargeOn_zeroAmount_chargesNothing_andSendsNoMoneyLine() {
+		mainThread();
+		chargeOn("amount * multiplier ^ wanted");
+		when(settings.getTakeMoneyAmount()).thenReturn(BigDecimal.ZERO);
+		ownedAt(3);
+
+		assertEquals(1, stars.drop(context, 1, WantedCause.DECAY));
+
+		assertTrue(context.withdrawals.isEmpty());
+		assertEquals(1, context.messages.size());
+	}
+
+	@Test
+	@DisplayName("a broken formula charges the fallback price and the star still drops")
+	void chargeOn_brokenFormula_chargesTheFallback_andTheStarStillDrops() {
+		mainThread();
+		chargeOn("amount * * wanted");
+
+		ownedAt(2);
+		assertEquals(1, stars.drop(context, 1, WantedCause.DECAY));
+		wanted.setLevel(3);
+		assertEquals(1, stars.drop(context, 1, WantedCause.DECAY));
+
+		assertEquals(2, wanted.getLevel());
+		assertMoney("1250", context.withdrawals.get(0));    // 50 * 5^2
+		assertMoney("6250", context.withdrawals.get(1));    // 50 * 5^3
+	}
+
+	@Test
+	@DisplayName("a formula that comes out negative falls back")
+	void chargeOn_negativeFormula_fallsBack() {
+		mainThread();
+		chargeOn("0 - amount");
+		ownedAt(2);
+
+		stars.drop(context, 1, WantedCause.DECAY);
+
+		assertMoney("1250", context.withdrawals.get(0));
+	}
+
+	@Test
+	@DisplayName("a User context adds its balance to the formula variables")
+	void chargeOn_balanceVariable() {
+		mainThread();
+		chargeOn("balance * 0.02 * wanted");
+		IdentitySettings.bind(new FakeIdentitySettingsContract());
+		when(owner.getUniqueId()).thenReturn(UUID.randomUUID());
+		Placeholder placeholder = mock(Placeholder.class);
+		when(placeholder.convert(any(), any())).thenAnswer(inv -> inv.getArgument(1));
+		User<Player> user = new User<>(plugin, owner, placeholder);
+		user.getEconomy().setAmount(Currency.of(1000));
+		user.getWanted().setLevel(2);
+		user.getWanted().setOwner(owner);
+
+		stars.drop(user, 1, WantedCause.DECAY);
+
+		assertMoney("960", user.getEconomy().getAmount());   // 1000 - 1000 * 0.02 * 2
+	}
+
+	@Test
+	@DisplayName("dropping several stars sums the price of each, withdrawn once")
+	void allStarsDrop_sumsThePricePerStar() {
+		mainThread();
+		chargeOn("amount * multiplier ^ wanted");
+		ownedAt(3);
+
+		assertEquals(3, stars.drop(context, 3, WantedCause.EVASION));
+
+		assertEquals(1, context.withdrawals.size());
+		assertMoney("7750", context.withdrawals.get(0));   // 50 * (5^3 + 5^2 + 5^1)
 	}
 
 	@Test
@@ -281,6 +383,13 @@ class WantedStarsTest {
 
 		stars.suppressStarChat(null);
 		assertTrue(stars.isStarChat());
+	}
+
+	private void chargeOn(String formula) {
+		when(settings.isTakeMoneyEnabled()).thenReturn(true);
+		when(settings.getTakeMoneyFormula()).thenReturn(formula);
+		when(settings.getTakeMoneyAmount()).thenReturn(new BigDecimal("50"));
+		when(settings.getTakeMoneyMultiplier()).thenReturn(5.0);
 	}
 
 	private void mainThread() {

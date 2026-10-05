@@ -36,6 +36,21 @@ public interface WantedSettings {
 	int getTimerTime();
 
 	/**
+	 * Whether dropping a star costs money ({@code Wanted.Take_Money.Enable}); off unless the server opts in.
+	 */
+	default boolean isTakeMoneyEnabled() {
+		return false;
+	}
+
+	/**
+	 * The per-star price formula ({@code Wanted.Take_Money.Formula}); variables amount, multiplier, wanted and the
+	 * user's balance, level, experience and bounty.
+	 */
+	default String getTakeMoneyFormula() {
+		return "amount * multiplier ^ wanted";
+	}
+
+	/**
 	 * Base money amount taken from the player per timer tick.
 	 */
 	BigDecimal getTakeMoneyAmount();
