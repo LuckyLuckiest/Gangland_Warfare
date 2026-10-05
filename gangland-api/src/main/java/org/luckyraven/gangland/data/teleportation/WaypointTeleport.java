@@ -1,11 +1,14 @@
 package org.luckyraven.gangland.data.teleportation;
 
+import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
@@ -16,14 +19,19 @@ import org.luckyraven.gangland.core.user.User;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
+@CustomLog
 public class WaypointTeleport implements Listener {
 
 	private static final Map<Player, CountdownTimer> teleportCooldown = new HashMap<>();
 	private static final Map<Player, CountdownTimer> countdownTimer   = new HashMap<>();
 	private static final Map<Player, Double>         totalDistance    = new HashMap<>();
+	private static final Set<UUID>                   shielded         = ConcurrentHashMap.newKeySet();
 
 	private final Waypoint waypoint;
 
@@ -108,6 +116,33 @@ public class WaypointTeleport implements Listener {
 		player.sendMessage(Messages.WAYPOINT_TELEPORT_CANCELLED.toString());
 	}
 
+	/**
+	 * The waypoint shield: cancels every damage a shielded player takes except void, matching what the entity
+	 * {@code Invulnerable} flag used to block.
+	 */
+	@EventHandler(ignoreCancelled = true)
+	public void onShieldedDamage(EntityDamageEvent event) {
+		if (event.getCause() == EntityDamageEvent.DamageCause.VOID) return;
+		if (!shielded.contains(event.getEntity().getUniqueId())) return;
+
+		event.setCancelled(true);
+	}
+
+	/**
+	 * Docket LS-28 heal: the shield used to set the entity {@code Invulnerable} flag, which vanilla saves in
+	 * {@code player.dat}, so a quit, crash, stop or reload before its timer fired left the player permanently immune
+	 * to fall and mob damage ({@code /data} cannot edit players). Gangland no longer sets that flag on a player, so a
+	 * player who joins with it set is carrying that leftover.
+	 */
+	@EventHandler
+	public void onJoin(PlayerJoinEvent event) {
+		Player player = event.getPlayer();
+		if (!player.isInvulnerable()) return;
+
+		player.setInvulnerable(false);
+		log.info("Cleared a stale Invulnerable flag on " + player.getName() + " left by an old waypoint shield");
+	}
+
 	private void teleport(JavaPlugin plugin, User<Player> user, CompletableFuture<TeleportResult> teleportResult) {
 		World locWorld = Bukkit.getWorld(waypoint.getWorld());
 
@@ -144,12 +179,13 @@ public class WaypointTeleport implements Listener {
 			countdownTimer.start(true);
 		}
 
-		// create a shield timer
+		// create a shield timer - in memory only, never the entity Invulnerable flag (docket LS-28)
 		if (waypoint.getShield() != 0) {
+			UUID uuid = player.getUniqueId();
 			CountdownTimer countdownTimer = new CountdownTimer(plugin, waypoint.getShield(), null, null,
-			                                                   time -> player.setInvulnerable(false));
+			                                                   time -> shielded.remove(uuid));
 
-			player.setInvulnerable(true);
+			shielded.add(uuid);
 
 			countdownTimer.start(false);
 		}
