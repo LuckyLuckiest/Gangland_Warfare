@@ -23,8 +23,8 @@ public class UserTable extends Table<User<? extends OfflinePlayer>> {
 		Attribute<Integer> level      = new Attribute<>("level", false, Integer.class);
 		Attribute<Double>  experience = new Attribute<>("experience", false, Double.class);
 		Attribute<Integer> wanted     = new Attribute<>("wanted", false, Integer.class);
-		// ponytail: 4096-char ledger, about 70 posters; a bounty_post table when that is not enough
-		Attribute<String>  posters    = new Attribute<>("bounty_posters", false, 4096, String.class);
+		// ponytail: TEXT ledger (64 KB on MySQL), about 1,100 distinct posters; a bounty_post table when that is not enough
+		Attribute<String>  posters    = new Attribute<>("bounty_posters", Types.LONGVARCHAR, false, String.class);
 
 		balance.setDefaultValue(0D);
 		kills.setDefaultValue(0);
