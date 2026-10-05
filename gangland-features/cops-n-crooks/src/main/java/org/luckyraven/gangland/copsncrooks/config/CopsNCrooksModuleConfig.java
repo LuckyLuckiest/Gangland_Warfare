@@ -378,8 +378,9 @@ public class CopsNCrooksModuleConfig {
 		// Seam 2, BankTiers, moved to NpcShopsModuleConfig#installBankTiers() (T-J3, group J) — this module no
 		// longer owns banker/trader NPCs or the bank tier catalogue.
 
-		TurfManager    turfs = container.getInstance(TurfManager.class);
-		GangMembership gangs = container.getInstance(GangMembership.class);
+		TurfManager         turfs     = container.getInstance(TurfManager.class);
+		GangMembership      gangs     = container.getInstance(GangMembership.class);
+		CivilianNpcRegistry civilians = container.getInstance(CivilianNpcRegistry.class);
 
 		container.getInstance(WantedKillTrackers.class)
 		       .install(new HeatWantedTracker(container.getInstance(ChaseConfigLoader.class),
@@ -391,6 +392,6 @@ public class CopsNCrooksModuleConfig {
 			                                      int  gang = gangs.gangIdOf(killer.getUniqueId());
 			                                      return turf != null && turf.getOwnerGangId() != null && gang != -1
 			                                             && turf.getOwnerGangId() == gang;
-		                                      }));
+		                                      }, victim -> civilians.getNpc(victim.getUniqueId()) != null));
 	}
 }

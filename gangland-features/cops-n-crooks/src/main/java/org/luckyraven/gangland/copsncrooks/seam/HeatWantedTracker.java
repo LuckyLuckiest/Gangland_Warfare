@@ -19,11 +19,13 @@ import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import java.util.UUID;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * Seam 3 delegate: routes every counted kill either to the heat ledger (as a crime) or, with {@code Heat.Enable} off,
- * to the old {@link KillCombo} / one-star-per-kill math. The heat switch is read per call. A kill made defending your
- * own contested turf mints nothing on either path (docket TF-49).
+ * to the old {@link KillCombo} / one-star-per-kill math. The heat switch is read per call. A civilian NPC managed by
+ * gangland-civilians is left to that module; any other CIVILIAN-marked kill commits Kill_Civilian here. A kill made
+ * defending your own contested turf mints nothing on either path (docket TF-49).
  */
 public final class HeatWantedTracker implements WantedKillTracker {
 
@@ -33,17 +35,20 @@ public final class HeatWantedTracker implements WantedKillTracker {
 	private final KillCombo                    killCombo;
 	private final NpcMarkManager               marks;
 	private final BiPredicate<Player, Location> defendingOwnTurf;
+	private final Predicate<Entity>             managedCivilian;
 
 	private volatile Consumer<Player> wantedTrigger;
 
 	public HeatWantedTracker(ChaseConfigLoader config, HeatLedger ledger, CrimeService crimes, KillCombo killCombo,
-	                         NpcMarkManager marks, BiPredicate<Player, Location> defendingOwnTurf) {
+	                         NpcMarkManager marks, BiPredicate<Player, Location> defendingOwnTurf,
+	                         Predicate<Entity> managedCivilian) {
 		this.config           = config;
 		this.ledger           = ledger;
 		this.crimes           = crimes;
 		this.killCombo        = killCombo;
 		this.marks            = marks;
 		this.defendingOwnTurf = defendingOwnTurf;
+		this.managedCivilian  = managedCivilian;
 	}
 
 	@Override
@@ -79,12 +84,17 @@ public final class HeatWantedTracker implements WantedKillTracker {
 			return;
 		}
 
-		if (EntityMarks.of(marks.getMark(victim)) == EntityMark.POLICE) {
+		EntityMark mark = EntityMarks.of(marks.getMark(victim));
+		if (mark == EntityMark.POLICE) {
 			crimes.commit(killer, Crimes.KILL_COP, victim.getLocation());
 		} else if (realPlayer) {
 			crimes.commit(killer, Crimes.KILL_PLAYER, victim.getLocation());
+		} else if (mark == EntityMark.CIVILIAN && !managedCivilian.test(victim)) {
+			// a gangland-civilians NPC is published by its own death listener (hostile-in-combat exemption); a vanilla
+			// villager, wandering trader or shop NPC has nobody else to report it
+			crimes.commit(killer, Crimes.KILL_CIVILIAN, victim.getLocation());
 		}
-		// a civilian kill is published by gangland-civilians; anything else is no crime
+		// anything else is no crime
 	}
 
 	@Override

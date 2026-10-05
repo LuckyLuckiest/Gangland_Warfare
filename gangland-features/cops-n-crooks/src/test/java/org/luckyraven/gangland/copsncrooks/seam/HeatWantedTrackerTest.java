@@ -42,7 +42,8 @@ import static org.mockito.Mockito.when;
 
 /**
  * Pins the seam-3 delegate: the kill-combo forwards of the old tracker, and the heat routing of counted kills (cop and
- * player kills become crimes, civilian kills are published elsewhere, defending your own turf mints nothing).
+ * player kills become crimes, a gangland-civilians NPC kill is published by that module and any other civilian kill
+ * here, defending your own turf mints nothing).
  */
 @DisplayName("HeatWantedTracker")
 class HeatWantedTrackerTest {
@@ -53,6 +54,7 @@ class HeatWantedTrackerTest {
 	private CrimeService      crimes;
 	private ChaseConfigLoader config;
 	private boolean           defending;
+	private boolean           managedCivilian;
 	private Player            killer;
 	private Wanted            wanted;
 	private Location          at;
@@ -75,7 +77,8 @@ class HeatWantedTrackerTest {
 		at     = mock(Location.class);
 
 		BiPredicate<Player, Location> defend = (p, l) -> defending;
-		tracker = new HeatWantedTracker(config, ledger, crimes, killCombo, markManager, defend);
+		tracker = new HeatWantedTracker(config, ledger, crimes, killCombo, markManager, defend,
+		                                victim -> managedCivilian);
 
 		savedCombo = (Boolean) comboField().get(null);
 		combo(true);
@@ -253,12 +256,30 @@ class HeatWantedTrackerTest {
 	}
 
 	@Test
-	@DisplayName("heat on: a civilian kill commits nothing here (gangland-civilians publishes it)")
-	void heatOn_civilianKill_commitsNothing() {
+	@DisplayName("heat on: a gangland-civilians NPC kill commits nothing here (its death listener publishes it)")
+	void heatOn_managedCivilianKill_commitsNothing() {
+		managedCivilian = true;
 		tracker.recordKill(killer, wanted, marked("CIVILIAN"), 10);
 
 		verifyNoInteractions(crimes);
 		verify(killCombo, never()).recordKill(any(), any(), any(), anyInt());
+	}
+
+	@Test
+	@DisplayName("heat on: a vanilla villager, wandering trader or shop NPC kill commits Kill_Civilian")
+	void heatOn_unmanagedCivilianKill_commitsKillCivilian() {
+		tracker.recordKill(killer, wanted, marked("CIVILIAN"), 10);
+
+		verify(crimes).commit(killer, Crimes.KILL_CIVILIAN, at);
+		verify(killCombo, never()).recordKill(any(), any(), any(), anyInt());
+	}
+
+	@Test
+	@DisplayName("heat on: an unmarked entity is no crime")
+	void heatOn_unmarkedKill_commitsNothing() {
+		tracker.recordKill(killer, wanted, marked(null), 10);
+
+		verifyNoInteractions(crimes);
 	}
 
 	@Test
