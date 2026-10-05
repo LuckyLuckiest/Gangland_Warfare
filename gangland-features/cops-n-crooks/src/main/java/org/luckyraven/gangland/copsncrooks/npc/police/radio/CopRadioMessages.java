@@ -74,7 +74,10 @@ public class CopRadioMessages extends LocalizedModuleYaml implements RadioLines 
 			Map.entry("Backup", List.of("Requesting backup at my location!", "Need more units here, now!")),
 			Map.entry("Dispatch_Wanted", List.of("All units, be advised: %target% is wanted, level %level%.")),
 			Map.entry("Escalate", List.of("%tier% units en route to %target%.")),
-			Map.entry("Stand_Down", List.of("Suspect cleared. Returning to patrol.")));
+			Map.entry("Stand_Down", List.of("Suspect cleared. Returning to patrol.")),
+			Map.entry("Regroup", List.of("Two down! Pull back to cover, backup is coming!", "We're losing men, fall back and wait for backup!")),
+			Map.entry("Regroup_Push", List.of("Backup's here! All units, push together!", "Everyone move in, now!")),
+			Map.entry("Shots_Fired", List.of("Shots fired! Converge on the sound!", "Gunfire, he's close! Move in!")));
 
 	public CopRadioMessages(FileManager fileManager) {
 		super(fileManager, BASE_NAME);

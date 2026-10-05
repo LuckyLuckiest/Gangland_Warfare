@@ -34,6 +34,7 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 					Map.entry("Man_Down", 5000L), Map.entry("Leader_Down", 5000L), Map.entry("Commander_Down", 5000L),
 					Map.entry("Resisting", 10000L), Map.entry("Backup", 20000L), Map.entry("Responding", 5000L),
 					Map.entry("Ack", 2000L),
+					Map.entry("Regroup", 60000L), Map.entry("Regroup_Push", 60000L), Map.entry("Shots_Fired", 3000L),
 					Map.entry("Fall_Back", 5000L), Map.entry("In_Cover", 10000L),
 					// field care (CopFieldCare); milliseconds here, ticks (x50) in cops.yml's Cooldown_Ticks
 					Map.entry("Hit", 5000L), Map.entry("Medic_Moving", 5000L), Map.entry("Covering_Fire", 10000L),
@@ -280,6 +281,16 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 	/** Backup-request tuning ({@code Cops.Backup}). */
 	default BackupSettings getBackupSettings() {
 		return BackupSettings.DEFAULT;
+	}
+
+	/** Squad regroup after casualties ({@code Cops.Regroup}). */
+	default RegroupSettings getRegroupSettings() {
+		return RegroupSettings.DEFAULT;
+	}
+
+	/** How far cops hear a shot ({@code Cops.Shot_Noise}). */
+	default ShotNoiseSettings getShotNoiseSettings() {
+		return ShotNoiseSettings.DEFAULT;
 	}
 
 	/** When a badly hurt cop breaks off to cover ({@code Cops.Retreat}). */

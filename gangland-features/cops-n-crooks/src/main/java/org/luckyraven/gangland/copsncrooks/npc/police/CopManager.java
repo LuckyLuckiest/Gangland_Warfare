@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.npc.police;
 
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
+import lombok.CustomLog;
 import lombok.Getter;
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Bukkit;
@@ -35,10 +36,13 @@ import org.luckyraven.gangland.core.wanted.Wanted;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.BiConsumer;
 
 /**
  * Central manager for all cop NPCs. Handles spawning, AI ticking, and lifecycle management.
  */
+@CustomLog
 public class CopManager implements BeanLifecycle {
 
 	/** Past twice {@code Recycle_Seconds}, only a view within this many blocks keeps a stranded cop. */
@@ -67,6 +71,10 @@ public class CopManager implements BeanLifecycle {
 	 */
 	private final Deque<RadioCall>      pendingCalls = new ArrayDeque<>();
 	private       CopConfigProvider     configProvider;
+	/** Called on every AI tick of an online player's chase; see {@link #addAiTickHook}. */
+	private final List<BiConsumer<Player, @Nullable CopGroup>> aiTickHooks     = new CopyOnWriteArrayList<>();
+	/** Called first thing when a player hits a cop; see {@link #addCopAttackedHook}. */
+	private final List<BiConsumer<CopNpc, Player>>             copAttackedHooks = new CopyOnWriteArrayList<>();
 
 	public CopManager(JavaPlugin plugin, CopSpawnManager spawnManager, TargetingManager targetingManager,
 	                  CopLoader copLoader, NpcMarkManager markManager,
@@ -188,6 +196,13 @@ public class CopManager implements BeanLifecycle {
 	 * @param attacker the attacking player
 	 */
 	public void onCopAttackedAlert(CopNpc copNpc, Player attacker) {
+		for (BiConsumer<CopNpc, Player> hook : copAttackedHooks) {
+			try {
+				hook.accept(copNpc, attacker);
+			} catch (RuntimeException exception) {
+				log.warn("cop-attacked hook failed: " + exception);
+			}
+		}
 		// Always force the directly attacked cop into combat with the attacker,
 		// regardless of whether it currently has a target or belongs to a group.
 		onCopAttacked(copNpc, attacker);
@@ -387,7 +402,36 @@ public class CopManager implements BeanLifecycle {
 	 * The group hunting {@code playerId}, or {@code null}. Package-private test seam.
 	 */
 	CopGroup groupFor(UUID playerId) {
+		return groupOf(playerId);
+	}
+
+	/** The group hunting {@code playerId}, or {@code null}. */
+	public @Nullable CopGroup groupOf(UUID playerId) {
 		return groups.get(playerId);
+	}
+
+	/**
+	 * Registers a hook run on every AI tick of an online player's chase: at the end of a normal tick, and before the
+	 * early return when his group is missing or empty (the group is passed as found, possibly {@code null}). A hook that
+	 * throws is logged and skipped.
+	 */
+	public void addAiTickHook(BiConsumer<Player, @Nullable CopGroup> hook) {
+		aiTickHooks.add(hook);
+	}
+
+	/** Registers a hook run first thing when a player hits a cop; a hook that throws is logged and skipped. */
+	public void addCopAttackedHook(BiConsumer<CopNpc, Player> hook) {
+		copAttackedHooks.add(hook);
+	}
+
+	private void runAiTickHooks(Player player, @Nullable CopGroup group) {
+		for (BiConsumer<Player, @Nullable CopGroup> hook : aiTickHooks) {
+			try {
+				hook.accept(player, group);
+			} catch (RuntimeException exception) {
+				log.warn("AI-tick hook failed: " + exception);
+			}
+		}
 	}
 
 	/** A new group whose squads speak on the police radio and queue its calls here. */
@@ -584,6 +628,7 @@ public class CopManager implements BeanLifecycle {
 		Location origin = cop.getSpawnLocation();
 		if (origin != null && stuck.avoidSpawnerSeconds() > 0)
 			group.avoid(origin, now + stuck.avoidSpawnerSeconds() * 1000L);
+		group.markTipOff(now);
 		group.getSquad().reportSighting(player.getLocation());
 		return true;
 	}
@@ -677,6 +722,7 @@ public class CopManager implements BeanLifecycle {
 
 		CopGroup group = groups.get(playerId);
 		if (group == null || group.isEmpty()) {
+			runAiTickHooks(player, group);
 			// Self-cleanup: player is no longer wanted and all cops are gone
 			if (!targetingManager.isWanted(playerId)) {
 				stopAITask(playerId);
@@ -720,6 +766,7 @@ public class CopManager implements BeanLifecycle {
 			copRadio.sayFromLeader(group, "Resisting");
 			fightResisting(group);
 		}
+		runAiTickHooks(player, group);
 		drainRadioCalls();
 	}
 

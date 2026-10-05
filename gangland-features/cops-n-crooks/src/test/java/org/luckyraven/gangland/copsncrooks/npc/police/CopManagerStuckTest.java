@@ -121,6 +121,27 @@ class CopManagerStuckTest {
 	}
 
 	@Test
+	@DisplayName("a recycle stamps the group's tip-off clock; a run with no recycle does not")
+	void recycle_marksATipOff() {
+		CopNpc stuck = stranded(CopState.PURSUING, 10, 64, 0, 13_000);
+
+		manager.spawnTick(playerId, wanted);
+
+		assertFalse(group.getCops().contains(stuck));
+		assertTrue(group.tippedOffWithin(fx.clock[0], 0), "stamped at the radio clock");
+	}
+
+	@Test
+	@DisplayName("no recycle, no tip-off stamp")
+	void noRecycle_noTipOff() {
+		stranded(CopState.PURSUING, 10, 64, 0, 11_000);
+
+		manager.spawnTick(playerId, wanted);
+
+		assertFalse(group.tippedOffWithin(fx.clock[0], Long.MAX_VALUE / 2));
+	}
+
+	@Test
 	@DisplayName("the replacement takes the recycled cop's squad role")
 	void strandedRecycled_replacementTakesFreedRole() {
 		CopRole pointman = role("Pointman");

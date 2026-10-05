@@ -249,4 +249,17 @@ class CopGroupSquadTest {
 		when(entity.getLocation()).thenReturn(at);
 		return entity;
 	}
+
+	@Test
+	@DisplayName("tippedOffWithin: false before any tip-off, true inside the window, false past it")
+	void tippedOffWithin_window() {
+		CopGroup group = new CopGroup(UUID.randomUUID());
+		assertFalse(group.tippedOffWithin(5_000L, 10_000L), "never tipped off");
+
+		group.markTipOff(5_000L);
+
+		assertTrue(group.tippedOffWithin(5_000L, 0L));
+		assertTrue(group.tippedOffWithin(9_000L, 4_000L), "edge of the window");
+		assertFalse(group.tippedOffWithin(9_001L, 4_000L), "past the window");
+	}
 }

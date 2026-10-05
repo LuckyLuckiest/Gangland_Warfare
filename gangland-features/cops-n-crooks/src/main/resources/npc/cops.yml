@@ -142,6 +142,11 @@ Cops:
          Status_Check: 400
          Pull_Back: 300
          Medic_Treating: 200
+         # Squad pulls back after casualties, then pushes when backup arrives (one regroup per Cooldown_Seconds).
+         Regroup: 1200
+         Regroup_Push: 1200
+         # A shot heard by cops; one squad hunts one player, so this is the per-shooter throttle (60 = 3 s).
+         Shots_Fired: 60
       # Short click played to each listener with every line (SoundConfiguration shape).
       Sound:
          Name: BLOCK_NOTE_BLOCK_HAT
@@ -156,6 +161,23 @@ Cops:
       Duration_Ticks: 600
       # Minimum gap between two backup requests from one group (1200 = 60 s).
       Cooldown_Ticks: 1200
+   # A squad that loses Casualties cops within Window_Seconds falls back to cover (Lines.Regroup) for up to
+   # Fall_Back_Seconds, then pushes together (Lines.Regroup_Push) once backup is within Arrival_Radius blocks.
+   # One regroup per Cooldown_Seconds; squads set to cuff first never regroup.
+   Regroup:
+      Enabled: true
+      Casualties: 2
+      Window_Seconds: 20
+      Fall_Back_Seconds: 15
+      Cooldown_Seconds: 60
+      Arrival_Radius: 24.0
+   # How far cops hear a shot, in blocks, by weapon type (0 = silent). Unlisted types are silent.
+   Shot_Noise:
+      Enabled: true
+      Radius:
+         GUN: 48
+         THROWABLE: 16
+         MELEE: 0
    # A badly hurt cop breaks off, radios it (Lines.Fall_Back / In_Cover) and takes cover out of the suspect's sight
    # for up to 10 seconds, then comes back out and fights on.
    Retreat:
