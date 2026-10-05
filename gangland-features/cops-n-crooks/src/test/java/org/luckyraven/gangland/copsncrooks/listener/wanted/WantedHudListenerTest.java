@@ -165,6 +165,19 @@ class WantedHudListenerTest {
 	}
 
 	@Test
+	@DisplayName("a raise that is not a crime ignores the ledger and names the reported crime")
+	void raise_nonCrimeCause_usesReportedCrime() {
+		WantedHudListener listener = listener(HudSettings.DEFAULT);
+
+		listener.onLevelChange(change(1, 2, WantedCause.ADMIN));
+
+		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
+		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(40), eq(10));
+		assertEquals("Reported crime: Sergeant inbound, they still want you in cuffs",
+		             ChatColor.stripColor(subtitle.getValue()));
+	}
+
+	@Test
 	@DisplayName("with Title off and Star_Card on the card goes to chat")
 	void titleOff_starCardOn_sendsTheCardToChat() {
 		WantedHudListener listener = listener(HudFixtures.hud(true, true, false, true, true, true));

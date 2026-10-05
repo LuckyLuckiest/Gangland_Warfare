@@ -67,7 +67,7 @@ class StarCardTest {
 	void raiseCard_noCrime_usesReportedCrime() throws IOException {
 		WantedMessages messages = HudFixtures.messages(tempDir);
 
-		assertEquals("Unknown Crime: Officer inbound, they still want you in cuffs",
+		assertEquals("Reported crime: Officer inbound, they still want you in cuffs",
 		             plain(StarCard.raiseCard(messages, messages.crimeName("Unknown_Crime"), "Officer", false)));
 	}
 
