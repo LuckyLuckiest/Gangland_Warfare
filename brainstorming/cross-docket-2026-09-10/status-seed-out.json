@@ -859,19 +859,44 @@
   "note": "Not fixed (low): not a regression; both lines still heard in 11 of 14 engagements. Not merged: master, publish and deploy wait for the owner's approval.",
   "updatedAt": "2026-10-05"
  },
+ "T-175": {
+  "status": "fixed",
+  "note": "Fixed in Gangland 0.13.0 (branch npc-roles-medics, b308a52d + 28b8c714): a returning cop with no route home despawns after the stuck window instead of waiting out Return.Max_Ticks. Live-round-2 lane: unreachable far spawner stand-down pass, reachable 40-block control pass. Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-10-05"
+ },
  "KS-NP-55": {
   "status": "open",
-  "note": "Not verified fixed (Keystone 1.14.0, branch phase-h13-npc-roles, 0470a0e): holdFireFacingAway holds fire while walking with the body over 90 degrees off the target; the live-round-2 lane still saw 18 of 562 shots (3.2%) over 90 degrees off, see KS-NP-56. Holding-fire DEBUG lines and normal cop fire pass. Not merged: master, publish and deploy wait for the owner's approval.",
+  "note": "Not verified fixed (b818483): lane 2b client view 5 of 2711 shots over 90 degrees (0.18%), but the server pre-snap check failed, see KS-NP-58. Not merged: master, publish and deploy wait for the owner's approval.",
   "updatedAt": "2026-10-05"
  },
  "KS-NP-56": {
   "status": "open",
-  "note": "The guard holds only while the navigator is navigating; an idle-navigator cop (arrival, re-issue, fresh spawn) turns and fires from any angle, 16 of the 18 live-round-2 violations; two nav=true shots had stale yaw (~116 deg pre-snap). Low.",
+  "note": "Not verified fixed (b818483): standing NPCs now turn first and shots over 90 degrees are held, but the lane's pre-snap check failed, see KS-NP-58. Not merged: master, publish and deploy wait for the owner's approval.",
   "updatedAt": "2026-10-05"
  },
- "T-175": {
-  "status": "fixed",
-  "note": "Fixed in Gangland 0.13.0 (branch npc-roles-medics, b308a52d + 28b8c714): a returning cop with no route home despawns after the stuck window instead of waiting out Return.Max_Ticks. Live-round-2 lane: unreachable far spawner stand-down pass, reachable 40-block control pass. Not merged: master, publish and deploy wait for the owner's approval.",
+ "T-176": {
+  "status": "open",
+  "note": "Not fixed (low): a stale pursuit-phase unreachable clock is not reset when the spawner is within the pacing radius of the death spot. Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-10-05"
+ },
+ "T-177": {
+  "status": "open",
+  "note": "Not fixed (low): with no spawner and no spawn location a stranded return only ends at Return.Max_Ticks. Not merged: master, publish and deploy wait for the owner's approval.",
+  "updatedAt": "2026-10-05"
+ },
+ "KS-NP-57": {
+  "status": "open",
+  "note": "Not fixed (low): the standing test counts a ladder climb or a pursuit-leg gap as standing.",
+  "updatedAt": "2026-10-05"
+ },
+ "KS-NP-58": {
+  "status": "open",
+  "note": "Open (medium): 10 of 2756 shots (0.36%) fired with a tick-start yaw over 93 degrees by sprinting cops; instrument the guard on the shot tick.",
+  "updatedAt": "2026-10-05"
+ },
+ "BZ-NU-09": {
+  "status": "open",
+  "note": "Not fixed (low): burst follow-up rounds bypass the facing guard.",
   "updatedAt": "2026-10-05"
  }
 }
