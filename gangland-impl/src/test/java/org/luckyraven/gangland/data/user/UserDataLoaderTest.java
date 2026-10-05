@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.data.user;
 
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -145,6 +146,22 @@ class UserDataLoaderTest {
 		verify(bukkit.scheduler()).runTaskTimer(any(Plugin.class), any(Runnable.class), anyLong(), anyLong());
 		verify(bukkit.scheduler(), never()).runTaskTimerAsynchronously(any(Plugin.class), any(Runnable.class),
 		                                                               anyLong(), anyLong());
+	}
+
+	@Test
+	@DisplayName("a bounty posted while the row loads survives the load, on top of the saved ledger, applied on the main thread")
+	void bountyPostedDuringTheLoad_survivesIt() throws SQLException {
+		saveRow(0, 100.0, "saved=100:100");
+		CommandSender poster = mock(CommandSender.class);
+		when(poster.getName()).thenReturn("live");
+		user.getBounty().addBounty(poster, BigDecimal.valueOf(50));
+
+		loader().loadUserData(user, new UserTable(), new BankTable(new UserTable()));
+
+		assertEquals(0, BigDecimal.valueOf(150).compareTo(user.getBounty().getAmount()), "saved 100 + live 50");
+		assertEquals(0, BigDecimal.valueOf(150).compareTo(user.getBounty().getPostedAmount()));
+		assertEquals(0, BigDecimal.valueOf(50).compareTo(user.getBounty().getPaidAmount(poster)), "the live refund");
+		verify(bukkit.scheduler()).runTask(any(Plugin.class), any(Runnable.class));
 	}
 
 	/** The only place the loader is constructed, so a constructor change touches one line. */

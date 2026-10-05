@@ -3,6 +3,7 @@ package org.luckyraven.gangland.data.user;
 import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.core.feature.Executor;
 import org.luckyraven.keystone.timer.Timer;
@@ -150,22 +151,27 @@ public final class UserDataLoader {
 			userLevel.setLevelValue(level);
 			userLevel.setExperience(experience);
 
-			Bounty userBounty = user.getBounty();
-			userBounty.setAmount(Currency.of(bounty));
-			userBounty.restoreLedger(posters);
-
-			if (!user.getUser().isOnline()) return;
-
-			// only the server-made part compounds; the timer touches Bukkit (event), so it starts on the main thread
-			if (Settings.isBountyTimerEnabled() && userBounty.getNotoriety().signum() > 0
-			    && userBounty.getNotoriety().compareTo(BigDecimal.valueOf(Settings.getBountyTimerMax())) < 0) {
-				Bukkit.getScheduler().runTask(gangland, () -> {
-					BountyEvent bountyEvent = new UserBountyEvent(false, user);
-					Executor    executor    = new BountyExecutor(gangland, bountyEvent, user, bountySettings);
-
-					executor.createTimer().start(false);
-				});
-			}
+			// the ledger is main-thread state: a post or a kill can book into it while this row loads, so the saved
+			// bounty is merged under it there instead of wiping it from this thread
+			Runnable restoreBounty = () -> restoreBounty(user, bounty, posters);
+			if (Bukkit.isPrimaryThread()) restoreBounty.run();
+			else Bukkit.getScheduler().runTask(gangland, restoreBounty);
 		});
+	}
+
+	private void restoreBounty(User<? extends OfflinePlayer> user, double saved, @Nullable String posters) {
+		Bounty userBounty = user.getBounty();
+		userBounty.restoreSaved(Currency.of(saved), posters);
+
+		if (!user.getUser().isOnline()) return;
+
+		// only the server-made part compounds; the timer touches Bukkit (event), so it starts on the main thread
+		if (Settings.isBountyTimerEnabled() && userBounty.getNotoriety().signum() > 0
+		    && userBounty.getNotoriety().compareTo(BigDecimal.valueOf(Settings.getBountyTimerMax())) < 0) {
+			BountyEvent bountyEvent = new UserBountyEvent(false, user);
+			Executor    executor    = new BountyExecutor(gangland, bountyEvent, user, bountySettings);
+
+			executor.createTimer().start(false);
+		}
 	}
 }

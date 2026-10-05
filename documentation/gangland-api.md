@@ -120,7 +120,7 @@ this artifact, and count as api surface under the same 2.1 bump):
 | `Wanted.setLevel(int, WantedCause)`, `incrementLevel(cause)`, `decrementLevel(cause)`, `reset(cause)` | same | The old no-cause methods stay and mean `UNKNOWN` |
 | `getCause()` | `WantedLevelChangeEvent`, `WantedStartEvent`, `WantedEndEvent` | The old constructors stay and pass `UNKNOWN` |
 | `MoneyFormula` | `org.luckyraven.gangland.core.money` | `evaluate(formula, variables, fallback)` never throws; `userVariables(user)` |
-| `Bounty` posted/notoriety members | `org.luckyraven.gangland.core.bounty` | `getPostedAmount`, `getPostedAmountExcluding`, `getNotoriety`, `addNotoriety`, `claimPosted`, `serializeLedger`, `restoreLedger` |
+| `Bounty` posted/notoriety members | `org.luckyraven.gangland.core.bounty` | `getPostedAmount`, `getPostedAmountExcluding`, `getNotoriety`, `addNotoriety`, `claimPosted`, `serializeLedger`, `restoreLedger`, `restoreSaved` |
 | `WantedKillTracker.exemptsKill(killer, victim)`, `appliesComboSwitch()` | `org.luckyraven.gangland.core.wanted` | `default` methods answering false. A delegate that exempts a kill (the heat tracker: defending your own turf) stops the core's kill notoriety too; one that applies `Wanted.Kill_Combo.Enable` itself gets every counted kill, while a pre-0.15.0 delegate keeps the core's combo gate |
 | `Settings.isWantedTakeMoneyEnabled()`, `getWantedTakeMoneyFormula()`, `isBountyPayNotoriety()` | `org.luckyraven.gangland.file.configuration` | New `settings.yml` getters (`Wanted.Take_Money.Enable`, `.Formula`, `Bounty.Pay_Notoriety`) |
 | `WantedClearContract.clearWanted(UUID, WantedCause)` | cops-n-crooks seam | A `default` method delegating to the one-argument form |

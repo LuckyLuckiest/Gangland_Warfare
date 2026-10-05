@@ -240,6 +240,24 @@ public class Bounty {
 		}
 	}
 
+	/**
+	 * Login restore over a bounty that was already in use while its row loaded: the saved total and ledger
+	 * ({@link #restoreLedger} rules), with everything booked in memory meanwhile (a post, a kill's notoriety) added on top
+	 * instead of wiped. Main thread, like every other ledger write.
+	 */
+	public void restoreSaved(BigDecimal savedAmount, @Nullable String serialized) {
+		Map<String, BigDecimal> liveSet    = new LinkedHashMap<>(userSetBounty);
+		Map<String, BigDecimal> livePaid   = new LinkedHashMap<>(userPaidBounty);
+		BigDecimal              liveAmount = amount;
+
+		this.amount = Currency.of(savedAmount);
+		restoreLedger(serialized);
+
+		liveSet.forEach((id, posted) -> userSetBounty.merge(id, posted, BigDecimal::add));
+		livePaid.forEach((id, paid) -> userPaidBounty.merge(id, paid, BigDecimal::add));
+		this.amount = this.amount.add(liveAmount);
+	}
+
 	@Override
 	public String toString() {
 		return "Bounty{amount=" + amount.toPlainString() + "}";
