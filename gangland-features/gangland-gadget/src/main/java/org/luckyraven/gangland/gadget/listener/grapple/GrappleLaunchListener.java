@@ -7,6 +7,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.luckyraven.gangland.gadget.grapple.Grapple;
 import org.luckyraven.gangland.gadget.grapple.GrappleService;
+import org.luckyraven.gangland.gadget.grapple.GrappleSession;
 import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
 import org.luckyraven.gangland.gadget.grapple.message.GrappleMessages;
 import org.luckyraven.keystone.bean.autowire.AutowireTarget;
@@ -15,9 +16,10 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
 /**
  * Fires and releases a grapple off the vanilla fishing-rod clicks. A grapple item is a fishing rod under the hood, so
  * the first right-click casts a hook ({@link PlayerFishEvent.State#FISHING}), which {@link GrappleService#fire} turns
- * into a fast web-shot; the rendered fishing line comes for free. The next right-click (any reel/catch state) lets go.
- * Never reads {@code event.getHand()} — absent on this plugin's Spigot API floor; the main hand is looked up instead,
- * matching {@code CarInteractListener}'s convention of ignoring the off-hand.
+ * into a fast web-shot; the rendered fishing line comes for free. The next right-click (reel, in-ground or a catch)
+ * on that same hook lets go, found by hook identity so it works whichever hand holds the rod. A bite, a failed
+ * attempt or any state newer servers add (LURED) is ignored. Never reads {@code event.getHand()} — absent on this
+ * plugin's Spigot API floor; the cast looks up the main hand, matching {@code CarInteractListener}'s convention.
  */
 @ListenerHandler
 @AutowireTarget({GrappleService.class, GrappleAddon.class, GrappleMessages.class})
@@ -37,29 +39,35 @@ public class GrappleLaunchListener implements Listener {
 	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
 	public void onPlayerFish(PlayerFishEvent event) {
 		Player player = event.getPlayer();
+		switch (event.getState()) {
+			case FISHING -> cast(event, player);
+			case REEL_IN, IN_GROUND, CAUGHT_FISH, CAUGHT_ENTITY -> release(event, player);
+			default -> {
+				// BITE (a fish nibbling at a hook pinned in water), FAILED_ATTEMPT, LURED on newer servers: not a click
+			}
+		}
+	}
 
+	/**
+	 * Lets go, keeping momentum, if this is the session's own hook. Cancelled so vanilla never fishes, yanks a hooked
+	 * entity or wears the rod; the hook goes with us.
+	 */
+	private void release(PlayerFishEvent event, Player player) {
+		GrappleSession session = grappleService.getSession(player);
+		if (session == null || !session.getHook().equals(event.getHook())) return;
+
+		event.setCancelled(true);
+		event.getHook().remove();
+		grappleService.cancel(player);
+	}
+
+	private void cast(PlayerFishEvent event, Player player) {
 		String id = Grapple.getGrappleId(player.getInventory().getItemInMainHand());
 		if (id == null) return;   // not a grapple item — leave vanilla fishing untouched
 
 		Grapple grapple = grappleAddon.getGrapple(id);
 		if (grapple == null) return;
 
-		switch (event.getState()) {
-			case FISHING -> cast(event, player, grapple);
-			case BITE -> {
-				// a pinned hook can sit in water; a fish nibbling at it is not a release
-			}
-			default -> {
-				// Second right-click (REEL_IN/IN_GROUND/FAILED_ATTEMPT) or a vanilla catch: let go, keeping momentum.
-				// Cancelled so vanilla never fishes, yanks a hooked entity or wears the rod; the hook goes with us.
-				event.setCancelled(true);
-				event.getHook().remove();
-				grappleService.cancel(player);
-			}
-		}
-	}
-
-	private void cast(PlayerFishEvent event, Player player, Grapple grapple) {
 		if (!player.hasPermission(grapple.getPermission())) {
 			player.sendMessage(grappleMessages.noPermission());
 			event.setCancelled(true);

@@ -73,4 +73,16 @@ class GrappleRopeTest {
 		assertEquals(9.5, GrappleRope.reel(10, 0.5, 1.5), 1e-9);
 		assertEquals(1.5, GrappleRope.reel(1.8, 0.5, 1.5), 1e-9);
 	}
+
+	@Test
+	@DisplayName("reel never lengthens a rope that latched on shorter than the minimum length")
+	void reel_neverLengthens() {
+		assertEquals(2.0, GrappleRope.reel(2.0, 0.3, 3.0), 1e-9);
+	}
+
+	@Test
+	@DisplayName("a player exactly on the anchor (zero radius) gets no rope force, never a NaN velocity")
+	void zeroRadius_noNaN() {
+		assertNull(GrappleRope.constrain(new Vector(0, 0, 0), new Vector(1, 0, 0), ANCHOR, 0, 2));
+	}
 }

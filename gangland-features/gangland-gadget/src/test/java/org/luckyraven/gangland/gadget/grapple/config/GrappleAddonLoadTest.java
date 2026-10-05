@@ -36,13 +36,15 @@ class GrappleAddonLoadTest {
 			      - "&7Line one"
 			   Max_Distance: 30
 			   Max_Pull_Speed: 2.0
-			   Pull_Acceleration: 0.4
+			   Pull_Acceleration: 0.04
+			   Reel_Speed: 0.5
+			   Min_Rope_Length: 2.5
 			   Arrival_Distance: 2.0
 			   Cooldown_Seconds: 5
-			   Max_Duration_Ticks: 120
+			   Max_Duration_Ticks: 60
 			   Fall_Damage_Grace_Ticks: 30
 			   Require_Line_Of_Sight: false
-			   Shot_Speed: 4.0
+			   Shot_Speed: 2.5
 			   Miss_Cooldown_Ticks: 0
 			   Fire_Sound: "ENTITY_ARROW_SHOOT"
 			   Attach_Sound: ""
@@ -67,6 +69,17 @@ class GrappleAddonLoadTest {
 			   Display_Name: "&bOut Of Range"
 			   Max_Distance: 64
 			   Shot_Speed: 0
+			   Max_Pull_Speed: 0
+			   Pull_Acceleration: 0
+			   Reel_Speed: 0
+			   Min_Rope_Length: 0
+
+			out_of_range_high:
+			   Material: FISHING_ROD
+			   Display_Name: "&bOut Of Range High"
+			   Shot_Speed: 10
+			   Max_Pull_Speed: 10
+			   Max_Duration_Ticks: 200
 			""";
 
 	@BeforeAll
@@ -128,13 +141,15 @@ class GrappleAddonLoadTest {
 
 		assertEquals(25, grapple.getMaxDistance());
 		assertEquals(1.8, grapple.getMaxPullSpeed());
-		assertEquals(0.35, grapple.getPullAcceleration());
-		assertEquals(1.5, grapple.getArrivalDistance());
+		assertEquals(0.05, grapple.getPullAcceleration());
+		assertEquals(0.3, grapple.getReelSpeed());
+		assertEquals(3.0, grapple.getMinRopeLength());
+		assertEquals(3.5, grapple.getArrivalDistance());
 		assertEquals(8, grapple.getCooldownSeconds());
-		assertEquals(100, grapple.getMaxDurationTicks());
+		assertEquals(70, grapple.getMaxDurationTicks());
 		assertEquals(40, grapple.getFallDamageGraceTicks());
 		assertTrue(grapple.isRequireLineOfSight());
-		assertEquals(5.0, grapple.getShotSpeed());
+		assertEquals(3.9, grapple.getShotSpeed());
 		assertEquals(10, grapple.getMissCooldownTicks());
 		assertEquals("ITEM_CROSSBOW_SHOOT", grapple.getFireSound().sound());
 		assertEquals("ENTITY_ARROW_HIT", grapple.getAttachSound().sound());
@@ -155,13 +170,15 @@ class GrappleAddonLoadTest {
 		assertEquals(7, grapple.getCustomModelData());
 		assertEquals(30, grapple.getMaxDistance());
 		assertEquals(2.0, grapple.getMaxPullSpeed());
-		assertEquals(0.4, grapple.getPullAcceleration());
+		assertEquals(0.04, grapple.getPullAcceleration());
+		assertEquals(0.5, grapple.getReelSpeed());
+		assertEquals(2.5, grapple.getMinRopeLength());
 		assertEquals(2.0, grapple.getArrivalDistance());
 		assertEquals(5, grapple.getCooldownSeconds());
-		assertEquals(120, grapple.getMaxDurationTicks());
+		assertEquals(60, grapple.getMaxDurationTicks());
 		assertEquals(30, grapple.getFallDamageGraceTicks());
 		assertEquals(false, grapple.isRequireLineOfSight());
-		assertEquals(4.0, grapple.getShotSpeed());
+		assertEquals(2.5, grapple.getShotSpeed());
 		assertEquals(0, grapple.getMissCooldownTicks());
 		assertEquals("ENTITY_ARROW_SHOOT", grapple.getFireSound().sound());
 		assertNull(grapple.getAttachSound(), "an empty sound name means silent");
@@ -181,7 +198,7 @@ class GrappleAddonLoadTest {
 	}
 
 	@Test
-	@DisplayName("Max_Distance past the vanilla 32-block hook limit is clamped to 32; Shot_Speed 0 floors at 0.5")
+	@DisplayName("too-low values clamp up: Max_Distance to 30, Shot_Speed 0.5, speeds/acceleration/rope to their floors")
 	void outOfRange_clamped() {
 		GrappleAddon addon = addon();
 		addon.loadGrapples(loadYaml(YAML));
@@ -189,7 +206,25 @@ class GrappleAddonLoadTest {
 		Grapple grapple = addon.getGrapple("out_of_range");
 		assertNotNull(grapple);
 
-		assertEquals(32, grapple.getMaxDistance());
+		assertEquals(30, grapple.getMaxDistance());
 		assertEquals(0.5, grapple.getShotSpeed());
+		assertEquals(0.1, grapple.getMaxPullSpeed());
+		assertEquals(0.01, grapple.getPullAcceleration());
+		assertEquals(0.01, grapple.getReelSpeed());
+		assertEquals(0.5, grapple.getMinRopeLength());
+	}
+
+	@Test
+	@DisplayName("too-high values clamp down: Shot_Speed and Max_Pull_Speed to 3.9 b/t, Max_Duration_Ticks to 79")
+	void outOfRangeHigh_clamped() {
+		GrappleAddon addon = addon();
+		addon.loadGrapples(loadYaml(YAML));
+
+		Grapple grapple = addon.getGrapple("out_of_range_high");
+		assertNotNull(grapple);
+
+		assertEquals(3.9, grapple.getShotSpeed(), "the client clamps a velocity packet to 3.9 b/t per axis");
+		assertEquals(3.9, grapple.getMaxPullSpeed());
+		assertEquals(79, grapple.getMaxDurationTicks(), "80+ ticks airborne kicks on allow-flight=false servers");
 	}
 }

@@ -15,7 +15,9 @@ import org.luckyraven.keystone.bean.autowire.AutowireTarget;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 /**
- * Aborts an in-progress grapple pull: damage, sneak-start (G2), and teleport, world-change and death (G3).
+ * Aborts an in-progress grapple pull: damage, sneak-start (G2), and teleport, world-change and death (G3). The last
+ * three end any session, a shot still in flight included ({@code cancel} is a no-op without one): the hook would
+ * otherwise keep flying from where the player no longer is.
  * <p>
  * {@code onDamage} is deliberately {@code MONITOR} priority + {@code ignoreCancelled = true}: G3's
  * {@code GrappleFallDamageListener} will cancel {@code DamageCause.FALL} at {@code HIGH} priority while a pull is
@@ -51,23 +53,17 @@ public class GrappleAbortListener implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onTeleport(PlayerTeleportEvent event) {
-		Player player = event.getPlayer();
-		if (!grappleService.isActive(player)) return;
-		grappleService.cancel(player);
+		grappleService.cancel(event.getPlayer());
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onChangeWorld(PlayerChangedWorldEvent event) {
-		Player player = event.getPlayer();
-		if (!grappleService.isActive(player)) return;
-		grappleService.cancel(player);
+		grappleService.cancel(event.getPlayer());
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onDeath(PlayerDeathEvent event) {
-		Player player = event.getEntity();   // PlayerDeathEvent#getEntity() covariantly returns Player
-		if (!grappleService.isActive(player)) return;
-		grappleService.cancel(player);
+		grappleService.cancel(event.getEntity());   // PlayerDeathEvent#getEntity() covariantly returns Player
 	}
 
 	/**

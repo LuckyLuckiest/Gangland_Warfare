@@ -34,6 +34,8 @@ public class Grapple {
 	private final int     maxDistance;
 	private final double  maxPullSpeed;
 	private final double  pullAcceleration;
+	private final double  reelSpeed;
+	private final double  minRopeLength;
 	private final double  arrivalDistance;
 	private final int     cooldownSeconds;
 	private final int     maxDurationTicks;

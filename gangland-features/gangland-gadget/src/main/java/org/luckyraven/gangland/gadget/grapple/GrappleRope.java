@@ -45,9 +45,10 @@ public final class GrappleRope {
 	}
 
 	/**
-	 * Reels the rope in by {@code reelSpeed}, never shorter than {@code minLength}.
+	 * Reels the rope in by {@code reelSpeed}, never shorter than {@code minLength} and never longer than it already is
+	 * (a rope that latched on shorter than the minimum stays as it is).
 	 */
 	public static double reel(double ropeLength, double reelSpeed, double minLength) {
-		return Math.max(ropeLength - reelSpeed, minLength);
+		return Math.max(ropeLength - reelSpeed, Math.min(minLength, ropeLength));
 	}
 }

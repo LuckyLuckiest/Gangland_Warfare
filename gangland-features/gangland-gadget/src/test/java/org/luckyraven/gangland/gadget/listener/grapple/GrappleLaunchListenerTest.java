@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.core.testsupport.BukkitRegistryFixture;
 import org.luckyraven.gangland.gadget.grapple.Grapple;
 import org.luckyraven.gangland.gadget.grapple.GrappleKey;
+import org.luckyraven.gangland.gadget.grapple.GrappleSession;
 import org.luckyraven.gangland.gadget.grapple.GrappleService;
 import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
 import org.luckyraven.gangland.gadget.grapple.message.GrappleMessages;
@@ -31,8 +32,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * Pins the grapple's click mapping onto {@link PlayerFishEvent}: the cast ({@code FISHING}) fires the web-shot when
- * permitted and off cooldown, otherwise no hook is spawned at all; any later reel/catch click lets go (cancelled, so
- * vanilla never fishes or wears the rod); a bite on a pinned hook is ignored; non-grapple rods are untouched.
+ * permitted and off cooldown, otherwise no hook is spawned at all; a reel/ground/catch click on the session's own hook
+ * lets go (cancelled, so vanilla never fishes or wears the rod) whichever hand holds the rod; a bite or a failed
+ * attempt is ignored; non-grapple rods are untouched.
  */
 @DisplayName("GrappleLaunchListener — fire on cast, release on the next click")
 class GrappleLaunchListenerTest {
@@ -140,17 +142,25 @@ class GrappleLaunchListenerTest {
 		verify(player, never()).sendMessage(anyString());
 	}
 
+	/** A running session whose hook is {@code hook}. */
+	private GrappleSession sessionWith(Player player, FishHook hook) {
+		GrappleSession session = mock(GrappleSession.class);
+		when(session.getHook()).thenReturn(hook);
+		when(grappleService.getSession(player)).thenReturn(session);
+		return session;
+	}
+
 	@Test
-	@DisplayName("every later click (reel, ground, failed, caught fish/entity) lets go: cancelled, hook removed")
+	@DisplayName("a reel/ground/catch click on the session's own hook lets go: cancelled, hook removed")
 	void secondClick_releases() {
 		for (PlayerFishEvent.State state : new PlayerFishEvent.State[]{PlayerFishEvent.State.REEL_IN,
 		                                                               PlayerFishEvent.State.IN_GROUND,
-		                                                               PlayerFishEvent.State.FAILED_ATTEMPT,
 		                                                               PlayerFishEvent.State.CAUGHT_FISH,
 		                                                               PlayerFishEvent.State.CAUGHT_ENTITY}) {
 			Player          player = playerWithMainHand(grappleItem());
 			FishHook        hook   = mock(FishHook.class);
 			PlayerFishEvent event  = fishEvent(player, state, hook);
+			sessionWith(player, hook);
 
 			listener.onPlayerFish(event);
 
@@ -161,15 +171,51 @@ class GrappleLaunchListenerTest {
 	}
 
 	@Test
-	@DisplayName("a bite on a pinned hook is not a release")
-	void bite_ignored() {
+	@DisplayName("G10: release resolves by hook identity, so a grapple held in the off hand still lets go")
+	void release_offHandGrapple_byHookIdentity() {
+		Player          player = playerWithMainHand(new ItemStack(Material.AIR));
+		FishHook        hook   = mock(FishHook.class);
+		PlayerFishEvent event  = fishEvent(player, PlayerFishEvent.State.REEL_IN, hook);
+		sessionWith(player, hook);
+
+		listener.onPlayerFish(event);
+
+		verify(event).setCancelled(true);
+		verify(hook).remove();
+		verify(grappleService).cancel(player);
+	}
+
+	@Test
+	@DisplayName("G10: a reel of some other hook (a plain rod) never ends the grapple session")
+	void release_otherHook_untouched() {
 		Player          player = playerWithMainHand(grappleItem());
-		PlayerFishEvent event  = fishEvent(player, PlayerFishEvent.State.BITE, mock(FishHook.class));
+		FishHook        hook   = mock(FishHook.class);
+		PlayerFishEvent event  = fishEvent(player, PlayerFishEvent.State.REEL_IN, hook);
+		sessionWith(player, mock(FishHook.class));
 
 		listener.onPlayerFish(event);
 
 		verify(event, never()).setCancelled(true);
+		verify(hook, never()).remove();
 		verify(grappleService, never()).cancel(any());
-		verifyNoInteractions(grappleMessages);
+	}
+
+	@Test
+	@DisplayName("G10: FAILED_ATTEMPT and BITE on the session's hook are no-ops, not releases")
+	void failedAttemptAndBite_ignored() {
+		for (PlayerFishEvent.State state : new PlayerFishEvent.State[]{PlayerFishEvent.State.FAILED_ATTEMPT,
+		                                                               PlayerFishEvent.State.BITE}) {
+			Player          player = playerWithMainHand(grappleItem());
+			FishHook        hook   = mock(FishHook.class);
+			PlayerFishEvent event  = fishEvent(player, state, hook);
+			sessionWith(player, hook);
+
+			listener.onPlayerFish(event);
+
+			verify(event, never()).setCancelled(true);
+			verify(hook, never()).remove();
+			verify(grappleService, never()).cancel(any());
+			verifyNoInteractions(grappleMessages);
+		}
 	}
 }

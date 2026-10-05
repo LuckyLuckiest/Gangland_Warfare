@@ -10,6 +10,7 @@ import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.gadget.grapple.GrappleService;
+import org.luckyraven.gangland.gadget.grapple.GrappleSession;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -18,8 +19,8 @@ import static org.mockito.Mockito.when;
 
 /**
  * Pins WS8 G2/G3 (+ fix round 1): {@link GrappleAbortListener} cancels an active pull on real damage, sneak-start,
- * teleport, world-change or death, forgets a player entirely on quit (F3), and is a no-op for an inactive player or
- * a sneak-release.
+ * teleport, world-change or death (those three also while the shot is still in flight, G9), forgets a player entirely
+ * on quit (F3), and is a no-op for an inactive player or a sneak-release.
  */
 @DisplayName("GrappleAbortListener — abort triggers (WS8 G2/G3)")
 class GrappleAbortListenerTest {
@@ -91,6 +92,7 @@ class GrappleAbortListenerTest {
 		GrappleService service = mock(GrappleService.class);
 		Player         player  = mock(Player.class);
 		when(service.isActive(player)).thenReturn(true);
+		when(service.getSession(player)).thenReturn(mock(GrappleSession.class));
 
 		PlayerTeleportEvent event = mock(PlayerTeleportEvent.class);
 		when(event.getPlayer()).thenReturn(player);
@@ -106,6 +108,7 @@ class GrappleAbortListenerTest {
 		GrappleService service = mock(GrappleService.class);
 		Player         player  = mock(Player.class);
 		when(service.isActive(player)).thenReturn(true);
+		when(service.getSession(player)).thenReturn(mock(GrappleSession.class));
 
 		PlayerChangedWorldEvent event = mock(PlayerChangedWorldEvent.class);
 		when(event.getPlayer()).thenReturn(player);
@@ -121,6 +124,7 @@ class GrappleAbortListenerTest {
 		GrappleService service = mock(GrappleService.class);
 		Player         player  = mock(Player.class);
 		when(service.isActive(player)).thenReturn(true);
+		when(service.getSession(player)).thenReturn(mock(GrappleSession.class));
 
 		PlayerDeathEvent event = mock(PlayerDeathEvent.class);
 		when(event.getEntity()).thenReturn(player);   // PlayerDeathEvent has no getPlayer()
@@ -143,5 +147,52 @@ class GrappleAbortListenerTest {
 
 		verify(service).forget(player);
 		verify(service, never()).cancel(player);
+	}
+
+	/** A service whose player has a session that is still a shot in flight (not attached, so not "active"). */
+	private static GrappleService inFlight(Player player) {
+		GrappleService service = mock(GrappleService.class);
+		when(service.isActive(player)).thenReturn(false);
+		when(service.getSession(player)).thenReturn(mock(GrappleSession.class));
+		return service;
+	}
+
+	@Test
+	@DisplayName("G9: a teleport while the shot is still in flight ends the session")
+	void onTeleport_shotInFlight_cancels() {
+		Player              player  = mock(Player.class);
+		GrappleService      service = inFlight(player);
+		PlayerTeleportEvent event   = mock(PlayerTeleportEvent.class);
+		when(event.getPlayer()).thenReturn(player);
+
+		new GrappleAbortListener(service).onTeleport(event);
+
+		verify(service).cancel(player);
+	}
+
+	@Test
+	@DisplayName("G9: a world change while the shot is still in flight ends the session")
+	void onChangeWorld_shotInFlight_cancels() {
+		Player                  player  = mock(Player.class);
+		GrappleService          service = inFlight(player);
+		PlayerChangedWorldEvent event   = mock(PlayerChangedWorldEvent.class);
+		when(event.getPlayer()).thenReturn(player);
+
+		new GrappleAbortListener(service).onChangeWorld(event);
+
+		verify(service).cancel(player);
+	}
+
+	@Test
+	@DisplayName("G9: dying while the shot is still in flight ends the session")
+	void onDeath_shotInFlight_cancels() {
+		Player           player  = mock(Player.class);
+		GrappleService   service = inFlight(player);
+		PlayerDeathEvent event   = mock(PlayerDeathEvent.class);
+		when(event.getEntity()).thenReturn(player);
+
+		new GrappleAbortListener(service).onDeath(event);
+
+		verify(service).cancel(player);
 	}
 }

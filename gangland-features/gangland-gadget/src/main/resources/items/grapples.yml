@@ -12,10 +12,11 @@
 #  \                                                        /  #
 #   +------------------------------------------------------+   #
 #
-# Each entry defines a grappling hook. Right-click fires the hook as a fast "web-shot" (the vanilla fishing line
-# stays visible from the player to the hook); it latches onto the first solid block in its path. Once attached, the
-# rope behaves like a real rope: gravity and your sideways speed are kept, so you swing around the anchor, while the
-# rope reels in and shortens toward the anchor. Sneak or right-click again to let go - you keep your momentum.
+# Each entry defines a grappling hook. Right-click fires the hook as a fast "web-shot" you can see fly (the vanilla
+# fishing line stays visible from the player to the hook); it sticks to the first solid block in its path. Once
+# attached, the rope behaves like a real rope: gravity and your sideways speed are kept, so you swing around the
+# anchor like a pendulum, while the rope slowly reels in toward it. Sneak or right-click again to let go - you keep
+# your momentum.
 # The item is a fishing rod under the hood, so Material should stay FISHING_ROD (the cast is a vanilla rod cast).
 # Items are identified in-game by a hidden NBT tag embedded when built via API.
 #
@@ -25,21 +26,29 @@
 #   Custom_Model_Data        - integer for resource pack model
 #   Lore                     - list of lore lines
 #
-#   Max_Distance             - range of the shot in blocks (default 25). Capped at 32: vanilla deletes a fishing hook
-#                              more than 32 blocks from its owner
-#   Shot_Speed               - how far the shot travels per tick, in blocks (default 5.0, so 25 blocks in 5 ticks;
-#                              minimum 0.5). The hook is raytraced between steps, so a fast shot never passes
-#                              through a block
-#   Max_Pull_Speed           - top reel-in speed, and the cap on the player's speed while the rope is taut,
-#                              in blocks per tick (default 1.8)
-#   Pull_Acceleration        - how much the reel speed grows each tick, in blocks per tick (default 0.35)
-#   Arrival_Distance         - distance from the anchor at which the rope lets go on its own (default 1.5). A shot
-#                              that lands closer than this is treated as a miss
+#   Max_Distance             - range of the shot in blocks (default 25). Capped at 30: vanilla deletes a fishing hook
+#                              more than 32 blocks from its owner's feet, and an anchor past that is a miss
+#   Shot_Speed               - how far the shot flies per tick, in blocks (default 3.9, so 25 blocks in 7 ticks;
+#                              0.5 to 3.9 - the client caps any velocity at 3.9 blocks per tick). The hook is raytraced
+#                              over each step, so a fast shot never passes through a block
+#   Max_Pull_Speed           - the cap on the player's speed while the rope is taut, in blocks per tick
+#                              (default 1.8; 0.1 to 3.9). Only a cap - the swing itself comes from gravity
+#   Reel_Speed               - how fast the rope shortens toward the anchor, in blocks per tick (default 0.3,
+#                              minimum 0.01). Keep it low so the rope swings you before it pulls you in
+#   Pull_Acceleration        - how much the reel speed grows each tick until it reaches Reel_Speed, in blocks per
+#                              tick (default 0.05, minimum 0.01)
+#   Min_Rope_Length          - the reel stops once the rope is this short, in blocks (default 3.0, minimum 0.5)
+#   Arrival_Distance         - distance from the anchor (measured from the middle of your body) at which the rope
+#                              lets go on its own (default 3.5). Keep it above Min_Rope_Length, or a fully reeled rope
+#                              leaves you hanging until you let go or Max_Duration_Ticks runs out. A shot that lands
+#                              closer than this is treated as a miss
 #   Cooldown_Seconds         - seconds after firing before the same player can fire again (default 8)
 #   Miss_Cooldown_Ticks      - cooldown instead, in ticks, when the shot never attached: missed (nothing within
 #                              Max_Distance), retracted mid-flight, or hit outside the world border (default 10)
-#   Max_Duration_Ticks       - hard timeout for one grapple, shot plus swing (default 100)
-#   Fall_Damage_Grace_Ticks  - one-shot fall-damage immunity window after an attached rope lets go (default 40)
+#   Max_Duration_Ticks       - hard timeout for one grapple, shot plus swing (default 70, maximum 79): vanilla kicks a
+#                              player for flying after 80 ticks in the air on a server with allow-flight=false
+#   Fall_Damage_Grace_Ticks  - one-shot fall-damage immunity window after an attached rope lets go (default 40).
+#                              While the rope holds you, the fall height does not build up at all
 #   Require_Line_Of_Sight    - the rope snaps if a block comes between the player and the anchor mid-swing
 #                              (default true)
 #   Fire_Sound               - vanilla sound name played when the shot fires (default ITEM_CROSSBOW_SHOOT);
@@ -71,13 +80,15 @@ grapple:
       - "&7and swings you in on the rope."
       - "&7Sneak or right-click again to let go and keep your momentum."
    Max_Distance: 25
-   Shot_Speed: 5.0
+   Shot_Speed: 3.9
    Max_Pull_Speed: 1.8
-   Pull_Acceleration: 0.35
-   Arrival_Distance: 1.5
+   Reel_Speed: 0.3
+   Pull_Acceleration: 0.05
+   Min_Rope_Length: 3.0
+   Arrival_Distance: 3.5
    Cooldown_Seconds: 8
    Miss_Cooldown_Ticks: 10
-   Max_Duration_Ticks: 100
+   Max_Duration_Ticks: 70
    Fall_Damage_Grace_Ticks: 40
    Require_Line_Of_Sight: true
    Fire_Sound: "ITEM_CROSSBOW_SHOOT"

@@ -19,19 +19,26 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Runs grapple sessions: the web-shot (the vanilla hook stepped {@code Shot_Speed} blocks per tick, raytraced between
- * steps so it cannot tunnel through a block, pinned where it hits), then the rope swing ({@link GrappleRope}) that
- * reels the player in. Also owns the cooldown and the one-shot landing-damage grace granted when an attached rope
- * lets go. Ticked by a single shared sync {@link RepeatingTimer} (it touches entities, so never async). Cooldown only
- * (WS8-D1): no fuel/durability.
+ * Runs grapple sessions: the web-shot (the vanilla hook driven by velocity at {@code Shot_Speed} blocks per tick, so
+ * the client sees it fly, and raytraced over each step so it cannot tunnel through a block), then the rope swing
+ * ({@link GrappleRope}) that reels the player in. Also owns the cooldown and the one-shot landing-damage grace granted
+ * when an attached rope lets go. Ticked by a single shared sync {@link RepeatingTimer} (it touches entities, so never
+ * async). Cooldown only (WS8-D1): no fuel/durability.
  * <p>
  * {@link #isActive(Player)} is true only while the rope is attached: a shot still in flight has not moved the player,
  * so it grants no fall immunity and no landing grace.
  */
 public class GrappleService implements BeanLifecycle {
 
-	/** Vanilla deletes a fishing hook whose owner is more than 32 blocks away, so the shot can never reach further. */
-	public static final int HOOK_RANGE_LIMIT = 32;
+	/** Max_Distance cap: vanilla discards a hook more than 32 blocks from its owner's feet, so keep clear of it. */
+	public static final int HOOK_RANGE_LIMIT = 30;
+
+	/** Vanilla discards a fishing hook whose squared distance to its owner's feet passes this (32 blocks). */
+	private static final double VANILLA_HOOK_DISCARD_DISTANCE_SQUARED = 1024;
+
+	/** Vanilla player air physics per tick, integrated server-side while the rope holds the player. */
+	private static final double GRAVITY = 0.08;
+	private static final double DRAG    = 0.98;
 
 	private static final long MILLIS_PER_TICK = 50L;
 
@@ -64,18 +71,18 @@ public class GrappleService implements BeanLifecycle {
 		cooldownExpiryMs.put(uuid, System.currentTimeMillis() + grapple.getCooldownSeconds() * 1000L);
 
 		Location eye = player.getEyeLocation();
-		// The shot is stepped by tickShot; vanilla's slow lobbed throw must not move the hook on its own.
+		// The shot is driven by tickShot; vanilla's slow lobbed throw must not move the hook on its own.
 		hook.setVelocity(new Vector());
-		activeSessions.put(uuid, new GrappleSession(player, grapple, hook, eye.toVector(), eye.getDirection()));
+		activeSessions.put(uuid, new GrappleSession(player, grapple, hook, bodyCentre(player), eye.getDirection()));
 		play(grapple.getFireSound(), eye);
 		return true;
 	}
 
 	/**
 	 * Ends the session for any reason (arrival, timeout, release by sneak or right-click, damage, teleport, world
-	 * change, death, item switch) and removes the hook. Never touches the player's velocity, so a release keeps its
-	 * momentum. An attached rope grants the one-shot landing grace; a shot that never attached (miss, retract) only
-	 * gets the short miss cooldown instead. A no-op without a session.
+	 * change, death, item switch) and removes the hook. Never touches the player's velocity, so a release keeps the
+	 * velocity the client already has. An attached rope grants the one-shot landing grace; a shot that never attached
+	 * (miss, retract) only gets the short miss cooldown instead. A no-op without a session.
 	 */
 	public void cancel(Player player) {
 		UUID           uuid    = player.getUniqueId();
@@ -146,7 +153,7 @@ public class GrappleService implements BeanLifecycle {
 			return;
 		}
 
-		// Vanilla removes the hook itself when the player stops holding a rod, dies, or gets over 32 blocks away.
+		// Vanilla removes the hook itself when the player holds no rod in either hand, or gets over 32 blocks away.
 		if (!session.getHook().isValid()) {
 			cancel(player);
 			return;
@@ -166,22 +173,31 @@ public class GrappleService implements BeanLifecycle {
 	}
 
 	/**
-	 * Moves the shot one step: raytrace from the hook tip over this tick's step first, so a fast shot latches onto the
-	 * first block in its path instead of skipping past it; otherwise advance the hook. Reaching Max_Distance without a
-	 * hit is a miss.
+	 * Moves the shot one step: raytrace from where the hook really is over this tick's step first, so a fast shot
+	 * latches onto the first block in its path instead of skipping past it; otherwise give the hook this step as its
+	 * velocity. Velocity, not teleport: a velocity change goes out to the client the same tick (a teleport would only
+	 * show on the tracker's 5-tick position sync), so the shot is seen flying. Reaching Max_Distance without a hit is
+	 * a miss.
 	 */
 	private void tickShot(GrappleSession session) {
-		Player  player  = session.getPlayer();
-		Grapple grapple = session.getGrapple();
-		World   world   = player.getWorld();
+		Player   player  = session.getPlayer();
+		Grapple  grapple = session.getGrapple();
+		World    world   = player.getWorld();
+		FishHook hook    = session.getHook();
+		if (!world.equals(hook.getWorld())) {
+			cancel(player);
+			return;
+		}
 
-		Vector tip  = session.getShotPosition();
+		Vector position = bodyCentre(player);
+		Vector moved    = position.clone().subtract(session.getLastPosition());
+		session.setLastPosition(position);
+
 		double step = Math.min(grapple.getShotSpeed(), grapple.getMaxDistance() - session.getShotTravelled());
-
-		RayTraceResult hit = world.rayTraceBlocks(tip.toLocation(world), session.getDirection(), step,
+		RayTraceResult hit = world.rayTraceBlocks(hook.getLocation(), session.getDirection(), step,
 		                                          FluidCollisionMode.NEVER, true);
 		if (hit != null && hit.getHitBlockFace() != null) {
-			attach(session, world, hit);
+			attach(session, world, hit, position, moved);
 			return;
 		}
 
@@ -190,35 +206,38 @@ public class GrappleService implements BeanLifecycle {
 			cancel(player);
 			return;
 		}
-
-		tip.add(session.getDirection().clone().multiply(step));
-		session.getHook().teleport(tip.toLocation(world));
+		hook.setVelocity(session.getDirection().clone().multiply(step));
 	}
 
-	private void attach(GrappleSession session, World world, RayTraceResult hit) {
+	private void attach(GrappleSession session, World world, RayTraceResult hit, Vector position, Vector moved) {
 		Player  player  = session.getPlayer();
 		Grapple grapple = session.getGrapple();
 
-		Vector   offset   = hit.getHitBlockFace().getDirection().multiply(SURFACE_OFFSET);
-		Location anchor   = hit.getHitPosition().clone().add(offset).toLocation(world);
-		Vector   position = player.getLocation().toVector();
+		Vector   offset = hit.getHitBlockFace().getDirection().multiply(SURFACE_OFFSET);
+		Location anchor = hit.getHitPosition().clone().add(offset).toLocation(world);
 
-		// Outside the border, or point-blank (it would "arrive" next tick): a miss, never a free landing grace.
+		// Outside the border, past the vanilla hook range (vanilla would delete the hook) or point-blank (it would
+		// "arrive" next tick): a miss, never a free landing grace.
 		if (!world.getWorldBorder().isInside(anchor)
+		    || anchor.distanceSquared(player.getLocation()) > VANILLA_HOOK_DISCARD_DISTANCE_SQUARED
 		    || position.distance(anchor.toVector()) <= grapple.getArrivalDistance()) {
 			cancel(player);
 			return;
 		}
 
-		session.attach(anchor, position);
-		session.getHook().teleport(anchor);
+		session.attach(anchor, position, moved);
+		// Send the hook the rest of the way this tick so the client sees it land; tickRope pins it from then on.
+		FishHook hook = session.getHook();
+		hook.setVelocity(anchor.toVector().subtract(hook.getLocation().toVector()));
 		play(grapple.getAttachSound(), anchor);
 	}
 
 	/**
-	 * One tick of the rope: reel in (speed ramps by Pull_Acceleration up to Max_Pull_Speed), then constrain the
-	 * player's real velocity (their position delta since last tick — the client owns player movement, so this is what
-	 * it actually did, gravity included) to the rope with {@link GrappleRope}. A slack rope sends nothing at all.
+	 * One tick of the rope. The reel shortens it (speed ramps by Pull_Acceleration up to Reel_Speed, never below
+	 * Min_Rope_Length). The player's velocity is integrated here with vanilla air physics, starting from what they
+	 * were doing when the hook latched, then constrained to the rope at their measured position with
+	 * {@link GrappleRope} and sent — so the swing is a real pendulum that the client cannot drift out of. A slack rope
+	 * sends nothing and just tracks what the client does on its own.
 	 */
 	private void tickRope(GrappleSession session) {
 		Player   player      = session.getPlayer();
@@ -233,7 +252,10 @@ public class GrappleService implements BeanLifecycle {
 			return;
 		}
 
-		Vector position = player.getLocation().toVector();
+		// A taut rope is not a fall: without this, vanilla charges the whole swing as fall height on landing.
+		player.setFallDistance(0f);
+
+		Vector position = bodyCentre(player);
 		Vector anchorAt = anchor.toVector();
 		if (position.distance(anchorAt) <= grapple.getArrivalDistance()) {
 			cancel(player);
@@ -245,19 +267,34 @@ public class GrappleService implements BeanLifecycle {
 			return;
 		}
 
-		session.setReelSpeed(Math.min(session.getReelSpeed() + grapple.getPullAcceleration(), grapple.getMaxPullSpeed()));
-		session.setRopeLength(GrappleRope.reel(session.getRopeLength(), session.getReelSpeed(), 0));
+		session.setReelSpeed(Math.min(session.getReelSpeed() + grapple.getPullAcceleration(), grapple.getReelSpeed()));
+		session.setRopeLength(GrappleRope.reel(session.getRopeLength(), session.getReelSpeed(),
+		                                       grapple.getMinRopeLength()));
 
-		Vector velocity = position.clone().subtract(session.getLastPosition());
+		Vector moved = position.clone().subtract(session.getLastPosition());
 		session.setLastPosition(position);
+
+		Vector velocity = session.getRopeVelocity().clone();
+		velocity.setY(velocity.getY() - GRAVITY).multiply(DRAG);
 
 		Vector constrained = GrappleRope.constrain(position, velocity, anchorAt, session.getRopeLength(),
 		                                           grapple.getMaxPullSpeed());
-		if (constrained != null) {
+		if (constrained == null) {
+			session.setRopeVelocity(moved);
+		} else {
 			player.setVelocity(constrained);
+			session.setRopeVelocity(constrained);
 		}
-		// Re-pin every tick: vanilla hook gravity would otherwise slide it down a wall face.
-		session.getHook().teleport(anchor);
+
+		// Pin the hook with no velocity every tick: vanilla hook gravity would otherwise sag it off a wall or ceiling.
+		FishHook hook = session.getHook();
+		hook.teleport(anchor);
+		hook.setVelocity(new Vector());
+	}
+
+	/** Rope maths run from the middle of the body, so a ceiling anchor straight overhead is reachable. */
+	private static Vector bodyCentre(Player player) {
+		return player.getLocation().add(0, player.getHeight() / 2, 0).toVector();
 	}
 
 	/**
