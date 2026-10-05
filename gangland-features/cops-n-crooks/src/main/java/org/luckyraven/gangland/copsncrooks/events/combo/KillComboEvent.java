@@ -14,10 +14,23 @@ public class KillComboEvent extends Event {
 
 	private final Player           player;
 	private final KillComboTracker tracker;
+	private final Kind             kind;
+
+	/**
+	 * Which of the three combo moments this event announces.
+	 */
+	public enum Kind {
+		INCREMENT, WANTED_TRIGGER, RESET
+	}
 
 	public KillComboEvent(Player player, KillComboTracker tracker) {
+		this(player, tracker, Kind.INCREMENT);
+	}
+
+	public KillComboEvent(Player player, KillComboTracker tracker, Kind kind) {
 		this.player  = player;
 		this.tracker = tracker;
+		this.kind    = kind;
 	}
 
 	public static HandlerList getHandlerList() {

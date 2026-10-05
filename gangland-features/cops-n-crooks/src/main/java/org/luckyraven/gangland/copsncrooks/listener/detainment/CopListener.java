@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.listener.detainment;
 
 import lombok.RequiredArgsConstructor;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -12,6 +13,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.luckyraven.gangland.copsncrooks.events.npc.CopDeathEvent;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
@@ -247,5 +249,7 @@ public class CopListener implements Listener {
 		if (event instanceof PlayerDeathEvent playerDeathEvent) {
 			playerDeathEvent.setKeepInventory(true);
 		}
+
+		Bukkit.getPluginManager().callEvent(new CopDeathEvent(cop, event.getEntity().getKiller()));
 	}
 }
