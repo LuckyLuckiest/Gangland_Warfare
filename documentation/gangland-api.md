@@ -72,7 +72,7 @@ Every `ServicesManager` registration this reactor touches, publisher and consume
 
 ## Events
 
-`gangland-api`'s `events/` package holds exactly three files, across two subpackages:
+`gangland-api`'s `events/` package held exactly three files, across two subpackages, until 0.15.0 added the crime and evasion events (see [Api 2.1](#api-21-0150) below):
 
 | Event | Package | Cancellable | Public api? |
 |---|---|---|---|
@@ -95,6 +95,40 @@ module/core package and is reachable transitively (`gangland-core`'s general-pur
   civilians' 1 event and gangland-item's `PlayerItemInitEvent` all stay module/infra-owned — no named consumer
   outside their own module, so none were promoted (WS3's explicit decline for the loot-chest 9 still stands).
 
+## Api 2.1 (0.15.0)
+
+`GanglandApi.VERSION` is `"2.1"`. The cops-n-crooks and gangland-civilians modules declare `Host_Api: 2.1` because they
+use the crime bus below; a module that only uses 2.0 types keeps `Host_Api: 2.0` and still loads (same major, module
+minor `<=` host minor). Nothing was removed or changed; every row is an addition.
+
+| Addition | Package | Kind |
+|---|---|---|
+| `CrimeService` | `org.luckyraven.gangland.crime` | Core bean (`WiringConfig.crimeService()`). `commit(player, crimeId, location[, seenByCop, witnesses])` fires `CrimeCommittedEvent` on the main thread and returns false when a listener cancelled it |
+| `Crimes` | `org.luckyraven.gangland.crime` | String constants for the crime ids 0.15.0 publishes: `Kill_Player`, `Kill_Civilian`, `Kill_Cop`, `Assault_Cop`, `Assault_Civilian`, `Resisting_Arrest`. Crime ids are plain strings, so a new crime needs no api bump |
+| `CrimeCommittedEvent` | `org.luckyraven.gangland.events.crime` | Cancellable; `getPlayer`, `getCrimeId`, `getLocation`, `isSeenByCop`, `getWitnesses` (witnesses is 0 from every 0.15.0 publisher) |
+| `WantedEvasionStateEvent` | `org.luckyraven.gangland.events.wanted` | Not cancellable; `getPlayer`, `getState`, `getLevel`, `getSecondsLeft`, `getZoneCentre`, `getZoneRadius` |
+| `EvasionState` | `org.luckyraven.gangland.events.wanted` | `SEEN`, `SEARCHING`, `EVADED`, `OFF` |
+
+Also reachable by a module, because `gangland-api` re-exports `gangland-core` at compile scope (they live in core, not in
+this artifact, and count as api surface under the same 2.1 bump):
+
+| Type / member | Package | Kind |
+|---|---|---|
+| `WantedCause` | `org.luckyraven.gangland.core.wanted` | Enum of why a star changed (`CRIME`, `SIGN`, `ADMIN`, `RESTORE`, `DECAY`, `EVASION`, `BRIBE`, `ARREST`, `DEATH`, `UNKNOWN`) |
+| `WantedStars` | same | Core bean: `raise`, `drop`, `restore`, `startDecayClock`, `installDecayPolicy`, `suppressStarChat` |
+| `WantedDecayPolicy` | same | Functional seam: `handlesDecay(owner, wanted)` |
+| `Wanted.setLevel(int, WantedCause)`, `incrementLevel(cause)`, `decrementLevel(cause)`, `reset(cause)` | same | The old no-cause methods stay and mean `UNKNOWN` |
+| `getCause()` | `WantedLevelChangeEvent`, `WantedStartEvent`, `WantedEndEvent` | The old constructors stay and pass `UNKNOWN` |
+| `MoneyFormula` | `org.luckyraven.gangland.core.money` | `evaluate(formula, variables, fallback)` never throws; `userVariables(user)` |
+| `Bounty` posted/notoriety members | `org.luckyraven.gangland.core.bounty` | `getPostedAmount`, `getNotoriety`, `addNotoriety`, `claimPosted`, `serializeLedger`, `restoreLedger` |
+| `Settings.isWantedTakeMoneyEnabled()`, `getWantedTakeMoneyFormula()`, `isBountyPayNotoriety()` | `org.luckyraven.gangland.file.configuration` | New `settings.yml` getters (`Wanted.Take_Money.Enable`, `.Formula`, `Bounty.Pay_Notoriety`) |
+| `WantedClearContract.clearWanted(UUID, WantedCause)` | cops-n-crooks seam | A `default` method delegating to the one-argument form |
+
+0.15.0 also fires two events that existed but were never sent: `CopDeathEvent` and `KillComboEvent` (now with a
+`Kind`), both owned by cops-n-crooks, not by this api.
+
+---
+
 ## What Gangland does not expose through the facade
 
 - **`wanted()`/`bounty()`** — no existing lookup contract for either; nothing to wrap.
@@ -106,7 +140,7 @@ module/core package and is reachable transitively (`gangland-core`'s general-pur
 
 ## Api contract: within `2.0`, only additions
 
-`GanglandApi.VERSION` stayed `"2.0"` (the branch's own major bump, G0, before WS1) through every gate of this
+Until 0.15.0 `GanglandApi.VERSION` stayed `"2.0"` (the branch's own major bump, G0, before WS1) through every gate of this
 plan. Everything WS6 G1/G2 added to the public surface, in order:
 
 | Addition | Kind |

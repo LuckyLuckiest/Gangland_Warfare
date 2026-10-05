@@ -45,6 +45,19 @@ Handcuff → transport → jail → timer → release flow. Managed by `Detainme
 
 ---
 
+## Charge Sheet (0.15.0)
+
+- [ ] Jailed at 2 stars with the default sheet and 300 in the wallet: the cops list the crimes of the chase, the fine is
+      700, 300 is paid, and 40 extra seconds are added to the sentence.
+- [ ] The bank is never touched and the wallet never goes below zero.
+- [ ] A player who is dead at intake (death bill already paid) is not fined again.
+- [ ] A fine of 0 sends no sheet; `Wanted.Charge_Sheet.Enable: false` fines nothing and adds no time.
+- [ ] The paperwork screen shows the fine paid and the extra time.
+- [ ] `detainment.fine_paid` and `detainment.fine_extra_seconds` are added on first boot; existing detainment rows still load.
+- [ ] Jailing clears the stars (cause arrest) and forgets the chase's heat.
+
+---
+
 ## Reload Safety
 
 - [ ] `B` is in jail. Run `/glw reload`.

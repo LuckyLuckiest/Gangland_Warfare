@@ -44,6 +44,23 @@ Managed by `CopService`, `CopSpawnManager`, `DetainmentService`, `JailManager`. 
 
 ---
 
+## Lose Them, Regroup and Shot Noise (0.15.0)
+
+- [ ] Cops hunting you lose sight of you for `Lost_Sight_Seconds`: the squad radios the lost contact, the zone ring
+      shows, and a star drops after `Seconds_To_Drop` out of sight (see the Wanted & Bounty checklist).
+- [ ] Kill two cops in quick succession (`Regroup.Casualties` inside `Window_Seconds`): the rest pull back to cover with the
+      Regroup line, radio for backup, and push together with the Regroup_Push line when backup is within `Arrival_Radius`.
+- [ ] `Cops.Regroup.Enabled: false`: the squad keeps fighting as in 0.13.0. A squad set to cuff first never regroups.
+- [ ] Fire a Bartizan gun within 48 blocks of a cop of your squad: the squad turns to your position (counts as a sighting)
+      and the nearest cop says the Shots_Fired line, at most once per 3 s.
+- [ ] A shot outside `Shot_Noise.Radius`, a melee weapon, a throwable beyond 16 blocks, or a shot by a player who is not
+      wanted, reveals nothing; `Shot_Noise.Enabled: false` silences all of it.
+- [ ] An existing `cops.yml` without the `Regroup` / `Shot_Noise` / three new `Cooldown_Ticks` keys behaves as the shipped file.
+- [ ] `npc/wanted.yml` and `npc/wanted_messages.yml` are copied on first boot and are never overwritten afterwards.
+- [ ] Console shows `Runtime modules: ... loaded, 0 fault(s)` with cops-n-crooks and civilians at `Host_Api: 2.1`.
+
+---
+
 ## Reload Safety
 
 - [ ] `/glw reload` while cops are pursuing → cops despawn cleanly, spawners re-register, wanted level preserved.

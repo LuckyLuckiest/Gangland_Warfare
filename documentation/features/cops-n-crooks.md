@@ -204,11 +204,36 @@ blocks). Each line plays a short click sound.
 - **Backup:** when a cop goes down, the squad requests `Backup.Extra_Cops` (1) extra cops for
   `Backup.Duration_Ticks` (30 s), at most once per `Backup.Cooldown_Ticks` (60 s). When the backup runs out, the
   surplus cops that aren't fighting walk home.
+- **Regroup (0.15.0):** "Two down! Pull back to cover, backup is coming!" when the squad falls back, and "Backup's
+  here! All units, push together!" when it pushes. See Regroup below.
+- **Shots fired (0.15.0):** the nearest cop of the hunted player's squad says where it heard a shot. See Shot Noise below.
 - **Resisting**, **retreat** and **field care** lines, as described above.
 
 Lines are throttled per squad and per player, so chat never floods. Every line is in `npc/cop_radio_messages.yml`
 (Spanish: `_es.yml`). Each key is a list that one entry is picked from at random, and `[]` silences that line.
 `Radio.Enabled: false` silences the radio for players but keeps responders and backup working.
+
+---
+
+## Losing the Cops and the Chase (0.15.0)
+
+The chase around a wanted player is configured in `npc/wanted.yml` (heat, evasion, HUD, charge sheet) and
+`npc/wanted_messages.yml`; see [Wanted & Bounty](./wanted-bounty.md) for the player-facing rules.
+
+- **Evasion reads the squad's sightings.** Every cop in the group shares what it sees. The evasion clock counts "no
+  cop has seen you" from the squad's last sighting, and a cop that is walking home (`RETURNING`) does not count as
+  pursuit. When no live hunting cop is left the evasion state turns off and the fixed decay timer takes over.
+- **Regroup.** When `Regroup.Casualties` (2) cops of one squad die within `Regroup.Window_Seconds` (20), the whole squad
+  falls back to cover for at most `Regroup.Fall_Back_Seconds` (15), radios for backup, and pushes together once backup
+  is within `Regroup.Arrival_Radius` (24) blocks. One regroup per `Regroup.Cooldown_Seconds` (60) and squad; a squad
+  that cuffs first never regroups. `Regroup.Enabled: false` keeps the 0.13.0 behaviour. A Commander call for a fall-back
+  during a regroup keeps the longer of the two.
+- **Shot noise.** A Bartizan weapon fired by a wanted player inside `Shot_Noise.Radius` of a cop of his squad (GUN 48,
+  THROWABLE 16, MELEE 0 = silent; a type that is not listed is silent) reports the shooter's position to the squad.
+  The squad counts it as a sighting, so evasion resets, and the nearest cop calls "Shots fired!" (throttled to once
+  per `Cooldown_Ticks.Shots_Fired`, 3 s, per shooter). Players who are not wanted, and NPC shooters, are ignored.
+- **Wanted HUD.** The boss bar, star card, title, siren, zone ring and compass are shown to the hunted player only and
+  disappear when the chase ends.
 
 ---
 
@@ -319,12 +344,26 @@ Cops:
       Player_Gap_Ticks: 20         # Gap between two low-priority lines reaching one player
       Ack_Delay_Ticks: 25          # Delay before an ordered cop answers
       Responder_Max: 2             # Nearby cops pulled in per call (0 = none)
-      # Priority (line kinds that skip the gaps), Cooldown_Ticks (per-kind repeat cooldown) and Sound: see the file
+      # Priority (line kinds that skip the gaps), Cooldown_Ticks (per-kind repeat cooldown; 0.15.0 adds Regroup 1200,
+      # Regroup_Push 1200 and Shots_Fired 60) and Sound: see the file
    Backup:
       Enabled: true
       Extra_Cops: 1                # On top of the wanted-level count, capped by Max_Per_Player
       Duration_Ticks: 600          # 30 s; afterwards the surplus cops that aren't fighting walk home
       Cooldown_Ticks: 1200         # 60 s between requests from one group
+   Regroup:                        # 0.15.0; every key falls back to the value shown
+      Enabled: true
+      Casualties: 2                # Cops lost inside Window_Seconds that trigger a pull-back
+      Window_Seconds: 20
+      Fall_Back_Seconds: 15        # Longest stay in cover before the squad pushes anyway
+      Cooldown_Seconds: 60         # One regroup per squad per this long
+      Arrival_Radius: 24.0         # Push together once backup is this close
+   Shot_Noise:                     # 0.15.0
+      Enabled: true
+      Radius:                      # Blocks a cop hears a shot, by weapon type; 0 or unlisted = silent
+         GUN: 48
+         THROWABLE: 16
+         MELEE: 0
    Retreat:
       Enabled: true
       Health_Fraction: 0.3         # Retreat at or below 30% health
