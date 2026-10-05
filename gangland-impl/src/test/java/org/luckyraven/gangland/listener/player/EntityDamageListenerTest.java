@@ -14,6 +14,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.luckyraven.gangland.Gangland;
+import org.bukkit.command.CommandSender;
+import org.luckyraven.gangland.core.bounty.Bounty;
 import org.luckyraven.gangland.core.bounty.BountySettings;
 import org.luckyraven.gangland.core.events.wanted.WantedLevelChangeEvent;
 import org.luckyraven.gangland.core.user.IdentitySettings;
@@ -25,6 +27,8 @@ import org.luckyraven.gangland.core.wanted.WantedKillTracker;
 import org.luckyraven.gangland.core.wanted.WantedKillTrackers;
 import org.luckyraven.gangland.core.wanted.WantedSettings;
 import org.luckyraven.gangland.core.wanted.WantedStars;
+import org.luckyraven.gangland.data.gang.GangMembership;
+import org.luckyraven.gangland.data.gang.GangMembershipView;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.support.FakeMessageProvider;
 import org.luckyraven.gangland.support.SettingsFixture;
@@ -66,11 +70,13 @@ class EntityDamageListenerTest {
 	private Player              alice, bob;
 	private User<Player>        aliceUser, bobUser;
 	private List<Event>         events;
+	private GangMembership      gangs;
 
 	@SuppressWarnings("unchecked")
 	@BeforeEach
 	void setUp() throws IOException {
 		bukkit = BukkitStatics.install();
+		gangs  = new GangMembership();
 		SettingsFixture.write(dir, """
 				Money_Symbol: '$'
 				Database:
@@ -192,6 +198,174 @@ class EntityDamageListenerTest {
 		assertEquals(WantedCause.DEATH, lastChange().getCause());
 	}
 
+	@Test
+	@DisplayName("a claim pays only what players posted; the server-made notoriety stays on the victim")
+	void claim_paysPostedOnly_notorietyStays() {
+		post(bobUser, "poster", 1000);
+		bobUser.getBounty().addNotoriety(BigDecimal.valueOf(500));
+
+		kill(listener(new WantedKillTrackers()), alice, bob);
+
+		assertEquals(0, BigDecimal.valueOf(1000).compareTo(aliceUser.getEconomy().getAmount()));
+		assertEquals(0, BigDecimal.valueOf(500).compareTo(bobUser.getBounty().getAmount()));
+		assertEquals(0, bobUser.getBounty().getPostedAmount().signum());
+	}
+
+	@Test
+	@DisplayName("a takedown of a posted bounty is not a crime: no star, no notoriety")
+	void postedTakedown_isNotACrime() {
+		post(bobUser, "poster", 1000);
+
+		kill(listener(new WantedKillTrackers()), alice, bob);
+
+		assertEquals(0, aliceUser.getWanted().getLevel());
+		assertEquals(0, aliceUser.getBounty().getAmount().signum());
+	}
+
+	@Test
+	@DisplayName("a target with notoriety only pays nothing, and the kill is a crime")
+	void notorietyOnlyTarget_paysNothing_andTheKillIsACrime() {
+		bobUser.getBounty().addNotoriety(BigDecimal.valueOf(500));
+
+		kill(listener(new WantedKillTrackers()), alice, bob);
+
+		assertEquals(0, aliceUser.getEconomy().getAmount().signum());
+		assertEquals(0, BigDecimal.valueOf(500).compareTo(bobUser.getBounty().getAmount()));
+		assertEquals(1, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("Pay_Notoriety true pays everything once and resets the bounty")
+	void payNotorietyTrue_paysEverythingOnce_andResets() throws IOException {
+		SettingsFixture.write(dir, """
+				Money_Symbol: '$'
+				Database:
+				  Auto_Save:
+				    Debug: false
+				Bounty:
+				  Pay_Notoriety: true
+				  Repeating_Timer:
+				    Enable: false
+				""");
+		SettingsFixture.initialize(dir);
+		post(bobUser, "poster", 1000);
+		bobUser.getBounty().addNotoriety(BigDecimal.valueOf(500));
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+
+		kill(listener, alice, bob);
+
+		assertEquals(0, BigDecimal.valueOf(1500).compareTo(aliceUser.getEconomy().getAmount()));
+		assertFalse(bobUser.getBounty().hasBounty());
+		assertEquals(0, aliceUser.getWanted().getLevel(), "the first kill was a takedown");
+
+		kill(listener, alice, bob);
+
+		assertEquals(0, BigDecimal.valueOf(1500).compareTo(aliceUser.getEconomy().getAmount()), "paid once");
+	}
+
+	@Test
+	@DisplayName("WB-43: a gangmate or ally collects nothing and the bounty stays")
+	void gangmatesOrAllies_collectNothing() {
+		GangMembershipView view = mock(GangMembershipView.class);
+		when(view.gangIdOf(any())).thenReturn(7);
+		gangs.install(view);
+		post(bobUser, "poster", 1000);
+
+		kill(listener(new WantedKillTrackers()), alice, bob);
+
+		assertEquals(0, aliceUser.getEconomy().getAmount().signum());
+		assertEquals(0, BigDecimal.valueOf(1000).compareTo(bobUser.getBounty().getAmount()));
+	}
+
+	@Test
+	@DisplayName("a bounty saved before the upgrade (no ledger) is still paid in full, once")
+	void legacyBounty_paysInFullOnce() {
+		bobUser.getBounty().setAmount(BigDecimal.valueOf(300));
+		bobUser.getBounty().restoreLedger(null);
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+
+		kill(listener, alice, bob);
+		kill(listener, alice, bob);
+
+		assertEquals(0, BigDecimal.valueOf(300).compareTo(aliceUser.getEconomy().getAmount()));
+		assertFalse(bobUser.getBounty().hasBounty());
+	}
+
+	@Test
+	@DisplayName("the victim struck first: the kill is self-defence, so no star and no notoriety")
+	void victimStruckFirst_killIsSelfDefence_noStarNoNotoriety() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+
+		hit(listener, bob, alice);
+		kill(listener, alice, bob);
+
+		assertEquals(0, aliceUser.getWanted().getLevel());
+		assertEquals(0, aliceUser.getBounty().getAmount().signum());
+	}
+
+	@Test
+	@DisplayName("the killer struck first: the kill is a crime even if the victim hit back")
+	void killerStruckFirst_killIsACrime() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+
+		hit(listener, alice, bob);
+		hit(listener, bob, alice);
+		kill(listener, alice, bob);
+
+		assertEquals(1, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("a fight with no hit for 30 seconds is forgotten, so a later kill is a crime")
+	void fightOlderThanThirtySeconds_isForgotten_soTheKillIsACrime() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+		long[] now = {0L};
+		listener.clock = () -> now[0];
+
+		hit(listener, bob, alice);
+		now[0] = 31_000L;
+		kill(listener, alice, bob);
+
+		assertEquals(1, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("self-defence holds with an installed tracker too: the tracker is never told")
+	void selfDefence_alsoHoldsWithoutTheTracker() {
+		WantedKillTrackers trackers = new WantedKillTrackers();
+		WantedKillTracker  tracker  = mock(WantedKillTracker.class);
+		trackers.install(tracker);
+		EntityDamageListener active = listener(trackers);
+
+		hit(active, bob, alice);
+		kill(active, alice, bob);
+		verify(tracker, never()).recordKill(any(), any(), any(), anyInt());
+
+		// and with no tracker installed the legacy handleWanted path stays silent
+		EntityDamageListener inactive = listener(new WantedKillTrackers());
+		hit(inactive, bob, alice);
+		kill(inactive, alice, bob);
+		assertEquals(0, aliceUser.getWanted().getLevel());
+	}
+
+	private void post(User<Player> target, String poster, int amount) {
+		CommandSender sender = mock(CommandSender.class);
+		when(sender.getName()).thenReturn(poster);
+		target.getBounty().addBounty(sender, BigDecimal.valueOf(amount), 0);
+	}
+
+	private void hit(EntityDamageListener listener, Player attacker, Player victim) {
+		when(victim.getHealth()).thenReturn(20.0);
+		when(victim.getLocation()).thenReturn(new Location(null, 0, 0, 0));
+
+		EntityDamageByEntityEvent event = mock(EntityDamageByEntityEvent.class);
+		when(event.getDamager()).thenReturn(attacker);
+		when(event.getEntity()).thenReturn(victim);
+		when(event.getFinalDamage()).thenReturn(1.0);
+
+		listener.onPlayerEntityDeath(event);
+	}
+
 	@SuppressWarnings("unchecked")
 	private Consumer<UUID> deathReset() {
 		WantedKillTrackers trackers = new WantedKillTrackers();
@@ -207,7 +381,7 @@ class EntityDamageListenerTest {
 	/** The only place the listener is constructed, so a constructor change touches one line. */
 	private EntityDamageListener listener(WantedKillTrackers trackers) {
 		return new EntityDamageListener(mock(Gangland.class), userManager, trackers, mock(BountySettings.class),
-		                                mock(WantedSettings.class), stars);
+		                                mock(WantedSettings.class), stars, gangs);
 	}
 
 	private void kill(EntityDamageListener listener, Player killer, Player victim) {

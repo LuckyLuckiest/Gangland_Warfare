@@ -172,7 +172,8 @@ class BountySetCommandTest {
 		EntityDamageListener listener = new EntityDamageListener(mock(Gangland.class), userManager, wantedKills,
 		                                                         mock(BountySettings.class),
 		                                                         mock(WantedSettings.class),
-		                                                         new WantedStars(plugin, mock(WantedSettings.class)));
+		                                                         new WantedStars(plugin, mock(WantedSettings.class)),
+		                                                         new org.luckyraven.gangland.data.gang.GangMembership());
 
 		when(victim.getHealth()).thenReturn(1.0);
 		when(victim.getLocation()).thenReturn(new Location(null, 0, 0, 0));

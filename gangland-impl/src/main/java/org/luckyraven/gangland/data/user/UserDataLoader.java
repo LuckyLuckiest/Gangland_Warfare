@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.data.user;
 
 import lombok.CustomLog;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.core.feature.Executor;
@@ -95,7 +96,9 @@ public final class UserDataLoader {
 			double bounty     = (double) userData[v++];
 			int    level      = (int) userData[v++];
 			double experience = (double) userData[v++];
-			int    wanted     = (int) userData[v];
+			int    wanted     = (int) userData[v++];
+			// NULL = a row saved before the ledger existed: the whole bounty counts as posted once
+			String posters    = userData.length > v && userData[v] != null ? String.valueOf(userData[v]) : null;
 
 			user.setKills(kills);
 			user.setDeaths(deaths);
@@ -149,17 +152,19 @@ public final class UserDataLoader {
 
 			Bounty userBounty = user.getBounty();
 			userBounty.setAmount(Currency.of(bounty));
+			userBounty.restoreLedger(posters);
 
 			if (!user.getUser().isOnline()) return;
 
-			if (userBounty.hasBounty() && Settings.isBountyTimerEnabled()) {
-				BountyEvent bountyEvent = new UserBountyEvent(true, user);
+			// only the server-made part compounds; the timer touches Bukkit (event), so it starts on the main thread
+			if (Settings.isBountyTimerEnabled() && userBounty.getNotoriety().signum() > 0
+			    && userBounty.getNotoriety().compareTo(BigDecimal.valueOf(Settings.getBountyTimerMax())) < 0) {
+				Bukkit.getScheduler().runTask(gangland, () -> {
+					BountyEvent bountyEvent = new UserBountyEvent(false, user);
+					Executor    executor    = new BountyExecutor(gangland, bountyEvent, user, bountySettings);
 
-				if (userBounty.getAmount().compareTo(BigDecimal.valueOf(Settings.getBountyTimerMax())) < 0) {
-					Executor executor = new BountyExecutor(gangland, bountyEvent, user, bountySettings);
-					Timer    timer    = executor.createTimer();
-					timer.start(true);
-				}
+					executor.createTimer().start(false);
+				});
 			}
 		});
 	}

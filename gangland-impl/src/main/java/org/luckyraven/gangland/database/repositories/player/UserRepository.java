@@ -50,7 +50,9 @@ public class UserRepository extends AbstractRepository<User<? extends OfflinePla
 			double bounty     = (double) result[v++];
 			int    level      = (int) result[v++];
 			double experience = (double) result[v++];
-			int    wanted     = (int) result[v];
+			int    wanted     = (int) result[v++];
+			// NULL = a row saved before the ledger existed
+			String posters    = result.length > v && result[v] != null ? String.valueOf(result[v]) : null;
 
 			OfflinePlayer       offlinePlayer = Bukkit.getOfflinePlayer(uuid);
 			User<OfflinePlayer> user          = userFactory.create(offlinePlayer);
@@ -64,6 +66,7 @@ public class UserRepository extends AbstractRepository<User<? extends OfflinePla
 			user.getLevel().setLevelValue(level);
 			user.getLevel().setExperience(experience);
 			user.getBounty().setAmount(Currency.of(bounty));
+			user.getBounty().restoreLedger(posters);
 
 			users.put(uuid, user);
 		}

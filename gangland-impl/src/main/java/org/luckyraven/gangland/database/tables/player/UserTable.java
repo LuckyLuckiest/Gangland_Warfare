@@ -23,6 +23,8 @@ public class UserTable extends Table<User<? extends OfflinePlayer>> {
 		Attribute<Integer> level      = new Attribute<>("level", false, Integer.class);
 		Attribute<Double>  experience = new Attribute<>("experience", false, Double.class);
 		Attribute<Integer> wanted     = new Attribute<>("wanted", false, Integer.class);
+		// ponytail: 4096-char ledger, about 70 posters; a bounty_post table when that is not enough
+		Attribute<String>  posters    = new Attribute<>("bounty_posters", false, 4096, String.class);
 
 		balance.setDefaultValue(0D);
 		kills.setDefaultValue(0);
@@ -32,6 +34,7 @@ public class UserTable extends Table<User<? extends OfflinePlayer>> {
 		level.setDefaultValue(0);
 		experience.setDefaultValue(0D);
 		wanted.setDefaultValue(0);
+		posters.setCanBeNull(true);
 
 		this.addAttribute(uuid);
 		this.addAttribute(balance);
@@ -42,6 +45,7 @@ public class UserTable extends Table<User<? extends OfflinePlayer>> {
 		this.addAttribute(level);
 		this.addAttribute(experience);
 		this.addAttribute(wanted);
+		this.addAttribute(posters);
 	}
 
 	@Override
@@ -50,7 +54,7 @@ public class UserTable extends Table<User<? extends OfflinePlayer>> {
 		                    data.getKills(),
 		                    data.getDeaths(), data.getMobKills(), data.getBounty().getAmount().doubleValue(),
 		                    data.getLevel().getLevelValue(), data.getLevel().getExperience(),
-		                    data.getWanted().getLevel()};
+		                    data.getWanted().getLevel(), data.getBounty().serializeLedger()};
 	}
 
 	@Override
