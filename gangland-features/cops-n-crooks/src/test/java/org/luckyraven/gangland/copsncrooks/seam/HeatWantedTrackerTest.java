@@ -263,13 +263,18 @@ class HeatWantedTrackerTest {
 
 	@Test
 	@DisplayName("a kill defending your own contested turf mints nothing, heat on and off (TF-49)")
-	void defenderKillInsideOwnContestedTurf_commitsNothing_heatOnAndOff() {
+	void defenderKillInsideOwnContestedTurf_commitsNothing_heatOnAndOff() throws ReflectiveOperationException {
+		List<Player> stars = new ArrayList<>();
+		tracker.onWantedTrigger(stars::add);
 		defending = true;
 		tracker.recordKill(killer, wanted, playerVictim(), 10);
 
 		heatOff();
 		tracker.recordKill(killer, wanted, playerVictim(), 10);
+		combo(false);
+		tracker.recordKill(killer, wanted, playerVictim(), 10);
 
+		assertTrue(stars.isEmpty());
 		verifyNoInteractions(crimes);
 		verify(killCombo, never()).recordKill(any(), any(), any(), anyInt());
 	}
