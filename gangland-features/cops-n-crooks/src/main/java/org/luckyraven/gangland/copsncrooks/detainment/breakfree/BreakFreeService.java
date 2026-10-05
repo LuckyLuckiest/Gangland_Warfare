@@ -11,6 +11,8 @@ import org.luckyraven.gangland.copsncrooks.detainment.message.DetainmentMessageC
 import org.luckyraven.gangland.copsncrooks.detainment.release.ReleasePipeline;
 import org.luckyraven.gangland.copsncrooks.detainment.release.ReleaseReason;
 import org.luckyraven.gangland.copsncrooks.detainment.sound.DetainmentSoundContract;
+import org.luckyraven.gangland.crime.CrimeService;
+import org.luckyraven.gangland.crime.Crimes;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.util.ActionBarManager;
 import org.luckyraven.keystone.util.ChatUtil;
@@ -35,6 +37,7 @@ public class BreakFreeService implements BeanLifecycle {
 	private final DetainmentMessageContract messages;
 	private final ReleasePipeline           releasePipeline;
 	private final DetainmentSoundContract   sounds;
+	private final CrimeService              crimes;
 
 	private final Map<UUID, Counter> counters = new ConcurrentHashMap<>();
 
@@ -59,6 +62,7 @@ public class BreakFreeService implements BeanLifecycle {
 			counters.remove(player.getUniqueId());
 			ChatUtil.sendTitle(player, messages.breakFreeSuccessTitle(), messages.breakFreeSuccessSubtitle());
 			sounds.playBreakFreeSuccess(player);
+			crimes.commit(player, Crimes.RESISTING_ARREST, player.getLocation());
 			releasePipeline.release(player, ReleaseReason.BREAK_FREE);
 			return;
 		}
