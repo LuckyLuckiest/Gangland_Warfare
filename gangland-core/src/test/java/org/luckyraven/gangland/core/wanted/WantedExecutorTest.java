@@ -118,6 +118,23 @@ class WantedExecutorTest {
 		verify(context).sendMessage("1");
 	}
 
+	@Test
+	@DisplayName("with the charge off a tick drops the star and never withdraws, even with Amount set")
+	void tickWithChargeOff_neverWithdraws() {
+		JavaPlugin     plugin   = mock(JavaPlugin.class);
+		Wanted         wanted   = ownedWanted(plugin, 3);
+		WantedSettings settings = settings();
+		when(settings.getTakeMoneyAmount()).thenReturn(new BigDecimal("50"));
+		when(settings.getTakeMoneyMultiplier()).thenReturn(5.0);
+		WantedContext context = context(wanted);
+
+		new WantedExecutor(plugin, new WantedEvent(false, wanted), context, settings,
+		                   new WantedStars(plugin, settings)).execute(mock(Timer.class));
+
+		assertEquals(2, wanted.getLevel());
+		verify(context, never()).withdraw(any());
+	}
+
 	private static Wanted ownedWanted(JavaPlugin plugin, int level) {
 		Wanted wanted = new Wanted(plugin, 1, 5);
 		wanted.setLevel(level);

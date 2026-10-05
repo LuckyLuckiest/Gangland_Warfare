@@ -32,6 +32,16 @@ public class GanglandWantedSettings implements WantedSettings {
 	}
 
 	@Override
+	public boolean isTakeMoneyEnabled() {
+		return Settings.isWantedTakeMoneyEnabled();
+	}
+
+	@Override
+	public String getTakeMoneyFormula() {
+		return Settings.getWantedTakeMoneyFormula();
+	}
+
+	@Override
 	public BigDecimal getTakeMoneyAmount() {
 		return Settings.getWantedTakeMoneyAmount();
 	}

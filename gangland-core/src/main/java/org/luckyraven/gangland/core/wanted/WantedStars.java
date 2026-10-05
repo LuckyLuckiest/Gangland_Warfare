@@ -5,10 +5,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.core.events.wanted.WantedEvent;
+import org.luckyraven.gangland.core.money.MoneyFormula;
+import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.keystone.timer.Timer;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.BooleanSupplier;
 
 /**
@@ -124,7 +128,7 @@ public final class WantedStars {
 
 		BigDecimal price = Currency.ZERO;
 		for (int level = before; level > after; level--) {
-			price = price.add(starPrice(level));
+			price = price.add(starPrice(context, level));
 		}
 
 		BigDecimal charged = price.signum() != 0 ? context.withdraw(price) : Currency.ZERO;
@@ -159,11 +163,22 @@ public final class WantedStars {
 		return timer;
 	}
 
-	/** The price of the star that falls from {@code level}: today's Repeating_Timer rule, Amount x Multiplier^level. */
-	private BigDecimal starPrice(int level) {
+	/**
+	 * The price of the star that falls from {@code level}: nothing unless {@code Take_Money.Enable}, else the admin
+	 * formula, falling back to Amount x Multiplier^level when it is broken.
+	 */
+	private BigDecimal starPrice(WantedContext context, int level) {
+		if (!settings.isTakeMoneyEnabled()) return Currency.ZERO;
 		BigDecimal amount = settings.getTakeMoneyAmount();
-		if (amount.signum() <= 0) return Currency.ZERO;
 
-		return Currency.multiply(amount, Math.pow(settings.getTakeMoneyMultiplier(), level));
+		double multiplier = settings.getTakeMoneyMultiplier();
+		double fallback   = Currency.toDouble(amount) * Math.pow(multiplier, level);
+
+		Map<String, Double> variables = context instanceof User<?> user ? MoneyFormula.userVariables(user) : new HashMap<>();
+		variables.put("amount", Currency.toDouble(amount));
+		variables.put("multiplier", multiplier);
+		variables.put("wanted", (double) level);
+
+		return Currency.of(MoneyFormula.evaluate(settings.getTakeMoneyFormula(), variables, fallback));
 	}
 }
