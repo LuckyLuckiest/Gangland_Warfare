@@ -92,6 +92,8 @@ public class Settings implements FileInitializer {
 	private static @Getter int        bountyTimeInterval;
 	// wanted configuration
 	private static @Getter BigDecimal wantedTakeMoneyAmount;
+	private static @Getter boolean    wantedTakeMoneyEnabled, bountyPayNotoriety;
+	private static @Getter String     wantedTakeMoneyFormula;
 	private static @Getter double     wantedTakeMoneyMultiplier, wantedTimerMultiplierAmount;
 	private static @Getter boolean wantedEnabled, wantedTimerEnabled, wantedTimerMultiplierEnabled,
 			wantedKillComboEnabled;
@@ -527,6 +529,7 @@ public class Settings implements FileInitializer {
 		bountyMinimum       = money(bounty, "Minimum", "0");
 		bountyEachKillValue = money(bountyKill, "Each", "5");
 		bountyMaxKill       = money(bountyKill, "Maximum", "50000");
+		bountyPayNotoriety  = bool(bounty, "Pay_Notoriety", false);
 		bountyTimerEnabled  = bool(bountyTimer, "Enable", true);
 		bountyTimerMultiple = dbl(bountyTimer, "Multiple", 2);
 		bountyTimeInterval  = intVal(bountyTimer, "Time", 300);
@@ -541,6 +544,8 @@ public class Settings implements FileInitializer {
 		NodeReader wantedKillComboSec = section(wanted, "Kill_Combo", report);
 
 		wantedEnabled                = bool(wanted, "Enable", true);
+		wantedTakeMoneyEnabled       = bool(wantedTakeMoney, "Enable", false);
+		wantedTakeMoneyFormula       = str(wantedTakeMoney, "Formula", "amount * multiplier ^ wanted");
 		wantedTakeMoneyAmount        = money(wantedTakeMoney, "Amount", "50");
 		wantedTakeMoneyMultiplier    = dbl(wantedTakeMoney, "Multiplier", 5);
 		wantedTimerEnabled           = bool(wantedTimer, "Enable", true);
