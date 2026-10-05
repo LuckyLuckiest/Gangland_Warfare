@@ -32,9 +32,13 @@ import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.gangland.core.wanted.WantedKillTrackers;
 import org.luckyraven.gangland.core.wanted.WantedSettings;
 import org.luckyraven.gangland.core.wanted.WantedStars;
+import org.luckyraven.gangland.data.gang.GangMembership;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.LongSupplier;
 
 @ListenerHandler
 public class EntityDamageListener implements Listener {
@@ -44,18 +48,32 @@ public class EntityDamageListener implements Listener {
 	private final WantedKillTrackers  wantedKills;
 	private final BountySettings      bountySettings;
 	private final WantedStars         wantedStars;
+	private final GangMembership      gangs;
+
+	private static final long FIGHT_WINDOW_MS = 30_000L;
+
+	// ponytail: fixed 30 s fight window, first hit wins, pairs that never meet again linger until restart;
+	// a config key / quit-time prune when it shows
+	private final Map<String, Long> firstHit     = new HashMap<>();   // value = hit order, so same-millisecond hits still sort
+	private long                    hitOrder;
+	private final Map<String, Long> lastExchange = new HashMap<>();
+
+	/** Test seam for the fight window. */
+	LongSupplier clock = System::currentTimeMillis;
 
 	public EntityDamageListener(Gangland gangland,
 	                            @Qualifier("online") UserManager<Player> userManager,
 	                            WantedKillTrackers wantedKills,
 	                            BountySettings bountySettings,
 	                            WantedSettings wantedSettings,
-	                            WantedStars wantedStars) {
+	                            WantedStars wantedStars,
+	                            GangMembership gangs) {
 		this.gangland          = gangland;
 		this.userManager       = userManager;
 		this.wantedKills       = wantedKills;
 		this.bountySettings    = bountySettings;
 		this.wantedStars       = wantedStars;
+		this.gangs             = gangs;
 		setupKillComboCallbacks();
 	}
 
@@ -72,6 +90,11 @@ public class EntityDamageListener implements Listener {
 		Entity entity = event.getEntity();
 
 		createBloodParticle(entity, event.getDamage());
+
+		// who struck first decides self-defence; recorded for every hit, before the death check
+		if (entity instanceof Player struck && struck != damager && userManager.getUser(struck) != null) {
+			recordHit(damager.getUniqueId(), struck.getUniqueId());
+		}
 
 		// register when the entity dies
 		boolean isEntityDead = !(entity instanceof LivingEntity livingEntity &&
@@ -121,17 +144,25 @@ public class EntityDamageListener implements Listener {
 		// Real player kill
 		damagerUser.setKills(damagerUser.getKills() + 1);
 
-		// when does the attacked user have a bounty
-		Bounty bounty = deadUser.getBounty();
+		boolean defence = selfDefence(damagerUser.getUser().getUniqueId(), deadPlayer.getUniqueId());
+		forgetFight(damagerUser.getUser().getUniqueId(), deadPlayer.getUniqueId());
 
-		if (bounty.hasBounty()) {
-			BigDecimal amount = bounty.getAmount();
+		// what the victim's head is worth: players' escrow always, the server-made notoriety only when configured
+		Bounty     bounty   = deadUser.getBounty();
+		boolean    payAll   = Settings.isBountyPayNotoriety();
+		BigDecimal posted   = bounty.getPostedAmount();
+		BigDecimal payout   = payAll ? bounty.getAmount() : posted;
+		boolean    allied   = gangs.alliedOrSame(damagerUser.getUser().getUniqueId(), deadPlayer.getUniqueId());
+		boolean    paid     = !allied && payout.signum() > 0;
 
-			damagerUser.getEconomy().depositAmount(amount);
-			bounty.resetBounty();
+		if (paid) {
+			damagerUser.getEconomy().depositAmount(payout);
+
+			if (payAll) bounty.resetBounty();
+			else bounty.claimPosted();
 
 			String message = Messages.BOUNTY_CLAIMED.toString();
-			String replace = message.replace("%amount%", Settings.formatAmount(amount))
+			String replace = message.replace("%amount%", Settings.formatAmount(payout))
 			                        .replace("%player%", deadPlayer.getName());
 
 			damagerUser.sendMessage(replace);
@@ -140,13 +171,52 @@ public class EntityDamageListener implements Listener {
 			if (wantedKills.isActive()) {
 				wantedKills.resetCombo(deadPlayer.getUniqueId());
 			}
-		} else handleBounty(damagerUser);
+
+			// a takedown of a posted bounty is not a crime
+			if (posted.signum() > 0) return;
+		}
+
+		// defending yourself is not a crime, with or without the cop module
+		if (defence) return;
+
+		if (!paid) handleBounty(damagerUser);
 
 		// increase the wanted level for killing another player
 		if (wantedKills.isActive()) {
 			wantedKills.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
 			                       Settings.getWantedKillComboResetAfter());
 		} else handleWanted(damagerUser);
+	}
+
+	private static String pair(UUID a, UUID b) {
+		return a.compareTo(b) < 0 ? a + "|" + b : b + "|" + a;
+	}
+
+	private void forgetFight(UUID a, UUID b) {
+		firstHit.remove(a + ">" + b);
+		firstHit.remove(b + ">" + a);
+		lastExchange.remove(pair(a, b));
+	}
+
+	private void recordHit(UUID attacker, UUID victim) {
+		long now = clock.getAsLong();
+		Long last = lastExchange.get(pair(attacker, victim));
+
+		if (last != null && now - last > FIGHT_WINDOW_MS) forgetFight(attacker, victim);
+
+		firstHit.putIfAbsent(attacker + ">" + victim, ++hitOrder);
+		lastExchange.put(pair(attacker, victim), now);
+	}
+
+	private boolean selfDefence(UUID killer, UUID victim) {
+		Long last = lastExchange.get(pair(killer, victim));
+
+		if (last != null && clock.getAsLong() - last > FIGHT_WINDOW_MS) forgetFight(killer, victim);
+
+		Long victimFirst = firstHit.get(victim + ">" + killer);
+		Long killerFirst = firstHit.get(killer + ">" + victim);
+
+		return victimFirst != null && (killerFirst == null || victimFirst < killerFirst);
 	}
 
 	private boolean handleMobKills(Entity victim, User<Player> attacker) {
@@ -221,17 +291,9 @@ public class EntityDamageListener implements Listener {
 		Bounty     bounty     = damagerUser.getBounty();
 		BigDecimal autoBounty = bounty.getAutoBountyIncrease(userLevel, wantedLevel);
 
-		bounty.setAmount(bounty.getAmount().add(autoBounty));
+		bounty.addNotoriety(autoBounty);
 
-		// Start bounty timer if enabled
-		BountyEvent bountyEvent = new UserBountyEvent(true, damagerUser);
-		if (Settings.isBountyTimerEnabled()
-		    && bounty.getAmount().compareTo(BigDecimal.valueOf(Settings.getBountyTimerMax())) < 0) {
-			Executor executor = new BountyExecutor(gangland, bountyEvent, damagerUser, bountySettings);
-			Timer    timer    = executor.createTimer();
-
-			timer.start(true);
-		}
+		startBountyTimer(damagerUser);
 
 		// Notify player with kill combo information
 		String format = String.format("&c&lWANTED LEVEL: &c%s &7(Bounty: &b+%s%s)", wanted.getLevelStars(),
@@ -241,37 +303,35 @@ public class EntityDamageListener implements Listener {
 		if (wantedStars.isStarChat()) damagerUser.sendMessage(message);
 	}
 
+	/** Starts the notoriety timer while it is on and below its cap; sync, because it fires events. */
+	private void startBountyTimer(User<Player> damagerUser) {
+		Bounty bounty = damagerUser.getBounty();
+
+		if (!Settings.isBountyTimerEnabled()
+		    || bounty.getNotoriety().compareTo(BigDecimal.valueOf(Settings.getBountyTimerMax())) >= 0) return;
+
+		Executor executor = new BountyExecutor(gangland, new UserBountyEvent(false, damagerUser), damagerUser,
+		                                       bountySettings);
+
+		executor.createTimer().start(false);
+	}
+
 	private void handleBounty(User<Player> damagerUser) {
 		Bounty     userBounty = damagerUser.getBounty();
-		BigDecimal eachKill   = Settings.getBountyEachKillValue();
-		BigDecimal scaledBounty = userBounty.calculateLevelScaledBounty(eachKill,
-		                                                                damagerUser.getLevel().getLevelValue());
+		BigDecimal scaled     = userBounty.calculateLevelScaledBounty(Settings.getBountyEachKillValue(),
+		                                                              damagerUser.getLevel().getLevelValue());
 
-		BountyEvent bountyEvent = new UserBountyEvent(true, damagerUser, scaledBounty);
+		if (userBounty.getNotoriety().add(scaled).compareTo(Settings.getBountyMaxKill()) > 0) return;
 
-		if (Settings.isBountyTimerEnabled()
-		    && userBounty.getAmount().compareTo(BigDecimal.valueOf(Settings.getBountyTimerMax())) < 0) {
-			Executor executor = new BountyExecutor(gangland, bountyEvent, damagerUser, bountySettings);
-			Timer    timer    = executor.createTimer();
+		BountyEvent bountyEvent = new UserBountyEvent(false, damagerUser, scaled);
 
-			timer.start(true);
-
-			return;
-		}
-
-		BigDecimal amount = Currency.of(eachKill.add(userBounty.getAmount()));
-
-		if (amount.compareTo(Settings.getBountyMaxKill()) > 0) return;
-
-		bountyEvent.setAmountApplied(scaledBounty);
-
-		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
-			Bukkit.getPluginManager().callEvent(bountyEvent);
-		});
+		Bukkit.getPluginManager().callEvent(bountyEvent);
 
 		if (bountyEvent.isCancelled()) return;
 
-		damagerUser.getBounty().setAmount(amount);
+		userBounty.addNotoriety(scaled);
+
+		startBountyTimer(damagerUser);
 	}
 
 }

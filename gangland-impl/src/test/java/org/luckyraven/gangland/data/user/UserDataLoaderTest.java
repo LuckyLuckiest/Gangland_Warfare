@@ -2,6 +2,7 @@ package org.luckyraven.gangland.data.user;
 
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -132,19 +133,40 @@ class UserDataLoaderTest {
 		verify(stars, never()).restore(any(), anyInt());
 	}
 
+	@Test
+	@DisplayName("a login with server-made notoriety starts the bounty timer on the main thread, never async")
+	void login_withNotoriety_startsTheBountyTimerOnTheMainThread() throws SQLException {
+		when(bukkit.scheduler().runTaskTimer(any(Plugin.class), any(Runnable.class), anyLong(), anyLong()))
+				.thenReturn(mock(BukkitTask.class));
+		saveRow(0, 100.0, "");
+
+		loader().loadUserData(user, new UserTable(), new BankTable(new UserTable()));
+
+		verify(bukkit.scheduler()).runTaskTimer(any(Plugin.class), any(Runnable.class), anyLong(), anyLong());
+		verify(bukkit.scheduler(), never()).runTaskTimerAsynchronously(any(Plugin.class), any(Runnable.class),
+		                                                               anyLong(), anyLong());
+	}
+
 	/** The only place the loader is constructed, so a constructor change touches one line. */
 	private UserDataLoader loader() {
-		return new UserDataLoader(mock(Gangland.class), database, new GangMembership(), mock(BountySettings.class),
+		BountySettings bountySettings = mock(BountySettings.class);
+		when(bountySettings.getTimeInterval()).thenReturn(300);
+
+		return new UserDataLoader(mock(Gangland.class), database, new GangMembership(), bountySettings,
 		                          mock(WantedSettings.class), stars);
 	}
 
 	private void saveRow(int wanted) throws SQLException {
+		saveRow(wanted, 0.0, null);
+	}
+
+	private void saveRow(int wanted, double bounty, String posters) throws SQLException {
 		String url = "jdbc:sqlite:" + tempDir.resolve("database").resolve("userdata.db").toAbsolutePath();
 
 		try (Connection connection = DriverManager.getConnection(url); Statement statement = connection.createStatement()) {
 			statement.executeUpdate("INSERT INTO user (uuid, balance, kills, deaths, mob_kills, bounty, level, " +
-			                        "experience, wanted) VALUES ('" + uuid + "', 10.0, 1, 2, 3, 0.0, 4, 5.0, " +
-			                        wanted + ")");
+			                        "experience, wanted, bounty_posters) VALUES ('" + uuid + "', 10.0, 1, 2, 3, " + bounty +
+			                        ", 4, 5.0, " + wanted + ", " + (posters == null ? "NULL" : "'" + posters + "'") + ")");
 		}
 	}
 

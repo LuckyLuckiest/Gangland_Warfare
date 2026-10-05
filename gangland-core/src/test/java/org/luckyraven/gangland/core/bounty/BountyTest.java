@@ -1,14 +1,17 @@
 package org.luckyraven.gangland.core.bounty;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.keystone.economy.Currency;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Proves {@link Bounty}'s scaling maths and ledger bookkeeping (Test Surface, wanted-bounty-combat.md:
@@ -158,19 +161,18 @@ class BountyTest {
 	}
 
 	@Test
-	@DisplayName("Observation #13 (wanted-bounty-combat.md): a direct setAmount (the Lombok @Data setter, used by "
-	             + "EntityDamageListener/BountyExecutor) bypasses the ledger entirely - the total moves, the ledger "
-	             + "does not")
-	void setAmount_bypassesLedger_pinsObservation13() {
+	@DisplayName("WB-13: notoriety moves the total, never the posted ledger")
+	void setAmount_movesTheTotal_neverThePostedLedger() {
 		Bounty bounty = bounty(100, 2.0);
-		CommandSender sender = mock(CommandSender.class);
+		CommandSender sender = named("poster");
 		bounty.addBounty(sender, Currency.of(10), 0);
 
 		bounty.setAmount(Currency.of(9999));
 
 		assertEquals(Currency.of(9999), bounty.getAmount());
-		assertEquals(1, bounty.size(), "the ledger entry from addBounty is untouched by a direct setAmount");
-		assertEquals(Currency.of(10), bounty.getSetAmount(sender));
+		assertEquals(1, bounty.size());
+		assertEquals(Currency.of(10), bounty.getPostedAmount(), "the escrow is only what was posted");
+		assertEquals(Currency.of(9989), bounty.getNotoriety());
 	}
 
 	@Test
@@ -214,8 +216,8 @@ class BountyTest {
 	@DisplayName("removeBounty for a sender with no ledger entry is a no-op")
 	void removeBounty_unknownSender_isNoop() {
 		Bounty bounty = bounty(0, 0.0);
-		CommandSender contributor = mock(CommandSender.class);
-		CommandSender stranger = mock(CommandSender.class);
+		CommandSender contributor = named("contributor");
+		CommandSender stranger = named("stranger");
 		bounty.addBounty(contributor, Currency.of(30), 0);
 
 		bounty.removeBounty(stranger);
@@ -235,6 +237,131 @@ class BountyTest {
 		assertEquals(Currency.ZERO, bounty.getAmount());
 		assertEquals(0, bounty.size());
 		assertFalse(bounty.hasBounty());
+	}
+
+	@Test
+	@DisplayName("WB-12: the ledger is keyed by poster id, so a relogged Player object still finds its entry")
+	void ledger_isKeyedByPosterId_aRelogStillFindsThePoster() {
+		Bounty bounty = bounty(0, 0.0);
+		UUID id = UUID.randomUUID();
+		Player before = player(id);
+		Player after = player(id);
+		bounty.addBounty(before, Currency.of(30), 0);
+
+		assertTrue(bounty.containsBounty(after));
+		assertEquals(Currency.of(30), bounty.getPaidAmount(after));
+
+		bounty.removeBounty(after);
+
+		assertEquals(Currency.ZERO, bounty.getAmount());
+	}
+
+	@Test
+	@DisplayName("postedAmount sums the PAID figures, not the level-scaled ones")
+	void postedAmount_sumsThePaidFigures() {
+		Bounty bounty = bounty(0, 2.0);
+		bounty.addBounty(named("a"), Currency.of(100), 5);   // posted 200, paid 100
+		bounty.addBounty(named("b"), Currency.of(50), 0);
+
+		assertEquals(Currency.of(150), bounty.getPostedAmount());
+	}
+
+	@Test
+	@DisplayName("notoriety is the server-made remainder of the total")
+	void notoriety_isTheServerMadeRemainder() {
+		Bounty bounty = bounty(0, 0.0);
+		bounty.addBounty(named("a"), Currency.of(100), 0);
+		bounty.addNotoriety(Currency.of(40));
+		bounty.addNotoriety(Currency.of(-5));
+
+		assertEquals(Currency.of(140), bounty.getAmount());
+		assertEquals(Currency.of(40), bounty.getNotoriety());
+	}
+
+	@Test
+	@DisplayName("claimPosted pays the posted escrow, keeps the notoriety and clears the ledger")
+	void claimPosted_paysPosted_keepsNotoriety() {
+		Bounty bounty = bounty(0, 0.0);
+		bounty.addBounty(named("a"), Currency.of(100), 0);
+		bounty.addNotoriety(Currency.of(40));
+
+		assertEquals(Currency.of(100), bounty.claimPosted());
+
+		assertEquals(Currency.of(40), bounty.getAmount());
+		assertEquals(Currency.of(40), bounty.getNotoriety());
+		assertEquals(Currency.ZERO, bounty.getPostedAmount());
+		assertEquals(0, bounty.size());
+	}
+
+	@Test
+	@DisplayName("serialize then restore round-trips posters and the paid refund")
+	void serializeRestore_roundTrips() {
+		Bounty bounty = bounty(0, 2.0);
+		bounty.addBounty(named("a"), Currency.of(100), 5);
+		bounty.addBounty(named("b"), Currency.of(50), 0);
+		bounty.addNotoriety(Currency.of(7));
+		String saved = bounty.serializeLedger();
+
+		Bounty loaded = bounty(0, 2.0);
+		loaded.setAmount(bounty.getAmount());
+		loaded.restoreLedger(saved);
+
+		assertEquals(saved, loaded.serializeLedger());
+		assertEquals(bounty.getPostedAmount(), loaded.getPostedAmount());
+		assertEquals(Currency.of(100), loaded.getPaidAmount(named("a")));
+		assertEquals(Currency.of(200), loaded.getSetAmount(named("a")));
+		assertEquals(bounty.getNotoriety(), loaded.getNotoriety());
+	}
+
+	@Test
+	@DisplayName("a null column is a pre-0.15 row: the whole bounty counts as posted, once")
+	void restoreNull_legacyBountyCountsAsPostedOnce() {
+		Bounty bounty = bounty(0, 0.0);
+		bounty.setAmount(Currency.of(300));
+
+		bounty.restoreLedger(null);
+
+		assertEquals(Currency.of(300), bounty.getPostedAmount());
+		assertEquals(Currency.ZERO, bounty.getNotoriety());
+		assertEquals(Currency.of(300), bounty.claimPosted());
+		assertEquals(Currency.ZERO, bounty.claimPosted(), "paid in full once, never again");
+	}
+
+	@Test
+	@DisplayName("an empty column is an empty ledger: all notoriety")
+	void restoreEmpty_isEmpty() {
+		Bounty bounty = bounty(0, 0.0);
+		bounty.setAmount(Currency.of(300));
+
+		bounty.restoreLedger("");
+
+		assertEquals(0, bounty.size());
+		assertEquals(Currency.of(300), bounty.getNotoriety());
+		assertEquals("", bounty.serializeLedger());
+	}
+
+	@Test
+	@DisplayName("damaged entries are skipped, good ones kept")
+	void badLedgerEntries_areSkipped() {
+		Bounty bounty = bounty(0, 0.0);
+		bounty.setAmount(Currency.of(50));
+
+		bounty.restoreLedger("junk;x=1;y=abc:2;=1:1;good=20:10;");
+
+		assertEquals(1, bounty.size());
+		assertEquals(Currency.of(10), bounty.getPostedAmount());
+	}
+
+	private static CommandSender named(String name) {
+		CommandSender sender = mock(CommandSender.class);
+		when(sender.getName()).thenReturn(name);
+		return sender;
+	}
+
+	private static Player player(UUID id) {
+		Player player = mock(Player.class);
+		when(player.getUniqueId()).thenReturn(id);
+		return player;
 	}
 
 	private static Bounty bounty(double baseAmount, double levelMultiplier) {

@@ -41,44 +41,25 @@ public class BountyExecutor extends Executor {
 	public void execute(Timer timer) {
 		Bounty bounty = context.getBounty();
 
-		if (hasBounty(timer, bounty)) return;
+		// only the server-made part grows: what players posted is escrow and never compounds
+		BigDecimal notoriety = bounty.getNotoriety();
+		BigDecimal max       = BigDecimal.valueOf(settings.getTimerMax());
 
-		BigDecimal oldAmount = bounty.getAmount();
-
-		BigDecimal currentBounty;
-		if (oldAmount.signum() == 0) {
-			double multiple = settings.getTimerMultiple();
-			currentBounty = settings.getEachKillValue()
-			                        .divide(BigDecimal.valueOf(multiple), Currency.SCALE, Currency.ROUNDING_MODE);
-		} else {
-			currentBounty = oldAmount;
-		}
-
-		if (oldAmount.compareTo(BigDecimal.valueOf(settings.getTimerMax())) >= 0) {
+		if (notoriety.signum() <= 0 || notoriety.compareTo(max) >= 0) {
 			timer.stop();
 			return;
 		}
 
-		BigDecimal baseIncrease   = Currency.multiply(currentBounty, settings.getTimerMultiple());
-		BigDecimal scaledIncrease = bounty.calculateLevelScaledBounty(baseIncrease, context.getUserLevel());
+		BigDecimal baseIncrease = Currency.multiply(notoriety, settings.getTimerMultiple());
+		BigDecimal grown        = bounty.calculateLevelScaledBounty(baseIncrease, context.getUserLevel()).min(max);
 
-		event.setAmountApplied(scaledIncrease.subtract(currentBounty));
+		event.setAmountApplied(grown.subtract(notoriety));
 
 		Bukkit.getPluginManager().callEvent(event);
 
 		if (event.isCancelled()) return;
 
-		bounty.setAmount(scaledIncrease);
-
-		hasBounty(timer, bounty);
-	}
-
-	private boolean hasBounty(Timer timer, Bounty bounty) {
-		if (!bounty.hasBounty()) {
-			timer.stop();
-			return true;
-		}
-		return false;
+		bounty.addNotoriety(grown.subtract(notoriety));
 	}
 
 }
