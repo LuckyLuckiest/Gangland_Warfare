@@ -12,6 +12,8 @@ import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
+import org.luckyraven.gangland.core.wanted.WantedCause;
+import org.luckyraven.gangland.core.wanted.WantedStars;
 
 import java.util.List;
 
@@ -22,15 +24,18 @@ class WantedRemoveCommand extends SubArgument {
 	private final JavaPlugin            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
+	private final WantedStars         wantedStars;
 
 	public WantedRemoveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                           @Qualifier("online") UserManager<Player> userManager) {
+	                           @Qualifier("online") UserManager<Player> userManager,
+	                           WantedStars wantedStars) {
 		super(gangland, "remove", tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
 
 		this.userManager = userManager;
+		this.wantedStars = wantedStars;
 
 		wantedValue();
 	}
@@ -47,7 +52,7 @@ class WantedRemoveCommand extends SubArgument {
 
 			int amount = 1;
 			if (wanted.getLevel() - amount < 0) amount = 0;
-			wanted.setLevel(Math.max(0, wanted.getLevel() - amount));
+			wanted.setLevel(Math.max(0, wanted.getLevel() - amount), WantedCause.ADMIN);
 
 			String decreased = Messages.WANTED_DECREASED.toString();
 			String replace = decreased.replace("%amount%", String.valueOf(amount))
@@ -84,7 +89,7 @@ class WantedRemoveCommand extends SubArgument {
 			int realAmount = amount;
 			if (wanted.getLevel() - realAmount < 0) realAmount = wanted.getLevel();
 			int value = Math.max(0, wanted.getLevel() - amount);
-			wanted.setLevel(value);
+			wanted.setLevel(value, WantedCause.ADMIN);
 
 			String decreased = Messages.WANTED_DECREASED.toString();
 			String replace = decreased.replace("%amount%", String.valueOf(realAmount))

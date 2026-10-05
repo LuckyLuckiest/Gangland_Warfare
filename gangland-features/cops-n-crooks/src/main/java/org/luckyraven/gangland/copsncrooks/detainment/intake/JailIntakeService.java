@@ -17,6 +17,7 @@ import org.luckyraven.gangland.copsncrooks.detainment.wanted.WantedClearContract
 import org.luckyraven.gangland.copsncrooks.jail.Jail;
 import org.luckyraven.gangland.copsncrooks.jail.JailRegistry;
 import org.luckyraven.gangland.copsncrooks.jail.JailService;
+import org.luckyraven.gangland.core.wanted.WantedCause;
 
 /**
  * Orchestrates the transition from HANDCUFFED → JAILED: picks a jail, seizes the inventory, zeros wanted, gives
@@ -51,7 +52,7 @@ public class JailIntakeService {
 		seizedInventoryService.snapshot(player);
 		clearInventory(player);
 		giveItem(player, paperworkItemFactory.create());
-		wantedClearContract.clearWanted(player.getUniqueId());
+		wantedClearContract.clearWanted(player.getUniqueId(), WantedCause.ARREST);
 
 		jailService.detainPlayer(jail.getId(), player.getUniqueId());
 		detainmentService.jail(player, jail.getId());

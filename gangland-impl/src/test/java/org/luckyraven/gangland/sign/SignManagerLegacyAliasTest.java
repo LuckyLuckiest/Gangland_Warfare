@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.sign.model.ParsedSign;
 import org.luckyraven.gangland.sign.registry.SignTypeDefinition;
@@ -57,7 +58,8 @@ class SignManagerLegacyAliasTest {
 
 		return new SignManager(mock(Gangland.class), "glw", new SignTypeRegistry(), signInteraction,
 		                       mock(UniqueItemAddon.class), mock(ItemSerializerRegistry.class),
-		                       mock(ItemParser.class), onlineUsers, offlineUsers, container, legacySignRewriter);
+		                       mock(ItemParser.class), onlineUsers, offlineUsers, container, legacySignRewriter,
+		                       mock(WantedStars.class));
 	}
 
 	@Test

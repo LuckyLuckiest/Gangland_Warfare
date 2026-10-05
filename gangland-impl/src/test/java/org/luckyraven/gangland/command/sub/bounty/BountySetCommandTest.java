@@ -19,6 +19,7 @@ import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.WantedKillTracker;
 import org.luckyraven.gangland.core.wanted.WantedKillTrackers;
 import org.luckyraven.gangland.core.wanted.WantedSettings;
+import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.listener.player.EntityDamageListener;
 import org.luckyraven.gangland.support.FakeMessageProvider;
@@ -170,7 +171,8 @@ class BountySetCommandTest {
 
 		EntityDamageListener listener = new EntityDamageListener(mock(Gangland.class), userManager, wantedKills,
 		                                                         mock(BountySettings.class),
-		                                                         mock(WantedSettings.class));
+		                                                         mock(WantedSettings.class),
+		                                                         new WantedStars(plugin, mock(WantedSettings.class)));
 
 		when(victim.getHealth()).thenReturn(1.0);
 		when(victim.getLocation()).thenReturn(new Location(null, 0, 0, 0));

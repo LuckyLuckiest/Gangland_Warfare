@@ -17,6 +17,7 @@ import org.luckyraven.gangland.sign.type.BountySign;
 import org.luckyraven.gangland.sign.type.Sign;
 import org.luckyraven.gangland.sign.type.ViewSign;
 import org.luckyraven.gangland.sign.type.WantedSign;
+import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.gangland.sign.type.trade.BuySign;
 import org.luckyraven.gangland.sign.type.trade.SellSign;
 import org.luckyraven.gangland.sign.validation.SignValidationException;
@@ -58,6 +59,8 @@ public class SignManager extends SignService {
 	private final DependencyContainer        container;
 	@Getter(AccessLevel.NONE)
 	private final LegacySignRewriter         legacyAliasRewriter;
+	@Getter(AccessLevel.NONE)
+	private final WantedStars                wantedStars;
 
 	public SignManager(Gangland gangland,
 	                   String shortPrefix,
@@ -69,7 +72,8 @@ public class SignManager extends SignService {
 	                   @Qualifier("online") UserManager<Player> userManager,
 	                   @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
 	                   DependencyContainer container,
-	                   LegacySignRewriter legacyAliasRewriter) {
+	                   LegacySignRewriter legacyAliasRewriter,
+	                   WantedStars wantedStars) {
 		super(registry, signInteraction);
 
 		this.gangland            = gangland;
@@ -82,6 +86,7 @@ public class SignManager extends SignService {
 		this.offlineUserManager  = offlineUserManager;
 		this.container           = container;
 		this.legacyAliasRewriter = legacyAliasRewriter;
+		this.wantedStars         = wantedStars;
 	}
 
 	@Override
@@ -149,7 +154,7 @@ public class SignManager extends SignService {
 		// wanted
 		String   wantedKey  = signPrefix + "wanted";
 		SignType wantedType = new SignType(wantedKey, "WANTED");
-		Sign     wanted     = new WantedSign(userManager, wantedType);
+		Sign     wanted     = new WantedSign(userManager, wantedType, wantedStars);
 
 		formatRegistry.register(wanted.createFormat());
 

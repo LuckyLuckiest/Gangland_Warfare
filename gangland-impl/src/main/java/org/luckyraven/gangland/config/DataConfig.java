@@ -96,8 +96,10 @@ public class DataConfig {
 	public UserDataLoader userDataLoader(GanglandDatabase database,
 	                                     GangMembership gangMembership,
 	                                     BountySettings bountySettings,
-	                                     WantedSettings wantedSettings) {
-		return new UserDataLoader(gangland, database, gangMembership, bountySettings, wantedSettings);
+	                                     WantedSettings wantedSettings,
+	                                     WantedStars wantedStars) {
+		return new UserDataLoader(gangland, database, gangMembership, bountySettings, wantedSettings,
+		                          wantedStars);
 	}
 
 	@Bean

@@ -16,14 +16,12 @@ import org.luckyraven.gangland.core.bounty.BountyExecutor;
 import org.luckyraven.gangland.core.bounty.BountySettings;
 import org.luckyraven.gangland.core.events.bounty.BountyEvent;
 import org.luckyraven.gangland.core.events.user.UserBountyEvent;
-import org.luckyraven.gangland.core.events.wanted.WantedEvent;
 import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.core.user.Level;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
-import org.luckyraven.gangland.core.wanted.Wanted;
-import org.luckyraven.gangland.core.wanted.WantedExecutor;
 import org.luckyraven.gangland.core.wanted.WantedSettings;
+import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.keystone.persistence.database.DatabaseHelper;
 
 import java.math.BigDecimal;
@@ -45,18 +43,19 @@ public final class UserDataLoader {
 	private final GanglandDatabase database;
 	private final GangMembership   gangMembership;
 	private final BountySettings   bountySettings;
-	private final WantedSettings   wantedSettings;
+	private final WantedStars      wantedStars;
 
 	public UserDataLoader(Gangland gangland,
 	                      GanglandDatabase database,
 	                      GangMembership gangMembership,
 	                      BountySettings bountySettings,
-	                      WantedSettings wantedSettings) {
+	                      WantedSettings wantedSettings,
+	                      WantedStars wantedStars) {
 		this.gangland       = gangland;
 		this.database       = database;
 		this.gangMembership = gangMembership;
 		this.bountySettings = bountySettings;
-		this.wantedSettings = wantedSettings;
+		this.wantedStars    = wantedStars;
 	}
 
 	private static Instant parseInstant(Object raw) {
@@ -102,7 +101,8 @@ public final class UserDataLoader {
 			user.setDeaths(deaths);
 			user.setMobKills(mobKills);
 			user.getEconomy().setAmount(Currency.of(balance));
-			user.getWanted().setLevel(wanted);
+			// RESTORE cause, and the decay clock for an online owner (hops to the main thread when needed)
+			if (wanted > 0) wantedStars.restore(user, wanted);
 
 			int gangId = gangMembership.gangIdOf(user.getUuid());
 			if (gangId != -1) {
@@ -160,14 +160,6 @@ public final class UserDataLoader {
 					Timer    timer    = executor.createTimer();
 					timer.start(true);
 				}
-			}
-
-			Wanted userWanted = user.getWanted();
-			if (userWanted.isWanted() && Settings.isWantedTimerEnabled()) {
-				WantedEvent wantedEvent = new WantedEvent(true, userWanted);
-				Executor    executor    = new WantedExecutor(gangland, wantedEvent, user, wantedSettings);
-				Timer       timer       = executor.createTimer();
-				timer.start(true);
 			}
 		});
 	}

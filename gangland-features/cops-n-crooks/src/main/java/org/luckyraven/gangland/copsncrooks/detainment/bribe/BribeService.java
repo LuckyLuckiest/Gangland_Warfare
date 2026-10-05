@@ -15,6 +15,7 @@ import org.luckyraven.gangland.copsncrooks.detainment.wanted.WantedClearContract
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
+import org.luckyraven.gangland.core.wanted.WantedCause;
 
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -67,7 +68,7 @@ public class BribeService {
 				break;
 		}
 
-		wantedClearContract.clearWanted(playerId);
+		wantedClearContract.clearWanted(playerId, WantedCause.BRIBE);
 		sounds.playBribeSuccess(player);
 		releasePipeline.release(player, ReleaseReason.HANDCUFF_BRIBE);
 		cop.transitionTo(CopState.RETURNING);

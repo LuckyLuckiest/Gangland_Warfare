@@ -37,6 +37,7 @@ import org.luckyraven.gangland.item.money.MoneyAddon;
 import org.luckyraven.gangland.item.money.MoneyDepositService;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
+import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.gangland.sign.LegacySignRewriter;
 import org.luckyraven.gangland.sign.SignManager;
 import org.luckyraven.gangland.sign.bulk.BulkActionManager;
@@ -251,10 +252,11 @@ public class GameplayConfig {
 	                               ItemParser itemParser,
 	                               @Qualifier("online") UserManager<Player> userManager,
 	                               @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
-	                               DependencyContainer container, LegacySignRewriter legacySignRewriter) {
+	                               DependencyContainer container, LegacySignRewriter legacySignRewriter,
+	                               WantedStars wantedStars) {
 		return new SignManager(gangland, Gangland.SHORT_PREFIX, signTypeRegistry, signInteraction,
 		                       uniqueItemAddon, itemSerializerRegistry, itemParser, userManager, offlineUserManager,
-		                       container, legacySignRewriter);
+		                       container, legacySignRewriter, wantedStars);
 	}
 
 	@Bean

@@ -13,6 +13,8 @@ import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
+import org.luckyraven.gangland.core.wanted.WantedCause;
+import org.luckyraven.gangland.core.wanted.WantedStars;
 
 import org.luckyraven.keystone.bean.Qualifier;
 
@@ -21,15 +23,18 @@ class WantedClearCommand extends SubArgument {
 	private final JavaPlugin            gangland;
 	private final Tree<Argument>      tree;
 	private final UserManager<Player> userManager;
+	private final WantedStars         wantedStars;
 
 	public WantedClearCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
-	                          @Qualifier("online") UserManager<Player> userManager) {
+	                          @Qualifier("online") UserManager<Player> userManager,
+	                           WantedStars wantedStars) {
 		super(gangland, "clear", tree, parent);
 
 		this.gangland = gangland;
 		this.tree     = tree;
 
 		this.userManager = userManager;
+		this.wantedStars = wantedStars;
 
 		clearTarget();
 	}
@@ -43,7 +48,7 @@ class WantedClearCommand extends SubArgument {
 			if (user == null) return;
 
 			Wanted wanted = user.getWanted();
-			wanted.setLevel(0);
+			wanted.setLevel(0, WantedCause.ADMIN);
 
 			sender.sendMessage(Messages.WANTED_CLEARED.toString());
 		};
@@ -68,7 +73,7 @@ class WantedClearCommand extends SubArgument {
 				return;
 			}
 
-			targetUser.getWanted().setLevel(0);
+			targetUser.getWanted().setLevel(0, WantedCause.ADMIN);
 
 			sender.sendMessage(
 					Messages.WANTED_CLEARED_OTHER.toString().replace("%player%", target.getName()));

@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.detainment.wanted;
 
+import org.luckyraven.gangland.core.wanted.WantedCause;
+
 import java.util.UUID;
 
 /**
@@ -22,4 +24,12 @@ public interface WantedClearContract {
 	 * Zeroes the player's wanted level. No-op if the user is not tracked.
 	 */
 	void clearWanted(UUID playerId);
+
+	/**
+	 * Zeroes the player's wanted level and tags the change with {@code cause} (it reaches the wanted events). No-op if
+	 * the user is not tracked. Implementations override it; the default keeps older implementations compiling.
+	 */
+	default void clearWanted(UUID playerId, WantedCause cause) {
+		clearWanted(playerId);
+	}
 }
