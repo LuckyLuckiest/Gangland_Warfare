@@ -283,6 +283,18 @@ class CopGroupSquadTest {
 	}
 
 	@Test
+	@DisplayName("regroupDisabled_neverRegroups (Cops.Regroup.Enabled false = 0.13 behaviour)")
+	void regroupDisabled_neverRegroups() {
+		CopGroup group = fighting();
+		group.recordCasualty(1_000L);
+		group.recordCasualty(15_000L);
+		RegroupSettings off = new RegroupSettings(false, R.casualties(), R.windowMs(), R.fallBackMs(),
+		                                          R.cooldownMs(), R.arrivalRadius());
+
+		assertFalse(group.shouldRegroup(15_000L, off));
+	}
+
+	@Test
 	@DisplayName("oneCasualty_doesNot")
 	void oneCasualty_doesNot() {
 		CopGroup group = fighting();

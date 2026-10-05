@@ -20,6 +20,8 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
+import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfig;
+import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.config.HudSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.CrimeRecord;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
@@ -40,6 +42,7 @@ import java.util.UUID;
 import java.util.function.BooleanSupplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -106,6 +109,10 @@ class WantedHudListenerTest {
 	}
 
 	private WantedHudListener listener(HudSettings hud) {
+		return listener(HudFixtures.loader(hud));
+	}
+
+	private WantedHudListener listener(ChaseConfigLoader chase) {
 		CopTierConfig tier = mock(CopTierConfig.class);
 		when(tier.displayName()).thenReturn("&9Sergeant");
 		when(tier.skipCuffing()).thenReturn(false);
@@ -122,7 +129,7 @@ class WantedHudListenerTest {
 		when(ledger.lastCrime(player.getUniqueId())).thenReturn(
 				new CrimeRecord("Assault_Cop", 100, 0L, new Location(mock(World.class), 0, 64, 0)));
 
-		return new WantedHudListener(plugin, HudFixtures.loader(hud), messages, ledger, spawns, copLoader, stars);
+		return new WantedHudListener(plugin, chase, messages, ledger, spawns, copLoader, stars);
 	}
 
 	private WantedLevelChangeEvent change(int from, int to, WantedCause cause) {
@@ -146,6 +153,33 @@ class WantedHudListenerTest {
 		verify(stars).suppressStarChat(suppressor.capture());
 		assertTrue(suppressor.getValue().getAsBoolean());
 		verify(bukkit.scheduler()).runTaskTimer(eq(plugin), any(Runnable.class), eq(10L), eq(10L));
+	}
+
+	@Test
+	@DisplayName("with Star_Card off the suppressor answers false, so the core's star chat line comes back")
+	void starCardOff_suppressorAnswersFalse_soTheChatLineReturns() {
+		listener(HudFixtures.hud(true, false, true, true, true, true));
+
+		ArgumentCaptor<BooleanSupplier> suppressor = ArgumentCaptor.forClass(BooleanSupplier.class);
+		verify(stars).suppressStarChat(suppressor.capture());
+		assertFalse(suppressor.getValue().getAsBoolean());
+	}
+
+	@Test
+	@DisplayName("the suppressor reads Star_Card per call, so a reload that turns the card off brings the chat line back")
+	void starCardSwitch_isReadPerCall() {
+		ChaseConfigLoader chase = HudFixtures.loader(HudSettings.DEFAULT);
+		listener(chase);
+		ArgumentCaptor<BooleanSupplier> suppressor = ArgumentCaptor.forClass(BooleanSupplier.class);
+		verify(stars).suppressStarChat(suppressor.capture());
+		assertTrue(suppressor.getValue().getAsBoolean());
+
+		ChaseConfig d = ChaseConfig.DEFAULT;
+		when(chase.get()).thenReturn(new ChaseConfig(d.heat(), d.evasion(),
+		                                             HudFixtures.hud(true, false, true, true, true, true),
+		                                             d.chargeSheet()));
+
+		assertFalse(suppressor.getValue().getAsBoolean());
 	}
 
 	@Test

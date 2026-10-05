@@ -10,12 +10,14 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
+import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.mockito.ArgumentCaptor;
 
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -67,6 +69,13 @@ class HeatModuleConfigTest {
 		registeredHook().accept(cop, player);
 
 		verify(ledger).reportAssault(player, copId, location);
+	}
+
+	@Test
+	@DisplayName("the hook is registered by the bean container: registerAttackedHook is a @PostConstruct")
+	void registerAttackedHook_isAPostConstruct() throws NoSuchMethodException {
+		assertTrue(HeatModuleConfig.class.getMethod("registerAttackedHook").isAnnotationPresent(PostConstruct.class),
+		           "without it, hitting a cop never reaches the heat ledger");
 	}
 
 	@Test

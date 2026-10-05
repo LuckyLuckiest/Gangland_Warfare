@@ -663,6 +663,21 @@ class CopManagerSquadTest {
 	}
 
 	@Test
+	@DisplayName("regroup_holdsWhileOnlyOneOfTwoCopsHasArrived")
+	void regroup_holdsWhileOnlyOneOfTwoCopsHasArrived() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		group.add(fx.cop(CopState.PURSUING, 12, 10));     // within Arrival_Radius 24
+		group.add(fx.cop(CopState.PURSUING, 100, 100));   // still far
+		group.startRegroup(fx.clock[0], org.luckyraven.gangland.copsncrooks.npc.police.config.RegroupSettings.DEFAULT);
+
+		manager.spawnTick(playerId, wanted);
+
+		assertTrue(group.isRegrouping(), "one arrived cop is not the target count of two");
+		verify(fx.radio, never()).sayFromLeaderLater(any(), eq("Regroup_Push"), anyInt(), any());
+	}
+
+	@Test
 	@DisplayName("regroup_holdsWhileReinforcementsAreStillFar")
 	void regroup_holdsWhileReinforcementsAreStillFar() {
 		CopGroup group = regroupingGroup(100, 100);
