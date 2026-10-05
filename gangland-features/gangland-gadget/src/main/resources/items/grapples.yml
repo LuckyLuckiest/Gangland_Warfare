@@ -48,7 +48,8 @@
 #   Max_Duration_Ticks       - hard timeout for one grapple, shot plus swing (default 70, maximum 79): vanilla kicks a
 #                              player for flying after 80 ticks in the air on a server with allow-flight=false
 #   Fall_Damage_Grace_Ticks  - one-shot fall-damage immunity window after an attached rope lets go (default 40).
-#                              While the rope holds you, the fall height does not build up at all
+#                              While the rope is taut, the fall height does not build up; a slack rope (for example
+#                              falling toward an anchor below you) holds nothing, so that fall still counts
 #   Require_Line_Of_Sight    - the rope snaps if a block comes between the player and the anchor mid-swing
 #                              (default true)
 #   Fire_Sound               - vanilla sound name played when the shot fires (default ITEM_CROSSBOW_SHOOT);

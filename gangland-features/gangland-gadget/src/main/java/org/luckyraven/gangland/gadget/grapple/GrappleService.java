@@ -154,7 +154,10 @@ public class GrappleService implements BeanLifecycle {
 		}
 
 		// Vanilla removes the hook itself when the player holds no rod in either hand, or gets over 32 blocks away.
-		if (!session.getHook().isValid()) {
+		// It also still collides the hook with entities: once one is hooked, vanilla snaps the hook to it every tick
+		// (undoing our pin), so a shot through a mob is a miss and a mob walking into the pinned hook lets go.
+		FishHook hook = session.getHook();
+		if (!hook.isValid() || hook.getHookedEntity() != null) {
 			cancel(player);
 			return;
 		}
@@ -252,9 +255,6 @@ public class GrappleService implements BeanLifecycle {
 			return;
 		}
 
-		// A taut rope is not a fall: without this, vanilla charges the whole swing as fall height on landing.
-		player.setFallDistance(0f);
-
 		Vector position = bodyCentre(player);
 		Vector anchorAt = anchor.toVector();
 		if (position.distance(anchorAt) <= grapple.getArrivalDistance()) {
@@ -282,6 +282,9 @@ public class GrappleService implements BeanLifecycle {
 		if (constrained == null) {
 			session.setRopeVelocity(moved);
 		} else {
+			// A taut rope is not a fall: without this, vanilla charges the whole swing as fall height on landing. A
+			// slack rope holds nothing, so a fall toward an anchor below still counts.
+			player.setFallDistance(0f);
 			player.setVelocity(constrained);
 			session.setRopeVelocity(constrained);
 		}

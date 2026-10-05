@@ -5,6 +5,7 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.WorldBorder;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.FishHook;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -26,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -200,6 +202,40 @@ class GrappleServiceTest {
 
 		assertNull(service.getSession(player));
 		verify(hook).remove();
+	}
+
+	@Test
+	@DisplayName("a shot that vanilla hooked onto an entity in flight is a miss, not a rope to a hidden anchor")
+	void shot_entityHookedInFlight_isMiss() {
+		GrappleService service = new GrappleService(mock(JavaPlugin.class));
+		World          world   = openWorld();
+		Player         player  = player(world, new Location[]{new Location(world, 0, 64, 0)});
+		FishHook       hook    = flyingHook(world, new Location(world, 0, 65.62, 0));
+		hitAt(world, new Vector(12, 65.62, 0), BlockFace.WEST);
+
+		service.fire(player, grapple(), hook);
+		when(hook.getHookedEntity()).thenReturn(mock(Entity.class));
+		service.tickSession(service.getSession(player));
+
+		assertNull(service.getSession(player));
+		verify(hook).remove();
+		assertFalse(service.consumeLandingGrace(player));
+	}
+
+	@Test
+	@DisplayName("an entity walking into the pinned hook mid-swing lets the rope go")
+	void rope_entityHookedOnPinnedHook_letsGo() {
+		GrappleService service = new GrappleService(mock(JavaPlugin.class));
+		World          world   = openWorld();
+		Player         player  = player(world, new Location[]{new Location(world, 0, 64, 0)});
+		GrappleSession session = attached(service, player, grapple(), new Location(world, 20, 64, 0));
+		when(session.getHook().getHookedEntity()).thenReturn(mock(Entity.class));
+
+		service.tickSession(session);
+
+		assertFalse(service.isActive(player));
+		verify(session.getHook()).remove();
+		verify(player, never()).setVelocity(any());
 	}
 
 	@Test
@@ -385,7 +421,7 @@ class GrappleServiceTest {
 	}
 
 	@Test
-	@DisplayName("G3: a 20-block rope swings the player under and past the anchor, keeping speed, before arriving")
+	@DisplayName("G3: a 20-block shot and rope (shipped defaults) swing the player under the anchor and arrive in time")
 	void swing_multiTick_passesUnderAnchorThenArrives() {
 		GrappleService service = new GrappleService(mock(JavaPlugin.class));
 		World          world   = openWorld();
@@ -394,19 +430,32 @@ class GrappleServiceTest {
 		Vector[]       sent    = {null};
 		doAnswer(invocation -> sent[0] = invocation.<Vector>getArgument(0).clone()).when(player)
 		                                                                           .setVelocity(any(Vector.class));
-		Grapple        grapple = grapple();
-		Location       anchor  = new Location(world, 14, 79, 0);   // ~20 blocks up and ahead
-		GrappleSession session = attached(service, player, grapple, anchor);
+		// Every knob at its grapples.yml default, line of sight included.
+		Grapple  grapple = grappleBuilder().requireLineOfSight(true).build();
+		Location anchor  = new Location(world, 14, 79, 0);   // ~20 blocks up and ahead
+		// Five clear 3.9-block shot steps, the sixth hits; every later trace (the line-of-sight checks) is clear.
+		RayTraceResult hit = new RayTraceResult(new Vector(14.1, 79, 0), BlockFace.WEST);
+		when(world.rayTraceBlocks(any(Location.class), any(Vector.class), anyDouble(), any(FluidCollisionMode.class),
+		                          anyBoolean())).thenReturn(null, null, null, null, null, hit, null);
+
+		assertTrue(service.fire(player, grapple, flyingHook(world, new Location(world, 0, 65.62, 0))));
+		GrappleSession session = service.getSession(player);
 
 		Vector  client      = new Vector();
 		boolean passedUnder = false;
 		double  speedUnder  = 0;
 		int     ticks       = 0;
+		int     shotTicks   = 0;
 		while (service.getSession(player) != null && ticks < 200) {
+			boolean flying = !session.isAttached();
 			sent[0] = null;
 			service.tickSession(session);
 			ticks++;
 			if (service.getSession(player) == null) break;
+			if (flying) {
+				shotTicks++;   // standing on the ground until the hook lands
+				continue;
+			}
 
 			// The client: a velocity packet replaces its motion, then it moves and applies its own air physics.
 			if (sent[0] != null) {
@@ -425,7 +474,8 @@ class GrappleServiceTest {
 
 		assertTrue(passedUnder, "the rope must swing the player under the anchor, not beeline at it");
 		assertTrue(speedUnder > 0.4, "tangential speed survives the swing, got " + speedUnder);
-		assertTrue(ticks < grapple.getMaxDurationTicks(), "arrives on its own before the timeout, took " + ticks);
+		assertEquals(6, shotTicks, "the 20-block shot flies for six ticks of the shared budget");
+		assertTrue(ticks < grapple.getMaxDurationTicks(), "shot plus swing arrive before the timeout, took " + ticks);
 		assertTrue(service.consumeLandingGrace(player));
 	}
 
@@ -485,6 +535,25 @@ class GrappleServiceTest {
 
 		assertTrue(service.isActive(player));
 		verify(player, never()).setVelocity(any());
+		verify(player, never()).setFallDistance(anyFloat());
+	}
+
+	@Test
+	@DisplayName("G7: falling toward an anchor below never pulls the rope taut, so the fall still counts")
+	void fallingTowardAnchorBelow_fallDistanceBuilds() {
+		GrappleService service = new GrappleService(mock(JavaPlugin.class));
+		World          world   = openWorld();
+		Location[]     where   = {new Location(world, 0, 90, 0)};
+		Player         player  = player(world, where);
+		GrappleSession session = attached(service, player, grapple(), new Location(world, 0, 64.1, 0));
+
+		for (int i = 0; i < 5; i++) {
+			where[0].add(0, -1.5, 0);   // free fall, faster than the reel
+			service.tickSession(session);
+		}
+
+		assertTrue(service.isActive(player));
+		verify(player, never()).setFallDistance(anyFloat());
 	}
 
 	@Test
