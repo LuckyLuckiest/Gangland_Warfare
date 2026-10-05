@@ -120,4 +120,15 @@ class StarCardTest {
 		assertEquals(140, atCentre.getX(), 1.0E-9);
 		assertEquals(100, atCentre.getZ(), 1.0E-9);
 	}
+
+	@Test
+	@DisplayName("outside the zone the exit point keeps pointing away from the centre")
+	void exitPoint_outsideTheZonePointsAwayFromTheCentre() {
+		World    world  = mock(World.class);
+		Location centre = new Location(world, 100, 64, 100);
+
+		Location out = StarCard.exitPoint(centre, 40, new Location(world, 160, 64, 100));
+		assertEquals(200, out.getX(), 1.0E-9);
+		assertEquals(100, out.getZ(), 1.0E-9);
+	}
 }
