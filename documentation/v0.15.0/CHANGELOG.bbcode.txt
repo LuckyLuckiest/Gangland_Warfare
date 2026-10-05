@@ -13,12 +13,12 @@ Cops N Crooks gets a proper chase. Crimes add [B]heat[/B], heat becomes [B]stars
 [SIZE=6][B]✨ New[/B][/SIZE]
 
 [LIST]
-[*][B]Heat ledger[/B] — Every crime — from brandishing near a cop to a jailbreak — now adds points to one per-player ledger, and the ledger converts to stars through [ICODE]Wanted.Heat.Star_Thresholds[/ICODE]. Repeat crimes build a streak bonus, being seen by a cop and turf-war crimes scale the points. Turn it off with [ICODE]Wanted.Heat.Enable: false[/ICODE] to keep the old per-event stars.
-[*][B]Line-of-sight evasion[/B] — Break line of sight with every cop for [ICODE]Lost_Sight_Seconds[/ICODE] and the squad starts searching a zone around your last known position. Stay outside the zone for the star's [ICODE]Seconds_To_Drop[/ICODE] and you lose a star (or all of them with [ICODE]Drop_Mode: ALL_STARS[/ICODE]). Getting spotted resets the countdown, and the zone grows with your star level.
-[*][B]Wanted HUD and compass[/B] — A star card, a title flash, a siren, a boss bar (red while you are seen, flashing when searched, green for three seconds when you lose them), a particle ring around the search zone and a compass pointing at it. Each piece has its own [ICODE]Wanted.Hud.<piece>.Enable[/ICODE] switch.
+[*][B]Heat ledger[/B] — Every crime a module reports adds points to one per-player ledger; 0.15.0 itself reports killing a player, a civilian or a cop, hitting a cop and resisting arrest (the other crime weights are reserved for later releases), and the ledger converts to stars through [ICODE]Wanted.Heat.Star_Thresholds[/ICODE]. Repeat crimes build a streak bonus, being seen by a cop and turf-war crimes scale the points. Turn it off with [ICODE]Wanted.Heat.Enable: false[/ICODE] to keep the old per-event stars.
+[*][B]Line-of-sight evasion[/B] — Break line of sight with every cop for [ICODE]Lost_Sight_Seconds[/ICODE] and the squad starts searching a zone around your last known position. Stay out of sight for the star's [ICODE]Seconds_To_Drop[/ICODE] (the clock runs faster while you are outside the zone) and you lose a star (or all of them with [ICODE]Drop_Mode: ALL_STARS[/ICODE]). Getting spotted starts the search over, and the zone grows with your star level.
+[*][B]Wanted HUD and compass[/B] — A star card, a title flash, a siren when a star is gained, a boss bar (red while you are seen, flashing when searched, green for three seconds when you lose them), a particle ring around the search zone and a compass pointing the way out of it. Each piece has its own [ICODE]Wanted.Hud.<piece>.Enable[/ICODE] switch.
 [*][B]Charge sheet[/B] — Arrest reads out every distinct crime on your sheet with counts, the total fine and what you paid. The fine comes out of your wallet only; whatever you cannot cover is served as extra jail time ([ICODE]Seconds_Per_Unpaid[/ICODE], capped by [ICODE]Max_Extra_Seconds[/ICODE]). The paperwork view shows the fine too.
 [*][B]Shots give you away[/B] — A wanted player's gunshot re-centres the squad on him, and the nearest cop radios it in. Radius per weapon type is set in [ICODE]Shot_Noise.Radius[/ICODE] in [ICODE]cops.yml[/ICODE].
-[*][B]Pull back and regroup[/B] — Two casualties inside [ICODE]Window_Seconds[/ICODE] and the squad falls back for [ICODE]Fall_Back_Seconds[/ICODE], then pushes again once it has regrouped within [ICODE]Arrival_Radius[/ICODE]. New radio lines cover both.
+[*][B]Pull back and regroup[/B] — Two casualties inside [ICODE]Window_Seconds[/ICODE] and the squad falls back for [ICODE]Fall_Back_Seconds[/ICODE], asks for backup (a regroup grants it when none is active), then pushes once the whole squad is within [ICODE]Arrival_Radius[/ICODE] of you or the fall-back runs out. New radio lines cover both.
 [*][B]Paid bounties[/B] — A bounty is now the sum of what each poster put up, kept per poster and saved with the user. Killing the target pays out the posted money only; the bounty clock grows notoriety, not money. [ICODE]Bounty.Pay_Notoriety[/ICODE] lets notoriety pay out too (off by default).
 [/LIST]
 
@@ -78,7 +78,7 @@ Cops N Crooks gets a proper chase. Crimes add [B]heat[/B], heat becomes [B]stars
 
 [LIST]
 [*][B]Read the migration guide[/B] — See [URL=../migration-0.15.0.md]migration-0.15.0.md[/URL] before upgrading.
-[*][B]Database[/B] — [ICODE]detainment[/ICODE] gains nullable [ICODE]fine_paid[/ICODE] and [ICODE]fine_extra_seconds[/ICODE]; [ICODE]users[/ICODE] gains nullable [ICODE]bounty_posters[/ICODE]. Both migrate on first boot.
+[*][B]Database[/B] — [ICODE]detainment[/ICODE] gains nullable [ICODE]fine_paid[/ICODE] and [ICODE]fine_extra_seconds[/ICODE]; [ICODE]user[/ICODE] gains nullable [ICODE]bounty_posters[/ICODE]. Both migrate on first boot.
 [*][B]Existing bounties[/B] — Bounties saved before 0.15 are treated as posted money, with no notoriety.
 [*][B]Behaviour change[/B] — If you relied on the star-drop charge, set [ICODE]Wanted.Take_Money.Enable: true[/ICODE].
 [*][B]Bartizan[/B] — [ICODE]cops-n-crooks[/ICODE] still needs Bartizan 0.6.0 or newer; without it the whole chase (heat, evasion, HUD, charge sheet, regroup, shot noise) is skipped.

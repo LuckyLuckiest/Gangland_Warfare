@@ -53,8 +53,8 @@ adds heat, and the heat crosses `Star_Thresholds` (100, 250, 450, 700, 1000) to 
 
 A boss bar with the stars (red when a cop sees you, yellow with a countdown while searching, green for three seconds
 when a star is lost), a star card (the crime, the tier coming and whether it cuffs or shoots; or why a star dropped),
-a title and a siren when stars rise, a particle ring marking the search zone, and a compass pointing at the nearest
-hunting cop. Switch each off under `Wanted.Hud` (`Boss_Bar`, `Star_Card`, `Title`, `Siren`, `Zone_Ring`, `Compass`);
+a title and, when a star is gained, a siren, a particle ring marking the search zone, and a compass pointing the way
+out of the zone (it never shows where the cops are). Switch each off under `Wanted.Hud` (`Boss_Bar`, `Star_Card`, `Title`, `Siren`, `Zone_Ring`, `Compass`);
 the text is in `npc/wanted_messages.yml`.
 
 ### Police Response Per Star
@@ -130,7 +130,7 @@ with a 20,000 money maximum). This rewards players for sustained hot streaks.
 | `/glw wanted remove <player> <stars>` | Remove wanted stars from a player.        |
 | `/glw bounty`                         | View the current bounty on you.           |
 | `/glw bounty set <player> <amount>`   | Place or update a bounty on a player.     |
-| `/glw bounty clear <player>`          | Remove all bounty from a player.          |
+| `/glw bounty clear <player>`          | Remove the bounty you posted on a player. |
 
 ---
 

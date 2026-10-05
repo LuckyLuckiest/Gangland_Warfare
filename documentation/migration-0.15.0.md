@@ -48,7 +48,7 @@ identical to the value the 0.15.0 file ships. Copy a block in only if you want t
 | `Cops.Regroup.Window_Seconds` | `20` | The window those casualties must fall in. |
 | `Cops.Regroup.Fall_Back_Seconds` | `15` | The longest the squad stays back before it pushes anyway. |
 | `Cops.Regroup.Cooldown_Seconds` | `60` | Minimum gap between two regroups of one squad. |
-| `Cops.Regroup.Arrival_Radius` | `24.0` | Blocks; the squad pushes together once backup is this close. |
+| `Cops.Regroup.Arrival_Radius` | `24.0` | Blocks; the squad pushes together once all of it is this close to you. |
 | `Cops.Shot_Noise.Enabled` | `true` | `false` = shots never reveal the shooter. |
 | `Cops.Shot_Noise.Radius.GUN` | `48` | Blocks within which a cop hears a Bartizan gun. `0` = silent. |
 | `Cops.Shot_Noise.Radius.THROWABLE` | `16` | Same for a throwable. |
@@ -136,8 +136,9 @@ Rows without the new columns keep working (a missing fine reads as none).
 - **No auto bounty without a star.** A kill at the maximum stars, or a raise a plugin cancelled, no longer
   adds the per-star auto bounty: only a star that actually lands adds it.
 - **Notoriety is kept through death and arrest.** Nothing in 0.15.0 clears the server-made part of a bounty on death
-  or arrest; only a paid claim (with `Pay_Notoriety: true`), `/glw bounty clear` or a sign removes it. This is
-  deliberate for now and is flagged for the owner to confirm.
+  or arrest; only a paid claim (with `Pay_Notoriety: true`) or a sign removes it. `/glw bounty clear` removes only the bounty
+  **you** posted (and refunds you); it never touches notoriety. This is deliberate for now and is flagged for the
+  owner to confirm.
 
 **Death and arrest**
 
@@ -151,12 +152,14 @@ Rows without the new columns keep working (a missing fine reads as none).
   paperwork screen shows the fine paid and the extra time. `Charge_Sheet.Enable: false`
   removes it.
 - **Regroup.** After `Casualties` cops fall inside `Window_Seconds` the squad falls back to cover, radios for backup
-  and pushes together when backup is within `Arrival_Radius`.
+  (if none is active the regroup grants it itself, past the backup cooldown) and pushes together once the whole squad,
+  backup included, is within `Arrival_Radius` of you or `Fall_Back_Seconds` run out.
 - **Shots give you away.** A gun, or a throwable, fired within the `Shot_Noise` radius of a cop of your squad reports
   your position to the squad, which counts as a sighting, and the nearest cop says "shots fired".
 - **Wanted HUD.** A boss bar with the stars (red in sight, yellow and searching with a countdown, green for three
   seconds when a star is lost), a star card (why you are wanted, which tier is coming, or why a star dropped), a title
-  and a siren, a particle ring around the search zone, and a compass pointing at the nearest cop. Each piece has its
+  and, when a star is gained, a siren, a particle ring around the search zone, and a compass pointing the way out of
+  the zone (it never shows where the cops are). Each piece has its
   own switch under `Wanted.Hud`.
 
 ## 7. Events and API for plugin authors

@@ -10,7 +10,8 @@
 
 | Version                                 | Status  | Changelog                                                      |
 |-----------------------------------------|---------|----------------------------------------------------------------|
-| [v0.7.5-DEV](./v0.7.5-DEV/CHANGELOG.md) | Current | Traders, Banker NPC, Bail — **Cops N Crooks feature-complete** |
+| [v0.15.0](./v0.15.0/CHANGELOG.md)       | Current | Cops N Crooks "Lose them": heat, evasion, wanted HUD, charge sheet, regroup, paid bounties |
+| [v0.7.5-DEV](./v0.7.5-DEV/CHANGELOG.md) | Stable | Traders, Banker NPC, Bail — **Cops N Crooks feature-complete** |
 | [v0.7.4-DEV](./v0.7.4-DEV/CHANGELOG.md) | Stable  | Civilians, five weapon categories, gadgets (cars + jetpacks)   |
 | [v0.7.3-DEV](./v0.7.3-DEV/CHANGELOG.md) | Stable  | Cops N Crooks, Wearables                                       |
 
@@ -65,7 +66,7 @@ In-depth technical documentation for developers working on the codebase.
 
 Bartizan integration (what the core gets from the weapons plugin, and what degrades without it) is documented in
 [`bartizan-integration.md`](./bartizan-integration.md); server-owner migration notes are in
-[`migration-0.9.0.md`](./migration-0.9.0.md). Recoil is documented in
+[`migration-0.9.0.md`](./migration-0.9.0.md) and [`migration-0.15.0.md`](./migration-0.15.0.md) (upgrading from 0.13.0 to 0.15.0, the Cops N Crooks chase). Recoil is documented in
 [Version Compatibility](./developer/compatibility.md), now a Bartizan-side reflective packet call rather than an
 NMS adapter this repo ships.
 

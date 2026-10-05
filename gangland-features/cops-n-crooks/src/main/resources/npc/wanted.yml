@@ -18,7 +18,8 @@ Wanted:
          - 450
          - 700
          - 1000
-      # Multiplier for crimes chained inside settings.yml Wanted.Kill_Combo.Reset_After
+      # Multiplier for crimes chained inside settings.yml Wanted.Kill_Combo.Reset_After. It only applies while
+      # Wanted.Kill_Combo.Enable is true; with the kill combo off no crime is ever treated as chained.
       Streak_Bonus: 1.5
       # Multiplier when a cop saw the crime
       Seen_By_Cop_Multiplier: 1.5
@@ -94,7 +95,7 @@ Wanted:
       Title:
          # false = no title
          Enable: true
-      # The siren sound when the cops spot you
+      # The siren sound, played with the title flash when a star is gained
       Siren:
          # false = silent
          Enable: true
@@ -112,7 +113,7 @@ Wanted:
          Particle: "DUST"
          # Particles drawn around the ring
          Points: 48
-      # The compass pointing at the nearest hunting cop
+      # The compass pointing the way out of the search zone (it never shows where the cops are)
       Compass:
          # false = no compass
          Enable: true

@@ -162,7 +162,8 @@ Cops:
       # Minimum gap between two backup requests from one group (1200 = 60 s).
       Cooldown_Ticks: 1200
    # A squad that loses Casualties cops within Window_Seconds falls back to cover (Lines.Regroup) for up to
-   # Fall_Back_Seconds, then pushes together (Lines.Regroup_Push) once backup is within Arrival_Radius blocks.
+   # Fall_Back_Seconds, then pushes together (Lines.Regroup_Push) once the whole squad is within Arrival_Radius blocks of the suspect. A regroup also grants
+   # the backup it waits for (past the Backup cooldown) unless one is already active.
    # One regroup per Cooldown_Seconds; squads set to cuff first never regroup.
    Regroup:
       Enabled: true
@@ -171,7 +172,9 @@ Cops:
       Fall_Back_Seconds: 15
       Cooldown_Seconds: 60
       Arrival_Radius: 24.0
-   # How far cops hear a shot, in blocks, by weapon type (0 = silent). Unlisted types are silent.
+   # How far cops hear a shot, in blocks, by weapon type (0 = silent). Unlisted types are silent. The ids below are
+   # weapon-type enum names (GUN, THROWABLE, MELEE) that the loader matches exactly: keep them upper case, they are
+   # not config keys in the Capitalized_Underscore style.
    Shot_Noise:
       Enabled: true
       Radius:
