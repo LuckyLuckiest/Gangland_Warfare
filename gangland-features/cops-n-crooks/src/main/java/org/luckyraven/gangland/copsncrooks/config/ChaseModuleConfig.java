@@ -9,7 +9,7 @@ import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.persistence.FileManager;
 
 /**
- * 0.15.0 chase configuration: the {@code npc/wanted.yml} loader and the {@code npc/wanted_messages.yml} strings.
+ * 0.15.0 chase configuration: the {@code copsncrooks/wanted.yml} loader and the {@code copsncrooks/wanted_messages.yml} strings.
  */
 @Configuration
 public class ChaseModuleConfig {

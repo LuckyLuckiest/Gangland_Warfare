@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Everything in {@code npc/wanted.yml}. {@link #DEFAULT} equals the shipped file; {@link #parse} reads a file over it
+ * Everything in {@code copsncrooks/wanted.yml}. {@link #DEFAULT} equals the shipped file; {@link #parse} reads a file over it
  * key by key, so a server whose file predates a key still gets the shipped value.
  *
  * @since 0.15.0

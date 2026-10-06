@@ -18,7 +18,7 @@ Managed by `CopService`, `CopSpawnManager`, `DetainmentService`, `JailManager`. 
 
 - [ ] Citizens plugin loaded.
 - [ ] At least one cop spawner configured or created at runtime.
-- [ ] `npc/cops.yml` and `cops.yml` (root) present.
+- [ ] `copsncrooks/cops.yml` and `cops.yml` (root) present.
 
 ---
 
@@ -58,7 +58,7 @@ Managed by `CopService`, `CopSpawnManager`, `DetainmentService`, `JailManager`. 
 - [ ] A shot outside `Shot_Noise.Radius`, a melee weapon, a throwable beyond 16 blocks, or a shot by a player who is not
       wanted, reveals nothing; `Shot_Noise.Enabled: false` silences all of it.
 - [ ] An existing `cops.yml` without the `Regroup` / `Shot_Noise` / three new `Cooldown_Ticks` keys behaves as the shipped file.
-- [ ] `npc/wanted.yml` and `npc/wanted_messages.yml` are copied on first boot and are never overwritten afterwards.
+- [ ] `copsncrooks/wanted.yml` and `copsncrooks/wanted_messages.yml` are copied on first boot and are never overwritten afterwards.
 - [ ] Console shows `Runtime modules: ... loaded, 0 fault(s)` with cops-n-crooks and civilians at `Host_Api: 2.1`.
 
 ---

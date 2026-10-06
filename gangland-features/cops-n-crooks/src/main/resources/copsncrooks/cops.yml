@@ -14,7 +14,7 @@
 #
 # Each entry under Cops.Tiers defines a cop NPC tier, escalating in difficulty.
 # Tiers are assigned to spawn points and determine NPC stats and equipment. Squad roles (Medic, Marksman, ...), their
-# gear and weapons per tier, and the squad compositions live in npc/cop_roles.yml; a role's gear and weapons replace
+# gear and weapons per tier, and the squad compositions live in copsncrooks/cop_roles.yml; a role's gear and weapons replace
 # the tier's Wearables and Weapon_Pool slot by slot.
 #
 # Fields:
@@ -195,7 +195,7 @@ Cops:
    # on the radio.
    Names:
       # %rank% = the tier's Display_Name, %role% = the cop's squad role as its coloured symbol and word (Display in
-      # npc/cop_roles.yml; for a cop with no role it goes away with the extra space), %name% = a first name from
+      # copsncrooks/cop_roles.yml; for a cop with no role it goes away with the extra space), %name% = a first name from
       # First_Names, %badge% = 1000 + the NPC id (unique among live NPCs). Remove %role% to hide the role.
       Format: "%rank% %role% &f%name% &7#%badge%"
       # Leave the list empty ([]) for no first name ("Officer #1592"); remove the key for the built-in names.

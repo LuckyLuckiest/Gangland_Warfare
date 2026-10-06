@@ -121,7 +121,7 @@ with `Radio.Enabled: false`, `Backup.Enabled: false`, `Retreat.Enabled: false` a
 Each new cop takes a **role** inside its squad, laid over its tier: the role decides how the cop is dressed and armed,
 where it stands and how it fights, and it shows in the cop's name. Roles fill in the order of the wanted level's
 `Squad_Composition`; cops past the end of the list (backup, extra cops) take its last role. Everything about the roles
-lives in its own file, `npc/cop_roles.yml`, written on first start when it is missing (an older `cops.yml` is never
+lives in its own file, `copsncrooks/cop_roles.yml`, written on first start when it is missing (an older `cops.yml` is never
 touched). Delete the file and the same built-in roles apply.
 
 | Role         | From level | Looks like                                    | Gun by tier (3 / 4 / 5)        | Does                                                                                   |
@@ -209,7 +209,7 @@ blocks). Each line plays a short click sound.
 - **Shots fired (0.15.0):** the nearest cop of the hunted player's squad says where it heard a shot. See Shot Noise below.
 - **Resisting**, **retreat** and **field care** lines, as described above.
 
-Lines are throttled per squad and per player, so chat never floods. Every line is in `npc/cop_radio_messages.yml`
+Lines are throttled per squad and per player, so chat never floods. Every line is in `copsncrooks/cop_radio_messages.yml`
 (Spanish: `_es.yml`). Each key is a list that one entry is picked from at random, and `[]` silences that line.
 `Radio.Enabled: false` silences the radio for players but keeps responders and backup working.
 
@@ -217,8 +217,8 @@ Lines are throttled per squad and per player, so chat never floods. Every line i
 
 ## Losing the Cops and the Chase (0.15.0)
 
-The chase around a wanted player is configured in `npc/wanted.yml` (heat, evasion, HUD, charge sheet) and
-`npc/wanted_messages.yml`; see [Wanted & Bounty](./wanted-bounty.md) for the player-facing rules.
+The chase around a wanted player is configured in `copsncrooks/wanted.yml` (heat, evasion, HUD, charge sheet) and
+`copsncrooks/wanted_messages.yml`; see [Wanted & Bounty](./wanted-bounty.md) for the player-facing rules.
 
 - **Evasion reads the squad's sightings.** Every cop in the group shares what it sees. The evasion clock counts "no
   cop has seen you" from the squad's last sighting, and a cop that is walking home (`RETURNING`) does not count as
@@ -283,6 +283,11 @@ All commands require appropriate permissions.
 
 Cop behavior is split across two files: `cops.yml` (tier definitions and AI tuning) and `settings.yml` (cop count
 scaling).
+
+The module's own files (`cops.yml`, `cop_roles.yml`, `cop_radio_messages(_es).yml`, `wanted.yml`,
+`wanted_messages.yml`) live in `plugins/Gangland_Warfare/copsncrooks/`. Older versions kept them in `npc/`; on the
+first boot after the update each one is moved from `npc/` to `copsncrooks/` with its values intact. If a file exists in
+both folders, the `copsncrooks/` one is used and the `npc/` copy is left alone with a console warning.
 
 ---
 
@@ -388,7 +393,7 @@ player who slipped away unseen from a spot the stranded cops could not reach is 
 
 ---
 
-### Roles and Squad_Composition (`npc/cop_roles.yml`, 0.13.0)
+### Roles and Squad_Composition (`copsncrooks/cop_roles.yml`, 0.13.0)
 
 Every key is optional; an entry under `Roles` is read key by key over the built-in role of the same name (a new name
 starts from a plain role). The shipped file lists the whole catalogue with a comment per key. A bad value (an unknown

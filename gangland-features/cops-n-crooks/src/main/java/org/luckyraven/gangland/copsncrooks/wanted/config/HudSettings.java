@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.wanted.config;
 
 /**
- * {@code Wanted.Hud} of {@code npc/wanted.yml}: each part of the chase HUD behind its own switch.
+ * {@code Wanted.Hud} of {@code copsncrooks/wanted.yml}: each part of the chase HUD behind its own switch.
  *
  * @since 0.15.0
  */

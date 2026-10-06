@@ -130,7 +130,7 @@ needs either declares it directly. A module never depends on
 - Its `@Configuration` class(es), its `@Repository` classes and `Table`s, its `@ListenerHandler` classes (under
   `<module>.listener`), and any `@CommandHandler` top-level commands (under `<module>.command`).
 - Its own `commands.json` at the jar root for the help entries of the commands it adds.
-- Its YAML defaults in the module jar **at exactly the data-folder path** (e.g. `npc/cops.yml`), *not* under
+- Its YAML defaults in the module jar **at exactly the data-folder path** (e.g. `copsncrooks/cops.yml`), *not* under
   `src/main/resources/<module>/` — the rule that every YAML lives in `gangland-impl` now applies only to shared
   top-level files (`settings.yml`, messages). `FileHandler`'s resource lookup is `directory + fileType` with
   forward slashes, so the module jar must carry the file at that same relative path and it must no longer exist
@@ -149,6 +149,9 @@ needs either declares it directly. A module never depends on
   must run before `FileManager` is used, and `FileManager` is itself a KERNEL bean, so a `@Configuration` at any
   later phase would race the CONFIG-phase code (`PowerupRegistryLoader`) that calls
   `fileManager.checkFileLoaded("turf_powerups")`.
+  The cops-n-crooks module is the exception to the shared-directory rule: its files live in its own
+  `copsncrooks/` folder (jar and data folder), and `CopsNCrooksYamlConfig.relocateLegacy` moves an existing
+  server's `npc/<file>.yml` there once before registering the defaults.
 
 Modules may import any `gangland-api` type directly (`Messages`, `Settings`, `Command`, `Waypoint`,
 `BankTiers`, the contribution interfaces …) and any Keystone type directly: the compile-time direction is

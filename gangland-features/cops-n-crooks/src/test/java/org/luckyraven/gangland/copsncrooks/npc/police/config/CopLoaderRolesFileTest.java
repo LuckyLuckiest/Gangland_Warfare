@@ -16,7 +16,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@DisplayName("CopLoader - the role catalogue comes from npc/cop_roles.yml, built-in when the file is not there")
+@DisplayName("CopLoader - the role catalogue comes from copsncrooks/cop_roles.yml, built-in when the file is not there")
 class CopLoaderRolesFileTest {
 
 	private static final String COPS = """

@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A cop's job inside its squad ({@code npc/cop_roles.yml} {@code Roles.<Name>}), laid over its tier when it spawns: the
+ * A cop's job inside its squad ({@code copsncrooks/cop_roles.yml} {@code Roles.<Name>}), laid over its tier when it spawns: the
  * role shifts where the cop stands and how it fights, and its {@link Kit kits} dress and arm it. Picked per spawn from
  * {@code Squad_Composition} by {@link #nextRole}.
  *

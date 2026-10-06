@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@DisplayName("npc/cop_roles.yml - the role catalogue, its gear and weapons per tier, and the squad compositions")
+@DisplayName("copsncrooks/cop_roles.yml - the role catalogue, its gear and weapons per tier, and the squad compositions")
 class CopRolesFileTest {
 
 	private static final String TIERS = """
@@ -82,7 +82,7 @@ class CopRolesFileTest {
 	@DisplayName("the shipped cop_roles.yml reads with no issues and matches the built-in catalogue exactly")
 	void shippedFile_matchesBuiltIns() throws IOException {
 		ConfigReport      report  = new ConfigReport();
-		CopConfigProvider shipped = provider(TIERS, shipped("npc/cop_roles.yml"), report);
+		CopConfigProvider shipped = provider(TIERS, shipped("copsncrooks/cop_roles.yml"), report);
 		CopConfigProvider builtIn = provider(TIERS, null, new ConfigReport());
 
 		assertTrue(report.issues().isEmpty(), report.issues()::toString);
@@ -93,7 +93,7 @@ class CopRolesFileTest {
 	@Test
 	@DisplayName("the shipped cop_roles.yml with Roles_Enabled: false - no composition, and no unknown keys")
 	void shippedFile_rolesDisabled_noUnknownKeys() throws IOException {
-		String yaml = shipped("npc/cop_roles.yml");
+		String yaml = shipped("copsncrooks/cop_roles.yml");
 		assertTrue(yaml.contains("Roles_Enabled: true"));
 
 		ConfigReport      report   = new ConfigReport();
@@ -108,8 +108,8 @@ class CopRolesFileTest {
 	@Test
 	@DisplayName("the role keys moved: cops.yml no longer declares them, and Roles there is an unknown key")
 	void cops_yml_noLongerHoldsRoles() throws IOException {
-		assertFalse(shipped("npc/cops.yml").contains("Squad_Composition"));
-		assertFalse(shipped("npc/cops.yml").contains("Roles_Enabled"));
+		assertFalse(shipped("copsncrooks/cops.yml").contains("Squad_Composition"));
+		assertFalse(shipped("copsncrooks/cops.yml").contains("Roles_Enabled"));
 
 		ConfigReport report = new ConfigReport();
 		CopConfigProvider provider = provider(TIERS.replace("Cops:\n", """

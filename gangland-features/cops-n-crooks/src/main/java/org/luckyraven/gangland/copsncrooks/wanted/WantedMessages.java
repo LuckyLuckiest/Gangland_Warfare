@@ -6,7 +6,7 @@ import org.luckyraven.keystone.persistence.FileManager;
 import java.util.Map;
 
 /**
- * The chase HUD and charge-sheet text, from the module's own {@code npc/wanted_messages.yml}. Every key has an in-code
+ * The chase HUD and charge-sheet text, from the module's own {@code copsncrooks/wanted_messages.yml}. Every key has an in-code
  * fallback equal to the shipped line, so a file that predates a key still reads.
  *
  * @since 0.15.0

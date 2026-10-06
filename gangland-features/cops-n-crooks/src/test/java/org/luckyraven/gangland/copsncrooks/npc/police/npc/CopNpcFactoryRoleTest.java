@@ -184,7 +184,7 @@ class CopNpcFactoryRoleTest {
 			           faults.get(0)::message);
 			assertTrue(faults.get(0).message().contains("cop_roles.yml") && !faults.get(0).message().contains("cops.yml"),
 			           faults.get(0)::message);
-			assertTrue(faults.get(1).message().contains("npc/cops.yml") && !faults.get(1).message().contains("cop_roles"),
+			assertTrue(faults.get(1).message().contains("copsncrooks/cops.yml") && !faults.get(1).message().contains("cop_roles"),
 			           faults.get(1)::message);
 		} finally {
 			Diagnostics.uninstall(hub);

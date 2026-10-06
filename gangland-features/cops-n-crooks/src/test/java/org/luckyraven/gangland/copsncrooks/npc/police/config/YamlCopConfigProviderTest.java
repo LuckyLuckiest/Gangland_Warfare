@@ -315,7 +315,7 @@ class YamlCopConfigProviderTest {
 	@DisplayName("the shipped cops.yml declares Melee/Tactics/Radio/Backup and the loader reads every key")
 	void shippedFile_loadsWithNoUnknownTacticsKeys() throws IOException {
 		String yaml;
-		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("npc/cops.yml"))) {
+		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("copsncrooks/cops.yml"))) {
 			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
 		}
 
@@ -341,7 +341,7 @@ class YamlCopConfigProviderTest {
 	@DisplayName("Fall_Back and In_Cover are priority lines in the shipped cops.yml and the code defaults, so a same-tick Resisting cannot drop them (T-134)")
 	void retreatLines_arePriority() throws IOException {
 		String yaml;
-		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("npc/cops.yml"))) {
+		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("copsncrooks/cops.yml"))) {
 			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
 		}
 		CopConfigProvider provider = parse(yaml);
@@ -465,7 +465,7 @@ class YamlCopConfigProviderTest {
 		Map<String, Long> expected = Map.of("Hit", 5000L, "Medic_Moving", 5000L, "Covering_Fire", 10000L,
 		                                    "Medic_Pinned", 8000L, "Patched_Up", 5000L);
 		String yaml;
-		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("npc/cops.yml"))) {
+		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("copsncrooks/cops.yml"))) {
 			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
 		}
 		CopConfigProvider shipped = parse(yaml);
@@ -551,7 +551,7 @@ class YamlCopConfigProviderTest {
 	@DisplayName("the shipped cops.yml's Regroup / Shot_Noise equal the code defaults, with no unknown keys")
 	void bundledCopsYml_equalsDefaults() throws IOException {
 		String yaml;
-		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("npc/cops.yml"))) {
+		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("copsncrooks/cops.yml"))) {
 			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
 		}
 		assertTrue(yaml.contains("   Regroup:") && yaml.contains("   Shot_Noise:"), "blocks must be declared");

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * {@code Wanted.Heat} of {@code npc/wanted.yml}: how crimes add up to stars.
+ * {@code Wanted.Heat} of {@code copsncrooks/wanted.yml}: how crimes add up to stars.
  *
  * @param enabled              {@code false} keeps today's behaviour.
  * @param starThresholds       heat needed for star 1, 2, ...

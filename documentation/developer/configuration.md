@@ -355,7 +355,7 @@ Gadgets:
 ## cops.yml
 
 Defines the cop tiers and, since 0.12.0, the squad tactics, melee band, police radio, backup and retreat tuning;
-ships inside the cops-n-crooks module jar as `npc/cops.yml`. Abridged:
+ships inside the cops-n-crooks module jar as `copsncrooks/cops.yml`. Abridged:
 
 ```yaml
 Cops:
@@ -439,16 +439,16 @@ Cops:
 | `Names.First_Names` | 28 built-in names | First-name pool; `[]` = no first name, a missing key = the built-in pool |
 | `Stuck.*` | see above | Optional (0.13.0). A cop that has found no way to its player for `Recycle_Seconds` (at least 1), out of his view (cone plus clear line within `Cops.Spawn.Visibility_Check_Distance`, never under 24 blocks; past twice `Recycle_Seconds` within 24 blocks only), unseen by other players (past twice `Recycle_Seconds` the same 24-block view rule) and outside melee reach on his level with a clear line, is replaced; its spawner is skipped for `Avoid_Spawner_Seconds` (0 = never). `Enabled: false` never replaces |
 
-The radio lines are in `npc/cop_radio_messages.yml` (Spanish `_es.yml`). See
+The radio lines are in `copsncrooks/cop_radio_messages.yml` (Spanish `_es.yml`). See
 [Cops N Crooks](../features/cops-n-crooks.md) and [Migrating to 0.12.0](../migration-0.12.0.md).
 
 ---
 
-## wanted.yml (`npc/wanted.yml`)
+## wanted.yml (`copsncrooks/wanted.yml`)
 
-New in 0.15.0; ships inside the cops-n-crooks module jar and is copied to `plugins/Gangland_Warfare/npc/` on first boot.
+New in 0.15.0; ships inside the cops-n-crooks module jar and is copied to `plugins/Gangland_Warfare/copsncrooks/` on first boot.
 Every key falls back to the value shown, a bad value is reported once and defaulted, and each feature's `Enable: false`
-restores the 0.13.0 behaviour of that piece. Texts are in `npc/wanted_messages.yml` (below).
+restores the 0.13.0 behaviour of that piece. Texts are in `copsncrooks/wanted_messages.yml` (below).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -477,7 +477,7 @@ Shipped crime weights (`Heat.Crimes`): `Brandish_Near_Cop` 25, `Assault_Civilian
 `Trespass_Restricted` 300, `Jailbreak` 450. 0.15.0 reports `Kill_Player`, `Kill_Civilian`, `Kill_Cop`, `Assault_Cop`
 and `Resisting_Arrest`; the others are read by later releases. A weight of 0 ignores that crime.
 
-`npc/wanted_messages.yml` holds `Hud.Bar.Seen` / `Searching` / `Evaded`, `Hud.Title`, `Hud.Card.Raise` /
+`copsncrooks/wanted_messages.yml` holds `Hud.Bar.Seen` / `Searching` / `Evaded`, `Hud.Title`, `Hud.Card.Raise` /
 `Stance_Cuffs` / `Stance_Shoot` / `Drop_Evasion` / `Drop_Decay` / `Drop_Other`, `Charge_Sheet.Header` / `Crime` / `Total` /
 `Paid` / `Extra_Time` / `Paperwork`, and `Crimes.<Id>` (including `Crimes.Unknown_Crime`, the card text when no crime is
 on record). Placeholders: `%stars%`, `%time%`, `%crime%`, `%tier%`, `%stance%`, `%count%`, `%amount%`, `%paid%`,

@@ -16,7 +16,7 @@ players and gangs put a price on each other's heads.
 
 ### How Stars Are Earned
 
-Since 0.15.0 stars come from **heat** when `Wanted.Heat.Enable` is true in `npc/wanted.yml` (the default). Each crime
+Since 0.15.0 stars come from **heat** when `Wanted.Heat.Enable` is true in `copsncrooks/wanted.yml` (the default). Each crime
 adds heat, and the heat crosses `Star_Thresholds` (100, 250, 450, 700, 1000) to become stars.
 
 | Crime | Heat | | Crime | Heat |
@@ -56,7 +56,7 @@ A boss bar with the stars (red when a cop sees you, yellow with a countdown whil
 when a star is lost), a star card (the crime, the tier coming and whether it cuffs or shoots; or why a star dropped),
 a title and, when a star is gained, a siren, a particle ring marking the search zone, and a compass pointing the way
 out of the zone (it never shows where the cops are). Switch each off under `Wanted.Hud` (`Boss_Bar`, `Star_Card`, `Title`, `Siren`, `Zone_Ring`, `Compass`);
-the text is in `npc/wanted_messages.yml`.
+the text is in `copsncrooks/wanted_messages.yml`.
 
 ### Police Response Per Star
 
@@ -91,7 +91,7 @@ applies to every cause of a drop (timer or evasion).
 
 ### The Charge Sheet
 
-When a cop jails you, `Wanted.Charge_Sheet` in `npc/wanted.yml` lists the crimes of the chase and fines you
+When a cop jails you, `Wanted.Charge_Sheet` in `copsncrooks/wanted.yml` lists the crimes of the chase and fines you
 `Base + Per_Wanted_Level x stars` (200 + 250 per star, at most 10,000) from your **wallet only**. What the wallet cannot
 cover is served as extra jail time (`Seconds_Per_Unpaid` 0.1 s per unit, at most `Max_Extra_Seconds` 600). A player
 who is already dead at intake is not fined again. The paperwork screen shows the fine paid and the extra time.
@@ -182,7 +182,7 @@ Bounty:
       Time: 300               # Seconds between multiplier applications
       Maximum: 20_000         # Cap on bonus bounty from the multiplier
 
-# The chase (Heat, Evasion, Hud, Charge_Sheet) is in npc/wanted.yml; see the migration guide and Configuration Reference.
+# The chase (Heat, Evasion, Hud, Charge_Sheet) is in copsncrooks/wanted.yml; see the migration guide and Configuration Reference.
 # Cop count scaling is under the Cops key — see the Cops N Crooks guide
 ```
 

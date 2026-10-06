@@ -3,7 +3,7 @@ package org.luckyraven.gangland.copsncrooks.wanted.config;
 import java.util.List;
 
 /**
- * {@code Wanted.Evasion} of {@code npc/wanted.yml}: losing the cops drops stars instead of the fixed decay timer.
+ * {@code Wanted.Evasion} of {@code copsncrooks/wanted.yml}: losing the cops drops stars instead of the fixed decay timer.
  *
  * @param enabled          {@code false} keeps today's decay.
  * @param lostSightSeconds seconds without a cop seeing you before the search starts.

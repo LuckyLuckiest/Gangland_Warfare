@@ -16,7 +16,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 /**
- * Loads {@code npc/wanted.yml} into a {@link ChaseConfig}. Consumers call {@link #get()} per use, so a reload is seen
+ * Loads {@code copsncrooks/wanted.yml} into a {@link ChaseConfig}. Consumers call {@link #get()} per use, so a reload is seen
  * live; before the first load, or when the file is missing, it is {@link ChaseConfig#DEFAULT}.
  *
  * @since 0.15.0

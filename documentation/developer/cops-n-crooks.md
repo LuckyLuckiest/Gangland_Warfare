@@ -377,7 +377,7 @@ retreat cannot drop them through the per-player gap.
 
 #### Squad roles (0.13.0)
 
-`CopRole` (`npc/cop_roles.yml` `Roles`, built-in catalogue in `YamlCopConfigProvider.builtInRoles`) is picked per
+`CopRole` (`copsncrooks/cop_roles.yml` `Roles`, built-in catalogue in `YamlCopConfigProvider.builtInRoles`) is picked per
 spawn by `CopRole.nextRole(getSquadComposition(level), liveRoles)` in `CopManager.spawnTick`, counting only the cops the
 spawn count counts (a stranded RETURNING cop's role is refilled). The roles file is its own `FileHandler`
 (`CopsNCrooksYamlConfig`, written from the module jar when missing); `CopLoader` hands its reader to
@@ -1126,8 +1126,8 @@ double getTakeMoneyMultiplier()
 
 ### The chase (cops-n-crooks, 0.15.0)
 
-Package `org.luckyraven.gangland.copsncrooks.wanted`, configured by `ChaseConfig` (`npc/wanted.yml`, loaded by
-`ChaseConfigLoader`) and `WantedMessages` (`npc/wanted_messages.yml`); the beans live in `ChaseModuleConfig`,
+Package `org.luckyraven.gangland.copsncrooks.wanted`, configured by `ChaseConfig` (`copsncrooks/wanted.yml`, loaded by
+`ChaseConfigLoader`) and `WantedMessages` (`copsncrooks/wanted_messages.yml`); the beans live in `ChaseModuleConfig`,
 `HeatModuleConfig` and `EvasionModuleConfig`.
 
 | Piece | Class | Role |
@@ -1549,7 +1549,7 @@ Civilians:
 Per-tier cop configuration loaded by `CopLoader`. Since 0.12.0 `Cops` also carries the `Melee`, `Tactics`, `Radio`,
 `Backup` and `Retreat` blocks, and each tier `Difficulty`, `Fire_Rate_Multiplier` and an optional `Tactics` override.
 The shipped file and [the feature doc](../features/cops-n-crooks.md) list every key; the radio lines live in
-`npc/cop_radio_messages.yml`. The abridged example below predates those keys:
+`copsncrooks/cop_radio_messages.yml`. The abridged example below predates those keys:
 
 ```yaml
 tiers:
