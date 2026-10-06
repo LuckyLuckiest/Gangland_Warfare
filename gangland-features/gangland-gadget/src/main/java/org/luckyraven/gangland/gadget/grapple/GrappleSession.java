@@ -46,8 +46,9 @@ public class GrappleSession {
 	@Setter
 	private boolean taut = false;
 
+	/** True while a taut rope is lending the player allow-flight (see GrappleService#lendFlight). */
 	@Setter
-	private int elapsedTicks = 0;
+	private boolean lendingFlight = false;
 
 	public GrappleSession(Player player, Grapple grapple, FishHook hook, Vector bodyCentre, Vector direction) {
 		this.player       = player;

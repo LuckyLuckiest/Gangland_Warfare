@@ -13,9 +13,9 @@ import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -41,7 +41,7 @@ class GrappleAddonLoadTest {
 			   Min_Rope_Length: 2.5
 			   Arrival_Distance: 2.0
 			   Cooldown_Seconds: 5
-			   Max_Duration_Ticks: 60
+			   Cooldown_Ready_Sound: "BLOCK_NOTE_BLOCK_PLING"
 			   Fall_Damage_Grace_Ticks: 30
 			   Require_Line_Of_Sight: false
 			   Shot_Speed: 2.5
@@ -79,7 +79,6 @@ class GrappleAddonLoadTest {
 			   Display_Name: "&bOut Of Range High"
 			   Shot_Speed: 10
 			   Max_Pull_Speed: 10
-			   Max_Duration_Ticks: 200
 			""";
 
 	@BeforeAll
@@ -146,13 +145,13 @@ class GrappleAddonLoadTest {
 		assertEquals(3.0, grapple.getMinRopeLength());
 		assertEquals(3.5, grapple.getArrivalDistance());
 		assertEquals(8, grapple.getCooldownSeconds());
-		assertEquals(70, grapple.getMaxDurationTicks());
 		assertEquals(40, grapple.getFallDamageGraceTicks());
-		assertTrue(grapple.isRequireLineOfSight());
+		assertFalse(grapple.isRequireLineOfSight(), "the rope holds until the player lets go");
 		assertEquals(3.9, grapple.getShotSpeed());
 		assertEquals(10, grapple.getMissCooldownTicks());
 		assertEquals("ITEM_CROSSBOW_SHOOT", grapple.getFireSound().sound());
 		assertEquals("ENTITY_ARROW_HIT", grapple.getAttachSound().sound());
+		assertEquals("ITEM_CROSSBOW_LOADING_END", grapple.getCooldownReadySound().sound());
 	}
 
 	@Test
@@ -175,13 +174,13 @@ class GrappleAddonLoadTest {
 		assertEquals(2.5, grapple.getMinRopeLength());
 		assertEquals(2.0, grapple.getArrivalDistance());
 		assertEquals(5, grapple.getCooldownSeconds());
-		assertEquals(60, grapple.getMaxDurationTicks());
 		assertEquals(30, grapple.getFallDamageGraceTicks());
 		assertEquals(false, grapple.isRequireLineOfSight());
 		assertEquals(2.5, grapple.getShotSpeed());
 		assertEquals(0, grapple.getMissCooldownTicks());
 		assertEquals("ENTITY_ARROW_SHOOT", grapple.getFireSound().sound());
 		assertNull(grapple.getAttachSound(), "an empty sound name means silent");
+		assertEquals("BLOCK_NOTE_BLOCK_PLING", grapple.getCooldownReadySound().sound());
 		assertEquals("gangland.grapples.valid_grapple", grapple.getPermission());
 	}
 
@@ -215,7 +214,7 @@ class GrappleAddonLoadTest {
 	}
 
 	@Test
-	@DisplayName("too-high values clamp down: Shot_Speed and Max_Pull_Speed to 3.9 b/t, Max_Duration_Ticks to 79")
+	@DisplayName("too-high values clamp down: Shot_Speed and Max_Pull_Speed to 3.9 b/t")
 	void outOfRangeHigh_clamped() {
 		GrappleAddon addon = addon();
 		addon.loadGrapples(loadYaml(YAML));
@@ -225,6 +224,5 @@ class GrappleAddonLoadTest {
 
 		assertEquals(3.9, grapple.getShotSpeed(), "the client clamps a velocity packet to 3.9 b/t per axis");
 		assertEquals(3.9, grapple.getMaxPullSpeed());
-		assertEquals(79, grapple.getMaxDurationTicks(), "80+ ticks airborne kicks on allow-flight=false servers");
 	}
 }

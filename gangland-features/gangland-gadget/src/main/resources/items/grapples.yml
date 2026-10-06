@@ -15,8 +15,9 @@
 # Each entry defines a grappling hook. Right-click fires the hook as a fast "web-shot" you can see fly (the vanilla
 # fishing line stays visible from the player to the hook); it sticks to the first solid block in its path. Once
 # attached, the rope behaves like a real rope: gravity and your sideways speed are kept, so you swing around the
-# anchor like a pendulum, while the rope slowly reels in toward it. Sneak or right-click again to let go - you keep
-# your momentum.
+# anchor like a pendulum, while the rope slowly reels in toward it. The rope holds until you let go: sneak or
+# right-click again - you keep your momentum. The cooldown starts when you let go and shows on the item like a weapon
+# cooldown (the white sweep over the hotbar slot); a sound plays when the grapple is ready again.
 # The item is a fishing rod under the hood, so Material should stay FISHING_ROD (the cast is a vanilla rod cast).
 # Items are identified in-game by a hidden NBT tag embedded when built via API.
 #
@@ -38,25 +39,31 @@
 #   Pull_Acceleration        - how much the reel speed grows each tick until it reaches Reel_Speed, in blocks per
 #                              tick (default 0.05, minimum 0.01)
 #   Min_Rope_Length          - the reel stops once the rope is this short, in blocks (default 3.0, minimum 0.5)
-#   Arrival_Distance         - distance from the anchor (measured from the middle of your body) at which the rope
-#                              lets go on its own (default 3.5). Keep it above Min_Rope_Length, or a fully reeled rope
-#                              leaves you hanging until you let go or Max_Duration_Ticks runs out. A shot that lands
-#                              closer than this is treated as a miss
-#   Cooldown_Seconds         - seconds after firing before the same player can fire again (default 8)
+#   Arrival_Distance         - a shot that lands closer than this to you (measured from the middle of your body) is
+#                              treated as a miss, since there is nothing to swing on (default 3.5). Reaching the
+#                              anchor never lets go on its own: you hang there until you let go
+#   Cooldown_Seconds         - seconds after the rope lets go before the same player can fire again (default 8).
+#                              Shown as the item cooldown overlay, which covers every item of the grapple's Material
+#                              (so every fishing rod) - that is how Minecraft item cooldowns work
 #   Miss_Cooldown_Ticks      - cooldown instead, in ticks, when the shot never attached: missed (nothing within
 #                              Max_Distance), retracted mid-flight, or hit outside the world border (default 10)
-#   Max_Duration_Ticks       - hard timeout for one grapple, shot plus swing (default 70, maximum 79): vanilla kicks a
-#                              player for flying after 80 ticks in the air on a server with allow-flight=false
 #   Fall_Damage_Grace_Ticks  - one-shot fall-damage immunity window after a taut rope lets go (default 40).
 #                              While the rope is taut, the fall height does not build up and a landing does not hurt;
 #                              a slack rope (for example falling toward an anchor below you) holds nothing, so that
 #                              fall still counts and letting go of it grants no grace
 #   Require_Line_Of_Sight    - the rope snaps if a block comes between the player and the anchor mid-swing
-#                              (default true)
+#                              (default false: the rope holds until you let go)
 #   Fire_Sound               - vanilla sound name played when the shot fires (default ITEM_CROSSBOW_SHOOT);
 #                              "" for silence
 #   Attach_Sound             - vanilla sound name played at the anchor when the hook latches on
 #                              (default ENTITY_ARROW_HIT); "" for silence
+#   Cooldown_Ready_Sound     - vanilla sound name played to the player when the cooldown runs out and the grapple is
+#                              ready again (default ITEM_CROSSBOW_LOADING_END, an arrow set on a crossbow); "" for
+#                              silence
+#
+# While the rope is taut the player is lent allow-flight, only so hanging still on the rope is not kicked as
+# "flying" on a server with allow-flight=false. Actually flying with it is blocked, it is taken back the moment the
+# rope goes slack or lets go, and a player who could already fly (creative, a jetpack) is never touched.
 #
 # No fuel/durability model - cooldown only (WS8-D1).
 #
@@ -66,7 +73,7 @@
 # Two rulings from the G2+G3 fix-round-1 review (W34), for server owners tuning the knobs above:
 #   - A wall/ceiling hit DURING an active pull (e.g. an elytra-equivalent "flew into a wall" stop) is NOT
 #     covered by Fall_Damage_Grace_Ticks - the grace only applies to the landing that ENDS a taut rope
-#     (arrival, timeout, release, or a cancel trigger), never to a mid-pull collision. This is deliberate, not a bug.
+#     (release or a cancel trigger), never to a mid-pull collision. This is deliberate, not a bug.
 #   - A sneak-cancel (or any other cancel) while still high above the ground is FATAL once
 #     Fall_Damage_Grace_Ticks (40 ticks ~= 2 seconds by default) expires - the grace is a short landing window,
 #     not permanent fall immunity for the rest of the fall. Lower Fall_Damage_Grace_Ticks toward 0 for a
@@ -80,7 +87,8 @@ grapple:
    Lore:
       - "&7Right-click to fire. Latches onto the first block it hits"
       - "&7and swings you in on the rope."
-      - "&7Sneak or right-click again to let go and keep your momentum."
+      - "&7Holds until you let go: sneak or right-click again,"
+      - "&7and you keep your momentum."
    Max_Distance: 25
    Shot_Speed: 3.9
    Max_Pull_Speed: 1.8
@@ -90,8 +98,8 @@ grapple:
    Arrival_Distance: 3.5
    Cooldown_Seconds: 8
    Miss_Cooldown_Ticks: 10
-   Max_Duration_Ticks: 70
    Fall_Damage_Grace_Ticks: 40
-   Require_Line_Of_Sight: true
+   Require_Line_Of_Sight: false
    Fire_Sound: "ITEM_CROSSBOW_SHOOT"
    Attach_Sound: "ENTITY_ARROW_HIT"
+   Cooldown_Ready_Sound: "ITEM_CROSSBOW_LOADING_END"
