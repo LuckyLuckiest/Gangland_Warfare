@@ -1450,106 +1450,75 @@ public void onCuffed(CuffedEvent event) {
 
 ## Configuration
 
-### settings.yml (Cop/Wanted/Detainment sections)
+Cops-n-crooks configuration moved to module-specific files in `copsncrooks/` as of 0.15.1.
 
-The following sections in `gangland-impl/src/main/resources/settings.yml` control the system. Feature modules access
-these via contract interfaces (`CopSettings`, `WantedSettings`, `BountySettings`, `CivilianSettings`).
+### wanted.yml
 
-#### Wanted Section
-
-```yaml
-Wanted:
-   enable: true
-   repeating_timer: 60          # Base interval (seconds) for wanted decay
-   timer_multiplier_enabled: true
-   timer_multiplier: 1.5        # Timer interval scales by multiplier^level
-   take_money: false            # 0.15.0: Take_Money.Enable, default false
-   take_money_amount: 100.0     # Numbers for Take_Money.Formula; the formula prices a star drop
-   take_money_multiplier: 1.2
-   max_level: 5                 # Maximum wanted stars
-   increments: 1                # Stars added per incrementLevel()
-   kill_combo:
-      kill_counter: [3, 5, 7, 10, 15]   # Kills needed per level threshold
-      reset_after: 30                     # Seconds of inactivity before combo resets
-```
-
-#### Cop Behavior Section
+Configuration for the wanted system lives in `copsncrooks/wanted.yml`:
 
 ```yaml
-Cops:
-   max_cops_per_player: 8
-   cops_per_wanted_level: # Map of wanted level -> target cop count
-      1: 2
-      2: 3
-      3: 5
-      4: 6
-      5: 8
-   behaviour:
-      ai_tick_rate: 4            # Ticks between AI evaluations
-      spawn_check_rate: 60       # Ticks between spawn checks
-      cuff_radius: 3.5           # Blocks
-      max_cuff_attempts: 3       # Escapes across the group before it fights (0.12.0)
-      cuff_cooldown_ticks: 40    # Wind-up duration
-      alert_range: 32.0          # Blocks; ranged cops fire at anything seen this close (0.12.0)
-      combat_range: 5.0          # Melee engage distance only (0.12.0)
-      attack_cooldown_ticks: 10  # Melee swing cooldown, server ticks (read since 0.12.0)
-   spawn:
-      min_distance: 20.0
-      max_distance: 45.0
-      phase1_min_distance: 30.0
-      radius_shrink_step: 5.0
-      vertical_search_range: 10
-      spawn_y_offset: 0
-      min_open_horizontal_sides: 2
-      spawner_preference_radius: 40.0
-      visibility_check_distance: 30.0
-      phase1_attempts: 10
-      phase2_attempts: 5
-   return:
-      max_return_ticks: 200
-      station_arrival_distance: 3.0
-   navigation:
-      recalculation_ticks: 10
-      stuck_check_interval_ticks: 5
-      max_stuck_checks: 4
-      max_hopeless_stuck_checks: 8
-      hopeless_close_threshold: 5.0
-      min_progress_distance: 0.5
-      ranged_min_distance: 8.0
-      ranged_max_distance: 25.0
-      min_repath_after_loss_ticks: 2
-   weapon:
-      starting_ammo_magazines: 3
-```
-
-#### Detainment Section
-
-```yaml
-Detainment:
-   jail_max_capacity: 10        # Max players per jail cell
-```
-
-#### Civilian Section
-
-```yaml
-Civilians:
-   behaviour:
-      ai_enabled: true
-      ai_tick_rate: 4
-      spawner_check_interval: 40
-   spawn:
-      activation_radius: 48.0
-      despawn_radius: 64.0
-      max_npcs_per_spawner: 3
-      default_type_id: "pedestrian"
+Kill_Combo:
+   Enable: true
+   Kill_Counter: [3, 5, 7, 10, 15]   # Kills needed per level threshold
+   Reset_After: 30                    # Seconds of inactivity before combo resets
 ```
 
 ### cops.yml
 
-Per-tier cop configuration loaded by `CopLoader`. Since 0.12.0 `Cops` also carries the `Melee`, `Tactics`, `Radio`,
+Cop behavior configuration lives in `copsncrooks/cops.yml`. The `Cops` block controls spawning, pursuit, and AI:
+
+```yaml
+Cops:
+   Count:
+      Max_Cops_Per_Player: 8
+      Per_Wanted_Level:           # Map of wanted level -> target cop count
+         1: 2
+         2: 3
+         3: 5
+         4: 6
+         5: 8
+   Behaviour:
+      AI_Tick_Rate: 4             # Ticks between AI evaluations
+      Spawn_Check_Rate: 60        # Ticks between spawn checks
+      Cuff_Radius: 3.5            # Blocks
+      Max_Cuff_Attempts: 3        # Escapes across the group before it fights (0.12.0)
+      Cuff_Cooldown_Ticks: 40     # Wind-up duration
+      Alert_Range: 32.0           # Blocks; ranged cops fire at anything seen this close (0.12.0)
+      Combat_Range: 5.0           # Melee engage distance only (0.12.0)
+      Attack_Cooldown_Ticks: 10   # Melee swing cooldown, server ticks (read since 0.12.0)
+      Guard_Radius: 16.0          # Detainment transit guard distance
+   Spawn:
+      Min_Distance: 20.0
+      Max_Distance: 45.0
+      Phase1_Min_Distance: 30.0
+      Radius_Shrink_Step: 5.0
+      Vertical_Search_Range: 10
+      Spawn_Y_Offset: 0
+      Min_Open_Horizontal_Sides: 2
+      Spawner_Preference_Radius: 40.0
+      Visibility_Check_Distance: 30.0
+      Phase1_Attempts: 10
+      Phase2_Attempts: 5
+   Return:
+      Max_Return_Ticks: 200
+      Station_Arrival_Distance: 3.0
+   Navigation:
+      Recalculation_Ticks: 10
+      Stuck_Check_Interval_Ticks: 5
+      Max_Stuck_Checks: 4
+      Max_Hopeless_Stuck_Checks: 8
+      Hopeless_Close_Threshold: 5.0
+      Min_Progress_Distance: 0.5
+      Ranged_Min_Distance: 8.0
+      Ranged_Max_Distance: 25.0
+   Weapon:
+      Starting_Ammo_Magazines: 3
+```
+
+Per-tier cop configuration is loaded by `CopLoader`. Since 0.12.0, `tiers` also carries the `Melee`, `Tactics`, `Radio`,
 `Backup` and `Retreat` blocks, and each tier `Difficulty`, `Fire_Rate_Multiplier` and an optional `Tactics` override.
 The shipped file and [the feature doc](../features/cops-n-crooks.md) list every key; the radio lines live in
-`copsncrooks/cop_radio_messages.yml`. The abridged example below predates those keys:
+`copsncrooks/cop_radio_messages.yml`. The abridged example:
 
 ```yaml
 tiers:
@@ -1588,6 +1557,53 @@ tiers:
       display_name: "&cMilitary"
       skip_cuffing: true
       # ... highest stats and weapons
+```
+
+### detainment.yml
+
+Jail and detainment configuration lives in `copsncrooks/detainment.yml`:
+
+```yaml
+Jail:
+   Max_Capacity: 10               # Max players per jail cell
+
+Transit:
+   Delay_Ticks: 40               # Ticks before detainment transit begins
+   Guard_Radius: 16.0            # Distance guards maintain from transit
+
+Break_Free:
+   Enabled: true
+   Escape_Chance: 0.1            # Chance per attempted escape
+   Escape_Cooldown_Ticks: 60
+
+Handcuff_Bribe:
+   Enabled: true
+   Bribe_Amount: 5000            # Money offered to avoid detainment
+
+Bail:
+   Enabled: true
+   Bail_Amount: 2000             # Money to pay for immediate release
+
+Jail_Bribe:
+   Enabled: true
+   Bribe_Amount: 10000           # Money to pay for release from jail
+
+Sentence:
+   Duration_Ticks: 1200          # Ticks prisoner stays in jail
+   Accrual_Rate: 1               # Multiplier for sentence length by wanted level
+
+Fallback_Exit_Waypoint: "spawn"  # Waypoint name if jail exit unavailable
+
+Sounds:
+   Lock:
+      Name: "block.anvil.land"
+      Volume: 1.0
+   Unlock:
+      Name: "block.anvil.use"
+      Volume: 1.0
+   Break_Free:
+      Name: "entity.player.hurt"
+      Volume: 1.0
 ```
 
 ### civilians.yml

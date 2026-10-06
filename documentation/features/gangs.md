@@ -116,24 +116,33 @@ removed.
 
 ## Configuration
 
+### Gang Settings (`settings.yml` → `gang/gang_settings.yml`)
+
+Most gang configuration moved to `gang/gang_settings.yml` in the gang module. Only `Gang.Enable` remains in `settings.yml`.
+
 In `settings.yml`:
 
 ```yaml
 Gang:
-   Enable: true
-   Name_Duplicates: false         # Whether two gangs can share the same name
-   Display_Name_Char: '*'         # Character prepended/appended to the gang display name in chat
+   Enable: true                   # Master toggle for gang system
+```
+
+In `gang/gang_settings.yml`:
+
+```yaml
+Name_Duplicates: false            # Whether two gangs can share the same name
+Display_Name_Char: '*'            # Character prepended/appended to the gang display name in chat
                                   # to distinguish it from the plain name
 
-   Rank:
-      Head: "member"              # Rank automatically assigned to every new member on join
-      Tail: "owner"               # The top rank — always held by the gang creator
+Rank:
+   Head: "member"                 # Rank automatically assigned to every new member on join
+   Tail: "owner"                  # The top rank — always held by the gang creator
 
-   Account:
-      Initial_Balance: 0          # Starting gang bank balance when the gang is created
-      Create_Cost: 100_000        # Money deducted from the creator's balance to form a gang. Set to 0 to remove the fee.
-      Maximum_Balance: 100_000_000_000  # Hard cap on the gang bank balance
-      Contribution_Rate: 1_000    # Divisor that converts deposited money into contribution units.
+Account:
+   Initial_Balance: 0             # Starting gang bank balance when the gang is created
+   Create_Cost: 100_000           # Money deducted from the creator's balance to form a gang. Set to 0 to remove the fee.
+   Maximum_Balance: 100_000_000_000  # Hard cap on the gang bank balance
+   Contribution_Rate: 1_000       # Divisor that converts deposited money into contribution units.
                                   # e.g. rate=1000: depositing $1 = 0.001 contribution, $1000 = 1 contribution.
                                   # Withdrawals are limited to the player's accrued contribution units.
 ```
