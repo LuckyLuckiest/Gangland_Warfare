@@ -46,7 +46,8 @@
 # ============================================
 Cops:
    # Count, Behaviour, Spawn, Pursuit, Return and Navigation moved here from settings.yml in 0.15.1. A value still
-   # tuned in settings.yml is used, with a console warning, until it is copied here; delete it there afterwards.
+   # tuned in settings.yml, or in the settings-old.yml backup the upgrade leaves, is used (console warning) until it
+   # is copied here; delete it there afterwards.
    Count:
       # Set to true to evaluate the Formula string below instead of the linear Base/Per_Level/Max calculation.
       Formula_Enabled: false

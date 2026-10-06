@@ -3,8 +3,9 @@
 #   +------------------------------------------------------+   #
 #
 # Jails, cuffs, bail, bribes and sentences. Moved here from settings.yml (Detainment) in 0.15.1; the guarding cop's
-# radius (Transit.Guard_Radius) went to cops.yml as Cops.Behaviour.Guard_Radius. A value still tuned in settings.yml
-# is used, with a console warning, until it is copied here; delete it there afterwards.
+# radius (Transit.Guard_Radius) went to cops.yml as Cops.Behaviour.Guard_Radius. A value still tuned in settings.yml,
+# or in the settings-old.yml backup the upgrade leaves, is used (console warning) until it is copied here; delete it
+# there afterwards.
 
 Detainment:
    Jail:

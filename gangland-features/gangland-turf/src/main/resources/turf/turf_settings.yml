@@ -16,7 +16,8 @@
 # | Turf Settings | #
 # +---------------+ #
 # Income, wand, outline, capture, sound and contribution knobs of the turf module. These keys lived in settings.yml
-# under Turf: until 0.15.1; a settings.yml that still tunes one keeps working for now (the server log says so once),
+# under Turf: until 0.15.1; a value still tuned in settings.yml, or in the settings-old.yml backup the upgrade leaves,
+# keeps working for now (the server log says so once),
 # but copy the value here and delete it there. The turf-NPC knobs are in turf_npcs.yml and the powerup catalogue is
 # in turf_powerups.yml.
 
