@@ -37,7 +37,9 @@ All module-file paths are relative to `plugins/Gangland_Warfare/`. Unless a Path
 | `Wanted.Kill_Combo.*` (`Enable`, `Reset_After`, `Kill_Counter`) | `copsncrooks/wanted.yml` | same |
 | `Cops.Count.*`, `Cops.Behaviour.*`, `Cops.Spawn.*`, `Cops.Pursuit.*`, `Cops.Return.*` | `copsncrooks/cops.yml` | same |
 | `Detainment.Transit.Guard_Radius` | `copsncrooks/cops.yml` | `Cops.Behaviour.Guard_Radius` |
-| `NPC_Navigation.*` (all but `Recalculation_Ticks`, `Min_Repath_After_Loss_Ticks`) | `copsncrooks/cops.yml` | `Cops.Navigation.<key>` |
+| `NPC_Navigation.*` | `copsncrooks/cops.yml` | `Cops.Navigation.<key>` |
+| `NPC_Navigation.Recalculation_Ticks` | `copsncrooks/cops.yml` | `Cops.Navigation.Recalculation_Ticks` |
+| `NPC_Navigation.Min_Repath_After_Loss_Ticks` | `copsncrooks/cops.yml` | `Cops.Navigation.Min_Repath_After_Loss_Ticks` |
 | `Detainment.Jail.*`, `Transit.Delay_Ticks`, `Break_Free.*`, `Handcuff_Bribe.*`, `Bail.*`, `Jail_Bribe.*`, `Sentence.*`, `Fallback_Exit_Waypoint`, `Sounds.*` | `copsncrooks/detainment.yml` | same |
 
 ### gangland-civilians

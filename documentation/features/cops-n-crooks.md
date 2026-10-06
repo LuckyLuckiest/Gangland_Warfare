@@ -513,7 +513,7 @@ Cops:
       Ranged_Max_Distance: 12.0     # Ranged cops hold position when target is farther than this
 ```
 
-`Recalculation_Ticks` and `Min_Repath_After_Loss_Ticks` are still read from `settings.yml` `NPC_Navigation`.
+`Recalculation_Ticks` (10) and `Min_Repath_After_Loss_Ticks` (2) live in the same `Cops.Navigation` block; the old `settings.yml` `NPC_Navigation` values are honoured for one release.
 
 ---
 
