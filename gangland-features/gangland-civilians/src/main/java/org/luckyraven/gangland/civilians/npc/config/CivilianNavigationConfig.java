@@ -3,8 +3,8 @@ package org.luckyraven.gangland.civilians.npc.config;
 import org.luckyraven.keystone.npc.NpcNavigationConfig;
 
 /**
- * Navigation configuration for civilian NPCs, backed by the shared {@code NPC_Navigation} block in {@code settings.yml}
- * via {@link Settings} static getters.
+ * Navigation configuration for civilian NPCs, backed by the {@code Navigation} section of {@code npc/civilians.yml}
+ * via {@link CivilianSettings}.
  */
 public record CivilianNavigationConfig(
 		int aiTickRate,
