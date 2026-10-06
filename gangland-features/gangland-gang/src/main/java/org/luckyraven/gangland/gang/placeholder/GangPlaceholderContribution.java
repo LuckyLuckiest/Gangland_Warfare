@@ -54,8 +54,9 @@ public final class GangPlaceholderContribution implements PlaceholderContributio
 	 * gang, so they are answered first (a gang-less player still sees the create fee), from this module's own file
 	 * instead of the deprecated core field the core would otherwise fall back to.
 	 */
+	@Override
 	@Nullable
-	private String resolveSetting(String parameter) {
+	public String resolveSetting(String parameter) {
 		return switch (parameter) {
 			case GANG_PREFIX + "create_fee" -> GangSettings.getGangCreateFee().toPlainString();
 			case GANG_PREFIX + "initial_balance" -> GangSettings.getGangInitialBalance().toPlainString();

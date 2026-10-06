@@ -107,7 +107,11 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		String param = parameter.toLowerCase();
 
 		if (player == null) {
-			String value = getSetting(param);
+			// a module-owned setting (gang_create_fee, ...) first, so the deprecated core field never answers it
+			String value = contributions().resolveSetting(param);
+			if (value != null) return value;
+
+			value = getSetting(param);
 			if (value != null) return value;
 			return isGanglandOwnedPrefix(param) ? "NA" : null;
 		}

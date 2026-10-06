@@ -475,7 +475,7 @@ restores the 0.13.0 behaviour of that piece. Texts are in `copsncrooks/wanted_me
 |---|---|---|
 | `Wanted.Heat.Enable` | `true` | `false` = no heat ledger; stars rise by the kill combo or one per counted kill |
 | `Wanted.Heat.Star_Thresholds` | `100, 250, 450, 700, 1000` | Heat needed for star 1, 2, 3 ...; a shorter list is stretched to the max level |
-| `Wanted.Heat.Streak_Bonus` | `1.5` | Multiplier for a crime inside `settings.yml` `Wanted.Kill_Combo.Reset_After` of the last; only while `Wanted.Kill_Combo.Enable` is true |
+| `Wanted.Heat.Streak_Bonus` | `1.5` | Multiplier for a crime inside `copsncrooks/wanted.yml` `Wanted.Kill_Combo.Reset_After` of the last; only while `Wanted.Kill_Combo.Enable` there is true |
 | `Wanted.Heat.Seen_By_Cop_Multiplier` | `1.5` | Multiplier when a cop saw the crime |
 | `Wanted.Heat.Turf_War_Multiplier` | `0.5` | Multiplier for a player kill inside a contested turf |
 | `Wanted.Heat.Assault_Repeat_Seconds` | `10` | Hitting the same cop again inside this is not a new crime |

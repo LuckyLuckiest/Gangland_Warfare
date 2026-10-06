@@ -31,10 +31,15 @@ from the default while the module file is absent or at the default, the legacy v
 per key, naming the file it came from:
 `plugins/Gangland_Warfare/settings-old.yml still sets '<legacy path>', which moved to plugins/Gangland_Warfare/<file> ...`.
 Copy the value into the module file (once it differs from the default, the module file wins) and delete it from
-`settings.yml` if it is there; deleting the backup also ends the fallback. The legacy read stops in a later release.
+`settings.yml` if it is there. To end the fallback without copying, delete every `settings-old*.yml` backup: the newest one
+left is always consulted, so deleting only the newest brings an older backup's values back. The legacy read stops in a later release.
 
-`%glw_settings_*%` placeholders and `/glw debug` entries for moved keys keep reporting the `settings.yml` value. The
-matching `Settings` getters are deprecated; do not rely on them for a module's real value.
+The settings placeholders (`%gangland_<field>%`, e.g. `%gangland_turf_income_interval_minutes%`) and `/glw debug` entries
+for moved keys keep reporting the deprecated core value (`settings.yml`, else the old default), except the gang ones:
+`%gangland_gang_create_fee%`, `gang_initial_balance`, `gang_max_balance`, `gang_contribution_rate`,
+`gang_name_duplicates`, `gang_display_name_char`, `gang_rank_head` and `gang_rank_tail` are answered by the gang module
+from `gang/gang_settings.yml`. The matching `Settings` getters are deprecated; do not rely on them for a module's real
+value.
 
 ## 3. Where each key went
 

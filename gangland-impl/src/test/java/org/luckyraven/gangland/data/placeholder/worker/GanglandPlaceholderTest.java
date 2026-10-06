@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.gangland.data.placeholder.PlaceholderService;
+import org.luckyraven.gangland.data.placeholder.extension.PlaceholderContribution;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.support.SettingsFixture;
@@ -14,10 +15,12 @@ import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.placeholder.replacer.Replacer;
 
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * gi=80: {@link GanglandPlaceholder#onRequest}'s unresolved-token fallback used to render the literal {@code "NA"}
@@ -67,5 +70,20 @@ class GanglandPlaceholderTest {
 	@DisplayName("player == null: a foreign/typo'd token still returns null")
 	void onRequest_nullPlayer_unrecognizedToken_returnsNull() {
 		assertNull(placeholder().onRequest(null, "foo_unknown"));
+	}
+
+	@Test
+	@DisplayName("player == null: a module-owned setting (gang_create_fee) comes from its contribution, not the deprecated core field")
+	void onRequest_nullPlayer_moduleSettingAnsweredByContribution() {
+		PlaceholderContribution gang = mock(PlaceholderContribution.class);
+		when(gang.resolveSetting("gang_create_fee")).thenReturn("5000");
+		DependencyContainer container = mock(DependencyContainer.class);
+		when(container.getAllInstances(PlaceholderContribution.class)).thenReturn(List.of(gang));
+
+		GanglandPlaceholder placeholder = new GanglandPlaceholder("gangland", Replacer.Closure.PERCENT,
+				mock(UserManager.class), mock(UniqueItemAddon.class), mock(BankTiers.class), container,
+				mock(PlaceholderService.class));
+
+		assertEquals("5000", placeholder.onRequest(null, "gang_create_fee"));
 	}
 }

@@ -144,7 +144,7 @@ public final class MovedSetting {
 		                               Pattern.quote("." + settings.getFileType()));
 		backupFile = Arrays.stream(candidates)
 		                   .filter(f -> f.isFile() && name.matcher(f.getName()).matches())
-		                   .max(Comparator.comparingLong(File::lastModified))
+		                   .max(Comparator.comparingLong(File::lastModified).thenComparing(File::getName))
 		                   .orElse(null);
 		if (backupFile == null) return null;
 

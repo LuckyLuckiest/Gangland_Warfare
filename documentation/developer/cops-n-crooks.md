@@ -1450,75 +1450,29 @@ public void onCuffed(CuffedEvent event) {
 
 ## Configuration
 
-Cops-n-crooks configuration moved to module-specific files in `copsncrooks/` as of 0.15.1.
+### Module-owned tuning (0.15.1)
 
-### wanted.yml
+Since 0.15.1 the module reads its tuning from its own files, not `settings.yml`. The shipped files are the reference:
+every key there carries its comment and default, so copy key names from them rather than from this page.
 
-Configuration for the wanted system lives in `copsncrooks/wanted.yml`:
+| File | Root | What it holds |
+|---|---|---|
+| `copsncrooks/cops.yml` | `Cops:` | `Count`, `Behaviour` (incl. `Guard_Radius`), `Spawn`, `Pursuit`, `Return`, `Navigation` |
+| `copsncrooks/detainment.yml` | `Detainment:` | jail capacity, transit delay, break-free, bribes, bail, sentence, fallback exit waypoint, sounds |
+| `copsncrooks/wanted.yml` | `Wanted:` | `Kill_Combo` (`Enable`, `Kill_Counter`, `Reset_After`) beside the chase/heat config |
 
-```yaml
-Kill_Combo:
-   Enable: true
-   Kill_Counter: [3, 5, 7, 10, 15]   # Kills needed per level threshold
-   Reset_After: 30                    # Seconds of inactivity before combo resets
-```
+Each moved key is read through `MovedSetting` (gangland-api 2.2), so an old `settings.yml` value, or the
+`settings-old*.yml` backup Keystone writes on upgrade, still applies for one release with a warning. The full
+legacy-path to new-path table is in [`migration-0.15.1.md`](../migration-0.15.1.md). Code still reaches these values
+through the contract interfaces (`CopSettings`, `WantedSettings`, `CivilianSettings`); only the adapters behind them
+changed.
 
 ### cops.yml
 
-Cop behavior configuration lives in `copsncrooks/cops.yml`. The `Cops` block controls spawning, pursuit, and AI:
-
-```yaml
-Cops:
-   Count:
-      Max_Cops_Per_Player: 8
-      Per_Wanted_Level:           # Map of wanted level -> target cop count
-         1: 2
-         2: 3
-         3: 5
-         4: 6
-         5: 8
-   Behaviour:
-      AI_Tick_Rate: 4             # Ticks between AI evaluations
-      Spawn_Check_Rate: 60        # Ticks between spawn checks
-      Cuff_Radius: 3.5            # Blocks
-      Max_Cuff_Attempts: 3        # Escapes across the group before it fights (0.12.0)
-      Cuff_Cooldown_Ticks: 40     # Wind-up duration
-      Alert_Range: 32.0           # Blocks; ranged cops fire at anything seen this close (0.12.0)
-      Combat_Range: 5.0           # Melee engage distance only (0.12.0)
-      Attack_Cooldown_Ticks: 10   # Melee swing cooldown, server ticks (read since 0.12.0)
-      Guard_Radius: 16.0          # Detainment transit guard distance
-   Spawn:
-      Min_Distance: 20.0
-      Max_Distance: 45.0
-      Phase1_Min_Distance: 30.0
-      Radius_Shrink_Step: 5.0
-      Vertical_Search_Range: 10
-      Spawn_Y_Offset: 0
-      Min_Open_Horizontal_Sides: 2
-      Spawner_Preference_Radius: 40.0
-      Visibility_Check_Distance: 30.0
-      Phase1_Attempts: 10
-      Phase2_Attempts: 5
-   Return:
-      Max_Return_Ticks: 200
-      Station_Arrival_Distance: 3.0
-   Navigation:
-      Recalculation_Ticks: 10
-      Stuck_Check_Interval_Ticks: 5
-      Max_Stuck_Checks: 4
-      Max_Hopeless_Stuck_Checks: 8
-      Hopeless_Close_Threshold: 5.0
-      Min_Progress_Distance: 0.5
-      Ranged_Min_Distance: 8.0
-      Ranged_Max_Distance: 25.0
-   Weapon:
-      Starting_Ammo_Magazines: 3
-```
-
-Per-tier cop configuration is loaded by `CopLoader`. Since 0.12.0, `tiers` also carries the `Melee`, `Tactics`, `Radio`,
+Per-tier cop configuration loaded by `CopLoader`. Since 0.12.0 `Cops` also carries the `Melee`, `Tactics`, `Radio`,
 `Backup` and `Retreat` blocks, and each tier `Difficulty`, `Fire_Rate_Multiplier` and an optional `Tactics` override.
 The shipped file and [the feature doc](../features/cops-n-crooks.md) list every key; the radio lines live in
-`copsncrooks/cop_radio_messages.yml`. The abridged example:
+`copsncrooks/cop_radio_messages.yml`. The abridged example below predates those keys:
 
 ```yaml
 tiers:
@@ -1557,53 +1511,6 @@ tiers:
       display_name: "&cMilitary"
       skip_cuffing: true
       # ... highest stats and weapons
-```
-
-### detainment.yml
-
-Jail and detainment configuration lives in `copsncrooks/detainment.yml`:
-
-```yaml
-Jail:
-   Max_Capacity: 10               # Max players per jail cell
-
-Transit:
-   Delay_Ticks: 40               # Ticks before detainment transit begins
-   Guard_Radius: 16.0            # Distance guards maintain from transit
-
-Break_Free:
-   Enabled: true
-   Escape_Chance: 0.1            # Chance per attempted escape
-   Escape_Cooldown_Ticks: 60
-
-Handcuff_Bribe:
-   Enabled: true
-   Bribe_Amount: 5000            # Money offered to avoid detainment
-
-Bail:
-   Enabled: true
-   Bail_Amount: 2000             # Money to pay for immediate release
-
-Jail_Bribe:
-   Enabled: true
-   Bribe_Amount: 10000           # Money to pay for release from jail
-
-Sentence:
-   Duration_Ticks: 1200          # Ticks prisoner stays in jail
-   Accrual_Rate: 1               # Multiplier for sentence length by wanted level
-
-Fallback_Exit_Waypoint: "spawn"  # Waypoint name if jail exit unavailable
-
-Sounds:
-   Lock:
-      Name: "block.anvil.land"
-      Volume: 1.0
-   Unlock:
-      Name: "block.anvil.use"
-      Volume: 1.0
-   Break_Free:
-      Name: "entity.player.hurt"
-      Volume: 1.0
 ```
 
 ### civilians.yml

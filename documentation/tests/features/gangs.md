@@ -16,7 +16,7 @@ Gang creation, membership, ranks within the gang, alliances, gang chat, gang ban
 ## Pre-Conditions
 
 - [ ] Two online players: `A` (will create gang), `B` (will join).
-- [ ] `A` has enough balance to pay the gang-creation fee (see `settings.yml`).
+- [ ] `A` has enough balance to pay the gang-creation fee (see `gang/gang_settings.yml` `Account.Create_Cost`).
 
 ---
 

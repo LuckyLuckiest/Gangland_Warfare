@@ -20,4 +20,16 @@ public interface PlaceholderContribution {
 	 */
 	@Nullable
 	String resolve(OfflinePlayer player, String parameter);
+
+	/**
+	 * A placeholder that needs no player, such as a module-owned setting ({@code gang_create_fee}). The core asks
+	 * this for a playerless request (holograms, console) before falling back to its own settings map. Since api 2.2.
+	 *
+	 * @param parameter the lower-cased placeholder parameter.
+	 * @return the resolved value, or {@code null} when this contribution doesn't own {@code parameter}.
+	 */
+	@Nullable
+	default String resolveSetting(String parameter) {
+		return null;
+	}
 }

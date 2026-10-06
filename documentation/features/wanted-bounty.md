@@ -69,7 +69,7 @@ the text is in `copsncrooks/wanted_messages.yml`.
 | 5 ★★★★★ | 8         | SWAT / Military |
 
 > The exact cop count follows the formula: `base + (stars - 1) × per-level`, capped at `max`. These values are
-> configurable in `settings.yml`.
+> configurable in `copsncrooks/cops.yml` under `Cops.Count`.
 
 ### Cost of Losing a Star
 

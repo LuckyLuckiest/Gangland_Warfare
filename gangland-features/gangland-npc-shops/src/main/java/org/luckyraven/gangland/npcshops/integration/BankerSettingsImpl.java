@@ -17,7 +17,7 @@ import java.math.BigDecimal;
 import java.util.Objects;
 
 /**
- * Reads {@code npc/banker_settings.yml} (module-owned default, WS4 G1a â€” moved out of the core settings.yml
+ * Reads {@code npc/banker_settings.yml} (module-owned default, WS4 G1a — moved out of the core settings.yml
  * {@code Banker:} block). Bank economy knobs ({@code getResetPeriodSeconds}/{@code getCreateFee}/
  * {@code getInitialBalance} stay delegated to core {@link Settings}. {@code getRenameFee} moved to this file.
  */

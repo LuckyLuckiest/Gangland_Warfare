@@ -514,8 +514,8 @@ sessions. Controls which side(s) exhaust particles spawn from.
 
 **File:** `config.gadget.org.luckyraven.gangland.GadgetPhysicsConfig`
 
-Contract interface for physics constants loaded from `settings.yml`. The implementation lives in
-`gangland-impl` (never imported directly from feature modules per project convention).
+Contract interface for physics constants loaded from the module's own `gadget/gadget_settings.yml` (since 0.15.1).
+The implementation, `GadgetSettings`, lives in the gadget module and parses the file once per load and reload.
 
 #### Car Constants
 
@@ -945,7 +945,7 @@ no longer gadget's own code, only a dependency gadget still reads from.
 
 ### gangland-gadget -> gangland-impl (contract interfaces)
 
-- `GadgetPhysicsConfig` -- physics constants from `settings.yml`
+- `GadgetPhysicsConfig` -- physics constants from `gadget/gadget_settings.yml`
 
 These follow the project convention: feature modules define the interface, `gangland-impl` provides
 the implementation. Feature modules never import `Settings` or `Messages` directly.
