@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.gang.placeholder;
 
+import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
@@ -64,7 +65,7 @@ public final class GangPlaceholderContribution implements PlaceholderContributio
 		if (parameter.equals(USER_PREFIX + "contributed-amount")) {
 			return !member.hasGang() ?
 			       null :
-			       NumberUtil.valueFormat(Settings.getGangContributionRate() * member.getContribution());
+			       NumberUtil.valueFormat(GangSettings.getGangContributionRate() * member.getContribution());
 		}
 		if (parameter.equals(USER_PREFIX + "has-rank")) return String.valueOf(member.hasRank());
 		if (parameter.equals(USER_PREFIX + "rank")) return member.getRank() == null ? null : member.getRank().getName();

@@ -22,6 +22,8 @@ import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.BeanFactory;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
+import org.luckyraven.keystone.module.ModuleLoader;
+import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
@@ -74,12 +76,18 @@ class GangConfigBeanGraphTest {
 	void setUp() {
 		container = new DependencyContainer();
 		JavaPlugin plugin = mock(JavaPlugin.class);
+		// FileHandler (gang_settings.yml, built inside gangSettingsContract) reads the plugin version.
+		org.bukkit.plugin.PluginDescriptionFile description = mock(org.bukkit.plugin.PluginDescriptionFile.class);
+		when(description.getVersion()).thenReturn("test");
+		when(plugin.getDescription()).thenReturn(description);
 		factory = new BeanFactory(container, plugin, key -> false);
 
 		container.registerInstance(JavaPlugin.class, plugin);
 		container.registerInstance(RepositoryRegistry.class, repositoryRegistry());
 		container.registerInstance(DatabaseHandler.class, mock(DatabaseHandler.class));
 		container.registerInstance(PermissionRegistryContract.class, mock(PermissionRegistryContract.class));
+		container.registerInstance(FileManager.class, mock(FileManager.class));
+		container.registerInstance(ModuleLoader.class, mock(ModuleLoader.class));
 		container.registerInstance(FilterStore.class, mock(FilterStore.class));
 		container.registerInstance(FilterApplier.class, mock(FilterApplier.class));
 

@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.mail.command.invite;
 
+import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -9,7 +10,6 @@ import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.Member;
@@ -168,7 +168,7 @@ class GangInviteAcceptCommand extends SubArgument {
 
 	private void doAccept(User<Player> user, Player player, Gang gang, MailItem mail) {
 		Member member = memberManager.getMember(player.getUniqueId());
-		Rank   rank   = rankManager.get(Settings.getGangRankHead());
+		Rank   rank   = rankManager.get(GangSettings.getGangRankHead());
 
 		List<User<Player>> gangOnlineMembers = gang.getOnlineMembers(userManager::getUser);
 		for (User<Player> onUser : gangOnlineMembers) {

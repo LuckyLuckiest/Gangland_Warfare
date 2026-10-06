@@ -2,6 +2,7 @@ package org.luckyraven.gangland.gang;
 
 import org.luckyraven.gangland.gang.contract.GangSettingsContract;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 /**
@@ -35,6 +36,26 @@ public final class GangSettings {
 
 	public static String getGangRankTail() {
 		return require().getGangRankTail();
+	}
+
+	public static boolean isGangNameDuplicates() {
+		return require().isGangNameDuplicates();
+	}
+
+	public static BigDecimal getGangInitialBalance() {
+		return require().getGangInitialBalance();
+	}
+
+	public static BigDecimal getGangCreateFee() {
+		return require().getGangCreateFee();
+	}
+
+	public static BigDecimal getGangMaxBalance() {
+		return require().getGangMaxBalance();
+	}
+
+	public static double getGangContributionRate() {
+		return require().getGangContributionRate();
 	}
 
 	private static GangSettingsContract require() {

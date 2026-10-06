@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -98,12 +99,12 @@ class GangDeleteCommand extends SubArgument {
 			// check if the player is the owner
 			if (member.getRank() == null) return;
 
-			Rank tail = rankManager.get(Settings.getGangRankTail());
+			Rank tail = rankManager.get(GangSettings.getGangRankTail());
 
 			if (tail == null) return;
 
 			if (!member.getRank().match(tail.getUsedId())) {
-				user.sendMessage(Messages.NOT_OWNER.toString().replace("%tail%", Settings.getGangRankTail()));
+				user.sendMessage(Messages.NOT_OWNER.toString().replace("%tail%", GangSettings.getGangRankTail()));
 				return;
 			}
 
@@ -159,12 +160,12 @@ class GangDeleteCommand extends SubArgument {
 			if (member.getRank() == null) return;
 
 			// check if the player is the owner
-			Rank tail = rankManager.get(Settings.getGangRankTail());
+			Rank tail = rankManager.get(GangSettings.getGangRankTail());
 
 			if (tail == null) return;
 
 			if (!member.getRank().match(tail.getUsedId())) {
-				user.sendMessage(Messages.NOT_OWNER.toString().replace("%tail%", Settings.getGangRankTail()));
+				user.sendMessage(Messages.NOT_OWNER.toString().replace("%tail%", GangSettings.getGangRankTail()));
 				return;
 			}
 
@@ -260,7 +261,7 @@ class GangDeleteCommand extends SubArgument {
 			}
 
 			// return quarter of the gang creation fees
-			BigDecimal amount = Settings.getGangCreateFee()
+			BigDecimal amount = GangSettings.getGangCreateFee()
 			                            .divide(BigDecimal.valueOf(4), Currency.SCALE, Currency.ROUNDING_MODE);
 
 			user.getEconomy().depositAmount(amount);

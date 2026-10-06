@@ -32,6 +32,9 @@ import org.bukkit.entity.Player;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.Qualifier;
+import org.luckyraven.keystone.module.ModuleLoader;
+import org.luckyraven.keystone.persistence.FileHandler;
+import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
@@ -45,17 +48,22 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
  * this module), and the {@code GangManager}/{@code RankManager}/{@code MemberManager} beans that used to live in
  * gangland-impl's {@code DataConfig}.
  *
- * <p>{@link #gangSettingsContract()} still routes through the api-hosted {@code Settings} class (same
- * {@code settings.yml} {@code Gang:} keys as before this move) rather than the module's own YAML — the "module
- * owns its own YAML directly" end state from the plan (§5) is deferred, not part of this gate; see the gate
- * report.
+ * <p>{@link #gangSettingsContract} reads the module's own {@code gang/gang_settings.yml} (0.15.1), falling back to
+ * the old {@code settings.yml} {@code Gang:} keys for one release through {@code MovedSetting}.
  */
 @Configuration
 public final class GangConfig {
 
 	@Bean
-	public GangSettingsContract gangSettingsContract() {
-		GangSettingsContract contract = new GanglandGangSettings();
+	public GangSettingsContract gangSettingsContract(JavaPlugin plugin, FileManager fileManager,
+	                                                 ModuleLoader moduleLoader) {
+		// The module's own gang/gang_settings.yml, copied out of the module jar (module classloader).
+		FileHandler file = new FileHandler(plugin, "gang_settings", "gang", ".yml", moduleLoader.classLoader());
+		fileManager.addFile(file, true);
+
+		GanglandGangSettings contract = new GanglandGangSettings(file, fileManager);
+		fileManager.registerInitializer(contract);
+		fileManager.initializeAll();
 		// Bind the static facade so gang data classes (Gang) can read settings from their constructors without
 		// injecting the contract.
 		GangSettings.bind(contract);

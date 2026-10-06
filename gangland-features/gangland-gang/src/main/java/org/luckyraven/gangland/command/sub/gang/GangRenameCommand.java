@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -9,7 +10,6 @@ import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberManager;
@@ -84,7 +84,7 @@ class GangRenameCommand extends SubArgument {
 			String oldName = gang.getName();
 			String newName = args[2];
 
-			if (!Settings.isGangNameDuplicates()) for (Gang checkGangName : gangManager.getGangs().values())
+			if (!GangSettings.isGangNameDuplicates()) for (Gang checkGangName : gangManager.getGangs().values())
 				if (checkGangName.getName().equalsIgnoreCase(newName)) {
 					user.sendMessage(Messages.DUPLICATE_GANG_NAME.toString().replace("%gang%", newName));
 					return;

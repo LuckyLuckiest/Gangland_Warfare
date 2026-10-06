@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -102,7 +103,7 @@ class GangCreateCommand extends SubArgument {
 			}
 
 			try {
-				user.getEconomy().withdrawAmount(Settings.getGangCreateFee());
+				user.getEconomy().withdrawAmount(GangSettings.getGangCreateFee());
 			} catch (EconomyException exception) {
 				CountdownTimer timer = createGangTimer.get(sender);
 				if (timer != null) {
@@ -123,9 +124,9 @@ class GangCreateCommand extends SubArgument {
 			Gang gang = new Gang(id);
 
 			member.setGangJoinDateLong(Instant.now().toEpochMilli());
-			gang.addMember(user, member, rankManager.get(Settings.getGangRankTail()));
+			gang.addMember(user, member, rankManager.get(GangSettings.getGangRankTail()));
 			gang.setName(createGangName.get(user).get());
-			gang.getEconomy().setAmount(Settings.getGangInitialBalance());
+			gang.getEconomy().setAmount(GangSettings.getGangInitialBalance());
 
 			gangManager.add(gang);
 
@@ -163,7 +164,7 @@ class GangCreateCommand extends SubArgument {
 
 			AtomicReference<String> name = new AtomicReference<>(args[2]);
 
-			if (!Settings.isGangNameDuplicates()) for (Gang gang : gangManager.getGangs().values())
+			if (!GangSettings.isGangNameDuplicates()) for (Gang gang : gangManager.getGangs().values())
 				if (gang.getName().equalsIgnoreCase(name.get())) {
 					user.sendMessage(Messages.DUPLICATE_GANG_NAME.toString().replace("%gang%", name.get()));
 					return;
@@ -173,7 +174,7 @@ class GangCreateCommand extends SubArgument {
 
 			// Need to notify the player and give access to confirm
 			String string  = Messages.GANG_CREATE_FEE.toString();
-			String replace = string.replace("%amount%", Settings.formatAmount(Settings.getGangCreateFee()));
+			String replace = string.replace("%amount%", Settings.formatAmount(GangSettings.getGangCreateFee()));
 
 			user.sendMessage(replace);
 			user.sendMessage(GanglandChatUtil.confirmCommand(new String[]{"gang", "create"}));
