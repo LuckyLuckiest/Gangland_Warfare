@@ -214,7 +214,7 @@ The top-level `Shouts` block (`Enabled`,
 
 ## Spawning System
 
-### Proximity-Based Spawning (settings.yml)
+### Proximity-Based Spawning (npc/civilians.yml)
 
 Civilians spawn automatically when players enter the activation radius of registered spawner
 points, similar to Minecraft village mechanics.
@@ -281,13 +281,12 @@ Uses the same `EntitySpawner` as cops, with a two-phase algorithm:
 
 ---
 
-## AI Tick Configuration (settings.yml)
+## AI Tick Configuration (npc/civilians.yml)
 
 ```yaml
-Civilians:
-   Behaviour:
-      Enabled: true           # Master toggle for civilian AI
-      AI_Tick_Rate: 20        # Ticks between AI evaluations
+Behaviour:
+   Enabled: true           # Master toggle for civilian AI
+   AI_Tick_Rate: 20        # Ticks between AI evaluations
 ```
 
 The AI tick rate controls how frequently each civilian evaluates its state machine.
