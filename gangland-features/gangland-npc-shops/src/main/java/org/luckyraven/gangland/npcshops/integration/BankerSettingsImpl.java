@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.npcshops.integration;
 
 import lombok.CustomLog;
+import org.luckyraven.gangland.file.configuration.MovedSetting;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.npcshops.banker.config.BankerSettings;
 import org.luckyraven.keystone.bean.BeanLifecycle;
@@ -18,18 +19,19 @@ import java.util.Objects;
 /**
  * Reads {@code npc/banker_settings.yml} (module-owned default, WS4 G1a — moved out of the core settings.yml
  * {@code Banker:} block). Bank economy knobs ({@code getResetPeriodSeconds}/{@code getCreateFee}/
- * {@code getInitialBalance}/{@code getRenameFee}) and the generic fill knobs stay delegated to core
- * {@link Settings} — untouched by this move.
+ * {@code getInitialBalance} stay delegated to core {@link Settings}. {@code getRenameFee} moved to this file.
  */
 @CustomLog
 public final class BankerSettingsImpl implements BankerSettings, BeanLifecycle {
 
 	private final FileHandler fileHandler;
+	private final FileManager fileManager;
 
-	private volatile int     headTrackRadius;
-	private volatile double  maxHealth;
-	private volatile boolean invulnerable;
-	private volatile String  fallbackTierId;
+	private volatile int        headTrackRadius;
+	private volatile double     maxHealth;
+	private volatile boolean    invulnerable;
+	private volatile String     fallbackTierId;
+	private volatile BigDecimal renameFee;
 
 	public BankerSettingsImpl(FileManager fileManager) {
 		try {
@@ -39,6 +41,7 @@ public final class BankerSettingsImpl implements BankerSettings, BeanLifecycle {
 		} catch (IOException e) {
 			throw new PluginException(e);
 		}
+		this.fileManager = fileManager;
 		load();
 	}
 
@@ -55,6 +58,10 @@ public final class BankerSettingsImpl implements BankerSettings, BeanLifecycle {
 		maxHealth       = reader.get("Max_Health").asDouble().orDefault(20.0);
 		invulnerable    = reader.get("Invulnerable").asBool().orDefault(true);
 		fallbackTierId  = reader.get("Fallback_Tier_Id").asString().orDefault("Basic");
+
+		// Rename_Fee moved from core settings.yml; use MovedSetting to fall back for servers still using the old location
+		MovedSetting moved = MovedSetting.of(fileHandler, fileManager, "gangland-npc-shops");
+		renameFee = moved.getMoney("Rename_Fee", "User.Bank.Rename_Fee", "1000");
 
 		if (!report.isEmpty()) report.log(log);
 	}
@@ -96,7 +103,7 @@ public final class BankerSettingsImpl implements BankerSettings, BeanLifecycle {
 
 	@Override
 	public BigDecimal getRenameFee() {
-		return Settings.getBankRenameFee();
+		return renameFee;
 	}
 
 	@Override
