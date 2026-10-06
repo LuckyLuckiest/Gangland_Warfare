@@ -3,8 +3,8 @@ package org.luckyraven.gangland.turf.contribution;
 import org.luckyraven.gangland.gang.member.Member;
 
 /**
- * Per-action contribution-point values awarded during turf activity. Loaded from {@code settings.yml} under
- * {@code Turf.Contribution.Points.*} and wired in as a bean by gangland-impl.
+ * Per-action contribution-point values awarded during turf activity. Loaded from {@code turf/turf_settings.yml} under
+ * {@code Contribution.Points.*} and wired in as a bean by {@code TurfModuleConfig}.
  *
  * <p>All awards go straight into {@link Member#increaseContribution(double)} — the
  * field already persists + already drives whatever contribution-based payout logic the gang module adds later.

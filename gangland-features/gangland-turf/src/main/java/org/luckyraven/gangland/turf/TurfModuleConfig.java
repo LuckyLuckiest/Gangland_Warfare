@@ -14,6 +14,7 @@ import org.luckyraven.gangland.turf.database.TurfRepository;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.turf.config.GanglandTurfMessages;
 import org.luckyraven.gangland.turf.config.GanglandTurfSounds;
+import org.luckyraven.gangland.turf.config.TurfSettings;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.keystone.persistence.FileManager;
@@ -46,11 +47,18 @@ import org.luckyraven.gangland.turf.task.TurfLocationTracker;
 import java.util.List;
 
 /**
- * Bean wiring for the gang-turf feature. Every tuning number comes from {@link Settings} (the central
- * {@code settings.yml} reader) — see the {@code Turf:} block there for the authoritative defaults and docs.
+ * Bean wiring for the gang-turf feature. The tuning numbers come from {@link TurfSettings} (the module's own
+ * {@code turf/turf_settings.yml}); the shared inventory-filler look still comes from {@link Settings}.
  */
 @Configuration
 public final class TurfModuleConfig {
+
+	@Bean
+	public TurfSettings turfSettings(FileManager fileManager) {
+		TurfSettings settings = new TurfSettings(fileManager);
+		fileManager.registerInitializer(settings);
+		return settings;
+	}
 
 	@Bean
 	public TurfRepositoryContract turfRepositoryContract(TurfRepository repository) {
@@ -99,13 +107,13 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
-	public TurfSoundContract turfSoundContract() {
-		return new GanglandTurfSounds();
+	public TurfSoundContract turfSoundContract(TurfSettings settings) {
+		return new GanglandTurfSounds(settings);
 	}
 
 	@Bean
-	public TurfDisplayContract turfDisplayContract() {
-		return Settings::isTurfShowEnterTitle;
+	public TurfDisplayContract turfDisplayContract(TurfSettings settings) {
+		return settings::isShowEnterTitle;
 	}
 
 	@Bean
@@ -123,22 +131,22 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
-	public CaptureSettings captureSettings() {
-		List<Integer> milestones = Settings.getTurfCaptureProgressMilestones();
+	public CaptureSettings captureSettings(TurfSettings turf) {
+		List<Integer> milestones = turf.getCaptureProgressMilestones();
 		int[]         asArray    = new int[milestones.size()];
 		for (int i = 0; i < milestones.size(); i++) {
 			asArray[i] = milestones.get(i);
 		}
 		return new CaptureSettings(
-				Settings.getTurfCaptureDurationSeconds(),
-				Settings.getTurfCaptureCooldownMinutes(),
-				Settings.getTurfCaptureAbandonGraceSeconds(),
-				Settings.getTurfCapturePostLogoffProtectionMinutes(),
-				Settings.getTurfCaptureInactivityAutoReleaseDays(),
+				turf.getCaptureDurationSeconds(),
+				turf.getCaptureCooldownMinutes(),
+				turf.getCaptureAbandonGraceSeconds(),
+				turf.getCapturePostLogoffProtectionMinutes(),
+				turf.getCaptureInactivityAutoReleaseDays(),
 				asArray,
-				Settings.isTurfCaptureBroadcastGlobally(),
-				Settings.getTurfCaptureUnclaimedPhase1Seconds(),
-				Settings.getTurfCaptureUnclaimedPhase2Seconds());
+				turf.isCaptureBroadcastGlobally(),
+				turf.getCaptureUnclaimedPhase1Seconds(),
+				turf.getCaptureUnclaimedPhase2Seconds());
 	}
 
 	@Bean
@@ -158,11 +166,11 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
-	public TurfIncomeDistributor turfIncomeDistributor(JavaPlugin plugin,
+	public TurfIncomeDistributor turfIncomeDistributor(JavaPlugin plugin, TurfSettings settings,
 	                                                   TurfManager turfs,
 	                                                   GangLookupContract gangs,
 	                                                   ActiveBuffManager buffs) {
-		long                  intervalTicks = Settings.getTurfIncomeIntervalMinutes() * 60L * 20L;
+		long                  intervalTicks = settings.getIncomeIntervalMinutes() * 60L * 20L;
 		TurfIncomeDistributor distributor   = new TurfIncomeDistributor(plugin, turfs, gangs, buffs, intervalTicks);
 		distributor.start();
 		return distributor;
@@ -188,12 +196,12 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
-	public TurfContributionSettings turfContributionSettings(@SuppressWarnings("unused") Settings settings) {
+	public TurfContributionSettings turfContributionSettings(TurfSettings turf) {
 		return new TurfContributionSettings(
-				Settings.getTurfContributionDefenderPresenceTick(),
-				Settings.getTurfContributionAttackerPresenceTick(),
-				Settings.getTurfContributionCaptureCompleteBonus(),
-				Settings.getTurfContributionDefenseSuccessBonus());
+				turf.getContributionDefenderPresenceTick(),
+				turf.getContributionAttackerPresenceTick(),
+				turf.getContributionCaptureCompleteBonus(),
+				turf.getContributionDefenseSuccessBonus());
 	}
 
 	@Bean

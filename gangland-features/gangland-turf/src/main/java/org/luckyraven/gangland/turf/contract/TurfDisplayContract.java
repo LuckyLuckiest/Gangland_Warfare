@@ -1,14 +1,14 @@
 package org.luckyraven.gangland.turf.contract;
 
 /**
- * Visual-presentation toggles for turf crossings. Implemented in gangland-impl, sourced from {@code settings.yml} so
- * the turf module does not import the impl-side {@code Settings} reader directly.
+ * Visual-presentation toggles for turf crossings. Implemented in the turf module, sourced from {@code turf/turf_settings.yml} so
+ * the listener does not read the settings file directly.
  */
 public interface TurfDisplayContract {
 
 	/**
 	 * Whether the big {@code Player#sendTitle} flash fires when a player enters a turf
-	 * ({@code settings.yml: Turf.Show_Enter_Title}). The action-bar announcement is sent regardless and is unaffected
+	 * ({@code turf_settings.yml: Show_Enter_Title}). The action-bar announcement is sent regardless and is unaffected
 	 * by this toggle.
 	 */
 	boolean isEnterTitleEnabled();

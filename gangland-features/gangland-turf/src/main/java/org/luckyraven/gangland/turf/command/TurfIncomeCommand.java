@@ -10,6 +10,7 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.gangland.turf.config.TurfSettings;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
@@ -31,9 +32,11 @@ class TurfIncomeCommand extends SubArgument {
 	private final TurfManager          turfs;
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
+	private final TurfSettings         settings;
 
 	protected TurfIncomeCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                            TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages) {
+	                            TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages,
+	                            TurfSettings settings) {
 		super(plugin, "income", tree, parent);
 
 		this.plugin   = plugin;
@@ -41,6 +44,7 @@ class TurfIncomeCommand extends SubArgument {
 		this.turfs      = turfs;
 		this.selections = selections;
 		this.messages   = messages;
+		this.settings   = settings;
 
 		this.addSubArgument(amountArgument());
 	}
@@ -87,7 +91,7 @@ class TurfIncomeCommand extends SubArgument {
 			              "turf", turf.getDisplayName(),
 			              "money_symbol", Settings.getMoneySymbol(),
 			              "amount", Settings.formatAmount(turf.getIncomeAmount()),
-			              "time", messages.formatDuration(Settings.getTurfIncomeIntervalMinutes() * 60L));
+			              "time", messages.formatDuration(settings.getIncomeIntervalMinutes() * 60L));
 		}, sender -> List.of("<amount>", "100", "500", "1000"));
 	}
 }

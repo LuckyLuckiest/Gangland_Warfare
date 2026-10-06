@@ -14,6 +14,7 @@ import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.turf.config.TurfSettings;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.listener.GangDisplayNameResolver;
@@ -46,6 +47,7 @@ public final class TurfCommand extends Command {
 	private final PowerupRegistry      powerupRegistry;
 	private final ActiveBuffManager    activeBuffs;
 	private final TurfPowerupManager   powerupNpcs;
+	private final TurfSettings         settings;
 	/**
 	 * Sub-arguments a runtime module attaches under {@code turf}. Empty when no module is installed — the core
 	 * never names them. {@code powerupnpc} used to come through here from cops-n-crooks; group I moved the turf-NPC
@@ -64,6 +66,7 @@ public final class TurfCommand extends Command {
 	                   PowerupRegistry powerupRegistry,
 	                   ActiveBuffManager activeBuffs,
 	                   TurfPowerupManager powerupNpcs,
+	                   TurfSettings settings,
 	                   DependencyContainer container) {
 		super(plugin, "turf", false);
 
@@ -77,6 +80,7 @@ public final class TurfCommand extends Command {
 		this.powerupRegistry = powerupRegistry;
 		this.activeBuffs     = activeBuffs;
 		this.powerupNpcs     = powerupNpcs;
+		this.settings        = settings;
 		this.contributions   = CommandContributions.from(container);
 
 		var list = getCommands().entrySet()
@@ -97,7 +101,7 @@ public final class TurfCommand extends Command {
 		Turf at = turfs.findAt(player.getLocation());
 		if (at != null) {
 			selections.get(player).setActiveTurfId(at.getId());
-			TurfInfoCommand.renderInfo(player, gangs, turfs, messages, at);
+			TurfInfoCommand.renderInfo(player, gangs, turfs, messages, settings, at);
 			return;
 		}
 		User<Player> user = users.findByPlayer(player);
@@ -110,11 +114,11 @@ public final class TurfCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		TurfWandCommand wand = new TurfWandCommand(getPlugin(), getArgumentTree(), getArgument(), selections);
+		TurfWandCommand wand = new TurfWandCommand(getPlugin(), getArgumentTree(), getArgument(), selections, settings);
 		TurfPos1Command pos1 = new TurfPos1Command(getPlugin(), getArgumentTree(), getArgument(), selections);
 		TurfPos2Command pos2 = new TurfPos2Command(getPlugin(), getArgumentTree(), getArgument(), selections);
 		TurfCreateCommand create = new TurfCreateCommand(getPlugin(), getArgumentTree(), getArgument(), turfs,
-		                                                 selections, messages);
+		                                                 selections, messages, settings);
 		TurfDeleteCommand delete = new TurfDeleteCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                 turfs, selections, messages,
 		                                                 garrisons, activeBuffs, powerupNpcs);
@@ -123,17 +127,17 @@ public final class TurfCommand extends Command {
 		TurfListCommand listSub = new TurfListCommand(getPlugin(), getArgumentTree(), getArgument(), turfs, gangs,
 		                                              messages);
 		TurfInfoCommand info = new TurfInfoCommand(getPlugin(), getArgumentTree(), getArgument(),
-		                                           turfs, gangs, selections, messages);
+		                                           turfs, gangs, selections, messages, settings);
 		TurfShowCommand show = new TurfShowCommand(getPlugin(), getArgumentTree(), getArgument(), turfs, selections,
-		                                           messages);
+		                                           messages, settings);
 		TurfStatusCommand status = new TurfStatusCommand(getPlugin(), getArgumentTree(), getArgument(),
-		                                                 turfs, gangs, selections, messages);
+		                                                 turfs, gangs, selections, messages, settings);
 		TurfSelectCommand select = new TurfSelectCommand(getPlugin(), getArgumentTree(), getArgument(), turfs,
 		                                                 selections, messages);
 		TurfTpCommand tp = new TurfTpCommand(getPlugin(), getArgumentTree(), getArgument(), turfs, selections,
 		                                     messages);
 		TurfIncomeCommand income = new TurfIncomeCommand(getPlugin(), getArgumentTree(), getArgument(), turfs,
-		                                                 selections, messages);
+		                                                 selections, messages, settings);
 		TurfGarrisonCommand garrison = new TurfGarrisonCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                       turfs, selections, messages, garrisons);
 		TurfBuffCommand buff = new TurfBuffCommand(getPlugin(), getArgumentTree(), getArgument(),
