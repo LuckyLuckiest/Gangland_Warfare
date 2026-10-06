@@ -40,6 +40,12 @@ public class YamlCiviliansConfigProvider {
 	                                   @Nullable ItemParser itemParser) {
 		this.defaultFireRateMultiplier = 1.0 / Math.max(1, aiTickRate);
 
+		// Sections parsed by GanglandCivilianSettings / GanglandCivilianSpawnConfigProvider (MovedSetting); touched here
+		// only so the unknown-key check treats them as known.
+		for (String section : List.of("Navigation", "Behaviour", "Spawn", "Spawner_Proximity")) {
+			reader.get(section).asMapping().orNull();
+		}
+
 		List<String> defaultCivilian = loadDefaultEntities(reader, "Civilian");
 		List<String> defaultPolice   = loadDefaultEntities(reader, "Police");
 
