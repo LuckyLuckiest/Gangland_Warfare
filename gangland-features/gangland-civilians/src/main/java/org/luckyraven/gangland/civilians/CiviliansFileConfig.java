@@ -7,6 +7,7 @@ import org.luckyraven.gangland.civilians.npc.config.CivilianSettings;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.Phase;
+import org.luckyraven.keystone.persistence.FileManager;
 
 /**
  * FILE-phase wiring for the civilians module. These two beans used to live in cops-n-crooks's own
@@ -18,12 +19,16 @@ import org.luckyraven.keystone.bean.Phase;
 public class CiviliansFileConfig {
 
 	@Bean
-	public CivilianSettings civilianSettings() {
-		return new GanglandCivilianSettings();
+	public CivilianSettings civilianSettings(FileManager fileManager) {
+		GanglandCivilianSettings settings = new GanglandCivilianSettings(fileManager);
+		fileManager.registerInitializer(settings);
+		return settings;
 	}
 
 	@Bean
-	public GanglandCivilianSpawnConfigProvider civilianSpawnConfigProvider() {
-		return new GanglandCivilianSpawnConfigProvider();
+	public GanglandCivilianSpawnConfigProvider civilianSpawnConfigProvider(FileManager fileManager) {
+		GanglandCivilianSpawnConfigProvider provider = new GanglandCivilianSpawnConfigProvider(fileManager);
+		fileManager.registerInitializer(provider);
+		return provider;
 	}
 }

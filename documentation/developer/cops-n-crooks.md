@@ -377,7 +377,7 @@ retreat cannot drop them through the per-player gap.
 
 #### Squad roles (0.13.0)
 
-`CopRole` (`npc/cop_roles.yml` `Roles`, built-in catalogue in `YamlCopConfigProvider.builtInRoles`) is picked per
+`CopRole` (`copsncrooks/cop_roles.yml` `Roles`, built-in catalogue in `YamlCopConfigProvider.builtInRoles`) is picked per
 spawn by `CopRole.nextRole(getSquadComposition(level), liveRoles)` in `CopManager.spawnTick`, counting only the cops the
 spawn count counts (a stranded RETURNING cop's role is refilled). The roles file is its own `FileHandler`
 (`CopsNCrooksYamlConfig`, written from the module jar when missing); `CopLoader` hands its reader to
@@ -1126,8 +1126,8 @@ double getTakeMoneyMultiplier()
 
 ### The chase (cops-n-crooks, 0.15.0)
 
-Package `org.luckyraven.gangland.copsncrooks.wanted`, configured by `ChaseConfig` (`npc/wanted.yml`, loaded by
-`ChaseConfigLoader`) and `WantedMessages` (`npc/wanted_messages.yml`); the beans live in `ChaseModuleConfig`,
+Package `org.luckyraven.gangland.copsncrooks.wanted`, configured by `ChaseConfig` (`copsncrooks/wanted.yml`, loaded by
+`ChaseConfigLoader`) and `WantedMessages` (`copsncrooks/wanted_messages.yml`); the beans live in `ChaseModuleConfig`,
 `HeatModuleConfig` and `EvasionModuleConfig`.
 
 | Piece | Class | Role |
@@ -1450,106 +1450,29 @@ public void onCuffed(CuffedEvent event) {
 
 ## Configuration
 
-### settings.yml (Cop/Wanted/Detainment sections)
+### Module-owned tuning (0.15.1)
 
-The following sections in `gangland-impl/src/main/resources/settings.yml` control the system. Feature modules access
-these via contract interfaces (`CopSettings`, `WantedSettings`, `BountySettings`, `CivilianSettings`).
+Since 0.15.1 the module reads its tuning from its own files, not `settings.yml`. The shipped files are the reference:
+every key there carries its comment and default, so copy key names from them rather than from this page.
 
-#### Wanted Section
+| File | Root | What it holds |
+|---|---|---|
+| `copsncrooks/cops.yml` | `Cops:` | `Count`, `Behaviour` (incl. `Guard_Radius`), `Spawn`, `Pursuit`, `Return`, `Navigation` |
+| `copsncrooks/detainment.yml` | `Detainment:` | jail capacity, transit delay, break-free, bribes, bail, sentence, fallback exit waypoint, sounds |
+| `copsncrooks/wanted.yml` | `Wanted:` | `Kill_Combo` (`Enable`, `Kill_Counter`, `Reset_After`) beside the chase/heat config |
 
-```yaml
-Wanted:
-   enable: true
-   repeating_timer: 60          # Base interval (seconds) for wanted decay
-   timer_multiplier_enabled: true
-   timer_multiplier: 1.5        # Timer interval scales by multiplier^level
-   take_money: false            # 0.15.0: Take_Money.Enable, default false
-   take_money_amount: 100.0     # Numbers for Take_Money.Formula; the formula prices a star drop
-   take_money_multiplier: 1.2
-   max_level: 5                 # Maximum wanted stars
-   increments: 1                # Stars added per incrementLevel()
-   kill_combo:
-      kill_counter: [3, 5, 7, 10, 15]   # Kills needed per level threshold
-      reset_after: 30                     # Seconds of inactivity before combo resets
-```
-
-#### Cop Behavior Section
-
-```yaml
-Cops:
-   max_cops_per_player: 8
-   cops_per_wanted_level: # Map of wanted level -> target cop count
-      1: 2
-      2: 3
-      3: 5
-      4: 6
-      5: 8
-   behaviour:
-      ai_tick_rate: 4            # Ticks between AI evaluations
-      spawn_check_rate: 60       # Ticks between spawn checks
-      cuff_radius: 3.5           # Blocks
-      max_cuff_attempts: 3       # Escapes across the group before it fights (0.12.0)
-      cuff_cooldown_ticks: 40    # Wind-up duration
-      alert_range: 32.0          # Blocks; ranged cops fire at anything seen this close (0.12.0)
-      combat_range: 5.0          # Melee engage distance only (0.12.0)
-      attack_cooldown_ticks: 10  # Melee swing cooldown, server ticks (read since 0.12.0)
-   spawn:
-      min_distance: 20.0
-      max_distance: 45.0
-      phase1_min_distance: 30.0
-      radius_shrink_step: 5.0
-      vertical_search_range: 10
-      spawn_y_offset: 0
-      min_open_horizontal_sides: 2
-      spawner_preference_radius: 40.0
-      visibility_check_distance: 30.0
-      phase1_attempts: 10
-      phase2_attempts: 5
-   return:
-      max_return_ticks: 200
-      station_arrival_distance: 3.0
-   navigation:
-      recalculation_ticks: 10
-      stuck_check_interval_ticks: 5
-      max_stuck_checks: 4
-      max_hopeless_stuck_checks: 8
-      hopeless_close_threshold: 5.0
-      min_progress_distance: 0.5
-      ranged_min_distance: 8.0
-      ranged_max_distance: 25.0
-      min_repath_after_loss_ticks: 2
-   weapon:
-      starting_ammo_magazines: 3
-```
-
-#### Detainment Section
-
-```yaml
-Detainment:
-   jail_max_capacity: 10        # Max players per jail cell
-```
-
-#### Civilian Section
-
-```yaml
-Civilians:
-   behaviour:
-      ai_enabled: true
-      ai_tick_rate: 4
-      spawner_check_interval: 40
-   spawn:
-      activation_radius: 48.0
-      despawn_radius: 64.0
-      max_npcs_per_spawner: 3
-      default_type_id: "pedestrian"
-```
+Each moved key is read through `MovedSetting` (gangland-api 2.2), so an old `settings.yml` value, or the
+`settings-old*.yml` backup Keystone writes on upgrade, still applies for one release with a warning. The full
+legacy-path to new-path table is in [`migration-0.15.1.md`](../migration-0.15.1.md). Code still reaches these values
+through the contract interfaces (`CopSettings`, `WantedSettings`, `CivilianSettings`); only the adapters behind them
+changed.
 
 ### cops.yml
 
 Per-tier cop configuration loaded by `CopLoader`. Since 0.12.0 `Cops` also carries the `Melee`, `Tactics`, `Radio`,
 `Backup` and `Retreat` blocks, and each tier `Difficulty`, `Fire_Rate_Multiplier` and an optional `Tactics` override.
 The shipped file and [the feature doc](../features/cops-n-crooks.md) list every key; the radio lines live in
-`npc/cop_radio_messages.yml`. The abridged example below predates those keys:
+`copsncrooks/cop_radio_messages.yml`. The abridged example below predates those keys:
 
 ```yaml
 tiers:

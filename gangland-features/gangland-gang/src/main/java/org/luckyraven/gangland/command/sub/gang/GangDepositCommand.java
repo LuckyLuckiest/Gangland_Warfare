@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -97,7 +98,7 @@ class GangDepositCommand extends SubArgument {
 
 				Gang       gang      = gangManager.getGang(user.getGangId());
 
-				double rate   = Settings.getGangContributionRate();
+				double rate   = GangSettings.getGangContributionRate();
 				int    length = String.valueOf((int) rate).length() - 1;
 				double round  = Math.pow(10, length);
 
@@ -109,7 +110,7 @@ class GangDepositCommand extends SubArgument {
 					user.sendMessage(Messages.CANNOT_TAKE_MORE_THAN_BALANCE.toString());
 					return;
 				} else if (gang.getEconomy().getAmount().add(argAmount)
-				               .compareTo(Settings.getGangMaxBalance()) > 0) {
+				               .compareTo(GangSettings.getGangMaxBalance()) > 0) {
 					user.sendMessage(Messages.CANNOT_EXCEED_MAXIMUM.toString());
 					return;
 				}

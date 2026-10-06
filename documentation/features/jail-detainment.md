@@ -46,7 +46,7 @@ After a player is handcuffed, the system (or an admin) jails them:
 4. On respawn (if the player dies while jailed), they are re-teleported to the jail and effects are reapplied.
 
 Each jail has a **capacity cap** — once full, no additional players can be sent there until someone is released. You can
-configure the capacity in `settings.yml`.
+configure the capacity in `copsncrooks/detainment.yml` (`Detainment.Jail.Max_Capacity`).
 
 ---
 
@@ -107,7 +107,7 @@ automatically.
   minutes base + 1 minute per wanted star. A five-star fugitive serves 8 minutes.
 - **Charge sheet (0.15.0)** — the arresting cops read out the crimes of the chase and fine the player from the
   **wallet only** (never the bank, never below zero): `Wanted.Charge_Sheet.Base + Per_Wanted_Level x stars` in
-  `npc/wanted.yml`, at most `Maximum`. Whatever the wallet could not cover is added to the sentence
+  `copsncrooks/wanted.yml`, at most `Maximum`. Whatever the wallet could not cover is added to the sentence
   (`Seconds_Per_Unpaid` seconds per unit of money, at most `Max_Extra_Seconds`). Example at 2 stars with the defaults:
   fine 700; a player holding 300 pays 300 and serves the 400 he could not pay as 40 extra seconds. A player who is dead
   at intake (the death bill was already paid) is not fined, nor is a player with no stars and no crimes (an admin
@@ -159,14 +159,14 @@ the player got out.
 
 ## Configuration
 
-The full detainment block lives in `settings.yml` under the top-level `Detainment:` key. Every subsection is
-tunable independently.
+The full detainment block lives in `copsncrooks/detainment.yml` under the top-level `Detainment:` key (it was in
+`settings.yml` until 0.15.1; a value still tuned there is used, with a console warning, until it is copied over). Every
+subsection is tunable independently. The guarding cop's radius moved to `cops.yml` as `Cops.Behaviour.Guard_Radius`.
 
 ```yaml
 Detainment:
    Transit:
       Delay_Ticks: 400                 # Ticks between handcuff and jail teleport
-      Guard_Radius: 5.0                # Blocks; cops stay within this radius during transit
    Break_Free:
       Taps_Required: 25
       Reset_Window_Ticks: 40
@@ -193,8 +193,8 @@ Detainment:
       Sentence_Complete: "BLOCK_BELL_USE"
 ```
 
-The fine itself is configured in `npc/wanted.yml` under `Wanted.Charge_Sheet` (`Enable`, `Base`, `Per_Wanted_Level`,
-`Maximum`, `Seconds_Per_Unpaid`, `Max_Extra_Seconds`); its text is in `npc/wanted_messages.yml`. See the
+The fine itself is configured in `copsncrooks/wanted.yml` under `Wanted.Charge_Sheet` (`Enable`, `Base`, `Per_Wanted_Level`,
+`Maximum`, `Seconds_Per_Unpaid`, `Max_Extra_Seconds`); its text is in `copsncrooks/wanted_messages.yml`. See the
 [Configuration Reference](../developer/configuration.md#wantedyml-npcwantedyml).
 
 Cuffing behavior (cop-side radius, attempts, cooldown) is configured per cop tier in `cops.yml`. See

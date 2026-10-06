@@ -3,9 +3,7 @@ package org.luckyraven.gangland.gadget.config;
 import lombok.CustomLog;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.util.Placeholder;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gadget.car.config.CarAddon;
-import org.luckyraven.gangland.gadget.contract.GadgetPhysicsConfigImpl;
 import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
 import org.luckyraven.gangland.gadget.grapple.message.GrappleMessages;
 import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
@@ -35,8 +33,13 @@ public class GadgetFileConfig {
 	}
 
 	@Bean
-	public GadgetPhysicsConfig gadgetPhysicsConfig(Settings settings) {
-		return new GadgetPhysicsConfigImpl();
+	public GadgetPhysicsConfig gadgetPhysicsConfig(FileManager fileManager, ModuleLoader moduleLoader) {
+		FileHandler handler = new FileHandler(plugin, "gadget_settings", "gadget", ".yml", moduleLoader.classLoader());
+		fileManager.addFile(handler, true);
+
+		GadgetSettings settings = new GadgetSettings(handler, fileManager);
+		fileManager.registerInitializer(settings);
+		return settings;
 	}
 
 	@Bean

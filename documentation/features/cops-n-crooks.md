@@ -121,7 +121,7 @@ with `Radio.Enabled: false`, `Backup.Enabled: false`, `Retreat.Enabled: false` a
 Each new cop takes a **role** inside its squad, laid over its tier: the role decides how the cop is dressed and armed,
 where it stands and how it fights, and it shows in the cop's name. Roles fill in the order of the wanted level's
 `Squad_Composition`; cops past the end of the list (backup, extra cops) take its last role. Everything about the roles
-lives in its own file, `npc/cop_roles.yml`, written on first start when it is missing (an older `cops.yml` is never
+lives in its own file, `copsncrooks/cop_roles.yml`, written on first start when it is missing (an older `cops.yml` is never
 touched). Delete the file and the same built-in roles apply.
 
 | Role         | From level | Looks like                                    | Gun by tier (3 / 4 / 5)        | Does                                                                                   |
@@ -209,7 +209,7 @@ blocks). Each line plays a short click sound.
 - **Shots fired (0.15.0):** the nearest cop of the hunted player's squad says where it heard a shot. See Shot Noise below.
 - **Resisting**, **retreat** and **field care** lines, as described above.
 
-Lines are throttled per squad and per player, so chat never floods. Every line is in `npc/cop_radio_messages.yml`
+Lines are throttled per squad and per player, so chat never floods. Every line is in `copsncrooks/cop_radio_messages.yml`
 (Spanish: `_es.yml`). Each key is a list that one entry is picked from at random, and `[]` silences that line.
 `Radio.Enabled: false` silences the radio for players but keeps responders and backup working.
 
@@ -217,8 +217,8 @@ Lines are throttled per squad and per player, so chat never floods. Every line i
 
 ## Losing the Cops and the Chase (0.15.0)
 
-The chase around a wanted player is configured in `npc/wanted.yml` (heat, evasion, HUD, charge sheet) and
-`npc/wanted_messages.yml`; see [Wanted & Bounty](./wanted-bounty.md) for the player-facing rules.
+The chase around a wanted player is configured in `copsncrooks/wanted.yml` (heat, evasion, HUD, charge sheet) and
+`copsncrooks/wanted_messages.yml`; see [Wanted & Bounty](./wanted-bounty.md) for the player-facing rules.
 
 - **Evasion reads the squad's sightings.** Every cop in the group shares what it sees. The evasion clock counts "no
   cop has seen you" from the squad's last sighting, and a cop that is walking home (`RETURNING`) does not count as
@@ -281,8 +281,18 @@ All commands require appropriate permissions.
 
 ## Configuration
 
-Cop behavior is split across two files: `cops.yml` (tier definitions and AI tuning) and `settings.yml` (cop count
-scaling).
+Cop behavior lives in `cops.yml`: tier definitions, AI tuning and, since 0.15.1, the cop count scaling, behaviour,
+spawn, pursuit, return and navigation knobs that used to be in `settings.yml` (same `Cops.*` paths; navigation is
+`Cops.Navigation`, a copy of `settings.yml` `NPC_Navigation`, and the guarding radius is `Cops.Behaviour.Guard_Radius`,
+formerly `Detainment.Transit.Guard_Radius`). The jail, bail, bribe and sentence knobs moved to `detainment.yml` and
+`Wanted.Kill_Combo` to `wanted.yml`. For one release a value still tuned in `settings.yml` is used, with a console
+warning naming the new file, while the module file holds the shipped default; copy it over and delete it from
+`settings.yml`.
+
+The module's own files (`cops.yml`, `cop_roles.yml`, `cop_radio_messages(_es).yml`, `wanted.yml`,
+`wanted_messages.yml`, `detainment.yml`) live in `plugins/Gangland_Warfare/copsncrooks/`. Older versions kept them in `npc/`; on the
+first boot after the update each one is moved from `npc/` to `copsncrooks/` with its values intact. If a file exists in
+both folders, the `copsncrooks/` one is used and the `npc/` copy is left alone with a console warning.
 
 ---
 
@@ -388,7 +398,7 @@ player who slipped away unseen from a spot the stranded cops could not reach is 
 
 ---
 
-### Roles and Squad_Composition (`npc/cop_roles.yml`, 0.13.0)
+### Roles and Squad_Composition (`copsncrooks/cop_roles.yml`, 0.13.0)
 
 Every key is optional; an entry under `Roles` is read key by key over the built-in role of the same name (a new name
 starts from a plain role). The shipped file lists the whole catalogue with a comment per key. A bad value (an unknown
@@ -450,7 +460,7 @@ Which gear a cop wears, slot by slot, and which weapon pool it draws from:
 On a melee tier step 2's `Weapon_Pool` is skipped (the cop keeps its melee weapon). A role pool with no vanilla item
 keeps the tier's vanilla items, which the cop holds when no Bartizan weapon resolves (Bartizan missing, unknown name).
 
-### AI Settings (`settings.yml` → `Cops.Behaviour`)
+### AI Settings (`cops.yml` → `Cops.Behaviour`)
 
 ```yaml
 Cops:
@@ -464,11 +474,12 @@ Cops:
       Alert_Range: 40.0             # Sight range: a cop sees a wanted player this close with line of sight; shared by the squad
       Combat_Range: 4.0             # Distance at which a melee cop starts a swing (ranged cops fire within Alert_Range)
       Attack_Cooldown_Ticks: 20     # Server ticks between melee swings
+      Guard_Radius: 5.0             # Blocks the guarding cop stays within the cuffed player (was Detainment.Transit)
 ```
 
 ---
 
-### Spawn Settings (`settings.yml` → `Cops.Spawn`)
+### Spawn Settings (`cops.yml` → `Cops.Spawn`)
 
 ```yaml
 Cops:
@@ -488,12 +499,11 @@ Cops:
 
 ---
 
-### Navigation Settings (`settings.yml` → `Cops.Navigation`)
+### Navigation Settings (`cops.yml` → `Cops.Navigation`)
 
 ```yaml
 Cops:
    Navigation:
-      Recalculation_Ticks: 10       # Ticks between pathfinding path recalculations
       Stuck_Check_Interval: 5       # AI ticks between movement-progress samples for stuck detection
       Max_Stuck_Checks: 3           # Consecutive stuck samples before the cop retries pathfinding
       Max_Hopeless_Stuck_Checks: 6  # Consecutive stuck samples before navigation is considered permanently failed
@@ -501,12 +511,13 @@ Cops:
       Min_Progress_Distance: 0.75   # Minimum blocks moved between samples to count as progress (not stuck)
       Ranged_Min_Distance: 7.0      # Ranged cops hold their firing position when target is closer than this
       Ranged_Max_Distance: 12.0     # Ranged cops hold position when target is farther than this
-      Min_Repath_After_Loss_Ticks: 2.0  # Minimum AI ticks before the cop re-paths after losing combat
 ```
+
+`Recalculation_Ticks` (10) and `Min_Repath_After_Loss_Ticks` (2) live in the same `Cops.Navigation` block; the old `settings.yml` `NPC_Navigation` values are honoured for one release.
 
 ---
 
-### Pursuit Settings (`settings.yml` → `Cops.Pursuit`)
+### Pursuit Settings (`cops.yml` → `Cops.Pursuit`)
 
 ```yaml
 Cops:
@@ -517,7 +528,7 @@ Cops:
 
 ---
 
-### Return Settings (`settings.yml` → `Cops.Return`)
+### Return Settings (`cops.yml` → `Cops.Return`)
 
 ```yaml
 Cops:
@@ -528,7 +539,7 @@ Cops:
 
 ---
 
-### Cop Count Scaling (`settings.yml` → `Cops.Count`)
+### Cop Count Scaling (`cops.yml` → `Cops.Count`)
 
 ```yaml
 Cops:

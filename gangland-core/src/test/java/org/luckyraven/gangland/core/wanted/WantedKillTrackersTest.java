@@ -10,8 +10,10 @@ import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Pins the seam-3 holder's inert-by-default contract: {@code EntityDamageListener} always constructs against
@@ -75,5 +77,60 @@ class WantedKillTrackersTest {
 		verify(delegate).countsForWanted(victim);
 		verify(delegate).recordKill(killer, wanted, victim, 30);
 		verify(delegate).resetCombo(victimId);
+	}
+
+	@Test
+	@DisplayName("api 2.2: a delegate reading its own combo settings gets every kill and never the legacy values")
+	void delegateReadingOwnComboSettings_ignoresLegacyValues() {
+		WantedKillTrackers trackers = new WantedKillTrackers(() -> false, () -> 45);
+		WantedKillTracker  delegate = mock(WantedKillTracker.class);
+		when(delegate.readsComboSettings()).thenReturn(true);
+		trackers.install(delegate);
+
+		Entity victim = mock(Entity.class);
+		Player killer = mock(Player.class);
+		Wanted wanted = mock(Wanted.class);
+
+		assertTrue(trackers.routesKills(), "routes although the legacy switch is off");
+		trackers.recordKill(killer, wanted, victim);
+
+		verify(delegate).recordKill(killer, wanted, victim, 0);
+	}
+
+	@Test
+	@DisplayName("a pre-2.2 delegate keeps the legacy settings.yml switch and reset window")
+	void legacyDelegate_getsTheLegacyValues() {
+		boolean[]          comboOn  = {false};
+		WantedKillTrackers trackers = new WantedKillTrackers(() -> comboOn[0], () -> 45);
+		WantedKillTracker  delegate = mock(WantedKillTracker.class);
+		trackers.install(delegate);
+
+		assertFalse(trackers.routesKills(), "combo off: the core's one-star path");
+		comboOn[0] = true;
+		assertTrue(trackers.routesKills(), "combo on: the delegate gets the kill");
+
+		Entity victim = mock(Entity.class);
+		Player killer = mock(Player.class);
+		Wanted wanted = mock(Wanted.class);
+		trackers.recordKill(killer, wanted, victim);
+
+		verify(delegate).recordKill(killer, wanted, victim, 45);
+	}
+
+	@Test
+	@DisplayName("a 2.1 delegate that applies the combo switch itself gets every kill, with the legacy reset window")
+	void switchApplyingDelegate_routesRegardless() {
+		WantedKillTrackers trackers = new WantedKillTrackers(() -> false, () -> 45);
+		WantedKillTracker  delegate = mock(WantedKillTracker.class);
+		when(delegate.appliesComboSwitch()).thenReturn(true);
+		trackers.install(delegate);
+
+		assertTrue(trackers.routesKills());
+		Entity victim = mock(Entity.class);
+		Player killer = mock(Player.class);
+		Wanted wanted = mock(Wanted.class);
+		trackers.recordKill(killer, wanted, victim);
+
+		verify(delegate).recordKill(killer, wanted, victim, 45);
 	}
 }

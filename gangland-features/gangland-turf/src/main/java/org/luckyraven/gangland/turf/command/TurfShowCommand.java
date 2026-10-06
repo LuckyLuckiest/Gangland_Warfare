@@ -8,7 +8,7 @@ import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
-import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.gangland.turf.config.TurfSettings;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
@@ -28,15 +28,18 @@ class TurfShowCommand extends SubArgument {
 	private final TurfManager          turfs;
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
+	private final TurfSettings         settings;
 
 	protected TurfShowCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                          TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages) {
+	                          TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages,
+	                          TurfSettings settings) {
 		super(plugin, "show", tree, parent);
 
 		this.plugin   = plugin;
 		this.turfs      = turfs;
 		this.selections = selections;
 		this.messages   = messages;
+		this.settings   = settings;
 	}
 
 	@Override
@@ -45,8 +48,8 @@ class TurfShowCommand extends SubArgument {
 			if (!(sender instanceof Player player)) {
 				return;
 			}
-			int    duration = Settings.getTurfVisualizationDurationSeconds();
-			String particle = Settings.getTurfVisualizationParticle();
+			int    duration = settings.getVisualizationDurationSeconds();
+			String particle = settings.getVisualizationParticle();
 
 			Selection selection = selections.get(player);
 			Integer   activeId  = selection.getActiveTurfId();

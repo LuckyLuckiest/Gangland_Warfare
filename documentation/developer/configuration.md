@@ -27,6 +27,27 @@ file is renamed with a `-old` suffix and a fresh default is generated.
 
 ---
 
+## Where module-owned settings live (0.15.1)
+
+Since 0.15.1 a key that only one runtime module reads lives in that module's own YAML, not in `settings.yml`. The
+`settings.yml` sections below for **Wanted.Kill_Combo, Cops, Detainment, Gang (except `Gang.Enable`), NPC Navigation,
+Civilians, Gadgets and Turf**, and `User.Bank.Rename_Fee`, describe the pre-0.15.1 layout: the shipped file no longer
+contains them. The full legacy path -> file -> path table is in [migration-0.15.1.md](../migration-0.15.1.md).
+
+| Module | File (under `plugins/Gangland_Warfare/`) |
+|---|---|
+| `cops-n-crooks` | `copsncrooks/wanted.yml`, `copsncrooks/cops.yml`, `copsncrooks/detainment.yml` |
+| `gangland-civilians` | `npc/civilians.yml` |
+| `gangland-turf` | `turf/turf_settings.yml` |
+| `gangland-gang` | `gang/gang_settings.yml` |
+| `gangland-gadget` | `gadget/gadget_settings.yml` |
+| `gangland-npc-shops` | `npc/banker_settings.yml` |
+
+The `Settings` getters for these keys stay in `gangland-api` (additive contract) but are `@Deprecated` and read
+`settings.yml` only.
+
+---
+
 ## settings.yml
 
 The main configuration file controlling all plugin systems.
@@ -355,7 +376,7 @@ Gadgets:
 ## cops.yml
 
 Defines the cop tiers and, since 0.12.0, the squad tactics, melee band, police radio, backup and retreat tuning;
-ships inside the cops-n-crooks module jar as `npc/cops.yml`. Abridged:
+ships inside the cops-n-crooks module jar as `copsncrooks/cops.yml`. Abridged:
 
 ```yaml
 Cops:
@@ -439,22 +460,22 @@ Cops:
 | `Names.First_Names` | 28 built-in names | First-name pool; `[]` = no first name, a missing key = the built-in pool |
 | `Stuck.*` | see above | Optional (0.13.0). A cop that has found no way to its player for `Recycle_Seconds` (at least 1), out of his view (cone plus clear line within `Cops.Spawn.Visibility_Check_Distance`, never under 24 blocks; past twice `Recycle_Seconds` within 24 blocks only), unseen by other players (past twice `Recycle_Seconds` the same 24-block view rule) and outside melee reach on his level with a clear line, is replaced; its spawner is skipped for `Avoid_Spawner_Seconds` (0 = never). `Enabled: false` never replaces |
 
-The radio lines are in `npc/cop_radio_messages.yml` (Spanish `_es.yml`). See
+The radio lines are in `copsncrooks/cop_radio_messages.yml` (Spanish `_es.yml`). See
 [Cops N Crooks](../features/cops-n-crooks.md) and [Migrating to 0.12.0](../migration-0.12.0.md).
 
 ---
 
-## wanted.yml (`npc/wanted.yml`)
+## wanted.yml (`copsncrooks/wanted.yml`)
 
-New in 0.15.0; ships inside the cops-n-crooks module jar and is copied to `plugins/Gangland_Warfare/npc/` on first boot.
+New in 0.15.0; ships inside the cops-n-crooks module jar and is copied to `plugins/Gangland_Warfare/copsncrooks/` on first boot.
 Every key falls back to the value shown, a bad value is reported once and defaulted, and each feature's `Enable: false`
-restores the 0.13.0 behaviour of that piece. Texts are in `npc/wanted_messages.yml` (below).
+restores the 0.13.0 behaviour of that piece. Texts are in `copsncrooks/wanted_messages.yml` (below).
 
 | Key | Default | Meaning |
 |---|---|---|
 | `Wanted.Heat.Enable` | `true` | `false` = no heat ledger; stars rise by the kill combo or one per counted kill |
 | `Wanted.Heat.Star_Thresholds` | `100, 250, 450, 700, 1000` | Heat needed for star 1, 2, 3 ...; a shorter list is stretched to the max level |
-| `Wanted.Heat.Streak_Bonus` | `1.5` | Multiplier for a crime inside `settings.yml` `Wanted.Kill_Combo.Reset_After` of the last; only while `Wanted.Kill_Combo.Enable` is true |
+| `Wanted.Heat.Streak_Bonus` | `1.5` | Multiplier for a crime inside `copsncrooks/wanted.yml` `Wanted.Kill_Combo.Reset_After` of the last; only while `Wanted.Kill_Combo.Enable` there is true |
 | `Wanted.Heat.Seen_By_Cop_Multiplier` | `1.5` | Multiplier when a cop saw the crime |
 | `Wanted.Heat.Turf_War_Multiplier` | `0.5` | Multiplier for a player kill inside a contested turf |
 | `Wanted.Heat.Assault_Repeat_Seconds` | `10` | Hitting the same cop again inside this is not a new crime |
@@ -477,7 +498,7 @@ Shipped crime weights (`Heat.Crimes`): `Brandish_Near_Cop` 25, `Assault_Civilian
 `Trespass_Restricted` 300, `Jailbreak` 450. 0.15.0 reports `Kill_Player`, `Kill_Civilian`, `Kill_Cop`, `Assault_Cop`
 and `Resisting_Arrest`; the others are read by later releases. A weight of 0 ignores that crime.
 
-`npc/wanted_messages.yml` holds `Hud.Bar.Seen` / `Searching` / `Evaded`, `Hud.Title`, `Hud.Card.Raise` /
+`copsncrooks/wanted_messages.yml` holds `Hud.Bar.Seen` / `Searching` / `Evaded`, `Hud.Title`, `Hud.Card.Raise` /
 `Stance_Cuffs` / `Stance_Shoot` / `Drop_Evasion` / `Drop_Decay` / `Drop_Other`, `Charge_Sheet.Header` / `Crime` / `Total` /
 `Paid` / `Extra_Time` / `Paperwork`, and `Crimes.<Id>` (including `Crimes.Unknown_Crime`, the card text when no crime is
 on record). Placeholders: `%stars%`, `%time%`, `%crime%`, `%tier%`, `%stance%`, `%count%`, `%amount%`, `%paid%`,

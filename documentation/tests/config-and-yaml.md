@@ -37,7 +37,7 @@ Run the three tests (regenerate / reload / corrupt) against each file below.
 ### NPCs
 
 - [ ] `npc/civilians.yml`
-- [ ] `npc/cops.yml`
+- [ ] `copsncrooks/cops.yml`
 - [ ] `npc/trader_traits.yml`
 
 ### Weapons

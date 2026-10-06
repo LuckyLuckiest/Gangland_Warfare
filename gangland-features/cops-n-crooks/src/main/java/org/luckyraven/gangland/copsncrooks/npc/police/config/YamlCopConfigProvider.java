@@ -30,8 +30,8 @@ import java.util.*;
  * <p>
  * Armor and weapon-pool entries are resolved through the shared {@link ItemParser} so that custom item syntax
  * ({@code weapon:rifle}, {@code LEATHER_HELMET\{color=blue\}}, etc.) is supported in addition to plain vanilla material
- * names. Cop-count scaling is delegated to {@link CopSettings}, whose implementation lives in {@code gangland-impl} and
- * reads from {@code settings.yml} via {@code SettingAddon}.
+ * names. Cop-count scaling and the Count/Behaviour/Spawn/Pursuit/Return/Navigation knobs come from {@link CopSettings},
+ * whose implementation reads them from the same cops.yml.
  */
 @CustomLog
 public class YamlCopConfigProvider implements CopConfigProvider {
@@ -138,7 +138,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	 * Primary positional-config constructor.
 	 *
 	 * @param copsReader positional reader over the cops.yml root mapping
-	 * @param rolesReader positional reader over the npc/cop_roles.yml root mapping; {@code null} (no file) gives the
+	 * @param rolesReader positional reader over the copsncrooks/cop_roles.yml root mapping; {@code null} (no file) gives the
 	 * 		built-in roles and compositions
 	 * @param report issue collector drained by the enclosing loader
 	 * @param copSettings cop-count-per-wanted-level provider (may be {@code null})
@@ -193,6 +193,14 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 		MappingNode copsSection = copsReader.get("Cops").asMapping().required().orNull();
 		NodeReader  cops        = copsSection != null ? NodeReader.of(copsSection, report) : null;
+
+		// 0.15.1: these blocks moved here from settings.yml and are read by CopSettings (GanglandCopSettings), not by
+		// this parser; touching them keeps the unknown-key sweep quiet
+		if (cops != null) {
+			for (String moved : List.of("Count", "Behaviour", "Spawn", "Pursuit", "Return", "Navigation")) {
+				cops.get(moved);
+			}
+		}
 
 		this.meleeProfile   = parseMeleeProfile(cops, report);
 		this.tacticsDefault = parseTacticsDefault(cops, report);
@@ -464,7 +472,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	}
 
 	/**
-	 * The built-in role catalogue: what a server without npc/cop_roles.yml gets, and what a {@code Roles.<Name>} entry
+	 * The built-in role catalogue: what a server without copsncrooks/cop_roles.yml gets, and what a {@code Roles.<Name>} entry
 	 * of the same name is read over. Each role's retreat threshold is laid over {@code retreat} ({@code Cops.Retreat}).
 	 * Each role keeps its identity piece (a dyed leather or gold helmet, the Medic's apple, the Defender's shield) on
 	 * every tier; its tier kits carry the armour and the gun up the levels (Lieutenant chain/iron, SWAT iron/diamond,
@@ -585,7 +593,7 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	}
 
 	/**
-	 * {@code Roles} (npc/cop_roles.yml) read over {@link #builtInRoles}, then {@code Squad_Composition} (or
+	 * {@code Roles} (copsncrooks/cop_roles.yml) read over {@link #builtInRoles}, then {@code Squad_Composition} (or
 	 * {@link #COMPOSITION_DEFAULTS} without one). {@code Roles_Enabled: false} turns roles off. No file: the built-ins.
 	 */
 	private void loadRoles(@Nullable NodeReader file, ConfigReport report, @Nullable ItemParser itemParser) {

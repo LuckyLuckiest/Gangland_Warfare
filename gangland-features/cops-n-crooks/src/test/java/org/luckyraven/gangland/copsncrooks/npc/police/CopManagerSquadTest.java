@@ -360,7 +360,7 @@ class CopManagerSquadTest {
 		return new CopNpc[] {cops.get(1), cops.get(2), replacement};
 	}
 
-	/** Squads fill {@code composition} ({@code Squad_Composition}, npc/cop_roles.yml); each spawn gets the role it was asked for. */
+	/** Squads fill {@code composition} ({@code Squad_Composition}, copsncrooks/cop_roles.yml); each spawn gets the role it was asked for. */
 	private void squadComposition(CopRole... composition) {
 		when(fx.provider.getSquadComposition(anyInt())).thenReturn(List.of(composition));
 		when(fx.spawner.spawnNearPlayer(any(), anyInt(), any(), any())).thenAnswer(inv -> {

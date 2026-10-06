@@ -1,12 +1,12 @@
 package org.luckyraven.gangland.gang.menu;
 
+import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.data.gang.GangItemSourceContribution;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangAlliance;
 import org.luckyraven.gangland.gang.GangFilterAdapter;
@@ -137,7 +137,7 @@ public final class GangMenuItemSourceContribution implements GangItemSourceContr
 		SearchFilter filter = filterStore.get(BINDING_GANGS, player);
 		List<Gang>   gangs  = filterApplier.apply(gangManager.getGangs().values(), filter, gangFilterAdapter);
 
-		String                     tail    = Settings.getGangRankTail();
+		String                     tail    = GangSettings.getGangRankTail();
 		List<Map<String, String>>  entries = new ArrayList<>(gangs.size());
 
 		for (Gang gang : gangs) {

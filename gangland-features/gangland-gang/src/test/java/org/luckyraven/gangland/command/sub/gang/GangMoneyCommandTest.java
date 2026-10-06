@@ -57,7 +57,8 @@ class GangMoneyCommandTest {
 	@BeforeEach
 	@SuppressWarnings("unchecked")
 	void setUp() {
-		GangSettings.bind(new FakeGangSettingsContract());
+		GangSettings.bind(new FakeGangSettingsContract().withContributionRate(1.0)
+		                                                .withMaxBalance(new BigDecimal("1000000")));
 		IdentitySettings.bind(new FakeIdentitySettingsContract());
 		Messages.init(new MessageProvider() {
 			@Override
@@ -73,8 +74,6 @@ class GangMoneyCommandTest {
 
 		settings = mockStatic(Settings.class, CALLS_REAL_METHODS);
 		settings.when(Settings::getMoneySymbol).thenReturn("$");
-		settings.when(Settings::getGangContributionRate).thenReturn(1.0);
-		settings.when(Settings::getGangMaxBalance).thenReturn(new BigDecimal("1000000"));
 
 		PluginManager pluginManager = mock(PluginManager.class);
 		Server        server        = mock(Server.class);

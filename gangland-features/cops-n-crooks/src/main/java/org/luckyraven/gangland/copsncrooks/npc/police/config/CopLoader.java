@@ -63,7 +63,7 @@ public class CopLoader extends FileLoader<CopConfig> {
 
 		ConfigReport report = new ConfigReport();
 		NodeReader   reader = FileHandlerReader.read(copsHandler, report);
-		// npc/cop_roles.yml: the role catalogue and squad compositions; without it, the built-in ones
+		// copsncrooks/cop_roles.yml: the role catalogue and squad compositions; without it, the built-in ones
 		FileHandler rolesHandler = fileManager.getFile("cop_roles");
 		NodeReader  roles        = rolesHandler != null && rolesHandler.isLoaded()
 		                           ? FileHandlerReader.read(rolesHandler, report) : null;

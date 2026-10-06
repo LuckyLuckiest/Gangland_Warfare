@@ -98,13 +98,13 @@ class CopRadioMessagesTest {
 		String[]         keys     = {"Fall_Back", "In_Cover", "Commander_Down", "Hit", "Medic_Moving",
 		                             "Covering_Fire", "Medic_Pinned", "Patched_Up"};
 		CopRadioMessages fallback = build("Lines: {}\n");
-		CopRadioMessages english  = build(shipped("npc/cop_radio_messages.yml"));
+		CopRadioMessages english  = build(shipped("copsncrooks/cop_radio_messages.yml"));
 
 		initializeSettingsLanguage("es");
 		JavaPlugin  plugin      = PluginMocks.plugin(tempDir);
 		FileManager fileManager = new FileManager(plugin);
-		writeFile(fileManager, plugin, "cop_radio_messages.yml", shipped("npc/cop_radio_messages.yml"));
-		writeFile(fileManager, plugin, "cop_radio_messages_es.yml", shipped("npc/cop_radio_messages_es.yml"));
+		writeFile(fileManager, plugin, "cop_radio_messages.yml", shipped("copsncrooks/cop_radio_messages.yml"));
+		writeFile(fileManager, plugin, "cop_radio_messages_es.yml", shipped("copsncrooks/cop_radio_messages_es.yml"));
 		CopRadioMessages spanish = new CopRadioMessages(fileManager);
 
 		for (String key : keys) {
@@ -119,8 +119,8 @@ class CopRadioMessagesTest {
 	@DisplayName("Regroup, Regroup_Push and Shots_Fired have lines in the code, English and Spanish, none needing a member")
 	void newLines_exist_andNeedNoMember() throws IOException {
 		CopRadioMessages fallback = build("Lines: {}\n");
-		CopRadioMessages english  = build(shipped("npc/cop_radio_messages.yml"));
-		String           spanish  = shipped("npc/cop_radio_messages_es.yml");
+		CopRadioMessages english  = build(shipped("copsncrooks/cop_radio_messages.yml"));
+		String           spanish  = shipped("copsncrooks/cop_radio_messages_es.yml");
 
 		for (String key : new String[]{"Regroup", "Regroup_Push", "Shots_Fired"}) {
 			assertFalse(fallback.lines(key).isEmpty(), "default " + key);
@@ -135,7 +135,7 @@ class CopRadioMessagesTest {
 	@DisplayName("Fall_Back no longer says \"I'm hit\": that is the field-care Hit line, and one hit crossing both thresholds must not say it twice")
 	void fallBack_doesNotDuplicateHit() throws IOException {
 		CopRadioMessages fallback = build("Lines: {}\n");
-		CopRadioMessages english  = build(shipped("npc/cop_radio_messages.yml"));
+		CopRadioMessages english  = build(shipped("copsncrooks/cop_radio_messages.yml"));
 
 		assertTrue(fallback.lines("Fall_Back").stream().noneMatch(line -> line.contains("I'm hit")));
 		assertTrue(english.lines("Fall_Back").stream().noneMatch(line -> line.contains("I'm hit")));
@@ -144,7 +144,7 @@ class CopRadioMessagesTest {
 	@Test
 	@DisplayName("the code defaults, the English file and the Spanish file carry the same line kinds, each with the same placeholders")
 	void defaultsEnglishAndSpanish_haveParity() throws IOException {
-		String english = shipped("npc/cop_radio_messages.yml");
+		String english = shipped("copsncrooks/cop_radio_messages.yml");
 		java.util.Set<String> keys = new java.util.TreeSet<>();
 		java.util.regex.Matcher m = java.util.regex.Pattern.compile("(?m)^ {3}([A-Z][A-Za-z_]+):\\s*$").matcher(
 				english.substring(english.indexOf("\nLines:")));
@@ -157,7 +157,7 @@ class CopRadioMessagesTest {
 		JavaPlugin  plugin      = PluginMocks.plugin(tempDir);
 		FileManager fileManager = new FileManager(plugin);
 		writeFile(fileManager, plugin, "cop_radio_messages.yml", english);
-		writeFile(fileManager, plugin, "cop_radio_messages_es.yml", shipped("npc/cop_radio_messages_es.yml"));
+		writeFile(fileManager, plugin, "cop_radio_messages_es.yml", shipped("copsncrooks/cop_radio_messages_es.yml"));
 		CopRadioMessages es = new CopRadioMessages(fileManager);
 
 		for (String key : keys) {
@@ -196,7 +196,7 @@ class CopRadioMessagesTest {
 	@Test
 	@DisplayName("no variant of any line, in the code defaults, the English file or the Spanish file, names a placeholder its caller does not fill")
 	void everyVariant_usesOnlyPlaceholdersItsCallerFills() throws IOException {
-		String english = shipped("npc/cop_radio_messages.yml");
+		String english = shipped("copsncrooks/cop_radio_messages.yml");
 		java.util.Set<String> keys = new java.util.TreeSet<>();
 		java.util.regex.Matcher m = java.util.regex.Pattern.compile("(?m)^ {3}([A-Z][A-Za-z_]+):\\s*$").matcher(
 				english.substring(english.indexOf("\nLines:")));
@@ -208,7 +208,7 @@ class CopRadioMessagesTest {
 		JavaPlugin  plugin      = PluginMocks.plugin(tempDir);
 		FileManager fileManager = new FileManager(plugin);
 		writeFile(fileManager, plugin, "cop_radio_messages.yml", english);
-		writeFile(fileManager, plugin, "cop_radio_messages_es.yml", shipped("npc/cop_radio_messages_es.yml"));
+		writeFile(fileManager, plugin, "cop_radio_messages_es.yml", shipped("copsncrooks/cop_radio_messages_es.yml"));
 		CopRadioMessages es = new CopRadioMessages(fileManager);
 
 		for (String key : keys) {

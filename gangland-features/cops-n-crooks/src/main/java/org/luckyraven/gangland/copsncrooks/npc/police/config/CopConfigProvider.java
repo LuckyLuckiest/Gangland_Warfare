@@ -315,7 +315,7 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 
 	/**
 	 * The roles a squad hunting at {@code wantedLevel} fills, in order ({@code Squad_Composition} in
-	 * npc/cop_roles.yml, see {@link CopRole#nextRole}); {@code null} with roles off, so every cop spawns as its plain
+	 * copsncrooks/cop_roles.yml, see {@link CopRole#nextRole}); {@code null} with roles off, so every cop spawns as its plain
 	 * tier.
 	 */
 	default @Nullable List<CopRole> getSquadComposition(int wantedLevel) {

@@ -61,7 +61,7 @@ class WantedMessagesTest {
 	@Test
 	@DisplayName("the shipped file's Unknown_Crime line is the one crimeName(\"Unknown_Crime\") reads")
 	void shippedUnknownCrime_isReadable() throws IOException {
-		String shipped = Files.readString(Path.of("src/main/resources/npc/wanted_messages.yml"), StandardCharsets.UTF_8);
+		String shipped = Files.readString(Path.of("src/main/resources/copsncrooks/wanted_messages.yml"), StandardCharsets.UTF_8);
 
 		assertEquals("Reported crime", messages(shipped).crimeName("Unknown_Crime"));
 	}

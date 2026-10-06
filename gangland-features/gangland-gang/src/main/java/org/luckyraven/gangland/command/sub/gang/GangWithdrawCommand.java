@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -97,7 +98,7 @@ class GangWithdrawCommand extends SubArgument {
 
 				Gang       gang      = gangManager.getGang(user.getGangId());
 
-				double rate   = Settings.getGangContributionRate();
+				double rate   = GangSettings.getGangContributionRate();
 				int    length = String.valueOf((int) rate).length() - 1;
 				double round  = Math.pow(10, length);
 

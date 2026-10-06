@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * {@link ChaseConfig}: the in-code defaults equal the shipped {@code npc/wanted.yml}, every block overrides key by key,
+ * {@link ChaseConfig}: the in-code defaults equal the shipped {@code copsncrooks/wanted.yml}, every block overrides key by key,
  * and the small lookup helpers the heat ledger, evasion clock and charge sheet call behave at their edges.
  */
 @DisplayName("ChaseConfig")
@@ -41,11 +41,11 @@ class ChaseConfigTest {
 	}
 
 	@Test
-	@DisplayName("the shipped npc/wanted.yml parses to exactly the in-code default, without issues")
+	@DisplayName("the shipped copsncrooks/wanted.yml parses to exactly the in-code default, without issues")
 	void parse_bundledFile_equalsDefault() throws IOException {
 		String yaml;
-		try (InputStream in = getClass().getClassLoader().getResourceAsStream("npc/wanted.yml")) {
-			assertNotNull(in, "npc/wanted.yml must ship in the module jar");
+		try (InputStream in = getClass().getClassLoader().getResourceAsStream("copsncrooks/wanted.yml")) {
+			assertNotNull(in, "copsncrooks/wanted.yml must ship in the module jar");
 			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
 		}
 		ConfigReport report = new ConfigReport();

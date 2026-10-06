@@ -24,6 +24,16 @@ public final class PlaceholderContributions {
 		return new PlaceholderContributions(found == null ? List.of() : found);
 	}
 
+	/** The first non-null playerless answer from any contribution, or {@code null} if none owns it. */
+	@Nullable
+	public String resolveSetting(String parameter) {
+		for (PlaceholderContribution contribution : contributions) {
+			String value = contribution.resolveSetting(parameter);
+			if (value != null) return value;
+		}
+		return null;
+	}
+
 	public static PlaceholderContributions none() {
 		return new PlaceholderContributions(List.of());
 	}

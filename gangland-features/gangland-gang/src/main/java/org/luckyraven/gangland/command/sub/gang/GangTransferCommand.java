@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -12,7 +13,6 @@ import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.Member;
@@ -87,11 +87,11 @@ class GangTransferCommand extends SubArgument {
 				return;
 			}
 
-			Rank tail = rankManager.get(Settings.getGangRankTail());
+			Rank tail = rankManager.get(GangSettings.getGangRankTail());
 			if (tail == null) return;
 
 			if (userMember.getRank() == null || !userMember.getRank().match(tail.getUsedId())) {
-				user.sendMessage(Messages.NOT_OWNER.toString().replace("%tail%", Settings.getGangRankTail()));
+				user.sendMessage(Messages.NOT_OWNER.toString().replace("%tail%", GangSettings.getGangRankTail()));
 				return;
 			}
 
@@ -147,13 +147,13 @@ class GangTransferCommand extends SubArgument {
 				return;
 			}
 
-			Rank tail = rankManager.get(Settings.getGangRankTail());
+			Rank tail = rankManager.get(GangSettings.getGangRankTail());
 			if (tail == null) return;
 
 			// Re-verify ownership — the player may have been demoted (or had their rank edited) between the request
 			// and the confirm.
 			if (userMember.getRank() == null || !userMember.getRank().match(tail.getUsedId())) {
-				user.sendMessage(Messages.NOT_OWNER.toString().replace("%tail%", Settings.getGangRankTail()));
+				user.sendMessage(Messages.NOT_OWNER.toString().replace("%tail%", GangSettings.getGangRankTail()));
 				return;
 			}
 

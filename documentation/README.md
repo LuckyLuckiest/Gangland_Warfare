@@ -66,7 +66,7 @@ In-depth technical documentation for developers working on the codebase.
 
 Bartizan integration (what the core gets from the weapons plugin, and what degrades without it) is documented in
 [`bartizan-integration.md`](./bartizan-integration.md); server-owner migration notes are in
-[`migration-0.9.0.md`](./migration-0.9.0.md) and [`migration-0.15.0.md`](./migration-0.15.0.md) (upgrading from 0.13.0 to 0.15.0, the Cops N Crooks chase). Recoil is documented in
+[`migration-0.9.0.md`](./migration-0.9.0.md) and [`migration-0.15.0.md`](./migration-0.15.0.md) (upgrading from 0.13.0 to 0.15.0, the Cops N Crooks chase), [`migration-0.15.1.md`](./migration-0.15.1.md) (module-owned settings). Recoil is documented in
 [Version Compatibility](./developer/compatibility.md), now a Bartizan-side reflective packet call rather than an
 NMS adapter this repo ships.
 

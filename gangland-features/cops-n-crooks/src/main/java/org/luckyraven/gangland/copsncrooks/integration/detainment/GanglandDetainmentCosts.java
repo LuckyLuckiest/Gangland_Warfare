@@ -1,80 +1,85 @@
 package org.luckyraven.gangland.copsncrooks.integration.detainment;
 
 import org.luckyraven.gangland.copsncrooks.detainment.economy.DetainmentCostsContract;
-import org.luckyraven.gangland.file.configuration.Settings;
 
 /**
- * Delegates every detainment cost / timing knob to the static {@link Settings} fields populated from settings.yml.
+ * Delegates every detainment cost / timing knob to {@link DetainmentSettings} ({@code copsncrooks/detainment.yml}).
  */
 public final class GanglandDetainmentCosts implements DetainmentCostsContract {
 
+	private final DetainmentSettings settings;
+
+	public GanglandDetainmentCosts(DetainmentSettings settings) {
+		this.settings = settings;
+	}
+
 	@Override
 	public int getTransitDelayTicks() {
-		return Settings.getDetainmentTransitDelayTicks();
+		return settings.getTransitDelayTicks();
 	}
 
 	@Override
 	public double getHandcuffBribeBaseCost() {
-		return Settings.getDetainmentHandcuffBribeBaseCost();
+		return settings.getHandcuffBribeBaseCost();
 	}
 
 	@Override
 	public double getHandcuffBribePerLevel() {
-		return Settings.getDetainmentHandcuffBribePerLevel();
+		return settings.getHandcuffBribePerLevel();
 	}
 
 	@Override
 	public double getBailBaseCost() {
-		return Settings.getDetainmentBailBaseCost();
+		return settings.getBailBaseCost();
 	}
 
 	@Override
 	public double getBailPerLevel() {
-		return Settings.getDetainmentBailPerLevel();
+		return settings.getBailPerLevel();
 	}
 
 	@Override
 	public double getJailBribeBaseCost() {
-		return Settings.getDetainmentJailBribeBaseCost();
+		return settings.getJailBribeBaseCost();
 	}
 
 	@Override
 	public double getJailBribePerLevel() {
-		return Settings.getDetainmentJailBribePerLevel();
+		return settings.getJailBribePerLevel();
 	}
 
 	@Override
 	public double getJailBribeSuccessChance() {
-		return Settings.getDetainmentJailBribeSuccessChance();
+		return settings.getJailBribeSuccessChance();
 	}
 
 	@Override
 	public int getJailBribeFailPenaltySeconds() {
-		return Settings.getDetainmentJailBribeFailPenaltySeconds();
+		return settings.getJailBribeFailPenaltySeconds();
 	}
 
 	@Override
 	public int getSentenceBaseSeconds() {
-		return Settings.getDetainmentSentenceBaseSeconds();
+		return settings.getSentenceBaseSeconds();
 	}
 
 	@Override
 	public int getSentencePerWantedLevelSeconds() {
-		return Settings.getDetainmentSentencePerWantedLevelSeconds();
+		return settings.getSentencePerWantedLevelSeconds();
 	}
 
 	@Override
 	public int getBreakFreeTapsRequired() {
-		return Settings.getDetainmentBreakFreeTapsRequired();
+		return settings.getBreakFreeTapsRequired();
 	}
 
 	@Override
 	public int getBreakFreeResetWindowTicks() {
-		return Settings.getDetainmentBreakFreeResetWindowTicks();
+		return settings.getBreakFreeResetWindowTicks();
 	}
 
 	@Override
 	public String getFallbackExitWaypoint() {
-		return Settings.getDetainmentFallbackExitWaypoint();
+		return settings.getFallbackExitWaypoint();
 	}
 }

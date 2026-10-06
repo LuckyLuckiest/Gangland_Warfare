@@ -14,7 +14,7 @@
 #
 # Each entry under Cops.Tiers defines a cop NPC tier, escalating in difficulty.
 # Tiers are assigned to spawn points and determine NPC stats and equipment. Squad roles (Medic, Marksman, ...), their
-# gear and weapons per tier, and the squad compositions live in npc/cop_roles.yml; a role's gear and weapons replace
+# gear and weapons per tier, and the squad compositions live in copsncrooks/cop_roles.yml; a role's gear and weapons replace
 # the tier's Wearables and Weapon_Pool slot by slot.
 #
 # Fields:
@@ -38,14 +38,132 @@
 #   Tactics:        Per-tier squad-tactics override, read over Cops.Tactics below (see its own comments).
 #   Fire_Rate_Multiplier: Gun cadence as a fraction of the weapon's own (player) fire rate, on top of the
 #                   Difficulty's fire rate. 1.0 = as fast as a player holding the gun; 0.1 = a tenth as often.
-#                   Must be above 0. When omitted, 1 / settings.yml Cops.Behaviour.AI_Tick_Rate.
+#                   Must be above 0. When omitted, 1 / Cops.Behaviour.AI_Tick_Rate (below).
 #                   The shipped 0.1 keeps the pre-0.12 time-to-kill: NPC guns used to advance one weapon tick
 #                   per cop AI tick (AI_Tick_Rate: 10), i.e. a tenth of the weapon's rate. A vanilla BOW/CROSSBOW
 #                   (no Bartizan weapon) counts from a 15-tick base, so 0.1 fires every 150 ticks at NORMAL (7.5 s),
 #                   exactly as before.
 # ============================================
 Cops:
-   # Melee band for every cop swing. The cooldown is settings.yml Cops.Behaviour.Attack_Cooldown_Ticks.
+   # Count, Behaviour, Spawn, Pursuit, Return and Navigation moved here from settings.yml in 0.15.1. A value still
+   # tuned in settings.yml, or in the settings-old.yml backup the upgrade leaves, is used (console warning) until it
+   # is copied here; delete it there afterwards.
+   Count:
+      # Set to true to evaluate the Formula string below instead of the linear Base/Per_Level/Max calculation.
+      Formula_Enabled: false
+      # Formula evaluated when Formula_Enabled is true.
+      # Available variables: level, base, perLevel, max
+      # Example: "base + (level - 1) * perLevel" (equivalent to the built-in linear formula)
+      Formula: "base + (level - 1) * perLevel"
+      # Cops at wanted level 1 (used for both the linear formula and as the 'base' variable)
+      Base: 2
+      # Additional cops per wanted level above 1 (used for both modes, exposed as 'perLevel')
+      Per_Level: 1
+      # Hard cap - result is always clamped to this value
+      Max: 8
+
+   # Core behavior values shared across all cop tiers.
+   Behaviour:
+      # Hard cap on the number of cop NPCs active per wanted player at any time.
+      Max_Per_Player: 8
+      # Game ticks between each AI evaluation cycle. Lower = faster reactions, higher CPU cost.
+      AI_Tick_Rate: 10
+      # Game ticks between each check that decides whether to spawn more cops.
+      Spawn_Check_Rate: 40
+      # Default radius within which a cop can attempt to cuff the target (blocks). Tiers may override this.
+      Cuff_Radius: 3.0
+      # How many cuff attempts a cop makes before giving up and switching to combat.
+      Max_Cuff_Attempts: 3
+      # Game ticks the cop waits between consecutive cuff attempts.
+      Cuff_Cooldown_Ticks: 100
+      # Sight range (blocks): a cop sees a wanted player within this distance when it has line of sight, and
+      # every sighting is shared with the other cops chasing that player.
+      Alert_Range: 40.0
+      # Distance at which a MELEE cop may start an attack. Ranged cops fire at anything they can see within
+      # Alert_Range. A swing lands only within Cops.Melee.Reach (below).
+      Combat_Range: 4.0
+      # Game ticks between melee attacks.
+      Attack_Cooldown_Ticks: 20
+      # Radius (blocks) the guarding cop tries to stay within the cuffed player.
+      # (Formerly settings.yml Detainment.Transit.Guard_Radius.)
+      Guard_Radius: 5.0
+
+   # Controls where cop NPCs spawn relative to the target player.
+   Spawn:
+      # Minimum distance from the player to spawn a cop (blocks).
+      Min_Distance: 10.0
+      # Maximum distance from the player to spawn a cop (blocks).
+      Max_Distance: 50.0
+      # Minimum ring distance used during phase-1 (preferred-ring, behind-player) spawn attempts (blocks).
+      Phase1_Min_Distance: 30.0
+      # Amount the ring radius shrinks per phase-2 iteration (blocks).
+      Radius_Shrink_Step: 5.0
+      # Vertical range searched above/below the player's Y level to find valid ground (blocks).
+      Vertical_Search_Range: 10
+      # Y-offset added to the player's Y when searching for spawn ground. 0 = same level as player.
+      Y_Offset: 0
+      # Minimum number of open horizontal sides required at a spawn position.
+      Min_Open_Sides: 2
+      # Radius within which a registered cop spawner is preferred over a random position (blocks).
+      Spawner_Preference_Radius: 80.0
+      # Distance within which another player triggers the visibility check during despawn (blocks).
+      Visibility_Check_Distance: 48.0
+      # Number of attempts in phase-1 (preferred ring, behind-player) of spawn location selection.
+      Phase1_Attempts: 20
+      # Number of attempts per shrink step in phase-2 of spawn location selection.
+      Phase2_Attempts: 15
+      # Maximum |spawnY - playerY| allowed for a chosen spawn location (blocks). The vertical search
+      # may scan further to locate ground (see Vertical_Search_Range) but the resulting position is
+      # rejected if the cop ends up too far above or below the player — prevents cops from spawning
+      # on a rooftop while the player is on the street, or vice-versa.
+      Max_Y_Diff: 4.0
+      # Maximum |spawnerY - playerY| allowed when picking a registered cop spawner (blocks). Filters
+      # out spawners whose Y is too far from the player so the spawned cop can plausibly path to them.
+      # Generous default so a roof-vs-ground-floor pair both apply, but a tower 25+ blocks above the
+      # street is excluded.
+      Spawner_Max_Y_Diff: 16.0
+
+   # Controls when a pursuing cop gives up chasing its target and transitions to RETURNING.
+   # Acts as a final-fallback leash so stuck/unreachable cops don't occupy the per-player cap forever.
+   Pursuit:
+      # Distance from the target (blocks) beyond which the pursuing cop gives up.
+      Max_Distance: 80.0
+      # AI ticks a pursuing cop may stay stuck while no cop chasing the same player can see them before it gives up
+      # (the spawner replaces it). Ticks where it moves or anyone sees the player reset the count.
+      # Default 120 = ~60 s at AI_Tick_Rate: 10 (10 game ticks per AI tick, 20 TPS).
+      Max_Ticks: 120
+
+   # Controls how a cop returns to its station and despawns after the target is detained.
+   Return:
+      # Maximum AI ticks the cop waits before being force-despawned. (600 = ~300 s at the default AI_Tick_Rate: 10)
+      # A cop whose way back to the station has no route despawns sooner, after Cops.Stuck.Recycle_Seconds.
+      Max_Ticks: 600
+      # Distance to the station at which the cop considers itself arrived and attempts to despawn (blocks).
+      Station_Arrival_Distance: 3.0
+
+   # Pathfinding and stuck detection for cops: the cops' own copy of settings.yml NPC_Navigation (civilians keep
+   # theirs).
+   Navigation:
+      # Ticks between navigation path recalculations. Lower = more responsive but higher CPU cost.
+      Recalculation_Ticks: 10
+      # Ticks a cop waits before re-pathing after losing its route.
+      Min_Repath_After_Loss_Ticks: 2
+      # AI ticks between movement-progress samples for stuck detection.
+      Stuck_Check_Interval: 5
+      # Consecutive stuck samples required before navigation is considered stuck.
+      Max_Stuck_Checks: 3
+      # Consecutive stuck samples required before navigation is considered permanently hopeless.
+      Max_Hopeless_Stuck_Checks: 6
+      # Distance (blocks) below which a hopeless NPC can still navigate to the target directly.
+      Hopeless_Close_Threshold: 8.0
+      # Minimum distance the NPC must travel between samples to count as progress (blocks).
+      Min_Progress_Distance: 0.75
+      # Ranged cops hold their firing position when the target is within this distance range (blocks).
+      # A role in copsncrooks/cop_roles.yml can set its own band.
+      Ranged_Min_Distance: 7.0
+      Ranged_Max_Distance: 12.0
+
+   # Melee band for every cop swing. The cooldown is Cops.Behaviour.Attack_Cooldown_Ticks (above).
    Melee:
       # A swing lands only when the cop is at most this many blocks from the target (feet to feet).
       Reach: 3.0
@@ -195,7 +313,7 @@ Cops:
    # on the radio.
    Names:
       # %rank% = the tier's Display_Name, %role% = the cop's squad role as its coloured symbol and word (Display in
-      # npc/cop_roles.yml; for a cop with no role it goes away with the extra space), %name% = a first name from
+      # copsncrooks/cop_roles.yml; for a cop with no role it goes away with the extra space), %name% = a first name from
       # First_Names, %badge% = 1000 + the NPC id (unique among live NPCs). Remove %role% to hide the role.
       Format: "%rank% %role% &f%name% &7#%badge%"
       # Leave the list empty ([]) for no first name ("Officer #1592"); remove the key for the built-in names.
@@ -233,7 +351,7 @@ Cops:
       Enabled: true
       # Seconds a cop may find no way to the suspect before it is taken off the map and a new one is sent from a
       # spot closer to his level (at least 1). A cop he is looking at (in front of him, clear line, within
-      # Cops.Spawn.Visibility_Check_Distance of settings.yml) is kept; past twice this, only within 24 blocks.
+      # Cops.Spawn.Visibility_Check_Distance above) is kept; past twice this, only within 24 blocks.
       # A cop returning to its station that finds no way there for this long despawns too (Return.Max_Ticks is the
       # final backstop).
       Recycle_Seconds: 12

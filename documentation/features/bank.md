@@ -114,7 +114,9 @@ Basic:
    Monthly_Loan_Amount: 2_000
 ```
 
-### Bank Settings (`settings.yml` → `User.Bank`)
+### Bank Settings (Account/Economy in `settings.yml`, Banker in `npc/banker_settings.yml`)
+
+In `settings.yml`:
 
 ```yaml
 User:
@@ -124,8 +126,13 @@ User:
    Bank:
       Initial_Balance: 0               # bank balance granted on account creation
       Create_Cost: 5_000               # charged from cash when a player creates their bank row
-      Rename_Fee: 1_000                # charged from cash on every rename at a Banker. 0 disables.
       Reset_Period: 86_400             # rolling-window length in seconds (86 400 = 24h)
+```
+
+In `npc/banker_settings.yml`:
+
+```yaml
+Rename_Fee: 1_000                      # charged from cash on every rename at a Banker. 0 disables.
 ```
 
 **Rolling-window vs. midnight:** the rolling window measures from the player's **first** transaction in the

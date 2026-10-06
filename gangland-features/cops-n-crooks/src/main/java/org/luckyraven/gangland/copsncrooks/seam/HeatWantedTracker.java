@@ -7,12 +7,12 @@ import org.luckyraven.gangland.civilians.npc.entity.EntityMark;
 import org.luckyraven.gangland.civilians.npc.entity.EntityMarks;
 import org.luckyraven.gangland.copsncrooks.combo.KillCombo;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
+import org.luckyraven.gangland.copsncrooks.wanted.config.KillComboSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.core.wanted.WantedKillTracker;
 import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.gangland.crime.Crimes;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 
@@ -67,6 +67,16 @@ public final class HeatWantedTracker implements WantedKillTracker {
 		return true;
 	}
 
+	/** Kill_Combo.Enable and Reset_After come from copsncrooks/wanted.yml (0.15.1), not from the core. */
+	@Override
+	public boolean readsComboSettings() {
+		return true;
+	}
+
+	/**
+	 * @param resetAfterSeconds ignored: the core passes 0 because {@link #readsComboSettings()} is true; the combo uses
+	 * 		wanted.yml's {@code Wanted.Kill_Combo.Reset_After}
+	 */
 	@Override
 	public void recordKill(Player killer, Wanted wanted, Entity victim, int resetAfterSeconds) {
 		boolean realPlayer = victim instanceof Player && !NpcSupport.isNpc(victim);
@@ -74,8 +84,9 @@ public final class HeatWantedTracker implements WantedKillTracker {
 		if (exemptsKill(killer, victim)) return;
 
 		if (!config.get().heat().enabled()) {
-			if (Settings.isWantedKillComboEnabled()) {
-				killCombo.recordKill(killer, wanted, victim, resetAfterSeconds);
+			KillComboSettings combo = config.getKillCombo();
+			if (combo.enabled()) {
+				killCombo.recordKill(killer, wanted, victim, combo.resetAfterSeconds());
 				return;
 			}
 

@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -11,7 +12,6 @@ import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.Member;
@@ -105,7 +105,7 @@ class GangLeaveCommand extends SubArgument {
 			// Re-verify ownership — between hint and confirm the player may have been promoted to owner.
 			if (member.getRank() == null) return;
 
-			Rank tail = rankManager.get(Settings.getGangRankTail());
+			Rank tail = rankManager.get(GangSettings.getGangRankTail());
 			if (tail == null) return;
 
 			if (member.getRank().match(tail.getUsedId())) {
@@ -142,7 +142,7 @@ class GangLeaveCommand extends SubArgument {
 
 		if (member.getRank() == null) return false;
 
-		Rank tail = rankManager.get(Settings.getGangRankTail());
+		Rank tail = rankManager.get(GangSettings.getGangRankTail());
 		if (tail == null) return false;
 
 		if (member.getRank().match(tail.getUsedId())) {

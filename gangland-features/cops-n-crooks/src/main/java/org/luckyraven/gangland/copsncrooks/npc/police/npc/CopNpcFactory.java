@@ -217,8 +217,8 @@ public class CopNpcFactory {
 		if (hub == null) return;
 		hub.report(Fault.userError(FAULT_ROLE_WEAPON_UNKNOWN,
 		                           "A " + role.name() + " cop drew 'weapon:" + weaponName + "' from " +
-		                           (fromRolePool ? "the role's Weapon_Pool (npc/cop_roles.yml)"
-		                                         : "the tier's Weapon_Pool (npc/cops.yml)") +
+		                           (fromRolePool ? "the role's Weapon_Pool (copsncrooks/cop_roles.yml)"
+		                                         : "the tier's Weapon_Pool (copsncrooks/cops.yml)") +
 		                           ", which Bartizan does not know: it holds its vanilla fallback and keeps the " +
 		                           "settings.yml firing band")
 		                .build());

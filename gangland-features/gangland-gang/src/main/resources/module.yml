@@ -3,5 +3,5 @@ Id: gang
 Name: Gangland Gangs
 Version: ${project.version}
 Main: org.luckyraven.gangland.gang.GangModule
-Host_Api: 2.0
+Host_Api: 2.2
 Artifact: org.luckyraven:gangland-gang

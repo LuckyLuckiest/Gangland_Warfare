@@ -1,7 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.wanted.config;
 
 /**
- * {@code Wanted.Charge_Sheet} of {@code npc/wanted.yml}: the fine on arrest, paid from the wallet only.
+ * {@code Wanted.Charge_Sheet} of {@code copsncrooks/wanted.yml}: the fine on arrest, paid from the wallet only.
  *
  * @since 0.15.0
  */

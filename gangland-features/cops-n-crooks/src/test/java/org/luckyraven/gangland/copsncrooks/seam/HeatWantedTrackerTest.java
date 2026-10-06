@@ -13,16 +13,15 @@ import org.luckyraven.gangland.copsncrooks.events.combo.KillComboEvent;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfig;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.config.HeatSettings;
+import org.luckyraven.gangland.copsncrooks.wanted.config.KillComboSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.gangland.crime.Crimes;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.mockito.ArgumentCaptor;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -59,11 +58,13 @@ class HeatWantedTrackerTest {
 	private Wanted            wanted;
 	private Location          at;
 	private HeatWantedTracker tracker;
-	private Boolean           savedCombo;
 	private BukkitStatics     bukkit;
 
+	/** wanted.yml's Kill_Combo.Reset_After in these tests; differs from the 0 the core passes to a 2.2 delegate. */
+	private static final int MODULE_RESET_AFTER = 30;
+
 	@BeforeEach
-	void setUp() throws ReflectiveOperationException {
+	void setUp() {
 		bukkit      = BukkitStatics.install();
 		killCombo   = mock(KillCombo.class);
 		markManager = mock(NpcMarkManager.class);
@@ -80,24 +81,17 @@ class HeatWantedTrackerTest {
 		tracker = new HeatWantedTracker(config, ledger, crimes, killCombo, markManager, defend,
 		                                victim -> managedCivilian);
 
-		savedCombo = (Boolean) comboField().get(null);
 		combo(true);
 	}
 
 	@AfterEach
-	void tearDown() throws ReflectiveOperationException {
+	void tearDown() {
 		bukkit.close();
-		combo(savedCombo != null && savedCombo);
 	}
 
-	private static Field comboField() throws ReflectiveOperationException {
-		Field field = Settings.class.getDeclaredField("wantedKillComboEnabled");
-		field.setAccessible(true);
-		return field;
-	}
-
-	private static void combo(boolean enabled) throws ReflectiveOperationException {
-		comboField().set(null, enabled);
+	private void combo(boolean enabled) {
+		when(config.getKillCombo()).thenReturn(
+				new KillComboSettings(enabled, MODULE_RESET_AFTER, KillComboSettings.DEFAULT.killCounter()));
 	}
 
 	private void heatOff() {
@@ -203,27 +197,27 @@ class HeatWantedTrackerTest {
 
 	@Test
 	@DisplayName("heat off and combo disabled: a counted kill triggers a star at once")
-	void heatOffComboDisabled_triggersAStarAtOnce() throws ReflectiveOperationException {
+	void heatOffComboDisabled_triggersAStarAtOnce() {
 		heatOff();
 		combo(false);
 		List<Player> stars = new ArrayList<>();
 		tracker.onWantedTrigger(stars::add);
 
-		tracker.recordKill(killer, wanted, marked("POLICE"), 10);
+		tracker.recordKill(killer, wanted, marked("POLICE"), 0);
 
 		assertEquals(List.of(killer), stars);
 		verify(killCombo, never()).recordKill(any(), any(), any(), anyInt());
 	}
 
 	@Test
-	@DisplayName("heat off and combo enabled: the kill goes to the combo")
-	void heatOffComboEnabled_goesToTheCombo() {
+	@DisplayName("heat off and combo enabled: the kill goes to the combo with wanted.yml's Reset_After, not the core's")
+	void heatOffComboEnabled_goesToTheComboWithTheModuleResetAfter() {
 		heatOff();
 		Entity victim = marked("POLICE");
 
-		tracker.recordKill(killer, wanted, victim, 10);
+		tracker.recordKill(killer, wanted, victim, 0);
 
-		verify(killCombo).recordKill(killer, wanted, victim, 10);
+		verify(killCombo).recordKill(killer, wanted, victim, MODULE_RESET_AFTER);
 	}
 
 	@Test
@@ -232,16 +226,16 @@ class HeatWantedTrackerTest {
 		heatOff();
 		Entity victim = marked("CIVILIAN");
 
-		tracker.recordKill(killer, wanted, victim, 10);
+		tracker.recordKill(killer, wanted, victim, 0);
 
-		verify(killCombo).recordKill(killer, wanted, victim, 10);
+		verify(killCombo).recordKill(killer, wanted, victim, MODULE_RESET_AFTER);
 		verifyNoInteractions(crimes);
 	}
 
 	@Test
 	@DisplayName("heat on: a cop kill commits Kill_Cop")
 	void heatOn_copKill_commitsKillCop() {
-		tracker.recordKill(killer, wanted, marked("POLICE"), 10);
+		tracker.recordKill(killer, wanted, marked("POLICE"), 0);
 
 		verify(crimes).commit(killer, Crimes.KILL_COP, at);
 		verify(killCombo, never()).recordKill(any(), any(), any(), anyInt());
@@ -250,7 +244,7 @@ class HeatWantedTrackerTest {
 	@Test
 	@DisplayName("heat on: a player kill commits Kill_Player")
 	void heatOn_playerKill_commitsKillPlayer() {
-		tracker.recordKill(killer, wanted, playerVictim(), 10);
+		tracker.recordKill(killer, wanted, playerVictim(), 0);
 
 		verify(crimes).commit(killer, Crimes.KILL_PLAYER, at);
 	}
@@ -259,7 +253,7 @@ class HeatWantedTrackerTest {
 	@DisplayName("heat on: a gangland-civilians NPC kill commits nothing here (its death listener publishes it)")
 	void heatOn_managedCivilianKill_commitsNothing() {
 		managedCivilian = true;
-		tracker.recordKill(killer, wanted, marked("CIVILIAN"), 10);
+		tracker.recordKill(killer, wanted, marked("CIVILIAN"), 0);
 
 		verifyNoInteractions(crimes);
 		verify(killCombo, never()).recordKill(any(), any(), any(), anyInt());
@@ -268,7 +262,7 @@ class HeatWantedTrackerTest {
 	@Test
 	@DisplayName("heat on: a vanilla villager, wandering trader or shop NPC kill commits Kill_Civilian")
 	void heatOn_unmanagedCivilianKill_commitsKillCivilian() {
-		tracker.recordKill(killer, wanted, marked("CIVILIAN"), 10);
+		tracker.recordKill(killer, wanted, marked("CIVILIAN"), 0);
 
 		verify(crimes).commit(killer, Crimes.KILL_CIVILIAN, at);
 		verify(killCombo, never()).recordKill(any(), any(), any(), anyInt());
@@ -277,23 +271,23 @@ class HeatWantedTrackerTest {
 	@Test
 	@DisplayName("heat on: an unmarked entity is no crime")
 	void heatOn_unmarkedKill_commitsNothing() {
-		tracker.recordKill(killer, wanted, marked(null), 10);
+		tracker.recordKill(killer, wanted, marked(null), 0);
 
 		verifyNoInteractions(crimes);
 	}
 
 	@Test
 	@DisplayName("a kill defending your own contested turf mints nothing, heat on and off (TF-49)")
-	void defenderKillInsideOwnContestedTurf_commitsNothing_heatOnAndOff() throws ReflectiveOperationException {
+	void defenderKillInsideOwnContestedTurf_commitsNothing_heatOnAndOff() {
 		List<Player> stars = new ArrayList<>();
 		tracker.onWantedTrigger(stars::add);
 		defending = true;
-		tracker.recordKill(killer, wanted, playerVictim(), 10);
+		tracker.recordKill(killer, wanted, playerVictim(), 0);
 
 		heatOff();
-		tracker.recordKill(killer, wanted, playerVictim(), 10);
+		tracker.recordKill(killer, wanted, playerVictim(), 0);
 		combo(false);
-		tracker.recordKill(killer, wanted, playerVictim(), 10);
+		tracker.recordKill(killer, wanted, playerVictim(), 0);
 
 		assertTrue(stars.isEmpty());
 		verifyNoInteractions(crimes);
@@ -318,11 +312,17 @@ class HeatWantedTrackerTest {
 	}
 
 	@Test
+	@DisplayName("the tracker reads Kill_Combo from copsncrooks/wanted.yml, so the core passes no settings.yml values (api 2.2)")
+	void readsComboSettings_isTrue() {
+		assertTrue(tracker.readsComboSettings());
+	}
+
+	@Test
 	@DisplayName("an attacker's kill inside a contested turf still commits Kill_Player")
 	void attackerKillInsideAContestedTurf_stillCommitsKillPlayer() {
 		defending = false;
 
-		tracker.recordKill(killer, wanted, playerVictim(), 10);
+		tracker.recordKill(killer, wanted, playerVictim(), 0);
 
 		verify(crimes).commit(killer, Crimes.KILL_PLAYER, at);
 	}

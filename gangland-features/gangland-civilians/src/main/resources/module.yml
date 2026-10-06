@@ -3,5 +3,5 @@ Id: civilians
 Name: Gangland Civilians
 Version: ${project.version}
 Main: org.luckyraven.gangland.civilians.CiviliansModule
-Host_Api: 2.1
+Host_Api: 2.2
 Artifact: org.luckyraven:gangland-civilians

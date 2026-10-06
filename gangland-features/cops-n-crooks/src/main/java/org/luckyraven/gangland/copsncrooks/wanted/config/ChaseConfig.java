@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Everything in {@code npc/wanted.yml}. {@link #DEFAULT} equals the shipped file; {@link #parse} reads a file over it
+ * Everything in {@code copsncrooks/wanted.yml}. {@link #DEFAULT} equals the shipped file; {@link #parse} reads a file over it
  * key by key, so a server whose file predates a key still gets the shipped value.
  *
  * @since 0.15.0
@@ -26,6 +26,9 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 	/** Reads the {@code Wanted} section; a null section, or a missing block or key, is its default. */
 	public static ChaseConfig parse(@Nullable NodeReader wantedRoot, ConfigReport report) {
 		if (wantedRoot == null) return DEFAULT;
+
+		// Kill_Combo (0.15.1) is read by ChaseConfigLoader through the settings.yml bridge (KillComboSettings)
+		wantedRoot.get("Kill_Combo");
 
 		return new ChaseConfig(heat(block(wantedRoot, "Heat", report)),
 		                       evasion(block(wantedRoot, "Evasion", report), report),

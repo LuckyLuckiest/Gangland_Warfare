@@ -27,8 +27,10 @@ public interface GanglandApi {
 	 * API a module may rely on, the major only on a breaking change; it is independent of the plugin version, so a
 	 * patch or feature release of Gangland does not invalidate every module jar on the server.
 	 * <p>2.1 adds the crime event bus ({@code CrimeService}, {@code CrimeCommittedEvent}) and {@code WantedEvasionStateEvent}.
+	 * <p>2.2 adds {@code MovedSetting} (the one-release settings.yml fallback for module-owned settings) and
+	 * {@code WantedKillTracker.readsComboSettings()}.
 	 */
-	String VERSION = "2.1";
+	String VERSION = "2.2";
 
 	/**
 	 * The permission namespace and long command alias ({@code /gangland}).

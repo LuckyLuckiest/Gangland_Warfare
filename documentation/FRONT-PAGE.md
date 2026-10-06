@@ -168,7 +168,7 @@ A new NPC class that shares the cop AI base — wander, flee, or fight. (Trade m
 - Groups bind spawn points to a type with population caps, activation
   radius, and despawn radius — civilians appear when players walk in range
   and disappear when the area empties
-- Shared navigation tuning with cops via `NPC_Navigation` in `settings.yml`
+- Navigation tuning in `npc/civilians.yml` `Navigation` (cops keep their own copy in `copsncrooks/cops.yml`)
 - `/glw civilian …` commands for manual spawn, despawn, and group control
 
 ---

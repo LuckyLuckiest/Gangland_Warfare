@@ -10,3 +10,5 @@ Max_Health: 20.0
 Invulnerable: true
 # Tier id substituted when a player's bank has no stored tier id or references a missing tier.
 Fallback_Tier_Id: "Basic"
+# Charged (from cash) every time the player renames their account at a Banker NPC. 0 disables.
+Rename_Fee: 1_000
