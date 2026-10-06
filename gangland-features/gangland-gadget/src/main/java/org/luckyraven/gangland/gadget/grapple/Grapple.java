@@ -38,7 +38,6 @@ public class Grapple {
 	private final double  minRopeLength;
 	private final double  arrivalDistance;
 	private final int     cooldownSeconds;
-	private final int     maxDurationTicks;
 	private final int     fallDamageGraceTicks;
 	private final boolean requireLineOfSight;
 	private final double  shotSpeed;
@@ -49,6 +48,8 @@ public class Grapple {
 	private final SoundEffect fireSound;
 	@Nullable
 	private final SoundEffect attachSound;
+	@Nullable
+	private final SoundEffect cooldownReadySound;
 
 	/**
 	 * Placeholder resolver injected by {@code GrappleAddon} via the builder so {@link #buildItem(Player)} can

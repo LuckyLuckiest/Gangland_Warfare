@@ -35,9 +35,6 @@ public class GrappleAddon implements FileInitializer {
 	/** The client clamps every axis of a velocity packet to this many blocks per tick. */
 	private static final double MAX_PACKET_SPEED = 3.9;
 
-	/** Vanilla kicks a player after 80 ticks of non-descending air movement on an allow-flight=false server. */
-	private static final int MAX_AIRBORNE_TICKS = 79;
-
 	private final Map<String, Grapple> grapples = new HashMap<>();
 
 	private final Consumer<String> permissionRegistrar;
@@ -135,15 +132,9 @@ public class GrappleAddon implements FileInitializer {
 			// floor instead of trusting the YAML.
 			double  arrivalDistance      = Math.max(section.getDouble("Arrival_Distance", 3.5), 0.1);
 			int     cooldownSeconds      = section.getInt("Cooldown_Seconds", 8);
-			int     maxDurationTicks     = section.getInt("Max_Duration_Ticks", 70);
-			if (maxDurationTicks > MAX_AIRBORNE_TICKS) {
-				log.warn("Grapple '{}' Max_Duration_Ticks {} would keep players airborne long enough to be kicked for "
-				         + "flying (allow-flight=false) - clamped to {}.", key, maxDurationTicks, MAX_AIRBORNE_TICKS);
-				maxDurationTicks = MAX_AIRBORNE_TICKS;
-			}
 			int     fallDamageGraceTicks = section.getInt("Fall_Damage_Grace_Ticks", 40);
-			boolean requireLineOfSight   = section.getBoolean("Require_Line_Of_Sight", true);
-			// Floor keeps a typo'd 0 from leaving the hook hanging in the air until Max_Duration_Ticks.
+			boolean requireLineOfSight   = section.getBoolean("Require_Line_Of_Sight", false);
+			// Floor keeps a typo'd 0 from leaving the hook hanging in the air.
 			double  shotSpeed            = clamp(section.getDouble("Shot_Speed", MAX_PACKET_SPEED), 0.5,
 			                                     MAX_PACKET_SPEED);
 			int     missCooldownTicks    = Math.max(section.getInt("Miss_Cooldown_Ticks", 10), 0);
@@ -161,13 +152,14 @@ public class GrappleAddon implements FileInitializer {
 			                         .minRopeLength(minRopeLength)
 			                         .arrivalDistance(arrivalDistance)
 			                         .cooldownSeconds(cooldownSeconds)
-			                         .maxDurationTicks(maxDurationTicks)
 			                         .fallDamageGraceTicks(fallDamageGraceTicks)
 			                         .requireLineOfSight(requireLineOfSight)
 			                         .shotSpeed(shotSpeed)
 			                         .missCooldownTicks(missCooldownTicks)
 			                         .fireSound(sound(section, "Fire_Sound", "ITEM_CROSSBOW_SHOOT"))
 			                         .attachSound(sound(section, "Attach_Sound", "ENTITY_ARROW_HIT"))
+			                         .cooldownReadySound(sound(section, "Cooldown_Ready_Sound",
+			                                                   "ITEM_CROSSBOW_LOADING_END"))
 			                         .placeholder(placeholder)
 			                         .build();
 

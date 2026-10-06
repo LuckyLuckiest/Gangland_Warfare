@@ -1,10 +1,14 @@
 package org.luckyraven.gangland.gadget.grapple;
 
 import org.bukkit.FluidCollisionMode;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.entity.FishHook;
 import org.bukkit.entity.Player;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
@@ -21,9 +25,15 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Runs grapple sessions: the web-shot (the vanilla hook driven by velocity at {@code Shot_Speed} blocks per tick, so
  * the client sees it fly, and raytraced over each step so it cannot tunnel through a block), then the rope swing
- * ({@link GrappleRope}) that reels the player in. Also owns the cooldown and the one-shot landing-damage grace granted
- * when an attached rope lets go. Ticked by a single shared sync {@link RepeatingTimer} (it touches entities, so never
- * async). Cooldown only (WS8-D1): no fuel/durability.
+ * ({@link GrappleRope}) that reels the player in and holds them until they let go. Also owns the cooldown (started
+ * when the rope lets go, shown as the item cooldown overlay, with a ready sound when it runs out) and the one-shot
+ * landing-damage grace granted when an attached rope lets go. Ticked by a single shared sync {@link RepeatingTimer} (it
+ * touches entities, so never async). Cooldown only (WS8-D1): no fuel/durability.
+ * <p>
+ * A rope holds as long as the player wants, so a player hanging still would be kicked for floating on an
+ * {@code allow-flight=false} server. While the rope is taut it therefore lends allow-flight (only to a player who could
+ * not already fly) and takes it back as soon as the rope goes slack or lets go; a marker in the player's persistent
+ * data lets the next join take it back after a crash ({@link #healFlight(Player)}).
  * <p>
  * {@link #isActive(Player)} is true only while the rope is attached: a shot still in flight has not moved the player.
  * Fall immunity ({@link #isHolding(Player)}) and the landing grace need more: a rope that was taut, actually holding
@@ -47,29 +57,29 @@ public class GrappleService implements BeanLifecycle {
 	private static final double SURFACE_OFFSET = 0.1;
 
 	private final Map<UUID, GrappleSession> activeSessions       = new ConcurrentHashMap<>();
-	private final Map<UUID, Long>           cooldownExpiryMs     = new ConcurrentHashMap<>();
+	private final Map<UUID, Cooldown>       cooldowns            = new ConcurrentHashMap<>();
 	private final Map<UUID, Long>           landingGraceExpiryMs = new ConcurrentHashMap<>();
 
-	private final JavaPlugin plugin;
+	private final JavaPlugin    plugin;
+	private final NamespacedKey flightKey;
 
 	private RepeatingTimer tickTimer;
 
 	public GrappleService(JavaPlugin plugin) {
-		this.plugin = plugin;
+		this.plugin    = plugin;
+		this.flightKey = new NamespacedKey(plugin, "grapple_flight");
 	}
 
 	/**
 	 * Fires the grapple from the player's eyes along their view, driving the freshly cast vanilla {@code hook}. Returns
-	 * false (the caller cancels the cast) if the player already has a session or is on cooldown. The full cooldown is
-	 * applied HERE, at fire time (WS8 G3): releasing right after attaching cannot dodge it. A shot that misses is
-	 * shortened to {@code Miss_Cooldown_Ticks} in {@link #cancel(Player)}.
+	 * false (the caller cancels the cast) if the player already has a session or is on cooldown. No cooldown starts
+	 * here: the client blocks every use of an item on cooldown, which would swallow the right-click that lets go. It
+	 * starts in {@link #cancel(Player)}, when the rope lets go — the full one even right after attaching.
 	 */
 	public boolean fire(Player player, Grapple grapple, FishHook hook) {
 		UUID uuid = player.getUniqueId();
 		if (activeSessions.containsKey(uuid)) return false;
 		if (isOnCooldown(player)) return false;
-
-		cooldownExpiryMs.put(uuid, System.currentTimeMillis() + grapple.getCooldownSeconds() * 1000L);
 
 		Location eye = player.getEyeLocation();
 		// The shot is driven by tickShot; vanilla's slow lobbed throw must not move the hook on its own.
@@ -80,27 +90,27 @@ public class GrappleService implements BeanLifecycle {
 	}
 
 	/**
-	 * Ends the session for any reason (arrival, timeout, release by sneak or right-click, damage, teleport, world
-	 * change, death, item switch) and removes the hook. Never touches the player's velocity, so a release keeps the
-	 * velocity the client already has. A rope that was taut on its last tick grants the one-shot landing grace; a slack
-	 * one held nothing, so the fall still counts. A shot that never attached (miss, retract) only gets the short miss
-	 * cooldown instead. A no-op without a session.
+	 * Ends the session for any reason (release by sneak or right-click, damage, teleport, world change, death, item
+	 * switch, the hook lost) and removes the hook, taking back any flight the rope lent. Never touches the player's
+	 * velocity, so a release keeps the velocity the client already has. Starts the cooldown: the full one for a rope
+	 * that attached, the short miss one for a shot that never did (miss, retract). A rope that was taut on its last tick
+	 * grants the one-shot landing grace; a slack one held nothing, so the fall still counts. A no-op without a session.
 	 */
 	public void cancel(Player player) {
 		UUID           uuid    = player.getUniqueId();
 		GrappleSession session = activeSessions.remove(uuid);
 		if (session == null) return;
 
-		session.getHook().remove();
+		end(session);
 		Grapple grapple = session.getGrapple();
-		long    now     = System.currentTimeMillis();
 
 		if (!session.isAttached()) {
-			cooldownExpiryMs.put(uuid, now + grapple.getMissCooldownTicks() * MILLIS_PER_TICK);
+			startCooldown(player, grapple, grapple.getMissCooldownTicks());
 			return;
 		}
+		startCooldown(player, grapple, grapple.getCooldownSeconds() * 20);
 		if (!session.isTaut()) return;
-		landingGraceExpiryMs.put(uuid, now + grapple.getFallDamageGraceTicks() * MILLIS_PER_TICK);
+		landingGraceExpiryMs.put(uuid, System.currentTimeMillis() + grapple.getFallDamageGraceTicks() * MILLIS_PER_TICK);
 	}
 
 	/**
@@ -112,9 +122,9 @@ public class GrappleService implements BeanLifecycle {
 		UUID           uuid    = player.getUniqueId();
 		GrappleSession session = activeSessions.remove(uuid);
 		if (session != null) {
-			session.getHook().remove();
+			end(session);
 		}
-		cooldownExpiryMs.remove(uuid);
+		cooldowns.remove(uuid);
 		landingGraceExpiryMs.remove(uuid);
 	}
 
@@ -136,8 +146,25 @@ public class GrappleService implements BeanLifecycle {
 	}
 
 	public boolean isOnCooldown(Player player) {
-		Long expiry = cooldownExpiryMs.get(player.getUniqueId());
-		return expiry != null && expiry > System.currentTimeMillis();
+		Cooldown cooldown = cooldowns.get(player.getUniqueId());
+		return cooldown != null && cooldown.expiryMs() > System.currentTimeMillis();
+	}
+
+	/** True while a taut rope is lending this player allow-flight (which they must not use to actually fly). */
+	public boolean holdsFlight(Player player) {
+		GrappleSession session = activeSessions.get(player.getUniqueId());
+		return session != null && session.isLendingFlight();
+	}
+
+	/**
+	 * On join: a flight marker still in the player's persistent data means the server went down mid-swing, before the
+	 * rope could take the flight back, so take it back now.
+	 */
+	public void healFlight(Player player) {
+		PersistentDataContainer data = player.getPersistentDataContainer();
+		if (!data.has(flightKey, PersistentDataType.BYTE)) return;
+		data.remove(flightKey);
+		revokeFlight(player);
 	}
 
 	@Nullable
@@ -170,12 +197,6 @@ public class GrappleService implements BeanLifecycle {
 		// (undoing our pin), so a shot through a mob is a miss and a mob walking into the pinned hook lets go.
 		FishHook hook = session.getHook();
 		if (!hook.isValid() || hook.getHookedEntity() != null) {
-			cancel(player);
-			return;
-		}
-
-		session.setElapsedTicks(session.getElapsedTicks() + 1);
-		if (session.getElapsedTicks() >= session.getGrapple().getMaxDurationTicks()) {
 			cancel(player);
 			return;
 		}
@@ -231,8 +252,8 @@ public class GrappleService implements BeanLifecycle {
 		Vector   offset = hit.getHitBlockFace().getDirection().multiply(SURFACE_OFFSET);
 		Location anchor = hit.getHitPosition().clone().add(offset).toLocation(world);
 
-		// Outside the border, past the vanilla hook range (vanilla would delete the hook) or point-blank (it would
-		// "arrive" next tick): a miss, never a free landing grace.
+		// Outside the border, past the vanilla hook range (vanilla would delete the hook) or point-blank (closer than
+		// Arrival_Distance, nothing to swing on): a miss, never a free landing grace.
 		if (!world.getWorldBorder().isInside(anchor)
 		    || anchor.distanceSquared(player.getLocation()) > VANILLA_HOOK_DISCARD_DISTANCE_SQUARED
 		    || position.distance(anchor.toVector()) <= grapple.getArrivalDistance()) {
@@ -252,7 +273,8 @@ public class GrappleService implements BeanLifecycle {
 	 * Min_Rope_Length). The player's velocity is integrated here with vanilla air physics, starting from what they
 	 * were doing when the hook latched, then constrained to the rope at their measured position with
 	 * {@link GrappleRope} and sent — so the swing is a real pendulum that the client cannot drift out of. A slack rope
-	 * sends nothing and just tracks what the client does on its own.
+	 * sends nothing and just tracks what the client does on its own. Reaching the anchor does not let go: the player
+	 * hangs there until they release.
 	 */
 	private void tickRope(GrappleSession session) {
 		Player   player      = session.getPlayer();
@@ -269,10 +291,6 @@ public class GrappleService implements BeanLifecycle {
 
 		Vector position = bodyCentre(player);
 		Vector anchorAt = anchor.toVector();
-		if (position.distance(anchorAt) <= grapple.getArrivalDistance()) {
-			cancel(player);
-			return;
-		}
 		// The rope snaps if a block comes between the player and the anchor mid-swing.
 		if (grapple.isRequireLineOfSight() && !hasLineOfSight(player, anchor)) {
 			cancel(player);
@@ -292,6 +310,7 @@ public class GrappleService implements BeanLifecycle {
 		Vector constrained = GrappleRope.constrain(position, velocity, anchorAt, session.getRopeLength(),
 		                                           grapple.getMaxPullSpeed());
 		session.setTaut(constrained != null);
+		lendFlight(session, constrained != null);
 		if (constrained == null) {
 			session.setRopeVelocity(moved);
 		} else {
@@ -322,6 +341,74 @@ public class GrappleService implements BeanLifecycle {
 
 	private static double collided(double sent, double moved) {
 		return Math.abs(moved) < Math.abs(sent) / 2 ? moved : sent;
+	}
+
+	/**
+	 * Lends allow-flight while the rope is taut (a player hanging still sends no descending moves, which Paper/vanilla
+	 * kick as floating on an allow-flight=false server) and takes it back the moment it goes slack, so a fall the rope
+	 * does not hold still counts. Never lends to a player who could already fly (creative, a jetpack).
+	 */
+	private void lendFlight(GrappleSession session, boolean taut) {
+		Player player = session.getPlayer();
+		if (taut && !session.isLendingFlight() && !player.getAllowFlight()) {
+			player.getPersistentDataContainer().set(flightKey, PersistentDataType.BYTE, (byte) 1);
+			player.setAllowFlight(true);
+			session.setLendingFlight(true);
+		} else if (!taut) {
+			returnFlight(session);
+		}
+	}
+
+	private void returnFlight(GrappleSession session) {
+		if (!session.isLendingFlight()) return;
+		session.setLendingFlight(false);
+		Player player = session.getPlayer();
+		player.getPersistentDataContainer().remove(flightKey);
+		revokeFlight(player);
+	}
+
+	/** Takes allow-flight back, unless the player changed to a game mode that flies on its own meanwhile. */
+	private static void revokeFlight(Player player) {
+		GameMode mode = player.getGameMode();
+		if (mode == GameMode.SURVIVAL || mode == GameMode.ADVENTURE) {
+			player.setAllowFlight(false);
+		}
+	}
+
+	/** Removes the hook and takes back any flight the rope lent. */
+	private void end(GrappleSession session) {
+		session.getHook().remove();
+		returnFlight(session);
+	}
+
+	/**
+	 * Starts the cooldown and shows it as the item cooldown overlay on the grapple's material, the way weapon
+	 * cooldowns show. Per material, so the overlay covers every item of that material (any fishing rod).
+	 */
+	private void startCooldown(Player player, Grapple grapple, int ticks) {
+		if (ticks <= 0) return;
+		cooldowns.put(player.getUniqueId(),
+		              new Cooldown(player, grapple, System.currentTimeMillis() + ticks * MILLIS_PER_TICK));
+		player.setCooldown(grapple.getMaterial(), ticks);
+	}
+
+	/** Ends every cooldown that ran out by {@code now}, telling its player the grapple is ready again. */
+	void tickCooldowns(long now) {
+		for (Map.Entry<UUID, Cooldown> entry : cooldowns.entrySet()) {
+			Cooldown cooldown = entry.getValue();
+			if (cooldown.expiryMs() > now || !cooldowns.remove(entry.getKey(), cooldown)) continue;
+			if (cooldown.player().isOnline()) {
+				cooldownReady(cooldown.player(), cooldown.grapple());
+			}
+		}
+	}
+
+	/** Plays the grapple's Cooldown_Ready_Sound to the player. Package-visible so the test can see it fire. */
+	void cooldownReady(Player player, Grapple grapple) {
+		SoundEffect sound = grapple.getCooldownReadySound();
+		if (sound != null) {
+			sound.playSound(player);
+		}
 	}
 
 	/** Rope maths run from the middle of the body, so a ceiling anchor straight overhead is reachable. */
@@ -355,6 +442,7 @@ public class GrappleService implements BeanLifecycle {
 		for (GrappleSession session : new ArrayList<>(activeSessions.values())) {
 			tickSession(session);
 		}
+		tickCooldowns(System.currentTimeMillis());
 	}
 
 	@Override
@@ -371,7 +459,9 @@ public class GrappleService implements BeanLifecycle {
 		if (tickTimer != null) {
 			tickTimer.stop();
 		}
-		activeSessions.values().forEach(session -> session.getHook().remove());
+		activeSessions.values().forEach(this::end);
 		activeSessions.clear();
 	}
+
+	private record Cooldown(Player player, Grapple grapple, long expiryMs) { }
 }
