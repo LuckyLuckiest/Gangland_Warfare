@@ -60,7 +60,7 @@ public final class BankerSettingsImpl implements BankerSettings, BeanLifecycle {
 		fallbackTierId  = reader.get("Fallback_Tier_Id").asString().orDefault("Basic");
 
 		// Rename_Fee moved from core settings.yml; use MovedSetting to fall back for servers still using the old location
-		MovedSetting moved = MovedSetting.of(fileHandler, fileManager, "gangland-npc-shops");
+		MovedSetting moved = MovedSetting.of(fileHandler, fileManager, "npcshops");
 		renameFee = moved.getMoney("Rename_Fee", "User.Bank.Rename_Fee", "1000");
 
 		if (!report.isEmpty()) report.log(log);
