@@ -175,8 +175,6 @@ User:
       # When a player wants to create a bank account, they're required to pay a fee.
       # Set it to zero, and the requirement is lifted.
       Create_Cost: 5_000
-      # Charged (from cash) every time the player renames their account at a Banker NPC. 0 disables.
-      Rename_Fee: 1_000
       # Length of the rolling window (seconds) after which the deposit counter resets. Defaults to 24h.
       # Measured from the player's first interaction within a window — not midnight — so splitting a transaction
       # across midnight never counts against two separate windows.
