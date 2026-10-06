@@ -135,9 +135,8 @@ public class EntityDamageListener implements Listener {
 
 			// Only increase wanted if this NPC counts towards wanted (cops should, civilians may, etc.)
 			if (wantedKills.countsForWanted(deadPlayer)) {
-				if (wantedKills.routesKills(Settings.isWantedKillComboEnabled())) {
-					wantedKills.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
-					                       Settings.getWantedKillComboResetAfter());
+				if (wantedKills.routesKills()) {
+					wantedKills.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer);
 				} else {
 					handleWanted(damagerUser);
 				}
@@ -188,9 +187,8 @@ public class EntityDamageListener implements Listener {
 		if (!paid) handleBounty(damagerUser);
 
 		// increase the wanted level for killing another player
-		if (wantedKills.routesKills(Settings.isWantedKillComboEnabled())) {
-			wantedKills.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer,
-			                       Settings.getWantedKillComboResetAfter());
+		if (wantedKills.routesKills()) {
+			wantedKills.recordKill(damagerUser.getUser(), damagerUser.getWanted(), deadPlayer);
 		} else handleWanted(damagerUser);
 	}
 
@@ -260,9 +258,8 @@ public class EntityDamageListener implements Listener {
 		if (!wantedKills.countsForWanted(victim)) return false;
 
 		// Record kill in combo system if enabled
-		if (wantedKills.routesKills(Settings.isWantedKillComboEnabled())) {
-			wantedKills.recordKill(attacker.getUser(), attacker.getWanted(), victim,
-			                       Settings.getWantedKillComboResetAfter());
+		if (wantedKills.routesKills()) {
+			wantedKills.recordKill(attacker.getUser(), attacker.getWanted(), victim);
 		} else handleWanted(attacker);
 
 		return false;

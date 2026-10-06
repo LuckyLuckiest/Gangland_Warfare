@@ -26,6 +26,7 @@ import org.luckyraven.gangland.core.user.UserFactory;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.WantedKillTrackers;
 import org.luckyraven.gangland.core.wanted.WantedSettings;
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.gangland.item.money.MoneyDropClassifier;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
@@ -134,11 +135,12 @@ public class DataConfig {
 
 	/**
 	 * Seam 3 holder. Always present so {@code EntityDamageListener} constructs; inert (combo-disabled behaviour)
-	 * until the cops-n-crooks module installs a delegate. See documentation/module-loader.md, "Core seams".
+	 * until the cops-n-crooks module installs a delegate. The legacy settings.yml combo values only reach a delegate
+	 * built before api 2.2 (one that does not read its own). See documentation/module-loader.md, "Core seams".
 	 */
 	@Bean
 	public WantedKillTrackers wantedKillTrackers() {
-		return new WantedKillTrackers();
+		return new WantedKillTrackers(Settings::isWantedKillComboEnabled, Settings::getWantedKillComboResetAfter);
 	}
 
 	/**

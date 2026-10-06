@@ -95,6 +95,18 @@ module/core package and is reachable transitively (`gangland-core`'s general-pur
   civilians' 1 event and gangland-item's `PlayerItemInitEvent` all stay module/infra-owned — no named consumer
   outside their own module, so none were promoted (WS3's explicit decline for the loot-chest 9 still stands).
 
+## Api 2.2 (0.15.1)
+
+`GanglandApi.VERSION` is `"2.2"`. cops-n-crooks, gangland-civilians, gangland-turf, gangland-gang, gangland-gadget and
+gangland-npc-shops declare `Host_Api: 2.2` because their settings moved out of the core `settings.yml` into their own
+YAML and they read them through `MovedSetting`. Modules built for 2.0 or 2.1 still load. Nothing was removed or changed.
+
+| Addition | Package | Kind |
+|---|---|---|
+| `MovedSetting` | `org.luckyraven.gangland.file.configuration` | One-release bridge. `MovedSetting.of(moduleFile, fileManager, moduleId)`, then `getInt`/`getLong`/`getDouble`/`getBoolean`/`getString`/`getStringList(path, legacyPath, def)` and `getMoney(path, legacyPath, "def")`. Returns the old `settings.yml` value (with one warning) only when it is set, differs from the default and the module file still holds the default. Otherwise it returns the module value |
+| `WantedKillTracker.readsComboSettings()` | `org.luckyraven.gangland.core.wanted` | `default` false. A delegate answering true reads `Kill_Combo.Enable`/`.Reset_After` from its own config: the core routes it every counted kill and passes `0` as `resetAfterSeconds` |
+| `WantedKillTrackers.routesKills()`, `recordKill(killer, wanted, victim)`, `WantedKillTrackers(BooleanSupplier, IntSupplier)` | same | The core no longer passes the combo settings from `EntityDamageListener`. The legacy suppliers feed only a pre-2.2 delegate. `routesKills(boolean)` and the four-argument `recordKill` stay, deprecated |
+
 ## Api 2.1 (0.15.0)
 
 `GanglandApi.VERSION` is `"2.1"`. The cops-n-crooks and gangland-civilians modules declare `Host_Api: 2.1` because they

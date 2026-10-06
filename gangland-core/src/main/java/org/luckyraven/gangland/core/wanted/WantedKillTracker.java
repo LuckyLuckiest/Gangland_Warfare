@@ -45,4 +45,16 @@ public interface WantedKillTracker {
 	default boolean appliesComboSwitch() {
 		return false;
 	}
+
+	/**
+	 * True when the delegate reads {@code Wanted.Kill_Combo.Enable} and {@code .Reset_After} from its own config
+	 * (0.15.1: cops-n-crooks {@code copsncrooks/wanted.yml}) and applies them itself. The core then routes it every
+	 * counted kill and passes {@code 0} as {@link #recordKill}'s {@code resetAfterSeconds}, which such a delegate
+	 * ignores. A delegate built before api 2.2 answers false and keeps getting the legacy {@code settings.yml} values.
+	 *
+	 * @since gangland-api 2.2
+	 */
+	default boolean readsComboSettings() {
+		return false;
+	}
 }

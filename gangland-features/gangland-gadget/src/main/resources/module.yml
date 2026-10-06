@@ -3,5 +3,5 @@ Id: gadget
 Name: Gangland Gadgets
 Version: ${project.version}
 Main: org.luckyraven.gangland.gadget.GadgetModule
-Host_Api: 2.0
+Host_Api: 2.2
 Artifact: org.luckyraven:gangland-gadget
