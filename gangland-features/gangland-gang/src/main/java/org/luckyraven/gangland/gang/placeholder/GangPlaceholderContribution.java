@@ -42,9 +42,31 @@ public final class GangPlaceholderContribution implements PlaceholderContributio
 	@Override
 	@Nullable
 	public String resolve(OfflinePlayer player, String parameter) {
+		String setting = resolveSetting(parameter);
+		if (setting != null) return setting;
 		if (parameter.startsWith(USER_PREFIX)) return resolveMember(player, parameter);
 		if (parameter.startsWith(GANG_PREFIX)) return resolveGang(player, parameter);
 		return null;
+	}
+
+	/**
+	 * The gang settings moved out of settings.yml into {@code gang/gang_settings.yml} (0.15.1). They need no member or
+	 * gang, so they are answered first (a gang-less player still sees the create fee), from this module's own file
+	 * instead of the deprecated core field the core would otherwise fall back to.
+	 */
+	@Nullable
+	private String resolveSetting(String parameter) {
+		return switch (parameter) {
+			case GANG_PREFIX + "create_fee" -> GangSettings.getGangCreateFee().toPlainString();
+			case GANG_PREFIX + "initial_balance" -> GangSettings.getGangInitialBalance().toPlainString();
+			case GANG_PREFIX + "max_balance" -> GangSettings.getGangMaxBalance().toPlainString();
+			case GANG_PREFIX + "contribution_rate" -> Settings.formatDouble(GangSettings.getGangContributionRate());
+			case GANG_PREFIX + "name_duplicates" -> String.valueOf(GangSettings.isGangNameDuplicates());
+			case GANG_PREFIX + "display_name_char" -> GangSettings.getGangDisplayNameChar();
+			case GANG_PREFIX + "rank_head" -> GangSettings.getGangRankHead();
+			case GANG_PREFIX + "rank_tail" -> GangSettings.getGangRankTail();
+			default -> null;
+		};
 	}
 
 	@Nullable
