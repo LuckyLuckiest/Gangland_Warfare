@@ -21,8 +21,7 @@ import java.util.Objects;
  * {@code settings.yml} key keeps its value for one release. Parsed once per load in {@link #initialize()}, which runs
  * before {@code CopLoader} (registered earlier), and cached.
  * <p>
- * Wanted level maximum, {@code NPC_Navigation.Recalculation_Ticks} and {@code Min_Repath_After_Loss_Ticks} are still
- * core settings and read from {@link Settings}.
+ * Wanted level maximum is still a core setting and read from {@link Settings}.
  * <p>
  * When formula mode is enabled, {@code Cops.Count.Formula} is evaluated using
  * <a href="https://www.objecthunter.net/exp4j/">exp4j</a> with four variables: {@code level}, {@code base},
@@ -79,6 +78,8 @@ public class GanglandCopSettings implements CopSettings, FileInitializer {
 	private int    maxReturnTicks         = 600;
 	private double stationArrivalDistance = 3.0;
 
+	private int    navigationRecalculationTicks = 10;
+	private int    minRepathAfterLossTicks      = 2;
 	private int    stuckCheckIntervalTicks = 5;
 	private int    maxStuckChecks          = 3;
 	private int    maxHopelessStuckChecks  = 6;
@@ -147,6 +148,9 @@ public class GanglandCopSettings implements CopSettings, FileInitializer {
 		stationArrivalDistance = m.getDouble("Cops.Return.Station_Arrival_Distance",
 		                                     "Cops.Return.Station_Arrival_Distance", 3.0);
 
+		navigationRecalculationTicks = m.getInt(NAV + "Recalculation_Ticks", NAV_OLD + "Recalculation_Ticks", 10);
+		minRepathAfterLossTicks      = m.getInt(NAV + "Min_Repath_After_Loss_Ticks",
+		                                        NAV_OLD + "Min_Repath_After_Loss_Ticks", 2);
 		stuckCheckIntervalTicks = m.getInt(NAV + "Stuck_Check_Interval", NAV_OLD + "Stuck_Check_Interval", 5);
 		maxStuckChecks          = m.getInt(NAV + "Max_Stuck_Checks", NAV_OLD + "Max_Stuck_Checks", 3);
 		maxHopelessStuckChecks  = m.getInt(NAV + "Max_Hopeless_Stuck_Checks", NAV_OLD + "Max_Hopeless_Stuck_Checks",
@@ -285,7 +289,7 @@ public class GanglandCopSettings implements CopSettings, FileInitializer {
 
 	@Override
 	public int getNavigationRecalculationTicks() {
-		return Settings.getNpcNavRecalculationTicks();
+		return navigationRecalculationTicks;
 	}
 
 	@Override
@@ -325,7 +329,7 @@ public class GanglandCopSettings implements CopSettings, FileInitializer {
 
 	@Override
 	public int getMinRepathAfterLossTicks() {
-		return Settings.getNpcNavMinRepathAfterLossTicks();
+		return minRepathAfterLossTicks;
 	}
 
 	@Override

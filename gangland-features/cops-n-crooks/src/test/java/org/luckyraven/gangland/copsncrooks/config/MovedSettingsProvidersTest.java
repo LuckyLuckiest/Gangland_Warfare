@@ -100,6 +100,8 @@ class MovedSettingsProvidersTest {
 		assertEquals(80.0, settings.getPursuitMaxDistance());
 		assertEquals(600, settings.getMaxReturnTicks());
 		assertEquals(5, settings.getStuckCheckIntervalTicks());
+		assertEquals(10, settings.getNavigationRecalculationTicks());
+		assertEquals(2, settings.getMinRepathAfterLossTicks());
 		assertEquals(0.75, settings.getMinProgressDistance());
 		assertEquals(12.0, settings.getRangedMaxDistance());
 		assertEquals(2, settings.getCountForLevel(1));
@@ -114,10 +116,14 @@ class MovedSettingsProvidersTest {
 		legacy.set("Cops.Behaviour.Max_Per_Player", 12);
 		legacy.set("Cops.Count.Base", 3);
 		legacy.set("NPC_Navigation.Ranged_Max_Distance", 20.0);
+		legacy.set("NPC_Navigation.Recalculation_Ticks", 25);
+		legacy.set("NPC_Navigation.Min_Repath_After_Loss_Ticks", 6);
 		legacy.set("Detainment.Transit.Guard_Radius", 7.5);
 
 		GanglandCopSettings settings = copSettings();
 
+		assertEquals(25, settings.getNavigationRecalculationTicks());
+		assertEquals(6, settings.getMinRepathAfterLossTicks());
 		assertEquals(12, settings.getMaxCopsPerPlayer());
 		assertEquals(3, settings.getCountForLevel(1));
 		assertEquals(20.0, settings.getRangedMaxDistance());

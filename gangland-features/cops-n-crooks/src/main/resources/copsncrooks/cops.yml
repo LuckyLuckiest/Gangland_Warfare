@@ -142,8 +142,12 @@ Cops:
       Station_Arrival_Distance: 3.0
 
    # Pathfinding and stuck detection for cops: the cops' own copy of settings.yml NPC_Navigation (civilians keep
-   # theirs). Recalculation_Ticks and Min_Repath_After_Loss_Ticks are still read from settings.yml.
+   # theirs).
    Navigation:
+      # Ticks between navigation path recalculations. Lower = more responsive but higher CPU cost.
+      Recalculation_Ticks: 10
+      # Ticks a cop waits before re-pathing after losing its route.
+      Min_Repath_After_Loss_Ticks: 2
       # AI ticks between movement-progress samples for stuck detection.
       Stuck_Check_Interval: 5
       # Consecutive stuck samples required before navigation is considered stuck.
