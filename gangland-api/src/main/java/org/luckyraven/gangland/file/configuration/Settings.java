@@ -59,6 +59,8 @@ public class Settings implements FileInitializer {
 	private static @Getter BigDecimal userMaxBalance;
 	private static @Getter BigDecimal bankInitialBalance;
 	private static @Getter BigDecimal bankCreateFee;
+	/** Moved to banker_settings.yml in 0.15.1: this field reads settings.yml only; the gangland-npc-shops module reads its own file. */
+	@Deprecated
 	private static @Getter BigDecimal bankRenameFee;
 	private static @Getter long       bankResetPeriodSeconds;
 	// user levels
@@ -98,99 +100,169 @@ public class Settings implements FileInitializer {
 	private static @Getter boolean wantedEnabled, wantedTimerEnabled, wantedTimerMultiplierEnabled,
 			wantedKillComboEnabled;
 	private static @Getter int wantedTimerTime, wantedLevelIncrement, wantedMaximumLevel, wantedKillComboResetAfter;
+	/** Moved to copsncrooks/wanted.yml in 0.15.1: this field reads settings.yml only; the cops-n-crooks module reads its own file. */
+	@Deprecated
 	private static @Getter List<Integer> wantedKillCounter;
 	// gang configuration
 	private static @Getter boolean       gangEnabled, gangNameDuplicates;
+	/** Moved to gang/gang_settings.yml in 0.15.1: this field reads settings.yml only; the gangland-gang module reads its own file. */
+	@Deprecated
 	private static @Getter String gangRankHead, gangRankTail, gangDisplayNameChar;
+	@Deprecated
 	private static @Getter BigDecimal gangInitialBalance;
+	@Deprecated
 	private static @Getter BigDecimal gangCreateFee;
+	@Deprecated
 	private static @Getter BigDecimal gangMaxBalance;
+	@Deprecated
 	private static @Getter double     gangContributionRate;
 	// civilian AI configuration
+	/** Moved to npc/civilians.yml in 0.15.1: this field reads settings.yml only; the gangland-civilians module reads its own file. */
+	@Deprecated
 	private static @Getter boolean    civilianAiEnabled;
+	@Deprecated
 	private static @Getter int        civilianAiTickRate;
 	// civilian spawner proximity configuration
+	@Deprecated
 	private static @Getter double     civilianSpawnerActivationRadius;
+	@Deprecated
 	private static @Getter double     civilianSpawnerDespawnRadius;
+	@Deprecated
 	private static @Getter int        civilianSpawnerMaxNpcs;
+	@Deprecated
 	private static @Getter double     civilianSpawnerSoftLeashRadius;
+	@Deprecated
 	private static @Getter double     civilianSpawnerHardLeashRadius;
+	@Deprecated
 	private static @Getter int        civilianSpawnerCheckInterval;
+	@Deprecated
 	private static @Getter String     civilianSpawnerDefaultTypeId;
 	// civilian spawn configuration
+	@Deprecated
 	private static @Getter double     civilianSpawnMinDistance, civilianSpawnMaxDistance,
 			civilianSpawnPhase1MinDistance;
+	@Deprecated
 	private static @Getter double civilianSpawnRadiusShrinkStep, civilianSpawnSpawnerPreferenceRadius,
 			civilianSpawnVisibilityCheckDistance;
+	@Deprecated
 	private static @Getter int civilianSpawnVerticalSearchRange, civilianSpawnYOffset,
 			civilianSpawnMinOpenHorizontalSides;
+	@Deprecated
 	private static @Getter int civilianSpawnPhase1Attempts, civilianSpawnPhase2Attempts;
+	@Deprecated
 	private static @Getter double civilianSpawnMaxYDiff, civilianSpawnSpawnerMaxYDiff;
 	// shared NPC navigation configuration
+	@Deprecated
 	private static @Getter int npcNavRecalculationTicks, npcNavStuckCheckInterval, npcNavMaxStuckChecks,
 			npcNavMaxHopelessStuckChecks, npcNavMinRepathAfterLossTicks;
+	@Deprecated
 	private static @Getter double npcNavHopelessCloseThreshold, npcNavMinProgressDistance, npcNavRangedMinDistance,
 			npcNavRangedMaxDistance;
 	// cop core configuration
+	/** Moved to copsncrooks/cops.yml and copsncrooks/detainment.yml in 0.15.1: this field reads settings.yml only; the cops-n-crooks module reads its own file. */
+	@Deprecated
 	private static @Getter int copMaxPerPlayer, copAiTickRate, copSpawnCheckRate, copMaxCuffAttempts,
 			copCuffCooldownTicks, copAttackCooldownTicks;
+	@Deprecated
 	private static @Getter double copCuffRadius, copAlertRange, copCombatRange;
 	// cop count configuration
+	@Deprecated
 	private static @Getter boolean copCountFormulaEnabled;
+	@Deprecated
 	private static @Getter String  copCountFormula;
+	@Deprecated
 	private static @Getter int     copCountBase, copCountPerLevel, copCountMax;
 	// cop spawn configuration
+	@Deprecated
 	private static @Getter double copSpawnMinDistance, copSpawnMaxDistance, copSpawnPhase1MinDistance;
+	@Deprecated
 	private static @Getter double copSpawnRadiusShrinkStep, copSpawnSpawnerPreferenceRadius,
 			copSpawnVisibilityCheckDistance;
+	@Deprecated
 	private static @Getter int copSpawnVerticalSearchRange, copSpawnYOffset, copSpawnMinOpenHorizontalSides;
+	@Deprecated
 	private static @Getter int copSpawnPhase1Attempts, copSpawnPhase2Attempts;
+	@Deprecated
 	private static @Getter double copSpawnMaxYDiff, copSpawnSpawnerMaxYDiff;
 	// cop pursuit leash configuration
+	@Deprecated
 	private static @Getter double     copPursuitMaxDistance;
+	@Deprecated
 	private static @Getter int        copPursuitMaxTicks;
 	// cop return / despawn configuration
+	@Deprecated
 	private static @Getter int        copReturnMaxTicks;
+	@Deprecated
 	private static @Getter double     copReturnStationArrivalDistance;
 	// cop misc configuration
+	@Deprecated
 	private static @Getter int        jailMaxCapacity;
 	// detainment transit / guard
+	@Deprecated
 	private static @Getter int        detainmentTransitDelayTicks;
+	@Deprecated
 	private static @Getter double     detainmentGuardRadius;
 	// detainment break-free minigame
+	@Deprecated
 	private static @Getter int        detainmentBreakFreeTapsRequired;
+	@Deprecated
 	private static @Getter int        detainmentBreakFreeResetWindowTicks;
 	// detainment handcuff bribe
+	@Deprecated
 	private static @Getter double     detainmentHandcuffBribeBaseCost;
+	@Deprecated
 	private static @Getter double     detainmentHandcuffBribePerLevel;
 	// detainment bail
+	@Deprecated
 	private static @Getter double     detainmentBailBaseCost;
+	@Deprecated
 	private static @Getter double     detainmentBailPerLevel;
 	// detainment jail bribe
+	@Deprecated
 	private static @Getter double     detainmentJailBribeBaseCost;
+	@Deprecated
 	private static @Getter double     detainmentJailBribePerLevel;
+	@Deprecated
 	private static @Getter double     detainmentJailBribeSuccessChance;
+	@Deprecated
 	private static @Getter int        detainmentJailBribeFailPenaltySeconds;
 	// detainment sentence
+	@Deprecated
 	private static @Getter int        detainmentSentenceBaseSeconds;
+	@Deprecated
 	private static @Getter int        detainmentSentencePerWantedLevelSeconds;
 	// detainment fallback exit waypoint
+	@Deprecated
 	private static @Getter String     detainmentFallbackExitWaypoint;
 	// detainment sounds (XSound names; built into SoundEffect at playback)
+	@Deprecated
 	private static @Getter String     detainmentBailSuccessSound;
+	@Deprecated
 	private static @Getter String     detainmentBribeSuccessSound;
+	@Deprecated
 	private static @Getter String     detainmentBribeFailSound;
+	@Deprecated
 	private static @Getter String     detainmentTransitCommitSound;
+	@Deprecated
 	private static @Getter String     detainmentSentenceCompleteSound;
 	// gadget - jetpack
+	/** Moved to gadget/gadget_settings.yml in 0.15.1: this field reads settings.yml only; the gangland-gadget module reads its own file. */
+	@Deprecated
 	private static @Getter int        gadgetJetpackThrustRampTicks;
+	@Deprecated
 	private static @Getter double     gadgetJetpackDescentAccel;
+	@Deprecated
 	private static @Getter double     gadgetJetpackMaxDescentSpeed;
+	@Deprecated
 	private static @Getter double     gadgetJetpackHorizInfluence;
+	@Deprecated
 	private static @Getter double     gadgetJetpackMaxHorizSpeed;
 	// gadget - car
+	@Deprecated
 	private static @Getter double     gadgetCarReverseSpeedRatio;
+	@Deprecated
 	private static @Getter double     gadgetCarHardBrakeMultiplier;
+	@Deprecated
 	private static @Getter int        gadgetCarFuelConsumePerTick;
 	// shop configuration (WS4 G1a: Trader/Banker NPC-specific knobs moved to module-owned
 	// npc/trader_settings.yml and npc/banker_settings.yml — Max_Mode_Multiplier is the one survivor,
@@ -199,34 +271,58 @@ public class Settings implements FileInitializer {
 	// money drop (cash items dropped by mobs / cops / civilians / players on death)
 	private static @Getter boolean       moneyDropEnabled;
 	// turf configuration
+	/** Moved to turf/turf_settings.yml in 0.15.1: this field reads settings.yml only; the gangland-turf module reads its own file. */
+	@Deprecated
 	private static @Getter int           turfIncomeIntervalMinutes;
+	@Deprecated
 	private static @Getter BigDecimal    turfDefaultIncomeAmount;
+	@Deprecated
 	private static @Getter String        turfWandItemType;
+	@Deprecated
 	private static @Getter int           turfVisualizationDurationSeconds;
+	@Deprecated
 	private static @Getter String        turfVisualizationParticle;
+	@Deprecated
 	private static @Getter boolean       turfShowEnterTitle;
 	// turf - capture
+	@Deprecated
 	private static @Getter int           turfCaptureDurationSeconds;
+	@Deprecated
 	private static @Getter int           turfCaptureUnclaimedPhase1Seconds;
+	@Deprecated
 	private static @Getter int           turfCaptureUnclaimedPhase2Seconds;
+	@Deprecated
 	private static @Getter int           turfCaptureCooldownMinutes;
+	@Deprecated
 	private static @Getter int           turfCaptureAbandonGraceSeconds;
+	@Deprecated
 	private static @Getter int           turfCapturePostLogoffProtectionMinutes;
+	@Deprecated
 	private static @Getter int           turfCaptureInactivityAutoReleaseDays;
+	@Deprecated
 	private static @Getter boolean       turfCaptureSoundEnabled;
+	@Deprecated
 	private static @Getter boolean       turfCaptureBroadcastGlobally;
+	@Deprecated
 	private static @Getter List<Integer> turfCaptureProgressMilestones;
 	// turf - sounds
+	@Deprecated
 	private static @Getter String        turfCaptureSoundStartName, turfCaptureSoundCompleteName,
 			turfCaptureSoundFailedName, turfCaptureSoundTickName, turfCaptureSoundUnclaimedName;
+	@Deprecated
 	private static @Getter double turfCaptureSoundStartVolume, turfCaptureSoundCompleteVolume,
 			turfCaptureSoundFailedVolume, turfCaptureSoundTickVolume, turfCaptureSoundUnclaimedVolume;
+	@Deprecated
 	private static @Getter double turfCaptureSoundStartPitch, turfCaptureSoundCompletePitch,
 			turfCaptureSoundFailedPitch, turfCaptureSoundTickPitch, turfCaptureSoundUnclaimedPitch;
 	// turf - contribution
+	@Deprecated
 	private static @Getter double      turfContributionDefenderPresenceTick;
+	@Deprecated
 	private static @Getter double      turfContributionAttackerPresenceTick;
+	@Deprecated
 	private static @Getter double      turfContributionCaptureCompleteBonus;
+	@Deprecated
 	private static @Getter double      turfContributionDefenseSuccessBonus;
 	// signs - legacy header aliases (rewritten onto the generic item-buy/item-sell pair)
 	private static @Getter String      signsLegacyWeaponBuy;
