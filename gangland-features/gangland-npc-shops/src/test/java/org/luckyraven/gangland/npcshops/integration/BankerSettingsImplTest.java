@@ -119,4 +119,32 @@ class BankerSettingsImplTest {
 		// Module custom value wins
 		assertEquals(0, new BigDecimal("750").compareTo(config.getRenameFee()));
 	}
+	@Test
+	@DisplayName("the shipped banker_settings.yml loads with no unknown-key issues")
+	void shippedFile_hasNoUnknownKeys() throws Exception {
+		org.luckyraven.keystone.persistence.config.ConfigReport parseReport =
+				new org.luckyraven.keystone.persistence.config.ConfigReport();
+		org.luckyraven.keystone.persistence.config.ConfigDocument document;
+		try (java.io.InputStream in = getClass().getClassLoader().getResourceAsStream("npc/banker_settings.yml")) {
+			document = new org.luckyraven.keystone.persistence.config.ConfigParser().parse(
+					java.nio.file.Path.of("banker_settings.yml"),
+					new java.io.StringReader(new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8)),
+					parseReport);
+		}
+		FileHandler bankerFile = mock(FileHandler.class);
+		when(bankerFile.getFileConfiguration()).thenReturn(new YamlConfiguration());
+		when(bankerFile.getParsedDocument()).thenReturn(document);
+		FileHandler settingsFile = mock(FileHandler.class);
+		when(settingsFile.getFileConfiguration()).thenReturn(new YamlConfiguration());
+		FileManager fileManager = mock(FileManager.class);
+		when(fileManager.getFile("banker_settings")).thenReturn(bankerFile);
+		when(fileManager.getFile("settings")).thenReturn(settingsFile);
+
+		org.luckyraven.keystone.persistence.config.ConfigReport report =
+				new BankerSettingsImpl(fileManager).load();
+
+		assertTrue(report.issues().stream().noneMatch(issue -> "config.unknown_key".equals(issue.code())),
+		           () -> "unknown keys: " + report.issues());
+	}
+
 }

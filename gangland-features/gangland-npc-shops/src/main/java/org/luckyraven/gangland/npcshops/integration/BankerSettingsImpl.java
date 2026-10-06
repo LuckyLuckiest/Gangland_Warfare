@@ -17,7 +17,7 @@ import java.math.BigDecimal;
 import java.util.Objects;
 
 /**
- * Reads {@code npc/banker_settings.yml} (module-owned default, WS4 G1a — moved out of the core settings.yml
+ * Reads {@code npc/banker_settings.yml} (module-owned default, WS4 G1a â€” moved out of the core settings.yml
  * {@code Banker:} block). Bank economy knobs ({@code getResetPeriodSeconds}/{@code getCreateFee}/
  * {@code getInitialBalance} stay delegated to core {@link Settings}. {@code getRenameFee} moved to this file.
  */
@@ -50,7 +50,7 @@ public final class BankerSettingsImpl implements BankerSettings, BeanLifecycle {
 		load();
 	}
 
-	private void load() {
+	ConfigReport load() {
 		ConfigReport report = new ConfigReport();
 		NodeReader   reader = FileHandlerReader.read(fileHandler, report);
 
@@ -59,11 +59,13 @@ public final class BankerSettingsImpl implements BankerSettings, BeanLifecycle {
 		invulnerable    = reader.get("Invulnerable").asBool().orDefault(true);
 		fallbackTierId  = reader.get("Fallback_Tier_Id").asString().orDefault("Basic");
 
+		reader.get("Rename_Fee"); // read below through MovedSetting; touched so the unknown-key sweep knows it
 		// Rename_Fee moved from core settings.yml; use MovedSetting to fall back for servers still using the old location
 		MovedSetting moved = MovedSetting.of(fileHandler, fileManager, "npcshops");
 		renameFee = moved.getMoney("Rename_Fee", "User.Bank.Rename_Fee", "1000");
 
 		if (!report.isEmpty()) report.log(log);
+		return report;
 	}
 
 	@Override
