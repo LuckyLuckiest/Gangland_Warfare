@@ -175,8 +175,7 @@ User:
       # When a player wants to create a bank account, they're required to pay a fee.
       # Set it to zero, and the requirement is lifted.
       Create_Cost: 5_000
-      # Charged (from cash) every time the player renames their account at a Banker NPC. 0 disables.
-      Rename_Fee: 1_000
+      # Rename_Fee: moved to plugins/Gangland_Warfare/npc/banker_settings.yml (gangland-npc-shops module) in 0.15.1.
       # Length of the rolling window (seconds) after which the deposit counter resets. Defaults to 24h.
       # Measured from the player's first interaction within a window — not midnight — so splitting a transaction
       # across midnight never counts against two separate windows.
@@ -311,199 +310,18 @@ Wanted:
    Level:
       Increment: 1
       Maximum: 5
-   # Number of kills to get a wanted level.
-   Kill_Combo:
-      Enable: true
-      # The time till the kill combo resets.
-      Reset_After: 10
-      # The kill counter to increment the wanted level.
-      Kill_Counter:
-         - 2
-         - 5
-         - 10
-         - 15
-         - 20
+   # Kill_Combo: moved to plugins/Gangland_Warfare/copsncrooks/wanted.yml (cops-n-crooks module) in 0.15.1.
 
-# +-------------+ #
-# | Cops Config | #
-# +-------------+ #
-Cops:
-   Count:
-      # Set to true to evaluate the Formula string below instead of the linear Base/Per_Level/Max calculation.
-      Formula_Enabled: false
-      # Formula evaluated when Formula_Enabled is true.
-      # Available variables: level, base, perLevel, max
-      # Example: "base + (level - 1) * perLevel" (equivalent to the built-in linear formula)
-      Formula: "base + (level - 1) * perLevel"
-      # Cops at wanted level 1 (used for both the linear formula and as the 'base' variable)
-      Base: 2
-      # Additional cops per wanted level above 1 (used for both modes, exposed as 'perLevel')
-      Per_Level: 1
-      # Hard cap - result is always clamped to this value
-      Max: 8
-
-   # Core behavior values shared across all cop tiers.
-   Behaviour:
-      # Hard cap on the number of cop NPCs active per wanted player at any time.
-      Max_Per_Player: 8
-      # Game ticks between each AI evaluation cycle. Lower = faster reactions, higher CPU cost.
-      AI_Tick_Rate: 10
-      # Game ticks between each check that decides whether to spawn more cops.
-      Spawn_Check_Rate: 40
-      # Default radius within which a cop can attempt to cuff the target (blocks). Tiers may override this.
-      Cuff_Radius: 3.0
-      # How many cuff attempts a cop makes before giving up and switching to combat.
-      Max_Cuff_Attempts: 3
-      # Game ticks the cop waits between consecutive cuff attempts.
-      Cuff_Cooldown_Ticks: 100
-      # Sight range (blocks): a cop sees a wanted player within this distance when it has line of sight, and
-      # every sighting is shared with the other cops chasing that player.
-      Alert_Range: 40.0
-      # Distance at which a MELEE cop may start an attack. Ranged cops fire at anything they can see within
-      # Alert_Range. A swing lands only within Cops.Melee.Reach (cops.yml).
-      Combat_Range: 4.0
-      # Game ticks between melee attacks.
-      Attack_Cooldown_Ticks: 20
-
-   # Controls where cop NPCs spawn relative to the target player.
-   Spawn:
-      # Minimum distance from the player to spawn a cop (blocks).
-      Min_Distance: 10.0
-      # Maximum distance from the player to spawn a cop (blocks).
-      Max_Distance: 50.0
-      # Minimum ring distance used during phase-1 (preferred-ring, behind-player) spawn attempts (blocks).
-      Phase1_Min_Distance: 30.0
-      # Amount the ring radius shrinks per phase-2 iteration (blocks).
-      Radius_Shrink_Step: 5.0
-      # Vertical range searched above/below the player's Y level to find valid ground (blocks).
-      Vertical_Search_Range: 10
-      # Y-offset added to the player's Y when searching for spawn ground. 0 = same level as player.
-      Y_Offset: 0
-      # Minimum number of open horizontal sides required at a spawn position.
-      Min_Open_Sides: 2
-      # Radius within which a registered cop spawner is preferred over a random position (blocks).
-      Spawner_Preference_Radius: 80.0
-      # Distance within which another player triggers the visibility check during despawn (blocks).
-      Visibility_Check_Distance: 48.0
-      # Number of attempts in phase-1 (preferred ring, behind-player) of spawn location selection.
-      Phase1_Attempts: 20
-      # Number of attempts per shrink step in phase-2 of spawn location selection.
-      Phase2_Attempts: 15
-      # Maximum |spawnY - playerY| allowed for a chosen spawn location (blocks). The vertical search
-      # may scan further to locate ground (see Vertical_Search_Range) but the resulting position is
-      # rejected if the cop ends up too far above or below the player — prevents cops from spawning
-      # on a rooftop while the player is on the street, or vice-versa.
-      Max_Y_Diff: 4.0
-      # Maximum |spawnerY - playerY| allowed when picking a registered cop spawner (blocks). Filters
-      # out spawners whose Y is too far from the player so the spawned cop can plausibly path to them.
-      # Generous default so a roof-vs-ground-floor pair both apply, but a tower 25+ blocks above the
-      # street is excluded.
-      Spawner_Max_Y_Diff: 16.0
-
-   # Controls when a pursuing cop gives up chasing its target and transitions to RETURNING.
-   # Acts as a final-fallback leash so stuck/unreachable cops don't occupy the per-player cap forever.
-   Pursuit:
-      # Distance from the target (blocks) beyond which the pursuing cop gives up.
-      Max_Distance: 80.0
-      # AI ticks a pursuing cop may stay stuck while no cop chasing the same player can see them before it gives up
-      # (the spawner replaces it). Ticks where it moves or anyone sees the player reset the count.
-      # Default 120 = ~60 s at AI_Tick_Rate: 10 (10 game ticks per AI tick, 20 TPS).
-      Max_Ticks: 120
-
-   # Controls how a cop returns to its station and despawns after the target is detained.
-   Return:
-      # Maximum AI ticks the cop waits before being force-despawned. (600 = ~300 s at the default AI_Tick_Rate: 10)
-      # A cop whose way back to the station has no route despawns sooner, after Cops.Stuck.Recycle_Seconds.
-      Max_Ticks: 600
-      # Distance to the station at which the cop considers itself arrived and attempts to despawn (blocks).
-      Station_Arrival_Distance: 3.0
-
-# +-------------------+ #
-# | Detainment Config | #
-# +-------------------+ #
-Detainment:
-   Jail:
-      # The maximum capacity of jail inmates a jail can hold
-      Max_Capacity: 10
-   # After a cop successfully handcuffs a player, the cop stays in GUARDING state
-   # next to the player. When the delay expires (or the player dies), the player
-   # is teleported to the nearest non-full jail, their inventory is seized, and
-   # they are given a Jail Paperwork item that opens the bail/bribe/sentence GUI.
-   Transit:
-      # Ticks between the cuff landing and the auto-teleport to jail. 400 = 20 seconds.
-      Delay_Ticks: 400
-      # Radius (blocks) the guarding cop tries to stay within the cuffed player.
-      Guard_Radius: 5.0
-   # While handcuffed, the player can spam the Sneak key to fill a break-free meter. If they reach the required
-   # number of taps before the reset window runs out the cuffs come off and they run free — wanted level stays, so
-   # cops will re-engage on the next AI tick.
-   Break_Free:
-      # Total sneak taps needed within the window to break out.
-      Taps_Required: 25
-      # Ticks of inactivity that reset the counter back to zero (20 ticks = 1 second).
-      Reset_Window_Ticks: 40
-   # While handcuffed, right-clicking the guarding cop opens a small GUI with a
-   # "Bribe" button. Cost is debited from the player's balance; no money item
-   # needs to be in hand. The money.yml variation closest to the cost is shown
-   # as the button icon.
-   Handcuff_Bribe:
-      Base_Cost: 500.0
-      Per_Wanted_Level: 250.0
-   # Once jailed, "Pay Bail" on the Jail Paperwork item releases the player
-   # immediately for this cost. Balance-based.
-   Bail:
-      Base_Cost: 2_500.0
-      Per_Wanted_Level: 1_000.0
-   # "Bribe Officer" on the Jail Paperwork item is cheaper than bail but rolls
-   # a chance. On failure the money is still consumed and the sentence timer is
-   # extended by Fail_Penalty_Seconds.
-   Jail_Bribe:
-      Base_Cost: 1_000.0
-      Per_Wanted_Level: 500.0
-      Success_Chance: 0.35
-      Fail_Penalty_Seconds: 60
-   # "Serve Sentence" closes the GUI and counts down. Sentence length is based
-   # on the player's wanted level at arrest time. Expires -> automatic release.
-   Sentence:
-      Base_Seconds: 180
-      Per_Wanted_Level_Seconds: 60
-   # Waypoint used when a jail has no explicit exit location configured via
-   # /glw jail setexit. Resolved through the existing Waypoint
-   Fallback_Exit_Waypoint: spawn
-   # Sound names played at key detainment moments.
-   Sounds:
-      Bail_Success: BLOCK_NOTE_BLOCK_PLING
-      Bribe_Success: ENTITY_VILLAGER_YES
-      Bribe_Fail: ENTITY_VILLAGER_NO
-      Transit_Commit: BLOCK_IRON_DOOR_CLOSE
-      Sentence_Complete: BLOCK_BELL_USE
+# Cops and Detainment: moved to plugins/Gangland_Warfare/copsncrooks/cops.yml and copsncrooks/detainment.yml
+# (cops-n-crooks module) in 0.15.1.
 
 # +-------------+#
 # | Gang Config |#
 # +-------------+#
 Gang:
    Enable: true
-   # Allow duplicating gang names.
-   Name_Duplicates: false
-   Display_Name_Char: '*'
-   # Hierarchy of ranks
-   Rank:
-      # The initial rank
-      Head: "member"
-      # The final rank
-      Tail: "owner"
-   Account:
-      # When a player creates a gang account, his account will have the amount of money that you set.
-      Initial_Balance: 0
-      # When a player wants to create a gang account, they are required to pay a fee.
-      # Set it to zero, and the requirement is lifted.
-      Create_Cost: 100_000
-      # Sets the maximum gang money.
-      Maximum_Balance: 100_000_000_000
-      # The total amount of money deposit for 1 contribution.
-      # ex: deposit $1 -> 0.001
-      # ex: deposit $1000 -> 1
-      Contribution_Rate: 1_000
+   # Name_Duplicates, Display_Name_Char, Rank, Account: moved to plugins/Gangland_Warfare/gang/gang_settings.yml
+   # (gangland-gang module) in 0.15.1. Enable stays here because gangland-civilians still reads it.
 
 # +----------------+ #
 # | Economy Config | #
@@ -515,97 +333,8 @@ Balance_Format:
    Enable: true
    Format: "%,.2f"
 
-# +----------------+ #
-# | NPC Navigation | #
-# +----------------+ #
-
-# Shared pathfinding and stuck-detection settings used by all Citizens NPC types (cops, civilians, etc.).
-NPC_Navigation:
-   # Ticks between navigation path recalculations. Lower = more responsive but higher CPU cost.
-   Recalculation_Ticks: 10
-   # AI ticks between movement-progress samples for stuck detection.
-   Stuck_Check_Interval: 5
-   # Consecutive stuck samples required before navigation is considered stuck.
-   Max_Stuck_Checks: 3
-   # Consecutive stuck samples required before navigation is considered permanently hopeless.
-   Max_Hopeless_Stuck_Checks: 6
-   # Distance (blocks) below which a hopeless NPC can still navigate to the target directly.
-   Hopeless_Close_Threshold: 8.0
-   # Minimum distance the NPC must travel between samples to count as progress (blocks).
-   Min_Progress_Distance: 0.75
-   # Ranged NPCs hold their firing position when the target is within this distance range (blocks).
-   Ranged_Min_Distance: 7.0
-   Ranged_Max_Distance: 12.0
-   # Minimum AI ticks an NPC waits before re-pathing after losing sight of target.
-   Min_Repath_After_Loss_Ticks: 2
-
-# +----------+ #
-# | Civilian | #
-# +----------+ #
-
-# Configuration for civilian NPC AI behavior. Per-type behavior (wander range, flee range, etc.)
-# is configured in civilians.yml.
-Civilians:
-   Behaviour:
-      # Set to false to disable all civilian NPC AI ticking.
-      Enabled: true
-      # Game ticks between each civilian AI evaluation cycle.
-      AI_Tick_Rate: 20
-   # Controls where civilian NPCs spawn relative to the target player.
-   Spawn:
-      # Minimum distance from the player to spawn a civilian (blocks).
-      Min_Distance: 10.0
-      # Maximum distance from the player to spawn a civilian (blocks).
-      Max_Distance: 50.0
-      # Minimum ring distance used during phase-1 (preferred-ring, behind-player) spawn attempts (blocks).
-      Phase1_Min_Distance: 30.0
-      # Amount the ring radius shrinks per phase-2 iteration (blocks).
-      Radius_Shrink_Step: 5.0
-      # Vertical range searched above/below the player's Y level to find valid ground (blocks).
-      Vertical_Search_Range: 10
-      # Y-offset added to the player's Y when searching for spawn ground. 0 = same level as player.
-      Y_Offset: 0
-      # Minimum number of open horizontal sides required at a spawn position.
-      Min_Open_Sides: 2
-      # Radius within which a registered cop spawner is preferred over a random position (blocks).
-      Spawner_Preference_Radius: 80.0
-      # Distance within which another player triggers the visibility check during despawn (blocks).
-      Visibility_Check_Distance: 48.0
-      # Number of attempts in phase-1 (preferred ring, behind-player) of spawn location selection.
-      Phase1_Attempts: 20
-      # Number of attempts per shrink step in phase-2 of spawn location selection.
-      Phase2_Attempts: 15
-      # Maximum |spawnY - playerY| allowed for a chosen spawn location (blocks). The vertical search
-      # may scan further to locate ground (see Vertical_Search_Range) but the resulting position is
-      # rejected if the civilian ends up too far above or below the player.
-      Max_Y_Diff: 4.0
-      # Maximum |spawnerY - playerY| allowed when picking a registered civilian spawner (blocks).
-      # Filters out spawners whose Y is too far from the player so the spawned civilian can plausibly
-      # path to them.
-      Spawner_Max_Y_Diff: 16.0
-   # Controls automatic civilian spawning from registered spawner points based on player proximity.
-   # Civilians spawn at spawner locations when a player enters the activation radius, similar to
-   # Minecraft village spawning. They despawn when all players move beyond the despawn radius.
-   Spawner_Proximity:
-      # Radius within which a player activates a civilian spawner (blocks). Large values mean
-      # civilians are already present when the player arrives at the location.
-      Activation_Radius: 60.0
-      # Radius beyond which all civilians from a spawner are despawned when no player is within it (blocks).
-      # Should be larger than Activation_Radius to avoid immediate despawn on the boundary.
-      Despawn_Radius: 80.0
-      # Maximum number of civilians that can be alive at once per spawner.
-      Max_Npcs_Per_Spawner: 5
-      # Distance (blocks) beyond which a wandering civilian is biased back toward its spawner.
-      # Keeps NPCs from drifting off the map without forcing an abrupt despawn.
-      Npc_Soft_Leash_Radius: 30.0
-      # Distance (blocks) beyond which a wandering civilian is despawned individually, freeing the
-      # Max_Npcs_Per_Spawner slot so a replacement can spawn. Should be < Despawn_Radius.
-      Npc_Hard_Leash_Radius: 50.0
-      # Ticks between each proximity check cycle. 100 ticks = 5 seconds at 20 TPS.
-      Check_Interval: 100
-      # Default civilian type ID to use when a spawner has no pinned type.
-      # Must match a type key defined in civilians.yml. Leave empty to skip untyped spawners.
-      Default_Type_Id: ""
+# NPC_Navigation: moved to the module YAMLs (copsncrooks/cops.yml Cops.Navigation, npc/civilians.yml Navigation) in 0.15.1.
+# Civilians: moved to plugins/Gangland_Warfare/npc/civilians.yml (gangland-civilians module) in 0.15.1.
 
 # +--------------------+ #
 # | Money Drop Config  | #
@@ -616,28 +345,7 @@ Civilians:
 Money_Drop:
    Enabled: true
 
-# +-----------------+ #
-# | Gadgets Config  | #
-# +-----------------+ #
-Gadgets:
-   Jetpack:
-      # Ticks of continuous thrust to ramp from 10% to 100% ascend power.
-      Thrust_Ramp_Ticks: 20
-      # Downward acceleration added per tick while descending (m/tick²).
-      Descent_Accel: 0.022
-      # Terminal descent speed — descent will not exceed this (negative = downward).
-      Max_Descent_Speed: -0.5
-      # Horizontal speed delta added per tick when a directional key is held (m/tick).
-      Horiz_Influence: 0.03
-      # Maximum horizontal speed while airborne (m/tick).
-      Max_Horiz_Speed: 0.25
-   Car:
-      # Fraction of max speed used when reversing (0.5 = half max speed).
-      Reverse_Speed_Ratio: 0.5
-      # Multiplier applied to deceleration when the driver hard-brakes (sneak key).
-      Hard_Brake_Multiplier: 3.0
-      # Fuel units consumed per tick while the car is moving.
-      Fuel_Consume_Per_Tick: 1
+# Gadgets: moved to plugins/Gangland_Warfare/gadget/gadget_settings.yml (gangland-gadget module) in 0.15.1.
 
 # +------+ #
 # | Shop | #
@@ -650,107 +358,7 @@ Shop:
    # Upper cap on the multiplier used by the shop price-editor's +/- buttons (via the custom-mode anvil).
    Max_Mode_Multiplier: 1000000
 
-# +------+ #
-# | Turf | #
-# +------+ #
-
-# Gang turf system. Admins define cuboid (X/Z) regions that gangs own and fight over via
-# /glw turf. Owning a turf generates passive income every Income_Interval_Minutes. Contested
-# turfs follow the weighted head-count capture model in CaptureService.
-Turf:
-   # Interval (minutes) between income payouts to each turf's owning gang. Paid straight into
-   # the gang vault; orphaned turfs (owning gang deleted) auto-release.
-   Income_Interval_Minutes: 10
-   # Default income amount stamped on new turfs by /glw turf create when no amount is given.
-   Default_Income_Amount: 100.0
-   # Material given by /glw turf wand; any ItemStack NBT-tagged as a turf wand still works, so
-   # changing this does not invalidate previously given wands.
-   Wand_Item_Type: CARROT_ON_A_STICK
-   # Seconds the /glw turf show particle outline runs before self-cancelling.
-   Visualization_Duration_Seconds: 30
-   # Particle type spawned along the 4 vertical edges by /glw turf show (XSeries-resolved name).
-   Visualization_Particle: FLAME
-   # Whether the big title screen flashes on the player when they enter a turf. Disable to
-   # keep the announcement to just the action-bar line, which is less intrusive when sprinting
-   # across multiple turfs in a row.
-   Show_Enter_Title: true
-   # Capture subsystem. Runtime state (contested/cooldown/progress) is not persisted — only
-   # Last_Capture_Timestamp anchors cooldowns across restarts.
-   Capture:
-      # Base time (seconds) for a single attacker to fill 0 -> 100 with no defenders present.
-      # Multiple attackers fill proportionally faster; defenders inside roll progress backward.
-      # Applies to captures of OWNED turfs. Unclaimed turfs use the two-phase timings below.
-      Duration_Seconds: 180
-      # Unclaimed turfs capture in two phases with independent timings. Phase 1 (CLAIM) marks the turf
-      # as "potentially" yours; Phase 2 (CONSOLIDATE) locks it in. Other gangs present inside decrease
-      # progress; if they push Phase 1 all the way to zero while dominating, they take over and start
-      # at Phase 2 (aggression reward). Each base time assumes one attacker with no opposition — net
-      # head-count scales the actual fill rate.
-      Unclaimed_Phase1_Seconds: 90
-      Unclaimed_Phase2_Seconds: 90
-      # Lockout window (minutes) after a capture completes during which the turf cannot be
-      # contested again.
-      Cooldown_Minutes: 15
-      # Grace (seconds) after the challenger leaves the turf before the contest cancels as
-      # ABANDONED.
-      Abandon_Grace_Seconds: 15
-      # After the last gang member logs off, the gang's turfs stay protected for this many
-      # minutes; after that they become capturable again with the gang fully offline.
-      Post_Logoff_Protection_Minutes: 10
-      # Days of zero gang activity before every turf the gang owns auto-releases.
-      Inactivity_Auto_Release_Days: 10
-      # Play the capture start / complete / failed sounds (see Sounds below) to players inside
-      # the turf. Disable to keep captures silent.
-      Enable_Sound: true
-      # When true, a capture completing fires a server-wide broadcast message. Disable on
-      # servers where capture results should stay local.
-      Broadcast_Globally: true
-      # Progress % thresholds that fire TurfCaptureProgressEvent on an upward crossing only —
-      # oscillation in a see-saw fight does not re-emit them.
-      Progress_Milestones: [25, 50, 75]
-      # Sounds played on every player currently inside the turf when the capture state
-      # transitions. Sound names resolved via XSeries so both 1.13+ and legacy ids work.
-      Sounds:
-         Start:
-            Name: BLOCK_NOTE_BLOCK_PLING
-            Volume: 1.0
-            Pitch: 1.0
-         Complete:
-            Name: UI_TOAST_CHALLENGE_COMPLETE
-            Volume: 1.0
-            Pitch: 1.0
-         Failed:
-            Name: ENTITY_VILLAGER_NO
-            Volume: 1.0
-            Pitch: 1.0
-         # Subtle click played to players inside the turf on every upward bossbar tick (~1 Hz) so attackers get
-         # audio feedback that progress is moving. Keep Volume low — this fires every second while contesting.
-         Tick:
-            Name: BLOCK_NOTE_BLOCK_HAT
-            Volume: 0.3
-            Pitch: 1.8
-         # Played to players inside a turf when its owning gang is cleared (admin
-         # /glw turf setowner none, inactivity auto-release, etc.) — distinct from a failed capture so the audio
-         # cue makes the meaning obvious.
-         Unclaimed:
-            Name: ENTITY_ENDER_DRAGON_GROWL
-            Volume: 0.5
-            Pitch: 1.5
-   # Contribution points awarded to Member.contribution when players take part in turf activity. The gang
-   # module already persists this field and exposes it to commands / leaderboards; values here just control
-   # how aggressively presence + capture events feed it. Tune to match the intended payout weighting.
-   Contribution:
-      Points:
-         # Per 1-Hz tick to defender-gang members standing inside an OWNED turf under contest.
-         Defender_Presence_Tick: 0.5
-         # Per 1-Hz tick to attacker-gang members standing inside the turf they're capturing.
-         Attacker_Presence_Tick: 1.0
-         # Flat one-shot bonus to every challenger-gang member inside the turf at the moment a capture
-         # completes.
-         Capture_Complete_Bonus: 50.0
-         # Flat one-shot bonus to every defender-gang member inside the turf at the moment an attack is
-         # pushed back to zero (DEFENDED).
-         Defense_Success_Bonus: 25.0
+# Turf: moved to plugins/Gangland_Warfare/turf/turf_settings.yml (gangland-turf module) in 0.15.1.
 # Rewrites legacy weapon/ammo/wearable sign headers onto the generic item-buy / item-sell pair, so a sign placed
 # before this stream keeps working once Bartizan is installed and publishes the matching item vocabulary. Each
 # value is "<new sign key>:<line-3 definition prefix>".

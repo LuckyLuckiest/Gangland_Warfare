@@ -27,6 +27,27 @@ file is renamed with a `-old` suffix and a fresh default is generated.
 
 ---
 
+## Where module-owned settings live (0.15.1)
+
+Since 0.15.1 a key that only one runtime module reads lives in that module's own YAML, not in `settings.yml`. The
+`settings.yml` sections below for **Wanted.Kill_Combo, Cops, Detainment, Gang (except `Gang.Enable`), NPC Navigation,
+Civilians, Gadgets and Turf**, and `User.Bank.Rename_Fee`, describe the pre-0.15.1 layout: the shipped file no longer
+contains them. The full legacy path -> file -> path table is in [migration-0.15.1.md](../migration-0.15.1.md).
+
+| Module | File (under `plugins/Gangland_Warfare/`) |
+|---|---|
+| `cops-n-crooks` | `copsncrooks/wanted.yml`, `copsncrooks/cops.yml`, `copsncrooks/detainment.yml` |
+| `gangland-civilians` | `npc/civilians.yml` |
+| `gangland-turf` | `turf/turf_settings.yml` |
+| `gangland-gang` | `gang/gang_settings.yml` |
+| `gangland-gadget` | `gadget/gadget_settings.yml` |
+| `gangland-npc-shops` | `npc/banker_settings.yml` |
+
+The `Settings` getters for these keys stay in `gangland-api` (additive contract) but are `@Deprecated` and read
+`settings.yml` only.
+
+---
+
 ## settings.yml
 
 The main configuration file controlling all plugin systems.
