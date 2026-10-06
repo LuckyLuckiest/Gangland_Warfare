@@ -3,25 +3,35 @@
 [← Back to Documentation Index](./README.md)
 
 Gangland 0.15.1 moves every `settings.yml` key that only one runtime module reads into that module's own YAML. No
-gameplay changes. Nothing breaks if you do nothing about it: the modules still honour an edited `settings.yml` value
-for now (section 2).
+gameplay changes. On first boot your `settings.yml` is replaced by a fresh one (section 1); moved keys you had tuned
+keep their values for now because the modules read them from the backup Keystone keeps (section 2), but **core keys you
+had tuned are back at their defaults until you copy them into the new `settings.yml`**.
 
 ## 1. Update
 
 Replace the core jar and the module jars together. Modules declare `Host_Api: 2.2` (the module API gained
 `MovedSetting`, see [gangland-api.md](./gangland-api.md)); a 2.2 module does not load on a 0.15.0 core.
 
-`settings.yml` carries `Config_Version: '${project.version}'`, so the version bump itself makes Keystone rename your old
-file to `settings-old.yml` and write a fresh one on first boot. Nothing is overwritten without a backup. The fresh file
-no longer holds the moved keys, so **copy any value you customised from `settings-old.yml` into the module file below**.
+`settings.yml` carries `Config_Version: '${project.version}'`, so the version bump makes Keystone, on the first 0.15.1
+boot and before any module reads, move your 0.15.0 file to `settings-old.yml` and write a fresh 0.15.1 `settings.yml`
+from the jar. An existing backup is never overwritten: if `settings-old.yml` is already there, the new backup is
+`settings-old (1).yml` (then `(2)`, ...). The fresh file holds the shipped defaults and none of the moved keys.
+
+- **Core keys** (everything that stays in `settings.yml`): copy any value you customised from the backup into the new
+  `settings.yml`. Nothing reads the backup for these.
+- **Moved keys**: copy any value you customised from the backup into the module file listed in section 3. Until you
+  do, the module still uses the backup's value (section 2).
 
 ## 2. The fallback rule
 
-For each moved key the module reads its own file first and also looks at the legacy `settings.yml` path. If
-`settings.yml` still sets the key to a non-default value while the module file is absent or at the default, the
-`settings.yml` value is used and the console warns once per key:
-`settings.yml still sets '<legacy path>', which moved to plugins/Gangland_Warfare/<file> ...`. Copy the value across and
-delete it from `settings.yml`; the legacy read stops in a later release.
+For each moved key the module reads its own file first. The legacy value is the old path in `settings.yml` if that
+file still sets it, otherwise the old path in the newest `settings-old*.yml` in `plugins/Gangland_Warfare/` (newest by
+modification time; read once per config load, ignored with a warning if it does not parse). If the legacy value differs
+from the default while the module file is absent or at the default, the legacy value is used and the console warns once
+per key, naming the file it came from:
+`plugins/Gangland_Warfare/settings-old.yml still sets '<legacy path>', which moved to plugins/Gangland_Warfare/<file> ...`.
+Copy the value into the module file (once it differs from the default, the module file wins) and delete it from
+`settings.yml` if it is there; deleting the backup also ends the fallback. The legacy read stops in a later release.
 
 `%glw_settings_*%` placeholders and `/glw debug` entries for moved keys keep reporting the `settings.yml` value. The
 matching `Settings` getters are deprecated; do not rely on them for a module's real value.

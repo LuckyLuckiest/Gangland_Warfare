@@ -1,16 +1,23 @@
 package org.luckyraven.gangland.file.configuration;
 
 import lombok.CustomLog;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 
@@ -25,10 +32,14 @@ import java.util.function.BiPredicate;
  * }</pre>
  *
  * <p>Rule, per key: the module value is the module file's value when set there, else the default. The legacy value
- * counts only when {@code settings.yml} still sets the old path. The legacy value wins (with one warning per instance
- * naming both files) only when it differs from the default while the module value is still the default, so an owner
+ * is the old path's value in {@code settings.yml}, or, when {@code settings.yml} does not set it, in the newest backup
+ * Keystone wrote beside it ({@code settings-old.yml}, {@code settings-old (1).yml}, ...; newest by modification time).
+ * The backup matters on upgrade: {@code settings.yml} carries {@code Config_Version: '${project.version}'}, so the
+ * version bump makes Keystone move the owner's file to such a backup and write a fresh one without the moved keys
+ * before any module reads. The legacy value wins (with one warning per key per instance naming the file it came from
+ * and the module file) only when it differs from the default while the module value is still the default, so an owner
  * who tuned the old key keeps the tuning until they copy it over. In every other case the module value wins. A later
- * release stops reading {@code settings.yml} and deletes this class.
+ * release stops reading the legacy files and deletes this class.
  *
  * @since gangland-api 2.2
  */
@@ -39,6 +50,10 @@ public final class MovedSetting {
 	private final FileManager fileManager;
 	private final String      moduleId;
 	private final Set<String> warned = new HashSet<>();
+
+	private boolean           backupLoaded;
+	private File              backupFile;
+	private FileConfiguration backup;
 
 	private MovedSetting(FileHandler moduleFile, FileManager fileManager, String moduleId) {
 		this.moduleFile  = moduleFile;
@@ -92,25 +107,59 @@ public final class MovedSetting {
 
 	private <T> T read(String path, String legacyPath, T def, BiFunction<FileConfiguration, String, T> getter,
 	                   BiPredicate<T, T> same) {
-		T module = value(moduleFile, path, getter);
+		T module = value(config(moduleFile), path, getter);
 		if (module == null) module = def;
 
-		T legacy = value(fileManager.getFile("settings"), legacyPath, getter);
+		FileHandler settings = fileManager.getFile("settings");
+		T           legacy   = value(config(settings), legacyPath, getter);
+		String      source   = where(settings);
+
+		if (legacy == null) {
+			legacy = value(backup(settings), legacyPath, getter);
+			source = backupFile == null ? null : backupFile.getPath();
+		}
 		if (legacy == null || same.test(legacy, def) || !same.test(module, def)) return module;
 
 		if (warned.add(legacyPath)) {
-			log.warn("settings.yml still sets '{}', which moved to plugins/Gangland_Warfare/{} (owned by the {} module); " +
-			         "using the settings.yml value for now. Copy it there and delete it from settings.yml; the " +
-			         "settings.yml value stops being read in a later release.", legacyPath, where(moduleFile),
-			         moduleId);
+			log.warn("{} still sets '{}', which moved to {} (owned by the {} module); using that value for now. Copy " +
+			         "it there (and delete it from settings.yml if it is still there); the legacy value stops being " +
+			         "read in a later release.", source, legacyPath, where(moduleFile), moduleId);
 		}
 		return legacy;
 	}
 
-	private static <T> T value(FileHandler file, String path, BiFunction<FileConfiguration, String, T> getter) {
-		if (file == null) return null;
+	/**
+	 * The newest {@code <name>-old[ (n)].<type>} Keystone left beside {@code settings}, loaded once; {@code null} when
+	 * there is none or it does not parse.
+	 */
+	private FileConfiguration backup(FileHandler settings) {
+		if (backupLoaded) return backup;
+		backupLoaded = true;
 
-		FileConfiguration config = file.getFileConfiguration();
+		File file = settings == null ? null : settings.getFile();
+		File[] candidates = file == null || file.getParentFile() == null ? null : file.getParentFile().listFiles();
+		if (candidates == null) return null;
+
+		Pattern name = Pattern.compile(Pattern.quote(settings.getName() + "-old") + "( \\(\\d+\\))?" +
+		                               Pattern.quote("." + settings.getFileType()));
+		backupFile = Arrays.stream(candidates)
+		                   .filter(f -> f.isFile() && name.matcher(f.getName()).matches())
+		                   .max(Comparator.comparingLong(File::lastModified))
+		                   .orElse(null);
+		if (backupFile == null) return null;
+
+		try {
+			YamlConfiguration config = new YamlConfiguration();
+			config.load(backupFile);
+			backup = config;
+		} catch (IOException | InvalidConfigurationException | RuntimeException e) {
+			log.warn("Could not read {} for moved settings ({}); ignoring it.", backupFile.getPath(), e.getMessage());
+			backupFile = null;
+		}
+		return backup;
+	}
+
+	private static <T> T value(FileConfiguration config, String path, BiFunction<FileConfiguration, String, T> getter) {
 		if (config == null || !config.isSet(path)) return null;
 
 		return getter.apply(config, path);
@@ -124,10 +173,14 @@ public final class MovedSetting {
 		}
 	}
 
-	private static String where(FileHandler file) {
-		String directory = file.getDirectory();
-		if (directory == null) return file.getName();
+	private static FileConfiguration config(FileHandler file) {
+		return file == null ? null : file.getFileConfiguration();
+	}
 
-		return directory.replace('\\', '/') + Objects.requireNonNullElse(file.getFileType(), "");
+	/** The file's path as Keystone resolved it (inside the plugin data folder), else its name. */
+	private static String where(FileHandler file) {
+		if (file == null) return null;
+
+		return file.getFile() == null ? file.getName() : file.getFile().getPath();
 	}
 }

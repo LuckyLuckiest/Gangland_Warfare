@@ -4,10 +4,16 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,7 +24,8 @@ import static org.mockito.Mockito.when;
 
 /**
  * Every branch of the {@link MovedSetting} rule: the settings.yml value wins only when it is set, differs from the
- * default and the module file still holds the default (set to it or absent).
+ * default and the module file still holds the default (set to it or absent). When settings.yml does not set the old
+ * path, the newest Keystone backup ({@code settings-old*.yml}) written on the version-bump regeneration stands in.
  */
 @DisplayName("MovedSetting - one-release settings.yml fallback")
 class MovedSettingTest {
@@ -27,6 +34,9 @@ class MovedSettingTest {
 	private YamlConfiguration legacy;
 	private MovedSetting      moved;
 
+	@TempDir
+	Path dataFolder;
+
 	@BeforeEach
 	void setUp() {
 		module = new YamlConfiguration();
@@ -34,11 +44,12 @@ class MovedSettingTest {
 
 		FileHandler moduleFile = mock(FileHandler.class);
 		when(moduleFile.getFileConfiguration()).thenReturn(module);
-		when(moduleFile.getDirectory()).thenReturn("turf/turf_settings");
-		when(moduleFile.getFileType()).thenReturn(".yml");
 
 		FileHandler settings = mock(FileHandler.class);
 		when(settings.getFileConfiguration()).thenReturn(legacy);
+		when(settings.getFile()).thenReturn(dataFolder.resolve("settings.yml").toFile());
+		when(settings.getName()).thenReturn("settings");
+		when(settings.getFileType()).thenReturn("yml");
 
 		FileManager fileManager = mock(FileManager.class);
 		when(fileManager.getFile("settings")).thenReturn(settings);
@@ -216,5 +227,58 @@ class MovedSettingTest {
 		assertEquals(99L, moved.getLong("L", "L", 1L));
 		assertEquals(2.5, moved.getDouble("D", "D", 1.0));
 		assertEquals(7.5, moved.getDouble("D2", "D2", 1.0));
+	}
+
+	// ── Keystone backup (upgrade: settings.yml regenerated without the moved keys) ─────────────────────────────
+
+	@Test
+	void backup_usedWhenSettingsLacksKey() throws IOException {
+		backup("settings-old.yml", "Old: 7\n", 1_000);
+		assertEquals(7, moved.getInt("New", "Old", 5));
+	}
+
+	@Test
+	void backup_settingsWinsOverBackup() throws IOException {
+		backup("settings-old.yml", "Old: 7\n", 1_000);
+		legacy.set("Old", 8);
+		assertEquals(8, moved.getInt("New", "Old", 5));
+	}
+
+	@Test
+	void backup_absent_noLegacy() {
+		assertEquals(5, moved.getInt("New", "Old", 5));
+	}
+
+	@Test
+	void backup_moduleTuned_module() throws IOException {
+		backup("settings-old.yml", "Old: 7\n", 1_000);
+		module.set("New", 9);
+		assertEquals(9, moved.getInt("New", "Old", 5));
+	}
+
+	@Test
+	void backup_newestNumberedBackupWins() throws IOException {
+		backup("settings-old.yml", "Old: 7\n", 1_000);
+		backup("settings-old (1).yml", "Old: 9\n", 3_000);
+		backup("settings-old (2).yml", "Old: 8\n", 2_000);
+		assertEquals(9, moved.getInt("New", "Old", 5));
+	}
+
+	@Test
+	void backup_malformed_ignored() throws IOException {
+		backup("settings-old.yml", "Old: [unclosed\n", 1_000);
+		assertEquals(5, moved.getInt("New", "Old", 5));
+	}
+
+	@Test
+	void backup_otherFilesNotMistakenForBackup() throws IOException {
+		backup("settings-older.yml", "Old: 7\n", 1_000);
+		backup("settings-old.yml.bak", "Old: 7\n", 1_000);
+		assertEquals(5, moved.getInt("New", "Old", 5));
+	}
+
+	private void backup(String name, String yaml, long modified) throws IOException {
+		File file = Files.writeString(dataFolder.resolve(name), yaml, StandardCharsets.UTF_8).toFile();
+		assertTrue(file.setLastModified(modified));
 	}
 }

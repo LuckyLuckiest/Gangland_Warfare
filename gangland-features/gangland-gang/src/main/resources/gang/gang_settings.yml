@@ -1,8 +1,9 @@
 # +----------------------+ #
 # | Gang module settings | #
 # +----------------------+ #
-# Moved here from settings.yml (Gang section) in 0.15.1. If settings.yml still sets one of these keys to a
-# non-default value while this file keeps the default, the settings.yml value is used for now and a warning is logged.
+# Moved here from settings.yml (Gang section) in 0.15.1. If settings.yml, or the settings-old.yml backup the upgrade
+# leaves, still sets one of these keys to a non-default value while this file keeps the default, that value is used
+# for now and a warning is logged.
 # Copy it here and delete it from settings.yml. (Gang.Enable stays in settings.yml.)
 
 # Allow duplicating gang names.

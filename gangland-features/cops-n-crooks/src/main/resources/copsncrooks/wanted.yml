@@ -8,7 +8,8 @@
 
 Wanted:
    # Number of kills to get a wanted level. Moved here from settings.yml (Wanted.Kill_Combo) in 0.15.1; a value still
-   # tuned in settings.yml is used, with a console warning, until it is copied here. Delete it there afterwards.
+   # tuned in settings.yml, or in the settings-old.yml backup the upgrade leaves, is used (console warning) until it
+   # is copied here. Delete it there afterwards.
    Kill_Combo:
       # false = no combo: with Heat off every counted kill adds a star at once, and no crime is ever chained.
       Enable: true
