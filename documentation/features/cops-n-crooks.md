@@ -281,11 +281,16 @@ All commands require appropriate permissions.
 
 ## Configuration
 
-Cop behavior is split across two files: `cops.yml` (tier definitions and AI tuning) and `settings.yml` (cop count
-scaling).
+Cop behavior lives in `cops.yml`: tier definitions, AI tuning and, since 0.15.1, the cop count scaling, behaviour,
+spawn, pursuit, return and navigation knobs that used to be in `settings.yml` (same `Cops.*` paths; navigation is
+`Cops.Navigation`, a copy of `settings.yml` `NPC_Navigation`, and the guarding radius is `Cops.Behaviour.Guard_Radius`,
+formerly `Detainment.Transit.Guard_Radius`). The jail, bail, bribe and sentence knobs moved to `detainment.yml` and
+`Wanted.Kill_Combo` to `wanted.yml`. For one release a value still tuned in `settings.yml` is used, with a console
+warning naming the new file, while the module file holds the shipped default; copy it over and delete it from
+`settings.yml`.
 
 The module's own files (`cops.yml`, `cop_roles.yml`, `cop_radio_messages(_es).yml`, `wanted.yml`,
-`wanted_messages.yml`) live in `plugins/Gangland_Warfare/copsncrooks/`. Older versions kept them in `npc/`; on the
+`wanted_messages.yml`, `detainment.yml`) live in `plugins/Gangland_Warfare/copsncrooks/`. Older versions kept them in `npc/`; on the
 first boot after the update each one is moved from `npc/` to `copsncrooks/` with its values intact. If a file exists in
 both folders, the `copsncrooks/` one is used and the `npc/` copy is left alone with a console warning.
 
@@ -455,7 +460,7 @@ Which gear a cop wears, slot by slot, and which weapon pool it draws from:
 On a melee tier step 2's `Weapon_Pool` is skipped (the cop keeps its melee weapon). A role pool with no vanilla item
 keeps the tier's vanilla items, which the cop holds when no Bartizan weapon resolves (Bartizan missing, unknown name).
 
-### AI Settings (`settings.yml` → `Cops.Behaviour`)
+### AI Settings (`cops.yml` → `Cops.Behaviour`)
 
 ```yaml
 Cops:
@@ -469,11 +474,12 @@ Cops:
       Alert_Range: 40.0             # Sight range: a cop sees a wanted player this close with line of sight; shared by the squad
       Combat_Range: 4.0             # Distance at which a melee cop starts a swing (ranged cops fire within Alert_Range)
       Attack_Cooldown_Ticks: 20     # Server ticks between melee swings
+      Guard_Radius: 5.0             # Blocks the guarding cop stays within the cuffed player (was Detainment.Transit)
 ```
 
 ---
 
-### Spawn Settings (`settings.yml` → `Cops.Spawn`)
+### Spawn Settings (`cops.yml` → `Cops.Spawn`)
 
 ```yaml
 Cops:
@@ -493,12 +499,11 @@ Cops:
 
 ---
 
-### Navigation Settings (`settings.yml` → `Cops.Navigation`)
+### Navigation Settings (`cops.yml` → `Cops.Navigation`)
 
 ```yaml
 Cops:
    Navigation:
-      Recalculation_Ticks: 10       # Ticks between pathfinding path recalculations
       Stuck_Check_Interval: 5       # AI ticks between movement-progress samples for stuck detection
       Max_Stuck_Checks: 3           # Consecutive stuck samples before the cop retries pathfinding
       Max_Hopeless_Stuck_Checks: 6  # Consecutive stuck samples before navigation is considered permanently failed
@@ -506,12 +511,13 @@ Cops:
       Min_Progress_Distance: 0.75   # Minimum blocks moved between samples to count as progress (not stuck)
       Ranged_Min_Distance: 7.0      # Ranged cops hold their firing position when target is closer than this
       Ranged_Max_Distance: 12.0     # Ranged cops hold position when target is farther than this
-      Min_Repath_After_Loss_Ticks: 2.0  # Minimum AI ticks before the cop re-paths after losing combat
 ```
+
+`Recalculation_Ticks` and `Min_Repath_After_Loss_Ticks` are still read from `settings.yml` `NPC_Navigation`.
 
 ---
 
-### Pursuit Settings (`settings.yml` → `Cops.Pursuit`)
+### Pursuit Settings (`cops.yml` → `Cops.Pursuit`)
 
 ```yaml
 Cops:
@@ -522,7 +528,7 @@ Cops:
 
 ---
 
-### Return Settings (`settings.yml` → `Cops.Return`)
+### Return Settings (`cops.yml` → `Cops.Return`)
 
 ```yaml
 Cops:
@@ -533,7 +539,7 @@ Cops:
 
 ---
 
-### Cop Count Scaling (`settings.yml` → `Cops.Count`)
+### Cop Count Scaling (`cops.yml` → `Cops.Count`)
 
 ```yaml
 Cops:

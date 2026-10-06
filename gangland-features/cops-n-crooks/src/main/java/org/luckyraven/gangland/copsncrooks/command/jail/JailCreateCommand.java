@@ -7,26 +7,29 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
+import org.luckyraven.gangland.copsncrooks.integration.detainment.DetainmentSettings;
 import org.luckyraven.gangland.copsncrooks.jail.Jail;
 import org.luckyraven.gangland.copsncrooks.jail.JailRegistry;
 import org.luckyraven.gangland.copsncrooks.jail.JailService;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.file.configuration.Settings;
 
 class JailCreateCommand extends SubArgument {
 
-	private final JailService  jailService;
-	private final JailRegistry jailRegistry;
+	private final JailService        jailService;
+	private final JailRegistry       jailRegistry;
+	private final DetainmentSettings detainmentSettings;
 
 	protected JailCreateCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                            JailService jailService,
-	                            JailRegistry jailRegistry) {
+	                            JailRegistry jailRegistry,
+	                            DetainmentSettings detainmentSettings) {
 		super(plugin, "create", tree, parent);
 
-		this.jailService  = jailService;
-		this.jailRegistry = jailRegistry;
+		this.jailService        = jailService;
+		this.jailRegistry       = jailRegistry;
+		this.detainmentSettings = detainmentSettings;
 	}
 
 	@Override
@@ -57,7 +60,7 @@ class JailCreateCommand extends SubArgument {
 				return;
 			}
 
-			Jail jail = jailService.setJailLocation(location, Settings.getJailMaxCapacity());
+			Jail jail = jailService.setJailLocation(location, detainmentSettings.getJailMaxCapacity());
 
 			sender.sendMessage(Messages.JAIL_CREATED.toString()
 			                                        .replace("%id%", String.valueOf(jail.getId())));

@@ -7,6 +7,21 @@
 # the behaviour from before 0.15.0.
 
 Wanted:
+   # Number of kills to get a wanted level. Moved here from settings.yml (Wanted.Kill_Combo) in 0.15.1; a value still
+   # tuned in settings.yml is used, with a console warning, until it is copied here. Delete it there afterwards.
+   Kill_Combo:
+      # false = no combo: with Heat off every counted kill adds a star at once, and no crime is ever chained.
+      Enable: true
+      # The time till the kill combo resets (seconds). Also the window Heat.Streak_Bonus chains crimes in.
+      Reset_After: 10
+      # The kill counter to increment the wanted level.
+      Kill_Counter:
+         - 2
+         - 5
+         - 10
+         - 15
+         - 20
+
    # Crimes add heat; heat becomes stars.
    Heat:
       # false = no heat ledger, stars rise the way they did before 0.15.0
@@ -18,8 +33,8 @@ Wanted:
          - 450
          - 700
          - 1000
-      # Multiplier for crimes chained inside settings.yml Wanted.Kill_Combo.Reset_After. It only applies while
-      # Wanted.Kill_Combo.Enable is true; with the kill combo off no crime is ever treated as chained.
+      # Multiplier for crimes chained inside Kill_Combo.Reset_After (above). It only applies while
+      # Kill_Combo.Enable is true; with the kill combo off no crime is ever treated as chained.
       Streak_Bonus: 1.5
       # Multiplier when a cop saw the crime
       Seen_By_Cop_Multiplier: 1.5

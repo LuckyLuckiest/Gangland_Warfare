@@ -9,7 +9,6 @@ import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.crime.CrimeService;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
@@ -36,7 +35,7 @@ public class HeatModuleConfig {
 			CopGroup group = copManager.groupOf(player.getUniqueId());
 			return group != null && group.getSquad().hasFreshSighting();
 		}, location -> HeatLedger.contestedTurfAt(turfs, location) != null,
-		                      () -> Settings.isWantedKillComboEnabled() ? Settings.getWantedKillComboResetAfter() : 0,
+		                      () -> config.getKillCombo().chainSeconds(),
 		                      System::currentTimeMillis);
 	}
 

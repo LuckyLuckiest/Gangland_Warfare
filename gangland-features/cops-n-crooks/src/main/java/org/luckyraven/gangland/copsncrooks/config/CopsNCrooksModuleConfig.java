@@ -114,9 +114,10 @@ public class CopsNCrooksModuleConfig {
 	// Kill combo + jails + detainment
 	// ---------------------------------------------------------------------------------------------------------------
 
+	/** Kill_Counter comes from copsncrooks/wanted.yml (0.15.1); read once, as it was from settings.yml before. */
 	@Bean
-	public KillCombo killCombo(Settings settings) {
-		return new KillCombo(plugin, Settings.getWantedKillCounter());
+	public KillCombo killCombo(ChaseConfigLoader chaseConfig) {
+		return new KillCombo(plugin, chaseConfig.getKillCombo().killCounter());
 	}
 
 	@Bean
@@ -173,14 +174,23 @@ public class CopsNCrooksModuleConfig {
 		return new JailExitService(jailExitRegistry, repository);
 	}
 
+	/** copsncrooks/detainment.yml (0.15.1, formerly settings.yml Detainment). */
 	@Bean
-	public DetainmentCostsContract detainmentCostsContract() {
-		return new GanglandDetainmentCosts();
+	public DetainmentSettings detainmentSettings(FileManager fileManager, Settings settings) {
+		DetainmentSettings detainmentSettings = new DetainmentSettings(fileManager);
+		fileManager.registerInitializer(detainmentSettings);
+		fileManager.initializeAll();
+		return detainmentSettings;
 	}
 
 	@Bean
-	public DetainmentSoundContract detainmentSoundContract() {
-		return new GanglandDetainmentSounds();
+	public DetainmentCostsContract detainmentCostsContract(DetainmentSettings detainmentSettings) {
+		return new GanglandDetainmentCosts(detainmentSettings);
+	}
+
+	@Bean
+	public DetainmentSoundContract detainmentSoundContract(DetainmentSettings detainmentSettings) {
+		return new GanglandDetainmentSounds(detainmentSettings);
 	}
 
 	@Bean
@@ -194,8 +204,9 @@ public class CopsNCrooksModuleConfig {
 	}
 
 	@Bean
-	public ReleaseExitContract releaseExitContract(JailExitRegistry jailExitRegistry, WaypointLookupContract waypointManager) {
-		return new GanglandReleaseExitContract(jailExitRegistry, waypointManager);
+	public ReleaseExitContract releaseExitContract(JailExitRegistry jailExitRegistry, WaypointLookupContract waypointManager,
+	                                               DetainmentSettings detainmentSettings) {
+		return new GanglandReleaseExitContract(jailExitRegistry, waypointManager, detainmentSettings);
 	}
 
 	@Bean

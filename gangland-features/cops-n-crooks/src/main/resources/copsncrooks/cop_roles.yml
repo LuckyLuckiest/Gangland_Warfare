@@ -40,7 +40,7 @@
 #   Tiers:               Per tier, by number (5) or by the tier's Display_Name without colours (Military): a
 #                        Weapon_Pool and/or Gear for that tier only, read over the role's own.
 #   Ranged_Min_Distance: The cop's own firing band in blocks (0-64), set together with Ranged_Max_Distance.
-#   Ranged_Max_Distance: Unset = settings.yml's band. Always clamped under the held gun's Projectile Distance, so a
+#   Ranged_Max_Distance: Unset = cops.yml's Cops.Navigation band. Always clamped under the held gun's Projectile Distance, so a
 #                        far band needs a long gun (scout: 100, awp: 120; the M4 rifle only reaches 10).
 #   Health_Multiplier:   Multiplies the tier's Health (0.1-10).
 #   Fan_Placement:       ANY, CENTER or FLANK: where on the squad's firing fan the cop prefers to stand. Placement is
