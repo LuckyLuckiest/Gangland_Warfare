@@ -97,14 +97,21 @@ public class Settings implements FileInitializer {
 	private static @Getter boolean    wantedTakeMoneyEnabled, bountyPayNotoriety;
 	private static @Getter String     wantedTakeMoneyFormula;
 	private static @Getter double     wantedTakeMoneyMultiplier, wantedTimerMultiplierAmount;
-	private static @Getter boolean wantedEnabled, wantedTimerEnabled, wantedTimerMultiplierEnabled,
-			wantedKillComboEnabled;
-	private static @Getter int wantedTimerTime, wantedLevelIncrement, wantedMaximumLevel, wantedKillComboResetAfter;
+	private static @Getter boolean wantedEnabled, wantedTimerEnabled, wantedTimerMultiplierEnabled;
+	private static @Getter int     wantedTimerTime, wantedLevelIncrement, wantedMaximumLevel;
+	/** Moved to copsncrooks/wanted.yml in 0.15.1: this field reads settings.yml only; the cops-n-crooks module reads its own file. */
+	@Deprecated
+	private static @Getter boolean wantedKillComboEnabled;
+	@Deprecated
+	private static @Getter int     wantedKillComboResetAfter;
 	/** Moved to copsncrooks/wanted.yml in 0.15.1: this field reads settings.yml only; the cops-n-crooks module reads its own file. */
 	@Deprecated
 	private static @Getter List<Integer> wantedKillCounter;
 	// gang configuration
-	private static @Getter boolean       gangEnabled, gangNameDuplicates;
+	private static @Getter boolean       gangEnabled;
+	/** Moved to gang/gang_settings.yml in 0.15.1: this field reads settings.yml only; the gangland-gang module reads its own file. */
+	@Deprecated
+	private static @Getter boolean       gangNameDuplicates;
 	/** Moved to gang/gang_settings.yml in 0.15.1: this field reads settings.yml only; the gangland-gang module reads its own file. */
 	@Deprecated
 	private static @Getter String gangRankHead, gangRankTail, gangDisplayNameChar;
@@ -653,6 +660,11 @@ public class Settings implements FileInitializer {
 		wantedKillComboEnabled       = bool(wantedKillComboSec, "Enable", true);
 		wantedKillComboResetAfter    = intVal(wantedKillComboSec, "Reset_After", 10);
 		wantedKillCounter            = intList(wantedKillComboSec, "Kill_Counter");
+		// 0.15.0 shipped settings.yml supplied this list; the fresh file no longer does, so a 2.1-built module
+		// reading the deprecated getter must still see the old shipped value
+		if (wantedKillCounter.isEmpty()) {
+			wantedKillCounter = Arrays.asList(2, 5, 10, 15, 20);
+		}
 
 		// gang
 		NodeReader gang        = section(root, "Gang", report);
@@ -853,7 +865,7 @@ public class Settings implements FileInitializer {
 
 		turfIncomeIntervalMinutes        = intVal(turf, "Income_Interval_Minutes", 10);
 		turfDefaultIncomeAmount          = money(turf, "Default_Income_Amount", "100");
-		turfWandItemType                 = str(turf, "Wand_Item_Type", "BLAZE_ROD");
+		turfWandItemType                 = str(turf, "Wand_Item_Type", "CARROT_ON_A_STICK");
 		turfVisualizationDurationSeconds = intVal(turf, "Visualization_Duration_Seconds", 30);
 		turfVisualizationParticle        = str(turf, "Visualization_Particle", "FLAME");
 		turfShowEnterTitle               = bool(turf, "Show_Enter_Title", true);
