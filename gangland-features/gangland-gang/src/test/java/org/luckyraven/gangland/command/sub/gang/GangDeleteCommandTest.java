@@ -84,7 +84,7 @@ class GangDeleteCommandTest {
 	@BeforeEach
 	@SuppressWarnings("unchecked")
 	void setUp() {
-		GangSettings.bind(new FakeGangSettingsContract());
+		GangSettings.bind(new FakeGangSettingsContract().withCreateFee(FEE));
 		IdentitySettings.bind(new FakeIdentitySettingsContract());
 		Messages.init(new MessageProvider() {
 			@Override
@@ -103,8 +103,6 @@ class GangDeleteCommandTest {
 		TimeMessages.initialize();
 
 		settings = mockStatic(Settings.class, CALLS_REAL_METHODS);
-		settings.when(Settings::getGangRankTail).thenReturn("owner");
-		settings.when(Settings::getGangCreateFee).thenReturn(FEE);
 		settings.when(Settings::getMoneySymbol).thenReturn("$");
 
 		scheduler = mock(BukkitScheduler.class);

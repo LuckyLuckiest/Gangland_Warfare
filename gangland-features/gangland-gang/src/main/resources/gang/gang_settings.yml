@@ -1,0 +1,29 @@
+# +----------------------+ #
+# | Gang module settings | #
+# +----------------------+ #
+# Moved here from settings.yml (Gang section) in 0.15.1. If settings.yml still sets one of these keys to a
+# non-default value while this file keeps the default, the settings.yml value is used for now and a warning is logged.
+# Copy it here and delete it from settings.yml. (Gang.Enable stays in settings.yml.)
+
+# Allow duplicating gang names.
+Name_Duplicates: false
+# The character appended to a gang's display name (only the first character is used).
+Display_Name_Char: '*'
+# Hierarchy of ranks
+Rank:
+   # The initial rank
+   Head: "member"
+   # The final rank
+   Tail: "owner"
+Account:
+   # When a player creates a gang account, his account will have the amount of money that you set.
+   Initial_Balance: 0
+   # When a player wants to create a gang account, they are required to pay a fee.
+   # Set it to zero, and the requirement is lifted.
+   Create_Cost: 100_000
+   # Sets the maximum gang money.
+   Maximum_Balance: 100_000_000_000
+   # The total amount of money deposit for 1 contribution.
+   # ex: deposit $1 -> 0.001
+   # ex: deposit $1000 -> 1
+   Contribution_Rate: 1_000
