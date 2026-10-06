@@ -27,6 +27,9 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 	public static ChaseConfig parse(@Nullable NodeReader wantedRoot, ConfigReport report) {
 		if (wantedRoot == null) return DEFAULT;
 
+		// Kill_Combo (0.15.1) is read by ChaseConfigLoader through the settings.yml bridge (KillComboSettings)
+		wantedRoot.get("Kill_Combo");
+
 		return new ChaseConfig(heat(block(wantedRoot, "Heat", report)),
 		                       evasion(block(wantedRoot, "Evasion", report), report),
 		                       hud(block(wantedRoot, "Hud", report), report),

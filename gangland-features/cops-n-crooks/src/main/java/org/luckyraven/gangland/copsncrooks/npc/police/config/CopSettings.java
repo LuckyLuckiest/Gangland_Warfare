@@ -1,12 +1,10 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.config;
 
 /**
- * Provides the cop count per wanted level, driven by either a formula or static parameters configured in
- * {@code settings.yml}.
+ * Provides the cop count per wanted level, driven by either a formula or static parameters, and the other cop knobs of
+ * {@code copsncrooks/cops.yml} (formerly {@code settings.yml}, until 0.15.1).
  * <p>
- * Implementations live in {@code gangland-impl} and delegate to
- * {@code org.luckyraven.gangland.file.configuration.SettingAddon}, keeping {@code cops-n-crooks} fully decoupled from
- * the main plugin's file-loading infrastructure.
+ * The implementation is {@code GanglandCopSettings} in this module's {@code integration.config} package.
  */
 public interface CopSettings {
 

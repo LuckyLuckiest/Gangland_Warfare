@@ -8,6 +8,7 @@ import org.luckyraven.gangland.copsncrooks.detainment.DetainmentRegistry;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.detainment.intake.JailIntakeService;
 import org.luckyraven.gangland.copsncrooks.detainment.release.ReleasePipeline;
+import org.luckyraven.gangland.copsncrooks.integration.detainment.DetainmentSettings;
 import org.luckyraven.gangland.copsncrooks.jail.JailExitService;
 import org.luckyraven.gangland.copsncrooks.jail.JailRegistry;
 import org.luckyraven.gangland.copsncrooks.jail.JailService;
@@ -29,6 +30,7 @@ public final class JailCommand extends Command {
 	private final JailIntakeService  jailIntakeService;
 	private final ReleasePipeline    releasePipeline;
 	private final JailExitService    jailExitService;
+	private final DetainmentSettings detainmentSettings;
 
 	public JailCommand(JavaPlugin plugin,
 	                   JailService jailService,
@@ -37,7 +39,8 @@ public final class JailCommand extends Command {
 	                   DetainmentRegistry detainmentRegistry,
 	                   JailIntakeService jailIntakeService,
 	                   ReleasePipeline releasePipeline,
-	                   JailExitService jailExitService) {
+	                   JailExitService jailExitService,
+	                   DetainmentSettings detainmentSettings) {
 		super(plugin, "jail", false);
 
 		this.jailService        = jailService;
@@ -47,6 +50,7 @@ public final class JailCommand extends Command {
 		this.jailIntakeService  = jailIntakeService;
 		this.releasePipeline    = releasePipeline;
 		this.jailExitService    = jailExitService;
+		this.detainmentSettings = detainmentSettings;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -66,7 +70,7 @@ public final class JailCommand extends Command {
 	@Override
 	protected void initializeArguments() {
 		Argument createArg = new JailCreateCommand(getPlugin(), getArgumentTree(), getArgument(), jailService,
-		                                           jailRegistry);
+		                                           jailRegistry, detainmentSettings);
 		Argument removeArg = new JailRemoveCommand(getPlugin(), getArgumentTree(), getArgument(), jailService,
 		                                           jailRegistry);
 		Argument playerArg = new JailThrowCommand(getPlugin(), getArgumentTree(), getArgument(), detainmentService,

@@ -161,15 +161,7 @@ Wanted:
       Increment: 1            # Stars added each time a kill threshold is crossed
       Maximum: 5              # Hard cap on wanted stars
 
-   Kill_Combo:
-      Enable: true
-      Reset_After: 10         # Seconds without a kill before the combo counter resets
-      Kill_Counter: # Kill thresholds that trigger each star level
-         - 2                   # 2 kills → 1 star
-         - 5                   # 5 kills → 2 stars
-         - 10                  # 10 kills → 3 stars
-         - 15                  # 15 kills → 4 stars
-         - 20                  # 20 kills → 5 stars
+   # Kill_Combo moved to copsncrooks/wanted.yml (same Wanted.Kill_Combo path, Enable / Reset_After / Kill_Counter) in 0.15.1.
 
 Bounty:
    Pay_Notoriety: false      # true also pays the server-made part of a bounty on a kill
@@ -183,7 +175,7 @@ Bounty:
       Maximum: 20_000         # Cap on bonus bounty from the multiplier
 
 # The chase (Heat, Evasion, Hud, Charge_Sheet) is in copsncrooks/wanted.yml; see the migration guide and Configuration Reference.
-# Cop count scaling is under the Cops key — see the Cops N Crooks guide
+# Cop count scaling is Cops.Count in copsncrooks/cops.yml — see the Cops N Crooks guide
 ```
 
 ---

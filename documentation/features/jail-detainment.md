@@ -46,7 +46,7 @@ After a player is handcuffed, the system (or an admin) jails them:
 4. On respawn (if the player dies while jailed), they are re-teleported to the jail and effects are reapplied.
 
 Each jail has a **capacity cap** — once full, no additional players can be sent there until someone is released. You can
-configure the capacity in `settings.yml`.
+configure the capacity in `copsncrooks/detainment.yml` (`Detainment.Jail.Max_Capacity`).
 
 ---
 
@@ -159,14 +159,14 @@ the player got out.
 
 ## Configuration
 
-The full detainment block lives in `settings.yml` under the top-level `Detainment:` key. Every subsection is
-tunable independently.
+The full detainment block lives in `copsncrooks/detainment.yml` under the top-level `Detainment:` key (it was in
+`settings.yml` until 0.15.1; a value still tuned there is used, with a console warning, until it is copied over). Every
+subsection is tunable independently. The guarding cop's radius moved to `cops.yml` as `Cops.Behaviour.Guard_Radius`.
 
 ```yaml
 Detainment:
    Transit:
       Delay_Ticks: 400                 # Ticks between handcuff and jail teleport
-      Guard_Radius: 5.0                # Blocks; cops stay within this radius during transit
    Break_Free:
       Taps_Required: 25
       Reset_Window_Ticks: 40
