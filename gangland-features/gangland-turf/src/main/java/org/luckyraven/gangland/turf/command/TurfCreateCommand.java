@@ -10,7 +10,7 @@ import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.gangland.turf.config.TurfSettings;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
@@ -33,9 +33,11 @@ class TurfCreateCommand extends SubArgument {
 	private final TurfManager          turfs;
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
+	private final TurfSettings         settings;
 
 	protected TurfCreateCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                            TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages) {
+	                            TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages,
+	                            TurfSettings settings) {
 		super(plugin, "create", tree, parent);
 
 		this.plugin   = plugin;
@@ -43,6 +45,7 @@ class TurfCreateCommand extends SubArgument {
 		this.turfs      = turfs;
 		this.selections = selections;
 		this.messages   = messages;
+		this.settings   = settings;
 
 		this.addSubArgument(displayNameArgument());
 	}
@@ -108,7 +111,7 @@ class TurfCreateCommand extends SubArgument {
 
 			int id = turfs.allocateId();
 			Turf turf = new Turf(id, displayName, region, null,
-			                     Settings.getTurfDefaultIncomeAmount(),
+			                     settings.getDefaultIncomeAmount(),
 			                     System.currentTimeMillis(), 0L);
 			turfs.create(turf);
 

@@ -40,6 +40,10 @@ public final class TurfModuleFileConfig {
 		                                  moduleLoader.classLoader());
 		fileManager.addFile(npcs, true);
 
-		return new TurfModuleFiles(powerups, npcs);
+		FileHandler settings = new FileHandler(plugin, "turf_settings", "turf", ".yml",
+		                                      moduleLoader.classLoader());
+		fileManager.addFile(settings, true);
+
+		return new TurfModuleFiles(powerups, npcs, settings);
 	}
 }

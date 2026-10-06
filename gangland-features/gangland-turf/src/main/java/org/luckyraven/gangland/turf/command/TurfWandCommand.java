@@ -13,18 +13,20 @@ import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.gangland.turf.config.TurfSettings;
 import org.luckyraven.gangland.turf.selection.WandSelectionManager;
 
 class TurfWandCommand extends SubArgument {
 
 	private final WandSelectionManager selections;
+	private final TurfSettings         settings;
 
 	protected TurfWandCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                          WandSelectionManager selections) {
+	                          WandSelectionManager selections, TurfSettings settings) {
 		super(plugin, "wand", tree, parent);
 
 		this.selections = selections;
+		this.settings   = settings;
 	}
 
 	@Override
@@ -39,7 +41,7 @@ class TurfWandCommand extends SubArgument {
 			if (!(sender instanceof Player player)) {
 				return;
 			}
-			Material material = resolveMaterial(Settings.getTurfWandItemType());
+			Material material = resolveMaterial(settings.getWandItemType());
 			ItemStack wand = new ItemBuilder(material)
 					.setDisplayName(ChatUtil.color("&6Turf Wand"))
 					.setLore(ChatUtil.color("&7Left-click = pos1, right-click = pos2."))

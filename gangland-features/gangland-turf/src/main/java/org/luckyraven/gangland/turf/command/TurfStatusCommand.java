@@ -6,9 +6,9 @@ import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
-import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
+import org.luckyraven.gangland.turf.config.TurfSettings;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.data.TurfRuntimeState;
@@ -27,16 +27,18 @@ class TurfStatusCommand extends SubArgument {
 	private final GangLookupContract   gangs;
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
+	private final TurfSettings         settings;
 
 	protected TurfStatusCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                            TurfManager turfs, GangLookupContract gangs, WandSelectionManager selections,
-	                            TurfMessageContract messages) {
+	                            TurfMessageContract messages, TurfSettings settings) {
 		super(plugin, "status", tree, parent);
 
 		this.turfs      = turfs;
 		this.gangs      = gangs;
 		this.selections = selections;
 		this.messages   = messages;
+		this.settings   = settings;
 	}
 
 	@Override
@@ -80,7 +82,7 @@ class TurfStatusCommand extends SubArgument {
 					              "phase", phaseSuffix);
 				}
 				case COOLDOWN -> {
-					long cooldownMs = Settings.getTurfCaptureCooldownMinutes() * 60_000L;
+					long cooldownMs = settings.getCaptureCooldownMinutes() * 60_000L;
 					long left       = (turf.getLastCaptureTimestamp() + cooldownMs - System.currentTimeMillis());
 					long seconds    = Math.max(0L, (left + 999L) / 1000L);
 					messages.send(sender, "TURF_STATUS_COOLDOWN",

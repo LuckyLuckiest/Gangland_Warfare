@@ -9,6 +9,7 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
+import org.luckyraven.gangland.turf.config.TurfSettings;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.data.TurfRuntimeState;
@@ -26,20 +27,22 @@ class TurfInfoCommand extends SubArgument {
 	private final GangLookupContract   gangs;
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
+	private final TurfSettings         settings;
 
 	protected TurfInfoCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                          TurfManager turfs, GangLookupContract gangs, WandSelectionManager selections,
-	                          TurfMessageContract messages) {
+	                          TurfMessageContract messages, TurfSettings settings) {
 		super(plugin, "info", tree, parent);
 
 		this.turfs      = turfs;
 		this.gangs      = gangs;
 		this.selections = selections;
 		this.messages   = messages;
+		this.settings   = settings;
 	}
 
 	static void renderInfo(CommandSender sender, GangLookupContract gangs, TurfManager turfs,
-	                       TurfMessageContract messages, Turf turf) {
+	                       TurfMessageContract messages, TurfSettings settings, Turf turf) {
 		String gangName = "Unclaimed";
 		if (turf.getOwnerGangId() != null) {
 			Gang owner = gangs.findById(turf.getOwnerGangId());
@@ -59,7 +62,7 @@ class TurfInfoCommand extends SubArgument {
 		messages.send(sender, "TURF_INFO_INCOME",
 		              "money_symbol", Settings.getMoneySymbol(),
 		              "amount", Settings.formatAmount(turf.getIncomeAmount()),
-		              "time", messages.formatDuration(Settings.getTurfIncomeIntervalMinutes() * 60L));
+		              "time", messages.formatDuration(settings.getIncomeIntervalMinutes() * 60L));
 		messages.send(sender, "TURF_INFO_STATE", "state", stateStr);
 	}
 
@@ -70,7 +73,7 @@ class TurfInfoCommand extends SubArgument {
 			if (turf == null) {
 				return;
 			}
-			renderInfo(sender, gangs, turfs, messages, turf);
+			renderInfo(sender, gangs, turfs, messages, settings, turf);
 		};
 	}
 }
