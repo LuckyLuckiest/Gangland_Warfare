@@ -191,6 +191,23 @@ class ContactCommandTest {
 	}
 
 	@Test
+	@DisplayName("a star drop cancelled by another plugin refunds the call and starts no cooldown")
+	void cancelledDrop_refunds_andStartsNoCooldown() {
+		wanted(3, 5000);
+		doAnswer(invocation -> {
+			if (invocation.getArgument(0) instanceof WantedLevelChangeEvent change) change.setCancelled(true);
+			return null;
+		}).when(bukkit.pluginManager()).callEvent(any());
+
+		command.contact(player, 1);
+
+		assertEquals(5000, cash());
+		assertEquals(3, user.getWanted().getLevel());
+		assertEquals(0, desk.cooldownLeftMs(player.getUniqueId()));
+		verify(player, never()).sendMessage(contains("USED"));
+	}
+
+	@Test
 	@DisplayName("with Wanted.Contacts off it refuses and moves nothing")
 	void disabled_refuses() throws Exception {
 		SettingsFixture.write(dir, "Wanted:\n  Contacts:\n    Enable: false\n");
