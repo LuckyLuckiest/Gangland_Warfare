@@ -78,7 +78,8 @@ Wanted:
       Enable: true
       # Seconds with no cop seeing you before the search zone appears
       Lost_Sight_Seconds: 3
-      # What a completed evasion takes: ONE_STAR or ALL_STARS
+      # What a completed evasion takes: ONE_STAR (one star), ALL_STARS (every star) or AUTO (the cops judge how the
+      # chase went and take one star, a share of them or all; see the Auto block below)
       Drop_Mode: ONE_STAR
       # Search zone radius in blocks for wanted level 1, 2, 3, ...
       Search_Radius:
@@ -96,6 +97,95 @@ Wanted:
          - 60
       # How much faster the timer runs while you are outside the search zone
       Outside_Zone_Speed: 2.0
+      # Read only while Drop_Mode is AUTO. First match wins when the hide timer runs out: a hot chase loses one star;
+      # a small chase or a long quiet one loses every star; leaving the search zone loses half your stars; anything
+      # else loses one star, and the next timer is shorter
+      Auto:
+         # Seconds from the first crime of a chase that count as its opening
+         Opening_Seconds: 30
+         # Crimes in the opening that make the chase a rampage
+         Rampage_Crimes: 4
+         # Peak stars that make a chase a rampage however it started (killing a cop always does)
+         Rampage_Peak_Level: 4
+         # A rampage, or a chase you logged out of, loses one star at a time until this many seconds pass with no
+         # new crime and no new star
+         Lock_Cool_Seconds: 180
+         # Times the cops may spot you again after losing you before small chases and clean breaks stop paying out
+         Respot_Limit: 4
+         # A small chase: the cops let it go and every star drops at once
+         Petty:
+            # Most crimes a chase may hold to count as small (a chase with no crime never counts)
+            Max_Crimes: 2
+            # Highest star level a chase may reach to count as small (keep it below Rampage_Peak_Level)
+            Max_Peak_Level: 2
+         # A long chase that went quiet: every star drops at once
+         Cold_Trail:
+            # A fresh server's guess, in seconds, of how long the cops stay on your tail before they lose you for
+            # good, for a chase that peaks at star 1, 2, 3, ... With Learning on, the server replaces it with what it
+            # measures, never below half or above double these numbers
+            Typical_Seconds:
+               - 30
+               - 60
+               - 90
+               - 120
+               - 150
+            # The whole chase must have lasted this many times that typical time
+            Ratio: 2.0
+            # Seconds with no new crime and no new star
+            Quiet_Seconds: 90
+         # You ran out of the search zone instead of sitting in it. A teleport of more than 32 blocks or into another
+         # world (a command, a plugin or a portal; not an ender pearl) during the search never counts as a clean break
+         Clean_Break:
+            # Share of the search time you must spend outside the zone (0 to 1)
+            Outside_Ratio: 0.5
+            # Share of your stars that drop (0 to 1), rounded up, at least one star
+            Drop_Fraction: 0.5
+         # After a star falls and you are still hidden, the next timer is shorter
+         Momentum:
+            # Each step is this share of the previous timer (1.0 = no speed-up)
+            Step_Speed: 0.75
+            # The same after a narrow escape. A chase that is still hot (a rampage, or you logged out) gets no
+            # speed-up at all, narrow or not
+            Narrow_Step_Speed: 0.5
+            # Seconds a cop must have kept you in sight before you broke away for it to count as a narrow escape
+            Narrow_Seen_Seconds: 20
+            # No timer ever shrinks below this share of Seconds_To_Drop, whatever momentum and the learned habit say
+            Floor: 0.4
+         # Chases with at least one crime that you ended recently; at this many the cops stop going easy (0 = off, at most 8)
+         Repeat_Chases: 3
+         # How far back those chases count, in minutes (kept in memory, forgotten at restart)
+         Repeat_Window_Minutes: 30
+         # Learning from finished chases (two small tables in the plugin database)
+         Learning:
+            # false = nothing is stored or read; AUTO uses Typical_Seconds and treats everyone as a stranger
+            Enable: true
+            # How often chases that peak at 1, 2, 3, ... stars end in a getaway on a fresh server (0 to 1)
+            Escape_Rate:
+               - 0.90
+               - 0.75
+               - 0.55
+               - 0.35
+               - 0.20
+            # Chases of evidence a player needs before his habit counts fully (bigger = slower to judge)
+            Prior_Chases: 5
+            # How much an older chase still counts after each newer one (0.90 = roughly the last 10 chases)
+            Decay_Per_Chase: 0.90
+            # A player whose escape habit reaches this is a known face: no small-fry or clean-break lumps
+            Habitual_Escaper_Delta: 0.20
+            # How strongly the habit stretches (always escapes) or shortens (always caught) the timer
+            Habit_Time_Strength: 0.8
+            # The habit on its own never shortens a timer below this share; with momentum on top, Momentum.Floor is
+            # the overall limit
+            Min_Time_Factor: 0.6
+            # No timer is ever stretched above this share of Seconds_To_Drop
+            Max_Time_Factor: 1.6
+            # Chases shorter than this many seconds are not learned from
+            Min_Chase_Seconds: 30
+            # A player's chases that end closer together than this many seconds are not learned from
+            Min_Seconds_Between_Outcomes: 180
+            # Habit rows of players not seen in a chase for this many days, and star-level rows not updated for this
+            # many days, are deleted at startup
+            Forget_After_Days: 90
 
    # What the player sees and hears while chased.
    Hud:

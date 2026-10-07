@@ -7,6 +7,7 @@ import org.luckyraven.keystone.persistence.config.NodeReader;
 import org.luckyraven.keystone.persistence.config.Severity;
 import org.luckyraven.keystone.persistence.config.SourceLocation;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,10 +31,24 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 		// Kill_Combo (0.15.1) is read by ChaseConfigLoader through the settings.yml bridge (KillComboSettings)
 		wantedRoot.get("Kill_Combo");
 
-		return new ChaseConfig(heat(block(wantedRoot, "Heat", report)),
-		                       evasion(block(wantedRoot, "Evasion", report), report),
-		                       hud(block(wantedRoot, "Hud", report), report),
-		                       chargeSheet(block(wantedRoot, "Charge_Sheet", report)));
+		ChaseConfig parsed = new ChaseConfig(heat(block(wantedRoot, "Heat", report)),
+		                                     evasion(block(wantedRoot, "Evasion", report), report),
+		                                     hud(block(wantedRoot, "Hud", report), report),
+		                                     chargeSheet(block(wantedRoot, "Charge_Sheet", report)));
+
+		if (parsed.evasion().dropMode() == DropMode.AUTO) {
+			SourceLocation at = SourceLocation.none();
+			if (!parsed.evasion().enabled()) {
+				report.add(Severity.INFO, at, "Wanted.Evasion.Drop_Mode", "AUTO does nothing while evasion is off",
+				           "config.note");
+			}
+			if (!parsed.heat().enabled()) {
+				report.add(Severity.INFO, at, "Wanted.Heat.Enable",
+				           "no heat ledger: every chase has 0 crimes, so no small-fry or rampage rules",
+				           "config.note");
+			}
+		}
+		return parsed;
 	}
 
 	private static @Nullable NodeReader block(@Nullable NodeReader parent, String key, ConfigReport report) {
@@ -77,7 +92,135 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 		                           n.get("Lost_Sight_Seconds").asInt().min(0).orDefault(d.lostSightSeconds()),
 		                           dropMode(n, report), radius.isEmpty() ? d.searchRadius() : List.copyOf(radius),
 		                           drops.isEmpty() ? d.secondsToDrop() : List.copyOf(drops),
-		                           n.get("Outside_Zone_Speed").asDouble().min(0).orDefault(d.outsideZoneSpeed()));
+		                           n.get("Outside_Zone_Speed").asDouble().min(0).orDefault(d.outsideZoneSpeed()),
+		                           auto(block(n, "Auto", report), report));
+	}
+
+	private static AutoSettings auto(@Nullable NodeReader n, ConfigReport report) {
+		if (n == null) return AutoSettings.DEFAULT;
+
+		AutoSettings d     = AutoSettings.DEFAULT;
+		NodeReader   petty = block(n, "Petty", report);
+		NodeReader   cold  = block(n, "Cold_Trail", report);
+		NodeReader   brk   = block(n, "Clean_Break", report);
+		NodeReader   mom   = block(n, "Momentum", report);
+		NodeReader   learn = block(n, "Learning", report);
+
+		AutoSettings.Petty dp          = d.petty();
+		AutoSettings.Petty pettyOut    = dp;
+		int                rampagePeak = n.get("Rampage_Peak_Level").asInt().min(1).orDefault(d.rampagePeakLevel());
+		if (petty != null) {
+			pettyOut = new AutoSettings.Petty(petty.get("Max_Crimes").asInt().min(1).orDefault(dp.maxCrimes()),
+			                                  petty.get("Max_Peak_Level").asInt().min(1)
+			                                       .orDefault(dp.maxPeakLevel()));
+		}
+		if (pettyOut.maxPeakLevel() >= rampagePeak) {
+			report.add(Severity.WARNING, petty == null ? SourceLocation.none() : locationOf(petty.get("Max_Peak_Level")),
+			           "Wanted.Evasion.Auto.Petty.Max_Peak_Level",
+			           "PETTY and rampage overlap; the rampage lock wins", "config.conflict");
+		}
+
+		AutoSettings.ColdTrail dc      = d.coldTrail();
+		AutoSettings.ColdTrail coldOut = dc;
+		if (cold != null) {
+			coldOut = new AutoSettings.ColdTrail(typical(cold, dc, report),
+			                                     cold.get("Ratio").asDouble().min(0.01).orDefault(dc.ratio()),
+			                                     cold.get("Quiet_Seconds").asInt().min(0)
+			                                         .orDefault(dc.quietSeconds()));
+		}
+
+		AutoSettings.CleanBreak db     = d.cleanBreak();
+		AutoSettings.CleanBreak brkOut = db;
+		if (brk != null) {
+			brkOut = new AutoSettings.CleanBreak(
+					brk.get("Outside_Ratio").asDouble().min(0).max(1).orDefault(db.outsideRatio()),
+					brk.get("Drop_Fraction").asDouble().min(0).max(1).orDefault(db.dropFraction()));
+		}
+
+		AutoSettings.Momentum dm     = d.momentum();
+		AutoSettings.Momentum momOut = dm;
+		if (mom != null) {
+			double step   = mom.get("Step_Speed").asDouble().min(0.01).max(1).orDefault(dm.stepSpeed());
+			double narrow = mom.get("Narrow_Step_Speed").asDouble().min(0.01).max(1).orDefault(dm.narrowStepSpeed());
+			if (narrow > step) {
+				report.add(Severity.WARNING, locationOf(mom.get("Narrow_Step_Speed")),
+				           "Wanted.Evasion.Auto.Momentum.Narrow_Step_Speed",
+				           "Narrow_Step_Speed is above Step_Speed, using Step_Speed", "config.conflict");
+				narrow = step;
+			}
+			momOut = new AutoSettings.Momentum(step, narrow, mom.get("Narrow_Seen_Seconds").asInt().min(0)
+			                                                    .orDefault(dm.narrowSeenSeconds()),
+			                                   mom.get("Floor").asDouble().min(0.01).max(1).orDefault(dm.floor()));
+		}
+
+		return new AutoSettings(n.get("Opening_Seconds").asInt().min(0).orDefault(d.openingSeconds()),
+		                        n.get("Rampage_Crimes").asInt().min(1).orDefault(d.rampageCrimes()), rampagePeak,
+		                        n.get("Lock_Cool_Seconds").asInt().min(0).orDefault(d.lockCoolSeconds()),
+		                        n.get("Respot_Limit").asInt().min(0).orDefault(d.respotLimit()), pettyOut, coldOut,
+		                        brkOut, momOut, n.get("Repeat_Chases").asInt().min(0).max(8).orDefault(d.repeatChases()),
+		                        n.get("Repeat_Window_Minutes").asInt().min(0).orDefault(d.repeatWindowMinutes()),
+		                        learning(learn, d.learning(), report));
+	}
+
+	private static List<Integer> typical(NodeReader cold, AutoSettings.ColdTrail d, ConfigReport report) {
+		NodeReader.NodeAccess access = cold.get("Typical_Seconds");
+		List<Integer>         raw    = access.asList().ofInts().orEmpty();
+		if (raw.isEmpty()) return d.typicalSeconds();
+
+		List<Integer> out = new ArrayList<>(raw.size());
+		for (int i = 0; i < raw.size(); i++) {
+			int value = raw.get(i);
+			if (value < 5) {
+				int fallback = i == 0 ? d.typicalSeconds().get(0) : out.get(i - 1);
+				report.add(Severity.WARNING, locationOf(access), "Wanted.Evasion.Auto.Cold_Trail.Typical_Seconds",
+				           "entry " + (i + 1) + " is " + value + ", below 5; using " + fallback, "config.range");
+				value = fallback;
+			}
+			out.add(value);
+		}
+		return List.copyOf(out);
+	}
+
+	private static AutoSettings.Learning learning(@Nullable NodeReader n, AutoSettings.Learning d,
+	                                              ConfigReport report) {
+		if (n == null) return d;
+
+		NodeReader.NodeAccess access = n.get("Escape_Rate");
+		List<Double>          raw    = access.asList().ofDoubles().orEmpty();
+		List<Double>          rates  = new ArrayList<>(raw.size());
+		for (int i = 0; i < raw.size(); i++) {
+			double value = raw.get(i);
+			if (value < 0 || value > 1) {
+				double clamped = Math.max(0, Math.min(1, value));
+				report.add(Severity.WARNING, locationOf(access), "Wanted.Evasion.Auto.Learning.Escape_Rate",
+				           "entry " + (i + 1) + " is " + value + ", outside 0 to 1; using " + clamped,
+				           "config.range");
+				value = clamped;
+			}
+			rates.add(value);
+		}
+
+		return new AutoSettings.Learning(n.get("Enable").asBool().orDefault(d.enable()),
+		                                 rates.isEmpty() ? d.escapeRate() : List.copyOf(rates),
+		                                 n.get("Prior_Chases").asInt().min(1).orDefault(d.priorChases()),
+		                                 n.get("Decay_Per_Chase").asDouble().min(0.5).max(1)
+		                                  .orDefault(d.decayPerChase()),
+		                                 n.get("Habitual_Escaper_Delta").asDouble().min(0.05).max(1)
+		                                  .orDefault(d.habitualEscaperDelta()),
+		                                 n.get("Habit_Time_Strength").asDouble().min(0).max(2)
+		                                  .orDefault(d.habitTimeStrength()),
+		                                 n.get("Min_Time_Factor").asDouble().min(0.1).max(1)
+		                                  .orDefault(d.minTimeFactor()),
+		                                 n.get("Max_Time_Factor").asDouble().min(1).max(4)
+		                                  .orDefault(d.maxTimeFactor()),
+		                                 n.get("Min_Chase_Seconds").asInt().min(0).orDefault(d.minChaseSeconds()),
+		                                 n.get("Min_Seconds_Between_Outcomes").asInt().min(0)
+		                                  .orDefault(d.minSecondsBetweenOutcomes()),
+		                                 n.get("Forget_After_Days").asInt().min(1).orDefault(d.forgetAfterDays()));
+	}
+
+	private static SourceLocation locationOf(NodeReader.NodeAccess access) {
+		return access.node() != null ? access.node().location() : SourceLocation.none();
 	}
 
 	private static DropMode dropMode(NodeReader n, ConfigReport report) {
@@ -91,7 +234,7 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 
 		SourceLocation at = access.node() != null ? access.node().location() : SourceLocation.none();
 		report.add(Severity.WARNING, at, "Wanted.Evasion.Drop_Mode",
-		           "unknown Drop_Mode \"" + text + "\", using ONE_STAR (ONE_STAR or ALL_STARS)", "config.enum");
+		           "unknown Drop_Mode \"" + text + "\", using ONE_STAR (ONE_STAR, ALL_STARS or AUTO)", "config.enum");
 		return DropMode.ONE_STAR;
 	}
 

@@ -41,9 +41,10 @@ adds heat, and the heat crosses `Star_Thresholds` (100, 250, 450, 700, 1000) to 
 
 - **Evasion.** While cops hunt you, break line of sight: after `Evasion.Lost_Sight_Seconds` (3) with no cop seeing
   you a search zone opens (radius `Search_Radius`, by level). Stay hidden for `Seconds_To_Drop` (10 s at 1 star up to
-  60 s at 5) and one star drops (`Drop_Mode: ALL_STARS` drops them all). Outside the zone the clock runs
+  60 s at 5) and one star drops (or all stars with `Drop_Mode: ALL_STARS`). Outside the zone the clock runs
   `Outside_Zone_Speed` (2x) faster. A sighting, or a shot you fire near a cop, puts you back to "seen"; being cuffed
   pauses it. Cops that are all walking home count as no pursuit.
+  - **AUTO mode (0.15.2+).** With `Drop_Mode: AUTO`, the cops judge how the chase went. A rampage loses one star at a time; a small chase loses them all at once. A long quiet chase with no new crime for 90+ seconds also loses them all. Leaving the search zone loses half your stars (rounded up). The next timer gets faster after each drop, and known repeat offenders stay locked to one star. The server learns how long chases typically last and who keeps getting away, so timers adjust over time. Cold starts use guessed numbers; warm servers tune based on play. An upgraded server from 0.15.1 keeps its old `wanted.yml` (no `Auto` block) and reads AUTO defaults, or an admin can copy the new `Auto` block from `plugins/Gangland_Warfare/modules/cops-n-crooks-<version>.jar`.
 - **The fixed decay timer** still runs when no cop is hunting you, and as the safety net otherwise: it starts at `Time`
   (default 120 seconds) and scales up with each star: `time x Amount ^ stars`. While cops hunt, evasion owns decay and the
   timer drops nothing. `Evasion.Enable: false` gives the timer back full control.

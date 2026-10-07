@@ -13,10 +13,16 @@ import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.gangland.copsncrooks.wanted.config.AutoSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfig;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.config.DropMode;
 import org.luckyraven.gangland.copsncrooks.wanted.config.EvasionSettings;
+import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.DropPlan;
+import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.Ending;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.CrimeRecord;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
+import org.luckyraven.gangland.copsncrooks.wanted.learn.ChaseLearner;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
@@ -32,6 +38,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -41,7 +48,10 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -68,6 +78,11 @@ class EvasionClockTest {
 	private NpcSquad          squad;
 	private long              unseenMs;
 	private Location          playerAt;
+	private HeatLedger        ledger;
+	private List<CrimeRecord> crimes;
+	private ChaseArcs         arcs;
+	private ChaseLearner      learner;
+	private List<DropPlan>    plansAtDrop;
 	private EvasionClock      clock;
 
 	@BeforeEach
@@ -102,14 +117,26 @@ class EvasionClockTest {
 		when(group.tippedOffWithin(anyLong(), anyLong())).thenReturn(false);
 		when(copManager.groupOf(id)).thenReturn(group);
 
-		// the real drop lowers the level; the mock does the same so the clock can read the result
+		crimes = new ArrayList<>();
+		ledger = mock(HeatLedger.class);
+		when(ledger.chaseCrimes(id)).thenAnswer(inv -> List.copyOf(crimes));
+		arcs    = spy(new ChaseArcs(() -> now[0]));
+		learner = mock(ChaseLearner.class);
+		when(learner.typicalSeconds(anyInt(), any())).thenAnswer(
+				inv -> (double) inv.<AutoSettings>getArgument(1).typicalFor(inv.getArgument(0)));
+
+		// the real drop lowers the level; the mock does the same so the clock can read the result. Like the HUD, it
+		// takes the plan the clock stashed, inside the drop
+		plansAtDrop = new ArrayList<>();
 		when(stars.drop(any(), anyInt(), any())).thenAnswer(inv -> {
 			int n = inv.getArgument(1);
+			plansAtDrop.add(arcs.takePending(id));
 			wanted.setLevel(wanted.getLevel() - n);
 			return n;
 		});
 
-		clock = new EvasionClock(config, copManager, detainment, stars, users, () -> now[0], events::add);
+		clock = new EvasionClock(config, copManager, detainment, stars, users, ledger, arcs, learner, () -> now[0],
+		                         events::add);
 	}
 
 	private static CopNpc cop(CopState state) {
@@ -354,5 +381,450 @@ class EvasionClockTest {
 
 		assertEquals(afterEntry + 1, events.size());
 		assertSame(EvasionState.SEARCHING, states().get(states().size() - 1).getState());
+	}
+
+	// ---- Drop_Mode AUTO (0.15.2) ----
+
+	private void auto() {
+		auto(settings.secondsToDrop());
+	}
+
+	private void auto(List<Integer> secondsToDrop) {
+		settings = new EvasionSettings(true, 3, DropMode.AUTO, settings.searchRadius(), secondsToDrop, 2.0,
+		                               AutoSettings.DEFAULT);
+	}
+
+	private void crimeAt(long at) {
+		crimes.add(new CrimeRecord("Kill_Civilian", 100, at, centre));
+	}
+
+	/** The countdown each search spell opened with: the first SEARCHING after anything else. */
+	private List<Integer> spellCountdowns() {
+		List<Integer> out  = new ArrayList<>();
+		EvasionState  prev = null;
+		for (WantedEvasionStateEvent e : states()) {
+			if (e.getState() == EvasionState.SEARCHING && prev != EvasionState.SEARCHING) out.add(e.getSecondsLeft());
+			prev = e.getState();
+		}
+		return out;
+	}
+
+	private List<Ending> endings() {
+		return plansAtDrop.stream().map(plan -> plan == null ? null : plan.ending()).toList();
+	}
+
+	@Test
+	@DisplayName("AUTO: a drop another plugin cancels leaves no stale plan on the arc to label a later drop")
+	void auto_cancelledDrop_clearsThePendingPlan() {
+		auto();
+		arcs.start(id, WantedCause.CRIME, 2);
+		crimeAt(now[0] - 25_000);
+		crimeAt(now[0] - 15_000);
+		when(stars.drop(any(), anyInt(), any())).thenReturn(0);
+		unseenMs = 10_000;
+
+		tickSeconds(21);
+
+		verify(stars).drop(any(), eq(2), eq(WantedCause.EVASION));
+		assertNull(arcs.takePending(id));
+	}
+
+	@Test
+	@DisplayName("AUTO E1: a small chase drops both stars at once, the PETTY plan stashed before stars.drop")
+	void auto_smallChase_dropsBothStarsAtOnce_withThePlanStashedBeforeTheDrop() {
+		auto();
+		arcs.start(id, WantedCause.CRIME, 2);
+		crimeAt(now[0] - 25_000);
+		crimeAt(now[0] - 15_000);
+		unseenMs = 10_000;
+
+		tickSeconds(21);
+
+		verify(stars).drop(any(), eq(2), eq(WantedCause.EVASION));
+		assertEquals(List.of(new DropPlan(2, Ending.PETTY, AutoDropPlanner.REASON_NONE)), plansAtDrop);
+	}
+
+	@Test
+	@DisplayName("AUTO E2: hunkering inside the zone needs 30 s, then 15 s, then 6 s")
+	void auto_hunkerCascade_needs30Then15Then6Seconds() {
+		auto();
+		wanted.setLevel(3);
+		arcs.start(id, WantedCause.CRIME, 3);
+		crimeAt(now[0] - 60_000);
+		crimeAt(now[0] - 20_000);
+		unseenMs = 10_000;
+
+		tickSeconds(60);
+
+		assertEquals(List.of(30, 15, 6), spellCountdowns());
+		verify(stars, times(3)).drop(any(), eq(1), eq(WantedCause.EVASION));
+		assertEquals(List.of(Ending.HUNKER_DOWN, Ending.HUNKER_DOWN, Ending.HUNKER_DOWN), endings());
+	}
+
+	@Test
+	@DisplayName("AUTO: running out of the zone is a clean break, half the stars rounded up")
+	void auto_outsideTheZone_cleanBreakDropsHalfRoundedUp() {
+		auto();
+		wanted.setLevel(3);
+		arcs.start(id, WantedCause.CRIME, 3);
+		playerAt = new Location(world, 500, 64, 0);
+		unseenMs = 10_000;
+
+		tickSeconds(16);
+
+		verify(stars).drop(any(), eq(2), eq(WantedCause.EVASION));
+		assertEquals(List.of(Ending.CLEAN_BREAK), endings());
+	}
+
+	@Test
+	@DisplayName("AUTO: a long teleport during the spell rules out the clean break")
+	void auto_teleported_stopsTheCleanBreak() {
+		auto();
+		wanted.setLevel(3);
+		arcs.start(id, WantedCause.CRIME, 3);
+		playerAt = new Location(world, 500, 64, 0);
+		unseenMs = 10_000;
+		tickSeconds(1);
+
+		clock.teleported(player);
+		tickSeconds(15);
+
+		verify(stars).drop(any(), eq(1), eq(WantedCause.EVASION));
+		assertEquals(List.of(Ending.HUNKER_DOWN), endings());
+	}
+
+	@Test
+	@DisplayName("AUTO: being seen again resets the momentum steps but not the chase arc, which counts a respot")
+	void auto_seenAgain_resetsTheSteps_butNotTheArc() {
+		auto();
+		wanted.setLevel(3);
+		arcs.start(id, WantedCause.CRIME, 3);
+		unseenMs = 10_000;
+		tickSeconds(31);
+		assertEquals(2, wanted.getLevel());
+
+		unseenMs = 100;
+		tickSeconds(1);
+		unseenMs = 10_000;
+		tickSeconds(1);
+
+		// a full 20 s at two stars, not 20 x 0.75
+		assertEquals(List.of(30, 20), spellCountdowns());
+		assertEquals(1, arcs.arc(id).respots);
+	}
+
+	@Test
+	@DisplayName("AUTO: being seen again resets the outside time and the teleport flag")
+	void auto_seenAgain_resetsTheOutsideTimeAndTheTeleport() {
+		// 60 s at two stars so a spell can sit outside a long while without finishing
+		auto(List.of(10, 60, 30, 45, 60));
+		arcs.start(id, WantedCause.CRIME, 2);
+		playerAt = new Location(world, 500, 64, 0);
+		unseenMs = 10_000;
+		tickSeconds(1);
+		clock.teleported(player);
+		tickSeconds(25);
+
+		unseenMs = 100;
+		tickSeconds(1);
+		unseenMs = 10_000;
+		playerAt = new Location(world, 5, 64, 5);
+		tickSeconds(31);
+		playerAt = new Location(world, 500, 64, 0);
+		tickSeconds(15);
+
+		// fresh spell: 30 s inside, 15 s outside = 60 s of progress, ratio 0.33. Carried over it would be 40 / 70
+		verify(stars).drop(any(), eq(1), eq(WantedCause.EVASION));
+		assertEquals(List.of(Ending.HUNKER_DOWN), endings());
+
+		// and the teleport did not survive the sighting: a new spell spent outside is a clean break
+		unseenMs = 100;
+		tickSeconds(1);
+		unseenMs = 10_000;
+		tickSeconds(6);
+		assertEquals(List.of(Ending.HUNKER_DOWN, Ending.CLEAN_BREAK), endings());
+	}
+
+	@Test
+	@DisplayName("a squad that went RETURNING and comes back to see him again counts one respot")
+	void returningSquad_comesBackAndSees_countsOneRespot() {
+		arcs.start(id, WantedCause.CRIME, 2);
+		unseenMs = 10_000;
+		tickSeconds(2);
+
+		List<CopNpc> walkingHome = List.of(cop(CopState.RETURNING));
+		when(group.getCops()).thenReturn(walkingHome);
+		tickSeconds(1);
+		assertNull(clock.snapshot(id));
+
+		List<CopNpc> back = List.of(cop(CopState.PURSUING));
+		when(group.getCops()).thenReturn(back);
+		unseenMs = 100;
+		tickSeconds(1);
+
+		assertEquals(1, arcs.arc(id).respots);
+	}
+
+	@Test
+	@DisplayName("a replacement squad that never sees him starts a search but leaves lastLostAt at the last real loss")
+	void replacementSquad_neverSeesHim_keepsLastLostAt() {
+		arcs.start(id, WantedCause.CRIME, 2);
+		unseenMs = 100;
+		tickSeconds(1);
+		unseenMs = 10_000;
+		tickSeconds(1);
+		long lostAt = arcs.arc(id).lastLostAt();
+		assertTrue(lostAt > 0);
+
+		List<CopNpc> walkingHome = List.of(cop(CopState.RETURNING));
+		when(group.getCops()).thenReturn(walkingHome);
+		tickSeconds(1);
+		assertNull(clock.snapshot(id));
+
+		List<CopNpc> fresh = List.of(cop(CopState.PURSUING));
+		when(group.getCops()).thenReturn(fresh);
+		tickSeconds(1);
+
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
+		assertEquals(lostAt, arcs.arc(id).lastLostAt());
+	}
+
+	@Test
+	@DisplayName("a squad wiped out while he is in sight ends the contact: lastLostAt is the wipe, not 0")
+	void squadDiesWhileSeen_stampsLastLostAtAtTheWipe() {
+		arcs.start(id, WantedCause.CRIME, 2);
+		unseenMs = 100;
+		tickSeconds(5);
+		assertEquals(0, arcs.arc(id).lastLostAt());
+
+		CopNpc dead = cop(CopState.PURSUING);
+		when(dead.isValid()).thenReturn(false);
+		when(group.getCops()).thenReturn(List.of(dead));
+		tickSeconds(1);
+		long wipedAt = now[0];
+		assertNull(clock.snapshot(id));
+
+		List<CopNpc> fresh = List.of(cop(CopState.PURSUING));
+		when(group.getCops()).thenReturn(fresh);
+		unseenMs = Long.MAX_VALUE;
+		tickSeconds(1);
+
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
+		assertEquals(wipedAt, arcs.arc(id).lastLostAt());
+	}
+
+	@Test
+	@DisplayName("a quit while in sight stamps lastLostAt at the quit; a quit while searching keeps the earlier loss")
+	void clearWhileSeen_stampsLost_clearWhileSearching_doesNot() {
+		arcs.start(id, WantedCause.CRIME, 2);
+		unseenMs = 100;
+		tickSeconds(3);
+		clock.clear(player);
+		long quitAt = now[0];
+		assertEquals(quitAt, arcs.arc(id).lastLostAt());
+
+		unseenMs = 10_000;
+		tickSeconds(1);
+		long searchingSince = arcs.arc(id).lastLostAt();
+		now[0] += 1000;
+		clock.clear(player);
+		assertEquals(searchingSince, arcs.arc(id).lastLostAt());
+	}
+
+	/** Three ticks in which the squad's last sighting ages as a real squad's does; the third is the switch to SEARCHING. */
+	private void loseSight() {
+		long seenAt = now[0] - unseenMs;
+		for (int k = 0; k < 3; k++) {
+			now[0] += 1000;
+			unseenMs = now[0] - seenAt;
+			clock.tick(player, group);
+		}
+	}
+
+	/** Quits while tracked and rejoins {@code awayMs} later: the RESTORE start's arc restore. */
+	private void quitAndRejoin(long awayMs) {
+		clock.clear(player);
+		arcs.quit(id);
+		now[0] += awayMs;
+		arcs.restore(id);
+	}
+
+	@Test
+	@DisplayName("a rejoin's seeded sighting is no contact: no respot, and lastLostAt keeps the loss before the quit")
+	void restoreSeed_isNoRespot_andKeepsThePreQuitLoss() {
+		arcs.start(id, WantedCause.CRIME, 2);
+		unseenMs = 100;
+		tickSeconds(10);
+		loseSight();
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
+		long lostAt = arcs.arc(id).lastLostAt();
+		tickSeconds(5);
+
+		quitAndRejoin(300_000);
+		// CopManager.onWantedStart seeds a sighting at the rejoin; the first cop spawns a second later
+		unseenMs = 0;
+		loseSight();
+
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
+		assertEquals(0, arcs.arc(id).respots);
+		assertEquals(lostAt + 300_000, arcs.arc(id).lastLostAt());
+	}
+
+	@Test
+	@DisplayName("a cop that really sees him after a rejoin is contact: one respot, lastLostAt at the next loss")
+	void restoreSeed_thenARealSighting_countsAsContact() {
+		arcs.start(id, WantedCause.CRIME, 2);
+		unseenMs = 100;
+		tickSeconds(10);
+		loseSight();
+		tickSeconds(5);
+
+		quitAndRejoin(300_000);
+		unseenMs = 1000;
+		tickSeconds(1);
+		assertEquals(0, arcs.arc(id).respots);
+		unseenMs = 100;
+		tickSeconds(1);
+		assertEquals(1, arcs.arc(id).respots);
+		loseSight();
+
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
+		assertEquals(now[0], arcs.arc(id).lastLostAt());
+	}
+
+	@Test
+	@DisplayName("AUTO: 17.9 s in sight plus the 3 s Lost_Sight_Seconds grace is not a narrow escape")
+	void auto_lostSightGrace_isNotTimeInSight() {
+		auto();
+		wanted.setLevel(3);
+		arcs.start(id, WantedCause.CRIME, 3);
+		unseenMs = 100;
+		tickSeconds(18);
+		loseSight();
+
+		unseenMs = 10_000;
+		tickSeconds(31);
+
+		assertNotEquals(AutoDropPlanner.REASON_NARROW, plansAtDrop.get(0).reason());
+	}
+
+	@Test
+	@DisplayName("AUTO: a narrow escape (20 s in sight) steps the next timer by 0.5 when the chase is not locked")
+	void auto_narrowEscape_notLocked_stepsByHalf() {
+		auto();
+		wanted.setLevel(3);
+		arcs.start(id, WantedCause.CRIME, 3);
+		unseenMs = 100;
+		tickSeconds(24);
+		loseSight();
+
+		unseenMs = 10_000;
+		tickSeconds(31);
+
+		assertEquals(List.of(30, 10), spellCountdowns());
+		assertEquals(AutoDropPlanner.REASON_NARROW, plansAtDrop.get(0).reason());
+	}
+
+	@Test
+	@DisplayName("AUTO: a locked chase keeps ONE_STAR timing, narrow escape or not")
+	void auto_locked_keepsOneStarTiming_narrowOrNot() {
+		auto();
+		wanted.setLevel(3);
+		arcs.start(id, WantedCause.RESTORE, 3); // a restored chase counts as a logout: locked for 180 s
+		unseenMs = 100;
+		tickSeconds(21);
+
+		unseenMs = 10_000;
+		tickSeconds(70);
+
+		assertEquals(List.of(30, 20, 10), spellCountdowns());
+		assertEquals(List.of(Ending.STILL_HOT, Ending.STILL_HOT, Ending.STILL_HOT), endings());
+		assertEquals(AutoDropPlanner.REASON_LOGOUT, plansAtDrop.get(0).reason());
+	}
+
+	@Test
+	@DisplayName("AUTO: a level raised mid-search recomputes the timer for the new level")
+	void auto_levelRaisedMidSearch_recomputesTheTimer() {
+		auto();
+		arcs.start(id, WantedCause.CRIME, 2);
+		unseenMs = 10_000;
+		tickSeconds(6);
+
+		wanted.setLevel(3);
+		tickSeconds(20);
+		verify(stars, never()).drop(any(), anyInt(), any());
+
+		tickSeconds(5);
+		verify(stars).drop(any(), eq(1), eq(WantedCause.EVASION));
+	}
+
+	@Test
+	@DisplayName("a reload that flips ONE_STAR to AUTO mid-search drops nothing on the next tick")
+	void reloadFlipToAuto_midSearch_dropsNothingOnTheNextTick() {
+		arcs.start(id, WantedCause.CRIME, 2);
+		unseenMs = 10_000;
+		tickSeconds(5);
+
+		auto();
+		tickSeconds(1);
+		verify(stars, never()).drop(any(), anyInt(), any());
+
+		tickSeconds(15);
+		verify(stars).drop(any(), eq(1), eq(WantedCause.EVASION));
+	}
+
+	@Test
+	@DisplayName("AUTO: a cancelled drop leaves the momentum steps alone")
+	void auto_cancelledDrop_leavesTheStepsAlone() {
+		auto();
+		wanted.setLevel(3);
+		arcs.start(id, WantedCause.CRIME, 3);
+		boolean[] cancelled = {false};
+		when(stars.drop(any(), anyInt(), any())).thenAnswer(inv -> {
+			if (!cancelled[0]) {
+				cancelled[0] = true;
+				return 0;
+			}
+			int n = inv.getArgument(1);
+			wanted.setLevel(wanted.getLevel() - n);
+			return n;
+		});
+		unseenMs = 10_000;
+
+		tickSeconds(62);
+
+		verify(stars, times(2)).drop(any(), eq(1), eq(WantedCause.EVASION));
+		assertEquals(List.of(30, 15), spellCountdowns());
+	}
+
+	@Test
+	@DisplayName("AUTO: a planner failure falls back to ONE_STAR, one star and today's timer, and the chase goes on")
+	void auto_plannerFailure_dropsOneStar() {
+		auto();
+		arcs.start(id, WantedCause.CRIME, 2);
+		crimeAt(now[0] - 25_000);
+		when(learner.delta(id)).thenThrow(new IllegalStateException("boom"));
+		unseenMs = 10_000;
+
+		tickSeconds(32);
+
+		// PETTY would have taken both stars; the fallback takes one, then the next one 10 s later
+		verify(stars, times(2)).drop(any(), eq(1), eq(WantedCause.EVASION));
+		assertEquals(List.of(20, 10), spellCountdowns());
+	}
+
+	@Test
+	@DisplayName("ONE_STAR reads no heat ledger, no learner and plans nothing")
+	void oneStar_readsNoLedgerNoLearner_andPlansNothing() {
+		arcs.start(id, WantedCause.CRIME, 2);
+		crimeAt(now[0] - 25_000);
+		unseenMs = 10_000;
+
+		tickSeconds(32);
+
+		verify(stars, times(2)).drop(any(), eq(1), eq(WantedCause.EVASION));
+		verifyNoInteractions(ledger, learner);
+		verify(arcs, never()).view(any(), any(), any());
+		verify(arcs, never()).stashPending(any(), any());
 	}
 }

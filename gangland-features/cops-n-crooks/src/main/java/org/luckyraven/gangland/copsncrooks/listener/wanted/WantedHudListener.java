@@ -15,6 +15,8 @@ import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.config.HudSettings;
+import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.DropPlan;
+import org.luckyraven.gangland.copsncrooks.wanted.evasion.ChaseArcs;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.CrimeRecord;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.copsncrooks.wanted.hud.StarCard;
@@ -48,15 +50,17 @@ public class WantedHudListener implements Listener {
 	private final CopSpawnManager   spawns;
 	private final CopLoader         copLoader;
 	private final WantedHud         hud;
+	private final ChaseArcs         arcs;
 
 	public WantedHudListener(JavaPlugin plugin, ChaseConfigLoader chase, WantedMessages messages, HeatLedger ledger,
-	                         CopSpawnManager spawns, CopLoader copLoader, WantedStars stars) {
+	                         CopSpawnManager spawns, CopLoader copLoader, WantedStars stars, ChaseArcs arcs) {
 		this.chase     = chase;
 		this.messages  = messages;
 		this.ledger    = ledger;
 		this.spawns    = spawns;
 		this.copLoader = copLoader;
 		this.hud       = new WantedHud(chase, messages);
+		this.arcs      = arcs;
 
 		stars.suppressStarChat(() -> chase.get().hud().starCard());
 		Bukkit.getScheduler().runTaskTimer(plugin, hud::tick, 10L, 10L);
@@ -78,7 +82,11 @@ public class WantedHudListener implements Listener {
 			announce(player, stars, raiseCard(player, event));
 			playSiren(player);
 		} else if (newLevel < event.getOldLevel() && (newLevel > 0 || isGetaway(event.getCause()))) {
-			announce(player, stars, StarCard.dropCard(messages, event.getCause()));
+			int      lost    = event.getOldLevel() - newLevel;
+			DropPlan pending = event.getCause() == WantedCause.EVASION ? arcs.takePending(player.getUniqueId()) : null;
+
+			announce(player, stars, StarCard.dropCard(messages, event.getCause(), pending, lost));
+			hud.lost(player, lost);
 		}
 
 		if (newLevel > 0) hud.stars(player, newLevel, stars);

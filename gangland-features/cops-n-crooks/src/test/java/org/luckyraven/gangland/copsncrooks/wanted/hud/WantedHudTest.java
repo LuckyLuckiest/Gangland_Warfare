@@ -139,6 +139,33 @@ class WantedHudTest {
 	}
 
 	@Test
+	@DisplayName("a drop of several stars shows -N STARS on the green bar, and the bar reads STAR LOST again after")
+	void lost_namesTheCountWhileGreen_thenResets() {
+		Player    player = player();
+		WantedHud hud    = hud();
+		hud.show(player, 3, "***");
+
+		hud.lost(player, 3);
+		hud.state(player, EvasionState.EVADED, 0, 0, centre(), 40);
+		verify(bar).setTitle(org.mockito.ArgumentMatchers.contains("-3 STARS"));
+
+		for (int i = 0; i < 6; i++) {
+			hud.tick();
+		}
+		hud.state(player, EvasionState.EVADED, 0, 0, centre(), 40);
+
+		verify(bar).setTitle(org.mockito.ArgumentMatchers.contains("STAR LOST"));
+	}
+
+	@Test
+	@DisplayName("lost for a player who is not shown is ignored")
+	void lost_notShown_isIgnored() {
+		hud().lost(player(), 3);
+
+		verify(bar, never()).setTitle(anyString());
+	}
+
+	@Test
 	@DisplayName("a lost star is green for three seconds, then the current state returns")
 	void evaded_isGreenForThreeSeconds() {
 		Player  player = player();

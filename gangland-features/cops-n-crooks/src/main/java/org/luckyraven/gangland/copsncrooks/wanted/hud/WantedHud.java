@@ -105,6 +105,15 @@ public class WantedHud {
 		aimCompass(entry);
 	}
 
+	/** How many stars the drop just shown took; the green bar names the count from 2. Ignored when not shown. */
+	public void lost(Player player, int lost) {
+		Entry entry = entries.get(player.getUniqueId());
+		if (entry == null) return;
+
+		entry.lost = lost;
+		render(entry);
+	}
+
 	/** Removes the bar and the ring and gives the compass back. */
 	public void hide(Player player) {
 		Entry entry = entries.remove(player.getUniqueId());
@@ -121,6 +130,7 @@ public class WantedHud {
 		for (Entry entry : entries.values()) {
 			if (entry.state == EvasionState.EVADED && tickCount >= entry.evadedUntil) {
 				entry.state = entry.after;
+				entry.lost  = 1;
 			}
 
 			render(entry);
@@ -133,7 +143,7 @@ public class WantedHud {
 	private void render(Entry entry) {
 		if (entry.bar == null) return;
 
-		String title = StarCard.barTitle(messages, entry.state, entry.stars, entry.secondsLeft);
+		String title = StarCard.barTitle(messages, entry.state, entry.stars, entry.secondsLeft, entry.lost);
 		if (showsWay(entry)) {
 			title += StarCard.wayHint(messages, entry.centre, entry.radius, entry.player.getLocation());
 		}
@@ -246,6 +256,7 @@ public class WantedHud {
 		private EvasionState       state = EvasionState.SEEN;
 		private EvasionState       after = EvasionState.SEEN;
 		private int                secondsLeft;
+		private int                lost = 1;
 		private @Nullable Location centre;
 		private double             radius;
 		private long               evadedUntil;

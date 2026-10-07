@@ -482,7 +482,8 @@ restores the 0.13.0 behaviour of that piece. Texts are in `copsncrooks/wanted_me
 | `Wanted.Heat.Crimes.<Id>` | see below | Heat per crime. Merged key by key over the defaults |
 | `Wanted.Evasion.Enable` | `true` | `false` = only the fixed decay timer |
 | `Wanted.Evasion.Lost_Sight_Seconds` | `3` | No cop sighting for this long opens the search zone |
-| `Wanted.Evasion.Drop_Mode` | `ONE_STAR` | `ONE_STAR` or `ALL_STARS` per completed evasion; an unknown value warns and uses `ONE_STAR` |
+| `Wanted.Evasion.Drop_Mode` | `ONE_STAR` | `ONE_STAR`, `ALL_STARS` or `AUTO` per completed evasion; an unknown value warns and uses `ONE_STAR` |
+| `Wanted.Evasion.Auto.*` | *see below* | AUTO mode only: the cops judge how the chase went and take 1, part or all stars (29 tunable keys under `Auto`, if missing uses defaults) |
 | `Wanted.Evasion.Search_Radius` | `40, 60, 90, 130, 180` | Zone radius in blocks by wanted level |
 | `Wanted.Evasion.Seconds_To_Drop` | `10, 20, 30, 45, 60` | Seconds hidden for a drop, by wanted level |
 | `Wanted.Evasion.Outside_Zone_Speed` | `2.0` | Clock speed outside the zone |
@@ -498,11 +499,56 @@ Shipped crime weights (`Heat.Crimes`): `Brandish_Near_Cop` 25, `Assault_Civilian
 `Trespass_Restricted` 300, `Jailbreak` 450. 0.15.0 reports `Kill_Player`, `Kill_Civilian`, `Kill_Cop`, `Assault_Cop`
 and `Resisting_Arrest`; the others are read by later releases. A weight of 0 ignores that crime.
 
-`copsncrooks/wanted_messages.yml` holds `Hud.Bar.Seen` / `Searching` / `Evaded`, `Hud.Title`, `Hud.Card.Raise` /
-`Stance_Cuffs` / `Stance_Shoot` / `Drop_Evasion` / `Drop_Decay` / `Drop_Other`, `Charge_Sheet.Header` / `Crime` / `Total` /
+`copsncrooks/wanted_messages.yml` holds `Hud.Bar.Seen` / `Searching` / `Evaded` / `Evaded_Many`, `Hud.Title`, `Hud.Card.Raise` /
+`Stance_Cuffs` / `Stance_Shoot` / `Drop_Evasion` / `Drop_Decay` / `Drop_Other` / `Drop_Petty` / `Drop_Cold_Trail` / 
+`Drop_Clean_Break` / `Drop_Still_Hot` / `Drop_Known_Face` / `Drop_Narrow`, `Charge_Sheet.Header` / `Crime` / `Total` /
 `Paid` / `Extra_Time` / `Paperwork`, and `Crimes.<Id>` (including `Crimes.Unknown_Crime`, the card text when no crime is
-on record). Placeholders: `%stars%`, `%time%`, `%crime%`, `%tier%`, `%stance%`, `%count%`, `%amount%`, `%paid%`,
-`%money_symbol%`.
+on record). AUTO ending cards (`Drop_*`) are new in 0.15.2. Placeholders: `%stars%`, `%time%`, `%crime%`, `%tier%`, `%stance%`, `%count%`, `%amount%`, `%paid%`,
+`%money_symbol%`, and `%count%` fills the star-drop lines.
+
+#### AUTO mode settings
+
+When `Wanted.Evasion.Drop_Mode: AUTO`, the cops decide how many stars to drop based on how the chase went. 29 tunable keys live under `Wanted.Evasion.Auto` in `copsncrooks/wanted.yml`. If the block is missing, all keys use their defaults. The mode reads:
+1. **How the chase started** — rampage (4+ opening crimes, 4+ peak stars, or a cop killed) or small fry (1-2 crimes, max 2 stars).
+2. **How long was the chase** — wall-clock seconds since the chase began (with offline time removed), compared to a learned typical getaway length per star level.
+3. **After a specific period** — the lock lifts after 180 s with no new crime; a cold trail needs 90 s quiet. Logging out during a chase locks it until quiet is restored.
+4. **How it might end** — did you leave the search zone (clean break), sit tight (hunker down), or slip after a long pursuit (narrow escape, faster next timer).
+
+Five **endings** map these rules to 1, part or all stars: **Still Hot** (1, a rampage or logout lock), **Petty** (all, a small chase), **Cold Trail** (all, a long quiet chase), **Clean Break** (half, leaving the zone), **Hunker Down** (1, the default). The `Learning` sub-block (11 keys) lets the server track how long chases typically last and how often each player gets away, then adjusts timers and denies small-fry lumps to repeat offenders.
+
+All keys are under `Wanted.Evasion.Auto`. A missing key uses its default; a value outside its range is reported (`config.range`) and the default is used instead. In the lists, a `Typical_Seconds` entry below 5 uses the entry before it (the default for the first), and an `Escape_Rate` entry outside 0 to 1 is clamped.
+
+| Key | Default | Range | Meaning |
+|-----|---------|-------|---------|
+| `Opening_Seconds` | `30` | >= 0 | Seconds from the first crime of the chase that count as its opening. A crime from more than this long before the chase began is not on the chase |
+| `Rampage_Crimes` | `4` | >= 1 | Crimes in the opening that make the chase a rampage |
+| `Rampage_Peak_Level` | `4` | >= 1 | Peak stars that make a chase a rampage (a cop kill always does) |
+| `Lock_Cool_Seconds` | `180` | >= 0 | A rampage or logged-out chase drops one star at a time until this many quiet seconds pass |
+| `Respot_Limit` | `4` | >= 0 | Respots after which PETTY and CLEAN_BREAK stop paying out |
+| `Petty.Max_Crimes` | `2` | >= 1 | Most crimes a small chase may hold (a chase with none never counts) |
+| `Petty.Max_Peak_Level` | `2` | >= 1 | Highest level a small chase may reach; at or above `Rampage_Peak_Level` warns (`config.conflict`) |
+| `Cold_Trail.Typical_Seconds` | `30, 60, 90, 120, 150` | each >= 5 | Fresh-server typical getaway seconds by peak level; Learning replaces it within half to double |
+| `Cold_Trail.Ratio` | `2.0` | >= 0.01 | The chase must last this many times the typical time |
+| `Cold_Trail.Quiet_Seconds` | `90` | >= 0 | Seconds with no new crime and no new star |
+| `Clean_Break.Outside_Ratio` | `0.5` | 0 to 1 | Share of the search time spent outside the zone |
+| `Clean_Break.Drop_Fraction` | `0.5` | 0 to 1 | Share of the stars that drop, rounded up, at least one |
+| `Momentum.Step_Speed` | `0.75` | 0.01 to 1 | Each later timer is this share of the previous one |
+| `Momentum.Narrow_Step_Speed` | `0.5` | 0.01 to 1 | The same after a narrow escape; above `Step_Speed` warns and uses `Step_Speed` |
+| `Momentum.Narrow_Seen_Seconds` | `20` | >= 0 | Seconds in sight before breaking away that make it a narrow escape |
+| `Momentum.Floor` | `0.4` | 0.01 to 1 | No timer shrinks below this share of `Seconds_To_Drop` |
+| `Repeat_Chases` | `3` | 0 to 8 | Recent crime chases at which the cops stop going easy (0 = off) |
+| `Repeat_Window_Minutes` | `30` | >= 0 | How far back those chases count (memory only) |
+| `Learning.Enable` | `true` | | `false` = nothing stored or read |
+| `Learning.Escape_Rate` | `0.90, 0.75, 0.55, 0.35, 0.20` | each 0 to 1 | Fresh-server getaway rate by peak level |
+| `Learning.Prior_Chases` | `5` | >= 1 | Chases of evidence before a player's habit counts fully |
+| `Learning.Decay_Per_Chase` | `0.90` | 0.5 to 1 | How much an older chase still counts after each newer one |
+| `Learning.Habitual_Escaper_Delta` | `0.20` | 0.05 to 1 | Habit at which a player is a known face (no small-fry or clean-break lumps) |
+| `Learning.Habit_Time_Strength` | `0.8` | 0 to 2 | How strongly the habit stretches or shortens the timer |
+| `Learning.Min_Time_Factor` | `0.6` | 0.1 to 1 | The habit alone never shortens a timer below this share |
+| `Learning.Max_Time_Factor` | `1.6` | 1 to 4 | No timer is stretched above this share of `Seconds_To_Drop` |
+| `Learning.Min_Chase_Seconds` | `30` | >= 0 | Shorter chases are not learned from |
+| `Learning.Min_Seconds_Between_Outcomes` | `180` | >= 0 | A player's chases ending closer together are not learned from |
+| `Learning.Forget_After_Days` | `90` | >= 1 | Habit and level rows untouched this long are deleted at startup |
 
 ---
 

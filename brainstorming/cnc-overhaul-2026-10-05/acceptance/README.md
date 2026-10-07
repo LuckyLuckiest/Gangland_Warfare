@@ -34,7 +34,7 @@ its own `README.md`. First use builds `E:/Programming/java/wt/_programme/servers
 
 ## Profiles (prep-cnc015.sh)
 `default` shipped 0.15 defaults - `legacy-settings` the 0.13.0 `settings.yml` (no `Take_Money.Enable`) on 0.15 jars - `r3`/`r4`
-`Repeating_Timer.Time: 10` (r4 also `Evasion.Enable: false` in `npc/wanted.yml`, extracted from the cops-n-crooks jar) - `n3`
+`Repeating_Timer.Time: 10` (r4 also `Evasion.Enable: false` in `copsncrooks/wanted.yml`, extracted from the cops-n-crooks jar) - `n3`
 `Take_Money.Enable: true` - `n3-broken` plus `Formula: "amount * ("` - `n4-old` Gangland 0.13.0 jars - `n4-new` 0.15.0 jars swapped
 onto the n4-old data. Every profile: flat fresh world, Keystone 1.14.0, Bartizan 0.6.1, live Citizens `config.yml`, Debug on for
 "Cops N Crooks". If a 0.15 key name differs from the one the prep script sets, `yset.js` inserts the key; check the printed `grep` of
@@ -62,6 +62,25 @@ Pass criterion for 0.15: **R1, R2, R3, R4, N1, N2, N3, N4 PASS** (N5-N8 best eff
 Verdict exit codes: 0 all PASS, 1 a FAIL, 2 REVIEW only. A row is not green until its run dir (`runs/<server>--<scenario>/`:
 `server.log`, `chat.txt`, `summary.txt`) has been read for the REVIEW lines. Each scenario drops `say CNCMARK:<tag>` / `CNCCOP:<tag>`
 markers so `chat.txt` reads as a timeline.
+
+## 0.15.2 AUTO rows (profiles `auto`, `auto-compat`; jars from `E:/Programming/java/wt/gangland-0.15.2/target/`)
+`prep-cnc015.sh auto` = `Wanted.Evasion.Drop_Mode AUTO` + `Auto.Learning.Min_Chase_Seconds 5` + `Min_Seconds_Between_Outcomes 5` on the
+shipped `copsncrooks/wanted.yml`; every other number stays shipped, so the 180 s lock and cold-trail line cannot fire inside a row.
+`auto-compat` = the 0.15.1 `wanted.yml` (`git show 970dfa96:...`, no `Auto` block). Verdicts read the `AUTO drop ... ending=` debug line
+in `server.log` (Debug on for "Cops N Crooks"). Run: `run-all-cnc015.sh A1 A2 ...` (also part of the default list, after N8).
+
+| Row | Scenario(s) | Pass line | Verdict |
+|---|---|---|---|
+| A1 auto-hunker | `A1-auto-hunker.json` | 3 stars sealed: three single drops, `ending=HUNKER_DOWN` x3, gaps about 15 / 6 s after a first drop about 30 s into the search | `cnc-verdict.js A1` |
+| A2 auto-petty | `A2-auto-petty.json` | one kill (80 heat, no star) + `wanted add 2`, sealed: one drop 2 -> 0, `ending=PETTY` | `A2` |
+| A3 auto-rampage-lock | `A3-auto-rampage-lock.json` | `wanted add 4` + a kill: first drop 4 -> 3, `STILL_HOT reason=rampage` | `A3` |
+| A4 auto-logout-lock | `A4a-auto-logout-quit.json` then `A4b-auto-logout-rejoin.json` (same server) | first drop 2 -> 1, `reason=logout`; REVIEW when no squad re-forms after the rejoin | `A4 <A4a run> <A4b run>` |
+| A5 auto-learn-persist | `A5a-auto-learn-two-chases.json`, sqlite read of `chase_habit` (run-all writes `chase_habit.txt` into the A5a run dir), `A5b-auto-learn-after-restart.json` | `n` = 1.9 for Runner after A5a; A5b's debug line shows `delta>0` | `A5 <A5a run> <A5b run>` |
+| A6 auto-config-compat | `A6-auto-config-compat.json` twice (second after `yset.js ... Auto.Momentum.Step_Speed 1.5`) | `Done (` both times; no `config.` line the first; exactly one `config.range` naming `Step_Speed` the second | `A6 <first run> <second run>` |
+| A7 / A8 / A9 (REVIEW) | `A7-auto-clean-break.json` (15 blocks/s hops), `A8-auto-flee-on-foot.json` (5 blocks/s), `A9-auto-teleport.json` (one 150-block tp) | A7 `CLEAN_BREAK` 3 -> 1; A8 `HUNKER_DOWN` with `outside` about 0.2-0.3; A9 `teleported=true`, no `CLEAN_BREAK` (a CLEAN_BREAK is a FAIL) | `A7`, `A8`, `A9` |
+
+Release pass: A1-A3, A5, A6 PASS, A4 PASS or REVIEW, A7-A9 read, R1-R4 and N1-N8 on the default profile unchanged. Manual checklist gains: a
+petty card, a still-hot card, a clean-break card, the `Evaded_Many` flash (bot cannot read titles or boss bars).
 
 ## M manual checklist (the bot cannot see boss bars, titles, particles or the compass)
 Run on a real client against a prepared sandbox (`prep-cnc015.sh default`, start it, join, `/glw wanted add 3`):
