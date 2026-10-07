@@ -5,6 +5,7 @@ import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.config.DropMode;
 import org.luckyraven.gangland.copsncrooks.wanted.config.EvasionSettings;
 import org.luckyraven.gangland.core.wanted.WantedCause;
+import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.util.Collection;
@@ -19,9 +20,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * replaced whole, so the async autosave never sees half an update. {@code Learning.Enable: false} is read live: every
  * method then answers cold values and writes nothing, and the caches stay as they were.
  *
+ * <p>Unlike {@code JailExitService} it reads the tables on the <b>first</b> load only: a {@code /glw reload} would
+ * otherwise replace learning that autosave has not written yet with the older stored rows.
+ *
  * @since 0.15.2
  */
-public class ChaseLearner {
+public class ChaseLearner implements BeanLifecycle {
 
 	// ponytail: the four constants below are not keys; promote them if an admin ever needs to tune them
 	/** Decay of the server rows per counted chase. */
@@ -34,16 +38,55 @@ public class ChaseLearner {
 	private static final double SERVER_PRIOR_CHASES = 20;
 	private static final double MAX_TYPICAL_COUNT   = 100;
 
+	private static final long DAY_MS = 86_400_000L;
+
 	private final ChaseConfigLoader            config;
 	private final Map<UUID, ChaseHabit>        habits = new ConcurrentHashMap<>();
 	private final Map<Integer, ChaseLevelStat> levels = new ConcurrentHashMap<>();
+	private final IRepository<ChaseHabit>      habitRepository;
+	private final IRepository<ChaseLevelStat>  levelRepository;
 
 	public ChaseLearner(ChaseConfigLoader config, IRepository<ChaseHabit> habitRepository,
 	                    IRepository<ChaseLevelStat> levelRepository) {
-		this.config = config;
+		this.config          = config;
+		this.habitRepository = habitRepository;
+		this.levelRepository = levelRepository;
 
 		habitRepository.setDataSupplier(habits::values);
 		levelRepository.setDataSupplier(levels::values);
+	}
+
+	/**
+	 * First load only: reads both tables into the caches, then deletes the rows not updated for
+	 * {@code Forget_After_Days} (and keeps them out of the caches). The delete is skipped with learning off, which
+	 * writes nothing.
+	 */
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		if (!firstLoad) return;
+
+		AutoSettings.Learning learn = config.get().evasion().auto().learning();
+		long                  limit = System.currentTimeMillis() - learn.forgetAfterDays() * DAY_MS;
+
+		for (ChaseHabit row : habitRepository.loadAll()) {
+			if (learn.enable() && row.lastAt() < limit) {
+				habitRepository.delete(row);
+			} else {
+				habits.put(row.player(), row);
+			}
+		}
+		for (ChaseLevelStat row : levelRepository.loadAll()) {
+			if (learn.enable() && row.updatedAt() < limit) {
+				levelRepository.delete(row);
+			} else {
+				levels.put(row.level(), row);
+			}
+		}
+	}
+
+	@Override
+	public void onClear() {
+		// The caches hold learning the autosave has not written yet; a reload must not drop it.
 	}
 
 	/** Puts stored rows into the caches, replacing any row with the same key. */
