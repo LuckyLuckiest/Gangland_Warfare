@@ -21,6 +21,7 @@ permissions. Some waypoint types also act as safe zones where PvP is disabled.
 | `SAFE_ZONE` | Yes       | General safe area — no PvP, publicly accessible.            |
 | `QUEST`     | No        | Quest-related destination. PvP is not disabled.             |
 | `GLOBAL`    | No        | Publicly accessible, no PvP protection.                     |
+| `HOSPITAL`  | Yes       | Where players wake up after dying (0.16.0). See Hospitals.  |
 
 ---
 
@@ -52,7 +53,7 @@ All configuration commands apply to the currently selected waypoint.
 
 | Command                            | Description                                                               |
 |------------------------------------|---------------------------------------------------------------------------|
-| `/glw waypoint type <type>`        | Sets the waypoint type (`SPAWN`, `GANG`, `SAFE_ZONE`, `QUEST`, `GLOBAL`). |
+| `/glw waypoint type <type>`        | Sets the waypoint type (`SPAWN`, `GANG`, `SAFE_ZONE`, `QUEST`, `GLOBAL`, `HOSPITAL`). |
 | `/glw waypoint cost <amount>`      | Money players must pay to teleport here. Use `0` for free.                |
 | `/glw waypoint timer <seconds>`    | How long players must stand still before teleporting.                     |
 | `/glw waypoint cooldown <seconds>` | How long before the same player can use this waypoint again.              |
@@ -97,6 +98,31 @@ access.
 
 Set a waypoint's type to `GANG` and assign a gang ID with `/glw waypoint gangId <id>`. Only players who are members of
 that gang can teleport to it. These waypoints are also safe zones.
+
+Since 0.16.0 a gang waypoint is also a **hideout**: while the police search for a member inside its radius (8 blocks when
+the waypoint's radius is 0, at most 64) the "nobody has seen you" clock runs faster. See Cops N Crooks.
+
+---
+
+## Hospitals (0.16.0)
+
+Create a waypoint where players should wake up and set it with `/glw waypoint type <name> hospital`. Several hospitals
+can exist; the **nearest one in the world where the player died** is used. The setting is `User.Death.Hospital.Enable`
+(default true, in `settings.yml`).
+
+- **The respawn rule.** A player who dies and respawns the vanilla way wakes at the nearest hospital, unless he respawns
+  at his bed or respawn anchor. A player who is *downed* and then respawns (with `User.Death.Respawn.Enable: true`) is
+  teleported straight to the nearest hospital, with no timer, cooldown or cost. With no hospital in that world the old
+  behaviour applies (the configured respawn waypoint, or the vanilla spawn). A jail can still override the respawn of a
+  jailed or handcuffed player.
+- **One bill.** The death penalty (`Lose_Money`) is now charged once, as the "Ward bill", when the downed player
+  gets up (respawn), or when he quits while downed; a player who is downed and then really dies pays once. With
+  `Hospital.Enable: false` the old message and timing stay (charged at the down).
+- **The respawn shield.** After a hospital respawn the player takes no damage for `User.Death.Hospital.Shield_Seconds`
+  (5) seconds, so a hospital cannot be camped the moment he wakes. Incoming damage is cancelled (the void still kills);
+  the shield ends early when he attacks anything, quits, or the time runs out. A bed, anchor or fallback respawn gets no
+  shield. `Shield_Seconds: 0` switches it off. A server with an older `settings.yml` has no `Shield_Seconds` key and
+  gets the default 5; add `Shield_Seconds: 0` to turn it off.
 
 ---
 

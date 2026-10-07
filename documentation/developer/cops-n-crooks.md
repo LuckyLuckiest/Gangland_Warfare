@@ -1143,6 +1143,84 @@ Package `org.luckyraven.gangland.copsncrooks.wanted`, configured by `ChaseConfig
 
 ---
 
+### Where the police come from (cops-n-crooks, 0.16.0)
+
+New in 0.16.0 (all in `org.luckyraven.gangland.copsncrooks` unless noted). Player-facing rules are in
+[`features/cops-n-crooks.md`](../features/cops-n-crooks.md); every key is in [`configuration.md`](./configuration.md).
+
+| Piece | Classes | Role |
+|---|---|---|
+| Registries | `station.Station`/`StationRegistry`, `place.AdminRegion`/`AdminRegionRegistry`, `place.SetupPoint`/`SetupPointRegistry`; tables `cop_station`, `cop_region`, `cop_point` | The only writer is the setup wand. Beans in `config.RegistryModuleConfig` (registered last in `CopsNCrooksModule`). `AdminRegionRegistry` is a `RegionProvider` (source `copsncrooks`) and registers itself with `PlaceNames` |
+| Spawner grouping | `CopSpawner.stationId` (`cop_spawner.station_id`, appended last), `CopSpawnManager.assignStation/assignNearby/unassignStation/spawnersOf` | A station owns the spawners within `Station_Radius`; the positional `doLoadAll` read takes the new column only when the row has it |
+| Dispatch | `npc.police.dispatch.Dispatcher`, `PendingUnit`, `SpawnBias`; `CopGroup` queue (`enqueue`, `takeDue`, `requeue`, `pendingCount`, `unitsEnRoute`, `clearPending`) | `CopManager.spawnTick` turns every missing slot into a `PendingUnit(role, tier, arriveAt, station, bias)`; due units are spawned through `CopSpawnManager.spawnUnit` |
+| Out-of-sight spawn | `CopSpawnManager.spawnUnit` / `hiddenRing`, Keystone `EntitySpawner.isOutOfSight` + `findHiddenSpawnLocation` | Order: the unit's station spawners (within `Spawner_Preference_Radius`, allowed, out of sight, nearest first); a hidden ring biased to the hand-off cone or the station side; a hidden ring anywhere; the 0.15 `spawnNearPlayer`. Null = requeue |
+| Breather | `BreatherSettings`, `CopGroup.getBreatherUntil`, `casualtyWithin`, `lastCasualtyAt` | A wipe is a `lastCasualtyAt` after the previous breather, inside `Wipe_Window_Seconds`; `Wipe_Refill` radio line |
+| Perimeter | `npc.police.perimeter.PerimeterController`, `PostRing`, `state.CopState.POSTED`, `state.behavior.PostedBehavior`, `listener.police.PerimeterListener` | Started from `WantedEvasionStateEvent` SEARCHING, ended by SEEN (back to PURSUING) or OFF (RETURNING). Posts use Keystone `AbstractNpc.holdPost` |
+| Hand-off | `npc.police.handoff.HandoffController` (an AI-tick hook) | Samples the suspect, on the "engaged to not engaged" edge sets a `SpawnBias` on the group and radios `Handoff` |
+| Evasion multipliers | `wanted.evasion.Hideouts`, `QuietTrail`, `EvasionClock` (speed = `min(Max_Speed, zone x hideout x cold)`), `ChaseArcs.offlineTotalMs` | Hideouts are read from `PlaceNames` (tag `hideout`); offline time never counts as quiet |
+| Bribe stars | `wanted.bribe.BribeStars` (`BeanLifecycle`, a 10-tick sync task) | Items at `cop_point` rows of kind `pickup`; cause `WantedCause.CONTACT` |
+| Setup wand | `setup.SetupCommands`, `SetupSelections`, `SetupOutline`, `SetupMessages`, `command.cops.setup.SetupCommand`, `listener.setup.SetupWandListener`; `copsncrooks/setup.yml` | Saves only through the three registries; the wand item carries the NBT tag `cnc_setup_wand` |
+
+**Config reads.** `CopConfigProvider` is not a container bean (`CopLoader` replaces it on every load). A class that
+needs it (`Dispatcher`, `PerimeterController`, `HandoffController`, the station commands) takes a
+`Supplier<CopConfigProvider>` from `copLoader::getLoadedProvider` and reads it **on every call** with
+`requireNonNullElse(provider.getDispatchSettings(), DispatchSettings.DEFAULT)` (same for `getBreatherSettings`,
+`getHandoffSettings`, `getPerimeterSettings`), so `/glw reload` applies. A Mockito mock returns null for a new getter,
+which the default covers. `CopConfigProvider.getSquadTiers(level)` returns the `@tier` list parallel to
+`getSquadComposition` (0 = the star's tier); `CopRole.nextSlot(composition, live)` is the index `nextRole` delegates to.
+
+**Squad tiers.** `YamlCopConfigProvider` parses `"<Role>@<tier>"`; an unknown tier id is judged against the tier ids parsed
+from `cops.yml` and reported as `config.unknown_tier`. The slot tier is clamped to `getMaxTier`; escalation and the
+formation arc keep the star tier. Code defaults (`COMPOSITION_DEFAULTS`) carry no `@`, only the bundled file mixes.
+
+**Dispatch flow (`CopManager.spawnTick`).** Both Dispatch and Breather off: today's instant loop with the slot tier.
+Otherwise: wipe detection, enqueue per missing slot (`targetCount - counted - pending`), one radio line per batch
+(`Wipe_Refill` after a wipe, else `Dispatch_En_Route` when a station answered), then `takeDue` -> `spawnUnit`. A unit
+spawned with a bias reports `bias.lastSeen()` (never the live position) and `group.markTipOff`. `onWantedStart(player,
+wanted, cause)` takes the `WantedCause`: a RESTORE start (rejoin) skips the crime-scene seed and sets
+`breatherUntil = now + Rejoin_Grace_Seconds`. `releaseSurplus` calls queued units off before it sends live cops home.
+`group.unitsEnRoute(now)` is true for a unit up to 10 s past its ETA (a `ponytail:` constant, not a key).
+
+**Evasion hold.** `EvasionClock.hasLiveCop`/`handlesDecay` are also true while `unitsEnRoute`, and `tick` holds (lastTick =
+now, no track, no search) while the group has no valid non-RETURNING cop in the world, so no star drops while units travel.
+`QuietTrail.tick` sets `group.setBackupHeld(...)`, which makes `requestBackup` and `grantRegroupBackup` refuse.
+
+**Keystone 1.15.0.** Gangland now **requires Keystone 1.15.0**: it uses `EntitySpawner.isOutOfSight(spot, target)` and
+`findHiddenSpawnLocation(player, allowed)` (a block ray, not the facing cone of `isVisibleToOtherPlayers`; NPC observers
+are skipped) and `NpcPost` with `AbstractNpc.holdPost/getPost/releasePost/tickPost` (leash, arrival and facing; no squad
+logic). `KeystoneFloor` (gangland-impl, `keystone-floor.properties` filtered from `<keystone.version>`) makes
+`Gangland.onEnable` log one line and disable the plugin on an older Keystone instead of a `NoSuchMethodError`.
+
+**Id floor (docket T-180).** `CopSpawnerRepository`, `CivilianSpawnerRepository` and `JailRepository` record the highest
+stored id **before** they skip a row whose world is not loaded; `CopSpawnManager`/`CivilianSpawnManager.raiseIdFloor()`
+lifts `EntitySpawner.ID` to it after `onInitialize` and `reloadSpawners`, and `JailService.ID` is `max`ed above the skip. A
+new spawner or jail can no longer take the id of a row that is waiting for its world. The station, region and point
+registries keep every row (the location is nullable), so their `max + 1` already covers unloaded worlds.
+
+**Debug lines** (`log.debug`, read by the acceptance verdicts): `DISPATCH {player} count= station= eta= hold= reason= bias=`,
+`UNIT {player} callsign= tier= role= fromStation= hidden= bias= ahead= at=`, `PERIMETER {player} start|end ...`,
+`HANDOFF {player} heading=`, `EVASION {player} speed= zone= hideout= quiet=` and `EVASION {player} hold=enroute`.
+
+**Radio.** `CopRadio` keeps both constructors; `setPlaceNames` and `placeOf(location)` (place name or `Unknown_Place`) supply
+`%place%` to every line (the voice uses the squad's last-known location, `dispatch` the target's). New overloads:
+`dispatch(group, target, key, level, tier, extra)`, `sayFromLeader(group, key, extra)`, `compassWord(from, to)`. The lines
+`Dispatch_En_Route` and `Wipe_Refill` are in the bundled `Cops.Radio.Priority` list, in the code default set, and are
+unioned into a server's own `Priority` list (so an old list still speaks them).
+
+**Sharing places.** A module publishes places by implementing `RegionProvider` and registering it with the core `PlaceNames`
+bean from its own `@Bean` method (cops: `AdminRegionRegistry`, turf: `place.TurfRegionProvider`, core:
+`WaypointRegionProvider`). See [`gangland-api.md`](../gangland-api.md).
+
+**Core features that run without cops (gangland-impl).** `data.wanted.ContactDesk`, `listener.wanted.EvasionStateListener`,
+`command.sub.contact.ContactCommand` and `WantedAspect` (contacts and the sign gate; the desk keeps the unseen state from
+`WantedEvasionStateEvent`); `data.teleportation.HospitalShield`, `listener.player.HospitalShieldListener`,
+`WaypointManager.nearest(location, type)` and the hospital branches of `CustomPlayerDeathListener`/`PlayerDeathListener`
+(one bill: `quote` + `charge`, a pending bill released on `PlayerUndownedEvent` or quit); `EntityDamageListener` (self-defence
+and takedown rules, `Wanted.Self_Defence`, `Bounty.Takedown_Minimum`). `DetainmentListener.onUndowned` and
+`JailIntakeService.admit(player, deathCommit)` make a downed handcuffed player pay the ward bill and no charge sheet.
+
+---
+
 ## Kill Combo System
 
 **Package:** `org.luckyraven.gangland.copsncrooks.combo`

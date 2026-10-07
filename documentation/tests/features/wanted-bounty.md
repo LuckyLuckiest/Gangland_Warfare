@@ -88,6 +88,43 @@ bounties on other players' heads).
 
 ---
 
+## Contacts, Self-Defence and Takedowns (0.16.0)
+
+**S9 Contact (command and phone)**
+- [ ] Wanted at 2 stars and unseen: `/glw contact` wipes 1 star, takes `Price_Per_Star` (1000), says "Your contact made 1 star(s) disappear";
+      `/glw contact 2` wipes up to 2 (never more than your level, never above `Max_Stars`).
+- [ ] The phone's Contacts page (`phone_contacts`) does the same; `%gangland_contact_price%` and `%gangland_contact_cooldown%` read
+      the price per star and `ready` / the time left.
+- [ ] Right after a wipe: "Your contact is lying low. Try again in ..." for `Cooldown_Seconds` (600); the cooldown survives leaving the
+      chase, a quit and a new chase, and is cleared by a restart.
+- [ ] Not wanted: "You have no stars to wipe."; too little money: "You need ...", nothing taken.
+- [ ] `Contacts.Enable: false`: "Nobody picks up." and the sign behaves as in 0.15.
+
+**S10 [WANTED] sign gate**
+- [ ] A cop has eyes on you: a paid REMOVE/CLEAR sign refuses ("Not while a cop has eyes on you.") and your balance is unchanged.
+- [ ] Unseen: the sign works, and a paid wipe starts the shared cooldown (the command then refuses too, and the other way round).
+- [ ] An INCREASE sign and a price-0 sign are unchanged.
+
+**S11 Self-defence**
+- [ ] A rival hits you for at least `Min_Damage` (2.0, one heart) first; you kill him within 8 s: no star.
+- [ ] You hit him first, wait, he hits back, you kill him: a crime (provocation). A hit for less than `Min_Damage` opens no window.
+- [ ] A second kill of the same player inside 600 s is a crime. Gang mates and allies never count. `Self_Defence.Enable: false`:
+      every kill is a crime.
+
+**S12 Posted bounty takedown**
+- [ ] A bounty of at least `Takedown_Minimum` (100) posted by other players: killing the target gives you the money and no star.
+- [ ] A posted bounty below 100: it pays, but the kill is an ordinary crime (WB-48).
+- [ ] The fourth crime-free takedown inside an hour is a crime; the same pair inside the pair cooldown is a crime.
+
+**S13 Kill with nothing posted**
+- [ ] Kill a five-star player nobody has put money on: you gain a star.
+
+**Rampage (AUTO mode)**
+- [ ] Brandish at a cop, hit a civilian and steal cars four times in the opening: not a rampage (`Rampage_Min_Weight` 80); four kills or
+      cop kills still are.
+
+---
+
 ## Reload Safety
 
 - [ ] Active wanted level survives `/glw reload`.

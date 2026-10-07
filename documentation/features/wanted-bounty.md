@@ -30,12 +30,15 @@ adds heat, and the heat crosses `Star_Thresholds` (100, 250, 450, 700, 1000) to 
 - A crime a cop saw is multiplied by `Seen_By_Cop_Multiplier` (1.5).
 - A player kill inside a contested turf is multiplied by `Turf_War_Multiplier` (0.5).
 - Hitting the same cop again within `Assault_Repeat_Seconds` (10) is not a new crime.
-- **Not crimes:** a kill in self-defence (the other player struck first inside a 30 second fight window), a kill that
-  claims a bounty players posted, and a turf defender killing a raider inside their own gang's contested turf.
+- **Not crimes:** a kill in self-defence (see Self-defence below), a crime-free takedown of a player with a bounty
+  players posted (see Takedowns below), and a turf defender killing a raider inside their own gang's contested turf.
 - With `Heat.Enable: false` the 0.13.0 maths apply: the kill combo (2 kills = 1 star, 5 = 2, 10 = 3, 15 = 4,
   20 = 5) when `Wanted.Kill_Combo.Enable` is on, otherwise one star per counted kill. A civilian kill counts once either way.
 - Admin commands and `[WANTED]` signs can set, add or remove stars at any time. Every star change carries its cause
-  (crime, sign, admin, restore, decay, evasion, bribe, arrest, death), which the HUD and plugins can read.
+  (crime, sign, admin, restore, decay, evasion, bribe, arrest, death, contact), which the HUD and plugins can read.
+- **Rampage (0.16.0).** In `Drop_Mode: AUTO` only heavy crimes count toward the rampage opening: a crime must be worth at
+  least `Auto.Rampage_Min_Weight` (80) heat. The cheap crimes (brandishing near a cop, hitting a civilian, car theft)
+  never make a rampage by themselves.
 
 ### How Stars Are Lost
 
@@ -50,6 +53,41 @@ adds heat, and the heat crosses `Star_Thresholds` (100, 250, 450, 700, 1000) to 
   timer drops nothing. `Evasion.Enable: false` gives the timer back full control.
 - **Dying clears all wanted stars** immediately.
 - Kill combos reset after `Reset_After` seconds of no kills (default 10 seconds).
+
+### Self-defence
+
+Hitting back is not a crime. Since 0.16.0 the rules are keys of `Wanted.Self_Defence` in `settings.yml`:
+
+- The victim must have been hit **first** by the other player, for at least `Min_Damage` (2.0). A weaker hit does not open the
+  window.
+- The window lasts `Window_Seconds` (8) after that first hit; a kill after it is an ordinary crime.
+- Not for provocation: a player who hit the other one in the minute before the other's first strike cannot claim it.
+- Not between gang mates or allies.
+- Once an exemption is granted, the same two players get a new one only after `Pair_Cooldown_Seconds` (600).
+- `Enable: false` removes the exemption: every kill is a crime.
+
+### Takedowns (bounty kills)
+
+Killing a player with a bounty that other players posted is crime-free only when the players' escrow on him is at least
+`Bounty.Takedown_Minimum` (100) and above `Bounty.Minimum`. A cheaper bounty still pays out but the kill is an ordinary
+crime. The same pair cannot farm it (the `Pair_Cooldown_Seconds` above applies) and one killer gets at most three
+crime-free takedowns per rolling hour.
+
+### Crooked contacts (0.16.0)
+
+A crooked desk sergeant makes stars disappear for money, but **only while no cop has eyes on you**:
+
+- **`/glw contact [stars]`** (or the phone's Contacts page): wipes `stars` stars (1 up to `Max_Stars`, at most your level) for
+  `Price_Per_Star` (1000) each, cause `CONTACT`. Afterwards your contact lies low for `Cooldown_Seconds` (600).
+- **`[WANTED]` signs** that remove or clear stars follow the same rules: refused while a cop sees you, and a paid wipe
+  starts the same cooldown. Increase signs and free signs are unchanged. Refusals cost nothing.
+- A player with no evasion state at all counts as unseen; only "a cop has eyes on you" blocks it.
+- `Contacts.Enable: false` switches the desk off: `/glw contact` answers "Nobody picks up." and the sign behaves as in 0.15.
+- Placeholders: `%gangland_contact_price%` (per star) and `%gangland_contact_cooldown%` (`ready` or the time left).
+- Cooldowns are kept in memory; a restart clears them.
+
+Bribe star pickups in the world (placed by admins) work the same way and are described in the
+[Cops N Crooks guide](./cops-n-crooks.md).
 
 ### What You See
 
@@ -130,6 +168,7 @@ with a 20,000 money maximum). This rewards players for sustained hot streaks.
 | `/glw wanted`                         | View your current wanted level and stars. |
 | `/glw wanted add <player> <stars>`    | Add wanted stars to a player.             |
 | `/glw wanted remove <player> <stars>` | Remove wanted stars from a player.        |
+| `/glw contact [stars]`                | Pay a contact to wipe stars while no cop sees you (0.16.0). |
 | `/glw bounty`                         | View the current bounty on you.           |
 | `/glw bounty set <player> <amount>`   | Place or update a bounty on a player.     |
 | `/glw bounty clear <player>`          | Remove the bounty you posted on a player. |
@@ -164,8 +203,22 @@ Wanted:
 
    # Kill_Combo moved to copsncrooks/wanted.yml (same Wanted.Kill_Combo path, Enable / Reset_After / Kill_Counter) in 0.15.1.
 
+   # 0.16.0: hitting back is not a crime
+   Self_Defence:
+      Enable: true
+      Window_Seconds: 8          # how long after being hit the victim may hit back crime-free
+      Min_Damage: 2.0            # weaker hits do not open the window
+      Pair_Cooldown_Seconds: 600 # the same pair gets a fresh window only after this long
+   # 0.16.0: crooked contacts (/glw contact and the [WANTED] sign), only while no cop sees you
+   Contacts:
+      Enable: true
+      Price_Per_Star: 1000
+      Cooldown_Seconds: 600
+      Max_Stars: 2
+
 Bounty:
    Pay_Notoriety: false      # true also pays the server-made part of a bounty on a kill
+   Takedown_Minimum: 100     # 0.16.0: escrow a bounty needs for a kill to be a crime-free takedown
    Kill:
       Each: 5                 # Money added to the player's bounty per kill they commit
       Maximum: 50_000         # Hard cap on a player's total kill-accrued bounty
@@ -175,7 +228,7 @@ Bounty:
       Time: 300               # Seconds between multiplier applications
       Maximum: 20_000         # Cap on bonus bounty from the multiplier
 
-# The chase (Heat, Evasion, Hud, Charge_Sheet) is in copsncrooks/wanted.yml; see the migration guide and Configuration Reference.
+# The chase (Heat, Evasion, Hud, Charge_Sheet, Bribe_Stars) is in copsncrooks/wanted.yml; see the migration guide and Configuration Reference.
 # Cop count scaling is Cops.Count in copsncrooks/cops.yml — see the Cops N Crooks guide
 ```
 
