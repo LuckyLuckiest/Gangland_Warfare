@@ -1,11 +1,11 @@
 {
-  "_comment": "Config + scenario matrix for smoke.py. See README.md in this directory. S1-S8 were the original phase-A rows against the 0.8.4 five-module topology (weapon still a Gangland module, no Bartizan, no civilians/npcshops split) -- kept for reference and still dry-run-verifiable, but marked \"legacy\": true (T-O9, 0.9.0) since they no longer describe the shipped topology; smoke.py's --list labels them. D0-D9 are the phase-D matrix for the post-split topology (gangland-0.9.0.md section G6 / REVIEW-consistency.md 'Smoke rows for phase D'), added by T-O9. Two items from the original S-row table were intentionally NOT encoded as automated checks and that limitation carries over identically to the D-rows: a DB-level check (S4's 'detainment table migrates') and a count/second-pass check that needs a human read of the transcript rather than a substring match (S1's '/glw help lists only core commands', and likewise D8's 'no second Item vocabularies installed: line' and 'no duplicate-listener errors', which need a COUNT-of-occurrences check evaluate_expect() does not implement) -- see smoke/README.md's Limitations section. D6's counted fault totals reflect the checklist's default reading (civilians/copsncrooks/gadget skipped, turf still loads); gangland-0.9.0.md's own D6 row flags this as PENDING A USER DECISION (reviews H m8 / RI I-3) -- if civilians' Plugins:[Bartizan] edge is later reworked so turf no longer transitively needs Bartizan, D6 stays correct only under variant (a) (accept the coupling); under variant (b) turf would also skip (2 loaded, 4 fault(s), no 'Item vocabularies installed: none' -> still applies, 'Depends' fault instead) and this row's expect block needs re-deriving, not just re-running. | 2026-09-17: paths point at the decoupling-wave worktrees (gangland-0.9.2, keystone-1.10.0, bartizan-0.4.0); the main checkouts hold an unrelated uncommitted floor wave. | 2026-10-05 (T10, cnc 0.15): paths repointed to the integration worktree gangland-0.15.0 + Keystone 1.14.0 + Bartizan 0.6.1 (api-compatible with the 0.6.0 pin); healthbars prefix added; row cnc-015-boot added (nine modules).",
+  "_comment": "Config + scenario matrix for smoke.py. See README.md in this directory. S1-S8 were the original phase-A rows against the 0.8.4 five-module topology (weapon still a Gangland module, no Bartizan, no civilians/npcshops split) -- kept for reference and still dry-run-verifiable, but marked \"legacy\": true (T-O9, 0.9.0) since they no longer describe the shipped topology; smoke.py's --list labels them. D0-D9 are the phase-D matrix for the post-split topology (gangland-0.9.0.md section G6 / REVIEW-consistency.md 'Smoke rows for phase D'), added by T-O9. Two items from the original S-row table were intentionally NOT encoded as automated checks and that limitation carries over identically to the D-rows: a DB-level check (S4's 'detainment table migrates') and a count/second-pass check that needs a human read of the transcript rather than a substring match (S1's '/glw help lists only core commands', and likewise D8's 'no second Item vocabularies installed: line' and 'no duplicate-listener errors', which need a COUNT-of-occurrences check evaluate_expect() does not implement) -- see smoke/README.md's Limitations section. D6's counted fault totals reflect the checklist's default reading (civilians/copsncrooks/gadget skipped, turf still loads); gangland-0.9.0.md's own D6 row flags this as PENDING A USER DECISION (reviews H m8 / RI I-3) -- if civilians' Plugins:[Bartizan] edge is later reworked so turf no longer transitively needs Bartizan, D6 stays correct only under variant (a) (accept the coupling); under variant (b) turf would also skip (2 loaded, 4 fault(s), no 'Item vocabularies installed: none' -> still applies, 'Depends' fault instead) and this row's expect block needs re-deriving, not just re-running. | 2026-09-17: paths point at the decoupling-wave worktrees (gangland-0.9.2, keystone-1.10.0, bartizan-0.4.0); the main checkouts hold an unrelated uncommitted floor wave. | 2026-10-05 (T10, cnc 0.15): paths repointed to the integration worktree gangland-0.15.0 + Keystone 1.14.0 + Bartizan 0.6.1 (api-compatible with the 0.6.0 pin); healthbars prefix added; row cnc-015-boot added (nine modules). | 2026-10-07 (T18, cnc 0.16): paths repointed to the integration worktree gangland-0.16.0 + Keystone 1.15.0 + Bartizan 0.6.0 (the pin); rows cnc-016-boot and cnc-016-old-keystone added. cnc-016-old-keystone needs Keystone 1.14.0 in the server's plugins folder: smoke.py has one global keystone_jar_dir and no per-row override, so stage keystone-1.14.0/keystone-plugin/target/Keystone-1.14.0.jar by hand and run that row WITHOUT --keystone, then restore the 1.15.0 jar.",
   "paths": {
     "server_dir": "E:\\Documents\\Minecraft\\Test Server",
-    "repo_dir": "E:\\Programming\\java\\wt\\gangland-0.15.0",
-    "keystone_jar_dir": "E:\\Programming\\java\\wt\\keystone-1.14.0\\keystone-plugin\\target",
+    "repo_dir": "E:\\Programming\\java\\wt\\gangland-0.16.0",
+    "keystone_jar_dir": "E:\\Programming\\java\\wt\\keystone-1.15.0\\keystone-plugin\\target",
     "keystone_jar_pattern": "Keystone-*.jar",
-    "bartizan_jar": "E:\\Programming\\java\\wt\\bartizan-0.6.1\\bartizan-plugin\\target\\Bartizan-0.6.1.jar"
+    "bartizan_jar": "E:\\Programming\\java\\wt\\bartizan-0.6.0\\bartizan-plugin\\target\\Bartizan-0.6.0.jar"
   },
   "deploy": {
     "core_jar_glob": "target/gangland_warfare-*.jar",
@@ -1369,6 +1369,95 @@
           "\\[PlaceholderAPI\\] Failed to download anti malware",
           "\\[ViaVersion\\] Could not check for updates",
           "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "cnc-016-boot",
+      "title": "Cops N Crooks 0.16 boot: all nine modules + Bartizan 0.6.0 + Keystone 1.15.0 load, no ERROR, Done (",
+      "modules": [
+        "mail",
+        "turf",
+        "civilians",
+        "cops",
+        "gadget",
+        "npcshops",
+        "lootchest",
+        "gang",
+        "healthbars"
+      ],
+      "plugins": [
+        "Bartizan"
+      ],
+      "commands": [
+        "glw",
+        "glw module list",
+        "glw wanted",
+        "glw cops",
+        "glw cop setup",
+        "glw contact"
+      ],
+      "expect": {
+        "loaded_modules": [
+          "civilians",
+          "copsncrooks",
+          "gadget",
+          "gang",
+          "healthbars",
+          "lootchest",
+          "mail",
+          "npcshops",
+          "turf"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 9 loaded, 0 fault(s)",
+          "Keystone v1.15.0"
+        ],
+        "must_not_contain": [
+          "NoSuchMethodError",
+          "NoClassDefFoundError",
+          "ClassCastException",
+          "needs Keystone",
+          "module.dependency.missing",
+          "module.host.incompatible"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "cnc-016-old-keystone",
+      "title": "Cops N Crooks 0.16 on Keystone 1.14.0: Gangland logs the Keystone-floor error (Ruling R47) and disables itself, no stack trace",
+      "_note": "Stage Keystone-1.14.0.jar by hand and run without --keystone (see _comment); smoke.py ignores keystone_jar_dir_override today.",
+      "keystone_jar_dir_override": "E:\\Programming\\java\\wt\\keystone-1.14.0\\keystone-plugin\\target",
+      "modules": [
+        "mail"
+      ],
+      "plugins": [
+        "Bartizan"
+      ],
+      "expect": {
+        "must_contain": [
+          "Done (",
+          "needs Keystone 1.15.0 or newer; found 1.14.0"
+        ],
+        "must_not_contain": [
+          "NoSuchMethodError",
+          "NoClassDefFoundError",
+          "at org.luckyraven",
+          "Runtime modules:"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version",
+          "needs Keystone 1\\.15\\.0 or newer; found 1\\.14\\.0"
         ]
       }
     }
