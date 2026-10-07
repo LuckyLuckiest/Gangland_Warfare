@@ -9,5 +9,7 @@ public enum CopState {
 	CUFFING,
 	GUARDING,
 	COMBAT,
-	RETURNING
+	RETURNING,
+	/** Holding a perimeter post ({@code Cops.Perimeter}, 0.16.0): watching for the suspect, never cuffing. */
+	POSTED
 }

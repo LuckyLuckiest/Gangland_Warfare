@@ -5,6 +5,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.npc.police.perimeter.PerimeterController;
+import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.ChaseArcs;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.EvasionClock;
@@ -23,7 +26,7 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 /**
  * Beans of the evasion clock (0.15.0): the clock itself and its two installs; since 0.15.2 also the chase arcs and the
- * learner that {@code Drop_Mode: AUTO} reads.
+ * learner that {@code Drop_Mode: AUTO} reads; since 0.16.0 also the containment perimeter.
  */
 @Configuration
 public class EvasionModuleConfig {
@@ -53,10 +56,17 @@ public class EvasionModuleConfig {
 		                        System::currentTimeMillis, event -> Bukkit.getPluginManager().callEvent(event));
 	}
 
+	@Bean
+	public PerimeterController perimeterController(CopLoader copLoader, CopManager copManager, CopRadio copRadio) {
+		return new PerimeterController(copLoader::getLoadedProvider, copManager, copRadio, System::currentTimeMillis);
+	}
+
 	@PostConstruct
 	public void installEvasion() {
 		EvasionClock clock = container.getInstance(EvasionClock.class);
 		container.getInstance(WantedStars.class).installDecayPolicy(clock);
-		container.getInstance(CopManager.class).addAiTickHook(clock::tick);
+		CopManager manager = container.getInstance(CopManager.class);
+		manager.addAiTickHook(clock::tick);
+		manager.addAiTickHook(container.getInstance(PerimeterController.class)::tick);
 	}
 }

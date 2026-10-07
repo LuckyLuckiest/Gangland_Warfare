@@ -64,6 +64,8 @@ public class CopBehaviorFactory {
 		                                                        configProvider.getStationArrivalDistance(),
 		                                                        configProvider.getStuckSettings()));
 
+		behaviors.put(CopState.POSTED, new PostedBehavior());
+
 		return behaviors;
 	}
 }
