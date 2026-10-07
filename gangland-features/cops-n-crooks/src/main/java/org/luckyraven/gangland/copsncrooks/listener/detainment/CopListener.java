@@ -41,7 +41,7 @@ public class CopListener implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onWantedStart(WantedStartEvent event) {
-		copManager.onWantedStart(event.getPlayer(), event.getWanted());
+		copManager.onWantedStart(event.getPlayer(), event.getWanted(), event.getCause());
 	}
 
 	/**

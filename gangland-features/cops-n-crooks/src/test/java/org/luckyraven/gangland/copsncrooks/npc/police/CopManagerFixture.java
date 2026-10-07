@@ -12,6 +12,11 @@ import org.bukkit.scheduler.BukkitTask;
 import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.BreatherSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.DispatchSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.HandoffSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.Dispatcher;
+import org.luckyraven.gangland.copsncrooks.station.StationRegistry;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
@@ -34,6 +39,7 @@ import org.luckyraven.keystone.testkit.BukkitStatics;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -61,6 +67,7 @@ final class CopManagerFixture implements AutoCloseable {
 	final TargetingManager  targeting = mock(TargetingManager.class);
 	final DetainmentService detainment = mock(DetainmentService.class);
 	final CopRadio          radio    = mock(CopRadio.class);
+	final StationRegistry   stations = mock(StationRegistry.class);
 	final CopManager        manager;
 	final long[]            clock    = {1_000L};
 	final int[]             tier     = {3};
@@ -86,6 +93,12 @@ final class CopManagerFixture implements AutoCloseable {
 		when(provider.getMeleeProfile()).thenReturn(NpcMeleeProfile.DEFAULT);
 		when(provider.getFieldCareSettings()).thenReturn(org.luckyraven.gangland.npc.FieldCareSettings.DEFAULT);
 		when(provider.getAiTickRate()).thenReturn(10);
+		// 0.16 dispatch and breather off: the legacy instant refill the 0.12-0.15 squad tests pin
+		when(provider.getDispatchSettings()).thenReturn(DispatchSettings.DISABLED);
+		when(provider.getBreatherSettings()).thenReturn(BreatherSettings.DISABLED);
+		when(provider.getHandoffSettings()).thenReturn(HandoffSettings.DEFAULT);
+		when(provider.getSquadTiers(anyInt())).thenReturn(List.of());
+		when(provider.getMaxTier()).thenReturn(5);
 		CopTierConfig tierConfig = mock(CopTierConfig.class);
 		when(tierConfig.displayName()).thenReturn("SWAT");
 		when(tierConfig.tactics()).thenReturn(new TacticsConfig(TacticsConfig.DEFAULT.engagement(), 270.0));
@@ -94,6 +107,7 @@ final class CopManagerFixture implements AutoCloseable {
 		when(spawner.getTargetCopCount(anyInt())).thenReturn(2);
 		when(spawner.getTierForWantedLevel(anyInt())).thenAnswer(inv -> tier[0]);
 		when(spawner.spawnNearPlayer(any(), anyInt(), any(), any())).thenAnswer(inv -> cop(CopState.IDLE, 0, 0));
+		when(spawner.spawnUnit(any(), any(), any())).thenAnswer(inv -> cop(CopState.IDLE, 0, 0));
 
 		when(radio.now()).thenAnswer(inv -> clock[0]);
 		when(radio.listenerFor(any(), any())).thenAnswer(inv -> {
@@ -107,7 +121,8 @@ final class CopManagerFixture implements AutoCloseable {
 		CopLoader loader = mock(CopLoader.class);
 		when(loader.getLoadedProvider()).thenReturn(provider);
 		manager = new CopManager(mock(JavaPlugin.class), spawner, targeting, loader, mock(NpcMarkManager.class),
-		                         detainment, mock(CivilianNpcRegistry.class), radio);
+		                         detainment, mock(CivilianNpcRegistry.class), radio,
+		                         new Dispatcher(stations, () -> provider));
 	}
 
 	/** An online player at (x, 64, z), wanted as far as the targeting manager is concerned. */

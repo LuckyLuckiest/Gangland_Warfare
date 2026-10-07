@@ -8,6 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.RegroupSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.PendingUnit;
+import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
+import org.bukkit.util.Vector;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.NpcSquadSignal;
 import org.luckyraven.keystone.npc.spi.NpcSquadListener;
@@ -20,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -384,5 +388,107 @@ class CopGroupSquadTest {
 
 		assertFalse(group.isRegrouping());
 		assertFalse(group.isFallingBack(10_001L));
+	}
+
+	// ── 0.16 dispatch queue (CONTRACTS C8) ──────────────────────────────────────
+
+	private static PendingUnit unit(long arriveAt) {
+		return new PendingUnit(null, 2, arriveAt, null, null);
+	}
+
+	@Test
+	@DisplayName("a held backup refuses both a backup request and the regroup's own grant; released, both grant again")
+	void backupHeld_refusesBackupAndRegroupGrant() {
+		BackupSettings backup = new BackupSettings(true, 1, 30_000, 60_000);
+		CopGroup       group  = new CopGroup(UUID.randomUUID());
+
+		group.setBackupHeld(true);
+
+		assertTrue(group.isBackupHeld());
+		assertFalse(group.requestBackup(1_000L, backup));
+		assertFalse(group.grantRegroupBackup(1_000L, backup));
+		assertEquals(0, group.backupExtra(1_000L, backup), "nothing was granted");
+
+		group.setBackupHeld(false);
+
+		assertTrue(group.requestBackup(1_000L, backup));
+		assertEquals(1, group.backupExtra(1_000L, backup));
+	}
+
+	@Test
+	@DisplayName("the pending queue: enqueue, takeDue hands over only due units, requeue puts one back, clear empties it")
+	void pendingQueue_ops() {
+		CopGroup    group = new CopGroup(UUID.randomUUID());
+		PendingUnit early = unit(5_000L);
+		PendingUnit onTime = unit(10_000L);
+		PendingUnit late  = unit(20_000L);
+		group.enqueue(early);
+		group.enqueue(late);
+		group.enqueue(onTime);
+
+		assertEquals(3, group.pendingCount());
+		assertTrue(group.hasPendingUnits());
+
+		List<PendingUnit> due = group.takeDue(10_000L);
+
+		assertEquals(2, due.size());
+		assertTrue(due.containsAll(List.of(early, onTime)));
+		assertEquals(List.of(late), group.getPending());
+
+		group.requeue(early);
+		assertEquals(2, group.pendingCount());
+
+		group.clearPending();
+		assertEquals(0, group.pendingCount());
+		assertFalse(group.hasPendingUnits());
+	}
+
+	@Test
+	@DisplayName("units count as en route until 10 s past their ETA")
+	void unitsEnRoute_stopsTenSecondsAfterEta() {
+		CopGroup group = new CopGroup(UUID.randomUUID());
+		assertFalse(group.unitsEnRoute(0L), "nothing queued");
+
+		group.enqueue(unit(20_000L));
+
+		assertTrue(group.unitsEnRoute(1_000L));
+		assertTrue(group.unitsEnRoute(29_999L), "overdue by under 10 s");
+		assertFalse(group.unitsEnRoute(30_000L), "overdue by 10 s: a unit that keeps failing stops holding the stars");
+	}
+
+	@Test
+	@DisplayName("the hand-off bias is read until it expires")
+	void bias_expires() {
+		CopGroup  group = new CopGroup(UUID.randomUUID());
+		SpawnBias bias  = new SpawnBias(new Vector(1, 0, 0), new Location(null, 0, 64, 0), 10_000L, 60.0);
+
+		group.setBias(bias);
+
+		assertSame(bias, group.biasAt(9_999L));
+		assertNull(group.biasAt(10_000L));
+	}
+
+	@Test
+	@DisplayName("casualtyWithin sees the latest casualty inside the window, even after a regroup cleared its count")
+	void casualtyWithin_window_survivesARegroup() {
+		CopGroup group = fighting();
+		assertFalse(group.casualtyWithin(1_000L, 10_000L), "no casualty yet");
+
+		group.recordCasualty(1_000L);
+		group.startRegroup(1_000L, R);
+
+		assertTrue(group.casualtyWithin(11_000L, 10_000L));
+		assertFalse(group.casualtyWithin(11_001L, 10_000L));
+	}
+
+	@Test
+	@DisplayName("the breather stamp is kept")
+	void breatherUntil_isKept() {
+		CopGroup group = new CopGroup(UUID.randomUUID());
+		assertEquals(0L, group.getBreatherUntil());
+
+		group.setBreatherUntil(14_000L);
+
+		assertEquals(14_000L, group.getBreatherUntil());
 	}
 }

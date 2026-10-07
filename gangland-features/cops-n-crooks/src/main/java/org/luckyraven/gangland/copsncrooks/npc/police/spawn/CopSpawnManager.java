@@ -1,8 +1,10 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.spawn;
 
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
+import lombok.CustomLog;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.civilians.npc.combat.BartizanNpcWeapons;
@@ -11,8 +13,11 @@ import org.luckyraven.gangland.copsncrooks.database.CopSpawnerRepository;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.PendingUnit;
+import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpcFactory;
+import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 import org.luckyraven.gangland.copsncrooks.station.Station;
@@ -21,11 +26,16 @@ import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 
+@CustomLog
 public class CopSpawnManager extends EntitySpawner<CopSpawner> {
+
+	/** Half-angle, either side of the target->station bearing, of the station side a unit's ring spot prefers. */
+	private static final double STATION_SIDE_DEGREES = 60.0;
 
 	private final JavaPlugin         plugin;
 	private final CopLoader          copLoader;
@@ -171,6 +181,101 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 		anyRoof = true;
 		try {
 			return findSpawnLocation(target);
+		} finally {
+			anyRoof = false;
+		}
+	}
+
+	/**
+	 * Spawns one due unit: (1) its station's spawners within {@code Spawner_Preference_Radius} of {@code target},
+	 * allowed and {@link #isOutOfSight out of sight}, nearest first; (2) {@link #hiddenRing} ahead of the unit's bias,
+	 * else on the station side (within 60 degrees of the target->station bearing); (3) {@link #hiddenRing} anywhere;
+	 * (4) {@link #spawnNearPlayer}. {@code null} when all fail (the caller requeues the unit).
+	 */
+	@Nullable
+	public CopNpc spawnUnit(Player target, PendingUnit unit, Predicate<Location> allowed) {
+		Location at      = target.getLocation();
+		Station  station = unit.station();
+		boolean  hidden  = true;
+		boolean  ring    = true;
+		Location spot    = station == null ? null : hiddenStationSpawner(target, station.getId(), allowed);
+		if (spot != null) {
+			ring = false;
+		} else {
+			SpawnBias side = unit.bias() != null ? unit.bias() : stationSide(at, station);
+			if (side != null) spot = hiddenRing(target, allowed.and(loc -> side.ahead(at, loc)));
+			if (spot == null) spot = hiddenRing(target, allowed);
+		}
+
+		CopNpc cop;
+		if (spot != null) {
+			cop = copNpcFactory.createCop(spot, unit.tier(), ring, unit.role());
+		} else {
+			hidden = false;
+			cop    = spawnNearPlayer(target, unit.tier(), allowed, unit.role());
+			spot   = cop == null ? null : cop.getSpawnLocation();
+		}
+
+		if (cop != null && log.isDebugEnabled()) {
+			String ahead = unit.bias() == null || spot == null ? "-" : String.valueOf(unit.bias().ahead(at, spot));
+			log.debug("UNIT {} callsign={} tier={} role={} fromStation={} hidden={} bias={} ahead={} at={}",
+			          target.getName(), cop.getNpc() == null ? "?" : CopRadio.callsign(cop), unit.tier(),
+			          unit.role() == null ? "-" : unit.role().name(), unit.fromStation(), hidden, unit.bias() != null,
+			          ahead, spot == null ? "?" : spot.getBlockX() + "," + spot.getBlockY() + "," + spot.getBlockZ());
+		}
+		return cop;
+	}
+
+	/**
+	 * The nearest spawner of station {@code stationId} within {@code Spawner_Preference_Radius} of {@code target}
+	 * (and {@code Spawner_Max_Y_Diff}, as {@link #findClosestSpawnerLocation}) that {@code allowed} accepts and that is
+	 * {@link #isOutOfSight out of sight}; {@code null} when none.
+	 */
+	private @Nullable Location hiddenStationSpawner(Player target, int stationId, Predicate<Location> allowed) {
+		Location at     = target.getLocation();
+		double   radius = configProvider.getSpawnerPreferenceRadius();
+		List<Location> candidates = new ArrayList<>();
+		for (CopSpawner spawner : spawnersOf(stationId)) {
+			Location loc = spawner.getLocation();
+			if (loc == null || loc.getWorld() == null || !loc.getWorld().equals(at.getWorld())) continue;
+			if (Math.abs(loc.getY() - at.getY()) > configProvider.getSpawnerMaxYDiff()) continue;
+			if (horizontalSq(loc, at) > radius * radius || !allowed.test(loc)) continue;
+			candidates.add(loc);
+		}
+		candidates.sort(Comparator.comparingDouble(loc -> horizontalSq(loc, at)));
+		for (Location loc : candidates)
+			if (isOutOfSight(loc, target)) return loc;
+		return null;
+	}
+
+	/**
+	 * The station side of {@code at} as a bias cone: within {@link #STATION_SIDE_DEGREES} of the bearing from the
+	 * target to the station's anchor; {@code null} without a station.
+	 */
+	private static @Nullable SpawnBias stationSide(Location at, @Nullable Station station) {
+		if (station == null) return null;
+		Vector bearing = new Vector(station.getX() - at.getX(), 0, station.getZ() - at.getZ());
+		return new SpawnBias(bearing, at, Long.MAX_VALUE, STATION_SIDE_DEGREES);
+	}
+
+	private static double horizontalSq(Location a, Location b) {
+		double dx = a.getX() - b.getX();
+		double dz = a.getZ() - b.getZ();
+		return dx * dx + dz * dz;
+	}
+
+	/**
+	 * {@link #findHiddenSpawnLocation} wrapped like {@link #findRingLocation}: a suspect indoors whose first pass finds
+	 * nothing is searched again taking indoor and outdoor spots alike.
+	 */
+	@Nullable
+	Location hiddenRing(Player target, Predicate<Location> allowed) {
+		Location spot = findHiddenSpawnLocation(target, allowed);
+		if (spot != null || isOutdoor(target.getLocation())) return spot;
+
+		anyRoof = true;
+		try {
+			return findHiddenSpawnLocation(target, allowed);
 		} finally {
 			anyRoof = false;
 		}
