@@ -22,9 +22,12 @@ public final class ChaseArcs {
 
 	/** An arc whose player has been offline longer than this is dropped; he comes back as a RESTORE start. */
 	static final long OFFLINE_KEEP_MS = 30L * 60_000L;
+	/** ChaseConfig caps {@code Repeat_Chases} at this, so the deque always holds enough ends to reach it. */
 	static final int  RECENT_CAP      = 8;
 	/** How far before the start the triggering crime may be stamped: the start listeners run after the ledger. */
 	static final long START_SLACK_MS  = 1000L;
+	/** How long after a RESTORE start a squad sighting still counts as the seed the start reported, not a cop's. */
+	static final long SEED_SLACK_MS   = 1000L;
 
 	private final LongSupplier clock;
 
@@ -57,7 +60,10 @@ public final class ChaseArcs {
 		arc.startedAt = now;
 		arc.lastHotAt = now;
 		arc.peak      = level;
-		if (cause == WantedCause.RESTORE) arc.quits = 1;
+		if (cause == WantedCause.RESTORE) {
+			arc.quits    = 1;
+			arc.seededAt = now;
+		}
 		arcs.put(id, arc);
 	}
 
@@ -71,6 +77,7 @@ public final class ChaseArcs {
 		arc.lastHotAt += gap;
 		if (arc.lastLostAt != 0) arc.lastLostAt += gap;
 		arc.offlineAt = 0;
+		arc.seededAt  = clock.getAsLong();
 	}
 
 	/** A crime the ledger keeps, or a star raise. */
@@ -96,6 +103,15 @@ public final class ChaseArcs {
 			arc.respots++;
 			arc.searched = false;
 		}
+	}
+
+	/**
+	 * Whether a squad sighting at {@code sightingAt} is only the one a RESTORE start seeds (CopManager reports the
+	 * player's location so the respawned squad has somewhere to go): no cop has seen him since the rejoin.
+	 */
+	public boolean restoreSeed(UUID id, long sightingAt) {
+		ChaseArc arc = arcs.get(id);
+		return arc != null && arc.seededAt != 0 && sightingAt <= arc.seededAt + SEED_SLACK_MS;
 	}
 
 	public void lost(UUID id) {

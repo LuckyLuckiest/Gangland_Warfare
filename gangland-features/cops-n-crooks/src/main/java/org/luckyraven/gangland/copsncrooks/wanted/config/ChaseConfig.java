@@ -157,7 +157,7 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 		                        n.get("Rampage_Crimes").asInt().min(1).orDefault(d.rampageCrimes()), rampagePeak,
 		                        n.get("Lock_Cool_Seconds").asInt().min(0).orDefault(d.lockCoolSeconds()),
 		                        n.get("Respot_Limit").asInt().min(0).orDefault(d.respotLimit()), pettyOut, coldOut,
-		                        brkOut, momOut, n.get("Repeat_Chases").asInt().min(0).orDefault(d.repeatChases()),
+		                        brkOut, momOut, n.get("Repeat_Chases").asInt().min(0).max(8).orDefault(d.repeatChases()),
 		                        n.get("Repeat_Window_Minutes").asInt().min(0).orDefault(d.repeatWindowMinutes()),
 		                        learning(learn, d.learning(), report));
 	}

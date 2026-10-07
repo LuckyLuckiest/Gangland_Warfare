@@ -5,6 +5,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
+import org.luckyraven.gangland.copsncrooks.wanted.config.DropMode;
+import org.luckyraven.gangland.copsncrooks.wanted.config.EvasionSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.config.HeatSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.ChaseArc;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.ChaseArcs;
@@ -83,7 +85,9 @@ public class ChaseArcListener implements Listener {
 
 		learner.record(new ChaseRecord(id, arc.startCause(), event.getCause(), arc.peak(), until - arc.startedAt(),
 		                               contact, now), now);
-		arcs.end(id, arcs.hadCrime(id, heat.chaseCrimes(id), config.get().evasion().auto()));
+		// only AUTO reads the recent ends; any other mode would keep a deque per player until restart
+		EvasionSettings evasion = config.get().evasion();
+		arcs.end(id, evasion.dropMode() == DropMode.AUTO && arcs.hadCrime(id, heat.chaseCrimes(id), evasion.auto()));
 	}
 
 	/** Not via UserManager: RemoveAccountListener (HIGHEST) has already removed the user. */

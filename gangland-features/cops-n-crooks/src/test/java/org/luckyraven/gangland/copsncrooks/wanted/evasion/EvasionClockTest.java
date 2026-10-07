@@ -38,6 +38,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -630,6 +631,83 @@ class EvasionClockTest {
 		assertEquals(searchingSince, arcs.arc(id).lastLostAt());
 	}
 
+	/** Three ticks in which the squad's last sighting ages as a real squad's does; the third is the switch to SEARCHING. */
+	private void loseSight() {
+		long seenAt = now[0] - unseenMs;
+		for (int k = 0; k < 3; k++) {
+			now[0] += 1000;
+			unseenMs = now[0] - seenAt;
+			clock.tick(player, group);
+		}
+	}
+
+	/** Quits while tracked and rejoins {@code awayMs} later: the RESTORE start's arc restore. */
+	private void quitAndRejoin(long awayMs) {
+		clock.clear(player);
+		arcs.quit(id);
+		now[0] += awayMs;
+		arcs.restore(id);
+	}
+
+	@Test
+	@DisplayName("a rejoin's seeded sighting is no contact: no respot, and lastLostAt keeps the loss before the quit")
+	void restoreSeed_isNoRespot_andKeepsThePreQuitLoss() {
+		arcs.start(id, WantedCause.CRIME, 2);
+		unseenMs = 100;
+		tickSeconds(10);
+		loseSight();
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
+		long lostAt = arcs.arc(id).lastLostAt();
+		tickSeconds(5);
+
+		quitAndRejoin(300_000);
+		// CopManager.onWantedStart seeds a sighting at the rejoin; the first cop spawns a second later
+		unseenMs = 0;
+		loseSight();
+
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
+		assertEquals(0, arcs.arc(id).respots);
+		assertEquals(lostAt + 300_000, arcs.arc(id).lastLostAt());
+	}
+
+	@Test
+	@DisplayName("a cop that really sees him after a rejoin is contact: one respot, lastLostAt at the next loss")
+	void restoreSeed_thenARealSighting_countsAsContact() {
+		arcs.start(id, WantedCause.CRIME, 2);
+		unseenMs = 100;
+		tickSeconds(10);
+		loseSight();
+		tickSeconds(5);
+
+		quitAndRejoin(300_000);
+		unseenMs = 1000;
+		tickSeconds(1);
+		assertEquals(0, arcs.arc(id).respots);
+		unseenMs = 100;
+		tickSeconds(1);
+		assertEquals(1, arcs.arc(id).respots);
+		loseSight();
+
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
+		assertEquals(now[0], arcs.arc(id).lastLostAt());
+	}
+
+	@Test
+	@DisplayName("AUTO: 17.9 s in sight plus the 3 s Lost_Sight_Seconds grace is not a narrow escape")
+	void auto_lostSightGrace_isNotTimeInSight() {
+		auto();
+		wanted.setLevel(3);
+		arcs.start(id, WantedCause.CRIME, 3);
+		unseenMs = 100;
+		tickSeconds(18);
+		loseSight();
+
+		unseenMs = 10_000;
+		tickSeconds(31);
+
+		assertNotEquals(AutoDropPlanner.REASON_NARROW, plansAtDrop.get(0).reason());
+	}
+
 	@Test
 	@DisplayName("AUTO: a narrow escape (20 s in sight) steps the next timer by 0.5 when the chase is not locked")
 	void auto_narrowEscape_notLocked_stepsByHalf() {
@@ -637,10 +715,11 @@ class EvasionClockTest {
 		wanted.setLevel(3);
 		arcs.start(id, WantedCause.CRIME, 3);
 		unseenMs = 100;
-		tickSeconds(21);
+		tickSeconds(24);
+		loseSight();
 
 		unseenMs = 10_000;
-		tickSeconds(32);
+		tickSeconds(31);
 
 		assertEquals(List.of(30, 10), spellCountdowns());
 		assertEquals(AutoDropPlanner.REASON_NARROW, plansAtDrop.get(0).reason());

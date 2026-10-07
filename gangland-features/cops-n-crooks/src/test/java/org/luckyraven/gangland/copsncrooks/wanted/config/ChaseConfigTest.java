@@ -309,7 +309,7 @@ class ChaseConfigTest {
 	}
 
 	@ParameterizedTest(name = "{0}: {1}")
-	@CsvSource({"Opening_Seconds,-1", "Lock_Cool_Seconds,-1", "Respot_Limit,-1", "Repeat_Chases,-1",
+	@CsvSource({"Opening_Seconds,-1", "Lock_Cool_Seconds,-1", "Respot_Limit,-1", "Repeat_Chases,-1", "Repeat_Chases,9",
 	            "Repeat_Window_Minutes,-1", "Rampage_Crimes,0", "Rampage_Peak_Level,0"})
 	@DisplayName("a top-level Auto key out of range is an ERROR config.range and takes its default")
 	void auto_topLevelRange(String key, String value) {

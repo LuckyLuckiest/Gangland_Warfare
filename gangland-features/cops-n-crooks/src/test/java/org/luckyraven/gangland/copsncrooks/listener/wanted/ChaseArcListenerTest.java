@@ -10,6 +10,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfig;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
+import org.luckyraven.gangland.copsncrooks.wanted.config.DropMode;
+import org.luckyraven.gangland.copsncrooks.wanted.config.EvasionSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.config.HeatSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.ChaseArcs;
@@ -85,6 +87,15 @@ class ChaseArcListenerTest {
 		listener = new ChaseArcListener(arcs, learner, ledger, config);
 	}
 
+	private void autoMode() {
+		EvasionSettings d = EvasionSettings.DEFAULT;
+		EvasionSettings evasion = new EvasionSettings(true, d.lostSightSeconds(), DropMode.AUTO, d.searchRadius(),
+		                                              d.secondsToDrop(), d.outsideZoneSpeed(), d.auto());
+		ChaseConfig auto = new ChaseConfig(HeatSettings.DEFAULT, evasion, ChaseConfig.DEFAULT.hud(),
+		                                   ChaseConfig.DEFAULT.chargeSheet());
+		when(config.get()).thenReturn(auto);
+	}
+
 	private CrimeCommittedEvent crime(String id) {
 		return new CrimeCommittedEvent(player, id, location, false, 0);
 	}
@@ -111,6 +122,7 @@ class ChaseArcListenerTest {
 	@Test
 	@DisplayName("the end handler reads the crimes from the real ledger before HeatListener clears them")
 	void chaseEnd_recordsTheChase_andRemembersACrimeChase() {
+		autoMode();
 		start(WantedCause.CRIME, 2);
 		ledger.record(crime(Crimes.KILL_COP));
 		clock.addAndGet(40_000);
@@ -130,6 +142,18 @@ class ChaseArcListenerTest {
 		assertEquals(40_000, record.contactMs());
 		assertFalse(arcs.has(playerId));
 		assertEquals(1, arcs.recentEnds(playerId, 30));
+	}
+
+	@Test
+	@DisplayName("outside AUTO a crime chase still feeds the learner but leaves no trace in recent")
+	void chaseEnd_notAuto_leavesNoRecent() {
+		start(WantedCause.CRIME, 2);
+		ledger.record(crime(Crimes.KILL_COP));
+
+		listener.onChaseEnd(new WantedEndEvent(player, wanted, WantedCause.EVASION));
+
+		verify(learner).record(any(), anyLong());
+		assertEquals(0, arcs.recentEnds(playerId, 30));
 	}
 
 	@Test

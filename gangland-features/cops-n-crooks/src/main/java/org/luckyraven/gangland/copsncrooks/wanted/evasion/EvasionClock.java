@@ -70,6 +70,8 @@ public final class EvasionClock implements WantedDecayPolicy {
 		/** He had been in sight {@code Narrow_Seen_Seconds} straight before he broke away. */
 		boolean      narrow;
 		long         seenSince;
+		/** Opened by the sighting a RESTORE start seeds, not by a cop: no respot, and its end is no loss of sight. */
+		boolean      seed;
 		long         insideMs;
 		long         outsideMs;
 		/** A long jump by command, plugin or portal during this spell. */
@@ -160,16 +162,26 @@ public final class EvasionClock implements WantedDecayPolicy {
 			return;
 		}
 
-		int level = wanted.getLevel();
-		if (group.getSquad().millisSinceSighting() < lostMs) {
+		int  level  = wanted.getLevel();
+		long unseen = group.getSquad().millisSinceSighting();
+		// the squad's latest sighting; meaningless (and never read) before the first one
+		long seenAt = now - unseen;
+		if (unseen < lostMs) {
+			boolean seed = arcs.restoreSeed(id, seenAt);
 			if (track == null || track.state != EvasionState.SEEN) {
 				track           = new Track();
 				track.state     = EvasionState.SEEN;
 				track.level     = level;
 				track.seenSince = now;
+				track.seed      = seed;
 				tracks.put(id, track);
-				arcs.seen(id);
+				if (!seed) arcs.seen(id);
 				callEvent.accept(new WantedEvasionStateEvent(player, EvasionState.SEEN, level, 0, null, 0));
+			} else if (track.seed && !seed) {
+				// a cop really saw him while the rejoin's seed held the track
+				track.seed      = false;
+				track.seenSince = seenAt;
+				arcs.seen(id);
 			}
 			track.lastTick = now;
 			return;
@@ -178,9 +190,10 @@ public final class EvasionClock implements WantedDecayPolicy {
 		// A new search starts at the last sighting; one that follows a drop keeps its centre.
 		if (track == null || track.state == EvasionState.SEEN) {
 			Track spell = track == null ? new Track() : track;
-			// contact ends at the SEEN -> SEARCHING switch only; a null track (relog, replaced squad) was never in sight
-			if (track != null) {
-				spell.narrow = now - spell.seenSince >= cfg.auto().momentum().narrowSeenSeconds() * 1000L;
+			// contact ends at the SEEN -> SEARCHING switch only; a null track (relog, replaced squad) or a rejoin's seed
+			// was never in sight. In sight until the last sighting, not through the Lost_Sight_Seconds grace after it
+			if (track != null && !track.seed) {
+				spell.narrow = seenAt - spell.seenSince >= cfg.auto().momentum().narrowSeenSeconds() * 1000L;
 				arcs.lost(id);
 			}
 			arcs.searchStarted(id);

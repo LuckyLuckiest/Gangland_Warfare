@@ -151,7 +151,7 @@ Wanted:
             Narrow_Seen_Seconds: 20
             # No timer ever shrinks below this share of Seconds_To_Drop, whatever momentum and the learned habit say
             Floor: 0.4
-         # Chases with at least one crime that you ended recently; at this many the cops stop going easy (0 = off)
+         # Chases with at least one crime that you ended recently; at this many the cops stop going easy (0 = off, at most 8)
          Repeat_Chases: 3
          # How far back those chases count, in minutes (kept in memory, forgotten at restart)
          Repeat_Window_Minutes: 30

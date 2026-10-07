@@ -536,7 +536,7 @@ All keys are under `Wanted.Evasion.Auto`. A missing key uses its default; a valu
 | `Momentum.Narrow_Step_Speed` | `0.5` | 0.01 to 1 | The same after a narrow escape; above `Step_Speed` warns and uses `Step_Speed` |
 | `Momentum.Narrow_Seen_Seconds` | `20` | >= 0 | Seconds in sight before breaking away that make it a narrow escape |
 | `Momentum.Floor` | `0.4` | 0.01 to 1 | No timer shrinks below this share of `Seconds_To_Drop` |
-| `Repeat_Chases` | `3` | >= 0 | Recent crime chases at which the cops stop going easy (0 = off) |
+| `Repeat_Chases` | `3` | 0 to 8 | Recent crime chases at which the cops stop going easy (0 = off) |
 | `Repeat_Window_Minutes` | `30` | >= 0 | How far back those chases count (memory only) |
 | `Learning.Enable` | `true` | | `false` = nothing stored or read |
 | `Learning.Escape_Rate` | `0.90, 0.75, 0.55, 0.35, 0.20` | each 0 to 1 | Fresh-server getaway rate by peak level |

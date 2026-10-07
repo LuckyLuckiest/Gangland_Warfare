@@ -19,6 +19,8 @@ public final class ChaseArc {
 	long                        lastHotAt;
 	long                        lastLostAt;
 	long                        offlineAt;
+	/** The last RESTORE start (rejoin), on the same timeline; 0 for a chase never restored. */
+	long                        seededAt;
 	int                         peak;
 	int                         respots;
 	int                         quits;
