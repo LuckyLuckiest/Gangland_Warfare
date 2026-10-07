@@ -23,6 +23,7 @@ import org.luckyraven.gangland.copsncrooks.wanted.config.ChargeSheetSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.CrimeRecord;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
+import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
 import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.gangland.file.configuration.Settings;
 
@@ -55,7 +56,9 @@ public class JailIntakeService {
 	private final WantedMessages          messages;
 
 	public boolean admit(Player player) {
-		return admit(player, player != null && player.isDead());
+		// a downed player (the transit timer fired mid-down) pays the ward bill on undown, so he gets no sheet either
+		return admit(player, player != null &&
+		                     (player.isDead() || DownedPlayerRegistry.isDowned(player.getUniqueId())));
 	}
 
 	/**
