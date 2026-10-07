@@ -17,18 +17,18 @@ Cops N Crooks expands from the squad mechanic into a full police response. Crime
 ## ✨ New
 
 - **Dispatch from stations** — Crimes call units from the nearest station in your world (or ring when none exists). ETA = clamp(distance / Unit_Speed, Min_Eta_Seconds–Max_Eta_Seconds, default 0–40 s). Rejoin grace (default 15 s) pauses the search while units arrive. Reload the server to refresh the dispatch cache.
-- **Mixed-tier squads and breather** — A squad composition can specify role-at-tier entries (`Marksman@3`, `Pointman@2`, etc.) instead of one tier per star. When every cop in the squad dies within Wipe_Window_Seconds (default 10 s), the survivors fall back and regroup for 6–15 s (by stars); a full wipe triggers an immediate backup with a fresh full squad after the breather.
+- **Mixed-tier squads and breather** — A squad composition can specify role-at-tier entries (`Marksman@3`, `Pointman@2`, etc.) instead of one tier per star. When a squad loses every cop within Wipe_Window_Seconds (default 10 s), the replacement waits a breather (15–6 s for 1–5 stars) before arriving, with the full ETA applied after. The `Wipe_Refill` radio confirms squad lost and backup inbound.
 - **Hand-off and perimeter posts** — When a cop walks out of pursuit beyond 40 blocks while the squad is not actively pursuing, hand-off biases the next dispatch ahead of the suspect within a cone (default 60 degrees, 10 s window). A 3+ star evasion spawns perimeter posts (default two, Marksman and Defender) on a ring around the search zone; posts hold the perimeter, radio sight updates and fight if attacked; they release when the suspect is spotted, all posts return, or Max_Seconds elapse (default 60 s).
-- **Hideouts and cold trail** — Gang waypoints and admin regions tagged `hideout` speed the clock 2× when the suspect is inside and unseen. Cold trail speeds it further (default 0.25×/min, capped at 2×) when no crime has been reported in the last minute (crimes from signs, commands, or the kill-combo do not reset quiet).
+- **Hideouts and cold trail** — Gang waypoints and admin regions tagged `hideout` speed the clock 2× when the suspect is inside and unseen. Cold trail speeds it further (default 0.25×/min, capped at 2×) when the suspect stays quiet (no crime, no new star, no cop sighting; offline time never counts) for every minute.
 - **Crooked contacts and bribe-star pickups** — Phone desk `/glw contact [stars]` costs Price_Per_Star per star (default 1000) and clears up to Max_Stars (default 2) when no cop has seen the player recently (same cooldown as paid REMOVE signs). Bribe-star pickups sit on the map (NETHER_STAR by default) and vanish when a wanted player walks over them (unseen), clawing back 1 star each; they respawn every Respawn_Seconds (default 300 s / 5 min).
-- **Hospital respawn and one bill** — Waypoints tagged `HOSPITAL` become respawn points (nearest by world and distance). Downed players receive one bill charged when they respawn or quit. Hospital respawns grant Shield_Seconds of damage immunity (default 5 s); attacking anything cancels it early. Arrests charged when a downed player is brought to jail.
+- **Hospital respawn and one bill** — Waypoints of type `HOSPITAL` become respawn points (nearest by world and distance). Downed players receive one bill charged when they respawn or quit. Hospital respawns grant Shield_Seconds of damage immunity (default 5 s); attacking anything cancels it early. Arrests charged when a downed player is brought to jail.
 - **Setup wand and place names** — `/glw cop setup` places and edits stations (anchors), admin regions (districts, hideouts, restricted, breaker trigger points) and setup points on the map. PlaceNames ranks regions by horizontal footprint (smallest first); dispatch radio and `%place%` token use them. Every admin region is a PlaceRegion with source `copsncrooks`.
 
 ---
 
 ## 🔧 Changed
 
-- **Self-defence keys and guards** — Killing a player who dealt ≥ 2 damage to you in the last 8 s (and you were the first to strike) is not a crime. A provocation memory (60 s) means a killer who hit the victim before is never covered. Crime-free takedowns require the bounty pool ≥ $100 + a Minimum threshold ($100 new).
+- **Self-defence keys and guards** — Killing a player who hit you first for ≥ 2 damage within the last 8 s is not a crime. A provocation check blocks the exemption if you struck them in the preceding 60 s. Crime-free takedowns require the bounty pool ≥ $100 + a Minimum threshold ($100 new).
 - **[WANTED] sign gate** — Paid REMOVE/CLEAR signs refuse when a cop has seen the player within the last 60 s or the sign's cooldown is active. Sight is shared with the phone desk. Price-0 admin signs stay free and gate-less.
 - **Bundled PLAYER cash drop off** — `items/money.yml` PLAYER Enabled is now false (one bill pays the death cost without a wallet drop). Flip it true to restore the drop.
 - **Rampage counts heavy crimes only** — The AUTO drop opening counts only crimes ≥ 80 weight; cheap crimes (Brandish_Near_Cop 25, Assault 30, Car_Theft 60) cannot start a rampage alone, only make a chase less petty.
@@ -37,8 +37,11 @@ Cops N Crooks expands from the squad mechanic into a full police response. Crime
 
 ## 🐛 Fixed
 
-- **WB-48** — Crime-free takedowns require a minimum bounty threshold before the kill is crime-free; docket case, T19 docs, T20 reflects migration rule (D20).
-- **US-33 / WB-17** — Duplicate recent-death entries are pruned on every charge; servers no longer grow unbounded memory from repeated deaths (both rows from the same cause).
+- **WB-48** — Crime-free takedowns require a minimum bounty (`Bounty.Takedown_Minimum`, default 100); killing a target below the threshold is an ordinary crime.
+- **US-33 / WB-17** — Recent-death entries are pruned on every update; the collection no longer grows without bound under repeated deaths.
+- **WB-32** — Death damage detector method renamed from inverted `isEntityDead` for clarity.
+- **WB-43** — Bounty claims by gangmates (allied members) are blocked; posted escrow is returned only to other players.
+- **WB-45** — Self-kill via own projectile no longer claims the bounty; damage attribution routes through the projectile shooter.
 - **T-180** — Spawner and jail IDs are no longer reused for rows in worlds that load after Gangland boots; each world keeps its row-id namespace, new rows take fresh IDs, and unloaded worlds' rows are unaffected.
 - **risk-11** — Rampage-weighted crime count threshold enforces `Auto.Rampage_Min_Weight` default 80, fixing rampage openings from cheap crimes alone.
 
@@ -60,13 +63,14 @@ Cops N Crooks expands from the squad mechanic into a full police response. Crime
 - `settings.yml` **Wanted block** gains: `Self_Defence.Enable` true, `Self_Defence.Window_Seconds` 8, `Self_Defence.Min_Damage` 2.0, `Self_Defence.Pair_Cooldown_Seconds` 600; `Contacts.Enable` true, `Contacts.Price_Per_Star` 1000, `Contacts.Cooldown_Seconds` 600, `Contacts.Max_Stars` 2.
 - `settings.yml` **Bounty block** gains: `Takedown_Minimum` 100.
 - `settings.yml` **User.Death block** gains: `Hospital.Enable` true, `Hospital.Shield_Seconds` 5 (0 = off).
+- `message_en.yml` (and `message_es.yml`) **new keys**: `Wanted_Level.Contact.Used`, `Wanted_Level.Contact.Seen`, `Wanted_Level.Contact.Cooldown`, `Wanted_Level.Contact.Not_Wanted`, `Wanted_Level.Contact.No_Money`, `Wanted_Level.Contact.Disabled`, `Death.Ward_Bill`, `Death.Hospital_Shield`.
 - `items/money.yml` **PLAYER entry**: `Enabled` false (was true).
 
 ---
 
 ## 🧩 API 2.3
 
-- **`GanglandApi.VERSION` is 2.3** — Additive only; modules that declare `Host_Api: 2.2` keep loading on a 0.16.0 host. `cops-n-crooks` and `gangland-turf` declare `Host_Api: 2.3` because they implement the region SPI; they do not load on a 0.15.x core.
+- **`GanglandApi.VERSION` is 2.3** — Additive only (owner rulings D14 and D19); modules that declare `Host_Api: 2.2` keep loading on a 0.16.0 host. `cops-n-crooks` and `gangland-turf` declare `Host_Api: 2.3` because they implement the region SPI; they do not load on a 0.15.x core. Details in [gangland-api.md](../gangland-api.md).
 - **Region SPI** — Four new types: `RegionShape` (sealed: `Cuboid`, `Sphere`), `PlaceRegion` (record: id, name, world, shape, ownerGangId, tags), `RegionProvider` (interface: `source()`, `regionsAt(Location)`), `PlaceNames` (core holder bean: register providers, query regions by location/tag/name). Core places: waypoints (GANG type, tagged hideout), admin regions (cops-n-crooks, tagged district/hideout/restricted/breaker). Turf contributes `TurfRegionProvider` at 2.3.
 - **New waypoint type** — `Waypoint.WaypointType.HOSPITAL` (safe-zone waypoint for respawns).
 - **New wanted cause** — `WantedCause.CONTACT` (crooked contact and bribe-star payments).
