@@ -824,7 +824,7 @@ class EvasionClockTest {
 
 		verify(stars, times(2)).drop(any(), eq(1), eq(WantedCause.EVASION));
 		verifyNoInteractions(ledger, learner);
-		verify(arcs, never()).view(any(), any(), any());
+		verify(arcs, never()).view(any(), any(), any(), any());
 		verify(arcs, never()).stashPending(any(), any());
 	}
 }

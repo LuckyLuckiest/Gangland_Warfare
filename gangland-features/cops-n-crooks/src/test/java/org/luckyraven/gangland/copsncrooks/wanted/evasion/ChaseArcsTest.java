@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.wanted.config.AutoSettings;
+import org.luckyraven.gangland.copsncrooks.wanted.config.HeatSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.CrimeRecord;
 import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.gangland.crime.Crimes;
@@ -249,5 +250,94 @@ class ChaseArcsTest {
 
 		assertSame(plan, arcs.takePending(id));
 		assertNull(arcs.takePending(id));
+	}
+
+	private static final String BRANDISH = "Brandish_Near_Cop";
+
+	private AutoDrop.ChaseView weighted(List<CrimeRecord> crimes) {
+		return arcs.view(id, crimes, settings, HeatSettings.DEFAULT::weightOf);
+	}
+
+	@Test
+	@DisplayName("four Brandish_Near_Cop records inside the opening are not a rampage: opening 0")
+	void fourBrandishCrimesInTheOpening_areNotARampage() {
+		long t = clock.get();
+		arcs.start(id, WantedCause.CRIME, 1);
+		List<CrimeRecord> crimes = List.of(crime(BRANDISH, t), crime(BRANDISH, t + 5_000),
+		                                   crime(BRANDISH, t + 10_000), crime(BRANDISH, t + 15_000));
+
+		AutoDrop.ChaseView v = weighted(crimes);
+
+		assertEquals(0, v.opening());
+		assertEquals(4, v.crimes());
+		AutoDrop.DropPlan plan = AutoDropPlanner.plan(settings, v, new AutoDrop.SpellView(0, 0, 0, false, false),
+		                                              AutoDrop.Learned.cold(settings, 1), 1);
+		assertFalse(AutoDropPlanner.REASON_RAMPAGE.equals(plan.reason()));
+	}
+
+	@Test
+	@DisplayName("one Kill_Cop is still a rampage")
+	void oneKillCop_isStillARampage() {
+		arcs.start(id, WantedCause.CRIME, 1);
+
+		AutoDrop.ChaseView v = weighted(List.of(crime(Crimes.KILL_COP, clock.get())));
+
+		assertTrue(v.copKilled());
+		assertEquals(1, v.opening());
+	}
+
+	@Test
+	@DisplayName("four Kill_Player crimes still count as the opening")
+	void fourKillPlayerCrimes_stillCountAsTheOpening() {
+		long t = clock.get();
+		arcs.start(id, WantedCause.CRIME, 1);
+
+		AutoDrop.ChaseView v = weighted(List.of(crime(Crimes.KILL_PLAYER, t), crime(Crimes.KILL_PLAYER, t + 5_000),
+		                                        crime(Crimes.KILL_PLAYER, t + 10_000),
+		                                        crime(Crimes.KILL_PLAYER, t + 15_000)));
+
+		assertEquals(4, v.opening());
+	}
+
+	@Test
+	@DisplayName("a cheap crime first: the opening window starts at the first heavy crime")
+	void cheapCrimeFirst_windowStartsAtTheFirstHeavyCrime() {
+		long t = clock.get();
+		arcs.start(id, WantedCause.CRIME, 1);
+
+		AutoDrop.ChaseView v = weighted(List.of(crime(BRANDISH, t), crime(Crimes.KILL_PLAYER, t + 20_000),
+		                                        crime(Crimes.KILL_PLAYER, t + 30_000),
+		                                        crime(Crimes.KILL_PLAYER, t + 40_000),
+		                                        crime(Crimes.KILL_PLAYER, t + 45_000)));
+
+		assertEquals(4, v.opening());
+		assertEquals(5, v.crimes());
+	}
+
+	@Test
+	@DisplayName("a heavy crime from before the chase is dropped by the on-chase prefilter and is not the window start")
+	void preChaseHeavyCrime_isNotTheWindowStart() {
+		long t = clock.get();
+		arcs.start(id, WantedCause.CRIME, 1);
+
+		AutoDrop.ChaseView v = weighted(List.of(crime(Crimes.KILL_PLAYER, t - 10 * MIN), crime(Crimes.KILL_PLAYER, t),
+		                                        crime(Crimes.KILL_PLAYER, t + 10_000),
+		                                        crime(Crimes.KILL_PLAYER, t + 20_000)));
+
+		assertEquals(3, v.opening());
+		assertEquals(3, v.crimes());
+	}
+
+	@Test
+	@DisplayName("characterization pin: the 3-argument view counts every crime, whatever its weight")
+	void threeArgView_countsEveryCrime() {
+		long t = clock.get();
+		arcs.start(id, WantedCause.CRIME, 1);
+
+		AutoDrop.ChaseView v = arcs.view(id, List.of(crime(BRANDISH, t), crime(BRANDISH, t + 5_000),
+		                                             crime(BRANDISH, t + 10_000), crime(BRANDISH, t + 15_000)),
+		                                 settings);
+
+		assertEquals(4, v.opening());
 	}
 }

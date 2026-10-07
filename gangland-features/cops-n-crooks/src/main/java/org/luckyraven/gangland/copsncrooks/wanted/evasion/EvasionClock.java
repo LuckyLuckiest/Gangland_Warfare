@@ -15,6 +15,7 @@ import org.luckyraven.gangland.copsncrooks.wanted.config.AutoSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.config.DropMode;
 import org.luckyraven.gangland.copsncrooks.wanted.config.EvasionSettings;
+import org.luckyraven.gangland.copsncrooks.wanted.config.HeatSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.ChaseView;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.DropPlan;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.Learned;
@@ -32,6 +33,7 @@ import org.luckyraven.gangland.events.wanted.WantedEvasionStateEvent;
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -307,7 +309,8 @@ public final class EvasionClock implements WantedDecayPolicy {
 
 	/** The planner's inputs, or {@code null} when the chase has no arc (AUTO then behaves as ONE_STAR). */
 	private @Nullable Views views(UUID id, Track track, AutoSettings auto) {
-		ChaseView chase = arcs.view(id, ledger.chaseCrimes(id), auto);
+		HeatSettings heat  = Objects.requireNonNullElse(config.get().heat(), HeatSettings.DEFAULT);
+		ChaseView    chase = arcs.view(id, ledger.chaseCrimes(id), auto, heat::weightOf);
 		if (chase == null) return null;
 
 		SpellView spell = new SpellView(track.insideMs, track.outsideMs, track.steps, track.narrow, track.teleported);
