@@ -36,7 +36,9 @@ import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.gangland.data.gang.GangMembership;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.LongSupplier;
@@ -51,12 +53,22 @@ public class EntityDamageListener implements Listener {
 	private final WantedStars         wantedStars;
 	private final GangMembership      gangs;
 
-	private static final long FIGHT_WINDOW_MS = 30_000L;
+	// ponytail: provocation memory and the crime-free takedown cap are fixed code constants (no keys); make them
+	// settings only if an owner asks to tune them
+	private static final long PROVOCATION_MS     = 60_000L;
+	private static final long TAKEDOWN_HOUR_MS   = 3_600_000L;
+	private static final int  TAKEDOWNS_PER_HOUR = 3;
 
-	// ponytail: fixed 30 s fight window, first hit wins; stale pairs are pruned on every recorded hit and on quit
-	private final Map<String, Long> firstHit     = new HashMap<>();   // value = hit order, so same-millisecond hits still sort
-	private long                    hitOrder;
-	private final Map<String, Long> lastExchange = new HashMap<>();
+	// ponytail: first hit wins inside Self_Defence.Window_Seconds (read per call); stale pairs are pruned on every
+	// recorded hit and on quit; the damage, provocation and cooldown maps are in memory only (a restart forgets them)
+	private final Map<String, Long>     firstHit     = new HashMap<>();   // value = hit order, so same-millisecond hits still sort
+	private long                        hitOrder;
+	private final Map<String, Long>     lastExchange = new HashMap<>();
+	private final Map<String, Double>   damage       = new HashMap<>();   // "attacker>victim" -> damage dealt this fight
+	private final Map<String, Long>     lastHit      = new HashMap<>();   // "attacker>victim" -> last hit time, kept 60 s
+	private final Map<String, Boolean>  provoked     = new HashMap<>();   // "attacker>victim" first strike followed a hit by the victim
+	private final Map<String, Long>     cooldowns    = new HashMap<>();   // sorted pair -> exemption cooldown end
+	private final Map<UUID, List<Long>> takedowns    = new HashMap<>();   // killer -> crime-free takedown times
 
 	/** Test seam for the fight window. */
 	LongSupplier clock = System::currentTimeMillis;
@@ -94,7 +106,7 @@ public class EntityDamageListener implements Listener {
 		// who struck first decides self-defence; recorded for every hit, before the death check
 		if (entity instanceof Player struck && struck != damager && userManager.getUser(struck) != null &&
 		    userManager.getUser(damager) != null) {
-			recordHit(damager.getUniqueId(), struck.getUniqueId());
+			recordHit(damager.getUniqueId(), struck.getUniqueId(), event.getFinalDamage());
 		}
 
 		// register when the entity dies
@@ -178,11 +190,17 @@ public class EntityDamageListener implements Listener {
 			}
 
 			// a takedown of a bounty other players posted is not a crime
-			if (byOthers.signum() > 0) return;
+			// WB-48: dust bounties, a repeated pair and a fourth takedown in the hour still pay but are crimes
+			if (takedownExempt(damagerUser.getUser().getUniqueId(), deadPlayer.getUniqueId(), byOthers)) return;
 		}
 
 		// defending yourself is not a crime, with or without the cop module; nor is defending your own turf (TF-49)
-		if (defence || wantedKills.exemptsKill(damagerUser.getUser(), deadPlayer)) return;
+		if (defence) {
+			stampCooldown(damagerUser.getUser().getUniqueId(), deadPlayer.getUniqueId());
+			return;
+		}
+
+		if (wantedKills.exemptsKill(damagerUser.getUser(), deadPlayer)) return;
 
 		if (!paid) handleBounty(damagerUser);
 
@@ -197,8 +215,11 @@ public class EntityDamageListener implements Listener {
 	}
 
 	private void forgetFight(UUID a, UUID b) {
-		firstHit.remove(a + ">" + b);
-		firstHit.remove(b + ">" + a);
+		for (String key : new String[]{a + ">" + b, b + ">" + a}) {
+			firstHit.remove(key);
+			damage.remove(key);
+			provoked.remove(key);
+		}
 		lastExchange.remove(pair(a, b));
 	}
 
@@ -207,46 +228,117 @@ public class EntityDamageListener implements Listener {
 		return lastExchange.size();
 	}
 
+	/** Entries across the provocation, damage, cooldown and takedown memories (test seam). */
+	int trackedMemories() {
+		return damage.size() + lastHit.size() + provoked.size() + cooldowns.size() + takedowns.size();
+	}
+
 	@EventHandler
 	public void onPlayerQuit(PlayerQuitEvent event) {
-		String id = event.getPlayer().getUniqueId().toString();
+		UUID   uuid = event.getPlayer().getUniqueId();
+		String id   = uuid.toString();
 
 		lastExchange.keySet().removeIf(key -> key.contains(id));
 		firstHit.keySet().removeIf(key -> key.contains(id));
+		damage.keySet().removeIf(key -> key.contains(id));
+		lastHit.keySet().removeIf(key -> key.contains(id));
+		provoked.keySet().removeIf(key -> key.contains(id));
+		cooldowns.keySet().removeIf(key -> key.contains(id));
+		takedowns.remove(uuid);
+	}
+
+	private static long windowMs() {
+		return Settings.getSelfDefenceWindowSeconds() * 1000L;
 	}
 
 	private void pruneStale(long now) {
+		long window = windowMs();
+
 		lastExchange.entrySet().removeIf(entry -> {
-			if (now - entry.getValue() <= FIGHT_WINDOW_MS) return false;
+			if (now - entry.getValue() <= window) return false;
 
 			String[] ids = entry.getKey().split("\\|");
-			firstHit.remove(ids[0] + ">" + ids[1]);
-			firstHit.remove(ids[1] + ">" + ids[0]);
+			for (String key : new String[]{ids[0] + ">" + ids[1], ids[1] + ">" + ids[0]}) {
+				firstHit.remove(key);
+				damage.remove(key);
+				provoked.remove(key);
+			}
 			return true;
+		});
+		lastHit.values().removeIf(time -> now - time > PROVOCATION_MS);
+		cooldowns.values().removeIf(end -> now >= end);
+		takedowns.values().removeIf(times -> {
+			times.removeIf(time -> now - time >= TAKEDOWN_HOUR_MS);
+			return times.isEmpty();
 		});
 	}
 
-	private void recordHit(UUID attacker, UUID victim) {
+	private void recordHit(UUID attacker, UUID victim, double dealt) {
 		long now = clock.getAsLong();
 
 		pruneStale(now);
 		Long last = lastExchange.get(pair(attacker, victim));
 
-		if (last != null && now - last > FIGHT_WINDOW_MS) forgetFight(attacker, victim);
+		if (last != null && now - last > windowMs()) forgetFight(attacker, victim);
 
-		firstHit.putIfAbsent(attacker + ">" + victim, ++hitOrder);
+		String key = attacker + ">" + victim;
+
+		if (firstHit.putIfAbsent(key, ++hitOrder) == null) {
+			// the first strike of this fight: did the victim hit the attacker in the minute before it?
+			Long theirs = lastHit.get(victim + ">" + attacker);
+			provoked.put(key, theirs != null && now - theirs <= PROVOCATION_MS);
+		}
+		damage.merge(key, dealt, Double::sum);
+		lastHit.put(key, now);
 		lastExchange.put(pair(attacker, victim), now);
 	}
 
 	private boolean selfDefence(UUID killer, UUID victim) {
+		if (!Settings.isSelfDefenceEnabled()) return false;
+
+		long now  = clock.getAsLong();
 		Long last = lastExchange.get(pair(killer, victim));
 
-		if (last != null && clock.getAsLong() - last > FIGHT_WINDOW_MS) forgetFight(killer, victim);
+		if (last != null && now - last > windowMs()) forgetFight(killer, victim);
 
 		Long victimFirst = firstHit.get(victim + ">" + killer);
 		Long killerFirst = firstHit.get(killer + ">" + victim);
 
-		return victimFirst != null && (killerFirst == null || victimFirst < killerFirst);
+		if (victimFirst == null || (killerFirst != null && victimFirst > killerFirst)) return false;
+		if (gangs.alliedOrSame(killer, victim)) return false;
+		if (damage.getOrDefault(victim + ">" + killer, 0.0) < Settings.getSelfDefenceMinDamage()) return false;
+		if (provoked.getOrDefault(victim + ">" + killer, false)) return false;
+
+		return !onCooldown(killer, victim, now);
+	}
+
+	private boolean onCooldown(UUID a, UUID b, long now) {
+		Long end = cooldowns.get(pair(a, b));
+
+		return end != null && now < end;
+	}
+
+	private void stampCooldown(UUID a, UUID b) {
+		cooldowns.put(pair(a, b), clock.getAsLong() + Settings.getSelfDefencePairCooldownSeconds() * 1000L);
+	}
+
+	/** True (and stamps the pair cooldown and the killer's tally) when this takedown is crime-free. */
+	private boolean takedownExempt(UUID killer, UUID victim, BigDecimal byOthers) {
+		long now = clock.getAsLong();
+
+		if (byOthers.compareTo(Settings.getBountyMinimum()) <= 0
+		    || byOthers.compareTo(Settings.getBountyTakedownMinimum()) < 0
+		    || onCooldown(killer, victim, now)) return false;
+
+		List<Long> times = takedowns.computeIfAbsent(killer, id -> new ArrayList<>());
+
+		times.removeIf(time -> now - time >= TAKEDOWN_HOUR_MS);
+
+		if (times.size() >= TAKEDOWNS_PER_HOUR) return false;
+
+		times.add(now);
+		stampCooldown(killer, victim);
+		return true;
 	}
 
 	private boolean handleMobKills(Entity victim, User<Player> attacker) {
