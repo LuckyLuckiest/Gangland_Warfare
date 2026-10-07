@@ -16,11 +16,16 @@ import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.BreatherSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.DispatchSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.RegroupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.StuckSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.Dispatcher;
+import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.PendingUnit;
+import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio.RadioCall;
@@ -34,11 +39,14 @@ import org.luckyraven.keystone.npc.NpcSupport;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
 import org.luckyraven.gangland.core.wanted.Wanted;
+import org.luckyraven.gangland.core.wanted.WantedCause;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiConsumer;
+
+import static java.util.Objects.requireNonNullElse;
 
 /**
  * Central manager for all cop NPCs. Handles spawning, AI ticking, and lifecycle management.
@@ -57,6 +65,8 @@ public class CopManager implements BeanLifecycle {
 	private final NpcMarkManager        markManager;
 	private final DetainmentService     detainmentService;
 	private final Map<UUID, CopGroup>   groups;
+	/** Players whose wanted level was RESTOREd and whose first dispatch batch is not logged yet (debug reason). */
+	private final java.util.Set<UUID>    restoring = ConcurrentHashMap.newKeySet();
 	/** Players whose current wanted clear has already been announced with Stand_Down; reset by the next wanted start. */
 	private final java.util.Set<UUID>    stoodDown = new java.util.HashSet<>();
 	private final Map<UUID, BukkitTask> aiTasks;
@@ -66,6 +76,7 @@ public class CopManager implements BeanLifecycle {
 	private final CivilianNpcRegistry   civilianNpcRegistry;
 	private final CopRadio              copRadio;
 	private final CopFieldCare          fieldCare;
+	private final Dispatcher            dispatcher;
 	/**
 	 * Radio calls heard since the last AI tick; answered after the tick's cop loop so a listener never changes a cop
 	 * list that is being iterated.
@@ -80,7 +91,7 @@ public class CopManager implements BeanLifecycle {
 	public CopManager(JavaPlugin plugin, CopSpawnManager spawnManager, TargetingManager targetingManager,
 	                  CopLoader copLoader, NpcMarkManager markManager,
 	                  DetainmentService detainmentService, CivilianNpcRegistry civilianNpcRegistry,
-	                  CopRadio copRadio) {
+	                  CopRadio copRadio, Dispatcher dispatcher) {
 		this.plugin            = plugin;
 		this.spawnManager      = spawnManager;
 		this.targetingManager  = targetingManager;
@@ -89,6 +100,7 @@ public class CopManager implements BeanLifecycle {
 		this.markManager       = markManager;
 		this.detainmentService = detainmentService;
 		this.copRadio          = copRadio;
+		this.dispatcher        = dispatcher;
 		this.fieldCare         = new CopFieldCare(copLoader::getLoadedProvider, copRadio, copRadio::now);
 
 		this.civilianNpcRegistry = civilianNpcRegistry;
@@ -106,6 +118,15 @@ public class CopManager implements BeanLifecycle {
 	 * @param wanted the wanted data
 	 */
 	public void onWantedStart(Player player, Wanted wanted) {
+		onWantedStart(player, wanted, WantedCause.UNKNOWN);
+	}
+
+	/**
+	 * {@link #onWantedStart(Player, Wanted)} knowing why the player became wanted.
+	 *
+	 * @param cause why the wanted level started
+	 */
+	public void onWantedStart(Player player, Wanted wanted, WantedCause cause) {
 		UUID playerId = player.getUniqueId();
 		if (!wanted.isWanted()) return;
 
@@ -118,7 +139,15 @@ public class CopManager implements BeanLifecycle {
 		if (existing == null || !group.getSquad().hasFreshSighting()) {
 			copRadio.dispatch(group, player, "Dispatch_Wanted", wanted.getLevel(), tierNameFor(wanted.getLevel()));
 		}
-		group.getSquad().reportSighting(player.getLocation());
+		DispatchSettings dispatch = dispatchSettings();
+		if (cause == WantedCause.RESTORE && dispatch.enabled()) {
+			// A rejoin is no crime scene: nobody saw him come back. His units wait out the rejoin grace (Ruling R21).
+			long now = copRadio.now();
+			group.setBreatherUntil(Math.max(group.getBreatherUntil(), now + dispatch.rejoinGraceSeconds() * 1000L));
+			restoring.add(playerId);
+		} else {
+			group.getSquad().reportSighting(player.getLocation());
+		}
 
 		// A new wanted start is a new episode: pull the group's returning cops back into the hunt instead of letting
 		// them walk home for up to Return.Max_Ticks. "Never give up while wanted" outranks the D1 re-engage rule,
@@ -146,8 +175,10 @@ public class CopManager implements BeanLifecycle {
 		clearCombatAlert(playerId);
 
 		CopGroup group = groups.get(playerId);
+		restoring.remove(playerId);
 		if (group != null) {
 			group.clearCombatAlert();
+			group.clearPending();
 			pendingCalls.removeIf(call -> call.group() == group);
 		}
 		if (group == null || group.isEmpty()) {
@@ -574,21 +605,28 @@ public class CopManager implements BeanLifecycle {
 		List<CopRole> liveRoles   = new ArrayList<>();
 		for (CopNpc cop : counted) liveRoles.add(cop.getRole());
 
-		// Spawn all missing cops in one pass so a full wipe is recovered in a single interval
-		while (currentCount < targetCount) {
-			CopRole role   = CopRole.nextRole(composition, liveRoles);
-			CopNpc  newCop = spawnManager.spawnNearPlayer(player, tier, loc -> !group.isAvoided(loc, now), role);
-			if (newCop == null) break; // no valid location found - stop trying this interval
+		if (!dispatchSettings().enabled() && !breatherSettings().enabled()) {
+			// Spawn all missing cops in one pass so a full wipe is recovered in a single interval
+			while (currentCount < targetCount) {
+				int     slot   = CopRole.nextSlot(composition, liveRoles);
+				CopRole role   = slot < 0 ? null : composition.get(slot);
+				CopNpc  newCop = spawnManager.spawnNearPlayer(player, slotTier(wantedLevel, slot, tier),
+				                                              loc -> !group.isAvoided(loc, now), role);
+				if (newCop == null) break; // no valid location found - stop trying this interval
 
-			newCop.setTargetPlayerId(playerId);
+				newCop.setTargetPlayerId(playerId);
 
-			// New spawns pursue immediately; combatForced flag causes them to enter COMBAT once in range
-			newCop.setCombatForced(hasCombatAlert(playerId) || group.isCombatAlert());
-			newCop.transitionTo(CopState.PURSUING);
+				// New spawns pursue immediately; combatForced flag causes them to enter COMBAT once in range
+				newCop.setCombatForced(hasCombatAlert(playerId) || group.isCombatAlert());
+				newCop.transitionTo(CopState.PURSUING);
 
-			group.add(newCop);
-			liveRoles.add(role);
-			currentCount++;
+				group.add(newCop);
+				liveRoles.add(role);
+				currentCount++;
+			}
+		} else {
+			dispatchMissing(player, group, wantedLevel, tier, targetCount - currentCount, composition, liveRoles, now);
+			spawnDueUnits(player, group, now);
 		}
 
 		if (group.isRegrouping()) {
@@ -606,6 +644,98 @@ public class CopManager implements BeanLifecycle {
 		group.consumeBackupExpiry(now, backup);
 		if (group.getPendingRelease() > 0) releaseSurplus(group, targetCount, composition);
 		group.pruneAttackerSquads();
+	}
+
+	/**
+	 * Queues a unit for every cop the group lacks beyond those already en route (CONTRACTS C8): a squad wiped inside
+	 * {@code Wipe_Window_Seconds} first waits out the breather; each unit arrives after the hold plus its station's ETA,
+	 * carrying the hand-off bias active now. One radio line per batch: {@code Wipe_Refill} after a wipe, else
+	 * {@code Dispatch_En_Route} when a station sends it.
+	 *
+	 * @param lacking cops the group lacks in the world ({@code targetCount - counted})
+	 */
+	private void dispatchMissing(Player player, CopGroup group, int wantedLevel, int starTier, int lacking,
+	                             @Nullable List<CopRole> composition, List<CopRole> liveRoles, long now) {
+		BreatherSettings breather = breatherSettings();
+		// only a casualty after the current breather is a new wipe: a breather shorter than the window ends while the
+		// refill is still queued and the old casualty is still inside it
+		boolean wipe = breather.enabled() && liveRoles.isEmpty() &&
+		               group.casualtyWithin(now, breather.wipeWindowSeconds() * 1000L) &&
+		               group.getLastCasualtyAt() > group.getBreatherUntil();
+		if (wipe) group.setBreatherUntil(now + breather.breatherMs(wantedLevel));
+
+		int missing = lacking - group.pendingCount();
+		if (missing <= 0) return;
+
+		SpawnBias       bias     = group.biasAt(now);
+		Dispatcher.Plan plan     = dispatcher.plan(player, now, bias);
+		long            hold     = Math.max(0L, group.getBreatherUntil() - now);
+		long            arriveAt = now + hold + plan.etaMs();
+		List<CopRole>   held     = new ArrayList<>(liveRoles);
+		for (PendingUnit unit : group.getPending()) held.add(unit.role());
+		for (int i = 0; i < missing; i++) {
+			int     slot = CopRole.nextSlot(composition, held);
+			CopRole role = slot < 0 ? null : composition.get(slot);
+			group.enqueue(new PendingUnit(role, slotTier(wantedLevel, slot, starTier), arriveAt, plan.station(), bias));
+			held.add(role);
+		}
+
+		String eta = String.valueOf((arriveAt - now + 999) / 1000);
+		if (wipe) {
+			copRadio.dispatch(group, player, "Wipe_Refill", wantedLevel, group.getTierName(), Map.of("eta", eta));
+		} else if (plan.station() != null) {
+			copRadio.dispatch(group, player, "Dispatch_En_Route", wantedLevel, group.getTierName(),
+			                  Map.of("count", String.valueOf(missing), "station", plan.station().getName(), "eta", eta));
+		}
+
+		String reason = wipe ? "wipe" : restoring.remove(player.getUniqueId()) ? "restore" : "none";
+		log.debug("DISPATCH {} count={} station={} eta={}s hold={}s reason={} bias={}", player.getName(), missing,
+		          plan.station() == null ? "ring" : plan.station().getName(), plan.etaMs() / 1000, (hold + 999) / 1000,
+		          reason, bias != null);
+	}
+
+	/**
+	 * Spawns every queued unit that is due; one that finds no spot is requeued. A unit enqueued under a hand-off bias
+	 * seeds the squad with the bias's last sighting and a tip-off when it spawns (CONTRACTS C11), so the evasion clock
+	 * holds instead of reading the seed as a fresh sighting.
+	 */
+	private void spawnDueUnits(Player player, CopGroup group, long now) {
+		UUID playerId = player.getUniqueId();
+		for (PendingUnit unit : group.takeDue(now)) {
+			CopNpc newCop = spawnManager.spawnUnit(player, unit, loc -> !group.isAvoided(loc, now));
+			if (newCop == null) {
+				group.requeue(unit);
+				continue;
+			}
+
+			newCop.setTargetPlayerId(playerId);
+			newCop.setCombatForced(hasCombatAlert(playerId) || group.isCombatAlert());
+			newCop.transitionTo(CopState.PURSUING);
+			group.add(newCop);
+
+			if (unit.bias() != null) {
+				group.getSquad().reportSighting(unit.bias().lastSeen());
+				group.markTipOff(now);
+			}
+		}
+	}
+
+	/**
+	 * The tier composition slot {@code slot} spawns at: its {@code "Role@tier"} tier (clamped to the top tier) when the
+	 * slot has one, else {@code starTier}, the wanted level's.
+	 */
+	private int slotTier(int wantedLevel, int slot, int starTier) {
+		List<Integer> tiers = requireNonNullElse(configProvider.getSquadTiers(wantedLevel), List.of());
+		if (slot < 0 || slot >= tiers.size() || tiers.get(slot) == null || tiers.get(slot) <= 0) return starTier;
+		return Math.min(tiers.get(slot), configProvider.getMaxTier());
+	}
+
+	private DispatchSettings dispatchSettings() {
+		return requireNonNullElse(configProvider.getDispatchSettings(), DispatchSettings.DEFAULT);
+	}
+
+	private BreatherSettings breatherSettings() {
+		return requireNonNullElse(configProvider.getBreatherSettings(), BreatherSettings.DEFAULT);
 	}
 
 	/** A valid, non-returning cop in the player's world within {@code radius} of him. */
@@ -688,7 +818,8 @@ public class CopManager implements BeanLifecycle {
 	 * cops of a role the group holds more of than its base squad of {@code targetCount} ({@link CopRole#nextRole}), so a
 	 * replacement spawned mid-backup for a fallen Commander or Pointman stays (T-146). The group's last Commander is
 	 * never sent, even when the wanted level fell to a composition without one. A cop in a fight, cuffing or guarding
-	 * is never sent; what cannot go this run is retried on the next.
+	 * is never sent; what cannot go this run is retried on the next. Queued units count toward the group and a surplus
+	 * one still en route is called off before any live cop is sent.
 	 */
 	private void releaseSurplus(CopGroup group, int targetCount, @Nullable List<CopRole> composition) {
 		List<CopNpc> live = new ArrayList<>();
@@ -696,20 +827,38 @@ public class CopManager implements BeanLifecycle {
 			for (CopNpc cop : group.getCops())
 				if (cop.isValid() && cop.getCurrentState() != CopState.RETURNING) live.add(cop);
 		}
+		List<PendingUnit> queued = group.getPending();
 
-		int surplus = live.size() - targetCount;
+		int surplus = live.size() + queued.size() - targetCount;
 		if (surplus <= 0) {
 			group.setPendingRelease(0);
 			return;
 		}
 
-		// live cops per role less the base squad's: what is left over came with the backup (roles off: every cop)
+		// live and queued cops per role less the base squad's: what is left over came with the backup (roles off: every cop)
 		Map<String, Integer> excess = new HashMap<>();
 		for (CopNpc cop : live) excess.merge(roleName(cop.getRole()), 1, Integer::sum);
+		for (PendingUnit unit : queued) excess.merge(roleName(unit.role()), 1, Integer::sum);
 		List<CopRole> base = new ArrayList<>();
 		for (int i = 0; i < targetCount; i++) base.add(CopRole.nextRole(composition, base));
 		for (CopRole role : base) excess.merge(roleName(role), -1, Integer::sum);
-		long commanders = live.stream().filter(CopManager::isCommander).count();
+		long commanders = live.stream().filter(CopManager::isCommander).count() +
+		                  queued.stream().filter(unit -> unit.role() != null && unit.role().commander()).count();
+
+		// a backup unit still en route is called off first, newest first: it outlived the backup on a long ETA
+		for (int i = queued.size() - 1; i >= 0 && surplus > 0 && group.getPendingRelease() > 0; i--) {
+			CopRole role = queued.get(i).role();
+			if (excess.get(roleName(role)) <= 0) continue;
+			if (role != null && role.commander()) {
+				if (commanders <= 1) continue; // the squad's leader stays (T-146)
+				commanders--;
+			}
+
+			excess.merge(roleName(role), -1, Integer::sum);
+			queued.remove(i);
+			group.setPendingRelease(group.getPendingRelease() - 1);
+			surplus--;
+		}
 
 		for (int i = live.size() - 1; i >= 0 && surplus > 0 && group.getPendingRelease() > 0; i--) {
 			CopNpc   cop   = live.get(i);
