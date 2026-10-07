@@ -6,7 +6,12 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
+import org.luckyraven.gangland.copsncrooks.wanted.evasion.ChaseArcs;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.EvasionClock;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
+import org.luckyraven.gangland.copsncrooks.wanted.learn.ChaseHabit;
+import org.luckyraven.gangland.copsncrooks.wanted.learn.ChaseLearner;
+import org.luckyraven.gangland.copsncrooks.wanted.learn.ChaseLevelStat;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.keystone.bean.Bean;
@@ -14,8 +19,12 @@ import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.Qualifier;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
+import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
-/** Beans of the evasion clock (0.15.0): the clock itself and its two installs. */
+/**
+ * Beans of the evasion clock (0.15.0): the clock itself and its two installs; since 0.15.2 also the chase arcs and the
+ * learner that {@code Drop_Mode: AUTO} reads.
+ */
 @Configuration
 public class EvasionModuleConfig {
 
@@ -26,10 +35,22 @@ public class EvasionModuleConfig {
 	}
 
 	@Bean
+	public ChaseArcs chaseArcs() {
+		return new ChaseArcs(System::currentTimeMillis);
+	}
+
+	@Bean
+	public ChaseLearner chaseLearner(ChaseConfigLoader config, RepositoryRegistry repositoryRegistry) {
+		return new ChaseLearner(config, repositoryRegistry.getRepository(ChaseHabit.class),
+		                        repositoryRegistry.getRepository(ChaseLevelStat.class));
+	}
+
+	@Bean
 	public EvasionClock evasionClock(ChaseConfigLoader config, CopManager copManager, DetainmentService detainment,
-	                                 WantedStars wantedStars, @Qualifier("online") UserManager<Player> users) {
-		return new EvasionClock(config, copManager, detainment, wantedStars, users, System::currentTimeMillis,
-		                        event -> Bukkit.getPluginManager().callEvent(event));
+	                                 WantedStars wantedStars, @Qualifier("online") UserManager<Player> users,
+	                                 HeatLedger heatLedger, ChaseArcs chaseArcs, ChaseLearner chaseLearner) {
+		return new EvasionClock(config, copManager, detainment, wantedStars, users, heatLedger, chaseArcs, chaseLearner,
+		                        System::currentTimeMillis, event -> Bukkit.getPluginManager().callEvent(event));
 	}
 
 	@PostConstruct
