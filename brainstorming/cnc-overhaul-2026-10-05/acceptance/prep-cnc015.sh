@@ -12,6 +12,8 @@
 #   n3              25635  Take_Money.Enable true                                           row N3
 #   n3-broken       25636  Take_Money.Enable true + Formula "amount * ("                    row N3b
 #   n4-old          25637  0.13.0 jars (Gangland 0.13.0 modules), fresh data               row N4 phase A
+#   auto            25638  0.15.2 jars, Drop_Mode AUTO, learning gates 5 s (three yset keys)     rows A1-A5 A7-A9
+#   auto-compat     25639  0.15.2 jars + the 0.15.1 copsncrooks/wanted.yml (no Auto block)       row A6 (run-all adds the bad key)
 #   n4-new          25637  SAME clone as n4-old, 0.15.0 jars swapped in, data kept          row N4 phase B
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd -W)"
@@ -19,13 +21,14 @@ PROG="E:/Programming/java/wt/_programme"
 H="$PROG/harness"
 LIVE="E:/Programming/java/wt/_programme/servers/base"  # T18: base copied from the Keystone harness base, live server never read
 WT15="E:/Programming/java/wt/gangland-0.15.0/target"
+WT152="E:/Programming/java/wt/gangland-0.15.2/target"
 WT13="E:/Programming/java/wt/gangland-0.13.0/target"
 KS="E:/Programming/java/wt/keystone-1.14.0/keystone-plugin/target/Keystone-1.14.0.jar"
 BZ="E:/Programming/java/wt/bartizan-0.6.1/bartizan-plugin/target/Bartizan-0.6.1.jar"
 PROFILE=${1:?usage: prep-cnc015.sh <profile> [name] [port]}
 case $PROFILE in
   default) PORT=25631;; legacy-settings) PORT=25632;; r3) PORT=25633;; r4) PORT=25634;; n3) PORT=25635;;
-  n3-broken) PORT=25636;; n4-old|n4-new) PORT=25637;; *) echo "unknown profile $PROFILE"; exit 2;;
+  n3-broken) PORT=25636;; n4-old|n4-new) PORT=25637;; auto) PORT=25638;; auto-compat) PORT=25639;; *) echo "unknown profile $PROFILE"; exit 2;;
 esac
 NAME=${2:-cnc015-$PROFILE}; PORT=${3:-$PORT}
 [ "$PROFILE" = n4-new ] && NAME=${2:-cnc015-n4-old}
@@ -39,7 +42,11 @@ if [ "$PROFILE" = n4-new ]; then
 else
   bash "$H/clone.sh" "$NAME" "$PORT" --fresh-data --fresh-world --force
   sed -i -e "s/^level-type=.*/level-type=flat/" -e "s/^generate-structures=.*/generate-structures=false/" "$S/server.properties"
-  if [ "$PROFILE" = n4-old ]; then GL=$WT13; REV=0.13.0; else GL=$WT15; REV=0.15.0; fi
+  case $PROFILE in
+    n4-old) GL=$WT13; REV=0.13.0;;
+    auto|auto-compat) GL=$WT152; REV=0.15.2;;
+    *) GL=$WT15; REV=0.15.0;;
+  esac
 fi
 rm -f "$P"/Keystone-*.jar "$P"/Bartizan-*.jar "$P"/gangland_warfare-*.jar "$G"/modules/*.jar
 mkdir -p "$G/modules" "$G/copsncrooks" "$G/npc" "$P/Citizens"
@@ -63,6 +70,13 @@ case $PROFILE in
       jarcat "$P/Gangland_Warfare/modules/cops-n-crooks-$REV.jar" copsncrooks/wanted.yml > "$G/copsncrooks/wanted.yml"
       Y "$G/copsncrooks/wanted.yml" Wanted.Evasion.Enable false;;
   n3) Y "$G/settings.yml" Wanted.Take_Money.Enable true;;
+  auto) jarcat "$P/Gangland_Warfare/modules/cops-n-crooks-$REV.jar" copsncrooks/wanted.yml > "$G/copsncrooks/wanted.yml"
+        Y "$G/copsncrooks/wanted.yml" Wanted.Evasion.Drop_Mode AUTO
+        Y "$G/copsncrooks/wanted.yml" Wanted.Evasion.Auto.Learning.Min_Chase_Seconds 5
+        Y "$G/copsncrooks/wanted.yml" Wanted.Evasion.Auto.Learning.Min_Seconds_Between_Outcomes 5;;
+  auto-compat) git -C "E:/Programming/java/wt/gangland-0.15.2" show 970dfa96:gangland-features/cops-n-crooks/src/main/resources/copsncrooks/wanted.yml > "$G/copsncrooks/wanted.yml"
+               # 0.15.1 file (merge 970dfa96): no Auto block, Drop_Mode as shipped; the new jar must boot on it
+               ;;
   n3-broken) Y "$G/settings.yml" Wanted.Take_Money.Enable true
              Y "$G/settings.yml" Wanted.Take_Money.Formula '"amount * ("';;
 esac
