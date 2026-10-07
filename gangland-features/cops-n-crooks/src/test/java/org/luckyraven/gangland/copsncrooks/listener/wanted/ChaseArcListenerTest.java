@@ -28,6 +28,7 @@ import org.luckyraven.gangland.crime.Crimes;
 import org.luckyraven.gangland.events.crime.CrimeCommittedEvent;
 import org.mockito.ArgumentCaptor;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
@@ -162,7 +163,7 @@ class ChaseArcListenerTest {
 	}
 
 	@Test
-	@DisplayName("a RESTORE level change is ignored: the 0->N change, then the RESTORE start, leaves quiet >= 0")
+	@DisplayName("a RESTORE level change is ignored: the 0->N change, then the RESTORE start, leaves quiet at the online time")
 	void restoreLevelChange_isIgnored() {
 		start(WantedCause.CRIME, 2);
 		clock.addAndGet(1_000);
@@ -173,7 +174,7 @@ class ChaseArcListenerTest {
 		start(WantedCause.RESTORE, 2);
 		clock.addAndGet(500);
 
-		assertTrue(view().quietMs() >= 0);
+		assertEquals(1_500, view().quietMs());
 		assertEquals(1_500, view().chaseMs());
 		assertEquals(1, view().quits());
 	}
@@ -217,13 +218,16 @@ class ChaseArcListenerTest {
 	}
 
 	@Test
-	@DisplayName("a quit with an arc counts even though no UserManager lookup exists (as after RemoveAccountListener)")
+	@DisplayName("a quit with an arc counts; the listener takes no UserManager, which RemoveAccountListener has already emptied")
 	void quit_withAnArc_counts() {
 		start(WantedCause.CRIME, 2);
 
 		listener.onQuit(new PlayerQuitEvent(player, "bye"));
 
 		assertEquals(1, view().quits());
+		assertTrue(Arrays.stream(ChaseArcListener.class.getConstructors())
+		                 .flatMap(c -> Arrays.stream(c.getParameterTypes()))
+		                 .noneMatch(UserManager.class::equals));
 	}
 
 	@Test

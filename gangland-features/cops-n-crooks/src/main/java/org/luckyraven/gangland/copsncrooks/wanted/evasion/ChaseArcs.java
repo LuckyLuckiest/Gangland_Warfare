@@ -169,6 +169,7 @@ public final class ChaseArcs {
 
 		long limit = clock.getAsLong() - windowMinutes * 60_000L;
 		ends.removeIf(at -> at < limit);
+		if (ends.isEmpty()) recent.remove(id);
 		return ends.size();
 	}
 

@@ -413,6 +413,22 @@ class EvasionClockTest {
 	}
 
 	@Test
+	@DisplayName("AUTO: a drop another plugin cancels leaves no stale plan on the arc to label a later drop")
+	void auto_cancelledDrop_clearsThePendingPlan() {
+		auto();
+		arcs.start(id, WantedCause.CRIME, 2);
+		crimeAt(now[0] - 25_000);
+		crimeAt(now[0] - 15_000);
+		when(stars.drop(any(), anyInt(), any())).thenReturn(0);
+		unseenMs = 10_000;
+
+		tickSeconds(21);
+
+		verify(stars).drop(any(), eq(2), eq(WantedCause.EVASION));
+		assertNull(arcs.takePending(id));
+	}
+
+	@Test
 	@DisplayName("AUTO E1: a small chase drops both stars at once, the PETTY plan stashed before stars.drop")
 	void auto_smallChase_dropsBothStarsAtOnce_withThePlanStashedBeforeTheDrop() {
 		auto();

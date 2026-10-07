@@ -213,6 +213,8 @@ public final class EvasionClock implements WantedDecayPolicy {
 			                   : (cfg.dropMode() == DropMode.ALL_STARS ? level : 1);
 			int dropped = stars.drop(user, count, WantedCause.EVASION);
 			track.progress = 0;
+			// a cancelled drop never reached the HUD; its plan must not label a later drop
+			if (auto && dropped == 0) arcs.takePending(id);
 			// The last star ends the chase: the WantedEndEvent listener has already cleared him and fired OFF.
 			if (!wanted.isWanted() || dropped == 0) return;
 
