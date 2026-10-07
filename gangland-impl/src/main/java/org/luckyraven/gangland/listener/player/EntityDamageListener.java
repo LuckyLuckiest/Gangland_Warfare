@@ -60,7 +60,7 @@ public class EntityDamageListener implements Listener {
 	private static final int  TAKEDOWNS_PER_HOUR = 3;
 
 	// ponytail: first hit wins inside Self_Defence.Window_Seconds (read per call); stale pairs are pruned on every
-	// recorded hit and on quit; the damage, provocation and cooldown maps are in memory only (a restart forgets them)
+	// recorded hit and a quit ends the player's fights; the damage, provocation and cooldown maps are in memory only (a restart forgets them)
 	private final Map<String, Long>     firstHit     = new HashMap<>();   // value = hit order, so same-millisecond hits still sort
 	private long                        hitOrder;
 	private final Map<String, Long>     lastExchange = new HashMap<>();
@@ -233,18 +233,18 @@ public class EntityDamageListener implements Listener {
 		return damage.size() + lastHit.size() + provoked.size() + cooldowns.size() + takedowns.size();
 	}
 
+	/**
+	 * A quit ends the fight (first strike, damage, the first strike's provocation flag), never the anti-abuse memory:
+	 * last-hit stamps, pair cooldowns and the takedown tally survive a relog and expire by time in {@link #pruneStale}.
+	 */
 	@EventHandler
 	public void onPlayerQuit(PlayerQuitEvent event) {
-		UUID   uuid = event.getPlayer().getUniqueId();
-		String id   = uuid.toString();
+		String id = event.getPlayer().getUniqueId().toString();
 
 		lastExchange.keySet().removeIf(key -> key.contains(id));
 		firstHit.keySet().removeIf(key -> key.contains(id));
 		damage.keySet().removeIf(key -> key.contains(id));
-		lastHit.keySet().removeIf(key -> key.contains(id));
 		provoked.keySet().removeIf(key -> key.contains(id));
-		cooldowns.keySet().removeIf(key -> key.contains(id));
-		takedowns.remove(uuid);
 	}
 
 	private static long windowMs() {

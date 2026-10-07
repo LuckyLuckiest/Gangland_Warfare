@@ -538,7 +538,7 @@ class EntityDamageListenerTest {
 	}
 
 	@Test
-	@DisplayName("R36: pruning and a quit drop the damage, provocation, cooldown and takedown memories")
+	@DisplayName("R36: pruning drops the anti-abuse memories by time; a quit drops only the fight state")
 	void pruneAndQuit_dropTheNewMemories() {
 		EntityDamageListener listener = listener(new WantedKillTrackers());
 		long[] now = {0L};
@@ -559,7 +559,58 @@ class EntityDamageListenerTest {
 		assertEquals(3, listener.trackedMemories(), "only carol>dave: its damage, last hit and provocation flag remain");
 
 		listener.onPlayerQuit(new org.bukkit.event.player.PlayerQuitEvent(carol, "bye"));
-		assertEquals(0, listener.trackedMemories());
+		assertEquals(1, listener.trackedMemories(), "the carol>dave last-hit stamp waits for its 60 s prune");
+	}
+
+	@Test
+	@DisplayName("R37, D20: relogging does not reset the killer's crime-free takedown tally")
+	void relog_keepsTheTakedownTally() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+		List<User<Player>>   victims  = new ArrayList<>();
+
+		for (int i = 0; i < 4; i++) {
+			Player       extra = player("Victim" + i);
+			User<Player> user  = new User<>(plugin, extra, (p, raw) -> raw);
+			when(userManager.getUser(extra)).thenReturn(user);
+			post(user, "poster", 1000);
+			victims.add(user);
+		}
+
+		for (int i = 0; i < 3; i++) kill(listener, alice, victims.get(i).getUser());
+		listener.onPlayerQuit(new org.bukkit.event.player.PlayerQuitEvent(alice, "relog"));
+		kill(listener, alice, victims.get(3).getUser());
+
+		assertEquals(1, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("R37: the victim relogging does not reset the pair cooldown")
+	void relog_keepsThePairCooldown() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+
+		post(bobUser, "poster", 1000);
+		kill(listener, alice, bob);
+		listener.onPlayerQuit(new org.bukkit.event.player.PlayerQuitEvent(bob, "relog"));
+		post(bobUser, "poster", 1000);
+		kill(listener, alice, bob);
+
+		assertEquals(1, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("R36: provoke, relog, let the victim retaliate: the kill is still a crime")
+	void relog_keepsTheProvocation() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+		long[] now = {0L};
+		listener.clock = () -> now[0];
+
+		hit(listener, alice, bob);
+		listener.onPlayerQuit(new org.bukkit.event.player.PlayerQuitEvent(alice, "relog"));
+		now[0] = 9_000L;
+		hit(listener, bob, alice, 4.0);
+		kill(listener, alice, bob);
+
+		assertEquals(1, aliceUser.getWanted().getLevel());
 	}
 
 	@Test
