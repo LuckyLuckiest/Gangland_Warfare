@@ -11,14 +11,22 @@ import java.util.List;
  * @param searchRadius     the search zone radius per wanted level.
  * @param secondsToDrop    seconds to evade per wanted level.
  * @param outsideZoneSpeed how much faster the timer runs while outside the zone.
+ * @param auto             {@code Auto} block, read only while {@code dropMode} is AUTO.
  * @since 0.15.0
  */
 public record EvasionSettings(boolean enabled, int lostSightSeconds, DropMode dropMode, List<Integer> searchRadius,
-                              List<Integer> secondsToDrop, double outsideZoneSpeed) {
+                              List<Integer> secondsToDrop, double outsideZoneSpeed, AutoSettings auto) {
 	/** The shipped {@code Wanted.Evasion}. */
 	public static final EvasionSettings DEFAULT = new EvasionSettings(true, 3, DropMode.ONE_STAR,
 	                                                                  List.of(40, 60, 90, 130, 180),
-	                                                                  List.of(10, 20, 30, 45, 60), 2.0);
+	                                                                  List.of(10, 20, 30, 45, 60), 2.0,
+	                                                                  AutoSettings.DEFAULT);
+
+	/** The 0.15.1 shape, with the default {@code Auto} block. */
+	public EvasionSettings(boolean enabled, int lostSightSeconds, DropMode dropMode, List<Integer> searchRadius,
+	                       List<Integer> secondsToDrop, double outsideZoneSpeed) {
+		this(enabled, lostSightSeconds, dropMode, searchRadius, secondsToDrop, outsideZoneSpeed, AutoSettings.DEFAULT);
+	}
 
 
 	/** Search radius at {@code level}, the level clamped into the list. */
