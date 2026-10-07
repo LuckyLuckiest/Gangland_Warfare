@@ -30,10 +30,10 @@ public class CopsNCrooksYamlConfig {
 	 * still gets the commented catalogue. cop_radio_messages(_es) (phase H12): police-radio lines, picked by
 	 * Settings.getLanguagePicked() via CopRadioMessages/LocalizedModuleYaml. wanted/wanted_messages (0.15.0): chase
 	 * tuning (heat, evasion, HUD, charge sheet) and its text. detainment (0.15.1): jail, bail, bribe and sentence
-	 * knobs, formerly settings.yml Detainment.
+	 * knobs, formerly settings.yml Detainment. setup (0.16.0): the admin setup wand's item, outline and messages.
 	 */
 	static final String[] FILES = {"cops", "cop_roles", "cop_radio_messages", "cop_radio_messages_es", "wanted",
-	                               "wanted_messages", "detainment"};
+	                               "wanted_messages", "detainment", "setup"};
 
 	private final JavaPlugin plugin;
 
