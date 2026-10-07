@@ -60,8 +60,8 @@ sed -i -e '/^Debug:/,/^   Modules:/ s/^   Enabled: false/   Enabled: true/' \
 case $PROFILE in
   r3) Y "$G/settings.yml" Wanted.Repeating_Timer.Time 10;;
   r4) Y "$G/settings.yml" Wanted.Repeating_Timer.Time 10
-      jarcat "$P/Gangland_Warfare/modules/cops-n-crooks-$REV.jar" npc/wanted.yml > "$G/npc/wanted.yml"
-      Y "$G/npc/wanted.yml" Wanted.Evasion.Enable false;;
+      jarcat "$P/Gangland_Warfare/modules/cops-n-crooks-$REV.jar" copsncrooks/wanted.yml > "$G/copsncrooks/wanted.yml"
+      Y "$G/copsncrooks/wanted.yml" Wanted.Evasion.Enable false;;
   n3) Y "$G/settings.yml" Wanted.Take_Money.Enable true;;
   n3-broken) Y "$G/settings.yml" Wanted.Take_Money.Enable true
              Y "$G/settings.yml" Wanted.Take_Money.Formula '"amount * ("';;

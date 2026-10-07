@@ -34,7 +34,7 @@ its own `README.md`. First use builds `E:/Programming/java/wt/_programme/servers
 
 ## Profiles (prep-cnc015.sh)
 `default` shipped 0.15 defaults - `legacy-settings` the 0.13.0 `settings.yml` (no `Take_Money.Enable`) on 0.15 jars - `r3`/`r4`
-`Repeating_Timer.Time: 10` (r4 also `Evasion.Enable: false` in `npc/wanted.yml`, extracted from the cops-n-crooks jar) - `n3`
+`Repeating_Timer.Time: 10` (r4 also `Evasion.Enable: false` in `copsncrooks/wanted.yml`, extracted from the cops-n-crooks jar) - `n3`
 `Take_Money.Enable: true` - `n3-broken` plus `Formula: "amount * ("` - `n4-old` Gangland 0.13.0 jars - `n4-new` 0.15.0 jars swapped
 onto the n4-old data. Every profile: flat fresh world, Keystone 1.14.0, Bartizan 0.6.1, live Citizens `config.yml`, Debug on for
 "Cops N Crooks". If a 0.15 key name differs from the one the prep script sets, `yset.js` inserts the key; check the printed `grep` of
