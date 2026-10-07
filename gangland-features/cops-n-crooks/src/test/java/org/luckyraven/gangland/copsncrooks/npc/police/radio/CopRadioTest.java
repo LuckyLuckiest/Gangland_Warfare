@@ -395,6 +395,19 @@ class CopRadioTest {
 	}
 
 	@Test
+	@DisplayName("sayFromLeader to an addressee: a leader far away is heard around the addressee too, not only around itself")
+	void sayFromLeader_toAnAddressee_isHeardAroundHim() {
+		Player far    = listener(100, 0);   // 100 blocks from the leader: beyond Range 32 and Target_Range 64
+		CopNpc leader = cop(3, "SWAT", 0, 0);
+		group.add(leader);
+
+		assertFalse(radio.sayFromLeader(group, "Handoff", Map.of()));
+		assertTrue(radio.sayFromLeader(group, "Handoff", Map.of(), far));
+
+		verify(far).sendMessage("[SWAT-3] Handoff line");
+	}
+
+	@Test
 	@DisplayName("compassWord returns the file's word for each of the 8 sides, empty across worlds or with no compass lines")
 	void compassWord_eightSides() {
 		List<String> words = List.of("N", "NE", "E", "SE", "S", "SW", "W", "NW");

@@ -84,12 +84,20 @@ write('cnc016-S4-wipe-breather', [...SETUP('Runner'), ...STATIONS, ...HIDE, ...W
 write('cnc016-S5-perimeter-posts', [...SETUP('Runner'), ...STATIONS, ...HIDE, ...mark('S5:CRIME'), ...WANT(3),
   { expectLog: 'PERIMETER Runner start', timeout: 90000 }, say('S5:PERIMETER'), { wait: 8000 }, say('S5:DONE'), ...END]);
 
-// S6 outrun the squad in the open (15 blocks a second, +x): HANDOFF, then DISPATCH bias=true and UNIT bias=true ahead=true
+// S6 outrun the squad (15 blocks a second, +x): HANDOFF, then DISPATCH bias=true and UNIT bias=true ahead=true
+// T22: the run starts 3 s after the first unit spawns, not after a fixed 20 s (a cop reached cuff range 7 s after spawning
+// and a completed cuff ends the chase before the run). A flat empty world has no cover, so no ring spot is ever out of
+// sight and every biased unit took the unbiased fallback (CONTRACTS C8 step 4) - so two 3-high walls flank the run east
+// of x=300 (corridor z 95..105, the hops land on z=100): ring spots beyond them, ahead of him, are hidden. Removed at the end.
 const HOPS = (n, step) => Array.from({ length: n }, (_, k) => ({ console: `tp Runner ${100 + step * (k + 1)} -60 100`, after: 1000 }));
-write('cnc016-S6-outrun-handoff', [...SETUP('Runner'), ...STATIONS, STAGE, ...WANT(3), { wait: 20000 }, ...mark('S6:RUN'),
+const COVER = (block) => [{ console: 'forceload add 300 94 700 106', after: 500 },
+  { console: `fill 300 -60 94 700 -58 94 minecraft:${block}`, after: 500 }, { console: `fill 300 -60 106 700 -58 106 minecraft:${block}`, after: 500 }];
+write('cnc016-S6-outrun-handoff', [...SETUP('Runner'), ...STATIONS, ...COVER('stone'), STAGE, ...WANT(3),
+  { expectLog: 'UNIT Runner ', timeout: 30000 }, { wait: 3000 }, ...mark('S6:RUN'),
   ...HOPS(30, 15), say('S6:HOPPED'),
   { expectLog: 'HANDOFF Runner', timeout: 30000 }, say('S6:HANDOFF'),
-  { expectLog: 'UNIT Runner .*bias=true', timeout: 60000 }, say('S6:BIASED'), ...END]);
+  { expectLog: 'UNIT Runner .*bias=true', timeout: 60000 }, say('S6:BIASED'),
+  ...COVER('air'), { console: 'forceload remove 300 94 700 106', after: 500 }, ...END]);
 
 // S7 hideout reached unseen: Boathouse hideout inside a second sealed room; EVASION hideout=2.0 once Runner is in it
 const ROOM2 = [{ console: 'fill 150 -61 126 162 -56 136 minecraft:stone hollow', after: 500 }];

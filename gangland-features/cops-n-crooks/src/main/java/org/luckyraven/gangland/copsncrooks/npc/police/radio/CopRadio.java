@@ -145,10 +145,19 @@ public class CopRadio {
 
 	/** {@link #sayFromLeader(CopGroup, String)} with {@code extra} placeholders (%direction%, %place%). */
 	public boolean sayFromLeader(CopGroup group, String key, Map<String, String> extra) {
+		return sayFromLeader(group, key, extra, null);
+	}
+
+	/**
+	 * {@link #sayFromLeader(CopGroup, String, Map)}, also heard within {@code Radio.Range} of {@code addressee}: a
+	 * line about a suspect the speaker is far from (the hand-off, said by a cop walking home) still reaches him.
+	 */
+	public boolean sayFromLeader(CopGroup group, String key, Map<String, String> extra,
+	                             @Nullable LivingEntity addressee) {
 		AbstractNpc speaker = leaderSpeaker(group);
 		if (speaker == null) return false;
 		return radio.say(group.getSquad(), voice(group), speaker.getEntity(), callsign(speaker), key, "Format", null,
-		                 null, extra);
+		                 addressee, extra);
 	}
 
 	private @Nullable AbstractNpc leaderSpeaker(CopGroup group) {

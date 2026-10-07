@@ -29,8 +29,9 @@ import static java.util.Objects.requireNonNullElse;
 
 /**
  * The pursuit hand-off (0.16.0): when the cops chasing a wanted player stop being engaged because the chase leashed out
- * (a cop is walking home beyond {@code Cops.Pursuit.Max_Distance}), the leader radios the suspect's heading and units
- * dispatched in the next {@code Bias_Seconds} spawn ahead of him, seeded with the last-known position.
+ * (a cop is walking home beyond {@code Cops.Pursuit.Max_Distance}), the leader radios the suspect's heading (heard
+ * around him as well as around the speaker) and units dispatched in the next {@code Bias_Seconds} spawn ahead of him,
+ * seeded with the last-known position. A perimeter post counts as engaged only within {@code Max_Distance} of him.
  * <p>
  * Reads the config on every call ({@code /glw reload}); main thread only, like the cop AI tick that drives {@link #tick}.
  *
@@ -77,13 +78,14 @@ public class HandoffController {
 		while (window.size() > 1 && now - window.peekFirst().time() > settings.headingSeconds() * 1000L)
 			window.removeFirst();
 
-		boolean wasEngaged = engaged.contains(id);
-		boolean isEngaged  = isEngaged(group);
+		double  maxDistance = config.getPursuitMaxDistance();
+		boolean wasEngaged  = engaged.contains(id);
+		boolean isEngaged   = isEngaged(group, player, maxDistance);
 		if (isEngaged) engaged.add(id);
 		else engaged.remove(id);
 
 		if (!wasEngaged || isEngaged || group.biasAt(now) != null) return;
-		if (!leashedOut(group, id, player, config.getPursuitMaxDistance())) return;
+		if (!leashedOut(group, id, player, maxDistance)) return;
 
 		Location oldest  = window.peekFirst().at();
 		Location newest  = window.peekLast().at();
@@ -92,14 +94,22 @@ public class HandoffController {
 
 		group.setBias(new SpawnBias(heading, newest, now + settings.biasSeconds() * 1000L, settings.coneDegrees()));
 		String word = copRadio.compassWord(oldest, newest);
-		copRadio.sayFromLeader(group, "Handoff", Map.of("direction", word));
+		// heard around him too: the speaker is a cop walking home beyond the radio's reach of him
+		copRadio.sayFromLeader(group, "Handoff", Map.of("direction", word), player);
 		log.debug("HANDOFF {} heading={}", player.getName(), word);
 	}
 
-	private static boolean isEngaged(CopGroup group) {
+	/**
+	 * A cop of the group chases or fights him, or holds a perimeter post within {@code maxDistance} of him: a post left
+	 * behind where he was lost watches an empty zone, so it no longer holds the chase.
+	 */
+	private static boolean isEngaged(CopGroup group, Player player, double maxDistance) {
 		for (CopNpc cop : List.copyOf(group.getCops())) {
 			CopState state = cop.getCurrentState();
-			if (cop.isValid() && (state == CopState.PURSUING || state == CopState.COMBAT || state == CopState.POSTED))
+			if (!cop.isValid()) continue;
+			if (state == CopState.PURSUING || state == CopState.COMBAT) return true;
+			Entity body = cop.getEntity();
+			if (state == CopState.POSTED && (body == null || !farFrom(body.getLocation(), player, maxDistance)))
 				return true;
 		}
 		return false;
@@ -111,10 +121,13 @@ public class HandoffController {
 			Entity body = cop.getEntity();
 			if (!cop.isValid() || body == null || cop.getCurrentState() != CopState.RETURNING ||
 			    !id.equals(cop.getTargetPlayerId())) continue;
-			Location at = body.getLocation();
-			if (at.getWorld() != player.getWorld() || at.distanceSquared(player.getLocation()) > maxDistance * maxDistance)
-				return true;
+			if (farFrom(body.getLocation(), player, maxDistance)) return true;
 		}
 		return false;
+	}
+
+	/** {@code at} is in another world than {@code player} or farther than {@code maxDistance} from him. */
+	private static boolean farFrom(Location at, Player player, double maxDistance) {
+		return at.getWorld() != player.getWorld() || at.distanceSquared(player.getLocation()) > maxDistance * maxDistance;
 	}
 }
