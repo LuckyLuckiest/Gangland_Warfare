@@ -524,6 +524,24 @@ class ChaseConfigTest {
 		assertEquals(5, report.issues().size(), report.issues().toString());
 	}
 
+	/** Final fix round 1: a 0.15.2 Outside_Zone_Speed above the new Max_Speed default is capped, so say so. */
+	@Test
+	@DisplayName("Outside_Zone_Speed above Max_Speed warns that the timer is capped")
+	void outsideZoneSpeedAboveMaxSpeed_warns() {
+		ConfigReport report = new ConfigReport();
+		String yaml = """
+				Wanted:
+				   Evasion:
+				      Outside_Zone_Speed: 6.0
+				""";
+
+		ChaseConfig c = ChaseConfig.parse(wantedRoot(yaml, report), report);
+
+		assertEquals(4.0, c.evasion().maxSpeed());
+		assertEquals(1, report.issues().size(), report.issues().toString());
+		assertTrue(report.issues().toString().contains("config.conflict"), report.issues().toString());
+	}
+
 	@Test
 	@DisplayName("quiet speed: 0 min = 1.0, 2 min = 1.5, 10 min capped at 2.0, disabled = 1.0")
 	void quietSpeed_speedFor() {

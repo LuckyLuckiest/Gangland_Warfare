@@ -99,14 +99,20 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 		List<Integer>   radius = n.get("Search_Radius").asList().ofInts().orEmpty();
 		List<Integer>   drops  = n.get("Seconds_To_Drop").asList().ofInts().orEmpty();
 
+		double outside  = n.get("Outside_Zone_Speed").asDouble().min(0).orDefault(d.outsideZoneSpeed());
+		double maxSpeed = maxSpeed(n.get("Max_Speed"), report);
+		// a 0.15.2 Outside_Zone_Speed above the 0.16 cap is silently slowed otherwise
+		if (outside > maxSpeed)
+			report.add(Severity.WARNING, locationOf(n.get("Max_Speed")), "Wanted.Evasion.Max_Speed",
+			           "Outside_Zone_Speed " + outside + " is above Max_Speed " + maxSpeed + "; the timer is capped at " +
+			           maxSpeed, "config.conflict");
+
 		return new EvasionSettings(n.get("Enable").asBool().orDefault(d.enabled()),
 		                           n.get("Lost_Sight_Seconds").asInt().min(0).orDefault(d.lostSightSeconds()),
 		                           dropMode(n, report), radius.isEmpty() ? d.searchRadius() : List.copyOf(radius),
-		                           drops.isEmpty() ? d.secondsToDrop() : List.copyOf(drops),
-		                           n.get("Outside_Zone_Speed").asDouble().min(0).orDefault(d.outsideZoneSpeed()),
+		                           drops.isEmpty() ? d.secondsToDrop() : List.copyOf(drops), outside,
 		                           auto(block(n, "Auto", report), report), hideout(block(n, "Hideout", report), report),
-		                           quietSpeed(block(n, "Quiet_Speed", report), report),
-		                           maxSpeed(n.get("Max_Speed"), report));
+		                           quietSpeed(block(n, "Quiet_Speed", report), report), maxSpeed);
 	}
 
 	private static HideoutSettings hideout(@Nullable NodeReader n, ConfigReport report) {
