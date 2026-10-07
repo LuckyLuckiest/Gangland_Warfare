@@ -340,4 +340,23 @@ class ChaseArcsTest {
 
 		assertEquals(4, v.opening());
 	}
+
+	@Test
+	@DisplayName("offlineTotalMs sums every restored gap; 0 with no arc or no restore")
+	void offlineTotalMs_sumsRestoredGaps() {
+		assertEquals(0, arcs.offlineTotalMs(id));
+		arcs.start(id, WantedCause.CRIME, 2);
+		assertEquals(0, arcs.offlineTotalMs(id));
+
+		arcs.quit(id);
+		clock.addAndGet(4 * MIN);
+		arcs.restore(id);
+		clock.addAndGet(10_000);
+		arcs.quit(id);
+		clock.addAndGet(2 * MIN);
+		arcs.restore(id);
+
+		assertEquals(6 * MIN, arcs.offlineTotalMs(id));
+		assertEquals(6 * MIN, arcs.arc(id).offlineTotal());
+	}
 }

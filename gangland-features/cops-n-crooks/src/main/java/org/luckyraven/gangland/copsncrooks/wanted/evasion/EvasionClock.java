@@ -16,6 +16,7 @@ import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.config.DropMode;
 import org.luckyraven.gangland.copsncrooks.wanted.config.EvasionSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.config.HeatSettings;
+import org.luckyraven.gangland.copsncrooks.wanted.config.HideoutSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.ChaseView;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.DropPlan;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.Learned;
@@ -28,6 +29,7 @@ import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.gangland.core.wanted.WantedDecayPolicy;
 import org.luckyraven.gangland.core.wanted.WantedStars;
+import org.luckyraven.gangland.data.region.PlaceRegion;
 import org.luckyraven.gangland.events.wanted.EvasionState;
 import org.luckyraven.gangland.events.wanted.WantedEvasionStateEvent;
 
@@ -78,6 +80,12 @@ public final class EvasionClock implements WantedDecayPolicy {
 		long         outsideMs;
 		/** A long jump by command, plugin or portal during this spell. */
 		boolean      teleported;
+		/** The hideout that holds the search centre: he was seen walking in, so it never speeds the timer. */
+		@Nullable String seenHideout;
+	}
+
+	/** The timer speed of one tick and its three factors; the total is capped at {@code Max_Speed}. */
+	private record Speed(double total, double zone, double hideout, double quiet) {
 	}
 
 	private record Views(ChaseView chase, SpellView spell, Learned learned) {
@@ -91,15 +99,20 @@ public final class EvasionClock implements WantedDecayPolicy {
 	private final HeatLedger          ledger;
 	private final ChaseArcs           arcs;
 	private final ChaseLearner        learner;
+	private final Hideouts            hideouts;
+	private final QuietTrail          quiet;
 	private final LongSupplier        clock;
 	private final Consumer<Event>     callEvent;
 	private final Map<UUID, Track>    tracks     = new ConcurrentHashMap<>();
 	/** Players whose AUTO decision already failed once, so the warning is logged once each. */
 	private final Set<UUID>           autoFailed = ConcurrentHashMap.newKeySet();
+	/** Players whose clock is holding for units still on their way, so the debug line is logged once per hold. */
+	private final Set<UUID>           holding    = ConcurrentHashMap.newKeySet();
 
 	public EvasionClock(ChaseConfigLoader config, CopManager copManager, DetainmentService detainment,
 	                    WantedStars stars, UserManager<Player> users, HeatLedger ledger, ChaseArcs arcs,
-	                    ChaseLearner learner, LongSupplier clock, Consumer<Event> callEvent) {
+	                    ChaseLearner learner, Hideouts hideouts, QuietTrail quiet, LongSupplier clock,
+	                    Consumer<Event> callEvent) {
 		this.config     = config;
 		this.copManager = copManager;
 		this.detainment = detainment;
@@ -108,13 +121,16 @@ public final class EvasionClock implements WantedDecayPolicy {
 		this.ledger     = ledger;
 		this.arcs       = arcs;
 		this.learner    = learner;
+		this.hideouts   = hideouts;
+		this.quiet      = quiet;
 		this.clock      = clock;
 		this.callEvent  = callEvent;
 	}
 
 	@Override
 	public boolean handlesDecay(Player player, Wanted wanted) {
-		return config.get().evasion().enabled() && hasLiveCop(copManager.groupOf(player.getUniqueId()));
+		return config.get().evasion().enabled() &&
+		       hasLiveCop(copManager.groupOf(player.getUniqueId()), clock.getAsLong());
 	}
 
 	/** The player's current state, or {@code null} when he is not tracked. */
@@ -130,6 +146,7 @@ public final class EvasionClock implements WantedDecayPolicy {
 	 * home) ends the contact, so it stamps the loss of sight the next, null-track search no longer can.
 	 */
 	public void clear(Player player) {
+		holding.remove(player.getUniqueId());
 		Track t = tracks.remove(player.getUniqueId());
 		if (t == null) return;
 		if (t.state == EvasionState.SEEN) arcs.lost(player.getUniqueId());
@@ -148,14 +165,14 @@ public final class EvasionClock implements WantedDecayPolicy {
 	public void tick(Player player, @Nullable CopGroup group) {
 		EvasionSettings cfg  = config.get().evasion();
 		User<Player>    user = users.getUser(player);
-		if (user == null || !cfg.enabled() || !user.getWanted().isWanted() || !hasLiveCop(group)) {
+		long            now  = clock.getAsLong();
+		if (user == null || !cfg.enabled() || !user.getWanted().isWanted() || !hasLiveCop(group, now)) {
 			clear(player);
 			return;
 		}
 
 		Wanted wanted = user.getWanted();
 		UUID   id     = player.getUniqueId();
-		long   now    = clock.getAsLong();
 		long   lostMs = cfg.lostSightSeconds() * 1000L;
 		Track  track  = tracks.get(id);
 
@@ -163,6 +180,13 @@ public final class EvasionClock implements WantedDecayPolicy {
 			if (track != null) track.lastTick = now;
 			return;
 		}
+		// only units still on their way: they own the decay, but nothing counts until the first one stands in the world
+		if (!hasStandingCop(group)) {
+			if (track != null) track.lastTick = now;
+			if (holding.add(id)) log.debug("EVASION {} hold=enroute", player.getName());
+			return;
+		}
+		holding.remove(id);
 
 		int  level  = wanted.getLevel();
 		long unseen = group.getSquad().millisSinceSighting();
@@ -215,13 +239,13 @@ public final class EvasionClock implements WantedDecayPolicy {
 		track.level    = level;
 		track.radius   = cfg.radiusFor(level);
 		boolean inside = inside(player, track);
-		double  speed  = speed(inside, cfg);
+		Speed   speed  = speed(player, track, cfg, now, inside);
 		if (inside) {
 			track.insideMs += dt;
 		} else {
 			track.outsideMs += dt;
 		}
-		track.progress += (long) (dt * speed);
+		track.progress += (long) (dt * speed.total());
 
 		boolean auto = cfg.dropMode() == DropMode.AUTO;
 		if (auto && levelChanged) track.needMs = autoNeed(player, track, cfg, level);
@@ -259,9 +283,10 @@ public final class EvasionClock implements WantedDecayPolicy {
 		track.lastTick    = now;
 		track.secondsLeft = -1;
 		track.needMs      = autoNeed(player, track, cfg, level);
+		track.seenHideout = hideouts.idAt(centre, player.getUniqueId());
 		tracks.put(player.getUniqueId(), track);
 		long need = track.needMs > 0 ? track.needMs : cfg.secondsToDropFor(level) * 1000L;
-		fireCountdown(player, track, need, speed(inside(player, track), cfg));
+		fireCountdown(player, track, need, speed(player, track, cfg, now, inside(player, track)));
 	}
 
 	/** AUTO's hide timer for this spell at {@code level}; 0 (today's {@code Seconds_To_Drop}) in any other mode. */
@@ -328,11 +353,13 @@ public final class EvasionClock implements WantedDecayPolicy {
 	}
 
 	/** Fires SEARCHING with the seconds left, but only when that number changed. */
-	private void fireCountdown(Player player, Track track, long needMs, double speed) {
-		int left = (int) Math.ceil((needMs - track.progress) / 1000.0 / speed);
+	private void fireCountdown(Player player, Track track, long needMs, Speed speed) {
+		int left = (int) Math.ceil((needMs - track.progress) / 1000.0 / speed.total());
 		if (left == track.secondsLeft) return;
 
 		track.secondsLeft = left;
+		log.debug("EVASION {} speed={} zone={} hideout={} quiet={}", player.getName(), format(speed.total()),
+		          format(speed.zone()), format(speed.hideout()), format(speed.quiet()));
 		callEvent.accept(new WantedEvasionStateEvent(player, EvasionState.SEARCHING, track.level, left, track.centre,
 		                                             track.radius));
 	}
@@ -345,12 +372,26 @@ public final class EvasionClock implements WantedDecayPolicy {
 		return centre != null && world != null && world.equals(centre.getWorld()) && at.distance(centre) <= track.radius;
 	}
 
-	/** 1 inside the search zone, {@code Outside_Zone_Speed} outside it. */
-	private static double speed(boolean inside, EvasionSettings cfg) {
-		return inside ? 1.0 : Math.max(0.01, cfg.outsideZoneSpeed());
+	/**
+	 * Zone x hideout x cold trail, capped at {@code Max_Speed}. The zone is 1 inside, {@code Outside_Zone_Speed}
+	 * outside; a hideout counts only when it is not the one that holds the last sighting; the cold trail only ever
+	 * speeds up (a floor of 1 also keeps a failed {@link QuietTrail} from freezing the clock).
+	 */
+	private Speed speed(Player player, Track track, EvasionSettings cfg, long now, boolean inside) {
+		double          zone = inside ? 1.0 : Math.max(0.01, cfg.outsideZoneSpeed());
+		HideoutSettings h    = Objects.requireNonNullElse(cfg.hideout(), HideoutSettings.DEFAULT);
+		PlaceRegion     spot = h.enabled() ? hideouts.at(player) : null;
+		double          hide = spot != null && !spot.id().equals(track.seenHideout) ? h.speed() : 1.0;
+		double          cold = Math.max(1.0, quiet.speed(player.getUniqueId(), now));
+		return new Speed(Math.max(0.01, Math.min(cfg.maxSpeed(), zone * hide * cold)), zone, hide, cold);
 	}
 
-	private static boolean hasLiveCop(@Nullable CopGroup group) {
+	/** A cop stands in the world, or units are on their way (they own the decay while they travel). */
+	private static boolean hasLiveCop(@Nullable CopGroup group, long now) {
+		return group != null && (hasStandingCop(group) || group.unitsEnRoute(now));
+	}
+
+	private static boolean hasStandingCop(@Nullable CopGroup group) {
 		if (group == null) return false;
 
 		for (CopNpc cop : group.getCops()) {
