@@ -58,8 +58,22 @@ for slug, (code, name, order, aid) in SYS.items():
             "case": CASE % aid, "source": slug + ".md",
         })
     for n in tri:
-        if not any(o["num"] == n for o in rows):
-            print("triage without observation:", slug, n)
+        if any(o["num"] == n for o in rows): continue
+        t = tri[n]
+        if len(t) < 8:
+            print("triage without observation:", slug, n); continue
+        # post-audit row (no audit observation): 8 fields, the cross-docket line format:
+        # num~~tier~~title~~fix~~tests~~location~~observation~~confidence   -> id <code>-<num>
+        _, tier, title, fix, tests, loc, obs_text, conf = [x.strip() for x in t[:8]]
+        if tier not in ("P0", "P1", "P2", "P3", "X"):
+            print("PROBLEM: bad tier", tier, "in", slug, n); continue
+        bugs.append({
+            "id": "%s-%02d" % (code, n), "code": code, "sys": slug, "sysName": name, "sysOrder": order, "num": n,
+            "tier": tier, "title": title, "fix": fix, "tests": None if tests in ("-", "") else tests,
+            "location": loc, "observation": obs_text, "impact": None,
+            "risk": "n/a", "confidence": conf, "unverified": conf == "Low",
+            "recheck": False, "case": CASE % aid, "source": slug + ".md (post-audit row)",
+        })
 
 # test-found bugs
 for ln in open(os.path.join(HERE, "triage", "new-findings.txt"), encoding="utf-8").read().splitlines():

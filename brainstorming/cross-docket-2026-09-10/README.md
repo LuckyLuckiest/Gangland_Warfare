@@ -11,14 +11,14 @@ Layout
   `num~~tier~~title~~fix~~tests~~location~~observation~~confidence`
   (tier P0/P1/P2/P3/X, tests `-` when none, location `Module path/File.java:line`, confidence High/Medium/Low)
 - `<project>/REVIEW.md` — phase 2: the opus lead's scope decisions, scanner orders, culled findings and why
-- `gangland/` — carried over from `../bug-docket-2026-09-06/bugs.json` (464 entries) + live statuses from the
+- `gangland/` — carried over from `../bug-docket-2026-09-06/bugs.json` (622 entries; new Gangland rows are added there, never here) + live statuses from the
   old artifact's db; Gangland is not re-scanned here
 - `build_docket.py` — merges everything into `bugs.json` and renders `docket_template.html` into
   `cross-project-bug-docket.html`
 - `prompts/` — the exact prompts handed to each agent (audit trail)
 
 Ids: Gangland keeps its ids (`CL-01`, `T-35`). New projects: `KS-<code>-<nn>` Keystone, `BZ-<code>-<nn>`
-Bartizan, `OR-<code>-<nn>` Oriel, `PQ-<code>-<nn>` Plaque. Published page: https://claude.ai/code/artifact/4a903fb6-cbdd-4810-90b8-88a863e9013c ("LuckyRaven Bug Docket", 702 entries: Gangland 498, Keystone 103, Bartizan 64, Oriel 37).
+Bartizan, `OR-<code>-<nn>` Oriel, `PQ-<code>-<nn>` Plaque. Published page: https://claude.ai/code/artifact/4a903fb6-cbdd-4810-90b8-88a863e9013c ("LuckyRaven Bug Docket", 1074 entries as built 2026-09-30: Gangland 622, Keystone 226, Bartizan 165, Oriel 57, Plaque 4).
 Status/notes live in that artifact's shared db (collection `bugs`,
 doc id = bug id, `{status, note, updatedAt}`); Gangland rows were seeded from the old artifact.
 
