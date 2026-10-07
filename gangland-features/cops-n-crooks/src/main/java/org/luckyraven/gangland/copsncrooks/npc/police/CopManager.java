@@ -665,12 +665,15 @@ public class CopManager implements BeanLifecycle {
 		if (wipe) group.setBreatherUntil(now + breather.breatherMs(wantedLevel));
 
 		int missing = lacking - group.pendingCount();
-		if (missing <= 0) return;
+		// a wipe is radioed and holds the queue even when every missing slot was already queued before it
+		if (missing <= 0 && !wipe) return;
 
 		SpawnBias       bias     = group.biasAt(now);
 		Dispatcher.Plan plan     = dispatcher.plan(player, now, bias);
 		long            hold     = Math.max(0L, group.getBreatherUntil() - now);
 		long            arriveAt = now + hold + plan.etaMs();
+		// R19: the whole refill arrives after the breather, units queued before the wipe included
+		if (wipe) group.holdPendingUntil(arriveAt);
 		List<CopRole>   held     = new ArrayList<>(liveRoles);
 		for (PendingUnit unit : group.getPending()) held.add(unit.role());
 		for (int i = 0; i < missing; i++) {
@@ -689,7 +692,8 @@ public class CopManager implements BeanLifecycle {
 		}
 
 		String reason = wipe ? "wipe" : restoring.remove(player.getUniqueId()) ? "restore" : "none";
-		log.debug("DISPATCH {} count={} station={} eta={}s hold={}s reason={} bias={}", player.getName(), missing,
+		log.debug("DISPATCH {} count={} station={} eta={}s hold={}s reason={} bias={}", player.getName(),
+		          Math.max(0, missing),
 		          plan.station() == null ? "ring" : plan.station().getName(), plan.etaMs() / 1000, (hold + 999) / 1000,
 		          reason, bias != null);
 	}

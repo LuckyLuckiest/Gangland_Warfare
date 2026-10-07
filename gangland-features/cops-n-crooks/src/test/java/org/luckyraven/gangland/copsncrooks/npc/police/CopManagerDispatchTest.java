@@ -221,6 +221,62 @@ class CopManagerDispatchTest {
 	}
 
 	/**
+	 * Final fix round 1: a replacement queued before the wipe is part of the refill. It waits out the breather like
+	 * the units queued on the wipe tick instead of arriving on its pre-wipe schedule (Ruling R19).
+	 */
+	@Test
+	@DisplayName("a unit queued before the wipe is held to the refill time, not its old ETA")
+	void wipe_unitQueuedBeforeIt_waitsOutTheBreather() {
+		manager.onWantedStart(player, wanted);
+		manager.spawnTick(playerId, wanted);
+		northside();
+		List<CopNpc> cops = new ArrayList<>(group().getCops());
+		when(cops.get(0).isMarkedForRemoval()).thenReturn(true);
+		fx.clock[0] = 2_000L;
+		manager.spawnTick(playerId, wanted);
+		assertEquals(22_000L, group().getPending().get(0).arriveAt());
+
+		when(cops.get(1).isMarkedForRemoval()).thenReturn(true);
+		group().recordCasualty(2_500L);
+		fx.clock[0] = 3_000L;
+		manager.spawnTick(playerId, wanted);
+
+		assertEquals(16_000L, group().getBreatherUntil());
+		assertEquals(2, group().pendingCount());
+		for (PendingUnit unit : group().getPending())
+			assertEquals(36_000L, unit.arriveAt(), "now 3 s + 13 s breather + 20 s ETA");
+
+		fx.clock[0] = 22_000L;
+		manager.spawnTick(playerId, wanted);
+		assertTrue(group().getCops().isEmpty(), "nothing arrives inside the breather");
+	}
+
+	/**
+	 * Final fix round 1: every missing slot is already queued when the wipe is seen. The wipe still radios
+	 * Wipe_Refill and still holds the queued units, instead of returning before either.
+	 */
+	@Test
+	@DisplayName("a wipe with every slot already queued still radios Wipe_Refill and holds the queue")
+	void wipe_everySlotAlreadyQueued_stillRadiosAndHolds() {
+		manager.onWantedStart(player, wanted);
+		manager.spawnTick(playerId, wanted);
+		northside();
+		for (CopNpc cop : group().getCops()) when(cop.isMarkedForRemoval()).thenReturn(true);
+		fx.clock[0] = 2_000L;
+		manager.spawnTick(playerId, wanted);
+		assertEquals(2, group().pendingCount());
+
+		group().recordCasualty(2_500L);
+		fx.clock[0] = 3_000L;
+		manager.spawnTick(playerId, wanted);
+
+		verify(fx.radio).dispatch(eq(group()), eq(player), eq("Wipe_Refill"), eq(2), anyString(),
+		                          eq(Map.of("eta", "33")));
+		assertEquals(2, group().pendingCount());
+		for (PendingUnit unit : group().getPending()) assertEquals(36_000L, unit.arriveAt());
+	}
+
+	/**
 	 * Fix round 1: a backup unit whose station ETA (40 s) outlasts the backup (30 s) is still queued when the backup
 	 * runs out. It is the surplus, so it is dropped from the queue instead of arriving later and staying for good.
 	 */

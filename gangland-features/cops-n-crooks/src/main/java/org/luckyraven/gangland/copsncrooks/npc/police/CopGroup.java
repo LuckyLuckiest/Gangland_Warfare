@@ -313,6 +313,13 @@ public class CopGroup {
 		pending.add(unit);
 	}
 
+	/** Holds every queued unit to arrive no earlier than {@code at}: a wipe's refill includes units already en route. */
+	public void holdPendingUntil(long at) {
+		pending.replaceAll(unit -> unit.arriveAt() >= at ? unit
+		                                                 : new PendingUnit(unit.role(), unit.tier(), at, unit.station(),
+		                                                                   unit.bias()));
+	}
+
 	public int pendingCount() {
 		return pending.size();
 	}
