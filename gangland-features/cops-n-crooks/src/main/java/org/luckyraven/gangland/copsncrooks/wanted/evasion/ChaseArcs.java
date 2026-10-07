@@ -75,10 +75,17 @@ public final class ChaseArcs {
 
 		long gap = clock.getAsLong() - arc.offlineAt;
 		arc.startedAt += gap;
+		arc.offlineTotal += gap;
 		arc.lastHotAt += gap;
 		if (arc.lastLostAt != 0) arc.lastLostAt += gap;
 		arc.offlineAt = 0;
 		arc.seededAt  = clock.getAsLong();
+	}
+
+	/** Total time the player spent offline during this chase; 0 when no arc exists. */
+	public long offlineTotalMs(UUID id) {
+		ChaseArc arc = arcs.get(id);
+		return arc == null ? 0 : arc.offlineTotal;
 	}
 
 	/** A crime the ledger keeps, or a star raise. */
