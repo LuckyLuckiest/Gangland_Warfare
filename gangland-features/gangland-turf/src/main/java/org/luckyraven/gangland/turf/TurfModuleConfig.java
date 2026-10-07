@@ -7,6 +7,7 @@ import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
+import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.gangland.turf.database.ActiveTurfBuffRepository;
 import org.luckyraven.gangland.turf.database.TurfGarrisonRepository;
 import org.luckyraven.gangland.turf.database.TurfPowerupNpcRepository;
@@ -15,6 +16,7 @@ import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.turf.config.GanglandTurfMessages;
 import org.luckyraven.gangland.turf.config.GanglandTurfSounds;
 import org.luckyraven.gangland.turf.config.TurfSettings;
+import org.luckyraven.gangland.turf.place.TurfRegionProvider;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.keystone.persistence.FileManager;
@@ -121,6 +123,13 @@ public final class TurfModuleConfig {
 		TurfManager manager = new TurfManager(repository);
 		manager.initialize();
 		return manager;
+	}
+
+	@Bean
+	public TurfRegionProvider turfRegionProvider(TurfManager turfs, PlaceNames places) {
+		TurfRegionProvider provider = new TurfRegionProvider(turfs);
+		places.register(provider);
+		return provider;
 	}
 
 	@Bean
