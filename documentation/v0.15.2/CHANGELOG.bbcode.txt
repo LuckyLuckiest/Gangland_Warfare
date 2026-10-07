@@ -61,7 +61,7 @@ Cops N Crooks 0.15.2 introduces [B]AUTO mode[/B] for star drops: instead of alwa
 [SIZE=6][B]⬆️ Upgrade notes[/B][/SIZE]
 
 [LIST]
-[*][B]Read the wanted-bounty guide[/B] — See the [URL]../features/wanted-bounty.md[/URL] for the full AUTO rules and examples.
+[*][B]Read the wanted-bounty guide[/B] — See [URL='https://github.com/LuckyLuckiest/Gangland_Warfare/blob/master/documentation/features/wanted-bounty.md'][B]Wanted & Bounty[/B][/URL] for the full AUTO rules and examples.
 [*][B]No restore migration[/B] — No database migration needed; the two new tables start empty (cold server).
 [*][B]YAML format[/B] — [ICODE]Auto[/ICODE] block is block style with Capitalized_Underscore keys, like the rest of [ICODE]wanted.yml[/ICODE]. One admin copy/paste; 29 keys, all commented.
 [/LIST]
