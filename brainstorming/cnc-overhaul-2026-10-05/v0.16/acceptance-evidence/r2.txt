@@ -1,0 +1,4 @@
+cnc016-b152: | 9 | Line of sight broken | FAIL | NOT RUN | T1: last-seen spot reached: sample 2; beeline behind the wall: false; fanned out: true; re-acquired: false; T2: not run |
+cnc016-default-016: | 9 | Line of sight broken | PASS | NOT RUN | T1: last-seen spot reached: sample 3; beeline behind the wall: false; fanned out: true; re-acquired: true; T2: not run |
+cnc016-b152: | 9 | Line of sight broken | PASS | NOT RUN | T1: last-seen spot reached: sample 1; beeline behind the wall: false; fanned out: true; re-acquired: true; T2: not run |
+cnc016-default-016: | 9 | Line of sight broken | PASS | NOT RUN | T1: last-seen spot reached: sample 2; beeline behind the wall: false; fanned out: true; re-acquired: true; T2: not run |

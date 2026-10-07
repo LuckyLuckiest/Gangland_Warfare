@@ -58,7 +58,7 @@ const autoDrops = r => r.log.filter(l => /AUTO drop /.test(l)).map(l => {
   return { at: secs(l), from: +g(/level=(\d+)->/), to: +g(/->(\d+) ending=/), ending: g(/ending=(\w+)/), reason: g(/reason=(\S*)/) || '',
     outside: parseFloat(g(/outside=([\d.]+)/)), teleported: g(/teleported=(\w+)/), delta: parseFloat(g(/delta=(-?[\d.]+)/)), line: l.replace(/^.*AUTO drop /, 'AUTO drop ').slice(0, 170) };
 });
-const markAt = (r, tag) => { const l = r.log.find(x => x.includes('CNCMARK:' + tag)); return l ? secs(l) : NaN; };
+const markAt = (r, tag) => { const l = r.log.find(x => /^\[\d+:\d+:\d+/.test(x) && x.includes('CNCMARK:' + tag)); return l ? secs(l) : NaN; };
 const firstDrop = (name, d, ending, reason) => {
   if (!d.length) { rec(name, 'FAIL', 'no AUTO drop debug line (Debug on for "Cops N Crooks", Drop_Mode AUTO?)'); return null; }
   const ok = d[0].ending === ending && (reason === undefined || d[0].reason === reason);

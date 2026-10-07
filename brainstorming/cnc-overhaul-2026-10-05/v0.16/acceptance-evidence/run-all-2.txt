@@ -1,0 +1,111 @@
+
+######## S15
+== S15 ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   HOSPITAL line names the Infirmary - HOSPITAL Runner waypoint=Infirmary
+FAIL   exactly one WARD_BILL (0)
+PASS   SHIELD line seconds=5 (owner ruling D19) - SHIELD Runner seconds=5
+PASS   wallet paid the one bill (5000 -> 4250)
+PASS   woke at the Infirmary (150,260): 150.5,260.5 - [17:53:23 INFO]: Runner has the following entity data: [150.5d, -60.0d, 260.5d]
+PASS   no cash item at the body with the bundled money.yml (0 item(s))
+== FAIL ==
+
+######## S6
+== S6 ==
+PASS   no server ERROR / org.luckyraven exception
+FAIL   harness steps - 2 failed step(s)
+PASS   HANDOFF line - HANDOFF Runner heading=east
+PASS   heading is east (Runner moved +x) - HANDOFF Runner heading=east
+FAIL   Handoff radio line
+PASS   DISPATCH ... bias=true after the hand-off - DISPATCH Runner count=4 station=Northside Station eta=14s hold=0s reason=none bias=true
+PASS   UNIT bias=true - UNIT Runner callsign=Lieutenant Commander Ann #1004 tier=3 role=Commander fromStation=true hidden=false bias=true ahead=false at=397,-60,99
+FAIL   UNIT ahead=true on every biased unit - UNIT Runner callsign=Lieutenant Commander Ann #1004 tier=3 role=Commander fromStation=true hidden=false bias=true ahead=false at=397,-60,99 // UNIT Runner callsign=Sergeant Pointman Hank #1005 tier=2 role=Pointman fromStation=true hidden=false bias=true ahead=false at=397,-60,92
+== FAIL ==
+
+######## S16
+== S16 ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   wanted before quit - [Runner] ★☆☆☆☆
+PASS   DISPATCH ... reason=restore hold=15s - DISPATCH Runner count=2 station=Northside Station eta=10s hold=15s reason=restore bias=false
+PASS   EVASION hold=enroute after the restore - EVASION Runner hold=enroute
+PASS   first unit only after the rejoin grace (24 s after the DISPATCH line, hold 15)
+PASS   the star is still there when the first unit spawns (1) - [Runner] ★☆☆☆☆
+== PASS ==
+
+######## N2
+== N2 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   run 2: no server ERROR / org.luckyraven exception
+PASS   run 2: harness steps - 0 failed step(s)
+PASS   run 1: balance 5000 -> 5000, charge 0 (expected 0)
+PASS   run 2: balance 5000 -> 5000, charge 0 (expected 0)
+PASS   star fell
+== PASS ==
+
+######## N4
+== N4 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   run 2: no server ERROR / org.luckyraven exception
+PASS   run 2: harness steps - 0 failed step(s)
+PASS   phase A posted the bounty
+PASS   first kill collects the 500 posted: Hunter 0 -> 500 - other kill rewards also show; read the transcript
+PASS   second kill collects no posted money: 500 -> 500
+== PASS ==
+
+######## A2
+== A2 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   first drop ending=PETTY - AUTO drop Runner level=2->0 ending=PETTY reason= crimes=1 opening=1 peak=2 chase=27s quiet=27s quits=0 respots=0 outside=0.00 teleported=false steps=0 narrow=false delta=
+PASS   every star dropped at once, 2 -> 0 (2->0)
+== PASS ==
+
+######## A3
+== A3 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   first drop ending=STILL_HOT reason=rampage - AUTO drop Runner level=4->3 ending=STILL_HOT reason=rampage crimes=1 opening=1 peak=4 chase=51s quiet=50s quits=0 respots=0 outside=0.00 teleported=false steps=0 narrow=f
+PASS   first drop 4 -> 3 (4->3)
+== PASS ==
+
+######## A4
+== A4 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+FAIL   run 1: harness steps - 1 failed step(s)
+PASS   run 2: no server ERROR / org.luckyraven exception
+PASS   run 2: harness steps - 0 failed step(s)
+PASS   wanted before quit - [Runner] ★★☆☆☆ | [Runner] [RADIO] Sergeant Assault Nick #1001: Moving to flank, south-east!
+PASS   still wanted after rejoin - [Runner] ★★☆☆☆
+PASS   first drop 2 -> 1, ending=STILL_HOT reason=logout - AUTO drop Runner level=2->1 ending=STILL_HOT reason=logout crimes=0 opening=0 peak=2 chase=37s quiet=37s quits=1 respots=0 outside=0.00 teleported=false steps=0 narrow=fa (no squad seen after the rejoin)
+== FAIL ==
+
+######## A5
+ls: cannot access 'E:/Programming/java/wt/_programme/servers/cnc016-auto/plugins/Gangland_Warfare/*.db': No such file or directory
+Error: in prepare, no such table: chase_habit
+== A5 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   run 2: no server ERROR / org.luckyraven exception
+PASS   run 2: harness steps - 0 failed step(s)
+PASS   run A: both chases ended PETTY - PETTY,PETTY
+PASS   run A: the second chase already reads a learned delta > 0 (0.02)
+FAIL   chase_habit row for Runner after run A has n = 1.9 (chase_habit.txt missing)
+PASS   after the restart the next debug line shows delta > 0, about 0.03 (0.03) - AUTO drop Runner level=1->0 ending=PETTY reason= crimes=2 opening=2 peak=1 chase=15s quiet=15s quits=0 respots=0 outside=0.00 teleported=false steps=0 narrow=false delta=
+== FAIL ==
+
+======== SUMMARY (0 = PASS, 1 = FAIL, 2 = REVIEW by a human, ERROR = could not run)
+S15: 1
+S6: 1
+S16: 0
+N2: 0
+N4: 0
+A2: 0
+A3: 0
+A4: 1
+A5: 1
+Pass criterion for 0.16: S1-S16 all 0 (S2 S5 S6 S8 may be 2 where the radio rate-limits or a spawn spot is soft: read the transcript); R1-R4, N1-N8, A1-A9 as in 0.15 and 0.15.2:
+  R1 R2 R3 R4 N1 N2 N3 N4 = 0 (R1 and N4 may be 2), A1 A2 A3 A5 A6 = 0, A4 = 0 or 2, A7 A8 A9 = 2 read by a human.

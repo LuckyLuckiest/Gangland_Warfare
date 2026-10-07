@@ -1,0 +1,76 @@
+#### S1
+== S1 ==
+== PASS ==
+rc=0
+#### S10
+== S10 ==
+== PASS ==
+rc=0
+#### S11
+== S11 ==
+== PASS ==
+rc=0
+#### S12
+== S12 ==
+== PASS ==
+rc=0
+#### S13
+== S13 ==
+== PASS ==
+rc=0
+#### S14
+== S14 ==
+== PASS ==
+rc=0
+#### S15
+== S15 ==
+FAIL   harness steps - 1 failed step(s)
+FAIL   exactly one WARD_BILL (0)
+== FAIL ==
+rc=1
+#### S16
+== S16 ==
+FAIL   DISPATCH ... reason=restore hold=15s - DISPATCH Runner count=2 station=Northside Station eta=10s hold=14s reason=restore bias=false
+== FAIL ==
+rc=1
+#### S2
+== S2 ==
+== PASS ==
+rc=0
+#### S3
+== S3 ==
+== PASS ==
+rc=0
+#### S4
+== S4 ==
+== PASS ==
+rc=0
+#### S5
+== S5 ==
+REVIEW two Post_Up lines (seen 0) - radio rate-limiting can fold two lines into one: read the transcript
+       PERIMETER Runner start","timeout":90000} | PERIMETER Runner start posts=2 radius=32.0 | PERIMETER Runner end reason=OFF
+== REVIEW ==
+rc=2
+#### S6
+== S6 ==
+FAIL   harness steps - 2 failed step(s)
+FAIL   HANDOFF line
+FAIL   Handoff radio line
+FAIL   DISPATCH ... bias=true after the hand-off
+FAIL   UNIT bias=true
+FAIL   UNIT ahead=true on every biased unit
+== FAIL ==
+rc=1
+#### S7
+== S7 ==
+REVIEW no hideout bonus before Runner entered the Boathouse - EVASION Runner speed=1.00 zone=1.00 hideout=1.00 quiet=1.00 // EVASION Runner speed=1.00 zone=1.00 hideout=1.00 quiet=1.00
+== REVIEW ==
+rc=2
+#### S8
+== S8 ==
+== PASS ==
+rc=0
+#### S9
+== S9 ==
+== PASS ==
+rc=0

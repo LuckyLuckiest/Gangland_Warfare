@@ -1,0 +1,95 @@
+#### S1 cnc016-S1-wand-station-docks
+PASS   harness steps - 0 failed step(s)
+PASS   station Northside Station saved (chat)
+PASS   district Docks saved (chat)
+PASS   list shows the station row - [Runner] station 1 Northside Station world 100 -61 40
+PASS   list shows the Docks region row with its district tag - [Runner] region 1 Docks world 80 -61 110 [district]
+#### S10 cnc016-S10-sign-refused
+PASS   harness steps - 0 failed step(s)
+PASS   Contact.Seen text - [Runner] Error: [GLW] Not while a cop has eyes on you.
+PASS   balance unchanged (5000 -> 5000)
+PASS   star level unchanged (still wanted) - [Runner] ★★☆☆☆ | [Runner/game_info] Break free - 0/25 (tap SNEAK!)
+PASS   sign did not report an invalid sign - if this fails the console-set sign was not recognised: place it by hand
+#### S11 cnc016-S11-self-defence
+PASS   harness steps - 0 failed step(s)
+PASS   not wanted before - [Runner] ☆☆☆☆☆
+PASS   two provoked kills, no star - [Runner] ☆☆☆☆☆
+#### S12 cnc016-S12-posted-bounty
+PASS   harness steps - 0 failed step(s)
+PASS   two posted bounties claimed, no star - [Hunter] ☆☆☆☆☆
+PASS   both bounties paid (0 -> 1000) - other rewards also show: read the transcript
+#### S13 cnc016-S13-unposted-kill
+PASS   harness steps - 0 failed step(s)
+PASS   Hunter not wanted before - [Hunter] ☆☆☆☆☆ | [Victim2] [RADIO] Military Commander Kate #1006: Suspect cleared. Returning to patrol. | [Hunter] [RADIO] Military Commander Frank #1000: All units, 
+PASS   two unposted five-star kills, Hunter gains a star (1) - [Hunter] ★☆☆☆☆ | [Hunter] [RADIO] Officer Assault Vince #1013: Flanking south, keep him busy!
+#### S14 cnc016-S14-hospital-downed
+PASS   harness steps - 0 failed step(s)
+PASS   HOSPITAL line names the Infirmary - HOSPITAL Runner waypoint=Infirmary
+PASS   exactly one WARD_BILL (1) - WARD_BILL Runner amount=750.00 at=RESPAWN
+PASS   bill charged at RESPAWN (RESPAWN)
+PASS   bill amount 750 (15% of 5000): 750
+PASS   SHIELD line seconds=5 (owner ruling D19) - SHIELD Runner seconds=5
+PASS   wallet paid the one bill (5000 -> 4250)
+PASS   woke at the Infirmary (150,260): 150.5,260.5 - [18:55:05 INFO]: Runner has the following entity data: [150.5d, -60.0d, 260.5d]
+#### S15 cnc016-S15-hospital-vanilla-death
+PASS   harness steps - 0 failed step(s)
+PASS   HOSPITAL line names the Infirmary - HOSPITAL Runner waypoint=Infirmary
+FAIL   exactly one WARD_BILL (0)
+PASS   SHIELD line seconds=5 (owner ruling D19) - SHIELD Runner seconds=5
+PASS   wallet paid the one bill (5000 -> 4250)
+PASS   woke at the Infirmary (150,260): 150.5,260.5 - [18:55:57 INFO]: Runner has the following entity data: [150.5d, -60.0d, 260.5d]
+PASS   no cash item at the body with the bundled money.yml (0 item(s))
+#### S16 cnc016-S16-logout-restore
+PASS   harness steps - 0 failed step(s)
+PASS   wanted before quit - [Runner] ★☆☆☆☆
+PASS   DISPATCH ... reason=restore hold=15s - DISPATCH Runner count=2 station=Northside Station eta=10s hold=14s reason=restore bias=false
+PASS   EVASION hold=enroute after the restore - EVASION Runner hold=enroute
+PASS   first unit only after the rejoin grace (24 s after the DISPATCH line, hold 14)
+PASS   the star is still there when the first unit spawns (1) - [Runner] ★☆☆☆☆
+#### S2 cnc016-S2-dispatch-from-station
+PASS   harness steps - 0 failed step(s)
+PASS   radio: units en route from Northside Station with an ETA - [Runner] [DISPATCH] 2 units en route from Northside Station, ETA 10 s.
+PASS   ETA about 9 s (90 blocks at Unit_Speed 10): 10
+PASS   DISPATCH line names Northside Station with the same ETA - DISPATCH Runner count=2 station=Northside Station eta=10s hold=0s reason=none bias=false
+PASS   first UNIT line hidden=true fromStation=true - UNIT Runner callsign=Officer Pointman Eddie #1000 tier=1 role=Pointman fromStation=true hidden=true bias=false ahead=- at=93,-60,98
+PASS   first unit arrives after the delay (10 s after DISPATCH, ETA 10)
+#### S3 cnc016-S3-mixed-tiers
+PASS   harness steps - 0 failed step(s)
+PASS   UNIT lines at tiers 2 and 3 (seen 2,3 over 6 units)
+PASS   roles carry their configured tier (Pointman/Assault 2, Commander/Defender/Marksman 3)
+#### S4 cnc016-S4-wipe-breather
+PASS   harness steps - 0 failed step(s)
+PASS   Wipe_Refill radio line
+PASS   DISPATCH ... reason=wipe hold>0 - DISPATCH Runner count=5 station=Northside Station eta=10s hold=10s reason=wipe bias=false
+PASS   hold = Breather.Seconds for 3 stars (10): 10
+PASS   no unit before the breather ends (22 s after the wipe, hold 10)
+#### S5 cnc016-S5-perimeter-posts
+PASS   harness steps - 0 failed step(s)
+PASS   PERIMETER start posts=2 - PERIMETER Runner start posts=2 radius=32.0
+PASS   post ring radius <= 32 (min(zone, 0.8 x Sight_Range 40)): 32
+REVIEW two Post_Up lines (seen 0) - radio rate-limiting can fold two lines into one: read the transcript
+       PERIMETER Runner start","timeout":90000} | PERIMETER Runner start posts=2 radius=32.0 | PERIMETER Runner end reason=OFF
+#### S6 cnc016-S6-outrun-handoff
+FAIL   harness steps - 2 failed step(s)
+PASS   HANDOFF line - HANDOFF Runner heading=east
+PASS   heading is east (Runner moved +x) - HANDOFF Runner heading=east
+FAIL   Handoff radio line
+PASS   DISPATCH ... bias=true after the hand-off - DISPATCH Runner count=3 station=Northside Station eta=14s hold=0s reason=none bias=true
+PASS   UNIT bias=true - UNIT Runner callsign=Lieutenant Commander Tina #1005 tier=3 role=Commander fromStation=true hidden=false bias=true ahead=false at=430,-60,60
+FAIL   UNIT ahead=true on every biased unit - UNIT Runner callsign=Lieutenant Commander Tina #1005 tier=3 role=Commander fromStation=true hidden=false bias=true ahead=false at=430,-60,60 // UNIT Runner callsign
+#### S7 cnc016-S7-hideout-faster
+PASS   harness steps - 0 failed step(s)
+PASS   EVASION line with hideout=2.0 - EVASION Runner speed=2.00 zone=1.00 hideout=2.00 quiet=1.00
+PASS   speed is zone x hideout (capped at Max_Speed 4): 2 - EVASION Runner speed=2.00 zone=1.00 hideout=2.00 quiet=1.00
+PASS   no hideout bonus before Runner entered the Boathouse - EVASION Runner speed=1.00 zone=1.00 hideout=1.00 quiet=1.00 // EVASION Runner speed=1.00 zone=1.00 hideout=1.00 quiet=1.00
+#### S8 cnc016-S8-quiet-minute
+PASS   harness steps - 0 failed step(s)
+PASS   Returning_To_Patrol radio line
+PASS   after about a quiet minute (60 s from the crime)
+PASS   EVASION line with quiet>1 - EVASION Runner speed=1.25 zone=1.00 hideout=1.00 quiet=1.25
+#### S9 cnc016-S9-contact-phone
+PASS   harness steps - 0 failed step(s)
+PASS   Contact.Used text - [Runner] [GLW] Your contact made 1 star(s) disappear for $1,000.
+PASS   price 1000 (Price_Per_Star x 1): 1000
+PASS   balance 5000 -> 4000, paid 1000
+PASS   star level fell by one (2 -> 1) - [Runner] ★☆☆☆☆

@@ -1,0 +1,54 @@
+
+######## A4
+== A4 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   run 2: no server ERROR / org.luckyraven exception
+PASS   run 2: harness steps - 0 failed step(s)
+PASS   wanted before quit - [Runner] ★★☆☆☆ | [Runner] [RADIO] Sergeant Assault Walt #1001: Moving to flank, west!
+PASS   still wanted after rejoin - [Runner] ★★☆☆☆
+PASS   first drop 2 -> 1, ending=STILL_HOT reason=logout - AUTO drop Runner level=2->1 ending=STILL_HOT reason=logout crimes=0 opening=0 peak=2 chase=37s quiet=37s quits=1 respots=0 outside=0.00 teleported=false steps=0 narrow=fa (no squad seen after the rejoin)
+== PASS ==
+
+######## A5
+a1751c29-088e-3dbf-8cad-ef2473d8e5f8|1.9|1.9|1.7147619047619
+== A5 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   run 2: no server ERROR / org.luckyraven exception
+PASS   run 2: harness steps - 0 failed step(s)
+PASS   run A: both chases ended PETTY - PETTY,PETTY
+PASS   run A: the second chase already reads a learned delta > 0 (0.02)
+PASS   chase_habit row for Runner after run A has n = 1.9 (a1751c29-088e-3dbf-8cad-ef2473d8e5f8|1.9|1.9|1.7147619047619)
+PASS   after the restart the next debug line shows delta > 0, about 0.03 (0.03) - AUTO drop Runner level=1->0 ending=PETTY reason= crimes=2 opening=2 peak=1 chase=13s quiet=13s quits=0 respots=0 outside=0.00 teleported=false steps=0 narrow=false delta=
+== PASS ==
+
+######## A7
+== A7 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+FAIL   A7: an AUTO drop was logged - no AUTO drop debug line
+== FAIL ==
+
+######## A8
+== A8 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+FAIL   A8: an AUTO drop was logged - no AUTO drop debug line
+== FAIL ==
+
+######## A9
+== A9 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+FAIL   A9: an AUTO drop was logged - no AUTO drop debug line
+== FAIL ==
+
+======== SUMMARY (0 = PASS, 1 = FAIL, 2 = REVIEW by a human, ERROR = could not run)
+A4: 0
+A5: 0
+A7: 1
+A8: 1
+A9: 1
+Pass criterion for 0.16: S1-S16 all 0 (S2 S5 S6 S8 may be 2 where the radio rate-limits or a spawn spot is soft: read the transcript); R1-R4, N1-N8, A1-A9 as in 0.15 and 0.15.2:
+  R1 R2 R3 R4 N1 N2 N3 N4 = 0 (R1 and N4 may be 2), A1 A2 A3 A5 A6 = 0, A4 = 0 or 2, A7 A8 A9 = 2 read by a human.

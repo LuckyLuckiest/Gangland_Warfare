@@ -25,8 +25,8 @@ const STAGE = { console: 'tp Runner 100 -60 100 0 0', after: 500 };
 const ROOM = [{ console: 'fill 96 -61 126 104 -56 134 minecraft:stone hollow', after: 500 }];
 const HIDE = [...ROOM, tpR(100, -60, 130)];
 const BAL = (tag) => [{ chat: '/glw balance', after: 1200 }, { expectChat: 'balance:', timeout: 4000 }, say('BAL:' + tag)];
-const WANT = (n) => [{ chat: `/glw wanted add ${n}`, after: 800 }, { expectChat: 'increased|wanted', timeout: 5000 }];
-const STATUS = (tag) => [{ chat: '/glw wanted', after: 1200 }, say('STATUS:' + tag)];
+const WANT = (n) => [{ chat: `/glw wanted add ${n}`, bot: 'Runner', after: 800 }, { expectChat: 'increased|wanted', timeout: 5000 }];
+const STATUS = (tag) => [{ chat: '/glw wanted', bot: 'Runner', after: 1200 }, say('STATUS:' + tag)];
 const END = [{ wait: 1500 }, { quit: true }];
 
 // R1 reg-ladder-1-3-5: squad sizes at 1, 3 and 5 stars (compare with Cops.Count + Squad_Composition; cnc-verdict.js prints both)
@@ -132,7 +132,7 @@ write('A2-auto-petty', [...SETUP('Runner'), ...TARGET, STAGE, KILL, ...WANT(2), 
 write('A3-auto-rampage-lock', [...SETUP('Runner'), ...TARGET, STAGE, ...WANT(4), KILL, say('A3:HIDING'), ...HIDE, ...DROPS('A3', 1, 90000), ...END]);
 // A4 auto-logout-lock (two runs on one server, no re-prep): A4a = A2 setup then quit; A4b = rejoin, wait for the squad, seal
 write('A4a-auto-logout-quit', [...SETUP('Runner'), ...TARGET, STAGE, KILL, ...WANT(2), { wait: 2000 }, ...STATUS('A4-before-quit'),
-  { quit: true, bot: 'Target' }, { quit: true }]);
+  { quit: true, bot: 'Target' }, { quit: true, bot: 'Runner' }]);
 write('A4b-auto-logout-rejoin', [{ join: 'Runner', after: 3000 }, { console: 'gamemode survival Runner', after: 200 },
   ...STATUS('A4-after-rejoin'), { wait: 8000 }, mark('A4-squad'), say('A4:HIDING'), ...HIDE, ...DROPS('A4', 1, 90000), ...END]);
 // A5 auto-learn-persist: A5a = two PETTY chases in one boot (two kills inside 10 s = 200 heat = 1 star, cause CRIME); the run-all
