@@ -40,9 +40,6 @@ Cops N Crooks expands from the squad mechanic into a full police response. Crime
 [LIST]
 [*][B]WB-48[/B] — Crime-free takedowns require a minimum bounty ([ICODE]Bounty.Takedown_Minimum[/ICODE], default 100); killing a target below the threshold is an ordinary crime.
 [*][B]US-33 / WB-17[/B] — Recent-death entries are pruned on every update; the collection no longer grows without bound under repeated deaths.
-[*][B]WB-32[/B] — Death damage detector method renamed from inverted [ICODE]isEntityDead[/ICODE] for clarity.
-[*][B]WB-43[/B] — Bounty claims by gangmates (allied members) are blocked; posted escrow is returned only to other players.
-[*][B]WB-45[/B] — Self-kill via own projectile no longer claims the bounty; damage attribution routes through the projectile shooter.
 [*][B]T-180[/B] — Spawner and jail IDs are no longer reused for rows in worlds that load after Gangland boots; each world keeps its row-id namespace, new rows take fresh IDs, and unloaded worlds' rows are unaffected.
 [*][B]risk-11[/B] — Rampage-weighted crime count threshold enforces [ICODE]Auto.Rampage_Min_Weight[/ICODE] default 80, fixing rampage openings from cheap crimes alone.
 [/LIST]
@@ -82,7 +79,7 @@ Cops N Crooks expands from the squad mechanic into a full police response. Crime
 [SIZE=6][B]🧩 API 2.3[/B][/SIZE]
 
 [LIST]
-[*][B][ICODE]GanglandApi.VERSION[/ICODE] is 2.3[/B] — Additive only (owner rulings D14 and D19); modules that declare [ICODE]Host_Api: 2.2[/ICODE] keep loading on a 0.16.0 host. [ICODE]cops-n-crooks[/ICODE] and [ICODE]gangland-turf[/ICODE] declare [ICODE]Host_Api: 2.3[/ICODE] because they implement the region SPI; they do not load on a 0.15.x core. Details in [URL=../gangland-api.md]gangland-api.md[/URL].
+[*][B][ICODE]GanglandApi.VERSION[/ICODE] is 2.3[/B] — Additive only. Owner ruling D14 allowed api 2.3 to carry [ICODE]WantedCause.CONTACT[/ICODE], eleven [ICODE]Settings[/ICODE] getters and eight [ICODE]Messages[/ICODE] constants beyond the three named surfaces ([ICODE]RegionProvider[/ICODE], [ICODE]PlaceNames[/ICODE], [ICODE]WaypointType.HOSPITAL[/ICODE]); ruling D19 chose the 5 s hospital respawn shield ([ICODE]User.Death.Hospital.Shield_Seconds[/ICODE]), whose getter and message are among those. Modules that declare [ICODE]Host_Api: 2.2[/ICODE] keep loading on a 0.16.0 host. [ICODE]cops-n-crooks[/ICODE] and [ICODE]gangland-turf[/ICODE] declare [ICODE]Host_Api: 2.3[/ICODE] because they implement the region SPI; they do not load on a 0.15.x core. Details in [URL=../gangland-api.md]gangland-api.md[/URL].
 [*][B]Region SPI[/B] — Four new types: [ICODE]RegionShape[/ICODE] (sealed: [ICODE]Cuboid[/ICODE], [ICODE]Sphere[/ICODE]), [ICODE]PlaceRegion[/ICODE] (record: id, name, world, shape, ownerGangId, tags), [ICODE]RegionProvider[/ICODE] (interface: [ICODE]source()[/ICODE], [ICODE]regionsAt(Location)[/ICODE]), [ICODE]PlaceNames[/ICODE] (core holder bean: register providers, query regions by location/tag/name). Core places: waypoints (GANG type, tagged hideout), admin regions (cops-n-crooks, tagged district/hideout/restricted/breaker). Turf contributes [ICODE]TurfRegionProvider[/ICODE] at 2.3.
 [*][B]New waypoint type[/B] — [ICODE]Waypoint.WaypointType.HOSPITAL[/ICODE] (safe-zone waypoint for respawns).
 [*][B]New wanted cause[/B] — [ICODE]WantedCause.CONTACT[/ICODE] (crooked contact and bribe-star payments).
