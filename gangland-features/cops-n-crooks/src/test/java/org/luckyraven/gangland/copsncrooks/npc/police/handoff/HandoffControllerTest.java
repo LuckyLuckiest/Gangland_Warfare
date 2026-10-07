@@ -1,23 +1,35 @@
 package org.luckyraven.gangland.copsncrooks.npc.police.handoff;
 
+import net.citizensnpcs.api.npc.NPC;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.HandoffSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.SpawnBias;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
+import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadioMessages;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.gangland.npc.radio.RadioSettings;
+import org.luckyraven.keystone.testkit.BukkitStatics;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -27,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -56,6 +69,16 @@ class HandoffControllerTest {
 	private final Map<CopNpc, AtomicReference<CopState>> states = new HashMap<>();
 
 	private final HandoffController controller;
+
+	/** Colouring a radio line reads {@code Settings.moneySymbol}, which only a loaded settings.yml sets. */
+	@BeforeAll
+	static void primeMoneySymbol() throws ReflectiveOperationException {
+		Field field = Settings.class.getDeclaredField("moneySymbol");
+		field.setAccessible(true);
+		if (field.get(null) == null) {
+			field.set(null, "$");
+		}
+	}
 
 	HandoffControllerTest() {
 		group.setLevel(3);
@@ -130,7 +153,7 @@ class HandoffControllerTest {
 		assertEquals(clock[0] + 10_000L, bias.until());
 		assertEquals(60.0, bias.coneDegrees());
 		assertTrue(bias.heading().getX() > 0 && Math.abs(bias.heading().getZ()) < 1e-9, "heading is east");
-		verify(radio).sayFromLeader(group, "Handoff", Map.of("direction", "east"));
+		verify(radio).sayFromLeader(group, "Handoff", Map.of("direction", "east"), player);
 	}
 
 	@Test
@@ -152,7 +175,7 @@ class HandoffControllerTest {
 		breakLeash(2, 6, 0);
 
 		assertNull(group.biasAt(clock[0]));
-		verify(radio, never()).sayFromLeader(any(), eq("Handoff"), any());
+		verify(radio, never()).sayFromLeader(any(), eq("Handoff"), any(), any());
 	}
 
 	@Test
@@ -216,13 +239,56 @@ class HandoffControllerTest {
 		tick(3, 7, 0);
 		leash(chaser);
 		tick(4, 8, 0);
-		verify(radio, times(1)).sayFromLeader(any(), eq("Handoff"), any());
+		verify(radio, times(1)).sayFromLeader(any(), eq("Handoff"), any(), any());
 
 		set(chaser, CopState.PURSUING);
 		tick(13, 9, 0);
 		leash(chaser);
 		tick(14, 10, 0);
-		verify(radio, times(2)).sayFromLeader(any(), eq("Handoff"), any());
+		verify(radio, times(2)).sayFromLeader(any(), eq("Handoff"), any(), any());
+	}
+
+	@Test
+	@DisplayName("a post left behind, beyond Pursuit.Max_Distance of the suspect, no longer holds the chase: the leash hands off")
+	void postLeftBehind_doesNotHoldTheChase() {
+		cop(CopState.POSTED, 10);   // posted where he was lost
+		breakLeash(2, 115, 0);      // he ran on east: the post is 105 blocks behind, the last chaser walks home at 200
+
+		assertNotNull(group.biasAt(clock[0]));
+		verify(radio).sayFromLeader(eq(group), eq("Handoff"), any(), eq(player));
+	}
+
+	@Test
+	@DisplayName("the hand-off line reaches the suspect although the cop speaking it walked home beyond radio range")
+	void handoffLine_isHeardByTheSuspect_whenTheSpeakerLeashedOut() {
+		CopRadioMessages lines = mock(CopRadioMessages.class);
+		when(lines.lines("Format")).thenReturn(List.of("[%unit%] %line%"));
+		when(lines.lines("Handoff")).thenReturn(List.of("Lost him heading %direction%."));
+		when(lines.lines("Compass")).thenReturn(List.of("north", "north-east", "east", "south-east", "south",
+		                                                "south-west", "west", "north-west"));
+		CopLoader loader = mock(CopLoader.class);
+		when(loader.getLoadedProvider()).thenReturn(provider);
+		// the shipped ranges (Range 32, Target_Range 64), no sound
+		when(provider.getRadioSettings()).thenReturn(new RadioSettings(true, 32, 64, 1500, 1000, 25, 2, Map.of(),
+		                                                               Set.of(), null, 1f, 1f));
+		when(world.getPlayers()).thenReturn(List.of(player));
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			bukkit.statics().when(() -> Bukkit.getPlayer(playerId)).thenReturn(player);
+			HandoffController real = new HandoffController(manager, new CopRadio(mock(JavaPlugin.class), loader, lines),
+			                                               () -> provider);
+			CopNpc chaser = cop(CopState.PURSUING, 5);
+			when(chaser.getNpc()).thenReturn(mock(NPC.class));
+
+			at = new Location(world, 105, 64, 0);
+			real.tick(player, group);
+			leash(chaser);   // the only cop, so it speaks: from 200, 90 blocks behind him (Range 32, Target_Range 64)
+			at = new Location(world, 110, 64, 0);
+			real.tick(player, group);
+		}
+
+		assertNotNull(group.biasAt(System.currentTimeMillis()));
+		verify(player).sendMessage(contains("Lost him heading east."));
 	}
 
 	@Test
@@ -232,7 +298,7 @@ class HandoffControllerTest {
 		breakLeash(2, 6, 0);
 
 		assertNull(group.biasAt(clock[0]));
-		verify(radio, never()).sayFromLeader(any(), eq("Handoff"), any());
+		verify(radio, never()).sayFromLeader(any(), eq("Handoff"), any(), any());
 	}
 
 	@Test

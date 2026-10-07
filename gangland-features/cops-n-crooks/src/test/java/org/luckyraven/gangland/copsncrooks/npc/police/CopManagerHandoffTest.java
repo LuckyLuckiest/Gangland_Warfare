@@ -85,7 +85,7 @@ class CopManagerHandoffTest {
 
 		SpawnBias bias = group.biasAt(fx.clock[0]);
 		assertNotNull(bias);
-		verify(fx.radio).sayFromLeader(group, "Handoff", Map.of("direction", "east"));
+		verify(fx.radio).sayFromLeader(group, "Handoff", Map.of("direction", "east"), player);
 
 		// he keeps running; the replacements are enqueued under the bias and seeded where he was at the hand-off
 		playerAt(90);

@@ -124,7 +124,11 @@ switch (row) {
     ok('DISPATCH ... bias=true after the hand-off', !!b, b && short(b.line));
     const us = units.filter(u => u.bias && u.at >= hAt);
     ok('UNIT bias=true', us.length > 0, us[0] && short(us[0].line));
-    ok('UNIT ahead=true on every biased unit', us.length > 0 && us.every(u => u.ahead === 'true'), us.filter(u => u.ahead !== 'true').map(u => short(u.line)).slice(0, 2).join(' // '));
+    // C8: only a hidden ring spot is filtered by the bias (steps 2-3); a unit that found no hidden spot takes the unbiased
+    // fallback (step 4, hidden=false), which the walls in the scenario make rare: REVIEW, not FAIL (T22)
+    const hid = us.filter(u => u.hidden), open = us.filter(u => !u.hidden);
+    ok('UNIT ahead=true on every hidden biased unit', hid.length > 0 && hid.every(u => u.ahead === 'true'), hid.filter(u => u.ahead !== 'true').map(u => short(u.line)).slice(0, 2).join(' // '));
+    if (open.length) ok(`biased units on the unbiased fallback (no hidden spot found): ${open.length}`, false, open.map(u => short(u.line)).slice(0, 2).join(' // '), true);
     break;
   }
   case 'S7': {
