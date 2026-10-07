@@ -104,6 +104,8 @@ public class BribeStars implements BeanLifecycle {
 		}
 
 		long now = clock.getAsLong();
+		// an entry this old is as good as none: drop it so a player who walked away does not stay in the map
+		told.values().removeIf(last -> now - last >= TOLD_EVERY_MS);
 		for (SetupPoint point : points.ofKind(SetupPoint.PICKUP)) {
 			Location at = point.getLocation();
 			if (at == null || at.getWorld() == null) continue;
