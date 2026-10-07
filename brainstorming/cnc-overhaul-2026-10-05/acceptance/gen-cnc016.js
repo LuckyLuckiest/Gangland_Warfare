@@ -95,8 +95,9 @@ const COVER = (block) => [{ console: 'forceload add 300 94 700 106', after: 500 
 write('cnc016-S6-outrun-handoff', [...SETUP('Runner'), ...STATIONS, ...COVER('stone'), STAGE, ...WANT(3),
   { expectLog: 'UNIT Runner ', timeout: 30000 }, { wait: 3000 }, ...mark('S6:RUN'),
   ...HOPS(30, 15), say('S6:HOPPED'),
-  { expectLog: 'HANDOFF Runner', timeout: 30000 }, say('S6:HANDOFF'),
-  { expectLog: 'UNIT Runner .*bias=true', timeout: 60000 }, say('S6:BIASED'),
+  // T25: the verdict reads HANDOFF and the biased UNIT from the log. expectLog here raced the hops (HANDOFF is logged DURING them,
+  // before the cursor reaches this step) and flagged two harness-step failures on a run whose product checks all passed.
+  { wait: 40000 }, say('S6:HANDOFF'), say('S6:BIASED'),
   ...COVER('air'), { console: 'forceload remove 300 94 700 106', after: 500 }, ...END]);
 
 // S7 hideout reached unseen: Boathouse hideout inside a second sealed room; EVASION hideout=2.0 once Runner is in it
@@ -173,3 +174,21 @@ write('cnc016-S16-logout-restore', [...SETUP('Runner'), ...STATIONS, ...HIDE, ..
   { quit: true }, { wait: 3000 },
   { join: 'Runner', after: 3000 }, { console: 'gamemode survival Runner', after: 200 }, ...mark('S16:REJOIN'), ...STATUS('S16-after-rejoin'),
   { expectLog: 'UNIT Runner ', timeout: 60000 }, say('S16:FIRSTUNIT'), ...STATUS('S16-at-first-unit'), ...END]);
+
+// ---- bribe stars (T13, C14; added by Task 25: no S row covered them). A wand `pickup` point floats a nether star above its block.
+const placePickup = (name, x, y, z) => [tp(x, -60, z - 2), { chat: '/glw cop setup mode pickup', after: 600 },
+  LEFT(x, y, z), { expectChat: 'pos1 set', timeout: 3000 },
+  { chat: `/glw cop setup save ${name}`, after: 800 }, { expectChat: 'Point .* saved', timeout: 4000 }];
+// S17a sealed room, 2 stars, no cop has seen Runner: stepping on the point takes one star (Bribe_Star.Taken)
+// (with the S9 station: backup spawns hidden and 90 blocks off, so nobody sights him inside the sealed room; without a station the
+// ring spawn 31 blocks off sighted him and the point correctly refused)
+write('cnc016-S17a-bribe-star-taken', [...SETUP('Runner'), ...STATIONS, ...ROOM, { console: 'gamemode creative Runner', after: 200 },
+  ...placePickup('Star1', 100, -61, 130),
+  { console: 'gamemode survival Runner', after: 200 }, { console: 'tp Runner 97 -60 128', after: 500 }, ...WANT(2), { wait: 6000 },
+  ...STATUS('S17-before'), { console: 'tp Runner 100 -60 130', after: 400 }, { expectChat: 'police bribe star', timeout: 8000 }, { wait: 1500 },
+  say('S17:TAKEN'), ...STATUS('S17-after'), ...END]);
+// S17b open ground, 2 stars, a squad has eyes on Runner (4 s: the squad spawns ~35 blocks off and sights him, but is not yet cuffing): the point refuses (Bribe_Star.Seen), stars unchanged
+write('cnc016-S17b-bribe-star-seen', [...SETUP('Runner'), ...WAND, ...placePickup('Star2', 102, -61, 100),
+  { console: 'gamemode survival Runner', after: 200 }, STAGE, ...WANT(2), { wait: 4000 }, ...STATUS('S17-before'),
+  { console: 'tp Runner 102 -60 100', after: 400 }, { expectChat: 'Not with a cop watching', timeout: 8000 },
+  say('S17:SEEN'), ...STATUS('S17-after'), ...END]);
