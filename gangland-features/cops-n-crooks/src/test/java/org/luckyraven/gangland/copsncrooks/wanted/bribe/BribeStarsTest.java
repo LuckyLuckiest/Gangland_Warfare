@@ -170,6 +170,19 @@ class BribeStarsTest {
 		verify(wanted).setLevel(2, WantedCause.CONTACT);
 	}
 
+	/** Final fix round 1: a squad that never sighted him (no sighting = Long.MAX_VALUE ms ago) does not see him. */
+	@Test
+	@DisplayName("a squad that never sighted the player lets him take the star")
+	void neverSightedBySquad_takesTheStar() {
+		seenBy(Long.MAX_VALUE);
+		BribeStars stars = stars();
+		stars.tick();
+		nearby.add(player);
+		stars.tick();
+
+		verify(wanted).setLevel(2, WantedCause.CONTACT);
+	}
+
 	@Test
 	@DisplayName("takenStar_respawnsAfterTheTimer")
 	void takenStar_respawnsAfterTheTimer() {
