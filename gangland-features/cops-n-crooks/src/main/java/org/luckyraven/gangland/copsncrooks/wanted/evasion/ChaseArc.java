@@ -27,6 +27,8 @@ public final class ChaseArc {
 	int                         respots;
 	int                         quits;
 	boolean                     searched;
+	/** A contact or bribe star took stars off mid-chase: the peak no longer says what was escaped. */
+	boolean                     boughtDown;
 	@Nullable AutoDrop.DropPlan pending;
 
 	ChaseArc(WantedCause startCause) {
@@ -39,6 +41,10 @@ public final class ChaseArc {
 
 	public int peak() {
 		return peak;
+	}
+
+	public boolean boughtDown() {
+		return boughtDown;
 	}
 
 	public long startedAt() {

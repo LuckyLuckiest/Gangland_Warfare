@@ -201,13 +201,17 @@ public final class EvasionClock implements WantedDecayPolicy {
 				track.seenSince = now;
 				track.seed      = seed;
 				tracks.put(id, track);
-				if (!seed) arcs.seen(id);
-				callEvent.accept(new WantedEvasionStateEvent(player, EvasionState.SEEN, level, 0, null, 0));
+				// a rejoin's seed holds the clock but is no cop's eyes on him: no SEEN until one really sees him
+				if (!seed) {
+					arcs.seen(id);
+					callEvent.accept(new WantedEvasionStateEvent(player, EvasionState.SEEN, level, 0, null, 0));
+				}
 			} else if (track.seed && !seed) {
 				// a cop really saw him while the rejoin's seed held the track
 				track.seed      = false;
 				track.seenSince = seenAt;
 				arcs.seen(id);
+				callEvent.accept(new WantedEvasionStateEvent(player, EvasionState.SEEN, level, 0, null, 0));
 			}
 			track.lastTick = now;
 			return;

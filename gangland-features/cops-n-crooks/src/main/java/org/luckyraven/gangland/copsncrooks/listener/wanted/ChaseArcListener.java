@@ -62,6 +62,7 @@ public class ChaseArcListener implements Listener {
 		UUID id = event.getPlayer().getUniqueId();
 		arcs.peak(id, event.getNewLevel());
 		if (event.getNewLevel() > event.getOldLevel()) arcs.hot(id);
+		if (event.getCause() == WantedCause.CONTACT && event.getNewLevel() < event.getOldLevel()) arcs.boughtDown(id);
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -83,8 +84,11 @@ public class ChaseArcListener implements Listener {
 		long until   = arc.offlineAt() != 0 ? arc.offlineAt() : now;
 		long contact = arc.lastLostAt() == 0 ? 0 : arc.lastLostAt() - arc.startedAt();
 
-		learner.record(new ChaseRecord(id, arc.startCause(), event.getCause(), arc.peak(), until - arc.startedAt(),
-		                               contact, now), now);
+		// a bought-down chase is not learned: CONTACT ends never are, and a later escape was not from arc.peak
+		if (!arc.boughtDown()) {
+			learner.record(new ChaseRecord(id, arc.startCause(), event.getCause(), arc.peak(), until - arc.startedAt(),
+			                               contact, now), now);
+		}
 		// only AUTO reads the recent ends; any other mode would keep a deque per player until restart
 		EvasionSettings evasion = config.get().evasion();
 		arcs.end(id, evasion.dropMode() == DropMode.AUTO && arcs.hadCrime(id, heat.chaseCrimes(id), evasion.auto()));

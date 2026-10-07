@@ -83,8 +83,9 @@ public class PerimeterController {
 			CopNpc   cop  = candidates.get(i);
 			Location spot = spots.get(i);
 
-			cop.holdPost(new NpcPost(spot, settings.leashRadius(), centre));
+			// the chase state's exit stops navigation, so leave it before the post walk starts
 			cop.transitionTo(CopState.POSTED);
+			cop.holdPost(new NpcPost(spot, settings.leashRadius(), centre));
 			copRadio.sayAs(group, cop, "Post_Up", Map.of("place", copRadio.placeOf(spot)));
 			posts.add(cop);
 		}
