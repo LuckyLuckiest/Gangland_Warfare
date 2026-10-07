@@ -304,10 +304,12 @@ right after the priority `Dispatch_Wanted` (`SquadRadio.speak`, gangland-api `np
 to the bundled `Cops.Radio.Priority` list (cops.yml :207-221), to the code default set (`CopConfigProvider.java:49`), and
 `YamlCopConfigProvider` unions them into whatever `Priority` list a server file has (a server list still replaces the rest of the
 bundled list wholesale, as in 0.15). Cooldown ticks `Handoff 200`, `Post_Up 100`, `Eyes_On 60`, `Returning_To_Patrol 1200`,
-`Dispatch_En_Route 0`, `Wipe_Refill 0`.
+`Dispatch_En_Route 0`, `Wipe_Refill 0`. `Handoff` and `Post_Up` are also always-priority in code (T26, same union as R43).
 `CopRadio` overloads (T4): `public boolean dispatch(CopGroup group, Player target, String key, int level, String tier,
 Map<String, String> extra)` (merges level/tier with extra; the 5-arg form delegates with `Map.of()`) and
-`public boolean sayFromLeader(CopGroup group, String key, Map<String, String> extra)`, and
+`public boolean sayFromLeader(CopGroup group, String key, Map<String, String> extra)` plus (T22) the 4-arg addressee overload
+`public boolean sayFromLeader(CopGroup group, String key, Map<String, String> extra, @Nullable LivingEntity addressee)` (also heard
+within `Radio.Range` of the addressee; the 3-arg form delegates with `null`), and
 `public String compassWord(Location from, Location to)` = the radio file's `Compass` word at `RadioSides.compass8(from, to)` (the
 lookup `directionTo` :453 already does, made reusable; `directionTo` delegates to it).
 
@@ -483,10 +485,10 @@ public boolean isActive(UUID playerId)
 `handoffController(CopManager, CopRadio, CopLoader)` in `CopsNCrooksModuleConfig`, config read per call (C8 "Config reads"),
 `copManager.addAiTickHook(controller::tick)`):
 per player a deque of (time, location) samples kept for `Heading_Seconds`; `engaged` = any valid cop of the group in PURSUING,
-COMBAT or POSTED. On engaged -> not engaged while the player is wanted and a group cop is RETURNING farther than
+COMBAT or POSTED (a POSTED cop counts only within `Cops.Pursuit.Max_Distance` of the player; T22 ruling). On engaged -> not engaged while the player is wanted and a group cop is RETURNING farther than
 `Cops.Pursuit.Max_Distance` from him: heading = newest - oldest sample (horizontal; under 2 blocks of travel -> the player's facing),
 `group.setBias(new SpawnBias(heading, newest, now + Bias_Seconds*1000, Cone_Degrees))`, `copRadio.sayFromLeader(group, "Handoff",
-Map.of("direction", copRadio.compassWord(oldest, newest)))`. Once per bias. Debug `HANDOFF {player} heading={word}`.
+Map.of("direction", copRadio.compassWord(oldest, newest)), player)` (4-arg addressee overload, so the line reaches the suspect). Once per bias. Debug `HANDOFF {player} heading={word}`.
 Seeding (T11, inside spawnTick): a unit whose `unit.bias() != null` (the bias active when it was ENQUEUED, C8) gets, when it spawns,
 `squad.reportSighting(unit.bias().lastSeen())` (the last-known sighting, never the live position) and `group.markTipOff(now)` (so
 EvasionClock holds instead of reading SEEN, `EvasionClock` tip-off guard).

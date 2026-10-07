@@ -58,6 +58,7 @@ class BribeStarsTest {
 	private Wanted              wanted;
 	private final int[]         level = {3};
 	private boolean             cancelDrops;
+	private boolean             held;
 	/** Where a dropped star sits once the server has ticked it; {@code null}: exactly where it was dropped. */
 	private Location            settlesAt;
 	private final List<Location> dropsAt = new ArrayList<>();
@@ -98,7 +99,7 @@ class BribeStarsTest {
 
 	private BribeStars stars() {
 		return new BribeStars(mock(JavaPlugin.class), points, users, () -> settings, () -> lostSight, messages, copManager,
-		                      now::get) {
+		                      now::get, id -> held) {
 			@Override
 			protected Item drop(Location at, String material) {
 				Item item = mock(Item.class);
@@ -193,6 +194,25 @@ class BribeStarsTest {
 		nearby.add(player);
 		stars.tick();
 
+		verify(wanted).setLevel(2, WantedCause.CONTACT);
+	}
+
+	/** T26: a held player (cuffed, in transit, jailed) with a guarding cop beside him is "unseen" - he still takes nothing. */
+	@Test
+	@DisplayName("a cuffed, in-transit or jailed player never takes a star, seen or not")
+	void heldPlayer_neverTakesTheStar() {
+		held = true;
+		seenBy(Long.MAX_VALUE);
+		BribeStars stars = stars();
+		stars.tick();
+		nearby.add(player);
+		stars.tick();
+
+		verify(wanted, never()).setLevel(anyInt(), any(WantedCause.class));
+		verify(items.get(0), never()).remove();
+
+		held = false;
+		stars.tick();
 		verify(wanted).setLevel(2, WantedCause.CONTACT);
 	}
 

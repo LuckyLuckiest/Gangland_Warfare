@@ -8,6 +8,8 @@ import org.luckyraven.gangland.copsncrooks.wanted.bribe.BribeStars;
 import org.luckyraven.gangland.copsncrooks.wanted.config.BribeStarSettings;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.keystone.bean.Qualifier;
+import org.luckyraven.gangland.copsncrooks.detainment.DetainmentRegistry;
+import org.luckyraven.gangland.copsncrooks.detainment.DetainmentState;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.keystone.bean.Bean;
@@ -46,10 +48,12 @@ public class ChaseModuleConfig {
 
 	@Bean
 	public BribeStars bribeStars(SetupPointRegistry setupPoints, @Qualifier("online") UserManager<Player> userManager,
-	                             ChaseConfigLoader config, WantedMessages messages, CopManager copManager) {
+	                             ChaseConfigLoader config, WantedMessages messages, CopManager copManager,
+	                             DetainmentRegistry detainmentRegistry) {
 		return new BribeStars(plugin, setupPoints, userManager, () -> {
 			BribeStarSettings bribe = config.get().bribeStars();
 			return bribe == null ? BribeStarSettings.DEFAULT : bribe;
-		}, () -> config.get().evasion().lostSightSeconds(), messages, copManager, System::currentTimeMillis);
+		}, () -> config.get().evasion().lostSightSeconds(), messages, copManager, System::currentTimeMillis,
+		                      id -> detainmentRegistry.getState(id) != DetainmentState.NORMAL);
 	}
 }

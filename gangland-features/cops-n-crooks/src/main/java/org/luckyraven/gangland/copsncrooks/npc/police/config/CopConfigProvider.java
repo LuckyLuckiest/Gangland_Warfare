@@ -52,7 +52,7 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 					Map.entry("Returning_To_Patrol", 60000L)),
 			Set.of("Contact", "Man_Down", "Leader_Down", "Commander_Down", "Backup", "Resisting", "Dispatch_Wanted",
 			      "Escalate", "Stand_Down", "Fall_Back", "In_Cover", "Hit", "Patched_Up", "Marksman_Spotted",
-			      "Dispatch_En_Route", "Wipe_Refill"),
+			      "Dispatch_En_Route", "Wipe_Refill", "Handoff", "Post_Up"),
 			"BLOCK_NOTE_BLOCK_HAT", 0.4f, 1.8f);
 
 	/**
