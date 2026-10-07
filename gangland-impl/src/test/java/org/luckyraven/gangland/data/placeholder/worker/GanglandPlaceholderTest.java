@@ -1,12 +1,16 @@
 package org.luckyraven.gangland.data.placeholder.worker;
 
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.gangland.data.placeholder.PlaceholderService;
+import org.luckyraven.gangland.data.wanted.ContactDesk;
 import org.luckyraven.gangland.data.placeholder.extension.PlaceholderContribution;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.core.user.UserManager;
@@ -14,7 +18,10 @@ import org.luckyraven.gangland.support.SettingsFixture;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.placeholder.replacer.Replacer;
 
+import java.math.BigDecimal;
 import java.nio.file.Path;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,7 +54,7 @@ class GanglandPlaceholderTest {
 	private GanglandPlaceholder placeholder() {
 		return new GanglandPlaceholder("gangland", Replacer.Closure.PERCENT, mock(UserManager.class),
 				mock(UniqueItemAddon.class), mock(BankTiers.class), mock(DependencyContainer.class),
-				mock(PlaceholderService.class));
+				mock(PlaceholderService.class), new ContactDesk(() -> 0L));
 	}
 
 	@Test
@@ -82,8 +89,46 @@ class GanglandPlaceholderTest {
 
 		GanglandPlaceholder placeholder = new GanglandPlaceholder("gangland", Replacer.Closure.PERCENT,
 				mock(UserManager.class), mock(UniqueItemAddon.class), mock(BankTiers.class), container,
-				mock(PlaceholderService.class));
+				mock(PlaceholderService.class), new ContactDesk(() -> 0L));
 
 		assertEquals("5000", placeholder.onRequest(null, "gang_create_fee"));
+	}
+
+	@Test
+	@DisplayName("contact_price is the per-star price, formatted like the other amounts")
+	void contactPrice_isThePerStarPrice() {
+		GanglandPlaceholder placeholder = withUser(new ContactDesk(() -> 0L));
+
+		assertEquals(Settings.formatAmount(new BigDecimal("1000")),
+		             placeholder.onRequest(onlinePlayer, "contact_price"));
+	}
+
+	@Test
+	@DisplayName("contact_cooldown is ready, then the time left")
+	void contactCooldown_readyOrSecondsLeft() {
+		AtomicLong          now         = new AtomicLong(0L);
+		ContactDesk         desk        = new ContactDesk(now::get);
+		GanglandPlaceholder placeholder = withUser(desk);
+
+		assertEquals("ready", placeholder.onRequest(onlinePlayer, "contact_cooldown"));
+
+		desk.startCooldown(playerId);
+		now.addAndGet(5_000L);
+
+		assertEquals("9m 55s", placeholder.onRequest(onlinePlayer, "contact_cooldown"));
+	}
+
+	private final UUID   playerId     = UUID.randomUUID();
+	private final Player onlinePlayer = mock(Player.class);
+
+	@SuppressWarnings("unchecked")
+	private GanglandPlaceholder withUser(ContactDesk desk) {
+		when(onlinePlayer.getUniqueId()).thenReturn(playerId);
+		when(onlinePlayer.isOnline()).thenReturn(true);
+		when(onlinePlayer.getPlayer()).thenReturn(onlinePlayer);
+		UserManager<Player> users = mock(UserManager.class);
+		when(users.getUser(onlinePlayer)).thenReturn(mock(User.class));
+		return new GanglandPlaceholder("gangland", Replacer.Closure.PERCENT, users, mock(UniqueItemAddon.class),
+				mock(BankTiers.class), mock(DependencyContainer.class), mock(PlaceholderService.class), desk);
 	}
 }

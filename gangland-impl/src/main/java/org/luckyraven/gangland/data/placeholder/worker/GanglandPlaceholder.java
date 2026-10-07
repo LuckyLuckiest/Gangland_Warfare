@@ -22,6 +22,7 @@ import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
+import org.luckyraven.gangland.data.wanted.ContactDesk;
 import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
 import org.luckyraven.gangland.item.unique.UniqueItem;
 
@@ -38,6 +39,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	private final UniqueItemAddon     uniqueItemAddon;
 	private final BankTiers           bankTiers;
 	private final DependencyContainer container;
+	private final ContactDesk         contactDesk;
 
 	// Lazily resolved on first placeholder request, not at construction: GanglandPlaceholder is a CONFIG-phase
 	// bean, and a module's PlaceholderContribution bean has no declared parameter edge forcing it to construct
@@ -55,8 +57,10 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 	                           UniqueItemAddon uniqueItemAddon,
 	                           BankTiers bankTiers,
 	                           DependencyContainer container,
-	                           PlaceholderService placeholderService) {
+	                           PlaceholderService placeholderService,
+	                           ContactDesk contactDesk) {
 		super(prefix, closure);
+		this.contactDesk     = contactDesk;
 		this.userManager     = userManager;
 		this.uniqueItemAddon = uniqueItemAddon;
 		this.bankTiers       = bankTiers;
@@ -144,6 +148,9 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 
 		String value = null;
 
+		if (param.startsWith("contact_")) value = getContact(player, param);
+		if (value != null) return value;
+
 		if (param.contains("user_")) value = getUser(player, param);
 		if (value != null) return value;
 
@@ -190,6 +197,18 @@ public class GanglandPlaceholder extends PlaceholderHandler {
 		if (value instanceof Double) return Settings.formatDouble((double) value);
 
 		return String.valueOf(value);
+	}
+
+	/** {@code contact_price} (per star) and {@code contact_cooldown} (time left, or "ready"): the crooked contact. */
+	@Nullable
+	private String getContact(OfflinePlayer player, String parameter) {
+		if (parameter.equals("contact_price")) return Settings.formatAmount(contactDesk.priceFor(1));
+
+		if (!parameter.equals("contact_cooldown")) return null;
+
+		long left = contactDesk.cooldownLeftMs(player.getUniqueId());
+
+		return left > 0 ? ContactDesk.formatLeft(left) : "ready";
 	}
 
 	@Nullable

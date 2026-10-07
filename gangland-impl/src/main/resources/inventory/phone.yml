@@ -38,6 +38,14 @@ Slots:
          - "&7Keeping your money safe!"
       OnClick:
          Inventory: phone_banking
+   31:
+      Item: NETHER_STAR
+      Name: "&6&lCrooked Contact"
+      Lore:
+         - "&7Pay a desk sergeant to lose your file."
+         - "&7Only works while no cop can see you."
+      OnClick:
+         Inventory: phone_contacts
    40:
       Item: EMERALD
       Name: "&a&lWallet"

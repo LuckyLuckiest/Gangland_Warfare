@@ -1,0 +1,41 @@
+Information:
+   Display_Name: "&6&lCrooked Contact"
+   Size: 54
+   Type: inventory
+   Open:
+      Type: OTHER_INVENTORY
+   Configuration:
+      Line:
+         Vertical: [2,8]
+         Horizontal: [1,6]
+      Fill: true
+
+Slots:
+   21:
+      Item: GOLD_NUGGET
+      Name: "&6&lWipe 1 star"
+      Lore:
+         - "&7Price&8: &a%money_symbol%%gangland_contact_price% &7per star"
+         - "&7Cooldown&8: &f%gangland_contact_cooldown%"
+         - "&7Only while no cop can see you."
+      OnClick:
+         Command: "/glw contact 1"
+   23:
+      Item: GOLD_INGOT
+      Name: "&6&lWipe 2 stars"
+      Lore:
+         - "&7Price&8: &a%money_symbol%%gangland_contact_price% &7per star"
+         - "&7Cooldown&8: &f%gangland_contact_cooldown%"
+         - "&7Only while no cop can see you."
+      OnClick:
+         Command: "/glw contact 2"
+   40:
+      Item: EMERALD
+      Name: "&a&lWallet"
+      Lore:
+         - "&e%money_symbol%%gangland_user_balance%"
+   49:
+      Item: ARROW
+      Name: "&c&lBack"
+      OnClick:
+         Inventory: phone
