@@ -55,6 +55,14 @@ public class JailIntakeService {
 	private final WantedMessages          messages;
 
 	public boolean admit(Player player) {
+		return admit(player, player != null && player.isDead());
+	}
+
+	/**
+	 * @param deathCommit true when the hospital bill already is the one charge (a death, or a handcuffed player downed):
+	 *                    the arrest then gets no charge sheet
+	 */
+	public boolean admit(Player player, boolean deathCommit) {
 		if (player == null || !player.isOnline()) return false;
 
 		Jail jail = pickJail(player);
@@ -79,7 +87,7 @@ public class JailIntakeService {
 			detained.setTransitExpiresAt(null);
 			detained.setWantedAtArrest(wantedLevel);
 			// a death-commit already paid the hospital bill, so it gets no sheet
-			int extraSeconds = player.isDead() ? 0 : chargeSheet(player, detained, wantedLevel, crimes);
+			int extraSeconds = deathCommit ? 0 : chargeSheet(player, detained, wantedLevel, crimes);
 			long sentenceExpiresAt = System.currentTimeMillis() +
 			                         (costs.computeSentenceSeconds(wantedLevel) + extraSeconds) * 1000L;
 			detained.setSentenceExpiresAt(sentenceExpiresAt);

@@ -17,11 +17,13 @@ import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.bukkit.event.vehicle.VehicleExitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
+import org.luckyraven.gangland.copsncrooks.detainment.intake.JailIntakeService;
 import org.luckyraven.gangland.copsncrooks.detainment.paperwork.DetainmentGuiAccess;
 import org.luckyraven.gangland.copsncrooks.detainment.paperwork.PaperworkItemFactory;
 import org.luckyraven.gangland.copsncrooks.detainment.paperwork.PaperworkView;
 import org.luckyraven.gangland.copsncrooks.detainment.transit.TransitService;
 import org.luckyraven.gangland.copsncrooks.jail.JailService;
+import org.luckyraven.gangland.core.downed.PlayerUndownedEvent;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.bartizan.api.event.WeaponShootEvent;
 
@@ -34,6 +36,7 @@ public class DetainmentListener implements Listener {
 	private final TransitService       transitService;
 	private final PaperworkItemFactory paperworkItemFactory;
 	private final PaperworkView        paperworkView;
+	private final JailIntakeService    jailIntake;
 
 	private static boolean isOwnInventoryClick(InventoryClickEvent event) {
 		// The native player inventory view is the CRAFTING type (2x2 grid + armour + hotbar + main).
@@ -78,6 +81,28 @@ public class DetainmentListener implements Listener {
 
 		var jail = jailService.getJailRegistry().getJailLocation(player.getUniqueId());
 		if (jail != null) event.setRespawnLocation(jail);
+
+		detainmentService.handleRespawn(player);
+	}
+
+	/**
+	 * A downed player wakes up through {@code performRespawn} (a hospital teleport, no {@code PlayerRespawnEvent}), so
+	 * the jail override above never runs for him. A handcuffed one is committed here as a death-commit: the ward bill
+	 * charged on this same event is his one charge, so no sheet (Ruling R48). A jailed one is put back in jail.
+	 */
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onUndowned(PlayerUndownedEvent event) {
+		Player player = event.getPlayer();
+
+		if (detainmentService.isHandcuffed(player)) {
+			transitService.cancel(player);
+			jailIntake.admit(player, true);
+		}
+
+		if (!detainmentService.isJailed(player)) return;
+
+		var jail = jailService.getJailRegistry().getJailLocation(player.getUniqueId());
+		if (jail != null) player.teleport(jail);
 
 		detainmentService.handleRespawn(player);
 	}

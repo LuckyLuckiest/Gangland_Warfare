@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.database.repositories.waypoint;
 
+import lombok.CustomLog;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.data.teleportation.Waypoint;
@@ -16,6 +17,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
+@CustomLog
 @Repository(Waypoint.class)
 public class WaypointRepository extends AbstractRepository<Waypoint> {
 
@@ -50,10 +52,19 @@ public class WaypointRepository extends AbstractRepository<Waypoint> {
 			double cost     = (double) result[v++];
 			double radius   = (double) result[v];
 
+			// R35: a type this version does not know (a row written by a newer one) skips the row, not the whole load
+			Waypoint.WaypointType waypointType;
+			try {
+				waypointType = Waypoint.WaypointType.valueOf(type.toUpperCase());
+			} catch (IllegalArgumentException e) {
+				log.warn("Skipping waypoint '{}' (id {}): unknown type '{}'.", name, id, type);
+				continue;
+			}
+
 			Waypoint waypoint = new Waypoint(name, Gangland.FULL_PREFIX);
 			waypoint.setUsedId(id);
 			waypoint.setCoordinates(world, x, y, z, (float) yaw, (float) pitch);
-			waypoint.setType(Waypoint.WaypointType.valueOf(type.toUpperCase()));
+			waypoint.setType(waypointType);
 			waypoint.setGangId(gangId);
 			waypoint.setTimer(timer);
 			waypoint.setCooldown(cooldown);
