@@ -367,7 +367,7 @@ class CopManagerDispatchTest {
 	}
 
 	@Test
-	@DisplayName("a unit that finds no spot is requeued and tried again on the next pass")
+	@DisplayName("a unit that finds no spot is requeued with the rest of the run, all tried again on the next pass")
 	void failedSpawn_isRequeued() {
 		when(fx.spawner.spawnUnit(any(), any(), any())).thenReturn(null);
 		manager.onWantedStart(player, wanted);
@@ -376,6 +376,8 @@ class CopManagerDispatchTest {
 
 		assertEquals(2, group().pendingCount());
 		assertTrue(group().getCops().isEmpty());
+		// final fix round 1: the first failure stops this run (the 0.15 rule); the rest wait, untried
+		verify(fx.spawner, times(1)).spawnUnit(eq(player), any(), any());
 
 		when(fx.spawner.spawnUnit(any(), any(), any())).thenAnswer(inv -> fx.cop(CopState.IDLE, 0, 0));
 		fx.clock[0] = 2_000L;
@@ -383,7 +385,7 @@ class CopManagerDispatchTest {
 
 		assertEquals(0, group().pendingCount());
 		assertEquals(2, group().getCops().size());
-		verify(fx.spawner, times(4)).spawnUnit(eq(player), any(), any());
+		verify(fx.spawner, times(3)).spawnUnit(eq(player), any(), any());
 	}
 
 	@Test
