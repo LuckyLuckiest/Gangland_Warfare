@@ -1,0 +1,4 @@
+# Re-review — 0.10.0 WS1 G3 fix round 1 — 2026-09-20 (Sonnet, transcribed)
+I4 ADDRESSED (WiringConfig.java:100-114 registers `PlaceholderProvider` at Normal priority, the exact FQCN Plaque looks up; Gangland.java:65 `unregisterAll(this)` first in onDisable; WiringConfigTest red-first) · I1 ADDRESSED (configuration.md:496-502) · I2 ADDRESSED (modules.md:324) · M5 ADDRESSED (migration-0.10.0.md) · M6 partly: Plaque paragraph CLAUDE.md:195-203 and table rows 2.0 ✓; the sentence at :240-241 still said 1.0/1.1 → fixed by the orchestrator (W27 precedent) · I3 ADDRESSED in the report · smoke PASS confirmed from the transcript (Keystone 1.11.0, Gangland 0.10.0, Plaque enabled/disabled, `glw reload` ok, zero scoreboard mentions).
+New breakage: none (`unregisterAll` scoped to Gangland's only own registration; provider bean ordered after PlaceholderService; BukkitStatics try-with-resources).
+Verdict: all addressed after the one-line CLAUDE.md fix.

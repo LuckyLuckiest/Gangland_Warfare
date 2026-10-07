@@ -1,0 +1,100 @@
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[10,62] package org.luckyraven.gangland.copsncrooks.npc.banker.economy does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[100,64] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[105,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[105,64] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[106,64] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[11,62] package org.luckyraven.gangland.copsncrooks.npc.banker.message does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[111,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[111,48] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[112,48] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[113,48] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[118,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[118,46] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[119,46] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[12,59] package org.luckyraven.gangland.copsncrooks.npc.banker.tier does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[120,46] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[121,46] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[128,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[128,38] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[128,64] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[128,96] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[129,38] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[129,68] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[13,59] package org.luckyraven.gangland.copsncrooks.npc.banker.tier does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[136,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[136,44] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[14,1] package org.luckyraven.gangland.copsncrooks.npc.banker.view does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[21,62] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[22,62] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[23,62] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[44,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[56,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[63,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[68,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[68,48] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[7,54] package org.luckyraven.gangland.copsncrooks.npc.banker does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[75,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[76,60] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[77,60] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[8,54] package org.luckyraven.gangland.copsncrooks.npc.banker does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[86,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[86,50] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[86,81] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[9,61] package org.luckyraven.gangland.copsncrooks.npc.banker.config does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[91,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[91,52] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[92,52] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[93,52] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[98,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[98,64] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/BankerConfig.java:[99,64] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[10,59] package org.luckyraven.gangland.copsncrooks.detainment.bail does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[109,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[11,64] package org.luckyraven.gangland.copsncrooks.detainment.breakfree does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[110,48] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[12,60] package org.luckyraven.gangland.copsncrooks.detainment.bribe does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[120,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[120,52] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[129,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[13,62] package org.luckyraven.gangland.copsncrooks.detainment.economy does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[134,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[139,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[139,40] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[14,62] package org.luckyraven.gangland.copsncrooks.detainment.economy does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[145,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[145,54] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[15,61] package org.luckyraven.gangland.copsncrooks.detainment.intake does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[151,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[16,64] package org.luckyraven.gangland.copsncrooks.detainment.inventory does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[17,64] package org.luckyraven.gangland.copsncrooks.detainment.inventory does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[172,52] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[18,62] package org.luckyraven.gangland.copsncrooks.detainment.message does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[20,62] package org.luckyraven.gangland.copsncrooks.detainment.release does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[21,62] package org.luckyraven.gangland.copsncrooks.detainment.release does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[22,63] package org.luckyraven.gangland.copsncrooks.detainment.sentence does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[23,60] package org.luckyraven.gangland.copsncrooks.detainment.sound does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[24,62] package org.luckyraven.gangland.copsncrooks.detainment.transit does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[25,61] package org.luckyraven.gangland.copsncrooks.detainment.wanted does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[27,56] package org.luckyraven.gangland.copsncrooks.npc.civilian does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[28,56] package org.luckyraven.gangland.copsncrooks.npc.civilian does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[29,63] package org.luckyraven.gangland.copsncrooks.npc.civilian.config does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[30,63] package org.luckyraven.gangland.copsncrooks.npc.civilian.config does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[31,60] package org.luckyraven.gangland.copsncrooks.npc.civilian.npc does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[32,62] package org.luckyraven.gangland.copsncrooks.npc.civilian.spawn does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[33,62] package org.luckyraven.gangland.copsncrooks.npc.civilian.spawn does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[34,54] package org.luckyraven.gangland.copsncrooks.npc.entity does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[35,54] package org.luckyraven.gangland.copsncrooks.npc.police does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[36,54] package org.luckyraven.gangland.copsncrooks.npc.police does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[37,61] package org.luckyraven.gangland.copsncrooks.npc.police.config does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[38,61] package org.luckyraven.gangland.copsncrooks.npc.police.config does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[39,60] package org.luckyraven.gangland.copsncrooks.npc.police.spawn does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[40,60] package org.luckyraven.gangland.copsncrooks.npc.police.spawn does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[41,60] package org.luckyraven.gangland.copsncrooks.npc.police.state does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[42,64] package org.luckyraven.gangland.copsncrooks.npc.police.targeting does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[47,57] package org.luckyraven.gangland.data.detainment.inventory does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[52,62] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[53,62] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[6,49] package org.luckyraven.gangland.copsncrooks.combo does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[7,54] package org.luckyraven.gangland.copsncrooks.detainment does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[8,54] package org.luckyraven.gangland.copsncrooks.detainment does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/CopsAndGadgetsConfig.java:[9,54] package org.luckyraven.gangland.copsncrooks.detainment does not exist

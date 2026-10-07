@@ -1,0 +1,667 @@
+# Review package — WS8 G4 + G-final — Gangland 0.9.2 working tree vs HEAD 122bf53d (G2+G3 commit)
+--- status ---
+ M documentation/migration-0.9.2.md
+ M documentation/module-loader.md
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/GrappleCommand.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/GrappleGiveCommand.java
+ M gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/message/GrappleMessages.java
+ M gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListener.java
+ M gangland-features/gangland-gadget/src/main/resources/commands.json
+ M gangland-features/gangland-gadget/src/main/resources/gadget/gadget_messages.yml
+ M gangland-features/gangland-gadget/src/main/resources/items/grapples.yml
+ A gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/command/GrappleGiveCommandAmountGuardTest.java
+ M gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListenerTest.java
+--- diffstat ---
+warning: in the working copy of 'documentation/migration-0.9.2.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentation/module-loader.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/message/GrappleMessages.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListener.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/resources/gadget/gadget_messages.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/resources/items/grapples.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListenerTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/GrappleCommand.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/GrappleGiveCommand.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/command/GrappleGiveCommandAmountGuardTest.java', LF will be replaced by CRLF the next time Git touches it
+ documentation/migration-0.9.2.md                   |  48 ++++++-
+ documentation/module-loader.md                     |   4 +-
+ .../gangland/gadget/command/GrappleCommand.java    |  62 +++++++++
+ .../gadget/command/GrappleGiveCommand.java         | 141 +++++++++++++++++++++
+ .../gadget/grapple/message/GrappleMessages.java    |  20 +++
+ .../listener/grapple/GrappleLaunchListener.java    |  21 ++-
+ .../src/main/resources/commands.json               |  12 ++
+ .../src/main/resources/gadget/gadget_messages.yml  |   3 +
+ .../src/main/resources/items/grapples.yml          |  10 ++
+ .../command/GrappleGiveCommandAmountGuardTest.java |  83 ++++++++++++
+ .../grapple/GrappleLaunchListenerTest.java         |  12 +-
+ 11 files changed, 400 insertions(+), 16 deletions(-)
+--- diff ---
+warning: in the working copy of 'documentation/migration-0.9.2.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'documentation/module-loader.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/message/GrappleMessages.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListener.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/resources/gadget/gadget_messages.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/resources/items/grapples.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListenerTest.java', LF will be replaced by CRLF the next time Git touches it
+diff --git a/documentation/migration-0.9.2.md b/documentation/migration-0.9.2.md
+index 0e063b63..4dff173c 100644
+--- a/documentation/migration-0.9.2.md
++++ b/documentation/migration-0.9.2.md
+@@ -1,15 +1,17 @@
+ # Migrating a server from 0.9.1 to Gangland 0.9.2
+ 
+ [← Back to Documentation Index](./README.md)
+ 
+-Gangland 0.9.2 (the WS7 "gadget wave") does two things: it moves the jetpack out of Bartizan's wearable catalog and
+-makes it a Gangland-owned item, and it soft-couples Bartizan for `gangland-gadget` and `gangland-civilians` — both
+-now load and work on a server that doesn't run Bartizan at all, instead of refusing to boot
+-(`module.plugin.missing`). Nothing about cars, gangs, turf, mail or NPC shops changes structurally; this page is
+-short on purpose. For Bartizan's own side of the jetpack move (the `WearableCatalog.register` external-registration
+-hook, the `items/wearables.yml` `jetpack:` entry's removal), see Bartizan's own
++Gangland 0.9.2 (the WS7 "gadget wave" + the WS8 "gadget catalogue" wave) does three things: it moves the jetpack
++out of Bartizan's wearable catalog and makes it a Gangland-owned item, it soft-couples Bartizan for
++`gangland-gadget` and `gangland-civilians` — both now load and work on a server that doesn't run Bartizan at all,
++instead of refusing to boot (`module.plugin.missing`) — and it adds the grappling hook, the first gadget item
++built from scratch (not migrated from Bartizan) on that same gadget-owned-item pattern (§8). Nothing about cars,
++gangs, turf, mail or NPC shops changes structurally; this page is short on purpose. For Bartizan's own side of the
++jetpack move (the `WearableCatalog.register` external-registration hook, the `items/wearables.yml` `jetpack:`
++entry's removal), see Bartizan's own
+ [`documentation/migration.md`](../../bartizan-0.4.0/documentation/migration.md) §12.
+ 
+ ## 1. Before you upgrade
+ 
+ 1. Decide whether you still want Bartizan installed. As of 0.9.2, **only `cops-n-crooks`** requires it
+@@ -88,10 +90,44 @@ to "one of six modules skipped" — only `cops-n-crooks` is lost, everything els
+ - If you run Bartizan at all, it must be 0.4.0+ for the `Bartizan_Traits:` opt-in to work (§1); an older Bartizan
+   still runs fine otherwise, it just doesn't have the new registration hook.
+ - A legacy (pre-0.9.2) jetpack item keeps working with no owner action — it silently re-stamps itself on next equip,
+   fuel and fuel ceiling both preserved (§2).
+ 
++## 8. New in this release: the grappling hook (WS8)
++
++Unlike everything else in this document, the grappling hook is **purely additive** — nothing to migrate, no
++existing item or shop row it changes the meaning of. It's included here because it ships in the same 0.9.2 build.
++
++A grapple item is a fishing rod under the hood (`items/grapples.yml`, same data-folder convention as
++`items/cars.yml`/`items/jetpacks.yml`): right-click to cast, and a hook that lands on a block pulls you toward it.
++**Cooldown only — no fuel, no durability, no Bartizan coupling of any kind** (unlike the jetpack, which still has
++an optional Bartizan armour-trait opt-in, §3 above; the grapple has nothing equivalent, by design).
++
++**Give command**: `/glw grapple give <id> [amount]` (self-give — the same shape as `/glw car give`/`/glw jetpack
++give`).
++
++**YAML knobs** (`items/grapples.yml`, per entry): `Max_Distance` (anchor range), `Max_Pull_Speed`/
++`Pull_Acceleration` (pull physics), `Arrival_Distance` (auto-stop range — clamped to a 0.1 floor internally, a 0 or
++negative value in the YAML is corrected rather than crashing the pull), `Cooldown_Seconds`, `Max_Duration_Ticks`
++(hard per-pull timeout), `Fall_Damage_Grace_Ticks` (the one-shot post-pull landing-immunity window), and
++`Require_Line_Of_Sight` (refuse the launch if a block occludes the anchor).
++
++**Two rulings server owners should know about** (documented directly in `items/grapples.yml`'s comments too):
++
++1. A wall/ceiling hit **during** an active pull is not covered by the landing grace — only the landing that
++   **ends** a pull (arrival, timeout, or a cancel trigger) gets the grace window. A mid-pull collision is not a
++   "landing" in that sense.
++2. A cancelled pull (sneak, damage, teleport, etc.) while still high above the ground **is fatal once
++   `Fall_Damage_Grace_Ticks` expires** (40 ticks / ~2 seconds by default) — the grace is a short landing window,
++   not open-ended fall immunity. This is deliberate anti-abuse, not a bug: without a bound, "grapple then cancel"
++   would be a free-fall-immunity exploit at any height. Lower `Fall_Damage_Grace_Ticks` for a stricter server.
++
++A refused launch (out of `Max_Distance`, outside the world border, or blocked line of sight) sends a shared
++`Grapple_Blocked` message (`gadget/gadget_messages.yml`, editable like every other gadget message) — once per cast
++attempt, no separate cooldown on the message itself (a cast is already a deliberate, human-paced action). A
++cooldown/already-active refusal stays silent, same as before — the player already knows about those.
++
+ ## See also
+ 
+ - [`documentation/module-loader.md`](./module-loader.md) — the full six-module topology, `Host_Api`, and the
+   `Depends:`/`Plugins:` descriptor mechanism, updated for 0.9.2's soft edges.
+ - [`documentation/TESTING.md`](./TESTING.md) §4b — `BartizanBlindScan`/`BartizanReferenceScan`, the two tests that
+diff --git a/documentation/module-loader.md b/documentation/module-loader.md
+index 95dfc7b0..aab1ba55 100644
+--- a/documentation/module-loader.md
++++ b/documentation/module-loader.md
+@@ -20,11 +20,11 @@ plugins/
+     │   ├── gangland-mail-0.9.2.jar        mail (gang invites, alliance requests) — no Depends, no Plugins
+     │   ├── gangland-turf-0.9.2.jar        turf capture + turf-NPC powerups, Depends: [civilians] (loads without Bartizan since 0.9.2)
+     │   ├── gangland-civilians-0.9.2.jar   civilian NPCs — Bartizan SOFT since 0.9.2 (WS7 G5b): no Plugins: entry, unarmed hostiles without it
+     │   ├── gangland-npc-shops-0.9.2.jar   trader/banker NPC shops — no Depends, no Plugins
+     │   ├── cops-n-crooks-0.9.2.jar        cops only, Depends: [turf, civilians]; Plugins: [Bartizan] (the only module still hard)
+-    │   ├── gangland-gadget-0.9.2.jar      cars and jetpacks — Bartizan SOFT since 0.9.2 (WS7 G5): no Plugins: entry
++    │   ├── gangland-gadget-0.9.2.jar      cars, jetpacks and the grappling hook (WS8) — Bartizan SOFT since 0.9.2 (WS7 G5): no Plugins: entry
+     │   └── .stale/                        replaced jars, deleted on the next start
+     └── settings.yml …
+ ```
+ 
+ **0.9.2 (WS7 gadget wave, gates G5/G5b) soft-coupled two of the three previously-hard `Plugins: [Bartizan]` edges** —
+@@ -46,11 +46,11 @@ lifted automatically the moment civilians went soft. Full story: `documentation/
+ | mail — `MailManager`, gang invites, alliance requests, join/quit surfacing | `gangland-mail` | runtime module since 0.8.2 (the pilot) |
+ | turf — `TurfManager`, capture, powerups/garrison, the `/glw turf` tree, and (since 0.9.0) the turf-NPC (Quartermaster/garrison defender) infrastructure moved out of cops-n-crooks | `gangland-turf` | runtime module since 0.8.4; `Depends: [civilians]` since 0.9.0 — loads without Bartizan since 0.9.2 (transitively, via civilians) |
+ | civilians — civilian NPCs, `NpcMarkManager`/`CombatEligibility`/target-filter seams cops and turf inject | `gangland-civilians` | **new runtime module, 0.9.0** (split out of cops-n-crooks); Bartizan **soft** since 0.9.2 (WS7 G5b — no `Plugins:` entry; unarmed hostiles without it), `Host_Api: 1.1` |
+ | npc-shops — trader/banker NPC shops (moved out of cops-n-crooks) | `gangland-npc-shops` | **new runtime module, 0.9.0** — no `Depends:`/`Plugins:` |
+ | cops-n-crooks — cops, jails, detainment (civilians and turf-NPC powerups moved out in 0.9.0) | `cops-n-crooks` | runtime module since 0.8.4; `Depends: [turf, civilians]`, `Plugins: [Bartizan]` since 0.9.0 — the only module still hard-coupled after 0.9.2 |
+-| gadget — cars (`/glw car`), jetpacks (`/glw jetpack`, gadget-ownewarning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/GrappleCommand.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/GrappleGiveCommand.java', LF will be replaced by CRLF the next time Git touches it
+d item since 0.9.2, `items/jetpacks.yml`) | `gangland-gadget` | runtime module since 0.8.4; Bartizan **soft** since 0.9.2 (WS7 G5 — no `Plugins:` entry; vanilla car-punch damage without it), `Host_Api: 1.1` |
++| gadget — cars (`/glw car`), jetpacks (`/glw jetpack`, gadget-owned item since 0.9.2, `items/jetpacks.yml`), and (WS8) the grappling hook (`/glw grapple`, cooldown-only, `items/grapples.yml`) | `gangland-gadget` | runtime module since 0.8.4; Bartizan **soft** since 0.9.2 (WS7 G5 — no `Plugins:` entry; vanilla car-punch damage without it), `Host_Api: 1.1` |
+ 
+ Weapons, ammunition, wearables and the projectile system left the repo entirely in 0.9.0 for the standalone
+ Bartizan plugin — there is no `gangland-weapon` module any more. All six modules above are runtime modules; the
+ core's feature compile closure is empty and the core names no Bartizan type either. Two independent descriptor keys
+ gate loading: `Depends:` (another **module**; `module.dependency.missing` when absent) and `Plugins:` (an external
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/GrappleCommand.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/GrappleCommand.java
+new file mode 100644
+index 00000000..97093a9a
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/GrappleCommand.java
+@@ -0,0 +1,62 @@
++package org.luckyraven.gangland.gadget.command;
++
++import org.bukkit.command.CommandSender;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.luckyraven.keystone.command.argument.Argument;
++import org.luckyraven.keystone.bean.command.CommandHandler;
++import org.luckyraven.gangland.command.Command;
++import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
++import org.luckyraven.gangland.gadget.grapple.message.GrappleMessages;
++
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Map;
++
++/**
++ * {@code /glw grapple} — parent for {@link GrappleGiveCommand}, mirrors {@link JetpackCommand} exactly (WS8-D3:
++ * per-type give command, same as car/jetpack).
++ */
++@CommandHandler
++public final class GrappleCommand extends Command {
++
++	private final GrappleAddon    grappleAddon;
++	private final GrappleMessages grappleMessages;
++
++	public GrappleCommand(JavaPlugin plugin, GrappleAddon grappleAddon, GrappleMessages grappleMessages) {
++		super(plugin, "grapple", true, "grapples");
++
++		this.grappleAddon    = grappleAddon;
++		this.grappleMessages = grappleMessages;
++
++		var list = getCommands().entrySet()
++				.stream()
++				.filter(entry -> entry.getKey().startsWith("grapple"))
++				.sorted(Map.Entry.comparingByKey())
++				.map(Map.Entry::getValue)
++				.toList();
++
++		getHelpInfo().addAll(list);
++	}
++
++	@Override
++	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
++		help(commandSender, 1);
++	}
++
++	@Override
++	protected void initializeArguments() {
++		Argument give = new GrappleGiveCommand(getPlugin(), getArgumentTree(), getArgument(), grappleAddon,
++		                                       grappleMessages);
++
++		List<Argument> arguments = new ArrayList<>();
++		arguments.add(give);
++
++		getArgument().addAllSubArguments(arguments);
++	}
++
++	@Override
++	protected void help(CommandSender sender, int page) {
++		getHelpInfo().displayHelp(sender, page, "Grapple");
++	}
++
++}
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/GrappleGiveCommand.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/GrappleGiveCommand.java
+new file mode 100644
+index 00000000..cb0a120f
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/GrappleGiveCommand.java
+@@ -0,0 +1,141 @@
++package org.luckyraven.gangland.gadget.command;
++
++import org.bukkit.World;
++import org.bukkit.command.CommandSender;
++import org.bukkit.entity.Player;
++import org.bukkit.inventory.ItemStack;
++import org.bukkit.inventory.PlayerInventory;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.luckyraven.keystone.command.argument.Argument;
++import org.luckyraven.keystone.command.argument.SubArgument;
++import org.luckyraven.keystone.command.argument.types.OptionalArgument;
++import org.luckyraven.keystone.util.TriConsumer;
++import org.luckyraven.keystone.datastructure.Tree;
++import org.luckyraven.gangland.file.configuration.Messages;
++import org.luckyraven.gangland.gadget.grapple.Grapple;
++import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
++import org.luckyraven.gangland.gadget.grapple.message.GrappleMessages;
++import org.luckyraven.gangland.util.GanglandChatUtil;
++
++import java.util.List;
++import java.util.Map;
++
++/**
++ * {@code /glw grapple give <id> [amount]}. Self-give, mirrors {@link JetpackGiveCommand} exactly (itself mirroring
++ * {@link CarGiveCommand}). Permission: {@code SubArgument}'s own constructor derives {@code
++ * gangland.command.grapple.give} from the parent {@code GrappleCommand}'s {@code gangland.command.grapple} — no
++ * manual permission check needed in this class's body (confirmed against Keystone's actual {@code
++ * SubArgument}/{@code Argument.traverseList} source, same mechanism as {@code CarGiveCommand}/{@code
++ * JetpackGiveCommand}). The per-item permission ({@code gangland.grapples.<id>}) is a separate, unrelated gate
++ * already enforced at launch time, not here — mirrors car/jetpack's give-vs-use permission split exactly.
++ */
++class GrappleGiveCommand extends SubArgument {
++
++	private final JavaPlugin      plugin;
++	private final Tree<Argument>  tree;
++	private final GrappleAddon    grappleAddon;
++	private final GrappleMessages messages;
++
++	GrappleGiveCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, GrappleAddon grappleAddon,
++	                   GrappleMessages messages) {
++		super(plugin, "give", tree, parent);
++
++		this.plugin       = plugin;
++		this.tree         = tree;
++		this.grappleAddon = grappleAddon;
++		this.messages     = messages;
++
++		grappleGive();
++	}
++
++	@Override
++	protected TriConsumer<Argument, CommandSender, String[]> action() {
++		return (argument, sender, args) -> sender.sendMessage(
++				GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<name>"));
++	}
++
++	private void grappleGive() {
++		Argument name = new OptionalArgument(plugin, tree, (argument, sender, args) -> {
++			Player player = (Player) sender;
++
++			String  grappleId = args[2];
++			boolean gave      = giveGrappleItem(player, grappleId, 1);
++
++			if (gave) {
++				player.sendMessage(messages.gave(grappleId, "1"));
++			} else {
++				player.sendMessage(messages.invalid(grappleId));
++			}
++		}, sender -> grappleAddon.getGrapples().keySet().stream().toList());
++
++		Argument amount = new OptionalArgument(plugin, tree, (argument, sender, args) -> {
++			Player player = (Player) sender;
++
++			String grappleId = args[2];
++			int    grappleAmount;
++
++			try {
++				grappleAmount = Integer.parseInt(args[3]);
++			} catch (NumberFormatException exception) {
++				player.sendMessage(Messages.MUST_BE_NUMBERS.toString());
++				return;
++			}
++
++			if (grappleAmount <= 0) {
++				player.sendMessage(Messages.MUST_BE_NUMBERS.toString());
++				return;
++			}
++
++			boolean gave = giveGrappleItem(player, grappleId, grappleAmount);
++
++			if (gave) {
++				player.sendMessage(messages.gave(grappleId, String.valueOf(grappleAmount)));
++			} else {
++				player.sendMessage(messages.invalid(grappleId));
++			}
++		}, sender -> List.of("<amount>"));
++
++		name.addSubArgument(amount);
++		this.addSubArgument(name);
++	}
++
++	private boolean giveGrappleItem(Player player, String name, int amount) {
++		Grapple grapple = grappleAddon.getGrapple(name);
++
++		if (grapple == null) return false;
++
++		ItemStack       sampleItem   = grapple.buildItem(player);
++		int             maxStackSize = sampleItem.getMaxStackSize();
++		// Defensive floor/cap (mirrors JetpackGiveCommand/WS7 G4 review I2): the command layer already rejects
++		// amount <= 0 before calling this method, but clamping here too means a non-positive amount can never
++		// produce a negative array size regardless of caller.
++		int             cappedAmount = Math.max(0, Math.min(amount, 36 * maxStackSize));
++		int             slots        = (int) Math.ceil(cappedAmount / (double) maxStackSize);
++		int             amountLeft   = cappedAmount;
++		PlayerInventory inventory    = player.getInventory();
++		ItemStack[]     items        = new ItemStack[slots];
++
++		for (int i = 0; i < items.length; ++i) {
++			int amountGive = Math.min(amountLeft, maxStackSize);
++
++			if (amountGive <= 0) break;
++
++			ItemStack item = grapple.buildItem(player);
++			item.setAmount(amountGive);
++			items[i] = item;
++			amountLeft -= amountGive;
++		}
++
++		Map<Integer, ItemStack> left = inventory.addItem(items);
++
++		World world = player.getWorld();
++		if (world != null) {
++			for (ItemStack item : left.values()) {
++				world.dropItemNaturally(player.getLocation(), item);
++			}
++		}
++
++		return true;
++	}
++
++}
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/message/GrappleMessages.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/message/GrappleMessages.java
+index 611d77ea..b92d11cc 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/message/GrappleMessages.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/message/GrappleMessages.java
+@@ -45,10 +45,30 @@ public class GrappleMessages implements FileInitializer {
+ 	public String noPermission() {
+ 		return GanglandChatUtil.color(get("Grapple_No_Permission", "&cYou do not have permission to use this "
+ 		                                                           + "grapple."));
+ 	}
+ 
++	/**
++	 * G4: sent from {@code GrappleLaunchListener} on a refused launch — out of {@code Max_Distance}, outside the
++	 * world border, or a blocked line of sight. Not sent for a cooldown/already-active no-op (the player already
++	 * knows about those); once per cast attempt, no separate throttle — each attempt is a deliberate player action
++	 * ({@code PlayerFishEvent.State#IN_GROUND} fires once per landed hook, not repeatedly), the same rate the
++	 * existing permission-denial message already sends at.
++	 */
++	public String blocked() {
++		return GanglandChatUtil.color(get("Grapple_Blocked", "&cThe grapple couldn't reach there."));
++	}
++
++	public String gave(String name, String amount) {
++		return GanglandChatUtil.color(get("Grapple_Gave", "&aGave %amount% grapple(s) '%name%'.")
++				.replace("%name%", name).replace("%amount%", amount));
++	}
++
++	public String invalid(String name) {
++		return GanglandChatUtil.color(get("Grapple_Invalid", "&cInvalid grapple '%name%'.").replace("%name%", name));
++	}
++
+ 	private String get(String key, String fallback) {
+ 		return fileHandler.getFileConfiguration().getString(key, fallback);
+ 	}
+ 
+ }
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListener.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListener.java
+index 18aaee56..35e97dbd 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListener.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListener.java
+@@ -64,17 +64,28 @@ public class GrappleLaunchListener implements Listener {
+ 			player.sendMessage(grappleMessages.noPermission());
+ 			return;
+ 		}
+ 
+ 		Location anchor = event.getHook().getLocation();
+-		if (!isWithinMaxDistance(player, grapple, anchor)) return;
+-		if (!isWithinWorldBorder(anchor)) return;
+-		if (grapple.isRequireLineOfSight() && !hasLineOfSight(player, anchor)) return;
++		// G4: Grapple_Blocked is sent for range/border/LOS refusals — the player did something wrong (aimed too
++		// far, at a wall, out of bounds) and needs feedback. It is deliberately NOT sent for start()'s own
++		// cooldown/already-active no-op below — the player already knows about those (they just used it, or are
++		// mid-pull), so a second message would be noise, not feedback.
++		if (!isWithinMaxDistance(player, grapple, anchor)) {
++			player.sendMessage(grappleMessages.blocked());
++			return;
++		}
++		if (!isWithinWorldBorder(anchor)) {
++			player.sendMessage(grappleMessages.blocked());
++			return;
++		}
++		if (grapple.isRequireLineOfSight() && !hasLineOfSight(player, anchor)) {
++			player.sendMessage(grappleMessages.blocked());
++			return;
++		}
+ 
+ 		grappleService.start(player, grapple, anchor);
+-		// start() silently no-ops on cooldown/already-active/out-of-range/out-of-border/blocked-LOS — no message
+-		// for any of them (G4 can add messages later if wanted).
+ 	}
+ 
+ 	/**
+ 	 * Fix round 1 (F1 Critical): {@code Max_Distance} was parsed by {@code GrappleAddon} and carried on {@link
+ 	 * Grapple} but never read anywhere — the anchor range was unbounded. Same-world (a hook can only ever land in
+diff --git a/gangland-features/gangland-gadget/src/main/resources/commands.json b/gangland-features/gangland-gadget/src/main/resources/commands.json
+index 0d5ffd66..195d463b 100644
+--- a/gangland-features/gangland-gadget/src/main/resources/commands.json
++++ b/gangland-features/gangland-gadget/src/main/resources/commands.json
+@@ -28,7 +28,19 @@
+ 		"description": "Shows the specified page in jetpack menu."
+ 	},
+ 	"jetpack_give": {
+ 		"usage": "/glw jetpack give <id> <amount>",
+ 		"description": "Gives the specified jetpack item."
++	},
++	"grapple": {
++		"usage": "/glw grapple",
++		"description": "Shows grapple help page."
++	},
++	"grapple_help": {
++		"usage": "/glw grapple help <page>",
++		"description": "Shows the specified page in grapple menu."
++	},
++	"grapple_give": {
++		"usage": "/glw grapple give <id> <amount>",
++		"description": "Gives the specified grapple item."
+ 	}
+ }
+diff --git a/gangland-features/gangland-gadget/src/main/resources/gadget/gadget_messages.yml b/gangland-features/gangland-gadget/src/main/resources/gadget/gadget_messages.yml
+index ca4a183c..f9111781 100644
+--- a/gangland-features/gangland-gadget/src/main/resources/gadget/gadget_messages.yml
++++ b/gangland-features/gangland-gadget/src/main/resources/gadget/gadget_messages.yml
+@@ -3,5 +3,8 @@
+ # Keys are prefixed per gadget (Jetpack_*, Grapple_*, ...) since this one file backs every gadget's messages.
+ Jetpack_No_Permission: "&cYou do not have permission to use this jetpack."
+ Jetpack_Gave: "&aGave %amount% jetpack(s) '%name%'."
+ Jetpack_Invalid: "&cInvalid jetpack '%name%'."
+ Grapple_No_Permission: "&cYou do not have permission to use this grapple."
++Grapple_Blocked: "&cThe grapple couldn't reach there."
++Grapple_Gave: "&aGave %amount% grapple(s) '%name%'."
++Grapple_Invalid: "&cInvalid grapple '%name%'."
+diff --git a/gangland-features/gangland-gadget/src/main/resources/items/grapples.yml b/gangland-features/gangland-gadget/src/main/resources/items/grapples.yml
+index 8ca5a5cc..190b3d63 100644
+--- a/gangland-features/gangland-gadget/src/main/resources/items/grapples.yml
++++ b/gangland-features/gangland-gadget/src/main/resources/items/grapples.yml
+@@ -32,10 +32,20 @@
+ #
+ # No fuel/durability model - cooldown only (WS8-D1).
+ #
+ # Permission nodes are derived automatically as "gangland.grapples.<key>"
+ # (e.g. grapple → gangland.grapples.grapple).
++#
++# Two rulings from the G2+G3 fix-round-1 review (W34), for server owners tuning the knobs above:
++#   - A wall/ceiling hit DURING an active pull (e.g. an elytra-equivalent "flew into a wall" stop) is NOT
++#     covered by Fall_Damage_Grace_Ticks - the grace only applies to the landing that ENDS a pull (arrival,
++#     timeout, or a cancel trigger), never to a mid-pull collision. This is deliberate, not a bug.
++#   - A sneak-cancel (or any other cancel) while still high above the ground is FATAL once
++#     Fall_Damage_Grace_Ticks (40 ticks ~= 2 seconds by default) expires - the grace is a short landing window,
++#     not permanent fall immunity for the rest of the fall. Lower Fall_Damage_Grace_Ticks toward 0 for a
++#     stricter server, or accept this as intwarning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/command/GrappleGiveCommandAmountGuardTest.java', LF will be replaced by CRLF the next time Git touches it
+entional anti-abuse (it prevents grapple-then-cancel from being a
++#     free-fall-immunity exploit at any height).
+ 
+ grapple:
+    Material: FISHING_ROD
+    Display_Name: "&b&lGrappling Hook"
+    Custom_Model_Data: 0
+diff --git a/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/command/GrappleGiveCommandAmountGuardTest.java b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/command/GrappleGiveCommandAmountGuardTest.java
+new file mode 100644
+index 00000000..ceabd4e2
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/command/GrappleGiveCommandAmountGuardTest.java
+@@ -0,0 +1,83 @@
++package org.luckyraven.gangland.gadget.command;
++
++import org.bukkit.Bukkit;
++import org.bukkit.Material;
++import org.bukkit.entity.Player;
++import org.bukkit.inventory.ItemStack;
++import org.bukkit.inventory.PlayerInventory;
++import org.bukkit.plugin.PluginManager;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.junit.jupiter.api.BeforeAll;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.gangland.core.testsupport.BukkitRegistryFixture;
++import org.luckyraven.gangland.gadget.grapple.Grapple;
++import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
++import org.luckyraven.gangland.gadget.grapple.message.GrappleMessages;
++import org.luckyraven.keystone.command.argument.Argument;
++import org.luckyraven.keystone.datastructure.Tree;
++import org.mockito.ArgumentCaptor;
++
++import java.lang.reflect.Method;
++import java.util.HashMap;
++import java.util.Set;
++
++import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.verify;
++import static org.mockito.Mockito.when;
++
++/**
++ * Mirrors {@code JetpackGiveCommandAmountGuardTest} (WS7 G4 review I2): {@code giveGrappleItem}'s
++ * {@code slots = ceil(amount / maxStackSize)} would produce a negative array size for a negative amount
++ * ({@code new ItemStack[-1]} -> {@code NegativeArraySizeException}) if the command layer's {@code amount <= 0}
++ * rejection were ever bypassed. This test pins the method's own defensive floor directly, independent of the
++ * command layer's guard.
++ */
++@DisplayName("GrappleGiveCommand.giveGrappleItem — amount guard (mirrors WS7 G4 review I2)")
++class GrappleGiveCommandAmountGuardTest {
++
++	@BeforeAll
++	static void bootstrapBukkitRegistry() {
++		BukkitRegistryFixture.install();
++
++		// Constructing a SubArgument registers its derived permission with Bukkit's PluginManager
++		// (Argument.setPermission -> addPermission); BukkitRegistryFixture does not stub one.
++		PluginManager pluginManager = mock(PluginManager.class);
++		when(pluginManager.getPermissions()).thenReturn(Set.of());
++		when(Bukkit.getServer().getPluginManager()).thenReturn(pluginManager);
++	}
++
++	@Test
++	@DisplayName("a negative amount gives zero items and does not throw NegativeArraySizeException")
++	void negativeAmount_noItemNoException() throws Exception {
++		JavaPlugin      plugin       = mock(JavaPlugin.class);
++		Tree<Argument>  tree         = new Tree<>();
++		Argument        parent       = new Argument(plugin, "grapple", tree);
++		tree.add(parent.getNode());
++		GrappleAddon    grappleAddon = mock(GrappleAddon.class);
++		GrappleMessages messages     = mock(GrappleMessages.class);
++
++		Grapple grapple = Grapple.builder().grappleId("grapple").material(Material.FISHING_ROD).build();
++		when(grappleAddon.getGrapple("grapple")).thenReturn(grapple);
++
++		GrappleGiveCommand giveCommand = new GrappleGiveCommand(plugin, tree, parent, grappleAddon, messages);
++
++		Player          player    = mock(Player.class);
++		PlayerInventory inventory = mock(PlayerInventory.class);
++		when(player.getInventory()).thenReturn(inventory);
++		when(inventory.addItem(any(ItemStack[].class))).thenReturn(new HashMap<>());
++
++		Method method = GrappleGiveCommand.class.getDeclaredMethod("giveGrappleItem", Player.class, String.class,
++		                                                          int.class);
++		method.setAccessible(true);
++
++		assertDoesNotThrow(() -> method.invoke(giveCommand, player, "grapple", -1));
++
++		ArgumentCaptor<ItemStack[]> captor = ArgumentCaptor.forClass(ItemStack[].class);
++		verify(inventory).addItem(captor.capture());
++		assertEquals(0, captor.getValue().length, "a negative amount must give zero items");
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListenerTest.java b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListenerTest.java
+index 826e923e..09d93921 100644
+--- a/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListenerTest.java
++++ b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListenerTest.java
+@@ -169,15 +169,16 @@ class GrappleLaunchListenerTest {
+ 
+ 		verify(grappleService).start(player, grapple, anchor);
+ 	}
+ 
+ 	@Test
+-	@DisplayName("blocked LOS (a RayTraceResult hit) silently refuses the launch when Require_Line_Of_Sight is set")
++	@DisplayName("blocked LOS (a RayTraceResult hit) refuses the launch and sends Grapple_Blocked")
+ 	void onPlayerFish_inGroundHasPermission_blockedLos_refusesLaunch() {
+ 		GrappleService  grappleService  = mock(GrappleService.class);
+ 		GrappleAddon    grappleAddon    = mock(GrappleAddon.class);
+ 		GrappleMessages grappleMessages = mock(GrappleMessages.class);
++		when(grappleMessages.blocked()).thenReturn("blocked-message");
+ 
+ 		Grapple grapple = Grapple.builder().grappleId("test").requireLineOfSight(true).maxDistance(25).build();
+ 		when(grappleAddon.getGrapple("test")).thenReturn(grapple);
+ 
+ 		World          world  = worldWithBorder(true);   // inside the border — LOS is the only thing failing here
+@@ -198,18 +199,20 @@ class GrappleLaunchListenerTest {
+ 		when(event.getHook()).thenReturn(hook);
+ 
+ 		new GrappleLaunchListener(grappleService, grappleAddon, grappleMessages).onPlayerFish(event);
+ 
+ 		verify(grappleService, never()).start(any(), any(), any());
++		verify(player).sendMessage("blocked-message");
+ 	}
+ 
+ 	@Test
+-	@DisplayName("outside the world border silently refuses the launch regardless of LOS")
++	@DisplayName("outside the world border refuses the launch and sends Grapple_Blocked, regardless of LOS")
+ 	void onPlayerFish_inGroundHasPermission_outsideBorder_refusesLaunch() {
+ 		GrappleService  grappleService  = mock(GrappleService.class);
+ 		GrappleAddon    grappleAddon    = mock(GrappleAddon.class);
+ 		GrappleMessages grappleMessages = mock(GrappleMessages.class);
++		when(grappleMessages.blocked()).thenReturn("blocked-message");
+ 
+ 		// requireLineOfSight left at its (false) default — the border check must refuse the launch on its own,
+ 		// before LOS is ever consulted.
+ 		Grapple grapple = Grapple.builder().grappleId("test").maxDistance(25).build();
+ 		when(grappleAddon.getGrapple("test")).thenReturn(grapple);
+@@ -229,18 +232,20 @@ class GrappleLaunchListenerTest {
+ 		when(event.getHook()).thenReturn(hook);
+ 
+ 		new GrappleLaunchListener(grappleService, grappleAddon, grappleMessages).onPlayerFish(event);
+ 
+ 		verify(grappleService, never()).start(any(), any(), any());
++		verify(player).sendMessage("blocked-message");
+ 	}
+ 
+ 	@Test
+-	@DisplayName("F1: an anchor at Max_Distance + 1 is refused")
++	@DisplayName("F1: an anchor at Max_Distance + 1 is refused and sends Grapple_Blocked")
+ 	void onPlayerFish_inGroundHasPermission_beyondMaxDistance_refusesLaunch() {
+ 		GrappleService  grappleService  = mock(GrappleService.class);
+ 		GrappleAddon    grappleAddon    = mock(GrappleAddon.class);
+ 		GrappleMessages grappleMessages = mock(GrappleMessages.class);
++		when(grappleMessages.blocked()).thenReturn("blocked-message");
+ 
+ 		Grapple grapple = Grapple.builder().grappleId("test").maxDistance(25).build();
+ 		when(grappleAddon.getGrapple("test")).thenReturn(grapple);
+ 
+ 		// Inside the border, LOS not required — isolates the Max_Distance gate specifically.
+@@ -259,10 +264,11 @@ class GrappleLaunchListenerTest {
+ 		when(event.getHook()).thenReturn(hook);
+ 
+ 		new GrappleLaunchListener(grappleService, grappleAddon, grappleMessages).onPlayerFish(event);
+ 
+ 		verify(grappleService, never()).start(any(), any(), any());
++		verify(player).sendMessage("blocked-message");
+ 	}
+ 
+ 	@Test
+ 	@DisplayName("F1: an anchor at Max_Distance - 1 is accepted")
+ 	void onPlayerFish_inGroundHasPermission_withinMaxDistance_startsPull() {

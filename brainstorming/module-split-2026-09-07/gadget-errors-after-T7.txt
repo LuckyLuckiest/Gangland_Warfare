@@ -1,0 +1,75 @@
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/car/CarCommand.java:[10,49] package org.luckyraven.gangland.gadget.car.config does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/car/CarCommand.java:[21,23] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/car/CarCommand.java:[23,100] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/car/CarGiveCommand.java:[14,42] package org.luckyraven.gangland.gadget.car does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/car/CarGiveCommand.java:[15,49] package org.luckyraven.gangland.gadget.car.config does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/car/CarGiveCommand.java:[28,23] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/car/CarGiveCommand.java:[31,57] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/car/CarInfoCommand.java:[13,42] package org.luckyraven.gangland.gadget.car does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/car/CarInfoCommand.java:[14,49] package org.luckyraven.gangland.gadget.car.config does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/car/CarInfoCommand.java:[22,23] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/car/CarInfoCommand.java:[25,57] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/car/CarListCommand.java:[10,42] package org.luckyraven.gangland.gadget.car does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/car/CarListCommand.java:[11,49] package org.luckyraven.gangland.gadget.car.config does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/car/CarListCommand.java:[19,23] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/car/CarListCommand.java:[21,81] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[126,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[17,49] package org.luckyraven.gangland.gadget.car.config does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[18,45] package org.luckyraven.gangland.gadget.config does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[190,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GadgetConfig.java:[10,42] package org.luckyraven.gangland.gadget.car does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GadgetConfig.java:[11,49] package org.luckyraven.gangland.gadget.car.access does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GadgetConfig.java:[12,49] package org.luckyraven.gangland.gadget.car.config does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GadgetConfig.java:[13,50] package org.luckyraven.gangland.gadget.car.message does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GadgetConfig.java:[14,50] package org.luckyraven.gangland.gadget.car.vehicle does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GadgetConfig.java:[15,45] package org.luckyraven.gangland.gadget.config does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GadgetConfig.java:[17,46] package org.luckyraven.gangland.gadget.jetpack does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GadgetConfig.java:[41,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GadgetConfig.java:[50,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GadgetConfig.java:[57,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GadgetConfig.java:[57,38] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GadgetConfig.java:[60,38] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GadgetConfig.java:[69,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GadgetConfig.java:[70,46] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GadgetConfig.java:[9,42] package org.luckyraven.gangland.gadget.car does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[180,50] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[5,49] package org.luckyraven.gangland.gadget.car.config does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[53,42] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/car/ParkedCarRepository.java:[20,13] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/car/ParkedCarRepository.java:[21,61] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/car/ParkedCarRepository.java:[31,30] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/car/ParkedCarRepository.java:[5,42] package org.luckyraven.gangland.gadget.car does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/car/ParkedCarRepository.java:[6,42] package org.luckyraven.gangland.gadget.car does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/car/ParkedCarRepository.java:[78,25] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/car/ParkedCarRepository.java:[83,33] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/car/ParkedCarTable.java:[10,43] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/car/ParkedCarTable.java:[3,42] package org.luckyraven.gangland.gadget.car does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/car/ParkedCarTable.java:[53,33] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/car/ParkedCarTable.java:[61,51] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/GadgetPhysicsConfigImpl.java:[3,45] package org.luckyraven.gangland.gadget.config does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/GadgetPhysicsConfigImpl.java:[8,49] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/gadget/GanglandCarMessages.java:[10,51] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/gadget/GanglandCarMessages.java:[4,50] package org.luckyraven.gangland.gadget.car.message does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/gadget/GanglandCarGangs.java:[15,42] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/gadget/GanglandCarGangs.java:[3,49] package org.luckyraven.gangland.gadget.car.access does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/item/ItemPredicates.java:[6,42] package org.luckyraven.gangland.gadget.car does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/item/converter/CarConverter.java:[23,1] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/item/converter/CarConverter.java:[26,23] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/item/converter/CarConverter.java:[5,42] package org.luckyraven.gangland.gadget.car does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/item/converter/CarConverter.java:[6,42] package org.luckyraven.gangland.gadget.car does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/item/refresher/CarItemRefresher.java:[17,1] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/item/refresher/CarItemRefresher.java:[20,23] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/item/refresher/CarItemRefresher.java:[7,42] package org.luckyraven.gangland.gadget.car does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/item/refresher/CarItemRefresher.java:[8,49] package org.luckyraven.gangland.gadget.car.config does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/item/serializer/CarItemSerializer.java:[6,42] package org.luckyraven.gangland.gadget.car does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/trade/car/CarBuySign.java:[34,23] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/trade/car/CarBuySign.java:[39,60] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/trade/car/CarBuySign.java:[5,42] package org.luckyraven.gangland.gadget.car does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/trade/car/CarBuySign.java:[6,42] package org.luckyraven.gangland.gadget.car does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/trade/car/CarSellSign.java:[34,23] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/trade/car/CarSellSign.java:[39,61] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/trade/car/CarSellSign.java:[5,42] package org.luckyraven.gangland.gadget.car does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/trade/car/CarSellSign.java:[6,42] package org.luckyraven.gangland.gadget.car does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/sign/validation/trade/car/CarSignValidator.java:[10,23] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/sign/validation/trade/car/CarSignValidator.java:[12,52] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/sign/validation/trade/car/CarSignValidator.java:[4,42] package org.luckyraven.gangland.gadget.car does not exist

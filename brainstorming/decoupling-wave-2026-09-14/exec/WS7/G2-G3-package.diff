@@ -1,0 +1,1800 @@
+# Review package — WS7 G2+G3 (+D4 bridge) — Gangland 0.9.2 working tree vs HEAD 03e60815 (G1 commit)
+--- status ---
+ M gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetFileConfig.java
+ M gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java
+ M gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GadgetItemPredicates.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/JetpackConverter.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/JetpackItemRefresher.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/JetpackItemSerializer.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/Jetpack.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackKey.java
+ M gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackService.java
+ M gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackSession.java
+ M gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackTask.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackAddon.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackBartizanTraitBridge.java
+ A gangland-features/gangland-gadget/src/main/resources/items/jetpacks.yml
+ A gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/JetpackNbtIdentityTest.java
+ M gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/JetpackTaskConsumptionRateTest.java
+ A gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackAddonLoadTest.java
+ A gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackBartizanTraitBridgeGuardTest.java
+--- diffstat ---
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackService.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackTask.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/JetpackTaskConsumptionRateTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/JetpackConverter.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/JetpackItemRefresher.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/JetpackItemSerializer.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/Jetpack.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackKey.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackAddon.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackBartizanTraitBridge.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/resources/items/jetpacks.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/JetpackNbtIdentityTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackAddonLoadTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackBartizanTraitBridgeGuardTest.java', LF will be replaced by CRLF the next time Git touches it
+ .../gangland/gadget/config/GadgetFileConfig.java   |  11 ++
+ .../gangland/gadget/config/GadgetModuleConfig.java |  52 ++++--
+ .../gangland/gadget/item/GadgetItemPredicates.java |   3 +
+ .../gangland/gadget/item/JetpackConverter.java     |  38 ++++
+ .../gangland/gadget/item/JetpackItemRefresher.java |  41 +++++
+ .../gadget/item/JetpackItemSerializer.java         |  23 +++
+ .../gangland/gadget/jetpack/Jetpack.java           | 143 +++++++++++++++
+ .../gangland/gadget/jetpack/JetpackKey.java        |  16 ++
+ .../gangland/gadget/jetpack/JetpackService.java    |  65 ++-----
+ .../gangland/gadget/jetpack/JetpackSession.java    |  11 +-
+ .../gangland/gadget/jetpack/JetpackTask.java       |  90 ++-------
+ .../gadget/jetpack/config/JetpackAddon.java        | 202 +++++++++++++++++++++
+ .../jetpack/config/JetpackBartizanTraitBridge.java |  40 ++++
+ .../src/main/resources/items/jetpacks.yml          |  73 ++++++++
+ .../gadget/jetpack/JetpackNbtIdentityTest.java     | 112 ++++++++++++
+ .../jetpack/JetpackTaskConsumptionRateTest.java    |  73 ++------
+ .../jetpack/config/JetpackAddonLoadTest.java       | 154 ++++++++++++++++
+ .../JetpackBartizanTraitBridgeGuardTest.java       | 118 ++++++++++++
+ 18 files changed, 1067 insertions(+), 198 deletions(-)
+--- diff ---
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackService.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackTask.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/JetpackTaskConsumptionRateTest.java', LF will be replaced by CRLF the next time Git touches it
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetFileConfig.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetFileConfig.java
+index a9a5923a..440ac158 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetFileConfig.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetFileConfig.java
+@@ -3,12 +3,13 @@ package org.luckyraven.gangland.gadget.config;
+ import lombok.CustomLog;
+ import org.bukkit.plugin.java.JavaPlugin;
+ import org.luckyraven.keystone.util.Placeholder;
+ import org.luckyraven.gangland.file.configuration.Settings;
+ import org.luckyraven.gangland.gadget.car.config.CarAddon;
+ import org.luckyraven.gangland.gadget.contract.GadgetPhysicsConfigImpl;
++import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
+ import org.luckyraven.keystone.bean.Bean;
+ import org.luckyraven.keystone.bean.Configuration;
+ import org.luckyraven.keystone.bean.Phase;
+ import org.luckyraven.keystone.module.ModuleLoader;
+ import org.luckyraven.keystone.permission.PermissionManager;
+ import org.luckyraven.keystone.persistence.FileHandler;
+@@ -41,7 +42,17 @@ public class GadgetFileConfig {
+ 		fileManager.addFile(new FileHandler(plugin, "cars", "items", ".yml", moduleLoader.classLoader()), true);
+ 
+ 		CarAddon addon = new CarAddon(permissionManager::addPermission, fileManager, placeholderService);
+ 		fileManager.registerInitializer(addon);
+ 		return addon;
+ 	}
++
++	@Bean
++	public JetpackAddon jetpackAddon(PermissionManager permissionManager, FileManager fileManager,
++	                                 Placeholder placeholderService, ModuleLoader moduleLoader) {
++		fileManager.addFile(new FileHandler(plugin, "jetpacks", "items", ".yml", moduleLoader.classLoader()), true);
++
++		JetpackAddon addon = new JetpackAddon(permissionManager::addPermission, fileManager, placeholderService);
++		fileManager.registerInitializer(addon);
++		return addon;
++	}
+ }
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java
+index 4217d2ca..b2ac5be0 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java
+@@ -1,16 +1,11 @@
+ package org.luckyraven.gangland.gadget.config;
+ 
+ import lombok.CustomLog;
+-import org.bukkit.Bukkit;
+ import org.bukkit.entity.Player;
+ import org.bukkit.inventory.ItemStack;
+-import org.bukkit.plugin.RegisteredServiceProvider;
+-import org.luckyraven.bartizan.api.BartizanApi;
+-import org.luckyraven.bartizan.api.wearable.Wearable;
+-import org.luckyraven.bartizan.api.wearable.WearableCatalog;
+ import org.bukkit.plugin.java.JavaPlugin;
+ import org.luckyraven.gangland.gadget.car.CarService;
+ import org.luckyraven.gangland.gadget.car.ParkedCar;
+ import org.luckyraven.gangland.gadget.car.access.CarAccessPolicy;
+ import org.luckyraven.gangland.gadget.car.access.GanglandCarGangs;
+ import org.luckyraven.gangland.gadget.car.config.CarAddon;
+@@ -18,13 +13,17 @@ import org.luckyraven.gangland.gadget.car.message.CarMessageContract;
+ import org.luckyraven.gangland.gadget.car.vehicle.VehicleRegistry;
+ import org.luckyraven.gangland.gadget.contract.GanglandCarMessages;
+ import org.luckyraven.gangland.gadget.item.CarConverter;
+ import org.luckyraven.gangland.gadget.item.CarItemRefresher;
+ import org.luckyraven.gangland.gadget.item.CarItemSerializer;
+ import org.luckyraven.gangland.gadget.item.GadgetItemPredicates;
++import org.luckyraven.gangland.gadget.item.JetpackConverter;
++import org.luckyraven.gangland.gadget.item.JetpackItemRefresher;
++import org.luckyraven.gangland.gadget.item.JetpackItemSerializer;
+ import org.luckyraven.gangland.gadget.jetpack.JetpackService;
++import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
+ import org.luckyraven.gangland.gadget.sign.CarSignContribution;
+ import org.luckyraven.gangland.gadget.sign.CarSignViewProvider;
+ import org.luckyraven.gangland.gang.member.MemberManager;
+ import org.luckyraven.gangland.gang.user.UserManager;
+ import org.luckyraven.gangland.item.ItemKind;
+ import org.luckyraven.keystone.item.ItemConverterRegistry;
+@@ -60,18 +59,13 @@ public class GadgetModuleConfig {
+ 
+ 	public GadgetModuleConfig(JavaPlugin plugin) {
+ 		this.plugin = plugin;
+ 	}
+ 
+ 	private boolean isJetpackFuelSink(ItemStack stack) {
+-		RegisteredServiceProvider<BartizanApi> rsp = Bukkit.getServicesManager().getRegistration(BartizanApi.class);
+-		if (rsp == null) return false;
+-
+-		WearableCatalog wearables = rsp.getProvider().wearables();
+-		Wearable        wearable  = wearables.resolveWearable(stack);
+-		return wearable != null && JetpackService.isJetpack(wearable);
++		return GadgetItemPredicates.JETPACK.test(stack);
+ 	}
+ 
+ 	@Bean
+ 	public CarMessageContract carMessageContract() {
+ 		return new GanglandCarMessages();
+ 	}
+@@ -99,24 +93,24 @@ public class GadgetModuleConfig {
+ 		return carService;
+ 	}
+ 
+ 	/**
+ 	 * T-KR2 (review B2, moved by B-1): installs the jetpack-refuel sink predicate onto the shared {@link FuelService}
+ 	 * so {@code FuelRefuelListener}'s container-to-sink click transfers fuel from a container (e.g. gasoline) into a
+-	 * worn jetpack again. {@link BartizanApi} is resolved fresh from the {@code ServicesManager} on every call
+-	 * (never cached in a field) — Bartizan may enable after this module, or not be installed at all
+-	 * ({@code module.yml}'s {@code Plugins: [Bartizan]}), in which case the predicate simply reports "not a sink".
++	 * worn jetpack again. Since WS7 (G3), this is a pure {@link GadgetItemPredicates#JETPACK} NBT-tag check — no
++	 * Bartizan/{@code ServicesManager} lookup involved any more.
+ 	 * Done here rather than in a {@code @PostConstruct} on the {@code @Configuration} constructor: every
+ 	 * {@code @Configuration} is instantiated before any bean phase runs, when only
+ 	 * {@code GanglandContext}/{@code DependencyContainer}/{@code JavaPlugin}/{@code ModuleLoader} are in the container —
+ 	 * a {@code FuelService} constructor parameter there throws {@code IllegalStateException} on bootstrap.
+ 	 */
+ 	@Bean
+-	public JetpackService jetpackService(FuelService fuelService, GadgetPhysicsConfig gadgetPhysicsConfig) {
++	public JetpackService jetpackService(FuelService fuelService, GadgetPhysicsConfig gadgetPhysicsConfig,
++	                                     JetpackAddon jetpackAddon) {
+ 		fuelService.setFuelSinkPredicate(this::isJetpackFuelSink);
+-		return new JetpackService(fuelService, plugin, gadgetPhysicsConfig);
++		return new JetpackService(fuelService, plugin, gadgetPhysicsConfig, jetpackAddon);
+ 	}
+ 
+ 	@Bean
+ 	public CarConverter carConverter(CarAddon carAddon, ItemConverterRegistry itemConverterRegistry) {
+ 		CarConverter converter = new CarConverter(carAddon);
+ 		itemConverterRegistry.register(ItemKind.CAR, converter);
+@@ -134,12 +128,38 @@ public class GadgetModuleConfig {
+ 	public CarItemRefresher carItemRefresher(CarAddon carAddon, ItemRefresherRegistry itemRefresherRegistry) {
+ 		CarItemRefresher refresher = new CarItemRefresher(carAddon);
+ 		itemRefresherRegistry.register(refresher);
+ 		return refresher;
+ 	}
+ 
++	@Bean
++	public JetpackConverter jetpackConverter(JetpackAddon jetpackAddon, ItemConverterRegistry itemConverterRegistry) {
++		JetpackConverter converter = new JetpackConverter(jetpackAddon);
++		itemConverterRegistry.register(ItemKind.JETPACK, converter);
++		return converter;
++	}
++
++	@Bean
++	public JetpackItemSerializer jetpackItemSerializer(ItemSerializerRegistry itemSerializerRegistry) {
++		JetpackItemSerializer serializer = new JetpackItemSerializer();
++		// Priority 20: above Bartizan's wearable serializer (priority 0) so a Bartizan-tagged jetpack (WS7-D4's
++		// conditional "wearable" NBT tag) is always claimed by gadget's own serializer first, never Bartizan's —
++		// closes the WS7-D4 review's Important-3 finding on twarning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/JetpackConverter.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/JetpackItemRefresher.java', LF will be replaced by CRLF the next time Git touches it
+he gadget side.
++		itemSerializerRegistry.register(GadgetItemPredicates.JETPACK, serializer, 20);
++		return serializer;
++	}
++
++	@Bean
++	public JetpackItemRefresher jetpackItemRefresher(JetpackAddon jetpackAddon,
++	                                                 ItemRefresherRegistry itemRefresherRegistry) {
++		JetpackItemRefresher refresher = new JetpackItemRefresher(jetpackAddon);
++		// Priority 20: above Bartizan's wearable refresher (priority 10) — same reason as the serializer above.
++		itemRefresherRegistry.register(refresher, 20);
++		return refresher;
++	}
++
+ 	@Bean
+ 	public CarSignContribution carSignContribution(@Qualifier("online") UserManager<Player> userManager,
+ 	                                               CarAddon carAddon) {
+ 		return new CarSignContribution(userManager, carAddon);
+ 	}
+ 
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GadgetItemPredicates.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GadgetItemPredicates.java
+index cce42296..ebe66bac 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GadgetItemPredicates.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GadgetItemPredicates.java
+@@ -1,10 +1,11 @@
+ package org.luckyraven.gangland.gadget.item;
+ 
+ import org.bukkit.inventory.ItemStack;
+ import org.luckyraven.gangland.gadget.car.CarKey;
++import org.luckyraven.gangland.gadget.jetpack.JetpackKey;
+ import org.luckyraven.keystone.item.ItemBuilder;
+ 
+ import java.util.function.Predicate;
+ 
+ /**
+  * Module-side counterpart of the core's {@code ItemPredicates}: constant {@link Predicate}s that identify item
+@@ -12,12 +13,14 @@ import java.util.function.Predicate;
+  * core cannot see {@link CarKey} once gadget is a runtime module.
+  */
+ public final class GadgetItemPredicates {
+ 
+ 	public static final Predicate<ItemStack> CAR = stack -> hasTag(stack, CarKey.CAR_ID.getKey());
+ 
++	public static final Predicate<ItemStack> JETPACK = stack -> hasTag(stack, JetpackKey.JETPACK_ID.getKey());
++
+ 	private GadgetItemPredicates() {
+ 	}
+ 
+ 	private static boolean hasTag(ItemStack stack, String tag) {
+ 		if (stack == null) {
+ 			return false;
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/JetpackConverter.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/JetpackConverter.java
+new file mode 100644
+index 00000000..555f469b
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/JetpackConverter.java
+@@ -0,0 +1,38 @@
++package org.luckyraven.gangland.gadget.item;
++
++import lombok.RequiredArgsConstructor;
++import org.bukkit.inventory.ItemStack;
++import org.luckyraven.gangland.gadget.jetpack.Jetpack;
++import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
++import org.luckyraven.gangland.item.ItemAttributes;
++
++import java.util.Map;
++
++/**
++ * Converts a {@code jetpack:<name>} item string into a fully-built {@link Jetpack} ItemStack. Mirrors
++ * {@link CarConverter}.
++ */
++@RequiredArgsConstructor
++public class JetpackConverter extends ItemAttributes {
++
++	private final JetpackAddon jetpackAddon;
++
++	@Override
++	public ItemStack convert(String type, String modifier, Map<String, String> attributes) {
++		if (modifier == null || modifier.isBlank()) {
++			return null;
++		}
++
++		Jetpack jetpack = jetpackAddon.getJetpack(modifier.trim());
++
++		if (jetpack == null) {
++			return null;
++		}
++
++		ItemStack itemStack = jetpack.buildItem();
++
++		applyAttributes(itemStack, attributes);
++
++		return itemStack;
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/JetpackItemRefresher.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/JetpackItemRefresher.java
+new file mode 100644
+index 00000000..2b966945
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/JetpackIwarning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/JetpackItemSerializer.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/Jetpack.java', LF will be replaced by CRLF the next time Git touches it
+temRefresher.java
+@@ -0,0 +1,41 @@
++package org.luckyraven.gangland.gadget.item;
++
++import lombok.RequiredArgsConstructor;
++import org.bukkit.entity.Player;
++import org.bukkit.inventory.ItemStack;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.gangland.gadget.jetpack.Jetpack;
++import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
++import org.luckyraven.keystone.item.ItemRefresher;
++
++/**
++ * Rebuilds a jetpack ItemStack into a factory-fresh copy (full fuel, fresh lore), mirroring
++ * {@link CarItemRefresher} — house rule {@code feedback_item_refresher_pattern}: stateful items refresh on every
++ * shop/trader delivery, not once at placement.
++ */
++@RequiredArgsConstructor
++public class JetpackItemRefresher implements ItemRefresher {
++
++	private final JetpackAddon jetpackAddon;
++
++	@Override
++	public boolean canRefresh(ItemStack source) {
++		return Jetpack.isJetpackItem(source);
++	}
++
++	@Override
++	@Nullable
++	public ItemStack refresh(ItemStack source, @Nullable Player context) {
++		String jetpackId = Jetpack.getJetpackId(source);
++		if (jetpackId == null || jetpackId.isEmpty()) return null;
++
++		Jetpack jetpack = jetpackAddon.getJetpack(jetpackId);
++		if (jetpack == null) return null;
++
++		ItemStack built = context != null ? jetpack.buildItem(context) : jetpack.buildItem();
++		if (built == null) return null;
++
++		built.setAmount(source.getAmount());
++		return built;
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/JetpackItemSerializer.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/JetpackItemSerializer.java
+new file mode 100644
+index 00000000..e7bea391
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/JetpackItemSerializer.java
+@@ -0,0 +1,23 @@
++package org.luckyraven.gangland.gadget.item;
++
++import org.bukkit.inventory.ItemStack;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.keystone.item.ItemBuilder;
++import org.luckyraven.gangland.gadget.jetpack.JetpackKey;
++import org.luckyraven.gangland.item.ItemKind;
++import org.luckyraven.keystone.item.ItemSerializer;
++
++/** Extracts the jetpack registry id from {@link JetpackKey#JETPACK_ID}. */
++public final class JetpackItemSerializer implements ItemSerializer {
++
++	@Override
++	public ItemKind kind() {
++		return ItemKind.JETPACK;
++	}
++
++	@Override
++	@Nullable
++	public String extract(ItemStack stack) {
++		return new ItemBuilder(stack).getStringTagData(JetpackKey.JETPACK_ID.getKey());
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/Jetpack.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/Jetpack.java
+new file mode 100644
+index 00000000..d7853aca
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/Jetpack.java
+@@ -0,0 +1,143 @@
++package org.luckyraven.gangland.gadget.jetpack;
++
++import lombok.Builder;
++import lombok.Getter;
++import org.bukkit.Material;
++import org.bukkit.entity.Player;
++import org.bukkit.inventory.ItemStack;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.gangland.item.fuel.FuelKey;
++import org.luckyraven.keystone.item.ItemBuilder;
++import org.luckyraven.keystone.util.Placeholder;
++
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Map;
++
++/**
++ * Domain entity for a gadget-owned jetpack, mirroring {@code car.Car} exactly. Rehomed off Bartizan's
++ * {@code Wearable} per WS7 — see {@code brainstorming/gadget-wave-2026-09-16/plans/WS7-gadget-ownership.md}.
++ */
++@Builder
++@Getter
++public class Jetpack {
++
++	// Identity
++	private final String       jetpackId;
++	private final String       displayName;
++	private final Material     material;
++	private final int          customModelData;
++	private final List<String> lore;
++
++	// Fuel
++	private final String fuelKey;
++	private final int    maxFuel;
++
++	// Physics — read directly by JetpackTask (G3) off this config objecwarning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackKey.java', LF will be replaced by CRLF the next time Git touches it
+t, never re-parsed per-item.
++	private final double ascendPower;
++	private final double maxSpeedY;
++	private final int    fuelConsumptionRate;
++
++	/**
++	 * The raw parsed {@code Sounds:} block ({@code {Thrust: {...}, Glide: {...}}}), read later by G3's
++	 * {@code JetpackTask.soundTag()}. Nullable — a jetpack with no {@code Sounds:} section simply has none.
++	 */
++	@Nullable
++	private final Map<String, Object> sounds;
++
++	/**
++	 * True only when this jetpack's id was actually registered with Bartizan's {@code WearableCatalog}
++	 * (WS7-D4 bridge, {@link org.luckyraven.gangland.gadget.jetpack.config.JetpackBartizanTraitBridge}). Drives
++	 * whether {@link #buildItem()} stamps the {@code wearable} tag.
++	 */
++	@Builder.Default
++	private final boolean bartizanRegistered = false;
++
++	/**
++	 * Placeholder resolver injected by {@code JetpackAddon} via the builder so {@link #buildItem(Player)} can
++	 * resolve {@code %gangland_*%} tokens in the display name and lore.
++	 */
++	@Nullable
++	private final Placeholder placeholder;
++
++	/**
++	 * Checks whether the given ItemStack is a jetpack item by looking for the jetpack NBT tag.
++	 */
++	public static boolean isJetpackItem(@Nullable ItemStack item) {
++		if (item == null || item.getType().isAir()) {
++			return false;
++		}
++		return new ItemBuilder(item).hasNBTTag(JetpackKey.JETPACK_ID.getKey());
++	}
++
++	/**
++	 * Extracts the jetpack configuration key from an ItemStack, or {@code null} if it is not a jetpack item.
++	 */
++	@Nullable
++	public static String getJetpackId(@Nullable ItemStack item) {
++		if (!isJetpackItem(item)) {
++			return null;
++		}
++		return new ItemBuilder(item).getStringTagData(JetpackKey.JETPACK_ID.getKey());
++	}
++
++	/**
++	 * Returns the permission node for this jetpack, derived from its configuration key.
++	 *
++	 * @return {@code "gangland.jetpacks.<jetpackId>"}
++	 */
++	public String getPermission() {
++		return "gangland.jetpacks." + jetpackId;
++	}
++
++	/**
++	 * Builds an ItemStack representing this jetpack in inventory form, stamped with identifying NBT tags.
++	 */
++	public ItemStack buildItem() {
++		return buildItem(null);
++	}
++
++	public ItemStack buildItem(@Nullable Player player) {
++		ItemBuilder builder = new ItemBuilder(material);
++		builder.setDisplayName(resolvePlaceholder(player, displayName));
++
++		List<String> resolvedLore = resolvePlaceholder(player, lore);
++		if (resolvedLore != null && !resolvedLore.isEmpty()) {
++			builder.setLore(resolvedLore);
++		}
++
++		if (customModelData > 0) {
++			builder.setCustomModelData(customModelData);
++		}
++
++		builder.addTag(JetpackKey.JETPACK_ID.getKey(), jetpackId);
++
++		builder.addTag(FuelKey.FUEL_ID.getKey(), fuelKey);
++		builder.addTag(FuelKey.FUEL_CURRENT.getKey(), maxFuel);
++		builder.addTag(FuelKey.FUEL_MAX.getKey(), maxFuel);
++
++		// Only stamped when JetpackBartizanTraitBridge actually registered this id with Bartizan's
++		// WearableCatalog (WS7-D4), so Bartizan's damage-reduction path resolves it. Never stamped otherwise —
++		// stamping it unconditionally would claim Bartizan's "wearable" vocabulary for an item Bartizan never
++		// actually registered a definition for.
++		if (bartizanRegistered) {
++			builder.addTag("wearable", jetpackId);
++		}
++
++		return builder.build();
++	}
++
++	private String resolvePlaceholder(@Nullable Player player, @Nullable String text) {
++		if (text == null || text.isEmpty() || placeholder == null) return text;
++		return placeholder.convert(player, text);
++	}
++
++	private List<String> resolvePlaceholder(@Nullable Player player, @Nullable List<String> loreLines) {
++		if (loreLines == null || loreLines.isEmpty() || placeholder == null) return loreLines;
++		List<String> resolved = new ArrayList<>(loreLines.size());
++		for (String line : loreLines) {
++			resolved.add(line == null ? null : placeholder.convert(player, line));
++		}
++		return resolved;
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackKey.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackKey.java
+new file mode 100644
+index 00000000..1efcf9dd
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackKey.java
+@@ -0,0 +1,16 @@
++package org.luckyraven.gangland.gadget.jetpack;
++
++import lombok.Getter;
++import lombok.RequiredArgsConstructor;
++
++/**
++ * NBT tag keys used to identify and store jetpack item data.
++ */
++@Getter
++@RequiredArgsConstructor
++public enum JetpackKey {
++
++	JETPACK_ID("jetpack");
++
++	private final String key;
++}
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackService.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackService.java
+index 933803c5..8b2140f8 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackService.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackService.java
+@@ -1,23 +1,19 @@
+ package org.luckyraven.gangland.gadget.jetpack;
+ 
+ import io.netty.channel.Channel;
+-import org.bukkit.Bukkit;
+ import org.bukkit.entity.Player;
+ import org.bukkit.inventory.ItemStack;
+-import org.bukkit.plugin.RegisteredServiceProvider;
+ import org.bukkit.plugin.java.JavaPlugin;
+ import org.jetbrains.annotations.Nullable;
+ import org.luckyraven.keystone.bean.BeanLifecycle;
+ import org.luckyraven.gangland.gadget.config.GadgetPhysicsConfig;
++import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
+ import org.luckyraven.gangland.item.fuel.FuelService;
+ import org.luckyraven.gangland.gadget.jetpack.packet.JetpackInputInterceptor;
+ import org.luckyraven.keystone.nms.input.PlayerInputInterceptor;
+-import org.luckyraven.bartizan.api.BartizanApi;
+-import org.luckyraven.bartizan.api.wearable.Wearable;
+-import org.luckyraven.bartizan.api.wearable.WearableCatalog;
+ 
+ import java.util.ArrayList;
+ import java.util.Map;
+ import java.util.UUID;
+ import java.util.concurrent.ConcurrentHashMap;
+ 
+@@ -27,36 +23,29 @@ import java.util.concurrent.ConcurrentHashMap;
+ public class JetpackService implements BeanLifecycle {
+ 
+ 	private final Map<UUID, JetpackSession> activeSessions = new ConcurrentHashMap<>();
+ 	private final FuelService               fuelService;
+ 	private final JavaPlugin                plugin;
+ 	private final GadgetPhysicsConfig       physicsConfig;
++	private final JetpackAddon              jetpackAddon;
+ 
+-	public JetpackService(FuelService fuelService, JavaPlugin plugin, GadgetPhysicsConfig physicsConfig) {
++	public JetpackService(FuelService fuelService, JavaPlugin plugin, GadgetPhysicsConfig physicsConfig,
++	                      JetpackAddon jetpackAddon) {
+ 		this.fuelService   = fuelService;
+ 		this.plugin        = plugin;
+ 		this.physicsConfig = physicsConfig;
+-	}
+-
+-	/**
+-	 * Resolves Bartizan's {@link WearableCatalog} lazily, never cached in a field — Bartizan may enable after this
+-	 * module (or not be installed at all, per {@code module.yml}'s {@code Plugins: [Bartizan]}).
+-	 */
+-	@Nullable
+-	private WearableCatalog wearables() {
+-		RegisteredServiceProvider<BartizanApi> rsp = Bukkit.getServicesManager().getRegistration(BartizanApi.class);
+-		return rsp == null ? null : rsp.getProvider().wearables();
++		this.jetpackAddon  = jetpackAddon;
+ 	}
+ 
+ 	/**
+ 	 * Activates the jetpack for the given player. Creates a session and starts the tick task.
+ 	 */
+-	public void activate(Player player, Wearable jetpackWearable) {
++	public void activate(Player player, Jetpack jetpack) {
+ 		if (activeSessions.containsKey(player.getUniqueId())) return;
+ 
+-		JetpackSession session = new JetpackSession(player, jetpackWearable);
++		JetpackSession session = new JetpackSession(player, jetpack);
+ 		JetpackTask    task    = new JetpackTask(session, this, fuelService, physicsConfig);
+ 		session.setTask(task);
+ 
+ 		activeSessions.put(player.getUniqueId(), session);
+ 		task.runTaskTimer(plugin, 1L, 1L);
+ 
+@@ -112,60 +101,44 @@ public class JetpackService implements BeanLifecycle {
+ 	/**
+ 	 * Schedules a next-tick check of the player's chestplate slot and activates or deactivates the jetpack
+ 	 * accordingly.
+ 	 */
+ 	public void scheduleChestplateCheck(Player player) {
+ 		player.getServer().getScheduler().runTask(plugin, () -> {
+-			WearableCatalog wearables  = wearables();
+-			ItemStack       chestplate = player.getInventory().getChestplate();
+-			Wearable wearable = chestplate != null && wearables != null ?
+-			                   wearables.resolveWearable(chestplate) :
+-			                   null;
+-
+-			if (wearable != null && isJetpack(wearable)) {
+-				activate(player, wearable);
++			ItemStack chestplate = player.getInventory().getChestplate();
++			String    id         = chestplate != null ? Jetpack.getJetpackId(chestplate) : null;
++			Jetpack   jetpack    = id != null ? jetpackAddon.getJetpack(id) : null;
++
++			if (jetpack != null) {
++				activate(player, jetpack);
+ 				return;
+ 			}
+ 
+ 			if (!isActive(player)) return;
+ 			deactivate(player);
+ 		});
+ 	}
+ 
+ 	/**
+-	 * A wearable is a jetpack when it carries the {@code fuel} extra tag (P2 Q2 — jetpack data has no dedicated
+-	 * {@code Wearable} fields any more, replacing the deleted {@code Wearable#isJetpack()}).
+-	 *
+-	 * <p>Public so {@code GadgetModuleConfig} can reuse the same predicate for
+-	 * {@link org.luckyraven.gangland.item.fuel.FuelService#setFuelSinkPredicate} (T-KR2, review B2) instead of
+-	 * duplicating the "fuel" tag check.
+-	 */
+-	public static boolean isJetpack(Wearable wearable) {
+-		return wearable.extraTags().containsKey("fuel");
+-	}
+-
+-	/**
+-	 * Refreshes the {@link Wearable} definition references held by all active jetpack sessions. Must be called after
+-	 * the wearable addon has been reloaded from config (e.g. on {@code /glw reload}) so that existing sessions
++	 * Refreshes the {@link Jetpack} definition references held by all active jetpack sessions. Must be called after
++	 * the jetpack addon has been reloaded from config (e.g. on {@code /glw reload}) so that existing sessions
+ 	 * immediately pick up updated physics values. Sessions whose player is offline or no longer wearing a jetpack are
+ 	 * deactivated.
+ 	 */
+ 	public void refreshSessions() {
+-		WearableCatalog wearables = wearables();
+ 		for (JetpackSession session : new ArrayList<>(activeSessions.values())) {
+ 			Player player = session.getPlayer();
+ 			if (!player.isOnline()) {
+ 				deactivate(player);
+ 				continue;
+ 			}
+ 			ItemStack chestplate = player.getInventory().getChestplate();
+-			Wearable  freshWearable = chestplate != null && wearables != null ?
+-			                         wearables.resolveWearable(chestplate) :
+-			                         null;
+-			if (freshWearable != null && isJetpack(freshWearable)) {
+-				session.setJetpackWearable(freshWearable);
++			String    id         = chestplate != null ? Jetpack.getJetpackId(chestplate) : null;
++			Jetpack   fresh      = id != null ? jetpackAddon.getJetpack(id) : null;
++			if (fresh != null) {
++				session.setJetpack(fresh);
+ 			} else {
+ 				deactivate(player);
+ 			}
+ 		}
+ 	}
+ 
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackSession.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackSession.java
+index 0a1d586b..577ad290 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackSession.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackSession.java
+@@ -1,23 +1,22 @@
+ package org.luckyraven.gangland.gadget.jetpack;
+ 
+ import lombok.Getter;
+ import lombok.Setter;
+ import org.bukkit.entity.Player;
+-import org.luckyraven.bartizan.api.wearable.Wearable;
+ 
+ /**
+  * Tracks the active state of a player using a jetpack. Created when the jetpack is activated (double-tap space) and
+  * destroyed when deactivated (land, remove chestplate, or disconnect).
+  */
+ @Getter
+ public class JetpackSession {
+ 
+-	private final Player   player;
++	private final Player  player;
+ 	@Setter
+-	private       Wearable jetpackWearable;
++	private       Jetpack jetpack;
+ 
+ 	@Setter
+ 	private          JetpackTask task;
+ 	@Setter
+ 	private          boolean     thrusting;
+ 	@Setter
+@@ -35,12 +34,12 @@ public class JetpackSession {
+ 	@Setter
+ 	private volatile boolean     inputSneak;
+ 
+ 	@Setter
+ 	private boolean glideModeActive;
+ 
+-	public JetpackSession(Player player, Wearable jetpackWearable) {
+-		this.player          = player;
+-		this.jetpackWearable = jetpackWearable;
++	public JetpackSession(Player player, Jetpack jetpack) {
++		this.player  = player;
++		this.jetpack = jetpack;
+ 	}
+ 
+ }
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackTask.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackTask.java
+index 8c1ebcb0..156da983 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackTask.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/JetpackTask.java
+@@ -1,28 +1,21 @@
+ package org.luckyraven.gangland.gadget.jetpack;
+ 
+-import org.bukkit.Bukkit;
+ import org.bukkit.entity.Player;
+ import org.bukkit.inventory.ItemStack;
+-import org.bukkit.plugin.RegisteredServiceProvider;
+ import org.bukkit.scheduler.BukkitRunnable;
+ import org.bukkit.util.Vector;
+ import org.jetbrains.annotations.Nullable;
+ import org.luckyraven.keystone.sound.SoundEffect;
+ import org.luckyraven.keystone.util.ActionBarManager;
+ import org.luckyraven.keystone.util.ChatUtil;
+ import org.luckyraven.keystone.util.ParticleUtil;
+ import org.luckyraven.keystone.util.PlayerUtil;
+ import org.luckyraven.gangland.gadget.config.GadgetPhysicsConfig;
+ import org.luckyraven.gangland.item.fuel.FuelService;
+ import org.luckyraven.gangland.item.fuel.FuelBar;
+-import org.luckyraven.bartizan.api.BartizanApi;
+-import org.luckyraven.bartizan.api.wearable.Wearable;
+-import org.luckyraven.bartizan.api.weapon.Weapon;
+-import org.luckyraven.bartizan.api.weapon.WeaponCatalog;
+-import org.luckyraven.bartizan.api.weapon.dto.ScopeData;
+ 
+ import java.util.Map;
+ 
+ /**
+  * Tick-based handler for an active jetpack. Runs every server tick while the jetpack is active.
+  *
+@@ -60,24 +53,18 @@ public class JetpackTask extends BukkitRunnable {
+ 		this.fuelService    = fuelService;
+ 		this.physicsConfig  = physicsConfig;
+ 	}
+ 
+ 	@Override
+ 	public void run() {
+-		Player   player  = session.getPlayer();
+-		Wearable jetpack = session.getJetpackWearable();
++		Player  player  = session.getPlayer();
++		Jetpack jetpack = session.getJetpack();
+ 
+ 		if (checkGuards(player, jetpack)) return;
+ 
+ 		boolean spaceHeld = session.isInputJump();
+-		// While a held weapon is scoped, ScopeJumpListener blocks upward Y movement on PlayerMoveEvent — the jump
+-		// can't happen, so the thrust path must not consume fuel either. Glide (sneak+space) is intentionally left
+-		// alone since the bug is about the jump key, not the glide gesture.
+-		if (spaceHeld && isScoped(player)) {
+-			spaceHeld = false;
+-		}
+ 		boolean sneakHeld = session.isInputSneak();
+ 		boolean hasFuel   = fuelService.hasFuelOnWearable(player);
+ 		boolean onGround  = PlayerUtil.isOnGround(player);
+ 
+ 		handleGlideToggle(spaceHeld, sneakHeld, onGround);
+ 
+@@ -85,13 +72,13 @@ public class JetpackTask extends BukkitRunnable {
+ 		double newY     = applyVerticalPhysics(player, jetpack, velocity.getY(), hasFuel, spaceHeld, onGround);
+ 		applyHorizontalPhysics(player, velocity.getX(), newY, velocity.getZ(), hasFuel, spaceHeld, onGround);
+ 		updateActionBar(player, spaceHeld, hasFuel);
+ 		playFlightSounds(player, jetpack);
+ 	}
+ 
+-	private boolean checkGuards(Player player, Wearable jetpack) {
++	private boolean checkGuards(Player player, Jetpack jetpack) {
+ 		if (!player.isOnline()) {
+ 			jetpackService.deactivate(player);
+ 			cancel();
+ 			return true;
+ 		}
+ 		if (!isWearingJetpack(player, jetpack)) {
+@@ -110,13 +97,13 @@ public class JetpackTask extends BukkitRunnable {
+ 		prevGlideToggleHeld = glideCombo;
+ 		if (onGround || (spaceHeld && !sneakHeld)) {
+ 			session.setGlideModeActive(false);
+ 		}
+ 	}
+ 
+-	private double applyVerticalPhysics(Player player, Wearable jetpack, double currentY, boolean hasFuel,
++	private double applyVerticalPhysics(Player player, Jetpack jetpack, double currentY, boolean hasFuel,
+ 	                                    boolean spaceHeld, boolean onGround) {
+ 		if (session.isGlideModeActive()) {
+ 			thrustTicks = 0;
+ 			if (hasFuel) {
+ 				fuelService.consumeFuelFromWearable(player, getEffectiveConsumptionRate(jetpack));
+ 				ParticleUtil.spawnJetpackGlide(player);
+@@ -130,14 +117,13 @@ public class JetpackTask extends BukkitRunnable {
+ 			fuelService.consumeFuelFromWearable(player, getEffectiveConsumptionRate(jetpack));
+ 			thrustTicks++;
+ 			double ramp = Math.min(thrustTicks / (double) physicsConfig.getJetpackThrustRampTicks(), 1.0);
+ 			ParticleUtil.spawnJetpackFlame(player);
+ 			session.setThrusting(true);
+ 			session.setGliding(false);
+-			return Math.min(currentY + extraDouble(jetpack, "jetpack_ascend_power", 0) * (0.1 + 0.9 * ramp),
+-			                extraDouble(jetpack, "jetpack_max_speed_y", currentY));
++			return Math.min(currentY + jetpack.getAscendPower() * (0.1 + 0.9 * ramp), jetpack.getMaxSpeedY());
+ 		}
+ 		if (!onGround) {
+ 			thrustTicks = 0;
+ 			ParticleUtil.spawnJetpackGlide(player);
+ 			session.setThrusting(false);
+ 			session.setGliding(true);
+@@ -200,36 +186,26 @@ public class JetpackTask extends BukkitRunnable {
+ 
+ 	private void updateActionBar(Player player, boolean spaceHeld, boolean hasFuel) {
+ 		int    currentFuel = fuelService.getWearableFuelLevel(player);
+ 		int    maxFuel     = fuelService.getWearableMaxFuelLevel(player);
+ 		String actionBar;
+ 		if (session.isGlideModeActive()) {
+-			actionBar = ChatUtil.color("&b\u2708 Gliding");
++			actionBar = ChatUtil.color("&b✈ Gliding");
+ 		} else if (spaceHeld && !hasFuel) {
+-			actionBar = ChatUtil.color("&c\u26A0 No fuel \u2014 refuel the jetpack!");
++			actionBar = ChatUtil.color("&c⚠ No fuel — refuel the jetpack!");
+ 		} else {
+ 			actionBar = FuelBar.render(currentFuel, maxFuel);
+ 		}
+ 		ActionBarManager.sendBackground(player, actionBar, 10);
+ 	}
+ 
+-	private int getEffectiveConsumptionRate(Wearable jetpack) {
+-		int baseRate = extraInt(jetpack, "jetpack_fuel_consumption_rate", 0);
+-
+-		int fuelEfficientLevel = jetpack.traitLevel("fuel_efficient");
+-		if (fuelEfficientLevel <= 0) return baseRate;
+-
+-		// fuel_efficient: max level 2, 10% reduction per level — ported verbatim from Bartizan's own
+-		// Wearable.TRAIT_TABLE ("fuel_efficient", {2, 0.10}); Bartizan owns the trait table now, Gangland only reads
+-		// the level back through traitLevel(String).
+-		int    capped    = Math.min(fuelEfficientLevel, 2);
+-		double reduction = capped * 0.10;
+-		return Math.max(1, (int) (baseRate * (1.0 - reduction)));
++	private int getEffectiveConsumptionRate(Jetpack jetpack) {
++		return jetpack.getFuelConsumptionRate();
+ 	}
+ 
+-	private void playFlightSounds(Player player, Wearable jetpack) {
++	private void playFlightSounds(Player player, Jetpack jetpack) {
+ 		soundTick++;
+ 		if (soundTick < SOUND_INTERVAL_TICKS) return;
+ 		soundTick = 0;
+ 
+ 		if (session.isThrusting()) {
+ 			SoundEffect.playSounds(player, soundTag(jetpack, SoundEffect.SoundType.VANILLA, "Thrust", "Default_Sound"),
+@@ -237,56 +213,28 @@ public class JetpackTask extends BukkitRunnable {
+ 		} else if (session.isGliding()) {
+ 			SoundEffect.playSounds(player, soundTag(jetpack, SoundEffect.SoundType.VANILLA, "Glide", "Default_Sound"),
+ 			                       soundTag(jetpack, SoundEffect.SoundType.CUSTOM, "Glide", "Custom_Sound"));
+ 		}
+ 	}
+ 
+-	private boolean isWearingJetpack(Player player, Wearable jetpack) {
+-		ItemStack chestplate = player.getInventory().getChestplate();
+-		if (chestplate == null || chestplate.getType().isAir()) return false;
+-		String key = Wearable.getWearableKey(chestplate);
+-		return key != null && key.equals(jetpack.getWearableKey());
++	private boolean isWearingJetpack(Player player, Jetpack jetpack) {
++		String id = Jetpack.getJetpackId(player.getInventory().getChestplate());
++		return id != null && id.equals(jetpack.getJetpackId());
+ 	}
+ 
+-	private boolean isScoped(Player player)warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackAddon.java', LF will be replaced by CRLF the next time Git touches it
+ {
+-		ItemStack held = player.getInventory().getItemInMainHand();
+-		if (held.getType().isAir()) return false;
+-
+-		RegisteredServiceProvider<BartizanApi> rsp = Bukkit.getServicesManager().getRegistration(BartizanApi.class);
+-		if (rsp == null) return false;
+-		WeaponCatalog weapons = rsp.getProvider().weapons();
+-
+-		Weapon weapon = weapons.validateAndGetWeapon(player, held);
+-		if (weapon == null) return false;
+-		ScopeData scope = weapon.getScopeData();
+-		return scope != null && scope.isScoped();
+-	}
+-
+-	// ── Wearable.extraTags() readers ─────────────────────────────────────────
+-	// Jetpack-specific data has no dedicated Wearable fields any more (P2 Q2) — every value below is read from the
+-	// generic Extra_Tags: map wearables.yml stamps onto the wearable (top-level scalars: NBT-stamped and readable
+-	// here identically; the nested Sounds map: readable here only, never stamped as NBT).
+-
+-	private static double extraDouble(Wearable wearable, String key, double fallback) {
+-		Object value = wearable.extraTags().get(key);
+-		return value instanceof Number number ? number.doubleValue() : fallback;
+-	}
+-
+-	private static int extraInt(Wearable wearable, String key, int fallback) {
+-		Object value = wearable.extraTags().get(key);
+-		return value instanceof Number number ? number.intValue() : fallback;
+-	}
++	// ── Jetpack config readers ───────────────────────────────────────────────
+ 
+ 	/**
+ 	 * Reads {@code Sounds.<group>.<leaf>} (e.g. {@code Sounds.Thrust.Default_Sound}) — itself a nested
+-	 * {@code {Sound, Volume, Pitch}} map, the same shape the deleted {@code WearableAddon.parseSoundConfig} used to
+-	 * parse into a {@link SoundEffect} at load time. Returns {@code null} when any level of the path is absent.
++	 * {@code {Sound, Volume, Pitch}} map, parsed by {@code JetpackAddon.loadJetpacks} straight off {@code
++	 * items/jetpacks.yml}'s {@code Sounds:} block. Returns {@code null} when any level of the path is absent.
+ 	 */
+ 	@Nullable
+-	private static SoundEffect soundTag(Wearable wearable, SoundEffect.SoundType type, String group, String leaf) {
+-		if (!(wearable.extraTags().get("Sounds") instanceof Map<?, ?> sounds)) return null;
++	private static SoundEffect soundTag(Jetpack jetpack, SoundEffect.SoundType type, String group, String leaf) {
++		Map<String, Object> sounds = jetpack.getSounds();
++		if (sounds == null) return null;
+ 		if (!(sounds.get(group) instanceof Map<?, ?> groupMap)) return null;
+ 		if (!(groupMap.get(leaf) instanceof Map<?, ?> leafMap)) return null;
+ 
+ 		if (!(leafMap.get("Sound") instanceof String sound) || sound.isEmpty()) return null;
+ 		float volume = leafMap.get("Volume") instanceof Number n ? n.floatValue() : 1.0f;
+ 		float pitch  = leafMap.get("Pitch") instanceof Number n ? n.floatValue() : 1.0f;
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackAddon.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackAddon.java
+new file mode 100644
+index 00000000..6d1c9d37
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackAddon.java
+@@ -0,0 +1,202 @@
++package org.luckyraven.gangland.gadget.jetpack.config;
++
++import com.cryptomorin.xseries.XMaterial;
++import lombok.CustomLog;
++import org.bukkit.Material;
++import org.bukkit.configuration.ConfigurationSection;
++import org.bukkit.configuration.file.FileConfiguration;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.gangland.file.configuration.Settings;
++import org.luckyraven.gangland.gadget.jetpack.Jetpack;
++import org.luckyraven.keystone.exception.PluginException;
++import org.luckyraven.keystone.persistence.FileHandler;
++import org.luckyraven.keystone.persistence.FileInitializer;
++import org.luckyraven.keystone.persistence.FileManager;
++import org.luckyraven.keystone.util.Placeholder;
++
++import java.io.IOException;
++import java.util.ArrayList;
++import java.util.Collections;
++import java.util.HashMap;
++import java.util.LinkedHashMap;
++import java.util.List;
++import java.util.Map;
++import java.util.Objects;
++import java.util.function.Consumer;
++
++/**
++ * Loads {@code items/jetpacks.yml} and holds the resulting {@link Jetpack} catalogue, mirroring
++ * {@code car.config.CarAddon}. Folds {@code CarManager}'s registry role directly into this class (no separate
++ * {@code JetpackManager} — the plan's file list names only {@code Jetpack}/{@code JetpackKey}/{@code config
++ * .JetpackAddon}).
++ */
++@CustomLog
++public class JetpackAddon implements FileInitializer {
++
++	private final Map<String, Jetpack> jetpacks = new HashMap<>();
++
++	private final Consumer<String> permissionRegistrar;
++	private final FileHandler      fileHandler;
++
++	/**
++	 * Placeholder resolver injected by the impl side; threaded into every parsed {@link Jetpack} via the builder
++	 * so its display name and lore resolve {@code %gangland_*%} tokens at item-build time.
++	 */
++	@Nullable
++	private final Placeholder placeholder;
++
++	public JetpackAddon(Consumer<String> permissionRegistrar, FileManager fileManager,
++	                    @Nullable Placeholder placeholder) {
++		this.permissionRegistrar = permissionRegistrar;
++		this.placeholder         = placeholder;
++
++		try {
++			String fileName = "jetpacks";
++
++			fileManager.checkFileLoaded(fileName);
++
++			this.fileHandler = Objects.requireNonNull(fileManager.getFile(fileName));
++		} catch (IOException exception) {
++			throw new PluginException(exception);
++		}
++	}
++
++	public void register(String key, Jetpack jetpack) {
++		jetpacks.put(key.toLowerCase(), jetpack);
++	}
++
++	@Nullable
++	public Jetpack getJetpack(String key) {
++		return jetpacks.get(key.toLowerCase());
++	}
++
++	public Map<String, Jetpack> getJetpacks() {
++		return Collections.unmodifiableMap(jetpacks);
++	}
++
++	public void clear() {
++		jetpacks.clear();
++	}
++
++	@Override
++	public FileHandler getFileHandler() {
++		return fileHandler;
++	}
++
++	@Override
++	public void initialize() {
++		loadJetpacks(fileHandler.getFileConfiguration());
++	}
++
++	void loadJetpacks(FileConfiguration config) {
++		List<String> loaded = new ArrayList<>();
++
++		for (String key : config.getKeys(false)) {
++			ConfigurationSection section = config.getConfigurationSection(key);
++			if (section == null) continue;
++
++			String materialString = section.getString("Material");
++			String name           = section.getString("Name");
++
++			if (materialString == null || name == null) {
++				log.warn("Jetpack '{}' is missing Material or Name - skipped.", key);
++				continue;
++			}
++
++			Material material = XMaterial.matchXMaterial(materialString).orElse(XMaterial.IRON_CHESTPLATE).get();
++
++			if (material == null) {
++				log.warn("Jetpack '{}' has invalid Material '{}' - skipped.", key, materialString);
++				continue;
++			}
++
++			String fuelKey = section.getString("Fuel_Key");
++			if (fuelKey == null || fuelKey.isBlank()) {
++				log.warn("Jetpack '{}' is missing a mandatory Fuel_Key - skipped.", key);
++				continue;
++			}
++
++			int          customModelData = section.getInt("Custom_Model_Data", 0);
++			List<String> lore            = section.getStringList("Lore");
++
++			int    maxFuel             = section.getInt("Max_Fuel", 3600);
++			double ascendPower         = section.getDouble("Ascend_Power", 0.2);
++			double maxSpeedY           = section.getDouble("Max_Speed_Y", 0.45);
++			int    fuelConsumptionRate = section.getInt("Fuel_Consumption_Rate", 1);
++
++			ConfigurationSection soundsSection = section.getConfigurationSection("Sounds");
++			Map<String, Object>  sounds        = soundsSection == null ? null : sectionToMap(soundsSection);
++
++			ConfigurationSection bartizanTraitsSection = section.getConfigurationSection("Bartizan_Traits");
++
++			double baseDamageReduction = 0.0;
++			Map<String, Integer> traits = Map.of();
++
++			if (bartizanTraitsSection != null) {
++				baseDamageReduction = bartizanTraitsSection.getDouble("Base_Damage_Reduction", 0.0);
++				trawarning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackBartizanTraitBridge.java', LF will be replaced by CRLF the next time Git touches it
+its              = traitsMap(bartizanTraitsSection.getConfigurationSection("Traits"));
++			}
++
++			boolean bartizanRegistered = false;
++			if (Settings.isBartizanAvailable() && bartizanTraitsSection != null) {
++				JetpackBartizanTraitBridge.register(key, baseDamageReduction, traits);
++				bartizanRegistered = true;
++			}
++
++			Jetpack jetpack = Jetpack.builder()
++			                         .jetpackId(key)
++			                         .displayName(name)
++			                         .material(material)
++			                         .customModelData(customModelData)
++			                         .lore(lore.isEmpty() ? null : lore)
++			                         .fuelKey(fuelKey)
++			                         .maxFuel(maxFuel)
++			                         .ascendPower(ascendPower)
++			                         .maxSpeedY(maxSpeedY)
++			                         .fuelConsumptionRate(fuelConsumptionRate)
++			                         .sounds(sounds)
++			                         .bartizanRegistered(bartizanRegistered)
++			                         .placeholder(placeholder)
++			                         .build();
++
++			register(key, jetpack);
++			permissionRegistrar.accept(jetpack.getPermission());
++			loaded.add(key);
++		}
++
++		log.debug("Loaded the following jetpacks:");
++		log.debug(loaded);
++	}
++
++	/**
++	 * Recursively converts a {@link ConfigurationSection} into a plain map — nested sections become nested maps,
++	 * leaf values pass through as-is. Used for the {@code Sounds:} block, read later by G3's
++	 * {@code JetpackTask.soundTag()}.
++	 */
++	private static Map<String, Object> sectionToMap(ConfigurationSection section) {
++		Map<String, Object> map = new LinkedHashMap<>();
++		for (String key : section.getKeys(false)) {
++			Object value = section.get(key);
++			if (value instanceof ConfigurationSection nested) {
++				map.put(key, sectionToMap(nested));
++			} else {
++				map.put(key, value);
++			}
++		}
++		return map;
++	}
++
++	/**
++	 * Reads a {@code Traits:} section the same way Bartizan's own trait table reads {@code wearables.yml} —
++	 * upper-case YAML keys, lower-cased on read ({@code Wearable.TRAIT_TABLE} is keyed lower-case).
++	 */
++	private static Map<String, Integer> traitsMap(@Nullable ConfigurationSection traitsSection) {
++		if (traitsSection == null) return Map.of();
++
++		Map<String, Integer> traits = new LinkedHashMap<>();
++		for (String traitKey : traitsSection.getKeys(false)) {
++			traits.put(traitKey.toLowerCase(), traitsSection.getInt(traitKey));
++		}
++		return traits;
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackBartizanTraitBridge.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackBartizanTraitBridge.java
+new file mode 100644
+index 00000000..9fad2d4c
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackBartizanTraitBridge.java
+@@ -0,0 +1,40 @@
++package org.luckyraven.gangland.gadget.jetpack.config;
++
++import org.bukkit.Bukkit;
++import org.bukkit.plugin.RegisteredServiceProvider;
++import org.luckyraven.bartizan.api.BartizanApi;
++import org.luckyraven.bartizan.api.wearable.Wearable;
++
++import java.util.Map;
++
++/**
++ * WS7-D4 static bridge: registers a jetpack's damage-reduction/trait numbers with Bartizan's
++ * {@code WearableCatalog} as an <em>external</em> entry (Bartizan never builds/converts/gives/serialises it —
++ * see {@code brainstorming/decoupling-wave-2026-09-14/exec/WS7/D4-design.md}). Gadget owns the item entirely;
++ * Bartizan's only role is reading this registered definition to compute a damage reduction.
++ *
++ * <p>Same shape as the B5-ruled {@code CarMeleeWeaponLookup}: a <b>static</b> helper — no {@code @Bean}, no
++ * field, no constructor parameter, not in any {@code @AutowireTarget}. This class (and its Bartizan-typed method
++ * signature) is only linked when {@link #register} is actually called, and the only call site is inside
++ * {@code JetpackAddon}'s {@code Settings.isBartizanAvailable()} warning: in the working copy of 'gangland-features/gangland-gadget/src/main/resources/items/jetpacks.yml', LF will be replaced by CRLF the next time Git touches it
+guard — so a Bartizan-less server never loads
++ * this class at all.
++ */
++public final class JetpackBartizanTraitBridge {
++
++	private JetpackBartizanTraitBridge() {
++	}
++
++	public static void register(String key, double baseDamageReduction, Map<String, Integer> traits) {
++		RegisteredServiceProvider<BartizanApi> rsp = Bukkit.getServicesManager().getRegistration(BartizanApi.class);
++		if (rsp == null) return;
++
++		Wearable wearable = Wearable.builder()
++		                            .wearableKey(key)
++		                            .baseDamageReduction(baseDamageReduction)
++		                            .traits(traits)
++		                            .external(true)
++		                            .build();
++
++		rsp.getProvider().wearables().register(key, wearable);
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/main/resources/items/jetpacks.yml b/gangland-features/gangland-gadget/src/main/resources/items/jetpacks.yml
+new file mode 100644
+index 00000000..cf846fe2
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/resources/items/jetpacks.yml
+@@ -0,0 +1,73 @@
++#   +------------------------------------------------------+   #
++#  /     __________      _______________       ____         \  #
++# |     / ________/      \_____   _____/      / __ \         | #
++# |    | /                     | |           / /  \ \        | #
++# |    | |  _______            | |          / /____\ \       | #
++# |    | |  \_____ \           | |         / ________ \      | #
++# |    | \_______/ ||          | |        / /        \ \     | #
++# |     \__________/           |_|       /_/          \_\    | #
++# |                                                          | #
++# |                    File: jetpacks.yml                    | #
++# |                  Author: [LuckyRaven10]                  | #
++#  \                                                        /  #
++#   +------------------------------------------------------+   #
++#
++# Each entry defines a wearable jetpack that can be equipped in the chestplate slot.
++# Items are identified in-game by a hidden NBT tag embedded when built via API.
++#
++# Fields:
++#   Material                - Bukkit material name for the inventory item
++#   Name                    - display name (supports & color codes)
++#   Custom_Model_Data       - integer for resource pack model
++#   Lore                    - list of lore lines
++#
++#   Fuel_Key                - mandatory: references a fuel unique item key (e.g. "gasoline");
++#                              an entry missing this field is skipped and logged
++#   Max_Fuel                - maximum fuel capacity (default 3600)
++#   Ascend_Power             - upward thrust strength per tick (default 0.2)
++#   Max_Speed_Y             - maximum vertical speed (default 0.45)
++#   Fuel_Consumption_Rate   - fuel consumed per tick while thrusting (default 1)
++#
++#   Sounds:                 - nested Thrust/Glide sound blocks, each Sound/Volume/Pitch
++#
++#   Bartizan_Traits:        - OPTIONAL. When present AND Bartizan is installed, these values are
++#                              registered with Bartizan (as an external, damage-only entry — Bartizan
++#                              never builds/gives/serialises this item) so its damage-reduction system
++#                              applies them while the jetpack is worn. When absent, or Bartizan isn't
++#                              installed, the jetpack is a plain fuel/thrust chestplate with vanilla
++#                              armor-material protection only.
++#     Base_Damage_Reduction - flat damage reduction fraction
++#     Traits:                - trait name -> level, read the same way Bartizan's own wearables.yml does
++#
++# Permission nodes are derived automatically as "gangland.jetpacks.<key>"
++# (e.g. jetpack → gangland.jetpacks.jetpack).
++
++jetpack:
++   Material: IRON_CHESTPLATE
++   Name: "&b&lJetpack"
++   Custom_Model_Data: 0
++   Lore:
++      - "&7Strap it on and take flight"
++      - "&7Hold &bSPACE &7to fly upward"
++      - "&7Fuel: &fGasoline"
++   Fuel_Key: "gasoline"
++   Max_Fuel: 3600
+warning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/JetpackNbtIdentityTest.java', LF will be replaced by CRLF the next time Git touches it
++   Ascend_Power: 0.2
++   Max_Speed_Y: 0.45
++   Fuel_Consumption_Rate: 1
++   Sounds:
++      Thrust:
++         Default_Sound:
++            Sound: ENTITY_BLAZE_SHOOT
++            Volume: 0.6
++            Pitch: 1.8
++      Glide:
++         Default_Sound:
++            Sound: ITEM_ELYTRA_FLYING
++            Volume: 0.4
++            Pitch: 1.0
++   Bartizan_Traits:
++      Base_Damage_Reduction: 0.05
++      Traits:
++         REINFORCED: 1
++         LIGHTWEIGHT: 2
+diff --git a/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/JetpackNbtIdentityTest.java b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/JetpackNbtIdentityTest.java
+new file mode 100644
+index 00000000..09e2cda5
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/JetpackNbtIdentityTest.java
+@@ -0,0 +1,112 @@
++package org.luckyraven.gangland.gadget.jetpack;
++
++import org.bukkit.Material;
++import org.bukkit.inventory.ItemStack;
++import org.junit.jupiter.api.AfterEach;
++import org.junit.jupiter.api.BeforeAll;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.gangland.core.testsupport.BukkitRegistryFixture;
++import org.luckyraven.gangland.gadget.item.GadgetItemPredicates;
++import org.luckyraven.gangland.item.fuel.FuelKey;
++import org.luckyraven.keystone.item.ItemBuilder;
++import org.luckyraven.keystone.item.nbt.NbtBridge;
++import org.luckyraven.keystone.testkit.RecordingNbtAccessor;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertFalse;
++import static org.junit.jupiter.api.Assertions.assertNull;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++
++/**
++ * Pins {@link Jetpack#isJetpackItem}/{@link Jetpack#getJetpackId}/{@link Jetpack#getPermission} NBT-tag identity
++ * checks, mirroring {@code car.CarNbtIdentityTest} (WS7 G3, gadget-wave-2026-09-16). Also pins the plan's §7 ask
++ * that {@link GadgetItemPredicates#CAR} and {@link GadgetItemPredicates#JETPACK} are mutually exclusive on a
++ * jetpack-tagged stack.
++ */
++@DisplayName("Jetpack — NBT tag identity (isJetpackItem / getJetpackId / getPermission)")
++class JetpackNbtIdentityTest {
++
++	@BeforeAll
++	static void bootstrapBukkitRegistry() {
++		// Subject code reaches Material.isAir() / an XSeries registry lookup — see the fixture javadoc.
++		BukkitRegistryFixture.install();
++	}
++
++	private RecordingNbtAccessor nbt;
++
++	@BeforeEach
++	void setUp() {
++		nbt = new RecordingNbtAccessor();
++		NbtBridge.install(nbt);
++	}
++
++	@AfterEach
++	void tearDown() {
++		NbtBridge.reset();
++	}
++
++	@Test
++	@DisplayName("isJetpackItem/getJetpackId are false/null for an item with no jetpack NBT tag at all")
++	void isJetpackItem_noTag_false() {
++		ItemStack plain = new ItemStack(Material.IRON_CHESTPLATE);
++
++		assertFalse(Jetpack.isJetpackItem(plain));
++		assertNull(Jetpack.getJetpackId(plain));
++	}
++
++	@Test
++	@DisplayName("isJetpackItem/getJetpackId read back exactly what buildItem's NBT-tag step would have stamped")
++	void isJetpackItem_stampedTag_readsBack() {
++		ItemStack stack = new ItemStack(Material.IRON_CHESTPLATE);
++		new ItemBuilder(stack).addTag(JetpackKey.JETPACK_ID.getKey(), "jetpack");
++
++		assertTrue(Jetpack.isJetpackItem(stack));
++		assertEquals("jetpack", Jetpack.getJetpackId(stack));
++	}
++
++	@Test
++	@DisplayName("isJetpackItem/getJetpackId are false/null for a null item or an AIR stack")
++	void isJetpackItem_nullOrAir_falseNull() {
++		assertFalse(Jetpack.isJetpackItem(null));
++		assertNull(Jetpack.getJetpackId(null));
++
++		ItemStack air = new ItemStack(Material.AIR);
++		assertFalse(Jetpack.isJetpackItem(air));
++		assertNull(Jetpack.getJetpackId(air));
++	}
++
++	@Test
++	@DisplayName("getPermission derives 'gangland.jetpacks.<jetpackId>' from the identity field, independent of NBT")
++	void getPermission_derivedFromJetpackId() {
++		Jetpack jetpack = Jetpack.builder().jetpackId("jetpack").build();
++
++		assertEquals("gangland.jetpacks.jetpack", jetpack.getPermission());
++	}
++
++	@Test
++	@DisplayName("a jetpack item also carries the fuel NBT tags buildItem() stamps, and is still recognized as a jetpack")
++	void jetpackItem_carriesFuelTags_stillRecognized() {
++		ItemStack   stack   = new ItemStack(Material.IRON_CHESTPLATE);
++		ItemBuilder builder = new ItemBuilder(stack);
++		builder.addTag(JetpackKey.JETPACK_ID.getKey(), "jetpack");
++		builder.addTag(FuelKey.FUEL_ID.getKey(), "jetpack_fuel");
++		builder.addTag(FuelKey.FUEL_CURRENT.getKey(), 3600);
++		builder.addTag(FuelKey.FUEL_MAX.getKey(), 3600);
++
++		assertTrue(Jetpack.isJetpackItem(stack));
++		assertEquals("jetpack", Jetpack.getJetpackId(stack));
++	}
++
++	@Test
++	@DisplayName("GadgetItemPredicates.CAR and JETPACK are mutually exclusive on a jetpack-tagged stack")
++	void carAndJetpackPredicates_mutuallyExclusive() {
++		ItemStack stack = new ItemStack(Material.IRON_CHESTPLATE);
++		new ItemBuilder(stack).addTag(JetpackKey.JETPACK_ID.getKey(), "jetpack");
++
++		assertTrue(GadgetItemPredicates.JETPACK.test(stack));
++		assertFalse(GadgetItemPredicates.CAR.test(stack));
++	}
++
++}
+diff --git a/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/JetpackTaskConsumptionRateTest.java b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/JetpackTaskConsumptionRateTest.java
+index 3b833f39..31f47f56 100644
+--- a/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/JetpackTaskConsumptionRateTest.java
++++ b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/JetpackTaskConsumptionRateTest.java
+@@ -1,86 +1,41 @@
+ package org.luckyraven.gangland.gadget.jetpack;
+ 
+ import org.junit.jupiter.api.DisplayName;
+ import org.junit.jupiter.api.Test;
+ import org.luckyraven.gangland.gadget.config.GadgetPhysicsConfig;
+ import org.luckyraven.gangland.item.fuel.FuelService;
+-import org.luckyraven.bartizan.api.wearable.Wearable;
+ 
+ import java.lang.reflect.Method;
+-import java.util.Map;
+ 
+ import static org.junit.jupiter.api.Assertions.assertEquals;
+ import static org.mockito.Mockito.mock;
+ 
+ /**
+- * Pins {@code JetpackTask.getEffectiveConsumptionRate}'s {@code fuel_efficient} trait discount math
+- * (gadgets-cars-fuel-jetpack.md — Test Surface bullet "JetpackTask.getEffectiveConsumptionRate — FUEL_EFFICIENT
+- * levels 0/1/2/overflow, floor of 1"). Re-pointed onto Bartizan's {@code Wearable} (group L, T-L2): the base rate now
+- * lives in {@code extraTags()} under {@code jetpack_fuel_consumption_rate} instead of a dedicated field, and the
+- * trait is read via {@code traitLevel("fuel_efficient")} instead of the deleted {@code WearableTrait} enum — the
+- * 10%-per-level/max-2 constants are ported verbatim (production code no longer has the enum to read them from).
+- *
+- * <p>The method is {@code private}, so this test reaches it via reflection rather than driving the full
+- * {@code run()}/{@code applyVerticalPhysics} tick pipeline (which needs a live {@code Player}, session and fuel
+- * service wired end-to-end) — the audit itself flags this method as "worth promoting to package-private for
+- * testability"; reflection avoids touching production code to get there.
++ * Pins {@code JetpackTask.getEffectiveConsumptionRate} post-S2 (WS7 G3): the fuel_efficient trait branch is
++ * deleted outright (nothing in items/jetpacks.yml ever configured it, and Bartizan's stock jetpack never carried
++ * the trait either — C1) — the method now returns the configured {@link Jetpack#getFuelConsumptionRate()}
++ * verbatim. Re-pointed off Bartizan's deleted {@code Wearable} mock onto a plain {@link Jetpack}.
+  */
+-@DisplayName("JetpackTask.getEffectiveConsumptionRate — fuel_efficient discount")
++@DisplayName("JetpackTask.getEffectiveConsumptionRate - post-S2, no trait branch")
+ class JetpackTaskConsumptionRateTest {
+ 
+-	private static int effectiveRate(Wearable jetpack) throws Exception {
++	private static int effectiveRate(Jetpack jetpack) throws Exception {
+ 		JetpackTask task = new JetpackTask(mwarning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackAddonLoadTest.java', LF will be replaced by CRLF the next time Git touches it
+ock(JetpackSession.class), mock(JetpackService.class),
+ 		                                   mock(FuelService.class), mock(GadgetPhysicsConfig.class));
+-		Method method = JetpackTask.class.getDeclaredMethod("getEffectiveConsumptionRate", Wearable.class);
++		Method method = JetpackTask.class.getDeclaredMethod("getEffectiveConsumptionRate", Jetpack.class);
+ 		method.setAccessible(true);
+ 		return (int) method.invoke(task, jetpack);
+ 	}
+ 
+-	private static Wearable jetpackWithTrait(int baseRate, Integer fuelEfficientLevel) {
+-		Wearable.WearableBuilder builder = Wearable.builder()
+-		                                            .wearableKey("jetpack")
+-		                                            .extraTags(Map.of("jetpack_fuel_consumption_rate", baseRate));
+-		if (fuelEfficientLevel != null) {
+-			builder.traits(Map.of("fuel_efficient", fuelEfficientLevel));
+-		} else {
+-			builder.traits(Map.of());
+-		}
+-		return builder.build();
++	private static Jetpack jetpackWithRate(int rate) {
++		return Jetpack.builder().jetpackId("jetpack").fuelConsumptionRate(rate).build();
+ 	}
+ 
+ 	@Test
+-	@DisplayName("level 0 (or absent) FUEL_EFFICIENT trait leaves the base rate unchanged")
+-	void level0_noDiscount() throws Exception {
+-		assertEquals(10, effectiveRate(jetpackWithTrait(10, 0)));
+-		assertEquals(10, effectiveRate(jetpackWithTrait(10, null)));
++	@DisplayName("returns the configured Fuel_Consumption_Rate verbatim - no trait discount exists any more")
++	void returnsConfiguredRateVerbatim() throws Exception {
++		assertEquals(10, effectiveRate(jetpackWithRate(10)));
++		assertEquals(1, effectiveRate(jetpackWithRate(1)));
++		assertEquals(0, effectiveRate(jetpackWithRate(0)));
+ 	}
+-
+-	@Test
+-	@DisplayName("level 1 applies a 10% discount (0.10 effectPerLevel)")
+-	void level1_tenPercentDiscount() throws Exception {
+-		// 10 * (1 - 0.10) = 9.0 -> (int) 9
+-		assertEquals(9, effectiveRate(jetpackWithTrait(10, 1)));
+-	}
+-
+-	@Test
+-	@DisplayName("level 2 (the trait's maxLevel) applies a 20% discount")
+-	void level2_twentyPercentDiscount() throws Exception {
+-		// 10 * (1 - 0.20) = 8.0 -> (int) 8
+-		assertEquals(8, effectiveRate(jetpackWithTrait(10, 2)));
+-	}
+-
+-	@Test
+-	@DisplayName("a level above maxLevel (3) is capped at level 2's 20% discount, not applied uncapped")
+-	void levelAboveMax_cappedAtMaxLevel() throws Exception {
+-		// fuel_efficient's max level is 2 (ported verbatim in JetpackTask), so level 3 is capped to 2 -> same as the level-2 case.
+-		assertEquals(8, effectiveRate(jetpackWithTrait(10, 3)));
+-	}
+-
+-	@Test
+-	@DisplayName("the discounted rate floors at 1, never reaches or drops below 0")
+-	void discount_floorsAtOne() throws Exception {
+-		// baseRate=1, 20% discount -> 1*(1-0.2)=0.8 -> (int) 0 -> Math.max(1, 0) = 1
+-		assertEquals(1, effectiveRate(jetpackWithTrait(1, 2)));
+-	}
+-
+ }
+diff --git a/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackAddonLoadTest.java b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackAddonLoadTest.java
+new file mode 100644
+index 00000000..f61ce993
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackAddonLoadTest.java
+@@ -0,0 +1,154 @@
++package org.luckyraven.gangland.gadget.jetpack.config;
++
++import org.bukkit.Bukkit;
++import org.bukkit.Material;
++import org.bukkit.configuration.InvalidConfigurationException;
++import org.bukkit.configuration.file.YamlConfiguration;
++import org.bukkit.plugin.PluginManager;
++import org.junit.jupiter.api.BeforeAll;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.gangland.core.testsupport.BukkitRegistryFixture;
++import org.luckyraven.gangland.gadget.jetpack.Jetpack;
++import org.luckyraven.keystone.persistence.FileHandler;
++import org.luckyraven.keystone.persistence.FileManager;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertNotNull;
++import static org.junit.jupiter.api.Assertions.assertNull;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.when;
++
++/**
++ * Pins GD-12 (WS7 G2): a jetpack entry missing its mandatory {@code Fuel_Key} started a session that never flew
++ * because nothing was ever wired to consume fuel — {@link JetpackAddon#loadJetpacks} now skips that entry outright
++ * at load time instead of loading a half-configured jetpack. New test, proven red against the pre-guard
++ * {@code JetpackAddon} (no such guard existed before this gate) — not a flip of an existing pinning test.
++ */
++@DisplayName("JetpackAddon — loadJetpacks (Fuel_Key mandatory, field round-trip)")
++class JetpackAddonLoadTest {
++
++	private static final String YAML = """
++			valid_jetpack:
++			   Material: IRON_CHESTPLATE
++			   Name: "&bTest Jetpack"
++			   Custom_Model_Data: 7
++			   Lore:
++			      - "&7Line one"
++			   Fuel_Key: "gasoline"
++			   Max_Fuel: 4000
++			   Ascend_Power: 0.25
++			   Max_Speed_Y: 0.5
++			   Fuel_Consumption_Rate: 2
++
++			missing_fuel_key:
++			   Material: IRON_CHESTPLATE
++			   Name: "&bNo Fuel Key"
++
++			blank_fuel_key:
++			   Material: IRON_CHESTPLATE
++			   Name: "&bBlank Fuel Key"
++			   Fuel_Key: ""
++
++			missing_material:
++			   Name: "&bNo Material"
++			   Fuel_Key: "gasoline"
++
++			missing_name:
++			   Material: IRON_CHESTPLATE
++			   Fuel_Key: "gasoline"
++			""";
++
++	@BeforeAll
++	static void bootstrapBukkitRegistry() {
++		// Subject code reaches Material.isAir() via an XSeries registry lookup — see the fixture javadoc.
++		BukkitRegistryFixture.install();
++
++		// XMaterial's enum <clinit> parses "MC: 1.xx" out of Bukkit.getVersion() the first time any XMaterial
++		// constant is touched (JetpackAddon.loadJetpacks calls XMaterial.matchXMaterial). The fixture's own
++		// server.getVersion() stub ("test") does not match that pattern and permanently poisons XMaterial's class
++		// init for the rest of this fork, so it is overridden here before the first touch.
++		when(Bukkit.getServer().getVersion()).thenReturn("git-Spigot-abcdef (MC: 1.21.11)");
++
++		// Settings.isBartizanAvailable() reads Bukkit.getPluginManager() directly; the fixture does not stub a
++		// PluginManager at all, so JetpackAddon's unconditional per-entry call NPEs without this.
++		PluginManager pluginManager = mock(PluginManager.class);
++		when(pluginManager.isPluginEnabled("Bartizan")).thenReturn(false);
++		when(Bukkit.getServer().getPluginManager()).thenReturn(pluginManager);
++	}
++
++	private static JetpackAddon addon() {
++		FileManager fileManager = mock(FileManager.class);
++		FileHandler fileHandler = mock(FileHandler.class);
++		when(fileManager.getFile("jetpacks")).thenReturn(fileHandler);
++
++		return new JetpackAddon(key -> {}, fileManager, null);
++	}
++
++	private static YamlConfiguration loadYaml(String yaml) {
++		YamlConfiguration config = new YamlConfiguration();
++		try {
++			config.loadFromString(yaml);
++		} catch (InvalidConfigurationException exception) {
++			throw new IllegalStateException(exception);
++		}
++		return config;
++	}
++
++	@Test
++	@DisplayName("an entry missing Fuel_Key is skipped, not loaded")
++	void missingFuelKey_skipped() {
++		JetpackAddon addon = addon();
++		addon.loadJetpacks(loadYaml(YAML));
++
++		assertNull(addon.getJetpack("missing_fuel_key"));
++	}
++
++	@Test
++	@DisplayName("an entry with a blank Fuel_Key is skipped, not loaded")
++	void blankFuelKey_skipped() {
++		JetpackAddon addon = addon();
++		addon.loadJetpacks(loadYaml(YAML));
++
++		assertNull(addon.getJetpack("blank_fuel_key"));
++	}
++
++	@Test
++	@DisplayName("an entry missing Material is skipped, not loaded")
++	void missingMaterial_skipped() {
++		JetpackAddon addon = addon();
++		addon.loadJetpacks(loadYaml(YAML));
++
++		assertNull(addon.getJetpack("missing_material"));
++	}
++
++	@Test
++	@DisplayName("an entry missing Name is skipped, not loaded")
++	void missingName_skipped() {
++		JetpackAddon addon = addon();
++		addon.loadJetpacks(loadYaml(YAML));
++
++		assertNull(addon.getJetpack("missing_name"));
++	}
++
++	@Test
++	@DisplayName("a complete entry round-trips every field through loadJetpacks")
++	void completeEwarning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackBartizanTraitBridgeGuardTest.java', LF will be replaced by CRLF the next time Git touches it
+ntry_roundTrips() {
++		JetpackAddon addon = addon();
++		addon.loadJetpacks(loadYaml(YAML));
++
++		Jetpack jetpack = addon.getJetpack("valid_jetpack");
++		assertNotNull(jetpack);
++
++		assertEquals("valid_jetpack", jetpack.getJetpackId());
++		assertEquals(Material.IRON_CHESTPLATE, jetpack.getMaterial());
++		assertEquals("&bTest Jetpack", jetpack.getDisplayName());
++		assertEquals(7, jetpack.getCustomModelData());
++		assertEquals("gasoline", jetpack.getFuelKey());
++		assertEquals(4000, jetpack.getMaxFuel());
++		assertEquals(0.25, jetpack.getAscendPower());
++		assertEquals(0.5, jetpack.getMaxSpeedY());
++		assertEquals(2, jetpack.getFuelConsumptionRate());
++		assertEquals("gangland.jetpacks.valid_jetpack", jetpack.getPermission());
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackBartizanTraitBridgeGuardTest.java b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackBartizanTraitBridgeGuardTest.java
+new file mode 100644
+index 00000000..8a74ed17
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/jetpack/config/JetpackBartizanTraitBridgeGuardTest.java
+@@ -0,0 +1,118 @@
++package org.luckyraven.gangland.gadget.jetpack.config;
++
++import org.bukkit.Bukkit;
++import org.bukkit.configuration.InvalidConfigurationException;
++import org.bukkit.configuration.file.YamlConfiguration;
++import org.bukkit.inventory.ItemStack;
++import org.bukkit.plugin.PluginManager;
++import org.junit.jupiter.api.AfterEach;
++import org.junit.jupiter.api.BeforeAll;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.gangland.core.testsupport.BukkitRegistryFixture;
++import org.luckyraven.gangland.gadget.jetpack.Jetpack;
++import org.luckyraven.keystone.item.ItemBuilder;
++import org.luckyraven.keystone.item.nbt.NbtBridge;
++import org.luckyraven.keystone.persistence.FileHandler;
++import org.luckyraven.keystone.persistence.FileManager;
++import org.luckyraven.keystone.testkit.RecordingNbtAccessor;
++
++import static org.junit.jupiter.api.Assertions.assertFalse;
++import static org.junit.jupiter.api.Assertions.assertNotNull;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.when;
++
++/**
++ * WS7-D4 guard (mirrors the B7-ruled {@code CarMeleeWeaponLookupGuardTest} shape — the observable is a value, not
++ * "non-invocation" of a mock, since {@code JetpackBartizanTraitBridge.register} is a static call with no instance
++ * to verify against): with {@code Settings.isBartizanAvailable()} stubbed {@code false}, a jetpack entry that
++ * configures {@code Bartizan_Traits:} still ends up with {@code bartizanRegistered == false} and
++ * {@link Jetpack#buildItem()} stamps no {@code wearable} NBT tag.
++ *
++ * <p>Goes through {@link JetpackAddon#loadJetpacks} (a fixture, not a narrower {@code Jetpack.builder()} unit) so
++ * the actual integration between {@code JetpackAddon} and {@code Settings.isBartizanAvailable()} is exercised, not
++ * just the downstream {@code Jetpack} field.
++ *
++ * <p>The brief's second case (guard stubbed {@code true}, {@code BartizanApi} unregistered on the services
++ * manager) is deliberately skipped: per {@code JetpackAddon}'s literal WS7-D4 pseudocode, {@code bartizanRegistered}
++ * is set {@code true} as soon as the guard's {@code isBartizanAvailable() && bartizanTraitsSection != null}
++ * condition holds — it does not depend on whether {@code JetpackBartizanTraitBridge.register}'s own
++ * {@code rsp == null} early-return actually reached Bartizan. So that scenario would assert the
++ * <em>opposite</em> outcome (the {@code wearable} tag IS stamped, even though the underlying Bartizan
++ * registration silently no-op'd) rather than "the same no-tag outcome for a different reason" — asserting it here
++ * would contradict the addon's own specified behaviour rather than confirm it.
++ */
++@DisplayName("JetpackBartizanTraitBridge — WS7-D4 guard (Bartizan unavailable)")
++class JetpackBartizanTraitBridgeGuardTest {
++
++	private static final String YAML = """
++			jetpack:
++			   Material: IRON_CHESTPLATE
++			   Name: "&bJetpack"
++			   Fuel_Key: "gasoline"
++			   Max_Fuel: 3600
++			   Bartizan_Traits:
++			      Base_Damage_Reduction: 0.05
++			      Traits:
++			         REINFORCED: 1
++			         LIGHTWEIGHT: 2
++			""";
++
++	@BeforeAll
++	static void bootstrapBukkitRegistry() {
++		BukkitRegistryFixture.install();
++		when(Bukkit.getServer().getVersion()).thenReturn("git-Spigot-abcdef (MC: 1.21.11)");
++	}
++
++	private RecordingNbtAccessor nbt;
++
++	@BeforeEach
++	void setUp() {
++		nbt = new RecordingNbtAccessor();
++		NbtBridge.install(nbt);
++	}
++
++	@AfterEach
++	void tearDown() {
++		NbtBridge.reset();
++	}
++
++	@Test
++	@DisplayName("Bartizan unavailable: bartizanRegistered stays false and buildItem() stamps no wearable tag, "
++	             + "even though Bartizan_Traits is configured")
++	void bartizanUnavailable_noRegistrationNoTag() {
++		stubBartizanUnavailable();
++
++		FileManager fileManager = mock(FileManager.class);
++		FileHandler fileHandler = mock(FileHandler.class);
++		when(fileManager.getFile("jetpacks")).thenReturn(fileHandler);
++
++		JetpackAddon addon = new JetpackAddon(key -> {}, fileManager, null);
++		addon.loadJetpacks(loadYaml(YAML));
++
++		Jetpack jetpack = addon.getJetpack("jetpack");
++		assertNotNull(jetpack);
++		assertFalse(jetpack.isBartizanRegistered());
++
++		ItemStack stack = jetpack.buildItem();
++		assertFalse(new ItemBuilder(stack).hasNBTTag("wearable"),
++		            "no wearable tag when Bartizan was unavailable at load time");
++	}
++
++	private static void stubBartizanUnavailable() {
++		PluginManager pluginManager = mock(PluginManager.class);
++		when(pluginManager.isPluginEnabled("Bartizan")).thenReturn(false);
++		when(Bukkit.getServer().getPluginManager()).thenReturn(pluginManager);
++	}
++
++	private static YamlConfiguration loadYaml(String yaml) {
++		YamlConfiguration config = new YamlConfiguration();
++		try {
++			config.loadFromString(yaml);
++		} catch (InvalidConfigurationException exception) {
++			throw new IllegalStateException(exception);
++		}
++		return config;
++	}
++}

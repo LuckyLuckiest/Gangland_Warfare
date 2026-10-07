@@ -1,0 +1,51 @@
+RUN cnc015-r3 jar=paper-1.21.11.jar java=jdk-26.0.2.1 client=26.1
+boot=20.5s exit={"code":0,"sig":null} steps=36/36 ok  logLines=476  artifacts=E:\Programming\java\wt\_programme\runs\cnc015-r3--R3-reg-cuffed
+== WARN/ERROR (15 distinct; 4 harness-noise lines suppressed) ==
+  1x STDERR [stderr] WARNING: Final field hashes in class io.papermc.paper.pluginremap.RemappedPluginIndex$State has been mutated reflectively by class com.google.gson.internal.bind.ReflectiveTypeAdapterFactory$2 in unnamed module @
+  1x STDERR [stderr] WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+  1x STDERR [stderr] WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+  1x STDERR [stderr] WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+  1x STDERR [stderr] WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.joml.MemUtil$MemUtilUnsafe (file:/E:/Programming/java/wt/_programme/servers/cnc015-r3/libraries/org/joml/joml/1.10.8/joml-1.10.8.jar)
+  1x STDERR [stderr] WARNING: Please consider reporting this to the maintainers of class org.joml.MemUtil$MemUtilUnsafe
+  1x STDERR [stderr] WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+  3x ERROR No key layers in MapLike[{}]
+  1x WARN [DeluxeMenus] Could not setup a NMS hook for your server version! The following Item options will not work: nbt_int, nbt_ints, nbt_string and nbt_strings.
+  1x WARN [Oriel.VaultConfig] Vault is installed but no economy provider is registered — economy actions/requirements will no-op
+  1x WARN [DeluxeMenus] Could not hook into Vault!
+  1x WARN [DeluxeMenus] Found 'data' option for item: teststone in menu: basics_menu. This option is deprecated and will be removed soon. Please use 'damage' instead.
+  1x WARN [ViaVersion] There is a newer plugin version available: 5.12.0, you're on: 5.12.0-SNAPSHOT
+  1x WARN *** You are running an outdated version of Minecraft, which is 4 release(s) and 3 build(s) behind!
+  1x WARN *** Please update to the latest stable version on https://papermc.io/downloads/paper ***
+== EXCEPTIONS (0 distinct) ==
+== FAILED STEPS (0) ==
+== CHAT (last 30 of 82) ==
+Unpaid $700 served as +1m 10s
+[actionbar] You are jailed
+[actionbar] Serving sentence - 369s
+[actionbar] Serving sentence - 368s
+[actionbar] Serving sentence - 367s
+[actionbar] Serving sentence - 366s
+[actionbar] Serving sentence - 365s
+[actionbar] Serving sentence - 364s
+[actionbar] Serving sentence - 363s
+[actionbar] Serving sentence - 362s
+[actionbar] Serving sentence - 361s
+[actionbar] Serving sentence - 360s
+[actionbar] Serving sentence - 359s
+[actionbar] Serving sentence - 358s
+[actionbar] Serving sentence - 357s
+GLW >> Wanted Status:
+☆☆☆☆☆
+[actionbar] Serving sentence - 356s
+[Server] CNCMARK:STATUS:R3-cuffed-30
+[actionbar] Serving sentence - 355s
+[Server] CNCMARK:R3:INTAKE
+[actionbar] Serving sentence - 354s
+[actionbar] Serving sentence - 353s
+[actionbar] Serving sentence - 352s
+GLW >> Wanted Status:
+☆☆☆☆☆
+[actionbar] Serving sentence - 351s
+[Server] CNCMARK:STATUS:R3-after-intake
+[actionbar] Serving sentence - 350s
+[END] disconnect.quitting

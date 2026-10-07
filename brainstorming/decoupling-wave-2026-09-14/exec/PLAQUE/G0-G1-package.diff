@@ -1,0 +1,1428 @@
+# Review package — Plaque 0.1.0 G0+G1 — working tree vs HEAD 61429ec
+--- status ---
+ A .gitignore
+ A CLAUDE.md
+ M README.md
+ A lombok.config
+ A pom.xml
+ A src/main/java/org/luckyraven/plaque/Plaque.java
+ A src/main/java/org/luckyraven/plaque/board/Board.java
+ A src/main/java/org/luckyraven/plaque/board/configuration/BoardAddon.java
+ A src/main/java/org/luckyraven/plaque/board/driver/DriverHandler.java
+ A src/main/java/org/luckyraven/plaque/board/driver/version/DriverV3.java
+ A src/main/java/org/luckyraven/plaque/board/part/Line.java
+ A src/main/java/org/luckyraven/plaque/board/part/StaticLine.java
+ A src/main/resources/org/luckyraven/plaque/module.properties
+ A src/main/resources/plugin.yml
+ A src/test/java/org/luckyraven/plaque/board/BoardTest.java
+ A src/test/java/org/luckyraven/plaque/board/part/LineTest.java
+--- diffstat ---
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'CLAUDE.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'lombok.config', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'pom.xml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/Plaque.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/board/Board.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/board/configuration/BoardAddon.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/board/driver/DriverHandler.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/board/driver/version/DriverV3.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/board/part/Line.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/board/part/StaticLine.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/resources/org/luckyraven/plaque/module.properties', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/resources/plugin.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/org/luckyraven/plaque/board/BoardTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/org/luckyraven/plaque/board/part/LineTest.java', LF will be replaced by CRLF the next time Git touches it
+ .gitignore                                         |   9 +
+ CLAUDE.md                                          | 137 ++++++++
+ README.md                                          |  32 +-
+ lombok.config                                      |   6 +
+ pom.xml                                            | 348 +++++++++++++++++++++
+ src/main/java/org/luckyraven/plaque/Plaque.java    |  27 ++
+ .../java/org/luckyraven/plaque/board/Board.java    |  48 +++
+ .../plaque/board/configuration/BoardAddon.java     |  86 +++++
+ .../plaque/board/driver/DriverHandler.java         | 122 ++++++++
+ .../plaque/board/driver/version/DriverV3.java      | 122 ++++++++
+ .../org/luckyraven/plaque/board/part/Line.java     | 115 +++++++
+ .../luckyraven/plaque/board/part/StaticLine.java   |  22 ++
+ .../org/luckyraven/plaque/module.properties        |   1 +
+ src/main/resources/plugin.yml                      |  13 +
+ .../org/luckyraven/plaque/board/BoardTest.java     |  63 ++++
+ .../org/luckyraven/plaque/board/part/LineTest.java | 111 +++++++
+ 16 files changed, 1261 insertions(+), 1 deletion(-)
+--- diff ---
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of '.gitignore', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'CLAUDE.md', LF will be replaced by CRLF the next time Git touches it
+diff --git a/.gitignore b/.gitignore
+new file mode 100644
+index 0000000..1b8e068
+--- /dev/null
++++ b/.gitignore
+@@ -0,0 +1,9 @@
++target/
++.flattened-pom.xml
++*.iml
++.idea/
++.vscode/
++*.log
++
++# Generated knowledge-graph output (graphify skill)
++graphify-out/
+diff --git a/CLAUDE.md b/CLAUDE.md
+new file mode 100644
+index 0000000..9f96f16
+--- /dev/null
++++ b/CLAUDE.md
+@@ -0,0 +1,137 @@
++# CLAUDE.md
++
++This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
++
++## What Plaque is
++
++A standalone Spigot plugin that renders a `scoreboard.yml`-driven FastBoard sidebar, split out of Gangland
++Warfare's `gangland-ui/scoreboard-api` module (decoupling wave WS1, 2026-09-16 — see
++`brainstorming/decoupling-wave-2026-09-14/plans/WS1-scoreboard.md` in the Gangland repo for the full plan,
++including the workstream's decision register and docket dispositions). Single Maven module (`packaging: jar`, no
++`-api` split — nobody outside this plugin calls it programmatically; `%gangland_*%`-style tokens through
++PlaceholderAPI are the only cross-plugin surface). Depends on Keystone (`org.luckyraven:keystone-*`) at
++`provided` scope, pinned to **1.9.2** (independent of Keystone's own current branch tip).
++
++## Server platform
++
++**Spigot only — not Paper.** Do NOT use Paper-specific APIs (e.g. `io.papermc.paper.event.player.PlayerJumpEvent`
++or any `io.papermc.*` import). Use Spigot/Bukkit equivalents instead. API floor is Spigot 1.16.5, matching
++Keystone's own floor.
++
++## Package map (as built, G0/G1)
++
++- `org.luckyraven.plaque.Plaque` — the `JavaPlugin` entry point. A G0/G1 stub: `onEnable`/`onDisable` only.
++  Bootstrap wiring (a `BeanFactory`-driven context, `settings.yml`/`scoreboard.yml` loading, the placeholder
++  chain, the enable-time board sweep, `/plaque reload`) lands in G2.
++- `org.luckyraven.plaque.board` — the rendering engine, ported verbatim (package rename only) from Gangland's
++  `gangland-ui/scoreboard-api`, with two fixes applied at port time (see "Deviations from upstream" below):
++  - `Board` (was `Scoreboard`) — owns the per-tick `RepeatingTimer` and start/stop lifecycle (UI-02 fix intact:
++    `timer.start(false)`, never `start(true)`).
++  - `board.driver.DriverHandler` — abstract base; owns the live `FastBoard` instance and the ViaVersion-aware
++    `FastBoardImpl.hasLinesMaxLength()` override (works for every driver, not just V3 — ViaVersion coupling is
++    repo-wide, not driver-specific).
++  - `board.driver.version.DriverV3` — the **only** driver ported (WS1 decision D1(b)). `DriverV1`/`DriverV2` and
++    the reflection-based `getDrivers()` scan were deleted, not carried forward — see "Silent migration" below.
++  - `board.part.Line` / `board.part.StaticLine` — per-board line state with rotation-cursor content cycling
++    (UI-01 fix intact: `Line#copy()`/`copyAll()` give every board its own instances).
++  - `board.configuration.BoardAddon` (was `ScoreboardAddon`) — a `FileInitializer` that parses `scoreboard.yml`
++    into `Line`/`StaticLine` instances. Not yet wired to a `FileManager` bean — that's G2.
++
++## Deviations from upstream Gangland (applied during the G1 port, not carried in unfixed)
++
++- **UI-17 (fixed):** `Line.getCurrentContent()`/`Line.update()` used to throw `IndexOutOfBoundsException` /
++  `ArithmeticException` on an empty `Lines:` list (a misconfigured board). Both now guard with an early
++  `if (contents.isEmpty()) return "";`. Pinned by `LineTest.emptyContents_doesNotThrowAndReturnsEmptyString`.
++- **Off the deprecated `Placeholder` interface:** `Line.update(...)`, `DriverHandler.updateLine(...)` and
++  `DriverV3`'s constructor took `org.luckyraven.keystone.util.Placeholder` (`@Deprecated(since = "1.3.0")`,
++  single method `convert(Player, String)`). All three now take
++  `org.luckyraven.keystone.placeholder.PlaceholderProvider` (`resolve(OfflinePlayer, String)`) instead — the
++  unified SPI the rest of the Keystone ecosystem is migrating onto. `Player extends OfflinePlayer`, so every call
++  site that used to pass a `Player` is unchanged.
++- **UI-01/UI-02 (already fixed upstream, ported as-is):** per-board `Line` copies and the synchronous
++  `RepeatingTimer` — do not "re-fix" these, they are already correct.
++
++## Silent migration warning (WS1 decision D1)
++
++Only `DriverV3` exists in this repo. Gangland's `ScoreboardManager.java:66` (pre-split) defaulted an
++**unrecognised** `Driver:` value to `DriverV1`, not V3. A server admin copying an old `settings.yml` that still
++says `Driver: Driver_V1` or `Driver_V2` must **not** be silently handed V1 (which had UI-16, now deleted code) —
++G2's `BoardManager`/`BoardSettings` must explicitly default to `DriverV3` and log a warning on any unrecognised
++value. Do not reintroduce a silent multi-driver fallback.
++
++## Cross-plugin placeholder chain (G2, not yet built)
++
++Per WS1-D5/A5: PAPI first, then an optional Keystone `PlaceholderProvider` Gangland publishes on Bukkit's
++`ServicesManager` (`GanglandPlaceholder.asProvider()`, the same seam `ItemVocabulary` already uses), then raw
++text last. `FlashPlaceholderWrapper.currentTick` is a **static field in the shared, unrelocated `keystone-common`
++jar** — this plugin's `Board`/`DriverV3` write it every tick, Gangland's `GanglandPlaceholder` reads it for
++`%gangland_flashif:...%`. This only works because Keystone is `provided` (not shaded) on both sides of the
++process boundary; do not relocate `org.luckyraven.keystone.*` in this plugin's shade config.
++
++## Build Commands
++
++```
++mvn clean install                # target/Plaque-<version>.jar
++mvn clean install -DskipTests    # skip tests
++```
++
++Keystone (`org.luckyraven:keystone-*`) must already be installed to `~/.m2` before this reactor resolves — build
++it with `mvn clean install` in the sibling `Keystone` repo first (or use the version already cached at 1.9.2).
++
++## Code Style
++
++### Method braces
++
++Every method body must have its opening and closing curly brackets on their own lines — never collapsed onto one
++line.
++
++**Wrong:**
++
++```java
++@Override
++public String getSecond() { return "s"; }
++```
++
++**Correct:**
++
++```java
++@Override
++public String getSecond() {
++	return "s";
++}
++```
++
++This applies to all methods regardless of how short the body is.
++
++### Logging
++
++Use Lombok `@CustomLog` (backed by Keystone's `org.luckyraven.keystone.logging.Logger`, configured in
++`lombok.config`) and `log.warn/info/error`; never `Bukkit.getLogger()`. `module.properties` sets the logger
++prefix.
++
++### Version-drifting enums
++
++`Material` / `Particle` / `Sound` / `PotionEffectType` resolve through XSeries or Keystone's
++`org.luckyraven.keystone.sound.SoundEffect` — never raw `valueOf` and never `player.playSound(..., Sound.X, ...)`.
++(Not yet exercised in this repo — no sound/particle code ported so far.)
++
++### Chat and color codes
++
++Colored chat goes through `org.luckyraven.keystone.util.ChatUtil.color()` with `&` codes; never emit a literal
++`§` in source. `Line.addContent()` already routes through it — do not bypass with a raw string concatenation.
++
++### YAML
++
++Block-style maps only — never inline `{ key: value }` flow syntax, every key on its own line.
++`Capitalized_Underscore_Separated` keys (lookup ids inside values stay lowercase). Never
++`FileConfiguration.setDefaults()` / `copyDefaults()` for YAML fallbacks. `scoreboard.yml`'s schema is kept
++byte-identical to Gangland's today, so an admin can copy the file across verbatim (WS1 plan §5).
++
++## Testing
++
++JUnit 5 + Mockito + Keystone's `keystone-testkit` (`BukkitStatics`, `PluginMocks` — see the Gangland repo's
++`documentation/TESTING.md` for the house patterns this repo follows). `com.viaversion:viaversion-api` stays on
++the `provided`/test classpath even where no test currently mocks a ViaVersion-typed field — Mockito's inline mock
++maker retransforms the full type hierarchy of any mocked type, so removing this dependency as "unused" risks a
++`TypeNotPresentException` the moment a future test mocks something in `DriverHandler`'s hierarchy (same gotcha
++documented in Bartizan's `CLAUDE.md`/`pom.xml`).
+diff --gitwarning: in the working copy of 'lombok.config', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'pom.xml', LF will be replaced by CRLF the next time Git touches it
+ a/README.md b/README.md
+index d57426e..0f79e64 100644
+--- a/README.md
++++ b/README.md
+@@ -1,3 +1,33 @@
+ # Plaque
+ 
+-Standalone scoreboard plugin for Spigot (Keystone-powered), extracted from Gangland Warfare (decoupling wave WS1, 2026-09-16).
++Standalone scoreboard plugin for Spigot (Keystone-powered), extracted from Gangland Warfare (decoupling wave WS1,
++2026-09-16). Renders a `scoreboard.yml`-driven FastBoard sidebar with no Gangland dependency — gang/user data
++reaches it only as text, through real PlaceholderAPI `%gangland_*%` tokens (plus an optional Keystone
++`PlaceholderProvider` fallback, landing in G2).
++
++## Status
++
++- **G0** (repo skeleton, pom, `plugin.yml`, `mvn clean install` green) — done.
++- **G1** (rendering engine ported: `Board`, `DriverHandler`, `DriverV3`, `Line`/`StaticLine`, `BoardAddon`; UI-17
++  guard added; UI-16 gone with `DriverV1`/`DriverV2`; off the deprecated `Placeholder` interface onto
++  `PlaceholderProvider`; tests ported) — done.
++- **G2** (bootstrap on Keystone beans, config loading, the PAPI → `PlaceholderProvider` → raw-text placeholder
++  chain, the enable-time board sweep, `/plaque reload`, docs) — not started.
++
++See `CLAUDE.md` for the package map, the fixes applied during the port, and the silent-migration warning around
++`Driver:` values. The binding plan lives in the Gangland repo:
++`brainstorming/decoupling-wave-2026-09-14/plans/WS1-scoreboard.md`.
++
++## Build
++
++```
++mvn clean install                # target/Plaque-<version>.jar
++mvn clean install -DskipTests    # skip tests
++```
++
++## Config compatibility
++
++`scoreboard.yml`'s schema is kept byte-identical to Gangland's today (landing in G2) — an admin copies
++`plugins/Gangland_Warfare/scoreboard.yml` to `plugins/Plaque/scoreboard.yml` verbatim. The one behavioral change:
++literal `%gangland_*%` tokens now need PlaceholderAPI (or Gangland's optional `ServicesManager` fallback) to
++resolve — Gangland's own in-process placeholder chain no longer applies once the board is a separate process.
+diff --git a/lombok.config b/lombok.config
+new file mode 100644
+index 0000000..8c13b84
+--- /dev/null
++++ b/lombok.config
+@@ -0,0 +1,6 @@
++config.stopBubbling = true
++lombok.log.fieldName = log
++# Keystone-wide @CustomLog declaration: generates
++#   private static final org.apache.logging.log4j.Logger log = Logger.getLogger(MyClass.class);
++# The Keystone Logger names loggers "<Module>.<SimpleName>" so Spigot's console prints [Module.Class].
++lombok.log.custom.declaration = org.apache.logging.log4j.Logger org.luckyraven.keystone.logging.Logger.getLogger(TYPE)
+diff --git a/pom.xml b/pom.xml
+new file mode 100644
+index 0000000..0ec0620
+--- /dev/null
++++ b/pom.xml
+@@ -0,0 +1,348 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
++         xmlns="http://maven.apache.org/POM/4.0.0"
++         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
++    <modelVersion>4.0.0</modelVersion>
++
++    <groupId>org.luckyraven.plaque</groupId>
++    <artifactId>plaque</artifactId>
++    <version>${revision}</version>
++    <packaging>jar</packaging>
++
++    <name>Plaque</name>
++    <description>Standalone Keystone-powered scoreboard plugin for Spigot, extracted from Gangland Warfare (decoupling wave WS1, 2026-09-16).</description>
++
++    <!-- Maven Central requires url, licenses, developers and scm in every published pom (only relevant once the
++         release profile below is activated; matches every other repo in this studio). -->
++    <url>https://github.com/LuckyLuckiest/Plaque</url>
++    <licenses>
++        <license>
++            <name>MIT License</name>
++            <url>https://opensource.org/licenses/MIT</url>
++            <distribution>repo</distribution>
++        </license>
++    </licenses>
++    <developers>
++        <developer>
++            <id>LuckyLuckiest</id>
++            <name>LuckyRaven10</name>
++            <email>luckyluckiest2002@gmail.com</email>
++            <url>https://github.com/LuckyLuckiest</url>
++        </developer>
++    </developers>
++    <scm>
++        <connection>scm:git:https://github.com/LuckyLuckiest/Plaque.git</connection>
++        <developerConnection>scm:git:ssh://git@github.com/LuckyLuckiest/Plaque.git</developerConnection>
++        <url>https://github.com/LuckyLuckiest/Plaque</url>
++        <tag>HEAD</tag>
++    </scm>
++
++    <properties>
++        <!-- Single source of truth for the Plaque version (CI-friendly versioning), same pattern as
++             Bartizan/Gangland/Keystone. Bump ONLY this property. -->
++        <revision>0.1.0</revision>
++
++        <!-- Java 17, matching Keystone's floor. -->
++        <maven.compiler.release>17</maven.compiler.release>
++        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
++
++        <!-- API floor: Spigot 1.16.5, matching Keystone's own floor (WS1 plan §2/§13 — nothing ported from
++             scoreboard-api needs a newer Bukkit symbol; do not inherit Bartizan's 1.21.11 pin by copy-paste). -->
++        <bukkit.version>1.16.5-R0.1-SNAPSHOT</bukkit.version>
++
++        <!-- Keystone: provided at runtime from Keystone-<version>.jar in /plugins, never shaded. Pinned per the
++             WS1 brief, independent of Keystone's own current branch tip (1.10.0). -->
++        <keystone.version>1.9.2</keystone.version>
++
++        <!-- fr.mrmicky:fastboard — same version Gangland's root pom shaded (root pom.xml:75 there). -->
++        <fastboard.version>2.1.5</fastboard.version>
++        <viaversion.version>5.8.1</viaversion.version>
++        <log4j.version>2.19.0</log4j.version>
++
++        <junit.version>6.0.3</junit.version>
++        <mockito.version>5.23.0</mockito.version>
++        <lombok.version>1.18.44</lombok.version>
++        <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
++
++        <!-- Central publishing (release profile only; not activated this wave — P1: install to ~/.m2, publish
++             once namespace/GPG setup lands, same as every other repo in this studio). -->
++        <maven-source-plugin.version>3.3.1</maven-source-plugin.version>
++        <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
++        <maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
++        <central-publishing-maven-plugin.version>0.11.0</central-publishing-maven-plugin.version>
++        <central.skipPublishing>false</central.skipPublishing>
++    </properties>
++
++    <repositories>
++        <repository>
++            <id>maven_central</id>
++            <url>https://repo.maven.apache.org/maven2/</url>
++        </repository>
++        <repository>
++            <id>spigot-repo</id>
++            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
++        </repository>
++        <repository>
++            <id>viaversion-repo</id>
++            <url>https://repo.viaversion.com</url>
++        </repository>
++        <repository>
++            <id>placeholderapi</id>
++            <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
++        </repository>
++    </repositories>
++
++    <dependencies>
++        <!-- Keystone: provided everywhere, never shaded. keystone-bean/keystone-hooks are not yet referenced by
++             G0/G1 code (bootstrap + placeholders land in G2) but are declared now per the WS1 plan's §2
++             dependency list, to avoid pom churn across gates. -->
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-common</artifactId>
++            <version>${keystone.version}</version>
++            <scope>provided</scope>
++        </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-bean</artifactId>
++            <version>${keystone.version}</version>
++            <scope>provided</scope>
++        </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-persistence</artifactId>
++            <version>${keystone.version}</version>
++            <scope>provided</scope>
++        </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-hooks</artifactId>
++            <version>${keystone.version}</version>
++            <scope>provided</scope>
++        </dependency>
++
++        <!-- Shaded into Plaque-<version>.jar and relocated below; the only real (non-Keystone) runtime
++             dependency this plugin ships. -->
++        <dependency>
++            <groupId>fr.mrmicky</groupId>
++            <artifactId>fastboard</artifactId>
++            <version>${fastboard.version}</version>
++        </dependency>
++
++        <dependency>
++            <groupId>com.viaversion</groupId>
++            <artifactId>viaversion-api</artifactId>
++            <version>${viaversion.version}</version>
++            <scope>provided</scope>
++        </dependency>
++
++        <!-- Required to compile Lombok's @CustomLog (lombok.config wires it to Keystone's Logger). -->
++        <dependency>
++            <groupId>org.apache.logging.log4j</groupId>
++            <artifactId>log4j-api</artifactId>
++            <version>${log4j.version}</version>
++            <scope>provided</scope>
++        </dependency>
++
++        <dependency>
++            <groupId>org.spigotmc</groupId>
++            <artifactId>spigot-api</artifactId>
++            <version>${bukkit.version}</version>
++            <scope>provided</scope>
++        </dependency>
++        <dependency>
++            <groupId>org.projectlombok</groupId>
++            <artifactId>lombok</artifactId>
++            <version>${lombok.version}</version>
++            <scope>provided</scope>
++        </dependency>
++
++        <!-- Test -->
++        <dependency>
++            <groupId>org.junit.jupiter</groupId>
++            <artifactId>junit-jupiter</artifactId>
++            <version>${junit.version}</version>
++            <scope>test</scope>
++        </dependency>
++        <dependency>
++            <groupId>org.mockito</groupId>
++            <artifactId>mockito-core</artifactId>
++            <version>${mockito.version}</version>
++            <scope>test</scope>
++        </dependency>
++        <!-- BukkitStatics / PluginMocks (documentation/TESTING.md house pattern in the Gangland repo). -->
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-testkit</artifactId>
++            <version>${keystone.version}</version>
++            <scope>test</scope>
++        </dependency>
++    </dependencies>
++
++    <build>
++        <finalName>Plaque-${project.version}</finalName>
++        <resources>
++            <resource>
++                <directory>src/main/resources</directory>
++                <filtering>true</filtering>
++            </resource>
++        </resources>
++        <plugins>
++            <!-- Resolves ${revision} in the installed/deployed pom, so a consumer resolving
++                 org.luckyraven.plaque:plaque from a repository sees a concrete version. -->
++            <plugin>
++                <groupId>org.codehaus.mojo</groupId>
++                <artifactId>flatten-maven-plugin</artifactId>
++                <version>1.6.0</version>
++                <configuration>
++                    <updatePomFile>true</updatePomFile>
++                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
++                </configuration>
++                <executions>
++                    <execution>
++                        <id>flatten</id>
++                        <phase>process-resources</phase>
++                        <goals>
++                            <goal>flatten</goal>
++                        </goals>
++                    </execution>
++                    <execution>
++                        <id>flatten.clean</id>
++                        <phase>clean</phase>
++                        <goals>
++                            <goal>clean</goal>
++                        </goals>
++                    </execution>
++                </executions>
++            </plugin>
++            <plugin>
++                <groupId>org.apache.maven.plugins</groupId>
++                <artifactId>maven-compiler-plugin</artifactId>
++                <version>3.13.0</version>
++                <configuration>
++                    <annotationProcessorPaths>
++                        <path>
++                            <groupId>org.projectlombok</groupId>
++                            <artifactId>lombok</artifactId>
++                            <version>${lombok.version}</version>
++                        </path>
++                    </annotationProcessorPaths>
++                </configuration>
++            </plugin>
++            <plugin>
++                <groupId>org.apache.maven.plugins</groupId>
++                <artifactId>maven-surefire-plugin</artifactId>
++                <version>${maven-surefire-plugin.version}</version>
++            </plugin>
++            <plugin>
++                <groupId>org.apache.maven.plugins</groupId>
++                <artifactId>maven-shade-plugin</artifactId>
++                <version>3.6.1</version>
++                <executions>
++                    <execution>
++                        <phase>package</phase>
++                        <goals>
++                            <goal>shade</goal>
++                        </goals>
++                        <configuration>
++                            <createDependencyReducedPom>false</createDependencyReducedPom>
++                            <!-- Keystone (and every other provided-scope dependency) stays out of the shaded jar
++                                 by virtue of "provided" scope; fastboard is the only dependency actually bundled.
++                                 Relocated so Spigot's shared classloader never collides with another plugin that
++                                 also shades FastBoard, same pattern Gangland used (gangland-build/pom.xml). -->
++                            <relocations>
++                                <relocation>
++                                    <pattern>fr.mrmicky.fastboard</pattern>
++                                    <shadedPattern>org.luckyraven.plaque.dependency.fastboard</shadedPattern>
++                                </relocation>
++                            </relocations>
++                            <filters>
++                                <filter>
++                                    <artifact>*:*</artifact>
++                                    <excludes>
++                                        <exclude>META-INF/*.SF</exclude>
++                                        <exclude>META-INF/*.DSA</exclude>
++                                        <exclude>META-INF/*.RSA</exclude>
++                                        <exclude>module-info.class</exclude>
++                                        <exclude>META-INF/versions/**/module-info.class</exclude>
++                                    </excludes>
++                                </filter>
++                            </filters>
++                        </configuration>
++                    </execution>
++                </executions>
++            </plugin>
++        </plugins>
++    </build>
++
++    <!-- Everything the Sonatype Central Portal requires on top of the normal build. Kept out of the default
++         build so day-to-day `mvn install` stays fast and never asks for a GPG key. Not activated this wave
++         (P1) — namespace/GPG setup is pending, same as every other repo in this studio. -->
++    <profiles>
++        <profile>
++            <id>release</id>
++            <build>
++                <plugins>
++                    <plugin>
++                        <groupId>org.apache.maven.plugins</groupId>
++                        <artifactId>maven-source-plugin</artifactId>
++                        <version>${maven-source-plugin.version}</version>
++                        <executions>
++                            <execution>
++                                <id>attach-sources</id>
++                                <goals>
++                                    <goal>jar-no-fork</goal>
++                                </goals>
++                            </execution>
++                        </executions>
++                    </plugin>
++                    <plugin>
++                        <grwarning: in the working copy of 'src/main/java/org/luckyraven/plaque/Plaque.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/board/Board.java', LF will be replaced by CRLF the next time Git touches it
+oupId>org.apache.maven.plugins</groupId>
++                        <artifactId>maven-javadoc-plugin</artifactId>
++                        <version>${maven-javadoc-plugin.version}</version>
++                        <configuration>
++                            <doclint>none</doclint>
++                            <quiet>true</quiet>
++                            <notimestamp>true</notimestamp>
++                        </configuration>
++                        <executions>
++                            <execution>
++                                <id>attach-javadocs</id>
++                                <goals>
++                                    <goal>jar</goal>
++                                </goals>
++                            </execution>
++                        </executions>
++                    </plugin>
++                    <plugin>
++                        <groupId>org.apache.maven.plugins</groupId>
++                        <artifactId>maven-gpg-plugin</artifactId>
++                        <version>${maven-gpg-plugin.version}</version>
++                        <executions>
++                            <execution>
++                                <id>sign-artifacts</id>
++                                <phase>verify</phase>
++                                <goals>
++                                    <goal>sign</goal>
++                                </goals>
++                            </execution>
++                        </executions>
++                    </plugin>
++                    <plugin>
++                        <groupId>org.sonatype.central</groupId>
++                        <artifactId>central-publishing-maven-plugin</artifactId>
++                        <version>${central-publishing-maven-plugin.version}</version>
++                        <extensions>true</extensions>
++                        <configuration>
++                            <publishingServerId>central</publishingServerId>
++                            <deploymentName>Plaque ${revision}</deploymentName>
++                            <autoPublish>false</autoPublish>
++                            <checksums>all</checksums>
++                            <skipPublishing>${central.skipPublishing}</skipPublishing>
++                        </configuration>
++                    </plugin>
++                </plugins>
++            </build>
++        </profile>
++    </profiles>
++</project>
+diff --git a/src/main/java/org/luckyraven/plaque/Plaque.java b/src/main/java/org/luckyraven/plaque/Plaque.java
+new file mode 100644
+index 0000000..1adebc8
+--- /dev/null
++++ b/src/main/java/org/luckyraven/plaque/Plaque.java
+@@ -0,0 +1,27 @@
++package org.luckyraven.plaque;
++
++import lombok.CustomLog;
++import org.bukkit.plugin.java.JavaPlugin;
++
++/**
++ * Plaque: a standalone Keystone-powered scoreboard plugin, split out of Gangland Warfare's
++ * {@code gangland-ui/scoreboard-api} module (decoupling wave WS1, 2026-09-16).
++ *
++ * <p>This is a G0/G1 stub. Bootstrap wiring (a {@code BeanFactory}-driven context, config loading, the
++ * PAPI/{@code PlaceholderProvider} placeholder chain and the enable-time board sweep) lands in G2 — see
++ * {@code brainstorming/decoupling-wave-2026-09-14/plans/WS1-scoreboard.md} in the Gangland repo.
++ */
++@CustomLog
++public final class Plaque extends JavaPlugin {
++
++	@Override
++	public void onEnable() {
++		log.info("Plaque {} enabling (G0/G1 stub — bootstrap lands in G2)", getDescription().getVersion());
++	}
++
++	@Override
++	public void onDisable() {
++		log.info("Plaque disabled");
++	}
++
++}
+diff --git a/src/main/java/org/luckyraven/plaque/board/Board.java b/src/main/java/org/luckyraven/plaque/board/Board.java
+new file mode 100644
+index 0000000..e83993b
+--- /dev/null
++++ b/src/main/java/org/luckyraven/plaque/board/Board.java
+@@ -0,0 +1,48 @@
++package org.luckyraven.plaque.board;
++
++import org.bukkit.plugin.java.JavaPlugin;
++import org.luckyraven.keystone.placeholder.effect.FlashPlaceholderWrapper;
++import org.luckyraven.keystone.timer.RepeatingTimer;
++import org.luckyraven.plaque.board.driver.DriverHandler;
++
++public class Board {
++
++	private warning: in the working copy of 'src/main/java/org/luckyraven/plaque/board/configuration/BoardAddon.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/board/driver/DriverHandler.java', LF will be replaced by CRLF the next time Git touches it
+final DriverHandler  driver;
++	private final RepeatingTimer timer;
++
++	public Board(JavaPlugin plugin, DriverHandler driver) {
++		this.driver = driver;
++
++		// repeating the task each tick
++		this.timer = new RepeatingTimer(plugin, 0L, 1L, time -> {
++			FlashPlaceholderWrapper.setCurrentTick(time.getTickCount());
++
++			this.driver.update();
++		});
++	}
++
++	/**
++	 * Starts the per-tick board refresh on the <b>main thread</b>. UI-02: this used to run asynchronously, and the
++	 * task body resolves placeholders (gang/user/bank lookups, PlaceholderAPI expansions) and pushes FastBoard
++	 * packets — none of which are thread-safe. Per {@code feedback_repeating_timer_async}, only flag flips and
++	 * cancels may run with {@code start(true)}.
++	 */
++	public void start() {
++		if (timer == null) return;
++
++		timer.start(false);
++	}
++
++	public void end() {
++		if (timer == null) return;
++
++		timer.stop();
++		driver.getFastBoard().delete();
++	}
++
++	@Override
++	public String toString() {
++		return String.format("Board{driver=%s,timer=%s}", driver, timer);
++	}
++
++}
+diff --git a/src/main/java/org/luckyraven/plaque/board/configuration/BoardAddon.java b/src/main/java/org/luckyraven/plaque/board/configuration/BoardAddon.java
+new file mode 100644
+index 0000000..c084532
+--- /dev/null
++++ b/src/main/java/org/luckyraven/plaque/board/configuration/BoardAddon.java
+@@ -0,0 +1,86 @@
++package org.luckyraven.plaque.board.configuration;
++
++import lombok.Getter;
++import org.bukkit.configuration.ConfigurationSection;
++import org.bukkit.configuration.file.FileConfiguration;
++import org.luckyraven.keystone.exception.PluginException;
++import org.luckyraven.keystone.persistence.FileHandler;
++import org.luckyraven.keystone.persistence.FileInitializer;
++import org.luckyraven.keystone.persistence.FileManager;
++import org.luckyraven.plaque.board.part.Line;
++import org.luckyraven.plaque.board.part.StaticLine;
++
++import java.io.IOException;
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Objects;
++
++public class BoardAddon implements FileInitializer {
++
++	private final FileHandler fileHandler;
++
++	private final @Getter List<Line> lines;
++	private @Getter       Line       title;
++
++	public BoardAddon(FileManager fileManager) {
++		this.lines = new ArrayList<>();
++
++		try {
++			fileManager.checkFileLoaded("scoreboard");
++			this.fileHandler = Objects.requireNonNull(fileManager.getFile("scoreboard"));
++		} catch (IOException exception) {
++			throw new PluginException(exception);
++		}
++	}
++
++	@Override
++	public FileHandler getFileHandler() {
++		return fileHandler;
++	}
++
++	@Override
++	public void initialize() {
++		FileConfiguration scoreboard = fileHandler.getFileConfiguration();
++
++		this.lines.clear();
++		this.title = null;
++
++		// initializing the title
++		List<String> titleLines = getLines(scoreboard, "Title");
++		long         interval   = scoreboard.getLong("Board.Title.Interval");
++
++		if (titleLines.size() == 1) this.title = new StaticLine();
++		else this.title = new Line(interval);
++		this.title.addAllContents(titleLines);
++
++		// initializing the rows
++		initializeRows(scoreboard);
++	}
++
++	private List<String> getLines(FileConfiguration scoreboard, String section) {
++		return Objects.requireNonNull(scoreboard.getConfigurationSection("Board." + section)).getStringList("Lines");
++	}
++
++	private void initializeRows(FileConfiguration scoreboard) {
++		ConfigurationSection section;
++		int                  index = 0;
++
++		do {
++			int row = index + 1;
++			section = scoreboard.getConfigurationSection("Board.Rows." + row);
++			if (section != null) {
++				List<String> lines    = getLines(scoreboard, "Rows." + row);
++				long         interval = section.getLong("Interval");
++
++				Line line;
++				if (interval == 0L) line = new StaticLine(index++);
++				else line = new Line(interval, index++);
++
++				line.addAllContents(lines);
++
++				this.lines.add(line);
++			}
++		} while (section != null);
++	}
++
++}
+diff --git a/src/main/java/org/luckyraven/plaque/board/driver/DriverHandler.java b/src/main/java/org/luckyraven/plaque/board/driver/DriverHandler.java
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/board/driver/version/DriverV3.java', LF will be replaced by CRLF the next time Git touches it
+new file mode 100644
+index 0000000..4587510
+--- /dev/null
++++ b/src/main/java/org/luckyraven/plaque/board/driver/DriverHandler.java
+@@ -0,0 +1,122 @@
++package org.luckyraven.plaque.board.driver;
++
++import com.viaversion.viaversion.api.ViaAPI;
++import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
++import fr.mrmicky.fastboard.FastBoard;
++import lombok.Getter;
++import org.bukkit.entity.Player;
++import org.luckyraven.keystone.placeholder.PlaceholderProvider;
++import org.luckyraven.plaque.board.part.Line;
++
++import java.util.ArrayList;
++import java.util.HashMap;
++import java.util.List;
++import java.util.Map;
++
++@Getter
++public abstract class DriverHandler {
++
++	private final PlaceholderProvider placeholder;
++	private final FastBoard           fastBoard;
++	private final List<Line>          lines;
++	private final Line                title;
++	private final Map<Line, Long>     lineUpdateCounts;
++
++	private long globalTickCount;
++
++	public DriverHandler(PlaceholderProvider placeholder, ViaAPI<?> viaAPI, Player player, Line title,
++	                     List<Line> lines) {
++		this.placeholder      = placeholder;
++		this.fastBoard        = new FastBoardImpl(player, viaAPI);
++		this.title            = title;
++		// UI-01: own the list. The caller used to hand in the live configuration list, and appending the title to
++		// it added one more entry per board created — once per join and per reload, without bound.
++		this.lines            = new ArrayList<>(lines);
++		this.lineUpdateCounts = new HashMap<>();
++		this.globalTickCount  = 0L;
++
++		this.lines.add(title);
++
++		// initialize line update counts
++		this.lines.forEach(line -> lineUpdateCounts.put(line, 0L));
++
++		// need to update all the values so when initialized, the user doesn't see the placeholders
++		updateBoard();
++	}
++
++	public abstract void update();
++
++	@Override
++	public String toString() {
++		return String.format("DriverHandler{title=%s,lines=%s}", fastBoard, lines);
++	}
++
++	public long getLineTickCount(Line line) {
++		return lineUpdateCounts.getOrDefault(line, 0L);
++	}
++
++	protected String updateLine(Line line) {
++		return line.update(placeholder, fastBoard.getPlayer());
++	}
++
++	protected void incrementTick() {
++		globalTickCount++;
++	}
++
++	private boolean shouldUpdateLine(Line line) {
++		// Static lines never update after initial
++		if (line.isStatic() || line.getInterval() == 0L) {
++			return false;
++		}
++
++		// Update when globalTickCount is divisible by the line's interval
++		return globalTickCount % line.getInterval() == 0L;
++	}
++
++	private void updateBoard() {
++		// update title
++		if (shouldUpdateLine(title)) {
++			lineUpdateCounts.merge(title, 1L, Long::sum);
++			fastBoard.updateTitle(updateLine(title));
++		}
++
++		// update lines
++		List<String> updateLines = lines.stream().filter(line -> line != title).map(line -> {
++			if (shouldUpdateLine(line)) {
++				lineUpdateCounts.merge(line, 1L, Long::sum);
++				return updateLine(line);
++			} else {
++				// return cached content
++				return line.getCurrentContent();
++			}
++		}).toList();
++
++		fastBoard.updateLines(updateLines);
++	}
++
++	private static class FastBoardImpl extends FastBoard {
++
++		private final ViaAPI<?> viaAPI;
++
++		public FastBoardImpl(Player player, ViaAPI<?> viaAPI) {
++			super(player);
++
++			this.viaAPI = viaAPI;
++		}
++
++		@Override
++		protected boolean hasLinesMaxLength() {
++			// change the max line length according to the player version using ViaVersion
++			if (viaAPI != null) {
++				int playerVersion = viaAPI.getPlayerVersion(getPlayer().getUniqueId());
++				int version       = ProtocolVersion.v1_13.getVersion();
++
++				return playerVersion < version;
++			}
++
++			// assuming the players are all >1.13
++			return false;
++		}
++	}
++
++}
+diff --git a/src/main/java/org/luckyraven/plaque/board/driver/version/DriverV3.java b/src/main/java/org/luckyraven/plaque/board/driver/version/DriverV3.java
+new file mode 100644
+index 0000000..9f9e6e0
+--- /dev/null
++++ b/src/main/java/org/luckyraven/plaque/board/driver/version/DriverV3.java
+@@ -0,0 +1,122 @@
++package org.luckyraven.plaque.board.drivewarning: in the working copy of 'src/main/java/org/luckyraven/plaque/board/part/Line.java', LF will be replaced by CRLF the next time Git touches it
+r.version;
++
++import com.viaversion.viaversion.api.ViaAPI;
++import org.bukkit.entity.Player;
++import org.luckyraven.keystone.placeholder.PlaceholderProvider;
++import org.luckyraven.plaque.board.driver.DriverHandler;
++import org.luckyraven.plaque.board.part.Line;
++
++import java.util.HashMap;
++import java.util.List;
++import java.util.Map;
++import java.util.stream.Collectors;
++
++/**
++ * DriverV3: Minimal-diff, low-overhead scoreboard driver.
++ * <p>
++ * Strategy: - Cluster lines by their interval like previous drivers. - Maintain a cache of the last rendered text per
++ * line (including the title). - On each tick, process only clusters whose interval is due, and only send FastBoard
++ * updates for lines whose computed text actually changed.
++ * <p>
++ * This reduces redundant updates (no-ops) and thus lowers bandwidth and CPU usage, while still honoring per-line update
++ * intervals.
++ */
++public class DriverV3 extends DriverHandler {
++
++	private final Map<Long, List<Line>> clusters;
++	private final Map<Long, Integer>    clustersInterval;
++	private final Map<Line, String>     cache;
++
++	public DriverV3(PlaceholderProvider placeholder, ViaAPI<?> viaAPI, Player player, Line title, List<Line> lines) {
++		super(placeholder, viaAPI, player, title, lines);
++
++		this.clusters         = getLines().stream().collect(Collectors.groupingBy(Line::getInterval));
++		this.clustersInterval = new HashMap<>();
++		this.cache            = new HashMap<>();
++
++		for (long key : clusters.keySet()) {
++			this.clustersInterval.put(key, 0);
++		}
++	}
++
++	@Override
++	public void update() {
++		updateFlashLines();
++
++		for (Map.Entry<Long, Integer> entry : clustersInterval.entrySet()) {
++			long interval        = entry.getKey();
++			int  currentInterval = entry.getValue();
++
++			// Only process when the cluster is due, and ignore 0 (never updates)
++			if (interval == currentInterval && interval != 0) {
++				List<Line> lines = clusters.get(interval);
++
++				if (lines == null || lines.isEmpty()) {
++					continue;
++				}
++
++				// If the cluster contains the title, handle it separately
++				if (lines.contains(getTitle())) {
++					String newTitle = updateLine(getTitle());
++					String oldTitle = cache.get(getTitle());
++					if (oldTitle == null || !oldTitle.equals(newTitle)) {
++						getFastBoard().updateTitle(newTitle);
++						cache.put(getTitle(), newTitle);
++					}
++				}
++
++				// Update only the lines whose value changed
++				for (Line line : lines) {
++					if (line == getTitle()) continue;
++					if (isFlashLine(line)) continue;
++
++					String newValue = updateLine(line);
++					String oldValue = cache.get(line);
++
++					if (oldValue == null || !oldValue.equals(newValue)) {
++						getFastBoard().updateLine(line.getUsedIndex(), newValue);
++						cache.put(line, newValue);
++					}
++				}
++			}
++
++			// increment the current interval value
++			int  current = currentInterval + 1;
++			long inter   = interval + 1;
++			int  value   = (int) (current % inter);
++
++			clustersInterval.replace(interval, value);
++		}
++	}
++
++	/**
++	 * Update all lines containing flash effects every tick for smooth animation
++	 */
++	private void updateFlashLines() {
++		for (Line line : List.copyOf(getLines())) {
++			if (line == getTitle()) continue;
++
++			// Check if this line contains flash effects
++			if (!isFlashLine(line)) continue;
++
++			String newValue = updateLine(line);
++			String oldValue = cache.get(line);
++
++			// Always update if value changed (flash effect changes every tick)
++			if (!(oldValue == null || !oldValue.equals(newValue))) continue;
++
++			getFastBoard().updateLine(line.getUsedIndex(), newValue);
++			cache.put(line, newValue);
++		}
++	}
++
++	/**
++	 * Check if a line contains flash effects
++	 */
++	private boolean isFlashLine(Line line) {
++		String content = line.getCurrentContent();
++
++		return content != null && (content.contains("flashif:") || content.contains("flash:"));
++	}
++
++}
+diff --git a/src/main/java/org/luckyraven/plaque/board/part/Line.java b/src/main/java/org/luckyraven/plaque/board/part/Line.java
+new file mode 100644
+index 0000000..da71ab7
+--- /dev/null
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/board/part/StaticLine.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/resources/org/luckyraven/plaque/module.properties', LF will be replaced by CRLF the next time Git touches it
++++ b/src/main/java/org/luckyraven/plaque/board/part/Line.java
+@@ -0,0 +1,115 @@
++package org.luckyraven.plaque.board.part;
++
++import lombok.Getter;
++import org.bukkit.entity.Player;
++import org.luckyraven.keystone.placeholder.PlaceholderProvider;
++import org.luckyraven.keystone.util.ChatUtil;
++
++import java.util.ArrayList;
++import java.util.List;
++
++public class Line {
++
++	private final @Getter long         interval;
++	private final         List<String> contents;
++	private final @Getter int          usedIndex;
++
++	private int index;
++
++	public Line(long interval) {
++		this(interval, 0);
++	}
++
++	public Line(long interval, int index) {
++		this.interval  = interval;
++		this.index     = 0;
++		this.contents  = new ArrayList<>();
++		this.usedIndex = index;
++	}
++
++	/**
++	 * Copy constructor. Clones the interval, board slot and rotation cursor, and takes a private copy of the
++	 * already-coloured contents — {@link #addContent(String)} is deliberately bypassed so
++	 * {@link ChatUtil#color(String)} is not applied a second time.
++	 */
++	protected Line(Line source) {
++		this.interval  = source.interval;
++		this.usedIndex = source.usedIndex;
++		this.index     = source.index;
++		this.contents  = new ArrayList<>(source.contents);
++	}
++
++	/**
++	 * A board-private clone of this line. {@link #update(PlaceholderProvider, Player)} advances the rotation
++	 * cursor, so every player's board must own its own {@code Line} instances — sharing the configured ones makes
++	 * animated content cycle once per online player per tick instead of once per tick (UI-01).
++	 *
++	 * @return an independent copy holding the same contents
++	 */
++	public Line copy() {
++		return new Line(this);
++	}
++
++	/**
++	 * Copies a whole board's worth of lines through {@link #copy()}, preserving order.
++	 *
++	 * @param lines the configured lines
++	 *
++	 * @return a new, independently mutable list of independent lines
++	 */
++	public static List<Line> copyAll(List<Line> lines) {
++		List<Line> copies = new ArrayList<>(lines.size());
++
++		for (Line line : lines) {
++			copies.add(line.copy());
++		}
++
++		return copies;
++	}
++
++	public void addContent(String content) {
++		contents.add(ChatUtil.color(content));
++	}
++
++	public void addAllContents(List<String> contents) {
++		contents.forEach(this::addContent);
++	}
++
++	/**
++	 * UI-17: an empty {@code Lines:} list (a misconfigured board) used to throw
++	 * {@code IndexOutOfBoundsException} here on every tick; return an empty string instead.
++	 */
++	public String getCurrentContent() {
++		if (contents.isEmpty()) return "";
++
++		return contents.get(index);
++	}
++
++	public String update(PlaceholderProvider placeholder, Player player) {
++		if (contents.isEmpty()) return "";
++
++		String data       = getCurrentContent();
++		String newContent = placeholder.resolve(player, data);
++
++		if (newContent.isEmpty()) newContent = data;
++
++		index = (index + 1) % contents.size();
++
++		return newContent;
++	}
++
++	public boolean isStatic() {
++		return this instanceof StaticLine || interval == 0L;
++	}
++
++	@Override
++	public int hashCode() {
++		return (int) interval;
++	}
++
++	@Override
++	public String toString() {
++		return String.format("Line{interval=%d,contents=%s}", interval, contents);
++	}
++
++}
+diff --git a/src/main/java/org/luckyraven/plaque/board/part/StaticLine.java b/src/main/java/org/luckyraven/plaque/board/part/StaticLine.java
+new file mode 100644
+index 0000000..337440e
+--- /dev/null
++++ b/src/main/java/org/luckyraven/plaque/board/part/StaticLine.java
+@@ -0,0 +1,22 @@
++package org.luckyraven.plaque.board.part;
++
++public class StaticLine extends Line {
++
++	public StaticLine() {
++		this(0);
++	}
++
++	public StaticLine(int index) {
++		super(0, index);
++	}
++
++	protected StaticLine(StaticLine source) {
++		super(source);
++	}
++
++	@Override
++	public Line copy() {
++		return new StaticLine(this);
++	}
++
++}
+diff --git a/src/main/resources/org/luckyraven/plaque/module.properties b/src/main/resources/org/luckyraven/plaque/module.properties
+new file mode 100644
+index 0000000..0f8ea8c
+--- /dev/null
++++ b/src/main/resources/org/luckyraven/plaque/module.propertiewarning: in the working copy of 'src/main/resources/plugin.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/org/luckyraven/plaque/board/BoardTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/org/luckyraven/plaque/board/part/LineTest.java', LF will be replaced by CRLF the next time Git touches it
+s
+@@ -0,0 +1 @@
++module.name=${project.name}
+diff --git a/src/main/resources/plugin.yml b/src/main/resources/plugin.yml
+new file mode 100644
+index 0000000..c308264
+--- /dev/null
++++ b/src/main/resources/plugin.yml
+@@ -0,0 +1,13 @@
++name: Plaque
++version: ${project.version}
++main: org.luckyraven.plaque.Plaque
++# Support floor is MC 1.16, matching Keystone's API floor.
++api-version: '1.16'
++depend:
++   - Keystone
++softdepend:
++   - PlaceholderAPI
++   - ViaVersion
++authors:
++   - LuckyRaven10
++description: ${project.description}
+diff --git a/src/test/java/org/luckyraven/plaque/board/BoardTest.java b/src/test/java/org/luckyraven/plaque/board/BoardTest.java
+new file mode 100644
+index 0000000..e6efc65
+--- /dev/null
++++ b/src/test/java/org/luckyraven/plaque/board/BoardTest.java
+@@ -0,0 +1,63 @@
++package org.luckyraven.plaque.board;
++
++import org.bukkit.plugin.Plugin;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.bukkit.scheduler.BukkitTask;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.io.TempDir;
++import org.luckyraven.keystone.testkit.BukkitStatics;
++import org.luckyraven.keystone.testkit.PluginMocks;
++
++import java.nio.file.Path;
++
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.ArgumentMatchers.anyLong;
++import static org.mockito.ArgumentMatchers.eq;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.never;
++import static org.mockito.Mockito.verify;
++import static org.mockito.Mockito.when;
++
++/**
++ * Pins how {@link Board} schedules its per-tick refresh.
++ *
++ * <p>Observation #2 (ui-inventory-scoreboard.md) / UI-02: {@code start()} called {@code timer.start(true)}, i.e.
++ * {@code runTaskTimerAsynchronously} at a one-tick period. The task body resolves placeholders (gang/user/bank
++ * lookups and PlaceholderAPI expansions) and pushes FastBoard packets — none of it thread-safe — once per tick
++ * per online player. The project's own {@code feedback_repeating_timer_async} rule reserves {@code start(true)}
++ * for flag flips and cancels, so the board now ticks on the main thread.
++ *
++ * <p>The driver is deliberately {@code null}: {@code start()} never dereferences it, and constructing a real
++ * {@code DriverHandler} would instantiate FastBoard, which needs a live NMS server.
++ *
++ * <p>Ported verbatim from Gangland's {@code scoreboard-api} {@code ScoreboardTest} (class renamed
++ * {@code Scoreboard} -&gt; {@link Board}) — decoupling wave WS1, G1.
++ */
++@DisplayName("Board - the per-tick refresh must run on the main thread (UI-02)")
++class BoardTest {
++
++	@TempDir
++	Path tempDir;
++
++	@Test
++	@DisplayName("UI-02: start() schedules a synchronous repeating task, never an asynchronous one")
++	void start_schedulesSynchronously() {
++		try (BukkitStatics bukkit = BukkitStatics.install()) {
++			JavaPlugin plugin = PluginMocks.plugin(tempDir);
++
++			// BukkitRunnable reads the task id straight off the returned task, so it must not be null.
++			when(bukkit.scheduler().runTaskTimer(any(Plugin.class), any(Runnable.class), anyLong(), anyLong()))
++					.thenReturn(mock(BukkitTask.class));
++
++			Board board = new Board(plugin, null);
++
++			board.start();
++
++			verify(bukkit.scheduler()).runTaskTimer(eq(plugin), any(Runnable.class), eq(0L), eq(1L));
++			verify(bukkit.scheduler(), never())
++					.runTaskTimerAsynchronously(any(Plugin.class), any(Runnable.class), anyLong(), anyLong());
++		}
++	}
++
++}
+diff --git a/src/test/java/org/luckyraven/plaque/board/part/LineTest.java b/src/test/java/org/luckyraven/plaque/board/part/LineTest.java
+new file mode 100644
+index 0000000..aef33a3
+--- /dev/null
++++ b/src/test/java/org/luckyraven/plaque/board/part/LineTest.java
+@@ -0,0 +1,111 @@
++package org.luckyraven.plaque.board.part;
++
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.keystone.placeholder.PlaceholderProvider;
++
++import java.util.List;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertInstanceOf;
++import static org.junit.jupiter.api.Assertions.assertNotSame;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++
++/**
++ * Pins the per-board copy semantics {@link Line} grew for UI-01, and (new in this repo, C3/UI-17) the
++ * empty-{@code Lines:} safety guard.
++ *
++ * <p>Observation #1 (ui-inventory-scoreboard.md) / UI-01: {@code ScoreboardManager.getDriverHandler} handed the
++ * live {@code ScoreboardAddon.getLines()} list — and the very same {@code Line} instances — to every board it
++ * built. {@code Line#update} advances a rotation cursor, so with N players online the cursor moved N times per
++ * tick and every board rendered the same frame; the driver's constructor also appended the title to that shared
++ * list once per board created, growing it without bound across joins and reloads. Boards now get a deep copy.
++ *
++ * <p>UI-17: a misconfigured board with an empty {@code Lines:} list threw {@code IndexOutOfBoundsException} out of
++ * {@link Line#getCurrentContent()} (and {@code ArithmeticException} out of {@link Line#update}) on every tick.
++ * Fixed at port time (WS1 plan §4 G1 step 3 / §11) rather than carried into this repo unfixed.
++ *
++ * <p>The placeholder seam is a one-line lambda rather than a Mockito mock (documentation/TESTING.md §6), and it
++ * ignores its player argument, so nothing here needs a Bukkit server.
++ */
++@DisplayName("Line - board-private copies (UI-01) and empty-content safety (UI-17)")
++class LineTest {
++
++	/** Identity conversion, so {@code update} exercises only the rotation cursor. */
++	private static final PlaceholderProvider IDENTITY = (player, text) -> text;
++
++	@Test
++	@DisplayName("copy() carries over the interval, board slot and contents")
++	void copy_preservesIntervalSlotAndContents() {
++		Line original = new Line(20L, 3);
++		original.addContent("first");
++		original.addContent("second");
++
++		Line copy = original.copy();
++
++		assertNotSame(original, copy);
++		assertEquals(20L, copy.getInterval());
++		assertEquals(3, copy.getUsedIndex());
++		assertEquals("first", copy.getCurrentContent());
++	}
++
++	@Test
++	@DisplayName("UI-01: advancing a copy's rotation cursor leaves every other copy where it was")
++	void copy_rotationCursorIsIndependent() {
++		Line original = new Line(20L);
++		original.addAllContents(List.of("one", "two", "three"));
++
++		Line first  = original.copy();
++		Line second = original.copy();
++
++		first.update(IDENTITY, null);
++
++		assertEquals("two", first.getCurrentContent(), "the updated copy advances");
++		assertEquals("one", second.getCurrentContent(), "a sibling board's copy must not move");
++		assertEquals("one", original.getCurrentContent(), "the configured line must not move either");
++	}
++
++	@Test
++	@DisplayName("UI-01: copyAll() yields a fresh list of fresh lines, so a board can append its title safely")
++	void copyAll_returnsIndependentListAndLines() {
++		Line first = new Line(20L, 0);
++		first.addContent("first");
++		Line second = new Line(40L, 1);
++		second.addContent("second");
++
++		List<Line> configured = List.of(first, second);
++		List<Line> copies     = Line.copyAll(configured);
++
++		assertEquals(2, copies.size());
++		assertNotSame(first, copies.get(0));
++		assertNotSame(second, copies.get(1));
++
++		// A board appends its title to its own list; the configured list must be untouched by that.
++		copies.add(new StaticLine());
++
++		assertEquals(2, configured.size());
++	}
++
++	@Test
++	@DisplayName("copying a StaticLine keeps it static")
++	void copy_ofStaticLine_staysStatic() {
++		StaticLine original = new StaticLine(2);
++		original.addContent("title");
++
++		Line copy = original.copy();
++
++		assertInstanceOf(StaticLine.class, copy);
++		assertTrue(copy.isStatic());
++		assertEquals(2, copy.getUsedIndex());
++	}
++
++	@Test
++	@DisplayName("UI-17: an empty Lines: list does not throw on getCurrentContent() or update()")
++	void emptyContents_doesNotThrowAndReturnsEmptyString() {
++		Line line = new Line(20L);
++
++		assertEquals("", line.getCurrentContent());
++		assertEquals("", line.update(IDENTITY, null));
++	}
++
++}

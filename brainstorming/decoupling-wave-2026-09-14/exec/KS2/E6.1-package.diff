@@ -1,0 +1,4183 @@
+# Review package — Keystone 1.11.0 E6.1 (keystone-inventory core) — working tree vs HEAD 6764bd5
+--- status ---
+ A keystone-inventory/pom.xml
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/CloseReason.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/InventoryService.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/Menu.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/MenuBuilder.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestClickContext.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestMenu.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestMenuBuilder.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestRenderContext.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestSlotView.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/PassthroughPlaceholders.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/ClickContext.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/ClickHandler.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/ClickKind.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/SlotHandlers.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/BorderComponent.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/Component.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/FillComponent.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/ItemComponent.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/ItemHoldingComponent.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/LineComponent.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/RenderContext.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/SlotView.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/listener/MenuListener.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/registry/InMemoryMenuRegistry.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/registry/MenuOpener.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/registry/MenuRegistry.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/spi/MenuHolder.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/spi/MenuTarget.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/tracking/DefaultOpenMenuTracker.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/tracking/NavigationHistory.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/tracking/OpenMenuTracker.java
+ A keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/InventoryServiceLifecycleTest.java
+ A keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/chest/ChestMenuBuilderTest.java
+ A keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/chest/ChestMenuTest.java
+ A keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/click/ClickKindTest.java
+ A keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/click/SlotHandlersTest.java
+ A keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/listener/MenuListenerTest.java
+ A keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/tracking/DefaultOpenMenuTrackerTest.java
+ M pom.xml
+--- diffstat ---
+warning: in the working copy of 'keystone-inventory/pom.xml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/CloseReason.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/InventoryService.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/Menu.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/MenuBuilder.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestClickContext.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestMenu.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestMenuBuilder.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestRenderContext.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestSlotView.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/PassthroughPlaceholders.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/ClickContext.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/ClickHandler.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/ClickKind.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/SlotHandlers.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/BorderComponent.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/Component.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/FillComponent.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/ItemComponent.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/ItemHoldingComponent.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/LineComponent.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/RenderContext.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/SlotView.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/listener/MenuListener.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/registry/InMemoryMenuRegistry.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/registry/MenuOpener.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/registry/MenuRegistry.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/spi/MenuHolder.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/spi/MenuTarget.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/tracking/DefaultOpenMenuTracker.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/tracking/NavigationHistory.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/tracking/OpenMenuTracker.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/InventoryServiceLifecycleTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/chest/ChestMenuBuilderTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/chest/ChestMenuTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/click/ClickKindTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/click/SlotHandlersTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/listener/MenuListenerTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/tracking/DefaultOpenMenuTrackerTest.java', LF will be replaced by CRLF the next time Git touches it
+ keystone-inventory/pom.xml                         |  60 +++
+ .../luckyraven/keystone/inventory/CloseReason.java |  35 ++
+ .../keystone/inventory/InventoryService.java       |  71 ++++
+ .../org/luckyraven/keystone/inventory/Menu.java    |  50 +++
+ .../luckyraven/keystone/inventory/MenuBuilder.java |  13 +
+ .../inventory/chest/ChestClickContext.java         | 124 ++++++
+ .../keystone/inventory/chest/ChestMenu.java        | 465 +++++++++++++++++++++
+ .../keystone/inventory/chest/ChestMenuBuilder.java | 260 ++++++++++++
+ .../inventory/chest/ChestRenderContext.java        |  52 +++
+ .../keystone/inventory/chest/ChestSlotView.java    | 106 +++++
+ .../inventory/chest/PassthroughPlaceholders.java   |  27 ++
+ .../keystone/inventory/click/ClickContext.java     |  80 ++++
+ .../keystone/inventory/click/ClickHandler.java     |  17 +
+ .../keystone/inventory/click/ClickKind.java        |  98 +++++
+ .../keystone/inventory/click/SlotHandlers.java     |  65 +++
+ .../inventory/component/BorderComponent.java       |  37 ++
+ .../keystone/inventory/component/Component.java    |  29 ++
+ .../inventory/component/FillComponent.java         |  34 ++
+ .../inventory/component/ItemComponent.java         | 128 ++++++
+ .../inventory/component/ItemHoldingComponent.java  |  27 ++
+ .../inventory/component/LineComponent.java         |  62 +++
+ .../inventory/component/RenderContext.java         |  29 ++
+ .../keystone/inventory/component/SlotView.java     |  64 +++
+ .../keystone/inventory/listener/MenuListener.java  | 190 +++++++++
+ .../inventory/registry/InMemoryMenuRegistry.java   | 106 +++++
+ .../keystone/inventory/registry/MenuOpener.java    |  20 +
+ .../keystone/inventory/registry/MenuRegistry.java  |  54 +++
+ .../keystone/inventory/spi/MenuHolder.java         |  51 +++
+ .../keystone/inventory/spi/MenuTarget.java         |  92 ++++
+ .../inventory/tracking/DefaultOpenMenuTracker.java | 101 +++++
+ .../inventory/tracking/NavigationHistory.java      |  80 ++++
+ .../inventory/tracking/OpenMenuTracker.java        |  51 +++
+ .../inventory/InventoryServiceLifecycleTest.java   | 100 +++++
+ .../inventory/chest/ChestMenuBuilderTest.java      | 157 +++++++
+ .../keystone/inventory/chest/ChestMenuTest.java    | 186 +++++++++
+ .../keystone/inventory/click/ClickKindTest.java    |  62 +++
+ .../keystone/inventory/click/SlotHandlersTest.java | 100 +++++
+ .../inventory/listener/MenuListenerTest.java       | 348 +++++++++++++++
+ .../tracking/DefaultOpenMenuTrackerTest.java       | 116 +++++
+ pom.xml                                            |   8 +-
+ 40 files changed, 3754 insertions(+), 1 deletion(-)
+--- diff ---
+warning: in the working copy of 'keystone-inventory/pom.xml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/CloseReason.java', LF will be replaced by CRLF the next time Git touches it
+diff --git a/keystone-inventory/pom.xml b/keystone-inventory/pom.xml
+new file mode 100644
+index 0000000..41d7836
+--- /dev/null
++++ b/keystone-inventory/pom.xml
+@@ -0,0 +1,60 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
++         xmlns="http://maven.apache.org/POM/4.0.0"
++         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
++    <modelVersion>4.0.0</modelVersion>
++    <parent>
++        <groupId>org.luckyraven</groupId>
++        <artifactId>keystone</artifactId>
++        <version>${revision}</version>
++    </parent>
++
++    <artifactId>keystone-inventory</artifactId>
++    <name>Keystone Inventory</name>
++    <description>Basic inventory mechanism: holder-identified menus, one listener, slot click routing, plain components, open/close tracking, panel flows and page arithmetic. The advanced menu product (animation, requirements, argument bindings, provider/filter/sort/search registries, deposit slots, non-chest menu types, YAML loaders, editor) stays in Oriel on top of this.</description>
++
++    <build>
++        <resources>
++            <resource>
++                <directory>src/main/resources</directory>
++                <filtering>true</filtering>
++            </resource>
++        </resources>
++        <plugins>
++            <plugin>
++                <groupId>org.apache.maven.plugins</groupId>
++                <artifactId>maven-surefire-plugin</artifactId>
++            </plugin>
++        </plugins>
++    </build>
++
++    <dependencies>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-common</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-bean</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-item</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>org.apache.logging.log4j</groupId>
++            <artifactId>log4j-api</artifactId>
++        </dependency>
++
++        <!-- Test -->
++        <dependency>
++            <groupId>org.mockito</groupId>
++            <artifactId>mockito-core</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-testkit</artifactId>
++            <scope>test</scope>
++        </dependency>
++    </dependencies>
++</project>
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/CloseReason.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/CloseReason.java
+new file mode 100644
+index 0000000..6118be9
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/CloseReason.java
+@@ -0,0 +1,35 @@
++package org.luckyraven.keystone.inventory;
++
++/**
++ * Why a {@link Menu} is being closed. Passed to {@link Menu#close(org.bukkit.entity.Player, CloseReason)} so
++ * implementations can branch on the cause — e.g. return held items only when the close was non-user-initiated.
++ *
++ * <p>Implementations that don't care about the reason can keep using the legacy
++ * {@link Menu#close(org.bukkit.entity.Player)} — the default {@link Menu#close(org.bukkit.entity.Player, CloseReason)}
++ * delegates to it so all callers stay compatible.
++ *
++ * <p>Ported from Oriel's {@code core.CloseReason} (menu-core) as part of Keystone Phase E6.
++ */
++public enum CloseReason {
++
++	/** Player closed the menu themselves (Esc, clicking outside, opening another inventory). */
++	USER,
++
++	/** A programmatic {@code menu.close()} / consumer action fired the close. */
++	COMMAND,
++
++	/** A {@code MenuFlow} switched panels or ended; the previous panel's inventory is being torn down. */
++	NAVIGATION,
++
++	/** Plugin {@code onDisable} — server stopping, /reload, or this plugin specifically being disabled. */
++	PLUGIN_DISABLE,
++
++	/** Bean-lifecycle reload cycle — {@code InventoryService.onPreClear()} rebuilding registerewarning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/InventoryService.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/Menu.java', LF will be replaced by CRLF the next time Git touches it
+d menus. */
++	RELOAD,
++
++	/** The viewing player disconnected from the server while the menu was open. */
++	PLAYER_DISCONNECT,
++
++	/** Fallback for closes that didn't pipe through the tracker (third-party plugin, NMS, etc.). */
++	UNKNOWN
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/InventoryService.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/InventoryService.java
+new file mode 100644
+index 0000000..4df1bfe
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/InventoryService.java
+@@ -0,0 +1,71 @@
++package org.luckyraven.keystone.inventory;
++
++import org.bukkit.Bukkit;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.luckyraven.keystone.bean.BeanLifecycle;
++import org.luckyraven.keystone.cooldown.CooldownService;
++import org.luckyraven.keystone.inventory.listener.MenuListener;
++import org.luckyraven.keystone.inventory.registry.InMemoryMenuRegistry;
++import org.luckyraven.keystone.inventory.registry.MenuRegistry;
++import org.luckyraven.keystone.inventory.tracking.DefaultOpenMenuTracker;
++import org.luckyraven.keystone.inventory.tracking.NavigationHistory;
++import org.luckyraven.keystone.inventory.tracking.OpenMenuTracker;
++
++/**
++ * Per-consumer root of the inventory mechanism. Each consumer plugin constructs its own instance (no static
++ * registry, no shared-classloader state, per {@code CLAUDE.md}'s shared-classloader constraint) — owns its own
++ * {@link OpenMenuTracker} and {@link MenuRegistry}, sharing one {@link NavigationHistory} between them.
++ *
++ * <p>New in Keystone Phase E6, following the {@code HologramService.registerProtection} precedent from Phase H10:
++ * Keystone ships the {@code MenuListener} class but never registers it itself — {@link #registerListeners(JavaPlugin)}
++ * is the one call a consumer makes at bootstrap, the lazier option over threading a Keystone-jar classloader
++ * reference through the consumer's own {@code @ListenerHandler} scan for one listener.
++ */
++public class InventoryService implements BeanLifecycle {
++
++	private final CooldownService cooldowns;
++	private final OpenMenuTracker tracker;
++	private final MenuRegistry    registry;
++
++	public InventoryService(CooldownService cooldowns) {
++		this.cooldowns = cooldowns;
++		NavigationHistory history = new NavigationHistory();
++		this.tracker  = new DefaultOpenMenuTracker(history);
++		this.registry = new InMemoryMenuRegistry(history);
++	}
++
++	/** This service's {@link OpenMenuTracker} — who has what menu open right now. */
++	public OpenMenuTracker tracker() {
++		return tracker;
++	}
++
++	/** This service's {@link MenuRegistry} — named menu factories and "back" navigation. */
++	public MenuRegistry registry() {
++		return registry;
++	}
++
++	/** The {@link CooldownService} this service's {@code MenuListener} debounces clicks through. */
++	public CooldownService cooldowns() {
++		return cooldowns;
++	}
++
++	/**
++	 * Register this service's {@link MenuListener} (click/drag/close/quit, all four events, one class) under
++	 * {@code owner}. Call once at bootstrap. Keystone.jar registers no listener of its own — see {@code CLAUDE.md}.
++	 */
++	public void registerListeners(JavaPlugin owner) {
++		Bukkit.getPluginManager().registerEvents(new MenuListener(this, owner, cooldowns), owner);
++	}
++
++	/** Reload cycle: close every menu this service is tracking with {@link CloseReason#RELOAD}. */
++	@Override
++	public void onPreClear() {
++		tracker.closeAll(CloseReason.RELOAD);
++	}
++
++	/** Plugin disabling: close every menu this service is tracking with {@link CloseReason#PLUGIN_DISABLE}. */
++	@Override
++	public void onShutdown() {
++		tracker.closeAll(CloseReason.PLUGIN_DISABLE);
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/Menu.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/Menu.java
+new file mode 100644
+index 0000000..2fc4a33
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/Menu.java
+@@ -0,0 +1,50 @@
++package org.luckyraven.keystone.inventorywarning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/MenuBuilder.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestClickContext.java', LF will be replaced by CRLF the next time Git touches it
+;
++
++import org.bukkit.entity.Player;
++
++/**
++ * Base contract for any menu. Each menu type (chest, and whatever a consumer builds on top) extends this with
++ * type-appropriate methods via its own builder; the slot shape is not generalised across types.
++ *
++ * <p>Most code holds a concrete subtype reference and only sees this interface when crossing module boundaries
++ * (the registry, the open-menu tracker, etc.). End-users build menus through their builder and call
++ * {@link #open(Player)}; the rest of the contract is for framework code that needs to drive a menu without knowing
++ * its concrete type.
++ *
++ * <p>Ported from Oriel's {@code core.Menu} (menu-core) as part of Keystone Phase E6 — see
++ * {@code docs/extraction-roadmap.md} "Phase E6 — keystone-inventory". {@code bindArguments} is deliberately not
++ * carried over: command-argument bindings are Oriel's advanced feature, not Keystone's basic mechanism.
++ */
++public interface Menu {
++
++	/** Open this menu for the given player. Implementations are responsible for tracking open instances. */
++	void open(Player player);
++
++	/** Close this menu for the given player. No-op if the player has not opened this menu. */
++	void close(Player player);
++
++	/**
++	 * Close this menu, with a reason describing why. Default delegates to {@link #close(Player)} for back-compat —
++	 * implementations that need to react to the close cause (item-return on shutdown, persistence on reload,
++	 * different feedback per reason) override this.
++	 *
++	 * <p>The {@code OpenMenuTracker} infrastructure routes every disconnect / reload / plugin-disable through this
++	 * overload so menus that hold real player items can return them before Bukkit blanket-closes the inventory.
++	 */
++	default void close(Player player, CloseReason reason) {
++		close(player);
++	}
++
++	/** Re-renders every slot. */
++	default void rerender() {
++	}
++
++	/**
++	 * Menu-level {@code click_delay} anti-spam debounce, in milliseconds. {@code 0} (the default) disables it. A
++	 * menu type's click listener consults this through {@code ClickDebounce} and silently swallows clicks that land
++	 * inside the window. Types that support it override; the rest inherit the no-debounce default.
++	 */
++	default int clickDelayMillis() {
++		return 0;
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/MenuBuilder.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/MenuBuilder.java
+new file mode 100644
+index 0000000..ff0d497
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/MenuBuilder.java
+@@ -0,0 +1,13 @@
++package org.luckyraven.keystone.inventory;
++
++/**
++ * Generic builder contract. Every menu type provides its own {@code Builder} class with type-specific methods (a
++ * {@code ChestMenuBuilder} has {@code .slot(int, ...)}; a different shape would not). Builders validate on
++ * {@link #build()}.
++ *
++ * <p>Ported from Oriel's {@code core.MenuBuilder} (menu-core) as part of Keystone Phase E6.
++ */
++public interface MenuBuilder<M extends Menu, B extends MenuBuilder<M, B>> {
++
++	M build();
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestClickContext.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestClickContext.java
+new file mode 100644
+index 0000000..dc8b5a8
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestClickContext.java
+@@ -0,0 +1,124 @@
++package org.luckyraven.keystone.inventory.chest;
++
++import org.bukkit.entity.Player;
++import org.bukkit.event.inventory.ClickType;
++import org.bukkit.event.inventory.InventoryClickEvent;
++import org.bukkit.inventory.ItemStack;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.keystone.inventory.Menu;
++import org.luckyraven.keystone.inventory.click.ClickContext;
++import org.luckyraven.keystone.inventory.registry.MenuRegistry;
++import org.luckyraven.keystone.placeholder.PlaceholderProvider;
++
++/**
++ * Concrete {@link ClickContext}. Constructed per-click by {@linwarning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestMenu.java', LF will be replaced by CRLF the next time Git touches it
+k ChestMenu}, and also reused (with slot {@code -1}
++ * and a {@code null} event) for the {@code on_open}/{@code on_close} lifecycle handlers, which have no real click
++ * to describe — {@link #cancel()} and the slot-specific behaviour already tolerate a {@code null} event, so a
++ * dedicated "headless" context class (Oriel keeps one, {@code ChestLifecycleClickContext}, for the same purpose)
++ * is not needed here.
++ *
++ * <p>Ported from Oriel's {@code chest.internal.ChestClickContext} as part of Keystone Phase E6: package-private
++ * (see {@link PassthroughPlaceholders}'s doc), and {@link #openMenu(String, String...)} is not overridden — the
++ * basic {@link MenuRegistry} does not support argument bindings, so the {@link ClickContext} interface default
++ * (ignore the args, delegate to {@link #openMenu(String)}) is exactly right.
++ */
++final class ChestClickContext implements ClickContext {
++
++	private final Player              player;
++	private final Menu                menu;
++	private final int                 slot;
++	private final ClickType           clickType;
++	private final ItemStack           clickedItem;
++	@Nullable
++	private final InventoryClickEvent event;
++	@Nullable
++	private final MenuRegistry        registry;
++
++	ChestClickContext(Player player, Menu menu, int slot, ClickType clickType, ItemStack clickedItem,
++	                  @Nullable InventoryClickEvent event, @Nullable MenuRegistry registry) {
++		this.player      = player;
++		this.menu        = menu;
++		this.slot        = slot;
++		this.clickType   = clickType;
++		this.clickedItem = clickedItem;
++		this.event       = event;
++		this.registry    = registry;
++	}
++
++	@Override
++	public Player player() {
++		return player;
++	}
++
++	@Override
++	public Menu menu() {
++		return menu;
++	}
++
++	@Override
++	public int slot() {
++		return slot;
++	}
++
++	@Override
++	public ClickType clickType() {
++		return clickType;
++	}
++
++	@Override
++	public ItemStack clickedItem() {
++		return clickedItem;
++	}
++
++	@Override
++	public boolean isShiftClick() {
++		return clickType.isShiftClick();
++	}
++
++	@Override
++	public void openMenu(String registeredName) {
++		if (registry == null) {
++			throw new IllegalStateException(
++					"openMenu(\"" + registeredName + "\") called but no MenuRegistry was attached. " +
++					"Build this menu through ChestMenu.builder(InventoryService) so ClickContext.openMenu(name) " +
++					"can route through its registry.");
++		}
++		registry.open(player, registeredName);
++	}
++
++	@Override
++	public void openPrevious() {
++		if (registry != null) registry.openPrevious(player);
++	}
++
++	@Override
++	public void closeMenu() {
++		menu.close(player);
++	}
++
++	@Override
++	public void cancel() {
++		// event is null on the lifecycle (on_open/on_close) dispatch path — nothing left to cancel there.
++		if (event != null) event.setCancelled(true);
++	}
++
++	@Override
++	public void rerender() {
++		menu.rerender();
++	}
++
++	@Override
++	public void rerenderSlot(int slot) {
++		if (menu instanceof ChestMenu cm) {
++			cm.rerenderSlot(slot);
++		} else {
++			menu.rerender();
++		}
++	}
++
++	@Override
++	public PlaceholderProvider placeholders() {
++		if (menu instanceof ChestMenu cm) return cm.placeholders();
++		return PassthroughPlaceholders.INSTANCE;
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestMenu.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestMenu.java
+new file mode 100644
+index 0000000..1a9ea6a
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestMenu.java
+@@ -0,0 +1,465 @@
++package org.luckyraven.keystone.inventory.chest;
++
++import lombok.CustomLog;
++import org.bukkit.Bukkit;
++import org.bukkit.ChatColor;
++import org.bukkit.Material;
++import org.bukkit.entity.Player;
++import org.bukkit.event.inventory.ClickType;
++import org.bukkit.event.inventory.InventoryClickEvent;
++import org.bukkit.event.inventory.InventoryCloseEvent;
++import org.bukkit.inventory.Inventory;
++import org.bukkit.inventory.ItemStack;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.keystone.diagnostics.Guard;
++import org.luckyraven.keystone.inventory.CloseReason;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.Menu;
++import org.luckyraven.keystone.inventory.click.ClickHandler;
++import org.luckyraven.keystone.inventory.click.ClickKind;
++import org.luckyraven.keystone.inventory.click.SlotHandlers;
++import org.luckyraven.keystone.inventory.component.Component;
++import org.luckyraven.keystone.inventory.component.ItemHoldingComponent;
++import org.luckyraven.keystone.inventory.registry.MenuRegistry;
++import org.luckyraven.keystone.inventory.spi.MenuHolder;
++import org.luckyraven.keystone.inventory.spi.MenuTarget;
++import org.luckyraven.keystone.placeholder.PlaceholderProvider;
++import org.luckyraven.keystone.util.ChatUtil;
++
++import java.util.HashMap;
++import java.util.HashSet;
++import java.util.List;
++import java.util.Map;
++import java.util.Set;
++import java.util.function.Predicate;
++import java.util.function.Supplier;
++
++/**
++ * Concrete chest-shaped {@link Menu} — the basic mechanism only. Construction is via
++ * {@link ChestMenu#builder(InventoryService)}; there is no service-less overload (unlike Oriel's {@code builder()}),
++ * because every menu needs a real {@link InventoryService} to track/untrack itself and to identify its
++ * {@link MenuHolder} — there is no static fallback tracker in Keystone (the shared-classloader constraint forbids
++ * one; see {@code CLAUDE.md}).
++ *
++ * <p><b>Ported from Oriel's {@code chest.ChestMenu}</b> (the ~200-line core of its 929-line class) as part of
++ * Keystone Phase E6. Everything advanced — animated titles/items, opening-sequence reveal, view/close requirement
++ * gates, deposit-slot bookkeeping ({@code snapshotDeposits}/{@code consumeDeposits}/{@code returnDeposits}),
++ * paginated-region invalidation, command-argument binding — stays in Oriel's own subclass.
++ *
++ * <p><b>Extension points (review pass 2026-09-17, finding F4 — a 1.11.0 requirement, not deferred).</b> This class
++ * is deliberately {@code non-final} with {@code protected} fields and render hooks so Oriel's rebase can subclass
++ * it instead of re-copying it: {@link #components}, {@link #inventory}, {@link #holder}, {@link #viewer} are
++ * protected fields; {@link #renderAll}, {@link #rerenderSlot}, {@link #applyFillIfEmpty}, {@link #ensureTitleFor},
++ * {@link #resolveTitle} are protected and overridable; {@link #titleSource} is a settable
++ * {@code Supplier<String>} an animated-title subclass can swap for its own frame-cycling implementation; and
++ * {@link MenuHolder#service()} is public.
++ */
++@CustomLog
++public class ChestMenu implements Menu, MenuTarget {
++
++	protected final Map<Integer, Component<?>> components;
++	protected final int                         size;
++	@Nullable
++	protected final MenuRegistry                registry;
++	protected       PlaceholderProvider          placeholders;
++	@Nullable
++	protected final Component<?>                 fillComponent;
++	/**
++	 * Title source. A plain {@code Supplier<String>} for the common case (a constant {@code &}-coded string with
++	 * possible {@code %placeholder%} tokens, resolved per-open) — settable so a subclass can substitute its own
++	 * frame-cycling implementation (F4). Oriel's flicker-free packet-bridge animated-title swap is NOT carried
++	 * over; only the "rebuild the inventory when the resolved static title changes" mechanic is.
++	 */
++	protected       Supplier<String>             titleSource;
++	private final   SlotHandlers                 handlers        = new SlotHandlers();
++	private final   Set<Integer>                 interactiveSlots = new HashSet<>();
++
++	protected final InventoryService service;
++	protected       Inventory        inventory;
++	protected       MenuHolder       holder;
++
++	@Nullable
++	protected String       lastResolvedTitle;
++	@Nullable
++	protected Player       viewer;
++	@Nullable
++	protected String       requiredPermission;
++	@Nullable
++	protected ClickHandler onCloseHandler;
++	@Nullable
++	protected ClickHandler onOpenHandler;
++	@Nullable
++	protected String            name;
++	protected int               clickDelayMillis;
++	/**
++	 * Simple predicate-based close gate — the basic-mechanism counterpart of Oriel's {@code RequirementHook}-based
++	 * {@code closeRequirement} (fail-action chains and {@code RequirementSet} stay in Oriel; this is just
++	 * "should this close be undone?"). {@code null} (the default) never vetoes.
++	 */
++	@Nullable
++	protected Predicate<Player> closeVeto;
++
++	public ChestMenu(Inventory inventory, MenuHolder holder, Map<Integer, Component<?>> components,
++	                 InventoryService service, @Nullable Component<?> fillComponent,
++	                 @Nullable PlaceholderProvider placeholders, @Nullable Supplier<String> titleSource) {
++		this.inventory     = inventory;
++		this.holder        = holder;
++		this.components    = new HashMap<>(components);
++		this.size          = inventory.getSize();
++		this.service       = service;
++		this.registry      = service.registry();
++		this.placeholders  = placeholders != null ? placeholders : PassthroughPlaceholders.INSTANCE;
++		this.fillComponent = fillComponent;
++		this.titleSource   = titleSource != null ? titleSource : () -> "";
++	}
++
++	public static ChestMenuBuilder builder(InventoryService service) {
++		return new ChestMenuBuilder(service);
++	}
++
++	public PlaceholderProvider placeholders() {
++		return placeholders;
++	}
++
++	public void requiredPermission(@Nullable String permission) {
++		this.requiredPermission = permission;
++	}
++
++	public void onCloseHandler(@Nullable ClickHandler handler) {
++		this.onCloseHandler = handler;
++	}
++
++	public void onOpenHandler(@Nullable ClickHandler handler) {
++		this.onOpenHandler = handler;
++	}
++
++	public void name(@Nullable String name) {
++		this.name = name;
++	}
++
++	@Nullable
++	public String name() {
++		return name;
++	}
++
++	public void clickDelayMillis(int millis) {
++		this.clickDelayMillis = millis;
++	}
++
++	public void closeVeto(@Nullable Predicate<Player> veto) {
++		this.closeVeto = veto;
++	}
++
++	/**
++	 * {@inheritDoc} The basic mechanism's veto is a plain predicate ({@link ChestMenuBuilder#vetoClose}) — no
++	 * fail-action chain. {@code MenuListener} re-opens the menu next tick when this returns {@code true} (Bukkit
++	 * close events can't be cancelled). Oriel's subclass overrides this with its
++	 * {@code RequirementHook}-based {@code closeRequirement} instead of setting {@link #closeVeto}.
++	 */
++	@Override
++	public boolean vetoesClose(Player player) {
++		return closeVeto != null && closeVeto.test(player);
++	}
++
++	@Override
++	public int clickDelayMillis() {
++		return clickDelayMillis;
++	}
++
++	@Override
++	public Inventory bukkitInventory() {
++		return inventory;
++	}
++
++	public int size() {
++		return size;
++	}
++
++	public MenuHolder holder() {
++		return holder;
++	}
++
++	@Override
++	public void open(Player player) {
++		if (requiredPermission != null && !requiredPermission.isEmpty() && !player.hasPermission(requiredPermission)) {
++			player.sendMessage(ChatColor.RED + "You don't have permission to open this menu.");
++			return;
++		}
++		this.viewer = player;
++		ensureTitleFor(player);
++		// Track BEFORE the initial render so a PlaceholderProvider that looks up the player's current menu sees
++		// this menu on the first render too, not just after a click.
++		service.tracker().track(player, this);
++		renderAll(player);
++		player.openInventory(inventory);
++		dispatchOnOpen(player);
++	}
++
++	@Override
++	public void close(Player player) {
++		// Untracking BEFORE closeInventory means the close event this triggers fails MenuListener's
++		// currentMenuOf == target check — which is what exempts programmatic closes from the close gate without
++		// any extra state.
++		service.tracker().untrack(player);
++		if (player.getOpenInventory().getTopInventory() == inventory) {
++			player.closeInventory();
++		}
++	}
++
++	/**
++	 * Returns every registered {@link ItemHoldingComponent}'s held items to {@code player}, then closes normally.
++	 * Reached only via {@code InventoryService}'s reload/shutdown sweep ({@link CloseReason#RELOAD} /
++	 * {@link CloseReason#PLUGIN_DISABLE}) and the disconnect handler ({@link CloseReason#PLAYER_DISCONNECT}) — a
++	 * live Bukkit close event (a genuine Escape-press) never reaches this overload; {@code MenuListener.onClose}
++	 * calls {@link #onClose} directly instead. Held-item return on a genuine user close is therefore out of scope
++	 * for this basic mechanism; a consumer whose components hold real items across a plain Escape-press (Oriel's
++	 * deposit slots) adds that in its own subclass.
++	 */
++	@Override
++	public void close(Player player, CloseReason reason) {
++		returnHeldItems(player, reason);
++		close(player);
++	}
++
++	private void returnHeldItems(Player player, CloseReason reason) {
++		for (Map.Entry<Integer, Component<?>> entry : components.entrySet()) {
++			if (entry.getValue() instanceof ItemHoldingComponent held) {
++				returnHeldItemsForSlot(player, held, reason);
++			}
++		}
++	}
++
++	/**
++	 * Drains one {@link ItemHoldingComponent}'s held state for {@code player} into their inventory (leftovers drop
++	 * at their feet), then clears it. Shared by {@link #returnHeldItems} (every slot, close-time) and
++	 * {@link #adoptComponentsFrom} (just the one slot a rerender is about to drop). No-op if the component is
++	 * holding nothing for {@code player}.
++	 */
++	protected void returnHeldItemsForSlot(Player player, ItemHoldingComponent held, CloseReason reason) {
++		List<ItemStack> items = held.heldItems(player);
++		if (items.isEmpty()) return;
++
++		int returned = 0;
++		int dropped  = 0;
++		for (ItemStack stack : items) {
++			if (stack == null || stack.getType() == Material.AIR || stack.getAmount() <= 0) continue;
++			int                     requested = stack.getAmount();
++			Map<Integer, ItemStack> leftovers = player.getInventory().addItem(stack);
++			if (leftovers.isEmpty()) {
++				returned += requested;
++				continue;
++			}
++			int leftoverCount = 0;
++			for (ItemStack leftover : leftovers.values()) {
++				player.getWorld().dropItemNaturally(player.getLocation(), leftover);
++				leftoverCount += leftover.getAmount();
++			}
++			returned += requested - leftoverCount;
++			dropped += leftoverCount;
++		}
++		held.clearHeld(player);
++
++		if (returned > 0 || dropped > 0) {
++			log.debug("Returned {} held item(s) to {} from chest menu (reason={}); {} dropped at feet (inv full)",
++			          returned, player.getName(), reason, dropped);
++		}
++	}
++
++	/**
++	 * Override of the {@link MenuTarget} hook called by {@code MenuListener}. Dispatches the registered
++	 * {@code on_close} handler (set via {@link ChestMenuBuilder#onClose}) with a synthetic {@link ChestClickContext}.
++	 */
++	@Override
++	public void onClose(InventoryCloseEvent event, Player player) {
++		if (onCloseHandler == null) return;
++		ChestClickContext ctx = lifecycleContext(player);
++		Guard.of("lifecycle.close")
++		     .with("menu", String.valueOf(name()))
++		     .with("player", player.getName())
++		     .run(() -> onCloseHandler.onClick(ctx));
++	}
++
++	private void dispatchOnOpen(Player player) {
++		if (onOpenHandler == null) return;
++		ChestClickContext ctx = lifecycleContext(player);
++		Guard.of("lifecycle.open")
++		     .with("menu", String.valueOf(name()))
++		     .with("player", player.getName())
++		     .run(() -> onOpenHandler.onClick(ctx));
++	}
++
++	private ChestClickContext lifecycleContext(Player player) {
++		return new ChestClickContext(player, this, -1, ClickType.LEFT, new ItemStack(Material.AIR), null, registry);
++	}
++
++	@Override
++	public void rerender() {
++		if (viewer == null) return;
++		renderAll(viewer);
++	}
++
++	/**
++	 * Re-render this ALREADY-OPEN menu using {@code fresh}'s computed component set — no new Bukkit inventory, no
++	 * close/open round trip, no flicker. Used by {@code MenuFlow.rerender()} (E6.2): {@code fresh} is a throwaway
++	 * {@link ChestMenu} built the normal way purely to compute its layered component set; its own
++	 * {@link #bukkitInventory()} is discarded unopened. Slots that existed on this menu but not on {@code fresh}
++	 * are cleared first — and if the outgoing component there is an {@link ItemHoldingComponent} holding items for
++	 * the viewer, those items are returned first via {@link #returnHeldItemsForSlot} (reason
++	 * {@link CloseReason#NAVIGATION}), so they never become unreturnable once the component itself is gone.
++	 */
++	public void adoptComponentsFrom(ChestMenu fresh) {
++		if (viewer == null) return;
++		for (Integer oldSlot : new HashSet<>(components.keySet())) {
++			if (!fresh.components.containsKey(oldSlot)) {
++				Component<?> outgoing = components.get(oldSlot);
++				if (outgoing instanceof ItemHoldingComponent held) {
++					returnHeldItemsForSlot(viewer, held, CloseReason.NAVIGATION);
++				}
++				inventory.setItem(oldSlot, null);
++				clearHandlers(oldSlot);
++			}
++		}
++		components.clear();
++		components.putAll(fresh.components);
++		rerender();
++	}
++
++	protected void rerenderSlot(int slot) {
++		if (viewer == null) return;
++		Component<?> component = components.get(slot);
++		if (component == null) {
++			inventory.setItem(slot, null);
++			clearHandlers(slot);
++			applyFillIfEmpty(slot, viewer);
++			return;
++		}
++		renderOne(slot, component, viewer);
++		applyFillIfEmpty(slot, viewer);
++	}
++
++	@Override
++	public void setHandler(int slot, ClickKind kind, ClickHandler handler) {
++		handlers.set(slot, kind, handler);
++	}
++
++	@Override
++	public void clearHandlers(int slot) {
++		handlers.clear(slot);
++	}
++
++	@Override
++	public boolean isInteractive(int slot) {
++		return interactiveSlots.contains(slot);
++	}
++
++	@Override
++	public void setInteractive(int slot, boolean interactive) {
++		if (interactive) {
++			interactiveSlots.add(slot);
++		} else {
++			interactiveSlots.remove(slot);
++		}
++	}
++
++	/**
++	 * Called by {@code MenuListener} after it has applied the cancel/interactive policy. Looks up the handler for
++	 * the clicked slot + click type and invokes it. No-op if no handler is registered.
++	 */
++	@Override
++	public void dispatchClick(InventoryClickEvent event, Player player) {
++		int slot = event.getRawSlot();
++		if (slot < 0 || slot >= size) return;
++
++		ClickType    type    = event.getClick();
++		ClickHandler handler = handlers.resolve(slot, type);
++		if (handler == null) return;
++
++		ItemStack clicked = event.getCurrentItem();
++		ChestClickContext ctx = new ChestClickContext(player, this, slot, type,
++		                                              clicked == null ? new ItemStack(Material.AIR) : clicked, event,
++		                                              registry);
++		Guard.of("click.dispatch")
++		     .with("menu", String.valueOf(name()))
++		     .with("slot", String.valueOf(slot))
++		     .with("player", player.getName())
++		     .run(() -> handler.onClick(ctx));
++	}
++
++	/**
++	 * Resolve {@link #titleSource}'s value against {@code player} (placeholders + colour codes) and, if the result
++	 * differs from the previously-resolved title, recreate the backing Bukkit inventory + holder so the new title
++	 * takes effect — Bukkit titles are immutable post-creation. The new inventory inherits the same size and the
++	 * same logical menu via a fresh {@link MenuHolder}; {@code MenuListener} looks up the menu via
++	 * {@link MenuHolder#target()}, so it continues to work.
++	 *
++	 * <p>No-op when the resolved title is empty.
++	 */
++	protected void ensureTitleFor(Player player) {
++		String raw = titleSource.get();
++		if (raw == null || raw.isEmpty()) return;
++
++		String resolved = ChatUtil.color(resolveTitle(player, raw));
++		if (resolved.equals(lastResolvedTitle)) return;
++
++		MenuHolder fresh = new MenuHolder(service);
++		fresh.setTarget(this);
++		Inventory next = Bukkit.createInventory(fresh, size, resolved);
++
++		this.holder            = fresh;
++		this.inventory         = next;
++		this.lastResolvedTitle = resolved;
++	}
++
++	/**
++	 * Resolve {@code %placeholder%} tokens in the title for {@code player}, logging and falling back to the raw
++	 * string if the provider throws.
++	 */
++	protected String resolveTitle(Player player, String raw) {
++		try {
++			return placeholders.resolve(player, raw);
++		} catch (Exception ex) {
++			log.warn("Title placeholder resolve failed for \"{}\" (player={}): {}", raw, player.getName(),
++			     warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestMenuBuilder.java', LF will be replaced by CRLF the next time Git touches it
+    ex.toString());
++			return raw;
++		}
++	}
++
++	protected void renderAll(Player player) {
++		// In-place render: each component's renderInto writes to the slot via SlotView.setItem, overwriting the
++		// previous frame slot-by-slot — skips a bulk inventory clear up-front, avoiding the single-tick blank
++		// window that causes visible flicker on rapid clicks of a control.
++		for (Map.Entry<Integer, Component<?>> entry : components.entrySet()) {
++			ChestSlotView view = renderOne(entry.getKey(), entry.getValue(), player);
++			if (!view.wasTouched()) {
++				inventory.setItem(entry.getKey(), null);
++				clearHandlers(entry.getKey());
++			}
++		}
++		// Apply fill at render time — covers slots without any component AND slots whose component rendered
++		// nothing (the wasTouched() == false branch above already cleared them, so they're null now).
++		if (fillComponent != null) {
++			for (int slot = 0; slot < size; slot++) {
++				if (inventory.getItem(slot) == null) {
++					renderOne(slot, fillComponent, player);
++				}
++			}
++		}
++	}
++
++	private ChestSlotView renderOne(int slot, Component<?> component, Player player) {
++		ChestRenderContext ctx  = new ChestRenderContext(player, this, placeholders);
++		ChestSlotView      view = new ChestSlotView(this, slot);
++		// Guard the render so one misbehaving component renders blank instead of aborting the whole menu render.
++		Guard.of("render.component")
++		     .with("menu", String.valueOf(name()))
++		     .with("slot", String.valueOf(slot))
++		     .run(() -> component.renderInto(view, ctx));
++		return view;
++	}
++
++	protected void applyFillIfEmpty(int slot, Player player) {
++		if (fillComponent == null) return;
++		if (inventory.getItem(slot) != null) return;
++		renderOne(slot, fillComponent, player);
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestMenuBuilder.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestMenuBuilder.java
+new file mode 100644
+index 0000000..a04e070
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestMenuBuilder.java
+@@ -0,0 +1,260 @@
++package org.luckyraven.keystone.inventory.chest;
++
++import org.bukkit.Bukkit;
++import org.bukkit.Material;
++import org.bukkit.entity.Player;
++import org.bukkit.inventory.Inventory;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.MenuBuilder;
++import org.luckyraven.keystone.inventory.click.ClickHandler;
++import org.luckyraven.keystone.inventory.component.BorderComponent;
++import org.luckyraven.keystone.inventory.component.Component;
++import org.luckyraven.keystone.inventory.component.FillComponent;
++import org.luckyraven.keystone.inventory.component.LineComponent;
++import org.luckyraven.keystone.inventory.spi.MenuHolder;
++import org.luckyraven.keystone.placeholder.PlaceholderProvider;
++import org.luckyraven.keystone.util.ChatUtil;
++
++import java.util.ArrayList;
++import java.util.HashMap;
++import java.util.HashSet;
++import java.util.List;
++import java.util.Map;
++import java.util.Set;
++import java.util.function.Predicate;
++import java.util.function.Supplier;
++
++/**
++ * Fluent builder for {@link ChestMenu}. Validation runs on {@link #build()} (rows in [1,6], slot indices in
++ * range), never on first open.
++ *
++ * <p>Composition order at build time: border fills the outer ring, lines fill their row/column, then explicit
++ * {@code .slot(int, Component)} calls OVERRIDE anything below (no {@code CompositeComponent} — an explicit slot
++ * simply replaces whatever decoration put there, per the E6 plan). Fill applies to remaining empty slots at
++ * render time, not here.
++ *
++ * <pre>{@code
++ * ChestMenu shop = ChestMenu.builder(inventoryService)
++ *     .title("&6Shop")
++ *     .rows(6)
++ *     .border(Material.BLACK_STAINED_GLASS_PANE)
++ *     .slot(13, ItemComponent.of(Material.DIAMOND)
++ *         .name("&bBuy Diamond")
++ *         .lore("&7Click to buy", "&7Costs &e$500")
++ *         .onLeftClick(ctx -> ctx.player().performCommand("buy diamond")))
++ *     .build();
++ * }</pre>
++ *
++ * <p>Ported from Oriel's {@code chest.ChestMenuBuilder} as part of Keystone Phase E6, trimmed to rows/title/
++ * permission/fill/border/line/slot/interactive/clickDelay/onOpen/onClose/vetoClose (Oriel's {@code RequirementHook}-based
++ * view/close requirements, opening sequences, save-history, refresh-interval and paginated regions are its
++ * advanced features — regions land in E6.2 as {@code PagedRegion}, the rest stay in Oriel). {@link #interactive(int)}
++ * is new — Gangland's per-slot "draggable" flag, folded in. {@link #vetoClose(Predicate)} is the basic-mechanism
++ * stand-in for Oriel's {@code closeRequirement}: a plain predicate, no fail-action chain.
++ */
++public final class ChestMenuBuilder implements MenuBuilder<ChestMenu, ChestMenuBuilder> {
++
++	private final InventoryService           service;
++	private final Map<Integer, Component<?>> explicitSlots    = new HashMap<>();
++	private final List<LineComponent>        lines            = new ArrayList<>();
++	private final Set<Integer>               interactiveSlots = new HashSet<>();
++	private       Supplier<String>           titleSource      = () -> "";
++	private       int                        rows             = 1;
++	@Nullable
++	private       BorderComponent            border;
++	@Nullable
++	private       FillComponent              fill;
++	@Nullable
++	private       PlaceholderProvider        placeholders;
++	@Nullable
++	private       String                     requiredPermission;
++	@Nullable
++	private       ClickHandler               onCloseHandler;
++	@Nullable
++	private       ClickHandler               onOpenHandler;
++	@Nullable
++	private       String                     name;
++	private       int                        clickDelayMillis;
++	@Nullable
++	private       Predicate<Player>          closeVeto;
++
++	ChestMenuBuilder(InventoryService service) {
++		this.service = service;
++	}
++
++	public ChestMenuBuilder title(String title) {
++		this.titleSource = () -> title;
++		return this;
++	}
++
++	/** Settable title source (F4) — a consumer with its own animated-title mechanism supplies one here. */
++	public ChestMenuBuilder title(Supplier<String> titleSource) {
++		this.titleSource = titleSource == null ? () -> "" : titleSource;
++		return this;
++	}
++
++	public ChestMenuBuilder rows(int rows) {
++		this.rows = rows;
++		return this;
++	}
++
++	/** Place one component at a slot. Overrides any decoration (border/line) already covering it. */
++	public ChestMenuBuilder slot(int slot, Component<?> component) {
++		explicitSlots.put(slot, component);
++		return this;
++	}
++
++	public ChestMenuBuilder border(Material material) {
++		this.border = BorderComponent.of(material);
++		return this;
++	}
++
++	public ChestMenuBuilder border(BorderComponent borderComponent) {
++		this.border = borderComponent;
++		return this;
++	}
++
++	public ChestMenuBuilder fill(Material material) {
++		this.fill = FillComponent.of(material);
++		return this;
++	}
++
++	public ChestMenuBuilder fill(FillComponent fillComponent) {
++		this.fill = fillComponent;
++		return this;
++	}
++
++	public ChestMenuBuilder line(LineComponent line) {
++		lines.add(line);
++		return this;
++	}
++
++	/**
++	 * Mark {@code slot} interactive before the first render — Gangland's "draggable" flag. A component's own
++	 * {@code SlotView.interactive(true)} call during render works too and takes effect on every subsequent
++	 * render; this is the builder-time shorthand for a slot with no component of its own.
++	 */
++	public ChestMenuBuilder interactive(int slot) {
++		interactiveSlots.add(slot);
++		return this;
++	}
++
++	/**
++	 * Attach a {@link PlaceholderProvider} so item names/lore resolve their {@code %placeholder%} tokens at render
++	 * time. Default is {@link PassthroughPlaceholders} (returns the raw string unchanged).
++	 */
++	public ChestMenuBuilder placeholders(PlaceholderProvider placeholders) {
++		this.placeholders = placeholders;
++		return this;
++	}
++
++	/**
++	 * Gate menu opening on a Bukkit permission. When set, {@link ChestMenu#open(org.bukkit.entity.Player)} no-opwarning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestRenderContext.java', LF will be replaced by CRLF the next time Git touches it
+s
++	 * for players without the permission and sends them a default "you don't have permission" message.
++	 */
++	public ChestMenuBuilder permission(String permission) {
++		this.requiredPermission = permission;
++		return this;
++	}
++
++	/** Register a handler invoked when the player closes this menu. */
++	public ChestMenuBuilder onClose(ClickHandler handler) {
++		this.onCloseHandler = handler;
++		return this;
++	}
++
++	/** Register a handler invoked when the player opens this menu. Fires once per {@code open()} call. */
++	public ChestMenuBuilder onOpen(ClickHandler handler) {
++		this.onOpenHandler = handler;
++		return this;
++	}
++
++	/** Tag the menu with a name. Surfaces via {@link ChestMenu#name()}. */
++	public ChestMenuBuilder name(String name) {
++		this.name = name;
++		return this;
++	}
++
++	/** Anti-spam debounce: silently ignore repeat clicks within {@code millis} of the previous one. {@code 0} disables it. */
++	public ChestMenuBuilder clickDelay(int millis) {
++		this.clickDelayMillis = millis;
++		return this;
++	}
++
++	/**
++	 * Gate a player-initiated close on a plain predicate: when {@code veto} returns {@code true},
++	 * {@code MenuListener} undoes the close (re-opens the menu next tick — Bukkit close events can't be
++	 * cancelled). The basic-mechanism counterpart of Oriel's {@code RequirementHook}-based
++	 * {@code closeRequirement} — no fail-action chain, just "should this close be undone?".
++	 */
++	public ChestMenuBuilder vetoClose(Predicate<Player> veto) {
++		this.closeVeto = veto;
++		return this;
++	}
++
++	@Override
++	public ChestMenu build() {
++		if (rows < 1 || rows > 6) {
++			throw new IllegalStateException("rows must be in [1, 6], got " + rows);
++		}
++		int size = rows * 9;
++		for (Integer slotIndex : explicitSlots.keySet()) {
++			if (slotIndex < 0 || slotIndex >= size) {
++				throw new IllegalStateException("slot " + slotIndex + " out of range [0, " + size + ")");
++			}
++		}
++		for (Integer slotIndex : interactiveSlots) {
++			if (slotIndex < 0 || slotIndex >= size) {
++				throw new IllegalStateException("interactive slot " + slotIndex + " out of range [0, " + size + ")");
++			}
++		}
++
++		Map<Integer, Component<?>> finalSlots = new HashMap<>();
++		if (border != null) applyBorder(finalSlots, size);
++		for (LineComponent line : lines) applyLine(finalSlots, line, size);
++		// Explicit slots OVERRIDE decoration — no CompositeComponent, per the E6 plan.
++		finalSlots.putAll(explicitSlots);
++
++		MenuHolder holder       = new MenuHolder(service);
++		String     coloredTitle = ChatUtil.color(titleSource.get());
++		Inventory  inventory    = Bukkit.createInventory(holder, size, coloredTitle);
++		ChestMenu  menu = new ChestMenu(inventory, holder, finalSlots, service, fill, placeholders, titleSource);
++		menu.requiredPermission(requiredPermission);
++		menu.onCloseHandler(onCloseHandler);
++		menu.onOpenHandler(onOpenHandler);
++		menu.name(name);
++		menu.clickDelayMillis(clickDelayMillis);
++		menu.closeVeto(closeVeto);
++		for (Integer slot : interactiveSlots) {
++			menu.setInteractive(slot, true);
++		}
++		holder.setTarget(menu);
++		return menu;
++	}
++
++	private void applyBorder(Map<Integer, Component<?>> finalSlots, int size) {
++		int lastRow = (size / 9) - 1;
++		for (int col = 0; col < 9; col++) {
++			finalSlots.put(col, border);
++			finalSlots.put(lastRow * 9 + col, border);
++		}
++		for (int row = 1; row < lastRow; row++) {
++			finalSlots.put(row * 9, border);
++			finalSlots.put(row * 9 + 8, border);
++		}
++	}
++
++	private void applyLine(Map<Integer, Component<?>> finalSlots, LineComponent line, int size) {
++		int totalRows = size / 9;
++		if (line.direction() == LineComponent.Direction.HORIZONTAL) {
++			int row = line.index();
++			if (row < 0 || row >= totalRows) return;
++			for (int col = 0; col < 9; col++) finalSlots.put(row * 9 + col, line);
++		} else {
++			int col = line.index();
++			if (col < 0 || col >= 9) return;
++			for (int row = 0; row < totalRows; row++) finalSlots.put(row * 9 + col, line);
++		}
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestRenderContext.java b/kewarning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestSlotView.java', LF will be replaced by CRLF the next time Git touches it
+ystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestRenderContext.java
+new file mode 100644
+index 0000000..c048ff7
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestRenderContext.java
+@@ -0,0 +1,52 @@
++package org.luckyraven.keystone.inventory.chest;
++
++import org.bukkit.entity.Player;
++import org.luckyraven.keystone.inventory.Menu;
++import org.luckyraven.keystone.inventory.component.RenderContext;
++import org.luckyraven.keystone.placeholder.PlaceholderProvider;
++
++/**
++ * Concrete {@link RenderContext}. Carries the player, menu, placeholder provider, and tick through every render
++ * call.
++ *
++ * <p>Ported unchanged (bar the package, and package-private — see {@link PassthroughPlaceholders}'s doc) from
++ * Oriel's {@code chest.internal.ChestRenderContext} as part of Keystone Phase E6.
++ */
++final class ChestRenderContext implements RenderContext {
++
++	private final Player              player;
++	private final Menu                menu;
++	private final PlaceholderProvider placeholders;
++	private final int                 tick;
++
++	ChestRenderContext(Player player, Menu menu, PlaceholderProvider placeholders) {
++		this(player, menu, placeholders, 0);
++	}
++
++	ChestRenderContext(Player player, Menu menu, PlaceholderProvider placeholders, int tick) {
++		this.player       = player;
++		this.menu         = menu;
++		this.placeholders = placeholders;
++		this.tick         = tick;
++	}
++
++	@Override
++	public Player player() {
++		return player;
++	}
++
++	@Override
++	public Menu menu() {
++		return menu;
++	}
++
++	@Override
++	public PlaceholderProvider placeholders() {
++		return placeholders;
++	}
++
++	@Override
++	public int tick() {
++		return tick;
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestSlotView.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestSlotView.java
+new file mode 100644
+index 0000000..55c7fe1
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/ChestSlotView.java
+@@ -0,0 +1,106 @@
++package org.luckyraven.keystone.inventory.chest;
++
++import org.bukkit.inventory.ItemStack;
++import org.luckyraven.keystone.inventory.click.ClickHandler;
++import org.luckyraven.keystone.inventory.click.ClickKind;
++import org.luckyraven.keystone.inventory.component.SlotView;
++import org.luckyraven.keystone.inventory.spi.MenuTarget;
++
++/**
++ * {@link SlotView} bound to one slot of a {@link MenuTarget}. Components only see this — they cannot mutate other
++ * slots or the menu structure during render.
++ *
++ * <p>Tracks whether the wrapped {@code setItem}/handler/{@code interactive} mutation methods were called in a
++ * render pass via {@link #wasTouched()}. {@link ChestMenu} uses this to detect components that deliberately
++ * rendered nothing so it can clear those slots explicitly without a bulk inventory clear up-front (which would
++ * cause visible flicker on rapid-click controls).
++ *
++ * <p>Ported from Oriel's {@code chest.internal.ChestSlotView} as part of Keystone Phase E6, minus the
++ * {@code SlotHandlerSink} indirection (Keystone ships one menu shape — {@code ChestMenu} itself IS the sink, via
++ * {@link MenuTarget}, so the separate interface Oriel needed for its chest + paginated-chest pair is not carried
++ * over) and package-private (see {@link PassthroughPlaceholders}'s doc for why these classes are co-located with
++ * {@link ChestMenu} rather than in a {@code .internal} sub-package).
++ */
++final class ChestSlotView implements SlotView {
++
++	private final MenuTarget target;
++	private final int        slot;
++	private       boolean    touched;
++
++	ChestSlotView(MenuTarget target, int slot) {
++		this.target = target;
++		this.slot   = slot;
++	}
++
++	@Override
++	public void setItem(ItemStack item) {
++		touched = true;
++		target.bukkitInventory().setItem(slot, item);
++	}
++
++	@Override
++	public void onLeftClick(ClickHandler handler) {
++		set(ClickKind.LEFT, handler);
++	}
++
++	@Override
++	public void onRightClick(ClickHandler handler) {
++		set(Clicwarning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/PassthroughPlaceholders.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/ClickContext.java', LF will be replaced by CRLF the next time Git touches it
+kKind.RIGHT, handler);
++	}
++
++	@Override
++	public void onAnyClick(ClickHandler handler) {
++		set(ClickKind.ANY, handler);
++	}
++
++	@Override
++	public void onMiddleClick(ClickHandler handler) {
++		set(ClickKind.MIDDLE, handler);
++	}
++
++	@Override
++	public void onShiftLeftClick(ClickHandler handler) {
++		set(ClickKind.SHIFT_LEFT, handler);
++	}
++
++	@Override
++	public void onShiftRightClick(ClickHandler handler) {
++		set(ClickKind.SHIFT_RIGHT, handler);
++	}
++
++	@Override
++	public void onDrop(ClickHandler handler) {
++		set(ClickKind.DROP, handler);
++	}
++
++	@Override
++	public void onNumberKey(ClickHandler handler) {
++		set(ClickKind.NUMBER_KEY, handler);
++	}
++
++	@Override
++	public void onDoubleClick(ClickHandler handler) {
++		set(ClickKind.DOUBLE_CLICK, handler);
++	}
++
++	private void set(ClickKind kind, ClickHandler handler) {
++		touched = true;
++		target.setHandler(slot, kind, handler);
++	}
++
++	@Override
++	public void clearHandlers() {
++		touched = true;
++		target.clearHandlers(slot);
++	}
++
++	@Override
++	public void interactive(boolean interactive) {
++		touched = true;
++		target.setInteractive(slot, interactive);
++	}
++
++	boolean wasTouched() {
++		return touched;
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/PassthroughPlaceholders.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/PassthroughPlaceholders.java
+new file mode 100644
+index 0000000..456abc1
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/chest/PassthroughPlaceholders.java
+@@ -0,0 +1,27 @@
++package org.luckyraven.keystone.inventory.chest;
++
++import org.bukkit.OfflinePlayer;
++import org.luckyraven.keystone.placeholder.PlaceholderProvider;
++
++/**
++ * No-op {@link PlaceholderProvider}. Returns the raw string unchanged. Used as {@link ChestMenu}'s default until a
++ * consumer wires a real one through {@link ChestMenuBuilder#placeholders(PlaceholderProvider)}.
++ *
++ * <p>Ported unchanged from Oriel's {@code chest.internal.PassthroughPlaceholders} as part of Keystone Phase E6,
++ * package-private (co-located with {@link ChestMenu}/{@link ChestClickContext}, its only callers — Java
++ * package-private access does not reach a {@code .internal} sub-package, so the "package-private" instruction in
++ * the E6 plan's E6.1 table means these support classes live beside {@code ChestMenu} itself, not in a separate
++ * {@code chest.internal} package the way Oriel split them).
++ */
++final class PassthroughPlaceholders implements PlaceholderProvider {
++
++	static final PassthroughPlaceholders INSTANCE = new PassthroughPlaceholders();
++
++	private PassthroughPlaceholders() {
++	}
++
++	@Override
++	public String resolve(OfflinePlayer player, String raw) {
++		return raw;
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/ClickContext.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/ClickContext.java
+new file mode 100644
+index 0000000..7da8802
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/ClickContext.java
+@@ -0,0 +1,80 @@
++package org.luckyraven.keystone.inventory.click;
++
++import org.bukkit.entity.Player;
++import org.bukkit.event.inventory.ClickType;
++import org.bukkit.inventory.ItemStack;
++import org.luckyraven.keystone.inventory.Menu;
++import org.luckyraven.keystone.placeholder.PlaceholderProvider;
++
++/**
++ * Self-documenting access to everything a click handler typically needs. An instance is passed to every handler
++ * registered through a {@link org.luckyraven.keystone.inventory.component.Component} or builder shorthand
++ * ({@code .onLeftClick(ctx -> ...)}, {@code .onRightClick(ctx -> ...)}, ...).
++ *
++ * <p>Implementations are immutable per click and carry the viewing player, the clicked menu, the raw slot index,
++ * the click type, and the item under the cursor. Reactive helpers ({@link #rerender()}, {@link #rerenderSlot(int)})
++ * are the canonical way to refresh visible state after a click mutates something.
++ *
++ * <p>Ported from Oriel's {@code corwarning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/ClickHandler.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/ClickKind.java', LF will be replaced by CRLF the next time Git touches it
+e.click.ClickContext} as part of Keystone Phase E6. {@code openMenu}/{@code openPrevious}
++ * stay on the contract (a {@code MenuRegistry}-backed implementation routes them); {@code HeadlessClickContext}
++ * (Oriel's no-window variant for command-argument fail actions) stays in Oriel — it serves Oriel's YAML action
++ * dialect, not the basic mechanism.
++ */
++public interface ClickContext {
++
++	/** The player who performed the click. */
++	Player player();
++
++	/** The menu the click happened in. */
++	Menu menu();
++
++	/** The raw slot index of the clicked slot, in the menu's coordinate space. */
++	int slot();
++
++	/** Bukkit's classification of the click (LEFT, RIGHT, SHIFT_LEFT, SHIFT_RIGHT, MIDDLE, DROP, ...). */
++	ClickType clickType();
++
++	/** The item that was visible in the clicked slot at the moment of the click. */
++	ItemStack clickedItem();
++
++	/** {@code true} if the click was a shift-click (either shift-left or shift-right). */
++	boolean isShiftClick();
++
++	/** Open another registered menu for the same player. Delegates through the configured {@code MenuOpener}. */
++	void openMenu(String registeredName);
++
++	/**
++	 * Open another registered menu for the same player, passing trailing arguments. The default ignores the args
++	 * and delegates to {@link #openMenu(String)} for contexts that don't route through a registry.
++	 */
++	default void openMenu(String registeredName, String... args) {
++		openMenu(registeredName);
++	}
++
++	/**
++	 * Re-open the menu the player viewed before this one. Walks the player's navigation trail (see
++	 * {@link org.luckyraven.keystone.inventory.tracking.NavigationHistory}); a no-op when there is no previous menu
++	 * to return to. The default is a no-op for click contexts not backed by a registry.
++	 */
++	default void openPrevious() {
++	}
++
++	/** Close the current menu for the player. */
++	void closeMenu();
++
++	/** Suppress default Bukkit handling. Default behaviour is already to cancel; call this to force re-cancel. */
++	void cancel();
++
++	/** Re-run every component on the current menu. */
++	void rerender();
++
++	/** Re-run just the named slot's component. */
++	void rerenderSlot(int slot);
++
++	/**
++	 * The same {@link PlaceholderProvider} the menu used for its render pass. Click handlers resolve
++	 * {@code %placeholder%} tokens via {@code ctx.placeholders().resolve(ctx.player(), raw)} so a consumer's
++	 * message/command actions end up with the same values an item name/lore would show.
++	 */
++	PlaceholderProvider placeholders();
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/ClickHandler.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/ClickHandler.java
+new file mode 100644
+index 0000000..212ae58
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/ClickHandler.java
+@@ -0,0 +1,17 @@
++package org.luckyraven.keystone.inventory.click;
++
++/**
++ * Single-method functional interface for click handlers. Every {@code .onLeftClick(...)}, {@code .onRightClick(...)},
++ * and {@code .onAnyClick(...)} builder method ultimately accepts one of these.
++ *
++ * <p>Lambdas are the typical form. The {@link ClickContext} carries everything a handler needs; handlers do not
++ * return a value because cancellation and re-render are routed through the context, not the return type.
++ *
++ * <p>Ported unchanged (bar the package) from Oriel's {@code core.click.ClickHandler} as part of Keystone Phase E6.
++ */
++@FunctionalInterface
++public interface ClickHandler {
++
++	/** Run this handler in response to a click. */
++	void onClick(ClickContext ctx);
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/ClickKind.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/ClickKind.java
+new file mode 100644
+index 0000000..1d9016e
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/ClickKind.java
+@@ -0,0 +1,98 @@
++package org.luckyraven.keystone.inventory.click;
++
++import org.bukkit.event.inventory.ClickType;
++
++imwarning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/SlotHandlers.java', LF will be replaced by CRLF the next time Git touches it
+port java.util.Locale;
++import java.util.Optional;
++
++/**
++ * The set of click gestures a slot can bind a distinct {@link ClickHandler} to.
++ *
++ * <p>{@link #resolutionOrder(ClickType)} encodes the most-specific-first routing: a {@code SHIFT_LEFT} click
++ * prefers a {@link #SHIFT_LEFT} handler, then falls through to {@link #LEFT}, then {@link #ANY}.
++ *
++ * <p>{@link #DOUBLE_CLICK} is the deliberate exception: it resolves <em>only</em> to an explicit
++ * {@link #DOUBLE_CLICK} handler, never falling through to {@link #LEFT} or {@link #ANY}. A physical double-click
++ * sends two click packets — a {@code LEFT} followed by a {@code DOUBLE_CLICK} — so the left/any handler already
++ * fired on the first packet. Falling through would run it a second time.
++ *
++ * <p>Ported unchanged (bar the package) from Oriel's {@code core.click.ClickKind} as part of Keystone Phase E6.
++ */
++public enum ClickKind {
++
++	LEFT("on_left_click", ClickType.LEFT),
++	RIGHT("on_right_click", ClickType.RIGHT),
++	MIDDLE("on_middle_click", ClickType.MIDDLE),
++	SHIFT_LEFT("on_shift_left_click", ClickType.SHIFT_LEFT),
++	SHIFT_RIGHT("on_shift_right_click", ClickType.SHIFT_RIGHT),
++	DROP("on_drop", ClickType.DROP),
++	NUMBER_KEY("on_number_key", ClickType.NUMBER_KEY),
++	DOUBLE_CLICK("on_double_click", ClickType.DOUBLE_CLICK),
++	ANY("on_click", null);
++
++	private final String    yamlKey;
++	private final ClickType bukkitType;
++
++	ClickKind(String yamlKey, ClickType bukkitType) {
++		this.yamlKey    = yamlKey;
++		this.bukkitType = bukkitType;
++	}
++
++	/** The YAML key that binds this click kind — e.g. {@code on_left_click} for {@link #LEFT}. */
++	public String yamlKey() {
++		return yamlKey;
++	}
++
++	/**
++	 * The representative Bukkit {@link ClickType} for this kind, or empty for {@link #ANY} (the catch-all, which
++	 * has no single click type).
++	 */
++	public Optional<ClickType> bukkitType() {
++		return Optional.ofNullable(bukkitType);
++	}
++
++	/**
++	 * Resolves a YAML key (e.g. {@code on_left_click}) back to its {@link ClickKind}, case-insensitively. Empty
++	 * when the key matches no known click kind.
++	 */
++	public static Optional<ClickKind> fromYamlKey(String key) {
++		if (key == null) {
++			return Optional.empty();
++		}
++		String normalized = key.trim().toLowerCase(Locale.ROOT);
++		for (ClickKind kind : values()) {
++			if (kind.yamlKey.equals(normalized)) {
++				return Optional.of(kind);
++			}
++		}
++		return Optional.empty();
++	}
++
++	private static final ClickKind[] ONLY_ANY     = { ANY };
++	private static final ClickKind[] LEFT_CHAIN   = { LEFT, ANY };
++	private static final ClickKind[] RIGHT_CHAIN  = { RIGHT, ANY };
++	private static final ClickKind[] MIDDLE_CHAIN = { MIDDLE, ANY };
++	private static final ClickKind[] SLEFT_CHAIN  = { SHIFT_LEFT, LEFT, ANY };
++	private static final ClickKind[] SRIGHT_CHAIN = { SHIFT_RIGHT, RIGHT, ANY };
++	private static final ClickKind[] DROP_CHAIN   = { DROP, ANY };
++	private static final ClickKind[] NUMBER_CHAIN = { NUMBER_KEY, ANY };
++	private static final ClickKind[] DOUBLE_CHAIN = { DOUBLE_CLICK };
++
++	/**
++	 * The ordered list of kinds to try when routing a {@link ClickType}, most specific first, always ending at
++	 * {@link #ANY}. An unrecognised click resolves only against {@link #ANY}.
++	 */
++	public static ClickKind[] resolutionOrder(ClickType type) {
++		return switch (type) {
++			case LEFT, WINDOW_BORDER_LEFT, CREATIVE -> LEFT_CHAIN;
++			case RIGHT, WINDOW_BORDER_RIGHT         -> RIGHT_CHAIN;
++			case MIDDLE                             -> MIDDLE_CHAIN;
++			case SHIFT_LEFT                         -> SLEFT_CHAIN;
++			case SHIFT_RIGHT                        -> SRIGHT_CHAIN;
++			case DROP, CONTROL_DROP                 -> DROP_CHAIN;
++			case NUMBER_KEY                         -> NUMBER_CHAIN;
++			case DOUBLE_CLICK                       -> DOUBLE_CHAIN;
++			default                                 -> ONLY_ANY;
++		};
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/SlotHandlers.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/SlotHandlers.javwarning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/BorderComponent.java', LF will be replaced by CRLF the next time Git touches it
+a
+new file mode 100644
+index 0000000..993ee57
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/click/SlotHandlers.java
+@@ -0,0 +1,65 @@
++package org.luckyraven.keystone.inventory.click;
++
++import org.bukkit.event.inventory.ClickType;
++import org.jetbrains.annotations.Nullable;
++
++import java.util.EnumMap;
++import java.util.HashMap;
++import java.util.Map;
++
++/**
++ * Per-slot click-handler storage shared by every menu type. Menus delegate their {@code SlotView} writes and their
++ * click-dispatch lookups here, so the most-specific-first {@link ClickKind} routing lives in exactly one place
++ * ({@link #resolve}).
++ *
++ * <p>Not thread-safe; all access is on the main server thread, as with the menus that own an instance.
++ *
++ * <p>Ported unchanged (bar the package) from Oriel's {@code core.click.SlotHandlers} as part of Keystone Phase E6.
++ */
++public final class SlotHandlers {
++
++	private final Map<Integer, EnumMap<ClickKind, ClickHandler>> bySlot = new HashMap<>();
++
++	/** Bind {@code handler} to {@code kind} on {@code slot}, replacing any handler already bound to that kind. */
++	public void set(int slot, ClickKind kind, ClickHandler handler) {
++		bySlot.computeIfAbsent(slot, k -> new EnumMap<>(ClickKind.class)).put(kind, handler);
++	}
++
++	/**
++	 * Bind {@code handler} to {@code kind} on {@code slot} only if that kind has no handler yet — used for default
++	 * controls that should not clobber a user-supplied handler on the same slot.
++	 */
++	public void setIfAbsent(int slot, ClickKind kind, ClickHandler handler) {
++		bySlot.computeIfAbsent(slot, k -> new EnumMap<>(ClickKind.class)).putIfAbsent(kind, handler);
++	}
++
++	/** Remove every handler bound to {@code slot}. */
++	public void clear(int slot) {
++		bySlot.remove(slot);
++	}
++
++	/** Remove every handler on every slot. */
++	public void clearAll() {
++		bySlot.clear();
++	}
++
++	/**
++	 * Resolve the handler for a click of {@code type} on {@code slot}, trying each kind in
++	 * {@link ClickKind#resolutionOrder} until one is bound. Returns {@code null} if the slot has no matching
++	 * handler.
++	 */
++	@Nullable
++	public ClickHandler resolve(int slot, ClickType type) {
++		EnumMap<ClickKind, ClickHandler> map = bySlot.get(slot);
++		if (map == null) {
++			return null;
++		}
++		for (ClickKind kind : ClickKind.resolutionOrder(type)) {
++			ClickHandler handler = map.get(kind);
++			if (handler != null) {
++				return handler;
++			}
++		}
++		return null;
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/BorderComponent.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/BorderComponent.java
+new file mode 100644
+index 0000000..8f9c178
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/BorderComponent.java
+@@ -0,0 +1,37 @@
++package org.luckyraven.keystone.inventory.component;
++
++import org.bukkit.Material;
++
++/**
++ * Decoration: fills the outer ring (row 0, last row, columns 0/8) of a chest menu. Has no click handlers — a
++ * border slot is non-interactive, so {@code MenuListener} cancels-by-default and border slots silently absorb
++ * clicks.
++ *
++ * <p>Per-slot semantics: {@code ChestMenuBuilder.border(...)} spreads one {@link BorderComponent} across every
++ * edge slot; sharing the instance is safe because rendering is stateless with respect to slot index.
++ *
++ * <p>Ported from Oriel's {@code chest.component.BorderComponent} as part of Keystone Phase E6 — the shape only
++ * (finding F8): delegates to Keystone's own plain {@link ItemComponent}, no animated-icon-source overload.
++ */
++public final class BorderComponent implements Component<BorderComponent> {
++
++	private final ItemComponent delegate;
++
++	private BorderComponent(ItemComponent delegate) {
++		this.delegate = delegate;
++	}
++
++	public static BorderComponent of(Material material) {
++		return new BorderComponent(ItemComponent.of(material));
++	}
++
++	public BorderComponent name(String name) {
++		delegate.name(name);
++		return this;
++	}
++
++	@Override
++	public void renwarning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/Component.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/FillComponent.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/ItemComponent.java', LF will be replaced by CRLF the next time Git touches it
+derInto(SlotView view, RenderContext ctx) {
++		delegate.renderInto(view, ctx);
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/Component.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/Component.java
+new file mode 100644
+index 0000000..590863c
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/Component.java
+@@ -0,0 +1,29 @@
++package org.luckyraven.keystone.inventory.component;
++
++/**
++ * A render unit. Components describe what to put in a slot and how to react to clicks; the menu places them at
++ * positions. Standard implementations shipped with {@code inventory.chest} include {@code ItemComponent},
++ * {@code FillComponent}, {@code BorderComponent} and {@code LineComponent}.
++ *
++ * <p>Custom components implement this interface directly and are used through the same builder methods as the
++ * built-ins — there is no privileged set.
++ *
++ * <pre>{@code
++ * public final class CountdownComponent implements Component<CountdownComponent> {
++ *     public void renderInto(SlotView view, RenderContext ctx) {
++ *         view.setItem(new ItemStack(Material.CLOCK));
++ *     }
++ * }
++ * }</pre>
++ *
++ * <p>Ported from Oriel's {@code core.component.Component} as part of Keystone Phase E6. Oriel's reactive
++ * {@code dependencies()}/{@code DependencyKey} re-render mechanism stays in Oriel as a subtype — it is an advanced
++ * feature, not part of the basic mechanism.
++ *
++ * @param <T> self-type for fluent builder methods on subclasses
++ */
++public interface Component<T extends Component<T>> {
++
++	/** Render this component into the given slot view. Called once per render pass. */
++	void renderInto(SlotView view, RenderContext ctx);
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/FillComponent.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/FillComponent.java
+new file mode 100644
+index 0000000..ba9efaf
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/FillComponent.java
+@@ -0,0 +1,34 @@
++package org.luckyraven.keystone.inventory.component;
++
++import org.bukkit.Material;
++
++/**
++ * Decoration: fills empty slots not claimed by other components. Applied last by {@code ChestMenuBuilder}/
++ * {@code ChestMenu} so it never overrides explicit slots, a border, or lines.
++ *
++ * <p>Ported from Oriel's {@code chest.component.FillComponent} as part of Keystone Phase E6 — the shape only, not
++ * lifted: it now delegates to Keystone's own plain {@link ItemComponent} (finding F8), so the animated-icon-source
++ * overload Oriel's version accepted is dropped along with it.
++ */
++public final class FillComponent implements Component<FillComponent> {
++
++	private final ItemComponent delegate;
++
++	private FillComponent(ItemComponent delegate) {
++		this.delegate = delegate;
++	}
++
++	public static FillComponent of(Material material) {
++		return new FillComponent(ItemComponent.of(material));
++	}
++
++	public FillComponent name(String name) {
++		delegate.name(name);
++		return this;
++	}
++
++	@Override
++	public void renderInto(SlotView view, RenderContext ctx) {
++		delegate.renderInto(view, ctx);
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/ItemComponent.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/ItemComponent.java
+new file mode 100644
+index 0000000..c7db924
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/ItemComponent.java
+@@ -0,0 +1,128 @@
++package org.luckyraven.keystone.inventory.component;
++
++import org.bukkit.Material;
++import org.bukkit.inventory.ItemStack;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.keystone.inventory.click.ClickHandler;
++import org.luckyraven.keystone.item.ItemBuilder;
++
++/**
++ * The plain item component: an {@link ItemStack} plus click handlers, nothing else.
++ *
++ * <p><b>New class, not a port</b> (review pass 202warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/ItemHoldingComponent.java', LF will be replaced by CRLF the next time Git touches it
+6-09-17, finding F8): Oriel's own {@code chest.component.ItemComponent}
++ * is actually {@code AnimatedComponent} + {@code ItemSource}/{@code LoreSource}/{@code RequirementHook} — Oriel's
++ * advanced rendering stack. This class is authored fresh at the plain shape the E6 plan calls for, with
++ * {@link ItemBuilder} overloads so the common "material + name(+lore)" call sites Gangland's
++ * {@code gangland-ui/inventory-api} used don't need to build an {@link ItemStack} by hand.
++ *
++ * <pre>{@code
++ * ItemComponent.of(Material.DIAMOND)
++ *     .name("&bBuy Diamond")
++ *     .lore("&7Click to buy", "&7Costs &e$500")
++ *     .onLeftClick(ctx -> ctx.player().performCommand("buy diamond"));
++ * }</pre>
++ */
++public final class ItemComponent implements Component<ItemComponent> {
++
++	private ItemStack item;
++	private boolean    interactive;
++	@Nullable
++	private ClickHandler left, right, middle, any, shiftLeft, shiftRight, drop, numberKey, doubleClick;
++
++	private ItemComponent(ItemStack item) {
++		this.item = item;
++	}
++
++	public static ItemComponent of(Material material) {
++		return new ItemComponent(new ItemBuilder(material).build());
++	}
++
++	public static ItemComponent of(ItemStack item) {
++		return new ItemComponent(item.clone());
++	}
++
++	public static ItemComponent of(ItemBuilder builder) {
++		return new ItemComponent(builder.build());
++	}
++
++	public ItemComponent name(String name) {
++		this.item = new ItemBuilder(item).setDisplayName(name).build();
++		return this;
++	}
++
++	public ItemComponent lore(String... lore) {
++		this.item = new ItemBuilder(item).setLore(lore).build();
++		return this;
++	}
++
++	public ItemComponent amount(int amount) {
++		this.item = new ItemBuilder(item).setAmount(amount).build();
++		return this;
++	}
++
++	/** Mark this slot interactive — see {@link SlotView#interactive(boolean)}. Default {@code false}. */
++	public ItemComponent interactive(boolean interactive) {
++		this.interactive = interactive;
++		return this;
++	}
++
++	public ItemComponent onLeftClick(ClickHandler handler) {
++		this.left = handler;
++		return this;
++	}
++
++	public ItemComponent onRightClick(ClickHandler handler) {
++		this.right = handler;
++		return this;
++	}
++
++	public ItemComponent onAnyClick(ClickHandler handler) {
++		this.any = handler;
++		return this;
++	}
++
++	public ItemComponent onMiddleClick(ClickHandler handler) {
++		this.middle = handler;
++		return this;
++	}
++
++	public ItemComponent onShiftLeftClick(ClickHandler handler) {
++		this.shiftLeft = handler;
++		return this;
++	}
++
++	public ItemComponent onShiftRightClick(ClickHandler handler) {
++		this.shiftRight = handler;
++		return this;
++	}
++
++	public ItemComponent onDrop(ClickHandler handler) {
++		this.drop = handler;
++		return this;
++	}
++
++	public ItemComponent onNumberKey(ClickHandler handler) {
++		this.numberKey = handler;
++		return this;
++	}
++
++	public ItemComponent onDoubleClick(ClickHandler handler) {
++		this.doubleClick = handler;
++		return this;
++	}
++
++	@Override
++	public void renderInto(SlotView view, RenderContext ctx) {
++		view.setItem(item);
++		view.interactive(interactive);
++		if (left != null) view.onLeftClick(left);
++		if (right != null) view.onRightClick(right);
++		if (any != null) view.onAnyClick(any);
++		if (middle != null) view.onMiddleClick(middle);
++		if (shiftLeft != null) view.onShiftLeftClick(shiftLeft);
++		if (shiftRight != null) view.onShiftRightClick(shiftRight);
++		if (drop != null) view.onDrop(drop);
++		if (numberKey != null) view.onNumberKey(numberKey);
++		if (doubleClick != null) view.onDoubleClick(doubleClick);
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/ItemHoldingComponent.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/ItemHoldingComponent.java
+new file mode 100644
+index 0000000..6bc4b76
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/ItemHoldingComponent.java
+@@ -0,0 +1,27 @@
++package org.luckyraven.keystone.inventory.component;
++
++import org.bukkit.entity.Player;
++import org.bukkit.inventory.ItemStack;
++imwarning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/LineComponent.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/RenderContext.java', LF will be replaced by CRLF the next time Git touches it
+port org.luckyraven.keystone.inventory.CloseReason;
++
++import java.util.List;
++
++/**
++ * Marker for components that hold player-supplied items between clicks. The owning {@link org.luckyraven.keystone.inventory.Menu}
++ * is responsible for returning {@link #heldItems(Player)} to the player on close — a data-loss guard against
++ * Bukkit discarding a plugin-owned inventory's slot contents.
++ *
++ * <p>Ported from Oriel's {@code core.component.ItemHoldingComponent} as part of Keystone Phase E6. Oriel's
++ * {@code DepositSlotComponent} is the first implementation; it stays in Oriel (deposit slots are an advanced
++ * feature), but the marker itself is basic mechanism — {@code ChestMenu} iterates every registered
++ * {@link ItemHoldingComponent} generically on {@link CloseReason#RELOAD} / {@link CloseReason#PLUGIN_DISABLE} so
++ * held items are never silently destroyed regardless of which consumer's component is holding them.
++ */
++public interface ItemHoldingComponent {
++
++	/** Items currently held for {@code player}. Empty when nothing is held. Caller should not mutate the stacks. */
++	List<ItemStack> heldItems(Player player);
++
++	/** Drop the held state for {@code player} without returning it or firing user-supplied withdraw handlers. */
++	void clearHeld(Player player);
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/LineComponent.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/LineComponent.java
+new file mode 100644
+index 0000000..c7518e6
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/LineComponent.java
+@@ -0,0 +1,62 @@
++package org.luckyraven.keystone.inventory.component;
++
++import org.bukkit.Material;
++
++/**
++ * Decoration: a horizontal or vertical divider line at a fixed row or column. Spread across the line's slots by
++ * {@code ChestMenuBuilder}.
++ *
++ * <pre>{@code
++ * .line(LineComponent.horizontal(2, Material.BLACK_STAINED_GLASS_PANE))
++ * .line(LineComponent.vertical(4, Material.WHITE_STAINED_GLASS_PANE))
++ * }</pre>
++ *
++ * <p>Ported from Oriel's {@code chest.component.LineComponent} as part of Keystone Phase E6 — the shape only
++ * (finding F8): delegates to Keystone's own plain {@link ItemComponent}, no animated-icon-source overload.
++ */
++public final class LineComponent implements Component<LineComponent> {
++
++	/** Whether the line spans a row (horizontal) or a column (vertical). */
++	public enum Direction {
++		/** Spans every column of one row. */
++		HORIZONTAL,
++		/** Spans every row of one column. */
++		VERTICAL
++	}
++
++	private final ItemComponent delegate;
++	private final Direction     direction;
++	private final int           index;
++
++	private LineComponent(ItemComponent delegate, Direction direction, int index) {
++		this.delegate  = delegate;
++		this.direction = direction;
++		this.index     = index;
++	}
++
++	public static LineComponent horizontal(int row, Material material) {
++		return new LineComponent(ItemComponent.of(material), Direction.HORIZONTAL, row);
++	}
++
++	public static LineComponent vertical(int column, Material material) {
++		return new LineComponent(ItemComponent.of(material), Direction.VERTICAL, column);
++	}
++
++	public LineComponent name(String name) {
++		delegate.name(name);
++		return this;
++	}
++
++	public Direction direction() {
++		return direction;
++	}
++
++	public int index() {
++		return index;
++	}
++
++	@Override
++	public void renderInto(SlotView view, RenderContext ctx) {
++		delegate.renderInto(view, ctx);
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/RenderContext.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/RenderContext.java
+new file mode 100644
+index 0000000..ab9cf98
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/RenderContext.java
+@@ -0,0 +1,29 @@
++package org.luckyraven.keystone.inventory.component;
++
++import org.bukkit.entity.Player;
++import org.luckyraven.keystone.inventory.Menu;
++import org.luckyraven.keystonwarning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/SlotView.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/listener/MenuListener.java', LF will be replaced by CRLF the next time Git touches it
+e.placeholder.PlaceholderProvider;
++
++/**
++ * Carries the player, the placeholder provider, and the owning menu through every {@link Component#renderInto}
++ * call. Components read this to resolve placeholders and access menu-scoped services.
++ *
++ * <p>Ported from Oriel's {@code core.component.RenderContext} as part of Keystone Phase E6. {@code tick()} is kept
++ * (Oriel's animated components read it), defaulting to {@code 0} for non-animated render passes.
++ */
++public interface RenderContext {
++
++	Player player();
++
++	Menu menu();
++
++	PlaceholderProvider placeholders();
++
++	/**
++	 * An animation tick counter, for consumers that drive per-frame renders on top of this mechanism. Returns
++	 * {@code 0} for a plain render pass (open, manual {@code rerender}, builder-time tests).
++	 */
++	default int tick() {
++		return 0;
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/SlotView.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/SlotView.java
+new file mode 100644
+index 0000000..f2ebc5c
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/component/SlotView.java
+@@ -0,0 +1,64 @@
++package org.luckyraven.keystone.inventory.component;
++
++import org.bukkit.inventory.ItemStack;
++import org.luckyraven.keystone.inventory.click.ClickHandler;
++
++/**
++ * Narrow write-side surface a {@link Component} uses to set its item, click handlers, and interactive flag.
++ * Components only see this, not the full menu, so they cannot mutate other slots or the menu structure during
++ * render.
++ *
++ * <p>Ported from Oriel's {@code core.component.SlotView} as part of Keystone Phase E6, with one addition:
++ * {@link #interactive(boolean)} — Gangland's per-slot "draggable" flag, folded in from
++ * {@code gangland-ui/inventory-api}. A slot marked interactive is not click-cancelled by {@code MenuListener}, so
++ * the player can freely place/pick up items there (an input/output slot); a slot left non-interactive (the
++ * default) is cancelled-by-default, as every menu slot always was.
++ */
++public interface SlotView {
++
++	void setItem(ItemStack item);
++
++	void onLeftClick(ClickHandler handler);
++
++	void onRightClick(ClickHandler handler);
++
++	void onAnyClick(ClickHandler handler);
++
++	/**
++	 * Bind a handler for a middle-click. Default no-op: a {@link SlotView} that does not support the broadened
++	 * click set silently drops it (the slot still works for left / right / any).
++	 */
++	default void onMiddleClick(ClickHandler handler) {
++	}
++
++	/** Bind a handler for a shift+left-click. Falls through to the left handler if unset. Default no-op. */
++	default void onShiftLeftClick(ClickHandler handler) {
++	}
++
++	/** Bind a handler for a shift+right-click. Falls through to the right handler if unset. Default no-op. */
++	default void onShiftRightClick(ClickHandler handler) {
++	}
++
++	/** Bind a handler for a drop (Q / Ctrl+Q while hovering the slot). Default no-op. */
++	default void onDrop(ClickHandler handler) {
++	}
++
++	/** Bind a handler for a hotbar number-key swap on the slot. Default no-op. */
++	default void onNumberKey(ClickHandler handler) {
++	}
++
++	/** Bind a handler for a double-click. Falls through to the left handler if unset. Default no-op. */
++	default void onDoubleClick(ClickHandler handler) {
++	}
++
++	void clearHandlers();
++
++	/**
++	 * Mark this slot as interactive (or not) for the current render. An interactive slot's click is not
++	 * cancelled-by-default by {@code MenuListener} — the player can place/pick up items there. Default is a
++	 * no-op: a {@link SlotView} that doesn't back onto a {@code MenuTarget} (a headless test double, say) simply
++	 * ignores it.
++	 */
++	default void interactive(boolean interactive) {
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/listener/MenuListener.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/listener/MenuListener.java
+new file mode 100644
+index 0000000..b95dd8b
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/listener/MenuListener.java
+@@ -0,0 +1,190 @@
++package org.luckyraven.keystone.inventory.listener;
++
++import lombok.CustomLog;
++import org.bukkit.Bukkit;
++import org.bukkit.Material;
++import org.bukkit.entity.Player;
++import org.bukkit.event.EventHandler;
++import org.bukkit.event.EventPriority;
++import org.bukkit.event.Listener;
++import org.bukkit.event.inventory.InventoryAction;
++import org.bukkit.event.inventory.InventoryClickEvent;
++import org.bukkit.event.inventory.InventoryCloseEvent;
++import org.bukkit.event.inventory.InventoryDragEvent;
++import org.bukkit.event.player.PlayerQuitEvent;
++import org.bukkit.inventory.Inventory;
++import org.bukkit.inventory.ItemStack;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.keystone.cooldown.ClickDebounce;
++import org.luckyraven.keystone.cooldown.CooldownService;
++import org.luckyraven.keystone.inventory.CloseReason;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.Menu;
++import org.luckyraven.keystone.inventory.spi.MenuHolder;
++import org.luckyraven.keystone.inventory.spi.MenuTarget;
++import org.luckyraven.keystone.inventory.tracking.DefaultOpenMenuTracker;
++
++/**
++ * Global click/drag/close/quit listener for every menu inventory owned by one {@link InventoryService}. Keystone
++ * ships this class but never registers it — {@link InventoryService#registerListeners(JavaPlugin)} does that once
++ * per consumer, at bootstrap.
++ *
++ * <p>Ported from Oriel's {@code chest.listener.ChestMenuClickListener} + {@code ChestMenuCloseListener} +
++ * the {@code PlayerQuitEvent} handler that lived on {@code core.registry.DefaultOpenMenuTracker} — one class here,
++ * per the E6 plan.
++ *
++ * <p><b>Identity.</b> {@code event.getInventory().getHolder() instanceof MenuHolder holder && holder.service() == this.service}.
++ * The shared classloader means every consumer's {@code MenuListener} sees every click on every menu inventory on
++ * the server, Oriel's and Gangland's alike; the service-identity check is what makes exactly one of them dispatch
++ * a given click. See {@link MenuHolder}'s doc.
++ *
++ * <p><b>Click policy</b> (merged from both of Oriel's listeners, plus the new interactive-slot flag folded in from
++ * Gangland): a click landing in the menu's own inventory first gets a chance at
++ * {@link MenuTarget#handleDepositClick(InventoryClickEvent)} — Oriel's deposit-slot place/pickup/swap logic lives
++ * entirely behind that one hook (finding F1 of the E6 plan review); if it declines, the slot is cancelled unless
++ * {@link MenuTarget#isInteractive(int)}, then {@link ClickDebounce} gates on {@link MenuTarget#clickDelayMillis()},
++ * then {@link MenuTarget#dispatchClick(InventoryClickEvent, Player)} resolves and invokes the slot's handler. A
++ * click in the player's own (bottom) inventory passes through untouched unless it is
++ * {@link InventoryAction#COLLECT_TO_CURSOR} (always blocked) or a shift-click (routed through
++ * {@link MenuTarget#handleDepositClick(InventoryClickEvent)}, blocked if declined). A drag is cancelled if any of
++ * its slots land in the menu's inventory and are not interactive.
++ */
++@CustomLog
++public final class MenuListener implements Listener {
++
++	private final InventoryService service;
++	private final JavaPlugin       plugin;
++	private final CooldownService  cooldowns;
++
++	public MenuListener(InventoryService service, JavaPlugin plugin, CooldownService cooldowns) {
++		this.service   = service;
++		this.plugin    = plugin;
++		this.cooldowns = cooldowns;
++	}
++
++	@EventHandler
++	public void onClick(InventoryClickEvent event) {
++		MenuHolder holder = ownHolder(event.getInventory());
++		if (holder == null) return;
++		MenuTarget target = holder.target();
++		if (target == null) return;
++
++		if (event.getClickedInventory() != event.getInventory()) {
++			handlePlayerInventoryClick(event, target);
++			return;
++		}
++
++		if (target.handleDepositClick(event)) return;
++
++		int slot = event.getRawSlot();
++		if (!target.isInteractive(slot)) {
++			event.setCancelled(true);
++		}
++
++		Player player = (Player) event.getWhoClicked();
++		if (ClickDebounce.shouldSwallow(cooldowns, player, target.clickDelayMillis())) return;
++		target.dispatchClick(event, player);
++	}
++
++	/**
++	 * Click in the player's own inventory while a menu is open. A shift-click can route an item into a
++	 * consumer-owned deposit slot via {@link MenuTarget#handleDepositClick(InventoryClickEvent)}; a plain click
++	 * passes through untouched, except {@link InventoryAction#COLLECT_TO_CURSOR} which is always blocked because
++	 * it would pull from the menu's own slots.
++	 */
++	private void handlePlayerInventoryClick(InventoryClickEvent event, MenuTarget target) {
++		if (event.getAction() == InventoryAction.COLLECT_TO_CURSOR) {
++			event.setCancelled(true);
++			return;
++		}
++		if (!event.isShiftClick()) {
++			return;
++		}
++		ItemStack source = event.getCurrentItem();
++		if (source == null || source.getType() == Material.AIR || source.getAmount() <= 0) {
++			event.setCancelled(true);
++			return;
++		}
++		if (!target.handleDepositClick(event)) {
++			// No consumer-specific routing accepted the shift-transfer — block it so the player doesn't
++			// accidentally inject items into non-deposit slots.
++			event.setCancelled(true);
++		}
++	}
++
++	@EventHandler
++	public void onDrag(InventoryDragEvent event) {
++		MenuHolder holder = ownHolder(event.getInventory());
++		if (holder == null) return;
++		MenuTarget target = holder.target();
++		if (target == null) return;
++
++		int topSize = event.getInventory().getSize();
++		for (int rawSlot : event.getRawSlots()) {
++			if (rawSlot < topSize && !target.isInteractive(rawSlot)) {
++				event.setCancelled(true);
++				return;
++			}
++		}
++	}
++
++	@EventHandler
++	public void onClose(InventoryCloseEvent event) {
++		MenuHolder holder = ownHolder(event.getInventory());
++		if (holder == null) return;
++		MenuTarget target = holder.target();
++		if (target == null) return;
++
++		Player player = (Player) event.getPlayer();
++
++		// Only untrack (and only consult the close gate) if this menu is still the tracked one. When a navigation
++		// opens a new inventory while one is already open, the incoming menu's open() tracks itself before
++		// player.openInventory() runs, which causes Bukkit to fire this close event for the OLD inventory after
++		// the new one is already registered — skipping in that case preserves the new registration and keeps a
++		// menu-to-menu transition from being vetoed by the outgoing menu's own close gate.
++		if (service.tracker().currentMenuOf(player) == target) {
++			if (target instanceof Menu menu && target.vetoesClose(player)) {
++				// Untrack now — open() re-tracks, and if the re-open's own gate aborts, the player must not stay
++				// tracked against a closed inventory. onClose is NOT dispatched: a vetoed close never "happened".
++				service.tracker().untrack(player);
++				Bukkit.getScheduler().runTask(plugin, () -> {
++					if (player.isOnline()) {
++						menu.open(player);
++					}
++				});
++				return;
++			}
++			service.tracker().untrack(player);
++		}
++		target.onClose(event, player);
++	}
++
++	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
++	public void onQuit(PlayerQuitEvent event) {
++		Player viewer = event.getPlayer();
++		// Clear the back-trail regardless of whether a menu was open — a disconnect always ends the navigation
++		// session for this service.
++		if (service.tracker() instanceof DefaultOpenMenuTracker tracker && tracker.navigationHistory() != null) {
++			tracker.navigationHistory().clear(viewer.getUniqueId());
++		}
++		Menu menu = service.tracker().currentMenuOf(viewer);
++		if (menu == null) return;
++		// Untrack before close — the resulting InventoryCloseEvent's tracked-check then fails, exempting this
++		// programmatic close from the veto gate above, matching the click listener's own re-entrancy guard.
++		service.tracker().untrack(viewer);
++		try {
++			// LOWEST so we run before Bukkit saves the player's inventory — items returned from the menu land in
++			// the player's saved state, not lost on warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/registry/InMemoryMenuRegistry.java', LF will be replaced by CRLF the next time Git touches it
+the way out.
++			menu.close(viewer, CloseReason.PLAYER_DISCONNECT);
++		} catch (Exception ex) {
++			log.warn("Menu close on disconnect failed for {}: {}", viewer.getName(), ex.toString(), ex);
++		}
++	}
++
++	@Nullable
++	private MenuHolder ownHolder(Inventory inventory) {
++		if (!(inventory.getHolder() instanceof MenuHolder holder)) return null;
++		return holder.service() == service ? holder : null;
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/registry/InMemoryMenuRegistry.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/registry/InMemoryMenuRegistry.java
+new file mode 100644
+index 0000000..e2c64ea
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/registry/InMemoryMenuRegistry.java
+@@ -0,0 +1,106 @@
++package org.luckyraven.keystone.inventory.registry;
++
++import lombok.CustomLog;
++import org.bukkit.entity.Player;
++import org.luckyraven.keystone.inventory.Menu;
++import org.luckyraven.keystone.inventory.tracking.NavigationHistory;
++
++import java.util.Collections;
++import java.util.HashMap;
++import java.util.Map;
++import java.util.Optional;
++import java.util.Set;
++import java.util.function.Supplier;
++
++/**
++ * Default {@link MenuRegistry} backed by a plain map. Not thread-safe; callers run on the main server thread.
++ *
++ * <p>Ported from Oriel's {@code core.registry.InMemoryMenuRegistry} as part of Keystone Phase E6, minus the
++ * {@code ArgumentProcessorSpec}/argument-binding path and {@code registerSource}/{@code source} — see
++ * {@link MenuRegistry}'s doc.
++ */
++@CustomLog
++public class InMemoryMenuRegistry implements MenuRegistry {
++
++	private final Map<String, Supplier<Menu>> factories = new HashMap<>();
++	private final NavigationHistory           history;
++
++	/** Default constructor — owns a private {@link NavigationHistory}. Used by tests and back-compat call sites. */
++	public InMemoryMenuRegistry() {
++		this(new NavigationHistory());
++	}
++
++	/**
++	 * Construct with a shared {@link NavigationHistory} so the same trail this registry records on open is the one
++	 * the disconnect / reload listeners clear. {@code InventoryService} wires it this way;
++	 * {@link #InMemoryMenuRegistry()} is for tests.
++	 */
++	public InMemoryMenuRegistry(NavigationHistory history) {
++		this.history = history;
++	}
++
++	@Override
++	public void register(String name, Supplier<Menu> factory) {
++		factories.put(name, factory);
++	}
++
++	@Override
++	public void unregister(String name) {
++		factories.remove(name);
++	}
++
++	@Override
++	public boolean open(Player player, String name) {
++		boolean opened = doOpen(player, name);
++		if (opened) {
++			history.recordOpen(player.getUniqueId(), name);
++		}
++		return opened;
++	}
++
++	@Override
++	public boolean openPrevious(Player player) {
++		Optional<String> previous = history.back(player.getUniqueId());
++		if (previous.isEmpty()) {
++			log.debug("openPrevious for {} ignored — no previous menu in the navigation trail", player.getName());
++			return false;
++		}
++		// The navigation trail stores menu names only, so a back-nav re-opens without the original args.
++		return doOpen(player, previous.get());
++	}
++
++	private boolean doOpen(Player player, String name) {
++		Supplier<Menu> factory = factories.get(name);
++		if (factory == null) return false;
++
++		// A misbehaving factory (validator throwing on a malformed config reload, NPE in a user-supplied builder,
++		// etc.) must NOT propagate up the caller's own dispatch chain. Catch + log + return false; the caller
++		// handles "menu didn't open" as it would handle an unregistered name.
++		Menu menu;
++		try {
++			menu = factory.get();
++		} catch (RuntimeException ex) {
++			log.warn("Menu factory '{}' threw while building for {}: {}", name, player.getName(), ex.toString(), ex);
++			return false;
++		}
++		if (menu == null) return false;
++
++		try {
++			menu.open(player);
++		} catch (RuntimeException ex) {
++			log.warn("Menu '{}' threw during open() for {}: {}", name, player.getName(), ex.toString(), ex);
++			return false;
++		}
++		return true;
++	}
++
++	@Override
++	warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/registry/MenuOpener.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/registry/MenuRegistry.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/spi/MenuHolder.java', LF will be replaced by CRLF the next time Git touches it
+public Set<String> registeredNames() {
++		return Collections.unmodifiableSet(factories.keySet());
++	}
++
++	@Override
++	public boolean isRegistered(String name) {
++		return factories.containsKey(name);
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/registry/MenuOpener.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/registry/MenuOpener.java
+new file mode 100644
+index 0000000..aabdebf
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/registry/MenuOpener.java
+@@ -0,0 +1,20 @@
++package org.luckyraven.keystone.inventory.registry;
++
++import org.bukkit.entity.Player;
++
++/**
++ * Decoupling interface: opens a registered menu by name. {@link MenuRegistry} is the canonical implementation;
++ * tests and adapters can substitute their own without dragging the full registry along.
++ *
++ * <p>Click handlers receive a {@code ClickContext} whose {@code openMenu(String)} method delegates to the
++ * configured opener. Code that needs to open menus from a non-click pathway can take a {@link MenuOpener} directly
++ * via constructor injection.
++ *
++ * <p>Ported unchanged (bar the package) from Oriel's {@code core.registry.MenuOpener} as part of Keystone Phase E6.
++ */
++@FunctionalInterface
++public interface MenuOpener {
++
++	/** Open the named menu for the given player. */
++	void open(Player player, String menuName);
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/registry/MenuRegistry.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/registry/MenuRegistry.java
+new file mode 100644
+index 0000000..bc7349a
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/registry/MenuRegistry.java
+@@ -0,0 +1,54 @@
++package org.luckyraven.keystone.inventory.registry;
++
++import org.bukkit.entity.Player;
++import org.luckyraven.keystone.inventory.Menu;
++
++import java.util.Set;
++import java.util.function.Supplier;
++
++/**
++ * Maps registered menu names to factory functions. Each {@link #open(Player, String)} call invokes the factory and
++ * opens a fresh {@link Menu} instance, so menus stay stateless between opens unless the factory captures state.
++ *
++ * <pre>{@code
++ * MenuRegistry registry = ...;
++ * registry.register("shop", () -> ChestMenu.builder()
++ *     .title("&6Shop")
++ *     .rows(6)
++ *     .build());
++ * registry.open(player, "shop");
++ * }</pre>
++ *
++ * <p>Ported from Oriel's {@code core.registry.MenuRegistry} as part of Keystone Phase E6, minus the two
++ * {@code ArgumentProcessorSpec} default methods and {@code registerSource}/{@code source} — argument bindings and
++ * item-provider sources are Oriel's advanced features, not part of the basic mechanism.
++ */
++public interface MenuRegistry {
++
++	/** Register a menu under {@code name}. The factory is invoked per open, producing a fresh menu instance. */
++	void register(String name, Supplier<Menu> factory);
++
++	/** Remove a registered menu. No-op if {@code name} is unknown. */
++	void unregister(String name);
++
++	/** Build and open the menu registered under {@code name} for the given player. Returns {@code false} if unknown. */
++	boolean open(Player player, String name);
++
++	/**
++	 * Re-open the menu the player viewed before the current one. Pops the player's navigation trail and opens the
++	 * previous entry without recording it (so repeated backs walk the trail rather than ping-ponging). Returns
++	 * {@code false} when there is nothing to go back to.
++	 *
++	 * <p>The default is a no-op for registry implementations that don't track navigation; {@link InMemoryMenuRegistry}
++	 * overrides it.
++	 */
++	default boolean openPrevious(Player player) {
++		return false;
++	}
++
++	/** All currently registered menu names. */
++	Set<String> registeredNames();
++
++	/** Whether a menu has been registered under {@code name}. */
++	boolean isRegistered(String name);
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/spi/MenuHolder.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/invewarning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/spi/MenuTarget.java', LF will be replaced by CRLF the next time Git touches it
+ntory/spi/MenuHolder.java
+new file mode 100644
+index 0000000..77cd4b5
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/spi/MenuHolder.java
+@@ -0,0 +1,51 @@
++package org.luckyraven.keystone.inventory.spi;
++
++import org.bukkit.inventory.Inventory;
++import org.bukkit.inventory.InventoryHolder;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.keystone.inventory.InventoryService;
++
++/**
++ * Bukkit {@link InventoryHolder} that back-references the owning menu ({@link MenuTarget}) AND the
++ * {@link InventoryService} that created it. {@code MenuListener} identifies a Keystone-owned inventory by
++ * {@code getHolder() instanceof MenuHolder}, and — critically, since the shared classloader means Oriel's and
++ * Gangland's {@code MenuListener} instances both see every click event — filters by {@code holder.service() == this.service}
++ * so a click on Oriel's menu never reaches Gangland's listener and vice versa (each consumer's {@link InventoryService}
++ * is its own instance; no static registry, per {@code CLAUDE.md}'s shared-classloader constraint).
++ *
++ * <p>Construction is necessarily two-step: holder first (Bukkit needs it at inventory create time), then the menu,
++ * then {@link #setTarget(MenuTarget)} to close the loop.
++ *
++ * <p>Ported from Oriel's {@code chest.internal.ChestMenuHolder} as part of Keystone Phase E6, with the owning
++ * {@link InventoryService} added.
++ */
++public final class MenuHolder implements InventoryHolder {
++
++	private final InventoryService service;
++	@Nullable
++	private MenuTarget target;
++
++	public MenuHolder(InventoryService service) {
++		this.service = service;
++	}
++
++	/** The {@link InventoryService} this holder's menu belongs to. See the class doc for why identity needs this. */
++	public InventoryService service() {
++		return service;
++	}
++
++	@Nullable
++	public MenuTarget target() {
++		return target;
++	}
++
++	public void setTarget(MenuTarget target) {
++		this.target = target;
++	}
++
++	@Override
++	@Nullable
++	public Inventory getInventory() {
++		return target == null ? null : target.bukkitInventory();
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/spi/MenuTarget.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/spi/MenuTarget.java
+new file mode 100644
+index 0000000..e92222e
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/spi/MenuTarget.java
+@@ -0,0 +1,92 @@
++package org.luckyraven.keystone.inventory.spi;
++
++import org.bukkit.entity.Player;
++import org.bukkit.event.inventory.InventoryClickEvent;
++import org.bukkit.event.inventory.InventoryCloseEvent;
++import org.bukkit.inventory.Inventory;
++import org.luckyraven.keystone.inventory.click.ClickHandler;
++import org.luckyraven.keystone.inventory.click.ClickKind;
++
++/**
++ * The seam every concrete menu type implements so {@link MenuHolder} and {@code MenuListener} can drive it without
++ * knowing its concrete class. Merges Oriel's {@code chest.internal.OrielMenuTarget} and
++ * {@code chest.internal.SlotHandlerSink} into one interface (Keystone ships only one menu shape, {@code ChestMenu},
++ * so the two-interface split Oriel needed for its chest + paginated-chest pair collapses to one).
++ *
++ * <p>Ported from Oriel's {@code chest.internal.OrielMenuTarget}/{@code SlotHandlerSink} as part of Keystone Phase
++ * E6, with two changes:
++ * <ul>
++ *     <li>{@link #isInteractive(int)}/{@link #setInteractive(int, boolean)} are new — Gangland's per-slot
++ *     "draggable" flag, folded in. {@code MenuListener} consults {@link #isInteractive(int)} to decide whether to
++ *     cancel a top-inventory click by default.</li>
++ *     <li>Oriel's three finer deposit-routing defaults ({@code componentAt}, {@code findAcceptingDepositSlot},
++ *     {@code dispatchDeposit}) collapse into one — {@link #handleDepositClick(InventoryClickEvent)} — per the E6
++ *     plan review (finding F1): Oriel's own deposit-slot place/pickup/swap/shift-transfer logic (~130 lines) does
++ *     not compile against a finer swarning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/tracking/DefaultOpenMenuTracker.java', LF will be replaced by CRLF the next time Git touches it
+eam, so the whole branch stays inside Oriel's own {@code MenuTarget}
++ *     implementation behind this one hook. {@code MenuListener} calls it for both a direct click on a menu slot and
++ *     a shift-click from the player's own inventory; a {@code true} return means the implementation fully handled
++ *     the event (including any {@code event.setCancelled(...)} it needed) and {@code MenuListener} does nothing
++ *     further for that click.</li>
++ * </ul>
++ */
++public interface MenuTarget {
++
++	Inventory bukkitInventory();
++
++	/** Bind {@code handler} for {@code kind} on {@code slot}. Routing across kinds lives in the menu's SlotHandlers. */
++	void setHandler(int slot, ClickKind kind, ClickHandler handler);
++
++	void clearHandlers(int slot);
++
++	/** Cancel-by-default has already happened in the listener. Resolve and invoke the slot's click handler. */
++	void dispatchClick(InventoryClickEvent event, Player player);
++
++	/**
++	 * Menu-level {@code click_delay} anti-spam debounce in milliseconds, mirroring {@code Menu.clickDelayMillis()}
++	 * so the listener can read it through this interface without a concrete cast. {@code 0} (default) disables it.
++	 */
++	default int clickDelayMillis() {
++		return 0;
++	}
++
++	/** Called once the player closes the inventory. Default is a no-op; override for cleanup hooks. */
++	default void onClose(InventoryCloseEvent event, Player player) {
++	}
++
++	/**
++	 * Whether a player-initiated close of this menu should be undone. Consulted by {@code MenuListener} before
++	 * untracking; when {@code true} the listener re-opens the menu next tick (Bukkit close events can't be
++	 * cancelled) and skips the {@link #onClose} dispatch. Default: closes always stand.
++	 */
++	default boolean vetoesClose(Player player) {
++		return false;
++	}
++
++	/**
++	 * Whether {@code slot} is interactive — the click there is not cancelled-by-default. Default {@code false}: a
++	 * menu type that never calls {@link #setInteractive(int, boolean)} behaves exactly as every menu always did
++	 * (cancel-by-default on every top-inventory slot).
++	 */
++	default boolean isInteractive(int slot) {
++		return false;
++	}
++
++	/**
++	 * Mark {@code slot} interactive (or not). Written by {@code ChestSlotView.interactive(boolean)} during render,
++	 * and pre-seeded by {@code ChestMenuBuilder.interactive(int)} at build time. Default no-op for menu types that
++	 * don't support the flag.
++	 */
++	default void setInteractive(int slot, boolean interactive) {
++	}
++
++	/**
++	 * Give this menu type a chance to fully handle a click that needs special item-routing (a deposit slot, in
++	 * Oriel's case) before the listener applies its generic cancel/interactive/dispatch policy. Called for both a
++	 * click landing in the menu's own inventory and a shift-click originating in the player's inventory. A
++	 * {@code true} return means the implementation already did everything the click needed (including cancelling
++	 * the event if required); {@code false} (the default) means "not my concern, apply the normal policy".
++	 */
++	default boolean handleDepositClick(InventoryClickEvent event) {
++		return false;
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/tracking/DefaultOpenMenuTracker.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/tracking/DefaultOpenMenuTracker.java
+new file mode 100644
+index 0000000..898bf73
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/tracking/DefaultOpenMenuTracker.java
+@@ -0,0 +1,101 @@
++package org.luckyraven.keystone.inventory.tracking;
++
++import lombok.CustomLog;
++import org.bukkit.Bukkit;
++import org.bukkit.entity.Player;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.keystone.inventory.CloseReason;
++import org.luckyraven.keystone.inventory.Menu;
++
++import java.util.Collections;
++import java.util.HashMap;
++import java.util.Map;
++import java.util.Set;
++import java.util.UUID;
++import java.util.concurrent.ConcurrentHashMap;
++import java.util.concurrent.ConcurrentMap;
++
++/**
++ * Concrete {@link OpenMenuTracker}warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/tracking/NavigationHistory.java', LF will be replaced by CRLF the next time Git touches it
+: a concurrent {@code UUID → Menu} map plus {@link #closeAll(CloseReason)}.
++ *
++ * <p>Ported from Oriel's {@code core.registry.DefaultOpenMenuTracker} as part of Keystone Phase E6, trimmed to the
++ * tracking map itself. Two responsibilities Oriel's version carried move out:
++ * <ul>
++ *     <li>The {@code PlayerQuitEvent} listener moves to {@code MenuListener} (one class: click, drag, close,
++ *     quit) — see {@code docs/extraction-roadmap.md} Phase E6.</li>
++ *     <li>{@code BeanLifecycle.onPreClear()}/{@code onShutdown()} move to {@code InventoryService}, the
++ *     per-consumer root bean that owns this tracker — it calls {@link #closeAll(CloseReason)} with
++ *     {@link CloseReason#RELOAD}/{@link CloseReason#PLUGIN_DISABLE} from its own lifecycle hooks.</li>
++ * </ul>
++ */
++@CustomLog
++public final class DefaultOpenMenuTracker implements OpenMenuTracker {
++
++	private final ConcurrentMap<UUID, Menu> open = new ConcurrentHashMap<>();
++	@Nullable
++	private final NavigationHistory navigationHistory;
++
++	/** No-arg constructor — no navigation-history clearing. Used by tests that don't exercise "back" navigation. */
++	public DefaultOpenMenuTracker() {
++		this(null);
++	}
++
++	/**
++	 * Construct with the shared {@link NavigationHistory} so a player's back-trail is wiped when they disconnect or
++	 * the owning plugin reloads — a fresh session (or reloaded menu set) must not inherit a stale trail. The same
++	 * instance the {@code MenuRegistry} records into.
++	 */
++	public DefaultOpenMenuTracker(@Nullable NavigationHistory navigationHistory) {
++		this.navigationHistory = navigationHistory;
++	}
++
++	@Override
++	public void track(Player viewer, Menu menu) {
++		open.put(viewer.getUniqueId(), menu);
++	}
++
++	@Override
++	public void untrack(Player viewer) {
++		open.remove(viewer.getUniqueId());
++	}
++
++	@Override
++	@Nullable
++	public Menu currentMenuOf(Player viewer) {
++		return open.get(viewer.getUniqueId());
++	}
++
++	@Override
++	public Set<UUID> currentViewers() {
++		return Collections.unmodifiableSet(open.keySet());
++	}
++
++	@Override
++	public void closeAll(CloseReason reason) {
++		// Snapshot first, then clear — so any listener that fires as a side-effect of close() sees an empty map
++		// and treats the close as already-untracked. Iterating after clear avoids ConcurrentModificationException
++		// for any handler that calls untrack() or open() mid-loop.
++		Map<UUID, Menu> snapshot = new HashMap<>(open);
++		open.clear();
++		if (navigationHistory != null) {
++			// Reload / disable wipes every menu — the navigation trails go with them so a post-reload open starts clean.
++			snapshot.keySet().forEach(navigationHistory::clear);
++		}
++
++		for (Map.Entry<UUID, Menu> entry : snapshot.entrySet()) {
++			Player player = Bukkit.getPlayer(entry.getKey());
++			if (player == null) continue;     // already gone — close is a no-op for offline players
++			try {
++				entry.getValue().close(player, reason);
++			} catch (Exception ex) {
++				log.warn("Menu close failed for {} (reason={}): {}", player.getName(), reason, ex.toString(), ex);
++			}
++		}
++	}
++
++	/** The shared {@link NavigationHistory}, or {@code null} if this tracker was built without one. */
++	@Nullable
++	public NavigationHistory navigationHistory() {
++		return navigationHistory;
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/tracking/NavigationHistory.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/tracking/NavigationHistory.java
+new file mode 100644
+index 0000000..c8bed3e
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/tracking/NavigationHistory.java
+@@ -0,0 +1,80 @@
++package org.luckyraven.keystone.inventory.tracking;
++
++import org.bukkit.entity.Player;
++
++import java.util.ArrayDeque;
++import java.util.Deque;
++import java.util.Map;
++import java.util.Optional;
++import java.util.UUID;
++import java.util.concurrent.ConcurrentHashMap;
++
++/**
++ * Per-player back-stack of registered menu names, powering {@code MenuOpener}/{@code ClickContext.openPrevious()}
++ * "back" nwarning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/tracking/OpenMenuTracker.java', LF will be replaced by CRLF the next time Git touches it
+avigation. The {@code MenuRegistry} records every named open here; a back action pops to the previously
++ * viewed menu.
++ *
++ * <p>Modelled as one bounded {@link Deque} per player whose <b>last element is the menu currently being viewed</b>
++ * and everything before it is the trail to walk back through. {@link #recordOpen(UUID, String)} pushes a new top;
++ * {@link #back(UUID)} drops the current top and returns the one beneath it (the menu to re-open) without pushing —
++ * so backing out of {@code C} after {@code A → B → C} yields {@code B}, then {@code A}, then nothing.
++ *
++ * <p>The deque is bounded (oldest entries drop past {@link #MAX_DEPTH}) so a long navigation chain can't grow
++ * without limit, and {@link #clear(UUID)} wipes a player's trail on disconnect / reload. Keyed by UUID and backed
++ * by a {@link ConcurrentHashMap} so the disconnect listener and the main-thread open path don't race.
++ *
++ * <p>Ported unchanged (bar the package) from Oriel's {@code core.registry.NavigationHistory} as part of Keystone
++ * Phase E6.
++ */
++public final class NavigationHistory {
++
++	/** Maximum trail length kept per player. Older entries fall off the bottom. */
++	public static final int MAX_DEPTH = 32;
++
++	private final Map<UUID, Deque<String>> trails = new ConcurrentHashMap<>();
++
++	/**
++	 * Record that {@code player} just opened the menu named {@code menuName}. A repeat open of the same menu (the
++	 * current top) is ignored so re-renders and self-reopens don't stack duplicates.
++	 */
++	public void recordOpen(UUID player, String menuName) {
++		Deque<String> trail = trails.computeIfAbsent(player, key -> new ArrayDeque<>());
++		if (menuName.equals(trail.peekLast())) {
++			return;
++		}
++		trail.addLast(menuName);
++		while (trail.size() > MAX_DEPTH) {
++			trail.removeFirst();
++		}
++	}
++
++	/**
++	 * Pop the current menu and return the previous one to re-open — the new current. Empty when the player has no
++	 * earlier menu to return to. Does <b>not</b> record the returned menu (it is already the new top), so the
++	 * caller must open it through a path that skips {@link #recordOpen}.
++	 */
++	public Optional<String> back(UUID player) {
++		Deque<String> trail = trails.get(player);
++		if (trail == null || trail.size() <= 1) {
++			return Optional.empty();
++		}
++		trail.removeLast();
++		return Optional.ofNullable(trail.peekLast());
++	}
++
++	/** The menu {@code player} is currently recorded as viewing, or empty when the trail is empty. */
++	public Optional<String> current(UUID player) {
++		Deque<String> trail = trails.get(player);
++		return trail == null ? Optional.empty() : Optional.ofNullable(trail.peekLast());
++	}
++
++	/** Forget {@code player}'s entire trail. Called on disconnect / reload — a fresh session starts with no history. */
++	public void clear(UUID player) {
++		trails.remove(player);
++	}
++
++	/** Convenience overload of {@link #clear(UUID)}. */
++	public void clear(Player player) {
++		clear(player.getUniqueId());
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/tracking/OpenMenuTracker.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/tracking/OpenMenuTracker.java
+new file mode 100644
+index 0000000..ece1781
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/tracking/OpenMenuTracker.java
+@@ -0,0 +1,51 @@
++package org.luckyraven.keystone.inventory.tracking;
++
++import org.bukkit.entity.Player;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.keystone.inventory.CloseReason;
++import org.luckyraven.keystone.inventory.Menu;
++
++import java.util.Set;
++import java.util.UUID;
++
++/**
++ * Tracks which player has which menu open right now, for one {@code InventoryService}. Powers the unified
++ * close-on-shutdown pipeline so menus holding real player items get a chance to return them before Bukkit
++ * blanket-closes inventories.
++ *
++ * <p>Menu types call {@link #track(Player, Menu)} on open and {@link #untrack(Player)} on natural close.
++ * {@code MenuListener} additionally drives:
++ *
++ * <ul>
++ *   <li>{@code Plawarning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/InventoryServiceLifecycleTest.java', LF will be replaced by CRLF the next time Git touches it
+yerQuitEvent} → {@code Menu.close(player, PLAYER_DISCONNECT)} for the disconnecting player</li>
++ *   <li>{@code InventoryService.onPreClear} (reload step) → {@code Menu.close(player, RELOAD)} for everyone</li>
++ *   <li>{@code InventoryService.onShutdown} (plugin disable) → {@code Menu.close(player, PLUGIN_DISABLE)}</li>
++ * </ul>
++ *
++ * <p>Ported from Oriel's {@code core.registry.OpenMenuTracker} as part of Keystone Phase E6. Instance-scoped only
++ * — Oriel's static {@code MenuTracking} accessor is deliberately not ported (the shared-classloader constraint
++ * forbids a static singleton holding per-plugin data; each consumer's {@code InventoryService} owns its own
++ * tracker instance).
++ */
++public interface OpenMenuTracker {
++
++	/** Note that {@code viewer} just opened {@code menu}. Replaces any previous entry for the same player. */
++	void track(Player viewer, Menu menu);
++
++	/** Forget any entry for {@code viewer}. No-op if the player wasn't tracked. */
++	void untrack(Player viewer);
++
++	/** @return the menu currently registered for {@code viewer}, or {@code null} if none. */
++	@Nullable
++	Menu currentMenuOf(Player viewer);
++
++	/** @return the UUIDs of every player with a tracked menu open. Snapshot — safe to iterate. */
++	Set<UUID> currentViewers();
++
++	/**
++	 * Drive {@link Menu#close(Player, CloseReason)} on every tracked player with the supplied reason. Used by the
++	 * lifecycle hooks. Implementations clear the registry before invoking close so re-entrant close listeners
++	 * (e.g. {@code MenuListener} firing as Bukkit auto-closes) see no entry and no-op.
++	 */
++	void closeAll(CloseReason reason);
++}
+diff --git a/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/InventoryServiceLifecycleTest.java b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/InventoryServiceLifecycleTest.java
+new file mode 100644
+index 0000000..5c4a545
+--- /dev/null
++++ b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/InventoryServiceLifecycleTest.java
+@@ -0,0 +1,100 @@
++package org.luckyraven.keystone.inventory;
++
++import org.bukkit.Bukkit;
++import org.bukkit.entity.Player;
++import org.bukkit.plugin.Plugin;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.keystone.cooldown.CooldownService;
++import org.luckyraven.keystone.inventory.listener.MenuListener;
++import org.luckyraven.keystone.testkit.BukkitStatics;
++
++import java.util.UUID;
++
++import static org.junit.jupiter.api.Assertions.assertNull;
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.ArgumentMatchers.eq;
++import static org.mockito.ArgumentMatchers.isA;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.verify;
++import static org.mockito.Mockito.when;
++
++/**
++ * {@link InventoryService}'s {@code BeanLifecycle} wiring: {@link InventoryService#onPreClear()}/
++ * {@link InventoryService#onShutdown()} sweep the tracker with {@link CloseReason#RELOAD}/
++ * {@link CloseReason#PLUGIN_DISABLE}, and {@link InventoryService#registerListeners(JavaPlugin)} registers exactly
++ * one {@link MenuListener} — the {@code HologramService.registerProtection} precedent, new for Keystone Phase E6.
++ */
++final class InventoryServiceLifecycleTest {
++
++	@Test
++	void onPreClearClosesTrackedMenusWithReload() {
++		CooldownService  cooldowns = mock(CooldownService.class);
++		InventoryService service   = new InventoryService(cooldowns);
++
++		UUID   uuid   = UUID.randomUUID();
++		Player player = mock(Player.class);
++		when(player.getUniqueId()).thenReturn(uuid);
++		Menu menu = mock(Menu.class);
++		service.tracker().track(player, menu);
++
++		try (BukkitStatics bukkit = BukkitStatics.install()) {
++			bukkit.statics().when(() -> Bukkit.getPlayer(eq(uuid))).thenReturn(player);
++			service.onPreClear();
++			verify(menu).close(player, CloseReason.RELOAD);
++		}
++		assertNull(service.tracker().currentMenuOf(player));
++	}
++
++	@Test
++	void onShutdownClosesTrackedMenusWithPluginDisable() {
++		CooldownService  cooldowns = mock(CooldownService.class);
++warning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/chest/ChestMenuBuilderTest.java', LF will be replaced by CRLF the next time Git touches it
+		InventoryService service   = new InventoryService(cooldowns);
++
++		UUID   uuid   = UUID.randomUUID();
++		Player player = mock(Player.class);
++		when(player.getUniqueId()).thenReturn(uuid);
++		Menu menu = mock(Menu.class);
++		service.tracker().track(player, menu);
++
++		try (BukkitStatics bukkit = BukkitStatics.install()) {
++			bukkit.statics().when(() -> Bukkit.getPlayer(eq(uuid))).thenReturn(player);
++			service.onShutdown();
++			verify(menu).close(player, CloseReason.PLUGIN_DISABLE);
++		}
++	}
++
++	@Test
++	void registerListenersRegistersExactlyOneMenuListenerUnderTheGivenOwner() {
++		CooldownService  cooldowns = mock(CooldownService.class);
++		InventoryService service   = new InventoryService(cooldowns);
++		JavaPlugin        owner     = mock(JavaPlugin.class);
++
++		try (BukkitStatics bukkit = BukkitStatics.install()) {
++			service.registerListeners(owner);
++
++			verify(bukkit.pluginManager()).registerEvents(isA(MenuListener.class), eq((Plugin) owner));
++		}
++	}
++
++	@Test
++	void trackerAndRegistryShareOneNavigationHistory() {
++		// The registry records "back" navigation into the same NavigationHistory the tracker clears on
++		// disconnect/reload — a fresh InventoryService wires them to the same instance, not two independent ones.
++		CooldownService  cooldowns = mock(CooldownService.class);
++		InventoryService service   = new InventoryService(cooldowns);
++
++		Player player = mock(Player.class);
++		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
++		service.registry().register("shop", () -> {
++			Menu menu = mock(Menu.class);
++			return menu;
++		});
++		service.registry().open(player, "shop");
++
++		// openPrevious() with only one recorded open has nothing to go back to — proves the open above actually
++		// landed in the tracker/registry's shared history (an empty/disconnected history would also return false,
++		// but only this call path exercises the sharing at all).
++		org.junit.jupiter.api.Assertions.assertFalse(service.registry().openPrevious(player));
++	}
++}
+diff --git a/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/chest/ChestMenuBuilderTest.java b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/chest/ChestMenuBuilderTest.java
+new file mode 100644
+index 0000000..e97eea8
+--- /dev/null
++++ b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/chest/ChestMenuBuilderTest.java
+@@ -0,0 +1,157 @@
++package org.luckyraven.keystone.inventory.chest;
++
++import org.bukkit.Bukkit;
++import org.bukkit.Material;
++import org.bukkit.entity.Player;
++import org.bukkit.inventory.Inventory;
++import org.bukkit.inventory.InventoryHolder;
++import org.bukkit.inventory.ItemStack;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.keystone.cooldown.CooldownService;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.component.BorderComponent;
++import org.luckyraven.keystone.inventory.component.ItemComponent;
++import org.luckyraven.keystone.inventory.component.LineComponent;
++import org.luckyraven.keystone.testkit.BukkitStatics;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertFalse;
++import static org.junit.jupiter.api.Assertions.assertThrows;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.ArgumentMatchers.anyInt;
++import static org.mockito.ArgumentMatchers.anyString;
++import static org.mockito.Mockito.doAnswer;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.when;
++
++/**
++ * {@link ChestMenuBuilder}: row validation and the composition order at {@link ChestMenuBuilder#build()} — border,
++ * then lines, then explicit slots override everything below (no {@code CompositeComponent}). Ported in spirit from
++ * Oriel's {@code chest.ChestMenuBuilderTest} as part of Keystone Phase E6.
++ */
++final class ChestMenuBuilderTest {
++
++	private final InventoryService service = new InventoryService(mock(CooldownService.class));
++
++	/** A minimal fake {@link Inventory} backed by a plain array, so {@code build()}'s {@code Bukkit.createInventory} works. */
++	private static Inventory fakeInventory(InventoryHolder holder, int size) {
++		ItemStack[] contents = new ItemStack[size];
++		Inventory   inv      = mock(Inventory.class);
++		when(inv.getHolder()).thenReturn(holder);
++		when(inv.getSize()).thenReturn(size);
++		when(inv.getItem(anyInt())).thenAnswer(invocation -> {
++			int idx = invocation.getArgument(0);
++			return idx >= 0 && idx < contents.length ? contents[idx] : null;
++		});
++		doAnswer(invocation -> {
++			int       idx  = invocation.getArgument(0);
++			ItemStack item = invocation.getArgument(1);
++			if (idx >= 0 && idx < contents.length) contents[idx] = item;
++			return null;
++		}).when(inv).setItem(anyInt(), any());
++		return inv;
++	}
++
++	private static BukkitStatics installBukkitWithFakeInventories() {
++		BukkitStatics bukkit = BukkitStatics.install();
++		bukkit.statics().when(() -> Bukkit.createInventory(any(InventoryHolder.class), anyInt(), anyString()))
++		      .thenAnswer(invocation -> fakeInventory(invocation.getArgument(0), invocation.getArgument(1)));
++		return bukkit;
++	}
++
++	@Test
++	void rowsOutOfRangeThrowsBeforeTouchingBukkit() {
++		assertThrows(IllegalStateException.class, () -> ChestMenu.builder(service).rows(0).build());
++		assertThrows(IllegalStateException.class, () -> ChestMenu.builder(service).rows(7).build());
++	}
++
++	@Test
++	void explicitSlotOutOfRangeThrows() {
++		ChestMenuBuilder builder = ChestMenu.builder(service).rows(1).slot(9, ItemComponent.of(Material.STONE));
++		assertThrows(IllegalStateException.class, builder::build);
++	}
++
++	@Test
++	void interactiveSlotOutOfRangeThrows() {
++		ChestMenuBuilder builder = ChestMenu.builder(service).rows(1).interactive(9);
++		assertThrows(IllegalStateException.class, builder::build);
++	}
++
++	@Test
++	void explicitSlotOverridesBorder() {
++		try (BukkitStatics bukkit = installBukkitWithFakeInventories()) {
++			ItemComponent explicit = ItemComponent.of(Material.DIAMOND);
++			ChestMenu menu = ChestMenu.builder(service)
++			                          .rows(3)
++			                          .border(BorderComponent.of(Material.BLACK_STAINED_GLASS_PANE))
++			                          .slot(0, explicit) // slot 0 is a border corner
++			                          .build();
++			assertEquals(explicit, menu.components.get(0));
++		}
++	}
++
++	@Test
++	void explicitSlotOverridesLine() {
++		try (BukkitStatics bukkit = installBukkitWithFakeInventories()) {
++			ItemComponent explicit = ItemComponent.of(Material.DIAMOND);
++			ChestMenu menu = ChestMenu.builder(service)
++			                          .rows(3)
++			                          .line(LineComponent.horizontal(1, Material.WHITE_STAINED_GLASS_PANE)) // row 1 = slots 9..17
++			                          .slot(10, explicit)
++			                          .build();
++			assertEquals(explicit, menu.components.get(10));
++			// The rest of the line is untouched by the override.
++			assertTrue(menu.components.get(9) instanceof LineComponent);
++			assertTrue(menu.components.get(11) instanceof LineComponent);
++		}
++	}
++
++	@Test
++	void borderCoversOnlyTheOuterRing() {
++		try (BukkitStatics bukkit = installBukkitWithFakeInventories()) {
++			ChestMenu menu = ChestMenu.builder(service)
++			                          .rows(3) // 27 slots, rows 0/1/2
++			                          .border(BorderComponent.of(Material.BLACK_STAINED_GLASS_PANE))
++			                          .build();
++			// Row 0 and row 2 (last row) are fully border; row 1's edges (9, 17) are border, the middle is not.
++			assertTrue(menu.components.get(0) instanceof BorderComponent);
++			assertTrue(menu.components.get(8) instanceof BorderComponent);
++			assertTrue(menu.components.get(18) instanceof BorderComponent);
++			assertTrue(menu.components.get(26) instanceof BorderComponent);
++			assertTrue(menu.components.get(9) instanceof BorderComponent);
++			assertTrue(menu.components.get(17) instanceof BorderComponent);
++			assertFalse(menu.components.containsKey(13)); // dead centre — untouched
++		}
++	}
++
++	@Test
++	void intewarning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/chest/ChestMenuTest.java', LF will be replaced by CRLF the next time Git touches it
+ractiveSlotIsPreSeededBeforeFirstRender() {
++		try (BukkitStatics bukkit = installBukkitWithFakeInventories()) {
++			ChestMenu menu = ChestMenu.builder(service).rows(3).interactive(13).build();
++			assertTrue(menu.isInteractive(13));
++			assertFalse(menu.isInteractive(12));
++		}
++	}
++
++	@Test
++	void vetoCloseWiresThePredicateIntoTheBuiltMenu() {
++		try (BukkitStatics bukkit = installBukkitWithFakeInventories()) {
++			Player blocked = mock(Player.class);
++			Player allowed = mock(Player.class);
++
++			ChestMenu menu = ChestMenu.builder(service).rows(1).vetoClose(p -> p == blocked).build();
++
++			assertTrue(menu.vetoesClose(blocked));
++			assertFalse(menu.vetoesClose(allowed));
++		}
++	}
++
++	@Test
++	void noVetoCloseNeverVetoes() {
++		try (BukkitStatics bukkit = installBukkitWithFakeInventories()) {
++			ChestMenu menu = ChestMenu.builder(service).rows(1).build();
++			assertFalse(menu.vetoesClose(mock(Player.class)));
++		}
++	}
++}
+diff --git a/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/chest/ChestMenuTest.java b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/chest/ChestMenuTest.java
+new file mode 100644
+index 0000000..9bc4d00
+--- /dev/null
++++ b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/chest/ChestMenuTest.java
+@@ -0,0 +1,186 @@
++package org.luckyraven.keystone.inventory.chest;
++
++import org.bukkit.Bukkit;
++import org.bukkit.Material;
++import org.bukkit.entity.Player;
++import org.bukkit.inventory.Inventory;
++import org.bukkit.inventory.InventoryHolder;
++import org.bukkit.inventory.InventoryView;
++import org.bukkit.inventory.ItemStack;
++import org.bukkit.inventory.PlayerInventory;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.keystone.cooldown.CooldownService;
++import org.luckyraven.keystone.inventory.CloseReason;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.component.Component;
++import org.luckyraven.keystone.inventory.component.ItemComponent;
++import org.luckyraven.keystone.inventory.component.ItemHoldingComponent;
++import org.luckyraven.keystone.inventory.component.RenderContext;
++import org.luckyraven.keystone.inventory.component.SlotView;
++import org.luckyraven.keystone.testkit.BukkitStatics;
++
++import java.util.HashMap;
++import java.util.List;
++import java.util.Map;
++import java.util.UUID;
++
++import static org.junit.jupiter.api.Assertions.assertNull;
++import static org.junit.jupiter.api.Assertions.assertSame;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.ArgumentMatchers.anyInt;
++import static org.mockito.ArgumentMatchers.anyString;
++import static org.mockito.Mockito.doAnswer;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.verify;
++import static org.mockito.Mockito.when;
++
++/**
++ * {@link ChestMenu} behaviour the E6.1 gate calls out explicitly: in-place rerender via
++ * {@link ChestMenu#adoptComponentsFrom} (no close/open round trip) and held-item return on
++ * {@link CloseReason#RELOAD}/{@link CloseReason#PLUGIN_DISABLE}.
++ */
++final class ChestMenuTest {
++
++	private final InventoryService service = new InventoryService(mock(CooldownService.class));
++
++	private static Inventory fakeInventory(InventoryHolder holder, int size) {
++		ItemStack[] contents = new ItemStack[size];
++		Inventory   inv      = mock(Inventory.class);
++		when(inv.getHolder()).thenReturn(holder);
++		when(inv.getSize()).thenReturn(size);
++		when(inv.getItem(anyInt())).thenAnswer(invocation -> {
++			int idx = invocation.getArgument(0);
++			return idx >= 0 && idx < contents.length ? contents[idx] : null;
++		});
++		doAnswer(invocation -> {
++			int       idx  = invocation.getArgument(0);
++			ItemStack item = invocation.getArgument(1);
++			if (idx >= 0 && idx < contents.length) contents[idx] = item;
++			return null;
++		}).when(inv).setItem(anyInt(), any());
++		return inv;
++	}
++
++	private static BukkitStatics installBukkitWithFakeInventories() {
++		BukkitStatics bukkit = BukkitStatics.install();
++		bukkit.statics().when(() -> Bukkit.createInventory(any(InventoryHolder.class), anyInt(), anyString()))
++		      .thenAnswer(invocation -> fakeInventory(invocation.getArgument(0), invocation.getArgument(1)));
++		return bukkit;
++	}
++
++	/** A minimal {@link ItemHoldingComponent} test double — holds whatever {@link #hold} gave it per player. */
++	private static final class HoldingComponent implements Component<HoldingComponent>, ItemHoldingComponent {
++		private final Map<UUID, List<ItemStack>> held = new HashMap<>();
++
++		void hold(Player player, ItemStack... items) {
++			held.put(player.getUniqueId(), List.of(items));
++		}
++
++		@Override
++		public List<ItemStack> heldItems(Player player) {
++			return held.getOrDefault(player.getUniqueId(), List.of());
++		}
++
++		@Override
++		public void clearHeld(Player player) {
++			held.remove(player.getUniqueId());
++		}
++
++		@Override
++		public void renderInto(SlotView view, RenderContext ctx) {
++			view.setItem(new ItemStack(Material.CHEST));
++		}
++	}
++
++	private static Player playerNotViewingAnyMenu() {
++		Player          player    = mock(Player.class);
++		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
++		InventoryView   view      = mock(InventoryView.class);
++		when(player.getOpenInventory()).thenReturn(view);
++		when(view.getTopInventory()).thenReturn(mock(Inventory.class)); // never equals the menu's own inventory
++		PlayerInventory inventory = mock(PlayerInventory.class);
++		when(player.getInventory()).thenReturn(inventory);
++		return player;
++	}
++
++	@Test
++	void closeWithReloadReturnsHeldItemsThenClearsHeldState() {
++		try (BukkitStatics bukkit = installBukkitWithFakeInventories()) {
++			HoldingComponent holding = new HoldingComponent();
++			ChestMenu        menu    = ChestMenu.builder(service).rows(1).slot(0, holding).build();
++
++			Player player = playerNotViewingAnyMenu();
++			when(player.getInventory().addItem(any())).thenReturn(new HashMap<Integer, ItemStack>()); // fits fully, nothing dropped
++
++			ItemStack heldStack = new ItemStack(Material.DIAMOND, 3);
++			holding.hold(player, heldStack);
++
++			menu.close(player, CloseReason.RELOAD);
++
++			verify(player.getInventory()).addItem(heldStack);
++			assertTrue(holding.heldItems(player).isEmpty());
++		}
++	}
++
++	@Test
++	void closeWithPluginDisableAlsoReturnsHeldItems() {
++		try (BukkitStatics bukkit = installBukkitWithFakeInventories()) {
++			HoldingComponent holding = new HoldingComponent();
++			ChestMenu        menu    = ChestMenu.builder(service).rows(1).slot(0, holding).build();
++
++			Player player = playerNotViewingAnyMenu();
++			when(player.getInventory().addItem(any())).thenReturn(new HashMap<Integer, ItemStack>());
++
++			ItemStack heldStack = new ItemStack(Material.IRON_INGOT, 5);
++			holding.hold(player, heldStack);
++
++			menu.close(player, CloseReason.PLUGIN_DISABLE);
++
++			verify(player.getInventory()).addItem(heldStack);
++			assertTrue(holding.heldItems(player).isEmpty());
++		}
++	}
++
++	@Test
++	void adoptComponentsFromRerendersInPlaceWithoutANewInventory() {
++		try (BukkitStatics bukkit = installBukkitWithFakeInventories()) {
++			ChestMenu menu = ChestMenu.builder(service).rows(1).slot(0, ItemComponent.of(Material.STONE)).build();
++
++			Player player = playerNotViewingAnyMenu();
++			menu.open(player); // no title set -> ensureTitleFor is a no-op -> build()'s original inventory survives
++
++			Inventory beforeInventory = menu.bukkitInventory();
++
++			ChestMenu fresh = ChestMenu.builder(service).rows(1).slot(1, ItemComponent.of(Material.DIAMOND)).build();
++			menu.adoptComponentsFrom(fresh);
++
++			// Same Bukkit inventory object — adoptComponentsFrom never closes/reopens.
++			assertSame(beforeInventory, menu.bukkitInventory());
++			assertNull(menu.components.get(0)); // slot 0 existed on the old menu but not the fresh one — cleared
++			assertTrue(menu.components.get(1) instanceof ItemComponent);
++		}
++	}
++
++	@Test
++	void adoptComponentsFromReturnsHeldItemsForDroppedSlots() {
++		try (BukkitStatics bukkit = installBukkitWithFakeInventories()) {
++			HoldingComponent holding = new HoldingComponent();
++			ChestMenu    warning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/click/ClickKindTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/click/SlotHandlersTest.java', LF will be replaced by CRLF the next time Git touches it
+    menu    = ChestMenu.builder(service).rows(1).slot(0, holding).build();
++
++			Player player = playerNotViewingAnyMenu();
++			when(player.getInventory().addItem(any())).thenReturn(new HashMap<Integer, ItemStack>());
++			menu.open(player);
++
++			ItemStack heldStack = new ItemStack(Material.GOLD_INGOT, 2);
++			holding.hold(player, heldStack);
++
++			// The fresh panel drops slot 0 entirely (a deposit slot the next panel doesn't have).
++			ChestMenu fresh = ChestMenu.builder(service).rows(1).build();
++			menu.adoptComponentsFrom(fresh);
++
++			verify(player.getInventory()).addItem(heldStack);
++			assertTrue(holding.heldItems(player).isEmpty());
++		}
++	}
++}
+diff --git a/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/click/ClickKindTest.java b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/click/ClickKindTest.java
+new file mode 100644
+index 0000000..c8fe273
+--- /dev/null
++++ b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/click/ClickKindTest.java
+@@ -0,0 +1,62 @@
++package org.luckyraven.keystone.inventory.click;
++
++import org.bukkit.event.inventory.ClickType;
++import org.junit.jupiter.api.Test;
++
++import java.util.Optional;
++
++import static org.junit.jupiter.api.Assertions.assertArrayEquals;
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++
++/** Resolution-order contract for {@link ClickKind} — most-specific-first, always terminating at {@link ClickKind#ANY}. */
++final class ClickKindTest {
++
++	@Test
++	void shiftLeftResolvesThroughLeftToAny() {
++		assertArrayEquals(new ClickKind[] { ClickKind.SHIFT_LEFT, ClickKind.LEFT, ClickKind.ANY },
++		                   ClickKind.resolutionOrder(ClickType.SHIFT_LEFT));
++	}
++
++	@Test
++	void shiftRightResolvesThroughRightToAny() {
++		assertArrayEquals(new ClickKind[] { ClickKind.SHIFT_RIGHT, ClickKind.RIGHT, ClickKind.ANY },
++		                   ClickKind.resolutionOrder(ClickType.SHIFT_RIGHT));
++	}
++
++	@Test
++	void doubleClickDoesNotFallThrough() {
++		assertArrayEquals(new ClickKind[] { ClickKind.DOUBLE_CLICK }, ClickKind.resolutionOrder(ClickType.DOUBLE_CLICK));
++	}
++
++	@Test
++	void unrecognisedClickResolvesOnlyAny() {
++		assertArrayEquals(new ClickKind[] { ClickKind.ANY }, ClickKind.resolutionOrder(ClickType.UNKNOWN));
++	}
++
++	@Test
++	void leftAndCreativeShareTheLeftChain() {
++		assertArrayEquals(ClickKind.resolutionOrder(ClickType.LEFT), ClickKind.resolutionOrder(ClickType.CREATIVE));
++		assertTrue(java.util.Arrays.asList(ClickKind.resolutionOrder(ClickType.LEFT)).contains(ClickKind.ANY));
++	}
++
++	@Test
++	void fromYamlKeyIsCaseInsensitiveAndTrims() {
++		assertEquals(Optional.of(ClickKind.SHIFT_LEFT), ClickKind.fromYamlKey(" ON_SHIFT_LEFT_CLICK "));
++		assertEquals(Optional.empty(), ClickKind.fromYamlKey("not_a_kind"));
++		assertEquals(Optional.empty(), ClickKind.fromYamlKey(null));
++	}
++
++	@Test
++	void yamlKeyRoundTrips() {
++		for (ClickKind kind : ClickKind.values()) {
++			assertEquals(Optional.of(kind), ClickKind.fromYamlKey(kind.yamlKey()));
++		}
++	}
++
++	@Test
++	void anyHasNoBukkitType() {
++		assertEquals(Optional.empty(), ClickKind.ANY.bukkitType());
++		assertEquals(Optional.of(ClickType.LEFT), ClickKind.LEFT.bukkitType());
++	}
++}
+diff --git a/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/click/SlotHandlersTest.java b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/click/SlotHandlersTest.java
+new file mode 100644
+index 0000000..d597b99
+--- /dev/null
++++ b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/click/SlotHandlersTest.java
+@@ -0,0 +1,100 @@
++package org.luckyraven.keystone.inventory.click;
++
++import org.bukkit.event.inventory.ClickType;
++import org.junit.jupiter.api.Test;
++
++import static org.junit.jupiter.api.Assertions.assertNull;
++import static org.junit.jupiter.api.Assertions.assertSame;
++
++/**
++ * Routing semantics for {@link SlotHandlers} / {@link ClickKind} — the most-specific-first resolution and the
++ * shift-to-plain-to-any (and double-click-to-left-to-any) fall-throughwarning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/listener/MenuListenerTest.java', LF will be replaced by CRLF the next time Git touches it
+. Ported from Oriel's
++ * {@code core.click.SlotHandlersTest} as part of Keystone Phase E6.
++ */
++final class SlotHandlersTest {
++
++	private final ClickHandler left   = ctx -> { };
++	private final ClickHandler right  = ctx -> { };
++	private final ClickHandler any    = ctx -> { };
++	private final ClickHandler sleft  = ctx -> { };
++	private final ClickHandler middle = ctx -> { };
++
++	@Test
++	void exactKindWins() {
++		SlotHandlers h = new SlotHandlers();
++		h.set(0, ClickKind.LEFT, left);
++		h.set(0, ClickKind.RIGHT, right);
++		assertSame(left, h.resolve(0, ClickType.LEFT));
++		assertSame(right, h.resolve(0, ClickType.RIGHT));
++	}
++
++	@Test
++	void shiftLeftFallsThroughToLeftThenAny() {
++		SlotHandlers h = new SlotHandlers();
++		h.set(0, ClickKind.LEFT, left);
++		assertSame(left, h.resolve(0, ClickType.SHIFT_LEFT));
++
++		h.set(0, ClickKind.SHIFT_LEFT, sleft);
++		assertSame(sleft, h.resolve(0, ClickType.SHIFT_LEFT));
++		assertSame(left, h.resolve(0, ClickType.LEFT));
++	}
++
++	@Test
++	void doubleClickDoesNotFallThroughToLeftOrAny() {
++		SlotHandlers h = new SlotHandlers();
++		h.set(0, ClickKind.LEFT, left);
++		h.set(0, ClickKind.ANY, any);
++		assertNull(h.resolve(0, ClickType.DOUBLE_CLICK));
++
++		ClickHandler dbl = ctx -> { };
++		h.set(0, ClickKind.DOUBLE_CLICK, dbl);
++		assertSame(dbl, h.resolve(0, ClickType.DOUBLE_CLICK));
++	}
++
++	@Test
++	void anyIsTheTerminalFallback() {
++		SlotHandlers h = new SlotHandlers();
++		h.set(0, ClickKind.ANY, any);
++		assertSame(any, h.resolve(0, ClickType.MIDDLE));
++		assertSame(any, h.resolve(0, ClickType.DROP));
++		assertSame(any, h.resolve(0, ClickType.NUMBER_KEY));
++
++		h.set(0, ClickKind.MIDDLE, middle);
++		assertSame(middle, h.resolve(0, ClickType.MIDDLE));
++		assertSame(any, h.resolve(0, ClickType.DROP));
++	}
++
++	@Test
++	void unboundSlotResolvesNull() {
++		SlotHandlers h = new SlotHandlers();
++		assertNull(h.resolve(5, ClickType.LEFT));
++		h.set(5, ClickKind.LEFT, left);
++		h.clear(5);
++		assertNull(h.resolve(5, ClickType.LEFT));
++	}
++
++	@Test
++	void rightHasNoLeftFallback() {
++		SlotHandlers h = new SlotHandlers();
++		h.set(0, ClickKind.LEFT, left);
++		assertNull(h.resolve(0, ClickType.RIGHT));
++	}
++
++	@Test
++	void setIfAbsentDoesNotClobber() {
++		SlotHandlers h = new SlotHandlers();
++		h.set(0, ClickKind.ANY, any);
++		h.setIfAbsent(0, ClickKind.ANY, middle);
++		assertSame(any, h.resolve(0, ClickType.LEFT));
++	}
++
++	@Test
++	void clearAllRemovesEverySlot() {
++		SlotHandlers h = new SlotHandlers();
++		h.set(0, ClickKind.LEFT, left);
++		h.set(1, ClickKind.RIGHT, right);
++		h.clearAll();
++		assertNull(h.resolve(0, ClickType.LEFT));
++		assertNull(h.resolve(1, ClickType.RIGHT));
++	}
++}
+diff --git a/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/listener/MenuListenerTest.java b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/listener/MenuListenerTest.java
+new file mode 100644
+index 0000000..97b6796
+--- /dev/null
++++ b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/listener/MenuListenerTest.java
+@@ -0,0 +1,348 @@
++package org.luckyraven.keystone.inventory.listener;
++
++import org.bukkit.Material;
++import org.bukkit.entity.Player;
++import org.bukkit.event.inventory.InventoryAction;
++import org.bukkit.event.inventory.InventoryClickEvent;
++import org.bukkit.event.inventory.InventoryDragEvent;
++import org.bukkit.inventory.Inventory;
++import org.bukkit.inventory.ItemStack;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.keystone.cooldown.CooldownService;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.spi.MenuHolder;
++import org.luckyraven.keystone.inventory.spi.MenuTarget;
++
++import java.util.Set;
++import java.util.UUID;
++
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.ArgumentMatchers.anyBoolean;
++import static org.mockito.ArgumentMatchers.anyInt;
++import static org.mockito.ArgumentMatchers.eq;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.never;
++import static org.mockito.Mockito.verify;
++import static org.mockito.Mockito.when;
++
++/**
++ * Click/drag routing policy for {@link MenuListener}: holder identity (including the two-service case), the
++ * cancel/interactive/bottom-inventory/drag matrix, and the debounce gate. Ported in spirit from Oriel's
++ * {@code chest.listener.ChestMenuClickListener} tests as part of Keystone Phase E6; the identity and interactive
++ * flag are new (Keystone owns basic click routing across two independently-instantiated consumers now).
++ */
++final class MenuListenerTest {
++
++	private final CooldownService cooldowns = mock(CooldownService.class);
++	private final JavaPlugin      plugin    = mock(JavaPlugin.class);
++
++	private InventoryService newService() {
++		return new InventoryService(cooldowns);
++	}
++
++	private Inventory topInventory(MenuHolder holder, int size) {
++		Inventory inv = mock(Inventory.class);
++		when(inv.getHolder()).thenReturn(holder);
++		when(inv.getSize()).thenReturn(size);
++		return inv;
++	}
++
++	private InventoryClickEvent clickEvent(Inventory topInventory, Inventory clickedInventory, int rawSlot,
++	                                       Player player) {
++		InventoryClickEvent event = mock(InventoryClickEvent.class);
++		when(event.getInventory()).thenReturn(topInventory);
++		when(event.getClickedInventory()).thenReturn(clickedInventory);
++		when(event.getRawSlot()).thenReturn(rawSlot);
++		when(event.getWhoClicked()).thenReturn(player);
++		return event;
++	}
++
++	// --- Holder identity, including the two-service case ---------------------------------------------------
++
++	@Test
++	void twoServiceCase_onlyTheMatchingServiceDispatches() {
++		InventoryService serviceA = newService();
++		InventoryService serviceB = newService();
++		MenuListener     listenerA = new MenuListener(serviceA, plugin, cooldowns);
++		MenuListener     listenerB = new MenuListener(serviceB, plugin, cooldowns);
++
++		MenuTarget target = mock(MenuTarget.class);
++		MenuHolder holder = new MenuHolder(serviceA);
++		holder.setTarget(target);
++		Inventory inv = topInventory(holder, 27);
++
++		Player               player = mock(Player.class);
++		InventoryClickEvent  event  = clickEvent(inv, inv, 5, player);
++
++		// Bukkit fires the event to BOTH consumers' listeners (shared classloader, both registered). Only the
++		// service whose holder.service() matches should ever touch the target.
++		listenerB.onClick(event);
++		verify(target, never()).dispatchClick(any(), any());
++		verify(target, never()).isInteractive(anyInt());
++
++		listenerA.onClick(event);
++		verify(target).dispatchClick(event, player);
++	}
++
++	@Test
++	void nonMenuHolderInventoryIsIgnored() {
++		InventoryService service  = newService();
++		MenuListener     listener = new MenuListener(service, plugin, cooldowns);
++
++		Inventory inv = mock(Inventory.class);
++		when(inv.getHolder()).thenReturn(null);
++		InventoryClickEvent event = clickEvent(inv, inv, 0, mock(Player.class));
++
++		listener.onClick(event); // must not throw
++		verify(event, never()).setCancelled(anyBoolean());
++	}
++
++	// --- Top-inventory click policy: deposit hook, interactive flag, dispatch ------------------------------
++
++	@Test
++	void nonInteractiveSlotIsCancelledButStillDispatched() {
++		InventoryService service  = newService();
++		MenuListener     listener = new MenuListener(service, plugin, cooldowns);
++		MenuTarget       target   = mock(MenuTarget.class);
++		when(target.isInteractive(5)).thenReturn(false);
++		MenuHolder holder = new MenuHolder(service);
++		holder.setTarget(target);
++		Inventory inv = topInventory(holder, 27);
++
++		Player              player = mock(Player.class);
++		InventoryClickEvent event  = clickEvent(inv, inv, 5, player);
++
++		listener.onClick(event);
++
++		verify(event).setCancelled(true);
++		verify(target).dispatchClick(event, player);
++	}
++
++	@Test
++	void interactiveSlotIsNotCancelledButStillDispatched() {
++		InventoryService service  = newService();
++		MenuListener     listener = new MenuListener(service, plugin, cooldowns);
++		MenuTarget       target   = mock(MenuTarget.class);
++		when(target.isInteractive(5)).thenReturn(true);
++		MenuHolder holder = new MenuHolder(service);
++		holder.setTarget(target);
++		Inventory inv = topInventory(holder, 27);
++
++		Player              player = mock(Player.class);
++		InventoryClickEvent event  = clickEvent(inv, inv, 5, player);
++
++		listener.onClick(event);
++
++		verify(event, never()).setCancelled(anyBoolean());
++		verify(target).dispatchClick(event, player);
++	}
++
++	@Test
++	void depositHookAcceptingSkipsInteractivePolicyAndDispatch() {
++		InventoryService service  = newService();
++		MenuListener     listener = new MenuListener(service, plugin, cooldowns);
++		MenuTarget       target   = mock(MenuTarget.class);
++		when(target.handleDepositClick(any())).thenReturn(true);
++		MenuHolder holder = new MenuHolder(service);
++		holder.setTarget(target);
++		Inventory inv = topInventory(holder, 27);
++
++		InventoryClickEvent event = clickEvent(inv, inv, 5, mock(Player.class));
++
++		listener.onClick(event);
++
++		verify(target, never()).isInteractive(anyInt());
++		verify(target, never()).dispatchClick(any(), any());
++		verify(event, never()).setCancelled(anyBoolean());
++	}
++
++	// --- Bottom (player) inventory clicks -------------------------------------------------------------------
++
++	@Test
++	void bottomInventoryPlainClickPasses() {
++		InventoryService service  = newService();
++		MenuListener     listener = new MenuListener(service, plugin, cooldowns);
++		MenuTarget       target   = mock(MenuTarget.class);
++		MenuHolder holder = new MenuHolder(service);
++		holder.setTarget(target);
++		Inventory top    = topInventory(holder, 27);
++		Inventory bottom = mock(Inventory.class);
++
++		InventoryClickEvent event = clickEvent(top, bottom, 0, mock(Player.class));
++		when(event.isShiftClick()).thenReturn(false);
++		when(event.getAction()).thenReturn(InventoryAction.PICKUP_ALL);
++
++		listener.onClick(event);
++
++		verify(event, never()).setCancelled(anyBoolean());
++		verify(target, never()).handleDepositClick(any());
++	}
++
++	@Test
++	void bottomInventoryCollectToCursorIsAlwaysCancelled() {
++		InventoryService service  = newService();
++		MenuListener     listener = new MenuListener(service, plugin, cooldowns);
++		MenuHolder holder = new MenuHolder(service);
++		holder.setTarget(mock(MenuTarget.class));
++		Inventory top    = topInventory(holder, 27);
++		Inventory bottom = mock(Inventory.class);
++
++		InventoryClickEvent event = clickEvent(top, bottom, 0, mock(Player.class));
++		when(event.getAction()).thenReturn(InventoryAction.COLLECT_TO_CURSOR);
++
++		listener.onClick(event);
++
++		verify(event).setCancelled(true);
++	}
++
++	@Test
++	void bottomInventoryShiftClickAcceptedByDepositHookIsNotCancelled() {
++		InventoryService service  = newService();
++		MenuListener     listener = new MenuListener(service, plugin, cooldowns);
++		MenuTarget       target   = mock(MenuTarget.class);
++		when(target.handleDepositClick(any())).thenReturn(true);
++		MenuHolder holder = new MenuHolder(service);
++		holder.setTarget(target);
++		Inventory top    = topInventory(holder, 27);
++		Inventory bottom = mock(Inventory.class);
++
++		InventoryClickEvent event = clickEvent(top, bottom, 0, mock(Player.class));
++		when(event.isShiftClick()).thenReturn(true);
++		when(event.getAction()).thenReturn(InventoryAction.MOVE_TO_OTHER_INVENTORY);
++		when(event.getCurrentItem()).thenReturn(new ItemStack(Material.DIAMOND));
++
++		listener.onClick(event);
++
++		verify(event, never()).setCancelled(anyBoolean());
++	}
++
++	@Test
++	void bottomInventoryShiftClickDeclinedByDepositHookIsCancelled() {
++		InventoryService service  = newService();
++		MenuListener     listener = new MenuListener(service, plugin, cooldowns);
++		MenuTarget       target   = mock(MenuTarget.class);
++		when(target.handleDepositClick(any())).thenReturn(false);
++		MenuHolder holder = new MenuHolder(service);
++		holder.setTarget(target);
++		Inventory top    = topInventory(holder, 27);
++		Inventory bottom = mock(Inventory.class);
++
++		InventoryClickEvent event = clickEvent(top, bottom, 0, mock(Player.class));
++		when(event.isShiftClick()).thenReturn(true);
++		when(event.getAction()).thenReturn(InventoryAction.MOVE_TO_OTHER_INVENTORY);
++		when(event.getCurrentItem()).thenReturn(new ItemStack(Material.DIAMOND));
++
++		listener.onClick(event);
++
++		verify(event).setCancelled(true);
++	}
++
++	// --- Drag ------------------------------------------------------------------------------------------------
++
++	@Test
++	void dragCancelledIfAnyTouchedMenuSlotIsNotInteractive() {
++		InventoryService service  = newService();
++		MenuListener     listener = new MenuListener(service, plugin, cooldowns);
++		MenuTarget       target   = mock(MenuTarget.class);
++		when(target.isInteractive(2)).thenReturn(true);
++		when(target.isInteractive(3)).thenReturn(false);
++		MenuHolder holder = new MenuHolder(service);
++		holder.setTarget(target);
++		Inventory inv = topInventory(holder, 27);
++
++		InventoryDragEvent event = mock(InventoryDragEvent.class);
++		when(event.getInventory()).thenReturn(inv);
++		when(event.getRawSlots()).thenReturn(Set.of(2, 3));
++
++		listener.onDrag(event);
++
++		verify(event).setCancelled(true);
++	}
++
++	@Test
++	void dragNotCancelledWhenEveryTouchedMenuSlotIsInteractive() {
++		InventoryService service  = newService();
++		MenuListener     listener = new MenuListener(service, plugin, cooldowns);
++		MenuTarget       target   = mock(MenuTarget.class);
++		when(target.isInteractive(anyInt())).thenReturn(true);
++		MenuHolder holder = new MenuHolder(service);
++		holder.setTarget(target);
++		Inventory inv = topInventory(holder, 27);
++
++		InventoryDragEvent event = mock(InventoryDragEvent.class);
++		when(event.getInventory()).thenReturn(inv);
++		when(event.getRawSlots()).thenReturn(Set.of(1, 2));
++
++		listener.onDrag(event);
++
++		verify(event, never()).setCancelled(anyBoolean());
++	}
++
++	@Test
++	void dragIgnoresSlotsOutsideTheMenuInventory() {
++		InventoryService service  = newService();
++		MenuListener     listener = new MenuListener(service, plugin, cooldowns);
++		MenuTarget       target   = mock(MenuTarget.class);
++		when(target.isInteractive(anyInt())).thenReturn(false);
++		MenuHolder holder = new MenuHolder(service);
++		holder.setTarget(target);
++		Inventory inv = topInventory(holder, 27); // 27-slot menu; slot 30 is in the player's inventory below it
++
++		InventoryDragEvent event = mock(InventoryDragEvent.class);
++		when(event.getInventory()).thenReturn(inv);
++		when(event.getRawSlots()).thenReturn(Set.of(30));
++
++		listener.onDrag(event);
++
++		verify(event, never()).setCancelled(anyBoolean());
++	}
++
++	// --- Debounce gate -----------------------------------------------------------------------------------------
++
++	@Test
++	void debounceSwallowsClickWithinTheWindow() {
++		InventoryService service  = newService();
++		MenuListener     listener = new MenuListener(service, plugin, cooldowns);
++		MenuTarget       target   = mock(MenuTarget.class);
++		when(target.isInteractive(5)).thenReturn(true);
++		when(target.clickDelayMillis()).thenReturn(500);
++		MenuHolder holder = new MenuHolder(service);
++		holder.setTarget(target);
++		Inventory inv = topInventory(holder, 27);
++
++		Player player = mock(Player.class);
++		UUID   uuid   = UUID.randomUUID();
++		when(player.getUniqueId()).thenReturn(uuid);
++		when(cooldowns.isActive(eq(uuid), any())).thenReturn(true);
++
++		InventoryClickEvent event = clickEvent(inv, inv, 5, player);
++
++		listener.onClick(event);
++
++		verify(target, never()).dispatchClick(any(), any());
++	}
++
++	@Test
++	void zeroClickDelayNeverDebounces() {
++		InventoryService service  = newService();
++		MenuListener     listener = new MenuListener(service, plugin, cooldowns);
++		MenuTarget       target   = mock(MenuTarget.class);
++		when(target.isInteractive(5)).thenReturn(true);
++		when(target.clickDelayMillis()).thenReturn(0);
++		MenuHolder holder = new MenuHolder(service);
++		holder.setTarget(target);
++		Inventory inv = topInventory(holder, 27);
++
++		Player player = mock(Player.class);
++		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
++
++		InventoryClickEvent event = clickEvent(inv, inv, 5, player);
++
++		listener.onClick(event);
++
++		// clickDelayMillis() == 0 short-circuits ClickDebounce without ever consulting cooldowns.isActive.
++		verify(target).warning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/tracking/DefaultOpenMenuTrackerTest.java', LF will be replaced by CRLF the next time Git touches it
+dispatchClick(event, player);
++		verify(cooldowns, never()).isActive(any(), any());
++	}
++}
+diff --git a/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/tracking/DefaultOpenMenuTrackerTest.java b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/tracking/DefaultOpenMenuTrackerTest.java
+new file mode 100644
+index 0000000..5939397
+--- /dev/null
++++ b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/tracking/DefaultOpenMenuTrackerTest.java
+@@ -0,0 +1,116 @@
++package org.luckyraven.keystone.inventory.tracking;
++
++import org.bukkit.Bukkit;
++import org.bukkit.entity.Player;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.keystone.inventory.CloseReason;
++import org.luckyraven.keystone.inventory.Menu;
++import org.luckyraven.keystone.testkit.BukkitStatics;
++
++import java.util.UUID;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertNull;
++import static org.junit.jupiter.api.Assertions.assertSame;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++import static org.mockito.ArgumentMatchers.eq;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.never;
++import static org.mockito.Mockito.verify;
++import static org.mockito.Mockito.when;
++
++/**
++ * {@link DefaultOpenMenuTracker} — track/untrack bookkeeping and the {@link #closeAll} reload/shutdown sweep. Ported
++ * in spirit from Oriel's {@code core.registry.DefaultOpenMenuTracker}; the quit-handling this class used to own as
++ * a {@code Listener} moved to {@code MenuListener} (see {@code MenuListenerTest}) as part of Keystone Phase E6, so
++ * this test covers only the tracking map and {@code closeAll} itself.
++ */
++final class DefaultOpenMenuTrackerTest {
++
++	@Test
++	void trackThenUntrackClearsCurrentMenu() {
++		DefaultOpenMenuTracker tracker = new DefaultOpenMenuTracker();
++		Player                 viewer  = mock(Player.class);
++		when(viewer.getUniqueId()).thenReturn(UUID.randomUUID());
++		Menu menu = mock(Menu.class);
++
++		tracker.track(viewer, menu);
++		assertSame(menu, tracker.currentMenuOf(viewer));
++		assertTrue(tracker.currentViewers().contains(viewer.getUniqueId()));
++
++		tracker.untrack(viewer);
++		assertNull(tracker.currentMenuOf(viewer));
++	}
++
++	@Test
++	void untrackDoesNotTouchNavigationHistory() {
++		// "Navigation does not untrack" — closing a panel mid-MenuFlow (a plain untrack(), not a closeAll sweep)
++		// must not wipe the player's back-trail; only a reload/shutdown sweep does that.
++		NavigationHistory      history = new NavigationHistory();
++		DefaultOpenMenuTracker tracker = new DefaultOpenMenuTracker(history);
++		UUID                   uuid    = UUID.randomUUID();
++		Player                 viewer  = mock(Player.class);
++		when(viewer.getUniqueId()).thenReturn(uuid);
++
++		history.recordOpen(uuid, "shop");
++		tracker.track(viewer, mock(Menu.class));
++		tracker.untrack(viewer);
++
++		assertEquals("shop", history.current(uuid).orElseThrow());
++	}
++
++	@Test
++	void closeAllClosesEveryTrackedMenuWithTheReasonAndClearsNavigationHistory() {
++		NavigationHistory      history = new NavigationHistory();
++		DefaultOpenMenuTracker tracker = new DefaultOpenMenuTracker(history);
++		UUID                   uuid    = UUID.randomUUID();
++		Player                 viewer  = mock(Player.class);
++		when(viewer.getUniqueId()).thenReturn(uuid);
++		Menu menu = mock(Menu.class);
++		history.recordOpen(uuid, "shop");
++		tracker.track(viewer, menu);
++
++		try (BukkitStatics bukkit = BukkitStatics.install()) {
++			bukkit.statics().when(() -> Bukkit.getPlayer(eq(uuid))).thenReturn(viewer);
++
++			tracker.closeAll(CloseReason.RELOAD);
++
++			verify(menu).close(viewer, CloseReason.RELOAD);
++		}
++		assertNull(tracker.currentMenuOf(viewer));
++		assertTrue(history.current(uuid).isEmpty());
++	}
++
++	@Test
++	void closeAllSkipsOfflinePlayersWithoutThrowing() {
++		DefaultOpenMenuTracker tracker = new DefaultOpenMenuTracker();
++		UUID                   uuid    = UUID.randomUUID();
++		Player                 viewer  = mock(Player.class);
++		when(viewer.getUniqueId()).thenReturn(uuid);
++		Menu menu = mock(Menu.class);
++		tracker.track(viewer, menu);
++
++		try (BukkitStatics bukkit = BukkitStatics.install()) {
++			bukkit.statics().when(() -> Bukkit.getPlayer(eq(uuid))).thenReturn(null);
++
++			tracker.closeAll(CloseReason.PLUGIN_DISABLE);
++
++			verify(menu, never()).close(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
++		}
++	}
++
++	@Test
++	void closeAllClearsTheTrackerEvenWithNoNavigationHistory() {
++		DefaultOpenMenuTracker tracker = new DefaultOpenMenuTracker();
++		Player                 viewer  = mock(Player.class);
++		when(viewer.getUniqueId()).thenReturn(UUID.randomUUID());
++		tracker.track(viewer, mock(Menu.class));
++
++		try (BukkitStatics bukkit = BukkitStatics.install()) {
++			bukkit.statics().when(() -> Bukkit.getPlayer(org.mockito.ArgumentMatchers.any(UUID.class)))
++			      .thenReturn(viewer);
++			tracker.closeAll(CloseReason.RELOAD);
++		}
++		assertTrue(tracker.currentViewers().isEmpty());
++	}
++}
+diff --git a/pom.xml b/pom.xml
+index c0b291a..6da7112 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -48,8 +48,9 @@
+         <module>keystone-module</module>
+         <module>keystone-npc</module>
+         <module>keystone-hologram</module>
+         <module>keystone-shop</module>
++        <module>keystone-inventory</module>
+         <module>keystone-hooks</module>
+         <module>keystone-testkit</module>
+         <module>keystone-plugin</module>
+     </modules>
+@@ -57,9 +58,9 @@
+     <properties>
+         <!-- Single source of truth for the Keystone version (CI-friendly versioning).
+              Bump ONLY this property per extraction phase; child poms reference ${revision}
+              and flatten-maven-plugin resolves it in the installed/deployed poms. -->
+-        <revision>1.10.0</revision>
++        <revision>1.11.0</revision>
+ 
+         <!-- Java 17: usable by every consumer. Oriel's toolchain is 17 (1.16+ servers);
+              Gangland's 21 toolchain consumes 17-built jars without issue. -->
+         <maven.compiler.release>17</maven.compiler.release>
+@@ -196,8 +197,13 @@
+                 <groupId>org.luckyraven</groupId>
+                 <artifactId>keystone-shop</artifactId>
+                 <version>${project.version}</version>
+             </dependency>
++            <dependency>
++                <groupId>org.luckyraven</groupId>
++                <artifactId>keystone-inventory</artifactId>
++                <version>${project.version}</version>
++            </dependency>
+             <!-- Test toolkit for consumer plugins. Test-scope only in consumers; NEVER shaded
+                  into Keystone.jar (keystone-plugin must not depend on it). -->
+             <dependency>
+                 <groupId>org.luckyraven</groupId>

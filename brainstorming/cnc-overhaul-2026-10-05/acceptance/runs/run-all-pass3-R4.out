@@ -1,0 +1,15 @@
+
+######## R4
+== R4 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   run 2: no server ERROR / org.luckyraven exception
+PASS   run 2: harness steps - 0 failed step(s)
+PASS   2 stars before quit - [Runner] ★★☆☆☆ | [Runner] [RADIO] Sergeant Assault Tina #1001: Flanking south-west, keep him busy!
+PASS   still wanted after rejoin - [Runner] ★★☆☆☆ | [Runner] [RADIO] Sergeant Assault Nick #1004: Moving to flank, west!
+PASS   decay clock runs after rejoin (decreased line within 60 s, Time 10)
+== PASS ==
+
+======== SUMMARY (0 = PASS, 1 = FAIL, 2 = REVIEW by a human, ERROR = could not run)
+R4: 0
+Pass criterion for 0.15: R1 R2 R3 R4 N1 N2 N3 N4 all 0 (R1 and N4 may be 2 when only the human read-through is left).

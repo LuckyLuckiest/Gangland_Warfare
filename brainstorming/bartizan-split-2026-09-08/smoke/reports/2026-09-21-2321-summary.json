@@ -1,0 +1,19 @@
+[
+  {
+    "id": "ws2-g5-boot",
+    "title": "WS2 G5 (0.10.0): turf, cops-n-crooks and gadget boot clean after the Quartermaster/detainment-paperwork/handcuff-bribe/car-sign generic Panel+standalone-ChestMenu swap onto keystone-inventory. civilians is deployed alongside turf/cops (Depends: [civilians]) and Bartizan alongside cops (Plugins: [Bartizan]) purely so all three load for real instead of faulting on a missing dependency -- console can only confirm the four modules' bean graphs construct without a fault (TurfModuleConfig/CopsNCrooksModuleConfig/GadgetModuleConfig's InventoryService-consuming beans) and their admin/player command trees resolve without an exception; it CANNOT drive an actual Quartermaster/paperwork/bribe/car-sign GUI interaction (no in-game player, no jailed/handcuffed state, no placed car exists in a console-only run) -- same documented-gap shape as npcshops-boot/grapple-boot. A human with a real client must run exec/G010/WS2-manual-checklist.md's G5 rows (20-27).",
+    "verdict": "PASS",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "civilians",
+      "gadget",
+      "turf",
+      "copsncrooks"
+    ],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-21-2321-ws2-g5-boot.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-21-2321-ws2-g5-boot.log"
+  }
+]

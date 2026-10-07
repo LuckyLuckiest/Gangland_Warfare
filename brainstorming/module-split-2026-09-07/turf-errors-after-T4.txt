@@ -1,0 +1,96 @@
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[104,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[111,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[130,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[130,46] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[133,46] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[134,46] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[139,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[139,73] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[139,92] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[146,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[147,60] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[149,60] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[157,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[157,60] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[159,60] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[16,44] package org.luckyraven.gangland.turf.capture does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[164,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[167,56] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[168,56] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[17,44] package org.luckyraven.gangland.turf.capture does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[176,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[18,45] package org.luckyraven.gangland.turf.contract does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[185,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[186,66] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[189,66] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[19,45] package org.luckyraven.gangland.turf.contract does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[20,45] package org.luckyraven.gangland.turf.contract does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[206,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[21,45] package org.luckyraven.gangland.turf.contract does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[22,49] package org.luckyraven.gangland.turf.contribution does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[23,49] package org.luckyraven.gangland.turf.contribution does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[24,44] package org.luckyraven.gangland.turf.manager does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[25,1] package org.luckyraven.gangland.turf.powerups does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[26,46] package org.luckyraven.gangland.turf.selection does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[27,41] package org.luckyraven.gangland.turf.task does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[28,41] package org.luckyraven.gangland.turf.task does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[29,41] package org.luckyraven.gangland.turf.task does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[30,41] package org.luckyraven.gangland.turf.task does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[31,45] package org.luckyraven.gangland.turf.turfnpcs does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[43,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[48,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[53,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[53,60] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[58,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[63,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[68,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[68,69] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[75,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[75,48] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[82,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[87,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[92,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[97,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/TurfConfig.java:[97,40] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/ActiveTurfBuffRepository.java:[10,45] package org.luckyraven.gangland.turf.powerups does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/ActiveTurfBuffRepository.java:[11,45] package org.luckyraven.gangland.turf.powerups does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/ActiveTurfBuffRepository.java:[12,45] package org.luckyraven.gangland.turf.powerups does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/ActiveTurfBuffRepository.java:[20,13] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/ActiveTurfBuffRepository.java:[21,66] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/ActiveTurfBuffRepository.java:[22,28] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/ActiveTurfBuffRepository.java:[33,30] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/ActiveTurfBuffRepository.java:[63,25] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/ActiveTurfBuffRepository.java:[68,33] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/TurfGarrisonRepository.java:[10,45] package org.luckyraven.gangland.turf.powerups does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/TurfGarrisonRepository.java:[11,45] package org.luckyraven.gangland.turf.powerups does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/TurfGarrisonRepository.java:[19,13] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/TurfGarrisonRepository.java:[20,64] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/TurfGarrisonRepository.java:[20,85] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/TurfGarrisonRepository.java:[31,30] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/TurfGarrisonRepository.java:[47,25] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/TurfGarrisonRepository.java:[52,33] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/TurfRepository.java:[10,45] package org.luckyraven.gangland.turf.contract does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/TurfRepository.java:[11,41] package org.luckyraven.gangland.turf.data does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/TurfRepository.java:[12,41] package org.luckyraven.gangland.turf.data does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/TurfRepository.java:[21,13] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/TurfRepository.java:[22,56] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/TurfRepository.java:[22,73] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/TurfRepository.java:[33,30] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/TurfRepository.java:[74,25] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/turf/TurfRepository.java:[79,33] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/turf/ActiveTurfBuffTable.java:[10,48] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/turf/ActiveTurfBuffTable.java:[31,33] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/turf/ActiveTurfBuffTable.java:[43,51] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/turf/ActiveTurfBuffTable.java:[5,45] package org.luckyraven.gangland.turf.powerups does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/turf/TurfGarrisonTable.java:[10,46] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/turf/TurfGarrisonTable.java:[25,33] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/turf/TurfGarrisonTable.java:[30,51] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/turf/TurfGarrisonTable.java:[5,45] package org.luckyraven.gangland.turf.powerups does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/turf/TurfTable.java:[10,38] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/turf/TurfTable.java:[46,33] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/turf/TurfTable.java:[5,41] package org.luckyraven.gangland.turf.data does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/turf/TurfTable.java:[63,51] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/turf/GanglandTurfMessages.java:[18,52] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/turf/GanglandTurfMessages.java:[7,45] package org.luckyraven.gangland.turf.contract does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/turf/GanglandTurfSounds.java:[13,50] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/turf/GanglandTurfSounds.java:[6,45] package org.luckyraven.gangland.turf.contract does not exist

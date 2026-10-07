@@ -1,0 +1,1332 @@
+# Review package — WS8 G2+G3 — Gangland 0.9.2 working tree vs HEAD 9a44ea45 (WS8 G1 commit)
+--- status ---
+ M gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetFileConfig.java
+ M gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/GrappleService.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/GrappleSession.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/message/GrappleMessages.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleAbortListener.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleFallDamageListener.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListener.java
+ M gangland-features/gangland-gadget/src/main/resources/gadget/gadget_messages.yml
+ A gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/grapple/GrappleServiceTest.java
+ A gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleAbortListenerTest.java
+ A gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleFallDamageListenerTest.java
+ A gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListenerTest.java
+--- diffstat ---
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/resources/gadget/gadget_messages.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/GrappleService.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/GrappleSession.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/message/GrappleMessages.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleAbortListener.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleFallDamageListener.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListener.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/grapple/GrappleServiceTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleAbortListenerTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleFallDamageListenerTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListenerTest.java', LF will be replaced by CRLF the next time Git touches it
+ .../gangland/gadget/config/GadgetFileConfig.java   |  14 ++
+ .../gangland/gadget/config/GadgetModuleConfig.java |   6 +
+ .../gangland/gadget/grapple/GrappleService.java    | 163 +++++++++++++
+ .../gangland/gadget/grapple/GrappleSession.java    |  30 +++
+ .../gadget/grapple/message/GrappleMessages.java    |  54 +++++
+ .../listener/grapple/GrappleAbortListener.java     |  71 ++++++
+ .../grapple/GrappleFallDamageListener.java         |  53 +++++
+ .../listener/grapple/GrappleLaunchListener.java    | 100 ++++++++
+ .../src/main/resources/gadget/gadget_messages.yml  |   1 +
+ .../gadget/grapple/GrappleServiceTest.java         | 209 +++++++++++++++++
+ .../listener/grapple/GrappleAbortListenerTest.java | 130 +++++++++++
+ .../grapple/GrappleFallDamageListenerTest.java     |  79 +++++++
+ .../grapple/GrappleLaunchListenerTest.java         | 251 +++++++++++++++++++++
+ 13 files changed, 1161 insertions(+)
+--- diff ---
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/resources/gadget/gadget_messages.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/GrappleService.java', LF will be replaced by CRLF the next time Git touches it
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetFileConfig.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetFileConfig.java
+index 09620fa0..9ef03ffa 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetFileConfig.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetFileConfig.java
+@@ -5,10 +5,11 @@ import org.bukkit.plugin.java.JavaPlugin;
+ import org.luckyraven.keystone.util.Placeholder;
+ import org.luckyraven.gangland.file.configuration.Settings;
+ import org.luckyraven.gangland.gadget.car.config.CarAddon;
+ import org.luckyraven.gangland.gadget.contract.GadgetPhysicsConfigImpl;
+ import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
++import org.luckyraven.gangland.gadget.grapple.message.GrappleMessages;
+ import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
+ import org.luckyraven.gangland.gadget.jetpack.message.JetpackMessages;
+ import org.luckyraven.keystone.bean.Bean;
+ import org.luckyraven.keystone.bean.Configuration;
+ import org.luckyraven.keystone.bean.Phase;
+@@ -81,6 +82,19 @@ public class GadgetFileConfig {
+ 
+ 		JetpackMessages messages = new JetpackMessages(fileManager);
+ 		fileManager.registerInitializer(messages);
+ 		return messages;
+ 	}
++
++	/**
++	 * Reads the same {@code gadget_messages.yml} the {@code jetpackMessages} bean above registers — the
++	 * {@code jetpackMessages} parameter is unused except to force bean-graph ordering (feedback_bean_ordering_via
++	 * _params) so that file's {@link FileHandler} is guaranteed registered before this constructor looks it up.
++	 * Never calls {@code fileManager.addFile(...)} here — that would double-register the same file name.
++	 */
++	@Bean
++	public GrappleMessages grappleMessages(FileManager fileManager, JetpackMessages jetpackMessages) {
++		GrappleMessages messages = new GrappleMessages(fileManager);
++		fileManager.registerInitializer(messages);
++		return messages;
++	}
+ }
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java
+index 4f52f196..4c266c67 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java
+@@ -13,10 +13,11 @@ import org.luckyraven.gangland.gadget.car.message.CarMessageContract;
+ import org.luckyraven.gangland.gadget.car.vehicle.VehicleRegistry;
+ import org.luckyraven.gangland.gadget.contract.GanglandCarMessages;
+ import org.luckyraven.gangland.gadget.item.CarConverter;
+ import org.luckyraven.gangland.gadget.item.CarItemRefresher;
+ import org.luckyraven.gangland.gadget.item.CarItemSerializer;
++import org.luckyraven.gangland.gadget.grapple.GrappleService;
+ import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
+ import org.luckyraven.gangland.gadget.item.GadgetItemPredicates;
+ import org.luckyraven.gangland.gadget.item.GrappleConverter;
+ import org.luckyraven.gangland.gadget.item.GrappleItemSerializer;
+ import org.luckyraven.gangland.gadget.item.JetpackConverter;
+@@ -121,10 +122,15 @@ public class GadgetModuleConfig {
+ 	                                     JetpackAddon jetpackAddon) {
+ 		fuelService.setFuelSinkPredicate(this::isJetpackFuelSink);
+ 		return new JetpackService(fuelService, plugin, gadgetPhysicsConfig, jetpackAddon);
+ 	}
+ 
++	@Bean
++	public GrappleService grappleService() {
++		return new GrappleService(plugin);
++	}
++
+ 	@Bean
+ 	public CarConverter carConverter(CarAddon carAddon, ItemConverterRegistry itemConverterRegistry) {
+ 		CarConverter converter = new CarConverter(carAddon);
+ 		itemConverterRegistry.register(ItemKind.CAR, converter);
+ 		return converter;
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/GrappleService.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/GrappleService.java
+new file mode 100644
+index 00000000..d1800380
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/GrappleService.java
+@@ -0,0 +1,163 @@
++package org.luckyraven.gangland.gadget.grapple;
++
++import lombok.CustomLog;
++import org.bukkit.Location;
++import org.bukkit.World;
++import org.bukkit.entity.Player;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.bukkit.util.Vector;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.keystone.bean.BeanLifecycle;
++import org.luckyraven.keystone.timer.RepeatingTimer;
++
++import java.util.ArrayList;
++import java.util.List;
++import java.util.Map;
++import java.util.UUID;
++import java.util.concurrent.ConcurrentHashMap;
++
++/**
++ * Manages active grapple-hook pull sessions: cooldown, the per-tick pull toward the anchor, and the one-shot
++ * landing-damage grace flag granted whenever a pull ends (mirrors jetpack.JetpackService's BeanLifecycle shape,
++ * but ticked by a single shared org.luckyraven.keystone.timer.RepeatingTimer instead of one BukkitRunnable per
++ * session — grapple pulls are short-lived and this avoids N scheduler tasks under concurrent players, WS8 §8
++ * risk 3). Cooldown only (WS8-D1) — no fuel/durability.
++ */
++@CustomLog
++public class GrappleService implements BeanLifecycle {
++
++	private static final long MILLIS_PER_TICK = 50L;
++
++	private final Map<UUID, GrappleSession> activeSessions       = new ConcurrentHashMap<>();
++	private final Map<UUID, Long>           cooldownExpiryMs     = new ConcurrentHashMap<>();
++	private final Map<UUID, Long>           landingGraceExpiryMs = new ConcurrentHashMap<>();
++
++	private final JavaPlugin plugin;
++
++	private RepeatingTimer tickTimer;
++
++	public GrappleService(JavaPlugin plugin) {
++		this.plugin = plugin;
++	}
++
++	/**
++	 * Starts a new pull toward {@code anchor}. No-op (returns false) if the player already has an active pull or
++	 * is still on cooldown. Cooldown is applied HERE, at launch, not at pull-end — this is deliberate (WS8 G3):
++	 * it prevents a cooldown bypass where cancelling a pull immediately after launch (damage/sneak/re-cast) would
++	 * let the player re-launch instantly.
++	 */
++	public boolean start(Player player, Grapple grapple, Location anchor) {
++		UUID uuid = player.getUniqueId();
++		if (activeSessions.containsKey(uuid)) return false;
++		if (isOnCooldown(player)) return false;
++
++		cooldownExpiryMs.put(uuid, System.currentTimeMillis() + grapple.getCooldownSeconds() * 1000L);
++		activeSessions.put(uuid, new GrappleSession(player, grapple, anchor));
++		return true;
++	}
++
++	/**
++	 * Ends the pull for any reason (arrival, timeout, damage, sneak, chunk unload, teleport, world change, death —
++	 * every caller across G2/G3 routes through here) and grants the one-shot landing-damage grace flag. A no-op if
++	 * the player has no active session.
++	 */
++	public void cancel(Player player) {
++		GrappleSession session = activeSessions.remove(player.getUniqueId());
++		if (session == null) return;
++
++		long graceMs = session.getGrapple().getFallDamageGraceTicks() * MILLIS_PER_TICK;
++		landingGraceExpiryMs.put(player.getUniqueId(), System.currentTimeMillis() + graceMs);
++	}
++
++	public boolean isActive(Player player) {
++		return activeSessions.containsKey(player.getUniqueId());
++	}
++
++	public boolean isOnCooldown(Player player) {
++		Long expiry = cooldownExpiryMs.get(player.getUniqueId());
++		return expiry != null && expiry > System.currentTimeMillis();
++	}
++
++	@Nullable
++	public GrappleSession getSession(Player player) {
++		return activeSessions.get(player.getUniqueId());
++	}
++
++	/**
++	 * One-shot: returns true and clears the flag if a landing grace window is still valid; returns false (and
++	 * clears any stale entry) otherwise. Consumable exactly once per grant — see GrappleFallDamageListener (G3).
++	 */
++	public boolean consumeLandingGrace(Player player) {
++		Long expiry = landingGraceExpiryMs.removwarning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/GrappleSession.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/message/GrappleMessages.java', LF will be replaced by CRLF the next time Git touches it
+e(player.getUniqueId());
++		return expiry != null && expiry > System.currentTimeMillis();
++	}
++
++	/**
++	 * Advances one tick of an in-progress pull: timeout check, anchor-chunk-loaded check, capped/accelerated
++	 * velocity toward the anchor, and arrival auto-stop. Package-visible (not private) so GrappleServiceTest can
++	 * call it directly without going through the scheduler. Every early-return path that ends the session must go
++	 * through cancel(player) so the landing grace is granted consistently.
++	 */
++	void tickSession(GrappleSession session) {
++		Player player = session.getPlayer();
++		if (!player.isOnline()) {
++			activeSessions.remove(player.getUniqueId());
++			return;
++		}
++
++		Grapple grapple = session.getGrapple();
++
++		session.setElapsedTicks(session.getElapsedTicks() + 1);
++		if (session.getElapsedTicks() >= grapple.getMaxDurationTicks()) {
++			cancel(player);
++			return;
++		}
++
++		Location anchor      = session.getAnchor();
++		World    anchorWorld = anchor.getWorld();
++		if (anchorWorld == null || !anchorWorld.equals(player.getWorld()) || !anchor.getChunk().isLoaded()) {
++			cancel(player);
++			return;
++		}
++
++		Location playerLoc = player.getLocation();
++		Vector   toAnchor   = anchor.toVector().subtract(playerLoc.toVector());
++		double   distance   = toAnchor.length();
++
++		if (distance <= grapple.getArrivalDistance()) {
++			cancel(player);
++			return;
++		}
++
++		Vector direction = toAnchor.normalize();
++		double speed     = Math.min(session.getCurrentSpeed() + grapple.getPullAcceleration(), grapple.getMaxPullSpeed());
++		session.setCurrentSpeed(speed);
++		player.setVelocity(direction.multiply(speed));
++	}
++
++	private void tickAll() {
++		for (GrappleSession session : new ArrayList<>(activeSessions.values())) {
++			tickSession(session);
++		}
++	}
++
++	@Override
++	public void onInitialize(boolean firstLoad) {
++		if (tickTimer == null) {
++			// RepeatingTimer(plugin, delay, period, task) — verified against Keystone's actual
++			// org.luckyraven.keystone.timer.RepeatingTimer/Timer source (delay is param 2, period is param 3;
++			// Timer's javadoc names them explicitly). delay=0 starts the pull-physics loop immediately, period=1
++			// ticks it every server tick, matching JetpackTask's own runTaskTimer(plugin, 1L, 1L) cadence.
++			tickTimer = new RepeatingTimer(plugin, 0L, 1L, timer -> tickAll());
++			tickTimer.start(false);
++		}
++	}
++
++	@Override
++	public void onShutdown() {
++		if (tickTimer != null) {
++			tickTimer.stop();
++		}
++		activeSessions.clear();
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/GrappleSession.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/GrappleSession.java
+new file mode 100644
+index 00000000..1df099ef
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/GrappleSession.java
+@@ -0,0 +1,30 @@
++package org.luckyraven.gangland.gadget.grapple;
++
++import lombok.Getter;
++import lombok.Setter;
++import org.bukkit.Location;
++import org.bukkit.entity.Player;
++
++/**
++ * Tracks one in-progress grapple pull. Created when a launch lands on a block ({@code PlayerFishEvent.State
++ * .IN_GROUND}) and destroyed when the pull ends (arrival, timeout, or a cancel trigger).
++ */
++@Getter
++public class GrappleSession {
++
++	private final Player   player;
++	private final Grapple  grapple;
++	private final Location anchor;
++
++	@Setter
++	private int elapsedTicks = 0;
++
++	@Setter
++	private double currentSpeed = 0.0;
++
++	public GrappleSession(Player player, Grapple grapple, Location anchor) {
++		this.player  = player;
++		this.grapple = grapple;
++		this.anchor  = anchor;
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/message/GrappleMessages.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/message/GrappleMessages.java
+new file mode 100644
+index 00000000..611d77ea
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/ganglawarning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleAbortListener.java', LF will be replaced by CRLF the next time Git touches it
+nd/gadget/grapple/message/GrappleMessages.java
+@@ -0,0 +1,54 @@
++package org.luckyraven.gangland.gadget.grapple.message;
++
++import org.luckyraven.gangland.util.GanglandChatUtil;
++import org.luckyraven.keystone.exception.PluginException;
++import org.luckyraven.keystone.persistence.FileHandler;
++import org.luckyraven.keystone.persistence.FileInitializer;
++import org.luckyraven.keystone.persistence.FileManager;
++
++import java.io.IOException;
++import java.util.Objects;
++
++/**
++ * Grapple-scoped user-facing strings, backed by the module's shared {@code gadget/gadget_messages.yml} — same file
++ * {@link org.luckyraven.gangland.gadget.jetpack.message.JetpackMessages} already registers (the {@code
++ * grappleMessages} bean takes a {@code JetpackMessages} parameter purely to force bean-graph ordering after that
++ * registration), so this constructor only looks the file up, it never calls {@code fileManager.addFile(...)} —
++ * mirrors {@link org.luckyraven.gangland.gadget.jetpack.message.JetpackMessages} exactly.
++ */
++public class GrappleMessages implements FileInitializer {
++
++	private final FileHandler fileHandler;
++
++	public GrappleMessages(FileManager fileManager) {
++		try {
++			String fileName = "gadget_messages";
++
++			fileManager.checkFileLoaded(fileName);
++
++			this.fileHandler = Objects.requireNonNull(fileManager.getFile(fileName));
++		} catch (IOException exception) {
++			throw new PluginException(exception);
++		}
++	}
++
++	@Override
++	public FileHandler getFileHandler() {
++		return fileHandler;
++	}
++
++	@Override
++	public void initialize() {
++		// Flat strings read lazily per call — nothing to pre-parse.
++	}
++
++	public String noPermission() {
++		return GanglandChatUtil.color(get("Grapple_No_Permission", "&cYou do not have permission to use this "
++		                                                           + "grapple."));
++	}
++
++	private String get(String key, String fallback) {
++		return fileHandler.getFileConfiguration().getString(key, fallback);
++	}
++
++}
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleAbortListener.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleAbortListener.java
+new file mode 100644
+index 00000000..1dd8951e
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleAbortListener.java
+@@ -0,0 +1,71 @@
++package org.luckyraven.gangland.gadget.listener.grapple;
++
++import org.bukkit.entity.Player;
++import org.bukkit.event.EventHandler;
++import org.bukkit.event.EventPriority;
++import org.bukkit.event.Listener;
++import org.bukkit.event.entity.EntityDamageEvent;
++import org.bukkit.event.entity.PlayerDeathEvent;
++import org.bukkit.event.player.PlayerChangedWorldEvent;
++import org.bukkit.event.player.PlayerTeleportEvent;
++import org.bukkit.event.player.PlayerToggleSneakEvent;
++import org.luckyraven.gangland.gadget.grapple.GrappleService;
++import org.luckyraven.keystone.bean.autowire.AutowireTarget;
++import org.luckyraven.keystone.bean.listener.ListenerHandler;
++
++/**
++ * Aborts an in-progress grapple pull: damage, sneak-start (G2), and teleport, world-change and death (G3).
++ * <p>
++ * {@code onDamage} is deliberately {@code MONITOR} priority + {@code ignoreCancelled = true}: G3's
++ * {@code GrappleFallDamageListener} will cancel {@code DamageCause.FALL} at {@code HIGH} priority while a pull is
++ * active (the player is being mechanically moved, not really falling). Because {@code MONITOR} runs after
++ * {@code HIGH}, a cancelled fall-immune landing during an active pull is already cancelled by the time this handler
++ * runs and {@code ignoreCancelled = true} skips it — so a soft landing never aborts the pull as "damage". A genuine
++ * non-fall hit still aborts it.
++ */
++@ListenerHandler
++@AutowireTarget({GrappleService.class})
++public class GrappleAbortListener implements Listener {
++
++	private final GrappleService grappleService;
++
++	public GrappleAbortListener(GrappleService grappleService) {
++		this.grapplewarning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleFallDamageListener.java', LF will be replaced by CRLF the next time Git touches it
+Service = grappleService;
++	}
++
++	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
++	public void onDamage(EntityDamageEvent event) {
++		if (!(event.getEntity() instanceof Player player)) return;
++		if (!grappleService.isActive(player)) return;
++		grappleService.cancel(player);
++	}
++
++	@EventHandler(priority = EventPriority.MONITOR)
++	public void onToggleSneak(PlayerToggleSneakEvent event) {
++		if (!event.isSneaking()) return;   // only the sneak-START cancels the pull
++		Player player = event.getPlayer();
++		if (!grappleService.isActive(player)) return;
++		grappleService.cancel(player);
++	}
++
++	@EventHandler(priority = EventPriority.MONITOR)
++	public void onTeleport(PlayerTeleportEvent event) {
++		Player player = event.getPlayer();
++		if (!grappleService.isActive(player)) return;
++		grappleService.cancel(player);
++	}
++
++	@EventHandler(priority = EventPriority.MONITOR)
++	public void onChangeWorld(PlayerChangedWorldEvent event) {
++		Player player = event.getPlayer();
++		if (!grappleService.isActive(player)) return;
++		grappleService.cancel(player);
++	}
++
++	@EventHandler(priority = EventPriority.MONITOR)
++	public void onDeath(PlayerDeathEvent event) {
++		Player player = event.getEntity();   // PlayerDeathEvent#getEntity() covariantly returns Player
++		if (!grappleService.isActive(player)) return;
++		grappleService.cancel(player);
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleFallDamageListener.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleFallDamageListener.java
+new file mode 100644
+index 00000000..d6f56a74
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleFallDamageListener.java
+@@ -0,0 +1,53 @@
++package org.luckyraven.gangland.gadget.listener.grapple;
++
++import org.bukkit.entity.Player;
++import org.bukkit.event.EventHandler;
++import org.bukkit.event.EventPriority;
++import org.bukkit.event.Listener;
++import org.bukkit.event.entity.EntityDamageEvent;
++import org.luckyraven.gangland.gadget.grapple.GrappleService;
++import org.luckyraven.keystone.bean.autowire.AutowireTarget;
++import org.luckyraven.keystone.bean.listener.ListenerHandler;
++
++/**
++ * Cancels fall damage for a grapple pull, through two independently time-bounded paths — deliberately shaped to
++ * avoid docket GD-04 (an empty jetpack grants permanent fall immunity, {@code JetpackFallDamageListener}): that
++ * listener cancels {@code DamageCause.FALL} whenever {@code JetpackService.isActive(player)} is true, and
++ * jetpack "active" has no expiry of its own — an empty/zero-fuel jetpack stays active until the player manually
++ * takes it off, so the immunity is effectively permanent for as long as it's worn.
++ * <p>
++ * Here, {@link GrappleService#isActive(Player)} is only true for the duration of a live pull, which is inherently
++ * bounded — {@code Max_Duration_Ticks} forces it to end, and G2/G3 wire multiple independent cancel triggers
++ * (damage, sneak, chunk-unload, teleport, world-change, death) on top of that timeout. There is no way to stay
++ * "active" indefinitely the way an inert-but-worn jetpack can.
++ * <p>
++ * The post-pull grace ({@link GrappleService#consumeLandingGrace(Player)}) is intentionally a separate, one-shot
++ * flag rather than an extension of {@code isActive}: {@code GrappleService.cancel(...)} grants it exactly once
++ * per pull-end, and consuming it removes it from the map immediately, so it can absorb at most a single
++ * fall-damage event no matter how long the player keeps holding the grapple item afterward — the opposite of
++ * GD-04's unbounded, indefinitely re-usable immunity.
++ */
++@ListenerHandler
++@AutowireTarget({GrappleService.class})
++public class GrappleFallDamageListener implements Listener {
++
++	private final GrappleService grappleService;
++
++	public GrappleFallDamageListener(GrappleService grappleService) {
++		this.grappleService = grappleService;
++	}
++
++	@EventHandler(priority = warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListener.java', LF will be replaced by CRLF the next time Git touches it
+EventPriority.HIGH, ignoreCancelled = true)
++	public void onFallDamage(EntityDamageEvent event) {
++		if (!(event.getEntity() instanceof Player player)) return;
++		if (event.getCause() != EntityDamageEvent.DamageCause.FALL) return;
++
++		if (grappleService.isActive(player)) {
++			event.setCancelled(true);
++			return;
++		}
++		if (grappleService.consumeLandingGrace(player)) {
++			event.setCancelled(true);
++		}
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListener.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListener.java
+new file mode 100644
+index 00000000..ae6caa9b
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListener.java
+@@ -0,0 +1,100 @@
++package org.luckyraven.gangland.gadget.listener.grapple;
++
++import org.bukkit.Location;
++import org.bukkit.World;
++import org.bukkit.entity.Player;
++import org.bukkit.event.EventHandler;
++import org.bukkit.event.EventPriority;
++import org.bukkit.event.Listener;
++import org.bukkit.event.player.PlayerFishEvent;
++import org.bukkit.inventory.ItemStack;
++import org.bukkit.util.RayTraceResult;
++import org.bukkit.util.Vector;
++import org.luckyraven.gangland.gadget.grapple.Grapple;
++import org.luckyraven.gangland.gadget.grapple.GrappleService;
++import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
++import org.luckyraven.gangland.gadget.grapple.message.GrappleMessages;
++import org.luckyraven.keystone.bean.autowire.AutowireTarget;
++import org.luckyraven.keystone.bean.listener.ListenerHandler;
++
++/**
++ * Launches a grapple pull off the vanilla fishing-rod hook mechanic: a grapple item is a fishing rod under the
++ * hood, so a landed hook ({@link PlayerFishEvent.State#IN_GROUND}) starts the pull toward the hook's location.
++ * Never reads {@code event.getHand()} — that accessor does not exist on this plugin's Spigot API floor
++ * (1.16.5-1.18.2); the held item is always looked up via {@code getItemInMainHand()} instead, matching
++ * {@code CarInteractListener}'s convention of ignoring off-hand entirely.
++ */
++@ListenerHandler
++@AutowireTarget({GrappleService.class, GrappleAddon.class, GrappleMessages.class})
++public class GrappleLaunchListener implements Listener {
++
++	private final GrappleService  grappleService;
++	private final GrappleAddon    grappleAddon;
++	private final GrappleMessages grappleMessages;
++
++	public GrappleLaunchListener(GrappleService grappleService, GrappleAddon grappleAddon,
++	                             GrappleMessages grappleMessages) {
++		this.grappleService  = grappleService;
++		this.grappleAddon    = grappleAddon;
++		this.grappleMessages = grappleMessages;
++	}
++
++	@EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
++	public void onPlayerFish(PlayerFishEvent event) {
++		Player    player = event.getPlayer();
++		ItemStack item    = player.getInventory().getItemInMainHand();
++
++		String id = Grapple.getGrappleId(item);
++		if (id == null) return;   // not a grapple item — leave vanilla fishing untouched
++
++		Grapple grapple = grappleAddon.getGrapple(id);
++		if (grapple == null) return;
++
++		switch (event.getState()) {
++			case IN_GROUND -> handleLanded(event, player, grapple);
++			case CAUGHT_FISH, CAUGHT_ENTITY -> event.setCancelled(true);   // never actually "fish" with a grapple
++			default -> {
++				// FISHING, FAILED_ATTEMPT, REEL_IN, BITE — nothing to do, let vanilla hook physics play out
++			}
++		}
++	}
++
++	private void handleLanded(PlayerFishEvent event, Player player, Grapple grapple) {
++		if (!player.hasPermission(grapple.getPermission())) {
++			player.sendMessage(grappleMessages.noPermission());
++			return;
++		}
++
++		Location anchor = event.getHook().getLocation();
++		if (!isWithinWorldBorder(anchor)) return;
++		if (grapple.isRequireLineOfSight() && !hasLineOfSight(player, anchor)) return;
++
++		grappleService.start(player, grapple, anchor);
++		// start() silently no-ops on cooldown/already-actiwarning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/grapple/GrappleServiceTest.java', LF will be replaced by CRLF the next time Git touches it
+ve/out-of-border/blocked-LOS — no message for any of
++		// them (G4 can add messages later if wanted).
++	}
++
++	private boolean isWithinWorldBorder(Location anchor) {
++		World world = anchor.getWorld();
++		if (world == null) return false;
++		return world.getWorldBorder().isInside(anchor);
++	}
++
++	/**
++	 * Traces from the player's eyes toward the anchor, stopping 1 block short of it so the anchor block itself
++	 * (the block the hook is stuck in — always a "hit" if traced all the way) never counts as an occlusion; only a
++	 * block strictly between the player and the anchor refuses the launch.
++	 */
++	private boolean hasLineOfSight(Player player, Location anchor) {
++		Location eye   = player.getEyeLocation();
++		World    world = eye.getWorld();
++		if (world == null) return false;
++
++		Vector toAnchor = anchor.toVector().subtract(eye.toVector());
++		double distance = toAnchor.length();
++		if (distance <= 1.0) return true;   // adjacent to the anchor — nothing meaningful to occlude
++
++		RayTraceResult result = world.rayTraceBlocks(eye, toAnchor.normalize(), distance - 1.0);
++		return result == null;
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/main/resources/gadget/gadget_messages.yml b/gangland-features/gangland-gadget/src/main/resources/gadget/gadget_messages.yml
+index 08fd2a57..a1369466 100644
+--- a/gangland-features/gangland-gadget/src/main/resources/gadget/gadget_messages.yml
++++ b/gangland-features/gangland-gadget/src/main/resources/gadget/gadget_messages.yml
+@@ -1,5 +1,6 @@
+ # Jetpack-specific user-facing strings (module-API contract: a module's own new strings live in its own YAML, not
+ # gangland-api's Messages/Settings). Colour codes use & — resolved through GanglandChatUtil.color at read time.
+ Jetpack_No_Permission: "&cYou do not have permission to use this jetpack."
+ Jetpack_Gave: "&aGave %amount% jetpack(s) '%name%'."
+ Jetpack_Invalid: "&cInvalid jetpack '%name%'."
++Grapple_No_Permission: "&cYou do not have permission to use this grapple."
+diff --git a/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/grapple/GrappleServiceTest.java b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/grapple/GrappleServiceTest.java
+new file mode 100644
+index 00000000..c8377172
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/grapple/GrappleServiceTest.java
+@@ -0,0 +1,209 @@
++package org.luckyraven.gangland.gadget.grapple;
++
++import org.bukkit.Chunk;
++import org.bukkit.Location;
++import org.bukkit.World;
++import org.bukkit.entity.Player;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.bukkit.util.Vector;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.mockito.ArgumentCaptor;
++
++import java.util.UUID;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertFalse;
++import static org.junit.jupiter.api.Assertions.assertSame;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.verify;
++import static org.mockito.Mockito.when;
++
++/**
++ * Pins WS8 G2: {@link GrappleService}'s cooldown/session bookkeeping and the {@code tickSession} per-tick pull
++ * physics, exercised directly (never through {@code onInitialize}/the scheduler) so this stays a pure-logic suite.
++ */
++@DisplayName("GrappleService — pull-session lifecycle and per-tick physics (WS8 G2)")
++class GrappleServiceTest {
++
++	private static Grapple grapple(int maxDurationTicks) {
++		return Grapple.builder()
++		              .grappleId("test")
++		              .maxDistance(25)
++		              .maxPullSpeed(1.8)
++		              .pullAcceleration(0.35)
++		              .arrivalDistance(1.5)
++		              .cooldownSeconds(8)
++		              .maxDurationTicks(maxDurationTicks)
++		              .fallDamageGraceTicks(40)
++		              .requireLineOfSight(true)
++		              .build();
++	}
++
++	private static Player onlinePlayer(World world, Location location) {
++		Player player = mock(Player.class);
++		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
++		when(player.isOnline()).thenReturn(true);
++		when(player.getWorld()).thenReturn(world);
++		when(player.getLocation()).thenReturn(location);
++		return player;
++	}
++
++	private static World loadedWorld() {
++		World world = mock(World.class);
++		Chunk chunk = mock(Chunk.class);
++		when(chunk.isLoaded()).thenReturn(true);
++		when(world.getChunkAt(any(Location.class))).thenReturn(chunk);
++		return world;
++	}
++
++	@Test
++	@DisplayName("start() succeeds once; a second start() while active is rejected without replacing the session")
++	void start_whileActive_rejectsAndKeepsOriginalSession() {
++		GrappleService service = new GrappleService(mock(JavaPlugin.class));
++
++		World  world     = loadedWorld();
++		Player player    = onlinePlayer(world, new Location(world, 0, 64, 0));
++		Grapple grapple  = grapple(100);
++		Location anchor1 = new Location(world, 10, 64, 0);
++		Location anchor2 = new Location(world, 20, 64, 0);
++
++		assertTrue(service.start(player, grapple, anchor1));
++		assertFalse(service.start(player, grapple, anchor2));
++		assertSame(anchor1, service.getSession(player).getAnchor());
++	}
++
++	@Test
++	@DisplayName("start() while on cooldown (after a cancel()) is rejected")
++	void start_onCooldown_rejected() {
++		GrappleService service = new GrappleService(mock(JavaPlugin.class));
++
++		World   world  = loadedWorld();
++		Player  player = onlinePlayer(world, new Location(world, 0, 64, 0));
++		Grapple grapple = grapple(100);
++		Location anchor = new Location(world, 10, 64, 0);
++
++		assertTrue(service.start(player, grapple, anchor));
++		service.cancel(player);
++
++		assertFalse(service.start(player, grapple, anchor));
++	}
++
++	@Test
++	@DisplayName("tickSession ends the pull once elapsedTicks reaches Max_Duration_Ticks")
++	void tickSession_timeout_endsSession() {
++		GrappleService service = new GrappleService(mock(JavaPlugin.class));
++
++		World world = loadedWorld();
++		// Anchor far enough away that arrival never triggers before the timeout does.
++		Location anchor = new Location(world, 500, 64, 0);
++		Player   player = onlinePlayer(world, new Location(world, 0, 64, 0));
++
++		Grapple grapple = grapple(3);
++		service.start(player, grapple, anchor);
++		GrappleSession session = service.getSession(player);
++
++		for (int i = 0; i < 3; i++) {
++			service.tickSession(session);
++		}
++
++		assertFalse(service.isActive(player));
++	}
++
++	@Test
++	@DisplayName("tickSession ends the pull when the anchor's chunk is unloaded")
++	void tickSession_chunkUnloaded_endsSession() {
++		GrappleService service = new GrappleService(mock(JavaPlugin.class));
++
++		World world = mock(World.class);
++		Chunk chunk = mock(Chunk.class);
++		when(chunk.isLoaded()).thenReturn(false);
++		when(world.getChunkAt(any(Location.class))).thenReturn(chunk);
++
++		Location anchor = new Location(world, 500, 64, 0);
++		Player   player = onlinePlayer(world, new Location(world, 0, 64, 0));
++
++		Grapple grapple = grapple(100);
++		service.start(player, grapple, anchor);
++		GrappleSession session = service.getSession(player);
++
++		service.tickSession(session);
++
++		assertFalse(service.isActive(player));
++	}
++
++	@Test
++	@DisplayName("tickSession caps velocity at Max_Pull_Speed and ramps up by roughly Pull_Acceleration per tick")
++	void tickSession_velocity_rampsThenCaps() {
++		GrappleService service = new GrappleService(mock(JavaPlugin.class));
++
++		World world = loadedWorld();
++		// Anchor far enough away (along +X) that arrival never triggers across the ticks below.
++		Location anchor = new Location(world, 500, 64, 0);
++
++		Player player = mock(Player.class);
++		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
++		when(player.isOnline()).thenReturn(true);
++		when(player.getWorld()).thenReturn(world);
++		when(player.getLocation()).thenReturn(new Location(world, 0, 64, 0));
++
++		Grapple grapple = grapple(100);
++		service.start(player, grapple, anchor);
++		GrappleSession session = service.getSession(player);
++
++		ArgumentCaptor<Vwarning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleAbortListenerTest.java', LF will be replaced by CRLF the next time Git touches it
+ector> captor = ArgumentCaptor.forClass(Vector.class);
++
++		// pullAcceleration=0.35, maxPullSpeed=1.8 -> caps on the 6th tick (0.35*5=1.75 < 1.8 <= 0.35*6=2.1).
++		for (int i = 0; i < 8; i++) {
++			service.tickSession(session);
++		}
++		verify(player, org.mockito.Mockito.times(8)).setVelocity(captor.capture());
++
++		double previousLength = 0.0;
++		for (Vector velocity : captor.getAllValues()) {
++			assertTrue(velocity.length() <= grapple.getMaxPullSpeed() + 1e-9);
++			assertTrue(velocity.length() >= previousLength - 1e-9);
++			previousLength = velocity.length();
++		}
++		assertEquals(grapple.getMaxPullSpeed(), previousLength, 1e-9);
++	}
++
++	@Test
++	@DisplayName("tickSession auto-stops on arrival and grants the one-shot landing grace")
++	void tickSession_arrival_stopsAndGrantsGrace() {
++		GrappleService service = new GrappleService(mock(JavaPlugin.class));
++
++		World world = loadedWorld();
++		Location anchor = new Location(world, 10, 64, 0);
++		// Within arrivalDistance (1.5) of the anchor.
++		Player player = onlinePlayer(world, new Location(world, 10, 64, 1));
++
++		Grapple grapple = grapple(100);
++		service.start(player, grapple, anchor);
++		GrappleSession session = service.getSession(player);
++
++		service.tickSession(session);
++
++		assertFalse(service.isActive(player));
++		assertTrue(service.consumeLandingGrace(player));
++	}
++
++	@Test
++	@DisplayName("consumeLandingGrace is one-shot: true once, false on the immediate second call")
++	void consumeLandingGrace_isOneShot() {
++		GrappleService service = new GrappleService(mock(JavaPlugin.class));
++
++		World   world   = loadedWorld();
++		Player  player  = onlinePlayer(world, new Location(world, 0, 64, 0));
++		Grapple grapple = grapple(100);
++		Location anchor = new Location(world, 10, 64, 0);
++
++		service.start(player, grapple, anchor);
++		service.cancel(player);
++
++		assertTrue(service.consumeLandingGrace(player));
++		assertFalse(service.consumeLandingGrace(player));
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleAbortListenerTest.java b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleAbortListenerTest.java
+new file mode 100644
+index 00000000..bb35c48a
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleAbortListenerTest.java
+@@ -0,0 +1,130 @@
++package org.luckyraven.gangland.gadget.listener.grapple;
++
++import org.bukkit.entity.Player;
++import org.bukkit.event.entity.EntityDamageEvent;
++import org.bukkit.event.entity.PlayerDeathEvent;
++import org.bukkit.event.player.PlayerChangedWorldEvent;
++import org.bukkit.event.player.PlayerTeleportEvent;
++import org.bukkit.event.player.PlayerToggleSneakEvent;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.gangland.gadget.grapple.GrappleService;
++
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.never;
++import static org.mockito.Mockito.verify;
++import static org.mockito.Mockito.when;
++
++/**
++ * Pins WS8 G2/G3: {@link GrappleAbortListener} cancels an active pull on real damage, sneak-start, teleport,
++ * world-change or death, and is a no-op for an inactive player or a sneak-release.
++ */
++@DisplayName("GrappleAbortListener — abort triggers (WS8 G2/G3)")
++class GrappleAbortListenerTest {
++
++	@Test
++	@DisplayName("EntityDamageEvent on an active player cancels the pull")
++	void onDamage_activePlayer_cancels() {
++		GrappleService service  = mock(GrappleService.class);
++		Player         player   = mock(Player.class);
++		when(service.isActive(player)).thenReturn(true);
++
++		EntityDamageEvent event = mock(EntityDamageEvent.class);
++		when(event.getEntity()).thenReturn(player);
++
++		new GrappleAbortListener(service).onDamage(event);
++
++		verify(service).cancel(player);
++	}
++
++	@Test
++	@DisplayName("EntityDamageEvent on an inactive player is a no-op")
++	void onDamage_inactivePlayer_noop() {
++		GrappleService service = mock(GrappleService.class);
++		Player         plawarning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleFallDamageListenerTest.java', LF will be replaced by CRLF the next time Git touches it
+yer  = mock(Player.class);
++		when(service.isActive(player)).thenReturn(false);
++
++		EntityDamageEvent event = mock(EntityDamageEvent.class);
++		when(event.getEntity()).thenReturn(player);
++
++		new GrappleAbortListener(service).onDamage(event);
++
++		verify(service, never()).cancel(player);
++	}
++
++	@Test
++	@DisplayName("PlayerToggleSneakEvent with isSneaking()==true on an active player cancels the pull")
++	void onToggleSneak_sneakStart_activePlayer_cancels() {
++		GrappleService service = mock(GrappleService.class);
++		Player         player  = mock(Player.class);
++		when(service.isActive(player)).thenReturn(true);
++
++		PlayerToggleSneakEvent event = mock(PlayerToggleSneakEvent.class);
++		when(event.getPlayer()).thenReturn(player);
++		when(event.isSneaking()).thenReturn(true);
++
++		new GrappleAbortListener(service).onToggleSneak(event);
++
++		verify(service).cancel(player);
++	}
++
++	@Test
++	@DisplayName("PlayerToggleSneakEvent with isSneaking()==false (sneak-release) is a no-op")
++	void onToggleSneak_sneakRelease_noop() {
++		GrappleService service = mock(GrappleService.class);
++		Player         player  = mock(Player.class);
++
++		PlayerToggleSneakEvent event = mock(PlayerToggleSneakEvent.class);
++		when(event.getPlayer()).thenReturn(player);
++		when(event.isSneaking()).thenReturn(false);
++
++		new GrappleAbortListener(service).onToggleSneak(event);
++
++		verify(service, never()).cancel(player);
++	}
++
++	@Test
++	@DisplayName("PlayerTeleportEvent on an active player cancels the pull")
++	void onTeleport_activePlayer_cancels() {
++		GrappleService service = mock(GrappleService.class);
++		Player         player  = mock(Player.class);
++		when(service.isActive(player)).thenReturn(true);
++
++		PlayerTeleportEvent event = mock(PlayerTeleportEvent.class);
++		when(event.getPlayer()).thenReturn(player);
++
++		new GrappleAbortListener(service).onTeleport(event);
++
++		verify(service).cancel(player);
++	}
++
++	@Test
++	@DisplayName("PlayerChangedWorldEvent on an active player cancels the pull")
++	void onChangeWorld_activePlayer_cancels() {
++		GrappleService service = mock(GrappleService.class);
++		Player         player  = mock(Player.class);
++		when(service.isActive(player)).thenReturn(true);
++
++		PlayerChangedWorldEvent event = mock(PlayerChangedWorldEvent.class);
++		when(event.getPlayer()).thenReturn(player);
++
++		new GrappleAbortListener(service).onChangeWorld(event);
++
++		verify(service).cancel(player);
++	}
++
++	@Test
++	@DisplayName("PlayerDeathEvent on an active player cancels the pull")
++	void onDeath_activePlayer_cancels() {
++		GrappleService service = mock(GrappleService.class);
++		Player         player  = mock(Player.class);
++		when(service.isActive(player)).thenReturn(true);
++
++		PlayerDeathEvent event = mock(PlayerDeathEvent.class);
++		when(event.getEntity()).thenReturn(player);   // PlayerDeathEvent has no getPlayer()
++
++		new GrappleAbortListener(service).onDeath(event);
++
++		verify(service).cancel(player);
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleFallDamageListenerTest.java b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleFallDamageListenerTest.java
+new file mode 100644
+index 00000000..aff5453d
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleFallDamageListenerTest.java
+@@ -0,0 +1,79 @@
++package org.luckyraven.gangland.gadget.listener.grapple;
++
++import org.bukkit.entity.Player;
++import org.bukkit.event.entity.EntityDamageEvent;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.gangland.gadget.grapple.GrappleService;
++
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.never;
++import static org.mockito.Mockito.verify;
++import static org.mockito.Mockito.when;
++
++/**
++ * Pins WS8 G3: {@link GrappleFallDamageListener} cancels FALL damage while a pull is active (without even
++ * consulting the landing grace), awarning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListenerTest.java', LF will be replaced by CRLF the next time Git touches it
+nd separately via the one-shot landing grace after the pull ends — exactly
++ * once, never on a second fall.
++ */
++@DisplayName("GrappleFallDamageListener — active-pull and one-shot landing-grace immunity (WS8 G3)")
++class GrappleFallDamageListenerTest {
++
++	private static EntityDamageEvent fallEvent(Player player) {
++		EntityDamageEvent event = mock(EntityDamageEvent.class);
++		when(event.getEntity()).thenReturn(player);
++		when(event.getCause()).thenReturn(EntityDamageEvent.DamageCause.FALL);
++		return event;
++	}
++
++	@Test
++	@DisplayName("FALL is cancelled while isActive(player) is true, without consulting landing grace")
++	void onFallDamage_activePull_cancelsWithoutConsumingGrace() {
++		GrappleService service = mock(GrappleService.class);
++		Player         player  = mock(Player.class);
++		when(service.isActive(player)).thenReturn(true);
++
++		EntityDamageEvent event = fallEvent(player);
++
++		new GrappleFallDamageListener(service).onFallDamage(event);
++
++		verify(event).setCancelled(true);
++		verify(service, never()).consumeLandingGrace(any());
++	}
++
++	@Test
++	@DisplayName("FALL is cancelled exactly once via the one-shot landing grace, not on a second fall")
++	void onFallDamage_landingGrace_cancelsOnceThenNotAgain() {
++		GrappleService service = mock(GrappleService.class);
++		Player         player  = mock(Player.class);
++		when(service.isActive(player)).thenReturn(false);
++
++		GrappleFallDamageListener listener = new GrappleFallDamageListener(service);
++
++		EntityDamageEvent firstFall = fallEvent(player);
++		when(service.consumeLandingGrace(player)).thenReturn(true);
++		listener.onFallDamage(firstFall);
++		verify(firstFall).setCancelled(true);
++
++		EntityDamageEvent secondFall = fallEvent(player);
++		when(service.consumeLandingGrace(player)).thenReturn(false);   // grace already consumed above
++		listener.onFallDamage(secondFall);
++		verify(secondFall, never()).setCancelled(true);
++	}
++
++	@Test
++	@DisplayName("FALL is not cancelled when inactive and landing grace was never granted")
++	void onFallDamage_inactiveNoGrace_notCancelled() {
++		GrappleService service = mock(GrappleService.class);
++		Player         player  = mock(Player.class);
++		when(service.isActive(player)).thenReturn(false);
++		when(service.consumeLandingGrace(player)).thenReturn(false);
++
++		EntityDamageEvent event = fallEvent(player);
++
++		new GrappleFallDamageListener(service).onFallDamage(event);
++
++		verify(event, never()).setCancelled(true);
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListenerTest.java b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListenerTest.java
+new file mode 100644
+index 00000000..2d6e0f55
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/listener/grapple/GrappleLaunchListenerTest.java
+@@ -0,0 +1,251 @@
++package org.luckyraven.gangland.gadget.listener.grapple;
++
++import org.bukkit.Location;
++import org.bukkit.Material;
++import org.bukkit.World;
++import org.bukkit.WorldBorder;
++import org.bukkit.entity.FishHook;
++import org.bukkit.entity.Player;
++import org.bukkit.event.player.PlayerFishEvent;
++import org.bukkit.inventory.ItemStack;
++import org.bukkit.inventory.PlayerInventory;
++import org.bukkit.util.RayTraceResult;
++import org.bukkit.util.Vector;
++import org.junit.jupiter.api.AfterEach;
++import org.junit.jupiter.api.BeforeAll;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.gangland.core.testsupport.BukkitRegistryFixture;
++import org.luckyraven.gangland.gadget.grapple.Grapple;
++import org.luckyraven.gangland.gadget.grapple.GrappleKey;
++import org.luckyraven.gangland.gadget.grapple.GrappleService;
++import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
++import org.luckyraven.gangland.gadget.grapple.message.GrappleMessages;
++import org.luckyraven.keystone.item.ItemBuilder;
++import org.luckyraven.keystone.item.nbt.NbtBridge;
++import org.luckyraven.keystone.testkit.RecordingNbtAccessor;
++
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.ArgumentMatchers.anyDouble;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.never;
++import static org.mockito.Mockito.verify;
++import static org.mockito.Mockito.verifyNoInteractions;
++import static org.mockito.Mockito.when;
++
++/**
++ * Pins WS8 G2: {@link GrappleLaunchListener} only reacts to a grapple item's fishing hook, denies a launch the
++ * player lacks permission for, and starts the pull on a permitted landed hook.
++ */
++@DisplayName("GrappleLaunchListener — grapple launch off PlayerFishEvent (WS8 G2)")
++class GrappleLaunchListenerTest {
++
++	@BeforeAll
++	static void bootstrapBukkitRegistry() {
++		BukkitRegistryFixture.install();
++	}
++
++	@BeforeEach
++	void setUp() {
++		NbtBridge.install(new RecordingNbtAccessor());
++	}
++
++	@AfterEach
++	void tearDown() {
++		NbtBridge.reset();
++	}
++
++	private static ItemStack grappleItem(String id) {
++		ItemStack stack = new ItemStack(Material.FISHING_ROD);
++		new ItemBuilder(stack).addTag(GrappleKey.GRAPPLE_ID.getKey(), id);
++		return stack;
++	}
++
++	private static PlayerFishEvent fishEvent(Player player, PlayerFishEvent.State state) {
++		PlayerFishEvent event = mock(PlayerFishEvent.class);
++		when(event.getPlayer()).thenReturn(player);
++		when(event.getState()).thenReturn(state);
++		return event;
++	}
++
++	private static Player playerWithMainHand(ItemStack item) {
++		PlayerInventory inventory = mock(PlayerInventory.class);
++		when(inventory.getItemInMainHand()).thenReturn(item);
++
++		Player player = mock(Player.class);
++		when(player.getInventory()).thenReturn(inventory);
++		return player;
++	}
++
++	/**
++	 * A mocked World whose WorldBorder#isInside always answers {@code insideBorder}, wired for {@code
++	 * GrappleLaunchListener#isWithinWorldBorder}.
++	 */
++	private static World worldWithBorder(boolean insideBorder) {
++		World       world       = mock(World.class);
++		WorldBorder worldBorder = mock(WorldBorder.class);
++		when(world.getWorldBorder()).thenReturn(worldBorder);
++		when(worldBorder.isInside(any(Location.class))).thenReturn(insideBorder);
++		return world;
++	}
++
++	@Test
++	@DisplayName("a non-grapple item in hand leaves the event untouched")
++	void onPlayerFish_nonGrappleItem_untouched() {
++		GrappleService  grappleService  = mock(GrappleService.class);
++		GrappleAddon    grappleAddon    = mock(GrappleAddon.class);
++		GrappleMessages grappleMessages = mock(GrappleMessages.class);
++
++		Player player = playerWithMainHand(new ItemStack(Material.FISHING_ROD));
++		PlayerFishEvent event = fishEvent(player, PlayerFishEvent.State.IN_GROUND);
++
++		new GrappleLaunchListener(grappleService, grappleAddon, grappleMessages).onPlayerFish(event);
++
++		verifyNoInteractions(grappleAddon);
++		verify(grappleService, never()).start(any(), any(), any());
++		verify(event, never()).setCancelled(true);
++	}
++
++	@Test
++	@DisplayName("IN_GROUND with no permission sends the denial message and never starts a pull")
++	void onPlayerFish_inGroundNoPermission_sendsMessageNoStart() {
++		GrappleService  grappleService  = mock(GrappleService.class);
++		GrappleAddon    grappleAddon    = mock(GrappleAddon.class);
++		GrappleMessages grappleMessages = mock(GrappleMessages.class);
++
++		Grapple grapple = Grapple.builder().grappleId("test").build();
++		when(grappleAddon.getGrapple("test")).thenReturn(grapple);
++		when(grappleMessages.noPermission()).thenReturn("no-permission-message");
++
++		Player player = playerWithMainHand(grappleItem("test"));
++		when(player.hasPermission(grapple.getPermission())).thenReturn(false);
++
++		FishHook hook = mock(FishHook.class);
++		when(hook.getLocation()).thenReturn(new Location(null, 1, 2, 3));
++
++		PlayerFishEvent event = fishEvent(player, PlayerFishEvent.State.IN_GROUND);
++		when(event.getHook()).thenReturn(hook);
++
++		new GrappleLaunchListener(grappleService, grappleAddon, grappleMessages).onPlayerFish(event);
++
++		verify(player).sendMessage("no-permission-message");
++		verify(grappleService, never()).start(any(), any(), any());
++	}
++
++	@Test
++	@DisplayName("IN_GROUND with permission, inside the border and clear LOS starts the pull (WS8 G3 checks wired in)")
++	void onPlayerFish_inGroundHasPermission_startsPull() {
++		GrappleService  grappleService  = mock(GrappleService.class);
++		GrappleAddon    grappleAddon    = mock(GrappleAddon.class);
++		GrappleMessages grappleMessages = mock(GrappleMessages.class);
++
++		// requireLineOfSight(true) deliberately, unlike the earlier G2 tests: this re-proves the happy path with
++		// BOTH new G3 checks (world-border + LOS) actually exercised, not just short-circuited by the Lombok
++		// @Builder boolean default (false) that a lower-effort choice here would have hidden behind.
++		Grapple grapple = Grapple.builder().grappleId("test").requireLineOfSight(true).build();
++		when(grappleAddon.getGrapple("test")).thenReturn(grapple);
++
++		World world = worldWithBorder(true);
++		when(world.rayTraceBlocks(any(Location.class), any(Vector.class), anyDouble())).thenReturn(null);
++
++		Player player = playerWithMainHand(grappleItem("test"));
++		when(player.hasPermission(grapple.getPermission())).thenReturn(true);
++		when(player.getEyeLocation()).thenReturn(new Location(world, 0, 0, 0));
++
++		Location anchor = new Location(world, 10, 0, 0);
++		FishHook hook = mock(FishHook.class);
++		when(hook.getLocation()).thenReturn(anchor);
++
++		PlayerFishEvent event = fishEvent(player, PlayerFishEvent.State.IN_GROUND);
++		when(event.getHook()).thenReturn(hook);
++
++		new GrappleLaunchListener(grappleService, grappleAddon, grappleMessages).onPlayerFish(event);
++
++		verify(grappleService).start(player, grapple, anchor);
++	}
++
++	@Test
++	@DisplayName("blocked LOS (a RayTraceResult hit) silently refuses the launch when Require_Line_Of_Sight is set")
++	void onPlayerFish_inGroundHasPermission_blockedLos_refusesLaunch() {
++		GrappleService  grappleService  = mock(GrappleService.class);
++		GrappleAddon    grappleAddon    = mock(GrappleAddon.class);
++		GrappleMessages grappleMessages = mock(GrappleMessages.class);
++
++		Grapple grapple = Grapple.builder().grappleId("test").requireLineOfSight(true).build();
++		when(grappleAddon.getGrapple("test")).thenReturn(grapple);
++
++		World          world  = worldWithBorder(true);   // inside the border — LOS is the only thing failing here
++		RayTraceResult hit    = mock(RayTraceResult.class);
++		when(world.rayTraceBlocks(any(Location.class), any(Vector.class), anyDouble())).thenReturn(hit);
++
++		Player player = playerWithMainHand(grappleItem("test"));
++		when(player.hasPermission(grapple.getPermission())).thenReturn(true);
++		when(player.getEyeLocation()).thenReturn(new Location(world, 0, 0, 0));
++
++		Location anchor = new Location(world, 10, 0, 0);
++		FishHook hook = mock(FishHook.class);
++		when(hook.getLocation()).thenReturn(anchor);
++
++		PlayerFishEvent event = fishEvent(player, PlayerFishEvent.State.IN_GROUND);
++		when(event.getHook()).thenReturn(hook);
++
++		new GrappleLaunchListener(grappleService, grappleAddon, grappleMessages).onPlayerFish(event);
++
++		verify(grappleService, never()).start(any(), any(), any());
++	}
++
++	@Test
++	@DisplayName("outside the world border silently refuses the launch regardless of LOS")
++	void onPlayerFish_inGroundHasPermission_outsideBorder_refusesLaunch() {
++		GrappleService  grappleService  = mock(GrappleService.class);
++		GrappleAddon    grappleAddon    = mock(GrappleAddon.class);
++		GrappleMessages grappleMessages = mock(GrappleMessages.class);
++
++		// requireLineOfSight left at its (false) default — the border check must refuse the launch on its own,
++		// before LOS is ever consulted.
++		Grapple grapple = Grapple.builder().grappleId("test").build();
++		when(grappleAddon.getGrapple("test")).thenReturn(grapple);
++
++		World world = worldWithBorder(false);
++
++		Player player = playerWithMainHand(grappleItem("test"));
++		when(player.hasPermission(grapple.getPermission())).thenReturn(true);
++
++		Location anchor = new Location(world, 10, 0, 0);
++		FishHook hook = mock(FishHook.class);
++		when(hook.getLocation()).thenReturn(anchor);
++
++		PlayerFishEvent event = fishEvent(player, PlayerFishEvent.State.IN_GROUND);
++		when(event.getHook()).thenReturn(hook);
++
++		new GrappleLaunchListener(grappleService, grappleAddon, grappleMessages).onPlayerFish(event);
++
++		verify(grappleService, never()).start(any(), any(), any());
++	}
++
++	@Test
++	@DisplayName("CAUGHT_FISH/CAUGHT_ENTITY on a grapple item cancels the event")
++	void onPlayerFish_caughtFishOrEntity_cancelsEvent() {
++		GrappleService  grappleService  = mock(GrappleService.class);
++		GrappleAddon    grappleAddon    = mock(GrappleAddon.class);
++		GrappleMessages grappleMessages = mock(GrappleMessages.class);
++
++		Grapple grapple = Grapple.builder().grappleId("test").build();
++		when(grappleAddon.getGrapple("test")).thenReturn(grapple);
++
++		Player player = playerWithMainHand(grappleItem("test"));
++
++		GrappleLaunchListener listener = new GrappleLaunchListener(grappleService, grappleAddon, grappleMessages);
++
++		PlayerFishEvent caughtFish = fishEvent(player, PlayerFishEvent.State.CAUGHT_FISH);
++		listener.onPlayerFish(caughtFish);
++		verify(caughtFish).setCancelled(true);
++
++		PlayerFishEvent caughtEntity = fishEvent(player, PlayerFishEvent.State.CAUGHT_ENTITY);
++		listener.onPlayerFish(caughtEntity);
++		verify(caughtEntity).setCancelled(true);
++
++		verify(grappleService, never()).start(any(), any(), any());
++	}
++}

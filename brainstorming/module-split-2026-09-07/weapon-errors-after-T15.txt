@@ -1,0 +1,83 @@
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[119,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[145,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[15,57] package org.luckyraven.gangland.file.configuration.weapon does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[150,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[151,48] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[16,57] package org.luckyraven.gangland.file.configuration.weapon does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[174,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[18,47] package org.luckyraven.gangland.weapon.wearable does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[183,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[183,40] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[193,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[194,42] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[195,42] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[31,43] package org.luckyraven.gangland.weapon.ammo does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[32,52] package org.luckyraven.gangland.weapon.configuration does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java:[33,52] package org.luckyraven.gangland.weapon.configuration does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[182,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[182,44] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[187,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[187,44] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[192,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[192,54] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[197,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[202,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[202,48] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[202,77] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[203,48] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[204,48] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[213,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[213,48] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[223,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[27,57] package org.luckyraven.gangland.file.configuration.weapon does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[28,47] package org.luckyraven.gangland.weapon.wearable does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[318,58] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[62,38] package org.luckyraven.gangland.weapon does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[63,38] package org.luckyraven.gangland.weapon does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[64,52] package org.luckyraven.gangland.weapon.configuration does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[65,43] package org.luckyraven.gangland.weapon.fire does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[66,48] package org.luckyraven.gangland.weapon.modifiers does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[67,47] package org.luckyraven.gangland.weapon.raytrace does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[68,47] package org.luckyraven.gangland.weapon.raytrace does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java:[69,47] package org.luckyraven.gangland.weapon.wearable does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[102,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[107,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[112,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[123,62] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[124,62] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[125,62] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[14,38] package org.luckyraven.gangland.weapon does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[146,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[146,48] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[15,43] package org.luckyraven.gangland.weapon.ammo does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[151,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[151,52] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[16,47] package org.luckyraven.gangland.weapon.wearable does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[161,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[161,64] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[173,60] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[174,60] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[176,60] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[38,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[38,48] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[43,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[43,56] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[48,16] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[48,52] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[64,60] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[65,60] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java:[66,60] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/item/ItemPredicates.java:[10,38] package org.luckyraven.gangland.weapon does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/item/ItemPredicates.java:[11,43] package org.luckyraven.gangland.weapon.ammo does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/item/ItemPredicates.java:[9,38] package org.luckyraven.gangland.weapon does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/listener/gang/GangMembersDamageListener.java:[15,56] package org.luckyraven.gangland.weapon.events.projectile does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/listener/gang/GangMembersDamageListener.java:[56,46] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/PlayerDeathListener.java:[30,38] package org.luckyraven.gangland.weapon does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/PlayerDeathListener.java:[31,38] package org.luckyraven.gangland.weapon does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/PlayerDeathListener.java:[32,54] package org.luckyraven.gangland.weapon.types.throwable does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/PlayerDeathListener.java:[43,23] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/PlayerDeathListener.java:[50,36] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/RemoveAccountListener.java:[22,38] package org.luckyraven.gangland.weapon does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/RemoveAccountListener.java:[23,38] package org.luckyraven.gangland.weapon does not exist
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/RemoveAccountListener.java:[32,23] cannot find symbol
+[ERROR] /E:/Programming/java/Gangland Warfare [Cubed-GTA recoded]/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/RemoveAccountListener.java:[38,38] cannot find symbol

@@ -1,0 +1,48 @@
+[
+  {
+    "id": "jetpack-give",
+    "title": "WS7: /glw jetpack give resolves and the gadget module boots with the WS7-D4 Bartizan trait bridge active (Bartizan present) -- console can only confirm the module loads, the command resolves without an error/exception, and the Bartizan item-vocabulary/trait registration lines appear; it CANNOT drive an actual equip or verify flight (no in-game player exists in a console-only run) -- same documented-gap shape as S1's '/glw help lists only core commands' and S4's 'detainment table migrates', see README.md Limitations. A human with a real client must equip the given jetpack and confirm it actually flies; JetpackNbtIdentityTest/JetpackServiceActivatePermissionTest are the automated unit-level equivalent for the parts console can't reach.",
+    "verdict": "PASS",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "gadget"
+    ],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-17-0204-jetpack-give.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-17-0204-jetpack-give.log"
+  },
+  {
+    "id": "jetpack-migrated",
+    "title": "WS7 G4: a chestplate carrying only the old Bartizan 'wearable' tag is re-stamped with the jetpack tag on next equip, keeps its fuel, and can then refuel/fly (JetpackService.migrateLegacyJetpack) -- console CANNOT inject a pre-tagged legacy item into a player's inventory or drive an equip event at all (no in-game player, no 'give player NBT' console command), so this row can only confirm the gadget module boots clean with items/jetpacks.yml loaded and the Bartizan trait bridge active; the migration behaviour itself (JETPACK_ID stamped, fuel preserved not reset, then refuels and flies) needs a human tester with a real client and a hand-crafted pre-0.9.2 test item, OR is covered at the unit level by JetpackLegacyMigrationTest (red-first, asserts FUEL_CURRENT survives unchanged). Documented gap, not a silent boolean -- same shape as jetpack-give's above.",
+    "verdict": "PASS",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "gadget"
+    ],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-17-0204-jetpack-migrated.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-17-0204-jetpack-migrated.log"
+  },
+  {
+    "id": "ws7-no-bartizan",
+    "title": "WS7 G5/G5b: all six modules, Bartizan REMOVED -- supersedes D6 (legacy). gadget (G5) and civilians (G5b) both dropped their hard Plugins:[Bartizan] module.yml edge, so both now load without Bartizan; turf loads too (Depends:[civilians] only, no direct Bartizan edge of its own -- it was only ever transitively blocked by civilians requiring Bartizan, and that block is gone now that civilians is soft). cops-n-crooks keeps Plugins:[Bartizan] unchanged (explicitly out of WS7 scope) and is the only module skipped, with module.plugin.missing. mail and npcshops load regardless, as always (neither ever had a Bartizan or civilians edge).",
+    "verdict": "PASS",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "civilians",
+      "gadget",
+      "mail",
+      "npcshops",
+      "turf"
+    ],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-17-0204-ws7-no-bartizan.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-17-0204-ws7-no-bartizan.log"
+  }
+]

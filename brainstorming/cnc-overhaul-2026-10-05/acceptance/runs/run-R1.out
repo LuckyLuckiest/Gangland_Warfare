@@ -1,0 +1,20 @@
+
+######## R1
+node:internal/modules/cjs/loader:1148
+  throw err;
+  ^
+
+Error: Cannot find module 'E:\e\Programming\java\Gangland Warfare [Cubed-GTA recoded]\brainstorming\cnc-overhaul-2026-10-05\acceptance\cnc-verdict.js'
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1145:15)
+    at Module._load (node:internal/modules/cjs/loader:986:27)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:174:12)
+    at node:internal/main/run_main_module:28:49 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: []
+}
+
+Node.js v20.13.1
+
+======== SUMMARY (0 = PASS, 1 = FAIL, 2 = REVIEW by a human, ERROR = could not run)
+R1: 1
+Pass criterion for 0.15: R1 R2 R3 R4 N1 N2 N3 N4 all 0 (R1 and N4 may be 2 when only the human read-through is left).

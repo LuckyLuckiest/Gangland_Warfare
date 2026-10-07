@@ -1,0 +1,30 @@
+[Runner] Runner joined the game
+[Runner] [ViaVersion] There is a newer plugin version available: 5.12.0, you're on: 5.12.0-SNAPSHOT
+[Runner] [Server: Gamerule spawn_mobs is now set to: false]
+[Runner] [Server: Gamerule spawn_monsters is now set to: false]
+[Runner] [Server: Gamerule advance_time is now set to: false]
+[Runner] [Server: Set the time to 6000]
+[Runner] [Server: Set the weather to clear]
+[Runner] [Server: Killed 2 entities]
+[Runner] [Server: Applied effect Resistance to Runner]
+[Runner] [Server: Applied effect Instant Health to Runner]
+[Runner] [Server: Teleported Runner to 100.500000, -60.000000, 100.500000]
+[Runner] [DISPATCH] All units, be advised: Runner is wanted, level 2.
+[Runner] [GLW] Your wanted level has been increased ★★☆☆☆.
+[Runner] [RADIO] Sergeant Pointman Joe #1000: Sergeant Assault Ray #1001, close the distance!
+[Runner] [RADIO] Sergeant Assault Joe #1002: Contact! Suspect 33 blocks west!
+[Runner] [RADIO] Sergeant Assault Ray #1001: Copy.
+[Runner] [RADIO] Sergeant Assault Joe #1002: Flanking west, keep him busy!
+[Runner] [Server: Removed 1 item(s) from player Runner]
+[Runner] BTZ >> You received (1) pistol weapon.
+[Runner] [Server] CNCMARK:N5:SHOT1
+[Runner] [RADIO] Sergeant Assault Joe #1002: Shots fired! Converge on the sound!
+[Runner] [Server] CNCMARK:N5:RADIO
+[Runner] [Server] CNCMARK:N5:SHOT2
+[Runner] GLW >> Wanted Status:
+[Runner] ★★☆☆☆
+[Runner/game_info] You are handcuffed
+[Runner] [Server] CNCMARK:STATUS:N5
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/end] [END] disconnect.quitting

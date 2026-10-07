@@ -1,0 +1,218 @@
+[
+ {
+  "id": "WB-44",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. ac20dc80 (T1). WantedStarsTest.drop_cancelledChange_chargesNothing.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-45",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. 743d7415. EntityDamageListenerTest.selfKill_claimsNothing.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-46",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. 743d7415. EntityDamageListenerTest.killAtMaxWanted_addsNoAutoBounty.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-47",
+  "status": "progress",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. Open on the integration branch; the polish lane is fixing it (event before withdraw). Mark fixed once its commit lands.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-48",
+  "status": "open",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. Owner decision: non-trivial Bounty.Minimum or a floor on others' escrow. F2 itself (self-posted bounty is still a crime) is fixed in 743d7415, selfPostedBounty_killIsStillACrime; the exemption is new in 0.15 so F2 got no row.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-49",
+  "status": "open",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. Noticed by the T6 reviewer, not fixed.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-50",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. 38d82ab4 (T7). civilianKill_commitsKillCivilian_andDoesNotIncrementWanted.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-51",
+  "status": "open",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. Noticed by the T13 reviewer, not fixed.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-52",
+  "status": "open",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. Docs drift noted by T16, not fixed.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "US-44",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. 593fca45 (T2). PlayerDeathListenerTest Lose_Money false cases. Semantics changed: false = no charge, no payout; economy.md still describes the old behaviour (docs follow-up).",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "US-45",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. 593fca45 (T2). MoneyFormulaTest + PlayerDeathListenerTest; fallback is balance * 0.15 with one warning.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "CM-39",
+  "status": "open",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. Dead nav links noted by T16, not fixed.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "KS-DB-27",
+  "status": "open",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. Keystone upstream fix not made; Gangland unaffected (always uses the backend path; bounty_posters is TEXT via LONGVARCHAR, 82cf2d71, UserTableTest.bountyPosters_isANullableTextColumn).",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-04",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. bc995b94 (T6) + T1 restore tests: login restore goes through WantedStars.restore. UserDataLoaderTest.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-20",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. bc995b94 (T6) routes every star change through WantedStars (raise/drop/restore) with its cause.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-06",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. Wanted half bc995b94 (T6, sync clock and events via WantedStars.startDecayClock); bounty half d49e8e07 (T13).",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "US-18",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. Wanted half bc995b94 (T6); bounty half d49e8e07 (T13).",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-21",
+  "status": "progress",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. WantedAspect half fixed in bc995b94 (T6); other half not recorded as done.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "LS-22",
+  "status": "progress",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. WantedAspect half fixed in bc995b94 (T6); other half not recorded as done.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "US-05",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. 593fca45 (T2): death withdraw clamped to the balance. PlayerDeathListenerTest.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "TF-49",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. e2b39a53 (final review): WantedKillTracker.exemptsKill seam; a defender's kill in his own contested turf mints no notoriety or bounty timer, heat on and off. Tests: EntityDamageListenerTest.turfDefenderKill_addsNoNotoriety_andStartsNoBountyTimer, HeatWantedTrackerTest.exemptsKill_onlyAPlayerKillDefendingYourOwnTurf, defenderKillInsideOwnContestedTurf_commitsNothing_heatOnAndOff (5c3dfefc).",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "CJ-39",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. ae0315ba (T3): CopDeathEvent fired from onCopDeath. CopListenerDeathTest.copDeath_*.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-29",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. ae0315ba (T3). KillComboTest.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-28",
+  "status": "progress",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. ae0315ba (T3): increment signalled through KillComboEvent INCREMENT, dead onComboIncrement Consumer deleted; remainder not recorded as done.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-12",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. d49e8e07 (T13): bounty post ledger persisted and keyed by poster uuid.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-13",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. d49e8e07 (T13): pin test flipped.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-14",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. d49e8e07 (T13); coverage added in 743d7415: killWithTimerOn_addsKillEachNotoriety_andStartsTheTimer, killEach_overKillMaximum_isSkipped, cancelledBountyEvent_addsNothing.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-16",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. d49e8e07 (T13).",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-43",
+  "status": "fixed",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. d49e8e07 (T13): self-defence exemption in the claim path.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "CJ-19",
+  "status": "open",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. Touched by T12, left open: duplicate detainPlayer needs a real DetainmentService to test.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "CJ-27",
+  "status": "open",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. Touched, left open on purpose: WantedLevelChangeEvent still fires before the level mutates and stays cancellable.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-03",
+  "status": "open",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. Reviewed by T13, left open.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-22",
+  "status": "open",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. Reviewed by T13, left open.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-07",
+  "status": "open",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. Touched by T7, KillCombo unchanged on the heat-off path.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-30",
+  "status": "open",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. Touched by T7, left open.",
+  "updatedAt": "2026-10-05"
+ },
+ {
+  "id": "WB-31",
+  "status": "open",
+  "note": "cnc-lose-them (wt/gangland-0.15.0), not yet merged to master. Touched by T7, left open.",
+  "updatedAt": "2026-10-05"
+ }
+]

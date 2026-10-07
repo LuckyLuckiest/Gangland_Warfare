@@ -1,0 +1,392 @@
+# Review package — Oriel 0.8.0 G0 — working tree vs HEAD fea7e01
+--- status ---
+ M docs/MIGRATION-FROM-GLW.md
+ M gradle.properties
+ M gradle/libs.versions.toml
+ M menu-data/config/src/main/java/org/luckyraven/oriel/config/MenuConfigService.java
+ A menu-data/config/src/test/java/org/luckyraven/oriel/config/MenuConfigServiceForConsumerTest.java
+ M menu-data/config/src/test/java/org/luckyraven/oriel/config/PaginatedControlsBugTest.java
+ A menu-data/config/src/test/resources/menus/chest_paginated_filter.yml
+--- diffstat ---
+warning: in the working copy of 'menu-data/config/src/test/java/org/luckyraven/oriel/config/MenuConfigServiceForConsumerTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'menu-data/config/src/test/resources/menus/chest_paginated_filter.yml', LF will be replaced by CRLF the next time Git touches it
+ docs/MIGRATION-FROM-GLW.md                         |  12 ++-
+ gradle.properties                                  |   2 +-
+ gradle/libs.versions.toml                          |   2 +-
+ .../luckyraven/oriel/config/MenuConfigService.java |  78 ++++++++++++++
+ .../config/MenuConfigServiceForConsumerTest.java   | 118 +++++++++++++++++++++
+ .../oriel/config/PaginatedControlsBugTest.java     |  27 +++++
+ .../resources/menus/chest_paginated_filter.yml     |  20 ++++
+ 7 files changed, 255 insertions(+), 4 deletions(-)
+--- diff ---
+diff --git a/docs/MIGRATION-FROM-GLW.md b/docs/MIGRATION-FROM-GLW.md
+index d900b4f..292811c 100644
+--- a/docs/MIGRATION-FROM-GLW.md
++++ b/docs/MIGRATION-FROM-GLW.md
+@@ -386,9 +386,17 @@ Things you couldn't write in GLW but can in Oriel:
+ - **Hot reload** — `/menu reload` re-parses YAML without disturbing
+   in-flight player sessions.
+ 
+ Things deferred to v0.2+ (PLAN §8):
+ 
+ - Declarative NBT on items (enchantments, custom_model_data, unbreakable).
+-- Paginated filters and sorting.
+ - Custom action registration (Java extension point + YAML macros).
+-- Anvil-driven search on paginated regions.
++
++**Shipped since this list was written (corrected 2026-09-16, Gangland WS2 G0 spike):** paginated filters/sorting
++*and* anvil-driven search on paginated regions are both live — `config/loader/PaginatedControlActions.java`'s
++`set_search` action opens a real `AnvilMenu` prompt, sets the viewer's search query on confirm, and reopens the
++menu; `paginated.search_button:` is sugar over the same path. See the bundled `paginated_search_demo.yml`
++("v0.3 demo") and `PaginatedControlsBugTest.searchThenClearShowsAllItemsAgain`
++(`menu-data/config/src/test/java/.../config/PaginatedControlsBugTest.java`), which narrows a 3-item paginated
++region to 1 on a search query and restores it on clear. The click→AnvilGUI NMS hop itself still can't be
++unit-tested under MockBukkit (see `AnvilMenuBuilderTest`'s class javadoc) — that boundary is pre-existing Oriel
++convention, not new.
+diff --git a/gradle.properties b/gradle.properties
+index 9e8e372..1d33cf5 100644
+--- a/gradle.properties
++++ b/gradle.properties
+@@ -1,5 +1,5 @@
+ group=org.luckyraven.oriel
+-version=0.7.0-SNAPSHOT
++version=0.8.0-SNAPSHOT
+ org.gradle.configuration-cache=true
+ org.gradle.parallel=true
+ org.gradle.caching=true
+diff --git a/gradle/libs.versions.toml b/gradle/libs.versions.toml
+index 7bd5665..b8763af 100644
+--- a/gradle/libs.versions.toml
++++ b/gradle/libs.versions.toml
+@@ -4,13 +4,13 @@ spigot = "1.16.5-R0.1-SNAPSHOT"
+ lombok = "1.18.34"
+ jetbrains-annotations = "24.1.0"
+ 
+ # Keystone — the shared infrastructure hub (E:\Programming\java\Keystone, mvn clean install →
+ # mavenLocal). Consumed compileOnly (never shaded; the Keystone server jar provides the classes)
+ # + testImplementation (compileOnly is on neither test classpath).
+-keystone = "1.7.0"
++keystone = "1.9.2"
+ # Matches Keystone's log4j.version — the server provides log4j2 at runtime; Keystone's Logger
+ # wrapper (behind @CustomLog) compiles against log4j-api.
+ log4j = "2.19.0"
+ 
+ # Tests. MockBukkit 4.x / v1.21 require Java 21; v1.20:3.88.1 is the newest Java-17 line.
+ junit = "5.10.2"
+diff --git a/menu-data/config/src/main/java/org/luckyraven/oriel/config/MenuConfigService.java b/menu-data/config/src/main/java/org/luckyraven/oriel/config/MenuConfigService.java
+index 3de3568..8476d5c 100644
+--- a/menu-data/config/src/main/java/org/luckyraven/oriel/config/MenuConfigService.java
++++ b/menu-data/config/src/main/java/org/luckyraven/oriel/config/MenuConfigService.java
+@@ -1,9 +1,10 @@
+ package org.luckyraven.oriel.config;
+ 
+ import lombok.CustomLog;
++import org.bukkit.plugin.ServicesManager;
+ import org.bukkit.plugin.java.JavaPlugin;
+ import org.jetbrains.annotations.Nullable;
+ import org.luckyraven.oriel.chest.internal.PaginatedControlRegistry;
+ import org.luckyraven.oriel.config.action.ActionRegistry;
+ import org.luckyraven.oriel.config.command.MenuCommandRegistrar;
+ import org.luckyraven.oriel.config.component.ComponentRegistry;
+@@ -16,15 +17,17 @@ import org.luckyraven.keystone.persistence.config.ConfigNode;
+ import org.luckyraven.keystone.persistence.config.MappingNode;
+ import org.luckyraven.keystone.persistence.config.ScalarNode;
+ import org.luckyraven.keystone.persistence.config.SequenceNode;
+ import org.luckyraven.keystone.persistence.config.NodeReader;
+ import org.luckyraven.keystone.persistence.config.ConfigReport;
+ import org.luckyraven.keystone.persistence.config.Severity;
++import org.luckyraven.oriel.config.requirement.InMemoryRequirementRegistry;
+ import org.luckyraven.oriel.config.requirement.RequirementRegistry;
+ import org.luckyraven.oriel.core.Menu;
+ import org.luckyraven.keystone.cooldown.CooldownService;
++import org.luckyraven.keystone.cooldown.InMemoryCooldownService;
+ import org.luckyraven.oriel.core.args.ArgumentProcessorSpec;
+ import org.luckyraven.keystone.placeholder.PlaceholderProvider;
+ import org.luckyraven.oriel.core.registry.*;
+ import org.luckyraven.oriel.furnace.FurnaceVariant;
+ import org.luckyraven.keystone.diagnostics.Fault;
+ import org.luckyraven.keystone.result.Pipeline;
+@@ -137,12 +140,87 @@ public final class MenuConfigService extends FolderLoader {
+ 		addExpectedFile(new FileHandler(plugin, "argument_processor_demo", MENUS_FOLDER, "yml"));
+ 
+ 		// Register with the FileManager so reloadLifecycleBeans cascades into our initialize() on /menu reload.
+ 		fileManager.registerInitializer(this);
+ 	}
+ 
++	/**
++	 * Convenience factory for a host plugin that only needs Oriel's default wiring — the 3 arguments every known
++	 * consumer (Gangland and friends) actually has to hand at bean-construction time. The full constructor takes 17
++	 * arguments; this factory resolves the 9 that Oriel publishes on Bukkit's {@link ServicesManager}
++	 * ({@link MenuRegistry}, {@link ActionRegistry}, {@link SourceProviderRegistry}, {@link FilterRegistry},
++	 * {@link SortRegistry}, {@link SearchMatcherRegistry}, {@link ItemProviderRegistry},
++	 * {@link MaterialSourceRegistry}, {@link ComponentRegistry}) and builds the remaining 4 itself:
++	 *
++	 * <ul>
++	 *   <li>{@link PaginatedControlRegistry} — a fresh instance private to the returned service. It only needs to
++	 *       track {@code plugin}'s own paginated menus, so it is never shared with Oriel's own copy.</li>
++	 *   <li>{@link RequirementRegistry} — a fresh {@link InMemoryRequirementRegistry}, the same default every other
++	 *       Oriel consumer gets.</li>
++	 *   <li>{@link MenuCommandRegistrar} — constructed against <b>{@code plugin}</b>, not Oriel:
++	 *       {@code open.command}/{@code open.commands} aliases this service registers belong to the
++	 *       <em>calling</em> plugin, appear on that plugin's help page, and are torn down when that plugin (not
++	 *       Oriel) disables.</li>
++	 *   <li>{@link CooldownService} — <b>Keystone's contract type, not Oriel's</b>
++	 *       ({@code org.luckyraven.keystone.cooldown.CooldownService} in {@code keystone-common}). Oriel does not
++	 *       publish one on the {@code ServicesManager}: every Keystone-based plugin is expected to own its own bean
++	 *       (Keystone's {@code getting-started.md}: {@code @Bean CooldownService cooldowns() { return new
++	 *       InMemoryCooldownService(); }}). This factory installs a fresh {@link InMemoryCooldownService} so
++	 *       {@code cooldown:} requirements in {@code plugin}'s own menus work out of the box. If {@code plugin}
++	 *       already has its own {@code CooldownService} bean (for example a persistent one backed by its own
++	 *       database), skip this factory and call the 17-arg constructor directly instead — otherwise Oriel silently
++	 *       allocates a second, unrelated in-memory one.</li>
++	 * </ul>
++	 *
++	 * <p>{@code allow_elevated_actions} (the {@code op:}/{@code permission:} action gate) defaults to
++	 * <b>disabled</b> here, matching {@link ActionParser#setElevatedActionsGate}'s own null-gate default. A
++	 * consumer that wants its menus to run elevated actions must call the 17-arg constructor with its own
++	 * {@link java.util.function.BooleanSupplier}.
++	 *
++	 * @param plugin       the consumer plugin. Owns the {@link MenuCommandRegistrar} registrations built from this
++	 *                     service's {@code open:} commands (see above) — <b>not</b> Oriel.
++	 * @param fileManager  {@code plugin}'s own {@link FileManager}; this service's {@code plugins/<plugin>/menus/}
++	 *                     folder is seeded and reloaded through it, exactly like any other {@link FolderLoader}.
++	 * @param placeholders {@code plugin}'s {@link PlaceholderProvider} chain for {@code %...%} tokens in menu YAML.
++	 * @return a fully wired {@link warning: in the working copy of 'menu-data/config/src/test/java/org/luckyraven/oriel/config/MenuConfigServiceForConsumerTest.java', LF will be replaced by CRLF the next time Git touches it
+MenuConfigService}, ready to be handed to {@code fileManager} the same way the
++	 *         17-arg constructor's result would be.
++	 * @throws IllegalStateException if Oriel has not published its registries on the {@link ServicesManager} yet —
++	 *                                call this only after Oriel has enabled. A hard {@code depend: Oriel} in
++	 *                                {@code plugin.yml} guarantees that for any bean built during or after the
++	 *                                consumer's own {@code onEnable}.
++	 */
++	public static MenuConfigService forConsumer(JavaPlugin plugin, FileManager fileManager,
++	                                            PlaceholderProvider placeholders) {
++		ServicesManager services = plugin.getServer().getServicesManager();
++		MenuRegistry    registry = requireService(services, MenuRegistry.class);
++		return new MenuConfigService(plugin, registry, fileManager, placeholders,
++		                             requireService(services, ActionRegistry.class),
++		                             requireService(services, SourceProviderRegistry.class),
++		                             requireService(services, FilterRegistry.class),
++		                             requireService(services, SortRegistry.class),
++		                             requireService(services, SearchMatcherRegistry.class),
++		                             requireService(services, ItemProviderRegistry.class),
++		                             requireService(services, MaterialSourceRegistry.class),
++		                             new PaginatedControlRegistry(),
++		                             requireService(services, ComponentRegistry.class),
++		                             new MenuCommandRegistrar(plugin, registry),
++		                             new InMemoryRequirementRegistry(), new InMemoryCooldownService(),
++		                             () -> false);
++	}
++
++	private static <T> T requireService(ServicesManager services, Class<T> type) {
++		T bean = services.load(type);
++		if (bean == null) {
++			throw new IllegalStateException("Oriel has not published " + type.getSimpleName() + " on the " +
++			                                "ServicesManager yet — MenuConfigService.forConsumer(...) must run " +
++			                                "after Oriel's plugin has enabled (a hard `depend: Oriel` in " +
++			                                "plugin.yml guarantees this for beans built during or after onEnable).");
++		}
++		return bean;
++	}
++
+ 	@Override
+ 	public void initialize() {
+ 		// Drop everything this service owns from the registry before re-scanning.
+ 		for (String name : ownedRegistryNames) {
+ 			registry.unregister(name);
+ 		}
+diff --git a/menu-data/config/src/test/java/org/luckyraven/oriel/config/MenuConfigServiceForConsumerTest.java b/menu-data/config/src/test/java/org/luckyraven/oriel/config/MenuConfigServiceForConsumerTest.java
+new file mode 100644
+index 0000000..4025550
+--- /dev/null
++++ b/menu-data/config/src/test/java/org/luckyraven/oriel/config/MenuConfigServiceForConsumerTest.java
+@@ -0,0 +1,118 @@
++package org.luckyraven.oriel.config;
++
++import be.seeseemelk.mockbukkit.MockBukkit;
++import be.seeseemelk.mockbukkit.ServerMock;
++import org.bukkit.plugin.ServicePriority;
++import org.bukkit.plugin.ServicesManager;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.junit.jupiter.api.AfterEach;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.keystone.persistence.FileManager;
++import org.luckyraven.keystone.placeholder.PlaceholderProvider;
++import org.luckyraven.oriel.config.action.ActionRegistry;
++import org.luckyraven.oriel.config.action.InMemoryActionRegistry;
++import org.luckyraven.oriel.config.component.ComponentRegistry;
++import org.luckyraven.oriel.config.component.InMemoryComponentRegistry;
++import org.luckyraven.oriel.core.registry.FilterRegistry;
++import org.luckyraven.oriel.core.registry.InMemoryFilterRegistry;
++import org.luckyraven.oriel.core.registry.InMemoryItemProviderRegistry;
++import org.luckyraven.oriel.core.registry.InMemoryMaterialSourceRegistry;
++import org.luckyraven.oriel.core.registry.InMemoryMenuRegistry;
++import org.luckyraven.oriel.core.registry.InMemorySearchMatcherRegistry;
++import org.luckyraven.oriel.core.registry.InMemorySortRegistry;
++import org.luckyraven.oriel.core.registry.InMemorySourceProviderRegistry;
++import org.luckyraven.oriel.core.registry.ItemProviderRegistry;
++import org.luckyraven.oriel.core.registry.MaterialSourceRegistry;
++import org.luckyraven.oriel.core.registry.MenuRegistry;
++import org.luckyraven.oriel.core.registry.SearchMatcherRegistry;
++import org.luckyraven.oriel.core.registry.SortRegistry;
++import org.luckyraven.oriel.core.registry.SourceProviderRegistry;
++
++import java.io.IOException;
++import java.nio.file.Files;
++import java.nio.file.Path;
++
++import static org.junit.jupiter.api.Assertions.assertNotNull;
++import static org.junit.jupiter.api.Assertions.assertThrows;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++
++/**
++ * Coverage for {@link MenuConfigService#forConsumer(JavaPlugin, FileManager, PlaceholderProvider)} — the 3-arg
++ * factory a host plugin (e.g. Gangland's {@code OrielMenuConfig} bean) calls once Oriel's plugin has published its
++ * registries on the {@link ServicesManager}, in place of hand-assembling the full 17-arg constructor.
++ */
++final class MenuConfigServiceForConsumerTest {
++
++	private static final String DEMO = """
++			type: chest
++			title: "&6Consumer Demo"
++			rows: 1
++			open:
++			  command: demo
++			slots:
++			  0:
++			    item: EMERALD
++			""";
++
++	private ServerMock server;
++	private JavaPlugin plugin;
++
++	@BeforeEach
++	void start() {
++		server = MockBukkit.mock();
++		plugin = MockBukkit.createMockPlugin();
++	}
++
++	@AfterEach
++	void stop() {
++		MockBukkit.unmock();
++	}
++
++	private void publishOrielRegistries() {
++		ServicesManager services = server.getServicesManager();
++		services.register(MenuRegistry.class, new InMemoryMenuRegistry(), plugin, ServicePriority.Normal);
++		services.register(ActionRegistry.class, new InMemoryActionRegistry(), plugin, ServicePriority.Normal);
++		services.register(SourceProviderRegistry.class, new InMemorySourceProviderRegistry(), plugin,
++		                  ServicePriority.Normal);
++		services.register(FilterRegistry.class, new InMemoryFilterRegistry(), plugin, ServicePriority.Normal);
++		services.register(SortRegistry.class, new InMemorySortRegistry(), plugin, ServicePriority.Normal);
++		services.register(SearchMatcherRegistry.class, new InMemorySearchMatcherRegistry(), plugin,
++		                  ServicePriority.Normal);
++		services.register(ItemProviderRegistry.class, new InMemoryItemProviderRegistry(), plugin,
++		                  ServicePriority.Normal);
++		services.register(MaterialSourceRegistry.class, new InMemoryMaterialSourceRegistry(), plugin,
++		                  ServicePriority.Normal);
++		services.register(ComponentRegistry.class, new InMemoryComponentRegistry(), plugin, ServicePriority.Normal);
++	}
++
++	@Test
++	void resolvesPublishedRegistriesAndLoadsAConsumerMenu() throws IOException {
++		publishOrielRegistries();
++
++		Path menusDir = plugin.getDataFolder().toPath().resolve("menus");
++		Files.createDirectories(menusDir);
++		Files.writeString(menusDir.resolve("demo.yml"), DEMO);
++
++		PlaceholderProvider passthrough = (p, raw) -> raw;
++		MenuConfigService   menus       = MenuConfigService.forConsumer(plugin, new FileManager(plugin),
++		                                                                passthrough);
++		menus.onInitialize(true);
++
++		assertTrue(menus.ownedNames().contains("demo"), "forConsumer's service should load the consumer's own menu");
++		assertNotNull(server.getCommandMap().getCommand("demo"), "the open.command alias should be registered");
++	}
++
++	@Test
++	void failsFastWithANamedServiceWhenOrielHasNotPublishedYet() {
++		// None of Oriel's registries are registered on the ServicesManager — simulates calling forConsumer
++		// before Oriel has enabled (or without Oriel installed at all).
++		PlaceholderProvider passthrough = (p, raw) -> raw;
++		IllegalStateException thrown = assertThrows(IllegalStateExceptiwarning: in the working copy of 'menu-data/config/src/test/resources/menus/chest_paginated_filter.yml', LF will be replaced by CRLF the next time Git touches it
+on.class,
++		                                            () -> MenuConfigService.forConsumer(plugin,
++		                                                                                new FileManager(plugin),
++		                                                                                passthrough));
++		assertTrue(thrown.getMessage().contains("MenuRegistry"),
++		           () -> "expected the failure to name the missing service: " + thrown.getMessage());
++	}
++}
+diff --git a/menu-data/config/src/test/java/org/luckyraven/oriel/config/PaginatedControlsBugTest.java b/menu-data/config/src/test/java/org/luckyraven/oriel/config/PaginatedControlsBugTest.java
+index 90b5352..f54b21d 100644
+--- a/menu-data/config/src/test/java/org/luckyraven/oriel/config/PaginatedControlsBugTest.java
++++ b/menu-data/config/src/test/java/org/luckyraven/oriel/config/PaginatedControlsBugTest.java
+@@ -102,12 +102,39 @@ final class PaginatedControlsBugTest {
+ 		chest.rerender();
+ 		assertEquals(3, countNonNullInRegion(chest),
+ 		             "after clear, all 3 items should reappear (current query="
+ 		             + state.searchQueryFor(player.getUniqueId()) + ")");
+ 	}
+ 
++	@Test
++	void cycleFilterActionNarrowsAPaginatedRegionToARegisteredFilter() {
++		// G0 spike (a): "a registered filter filters" — filter_options: [none, enchanted] over 3 items, only 1
++		// of which is enchanted. "enchanted" comes from StandardFilters, registered in start() below the same
++		// way MenuConfigService's constructor installs it for every real deployment; cycle_filter must advance
++		// past "none" (3 visible) onto "enchanted" (1 visible) without the test calling FilterRegistry directly.
++		Fixtures.Loaded f       = Fixtures.load("chest_paginated_filter");
++		Supplier<Menu>  factory = loader.load(f.root, "chest_paginated_filter");
++		assertNotNull(factory, () -> "factory null; report=" + f.report.issues());
++
++		PaginatedControlState state = controls.lookup("chest_paginated_filter");
++		assertNotNull(state, "control state should be registered for a menu declaring filter_options");
++
++		ChestMenu  chest  = assertInstanceOf(ChestMenu.class, factory.get());
++		PlayerMock player = server.addPlayer();
++		chest.open(player);
++
++		assertEquals(3, countNonNullInRegion(chest), "all 3 items visible with filter_options[0] = none");
++
++		state.cycleFilter(player.getUniqueId());
++		chest.invalidatePaginatedRegions(player);
++		chest.rerender();
++
++		assertEquals(1, countNonNullInRegion(chest),
++		             "cycling onto the registered 'enchanted' filter should narrow to the 1 enchanted item");
++	}
++
+ 	@Test
+ 	void rightClickFiresClearSearchAction() {
+ 		Fixtures.Loaded f       = Fixtures.load("chest_paginated_interactive");
+ 		java.util.function.Supplier<Menu> factory = loader.load(f.root, "chest_paginated_interactive");
+ 		assertNotNull(factory, () -> "factory null; report=" + f.report.issues());
+ 
+diff --git a/menu-data/config/src/test/resources/menus/chest_paginated_filter.yml b/menu-data/config/src/test/resources/menus/chest_paginated_filter.yml
+new file mode 100644
+index 0000000..63ed555
+--- /dev/null
++++ b/menu-data/config/src/test/resources/menus/chest_paginated_filter.yml
+@@ -0,0 +1,20 @@
++type: chest
++title: "&aFilterable"
++rows: 6
++paginated:
++   source:
++      items:
++         - { item: DIAMOND_SWORD, name: "&bPlain Sword" }
++         - item: DIAMOND_SWORD
++           name: "&bEnchanted Sword"
++           enchantments:
++              SHARPNESS: 1
++         - { item: DIAMOND_SWORD, name: "&bAnother Plain Sword" }
++   sort_options:
++      - by_name
++   filter_options:
++      - none
++      - enchanted
++   region:
++      rows: [1, 4]
++      cols: [1, 7]

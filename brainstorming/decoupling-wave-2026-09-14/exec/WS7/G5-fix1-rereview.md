@@ -1,0 +1,4 @@
+# Re-review — WS7 G5+G5b fix round 1 — 2026-09-20 (Sonnet, transcribed)
+C1 FIXED (CiviliansModule.java:53-55; gate test both branches, red quoted) · C2 FIXED (BartizanNpcWeapons.java:37/:58 before the class literal :39/:60; guard test red NPE) · I1 FIXED (module.yml:6) · Allowlist FIXED (BartizanReferenceScan spec-conformant constant-pool walker; exact sets; non-vacuous) · I2 FIXED (reds quoted) · M1 FIXED · M2 FIXED (CarDamageMath byte-identical body, both listeners call it) · I3 FIXED (5/5 smoke PASS; console cannot force a civilian spawn → G6 manual checklist).
+New breakage: none (softdepend guarantees Bartizan enabled before configure(); target/classes resolves from module basedir under Surefire both ways). Cosmetic: BartizanNpcWeaponsTest.java:130 method name vs display name.
+Verdict: all addressed.

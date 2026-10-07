@@ -1,0 +1,233 @@
+[
+ {
+  "i": 0,
+  "step": {
+   "join": "Runner",
+   "after": 800
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "spawned 26.1"
+ },
+ {
+  "i": 1,
+  "step": {
+   "console": "gamerule spawn_mobs false"
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "gamerule spawn_mobs false"
+ },
+ {
+  "i": 2,
+  "step": {
+   "console": "gamerule spawn_monsters false"
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "gamerule spawn_monsters false"
+ },
+ {
+  "i": 3,
+  "step": {
+   "console": "gamerule advance_time false"
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "gamerule advance_time false"
+ },
+ {
+  "i": 4,
+  "step": {
+   "console": "time set 6000"
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "time set 6000"
+ },
+ {
+  "i": 5,
+  "step": {
+   "console": "weather clear"
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "weather clear"
+ },
+ {
+  "i": 6,
+  "step": {
+   "console": "kill @e[type=minecraft:slime]"
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "kill @e[type=minecraft:slime]"
+ },
+ {
+  "i": 7,
+  "step": {
+   "console": "gamemode survival Runner",
+   "after": 200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "gamemode survival Runner"
+ },
+ {
+  "i": 8,
+  "step": {
+   "console": "effect give Runner minecraft:resistance 100000 4 true",
+   "after": 200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "effect give Runner minecraft:resistance 100000 4 true"
+ },
+ {
+  "i": 9,
+  "step": {
+   "console": "attribute Runner minecraft:max_health base set 1024",
+   "after": 200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "attribute Runner minecraft:max_health base set 1024"
+ },
+ {
+  "i": 10,
+  "step": {
+   "console": "effect give Runner minecraft:instant_health 1 8 true",
+   "after": 200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "effect give Runner minecraft:instant_health 1 8 true"
+ },
+ {
+  "i": 11,
+  "step": {
+   "console": "tp Runner 100 -60 100 0 0",
+   "after": 500
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "tp Runner 100 -60 100 0 0"
+ },
+ {
+  "i": 12,
+  "step": {
+   "chat": "/glw wanted add 2",
+   "after": 800
+  },
+  "ok": true,
+  "ms": 1,
+  "detail": "/glw wanted add 2"
+ },
+ {
+  "i": 13,
+  "step": {
+   "expectChat": "increased|wanted",
+   "timeout": 5000
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "[DISPATCH] All units, be advised: Runner is wanted, level 2."
+ },
+ {
+  "i": 14,
+  "step": {
+   "wait": 5000
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "5000ms"
+ },
+ {
+  "i": 15,
+  "step": {
+   "console": "say CNCMARK:N1:HIDING",
+   "after": 100
+  },
+  "ok": true,
+  "ms": 1,
+  "detail": "say CNCMARK:N1:HIDING"
+ },
+ {
+  "i": 16,
+  "step": {
+   "console": "fill 96 -61 126 104 -56 134 minecraft:stone hollow",
+   "after": 500
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "fill 96 -61 126 104 -56 134 minecraft:stone hollow"
+ },
+ {
+  "i": 17,
+  "step": {
+   "console": "tp Runner 100 -60 130",
+   "after": 300
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "tp Runner 100 -60 130"
+ },
+ {
+  "i": 18,
+  "step": {
+   "expectChat": "decreased",
+   "timeout": 40000
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "[GLW] Your wanted level has been decreased ★☆☆☆☆."
+ },
+ {
+  "i": 19,
+  "step": {
+   "console": "say CNCMARK:N1:DROPPED",
+   "after": 100
+  },
+  "ok": true,
+  "ms": 1,
+  "detail": "say CNCMARK:N1:DROPPED"
+ },
+ {
+  "i": 20,
+  "step": {
+   "chat": "/glw wanted",
+   "after": 1200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "/glw wanted"
+ },
+ {
+  "i": 21,
+  "step": {
+   "console": "say CNCMARK:STATUS:N1-after-drop",
+   "after": 100
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "say CNCMARK:STATUS:N1-after-drop"
+ },
+ {
+  "i": 22,
+  "step": {
+   "wait": 1500
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "1500ms"
+ },
+ {
+  "i": 23,
+  "step": {
+   "quit": true
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "quit Runner"
+ }
+]

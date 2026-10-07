@@ -1,0 +1,1512 @@
+# Review package — Plaque 0.1.0 G2 — working tree vs HEAD debfbac (G0+G1 commit)
+--- status ---
+ M CLAUDE.md
+ M README.md
+ M pom.xml
+ M src/main/java/org/luckyraven/plaque/Plaque.java
+ A src/main/java/org/luckyraven/plaque/board/BoardManager.java
+ A src/main/java/org/luckyraven/plaque/bootstrap/DefaultListenerService.java
+ A src/main/java/org/luckyraven/plaque/bootstrap/PlaqueContext.java
+ A src/main/java/org/luckyraven/plaque/command/ReloadCommand.java
+ A src/main/java/org/luckyraven/plaque/config/BoardConfig.java
+ A src/main/java/org/luckyraven/plaque/config/BoardSettings.java
+ A src/main/java/org/luckyraven/plaque/config/FileConfig.java
+ A src/main/java/org/luckyraven/plaque/config/KernelConfig.java
+ A src/main/java/org/luckyraven/plaque/listener/PlayerBoardListener.java
+ A src/main/java/org/luckyraven/plaque/listener/RemoveBoardListener.java
+ A src/main/java/org/luckyraven/plaque/placeholder/PapiText.java
+ M src/main/resources/plugin.yml
+ A src/main/resources/scoreboard.yml
+ A src/main/resources/settings.yml
+ A src/test/java/org/luckyraven/plaque/board/BoardManagerTest.java
+ A src/test/java/org/luckyraven/plaque/placeholder/PapiTextTest.java
+--- diffstat ---
+warning: in the working copy of 'CLAUDE.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'pom.xml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/Plaque.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/resources/plugin.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/board/BoardManager.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/bootstrap/DefaultListenerService.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/bootstrap/PlaqueContext.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/command/ReloadCommand.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/config/BoardConfig.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/config/BoardSettings.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/config/FileConfig.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/config/KernelConfig.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/listener/PlayerBoardListener.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/listener/RemoveBoardListener.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/placeholder/PapiText.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/resources/scoreboard.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/resources/settings.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/org/luckyraven/plaque/board/BoardManagerTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/org/luckyraven/plaque/placeholder/PapiTextTest.java', LF will be replaced by CRLF the next time Git touches it
+ CLAUDE.md                                          | 110 +++++++++++++---
+ README.md                                          |  35 +++--
+ pom.xml                                            |  10 ++
+ src/main/java/org/luckyraven/plaque/Plaque.java    |  69 +++++++++-
+ .../org/luckyraven/plaque/board/BoardManager.java  | 114 ++++++++++++++++
+ .../plaque/bootstrap/DefaultListenerService.java   |  26 ++++
+ .../luckyraven/plaque/bootstrap/PlaqueContext.java | 144 +++++++++++++++++++++
+ .../luckyraven/plaque/command/ReloadCommand.java   |  68 ++++++++++
+ .../org/luckyraven/plaque/config/BoardConfig.java  |  50 +++++++
+ .../luckyraven/plaque/config/BoardSettings.java    |  48 +++++++
+ .../org/luckyraven/plaque/config/FileConfig.java   |  33 +++++
+ .../org/luckyraven/plaque/config/KernelConfig.java |  54 ++++++++
+ .../plaque/listener/PlayerBoardListener.java       |  30 +++++
+ .../plaque/listener/RemoveBoardListener.java       |  31 +++++
+ .../luckyraven/plaque/placeholder/PapiText.java    |  43 ++++++
+ src/main/resources/plugin.yml                      |  11 ++
+ src/main/resources/scoreboard.yml                  | 116 +++++++++++++++++
+ src/main/resources/settings.yml                    |  27 ++++
+ .../luckyraven/plaque/board/BoardManagerTest.java  | 103 +++++++++++++++
+ .../plaque/placeholder/PapiTextTest.java           |  89 +++++++++++++
+ 20 files changed, 1178 insertions(+), 33 deletions(-)
+--- diff ---
+warning: in the working copy of 'CLAUDE.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'pom.xml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/Plaque.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/resources/plugin.yml', LF will be replaced by CRLF the next time Git touches it
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 9f96f16..928991b 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -16,28 +16,82 @@ PlaceholderAPI are the only cross-plugin surface). Depends on Keystone (`org.luc
+ 
+ **Spigot only — not Paper.** Do NOT use Paper-specific APIs (e.g. `io.papermc.paper.event.player.PlayerJumpEvent`
+ or any `io.papermc.*` import). Use Spigot/Bukkit equivalents instead. API floor is Spigot 1.16.5, matching
+ Keystone's own floor.
+ 
+-## Package map (as built, G0/G1)
+-
+-- `org.luckyraven.plaque.Plaque` — the `JavaPlugin` entry point. A G0/G1 stub: `onEnable`/`onDisable` only.
+-  Bootstrap wiring (a `BeanFactory`-driven context, `settings.yml`/`scoreboard.yml` loading, the placeholder
+-  chain, the enable-time board sweep, `/plaque reload`) lands in G2.
+-- `org.luckyraven.plaque.board` — the rendering engine, ported verbatim (package rename only) from Gangland's
+-  `gangland-ui/scoreboard-api`, with two fixes applied at port time (see "Deviations from upstream" below):
++## Package map (as built through G2)
++
++- `org.luckyraven.plaque.Plaque` — the `JavaPlugin` entry point. `onEnable()` builds `PlaqueContext` and calls
++  `bootstrap()`, then `dependencyHandler()` (ViaVersion/PlaceholderAPI soft-dep checks, WS1-D3), then B5's
++  enable-time board sweep. `onDisable()` ends every active board before shutting down beans.
++- `org.luckyraven.plaque.bootstrap`
++  - `PlaqueContext` — owns the single `DependencyContainer`/`BeanFactory`; drives KERNEL → FILE → CONFIG →
++    LISTENER → COMMAND (Keystone's DATABASE phase runs empty — this plugin keeps no database). Same shape as
++    Bartizan's `BartizanContext`.
++  - `DefaultListenerService` — Keystone ships only the abstract `ListenerService`; every consumer plugin writes
++    this one-method concrete subclass itself.
++- `org.luckyraven.plaque.config` — three `@Configuration` classes, one per phase that needs one:
++  - `KernelConfig` (KERNEL) — `Diagnostics` hub, `FileManager` (registers `settings.yml` + `scoreboard.yml`).
++  - `FileConfig` (FILE) — `BoardSettings` + `BoardAddon` beans, each self-registers as a `FileInitializer`.
++  - `BoardConfig` (CONFIG, default phase) — the `PlaceholderProvider` bean (`PapiText`), `BoardManager`,
++    `DefaultListenerService`, `CommandManager`.
++  - `BoardSettings` — reads `Enable`/`Driver` off `settings.yml` via plain `FileConfiguration` getters (no
++    Gangland-style `NodeReader` validation layer — that class is Gangland application code, not Keystone).
++- `org.luckyraven.plaque.board` — the rendering engine, ported (package rename only) from Gangland's
++  `gangland-ui/scoreboard-api`, with two fixes applied at G1 port time (see "Deviations from upstream" below):
+   - `Board` (was `Scoreboard`) — owns the per-tick `RepeatingTimer` and start/stop lifecycle (UI-02 fix intact:
+     `timer.start(false)`, never `start(true)`).
++  - `BoardManager` (was `ScoreboardManager`) — G2 addition. Owns the `Map<UUID, Board>` registry (this plugin has
++    no `User`/`UserManager` to hold a per-player board reference the way Gangland did), the `DriverV3` factory
++    (`getDriverHandler`), and the enable-time/reload sweep (`sweepOnlinePlayers()`, `rebuildAll()`, `removeAll()`
++    — B5). `viaApi` is a mutable field set once by `Plaque#dependencyHandler()` after bootstrap, never bean-
++    injected — see "ViaAPI wiring" below.
+   - `board.driver.DriverHandler` — abstract base; owns the live `FastBoard` instance and the ViaVersion-aware
+     `FastBoardImpl.hasLinesMaxLength()` override (works for every driver, not just V3 — ViaVersion coupling is
+     repo-wide, not driver-specific).
+   - `board.driver.version.DriverV3` — the **only** driver ported (WS1 decision D1(b)). `DriverV1`/`DriverV2` and
+     the reflection-based `getDrivers()` scan were deleted, not carried forward — see "Silent migration" below.
+   - `board.part.Line` / `board.part.StaticLine` — per-board line state with rotation-cursor content cycling
+     (UI-01 fix intact: `Line#copy()`/`copyAll()` give every board its own instances).
+   - `board.configuration.BoardAddon` (was `ScoreboardAddon`) — a `FileInitializer` that parses `scoreboard.yml`
+-    into `Line`/`StaticLine` instances. Not yet wired to a `FileManager` bean — that's G2.
++    into `Line`/`StaticLine` instances.
++- `org.luckyraven.plaque.listener` — `PlayerBoardListener` (`PlayerJoinEvent` → `BoardManager#createBoard`),
++  `RemoveBoardListener` (`PlayerQuitEvent` → `BoardManager#removeBoard`). Flat under `listener/`, not
++  `listener/player/` — this is a single-purpose plugin, not a Gangland module (the `feedback_listener_package`
++  house rule is a Gangland-monorepo convention, not binding here; the WS1 plan's own file tree places both flat).
++- `org.luckyraven.plaque.command` — `ReloadCommand` (`/plaque reload`), a **keystone-command** `Command`, not a
++  plain `CommandExecutor` — see "Command framework" below. No `InformationManager`/`commands.json` help-listing
++  layer: this plugin has exactly one command, so that machinery would be scaffolding for a listing nobody needs
++  yet (ponytail).
++- `org.luckyraven.plaque.placeholder` — `PapiText`, the PAPI → `ServicesManager` `PlaceholderProvider` → raw-text
++  chain (WS1-D5/A5). Implements `PlaceholderProvider` directly (a thin wrapper around
++  `CompositePlaceholderProvider.of(papiOrPassthrough, serviceFallbackLambda)`) so it drops straight into
++  `DriverHandler`'s constructor as the `placeholder` bean.
++
++## Command framework: keystone-command, not a plain CommandExecutor
++
++**This overrides an earlier draft of the WS1 plan document** (`WS1-scoreboard.md` §9 D2 recommended a plain
++Bukkit `CommandExecutor`, arguing a full argument-tree framework is overkill for one leaf command). The user
++decided otherwise in the wave's decisions register (WS1-D2): *"stick with keystone implementation since they
++already have the whole library"* — orchestrator ruling W5 treats this as authoritative over the plan document's
++own recommendation. `/plaque reload` is therefore a `org.luckyraven.keystone.command.Command` subclass
++(`@CommandHandler`-annotated, discovered by the COMMAND-phase scan), `keystone-command` is a real `provided`
++dependency, and `PlaqueContext` runs a real COMMAND phase (`CommandManager`, `CommandTabCompleter`,
++`BrigadierTabRegistrar.registerIfSupported`) — mirroring Bartizan's `ReloadCommand`/`BartizanContext` almost
++exactly. If a future session finds a plan artifact still describing "plain CommandExecutor" for this plugin,
++that text is stale; this file and the shipped code are the source of truth.
++
++## ViaAPI wiring: a mutable field, not a bean
++
++`BoardManager.viaApi` (`com.viaversion.viaversion.api.ViaAPI<?>`, `@Setter`) is **not** constructor-injected.
++`DependencyContainer.registerInstance` calls `instance.getClass()` on whatever is passed — registering a `null`
++`ViaAPI` (the common case: ViaVersion is a soft dependency, usually absent in dev/test) would NPE at bean-graph
++construction time. Instead `Plaque#dependencyHandler()` calls `context.get(BoardManager.class).setViaApi(...)`
++imperatively, once, right after `context.bootstrap()` completes — the exact "resolve lazily, after bootstrap,
++never at construction" pattern Gangland's own `Gangland.java` field + `ScoreboardManager.getDriverHandler`'s
++`gangland.getViaAPI()` call used. Do not try to make `ViaAPI` a `@Bean`-produced or constructor-injected
++dependency without re-checking this.
+ 
+ ## Deviations from upstream Gangland (applied during the G1 port, not carried in unfixed)
+ 
+ - **UI-17 (fixed):** `Line.getCurrentContent()`/`Line.update()` used to throw `IndexOutOfBoundsException` /
+   `ArithmeticException` on an empty `Lines:` list (a misconfigured board). Both now guard with an early
+@@ -49,24 +103,29 @@ Keystone's own floor.
+   unified SPI the rest of the Keystone ecosystem is migrating onto. `Player extends OfflinePlayer`, so every call
+   site that used to pass a `Player` is unchanged.
+ - **UI-01/UI-02 (already fixed upstream, ported as-is):** per-board `Line` copies and the synchronous
+   `RepeatingTimer` — do not "re-fix" these, they are already correct.
+ 
+-## Silent migration warning (WS1 decision D1)
++## Silent migration warning (WS1 decision D1) — implemented, keep it that way
+ 
+ Only `DriverV3` exists in this repo. Gangland's `ScoreboardManager.java:66` (pre-split) defaulted an
+ **unrecognised** `Driver:` value to `DriverV1`, not V3. A server admin copying an old `settings.yml` that still
+ says `Driver: Driver_V1` or `Driver_V2` must **not** be silently handed V1 (which had UI-16, now deleted code) —
+-G2's `BoardManager`/`BoardSettings` must explicitly default to `DriverV3` and log a warning on any unrecognised
+-value. Do not reintroduce a silent multi-driver fallback.
++`BoardManager.getDriverHandler()` explicitly defaults to `DriverV3` and `log.warn`s on any unrecognised value
++(case-insensitive match against `"driver_v3"`). Do not reintroduce a silent multi-driver fallback.
++
++## Cross-plugin placeholder chain — implemented
+ 
+-## Cross-plugin placeholder chain (G2, not yet built)
++Per WS1-D5/A5: `PapiText` tries PAPI first (guard-constructed once, at startup, only if the PlaceholderAPI
++plugin is present), then an optional Keystone `PlaceholderProvider` another plugin (e.g. Gangland, via
++`GanglandPlaceholder.asProvider()` — the same seam `ItemVocabulary` already uses) publishes on Bukkit's
++`ServicesManager` — looked up **fresh on every call**, never cached, since the publishing plugin may enable
++after this one — then raw text. `Plaque#dependencyHandler()` logs a boot warning when PlaceholderAPI is absent
++(WS1-D3); `scoreboard.yml`'s header comment states the same requirement for admins.
+ 
+-Per WS1-D5/A5: PAPI first, then an optional Keystone `PlaceholderProvider` Gangland publishes on Bukkit's
+-`ServicesManager` (`GanglandPlaceholder.asProvider()`, the same seam `ItemVocabulary` already uses), then raw
+-text last. `FlashPlaceholderWrapper.currentTick` is a **static field in the shared, unrelocated `keystone-common`
+-jar** — this plugin's `Board`/`DriverV3` write it every tick, Gangland's `GanglandPlaceholder` reads it for
++`FlashPlaceholderWrapper.currentTick` is a **static field in the shared, unrelocated `keystone-common` jar** —
++this plugin's `Board`/`DriverV3` write it every tick, Gangland's `GanglandPlaceholder` reads it for
+ `%gangland_flashif:...%`. This only works because Keystone is `provided` (not shaded) on both sides of the
+ process boundary; do not relocate `org.luckyraven.keystone.*` in this plugin's shade config.
+ 
+ ## Build Commands
+ 
+@@ -133,5 +192,24 @@ JUnit 5 + Mockito + Keystone's `keystone-testkit` (`BukkitStatics`, `PluginMocks
+ `documentation/TESTING.md` for the house patterns this repo follows). `com.viaversion:viaversion-api` stays on
+ the `provided`/test classpath even where no test currently mocks a ViaVersion-typed field — Mockito's inline mock
+ maker retransforms the full type hierarchy of any mocked type, so removing this dependency as "unused" risks a
+ `TypeNotPresentException` the moment a future test mocks something in `DriverHandler`'s hierarchy (same gotcha
+ documented in Bartizan's `CLAUDE.md`/`pom.xml`).
++
++### `BukkitStatics` only pre-wires four statics
++
++`BukkitStatics.install()` (keystone-testkit) wires `Bukkit.getServer()` / `getPluginManager()` /
++`getServicesManager()` / `getScheduler()` to its own mocks automatically. **Every other static Bukkit method —
++`Bukkit.getOnlinePlayers()` included — is not pre-wired** and returns `null` until stubbed explicitly through the
++`MockedStatic` handle: `bukkit.statics().when(Bukkit::getOnlinePlayers).thenReturn(List.of(...))`. Stubbing
++`bukkit.server().getOnlinePlayers()` instead does nothing, because `Bukkit`'s own static methods are intercepted
++independently of the `Server` mock they happen to share a name with — they are not proxied through
++`Bukkit.getServer()` under a static mock. `BoardManagerTest` hit this directly; check `bukkit.statics()`'s
++existing stubs before assuming a `Bukkit.*` static call is covered.
++
++### Testing a bean that only orchestrates other beans
++
++`BoardManagerTest` subclasses `BoardManager` and overrides `createBoard`/`removeBoard` to record calls, rather
++than mocking `BoardManager` itself or building a fully real one (which would need a live `FastBoard`/NMS server
++just to prove `sweepOnlinePlayers()`/`rebuildAll()` visit the right players). `BoardAddon`/`BoardSettings` are
++plain Mockito mocks in that test since neither is touched once `createBoard` is overridden away — don't upgrade
++them to real `FileManager`-backed instances unless a test actually needs `getDriverHandler()`'s real output.
+diff --git a/README.md b/README.md
+index 0f79e64..bab518b 100644
+--- a/README.md
++++ b/README.md
+@@ -1,33 +1,46 @@
+ # Plaque
+ 
+ Standalone scoreboard plugin for Spigot (Keystone-powered), extracted from Gangland Warfare (decoupling wave WS1,
+ 2026-09-16). Renders a `scoreboard.yml`-driven FastBoard sidebar with no Gangland dependency — gang/user data
+-reaches it only as text, through real PlaceholderAPI `%gangland_*%` tokens (plus an optional Keystone
+-`PlaceholderProvider` fallback, landing in G2).
++reaches it only as text, through real PlaceholderAPI `%gangland_*%` tokens, with an optional Keystone
++`PlaceholderProvider` fallback another plugin may publish on the `ServicesManager`.
+ 
+ ## Status
+ 
+ - **G0** (repo skeleton, pom, `plugin.yml`, `mvn clean install` green) — done.
+ - **G1** (rendering engine ported: `Board`, `DriverHandler`, `DriverV3`, `Line`/`StaticLine`, `BoardAddon`; UI-17
+   guard added; UI-16 gone with `DriverV1`/`DriverV2`; off the deprecated `Placeholder` interface onto
+   `PlaceholderProvider`; tests ported) — done.
+-- **G2** (bootstrap on Keystone beans, config loading, the PAPI → `PlaceholderProvider` → raw-text placeholder
+-  chain, the enable-time board sweep, `/plaque reload`, docs) — not started.
++- **G2** (bootstrap on Keystone beans via `PlaqueContext`, `settings.yml`/`scoreboard.yml` config loading, the
++  PAPI → `ServicesManager PlaceholderProvider` → raw-text placeholder chain, the enable-time/reload board sweep,
++  `/plaque reload` as a keystone-command `Command`) — done.
+ 
+-See `CLAUDE.md` for the package map, the fixes applied during the port, and the silent-migration warning around
+-`Driver:` values. The binding plan lives in the Gangland repo:
+-`brainstorming/decoupling-wave-2026-09-14/plans/WS1-scoreboard.md`.
++See `CLAUDE.md` for the package map, the fixes applied during the port, the silent-migration warning around
++`Driver:` values, and why `/plaque reload` uses keystone-command rather than a plain `CommandExecutor` (WS1-D2,
++a user decision that overrides an earlier draft of the plan document). The binding plan lives in the Gangland
++repo: `brainstorming/decoupling-wave-2026-09-14/plans/WS1-scoreboard.md`.
+ 
+ ## Build
+ 
+ ```
+ mvn clean install                # target/Plaque-<version>.jar
+ mvn clean install -DskipTests    # skip tests
+ ```
+ 
++## Running it
++
++Drop `Plaque-<version>.jar` into `plugins/` beside `Keystone-1.9.2.jar` (`depend: [Keystone]`, no other hard
++dependency). `PlaceholderAPI` and `ViaVersion` are both soft dependencies — the plugin boots and shows static
++lines without either, but logs a startup warning if PlaceholderAPI is missing (dynamic `%gangland_*%`-style
++tokens render literally until it's installed, or until another plugin publishes a Keystone `PlaceholderProvider`
++on the `ServicesManager`). `/plaque reload` (alias `/plq reload`, permission `plaque.command.main`) reloads
++`settings.yml`/`scoreboard.yml` and rebuilds every online player's board.
++
+ ## Config compatibility
+ 
+-`scoreboard.yml`'s schema is kept byte-identical to Gangland's today (landing in G2) — an admin copies
+-`plugins/Gangland_Warfare/scoreboard.yml` to `plugins/Plaque/scoreboard.yml` verbatim. The one behavioral change:
+-literal `%gangland_*%` tokens now need PlaceholderAPI (or Gangland's optional `ServicesManager` fallback) to
+-resolve — Gangland's own in-process placeholder chain no longer applies once the board is a separate process.
++`scoreboard.yml`'s schema is kept byte-identical to Gangland's — an admin copies
++`plugins/Gangland_Warfare/scoreboard.yml` to `plugins/Plaque/scoreboard.yml` verbatim. `settings.yml`'s `Enable`/
++`Driver` keys are the same two values that lived under Gangland's `settings.yml` `Scoreboard:` block, just at the
++top level of their own file now. The one behavioral change: literal `%gangland_*%` tokens now need PlaceholderAPI
++(or the `ServicesManager` `PlaceholderProvider` fallback) to resolve — Gangland's own in-process placeholder
++chain no longer applies once the board is a separate process.
+diff --git a/pom.xml b/pom.xml
+index 0ec0620..4e56084 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -118,10 +118,20 @@
+             <groupId>org.luckyraven</groupId>
+             <artifactId>keystone-hooks</artifactId>
+             <version>${keystone.version}</version>
+             <scope>provided</scope>
+         </dependency>
++        <!-- G2: /plaque reload is a keystone-command Command, not a plain CommandExecutor (WS1-D2 was decided
++             by the user in the decisions register — "stick with keystone implementation since they already have
++             the whole library" — overriding the plan document's own CommandExecutor recommendation; orchestrator
++             ruling W5). -->
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-command</artifactId>
++            <version>${keystone.version}</version>
++            <scope>provided</scope>
++        </dependency>
+ 
+         <!-- Shaded into Plaque-<version>.jar and relocated below; the only real (non-Keystone) runtime
+              dependency this plugin ships. -->
+         <dependency>
+             <groupId>fr.mrmicky</groupId>
+diff --git a/src/main/java/org/luckyraven/plaque/Plaque.java b/src/main/java/org/luckyraven/plaque/Plaque.java
+index 1adebc8..3b03003 100644
+--- a/src/main/java/org/luckyraven/plaque/Plaque.java
++++ b/src/main/java/org/luckyraven/plaque/Plaque.java
+@@ -1,27 +1,84 @@
+ package org.luckyraven.plaque;
+ 
++import com.viaversion.viaversion.api.Via;
+ import lombok.CustomLog;
++import lombok.Getter;
++import org.bukkit.Bukkit;
+ import org.bukkit.plugin.java.JavaPlugin;
++import org.luckyraven.plaque.board.BoardManager;
++import org.luckyraven.plaque.bootstrap.PlaqueContext;
+ 
+ /**
+  * Plaque: a standalone Keystone-powered scoreboard plugin, split out of Gangland Warfare's
+- * {@code gangland-ui/scoreboard-api} module (decoupling wave WS1, 2026-09-16).
+- *
+- * <p>This is a G0/G1 stub. Bootstrap wiring (a {@code BeanFactory}-driven context, config loading, the
+- * PAPI/{@code PlaceholderProvider} placeholder chain and the enable-time board sweep) lands in G2 — see
+- * {@code brainstorming/decoupling-wave-2026-09-14/plans/WS1-scoreboard.md} in the Gangland repo.
++ * {@code gangland-ui/scoreboard-api} module (decoupling wave WS1, 2026-09-16). See
++ * {@code brainstorming/decoupling-wave-2026-09-14/plans/WS1-scoreboard.md} in the Gangland repo for the full
++ * plan.
+  */
++@Getter
+ @CustomLog
+ public final class Plaque extends JavaPlugin {
+ 
++	public static final String FULL_PREFIX = "plaque";
++
++	private PlaqueContext context;
++
+ 	@Override
+ 	public void onEnable() {
+-		log.info("Plaque {} enabling (G0/G1 stub — bootstrap lands in G2)", getDescription().getVersion());
++		try {
++			this.context = new PlaqueContext(this);
++			context.bootstrap();
++
++			dependencyHandler();
++
++			// B5: cover a /reload, a /plugman enable, or any enable with players already on — without this, a
++			// join/quit-listener-only port leaves already-online players boardless until their next join.
++			context.get(BoardManager.class).sweepOnlinePlayers();
++		} catch (Throwable t) {
++			log.error("Plaque failed to enable", t);
++			getServer().getPluginManager().disablePlugin(this);
++		}
+ 	}
+ 
+ 	@Override
+ 	public void onDisable() {
++		if (context != null) {
++			BoardManager boardManager = context.get(BoardManager.class);
++			if (boardManager != null) {
++				boardManager.removeAll();
++			}
++
++			try {
++				context.shutdownBeans();
++			} catch (Throwable t) {
++				log.error("Plaque bean shutdown failed; clearing the container anyway", t);
++			} finally {
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/board/BoardManager.java', LF will be replaced by CRLF the next time Git touches it
++				context.getContainer().clear();
++			}
++		}
++
+ 		log.info("Plaque disabled");
+ 	}
+ 
++	/**
++	 * Checks soft dependencies (WS1-D3): ViaVersion (max-line-length awareness inside
++	 * {@code DriverHandler.FastBoardImpl}) and PlaceholderAPI (dynamic placeholders — see {@code PapiText}).
++	 * Neither is required to boot; PlaceholderAPI's absence gets a loud boot warning because a board without it
++	 * silently renders literal {@code %gangland_*%} tokens instead of gang/user data (WS1 plan Risk 1/D3).
++	 */
++	private void dependencyHandler() {
++		if (Bukkit.getPluginManager().getPlugin("ViaVersion") != null) {
++			log.info("Found ViaVersion, linking...");
++			context.get(BoardManager.class).setViaApi(Via.getAPI());
++			log.info("Linked ViaVersion");
++		}
++
++		if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
++			log.info("Found PlaceholderAPI, linking...");
++		} else {
++			log.warn("PlaceholderAPI not found: dynamic %gangland_*%-style placeholders will render literally " +
++			         "unless another plugin publishes a Keystone PlaceholderProvider on the ServicesManager. " +
++			         "Static board lines still work fine without it.");
++		}
++	}
++
+ }
+diff --git a/src/main/java/org/luckyraven/plaque/board/BoardManager.java b/src/main/java/org/luckyraven/plaque/board/BoardManager.java
+new file mode 100644
+index 0000000..4281a88
+--- /dev/null
++++ b/src/main/java/org/luckyraven/plaque/board/BoardManager.java
+@@ -0,0 +1,114 @@
++package org.luckyraven.plaque.board;
++
++import com.viaversion.viaversion.api.ViaAPI;
++import lombok.CustomLog;
++import lombok.Setter;
++import org.bukkit.Bukkit;
++import org.bukkit.entity.Player;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.luckyraven.keystone.placeholder.PlaceholderProvider;
++import org.luckyraven.plaque.board.configuration.BoardAddon;
++import org.luckyraven.plaque.board.driver.DriverHandler;
++import org.luckyraven.plaque.board.driver.version.DriverV3;
++import org.luckyraven.plaque.board.part.Line;
++import org.luckyraven.plaque.config.BoardSettings;
++
++import java.util.HashMap;
++import java.util.List;
++import java.util.Map;
++import java.util.UUID;
++
++/**
++ * Was Gangland's {@code ScoreboardManager} (gangland-impl). Two differences from the upstream class: (1) this
++ * plugin has no User/UserManager to hold a per-player board reference, so {@code BoardManager} owns that
++ * registry itself; (2) under WS1 decision D1(b) only {@link DriverV3} exists — the reflection-based
++ * {@code getDrivers()} scan and the {@code DriverV1}/{@code DriverV2} switch branches are gone, replaced with a
++ * hardcoded {@code DriverV3} plus a startup warning on an unrecognised {@code Driver:} value (the
++ * silent-migration risk called out in this repo's {@code CLAUDE.md}).
++ */
++@CustomLog
++public class BoardManager {
++
++	private final JavaPlugin          plugin;
++	private final PlaceholderProvider placeholder;
++	private final BoardAddon          boardAddon;
++	private final BoardSettings       settings;
++
++	private final Map<UUID, Board> boards = new HashMap<>();
++
++	/**
++	 * Resolved once, after bootstrap, by {@code Plaque}'s soft-dependency check ({@code Via.getAPI()}); stays
++	 * {@code null} when ViaVersion is absent. Never cached per-board — every {@link #getDriverHandler(Player)}
++	 * call reads the current value, the same "resolve lazily, never at construction" rule the rest of this
++	 * studio applies to every soft-dependency lookup.
++	 */
++	@Setter
++	private ViaAPI<?> viaApi;
++
++	public BoardManager(JavaPlugin plugin, PlaceholderProvider placeholder, BoardAddon boardAddon,
++	                    BoardSettings settings) {
++		this.plugin      = plugin;
++		this.placeholder = placeholder;
++		this.boardAddon  = boardAddon;
++		this.settings    = settings;
++	}
++
++	public DriverHandler getDriverHandler(Player player) {
++		// UI-01: every board gets its own deep copy of the configured lines (Line#update advances a rotation
++		// cursor; sharing the configured instances made animated content cycle once per online player per tick).
++		List<Line> lines = Line.copyAll(boardAddon.gwarning: in the working copy of 'src/main/java/org/luckyraven/plaque/bootstrap/DefaultListenerService.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/bootstrap/PlaqueContext.java', LF will be replaced by CRLF the next time Git touches it
+etLines());
++		Line       title = boardAddon.getTitle().copy();
++
++		String driver = settings.getDriver();
++		if (driver == null || !driver.equalsIgnoreCase("driver_v3")) {
++			log.warn("settings.yml Driver: '{}' is not recognised — this plugin ships only Driver_V3 " +
++			         "(Driver_V1/Driver_V2 were retired when this plugin split from Gangland Warfare). Falling " +
++			         "back to Driver_V3 instead of silently reproducing a deleted driver's behaviour.", driver);
++		}
++
++		return new DriverV3(placeholder, viaApi, player, title, lines);
++	}
++
++	/** Builds and starts a board for one player, if the feature is enabled and they don't already have one. */
++	public void createBoard(Player player) {
++		if (!settings.isEnabled()) return;
++		if (boards.containsKey(player.getUniqueId())) return;
++
++		Board board = new Board(plugin, getDriverHandler(player));
++		boards.put(player.getUniqueId(), board);
++		board.start();
++	}
++
++	/** Ends and forgets one player's board, if they have one. */
++	public void removeBoard(Player player) {
++		Board board = boards.remove(player.getUniqueId());
++		if (board != null) board.end();
++	}
++
++	/**
++	 * B5: builds and starts a board for every already-online player that doesn't have one yet. Called at the end
++	 * of {@code Plaque#onEnable()} and again by {@code /plaque reload} — covers a {@code /reload}, a
++	 * {@code /plugman enable}, or any enable with players already on, which a join/quit-listener-only port would
++	 * silently miss (WS1 plan risk table, row 6).
++	 */
++	public void sweepOnlinePlayers() {
++		if (!settings.isEnabled()) return;
++
++		Bukkit.getOnlinePlayers().forEach(this::createBoard);
++	}
++
++	/** Kills every active board and rebuilds it from the current configuration. Used by {@code /plaque reload}. */
++	public void rebuildAll() {
++		for (Player player : List.copyOf(Bukkit.getOnlinePlayers())) {
++			removeBoard(player);
++		}
++		sweepOnlinePlayers();
++	}
++
++	/** Kills every active board without rebuilding. Used by {@code Plaque#onDisable()}. */
++	public void removeAll() {
++		boards.values().forEach(Board::end);
++		boards.clear();
++	}
++
++}
+diff --git a/src/main/java/org/luckyraven/plaque/bootstrap/DefaultListenerService.java b/src/main/java/org/luckyraven/plaque/bootstrap/DefaultListenerService.java
+new file mode 100644
+index 0000000..ea02be5
+--- /dev/null
++++ b/src/main/java/org/luckyraven/plaque/bootstrap/DefaultListenerService.java
+@@ -0,0 +1,26 @@
++package org.luckyraven.plaque.bootstrap;
++
++import org.bukkit.plugin.java.JavaPlugin;
++import org.luckyraven.keystone.bean.SettingsLookup;
++import org.luckyraven.keystone.bean.autowire.DependencyContainer;
++import org.luckyraven.keystone.bean.listener.ListenerService;
++
++/**
++ * Keystone ships only the abstract {@link ListenerService} base — every consumer plugin writes this one-method
++ * concrete subclass itself (same shape as Bartizan's own {@code DefaultListenerService}).
++ */
++public final class DefaultListenerService extends ListenerService {
++
++	private final SettingsLookup settings;
++
++	public DefaultListenerService(JavaPlugin plugin, DependencyContainer dependencyContainer, SettingsLookup settings) {
++		super(plugin, dependencyContainer);
++		this.settings = settings;
++	}
++
++	@Override
++	public boolean invokeMethod(String condition) {
++		return settings.isEnabled(condition);
++	}
++
++}
+diff --git a/src/main/java/org/luckyraven/plaque/bootstrap/PlaqueContext.java b/src/main/java/org/luckyraven/plaque/bootstrap/PlaqueContext.java
+new file mode 100644
+index 0000000..42c1d7b
+--- /dev/null
++++ b/src/main/java/org/luckyraven/plaque/bootstrap/PlaqueContext.java
+@@ -0,0 +1,144 @@
++package org.luckyraven.plaque.bootstrap;
++
++import lombok.CustomLog;
++import lombok.Getter;
++import org.bukkit.command.PluginCommand;
++import org.luckyraven.keystone.bean.BeanFactory;
++import org.luckyraven.keystone.bean.BeanLifecycle;
++import org.luckyraven.keystone.bean.Phase;
++import org.luckyraven.keystone.bean.SettingsLookup;
++import org.luckyraven.keystone.bean.autowire.DependencyContainer;
++import org.luckyraven.keystone.command.CommandManager;
++import org.luckyraven.keystone.command.CommandTabCompleter;
++import org.luckyraven.keystone.command.brigadier.BrigadierTabRegistrar;
++import org.luckyraven.keystone.persistence.FileManager;
++import org.luckyraven.plaque.Plaque;
++
++/**
++ * Single root for Plaque's wiring — the standalone-plugin twin of Gangland's {@code GanglandContext} with every
++ * module concern removed (same shape as Bartizan's {@code BartizanContext}): no {@code ModuleLoader}, no module
++ * scans, no {@code hostApi}, no repository-republish hook (this plugin keeps no database). Owns the only
++ * {@link DependencyContainer} and {@link BeanFactory} that exist at runtime and runs the post-bootstrap listener
++ * and command scans.
++ *
++ * <p>The bootstrap pipeline: {@code KernelConfig} (KERNEL) produces every bootstrap-critical singleton,
++ * {@link #bootstrap()} scans {@code org.luckyraven.plaque.config} for {@code @Configuration} classes and drives
++ * {@link BeanFactory#instantiate()} through KERNEL → FILE → CONFIG → LISTENER → COMMAND (Keystone's DATABASE
++ * phase runs empty), then runs the listener and command scans. Unlike WS1's original plan draft, the COMMAND
++ * phase is real here — {@code /plaque reload} is a keystone-command {@code Command}, not a plain
++ * {@code CommandExecutor} (WS1-D2, user decision, orchestrator ruling W5).
++ */
++@CustomLog
++public final class PlaqueContext {
++
++	private static final String CONFIG_PACKAGE   = "org.luckyraven.plaque.config";
++	private static final String LISTENER_PACKAGE = "org.luckyraven.plaque";
++	private static final String COMMAND_PACKAGE  = "org.luckyraven.plaque.command";
++
++	@Getter
++	private final DependencyContainer container;
++	@Getter
++	private final BeanFactory         beanFactory;
++
++	private final Plaque plaque;
++
++	public PlaqueContext(Plaque plaque) {
++		this.plaque = plaque;
++
++		// Plaque ships no @ConditionalOnSetting-gated beans/listeners today, so a trivial always-false lookup is
++		// enough (same minimal shape Bartizan/Oriel use) rather than a dedicated impl class.
++		SettingsLookup settings = key -> false;
++
++		this.container   = new DependencyContainer();
++		this.beanFactory = new BeanFactory(container, plaque, settings);
++
++		container.registerInstance(PlaqueContext.class, this);
++		container.registerInstance(DependencyContainer.class, container);
++		container.registerInstance(org.bukkit.plugin.java.JavaPlugin.class, plaque);
++		container.registerInstance(Plaque.class, plaque);
++		container.registerInstance(SettingsLookup.class, settings);
++		container.registerInstance(BeanFactory.class, beanFactory);
++	}
++
++	/**
++	 * Convenience accessor for code that needs a bean by raw type.
++	 */
++	public <T> T get(Class<T> type) {
++		return container.getInstance(type);
++	}
++
++	/**
++	 * Runs the reload lifecycle on all beans implementing {@link BeanLifecycle}.
++	 */
++	public void reloadBeans() {
++		beanFactory.reloadLifecycleBeans();
++	}
++
++	/**
++	 * Runs graceful shutdown on all beans implementing {@link BeanLifecycle} in reverse topological order.
++	 */
++	public void shutdownBeans() {
++		beanFactory.shutdownLifecycleBeans();
++	}
++
++	/**
++	 * Drive the phased bean instantiation, then run the listener and command scans. Must be called exactly once.
++	 */
++	public void bootstrap() {
++		// FILE phase: after each file-initializer bean is registered, run FileManager.initializeAll() so the file
++		// is loaded before the next FILE-phase bean's @Bean method runs. FileManager is produced by KernelConfig
++		// in the KERNEL phase, so it is guaranteed to be in the container.
++		beanFactory.setPhaseHook(Phase.FILE, beans -> {
++			FileManager fm = container.getInstance(FileManager.class);
++			if (fm != null) {
++				fm.initializeAll();
++			}
++		});
++
++		beanFactory.scan(CONFIG_PACKAGE);
++		beanFactory.instantiate();
++
++		runListenerPhase();
++		runCommandPhase();
++	}
++
++	private void runListenerPhase() {
++		DefaultListenerService listenerService = container.getInstance(DefaultListenerService.class);
++		if (listenerService == null) {
++			throw new IllegalStateException(
++					this.getwarning: in the working copy of 'src/main/java/org/luckyraven/plaque/command/ReloadCommand.java', LF will be replaced by CRLF the next time Git touches it
+Class().getSimpleName() + ".bootstrap(): " + DefaultListenerService.class.getSimpleName() +
++					" bean missing. Add a @Bean method that produces " + DefaultListenerService.class.getSimpleName() +
++					" to a CONFIG-phase @Configuration class.");
++		}
++		listenerService.scanAndRegisterListeners(LISTENER_PACKAGE, plaque);
++		listenerService.registerEvents();
++		log.debug("Listener phase complete: {} listener(s) registered", listenerService.getListeners().size());
++	}
++
++	private void runCommandPhase() {
++		CommandManager commandManager = container.getInstance(CommandManager.class);
++		if (commandManager == null) {
++			throw new IllegalStateException(
++					this.getClass().getSimpleName() + ".bootstrap(): " + CommandManager.class.getSimpleName() +
++					" bean missing. Add a @Bean method that produces " + CommandManager.class.getSimpleName() +
++					" to a CONFIG-phase @Configuration class.");
++		}
++		PluginCommand command = plaque.getCommand(Plaque.FULL_PREFIX);
++		if (command == null) {
++			log.warn("Plugin command /{} not declared in plugin.yml — skipping command bind", Plaque.FULL_PREFIX);
++			return;
++		}
++		command.setExecutor(commandManager);
++		commandManager.scanAndRegisterCommands(COMMAND_PACKAGE, plaque.getClass().getClassLoader());
++
++		CommandTabCompleter tabCompleter = new CommandTabCompleter(commandManager);
++		command.setTabCompleter(tabCompleter);
++
++		// Client-side Brigadier completion — safe on plain Spigot; on any failure it logs WARN and the
++		// server-side tab completer above stays the only path.
++		BrigadierTabRegistrar.registerIfSupported(plaque, command, commandManager);
++
++		log.debug("Command phase complete: {} command(s) registered", commandManager.commandView().size());
++	}
++
++}
+diff --git a/src/main/java/org/luckyraven/plaque/command/ReloadCommand.java b/src/main/java/org/luckyraven/plaque/command/ReloadCommand.java
+new file mode 100644
+index 0000000..2bbda6b
+--- /dev/null
++++ b/src/main/java/org/luckyraven/plaque/command/ReloadCommand.java
+@@ -0,0 +1,68 @@
++package org.luckyraven.plaque.command;
++
++import lombok.CustomLog;
++import org.bukkit.command.CommandSender;
++import org.luckyraven.keystone.bean.command.CommandHandler;
++import org.luckyraven.keystone.command.Command;
++import org.luckyraven.keystone.command.argument.Argument;
++import org.luckyraven.keystone.persistence.FileManager;
++import org.luckyraven.keystone.util.ChatUtil;
++import org.luckyraven.plaque.Plaque;
++import org.luckyraven.plaque.board.BoardManager;
++import org.luckyraven.plaque.bootstrap.PlaqueContext;
++
++/**
++ * {@code /plaque reload} — reloads {@code settings.yml}/{@code scoreboard.yml} through
++ * {@link FileManager#initializeAll()}, runs the {@code BeanLifecycle} reload pass, then rebuilds every online
++ * player's board ({@link BoardManager#rebuildAll()}, reusing B5's enable-time sweep). Mirrors Bartizan's own
++ * {@code ReloadCommand} shape (a keystone-command {@code Command}, WS1-D2/orchestrator ruling W5) — this plugin
++ * has exactly one command, so no {@code InformationManager}/{@code commands.json} help-listing layer is built
++ * for it (ponytail: that machinery earns its keep once there is more than one command to list, not before).
++ */
++@CustomLog
++@CommandHandler
++public final class ReloadCommand extends Command {
++
++	private final PlaqueContext context;
++
++	public ReloadCommand(Plaque plaque, PlaqueContext context) {
++		super(plaque, Plaque.FULL_PREFIX, "reload", false, "rl");
++
++		this.context = context;
++	}
++
++	@Override
++	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
++		commandSender.sendMessage(ChatUtil.color("&bReloading&7 Plaque..."));
++
++		try {
++			FileManager fileManager = context.get(FileManager.class);
++			if (fileManager != null) {
++				fileManager.initializeAll();
++			}
++
++			context.reloadBeans();
++
++			BoardManager boardManager = context.get(BoardManager.class);
++			if (boardManager != null) {
++				boardManager.rebuildAll();
++			}
++
++			commandSender.sendMessage(ChatUtil.color("&aReload complete."));
++		} catch (Throwable throwablewarning: in the working copy of 'src/main/java/org/luckyraven/plaque/config/BoardConfig.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/config/BoardSettings.java', LF will be replaced by CRLF the next time Git touches it
+) {
++			commandSender.sendMessage(ChatUtil.color("&cThere was a problem reloading Plaque!"));
++			log.error(throwable.getMessage(), throwable);
++		}
++	}
++
++	@Override
++	protected void initializeArguments() {
++		// No sub-arguments — a bare /plaque reload is the whole surface.
++	}
++
++	@Override
++	protected void help(CommandSender sender, int page) {
++		sender.sendMessage(ChatUtil.color("&b/plaque reload &7- reloads config and rebuilds every online player's board."));
++	}
++
++}
+diff --git a/src/main/java/org/luckyraven/plaque/config/BoardConfig.java b/src/main/java/org/luckyraven/plaque/config/BoardConfig.java
+new file mode 100644
+index 0000000..e28212a
+--- /dev/null
++++ b/src/main/java/org/luckyraven/plaque/config/BoardConfig.java
+@@ -0,0 +1,50 @@
++package org.luckyraven.plaque.config;
++
++import org.luckyraven.keystone.bean.Bean;
++import org.luckyraven.keystone.bean.Configuration;
++import org.luckyraven.keystone.bean.SettingsLookup;
++import org.luckyraven.keystone.bean.autowire.DependencyContainer;
++import org.luckyraven.keystone.command.CommandManager;
++import org.luckyraven.keystone.placeholder.PlaceholderProvider;
++import org.luckyraven.plaque.Plaque;
++import org.luckyraven.plaque.board.BoardManager;
++import org.luckyraven.plaque.board.configuration.BoardAddon;
++import org.luckyraven.plaque.bootstrap.DefaultListenerService;
++import org.luckyraven.plaque.placeholder.PapiText;
++
++/**
++ * CONFIG-phase wiring — the seams Plaque itself needs a bean for: the placeholder chain, the board factory/
++ * registry, and the {@code ListenerService}/{@code CommandManager} instances the LISTENER/COMMAND phase scans
++ * consume. Same shape as Bartizan's own {@code WiringConfig}.
++ */
++@Configuration
++public final class BoardConfig {
++
++	private final Plaque plaque;
++
++	public BoardConfig(Plaque plaque) {
++		this.plaque = plaque;
++	}
++
++	@Bean
++	public PlaceholderProvider placeholderProvider() {
++		return new PapiText();
++	}
++
++	@Bean
++	public BoardManager boardManager(PlaceholderProvider placeholderProvider, BoardAddon boardAddon,
++	                                 BoardSettings settings) {
++		return new BoardManager(plaque, placeholderProvider, boardAddon, settings);
++	}
++
++	@Bean
++	public DefaultListenerService listenerService(DependencyContainer container, SettingsLookup settings) {
++		return new DefaultListenerService(plaque, container, settings);
++	}
++
++	@Bean
++	public CommandManager commandManager(DependencyContainer container, SettingsLookup settings) {
++		return new CommandManager(plaque, container, settings, Plaque.FULL_PREFIX, Plaque.FULL_PREFIX);
++	}
++
++}
+diff --git a/src/main/java/org/luckyraven/plaque/config/BoardSettings.java b/src/main/java/org/luckyraven/plaque/config/BoardSettings.java
+new file mode 100644
+index 0000000..80cbc60
+--- /dev/null
++++ b/src/main/java/org/luckyraven/plaque/config/BoardSettings.java
+@@ -0,0 +1,48 @@
++package org.luckyraven.plaque.config;
++
++import lombok.Getter;
++import org.bukkit.configuration.file.FileConfiguration;
++import org.luckyraven.keystone.exception.PluginException;
++import org.luckyraven.keystone.persistence.FileHandler;
++import org.luckyraven.keystone.persistence.FileInitializer;
++import org.luckyraven.keystone.persistence.FileManager;
++
++import java.io.IOException;
++import java.util.Objects;
++
++/**
++ * Reads {@code Enable}/{@code Driver} off {@code settings.yml}. Small enough that this repo has no
++ * {@code Settings} god-class to hold it (WS1 plan C7) — Bukkit's own typed {@link FileConfiguration} getters
++ * replace Gangland's {@code NodeReader} validation layer, which is Gangland application code, not part of
++ * Keystone.
++ */
++public class BoardSettings implements FileInitializer {
++
++	private final FileHandler fileHandler;
++
++	private @Getter boolean enabled;
++	private @Getter String  driver;
++
++	public BoardSettings(FileManager fileManager) {
++		try {
++			fileManager.checkFileLoaded("settings");
++			this.fileHandler = Objects.requireNonNull(fileManager.getFile("settings"));
++		} catch (IOException exception) {
++			throw new PluginException(exception);
++		}
++	}
++
++	@Ovwarning: in the working copy of 'src/main/java/org/luckyraven/plaque/config/FileConfig.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/config/KernelConfig.java', LF will be replaced by CRLF the next time Git touches it
+erride
++	public FileHandler getFileHandler() {
++		return fileHandler;
++	}
++
++	@Override
++	public void initialize() {
++		FileConfiguration settings = fileHandler.getFileConfiguration();
++
++		this.enabled = settings.getBoolean("Enable", true);
++		this.driver  = settings.getString("Driver", "Driver_V3");
++	}
++
++}
+diff --git a/src/main/java/org/luckyraven/plaque/config/FileConfig.java b/src/main/java/org/luckyraven/plaque/config/FileConfig.java
+new file mode 100644
+index 0000000..ffed0ba
+--- /dev/null
++++ b/src/main/java/org/luckyraven/plaque/config/FileConfig.java
+@@ -0,0 +1,33 @@
++package org.luckyraven.plaque.config;
++
++import org.luckyraven.keystone.bean.Bean;
++import org.luckyraven.keystone.bean.Configuration;
++import org.luckyraven.keystone.bean.Phase;
++import org.luckyraven.keystone.persistence.FileManager;
++import org.luckyraven.plaque.board.configuration.BoardAddon;
++
++/**
++ * FILE-phase configuration: registers this plugin's two {@code FileInitializer}s with the {@link FileManager}
++ * bean {@code KernelConfig} produced. {@code PlaqueContext}'s FILE-phase hook calls
++ * {@code FileManager#initializeAll()} right after this phase finishes, so both beans' typed fields are populated
++ * before any CONFIG-phase bean (e.g. {@code BoardManager}) is constructed — same ordering Gangland's own
++ * {@code FileConfig} relies on.
++ */
++@Configuration(phase = Phase.FILE)
++public class FileConfig {
++
++	@Bean
++	public BoardSettings boardSettings(FileManager fileManager) {
++		BoardSettings settings = new BoardSettings(fileManager);
++		fileManager.registerInitializer(settings);
++		return settings;
++	}
++
++	@Bean
++	public BoardAddon boardAddon(FileManager fileManager) {
++		BoardAddon addon = new BoardAddon(fileManager);
++		fileManager.registerInitializer(addon);
++		return addon;
++	}
++
++}
+diff --git a/src/main/java/org/luckyraven/plaque/config/KernelConfig.java b/src/main/java/org/luckyraven/plaque/config/KernelConfig.java
+new file mode 100644
+index 0000000..7f60a7c
+--- /dev/null
++++ b/src/main/java/org/luckyraven/plaque/config/KernelConfig.java
+@@ -0,0 +1,54 @@
++package org.luckyraven.plaque.config;
++
++import org.luckyraven.keystone.bean.Bean;
++import org.luckyraven.keystone.bean.Configuration;
++import org.luckyraven.keystone.bean.Phase;
++import org.luckyraven.keystone.diagnostics.Diagnostics;
++import org.luckyraven.keystone.diagnostics.LoggingSink;
++import org.luckyraven.keystone.diagnostics.RecentFaultsSink;
++import org.luckyraven.keystone.persistence.FileHandler;
++import org.luckyraven.keystone.persistence.FileManager;
++import org.luckyraven.plaque.Plaque;
++
++/**
++ * KERNEL-phase configuration that produces every bootstrap-critical singleton Plaque needs before the FILE phase
++ * begins — the standalone-plugin twin of Gangland's {@code KernelConfig}, same shape as Bartizan's own
++ * {@code KernelConfig} (bartizan.md §2 B10): no {@code ModuleLoader}, no per-module {@code commands.json} merge,
++ * no database beans (this plugin keeps no database — §6 of the WS1 plan).
++ */
++@Configuration(phase = Phase.KERNEL)
++public class KernelConfig {
++
++	private final Plaque plaque;
++
++	public KernelConfig(Plaque plaque) {
++		this.plaque = plaque;
++	}
++
++	/**
++	 * The plugin's fault hub (Keystone diagnostics). Command dispatch errors funnel here (keystone-command.md
++	 * "Failure handling") so they are classified and kept in a recent-faults ring instead of only logged.
++	 */
++	@Bean
++	public Diagnostics diagnostics() {
++		Diagnostics hub = Diagnostics.withDefaults()
++		                             .addSink(new LoggingSink())
++		                             .addSink(new RecentFaultsSink());
++		Diagnostics.install(hub);
++		return hub;
++	}
++
++	/**
++	 * Registers the two YAML files this plugin owns. {@code scoreboard.yml}'s schema is byte-identical to
++	 * Gangland's own (WS1 plan §5) — an owner copies the file across verbatim.
++	 */
++	@Bean
++	public FileManager fileManager() {
++		FileManager fm = new FileManager(plaque);
++		fm.addFile(new FileHandler(plaque, "settings", ".yml"), true);
++		fm.addFile(new FileHandler(plaque, "scoreboard", warning: in the working copy of 'src/main/java/org/luckyraven/plaque/listener/PlayerBoardListener.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/listener/RemoveBoardListener.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/main/java/org/luckyraven/plaque/placeholder/PapiText.java', LF will be replaced by CRLF the next time Git touches it
+".yml"), true);
++
++		return fm;
++	}
++
++}
+diff --git a/src/main/java/org/luckyraven/plaque/listener/PlayerBoardListener.java b/src/main/java/org/luckyraven/plaque/listener/PlayerBoardListener.java
+new file mode 100644
+index 0000000..c199967
+--- /dev/null
++++ b/src/main/java/org/luckyraven/plaque/listener/PlayerBoardListener.java
+@@ -0,0 +1,30 @@
++package org.luckyraven.plaque.listener;
++
++import org.bukkit.entity.Player;
++import org.bukkit.event.EventHandler;
++import org.bukkit.event.Listener;
++import org.bukkit.event.player.PlayerJoinEvent;
++import org.luckyraven.keystone.bean.listener.ListenerHandler;
++import org.luckyraven.plaque.board.BoardManager;
++
++/**
++ * Was Gangland's {@code PlayerScoreboardListener}. Listens to plain Bukkit {@link PlayerJoinEvent} instead of
++ * Gangland's {@code UserDataInitEvent} — this plugin has no user-data bootstrap sequence to hook (WS1 plan §2/§3).
++ */
++@ListenerHandler
++public class PlayerBoardListener implements Listener {
++
++	private final BoardManager boardManager;
++
++	public PlayerBoardListener(BoardManager boardManager) {
++		this.boardManager = boardManager;
++	}
++
++	@EventHandler
++	public void onJoin(PlayerJoinEvent event) {
++		Player player = event.getPlayer();
++
++		boardManager.createBoard(player);
++	}
++
++}
+diff --git a/src/main/java/org/luckyraven/plaque/listener/RemoveBoardListener.java b/src/main/java/org/luckyraven/plaque/listener/RemoveBoardListener.java
+new file mode 100644
+index 0000000..911df18
+--- /dev/null
++++ b/src/main/java/org/luckyraven/plaque/listener/RemoveBoardListener.java
+@@ -0,0 +1,31 @@
++package org.luckyraven.plaque.listener;
++
++import org.bukkit.entity.Player;
++import org.bukkit.event.EventHandler;
++import org.bukkit.event.Listener;
++import org.bukkit.event.player.PlayerQuitEvent;
++import org.luckyraven.keystone.bean.listener.ListenerHandler;
++import org.luckyraven.plaque.board.BoardManager;
++
++/**
++ * Was the scoreboard branch of Gangland's {@code RemoveAccountListener}/{@code UserManager.onPreClear()}. Ends
++ * and forgets a player's board on quit; the remaining half of that upstream cleanup (every board still active at
++ * shutdown) is {@link BoardManager#removeAll()}, called from {@code Plaque#onDisable()}.
++ */
++@ListenerHandler
++public class RemoveBoardListener implements Listener {
++
++	private final BoardManager boardManager;
++
++	public RemoveBoardListener(BoardManager boardManager) {
++		this.boardManager = boardManager;
++	}
++
++	@EventHandler
++	public void onQuit(PlayerQuitEvent event) {
++		Player player = event.getPlayer();
++
++		boardManager.removeBoard(player);
++	}
++
++}
+diff --git a/src/main/java/org/luckyraven/plaque/placeholder/PapiText.java b/src/main/java/org/luckyraven/plaque/placeholder/PapiText.java
+new file mode 100644
+index 0000000..e32b6fd
+--- /dev/null
++++ b/src/main/java/org/luckyraven/plaque/placeholder/PapiText.java
+@@ -0,0 +1,43 @@
++package org.luckyraven.plaque.placeholder;
++
++import org.bukkit.Bukkit;
++import org.bukkit.OfflinePlayer;
++import org.luckyraven.keystone.papi.PlaceholderAPIProvider;
++import org.luckyraven.keystone.placeholder.CompositePlaceholderProvider;
++import org.luckyraven.keystone.placeholder.PlaceholderProvider;
++
++/**
++ * The board's placeholder chain (WS1-D5/A5): PlaceholderAPI first, then an optional Keystone
++ * {@link PlaceholderProvider} another plugin (e.g. Gangland, via {@code GanglandPlaceholder.asProvider()}) may
++ * publish on Bukkit's {@code ServicesManager} — the same seam {@code ItemVocabulary} already uses — then raw
++ * text. PAPI presence is checked once, at construction: {@link PlaceholderAPIProvider} touches PAPI's static
++ * bridge, which is unsafe to call when the plugin is not installed, mirroring the soft-dependency gate used
++ * everywhere else in this studio. The {@code ServicesManager} lookup is resolved fresh on every call, never
++ * cached — the publishing plugin may enable after this one, or not be installed at all.
++ */
++public final class PapiText implements PlaceholderProvider {
++
++	private final PlaceholderProvider chain;
++
++	public PapiText() {
++		this(Bukkit.getPlugiwarning: in the working copy of 'src/main/resources/scoreboard.yml', LF will be replaced by CRLF the next time Git touches it
+nManager().getPlugin("PlaceholderAPI") != null);
++	}
++
++	/** Test seam — bypasses the live Bukkit plugin-manager lookup. */
++	PapiText(boolean papiPresent) {
++		PlaceholderProvider papi = papiPresent ? new PlaceholderAPIProvider() : (player, raw) -> raw;
++
++		PlaceholderProvider serviceFallback = (player, raw) -> {
++			var registration = Bukkit.getServicesManager().getRegistration(PlaceholderProvider.class);
++			return registration == null ? raw : registration.getProvider().resolve(player, raw);
++		};
++
++		this.chain = CompositePlaceholderProvider.of(papi, serviceFallback);
++	}
++
++	@Override
++	public String resolve(OfflinePlayer player, String raw) {
++		return chain.resolve(player, raw);
++	}
++
++}
+diff --git a/src/main/resources/plugin.yml b/src/main/resources/plugin.yml
+index c308264..1f38936 100644
+--- a/src/main/resources/plugin.yml
++++ b/src/main/resources/plugin.yml
+@@ -9,5 +9,16 @@ softdepend:
+    - PlaceholderAPI
+    - ViaVersion
+ authors:
+    - LuckyRaven10
+ description: ${project.description}
++
++commands:
++   plaque:
++      description: Plaque scoreboard plugin main command.
++      permission: plaque.command.main
++      aliases:
++         - plq
++
++permissions:
++   plaque.command.main:
++      default: op
+diff --git a/src/main/resources/scoreboard.yml b/src/main/resources/scoreboard.yml
+new file mode 100644
+index 0000000..b74ad29
+--- /dev/null
++++ b/src/main/resources/scoreboard.yml
+@@ -0,0 +1,116 @@
++#   +------------------------------------------------------+   #
++#  /     __________      _______________       ____         \  #
++# |     / ________/      \_____   _____/      / __ \         | #
++# |    | /                     | |           / /  \ \        | #
++# |    | |  _______            | |          / /____\ \       | #
++# |    | |  \_____ \           | |         / ________ \      | #
++# |    | \_______/ ||          | |        / /        \ \     | #
++# |     \__________/           |_|       /_/          \_\    | #
++# |                                                          | #
++# |                   File: scoreboard.yml                   | #
++# |                  Author: [LuckyRaven10]                  | #
++#  \                                                        /  #
++#   +------------------------------------------------------+   #
++
++# +------------------------------------+ #
++# |      Scoreboard Configuration      | #
++# +------------------------------------+ #
++# Schema is byte-identical to Gangland Warfare's own scoreboard.yml (decoupling wave WS1) — copy an existing
++# file from plugins/Gangland_Warfare/scoreboard.yml straight over this one and it will load unchanged.
++#
++# WS1-D3: every %gangland_*%-style token below needs PlaceholderAPI installed (plus Gangland Warfare's own PAPI
++# expansion) to resolve, or an optional Keystone PlaceholderProvider another plugin publishes on the
++# ServicesManager. Without either, these tokens render as literal text instead of gang/user data — this plugin
++# logs a startup warning when PlaceholderAPI is not found. Static lines (no %...% tokens) work with no
++# dependency at all.
++Board:
++   Title:
++      Interval: 2
++      Lines:
++         - "&f&l<>"
++         - "&f&l<&8=&f&l>"
++         - "&f&l< &8G &f&l>"
++         - "&f&l< &8G&7a &f&l>"
++         - "&f&l< &8G&7a&8n &f&l>"
++         - "&f&l< &8G&7a&8n&7g &f&l>"
++         - "&f&l< &8G&7a&8n&7g&8l &f&l>"
++         - "&f&l< &8G&7a&8n&7g&8l&7a &f&l>"
++         - "&f&l< &8G&7a&8n&7g&8l&7a&8n &f&l>"
++         - "&f&l< &8G&7a&8n&7g&8l&7a&8n&7d &f&l>"
++         - "&f&l[ &8G&7a&8n&7g&8l&7a&8n&7d &f&l]"
++         - "&f&l[ &7G&8a&7n&8g&7l&8a&7n&8d &f&l]"
++         - "&f&l[ &8G&7a&8n&7g&8l&7a&8n&7d &f&l]"
++         - "&f&l[ &7G&8a&7n&8g&7l&8a&7n&8d &f&l]"
++         - "&f&l[ &8G&7a&8n&7g&8l&7a&8n&7d &f&l]"
++         - "&f&l> &8G&7a&8n&7g&8l&7a&8n&7d &f&l<"
++         - "&f&l> &8G&7a&8n&7g&8l&7a&8n &f&l<"
++         - "&f&l> &8G&7a&8n&7g&8l&7a &f&l<"
++         - "&f&l> &8G&7a&8n&7g&8l &f&l<"
++         - "&f&l> &8G&7a&8n&7g &f&l<"
++         - "&f&l> &8G&7a&8n &f&l<"
++         - "&f&l> &8G&7a &f&l<"
++         - "&f&l> &8G &warning: in the working copy of 'src/main/resources/settings.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/test/java/org/luckyraven/plaque/board/BoardManagerTest.java', LF will be replaced by CRLF the next time Git touches it
+f&l<"
++         - "&f&l>&8=&f&l<"
++         - "&f&l><"
++   Rows:
++      1:
++         Interval: 10
++         Lines:
++            - "&7+--------------------+"
++            - "&8+--------------------+"
++      2:
++         Interval: 0
++         Lines:
++            - "&7&l> &c&lPlayer:"
++      3:
++         Interval: 2
++         Lines:
++            - "   &7Wanted: %gangland_flashif:user_wanted-level>0:15:5:user_wanted%"
++      4:
++         Interval: 10
++         Lines:
++            - "   &7Bounty: &2%gangland_money_symbol%&e%gangland_user_bounty%"
++      5:
++         Interval: 10
++         Lines:
++            - "   &7Purse: &2%gangland_money_symbol%&e%gangland_user_balance%"
++      6:
++         Interval: 10
++         Lines:
++            - "   &7Level: &e%gangland_user_level% &8| &c%gangland_user_experience-percentage%%"
++      7:
++         Interval: 0
++         Lines:
++            - "                              "
++      8:
++         Interval: 0
++         Lines:
++            - "&7&l> &c&lBank Info:"
++      9:
++         Interval: 10
++         Lines:
++            - "   &7Name: &e%gangland_bank_name%"
++      10:
++         Interval: 10
++         Lines:
++            - "   &7Balance: &2%gangland_money_symbol%&e%gangland_bank_balance%"
++      11:
++         Interval: 0
++         Lines:
++            - "                              "
++      12:
++         Interval: 0
++         Lines:
++            - "&7&l> &c&lGang Info:"
++      13:
++         Interval: 10
++         Lines:
++            - "   &7Name: &e%gangland_gang_display-name%"
++      14:
++         Interval: 10
++         Lines:
++            - "   &7Contribution: &2%gangland_money_symbol%&e%gangland_user_contributed-amount%"
++      15:
++         Interval: 40
++         Lines:
++            - "   &7Members: &e%gangland_gang_online-members-size%&8/&c%gangland_gang_members-size%"
+diff --git a/src/main/resources/settings.yml b/src/main/resources/settings.yml
+new file mode 100644
+index 0000000..a4b776a
+--- /dev/null
++++ b/src/main/resources/settings.yml
+@@ -0,0 +1,27 @@
++#   +------------------------------------------------------+   #
++#  /     __________      _______________       ____         \  #
++# |     / ________/      \_____   _____/      / __ \         | #
++# |    | /                     | |           / /  \ \        | #
++# |    | |  _______            | |          / /____\ \       | #
++# |    | |  \_____ \           | |         / ________ \      | #
++# |    | \_______/ ||          | |        / /        \ \     | #
++# |     \__________/           |_|       /_/          \_\    | #
++# |                                                          | #
++# |                    File: settings.yml                    | #
++# |                  Author: [LuckyRaven10]                  | #
++#  \                                                        /  #
++#   +------------------------------------------------------+   #
++
++# +---------------------+ #
++# |    Plaque Config    | #
++# +---------------------+ #
++
++# Whether the board is shown to players at all.
++Enable: true
++
++# This plugin ships one driver: Driver_V3 (a minimal-diff, low-overhead renderer that only sends a FastBoard
++# update for a line whose computed text actually changed since its last tick). Gangland's older Driver_V1/
++# Driver_V2 clustering algorithms were retired when this plugin split out of Gangland Warfare (decoupling wave
++# WS1, decision D1) — an unrecognised value here falls back to Driver_V3 with a startup warning rather than
++# silently reproducing a deleted driver's behaviour.
++Driver: "Driver_V3"
+diff --git a/src/test/java/org/luckyraven/plaque/board/BoardManagerTest.java b/src/test/java/org/luckyraven/plaque/board/BoardManagerTest.java
+new file mode 100644
+index 0000000..cb57856
+--- /dev/null
++++ b/src/test/java/org/luckyraven/plaque/board/BoardManagerTest.java
+@@ -0,0 +1,103 @@
++package org.luckyraven.plaque.board;
++
++import org.bukkit.Bukkit;
++import org.bukkit.entity.Player;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.luckyravwarning: in the working copy of 'src/test/java/org/luckyraven/plaque/placeholder/PapiTextTest.java', LF will be replaced by CRLF the next time Git touches it
+en.keystone.testkit.BukkitStatics;
++import org.luckyraven.plaque.board.configuration.BoardAddon;
++import org.luckyraven.plaque.config.BoardSettings;
++
++import java.util.ArrayList;
++import java.util.List;
++import java.util.UUID;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.when;
++
++/**
++ * Pins B5, the enable-time/reload board sweep: {@link BoardManager} must build and start a board for every
++ * already-online player, not only for players who join after the plugin is up. The docket risk this test guards
++ * (WS1 plan §8 row 6): "nothing in a naive join/quit-listener port would fail a build or a unit test if [the
++ * sweep is] missing, it would only show up as 'boards are missing after a restart with players online,'
++ * reported late."
++ *
++ * <p>{@code createBoard}/{@code removeBoard} are overridden to record calls instead of building a real
++ * {@code FastBoard} (which needs a live NMS server) — {@link BoardManager#sweepOnlinePlayers()} and
++ * {@link BoardManager#rebuildAll()} themselves run the real production code, which is what this test pins.
++ * {@link BoardAddon}/{@link BoardSettings} are Mockito mocks since neither is touched once {@code createBoard}
++ * is overridden away.
++ */
++@DisplayName("BoardManager - the enable-time/reload sweep must reach every already-online player (B5)")
++class BoardManagerTest {
++
++	@Test
++	@DisplayName("B5: sweepOnlinePlayers() builds a board for every already-online player")
++	void sweepOnlinePlayers_reachesEveryOnlinePlayer() {
++		try (BukkitStatics bukkit = BukkitStatics.install()) {
++			Player alice = onlinePlayer();
++			Player bob   = onlinePlayer();
++			bukkit.statics().when(Bukkit::getOnlinePlayers).thenReturn(List.of(alice, bob));
++
++			CountingBoardManager manager = countingManager();
++
++			manager.sweepOnlinePlayers();
++
++			assertEquals(List.of(alice, bob), manager.createBoardCalls);
++		}
++	}
++
++	@Test
++	@DisplayName("rebuildAll() ends every tracked board, then re-sweeps every online player (/plaque reload)")
++	void rebuildAll_killsAndRecreatesEveryOnlinePlayersBoard() {
++		try (BukkitStatics bukkit = BukkitStatics.install()) {
++			Player alice = onlinePlayer();
++			bukkit.statics().when(Bukkit::getOnlinePlayers).thenReturn(List.of(alice));
++
++			CountingBoardManager manager = countingManager();
++
++			manager.rebuildAll();
++
++			assertEquals(List.of(alice), manager.removeBoardCalls, "the existing board must be ended first");
++			assertEquals(List.of(alice), manager.createBoardCalls, "the board must be rebuilt for the still-online player");
++		}
++	}
++
++	private static CountingBoardManager countingManager() {
++		BoardAddon    boardAddon = mock(BoardAddon.class);
++		BoardSettings settings   = mock(BoardSettings.class);
++		when(settings.isEnabled()).thenReturn(true);
++
++		return new CountingBoardManager(mock(JavaPlugin.class), boardAddon, settings);
++	}
++
++	private static Player onlinePlayer() {
++		Player player = mock(Player.class);
++		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
++		return player;
++	}
++
++	private static final class CountingBoardManager extends BoardManager {
++
++		private final List<Player> createBoardCalls = new ArrayList<>();
++		private final List<Player> removeBoardCalls = new ArrayList<>();
++
++		CountingBoardManager(JavaPlugin plugin, BoardAddon boardAddon, BoardSettings settings) {
++			super(plugin, (player, raw) -> raw, boardAddon, settings);
++		}
++
++		@Override
++		public void createBoard(Player player) {
++			createBoardCalls.add(player);
++		}
++
++		@Override
++		public void removeBoard(Player player) {
++			removeBoardCalls.add(player);
++		}
++
++	}
++
++}
+diff --git a/src/test/java/org/luckyraven/plaque/placeholder/PapiTextTest.java b/src/test/java/org/luckyraven/plaque/placeholder/PapiTextTest.java
+new file mode 100644
+index 0000000..42908ea
+--- /dev/null
++++ b/src/test/java/org/luckyraven/plaque/placeholder/PapiTextTest.java
+@@ -0,0 +1,89 @@
++package org.luckyraven.plaque.placeholder;
++
++import org.bukkit.OfflinePlayer;
++import org.bukkit.plugin.Plugin;
++import org.bukkit.plugin.PluginManager;
++import org.bukkit.plugin.RegisteredServiceProvider;
++import org.bukkit.plugin.ServicesManager;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.keystone.placeholder.PlaceholderProvider;
++import org.luckyraven.keystone.testkit.BukkitStatics;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.mockito.ArgumentMatchers.eq;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.when;
++
++/**
++ * Pins the board's placeholder chain (WS1-D5/A5): PlaceholderAPI first, then an optional Keystone
++ * {@link PlaceholderProvider} another plugin (e.g. Gangland) may publish on the {@code ServicesManager}, then raw
++ * text. All three fallbacks are exercised here.
++ *
++ * <p>The "PAPI present" case mirrors {@code PlaceholderAPIProviderTest} in keystone-hooks: percent-free text
++ * short-circuits before {@link org.luckyraven.keystone.papi.PlaceholderAPIProvider} ever touches PlaceholderAPI's
++ * static bridge, so this stays safe without a live PAPI plugin on the test classpath.
++ */
++@DisplayName("PapiText - PAPI, then ServicesManager PlaceholderProvider, then raw text (WS1-D5)")
++class PapiTextTest {
++
++	private static final OfflinePlayer PLAYER = mock(OfflinePlayer.class);
++
++	@Test
++	@DisplayName("PlaceholderAPI absent, no ServicesManager registration: raw text passes through unchanged")
++	void papiAbsent_noFallback_returnsRawText() {
++		try (BukkitStatics bukkit = BukkitStatics.install()) {
++			stubPapiPresence(bukkit.pluginManager(), false);
++			stubServiceRegistration(bukkit.servicesManager(), null);
++
++			PapiText papiText = new PapiText();
++
++			assertEquals("%gangland_user_balance%", papiText.resolve(PLAYER, "%gangland_user_balance%"));
++		}
++	}
++
++	@Test
++	@DisplayName("PlaceholderAPI present, percent-free text: delegates to PlaceholderAPIProvider's short-circuit")
++	void papiPresent_percentFreeText_returnsUnchanged() {
++		try (BukkitStatics bukkit = BukkitStatics.install()) {
++			stubPapiPresence(bukkit.pluginManager(), true);
++			stubServiceRegistration(bukkit.servicesManager(), null);
++
++			PapiText papiText = new PapiText();
++
++			assertEquals("plain text, no tokens", papiText.resolve(PLAYER, "plain text, no tokens"));
++		}
++	}
++
++	@Test
++	@DisplayName("D5: PlaceholderAPI absent, a ServicesManager PlaceholderProvider is registered: fallback fires")
++	void papiAbsent_serviceFallbackRegistered_fallbackResolves() {
++		try (BukkitStatics bukkit = BukkitStatics.install()) {
++			stubPapiPresence(bukkit.pluginManager(), false);
++
++			PlaceholderProvider fallback = (player, raw) -> raw.replace("%gangland_user_balance%", "500");
++			stubServiceRegistration(bukkit.servicesManager(), fallback);
++
++			PapiText papiText = new PapiText();
++
++			assertEquals("Purse: 500", papiText.resolve(PLAYER, "Purse: %gangland_user_balance%"));
++		}
++	}
++
++	private static void stubPapiPresence(PluginManager pluginManager, boolean present) {
++		when(pluginManager.getPlugin(eq("PlaceholderAPI"))).thenReturn(present ? mock(Plugin.class) : null);
++	}
++
++	@SuppressWarnings("unchecked")
++	private static void stubServiceRegistration(ServicesManager servicesManager, PlaceholderProvider provider) {
++		if (provider == null) {
++			when(servicesManager.getRegistration(PlaceholderProvider.class)).thenReturn(null);
++			return;
++		}
++
++		RegisteredServiceProvider<PlaceholderProvider> registration = mock(RegisteredServiceProvider.class);
++		when(registration.getProvider()).thenReturn(provider);
++		when(servicesManager.getRegistration(PlaceholderProvider.class)).thenReturn(registration);
++	}
++
++}

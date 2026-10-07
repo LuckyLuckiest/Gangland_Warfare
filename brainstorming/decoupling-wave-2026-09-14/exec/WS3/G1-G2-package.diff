@@ -1,0 +1,1493 @@
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/item/NbtTagCatalog.java b/gangland-api/src/main/java/org/luckyraven/gangland/item/NbtTagCatalog.java
+similarity index 100%
+rename from gangland-impl/src/main/java/org/luckyraven/gangland/item/NbtTagCatalog.java
+rename to gangland-api/src/main/java/org/luckyraven/gangland/item/NbtTagCatalog.java
+diff --git a/gangland-build/pom.xml b/gangland-build/pom.xml
+index 1a84c94c..ed460fad 100644
+--- a/gangland-build/pom.xml
++++ b/gangland-build/pom.xml
+@@ -79,6 +79,7 @@
+                             <exclude>org.luckyraven:gangland-turf</exclude>
+                             <exclude>org.luckyraven:gangland-civilians</exclude>
+                             <exclude>org.luckyraven:gangland-npc-shops</exclude>
++                            <exclude>org.luckyraven:gangland-lootchest</exclude>
+                         </excludes>
+                     </artifactSet>
+                 </configuration>
+@@ -142,6 +143,11 @@
+                                     <artifactId>gangland-npc-shops</artifactId>
+                                     <version>${project.version}</version>
+                                 </artifactItem>
++                                <artifactItem>
++                                    <groupId>org.luckyraven</groupId>
++                                    <artifactId>gangland-lootchest</artifactId>
++                                    <version>${project.version}</version>
++                                </artifactItem>
+                             </artifactItems>
+                         </configuration>
+                     </execution>
+@@ -195,6 +201,12 @@
+             <version>${project.parent.version}</version>
+             <scope>provided</scope>
+         </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>gangland-lootchest</artifactId>
++            <version>${project.parent.version}</version>
++            <scope>provided</scope>
++        </dependency>
+     </dependencies>
+ 
+ </project>
+diff --git a/gangland-features/gangland-lootchest/pom.xml b/gangland-features/gangland-lootchest/pom.xml
+new file mode 100644
+index 00000000..0204fbda
+--- /dev/null
++++ b/gangland-features/gangland-lootchest/pom.xml
+@@ -0,0 +1,100 @@
++<?xml version="1.0" encoding="UTF-8"?>
++<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
++         xmlns="http://maven.apache.org/POM/4.0.0"
++         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
++    <modelVersion>4.0.0</modelVersion>
++
++    <parent>
++        <groupId>org.luckyraven</groupId>
++        <artifactId>gangland-features</artifactId>
++        <version>${revision}</version>
++        <relativePath>../pom.xml</relativePath>
++    </parent>
++
++    <artifactId>gangland-lootchest</artifactId>
++
++    <name>Gangland Loot Chests</name>
++
++    <dependencies>
++        <!-- Spigot Build -->
++        <dependency>
++            <groupId>org.spigotmc</groupId>
++            <artifactId>spigot-api</artifactId>
++            <scope>provided</scope>
++        </dependency>
++
++        <!-- Local dependencies -->
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-common</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-persistence</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>gangland-core</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-bean</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-command</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-module</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-hooks</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-item</artifactId>
++        </dependency>
++        <!-- WS3 G1/G2 (0.10.0): holograms, promoted out of Gangland's own hologram-api into Keystone. -->
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-hologram</artifactId>
++        </dependency>
++
++        <!-- ponytail: temporary — LootChestService/LootChestSession/LootChestWand*/LootChestWandListener still
++             build their shared chest view and the admin wand-preview screen on gangland-ui/inventory-api
++             (InventoryHandler, inventory.part.Fill). WS3's own G3 (owned by the CUT lead, not this stream) swaps
++             the chest view to a raw-Bukkit SharedLootInventory and the wand preview to keystone-inventory's
++             PaginatedChestMenu; this dependency and the 3 below it (only LootChestWand.java uses them) drop out
++             then, not before. -->
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>inventory-api</artifactId>
++            <scope>provided</scope>
++        </dependency>
++        <dependency>
++            <groupId>com.github.cryptomorin</groupId>
++            <artifactId>XSeries</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>de.tr7zw</groupId>
++            <artifactId>item-nbt-api-plugin</artifactId>
++        </dependency>
++        <dependency>
++            <groupId>net.wesjd</groupId>
++            <artifactId>anvilgui</artifactId>
++        </dependency>
++
++        <!-- The host API — the only host artifact a runtime module compiles against, so the compiler enforces the
++             contract. Provided: at runtime this module is loaded from plugins/Gangland_Warfare/modules/ by
++             Keystone's ModuleLoader, whose parent is the host plugin's classloader, so every api class resolves
++             from the shaded core jar. Dependency direction is module -> api; the host never names a module type. -->
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>gangland-api</artifactId>
++            <scope>provided</scope>
++        </dependency>
++    </dependencies>
++
++</project>
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/ChestCooldownManager.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/ChestCooldownManager.java
+similarity index 98%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/ChestCooldownManager.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/ChestCooldownManager.java
+index 9e1a65e5..47c5a456 100644
+--- a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/ChestCooldownManager.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/ChestCooldownManager.java
+@@ -9,8 +9,8 @@ import org.bukkit.plugin.java.JavaPlugin;
+ import org.bukkit.scheduler.BukkitTask;
+ import org.bukkit.util.Vector;
+ import org.luckyraven.keystone.util.ChatUtil;
+-import org.luckyraven.gangland.hologram.Hologram;
+-import org.luckyraven.gangland.hologram.HologramService;
++import org.luckyraven.keystone.hologram.Hologram;
++import org.luckyraven.keystone.hologram.HologramService;
+ import org.luckyraven.keystone.item.ItemParser;
+ import org.luckyraven.gangland.lootchest.config.LootChestMessagesProvider;
+ import org.luckyraven.gangland.lootchest.data.LootChestData;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/lootchest/LootChestManager.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/LootChestManager.java
+similarity index 90%
+rename from gangland-impl/src/main/java/org/luckyraven/gangland/lootchest/LootChestManager.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/LootChestManager.java
+index be06c5bc..7a3320dd 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/lootchest/LootChestManager.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/LootChestManager.java
+@@ -1,12 +1,12 @@
+ package org.luckyraven.gangland.lootchest;
+ 
+ import lombok.CustomLog;
+-import org.luckyraven.gangland.Gangland;
++import org.bukkit.plugin.java.JavaPlugin;
+ import org.luckyraven.keystone.bean.BeanLifecycle;
+ import org.luckyraven.keystone.timer.CountdownTimer;
+-import org.luckyraven.gangland.database.repositories.lootchest.LootChestRepository;
++import org.luckyraven.gangland.lootchest.database.LootChestRepository;
+ import org.luckyraven.keystone.exception.PluginException;
+-import org.luckyraven.gangland.hologram.HologramService;
++import org.luckyraven.keystone.hologram.HologramService;
+ import org.luckyraven.keystone.item.ItemParser;
+ import org.luckyraven.gangland.lootchest.config.LootChestMessagesProvider;
+ import org.luckyraven.gangland.lootchest.data.LootChestData;
+@@ -18,12 +18,12 @@ import java.util.Collection;
+ @CustomLog
+ public class LootChestManager extends LootChestService implements BeanLifecycle {
+ 
+-	private final Gangland           gangland;
++	private final JavaPlugin         gangland;
+ 	private final RepositoryRegistry repositoryRegistry;
+ 
+ 	private CountdownTimer pendingStartupTimer;
+ 
+-	public LootChestManager(Gangland gangland, String prefix, HologramService hologramService,
++	public LootChestManager(JavaPlugin gangland, String prefix, HologramService hologramService,
+ 	                        RepositoryRegistry repositoryRegistry,
+ 	                        ItemParser itemParser,
+ 	                        LootChestMessagesProvider messagesProvider) {
+diff --git a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/LootChestModule.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/LootChestModule.java
+new file mode 100644
+index 00000000..cce41501
+--- /dev/null
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/LootChestModule.java
+@@ -0,0 +1,50 @@
++package org.luckyraven.gangland.lootchest;
++
++import lombok.CustomLog;
++import org.luckyraven.gangland.lootchest.config.LootChestFileConfig;
++import org.luckyraven.gangland.lootchest.config.LootChestModuleConfig;
++import org.luckyraven.keystone.module.KeystoneModule;
++import org.luckyraven.keystone.module.ModuleContext;
++import org.luckyraven.keystone.module.ModuleRegistrar;
++
++/**
++ * Entry point of the loot chest module ({@code module.yml} {@code Main}). Declares what the module contributes; the
++ * host runs the scans and folds {@link LootChestFileConfig} and {@link LootChestModuleConfig} into its phased bean
++ * pipeline.
++ *
++ * <ul>
++ *     <li>{@link LootChestFileConfig} - the KERNEL-phase {@code loot_chests}/{@code tiers} YAML FileHandlers.</li>
++ *     <li>{@link LootChestModuleConfig} - the hologram bean (now {@code keystone-hologram}), {@code LootChestManager},
++ *     its {@code LootChestLoader} and the {@code NbtTagCatalog} tag registration.</li>
++ *     <li>{@code lootchest.listener} - the chest-interaction, wand and reward-on-open listeners.</li>
++ *     <li>{@code lootchest.command} - the root {@code /glw lootchest} command and its sub-arguments.</li>
++ *     <li>{@code lootchest.database} - the {@code LootChestRepository} and its table, scanned through the module
++ *     loader.</li>
++ * </ul>
++ */
++@CustomLog
++public final class LootChestModule implements KeystoneModule {
++
++	public static final String LISTENER_PACKAGE   = "org.luckyraven.gangland.lootchest.listener";
++	public static final String COMMAND_PACKAGE    = "org.luckyraven.gangland.lootchest.command";
++	public static final String REPOSITORY_PACKAGE = "org.luckyraven.gangland.lootchest.database";
++
++	@Override
++	public void configure(ModuleRegistrar registrar) {
++		registrar.configuration(LootChestFileConfig.class)
++		         .configuration(LootChestModuleConfig.class)
++		         .listenerPackage(LISTENER_PACKAGE)
++		         .commandPackage(COMMAND_PACKAGE)
++		         .repositoryPackage(REPOSITORY_PACKAGE);
++	}
++
++	@Override
++	public void onEnabled(ModuleContext context) {
++		log.info("Loot chest module {} enabled", context.module().descriptor().version());
++	}
++
++	@Override
++	public void onDisabled() {
++		log.debug("Loot chest module disabled");
++	}
++}
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/LootChestService.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/LootChestService.java
+similarity index 99%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/LootChestService.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/LootChestService.java
+index c838c8a8..47908302 100644
+--- a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/LootChestService.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/LootChestService.java
+@@ -10,7 +10,7 @@ import org.bukkit.plugin.java.JavaPlugin;
+ import org.jetbrains.annotations.Nullable;
+ import org.luckyraven.keystone.item.ItemBuilder;
+ import org.luckyraven.keystone.sound.SoundEffect;
+-import org.luckyraven.gangland.hologram.HologramService;
++import org.luckyraven.keystone.hologram.HologramService;
+ import org.luckyraven.gangland.inventory.InventoryHandler;
+ import org.luckyraven.keystone.item.ItemParser;
+ import org.luckyraven.gangland.lootchest.config.LootChestConfig;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/lootchest/LootChestWand.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/LootChestWand.java
+similarity index 100%
+rename from gangland-impl/src/main/java/org/luckyraven/gangland/lootchest/LootChestWand.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/LootChestWand.java
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/lootchest/LootChestWandTag.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/LootChestWandTag.java
+similarity index 100%
+rename from gangland-impl/src/main/java/org/luckyraven/gangland/lootchest/LootChestWandTag.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/LootChestWandTag.java
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/lootchest/LootChestRemoveCommand.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestRemoveCommand.java
+similarity index 78%
+rename from gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/lootchest/LootChestRemoveCommand.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestRemoveCommand.java
+index b8e556dc..7e4ec0ef 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/lootchest/LootChestRemoveCommand.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestRemoveCommand.java
+@@ -1,4 +1,4 @@
+-package org.luckyraven.gangland.command.sub.lootchest;
++package org.luckyraven.gangland.lootchest.command;
+ 
+ import org.bukkit.Location;
+ import org.bukkit.block.Block;
+@@ -9,7 +9,7 @@ import org.luckyraven.keystone.command.argument.Argument;
+ import org.luckyraven.keystone.command.argument.SubArgument;
+ import org.luckyraven.keystone.util.TriConsumer;
+ import org.luckyraven.keystone.datastructure.Tree;
+-import org.luckyraven.gangland.database.GanglandDatabase;
++import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
+ import org.luckyraven.gangland.file.configuration.Messages;
+ import org.luckyraven.gangland.lootchest.LootChestManager;
+ import org.luckyraven.gangland.lootchest.data.LootChestData;
+@@ -18,14 +18,14 @@ import java.util.Optional;
+ 
+ class LootChestRemoveCommand extends SubArgument {
+ 
+-	private final LootChestManager lootChestManager;
+-	private final GanglandDatabase ganglandDatabase;
++	private final LootChestManager   lootChestManager;
++	private final RepositoryRegistry repositoryRegistry;
+ 
+ 	protected LootChestRemoveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                                 LootChestManager lootChestManager, GanglandDatabase ganglandDatabase) {
++	                                 LootChestManager lootChestManager, RepositoryRegistry repositoryRegistry) {
+ 		super(gangland, "remove", tree, parent);
+-		this.lootChestManager = lootChestManager;
+-		this.ganglandDatabase = ganglandDatabase;
++		this.lootChestManager   = lootChestManager;
++		this.repositoryRegistry = repositoryRegistry;
+ 	}
+ 
+ 	@Override
+@@ -56,8 +56,7 @@ class LootChestRemoveCommand extends SubArgument {
+ 			lootChestManager.unregisterChest(chestData.getId());
+ 
+ 			// Remove from database via repository
+-			var lootChestRepository = ganglandDatabase.getRepositoryRegistry()
+-			                                          .getRepository(LootChestData.class);
++			var lootChestRepository = repositoryRegistry.getRepository(LootChestData.class);
+ 			lootChestRepository.delete(chestData);
+ 
+ 			player.sendMessage(Messages.LOOT_CHEST_REMOVED.toString());
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/lootchest/LootChestWandCommand.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestWandCommand.java
+similarity index 85%
+rename from gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/lootchest/LootChestWandCommand.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestWandCommand.java
+index ad0f75ba..a60bef81 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/lootchest/LootChestWandCommand.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestWandCommand.java
+@@ -1,4 +1,4 @@
+-package org.luckyraven.gangland.command.sub.lootchest;
++package org.luckyraven.gangland.lootchest.command;
+ 
+ import org.bukkit.command.CommandSender;
+ import org.bukkit.entity.Player;
+@@ -8,7 +8,7 @@ import org.luckyraven.gangland.GanglandApi;
+ import org.luckyraven.gangland.command.Command;
+ import org.luckyraven.keystone.command.argument.Argument;
+ import org.luckyraven.keystone.bean.command.CommandHandler;
+-import org.luckyraven.gangland.database.GanglandDatabase;
++import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
+ import org.luckyraven.gangland.lootchest.LootChestManager;
+ import org.luckyraven.gangland.lootchest.LootChestWand;
+ import org.luckyraven.gangland.util.GanglandChatUtil;
+@@ -18,16 +18,16 @@ import java.util.Map;
+ @CommandHandler
+ public class LootChestWandCommand extends Command {
+ 
+-	private final LootChestManager lootChestManager;
+-	private final GanglandDatabase ganglandDatabase;
++	private final LootChestManager   lootChestManager;
++	private final RepositoryRegistry repositoryRegistry;
+ 
+ 	public LootChestWandCommand(JavaPlugin gangland,
+ 	                            LootChestManager lootChestManager,
+-	                            GanglandDatabase ganglandDatabase) {
++	                            RepositoryRegistry repositoryRegistry) {
+ 		super(gangland, "lootchest", true, "wand", "lootchestwand", "chestwand", "lcwand");
+ 
+-		this.lootChestManager = lootChestManager;
+-		this.ganglandDatabase = ganglandDatabase;
++		this.lootChestManager   = lootChestManager;
++		this.repositoryRegistry = repositoryRegistry;
+ 
+ 		var list = getCommands().entrySet()
+ 				.stream()
+@@ -59,7 +59,7 @@ public class LootChestWandCommand extends Command {
+ 		Argument editArg = new LootChestWandEditCommand(getPlugin(), getArgumentTree(), getArgument(),
+ 		                                                lootChestManager);
+ 		Argument removeArg = new LootChestRemoveCommand(getPlugin(), getArgumentTree(), getArgument(),
+-		                                                lootChestManager, ganglandDatabase);
++		                                                lootChestManager, repositoryRegistry);
+ 
+ 		getArgument().addSubArgument(editArg);
+ 		getArgument().addSubArgument(removeArg);
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/lootchest/LootChestWandEditCommand.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestWandEditCommand.java
+similarity index 97%
+rename from gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/lootchest/LootChestWandEditCommand.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestWandEditCommand.java
+index 45d07d4d..d57ee38f 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/lootchest/LootChestWandEditCommand.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestWandEditCommand.java
+@@ -1,4 +1,4 @@
+-package org.luckyraven.gangland.command.sub.lootchest;
++package org.luckyraven.gangland.lootchest.command;
+ 
+ import org.bukkit.command.CommandSender;
+ import org.bukkit.entity.Player;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/lootchest/GanglandLootChestMessages.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/GanglandLootChestMessages.java
+similarity index 95%
+rename from gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/lootchest/GanglandLootChestMessages.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/GanglandLootChestMessages.java
+index cadc9e69..ba3b2720 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/lootchest/GanglandLootChestMessages.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/GanglandLootChestMessages.java
+@@ -1,8 +1,7 @@
+-package org.luckyraven.gangland.file.configuration.lootchest;
++package org.luckyraven.gangland.lootchest.config;
+ 
+ import org.luckyraven.keystone.util.messages.TimeMessagesProvider;
+ import org.luckyraven.gangland.file.configuration.Messages;
+-import org.luckyraven.gangland.lootchest.config.LootChestMessagesProvider;
+ import org.luckyraven.gangland.lootchest.data.LootTier;
+ 
+ /**
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestConfig.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestConfig.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestConfig.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestConfig.java
+diff --git a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestFileConfig.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestFileConfig.java
+new file mode 100644
+index 00000000..d989d85e
+--- /dev/null
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestFileConfig.java
+@@ -0,0 +1,39 @@
++package org.luckyraven.gangland.lootchest.config;
++
++import lombok.CustomLog;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.luckyraven.keystone.bean.Bean;
++import org.luckyraven.keystone.bean.Configuration;
++import org.luckyraven.keystone.bean.Phase;
++import org.luckyraven.keystone.module.ModuleLoader;
++import org.luckyraven.keystone.persistence.FileHandler;
++import org.luckyraven.keystone.persistence.FileManager;
++
++/**
++ * KERNEL-phase registration of the loot chest module's own YAML defaults ({@code lootchests/loot_chests.yml},
++ * {@code lootchests/tiers.yml}, moved out of {@code gangland-impl}'s {@code KernelConfig.fileManager()} — WS3 G2).
++ * The five-argument {@link FileHandler} copies the bundled default out of the MODULE jar (parent-first loader), so
++ * the same path must no longer exist in the core jar. Runs in KERNEL, after {@code KernelConfig} produced the
++ * {@link FileManager} (parameter = ordering edge) — mirrors {@code CiviliansYamlConfig}.
++ */
++@CustomLog
++@Configuration(phase = Phase.KERNEL)
++public class LootChestFileConfig {
++
++	private final JavaPlugin plugin;
++
++	public LootChestFileConfig(JavaPlugin plugin) {
++		this.plugin = plugin;
++	}
++
++	@Bean
++	public LootChestFiles lootChestFiles(FileManager fileManager, ModuleLoader moduleLoader) {
++		fileManager.addFile(new FileHandler(plugin, "loot_chests", "lootchests", ".yml", moduleLoader.classLoader()),
++		                    true);
++		fileManager.addFile(new FileHandler(plugin, "tiers", "lootchests", ".yml", moduleLoader.classLoader()), true);
++		return new LootChestFiles();
++	}
++
++	/** Marker so the registration above is an ordinary @Bean in the phased pipeline. */
++	public static final class LootChestFiles { }
++}
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestLoader.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestLoader.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestLoader.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestLoader.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestMessagesProvider.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestMessagesProvider.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestMessagesProvider.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestMessagesProvider.java
+diff --git a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestModuleConfig.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestModuleConfig.java
+new file mode 100644
+index 00000000..76f20119
+--- /dev/null
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestModuleConfig.java
+@@ -0,0 +1,80 @@
++package org.luckyraven.gangland.lootchest.config;
++
++import lombok.CustomLog;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.luckyraven.gangland.GanglandApi;
++import org.luckyraven.gangland.item.NbtTagCatalog;
++import org.luckyraven.gangland.lootchest.LootChestManager;
++import org.luckyraven.gangland.lootchest.LootChestService;
++import org.luckyraven.gangland.lootchest.LootChestWandTag;
++import org.luckyraven.keystone.bean.Bean;
++import org.luckyraven.keystone.bean.Configuration;
++import org.luckyraven.keystone.hologram.HologramService;
++import org.luckyraven.keystone.item.ItemParser;
++import org.luckyraven.keystone.persistence.FileManager;
++import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
++
++/**
++ * CONFIG-phase wiring for the loot chest module: the {@code keystone-hologram} bean (armor-stand holograms,
++ * promoted out of Gangland's own {@code hologram-api} — WS3 G1), {@link LootChestManager}, its
++ * {@link LootChestLoader} and the {@link NbtTagCatalog} tag registration (all moved out of the core's
++ * {@code GameplayConfig}/{@code ItemConfig} — WS3 G2).
++ *
++ * <p>{@link #lootChestLoader} calls {@code fileManager.registerInitializer(loader); fileManager.initializeAll();}
++ * inline (B1) rather than a separate {@code @PostConstruct} — the exact precedent {@code CopsNCrooksModuleConfig}'s
++ * {@code copLoader} and {@code CiviliansModuleConfig}'s civilian loader both use. The core's own
++ * {@code GameplayConfig.initializeDeferredLoaders()} (renamed from {@code initializeLootChestLoader}) still runs its
++ * own {@code fileManager.initializeAll()} afterwards for every other core-registered {@code FileLoader} — a second
++ * {@code initializeAll()} call is a no-op for files already loaded.
++ */
++@CustomLog
++@Configuration
++public class LootChestModuleConfig {
++
++	private final JavaPlugin plugin;
++
++	public LootChestModuleConfig(JavaPlugin plugin) {
++		this.plugin = plugin;
++	}
++
++	@Bean
++	public HologramService hologramService() {
++		HologramService service = new HologramService(plugin);
++		service.registerProtection(plugin);
++		return service;
++	}
++
++	@Bean
++	public LootChestManager lootChestManager(HologramService hologramService, RepositoryRegistry repositoryRegistry,
++	                                         ItemParser itemParser) {
++		return new LootChestManager(plugin, GanglandApi.FULL_PREFIX, hologramService, repositoryRegistry, itemParser,
++		                            new GanglandLootChestMessages());
++	}
++
++	@Bean
++	public LootChestService lootChestService(LootChestManager lootChestManager) {
++		return lootChestManager;
++	}
++
++	@Bean
++	public LootChestLoader lootChestLoader(LootChestManager lootChestManager, FileManager fileManager) {
++		LootChestLoader loader = new LootChestLoader(plugin, lootChestManager, new LootChestSettings(), false, null,
++		                                             fileManager);
++		fileManager.registerInitializer(loader);
++		fileManager.initializeAll();
++		return loader;
++	}
++
++	/**
++	 * Registers the wand's 9 NBT tag names (lowercase — the exact form the core's pre-split
++	 * {@code ItemConfig.nbtTagCatalog()} loop used, C11) into the always-present core catalog bean. Item registry
++	 * injection, no new interface — see {@code documentation/module-loader.md}'s {@code NbtTagCatalog} entry.
++	 */
++	@Bean
++	public LootChestWandTag[] lootChestWandTags(NbtTagCatalog catalog) {
++		for (LootChestWandTag tag : LootChestWandTag.values()) {
++			catalog.register(tag.toString().toLowerCase());
++		}
++		return LootChestWandTag.values();
++	}
++}
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/lootchest/LootChestSettings.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestSettings.java
+similarity index 82%
+rename from gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/lootchest/LootChestSettings.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestSettings.java
+index 68359583..94c5774f 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/lootchest/LootChestSettings.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestSettings.java
+@@ -1,7 +1,6 @@
+-package org.luckyraven.gangland.file.configuration.lootchest;
++package org.luckyraven.gangland.lootchest.config;
+ 
+ import org.luckyraven.gangland.file.configuration.Settings;
+-import org.luckyraven.gangland.lootchest.config.LootChestSettingsProvider;
+ 
+ import java.util.List;
+ 
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestSettingsProvider.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestSettingsProvider.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestSettingsProvider.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestSettingsProvider.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/data/CrackingSession.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/data/CrackingSession.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/data/CrackingSession.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/data/CrackingSession.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/data/LootChestData.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/data/LootChestData.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/data/LootChestData.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/data/LootChestData.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/data/LootChestSession.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/data/LootChestSession.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/data/LootChestSession.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/data/LootChestSession.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/data/LootTable.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/data/LootTable.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/data/LootTable.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/data/LootTable.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/data/LootTier.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/data/LootTier.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/data/LootTier.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/data/LootTier.java
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/lootchest/LootChestRepository.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/database/LootChestRepository.java
+similarity index 96%
+rename from gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/lootchest/LootChestRepository.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/database/LootChestRepository.java
+index 2acef667..ad852246 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/lootchest/LootChestRepository.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/database/LootChestRepository.java
+@@ -1,11 +1,10 @@
+-package org.luckyraven.gangland.database.repositories.lootchest;
++package org.luckyraven.gangland.lootchest.database;
+ 
+ import lombok.Setter;
+ import org.bukkit.Bukkit;
+ import org.bukkit.Location;
+ import org.bukkit.World;
+ import org.bukkit.plugin.java.JavaPlugin;
+-import org.luckyraven.gangland.database.tables.lootchest.LootChestTable;
+ import org.luckyraven.gangland.lootchest.LootChestService;
+ import org.luckyraven.gangland.lootchest.data.LootChestData;
+ import org.luckyraven.gangland.lootchest.data.LootTier;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/lootchest/LootChestTable.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/database/LootChestTable.java
+similarity index 97%
+rename from gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/lootchest/LootChestTable.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/database/LootChestTable.java
+index b7264bb1..157dc46b 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/lootchest/LootChestTable.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/database/LootChestTable.java
+@@ -1,4 +1,4 @@
+-package org.luckyraven.gangland.database.tables.lootchest;
++package org.luckyraven.gangland.lootchest.database;
+ 
+ import org.luckyraven.gangland.lootchest.data.LootChestData;
+ import org.luckyraven.keystone.persistence.database.component.Attribute;
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/LootChestEvent.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/LootChestEvent.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/LootChestEvent.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/LootChestEvent.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestCrackingEndEvent.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestCrackingEndEvent.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestCrackingEndEvent.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestCrackingEndEvent.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestCrackingFailureEvent.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestCrackingFailureEvent.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestCrackingFailureEvent.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestCrackingFailureEvent.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestCrackingStartEvent.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestCrackingStartEvent.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestCrackingStartEvent.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestCrackingStartEvent.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestCrackingSuccessEvent.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestCrackingSuccessEvent.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestCrackingSuccessEvent.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestCrackingSuccessEvent.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestDuringCrackingEvent.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestDuringCrackingEvent.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestDuringCrackingEvent.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/cracking/LootChestDuringCrackingEvent.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/lootchest/LootChestCloseEvent.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/lootchest/LootChestCloseEvent.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/lootchest/LootChestCloseEvent.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/lootchest/LootChestCloseEvent.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/lootchest/LootChestCooldownCompleteEvent.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/lootchest/LootChestCooldownCompleteEvent.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/lootchest/LootChestCooldownCompleteEvent.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/lootchest/LootChestCooldownCompleteEvent.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/lootchest/LootChestDuringCooldownEvent.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/lootchest/LootChestDuringCooldownEvent.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/lootchest/LootChestDuringCooldownEvent.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/lootchest/LootChestDuringCooldownEvent.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/lootchest/LootChestOpenEvent.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/lootchest/LootChestOpenEvent.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/events/lootchest/LootChestOpenEvent.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/events/lootchest/LootChestOpenEvent.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/handler/LootChestHandler.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/handler/LootChestHandler.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/handler/LootChestHandler.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/handler/LootChestHandler.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/handler/cracking/CrackingFailedHandler.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/handler/cracking/CrackingFailedHandler.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/handler/cracking/CrackingFailedHandler.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/handler/cracking/CrackingFailedHandler.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/handler/cracking/CrackingStartHandler.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/handler/cracking/CrackingStartHandler.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/handler/cracking/CrackingStartHandler.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/handler/cracking/CrackingStartHandler.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/handler/cracking/CrackingSuccessHandler.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/handler/cracking/CrackingSuccessHandler.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/handler/cracking/CrackingSuccessHandler.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/handler/cracking/CrackingSuccessHandler.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/handler/cracking/CrackingTickHandler.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/handler/cracking/CrackingTickHandler.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/handler/cracking/CrackingTickHandler.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/handler/cracking/CrackingTickHandler.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/handler/lootchest/ChestCooldownCompleteHandler.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/handler/lootchest/ChestCooldownCompleteHandler.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/handler/lootchest/ChestCooldownCompleteHandler.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/handler/lootchest/ChestCooldownCompleteHandler.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/handler/lootchest/ChestCooldownTickHandler.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/handler/lootchest/ChestCooldownTickHandler.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/handler/lootchest/ChestCooldownTickHandler.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/handler/lootchest/ChestCooldownTickHandler.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/handler/lootchest/SessionCompleteHandler.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/handler/lootchest/SessionCompleteHandler.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/handler/lootchest/SessionCompleteHandler.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/handler/lootchest/SessionCompleteHandler.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/handler/lootchest/SessionStartHandler.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/handler/lootchest/SessionStartHandler.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/handler/lootchest/SessionStartHandler.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/handler/lootchest/SessionStartHandler.java
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/item/LootItemReference.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/item/LootItemReference.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/item/LootItemReference.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/item/LootItemReference.java
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/listener/loot/LootChestEarnGoodsListener.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/listener/LootChestEarnGoodsListener.java
+similarity index 98%
+rename from gangland-impl/src/main/java/org/luckyraven/gangland/listener/loot/LootChestEarnGoodsListener.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/listener/LootChestEarnGoodsListener.java
+index 0bbf62d6..43da997e 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/listener/loot/LootChestEarnGoodsListener.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/listener/LootChestEarnGoodsListener.java
+@@ -1,4 +1,4 @@
+-package org.luckyraven.gangland.listener.loot;
++package org.luckyraven.gangland.lootchest.listener;
+ 
+ import org.bukkit.entity.Player;
+ import org.bukkit.event.EventHandler;
+diff --git a/gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/listener/LootChestListener.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/listener/LootChestListener.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/main/java/org/luckyraven/gangland/lootchest/listener/LootChestListener.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/listener/LootChestListener.java
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/listener/loot/LootChestWandListener.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/listener/LootChestWandListener.java
+similarity index 96%
+rename from gangland-impl/src/main/java/org/luckyraven/gangland/listener/loot/LootChestWandListener.java
+rename to gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/listener/LootChestWandListener.java
+index 82eb50cc..ba72fe2e 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/listener/loot/LootChestWandListener.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/listener/LootChestWandListener.java
+@@ -1,4 +1,4 @@
+-package org.luckyraven.gangland.listener.loot;
++package org.luckyraven.gangland.lootchest.listener;
+ 
+ import lombok.RequiredArgsConstructor;
+ import org.bukkit.block.Block;
+@@ -9,7 +9,7 @@ import org.bukkit.event.Listener;
+ import org.bukkit.event.block.Action;
+ import org.bukkit.event.player.PlayerInteractEvent;
+ import org.bukkit.inventory.ItemStack;
+-import org.luckyraven.gangland.Gangland;
++import org.bukkit.plugin.java.JavaPlugin;
+ import org.luckyraven.keystone.bean.listener.ListenerHandler;
+ import org.luckyraven.keystone.util.ChatUtil;
+ import org.luckyraven.gangland.file.configuration.Settings;
+@@ -23,7 +23,7 @@ import java.util.List;
+ @RequiredArgsConstructor
+ public class LootChestWandListener implements Listener {
+ 
+-	private final Gangland         gangland;
++	private final JavaPlugin       gangland;
+ 	private final LootChestManager lootChestManager;
+ 
+ 	@EventHandler(priority = EventPriority.HIGH)
+diff --git a/gangland-impl/src/main/resources/lootchests/loot_chests.yml b/gangland-features/gangland-lootchest/src/main/resources/lootchests/loot_chests.yml
+similarity index 100%
+rename from gangland-impl/src/main/resources/lootchests/loot_chests.yml
+rename to gangland-features/gangland-lootchest/src/main/resources/lootchests/loot_chests.yml
+diff --git a/gangland-impl/src/main/resources/lootchests/tiers.yml b/gangland-features/gangland-lootchest/src/main/resources/lootchests/tiers.yml
+similarity index 100%
+rename from gangland-impl/src/main/resources/lootchests/tiers.yml
+rename to gangland-features/gangland-lootchest/src/main/resources/lootchests/tiers.yml
+diff --git a/gangland-features/gangland-lootchest/src/main/resources/module.yml b/gangland-features/gangland-lootchest/src/main/resources/module.yml
+new file mode 100644
+index 00000000..b25b7622
+--- /dev/null
++++ b/gangland-features/gangland-lootchest/src/main/resources/module.yml
+@@ -0,0 +1,7 @@
++# Keystone module descriptor - read by Gangland's ModuleLoader from plugins/Gangland_Warfare/modules/.
++Id: lootchest
++Name: Gangland Loot Chests
++Version: ${project.version}
++Main: org.luckyraven.gangland.lootchest.LootChestModule
++Host_Api: 2.0
++Artifact: org.luckyraven:gangland-lootchest
+diff --git a/gangland-ui/hologram-api/src/main/resources/org/luckyraven/gangland/hologram/module.properties b/gangland-features/gangland-lootchest/src/main/resources/org/luckyraven/gangland/lootchest/module.properties
+similarity index 100%
+rename from gangland-ui/hologram-api/src/main/resources/org/luckyraven/gangland/hologram/module.properties
+rename to gangland-features/gangland-lootchest/src/main/resources/org/luckyraven/gangland/lootchest/module.properties
+diff --git a/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/LootChestModuleTest.java b/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/LootChestModuleTest.java
+new file mode 100644
+index 00000000..edc58eba
+--- /dev/null
++++ b/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/LootChestModuleTest.java
+@@ -0,0 +1,45 @@
++package org.luckyraven.gangland.lootchest;
++
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.gangland.lootchest.command.LootChestWandCommand;
++import org.luckyraven.gangland.lootchest.config.LootChestFileConfig;
++import org.luckyraven.gangland.lootchest.config.LootChestModuleConfig;
++import org.luckyraven.gangland.lootchest.database.LootChestRepository;
++import org.luckyraven.gangland.lootchest.listener.LootChestListener;
++import org.luckyraven.keystone.module.ModuleRegistrations;
++
++import java.util.List;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++
++/**
++ * The loot chest module's declaration to the host (WS3 G2, 0.10.0 decoupling wave): the two configuration classes
++ * in declaration order, its listener/command/repository packages, and that the declared packages match where the
++ * classes actually live. Modelled on {@code GadgetModuleTest} / {@code MailModuleTest}.
++ */
++@DisplayName("LootChestModule")
++class LootChestModuleTest {
++
++	@Test
++	@DisplayName("configure registers LootChestFileConfig and LootChestModuleConfig plus the three packages")
++	void configure_declaresConfigsAndPackages() {
++		ModuleRegistrations registrations = new ModuleRegistrations();
++
++		new LootChestModule().configure(registrations);
++
++		assertEquals(List.of(LootChestFileConfig.class, LootChestModuleConfig.class), registrations.configurations());
++		assertEquals(List.of(LootChestModule.LISTENER_PACKAGE), registrations.listenerPackages());
++		assertEquals(List.of(LootChestModule.COMMAND_PACKAGE), registrations.commandPackages());
++		assertEquals(List.of(LootChestModule.REPOSITORY_PACKAGE), registrations.repositoryPackages());
++	}
++
++	@Test
++	@DisplayName("the declared packages match where the classes actually live")
++	void declaredPackages_matchClasses() {
++		assertTrue(LootChestListener.class.getPackageName().startsWith(LootChestModule.LISTENER_PACKAGE));
++		assertEquals(LootChestModule.COMMAND_PACKAGE, LootChestWandCommand.class.getPackageName());
++		assertEquals(LootChestModule.REPOSITORY_PACKAGE, LootChestRepository.class.getPackageName());
++	}
++}
+diff --git a/gangland-ui/lootchest-api/src/test/java/org/luckyraven/gangland/lootchest/data/CrackingSessionTest.java b/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/data/CrackingSessionTest.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/test/java/org/luckyraven/gangland/lootchest/data/CrackingSessionTest.java
+rename to gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/data/CrackingSessionTest.java
+diff --git a/gangland-ui/lootchest-api/src/test/java/org/luckyraven/gangland/lootchest/data/LootChestDataTest.java b/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/data/LootChestDataTest.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/test/java/org/luckyraven/gangland/lootchest/data/LootChestDataTest.java
+rename to gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/data/LootChestDataTest.java
+diff --git a/gangland-ui/lootchest-api/src/test/java/org/luckyraven/gangland/lootchest/data/LootTableTest.java b/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/data/LootTableTest.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/test/java/org/luckyraven/gangland/lootchest/data/LootTableTest.java
+rename to gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/data/LootTableTest.java
+diff --git a/gangland-ui/lootchest-api/src/test/java/org/luckyraven/gangland/lootchest/item/LootItemReferenceTest.java b/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/item/LootItemReferenceTest.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/test/java/org/luckyraven/gangland/lootchest/item/LootItemReferenceTest.java
+rename to gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/item/LootItemReferenceTest.java
+diff --git a/gangland-ui/lootchest-api/src/test/java/org/luckyraven/gangland/lootchest/support/TestItemParsers.java b/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/support/TestItemParsers.java
+similarity index 100%
+rename from gangland-ui/lootchest-api/src/test/java/org/luckyraven/gangland/lootchest/support/TestItemParsers.java
+rename to gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/support/TestItemParsers.java
+diff --git a/gangland-features/pom.xml b/gangland-features/pom.xml
+index 1db826b6..cbf4889b 100644
+--- a/gangland-features/pom.xml
++++ b/gangland-features/pom.xml
+@@ -23,6 +23,7 @@
+         <module>cops-n-crooks</module>
+         <module>gangland-civilians</module>
+         <module>gangland-npc-shops</module>
++        <module>gangland-lootchest</module>
+     </modules>
+ 
+ </project>
+diff --git a/gangland-impl/pom.xml b/gangland-impl/pom.xml
+index 29db1940..11ed69e7 100644
+--- a/gangland-impl/pom.xml
++++ b/gangland-impl/pom.xml
+@@ -52,7 +52,7 @@
+         </dependency>
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+-            <artifactId>hologram-api</artifactId>
++            <artifactId>keystone-hologram</artifactId>
+         </dependency>
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java b/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java
+index fe7d1641..10d5330a 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java
+@@ -17,14 +17,11 @@ import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionS
+ import org.luckyraven.gangland.file.configuration.inventory.InventoryLoader;
+ import org.luckyraven.gangland.file.configuration.inventory.InventoryRuntimeContext;
+ import org.luckyraven.gangland.file.configuration.inventory.itemsource.GangItemSourceProvider;
+-import org.luckyraven.gangland.file.configuration.lootchest.GanglandLootChestMessages;
+ import org.luckyraven.gangland.file.configuration.Settings;
+-import org.luckyraven.gangland.file.configuration.lootchest.LootChestSettings;
+ import org.luckyraven.gangland.gang.GangFilterAdapter;
+ import org.luckyraven.gangland.gang.GangManager;
+ import org.luckyraven.gangland.gang.member.MemberFilterAdapter;
+ import org.luckyraven.gangland.gang.user.UserManager;
+-import org.luckyraven.gangland.hologram.HologramService;
+ import org.luckyraven.gangland.menu.condition.BooleanExpressionEvaluator;
+ import org.luckyraven.gangland.menu.filter.*;
+ import org.luckyraven.gangland.menu.multi.ItemSourceProvider;
+@@ -40,12 +37,8 @@ import org.luckyraven.gangland.item.contract.UniqueItemRegistry;
+ import org.luckyraven.gangland.item.listener.money.MoneyProximityPickupTask;
+ import org.luckyraven.gangland.item.money.MoneyAddon;
+ import org.luckyraven.gangland.item.money.MoneyDepositService;
+-import org.luckyraven.gangland.lootchest.LootChestManager;
+-import org.luckyraven.gangland.lootchest.LootChestService;
+-import org.luckyraven.gangland.lootchest.config.LootChestLoader;
+ import org.luckyraven.keystone.persistence.FileHandler;
+ import org.luckyraven.keystone.persistence.FileManager;
+-import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
+ import org.luckyraven.gangland.sign.LegacySignRewriter;
+ import org.luckyraven.gangland.sign.SignManager;
+ import org.luckyraven.gangland.sign.bulk.BulkActionManager;
+@@ -58,9 +51,10 @@ import org.luckyraven.gangland.sign.service.SignInteraction;
+ import org.luckyraven.gangland.sign.service.SignInteractionService;
+ 
+ /**
+- * CONFIG-phase wiring for the gameplay-side managers: signs, items, inventory, hologram, loot chest, money. The
+- * weapon/wearable system's own CONFIG-phase beans live in the weapon module's {@code WeaponModuleConfig}. Every
+- * bean here can constructor-inject any FILE-phase or DATABASE-phase bean by type.
++ * CONFIG-phase wiring for the gameplay-side managers: signs, items, inventory, money. The hologram + loot chest
++ * beans that used to live here moved to the {@code gangland-lootchest} module's own {@code LootChestModuleConfig}
++ * (WS3 G2, 0.10.0). The weapon/wearable system's own CONFIG-phase beans live in the weapon module's
++ * {@code WeaponModuleConfig}. Every bean here can constructor-inject any FILE-phase or DATABASE-phase bean by type.
+  *
+  * <p>The structural ordering inside the topo sort:
+  * <ol>
+@@ -68,8 +62,7 @@ import org.luckyraven.gangland.sign.service.SignInteractionService;
+  *     and {@link BulkActionManager}.</li>
+  *     <li>Money + items: {@link MoneyDepositService} (must precede the parser; {@code MoneyConverter} resolves the
+  *     currency symbol via the contract on instantiation), then the converter beans → {@link ItemConverterRegistry}
+- *     → {@link ItemParser}, which the loot chest + cops-n-crooks beans transitively consume.</li>
+- *     <li>Loot chest: {@link HologramService} → {@link LootChestManager} → {@link LootChestLoader}.</li>
++ *     → {@link ItemParser}, which cops-n-crooks and the loot chest module transitively consume.</li>
+  * </ol>
+  *
+  * <p>Tiny bridge / contract beans live here too because they're trivial wrappers over the managers they bind to.
+@@ -284,35 +277,6 @@ public class GameplayConfig {
+ 		return new GanglandUniqueItemInteractionService(inventoryRuntimeContext);
+ 	}
+ 
+-	// ---------------------------------------------------------------------------------------------------------------
+-	// Hologram + loot chest
+-	// ---------------------------------------------------------------------------------------------------------------
+-
+-	@Bean
+-	public HologramService hologramService() {
+-		return new HologramService(gangland);
+-	}
+-
+-	@Bean
+-	public LootChestManager lootChestManager(HologramService hologramService, RepositoryRegistry repositoryRegistry,
+-	                                         ItemParser itemParser) {
+-		return new LootChestManager(gangland, Gangland.FULL_PREFIX, hologramService, repositoryRegistry, itemParser,
+-		                            new GanglandLootChestMessages());
+-	}
+-
+-	@Bean
+-	public LootChestService lootChestService(LootChestManager lootChestManager) {
+-		return lootChestManager;
+-	}
+-
+-	@Bean
+-	public LootChestLoader lootChestLoader(LootChestManager lootChestManager, FileManager fileManager) {
+-		LootChestLoader loader = new LootChestLoader(gangland, lootChestManager, new LootChestSettings(), false, null,
+-		                                             fileManager);
+-		fileManager.registerInitializer(loader);
+-		return loader;
+-	}
+-
+ 	/**
+ 	 * {@link InventoryLoader} can't initialize during construction because its load callback parses prefixed item refs
+ 	 * (weapon:awp, wearable:police_vest, …) via {@link ItemParser}, which is also a CONFIG-phase bean. By the time this
+@@ -329,13 +293,17 @@ public class GameplayConfig {
+ 	}
+ 
+ 	/**
+-	 * {@link LootChestLoader} can't initialize during construction for the same reason as
+-	 * {@link #initializeInventoryLoader()}: {@link org.luckyraven.keystone.persistence.FileManager#initializeAll()}
+-	 * eagerly resolves item strings through module/plugin converters (weapon:awp, …) that don't exist yet inside the
+-	 * CONFIG phase. Deferring the call here (T-11) lets those converters register first.
++	 * Global CONFIG-phase initializer for every core-registered {@link org.luckyraven.keystone.persistence.FileLoader}
++	 * (not lootchest-specific despite the name it carried before WS3 G2 moved the loot chest loader itself into the
++	 * {@code gangland-lootchest} module's own {@code LootChestModuleConfig}, which calls
++	 * {@code fileManager.initializeAll()} inline — B1). Kept, renamed from {@code initializeLootChestLoader}:
++	 * {@link org.luckyraven.keystone.persistence.FileManager#initializeAll()} eagerly resolves item strings through
++	 * module/plugin converters (weapon:awp, …) that don't exist yet inside the CONFIG phase, so this still has to run
++	 * once every CONFIG bean (core and module) exists (T-11) — a second {@code initializeAll()} call is a no-op for
++	 * files a module's own inline call already loaded.
+ 	 */
+ 	@PostConstruct
+-	public void initializeLootChestLoader() {
++	public void initializeDeferredLoaders() {
+ 		FileManager fileManager = context.get(FileManager.class);
+ 		if (fileManager != null) {
+ 			fileManager.initializeAll();
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java b/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java
+index ebe737e0..44fba800 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/config/ItemConfig.java
+@@ -17,7 +17,6 @@ import org.luckyraven.gangland.item.money.MoneyConverter;
+ import org.luckyraven.gangland.item.money.MoneyDepositService;
+ import org.luckyraven.gangland.item.refresher.*;
+ import org.luckyraven.gangland.item.serializer.*;
+-import org.luckyraven.gangland.lootchest.LootChestWandTag;
+ 
+ /**
+  * CONFIG-phase wiring for the item framework: every converter (string → ItemStack), serializer (ItemStack → string),
+@@ -128,12 +127,13 @@ public class ItemConfig {
+ 
+ 	// ── nbt tag catalogue ───────────────────────────────────────────────────────────────────────────────────────
+ 
++	/**
++	 * The loot chest module (if present) registers its own {@code LootChestWandTag} values into this catalog via
++	 * registry injection (WS3 G2, {@code documentation/module-loader.md}'s {@code NbtTagCatalog} entry) — the core
++	 * only ever produces the empty catalog itself.
++	 */
+ 	@Bean
+ 	public NbtTagCatalog nbtTagCatalog() {
+-		NbtTagCatalog catalog = new NbtTagCatalog();
+-		for (LootChestWandTag tag : LootChestWandTag.values()) {
+-			catalog.register(tag.toString().toLowerCase());
+-		}
+-		return catalog;
++		return new NbtTagCatalog();
+ 	}
+ }
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/config/KernelConfig.java b/gangland-impl/src/main/java/org/luckyraven/gangland/config/KernelConfig.java
+index ceacdb02..df5693cf 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/config/KernelConfig.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/config/KernelConfig.java
+@@ -166,9 +166,6 @@ public class KernelConfig {
+ 		fm.addFile(new FileHandler(gangland, "unique_items", "items", ".yml"), true);
+ 		fm.addFile(new FileHandler(gangland, "money", "items", ".yml"), true);
+ 
+-		fm.addFile(new FileHandler(gangland, "loot_chests", "lootchests", ".yml"), true);
+-		fm.addFile(new FileHandler(gangland, "tiers", "lootchests", ".yml"), true);
+-
+ 		return fm;
+ 	}
+ 
+diff --git a/gangland-ui/hologram-api/pom.xml b/gangland-ui/hologram-api/pom.xml
+deleted file mode 100644
+index 7e88b038..00000000
+--- a/gangland-ui/hologram-api/pom.xml
++++ /dev/null
+@@ -1,35 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+-         xmlns="http://maven.apache.org/POM/4.0.0"
+-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+-    <modelVersion>4.0.0</modelVersion>
+-
+-    <parent>
+-        <groupId>org.luckyraven</groupId>
+-        <artifactId>gangland-ui</artifactId>
+-        <version>${revision}</version>
+-        <relativePath>../pom.xml</relativePath>
+-    </parent>
+-
+-    <artifactId>hologram-api</artifactId>
+-
+-    <name>Hologram API</name>
+-
+-    <dependencies>
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>keystone-common</artifactId>
+-        </dependency>
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>keystone-bean</artifactId>
+-        </dependency>
+-        <!-- Local dependencies -->
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>gangland-core</artifactId>
+-            <scope>provided</scope>
+-        </dependency>
+-    </dependencies>
+-
+-</project>
+diff --git a/gangland-ui/hologram-api/src/main/java/org/luckyraven/gangland/hologram/Hologram.java b/gangland-ui/hologram-api/src/main/java/org/luckyraven/gangland/hologram/Hologram.java
+deleted file mode 100644
+index 56436399..00000000
+--- a/gangland-ui/hologram-api/src/main/java/org/luckyraven/gangland/hologram/Hologram.java
++++ /dev/null
+@@ -1,175 +0,0 @@
+-package org.luckyraven.gangland.hologram;
+-
+-import lombok.Getter;
+-import org.bukkit.Location;
+-import org.bukkit.World;
+-import org.bukkit.entity.ArmorStand;
+-import org.bukkit.entity.EntityType;
+-import org.bukkit.inventory.EquipmentSlot;
+-import org.luckyraven.keystone.util.ChatUtil;
+-
+-import java.util.ArrayList;
+-import java.util.List;
+-import java.util.Objects;
+-import java.util.UUID;
+-
+-/**
+- * Represents a hologram made of invisible armor stands
+- */
+-@Getter
+-public class Hologram {
+-
+-	private static final double LINE_HEIGHT = 0.25;
+-
+-	private final UUID             id;
+-	private final Location         baseLocation;
+-	private final List<ArmorStand> lines;
+-
+-	private boolean spawned;
+-
+-	public Hologram(Location location) {
+-		this.id           = UUID.randomUUID();
+-		this.baseLocation = location.clone();
+-		this.lines        = new ArrayList<>();
+-		this.spawned      = false;
+-	}
+-
+-	/**
+-	 * Spawns the hologram with the given lines
+-	 *
+-	 * @param text lines of text (first line is at the top)
+-	 */
+-	public void spawn(String... text) {
+-		if (spawned) return;
+-		if (baseLocation.getWorld() == null) return;
+-
+-		for (int i = 0; i < text.length; i++) {
+-			Location   lineLocation = baseLocation.clone().add(0, (text.length - 1 - i) * LINE_HEIGHT, 0);
+-			ArmorStand armorStand   = createArmorStand(lineLocation, text[i]);
+-
+-			lines.add(armorStand);
+-		}
+-
+-		spawned = true;
+-	}
+-
+-	/**
+-	 * Updates all lines of the hologram
+-	 */
+-	public void update(String... text) {
+-		if (!spawned) {
+-			spawn(text);
+-			return;
+-		}
+-
+-		// If line count changed, respawn
+-		if (lines.size() != text.length) {
+-			despawn();
+-			spawn(text);
+-			return;
+-		}
+-
+-		// Update existing lines
+-		for (int i = 0; i < text.length; i++) {
+-			ArmorStand armorStand = lines.get(i);
+-			if (isArmorStandDead(armorStand)) continue;
+-
+-			armorStand.setCustomName(ChatUtil.color(text[i]));
+-		}
+-	}
+-
+-	/**
+-	 * Updates a specific line
+-	 */
+-	public void updateLine(int lineIndex, String text) {
+-		if (!spawned || lineIndex < 0 || lineIndex >= lines.size()) return;
+-
+-		ArmorStand armorStand = lines.get(lineIndex);
+-
+-		if (isArmorStandDead(armorStand)) return;
+-
+-		armorStand.setCustomName(ChatUtil.color(text));
+-	}
+-
+-	/**
+-	 * Despawns and removes the hologram
+-	 */
+-	public void despawn() {
+-		if (!spawned) return;
+-
+-		for (ArmorStand armorStand : lines) {
+-			if (isArmorStandDead(armorStand)) continue;
+-
+-			armorStand.remove();
+-		}
+-
+-		lines.clear();
+-		spawned = false;
+-	}
+-
+-	/**
+-	 * Teleports the hologram to a new location
+-	 */
+-	public void teleport(Location newLocation) {
+-		if (!spawned) {
+-			baseLocation.setWorld(newLocation.getWorld());
+-			baseLocation.setX(newLocation.getX());
+-			baseLocation.setY(newLocation.getY());
+-			baseLocation.setZ(newLocation.getZ());
+-			return;
+-		}
+-
+-		for (int i = 0; i < lines.size(); i++) {
+-			ArmorStand armorStand = lines.get(i);
+-
+-			if (isArmorStandDead(armorStand)) continue;
+-
+-			Location lineLocation = newLocation.clone().add(0, (lines.size() - 1 - i) * LINE_HEIGHT, 0);
+-			armorStand.teleport(lineLocation);
+-		}
+-
+-		baseLocation.setWorld(newLocation.getWorld());
+-		baseLocation.setX(newLocation.getX());
+-		baseLocation.setY(newLocation.getY());
+-		baseLocation.setZ(newLocation.getZ());
+-	}
+-
+-	public int getLineCount() {
+-		return lines.size();
+-	}
+-
+-	private boolean isArmorStandDead(ArmorStand armorStand) {
+-		return armorStand == null || armorStand.isDead();
+-	}
+-
+-	private ArmorStand createArmorStand(Location location, String text) {
+-		World      world      = Objects.requireNonNull(location.getWorld());
+-		ArmorStand armorStand = (ArmorStand) world.spawnEntity(location, EntityType.ARMOR_STAND);
+-
+-		armorStand.setVisible(false);
+-		armorStand.setGravity(false);
+-		armorStand.setCustomName(ChatUtil.color(text));
+-		armorStand.setCustomNameVisible(true);
+-		// Makes it non-collidable and non-interactable
+-		armorStand.setMarker(true);
+-		armorStand.setInvulnerable(true);
+-		armorStand.setSmall(true);
+-		armorStand.setSilent(true);
+-		// Won't save to disk
+-		armorStand.setPersistent(false);
+-
+-		// Disable all equipment slots to prevent item placement
+-		for (EquipmentSlot slot : EquipmentSlot.values()) {
+-			armorStand.addEquipmentLock(slot, ArmorStand.LockType.ADDING_OR_CHANGING);
+-			armorStand.addEquipmentLock(slot, ArmorStand.LockType.REMOVING_OR_CHANGING);
+-		}
+-
+-		// Prevent any arms from showing (and thus being interactable)
+-		armorStand.setArms(false);
+-		// Make it so the base plate doesn't show
+-		armorStand.setBasePlate(false);
+-
+-		return armorStand;
+-	}
+-
+-}
+diff --git a/gangland-ui/hologram-api/src/main/java/org/luckyraven/gangland/hologram/HologramProtectionListener.java b/gangland-ui/hologram-api/src/main/java/org/luckyraven/gangland/hologram/HologramProtectionListener.java
+deleted file mode 100644
+index d243e255..00000000
+--- a/gangland-ui/hologram-api/src/main/java/org/luckyraven/gangland/hologram/HologramProtectionListener.java
++++ /dev/null
+@@ -1,38 +0,0 @@
+-package org.luckyraven.gangland.hologram;
+-
+-import lombok.RequiredArgsConstructor;
+-import org.bukkit.entity.ArmorStand;
+-import org.bukkit.event.EventHandler;
+-import org.bukkit.event.EventPriority;
+-import org.bukkit.event.Listener;
+-import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
+-import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+-import org.luckyraven.keystone.bean.listener.ListenerHandler;
+-
+-@ListenerHandler
+-@RequiredArgsConstructor
+-public class HologramProtectionListener implements Listener {
+-
+-	private final HologramService hologramService;
+-
+-	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+-	public void onArmorStandManipulate(PlayerArmorStandManipulateEvent event) {
+-		if (!isHologramArmorStand(event.getRightClicked())) return;
+-
+-		event.setCancelled(true);
+-	}
+-
+-	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+-	public void onInteractAtEntity(PlayerInteractAtEntityEvent event) {
+-		if (!(event.getRightClicked() instanceof ArmorStand armorStand) || !isHologramArmorStand(armorStand)) return;
+-
+-		event.setCancelled(true);
+-	}
+-
+-	private boolean isHologramArmorStand(ArmorStand armorStand) {
+-		// Check if this armor stand belongs to any of our holograms
+-		return hologramService.getHolograms().values()
+-				.stream().anyMatch(hologram -> hologram.getLines().contains(armorStand));
+-	}
+-
+-}
+diff --git a/gangland-ui/hologram-api/src/main/java/org/luckyraven/gangland/hologram/HologramService.java b/gangland-ui/hologram-api/src/main/java/org/luckyraven/gangland/hologram/HologramService.java
+deleted file mode 100644
+index 663b7069..00000000
+--- a/gangland-ui/hologram-api/src/main/java/org/luckyraven/gangland/hologram/HologramService.java
++++ /dev/null
+@@ -1,133 +0,0 @@
+-package org.luckyraven.gangland.hologram;
+-
+-import lombok.Getter;
+-import org.bukkit.Location;
+-import org.bukkit.plugin.java.JavaPlugin;
+-import org.bukkit.scheduler.BukkitTask;
+-import org.luckyraven.keystone.bean.BeanLifecycle;
+-
+-import java.util.Map;
+-import java.util.Optional;
+-import java.util.UUID;
+-import java.util.concurrent.ConcurrentHashMap;
+-import java.util.function.BiConsumer;
+-
+-/**
+- * Service for managing holograms throughout the plugin
+- */
+-public class HologramService implements BeanLifecycle {
+-
+-	private final JavaPlugin              plugin;
+-	@Getter
+-	private final Map<UUID, Hologram>     holograms;
+-	private final Map<UUID, BukkitTask>   updateTasks;
+-	private final Map<Location, Hologram> hologramsByLocation;
+-
+-	public HologramService(JavaPlugin plugin) {
+-		this.plugin              = plugin;
+-		this.holograms           = new ConcurrentHashMap<>();
+-		this.updateTasks         = new ConcurrentHashMap<>();
+-		this.hologramsByLocation = new ConcurrentHashMap<>();
+-	}
+-
+-	/**
+-	 * Creates and spawns a new hologram at the specified location
+-	 */
+-	public Hologram createHologram(Location location, String... lines) {
+-		Hologram hologram = new Hologram(location);
+-		hologram.spawn(lines);
+-
+-		holograms.put(hologram.getId(), hologram);
+-		hologramsByLocation.put(location, hologram);
+-
+-		return hologram;
+-	}
+-
+-	/**
+-	 * Creates a hologram with automatic updates at a fixed interval
+-	 *
+-	 * @param location the location for the hologram
+-	 * @param updateIntervalTicks how often to update (in ticks, 20 ticks = 1 second)
+-	 * @param updater function that provides new lines for the hologram
+-	 */
+-	public Hologram createUpdatingHologram(Location location, long updateIntervalTicks,
+-	                                       BiConsumer<Hologram, Long> updater, String... initialLines) {
+-		Hologram hologram = createHologram(location, initialLines);
+-
+-		BukkitTask task = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
+-			if (!hologram.isSpawned()) {
+-				cancelUpdateTask(hologram.getId());
+-				return;
+-			}
+-			updater.accept(hologram, System.currentTimeMillis());
+-		}, updateIntervalTicks, updateIntervalTicks);
+-
+-		updateTasks.put(hologram.getId(), task);
+-		return hologram;
+-	}
+-
+-	/**
+-	 * Gets a hologram by its ID
+-	 */
+-	public Optional<Hologram> getHologram(UUID id) {
+-		return Optional.ofNullable(holograms.get(id));
+-	}
+-
+-	/**
+-	 * Gets a hologram at a specific location
+-	 */
+-	public Optional<Hologram> getHologramAt(Location location) {
+-		return Optional.ofNullable(hologramsByLocation.get(location));
+-	}
+-
+-	/**
+-	 * Removes and despawns a hologram
+-	 */
+-	public void removeHologram(UUID id) {
+-		Hologram hologram = holograms.remove(id);
+-		if (hologram == null) return;
+-
+-		cancelUpdateTask(id);
+-		hologramsByLocation.remove(hologram.getBaseLocation());
+-		hologram.despawn();
+-	}
+-
+-	/**
+-	 * Removes a hologram at a specific location
+-	 */
+-	public void removeHologramAt(Location location) {
+-		Hologram hologram = hologramsByLocation.get(location);
+-		if (hologram == null) return;
+-
+-		removeHologram(hologram.getId());
+-	}
+-
+-	/**
+-	 * Cancels the update task for a hologram
+-	 */
+-	public void cancelUpdateTask(UUID hologramId) {
+-		BukkitTask task = updateTasks.remove(hologramId);
+-
+-		if (task == null) return;
+-
+-		task.cancel();
+-	}
+-
+-	/**
+-	 * Clears all holograms
+-	 */
+-	public void clear() {
+-		updateTasks.values().forEach(BukkitTask::cancel);
+-		updateTasks.clear();
+-
+-		holograms.values().forEach(Hologram::despawn);
+-		holograms.clear();
+-		hologramsByLocation.clear();
+-	}
+-
+-	@Override
+-	public void onShutdown() {
+-		clear();
+-	}
+-
+-}
+diff --git a/gangland-ui/lootchest-api/pom.xml b/gangland-ui/lootchest-api/pom.xml
+index abd30b9b..bcacceb6 100644
+--- a/gangland-ui/lootchest-api/pom.xml
++++ b/gangland-ui/lootchest-api/pom.xml
+@@ -41,8 +41,7 @@
+         </dependency>
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+-            <artifactId>hologram-api</artifactId>
+-            <scope>provided</scope>
++            <artifactId>keystone-hologram</artifactId>
+         </dependency>
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+diff --git a/gangland-ui/pom.xml b/gangland-ui/pom.xml
+index 2616d886..6d0e602e 100644
+--- a/gangland-ui/pom.xml
++++ b/gangland-ui/pom.xml
+@@ -17,7 +17,6 @@
+     <name>Gangland UI</name>
+ 
+     <modules>
+-        <module>hologram-api</module>
+         <module>inventory-api</module>
+         <module>sign-api</module>
+         <module>lootchest-api</module>
+diff --git a/pom.xml b/pom.xml
+index 3790d9e1..ff3263e1 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -205,6 +205,14 @@
+                 <version>${keystone.version}</version>
+                 <scope>provided</scope>
+             </dependency>
++            <!-- WS3 G1 (0.10.0): holograms, promoted out of Gangland's own hologram-api into Keystone
++                 (keystone-hologram, ArmorStand-only, Spigot 1.16.5 floor). -->
++            <dependency>
++                <groupId>org.luckyraven</groupId>
++                <artifactId>keystone-hologram</artifactId>
++                <version>${keystone.version}</version>
++                <scope>provided</scope>
++            </dependency>
+             <!-- WS2 G1 (0.10.0): the basic menu mechanism (ChestMenu, MenuFlow, PagedRegion, OpenMenuTracker) —
+                  R6: gangland-api never re-exports this, unlike the old inventory-api; every menu-building module
+                  declares it directly (the bartizan-api rule). -->

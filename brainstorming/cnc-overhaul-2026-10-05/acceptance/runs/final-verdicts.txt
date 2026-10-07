@@ -1,0 +1,88 @@
+== R1 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   squad members seen at 1/3/5 stars: 2/4/6
+PASS   squad grows (or holds) with the star level
+REVIEW compare with Cops.Count (settings.yml) and Squad_Composition (cop_roles.yml) for 1/3/5 stars - human read, see README R1
+== REVIEW ==
+exit=2
+== R3 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   no star drop while cuffed (until the charge sheet)
+PASS   stars kept R3-cuffed-0 - [Runner] ★★☆☆☆ | [Runner/game_info] Break free - 0/25 (tap SNEAK!)
+PASS   stars kept R3-cuffed-15 - [Runner] ★★☆☆☆ | [Runner/game_info] Break free - 0/25 (tap SNEAK!) | [Runner/game_info] Break free - 0/25 (tap SNEAK!)
+PASS   stars kept R3-cuffed-30 - sampled after intake (window ended at the charge sheet), see after-intake row
+PASS   intake reached
+PASS   stars cleared at intake - [Runner] GLW >> Wanted Status: | [Runner] ☆☆☆☆☆ | [Runner/game_info] Serving sentence - 351s
+== PASS ==
+exit=0
+== R4 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   run 2: no server ERROR / org.luckyraven exception
+PASS   run 2: harness steps - 0 failed step(s)
+PASS   2 stars before quit - [Runner] ★★☆☆☆ | [Runner] [RADIO] Sergeant Assault Tina #1001: Flanking south-west, keep him busy!
+PASS   still wanted after rejoin - [Runner] ★★☆☆☆ | [Runner] [RADIO] Sergeant Assault Nick #1004: Moving to flank, west!
+PASS   decay clock runs after rejoin (decreased line within 60 s, Time 10)
+== PASS ==
+exit=0
+== N1 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   decreased line within 3 + 20 + 5 s
+PASS   1 star left (status still wanted) - [Runner] ★☆☆☆☆
+PASS   no death
+== PASS ==
+exit=0
+== N2 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   run 2: no server ERROR / org.luckyraven exception
+PASS   run 2: harness steps - 0 failed step(s)
+PASS   run 1: balance 5000 -> 5000, charge 0 (expected 0)
+PASS   run 2: balance 5000 -> 5000, charge 0 (expected 0)
+PASS   star fell
+== PASS ==
+exit=0
+== N3 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   run 1: balance 5000 -> 3750, charge 1250 (expected 1250)
+PASS   star fell
+== PASS ==
+exit=0
+== N3b ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   run 1: balance 5000 -> 3500, charge 1500 (expected 1500)
+PASS   exactly one "Money formula" warning over two drops - 1 seen
+PASS   both stars fell
+== PASS ==
+exit=0
+== N4 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   run 2: no server ERROR / org.luckyraven exception
+PASS   run 2: harness steps - 0 failed step(s)
+PASS   phase A posted the bounty
+PASS   first kill collects the 500 posted: Hunter 0 -> 500 - other kill rewards also show; read the transcript
+PASS   second kill collects no posted money: 500 -> 500
+== PASS ==
+exit=0
+== N7 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+       [Runner] [Server] CNCMARK:BAL:before
+       [Runner] [Server] CNCMARK:N7:CUFFED
+       [Runner] ----- CHARGE SHEET -----
+       [Runner] Paid from your wallet: $300
+       [Runner] Unpaid $400 served as +40s
+       [Runner] [Server] CNCMARK:N7:SHEET
+       [Runner] [Server] CNCMARK:BAL:after
+       [Runner] [Server] CNCMARK:STATUS:N7
+REVIEW N7 best effort: read the transcript above against the pass line
+== REVIEW ==
+       [Runner] [Server] CNCMARK:STATUS:N6-after-hit
+REVIEW N6 best effort: read the transcript above against the pass line
+== REVIEW ==

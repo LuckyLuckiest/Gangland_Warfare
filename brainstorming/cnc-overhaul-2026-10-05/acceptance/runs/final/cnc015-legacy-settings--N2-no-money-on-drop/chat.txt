@@ -1,0 +1,33 @@
+[Runner] Runner joined the game
+[Runner] [ViaVersion] There is a newer plugin version available: 5.12.0, you're on: 5.12.0-SNAPSHOT
+[Runner] [Server: Gamerule spawn_mobs is now set to: false]
+[Runner] [Server: Gamerule spawn_monsters is now set to: false]
+[Runner] [Server: Gamerule advance_time is now set to: false]
+[Runner] [Server: Set the time to 6000]
+[Runner] [Server: Set the weather to clear]
+[Runner] [Server: Killed 4 entities]
+[Runner] [Server: Applied effect Resistance to Runner]
+[Runner] [Server: Applied effect Instant Health to Runner]
+[Runner] GLW >> Your account balance has been set to $5,000.
+[Runner] Runner balance:
+[Runner] $5,000
+[Runner] [Server] CNCMARK:BAL:before
+[Runner] [Server: Teleported Runner to 100.500000, -60.000000, 100.500000]
+[Runner] [DISPATCH] All units, be advised: Runner is wanted, level 2.
+[Runner] [GLW] Your wanted level has been increased ★★☆☆☆.
+[Runner] [RADIO] Sergeant Pointman Jim #1000: Contact! Suspect 38 blocks south-west!
+[Runner] [RADIO] Sergeant Assault Gus #1001: Moving to flank, west!
+[Runner] [Server: Successfully filled 290 block(s)]
+[Runner] [Server: Teleported Runner to 100.500000, -60.000000, 130.500000]
+[Runner] [RADIO] Sergeant Pointman Jim #1000: Sergeant Assault Gus #1001, move in on him!
+[Runner] [RADIO] Sergeant Assault Gus #1001: Copy.
+[Runner] [RADIO] Sergeant Pointman Jim #1000: Where'd he go?!
+[Runner] [GLW] Your wanted level has been decreased ★☆☆☆☆.
+[Runner] [Server] CNCMARK:N2:DROPPED
+[Runner] Runner balance:
+[Runner] $5,000
+[Runner] [Server] CNCMARK:BAL:after
+[Runner] GLW >> Wanted Status:
+[Runner] ★☆☆☆☆
+[Runner] [Server] CNCMARK:STATUS:N2-after-drop
+[Runner/end] [END] disconnect.quitting

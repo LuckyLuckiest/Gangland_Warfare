@@ -1,0 +1,8 @@
+# Re-review — 0.10.0 CUT fix round 1 — 2026-09-22 (Sonnet, transcribed)
+F1 guard ADDRESSED: `SharedLootInventory.java:19,24-28` implements InventoryHolder; `LootChestListener.java:81/:119` gate on holder identity before any take logic; `isDepositAction` :133-145 blocks PLACE_*/SWAP_WITH_CURSOR/HOTBAR_SWAP/HOTBAR_MOVE_AND_READD on top and MOVE_TO_OTHER_INVENTORY from bottom; drag :120 cancels any raw slot < top size; take paths, bottom-only rearranging and null clicked inventory fall through; guard runs first inside the same handler; diff purely additive. Tests PARTIAL: 9 cases cover 5 blocked + 4 allowed; PLACE_ONE/PLACE_SOME/HOTBAR_MOVE_AND_READD share the tested switch branch but are not individually exercised. Red evidence consistent. Docs ADDRESSED (`migration-0.10.0.md:183-197`).
+F2 LS-31 ADDRESSED (`LootChestWandListenerTest.java:64-96`, red via contains()). LS-30 PARTIAL: `LootChestWandTest` pins only `updateWandLore`'s resolution; `setWandNBT` (:555, three callers), `handleInvSizeChange` (:366), `openConfigInventory` (:115) each read `getItem(wandSlot)` independently and are unpinned; the report's "anywhere in the resolution path" overclaims.
+F3 GR-18 ADDRESSED (report :333, :371-373, file #11). Keystone pin ADDRESSED (`pom.xml:70`; no literal 1.11.0 left). New breakage: none.
+Verdict: FIX — LS-30 pin partial (not merge-blocking).
+
+## Orchestrator ruling (W50)
+CUT committed as is. LS-30's docket note says "fixed; pinned on updateWandLore only". WS3 G5 (which moves the wand into the module) adds thin pins on setWandNBT/handleInvSizeChange/openConfigInventory (read getItem(wandSlot), never getItemInMainHand) and the three missing deposit-action cases.

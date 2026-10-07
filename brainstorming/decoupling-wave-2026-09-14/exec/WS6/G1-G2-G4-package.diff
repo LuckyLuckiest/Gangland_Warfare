@@ -1,0 +1,522 @@
+diff --git a/documentation/gangland-api.md b/documentation/gangland-api.md
+new file mode 100644
+index 00000000..67bff017
+--- /dev/null
++++ b/documentation/gangland-api.md
+@@ -0,0 +1,137 @@
++# `gangland-api` — the module API and the `GanglandApi` facade
++
++[← Back to Documentation Index](./README.md)
++
++`gangland-api` is the only host artifact a runtime module compiles against (`provided` scope; see the root
++`CLAUDE.md`'s "Module API contract" section for the contract rule and versioning). Since WS6 G1 (0.10.0) it also
++publishes `GanglandApi` — a Bukkit `ServicesManager` facade an **external plugin** (not a runtime module) resolves
++to reach four always-present pieces of Gangland state, modelled directly on Bartizan's own `BartizanApi`.
++
++## Resolving the facade
++
++```java
++GanglandApi api = Bukkit.getServicesManager()
++        .getRegistration(GanglandApi.class)
++        .map(RegisteredServiceProvider::getProvider)
++        .orElse(null);
++
++if (api == null) {
++    // Gangland is absent, disabled, or hasn't finished enabling yet
++    return;
++}
++```
++
++**Resolve fresh on every call — never cache the reference.** Gangland may disable, reload, or not be installed at
++all; a cached reference outlives the registration it came from. This is the same rule Bartizan's own facade
++documents for `BartizanApi`.
++
++A **runtime module** never resolves the facade this way — modules already have constructor injection from the
++shared `DependencyContainer` (see `documentation/module-loader.md`). `GanglandApi` is exclusively the
++external-plugin surface; there is no concrete external consumer of it today (the same honest starting point
++Bartizan's own facade had when it shipped).
++
++## The four accessors (final ruling R7, `plans/WS6-api.md` §0c)
++
++| Accessor | Returns | Always present? |
++|---|---|---|
++| `users()` | `UserLookupContract` | Yes — core-mandatory |
++| `gangs()` | `GangMembership` (`org.luckyraven.gangland.data.gang`) | Yes — **never `null`**. Inert (every query answers its documented absent-default: `gangIdOf` → `-1`, `gangsAllied`/`alliedOrSame` → `false`, `nameOf` → empty) until the `gangland-gang` module's `GangMembershipInstaller` calls `install(...)`. Check `isInstalled()` to distinguish "module absent" from "module answered no" |
++| `waypoints()` | `WaypointLookupContract` | Yes — core-mandatory |
++| `bankTiers()` | `BankTiers` | Yes — already the "optional module" pattern: `tierFor(...)` returns `null` until cops-n-crooks installs a lookup |
++
++There is **no `ranks()` accessor**. `GangLookupContract`/`RankLookupContract` live inside the `gangland-gang`
++module (WS5), not in `gangland-api` — the api can never name a module type, so the facade cannot expose them.
++Earlier drafts of this plan proposed a fifth accessor returning `Optional<GangLookupContract>`/
++`Optional<RankLookupContract>`, resolved lazily from the `DependencyContainer`; R7 replaced that design entirely
++with the `GangMembership` holder above, which needed no `Optional` and no container lookup because it is always
++a core bean.
++
++## Service table
++
++Every `ServicesManager` registration this reactor touches, publisher and consumer, as of this gate:
++
++| Service class | Registered by | Priority | Consumed by |
++|---|---|---|---|
++| `org.luckyraven.gangland.GanglandApi` | **Gangland**, `WiringConfig.ganglandApi(...)` (WS6 G1) | Normal | any external plugin (no named consumer today) |
++| `org.luckyraven.keystone.placeholder.PlaceholderProvider` | **Gangland**, `WiringConfig.ganglandPlaceholder(...)` (WS1 D5) — `GanglandPlaceholder.asProvider()` | Normal | `<ScoreboardPlugin>`'s `PapiText` (Plaque), when PAPI itself is absent/has no answer |
++| `org.luckyraven.keystone.item.spi.ItemVocabulary` | Bartizan (or any item-owning plugin) | Normal | **Gangland core *consumes*, does not publish** — `GanglandContext.installItemVocabularies()` folds every registration in once, after all CONFIG beans exist but before any `@PostConstruct` |
++| `org.luckyraven.bartizan.api.BartizanApi` | Bartizan | Normal | Gangland's civilians/cops-n-crooks/gadget modules |
++| `org.luckyraven.bartizan.api.raytrace.WeaponRaytracer` | Bartizan | Normal | Bartizan's own controllers; open to third parties |
++| `org.luckyraven.bartizan.api.combat.CombatEligibility` | the consumer registers it (Gangland could, doesn't today) | Normal | Bartizan's weapon/reload controllers |
++
++**Not services — container beans instead:**
++
++- `ShopAdminOpener` (`gangland-api`, WS4) — a one-method interface, registered under its interface type via a
++  plain `@Bean`/`DependencyContainer` entry, pulled by `TraderModuleConfig.shopViewOpener()`. Never touches
++  `ServicesManager`.
++- `GangMembership` (`gangland-api`, WS5 R9) — the core-owned holder documented above, installed by the gang
++  module's `@PostConstruct`. Also never touches `ServicesManager`.
++- `PlaceholderContribution` (`gangland-api/.../data/placeholder/extension`, WS5) and `GangItemSourceContribution`
++  (`gangland-api/.../data/gang`, WS5) — library seam interfaces consumed through
++  `container.getAllInstances(...)` (the "Contributions" shape, `documentation/module-loader.md`'s Core seams
++  section), not facade accessors either.
++
++## Events
++
++`gangland-api`'s `events/` package holds exactly three files, across two subpackages:
++
++| Event | Package | Cancellable | Public api? |
++|---|---|---|---|
++| `TeleportEvent` | `events.teleportation` | Yes | Yes |
++| `UserLevelUpEvent` | `events.user` | Yes | Yes |
++| `UserDataInitEvent` | `events.user` | Yes | **No** — physically colocated (it needs `User`, a `gangland-core` type already re-exported here) but not a designed public extension point; it fires around `PlayerBootstrapService`'s internal init timing, an implementation detail, not a stable contract |
++
++**Future-event rule** (unchanged from the plan's original G2 decision): cancellable if fired before the action
++completes (`TeleportEvent`, `UserLevelUpEvent` both `implements Cancellable`), not cancellable if fired after (a
++notification) — mirrors Bartizan's `WeaponStatusApplyEvent`(cancellable)/`WeaponStatusExpireEvent`(not) split.
++
++No other event lives in `gangland-api`. Every other `*Event` class in the reactor stays with its owning
++module/core package and is reachable transitively (`gangland-core`'s general-purpose events — `LevelUpEvent`,
++`BountyEvent`, `WantedEvent` family — through `gangland-api`'s existing compile-scope dependency on
++`gangland-core`) rather than being promoted into `gangland-api` itself:
++
++- `GangBountyEvent`/`GangLevelUpEvent` moved into the `gangland-gang` module (WS5) alongside the rest of
++  `gang.*` — reachable by a module through `Depends: [gang]`, not through this api.
++- Loot-chest's 9 events, npc-shops' trader events, turf's 7 capture/enter events, cops-n-crooks' 4 events,
++  civilians' 1 event and gangland-item's `PlayerItemInitEvent` all stay module/infra-owned — no named consumer
++  outside their own module, so none were promoted (WS3's explicit decline for the loot-chest 9 still stands).
++
++## What Gangland does not expose through the facade
++
++- **`wanted()`/`bounty()`** — no existing lookup contract for either; nothing to wrap.
++- **`placeholders()`** — `PlaceholderService` has zero external consumers; `PlaceholderProvider` (above) is
++  already the public path for that need.
++- **`shopRegistry()`** — WS4 explicitly recommended against it; no named consumer.
++- **`modules()`/`ModuleInfo`** — cut (S1, 2026-09-14 review): `/glw module list` already exists as a command;
++  nothing consumes a programmatic module listing.
++
++## Api contract: within `2.0`, only additions
++
++`GanglandApi.VERSION` stayed `"2.0"` (the branch's own major bump, G0, before WS1) through every gate of this
++plan. Everything WS6 G1/G2 added to the public surface, in order:
++
++| Addition | Kind |
++|---|---|
++| `GanglandApi` becomes an `interface` (was `final class`) | Widening — every existing static-constant read (`VERSION`/`FULL_PREFIX`/`SHORT_PREFIX`) still compiles, confirmed reactor-wide (31 call sites, 25 files) |
++| `UserLookupContract users()` | New method |
++| `GangMembership gangs()` | New method |
++| `WaypointLookupContract waypoints()` | New method |
++| `BankTiers bankTiers()` | New method |
++| `GanglandApiImpl` (`gangland-impl`) | New class, the facade's sole implementation |
++
++No removal, rename or signature change — the contract rule (`CLAUDE.md`'s "Module API contract" section) holds.
++
++## Follow-ups
++
++- `japicmp` wiring — deferred until a second `2.x` release of `gangland-api` exists on a resolvable repository
++  (nothing to diff against yet).
++- `LocalizedModuleYaml` (WS6 G3) has one consumer (`CivilianMessages`) — `GanglandLootChestMessages`/
++  `JetpackMessages` still carry their own copy of the same logic; migrating them onto the shared base is a
++  follow-up, not executed by this plan.
++
++## See also
++
++- [`documentation/module-loader.md`](./module-loader.md) — the module-facing side (constructor injection, Core
++  seams) this facade deliberately does not duplicate.
++- [`documentation/migration-0.10.0.md`](./migration-0.10.0.md) — the WS6 section covering both G3 (civilians
++  message migration) and G1/G2/G4 (this facade).
+diff --git a/documentation/migration-0.10.0.md b/documentation/migration-0.10.0.md
+index 4c3b0d11..d6d85d71 100644
+--- a/documentation/migration-0.10.0.md
++++ b/documentation/migration-0.10.0.md
+@@ -334,4 +334,23 @@ As with every other block this family of warnings covers, a customised civilian
+ `message_en.yml`/`message_es.yml` is **not** auto-migrated — copy it into the new
+ `npc/civilian_messages.yml`/`npc/civilian_messages_es.yml` by hand.
+ 
+-<!-- Later 0.10.0 gates (WS5 gang module, WS6's remaining G1/G2/G4 gates) append their own sections here as they land. -->
++## WS6 G1/G2/G4 — the `GanglandApi` facade (for module/external-plugin authors, not server owners)
++
++No server-owner action needed for this section — it changes what a plugin author can compile against, not
++anything in `settings.yml`, `commands.json` or a data folder.
++
++`GanglandApi` is an `interface` now (was a constants-only `final class`); every existing static-constant read
++(`GanglandApi.VERSION`/`.FULL_PREFIX`/`.SHORT_PREFIX`, 31 call sites across 25 files, reactor-wide) compiles
++unchanged. It gains four accessors — `users()`, `gangs()` (the core-owned `GangMembership` holder, never `null`,
++inert until the `gangland-gang` module installs a view — **no `ranks()`**, that type lives inside the gang
++module, not this api), `waypoints()`, `bankTiers()` — published on Bukkit's `ServicesManager` by
++`WiringConfig.ganglandApi(...)` for an **external plugin** to resolve fresh on every call (never cached), exactly
++Bartizan's own facade pattern. A runtime **module** is unaffected — it still uses constructor injection, not this
++facade. Full detail, the service table and the api-contract additions list: `documentation/gangland-api.md`.
++
++The events census was also corrected: `gangland-api`'s `events/` package holds `TeleportEvent`,
++`UserLevelUpEvent` (both public api) and `UserDataInitEvent` (physically colocated, explicitly **not** public
++api — an internal bootstrap-timing event). No gang/wanted/bounty event was promoted into this api; those moved
++into the `gangland-gang` module with the rest of `gang.*` (WS5).
++
++<!-- Later 0.10.0 gates append their own sections here as they land. -->
+diff --git a/documentation/module-loader.md b/documentation/module-loader.md
+index 4646d317..2f71586c 100644
+--- a/documentation/module-loader.md
++++ b/documentation/module-loader.md
+@@ -272,6 +272,47 @@ contribution paths (`/glw debug weapon`, `/glw item wearable`, both gone), and t
+ `UniqueItemRefresher` — all removed along with `WeaponModuleConfig`. None of these interfaces exist in the 0.9.0
+ tree; do not reintroduce them for a new module without re-reading whether `ItemVocabulary` already covers the need.
+ 
++Contributions and a holder added by **WS5** (the gang domain becoming the `gangland-gang` runtime module,
++0.10.0):
++
++- **`PlaceholderContribution`** (`org.luckyraven.gangland.data.placeholder.extension`, gangland-api) —
++  `@Nullable String resolve(OfflinePlayer player, String parameter)`. The core cannot name a module type, so
++  `gang_*` and the member-touching `user_has-gang`/`user_gang-id`/`user_rank` placeholder family are answered by
++  the gang module's own contribution bean instead; `GanglandPlaceholder` queries every registered contribution
++  once its own built-in prefixes (user/bank/unique-item) have missed. Modelled on `CommandContribution`.
++- **`GangItemSourceContribution`** (`org.luckyraven.gangland.data.gang`, gangland-api) —
++  `boolean supports(String source)` / `List<Map<String, String>> entries(Player player, String source)`. Dynamic
++  item-source rows (e.g. `gang_members`) a YAML menu references; `GameplayConfig.inventoryRuntimeContext`'s
++  `ItemSourceProvider` delegates here instead of naming `Gang`/`Member`/`GangManager` directly (W54 F1, replacing
++  the deleted `GangItemSourceProvider`). Rows are `Map<String, String>`, not the impl-only `ItemSourceEntry`
++  record, so the module never imports `menu.multi.*`.
++- **`GangMembership`** (`org.luckyraven.gangland.data.gang`, gangland-api) — the core-owned "is/which gang" fact
++  Holder (R9): `int gangIdOf(UUID)`, `boolean gangsAllied(int, int)` (strict, never same-gang — pinned so cops'
++  turf friendly-fire keeps its semantics), the derived `boolean alliedOrSame(UUID, UUID)`, `Optional<String>
++  nameOf(int)`, `boolean isInstalled()`. Sibling of `BankTiers`: always a core bean (`IdentityContractConfig
++  .gangMembership()`, zero-arg), inert (every query answers its documented absent-default) until the gang
++  module's `GangMembershipInstaller` calls `install(...)` from its `@PostConstruct`. Lets `gadget`, `civilians`
++  and `cops-n-crooks` read gang facts without ever declaring `Depends: [gang]` — replaces the earlier
++  `MembershipLookupContract` sketch (one holder instead of a narrower per-module contract).
++
++Mechanism added by **WS6 G3** (module-owned Messages/Settings migration, civilians worked example, 0.10.0):
++
++- **`LocalizedModuleYaml`** (`org.luckyraven.gangland.file.configuration`, gangland-api, abstract class, not an
++  interface — there is only ever one implementation per module, so a "Contributions"/"Holder" shape doesn't fit)
++  — the shared base a module's own message/config YAML reader extends: `<baseName>_es.yml` is picked over
++  `<baseName>.yml` when `Settings.getLanguagePicked()` is `"es"` and the localized file is registered, falling
++  back to English otherwise; every read formats through `GanglandChatUtil`. `CivilianMessages` (civilians) is its
++  first consumer; `GanglandLootChestMessages` (lootchest) and `JetpackMessages`/`GrappleMessages` (gadget) predate
++  it and still carry their own copy of the identical logic — migrating them onto this base is a follow-up.
++
++Facade added by **WS6 G1** (0.10.0) — not a module-facing seam, listed here for completeness since it lives
++beside the seams above in `gangland-api`:
++
++- **`GanglandApi`** (`org.luckyraven.gangland`, gangland-api) — an interface now (was a constants-only
++  `final class`), published on Bukkit's `ServicesManager` by `WiringConfig.ganglandApi(...)` for an **external
++  plugin** to resolve (never cached); a runtime module still uses constructor injection, unaffected by this
++  facade. Full detail: [`documentation/gangland-api.md`](./gangland-api.md).
++
+ Later flips append their own holders/contributions as new rows in this section rather than starting a new one.
+ 
+ ## Faults you will see in the console
+diff --git a/gangland-api/src/main/java/org/luckyraven/gangland/GanglandApi.java b/gangland-api/src/main/java/org/luckyraven/gangland/GanglandApi.java
+index 59141723..7166ec44 100644
+--- a/gangland-api/src/main/java/org/luckyraven/gangland/GanglandApi.java
++++ b/gangland-api/src/main/java/org/luckyraven/gangland/GanglandApi.java
+@@ -1,28 +1,66 @@
+ package org.luckyraven.gangland;
+ 
++import org.luckyraven.gangland.core.user.UserLookupContract;
++import org.luckyraven.gangland.data.economy.BankTiers;
++import org.luckyraven.gangland.data.gang.GangMembership;
++import org.luckyraven.gangland.data.teleportation.WaypointLookupContract;
++
+ /**
+- * Constants a runtime module compiles against without reaching into the host plugin class.
++ * Constants a runtime module compiles against without reaching into the host plugin class, plus (WS6 G1) the
++ * {@code ServicesManager} facade an <b>external plugin</b> (not a runtime module — modules already have constructor
++ * injection, see {@code documentation/module-loader.md}) resolves to reach the four always-present pieces of
++ * Gangland state: {@code Bukkit.getServicesManager().getRegistration(GanglandApi.class)}. Resolve fresh on every
++ * call — never cache the reference — the same rule Bartizan's own facade documents, since Gangland may disable,
++ * reload or not be installed at all.
++ *
++ * <p>Exactly four accessors (final ruling R7, {@code plans/WS6-api.md} §0c): {@link #gangs()} returns the
++ * core-owned {@link GangMembership} holder directly, never {@code null} and never an {@code Optional} — it is
++ * <em>inert</em> (every query answers its documented absent-default) until the {@code gangland-gang} module's
++ * {@code GangMembershipInstaller} calls {@code GangMembership.install(...)}. There is no {@code ranks()} accessor:
++ * {@code GangLookupContract}/{@code RankLookupContract} live inside {@code gangland-gang}, not in this api, so the
++ * facade can never name them.
+  */
+-public final class GanglandApi {
++public interface GanglandApi {
+ 
+ 	/**
+ 	 * The module API line a {@code module.yml} {@code Host_Api} is matched against. Bump the minor when the host adds
+ 	 * API a module may rely on, the major only on a breaking change; it is independent of the plugin version, so a
+ 	 * patch or feature release of Gangland does not invalidate every module jar on the server.
+ 	 */
+-	public static final String VERSION = "2.0";
++	String VERSION = "2.0";
+ 
+ 	/**
+ 	 * The permission namespace and long command alias ({@code /gangland}).
+ 	 */
+-	public static final String FULL_PREFIX = "gangland";
++	String FULL_PREFIX = "gangland";
+ 
+ 	/**
+ 	 * The primary command label ({@code /glw}).
+ 	 */
+-	public static final String SHORT_PREFIX = "glw";
++	String SHORT_PREFIX = "glw";
++
++	/**
++	 * @return the identity/online-caching lookup — always core-mandatory, never absent.
++	 */
++	UserLookupContract users();
++
++	/**
++	 * @return the core-owned "is/which gang" fact holder — never {@code null}. Every query is inert (documented
++	 * absent-default: {@code gangIdOf} → {@code -1}, {@code gangsAllied}/{@code alliedOrSame} → {@code false},
++	 * {@code nameOf} → empty) until the {@code gangland-gang} module installs a live view. Check
++	 * {@link GangMembership#isInstalled()} to tell "module absent" apart from "module answered no".
++	 */
++	GangMembership gangs();
++
++	/**
++	 * @return the waypoint lookup — always core-mandatory, never absent.
++	 */
++	WaypointLookupContract waypoints();
+ 
+-	private GanglandApi() {
+-	}
++	/**
++	 * @return the bank-tier holder — already the "optional module" pattern: {@code tierFor(...)} returns
++	 * {@code null} until cops-n-crooks installs a lookup.
++	 */
++	BankTiers bankTiers();
+ 
+ }
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/GanglandApiImpl.java b/gangland-impl/src/main/java/org/luckyraven/gangland/GanglandApiImpl.java
+new file mode 100644
+index 00000000..1633d9e8
+--- /dev/null
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/GanglandApiImpl.java
+@@ -0,0 +1,50 @@
++package org.luckyraven.gangland;
++
++import org.luckyraven.gangland.core.user.UserLookupContract;
++import org.luckyraven.gangland.data.economy.BankTiers;
++import org.luckyraven.gangland.data.gang.GangMembership;
++import org.luckyraven.gangland.data.teleportation.WaypointLookupContract;
++
++/**
++ * The only implementation of {@link GanglandApi} (WS6 G1). Thin: every accessor returns exactly the
++ * constructor-injected instance, all four mandatory (R7 removed the one accessor — {@code gangs()} — that used to
++ * need a lazy {@code DependencyContainer} lookup for an {@code Optional} module-owned contract; {@link
++ * GangMembership} is a core bean like the other three, always present, inert until the gang module installs a
++ * view). Mirrors Bartizan's {@code BartizanApiImpl} shape.
++ */
++public final class GanglandApiImpl implements GanglandApi {
++
++	private final UserLookupContract      users;
++	private final GangMembership          gangs;
++	private final WaypointLookupContract  waypoints;
++	private final BankTiers               bankTiers;
++
++	public GanglandApiImpl(UserLookupContract users, GangMembership gangs, WaypointLookupContract waypoints,
++	                       BankTiers bankTiers) {
++		this.users     = users;
++		this.gangs     = gangs;
++		this.waypoints = waypoints;
++		this.bankTiers = bankTiers;
++	}
++
++	@Override
++	public UserLookupContract users() {
++		return users;
++	}
++
++	@Override
++	public GangMembership gangs() {
++		return gangs;
++	}
++
++	@Override
++	public WaypointLookupContract waypoints() {
++		return waypoints;
++	}
++
++	@Override
++	public BankTiers bankTiers() {
++		return bankTiers;
++	}
++
++}
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/config/WiringConfig.java b/gangland-impl/src/main/java/org/luckyraven/gangland/config/WiringConfig.java
+index 95ae6d03..f0a11226 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/config/WiringConfig.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/config/WiringConfig.java
+@@ -5,8 +5,13 @@ import org.bukkit.Bukkit;
+ import org.bukkit.entity.Player;
+ import org.bukkit.plugin.ServicePriority;
+ import org.luckyraven.gangland.Gangland;
++import org.luckyraven.gangland.GanglandApi;
++import org.luckyraven.gangland.GanglandApiImpl;
+ import org.luckyraven.gangland.command.CommandManager;
++import org.luckyraven.gangland.core.user.UserLookupContract;
+ import org.luckyraven.gangland.data.economy.BankTiers;
++import org.luckyraven.gangland.data.gang.GangMembership;
++import org.luckyraven.gangland.data.teleportation.WaypointLookupContract;
+ import org.luckyraven.gangland.file.configuration.Messages;
+ import org.luckyraven.gangland.file.configuration.Settings;
+ import org.luckyraven.keystone.module.ModuleLoader;
+@@ -109,4 +114,22 @@ public class WiringConfig {
+ 		log.info("Placeholder provider published for external consumers (e.g. Plaque)");
+ 		return placeholder;
+ 	}
++
++	/**
++	 * WS6 G1: publishes {@link GanglandApiImpl} as a {@link GanglandApi} service on the {@code ServicesManager} —
++	 * same publication idiom as {@link #ganglandPlaceholder} just above (construct, register, log, return). The
++	 * only consumer is an external plugin (no runtime module resolves the facade this way — modules already have
++	 * constructor injection); it must resolve fresh on every call, never cache the reference, exactly like
++	 * Bartizan's own facade documents, since Gangland may disable, reload or not be installed at all.
++	 * {@code Gangland.onDisable()}'s {@code getServicesManager().unregisterAll(this)} (already the first statement,
++	 * added for {@link #ganglandPlaceholder} — WS1) covers this registration too; nothing further to add there.
++	 */
++	@Bean
++	public GanglandApiImpl ganglandApi(UserLookupContract users, GangMembership gangs,
++	                                   WaypointLookupContract waypoints, BankTiers bankTiers) {
++		GanglandApiImpl api = new GanglandApiImpl(users, gangs, waypoints, bankTiers);
++		Bukkit.getServicesManager().register(GanglandApi.class, api, gangland, ServicePriority.Normal);
++		log.info("GanglandApi facade published for external consumers");
++		return api;
++	}
+ }
+diff --git a/gangland-impl/src/test/java/org/luckyraven/gangland/GanglandApiImplTest.java b/gangland-impl/src/test/java/org/luckyraven/gangland/GanglandApiImplTest.java
+new file mode 100644
+index 00000000..8370ad2c
+--- /dev/null
++++ b/gangland-impl/src/test/java/org/luckyraven/gangland/GanglandApiImplTest.java
+@@ -0,0 +1,59 @@
++package org.luckyraven.gangland;
++
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.gangland.core.user.UserLookupContract;
++import org.luckyraven.gangland.data.economy.BankTiers;
++import org.luckyraven.gangland.data.gang.GangMembership;
++import org.luckyraven.gangland.data.teleportation.WaypointLookupContract;
++
++import java.util.UUID;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertFalse;
++import static org.junit.jupiter.api.Assertions.assertSame;
++import static org.mockito.Mockito.mock;
++
++/**
++ * WS6 G1: {@link GanglandApiImpl} is entirely new this gate (final ruling R7, {@code plans/WS6-api.md} §0c — the
++ * facade's four accessors), so "red by non-existence" is the W48-accepted evidence: this test class could not
++ * compile before {@link GanglandApiImpl} existed. Asserts (a) every accessor returns exactly the
++ * constructor-injected instance and (b) {@link #gangs()} — the one accessor R7 changed from an
++ * {@code Optional<GangLookupContract>} lazy container lookup to a direct, never-null {@link GangMembership}
++ * reference — stays inert (every query answers its documented absent-default) until the gang module installs a
++ * view, proving the facade doesn't paper over that with a different default.
++ */
++@DisplayName("GanglandApiImpl — the four accessors return exactly what the constructor was given")
++class GanglandApiImplTest {
++
++	@Test
++	@DisplayName("users()/waypoints()/bankTiers()/gangs() return exactly the constructor-injected instances")
++	void accessors_returnConstructorInjectedInstances() {
++		UserLookupContract     users     = mock(UserLookupContract.class);
++		GangMembership         gangs     = new GangMembership();
++		WaypointLookupContract waypoints = mock(WaypointLookupContract.class);
++		BankTiers              bankTiers = mock(BankTiers.class);
++
++		GanglandApiImpl api = new GanglandApiImpl(users, gangs, waypoints, bankTiers);
++
++		assertSame(users, api.users());
++		assertSame(gangs, api.gangs());
++		assertSame(waypoints, api.waypoints());
++		assertSame(bankTiers, api.bankTiers());
++	}
++
++	@Test
++	@DisplayName("gangs() is never null and stays inert (module-absent defaults) until GangMembership.install(...)")
++	void gangs_neverNullAndInertUntilInstalled() {
++		GanglandApiImpl api = new GanglandApiImpl(mock(UserLookupContract.class), new GangMembership(),
++		                                          mock(WaypointLookupContract.class), mock(BankTiers.class));
++
++		GangMembership gangs = api.gangs();
++
++		assertFalse(gangs.isInstalled());
++		assertEquals(-1, gangs.gangIdOf(UUID.randomUUID()));
++		assertFalse(gangs.gangsAllied(1, 2));
++		assertFalse(gangs.alliedOrSame(UUID.randomUUID(), UUID.randomUUID()));
++	}
++
++}
+diff --git a/gangland-impl/src/test/java/org/luckyraven/gangland/config/GanglandApiRegistrationTest.java b/gangland-impl/src/test/java/org/luckyraven/gangland/config/GanglandApiRegistrationTest.java
+new file mode 100644
+index 00000000..97971f4d
+--- /dev/null
++++ b/gangland-impl/src/test/java/org/luckyraven/gangland/config/GanglandApiRegistrationTest.java
+@@ -0,0 +1,52 @@
++package org.luckyraven.gangland.config;
++
++import org.bukkit.plugin.ServicePriority;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.gangland.Gangland;
++import org.luckyraven.gangland.GanglandApi;
++import org.luckyraven.gangland.GanglandApiImpl;
++import org.luckyraven.gangland.core.user.UserLookupContract;
++import org.luckyraven.gangland.data.economy.BankTiers;
++import org.luckyraven.gangland.data.gang.GangMembership;
++import org.luckyraven.gangland.data.teleportation.WaypointLookupContract;
++import org.luckyraven.keystone.testkit.BukkitStatics;
++
++import static org.junit.jupiter.api.Assertions.assertNotNull;
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.ArgumentMatchers.eq;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.verify;
++
++/**
++ * WS6 G1. Mirrors {@link WiringConfigTest}'s {@code ganglandPlaceholder} pin, for the new facade bean: entirely
++ * new this gate, so "red by non-existence" is the W48-accepted evidence (this class could not compile before
++ * {@link WiringConfig#ganglandApi} existed). Pins that the bean publishes {@link GanglandApiImpl} as a
++ * {@link GanglandApi} service, owned by the plugin, via the same construct-register-log-return idiom
++ * {@code ganglandPlaceholder} already established — the mechanism an external plugin resolves the facade through
++ * ({@code Bukkit.getServicesManager().getRegistration(GanglandApi.class)}, never cached).
++ */
++@DisplayName("WiringConfig.ganglandApi — publishes the GanglandApi facade for external consumers")
++class GanglandApiRegistrationTest {
++
++	@Test
++	@DisplayName("registers GanglandApiImpl as a GanglandApi service, owned by the plugin")
++	void ganglandApi_registersGanglandApiService() {
++		try (BukkitStatics bukkit = BukkitStatics.install()) {
++			Gangland     gangland = mock(Gangland.class);
++			WiringConfig config   = new WiringConfig(gangland);
++
++			UserLookupContract     users     = mock(UserLookupContract.class);
++			GangMembership         gangs     = new GangMembership();
++			WaypointLookupContract waypoints = mock(WaypointLookupContract.class);
++			BankTiers              bankTiers = mock(BankTiers.class);
++
++			GanglandApiImpl api = config.ganglandApi(users, gangs, waypoints, bankTiers);
++
++			assertNotNull(api);
++			verify(bukkit.servicesManager()).register(eq(GanglandApi.class), any(GanglandApi.class), eq(gangland),
++			                                          eq(ServicePriority.Normal));
++		}
++	}
++
++}

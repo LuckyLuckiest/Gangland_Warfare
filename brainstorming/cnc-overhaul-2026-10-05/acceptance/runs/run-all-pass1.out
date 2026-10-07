@@ -1,0 +1,141 @@
+
+######## R1
+== R1 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   squad members seen at 1/3/5 stars: 2/4/6
+PASS   squad grows (or holds) with the star level
+REVIEW compare with Cops.Count (settings.yml) and Squad_Composition (cop_roles.yml) for 1/3/5 stars - human read, see README R1
+== REVIEW ==
+
+######## R2
+| # | Scenario | Trial 1 | Trial 2 | Evidence |
+|---|---|---|---|---|
+| 9 | Line of sight broken | FAIL | NOT RUN | T1: last-seen spot reached: no; beeline behind the wall: false; fanned out: false; re-acquired: false; T2: not run |
+
+######## R3
+prep r3 FAILED, see E:/Programming/java/wt/_programme/runs/prep-r3.log
+
+######## R4
+prep r4 FAILED, see E:/Programming/java/wt/_programme/runs/prep-r4.log
+
+######## N1
+== N1 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   decreased line within 3 + 20 + 5 s
+PASS   1 star left (status still wanted) - [Runner] ★☆☆☆☆
+PASS   no death
+== PASS ==
+
+######## N2
+== N2 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+FAIL   run 1: harness steps - 2 failed step(s)
+PASS   run 2: no server ERROR / org.luckyraven exception
+FAIL   run 2: harness steps - 2 failed step(s)
+FAIL   run 1: balance NaN -> NaN, charge NaN (expected 0)
+FAIL   run 2: balance NaN -> NaN, charge NaN (expected 0)
+PASS   star fell
+== FAIL ==
+
+######## N3
+prep n3 FAILED, see E:/Programming/java/wt/_programme/runs/prep-n3.log
+
+######## N3b
+prep n3-broken FAILED, see E:/Programming/java/wt/_programme/runs/prep-n3-broken.log
+
+######## N4
+== N4 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   run 2: no server ERROR / org.luckyraven exception
+PASS   run 2: harness steps - 0 failed step(s)
+PASS   phase A posted the bounty
+REVIEW first kill collects the 500 posted: Hunter NaN -> NaN - other kill rewards also show; read the transcript
+FAIL   second kill collects no posted money: NaN -> NaN
+== REVIEW ==
+
+######## N5
+== N5 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+FAIL   run 1: harness steps - 1 failed step(s)
+       [Runner] [RADIO] Sergeant Pointman Rick #1000: Sergeant Assault Eddie #1001, take his right!
+       [Runner] [RADIO] Sergeant Assault Lou #1002: Contact! Suspect 38 blocks west!
+       [Runner] [RADIO] Sergeant Assault Eddie #1001: Copy.
+       [Runner] [RADIO] Sergeant Assault Eddie #1001: Moving to flank, south-west!
+       [Runner] [Server] CNCMARK:N5:SHOT1
+       [Runner] [RADIO] Sergeant Assault Lou #1002: Shots fired! Converge on the sound!
+       [Runner] [Server] CNCMARK:N5:SHOT2
+       [Runner] [Server] CNCMARK:STATUS:N5
+REVIEW N5 best effort: read the transcript above against the pass line
+== REVIEW ==
+
+######## N6
+== N6 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+       [Runner] [DISPATCH] All units, be advised: Runner is wanted, level 1.
+       [Runner] [GLW] Your wanted level has been increased ★☆☆☆☆.
+       [Runner] [GLW] Your wanted level has been cleared.
+       [Runner] GLW >> Wanted Status:
+       [Runner] [Server] CNCMARK:STATUS:N6-cleared
+       [Runner] GLW >> Wanted Status:
+       [Runner] [Server] CNCMARK:STATUS:N6-after-hit
+REVIEW N6 best effort: read the transcript above against the pass line
+== REVIEW ==
+
+######## N7
+== N7 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+FAIL   run 1: harness steps - 3 failed step(s)
+       [Runner] [Server] CNCMARK:BAL:before
+       [Runner] [Server] CNCMARK:N7:CUFFED
+       [Runner] [Server] CNCMARK:N7:SHEET
+       [Runner] [Server] CNCMARK:BAL:after
+       [Runner] [Server] CNCMARK:STATUS:N7
+REVIEW N7 best effort: read the transcript above against the pass line
+== REVIEW ==
+
+######## N8
+== N8 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+FAIL   run 1: harness steps - 2 failed step(s)
+       [Runner] [RADIO] Lieutenant Commander Carl #1000: Contact! Suspect 31 blocks west!
+       [Runner] [RADIO] Lieutenant Commander Carl #1000: Squad, positions! Watch your sectors, west first!
+       [Runner] [RADIO] Lieutenant Defender Dave #1002: Shield up, holding the line!
+       [Runner] [RADIO] Lieutenant Marksman Dave #1003: Marksman set, 40 blocks south-west. Eyes on Runner.
+       [Runner] [RADIO] Lieutenant Marksman Dave #1003: Moving, cover me!
+       [Runner] [Server] CNCMARK:N8:KILL1
+       [Runner] [RADIO] Lieutenant Pointman Jim #1001: Moving, cover me!
+       [Runner] [Server] CNCMARK:N8:KILL2
+       [Runner] [RADIO] Lieutenant Marksman Dave #1003: Overwatch reloading, I'm blind for a few seconds!
+       [Runner] [RADIO] Lieutenant Defender Dave #1002: Changing mags!
+       [Runner] [RADIO] Lieutenant Pointman Jim #1001: Changing position!
+       [Runner] [Server] CNCMARK:N8:REGROUP
+       [Runner] [RADIO] Lieutenant Marksman Dave #1003: Changing position!
+       [Runner] [RADIO] Lieutenant Commander Carl #1000: Changing mags!
+       [Runner] [RADIO] Lieutenant Marksman Dave #1003: Changing position!
+       [Runner] [RADIO] Lieutenant Marksman Dave #1003: Overwatch reloading, I'm blind for a few seconds!
+       [Runner] [RADIO] Lieutenant Marksman Dave #1003: Moving, cover me!
+       [Runner] [RADIO] Lieutenant Defender Dave #1002: Reloading, cover me!
+       [Runner] [Server] CNCMARK:N8:PUSH
+       [Runner] [RADIO] Lieutenant Pointman Jim #1001: Changing position!
+REVIEW N8 best effort: read the transcript above against the pass line
+== REVIEW ==
+
+======== SUMMARY (0 = PASS, 1 = FAIL, 2 = REVIEW by a human, ERROR = could not run)
+R1: 2
+R2: 1
+R3: ERROR
+R4: ERROR
+N1: 0
+N2: 1
+N3: ERROR
+N3b: ERROR
+N4: 2
+N5: 2
+N6: 2
+N7: 2
+N8: 2
+Pass criterion for 0.15: R1 R2 R3 R4 N1 N2 N3 N4 all 0 (R1 and N4 may be 2 when only the human read-through is left).

@@ -1,0 +1,87 @@
+[
+  {
+    "id": "D0",
+    "title": "Bartizan standalone -- no Gangland core, no Gangland modules",
+    "verdict": "PASS",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1345-D0.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1345-D0.log"
+  },
+  {
+    "id": "D1",
+    "title": "Empty -- Bartizan + Citizens present, no Gangland modules deployed",
+    "verdict": "PASS",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1345-D1.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1345-D1.log"
+  },
+  {
+    "id": "D2",
+    "title": "Civilians only",
+    "verdict": "PASS",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "civilians"
+    ],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1345-D2.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1345-D2.log"
+  },
+  {
+    "id": "D3",
+    "title": "Turf alone -- expect module.dependency.missing (turf Depends: [civilians])",
+    "verdict": "PASS",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1345-D3.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1345-D3.log"
+  },
+  {
+    "id": "D4",
+    "title": "Civilians + Turf + Cops -- /glw turf powerupnpc without a CommandContribution",
+    "verdict": "PASS",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "civilians",
+      "turf",
+      "copsncrooks"
+    ],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1345-D4.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1345-D4.log"
+  },
+  {
+    "id": "D5",
+    "title": "All six modules",
+    "verdict": "PASS",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "civilians",
+      "gadget",
+      "mail",
+      "npcshops",
+      "turf",
+      "copsncrooks"
+    ],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1345-D5.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1345-D5.log"
+  }
+]

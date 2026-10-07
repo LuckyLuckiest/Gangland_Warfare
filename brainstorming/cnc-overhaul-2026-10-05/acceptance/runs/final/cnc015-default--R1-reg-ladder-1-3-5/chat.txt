@@ -1,0 +1,87 @@
+[Runner] Runner joined the game
+[Runner] [ViaVersion] There is a newer plugin version available: 5.12.0, you're on: 5.12.0-SNAPSHOT
+[Runner] [Server: Gamerule spawn_mobs is now set to: false]
+[Runner] [Server: Gamerule spawn_monsters is now set to: false]
+[Runner] [Server: Gamerule advance_time is now set to: false]
+[Runner] [Server: Set the time to 6000]
+[Runner] [Server: Set the weather to clear]
+[Runner] [Server: Killed Slime]
+[Runner] [Server: Applied effect Resistance to Runner]
+[Runner] [Server: Applied effect Instant Health to Runner]
+[Runner] [Server: Teleported Runner to 100.500000, -60.000000, 100.500000]
+[Runner] [DISPATCH] All units, be advised: Runner is wanted, level 1.
+[Runner] [GLW] Your wanted level has been increased ★☆☆☆☆.
+[Runner] [RADIO] Officer Pointman Marty #1000: Officer Assault Maria #1001, take his front!
+[Runner] [RADIO] Officer Pointman Marty #1000: Contact! Suspect 40 blocks south-east!
+[Runner] [RADIO] Officer Assault Maria #1001: Flanking east, keep him busy!
+[Runner] [Marty #1000] CNCCOP:R1-1
+[Runner] [Maria #1001] CNCCOP:R1-1
+[Runner] GLW >> Wanted Status:
+[Runner] ★☆☆☆☆
+[Runner] [Server] CNCMARK:STATUS:R1-1
+[Runner] [RADIO] Officer Pointman Marty #1000: Suspect cleared. Returning to patrol.
+[Runner] [GLW] Your wanted level has been cleared.
+[Runner] [Server: Killed 2 entities]
+[Runner] [Server: Teleported Runner to 100.500000, -60.000000, 100.500000]
+[Runner] [DISPATCH] All units, be advised: Runner is wanted, level 3.
+[Runner] [GLW] Your wanted level has been increased ★★★☆☆.
+[Runner] [RADIO] Officer Pointman Marty #1000: Contact! Suspect 34 blocks south-east!
+[Runner] [DISPATCH] Lieutenant units en route to Runner.
+[Runner] [RADIO] Lieutenant Defender Sue #1003: Check your fire, friendly in the line!
+[Runner] [RADIO] Officer Assault Maria #1001: Moving to flank, east!
+[Runner] [RADIO] Lieutenant Commander Hank #1002: Officer Assault Maria #1001, cut him off on his front!
+[Runner] [RADIO] Officer Assault Maria #1001: Copy.
+[Runner] [RADIO] Officer Assault Maria #1001: Flanking south, keep him busy!
+[Runner] [Sue #1003] CNCCOP:R1-3
+[Runner] [Maria #1001] CNCCOP:R1-3
+[Runner] [Marty #1000] CNCCOP:R1-3
+[Runner] [Hank #1002] CNCCOP:R1-3
+[Runner/game_info] You are handcuffed
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner] GLW >> Wanted Status:
+[Runner] ★★★☆☆
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner] [Server] CNCMARK:STATUS:R1-3
+[Runner] [RADIO] Officer Pointman Marty #1000: Suspect cleared. Returning to patrol.
+[Runner] [GLW] Your wanted level has been cleared.
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner] [Server: Killed ]
+[Runner] [Server: Teleported Runner to 100.500000, -60.000000, 100.500000]
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner] [DISPATCH] All units, be advised: Runner is wanted, level 5.
+[Runner] [GLW] Your wanted level has been increased ★★★★★.
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner] [DISPATCH] Military units en route to Runner.
+[Runner] [RADIO] Military Commander Nick #1004: Eyes on Runner, east!
+[Runner] [RADIO] Military Commander Nick #1004: All units, engage! Defender up front, Assault go wide east!
+[Runner] [RADIO] Military Assault Carl #1009: Flanking west, keep him busy!
+[Runner] [RADIO] Military Defender Jim #1006: Defender up front, nobody gets past me!
+[Runner] [RADIO] Military Marksman Sue #1007: Overwatch in position, 39 blocks south, I have eyes on the suspect.
+[Runner] [Sue #1007] CNCCOP:R1-5
+[Runner] [Kate #1005] CNCCOP:R1-5
+[Runner] [Nick #1004] CNCCOP:R1-5
+[Runner] [Carl #1009] CNCCOP:R1-5
+[Runner] [Jim #1006] CNCCOP:R1-5
+[Runner] [Linda #1008] CNCCOP:R1-5
+[Runner] GLW >> Wanted Status:
+[Runner] ★★★★★
+[Runner] [RADIO] Military Commander Nick #1004: Moving, cover me!
+[Runner] [Server] CNCMARK:STATUS:R1-5
+[Runner] [RADIO] Military Commander Nick #1004: Suspect cleared. Returning to patrol.
+[Runner] [GLW] Your wanted level has been cleared.
+[Runner/end] [END] disconnect.quitting

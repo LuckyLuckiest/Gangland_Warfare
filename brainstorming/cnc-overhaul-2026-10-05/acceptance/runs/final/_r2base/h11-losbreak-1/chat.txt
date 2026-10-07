@@ -1,0 +1,18 @@
+[Runner] Runner joined the game
+[Runner] [ViaVersion] There is a newer plugin version available: 5.12.0, you're on: 5.12.0-SNAPSHOT
+[Runner] [Server: Killed 3 entities]
+[Runner] [Server: Teleported Runner to 100.500000, -60.000000, 125.500000]
+[Runner] [Server: Successfully filled 105 block(s)]
+[Runner] [Server: Teleported Runner to 100.500000, -60.000000, 100.500000]
+[Runner] [DISPATCH] All units, be advised: Runner is wanted, level 2.
+[Runner] [GLW] Your wanted level has been increased ★★☆☆☆.
+[Runner] [RADIO] Sergeant Pointman Carl #1000: Contact! Suspect 30 blocks east!
+[Runner] [RADIO] Sergeant Assault Gus #1001: Moving to flank, west!
+[Runner] [Server: Teleported Runner to 100.500000, -60.000000, 116.500000]
+[Runner] [RADIO] Sergeant Pointman Carl #1000: Sweep the area!
+[Runner] [RADIO] Sergeant Assault Gus #1001: Copy.
+[Runner] [RADIO] Sergeant Pointman Carl #1000: Suspect cleared. Returning to patrol.
+[Runner] Runner was slain by Slime
+[Runner] [Server: Teleported Runner to 100.500000, -60.000000, 94.500000]
+[Runner] [GLW] Your wanted level has been cleared.
+[Runner/end] [END] disconnect.quitting

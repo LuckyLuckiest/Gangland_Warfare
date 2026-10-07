@@ -1,0 +1,63 @@
+
+######## N5
+== N5 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+       [Runner] [RADIO] Sergeant Pointman Joe #1000: Sergeant Assault Ray #1001, close the distance!
+       [Runner] [RADIO] Sergeant Assault Joe #1002: Contact! Suspect 33 blocks west!
+       [Runner] [RADIO] Sergeant Assault Ray #1001: Copy.
+       [Runner] [RADIO] Sergeant Assault Joe #1002: Flanking west, keep him busy!
+       [Runner] [Server] CNCMARK:N5:SHOT1
+       [Runner] [RADIO] Sergeant Assault Joe #1002: Shots fired! Converge on the sound!
+       [Runner] [Server] CNCMARK:N5:RADIO
+       [Runner] [Server] CNCMARK:N5:SHOT2
+       [Runner] [Server] CNCMARK:STATUS:N5
+REVIEW N5 best effort: read the transcript above against the pass line
+== REVIEW ==
+
+######## N6
+== N6 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+       [Runner] [DISPATCH] All units, be advised: Runner is wanted, level 1.
+       [Runner] [GLW] Your wanted level has been increased ★☆☆☆☆.
+       [Runner] [GLW] Your wanted level has been cleared.
+       [Runner] GLW >> Wanted Status:
+       [Runner] [Server] CNCMARK:STATUS:N6-cleared
+       [Runner] [DISPATCH] All units, be advised: Runner is wanted, level 1.
+       [Runner] GLW >> Wanted Status:
+       [Runner] [Server] CNCMARK:STATUS:N6-after-hit
+REVIEW N6 best effort: read the transcript above against the pass line
+== REVIEW ==
+
+######## N8
+== N8 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+       [Runner] [RADIO] Lieutenant Commander Rick #1000: Contact! Suspect 34 blocks south-east!
+       [Runner] [RADIO] Lieutenant Commander Rick #1000: Squad, positions! Watch your sectors, south-east first!
+       [Runner] [RADIO] Lieutenant Defender Ray #1002: Covering the squad, shields up!
+       [Runner] [Server] CNCMARK:N8:KILL1
+       [Runner] [RADIO] Lieutenant Commander Rick #1000: Officer down! Lieutenant Pointman Rosa #1001 is down!
+       [Runner] [RADIO] Lieutenant Commander Rick #1000: Requesting backup at my location!
+       [Runner] [RADIO] Lieutenant Commander Rick #1000: Suspect is resisting! Take him down!
+       [Runner] [RADIO] Lieutenant Commander Rick #1000: Man down, Lieutenant Pointman Rosa #1001! Pull back to cover, medic on him!
+       [Runner] [RADIO] Lieutenant Commander Rick #1000: Reloading, cover me!
+       [Runner] [RADIO] Lieutenant Marksman Pete #1003: Overwatch in position, 30 blocks west, I have eyes on the suspect.
+       [Runner] [RADIO] SWAT Assault Sue #1006: Moving to flank, south-west!
+       [Runner] [Server] CNCMARK:N8:KILL2
+       [Runner] [RADIO] Lieutenant Commander Rick #1000: Two down! Pull back to cover, backup is coming!
+       [Runner] [Server] CNCMARK:N8:REGROUP
+       [Runner] [RADIO] Lieutenant Commander Rick #1000: Lieutenant Marksman Pete #1003, take his front!
+       [Runner] [RADIO] Lieutenant Marksman Pete #1003: On it.
+       [Runner] [RADIO] Lieutenant Commander Rick #1000: Squad, positions! Defender hold, Assault flank, Marksman take the high ground!
+       [Runner] [RADIO] Lieutenant Commander Rick #1000: Backup's here! All units, push together!
+       [Runner] [Server] CNCMARK:N8:PUSH
+REVIEW N8 best effort: read the transcript above against the pass line
+== REVIEW ==
+
+======== SUMMARY (0 = PASS, 1 = FAIL, 2 = REVIEW by a human, ERROR = could not run)
+N5: 2
+N6: 2
+N8: 2
+Pass criterion for 0.15: R1 R2 R3 R4 N1 N2 N3 N4 all 0 (R1 and N4 may be 2 when only the human read-through is left).

@@ -1,0 +1,388 @@
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/GangConfig.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/GangConfig.java
+index 1b94e78f..6a290812 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/GangConfig.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/GangConfig.java
+@@ -12,6 +12,7 @@ import org.luckyraven.gangland.gang.contract.RankLookupContract;
+ import org.luckyraven.gangland.command.extension.CommandContribution;
+ import org.luckyraven.gangland.core.user.UserManager;
+ import org.luckyraven.gangland.data.gang.GangItemSourceContribution;
++import org.luckyraven.gangland.data.gang.GangMembership;
+ import org.luckyraven.gangland.data.placeholder.extension.PlaceholderContribution;
+ import org.luckyraven.gangland.gang.command.debug.GangDebugContribution;
+ import org.luckyraven.gangland.gang.command.option.GangOptionContribution;
+@@ -178,4 +179,18 @@ public final class GangConfig {
+ 		return new GangMenuItemSourceContribution(userManager, gangManager, filterStore, filterApplier,
+ 		                                          gangFilterAdapter, memberFilterAdapter);
+ 	}
++
++	/**
++	 * Wires the core-owned {@link GangMembership} holder (T-53, W55) — see {@link GangMembershipInstaller}'s
++	 * javadoc for why this has to be a {@code @Bean}-produced value rather than its own bare
++	 * {@code @Configuration} class: these 3 parameters are the real ordering edges that guarantee
++	 * {@code IdentityContractConfig.gangMembership()} and this class's own {@code gangManager}/
++	 * {@code memberManager} beans have already run by the time this factory method is invoked.
++	 * {@code @PostConstruct install()} still fires automatically once this bean is registered.
++	 */
++	@Bean
++	public GangMembershipInstaller gangMembershipInstaller(GangMembership gangMembership, MemberManager memberManager,
++	                                                        GangManager gangManager) {
++		return new GangMembershipInstaller(gangMembership, memberManager, gangManager);
++	}
+ }
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/GangMembershipInstaller.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/GangMembershipInstaller.java
+index 52850969..3b97cf40 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/GangMembershipInstaller.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/GangMembershipInstaller.java
+@@ -4,7 +4,6 @@ import org.luckyraven.gangland.data.gang.GangMembership;
+ import org.luckyraven.gangland.data.gang.GangMembershipView;
+ import org.luckyraven.gangland.gang.member.Member;
+ import org.luckyraven.gangland.gang.member.MemberManager;
+-import org.luckyraven.keystone.bean.Configuration;
+ import org.luckyraven.keystone.bean.PostConstruct;
+ 
+ import java.util.Optional;
+@@ -15,8 +14,21 @@ import java.util.UUID;
+  * holder (WS5 G1 step 9c, R9). Runs in {@link #install()} rather than a constructor because
+  * {@code GangMembership} is a core bean the module only ever writes to once, after its own
+  * {@code GangManager}/{@code MemberManager} beans exist.
++ *
++ * <p><b>Not a {@code @Configuration} class (T-53, W55).</b> {@code BeanFactory.instantiate()} instantiates
++ * every registered {@code @Configuration} class via its own constructor in one up-front pass, entirely
++ * <em>before</em> any {@code @Bean} method runs in any phase — so a bare {@code @Configuration} class can only
++ * ever resolve constructor parameters that are themselves other configuration-class instances, never a
++ * {@code @Bean}-produced value like {@link GangMembership}/{@link GangManager}/{@link MemberManager}, no matter
++ * what order the configuration classes are registered in (house rule
++ * {@code feedback_bean_ordering_via_params.md}: only {@code @Bean} method parameters are real ordering edges).
++ * This class is now produced by a {@code @Bean} factory method on {@link GangConfig} instead — its 3 parameters
++ * are the ordering edges that guarantee {@code IdentityContractConfig.gangMembership()} (core) and
++ * {@code GangConfig}'s own {@code gangManager}/{@code memberManager} beans run first. {@code @PostConstruct}
++ * still fires correctly on a factory-produced bean (confirmed against {@code BeanFactory.runPostConstruct},
++ * which walks every bean in {@code allRegisteredBeans}, not just direct configuration-class instances), so
++ * {@link #install()} needed no change.
+  */
+-@Configuration
+ public final class GangMembershipInstaller {
+ 
+ 	private final GangMembership gangMembership;
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/GangModule.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/GangModule.java
+index 3f739612..773c8d0c 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/GangModule.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/GangModule.java
+@@ -15,8 +15,9 @@ import org.luckyraven.keystone.vault.permission.VaultOfflinePermissionService;
+  * <ul>
+  *     <li>{@link GangConfig} - the module-owned contract beans (GangMessageContract, GangPermissionBridgeContract,
+  *     GangSettingsContract, GangAllianceRepositoryContract's own binding, MemberRepositoryContract's own binding)
+- *     plus {@code GangMembershipInstaller}'s {@code @PostConstruct} wiring of the core-owned
+- *     {@code GangMembership} holder.</li>
++ *     plus the {@code @Bean}-produced {@code GangMembershipInstaller} whose {@code @PostConstruct} wires the
++ *     core-owned {@code GangMembership} holder (T-53, W55: not registered as its own {@code @Configuration}
++ *     class — see its javadoc for why that broke boot with the module deployed).</li>
+  *     <li>{@code gang.command.sub} - the {@code /glw gang} and {@code /glw rank} command trees (31 commands).</li>
+  *     <li>{@code gang.listener} - {@code GangMembersDamageListener}.</li>
+  *     <li>{@code gang.database} - the gang/rank/member repositories and their tables, scanned through the module
+@@ -34,7 +35,6 @@ public final class GangModule implements KeystoneModule {
+ 	@Override
+ 	public void configure(ModuleRegistrar registrar) {
+ 		registrar.configuration(GangConfig.class)
+-		         .configuration(GangMembershipInstaller.class)
+ 		         .listenerPackage(LISTENER_PACKAGE)
+ 		         .commandPackage(GANG_COMMAND_PACKAGE)
+ 		         .commandPackage(RANK_COMMAND_PACKAGE)
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/plugin/PermissionRepository.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/database/repositories/permission/PermissionRepository.java
+similarity index 69%
+rename from gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/plugin/PermissionRepository.java
+rename to gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/database/repositories/permission/PermissionRepository.java
+index 597ad20b..260e8beb 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/database/repositories/plugin/PermissionRepository.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/database/repositories/permission/PermissionRepository.java
+@@ -1,7 +1,7 @@
+-package org.luckyraven.gangland.database.repositories.plugin;
++package org.luckyraven.gangland.gang.database.repositories.permission;
+ 
+ import org.bukkit.plugin.java.JavaPlugin;
+-import org.luckyraven.gangland.database.tables.plugin.PermissionTable;
++import org.luckyraven.gangland.gang.database.tables.permission.PermissionTable;
+ import org.luckyraven.gangland.core.permission.Permission;
+ import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+ import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
+@@ -15,6 +15,14 @@ import java.util.Collection;
+ import java.util.List;
+ import java.util.function.Consumer;
+ 
++/**
++ * Moved from gangland-impl (T-54, W55): {@code Permission}'s only caller is the gang module's
++ * {@code RankManager} ({@code repositoryRegistry.getRepository(Permission.class)}); when the module isn't
++ * deployed, nothing ever called {@link #setDataSupplier}, so this repository sat in core's unconditional
++ * scan as an orphan and logged "No data supplier set" on every autosave. Scanned now only by
++ * {@code GangModule.REPOSITORY_PACKAGE}'s module-loader pass. The {@link Permission} entity itself and the
++ * {@code permission} table name are unchanged.
++ */
+ @Repository(Permission.class)
+ public class PermissionRepository extends AbstractRepository<Permission> {
+ 
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/plugin/PermissionTable.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/database/tables/permission/PermissionTable.java
+similarity index 93%
+rename from gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/plugin/PermissionTable.java
+rename to gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/database/tables/permission/PermissionTable.java
+index d4acf90d..ad376d04 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/database/tables/plugin/PermissionTable.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/database/tables/permission/PermissionTable.java
+@@ -1,4 +1,4 @@
+-package org.luckyraven.gangland.database.tables.plugin;
++package org.luckyraven.gangland.gang.database.tables.permission;
+ 
+ import org.luckyraven.gangland.core.permission.Permission;
+ import org.luckyraven.keystone.persistence.database.component.Attribute;
+diff --git a/gangland-features/gangland-gang/src/test/java/org/luckyraven/gangland/gang/GangConfigBeanGraphTest.java b/gangland-features/gangland-gang/src/test/java/org/luckyraven/gangland/gang/GangConfigBeanGraphTest.java
+new file mode 100644
+index 00000000..cef48aaf
+--- /dev/null
++++ b/gangland-features/gangland-gang/src/test/java/org/luckyraven/gangland/gang/GangConfigBeanGraphTest.java
+@@ -0,0 +1,169 @@
++package org.luckyraven.gangland.gang;
++
++import org.bukkit.entity.Player;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.gangland.core.permission.PermissionRegistryContract;
++import org.luckyraven.gangland.core.user.UserManager;
++import org.luckyraven.gangland.data.gang.GangMembership;
++import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
++import org.luckyraven.gangland.gang.contract.MemberRepositoryContract;
++import org.luckyraven.gangland.core.permission.Permission;
++import org.luckyraven.gangland.gang.member.Member;
++import org.luckyraven.gangland.gang.rank.Rank;
++import org.luckyraven.gangland.gang.rank.RankParent;
++import org.luckyraven.gangland.gang.rank.RankPermission;
++import org.luckyraven.gangland.menu.filter.FilterApplier;
++import org.luckyraven.gangland.menu.filter.FilterStore;
++import org.luckyraven.keystone.bean.Bean;
++import org.luckyraven.keystone.bean.BeanFactory;
++import org.luckyraven.keystone.bean.Configuration;
++import org.luckyraven.keystone.bean.autowire.DependencyContainer;
++import org.luckyraven.keystone.persistence.database.DatabaseHandler;
++import org.luckyraven.keystone.persistence.repository.IRepository;
++import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
++
++import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
++import static org.junit.jupiter.api.Assertions.assertThrows;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.when;
++
++/**
++ * Pins T-53 (W55, P0 boot blocker): with the gang module deployed, {@code Gangland.onEnable} threw
++ * {@code Failed to instantiate @Configuration class ...GangMembershipInstaller ... Cannot resolve required
++ * parameter of type GangMembership}. Root cause: {@code BeanFactory.instantiate()} instantiates every
++ * registered {@code @Configuration} class via its own constructor in one up-front pass, entirely
++ * <b>before</b> any {@code @Bean} method runs in any phase — a bare {@code @Configuration} class can never
++ * resolve a {@code @Bean}-produced parameter, no matter how the configuration classes are ordered. Fixed by
++ * making {@code GangMembershipInstaller} a {@code @Bean} produced by {@link GangConfig} instead, whose 3
++ * parameters are real ordering edges.
++ *
++ * <p>Runs the real Keystone {@link BeanFactory} against the real {@link GangConfig} — not a declaration-shape
++ * check like {@code GangModuleTest} — plus a minimal in-test stand-in for the one core bean this needs
++ * ({@link GangMembership}, normally produced by gangland-impl's {@code IdentityContractConfig}). A literal
++ * {@code IdentityContractConfig} can't be used here: {@code gangland-gang} can never depend on
++ * {@code gangland-impl} (the module boundary this whole gate protects), so this fixture reproduces the exact
++ * same shape of the real bug — {@code GangMembership} produced by a <em>different</em> {@code @Configuration}
++ * class than the one that needs it — without violating it. Every other {@code GangConfig} dependency
++ * (repositories, plugin, database handler, user manager, filter plumbing) is mocked, matching every other
++ * config-class bean test's rig in this codebase.
++ */
++@DisplayName("GangConfig bean graph - real BeanFactory wiring (T-53)")
++class GangConfigBeanGraphTest {
++
++	private DependencyContainer container;
++	private BeanFactory         factory;
++
++	@BeforeEach
++	void setUp() {
++		container = new DependencyContainer();
++		JavaPlugin plugin = mock(JavaPlugin.class);
++		factory = new BeanFactory(container, plugin, key -> false);
++
++		container.registerInstance(JavaPlugin.class, plugin);
++		container.registerInstance(RepositoryRegistry.class, repositoryRegistry());
++		container.registerInstance(DatabaseHandler.class, mock(DatabaseHandler.class));
++		container.registerInstance(PermissionRegistryContract.class, mock(PermissionRegistryContract.class));
++		container.registerInstance(FilterStore.class, mock(FilterStore.class));
++		container.registerInstance(FilterApplier.class, mock(FilterApplier.class));
++
++		@SuppressWarnings("unchecked")
++		UserManager<Player> userManager = mock(UserManager.class);
++		container.registerInstance("online", UserManager.class, userManager);
++
++		factory.registerConfiguration(FixtureGangMembershipProducer.class);
++		factory.registerConfiguration(GangConfig.class);
++		// Harmless no-op once GangMembershipInstaller isn't @Configuration-annotated any more
++		// (BeanFactory.registerConfiguration silently rejects a non-annotated class) — kept so this same test
++		// reproduces the pre-fix crash unchanged when the fix is temporarily reverted for the red-first check.
++		factory.registerConfiguration(GangMembershipInstaller.class);
++	}
++
++	@SuppressWarnings("unchecked")
++	private RepositoryRegistry repositoryRegistry() {
++		RepositoryRegistry registry = mock(RepositoryRegistry.class);
++
++		IRepository<Gang> gangRepo = mock(IRepository.class);
++		when(registry.getRepository(Gang.class)).thenReturn(gangRepo);
++
++		GangAllianceRepositoryContract allianceRepo = mock(GangAllianceRepositoryContract.class);
++		when(registry.getRepository(GangAlliance.class)).thenReturn(allianceRepo);
++
++		MemberRepositoryContract memberRepo = mock(MemberRepositoryContract.class);
++		when(registry.getRepository(Member.class)).thenReturn(memberRepo);
++
++		// RankManager/MemberManager are both BeanLifecycle — BeanFactory calls onInitialize(true) immediately
++		// after each is registered (before the next bean in topo order), so every repository their initialize()
++		// touches needs a non-null stand-in too, or the whole instantiate() call NPEs before ever reaching
++		// GangMembershipInstaller.
++		IRepository<Rank> rankRepo = mock(IRepository.class);
++		when(registry.getRepository(Rank.class)).thenReturn(rankRepo);
++
++		IRepository<RankParent> rankParentRepo = mock(IRepository.class);
++		when(registry.getRepository(RankParent.class)).thenReturn(rankParentRepo);
++
++		IRepository<Permission> permissionRepo = mock(IRepository.class);
++		when(registry.getRepository(Permission.class)).thenReturn(permissionRepo);
++
++		IRepository<RankPermission> rankPermissionRepo = mock(IRepository.class);
++		when(registry.getRepository(RankPermission.class)).thenReturn(rankPermissionRepo);
++
++		return registry;
++	}
++
++	@Test
++	@DisplayName("GangMembershipInstaller's GangMembership dependency resolves and installs a view")
++	void gangMembershipInstaller_resolvesAndInstalls() {
++		assertDoesNotThrow(() -> factory.instantiate());
++
++		GangMembership membership = container.getInstance(GangMembership.class);
++		assertTrue(membership.isInstalled(),
++		           "GangMembershipInstaller's @PostConstruct install() must have run against the real bean graph");
++	}
++
++	/**
++	 * Reproduces the exact pre-fix crash: a bare {@code @Configuration} class construction-injecting a
++	 * {@code @Bean}-produced type. Standalone from the test above so a reader can run just this one to see the
++	 * failure mode in isolation.
++	 */
++	@Test
++	@DisplayName("a bare @Configuration class construction-injecting a @Bean-produced type fails the same way")
++	void bareConfigurationClass_constructorInjectingABeanProducedType_fails() {
++		DependencyContainer isolated = new DependencyContainer();
++		BeanFactory          isolatedFactory = new BeanFactory(isolated, mock(JavaPlugin.class), key -> false);
++
++		isolatedFactory.registerConfiguration(FixtureGangMembershipProducer.class);
++		isolatedFactory.registerConfiguration(BareConfigurationNeedingABeanProducedType.class);
++
++		IllegalStateException thrown =
++				assertThrows(IllegalStateException.class, isolatedFactory::instantiate);
++		assertTrue(thrown.getMessage().contains("Failed to instantiate @Configuration class"),
++		           thrown.getMessage());
++	}
++
++	/** Zero-arg producer for {@link GangMembership} — see the class javadoc for why this stands in for impl's
++	 * real {@code IdentityContractConfig.gangMembership()} bean. */
++	@Configuration
++	public static final class FixtureGangMembershipProducer {
++
++		@Bean
++		public GangMembership gangMembership() {
++			return new GangMembership();
++		}
++	}
++
++	/** Minimal repro fixture for the second test: any bare {@code @Configuration} class whose constructor names
++	 * a {@code @Bean}-produced type hits the same up-front-instantiation hole {@link GangMembershipInstaller}
++	 * used to. */
++	@Configuration
++	public static final class BareConfigurationNeedingABeanProducedType {
++
++		public BareConfigurationNeedingABeanProducedType(GangMembership gangMembership) {
++			// unused — the point is that this constructor can never resolve, regardless of body
++		}
++	}
++
++}
+diff --git a/gangland-features/gangland-gang/src/test/java/org/luckyraven/gangland/gang/GangModuleTest.java b/gangland-features/gangland-gang/src/test/java/org/luckyraven/gangland/gang/GangModuleTest.java
+index 29e2ea07..bea7a20e 100644
+--- a/gangland-features/gangland-gang/src/test/java/org/luckyraven/gangland/gang/GangModuleTest.java
++++ b/gangland-features/gangland-gang/src/test/java/org/luckyraven/gangland/gang/GangModuleTest.java
+@@ -27,7 +27,9 @@ class GangModuleTest {
+ 
+ 		new GangModule().configure(registrations);
+ 
+-		assertEquals(List.of(GangConfig.class, GangMembershipInstaller.class), registrations.configurations());
++		// GangMembershipInstaller is no longer its own @Configuration class (T-53, W55) — it's a @Bean produced
++		// inside GangConfig now, so only one configuration class is registered.
++		assertEquals(List.of(GangConfig.class), registrations.configurations());
+ 		assertEquals(List.of(GangModule.LISTENER_PACKAGE), registrations.listenerPackages());
+ 		assertEquals(List.of(GangModule.GANG_COMMAND_PACKAGE, GangModule.RANK_COMMAND_PACKAGE),
+ 		            registrations.commandPackages());
+diff --git a/gangland-impl/src/test/java/org/luckyraven/gangland/database/repositories/CoreRepositoryScanTest.java b/gangland-impl/src/test/java/org/luckyraven/gangland/database/repositories/CoreRepositoryScanTest.java
+new file mode 100644
+index 00000000..b0932c43
+--- /dev/null
++++ b/gangland-impl/src/test/java/org/luckyraven/gangland/database/repositories/CoreRepositoryScanTest.java
+@@ -0,0 +1,57 @@
++package org.luckyraven.gangland.database.repositories;
++
++import org.bukkit.plugin.java.JavaPlugin;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.gangland.core.permission.Permission;
++import org.luckyraven.gangland.data.plugin.PluginData;
++import org.luckyraven.keystone.persistence.database.DatabaseHandler;
++import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
++import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
++
++import static org.junit.jupiter.api.Assertions.assertFalse;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++import static org.mockito.Mockito.mock;
++
++/**
++ * Pins T-54 (W55, P1): with the gang module deployed, {@code PermissionRepository} used to live in core
++ * ({@code org.luckyraven.gangland.database.repositories.plugin}) and get scanned/registered unconditionally by
++ * {@code DatabaseConfig}, even though its only caller ({@code RankManager.initialize()},
++ * {@code repositoryRegistry.getRepository(Permission.class)}) moved to the gang module. Without the module,
++ * nothing ever called {@code setDataSupplier} on it, so every autosave/reload logged
++ * {@code "No data supplier set for repository: PermissionRepository"} for a repository the core has no use for
++ * on its own.
++ *
++ * <p>Fix: {@code PermissionRepository}/{@code PermissionTable} moved into the gang module's own database
++ * package ({@code org.luckyraven.gangland.gang.database.repositories.permission}/{@code .tables.permission}),
++ * scanned only by the module loader's own {@code repositoryPackage} pass
++ * ({@code GangModule.REPOSITORY_PACKAGE}) — a gang-less server's core scan of
++ * {@code org.luckyraven.gangland.database.repositories} (this class's own package, run by
++ * {@code DatabaseConfig.ganglandDatabase()}) no longer finds it at all, so there is no orphan repository left to
++ * warn about. The {@code Permission} entity itself stays in {@code gangland-core} (table name {@code permission}
++ * unchanged; no migration). This test scans the real core package against the real classpath — no mock of
++ * {@code PermissionRepository} itself, since after the fix it is not on gangland-impl's classpath at all — and
++ * doesn't name the class it expects to be missing, so it stays valid regardless of where the class moved to.
++ */
++@DisplayName("core repository package scan (T-54)")
++class CoreRepositoryScanTest {
++
++	@Test
++	@DisplayName("scanning org.luckyraven.gangland.database.repositories no longer registers a Permission repository")
++	void coreScan_doesNotRegisterPermissionRepository() {
++		RepositoryRegistry registry = new RepositoryRegistry(mock(JavaPlugin.class), mock(DatabaseHandler.class),
++		                                                      mock(DatabaseBackend.class));
++
++		registry.scanAndRegisterRepositories("org.luckyraven.gangland.database.repositories",
++		                                     getClass().getClassLoader());
++
++		assertFalse(registry.hasRepository(Permission.class),
++		           "PermissionRepository moved to the gang module (T-54) — a gang-less server's core scan must " +
++		           "not find it any more, or RankManager.setDataSupplier being the only caller left it as an " +
++		           "orphan repository that logs \"No data supplier set\" on every autosave.");
++
++		// Sanity: the scan itself still works and still finds a repository that legitimately stayed in core.
++		assertTrue(registry.hasRepository(PluginData.class),
++		          "the scan should still register sibling core repositories that were not moved");
++	}
++}

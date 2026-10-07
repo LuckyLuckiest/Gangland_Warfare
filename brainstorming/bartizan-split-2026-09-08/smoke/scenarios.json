@@ -1,0 +1,1376 @@
+{
+  "_comment": "Config + scenario matrix for smoke.py. See README.md in this directory. S1-S8 were the original phase-A rows against the 0.8.4 five-module topology (weapon still a Gangland module, no Bartizan, no civilians/npcshops split) -- kept for reference and still dry-run-verifiable, but marked \"legacy\": true (T-O9, 0.9.0) since they no longer describe the shipped topology; smoke.py's --list labels them. D0-D9 are the phase-D matrix for the post-split topology (gangland-0.9.0.md section G6 / REVIEW-consistency.md 'Smoke rows for phase D'), added by T-O9. Two items from the original S-row table were intentionally NOT encoded as automated checks and that limitation carries over identically to the D-rows: a DB-level check (S4's 'detainment table migrates') and a count/second-pass check that needs a human read of the transcript rather than a substring match (S1's '/glw help lists only core commands', and likewise D8's 'no second Item vocabularies installed: line' and 'no duplicate-listener errors', which need a COUNT-of-occurrences check evaluate_expect() does not implement) -- see smoke/README.md's Limitations section. D6's counted fault totals reflect the checklist's default reading (civilians/copsncrooks/gadget skipped, turf still loads); gangland-0.9.0.md's own D6 row flags this as PENDING A USER DECISION (reviews H m8 / RI I-3) -- if civilians' Plugins:[Bartizan] edge is later reworked so turf no longer transitively needs Bartizan, D6 stays correct only under variant (a) (accept the coupling); under variant (b) turf would also skip (2 loaded, 4 fault(s), no 'Item vocabularies installed: none' -> still applies, 'Depends' fault instead) and this row's expect block needs re-deriving, not just re-running. | 2026-09-17: paths point at the decoupling-wave worktrees (gangland-0.9.2, keystone-1.10.0, bartizan-0.4.0); the main checkouts hold an unrelated uncommitted floor wave. | 2026-10-05 (T10, cnc 0.15): paths repointed to the integration worktree gangland-0.15.0 + Keystone 1.14.0 + Bartizan 0.6.1 (api-compatible with the 0.6.0 pin); healthbars prefix added; row cnc-015-boot added (nine modules).",
+  "paths": {
+    "server_dir": "E:\\Documents\\Minecraft\\Test Server",
+    "repo_dir": "E:\\Programming\\java\\wt\\gangland-0.15.0",
+    "keystone_jar_dir": "E:\\Programming\\java\\wt\\keystone-1.14.0\\keystone-plugin\\target",
+    "keystone_jar_pattern": "Keystone-*.jar",
+    "bartizan_jar": "E:\\Programming\\java\\wt\\bartizan-0.6.1\\bartizan-plugin\\target\\Bartizan-0.6.1.jar"
+  },
+  "deploy": {
+    "core_jar_glob": "target/gangland_warfare-*.jar",
+    "modules_dir": "target/modules",
+    "server_plugins_dir": "plugins",
+    "server_core_jar_glob_relative": "gangland_warfare-*.jar"
+  },
+  "module_jar_prefix": {
+    "mail": "gangland-mail",
+    "cops": "cops-n-crooks",
+    "gadget": "gangland-gadget",
+    "turf": "gangland-turf",
+    "civilians": "gangland-civilians",
+    "npcshops": "gangland-npc-shops",
+    "lootchest": "gangland-lootchest",
+    "gang": "gangland-gang",
+    "healthbars": "gangland-healthbars"
+  },
+  "legacy_module_jar_prefix": {
+    "_comment": "T-O9: 'weapon' dropped from module_jar_prefix (there is no gangland-weapon module in the 0.9.0 topology D0-D9 target) but kept here so the 'legacy': true S1-S8 rows -- which still reference module id 'weapon' -- stay dry-run-verifiable against the pre-split 0.8.4 layout. smoke.py's module_prefix() checks module_jar_prefix first, this map second.",
+    "weapon": "gangland-weapon"
+  },
+  "module_probe_commands": {
+    "gadget": "glw car",
+    "cops": "glw cops",
+    "turf": "glw turf",
+    "mail": "glw gang",
+    "civilians": "glw civilian list",
+    "npcshops": "glw trader",
+    "gang": "glw gang"
+  },
+  "default_commands": [
+    "glw",
+    "glw help",
+    "glw help 2",
+    "glw help 3",
+    "glw modules"
+  ],
+  "command_delay_seconds": 2,
+  "boot_timeout_seconds": 180,
+  "stop_timeout_seconds": 120,
+  "scenarios": [
+    {
+      "id": "S1",
+      "title": "Empty -- no runtime modules deployed",
+      "legacy": true,
+      "modules": [],
+      "commands": null,
+      "expect": {
+        "loaded_modules": [],
+        "must_contain": [
+          "Done (",
+          "Runtime modules:"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "S2",
+      "title": "Weapon only",
+      "legacy": true,
+      "modules": [
+        "weapon"
+      ],
+      "commands": null,
+      "expect": {
+        "loaded_modules": [
+          "weapon"
+        ],
+        "must_contain": [
+          "Done (",
+          "Disabling",
+          "Disabling Gangland_Warfare"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "S3",
+      "title": "Weapon + Gadget",
+      "legacy": true,
+      "modules": [
+        "weapon",
+        "gadget"
+      ],
+      "commands": null,
+      "expect": {
+        "loaded_modules": [
+          "weapon",
+          "gadget"
+        ],
+        "must_contain": [
+          "Done (",
+          "Disabling",
+          "Disabling Gangland_Warfare"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "S4",
+      "title": "Turf + Weapon + Cops",
+      "legacy": true,
+      "modules": [
+        "turf",
+        "weapon",
+        "cops"
+      ],
+      "commands": null,
+      "expect": {
+        "loaded_modules": [
+          "turf",
+          "weapon",
+          "copsncrooks"
+        ],
+        "must_contain": [
+          "Done (",
+          "Disabling",
+          "Disabling Gangland_Warfare"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "S5",
+      "title": "All five modules",
+      "legacy": true,
+      "modules": [
+        "mail",
+        "cops",
+        "gadget",
+        "turf",
+        "weapon"
+      ],
+      "commands": null,
+      "expect": {
+        "loaded_modules": [
+          "mail",
+          "copsncrooks",
+          "gadget",
+          "turf",
+          "weapon"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules:",
+          "Disabling",
+          "Disabling Gangland_Warfare"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "S6",
+      "title": "Cops without Turf -- expect module.dependency.missing fault, server still boots",
+      "legacy": true,
+      "modules": [
+        "cops"
+      ],
+      "commands": null,
+      "expect": {
+        "faults": [
+          "module.dependency.missing"
+        ],
+        "must_contain": [
+          "Done (",
+          "Disabling"
+        ],
+        "no_errors_except": [
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "S7",
+      "title": "Weapon + a Host_Api=0.7 copy of the weapon jar (expect rejection, original still loads)",
+      "legacy": true,
+      "modules": [
+        "weapon"
+      ],
+      "commands": null,
+      "extra_module_jars": [
+        {
+          "source_module": "weapon",
+          "host_api_override": "0.7",
+          "id_override": "weaponhostapi07",
+          "name_suffix": "hostapi07"
+        }
+      ],
+      "expect": {
+        "loaded_modules": [
+          "weapon"
+        ],
+        "faults": [
+          "module.host.incompatible",
+          "was built for host 0.7"
+        ],
+        "must_contain": [
+          "Done (",
+          "Disabling",
+          "Disabling Gangland_Warfare"
+        ],
+        "no_errors_except": [
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "S8",
+      "title": "All five modules + glw reload after boot",
+      "legacy": true,
+      "modules": [
+        "mail",
+        "cops",
+        "gadget",
+        "turf",
+        "weapon"
+      ],
+      "commands": null,
+      "pre_commands": [
+        {
+          "wait_before": 10,
+          "command": "glw reload"
+        }
+      ],
+      "expect": {
+        "loaded_modules": [
+          "mail",
+          "copsncrooks",
+          "gadget",
+          "turf",
+          "weapon"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules:",
+          "Disabling",
+          "Disabling Gangland_Warfare"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "D0",
+      "title": "Bartizan standalone -- no Gangland core, no Gangland modules",
+      "modules": [],
+      "plugins": [
+        "Bartizan"
+      ],
+      "remove_plugins": [
+        "Gangland_Warfare"
+      ],
+      "commands": [
+        "bartizan",
+        "weapon list"
+      ],
+      "expect": {
+        "must_contain": [
+          "Done ("
+        ],
+        "must_not_contain": [
+          "Failed to import the legacy weapon table",
+          "No suitable driver found for jdbc:sqlite",
+          "Could not connect to the 'sqlite' database"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "D1",
+      "title": "Empty -- Bartizan + Citizens present, no Gangland modules deployed",
+      "modules": [],
+      "plugins": [
+        "Bartizan"
+      ],
+      "commands": null,
+      "expect": {
+        "loaded_modules": [],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 0 loaded, 0 fault(s)",
+          "Item vocabularies installed: [bartizan]"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "D2",
+      "title": "Civilians only",
+      "modules": [
+        "civilians"
+      ],
+      "plugins": [
+        "Bartizan"
+      ],
+      "commands": null,
+      "expect": {
+        "loaded_modules": [
+          "civilians"
+        ],
+        "must_contain": [
+          "Done (",
+          "Loaded module civilians 0.9.0",
+          "Item vocabularies installed: [bartizan]",
+          "Disabled module ",
+          "Disabling"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "D3",
+      "title": "Turf alone -- expect module.dependency.missing (turf Depends: [civilians])",
+      "modules": [
+        "turf"
+      ],
+      "plugins": [
+        "Bartizan"
+      ],
+      "commands": null,
+      "expect": {
+        "loaded_modules": [],
+        "faults": [
+          "module.dependency.missing"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 0 loaded, 1 fault(s)",
+          "Item vocabularies installed: [bartizan]"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup"
+        ],
+        "no_errors_except": [
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "D4",
+      "title": "Civilians + Turf + Cops -- /glw turf powerupnpc without a CommandContribution",
+      "modules": [
+        "civilians",
+        "turf",
+        "cops"
+      ],
+      "plugins": [
+        "Bartizan"
+      ],
+      "commands": [
+        "glw",
+        "glw help",
+        "glw help 2",
+        "glw help 3",
+        "glw modules",
+        "glw civilian list",
+        "glw turf",
+        "glw turf powerupnpc",
+        "glw cops"
+      ],
+      "expect": {
+        "loaded_modules": [
+          "civilians",
+          "turf",
+          "copsncrooks"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 3 loaded, 0 fault(s)",
+          "Item vocabularies installed: [bartizan]",
+          "Disabled module ",
+          "Disabling"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "D5",
+      "title": "All six modules",
+      "modules": [
+        "mail",
+        "turf",
+        "civilians",
+        "cops",
+        "gadget",
+        "npcshops"
+      ],
+      "plugins": [
+        "Bartizan"
+      ],
+      "commands": null,
+      "expect": {
+        "loaded_modules": [
+          "mail",
+          "turf",
+          "civilians",
+          "copsncrooks",
+          "gadget",
+          "npcshops"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 6 loaded, 0 fault(s)",
+          "Item vocabularies installed: [bartizan]",
+          "Disabled module ",
+          "Disabling"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "D6",
+      "legacy": true,
+      "title": "SUPERSEDED by ws7-no-bartizan (WS7 G5/G5b dropped gadget's and civilians' hard Plugins:[Bartizan] edge, 2026-09-17) -- kept as the pre-WS7 topology snapshot, dry-run-verifiable only. All six modules, Bartizan REMOVED -- civilians/copsncrooks/gadget skipped (module.plugin.missing); PENDING USER DECISION (see _comment / gangland-0.9.0.md D6 note) may also skip turf",
+      "modules": [
+        "mail",
+        "turf",
+        "civilians",
+        "cops",
+        "gadget",
+        "npcshops"
+      ],
+      "plugins": [],
+      "remove_plugins": [
+        "Bartizan"
+      ],
+      "commands": null,
+      "expect": {
+        "loaded_modules": [
+          "mail",
+          "npcshops"
+        ],
+        "faults": [
+          "module.plugin.missing"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 2 loaded, 4 fault(s)",
+          "Item vocabularies installed: none",
+          "Disabled module ",
+          "Disabling"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      },
+      "loaded_modules": [
+        "mail",
+        "npcshops"
+      ],
+      "must_contain": [
+        "Runtime modules: 2 loaded, 4 fault(s)"
+      ],
+      "faults": [
+        "module.plugin.missing",
+        "module.dependency.missing"
+      ]
+    },
+    {
+      "id": "D7",
+      "title": "All six modules, Citizens REMOVED -- npc.citizens.missing once each from civilians/copsncrooks/turf/npcshops",
+      "modules": [
+        "mail",
+        "turf",
+        "civilians",
+        "cops",
+        "gadget",
+        "npcshops"
+      ],
+      "plugins": [
+        "Bartizan"
+      ],
+      "remove_plugins": [
+        "Citizens"
+      ],
+      "commands": null,
+      "expect": {
+        "loaded_modules": [
+          "mail",
+          "turf",
+          "civilians",
+          "copsncrooks",
+          "gadget",
+          "npcshops"
+        ],
+        "faults": [
+          "npc.citizens.missing"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 6 loaded, 0 fault(s)",
+          "Disabled module ",
+          "Disabling",
+          "npc.citizens.missing"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup",
+          "NoClassDefFoundError"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "D8",
+      "title": "All six modules + glw reload after boot",
+      "modules": [
+        "mail",
+        "turf",
+        "civilians",
+        "cops",
+        "gadget",
+        "npcshops"
+      ],
+      "plugins": [
+        "Bartizan"
+      ],
+      "commands": null,
+      "pre_commands": [
+        {
+          "wait_before": 10,
+          "command": "glw reload"
+        }
+      ],
+      "expect": {
+        "loaded_modules": [
+          "mail",
+          "turf",
+          "civilians",
+          "copsncrooks",
+          "gadget",
+          "npcshops"
+        ],
+        "must_contain": [
+          "Done (",
+          "Item vocabularies installed: [bartizan]",
+          "Disabled module ",
+          "Disabling"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "D9",
+      "title": "All six modules + a Host_Api=0.8 copy of mail -- expect module.host.incompatible, the other six load",
+      "modules": [
+        "mail",
+        "turf",
+        "civilians",
+        "cops",
+        "gadget",
+        "npcshops"
+      ],
+      "plugins": [
+        "Bartizan"
+      ],
+      "commands": null,
+      "extra_module_jars": [
+        {
+          "source_module": "mail",
+          "host_api_override": "0.8",
+          "id_override": "mailhostapi08",
+          "name_suffix": "hostapi08"
+        }
+      ],
+      "expect": {
+        "loaded_modules": [
+          "mail",
+          "turf",
+          "civilians",
+          "copsncrooks",
+          "gadget",
+          "npcshops"
+        ],
+        "faults": [
+          "module.host.incompatible"
+        ],
+        "must_contain": [
+          "Done (",
+          "Disabled module ",
+          "Disabling"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup"
+        ],
+        "no_errors_except": [
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "M1",
+      "title": "All six modules compiled against gangland-api (Host_Api 1.0) + /glw module list|install|remove from the console",
+      "modules": [
+        "mail",
+        "turf",
+        "civilians",
+        "cops",
+        "gadget",
+        "npcshops"
+      ],
+      "plugins": [
+        "Bartizan"
+      ],
+      "commands": [
+        "glw",
+        "glw help",
+        "glw modules",
+        "glw module list",
+        "glw module install nosuch-module",
+        "glw module remove nosuch"
+      ],
+      "expect": {
+        "loaded_modules": [
+          "mail",
+          "turf",
+          "civilians",
+          "copsncrooks",
+          "gadget",
+          "npcshops"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 6 loaded, 0 fault(s)",
+          "Item vocabularies installed: [bartizan]",
+          "Loaded modules",
+          "Host_Api 1.0)",
+          "Use a module id or",
+          "No module named",
+          "Disabled module ",
+          "Disabling"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup",
+          "NoSuchMethodError",
+          "NoClassDefFoundError"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "jetpack-give",
+      "title": "WS7: /glw jetpack give resolves and the gadget module boots with the WS7-D4 Bartizan trait bridge active (Bartizan present) -- console can only confirm the module loads, the command resolves without an error/exception, and the Bartizan item-vocabulary/trait registration lines appear; it CANNOT drive an actual equip or verify flight (no in-game player exists in a console-only run) -- same documented-gap shape as S1's '/glw help lists only core commands' and S4's 'detainment table migrates', see README.md Limitations. A human with a real client must equip the given jetpack and confirm it actually flies; JetpackNbtIdentityTest/JetpackServiceActivatePermissionTest are the automated unit-level equivalent for the parts console can't reach.",
+      "modules": [
+        "gadget"
+      ],
+      "plugins": [
+        "Bartizan"
+      ],
+      "commands": [
+        "glw",
+        "glw help",
+        "glw modules",
+        "glw jetpack",
+        "glw jetpack give jetpack 1"
+      ],
+      "expect": {
+        "loaded_modules": [
+          "gadget"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 1 loaded, 0 fault(s)",
+          "Item vocabularies installed: [bartizan]"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup",
+          "NoSuchMethodError",
+          "NoClassDefFoundError",
+          "ClassCastException"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "jetpack-migrated",
+      "title": "WS7 G4: a chestplate carrying only the old Bartizan 'wearable' tag is re-stamped with the jetpack tag on next equip, keeps its fuel, and can then refuel/fly (JetpackService.migrateLegacyJetpack) -- console CANNOT inject a pre-tagged legacy item into a player's inventory or drive an equip event at all (no in-game player, no 'give player NBT' console command), so this row can only confirm the gadget module boots clean with items/jetpacks.yml loaded and the Bartizan trait bridge active; the migration behaviour itself (JETPACK_ID stamped, fuel preserved not reset, then refuels and flies) needs a human tester with a real client and a hand-crafted pre-0.9.2 test item, OR is covered at the unit level by JetpackLegacyMigrationTest (red-first, asserts FUEL_CURRENT survives unchanged). Documented gap, not a silent boolean -- same shape as jetpack-give's above.",
+      "modules": [
+        "gadget"
+      ],
+      "plugins": [
+        "Bartizan"
+      ],
+      "commands": [
+        "glw",
+        "glw modules",
+        "glw jetpack"
+      ],
+      "expect": {
+        "loaded_modules": [
+          "gadget"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 1 loaded, 0 fault(s)",
+          "Item vocabularies installed: [bartizan]"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup",
+          "NoSuchMethodError",
+          "NoClassDefFoundError"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "ws7-no-bartizan",
+      "title": "WS7 G5/G5b: all six modules, Bartizan REMOVED -- supersedes D6 (legacy). gadget (G5) and civilians (G5b) both dropped their hard Plugins:[Bartizan] module.yml edge, so both now load without Bartizan; turf loads too (Depends:[civilians] only, no direct Bartizan edge of its own -- it was only ever transitively blocked by civilians requiring Bartizan, and that block is gone now that civilians is soft). cops-n-crooks keeps Plugins:[Bartizan] unchanged (explicitly out of WS7 scope) and is the only module skipped, with module.plugin.missing. mail and npcshops load regardless, as always (neither ever had a Bartizan or civilians edge).",
+      "modules": [
+        "mail",
+        "turf",
+        "civilians",
+        "cops",
+        "gadget",
+        "npcshops"
+      ],
+      "plugins": [],
+      "remove_plugins": [
+        "Bartizan"
+      ],
+      "commands": [
+        "glw",
+        "glw modules",
+        "glw jetpack",
+        "glw civilian list",
+        "glw turf"
+      ],
+      "expect": {
+        "loaded_modules": [
+          "mail",
+          "turf",
+          "civilians",
+          "gadget",
+          "npcshops"
+        ],
+        "faults": [
+          "module.plugin.missing"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 5 loaded, 1 fault(s)",
+          "Disabled module ",
+          "Disabling"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup",
+          "NoSuchMethodError",
+          "NoClassDefFoundError",
+          "ClassCastException"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "ws7-no-bartizan-citizens",
+      "title": "WS7 G5 fix round 1 (I3/C2 verification): all six modules, Citizens PRESENT, Bartizan REMOVED -- attempts /glw civilian spawn gang_member (a Hostile:true, Weapon_Pool-bearing civilian type, npc/civilians.yml:85-99) from console. IMPORTANT DOCUMENTED GAP: CivilianSpawnCommand.typeIdArgument (and CivilianSpawnGroupCommand identically) both require `sender instanceof Player` and send Messages.NOT_PLAYER otherwise -- confirmed by direct source read before writing this row -- so console CANNOT actually force a spawn or drive BartizanNpcWeapons.create's weapon-assignment codepath (the actual C2 fix target); this row can only confirm the command resolves cleanly (no exception) when invoked from console, and that the whole topology boots clean with Citizens present and Bartizan absent (civilians/gadget/turf load, only cops-n-crooks faults). Verifying an actual hostile civilian spawn while Bartizan is absent (BartizanNpcWeapons.create/buildItem's C2 guard, live) needs a human tester with a real client standing where a civilian can spawn, or spawning one via /glw civilian spawn as an actual player -- booked for G6's manual checklist.",
+      "modules": [
+        "mail",
+        "turf",
+        "civilians",
+        "cops",
+        "gadget",
+        "npcshops"
+      ],
+      "plugins": [],
+      "remove_plugins": [
+        "Bartizan"
+      ],
+      "commands": [
+        "glw",
+        "glw modules",
+        "glw civilian spawn gang_member"
+      ],
+      "expect": {
+        "loaded_modules": [
+          "mail",
+          "turf",
+          "civilians",
+          "gadget",
+          "npcshops"
+        ],
+        "faults": [
+          "module.plugin.missing"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 5 loaded, 1 fault(s)",
+          "Disabled module ",
+          "Disabling"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup",
+          "NoSuchMethodError",
+          "NoClassDefFoundError",
+          "ClassCastException"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "car-damage-with-bartizan",
+      "title": "WS7 G5 fix round 1 (I3): gadget module boots with Bartizan PRESENT and drives /glw car commands (the G5 counterpart to jetpack-give, which only exercised jetpack commands) -- confirms CarWeaponDamageListener's condition=\"isBartizanAvailable\" resolves true and the class registers cleanly when Bartizan IS installed (the flip side of ws7-no-bartizan, which already proved gadget boots fine WITHOUT it). Console can only confirm the module/listener wiring boots without an error/exception and the command resolves -- it CANNOT punch a car or verify actual weapon-vs-vanilla damage routing (no in-game player, same documented-gap shape as jetpack-give); CarMeleeWeaponLookupGuardTest/CarDamageListener's own unit tests are the automated equivalent for the parts console can't reach. A human with a real client punching a car (with and without a melee weapon held) is booked for G6's manual checklist.",
+      "modules": [
+        "gadget"
+      ],
+      "plugins": [
+        "Bartizan"
+      ],
+      "commands": [
+        "glw",
+        "glw car",
+        "glw car give sports_car 1"
+      ],
+      "expect": {
+        "loaded_modules": [
+          "gadget"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 1 loaded, 0 fault(s)",
+          "Item vocabularies installed: [bartizan]"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup",
+          "NoSuchMethodError",
+          "NoClassDefFoundError",
+          "ClassCastException"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "no-scoreboard-boot",
+      "title": "WS1 G3 (0.10.0): scoreboard fully removed from Gangland -- boots clean, /glw reload survives, no scoreboard bean/fault of any kind. Plan Sec.4 step 18 rows (a)+(d): (a) Gangland alone with no scoreboard plugin installed boots with no scoreboard and no error; (d) a full /glw reload leaves the board (if any external plugin renders one) untouched, since Gangland no longer knows scoreboards exist. Row (d)'s Plaque-installed half is exercised by manually staging Plaque-0.1.0.jar into the server's plugins/ folder before this run (outside this harness's scripted deploy -- 'Plaque' is not a PLUGIN_NAME_GLOBS entry, smoke.py itself was not touched, only this scenario file, per ruling W35) so the same boot proves Gangland is inert to Plaque's presence, not just its absence.",
+      "modules": [],
+      "commands": null,
+      "pre_commands": [
+        {
+          "wait_before": 5,
+          "command": "glw reload"
+        }
+      ],
+      "expect": {
+        "loaded_modules": [],
+        "must_contain": [
+          "Done (",
+          "Runtime modules:"
+        ],
+        "must_not_contain": [
+          "scoreboard",
+          "Scoreboard",
+          "ScoreboardManager",
+          "ScoreboardLifecycleService",
+          "PlayerScoreboardListener",
+          "NoClassDefFoundError",
+          "NoSuchMethodError",
+          "ClassCastException"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "grapple-boot",
+      "title": "WS8: /glw grapple resolves and the gadget module boots with the grappling hook wired in, with NO Bartizan present (proving the WS8-D1/K1 zero-Bartizan-coupling claim, unlike jetpack-give which stages Bartizan) -- console can only confirm the module loads, the command tree resolves without an exception, and a console-issued self-give (players-only command, no target-player argument exists on /glw grapple give) fails cleanly with the Not_Player message rather than a stack trace; it CANNOT drive an actual cast/pull/fall-damage cycle (no in-game player exists in a console-only run) -- same documented-gap shape as jetpack-give. A human with a real client must run the cast/pull/fall matrix in exec/WS8/G-final-manual-checklist.md.",
+      "modules": [
+        "gadget"
+      ],
+      "commands": [
+        "glw",
+        "glw help",
+        "glw modules",
+        "glw grapple",
+        "glw grapple give grapple 1"
+      ],
+      "expect": {
+        "loaded_modules": [
+          "gadget"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 1 loaded, 0 fault(s)",
+          "need to be a player"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup",
+          "NoSuchMethodError",
+          "NoClassDefFoundError",
+          "ClassCastException",
+          "at org.luckyraven.gangland.gadget"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "npcshops-boot",
+      "title": "WS2 G4 (0.10.0): npc-shops alone boots clean after the trader/banker Panel swap + BarterView/SellView re-point onto keystone-inventory (MenuFlow/ChestMenuBuilder/DropzoneSlotComponent) -- console can only confirm the module loads, TraderModuleConfig/BankerModuleConfig's beans construct without a fault (TraderFlow/BankerFlow now also pull InventoryService), and the admin command tree resolves without an exception; it CANNOT drive an actual trader/banker NPC interaction, dropzone click/drag, or item-return-on-close (no in-game player exists in a console-only run) -- same documented-gap shape as grapple-boot/jetpack-give. A human with a real client must run exec/G010/WS2-manual-checklist.md's G4 rows (8-19).",
+      "modules": [
+        "npcshops"
+      ],
+      "commands": [
+        "glw",
+        "glw help",
+        "glw modules",
+        "glw trader",
+        "glw banker",
+        "glw debug inv-data"
+      ],
+      "expect": {
+        "loaded_modules": [
+          "npcshops"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 1 loaded, 0 fault(s)"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup",
+          "NoSuchMethodError",
+          "NoClassDefFoundError",
+          "ClassCastException",
+          "at org.luckyraven.gangland.npcshops"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "ws2-g5-boot",
+      "title": "WS2 G5 (0.10.0): turf, cops-n-crooks and gadget boot clean after the Quartermaster/detainment-paperwork/handcuff-bribe/car-sign generic Panel+standalone-ChestMenu swap onto keystone-inventory. civilians is deployed alongside turf/cops (Depends: [civilians]) and Bartizan alongside cops (Plugins: [Bartizan]) purely so all three load for real instead of faulting on a missing dependency -- console can only confirm the four modules' bean graphs construct without a fault (TurfModuleConfig/CopsNCrooksModuleConfig/GadgetModuleConfig's InventoryService-consuming beans) and their admin/player command trees resolve without an exception; it CANNOT drive an actual Quartermaster/paperwork/bribe/car-sign GUI interaction (no in-game player, no jailed/handcuffed state, no placed car exists in a console-only run) -- same documented-gap shape as npcshops-boot/grapple-boot. A human with a real client must run exec/G010/WS2-manual-checklist.md's G5 rows (20-27).",
+      "modules": [
+        "civilians",
+        "turf",
+        "cops",
+        "gadget"
+      ],
+      "plugins": [
+        "Bartizan"
+      ],
+      "commands": [
+        "glw",
+        "glw help",
+        "glw modules",
+        "glw turf",
+        "glw car",
+        "glw debug inv-data"
+      ],
+      "expect": {
+        "loaded_modules": [
+          "civilians",
+          "turf",
+          "copsncrooks",
+          "gadget"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 4 loaded, 0 fault(s)"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup",
+          "NoSuchMethodError",
+          "NoClassDefFoundError",
+          "ClassCastException",
+          "at org.luckyraven.gangland.turf",
+          "at org.luckyraven.gangland.copsncrooks",
+          "at org.luckyraven.gangland.gadget"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "ws4-g1a-shop-boot",
+      "title": "WS4 G1a+G1b (0.10.0): shop-api deleted, keystone-shop provided everywhere (B2), 9 admin-UI files relocated to gangland-impl shop/admin/{view,listener} -- G1a left them on inventory-api unchanged, G1b (reuses this same row) rebuilt them onto keystone-inventory's MenuFlow/ChestMenuBuilder, so ShopConfig.shopAdminFlow now also takes InventoryService. ShopAdminOpener seam (B1) lets npcshops open the admin editor without naming gangland-impl. Drives the console-usable half of M-SHOP-1: /glw shop create|list|title|remove against the core ShopRegistry/ShopConfig wiring, with npcshops deployed alongside so TraderModuleConfig/BankerModuleConfig's FileManager-backed TraderSettingsImpl/BankerSettingsImpl (reading the module-owned npc/trader_settings.yml + npc/banker_settings.yml) and the ShopAdminOpener/InventoryService-consuming ShopAdminFlow bean all construct without a fault. Cannot drive /glw shop edit's chest GUI, trader buy/sell/barter, or banker deposit/withdraw (no in-game player) -- those rows go in exec/G010/WS2-manual-checklist.md's WS4 G1a and WS4 G1b sections.",
+      "modules": [
+        "npcshops"
+      ],
+      "commands": [
+        "glw",
+        "glw help",
+        "glw modules",
+        "glw shop create smoketestshop",
+        "glw shop list",
+        "glw shop title smoketestshop Smoke Test Shop",
+        "glw shop remove smoketestshop",
+        "glw shop list",
+        "glw trader",
+        "glw banker",
+        "glw debug inv-data"
+      ],
+      "expect": {
+        "loaded_modules": [
+          "npcshops"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 1 loaded, 0 fault(s)"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup",
+          "NoSuchMethodError",
+          "NoClassDefFoundError",
+          "ClassCastException",
+          "at org.luckyraven.gangland.npcshops",
+          "at org.luckyraven.gangland.shop",
+          "at org.luckyraven.keystone.shop"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "cut-full-regression",
+      "title": "END batch (2026-09-23, fcc41a32): T-53/T-54 fix -- GangMembershipInstaller now a @Bean factory method on GangConfig (real ordering edge), PermissionRepository/PermissionTable moved into the gang module. Eight-module + Bartizan regression boot, /glw reload, /glw lootchest, /glw lootchest help, /glw gang help, /glw rank list, /glw civilian list, /glw modules, /glw debug placeholder. Console confirms bean graph + module YAMLs extract + commands resolve + GanglandApi facade registers; cannot place/open a real chest, open a gang menu or run /glw filter/waypoint gangid (all Player-gated, no player).",
+      "modules": [
+        "mail",
+        "turf",
+        "civilians",
+        "cops",
+        "gadget",
+        "npcshops",
+        "lootchest",
+        "gang"
+      ],
+      "plugins": [
+        "Bartizan"
+      ],
+      "commands": [
+        "glw",
+        "glw help",
+        "glw module list",
+        "glw reload",
+        "glw debug inv-data",
+        "glw debug placeholder-data",
+        "glw lootchest",
+        "glw lootchest help",
+        "glw gang help",
+        "glw rank list",
+        "glw civilian list",
+        "glw filter gangs"
+      ],
+      "expect": {
+        "loaded_modules": [
+          "civilians",
+          "copsncrooks",
+          "gadget",
+          "lootchest",
+          "mail",
+          "npcshops",
+          "turf",
+          "gang"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 8 loaded, 0 fault(s)",
+          "Item vocabularies installed: [bartizan]",
+          "GanglandApi facade published for external consumers"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup",
+          "NoSuchMethodError",
+          "NoClassDefFoundError",
+          "ClassCastException",
+          "at org.luckyraven.gangland.inventory",
+          "at org.luckyraven.gangland.hologram",
+          "module.dependency.missing"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    },
+    {
+      "id": "ws6-civilians-isolated",
+      "title": "WS6 G3 isolation (2026-09-23, T-53 workaround): gang/turf/mail dropped from the deploy set (turf+mail Depends: [gang], and gang's own GangMembershipInstaller crashes onEnable -- see T-53) so civilians' LocalizedModuleYaml message extraction can still be verified on a plugin that actually boots. civilians has no gang dependency.",
+      "modules": [
+        "civilians",
+        "cops",
+        "gadget",
+        "npcshops",
+        "lootchest"
+      ],
+      "plugins": [
+        "Bartizan"
+      ],
+      "commands": [
+        "glw",
+        "glw reload",
+        "glw civilian list"
+      ],
+      "expect": {
+        "loaded_modules": [
+          "civilians",
+          "copsncrooks",
+          "gadget",
+          "lootchest",
+          "npcshops"
+        ],
+        "must_contain": [
+          "Done (",
+          "Item vocabularies installed: [bartizan]"
+        ],
+        "must_not_contain": [
+          "Failed to create a backup",
+          "NoSuchMethodError",
+          "NoClassDefFoundError",
+          "ClassCastException"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version",
+          "module\\.dependency\\.missing"
+        ]
+      }
+    },
+    {
+      "id": "end-t54-no-gang",
+      "title": "END batch T-54 proof (2026-09-23, fcc41a32): gang module NOT deployed. turf (Depends: [civilians, gang]) and mail (Depends: [gang]) are both expected to refuse with module.dependency.missing and stay unloaded -- non-fatal, server still boots (established S6/D6 pattern). civilians/cops/gadget/npcshops/lootchest should load normally. Proves PermissionRepository's move into the gang module means the core repository scan no longer registers an orphan: no reload/autosave should ever log 'No data supplier set for repository: Permission' again.",
+      "modules": [
+        "mail",
+        "turf",
+        "civilians",
+        "cops",
+        "gadget",
+        "npcshops",
+        "lootchest"
+      ],
+      "plugins": [
+        "Bartizan"
+      ],
+      "commands": [
+        "glw",
+        "glw modules",
+        "glw reload"
+      ],
+      "expect": {
+        "loaded_modules": [
+          "civilians",
+          "copsncrooks",
+          "gadget",
+          "lootchest",
+          "npcshops"
+        ],
+        "must_contain": [
+          "Done (",
+          "module.dependency.missing"
+        ],
+        "must_not_contain": [
+          "No data supplier set for repository: Permission",
+          "Failed to save data for repository: Permission",
+          "NoSuchMethodError",
+          "NoClassDefFoundError",
+          "ClassCastException"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version",
+          "module\\.dependency\\.missing"
+        ]
+      }
+    },
+    {
+      "id": "cnc-015-boot",
+      "title": "Cops N Crooks 0.15 boot: all nine modules + Bartizan 0.6.1 + Keystone 1.14.0 load, no ERROR, Done (",
+      "modules": [
+        "mail",
+        "turf",
+        "civilians",
+        "cops",
+        "gadget",
+        "npcshops",
+        "lootchest",
+        "gang",
+        "healthbars"
+      ],
+      "plugins": [
+        "Bartizan"
+      ],
+      "commands": [
+        "glw",
+        "glw module list",
+        "glw wanted",
+        "glw cops"
+      ],
+      "expect": {
+        "loaded_modules": [
+          "civilians",
+          "copsncrooks",
+          "gadget",
+          "gang",
+          "healthbars",
+          "lootchest",
+          "mail",
+          "npcshops",
+          "turf"
+        ],
+        "must_contain": [
+          "Done (",
+          "Runtime modules: 9 loaded, 0 fault(s)"
+        ],
+        "must_not_contain": [
+          "NoSuchMethodError",
+          "NoClassDefFoundError",
+          "ClassCastException",
+          "module.dependency.missing",
+          "module.host.incompatible"
+        ],
+        "no_errors_except": [
+          "\\[FakeSmoke\\]",
+          "\\[PlaceholderAPI\\] Failed to download anti malware",
+          "\\[ViaVersion\\] Could not check for updates",
+          "\\[Keystone Common\\.UpdateChecker\\] Unable to check for the latest version"
+        ]
+      }
+    }
+  ]
+}

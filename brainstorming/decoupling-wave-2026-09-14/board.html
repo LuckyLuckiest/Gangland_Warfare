@@ -1,0 +1,602 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Gangland Decoupling Wave</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --paper: #EDF1F5; --surface: #F8FAFC; --ink: #16212C; --muted: #5B6B7B; --rule: #C9D3DD;
+    --accent: #1E4A7E; --accent-ink: #FFFFFF; --decide: #9A5B12; --decide-bg: #F6EBDA;
+    --ok: #2E7D4F; --warn: #A6780F; --bad: #B3261E; --code-bg: #E3E9F0;
+    --shadow: 0 1px 2px rgba(22,33,44,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0F171F; --surface: #151F2A; --ink: #E3EAF1; --muted: #94A5B6; --rule: #25323F;
+      --accent: #7FAAE0; --accent-ink: #0F171F; --decide: #E0A050; --decide-bg: #2A2116;
+      --ok: #5FBF87; --warn: #E0B24A; --bad: #F08A7E; --code-bg: #1C2733;
+      --shadow: 0 1px 2px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0F171F; --surface: #151F2A; --ink: #E3EAF1; --muted: #94A5B6; --rule: #25323F;
+    --accent: #7FAAE0; --accent-ink: #0F171F; --decide: #E0A050; --decide-bg: #2A2116;
+    --ok: #5FBF87; --warn: #E0B24A; --bad: #F08A7E; --code-bg: #1C2733;
+    --shadow: 0 1px 2px rgba(0,0,0,.4);
+  }
+  * { box-sizing: border-box; }
+  body { background: var(--paper); color: var(--ink); font-family: "Source Sans 3", "Segoe UI", system-ui, sans-serif; font-size: 16px; line-height: 1.5; padding-inline: 20px; padding-block: 0 48px; }
+  h1, h2, h3 { font-family: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif; text-wrap: balance; line-height: 1.15; margin: 0; }
+  h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.01em; }
+  h2 { font-size: 1.4rem; font-weight: 700; margin-top: 2.6rem; padding-top: .6rem; border-top: 2px solid var(--ink); }
+  h3 { font-size: 1.05rem; font-weight: 700; margin-top: 1.4rem; }
+  p { margin: .6rem 0; max-width: 78ch; }
+  ul { max-width: 78ch; padding-left: 1.2rem; }
+  li { margin: .25rem 0; }
+  code, .mono { font-family: "JetBrains Mono", Consolas, monospace; font-size: .86em; }
+  code { background: var(--code-bg); padding: .05em .3em; border-radius: 3px; }
+  a { color: var(--accent); }
+  .eyebrow { font-family: "JetBrains Mono", Consolas, monospace; font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .wrap { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 40px; max-width: 1240px; margin: 0 auto; }
+  nav.rail { position: sticky; top: 0; align-self: start; padding-block: 28px 20px; max-height: 100vh; overflow-y: auto; }
+  nav.rail ol { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+  nav.rail a { display: block; color: var(--muted); text-decoration: none; padding: .28rem .5rem; border-left: 2px solid transparent; font-size: .92rem; }
+  nav.rail a:hover, nav.rail a:focus-visible { color: var(--ink); border-left-color: var(--accent); outline: none; }
+  nav.rail .sub { font-family: "JetBrains Mono", Consolas, monospace; font-size: .74rem; color: var(--muted); margin: 14px 0 6px .5rem; }
+  main { padding-block: 28px 0; min-width: 0; }
+  header.top { border-bottom: 1px solid var(--rule); padding-bottom: 20px; }
+  header.top .status { display: inline-flex; align-items: center; gap: .5rem; margin-top: .8rem; padding: .3rem .7rem; border: 1px solid var(--decide); color: var(--decide); border-radius: 999px; font-size: .85rem; font-weight: 600; }
+  .spec { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-top: 20px; }
+  .spec > div { background: var(--surface); border: 1px solid var(--rule); padding: 12px 14px; }
+  .spec .k { font-size: .78rem; color: var(--muted); }
+  .spec .v { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-weight: 700; font-size: 1.15rem; margin-top: 2px; }
+  .spec .d { font-size: .85rem; color: var(--muted); margin-top: 4px; }
+  .tablewrap { overflow-x: auto; margin: .8rem 0 1rem; }
+  table { border-collapse: collapse; width: 100%; font-size: .93rem; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; vertical-align: top; padding: .5rem .6rem; border-bottom: 1px solid var(--rule); }
+  th { font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  .chip { display: inline-block; font-family: "JetBrains Mono", Consolas, monospace; font-size: .72rem; padding: .12em .5em; border-radius: 3px; border: 1px solid currentColor; white-space: nowrap; }
+  .chip.ok { color: var(--ok); } .chip.warn { color: var(--warn); } .chip.bad { color: var(--bad); } .chip.muted { color: var(--muted); } .chip.accent { color: var(--accent); }
+  .ws { border: 1px solid var(--rule); background: var(--surface); padding: 18px 20px; margin-top: 1.4rem; box-shadow: var(--shadow); }
+  .ws-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .ws-head h2 { border-top: none; margin-top: 0; padding-top: 0; }
+  .ws-head .quote { color: var(--muted); font-style: italic; font-size: .95rem; max-width: 60ch; margin: 0; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+  .facts > div { border-top: 2px solid var(--rule); padding-top: 6px; }
+  .facts .k { font-size: .76rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .facts .v { font-weight: 600; }
+  .gates { display: flex; flex-wrap: wrap; gap: 6px; margin: .6rem 0; padding: 0; list-style: none; }
+  .gates li { font-family: "JetBrains Mono", Consolas, monospace; font-size: .78rem; padding: .25rem .5rem; border: 1px solid var(--rule); background: var(--paper); }
+  .gates li b { color: var(--accent); font-weight: 600; }
+  figure { margin: 1.2rem 0; max-width: 100%; }
+  figure svg { max-width: 100%; height: auto; display: block; }
+  figcaption { font-size: .88rem; color: var(--muted); margin-top: .4rem; max-width: 78ch; }
+  .rulings li { margin: .35rem 0; }
+  s { color: var(--muted); text-decoration-color: var(--bad); }
+  .decision { border: 1px solid var(--rule); background: var(--surface); padding: 12px 14px; margin-top: 10px; display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 12px 18px; }
+  .decision .id { font-family: "JetBrains Mono", Consolas, monospace; font-size: .76rem; color: var(--decide); }
+  .decision .q { font-weight: 600; }
+  .decision .opts { color: var(--muted); font-size: .92rem; margin-top: 2px; }
+  .decision .opts b { color: var(--ink); }
+  .decision fieldset { border: 1px solid var(--rule); padding: 8px 10px; margin: 0; display: grid; gap: 4px; font-size: .88rem; }
+  .decision legend { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 0 4px; }
+  .decision label { display: flex; align-items: center; gap: .4rem; cursor: pointer; }
+  .decision textarea { width: 100%; min-height: 34px; font: inherit; font-size: .85rem; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); padding: 4px 6px; resize: vertical; }
+  .decision .saved { font-size: .74rem; color: var(--muted); font-family: "JetBrains Mono", Consolas, monospace; }
+  .decision[data-choice="rec"] { border-left: 4px solid var(--ok); }
+  .decision[data-choice="alt"] { border-left: 4px solid var(--warn); }
+  .decision[data-choice="open"] { border-left: 4px solid var(--decide); }
+  .summary { display: flex; flex-wrap: wrap; gap: 14px; margin-top: .8rem; font-size: .92rem; }
+  .summary span b { font-family: "Bricolage Grotesque", system-ui, sans-serif; font-size: 1.2rem; margin-right: .25rem; }
+  .note { border-left: 3px solid var(--decide); background: var(--decide-bg); padding: 8px 12px; margin: .8rem 0; max-width: 78ch; font-size: .93rem; }
+  .status-select { font: inherit; font-size: .85rem; background: var(--paper); color: var(--ink); border: 1px solid var(--rule); padding: 2px 6px; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  @media (max-width: 860px) {
+    .wrap { grid-template-columns: 1fr; gap: 0; }
+    nav.rail { position: static; max-height: none; padding-block: 20px 0; }
+    nav.rail ol { display: flex; flex-wrap: wrap; gap: 4px; }
+    nav.rail .sub { display: none; }
+    .decision { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: no-preference) { .decision { transition: border-color .15s; } }
+</style>
+
+<div class="wrap">
+<nav class="rail" aria-label="Sections">
+  <div class="sub">plan</div>
+  <ol>
+    <li><a href="#ask">0 · The ask</a></li>
+    <li><a href="#versions">1 · Repos &amp; versions</a></li>
+    <li><a href="#order">2 · Order &amp; rulings</a></li>
+    <li><a href="#verdicts">3 · Review verdicts</a></li>
+  </ol>
+  <div class="sub">workstreams</div>
+  <ol>
+    <li><a href="#ws1">WS1 · Scoreboard plugin</a></li>
+    <li><a href="#ws2">WS2 · Menus → Keystone</a></li>
+    <li><a href="#ws3">WS3 · Loot chests + hologram</a></li>
+    <li><a href="#ws4">WS4 · Shop → Keystone</a></li>
+    <li><a href="#ws5">WS5 · Gang module</a></li>
+    <li><a href="#ws6">WS6 · API facade</a></li>
+    <li><a href="#ws7">WS7 · Jetpack ownership</a></li>
+    <li><a href="#ws8">WS8 · Gadget catalogue</a></li>
+  </ol>
+  <div class="sub">your calls</div>
+  <ol>
+    <li><a href="#decisions">10 · Decisions register</a></li>
+    <li><a href="#estimate">11 · Estimate</a></li>
+    <li><a href="#process">12 · Execution process</a></li>
+    <li><a href="#later">13 · Not in this wave</a></li>
+    <li><a href="#execution">14 · Execution log</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="top">
+  <div class="eyebrow">LuckyRaven · Gangland Warfare 0.9.1 → 0.9.2 → 0.10.0 · planning record 2026-09-14 · gadget wave 2026-09-16 · WS2 re-targeted 2026-09-17</div>
+  <h1>Gangland Decoupling Wave</h1>
+  <p>Six features leave the Gangland core: the scoreboard becomes its own plugin, menus move onto a new <code>keystone-inventory</code> module (re-targeted from Oriel on 2026-09-17, ruling R10), loot chests and the gang system become runtime modules, holograms and the shop system move into Keystone, and <code>gangland-api</code> grows a Bartizan-style facade. Planned by six Sonnet planners, attacked by Opus reviewers, consolidated here. Sources: <code>brainstorming/decoupling-wave-2026-09-14/</code> (<code>PLAN.md</code>, <code>plans/</code>, <code>reviews/</code>, <code>census/</code>). <b>Added 2026-09-16 (gadget wave, <code>brainstorming/gadget-wave-2026-09-16/</code>):</b> WS7 brings the jetpack home from Bartizan and makes Bartizan a soft dependency of the gadget module; WS8 adds the grappling hook and a gadget shortlist. Both run first, on Gangland 0.9.2.</p>
+  <div class="status">In execution since 2026-09-16 · Bartizan 0.4.0, Keystone 1.10.0, Oriel 0.8.0, Plaque 0.1.0 G0–G2 and Gangland 0.9.2 G1–G4 committed · WS2 re-target reviewed (PASS WITH FIXES, R10/R11) · keystone-inventory E6.1 and WS7 G5 in their fix rounds · see §14</div>
+  <div class="spec">
+    <div><div class="k">Gangland Warfare</div><div class="v">0.9.1 → 0.9.2 → 0.10.0</div><div class="d">0.9.2 = gadget wave (api 1.0 → 1.1, additive); 0.10.0 = new branch off 0.9.2; api <code>Host_Api</code> → 2.0 in its first commit</div></div>
+    <div><div class="k">Keystone</div><div class="v">1.9.2 → 1.10.0 → 1.11.0</div><div class="d">1.10.0: <code>keystone-hologram</code>, <code>keystone-shop</code> (committed) · 1.11.0: <code>keystone-inventory</code> (Phase E6, plan reviewed, E6.1 core in its fix round)</div></div>
+    <div><div class="k">Oriel</div><div class="v">off the path</div><div class="d">Gangland gains no Oriel dependency (R10); Oriel rebases onto <code>keystone-inventory</code> on its own track</div></div>
+    <div><div class="k">Scoreboard plugin</div><div class="v">Plaque · 0.1.0</div><div class="d">named by you (N1); G0–G2 committed in <code>E:\Programming\java\Plaque</code>; the Gangland removal waits for 0.10.0</div></div>
+    <div><div class="k">Bartizan</div><div class="v">0.3.0 → 0.4.0</div><div class="d">jetpack residue leaves (WS7 G0); Gangland's pin 0.1.0 → 0.4.0</div></div>
+  </div>
+</header>
+
+<h2 id="ask">0 · The ask, in one table</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>WS</th><th>Feature today</th><th>After the wave</th><th>Repos</th></tr></thead>
+<tbody>
+<tr><td>WS1</td><td><code>gangland-ui/scoreboard-api</code> + impl lifecycle + <code>settings.yml</code> <code>Scoreboard:</code> + <code>scoreboard.yml</code></td><td>A standalone Keystone-powered plugin in a new sibling repo; Gangland keeps no scoreboard code or settings</td><td>new repo, Gangland</td></tr>
+<tr><td>WS2</td><td><code>gangland-ui/inventory-api</code> (58 files, <code>InventoryHandler</code> 207 edges, <code>MultiPanelInventory</code> 143)</td><td>Deleted; every Gangland menu is a <code>keystone-inventory</code> <code>ChestMenu</code> or <code>MenuFlow</code>; Gangland keeps its YAML inventory dialect and gains no Oriel dependency</td><td>Keystone 1.11.0, Gangland</td></tr>
+<tr><td>WS3</td><td><code>lootchest-api</code> + <code>hologram-api</code> + impl wiring</td><td><code>gangland-lootchest</code> runtime module; holograms are a Keystone service</td><td>Keystone, Gangland</td></tr>
+<tr><td>WS4</td><td><code>gangland-ui/shop-api</code> (37 files)</td><td>Headless <code>keystone-shop</code> (28 files move as-is); 9 admin-view files rebuilt on <code>keystone-inventory</code> in the core</td><td>Keystone, Gangland</td></tr>
+<tr><td>WS5</td><td><code>gangland-domain</code> <code>gang.*</code> (40 files) + 167 impl importers</td><td><code>gangland-gang</code> runtime module; the player record stays core; <code>gangland-domain</code> deleted</td><td>Gangland</td></tr>
+<tr><td>WS6</td><td><code>gangland-api</code> 1.0 (module contract only)</td><td><code>gangland-api</code> 2.0: <code>GanglandApi</code> facade on the ServicesManager, service-table doc, <code>japicmp</code></td><td>Gangland</td></tr>
+<tr><td>WS7 <small>(gadget wave, 2026-09-16)</small></td><td>Jetpack identity + config live in Bartizan's <code>wearables.yml</code>; gadget <code>Plugins: [Bartizan]</code> fail-fast</td><td>Jetpack fully gadget-owned (<code>ItemKind.JETPACK</code>, <code>items/jetpacks.yml</code>, own converter/serializer/refresher, NBT identity, <code>/glw jetpack give</code>); gadget's Bartizan dependency is soft; the jetpack residue leaves Bartizan</td><td>Gangland 0.9.2, Bartizan 0.4.0</td></tr>
+<tr><td>WS8 <small>(gadget wave, 2026-09-16)</small></td><td>No gadget beyond car + jetpack</td><td>The per-gadget pattern WS7 proves, the grappling hook shipped, an 8-candidate shortlist to pick from</td><td>Gangland 0.9.2</td></tr>
+</tbody></table></div>
+
+<h2 id="versions">1 · Repos, branches, versions</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Repo</th><th>Today</th><th>This wave</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>Keystone</td><td>1.10.0 committed on <code>phase-h10-hologram-shop</code></td><td><b>1.10.0</b>: modules <code>keystone-hologram</code>, <code>keystone-shop</code>; <code>CLAUDE.md</code> layering line amended once (one sentence shared by WS3 and WS4). Then <b>1.11.0</b>: <code>keystone-inventory</code> — Phase E6, planned in <code>docs/extraction-roadmap.md</code> on branch <code>docs-inventory-roadmap</code>; the layering line amended again (basic inventory mechanism in Keystone, advanced menu features in Oriel)</td><td>new modules = minor</td></tr>
+<tr><td>Oriel</td><td>0.7.0; the 0.8.0 G0 (Keystone 1.9.2 bump + <code>forConsumer</code>) is done pending review</td><td>Off the wave's critical path (R10). The Keystone bump stays useful; <code>forConsumer</code> is no longer a Gangland need. Oriel's next version rebases <code>menu-core</code>/<code>chest</code> onto <code>keystone-inventory</code> and deletes six copy-pasted holder/listener trios — its own track after 1.11.0</td><td>Gangland no longer names an Oriel type</td></tr>
+<tr><td>Bartizan</td><td>0.3.0</td><td><b>0.4.0</b> on its own branch (WS7 G0): the jetpack <code>wearables.yml</code> entry, the legacy <code>Jetpack:</code> converter and its test leave; <code>Wearable</code>/<code>Extra_Tags</code> stay generic. Gangland's pin 0.1.0 → 0.4.0 at WS7 G1</td><td>Gangland-specific residue leaves (K3)</td></tr>
+<tr><td>Gangland Warfare</td><td>0.9.1 on <code>0.9.1</code></td><td><b>0.9.2</b> on branch <code>0.9.2</code> first (WS7 → WS8; <code>GanglandApi.VERSION</code> 1.0 → 1.1 for <code>Settings.isBartizanAvailable()</code>, additive); then <b>0.10.0</b> on branch <code>0.10.0</code> off 0.9.2; <b>G0 = first commit bumps <code>GanglandApi.VERSION</code> and every <code>module.yml</code> <code>Host_Api</code> to 2.0</b> (R1)</td><td>a gadget rehome is a patch; core features leave with their settings → minor bump (Bartizan precedent)</td></tr>
+<tr><td>Scoreboard plugin</td><td>—</td><td><b>0.1.0</b>, new sibling repo, single Maven module, no <code>-api</code></td><td>new product</td></tr>
+</tbody></table></div>
+
+<h2 id="order">2 · Order, gates and rulings</h2>
+<p><b>Gadget wave first (2026-09-16):</b> Gangland <b>0.9.2</b> — WS7 (Bartizan 0.4.0 residue, then the jetpack rehome and the soft Bartizan dependency) → WS8 (grappling hook) — runs on a branch off 0.9.1 with no Keystone or Oriel prerequisite; 0.10.0 then branches off 0.9.2 and the diagram below applies unchanged.</p>
+<figure>
+<svg viewBox="0 0 900 300" role="img" aria-label="Dependency direction after the wave: Keystone at the bottom, the Gangland core above it, eight runtime modules on top; Bartizan, Oriel and the scoreboard plugin each depend on Keystone only and never name Gangland, and Gangland never names Oriel. Every solid arrow is a provided-scope compile dependency plus a plugin.yml depend or module.yml Depends entry." style="color: var(--ink)">
+  <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+  <!-- Keystone -->
+  <rect x="300" y="240" width="300" height="40" fill="none" stroke="currentColor" stroke-width="1.5"/>
+  <text x="450" y="265" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor">Keystone 1.11.0  ·  + hologram, + shop, + inventory</text>
+  <!-- Gangland core -->
+  <rect x="300" y="100" width="300" height="40" fill="none" stroke="var(--accent)" stroke-width="2"/>
+  <text x="450" y="125" text-anchor="middle" font-size="13" font-weight="600" fill="var(--accent)">Gangland core 0.10.0  ·  gangland-api 2.0</text>
+  <!-- modules -->
+  <rect x="220" y="20" width="460" height="48" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="450" y="39" text-anchor="middle" font-size="12" fill="currentColor">8 runtime modules · plugins/Gangland_Warfare/modules/</text>
+  <text x="450" y="57" text-anchor="middle" font-size="11.5" fill="currentColor">mail · turf · civilians · cops-n-crooks · gadget · npc-shops · lootchest · gang</text>
+  <!-- vertical arrows: consumer -> dependency -->
+  <line x1="450" y1="68" x2="450" y2="98" stroke="currentColor" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="460" y="88" font-size="11" fill="currentColor">provided · Host_Api 2.0</text>
+  <line x1="450" y1="140" x2="450" y2="238" stroke="currentColor" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="460" y="195" font-size="11" fill="currentColor">provided · depend: [Keystone] · menus on keystone-inventory</text>
+  <!-- Bartizan -->
+  <rect x="40" y="100" width="180" height="40" fill="none" stroke="currentColor" stroke-width="1.5"/>
+  <text x="130" y="125" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor">Bartizan 0.4.0</text>
+  <path d="M130,140 L130,260 L298,260" fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="138" y="205" font-size="11" fill="currentColor">depend: [Keystone]</text>
+  <path d="M222,120 L298,120" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#arr)"/>
+  <text x="228" y="112" font-size="10.5" fill="currentColor">softdepend, lazy</text>
+  <!-- Scoreboard plugin -->
+  <rect x="680" y="100" width="190" height="40" fill="none" stroke="currentColor" stroke-width="1.5"/>
+  <text x="775" y="125" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor">&lt;ScoreboardPlugin&gt; 0.1.0</text>
+  <path d="M870,120 L888,120 L888,252 L602,252" fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text transform="rotate(-90 884 186)" x="884" y="186" text-anchor="middle" font-size="10.5" fill="currentColor">depend: [Keystone]</text>
+  <path d="M678,120 L602,120" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 3" marker-end="url(#arr)"/>
+  <text x="612" y="112" font-size="10.5" fill="currentColor">PAPI / Keystone placeholders only</text>
+  <!-- Oriel: a sibling consumer, no arrow to or from Gangland -->
+  <rect x="680" y="180" width="190" height="40" fill="none" stroke="currentColor" stroke-width="1.5"/>
+  <text x="775" y="205" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor">Oriel  ·  advanced menus</text>
+  <path d="M775,220 L775,268 L602,268" fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="782" y="247" font-size="10.5" fill="currentColor">depend: [Keystone]</text>
+</svg>
+<figcaption>Dependency direction after the wave, never reversed. Solid arrows are a <code>provided</code>-scope compile dependency plus a hard <code>depend:</code>; dashed arrows are runtime-only lookups through the ServicesManager or PlaceholderAPI. Bartizan, Oriel and the scoreboard plugin never name a Gangland type, and since R10 Gangland never names an Oriel type: the menu mechanism both shared now lives in Keystone.</figcaption>
+</figure>
+
+<h3>Execution order</h3>
+<ol class="gates">
+  <li><b>0.9.2</b> WS7 jetpack ownership (Bartizan 0.4.0 first) → WS8 grappling hook</li>
+  <li><b>K</b> Keystone 1.10.0 (hologram, shop) ✓</li>
+  <li><b>K2</b> Keystone 1.11.0 (inventory, E6)</li>
+  <li><b>S</b> scoreboard plugin G0–G2 (parallel)</li>
+  <li><b>G0</b> Gangland 0.10.0: api → 2.0</li>
+  <li><b>WS1</b> scoreboard out</li>
+  <li><b>WS2</b> menus → keystone-inventory</li>
+  <li><b>WS4</b> shop consumer</li>
+  <li><b>CUT</b> delete inventory-api</li>
+  <li><b>WS3</b> lootchest module</li>
+  <li><b>WS5</b> gang module</li>
+  <li><b>WS6</b> api facade</li>
+  <li><b>END</b> docs · smoke · graphs</li>
+</ol>
+<p>Oriel is off the path: Keystone 1.11.0 and the scoreboard plugin run in parallel with each other, and Gangland 0.10.0 waits only on Keystone. Inside Gangland the stream is sequential because the workstreams share files (<code>User.java</code>, <code>gangland-domain/pom.xml</code>, the api pom).</p>
+
+<h3>Rulings made during review</h3>
+<p>Each is binding for the plans and appears again in the decisions register so you can veto it.</p>
+<ul class="rulings">
+  <li><b>R1</b> Gangland G0 bumps the api to 2.0 in the first commit, so every later removal from <code>gangland-api</code> is inside the breaking major and legal in its own workstream. <span class="chip muted">REVIEW-WS3 B3</span></li>
+  <li><b>R2</b> <code>LootChestService</code>/<code>LootChestSession</code> belong to WS3 (raw Bukkit <code>Inventory</code> wrapper); WS2 does not port them. <span class="chip muted">REVIEW-WS3 B4</span></li>
+  <li><b>R3</b> Deleting <code>inventory-api</code> is a shared cutover gate after WS4's consumer gate; precondition is a grep proving zero importers of <code>org.luckyraven.gangland.inventory</code>. <span class="chip muted">REVIEW-WS2 B1</span></li>
+  <li><b>R4</b> <s>Oriel G0 targets Keystone 1.9.2 now; 1.10.0 later in a small gate.</s> Void under R10 — Oriel is off the path; the bump it already made stays useful for Oriel's own rebase. <span class="chip muted">REVIEW-WS2 D4</span></li>
+  <li><b>R5</b> <s>Oriel's missing in-place <code>rerender()</code> (20 Gangland call sites) and the unpublished <code>OpenMenuTracker</code> are first-class Oriel 0.8.0 asks.</s> Both are now Keystone E6 requirements: <code>Menu.rerender()</code>/<code>MenuFlow.rerender()</code> in place, and a per-consumer <code>InventoryService</code> that owns the tracker. <span class="chip muted">REVIEW-WS2 B3/B4 · re-targeted</span></li>
+  <li><b>R6</b> <code>gangland-api</code> 2.0 does not re-export <s>Oriel</s> <code>keystone-inventory</code>; a module that builds a menu declares it in its own pom (the Bartizan rule: a consumer declares what it names). <span class="chip muted">WS6 vs WS2</span></li>
+  <li><b>R7</b> (final) <code>GangLookupContract</code>/<code>RankLookupContract</code> move into the gang module with <code>Gang</code>/<code>Rank</code> — their signatures name those types, so neither the api nor the facade can hold them. The api exposes gang facts only through the <code>GangMembership</code> holder (R9), which the facade returns directly; no <code>ranks()</code> accessor. Stamped into both plans as §0c. <span class="chip muted">REVIEW-WS5 re-review</span></li>
+  <li><b>R8</b> WS1 runs before WS2: zero Oriel coupling, and both edit <code>gangland-domain/pom.xml</code> and <code>User.java</code>. <span class="chip muted">REVIEW-WS1</span></li>
+  <li><b>R9</b> One core-owned <code>GangMembership</code> holder (interface in the api, inert default registered by the core, installed by the gang module) serves every site that only needs "is/which gang" facts; gadget, civilians and cops-n-crooks need no gang dependency. <span class="chip muted">REVIEW-WS5</span></li>
+  <li><b>R10</b> (2026-09-17) WS2 re-targeted: <code>inventory-api</code> moves onto Keystone's new <code>keystone-inventory</code> module (Phase E6, 1.11.0) instead of Oriel. Gangland gains no Oriel dependency, hard or soft — which also settles WS2-D1 the way your note asked (an api layer, no coupling). Oriel's own rebase onto the same module is its own track after 1.11.0. Keystone's "Oriel owns menus permanently" rule is amended on branch <code>docs-inventory-roadmap</code>: the basic mechanism is Keystone's, the advanced menu product stays Oriel's. <span class="chip accent">Keystone docs/extraction-roadmap.md · Phase E6</span></li>
+</ul>
+
+<h2 id="verdicts">3 · Review verdicts</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>WS</th><th>Verdict</th><th>Blockers found → fixed in the plan</th><th>Follow-up</th></tr></thead>
+<tbody>
+<tr><td>WS1</td><td><span class="chip ok">PASS WITH FIXES</span></td><td>5: missing <code>keystone-persistence</code>; two pom removal rows; false "PAPI-only" claim → decision WS1-D5; US-19 mis-recorded; lost enable-time board sweep — all applied</td><td>—</td></tr>
+<tr><td>WS2</td><td><span class="chip warn">REWORK</span> → <span class="chip ok">PASS WITH FIXES</span> → <span class="chip accent">RE-PLANNED 2026-09-17</span></td><td>The reviewed plan targeted Oriel; its five blockers (R3, the three domain tests, R5's <code>rerender()</code> and <code>OpenMenuTracker</code>, the <code>Enchanted:</code> rename) were fixed against that target. Under R10 the Oriel-shaped ones dissolve: no <code>forConsumer</code> factory, no YAML rewrite, no Oriel asks. R3 stands; the domain tests still need the tracker swap; <code>rerender()</code> and the tracker become Keystone E6 requirements.</td><td>Needs a fresh review pass against the E6 plan before G1 starts. The Keystone half (E6.1/E6.2) is reviewed as a Keystone phase, like 1.10.0 was.</td></tr>
+<tr><td>WS3</td><td><span class="chip ok">PASS WITH FIXES</span></td><td>4: global <code>initializeAll()</code> deletion; <code>GanglandDatabase</code> in a module; removals inside 1.x → R1; WS2/WS3 file conflict → R2 — all applied</td><td>—</td></tr>
+<tr><td>WS4</td><td><span class="chip ok">PASS WITH FIXES</span></td><td>5: a module names <code>ShopAdminFlow</code> → new <code>ShopAdminOpener</code> api seam; <code>provided</code> is not transitive; gate collapse invalid under R3 → G1a/G1b restored; 8 <code>host.rerender()</code> calls → R5; <code>Max_Mode_Multiplier</code> stays core — fix pass applied</td><td>Simplifications accepted: persistence handler and UI settings stay Gangland-side; trader/banker message migration deferred; re-estimate 6–8 days</td></tr>
+<tr id="verdict-ws5"><td>WS5</td><td><span class="chip warn">REWORK</span> → <span class="chip ok">PASS WITH FIXES</span></td><td>6: cops-n-crooks imports <code>Gang</code> (<code>TurfFriendlyFireListener</code>); <code>User</code>/<code>UserManager</code> name <code>GangSettings</code>/<code>Rank</code>/<code>Permission</code>/<code>Member</code>; a missing contract bean aborts boot; the <code>MemberManager</code>→<code>UserManager</code> ordering edge is real; three missed core consumers (rank seeding, bounty and level listeners); the facade question unanswered → R7</td><td>Ruling R9 adopted from the review: one core-owned <code>GangMembership</code> holder (the <code>BankTiers</code> shape) fixes the boot abort and removes the gang dependency from gadget and civilians — a gangless server loses turf + mail only; <code>UserDataInitEvent</code> instead of a new join listener. Re-review: all six blockers resolved, the load-order claim verified in Keystone's <code>BeanPostInitialize</code> contract, and one new finding that became the final R7; the holder's <code>gangsAllied</code> must mean strictly allied (pinned by a test); estimate ≈ 17–18 executor-days</td></tr>
+<tr id="verdict-ws6"><td>WS6</td><td><span class="chip ok">PASS WITH FIXES</span></td><td>3: plan text placed <code>GangLookupContract</code> in the module while the api facade returned it (cannot compile) → R7; <code>UserLookupContract</code> lives in <code>gangland-domain</code> today, so WS5 must move it first; <code>unregisterAll</code> must be the first statement of <code>onDisable</code> — fix pass applied</td><td>Cuts accepted: no <code>modules()</code> accessor, no <code>japicmp</code> block this wave; the <code>Optional</code> lookup is one line (no Keystone ask); a module that already ships YAML is the worked example; estimate 12–14 h</td></tr>
+<tr id="verdict-ws7"><td>WS7</td><td><span class="chip ok">PASS WITH FIXES</span> → <span class="chip ok">PASS</span></td><td>4 + 3: <code>bartizan-api</code> must stay <code>provided</code>; Bartizan-touching method <em>bodies</em> throw <code>NoClassDefFoundError</code> once the dependency is soft (extraction + call-site guard); the YAML surface and fuel stamping were missing; WS7-D4 added. The extraction's own wiring then needed three fixes (a bean would re-open the crash; listener + bean conflict; test wording) — applied by the orchestrator (plan §0c)</td><td><code>isScoped()</code> and the trait branch deleted; <code>JetpackItemRefresher</code> kept for shop deliveries; GD-12 fixed for free; GD-27 tracked; <code>Host_Api</code> 1.0 → 1.1 (additive)</td></tr>
+<tr id="verdict-ws8"><td>WS8</td><td><span class="chip ok">PASS</span></td><td>4: <code>ItemKind</code> is a shared edit with WS7; the fall-damage design must not mirror GD-04; the <code>PlayerFishEvent</code> version-floor smoke belongs in G2, not G-final; estimate 3.1 → 4.5–5 days — all applied</td><td>Stale shop templates until re-issued (accepted); a parachute, if picked next, must not mirror the GD-04/GD-07 shapes</td></tr>
+</tbody></table></div>
+
+<!-- ===================== WS1 ===================== -->
+<section class="ws" id="ws1">
+<div class="ws-head"><h2>WS1 · Scoreboard becomes <code>&lt;ScoreboardPlugin&gt;</code></h2><p class="quote">"The scoreboard needs to be its own plugin, thus remove it from the settings."</p></div>
+<div class="facts">
+  <div><div class="k">Status</div><div class="v"><select class="status-select" data-ws="ws1" id="status-ws1" aria-label="WS1 status"><option value="planned">planned</option><option value="approved">approved</option><option value="in-progress">in progress</option><option value="done">done</option><option value="vetoed">vetoed</option></select></div></div>
+  <div><div class="k">Estimate</div><div class="v">~16 h · 2 studio days</div></div>
+  <div><div class="k">Repos</div><div class="v">new repo, Gangland</div></div>
+  <div><div class="k">Docket</div><div class="v">CM-04, UI-17 fixed · UI-16 deleted · US-19 stays open</div></div>
+</div>
+<h3>Scope</h3>
+<p>Delete <code>gangland-ui/scoreboard-api</code> (8 files, FastBoard + ViaVersion) and every wiring site: <code>ScoreboardManager</code>, <code>ScoreboardLifecycleService</code>, <code>PlayerScoreboardListener</code>, the <code>FileConfig</code>/<code>SchedulingConfig</code>/<code>KernelConfig</code> beans, <code>ReloadPlugin.scoreboardReload</code>, the bStats chart, the resource-pack command's toggle, <code>RemoveAccountListener</code>, <code>UserManager.onPreClear()</code> in the domain, the <code>User.scoreboard</code> field, the <code>Scoreboard:</code> settings block, <code>scoreboard.yml</code>, three pom entries and the FastBoard shade include. Stand up a single-module Keystone-powered plugin on Bartizan's repo layout that reads the <em>same</em> <code>scoreboard.yml</code> schema, so owners copy the file over unchanged.</p>
+<p><b>Placeholders.</b> Lines resolve through PlaceholderAPI first, then an optional Keystone <code>PlaceholderProvider</code> that Gangland publishes on the ServicesManager via <code>GanglandPlaceholder.asProvider()</code> (the same seam as <code>ItemVocabulary</code>), then raw text. Gang and user placeholders keep working without PAPI and no Gangland type crosses the boundary.</p>
+<h3>Gates</h3>
+<ol class="gates"><li><b>G0</b> repo + naming</li><li><b>G1</b> port the engine, DriverV3 only</li><li><b>G2</b> bootstrap, config, placeholders, enable-time sweep</li><li><b>G3</b> remove from Gangland (+ CM-04 fix)</li><li><b>G4</b> docs + docket</li><li><b>G-final</b> combined smoke</li></ol>
+<p>Rollback: G0–G2 live in the separate repo; G3 is one revertible commit range. No Oriel or Keystone asks.</p>
+</section>
+
+<!-- ===================== WS2 ===================== -->
+<section class="ws" id="ws2">
+<div class="ws-head"><h2>WS2 · inventory-api → <code>keystone-inventory</code></h2><p class="quote">"The idea is to not have inventory-api in Gangland Warfare and let Keystone handle such thing. Oriel can use it in order to do the functionalities; what Oriel has is the advanced menu features."</p></div>
+<div class="facts">
+  <div><div class="k">Status</div><div class="v"><select class="status-select" data-ws="ws2" id="status-ws2" aria-label="WS2 status"><option value="planned">planned</option><option value="approved">approved</option><option value="in-progress">in progress</option><option value="done">done</option><option value="vetoed">vetoed</option></select></div></div>
+  <div><div class="k">Estimate</div><div class="v">Keystone 4–5 d · Gangland 4–5 d + 0.5 cutover</div></div>
+  <div><div class="k">Repos</div><div class="v">Keystone 1.11.0, Gangland</div></div>
+  <div><div class="k">Consumers</div><div class="v">impl 22 · npc-shops 18 · shop-api 9 · domain 7 · turf 6</div></div>
+</div>
+<div class="note"><b>Re-targeted 2026-09-17 (R10).</b> The reviewed plan moved every Gangland menu onto Oriel — the original ask was "The inventory-api needs to be basically linked to oriel, thus using oriel features rather than being independent." It now moves onto a new Keystone module. Your WS2-D1 note already asked for no hard Oriel coupling and an api layer; this goes one further: no Oriel dependency at all. Oriel's 0.8.0 G0 (Keystone 1.9.2 bump, <code>forConsumer</code>) is done pending review — the bump stays useful for Oriel's own rebase, <code>forConsumer</code> is no longer a Gangland need. The Keystone half is planned as <b>Phase E6</b> in <code>docs/extraction-roadmap.md</code> (branch <code>docs-inventory-roadmap</code>, cut from <code>phase-h10-hologram-shop</code>); this section is the Gangland half. <b>Review pass done 2026-09-17: PASS WITH FIXES</b> — the fixes are rulings W23 + R11 (single <code>handleDepositClick</code> seam, gate G3a moves the 46 Gangland-dialect files into <code>gangland-impl</code>, lootchest belongs to WS3 and the shop views to WS4, Oriel extension points shipped in 1.11.0); the amended plan is <code>plans/WS2-inventory-keystone.md</code>.</div>
+<h3>What Keystone ships (E6, 1.11.0)</h3>
+<p>The basic mechanism both plugins duplicate today, sourced from Oriel's <code>menu-core</code>/<code>chest</code> with Gangland's unique pieces folded in: holder-identified menus (<code>MenuHolder</code>, the <code>MenuTarget</code> seam), one <code>MenuListener</code> for click/drag/close/quit that the consumer registers (the <code>keystone-hologram</code> precedent — Keystone still registers nothing itself), <code>ClickKind</code> resolution and <code>SlotHandlers</code>, <code>Menu</code>/<code>Component</code>/<code>SlotView</code>/<code>RenderContext</code>/<code>CloseReason</code>, a trimmed <code>ChestMenu</code> + <code>ChestMenuBuilder</code>, item/fill/border/line components, a per-consumer <code>InventoryService</code> (open-menu tracker + name registry, <code>BeanLifecycle</code>, no static state), <code>MenuFlow</code>/<code>Panel</code>/<code>FlowState</code> reconciled with <code>MultiPanelInventory</code> (in-place switch, <code>suspend</code>/<code>resume</code>), and <code>PageConfig</code> + <code>PagedRegion</code>. <b>Not shipped:</b> animation, requirements, argument bindings, the provider/filter/sort/search registries, deposit slots, the non-chest menu types, YAML loaders, the editor — those stay Oriel's product. Both stacks were audited Spigot-1.16.5-clean.</p>
+<h3>Scope in Gangland</h3>
+<p><code>keystone-inventory</code> enters the poms that used <code>inventory-api</code> at <code>provided</code> scope; <code>plugin.yml</code> keeps <code>depend: [Keystone]</code> only. The domain's dependency on the menu framework is severed as before: <code>User</code>'s <code>Set&lt;InventoryHandler&gt;</code> and <code>InventoryRegistry</code> are replaced by the service's tracker — the <code>InventoryHolder</code> identity deletes the linear <code>findByInventory</code> scan, <code>PlayerInventoryCleanup</code>, the static <code>SPECIAL_INVENTORIES</code> map and the non-atomic <code>MultiInventory.ID</code>. The nine core YAML menus are <b>not rewritten</b>: <code>InventoryParser</code> and the <code>handler.*</code> action dialect stay in <code>gangland-impl</code> and target <code>ChestMenuBuilder</code>, so the files under <code>plugins/Gangland_Warfare/</code> load unchanged. Conditions, filters/search/sort (the 11 files), unique items, villager trades and the AnvilGUI prompt stay Gangland-side as they are. Six consumers (<code>shop-api</code>, <code>lootchest-api</code>, npc-shops, turf, cops-n-crooks, gadget) use only <code>InventoryHandler</code> + <code>Fill</code> + <code>InventoryUtil</code> + <code>flow.*</code> and move mechanically to <code>ChestMenuBuilder</code>, the four components and <code>MenuFlow</code>. The trader barter and sell views keep today's interactive-slot behaviour (<code>SlotView.interactive</code> is Gangland's <em>draggable</em>), so they are re-points, not the deposit-slot redesigns the Oriel plan needed.</p>
+<h3>Gates</h3>
+<ol class="gates"><li><b>K2</b> Keystone 1.11.0: E6.1 core → E6.2 flow + pages (own phase, own review)</li><li><b>G1</b> Gangland reactor plumbing (poms, no Oriel)</li><li><b>G2</b> sever the domain inversion (tracker swap, three domain tests)</li><li><b>G3</b> <code>InventoryParser</code> targets <code>ChestMenuBuilder</code>; nine YAML menus load unchanged</li><li><b>G4</b> npc-shops (18 files)</li><li><b>G3a</b> move the 46 dialect files to gangland-impl</li><li><b>G5</b> turf · cops · gadget (lootchest = WS3, shop views = WS4, R11)</li><li><b>CUT</b> delete inventory-api (shared, after WS4, R3)</li></ol>
+<h3>Keystone E6 requirements this migration depends on — replaces the Oriel asks table</h3>
+<div class="tablewrap"><table>
+<thead><tr><th>Primitive</th><th>Why</th><th>Where in E6</th><th>Blocking?</th></tr></thead>
+<tbody>
+<tr><td>In-place <code>Menu.rerender()</code> / <code>MenuFlow.rerender()</code></td><td>20 Gangland call sites (was Oriel ask R5)</td><td>E6.1 / E6.2</td><td><span class="chip bad">yes — G4/G5</span></td></tr>
+<tr><td>Per-consumer <code>InventoryService</code> owning an <code>OpenMenuTracker</code></td><td>replaces <code>User.inventories</code> (was Oriel ask R5)</td><td>E6.1</td><td><span class="chip bad">yes — G2</span></td></tr>
+<tr><td><code>SlotView.interactive(boolean)</code> + the drag policy</td><td>barter, sell and loot views take and place items</td><td>E6.1</td><td><span class="chip bad">yes — G4/G5</span></td></tr>
+<tr><td><code>MenuFlow</code> in-place switch, <code>suspend</code>/<code>resume</code>, <code>back()</code>/<code>hasBack()</code></td><td>panel flows in shop-api, npc-shops, turf</td><td>E6.2</td><td><span class="chip bad">yes — G4/G5</span></td></tr>
+<tr><td><code>PageConfig</code> + <code>PagedRegion</code></td><td>gang search, user stats, multi-page YAML inventories</td><td>E6.2</td><td><span class="chip warn">G3</span></td></tr>
+<tr><td><code>MenuRegistry</code> (name → menu, <code>openPrevious</code>)</td><td>replaces <code>InventoryOpener</code> and the command-open lookup</td><td>E6.1</td><td><span class="chip warn">G3</span></td></tr>
+<tr><td><code>ItemBuilder</code> overloads on <code>ItemComponent</code> and the slot setters</td><td>Gangland's call sites pass <code>ItemBuilder</code>, not <code>ItemStack</code></td><td>E6.1</td><td><span class="chip muted">no — one adapter line otherwise</span></td></tr>
+<tr><td>Price-entry grid component (mirrored ± rows) — from WS4</td><td>the shop price editor</td><td>consumer-side, over <code>ChestMenuBuilder</code></td><td><span class="chip muted">no Keystone ask</span></td></tr>
+<tr><td>Anvil-driven paginated search</td><td>gang search and user stats menus</td><td>stays Gangland (AnvilGUI in impl)</td><td><span class="chip muted">no Keystone ask</span></td></tr>
+</tbody></table></div>
+</section>
+
+<!-- ===================== WS3 ===================== -->
+<section class="ws" id="ws3">
+<div class="ws-head"><h2>WS3 · Loot chest module + <code>keystone-hologram</code></h2><p class="quote">"Lootchests needs a revamp, since they are coupled with hologram api and they can be set as a module. Thus you can have hologram to be in keystone plugin."</p></div>
+<div class="facts">
+  <div><div class="k">Status</div><div class="v"><select class="status-select" data-ws="ws3" id="status-ws3" aria-label="WS3 status"><option value="planned">planned</option><option value="approved">approved</option><option value="in-progress">in progress</option><option value="done">done</option><option value="vetoed">vetoed</option></select></div></div>
+  <div><div class="k">Estimate</div><div class="v">~6 executor-days</div></div>
+  <div><div class="k">Repos</div><div class="v">Keystone, Gangland</div></div>
+  <div><div class="k">Docket</div><div class="v">21 open ids carried · LS-30/31 fixed free</div></div>
+</div>
+<h3>Scope</h3>
+<p>The three hologram classes (346 lines, ArmorStand-based) become a small <code>keystone-hologram</code> module: per-consumer instance, no static registry, a <code>registerProtection(JavaPlugin)</code> call instead of shipping a listener, and a marked upgrade path to TextDisplay above the 1.16 floor. Loot chests (31 library files + 10 impl files) fold into one runtime module <code>gangland-lootchest</code> built on the mail template: unchanged table name, YAML defaults in the jar, the 34-line <code>Loot_Chest:</code> block in a module <code>loot_chest.yml</code>, no <code>Depends:</code>, no <code>Plugins:</code>. Two commands switch from <code>GanglandDatabase</code> to <code>RepositoryRegistry</code>. The chest-opening view is a raw Bukkit inventory wrapper under 30 lines; only the wand-preview admin screen touches <code>keystone-inventory</code>.</p>
+<div class="note"><b>Revamp = structural this wave.</b> The cracking minigame has no production caller (docket LS-02, dead code), so there is nothing to port; the safe-cracking input UI, tier/refill redesign and per-tier hologram text are listed as deferred items you can pull in one at a time.</div>
+<h3>Gates</h3>
+<ol class="gates"><li><b>G0</b> Keystone hologram (install 1.10.0)</li><li><b>G1</b> Gangland consumes it, deletes hologram-api</li><li><b>G2</b> module skeleton + persistence</li><li><b>G3</b> GUI on keystone-inventory (after WS2)</li><li><b>G4</b> config · messages · commands</li><li><b>G5</b> deletions · docs · docket · smoke (armor-stand count on disable)</li><li><b>G6</b> follow-up after WS5's identity repackage</li></ol>
+</section>
+
+<!-- ===================== WS4 ===================== -->
+<section class="ws" id="ws4">
+<div class="ws-head"><h2>WS4 · Shop system → <code>keystone-shop</code></h2><p class="quote">"The shop-api can be a system that is in keystone and not specifically in gangland warfare and then we can reuse it again."</p></div>
+<div class="facts">
+  <div><div class="k">Status</div><div class="v"><select class="status-select" data-ws="ws4" id="status-ws4" aria-label="WS4 status"><option value="planned">planned</option><option value="approved">approved</option><option value="in-progress">in progress</option><option value="done">done</option><option value="vetoed">vetoed</option></select></div></div>
+  <div><div class="k">Estimate</div><div class="v">6–8 days</div></div>
+  <div><div class="k">Repos</div><div class="v">Keystone, Gangland</div></div>
+  <div><div class="k">Split</div><div class="v">28 headless move as-is · 9 views rebuilt</div></div>
+</div>
+<h3>Scope</h3>
+<p>Headless <code>keystone-shop</code> takes the 28 files with no menu import (model, registry, transactions, valuation, YAML io, the default display resolver) plus all eight tests, behaviour unchanged. <code>PaymentHandler</code> already wraps Keystone's <code>EconomyHandler</code> one-to-one, so a second consumer implements at most two interfaces. The nine admin-view files are rebuilt on <code>keystone-inventory</code> inside the core (<code>/glw shop</code> works with zero modules) and npc-shops reaches them through a new <code>ShopAdminOpener</code> interface in the api. Keystone's layering rule gains one sentence, shared with the hologram move. Options B (a standalone Bartizan-style plugin) and C (inside Oriel — whose own docs disclaim pricing logic) are recorded with their costs.</p>
+<h3>Gates</h3>
+<ol class="gates"><li><b>G0</b> Keystone module (can start now)</li><li><b>G1a</b> Gangland headless repoint</li><li><b>G1b</b> nine admin views on keystone-inventory (needs E6's in-place <code>rerender()</code>)</li><li><b>—</b> shop-api deleted last · smoke M-SHOP-1</li></ol>
+<p>Kept Gangland-side after review: the 12-line edit-persistence handler, <code>ShopUiSettings</code> and <code>Trader.Max_Mode_Multiplier</code>. The trader/banker message migration is deferred to the per-module follow-up.</p>
+</section>
+
+<!-- ===================== WS5 ===================== -->
+<section class="ws" id="ws5">
+<div class="ws-head"><h2>WS5 · Gang module</h2><p class="quote">"The gang system can be a module by itself, and thus implemented with turfs."</p></div>
+<div class="facts">
+  <div><div class="k">Status</div><div class="v"><select class="status-select" data-ws="ws5" id="status-ws5" aria-label="WS5 status"><option value="planned">planned</option><option value="approved">approved</option><option value="in-progress">in progress</option><option value="done">done</option><option value="vetoed">vetoed</option></select></div></div>
+  <div><div class="k">Estimate</div><div class="v">~138 h ≈ 17–18 executor-days</div></div>
+  <div><div class="k">Repos</div><div class="v">Gangland</div></div>
+  <div><div class="k">Docket</div><div class="v">37 GR- ids move · 3 test-pinned</div></div>
+</div>
+<h3>Scope</h3>
+<p>The player record stays core, repackaged out of <code>gang.*</code> into <code>org.luckyraven.gangland.user</code>: <code>User</code>, <code>UserManager</code>, <code>Level</code>, <code>UserFactory</code>, plus <code>Bounty</code>/<code>Wanted</code> (cops-n-crooks imports them from eight files and declares no gang dependency) and the generic <code>Permission</code> catalogue. The review showed <code>User</code> and <code>UserManager</code> also name <code>GangSettings</code>, <code>Rank</code> and <code>Member</code>, so the rework splits <code>GangSettingsContract</code> and routes per-user gang state through the membership holder. Everything else moves to <code>gangland-gang</code>: gangs, alliances, members, ranks, permissions bridge, the 31 gang/rank/ally commands, gang persistence with unchanged table names, five menus (on <code>keystone-inventory</code> after WS2), the gang placeholders, the <code>Gang:</code> settings and messages. <code>gangland-domain</code> ends empty and is deleted. Turf keeps its integer owner id with zero signature change and declares <code>Depends: [gang, civilians]</code>; mail declares <code>Depends: [gang]</code>; gadget, civilians, cops-n-crooks and npc-shops reach gang facts through the membership holder and need no gang dependency (R9).</p>
+<h3>Seams</h3>
+<ul>
+  <li><code>UserLookupContract</code> and <code>PermissionRegistryContract</code> stay in the api; the core publishes them.</li>
+  <li><code>GangLookupContract</code>/<code>RankLookupContract</code> move with <code>Gang</code>/<code>Rank</code> into the module (final R7); every core and module site that only needs gang facts uses the <code>GangMembership</code> holder (R9).</li>
+  <li>The core-owned <code>GangMembership</code> holder (R9) replaces the user loader's direct <code>MemberManager</code> parameter; the rework must state how the members-before-users load invariant survives the module boundary (the reviewer showed the ordering edge is real).</li>
+  <li>New <code>PlaceholderContribution</code> splits the PAPI expansion: core keeps user/level/bounty/wanted, the module contributes gang/rank/member.</li>
+  <li>The existing <code>CommandContribution</code> carries <code>WaypointGangIdCommand</code> and the gang/rank debug branches.</li>
+</ul>
+<h3>Gates</h3>
+<ol class="gates"><li><b>G0</b> repackage identity (438+161 edges)</li><li><b>G1</b> module skeleton + persistence</li><li><b>G2</b> the hard part: user loader, join listener split, placeholder split</li><li><b>G3</b> menus on keystone-inventory</li><li><b>G4</b> re-point four consumer modules</li><li><b>G5</b> delete gangland-domain · docs · smoke</li></ol>
+</section>
+
+<!-- ===================== WS6 ===================== -->
+<section class="ws" id="ws6">
+<div class="ws-head"><h2>WS6 · <code>gangland-api</code> 2.0 and the <code>GanglandApi</code> facade</h2><p class="quote">"Improve the api system so that most of the features can be used over there, check bartizan plugin how it was done."</p></div>
+<div class="facts">
+  <div><div class="k">Status</div><div class="v"><select class="status-select" data-ws="ws6" id="status-ws6" aria-label="WS6 status"><option value="planned">planned</option><option value="approved">approved</option><option value="in-progress">in progress</option><option value="done">done</option><option value="vetoed">vetoed</option></select></div></div>
+  <div><div class="k">Estimate</div><div class="v">~10.5–14 h</div></div>
+  <div><div class="k">Repos</div><div class="v">Gangland</div></div>
+  <div><div class="k">Model</div><div class="v">Bartizan's api/plugin split</div></div>
+</div>
+<h3>Scope</h3>
+<p>Two audiences, two mechanisms. Runtime modules already receive everything by constructor injection and keep doing so. External plugins get what Bartizan gives its consumers: <code>GanglandApi</code> becomes the facade <em>interface</em> (its constants stay, so the ~24 static call sites compile unchanged), <code>GanglandApiImpl</code> is registered on the ServicesManager by one <code>WiringConfig</code> bean and unregistered on disable, and consumers resolve it lazily and never cache it. Four accessors, each an api-safe type: <code>users()</code>, <code>gangs()</code> (the <code>GangMembership</code> holder, never null, inert when the gang module is absent), <code>waypoints()</code>, <code>bankTiers()</code>. Nothing without a named consumer. The 2.0 re-export list drops inventory-api, shop-api, scoreboard-api and the gang domain, adds <code>keystone-shop</code>, and does not re-export <code>keystone-inventory</code> either (R6, re-targeted). <code>Messages</code> and <code>Settings</code> stay static; the mail module proves the YAML-migration mechanism for module-owned entries. A <code>documentation/gangland-api.md</code> modelled on <code>bartizan-api.md</code> carries the resolution snippet, the service table and the accessor table; <code>japicmp</code> is deferred until a Central release exists.</p>
+<h3>Gates</h3>
+<ol class="gates"><li><b>G0</b> prerequisites after WS1/2/4/5 pruning</li><li><b>G1</b> facade + registration + two tests</li><li><b>G2</b> events audit</li><li><b>G3</b> mail worked example</li><li><b>G4</b> docs · japicmp · graph refresh</li></ol>
+</section>
+
+<!-- ===================== WS7 ===================== -->
+<section class="ws" id="ws7">
+<div class="ws-head"><h2>WS7 · Jetpack ownership and a soft Bartizan</h2><p class="quote">"I need it to be in gangland since it is part of gadgets. We can't have a dependency of having it moved to Bartizan, then need Gangland Warfare then need gangland-gadgets module."</p></div>
+<div class="facts">
+  <div><div class="k">Status</div><div class="v"><select class="status-select" data-ws="ws7" id="status-ws7" aria-label="WS7 status"><option value="planned">planned</option><option value="approved">approved</option><option value="in-progress">in progress</option><option value="done">done</option><option value="vetoed">vetoed</option></select></div></div>
+  <div><div class="k">Estimate</div><div class="v">~11.5 executor-days, 7 gates</div></div>
+  <div><div class="k">Repos</div><div class="v">Gangland 0.9.2 (before 0.10.0), Bartizan 0.4.0</div></div>
+  <div><div class="k">Sources</div><div class="v"><code>brainstorming/gadget-wave-2026-09-16/</code></div></div>
+</div>
+<h3>Why the jetpack is in Bartizan today</h3>
+<p>Before 0.9.0 the jetpack was modelled as a <em>wearable</em> (a chestplate entry with a <code>Jetpack:</code> block in the weapon module's <code>wearables.yml</code>). The Bartizan split ruled "Bartizan owns wearables", so the jetpack's item identity and configuration moved to Bartizan's <code>items/wearables.yml</code> (as generic <code>Extra_Tags:</code>) while the flight behaviour stayed in <code>gangland-gadget</code>. The gadget module therefore hard-depends on Bartizan (<code>Plugins: [Bartizan]</code>, fail-fast) only to know what a jetpack <em>is</em>. The census found that the only genuinely weapon-inherent gadget code is one zoom check (deleted) and the two car weapon-damage handlers.</p>
+<h3>Scope</h3>
+<p>The jetpack becomes a gadget-owned item exactly like the car: <code>ItemKind.JETPACK</code>, <code>items/jetpacks.yml</code> in the module jar, a <code>Jetpack</code> domain type with its own converter, serializer and refresher, its own NBT identity, <code>/glw jetpack give</code>, a per-item permission and a mandatory <code>Fuel_Key</code> at load (GD-12 fixed for free). A chestplate still carrying Bartizan's old tag is re-stamped on equip with its fuel preserved. Gadget drops <code>Plugins: [Bartizan]</code>; the two car weapon-damage handlers move into a conditionally registered listener and the melee lookup into a static helper called only when Bartizan is present, so a Bartizan-less server keeps cars and jetpacks. The one api addition is <code>Settings.isBartizanAvailable()</code> (<code>GanglandApi.VERSION</code> 1.0 → 1.1, additive). Bartizan 0.4.0 drops the jetpack entry, the legacy <code>Jetpack:</code> converter and its test. Civilians and cops keep their weapon-inherent edges; whether they go soft is decision WS7-D1.</p>
+<h3>Gates</h3>
+<ol class="gates"><li><b>G0</b> Bartizan 0.4.0 residue removal</li><li><b>G1</b> api: <code>isBartizanAvailable()</code>, <code>VERSION</code> 1.1, <code>ItemKind.JETPACK</code>, pins</li><li><b>G2</b> <code>items/jetpacks.yml</code> + <code>Jetpack</code> domain type</li><li><b>G3</b> converter / serializer / refresher; jetpack classes rewritten off <code>Wearable</code></li><li><b>G4</b> legacy re-stamp, equip permission, <code>/glw jetpack give</code></li><li><b>G5</b> car listener split, <code>Plugins: [Bartizan]</code> dropped, Bartizan-blind scan test, exercise smoke without Bartizan</li><li><b>G6</b> docs · docket · graph refresh</li></ol>
+</section>
+
+<!-- ===================== WS8 ===================== -->
+<section class="ws" id="ws8">
+<div class="ws-head"><h2>WS8 · Gadget catalogue: the grappling hook first</h2><p class="quote">"The gadgets at the end needs to have other tools like a grappling hook, or some other functionalities to make the game fun."</p></div>
+<div class="facts">
+  <div><div class="k">Status</div><div class="v"><select class="status-select" data-ws="ws8" id="status-ws8" aria-label="WS8 status"><option value="planned">planned</option><option value="approved">approved</option><option value="in-progress">in progress</option><option value="done">done</option><option value="vetoed">vetoed</option></select></div></div>
+  <div><div class="k">Estimate</div><div class="v">~4.5–5 executor-days (hook only)</div></div>
+  <div><div class="k">Repos</div><div class="v">Gangland 0.9.2, after WS7's G1</div></div>
+  <div><div class="k">Verdict</div><div class="v">PASS</div></div>
+</div>
+<h3>Scope</h3>
+<p>The reusable pattern is exactly what WS7 creates: an <code>ItemKind</code> entry, YAML in the module jar, converter / serializer / refresher, an NBT key, a per-type give command and listeners — no gadget interface or registry until the catalogue outgrows it. The grappling hook ships in full: launch on the fishing-rod event, hook lands on a block within range, line-of-sight check, a capped pull toward the anchor each tick, cancel on damage / sneak / timeout / chunk unload, a cooldown (no fuel), and fall damage handled with the corrected shape so it does not reproduce the jetpack's GD-04. The shortlist for the next picks: parachute, spike strip, lockpick (item only; the minigame is WS3's), smoke/flash device (not a Bartizan throwable), drone/camera (highest risk), disguise kit (recommended drop), boombox/radio, getaway flare.</p>
+<h3>Gates</h3>
+<ol class="gates"><li><b>G1</b> item + registration</li><li><b>G2</b> launch / land / pull mechanics (early version-floor smoke)</li><li><b>G3</b> anti-abuse + fall damage</li><li><b>G4</b> give command + permissions</li><li><b>G-final</b> docs · docket · graph</li></ol>
+</section>
+
+<h2 id="decisions">10 · Decisions register</h2>
+<p>Your calls. The recommendation is in bold; pick <em>accept</em>, <em>other option</em> or leave it open, and add a note. Choices are saved to this page's shared database and shown to anyone who opens it; a later session reads them back before executors start.</p>
+<div class="summary" id="decision-summary"><span><b id="cnt-rec">0</b>accepted</span><span><b id="cnt-alt">0</b>other option</span><span><b id="cnt-open">0</b>open</span></div>
+<div id="decision-list"></div>
+
+<h2 id="estimate">11 · Estimate</h2>
+<div class="tablewrap"><table>
+<thead><tr><th>Stream</th><th>Executor time</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>Keystone 1.10.0</td><td>1.5–2 days</td><td>done — committed on <code>phase-h10-hologram-shop</code></td></tr>
+<tr><td>Keystone 1.11.0 (E6)</td><td>5–6 days</td><td>E6.1 core (ported trimmed + Oriel extension points + item-safety tests), E6.2 flow + pages; plan reviewed 2026-09-17</td></tr>
+<tr><td>Oriel</td><td>0 in this wave</td><td>off the path (R10); the rebase onto keystone-inventory is costed on Oriel's track</td></tr>
+<tr><td>Scoreboard plugin + WS1 removal</td><td>2 days</td><td>~16 h</td></tr>
+<tr><td>WS2 (Gangland side, re-targeted)</td><td>7–9 days + 0.5 cutover</td><td>adds G3a (46-file move) and the paginated stack on <code>PagedRegion</code>; the barter/sell views are re-points; reviewed 2026-09-17</td></tr>
+<tr><td>WS3</td><td>6 days</td><td>G3 blocked on WS2</td></tr>
+<tr><td>WS4 consumer side</td><td>5–6 days</td><td>G1a headless repoint + G1b nine admin views on keystone-inventory</td></tr>
+<tr><td>WS5</td><td>~138 h ≈ 17–18 executor-days</td><td>~40 steps after rework; the identity/gang split of <code>User</code> and <code>UserManager</code> is the critical path</td></tr>
+<tr><td>WS6</td><td>1.5–2 days</td><td>12–14 h; mostly receives the others' output</td></tr>
+<tr><td>WS7 (Gangland 0.9.2 + Bartizan 0.4.0)</td><td>~11.5 days</td><td>7 gates; G3 and G5 are the large ones; runs before 0.10.0's G0 with no Keystone or Oriel prerequisite</td></tr>
+<tr><td>WS8 (Gangland 0.9.2)</td><td>4.5–5 days</td><td>grappling hook only; the shortlist is uncosted</td></tr>
+<tr><td><b>Total</b></td><td><b>≈ 42–47 executor-days (0.10.0, incl. Keystone 1.11.0) + ≈ 16–17 (0.9.2 gadget wave) ≈ 58–64</b></td><td>WS2 and Oriel shrink, Keystone 1.11.0 is added; one reactor build at a time; Keystone and the scoreboard plugin parallelise; Gangland's stream is sequential</td></tr>
+</tbody></table></div>
+
+<h2 id="process">12 · Execution process (when you say go)</h2>
+<ul>
+  <li>Order: <b>Gangland 0.9.2: WS7 (Bartizan 0.4.0 first) → WS8</b> → then Keystone 1.10.0 (done) → Keystone 1.11.0 (E6) → Gangland 0.10.0 G0 (branched off 0.9.2) → WS1 → WS2 → WS4 consumer → cutover → WS3 → WS5 → WS6; the scoreboard plugin's first gates run in parallel with the Keystone phases, which may start while 0.9.2 is in flight. Oriel is not on the path.</li>
+  <li>One reactor build at a time (parallel <code>-am</code> builds race on shared <code>target/</code>); install order Keystone → Gangland (Oriel is independent).</li>
+  <li>Executors are Sonnet agents, one gate each, no sub-agents, never committing; Opus reviewers per gate; the orchestrator commits at gate boundaries with <code>git commit -- &lt;paths&gt;</code>; nothing is pushed without you.</li>
+  <li>Every gate ends green (<code>mvn clean install</code> of each touched reactor) with its smoke rows run through the console harness; every flipped or new test is proven red first.</li>
+  <li>Bug docket: every touched id gets a status or note row after its gate; new bugs go to <code>triage/</code>.</li>
+  <li><code>graphify update . --force</code> in every touched repo at the end of each gate; memory and <code>CLAUDE.md</code> updated at the end.</li>
+</ul>
+
+<h2 id="later">13 · Not in this wave</h2>
+<ul>
+  <li>Oriel's rebase of <code>menu-core</code>/<code>chest</code> onto <code>keystone-inventory</code> — deletes <code>MenuTracking</code> and six copy-pasted holder/listener/click-context trios; Oriel's own track once 1.11.0 ships, together with its Keystone bump from the old 0.8.0 G0.</li>
+  <li>Central publishing of Oriel 0.8.0, the Keystone modules, <code>gangland-api</code> 2.0 and the scoreboard plugin (namespace/GPG/token pending); <code>japicmp</code> enforcement once a second 2.x exists.</li>
+  <li>Moving Wanted/Bounty into cops-n-crooks; the full module-owned <code>Messages</code>/<code>Settings</code> sweep beyond mail; the trader/banker message migration.</li>
+  <li>Loot chest feature items: safe-cracking input, tier/refill redesign, per-tier hologram text; bStats gang charts through a metrics seam.</li>
+  <li>KS-MO-05/06/07 (module bootstrap isolation, Keystone-side); Oriel's deprecated tab-completer usage before Keystone 2.0.0; a TextDisplay hologram backend above the 1.16 floor.</li>
+</ul>
+
+<h2 id="execution">14 · Execution log (orchestrator, 2026-09-16 → 2026-09-23)</h2>
+<p>Every stream runs in its own git worktree under <code>E:\Programming\java\wt\</code> (Plaque in <code>E:\Programming\java\Plaque</code>). The main checkouts are untouched: they hold an unrelated, uncommitted 1.16.5 compile-floor change in Gangland, Bartizan and Keystone that must be merged separately. Nothing is pushed and nothing is tagged. Process: a Sonnet lead per stream with at most two Haiku/Sonnet subagents → an Opus gate review per batch → a scoped re-review of each fix round → the orchestrator commits. The full ledger with every ruling (W1–W26) is <code>.superpowers/sdd/PLAN/progress.md</code>; briefs, reports, diffs and reviews are under <code>brainstorming/decoupling-wave-2026-09-14/exec/</code>.</p>
+<div class="tablewrap"><table class="gates">
+<thead><tr><th>Stream</th><th>Where</th><th>Gates</th><th>Commits</th><th>Reviews</th><th>Open</th></tr></thead>
+<tbody>
+<tr><td>WS7 · jetpack gadget-owned, soft Bartizan — <b>done</b></td><td><code>wt/gangland-0.9.2</code> (branch 0.9.2) · <code>wt/bartizan-0.4.0</code> (branch 0.4.0)</td><td>G0 Bartizan · G1 · G2+G3 (+ the WS7-D4 trait bridge) · G4 · G5+G5b (gadget and civilians soft on Bartizan, turf loads without it) · G6 docs. Live smoke 5/5 PASS; two safety nets (blinded classloader + constant-pool allowlist) in gangland-core's test-jar</td><td>dda1710, 705885e · 03e60815 · 4d4ffa28 · 6bc1e2d1 · d136fc8d · d4fa4643</td><td>5 Opus + 5 re-reviews; 5 fix rounds</td><td>manual client checklist <code>exec/WS7/G6-manual-checklist.md</code></td></tr>
+<tr><td>WS8 · grappling hook — <b>done</b></td><td><code>wt/gangland-0.9.2</code></td><td>G1 item · G2+G3 mechanics, anti-abuse, fall damage (avoids GD-04/05) · G4 give command, blocked-launch message, docs. Live smoke grapple-boot PASS; <b>Gangland 0.9.2 complete (9 commits since 0.9.1)</b></td><td>9a44ea45 · 122bf53d · 61903085</td><td>1 Sonnet + 1 Opus + 1 Sonnet review; 1 fix round</td><td>manual client checklist <code>exec/WS8/G-final-manual-checklist.md</code></td></tr>
+<tr><td>Keystone 1.10.0 · keystone-hologram + headless keystone-shop</td><td><code>wt/keystone-1.10.0</code> (phase-h10-hologram-shop)</td><td>G-H, G-S, G-D done (1107 tests)</td><td>cd5bb9f</td><td>1 Opus + 1 re-review; 1 fix round</td><td>Gangland consumer gates at 0.10.0</td></tr>
+<tr><td>Keystone 1.11.0 · keystone-inventory (Phase E6, your R10) — <b>done</b></td><td><code>wt/keystone-1.11.0</code> (phase-e6-inventory)</td><td>Plan review PASS WITH FIXES (W23 + R11) · E6.1 core (3 fix rounds: held-item return on Escape/disconnect/veto+quit/reload, dupe guard, collect-to-cursor, interactive floor, Oriel extension points) · E6.2 flows/pages/docs (phase review: detour rebuild, menuBuilder hook, listener leak). 99 module tests, reactor 1206</td><td>6764bd5 · 53de9e6 · 6ea96e5</td><td>1 plan review + 2 Opus + 4 re-reviews; 4 fix rounds</td><td>Gangland consumes it in 0.10.0 WS2</td></tr>
+<tr><td>Oriel 0.8.0 (off the path since R10)</td><td><code>wt/oriel-0.8.0</code> (branch 0.8.0)</td><td>G0 (Keystone 1.9.2, forConsumer), G1+G2 (rerender, published tracker, deposit-slot P0 fixes, price grid) done; stream closed</td><td>81ddb97 · 00b8b35</td><td>2 reviews + 2 re-reviews; 2 fix rounds</td><td>Oriel's own rebase onto keystone-inventory later</td></tr>
+<tr><td>WS1 · Plaque 0.1.0 (scoreboard plugin)</td><td><code>E:\Programming\java\Plaque</code> (master)</td><td>G0 skeleton, G1 engine (DriverV3 only), G2 bootstrap + placeholder chain + keystone-command reload done (12 tests)</td><td>debfbac · c0fd9d4</td><td>2 reviews + 1 re-review; 1 fix round</td><td>G3 Gangland removal, G4 docs/docket, smoke at 0.10.0</td></tr>
+<tr><td>Gangland 0.10.0 · all six workstreams landed — <b>DONE (END smoke PASS)</b></td><td><code>wt/gangland-0.10.0</code> (branch 0.10.0) + side worktrees <code>-ws3</code>/<code>-ws5</code>/<code>-ws6</code>, each rebased and fast-forwarded by the orchestrator</td><td>G0 api 2.0 · WS1 scoreboard → Plaque · WS2 keystone-inventory (G1-G5 + CUT: inventory-api deleted, loot chests take-only) · WS4 keystone-shop (G1a/G1b) · WS3 keystone-hologram + <code>gangland-lootchest</code> runtime module (G1-G5, module-owned YAML in two languages) · WS5 <code>gangland-gang</code> runtime module (G0, combined G1-G3 under W51, G5 gangland-domain deleted) · WS6 <code>LocalizedModuleYaml</code> + civilians example (G3), <code>GanglandApi</code> interface facade on the ServicesManager (G1/G2/G4) · END docs pass. Boot fixes found only by the real-server smoke: T-53 (installer bean had no ordering edge), T-54 (orphan PermissionRepository), T-55 (ambiguous UserManager) — all fixed red-first; rule W56/W57 recorded.</td><td>… 5d6cbefc CUT · f999ab72 · 5b915c17 · 837966c3 · 9e2c378e · f5caaaca · 89746105 · 366b43de · 207e7282 · 6977eff9 · fcc41a32 · <b>198d101d</b> (tip) — Keystone 1.11.1 a7e436f + d05faa9</td><td>Opus: WS1 G3, WS2 G1+G2/G3a/G3/G4, WS5 combined gate; Sonnet: the rest. Every FIX closed by a fix round + scoped re-review or an orchestrator grep. 929 tests, 18 reactor modules, 8 runtime modules.</td><td>END smoke PASS on 198d101d: 8 modules loaded, 0 faults, twice on one DB, 0 errors; graph 15,939 nodes · user: merge 0.10.0, copy the worktree CLAUDE.md (W28), tag/push, manual client checklists <code>exec/G010/WS2-manual-checklist.md</code> rows 1-56 · follow-ups: T-51 attachment leak, T-47 Inventory: block, T-52 BANKER leftover, message migrations per <code>exec/WS6/messages-settings-migration-table.md</code>, docs debt (architecture.md bean tables, modules.md compatibility/item tables), KS-MO-05/06/07</td></tr>
+</tbody></table></div>
+<h3>What the gate reviews caught before a commit</h3>
+<ul>
+  <li>Bartizan: registering a minimal <code>Wearable</code> for the jetpack would have crashed Bartizan's refresher, converter and give command and blocked non-op players from equipping — became the <code>external</code> damage-only wearable (WS7-D4).</li>
+  <li>Gadget: the <code>wearable</code> tag was stamped from the guard, not the registration; no test pinned <code>buildItem</code>'s full fuel; a negative <code>/glw jetpack give</code> amount threw (same hole in the car command, fixed too); the module claimed the global <code>messages.yml</code> name (now <code>gadget/gadget_messages.yml</code>, the precedent for every module).</li>
+  <li>Civilians (G5b): the new combat-eligibility config was never registered (downed players hittable even with Bartizan), and <code>BartizanNpcWeapons</code> threw on every hostile spawn without Bartizan — invisible to the signature-level blind scan, so a constant-pool allowlist test is being added.</li>
+  <li>Oriel: <code>forConsumer</code> built a private control registry so filter/search buttons on consumer menus no-op'd; a rerender that dropped a deposit slot destroyed the held items.</li>
+  <li>Plaque: a <code>ViaAPI</code>-typed setter on a scanned bean logged a missing-type fault on every ViaVersion-less boot.</li>
+  <li>keystone-inventory: held items were lost on Escape and on disconnect (CraftBukkit closes the inventory before the quit event), the duplication guard was dropped on the reload/disable race, fill items in interactive slots could be taken endlessly, and the Oriel extension points were missing.</li>
+  <li>keystone-inventory consumers (WS2 G4/G1b): the rerender item-survival test pinned <code>ChestMenu.rerender()</code> instead of the production <code>MenuFlow.rerender()</code> → <code>adoptComponentsFrom</code> path; nothing was lost, but the highest-stakes mechanism was unpinned until the fix round. The shop admin editor's add-template click survives Keystone's cancel because the bridge listener runs at HIGH without <code>ignoreCancelled</code> — verified in Keystone source, not trusted from the report.</li>
+  <li>WS4 G1a: the display-resolver test that pinned "live name before pristine" was deleted with its class and Keystone's replacement could not distinguish the two orderings — restored upstream as a test-only Keystone commit; and the Trader:/Banker: settings split would have silently reverted an upgrading server's values — now a distinct boot warning plus a migration section.</li>
+  <li>Docket rows filed from the reviews: T-42..T-45, KS-IV-05..08, KS-SH-01 (new system code SH); T-45 and KS-SH-01 already fixed.</li>
+  <li>CUT: the raw shared loot inventory silently dropped the old deposit block (a chest became free storage that regeneration would void) — loot chests are take-only now, nine red-first listener tests; the wand fixes LS-30/31 had no automated pin; GR-18 was already a docket row.</li>
+  <li>WS5 G0: the temporary permission bridges cleared a rank's nodes with an explicit deny instead of an unset, which would shadow a Vault/LuckPerms group grant — replaced by a real unset primitive with a genuine Mockito red.</li>
+  <li>Keystone 1.11.1: the same ended-flow hole the patch closed for switchTo/rerender was still open in back() — fixed in a follow-up commit.</li>
+  <li>WS5 combined gate: the gang menus opened empty and their filter buttons no-op'd because the item sources were deleted instead of contract-fed; restored through a <code>GangItemSourceContribution</code> seam with the adapter tests. The temporary permission bridges used an explicit deny instead of an unset (would shadow group grants).</li>
+  <li>WS3 G4+G5: the Spanish loot-chest strings were dropped in the move to module-owned YAML — restored with a language-picked file, and generalised in WS6 G3 as <code>LocalizedModuleYaml</code>.</li>
+  <li>The real-server boot, not the unit reactor, caught three P0/P1 wiring faults after every gate was green: a module <code>@Configuration</code> with constructor parameters gets no bean-graph edge (T-53), a core repository lost its data supplier when its only caller moved (T-54), and bean-method parameters of a twice-registered type must be qualified (T-55).</li>
+</ul>
+<h3>Rulings you can veto</h3>
+<ul>
+  <li><b>W1</b> worktrees instead of the main checkouts (foreign floor wave). <b>W2/W11</b> WS7-D4 as "Bartizan is the api layer": <code>WearableCatalog.register</code> + <code>Wearable.external</code>. <b>W3</b> WS7-D1 = C adds gate G5b. <b>W5</b> Plaque, keystone-command for <code>/plaque reload</code>. <b>W9</b> no tags. <b>W10</b> revision 0.9.2. <b>W13</b> anvil-search ask dropped (already shipped). <b>W16</b> <code>/glw jetpack give &lt;id&gt; [amount]</code>, self-give. <b>W18</b> smoke harness paths point at the worktree jars. <b>W20/W21</b> Oriel stream closed after its G1+G2; on-disk deposit persistence (A3) accepted out of scope. <b>W22</b> <code>&lt;module&gt;/&lt;module&gt;_messages.yml</code> precedent. <b>W23 + R11</b> E6 amendments: single <code>handleDepositClick</code> seam, gate G3a moves 46 dialect files to <code>gangland-impl</code>, lootchest = WS3, shop views = WS4. <b>W24/W26</b> keystone-inventory api shape (non-final listener/builder, factory hooks, no recursive generics) and item-safety fixes. <b>W25</b> constant-pool allowlist test per module. <b>W27/W33/W37/W39</b> orchestrator-verified two-word doc fixes and eight-constant gates instead of a review seat. <b>W30/W34/W36/W38</b> the E6.2 detour rebuild, the grapple range/chunk/quit fixes, the Plaque placeholder seam landed in WS1 G3, the interim per-player menu lookup. <b>W31/W32</b> 0.10.0 started off 0.9.2@9a44ea45 with Keystone 1.11.0 at G0; WS8 merged in before WS2 G3. <b>W35</b> leads may edit the smoke harness. <b>W40</b> lead rotated at G3a. Two more session-limit kills (09-17 05:00, 09-20 22:30) were resumed from disk with nothing lost.</li>
+</ul>
+<p class="note">Docket: GD-12 fixed, GD-20's jetpack half moot, GD-27 unchanged; candidates collected in each review (CarAddon/JetpackAddon default material, negative give amounts, Keystone <code>Diagnostics.install</code> shared static, three keystone-inventory rows, one Oriel P0 found-and-fixed, two Gangland inventory statics fixed-by-WS2) are filed at the wave's docket step.</p>
+</main>
+</div>
+
+<script>
+(function () {
+  const DECISIONS = [
+    ["A1", "Versions and branches", "<b>Gangland 0.10.0, Keystone 1.10.0, Oriel 0.8.0, scoreboard plugin 0.1.0, Host_Api 2.0</b>"],
+    ["A2", "Gang module shape (WS5-D1)", "<b>separate gangland-gang; turf Depends: [gang, civilians]</b> vs fold turf into the gang module"],
+    ["A3", "Where the shop system lives (WS4-D1)", "<b>headless keystone-shop + one-sentence Keystone CLAUDE.md amendment</b> vs standalone plugin vs inside Oriel"],
+    ["A4", "Hologram in Keystone (WS3-D1/D2)", "<b>new keystone-hologram module; amend the layering line narrowly</b> vs a package in keystone-common"],
+    ["A5", "Scoreboard plugin placeholders (WS1-D5)", "<b>PAPI first, then Gangland's Keystone PlaceholderProvider on the ServicesManager, then raw text</b> vs PAPI-only"],
+    ["N1", "Scoreboard plugin name", "candidates <b>Cartouche</b> / Fascia / Parapet / Corbel (shallow collision check only) — write the name in the note"],
+    ["WS1-D1", "Scoreboard drivers", "<b>port only DriverV3</b> (today's default; the manager silently falls back to V1) vs all three"],
+    ["WS1-D2", "Command framework in the scoreboard plugin", "<b>plain Bukkit CommandExecutor for the single reload command</b> vs keystone-command"],
+    ["WS1-D3", "PlaceholderAPI absent", "<b>boot warning + header comment, graceful raw text</b> vs silent"],
+    ["WS2-D1", "Oriel dependency hardness — superseded by R10 (2026-09-17)", "your note asked for a soft dependency and an api layer; R10 removes the Oriel dependency entirely — <b>no action needed</b>"],
+    ["WS2-D2", "Menu YAML home — superseded by R10", "the nine YAML menus stay where they are, loaded by Gangland's own InventoryParser over ChestMenuBuilder — <b>no action needed</b>"],
+    ["WS2-D3", "Filters, search, sort — superseded by R10", "the 11 Gangland files stay in gangland-impl unchanged; Oriel's registries are not on the path — <b>no action needed</b>"],
+    ["WS3-D3", "lootchest-api Maven module", "<b>fold into the feature module</b> vs keep as a shaded library"],
+    ["WS3-D5", "Loot chest revamp scope", "<b>structural now; LS-30/31 fixed for free; feature items deferred</b> vs fold in the 21 docket fixes"],
+    ["WS4-D2", "Default ShopDisplayResolver in Keystone", "<b>ship it as the default</b> vs consumer-only"],
+    ["WS4-D5", "Trader/Banker messages + settings", "<b>defer to the per-module follow-up</b> vs bundle into WS4"],
+    ["WS5-D2", "Wanted, Bounty, Level", "<b>stay core, repackaged</b>; move to cops-n-crooks later"],
+    ["WS5-D3", "Permission catalogue", "<b>stay core</b> vs move with gang.rank.*"],
+    ["WS5-D4", "bStats gang/rank charts", "<b>drop</b> vs a metrics seam in the module"],
+    ["WS6-D1", "Facade type name", "<b>keep GanglandApi as the interface</b> vs GanglandServices"],
+    ["WS6-D2", "Facade accessors", "<b>users, gangs (membership holder), waypoints, bank tiers — only api-safe types</b> vs also ranks/wanted/bounty/shop/placeholders/modules"],
+    ["WS6-D4", "Messages and Settings", "<b>stay static; migration mechanism proven on mail</b> vs instance beans now"],
+    ["WS6-D5", "japicmp", "<b>deferred until a Central release exists</b> vs wire now with skip=true"],
+    ["WS6-D6", "Public api events", "<b>keep the current two</b> vs promote loot/shop/gang events"],
+    ["R1-R9", "Orchestrator rulings in section 2", "<b>as ruled</b> — veto any one and its plan section is reworked"],
+    ["R10", "WS2 re-target: inventory-api → keystone-inventory (2026-09-17)", "<b>as ruled — Keystone E6 (1.11.0) ships the basic layer; Gangland gains no Oriel dependency; Oriel rebases on its own track</b> vs the reviewed Oriel plan"],
+    ["E6-D1", "Panel flows in Keystone", "<b>yes — MenuFlow reconciled from Oriel's MenuFlow and Gangland's MultiPanelInventory</b> vs flows stay Oriel and Gangland keeps MultiPanelInventory locally"],
+    ["E6-D2", "Oriel rebase timing", "<b>Oriel's own track after 1.11.0, not a wave prerequisite</b> vs bundle Oriel 0.8.0 into the wave"],
+    ["E6-D3", "Phase numbering and record", "<b>E6 (reopens the extraction track); record docs/phase-e6-inventory.md</b> vs H11"],
+    ["P1", "Central publishing in this wave", "<b>no — install to ~/.m2; publish when the namespace setup lands</b> vs publish now"],
+    ["K1-K9", "Gadget-wave contracts (README of brainstorming/gadget-wave-2026-09-16)", "<b>as fixed</b> — veto one and its plan section is reworked"],
+    ["WS7-D1", "civilians / cops-n-crooks Bartizan dependency", "(A) both stay hard — Bartizan absent drops civilians + cops + turf; (B) both soft — unarmed-NPC fallback; <b>(C) soft civilians / hard cops — frees turf</b> (the reviewer's suggestion, no forced default — write A, B or C in the note)"],
+    ["WS7-D4", "The jetpack loses Bartizan's armour traits (damage reduction, REINFORCED, LIGHTWEIGHT)", "<b>accept and document</b> vs re-implement the reduction inside gadget"],
+    ["WS8-D1", "Grappling hook resource model", "<b>cooldown only</b> vs fuel/durability through FuelService"],
+    ["WS8-D2", "First three gadgets after the hook", "<b>grappling hook + parachute + smoke/flash</b> vs another pick from the eight-candidate shortlist"],
+    ["WS8-D3", "Give-command shape", "<b>per-type /glw &lt;gadget&gt; give (car precedent)</b> vs generic /glw gadget give &lt;id&gt; + registry"]
+  ];
+  const list = document.getElementById('decision-list');
+  const state = {};
+  function render() {
+    list.innerHTML = '';
+    for (const [id, q, opts] of DECISIONS) {
+      const d = state[id] || {};
+      const el = document.createElement('div');
+      el.className = 'decision';
+      el.dataset.choice = d.choice || 'open';
+      el.id = 'dec-' + id;
+      const safe = id.replace(/[^A-Za-z0-9]/g, '_');
+      el.innerHTML =
+        '<div><div class="id">' + id + '</div><div class="q">' + q + '</div><div class="opts">' + opts + '</div>' +
+        '<textarea id="note-' + safe + '" placeholder="note (why, or the option you picked)" aria-label="Note for ' + id + '">' + (d.note ? String(d.note).replace(/</g, '&lt;') : '') + '</textarea>' +
+        '<div class="saved" id="saved-' + safe + '">' + (d.updatedAt ? 'saved ' + d.updatedAt.slice(0, 16).replace('T', ' ') : 'not decided') + '</div></div>' +
+        '<fieldset><legend>Your call</legend>' +
+        '<label><input type="radio" name="c-' + safe + '" value="rec" id="rec-' + safe + '"' + (d.choice === 'rec' ? ' checked' : '') + '> accept the recommendation</label>' +
+        '<label><input type="radio" name="c-' + safe + '" value="alt" id="alt-' + safe + '"' + (d.choice === 'alt' ? ' checked' : '') + '> the other option (say which in the note)</label>' +
+        '<label><input type="radio" name="c-' + safe + '" value="open" id="open-' + safe + '"' + (!d.choice || d.choice === 'open' ? ' checked' : '') + '> still open</label>' +
+        '</fieldset>';
+      list.appendChild(el);
+      el.querySelectorAll('input[type=radio]').forEach(r => r.addEventListener('change', () => save(id, safe)));
+      el.querySelector('textarea').addEventListener('change', () => save(id, safe));
+    }
+    counts();
+  }
+  function counts() {
+    let rec = 0, alt = 0, open = 0;
+    for (const [id] of DECISIONS) { const c = (state[id] || {}).choice; if (c === 'rec') rec++; else if (c === 'alt') alt++; else open++; }
+    document.getElementById('cnt-rec').textContent = rec;
+    document.getElementById('cnt-alt').textContent = alt;
+    document.getElementById('cnt-open').textContent = open;
+  }
+  let db = null;
+  async function save(id, safe) {
+    const choice = (document.querySelector('input[name="c-' + safe + '"]:checked') || {}).value || 'open';
+    const note = document.getElementById('note-' + safe).value;
+    const doc = { choice, note, updatedAt: new Date().toISOString() };
+    state[id] = doc;
+    const el = document.getElementById('dec-' + id); if (el) el.dataset.choice = choice;
+    counts();
+    const savedEl = document.getElementById('saved-' + safe);
+    if (!db) { savedEl.textContent = 'not saved — this view cannot reach the shared database'; return; }
+    try { await db.doc('decisions/' + id).set(doc); savedEl.textContent = 'saved ' + doc.updatedAt.slice(0, 16).replace('T', ' '); }
+    catch (e) { savedEl.textContent = 'save failed: ' + (e && e.message ? e.message : e); }
+  }
+  render();
+  document.querySelectorAll('.status-select').forEach(sel => sel.addEventListener('change', async () => {
+    if (!db) return;
+    try { await db.doc('workstreams/' + sel.dataset.ws).set({ status: sel.value, updatedAt: new Date().toISOString() }); } catch (e) { /* shown as unchanged */ }
+  }));
+  (async () => {
+    if (!window.claude || !window.claude.use) return;
+    db = await window.claude.use('db');
+    if (!db) return;
+    db.collection('decisions').onSnapshot(snap => {
+      for (const d of snap.docs) state[d.id] = d.data() || {};
+      render();
+    }, () => {});
+    db.collection('workstreams').onSnapshot(snap => {
+      for (const d of snap.docs) { const sel = document.getElementById('status-' + d.id); const v = (d.data() || {}).status; if (sel && v) sel.value = v; }
+    }, () => {});
+  })();
+})();
+</script>
+
+
+</body></html>

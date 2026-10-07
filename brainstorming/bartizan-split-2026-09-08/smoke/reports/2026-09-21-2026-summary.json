@@ -1,0 +1,16 @@
+[
+  {
+    "id": "npcshops-boot",
+    "title": "WS2 G4 (0.10.0): npc-shops alone boots clean after the trader/banker Panel swap + BarterView/SellView re-point onto keystone-inventory (MenuFlow/ChestMenuBuilder/DropzoneSlotComponent) -- console can only confirm the module loads, TraderModuleConfig/BankerModuleConfig's beans construct without a fault (TraderFlow/BankerFlow now also pull InventoryService), and the admin command tree resolves without an exception; it CANNOT drive an actual trader/banker NPC interaction, dropzone click/drag, or item-return-on-close (no in-game player exists in a console-only run) -- same documented-gap shape as grapple-boot/jetpack-give. A human with a real client must run exec/G010/WS2-manual-checklist.md's G4 rows (8-19).",
+    "verdict": "PASS",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "npcshops"
+    ],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-21-2026-npcshops-boot.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-21-2026-npcshops-boot.log"
+  }
+]

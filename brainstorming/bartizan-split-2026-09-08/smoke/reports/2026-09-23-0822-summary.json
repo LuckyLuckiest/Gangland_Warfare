@@ -1,0 +1,19 @@
+[
+  {
+    "id": "ws6-civilians-isolated",
+    "title": "WS6 G3 isolation (2026-09-23, T-53 workaround): gang/turf/mail dropped from the deploy set (turf+mail Depends: [gang], and gang's own GangMembershipInstaller crashes onEnable -- see T-53) so civilians' LocalizedModuleYaml message extraction can still be verified on a plugin that actually boots. civilians has no gang dependency.",
+    "verdict": "FAIL",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "civilians",
+      "gadget",
+      "lootchest",
+      "npcshops"
+    ],
+    "distinct_error_count": 1,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-23-0822-ws6-civilians-isolated.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-23-0822-ws6-civilians-isolated.log"
+  }
+]

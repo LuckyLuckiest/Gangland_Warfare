@@ -1,0 +1,131 @@
+# Review package — 0.10.0 WS2 G3a — working tree vs HEAD 9d0d8878 (WS2 G1+G2 merge)
+--- status ---
+ M gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/debug/DebugCommand.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/filter/FilterCommand.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/gang/GangCommand.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/config/GangFilterRegistration.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/config/KernelConfig.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/ConditionalSlotParser.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryDefinitionStore.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryParser.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryRuntimeContext.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/itemsource/GangItemSourceProvider.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/gang/GangFilterAdapter.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/gang/member/MemberFilterAdapter.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/item/contract/GanglandUniqueItemInteractionService.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/listener/inventory/InventoryOpenByCommandListener.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/InventoryBuilder.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/InventoryBuilder.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/InventoryData.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/InventoryData.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/OpenInventory.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/OpenInventory.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/State.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/State.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/condition/BooleanExpressionEvaluator.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/condition/BooleanExpressionEvaluator.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/condition/ConditionEvaluator.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/condition/ConditionEvaluator.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/condition/ConditionalSlotData.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/condition/ConditionalSlotData.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/condition/SlotCondition.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/condition/SlotCondition.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/filter/FilterAdapter.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/filter/FilterAdapter.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/filter/FilterApplier.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/filter/FilterApplier.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/filter/FilterBinding.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/filter/FilterBinding.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/filter/FilterField.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/filter/FilterField.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/filter/FilterRegistry.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/filter/FilterRegistry.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/filter/FilterStore.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/filter/FilterStore.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/filter/FilterValue.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/filter/FilterValue.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/filter/SearchButtonFactory.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/filter/SearchButtonFactory.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/filter/SearchFilter.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/filter/SearchFilter.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/filter/SortDescriptor.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/filter/SortDescriptor.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/filter/StandardFilterField.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/filter/StandardFilterField.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/handler/AbstractCommandSlotHandler.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/AbstractCommandSlotHandler.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/handler/ClickSlotHandler.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/ClickSlotHandler.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/handler/CloseSlotHandler.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/CloseSlotHandler.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/handler/DropSlotHandler.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/DropSlotHandler.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/handler/JoinSlotHandler.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/JoinSlotHandler.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/handler/PlayerInteractSlotHandler.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/PlayerInteractSlotHandler.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/handler/QuitSlotHandler.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/QuitSlotHandler.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/handler/SlotContext.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/SlotContext.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/handler/SlotEventHandler.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/SlotEventHandler.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/handler/SlotItemFactory.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/SlotItemFactory.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/handler/SwapHandSlotHandler.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/SwapHandSlotHandler.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/multi/ItemSourceEntry.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/ItemSourceEntry.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/multi/ItemSourceProvider.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/ItemSourceProvider.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/multi/ListEntry.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/ListEntry.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/multi/MultiInventory.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/MultiInventory.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/multi/MultiInventoryCreation.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/MultiInventoryCreation.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/multi/MultiInventoryNavigation.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/MultiInventoryNavigation.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/multi/StaticSlotEntry.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/StaticSlotEntry.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/part/ButtonTags.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/part/ButtonTags.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/part/ConditionalSlotResult.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/part/ConditionalSlotResult.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/part/Slot.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/part/Slot.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/unique/UniqueItemHandler.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/unique/UniqueItemHandler.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/villager/VillagerInventory.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/villager/VillagerInventory.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/villager/VillagerInventoryListener.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/villager/VillagerInventoryListener.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/villager/VillagerInventoryRegistry.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/villager/VillagerInventoryRegistry.java
+RM gangland-ui/inventory-api/src/main/java/org/luckyraven/gangland/inventory/villager/VillagerTrade.java -> gangland-impl/src/main/java/org/luckyraven/gangland/menu/villager/VillagerTrade.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/sign/aspect/BountyAspect.java
+ M gangland-impl/src/test/java/org/luckyraven/gangland/file/configuration/inventory/InventoryRuntimeContextTest.java
+?? gangland-impl/src/test/java/org/luckyraven/gangland/gang/
+--- diffstat ---
+ .../gangland/command/sub/debug/DebugCommand.java    | 14 +++++++-------
+ .../gangland/command/sub/filter/FilterCommand.java  |  2 +-
+ .../gangland/command/sub/gang/GangCommand.java      |  8 ++++----
+ .../org/luckyraven/gangland/config/FileConfig.java  |  2 +-
+ .../luckyraven/gangland/config/GameplayConfig.java  |  6 +++---
+ .../gangland/config/GangFilterRegistration.java     |  8 ++++----
+ .../luckyraven/gangland/config/KernelConfig.java    |  6 +++---
+ .../inventory/ConditionalSlotParser.java            |  6 +++---
+ .../inventory/InventoryDefinitionStore.java         |  6 +++---
+ .../configuration/inventory/InventoryParser.java    | 10 +++++-----
+ .../inventory/InventoryRuntimeContext.java          | 21 +++++++++++++--------
+ .../itemsource/GangItemSourceProvider.java          | 10 +++++-----
+ .../luckyraven/gangland/gang/GangFilterAdapter.java |  6 +++---
+ .../gangland/gang/member/MemberFilterAdapter.java   |  6 +++---
+ .../GanglandUniqueItemInteractionService.java       |  2 +-
+ .../inventory/InventoryOpenByCommandListener.java   |  8 ++++----
+ .../luckyraven/gangland/menu/InventoryBuilder.java  | 14 ++++++++------
+ .../org/luckyraven/gangland/menu/InventoryData.java |  4 ++--
+ .../org/luckyraven/gangland/menu/OpenInventory.java |  2 +-
+ .../java/org/luckyraven/gangland/menu/State.java    |  2 +-
+ .../menu/condition/BooleanExpressionEvaluator.java  |  2 +-
+ .../gangland/menu/condition/ConditionEvaluator.java |  2 +-
+ .../menu/condition/ConditionalSlotData.java         |  2 +-
+ .../gangland/menu/condition/SlotCondition.java      |  2 +-
+ .../gangland/menu/filter/FilterAdapter.java         |  2 +-
+ .../gangland/menu/filter/FilterApplier.java         |  2 +-
+ .../gangland/menu/filter/FilterBinding.java         |  2 +-
+ .../gangland/menu/filter/FilterField.java           |  2 +-
+ .../gangland/menu/filter/FilterRegistry.java        |  2 +-
+ .../gangland/menu/filter/FilterStore.java           |  2 +-
+ .../gangland/menu/filter/FilterValue.java           |  2 +-
+ .../gangland/menu/filter/SearchButtonFactory.java   |  2 +-
+ .../gangland/menu/filter/SearchFilter.java          |  2 +-
+ .../gangland/menu/filter/SortDescriptor.java        |  2 +-
+ .../gangland/menu/filter/StandardFilterField.java   |  2 +-
+ .../menu/handler/AbstractCommandSlotHandler.java    |  4 ++--
+ .../gangland/menu/handler/ClickSlotHandler.java     |  4 ++--
+ .../gangland/menu/handler/CloseSlotHandler.java     |  2 +-
+ .../gangland/menu/handler/DropSlotHandler.java      |  2 +-
+ .../gangland/menu/handler/JoinSlotHandler.java      |  2 +-
+ .../menu/handler/PlayerInteractSlotHandler.java     |  2 +-
+ .../gangland/menu/handler/QuitSlotHandler.java      |  2 +-
+ .../gangland/menu/handler/SlotContext.java          |  4 ++--
+ .../gangland/menu/handler/SlotEventHandler.java     |  4 ++--
+ .../gangland/menu/handler/SlotItemFactory.java      |  2 +-
+ .../gangland/menu/handler/SwapHandSlotHandler.java  |  2 +-
+ .../gangland/menu/multi/ItemSourceEntry.java        |  2 +-
+ .../gangland/menu/multi/ItemSourceProvider.java     |  2 +-
+ .../luckyraven/gangland/menu/multi/ListEntry.java   |  2 +-
+ .../gangland/menu/multi/MultiInventory.java         |  4 ++--
+ .../gangland/menu/multi/MultiInventoryCreation.java |  6 +++---
+ .../menu/multi/MultiInventoryNavigation.java        |  4 ++--
+ .../gangland/menu/multi/StaticSlotEntry.java        |  2 +-
+ .../luckyraven/gangland/menu/part/ButtonTags.java   |  2 +-
+ .../gangland/menu/part/ConditionalSlotResult.java   |  4 ++--
+ .../org/luckyraven/gangland/menu/part/Slot.java     |  6 +++---
+ .../gangland/menu/unique/UniqueItemHandler.java     |  2 +-
+ .../gangland/menu/villager/VillagerInventory.java   |  2 +-
+ .../menu/villager/VillagerInventoryListener.java    |  2 +-
+ .../menu/villager/VillagerInventoryRegistry.java    |  2 +-
+ .../gangland/menu/villager/VillagerTrade.java       |  2 +-
+ .../gangland/sign/aspect/BountyAspect.java          |  8 ++++----
+ .../inventory/InventoryRuntimeContextTest.java      |  8 ++++----
+ 63 files changed, 135 insertions(+), 128 deletions(-)

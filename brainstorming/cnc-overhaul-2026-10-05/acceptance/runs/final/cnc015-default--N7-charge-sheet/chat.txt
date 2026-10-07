@@ -1,0 +1,68 @@
+[Runner] Runner joined the game
+[Runner] [ViaVersion] There is a newer plugin version available: 5.12.0, you're on: 5.12.0-SNAPSHOT
+[Runner] [Server: Gamerule spawn_mobs is now set to: false]
+[Runner] [Server: Gamerule spawn_monsters is now set to: false]
+[Runner] [Server: Gamerule advance_time is now set to: false]
+[Runner] [Server: Set the time to 6000]
+[Runner] [Server: Set the weather to clear]
+[Runner] [Server: Applied effect Resistance to Runner]
+[Runner] [Server: Applied effect Instant Health to Runner]
+[Runner] GLW >> Your account balance has been set to $300.
+[Runner] Runner balance:
+[Runner] $300
+[Runner] [Server] CNCMARK:BAL:before
+[Runner] [Server: Teleported Runner to 160.500000, -60.000000, 160.500000]
+[Runner] GLW >> Jail 1 created at your location.
+[Runner] GLW >> Global jail exit set to your current location.
+[Runner] [GLW] Jails:
+[Runner]  - 1 (tp)
+[Runner] [Server: Teleported Runner to 100.500000, -60.000000, 100.500000]
+[Runner] [DISPATCH] All units, be advised: Runner is wanted, level 2.
+[Runner] [GLW] Your wanted level has been increased ★★☆☆☆.
+[Runner] [RADIO] Sergeant Pointman Hank #1000: Sergeant Assault Ray #1001, close the distance!
+[Runner] [RADIO] Sergeant Assault Gus #1002: Eyes on Runner, east!
+[Runner] [RADIO] Sergeant Assault Ray #1001: Copy.
+[Runner] [RADIO] Sergeant Assault Gus #1002: Going wide east, I'll get behind him!
+[Runner/game_info] You are handcuffed
+[Runner] [Server] CNCMARK:N7:CUFFED
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner/game_info] Break free - 0/25 (tap SNEAK!)
+[Runner] [RADIO] Sergeant Assault Gus #1002: Suspect cleared. Returning to patrol.
+[Runner] ----- CHARGE SHEET -----
+[Runner] Fine: $700
+[Runner] Paid from your wallet: $300
+[Runner] Unpaid $400 served as +40s
+[Runner/game_info] You are jailed
+[Runner] [Server] CNCMARK:N7:SHEET
+[Runner/game_info] Serving sentence - 339s
+[Runner/game_info] Serving sentence - 338s
+[Runner/game_info] Serving sentence - 337s
+[Runner] Runner balance:
+[Runner] $0
+[Runner/game_info] Serving sentence - 336s
+[Runner/game_info] Serving sentence - 335s
+[Runner] [Server] CNCMARK:BAL:after
+[Runner] GLW >> Wanted Status:
+[Runner] ☆☆☆☆☆
+[Runner/game_info] Serving sentence - 334s
+[Runner] [Server] CNCMARK:STATUS:N7
+[Runner/game_info] Serving sentence - 333s
+[Runner/end] [END] disconnect.quitting

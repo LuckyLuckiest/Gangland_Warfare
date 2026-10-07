@@ -1,0 +1,16 @@
+[
+  {
+    "id": "grapple-boot",
+    "title": "WS8: /glw grapple resolves and the gadget module boots with the grappling hook wired in, with NO Bartizan present (proving the WS8-D1/K1 zero-Bartizan-coupling claim, unlike jetpack-give which stages Bartizan) -- console can only confirm the module loads, the command tree resolves without an exception, and a console-issued self-give (players-only command, no target-player argument exists on /glw grapple give) fails cleanly with the Not_Player message rather than a stack trace; it CANNOT drive an actual cast/pull/fall-damage cycle (no in-game player exists in a console-only run) -- same documented-gap shape as jetpack-give. A human with a real client must run the cast/pull/fall matrix in exec/WS8/G-final-manual-checklist.md.",
+    "verdict": "PASS",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "gadget"
+    ],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-20-2333-grapple-boot.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-20-2333-grapple-boot.log"
+  }
+]

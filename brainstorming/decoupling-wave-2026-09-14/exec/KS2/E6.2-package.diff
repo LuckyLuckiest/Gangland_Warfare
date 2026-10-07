@@ -1,0 +1,1640 @@
+# Review package — Keystone 1.11.0 E6.2 (flow, pages, shade, docs) — working tree vs HEAD 53de9e6 (E6.1 commit)
+--- status ---
+ M CLAUDE.md
+ M README.md
+ M docs/README.md
+ A docs/keystone-inventory.md
+ A docs/phase-e6-inventory.md
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/FlowState.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/MenuFlow.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/MenuFlowBuilder.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/Panel.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/page/PageConfig.java
+ A keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/page/PagedRegion.java
+ A keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/flow/MenuFlowTest.java
+ A keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/page/PageConfigTest.java
+ A keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/page/PagedRegionTest.java
+ M keystone-plugin/pom.xml
+--- diffstat ---
+warning: in the working copy of 'docs/keystone-inventory.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/phase-e6-inventory.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/FlowState.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/MenuFlow.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/MenuFlowBuilder.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/Panel.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/page/PageConfig.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/page/PagedRegion.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/flow/MenuFlowTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/page/PageConfigTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/page/PagedRegionTest.java', LF will be replaced by CRLF the next time Git touches it
+ CLAUDE.md                                          |  19 +-
+ README.md                                          |   1 +
+ docs/README.md                                     |   9 +-
+ docs/keystone-inventory.md                         | 136 ++++++++
+ docs/phase-e6-inventory.md                         | 155 +++++++++
+ .../keystone/inventory/flow/FlowState.java         |  14 +
+ .../keystone/inventory/flow/MenuFlow.java          | 295 +++++++++++++++++
+ .../keystone/inventory/flow/MenuFlowBuilder.java   |  66 ++++
+ .../luckyraven/keystone/inventory/flow/Panel.java  |  26 ++
+ .../keystone/inventory/page/PageConfig.java        |  60 ++++
+ .../keystone/inventory/page/PagedRegion.java       |  72 +++++
+ .../keystone/inventory/flow/MenuFlowTest.java      | 348 +++++++++++++++++++++
+ .../keystone/inventory/page/PageConfigTest.java    |  72 +++++
+ .../keystone/inventory/page/PagedRegionTest.java   | 148 +++++++++
+ keystone-plugin/pom.xml                            |   4 +
+ 15 files changed, 1416 insertions(+), 9 deletions(-)
+--- diff ---
+diff --git a/CLAUDE.md b/CLAUDE.md
+index dd92fa0..470674a 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -88,24 +88,31 @@ keystone-common      ← utilities, logging, timers, cooldowns, placeholders, Re
+   ├─ keystone-npc          ← Citizens-backed NPC base: AbstractNpc, navigation/combat delegates, NpcDifficulty,
+   │  (depends on common + bean + persistence,  entity spawning, persisted entity marks, NpcSupport presence check,
+   │   citizens-main provided)                  NpcRangedAttack/NpcTargetFilter/NpcMarkDefaults SPI (npc, npc.spi, npc.entity)
+   ├─ keystone-hologram     ← ArmorStand hologram service: per-consumer HologramService (no static registry),
+   │  (depends on common + bean)  Hologram spawn/update/teleport/despawn, opt-in registerProtection(JavaPlugin) (hologram)
+-  └─ keystone-shop         ← headless shop system: ShopDefinition/ShopRegistry/BarterCategory/SellCategory,
+-     (depends on common + item + persistence)  buy/sell/barter transaction services, valuation, YAML persistence
+-                                                (shop, shop.event, shop.io, shop.message, shop.transaction, shop.valuation)
++  ├─ keystone-shop         ← headless shop system: ShopDefinition/ShopRegistry/BarterCategory/SellCategory,
++  │  (depends on common + item + persistence)  buy/sell/barter transaction services, valuation, YAML persistence
++  │                                            (shop, shop.event, shop.io, shop.message, shop.transaction, shop.valuation)
++  └─ keystone-inventory    ← basic inventory mechanism: holder-identified menus (MenuHolder/MenuTarget), one
++     (depends on common + bean + item)         click/drag/close/quit listener per consumer (MenuListener,
++                                                InventoryService), plain components (ItemComponent/Fill/Border/
++                                                Line), panel flows (MenuFlow) and page arithmetic (PageConfig/
++                                                PagedRegion) (inventory, inventory.component, inventory.click,
++                                                inventory.spi, inventory.listener, inventory.tracking,
++                                                inventory.registry, inventory.chest, inventory.flow, inventory.page)
+ keystone-testkit     ← TEST-SCOPE-ONLY fixtures for consumer tests (depends on common + bean + item +
+                        persistence, and on mockito-core at compile scope by design)
+ keystone-plugin      ← shades every module EXCEPT the testkit into Keystone.jar
+                        (entry point KeystonePlugin: empty onEnable)
+ ```
+ 
+-`keystone-testkit` depends on common/bean/item/persistence, so Maven forbids those four from consuming it even at test scope — they keep their own local fixtures. `keystone-command`, `keystone-hooks`, `keystone-module`, `keystone-npc`, `keystone-hologram`, `keystone-shop`, `keystone-plugin` and external consumers may use it. **Never add it (or Mockito) to `keystone-plugin`'s shade** — audit with `unzip -l keystone-plugin/target/Keystone-<version>.jar | grep -i "testkit\|mockito"` (must be empty).
++`keystone-testkit` depends on common/bean/item/persistence, so Maven forbids those four from consuming it even at test scope — they keep their own local fixtures. `keystone-command`, `keystone-hooks`, `keystone-module`, `keystone-npc`, `keystone-hologram`, `keystone-shop`, `keystone-inventory`, `keystone-plugin` and external consumers may use it. **Never add it (or Mockito) to `keystone-plugin`'s shade** — audit with `unzip -l keystone-plugin/target/Keystone-<version>.jar | grep -i "testkit\|mockito"` (must be empty).
+ 
+ ## Hard design rules
+ 
+-- **Layering:** Keystone holds only low-level, generic infrastructure. If a class knows about gangs, shops, weapons, or any product concept, it does not belong here. **Inventories split by layer (Phase E6, planned for 1.11.0):** the basic inventory mechanism (`keystone-inventory`: holder identity, click routing, slot rendering, open/close tracking, panel flows, page arithmetic) is Keystone's; the advanced menu product (animation, requirements, argument bindings, providers/filters/search, deposit slots, non-chest menu types, YAML loaders, editor) stays in Oriel — see `docs/extraction-roadmap.md`. Until E6 lands, no inventory code goes into Keystone. Scoreboard/hologram code stays in Gangland. `keystone-npc` is generic NPC-driving infrastructure only (navigation, combat cadence, difficulty, entity spawning, mark persistence); product concepts riding on top of it — wanted levels, civilian/police marks, trader shops, what fires a ranged attack — stay in the consumer, reached through `keystone-npc`'s SPI (`NpcRangedAttack`, `NpcTargetFilter`, `NpcMarkDefaults`), never hardcoded here. As of 1.10.0 (phase H10), hologram code lives in `keystone-hologram` and the headless shop transaction/valuation system lives in `keystone-shop` — both generic enough to belong here, superseding the "hologram" and "trader shops" exclusions above for those two systems specifically, while UI-coupled shop admin views and scoreboard code still stay in the consumer (see `docs/keystone-hologram.md` / `docs/keystone-shop.md`).
++- **Layering:** Keystone holds only low-level, generic infrastructure. If a class knows about gangs, shops, weapons, or any product concept, it does not belong here. **Inventories split by layer (Phase E6, landed in 1.11.0):** the basic inventory mechanism is in Keystone, the advanced menu features are in Oriel. Concretely: `keystone-inventory` owns holder identity, click/drag/close/quit routing (one `MenuListener` per consumer `InventoryService`), slot rendering (`Component`/`SlotView`/`ItemComponent`/`Fill`/`Border`/`Line`), open/close tracking, panel flows (`MenuFlow`) and page arithmetic (`PageConfig`/`PagedRegion`); Oriel owns the advanced menu product built on top of it (animation, requirements, argument bindings, providers/filters/search, deposit slots, non-chest menu types, YAML loaders, editor) — see `docs/extraction-roadmap.md` and `docs/keystone-inventory.md`. Scoreboard code stays in Gangland. `keystone-npc` is generic NPC-driving infrastructure only (navigation, combat cadence, difficulty, entity spawning, mark persistence); product concepts riding on top of it — wanted levels, civilian/police marks, trader shops, what fires a ranged attack — stay in the consumer, reached through `keystone-npc`'s SPI (`NpcRangedAttack`, `NpcTargetFilter`, `NpcMarkDefaults`), never hardcoded here. As of 1.10.0 (phase H10), hologram code lives in `keystone-hologram` and the headless shop transaction/valuation system lives in `keystone-shop` — both generic enough to belong here, superseding the "hologram" and "trader shops" exclusions above for those two systems specifically, while UI-coupled shop admin views and scoreboard code still stay in the consumer (see `docs/keystone-hologram.md` / `docs/keystone-shop.md`).
+ - **API floor: Spigot 1.16.5** (`api-version: 1.16`). Never reference newer Bukkit API from Keystone code; version-specific behaviour branches on `NmsVersion`/`NmsCache` (reflection-first, no per-version source modules).
+ - **Java 17 only** — no Java 21 language features (Oriel's toolchain is 17).
+ - **Shared-classloader constraint:** every consumer plugin sees the same loaded Keystone classes, so never add a static singleton holding per-plugin data (registries, caches, `shared()` accessors). Each consumer instantiates its own `BeanFactory`, `FileManager`, `DatabaseManager`, `Diagnostics` install. Static caches keyed on server-global facts (e.g. `NmsCache`) are fine. Keep public APIs backward compatible within a major version — a Keystone upgrade hits every consumer at once.
+ - **Hard third-party dependencies only in `keystone-hooks` and `keystone-npc`** (Vault, PlaceholderAPI, both `provided`; `keystone-npc` adds Citizens, `provided`, reached exclusively through `NpcSupport`, which degrades cleanly when Citizens is absent). Everything else is Bukkit + JDK + the shaded libraries.
+ - **Shaded libraries (HikariCP, XSeries, exp4j, commodore) are deliberately NOT relocated** — Keystone is the only plugin shipping them and consumers use them through Keystone's classpath. Don't "fix" this.
+@@ -122,8 +129,8 @@ keystone-plugin      ← shades every module EXCEPT the testkit into Keystone.ja
+ 
+ - **Logging:** use `@lombok.CustomLog` (field name `log`, declared in `lombok.config`), which resolves to the Keystone `Logger` wrapper naming loggers `<Module>.<Class>`. Each module carries a `module.properties` resource that supplies the module name; the `Debug.Modules` toggle flips DEBUG per module via `DebugLoggingInitializer`.
+ - **Bean lifecycle:** consumers bootstrap via `BeanFactory.scan(basePackage)` → phased, topologically-sorted bean creation through `Phase`s: KERNEL → FILE → DATABASE → CONFIG → LIFECYCLE → LISTENER → COMMAND. Reload runs `BeanLifecycle.onPreClear()`/`onClear()` in reverse topological order, then `onInitialize(false)` forward; shutdown runs `onShutdown()` in reverse.
+ - **Convention wiring (1.6.0):** `BeanFactory.registerListenerScan(pkg)` / `registerCommandScan(pkg)` opt a consumer into auto-scanning during the LISTENER/COMMAND phases (which fire even when the phase has no `@Bean` methods); a missing `ListenerService`/`CommandService` in the container fails fast. The LIFECYCLE convention calls zero-arg `initialize()` on beans after `@PostConstruct` — `setConventionInitializeEnabled(false)` opts out. Scans are idempotent (packages deduplicated, `registerEvents()` watermarked), so convention wiring composes with existing phase-hook wiring.
+ - **Database:** the legacy `Database`/`SQLite`/`MySQL`/`database.query.QueryBuilder` stack is `@Deprecated(since = "1.6.0")` and removed in 2.0.0 — write new code against the `DatabaseBackend` SPI (`SqliteBackend`/`MysqlBackend`, `TableBackend<T>` for `Table` declarations, `BackendQueryBuilder`). `Table`/`Attribute` are **not** deprecated; they declare schemas for both stacks. Nothing in the legacy classes may be deleted before 2.0.0 — every method implements the still-public `Database` contract. See `docs/database-backend-migration.md`.
+-- New code extracted from the consumer plugins should follow the phased plan in `docs/extraction-roadmap.md`. E1 (utilities, v1.1.0), E2 (`keystone-command`, v1.2.0), E3 (clone-drift back-ports, unified placeholder SPI, additive `DatabaseBackend` subsystem — v1.3.0), E4 (reflection-first NMS packet layer — outbound `PacketAdapter`/`PacketBridge` from Oriel + inbound `PlayerInputInterceptor` from Gangland, in `keystone-common` `nms`/`nms.internal`/`nms.input` — v1.4.0) and E5 (item framework — the new `keystone-item` module plus `ItemDslAdapter` in persistence, v1.5.0) are all done. **The extraction track is complete**; what remains is consumer migration, which is a separate track in `docs/integration-guide.md`. Post-extraction work is *hardening*: H1 (v1.6.0 — database backend refactor Phases 1–3, BeanFactory convention wiring, `keystone-testkit`, defect fixes, 547 → 765 tests) is recorded in `docs/phase-h1-hardening.md`; H2 (v1.7.0 — the six upstream fixes surfaced by Oriel's consumer migration: `ConfigSerializer` static API, `FileHandler` identity/accessor, parse-report sweep handoff, version-key casing, pure single-arg `ChatUtil.color`, consumer-classloader `Logger` module resolution) is recorded in `docs/phase-h2-oriel-hardening.md`; H3 (v1.7.1 — the two blockers cleared for Gangland's migration: consumer-classpath `DebugLoggingInitializer` discovery and the `DatabaseBackend.upsertAll` batching SPI) is recorded in `docs/phase-h3-gangland-hardening.md`; H4–H6 (v1.7.2–1.7.4) have their own `docs/phase-h*.md` records; H7 (v1.8.0 — the `keystone-module` runtime module loader plus loader-aware scan/file overloads) is recorded in `docs/phase-h7-module-loader.md`; H8 (v1.9.0 — cross-plugin item vocabularies, the new `keystone-npc` module, and the `Plugins:` module-descriptor key, driven by Gangland Warfare's weapon system leaving for the standalone Bartizan plugin) is recorded in `docs/phase-h8-item-npc.md`; the H8 hotfix (v1.9.1 — `ReflectionGuard` in `keystone-common`: a class whose signature names a soft-dependency type absent at runtime, e.g. Citizens' `NPC`, is skipped with a `reflection.type.missing` fault across six `keystone-bean`/`keystone-persistence` reflective scan sites instead of crashing the consumer's whole bootstrap) is recorded in `docs/phase-h8-hotfix-1.9.1.md`; H9 (v1.9.2 — `Host_Api` becomes a minor floor rather than an equality, so a module built for API 1.0 loads on any 1.x host at or above it, plus the four `keystone-module` docket fixes `KS-MO-01`–`KS-MO-04`: per-file stale-jar deletion, artifact/metadata path-traversal validation, a download-identity check before the installed jar is retired, and a guarded `pending` mutation) is recorded in `docs/phase-h9-host-api.md`. The version is declared once as `${revision}` in the root pom (flatten-maven-plugin resolves installed poms) — bump only that property per phase.
++- New code extracted from the consumer plugins should follow the phased plan in `docs/extraction-roadmap.md`. E1 (utilities, v1.1.0), E2 (`keystone-command`, v1.2.0), E3 (clone-drift back-ports, unified placeholder SPI, additive `DatabaseBackend` subsystem — v1.3.0), E4 (reflection-first NMS packet layer — outbound `PacketAdapter`/`PacketBridge` from Oriel + inbound `PlayerInputInterceptor` from Gangland, in `keystone-common` `nms`/`nms.internal`/`nms.input` — v1.4.0) and E5 (item framework — the new `keystone-item` module plus `ItemDslAdapter` in persistence, v1.5.0) are all done. E6 (v1.11.0 — the new `keystone-inventory` module: basic inventory mechanism reconciled from Oriel's committed `menu-core`/`chest` and Gangland's `inventory-api`, holder-identified menus/one listener/click routing/plain components/open-close tracking/panel flows/page arithmetic; advanced menu features stay in Oriel) reopened the extraction track after E1–E5 had closed it, and is recorded in `docs/phase-e6-inventory.md`. What remains beyond E6 is consumer migration, which is a separate track in `docs/integration-guide.md`. Post-extraction work is *hardening*: H1 (v1.6.0 — database backend refactor Phases 1–3, BeanFactory convention wiring, `keystone-testkit`, defect fixes, 547 → 765 tests) is recorded in `docs/phase-h1-hardening.md`; H2 (v1.7.0 — the six upstream fixes surfaced by Oriel's consumer migration: `ConfigSerializer` static API, `FileHandler` identity/accessor, parse-report sweep handoff, version-key casing, pure single-arg `ChatUtil.color`, consumer-classloader `Logger` module resolution) is recorded in `docs/phase-h2-oriel-hardening.md`; H3 (v1.7.1 — the two blockers cleared for Gangland's migration: consumer-classpath `DebugLoggingInitializer` discovery and the `DatabaseBackend.upsertAll` batching SPI) is recorded in `docs/phase-h3-gangland-hardening.md`; H4–H6 (v1.7.2–1.7.4) have their own `docs/phase-h*.md` records; H7 (v1.8.0 — the `keystone-module` runtime module loader plus loader-aware scan/file overloads) is recorded in `docs/phase-h7-module-loader.md`; H8 (v1.9.0 — cross-plugin item vocabularies, the new `keystone-npc` module, and the `Plugins:` module-descriptor key, driven by Gangland Warfare's weapon system leaving for the standalone Bartizan plugin) is recorded in `docs/phase-h8-item-npc.md`; the H8 hotfix (v1.9.1 — `ReflectionGuard` in `keystone-common`: a class whose signature names a soft-dependency type absent at runtime, e.g. Citizens' `NPC`, is skipped with a `reflection.type.missing` fault across six `keystone-bean`/`keystone-persistence` reflective scan sites instead of crashing the consumer's whole bootstrap) is recorded in `docs/phase-h8-hotfix-1.9.1.md`; H9 (v1.9.2 — `Host_Api` becomes a minor floor rather than an equality, so a module built for API 1.0 loads on any 1.x host at or above it, plus the four `keystone-module` docket fixes `KS-MO-01`–`KS-MO-04`: per-file stale-jar deletion, artifact/metadata path-traversal validation, a download-identity check before the installed jar is retired, and a guarded `pending` mutation) is recorded in `docs/phase-h9-host-api.md`. The version is declared once as `${revision}` in the root pom (flatten-maven-plugin resolves installed poms) — bump only that property per phase.
+ - **Item kinds are the consumer's vocabulary.** `ItemKind` is an interface (`String label()`); Keystone ships only `StandardItemKind.MATERIAL`. Never add product kinds (weapon, vehicle, currency) to it.
+ - **NBT is optional and reached reflectively.** `ItemBuilder` routes custom tags through `NbtBridge`; with no provider installed writes are dropped and reads return empty values. Never add a compile-time NBT-API dependency — `ReflectiveNbtApiAccessor` binds it at runtime and supports both `de.tr7zw.nbtapi` and `de.tr7zw.changeme.nbtapi`.
+diff --git a/README.md b/README.md
+index dbd7788..4632d65 100644
+--- a/README.md
++++ b/README.md
+@@ -22,10 +22,11 @@ extraction roadmap, and the consumer integration guide.
+ | `keystone-item`        | `item`, `item.nbt`                                                                           | Item framework: `ItemConverter`/`ItemSerializer`/`ItemRefresher` registries, the `type:modifier{k=v}` definition grammar (`ItemParser`, with a `Result`-returning `tryParse`), `ItemKind` SPI + `StandardItemKind`, `MaterialItemSerializer`, `ItemBuilder` (display fields via plain Bukkit meta), and an optional NBT seam (`NbtBridge`, `ReflectiveNbtApiAccessor`) that degrades to no-ops when no provider is installed |
+ | `keystone-persistence` | `persistence`, `persistence.config`, `persistence.config.dsl`, `persistence.database`, `persistence.repository`, `persistence.cooldown`, `persistence.message` | Config document/parser/serializer with `ConfigReport` issue reporting and spell-check suggestions, string DSL parsers, `ItemDslAdapter`, `FileManager`/`FileHandler`/`FolderLoader` family, SQLite + MySQL over HikariCP, `QueryBuilder`, `Table`/`Attribute` schema components, schema migrations, repository pattern (`AbstractRepository`, `RepositoryRegistry`), `PersistentCooldownService`, `LanguageLoader` |
+ | `keystone-hooks`       | `economy`, `vault`, `papi`                                                                   | `EconomyHandler`/`Currency`/`Bank` (BigDecimal money), Vault economy/permission/group providers, PlaceholderAPI provider + truthy `BooleanExpressionEvaluator` |
+ | `keystone-hologram`    | `hologram`                                                                                   | ArmorStand-based hologram service: per-consumer `HologramService` (no static registry), `Hologram` (spawn/update/teleport/despawn), opt-in `registerProtection(JavaPlugin)` cancelling manipulate/interact on hologram-owned stands |
+ | `keystone-shop`        | `shop`, `shop.event`, `shop.io`, `shop.message`, `shop.transaction`, `shop.valuation`         | Headless shop system, zero-DI: `ShopDefinition`/`ShopRegistry`/`BarterCategory`/`SellCategory`, buy/sell/barter transaction services (`PaymentHandler` decoupled from any economy provider), category valuation, YAML persistence, a default `ShopDisplayResolver` |
++| `keystone-inventory`   | `inventory`, `inventory.component`, `inventory.click`, `inventory.spi`, `inventory.listener`, `inventory.tracking`, `inventory.registry`, `inventory.chest`, `inventory.flow`, `inventory.page` | Basic inventory mechanism (advanced menu features stay in Oriel): holder-identified menus (`ChestMenu`/`MenuHolder`/`MenuTarget`), one click/drag/close/quit listener per consumer (`MenuListener`/`InventoryService`, with a guaranteed item-return contract across every close path), plain components (`ItemComponent`/`FillComponent`/`BorderComponent`/`LineComponent`), panel flows (`MenuFlow`) and page arithmetic (`PageConfig`/`PagedRegion`) |
+ | `keystone-testkit`     | `testkit`                                                                                    | **Test scope only.** Fixtures for testing consumer plugins without a server: `BukkitStatics` (static `Bukkit` mock incl. an inline scheduler), `BukkitServerFixture` (a real `Bukkit.setServer` install for API that reads the static field directly, e.g. `ItemStack.clone()`'s `getItemFactory()`), `PluginMocks`, `DatabaseSettingsMocks`, `CapturingDiagnostics`, `RecordingNbtAccessor`/`RecordingPacketAdapter`, `FakeSettingsLookup`, `SqliteDbs`/`DbFiles`, `StaticResets`. Never shaded into `Keystone.jar` — see [docs/keystone-testkit.md](docs/keystone-testkit.md) |
+ | `keystone-plugin`      | —                                                                                            | The `Keystone.jar` dropped into `/plugins`. Shades every module (except the testkit) plus HikariCP, XSeries, exp4j, commodore and slf4j-api. |
+ 
+ ## Building
+ 
+diff --git a/docs/README.md b/docs/README.md
+index 191db93..57badfc 100644
+--- a/docs/README.md
++++ b/docs/README.md
+@@ -4,13 +4,14 @@ Keystone is the **core dependency plugin** shared by LuckyRaven's Spigot plugins
+ Oriel, and future plugins). It ships as one `Keystone-<version>.jar` that does nothing on its own —
+ no commands, no listeners, no gameplay — and exists purely so its low-level infrastructure classes
+ are loaded once and shared by every plugin that depends on it.
+ 
+ **The layering rule:** Keystone holds only *low-level, generic* code. High-level or product-specific
+-code lives in the specific plugin that owns it — advanced menu features belong to Oriel, game features
+-to Gangland Warfare (the basic inventory mechanism becomes Keystone's `keystone-inventory` in Phase E6,
+-planned for 1.11.0). Any plugin that needs a low-level capability depends on Keystone for it.
++code lives in the specific plugin that owns it — game features to Gangland Warfare, advanced menu
++features to Oriel. The basic inventory mechanism itself is Keystone's `keystone-inventory` (Phase E6,
++landed in 1.11.0) — see [keystone-inventory.md](keystone-inventory.md). Any plugin that needs a
++low-level capability depends on Keystone for it.
+ 
+ ## Documentation map
+ 
+ | Document | What it covers |
+ |---|---|
+@@ -36,14 +37,16 @@ planned for 1.11.0). Any plugin that needs a low-level capability depends on Key
+ | [phase-h7-module-loader.md](phase-h7-module-loader.md) | Phase record for v1.8.0: the new `keystone-module` (descriptor, classloader, resolution, SPI, artifact resolver, update service) and the loader-aware scan/file overloads on `BeanFactory`, `ListenerService`, `RepositoryRegistry`, `FileHandler`/`FileManager` |
+ | [phase-h7-hotfix-1.8.1.md](phase-h7-hotfix-1.8.1.md) | Phase record for v1.8.1: the hotfix wave off Gangland 0.8.4 — sibling-event dispatch dropped in `ListenerService`'s guarded executor (T-13), `UpdateNotifier` moved off the server thread and down to one endpoint fetch per check (T-15), backup failure cause logged (T-16) |
+ | [keystone-npc.md](keystone-npc.md) | The Citizens-backed NPC base: `AbstractNpc`, navigation/combat delegates, difficulty, entity spawning, persisted entity marks, and the `NpcRangedAttack`/`NpcTargetFilter`/`NpcMarkDefaults` SPI a consumer implements |
+ | [keystone-hologram.md](keystone-hologram.md) | ArmorStand-based hologram service: per-consumer `HologramService`, no static registry, an opt-in `registerProtection` listener |
+ | [keystone-shop.md](keystone-shop.md) | Headless shop system: definitions, buy/sell/barter transaction services, valuation, YAML persistence — zero-DI, reusable outside Gangland |
++| [keystone-inventory.md](keystone-inventory.md) | Basic inventory mechanism: holder-identified menus, one click/drag/close/quit listener per consumer, the item-return contract, panel flows, page arithmetic — the two-service rule and the extension points for a subclassing product (Oriel's advanced menus) |
+ | [phase-h8-item-npc.md](phase-h8-item-npc.md) | Phase record for v1.9.0: cross-plugin item vocabularies (`ItemVocabulary`, `ItemDefinitions`, priority overloads), the new `keystone-npc` module, the `Plugins:` module-descriptor key, and two smoke-driven fixes (`ModuleLoader` disable logging, the `DatabaseManager.startBackup` T-16 skip) |
+ | [phase-h8-hotfix-1.9.1.md](phase-h8-hotfix-1.9.1.md) | Phase record for v1.9.1: the new `ReflectionGuard` (`keystone-common`) — a class whose signature names a soft-dependency type absent at runtime (e.g. Citizens' `NPC`) iswarning: in the working copy of 'docs/keystone-inventory.md', LF will be replaced by CRLF the next time Git touches it
+ skipped with a `reflection.type.missing` fault instead of crashing the consumer's whole bean/listener/command/repository scan; hardens six sites across `keystone-bean` and `keystone-persistence` |
+ | [phase-h9-host-api.md](phase-h9-host-api.md) | Phase record for v1.9.2: `Host_Api` becomes a minor **floor** instead of an equality (a module built for API 1.0 loads on host 1.4), plus four `keystone-module` docket fixes — `purgeStale` no longer drops every module over one locked jar (`KS-MO-01`), artifact coordinates and remote `maven-metadata.xml` versions are validated against path traversal (`KS-MO-02`), a download must prove it is the module before the installed jar is retired (`KS-MO-03`), and the `pending` list mutation is guarded (`KS-MO-04`) |
+ | [phase-h10-hologram-shop.md](phase-h10-hologram-shop.md) | Phase record for v1.10.0: two new modules promoted from Gangland Warfare's decoupling wave — `keystone-hologram` (ArmorStand holograms) and headless `keystone-shop` (definitions, transaction services, valuation) — plus the `keystone-testkit` `BukkitServerFixture` addition |
++| [phase-e6-inventory.md](phase-e6-inventory.md) | Phase record for v1.11.0: the new `keystone-inventory` module, reconciled from Oriel's committed `menu-core`/`chest` and Gangland's `inventory-api` — the three item-safety fix rounds, `MenuFlow`/pages, and the landed layering split |
+ | [database-backend-migration.md](database-backend-migration.md) | Moving off the deprecated `Database`/`SQLite`/`MySQL` stack onto `DatabaseBackend`/`TableBackend` before 2.0.0 |
+ | [central-publishing.md](central-publishing.md) | Publishing the `keystone-*` modules to Maven Central: the `release` profile, requirement mapping (checksums, signatures, sources/javadoc, pom metadata), namespace/GPG/token setup, release runbook |
+ 
+ ## Suggested reading order
+ 
+diff --git a/docs/keystone-inventory.md b/docs/keystone-inventory.md
+new file mode 100644
+index 0000000..ec4554b
+--- /dev/null
++++ b/docs/keystone-inventory.md
+@@ -0,0 +1,136 @@
++# keystone-inventory
++
++[Back to Documentation Index](./README.md)
++
++The basic inventory mechanism — holder-identified menus, one click/drag/close/quit listener, slot click routing,
++plain components, open/close tracking, panel flows, page arithmetic — reconciled from Oriel's and Gangland's
++independent copies in Keystone Phase E6 (`docs/phase-e6-inventory.md`). Each consumer plugin constructs its own
++`InventoryService`; there is no static registry, matching the shared-classloader constraint every Keystone module
++follows.
++
++**Layering.** This module is the floor, not the whole building. Oriel builds its advanced menu product on top of
++it (animation, requirements, argument bindings, provider/filter/sort/search registries, deposit slots, non-chest
++menu types, YAML loaders, an editor) — none of that lives here. If you find yourself wanting to add a feature that
++knows about a specific product's menu *content*, it belongs in your own consumer code (or in Oriel), not here.
++
++Depends on `keystone-common`, `keystone-bean`, `keystone-item`. Shaded into `Keystone.jar` by `keystone-plugin`.
++
++## Usage
++
++```java
++CooldownService cooldowns = ...; // your consumer's CooldownService bean
++InventoryService inventory = new InventoryService(cooldowns); // constructed by the consumer, e.g. a @Bean method
++inventory.registerListeners(plugin); // once, at bootstrap — registers MenuListener under your plugin
++
++ChestMenu shop = ChestMenu.builder(inventory)
++    .title("&6Shop")
++    .rows(6)
++    .border(Material.BLACK_STAINED_GLASS_PANE)
++    .slot(13, ItemComponent.of(Material.DIAMOND)
++        .name("&bBuy Diamond")
++        .lore("&7Click to buy", "&7Costs &e$500")
++        .onLeftClick(ctx -> ctx.player().performCommand("buy diamond")))
++    .build();
++shop.open(player);
++```
++
++`InventoryService`'s reload/shutdown `BeanLifecycle` hooks (`onPreClear`/`onShutdown`) close every menu this
++service is tracking — including one sitting in the vetoed-close reopen window (§ Item-return contract) — with
++`CloseReason.RELOAD`/`CloseReason.PLUGIN_DISABLE`. Nothing extra to wire up.
++
++## The two-service rule
++
++The shared classloader means every consumer's `InventoryService`/`MenuListener` sees every click, drag, close and
++quit event on the server — Oriel's menus and Gangland's alike. Identity is
++`event.getInventory().getHolder() instanceof MenuHolder holder && holder.service() == this.service`: each
++`MenuHolder` carries the exact `InventoryService` instance that built it, so a click on Oriel's menu never reaches
++Gangland's `MenuListener` and vice versa, with **no static registry anywhere** — each consumer's service is its
++own object, compared by reference. `MenuListenerTest`'s `twoServiceCase_*` tests pin this for click, drag, close
++and quit independently.
++
++If your product builds its own `InventoryService` subclass (via `InventoryService.createListener` — see
++Extension points below) and registers it, it participates in the same rule automatically: as long as every menu
++your consumer builds goes through your own `InventoryService` instance, other consumers' listeners will never
++touch it, and yours will never touch theirs.
++
++## The item-return contract
++
++Any component implementing `ItemHoldingComponent` (a deposit slot, an input tray — anything holding a real player
++item across clicks) is guaranteed to get it back, on every path the basic mechanism drives a close through:
++
++| Path | Guarantee |
++|---|---|
++| A genuine user close (Escape, click outside) | `MenuListener.onClose`'s tracked branch calls `MenuTarget.returnHeldItemsOnUserClose(Player)`; `ChestMenu`'s implementation is the same guarded return every other path uses. |
++| `ChestMenu.close(player, CloseReason.RELOAD/PLUGIN_DISABLE/PLAYER_DISCONNECT/NAVIGATION/...)` | `returnHeldItems(player, reason, skipIfSlotEmpty=true)` — the `skipIfSlotEmpty` guard means a click that already moved the item out physically (Bukkit's own pickup handling, mid-flight when the close fires) is never double-issued; the held state is just cleared. |
++| A vetoed close (`MenuTarget.vetoesClose` returns `true`) followed by the player disconnecting or a reload/shutdown before the scheduled reopen tick runs | `InventoryService.recordPendingReopen`/`consumePendingReopen` (an atomic per-player map) plus `InventoryService.closeAll` draining it on top of the tracker sweep — whichever of the reopen task, `onQuit`, or the reload/shutdown sweep runs first returns the items exactly once. |
++| `MenuFlow.switchTo(String)` to a differently-sized/titled panel, or `MenuFlow.end()` | Closes the outgoing menu with `CloseReason.NAVIGATION` before discarding it — never a bare replace-and-abandon. |
++| `MenuFlow.switchTo`/`rerender()` in place (matching size+title, or `ChestMenu.adoptComponentsFrom` directly) | A dropped slot's `ItemHoldingComponent` is drained (`CloseReason.NAVIGATION`) before the slot is cleared. |
++
++**What is NOT covered:** a plain `SlotView.interactive(true)` slot that is *not* an `ItemHoldingComponent` — the
++mechanism has no way to know an interactive slot is holding something worth returning without the marker
++interface. A product that lets players freely place items in an interactive slot and expects them back on close
++must implement `ItemHoldingComponent` for that slot's component. `ChestMenu.close(Player)` (the plain, reason-less
++overload) also does NOT return held items by itself — it exists for callers that have already reasoned about
++whether a return is needed; a caller switching a player to a different menu should use
++`close(player, CloseReason.NAVIGATION)` (which is exactly what `MenuFlow.switchTo` does) rather than this overload.
++
++Full narrative and the three fix rounds that hardened this contract before E6.1 shipped: `docs/phase-e6-inventory.md` §3.
++
++## The `handleDepositClick` seam
++
++`MenuTarget` has one hook for "a click needs item-routing logic more specialised than the plain
++cancel-unless-interactive policy": `default boolean handleDepositClick(InventoryClickEvent event) { return false; }`.
++`MenuListener` calls it for both a click landing in the menu's own inventory and a shift-click originating in the
++player's inventory, BEFORE applying its own cancel/interactive/dispatch policy. Returning `true` means "I already
++did everything this click needed, including cancelling the event if required" — `MenuListener` does nothing
++further. This is where Oriel's ~130-line deposit-slot place/pickup/swap/shift-transfer logic lives entirely; the
++basic mechanism ships the seam, never the logic behind it.
++
++A product building its own item-routing feature (a trade-input slot, a fee box) implements this hook on its own
++`ChestMenu` subclass (see Extension points) rather than trying to route everything through the plain interactive
++flag, which only supports "cancelled or not" — no placeholder-swap, no partial-stack accept/reject, no
++distinguishing a top-inventory click from a bottom-inventory shift-transfer.
++
++## Extension points
++
++`ChestMenu`/`ChestMenuBuilder`/`MenuListener`/`InventoryService` are all non-final with protected hooks, so a
++product can subclass instead of re-copying the ~230-line `ChestMenu` core (this is exactly what lets Oriel's own
++rebase subclass `keystone-inventory`'s `ChestMenu` instead of forking it):
++
++| Class | Hooks a subclass overrides |
++|---|---|
++| `ChestMenu` | `renderAll`, `rerenderSlot`, `applyFillIfEmpty`, `ensureTitleFor`, `resolveTitle` (all protected, overridable); `renderOne(int, Component<?>, Player)` returns `boolean` (touched), not a package-private type; `newRenderContext`/`newSlotView` factory hooks let a subclass supply its own `RenderContext`/`SlotView` implementation while `renderOne`'s own untouched-detection (via the public `SlotView.wasTouched()`) keeps working; `dispatchOnOpen` protected; protected fields `components`/`inventory`/`holder`/`viewer`/`titleSource`/`builderInteractiveSlots`; settable `titleSource` (a plain `Supplier<String>`) for a subclass with its own animated-title mechanism; `handleDepositClick`/`vetoesClose`/`isInteractive`/`setInteractive` all overridable (inherited from `MenuTarget`). |
++| `ChestMenuBuilder` | Protected constructor (`super(service)` from a subclass builder in another package); `newMenu(...)` factory hook returns the `ChestMenu` `build()` hands back — override to return your own subclass; `applyBorder`/`applyLine` protected. Fluent methods return `ChestMenuBuilder`; a subclass builder re-declares the ones it needs a covariant return type for. |
++| `MenuListener` | Non-final; `handlePlayerInventoryClick`/`ownHolder` protected; every `@EventHandler` method public (already overridable). |
++| `InventoryService` | `createListener(JavaPlugin)` factory hook — override to return your own `MenuListener` subclass; `registerListeners` calls it instead of hard-coding `new MenuListener(...)`. |
++
++A subclass never needs package-private access to anything — `ChestClickContext`/`ChestRenderContext`/`ChestSlotView`/
++`PassthroughPlaceholders` stay package-private specifically because the extension points above are enough;
++`ExtensionPointsTest` (in a *different* package, `inventory.extensibility`) proves this by overriding `newMenu`
++and `renderOne` from outside `inventory.chest` entirely.
++
++## Panel flows and pages
++
++`MenuFlow<S extends FlowState>` drives a sequence of `ChestMenu`s sharing one typed state object — panel-by-id
++navigation (`switchTo`/`back`/`end`), `suspend()`/`resume()` for an anvil/sign detour, and (reconciled from
++Gangland's `MultiPanelInventory`) an in-place switch — no close event, no flicker — when the target panel's size
++and title both match what's already open. `PageConfig` computes the arithmetic for a paginated rectangular region
++(`PagedRegion.render(builder, config, entries, page)` places `ItemStack` + `ClickHandler` entries into it); the
++consumer builds its own previous/next buttons.
++
++## Classes
++
++| Class | Purpose |
++|---|---|
++| `Menu`, `MenuBuilder`, `CloseReason` | The base contracts every menu type implements/builds against. |
++| `Component`, `RenderContext`, `SlotView`, `ItemHoldingComponent` | The render-time seam: what a component writes into a slowarning: in the working copy of 'docs/phase-e6-inventory.md', LF will be replaced by CRLF the next time Git touches it
+t, and the marker for "holds a real player item across clicks". |
++| `ItemComponent`, `FillComponent`, `BorderComponent`, `LineComponent` | Plain `ItemStack`+handlers component and the three decoration shapes. |
++| `ClickKind`, `ClickHandler`, `ClickContext`, `SlotHandlers` | Per-slot, most-specific-first click routing. |
++| `MenuHolder`, `MenuTarget` | The Bukkit `InventoryHolder` (carries the owning `InventoryService`) and the seam every concrete menu type implements. |
++| `MenuListener` | One class: click, drag, close, quit — for every menu inventory one `InventoryService` owns. |
++| `OpenMenuTracker`, `DefaultOpenMenuTracker`, `NavigationHistory` | Who has what menu open right now, and the per-player "back" trail. |
++| `MenuRegistry`, `InMemoryMenuRegistry`, `MenuOpener` | Named menu factories, opened by name. |
++| `InventoryService` | Per-consumer root: owns the tracker, registry, and pending-vetoed-reopen bookkeeping; `BeanLifecycle`. |
++| `ChestMenu`, `ChestMenuBuilder` | The concrete chest-shaped menu and its fluent builder. |
++| `MenuFlow`, `MenuFlowBuilder`, `Panel`, `FlowState` | Multi-panel flow coordinator. |
++| `PageConfig`, `PagedRegion` | Pagination arithmetic and rectangular-region rendering. |
+diff --git a/docs/phase-e6-inventory.md b/docs/phase-e6-inventory.md
+new file mode 100644
+index 0000000..096d423
+--- /dev/null
++++ b/docs/phase-e6-inventory.md
+@@ -0,0 +1,155 @@
++# Phase E6 — `keystone-inventory` (v1.11.0)
++
++Driven by the Gangland Warfare 0.9.2 decoupling wave (`brainstorming/decoupling-wave-2026-09-14/`, workstream WS2,
++re-targeted from "Gangland adopts Oriel" to "the basic mechanism moves to Keystone" — R10): the basic inventory
++mechanism both Oriel and Gangland were independently carrying — holder-identified menus, one click/drag/close/quit
++listener, slot click routing, plain components, open/close tracking, panel flows, page arithmetic — is generic
++infrastructure of the same kind as `keystone-command` or `keystone-hologram`, and moves to a new module. Oriel keeps
++the advanced menu product on top (animation, requirements, argument bindings, provider/filter/sort/search
++registries, deposit slots, non-chest menu types, YAML loaders, the editor).
++
++| | |
++|---|---|
++| Version | `1.10.0 → **1.11.0**` (single `${revision}` bump in the root pom; new module is a minor) |
++| Driver | `plans/WS2-inventory-keystone.md`, `docs/extraction-roadmap.md` "Phase E6", plan review `brainstorming/decoupling-wave-2026-09-14/exec/WS2/E6-plan-review.md` (rulings W23), and orchestrator ruling W26 |
++| New module | `keystone-inventory` (37 files: 30 main, 7 test at E6.1; +8 main, +5 test at E6.2 — 43 main, 12 test total) |
++| Gates | E6.1 core (this doc's §1–§2) + 3 fix rounds (§3) → E6.2 flow + pages + docs (§4–§5) |
++
++## 1. Source: Oriel wins, Gangland contributes two pieces
++
++Oriel's `menu-core`/`chest` is the base (holder-identified, `ClickKind`-resolved, already built on Keystone's
++`PlaceholderProvider`/`ChatUtil`/`Guard`/`CooldownService`). Gangland's `gangland-ui/inventory-api` contributes the
++interactive-slot flag (`SlotView.interactive(boolean)`, `ChestMenuBuilder.interactive(int)` — its "draggable" flag),
++the `MultiPanelInventory` in-place-switch-on-matching-size/title optimization (§4), and the extra arithmetic in
++`PageConfig` (§4). Both source stacks were audited 1.16.5-clean: no Adventure or Paper API,
++`Bukkit.createInventory(holder, size, String)` throughout.
++
++## 2. E6.1 — core
++
++`Menu`/`MenuBuilder`/`CloseReason` (`inventory`); `Component`/`RenderContext`/`SlotView`(+`interactive`)/
++`ItemHoldingComponent` (`inventory.component`); `ClickKind`/`ClickHandler`/`ClickContext`/`SlotHandlers`
++(`inventory.click`); `MenuHolder`/`MenuTarget` (`inventory.spi` — `MenuTarget`'s three finer Oriel deposit defaults
++collapse into one `handleDepositClick(InventoryClickEvent)`); `MenuListener` (`inventory.listener` — one class:
++click/drag/close/quit, service-identity filtered); `OpenMenuTracker`/`DefaultOpenMenuTracker`/`NavigationHistory`
++(`inventory.tracking` — instance-scoped, no static tracker); `MenuRegistry`/`InMemoryMenuRegistry`/`MenuOpener`
++(`inventory.registry`); `InventoryService` (`inventory` — `BeanLifecycle`, owns tracker+registry,
++`registerListeners(JavaPlugin)` following the `HologramService.registerProtection` precedent); `ChestMenu`/
++`ChestMenuBuilder` (`inventory.chest` — non-final, protected extension points for Oriel's rebase to subclass
++instead of re-copy); new plain `ItemComponent` plus `FillComponent`/`BorderComponent`/`LineComponent`
++(`inventory.component`); package-private `ChestClickContext`/`ChestRenderContext`/`ChestSlotView`/
++`PassthroughPlaceholders` (`inventory.chest` — co-located with `ChestMenu`, not a `.internal` sub-package, since
++Java package-private access doesn't cross a sub-package boundary and `ChestMenu` needs direct construction access
++to all three on every render/click pass).
++
++## 3. Item-safety guarantees (three fix rounds, all red-first)
++
++E6.1's re-review process found and fixed three item-loss classes before this module shipped a single line to a
++consumer. Each is a standing guarantee `keystone-inventory` now makes that a consumer building on it can rely on:
++
++1. **A genuine user close (Escape, clicking outside) returns held items.** `MenuTarget.returnHeldItemsOnUserClose(Player)`
++   is called by `MenuListener.onClose`'s tracked, non-veto branch; `ChestMenu` overrides it with the same guarded
++   `returnHeldItems(player, CloseReason.USER, true)` every other close path uses. (Fix round 1, finding F1 — the
++   regression of an already-fixed Oriel bug that would otherwise have shipped in the Keystone base.)
++2. **The pickup-vs-close race cannot duplicate an item.** `ChestMenu.returnHeldItems(Player, CloseReason, boolean
++   skipIfSlotEmpty)` — when a click already moved an item out of its physical slot (Bukkit's natural pickup
++   handling) before a close fires, the guard sees the slot is empty and clears the stale held state WITHOUT
++   returning it again. Pinned by `ChestMenuTest.pickupRaceWithPluginDisableDoesNotDupe`. (Fix round 1, finding F2.)
++3. **A vetoed close's held items are never lost, however the timing lands.** A vetoed close (`MenuTarget.vetoesClose`
++   returns `true`) schedules a reopen for next tick; the player may disconnect before that tick runs, or a
++   reload/shutdown may land inside the same window. `InventoryService` records the pending reopen
++   (`recordPendingReopen`/`consumePendingReopen`, an atomic per-player map) the moment the veto fires; whichever of
++   three things happens first — the scheduled reopen task, `MenuListener.onQuit`, or `InventoryService.closeAll`
++   (the reload/shutdown sweep, which now drains this map too, not just the tracker) — consumes the entry and
++   returns the held items exactly once via the same guarded `close(player, reason)`/`returnHeldItemsOnUserClose`
++   paths as everything else. Pinned by `MenuListenerTest.vetoedCloseThenQuitReturnsHeldItemsExactlyOnceAndTheLateReopenTaskDoesNothing`
++   and `InventoryServiceLifecycleTest.onShutdownDrainsAPendingVetoedReopenAndReturnsItsHeldItemsExactlyOnce`. (Fix
++   rounds 2 and 3.)
++
++Two related, deliberately-not-fixed-here items are recorded as docket rows rather than silently left in the code:
++the interactive-flag staleness across renders (fix round 1, N1/N2 — a builder-marked interactive slot now survives
++an untouched render or `rerenderSlot`, and fill decoration never lands in an interactive slot) is fixed, but a
++player-placed item sitting in an interactive slot that is *not* an `ItemHoldingComponent` is still discarded on
++close — recorded as a consumer responsibility (WS2 plan G4), not a Keystone-side gap, since the basic mechanism has
++no way to know a plain interactive slot is holding something worth returning without the marker interface.
++
++Full detail, every red/green line, and the build summary per round: `exec/KS2/E6.1-report.md` ("Fix round 1"/"Fix
++round 2"/"Fix round 3" sections).
++
++## 4. E6.2 — flow + pages
++
++**`MenuFlow`/`MenuFlowBuilder`/`Panel`/`FlowState`** (`inventory.flow`) — reconciled from Oriel's committed
++`chest/flow` (commit `00b8b35`) and Gangland's `MultiPanelInventory`:
++
++- From Oriel: `rerender()` (re-invokes `Panel.render`, row-count-mismatch falls back to a full reopen), same-id
++  `switchTo` == `rerender()`, `back()`/`hasBack()` (ends the flow on an empty back-stack rather than no-op'ing),
++  `suspend()`/`resume()`/`suppressClose()` for an anvil/sign detour, and — the E6.1 re-review's open note — closing
++  the outgoing menu with `CloseReason.NAVIGATION` on a real panel switch, so an `ItemHoldingComponent` a panel is
++  holding returns instead of being silently abandoned along with the discarded `ChestMenu`. Pinned by
++  `MenuFlowTest.switchToADifferentSizedPanelClosesTheOutgoingMenuWithNavigationSoHeldItemsReturn`.
++- From Gangland: switching to a **different** panel whose size AND title both match the currently-open menu's now
++  happens in place (`adoptComponentsFrom`, no close event, no flicker) instead of a full close+reopen — Oriel's
++  original only special-cased the *same* panel id for this optimization. Pinned by
++  `MenuFlowTest.switchToADifferentPanelWithMatchingSizeAndTitleSwitchesInPlace`.
++- One small cleanup over the Oriel source: its `switchInternal(String, boolean)` took a `trackedAlready` parameter
++  never read anywhere in the method body — dropped in the port.
++
++This module is entirely new code with zero prior tests, so there is no pre-existing "red" baseline for the ported
++pieces to show red against — only the two behaviours above are genuinely new logic; the rest is a faithful port of
++Oriel's already-shipped, already-tested design.
++
++**`PageConfig`** (`inventory.page`) — Oriel's `chest/internal/PageConfig` shape
++(`firstRow`/`lastRow`/`firstCol`/`lastCol`/`slotsPerPage`/`pageCount`/`initialPage`, the `forSize`/`defaultInterior`
++factories) kept as-is, plus one new field, `remainingOnLastPage`, folded in from Gangland's
++`inventory/part/PageConfig` — Gangland's own `remainingAmount = itemsCount - (pages - 1) * perPage`, adapted to
++Oriel's field names. Gangland's `finalPage`/`initialPage` fields (an inventory *size* to build per page, under its
++own per-page-separate-inventory `MultiInventory` model) do not port: Keystone's `PagedRegion` pages within ONE
++fixed-size chest menu, never creates a differently-sized inventory per page, and in Gangland's own two call sites
++both fields were always passed the identical value anyway (`MultiInventoryCreation.java:118,131`) — porting a
++field two call sites never actually varied, for a model this module doesn't have, would be dead flexibility.
++
++**`PagedRegion`** (`inventory.page`, new — shaped after Oriel's `chest.component.PaginatedListComponent` but not
++lifted) — a static utility, not a `Component` and not builder-integrated: `PagedRegion.render(builder, config,
++entries, page)` places a page-sized slice of `List<Entry>` (an `ItemStack` + optional `ClickHandler`) into
++`config`'s rectangular region on a `ChestMenuBuilder`. No page-state object, no `initialize(slotsPerPage)`
++registration step, no built-in previous/next button factories — the consumer owns which page is showing and builds
++its own previous/next buttons that call back into whatever re-renders the menu. Oriel's `PaginatedChestMenu`, its
++nav components, and `PaginatedControlPlaceholders` all stay in Oriel.
++
++## 5. Module joins the shade; docs
++
++`keystone-plugin`'s shade list gained `keystone-inventory`. `CLAUDE.md`: module dependency graph gained the module
++(8 sub-packages listed), the testkit-consumer sentence extended, and the layering bullet rewritten from "planned
++for 1.11.0" / "until E6 lands, no inventory code goes into Keystone" to the landed state — the one-sentence
++summary any docket/report can now cite verbatim: **basic inventory mechanism in Keystone, advanced menu features
++in Oriel.** `README.md`'s `## Modules` table and `docs/README.md`'s index both gained a row.
++
++## 6. Tests
++
++Reactor-wide: **1199** tests, 0 failures, 0 errors (`keystone-inventory` **92** at E6.2 gate-close, up from 72
++after E6warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/FlowState.java', LF will be replaced by CRLF the next time Git touches it
+.1's three fix rounds: `MenuFlowTest` 9, `PageConfigTest` 8, `PagedRegionTest` 3, unchanged elsewhere).
++`mvn clean install` green. Jar audit (`unzip -l Keystone-1.11.0.jar`): `org/luckyraven/keystone/inventory/`
++present (51 entries); `testkit`/`mockito` absent (0 matches).
++
++## Files
++
++| File | Change |
++|---|---|
++| `pom.xml` | `<revision>` 1.10.0 → 1.11.0 (E6.1); new `<module>keystone-inventory</module>`; dependencyManagement entry; `## Module dependency graph` gained the module (E6.1+E6.2 doc update) |
++| `keystone-plugin/pom.xml` | new `keystone-inventory` shade dependency (E6.2) |
++| `CLAUDE.md` | layering bullet rewritten (landed, not planned); testkit-consumer sentence extended; E6 added to the extraction-track history paragraph (E6.2) |
++| `README.md` | `## Modules` table +1 row (E6.2) |
++| `docs/README.md` | +2 rows (`keystone-inventory.md`, this file) (E6.2) |
++| `docs/phase-e6-inventory.md` | new — this file |
++| `docs/keystone-inventory.md` | new — module guide (E6.2) |
++| `keystone-inventory/pom.xml` | new module scaffold: `keystone-common`+`keystone-bean`+`keystone-item`+`log4j-api`, test `mockito-core`+`keystone-testkit` (E6.1) |
++| `keystone-inventory/.../inventory/*.java` (4 files: `Menu`, `MenuBuilder`, `CloseReason`, `InventoryService`) | new (E6.1); `InventoryService` gained `pendingReopen`/`recordPendingReopen`/`consumePendingReopen`/`closeAll` (fix rounds 2–3) |
++| `keystone-inventory/.../inventory/component/*.java` (8 files) | new (E6.1); `ItemComponent.interactive` changed `boolean`→`@Nullable Boolean` (fix round 1, F3a); `SlotView` gained `wasTouched()` (fix round 1, F5) |
++| `keystone-inventory/.../inventory/click/*.java` (4 files) | new (E6.1), unchanged since |
++| `keystone-inventory/.../inventory/spi/*.java` (2 files) | new (E6.1); `MenuTarget` gained `returnHeldItemsOnUserClose` (fix round 1, F1) |
++| `keystone-inventory/.../inventory/listener/MenuListener.java` | new (E6.1); non-final + protected hooks (fix round 1, F5); COLLECT_TO_CURSOR force-cancel (fix round 1, F4); `returnHeldItemsOnUserClose` call + pending-reopen record/consume (fix rounds 1–2) |
++| `keystone-inventory/.../inventory/tracking/*.java` (3 files) | new (E6.1), unchanged since |
++| `keystone-inventory/.../inventory/registry/*.java` (3 files) | new (E6.1), unchanged since |
++| `keystone-inventory/.../inventory/chest/*.java` (6 files) | new (E6.1); `ChestMenu` gained `builderInteractiveSlots` floor (fix round 2, N1), fill-skips-interactive (fix round 2, N2), `noPermissionHandler` (M1), `lastResolvedTitle` seeding (M2), `returnHeldItemsOnUserClose` override + guarded `returnHeldItems` (fix round 1), protected `renderOne`/`newRenderContext`/`newSlotView`/`dispatchOnOpen` (fix round 1, F5); `ChestMenuBuilder` gained `vetoClose`, non-final + protected ctor/`newMenu`/`applyBorder`/`applyLine` (fix round 1, F5) |
++| `keystone-inventory/.../inventory/flow/*.java` (4 files: `FlowState`, `Panel`, `MenuFlowBuilder`, `MenuFlow`) | new (E6.2) |
++| `keystone-inventory/.../inventory/page/*.java` (2 files: `PageConfig`, `PagedRegion`) | new (E6.2) |
++| `keystone-inventory/src/test/.../*.java` (12 files) | new — `ClickKindTest`, `SlotHandlersTest`, `DefaultOpenMenuTrackerTest`, `InventoryServiceLifecycleTest`, `ChestMenuBuilderTest`, `ChestMenuTest`, `MenuListenerTest`, `ExtensionPointsTest` (E6.1 + 3 fix rounds); `MenuFlowTest`, `PageConfigTest`, `PagedRegionTest` (E6.2) |
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/FlowState.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/FlowState.java
+new file mode 100644
+index 0000000..c28500c
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/FlowState.java
+@@ -0,0 +1,14 @@
++package org.luckyraven.keystone.inventory.flow;
++
++/**
++ * Marker interface for state objects threaded through every {@link Panel} of a {@link MenuFlow}. Implementations
++ * are typically records — the state is read by every panel during {@code render(...)} and end-of-flow callbacks.
++ *
++ * <pre>{@warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/MenuFlow.java', LF will be replaced by CRLF the next time Git touches it
+code
++ * record TraderFlowState(Trader trader, Player buyer) implements FlowState {}
++ * }</pre>
++ *
++ * <p>Ported unchanged from Oriel's {@code chest.flow.FlowState} (commit 00b8b35) as part of Keystone Phase E6.2.
++ */
++public interface FlowState {
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/MenuFlow.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/MenuFlow.java
+new file mode 100644
+index 0000000..712742f
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/MenuFlow.java
+@@ -0,0 +1,295 @@
++package org.luckyraven.keystone.inventory.flow;
++
++import lombok.CustomLog;
++import org.bukkit.Bukkit;
++import org.bukkit.entity.Player;
++import org.bukkit.event.EventHandler;
++import org.bukkit.event.HandlerList;
++import org.bukkit.event.Listener;
++import org.bukkit.event.inventory.InventoryCloseEvent;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.keystone.inventory.CloseReason;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.chest.ChestMenu;
++import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
++import org.luckyraven.keystone.inventory.spi.MenuHolder;
++
++import java.util.ArrayDeque;
++import java.util.Deque;
++import java.util.HashMap;
++import java.util.Map;
++import java.util.function.Consumer;
++
++/**
++ * Multi-panel flow coordinator. Drives a sequence of {@link ChestMenu}s sharing a single {@link FlowState}.
++ * {@link #suspend()}/{@link #resume()} is the load-bearing trick that lets a flow open an external inventory
++ * (anvil, sign, etc.) and resume cleanly when control returns — without it, the close event from the detour
++ * would tear the flow down.
++ *
++ * <p>Public moves are panel-by-id ({@link #switchTo(String)}, {@link #back()}, {@link #end()}). The back-stack
++ * holds panel ids, not snapshots — going back re-renders the panel from current state, not from a captured frame.
++ *
++ * <pre>{@code
++ * record TraderFlowState(Trader trader, Player buyer) implements FlowState {}
++ *
++ * MenuFlow<TraderFlowState> flow = MenuFlow.builder(inventoryService, plugin, player, new TraderFlowState(trader, player))
++ *     .panel("menu",   new TraderMenuPanel())
++ *     .panel("buy",    new TraderBuyPanel())
++ *     .panel("barter", new TraderBarterPanel())
++ *     .onEnd(state -> state.trader().releaseHold(state.buyer()))
++ *     .build();
++ *
++ * flow.openAt("menu");
++ * }</pre>
++ *
++ * <p><b>Reconciled from two sources</b> (Keystone Phase E6.2, {@code docs/extraction-roadmap.md} "Phase E6"):
++ * Oriel's committed {@code chest.flow.MenuFlow} (commit 00b8b35) supplies {@link #rerender()} (row-count fallback
++ * to a full reopen), same-id {@link #switchTo} == rerender, {@link #back()}/{@link #hasBack()} ending the flow on
++ * an empty stack, and closing the outgoing menu with {@link CloseReason#NAVIGATION} so held items return (the
++ * E6.1 re-review's open note — pinned by {@code MenuFlowTest.switchingToADifferentlySizedPanelReturnsHeldItems}).
++ * Gangland's {@code flow.MultiPanelInventory} supplies the one thing Oriel's version didn't have: switching to a
++ * DIFFERENT panel whose size and title both match the currently-open menu's happens IN PLACE — no close event, no
++ * flicker — instead of a full close+reopen; see {@link #switchInternal}.
++ *
++ * <p>One small cleanup over the Oriel source: its {@code switchInternal(String, boolean)} took a
++ * {@code trackedAlready} parameter that was never read anywhere in the method body — dropped here.
++ */
++@CustomLog
++public final class MenuFlow<S extends FlowState> {
++
++	private final InventoryService      service;
++	private final JavaPlugin            plugin;
++	private final Map<String, Panel<S>> panels;
++	private final S                     state;
++	private final Player                viewer;
++	@Nullable
++	private final Consumer<S>           onEnd;
++
++	private final Deque<String> backStack = new ArrayDeque<>();
++
++	@Nullable
++	private String    currentPanelId;
++	@Nullable
++	private ChestMenu currentMenu;
++	/**
++	 * The raw title string {@link #currentMenu} was last opened/switched with — Keystone's {@code ChestMenu} has
++	 * no public "what title is this showing" accessor (unlike Oriel's {@code InventoryHandler.getDisplayTitle()}),
++	 * so the flow remembers it locally purely to drive the in-place-switch size+title comparison in
++	 * {@link #switchInternal}.
++	 */
++	@Nullable
++	private String currentTitle;
++
++	private boolean suspended = false;
++	private boolean switching = false;
++	private boolean ended     = false;
++
++	@Nullable
++	private FlowCloseListener closeListener;
++
++	MenuFlow(InventoryService service, JavaPlugin plugin, Map<String, Panel<S>> panels, S state, Player viewer,
++	        @Nullable Consumer<S> onEnd) {
++		this.service = service;
++		this.plugin  = plugin;
++		this.panels  = new HashMap<>(panels);
++		this.state   = state;
++		this.viewer  = viewer;
++		this.onEnd   = onEnd;
++	}
++
++	public static <S extends FlowState> MenuFlowBuilder<S> builder(InventoryService service, JavaPlugin plugin,
++	                                                                Player viewer, S state) {
++		return new MenuFlowBuilder<>(service, plugin, viewer, state);
++	}
++
++	public S state() {
++		return state;
++	}
++
++	public Player viewer() {
++		return viewer;
++	}
++
++	@Nullable
++	public String currentPanelId() {
++		return currentPanelId;
++	}
++
++	@Nullable
++	public ChestMenu currentMenu() {
++		return currentMenu;
++	}
++
++	/** Open the flow at the given panel id. Registers the close listener once. */
++	public void openAt(String panelId) {
++		if (closeListener == null) {
++			closeListener = new FlowCloseListener();
++			Bukkit.getPluginManager().registerEvents(closeListener, plugin);
++		}
++		switchInternal(panelId);
++	}
++
++	/**
++	 * Switch to a panel and remember the previous one on the back-stack. If {@code panelId} equals the current
++	 * panel, this is a re-render in place via {@link #rerender()} — the back-stack is not modified (unlike a real
++	 * navigation) and nothing sitting in a live {@code ItemHoldingComponent} slot is disturbed, which is what
++	 * keeps {@code suspend → external inventory → resume → switchTo(same panel)} flows working: that round trip
++	 * must not eject an item the player deposited before the detour.
++	 */
++	public void switchTo(String panelId) {
++		if (panelId.equals(currentPanelId)) {
++			rerender();
++			return;
++		}
++		if (currentPanelId != null) backStack.push(currentPanelId);
++		switchInternal(panelId);
++	}
++
++	/** True when {@link #back()} would navigate to a previous panel rather than ending the flow. */
++	public boolean hasBack() {
++		return !backStack.isEmpty();
++	}
++
++	/**
++	 * Pop the back-stack and switch to the previous panel. Ends the flow if the stack is empty, instead of
++	 * silently no-op'ing on a dead button. Does not push the current panel onto the stack.
++	 */
++	public void back() {
++		String previous = backStack.pollFirst();
++		if (previous == null) {
++			end();
++			return;
++		}
++		switchInternal(previous);
++	}
++
++	/**
++	 * Re-render the current panel in place, in the already-open inventory: re-runs {@link Panel#render} and
++	 * applies the freshly-built component set to the live {@link ChestMenu} via {@link ChestMenu#adoptComponentsFrom}
++	 * — no new Bukkit inventory, no close/open round trip, no flicker, no cursor/drag-state reset. Unlike the plain
++	 * {@link ChestMenu#rerender()} (which only repaints the current component set), this re-invokes
++	 * {@link Panel#render} — a panel that adds or removes a button in response to a state change (not just
++	 * updates item lore/amount) needs this, not the plain repaint. No-op if the flow hasn't opened a panel yet.
++	 *
++	 * <p>A title that depends on {@code state} is NOT picked up by this call — {@code adoptComponentsFrom}
++	 * deliberately only adopts the fresh panel's component slots, not its title (Bukkit titles are immutable
++	 * post-creation; retitling means a real reopen). A panel whose title must react to state needs
++	 * {@link #switchTo(String)} on itself, not {@code rerender()}.
++	 *
++	 * <p><b>Row-count rule:</b> {@code adoptComponentsFrom} writes into the LIVE inventory's existing slot count —
++	 * it cannot resize a Bukkit {@code Inventory} in place. If {@code panel.rows(state)} now disagrees with the
++	 * open inventory's size, this falls back to a real {@link #switchInternal} instead — a full reopen at the new
++	 * size, same as {@link #switchTo(String)} on a different panel.
++	 */
++	public void rerender() {
++		if (currentPanelId == null || currentMenu == null) return;
++		Panel<S> panel = panels.get(currentPanelId);
++		if (panel == null) return;
++		int rows = panel.rows(state);
++		if (rows * 9 != currentMenu.bukkitInventory().getSize()) {
++			switchInternal(currentPanelId);
++			return;
++		}
++		ChestMenuBuilder builder = ChestMenu.builder(service);
++		builder.title(panel.title(state)).rows(rows);
++		panel.render(this, builder, state);
++		// ponytail: builds a full throwaway ChestMenu (including a real Bukkit Inventory nobody opens) purely to
++		// reuse ChestMenuBuilder.build()'s existing border/line/fill layering instead of duplicating it. Fine at
++		// click-driven rerender frequency; upgrade path if this is ever called every tick is a ChestMenuBuilder
++		// method that computes the layered component map without allocating an Inventory.
++		currentMenu.adoptComponentsFrom(builder.build());
++	}
++
++	/** Suspend the flow — the close listener will not call {@link #end()} until {@link #resume()} is called. */
++	public void suspend() {
++		this.suspended = true;
++	}
++
++	/** Resume the flow after an external inventory (anvil, sign, etc.) closes. Caller follows with switchTo/openAt. */
++	public void resume() {
++		this.suspended = false;
++	}
++
++	/**
++	 * End the flow: invoke {@code onEnd}, close the inventory (draining any {@code ItemHoldingComponent} state
++	 * back to the viewer — see {@link CloseReason#NAVIGATION}), unregister the close listener. Idempotent.
++	 */
++	public void end() {
++		if (ended) return;
++		ended = true;
++		try {
++			if (onEnd != null) onEnd.accept(state);
++		} catch (Exception ex) {
++			log.warn("MenuFlow onEnd threw {}", ex.toString(), ex);
++		}
++		if (currentMenu != null) currentMenu.close(viewer, CloseReason.NAVIGATION);
++		if (closeListener != null) {
++			HandlerList.unregisterAll(closeListener);
++			closeListener = null;
++		}
++	}
++
++	/** True while a panel swap or external-inventory detour is in progress. The close listener consults this. */
++	public boolean suppressClose() {
++		return switching || suspended;
++	}
++
++	private void switchInternal(String panelId) {
++		Panel<S> panel = panels.get(panelId);
++		if (panel == null) {
++			throw new IllegalArgumentException("no panel registered with id '" + panelId + "'");
++		}
++
++		int    rows  = panel.rows(state);
++		String title = panel.title(state);
++
++		// Gangland's MultiPanelInventory optimization: switch to a DIFFERENT panel in place — no close event, no
++		// flicker — when its size and title both match what's already open.
++		if (currentMenu != null && rows * 9 == currentMenu.bukkitInventory().getSize() && title.equals(currentTitle)) {
++			currentPanelId = panelId;
++			ChestMenuBuilder builder = ChestMenu.builder(service);
++			builder.title(title).rows(rows);
++			panel.render(this, builder, state);
++			currentMenu.adoptComponentsFrom(builder.build());
++			return;
++		}
++
++		switching = true;
++		try {
++			// Close the OUTGOING menu properly first (E6.1 re-review's open note): naively replacing/abandoning
++			// the old ChestMenu would discard anything a live ItemHoldingComponent was holding along with its
++			// Inventory. CloseReason.NAVIGATION exists on the enum precisely for this ("a MenuFlow switched
++			// panels or ended"). This fires an explicit InventoryCloseEvent for the old inventory before the new
++			// one opens, same as Bukkit's own implicit close-on-reopen would have anyway.
++			if (currentMenu != null) {
++				currentMenu.close(viewer, CloseReason.NAVIGATION);
++			}
++			ChestMenuBuilder builder = ChestMenu.builder(service);
++			builder.title(title).rows(rows);
++			pawarning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/MenuFlowBuilder.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/Panel.java', LF will be replaced by CRLF the next time Git touches it
+nel.render(this, builder, state);
++			ChestMenu newMenu = builder.build();
++			currentMenu    = newMenu;
++			currentPanelId = panelId;
++			currentTitle   = title;
++			newMenu.open(viewer);
++		} finally {
++			switching = false;
++		}
++	}
++
++	/** Internal listener: closes the flow when the viewer closes the active inventory, unless suppression is on. */
++	private final class FlowCloseListener implements Listener {
++
++		@EventHandler
++		public void onClose(InventoryCloseEvent event) {
++			if (suppressClose()) return;
++			if (currentMenu == null) return;
++			if (event.getInventory().getHolder() instanceof MenuHolder holder
++			    && holder.target() == currentMenu
++			    && event.getPlayer().equals(viewer)) {
++				end();
++			}
++		}
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/MenuFlowBuilder.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/MenuFlowBuilder.java
+new file mode 100644
+index 0000000..8135cbc
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/MenuFlowBuilder.java
+@@ -0,0 +1,66 @@
++package org.luckyraven.keystone.inventory.flow;
++
++import org.bukkit.entity.Player;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.keystone.inventory.InventoryService;
++
++import java.util.HashMap;
++import java.util.Map;
++import java.util.function.Consumer;
++
++/**
++ * Fluent builder for {@link MenuFlow}. Get one via
++ * {@link MenuFlow#builder(InventoryService, JavaPlugin, Player, FlowState)}.
++ *
++ * <pre>{@code
++ * MenuFlow.<TraderFlowState>builder(inventoryService, plugin, player, new TraderFlowState(trader, player))
++ *     .panel("menu",   new TraderMenuPanel())
++ *     .panel("buy",    new TraderBuyPanel())
++ *     .panel("barter", new TraderBarterPanel())
++ *     .onEnd(state -> state.trader().releaseHold(state.buyer()))
++ *     .build()
++ *     .openAt("menu");
++ * }</pre>
++ *
++ * <p>Ported from Oriel's {@code chest.flow.MenuFlowBuilder} (commit 00b8b35) as part of Keystone Phase E6.2. No
++ * separate {@code .registry(MenuRegistry)} method — every Keystone {@code ChestMenu} requires a real
++ * {@link InventoryService} (unlike Oriel's optional {@code MenuRegistry}), and that service already carries its
++ * own {@code MenuRegistry}, so the flow just takes the service.
++ */
++public final class MenuFlowBuilder<S extends FlowState> {
++
++	private final InventoryService service;
++	private final JavaPlugin       plugin;
++	private final Player           viewer;
++	private final S                state;
++
++	private final Map<String, Panel<S>> panels = new HashMap<>();
++
++	@Nullable
++	private Consumer<S> onEnd;
++
++	MenuFlowBuilder(InventoryService service, JavaPlugin plugin, Player viewer, S state) {
++		this.service = service;
++		this.plugin  = plugin;
++		this.viewer  = viewer;
++		this.state   = state;
++	}
++
++	public MenuFlowBuilder<S> panel(String id, Panel<S> panel) {
++		panels.put(id, panel);
++		return this;
++	}
++
++	public MenuFlowBuilder<S> onEnd(Consumer<S> handler) {
++		this.onEnd = handler;
++		return this;
++	}
++
++	public MenuFlow<S> build() {
++		if (panels.isEmpty()) {
++			throw new IllegalStateException("MenuFlow needs at least one panel — call .panel(id, panel)");
++		}
++		return new MenuFlow<>(service, plugin, panels, state, viewer, onEnd);
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/Panel.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/Panel.java
+new file mode 100644
+index 0000000..92efe8f
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/flow/Panel.java
+@@ -0,0 +1,26 @@
++package org.luckyraven.keystone.inventory.flow;
++
++import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
++
++/**
++ * One panel in a {@link MenuFlow}. Implementations describe how to populate a {@link ChestMenuBuilder} given the
++ * shared {@link FlowState}. {@link MenuFlow} re-invokes {@link #render(MenuFlow, ChestMenuBuilder, FlowState)}
++ * every time the panwarning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/page/PageConfig.java', LF will be replaced by CRLF the next time Git touches it
+el is shown, so panels are stateless — all mutable state lives on {@code state}.
++ *
++ * <p>Reconciled from Oriel's {@code chest.flow.Panel} (commit 00b8b35, kept as-is — rows/title/render against a
++ * {@link ChestMenuBuilder}) and Gangland's {@code flow.Panel} (same three-method shape, but against its own
++ * {@code InventoryHandler} with a raw pixel {@code size(session)} instead of {@code rows(state)}) as part of
++ * Keystone Phase E6.2. Oriel's shape wins outright — it is the one already built against the Keystone builder
++ * type, and {@code rows} is what {@link ChestMenuBuilder#rows(int)} takes.
++ */
++public interface Panel<S extends FlowState> {
++
++	/** Number of rows for this panel's chest inventory. */
++	int rows(S state);
++
++	/** Title for this panel's chest inventory. May read state. {@code &}-coded legacy strings are accepted. */
++	String title(S state);
++
++	/** Populate the builder with components. Called every time the panel is shown. */
++	void render(MenuFlow<S> flow, ChestMenuBuilder builder, S state);
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/page/PageConfig.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/page/PageConfig.java
+new file mode 100644
+index 0000000..e79b585
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/page/PageConfig.java
+@@ -0,0 +1,60 @@
++package org.luckyraven.keystone.inventory.page;
++
++/**
++ * Pagination layout maths for a rectangular region of a chest menu: rows × columns → per-page slot count, page
++ * count, and how many entries actually land on the last page.
++ *
++ * <p>Default interior grid (when no explicit region override): rows {@code 1..rows-2}, cols {@code 1..7}, leaving
++ * the outer ring for borders/decorations and the bottom row for nav.
++ *
++ * <p>Reconciled from two sources (Keystone Phase E6.2, review pass 2026-09-17 finding F9): Oriel's
++ * {@code chest.internal.PageConfig} (commit 00b8b35) supplies the shape — {@code firstRow}/{@code lastRow}/
++ * {@code firstCol}/{@code lastCol}/{@code slotsPerPage}/{@code pageCount}/{@code initialPage}, and the
++ * {@link #forSize}/{@link #defaultInterior} factories, unchanged. Gangland's {@code inventory.part.PageConfig}
++ * (fields {@code maxRows}/{@code maxColumns}/{@code perPage}/{@code pages}/{@code remainingAmount}/
++ * {@code finalPage}/{@code initialPage}) contributes exactly one thing Oriel's didn't compute:
++ * {@link #remainingOnLastPage} — how many entries actually occupy the last page (Gangland's
++ * {@code remainingAmount = itemsCount - (pages - 1) * perPage}, adapted to Oriel's field names). Gangland's
++ * {@code finalPage}/{@code initialPage} fields do NOT port: in Gangland's own source both were always passed the
++ * same value ({@code MultiInventoryCreation.java:118,131} — {@code new PageConfig(..., pageSlots, pageSlots)}) and
++ * meant "the Bukkit inventory size to build for this page" under Gangland's per-page-separate-inventory model,
++ * which has no equivalent in Keystone's design (a {@link PagedRegion} pages within ONE fixed-size chest menu, never
++ * creates a differently-sized inventory per page) — porting a field two call sites never actually varied, for a
++ * model this module doesn't have, would be dead flexibility.
++ */
++public record PageConfig(int firstRow, int lastRow, int firstCol, int lastCol, int slotsPerPage, int pageCount,
++                          int initialPage, int remainingOnLastPage) {
++
++	public static PageConfig forSize(int rows, int firstRow, int lastRow, int firstCol, int lastCol, int itemCount) {
++		if (rows < 1 || rows > 6) {
++			throw new IllegalArgumentException("rows must be in [1, 6], got " + rows);
++		}
++		if (firstRow < 0 || lastRow >= rows || firstRow > lastRow) {
++			throw new IllegalArgumentException(
++					"region rows " + firstRow + ".." + lastRow + " out of range for " + rows + "-row menu");
++		}
++		if (firstCol < 0 || lastCol > 8 || firstCol > lastCol) {
++			throw new IllegalArgumentException("region cols " + firstCol + ".." + lastCol + " out of ranwarning: in the working copy of 'keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/page/PagedRegion.java', LF will be replaced by CRLF the next time Git touches it
+ge");
++		}
++
++		int rowSpan      = lastRow - firstRow + 1;
++		int colSpan      = lastCol - firstCol + 1;
++		int slotsPerPage = rowSpan * colSpan;
++		int pageCount    = itemCount == 0 ? 1 : (int) Math.ceil(itemCount / (double) slotsPerPage);
++		int remainingOnLastPage = itemCount == 0 ? 0 : itemCount - (pageCount - 1) * slotsPerPage;
++
++		return new PageConfig(firstRow, lastRow, firstCol, lastCol, slotsPerPage, pageCount, 0, remainingOnLastPage);
++	}
++
++	/** Convenience constructor for the default interior grid (rows 1..rows-2, cols 1..7). */
++	public static PageConfig defaultInterior(int rows, int itemCount) {
++		int firstRow = 1;
++		int lastRow  = rows - 2;
++		// 1-row chests have no interior; clamp to row 0 so the maths still work (caller must accept the constraint).
++		if (lastRow < firstRow) {
++			firstRow = 0;
++			lastRow  = 0;
++		}
++		return forSize(rows, firstRow, lastRow, 1, 7, itemCount);
++	}
++}
+diff --git a/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/page/PagedRegion.java b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/page/PagedRegion.java
+new file mode 100644
+index 0000000..c386931
+--- /dev/null
++++ b/keystone-inventory/src/main/java/org/luckyraven/keystone/inventory/page/PagedRegion.java
+@@ -0,0 +1,72 @@
++package org.luckyraven.keystone.inventory.page;
++
++import org.bukkit.inventory.ItemStack;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
++import org.luckyraven.keystone.inventory.click.ClickHandler;
++import org.luckyraven.keystone.inventory.component.ItemComponent;
++
++import java.util.List;
++
++/**
++ * Renders a slice of {@link Entry} items into a rectangular region of a {@link ChestMenuBuilder} for page
++ * {@code n}. A static utility, not a {@code Component} and not builder-integrated (unlike Oriel's
++ * {@code chest.component.PaginatedListComponent}, which this is shaped after but does not lift) — no page-state
++ * object, no {@code initialize(slotsPerPage)} registration step, no built-in previous/next button factories. The
++ * consumer owns paging state (which page is currently shown) and builds its own previous/next buttons that call
++ * back into whatever re-renders the menu (a {@code MenuFlow.rerender()}, a {@code ClickContext.rerender()}) — see
++ * {@code docs/extraction-roadmap.md} "Phase E6": "previous/next are the consumer's own buttons".
++ *
++ * <pre>{@code
++ * List<PagedRegion.Entry> entries = roster.stream()
++ *     .map(member -> new PagedRegion.Entry(memberIcon(member), ctx -> openMemberCard(ctx, member)))
++ *     .toList();
++ * PageConfig config = PageConfig.forSize(6, 1, 4, 1, 7, entries.size());
++ * ChestMenu.builder(service)
++ *     .rows(6)
++ *     .border(Material.BLACK_STAINED_GLASS_PANE)
++ *     .slot(48, ItemComponent.of(Material.ARROW).onLeftClick(ctx -> { currentPage--; ctx.rerender(); }))
++ *     .slot(50, ItemComponent.of(Material.ARROW).onLeftClick(ctx -> { currentPage++; ctx.rerender(); }));
++ * PagedRegion.render(builder, config, entries, currentPage);
++ * }</pre>
++ */
++public final class PagedRegion {
++
++	private PagedRegion() {
++	}
++
++	/**
++	 * Render {@code entries}' slice for {@code page} into {@code builder}, one explicit {@code .slot(...)} call
++	 * per occupied cell within {@code config}'s bounds. Cells past the end of {@code entries} on a partially-filled
++	 * last page are left untouched — any fill/border decoration underneath still shows through, matching
++	 * {@code ChestMenuBuilder}'s own decoration-then-explicit-slot layering. {@code page} is not range-checked
++	 * against {@link PageConfig#pageCount()} — an out-of-range page simply renders nothing (an empty page), which
++	 * the consumer's own previous/next buttons are expected to prevent by construction.
++	 */
++	public static void render(ChestMenuBuilder builder, PageConfig config, List<Entry> entries, int page) {
++		int start = page * config.slotsPerPage();
++		int index = 0;
++		for (int row = config.firstRow(); row <= config.lastRow(); row++) {
++			for (int col = config.firstCol(); col <= config.lawarning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/flow/MenuFlowTest.java', LF will be replaced by CRLF the next time Git touches it
+stCol(); col++) {
++				int entryIndex = start + index;
++				index++;
++				if (entryIndex < 0 || entryIndex >= entries.size()) continue;
++
++				Entry         entry     = entries.get(entryIndex);
++				ItemComponent component = ItemComponent.of(entry.item());
++				if (entry.handler() != null) {
++					component.onAnyClick(entry.handler());
++				}
++				builder.slot(row * 9 + col, component);
++			}
++		}
++	}
++
++	/** One page-able entry: an item and the (optional) handler that fires on any click. */
++	public record Entry(ItemStack item, @Nullable ClickHandler handler) {
++
++		public Entry(ItemStack item) {
++			this(item, null);
++		}
++	}
++}
+diff --git a/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/flow/MenuFlowTest.java b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/flow/MenuFlowTest.java
+new file mode 100644
+index 0000000..0f713a3
+--- /dev/null
++++ b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/flow/MenuFlowTest.java
+@@ -0,0 +1,348 @@
++package org.luckyraven.keystone.inventory.flow;
++
++import org.bukkit.Bukkit;
++import org.bukkit.Material;
++import org.bukkit.entity.Player;
++import org.bukkit.inventory.Inventory;
++import org.bukkit.inventory.InventoryHolder;
++import org.bukkit.inventory.InventoryView;
++import org.bukkit.inventory.ItemFactory;
++import org.bukkit.inventory.ItemStack;
++import org.bukkit.inventory.PlayerInventory;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.keystone.cooldown.CooldownService;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.chest.ChestMenu;
++import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
++import org.luckyraven.keystone.inventory.component.Component;
++import org.luckyraven.keystone.inventory.component.ItemHoldingComponent;
++import org.luckyraven.keystone.inventory.component.RenderContext;
++import org.luckyraven.keystone.inventory.component.SlotView;
++import org.luckyraven.keystone.testkit.BukkitStatics;
++
++import java.util.HashMap;
++import java.util.List;
++import java.util.Map;
++import java.util.UUID;
++import java.util.concurrent.atomic.AtomicBoolean;
++import java.util.concurrent.atomic.AtomicInteger;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertFalse;
++import static org.junit.jupiter.api.Assertions.assertNotNull;
++import static org.junit.jupiter.api.Assertions.assertNotSame;
++import static org.junit.jupiter.api.Assertions.assertSame;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.ArgumentMatchers.anyInt;
++import static org.mockito.ArgumentMatchers.anyString;
++import static org.mockito.Mockito.doAnswer;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.verify;
++import static org.mockito.Mockito.when;
++
++/**
++ * {@link MenuFlow}: the two behaviours new to Keystone Phase E6.2 — closing the outgoing menu with
++ * {@code CloseReason.NAVIGATION} on a panel switch (ported from Oriel's committed {@code chest.flow.MenuFlow},
++ * commit 00b8b35 — the E6.1 re-review's open note) and switching to a DIFFERENT panel in place when its size and
++ * title match what's already open (Gangland's {@code MultiPanelInventory} optimization, new to this port) — plus
++ * pinning tests for the rest of the reconciled behaviour (same-id switch, row-count fallback, back/hasBack,
++ * suspend/resume). This module is entirely new code with zero prior tests, so there is no pre-existing "red"
++ * baseline for the ported pieces — see `exec/KS2/E6.2-report.md`.
++ */
++final class MenuFlowTest {
++
++	private final InventoryService service = new InventoryService(mock(CooldownService.class));
++	private final JavaPlugin       plugin  = mock(JavaPlugin.class);
++
++	private record TestState(String label) implements FlowState {
++	}
++
++	private static Inventory fakeInventory(InventoryHolder holder, int size) {
++		ItemStack[] contents = new ItemStack[size];
++		Inventory   inv      = mock(Inventory.class);
++		when(inv.getHolder()).thenReturn(holder);
++		when(inv.getSize()).thenReturn(size);
++		when(inv.getItem(anyInt())).thenAnswer(invocation -> {
++			int idx = invocation.getArgument(0);
++			return idx >= 0 && idx < contents.length ? contents[idx] : null;
++		});
++		doAnswer(invocation -> {
++			int       idx  = invocation.getArgument(0);
++			ItemStack item = invocation.getArgument(1);
++			if (idx >= 0 && idx < contents.length) contents[idx] = item;
++			return null;
++		}).when(inv).setItem(anyInt(), any());
++		return inv;
++	}
++
++	private static BukkitStatics installBukkit() {
++		BukkitStatics bukkit = BukkitStatics.install();
++		bukkit.statics().when(Bukkit::getItemFactory).thenReturn(mock(ItemFactory.class));
++		bukkit.statics().when(() -> Bukkit.createInventory(any(InventoryHolder.class), anyInt(), anyString()))
++		      .thenAnswer(invocation -> fakeInventory(invocation.getArgument(0), invocation.getArgument(1)));
++		return bukkit;
++	}
++
++	private static Player playerNotViewingAnyMenu() {
++		Player          player = mock(Player.class);
++		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
++		InventoryView   view   = mock(InventoryView.class);
++		when(player.getOpenInventory()).thenReturn(view);
++		when(view.getTopInventory()).thenReturn(mock(Inventory.class)); // never equals a menu's own inventory
++		PlayerInventory inventory = mock(PlayerInventory.class);
++		when(player.getInventory()).thenReturn(inventory);
++		return player;
++	}
++
++	/** A minimal {@link ItemHoldingComponent} test double — holds whatever {@link #hold} gave it per player. */
++	private static final class HoldingComponent implements Component<HoldingComponent>, ItemHoldingComponent {
++		private final Map<UUID, List<ItemStack>> held = new HashMap<>();
++
++		void hold(Player player, ItemStack... items) {
++			held.put(player.getUniqueId(), List.of(items));
++		}
++
++		@Override
++		public List<ItemStack> heldItems(Player player) {
++			return held.getOrDefault(player.getUniqueId(), List.of());
++		}
++
++		@Override
++		public void clearHeld(Player player) {
++			held.remove(player.getUniqueId());
++		}
++
++		@Override
++		public void renderInto(SlotView view, RenderContext ctx) {
++			view.setItem(new ItemStack(Material.CHEST));
++		}
++	}
++
++	private static final class SimplePanel implements Panel<TestState> {
++		private final int    rows;
++		private final String title;
++
++		SimplePanel(int rows, String title) {
++			this.rows  = rows;
++			this.title = title;
++		}
++
++		@Override
++		public int rows(TestState state) {
++			return rows;
++		}
++
++		@Override
++		public String title(TestState state) {
++			return title;
++		}
++
++		@Override
++		public void render(MenuFlow<TestState> flow, ChestMenuBuilder builder, TestState state) {
++		}
++	}
++
++	@Test
++	void openAtOpensTheFirstPanel() {
++		try (BukkitStatics bukkit = installBukkit()) {
++			Player player = playerNotViewingAnyMenu();
++			MenuFlow<TestState> flow = MenuFlow.builder(service, plugin, player, new TestState("x"))
++			                                   .panel("a", new SimplePanel(1, "&6A"))
++			                                   .build();
++
++			flow.openAt("a");
++
++			assertEquals("a", flow.currentPanelId());
++			assertNotNull(flow.currentMenu());
++		}
++	}
++
++	@Test
++	void switchToADifferentSizedPanelClosesTheOutgoingMenuWithNavigationSoHeldItemsReturn() {
++		// The explicitly required test (E6.1 re-review's open note): a panel switch to a differently-sized panel
++		// must close the outgoing menu with CloseReason.NAVIGATION, not just abandon it — otherwise anything a
++		// live ItemHoldingComponent was holding is silently discarded along with the old Inventory.
++		try (BukkitStatics bukkit = installBukkit()) {
++			Player player = playerNotViewingAnyMenu();
++			when(player.getInventory().addItem(any())).thenReturn(new HashMap<Integer, ItemStack>());
++
++			HoldingComponent holding = new HoldingComponent();
++			Panel<TestState> panelWithHeldItem = new Panel<>() {
++				@Override
++				public int rows(TestState state) {
++					return 1;
++				}
++
++				@Override
++				public String title(TestState state) {
++					return "&6A";
++				}
++
++				@Override
++				public void render(MenuFlow<TestState> flow, ChestMenuBuilder builder, TestState state) {
++					builder.slot(0, holding);
++				}
++			};
++
++			MenuFlow<TestState> flow = MenuFlow.builder(service, plugin, player, new TestState("x"))
++			                                   .panel("a", panelWithHeldItem)
++			                                   .panel("b", new SimplePanel(2, "&6B")) // different size+title
++			                                   .build();
++			flow.openAt("a");
++
++			ItemStack heldStack = new ItemStack(Material.DIAMOND, 3);
++			holding.hold(player, heldStack);
++
++			flow.switchTo("b");
++
++			verify(player.getInventory()).addItem(heldStack);
++			assertEquals("b", flow.currentPanelId());
++		}
++	}
++
++	@Test
++	void switchToADifferentPanelWithMatchingSizeAndTitleSwitchesInPlace() {
++		// New to this port (Gangland's MultiPanelInventory optimization): a DIFFERENT panel id whose size and
++		// title both match what's already open must switch in place — same ChestMenu object, no close/reopen.
++		try (BukkitStatics bukkit = installBukkit()) {
++			Player player = playerNotViewingAnyMenu();
++			MenuFlow<TestState> flow = MenuFlow.builder(service, plugin, player, new TestState("x"))
++			                                   .panel("a", new SimplePanel(2, "&6Shared"))
++			                                   .panel("b", new SimplePanel(2, "&6Shared"))
++			                                   .build();
++			flow.openAt("a");
++			ChestMenu afterOpen = flow.currentMenu();
++
++			flow.switchTo("b");
++
++			assertSame(afterOpen, flow.currentMenu(), "same size+title -> in-place switch, same ChestMenu, no reopen");
++			assertEquals("b", flow.currentPanelId());
++		}
++	}
++
++	@Test
++	void switchToADifferentPanelWithADifferentTitleReopens() {
++		try (BukkitStatics bukkit = installBukkit()) {
++			Player player = playerNotViewingAnyMenu();
++			MenuFlow<TestState> flow = MenuFlow.builder(service, plugin, player, new TestState("x"))
++			                                   .panel("a", new SimplePanel(2, "&6A"))
++			                                   .panel("b", new SimplePanel(2, "&6B")) // same rows, different title
++			                                   .build();
++			flow.openAt("a");
++			ChestMenu afterOpen = flow.currentMenu();
++
++			flow.switchTo("b");
++
++			assertNotSame(afterOpen, flow.currentMenu(), "a title mismatch must still trigger a full reopen");
++		}
++	}
++
++	@Test
++	void switchToTheSamePanelIdRerendersInPlaceWithoutTouchingTheBackStack() {
++		try (BukkitStatics bukkit = installBukkit()) {
++			Player player = playerNotViewingAnyMenu();
++			MenuFlow<TestState> flow = MenuFlow.builder(service, plugin, player, new TestState("x"))
++			                                   .panel("a", new SimplePanel(1, "&6A"))
++			                                   .build();
++			flow.openAt("a");
++			ChestMenu opened = flow.currentMenu();
++
++			flow.switchTo("a");
++
++			assertSame(opened, flow.currentMenu());
++			assertFalse(flow.hasBack(), "same-id switch must not push onto the back-stack");
++		}
++	}
++
++	@Test
++	void rerenderFallsBackToAFullSwitchWhenTheRowCountChanges() {
++		try (BukkitStatics bukkit = installBukkit()) {
++			Player          player        = playerNotViewingAnyMenu();
++			AtomicInteger   rowsToReturn  = new AtomicInteger(1);
++			Panel<TestState> panel = new Panel<>() {
++				@Override
++				public int rows(TestState state) {
++					return rowsToReturn.get();
++				}
++
++				@Override
++				public String title(TestState state) {
++					return "&6A";
++				}
++
++				@Override
++				public void render(MenuFlow<TestState> flow, ChestMenuBuilder builder, TestState state) {
++				}
++			};
++			MenuFlow<TestState> flow = MenuFlow.builder(service, plugin, player, new TestState("x"))
++			                                   .panel("a", panel)
++			                                   .build();
++			flow.openAt("a");
++			ChestMenu firstMenu = flow.currentMenu();
++			assertEquals(9, firstMenu.bukkitInventory().getSize());
++
++			rowsToReturn.set(2); // the panel now wants 2 rows — mismatches the alrewarning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/page/PageConfigTest.java', LF will be replaced by CRLF the next time Git touches it
+ady-open 1-row inventory
++			flow.rerender();
++
++			assertNotSame(firstMenu, flow.currentMenu(), "a row-count mismatch must fall back to a full reopen");
++			assertEquals(18, flow.currentMenu().bukkitInventory().getSize());
++		}
++	}
++
++	@Test
++	void backEndsTheFlowWhenTheStackIsEmpty() {
++		try (BukkitStatics bukkit = installBukkit()) {
++			Player        player = playerNotViewingAnyMenu();
++			AtomicBoolean ended  = new AtomicBoolean(false);
++			MenuFlow<TestState> flow = MenuFlow.builder(service, plugin, player, new TestState("x"))
++			                                   .panel("a", new SimplePanel(1, "&6A"))
++			                                   .onEnd(state -> ended.set(true))
++			                                   .build();
++			flow.openAt("a");
++			assertFalse(flow.hasBack());
++
++			flow.back();
++
++			assertTrue(ended.get());
++		}
++	}
++
++	@Test
++	void backPopsToThePreviousPanelWhenTheStackIsNotEmpty() {
++		try (BukkitStatics bukkit = installBukkit()) {
++			Player player = playerNotViewingAnyMenu();
++			MenuFlow<TestState> flow = MenuFlow.builder(service, plugin, player, new TestState("x"))
++			                                   .panel("a", new SimplePanel(1, "&6A"))
++			                                   .panel("b", new SimplePanel(1, "&6B")) // same size, different title
++			                                   .build();
++			flow.openAt("a");
++			flow.switchTo("b");
++			assertTrue(flow.hasBack());
++
++			flow.back();
++
++			assertEquals("a", flow.currentPanelId());
++			assertFalse(flow.hasBack());
++		}
++	}
++
++	@Test
++	void suspendAndResumeToggleSuppressClose() {
++		try (BukkitStatics bukkit = installBukkit()) {
++			Player player = playerNotViewingAnyMenu();
++			MenuFlow<TestState> flow = MenuFlow.builder(service, plugin, player, new TestState("x"))
++			                                   .panel("a", new SimplePanel(1, "&6A"))
++			                                   .build();
++			flow.openAt("a");
++			assertFalse(flow.suppressClose());
++
++			flow.suspend();
++			assertTrue(flow.suppressClose());
++
++			flow.resume();
++			assertFalse(flow.suppressClose());
++		}
++	}
++}
+diff --git a/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/page/PageConfigTest.java b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/page/PageConfigTest.java
+new file mode 100644
+index 0000000..70b6086
+--- /dev/null
++++ b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/page/PageConfigTest.java
+@@ -0,0 +1,72 @@
++package org.luckyraven.keystone.inventory.page;
++
++import org.junit.jupiter.api.Test;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertThrows;
++
++/**
++ * {@link PageConfig}: Oriel's arithmetic ({@code slotsPerPage}/{@code pageCount}) plus Gangland's
++ * {@code remainingOnLastPage} contribution.
++ */
++final class PageConfigTest {
++
++	@Test
++	void evenlyDivisibleItemCountFillsEveryPage() {
++		// 6-row menu, region rows 1..4, cols 1..7 -> 4 rows * 7 cols = 28 slots/page. 56 items -> exactly 2 pages.
++		PageConfig config = PageConfig.forSize(6, 1, 4, 1, 7, 56);
++		assertEquals(28, config.slotsPerPage());
++		assertEquals(2, config.pageCount());
++		assertEquals(28, config.remainingOnLastPage(), "an evenly-divisible count fills the last page fully too");
++	}
++
++	@Test
++	void partiallyFilledLastPageReportsTheRemainder() {
++		PageConfig config = PageConfig.forSize(6, 1, 4, 1, 7, 30); // 28/page -> 2 pages, 2 left on page 2
++		assertEquals(2, config.pageCount());
++		assertEquals(2, config.remainingOnLastPage());
++	}
++
++	@Test
++	void zeroItemsIsOnePageWithNothingOnIt() {
++		PageConfig config = PageConfig.forSize(6, 1, 4, 1, 7, 0);
++		assertEquals(1, config.pageCount());
++		assertEquals(0, config.remainingOnLastPage());
++	}
++
++	@Test
++	void defaultInteriorClampsToRowZeroForAOneRowChest() {
++		PageConfig config = PageConfig.defaultInterior(1, 5);
++		assertEquals(0, config.firstRow());
++		assertEquals(0, config.lastRow());
++		assertEquals(1, config.firstCol());
++		assertEquals(7, config.lastCol());
++		assertEquals(7, config.slotsPerPage());
+warning: in the working copy of 'keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/page/PagedRegionTest.java', LF will be replaced by CRLF the next time Git touches it
++	}
++
++	@Test
++	void defaultInteriorLeavesTheOuterRingForABiggerChest() {
++		PageConfig config = PageConfig.defaultInterior(6, 10);
++		assertEquals(1, config.firstRow());
++		assertEquals(4, config.lastRow());
++		assertEquals(1, config.firstCol());
++		assertEquals(7, config.lastCol());
++		assertEquals(28, config.slotsPerPage());
++	}
++
++	@Test
++	void outOfRangeRowsThrows() {
++		assertThrows(IllegalArgumentException.class, () -> PageConfig.forSize(0, 0, 0, 1, 7, 1));
++		assertThrows(IllegalArgumentException.class, () -> PageConfig.forSize(7, 0, 0, 1, 7, 1));
++	}
++
++	@Test
++	void regionRowsOutOfRangeForTheMenuThrows() {
++		assertThrows(IllegalArgumentException.class, () -> PageConfig.forSize(3, 0, 3, 1, 7, 1));
++	}
++
++	@Test
++	void regionColumnsOutOfRangeThrows() {
++		assertThrows(IllegalArgumentException.class, () -> PageConfig.forSize(6, 1, 4, 0, 9, 1));
++	}
++}
+diff --git a/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/page/PagedRegionTest.java b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/page/PagedRegionTest.java
+new file mode 100644
+index 0000000..ae8868c
+--- /dev/null
++++ b/keystone-inventory/src/test/java/org/luckyraven/keystone/inventory/page/PagedRegionTest.java
+@@ -0,0 +1,148 @@
++package org.luckyraven.keystone.inventory.page;
++
++import org.bukkit.Bukkit;
++import org.bukkit.Material;
++import org.bukkit.entity.Player;
++import org.bukkit.event.inventory.ClickType;
++import org.bukkit.event.inventory.InventoryClickEvent;
++import org.bukkit.inventory.Inventory;
++import org.bukkit.inventory.InventoryHolder;
++import org.bukkit.inventory.InventoryView;
++import org.bukkit.inventory.ItemFactory;
++import org.bukkit.inventory.ItemStack;
++import org.bukkit.inventory.PlayerInventory;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.keystone.cooldown.CooldownService;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.chest.ChestMenu;
++import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
++import org.luckyraven.keystone.testkit.BukkitStatics;
++
++import java.util.ArrayList;
++import java.util.List;
++import java.util.UUID;
++import java.util.concurrent.atomic.AtomicBoolean;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertNotNull;
++import static org.junit.jupiter.api.Assertions.assertNull;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.ArgumentMatchers.anyInt;
++import static org.mockito.ArgumentMatchers.anyString;
++import static org.mockito.Mockito.doAnswer;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.when;
++
++/** {@link PagedRegion}: entries render into the configured rectangular region for a given page. */
++final class PagedRegionTest {
++
++	private final InventoryService service = new InventoryService(mock(CooldownService.class));
++
++	private static Inventory fakeInventory(InventoryHolder holder, int size) {
++		ItemStack[] contents = new ItemStack[size];
++		Inventory   inv      = mock(Inventory.class);
++		when(inv.getHolder()).thenReturn(holder);
++		when(inv.getSize()).thenReturn(size);
++		when(inv.getItem(anyInt())).thenAnswer(invocation -> {
++			int idx = invocation.getArgument(0);
++			return idx >= 0 && idx < contents.length ? contents[idx] : null;
++		});
++		doAnswer(invocation -> {
++			int       idx  = invocation.getArgument(0);
++			ItemStack item = invocation.getArgument(1);
++			if (idx >= 0 && idx < contents.length) contents[idx] = item;
++			return null;
++		}).when(inv).setItem(anyInt(), any());
++		return inv;
++	}
++
++	private static BukkitStatics installBukkit() {
++		BukkitStatics bukkit = BukkitStatics.install();
++		bukkit.statics().when(Bukkit::getItemFactory).thenReturn(mock(ItemFactory.class));
++		bukkit.statics().when(() -> Bukkit.createInventory(any(InventoryHolder.class), anyInt(), anyString()))
++		      .thenAnswer(invocation -> fakeInventory(invocation.getArgument(0), invocation.getArgument(1)));
++		return bukkit;
++	}
++
++	private static Player playerNotViewingAnyMenu() {
++		Player          player = mock(Player.class);
++		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
++		InventoryView   view   = mock(InventoryView.class);
++		when(player.getOpenInventory()).thenReturn(view);
++		when(view.getTopInventory()).thenReturn(mock(Inventory.class));
++		PlayerInventory inventory = mock(PlayerInventory.class);
++		when(player.getInventory()).thenReturn(inventory);
++		return player;
++	}
++
++	private static List<PagedRegion.Entry> stoneEntries(int count) {
++		List<PagedRegion.Entry> entries = new ArrayList<>();
++		for (int i = 0; i < count; i++) {
++			entries.add(new PagedRegion.Entry(new ItemStack(Material.STONE, i + 1)));
++		}
++		return entries;
++	}
++
++	@Test
++	void rendersTheFirstPageIntoTheConfiguredRegion() {
++		try (BukkitStatics bukkit = installBukkit()) {
++			// 3-row menu, region = row 1, cols 1..7 -> 7 slots/page. 10 entries -> 2 pages.
++			PageConfig               config  = PageConfig.forSize(3, 1, 1, 1, 7, 10);
++			List<PagedRegion.Entry>  entries = stoneEntries(10);
++
++			ChestMenuBuilder builder = ChestMenu.builder(service).rows(3);
++			PagedRegion.render(builder, config, entries, 0);
++			ChestMenu menu = builder.build();
++			menu.open(playerNotViewingAnyMenu());
++
++			for (int col = 1; col <= 7; col++) {
++				ItemStack item = menu.bukkitInventory().getItem(9 + col);
++				assertNotNull(item, "slot for entry " + (col - 1) + " must be filled on page 0");
++				assertEquals(col, item.getAmount()); // entries[col-1] was built with amount = col
++			}
++		}
++	}
++
++	@Test
++	void lastPageRendersTheRemainderAndLeavesTheRestUntouched() {
++		try (BukkitStatics bukkit = installBukkit()) {
++			PageConfig              config  = PageConfig.forSize(3, 1, 1, 1, 7, 10); // 7/page -> page 1 has 3 left
++			List<PagedRegion.Entry> entries = stoneEntries(10);
++
++			ChestMenuBuilder builder = ChestMenu.builder(service).rows(3);
++			PagedRegion.render(builder, config, entries, 1);
++			ChestMenu menu = builder.build();
++			menu.open(playerNotViewingAnyMenu());
++
++			assertEquals(8, menu.bukkitInventory().getItem(9 + 1).getAmount());  // entries[7]
++			assertEquals(9, menu.bukkitInventory().getItem(9 + 2).getAmount());  // entries[8]
++			assertEquals(10, menu.bukkitInventory().getItem(9 + 3).getAmount()); // entries[9]
++			assertNull(menu.bukkitInventory().getItem(9 + 4), "past the end of entries — cell stays untouched");
++		}
++	}
++
++	@Test
++	void anEntrysClickHandlerFiresOnAClickAtItsSlot() {
++		try (BukkitStatics bukkit = installBukkit()) {
++			PageConfig    config  = PageConfig.forSize(1, 0, 0, 0, 8, 1);
++			AtomicBoolean clicked = new AtomicBoolean(false);
++			List<PagedRegion.Entry> entries =
++					List.of(new PagedRegion.Entry(new ItemStack(Material.DIAMOND), ctx -> clicked.set(true)));
++
++			ChestMenuBuilder builder = ChestMenu.builder(service).rows(1);
++			PagedRegion.render(builder, config, entries, 0);
++			ChestMenu menu   = builder.build();
++			Player    player = playerNotViewingAnyMenu();
++			menu.open(player);
++
++			InventoryClickEvent event = mock(InventoryClickEvent.class);
++			when(event.getRawSlot()).thenReturn(0);
++			when(event.getClick()).thenReturn(ClickType.LEFT);
++			when(event.getCurrentItem()).thenReturn(new ItemStack(Material.DIAMOND));
++			menu.dispatchClick(event, player);
++
++			assertTrue(clicked.get());
++		}
++	}
++}
+diff --git a/keystone-plugin/pom.xml b/keystone-plugin/pom.xml
+index 4db3b59..eba1a89 100644
+--- a/keystone-plugin/pom.xml
++++ b/keystone-plugin/pom.xml
+@@ -95,10 +95,14 @@
+         </dependency>
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+             <artifactId>keystone-shop</artifactId>
+         </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-inventory</artifactId>
++        </dependency>
+ 
+         <!-- Test-only — never shaded (shade consumes compile scope only). keystone-testkit in particular
+              must NEVER move to compile scope here: nothing from it (or Mockito) may enter Keystone.jar. -->
+         <dependency>
+             <groupId>org.luckyraven</groupId>

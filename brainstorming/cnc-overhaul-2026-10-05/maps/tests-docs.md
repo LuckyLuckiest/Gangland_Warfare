@@ -1,0 +1,126 @@
+# Map: tests-docs (testing, acceptance, docs, release bookkeeping, docket) - 0.15 "Lose them"
+
+Code read in worktree `E:/Programming/java/wt/gangland-0.15.0` (branch cnc-lose-them, master 16d1f064, clean tree). Paths below are relative to it
+unless absolute. Line numbers verified by direct read 2026-10-05.
+
+## 1. Binding test rules (documentation/TESTING.md, 237 lines)
+- No pom edits: root pom puts JUnit 6.0.3 (`junit.version` pom.xml:85), Mockito 5.23.0 (:86), `keystone-testkit`, sqlite-jdbc in global deps (sec 1). NO MockBukkit anywhere
+  (only mentioned in old audit .md files). Bukkit seams = Keystone testkit + Mockito (sec 4, 6).
+- Layout (sec 2): `<module>/src/test/java/org/luckyraven/<mirrored pkg>/FooTest.java`, one class per prod class, `support/` pkg for fixtures. 301 test files in the repo.
+- Naming (sec 3): behaviour-named methods, `@DisplayName` on class, javadoc on every test class (cite audit "Observation #n (file.md)"), Java 17, Spigot only, method braces on own lines.
+- Seams (sec 4): `BukkitStatics.install()` in try-with-resources (scheduler runs runnables INLINE; extra stubs via `bukkit.statics().when(...)`); `PluginMocks.plugin(tempDir)`;
+  `CapturingDiagnostics`; `FakeSettingsLookup`; `StaticResets.resetAll()`. Process-wide statics: always close/reset.
+- Sec 4a `BukkitRegistryFixture.install()` (gangland-core test-jar, `org.luckyraven.gangland.core.testsupport`) in `@BeforeAll` whenever code touches `Material.isAir()`,
+  XSeries lookups or `ItemStack.clone/equals`; failure = cascade `NoClassDefFoundError: Registry`. Other testsupport: `BartizanBlindScan`, `BartizanReferenceScan`,
+  `CitizensBlindScan`, `ConfigurationConstructorScan` (gangland-core/src/test/.../core/testsupport/). Consumers declare the gangland-core `test-jar` test dep.
+- Sec 4b: a module with no `Plugins: [Bartizan]` must pass BlindScan (signatures) + ReferenceScan (constant-pool allowlist); go red first.
+- Sec 5 Windows/SQLite (non-negotiable): `@TempDir(cleanup = CleanupMode.NEVER)` never plain; `backend.disconnect()` THEN `DbFiles.release(tempDir)` in `@AfterEach`; track every
+  backend/handler; repository needs `setDataSupplier(...)` before autosave paths. Worked example `RankRepositorySpiTest`. (CLAUDE.md names `MockPluginFactory.releaseDbFiles` - STALE, deleted; TESTING.md `DbFiles.release` is authoritative.)
+- Sec 6 prefer small recording fakes (contracts) over deep mock chains; Mockito only for wide Bukkit types. Sec 7 priority: pure logic > SQLite round-trips > testkit seam tests; skip integration-only (Citizens, particles, bossbars, Vault live).
+- Sec 8 audit observations: pin today's behaviour (green) - but CLAUDE.md docket rule overrides for fixes: new test must be RED against pre-fix code, and flip any pinning test. Sec 9: `mvn clean install -DskipTests` once, then `mvn test -pl <module> -am`; ALWAYS `-am` (revision parent).
+- Maven is blocked in the Bash tool by the context-mode hook: use PowerShell/ctx_execute. The harness wraps builds in `node slot.js mvn ...` (RAM guard).
+
+### Settings statics fixtures
+- `Settings` (gangland-api `org.luckyraven.gangland.file.configuration.Settings`, ~200 `private static @Getter` fields, no reset hook).
+- `SettingsFixture` = `gangland-impl/src/test/java/org/luckyraven/gangland/support/SettingsFixture.java`: `initializeMinimal(Path)` (:43, Money_Symbol only, Auto_Save.Debug false),
+  `write(Path, yaml)` (:52), `initialize(Path)` (:60) re-parses a settings.yml fixture and re-assigns every static. Used by `SettingsTest`, `BountySetCommandTest:60`.
+  It is in the gangland-impl test tree only: modules (cops-n-crooks, core) cannot use it.
+- Module tests prime a single static by reflection: `CopRadioTest` (cops-n-crooks/.../npc/police/radio/CopRadioTest.java:344-347) does `Settings.class.getDeclaredField("moneySymbol")` (commit 16d1f064).
+  `WantedExecutorTest` avoids Settings entirely by stubbing `WantedSettings`/`WantedContext` (gangland-core has no impl dependency).
+- `SettingsDefaultsTest` / `SettingsTest` (gangland-impl/src/test/.../file/configuration/) are the homes for new-key default tests (Take_Money.Enable/Formula, Bounty.Pay_Notoriety, Wanted evasion keys).
+
+## 2. Existing tests touching wanted / bounty / death money / detainment
+| Test (path) | Asserts |
+|---|---|
+| gangland-core/src/test/.../core/wanted/WantedExecutorTest.java (74 l) | ONE test `cancelledTick_thenUncancelledTick_decrements` (:47): cancelled event keeps level 3, next tick decrements to 2 (T-112). Stubs WantedSettings/WantedContext. No test of the money withdraw or message today. |
+| .../core/wanted/WantedTest.java (135 l) | buildStars clamps; ctor zero/not wanted; setLevel clamp 0..max with NO owner (no events); increment adds `increments` clamped; decrement clamps 0. Nothing about events, timers or WantedEndEvent. |
+| .../core/wanted/WantedKillTrackersTest.java (79 l) | holder inert without delegate; handler registered before install is replayed; forwards after install. |
+| .../core/bounty/BountyTest.java | ledger posted+paid: addBounty 2/3-arg, getPaidAmount, removeBounty floors 0, resetBounty clears both, level-scaled maths (`getAutoBountyIncrease`). Pins WB-03/WB-13 ("pins; flip when fixed"). |
+| gangland-core/.../user/UserTest.java | `withdraw` clamp to balance (US-05). |
+| gangland-impl/.../command/sub/bounty/BountySetCommandTest.java | real Users+EconomyHandlers: `setThenClaim_highLevelTarget_conservesMoney` (T-106). Uses SettingsFixture + BukkitStatics + mock(WantedSettings). |
+| gangland-impl/.../command/sub/wanted/WantedAmountGuardTest.java | /glw wanted add/remove refuse amounts <= 0 (T-107). |
+| gangland-impl/.../listener/player/CustomPlayerDeathListenerQuitTest.java | quit-while-downed only. NO test for PlayerDeathListener money (handleMoney / amountDeduction / Threshold / Lose_Money). |
+| cops-n-crooks/.../combo/KillComboTrackerTest.java; seam/KillComboWantedTrackerTest.java | tracker history; seam forwards onWantedTrigger/onComboReset (consumers fed `new KillComboEvent(player, mock)` directly; the event never goes through Bukkit). |
+| cops-n-crooks/.../detainment/economy/DetainmentCostsContractTest.java | handcuff-bribe / bail / jail-bribe cost and `computeSentenceSeconds` scale with level, negative level clamps to base. |
+| cops-n-crooks/.../detainment/DetainmentServiceQuitTest.java; integration/detainment/GanglandSeizedInventoryServiceTest.java; database/DetainmentRepository{Spi,Migration}Test.java | quit-in-jail; seized items; detained table (the Migration test is the pattern for an additive column such as arrest origin or fine-paid). |
+| cops-n-crooks/.../listener/detainment/CopListenerDeathTest.java; npc/police/CopManagerSquadTest.java; radio/SquadRadioTest | wanted-end teardown, stand-down radio once, stranded returning cops. |
+| gangland-item/.../listener/money/MoneyDropListenerTest.java; gangland-api GanglandMoneyDropClassifierTest; cops-n-crooks/seam/CopsMoneyDropSourceTest | drop sources (PLAYER debits via depositService.withdraw, clamped). |
+| NO TEST EXISTS for | JailIntakeService, BribeService, BailService, WantedSign/WantedAspect, EntityDamageListener (handleWanted, bounty claim :126-141), CivilianDeathRewardListener, GanglandWantedSettings, UserDataLoader wanted/bounty read. |
+
+## 3. Acceptance / smoke harnesses
+### A. `brainstorming/bartizan-split-2026-09-08/smoke/smoke.py` (1424 l, README 430 l) - CONSOLE ONLY, no players
+- Python 3 stdlib; launches `E:\Documents\Minecraft\Test Server\ServerStartDebug.bat` via stdin/stdout, deploys jars (`--deploy`: core jar from `repo_dir/target/gangland_warfare-*.jar` + module jars from
+  `target/modules`; `--keystone`; `--restore`), sends a command plan, parses the log for `Loaded module`, ERROR/WARN, `Done (`; writes per-row md/json reports to `smoke/reports/` (222 files).
+- Scenario = JSON row in `smoke/scenarios.json` (32 rows: legacy S1-S8, D0-D9, M1, jetpack-*, ws7-*, cut-full-regression, end-t54-no-gang): `id,title,modules[],plugins[],remove_plugins[],commands[],expect{loaded_modules,must_contain,must_not_contain,no_errors_except}`.
+  CLI: `python smoke.py --list | --dry-run --deploy --rows X | --fake | --rows A,B --deploy --restore` (no ranges). Exit 0 all PASS / 1 any FAIL. Unattended: YES (boot timeout 180 s, stop 120 s, taskkill fallback).
+- Limits: substring checks only, no counts, cannot drive a player. `paths` in scenarios.json still point at `wt\gangland-0.9.2`, `keystone-1.10.0`, `bartizan-0.4.0` - must be repointed to wt\gangland-0.15.0 / Keystone 1.14.0 / Bartizan 0.6.x. Good for a boot-regression row only, not chase scenarios.
+### B. Mineflayer bot sandbox harness (what H11/H12/H13 acceptance actually used) - the chase-scenario vehicle
+- Lives OUTSIDE the repo, in a volatile temp dir: `C:\Users\Hashim\AppData\Local\Temp\claude\E--Programming-java-Keystone\testserver-work\` (`harness/` 333 files, `servers/<clone>`, `runs/<name>`). Not git-tracked; README `harness/README.md`. RISK: the temp dir may be purged; copy it somewhere durable before the wave leans on it.
+- Clone: `bash harness/clone.sh <name> <port> [--fresh-data] [--fresh-world] [--force]` (copies pristine `servers/base`: Paper 1.21.11, online-mode off, base port 25601, JDK 26). Prep scripts (`h13reg-f-prep.sh` etc.) stage jars (all 9 `target/modules/*.jar`, Keystone, Bartizan), copy live Citizens config.yml + live settings.yml/npc yml, set `generate-structures=false` and `Debug.Modules`. Live server is never touched.
+- Run: `cd harness && node run.js --server ../servers/<n> --jar paper-1.21.11.jar --scenario s.json --out ../runs/<n> --version 26.1` (client 26.1 via ViaVersion). Boots, waits `Done (`, runs steps, stops. Outputs server.log with `>>> STEP n`, chat.txt, steps.json, summary.txt. Exit 1 if any step failed. Fully unattended; takes one of 3 heavy-slot lock files (`slot.js`).
+- Scenario = JSON array of steps: `{console}`, `{wait}`, `{join:"Bot"}` (ops the bot), `{chat:"/glw wanted add 3"}`, `{expectChat:regex,timeout}`, `{expectLog:regex,timeout}`, `{window:"dump"}`, `{click}`, `{hold}`, `{useItem}`, `{swing}`, `{lookAt:[x,y,z]}`, `{quit}`. Example `scen-lm-boot.json`: join Runner, `/glw wanted add 1`, expectChat, `/glw wanted clear`, quit. Bigger scenarios are generated by `gen-*.js` (e.g. gen-h13dn.js) and measured by purpose-built runners (`run-h13*.js`, `run-squad.js`: bot-view entity yaw/position sampler -> pkts.jsonl/track.jsonl, `snap`, `captureLog`) plus `*-verdict.js`.
+- Existing scenarios relevant to 0.15: `scen-h11-losbreak.json` (line-of-sight break, H11), `scen-h12sqr-rewanted-a/b.json` + `h12sqr-rewanted.js` (re-wanted after clear), `scen-h12sqr-pkill.json`, `scen-h13s-*` (stuck: street/indoor/inview/away), `scen-h13brm-l3|l4*.json` + `gen-h13rm-scen.js` (L3/L4/L5 engagements, retreats, medics), `scen-h13dn*.json` (death drops/cash/names), `scen-h13f-sd*.json` (stand-down), `scen-h13f-face*.json` (facing).
+- Reports of record: `E:/Programming/java/wt/_programme/acceptance/*.md` (h13-regression.md = 5/5 PASS, h13-roles-medic.md, h13-stuck.md, h13-drops-names.md, h13b-roles-visuals.md, h13f-live-round2.md; older ladder-melee, retreat, squad-tactics, gun-release). The "0.13.x regression suite" the spec reuses = the h13-regression lanes (ladder climbs, melee pair slots, retreat Fall_Back/In_Cover, Bartizan exact trigger release, crit sound), runs `h13reg-f-*`.
+- Gaps for 0.15 "Done when": no scenario yet for 1/3/5-star ladder, cuffed, logout mid-chase, evasion-drop (star drops with no death after breaking LOS). The bot cannot read boss bars or titles (README: "titles/bossbars not captured"; actionbar via `/game_info`), so boss-bar acceptance needs a packet-level hook or a manual check. Open h13f issue: server-side facing tail 0.36% of shots over 93 deg - not 0.15 scope.
+- Prerequisites for unattended runs: free port per clone, a free heavy slot, Paper 1.21.11 + JDK 26 install, node + mineflayer.
+
+## 4. Docs (paths)
+- Changelogs: only `documentation/v0.7.3-DEV/CHANGELOG.md`, `v0.7.4-DEV/CHANGELOG.{md,bbcode.txt}`, `v0.7.5-DEV/CHANGELOG.{md,bbcode.txt}` (latest = 0.7.5-DEV). Since 0.9 release notes are `documentation/migration-<rev>.md` (0.9.0, 0.9.2, 0.10.0, 0.11.0, 0.12.0; NO migration-0.13.0.md exists). Front page `documentation/FRONT-PAGE.md` + `FRONT-PAGE.bbcode.txt`. The 0.12.0 housekeeping commit e3bc4c0c touched only `pom.xml` + `migration-0.12.0.md` (134 l: dependencies, new cops.yml keys, behaviour changes, required versions). Memory rule: changelog requests produce BOTH .md and .bbcode.txt.
+- Feature docs: `documentation/features/wanted-bounty.md` (180 l; How Stars Are Earned :17, Lost :27, Police Response :34, Cost of Being Wanted :47, Bounty System :69, Commands :87, Configuration :100, API :149), `features/cops-n-crooks.md` (549 l), `features/jail-detainment.md` (252 l), `features/economy.md`; developer: `developer/cops-n-crooks.md` (1600 l), `developer/configuration.md` (cops.yml key table ~:388-428; documents Stuck.* as 0.13.0), `developer/civilians.md`, `gangland-api.md`, `module-loader.md` (seams; :26 lists 0.13.0 healthbars jar), `bartizan-integration.md`.
+- Manual checklists: `documentation/tests/features/wanted-bounty.md` (75 l, all unchecked), `tests/features/cops-n-crooks.md` (71 l), `tests/features/jail-detainment.md`, `tests/UNIVERSAL-PRE-SHIP.md` (mandatory each release), `tests/README.md`, `tests/TEMPLATE.md`.
+- `docs/wiki/workflow-audit-07-wanted-bounty-combat.md`, `-08-cops-detainment-jail.md` are copies of `brainstorming/workflow-audit-2026-09-02/{wanted-bounty-combat,cops-detainment-jail}.md`.
+
+## 5. commands.json / version bookkeeping
+- Core: `gangland-impl/src/main/resources/commands.json` (wanted keys :190-212: wanted, wanted_help, wanted_add, wanted_remove, wanted_clear, wanted_clear_others; bounty :218-232 incl. bounty_set, bounty_remove).
+- cops-n-crooks: `gangland-features/cops-n-crooks/src/main/resources/commands.json` (/glw cop help/list/spawner set|remove|list|info|teleport :47-72, jail commands). A command's entry goes in the jar that owns the command. Other modules each own one (civilians, gadget, gang, lootchest, mail, npc-shops, turf).
+- Revision: root `pom.xml:57 <revision>0.13.0</revision>` -> 0.15.0 (flatten plugin writes `.flattened-pom.xml` per module; ignore). `keystone.version` :70 = 1.14.0, `bartizan.version` :71 = 0.6.0 (Bartizan master is 0.6.1; decide whether to bump). `gangland-impl/src/main/resources/plugin.yml:2 version: ${project.version}`; every module.yml `Version: ${project.version}` (line 4; 9 modules: cops-n-crooks, civilians, gadget, gang, healthbars, lootchest, mail, npc-shops, turf); gangland-build copies 9 module jars with `${project.version}` (pom :121-161). So ONLY pom.xml:57 changes for the revision; other "0.13.0" strings are prose in docs/javadoc (configuration.md:388/428, module-loader.md:26, StuckSettings, CopsNCrooksYamlConfig, BleedSettings/BleedSpot/FieldCareSettings javadoc).
+- API line: `gangland-api/src/main/java/org/luckyraven/gangland/GanglandApi.java:30  String VERSION = "2.0";`; every module.yml `Host_Api: 2.0` (line 6; floor semantics: module minor <= host minor). Bump VERSION to "2.1"; module.yml may stay 2.0 unless a module needs the new API (then 2.1).
+- Docs to touch on release: new `documentation/migration-0.15.0.md`, wanted-bounty.md, cops-n-crooks docs, configuration.md, gangland-api.md (api table), tests/features checklists, CLAUDE.md pin note.
+
+## 6. Bug docket (cross-docket `brainstorming/cross-docket-2026-09-10/bugs.json`, 1137 rows; `bug-docket-2026-09-06/bugs.json` 660 rows is a strict subset by id)
+Live status is in the artifact db (collection `bugs`) and is NOT readable offline. Local seeds (`cross-docket-2026-09-10/status-seed-out.json`, `gangland/status-extra.json`) only show: US-06, WB-01, WB-02 fixed; T-112 fixed (0.12.0 354784b7); T-128 fixed (c9bd3ee4). For all others check the artifact db first.
+| id | tier | title | test pins it? |
+|---|---|---|---|
+| WB-20 | P2 | Sign/command-granted wanted levels never decay (WantedAspect.java:32, WantedAddCommand.java:47 call setLevel, no WantedExecutor) | no. VERIFIED still true. The spec's "one increment method" fixes it. |
+| WB-04 | P1 | Decay timer never starts on join: setLevel deferred to main thread, isWanted check UserDataLoader:99 vs :160 | no |
+| WB-11 | P1 | One WantedEvent/BountyEvent instance stays cancelled | no row test; fixed in practice by T-112 (`event.setCancelled(false)` WantedExecutor:63) |
+| T-112 | P2 | One cancelled decay tick froze decay | WantedExecutorTest.cancelledTick_thenUncancelledTick_decrements (fixed 0.12.0) |
+| WB-06 | P1 | Wanted/bounty executors run async and call events, Vault, messages | no (`timer.start(true)` EntityDamageListener:219, UserDataLoader:168) |
+| WB-07/08/28/29/30/31 | P1/P1/P3/P3/P3/P2 | kill-combo window 20x, HashMap async, onComboIncrement never assigned, KillComboEvent never called, killHistory unbounded, pointKillCount never reduced | only KillComboTrackerTest (history growth) for 08/30. WB-29 CONFIRMED: KillComboEvent is only constructed, never `callEvent`. |
+| CJ-39 | P3 | CopDeathEvent is never fired | no; CONFIRMED zero references outside its events package |
+| WB-01/02/03/13/12/14/16/22/24/43 | P0/P0/P1/P1/P1/P2/P3/P2/P2/P3 | bounty ledger/refund/negatives/hasBounty on negative/auto-accrual bypasses ledger/userSetBounty keyed by live sender and not persisted/Kill.Each dead with timer/over-cap overshoot/no refund on payoff/self bounty/gangmate claim | BountyTest pins 03 + 13 ("flip when fixed"); 01/02 fixed; 12/14/16/22/24/43 untested. WB-12 is the spec's "posted total not persisted". |
+| T-106 | P0 | Level-scaled player bounties mint money on claim | BountySetCommandTest (fixed) |
+| T-107 | P3 | /glw wanted add/remove accept negatives | WantedAmountGuardTest (fixed) |
+| US-05 / US-06 | P1/P0 | Death tax withdraw can throw EconomyException in handler / death drops mint cash | UserTest withdraw clamp / MoneyDepositService.withdraw (US-06 fixed f6f73626). US-05 is NOT the spec's "broken Formula throws out of handler" (:213-228); no docket row for a throwing Formula. |
+| US-18, US-33, WB-17 | P2/P3/P3 | bounty+wanted timers started async from async DB task; recentDeaths/downedBroadcasted never pruned | no |
+| WB-35 | P3 | Wanted.Enable parsed but never read | no |
+| WB-09/10/38/40/41/42, LS-36 | various | downed-state defects (quit while downed, reload, static instance, cops target downed, HIGHEST ordering) | CustomPlayerDeathListenerQuitTest touches 09 only |
+| CJ-15 | P2 | Cops leak after wanted ends and player quits | no |
+| CJ-27 | P2 | WantedLevelChangeEvent fires before the level updates (Wanted.java:65-88) | no. VERIFIED: event fired at :65 before assignment :79; matters for any decay-policy / cause-carrying listener. |
+| CJ-19, CJ-21, CJ-30, CJ-40 | P3 | detainPlayer twice per intake; bribe GUI reachability (unverified); "Serve Sentence" not implemented; bail/bribe double-click race | no |
+| T-124 | P3 | Lieutenant cops sometimes cuff a passive wanted player | sandbox only |
+| T-128 / T-137 | P3 | Stand_Down radioed twice (fixed) / receiver dedupe set never cleaned, double onWantedEnd teardown remains | CopManagerSquadTest, SquadRadioTest / none |
+| T-130, T-175 | P2 | re-wanted far from returning cops: no fresh cops up to 300 s; cops freeze after wanted player dies | CopManagerSquadTest.spawnTask_ignoresStrandedReturningCops; ReturningBehaviorTest |
+| TF-49 | P3 | Defending own turf raises wanted (no defender exemption) | no (owner decision D10 / W4-H; spec: turf-war kills half heat, defender none) |
+| UI-16, UI-21, WB-37 | P1/P2/P2 | Plaque DriverV1/V2 (WONTFIX, moved); phone_bounty.yml dead | n/a |
+- NOT in the docket (searched title/location): `Lose_Money: false` PAYING the player (spec cites PlayerDeathListener.java:148-154); a throwing death `Formula`; `[WANTED]` sign usable under cop sight; bounty auto-accrual alt-farm; jail intake charge. Per CLAUDE.md add them to `brainstorming/bug-docket-2026-09-06/triage/<slug>.txt` (or cross-docket `gangland/findings/*.txt`) and rebuild with `build_docket.py` when fixed.
+- Workflow: ids `<code>-<nn>`; read the row's fix + tests before touching; after the fix write status via ArtifactData to the artifact db; new tests must be red first.
+
+## 7. Spec drift (SPEC-0.15.md vs worktree)
+1. API number: spec body says gangland-api "2.2" in the Foundations/Chase rows and the bump-cadence line (:385); owner ruling (:15-16) corrects to 2.1. `GanglandApi.VERSION = "2.0"` is at `gangland-api/src/main/java/org/luckyraven/gangland/GanglandApi.java:30` (no `api/` subpackage).
+2. settings.yml cites for the cops economy block are +1 off: Handcuff_Bribe is :427-429 (spec :426-428), Bail :432-434 (spec :431-433), Jail_Bribe :438-442 (spec :437-441). Take_Money :273-278 (spec :273-279, ok), Bounty Repeating_Timer :260-267 (spec :260-266), Lose_Money :217-218 ok, Threshold :227 ok.
+3. WantedAspect.canExecute is :63 (spec :62-79). CopRadio.listenerFor is declared at :90 (spec range :79-91, ok). Spot-checked EXACT: WantedExecutor :54-60/:68-70/:85-87, Settings.java :94-95/:537/:544-545/:554, PlayerDeathListener :116-119/:131-157/:148-154/:213-228 (code threshold check :118), EntityDamageListener handleWanted :206 and bounty claim :126-141, Bounty.java :22/:31, CopGroup :70/:144/:149, DetainmentListener WeaponShootEvent handler :46, Keystone NpcSquad.reportSighting :186, DetainmentCostsContract.computeBailCost :41.
+4. Spec calls CopDeathEvent/KillComboEvent "dormant": true for both, but `KillCombo.java:55,122,148` DOES construct KillComboEvent and hands it to Consumer callbacks (KillComboWantedTracker). "Fire through Bukkit" = add `Bukkit.getPluginManager().callEvent`, not create the class.
+5. Spec puts WantedEndEvent cause / WantedEvasionStateEvent / CrimeCommittedEvent / CrimeService in gangland-api. Today `WantedEndEvent` lives in gangland-CORE (`gangland-core/src/main/java/org/luckyraven/gangland/core/events/wanted/WantedEndEvent.java`, ctor `(Player, Wanted)` only; siblings WantedEvent, WantedLevelChangeEvent, WantedStartEvent) and `Wanted`/`WantedExecutor`/`WantedKillTracker` are core too. Modules compile against gangland-api only (which re-exports core at compile scope per CLAUDE.md), so verify where new types should sit; the spec's "gangland-core + gangland-api" is ambiguous.
+6. "Every star increment goes through one method": real increment sites = EntityDamageListener:211 `incrementLevel` (handleWanted), CivilianDeathRewardListener:48 `incrementLevel` (gangland-civilians), WantedAspect:32 `setLevel(current+amount)`, WantedAddCommand:49/:87 `setLevel`. Decrease/clear sites = WantedExecutor:77, WantedRemoveCommand:50/:87, WantedClearCommand:46/:71, GanglandWantedClearContract:36 (arrest/bribe), EntityDamageListener ~:203 `reset()` (death), RemoveAccountListener:93, UserRepository:63 / UserDataLoader:105 (load). `WantedExecutor` is constructed ONLY at EntityDamageListener:215 and UserDataLoader:168; WantedAspect, WantedAddCommand and the civilian reward start no timer (WB-20 live).
+7. Spec says today's Lose_Money:false deposits the formula amount: CONFIRMED (`PlayerDeathListener.java:148-153` withdraw vs `depositAmount`). The `handleCommandExecution` boolean is inverted-named (docket WB-41).
+8. Spec "bundled money.yml ships it false" is a FUTURE change: today `Drop_Sources.PLAYER.Enabled: true` (`gangland-impl/src/main/resources/items/money.yml:57`), COP :70, CIVILIAN :77, MOB :84 all true.
+9. Bounty persistence: code has TWO in-memory ledgers `Map<CommandSender,BigDecimal>` (userSetBounty :22, userPaidBounty :31; WB-01 fix). Spec mentions posted/paid but the additive column must cover both and a key change from live CommandSender (WB-12).
+10. WantedExecutorTest has exactly one test, so "add off, formula, zero-price and broken-formula cases" means building the WantedSettings stub for money paths from scratch (setUp at :34 only stubs what the cancel test needs).
+11. Current Settings defaults: `Settings.java:544` Take_Money.Amount default "50", :545 Multiplier 5, no Enable/Formula read; Wanted.Repeating_Timer.Time default 120 (:547) multiplier 1.1 per star (settings.yml:286-287); spec ladder "Today" column (132 s etc.) = 120 x 1.1^stars - consistent.
+12. Docs: CLAUDE.md still names `MockPluginFactory.releaseDbFiles`; TESTING.md is authoritative. Root pom pins Bartizan 0.6.0 although master is 0.6.1.
+
+## 8. Seams (no proposals beyond these)
+- Release bookkeeping touch list: pom.xml:57; GanglandApi.VERSION; new migration-0.15.0.md (+ FRONT-PAGE md/bbcode if announcing); docs in sec 5; docket status writes; `graphify update . --force` at end.
+- Test homes: money-formula class -> gangland-core test (pure); WantedExecutor cases -> existing WantedExecutorTest; death bill / Lose_Money -> new gangland-impl PlayerDeathListener test with SettingsFixture + BukkitStatics; jail-intake fine -> cops-n-crooks detainment test with a DetainmentCostsContract fake; bounty persistence -> BountyTest + a UserRepository/UserDataLoader SQLite test (TempDir NEVER + DbFiles.release).
+- Acceptance: add scenario JSONs + `gen-0.15-*.js` to the Keystone-temp harness (copy it into a durable location first); smoke.py only for a boot-regression row after repointing `paths` in scenarios.json.

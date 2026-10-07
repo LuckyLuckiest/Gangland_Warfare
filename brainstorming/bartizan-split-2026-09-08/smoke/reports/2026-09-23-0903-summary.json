@@ -1,0 +1,19 @@
+[
+  {
+    "id": "end-t54-no-gang",
+    "title": "END batch T-54 proof (2026-09-23, fcc41a32): gang module NOT deployed. turf (Depends: [civilians, gang]) and mail (Depends: [gang]) are both expected to refuse with module.dependency.missing and stay unloaded -- non-fatal, server still boots (established S6/D6 pattern). civilians/cops/gadget/npcshops/lootchest should load normally. Proves PermissionRepository's move into the gang module means the core repository scan no longer registers an orphan: no reload/autosave should ever log 'No data supplier set for repository: Permission' again.",
+    "verdict": "FAIL",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "civilians",
+      "gadget",
+      "lootchest",
+      "npcshops"
+    ],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-23-0903-end-t54-no-gang.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-23-0903-end-t54-no-gang.log"
+  }
+]

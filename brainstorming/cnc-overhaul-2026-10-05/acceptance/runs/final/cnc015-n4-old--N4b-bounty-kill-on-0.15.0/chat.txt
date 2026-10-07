@@ -1,0 +1,31 @@
+[Target] Target joined the game
+[Target] [ViaVersion] There is a newer plugin version available: 5.12.0, you're on: 5.12.0-SNAPSHOT
+[Target] Hunter joined the game
+[Hunter] Hunter joined the game
+[Hunter] [ViaVersion] There is a newer plugin version available: 5.12.0, you're on: 5.12.0-SNAPSHOT
+[Hunter] Hunter balance:
+[Hunter] $0
+[Hunter] [Server] CNCMARK:N4:BAL0
+[Target] [Server] CNCMARK:N4:BAL0
+[Target] Target was killed by Hunter.
+[Target] [Server: Applied 1000 damage to Target]
+[Hunter] GLW >> You claimed the $500 bounty on Target.
+[Hunter] Target was killed by Hunter.
+[Hunter] [Server: Applied 1000 damage to Target]
+[Hunter] Hunter balance:
+[Hunter] $500
+[Hunter] [Server] CNCMARK:N4:BAL1-after-first-kill
+[Target] [Server] CNCMARK:N4:BAL1-after-first-kill
+[Target] Target was killed by Hunter.
+[Target] [Server: Applied 1000 damage to Target]
+[Hunter] Bounty +5
+[Hunter] Target was killed by Hunter.
+[Hunter] [Server: Applied 1000 damage to Target]
+[Hunter] Hunter balance:
+[Hunter] $500
+[Hunter] [Server] CNCMARK:N4:BAL2-after-second-kill
+[Target] [Server] CNCMARK:N4:BAL2-after-second-kill
+[Target] GLW >> Bounty $0
+[Target/end] [END] disconnect.quitting
+[Hunter] Target left the game
+[Hunter/end] [END] disconnect.quitting

@@ -1,0 +1,2292 @@
+warning: in the working copy of 'gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/GanglandLootChestMessages.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestSettings.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-lootchest/src/main/resources/commands.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-lootchest/src/main/resources/lootchests/loot_chest_settings.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-lootchest/src/main/resources/lootchests/lootchest_messages.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-lootchest/src/main/resources/lootchests/lootchest_messages_es.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/config/GanglandLootChestMessagesTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/config/LootChestSettingsTest.java', LF will be replaced by CRLF the next time Git touches it
+diff --git a/README.md b/README.md
+index 60d63add..cedadea5 100644
+--- a/README.md
++++ b/README.md
+@@ -144,7 +144,7 @@ Bartizan type. Six runtime modules ship alongside it and can be dropped or added
+ | `gangland-gadget` (runtime module)     | Cars (`/glw car`) and jetpacks                                               |
+ | `gangland-mail` (runtime module)       | Mail, gang invites, and alliance requests                                    |
+ | `sign-api`                             | Sign interaction system                                                      |
+-| `lootchest-api`                        | Loot chest system with hologram support                                      |
++| `gangland-lootchest` (runtime module)  | Loot chest system (hologram support via Keystone's `keystone-hologram`) — was the `gangland-ui/lootchest-api` library, split 0.10.0 |
+ | `gangland-build`                       | Shade assembly — produces the final deployable JAR                           |
+ 
+ The weapon system (`gangland-weapon`) and the recoil NMS adapters (`gangland-compatibility/version-*`) left this
+diff --git a/documentation/developer/README.md b/documentation/developer/README.md
+index 4efde455..12da0548 100644
+--- a/documentation/developer/README.md
++++ b/documentation/developer/README.md
+@@ -62,10 +62,9 @@ gangland_warfare/
+ │   ├── cops-n-crooks/          Police NPCs, civilians, wanted/bounty, jail
+ │   ├── gangland-weapon/        Weapon engine, projectiles, modifiers
+ │   ╰── gangland-gadget/        Cars, jetpacks, fuel
+-├── gangland-ui/
+-│   ├── sign-api/               Sign interaction system
+-│   ├── lootchest-api/          Loot chest with cracking
+-│   ╰── hologram-api/           Floating text displays
++├── gangland-ui/                (lootchest-api -> gangland-features/gangland-lootchest, hologram-api -> Keystone's
++│                                 keystone-hologram, both at 0.10.0 WS3)
++│   ╰── sign-api/               Sign interaction system
+ ├── gangland-compatibility/
+ │   ├── version-impl/           Adapter interfaces
+ │   ╰── version-1_16_R1..1_21_R7/  20 NMS adapter modules (MC 1.16+)
+diff --git a/documentation/developer/modules.md b/documentation/developer/modules.md
+index 0d5cd59c..f0715e1f 100644
+--- a/documentation/developer/modules.md
++++ b/documentation/developer/modules.md
+@@ -21,8 +21,8 @@ the module's purpose, package structure, key classes, and how it integrates with
+ 9. [gangland-features/gangland-gadget](#gangland-featuresgangland-gadget)
+ 10. [gangland-ui/inventory-api](#gangland-uiinventory-api) — deleted at the 0.10.0 WS2 CUT gate, kept as a stub
+ 11. [gangland-ui/sign-api](#gangland-uisign-api)
+-12. [gangland-ui/lootchest-api](#gangland-uilootchest-api)
+-13. [gangland-ui/hologram-api](#gangland-uihologram-api)
++12. [gangland-ui/lootchest-api](#gangland-uilootchest-api) — became the `gangland-features/gangland-lootchest` runtime module at the 0.10.0 WS3 G2 gate
++13. [gangland-ui/hologram-api](#gangland-uihologram-api) — deleted at the 0.10.0 WS3 G1 gate, kept as a stub
+ 14. [gangland-compatibility](#gangland-compatibility)
+ 
+ ---
+@@ -1126,19 +1126,28 @@ Bulk sign operations.
+ 
+ ## gangland-ui/lootchest-api
+ 
+-**Purpose:** Loot chest system with cracking mini-game, cooldown management, hologram integration, tiered loot tables,
+-and a comprehensive event lifecycle.
+-
+-**Java Files:** 33 | **Package:** `org.luckyraven.gangland.lootchest.*`
+-
+-### Root Classes
++**Became the `gangland-features/gangland-lootchest` runtime module at the 0.10.0 WS3 G2 gate** (folded in whole,
++along with the `gangland-impl`-side classes it used to depend on — `LootChestManager`, `LootChestWand`,
++`LootChestWandTag`, the repository/table, the command/listener classes — no library jar survives). The package
++stays `org.luckyraven.gangland.lootchest.*` unchanged. G4 additionally moved the module's messages/settings off
++`gangland-api`'s `Messages`/`Settings` onto its own `lootchests/lootchest_messages.yml`/`loot_chest_settings.yml`
++(new `config/LootChestFileConfig`, `config/LootChestModuleConfig`, plus concrete `GanglandLootChestMessages`/
++`LootChestSettings` implementations that read those files instead of core statics) and its 4 `/glw lootchest*`
++commands.json entries into the module's own `commands.json`. See
++[`documentation/module-loader.md`](module-loader.md) for the module-loader mechanics and
++[`brainstorming/decoupling-wave-2026-09-14/exec/WS3/`](../../brainstorming/decoupling-wave-2026-09-14/exec/WS3/)
++for the move's own reports. This section stays only as a historical pointer to the pre-move library layout (33
++files); the class-by-class table it used to hold described `gangland-ui/lootchest-api` and the `gangland-impl`
++classes separately — they are now one module, **48 files** total.
++
++### Root Classes (pre-move layout, historical)
+ 
+ | Class                       | Description                                                                                                                                                                                |
+-|-----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+-| `LootChestService.java`     | Abstract service managing the loot chest lifecycle: handler registration, cooldown tracking, hologram display, cracking session orchestration. Concrete implementation in `gangland-impl`. |
++|-----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
++| `LootChestService.java`     | Abstract service managing the loot chest lifecycle: handler registration, cooldown tracking, hologram display, cracking session orchestration. Concrete implementation (`LootChestManager`) now lives in the same module, not `gangland-impl`. |
+ | `ChestCooldownManager.java` | Tracks per-chest cooldown timers. Prevents re-opening chests before cooldown expires.                                                                                                      |
+ 
+-### Subpackage: `config/`
++### Subpackage: `config/` (pre-move layout; `LootChestFileConfig`/`LootChestModuleConfig` added in G4, not shown here)
+ 
+ | Class                            | Description                                                                                     |
+ |----------------------------------|-------------------------------------------------------------------------------------------------|
+@@ -1197,25 +1206,32 @@ Custom events (8 total + 1 base).
+ | `lootchest/LootChestCooldownCompleteEvent.java` | Fired when a chest's cooldown expires.                  |
+ | `lootchest/LootChestDuringCooldownEvent.java`   | Fired each tick during cooldown (for hologram updates). |
+ 
+-### Subpackage: `listener/`
++### Subpackage: `listener/` (pre-move layout; `LootChestEarnGoodsListener`/`LootChestWandListener` moved in from
++`gangland-impl` at the same G2 gate, not shown here)
+ 
+ | Class                    | Description                                                            |
+ |--------------------------|------------------------------------------------------------------------|
+ | `LootChestListener.java` | Bukkit event listener routing chest interactions to the handler chain. |
+ 
+----
++### Subpackage: `command/` and `database/` (new in G2, moved in from `gangland-impl`)
+ 
+-## gangland-ui/hologram-api
++| Class                                    | Description                                                                                   |
++|-------------------------------------------|------------------------------------------------------------------------------------------------|
++| `command/LootChestWandCommand.java`        | Root `/glw lootchest` command; gives the admin wand.                                           |
++| `command/LootChestRemoveCommand.java`      | `/glw lootchest remove` — unregisters the chest the player is looking at.                      |
++| `command/LootChestWandEditCommand.java`    | `/glw lootchest wand edit` — opens the wand's config menu for the held wand.                   |
++| `database/LootChestRepository.java`        | `AbstractRepository<LootChestData>`, table `loot_chest` (name/schema unchanged by the move).   |
++| `database/LootChestTable.java`             | Table definition for `database/LootChestRepository`.                                           |
+ 
+-**Purpose:** Minimal hologram display system for floating text above loot chests, waypoints, and other world markers.
++---
+ 
+-**Java Files:** 3 | **Package:** `org.luckyraven.gangland.hologram.*`
++## gangland-ui/hologram-api
+ 
+-| Class                             | Description                                                                                                     |
+-|-----------------------------------|-----------------------------------------------------------------------------------------------------------------|
+-| `HologramService.java`            | Creates, updates, and removes holograms at world locations. Manages hologram entity lifecycle and text updates. |
+-| `Hologram.java`                   | Hologram data model (location, lines, visibility range). Wraps armor stand entities with invisible bodies.      |
+-| `HologramProtectionListener.java` | Prevents players from interacting with or damaging hologram armor stand entities.                               |
++**Deleted at the 0.10.0 WS3 G1 gate.** Holograms moved to Keystone's own `keystone-hologram` module
++(`org.luckyraven.keystone.hologram.*`, package renamed from `org.luckyraven.gangland.hologram.*`) — see
++`Keystone/docs/keystone-hologram.md` in the sibling Keystone repo for the current architecture. This section stays
++only as a historical pointer; the class-by-class table it used to hold (3 files) described a module that no longer
++exists in this repo.
+ 
+ ---
+ 
+@@ -1287,8 +1303,7 @@ gangland-build (shade assembly)
+   │     ├── gangland-weapon
+   │     ├── gangland-gadget
+   │     ├── sign-api
+-  │     ├── lootchest-api
+-  │     ├── hologram-api
++  │     ├── gangland-features/gangland-lootchest (was lootchest-api, 0.10.0 WS3 G2)
+   │     ├── version-impl
+   │     ╰── version-1_10_R1 ... version-1_21_R7
+   │
+@@ -1319,7 +1334,7 @@ gangland-build (shade assembly)
+   │     ├── gangland-weapon
+   │     ╰── plugin-common
+   │
+-  ├── UI modules (inventory, sign, lootchest, hologram)
++  ├── UI modules (inventory — deleted 0.10.0 WS2; sign)
+   │     ├── gangland-core
+   │     ╰── plugin-common
+   │
+@@ -1343,8 +1358,7 @@ gangland-build (shade assembly)
+ | `gangland-weapon`     | 83         | 17       | Weapons, projectiles, modifiers, reload                                 |
+ | `gangland-gadget`     | 47         | 14       | Vehicles, jetpacks, fuel                                                |
+ | `sign-api`            | 28         | 8        | Sign interaction framework                                              |
+-| `lootchest-api`       | 33         | 7        | Loot chest system                                                       |
+-| `hologram-api`        | 3          | 1        | Floating text holograms                                                 |
++| `gangland-features/gangland-lootchest` (was `lootchest-api`) | 48 | 8 | Loot chest system (runtime module since 0.10.0 WS3 G2; `hologram-api` folded out to Keystone, not counted here) |
+ | `version-impl`        | 6          | 2        | Compatibility interfaces                                                |
+ | Version modules (x27) | 54         | 27       | NMS adapters                                                            |
+ | **Total**             | **~791**   | **~170** |                                                                         |
+diff --git a/documentation/developer/ui-framework.md b/documentation/developer/ui-framework.md
+index d4afa496..8449b2ab 100644
+--- a/documentation/developer/ui-framework.md
++++ b/documentation/developer/ui-framework.md
+@@ -4,13 +4,15 @@
+ 
+ `gangland-ui/inventory-api` was deleted outright at the 0.10.0 WS2 CUT gate — every menu in this repo now builds
+ on Keystone's `keystone-inventory` library plus a thin Gangland-only YAML dialect living in `gangland-impl`'s own
+-`org.luckyraven.gangland.menu.*` package. Three independent modules remain under `gangland-ui/`:
++`org.luckyraven.gangland.menu.*` package. `gangland-ui/hologram-api` was deleted at the 0.10.0 WS3 G1 gate —
++holograms moved to Keystone's own `keystone-hologram` module (`org.luckyraven.keystone.hologram.*`). `lootchest-api`
++became the `gangland-features/gangland-lootchest` runtime module at the WS3 G2 gate (folded in whole with the
++`gangland-impl`-side classes it used to pair with — package stays `org.luckyraven.gangland.lootchest.*`). One
++module remains under `gangland-ui/`:
+ 
+ | Module           | Package                              | Classes | Purpose                                    |
+ |------------------|--------------------------------------|---------|--------------------------------------------|
+ | `sign-api`       | `org.luckyraven.gangland.sign`       | ~25     | Interactive sign placement and interaction |
+-| `lootchest-api`  | `org.luckyraven.gangland.lootchest`  | ~35     | Loot chest sessions with cracking minigame |
+-| `hologram-api`   | `org.luckyraven.gangland.hologram`   | 3       | Floating text via invisible armor stands   |
+ 
+ All modules are event-driven using Bukkit listeners. Listeners are annotated with `@ListenerHandler` for
+ auto-registration via the `DependencyContainer` scan.
+@@ -920,16 +922,20 @@ The chest-opening view is **not** a menu — it's a plain shared Bukkit `Invento
+ open at once, with clicks handled directly by `LootChestListener`'s raw `InventoryClickEvent`/`InventoryCloseEvent`
+ dispatch (unrelated to the `ChestMenu`/`ClickHandler` model above). At the CUT gate, `LootChestSession` (and
+ `LootChestService`'s `sharedChestInventories` map) swapped the deleted `InventoryHandler` for a small,
+-module-owned `SharedLootInventory` wrapper (~40 lines, `gangland-ui/lootchest-api/.../lootchest/
+-SharedLootInventory.java`) around a raw `Bukkit.createInventory(...)` — no menu framework needed for this path.
+-Take/deposit policy is unchanged either way: any viewer can freely take or place items, and a cursor-held stack on
+-close/disconnect is returned or dropped by stock CraftBukkit `InventoryView`-close behavior, which neither the old
+-`InventoryHandler` nor the new `SharedLootInventory` ever intercepted (see the CUT report for the full evidence
+-trail). Items are placed at random slots, and the inventory state is synced back to `LootChestData` on close for
+-persistence across sessions. The admin wand-preview screen (`LootChestWand`/`LootChestWandEditCommand`, both
+-`gangland-impl`, not `lootchest-api`) is a real menu, rebuilt onto `ChestMenuBuilder`/`PagedRegion` at the same
+-gate — `gangland-impl` already depends on `keystone-inventory` for its own core menus, so no new pom dependency
+-was needed for this.
++module-owned `SharedLootInventory` wrapper (~40 lines, now `gangland-features/gangland-lootchest/.../lootchest/
++SharedLootInventory.java` — `lootchest-api` folded into that module at the WS3 G2 gate) around a raw
++`Bukkit.createInventory(...)` — no menu framework needed for this path. **Take-only policy** (CUT fix round, ruling
++ref "Lootchest policy" in the CUT report): `LootChestListener.onInventoryClick`/`onInventoryDrag` cancel every
++deposit-shaped action onto the chest's top inventory or a shift-click FROM the player's inventory INTO it
++(`PLACE_ALL`/`PLACE_ONE`/`PLACE_SOME`/`SWAP_WITH_CURSOR`/`HOTBAR_SWAP`/`HOTBAR_MOVE_AND_READD`, or
++`MOVE_TO_OTHER_INVENTORY` originating in the bottom inventory, plus any drag touching a top slot); every take path
++(`PICKUP_ALL`, a shift-click OUT of the chest, …) is left untouched — stricter than the old `InventoryHandler`'s
++loot-slot-only deposit rule, see `documentation/migration-0.10.0.md`. Items are placed at random slots, and the
++inventory state is synced back to `LootChestData` on close for persistence across sessions. The admin
++wand-preview screen (`LootChestWand`/`LootChestWandEditCommand`, both now in `gangland-features/gangland-lootchest`,
++not `gangland-impl`) is a real menu, rebuilt onto `ChestMenuBuilder`/`PagedRegion` at the same CUT gate — the
++module declares its own `keystone-inventory` dependency directly (every menu-building module does, `gangland-api`
++never re-exports it).
+ 
+ ### Inventory + Sign
+ 
+@@ -943,16 +949,18 @@ Sign interactions that open a menu go through `MenuOpener` (see above) rather th
+ gangland-core (Placeholder, ItemBuilder, ChatUtil, TriConsumer)
+     ^
+     |
+-sign-api ──────────> (standalone, depends on gangland-core)
+-    
+-hologram-api ───────> (standalone, depends on gangland-core)
++sign-api ──────────────────────> (standalone, depends on gangland-core)
++
++keystone-hologram (Keystone) ──> (standalone, depends on keystone-common/keystone-bean; not gangland-core)
+     ^
+     |
+-lootchest-api ──────> (depends on hologram-api, gangland-core; no inventory-api dependency any more)
++gangland-features/gangland-lootchest ─> (depends on keystone-hologram, keystone-inventory, gangland-core;
++                                          no inventory-api dependency any more)
+ ```
+ 
+-All UI modules depend on `gangland-core` for shared utilities (`Placeholder`, `ItemBuilder`, `ChatUtil`,
+-`ColorUtil`, `TriConsumer`). `lootchest-api` additionally depends on `hologram-api` (for hologram labels); its own
+-chest-opening view is a raw Bukkit `Inventory` (`SharedLootInventory`), so it needs no Keystone menu dependency at
+-all. The admin wand-preview screen (`gangland-impl`'s `LootChestWand`) is the only loot-chest GUI on
+-`keystone-inventory`. All other modules are independent of each other.
++`sign-api` depends on `gangland-core` for shared utilities (`Placeholder`, `ItemBuilder`, `ChatUtil`, `ColorUtil`,
++`TriConsumer`). `gangland-features/gangland-lootchest` additionally depends on Keystone's `keystone-hologram` (for
++hologram labels, WS3 G1) and declares `keystone-inventory` directly for its admin wand-preview screen
++(`LootChestWand`/`LootChestWandEditCommand`, now inside the same module) — its chest-opening view is still a raw
++Bukkit `Inventory` (`SharedLootInventory`), needing no menu dependency of its own. All other modules are
++independent of each other.
+diff --git a/documentation/features/loot_chests.md b/documentation/features/loot_chests.md
+index 265e038d..0a6e2500 100644
+--- a/documentation/features/loot_chests.md
++++ b/documentation/features/loot_chests.md
+@@ -110,36 +110,41 @@ The following block types can be designated as loot chests:
+ 
+ ## Configuration
+ 
+-In `settings.yml`:
++Loot chests are a runtime module (`gangland-features/gangland-lootchest`, `modules/gangland-lootchest-<rev>.jar`)
++since 0.10.0 WS3 — its settings, messages and loot data all live in its own YAML files under the plugin's
++`lootchests/` data folder, not core `settings.yml`/the message files. Upgrading a server that customised the old
++`settings.yml` `Loot_Chest:` block gets a targeted warning naming the new file (see
++`documentation/migration-0.10.0.md`); customised values must be copied over by hand.
++
++In `lootchests/loot_chest_settings.yml`:
+ 
+ ```yaml
+-Loot_Chest:
+-   Countdown_Timer: 300          # Seconds before the chest opens (default: 5 minutes)
+-
+-   Sound:
+-      Opening: "BLOCK_CHEST_OPEN"
+-      Locked: "BLOCK_CHEST_LOCKED"
+-      Closing: "BLOCK_CHEST_CLOSE"
+-
+-   Allowed_Blocks:
+-      - "CHEST"
+-      - "TRAPPED_CHEST"
+-      - "BARREL"
+-      - "SHULKER_BOX"
+-      - "ENDER_CHEST"
+-
+-   Rewards:
+-      Money:
+-         Minimum: 10
+-         Maximum: 1_000            # Random amount drawn between min and max
+-      Experience:
+-         Minimum: 5
+-         Maximum: 100
+-      Commands:
+-         - ""                      # Optional: server commands executed on open
++Countdown_Timer: 300          # Seconds before the chest opens (default: 5 minutes)
++
++Sound:
++   Opening: "BLOCK_CHEST_OPEN"
++   Locked: "BLOCK_CHEST_LOCKED"
++   Closing: "BLOCK_CHEST_CLOSE"
++
++Allowed_Blocks:
++   - "CHEST"
++   - "TRAPPED_CHEST"
++   - "BARREL"
++   - "SHULKER_BOX"
++   - "ENDER_CHEST"
++
++Rewards:
++   Money:
++      Minimum: 10
++      Maximum: 1_000            # Random amount drawn between min and max
++   Experience:
++      Minimum: 5
++      Maximum: 100
++   Commands:
++      - ""                      # Optional: server commands executed on open
+ ```
+ 
+-Tier definitions and base rarity weights live in `loot/tiers.yml`:
++Tier definitions and base rarity weights live in `lootchests/tiers.yml`:
+ 
+ ```yaml
+ Rarity:
+@@ -167,7 +172,7 @@ Tiers:
+       Unlock_Item: "legendary_key"
+ ```
+ 
+-Per-table item drops and per-table rarity overrides live in `loot/loot_chests.yml`:
++Per-table item drops and per-table rarity overrides live in `lootchests/loot_chests.yml`:
+ 
+ ```yaml
+ Loot_Tables:
+diff --git a/documentation/migration-0.10.0.md b/documentation/migration-0.10.0.md
+index fda290d2..a72cf877 100644
+--- a/documentation/migration-0.10.0.md
++++ b/documentation/migration-0.10.0.md
+@@ -193,8 +193,81 @@ from the player's own inventory) and every drag that touches a chest slot, leavi
+ `COLLECT_TO_CURSOR`, shift-click out of the chest) untouched. No deposit slot exists any more — not even onto
+ generated loot. This is deliberate, not a missed case: a loot chest regenerates on cooldown/respawn, which would
+ silently void anything a player had deposited into it, and a free deposit slot would make loot chests double as
+-an unintended shared stash. Covered by
+-`gangland-ui/lootchest-api/src/test/java/org/luckyraven/gangland/lootchest/listener/LootChestListenerTest.java`.
++an unintended shared stash. Covered by `LootChestListenerTest` — moved from `gangland-ui/lootchest-api` into
++`gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/listener/` at the WS3 G2
++gate below (package unchanged), and extended at WS3 G5 with the three deposit-action cases (`PLACE_ONE`,
++`PLACE_SOME`, `HOTBAR_MOVE_AND_READD`) the original coverage list above didn't individually pin.
++
++<!-- Later 0.10.0 gates (WS5 gang module, WS6 api facade) append their own sections here as they land. -->
++
++## WS3 — loot chests and holograms leave `gangland-ui`
++
++Two independent moves, both from the decoupling wave's WS3 stream:
++
++- **Holograms → Keystone (G1).** `gangland-ui/hologram-api` is deleted outright; armor-stand holograms are now
++  Keystone's own `keystone-hologram` module (`org.luckyraven.keystone.hologram.*`, package renamed from
++  `org.luckyraven.gangland.hologram.*`). Nothing server-owner-visible changes — no config, no command, no data
++  file. If you have custom code embedding the old Gangland-owned hologram classes directly (not the loot chest
++  feature, which is unaffected), repoint the import.
++- **Loot chests → a runtime module (G2).** `gangland-ui/lootchest-api` (the library) plus the `gangland-impl`-side
++  loot chest classes it always shipped alongside (`LootChestManager`, the admin wand, the repository/table, the
++  `/glw lootchest*` commands, the loot/wand listeners) are gone; loot chests are now the runtime module
++  `gangland-features/gangland-lootchest`, shipped as `modules/gangland-lootchest-<rev>.jar` and loaded from
++  `plugins/Gangland_Warfare/modules/` like any other module (see `documentation/module-loader.md`). **This module
++  is not optional** in the sense the other five are — there is no fallback behaviour; without the jar present,
++  `/glw lootchest` simply doesn't exist and no chest data loads. Drop the jar in alongside the others.
++
++### 1. Settings and messages move into the module's own YAML (G4)
++
++The `settings.yml` `Loot_Chest:` block (10 keys) and 26 `Messages` entries (`Loot_Chest.*` player/hologram/
++time-unit strings, `Errors.Loot_Chest.*`/`Commands.Loot_Chest.Removed` admin strings) both moved into two new
++files the module ships and auto-creates on first boot, at the same `lootchests/` data-folder path the existing
++`loot_chests.yml`/`tiers.yml` already use:
++
++| Old | New file | New key(s) |
++|---|---|---|
++| `settings.yml` `Loot_Chest.Countdown_Timer` | `plugins/Gangland_Warfare/lootchests/loot_chest_settings.yml` | `Countdown_Timer` |
++| `settings.yml` `Loot_Chest.Sound.*` (3 keys) | same | `Sound.Opening`/`Sound.Locked`/`Sound.Closing` |
++| `settings.yml` `Loot_Chest.Allowed_Blocks` | same | `Allowed_Blocks` |
++| `settings.yml` `Loot_Chest.Rewards.*` (5 keys: Money/Experience min/max, Commands) | same | `Rewards.Money.*`/`Rewards.Experience.*`/`Rewards.Commands` |
++| `message_en.yml` `Loot_Chest.*` (16 keys: 10 player + 6 hologram) | `plugins/Gangland_Warfare/lootchests/lootchest_messages.yml` | same leaf names, flattened to the file's top level (e.g. `Loot_Chest.Hologram.Cooldown_Status` → `Hologram.Cooldown_Status`) |
++| `message_en.yml` `Loot_Chest.Time_Units.*` (6 keys) | same | `Time_Units.*` |
++| `message_en.yml` `Errors.Loot_Chest.*` (3 keys), `Commands.Loot_Chest.Removed` | same | `Must_Look_At_Block`/`No_Chest_At_Location`/`Requires_Wand`/`Removed` |
++| `message_es.yml` `Loot_Chest.*`/`Loot_Chest.Time_Units.*`/`Errors.Loot_Chest.*`/`Commands.Loot_Chest.Removed` (same 26 keys) | `plugins/Gangland_Warfare/lootchests/lootchest_messages_es.yml` | same leaf names as the English file above |
++
++**Both languages ship** (fix round 1, W53 F1) — `GanglandLootChestMessages` picks between the two files by the
++same `Settings.Language` setting (`settings.yml` `Language: es`) Keystone's `LanguageLoader` already uses to pick
++between core's own `message_en.yml`/`message_es.yml`, falling back to the English file whenever the language
++isn't `es` or the Spanish file isn't present. No new config knob — it reuses `Settings.getLanguagePicked()`.
++
++### 2. Customised values are NOT auto-migrated — copy them by hand
++
++Same story as WS4's Trader/Banker move above: if you had changed any of the 10 settings keys or 26 message
++strings away from their defaults, upgrading in place does not carry those values into the new files — they are
++written fresh from the module jar's own defaults, and core `Settings`/`Messages` no longer read the old block at
++all. Copy your customised values across by hand, using the table above to find the new key.
++
++### 3. The warning that tells you the settings need doing
++
++A leftover `Loot_Chest:` block in `settings.yml` fires the same targeted warning WS4 introduced for `Trader:`/
++`Banker:` (the helper is now shared across all three, `Settings.warnIfLegacyShopBlockPresent`, parameterised by
++module name):
++
++```
++[Gangland.Settings] settings.yml still has a legacy 'Loot_Chest:' block — those keys moved to
++plugins/Gangland_Warfare/lootchests/loot_chest_settings.yml and lootchests/lootchest_messages.yml (extracted by
++the gangland-lootchest module); customised values are NOT auto-migrated and must be copied over by hand. See
++documentation/migration-0.10.0.md.
++```
++
++There is no equivalent warning for a leftover `message_en.yml`/`message_es.yml` `Loot_Chest:` block — the message
++loader doesn't have WS4's/WS3's targeted-warning hook, only the generic per-key "unknown key" line. A leftover
++block there is harmless dead weight (never read), same as WS1's `Scoreboard:` block was.
++
++### 4. `/glw lootchest*` commands.json entries moved into the module jar
++
++The 4 entries (`lootchest`, `lootchest_help`, `lootchest_edit`, `lootchest_remove`) moved from the core's
++`commands.json` into the module's own, at its jar root — no server-owner action; `/glw help lootchest` and
++`/glw lootchest help` keep working identically once the module jar is present.
+ 
+-<!-- Later 0.10.0 gates (WS3 lootchest module extraction / hologram → keystone-hologram, WS5 gang module,
+-     WS6 api facade) append their own sections here as they land. -->
++<!-- Later 0.10.0 gates (WS5 gang module, WS6 api facade) append their own sections here as they land. -->
+diff --git a/documentation/tests/features/loot_chests.md b/documentation/tests/features/loot_chests.md
+index 12f8b2a0..5c4efd47 100644
+--- a/documentation/tests/features/loot_chests.md
++++ b/documentation/tests/features/loot_chests.md
+@@ -7,10 +7,13 @@
+ ## Overview
+ 
+ Placeable loot chests with tiered loot tables, keys, hologram labels, and cooldowns. Managed by `LootChestManager`
+-(module `gangland-ui/lootchest-api`) with hologram support from `gangland-ui/hologram-api`. Configured via
+-`lootchests/loot_chests.yml` and `lootchests/tiers.yml`.
++(runtime module `gangland-features/gangland-lootchest`, was `gangland-ui/lootchest-api` before 0.10.0 WS3) with
++hologram support from Keystone's `keystone-hologram` (was `gangland-ui/hologram-api`). Configured via the module's
++own `lootchests/loot_chests.yml`, `lootchests/tiers.yml`, `lootchests/loot_chest_settings.yml` and
++`lootchests/lootchest_messages.yml` (settings/messages moved out of core `settings.yml`/`Messages` at WS3 G4).
+ 
+-**Modules involved:** `gangland-ui/lootchest-api`, `gangland-ui/hologram-api`, `gangland-impl`.
++**Modules involved:** `gangland-features/gangland-lootchest` (runtime module, loaded from `modules/`), Keystone's
++`keystone-hologram`.
+ 
+ ---
+ 
+diff --git a/gangland-api/src/main/java/org/luckyraven/gangland/file/configuration/Messages.java b/gangland-api/src/main/java/org/luckyraven/gangland/file/configuration/Messages.java
+index 344b67da..ca0b752d 100644
+--- a/gangland-api/src/main/java/org/luckyraven/gangland/file/configuration/Messages.java
++++ b/gangland-api/src/main/java/org/luckyraven/gangland/file/configuration/Messages.java
+@@ -326,34 +326,6 @@ public enum Messages {
+ 	SIGN_BULK_EXPIRED("Signs.Bulk.Expired", Type.ERROR),
+ 	SIGN_BULK_CANCELLED("Signs.Bulk.Cancelled", Type.ERROR),
+ 
+-	// loot chests - player messages
+-	LOOT_CHEST_CRACKING_STARTED("Loot_Chest.Cracking_Started", Type.OTHER),
+-	LOOT_CHEST_ALREADY_IN_SESSION("Loot_Chest.Already_In_Session", Type.ERROR),
+-	LOOT_CHEST_ON_COOLDOWN("Loot_Chest.On_Cooldown", Type.ERROR),
+-	LOOT_CHEST_REQUIRES_LOCKPICK("Loot_Chest.Requires_Lockpick", Type.ERROR),
+-	LOOT_CHEST_REQUIRES_KEY("Loot_Chest.Requires_Key", Type.ERROR),
+-	LOOT_CHEST_NO_PERMISSION("Loot_Chest.No_Permission", Type.ERROR),
+-	LOOT_CHEST_INVALID_LOOT_TABLE("Loot_Chest.Invalid_Loot_Table", Type.ERROR),
+-	LOOT_CHEST_INVALID_CHEST("Loot_Chest.Invalid_Chest", Type.ERROR),
+-	LOOT_CHEST_NO_ITEM_PROVIDER("Loot_Chest.No_Item_Provider", Type.ERROR),
+-	LOOT_CHEST_ALREADY_LOOTED("Loot_Chest.Already_Looted", Type.ERROR),
+-
+-	// loot chests - hologram text
+-	LOOT_CHEST_HOLOGRAM_COOLDOWN("Loot_Chest.Hologram.Cooldown_Status", Type.OTHER),
+-	LOOT_CHEST_HOLOGRAM_AVAILABLE("Loot_Chest.Hologram.Available_Status", Type.OTHER),
+-	LOOT_CHEST_HOLOGRAM_HINT("Loot_Chest.Hologram.Available_Hint", Type.OTHER),
+-	LOOT_CHEST_HOLOGRAM_LOCKED_REQUIRES("Loot_Chest.Hologram.Locked_Requires", Type.OTHER),
+-	LOOT_CHEST_HOLOGRAM_LOCKED_PERMISSION("Loot_Chest.Hologram.Locked_Permission", Type.OTHER),
+-	LOOT_CHEST_HOLOGRAM_UNLOCKED("Loot_Chest.Hologram.Unlocked", Type.OTHER),
+-
+-	// loot chests - time units for cooldown countdown
+-	LOOT_CHEST_TIME_YEAR("Loot_Chest.Time_Units.Year", Type.NO_CHANGE),
+-	LOOT_CHEST_TIME_WEEK("Loot_Chest.Time_Units.Week", Type.NO_CHANGE),
+-	LOOT_CHEST_TIME_DAY("Loot_Chest.Time_Units.Day", Type.NO_CHANGE),
+-	LOOT_CHEST_TIME_HOUR("Loot_Chest.Time_Units.Hour", Type.NO_CHANGE),
+-	LOOT_CHEST_TIME_MINUTE("Loot_Chest.Time_Units.Minute", Type.NO_CHANGE),
+-	LOOT_CHEST_TIME_SECOND("Loot_Chest.Time_Units.Second", Type.NO_CHANGE),
+-
+ 	// shop framework (reusable across any shop integration)
+ 	SHOP_PURCHASE_SUCCESS("Commands.Shop.Purchase.Success", Type.COMMAND),
+ 	SHOP_PURCHASE_STACK_SUCCESS("Commands.Shop.Purchase.Stack_Success", Type.COMMAND),
+@@ -571,12 +543,6 @@ public enum Messages {
+ 	WAYPOINT_DELETED("Commands.Waypoint.Deleted", Type.COMMAND),
+ 	WAYPOINT_TYPE_INVALID_HEADER("Errors.Waypoint.Invalid_Type_Header", Type.ERROR),
+ 
+-	// commands - loot chest (admin)
+-	LOOT_CHEST_MUST_LOOK_AT_BLOCK("Errors.Loot_Chest.Must_Look_At_Block", Type.ERROR),
+-	LOOT_CHEST_NO_CHEST_AT_LOCATION("Errors.Loot_Chest.No_Chest_At_Location", Type.ERROR),
+-	LOOT_CHEST_REQUIRES_WAND("Errors.Loot_Chest.Requires_Wand", Type.ERROR),
+-	LOOT_CHEST_REMOVED("Commands.Loot_Chest.Removed", Type.COMMAND),
+-
+ 	// commands - wanted / balance
+ 	WANTED_STATUS_HEADER("Commands.Wanted.Status_Header", Type.COMMAND),
+ 	BALANCE_REGISTERED_ONLY("Information.Balance.Registered_Only", Type.INFORMATION),
+diff --git a/gangland-api/src/main/java/org/luckyraven/gangland/file/configuration/Settings.java b/gangland-api/src/main/java/org/luckyraven/gangland/file/configuration/Settings.java
+index 263bb03a..1f88481e 100644
+--- a/gangland-api/src/main/java/org/luckyraven/gangland/file/configuration/Settings.java
++++ b/gangland-api/src/main/java/org/luckyraven/gangland/file/configuration/Settings.java
+@@ -194,13 +194,6 @@ public class Settings implements FileInitializer {
+ 	// npc/trader_settings.yml and npc/banker_settings.yml — Max_Mode_Multiplier is the one survivor,
+ 	// shared by the admin editor and the trader browser, so it stays core under its own Shop: block)
+ 	private static @Getter int        shopMaxModeMultiplier;
+-	// loot chest configuration
+-	private static @Getter long       lootChestCountdownTimer;
+-	private static @Getter String     lootChestOpeningSound, lootChestLockedSound, lootChestClosingSound;
+-	private static @Getter List<String> lootChestAllowedBlocks;
+-	private static @Getter double       lootChestRewardMoneyMinimum, lootChestRewardMoneyMaximum,
+-			lootChestRewardExperienceMinimum, lootChestRewardExperienceMaximum;
+-	private static @Getter List<String>  lootChestRewardCommands;
+ 	// money drop (cash items dropped by mobs / cops / civilians / players on death)
+ 	private static @Getter boolean       moneyDropEnabled;
+ 	// turf configuration
+@@ -374,18 +367,20 @@ public class Settings implements FileInitializer {
+ 	}
+ 
+ 	/**
+-	 * WS4 G1a fix round 1 (F2): fires a distinct, actionable warning when a legacy {@code Trader:}/{@code Banker:}
+-	 * block is still present in {@code settings.yml} after those NPC-specific keys moved to module-owned YAML.
+-	 * Runs once per {@link #init()} call — once at boot, once per {@code /glw reload} — naming the file the keys
+-	 * moved to and the migration doc, since customised values are not auto-migrated and would otherwise silently
+-	 * do nothing with no clue why.
++	 * WS4 G1a fix round 1 (F2): fires a distinct, actionable warning when a legacy block is still present in
++	 * {@code settings.yml} after those keys moved to a module-owned YAML. Runs once per {@link #init()} call —
++	 * once at boot, once per {@code /glw reload} — naming the file the keys moved to, the module that extracted
++	 * them and the migration doc, since customised values are not auto-migrated and would otherwise silently do
++	 * nothing with no clue why. Generalized in WS3 G4 (0.10.0) from the Trader:/Banker:-only helper WS4 G1a
++	 * introduced — {@code module} is now a parameter instead of a hard-coded {@code "npc-shops"}.
+ 	 */
+-	private static void warnIfLegacyShopBlockPresent(boolean present, String legacyKey, String movedTo) {
++	private static void warnIfLegacyShopBlockPresent(boolean present, String legacyKey, String movedTo,
++	                                                  String module) {
+ 		if (!present) return;
+ 		log.warn("settings.yml still has a legacy '{}:' block — those keys moved to " +
+-		         "plugins/Gangland_Warfare/{} (extracted by the npc-shops module); customised values are NOT " +
++		         "plugins/Gangland_Warfare/{} (extracted by the {} module); customised values are NOT " +
+ 		         "auto-migrated and must be copied over by hand. See documentation/migration-0.10.0.md.",
+-		         legacyKey, movedTo);
++		         legacyKey, movedTo, module);
+ 	}
+ 
+ 	@Override
+@@ -696,24 +691,10 @@ public class Settings implements FileInitializer {
+ 		detainmentTransitCommitSound    = str(detainSounds, "Transit_Commit", "BLOCK_IRON_DOOR_CLOSE");
+ 		detainmentSentenceCompleteSound = str(detainSounds, "Sentence_Complete", "BLOCK_BELL_USE");
+ 
+-		// loot chest
+-		NodeReader lootChest        = section(root, "Loot_Chest", report);
+-		NodeReader lootChestSound   = section(lootChest, "Sound", report);
+-		NodeReader lootChestRewards = section(lootChest, "Rewards", report);
+-		NodeReader lootRewardMoney  = section(lootChestRewards, "Money", report);
+-		NodeReader lootRewardExp    = section(lootChestRewards, "Experience", report);
+-
+-		lootChestCountdownTimer = intVal(lootChest, "Countdown_Timer", 300);
+-		lootChestOpeningSound   = str(lootChestSound, "Opening", "BLOCK_CHEST_OPEN");
+-		lootChestLockedSound    = str(lootChestSound, "Locked", "BLOCK_CHEST_LOCKED");
+-		lootChestClosingSound   = str(lootChestSound, "Closing", "BLOCK_CHEST_CLOSE");
+-		lootChestAllowedBlocks  = strList(lootChest, "Allowed_Blocks");
+-
+-		lootChestRewardMoneyMinimum      = dbl(lootRewardMoney, "Minimum", 10);
+-		lootChestRewardMoneyMaximum      = dbl(lootRewardMoney, "Maximum", 1_000);
+-		lootChestRewardExperienceMinimum = dbl(lootRewardExp, "Minimum", 5);
+-		lootChestRewardExperienceMaximum = dbl(lootRewardExp, "Maximum", 100);
+-		lootChestRewardCommands          = strList(lootChestRewards, "Commands");
++		// loot chest — Countdown_Timer/Sound/Allowed_Blocks/Rewards all moved to the gangland-lootchest module's
++		// own lootchests/loot_chest_settings.yml (WS3 G4); a leftover legacy block gets the same targeted warning
++		// WS4 G1a introduced for Trader:/Banker:, not silent dead weight — see the warnIfLegacyShopBlockPresent
++		// call below.
+ 
+ 		// money drop — optional section; defaults true when missing
+ 		MappingNode moneyDropNode = root.get("Money_Drop").asMapping().orNull();
+@@ -745,8 +726,13 @@ public class Settings implements FileInitializer {
+ 		// customised values now silently do nothing. section() above already marked the block "touched",
+ 		// which suppresses the generic unknown-key sweep for it; this replaces that generic, unhelpful line
+ 		// with one that actually says where the keys went.
+-		warnIfLegacyShopBlockPresent(section(root, "Trader", report) != null, "Trader", "npc/trader_settings.yml");
+-		warnIfLegacyShopBlockPresent(section(root, "Banker", report) != null, "Banker", "npc/banker_settings.yml");
++		warnIfLegacyShopBlockPresent(section(root, "Trader", report) != null, "Trader", "npc/trader_settings.yml",
++		                             "npc-shops");
++		warnIfLegacyShopBlockPresent(section(root, "Banker", report) != null, "Banker", "npc/banker_settings.yml",
++		                             "npc-shops");
++		warnIfLegacyShopBlockPresent(section(root, "Loot_Chest", report) != null, "Loot_Chest",
++		                             "lootchests/loot_chest_settings.yml and lootchests/lootchest_messages.yml",
++		                             "gangland-lootchest");
+ 
+ 		// turf
+ 		NodeReader turf          = section(root, "Turf", report);
+diff --git a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestRemoveCommand.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestRemoveCommand.java
+index 7e4ec0ef..230a103c 100644
+--- a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestRemoveCommand.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestRemoveCommand.java
+@@ -10,22 +10,25 @@ import org.luckyraven.keystone.command.argument.SubArgument;
+ import org.luckyraven.keystone.util.TriConsumer;
+ import org.luckyraven.keystone.datastructure.Tree;
+ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
+-import org.luckyraven.gangland.file.configuration.Messages;
+ import org.luckyraven.gangland.lootchest.LootChestManager;
++import org.luckyraven.gangland.lootchest.config.LootChestMessagesProvider;
+ import org.luckyraven.gangland.lootchest.data.LootChestData;
+ 
+ import java.util.Optional;
+ 
+ class LootChestRemoveCommand extends SubArgument {
+ 
+-	private final LootChestManager   lootChestManager;
+-	private final RepositoryRegistry repositoryRegistry;
++	private final LootChestManager        lootChestManager;
++	private final RepositoryRegistry      repositoryRegistry;
++	private final LootChestMessagesProvider messagesProvider;
+ 
+ 	protected LootChestRemoveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                                 LootChestManager lootChestManager, RepositoryRegistry repositoryRegistry) {
++	                                 LootChestManager lootChestManager, RepositoryRegistry repositoryRegistry,
++	                                 LootChestMessagesProvider messagesProvider) {
+ 		super(gangland, "remove", tree, parent);
+ 		this.lootChestManager   = lootChestManager;
+ 		this.repositoryRegistry = repositoryRegistry;
++		this.messagesProvider   = messagesProvider;
+ 	}
+ 
+ 	@Override
+@@ -37,7 +40,7 @@ class LootChestRemoveCommand extends SubArgument {
+ 			Block targetBlock = player.getTargetBlockExact(5);
+ 
+ 			if (targetBlock == null) {
+-				player.sendMessage(Messages.LOOT_CHEST_MUST_LOOK_AT_BLOCK.toString());
++				player.sendMessage(messagesProvider.getMustLookAtBlock());
+ 				return;
+ 			}
+ 
+@@ -46,7 +49,7 @@ class LootChestRemoveCommand extends SubArgument {
+ 			Optional<LootChestData> chestOptional = lootChestManager.getChestAt(location);
+ 
+ 			if (chestOptional.isEmpty()) {
+-				player.sendMessage(Messages.LOOT_CHEST_NO_CHEST_AT_LOCATION.toString());
++				player.sendMessage(messagesProvider.getNoChestAtLocation());
+ 				return;
+ 			}
+ 
+@@ -59,7 +62,7 @@ class LootChestRemoveCommand extends SubArgument {
+ 			var lootChestRepository = repositoryRegistry.getRepository(LootChestData.class);
+ 			lootChestRepository.delete(chestData);
+ 
+-			player.sendMessage(Messages.LOOT_CHEST_REMOVED.toString());
++			player.sendMessage(messagesProvider.getRemoved());
+ 		});
+ 	}
+ 
+diff --git a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestWandCommand.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestWandCommand.java
+index a60bef81..f06599f2 100644
+--- a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestWandCommand.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestWandCommand.java
+@@ -11,6 +11,7 @@ import org.luckyraven.keystone.bean.command.CommandHandler;
+ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
+ import org.luckyraven.gangland.lootchest.LootChestManager;
+ import org.luckyraven.gangland.lootchest.LootChestWand;
++import org.luckyraven.gangland.lootchest.config.LootChestMessagesProvider;
+ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.util.Map;
+@@ -18,16 +19,19 @@ import java.util.Map;
+ @CommandHandler
+ public class LootChestWandCommand extends Command {
+ 
+-	private final LootChestManager   lootChestManager;
+-	private final RepositoryRegistry repositoryRegistry;
++	private final LootChestManager        lootChestManager;
++	private final RepositoryRegistry      repositoryRegistry;
++	private final LootChestMessagesProvider messagesProvider;
+ 
+ 	public LootChestWandCommand(JavaPlugin gangland,
+ 	                            LootChestManager lootChestManager,
+-	                            RepositoryRegistry repositoryRegistry) {
++	                            RepositoryRegistry repositoryRegistry,
++	                            LootChestMessagesProvider messagesProvider) {
+ 		super(gangland, "lootchest", true, "wand", "lootchestwand", "chestwand", "lcwand");
+ 
+ 		this.lootChestManager   = lootChestManager;
+ 		this.repositoryRegistry = repositoryRegistry;
++		this.messagesProvider   = messagesProvider;
+ 
+ 		var list = getCommands().entrySet()
+ 				.stream()
+@@ -57,9 +61,9 @@ public class LootChestWandCommand extends Command {
+ 	@Override
+ 	protected void initializeArguments() {
+ 		Argument editArg = new LootChestWandEditCommand(getPlugin(), getArgumentTree(), getArgument(),
+-		                                                lootChestManager);
++		                                                lootChestManager, messagesProvider);
+ 		Argument removeArg = new LootChestRemoveCommand(getPlugin(), getArgumentTree(), getArgument(),
+-		                                                lootChestManager, repositoryRegistry);
++		                                                lootChestManager, repositoryRegistry, messagesProvider);
+ 
+ 		getArgument().addSubArgument(editArg);
+ 		getArgument().addSubArgument(removeArg);
+diff --git a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestWandEditCommand.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestWandEditCommand.java
+index e5893de8..2a12d07e 100644
+--- a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestWandEditCommand.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/command/LootChestWandEditCommand.java
+@@ -8,21 +8,23 @@ import org.luckyraven.keystone.command.argument.Argument;
+ import org.luckyraven.keystone.command.argument.SubArgument;
+ import org.luckyraven.keystone.util.TriConsumer;
+ import org.luckyraven.keystone.datastructure.Tree;
+-import org.luckyraven.gangland.file.configuration.Messages;
+ import org.luckyraven.gangland.lootchest.LootChestManager;
+ import org.luckyraven.gangland.lootchest.LootChestWand;
++import org.luckyraven.gangland.lootchest.config.LootChestMessagesProvider;
+ 
+ class LootChestWandEditCommand extends SubArgument {
+ 
+-	private final JavaPlugin         gangland;
+-	private final LootChestManager lootChestManager;
++	private final JavaPlugin              gangland;
++	private final LootChestManager        lootChestManager;
++	private final LootChestMessagesProvider messagesProvider;
+ 
+ 	protected LootChestWandEditCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                                   LootChestManager lootChestManager) {
++	                                   LootChestManager lootChestManager, LootChestMessagesProvider messagesProvider) {
+ 		super(gangland, "edit", tree, parent);
+ 
+ 		this.gangland         = gangland;
+ 		this.lootChestManager = lootChestManager;
++		this.messagesProvider = messagesProvider;
+ 	}
+ 
+ 	@Override
+@@ -33,7 +35,7 @@ class LootChestWandEditCommand extends SubArgument {
+ 			ItemStack heldItem = player.getInventory().getItemInMainHand();
+ 
+ 			if (!LootChestWand.isLootChestWand(heldItem)) {
+-				player.sendMessage(Messages.LOOT_CHEST_REQUIRES_WAND.toString());
++				player.sendMessage(messagesProvider.getRequiresWand());
+ 				return;
+ 			}
+ 
+diff --git a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/GanglandLootChestMessages.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/GanglandLootChestMessages.java
+index ba3b2720..8f2b3871 100644
+--- a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/GanglandLootChestMessages.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/GanglandLootChestMessages.java
+@@ -1,80 +1,135 @@
+ package org.luckyraven.gangland.lootchest.config;
+ 
++import org.luckyraven.gangland.file.configuration.Settings;
++import org.luckyraven.gangland.util.GanglandChatUtil;
++import org.luckyraven.keystone.exception.PluginException;
++import org.luckyraven.keystone.persistence.FileHandler;
++import org.luckyraven.keystone.persistence.FileInitializer;
++import org.luckyraven.keystone.persistence.FileManager;
+ import org.luckyraven.keystone.util.messages.TimeMessagesProvider;
+-import org.luckyraven.gangland.file.configuration.Messages;
+ import org.luckyraven.gangland.lootchest.data.LootTier;
+ 
++import java.io.IOException;
++
+ /**
+- * {@link LootChestMessagesProvider} implementation backed by {@link Messages}.
+- * <p>
+- * All strings are read from the active messages file ({@code message_en.yml} / {@code message_es.yml}) under the
+- * {@code Loot_Chest} section.
++ * {@link LootChestMessagesProvider} implementation backed by the module's own
++ * {@code lootchests/lootchest_messages.yml} (English, always shipped as the fallback) or
++ * {@code lootchests/lootchest_messages_es.yml} (Spanish, WS3 G4 fix round 1 / W53 F1 — the 26 strings deleted
++ * from the core's {@code message_es.yml} live here now, not lost) — picked by {@link Settings#getLanguagePicked()}
++ * the same way Keystone's {@code LanguageLoader} chooses core's own {@code message_<lang>.yml}, reusing that
++ * existing knob rather than inventing a module-local one. Falls back to the English file whenever the language
++ * isn't {@code "es"}, or the Spanish file isn't registered. Module-owned message localisation is ad hoc here —
++ * WS6 G3's own mechanism is expected to generalise this to every module. Mirrors {@code JetpackMessages}'s
++ * {@link FileInitializer} shape otherwise: flat keys, read lazily per call, each wrapped with the same
++ * {@link GanglandChatUtil} color-type the old {@code Messages} enum entry used
++ * ({@code ERROR}/{@code COMMAND}/{@code OTHER}/raw) so player-visible output is unchanged.
+  */
+-public class GanglandLootChestMessages implements LootChestMessagesProvider {
++public class GanglandLootChestMessages implements LootChestMessagesProvider, FileInitializer {
++
++	private static final String ENGLISH_FILE = "lootchest_messages";
++	private static final String SPANISH_FILE = "lootchest_messages_es";
++
++	private final FileHandler fileHandler;
++
++	public GanglandLootChestMessages(FileManager fileManager) {
++		this.fileHandler = resolveFileHandler(fileManager);
++	}
++
++	private static FileHandler resolveFileHandler(FileManager fileManager) {
++		if ("es".equalsIgnoreCase(Settings.getLanguagePicked())) {
++			FileHandler spanish = tryGetFile(fileManager, SPANISH_FILE);
++			if (spanish != null) return spanish;
++		}
++
++		FileHandler english = tryGetFile(fileManager, ENGLISH_FILE);
++		if (english != null) return english;
++
++		throw new PluginException("Neither " + ENGLISH_FILE + " nor " + SPANISH_FILE + " is registered");
++	}
++
++	private static FileHandler tryGetFile(FileManager fileManager, String fileName) {
++		try {
++			fileManager.checkFileLoaded(fileName);
++			return fileManager.getFile(fileName);
++		} catch (IOException exception) {
++			return null;
++		}
++	}
++
++	@Override
++	public FileHandler getFileHandler() {
++		return fileHandler;
++	}
++
++	@Override
++	public void initialize() {
++		// Flat strings read lazily per call — nothing to pre-parse.
++	}
+ 
+ 	@Override
+ 	public String getCrackingStarted() {
+-		return Messages.LOOT_CHEST_CRACKING_STARTED.toString();
++		return GanglandChatUtil.color(get("Cracking_Started", "&eCracking the chest... Complete the minigame!"));
+ 	}
+ 
+ 	@Override
+ 	public String getAlreadyInSession() {
+-		return Messages.LOOT_CHEST_ALREADY_IN_SESSION.toString();
++		return GanglandChatUtil.errorMessage(get("Already_In_Session", "You are already opening a chest!"));
+ 	}
+ 
+ 	@Override
+ 	public String getOnCooldown(String formattedTime) {
+-		return Messages.LOOT_CHEST_ON_COOLDOWN.toString().replace("%time%", formattedTime);
++		return GanglandChatUtil.errorMessage(get("On_Cooldown", "This chest is empty and on cooldown! &7(%time%)"))
++		                       .replace("%time%", formattedTime);
+ 	}
+ 
+ 	@Override
+ 	public String getRequiresLockpick() {
+-		return Messages.LOOT_CHEST_REQUIRES_LOCKPICK.toString();
++		return GanglandChatUtil.errorMessage(get("Requires_Lockpick", "You need a lockpick to open this chest!"));
+ 	}
+ 
+ 	@Override
+ 	public String getRequiresKey() {
+-		return Messages.LOOT_CHEST_REQUIRES_KEY.toString();
++		return GanglandChatUtil.errorMessage(get("Requires_Key", "You need a key to open this chest!"));
+ 	}
+ 
+ 	@Override
+ 	public String getNoPermission() {
+-		return Messages.LOOT_CHEST_NO_PERMISSION.toString();
++		return GanglandChatUtil.errorMessage(get("No_Permission", "You don't have permission to open this chest!"));
+ 	}
+ 
+ 	@Override
+ 	public String getInvalidLootTable() {
+-		return Messages.LOOT_CHEST_INVALID_LOOT_TABLE.toString();
++		return GanglandChatUtil.errorMessage(get("Invalid_Loot_Table", "This chest has an invalid loot table!"));
+ 	}
+ 
+ 	@Override
+ 	public String getInvalidChest() {
+-		return Messages.LOOT_CHEST_INVALID_CHEST.toString();
++		return GanglandChatUtil.errorMessage(get("Invalid_Chest", "This chest is invalid!"));
+ 	}
+ 
+ 	@Override
+ 	public String getNoItemProvider() {
+-		return Messages.LOOT_CHEST_NO_ITEM_PROVIDER.toString();
++		return GanglandChatUtil.errorMessage(get("No_Item_Provider", "Loot system is not configured properly!"));
+ 	}
+ 
+ 	@Override
+ 	public String getAlreadyLooted() {
+-		return Messages.LOOT_CHEST_ALREADY_LOOTED.toString();
++		return GanglandChatUtil.errorMessage(get("Already_Looted", "This chest has already been looted!"));
+ 	}
+ 
+ 	@Override
+ 	public String getHologramCooldownStatus() {
+-		return Messages.LOOT_CHEST_HOLOGRAM_COOLDOWN.toString();
++		return GanglandChatUtil.color(get("Hologram.Cooldown_Status", "&c&lON COOLDOWN"));
+ 	}
+ 
+ 	@Override
+ 	public String getHologramAvailableStatus() {
+-		return Messages.LOOT_CHEST_HOLOGRAM_AVAILABLE.toString();
++		return GanglandChatUtil.color(get("Hologram.Available_Status", "&a&lAVAILABLE"));
+ 	}
+ 
+ 	@Override
+ 	public String getHologramAvailableHint() {
+-		return Messages.LOOT_CHEST_HOLOGRAM_HINT.toString();
++		return GanglandChatUtil.color(get("Hologram.Available_Hint", "&7Right-click to open"));
+ 	}
+ 
+ 	@Override
+@@ -84,17 +139,38 @@ public class GanglandLootChestMessages implements LootChestMessagesProvider {
+ 
+ 	@Override
+ 	public String getHologramLockedRequires(String itemDisplay) {
+-		return Messages.LOOT_CHEST_HOLOGRAM_LOCKED_REQUIRES.toString().replace("%item%", itemDisplay);
++		return GanglandChatUtil.color(get("Hologram.Locked_Requires", "&c🔒 Requires &e%item%"))
++		                       .replace("%item%", itemDisplay);
+ 	}
+ 
+ 	@Override
+ 	public String getHologramLockedPermission() {
+-		return Messages.LOOT_CHEST_HOLOGRAM_LOCKED_PERMISSION.toString();
++		return GanglandChatUtil.color(get("Hologram.Locked_Permission", "&c🔒 Permission Only"));
+ 	}
+ 
+ 	@Override
+ 	public String getHologramUnlocked() {
+-		return Messages.LOOT_CHEST_HOLOGRAM_UNLOCKED.toString();
++		return GanglandChatUtil.color(get("Hologram.Unlocked", "&a🔓 Unlocked"));
++	}
++
++	@Override
++	public String getMustLookAtBlock() {
++		return GanglandChatUtil.errorMessage(get("Must_Look_At_Block", "&cYou must be looking at a block within 5 blocks!"));
++	}
++
++	@Override
++	public String getNoChestAtLocation() {
++		return GanglandChatUtil.errorMessage(get("No_Chest_At_Location", "&cNo loot chest found at that location!"));
++	}
++
++	@Override
++	public String getRequiresWand() {
++		return GanglandChatUtil.errorMessage(get("Requires_Wand", "You must be holding a Loot Chest Wand to edit settings!"));
++	}
++
++	@Override
++	public String getRemoved() {
++		return GanglandChatUtil.commandMessage(get("Removed", "&aLoot chest removed successfully!"));
+ 	}
+ 
+ 	@Override
+@@ -103,33 +179,38 @@ public class GanglandLootChestMessages implements LootChestMessagesProvider {
+ 
+ 			@Override
+ 			public String getYear() {
+-				return Messages.LOOT_CHEST_TIME_YEAR.toString();
++				return get("Time_Units.Year", "y");
+ 			}
+ 
+ 			@Override
+ 			public String getWeek() {
+-				return Messages.LOOT_CHEST_TIME_WEEK.toString();
++				return get("Time_Units.Week", "w");
+ 			}
+ 
+ 			@Override
+ 			public String getDay() {
+-				return Messages.LOOT_CHEST_TIME_DAY.toString();
++				return get("Time_Units.Day", "d");
+ 			}
+ 
+ 			@Override
+ 			public String getHour() {
+-				return Messages.LOOT_CHEST_TIME_HOUR.toString();
++				return get("Time_Units.Hour", "h");
+ 			}
+ 
+ 			@Override
+ 			public String getMinute() {
+-				return Messages.LOOT_CHEST_TIME_MINUTE.toString();
++				return get("Time_Units.Minute", "m");
+ 			}
+ 
+ 			@Override
+ 			public String getSecond() {
+-				return Messages.LOOT_CHEST_TIME_SECOND.toString();
++				return get("Time_Units.Second", "s");
+ 			}
+ 		};
+ 	}
++
++	private String get(String key, String fallback) {
++		return fileHandler.getFileConfiguration().getString(key, fallback);
++	}
++
+ }
+diff --git a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestFileConfig.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestFileConfig.java
+index d989d85e..24677d80 100644
+--- a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestFileConfig.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestFileConfig.java
+@@ -11,10 +11,14 @@ import org.luckyraven.keystone.persistence.FileManager;
+ 
+ /**
+  * KERNEL-phase registration of the loot chest module's own YAML defaults ({@code lootchests/loot_chests.yml},
+- * {@code lootchests/tiers.yml}, moved out of {@code gangland-impl}'s {@code KernelConfig.fileManager()} — WS3 G2).
+- * The five-argument {@link FileHandler} copies the bundled default out of the MODULE jar (parent-first loader), so
+- * the same path must no longer exist in the core jar. Runs in KERNEL, after {@code KernelConfig} produced the
+- * {@link FileManager} (parameter = ordering edge) — mirrors {@code CiviliansYamlConfig}.
++ * {@code lootchests/tiers.yml}, moved out of {@code gangland-impl}'s {@code KernelConfig.fileManager()} — WS3 G2;
++ * {@code lootchests/lootchest_messages.yml}, {@code lootchests/loot_chest_settings.yml} — WS3 G4, moved off
++ * {@code gangland-api}'s {@code Messages}/{@code Settings}; {@code lootchests/lootchest_messages_es.yml} — WS3 G4
++ * fix round 1 / W53 F1, the Spanish strings {@code GanglandLootChestMessages} picks by
++ * {@code Settings.getLanguagePicked()}). The five-argument {@link FileHandler} copies the bundled default out of
++ * the MODULE jar (parent-first loader), so the same path must no longer exist in the core jar. Runs in KERNEL,
++ * after {@code KernelConfig} produced the {@link FileManager} (parameter = ordering edge) — mirrors
++ * {@code CiviliansYamlConfig}.
+  */
+ @CustomLog
+ @Configuration(phase = Phase.KERNEL)
+@@ -31,6 +35,12 @@ public class LootChestFileConfig {
+ 		fileManager.addFile(new FileHandler(plugin, "loot_chests", "lootchests", ".yml", moduleLoader.classLoader()),
+ 		                    true);
+ 		fileManager.addFile(new FileHandler(plugin, "tiers", "lootchests", ".yml", moduleLoader.classLoader()), true);
++		fileManager.addFile(new FileHandler(plugin, "lootchest_messages", "lootchests", ".yml",
++		                                    moduleLoader.classLoader()), true);
++		fileManager.addFile(new FileHandler(plugin, "lootchest_messages_es", "lootchests", ".yml",
++		                                    moduleLoader.classLoader()), true);
++		fileManager.addFile(new FileHandler(plugin, "loot_chest_settings", "lootchests", ".yml",
++		                                    moduleLoader.classLoader()), true);
+ 		return new LootChestFiles();
+ 	}
+ 
+diff --git a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestMessagesProvider.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestMessagesProvider.java
+index 5833a6a5..c6c1a589 100644
+--- a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestMessagesProvider.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestMessagesProvider.java
+@@ -7,8 +7,9 @@ import org.luckyraven.gangland.lootchest.data.LootTier;
+ /**
+  * Provides all player-facing messages and hologram text used by the loot chest system.
+  * <p>
+- * Implementations live in {@code gangland-impl} and read from the configured messages file via {@code MessageAddon}.
+- * lootchest-api never accesses message files directly.
++ * The implementation ({@code GanglandLootChestMessages}, WS3 G4) lives in this module and reads its own
++ * {@code lootchests/lootchest_messages.yml} — module-owned strings never live in {@code gangland-api}'s
++ * {@code Messages} enum (module API contract).
+  */
+ public interface LootChestMessagesProvider {
+ 	/**
+@@ -105,4 +106,24 @@ public interface LootChestMessagesProvider {
+ 	 * Time-unit label provider used when formatting the cooldown countdown in chat.
+ 	 */
+ 	TimeMessagesProvider getTimeMessages();
++
++	/**
++	 * Sent by {@code /glw lootchest remove} when the player isn't looking at a block close enough to target.
++	 */
++	String getMustLookAtBlock();
++
++	/**
++	 * Sent by {@code /glw lootchest remove} when the targeted block isn't a registered loot chest.
++	 */
++	String getNoChestAtLocation();
++
++	/**
++	 * Sent by {@code /glw lootchest wand edit} when the player isn't holding a loot chest wand.
++	 */
++	String getRequiresWand();
++
++	/**
++	 * Sent by {@code /glw lootchest remove} once the chest has been unregistered and deleted.
++	 */
++	String getRemoved();
+ }
+diff --git a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestModuleConfig.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestModuleConfig.java
+index 06552c9f..d07c5371 100644
+--- a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestModuleConfig.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestModuleConfig.java
+@@ -18,8 +18,10 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
+ /**
+  * CONFIG-phase wiring for the loot chest module: the {@code keystone-hologram} bean (armor-stand holograms,
+  * promoted out of Gangland's own {@code hologram-api} — WS3 G1), {@link LootChestManager}, its
+- * {@link LootChestLoader} and the {@link NbtTagCatalog} tag registration (all moved out of the core's
+- * {@code GameplayConfig}/{@code ItemConfig} — WS3 G2).
++ * {@link LootChestLoader}, the module's own {@link LootChestMessagesProvider}/{@link LootChestSettingsProvider}
++ * beans (WS3 G4 — read {@code lootchests/lootchest_messages.yml}/{@code loot_chest_settings.yml} instead of
++ * {@code gangland-api}'s {@code Messages}/{@code Settings}) and the {@link NbtTagCatalog} tag registration (all
++ * moved out of the core's {@code GameplayConfig}/{@code ItemConfig} — WS3 G2).
+  *
+  * <p>{@link #lootChestLoader} calls {@code fileManager.registerInitializer(loader); fileManager.initializeAll();}
+  * inline (B1) rather than a separate {@code @PostConstruct} — the exact precedent {@code CopsNCrooksModuleConfig}'s
+@@ -45,11 +47,36 @@ public class LootChestModuleConfig {
+ 		return service;
+ 	}
+ 
++	/**
++	 * Registered as {@code FileInitializer} (G4) so it's reachable from the module's own listener/command beans
++	 * ({@code LootChestEarnGoodsListener}, {@code LootChestWandListener}, {@code LootChestWandCommand}) by
++	 * constructor injection, not just from {@link #lootChestManager}.
++	 */
++	@Bean
++	public LootChestMessagesProvider lootChestMessages(FileManager fileManager) {
++		GanglandLootChestMessages messages = new GanglandLootChestMessages(fileManager);
++		fileManager.registerInitializer(messages);
++		return messages;
++	}
++
++	/**
++	 * Registered as {@code FileInitializer} (G4) so it's reachable from the module's own listener beans
++	 * ({@code LootChestEarnGoodsListener}, {@code LootChestWandListener}) by constructor injection, not just from
++	 * {@link #lootChestLoader}.
++	 */
++	@Bean
++	public LootChestSettingsProvider lootChestSettings(FileManager fileManager) {
++		LootChestSettings settings = new LootChestSettings(fileManager);
++		fileManager.registerInitializer(settings);
++		return settings;
++	}
++
+ 	@Bean
+ 	public LootChestManager lootChestManager(HologramService hologramService, RepositoryRegistry repositoryRegistry,
+-	                                         ItemParser itemParser, InventoryService inventoryService) {
++	                                         ItemParser itemParser, InventoryService inventoryService,
++	                                         LootChestMessagesProvider messagesProvider) {
+ 		return new LootChestManager(plugin, GanglandApi.FULL_PREFIX, hologramService, repositoryRegistry, itemParser,
+-		                            new GanglandLootChestMessages(), inventoryService);
++		                            messagesProvider, inventoryService);
+ 	}
+ 
+ 	@Bean
+@@ -58,8 +85,9 @@ public class LootChestModuleConfig {
+ 	}
+ 
+ 	@Bean
+-	public LootChestLoader lootChestLoader(LootChestManager lootChestManager, FileManager fileManager) {
+-		LootChestLoader loader = new LootChestLoader(plugin, lootChestManager, new LootChestSettings(), false, null,
++	public LootChestLoader lootChestLoader(LootChestManager lootChestManager, FileManager fileManager,
++	                                       LootChestSettingsProvider settingsProvider) {
++		LootChestLoader loader = new LootChestLoader(plugin, lootChestManager, settingsProvider, false, null,
+ 		                                             fileManager);
+ 		fileManager.registerInitializer(loader);
+ 		fileManager.initializeAll();
+diff --git a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestSettings.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestSettings.java
+index 94c5774f..9ca3b6ee 100644
+--- a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestSettings.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestSettings.java
+@@ -1,34 +1,93 @@
+ package org.luckyraven.gangland.lootchest.config;
+ 
+-import org.luckyraven.gangland.file.configuration.Settings;
++import org.luckyraven.keystone.exception.PluginException;
++import org.luckyraven.keystone.persistence.FileHandler;
++import org.luckyraven.keystone.persistence.FileInitializer;
++import org.luckyraven.keystone.persistence.FileManager;
+ 
++import java.io.IOException;
+ import java.util.List;
++import java.util.Objects;
+ 
+-public class LootChestSettings implements LootChestSettingsProvider {
++/**
++ * {@link LootChestSettingsProvider} implementation backed by the module's own
++ * {@code lootchests/loot_chest_settings.yml} (WS3 G4 — moved off {@code gangland-api}'s {@code Settings}; module-owned
++ * config never lives in the core settings file). Mirrors {@code JetpackMessages}'s {@link FileInitializer} shape.
++ */
++public class LootChestSettings implements LootChestSettingsProvider, FileInitializer {
++
++	private final FileHandler fileHandler;
++
++	public LootChestSettings(FileManager fileManager) {
++		try {
++			String fileName = "loot_chest_settings";
++
++			fileManager.checkFileLoaded(fileName);
++
++			this.fileHandler = Objects.requireNonNull(fileManager.getFile(fileName));
++		} catch (IOException exception) {
++			throw new PluginException(exception);
++		}
++	}
++
++	@Override
++	public FileHandler getFileHandler() {
++		return fileHandler;
++	}
++
++	@Override
++	public void initialize() {
++		// Flat/list values read lazily per call — nothing to pre-parse.
++	}
+ 
+ 	@Override
+ 	public long getCountdownTimer() {
+-		return Settings.getLootChestCountdownTimer();
++		return fileHandler.getFileConfiguration().getLong("Countdown_Timer", 300);
+ 	}
+ 
+ 	@Override
+ 	public String getOpeningSound() {
+-		return Settings.getLootChestOpeningSound();
++		return fileHandler.getFileConfiguration().getString("Sound.Opening", "BLOCK_CHEST_OPEN");
+ 	}
+ 
+ 	@Override
+ 	public String getLockedSound() {
+-		return Settings.getLootChestLockedSound();
++		return fileHandler.getFileConfiguration().getString("Sound.Locked", "BLOCK_CHEST_LOCKED");
+ 	}
+ 
+ 	@Override
+ 	public String getClosingSound() {
+-		return Settings.getLootChestClosingSound();
++		return fileHandler.getFileConfiguration().getString("Sound.Closing", "BLOCK_CHEST_CLOSE");
+ 	}
+ 
+ 	@Override
+ 	public List<String> getAllowedBlocks() {
+-		return Settings.getLootChestAllowedBlocks();
++		return fileHandler.getFileConfiguration().getStringList("Allowed_Blocks");
++	}
++
++	@Override
++	public double getRewardMoneyMinimum() {
++		return fileHandler.getFileConfiguration().getDouble("Rewards.Money.Minimum", 10);
++	}
++
++	@Override
++	public double getRewardMoneyMaximum() {
++		return fileHandler.getFileConfiguration().getDouble("Rewards.Money.Maximum", 1_000);
++	}
++
++	@Override
++	public double getRewardExperienceMinimum() {
++		return fileHandler.getFileConfiguration().getDouble("Rewards.Experience.Minimum", 5);
++	}
++
++	@Override
++	public double getRewardExperienceMaximum() {
++		return fileHandler.getFileConfiguration().getDouble("Rewards.Experience.Maximum", 100);
++	}
++
++	@Override
++	public List<String> getRewardCommands() {
++		return fileHandler.getFileConfiguration().getStringList("Rewards.Commands");
+ 	}
+ 
+ }
+diff --git a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestSettingsProvider.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestSettingsProvider.java
+index 8d3c4c2c..1c751168 100644
+--- a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestSettingsProvider.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/config/LootChestSettingsProvider.java
+@@ -14,6 +14,33 @@ public interface LootChestSettingsProvider {
+ 
+ 	List<String> getAllowedBlocks();
+ 
++	/**
++	 * Minimum money reward for opening a loot chest (C4 — {@code LootChestEarnGoodsListener} used to read
++	 * {@code Settings.getLootChestRewardMoneyMinimum()} directly; G4 moves these 5 onto the provider so the
++	 * listener never touches core {@code Settings} statics for loot-chest values).
++	 */
++	double getRewardMoneyMinimum();
++
++	/**
++	 * Maximum money reward for opening a loot chest.
++	 */
++	double getRewardMoneyMaximum();
++
++	/**
++	 * Minimum experience reward for opening a loot chest.
++	 */
++	double getRewardExperienceMinimum();
++
++	/**
++	 * Maximum experience reward for opening a loot chest.
++	 */
++	double getRewardExperienceMaximum();
++
++	/**
++	 * Console commands run (as the console) when a player opens a loot chest.
++	 */
++	List<String> getRewardCommands();
++
+ 	/**
+ 	 * Whether cracking minigame is enabled globally
+ 	 */
+diff --git a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/listener/LootChestEarnGoodsListener.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/listener/LootChestEarnGoodsListener.java
+index 1a7c8c73..36b69801 100644
+--- a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/listener/LootChestEarnGoodsListener.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/listener/LootChestEarnGoodsListener.java
+@@ -12,6 +12,7 @@ import org.luckyraven.gangland.core.events.level.LevelUpEvent;
+ import org.luckyraven.gangland.core.user.Level;
+ import org.luckyraven.gangland.core.user.User;
+ import org.luckyraven.gangland.core.user.UserManager;
++import org.luckyraven.gangland.lootchest.config.LootChestSettingsProvider;
+ import org.luckyraven.gangland.lootchest.data.LootChestSession;
+ import org.luckyraven.gangland.lootchest.events.lootchest.LootChestCooldownCompleteEvent;
+ import org.luckyraven.gangland.lootchest.events.lootchest.LootChestOpenEvent;
+@@ -26,13 +27,16 @@ import java.util.concurrent.ConcurrentHashMap;
+ @ListenerHandler
+ public class LootChestEarnGoodsListener implements Listener {
+ 
+-	private final Random                 random;
+-	private final UserManager<Player>    userManager;
+-	private final Map<Player, Set<UUID>> openedLootChests;
++	private final Random                    random;
++	private final UserManager<Player>       userManager;
++	private final LootChestSettingsProvider settingsProvider;
++	private final Map<Player, Set<UUID>>    openedLootChests;
+ 
+-	public LootChestEarnGoodsListener(@Qualifier("online") UserManager<Player> userManager) {
++	public LootChestEarnGoodsListener(@Qualifier("online") UserManager<Player> userManager,
++	                                  LootChestSettingsProvider settingsProvider) {
+ 		this.random           = new Random();
+ 		this.userManager      = userManager;
++		this.settingsProvider = settingsProvider;
+ 		this.openedLootChests = new ConcurrentHashMap<>();
+ 	}
+ 
+@@ -54,11 +58,11 @@ public class LootChestEarnGoodsListener implements Listener {
+ 		openedLootChests.computeIfAbsent(player, k -> ConcurrentHashMap.newKeySet()).add(chestId);
+ 
+ 		// add experience and money
+-		double money = random.nextDouble(Settings.getLootChestRewarwarning: in the working copy of 'gangland-features/gangland-lootchest/src/main/resources/commands.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-lootchest/src/main/resources/lootchests/loot_chest_settings.yml', LF will be replaced by CRLF the next time Git touches it
+dMoneyMinimum(),
+-		                                 Settings.getLootChestRewardMoneyMaximum());
++		double money = random.nextDouble(settingsProvider.getRewardMoneyMinimum(),
++		                                 settingsProvider.getRewardMoneyMaximum());
+ 
+-		double exp = random.nextDouble(Settings.getLootChestRewardExperienceMinimum(),
+-		                               Settings.getLootChestRewardExperienceMaximum());
++		double exp = random.nextDouble(settingsProvider.getRewardExperienceMinimum(),
++		                               settingsProvider.getRewardExperienceMaximum());
+ 
+ 		// deposit money
+ 		user.getEconomy().depositAmount(Currency.of(money));
+@@ -74,7 +78,7 @@ public class LootChestEarnGoodsListener implements Listener {
+ 				String.format("&c-> &a%s +%s", Settings.getMoneySymbol(), Settings.formatDouble(money))));
+ 		player.sendMessage(GanglandChatUtil.color(String.format("&c-> &aXP +%.2f", exp)));
+ 
+-		for (String command : Settings.getLootChestRewardCommands()) {
++		for (String command : settingsProvider.getRewardCommands()) {
+ 			if (command.isEmpty()) continue;
+ 			if (command.startsWith("/")) command = command.substring(1);
+ 
+diff --git a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/listener/LootChestWandListener.java b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/listener/LootChestWandListener.java
+index e3e344a5..7359e0e5 100644
+--- a/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/listener/LootChestWandListener.java
++++ b/gangland-features/gangland-lootchest/src/main/java/org/luckyraven/gangland/lootchest/listener/LootChestWandListener.java
+@@ -12,9 +12,9 @@ import org.bukkit.inventory.ItemStack;
+ import org.bukkit.plugin.java.JavaPlugin;
+ import org.luckyraven.keystone.bean.listener.ListenerHandler;
+ import org.luckyraven.keystone.util.ChatUtil;
+-import org.luckyraven.gangland.file.configuration.Settings;
+ import org.luckyraven.gangland.lootchest.LootChestManager;
+ import org.luckyraven.gangland.lootchest.LootChestWand;
++import org.luckyraven.gangland.lootchest.config.LootChestSettingsProvider;
+ 
+ import java.util.List;
+ 
+@@ -22,8 +22,9 @@ import java.util.List;
+ @RequiredArgsConstructor
+ public class LootChestWandListener implements Listener {
+ 
+-	private final JavaPlugin       gangland;
+-	private final LootChestManager lootChestManager;
++	private final JavaPlugin                gangland;
++	private final LootChestManager          lootChestManager;
++	private final LootChestSettingsProvider settingsProvider;
+ 
+ 	@EventHandler(priority = EventPriority.HIGH)
+ 	public void onPlayerInteract(PlayerInteractEvent event) {
+@@ -62,7 +63,7 @@ public class LootChestWandListener implements Listener {
+ 		event.setCancelled(true);
+ 
+ 		// Check if block is allowed
+-		List<String> allowedBlocks = Settings.getLootChestAllowedBlocks();
++		List<String> allowedBlocks = settingsProvider.getAllowedBlocks();
+ 		if (allowedBlocks.isEmpty()) {
+ 			allowedBlocks = List.of("CHEST", "TRAPPED_CHEST", "BARREL", "ENDER_CHEST");
+ 		}
+diff --git a/gangland-features/gangland-lootchest/src/main/resources/commands.json b/gangland-features/gangland-lootchest/src/main/resources/commands.json
+new file mode 100644
+index 00000000..255e7867
+--- /dev/null
++++ b/gangland-features/gangland-lootchest/src/main/resources/commands.json
+@@ -0,0 +1,18 @@
++{
++	"lootchest": {
++		"usage": "/glw lootchest",
++		"description": "Get a loot chest wand."
++	},
++	"lootchest_help": {
++		"usage": "/glw lootchest help <page>",
++		"description": "Shows the specified page in loot chest menu."
++	},
++	"lootchest_edit": {
++		"usage": "/glw lootchest edit",
++		"description": "Edit wand settings while holding it."
++	},
++	"lootchest_remove": {
++		"usage": "/glw lootchest remove",
++		"description": "Removes the loot chest you are looking at."
++	}
++}
+diff --git a/gangland-features/gangland-lootchest/src/main/resources/lootchests/loot_chest_settings.yml b/gangland-features/gangland-lootchest/src/main/resources/lootchests/loot_chest_settings.yml
+new file mode 1warning: in the working copy of 'gangland-features/gangland-lootchest/src/main/resources/lootchests/lootchest_messages.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-lootchest/src/main/resources/lootchests/lootchest_messages_es.yml', LF will be replaced by CRLF the next time Git touches it
+00644
+index 00000000..de5529d1
+--- /dev/null
++++ b/gangland-features/gangland-lootchest/src/main/resources/lootchests/loot_chest_settings.yml
+@@ -0,0 +1,28 @@
++# Loot chest module — runtime knobs. Moved off gangland-impl's settings.yml (WS3 G4): module-owned config lives
++# in the module's own YAML, never the core settings file.
++# The amount of time to wait before opening the loot chest in seconds.
++Countdown_Timer: 300
++# The sounds when interacting with a loot chest.
++Sound:
++   Opening: BLOCK_CHEST_OPEN
++   Locked: BLOCK_CHEST_LOCKED
++   Closing: BLOCK_CHEST_CLOSE
++# The blocks that can be used as loot chests.
++Allowed_Blocks:
++   - CHEST
++   - TRAPPED_CHEST
++   - BARREL
++   - SHULKER_BOX
++   - ENDER_CHEST
++Rewards:
++   # The amount of money to reward players for opening a loot chest.
++   Money:
++      Minimum: 10
++      Maximum: 1_000
++   # The amount of experience to reward players for opening a loot chest.
++   Experience:
++      Minimum: 5
++      Maximum: 100
++   # The commands to execute when a player opens a loot chest.
++   Commands:
++      - ""
+diff --git a/gangland-features/gangland-lootchest/src/main/resources/lootchests/lootchest_messages.yml b/gangland-features/gangland-lootchest/src/main/resources/lootchests/lootchest_messages.yml
+new file mode 100644
+index 00000000..b57cbb89
+--- /dev/null
++++ b/gangland-features/gangland-lootchest/src/main/resources/lootchests/lootchest_messages.yml
+@@ -0,0 +1,31 @@
++# Loot chest module — player-facing strings. Moved off gangland-api's Messages enum (WS3 G4): module-owned
++# strings live in the module's own YAML, never the core message file.
++Cracking_Started: "&eCracking the chest... Complete the minigame!"
++Already_In_Session: "You are already opening a chest!"
++On_Cooldown: "This chest is empty and on cooldown! &7(%time%)"
++Requires_Lockpick: "You need a lockpick to open this chest!"
++Requires_Key: "You need a key to open this chest!"
++No_Permission: "You don't have permission to open this chest!"
++Invalid_Loot_Table: "This chest has an invalid loot table!"
++Invalid_Chest: "This chest is invalid!"
++No_Item_Provider: "Loot system is not configured properly!"
++Already_Looted: "This chest has already been looted!"
++Must_Look_At_Block: "&cYou must be looking at a block within 5 blocks!"
++No_Chest_At_Location: "&cNo loot chest found at that location!"
++Requires_Wand: "You must be holding a Loot Chest Wand to edit settings!"
++Removed: "&aLoot chest removed successfully!"
++Hologram:
++   Cooldown_Status: "&c&lON COOLDOWN"
++   Available_Status: "&a&lAVAILABLE"
++   Available_Hint: "&7Right-click to open"
++   # Lock-state lines. %item% is substituted with the tier's Unlock_Item_Display.
++   Locked_Requires: "&c🔒 Requires &e%item%"
++   Locked_Permission: "&c🔒 Permission Only"
++   Unlocked: "&a🔓 Unlocked"
++Time_Units:
++   Year: "y"
++   Week: "w"
++   Day: "d"
++   Hour: "h"
++   Minute: "m"
++   Second: "s"
+diff --git a/gangland-features/gangland-lootchest/src/main/resources/lootchests/lootchest_messages_es.yml b/gangland-features/gangland-lootchest/src/main/resources/lootchests/lootchest_messages_es.yml
+new file mode 100644
+index 00000000..00699554
+--- /dev/null
++++ b/gangland-features/gangland-lootchest/src/main/resources/lootchests/lootchest_messages_es.yml
+@@ -0,0 +1,31 @@
++# Loot chest module — player-facing strings, Spanish. Same keys as lootchest_messages.yml (English, the fallback
++# when this file is absent or the server's Language setting isn't "es"). Moved verbatim off gangland-impl's
++# message_es.yml (WS3 G4 fix round 1, W53 F1) — the 26 strings that were deleted from there are these, unchanged.
++Cracking_Started: "&e¡Forzando el cofre... ¡Completa el minijuego!"
++Already_In_Session: "¡Ya estás abriendo un cofre!"
++On_Cooldown: "¡Este cofre está vacío y en recarga! &7(%time%)"
++Requires_Lockpick: "¡Necesitas una ganzúa para abrir este cofre!"
++Requires_Key: "¡Necesitas una llave para abrir este cofre!"
++No_Permission: "¡No tienes permiso para abrir este cofre!"
++Invalid_Loot_Table: "¡Este cofre tiene una tabla de botín no válida!"
++Invalid_Chest: "¡Este cofre no es válido!"
++No_Item_Provider: "¡El sistema de botín no está configurado correctamente!"
++Already_Looted: "¡Este cofre ya ha sido saqueado!"
++Must_Look_At_Block: "&c¡Debes estar mirando un bloque a menos de 5 bloques de distancia!"
++No_Chest_At_Location: "&c¡No se encontró un cofre de botín en esa ubicación!"
++Requires_Wand: "¡Debes estar sosteniendo una Varita de Cofre de Botín para editar la configuración!"
++Removed: "&a¡Cofre de botín eliminado exitosamente!"
++Hologram:
++   Cooldown_Status: "&c&lEN RECARGA"
++   Available_Status: "&a&lDISPONIBLE"
++   Available_Hint: "&7Clic derecho para abrir"
++   Locked_Requires: "&c🔒 Requiere &e%item%"
++   Locked_Permission: "&c🔒 Solo con permiso"
++   Unlocked: "&a🔓 Desbloqueado"
++Time_Units:
++   Year: "a"
++   Week: "sem"
++   Day: "d"
++   Hour: "h"
++   Minute: "m"
++   Second: "s"
+diff --git a/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/LootChestWandTest.java b/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/LootChestWandTest.java
+index e829c512..5fbbdd36 100644
+--- a/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/LootChestWandTest.java
++++ b/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/LootChestWandTest.java
+@@ -99,12 +99,97 @@ class LootChestWandTest {
+ 		verify(inventory, never()).setItem(eq(WAND_SLOT), any());
+ 	}
+ 
++	@Test
++	@DisplayName("setWandNBT resolves its target from the captured wandSlot, never from the current main hand")
++	void setWandNBT_resolvesTargetFromCapturedWandSlot_notFromCurrentMainHand() throws Exception {
++		LootChestWand wand = new LootChestWand(mock(JavaPlugin.class), mock(LootChestManager.class), "glw");
++
++		ItemStack notAWand      = new ItemStack(Material.DIRT);
++		ItemStack wandInMainHand = taggedWandItem();
++
++		Player          player    = mock(Player.class);
++		PlayerInventory inventory = mock(PlayerInventory.class);
++		when(player.getInventory()).thenReturn(inventory);
++		when(inventory.getItem(WAND_SLOT)).thenReturn(notAWand);
++		when(inventory.getHeldItemSlot()).thenReturn(CURRENT_HELD_SLOT);
++		when(inventory.getItemInMainHand()).thenReturn(wandInMainHand);
++
++		invokeSetWandNBT(wand, player, WAND_SLOT, LootChestWandTag.TIER_ID.toString(), "gold");
++
++		// setWandNBT bails out (never reaches NBT.modify, which needs a live server) once getItem(wandSlot) shows
++		// the captured slot no longer holds a wand — it must never fall back to the current main hand.
++		verify(inventory).getItem(WAND_SLOT);
++		verify(inventory, never()).getItemInMainHand();
++	}
++
++	@Test
++	@DisplayName("handleInvSizeChange resolves its target from the captured wandSlot, never from the current main hand")
++	void handleInvSizeChange_resolvesTargetFromCapturedWandSlot_notFromCurrentMainHand() throws Exception {
++		LootChestWand wand = new LootChestWand(mock(JavaPlugin.class), mock(LootChestManager.class), "glw");
++
++		ItemStack notAWand      = new ItemStack(Material.DIRT);
++		ItemStack wandInMainHand = taggedWandItem();
++
++		Player          player    = mock(Player.class);
++		PlayerInventory inventory = mock(PlayerInventory.class);
++		when(player.getInventory()).thenReturn(inventory);
++		when(inventory.getItem(WAND_SLOT)).thenReturn(notAWand);
++		when(inventory.getHeldItemSlot()).thenReturn(CURRENT_HELD_SLOT);
++		when(inventory.getItemInMainHand()).thenReturn(wandInMainHand);
++
++		invokeHandleInvSizeChange(wand, player, true, "BLACK_STAINED_GLASS_PANE", " ", WAND_SLOT);
++
++		// handleInvSizeChange bails out (never reaches setWandNBT/openConfigInventory) once getItem(wandSlot)
++		// shows the captured slot no longer holds a wand — it must never fall back to the current main hand.
++		verify(inventory).getItem(WAND_SLOT);
++		verify(inventory, never()).getItemInMainHand();
++	}
++
++	@Test
++	@DisplayName("openConfigInventory resolves its target from the freshly-captured wandSlot, never from getItemInMainHand()")
++	void openConfigInventory_resolvesTargetFromCapturedWandSlot_notFromGetIwarning: in the working copy of 'gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/config/GanglandLootChestMessagesTest.java', LF will be replaced by CRLF the next time Git touches it
+temInMainHand() {
++		LootChestWand wand = new LootChestWand(mock(JavaPlugin.class), mock(LootChestManager.class), "glw");
++
++		ItemStack notAWand = new ItemStack(Material.DIRT);
++
++		Player          player    = mock(Player.class);
++		PlayerInventory inventory = mock(PlayerInventory.class);
++		when(player.getInventory()).thenReturn(inventory);
++		when(inventory.getHeldItemSlot()).thenReturn(WAND_SLOT);
++		when(inventory.getItem(WAND_SLOT)).thenReturn(notAWand);
++
++		wand.openConfigInventory(player, "BLACK_STAINED_GLASS_PANE", " ");
++
++		// openConfigInventory captures wandSlot once via getHeldItemSlot(), then reads the held item through
++		// getItem(wandSlot) — the LS-30 fix's entry point. It must never call getItemInMainHand() itself; every
++		// later read/write in this class re-derives from the same captured wandSlot, never a fresh main-hand read.
++		verify(inventory).getItem(WAND_SLOT);
++		verify(inventory, never()).getItemInMainHand();
++	}
++
+ 	private static void invokeUpdateWandLore(LootChestWand wand, Player player, int wandSlot) throws Exception {
+ 		Method method = LootChestWand.class.getDeclaredMethod("updateWandLore", Player.class, int.class);
+ 		method.setAccessible(true);
+ 		method.invoke(wand, player, wandSlot);
+ 	}
+ 
++	private static void invokeSetWandNBT(LootChestWand wand, Player player, int wandSlot, String key, Object value)
++			throws Exception {
++		Method method = LootChestWand.class.getDeclaredMethod("setWandNBT", Player.class, int.class, String.class,
++		                                                      Object.class);
++		method.setAccessible(true);
++		method.invoke(wand, player, wandSlot, key, value);
++	}
++
++	private static void invokeHandleInvSizeChange(LootChestWand wand, Player player, boolean increase,
++	                                              String fillMaterial, String fillName, int wandSlot)
++			throws Exception {
++		Method method = LootChestWand.class.getDeclaredMethod("handleInvSizeChange", Player.class, boolean.class,
++		                                                      String.class, String.class, int.class);
++		method.setAccessible(true);
++		method.invoke(wand, player, increase, fillMaterial, fillName, wandSlot);
++	}
++
+ 	/** Same tag shape {@link LootChestWand#createWand()} stamps, built by hand to dodge {@code XMaterial}. */
+ 	private static ItemStack taggedWandItem() {
+ 		ItemStack stack = new ItemStack(Material.STICK);
+diff --git a/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/config/GanglandLootChestMessagesTest.java b/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/config/GanglandLootChestMessagesTest.java
+new file mode 100644
+index 00000000..32513b01
+--- /dev/null
++++ b/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/config/GanglandLootChestMessagesTest.java
+@@ -0,0 +1,95 @@
++package org.luckyraven.gangland.lootchest.config;
++
++import org.bukkit.plugin.java.JavaPlugin;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.io.TempDir;
++import org.luckyraven.gangland.file.configuration.Settings;
++import org.luckyraven.keystone.persistence.FileHandler;
++import org.luckyraven.keystone.persistence.FileManager;
++import org.luckyraven.keystone.testkit.PluginMocks;
++
++import java.io.IOException;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.nio.file.Path;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++
++/**
++ * W53 F1: {@link GanglandLootChestMessages} must pick its backing file by the core {@code Settings.Language}
++ * setting the same way {@code LanguageLoader} chooses {@code message_<lang>.yml} — not always read the English
++ * file regardless of what the server is configured for. Uses {@code getTimeMessages().getYear()} as the marker
++ * read (a {@code Type.NO_CHANGE}-style raw string, no {@link org.luckyraven.gangland.util.GanglandChatUtil}
++ * prefix wrapping) so this test doesn't also need {@code Messages.init(...)} wired for {@code ERROR_PREFIwarning: in the working copy of 'gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/config/LootChestSettingsTest.java', LF will be replaced by CRLF the next time Git touches it
+X}/etc.
++ */
++@DisplayName("GanglandLootChestMessages — W53 F1: language-aware file selection")
++class GanglandLootChestMessagesTest {
++
++	@TempDir
++	Path tempDir;
++
++	@Test
++	@DisplayName("Settings.Language 'es' resolves lootchests/lootchest_messages_es.yml")
++	void languageEs_resolvesSpanishFile() throws IOException {
++		initializeSettingsLanguage("es");
++		FileManager fileManager = buildMessagesFileManager(true);
++
++		GanglandLootChestMessages messages = new GanglandLootChestMessages(fileManager);
++
++		assertEquals("marcador-es", messages.getTimeMessages().getYear());
++	}
++
++	@Test
++	@DisplayName("a non-Spanish Language falls back to the English file")
++	void languageOther_fallsBackToEnglish() throws IOException {
++		initializeSettingsLanguage("fr");
++		FileManager fileManager = buildMessagesFileManager(true);
++
++		GanglandLootChestMessages messages = new GanglandLootChestMessages(fileManager);
++
++		assertEquals("marker-en", messages.getTimeMessages().getYear());
++	}
++
++	@Test
++	@DisplayName("Language 'es' but the Spanish file isn't registered falls back to English without throwing")
++	void languageEs_missingSpanishFile_fallsBackToEnglish() throws IOException {
++		initializeSettingsLanguage("es");
++		FileManager fileManager = buildMessagesFileManager(false);
++
++		GanglandLootChestMessages messages = new GanglandLootChestMessages(fileManager);
++
++		assertEquals("marker-en", messages.getTimeMessages().getYear());
++	}
++
++	private void initializeSettingsLanguage(String language) throws IOException {
++		Files.writeString(tempDir.resolve("settings.yml"), "Language: " + language + "\nMoney_Symbol: '$'\n",
++		                  StandardCharsets.UTF_8);
++
++		JavaPlugin  plugin      = PluginMocks.plugin(tempDir);
++		FileHandler handler     = new FileHandler(plugin, tempDir.resolve("settings.yml").toFile());
++		FileManager fileManager = new FileManager(plugin);
++		fileManager.addFile(handler, false);
++
++		new Settings(fileManager).initialize();
++	}
++
++	private FileManager buildMessagesFileManager(boolean includeSpanish) throws IOException {
++		Files.writeString(tempDir.resolve("lootchest_messages.yml"), "Time_Units:\n  Year: \"marker-en\"\n",
++		                  StandardCharsets.UTF_8);
++
++		JavaPlugin  plugin      = PluginMocks.plugin(tempDir);
++		FileManager fileManager = new FileManager(plugin);
++		fileManager.addFile(new FileHandler(plugin, tempDir.resolve("lootchest_messages.yml").toFile()), false);
++
++		if (includeSpanish) {
++			Files.writeString(tempDir.resolve("lootchest_messages_es.yml"), "Time_Units:\n  Year: \"marcador-es\"\n",
++			                  StandardCharsets.UTF_8);
++			fileManager.addFile(new FileHandler(plugin, tempDir.resolve("lootchest_messages_es.yml").toFile()),
++			                    false);
++		}
++
++		return fileManager;
++	}
++
++}
+diff --git a/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/config/LootChestSettingsTest.java b/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/config/LootChestSettingsTest.java
+new file mode 100644
+index 00000000..6cf8b9ff
+--- /dev/null
++++ b/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/config/LootChestSettingsTest.java
+@@ -0,0 +1,95 @@
++package org.luckyraven.gangland.lootchest.config;
++
++import org.bukkit.plugin.java.JavaPlugin;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.io.TempDir;
++import org.luckyraven.keystone.persistence.FileHandler;
++import org.luckyraven.keystone.persistence.FileManager;
++import org.luckyraven.keystone.testkit.PluginMocks;
++
++import java.io.IOException;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.util.List;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++
++/**
++ * Drives a real {@link LootChestSettings#initialize()} pass off a hand-written
++ * {@code lootchests/loot_chest_settings.yml} fixture — the same {@code FileHandler}/{@code FileManager} entry
++ * point {@code LootChestFileConfig} uses at bootstrap (mirrors {@code SettingsFixture}'s approach for the core
++ * {@code Settings} class). WS3 G4: the module's own settings provider no longer reads {@code gangland-api}'s
++ * {@code Settings} statics.
++ */
++@DisplayName("LootChestSettings")
++class LootChestSettingsTest {
++
++	@TempDir
++	Path tempDir;
++
++	@Test
++	@DisplayName("a full loot_chest_settings.yml populates every getter, including the 5 reward getters (C4)")
++	void initialize_populatesFromYaml() throws IOException {
++		LootChestSettings settings = build("""
++				Countdown_Timer: 60
++				Sound:
++				  Opening: BLOCK_BARREL_OPEN
++				  Locked: BLOCK_CHEST_LOCKED
++				  Closing: BLOCK_BARREL_CLOSE
++				Allowed_Blocks:
++				  - CHEST
++				  - BARREL
++				Rewards:
++				  Money:
++				    Minimum: 1
++				    Maximum: 2
++				  Experience:
++				    Minimum: 3
++				    Maximum: 4
++				  Commands:
++				    - "give %player% diamond 1"
++				""");
++
++		assertEquals(60L, settings.getCountdownTimer());
++		assertEquals("BLOCK_BARREL_OPEN", settings.getOpeningSound());
++		assertEquals("BLOCK_CHEST_LOCKED", settings.getLockedSound());
++		assertEquals("BLOCK_BARREL_CLOSE", settings.getClosingSound());
++		assertEquals(List.of("CHEST", "BARREL"), settings.getAllowedBlocks());
++		assertEquals(1.0, settings.getRewardMoneyMinimum());
++		assertEquals(2.0, settings.getRewardMoneyMaximum());
++		assertEquals(3.0, settings.getRewardExperienceMinimum());
++		assertEquals(4.0, settings.getRewardExperienceMaximum());
++		assertEquals(List.of("give %player% diamond 1"), settings.getRewardCommands());
++	}
++
++	@Test
++	@DisplayName("an empty loot_chest_settings.yml falls back to the same defaults the core Settings.java used")
++	void initialize_emptyYaml_fallsBackToDefaults() throws IOException {
++		LootChestSettings settings = build("{}\n");
++
++		assertEquals(300L, settings.getCountdownTimer());
++		assertEquals("BLOCK_CHEST_OPEN", settings.getOpeningSound());
++		assertEquals("BLOCK_CHEST_LOCKED", settings.getLockedSound());
++		assertEquals("BLOCK_CHEST_CLOSE", settings.getClosingSound());
++		assertEquals(10.0, settings.getRewardMoneyMinimum());
++		assertEquals(1_000.0, settings.getRewardMoneyMaximum());
++		assertEquals(5.0, settings.getRewardExperienceMinimum());
++		assertEquals(100.0, settings.getRewardExperienceMaximum());
++	}
++
++	private LootChestSettings build(String yaml) throws IOException {
++		Files.writeString(tempDir.resolve("loot_chest_settings.yml"), yaml, StandardCharsets.UTF_8);
++
++		JavaPlugin  plugin      = PluginMocks.plugin(tempDir);
++		FileHandler handler     = new FileHandler(plugin, tempDir.resolve("loot_chest_settings.yml").toFile());
++		FileManager fileManager = new FileManager(plugin);
++		fileManager.addFile(handler, false);
++
++		LootChestSettings settings = new LootChestSettings(fileManager);
++		settings.initialize();
++		return settings;
++	}
++
++}
+diff --git a/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/listener/LootChestListenerTest.java b/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/listener/LootChestListenerTest.java
+index 746433e2..4f2174ab 100644
+--- a/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/listener/LootChestListenerTest.java
++++ b/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/listener/LootChestListenerTest.java
+@@ -116,6 +116,26 @@ class LootChestListenerTest {
+ 		verify(event).setCancelled(true);
+ 	}
+ 
++	@Test
++	@DisplayName("PLACE_ONE onto a top slot is cancelled (deposit into the chest)")
++	void placeOne_ontoTopSlot_isCancelled() {
++		InventoryClickEvent event = clickEvent(InventoryAction.PLACE_ONE, topInventory, 4);
++
++		listener.onInventoryClick(event);
++
++		verify(event).setCancelled(true);
++	}
++
++	@Test
++	@DisplayName("PLACE_SOME onto a top slot is cancelled (deposit into the chest)")
++	void placeSome_ontoTopSlot_isCancelled() {
++		InventoryClickEvent event = clickEvent(InventoryAction.PLACE_SOME, topInventory, 6);
++
++		listener.onInventoryClick(event);
++
++		verify(event).setCancelled(true);
++	}
++
+ 	@Test
+ 	@DisplayName("HOTBAR_SWAP onto a top slot is cancelled (deposit into the chest)")
+ 	void hotbarSwap_ontoTopSlot_isCancelled() {
+@@ -126,6 +146,16 @@ class LootChestListenerTest {
+ 		verify(event).setCancelled(true);
+ 	}
+ 
++	@Test
++	@DisplayName("HOTBAR_MOVE_AND_READD onto a top slot is cancelled (deposit into the chest)")
++	void hotbarMoveAndReadd_ontoTopSlot_isCancelled() {
++		InventoryClickEvent event = clickEvent(InventoryAction.HOTBAR_MOVE_AND_READD, topInventory, 8);
++
++		listener.onInventoryClick(event);
++
++		verify(event).setCancelled(true);
++	}
++
+ 	@Test
+ 	@DisplayName("MOVE_TO_OTHER_INVENTORY shift-clicked from the player's own inventory is cancelled (deposit)")
+ 	void moveToOtherInventory_fromBottomInventory_isCancelled() {
+diff --git a/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/listener/LootChestWandListenerTest.java b/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/listener/LootChestWandListenerTest.java
+index a60db0c8..3bb1f190 100644
+--- a/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/listener/LootChestWandListenerTest.java
++++ b/gangland-features/gangland-lootchest/src/test/java/org/luckyraven/gangland/lootchest/listener/LootChestWandListenerTest.java
+@@ -13,13 +13,12 @@ import org.junit.jupiter.api.AfterEach;
+ import org.junit.jupiter.api.BeforeEach;
+ import org.junit.jupiter.api.DisplayName;
+ import org.junit.jupiter.api.Test;
+-import org.luckyraven.gangland.file.configuration.Settings;
+ import org.luckyraven.gangland.lootchest.LootChestManager;
+ import org.luckyraven.gangland.lootchest.LootChestWandTag;
++import org.luckyraven.gangland.lootchest.config.LootChestSettingsProvider;
+ import org.luckyraven.keystone.item.ItemBuilder;
+ import org.luckyraven.keystone.item.nbt.NbtBridge;
+ import org.luckyraven.keystone.testkit.RecordingNbtAccessor;
+-import org.mockito.MockedStatic;
+ 
+ import java.util.List;
+ import java.util.Optional;
+@@ -27,7 +26,6 @@ import java.util.Optional;
+ import static org.mockito.ArgumentMatchers.any;
+ import static org.mockito.ArgumentMatchers.contains;
+ import static org.mockito.Mockito.mock;
+-import static org.mockito.Mockito.mockStatic;
+ import static org.mockito.Mockito.never;
+ import static org.mockito.Mockito.verify;
+ import static org.mockito.Mockito.when;
+@@ -62,13 +60,14 @@ class LootChestWandListenerTest {
+ 	@Test
+ 	@DisplayName("allow-list [\"CHEST\"] rejects a right-clicked TRAPPED_CHEST instead of substring-matching it")
+ 	void allowListOfChest_rejectsTrappedChest_exactMatchNotSubstring() {
+-		JavaPlugin           gangland  = mock(JavaPlugin.class);
+-		LootChestManager     manager   = mock(LootChestManager.class);
+-		Player               player    = mock(Player.class);
+-		PlayerInventory      inventory = mock(PlayerInventory.class);
+-		Block                block     = mock(Block.class);
+-		Location             location  = new Location(null, 10, 64, 10);
+-		PlayerInteractEvent  event     = mock(PlayerInteractEvent.class);
++		JavaPlugin               gangland         = mock(JavaPlugin.class);
++		LootChestManager         manager          = mock(LootChestManager.class);
++		LootChestSettingsProvider settingsProvider = mock(LootChestSettingsProvider.class);
++		Player                   player           = mock(Player.class);
++		PlayerInventory          inventory        = mock(PlayerInventory.class);
++		Block                    block            = mock(Block.class);
++		Location                 location         = new Location(null, 10, 64, 10);
++		PlayerInteractEvent      event            = mock(PlayerInteractEvent.class);
+ 
+ 		ItemStack wand = configuredWandItem();
+ 
+@@ -80,14 +79,11 @@ class LootChestWandListenerTest {
+ 		when(block.getType()).thenReturn(Material.TRAPPED_CHEST);
+ 		when(block.getLocation()).thenReturn(location);
+ 		when(manager.getChestAt(location)).thenReturn(Optional.empty());
++		when(settingsProvider.getAllowedBlocks()).thenReturn(List.of("CHEST"));
+ 
+-		LootChestWandListener listener = new LootChestWandListener(gangland, manager);
++		LootChestWandListener listener = new LootChestWandListener(gangland, manager, settingsProvider);
+ 
+-		try (MockedStatic<Settings> settings = mockStatic(Settings.class)) {
+-			settings.when(Settings::getLootChestAllowedBlocks).thenReturn(List.of("CHEST"));
+-
+-			listener.onPlayerInteract(event);
+-		}
++		listener.onPlayerInteract(event);
+ 
+ 		// The observable effect of the bug: a TRAPPED_CHEST wrongly treated as an allowed "CHEST" gets a loot
+ 		// chest registered at its location. The fix must never reach registerChest for this block/allow-list pair.
+diff --git a/gangland-impl/pom.xml b/gangland-impl/pom.xml
+index 8e10920f..b386b1dd 100644
+--- a/gangland-impl/pom.xml
++++ b/gangland-impl/pom.xml
+@@ -70,10 +70,6 @@
+             <groupId>org.luckyraven</groupId>
+             <artifactId>sign-api</artifactId>
+         </dependency>
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>lootchest-api</artifactId>
+-        </dependency>
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+             <artifactId>keystone-shop</artifactId>
+diff --git a/gangland-impl/src/main/resources/commands.json b/gangland-impl/src/main/resources/commands.json
+index 2f0a45d1..5f262034 100644
+--- a/gangland-impl/src/main/resources/commands.json
++++ b/gangland-impl/src/main/resources/commands.json
+@@ -459,22 +459,6 @@
+ 		"usage": "/glw update download",
+ 		"description": "If there was an update it would try to download it."
+ 	},
+-	"lootchest": {
+-		"usage": "/glw lootchest",
+-		"description": "Get a loot chest wand."
+-	},
+-	"lootchest_help": {
+-		"usage": "/glw lootchest help <page>",
+-		"description": "Shows the specified page in loot chest menu."
+-	},
+-	"lootchest_edit": {
+-		"usage": "/glw lootchest edit",
+-		"description": "Edit wand settings while holding it."
+-	},
+-	"lootchest_remove": {
+-		"usage": "/glw lootchest remove",
+-		"description": "Removes the loot chest you are looking at."
+-	},
+ 	"fuel": {
+ 		"usage": "/glw fuel",
+ 		"description": "Shows fuel help page."
+diff --git a/gangland-impl/src/main/resources/message/message_en.yml b/gangland-impl/src/main/resources/message/message_en.yml
+index b4dcd9f3..8e737592 100644
+--- a/gangland-impl/src/main/resources/message/message_en.yml
++++ b/gangland-impl/src/main/resources/message/message_en.yml
+@@ -392,8 +392,6 @@ Commands:
+       Overview_Category: "&7- &b%category% &8(&a%count%&8)"
+       Registered: "&aRegistered &8» &b%permission%"
+       Drift: "&eDrift &8» &b%permission% &7(Bukkit: &f%bukkit%&7, tracked: &f%tracked%&7)"
+-   Loot_Chest:
+-      Removed: "&aLoot chest removed successfully!"
+    Turf:
+       Enter:
+          Owned: "&8» &7Entering &f%turf% &7— Controlled by &e%gang%"
+@@ -580,10 +578,6 @@ Errors:
+       Already_Jailed: "Player is already jailed!"
+       Not_Jailed: "&cPlayer &e%target%&c is not jailed."
+       Exists_Nearby: "A jail already exists within %blocks% blocks of this location!"
+-   Loot_Chest:
+-      Must_Look_At_Block: "&cYou must be looking at a block within 5 blocks!"
+-      No_Chest_At_Location: "&cNo loot chest found at that location!"
+-      Requires_Wand: "You must be holding a Loot Chest Wand to edit settings!"
+    Argument:
+       Not_Implemented: "Not implemented method!"
+       Confirm_Required: "Need to execute the initial statement to use this argument."
+@@ -815,30 +809,3 @@ Item:
+       Invalid: "Invalid wearable: &c%name%"
+       Not_Registered: "Wearable not registered: &c%key%"
+       Not_Wearable: "Not a registered wearable!"
+-
+-Loot_Chest:
+-   Cracking_Started: "&eCracking the chest... Complete the minigame!"
+-   Already_In_Session: "You are already opening a chest!"
+-   On_Cooldown: "This chest is empty and on cooldown! &7(%time%)"
+-   Requires_Lockpick: "You need a lockpick to open this chest!"
+-   Requires_Key: "You need a key to open this chest!"
+-   No_Permission: "You don't have permission to open this chest!"
+-   Invalid_Loot_Table: "This chest has an invalid loot table!"
+-   Invalid_Chest: "This chest is invalid!"
+-   No_Item_Provider: "Loot system is not configured properly!"
+-   Already_Looted: "This chest has already been looted!"
+-   Hologram:
+-      Cooldown_Status: "&c&lON COOLDOWN"
+-      Available_Status: "&a&lAVAILABLE"
+-      Available_Hint: "&7Right-click to open"
+-      # Lock-state lines. %item% is substituted with the tier's Unlock_Item_Display.
+-      Locked_Requires: "&c🔒 Requires &e%item%"
+-      Locked_Permission: "&c🔒 Permission Only"
+-      Unlocked: "&a🔓 Unlocked"
+-   Time_Units:
+-      Year: "y"
+-      Week: "w"
+-      Day: "d"
+-      Hour: "h"
+-      Minute: "m"
+-      Second: "s"
+diff --git a/gangland-impl/src/main/resources/message/message_es.yml b/gangland-impl/src/main/resources/message/message_es.yml
+index ee9c320f..7f487602 100644
+--- a/gangland-impl/src/main/resources/message/message_es.yml
++++ b/gangland-impl/src/main/resources/message/message_es.yml
+@@ -362,8 +362,6 @@ Commands:
+       Overview_Category: "&7- &b%category% &8(&a%count%&8)"
+       Registered: "&aRegistrado &8» &b%permission%"
+       Drift: "&eDesincronizado &8» &b%permission% &7(Bukkit: &f%bukkit%&7, rastreado: &f%tracked%&7)"
+-   Loot_Chest:
+-      Removed: "&a¡Cofre de botín eliminado exitosamente!"
+ 
+ Errors:
+    Prefix: "&4Error&7: "
+@@ -464,10 +462,6 @@ Errors:
+       Already_Jailed: "¡El jugador ya está encarcelado!"
+       Not_Jailed: "&cEl jugador &e%target%&c no está encarcelado."
+       Exists_Nearby: "¡Ya existe una cárcel dentro de %blocks% bloques de esta ubicación!"
+-   Loot_Chest:
+-      Must_Look_At_Block: "&c¡Debes estar mirando un bloque a menos de 5 bloques de distancia!"
+-      No_Chest_At_Location: "&c¡No se encontró un cofre de botín en esa ubicación!"
+-      Requires_Wand: "¡Debes estar sosteniendo una Varita de Cofre de Botín para editar la configuración!"
+    Argument:
+       Not_Implemented: "¡Método no implementado!"
+       Confirm_Required: "Necesitas ejecutar la instrucción inicial para usar este argumento."
+@@ -687,29 +681,3 @@ Item:
+       Invalid: "Objeto vestible inválido: &c%name%"
+       Not_Registered: "Objeto vestible no registrado: &c%key%"
+       Not_Wearable: "¡No es un objeto vestible registrado!"
+-
+-Loot_Chest:
+-   Cracking_Started: "&e¡Forzando el cofre... ¡Completa el minijuego!"
+-   Already_In_Session: "¡Ya estás abriendo un cofre!"
+-   On_Cooldown: "¡Este cofre está vacío y en recarga! &7(%time%)"
+-   Requires_Lockpick: "¡Necesitas una ganzúa para abrir este cofre!"
+-   Requires_Key: "¡Necesitas una llave para abrir este cofre!"
+-   No_Permission: "¡No tienes permiso para abrir este cofre!"
+-   Invalid_Loot_Table: "¡Este cofre tiene una tabla de botín no válida!"
+-   Invalid_Chest: "¡Este cofre no es válido!"
+-   No_Item_Provider: "¡El sistema de botín no está configurado correctamente!"
+-   Already_Looted: "¡Este cofre ya ha sido saqueado!"
+-   Hologram:
+-      Cooldown_Status: "&c&lEN RECARGA"
+-      Available_Status: "&a&lDISPONIBLE"
+-      Available_Hint: "&7Clic derecho para abrir"
+-      Locked_Requires: "&c🔒 Requiere &e%item%"
+-      Locked_Permission: "&c🔒 Solo con permiso"
+-      Unlocked: "&a🔓 Desbloqueado"
+-   Time_Units:
+-      Year: "a"
+-      Week: "sem"
+-      Day: "d"
+-      Hour: "h"
+-      Minute: "m"
+-      Second: "s"
+diff --git a/gangland-impl/src/main/resources/settings.yml b/gangland-impl/src/main/resources/settings.yml
+index b9389953..64745214 100644
+--- a/gangland-impl/src/main/resources/settings.yml
++++ b/gangland-impl/src/main/resources/settings.yml
+@@ -581,39 +581,6 @@ Civilians:
+       # Must match a type key defined in civilians.yml. Leave empty to skip untyped spawners.
+       Default_Type_Id: ""
+ 
+-# +------------+ #
+-# | Loot Chest | #
+-# +------------+ #
+-# The loot chest is a block that players can open to receive random rewards. These rewards can be configured from types
+-# of items in loot-chest.yml.
+-Loot_Chest:
+-   # The amount of time to wait before opening the loot chest in seconds.
+-   Countdown_Timer: 300
+-   # The sounds when interacting with a loot chest.
+-   Sound:
+-      Opening: BLOCK_CHEST_OPEN
+-      Locked: BLOCK_CHEST_LOCKED
+-      Closing: BLOCK_CHEST_CLOSE
+-   # The blocks that can be as loot chests.
+-   Allowed_Blocks:
+-      - CHEST
+-      - TRAPPED_CHEST
+-      - BARREL
+-      - SHULKER_BOX
+-      - ENDER_CHEST
+-   Rewards:
+-      # The amount of money to reward players for opening a loot chest.
+-      Money:
+-         Minimum: 10
+-         Maximum: 1_000
+-      # The amount of experience to reward players for opening a loot chest.
+-      Experience:
+-         Minimum: 5
+-         Maximum: 100
+-      # The commands to execute when a player opens a loot chest.
+-      Commands:
+-         - ""
+-
+ # +--------------------+ #
+ # | Money Drop Config  | #
+ # +--------------------+ #
+diff --git a/gangland-impl/src/test/java/org/luckyraven/gangland/command/data/InformationManagerTest.java b/gangland-impl/src/test/java/org/luckyraven/gangland/command/data/InformationManagerTest.java
+index 494e0d50..44fe7ef9 100644
+--- a/gangland-impl/src/test/java/org/luckyraven/gangland/command/data/InformationManagerTest.java
++++ b/gangland-impl/src/test/java/org/luckyraven/gangland/command/data/InformationManagerTest.java
+@@ -38,14 +38,16 @@ class InformationManagerTest {
+ 
+ 		manager.processCommands();
+ 
+-		assertEquals(153, manager.getCommands().size(),
++		assertEquals(149, manager.getCommands().size(),
+ 				"pins the current entry count (225 minus the 43 cops/banker/trader/civilian/jail/cuff keys that "
+ 				+ "moved to the cops-n-crooks module's own commands.json in 0.8.4, minus the 5 car* keys that moved "
+ 				+ "to the gadget module's own commands.json in 0.8.4, minus the 16 turf entries that moved to the "
+ 				+ "turf module's own commands.json in 0.8.4, minus the 12 weapon/ammunition/item-wearable keys that "
+ 				+ "moved to the weapon module's own commands.json in 0.8.4, plus the 5 module* keys added with "
+ 				+ "/glw module in 0.9.1, minus the reload_scoreboard key removed in WS1 G3 (0.10.0, scoreboard moved "
+-				+ "to the standalone Plaque plugin); update this alongside any deliberate commands.json edit");
++				+ "to the standalone Plaque plugin), minus the 4 lootchest* keys that moved to the gangland-lootchest "
++				+ "module's own commands.json in WS3 G4 (0.10.0); update this alongside any deliberate commands.json "
++				+ "edit");
+ 		assertTrue(manager.getCommands().containsKey("general"));
+ 		assertTrue(manager.getCommands().containsKey("general_page"));
+ 	}
+diff --git a/gangland-impl/src/test/java/org/luckyraven/gangland/file/configuration/SettingsTest.java b/gangland-impl/src/test/java/org/luckyraven/gangland/file/configuration/SettingsTest.java
+index c95d95ea..529b67a2 100644
+--- a/gangland-impl/src/test/java/org/luckyraven/gangland/file/configuration/SettingsTest.java
++++ b/gangland-impl/src/test/java/org/luckyraven/gangland/file/configuration/SettingsTest.java
+@@ -172,6 +172,33 @@ class SettingsTest {
+ 				"expected no targeted migration warning when neither legacy block is present; got: " + logs);
+ 	}
+ 
++	@Test
++	@DisplayName("WS3 G4: a legacy Loot_Chest: block logs a targeted warning naming the gangland-lootchest module's own YAML")
++	void initialize_legacyLootChestBlock_logsTargetedMigrationWarning() throws IOException {
++		SettingsFixture.write(tempDir, """
++				Money_Symbol: '$'
++				Loot_Chest:
++				  Countdown_Timer: 60
++				""");
++
++		List<String> logs = captureWarnLogs(() -> SettingsFixture.initialize(tempDir));
++
++		assertTrue(logs.stream().anyMatch(m -> m.contains("Loot_Chest") && m.contains("loot_chest_settings.yml")
++						&& m.contains("gangland-lootchest")),
++				"expected a targeted migration warning naming the module's own settings file; got: " + logs);
++	}
++
++	@Test
++	@DisplayName("WS3 G4: no legacy Loot_Chest: block means no targeted migration warning")
++	void initialize_noLegacyLootChestBlock_logsNoMigrationWarning() throws IOException {
++		SettingsFixture.write(tempDir, "Money_Symbol: '$'\n");
++
++		List<String> logs = captureWarnLogs(() -> SettingsFixture.initialize(tempDir));
++
++		assertTrue(logs.stream().noneMatch(m -> m.contains("loot_chest_settings.yml")),
++				"expected no targeted migration warning when the legacy block is absent; got: " + logs);
++	}
++
+ 	/**
+ 	 * Attaches a throwaway Log4j2 appender directly to the exact {@link Logger} instance
+ 	 * {@code Settings}'s own {@code @CustomLog} field resolves to (same factory call,
+diff --git a/gangland-ui/lootchest-api/pom.xml b/gangland-ui/lootchest-api/pom.xml
+deleted file mode 100644
+index 94f10f8d..00000000
+--- a/gangland-ui/lootchest-api/pom.xml
++++ /dev/null
+@@ -1,74 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+-         xmlns="http://maven.apache.org/POM/4.0.0"
+-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+-    <modelVersion>4.0.0</modelVersion>
+-
+-    <parent>
+-        <groupId>org.luckyraven</groupId>
+-        <artifactId>gangland-ui</artifactId>
+-        <version>${revision}</version>
+-        <relativePath>../pom.xml</relativePath>
+-    </parent>
+-
+-    <artifactId>lootchest-api</artifactId>
+-
+-    <name>Lootchest API</name>
+-
+-    <dependencies>
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>keystone-bean</artifactId>
+-        </dependency>
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>keystone-item</artifactId>
+-        </dependency>
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>gangland-core</artifactId>
+-            <scope>provided</scope>
+-        </dependency>
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>gangland-item</artifactId>
+-            <scope>provided</scope>
+-        </dependency>
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>keystone-hologram</artifactId>
+-        </dependency>
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>keystone-persistence</artifactId>
+-            <scope>provided</scope>
+-        </dependency>
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>keystone-common</artifactId>
+-        </dependency>
+-
+-        <dependency>
+-            <groupId>com.github.cryptomorin</groupId>
+-            <artifactId>XSeries</artifactId>
+-        </dependency>
+-
+-        <dependency>
+-            <groupId>de.tr7zw</groupId>
+-            <artifactId>item-nbt-api-plugin</artifactId>
+-        </dependency>
+-
+-        <dependency>
+-            <groupId>net.wesjd</groupId>
+-            <artifactId>anvilgui</artifactId>
+-        </dependency>
+-
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>gangland-core</artifactId>
+-            <type>test-jar</type>
+-            <scope>test</scope>
+-        </dependency>
+-    </dependencies>
+-
+-</project>
+diff --git a/gangland-ui/lootchest-api/src/main/resources/org/luckyraven/gangland/lootchest/module.properties b/gangland-ui/lootchest-api/src/main/resources/org/luckyraven/gangland/lootchest/module.properties
+deleted file mode 100644
+index 0f8ea8c3..00000000
+--- a/gangland-ui/lootchest-api/src/main/resources/org/luckyraven/gangland/lootchest/module.properties
++++ /dev/null
+@@ -1 +0,0 @@
+-module.name=${project.name}
+diff --git a/gangland-ui/pom.xml b/gangland-ui/pom.xml
+index fca4a3ae..0f2a86bf 100644
+--- a/gangland-ui/pom.xml
++++ b/gangland-ui/pom.xml
+@@ -18,7 +18,6 @@
+ 
+     <modules>
+         <module>sign-api</module>
+-        <module>lootchest-api</module>
+     </modules>
+ 
+     <dependencies>
+diff --git a/pom.xml b/pom.xml
+index 913c7886..740f1bf8 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -274,16 +274,6 @@
+                 <artifactId>sign-api</artifactId>
+                 <version>${project.version}</version>
+             </dependency>
+-            <dependency>
+-                <groupId>org.luckyraven</groupId>
+-                <artifactId>lootchest-api</artifactId>
+-                <version>${project.version}</version>
+-            </dependency>
+-            <dependency>
+-                <groupId>org.luckyraven</groupId>
+-                <artifactId>hologram-api</artifactId>
+-                <version>${project.version}</version>
+-            </dependency>
+             <dependency>
+                 <groupId>org.luckyraven</groupId>
+                 <artifactId>gangland-gadget</artifactId>

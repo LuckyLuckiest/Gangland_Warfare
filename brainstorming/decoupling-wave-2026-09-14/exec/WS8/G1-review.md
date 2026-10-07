@@ -1,0 +1,2 @@
+# Review — WS8 G1 — 2026-09-20 (Sonnet, transcribed)
+Verdict: APPROVED. Exact mirror of the jetpack/car shapes (ItemKind.java:17; GadgetFileConfig.java:61-68; GrappleAddon material fix like JetpackAddon.java:106-111; permission registered at load; cooldown only; default priority correct — no Bartizan-tag collision); tests mirror JetpackAddonLoadTest/CarNbtIdentityTest; red-first via compile failure acceptable for a new type; no Bartizan import. Plural grapples.yml confirmed (PLAN.md:277, brief). Sounds: knob not in the plan §5 block either.

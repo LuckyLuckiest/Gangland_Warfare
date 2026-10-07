@@ -1,0 +1,996 @@
+# Review package — 0.10.0 WS2 G1+G2 — working tree vs HEAD 02f334b3 (WS1 G3 commit)
+--- status ---
+ M gangland-features/cops-n-crooks/pom.xml
+ M gangland-features/gangland-gadget/pom.xml
+ M gangland-features/gangland-npc-shops/pom.xml
+ M gangland-features/gangland-turf/pom.xml
+ M gangland-impl/pom.xml
+ M gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/debug/DebugCommand.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/config/KernelConfig.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryRuntimeContext.java
+ A gangland-impl/src/main/java/org/luckyraven/gangland/gang/GangFilterAdapter.java
+ A gangland-impl/src/main/java/org/luckyraven/gangland/gang/member/MemberFilterAdapter.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/RemoveAccountListener.java
+ M gangland-impl/src/test/java/LevelTester.java
+ M gangland-infra/gangland-domain/pom.xml
+D  gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/GangFilterAdapter.java
+D  gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/member/MemberFilterAdapter.java
+ M gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/User.java
+ M gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/UserFactory.java
+ M gangland-infra/gangland-domain/src/test/java/org/luckyraven/gangland/gang/GangMembershipTest.java
+ M gangland-infra/gangland-domain/src/test/java/org/luckyraven/gangland/gang/user/UserManagerTest.java
+ M gangland-infra/gangland-domain/src/test/java/org/luckyraven/gangland/gang/user/UserTest.java
+ M gangland-ui/shop-api/pom.xml
+ M pom.xml
+--- diffstat ---
+warning: in the working copy of 'gangland-impl/src/main/java/org/luckyraven/gangland/gang/GangFilterAdapter.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-impl/src/main/java/org/luckyraven/gangland/gang/member/MemberFilterAdapter.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-impl/src/main/java/org/luckyraven/gangland/gang/GangFilterAdapter.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-impl/src/main/java/org/luckyraven/gangland/gang/member/MemberFilterAdapter.java', LF will be replaced by CRLF the next time Git touches it
+ gangland-features/cops-n-crooks/pom.xml            |  4 +
+ gangland-features/gangland-gadget/pom.xml          |  4 +
+ gangland-features/gangland-npc-shops/pom.xml       |  4 +
+ gangland-features/gangland-turf/pom.xml            |  4 +
+ gangland-impl/pom.xml                              |  4 +
+ .../gangland/command/sub/debug/DebugCommand.java   | 38 ++++++----
+ .../luckyraven/gangland/config/GameplayConfig.java | 29 +++++++-
+ .../luckyraven/gangland/config/KernelConfig.java   | 20 +++--
+ .../inventory/InventoryRuntimeContext.java         | 14 +++-
+ .../gangland/gang/GangFilterAdapter.java           |  6 ++
+ .../gangland/gang/member/MemberFilterAdapter.java  |  4 +
+ .../listener/player/RemoveAccountListener.java     | 11 ++-
+ gangland-impl/src/test/java/LevelTester.java       |  2 +-
+ gangland-infra/gangland-domain/pom.xml             |  4 -
+ .../org/luckyraven/gangland/gang/user/User.java    | 87 +---------------------
+ .../luckyraven/gangland/gang/user/UserFactory.java | 21 +++---
+ .../gangland/gang/GangMembershipTest.java          |  6 +-
+ .../gangland/gang/user/UserManagerTest.java        | 11 +--
+ .../luckyraven/gangland/gang/user/UserTest.java    |  8 +-
+ gangland-ui/shop-api/pom.xml                       |  5 ++
+ pom.xml                                            |  9 +++
+ 21 files changed, 148 insertions(+), 147 deletions(-)
+--- diff ---
+warning: in the working copy of 'gangland-impl/src/main/java/org/luckyraven/gangland/gang/GangFilterAdapter.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-impl/src/main/java/org/luckyraven/gangland/gang/member/MemberFilterAdapter.java', LF will be replaced by CRLF the next time Git touches it
+diff --git a/gangland-features/cops-n-crooks/pom.xml b/gangland-features/cops-n-crooks/pom.xml
+index 1fd31e82..517e67a7 100644
+--- a/gangland-features/cops-n-crooks/pom.xml
++++ b/gangland-features/cops-n-crooks/pom.xml
+@@ -52,10 +52,14 @@
+         </dependency>
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+             <artifactId>inventory-api</artifactId>
+         </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-inventory</artifactId>
++        </dependency>
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+             <artifactId>shop-api</artifactId>
+         </dependency>
+         <dependency>
+diff --git a/gangland-features/gangland-gadget/pom.xml b/gangland-features/gangland-gadget/pom.xml
+index 7d38226b..838d14d7 100644
+--- a/gangland-features/gangland-gadget/pom.xml
++++ b/gangland-features/gangland-gadget/pom.xml
+@@ -34,10 +34,14 @@
+         </dependency>
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+             <artifactId>keystone-hooks</artifactId>
+         </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-inventory</artifactId>
++        </dependency>
+         <!-- Spigot Build (full server — needed for io.netty access) -->
+         <dependency>
+             <groupId>org.spigotmc</groupId>
+             <artifactId>spigot</artifactId>
+             <scope>provided</scope>
+diff --git a/gangland-features/gangland-npc-shops/pom.xml b/gangland-features/gangland-npc-shops/pom.xml
+index 9d5c045d..5ca284cc 100644
+--- a/gangland-features/gangland-npc-shops/pom.xml
++++ b/gangland-features/gangland-npc-shops/pom.xml
+@@ -55,10 +55,14 @@
+         </dependency>
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+             <artifactId>inventory-api</artifactId>
+         </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-inventory</artifactId>
++        </dependency>
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+             <artifactId>shop-api</artifactId>
+         </dependency>
+         <!-- The module touches User/UserManager (gangland-domain hooks) directly — provided scope is not
+diff --git a/gangland-features/gangland-turf/pom.xml b/gangland-features/gangland-turf/pom.xml
+index ab58a0b7..4d16724c 100644
+--- a/gangland-features/gangland-turf/pom.xml
++++ b/gangland-features/gangland-turf/pom.xml
+@@ -77,10 +77,14 @@
+         <!-- Moved turf-NPC views (TurfPowerupFlow/View classes, group I) need InventoryHandler/MultiPanelInventory. -->
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+             <artifactId>inventory-api</artifactId>
+         </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-inventory</artifactId>
++        </dependency>
+ 
+         <!-- Citizens dependency (moved turf-NPC code, group I) -->
+         <dependency>
+             <groupId>net.citizensnpcs</groupId>
+             <artifactId>citizens-main</artifactId>
+diff --git a/gangland-impl/pom.xml b/gangland-impl/pom.xml
+index 5dc3dceb..c04c8598 100644
+--- a/gangland-impl/pom.xml
++++ b/gangland-impl/pom.xml
+@@ -56,10 +56,14 @@
+         </dependency>
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+             <artifactId>inventory-api</artifactId>
+         </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-inventory</artifactId>
++        </dependency>
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+             <artifactId>keystone-common</artifactId>
+         </dependency>
+         <dependency>
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/debug/DebugCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/debug/DebugCommand.java
+index c58a6b1d..9e78500b 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/debug/DebugCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/debug/DebugCommand.java
+@@ -50,10 +50,12 @@ import org.luckyraven.gangland.inventory.multi.MultiInventoryCreation;
+ import org.luckyraven.gangland.inventory.part.ButtonTags;
+ import org.luckyraven.gangland.inventory.part.Fill;
+ import org.luckyraven.gangland.inventory.villager.VillagerInventory;
+ import org.luckyraven.gangland.inventory.villager.VillagerInventoryRegistry;
+ import org.luckyraven.gangland.inventory.villager.VillagerTrade;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.Menu;
+ 
+ import java.util.*;
+ 
+ /**
+  * Accepts {@code CommandContribution}s at path {@code debug}.
+@@ -69,10 +71,11 @@ public final class DebugCommand extends Command {
+ 	private final PermissionManager         permissionManager;
+ 	private final GanglandPlaceholder       placeholder;
+ 	private final CommandManager            commandManager;
+ 	private final VillagerInventoryRegistry villagerRegistry;
+ 	private final CommandContributions      contributions;
++	private final InventoryService          inventoryService;
+ 
+ 	private final Gangland gangland;
+ 
+ 	public DebugCommand(Gangland gangland,
+ 	                    @Qualifier("online") UserManager<Player> userManager,
+@@ -82,11 +85,12 @@ public final class DebugCommand extends Command {
+ 	                    WaypointManager waypointManager,
+ 	                    PermissionManager permissionManager,
+ 	                    GanglandPlaceholder placeholder,
+ 	                    CommandManager commandManager,
+ 	                    VillagerInventoryRegistry villagerRegistry,
+-	                    DependencyContainer container) {
++	                    DependencyContainer container,
++	                    InventoryService inventoryService) {
+ 		super(gangland, "debug", false);
+ 
+ 		this.gangland = gangland;
+ 
+ 		this.userManager       = userManager;
+@@ -97,10 +101,11 @@ public final class DebugCommand extends Command {
+ 		this.permissionManager = permissionManager;
+ 		this.placeholder       = placeholder;
+ 		this.commandManager    = commandManager;
+ 		this.villagerRegistry  = villagerRegistry;
+ 		this.contributions     = CommandContributions.from(container);
++		this.inventoryService  = inventoryService;
+ 	}
+ 
+ 	@Override
+ 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
+ 		commandManager.show(commandSender);
+@@ -453,33 +458,38 @@ public final class DebugCommand extends Command {
+ 		return new Argument(getPlugin(), "update-data", getArgumentTree(), (argument, sender, args) -> {
+ 			gangland.getContext().get(PeriodicalUpdates.class).forceUpdate();
+ 		});
+ 	}
+ 
++	/**
++	 * WS2 G1/G2 (0.10.0, ruling W23 F7): under {@code keystone-inventory} a player has at most ONE menu open at a
++	 * time, tracked by {@link InventoryService#tracker()}'s {@code OpenMenuTracker} — a real reduction from the old
++	 * {@code inventory-api} model this replaces, which could accumulate several simultaneously-registered
++	 * {@code InventoryHandler}s per player. {@code Menu} exposes no generic title, so the class simple name stands
++	 * in as the display name. Nothing actually opens a menu through this service yet (that lands at WS2 G3, when
++	 * {@code InventoryRuntimeContext} retargets onto {@code ChestMenuBuilder}), so this argument reports "none" for
++	 * everyone until then — a known, accepted interim state, not a bug.
++	 */
+ 	private @NotNull Argument getInventoriesData() {
+ 		return new Argument(getPlugin(), "inv-data", getArgumentTree(), (argument, sender, args) -> {
+ 			if (sender instanceof Player player) {
+ 				User<Player> user = userManager.getUser(player);
+ 
+ 				if (user == null) return;
+ 
+-				user.sendMessage("Normal inventories: ");
+-				user.sendMessage(user.getInventories()
+-										 .stream()
+-										 .map(InventoryHandler::getTitle)
+-						                 .map(NamespacedKey::getKey)
+-						                 .toArray(String[]::new));
+-			} else {
+-				for (User<Player> user : userManager.getUsers().values()) {
++				Menu menu = inventoryService.tracker().currentMenuOf(player);
+ 
+-					List<String> inventories = user.getInventories()
+-							.stream().map(InventoryHandler::getTitle).map(NamespacedKey::getKey).toList();
++				user.sendMessage("Current menu: " + (menu == null ? "none" : menu.getClass().getSimpleName()));
++			} else {
++				for (UUID uuid : inventoryService.tracker().currentViewers()) {
++					User<Player> user = userManager.getUser(uuid);
++					if (user == null) continue;
+ 
+-					List<String> values = new ArrayList<>(inventories);
++					Menu menu = inventoryService.tracker().currentMenuOf(user.getUser());
+ 
+-					user.sendMessage(user.getUser().getName() + ":");
+-					user.sendMessage(String.valueOf(values));
++					user.sendMessage(user.getUser().getName() + ": "
++					                  + (menu == null ? "none" : menu.getClass().getSimpleName()));
+ 				}
+ 			}
+ 		});
+ 	}
+ 
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java b/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java
+index c30326bf..258b5878 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java
+@@ -26,10 +26,13 @@ import org.luckyraven.gangland.gang.member.MemberFilterAdapter;
+ import org.luckyraven.gangland.gang.user.UserManager;
+ import org.luckyraven.gangland.hologram.HologramService;
+ import org.luckyraven.gangland.inventory.condition.BooleanExpressionEvaluator;
+ import org.luckyraven.gangland.inventory.filter.*;
+ import org.luckyraven.gangland.inventory.multi.ItemSourceProvider;
++import org.luckyraven.gangland.inventory.service.InventoryRegistry;
++import org.luckyraven.keystone.cooldown.InMemoryCooldownService;
++import org.luckyraven.keystone.inventory.InventoryService;
+ import org.luckyraven.keystone.item.ItemConverterRegistry;
+ import org.luckyraven.keystone.item.ItemParser;
+ import org.luckyraven.keystone.item.ItemSerializerRegistry;
+ import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
+ import org.luckyraven.gangland.item.contract.GanglandUniqueItemInteractionService;
+@@ -86,10 +89,30 @@ public class GameplayConfig {
+ 
+ 	// ---------------------------------------------------------------------------------------------------------------
+ 	// Inventory runtime + loader
+ 	// ---------------------------------------------------------------------------------------------------------------
+ 
++	/**
++	 * WS2 G1 (0.10.0): the core's single {@code keystone-inventory} root. A plain {@code @Bean}, own instance —
++	 * not resolved via the {@code ServicesManager}, since {@code keystone-inventory} is a {@code provided}-scope
++	 * library dependency, not a second running plugin (contrast {@link org.luckyraven.gangland.data.placeholder.worker.GanglandPlaceholder}'s
++	 * {@code PlaceholderProvider} publication, which exists precisely because Plaque IS a separate plugin).
++	 * {@code registerListeners} is called once here, at bean construction, per the module's own doc ("Keystone.jar
++	 * registers no listener of its own"). Cooldowns are in-memory only — nothing in Gangland needs a
++	 * database-backed cooldown yet; upgrade to {@code keystone-persistence}'s {@code PersistentCooldownService} if
++	 * that changes. No menu is actually built through this service until WS2 G3 retargets
++	 * {@link InventoryRuntimeContext} onto {@code ChestMenuBuilder} — until then this bean exists side by side with
++	 * the old {@code inventory-api} framework, doing nothing yet.
++	 */
++	@Bean
++	public InventoryService inventoryService() {
++		InventoryService service = new InventoryService(new InMemoryCooldownService());
++		service.registerListeners(gangland);
++		log.info("keystone-inventory service registered");
++		return service;
++	}
++
+ 	/**
+ 	 * Domain-agnostic filter plumbing — the registry tracks per-view {@link FilterBinding} specs, the store holds
+ 	 * per-(binding, player) {@link SearchFilter} state, and the applier is the shared filter/sort pipeline that
+ 	 * replaced the old hand-rolled gang-search code.
+ 	 */
+@@ -128,16 +151,18 @@ public class GameplayConfig {
+ 	                                                       GangManager gangManager,
+ 	                                                       FilterStore filterStore,
+ 	                                                       FilterApplier filterApplier,
+ 	                                                       GangFilterAdapter gangFilterAdapter,
+ 	                                                       MemberFilterAdapter memberFilterAdapter,
+-	                                                       ItemParser itemParser) {
++	                                                       ItemParser itemParser,
++	                                                       InventoryRegistry inventoryRegistry) {
+ 		ItemSourceProvider itemSourceProvider = new GangItemSourceProvider(userManager, gangManager, filterStore,
+ 		                                                                   filterApplier, gangFilterAdapter,
+ 		                                                                   memberFilterAdapter);
+ 		return new InventoryRuntimeContext(gangland, definitionStore, itemSourceProvider, conditionEvaluator,
+-		                                   userManager, permissionManager, placeholderService, itemParser);
++		                                   userManager, permissionManager, placeholderService, itemParser,
++		                                   inventoryRegistry);
+ 	}
+ 
+ 	/**
+ 	 * {@link InventoryLoader} can't initialize during the FILE phase because its load callback parses prefixed item
+ 	 * refs (weapon:awp, wearable:police_vest, …) via {@link ItemParser}, which is a CONFIG-phase bean. The
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/config/KernelConfig.java b/gangland-impl/src/main/java/org/luckyraven/gangland/config/KernelConfig.java
+index 9d8069cd..8bd589e6 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/config/KernelConfig.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/config/KernelConfig.java
+@@ -105,13 +105,18 @@ public class KernelConfig {
+ 		service.register((player, text) -> text.replace("%money_symbol%", Settings.getMoneySymbol()));
+ 		return service;
+ 	}
+ 
+ 	/**
+-	 * Per-player open-inventory tracker. Constructed once and threaded into the {@link UserFactory}, the four UI
+-	 * listeners, and the {@link InventoryHandler} static seam (the last static seam left after Phase 2 — same
+-	 * lightweight pattern as {@code Messages.init(...)}).
++	 * Per-player open-inventory tracker for the old {@code inventory-api} framework. Threaded into the four UI
++	 * listeners and the {@link InventoryHandler} static seam (the last static seam left after Phase 2 — same
++	 * lightweight pattern as {@code Messages.init(...)}). WS2 G2 (0.10.0) severed this out of {@link UserFactory}/
++	 * {@code User} (the domain inversion) —
++	 * {@link org.luckyraven.gangland.file.configuration.inventory.InventoryRuntimeContext}, {@code RemoveAccountListener}
++	 * and {@code DebugCommand}'s {@code /glw debug inv-data} argument now call this bean directly instead of going
++	 * through {@code User}. Stays alive, along with the rest of {@code inventory-api}, until WS2 CUT retargets
++	 * everything onto {@code keystone-inventory}'s {@code OpenMenuTracker}.
+ 	 */
+ 	@Bean
+ 	public InventoryRegistry inventoryRegistry() {
+ 		InventoryRegistry registry = new InventoryRegistry();
+ 		InventoryHandler.setRegistry(registry);
+@@ -127,16 +132,17 @@ public class KernelConfig {
+ 	public VillagerInventoryRegistry villagerInventoryRegistry() {
+ 		return new VillagerInventoryRegistry();
+ 	}
+ 
+ 	/**
+-	 * Builds {@link User} instances with their {@link PlaceholderService} and {@link InventoryRegistry} dependencies
+-	 * wired in. Replaces the static {@code User.setPlaceholder(...)} field.
++	 * Builds {@link User} instances with their {@link PlaceholderService} dependency wired in. Replaces the static
++	 * {@code User.setPlaceholder(...)} field. No longer takes {@link InventoryRegistry} (WS2 G2, 0.10.0) — severing
++	 * the domain inversion means {@code User} itself has no inventory-tracking knowledge at all any more.
+ 	 */
+ 	@Bean
+-	public UserFactory userFactory(PlaceholderService placeholderService, InventoryRegistry inventoryRegistry) {
+-		return new UserFactory(gangland, placeholderService, inventoryRegistry);
++	public UserFactory userFactory(PlaceholderService placeholderService) {
++		return new UserFactory(gangland, placeholderService);
+ 	}
+ 
+ 	@Bean
+ 	public PermissionWorker permissionWorker() {
+ 		return new PermissionWorker(Gangland.FULL_PREFIX);
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryRuntimeContext.java b/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryRuntimeContext.java
+index c87e8712..cceae3ab 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryRuntimeContext.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryRuntimeContext.java
+@@ -20,10 +20,11 @@ import org.luckyraven.gangland.inventory.multi.ItemSourceEntry;
+ import org.luckyraven.gangland.inventory.multi.ItemSourceProvider;
+ import org.luckyraven.gangland.inventory.multi.MultiInventory;
+ import org.luckyraven.gangland.inventory.part.ButtonTags;
+ import org.luckyraven.gangland.inventory.part.Fill;
+ import org.luckyraven.gangland.inventory.part.Slot;
++import org.luckyraven.gangland.inventory.service.InventoryRegistry;
+ import org.luckyraven.gangland.inventory.unique.UniqueItemHandler;
+ import org.luckyraven.keystone.item.ItemParser;
+ import org.luckyraven.keystone.persistence.FileHandler;
+ import org.luckyraven.keystone.persistence.config.*;
+ 
+@@ -46,27 +47,30 @@ public class InventoryRuntimeContext {
+ 	private final ConditionEvaluator       conditionEvaluator;
+ 	private final UserManager<Player>      userManager;
+ 	private final PermissionManager        permissionManager;
+ 	private final PlaceholderService       placeholderService;
+ 	private final ItemParser               itemParser;
++	private final InventoryRegistry        inventoryRegistry;
+ 
+ 	public InventoryRuntimeContext(Gangland gangland,
+ 	                               InventoryDefinitionStore definitionStore,
+ 	                               ItemSourceProvider itemSourceProvider,
+ 	                               ConditionEvaluator conditionEvaluator,
+ 	                               UserManager<Player> userManager,
+ 	                               PermissionManager permissionManager,
+ 	                               PlaceholderService placeholderService,
+-	                               ItemParser itemParser) {
++	                               ItemParser itemParser,
++	                               InventoryRegistry inventoryRegistry) {
+ 		this.gangland           = gangland;
+ 		this.definitionStore    = definitionStore;
+ 		this.itemSourceProvider = itemSourceProvider;
+ 		this.conditionEvaluator = conditionEvaluator;
+ 		this.userManager        = userManager;
+ 		this.permissionManager  = permissionManager;
+ 		this.placeholderService = placeholderService;
+ 		this.itemParser         = itemParser;
++		this.inventoryRegistry  = inventoryRegistry;
+ 	}
+ 
+ 	public InventoryDefinitionStore definitionStore() {
+ 		return definitionStore;
+ 	}
+@@ -216,11 +220,13 @@ public class InventoryRuntimeContext {
+ 		if (user == null) {
+ 			log.warn("Cannot open inventory '{}' — no User record for player {}", inventoryName, player.getName());
+ 			return;
+ 		}
+ 
+-		InventoryHandler existing = user.getInventory(inventoryName);
++		InventoryHandler existing = inventoryRegistry.getInventories(user.getUuid()).stream()
++				.filter(handler -> handler.getTitle().getKey().equals(inventoryName.toLowerCase()))
++				.findFirst().orElse(null);
+ 		if (existing != null) {
+ 			existing.open(player);
+ 			return;
+ 		}
+ 
+@@ -250,21 +256,21 @@ public class InventoryRuntimeContext {
+ 			                                       Settings.getNextPage());
+ 			MultiInventory multi = invBuilder.createMultiInventory(gangland, placeholder, player, enwarning: in the working copy of 'gangland-impl/src/main/java/org/luckyraven/gangland/gang/GangFilterAdapter.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-impl/src/main/java/org/luckyraven/gangland/gang/member/MemberFilterAdapter.java', LF will be replaced by CRLF the next time Git touches it
+tries, buttonTags,
+ 			                                                       fill);
+ 			if (multi != null) {
+ 				multi.open(player);
+-				user.addInventory(multi);
++				inventoryRegistry.registerInventory(user.getUuid(), multi);
+ 			} else {
+ 				log.warn(
+ 						"Cannot open multi-inventory '{}' — createMultiInventory returned null (source='{}', entries={})",
+ 						inventoryName, itemSource, entries.size());
+ 			}
+ 		} else {
+ 			InventoryHandler handler = invBuilder.createInventory(gangland, placeholder, user.getUser(), fill, line,
+ 			                                                      conditionEvaluator, opener);
+ 			handler.open(player);
+-			user.addInventory(handler);
++			inventoryRegistry.registerInventory(user.getUuid(), handler);
+ 		}
+ 	}
+ 
+ 	Gangland gangland() {
+ 		return gangland;
+diff --git a/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/GangFilterAdapter.java b/gangland-impl/src/main/java/org/luckyraven/gangland/gang/GangFilterAdapter.java
+similarity index 68%
+rename from gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/GangFilterAdapter.java
+rename to gangland-impl/src/main/java/org/luckyraven/gangland/gang/GangFilterAdapter.java
+index 3800668c..22f17eea 100644
+--- a/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/GangFilterAdapter.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/gang/GangFilterAdapter.java
+@@ -8,10 +8,16 @@ import java.util.Locale;
+ 
+ /**
+  * Projects {@link Gang} instances onto the canonical {@link StandardFilterField} axes that the gang-search view
+  * supports. Returning {@code null} marks a field as unsupported; the applier treats unsupported fields as non-matches
+  * and sorts them last.
++ *
++ * <p>Moved from {@code gangland-domain} to {@code gangland-impl} at WS2 G2 (0.10.0): {@code gangland-domain} no
++ * longer depends on {@code inventory-api} (severing the domain inversion), but this class's {@code FilterAdapter}/
++ * {@code FilterField}/{@code StandardFilterField} types still live in {@code inventory-api} until WS2 G3a moves them
++ * to {@code gangland-impl}'s own {@code menu.filter} package — so this class has to live somewhere that still
++ * depends on {@code inventory-api} in the meantime. Package unchanged, so no importer needed updating.
+  */
+ public final class GangFilterAdapter implements FilterAdapter<Gang> {
+ 
+ 	@Override
+ 	public Object project(Gang gang, FilterField field) {
+diff --git a/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/member/MemberFilterAdapter.java b/gangland-impl/src/main/java/org/luckyraven/gangland/gang/member/MemberFilterAdapter.java
+similarity index 86%
+rename from gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/member/MemberFilterAdapter.java
+rename to gangland-impl/src/main/java/org/luckyraven/gangland/gang/member/MemberFilterAdapter.java
+index d0c6414e..ac2c4c6b 100644
+--- a/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/member/MemberFilterAdapter.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/gang/member/MemberFilterAdapter.java
+@@ -11,10 +11,14 @@ import java.util.Locale;
+ /**
+  * Projects {@link Member} instances onto the canonical filter fields used by the gang-members list view. The
+  * {@code NAME} projection reads the {@link org.bukkit.OfflinePlayer} name (so the filter matches what's rendered in the
+  * inventory), {@code DATE} uses the raw epoch-millis join timestamp for numeric sort, and {@code MEMBERS} is overloaded
+  * here as the contribution value (the view's "by contribution" sort axis).
++ *
++ * <p>Moved from {@code gangland-domain} to {@code gangland-impl} at WS2 G2 (0.10.0): see
++ * {@link org.luckyraven.gangland.gang.GangFilterAdapter}'s javadoc for why. Package unchanged, so no importer
++ * needed updating.
+  */
+ public final class MemberFilterAdapter implements FilterAdapter<Member> {
+ 
+ 	@Override
+ 	public Object project(Member member, FilterField field) {
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/RemoveAccountListener.java b/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/RemoveAccountListener.java
+index 49672b56..56170e75 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/RemoveAccountListener.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/RemoveAccountListener.java
+@@ -15,40 +15,45 @@ import org.luckyraven.gangland.database.GanglandDatabase;
+ import org.luckyraven.keystone.economy.bank.Bank;
+ import org.luckyraven.gangland.gang.bounty.Bounty;
+ import org.luckyraven.gangland.gang.user.User;
+ import org.luckyraven.gangland.gang.user.UserManager;
+ import org.luckyraven.gangland.gang.wanted.Wanted;
++import org.luckyraven.gangland.inventory.service.InventoryRegistry;
+ import org.luckyraven.keystone.persistence.repository.IRepository;
+ 
+ @ListenerHandler(priority = ListenerPriority.LOW)
+ public final class RemoveAccountListener implements Listener {
+ 
+ 	private final Gangland                   gangland;
+ 	private final GanglandDatabase           ganglandDatabase;
+ 	private final UserManager<Player>        userManager;
+ 	private final UserManager<OfflinePlayer> offlineUserManager;
++	private final InventoryRegistry          inventoryRegistry;
+ 
+ 	public RemoveAccountListener(Gangland gangland,
+ 	                             GanglandDatabase ganglandDatabase,
+ 	                             @Qualifier("online") UserManager<Player> userManager,
+-	                             @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager) {
++	                             @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
++	                             InventoryRegistry inventoryRegistry) {
+ 		this.gangland           = gangland;
+ 		this.ganglandDatabase   = ganglandDatabase;
+ 		this.userManager        = userManager;
+ 		this.offlineUserManager = offlineUserManager;
++		this.inventoryRegistry  = inventoryRegistry;
+ 	}
+ 
+ 	@EventHandler(priority = EventPriority.LOWEST)
+ 	public synchronized void onPlayerQuit(PlayerQuitEvent event) {
+ 		Player       player = event.getPlayer();
+ 		User<Player> user   = userManager.getUser(player);
+ 
+ 		if (user == null) return;
+ 
+ 		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
+-			// remove all the inventories of that player only
+-			user.clearInventories();
++			// remove all the inventories of that player only (WS2 G2: severed off User, goes through the
++			// registry bean directly)
++			inventoryRegistry.clear(user.getUuid());
+ 
+ 			user.getWanted().stopTimer();
+ 			user.getBounty().stopTimer();
+ 		});
+ 	}
+diff --git a/gangland-impl/src/test/java/LevelTester.java b/gangland-impl/src/test/java/LevelTester.java
+index da99a27f..33c8f3fd 100644
+--- a/gangland-impl/src/test/java/LevelTester.java
++++ b/gangland-impl/src/test/java/LevelTester.java
+@@ -47,11 +47,11 @@ public class LevelTester {
+ 					} catch (NumberFormatException exception) {
+ 						System.out.println("Need to input a number");
+ 						amount = 0;
+ 					}
+ 
+-					LevelUpEvent event = new UserLevelUpEvent(false, new User<>(any(), any(), any(), any()), level);
++					LevelUpEvent event = new UserLevelUpEvent(false, new User<>(any(), any(), any()), level);
+ 					System.out.printf("Added %d experience level.\n", level.addLevels(amount, event));
+ 				}
+ 				case 2 -> {
+ 					System.out.print("Amount: ");
+ 					Scanner addScanner = new Scanner(System.in);
+diff --git a/gangland-infra/gangland-domain/pom.xml b/gangland-infra/gangland-domain/pom.xml
+index 76b03744..ec898a68 100644
+--- a/gangland-infra/gangland-domain/pom.xml
++++ b/gangland-infra/gangland-domain/pom.xml
+@@ -35,14 +35,10 @@
+         </dependency>
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+             <artifactId>keystone-hooks</artifactId>
+         </dependency>
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>inventory-api</artifactId>
+-        </dependency>
+ 
+         <!-- XSeries -->
+         <dependency>
+             <groupId>com.github.cryptomorin</groupId>
+             <artifactId>XSeries</artifactId>
+diff --git a/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/User.java b/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/User.java
+index bbfd2825..e3df7809 100644
+--- a/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/User.java
++++ b/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/User.java
+@@ -19,12 +19,10 @@ import org.luckyraven.gangland.gang.bounty.Bounty;
+ import org.luckyraven.gangland.gang.bounty.BountyContext;
+ import org.luckyraven.gangland.gang.rank.Permission;
+ import org.luckyraven.gangland.gang.rank.Rank;
+ import org.luckyraven.gangland.gang.wanted.Wanted;
+ import org.luckyraven.gangland.gang.wanted.WantedContext;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+-import org.luckyraven.gangland.inventory.service.InventoryRegistry;
+ 
+ import java.math.BigDecimal;
+ import java.util.*;
+ 
+ /**
+@@ -40,35 +38,31 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
+ 	private final UUID                  uuid;
+ 	private final Bounty                bounty;
+ 	private final Level                 level;
+ 	private final Wanted                wanted;
+ 	private final EconomyHandler        economy;
+-	private final Set<InventoryHandler> inventories;
+ 	private final Placeholder           placeholder;
+-	private final InventoryRegistry     inventoryRegistry;
+ 
+ 	@Nullable
+ 	private Bank bank;
+ 	private int  kills, deaths, mobKills, gangId;
+ 	private PermissionAttachment permissionAttachment;
+ 
+ 	/**
+-	 * Instantiates a new User. Prefer constructing through {@link UserFactory} so the {@link Placeholder} and
+-	 * {@link InventoryRegistry} dependencies come from the bean container.
++	 * Instantiates a new User. Prefer constructing through {@link UserFactory} so the {@link Placeholder}
++	 * dependency comes from the bean container.
+ 	 */
+-	public User(JavaPlugin plugin, T user, Placeholder placeholder, InventoryRegistry inventoryRegistry) {
++	public User(JavaPlugin plugin, T user, Placeholder placeholder) {
+ 		this.user              = user;
+ 		this.uuid              = user.getUniqueId();
+ 		this.bounty            = new Bounty(GangSettings.getBountyEachKillValue(),
+ 		                                    GangSettings.getBountyTimerMultiple());
+ 		this.level             = new Level();
+ 		this.wanted            = new Wanted(plugin, GangSettings.getWantedLevelIncrement(),
+ 		                                    GangSettings.getWantedMaximumLevel());
+ 		this.economy           = new EconomyHandler(this);
+-		this.inventories       = new HashSet<>();
+ 		this.placeholder       = placeholder;
+-		this.inventoryRegistry = inventoryRegistry;
+ 
+ 		this.wanted.setOwner(user.getPlayer());
+ 
+ 		this.kills  = this.deaths = this.mobKills = 0;
+ 		this.gangId = -1;
+@@ -133,85 +127,10 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
+ 
+ 	public void sendMessage(String... texts) {
+ 		for (String text : texts) sendMessage(text);
+ 	}
+ 
+-	/**
+-	 * Add the inventory to the user.
+-	 *
+-	 * @param inventoryHandler the inventory
+-	 */
+-	public void addInventory(InventoryHandler inventoryHandler) {
+-		// remove the inventory if it was already generated
+-		removeInventory(inventoryHandler.getTitle().getKey());
+-
+-		// add the inventory to the set
+-		inventories.add(inventoryHandler);
+-
+-		// register with the global registry
+-		inventoryRegistry.registerInventory(uuid, inventoryHandler);
+-	}
+-
+-	/**
+-	 * Remove the inventory from the user.
+-	 *
+-	 * @param inventoryHandler the inventory
+-	 */
+-	public void removeInventory(InventoryHandler inventoryHandler) {
+-		inventories.remove(inventoryHandler);
+-
+-		// unregister from the global registry
+-		inventoryRegistry.unregisterInventory(uuid, inventoryHandler);
+-	}
+-
+-	/**
+-	 * Remove the inventory from the user.
+-	 *
+-	 * @param name the name of the inventory
+-	 */
+-	public void removeInventory(String name) {
+-		InventoryHandler inventory = getInventory(name);
+-
+-		if (inventory == null) return;
+-
+-		inventories.remove(inventory);
+-	}
+-
+-	/**
+-	 * Get the inventory from the user.
+-	 *
+-	 * @param name the name of the inventory
+-	 *
+-	 * @return the inventory if found or null
+-	 */
+-	@Nullable
+-	public InventoryHandler getInventory(String name) {
+-		return inventories.stream()
+-				.filter(handler -> handler.getTitle().getKey().equals(name.toLowerCase()))
+-				.findFirst()
+-				.orElse(null);
+-	}
+-
+-	/**
+-	 * Clears all the inventories from the user.
+-	 */
+-	public void clearInventories() {
+-		inventories.clear();
+-
+-		// clear from the global registry
+-		inventoryRegistry.clear(uuid);
+-	}
+-
+-	/**
+-	 * Get the inventories from the user.
+-	 *
+-	 * @return a copy of the inventories registered to the user.
+-	 */
+-	public List<InventoryHandler> getInventories() {
+-		return inventories.stream().toList();
+-	}
+-
+ 	/**
+ 	 * Gets a kills/deaths ratio of the user.
+ 	 *
+ 	 * @return the kd ratio
+ 	 */
+diff --git a/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/UserFactory.java b/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/UserFactory.java
+index 5d56fce1..c63599f8 100644
+--- a/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/UserFactory.java
++++ b/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/UserFactory.java
+@@ -1,29 +1,26 @@
+ package org.luckyraven.gangland.gang.user;
+ 
+ import org.bukkit.OfflinePlayer;
+ import org.bukkit.plugin.java.JavaPlugin;
+ import org.luckyraven.keystone.util.Placeholder;
+-import org.luckyraven.gangland.inventory.service.InventoryRegistry;
+ 
+ /**
+- * KERNEL-phase bean that constructs {@link User} instances with their {@link Placeholder} and {@link InventoryRegistry}
+- * dependencies wired from the bean container. Use this everywhere instead of calling {@code new User<>(...)} directly
+- * so {@code User} no longer needs a static placeholder field.
++ * KERNEL-phase bean that constructs {@link User} instances with their {@link Placeholder} dependency wired from the
++ * bean container. Use this everywhere instead of calling {@code new User<>(...)} directly so {@code User} no longer
++ * needs a static placeholder field.
+  */
+ public class UserFactory {
+ 
+-	private final JavaPlugin        plugin;
+-	private final Placeholder       placeholder;
+-	private final InventoryRegistry inventoryRegistry;
++	private final JavaPlugin  plugin;
++	private final Placeholder placeholder;
+ 
+-	public UserFactory(JavaPlugin plugin, Placeholder placeholder, InventoryRegistry inventoryRegistry) {
+-		this.plugin            = plugin;
+-		this.placeholder       = placeholder;
+-		this.inventoryRegistry = inventoryRegistry;
++	public UserFactory(JavaPlugin plugin, Placeholder placeholder) {
++		this.plugin      = plugin;
++		this.placeholder = placeholder;
+ 	}
+ 
+ 	public <T extends OfflinePlayer> User<T> create(T offlinePlayer) {
+-		return new User<>(plugin, offlinePlayer, placeholder, inventoryRegistry);
++		return new User<>(plugin, offlinePlayer, placeholder);
+ 	}
+ 
+ }
+diff --git a/gangland-infra/gangland-domain/src/test/java/org/luckyraven/gangland/gang/GangMembershipTest.java b/gangland-infra/gangland-domain/src/test/java/org/luckyraven/gangland/gang/GangMembershipTest.java
+index d4a8663f..e65d7b25 100644
+--- a/gangland-infra/gangland-domain/src/test/java/org/luckyraven/gangland/gang/GangMembershipTest.java
++++ b/gangland-infra/gangland-domain/src/test/java/org/luckyraven/gangland/gang/GangMembershipTest.java
+@@ -10,11 +10,10 @@ import org.junit.jupiter.api.Test;
+ import org.luckyraven.gangland.gang.member.Member;
+ import org.luckyraven.gangland.gang.rank.Rank;
+ import org.luckyraven.gangland.gang.support.FakeGangSettingsContract;
+ import org.luckyraven.gangland.gang.user.User;
+ import org.luckyraven.gangland.gang.vault.permission.VaultPermissionBridge;
+-import org.luckyraven.gangland.inventory.service.InventoryRegistry;
+ import org.luckyraven.keystone.util.Placeholder;
+ 
+ import java.util.Collections;
+ import java.util.UUID;
+ 
+@@ -139,14 +138,13 @@ class GangMembershipTest {
+ 	private User<Player> newOnlineUser() {
+ 		JavaPlugin plugin = mock(JavaPlugin.class);
+ 		Player     player = mock(Player.class);
+ 		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
+ 
+-		Placeholder        placeholder = mock(Placeholder.class);
+-		InventoryRegistry  registry    = new InventoryRegistry();
++		Placeholder placeholder = mock(Placeholder.class);
+ 
+-		User<Player> user = new User<>(plugin, player, placeholder, registry);
++		User<Player> user = new User<>(plugin, player, placeholder);
+ 
+ 		PermissionAttachment attachment = mock(PermissionAttachment.class);
+ 		when(attachment.getPermissions()).thenReturn(Collections.emptyMap());
+ 		user.setPermissionAttachment(attachment);
+ 
+diff --git a/gangland-infra/gangland-domain/src/test/java/org/luckyraven/gangland/gang/user/UserManagerTest.java b/gangland-infra/gangland-domain/src/test/java/org/luckyraven/gangland/gang/user/UserManagerTest.java
+index 130f2fb1..7ffef851 100644
+--- a/gangland-infra/gangland-domain/src/test/java/org/luckyraven/gangland/gang/user/UserManagerTest.java
++++ b/gangland-infra/gangland-domain/src/test/java/org/luckyraven/gangland/gang/user/UserManagerTest.java
+@@ -6,11 +6,10 @@ import org.bukkit.plugin.java.JavaPlugin;
+ import org.junit.jupiter.api.BeforeEach;
+ import org.junit.jupiter.api.DisplayName;
+ import org.junit.jupiter.api.Test;
+ import org.luckyraven.gangland.gang.GangSettings;
+ import org.luckyraven.gangland.gang.support.FakeGangSettingsContract;
+-import org.luckyraven.gangland.inventory.service.InventoryRegistry;
+ import org.luckyraven.keystone.economy.bank.Bank;
+ import org.luckyraven.keystone.persistence.repository.IRepository;
+ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
+ import org.luckyraven.keystone.util.Placeholder;
+ 
+@@ -122,11 +121,11 @@ class UserManagerTest {
+ 		when(handle.getUniqueId()).thenReturn(uuid);
+ 		return handle;
+ 	}
+ 
+ 	private static <T extends OfflinePlayer> User<T> newUser(T handle) {
+-		return new User<>(mock(JavaPlugin.class), handle, mock(Placeholder.class), new InventoryRegistry());
++		return new User<>(mock(JavaPlugin.class), handle, mock(Placeholder.class));
+ 	}
+ 
+ 	@SuppressWarnings("unchecked")
+ 	@Test
+ 	@DisplayName("CL-23 / Observation #12: linked beans still overwrite each other's supplier on the shared "
+@@ -138,27 +137,26 @@ class UserManagerTest {
+ 		when(registry.<User<? extends OfflinePlayer>>getGenericRepository(User.class)).thenReturn(userRepo);
+ 		when(registry.getRepository(Bank.class)).thenReturn(bankRepo);
+ 
+ 		JavaPlugin plugin = mock(JavaPlugin.class);
+ 		Placeholder placeholder = mock(Placeholder.class);
+-		InventoryRegistry inventoryRegistry = new InventoryRegistry();
+ 		UserFactory factory = mock(UserFactory.class);
+ 
+ 		UserManager<Player> onlineManager = new UserManager<>(plugin, registry, factory);
+ 		UserManager<OfflinePlayer> offlineManager = new UserManager<>(plugin, registry, factory);
+ 
+ 		// DataConfig.offlineUserManager(...) wires exactly this link
+ 		offlineManager.link(onlineManager);
+ 
+ 		Player onlinePlayer = mock(Player.class);
+ 		when(onlinePlayer.getUniqueId()).thenReturn(UUID.randomUUID());
+-		User<Player> onlineUser = new User<>(plugin, onlinePlayer, placeholder, inventoryRegistry);
++		User<Player> onlineUser = new User<>(plugin, onlinePlayer, placeholder);
+ 		onlineManager.add(onlineUser);
+ 
+ 		OfflinePlayer offlinePlayer = mock(OfflinePlayer.class);
+ 		when(offlinePlayer.getUniqueId()).thenReturn(UUID.randomUUID());
+-		User<OfflinePlayer> offlineUser = new User<>(plugin, offlinePlayer, placeholder, inventoryRegistry);
++		User<OfflinePlayer> offlineUser = new User<>(plugin, offlinePlayer, placeholder);
+ 		offlineManager.add(offlineUser);
+ 
+ 		onlineManager.initialize();
+ 		offlineManager.initialize();
+ 
+@@ -191,18 +189,17 @@ class UserManagerTest {
+ 		when(registry.<User<? extends OfflinePlayer>>getGenericRepository(User.class)).thenReturn(userRepo);
+ 		when(registry.getRepository(Bank.class)).thenReturn(bankRepo);
+ 
+ 		JavaPlugin plugin = mock(JavaPlugin.class);
+ 		Placeholder placeholder = mock(Placeholder.class);
+-		InventoryRegistry inventoryRegistry = new InventoryRegistry();
+ 		UserFactory factory = mock(UserFactory.class);
+ 
+ 		UserManager<OfflinePlayer> manager = new UserManager<>(plugin, registry, factory);
+ 
+ 		OfflinePlayer offlinePlayer = mock(OfflinePlayer.class);
+ 		when(offlinePlayer.getUniqueId()).thenReturn(UUID.randomUUID());
+-		User<OfflinePlayer> user = new User<>(plugin, offlinePlayer, placeholder, inventoryRegistry);
++		User<OfflinePlayer> user = new User<>(plugin, offlinePlayer, placeholder);
+ 		manager.add(user);
+ 
+ 		manager.initialize();
+ 
+ 		org.mockito.ArgumentCaptor<Supplier<Collection<User<? extends OfflinePlayer>>>> captor =
+diff --git a/gangland-infra/gangland-domain/src/test/java/org/luckyraven/gangland/gang/user/UserTest.java b/gangland-infra/gangland-domain/src/test/java/org/luckyraven/gangland/gang/user/UserTest.java
+index 4b62abd8..3c35d7be 100644
+--- a/gangland-infra/gangland-domain/src/test/java/org/luckyraven/gangland/gang/user/UserTest.java
++++ b/gangland-infra/gangland-domain/src/test/java/org/luckyraven/gangland/gang/user/UserTest.java
+@@ -9,11 +9,10 @@ import org.junit.jupiter.api.DisplayName;
+ import org.junit.jupiter.api.Test;
+ import org.luckyraven.gangland.gang.GangSettings;
+ import org.luckyraven.gangland.gang.rank.Permission;
+ import org.luckyraven.gangland.gang.rank.Rank;
+ import org.luckyraven.gangland.gang.support.FakeGangSettingsContract;
+-import org.luckyraven.gangland.inventory.service.InventoryRegistry;
+ import org.luckyraven.keystone.util.Placeholder;
+ 
+ import java.math.BigDecimal;
+ import java.util.Collections;
+ import java.util.List;
+@@ -39,12 +38,11 @@ class UserTest {
+ 	private User<Player> newOnlineUser() {
+ 		JavaPlugin plugin = mock(JavaPlugin.class);
+ 		Player player = mock(Player.class);
+ 		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
+ 		Placeholder placeholder = mock(Placeholder.class);
+-		InventoryRegistry registry = new InventoryRegistry();
+-		return new User<>(plugin, player, placeholder, registry);
++		return new User<>(plugin, player, placeholder);
+ 	}
+ 
+ 	@Test
+ 	@DisplayName("hasGang()/resetGang(): a fresh User starts with no gang (gangId == -1)")
+ 	void hasGang_defaultsFalse_untilGangIdSet() {
+@@ -129,11 +127,11 @@ class UserTest {
+ 	void flushPermissions_offlinePlayer_isNoOpAndDoesNotNpe() {
+ 		JavaPlugin plugin = mock(JavaPlugin.class);
+ 		OfflinePlayer offline = mock(OfflinePlayer.class);
+ 		when(offline.getUniqueId()).thenReturn(UUID.randomUUID());
+ 		Placeholder placeholder = mock(Placeholder.class);
+-		User<OfflinePlayer> user = new User<>(plugin, offline, placeholder, new InventoryRegistry());
++		User<OfflinePlayer> user = new User<>(plugin, offline, placeholder);
+ 
+ 		assertDoesNotThrow(() -> user.flushPermissions(new Rank("Boss", 1)));
+ 	}
+ 
+ 	@Test
+@@ -179,11 +177,11 @@ class UserTest {
+ 	void sendMessage_offlinePlayer_isNoOp() {
+ 		JavaPlugin plugin = mock(JavaPlugin.class);
+ 		OfflinePlayer offline = mock(OfflinePlayer.class);
+ 		when(offline.getUniqueId()).thenReturn(UUID.randomUUID());
+ 		Placeholder placeholder = mock(Placeholder.class);
+-		User<OfflinePlayer> user = new User<>(plugin, offline, placeholder, new InventoryRegistry());
++		User<OfflinePlayer> user = new User<>(plugin, offline, placeholder);
+ 
+ 		user.sendMessage("&aHello");
+ 
+ 		verifyNoInteractions(placeholder);
+ 	}
+diff --git a/gangland-ui/shop-api/pom.xml b/gangland-ui/shop-api/pom.xml
+index 3a6318a1..83c276d0 100644
+--- a/gangland-ui/shop-api/pom.xml
++++ b/gangland-ui/shop-api/pom.xml
+@@ -41,10 +41,15 @@
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+             <artifactId>inventory-api</artifactId>
+             <scope>provided</scope>
+         </dependency>
++        <dependency>
++            <groupId>org.luckyraven</groupId>
++            <artifactId>keystone-inventory</artifactId>
++            <scope>provided</scope>
++        </dependency>
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+             <artifactId>gangland-item</artifactId>
+             <scope>provided</scope>
+         </dependency>
+diff --git a/pom.xml b/pom.xml
+index 14481b23..feebcf09 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -203,10 +203,19 @@
+                 <groupId>org.luckyraven</groupId>
+                 <artifactId>keystone-npc</artifactId>
+                 <version>${keystone.version}</version>
+                 <scope>provided</scope>
+             </dependency>
++            <!-- WS2 G1 (0.10.0): the basic menu mechanism (ChestMenu, MenuFlow, PagedRegion, OpenMenuTracker) —
++                 R6: gangland-api never re-exports this, unlike the old inventory-api; every menu-building module
++                 declares it directly (the bartizan-api rule). -->
++            <dependency>
++                <groupId>org.luckyraven</groupId>
++                <artifactId>keystone-inventory</artifactId>
++                <version>${keystone.version}</version>
++                <scope>provided</scope>
++            </dependency>
+             <dependency>
+                 <groupId>org.luckyraven</groupId>
+                 <artifactId>keystone-testkit</artifactId>
+                 <version>${keystone.version}</version>
+                 <scope>test</scope>

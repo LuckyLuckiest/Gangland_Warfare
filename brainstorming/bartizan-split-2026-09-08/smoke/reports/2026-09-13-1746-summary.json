@@ -1,0 +1,40 @@
+[
+  {
+    "id": "M1",
+    "title": "All six modules compiled against gangland-api (Host_Api 1.0) + /glw module list|install|remove from the console",
+    "verdict": "PASS",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "civilians",
+      "gadget",
+      "mail",
+      "npcshops",
+      "turf",
+      "copsncrooks"
+    ],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-13-1746-M1.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-13-1746-M1.log"
+  },
+  {
+    "id": "D9",
+    "title": "All six modules + a Host_Api=0.8 copy of mail -- expect module.host.incompatible, the other six load",
+    "verdict": "PASS",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "civilians",
+      "gadget",
+      "mail",
+      "npcshops",
+      "turf",
+      "copsncrooks"
+    ],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-13-1746-D9.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-13-1746-D9.log"
+  }
+]

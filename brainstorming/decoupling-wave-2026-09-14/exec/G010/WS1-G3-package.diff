@@ -1,0 +1,1976 @@
+# Review package — 0.10.0 WS1 G3 (scoreboard out of Gangland) — working tree vs HEAD b0a27bfc (G0 commit)
+--- status ---
+ M README.md
+ M documentation/FRONT-PAGE.bbcode.txt
+ M documentation/FRONT-PAGE.md
+ M documentation/README.md
+ M documentation/bartizan-integration.md
+ M documentation/developer/README.md
+ M documentation/developer/architecture.md
+ M documentation/developer/configuration.md
+ M documentation/developer/cops-n-crooks.md
+ M documentation/developer/dependency-injection.md
+ M documentation/developer/modules.md
+ M documentation/developer/ui-framework.md
+ M documentation/features/gangs.md
+ M documentation/features/scoreboard.md
+ M documentation/features/unique-items.md
+ M documentation/tests/README.md
+ M documentation/tests/UNIVERSAL-PRE-SHIP.md
+ M documentation/tests/commands.md
+ M documentation/tests/config-and-yaml.md
+ M documentation/tests/features/loot_chests.md
+ M documentation/tests/features/scoreboard.md
+ M documentation/tests/lifecycle-and-reload.md
+ M gangland-api/src/main/java/org/luckyraven/gangland/file/configuration/Settings.java
+ M gangland-build/pom.xml
+ M gangland-impl/pom.xml
+ M gangland-impl/src/main/java/org/luckyraven/gangland/Gangland.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/GanglandContext.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/ReloadPlugin.java
+D  gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/ScoreboardLifecycleService.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/DownloadResourceCommand.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/ReloadCommand.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/config/KernelConfig.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/config/SchedulingConfig.java
+D  gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/PlayerScoreboardListener.java
+ M gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/RemoveAccountListener.java
+D  gangland-impl/src/main/java/org/luckyraven/gangland/scoreboard/ScoreboardManager.java
+ M gangland-impl/src/main/resources/commands.json
+D  gangland-impl/src/main/resources/scoreboard.yml
+ M gangland-impl/src/main/resources/settings.yml
+ M gangland-impl/src/test/java/org/luckyraven/gangland/command/data/InformationManagerTest.java
+ M gangland-infra/gangland-domain/pom.xml
+ M gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/User.java
+ M gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/UserManager.java
+ M gangland-ui/pom.xml
+D  gangland-ui/scoreboard-api/pom.xml
+D  gangland-ui/scoreboard-api/src/main/java/org/luckyraven/gangland/scoreboard/Scoreboard.java
+D  gangland-ui/scoreboard-api/src/main/java/org/luckyraven/gangland/scoreboard/configuration/ScoreboardAddon.java
+D  gangland-ui/scoreboard-api/src/main/java/org/luckyraven/gangland/scoreboard/driver/DriverHandler.java
+D  gangland-ui/scoreboard-api/src/main/java/org/luckyraven/gangland/scoreboard/driver/version/DriverV1.java
+D  gangland-ui/scoreboard-api/src/main/java/org/luckyraven/gangland/scoreboard/driver/version/DriverV2.java
+D  gangland-ui/scoreboard-api/src/main/java/org/luckyraven/gangland/scoreboard/driver/version/DriverV3.java
+D  gangland-ui/scoreboard-api/src/main/java/org/luckyraven/gangland/scoreboard/part/Line.java
+D  gangland-ui/scoreboard-api/src/main/java/org/luckyraven/gangland/scoreboard/part/StaticLine.java
+D  gangland-ui/scoreboard-api/src/main/resources/org/luckyraven/gangland/scoreboard/module.properties
+D  gangland-ui/scoreboard-api/src/test/java/org/luckyraven/gangland/scoreboard/ScoreboardTest.java
+D  gangland-ui/scoreboard-api/src/test/java/org/luckyraven/gangland/scoreboard/part/LineTest.java
+ M pom.xml
+--- diffstat ---
+ documentation/features/unique-items.md             |   4 +-
+ documentation/tests/README.md                      |   2 +-
+ documentation/tests/UNIVERSAL-PRE-SHIP.md          |   4 +-
+ documentation/tests/commands.md                    |   1 -
+ documentation/tests/config-and-yaml.md             |   1 -
+ documentation/tests/features/loot_chests.md        |   2 +-
+ documentation/tests/features/scoreboard.md         |  57 +-------
+ documentation/tests/lifecycle-and-reload.md        |  12 +-
+ .../gangland/file/configuration/Settings.java      |   8 --
+ gangland-build/pom.xml                             |   6 -
+ gangland-impl/pom.xml                              |   4 -
+ .../java/org/luckyraven/gangland/Gangland.java     |  20 ---
+ .../gangland/bootstrap/GanglandContext.java        |   6 +-
+ .../gangland/bootstrap/ReloadPlugin.java           |  44 +-----
+ .../bootstrap/ScoreboardLifecycleService.java      |  58 --------
+ .../command/sub/DownloadResourceCommand.java       |   2 +-
+ .../gangland/command/sub/ReloadCommand.java        |  10 --
+ .../org/luckyraven/gangland/config/FileConfig.java |  20 +--
+ .../luckyraven/gangland/config/KernelConfig.java   |   1 -
+ .../gangland/config/SchedulingConfig.java          |  18 +--
+ .../listener/player/PlayerScoreboardListener.java  |  41 ------
+ .../listener/player/RemoveAccountListener.java     |   5 -
+ .../gangland/scoreboard/ScoreboardManager.java     |  70 ----------
+ gangland-impl/src/main/resources/commands.json     |   4 -
+ gangland-impl/src/main/resources/scoreboard.yml    | 108 --------------
+ gangland-impl/src/main/resources/settings.yml      |  16 +--
+ .../command/data/InformationManagerTest.java       |   5 +-
+ gangland-infra/gangland-domain/pom.xml             |   4 -
+ .../org/luckyraven/gangland/gang/user/User.java    |   2 -
+ .../luckyraven/gangland/gang/user/UserManager.java |   5 -
+ gangland-ui/pom.xml                                |   1 -
+ gangland-ui/scoreboard-api/pom.xml                 |  48 -------
+ .../luckyraven/gangland/scoreboard/Scoreboard.java |  48 -------
+ .../scoreboard/configuration/ScoreboardAddon.java  |  86 ------------
+ .../gangland/scoreboard/driver/DriverHandler.java  | 121 ----------------
+ .../scoreboard/driver/version/DriverV1.java        |  97 -------------
+ .../scoreboard/driver/version/DriverV2.java        |  80 -----------
+ .../scoreboard/driver/version/DriverV3.java        | 122 ----------------
+ .../luckyraven/gangland/scoreboard/part/Line.java  | 107 --------------
+ .../gangland/scoreboard/part/StaticLine.java       |  22 ---
+ .../gangland/scoreboard/module.properties          |   1 -
+ .../gangland/scoreboard/ScoreboardTest.java        |  60 --------
+ .../gangland/scoreboard/part/LineTest.java         |  97 -------------
+ pom.xml                                            |  12 --
+ 58 files changed, 68 insertions(+), 1767 deletions(-)
+--- diff (deleted files shown as stat only) ---
+diff --git a/README.md b/README.md
+index 060342e0..af6009ab 100644
+--- a/README.md
++++ b/README.md
+@@ -58,26 +58,21 @@ public, gang-restricted, or permission-gated.
+ ### 📦 Loot Chests
+ 
+ Randomized reward containers that unlock on a countdown timer. Five rarity tiers — Common through Legendary — with the
+ upper tiers locked behind collectible keys. Rewards include money, XP, weapons, ammo, and more.
+ 
+-### 📊 Scoreboard
+-
+-Live player stats with an animated title and per-row update intervals. Three rendering drivers available, including an
+-interactive mode for advanced UI use cases.
+-
+ ---
+ 
+ ## Requirements
+ 
+ | Dependency                                                                | Type         | Notes                                                                |
+ |---------------------------------------------------------------------------|--------------|-----------------------------------------------------------------------|
+ | Keystone                                                                  | **Required** | DI/bean container, persistence, command framework. Plugin will not load without it. |
+ | [NBTAPI](https://www.spigotmc.org/resources/nbt-api.7939/)                | **Required** | Custom item data (unique items, loot chests, and more).             |
+ | [Citizens](https://www.spigotmc.org/resources/citizens.13811/)            | Optional     | Powers cop and civilian NPCs. Without it, NPC spawning is skipped with a logged fault — the server still boots. |
+ | Bartizan                                                                  | Optional     | The companion weapons plugin (weapons, ammo, wearables, projectiles). Without it, the civilians, cops-n-crooks and gadget modules are skipped entirely and turf with them and weapon-related item vocabularies do not resolve. |
+-| [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/) | Optional     | Placeholders in messages and scoreboards.                            |
++| [PlaceholderAPI](https://www.spigotmc.org/resources/placeholderapi.6245/) | Optional     | Placeholders in messages; also what the standalone Plaque plugin uses to render scoreboards. |
+ | [Vault](https://www.spigotmc.org/resources/vault.34315/)                  | Optional     | Economy hook for cross-plugin compatibility.                          |
+ | [ViaVersion](https://www.spigotmc.org/resources/viaversion.19254/)        | Optional     | Multi-version client support.                                        |
+ 
+ ---
+ 
+@@ -104,11 +99,10 @@ All commands use the `/glw` dispatcher (alias: `/gangland`).
+ | File               | Purpose                                                           |
+ |--------------------|-------------------------------------------------------------------|
+ | `settings.yml`     | Database, economy, wanted level, bounty, gang, and level settings |
+ | `cops.yml`         | Cop tier stats, AI behavior, spawn radii, and detainment options (ships inside the cops-n-crooks module jar) |
+ | `unique_items.yml` | Phone, keys, lockpicks, and other special items                   |
+-| `scoreboard.yml`   | Scoreboard driver, layout, and animation                          |
+ 
+ Weapon/ammo/wearable configuration (`weapon/*.yml`, `ammunition.yml`, `wearables.yml`) is Bartizan's, generated
+ under `plugins/Bartizan/` — not this plugin's config surface.
+ 
+ ---
+@@ -147,11 +141,10 @@ Bartizan type. Six runtime modules ship alongside it and can be dropped or added
+ | `gangland-civilians` (runtime module)  | Civilian NPCs — split out of cops-n-crooks in 0.9.0                          |
+ | `gangland-npc-shops` (runtime module)  | Trader and banker NPC shops — split out of cops-n-crooks in 0.9.0            |
+ | `gangland-turf` (runtime module)       | Turf capture, contribution, garrison gameplay, and turf-NPC powerups         |
+ | `gangland-gadget` (runtime module)     | Cars (`/glw car`) and jetpacks                                               |
+ | `gangland-mail` (runtime module)       | Mail, gang invites, and alliance requests                                    |
+-| `scoreboard-api`                       | FastBoard-based scoreboard rendering                                         |
+ | `inventory-api`                        | Custom inventory and GUI framework                                           |
+ | `sign-api`                             | Sign interaction system                                                      |
+ | `lootchest-api`                        | Loot chest system with hologram support                                      |
+ | `gangland-build`                       | Shade assembly — produces the final deployable JAR                           |
+ 
+diff --git a/documentation/FRONT-PAGE.bbcode.txt b/documentation/FRONT-PAGE.bbcode.txt
+index 696bf3cb..594d6ca8 100644
+--- a/documentation/FRONT-PAGE.bbcode.txt
++++ b/documentation/FRONT-PAGE.bbcode.txt
+@@ -224,28 +224,20 @@ Players don't just fight — they:[/SIZE]
+ [*][SIZE=4]Throwables bought from signs stack with looted ones via shared UUIDs[/SIZE]
+ [*][SIZE=4]No additional plugin required — works entirely within Gangland Warfare[/SIZE]
+ [*][SIZE=4]Configurable item, price, and quantity per sign[/SIZE]
+ [/LIST]
+ 
+-[B][SIZE=4]15.  Scoreboard[/SIZE][/B]
+-[SIZE=4]Live stat display for players.[/SIZE]
+-[LIST]
+-[*][SIZE=4]Animated titles with configurable scroll speed[/SIZE]
+-[*][SIZE=4]Displays money, level, wanted stars, gang name, and other live values[/SIZE]
+-[*][SIZE=4]Multiple scoreboard drivers supported[/SIZE]
+-[/LIST]
+-
+-[B][SIZE=4]16.  Unique Items[/SIZE][/B]
++[B][SIZE=4]15.  Unique Items[/SIZE][/B]
+ [SIZE=4]Special items with controlled inventory behavior.[/SIZE]
+ [LIST]
+ [*][SIZE=4] Phone — permanently in the last hotbar slot, given on join and respawn, cannot be dropped[/SIZE]
+ [*][SIZE=4] Lockpick — consumable required to unlock Rare loot chests[/SIZE]
+ [*][SIZE=4]️ Epic Key and Legendary Key — required for Epic and Legendary chest tiers[/SIZE]
+ [*][SIZE=4]Configurable auto-give on join, slot pinning, drop-on-death, and duplicate rules[/SIZE]
+ [/LIST]
+ 
+-[B][SIZE=4]17. ️ Server Infrastructure[/SIZE][/B]
++[B][SIZE=4]16. ️ Server Infrastructure[/SIZE][/B]
+ [SIZE=4]Backend features for operators and developers.[/SIZE]
+ [LIST]
+ [*][SIZE=4]MySQL and SQLite support via HikariCP — selected in [B]settings.yml[/B][/SIZE]
+ [*][SIZE=4][B]Beans-based bootstrap[/B] — phased dependency-injection pipeline (KERNEL → FILE → DATABASE → CONFIG → LIFECYCLE → LISTENER → COMMAND) with auto-registered [B][USER=55628]@bean[/USER][/B], [B]@ListenerHandler[/B], and [B]@CommandHandler[/B] classes[/SIZE]
+ [*][SIZE=4][B]YAML validation layer[/B] — every loader reports unknown keys with file + line number, so stale settings never silently rot between releases[/SIZE]
+@@ -256,11 +248,10 @@ Players don't just fight — they:[/SIZE]
+ [*][SIZE=4][B]/gangland[/B] alias for [B]/glw[/B][/SIZE]
+ [*][SIZE=4]Batched database queries to reduce individual query overhead[/SIZE]
+ [*][SIZE=4]Automatic periodic data saving and cache cleanup[/SIZE]
+ [*][SIZE=4] Multi-language message support with jar-bundled fallback[/SIZE]
+ [*][SIZE=4]Resource pack auto-loading on join[/SIZE]
+-[*][SIZE=4]Custom scoreboard via FastBoard[/SIZE]
+ [*][SIZE=4] Public developer API with events for weapons, cops, civilians, traders, bounty, and more[/SIZE]
+ [/LIST]
+ 
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 
+diff --git a/documentation/FRONT-PAGE.md b/documentation/FRONT-PAGE.md
+index e800c600..5543b366 100644
+--- a/documentation/FRONT-PAGE.md
++++ b/documentation/FRONT-PAGE.md
+@@ -301,32 +301,22 @@ In-world buy and sell signs for weapons and ammunition.
+ - No additional plugin is required — works entirely within Gangland Warfare
+ - Configurable item, price, and quantity per sign
+ 
+ ---
+ 
+-### 15. 📋 Scoreboard
+-
+-Live stat display for players.
+-
+-- Animated titles with configurable scroll speed
+-- Displays money, level, wanted stars, gang name, and other live values
+-- Multiple scoreboard drivers supported
+-
+----
+-
+-### 16. 🎒 Unique Items
++### 15. 🎒 Unique Items
+ 
+ Special items with controlled inventory behavior.
+ 
+ - 📱 Phone — permanently in the last hotbar slot, given on join and respawn, cannot be dropped
+ - 🔑 Lockpick — consumable required to unlock Rare loot chests
+ - 🗝️ Epic Key and Legendary Key — required for Epic and Legendary chest tiers
+ - Configurable auto-give on join, slot pinning, drop-on-death, and duplicate rules
+ 
+ ---
+ 
+-### 17. 🖥️ Server Infrastructure
++### 16. 🖥️ Server Infrastructure
+ 
+ Backend features for operators and developers.
+ 
+ - MySQL and SQLite support via HikariCP — selected in `settings.yml`
+ - **Beans-based bootstrap** — phased dependency-injection pipeline
+@@ -345,11 +335,10 @@ Backend features for operators and developers.
+ - `/gangland` alias for `/glw`
+ - Batched database queries to reduce individual query overhead
+ - Automatic periodic data saving and cache cleanup
+ - 🌐 Multi-language message support with jar-bundled fallback
+ - Resource pack auto-loading on join
+-- Custom scoreboard via FastBoard
+ - 🧰 Public developer API with events for weapons, cops, civilians, traders,
+   bounty, and more
+ 
+ ---
+ 
+diff --git a/documentation/README.md b/documentation/README.md
+index eaca80c8..61367975 100644
+--- a/documentation/README.md
++++ b/documentation/README.md
+@@ -26,11 +26,11 @@ Guides for features that are part of the base plugin and not tied to a specific
+ | 2  | [Economy](./features/economy.md)                   | Personal balance, bank accounts, death penalties, admin commands |
+ | 3  | [Waypoints](./features/waypoints.md)               | Teleportation destinations, costs, timers, and safe zones        |
+ | 4  | [Loot Chests](./features/loot_chests.md)           | Randomized reward containers, tiers, and keys                    |
+ | 5  | [Levels](./features/levels.md)                     | XP system, level formulas, and skill upgrades                    |
+ | 6  | [Unique Items](./features/unique-items.md)         | Phone, lockpicks, keys, and custom inventory behavior            |
+-| 7  | [Scoreboard](./features/scoreboard.md)             | Live stat display, drivers, and animated titles                  |
++| 7  | [Scoreboard](./features/scoreboard.md)             | Moved to the standalone Plaque plugin as of 0.10.0                |
+ | 8  | [Wanted & Bounty](./features/wanted-bounty.md)     | Wanted stars, cop scaling, and bounty system                     |
+ | 9  | [Trade Signs](./features/trade-signs.md)           | In-world generic `item-buy`/`item-sell` signs (any item definition, not just weapons) |
+ | 10 | [Ranks](./features/ranks.md)                       | Gang rank hierarchy and permission management                    |
+ | 11 | [Database & Setup](./features/database.md)         | MySQL/SQLite config, auto-save, and first-time setup             |
+ | 12 | [Inventory System](./features/inventory.md)        | Custom GUI menus, slots, conditions, pagination, and API usage   |
+@@ -58,11 +58,11 @@ In-depth technical documentation for developers working on the codebase.
+ | 6  | [Cops N Crooks](./developer/cops-n-crooks.md)               | Cop NPC AI, spawning, wanted system, bounty tracking (module: `cops-n-crooks`) |
+ | 7  | [Gadget System](./developer/gadgets.md)                     | Cars, jetpacks, fuel, physics (module: `gangland-gadget`)    |
+ | 8  | [Civilian NPCs](./developer/civilians.md)                   | Behaviors, spawning, trader interaction (module: `gangland-civilians`, split out of cops-n-crooks in 0.9.0) |
+ | 9  | NPC Shops                                                    | Trader and banker NPC shops (module: `gangland-npc-shops`, split out of cops-n-crooks in 0.9.0) — no dedicated developer-internals page yet; see the [Traders](./features/traders.md) and [Bank & Banker](./features/bank.md) feature guides |
+ | 10 | [Item System](./developer/items.md)                         | Parsing, unique items, fuel (item conversion/serialization now lives in Keystone's `keystone-item`) |
+-| 11 | [UI Framework](./developer/ui-framework.md)                 | Inventory, scoreboard, signs, loot chests, holograms         |
++| 11 | [UI Framework](./developer/ui-framework.md)                 | Inventory, signs, loot chests, holograms                     |
+ | 12 | [Configuration Reference](./developer/configuration.md)     | All YAML files, settings, formulas, defaults                 |
+ 
+ Bartizan integration (what the core gets from the weapons plugin, and what degrades without it) is documented in
+ [`bartizan-integration.md`](./bartizan-integration.md); server-owner migration notes are in
+ [`migration-0.9.0.md`](./migration-0.9.0.md). Recoil is documented in
+diff --git a/documentation/bartizan-integration.md b/documentation/bartizan-integration.md
+index 7383a876..7736a8d7 100644
+--- a/documentation/bartizan-integration.md
++++ b/documentation/bartizan-integration.md
+@@ -76,12 +76,12 @@ scope (enforced by gate G4's boundary greps in the Bartizan-wave checklist).
+   `CarDamageListener`'s melee-damage and grenade-explosion-suppression logic both no-op gracefully (fall back to
+   vanilla punch damage / no double-hit suppression needed, since Bartizan events never fire without Bartizan).
+ 
+ ## What never breaks
+ 
+-Gang management, economy, waypoints, loot chests (aside from `weapon:`/`ammo:`/`wearable:` entries), the
+-scoreboard, ranks, mail, gang alliances, turf capture's core mechanics (contribution, income, garrison — separate
++Gang management, economy, waypoints, loot chests (aside from `weapon:`/`ammo:`/`wearable:` entries), ranks,
++mail, gang alliances, turf capture's core mechanics (contribution, income, garrison — separate
+ from the Quartermaster/garrison-defender NPCs, which are Citizens-gated, not Bartizan-gated directly), and trader/
+ banker NPC shops (`gangland-npc-shops` carries no `Plugins:` dependency at all).
+ 
+ ## See also
+ 
+diff --git a/documentation/developer/README.md b/documentation/developer/README.md
+index 696996dd..b695e327 100644
+--- a/documentation/developer/README.md
++++ b/documentation/developer/README.md
+@@ -23,11 +23,11 @@ codebase. It covers architecture, module internals, design patterns, and impleme
+ | 6  | [Weapon System](./weapons.md)                  | Projectiles, modifiers, reload, spread, recoil, damage pipeline   |
+ | 7  | [Cops N Crooks](./cops-n-crooks.md)            | NPC AI state machines, spawning, wanted system, bounty tracking   |
+ | 8  | [Gadget System](./gadgets.md)                  | Cars, jetpacks, fuel, physics                                     |
+ | 9  | [Civilian NPCs](./civilians.md)                | Behavior states, spawning, trader interaction, navigation         |
+ | 10 | [Item System](./items.md)                      | Item parsing, unique items, fuel, wearables                       |
+-| 11 | [UI Framework](./ui-framework.md)              | Inventory, scoreboard, signs, loot chests, holograms              |
++| 11 | [UI Framework](./ui-framework.md)              | Inventory, signs, loot chests, holograms                          |
+ | 12 | [Version Compatibility](./compatibility.md)    | NMS adapters, version detection, recoil implementation            |
+ | 13 | [Configuration Reference](./configuration.md)  | All YAML files, settings, formulas, defaults                      |
+ 
+ ---
+ 
+@@ -62,11 +62,10 @@ gangland_warfare/
+ │   ├── cops-n-crooks/          Police NPCs, civilians, wanted/bounty, jail
+ │   ├── gangland-weapon/        Weapon engine, projectiles, modifiers
+ │   ╰── gangland-gadget/        Cars, jetpacks, fuel
+ ├── gangland-ui/
+ │   ├── inventory-api/          Custom inventory framework
+-│   ├── scoreboard-api/         FastBoard scoreboard
+ │   ├── sign-api/               Sign interaction system
+ │   ├── lootchest-api/          Loot chest with cracking
+ │   ╰── hologram-api/           Floating text displays
+ ├── gangland-compatibility/
+ │   ├── version-impl/           Adapter interfaces
+@@ -89,11 +88,10 @@ gangland_warfare/
+ | Database Pool    | HikariCP                    | 7.0.2   |
+ | Database Engines | MySQL, SQLite               | --      |
+ | NPC Framework    | Citizens                    | 2.0.42  |
+ | NBT Library      | NBTAPI                      | 2.15.6  |
+ | Material Compat  | XSeries                     | 13.6.0  |
+-| Scoreboard       | FastBoard                   | 2.1.5   |
+ | Math Expressions | exp4j                       | 0.4.8   |
+ | Annotations      | Lombok                      | 1.18.44 |
+ | Testing          | JUnit 6.0.3, Mockito 5.23.0 | --      |
+ | Metrics          | bStats                      | 3.2.1   |
+ 
+@@ -103,12 +101,12 @@ gangland_warfare/
+ 
+ | Pattern                 | Where Used                                                  |
+ |-------------------------|-------------------------------------------------------------|
+ | Repository              | `plugin-persistence` -- IRepository, AbstractRepository     |
+ | Dependency Injection    | `gangland-core` -- BeanFactory, DependencyContainer         |
+-| Template Method         | AbstractRepository, DriverHandler, LootChestService         |
+-| Strategy                | Scoreboard drivers (V1/V2/V3), weapon parsers               |
++| Template Method         | AbstractRepository, LootChestService                        |
++| Strategy                | weapon parsers                                               |
+ | State Machine           | Cop AI, Civilian AI behaviors                               |
+ | Builder                 | Fuel, UniqueItem, Wearable, ItemBuilder                     |
+ | Chain of Responsibility | Sign aspects, loot chest handlers                           |
+ | Observer/Event          | Bukkit events + 30+ custom events                           |
+ | Registry                | RepositoryRegistry, ItemConverterRegistry, SignTypeRegistry |
+diff --git a/documentation/developer/architecture.md b/documentation/developer/architecture.md
+index 092ab2e5..96c79198 100644
+--- a/documentation/developer/architecture.md
++++ b/documentation/developer/architecture.md
+@@ -63,11 +63,11 @@ Server Start
+     │     ╰── context.bootstrap()
+     │           ├── Install FILE phase hook (FileManager.initializeAll() per bean)
+     │           ├── Install DATABASE phase hook (publish repos to container)
+     │           ├── Scan org.luckyraven.gangland.config for @Configuration classes
+     │           ├── BeanFactory.instantiate()
+-    │           │     ├── KERNEL phase   → version, compatibility, permissions, files, DB, scoreboard
++    │           │     ├── KERNEL phase   → version, compatibility, permissions, files, DB
+     │           │     ├── FILE phase     → Settings, addons, file initializers (staged loading)
+     │           │     ├── DATABASE phase → GanglandDatabase, RepositoryRegistry
+     │           │     ├── CONFIG phase   → all managers, services, gadgets, cops, weapons
+     │           │     ├── LIFECYCLE      → @PostConstruct + convention-based initialize()
+     │           │     ╰── (per-bean BeanLifecycle.onInitialize(true) runs in topo order)
+@@ -95,18 +95,18 @@ the shared `DependencyContainer`.
+ ### Configuration Classes
+ 
+ | Class                  | Phase    | Beans produced                                                           |
+ |------------------------|----------|--------------------------------------------------------------------------|
+ | `KernelConfig`         | KERNEL   | InformationManager, VersionSetup, CompatibilitySetup, PermissionManager, |
+-|                        |          | FileManager, DatabaseManager, ScoreboardManager, PlaceholderService      |
++|                        |          | FileManager, DatabaseManager, PlaceholderService                        |
+ | `FileConfig`           | FILE     | Settings, LanguageLoader, 13+ FileInitializer addons                     |
+ | `DatabaseConfig`       | DATABASE | GanglandDatabase, RepositoryRegistry                                     |
+ | `DataConfig`           | CONFIG   | UserManager (online/offline), RankManager, GangManager, MemberManager,   |
+ |                        |          | WaypointManager, PluginManager                                           |
+ | `GameplayConfig`       | CONFIG   | WeaponManager, SignManager, ItemParser, LootChestManager,                |
+ |                        |          | HologramService, MoneyDepositService, BlockDamageManager                 |
+-| `SchedulingConfig`     | CONFIG   | PeriodicalUpdates, PlayerBootstrapService, ScoreboardLifecycleService    |
++| `SchedulingConfig`     | CONFIG   | PeriodicalUpdates, PlayerBootstrapService                                |
+ | `WiringConfig`         | CONFIG   | ListenerManager, CommandManager, GanglandPlaceholder                     |
+ | `CopsAndGadgetsConfig` | CONFIG   | CopService, CivilianService, JailService, DetainmentService,             |
+ |                        |          | CarService, JetpackService, MoneyDropClassifier                          |
+ 
+ ### Phase Hooks
+@@ -272,11 +272,11 @@ Database:
+     │              │  │           │         │
+ ╭───┴──────╮  ╭────┴──┴───╮   ╭───┴────╮  ╭─┴──────────╮
+ │gangland- │  │gangland-  │   │gangland│  │version-impl│
+ │features/ │  │ui/        │   │-item   │  │(interfaces)│
+ │  cops    │  │ inventory │   ╰───┬────╯  ╰────────────╯
+-│  weapon  │  │ scoreboard│       │
++│  weapon  │  │           │       │
+ │  gadget  │  │ sign      │       │
+ ╰───┬──────╯  │ lootchest │  ╭────┴────────╮
+     │         │ hologram  │  │gangland-core│
+     │         ╰───┬───────╯  │  (DI, utils)│
+     │             │          ╰───┬─────────╯
+diff --git a/documentation/developer/configuration.md b/documentation/developer/configuration.md
+index d60c93ce..cb87eca1 100644
+--- a/documentation/developer/configuration.md
++++ b/documentation/developer/configuration.md
+@@ -21,11 +21,10 @@ file is renamed with a `-old` suffix and a fresh default is generated.
+ | `civilians.yml`    | Civilian type definitions and spawner config |
+ | `cars.yml`         | Car type definitions                         |
+ | `wearables.yml`    | Wearable armor definitions                   |
+ | `unique_items.yml` | Unique item definitions                      |
+ | `ammunition.yml`   | Ammunition type definitions                  |
+-| `scoreboard.yml`   | Scoreboard layout and lines                  |
+ | `plugin.yml`       | Spigot plugin metadata (not user-editable)   |
+ 
+ ---
+ 
+ ## settings.yml
+@@ -83,24 +82,10 @@ Database:
+       Debug: true                  # Log save performance
+    Clean_Up:
+       Time: 30                     # Days before old data cleanup
+ ```
+ 
+-### Scoreboard
+-
+-```yaml
+-Scoreboard:
+-  Enable: true
+-  Driver: "Driver_V3"           # Driver_V1, Driver_V2, or Driver_V3
+-```
+-
+-| Driver      | Algorithm                                         |
+-|-------------|---------------------------------------------------|
+-| `Driver_V1` | Clustering algorithm for similar-interval updates |
+-| `Driver_V2` | Built-in library for cluster management           |
+-| `Driver_V3` | Change detection caching, temporary alternative   |
+-
+ ### Inventory
+ 
+ ```yaml
+ Inventory:
+   Fill:
+@@ -508,26 +493,13 @@ ammunition:
+ 
+ ---
+ 
+ ## scoreboard.yml
+ 
+-Scoreboard layout configuration.
+-
+-```yaml
+-title:
+-   text: "&6Gangland Warfare"
+-   animated: false
+-lines:
+-   -  text: "&7Balance: &a%balance%"
+-      update_interval: 20
+-   -  text: "&7Level: &e%level%"
+-      update_interval: 100
+-   -  text: "&7Gang: &b%gang_name%"
+-      update_interval: 60
+-   -  text: "&7Wanted: %wanted_stars%"
+-      update_interval: 10
+-```
++Removed in 0.10.0. Scoreboard rendering moved to the standalone **Plaque** plugin
++(`E:\Programming\java\Plaque`), which owns its own `scoreboard.yml` using the same layout schema
++(`title`/`lines` with `text`/`update_interval`) against Gangland's `%gangland_*%` PlaceholderAPI tokens.
+ 
+ ---
+ 
+ ## plugin.yml
+ 
+diff --git a/documentation/developer/cops-n-crooks.md b/documentation/developer/cops-n-crooks.md
+index 7d521b18..6cc05502 100644
+--- a/documentation/developer/cops-n-crooks.md
++++ b/documentation/developer/cops-n-crooks.md
+@@ -1083,11 +1083,11 @@ The module fires 11 custom Bukkit events:
+ 
+ @EventHandler
+ public void onWantedStart(WantedStartEvent event) {
+ 	Player player = event.getPlayer();
+ 	int    level  = event.getWantedLevel();
+-	// Spawn cops, update scoreboard, etc.
++	// Spawn cops, notify the player, etc.
+ }
+ 
+ @EventHandler
+ public void onCopDeath(CopDeathEvent event) {
+ 	Player killer = event.getKiller();
+diff --git a/documentation/developer/dependency-injection.md b/documentation/developer/dependency-injection.md
+index ce4fcde8..42909c6e 100644
+--- a/documentation/developer/dependency-injection.md
++++ b/documentation/developer/dependency-injection.md
+@@ -118,22 +118,22 @@ bootstrap();
+ topological sort runs **per phase**, so cross-phase ordering is enforced by the pipeline itself.
+ 
+ ### Phase 1: KERNEL
+ 
+ Re-publishes the constructor-built kernel objects (`Gangland`, `FileManager`, `PermissionManager`,
+-`CompatibilitySetup`, `PlaceholderService`, `DatabaseManager`, `ScoreboardManager`) so downstream phases can
++`CompatibilitySetup`, `PlaceholderService`, `DatabaseManager`) so downstream phases can
+ constructor-inject them by type.
+ 
+ **Configuration class:** `KernelConfig`
+ 
+ ### Phase 2: FILE
+ 
+ Produces `FileInitializer` implementations (Settings, LanguageLoader, weapon addons, item addons, etc.).
+ 
+ **Phase hook:** After every bean in this phase is registered, `FileManager.initializeAll()` is called so the YAML file
+ is loaded before the next FILE-phase bean tries to read it. This staged loading ensures that e.g. `Settings` is fully
+-loaded before `ScoreboardAddon` reads `Settings.getX()` at construction time.
++loaded before the next FILE-phase addon reads `Settings.getX()` at construction time.
+ 
+ **Configuration class:** `FileConfig`
+ 
+ ### Phase 3: DATABASE
+ 
+@@ -210,11 +210,11 @@ public interface BeanLifecycle {
+ 
+ ### Reload Sequence (`context.reloadBeans()`)
+ 
+ | Step | Method                | Order                                        | Purpose                                          |
+ |------|-----------------------|----------------------------------------------|--------------------------------------------------|
+-| 1    | `onPreClear()`        | **Reverse** topological (dependents first)   | Stop timers, cancel async tasks, end scoreboards |
++| 1    | `onPreClear()`        | **Reverse** topological (dependents first)   | Stop timers, cancel async tasks                  |
+ | 2    | `onClear()`           | **Reverse** topological                      | Wipe maps, reset state to post-construction      |
+ | 3    | `onInitialize(false)` | **Forward** topological (dependencies first) | Re-populate from database/config files           |
+ 
+ ### Shutdown Sequence (`context.shutdownBeans()`)
+ 
+diff --git a/documentation/developer/modules.md b/documentation/developer/modules.md
+index 7cd7be2a..f6e1753b 100644
+--- a/documentation/developer/modules.md
++++ b/documentation/developer/modules.md
+@@ -17,16 +17,15 @@ the module's purpose, package structure, key classes, and how it integrates with
+ 5. [plugin-persistence (Database & Repository)](#plugin-persistence-database--repository)
+ 6. [plugin-common (Logger & Exceptions)](#plugin-common-logger--exceptions)
+ 7. [gangland-features/cops-n-crooks](#gangland-featurescops-n-crooks)
+ 8. [gangland-features/gangland-weapon](#gangland-featuresgangland-weapon)
+ 9. [gangland-features/gangland-gadget](#gangland-featuresgangland-gadget)
+-10. [gangland-ui/scoreboard-api](#gangland-uiscoreboard-api)
+-11. [gangland-ui/inventory-api](#gangland-uiinventory-api)
+-12. [gangland-ui/sign-api](#gangland-uisign-api)
+-13. [gangland-ui/lootchest-api](#gangland-uilootchest-api)
+-14. [gangland-ui/hologram-api](#gangland-uihologram-api)
+-15. [gangland-compatibility](#gangland-compatibility)
++10. [gangland-ui/inventory-api](#gangland-uiinventory-api)
++11. [gangland-ui/sign-api](#gangland-uisign-api)
++12. [gangland-ui/lootchest-api](#gangland-uilootchest-api)
++13. [gangland-ui/hologram-api](#gangland-uihologram-api)
++14. [gangland-compatibility](#gangland-compatibility)
+ 
+ ---
+ 
+ ## gangland-impl (Main Plugin)
+ 
+@@ -171,11 +170,11 @@ Event listeners registered via `ListenerManager` and the DI container.
+ | `listener/`  | `ListenerManager.java`                                                                                                                                                                                                                          | Scans packages for `@ListenerHandler`-annotated classes and registers them via `DependencyContainer`.                                                                   |
+ | `gang/`      | `GangMembersDamage.java`                                                                                                                                                                                                                        | Prevents friendly fire between gang members and allies.                                                                                                                 |
+ | `inventory/` | `InventoryOpenByCommand.java`, `LoadUniqueItem.java`, `UniqueItemInteract.java`, `UniqueItemInventoryRestrict.java`                                                                                                                             | Handles unique item loading on join/respawn, interaction events, and inventory restrictions.                                                                            |
+ | `loot/`      | `LootChestEarnGoods.java`, `LootChestWandHandler.java`                                                                                                                                                                                          | Loot chest interaction rewards and admin wand tool.                                                                                                                     |
+ | `npc/`       | `CivilianDeathRewardListener.java`                                                                                                                                                                                                              | Grants XP/money rewards when civilians are killed.                                                                                                                      |
+-| `player/`    | `CreateAccount.java`, `RemoveAccount.java`, `CustomPlayerDeath.java`, `PlayerDeath.java`, `EntityDamage.java`, `BountyIncrease.java`, `LevelUp.java`, `LoadResourcePack.java`, `PlayerScoreboard.java`, `WantedChange.java`, `WantedLevel.java` | Core player lifecycle: account creation/removal on join/quit, death handling, damage processing, bounty/wanted/level events, scoreboard updates, resource pack loading. |
++| `player/`    | `CreateAccount.java`, `RemoveAccount.java`, `CustomPlayerDeath.java`, `PlayerDeath.java`, `EntityDamage.java`, `BountyIncrease.java`, `LevelUp.java`, `LoadResourcePack.java`, `WantedChange.java`, `WantedLevel.java` | Core player lifecycle: account creation/removal on join/quit, death handling, damage processing, bounty/wanted/level events, resource pack loading. |
+ 
+ ### Package: `events/`
+ 
+ Custom Bukkit events fired by the plugin for inter-system communication.
+ 
+@@ -266,16 +265,10 @@ Concrete sign type implementations for the sign-api framework.
+ | `LootChestManager.java`         | Extends `LootChestService`, wiring gangland-specific item providers and configuration.  |
+ | `GanglandLootItemProvider.java` | Implements `LootItemProvider` to resolve weapons, ammo, and wearables from loot tables. |
+ | `LootChestWand.java`            | Admin tool for placing and configuring loot chests.                                     |
+ | `LootChestWandTag.java`         | NBT tag constants for the loot chest wand item.                                         |
+ 
+-### Package: `scoreboard/`
+-
+-| Class                    | Description                                                                                       |
+-|--------------------------|---------------------------------------------------------------------------------------------------|
+-| `ScoreboardManager.java` | Creates and manages per-player scoreboards using the scoreboard-api. Registers placeholder lines. |
+-
+ ### Package: `weapon/`
+ 
+ | Class                | Description                                                                                      |
+ |----------------------|--------------------------------------------------------------------------------------------------|
+ | `WeaponManager.java` | Loads weapon configurations from YAML, manages the weapon registry, and provides lookup by name. |
+@@ -303,11 +296,10 @@ Concrete sign type implementations for the sign-api framework.
+ | `commands.json`          | Command metadata (descriptions, usage, permissions) for the help system.                                                         |
+ | `cops.yml`               | Cop NPC tiers, equipment, and spawn configuration.                                                                               |
+ | `civilians.yml`          | Civilian NPC types, groups, behaviors, and equipment configuration.                                                              |
+ | `ammunition.yml`         | Ammunition type definitions (name, material, max stack, price).                                                                  |
+ | `cars.yml`               | Vehicle type definitions (speed, fuel capacity, model).                                                                          |
+-| `scoreboard.yml`         | Scoreboard layout and line definitions with placeholders.                                                                        |
+ | `unique_items.yml`       | Unique item definitions (phone, tools, etc.) with slot, permission, and behavior.                                                |
+ | `wearables.yml`          | Wearable armor definitions (material, traits, damage reduction, leather color).                                                  |
+ | `weapon/*.yml`           | Per-weapon-type YAML files: `rifle.yml`, `knife.yml`, `grenade.yml`, `flamethrower.yml`, `syringe_gun.yml`.                      |
+ | `loot/loot_chests.yml`   | Loot chest definitions (location, tier, cooldown).                                                                               |
+ | `loot/tiers.yml`         | Loot tier definitions (rarity weights, item pools).                                                                              |
+@@ -428,11 +420,11 @@ Advanced placeholder system with effects.
+ 
+ | Class                                 | Description                                                                    |
+ |---------------------------------------|--------------------------------------------------------------------------------|
+ | `PlaceholderHandler.java`             | Interface for resolving named placeholders to string values.                   |
+ | `PlaceholderRequest.java`             | Encapsulates a placeholder resolution request (player, identifier, arguments). |
+-| `effect/FlashEffect.java`             | Alternating text flash effect for scoreboard/action bar placeholders.          |
++| `effect/FlashEffect.java`             | Alternating text flash effect for action bar placeholders.                     |
+ | `effect/FlashPlaceholderWrapper.java` | Wraps a placeholder with a flash animation effect.                             |
+ | `effect/ConditionalFlashWrapper.java` | Flash effect that activates only when a condition is met.                      |
+ | `replacer/Replacer.java`              | Functional interface for string token replacement.                             |
+ | `replacer/CharReplacer.java`          | Character-level replacement implementation.                                    |
+ 
+@@ -443,11 +435,11 @@ Scheduled task timer abstractions.
+ | Class                 | Description                                                                        |
+ |-----------------------|------------------------------------------------------------------------------------|
+ | `Timer.java`          | Base abstract timer with start/stop lifecycle.                                     |
+ | `CountdownTimer.java` | Counts down from a value to zero, firing callbacks at each tick and on completion. |
+ | `CountupTimer.java`   | Counts up from zero, firing callbacks at each tick.                                |
+-| `RepeatingTimer.java` | Repeats a task at a fixed interval (used by scoreboard refresh).                   |
++| `RepeatingTimer.java` | Repeats a task at a fixed interval.                                                |
+ | `SequenceTimer.java`  | Executes a sequence of timed actions in order.                                     |
+ 
+ ### Subpackage: `utilities/`
+ 
+ Static utility classes used across all modules.
+@@ -1032,30 +1024,10 @@ Event listeners (11 total).
+ | `jetpack/`  | `JetpackActivateListener`, `JetpackEquipListener`, `JetpackFallDamageListener`                 | Jetpack activation on jump, equip detection, fall damage cancellation while active.   |
+ | `wearable/` | `WearableEquipListener`                                                                        | Wearable armor equip/unequip and trait activation.                                    |
+ 
+ ---
+ 
+-## gangland-ui/scoreboard-api
+-
+-**Purpose:** FastBoard-based scoreboard rendering system with ViaVersion compatibility and progressive optimization
+-strategies.
+-
+-**Java Files:** 8 | **Package:** `org.luckyraven.gangland.scoreboard.*`
+-
+-| Class                                | Description                                                                                                                                           |
+-|--------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+-| `Scoreboard.java`                    | Main scoreboard orchestrator. Creates a per-player `DriverHandler`, manages `Line` instances, and uses `RepeatingTimer` for periodic refresh.         |
+-| `configuration/ScoreboardAddon.java` | Configuration addon interface for scoreboard YAML loading (title, lines, refresh interval).                                                           |
+-| `driver/DriverHandler.java`          | Abstract wrapper around FastBoard. Handles board creation, destruction, and line updates. Selects driver version based on ViaVersion player protocol. |
+-| `driver/version/DriverV1.java`       | Basic driver. Full board update on every refresh tick.                                                                                                |
+-| `driver/version/DriverV2.java`       | Optimized driver. Only updates lines that have changed since last refresh.                                                                            |
+-| `driver/version/DriverV3.java`       | Most optimized driver. Change detection with hash comparison -- only sends packets for actually modified lines.                                       |
+-| `part/Line.java`                     | Dynamic scoreboard line. Resolves placeholders on each refresh tick and caches the result.                                                            |
+-| `part/StaticLine.java`               | Static scoreboard line. Resolved once on creation, never re-evaluated.                                                                                |
+-
+----
+-
+ ## gangland-ui/inventory-api
+ 
+ **Purpose:** Custom inventory/GUI framework with YAML-driven layouts, conditional slots, multi-page navigation, and a
+ comprehensive event handling system.
+ 
+@@ -1404,11 +1376,10 @@ gangland-build (shade assembly)
+   │     ├── plugin-persistence
+   │     ├── plugin-common
+   │     ├── cops-n-crooks
+   │     ├── gangland-weapon
+   │     ├── gangland-gadget
+-  │     ├── scoreboard-api
+   │     ├── inventory-api
+   │     ├── sign-api
+   │     ├── lootchest-api
+   │     ├── hologram-api
+   │     ├── version-impl
+@@ -1439,11 +1410,11 @@ gangland-build (shade assembly)
+   │     ├── gangland-core
+   │     ├── gangland-item
+   │     ├── gangland-weapon
+   │     ╰── plugin-common
+   │
+-  ├── UI modules (scoreboard, inventory, sign, lootchest, hologram)
++  ├── UI modules (inventory, sign, lootchest, hologram)
+   │     ├── gangland-core
+   │     ╰── plugin-common
+   │
+   ╰── version-impl (no plugin dependencies)
+         ╰── plugin-common
+@@ -1462,11 +1433,10 @@ gangland-build (shade assembly)
+ | `plugin-persistence`  | 20         | 5        | Repository pattern, database abstraction                                |
+ | `plugin-common`       | 2          | 2        | Logger, exceptions                                                      |
+ | `cops-n-crooks`       | 91         | 20       | NPC cops/civilians, wanted, bounty, jails                               |
+ | `gangland-weapon`     | 83         | 17       | Weapons, projectiles, modifiers, reload                                 |
+ | `gangland-gadget`     | 47         | 14       | Vehicles, jetpacks, fuel                                                |
+-| `scoreboard-api`      | 8          | 3        | FastBoard scoreboards                                                   |
+ | `inventory-api`       | 37         | 8        | Custom GUI framework                                                    |
+ | `sign-api`            | 28         | 8        | Sign interaction framework                                              |
+ | `lootchest-api`       | 33         | 7        | Loot chest system                                                       |
+ | `hologram-api`        | 3          | 1        | Floating text holograms                                                 |
+ | `version-impl`        | 6          | 2        | Compatibility interfaces                                                |
+diff --git a/documentation/developer/ui-framework.md b/documentation/developer/ui-framework.md
+index 7d86fe58..c97a451b 100644
+--- a/documentation/developer/ui-framework.md
++++ b/documentation/developer/ui-framework.md
+@@ -1,15 +1,14 @@
+ # UI Framework
+ 
+ ## Overview
+ 
+-The Gangland Warfare UI framework is composed of five independent modules under `gangland-ui/`:
++The Gangland Warfare UI framework is composed of four independent modules under `gangland-ui/`:
+ 
+ | Module           | Package                              | Classes | Purpose                                    |
+ |------------------|--------------------------------------|---------|--------------------------------------------|
+ | `inventory-api`  | `org.luckyraven.gangland.inventory`  | ~37     | Custom inventory GUIs with click handlers  |
+-| `scoreboard-api` | `org.luckyraven.gangland.scoreboard` | ~8      | Per-player sidebar scoreboards             |
+ | `sign-api`       | `org.luckyraven.gangland.sign`       | ~25     | Interactive sign placement and interaction |
+ | `lootchest-api`  | `org.luckyraven.gangland.lootchest`  | ~35     | Loot chest sessions with cracking minigame |
+ | `hologram-api`   | `org.luckyraven.gangland.hologram`   | 3       | Floating text via invisible armor stands   |
+ 
+ All modules are event-driven using Bukkit listeners. Listeners are annotated with `@ListenerHandler` for
+@@ -622,157 +621,13 @@ back());
+ 
+ ---
+ 
+ ## Scoreboard System
+ 
+-### Architecture
+-
+-```
+-ScoreboardAddon (config loader)
+-    ├── reads YAML ──> Line / StaticLine objects
+-    
+-Scoreboard (orchestrator)
+-    ├── uses ──> RepeatingTimer (tick every 1 tick)
+-    ├── delegates to ──> DriverHandler (abstract)
+-                            ├── DriverV1 (clustered updates)
+-                            ├── DriverV2 (built-in clustering)
+-                            ├── DriverV3 (minimal-diff, change detection)
+-                                ├── wraps ──> FastBoard (packet-based scoreboard)
+-```
+-
+-### Scoreboard (Orchestrator)
+-
+-Creates a `RepeatingTimer` that fires every tick (50ms) and calls `driver.update()`:
+-
+-```java
+-public class Scoreboard {
+-	public Scoreboard(JavaPlugin plugin, DriverHandler driver);
+-
+-	public void start();  // begins tick-based updates
+-
+-	public void end();    // stops timer and deletes FastBoard
+-}
+-```
+-
+-### DriverHandler (Abstract Base)
+-
+-Wraps FastBoard with ViaVersion compatibility and per-line update intervals:
+-
+-```java
+-public abstract class DriverHandler {
+-	// Fields
+-	private final Placeholder     placeholder;
+-	private final FastBoard       fastBoard;
+-	private final List<Line>      lines;
+-	private final Line            title;
+-	private final Map<Line, Long> lineUpdateCounts;
+-	private       long            globalTickCount;
+-
+-	// Abstract -- each driver version implements its own update strategy
+-	public abstract void update();
+-
+-	// Shared helpers
+-	protected String updateLine(Line line);   // resolves placeholders
+-
+-	protected void incrementTick();
+-}
+-```
+-
+-**ViaVersion support:** `FastBoardImpl` (inner class) overrides `hasLinesMaxLength()` to check the
+-player's protocol version via ViaVersion API. Players on 1.13+ get unlimited line length.
+-
+-### Driver Versions
+-
+-**DriverV1** -- Caches lines and uses a clustering algorithm to group lines with similar update intervals,
+-minimizing FastBoard API calls.
+-
+-**DriverV2** -- Similar to V1 with a built-in library-based clustering approach.
+-
+-**DriverV3** (recommended) -- Minimal-diff driver with change detection:
+-
+-```java
+-public class DriverV3 extends DriverHandler {
+-	private final Map<Long, List<Line>> clusters;        // lines grouped by interval
+-	private final Map<Long, Integer>    clustersInterval; // tick counters per cluster
+-	private final Map<Line, String>     cache;            // last rendered text per line
+-}
+-```
+-
+-Strategy:
+-
+-1. Group lines by their update interval into clusters
+-2. Each tick, only process clusters whose interval counter is due
+-3. Within due clusters, only send FastBoard updates for lines whose text actually changed
+-4. Flash effects (`flashif:`, `flash:`) are updated every tick regardless of interval
+-
+-### Line / StaticLine
+-
+-**`Line`** -- a content unit with animated text support:
+-
+-```java
+-public class Line {
+-	private final long         interval;  // update interval in ticks (0 = static)
+-	private final List<String> contents;  // rotating content frames
+-	private final int          usedIndex; // position index in the scoreboard
+-
+-	public void addContent(String content);      // add a frame (auto-colorized)
+-
+-	public String getCurrentContent();           // current frame
+-
+-	public String update(Placeholder, Player);   // resolve placeholders, advance frame
+-
+-	public boolean isStatic();                   // true if interval==0 or StaticLine
+-}
+-```
+-
+-**`StaticLine`** -- extends `Line` with `interval=0`, never updates after initial render.
+-
+-### ScoreboardAddon (Configuration)
+-
+-Loads scoreboard configuration from `scoreboard.yml`:
+-
+-```yaml
+-Board:
+-   Title:
+-      Interval: 20          # ticks between title frame changes
+-      Lines:
+-         - "&6Gangland &7Warfare"
+-         - "&eGangland &7Warfare"
+-   Rows:
+-      1:
+-         Interval: 0         # static line
+-         Lines:
+-            - "&7&m                    "
+-      2:
+-         Interval: 20        # update every second
+-         Lines:
+-            - "&fKills: &a%gangland_kills%"
+-```
+-
+-**Example -- creating a scoreboard for a player:**
+-
+-```java
+-ScoreboardAddon addon = new ScoreboardAddon(fileManager);
+-
+-DriverV3 driver = new DriverV3(
+-		placeholder,                // Placeholder resolver
+-		viaAPI,                     // ViaVersion API (nullable)
+-		player,                     // target player
+-		addon.getTitle(),           // title Line
+-		new ArrayList<>(addon.getLines())  // content Lines
+-);
+-
+-Scoreboard scoreboard = new Scoreboard(plugin, driver);
+-scoreboard.
+-
+-start();
+-
+-// Later, on quit:
+-scoreboard.
+-
+-end();
+-```
++Removed in 0.10.0. Scoreboard rendering is no longer part of the UI framework — it now lives in the
++standalone **Plaque** plugin (`E:\Programming\java\Plaque`), which renders via PlaceholderAPI
++`%gangland_*%` tokens that Gangland's placeholder system still publishes.
+ 
+ ---
+ 
+ ## Sign System
+ 
+@@ -1493,12 +1348,10 @@ gangland-core (Placeholder, ItemBuilder, ChatUtil, TriConsumer)
+     ^
+     |
+ inventory-api ─────> (standalone, depends on gangland-core)
+     ^
+     |
+-scoreboard-api ────> (standalone, depends on gangland-core)
+-    
+ sign-api ──────────> (standalone, depends on gangland-core)
+     
+ hologram-api ───────> (standalone, depends on gangland-core)
+     ^
+     |
+diff --git a/documentation/features/gangs.md b/documentation/features/gangs.md
+index 1d2a3a4f..1e43663b 100644
+--- a/documentation/features/gangs.md
++++ b/documentation/features/gangs.md
+@@ -76,11 +76,11 @@ The gang has a shared bank account separate from all personal balances. Deposits
+ ## Customization
+ 
+ | Command                       | Description                                                   |
+ |-------------------------------|---------------------------------------------------------------|
+ | `/glw gang rename <new name>` | Renames the gang.                                             |
+-| `/glw gang display <name>`    | Sets a custom display name shown in chat and scoreboards.     |
++| `/glw gang display <name>`    | Sets a custom display name shown in chat and (via Plaque) scoreboards. |
+ | `/glw gang display remove`    | Removes the custom display name, reverting to the plain name. |
+ | `/glw gang desc`              | Opens an anvil GUI to write a gang description.               |
+ | `/glw gang color`             | Opens a GUI to pick from 16 gang colors used in displays.     |
+ 
+ ---
+diff --git a/documentation/features/scoreboard.md b/documentation/features/scoreboard.md
+index 1780ed52..6d84d2bf 100644
+--- a/documentation/features/scoreboard.md
++++ b/documentation/features/scoreboard.md
+@@ -4,89 +4,14 @@
+ 
+ ---
+ 
+ ## Overview
+ 
+-The scoreboard displays live player stats on the right side of the screen. It supports animated titles, per-row update
+-intervals, and three different rendering drivers. The displayed rows update independently at configurable tick
+-intervals, keeping the board responsive without overloading the server.
+-
+----
+-
+-## What Is Displayed
+-
+-The scoreboard shows the following player stats by default:
+-
+-- Wanted stars
+-- Bounty amount
+-- Cash balance (Purse)
+-- Player level and XP percentage
+-- Bank account name and balance
+-- Gang display name and contribution
+-- Gang member count (online / total)
+-
+-The content and update rates for each row are fully configurable in `scoreboard.yml`.
+-
+----
+-
+-## Drivers
+-
+-The scoreboard supports three rendering drivers. Set the active driver in `scoreboard.yml`.
+-
+-| Driver      | Description                                                                                                                                                                                |
+-|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+-| `Driver_V1` | Caches scoreboard lines in memory and uses a clustering algorithm to minimize update packets. Good baseline performance.                                                                   |
+-| `Driver_V2` | Similar to V1 but delegates cluster management to the FastBoard library. More stable line handling under rapid updates.                                                                    |
+-| `Driver_V3` | Uses interactive scoreboards. Temporarily replaces the main scoreboard when showing alternate views. The most feature-rich driver — recommended for servers using interactive UI features. |
+-
+----
+-
+-## Animated Title
+-
+-The scoreboard title supports animation by defining multiple frames. The title cycles through each frame at a
+-configurable interval (in ticks).
+-
+-The default animation spells out **GANGLAND** with a sweeping highlight effect across 27 frames.
+-
+----
+-
+-## Configuration
+-
+-Scoreboard settings live in `scoreboard.yml`:
+-
+-```yaml
+-Scoreboard:
+-   Enable: true
+-   Driver: "Driver_V3"        # Driver_V1, Driver_V2, or Driver_V3
+-
+-Board:
+-   Title:
+-      Interval: 2              # Ticks between title animation frames
+-      Lines:
+-         - "&f&l<>"             # Frame 1
+-         - "&f&l<&8=&f&l>"      # Frame 2
+-         # ... additional frames
+-
+-   Rows:
+-      1:
+-         Interval: 10           # Ticks between updates for this row
+-         Lines:
+-            - "&7+--------------------+"
+-      2:
+-         Interval: 20
+-         Lines:
+-            - "&7 Wanted: &c{wanted_stars}"
+-      # ... additional rows
+-```
+-
+-Each row can have its own `Interval`, allowing high-frequency stats (like wanted level) to update more often than
+-low-frequency ones (like gang info).
+-
+-- `Interval: 0` — the row is **static**. It is set once and never updated again. Use this for decorative separator lines
+-  or section headers that never change.
+-- Any positive `Interval` value — the row is refreshed every that many ticks (20 ticks = 1 second).
+-
+-Row lines support PlaceholderAPI placeholders (e.g., `%gangland_user_balance%`) and standard `&` color codes.
++The scoreboard is no longer part of Gangland Warfare as of 0.10.0. It now lives in **Plaque**, a standalone
++Keystone-powered Spigot plugin (`E:\Programming\java\Plaque`) with no dependency on Gangland, which renders
++scoreboards through real PlaceholderAPI `%gangland_*%` tokens that Gangland's own placeholder expansion still
++publishes. Plaque owns its own `settings.yml`/`scoreboard.yml` and `/plaque reload` command; any
++scoreboard-specific feature or test documentation now lives in that repo.
+ 
+ ---
+ 
+ [← Unique Items](./unique-items.md) | [Back to Index](../README.md) | [Next: Weapons →](./weapons.md)
+diff --git a/documentation/features/unique-items.md b/documentation/features/unique-items.md
+index 0c720de6..7211249f 100644
+--- a/documentation/features/unique-items.md
++++ b/documentation/features/unique-items.md
+@@ -1,8 +1,8 @@
+ # Unique Items
+ 
+-[← Levels](./levels.md) | [Back to Index](../README.md) | [Next: Scoreboard →](./scoreboard.md)
++[← Levels](./levels.md) | [Back to Index](../README.md) | [Next: Scoreboard (moved to Plaque) →](./scoreboard.md)
+ 
+ ---
+ 
+ ## Overview
+ 
+@@ -148,6 +148,6 @@ medkit:
+ 
+ Any key added to `unique_items.yml` is automatically registered on load.
+ 
+ ---
+ 
+-[← Levels](./levels.md) | [Back to Index](../README.md) | [Next: Scoreboard →](./scoreboard.md)
++[← Levels](./levels.md) | [Back to Index](../README.md) | [Next: Scoreboard (moved to Plaque) →](./scoreboard.md)
+diff --git a/documentation/tests/README.md b/documentation/tests/README.md
+index 7b03fa2e..23ae24fe 100644
+--- a/documentation/tests/README.md
++++ b/documentation/tests/README.md
+@@ -48,11 +48,11 @@ Run the checklist for any feature whose code, config, or dependencies changed th
+ | 2  | [Economy](./features/economy.md)                   | [economy](../features/economy.md)                 |
+ | 3  | [Waypoints](./features/waypoints.md)               | [waypoints](../features/waypoints.md)             |
+ | 4  | [Loot Chests](./features/loot_chests.md)           | [loot_chests](../features/loot_chests.md)         |
+ | 5  | [Levels](./features/levels.md)                     | [levels](../features/levels.md)                   |
+ | 6  | [Unique Items](./features/unique-items.md)         | [unique-items](../features/unique-items.md)       |
+-| 7  | [Scoreboard](./features/scoreboard.md)             | [scoreboard](../features/scoreboard.md)           |
++| 7  | [Scoreboard](./features/scoreboard.md)             | Moved to the standalone Plaque plugin as of 0.10.0 |
+ | 8  | [Weapons](./features/weapons.md)                   | [weapons](../features/weapons.md)                 |
+ | 9  | [Wanted & Bounty](./features/wanted-bounty.md)     | [wanted-bounty](../features/wanted-bounty.md)     |
+ | 10 | [Trade Signs](./features/trade-signs.md)           | [trade-signs](../features/trade-signs.md)         |
+ | 11 | [Ranks](./features/ranks.md)                       | [ranks](../features/ranks.md)                     |
+ | 12 | [Inventory System](./features/inventory.md)        | [inventory](../features/inventory.md)             |
+diff --git a/documentation/tests/UNIVERSAL-PRE-SHIP.md b/documentation/tests/UNIVERSAL-PRE-SHIP.md
+index b7e03643..b24aae10 100644
+--- a/documentation/tests/UNIVERSAL-PRE-SHIP.md
++++ b/documentation/tests/UNIVERSAL-PRE-SHIP.md
+@@ -51,14 +51,14 @@ the relevant subsystem heavily.
+ ---
+ 
+ ## 4. Reload
+ 
+ - [ ] `/glw reload` completes with no errors.
+-- [ ] `/glw reload files`, `/glw reload data`, `/glw reload scoreboard` each individually complete cleanly.
++- [ ] `/glw reload files`, `/glw reload data` each individually complete cleanly.
+ - [ ] After reload: a previously-working command still responds; a previously-registered listener fires exactly once
+   (no duplicates).
+-- [ ] Active player state (open inventories, equipped weapons, scoreboard) is preserved or cleanly re-initialised.
++- [ ] Active player state (open inventories, equipped weapons) is preserved or cleanly re-initialised.
+ 
+ ---
+ 
+ ## 5. Clean Shutdown
+ 
+diff --git a/documentation/tests/commands.md b/documentation/tests/commands.md
+index 2b520bf7..5cb46ffe 100644
+--- a/documentation/tests/commands.md
++++ b/documentation/tests/commands.md
+@@ -23,11 +23,10 @@ input must be chained `OptionalArgument` nodes with tab-completion — verify ta
+ | `/glw help`              | Responds with the main help page; every top-level verb is listed.               | —   |
+ | `/glw help <page>`       | Page 1 and page 2 both render.                                                  | —   |
+ | `/glw reload`            | Completes without error. See [lifecycle-and-reload](./lifecycle-and-reload.md). | —   |
+ | `/glw reload files`      | Edits to `settings.yml` become visible.                                         | —   |
+ | `/glw reload data`       | Caches drop and re-read.                                                        | Yes |
+-| `/glw reload scoreboard` | New `scoreboard.yml` values render.                                             | —   |
+ | `/glw update`            | Reports current version + latest release.                                       | —   |
+ | `/glw update download`   | Skip on a dev server — only test on the designated release smoke server.        | —   |
+ | `/glw resource`          | Prompts the player to download the resource pack.                               | —   |
+ 
+ - [ ] All rows above pass.
+diff --git a/documentation/tests/config-and-yaml.md b/documentation/tests/config-and-yaml.md
+index dcfc2bb6..7a48fdbd 100644
+--- a/documentation/tests/config-and-yaml.md
++++ b/documentation/tests/config-and-yaml.md
+@@ -21,11 +21,10 @@ Every `.yml` file the plugin ships must be:
+ Run the three tests (regenerate / reload / corrupt) against each file below.
+ 
+ ### Root
+ 
+ - [ ] `settings.yml` — main runtime config (database type, auto-save interval, economy knobs).
+-- [ ] `scoreboard.yml` — scoreboard layout and colours.
+ - [ ] `plugin.yml` — Bukkit metadata. Changes require a restart (Bukkit limitation); do **not** expect reload to
+   pick these up. Smoke test: cold-start only.
+ - [ ] `commands.json` — command descriptions. Per `feedback_commands_json`, any new command added this release must
+   have an entry here.
+ 
+diff --git a/documentation/tests/features/loot_chests.md b/documentation/tests/features/loot_chests.md
+index facdf994..12f8b2a0 100644
+--- a/documentation/tests/features/loot_chests.md
++++ b/documentation/tests/features/loot_chests.md
+@@ -60,11 +60,11 @@ Placeable loot chests with tiered loot tables, keys, hologram labels, and cooldo
+ ---
+ 
+ ## Regression Risks
+ 
+ - `LootChestManager` — placement, roll, persistence.
+-- Hologram API — spawn, update, remove on reload (see [scoreboard](./scoreboard.md) for similar concerns).
++- Hologram API — spawn, update, remove on reload.
+ - Item refresher pattern — if chest delivers stateful items (like fuel-bearing cars), they must refresh via
+   `ItemRefresher` per `feedback_item_refresher_pattern`.
+ 
+ ---
+ 
+diff --git a/documentation/tests/features/scoreboard.md b/documentation/tests/features/scoreboard.md
+index 6a3390d3..5b08fce9 100644
+--- a/documentation/tests/features/scoreboard.md
++++ b/documentation/tests/features/scoreboard.md
+@@ -4,62 +4,13 @@
+ 
+ ---
+ 
+ ## Overview
+ 
+-Per-player live scoreboard rendered via FastBoard. Layout and placeholder drivers defined in `scoreboard.yml`.
+-Lifecycle managed by `ScoreboardLifecycleService`.
+-
+-**Modules involved:** `gangland-ui/scoreboard-api`, `gangland-impl`.
+-
+----
+-
+-## Pre-Conditions
+-
+-- [ ] Player `A` online with scoreboard enabled in settings.
+-- [ ] `scoreboard.yml` present with animated title + at least three driver lines.
+-
+----
+-
+-## Smoke Test
+-
+-- [ ] Join server → scoreboard appears immediately.
+-- [ ] Animated title cycles through its frames at the configured rate.
+-- [ ] Each driver line (balance, gang, wanted stars, level, etc.) shows correct placeholder values.
+-- [ ] Change a driver's underlying value (e.g. `/glw economy deposit A 100`) → line updates within one tick.
+-- [ ] Toggle scoreboard off/on per player (if a toggle exists) → hides and re-renders correctly.
+-
+----
+-
+-## Edge Cases
+-
+-- [ ] Colour codes in `scoreboard.yml` use `&`, not `§` (`feedback_chat_color_codes`).
+-- [ ] Line longer than 40 characters → truncated gracefully (FastBoard cap).
+-- [ ] PlaceholderAPI missing → placeholders fall back to raw text, no stack trace.
+-- [ ] Join + immediate logout (sub-second) → no leaked FastBoard instance.
+-
+----
+-
+-## Reload Safety
+-
+-- [ ] Edit a line in `scoreboard.yml` → `/glw reload scoreboard` applies change to all online players.
+-- [ ] Full `/glw reload` also re-renders scoreboards without duplication.
+-- [ ] Reference: `project_copmanager_reload_npe` / `BeanPostInitialize` contract — `ScoreboardLifecycleService` was
+-  migrated off `BeanLifecycle` to avoid reload NPEs.
+-
+----
+-
+-## Persistence
+-
+-- [ ] Scoreboard has no persistent state; nothing to verify across restart beyond "it still renders after reboot."
+-
+----
+-
+-## Regression Risks
+-
+-- `ScoreboardLifecycleService` — per-player lifecycle (attach on join, detach on leave).
+-- FastBoard version compatibility across MC 1.16–1.21 NMS adapters.
+-- Placeholder service — `PlaceholderService` bean (see `project_decoupling_phases`).
++The scoreboard is no longer part of Gangland Warfare as of 0.10.0. It now lives in **Plaque**, a standalone
++Keystone-powered Spigot plugin (`E:\Programming\java\Plaque`) with no dependency on Gangland, which renders
++scoreboards through real PlaceholderAPI `%gangland_*%` tokens that Gangland's own placeholder expansion still
++publishes. Its test checklist now lives in that repo.
+ 
+ ---
+ 
+ [Back to Test Index](../README.md)
+diff --git a/documentation/tests/lifecycle-and-reload.md b/documentation/tests/lifecycle-and-reload.md
+index d3c3aa85..c935c3bd 100644
+--- a/documentation/tests/lifecycle-and-reload.md
++++ b/documentation/tests/lifecycle-and-reload.md
+@@ -33,24 +33,22 @@ This checklist exercises the enable, reload, and disable paths end-to-end.
+ - [ ] Boot against a data dir from the previous stable release.
+ - [ ] All prior gangs, members, users, ranks, waypoints, loot chests, cop spawners, civilian spawners, jails, and
+   traders load back in.
+ - [ ] NPC entities re-spawn at their saved locations (Citizens must not have a persistent copy — our repositories
+   own NPC state).
+-- [ ] Active scoreboard shows on every online player's screen at correct values.
+ 
+ ---
+ 
+ ## `/glw reload` (full reload)
+ 
+-- [ ] While the server is running, open an inventory, equip a weapon, and have a scoreboard visible.
++- [ ] While the server is running, open an inventory and equip a weapon.
+ - [ ] Run `/glw reload` as an op.
+ - [ ] Console shows `context.reloadBeans()` firing in topological order.
+ - [ ] After completion:
+     - [ ] `/glw help` still responds.
+     - [ ] The open inventory was closed or cleanly re-initialised (no ghost clicks).
+     - [ ] Weapon still fires with correct stats.
+-    - [ ] Scoreboard still renders.
+ - [ ] Trigger an event the plugin listens to (join/leave, block place, sign interact). The handler fires **once**, not
+   twice — verifies listeners did not double-register.
+ 
+ ---
+ 
+@@ -69,18 +67,10 @@ This checklist exercises the enable, reload, and disable paths end-to-end.
+ - [ ] In-memory caches drop and re-read from DB.
+ - [ ] User data for online players re-populates within one tick.
+ 
+ ---
+ 
+-## `/glw reload scoreboard`
+-
+-- [ ] Edit `scoreboard.yml` (e.g. change a line's colour code).
+-- [ ] Run `/glw reload scoreboard`.
+-- [ ] All online players see the new scoreboard immediately.
+-
+----
+-
+ ## Clean Shutdown
+ 
+ - [ ] Run `stop`.
+ - [ ] Console shows `shutdownBeans()` running in **reverse** topological order.
+ - [ ] `PluginDataCleanupService` flushes every dirty user, gang, and repository entry.
+diff --git a/gangland-api/src/main/java/org/luckyraven/gangland/file/configuration/Settings.java b/gangland-api/src/main/java/org/luckyraven/gangland/file/configuration/Settings.java
+index 4dd0b3cb..4100c7b5 100644
+--- a/gangland-api/src/main/java/org/luckyraven/gangland/file/configuration/Settings.java
++++ b/gangland-api/src/main/java/org/luckyraven/gangland/file/configuration/Settings.java
+@@ -102,13 +102,10 @@ public class Settings implements FileInitializer {
+ 	private static @Getter String gangRankHead, gangRankTail, gangDisplayNameChar;
+ 	private static @Getter BigDecimal gangInitialBalance;
+ 	private static @Getter BigDecimal gangCreateFee;
+ 	private static @Getter BigDecimal gangMaxBalance;
+ 	private static @Getter double     gangContributionRate;
+-	// scoreboard configuration
+-	private static @Getter boolean    scoreboardEnabled;
+-	private static @Getter String     scoreboardDriver;
+ 	// civilian AI configuration
+ 	private static @Getter boolean    civilianAiEnabled;
+ 	private static @Getter int        civilianAiTickRate;
+ 	// civilian spawner proximity configuration
+ 	private static @Getter double     civilianSpawnerActivationRadius;
+@@ -563,15 +560,10 @@ public class Settings implements FileInitializer {
+ 		gangInitialBalance   = money(gangAccount, "Initial_Balance", "0");
+ 		gangCreateFee        = money(gangAccount, "Create_Cost", "100000");
+ 		gangMaxBalance       = money(gangAccount, "Maximum_Balance", "100000000000");
+ 		gangContributionRate = dbl(gangAccount, "Contribution_Rate", 1_000);
+ 
+-		// scoreboard
+-		NodeReader scoreboard = section(root, "Scoreboard", report);
+-		scoreboardEnabled = bool(scoreboard, "Enable", true);
+-		scoreboardDriver  = str(scoreboard, "Driver", "Driver_V3");
+-
+ 		// civilian
+ 		NodeReader civilian                 = section(root, "Civilians", report);
+ 		NodeReader civilianBehaviour        = section(civilian, "Behaviour", report);
+ 		NodeReader civilianSpawnerProximity = section(civilian, "Spawner_Proximity", report);
+ 		NodeReader civiliansSpawn           = section(civilian, "Spawn", report);
+diff --git a/gangland-build/pom.xml b/gangland-build/pom.xml
+index b73c4274..1a84c94c 100644
+--- a/gangland-build/pom.xml
++++ b/gangland-build/pom.xml
+@@ -38,15 +38,10 @@
+                          NoClassDefFoundError: net/wesjd/anvilgui/AnvilGUI$StateSnapshot, because a module jar can
+                          resolve AnvilGUI only by its original name from the core jar's classpath. It still ships
+                          inside the core jar (see the artifactSet include and the shade filter below) - just
+                          unrelocated. -->
+                     <relocations>
+-                        <relocation>
+-                            <pattern>fr.mrmicky.fastboard</pattern>
+-                            <shadedPattern>org.luckyraven.gangland.dependency.fastboard</shadedPattern>
+-                        </relocation>
+-
+                         <relocation>
+                             <pattern>org.bstats</pattern>
+                             <shadedPattern>org.luckyraven.gangland.dependency.bstats</shadedPattern>
+                         </relocation>
+                     </relocations>
+@@ -71,11 +66,10 @@
+                         <includes>
+                             <!-- keystone-* modules share this groupId but are provided scope, so the shade
+                                  plugin never includes them — the runtime copies come from Keystone.jar. -->
+                             <include>org.luckyraven:*</include>
+                             <include>net.wesjd:anvilgui</include>
+-                            <include>fr.mrmicky:fastboard</include>
+                             <include>org.bstats:*</include>
+                         </includes>
+                         <excludes>
+                             <!-- Runtime modules ship as their own jars under target/modules/ (see the
+                                  maven-dependency-plugin execution below), never inside the core jar. -->
+diff --git a/gangland-impl/pom.xml b/gangland-impl/pom.xml
+index a230c409..5dc3dceb 100644
+--- a/gangland-impl/pom.xml
++++ b/gangland-impl/pom.xml
+@@ -64,14 +64,10 @@
+         </dependency>
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+             <artifactId>keystone-persistence</artifactId>
+         </dependency>
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>scoreboard-api</artifactId>
+-        </dependency>
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+             <artifactId>sign-api</artifactId>
+         </dependency>
+         <dependency>
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/Gangland.java b/gangland-impl/src/main/java/org/luckyraven/gangland/Gangland.java
+index 219c963c..6e1aff9a 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/Gangland.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/Gangland.java
+@@ -7,11 +7,10 @@ import lombok.CustomLog;
+ import lombok.Getter;
+ import net.milkbowl.vault.economy.Economy;
+ import org.apache.logging.log4j.Level;
+ import org.apache.logging.log4j.core.config.Configurator;
+ import org.bstats.bukkit.Metrics;
+-import org.bstats.charts.AdvancedPie;
+ import org.bstats.charts.SingleLineChart;
+ import org.bukkit.Bukkit;
+ import org.bukkit.plugin.Plugin;
+ import org.bukkit.plugin.RegisteredServiceProvider;
+ import org.bukkit.plugin.java.JavaPlugin;
+@@ -30,18 +29,15 @@ import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionS
+ import org.luckyraven.gangland.gang.GangManager;
+ import org.luckyraven.gangland.gang.rank.RankManager;
+ import org.luckyraven.gangland.gang.vault.permission.VaultPermissionBridge;
+ import org.luckyraven.keystone.vault.permission.VaultOfflinePermissionService;
+ import org.luckyraven.keystone.sound.ResourcePackTracker;
+-import org.luckyraven.gangland.scoreboard.ScoreboardManager;
+ import org.luckyraven.gangland.util.GanglandChatUtil;
+ import org.luckyraven.keystone.update.UpdateNotifier;
+ import org.luckyraven.keystone.update.UpdateChecker;
+ 
+-import java.util.HashMap;
+ import java.util.List;
+-import java.util.Map;
+ 
+ @Getter
+ @CustomLog
+ public final class Gangland extends JavaPlugin {
+ 
+@@ -125,26 +121,10 @@ public final class Gangland extends JavaPlugin {
+ 		metrics.addCustomChart(new SingleLineChart("number_of_gangs", () -> context.get(GangManager.class).size()));
+ 
+ 		// number of waypoints
+ 		metrics.addCustomChart(
+ 				new SingleLineChart("number_of_waypoints", () -> context.get(WaypointManager.class).size()));
+-
+-		// scoreboard driver
+-		metrics.addCustomChart(new AdvancedPie("scoreboard_driver", () -> {
+-			Map<String, Integer> values = new HashMap<>();
+-
+-			for (String driver : ScoreboardManager.getDrivers()) {
+-				if (!driver.equalsIgnoreCase(Settings.getScoreboardDriver())) {
+-					values.put(driver, 0);
+-					continue;
+-				}
+-
+-				values.put(driver, 100);
+-			}
+-
+-			return values;
+-		}));
+ 	}
+ 
+ 	/**
+ 	 * Removes all the logs of the specified class.
+ 	 *
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/GanglandContext.java b/gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/GanglandContext.java
+index fe83759c..478bdf3a 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/GanglandContext.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/GanglandContext.java
+@@ -42,11 +42,11 @@ import java.util.Set;
+  * the {@link BeanFactory} that drives the phased bootstrap, and runs the post-bootstrap listener + command scans.
+  *
+  * <p>The bootstrap pipeline is:
+  * <ol>
+  *     <li><b>Kernel:</b> {@code KernelConfig} ({@link Phase#KERNEL}) produces every bootstrap-critical singleton
+- *     (version detection, compatibility, permissions, file management, database, scoreboard) via standard
++ *     (version detection, compatibility, permissions, file management, database) via standard
+  *     {@code @Bean} methods. Dependency ordering within the kernel phase is resolved by
+  *     {@link BeanGraph} topological sort.</li>
+  *     <li><b>Scan:</b> {@link #bootstrap} scans {@code org.luckyraven.gangland.config} for {@code @Configuration} classes and
+  *     hands them to {@link BeanFactory}.</li>
+  *     <li><b>Instantiate:</b> {@link BeanFactory#instantiate()} runs each {@link Phase} in declared order.
+@@ -125,12 +125,12 @@ public final class GanglandContext {
+ 	}
+ 
+ 	/**
+ 	 * Runs the reload lifecycle on all beans implementing {@link BeanLifecycle}: {@code onPreClear()} and
+ 	 * {@code onClear()} in reverse topological order, then {@code onInitialize(false)} in forward topological order.
+-	 * Call this from the reload orchestrator after files have been reloaded and scoreboards have been killed — this
+-	 * replaces the hard-coded {@code ReloadPlugin.databaseInitialize()} sequence.
++	 * Call this from the reload orchestrator after files have been reloaded — this replaces the hard-coded
++	 * {@code ReloadPlugin.databaseInitialize()} sequence.
+ 	 */
+ 	public void reloadBeans() {
+ 		beanFactory.reloadLifecycleBeans();
+ 	}
+ 
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/ReloadPlugin.java b/gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/ReloadPlugin.java
+index a40bb408..ca60b49d 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/ReloadPlugin.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/ReloadPlugin.java
+@@ -1,28 +1,20 @@
+ package org.luckyraven.gangland.bootstrap;
+ 
+ import lombok.CustomLog;
+-import org.bukkit.entity.Player;
+-import org.luckyraven.gangland.Gangland;
+ import org.luckyraven.keystone.bean.BeanLifecycle;
+-import org.luckyraven.gangland.file.configuration.Settings;
+ import org.luckyraven.gangland.file.configuration.inventory.InventoryLoader;
+-import org.luckyraven.gangland.gang.user.User;
+-import org.luckyraven.gangland.gang.user.UserManager;
+ import org.luckyraven.gangland.inventory.InventoryHandler;
+ import org.luckyraven.keystone.persistence.FileManager;
+-import org.luckyraven.gangland.scoreboard.Scoreboard;
+-import org.luckyraven.gangland.scoreboard.ScoreboardManager;
+-import org.luckyraven.gangland.scoreboard.driver.DriverHandler;
+ 
+ /**
+  * Thin facade over the bean lifecycle for plugin reload operations. The full {@link #reload()} delegates entirely to
+  * {@link GanglandContext#reloadBeans()}, which drives every {@link BeanLifecycle} bean through its onPreClear → onClear
+  * → onInitialize(false) cycle in topological order.
+  *
+- * <p>Convenience methods ({@link #filesReload()}, {@link #scoreboardReload()}, {@link #inventoryReload()}) support the
+- * sub-command variants ({@code /glw reload files}, etc.) that only reload a subset of the plugin.
++ * <p>Convenience methods ({@link #filesReload()}, {@link #inventoryReload()}) support the sub-command variants
++ * ({@code /glw reload files}, etc.) that only reload a subset of the plugin.
+  */
+ @CustomLog
+ public final class ReloadPlugin {
+ 
+ 	private final GanglandContext context;
+@@ -33,15 +25,14 @@ public final class ReloadPlugin {
+ 
+ 	/**
+ 	 * Full plugin reload. Drives every BeanLifecycle bean through the reload cycle:
+ 	 * <ol>
+ 	 *     <li>PeriodicalUpdates stops timer</li>
+-	 *     <li>UserManager kills scoreboards, stops timers</li>
++	 *     <li>UserManager stops timers</li>
+ 	 *     <li>FileManager reloads YAML files and re-initializes all file initializers</li>
+ 	 *     <li>Managers reinitialize from database</li>
+ 	 *     <li>PlayerBootstrapService loads online/offline players</li>
+-	 *     <li>ScoreboardLifecycleService creates scoreboards</li>
+ 	 *     <li>PeriodicalUpdates restarts timer</li>
+ 	 * </ol>
+ 	 */
+ 	public void reload() {
+ 		context.reloadBeans();
+@@ -55,39 +46,10 @@ public final class ReloadPlugin {
+ 		FileManager fileManager = context.get(FileManager.class);
+ 		fileManager.onClear();
+ 		fileManager.onInitialize(false);
+ 	}
+ 
+-	/**
+-	 * Scoreboard-only reload: kills all active scoreboards and recreates them from the current scoreboard
+-	 * configuration. Used by {@code /glw reload scoreboard}.
+-	 */
+-	@SuppressWarnings("unchecked")
+-	public void scoreboardReload() {
+-		if (!Settings.isScoreboardEnabled()) {
+-			return;
+-		}
+-
+-		Gangland          gangland          = context.get(Gangland.class);
+-		ScoreboardManager scoreboardManager = context.get(ScoreboardManager.class);
+-		UserManager<Player> userManager = (UserManager<Player>) context.getContainer()
+-		                                                               .getInstance("online", UserManager.class);
+-
+-		for (User<Player> user : userManager.getUsers().values()) {
+-			if (user.getScoreboard() != null) {
+-				user.getScoreboard().end();
+-				user.setScoreboard(null);
+-			}
+-
+-			DriverHandler driverHandler = scoreboardManager.getDriverHandler(user.getUser());
+-			Scoreboard    scoreboard    = new Scoreboard(gangland, driverHandler);
+-
+-			user.setScoreboard(scoreboard);
+-			user.getScoreboard().start();
+-		}
+-	}
+-
+ 	/**
+ 	 * Inventory-only reload: removes all special inventories and re-initializes the inventory loader. Used by
+ 	 * {@code /glw reload inventory}.
+ 	 */
+ 	public void inventoryReload() {
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/DownloadResourceCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/DownloadResourceCommand.java
+index 570cd944..25734d88 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/DownloadResourceCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/DownloadResourceCommand.java
+@@ -26,11 +26,11 @@ public final class DownloadResourceCommand extends Command {
+ 		getHelpInfo().addAll(list);
+ 	}
+ 
+ 	@Override
+ 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
+-		if (!Settings.isScoreboardEnabled()) return;
++		if (!Settings.isResourcePackEnabled()) return;
+ 
+ 		Player player = (Player) commandSender;
+ 
+ 		player.setResourcePack(Settings.getResourcePackUrl());
+ 	}
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/ReloadCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/ReloadCommand.java
+index b632c88a..00c0e1d4 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/ReloadCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/ReloadCommand.java
+@@ -8,11 +8,10 @@ import org.luckyraven.gangland.Gangland;
+ import org.luckyraven.gangland.bootstrap.GanglandContext;
+ import org.luckyraven.gangland.bootstrap.PeriodicalUpdates;
+ import org.luckyraven.gangland.command.Command;
+ import org.luckyraven.keystone.command.argument.Argument;
+ import org.luckyraven.keystone.bean.command.CommandHandler;
+-import org.luckyraven.gangland.file.configuration.Settings;
+ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.Map;
+@@ -48,18 +47,10 @@ public final class ReloadCommand extends Command {
+ 		                              (argument, sender, args) -> {
+ 										  reloadProcess("files", () -> gangland.getReloadPlugin().filesReload(),
+ 			                                            true);
+ 									  });
+ 
+-		Argument scoreboard = new Argument(getPlugin(), "scoreboard", getArgumentTree(), (argument, sender, args) -> {
+-			reloadProcess("scoreboard", () -> {
+-				if (Settings.isScoreboardEnabled()) {
+-					gangland.getReloadPlugin().scoreboardReload();
+-				}
+-			}, false);
+-		});
+-
+ 		GanglandContext context = gangland.getContext();
+ 
+ 		Argument inventory = new Argument(getPlugin(), "inventory", getArgumentTree(), (argument, sender, args) -> {
+ 			reloadProcess("inventory", () -> {
+ 				context.get(PeriodicalUpdates.class).resetCache();
+@@ -74,11 +65,10 @@ public final class ReloadCommand extends Command {
+ 		});
+ 
+ 		List<Argument> arguments = new ArrayList<>();
+ 
+ 		arguments.add(files);
+-		arguments.add(scoreboard);
+ 		arguments.add(inventory);
+ 		arguments.add(cleanup);
+ 
+ 		getArgument().addAllSubArguments(arguments);
+ 	}
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java b/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java
+index ab290c26..7f756e84 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/config/FileConfig.java
+@@ -17,12 +17,10 @@ import org.luckyraven.gangland.gang.bounty.BountySettings;
+ import org.luckyraven.gangland.gang.wanted.WantedSettings;
+ import org.luckyraven.gangland.inventory.condition.BooleanExpressionEvaluator;
+ import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
+ import org.luckyraven.gangland.item.money.MoneyAddon;
+ import org.luckyraven.keystone.persistence.FileManager;
+-import org.luckyraven.gangland.scoreboard.ScoreboardManager;
+-import org.luckyraven.gangland.scoreboard.configuration.ScoreboardAddon;
+ import org.luckyraven.gangland.sign.GanglandSignInformation;
+ import org.luckyraven.gangland.sign.service.SignInformation;
+ import org.luckyraven.gangland.util.TimeMessages;
+ 
+ /**
+@@ -30,13 +28,12 @@ import org.luckyraven.gangland.util.TimeMessages;
+  * recovery loop is fired between each bean by {@code GanglandContext}'s FILE-phase hook so each file is fully loaded by
+  * the time the next bean's method body runs (downstream addons typically read static fields off {@link Settings} at
+  * construction time).
+  *
+  * <p>Intra-phase ordering is enforced by declaring upstream beans as parameters even when the produced bean's
+- * constructor doesn't need them. For example, {@link #scoreboardAddon(FileManager, Settings)} doesn't actually use
+- * {@code Settings} in the call to {@code new ScoreboardAddon(fileManager)} — but listing it as a parameter forces the
+- * topological sort to put {@code Settings} first, which is the load order the legacy {@code addonsLoader()} relied on.
++ * constructor doesn't need them — listing {@link Settings} as a parameter on a downstream bean forces the
++ * topological sort to put it first, which is the load order the legacy {@code addonsLoader()} relied on.
+  *
+  * <p>Pure data beans (settings extension classes such as {@link GanglandCopSettings}) live here too because they
+  * have no dependencies on the database / managers and naturally fit the FILE phase.
+  */
+ @CustomLog
+@@ -110,23 +107,10 @@ public class FileConfig {
+ 
+ 	// ---------------------------------------------------------------------------------------------------------------
+ 	// FileInitializer beans
+ 	// ---------------------------------------------------------------------------------------------------------------
+ 
+-	@Bean
+-	public ScoreboardAddon scoreboardAddon(FileManager fileManager, Settings settings) {
+-		ScoreboardAddon addon = new ScoreboardAddon(fileManager);
+-		fileManager.registerInitializer(addon);
+-		return addon;
+-	}
+-
+-	@Bean
+-	public ScoreboardManager scoreboardManager(PlaceholderService placeholderService,
+-	                                           ScoreboardAddon scoreboardAddon) {
+-		return new ScoreboardManager(gangland, placeholderService, scoreboardAddon);
+-	}
+-
+ 	@Bean
+ 	public FuelService fuelService(Settings settings) {
+ 		return new FuelService();
+ 	}
+ 
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/config/KernelConfig.java b/gangland-impl/src/main/java/org/luckyraven/gangland/config/KernelConfig.java
+index 1af84088..9d8069cd 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/config/KernelConfig.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/config/KernelConfig.java
+@@ -154,11 +154,10 @@ public class KernelConfig {
+ 	 */
+ 	@Bean
+ 	public FileManager fileManager() {
+ 		FileManager fm = new FileManager(gangland);
+ 		fm.addFile(new FileHandler(gangland, "settings", ".yml"), true);
+-		fm.addFile(new FileHandler(gangland, "scoreboard", ".yml"), true);
+ 
+ 		fm.addFile(new FileHandler(gangland, "unique_items", "items", ".yml"), true);
+ 		fm.addFile(new FileHandler(gangland, "money", "items", ".yml"), true);
+ 
+ 		fm.addFile(new FileHandler(gangland, "loot_chests", "lootchests", ".yml"), true);
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/config/SchedulingConfig.java b/gangland-impl/src/main/java/org/luckyraven/gangland/config/SchedulingConfig.java
+index d1698759..d71c24dd 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/config/SchedulingConfig.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/config/SchedulingConfig.java
+@@ -3,11 +3,10 @@ package org.luckyraven.gangland.config;
+ import org.bukkit.OfflinePlayer;
+ import org.bukkit.entity.Player;
+ import org.luckyraven.gangland.Gangland;
+ import org.luckyraven.gangland.bootstrap.PeriodicalUpdates;
+ import org.luckyraven.gangland.bootstrap.PlayerBootstrapService;
+-import org.luckyraven.gangland.bootstrap.ScoreboardLifecycleService;
+ import org.luckyraven.keystone.bean.Bean;
+ import org.luckyraven.keystone.bean.BeanLifecycle;
+ import org.luckyraven.keystone.bean.Configuration;
+ import org.luckyraven.keystone.bean.Qualifier;
+ import org.luckyraven.gangland.data.plugin.PluginManager;
+@@ -17,23 +16,20 @@ import org.luckyraven.gangland.file.configuration.Settings;
+ import org.luckyraven.gangland.gang.member.MemberManager;
+ import org.luckyraven.gangland.gang.user.UserManager;
+ import org.luckyraven.gangland.item.configuration.UniqueItemAddon;
+ import org.luckyraven.keystone.bean.autowire.DependencyContainer;
+ import org.luckyraven.keystone.persistence.FileManager;
+-import org.luckyraven.gangland.scoreboard.ScoreboardManager;
+ 
+ /**
+- * CONFIG-phase wiring for the four lifecycle service beans that automate plugin reload, player loading, scoreboard
+- * creation, and periodic auto-save. Every bean here implements {@link BeanLifecycle} and participates in the unified
++ * CONFIG-phase wiring for the lifecycle service beans that automate plugin reload, player loading, and periodic
++ * auto-save. Every bean here implements {@link BeanLifecycle} and participates in the unified
+  * {@code context.reloadBeans()} / {@code context.shutdownBeans()} pipelines.
+  *
+  * <p>Topological ordering between these beans is enforced by declaring upstream services as constructor parameters,
+  * even when the downstream bean doesn't invoke methods on them at runtime:
+  * <ul>
+  *     <li>{@link PlayerBootstrapService} depends on {@link FileManager} — files reload before players load</li>
+- *     <li>{@link ScoreboardLifecycleService} depends on {@link PlayerBootstrapService} — players load before scoreboards
+- *     are created</li>
+  * </ul>
+  */
+ @Configuration
+ public class SchedulingConfig {
+ 
+@@ -54,20 +50,10 @@ public class SchedulingConfig {
+ 	                                                     @SuppressWarnings("unused") FileManager fileManager) {
+ 		return new PlayerBootstrapService(gangland, ganglandDatabase, userManager, offlineUserManager, memberManager,
+ 		                                  userDataLoader, uniqueItemAddon);
+ 	}
+ 
+-	@Bean
+-	public ScoreboardLifecycleService scoreboardLifecycleService(ScoreboardManager scoreboardManager,
+-	                                                             @Qualifier("online") UserManager<Player> userManager,
+-	                                                             @SuppressWarnings("unused")
+-																 PlayerBootstrapService playerBootstrapService) {
+-		// PlayerBootstrapService needs to load before the ScoreboardLifecycleService since all the users need load
+-		// before attaching the scoreboard to them
+-		return new ScoreboardLifecycleService(gangland, scoreboardManager, userManager);
+-	}
+-
+ 	@Bean
+ 	public PeriodicalUpdates periodicalUpdates(GanglandDatabase ganglandDatabase,
+ 	                                           PluginManager pluginManager,
+ 	                                           @Qualifier("online") UserManager<Player> userManager,
+ 	                                           @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/RemoveAccountListener.java b/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/RemoveAccountListener.java
+index 53ec2c15..49672b56 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/RemoveAccountListener.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/RemoveAccountListener.java
+@@ -78,15 +78,10 @@ public final class RemoveAccountListener implements Listener {
+ 
+ 		Bank bank = user.getBank();
+ 
+ 		if (bank != null) bankRepository.save(bank);
+ 
+-		if (user.getScoreboard() != null) {
+-			user.getScoreboard().end();
+-			user.setScoreboard(null);
+-		}
+-
+ 		// add to offline user manager - copy in-memory data to avoid a redundant DB round-trip
+ 		User<OfflinePlayer> offlineUser = offlineUserManager.create(player);
+ 
+ 		offlineUser.setKills(user.getKills());
+ 		offlineUser.setDeaths(user.getDeaths());
+diff --git a/gangland-impl/src/main/resources/commands.json b/gangland-impl/src/main/resources/commands.json
+index 797c1110..2f0a45d1 100644
+--- a/gangland-impl/src/main/resources/commands.json
++++ b/gangland-impl/src/main/resources/commands.json
+@@ -41,14 +41,10 @@
+ 	},
+ 	"reload_database": {
+ 		"usage": "/glw reload data",
+ 		"description": "Reloads the data related to the database."
+ 	},
+-	"reload_scoreboard": {
+-		"usage": "/glw reload scoreboard",
+-		"description": "Reloads the scoreboard."
+-	},
+ 	"economy": {
+ 		"usage": "/glw economy",
+ 		"description": "Shows economy help page."
+ 	},
+ 	"economy_help": {
+diff --git a/gangland-impl/src/main/resources/settings.yml b/gangland-impl/src/main/resources/settings.yml
+index 7e901405..cb3e2078 100644
+--- a/gangland-impl/src/main/resources/settings.yml
++++ b/gangland-impl/src/main/resources/settings.yml
+@@ -36,11 +36,11 @@ Config_Version: '${project.version}'
+ Debug:
+    # Master toggle. When false the Modules list is ignored.
+    Enabled: false
+    # Module names to flip to DEBUG level. Exact match (including spaces). Valid values:
+    #   Gangland, Gangland Core, Cops N Crooks, Inventory API,
+-   #   Lootchest API, Scoreboard API, Sign API, Plugin Persistence
++   #   Lootchest API, Sign API, Plugin Persistence
+    # Leave the list empty to automatically flip every module discovered on the classpath.
+    Modules: []
+ 
+ # +---------------+ #
+ # | Update Config | #
+@@ -128,24 +128,10 @@ Database:
+       Debug: true
+    Clean_Up:
+       # Time to clean up the database from old data in days.
+       Time: 30
+ 
+-# +-------------------+ #
+-# | Scoreboard Config | #
+-# +-------------------+ #
+-Scoreboard:
+-   Enable: true
+-   # The plugin supports multiple drivers, and each driver has its own algorithm and way of updating scoreboards.
+-   # Drivers' list:
+-   #  1) Driver_V1: Caches the lines into memory and uses a clustering algorithm that updates similar line intervals
+-   #                each tick.
+-   #  2) Driver_V2: Caches the lines into memory similar to Driver_V1 algorithm. The difference is it uses a built-in
+-   #                library to manage the clusters.
+-   #  3) Driver_V3: Uses interactive scoreboard to temporarily disable the main one and use the alternative scoreboard.
+-   Driver: "Driver_V3"
+-
+ # +------------------+ #
+ # | Inventory Config | #
+ # +------------------+ #
+ Inventory:
+    # Inventory fill item and its name
+diff --git a/gangland-impl/src/test/java/org/luckyraven/gangland/command/data/InformationManagerTest.java b/gangland-impl/src/test/java/org/luckyraven/gangland/command/data/InformationManagerTest.java
+index fe4dc3d3..494e0d50 100644
+--- a/gangland-impl/src/test/java/org/luckyraven/gangland/command/data/InformationManagerTest.java
++++ b/gangland-impl/src/test/java/org/luckyraven/gangland/command/data/InformationManagerTest.java
+@@ -36,17 +36,18 @@ class InformationManagerTest {
+ 	void processCommands_populatesFromBundledJson() {
+ 		InformationManager manager = new InformationManager();
+ 
+ 		manager.processCommands();
+ 
+-		assertEquals(154, manager.getCommands().size(),
++		assertEquals(153, manager.getCommands().size(),
+ 				"pins the current entry count (225 minus the 43 cops/banker/trader/civilian/jail/cuff keys that "
+ 				+ "moved to the cops-n-crooks module's own commands.json in 0.8.4, minus the 5 car* keys that moved "
+ 				+ "to the gadget module's own commands.json in 0.8.4, minus the 16 turf entries that moved to the "
+ 				+ "turf module's own commands.json in 0.8.4, minus the 12 weapon/ammunition/item-wearable keys that "
+ 				+ "moved to the weapon module's own commands.json in 0.8.4, plus the 5 module* keys added with "
+-				+ "/glw module in 0.9.1); update this alongside any deliberate commands.json edit");
++				+ "/glw module in 0.9.1, minus the reload_scoreboard key removed in WS1 G3 (0.10.0, scoreboard moved "
++				+ "to the standalone Plaque plugin); update this alongside any deliberate commands.json edit");
+ 		assertTrue(manager.getCommands().containsKey("general"));
+ 		assertTrue(manager.getCommands().containsKey("general_page"));
+ 	}
+ 
+ 	@Test
+diff --git a/gangland-infra/gangland-domain/pom.xml b/gangland-infra/gangland-domain/pom.xml
+index 97fe0d88..76b03744 100644
+--- a/gangland-infra/gangland-domain/pom.xml
++++ b/gangland-infra/gangland-domain/pom.xml
+@@ -39,14 +39,10 @@
+         </dependency>
+         <dependency>
+             <groupId>org.luckyraven</groupId>
+             <artifactId>inventory-api</artifactId>
+         </dependency>
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>scoreboard-api</artifactId>
+-        </dependency>
+ 
+         <!-- XSeries -->
+         <dependency>
+             <groupId>com.github.cryptomorin</groupId>
+             <artifactId>XSeries</artifactId>
+diff --git a/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/User.java b/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/User.java
+index 3510f1d4..bbfd2825 100644
+--- a/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/User.java
++++ b/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/User.java
+@@ -21,11 +21,10 @@ import org.luckyraven.gangland.gang.rank.Permission;
+ import org.luckyraven.gangland.gang.rank.Rank;
+ import org.luckyraven.gangland.gang.wanted.Wanted;
+ import org.luckyraven.gangland.gang.wanted.WantedContext;
+ import org.luckyraven.gangland.inventory.InventoryHandler;
+ import org.luckyraven.gangland.inventory.service.InventoryRegistry;
+-import org.luckyraven.gangland.scoreboard.Scoreboard;
+ 
+ import java.math.BigDecimal;
+ import java.util.*;
+ 
+ /**
+@@ -48,11 +47,10 @@ public class User<T extends OfflinePlayer> implements BountyContext, WantedConte
+ 	private final InventoryRegistry     inventoryRegistry;
+ 
+ 	@Nullable
+ 	private Bank bank;
+ 	private int  kills, deaths, mobKills, gangId;
+-	private Scoreboard           scoreboard;
+ 	private PermissionAttachment permissionAttachment;
+ 
+ 	/**
+ 	 * Instantiates a new User. Prefer constructing through {@link UserFactory} so the {@link Placeholder} and
+ 	 * {@link InventoryRegistry} dependencies come from the bean container.
+diff --git a/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/UserManager.java b/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/UserManager.java
+index 346ffed8..c141cb6a 100644
+--- a/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/UserManager.java
++++ b/gangland-infra/gangland-domain/src/main/java/org/luckyraven/gangland/gang/user/UserManager.java
+@@ -167,15 +167,10 @@ public class UserManager<T extends OfflinePlayer> implements BeanLifecycle {
+ 	@Override
+ 	public void onPreClear() {
+ 		for (User<T> user : users.values()) {
+ 			user.getWanted().stopTimer();
+ 			user.getBounty().stopTimer();
+-
+-			if (user.getScoreboard() == null) continue;
+-
+-			user.getScoreboard().end();
+-			user.setScoreboard(null);
+ 		}
+ 	}
+ 
+ 	@Override
+ 	public void onClear() {
+diff --git a/gangland-ui/pom.xml b/gangland-ui/pom.xml
+index 1793e3ad..d9fb93ca 100644
+--- a/gangland-ui/pom.xml
++++ b/gangland-ui/pom.xml
+@@ -17,11 +17,10 @@
+     <name>Gangland UI</name>
+ 
+     <modules>
+         <module>hologram-api</module>
+         <module>inventory-api</module>
+-        <module>scoreboard-api</module>
+         <module>sign-api</module>
+         <module>lootchest-api</module>
+         <module>shop-api</module>
+     </modules>
+ 
+diff --git a/pom.xml b/pom.xml
+index b2475480..14481b23 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -70,11 +70,10 @@
+         <keystone.version>1.11.0</keystone.version>
+         <bartizan.version>0.4.0</bartizan.version>
+         <nbt.version>2.15.7</nbt.version>
+         <xseries.version>13.6.0</xseries.version>
+         <anvilgui.version>1.10.11-SNAPSHOT</anvilgui.version>
+-        <fastboard.version>2.1.5</fastboard.version>
+         <viaversion.version>5.8.1</viaversion.version>
+         <placeholderapi.version>2.12.2</placeholderapi.version>
+         <vault.version>1.7.1</vault.version>
+         <citizen.version>2.0.42-SNAPSHOT</citizen.version>
+ 
+@@ -246,15 +245,10 @@
+             <dependency>
+                 <groupId>org.luckyraven</groupId>
+                 <artifactId>inventory-api</artifactId>
+                 <version>${project.version}</version>
+             </dependency>
+-            <dependency>
+-                <groupId>org.luckyraven</groupId>
+-                <artifactId>scoreboard-api</artifactId>
+-                <version>${project.version}</version>
+-            </dependency>
+             <dependency>
+                 <groupId>org.luckyraven</groupId>
+                 <artifactId>sign-api</artifactId>
+                 <version>${project.version}</version>
+             </dependency>
+@@ -367,16 +361,10 @@
+             <dependency>
+                 <groupId>net.wesjd</groupId>
+                 <artifactId>anvilgui</artifactId>
+                 <version>${anvilgui.version}</version>
+             </dependency>
+-            <dependency>
+-                <groupId>fr.mrmicky</groupId>
+-                <artifactId>fastboard</artifactId>
+-                <version>${fastboard.version}</version>
+-                <scope>compile</scope>
+-            </dependency>
+             <dependency>
+                 <groupId>org.bstats</groupId>
+                 <artifactId>bstats-bukkit</artifactId>
+                 <version>${bstats.version}</version>
+                 <scope>compile</scope>
+--- deleted files ---
+ .../bootstrap/ScoreboardLifecycleService.java      |  58 ----------
+ .../listener/player/PlayerScoreboardListener.java  |  41 -------
+ .../gangland/scoreboard/ScoreboardManager.java     |  70 ------------
+ gangland-impl/src/main/resources/scoreboard.yml    | 108 ------------------
+ gangland-ui/scoreboard-api/pom.xml                 |  48 --------
+ .../luckyraven/gangland/scoreboard/Scoreboard.java |  48 --------
+ .../scoreboard/configuration/ScoreboardAddon.java  |  86 ---------------
+ .../gangland/scoreboard/driver/DriverHandler.java  | 121 --------------------
+ .../scoreboard/driver/version/DriverV1.java        |  97 ----------------
+ .../scoreboard/driver/version/DriverV2.java        |  80 --------------
+ .../scoreboard/driver/version/DriverV3.java        | 122 ---------------------
+ .../luckyraven/gangland/scoreboard/part/Line.java  | 107 ------------------
+ .../gangland/scoreboard/part/StaticLine.java       |  22 ----
+ .../gangland/scoreboard/module.properties          |   1 -
+ .../gangland/scoreboard/ScoreboardTest.java        |  60 ----------
+ .../gangland/scoreboard/part/LineTest.java         |  97 ----------------
+ 16 files changed, 1166 deletions(-)

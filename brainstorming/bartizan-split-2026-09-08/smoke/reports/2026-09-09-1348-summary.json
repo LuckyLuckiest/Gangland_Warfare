@@ -1,0 +1,74 @@
+[
+  {
+    "id": "D6",
+    "title": "All six modules, Bartizan REMOVED -- civilians/copsncrooks/gadget skipped (module.plugin.missing); PENDING USER DECISION (see _comment / gangland-0.9.0.md D6 note) may also skip turf",
+    "verdict": "FAIL",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "mail",
+      "npcshops"
+    ],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1348-D6.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1348-D6.log"
+  },
+  {
+    "id": "D7",
+    "title": "All six modules, Citizens REMOVED -- npc.citizens.missing once each from civilians/copsncrooks/turf/npcshops",
+    "verdict": "FAIL",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "civilians",
+      "gadget",
+      "mail",
+      "npcshops",
+      "turf",
+      "copsncrooks"
+    ],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1348-D7.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1348-D7.log"
+  },
+  {
+    "id": "D8",
+    "title": "All six modules + glw reload after boot",
+    "verdict": "PASS",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "civilians",
+      "gadget",
+      "mail",
+      "npcshops",
+      "turf",
+      "copsncrooks"
+    ],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1348-D8.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1348-D8.log"
+  },
+  {
+    "id": "D9",
+    "title": "All six modules + a Host_Api=0.8 copy of mail -- expect module.host.incompatible, the other six load",
+    "verdict": "PASS",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "civilians",
+      "gadget",
+      "mail",
+      "npcshops",
+      "turf",
+      "copsncrooks"
+    ],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1348-D9.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-09-1348-D9.log"
+  }
+]

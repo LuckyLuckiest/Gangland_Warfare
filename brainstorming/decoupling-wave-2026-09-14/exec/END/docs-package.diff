@@ -1,0 +1,965 @@
+diff --git a/documentation/developer/README.md b/documentation/developer/README.md
+index 12da0548..ed05dd79 100644
+--- a/documentation/developer/README.md
++++ b/documentation/developer/README.md
+@@ -109,7 +109,7 @@ gangland_warfare/
+ | Observer/Event          | Bukkit events + 30+ custom events                           |
+ | Registry                | RepositoryRegistry, ItemConverterRegistry, SignTypeRegistry |
+ | Adapter                 | NMS version compatibility modules                           |
+-| Factory                 | MultiInventoryCreation, SlotItemFactory                     |
++| Factory                 | SlotItemFactory (`MultiInventoryCreation` deleted, WS2 0.10.0 — see `documentation/developer/ui-framework.md`) |
+ | Command                 | Argument tree command dispatch                              |
+ 
+ ---
+diff --git a/documentation/developer/architecture.md b/documentation/developer/architecture.md
+index 711471b0..b7e66d74 100644
+--- a/documentation/developer/architecture.md
++++ b/documentation/developer/architecture.md
+@@ -199,10 +199,10 @@ Cop spawns   → CopService.spawnCopsFor(player) → create NPC → start AI loo
+ 
+ | Suffix      | Role                        | Examples                                  |
+ |-------------|-----------------------------|-------------------------------------------|
+-| `*Manager`  | Cache + persistence         | UserManager, GangManager, WeaponManager   |
++| `*Manager`  | Cache + persistence         | UserManager, WaypointManager (`GangManager` moved to the `gangland-gang` module, WS5 0.10.0; `WeaponManager` deleted, 0.9.0) |
+ | `*Service`  | Business logic              | CopService, DetainmentService, CarService |
+ | `*Registry` | Type/instance lookup        | RepositoryRegistry, SignTypeRegistry      |
+-| `*Handler`  | Event/request processing    | InventoryHandler, DatabaseHandler         |
++| `*Handler`  | Event/request processing    | DatabaseHandler, FileHandler              |
+ | `*Executor` | Scheduled/triggered actions | WantedExecutor, BountyExecutor            |
+ 
+ ---
+diff --git a/documentation/developer/modules.md b/documentation/developer/modules.md
+index 8a59bea4..7b76ff8c 100644
+--- a/documentation/developer/modules.md
++++ b/documentation/developer/modules.md
+@@ -67,26 +67,40 @@ The command system dispatches all player commands through a single `/glw` root c
+ | `data/CommandInformation.java`         | Metadata DTO for a command (name, description, usage, permission).                               |
+ | `data/InformationManager.java`         | Loads command metadata from `commands.json` resource file.                                       |
+ 
+-**Sub-Command Groups (16 groups + 8 standalone):**
+-
+-| Group            | Commands                                                                                                                                                                                                                                                                                                                                      | Description                                                         |
+-|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+-| `sub/bank/`      | `BankCommand`, `BankBalanceCommand`, `BankCreateCommand`, `BankDeleteCommand`, `BankDepositCommand`, `BankWithdrawCommand`                                                                                                                                                                                                                    | Player bank account management.                                     |
+-| `sub/bounty/`    | `BountyCommand`, `BountyClearCommand`, `BountySetCommand`                                                                                                                                                                                                                                                                                     | Bounty placement and clearing on players.                           |
+-| `sub/car/`       | `CarCommand`, `CarGiveCommand`, `CarInfoCommand`, `CarListCommand`                                                                                                                                                                                                                                                                            | Vehicle spawning and management.                                    |
+-| `sub/civilians/` | `CivilianCommand`, `CivilianGroupsCommand`, `CivilianListCommand`, `CivilianSpawnCommand`, `CivilianSpawnerCommand`, `CivilianSpawnerInfoCommand`, `CivilianSpawnerListCommand`, `CivilianSpawnerRemoveCommand`, `CivilianSpawnerSetCommand`, `CivilianSpawnerSetGroupCommand`, `CivilianSpawnerTeleportCommand`, `CivilianSpawnGroupCommand` | Civilian NPC spawner administration.                                |
+-| `sub/cops/`      | `CopCommand`, `CopListCommand`, `CopSpawnerCommand`, `CopSpawnerInfoCommand`, `CopSpawnerListCommand`, `CopSpawnerRemoveCommand`, `CopSpawnerSetCommand`, `CopSpawnerTeleportCommand`                                                                                                                                                         | Cop NPC spawner administration.                                     |
+-| `sub/cuff/`      | `CuffCommand`, `UncuffCommand`                                                                                                                                                                                                                                                                                                                | Handcuff/uncuff players as a cop.                                   |
+-| `sub/debug/`     | Debug commands                                                                                                                                                                                                                                                                                                                                | Developer diagnostics and testing utilities.                        |
+-| `sub/fuel/`      | Fuel commands                                                                                                                                                                                                                                                                                                                                 | Fuel management for vehicles and jetpacks.                          |
+-| `sub/gang/`      | Gang commands                                                                                                                                                                                                                                                                                                                                 | Gang creation, invitation, kicking, promotion, alliance management. |
+-| `sub/item/`      | Item commands                                                                                                                                                                                                                                                                                                                                 | Custom item giving and manipulation.                                |
+-| `sub/jail/`      | Jail commands                                                                                                                                                                                                                                                                                                                                 | Jail location setup and prisoner management.                        |
+-| `sub/lootchest/` | Loot chest commands                                                                                                                                                                                                                                                                                                                           | Loot chest placement and configuration.                             |
+-| `sub/rank/`      | Rank commands                                                                                                                                                                                                                                                                                                                                 | Rank creation, permission assignment, hierarchy management.         |
+-| `sub/wanted/`    | Wanted commands                                                                                                                                                                                                                                                                                                                               | Wanted level manipulation for players.                              |
+-| `sub/waypoint/`  | Waypoint commands                                                                                                                                                                                                                                                                                                                             | Teleportation waypoint creation and management.                     |
+-| `sub/weapon/`    | Weapon commands                                                                                                                                                                                                                                                                                                                               | Weapon giving and configuration.                                    |
++**Sub-Command Groups still in `gangland-impl`:**
++
++Several groups that used to live here moved into runtime modules as those features were split out (see the
++"Moved to a runtime module" table below) or, for weapons, left the repo entirely in 0.9.0. What remains under
++`gangland-impl`'s `command/sub/` (car/civilians/cops/cuff/jail/lootchest/gang/rank/weapon removed from this table
++— see below):
++
++| Group            | Commands                                                                                                                    | Description                                                         |
++|------------------|-------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
++| `sub/bank/`      | `BankCommand`, `BankBalanceCommand`, `BankCreateCommand`, `BankDeleteCommand`, `BankDepositCommand`, `BankWithdrawCommand`    | Player bank account management.                                     |
++| `sub/bounty/`    | `BountyCommand`, `BountyClearCommand`, `BountySetCommand`                                                                     | Bounty placement and clearing on players.                           |
++| `sub/debug/`     | Debug commands                                                                                                                | Developer diagnostics and testing utilities.                        |
++| `sub/fuel/`      | `FuelCommand`, `FuelAddCommand`, `FuelDefuelCommand`, `FuelInfoCommand`, `FuelRefuelCommand`, `FuelRemoveCommand`             | Fuel management for vehicles and jetpacks (still core-owned — not moved). |
++| `sub/item/`      | Item commands                                                                                                                 | Custom item giving and manipulation.                                |
++| `sub/wanted/`    | Wanted commands                                                                                                               | Wanted level manipulation for players.                              |
++| `sub/waypoint/`  | Waypoint commands                                                                                                              | Teleportation waypoint creation and management.                     |
++
++**Command groups moved to a runtime module** (still reachable under `/glw`, wired via each module's
++`CommandContribution` bean + its own `commands.json` — see "Module API contract" in the root `CLAUDE.md`):
++
++| Group (was `gangland-impl/command/sub/...`) | Owning module           | Package now                                              | Description                            |
++|----------------------------------------------|--------------------------|-----------------------------------------------------------|-----------------------------------------|
++| `sub/car/`                                    | `gangland-gadget`        | `org.luckyraven.gangland.gadget.command`                  | Vehicle spawning and management.        |
++| `sub/civilians/`                              | `gangland-civilians`     | `org.luckyraven.gangland.civilians.command`(`.spawner`)   | Civilian NPC spawner administration.    |
++| `sub/cops/`                                   | `cops-n-crooks`          | `org.luckyraven.gangland.copsncrooks.command.cops`(`.spawner`) | Cop NPC spawner administration.    |
++| `sub/cuff/`                                   | `cops-n-crooks`          | `org.luckyraven.gangland.copsncrooks.command.cuff`         | Handcuff/uncuff players as a cop.       |
++| `sub/jail/`                                   | `cops-n-crooks`          | `org.luckyraven.gangland.copsncrooks.command.jail`         | Jail location setup and prisoner management. |
++| `sub/lootchest/`                              | `gangland-lootchest`     | `org.luckyraven.gangland.lootchest.command`                | Loot chest placement and configuration. |
++| `sub/gang/`                                   | `gangland-gang` (WS5, 0.10.0) | `org.luckyraven.gangland.command.sub.gang`            | Gang creation, invitation, kicking, promotion, alliance management. |
++| `sub/rank/`                                   | `gangland-gang` (WS5, 0.10.0) | `org.luckyraven.gangland.command.sub.rank`            | Rank creation, permission assignment, hierarchy management. |
++
++**`sub/weapon/` — deleted, not moved.** Weapons left the Gangland repo entirely in 0.9.0 to the standalone sibling
++plugin Bartizan; there is no `/glw weapon` command in this repo any more (see the Keystone/Bartizan section of the
++root `CLAUDE.md`).
+ 
+ **Standalone Commands:**
+ 
+@@ -130,38 +144,42 @@ Concrete database connection and all repository/table implementations.
+ | `GanglandDatabase.java`         | Wraps HikariCP. Supports MySQL and SQLite, selected via `Settings`. Manages connection pooling and table creation. |
+ | `GanglandDatabaseSettings.java` | Implements `DatabaseSettingsProvider` contract from `plugin-persistence`, pulling values from `Settings`.          |
+ 
+-**Repositories (`database/repositories/`):**
++**Repositories (`database/repositories/`) still in `gangland-impl`:**
+ 
+ All repositories implement `AbstractRepository<T>` from `plugin-persistence` and are annotated with `@Repository` for
+-auto-discovery.
+-
+-| Subpackage     | Repository                                                                                    | Entity Type                                      |
+-|----------------|-----------------------------------------------------------------------------------------------|--------------------------------------------------|
+-| `car/`         | `ParkedCarRepository`                                                                         | `ParkedCar`                                      |
+-| `copsncrooks/` | `CivilianSpawnerRepository`, `CopSpawnerRepository`, `DetainmentRepository`, `JailRepository` | Spawner points, detained players, jail locations |
+-| `gang/`        | `GangRepository`, `GangAllianceRepository`                                                    | `Gang`, `GangAlliance`                           |
+-| `lootchest/`   | `LootChestRepository`                                                                         | `LootChestData`                                  |
+-| `player/`      | `UserRepository`, `MemberRepository`, `BankRepository`                                        | `User`, `Member`, `Bank`                         |
+-| `plugin/`      | `PluginDataRepository`, `PermissionRepository`                                                | `PluginData`, `Permission`                       |
+-| `rank/`        | `RankRepository`, `RankParentRepository`, `RankPermissionRepository`                          | `Rank`, `RankParent`, `RankPermission`           |
+-| `waypoint/`    | `WaypointRepository`                                                                          | `Waypoint`                                       |
+-| `weapon/`      | `WeaponRepository`                                                                            | `Weapon`                                         |
+-
+-**Tables (`database/tables/`):**
+-
+-Each table class extends `Table<T>` and defines the SQL schema, search criteria, and column mappings.
+-
+-| Subpackage     | Tables                                                                    |
+-|----------------|---------------------------------------------------------------------------|
+-| `car/`         | `ParkedCarTable`                                                          |
+-| `copsncrooks/` | `CivilianSpawnerTable`, `CopSpawnerTable`, `DetainmentTable`, `JailTable` |
+-| `gang/`        | `GangTable`, `GangAllianceTable`                                          |
+-| `lootchest/`   | `LootChestTable`                                                          |
+-| `player/`      | `UserTable`, `MemberTable`, `BankTable`                                   |
+-| `plugin/`      | `PluginDataTable`, `PermissionTable`                                      |
+-| `rank/`        | `RankTable`, `RankParentTable`, `RankPermissionTable`                     |
+-| `waypoint/`    | `WaypointTable`                                                           |
+-| `weapon/`      | `WeaponTable`                                                             |
++auto-discovery. `car/`, `copsncrooks/`, `gang/`, `lootchest/`, `rank/` and `weapon/` are gone from this package —
++see the table below.
++
++| Subpackage     | Repository                                       | Entity Type                |
++|----------------|---------------------------------------------------|------------------------------|
++| `player/`      | `UserRepository`, `BankRepository`                | `User`, `Bank`              |
++| `plugin/`      | `PluginDataRepository`, `PermissionRepository`    | `PluginData`, `Permission`  |
++| `waypoint/`    | `WaypointRepository`                              | `Waypoint`                  |
++
++**Repositories moved to a runtime module, or deleted:**
++
++| Was `database/repositories/...`                                            | Now                                                                                                  |
++|-------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------|
++| `car/ParkedCarRepository`                                                    | `gangland-gadget`, `org.luckyraven.gangland.gadget.database.ParkedCarRepository`                        |
++| `copsncrooks/CivilianSpawnerRepository`                                     | `gangland-civilians`, `org.luckyraven.gangland.civilians.database.CivilianSpawnerRepository`            |
++| `copsncrooks/{CopSpawnerRepository, DetainmentRepository, JailRepository}` | `cops-n-crooks`, `org.luckyraven.gangland.copsncrooks.database.*`                                       |
++| `gang/{GangRepository, GangAllianceRepository}`, `player/MemberRepository` | `gangland-gang` (WS5, 0.10.0), `org.luckyraven.gangland.gang.database.repositories.{gang,member}.*`     |
++| `lootchest/LootChestRepository`                                              | `gangland-lootchest`, `org.luckyraven.gangland.lootchest.database.LootChestRepository`                  |
++| `rank/{RankRepository, RankParentRepository, RankPermissionRepository}`    | `gangland-gang` (WS5, 0.10.0), `org.luckyraven.gangland.gang.database.repositories.rank.*`              |
++| `weapon/WeaponRepository`                                                    | deleted — weapon persistence left the repo entirely in 0.9.0 with Bartizan                              |
++
++**Tables (`database/tables/`) still in `gangland-impl`:**
++
++Each table class extends `Table<T>` and defines the SQL schema, search criteria, and column mappings. The same
++`car/`, `copsncrooks/`, `gang/`, `lootchest/`, `rank/`, `weapon/` subpackages moved or were deleted alongside their
++repositories above.
++
++| Subpackage     | Tables                              |
++|----------------|----------------------------------------|
++| `fk/`          | `ForeignGangTable`                     |
++| `player/`      | `UserTable`, `BankTable`               |
++| `plugin/`      | `PluginDataTable`, `PermissionTable`   |
++| `waypoint/`    | `WaypointTable`                        |
+ 
+ ### Package: `listener/`
+ 
+@@ -170,20 +188,27 @@ Event listeners registered via `ListenerManager` and the DI container.
+ | Subpackage   | Listeners                                                                                                                                                                                                                                       | Description                                                                                                                                                             |
+ |--------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+ | `listener/`  | `ListenerManager.java`                                                                                                                                                                                                                          | Scans packages for `@ListenerHandler`-annotated classes and registers them via `DependencyContainer`.                                                                   |
+-| `gang/`      | `GangMembersDamage.java`                                                                                                                                                                                                                        | Prevents friendly fire between gang members and allies.                                                                                                                 |
+ | `inventory/` | `InventoryOpenByCommand.java`, `LoadUniqueItem.java`, `UniqueItemInteract.java`, `UniqueItemInventoryRestrict.java`                                                                                                                             | Handles unique item loading on join/respawn, interaction events, and inventory restrictions.                                                                            |
+-| `loot/`      | `LootChestEarnGoods.java`, `LootChestWandHandler.java`                                                                                                                                                                                          | Loot chest interaction rewards and admin wand tool.                                                                                                                     |
+-| `npc/`       | `CivilianDeathRewardListener.java`                                                                                                                                                                                                              | Grants XP/money rewards when civilians are killed.                                                                                                                      |
+ | `player/`    | `CreateAccount.java`, `RemoveAccount.java`, `CustomPlayerDeath.java`, `PlayerDeath.java`, `EntityDamage.java`, `BountyIncrease.java`, `LevelUp.java`, `LoadResourcePack.java`, `WantedChange.java`, `WantedLevel.java` | Core player lifecycle: account creation/removal on join/quit, death handling, damage processing, bounty/wanted/level events, resource pack loading. |
+ 
++`gang/`, `loot/` and `npc/` are gone from this package (moved to a module, renamed in the
++process, not just relocated):
++
++| Was `listener/...`                     | Now                                                                                                  |
++|-------------------------------------------|-----------------------------------------------------------------------------------------------------|
++| `gang/GangMembersDamage.java`          | `gangland-gang`, `org.luckyraven.gangland.listener.gang.GangMembersDamageListener`                  |
++| `loot/LootChestEarnGoods.java`         | `gangland-lootchest`, `org.luckyraven.gangland.lootchest.listener.LootChestEarnGoodsListener`       |
++| `loot/LootChestWandHandler.java`       | `gangland-lootchest`, `org.luckyraven.gangland.lootchest.listener.LootChestWandListener`            |
++| `npc/CivilianDeathRewardListener.java` | `gangland-civilians`, `org.luckyraven.gangland.civilians.listener.npc.CivilianDeathRewardListener`  |
++
+ ### Package: `events/`
+ 
+-Custom Bukkit events fired by the plugin for inter-system communication.
++Custom Bukkit events fired by the plugin for inter-system communication. `gang/GangBountyEvent.java` and
++`gang/GangLevelUpEvent.java` moved to the `gangland-gang` module (WS5, 0.10.0) —
++`org.luckyraven.gangland.events.gang.*` there, package name unchanged, jar changed.
+ 
+ | Event                              | Description                                                   |
+ |------------------------------------|---------------------------------------------------------------|
+-| `gang/GangBountyEvent.java`        | Fired when a gang collectively earns bounty.                  |
+-| `gang/GangLevelUpEvent.java`       | Fired when a gang levels up.                                  |
+ | `level/LevelUpEvent.java`          | Base level-up event.                                          |
+ | `teleportation/TeleportEvent.java` | Fired when a player uses a waypoint.                          |
+ | `user/UserBountyEvent.java`        | Fired when a player's bounty changes.                         |
+@@ -210,105 +235,124 @@ Configuration loading and contract implementations.
+ | `configuration/Settings.java`                                        | Static accessor for `settings.yml` values (database type, auto-save interval, economy, etc.).   |
+ | `configuration/Messages.java`                                        | Static accessor for localized message strings.                                                  |
+ | `configuration/GadgetPhysicsConfigImpl.java`                         | Implements `GadgetPhysicsConfig` for the gadget module.                                         |
+-| `configuration/copsncrooks/GanglandBountySettings.java`              | Implements `BountySettings` contract.                                                           |
+-| `configuration/copsncrooks/GanglandCivilianSettings.java`            | Implements `CivilianSettings` contract.                                                         |
+-| `configuration/copsncrooks/GanglandCivilianSpawnConfigProvider.java` | Implements `SpawnConfigProvider` for civilian spawners.                                         |
+-| `configuration/copsncrooks/GanglandCopSettings.java`                 | Implements `CopSettings` contract.                                                              |
+-| `configuration/copsncrooks/GanglandWantedSettings.java`              | Implements `WantedSettings` contract.                                                           |
++| `configuration/wanted/GanglandBountySettings.java`                   | Implements `BountySettings` contract. (Moved from `configuration/copsncrooks/` to `configuration/wanted/` — bounty/wanted stayed core-owned.) |
++| `configuration/wanted/GanglandWantedSettings.java`                   | Implements `WantedSettings` contract. (Same move as above.)                                     |
+ | `configuration/inventory/ConditionalSlotParser.java`                 | Parses conditional slot definitions from inventory YAML.                                        |
+ | `configuration/inventory/InventoryDefinitionStore.java`              | Pure-data half of the former `InventoryAddon`: holds inventory and unique-item lookup maps.     |
+ | `configuration/inventory/InventoryRuntimeContext.java`               | Runtime half of the former `InventoryAddon`: service refs, registration + open-inventory logic. |
+ | `configuration/inventory/InventoryLoader.java`                       | Loads inventory layout definitions from YAML files.                                             |
+-| `configuration/inventory/InventoryParser.java`                       | Parses inventory YAML into `InventoryHandler` instances.                                        |
+-| `configuration/inventory/itemsource/GangItemSourceProvider.java`     | Provides gang-specific items for paginated inventory GUIs.                                      |
+-| `configuration/lootchest/GanglandLootChestMessages.java`             | Implements `LootChestMessagesProvider` contract.                                                |
+-| `configuration/lootchest/LootChestSettings.java`                     | Implements `LootChestSettingsProvider` contract.                                                |
+-| `configuration/weapon/WeaponLoader.java`                             | Loads weapon definitions from per-weapon YAML files in `weapon/`.                               |
++| `configuration/inventory/InventoryParser.java`                       | Parses inventory YAML into a Keystone `ChestMenu` (via `InventoryBuilder`/`ChestMenuBuilder`, not the deleted `InventoryHandler` — see `documentation/developer/ui-framework.md`). |
++
++**Moved to a runtime module, or deleted:**
++
++| Was `file/configuration/...`                                            | Now                                                                                                    |
++|------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------|
++| `copsncrooks/GanglandCivilianSettings.java`, `copsncrooks/GanglandCivilianSpawnConfigProvider.java` | `gangland-civilians`, `org.luckyraven.gangland.civilians.integration.*`         |
++| `copsncrooks/GanglandCopSettings.java`                                       | `cops-n-crooks`, `org.luckyraven.gangland.copsncrooks.integration.config.GanglandCopSettings`          |
++| `inventory/itemsource/GangItemSourceProvider.java`                          | `gangland-gang` (WS5, 0.10.0), renamed to `org.luckyraven.gangland.gang.menu.GangMenuItemSourceContribution` |
++| `lootchest/GanglandLootChestMessages.java`, `lootchest/LootChestSettings.java` | `gangland-lootchest` (WS3 G2, 0.10.0), `org.luckyraven.gangland.lootchest.config.*`                  |
++| `weapon/WeaponLoader.java`                                                   | deleted — weapon config loading left the repo entirely in 0.9.0 with Bartizan                          |
+ 
+ ### Package: `item/`
+ 
+-Item conversion and parsing implementations.
++Item conversion and parsing implementations. `converter/CarConverter.java` and `converter/WeaponConverter.java`
++named car/weapon domains directly - car moved, weapon was deleted:
+ 
+ | Class                                | Description                                                          |
+-|--------------------------------------|----------------------------------------------------------------------|
++|----------------------------------------|--------------------------------------------------------------------|
+ | `ItemAttributes.java`                | Constants for custom item NBT attribute keys.                        |
+ | `ItemConverterRegistry.java`         | Holds all `ItemConverter` implementations keyed by type string.      |
+-| `ItemParser.java`                    | Parses item strings (e.g. `weapon:awp{attr=val}`) via the registry.  |
++| `ItemParser.java`                    | Parses item strings (e.g. `MATERIAL_NAME{attr=val}`) via the registry. |
+ | `configuration/UniqueItemAddon.java` | Loads unique item definitions from `unique_items.yml`.               |
+ | `converter/AmmunitionConverter.java` | Converts `"ammo:ak47"` format strings to ammunition `ItemStack`.     |
+-| `converter/CarConverter.java`        | Converts `"car:sports_car"` format strings to car spawn items.       |
+ | `converter/MaterialConverter.java`   | Converts standard `"MATERIAL_NAME"` strings to vanilla `ItemStack`.  |
+-| `converter/WeaponConverter.java`     | Converts `"weapon:rifle"` format strings to weapon `ItemStack`.      |
+ | `converter/WearableConverter.java`   | Converts `"wearable:kevlar"` format strings to wearable `ItemStack`. |
+ 
++> **Note:** this whole `item/` listing predates the 0.9.0 `keystone-item` promotion and is independently stale -
++> `ItemConverterRegistry.java`/`ItemParser.java` no longer exist under this package (the generic item framework
++> moved into Keystone's `keystone-item`); out of scope for this pass, which only touches the car/weapon rows.
++> `converter/CarConverter.java` moved to `gangland-gadget`
++> (`org.luckyraven.gangland.gadget.item.CarConverter`); `converter/WeaponConverter.java` was deleted - weapon
++> items left the repo entirely in 0.9.0 with Bartizan.
++
+ ### Package: `sign/`
+ 
+-Concrete sign type implementations for the sign-api framework.
+-
+-| Subpackage             | Key Classes                                                                                                                        | Description                                                                                                     |
+-|------------------------|------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
+-| Root                   | `SignManager.java`, `GanglandSignInformation.java`                                                                                 | Registers all sign types and provides sign metadata.                                                            |
+-| `aspect/`              | `BountyAspect`, `MoneyAspect`, `ItemTransferAspect`, `ViewInventoryAspect`, `WantedAspect`                                         | Composable sign behaviors: bounty check, money transfer, item trading, inventory viewing, wanted level display. |
+-| `model/`               | `BountyParsedSign`, `ViewParsedSign`, `WantedParsedSign`, `WeaponParsedSign`                                                       | Parsed sign data models extending `BaseParsedSign`.                                                             |
+-| `parser/`              | `BountyParser`, `TradeSignParser`, `ViewSignParser`, `WantedParser`                                                                | Sign text parsers extending `AbstractSignParser`.                                                               |
+-| `type/`                | `Sign`, `BountySign`, `ViewSign`, `WantedSign`                                                                                     | Core sign type implementations.                                                                                 |
+-| `type/trade/`          | `BaseTradeSign`, `BuySign`, `SellSign`                                                                                             | Base buy/sell sign logic.                                                                                       |
+-| `type/trade/ammo/`     | `AmmoBuySign`, `AmmoSellSign`                                                                                                      | Ammunition trading signs.                                                                                       |
+-| `type/trade/car/`      | `CarBuySign`, `CarSellSign`                                                                                                        | Vehicle trading signs.                                                                                          |
+-| `type/trade/weapon/`   | `WeaponBuySign`, `WeaponSellSign`                                                                                                  | Weapon trading signs.                                                                                           |
+-| `type/trade/wearable/` | `WearableBuySign`, `WearableSellSign`                                                                                              | Wearable armor trading signs.                                                                                   |
+-| `validation/`          | `BountySignValidator`, `ViewSignValidator`, `WantedSignValidator`                                                                  | Input validation for sign creation.                                                                             |
+-| `validation/trade/`    | `TradeSignValidator`, `ItemSignValidator`, `AmmoSignValidator`, `CarSignValidator`, `WeaponSignValidator`, `WearableSignValidator` | Trade sign input validation.                                                                                    |
+-
+-### Package: `lootchest/`
+-
+-| Class                           | Description                                                                             |
+-|---------------------------------|-----------------------------------------------------------------------------------------|
+-| `LootChestManager.java`         | Extends `LootChestService`, wiring gangland-specific item providers and configuration.  |
+-| `GanglandLootItemProvider.java` | Implements `LootItemProvider` to resolve weapons, ammo, and wearables from loot tables. |
+-| `LootChestWand.java`            | Admin tool for placing and configuring loot chests.                                     |
+-| `LootChestWandTag.java`         | NBT tag constants for the loot chest wand item.                                         |
+-
+-### Package: `weapon/`
+-
+-| Class                | Description                                                                                      |
+-|----------------------|--------------------------------------------------------------------------------------------------|
+-| `WeaponManager.java` | Loads weapon configurations from YAML, manages the weapon registry, and provides lookup by name. |
++Concrete sign type implementations for the sign-api framework. The whole ammo/car/weapon/wearable trade-sign
++family (all four `type/trade/*` subpackages below) left this package with the Bartizan split (0.9.0) except car,
++which moved on to `gangland-gadget` rather than being deleted:
++
++| Subpackage             | Key Classes                                                                         | Description                                                                                                      |
++|--------------------------|----------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------|
++| Root                   | `SignManager.java`, `GanglandSignInformation.java`                                 | Registers all sign types and provides sign metadata.                                                            |
++| `aspect/`              | `BountyAspect`, `ViewInventoryAspect`, `WantedAspect`                              | Composable sign behaviors: bounty check, item trading, inventory viewing, wanted level display.                 |
++| `model/`               | `BountyParsedSign`, `ViewParsedSign`, `WantedParsedSign`                           | Parsed sign data models extending `BaseParsedSign`. (`WeaponParsedSign` deleted with the weapon module.)        |
++| `parser/`              | `BountyParser`, `ViewSignParser`, `WantedParser`                                   | Sign text parsers extending `AbstractSignParser`.                                                               |
++| `type/`                | `BountySign`, `ViewSign`, `WantedSign`                                             | Core sign type implementations.                                                                                 |
++| `type/trade/`          | `BuySign`, `SellSign`                                                              | Base buy/sell sign logic (the generic `item-buy`/`item-sell` signs route through this widened core pair).       |
++| `validation/`          | `BountySignValidator`, `ViewSignValidator`, `WantedSignValidator`                  | Input validation for sign creation.                                                                             |
++| `validation/trade/`    | `ItemSignValidator`                                                                | Trade sign input validation.                                                                                    |
++
++**Trade-sign subpackages moved to a runtime module, or deleted (all gone from `gangland-impl`):**
++
++| Was `sign/type/trade/...`                        | Now                                                                                          |
++|------------------------------------------------------|--------------------------------------------------------------------------------------------------|
++| `car/{CarBuySign, CarSellSign}`                      | `gangland-gadget`, `org.luckyraven.gangland.gadget.sign.*`                                       |
++| `ammo/{AmmoBuySign, AmmoSellSign}`                   | deleted - left the repo entirely in 0.9.0 with Bartizan                                          |
++| `weapon/{WeaponBuySign, WeaponSellSign}`             | deleted - left the repo entirely in 0.9.0 with Bartizan                                          |
++| `wearable/{WearableBuySign, WearableSellSign}`       | deleted - left the repo entirely in 0.9.0 with Bartizan                                          |
++| `validation/trade/{TradeSignValidator, AmmoSignValidator, WearableSignValidator}` | deleted alongside the ammo/wearable sign types above |
++| `validation/trade/CarSignValidator`                  | `gangland-gadget`, `org.luckyraven.gangland.gadget.sign.CarSignValidator`                        |
++| `validation/trade/WeaponSignValidator`               | deleted - left the repo entirely in 0.9.0 with Bartizan                                          |
++
++### `lootchest/` and `weapon/` packages - gone from `gangland-impl`
++
++Both packages moved out wholesale rather than row-by-row:
++
++| Was                                                          | Now                                                                                                      |
++|------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
++| `lootchest/{LootChestManager, GanglandLootItemProvider, LootChestWand, LootChestWandTag}` | `gangland-lootchest` runtime module (WS3 G2, 0.10.0), `org.luckyraven.gangland.lootchest.*` |
++| `weapon/WeaponManager.java`                                      | deleted - weapon config loading left the repo entirely in 0.9.0 with Bartizan                            |
+ 
+ ### Package: `updater/`
+ 
+ | Class                | Description                                                         |
+-|----------------------|---------------------------------------------------------------------|
++|----------------------|-----------------------------------------------------------------------|
+ | `UpdateChecker.java` | Checks for plugin updates from a remote source and notifies admins. |
+ 
+ ### Package: `util/`
+ 
+ | Class                   | Description                                                                |
+-|-------------------------|----------------------------------------------------------------------------|
++|---------------------------|----------------------------------------------------------------------------|
+ | `GanglandChatUtil.java` | Plugin-specific chat formatting extending core `ChatUtil`.                 |
+ | `TimeMessages.java`     | Implements `TimeMessagesProvider` for localized time duration strings.     |
+ | `ray/RayTrace.java`     | Ray-tracing utility for projectile hit detection and line-of-sight checks. |
+ 
+ ### Resource Files
+ 
++Resource files owned by a module that moved (cops/civilians NPC config, car/weapon/ammo/wearable item YAML, loot
++chest YAML) ship inside that module's own jar now, at the same path as its data folder - not under
++`gangland-impl/src/main/resources/` any more (see "YAML rule" in the root `CLAUDE.md`):
++
+ | File                     | Description                                                                                                                      |
+-|--------------------------|----------------------------------------------------------------------------------------------------------------------------------|
++|----------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+ | `plugin.yml`             | Spigot plugin metadata. Required dependencies: `NBTAPI`, `Citizens`. Soft dependencies: `PlaceholderAPI`, `Vault`, `ViaVersion`. |
+ | `settings.yml`           | Main runtime configuration (database type, auto-save interval, economy settings, world settings).                                |
+ | `commands.json`          | Command metadata (descriptions, usage, permissions) for the help system.                                                         |
+-| `cops.yml`               | Cop NPC tiers, equipment, and spawn configuration.                                                                               |
+-| `civilians.yml`          | Civilian NPC types, groups, behaviors, and equipment configuration.                                                              |
+-| `ammunition.yml`         | Ammunition type definitions (name, material, max stack, price).                                                                  |
+-| `cars.yml`               | Vehicle type definitions (speed, fuel capacity, model).                                                                          |
+ | `unique_items.yml`       | Unique item definitions (phone, tools, etc.) with slot, permission, and behavior.                                                |
+-| `wearables.yml`          | Wearable armor definitions (material, traits, damage reduction, leather color).                                                  |
+-| `weapon/*.yml`           | Per-weapon-type YAML files: `rifle.yml`, `knife.yml`, `grenade.yml`, `flamethrower.yml`, `syringe_gun.yml`.                      |
+-| `loot/loot_chests.yml`   | Loot chest definitions (location, tier, cooldown).                                                                               |
+-| `loot/tiers.yml`         | Loot tier definitions (rarity weights, item pools).                                                                              |
+ | `inventory/*.yml`        | GUI layout definitions: `phone.yml`, `phone_gang.yml`, `gang_info.yml`, `gang_stat.yml`, `alliance_stat.yml`, `user_stat.yml`.   |
+ | `message/message_en.yml` | English message strings.                                                                                                         |
+ | `message/message_es.yml` | Spanish message strings.                                                                                                         |
+ 
++**Resource files moved into a module's own jar, or deleted:**
++
++| Was `gangland-impl/src/main/resources/...`  | Now                                                                                          |
++|------------------------------------------------|---------------------------------------------------------------------------------------------|
++| `cops.yml`                                     | ships inside `modules/cops-n-crooks-<rev>.jar`                                              |
++| `civilians.yml`                                | ships inside `modules/gangland-civilians-<rev>.jar`                                         |
++| `cars.yml`                                     | ships inside `modules/gangland-gadget-<rev>.jar`                                            |
++| `loot/loot_chests.yml`, `loot/tiers.yml`       | ship inside `modules/gangland-lootchest-<rev>.jar`                                          |
++| `ammunition.yml`, `wearables.yml`, `weapon/*.yml` | deleted - left the repo entirely in 0.9.0 with Bartizan (ship inside Bartizan's own jar) |
++
+ ---
+ 
+ ## gangland-build (Assembly)
+diff --git a/documentation/features/inventory.md b/documentation/features/inventory.md
+index a49642e8..27f72be3 100644
+--- a/documentation/features/inventory.md
++++ b/documentation/features/inventory.md
+@@ -6,31 +6,38 @@
+ 
+ ## Overview
+ 
+-The inventory system lets you define fully custom GUI menus in YAML files. Each file declares one inventory:
+-its title, size, layout, per-slot items, click actions, and optional conditions. Inventories can be opened by
+-command, by right-clicking a unique item, or opened from another inventory's click action. A special
+-`multi-inventory` type handles paginated lists with automatic next/previous/home navigation.
++The inventory system lets you define fully custom GUI menus in YAML files. Each file declares one menu: its
++title, size, layout, per-slot items, click actions, and optional conditions. Menus can be opened by command, by
++right-clicking a unique item, or opened from another menu's click action. A `multi-inventory` type handles
++paginated lists with automatic next/previous/home navigation.
++
++As of 0.10.0, `gangland-ui/inventory-api` is gone. Every menu builds on Keystone's **`keystone-inventory`**
++library (`ChestMenuBuilder`) through a thin Gangland-only YAML dialect (`InventoryParser`/`InventoryBuilder`,
++`org.luckyraven.gangland.menu.*` in `gangland-impl`) — **the YAML schema documented below is unchanged**: no
++menu file needs editing for this migration. For the Java-level picture (the two layers, multi-screen flows, the
++item-return contract), see [`documentation/developer/ui-framework.md`](../developer/ui-framework.md) — this page
++covers only what a server owner or menu author writes in YAML.
+ 
+ ---
+ 
+ ## Inventory Types
+ 
+ | Type              | Description                                                                              |
+-|-------------------|------------------------------------------------------------------------------------------|
+-| `inventory`       | Standard single-page GUI. Slots are defined statically in the YAML.                      |
++|-------------------|-------------------------------------------------------------------------------------------|
++| `inventory`       | Standard single-page GUI. Slots are defined statically in the YAML.                       |
+ | `multi-inventory` | Paginated GUI. Items are sourced dynamically at runtime and split across multiple pages. |
+ 
+ ---
+ 
+ ## File Structure
+ 
+-Each inventory is a separate YAML file placed in the inventories resource directory. The plugin loads every
+-file in that directory on startup.
++Each menu is a separate YAML file placed in the inventories resource directory. The plugin loads every file in
++that directory on startup.
+ 
+ ### Top-level sections
+ 
+ | Section        | Required | Description                                                       |
+-|----------------|----------|-------------------------------------------------------------------|
++|----------------|----------|---------------------------------------------------------------------|
+ | `Information`  | Yes      | Metadata: name, title, size, type, opening triggers, layout flags |
+ | `Slots`        | No       | Per-slot item and action definitions (standard inventories)       |
+ | `Static_Items` | No       | Persistent slots shown on every page of a `multi-inventory`       |
+@@ -38,21 +45,21 @@ file in that directory on startup.
+ ### `Information` fields
+ 
+ | Field                               | Type    | Description                                                              |
+-|-------------------------------------|---------|--------------------------------------------------------------------------|
+-| `Name`                              | String  | Internal key used to reference this inventory. Defaults to filename.     |
+-| `Display_Name`                      | String  | Title shown in the inventory UI. Supports color codes and placeholders.  |
+-| `Size`                              | Integer | Number of slots. Rounded up to the nearest multiple of 9 (max 54).       |
+-| `Type`                              | String  | `inventory` or `multi-inventory`.                                        |
+-| `Permission`                        | String  | Optional permission node. Players without it cannot open this inventory. |
+-| `Open.Command`                      | String  | Sub-command that opens this inventory (registered under `/glw`).         |
+-| `Open.Event.OnItemClick.UniqueItem` | String  | Unique item key that triggers this inventory on right-click.             |
+-| `Open.Event.OnItemClick.Action`     | List    | Bukkit `Action` values that count as a trigger (default: right-clicks).  |
+-| `Open.Event.Permission`             | String  | Permission required to open via the item event.                          |
++|--------------------------------------|---------|----------------------------------------------------------------------------|
++| `Name`                               | String  | Internal key used to reference this menu. Defaults to filename.          |
++| `Display_Name`                       | String  | Title shown in the menu. Supports color codes and placeholders.          |
++| `Size`                                | Integer | Number of slots. Rounded up to the nearest multiple of 9 (max 54).        |
++| `Type`                                | String  | `inventory` or `multi-inventory`.                                        |
++| `Permission`                         | String  | Optional permission node. Players without it cannot open this menu.      |
++| `Open.Command`                       | String  | Sub-command that opens this menu (registered under `/glw`).              |
++| `Open.Event.OnItemClick.UniqueItem`  | String  | Unique item key that triggers this menu on right-click.                  |
++| `Open.Event.OnItemClick.Action`      | List    | Bukkit `Action` values that count as a trigger (default: right-clicks).  |
++| `Open.Event.Permission`              | String  | Permission required to open via the item event.                          |
+ 
+ ### `Configuration` fields (inside `Information`)
+ 
+ | Field             | Type         | Description                                                  |
+-|-------------------|--------------|--------------------------------------------------------------|
++|-------------------|--------------|----------------------------------------------------------------|
+ | `Fill`            | Boolean      | Fill all empty slots with the configured fill item.          |
+ | `Border`          | Boolean      | Place the fill item along the outer border only.             |
+ | `Line.Vertical`   | Integer list | Column indices (0–8) where a vertical divider line is drawn. |
+@@ -96,8 +103,6 @@ Slots:
+ 
+ Slots are defined under the `Slots` section, keyed by their zero-based inventory index (0 = top-left).
+ 
+-### Simple item
+-
+ ```yaml
+ Slots:
+    4:
+@@ -109,9 +114,7 @@ Slots:
+       Draggable: false
+ ```
+ 
+-### Complex item — colored or dynamic material
+-
+-Use an `Item` sub-section to supply a `Color` or `Data` value resolved via PlaceholderAPI at open time.
++Use an `Item` sub-section to supply a `Color` or `Data` value resolved via PlaceholderAPI at open time:
+ 
+ ```yaml
+ Slots:
+@@ -120,80 +123,48 @@ Slots:
+          Type: WHITE_WOOL
+          Color: "%gangland_gang_color%"
+       Name: "&fGang Color"
+-      Lore:
+-         - "&7Your gang's color"
+ ```
+ 
+-### Item fields
+-
+ | Field       | Type         | Description                                                         |
+-|-------------|--------------|---------------------------------------------------------------------|
++|-------------|--------------|-----------------------------------------------------------------------|
+ | `Item`      | String / Map | Material name, or a map with `Type`, `Color`, and/or `Data`.        |
+ | `Name`      | String       | Display name. Supports color codes and PlaceholderAPI placeholders. |
+ | `Lore`      | String list  | Lore lines. Each line supports color codes and placeholders.        |
+ | `Enchanted` | Boolean      | Adds a hidden enchantment glow effect.                              |
+-| `Draggable` | Boolean      | Whether players can drag this item out of the inventory.            |
++| `Draggable` | Boolean      | Whether players can drag this item out of the menu.                 |
+ 
+ ---
+ 
+ ## Event Triggers on Slots
+ 
+-An event key attached to a slot determines *when* its action fires. Only one event key is read per slot.
+-
+ | Event key     | Fires when                                                 |
+-|---------------|------------------------------------------------------------|
+-| `OnClick`     | Player left-clicks the slot inside the inventory.          |
+-| `OnInteract`  | Player interacts with the inventory (left or right click). |
+-| `OnClose`     | Player closes the inventory.                               |
++|---------------|---------------------------------------------------------------|
++| `OnClick`     | Player left-clicks the slot inside the menu.               |
++| `OnInteract`  | Player interacts with the menu (left or right click).      |
++| `OnClose`     | Player closes the menu.                                    |
+ | `OnItemClick` | Player right-clicks a physical block or air with the item. |
+ | `OnDrop`      | Player drops the item from their hand.                     |
+-| `OnSwapHand`  | Player swaps the item to their off-hand (F key).           |
+-| `OnJoin`      | Player joins the server.                                   |
+-| `OnQuit`      | Player leaves the server.                                  |
+-
+-A separate `OnRightClick` key can be added alongside any inventory event to provide a distinct action for
+-right-clicks on that slot.
+-
+-```yaml
+-Slots:
+-   20:
+-      Item: PAPER
+-      Name: "&fInfo"
+-      OnClick:
+-         Command: "glw info"
+-      OnRightClick:
+-         Command: "glw info detailed"
+-```
++| `OnSwapHand`  | Player swaps the item to their off-hand (F key).            |
++| `OnJoin`      | Player joins the server.                                    |
++| `OnQuit`      | Player leaves the server.                                   |
+ 
+----
++A separate `OnRightClick` key can be added alongside any menu event to provide a distinct action for right-clicks
++on that slot.
+ 
+ ## Click Actions
+ 
+ Every event section must contain exactly one of the following action types.
+ 
+-### Run a command
+-
+-The command is run as the player. Omit the leading `/`.
+-
+ ```yaml
++# Run a command as the player (omit the leading /)
+ OnClick:
+    Command: "glw gang info"
+-```
+ 
+-### Open another inventory
+-
+-Pass the target inventory's internal `Name` as a string:
+-
+-```yaml
++# Open another menu by its internal Name
+ OnClick:
+    Inventory: "gang_settings"
+-```
+-
+-### Open an anvil text-input
+ 
+-Opens the AnvilGUI dialog. On confirm, `%gangland_anvil_output%` is replaced with whatever the player typed.
+-
+-```yaml
++# Open an anvil text-input; %gangland_anvil_output% resolves to what the player typed
+ OnClick:
+    Inventory:
+       Type: anvil
+@@ -208,7 +179,9 @@ OnClick:
+ ## Conditional Slots
+ 
+ A `Condition` section on a slot shows different items and triggers different actions depending on whether a
+-PlaceholderAPI expression evaluates to true or false.
++PlaceholderAPI expression evaluates to true or false. Each branch (`True` / `False`) supports all the same
++fields as a normal slot — `Item`, `Name`, `Lore`, `Enchanted`, `Draggable`, click actions, and even a nested
++`Condition` for chained logic.
+ 
+ ```yaml
+ Slots:
+@@ -220,46 +193,30 @@ Slots:
+          True:
+             Item: LIME_DYE
+             Name: "&aIn a Gang"
+-            Lore:
+-               - "&7Gang: &e%gangland_gang_name%"
+             OnClick:
+                Command: "glw gang info"
+          False:
+             Item: GRAY_DYE
+             Name: "&7No Gang"
+-            Lore:
+-               - "&7Click to create one."
+             OnClick:
+                Inventory: "create_gang"
+ ```
+ 
+-Each branch (`True` / `False`) supports all the same fields as a normal slot — `Item`, `Name`, `Lore`,
+-`Enchanted`, `Draggable`, click actions, and even a nested `Condition` for chained logic.
+-
+-### Condition evaluation rules
+-
+-| Expression value     | Evaluates to |
+-|----------------------|--------------|
+-| `true`, `yes`, `1`   | `true`       |
+-| `false`, `no`, `0`   | `false`      |
+-| Any non-empty string | `true`       |
+-| Empty string         | `false`      |
+-| Numeric `> 0`        | `true`       |
+-| Numeric `<= 0`       | `false`      |
++| Expression value      | Evaluates to |
++|------------------------|--------------|
++| `true`, `yes`, `1`    | `true`       |
++| `false`, `no`, `0`    | `false`      |
++| Any non-empty string  | `true`       |
++| Empty string           | `false`      |
++| Numeric `> 0`          | `true`       |
++| Numeric `<= 0`         | `false`      |
+ 
+ ---
+ 
+-## Paginated Inventories
++## Paginated Menus
+ 
+ Set `Type: "multi-inventory"` to split a dynamic item list across multiple pages automatically.
+ 
+-### `Multi` fields (inside `Information`)
+-
+-| Field               | Type    | Default | Description                                          |
+-|---------------------|---------|---------|------------------------------------------------------|
+-| `Multi.Item_Source` | String  | —       | Key identifying the data source that provides items. |
+-| `Multi.Per_Page`    | Integer | `28`    | How many dynamic items appear per page.              |
+-
+ ```yaml
+ Information:
+    Name: "gang_members"
+@@ -273,268 +230,48 @@ Information:
+ 
+    Multi:
+       Item_Source: "gang_members"
+-      Per_Page: 28
+ ```
+ 
+-Navigation buttons (previous page, home, next page) are added automatically using the skull textures
+-configured in `settings.yml`.
+-
+-### Static items
++`Multi.Item_Source` selects a registered `ItemSourceProvider`; page size is driven by Keystone's own
++`PageConfig`/`PagedRegion` arithmetic, not a YAML override — **`Multi.Per_Page` no longer exists** (it was
++already unread by the old engine and was removed outright at the 0.10.0 CUT gate, docket T-43).
++Next/previous/home nav buttons use fixed built-in head textures (`ButtonTags.DEFAULT` in
++`org.luckyraven.gangland.menu.part`) — the old `settings.yml` `Inventory.Multi_Inventory` block that used to
++configure these textures was deleted at the same gate, so they are no longer YAML-configurable.
+ 
+-`Static_Items` defines slots that appear on every page alongside the dynamic content. Supports the same
+-item and action fields as `Slots`.
+-
+-```yaml
+-Static_Items:
+-   49:
+-      Item: BARRIER
+-      Name: "&cClose"
+-      OnClick:
+-         Command: "glw inventory close"
+-```
++`Static_Items` defines slots that appear on every page alongside the dynamic content, using the same item and
++action fields as `Slots`.
+ 
+ ---
+ 
+-## Opening Inventories
+-
+-### Via command
+-
+-When `Open.Command` is set, the inventory opens when the player runs `/glw <command>`.
+-
+-```yaml
+-Open:
+-   Command: "mymenu"
+-```
+-
+-The player types `/glw mymenu` to open the inventory.
+-
+-### Via unique item
+-
+-When `Open.Event` is configured, holding the specified unique item and right-clicking opens the inventory.
++## Opening Menus
+ 
+-```yaml
+-Open:
+-   Event:
+-      OnItemClick:
+-         UniqueItem: "gang_phone"
+-         Action:
+-            - RIGHT_CLICK_AIR
+-            - RIGHT_CLICK_BLOCK
+-      Permission: "gangland.use.gangphone"
+-```
+-
+-If no `Action` list is provided, both `RIGHT_CLICK_AIR` and `RIGHT_CLICK_BLOCK` are used by default.
+-
+-### From another inventory's click action
+-
+-Any slot's `OnClick` or `OnRightClick` can open a different inventory by name:
+-
+-```yaml
+-OnClick:
+-   Inventory: "gang_settings"
+-```
++A menu opens via `Open.Command` (`/glw <command>`), via `Open.Event` (holding a unique item and right-clicking —
++see the `Information` fields table above), or from another menu's `OnClick`/`OnRightClick` action
++(`Inventory: "<name>"`).
+ 
+ ---
+ 
+-## API Usage
+-
+-The sections below are for developers working with the inventory system in Java code.
+-
+-### `InventoryHandler` — creating inventories programmatically
+-
+-`InventoryHandler` wraps a Bukkit `Inventory` and manages per-slot click handlers.
+-
+-```java
+-// Player-owned inventory (registered in InventoryRegistry)
+-InventoryHandler handler = new InventoryHandler(plugin, "&6My Menu", 54, player);
+-
+-// Add a static item with no click action
+-handler.
+-
+-setItem(4,Material.DIAMOND, "&bTitle",List.of("&7Lore line"), false,false);
+-
+-// Add a clickable item — left-click only
+-ItemBuilder item = new ItemBuilder(Material.GOLD_INGOT).setDisplayName("&6Click me");
+-handler.
+-
+-setItem(10,item, false,(p, inv, builder) ->{
+-		p.
+-
+-sendMessage("You clicked!");
+-});
+-
+-// Add a clickable item — separate left and right handlers
+-		handler.
+-
+-setItem(20,item, false,
+-		(p, inv, builder) ->p.
+-
+-sendMessage("Left click"),
+-    (p,inv,builder)->p.
+-
+-sendMessage("Right click")
+-);
+-
+-// Open for the player
+-		handler.open(player);
+-
+-// Remove an item
+-		handler.removeItem(10);
+-
+-// Update the title
+-		handler.rename(plugin,"&6New Title");
+-
+-// Unregister when done
+-		handler.unregister();
+-```
+-
+-`InventoryHandler` implements `Listener` — it is registered with Bukkit automatically when opened and
+-deregistered via `unregister()`.
+-
+-### `InventoryHandler` — key methods
+-
+-| Method                                        | Description                                               |
+-|-----------------------------------------------|-----------------------------------------------------------|
+-| `setItem(slot, item, draggable, click)`       | Place an item with an optional left-click handler.        |
+-| `setItem(slot, item, draggable, left, right)` | Place an item with separate left and right handlers.      |
+-| `removeItem(slot)`                            | Clear a slot and remove its handlers.                     |
+-| `open(player)`                                | Open the inventory for the given player.                  |
+-| `close(player)`                               | Close the inventory for the given player.                 |
+-| `rename(plugin, name)`                        | Update the inventory title in place.                      |
+-| `unregister()`                                | Remove from `InventoryRegistry`.                          |
+-| `itemOccupied(slot)`                          | Returns `true` if a slot already has an item.             |
+-| `clear()`                                     | Clear all items from the inventory.                       |
+-| `getSize()`                                   | Returns the inventory size (always a multiple of 9).      |
+-| `getOwner()`                                  | Returns the UUID of the player this inventory belongs to. |
+-
+-### `InventoryBuilder` — building from `InventoryData`
+-
+-`InventoryBuilder` is used when constructing an inventory from a parsed YAML config. For standard
+-programmatic use, create `InventoryHandler` directly. Use `InventoryBuilder` when you already have an
+-`InventoryData` object (e.g. a loaded config):
+-
+-```java
+-InventoryData data = ...; // populated from YAML or constructed manually
+-InventoryBuilder builder = new InventoryBuilder(data, "gangland.inv.mymenu");
+-
+-Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
+-Fill line = new Fill(Settings.getInventoryLineName(), Settings.getInventoryLineItem());
+-InventoryOpener opener = inventoryRuntimeContext::openInventoryForPlayer;
+-
+-InventoryHandler handler = builder.createInventory(plugin, placeholder, player, fill, line, evaluator, opener);
+-handler.open(player);
+-```
+-
+-### `MultiInventory` — paginated inventories
+-
+-`MultiInventory` extends `InventoryHandler` and manages a `LinkedList` of pages.
+-
+-```java
+-MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(
+-		plugin,
+-		player,
+-		items,          // List<ItemStack> — the dynamic content
+-		"&8Members",    // title
+-		true,           // include static items
+-		true,           // border
+-		fill,
+-		buttonTags,
+-		staticItemsMap  // Map<ItemStack, TriConsumer> for persistent slots
+-);
+-
+-multi.open(player);
+-
+-// Navigation (also wired to the nav buttons automatically)
+-		multi.nextPage();
+-		multi.previousPage();
+-		multi.homePage();
+-
+-// Refresh content (e.g. after data changes)
+-		multi.updateItems(plugin,newItems,player,true,fill);
+-```
+-
+-### `MultiPanelInventory` — seamless multi-screen flows
+-
+-`MultiPanelInventory<S>` is the enhancement layered on top of the seamless in-place updates that
+-`InventoryHandler.rename()` and `MultiInventory.updateItems()` already provide. Where those two
+-swap *content* inside one fixed window, `MultiPanelInventory` keeps a single open window across a
+-sequence of fully distinct screens (`Panel<S>`) — each with its own size, title, and layout — while
+-threading one typed `FlowSession` through every screen.
+-
+-Use it instead of the legacy `player.closeInventory(); next.open(player)` pattern. The session
+-survives panel swaps, the back-stack is built in, and side-effect detours (anvil prompts, chat input,
+-external GUIs) are first-class via `suspend()` / `resume()`.
+-
+-#### When to use
+-
+-- A feature has multiple GUI screens (menu → list → detail → confirm) that share state.
+-- A user-driven action triggers an anvil text prompt, then returns to the same flow.
+-- You want one back button to walk the player back through previously opened screens.
+-
+-For a single, self-contained menu — keep using `InventoryHandler` directly. For a paginated list of
+-items — keep using `MultiInventory`.
+-
+-#### Concepts
+-
+-| Type                           | Role                                                                                               |
+-|--------------------------------|----------------------------------------------------------------------------------------------------|
+-| `FlowSession`                  | Marker interface for the typed payload threaded through the flow. Implement it on your own record. |
+-| `Panel<S extends FlowSession>` | One screen. Owns `size(session)`, `title(session)`, and `render(host, handler, viewer, session)`.  |
+-| `MultiPanelInventory<S>`       | Host. Holds the registered panels, the back-stack, and the open `InventoryHandler`.                |
+-
+-#### Lifecycle
+-
+-| Method                | Behavior                                                                                               |
+-|-----------------------|--------------------------------------------------------------------------------------------------------|
+-| `register(id, panel)` | Add a panel under a string id. Returns `this` for chaining.                                            |
+-| `openAt(id)`          | Open the flow at the given panel; registers the close listener on first open.                          |
+-| `switchTo(id)`        | Push the current panel onto the back-stack and switch to `id`.                                         |
+-| `back()`              | Pop the back-stack and switch to the previous panel; calls `end()` if the stack is empty.              |
+-| `rerender()`          | Re-run the current panel's render against the same inventory handle (use after session state changes). |
+-| `suspend()`           | Pause the flow's close listener while an external UI (anvil, chat) takes over the screen.              |
+-| `resume()`            | Resume after `suspend()`; call before re-entering a panel from the side-effect's completion callback.  |
+-| `end()`               | Close the inventory, fire `onEnd`, and unregister the close listener.                                  |
+-| `onEnd(callback)`     | Register a `Consumer<S>` that runs when the flow ends (natural close, `back()` past root, or `end()`). |
+-
+-#### Seamless re-render vs. rebuild
+-
+-Bukkit forbids resizing an open inventory, so `switchTo` takes one of two paths automatically:
+-
+-- **Re-render in place** — when the target panel's `size` and `title` match the current handle, the host
+-  clears the slots and re-runs `panel.render(...)`. The viewer's screen never flickers.
+-- **Rebuild** — when size or title differ, the host builds a new `InventoryHandler`, renders into it,
+-  and opens it for the viewer. An internal `suppressClose()` latch prevents the close event Bukkit
+-  fires during the swap from tearing the session down.
+-
+-#### Example
+-
+-```java
+-public record TraderFlowSession(Trader trader, Player buyer) implements FlowSession { }
+-
+-MultiPanelInventory<TraderFlowSession> flow =
+-		new MultiPanelInventory<>(plugin, player, new TraderFlowSession(trader, player))
+-				.register("menu", new TraderMenuPanel())
+-				.register("buy", new TraderBuyPanel())
+-				.register("barter", new TraderBarterPanel())
+-				.onEnd(session -> trader.releaseHold(session.buyer()));
+-
+-flow.openAt("menu");
+-
+-// Inside a panel's render method, wire a slot to:
+-handler.setItem(13, buyButton, false, (p, inv, item) -> flow.switchTo("buy"));
+-handler.setItem(22, backButton, false, (p, inv, item) -> flow.back());
+-
+-// Anvil detour from inside a panel:
+-flow.suspend();
+-new AnvilGUI.Builder()
+-		.onClick((slot, snapshot) -> {
+-			flow.resume();
+-			flow.session().setBidAmount(parse(snapshot.getText()));
+-			flow.switchTo("buy");
+-			return List.of(AnvilGUI.ResponseAction.close());
+-		})
+-		.open(player);
+-```
++## Beyond YAML: flows, item-return, and loot chests
++
++A handful of screens are not built from this YAML dialect at all:
++
++- **Multi-screen flows** (trader buy/barter, banker menus, turf powerup, shop admin) are plain Java, built on
++  Keystone's `MenuFlow<S>` / `Panel<S extends FlowState>` — the replacement for the deleted
++  `MultiPanelInventory`/`Panel`/`FlowSession` trio. See ui-framework.md's "Multi-screen flows" section for the
++  shape and an example.
++- Any menu with an **interactive/draggable slot** (a slot a player can put items into) must return those items on
++  close via Keystone's `ItemHoldingComponent`, or model the slot as a live-inventory dropzone that never snapshots
++  it in the first place — see ui-framework.md's "The item-return contract" section before adding a new drop
++  target.
++- The **loot chest** opening view is not a menu at all — it's a raw shared Bukkit `Inventory`
++  (`SharedLootInventory`, `gangland-features/gangland-lootchest`) with a **take-only** policy: every deposit-shaped
++  click or drag onto the chest is cancelled, every take path is left alone. See ui-framework.md's "Loot Chest +
++  Inventory" section.
++
++For the full developer-facing picture (the two layers, `InventoryBuilder`'s build methods, `SimplePagedMenu`, the
++module dependency graph), read
++[`documentation/developer/ui-framework.md`](../developer/ui-framework.md).
+ 
+ ---
+ 
+diff --git a/documentation/module-loader.md b/documentation/module-loader.md
+index ad8252dc..6b2bf17a 100644
+--- a/documentation/module-loader.md
++++ b/documentation/module-loader.md
+@@ -213,7 +213,7 @@ Holders introduced by the **cops-n-crooks** flip (0.8.4); `BankTiers`' installer
+ |---|---|---|---|---|
+ | `GanglandMoneyDropClassifier` | `NpcMoneyDropSource` | `org.luckyraven.gangland.data.economy` | classifies no NPC as a cop/civilian cash drop | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`CopsMoneyDropSource`) |
+ | `BankTiers` | `BankTierView` | `org.luckyraven.gangland.data.economy` | `tierFor(...)` returns `null` — no tier cap, no daily deposit limit, no death-penalty insurance discount, empty `%..bank_tier%` placeholders | `NpcShopsModuleConfig`'s `installBankTiers()` (0.9.0; was `CopsNCrooksModuleConfig`'s `installCoreSeams()` before the npc-shops split) |
+-| `WantedKillTrackers` | `WantedKillTracker` | `org.luckyraven.gangland.gang.wanted` (gangland-domain) | `isActive()` false — kill combo and "counts for wanted" both disabled, `EntityDamageListener` falls back to its pre-combo branches | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`KillComboWantedTracker`) |
++| `WantedKillTrackers` | `WantedKillTracker` | `org.luckyraven.gangland.core.wanted` (`gangland-core` — moved out of the deleted `gangland-infra/gangland-domain` at WS5, 0.10.0) | `isActive()` false — kill combo and "counts for wanted" both disabled, `EntityDamageListener` falls back to its pre-combo branches | `CopsNCrooksModuleConfig`'s `installCoreSeams()` (`KillComboWantedTracker`) |
+ 
+ Contribution paths added by the cops-n-crooks flip, now installed by **npc-shops** (0.9.0 split):
+ `BankMenuContribution` (`parent() == "bank"`, attaches `/glw bank menu`, queried by `BankCommand`).

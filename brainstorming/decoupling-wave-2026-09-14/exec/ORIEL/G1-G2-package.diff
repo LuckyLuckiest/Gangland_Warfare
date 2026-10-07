@@ -1,0 +1,1228 @@
+# Review package — Oriel 0.8.0 G1+G2 — working tree vs HEAD 81ddb97 (G0 commit)
+--- status ---
+ M docs/MIGRATION-FROM-GLW.md
+ M menu-data/config/src/test/java/org/luckyraven/oriel/config/MenuConfigServiceForConsumerTest.java
+ M menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/ChestMenu.java
+ M menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/component/DepositSlotComponent.java
+ A menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/component/PriceGridComponent.java
+ M menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/flow/MenuFlow.java
+ M menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/internal/OrielMenuTarget.java
+ M menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/listener/ChestMenuCloseListener.java
+ M menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/DepositSlotComponentTest.java
+ M menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/DepositSlotMultiSlotStressTest.java
+ A menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/DepositSurvivalIntegrationTest.java
+ M menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/MenuFlowTest.java
+ A menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/PlaceholderResolutionAndRowScopedSourceTest.java
+ A menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/component/PriceGridComponentTest.java
+ M menu-plugin/src/main/java/org/luckyraven/oriel/plugin/OrielPlugin.java
+--- diffstat ---
+warning: in the working copy of 'menu-data/config/src/test/java/org/luckyraven/oriel/config/MenuConfigServiceForConsumerTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/component/PriceGridComponent.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/DepositSurvivalIntegrationTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/PlaceholderResolutionAndRowScopedSourceTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/component/PriceGridComponentTest.java', LF will be replaced by CRLF the next time Git touches it
+ docs/MIGRATION-FROM-GLW.md                         |  16 +++
+ .../config/MenuConfigServiceForConsumerTest.java   |  18 +++
+ .../java/org/luckyraven/oriel/chest/ChestMenu.java |  55 ++++++-
+ .../chest/component/DepositSlotComponent.java      |   8 +-
+ .../oriel/chest/component/PriceGridComponent.java  | 124 ++++++++++++++++
+ .../org/luckyraven/oriel/chest/flow/MenuFlow.java  |  54 ++++++-
+ .../oriel/chest/internal/OrielMenuTarget.java      |  14 ++
+ .../chest/listener/ChestMenuCloseListener.java     |   5 +
+ .../oriel/chest/DepositSlotComponentTest.java      |  16 ++-
+ .../chest/DepositSlotMultiSlotStressTest.java      |  14 +-
+ .../chest/DepositSurvivalIntegrationTest.java      | 160 +++++++++++++++++++++
+ .../org/luckyraven/oriel/chest/MenuFlowTest.java   |  80 +++++++++++
+ ...laceholderResolutionAndRowScopedSourceTest.java | 143 ++++++++++++++++++
+ .../chest/component/PriceGridComponentTest.java    | 121 ++++++++++++++++
+ .../org/luckyraven/oriel/plugin/OrielPlugin.java   |   1 +
+ 15 files changed, 803 insertions(+), 26 deletions(-)
+--- diff ---
+warning: in the working copy of 'menu-data/config/src/test/java/org/luckyraven/oriel/config/MenuConfigServiceForConsumerTest.java', LF will be replaced by CRLF the next time Git touches it
+diff --git a/docs/MIGRATION-FROM-GLW.md b/docs/MIGRATION-FROM-GLW.md
+index 292811c..1fde306 100644
+--- a/docs/MIGRATION-FROM-GLW.md
++++ b/docs/MIGRATION-FROM-GLW.md
+@@ -380,12 +380,28 @@ Things you couldn't write in GLW but can in Oriel:
+ - **`button: true`** — sugar opt-in for a built-in click sound.
+ - **Pluggable placeholder providers** — PAPI is one; MiniPlaceholders or
+   custom in-house adapters drop in with `Dependency.SOFT` gating.
+ - **Reactive re-render** — components declare `dependencies()` and the
+   menu re-renders only the affected slot when a dependency changes
+   (Oriel-only API; not exposed in the YAML schema yet).
++- **`MenuFlow.rerender()`** — re-runs the current panel's `Panel#render` and applies the fresh component set to the
++  already-open inventory (no close/open round trip, no flicker, no abandoned `DepositSlotComponent` contents), so a
++  panel can add or remove a button in response to a state change without a full `switchTo` reopen.
++- **`MenuFlow.back()`/`hasBack()`** — `back()` on an empty stack now ends the flow (GLW `MultiPanelInventory`
++  parity) instead of no-op'ing on a dead button; `hasBack()` lets a panel pick its own root-vs-back affordance
++  ahead of the click.
++- **`PriceGridComponent`** (`chest/component/PriceGridComponent.java`) — a reusable mirrored ± step row flanking a
++  center preview item (buy-quantity / price-editor / bid-amount pickers), so consumers stop hand-rolling this
++  pattern. House rule: the biggest step sits nearest the center item, the smallest at the edges.
++- **`OpenMenuTracker` on the `ServicesManager`** — third-party plugins can now `Bukkit.getServicesManager()
++  .load(OpenMenuTracker.class)` to build their own "which menus does this player have open" bookkeeping instead
++  of tracking it themselves.
++- **`DepositSlotComponent` items survive every close reason** — corrected 2026-09-16 (Gangland WS2 G2, cross-docket
++  findings menu-chest#1/#2): a genuine player-initiated close (Escape), a `MenuFlow` panel switch, and a server
++  stop (`/stop`, `/menu reload`, plugin disable) all now return deposited items instead of discarding them. Full
++  on-disk crash safety (surviving `kill -9`) is still Oriel's own A3 backlog item, not covered by this fix.
+ - **Hot reload** — `/menu reload` re-parses YAML without disturbing
+   in-flight player sessions.
+ 
+ Things deferred to v0.2+ (PLAN §8):
+ 
+ - Declarative NBT on items (enchantments, custom_model_data, unbreakable).
+diff --git a/menu-data/config/src/test/java/org/luckyraven/oriel/config/MenuConfigServiceForConsumerTest.java b/menu-data/config/src/test/java/org/luckyraven/oriel/config/MenuConfigServiceForConsumerTest.java
+index 5c4a559..5251237 100644
+--- a/menu-data/config/src/test/java/org/luckyraven/oriel/config/MenuConfigServiceForConsumerTest.java
++++ b/menu-data/config/src/test/java/org/luckyraven/oriel/config/MenuConfigServiceForConsumerTest.java
+@@ -31,13 +31,15 @@ import org.luckyraven.oriel.core.registry.InMemoryMaterialSourceRegistry;
+ import org.luckyraven.oriel.core.registry.InMemoryMenuRegistry;
+ import org.luckyraven.oriel.core.registry.InMemorySearchMatcherRegistry;
+ import org.luckyraven.oriel.core.registry.InMemorySortRegistry;
+ import org.luckyraven.oriel.core.registry.InMemorySourceProviderRegistry;
+ import org.luckyraven.oriel.core.registry.ItemProviderRegistry;
+ import org.luckyraven.oriel.core.registry.MaterialSourceRegistry;
++import org.luckyraven.oriel.core.registry.DefaultOpenMenuTracker;
+ import org.luckyraven.oriel.core.registry.MenuRegistry;
++import org.luckyraven.oriel.core.registry.OpenMenuTracker;
+ import org.luckyraven.oriel.core.registry.SearchMatcherRegistry;
+ import org.luckyraven.oriel.core.registry.SortRegistry;
+ import org.luckyraven.oriel.core.registry.SourceProviderRegistry;
+ 
+ import java.io.IOException;
+ import java.nio.file.Files;
+@@ -208,12 +210,28 @@ final class MenuConfigServiceForConsumerTest {
+ 				if (stack != null) count++;
+ 			}
+ 		}
+ 		return count;
+ 	}
+ 
++	/**
++	 * Smoke test for the G1 primitive: {@code OrielPlugin.registerServices()} now publishes
++	 * {@link OpenMenuTracker} on the {@link ServicesManager} the same way it does {@code PaginatedControlRegistry}
++	 * / {@code RequirementRegistry} / {@code CooldownService} above (see that method's final line). Standing up
++	 * the real {@code OrielPlugin}/{@code OrielContext} bootstrap here is impractical (no test module wires that),
++	 * so — mirroring {@link #publishOrielRegistries()}'s own hand-built-registration style — this proves only that
++	 * {@link OpenMenuTracker} is a valid, loadable {@code ServicesManager} service type.
++	 */
++	@Test
++	void openMenuTrackerIsLoadableViaServicesManager() {
++		ServicesManager services = server.getServicesManager();
++		services.register(OpenMenuTracker.class, new DefaultOpenMenuTracker(), plugin, ServicePriority.Normal);
++
++		assertNotNull(services.load(OpenMenuTracker.class));
++	}
++
+ 	@Test
+ 	void failsFastWithANamedServiceWhenOrielHasNotPublishedYet() {
+ 		// None of Oriel's registries are registered on the ServicesManager — simulates calling forConsumer
+ 		// before Oriel has enabled (or without Oriel installed at all).
+ 		PlaceholderProvider passthrough = (p, raw) -> raw;
+ 		IllegalStateException thrown = assertThrows(IllegalStateException.class,
+diff --git a/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/ChestMenu.java b/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/ChestMenu.java
+index efcec47..c12a568 100644
+--- a/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/ChestMenu.java
++++ b/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/ChestMenu.java
+@@ -367,27 +367,45 @@ public final class ChestMenu implements Menu, OrielMenuTarget, Animatable {
+ 		ChestLifecycleClickContext ctx = new ChestLifecycleClickContext(player, this, placeholders, registry);
+ 		return !closeRequirement.evaluate(RequirementContext.of(player, placeholders), ctx);
+ 	}
+ 
+ 	/**
+ 	 * Returns deposited items from {@link DepositSlotComponent} (and any other {@link ItemHoldingComponent}) to
+-	 * {@code player} on non-user closes — plugin disable, /menu reload, player disconnect. {@link CloseReason#USER}
+-	 * skips the return: Bukkit's normal close flow surfaces the cursor stack to the player, and the held items are
+-	 * theirs to manage at that point.
++	 * {@code player} for every close reason, {@link CloseReason#USER} included.
++	 *
++	 * <p><b>Correction (cross-docket menu-chest finding #1, fixed in Gangland WS2 G2):</b> this used to skip the
++	 * return on {@code USER}, on the theory that "Bukkit's normal close flow surfaces the cursor stack to the
++	 * player, so the held items are theirs to manage at that point." That's true of the CURSOR — but a
++	 * {@link DepositSlotComponent}'s stack physically occupies a SLOT in this plugin-owned {@link Inventory}, not
++	 * the player's cursor, and Bukkit simply discards a custom inventory's slot contents on close. The USER
++	 * special-case therefore silently destroyed deposited items on every Escape-press. {@code skipIfSlotEmpty=true}
++	 * still protects against double-issuing when Bukkit's own click handling already moved the stack out (see
++	 * {@link #returnHeldItems}'s own doc).
+ 	 *
+ 	 * <p>Mirrors {@code TraderMenu.returnInputItems}: try {@code Inventory.addItem} first, drop the leftovers
+ 	 * at the player's location so nothing is silently destroyed.
+ 	 */
+ 	@Override
+ 	public void close(Player player, CloseReason reason) {
+-		if (reason != CloseReason.USER) {
+-			returnHeldItems(player, reason, true);
+-		}
++		returnHeldItems(player, reason, true);
+ 		close(player);
+ 	}
+ 
++	/**
++	 * {@inheritDoc} Drains this menu's held-item state (see {@link #close(Player, CloseReason)}'s
++	 * {@link CloseReason#USER} correction) — called by {@code ChestMenuCloseListener} for a genuine
++	 * player-initiated close, i.e. exactly the case {@link #close(Player, CloseReason)} is never invoked for in
++	 * production (nothing calls it with {@code CloseReason.USER}; {@code ChestMenuCloseListener} only ever calls
++	 * the reason-less {@link #close(Player)} indirectly via Bukkit's own close-inventory flow). Does not call
++	 * {@link #close(Player)} itself — the inventory is already closing/closed by the time this fires.
++	 */
++	@Override
++	public void returnHeldItemsOnUserClose(Player player) {
++		returnHeldItems(player, CloseReason.USER, true);
++	}
++
+ 	/**
+ 	 * Drop the held state of every {@link ItemHoldingComponent} for {@code player} without firing user-supplied
+ 	 * withdraw handlers and without returning the items. Backs the {@code consume_deposit} YAML action — items in
+ 	 * deposit slots are treated as paid; the action chain that follows ({@code give-reward}, {@code message}, etc.) is
+ 	 * responsible for whatever the player gets back.
+ 	 */
+@@ -431,12 +449,37 @@ public final class ChestMenu implements Menu, OrielMenuTarget, Animatable {
+ 	@Override
+ 	public void rerender() {
+ 		if (viewer == null) return;
+ 		renderAll(viewer);
+ 	}
+ 
++	/**
++	 * Re-render this ALREADY-OPEN menu using {@code fresh}'s computed component set — no new Bukkit inventory, no
++	 * close/open round trip, no flicker, no cursor/drag-state reset. Used by
++	 * {@link org.luckyraven.oriel.chest.flow.MenuFlow#rerender()}: {@code fresh} is a throwaway {@link ChestMenu}
++	 * built the normal way (via {@link ChestMenuBuilder#build()}) purely to compute its layered component set
++	 * (border/lines/regions/explicit slots/fill); its own {@link #bukkitInventory()} is discarded unopened. Slots
++	 * that existed on this menu but not on {@code fresh} (a button the panel removed) are cleared first, matching
++	 * {@link #renderAll}'s own untouched-slot semantics, so nothing stale lingers. {@code fresh}'s fill/title/
++	 * permission/requirement/etc. configuration is NOT adopted — only its component slot map — because Bukkit
++	 * titles are immutable post-creation ({@link #ensureTitleFor} already documents this constraint) and this
++	 * method's whole point is avoiding a new inventory.
++	 */
++	public void adoptComponentsFrom(ChestMenu fresh) {
++		if (viewer == null) return;
++		for (Integer oldSlot : new HashSet<>(components.keySet())) {
++			if (!fresh.components.containsKey(oldSlot)) {
++				inventory.setItem(oldSlot, null);
++				clearHandlers(oldSlot);
++			}
++		}
++		components.clear();
++		components.putAll(fresh.components);
++		rerender();
++	}
++
+ 	/**
+ 	 * Drops the cached source list for every paginated region in this menu, scoped to {@code player}. The next render
+ 	 * re-fetches via the source closure — used by the interactive {@code cycle_sort} / {@code cycle_filter} /
+ 	 * {@code set_search} actions so a state change actually re-runs the sort/filter pipeline instead of replaying the
+ 	 * cached page.
+ 	 */
+diff --git a/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/component/DepositSlotComponent.java b/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/component/DepositSlotComponent.java
+index bb67191..e761ef3 100644
+--- a/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/component/DepositSlotComponent.java
++++ b/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/component/DepositSlotComponent.java
+@@ -15,15 +15,17 @@ import java.util.*;
+ import java.util.function.BiConsumer;
+ import java.util.function.Predicate;
+ 
+ /**
+  * The first component that opts a slot out of cancel-by-default. Players can place items into a deposit slot and
+  * retrieve them again, with optional acceptance filtering, placeholder rendering when empty, and per-event deposit /
+- * withdraw handlers. Held items are returned to the player automatically on non-user closes
+- * ({@link org.luckyraven.oriel.core.CloseReason#PLUGIN_DISABLE} / {@link org.luckyraven.oriel.core.CloseReason#RELOAD}
+- * / {@link org.luckyraven.oriel.core.CloseReason#PLAYER_DISCONNECT}).
++ * withdraw handlers. Held items are returned to the player automatically on EVERY close reason
++ * ({@link org.luckyraven.oriel.core.CloseReason#USER} included since the WS2 G2 fix for cross-docket finding
++ * menu-chest#1 — a deposit slot's stack lives in a plugin-owned inventory SLOT, not the player's cursor, so
++ * Bukkit's own close handling nevewarning: in the working copy of 'menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/component/PriceGridComponent.java', LF will be replaced by CRLF the next time Git touches it
+r returns it) and on a {@code MenuFlow} panel switch
++ * ({@link org.luckyraven.oriel.core.CloseReason#NAVIGATION}, finding menu-chest#2).
+  *
+  * <pre>{@code
+  * DepositSlotComponent.builder()
+  *     .accepting(stack -> stack.getType() == Material.DIAMOND)
+  *     .placeholder(ItemComponent.of(Material.GRAY_STAINED_GLASS_PANE).name("&7Drop a diamond here"))
+  *     .onDeposit((ctx, deposited) -> ctx.player().sendMessage("Got " + deposited.getAmount()))
+diff --git a/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/component/PriceGridComponent.java b/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/component/PriceGridComponent.java
+new file mode 100644
+index 0000000..d28ffa5
+--- /dev/null
++++ b/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/component/PriceGridComponent.java
+@@ -0,0 +1,124 @@
++package org.luckyraven.oriel.chest.component;
++
++import org.luckyraven.oriel.chest.ChestMenuBuilder;
++import org.luckyraven.oriel.core.component.Component;
++import org.luckyraven.oriel.core.component.RenderContext;
++import org.luckyraven.oriel.core.component.SlotView;
++
++import java.util.function.LongConsumer;
++import java.util.function.LongFunction;
++import java.util.function.LongSupplier;
++import java.util.function.Supplier;
++
++/**
++ * Installs a "price-entry grid" onto a {@link ChestMenuBuilder}: a center preview item flanked by mirrored +/- step
++ * buttons, for buy-quantity / price-editor / bid-amount style UIs.
++ *
++ * <p><b>House rule — mirror OUTWARD.</b> Paired +/- step buttons must mirror outward from the center: the BIGGEST
++ * step sits immediately adjacent to the center item on both sides, the SMALLEST step sits at the far edges.
++ * Magnitude increases as you approach the center from either edge. For ascending steps {@code [1, 10, 100]} and a
++ * center slot, the row (left to right) is:
++ *
++ * <pre>
++ * -1, -10, -100, [center], +100, +10, +1
++ * </pre>
++ *
++ * This is NOT the "smallest near center, biggest at edges" convention some UIs use — it is the opposite, on
++ * purpose. Consumer-side price/quantity pickers should install this instead of hand-rolling their own mirrored
++ * button ring.
++ *
++ * <pre>{@code
++ * ChestMenuBuilder builder = ChestMenu.builder();
++ * PriceGridComponent.install(builder, 22, new long[]{1, 10, 100},
++ *     () -> currentAmount.get(), 1, 10_000, next -> currentAmount.set(next),
++ *     amount -> ItemComponent.of(Material.EMERALD).name("&aAmount: " + amount),
++ *     (delta, positive) -> ItemComponent.of(positive ? Material.LIME_DYE : Material.RED_DYE)
++ *         .name((positive ? "&a+" : "&c-") + delta));
++ * }</pre>
++ */
++public final class PriceGridComponent {
++
++	PriceGridComponent() {
++	}
++
++	/**
++	 * Builds the item shown for one step button, given the step's magnitude (always positive) and whether it is
++	 * the increasing (+) or decreasing (-) side of the grid.
++	 */
++	@FunctionalInterface
++	public interface StepItemFactory {
++		ItemComponent item(long magnitude, boolean positive);
++	}
++
++	/**
++	 * Install the mirrored row onto {@code builder}. {@code steps} must be ascending and non-empty; the biggest
++	 * step lands nearest {@code centerSlot}, the smallest at the outer edge, per the house rule above.
++	 *
++	 * <p>Clicking a step button re-reads {@code currentValue} at click time (never a build-time snapshot), applies
++	 * the signed delta, clamps to {@code [min, max]}, writes back through {@code onChange}, then calls
++	 * {@link org.luckyraven.oriel.core.click.ClickContext#rerender()} so the preview and every button repaint.
++	 *
++	 * @param builder        the menu builder to install into
++	 * @param centerSlot     slot index of the preview item; step buttons are placed at
++	 *                       {@code centerSlot - distance} / {@code centerSlot + distance}
++	 * @param steps          ascending step magnitudes, e.g. {@code [1, 10, 100]}
++	 * @param currentValue   reads the live current value
++	 * @param min            inclusive clamp lower bound
++	 * @param max            inclusive clamp upper bound
++	 * @param onChange       writes the clamped new value back
++	 * @param previewFactory builds the center preview item for a given current value
++	 * @param stepFactory    builds a step button's item for a given magnitude/direction
++	 */
++	public static void install(ChestMenuBuilder builder, int centerSlot, long[] steps, LongSupplier currentValue,
++	                           long min, long max, LongConsumer onChange,
++	                           LongFunction<ItemComponent> previewFactory, StepItemFactory stepFactory) {
++		if (steps.length == 0) {
++			throw new IllegalArgumentException("steps must not be empty");
++		}
++
++		builder.slot(centerSlot, previewComponent(currentValue, previewFactory));
++
++		for (int i = 0; i < steps.length; i++) {
++			long magnitude = steps[steps.length - 1 - i]; // biggest first: nearest the center
++			int  distance  = i + 1;
++			builder.slot(centerSlot - distance,
++			             stepComponent(magnitude, false, currentValue, min, max, onChange, stepFactory));
++			builder.slot(centerSlot + distance,
++			             stepComponent(magnitude, true, currentValue, min, max, onChange, stepFactory));
++		}
++	}
++
++	private static Component<?> previewComponent(LongSupplier currentValue, LongFunction<ItemComponent> previewFactory) {
++		return new LiveComponent(() -> previewFactory.apply(currentValue.getAsLong()));
++	}
++
++	private static Component<?> stepComponent(long magnitude, boolean positive, LongSupplier currentValue, long min,
++	                                          long max, LongConsumer onChange, StepItemFactory stepFactory) {
++		return new LiveComponent(() -> stepFactory.item(magnitude, positive).onLeftClick(ctx -> {
++			long current = currentValue.getAsLong();
++			long next    = positive ? current + magnitude : current - magnitude;
++			next = Math.max(min, Math.min(max, next));
++			onChange.accept(next);
++			ctx.rerender();
++		}));
++	}
++
++	/**
++	 * Internal: rebuilds its {@link ItemComponent} from {@code factory} on every render pass instead of rendering a
++	 * snapshot captured at install time — this is what makes the preview (and every button, in case its label
++	 * depends on the value) repaint correctly after {@link org.luckyraven.oriel.core.click.ClickContext#rerender()}.
++	 */
++	private static final class LiveComponent implements Component<LiveComponent> {
++
++		private final Supplier<ItemComponent> factory;
++
++		private LiveComponent(Supplier<ItemComponent> factory) {
++			this.factory = factory;
++		}
++
++		@Override
++		public void renderInto(SlotView view, RenderContext ctx) {
++			factory.get().renderInto(view, ctx);
++		}
++	}
++}
+diff --git a/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/flow/MenuFlow.java b/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/flow/MenuFlow.java
+index 84d933c..1e83915 100644
+--- a/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/flow/MenuFlow.java
++++ b/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/flow/MenuFlow.java
+@@ -9,12 +9,13 @@ import org.bukkit.event.Listener;
+ import org.bukkit.event.inventory.InventoryCloseEvent;
+ import org.bukkit.plugin.java.JavaPlugin;
+ import org.jetbrains.annotations.Nullable;
+ import org.luckyraven.oriel.chest.ChestMenu;
+ import org.luckyraven.oriel.chest.ChestMenuBuilder;
+ import org.luckyraven.oriel.chest.internal.ChestMenuHolder;
++import org.luckyraven.oriel.core.CloseReason;
+ import org.luckyraven.oriel.core.registry.MenuRegistry;
+ 
+ import java.util.ArrayDeque;
+ import java.util.Deque;
+ import java.util.HashMap;
+ import java.util.Map;
+@@ -121,39 +122,75 @@ public final class MenuFlow<S extends FlowState> {
+ 			return;
+ 		}
+ 		if (currentPanelId != null) backStack.push(currentPanelId);
+ 		switchInternal(panelId, true);
+ 	}
+ 
+-	/** Pop the back-stack. No-op if empty. Does not push the current panel onto the stack. */
++	/** True when {@link #back()} would navigate to a previous panel rather than ending the flow. */
++	public boolean hasBack() {
++		return !backStack.isEmpty();
++	}
++
++	/**
++	 * Pop the back-stack and switch to the previous panel. Ends the flow (matching the legacy GLW
++	 * {@code MultiPanelInventory}'s behaviour) if the stack is empty, instead of silently no-op'ing on a dead
++	 * button. Does not push the current panel onto the stack.
++	 */
+ 	public void back() {
+ 		String previous = backStack.pollFirst();
+-		if (previous == null) return;
++		if (previous == null) {
++			end();
++			return;
++		}
+ 		switchInternal(previous, false);
+ 	}
+ 
++	/**
++	 * Re-render the current panel in place, in the already-open inventory: re-runs {@link Panel#render} and applies
++	 * the freshly-built component set to the live {@link ChestMenu} via {@link ChestMenu#adoptComponentsFrom} — no
++	 * new Bukkit inventory, no close/open round trip, no flicker, no cursor/drag-state reset, and (unlike
++	 * {@link #switchTo(String)} on the same id) nothing sitting in a live {@code DepositSlotComponent} slot is
++	 * abandoned. Unlike the pre-existing {@link ChestMenu#rerender()} (which only repaints the CURRENT component
++	 * set), this re-invokes {@link Panel#render} — so a panel that adds or removes a button in response to a state
++	 * change (not just updates item lore/amount) needs this, not the plain repaint. No-op if the flow hasn't opened
++	 * a panel yet.
++	 */
++	public void rerender() {
++		if (currentPanelId == null || currentMenu == null) return;
++		Panel<S> panel = panels.get(currentPanelId);
++		if (panel == null) return;
++		ChestMenuBuilder builder = registry == null ? ChestMenu.builder() : ChestMenu.builder(registry);
++		builder.title(panel.title(state)).rows(panel.rows(state));
++		panel.render(this, builder, state);
++		currentMenu.adoptComponentsFrom(builder.build());
++	}
++
+ 	/** Suspend the flow — the close listener will not call {@link #end()} until {@link #resume()} is called. */
+ 	public void suspend() {
+ 		this.suspended = true;
+ 	}
+ 
+ 	/** Resume the flow after an external inventory (anvil, sign, etc.) closes. Caller follows with switchTo/openAt. */
+ 	public void resume() {
+ 		this.suspended = false;
+ 	}
+ 
+-	/** End the flow: invoke {@code onEnd}, close the inventory, unregister the close listener. Idempotent. */
++	/**
++	 * End the flow: invoke {@code onEnd}, close the inventory (draining any {@code DepositSlotComponent}/
++	 * {@code ItemHoldingComponent} state back to the viewer — see {@link CloseReason#NAVIGATION}), unregister the
++	 * close listener. Idempotent.
++	 */
+ 	public void end() {
+ 		if (ended) return;
+ 		ended = true;
+ 		try {
+ 			if (onEnd != null) onEnd.accept(state);
+ 		} catch (Exception ex) {
+ 			log.warn("MenuFlow onEnd threw {}", ex.toString(), ex);
+ 		}
+-		if (currentMenu != null) currentMenu.close(viewer);
++		if (currentMenu != null) currentMenu.close(viewer, CloseReason.NAVIGATION);
+ 		if (closeListener != null) {
+ 			HandlerList.unregisterAll(closeListener);
+ 			closeListener = null;
+ 		}
+ 	}
+ 
+@@ -167,12 +204,21 @@ public final class MenuFlow<S extends FlowState> {
+ 		if (panel == null) {
+ 			throw new IllegalArgumentException("no panel registered with id '" + panelId + "'");
+ 		}
+ 
+ 		switching = true;
+ 		try {
++			// Close the OUTGOING menu properly first (cross-docket menu-chest finding #2, fixed in WS2 G2):
++			// previously the old ChestMenu was simply replaced/abandoned, so anything sitting in a live
++			// DepositSlotComponent slot on it was discarded along with the Inventory. CloseReason.NAVIGATION
++			// exists on the enum precisely for this ("a MenuFlow switched panels or ended") but was never wired
++			// up until now. This fires an explicit InventoryCloseEvent for the old inventory before the new one
++			// opens, same as Bukkit's own implicit close-on-reopen would have anyway.
++			if (currentMenu != null) {
++				currentMenu.close(viewer, CloseReason.NAVIGATION);
++			}
+ 			ChestMenuBuilder builder = registry == null
+ 				? ChestMenu.builder()
+ 				: ChestMenu.builder(registry);
+ 			builder.title(panel.title(state)).rows(panel.rows(state));
+ 			panel.render(this, builder, state);
+ 			ChestMenu newMenu = builder.build();
+diff --git a/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/internal/OrielMenuTarget.java b/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/internal/OrielMenuTarget.java
+index 5f1696f..bc55717 100644
+--- a/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/internal/OrielMenuTarget.java
++++ b/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/internal/OrielMenuTarget.java
+@@ -67,7 +67,21 @@ public interface OrielMenuTarget extends SlotHandlerSink {
+ 	 * {@code -1} if none. Used by the click listener to route a shift-click from the player's inventory into a
+ 	 * compatible deposit slot. Default returns {@code -1}; {@code ChestMenu} overrides.
+ 	 */
+ 	default int findAcceptingDepositSlot(Player player, ItemStack stack) {
+ 		return -1;
+ 	}
++
++	/**
++	 * Return any held {@code ItemHoldingComponent} state (deposit slots, etc.) to {@code player} on a genuine
++	 * user-initiated close — the player pressed Escape / closed the window themselves, not a {@code MenuFlow}
++	 * navigation and not a lifecycle-driven close (those already drain via {@code Menu.close(Player, CloseReason)}).
++	 *
++	 * <p>Bukkit automatically restores the player's cursor stack on any inventory close, but a custom inventory's
++	 * SLOT contents — where a {@code DepositSlotComponent} physically lives — are simply discarded, not returned.
++	 * Called by {@code ChestMenuCloseListener} exactly once, only for the branch where this menu is still the
++	 * tracked one for {@code player} (i.e. not a navigation-triggered close of an outgoing panel, which is already
++	 * untracked by the time its close event fires). Default is a no-op; {@code ChestMenu} overrides.
++	 */
++	default void returnHeldItemsOnUserClose(Player player) {
++	}
+ }
+diff --git a/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/listener/ChestMenuCloseListener.java b/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/listener/ChestMenuCloseListener.java
+index 1e31b4d..22e6f18 100644
+--- a/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/listener/ChestMenuCloseListener.java
++++ b/menu-inventories/chest/src/main/java/org/luckyraven/oriel/chest/listener/ChestMenuCloseListener.java
+@@ -63,10 +63,15 @@ public final class ChestMenuCloseListener implements Listener {
+ 						menu.open(player);
+ 					}
+ 				});
+ 				return;
+ 			}
+ 			MenuTracking.tracker().untrack(player);
++			// Genuine user close (this menu was still the tracked one, so it's neither a navigation-triggered
++			// close of an outgoing panel nor a lifecycle-driven close — both of those are already untracked by
++			// the time their close event fires). Bukkit only restores the player's cursor stack on close; a
++			// DepositSlotComponent's items live in a plugin-owned inventory SLOT and are otherwise just discarded.
++			target.returnHeldItemsOnUserClose(player);
+ 		}
+ 		target.onClose(event, player);
+ 	}
+ }
+diff --git a/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/DepositSlotComponentTest.java b/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/DepositSlotComponentTest.java
+index 7b3b332..1d34f8c 100644
+--- a/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/DepositSlotComponentTest.java
++++ b/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/DepositSlotComponentTest.java
+@@ -140,26 +140,32 @@ final class DepositSlotComponentTest {
+ 		assertTrue(player.getInventory().contains(Material.DIAMOND, 5),
+ 		           "diamonds should be returned to player inventory on plugin disable close");
+ 		assertFalse(deposit.hasDeposit(player), "held state should be cleared after return");
+ 	}
+ 
+ 	@Test
+-	void closeWithUserSkipsReturnSoBukkitCursorPickupHandlesIt() {
++	void closeWithUserAlsoReturnsHeldItems() {
++		// Corrected (cross-docket menu-chest finding #1, fixed WS2 G2): CloseReason.USER used to skip the
++		// return on the theory that Bukkit's cursor flow already handles it — wrong, a DepositSlotComponent's
++		// stack lives in a plugin-owned SLOT, not the cursor, and Bukkit simply discards it on close.
+ 		PlayerMock           player  = server.addPlayer();
+ 		DepositSlotComponent deposit = DepositSlotComponent.builder();
+ 
+warning: in the working copy of 'menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/DepositSurvivalIntegrationTest.java', LF will be replaced by CRLF the next time Git touches it
+ 		ChestMenu menu = ChestMenu.builder().rows(1).slot(0, deposit).build();
+ 		menu.open(player);
+ 
+-		deposit.handleSlotChange(ctxFor(player, menu, 0), null, new ItemStack(Material.DIAMOND, 5));
++		ItemStack diamond = new ItemStack(Material.DIAMOND, 5);
++		// Set both the slot and held state — mirrors closeWithPluginDisableReturnsHeldItems's steady state.
++		menu.bukkitInventory().setItem(0, diamond.clone());
++		deposit.handleSlotChange(ctxFor(player, menu, 0), null, diamond);
+ 
+ 		menu.close(player, CloseReason.USER);
+ 
+-		// Held state remains — the player initiated the close themselves; Bukkit's normal cursor flow surfaces
+-		// any in-flight items. Held state will clear naturally on the next open.
+-		assertTrue(deposit.hasDeposit(player), "USER close must skip the return so we don't double-issue items");
++		assertTrue(player.getInventory().contains(Material.DIAMOND, 5),
++		           "diamonds should be returned to player inventory on a USER close too");
++		assertFalse(deposit.hasDeposit(player), "held state should be cleared after return");
+ 	}
+ 
+ 	@Test
+ 	void consumeDepositsClearsAllHoldersWithoutReturning() {
+ 		PlayerMock           player  = server.addPlayer();
+ 		DepositSlotComponent deposit = DepositSlotComponent.builder();
+diff --git a/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/DepositSlotMultiSlotStressTest.java b/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/DepositSlotMultiSlotStressTest.java
+index aab1ad6..4a17b41 100644
+--- a/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/DepositSlotMultiSlotStressTest.java
++++ b/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/DepositSlotMultiSlotStressTest.java
+@@ -143,15 +143,16 @@ final class DepositSlotMultiSlotStressTest {
+ 		// Held state cleared after return.
+ 		assertFalse(slotA.hasDeposit(player));
+ 		assertFalse(slotB.hasDeposit(player));
+ 	}
+ 
+ 	@Test
+-	void closeOnUserSkipsReturnSoBukkitCursorPickupHandlesIt() {
+-		// USER close: Bukkit's natural close flow returns the cursor stack — we must NOT also drain held items
+-		// or the player gets a duplicate.
++	void closeOnUserAlsoReturnsHeldItems() {
++		// Corrected (cross-docket menu-chest finding #1, fixed WS2 G2): a DepositSlotComponent's stack lives in
++		// a plugin-owned SLOT, not the player's cursor, so Bukkit's normal close flow does NOT return it —
++		// CloseReason.USER must drain held items the same as every other close reason.
+ 		PlayerMock           player = server.addPlayer();
+ 		DepositSlotComponent slot   = DepositSlotComponent.builder();
+ 		ChestMenu            menu   = ChestMenu.builder().rows(1).slot(0, slot).build();
+ 		menu.open(player);
+ 
+ 		menu.bukkitInventory().setItem(0, new ItemStack(Material.DIAMOND, 5));
+@@ -159,24 +160,21 @@ final class DepositSlotMultiSlotStressTest {
+ 		                     new ItemStack(Material.AIR), new ItemStack(Material.DIAMOND, 5));
+ 		assertTrue(slot.hasDeposit(player));
+ 		player.getInventory().clear();
+ 
+ 		menu.close(player, CloseReason.USER);
+ 
+-		// USER close path: held state survives — Bukkit's cursor flow is responsible for returning the player's
+-		// items, not us. (Documented behaviour in ChestMenu.close(player, reason).)
+-		assertTrue(slot.hasDeposit(player), "USER close must not drain held items");
+-		// Player inventory should still be empty (we didn't return anything).
++		assertFalse(slot.hasDeposit(player), "held state should be cleared after a USER close returns it");
+ 		boolean foundDiamond = false;
+ 		for (ItemStack stack : player.getInventory().getContents()) {
+ 			if (stack != null && stack.getType() == Material.DIAMOND) {
+ 				foundDiamond = true;
+ 				break;
+ 			}
+ 		}
+-		assertFalse(foundDiamond, "USER close must not have returned items into player inventory");
++		assertTrue(foundDiamond, "USER close must return held items into player inventory");
+ 	}
+ 
+ 	@Test
+ 	void rapidConsumeAndReturnCycles() {
+ 		PlayerMock player = server.addPlayer();
+ 		// Use the DepositSlotComponent's own placeholder slot — composite-wrapping the deposit with another
+diff --git a/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/DepositSurvivalIntegrationTest.java b/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/DepositSurvivalIntegrationTest.java
+new file mode 100644
+index 0000000..b7e075d
+--- /dev/null
++++ b/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/DepositSurvivalIntegrationTest.java
+@@ -0,0 +1,160 @@
++package org.luckyraven.oriel.chest;
++
++import be.seeseemelk.mockbukkit.MockBukkit;
++import be.seeseemelk.mockbukkit.MockPlugin;
++import be.seeseemelk.mockbukkit.ServerMock;
++import be.seeseemelk.mockbukkit.entity.PlayerMock;
++import org.bukkit.Material;
++import org.bukkit.event.inventory.ClickType;
++import org.bukkit.event.inventory.InventoryCloseEvent;
++import org.bukkit.inventory.ItemStack;
++import org.junit.jupiter.api.AfterEach;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.oriel.chest.component.DepositSlotComponent;
++import org.luckyraven.oriel.chest.flow.FlowState;
++import org.luckyraven.oriel.chest.flow.MenuFlow;
++import org.luckyraven.oriel.chest.flow.Panel;
++import org.luckyraven.oriel.chest.listener.ChestMenuCloseListener;
++import org.luckyraven.oriel.core.CloseReason;
++import org.luckyraven.oriel.core.registry.DefaultOpenMenuTracker;
++import org.luckyraven.oriel.core.registry.MenuTracking;
++
++import static org.junit.jupiter.api.Assertions.assertFalse;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++
++/**
++ * G2 acceptance test (Oriel A3 / cross-docket menu-chest findings #1 + #2): items sitting in a
++ * {@link DepositSlotComponent} must survive the three scenarios the gate names — a genuine player-initiated
++ * close, a {@code MenuFlow} panel switch, and a server stop — each proven through its REAL production entry
++ * point (the Bukkit close listener, {@code MenuFlow.switchInternal}, and {@link DefaultOpenMenuTracker}), not
++ * just the lower-level {@code ChestMenu.close(Player, CloseReason)} API those entry points funnel into (that API
++ * itself is unit-tested directly in {@code DepositSlotComponentTest}/{@code DepositSlotMultiSlotStressTest}).
++ *
++ * <p>Full crash safety (surviving {@code kill -9}, Oriel's on-disk A3 backlog item) is explicitly NOT covered
++ * here — these three scenarios are graceful-shutdown-hook coverage, which is what the gate asked for.
++ */
++final class DepositSurvivalIntegrationTest {
++
++	private ServerMock server;
++	private MockPlugin plugin;
++
++	@BeforeEach
++	void start() {
++		server = MockBukkit.mock();
++		plugin = MockBukkit.createMockPlugin();
++		// A real tracker, not the NoOpTracker default MenuTracking falls back to in bare unit tests: without it
++		// ChestMenu.open() never registers, so ChestMenuCloseListener's `currentMenuOf(player) == target` guard
++		// (and DefaultOpenMenuTracker.closeAll's own bookkeeping) can't see a tracked menu at all.
++		MenuTracking.install(new DefaultOpenMenuTracker());
++	}
++
++	@AfterEach
++	void stop() {
++		MenuTracking.reset();
++		MockBukkit.unmock();
++	}
++
++	private static void deposit(ChestMenu menu, PlayerMock player, ItemStack stack) {
++		menu.bukkitInventory().setItem(0, stack.clone());
++		menu.dispatchDeposit(player, 0, ClickType.LEFT, new ItemStack(Material.AIR), stack);
++	}
++
++	@Test
++	void itemSurvivesAGenuineUserClose() {
++		// Real production path: the Bukkit InventoryCloseEvent -> ChestMenuCloseListener, not a direct
++		// close(player, CloseReason.USER) API call — proves the listener wiring (finding #1), not just the API.
++		server.getPluginManager().registerEvents(new ChestMenuCloseListener(plugin), plugin);
++
++		PlayerMock            player = server.addPlayer();
++		DepositSlotComponent  slot   = DepositSlotComponent.builder();
++		ChestMenu             menu   = ChestMenu.builder().rows(1).slot(0, slot).build();
++		menu.open(player);
++
++		deposit(menu, player, new ItemStack(Material.DIAMOND, 5));
++		assertTrue(slot.hasDeposit(player));
++		player.getInventory().clear();
++
++		InventoryCloseEvent event = new InventoryCloseEvent(player.getOpenInventory());
++		server.getPluginManager().callEvent(event);
++
++		assertFalse(slot.hasDeposit(player), "held state should clear once the item is returned");
++		assertTrue(player.getInventory().contains(Material.DIAMOND, 5),
++		           "pressing Escape must return the deposit, not discard it");
++	}
++
++	@Test
++	void itemSurvivesAMenuFlowPanelSwitch() {
++		// Real production path: MenuFlow.switchTo(...), not a direct close(viewer, NAVIGATION) call.
++		PlayerMock   player = server.addPlayer();
++		DepositState state  = new DepositState();
++		MenuFlow<DepositState> flow = MenuFlow.builder(plugin, player, state)
++		                                      .panel("deposit", depositPanel())
++		                                      .panel("other", otherPanel())
++		                                      .build();
++		flow.openAt("deposit");
++
++		deposit(flow.currentMenu(), player, new ItemStack(Material.DIAMOND, 5));
++		assertTrue(state.slot.hasDeposit(player));
++		player.getInventory().clear();
++
++		flow.switchTo("other");
++
++		assertFalse(state.slot.hasDeposit(player), "held state should clear once the item is returned");
++		assertTrue(player.getInventory().contains(Material.DIAMOND, 5),
++		           "switching panels must return the outgoing panel's deposit, not abandon it");
++	}
++
++	@Test
++	void itemSurvivesAServerStop() {
++		// Real production path: OpenMenuTracker.closeAll(...) — exactly what DefaultOpenMenuTracker.onShutdown()
++		// calls on plugin disable — not a direct close(player, PLUGIN_DISABLE) call (already covered elsewhere).
++		PlayerMock            player = server.addPlayer();
++		DepositSlotComponent  slot   = DepositSlotComponent.builder();
++		ChestMenu             menu   = ChestMenu.builder().rows(1).slot(0, slot).build();
++		menu.open(player); // ChestMenu.open tracks via MenuTracking.tracker().track(...) (a real tracker per start())
++
++		deposit(menu, player, new ItemStack(Material.DIAMOND, 5));
++		assertTrue(slot.hasDeposit(player));
++		player.getInventory().clear();
++
++		MenuTracking.tracker().closeAll(CloseReason.PLUGIN_DISABLE);
++
++		assertFalse(slot.hasDeposit(player), "held state should clear once the item is returned");
++		assertTrue(player.getInventory().contains(Material.DIAMOND, 5),
++		           "a server stop must return every tracked menu's deposits, not discard them");
++	}
++
++	private static final class DepositState implements FlowState {
++		final DepositSlotComponent slot = DepositSlotComponent.builder();
++	}
++
++	private Panel<DepositState> depositPanel() {
++		return new Panel<>() {
++			@Override
++			public int rows(DepositState state) { return 1; }
++
++			@Override
++			public String title(DepositState state) { return "&6Deposit"; }
++
++			@Override
++			public void render(MenuFlow<DepositState> flow, ChestMenuBuilder builder, DepositState state) {
++				builder.slot(0, state.slot);
++			}
++		};
++	}
++
++	private Panel<DepositState> otherPanel() {
++		return new Panel<>() {
++			@Override
++			public int rows(DepositState state) { return 1; }
++
++			@Override
++			public String title(DepositState state) { return "&6Other"; }
++
++			@Override
++			public void render(MenuFlow<DepositState> flow, ChestMenuBuilder builder, DepositState state) {
++			}
++		};
++	}
++}
+diff --git a/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/MenuFlowTest.java b/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/MenuFlowTest.java
+index a0f358d..90c58d9 100644
+--- a/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/MenuFlowTest.java
++++ b/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/MenuFlowTest.java
+@@ -5,12 +5,13 @@ import org.luckyraven.keystone.cooldown.InMemoryCooldownService;
+ import be.seeseemelk.mockbukkit.MockBukkit;
+ import be.seeseemelk.mockbukkit.MockPlugin;
+ import be.seeseemelk.mockbukkit.ServerMock;
+ import be.seeseemelk.mockbukkit.entity.PlayerMock;
+ import org.bukkit.Material;
+ import org.bukkit.event.inventory.*;
++import org.bukkit.inventory.Inventory;
+ import org.junit.jupiter.api.AfterEach;
+ import org.junit.jupiter.api.BeforeEach;
+ import org.junit.jupiter.api.Test;
+ import org.luckyraven.oriel.chest.component.ItemComponent;
+ import org.luckyraven.oriel.chest.flow.FlowState;
+ import org.luckyraven.oriel.chest.flow.MenuFlow;
+@@ -19,13 +20,17 @@ import org.luckyraven.oriel.chest.listener.ChestMenuClickListener;
+ 
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.concurrent.atomic.AtomicInteger;
+ 
+ import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertFalse;
+ import static org.junit.jupiter.api.Assertions.assertNotEquals;
++import static org.junit.jupiter.api.Assertions.assertNull;
++import static org.junit.jupiter.api.Assertions.assertSame;
++import static org.junit.jupiter.api.Assertions.assertTrue;
+ 
+ /**
+  * Acceptance test for the flow lifecycle: {@code menu → buy → detour → buy → back → menu → close} runs end-to-end.
+  *
+  * <p>"Detour" stands in for an anvil-prompt: the flow {@code suspend()}s, opens an external inventory (we use
+  * a vanilla Bukkit chest for the simulation), then {@code resume()}s and switches back. Real {@code AnvilMenu} uses the
+@@ -135,12 +140,86 @@ final class MenuFlowTest {
+ 		fireClose(player, flow);
+ 
+ 		assertEquals(List.of("render:menu", "render:buy", "render:buy", "render:menu", "end"), state.trace);
+ 		assertEquals(1, ended.get());
+ 	}
+ 
++	@Test
++	void rerenderReRunsPanelRenderWithoutABukkitReopen() {
++		PlayerMock  player = server.addPlayer();
++		TraderState state  = new TraderState();
++		MenuFlow<TraderState> flow = MenuFlow.builder(plugin, player, state)
++		                                     .panel("menu", conditionalButtonPanel())
++		                                     .build();
++
++		flow.openAt("menu");
++		Inventory beforeInventory = flow.currentMenu().bukkitInventory();
++		assertNull(beforeInventory.getItem(13), "button must be absent before the state flips");
++
++		state.unlocked = true;
++		flow.rerender();
++
++		assertSame(beforeInventory, flow.currentMenu().bukkitInventory(),
++		           "rerender() must reuse the live inventory, never open a new one");
++		assertEquals(Material.DIAMOND, beforeInventory.getItem(13).getType(),
++		             "rerender() must re-run Panel.render so the conditional button appears");
++	}
++
++	@Test
++	void backOnEmptyStackEndsTheFlow() {
++		PlayerMock    player = server.addPlayer();
++		TraderState   state  = new TraderState();
++		AtomicInteger ended  = new AtomicInteger();
++		MenuFlow<TraderState> flow = MenuFlow.builder(plugin, player, state)
++		                                     .panel("menu", trackingPanel("menu"))
++		                                     .onEnd(s -> ended.incrementAndGet())
++		                                     .build();
++		flow.openAt("menu");
++
++		flow.back();
++
++		assertEquals(1, ended.get(), "back() on an empty stack should end the flow (GLW parity), not no-op");
++	}
++
++	@Test
++	void hasBackReflectsBackStackState() {
++		PlayerMock  player = server.addPlayer();
++		TraderState state  = new TraderState();
++		MenuFlow<TraderState> flow = MenuFlow.builder(plugin, player, state)
++		                                     .panel("menu", trackingPanel("menu"))
++		                                     .panel("buy", trackingPanel("buy"))
++		                                     .build();
++
++		flow.openAt("menu");
++		assertFalse(flow.hasBack(), "no prior switchTo yet");
++
++		flow.switchTo("buy");
++		assertTrue(flow.hasBack(), "one switchTo pushed the root onto the back-stack");
++
++		flow.back();
++		assertFalse(flow.hasBack(), "popped back to the root, stack empty again");
++	}
++
++	/** Panel whose render() adds a button at slot 13 only once {@code state.unlocked} flips — see the rerender test. */
++	private Panel<TraderState> conditionalButtonPanel() {
++		return new Panel<>() {
++			@Override
++			public int rows(TraderState state) { return 3; }
++
++			@Override
++			public String title(TraderState state) { return "&6menu"; }
++
++			@Override
++			public void render(MenuFlow<TraderState> flow, ChestMenuBuilder builder, TraderState state) {
++				if (state.unlocked) {
++					builder.slot(13, ItemComponent.of(Material.DIAMOND));
++				}
++	warning: in the working copy of 'menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/PlaceholderResolutionAndRowScopedSourceTest.java', LF will be replaced by CRLF the next time Git touches it
+		}
++		};
++	}
++
+ 	private Panel<TraderState> trackingPanel(String id) {
+ 		return new Panel<>() {
+ 			@Override
+ 			public int rows(TraderState state) { return 3; }
+ 
+ 			@Override
+@@ -167,8 +246,9 @@ final class MenuFlowTest {
+ 					  new InventoryClickEvent(player.getOpenInventory(), InventoryType.SlotType.CONTAINER, slot, type,
+ 				                              InventoryAction.NOTHING));
+ 	}
+ 
+ 	private static final class TraderState implements FlowState {
+ 		final List<String> trace = new ArrayList<>();
++		boolean unlocked;
+ 	}
+ }
+diff --git a/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/PlaceholderResolutionAndRowScopedSourceTest.java b/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/PlaceholderResolutionAndRowScopedSourceTest.java
+new file mode 100644
+index 0000000..9b6445d
+--- /dev/null
++++ b/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/PlaceholderResolutionAndRowScopedSourceTest.java
+@@ -0,0 +1,143 @@
++package org.luckyraven.oriel.chest;
++
++import be.seeseemelk.mockbukkit.MockBukkit;
++import be.seeseemelk.mockbukkit.ServerMock;
++import be.seeseemelk.mockbukkit.entity.PlayerMock;
++import org.bukkit.ChatColor;
++import org.bukkit.Material;
++import org.bukkit.inventory.ItemStack;
++import org.bukkit.inventory.meta.ItemMeta;
++import org.junit.jupiter.api.AfterEach;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.oriel.chest.component.ItemComponent;
++import org.luckyraven.oriel.chest.component.PaginatedListComponent;
++import org.luckyraven.keystone.placeholder.PlaceholderProvider;
++
++import java.util.List;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertNotNull;
++
++/**
++ * G2 confirmation spike (WS2-inventory-oriel.md §3 finding C4): "placeholder resolution for a consumer's
++ * in-process placeholder service" and "row-scoped {@code %member_*%}/{@code %ally_*%} tokens" are NOT two gaps
++ * needing new Oriel primitives — the seam already exists on both counts, this test proves it end to end so the
++ * claim isn't just asserted in a plan document.
++ *
++ * <p><b>Menu-level tokens</b> (e.g. {@code %money_symbol%}): any {@link PlaceholderProvider} — PAPI-backed or a
++ * consumer's own in-process resolver, it makes no difference to Oriel — plugs into
++ * {@link ChestMenuBuilder#placeholders(PlaceholderProvider)} and resolves at render time, same as every other
++ * {@code %...%} token.
++ *
++ * <p><b>Row-scoped tokens</b> (e.g. {@code %member_name%}/{@code %member_rank%}, different per paginated list
++ * entry): {@link PaginatedListComponent#from} takes a {@code Function<RenderContext, List<ItemStack>>} that
++ * returns ALREADY-BUILT {@link ItemStack}s — the consumer's own source function (Gangland's
++ * {@code GangItemSourceProvider}, per the plan) resolves each row's values into the stack's name/lore itself,
++ * the same way it would build any other item. No PAPI-style expansion could resolve these anyway — a
++ * player-scoped placeholder call has no way to know which row a slot is rendering. This is why the plan (§3
++ * finding C4) landed on "no new Oriel ask for this row": there is nothing to build, only to prove it composes.
++ */
++final class PlaceholderResolutionAndRowScopedSourceTest {
++
++	private ServerMock server;
++
++	@BeforeEach
++	void start() {
++		server = MockBukkit.mock();
++	}
++
++	@AfterEach
++	void stop() {
++		MockBukkit.unmock();
++	}
++
++	private static String displayName(ChestMenu menu, int slot) {
++		ItemStack stack = menu.bukkitInventory().getItem(slot);
++		assertNotNull(stack, () -> "expected an item at slot " + slot);
++		ItemMeta meta = stack.getItemMeta();
++		assertNotNull(meta);
++		return ChatColor.stripColor(meta.getDisplayName());
++	}
++
++	private static List<String> lore(ChestMenu menu, int slot) {
++		ItemStack stack = menu.bukkitInventory().getItem(slot);
++		assertNotNull(stack, () -> "expected an item at slot " + slot);
++		ItemMeta meta = stack.getItemMeta();
++		assertNotNull(meta);
++		List<String> raw = meta.getLore()warning: in the working copy of 'menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/component/PriceGridComponentTest.java', LF will be replaced by CRLF the next time Git touches it
+;
++		assertNotNull(raw, () -> "expected lore at slot " + slot);
++		return raw.stream().map(ChatColor::stripColor).toList();
++	}
++
++	/** A per-row domain record, standing in for Gangland's {@code Member}. */
++	private record Member(String name, String rank, int contribution) {
++	}
++
++	/** Mirrors what a consumer's own source-provider rewrite (e.g. {@code GangItemSourceProvider}) would do:
++	 *  build a fully-resolved {@link ItemStack} per row, baking the row's own field values directly into the
++	 *  name/lore — no Oriel placeholder call involved for these row-scoped values at all. {@link PaginatedListComponent#from}
++	 *  places the returned stack verbatim (unlike {@link ItemComponent}, it does no {@code &}-code translation of
++	 *  its own), so a real consumer would run its own strings through {@code ChatUtil.color(...)} first — skipped
++	 *  here since this test asserts row-value substitution, not color translation. */
++	private static ItemStack itemFor(Member member) {
++		ItemStack stack = new ItemStack(Material.PLAYER_HEAD);
++		ItemMeta  meta  = stack.getItemMeta();
++		meta.setDisplayName(member.name());
++		meta.setLore(List.of("Rank: " + member.rank(), "Contribution: " + member.contribution()));
++		stack.setItemMeta(meta);
++		return stack;
++	}
++
++	@Test
++	void customInProcessPlaceholderProviderResolvesAMenuLevelToken() {
++		// Simulates Gangland's own PlaceholderService (not PAPI) as the ChestMenuBuilder's placeholders(...) —
++		// the seam is a plain functional interface, so any resolver plugs in identically.
++		PlaceholderProvider inProcessMoneySymbol = (player, raw) -> raw.replace("%money_symbol%", "$");
++
++		ChestMenu menu = ChestMenu.builder()
++		                          .rows(1)
++		                          .placeholders(inProcessMoneySymbol)
++		                          .slot(0, ItemComponent.of(Material.GOLD_INGOT).name("&6Balance: %money_symbol%100"))
++		                          .build();
++
++		PlayerMock player = server.addPlayer();
++		menu.open(player);
++
++		assertEquals("Balance: $100", displayName(menu, 0));
++	}
++
++	@Test
++	void rowScopedValuesComeFromTheSourceFunctionNotAPlaceholderCall() {
++		List<Member> roster = List.of(
++				new Member("Alice", "Leader", 500),
++				new Member("Bob", "Member", 120)
++		);
++
++		// No PlaceholderProvider is involved in building these rows — the source function resolves row-scoped
++		// data itself, exactly as GangItemSourceProvider would. Also attach an unrelated menu-level placeholder
++		// to prove the two mechanisms compose without interfering with each other.
++		PlaceholderProvider inProcessMoneySymbol = (player, raw) -> raw.replace("%money_symbol%", "$");
++		PaginatedListComponent members = PaginatedListComponent.from(
++				ctx -> roster.stream().map(PlaceholderResolutionAndRowScopedSourceTest::itemFor).toList());
++
++		ChestMenu menu = ChestMenu.builder()
++		                          .rows(3)
++		                          .placeholders(inProcessMoneySymbol)
++		                          .region(1, 1, 0, 8, members)
++		                          .slot(0, ItemComponent.of(Material.GOLD_INGOT).name("&6Bank: %money_symbol%50"))
++		                          .build();
++
++		PlayerMock player = server.addPlayer();
++		menu.open(player);
++
++		// Menu-level token still resolves via the in-process provider.
++		assertEquals("Bank: $50", displayName(menu, 0));
++
++		// Row 1 spans slots 9..17 (region rows [1,1], cols [0,8]) — Alice at 9, Bob at 10, per source order.
++		assertEquals("Alice", displayName(menu, 9));
++		assertEquals(List.of("Rank: Leader", "Contribution: 500"), lore(menu, 9));
++		assertEquals("Bob", displayName(menu, 10));
++		assertEquals(List.of("Rank: Member", "Contribution: 120"), lore(menu, 10));
++	}
++}
+diff --git a/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/component/PriceGridComponentTest.java b/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/component/PriceGridComponentTest.java
+new file mode 100644
+index 0000000..a3823c5
+--- /dev/null
++++ b/menu-inventories/chest/src/test/java/org/luckyraven/oriel/chest/component/PriceGridComponentTest.java
+@@ -0,0 +1,121 @@
++package org.luckyraven.oriel.chest.component;
++
++import be.seeseemelk.mockbukkit.MockBukkit;
++import be.seeseemelk.mockbukkit.ServerMock;
++import be.seeseemelk.mockbukkit.entity.PlayerMock;
++import org.bukkit.Material;
++import org.bukkit.event.inventory.ClickType;
++import org.bukkit.event.inventory.InventoryAction;
++import org.bukkit.event.inventory.InventoryClickEvent;
++import org.bukkit.event.inventory.InventoryType;
++import org.bukkit.inventory.ItemStack;
++import org.bukkit.plugin.Plugin;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.junit.jupiter.api.AfterEach;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.keystone.cooldown.InMemoryCooldownService;
++import org.luckyraven.oriel.chest.ChestMenu;
++import org.luckyraven.oriel.chest.ChestMenuBuilder;
++import org.luckyraven.oriel.chest.listener.ChestMenuClickListener;
++
++import java.util.concurrent.atomic.AtomicLong;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertNotNull;
++
++/**
++ * Covers the mirror-outward house rule ({@code centerSlot - distance} / {@code + distance}, biggest step nearest
++ * the center) and the click -> clamp -> rerender cycle.
++ */
++final class PriceGridComponentTest {
++
++	private static final int CENTER_SLOT = 22; // row 2 of a 3-row/27-slot menu
++
++	private ServerMock server;
++	private Plugin     plugin;
++
++	@BeforeEach
++	void start() {
++		server = MockBukkit.mock();
++		plugin = MockBukkit.createMockPlugin();
++		server.getPluginManager()
++		      .registerEvents(new ChestMenuClickListener((JavaPlugin) plugin, new InMemoryCooldownService()), plugin);
++	}
++
++	@AfterEach
++	void stop() {
++		MockBukkit.unmock();
++	}
++
++	@Test
++	void mirroredSlotLayoutMatchesHouseRule() {
++		PlayerMock player = server.addPlayer();
++		AtomicLong amount = new AtomicLong(1);
++		ChestMenu  menu   = buildGrid(amount, 1, 10_000);
++		menu.open(player);
++
++		// Left side: biggest step nearest the center, smallest at the edge.
++		assertName(menu, CENTER_SLOT - 1, "-100");
++		assertName(menu, CENTER_SLOT - 2, "-10");
++		assertName(menu, CENTER_SLOT - 3, "-1");
++		// Mirrored on the right.
++		assertName(menu, CENTER_SLOT + 1, "+100");
++		assertName(menu, CENTER_SLOT + 2, "+10");
++		assertName(menu, CENTER_SLOT + 3, "+1");
++		// Center preview, nothing else at that slot.
++		assertName(menu, CENTER_SLOT, "Amount:1");
++	}
++
++	@Test
++	void clickingStepButtonUpdatesValueAndRerendersPreviewInPlace() {
++		PlayerMock player = server.addPlayer();
++		AtomicLong amount = new AtomicLong(1);
++		ChestMenu  menu   = buildGrid(amount, 1, 150);
++		menu.open(player);
++
++		fireClick(player, CENTER_SLOT + 1, ClickType.LEFT); // "+100" button
++
++		assertEquals(101L, amount.get());
++		assertName(menu, CENTER_SLOT, "Amount:101"); // proves the rerender repainted the preview in place
++	}
++
++	@Test
++	void clickingStepButtonClampsAtBoundWithoutOvershootOrThrow() {
++		PlayerMock player = server.addPlayer();
++		AtomicLong amount = new AtomicLong(1);
++		ChestMenu  menu   = buildGrid(amount, 1, 50);
++		menu.open(player);
++
++		fireClick(player, CENTER_SLOT + 1, ClickType.LEFT); // "+100" would overshoot max=50
++
++		assertEquals(50L, amount.get());
++		assertName(menu, CENTER_SLOT, "Amount:50");
++
++		fireClick(player, CENTER_SLOT + 1, ClickType.LEFT); // click again at the bound: stays clamped, no throw
++
++		assertEquals(50L, amount.get());
++	}
++
++	private ChestMenu buildGrid(AtomicLong amount, long min, long max) {
++		ChestMenuBuilder builder = ChestMenu.builder().rows(3);
++		PriceGridComponent.install(builder, CENTER_SLOT, new long[]{1, 10, 100},
++		                           amount::get, min, max, amount::set,
++		                           current -> ItemComponent.of(Material.EMERALD).name("Amount:" + current),
++		                           (magnitude, positive) -> ItemComponent.of(positive ? Material.LIME_DYE : Material.RED_DYE)
++		                                                                 .name((positive ? "+" : "-") + magnitude));
++		return builder.build();
++	}
++
++	private void assertName(ChestMenu menu, int slot, String expectedDisplayName) {
++		ItemStack item = menu.bukkitInventory().getItem(slot);
++		assertNotNull(item, "expected an item at slot " + slot);
++		assertEquals(expectedDisplayName, item.getItemMeta().getDisplayName());
++	}
++
++	private void fireClick(PlayerMock player, int slot, ClickType type) {
++		server.getPluginManager()
++		      .callEvent(new InventoryClickEvent(player.getOpenInventory(), InventoryType.SlotType.CONTAINER, slot,
++		                                         type, InventoryAction.NOTHING));
++	}
++}
+diff --git a/menu-plugin/src/main/java/org/luckyraven/oriel/plugin/OrielPlugin.java b/menu-plugin/src/main/java/org/luckyraven/oriel/plugin/OrielPlugin.java
+index e0e4796..b9be45d 100644
+--- a/menu-plugin/src/main/java/org/luckyraven/oriel/plugin/OrielPlugin.java
++++ b/menu-plugin/src/main/java/org/luckyraven/oriel/plugin/OrielPlugin.java
+@@ -205,12 +205,13 @@ public final class OrielPlugin extends JavaPlugin {
+ 		// RequirementRegistry/CooldownService via MenuConfigService.forConsumer(...) would silently split state
+ 		// (cycle_sort/cycle_filter/set_search would no-op) or stomp the static parser slots on /menu reload — so
+ 		// those three are published here too, for forConsumer to reuse instead of constructing its own.
+ 		registerService(services, PaginatedControlRegistry.class);
+ 		registerService(services, RequirementRegistry.class);
+ 		registerService(services, CooldownService.class);
++		registerService(services, OpenMenuTracker.class);
+ 	}
+ 
+ 	private <T> void registerService(ServicesManager services, Class<T> type) {
+ 		T bean = context.get(type);
+ 		if (bean != null) services.register(type, bean, this, ServicePriority.Normal);
+ 	}

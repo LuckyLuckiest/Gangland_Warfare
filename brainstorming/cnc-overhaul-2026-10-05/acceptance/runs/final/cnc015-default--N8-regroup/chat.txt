@@ -1,0 +1,41 @@
+[Runner] Runner joined the game
+[Runner] [ViaVersion] There is a newer plugin version available: 5.12.0, you're on: 5.12.0-SNAPSHOT
+[Runner] [Server: Gamerule spawn_mobs is now set to: false]
+[Runner] [Server: Gamerule spawn_monsters is now set to: false]
+[Runner] [Server: Gamerule advance_time is now set to: false]
+[Runner] [Server: Set the time to 6000]
+[Runner] [Server: Set the weather to clear]
+[Runner] [Server: Killed 3 entities]
+[Runner] [Server: Applied effect Resistance to Runner]
+[Runner] [Server: Applied effect Instant Health to Runner]
+[Runner] [Server: Teleported Runner to 100.500000, -60.000000, 100.500000]
+[Runner] [DISPATCH] All units, be advised: Runner is wanted, level 3.
+[Runner] [GLW] Your wanted level has been increased ★★★☆☆.
+[Runner] [RADIO] Lieutenant Commander Rick #1000: Contact! Suspect 34 blocks south-east!
+[Runner] [RADIO] Lieutenant Commander Rick #1000: Squad, positions! Watch your sectors, south-east first!
+[Runner] [RADIO] Lieutenant Defender Ray #1002: Covering the squad, shields up!
+[Runner] [Ray #1002: Added tag 'cncc' to Ray #1002]
+[Runner] [Pete #1003: Added tag 'cncc' to Pete #1003]
+[Runner] [Rosa #1001: Added tag 'cncc' to Rosa #1001]
+[Runner] [Rick #1000: Added tag 'cncc' to Rick #1000]
+[Runner] [Server] CNCMARK:N8:KILL1
+[Runner] [RADIO] Lieutenant Commander Rick #1000: Officer down! Lieutenant Pointman Rosa #1001 is down!
+[Runner] [RADIO] Lieutenant Commander Rick #1000: Requesting backup at my location!
+[Runner] [Server: Applied 1000 damage to Rosa #1001]
+[Runner] [RADIO] Lieutenant Commander Rick #1000: Suspect is resisting! Take him down!
+[Runner] [RADIO] Lieutenant Commander Rick #1000: Man down, Lieutenant Pointman Rosa #1001! Pull back to cover, medic on him!
+[Runner] [DISPATCH] SWAT units en route to Runner.
+[Runner] [RADIO] Lieutenant Commander Rick #1000: Reloading, cover me!
+[Runner] [RADIO] Lieutenant Marksman Pete #1003: Overwatch in position, 30 blocks west, I have eyes on the suspect.
+[Runner] [RADIO] SWAT Assault Sue #1006: Moving to flank, south-west!
+[Runner] [Server: Applied 1000 damage to Ray #1002]
+[Runner] [Server] CNCMARK:N8:KILL2
+[Runner] [DISPATCH] Military units en route to Runner.
+[Runner] [RADIO] Lieutenant Commander Rick #1000: Two down! Pull back to cover, backup is coming!
+[Runner] [Server] CNCMARK:N8:REGROUP
+[Runner] [RADIO] Lieutenant Commander Rick #1000: Lieutenant Marksman Pete #1003, take his front!
+[Runner] [RADIO] Lieutenant Marksman Pete #1003: On it.
+[Runner] [RADIO] Lieutenant Commander Rick #1000: Squad, positions! Defender hold, Assault flank, Marksman take the high ground!
+[Runner] [RADIO] Lieutenant Commander Rick #1000: Backup's here! All units, push together!
+[Runner] [Server] CNCMARK:N8:PUSH
+[Runner/end] [END] disconnect.quitting

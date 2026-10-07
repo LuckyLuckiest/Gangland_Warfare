@@ -1,0 +1,18 @@
+[Runner] Runner joined the game
+[Runner] [ViaVersion] There is a newer plugin version available: 5.12.0, you're on: 5.12.0-SNAPSHOT
+[Runner] [Server: Gamerule spawn_mobs is now set to: false]
+[Runner] [Server: Gamerule spawn_monsters is now set to: false]
+[Runner] [Server: Gamerule advance_time is now set to: false]
+[Runner] [Server: Set the time to 6000]
+[Runner] [Server: Set the weather to clear]
+[Runner] [Server: Applied effect Resistance to Runner]
+[Runner] [Server: Applied effect Instant Health to Runner]
+[Runner] [Server: Teleported Runner to 100.500000, -60.000000, 100.500000]
+[Runner] [DISPATCH] All units, be advised: Runner is wanted, level 2.
+[Runner] [GLW] Your wanted level has been increased ★★☆☆☆.
+[Runner] [RADIO] Sergeant Pointman Rick #1000: Eyes on Runner, east!
+[Runner] GLW >> Wanted Status:
+[Runner] ★★☆☆☆
+[Runner] [RADIO] Sergeant Assault Tina #1001: Flanking south-west, keep him busy!
+[Runner] [Server] CNCMARK:STATUS:R4-before-quit
+[Runner/end] [END] disconnect.quitting

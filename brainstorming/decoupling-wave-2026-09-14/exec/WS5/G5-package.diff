@@ -1,0 +1,240 @@
+diff --git a/documentation/developer/architecture.md b/documentation/developer/architecture.md
+index 96c79198..711471b0 100644
+--- a/documentation/developer/architecture.md
++++ b/documentation/developer/architecture.md
+@@ -100,8 +100,7 @@ the shared `DependencyContainer`.
+ |                        |          | FileManager, DatabaseManager, PlaceholderService                        |
+ | `FileConfig`           | FILE     | Settings, LanguageLoader, 13+ FileInitializer addons                     |
+ | `DatabaseConfig`       | DATABASE | GanglandDatabase, RepositoryRegistry                                     |
+-| `DataConfig`           | CONFIG   | UserManager (online/offline), RankManager, GangManager, MemberManager,   |
+-|                        |          | WaypointManager, PluginManager                                           |
++| `DataConfig`           | CONFIG   | UserManager (online/offline), WaypointManager, PluginManager             |
+ | `GameplayConfig`       | CONFIG   | WeaponManager, SignManager, ItemParser, LootChestManager,                |
+ |                        |          | HologramService, MoneyDepositService, BlockDamageManager                 |
+ | `SchedulingConfig`     | CONFIG   | PeriodicalUpdates, PlayerBootstrapService                                |
+diff --git a/documentation/developer/dependency-injection.md b/documentation/developer/dependency-injection.md
+index 42909c6e..05dc45be 100644
+--- a/documentation/developer/dependency-injection.md
++++ b/documentation/developer/dependency-injection.md
+@@ -147,9 +147,12 @@ repo) resolve automatically.
+ 
+ ### Phase 4: CONFIG
+ 
+-The bulk manager phase. Produces all domain managers and services: `UserManager`, `GangManager`, `MemberManager`,
+-`RankManager`, `WaypointManager`, `WeaponManager`, `SignManager`, `CarService`, `CopService`, `LootChestManager`,
+-`PeriodicalUpdates`, `ListenerManager`, `CommandManager`, and many more.
++The bulk manager phase. Produces all domain managers and services: `UserManager`, `WaypointManager`,
++`SignManager`, `CarService`, `CopService`, `LootChestManager`, `PeriodicalUpdates`, `ListenerManager`,
++`CommandManager`, and many more — plus, since a runtime module's own `@Configuration` class is registered
++alongside the core's and runs in the same CONFIG phase (WS5, 0.10.0), module-owned managers such as
++`GangManager`/`MemberManager`/`RankManager` (`gangland-gang`) too. Both sets are produced the identical way;
++the only difference is which jar the `@Configuration` class lives in.
+ 
+ Beans implementing `BeanLifecycle` have their `onInitialize(true)` called immediately after registration (in topo
+ order), so each bean is populated with data before the next bean in the order is constructed.
+diff --git a/documentation/developer/modules.md b/documentation/developer/modules.md
+index f0715e1f..8a59bea4 100644
+--- a/documentation/developer/modules.md
++++ b/documentation/developer/modules.md
+@@ -103,19 +103,21 @@ The command system dispatches all player commands through a single `/glw` root c
+ 
+ ### Package: `data/`
+ 
+-Domain models, managers, and services for core gameplay entities.
++Domain models, managers, and services for core gameplay entities. Gangs, gang membership and ranks are **not**
++part of this package any more (WS5, 0.10.0) — `Gang`/`GangAlliance`/`GangManager`, `Member`/`MemberManager` and
++`Rank`/`RankManager`/`RankParent`/`RankPermission` all moved into the `gangland-gang` runtime module (see
++`documentation/module-loader.md`); `Permission` (the plain node, not the rank-permission link) stayed behind in
++`gangland-core`. A core class that needs a gang/membership fact without depending on the module reads it
++through `gangland-api`'s `GangMembership` holder instead.
+ 
+ | Subpackage             | Key Classes                                                                                       | Description                                                                                                                                       |
+ |------------------------|---------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+ | `account/`             | `Bank.java`                                                                                       | Player bank account with balance, interest, and transaction history.                                                                              |
+-| `account/gang/`        | `Gang.java`, `GangAlliance.java`, `GangManager.java`                                              | Gang entity (name, tag, level, XP, bank), alliance tracking, and gang lifecycle management.                                                       |
+-| `account/gang/member/` | `Member.java`, `MemberManager.java`                                                               | Gang membership model and cache with join/leave/promote operations.                                                                               |
+ | `account/user/`        | `User.java`, `UserManager.java`                                                                   | Player profile (level, XP, balance, bounty, kills, deaths, wanted level). `UserManager` handles online/offline caching with async DB persistence. |
+ | `economy/`             | `EconomyHandler.java`, `EconomyException.java`                                                    | Vault-compatible economy interface with balance checks and transfer validation.                                                                   |
+ | `permission/`          | `PermissionHandler.java`, `PermissionManager.java`, `PermissionWorker.java`                       | Runtime permission attachment and rank-based permission resolution.                                                                               |
+ | `placeholder/`         | `PlaceholderService.java`, `GanglandPlaceholder.java`, `PlaceholderAPIExpansion.java`             | PlaceholderAPI integration. Exposes player stats, gang info, and economy data as `%gangland_*%` placeholders.                                     |
+ | `plugin/`              | `PluginData.java`, `PluginDataCleanupService.java`, `PluginManager.java`                          | Global plugin state tracking and periodic cleanup of stale data.                                                                                  |
+-| `rank/`                | `Rank.java`, `RankManager.java`, `RankParent.java`, `RankPermission.java`, `Permission.java`      | Hierarchical rank system with inheritance. Ranks have parents, permissions, and display prefixes.                                                 |
+ | `teleportation/`       | `Waypoint.java`, `WaypointManager.java`, `WaypointTeleport.java`, `IllegalTeleportException.java` | Named teleportation waypoints with warmup timers and movement cancellation.                                                                       |
+ | `HelpInfo.java`        | —                                                                                                 | Help page data structure for the `/glw help` command.                                                                                             |
+ 
+diff --git a/documentation/migration-0.10.0.md b/documentation/migration-0.10.0.md
+index 4c3b0d11..63bf92db 100644
+--- a/documentation/migration-0.10.0.md
++++ b/documentation/migration-0.10.0.md
+@@ -270,6 +270,56 @@ The 4 entries (`lootchest`, `lootchest_help`, `lootchest_edit`, `lootchest_remov
+ `commands.json` into the module's own, at its jar root — no server-owner action; `/glw help lootchest` and
+ `/glw lootchest help` keep working identically once the module jar is present.
+ 
++## WS5 — gangs, gang membership and ranks become the `gangland-gang` runtime module
++
++`Gang`, `GangAlliance`, `Member` and `Rank` (plus their managers, `GangManager`/`MemberManager`/`RankManager`)
++leave `gangland-impl`/`gangland-infra/gangland-domain` (now deleted outright, G5 — see §3 below) and become the
++runtime module `gangland-features/gangland-gang`, shipped as `modules/gangland-gang-<rev>.jar` and loaded from
++`plugins/Gangland_Warfare/modules/` like any other module (see `documentation/module-loader.md`). **This module
++is effectively required** for any gang/rank functionality: `/glw gang*`, `/glw rank*`, the gang bank, gang
++alliances, and every gang-touching menu (`gang_info.yml`, `gang_stat.yml`, `phone_gang.yml`,
++`phone_gang_search.yml`, `alliance_stat.yml`, `user_stat.yml`) all live in this jar now.
++
++### 1. Database tables are unchanged — no migration
++
++The `gang`, `gang_ally`, `member` and `rank`/`rank_parent`/`rank_permission` tables keep their exact names,
++columns and data. Moving the Java classes into a module changed nothing about the schema or how rows are
++read/written (still through the same `DatabaseBackend` SPI, via repositories that now live in the module jar
++instead of the core one). Upgrading in place with the module jar present needs no manual step here.
++
++### 2. What a server owner sees without the module installed
++
++Unlike loot chests (WS3, above), a missing `gangland-gang` jar does not simply make `/glw gang`/`/glw rank`
++disappear quietly — the failure mode depends on which other module is asking:
++
++- **`gangland-turf` and `gangland-mail` refuse to load entirely.** Both declare `Depends: [gang]` in their own
++  `module.yml` (they name `Gang`/`GangManager`/etc. directly), so Keystone's `ModuleLoader` rejects them with
++  `module.dependency.missing` at boot — `/glw turf*`/`/glw mail*` and gang invites/alliance requests are all
++  unavailable, not just the gang commands themselves.
++- **Every other module degrades instead of failing.** `gangland-civilians`, `cops-n-crooks` and
++  `gangland-gadget` were deliberately kept gang-module-free (no `Depends:` edge at all) — they read gang facts
++  (same gang / allied gangs) through `gangland-api`'s always-present `GangMembership` holder, which simply goes
++  inert (every query answers "no", "-1", or empty) when nothing installs a live view into it. Turf's
++  friendly-fire exemption between gang allies, civilians' weapon-impact ally check, and the car-sharing check in
++  gadget all silently stop recognising allies/gangmates — no error, no fault logged, just the
++  "no gang installed" default.
++- **`/glw gang*`/`/glw rank*` themselves simply don't exist** (same as any other missing module's commands) —
++  their `commands.json` entries live in the module jar, not the core's.
++- **The gang menus** (`gang_info.yml`, `gang_stat.yml`, `phone_gang.yml`, `phone_gang_search.yml`,
++  `alliance_stat.yml`, `user_stat.yml`) still open — they're core YAML menus — but every dynamic row (the member
++  list, the ally list, the gang-search results) is empty, since their `ItemSourceProvider` also resolves through
++  a now-inert contribution.
++
++Drop the jar in alongside the others (`plugins/Gangland_Warfare/modules/gangland-gang-<rev>.jar`) and restart to
++restore everything above.
++
++### 3. `gangland-infra/gangland-domain` is gone (G5)
++
++The now-empty shell module (everything it held moved out across WS5 G0 — identity (`User`/`Level`/`Bounty`/
++`Wanted`) → `gangland-core` — and G1-G3 — gangs/ranks → this module) is deleted from the reactor entirely along
++with its `<module>` line and every remaining pom reference. No server-owner action — this is a build-time-only
++change; nothing it ever produced was itself deployed to a running server.
++
+ ## WS6 G3 — civilians' 12 `Messages.CIVILIAN_*` strings moved to the module's own YAML (worked example)
+ 
+ This section covers only **G3** of the WS6 (api facade) plan — the module-owned `Messages`/`Settings`-to-YAML
+diff --git a/documentation/module-loader.md b/documentation/module-loader.md
+index 4646d317..1970be23 100644
+--- a/documentation/module-loader.md
++++ b/documentation/module-loader.md
+@@ -85,8 +85,13 @@ Modules load once. A changed `modules/` folder — including an update — takes
+ 
+ A module is a Maven module under `gangland-features/` that depends on **`gangland-api`** at **`provided`** scope —
+ the only host artifact a module compiles against, so the compiler (not a convention) enforces the contract. It pulls
+-`gangland-core`, `gangland-domain`, `gangland-item` and `sign-api` in transitively, so
+-that one line replaces them all; add the Keystone modules it uses (also provided) — `keystone-shop` and
++`gangland-core`, `gangland-item` and `sign-api` in transitively, so
++that one line replaces them all (`gangland-domain` is gone entirely as of WS5, 0.10.0 — every type it held moved
++either into `gangland-core`, at WS5 G0, or into the `gangland-gang` module itself, at WS5 G1-G3; a module that
++names `Gang`/`GangManager`/`Member`/`Rank` directly needs its own `provided`-scope dependency on
++`gangland-gang` and a `Depends: [gang]` line in its `module.yml`, e.g. `gangland-mail`/`gangland-turf` — most
++modules instead read gang facts through `gangland-api`'s `GangMembership` holder and never need the
++dependency at all); add the Keystone modules it uses (also provided) — `keystone-shop` and
+ `keystone-inventory` are never re-exported by `gangland-api` (0.10.0, WS4/WS2 — `gangland-ui/inventory-api` itself
+ was deleted outright at the WS2 CUT gate, so there is nothing left to re-export there either), so a module that
+ needs either declares it directly. A module never depends on
+diff --git a/gangland-infra/gangland-domain/pom.xml b/gangland-infra/gangland-domain/pom.xml
+deleted file mode 100644
+index ec898a68..00000000
+--- a/gangland-infra/gangland-domain/pom.xml
++++ /dev/null
+@@ -1,54 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+-         xmlns="http://maven.apache.org/POM/4.0.0"
+-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+-    <modelVersion>4.0.0</modelVersion>
+-
+-    <parent>
+-        <groupId>org.luckyraven</groupId>
+-        <artifactId>gangland-infra</artifactId>
+-        <version>${revision}</version>
+-        <relativePath>../pom.xml</relativePath>
+-    </parent>
+-
+-    <artifactId>gangland-domain</artifactId>
+-
+-    <name>Gangland Domain</name>
+-
+-    <dependencies>
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>keystone-bean</artifactId>
+-        </dependency>
+-        <!-- Local dependencies -->
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>keystone-common</artifactId>
+-        </dependency>
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>keystone-persistence</artifactId>
+-        </dependency>
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>gangland-core</artifactId>
+-        </dependency>
+-        <dependency>
+-            <groupId>org.luckyraven</groupId>
+-            <artifactId>keystone-hooks</artifactId>
+-        </dependency>
+-
+-        <!-- XSeries -->
+-        <dependency>
+-            <groupId>com.github.cryptomorin</groupId>
+-            <artifactId>XSeries</artifactId>
+-        </dependency>
+-
+-        <!-- NBTAPI -->
+-        <dependency>
+-            <groupId>de.tr7zw</groupId>
+-            <artifactId>item-nbt-api-plugin</artifactId>
+-        </dependency>
+-    </dependencies>
+-
+-</project>
+diff --git a/gangland-infra/gangland-domain/src/main/resources/org/luckyraven/gangland/gang/module.properties b/gangland-infra/gangland-domain/src/main/resources/org/luckyraven/gangland/gang/module.properties
+deleted file mode 100644
+index 0f8ea8c3..00000000
+--- a/gangland-infra/gangland-domain/src/main/resources/org/luckyraven/gangland/gang/module.properties
++++ /dev/null
+@@ -1 +0,0 @@
+-module.name=${project.name}
+diff --git a/gangland-infra/pom.xml b/gangland-infra/pom.xml
+index e124bf3b..4dfacfc0 100644
+--- a/gangland-infra/pom.xml
++++ b/gangland-infra/pom.xml
+@@ -17,7 +17,6 @@
+     <name>Gangland Infrastructure</name>
+ 
+     <modules>
+-        <module>gangland-domain</module>
+         <module>gangland-item</module>
+     </modules>
+ 
+diff --git a/pom.xml b/pom.xml
+index caef3b49..64f74684 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -259,11 +259,6 @@
+                 <artifactId>gangland-core</artifactId>
+                 <version>${project.version}</version>
+             </dependency>
+-            <dependency>
+-                <groupId>org.luckyraven</groupId>
+-                <artifactId>gangland-domain</artifactId>
+-                <version>${project.version}</version>
+-            </dependency>
+             <dependency>
+                 <groupId>org.luckyraven</groupId>
+                 <artifactId>gangland-item</artifactId>

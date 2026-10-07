@@ -1,0 +1,27 @@
+[Poster] Poster joined the game
+[Poster] [ViaVersion] There is a newer plugin version available: 5.12.0, you're on: 5.12.0-SNAPSHOT
+[Poster] [Server: Made Target a server operator]
+[Poster] Target joined the game
+[Target] Target joined the game
+[Target] [ViaVersion] There is a newer plugin version available: 5.12.0, you're on: 5.12.0-SNAPSHOT
+[Poster] [Server: Made Hunter a server operator]
+[Target] [Server: Made Hunter a server operator]
+[Target] Hunter joined the game
+[Poster] Hunter joined the game
+[Hunter] Hunter joined the game
+[Hunter] [ViaVersion] There is a newer plugin version available: 5.12.0, you're on: 5.12.0-SNAPSHOT
+[Poster] GLW >> Your account balance has been set to $2,000.
+[Poster] GLW >> $500 has been taken from your account.
+[Target] Bounty +500
+[Target] GLW >> You have a bounty on your head!
+[Target] GLW >> Bounty $500
+[Poster] [Server] CNCMARK:N4:POSTED
+[Target] [Server] CNCMARK:N4:POSTED
+[Hunter] [Server] CNCMARK:N4:POSTED
+[Hunter] GLW >> Your account balance has been set to $0.
+[Poster/end] [END] disconnect.quitting
+[Hunter] Poster left the game
+[Target] Poster left the game
+[Target/end] [END] disconnect.quitting
+[Hunter] Target left the game
+[Hunter/end] [END] disconnect.quitting

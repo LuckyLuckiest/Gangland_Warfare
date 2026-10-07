@@ -1,0 +1,869 @@
+# Review package — WS8 G1 — Gangland 0.9.2 working tree vs HEAD d4fa4643 (WS7 G6 commit)
+--- status ---
+ M gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetFileConfig.java
+ M gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/Grapple.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/GrappleKey.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/config/GrappleAddon.java
+ M gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GadgetItemPredicates.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GrappleConverter.java
+ A gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GrappleItemSerializer.java
+ A gangland-features/gangland-gadget/src/main/resources/items/grapples.yml
+ A gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/grapple/GrappleNbtIdentityTest.java
+ A gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/grapple/config/GrappleAddonLoadTest.java
+ M gangland-infra/gangland-item/src/main/java/org/luckyraven/gangland/item/ItemKind.java
+--- diffstat ---
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/Grapple.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/GrappleKey.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/config/GrappleAddon.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GrappleConverter.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GrappleItemSerializer.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/resources/items/grapples.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/grapple/GrappleNbtIdentityTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/grapple/config/GrappleAddonLoadTest.java', LF will be replaced by CRLF the next time Git touches it
+ .../gangland/gadget/config/GadgetFileConfig.java   |  11 ++
+ .../gangland/gadget/config/GadgetModuleConfig.java |  17 +++
+ .../gangland/gadget/grapple/Grapple.java           | 117 ++++++++++++++++
+ .../gangland/gadget/grapple/GrappleKey.java        |  16 +++
+ .../gadget/grapple/config/GrappleAddon.java        | 147 +++++++++++++++++++++
+ .../gangland/gadget/item/GadgetItemPredicates.java |   3 +
+ .../gangland/gadget/item/GrappleConverter.java     |  38 ++++++
+ .../gadget/item/GrappleItemSerializer.java         |  23 ++++
+ .../src/main/resources/items/grapples.yml          |  52 ++++++++
+ .../gadget/grapple/GrappleNbtIdentityTest.java     | 111 ++++++++++++++++
+ .../grapple/config/GrappleAddonLoadTest.java       | 147 +++++++++++++++++++++
+ .../org/luckyraven/gangland/item/ItemKind.java     |   1 +
+ 12 files changed, 683 insertions(+)
+--- diff ---
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetFileConfig.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetFileConfig.java
+index ee87c78b..09620fa0 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetFileConfig.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetFileConfig.java
+@@ -4,10 +4,11 @@ import lombok.CustomLog;
+ import org.bukkit.plugin.java.JavaPlugin;
+ import org.luckyraven.keystone.util.Placeholder;
+ import org.luckyraven.gangland.file.configuration.Settings;
+ import org.luckyraven.gangland.gadget.car.config.CarAddon;
+ import org.luckyraven.gangland.gadget.contract.GadgetPhysicsConfigImpl;
++import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
+ import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
+ import org.luckyraven.gangland.gadget.jetpack.message.JetpackMessages;
+ import org.luckyraven.keystone.bean.Bean;
+ import org.luckyraven.keystone.bean.Configuration;
+ import org.luckyraven.keystone.bean.Phase;
+@@ -55,10 +56,20 @@ public class GadgetFileConfig {
+ 		JetpackAddon addon = new JetpackAddon(permissionManager::addPermission, fileManager, placeholderService);
+ 		fileManager.registerInitializer(addon);
+ 		return addon;
+ 	}
+ 
++	@Bean
++	public GrappleAddon grappleAddon(PermissionManager permissionManager, FileManager fileManager,
++	                                 Placeholder placeholderService, ModuleLoader moduleLoader) {
++		fileManager.addFile(new FileHandler(plugin, "grapples", "items", ".yml", moduleLoader.classLoader()), true);
++
++		GrappleAddon addon = new GrappleAddon(permissionManager::addPermission, fileManager, placeholderService);
++		fileManager.registerInitializer(addon);
++		return addon;
++	}
++
+ 	/**
+ 	 * WS7-G4 review I1: a module's own messages file is never the bare {@code messages} name — {@link FileManager}
+ 	 * resolves purely by name (no per-module namespacing of its own), so a second module registering its own
+ 	 * {@code messages.yml} would silently collide with gadget's. The precedent for every module: FileManager name
+ 	 * {@code <module>_messages}, resource {@code <module>/<module>_messages.yml}.
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java
+index 15f6f90d..4f52f196 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java
+@@ -13,11 +13,14 @@ import org.luckyraven.gangland.gadget.car.message.CarMessageContract;
+ import org.luckyraven.gangland.gadget.car.vehicle.VehicleRegistry;
+ import org.luckyraven.gangland.gadget.contract.GanglandCarMessages;
+ import org.luckyraven.gangland.gadget.item.CarConverter;
+ import org.luckyraven.gangland.gadget.item.CarItemRefresher;
+ import org.luckyraven.gangland.gadget.item.CarItemSerializer;
++import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
+ import org.luckyraven.gangland.gadget.item.GadgetItemPredicates;
++import org.luckyraven.gangland.gadget.item.GrappleConverter;
++import org.luckyraven.gangland.gadget.item.GrappleItemSerializer;
+ import org.luckyraven.gangland.gadget.item.JetpackConverter;
+ import org.luckyraven.gangland.gadget.item.JetpackItemRefresher;
+ import org.luckyraven.gangland.gadget.item.JetpackItemSerializer;
+ import org.luckyraven.gangland.gadget.jetpack.JetpackService;
+ import org.luckyraven.gangland.gadget.jetpack.config.JetpackAddon;
+@@ -165,10 +168,24 @@ public class GadgetModuleConfig {
+ 		// Priority 20: above Bartizan's wearable refresher (priority 10) — same reason as the serializer above.
+ 		itemRefresherRegistry.register(refresher, 20);
+ 		return refresher;
+ 	}
+ 
++	@Bean
++	public GrappleConverter grappleConvewarning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/Grapple.java', LF will be replaced by CRLF the next time Git touches it
+rter(GrappleAddon grappleAddon, ItemConverterRegistry itemConverterRegistry) {
++		GrappleConverter converter = new GrappleConverter(grappleAddon);
++		itemConverterRegistry.register(ItemKind.GRAPPLE, converter);
++		return converter;
++	}
++
++	@Bean
++	public GrappleItemSerializer grappleItemSerializer(ItemSerializerRegistry itemSerializerRegistry) {
++		GrappleItemSerializer serializer = new GrappleItemSerializer();
++		itemSerializerRegistry.register(GadgetItemPredicates.GRAPPLE, serializer);
++		return serializer;
++	}
++
+ 	@Bean
+ 	public CarSignContribution carSignContribution(@Qualifier("online") UserManager<Player> userManager,
+ 	                                               CarAddon carAddon) {
+ 		return new CarSignContribution(userManager, carAddon);
+ 	}
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/Grapple.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/Grapple.java
+new file mode 100644
+index 00000000..4dd80b9d
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/Grapple.java
+@@ -0,0 +1,117 @@
++package org.luckyraven.gangland.gadget.grapple;
++
++import lombok.Builder;
++import lombok.Getter;
++import org.bukkit.Material;
++import org.bukkit.entity.Player;
++import org.bukkit.inventory.ItemStack;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.keystone.item.ItemBuilder;
++import org.luckyraven.keystone.util.Placeholder;
++
++import java.util.ArrayList;
++import java.util.List;
++
++/**
++ * Domain entity for a gadget-owned grappling hook, mirroring {@code jetpack.Jetpack} (itself mirroring
++ * {@code car.Car}) — see {@code brainstorming/gadget-wave-2026-09-16/plans/WS8-gadget-catalogue.md}. Cooldown
++ * only (WS8-D1): no fuel/durability fields, no Bartizan bridge.
++ */
++@Builder
++@Getter
++public class Grapple {
++
++	// Identity
++	private final String       grappleId;
++	private final String       displayName;
++	private final Material     material;
++	private final int          customModelData;
++	private final List<String> lore;
++
++	// Mechanics — read directly by GrappleService/GrappleLaunchListener (G2/G3) off this config object, never
++	// re-parsed per-item.
++	private final int     maxDistance;
++	private final double  maxPullSpeed;
++	private final double  pullAcceleration;
++	private final double  arrivalDistance;
++	private final int     cooldownSeconds;
++	private final int     maxDurationTicks;
++	private final int     fallDamageGraceTicks;
++	private final boolean requireLineOfSight;
++
++	/**
++	 * Placeholder resolver injected by {@code GrappleAddon} via the builder so {@link #buildItem(Player)} can
++	 * resolve {@code %gangland_*%} tokens in the display name and lore.
++	 */
++	@Nullable
++	private final Placeholder placeholder;
++
++	/**
++	 * Checks whether the given ItemStack is a grapple item by looking for the grapple NBT tag.
++	 */
++	public static boolean isGrappleItem(@Nullable ItemStack item) {
++		if (item == null || item.getType().isAir()) {
++			return false;
++		}
++		return new ItemBuilder(item).hasNBTTag(GrappleKey.GRAPPLE_ID.getKey());
++	}
++
++	/**
++	 * Extracts the grapple configuration key from an ItemStack, or {@code null} if it is not a grapple item.
++	 */
++	@Nullable
++	public static String getGrappleId(@Nullable ItemStack item) {
++		if (!isGrappleItem(item)) {
++			return null;
++		}
++		return new ItemBuilder(item).getStringTagData(GrappleKey.GRAPPLE_ID.getKey());
++	}
++
++	/**
++	 * Returns the permission node for this grapple, derived from its configuration key.
++	 *
++	 * @return {@code "gangland.grapples.<grappleId>"}
++	 */
++	public String getPermission() {
++		return "gangland.grapples." + grappleId;
++	}
++
++	/**
++	 * Builds an ItemStack representing this grapple in inventory form, stamped with identifying NBT tags.
++	 */
++	public ItemStack buildItem() {
++		return buildItem(null);
++	}
++
++	public ItemStack buildItem(@Nullable Player player) {
++		ItemBuilder builder = new ItemBuilder(material);
++		builder.setDisplayName(resolvePlaceholder(player, displayNamwarning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/GrappleKey.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/config/GrappleAddon.java', LF will be replaced by CRLF the next time Git touches it
+e));
++
++		List<String> resolvedLore = resolvePlaceholder(player, lore);
++		if (resolvedLore != null && !resolvedLore.isEmpty()) {
++			builder.setLore(resolvedLore);
++		}
++
++		if (customModelData > 0) {
++			builder.setCustomModelData(customModelData);
++		}
++
++		builder.addTag(GrappleKey.GRAPPLE_ID.getKey(), grappleId);
++
++		return builder.build();
++	}
++
++	private String resolvePlaceholder(@Nullable Player player, @Nullable String text) {
++		if (text == null || text.isEmpty() || placeholder == null) return text;
++		return placeholder.convert(player, text);
++	}
++
++	private List<String> resolvePlaceholder(@Nullable Player player, @Nullable List<String> loreLines) {
++		if (loreLines == null || loreLines.isEmpty() || placeholder == null) return loreLines;
++		List<String> resolved = new ArrayList<>(loreLines.size());
++		for (String line : loreLines) {
++			resolved.add(line == null ? null : placeholder.convert(player, line));
++		}
++		return resolved;
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/GrappleKey.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/GrappleKey.java
+new file mode 100644
+index 00000000..915ab654
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/GrappleKey.java
+@@ -0,0 +1,16 @@
++package org.luckyraven.gangland.gadget.grapple;
++
++import lombok.Getter;
++import lombok.RequiredArgsConstructor;
++
++/**
++ * NBT tag keys used to identify and store grapple item data.
++ */
++@Getter
++@RequiredArgsConstructor
++public enum GrappleKey {
++
++	GRAPPLE_ID("grapple");
++
++	private final String key;
++}
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/config/GrappleAddon.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/config/GrappleAddon.java
+new file mode 100644
+index 00000000..714cb812
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/grapple/config/GrappleAddon.java
+@@ -0,0 +1,147 @@
++package org.luckyraven.gangland.gadget.grapple.config;
++
++import com.cryptomorin.xseries.XMaterial;
++import lombok.CustomLog;
++import org.bukkit.Material;
++import org.bukkit.configuration.ConfigurationSection;
++import org.bukkit.configuration.file.FileConfiguration;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.gangland.gadget.grapple.Grapple;
++import org.luckyraven.keystone.exception.PluginException;
++import org.luckyraven.keystone.persistence.FileHandler;
++import org.luckyraven.keystone.persistence.FileInitializer;
++import org.luckyraven.keystone.persistence.FileManager;
++import org.luckyraven.keystone.util.Placeholder;
++
++import java.io.IOException;
++import java.util.ArrayList;
++import java.util.Collections;
++import java.util.HashMap;
++import java.util.List;
++import java.util.Map;
++import java.util.Objects;
++import java.util.function.Consumer;
++
++/**
++ * Loads {@code items/grapples.yml} and holds the resulting {@link Grapple} catalogue, mirroring
++ * {@code jetpack.config.JetpackAddon} (itself mirroring {@code car.config.CarAddon}). Folds the registry role
++ * directly into this class — no separate {@code GrappleManager}, same as {@code JetpackAddon}.
++ */
++@CustomLog
++public class GrappleAddon implements FileInitializer {
++
++	private final Map<String, Grapple> grapples = new HashMap<>();
++
++	private final Consumer<String> permissionRegistrar;
++	private final FileHandler      fileHandler;
++
++	/**
++	 * Placeholder resolver injected by the impl side; threaded into every parsed {@link Grapple} via the builder so
++	 * its display name and lore resolve {@code %gangland_*%} tokens at item-build time.
++	 */
++	@Nullable
++	private final Placeholder placeholder;
++
++	public GrappleAddon(Consumer<String> permissionRegistrar, FileManager fileManager,
++	                    @Nullable Placeholder placeholder) {
++		this.permissionRegistrar = permissionRegistrar;
++		this.placeholder         = placeholder;
++
++		try {
++			String fileName = "grapples";
++
++			fileManager.checkFileLoaded(fileName);
++
++			this.fileHandler = Objects.requireNonNull(fileManager.getFile(fileName));
++		} catch (IOException exception) {
++			throw new PluginException(exception);
++		}
++	}
++
++	public void register(String key, Grapple grapple) {
++		grapples.put(key.toLowerCase(), grapple);
++	}
++
++	@Nullable
++	public Grapple getGrapple(String key) {
++		return grapples.get(key.toLowerCase());
++	}
++
++	public Map<String, Grapple> getGrapples() {
++		return Collections.unmodifiableMap(grapples);
++	}
++
++	public void clear() {
++		grapples.clear();
++	}
++
++	@Override
++	public FileHandler getFileHandler() {
++		return fileHandler;
++	}
++
++	@Override
++	public void initialize() {
++		loadGrapples(fileHandler.getFileConfiguration());
++	}
++
++	void loadGrapples(FileConfiguration config) {
++		List<String> loaded = new ArrayList<>();
++
++		for (String key : config.getKeys(false)) {
++			ConfigurationSection section = config.getConfigurationSection(key);
++			if (section == null) continue;
++
++			String materialString = section.getString("Material");
++			String displayName    = section.getString("Display_Name");
++
++			if (materialString == null || displayName == null) {
++				log.warn("Grapple '{}' is missing Material or Display_Name - skipped.", key);
++				continue;
++			}
++
++			Material material = XMaterial.matchXMaterial(materialString).map(XMaterial::get).orElse(null);
++
++			if (material == null) {
++				log.warn("Grapple '{}' has invalid Material '{}' - skipped.", key, materialString);
++				continue;
++			}
++
++			int          customModelData = section.getInt("Custom_Model_Data", 0);
++			List<String> lore            = section.getStringList("Lore");
++
++			int     maxDistance          = section.getInt("Max_Distance", 25);
++			double  maxPullSpeed         = section.getDouble("Max_Pull_Speed", 1.8);
++			double  pullAcceleration     = section.getDouble("Pull_Acceleration", 0.35);
++			double  arrivalDistance      = section.getDouble("Arrival_Distance", 1.5);
++			int     cooldownSeconds      = section.getInt("Cooldown_Seconds", 8);
++			int     maxDurationTicks     = section.getInt("Max_Duration_Ticks", 100);
++			int     fallDamageGraceTicks = section.getInt("Fall_Damage_Grace_Ticks", 40);
++			boolean requireLineOfSight   = section.getBoolean("Require_Line_Of_Sight", true);
++
++			Grapple grapple = Grapple.builder()
++			                         .grappleId(key)
++			                         .displayName(displayName)
++			                         .material(material)
++			                         .customModelData(customModelData)
++			                         .lore(lore.isEmpty() ? null : lore)
++			                         .maxDistance(maxDistance)
++			                         .maxPullSpeed(maxPullSpeed)
++			                         .pullAcceleration(pullAcceleration)
++			                         .arrivalDistance(arrivalDistance)
++			                         .cooldownSeconds(cooldownSeconds)
++			                         .maxDurationTicks(maxDurationTicks)
++			                         .fallDamageGraceTicks(fallDamageGraceTicks)
++			                         .requireLineOfSight(requireLineOfSight)
++			                         .placeholder(placeholder)
++			                         .build();
++
++			register(key, grapple);
++			permissionRegistrar.accept(grapple.getPermission());
++			loaded.add(key);
++		}
++
++		log.debug("Loaded the following grapples:");
++		log.debug(loaded);
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GadgetItemPredicates.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GadgetItemPredicates.java
+index ebe66bac..acf16be3 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GadgetItemPredicates.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GadgetItemPredicates.java
+@@ -1,9 +1,10 @@
+ package org.luckyraven.gangland.gadget.item;
+ 
+ import org.bukkit.inventory.ItemStack;
+ import org.luckyraven.gangland.gadget.car.CarKey;
++import owarning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GrappleConverter.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GrappleItemSerializer.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/resources/items/grapples.yml', LF will be replaced by CRLF the next time Git touches it
+rg.luckyraven.gangland.gadget.grapple.GrappleKey;
+ import org.luckyraven.gangland.gadget.jetpack.JetpackKey;
+ import org.luckyraven.keystone.item.ItemBuilder;
+ 
+ import java.util.function.Predicate;
+ 
+@@ -16,10 +17,12 @@ public final class GadgetItemPredicates {
+ 
+ 	public static final Predicate<ItemStack> CAR = stack -> hasTag(stack, CarKey.CAR_ID.getKey());
+ 
+ 	public static final Predicate<ItemStack> JETPACK = stack -> hasTag(stack, JetpackKey.JETPACK_ID.getKey());
+ 
++	public static final Predicate<ItemStack> GRAPPLE = stack -> hasTag(stack, GrappleKey.GRAPPLE_ID.getKey());
++
+ 	private GadgetItemPredicates() {
+ 	}
+ 
+ 	private static boolean hasTag(ItemStack stack, String tag) {
+ 		if (stack == null) {
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GrappleConverter.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GrappleConverter.java
+new file mode 100644
+index 00000000..ed1cdc69
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GrappleConverter.java
+@@ -0,0 +1,38 @@
++package org.luckyraven.gangland.gadget.item;
++
++import lombok.RequiredArgsConstructor;
++import org.bukkit.inventory.ItemStack;
++import org.luckyraven.gangland.gadget.grapple.Grapple;
++import org.luckyraven.gangland.gadget.grapple.config.GrappleAddon;
++import org.luckyraven.gangland.item.ItemAttributes;
++
++import java.util.Map;
++
++/**
++ * Converts a {@code grapple:<name>} item string into a fully-built {@link Grapple} ItemStack. Mirrors
++ * {@link JetpackConverter}.
++ */
++@RequiredArgsConstructor
++public class GrappleConverter extends ItemAttributes {
++
++	private final GrappleAddon grappleAddon;
++
++	@Override
++	public ItemStack convert(String type, String modifier, Map<String, String> attributes) {
++		if (modifier == null || modifier.isBlank()) {
++			return null;
++		}
++
++		Grapple grapple = grappleAddon.getGrapple(modifier.trim());
++
++		if (grapple == null) {
++			return null;
++		}
++
++		ItemStack itemStack = grapple.buildItem();
++
++		applyAttributes(itemStack, attributes);
++
++		return itemStack;
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GrappleItemSerializer.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GrappleItemSerializer.java
+new file mode 100644
+index 00000000..ad6dd60e
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/item/GrappleItemSerializer.java
+@@ -0,0 +1,23 @@
++package org.luckyraven.gangland.gadget.item;
++
++import org.bukkit.inventory.ItemStack;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.gangland.gadget.grapple.GrappleKey;
++import org.luckyraven.gangland.item.ItemKind;
++import org.luckyraven.keystone.item.ItemBuilder;
++import org.luckyraven.keystone.item.ItemSerializer;
++
++/** Extracts the grapple registry id from {@link GrappleKey#GRAPPLE_ID}. */
++public final class GrappleItemSerializer implements ItemSerializer {
++
++	@Override
++	public ItemKind kind() {
++		return ItemKind.GRAPPLE;
++	}
++
++	@Override
++	@Nullable
++	public String extract(ItemStack stack) {
++		return new ItemBuilder(stack).getStringTagData(GrappleKey.GRAPPLE_ID.getKey());
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/main/resources/items/grapples.yml b/gangland-features/gangland-gadget/src/main/resources/items/grapples.yml
+new file mode 100644
+index 00000000..8ca5a5cc
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/main/resources/items/grapples.yml
+@@ -0,0 +1,52 @@
++#   +------------------------------------------------------+   #
++#  /     __________      _______________       ____         \  #
++# |     / ________/      \_____   _____/      / __ \         | #
++# |    | /                     | |           / /  \ \        | #
++# |    | |  _______            | |          / /____\ \       | #
++# |    | |  \_____ \           | |         / ________ \      | #
++# |    | \_______/ ||          | |        / /        \ \     | #
++# |     \__________warning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/grapple/GrappleNbtIdentityTest.java', LF will be replaced by CRLF the next time Git touches it
+/           |_|       /_/          \_\    | #
++# |                                                          | #
++# |                   File: grapples.yml                     | #
++# |                  Author: [LuckyRaven10]                  | #
++#  \                                                        /  #
++#   +------------------------------------------------------+   #
++#
++# Each entry defines a grappling hook launched via a fishing-rod cast (PlayerFishEvent).
++# Items are identified in-game by a hidden NBT tag embedded when built via API.
++#
++# Fields:
++#   Material                 - Bukkit material name for the inventory item
++#   Display_Name             - display name (supports & color codes)
++#   Custom_Model_Data        - integer for resource pack model
++#   Lore                     - list of lore lines
++#
++#   Max_Distance             - maximum anchor distance in blocks (default 25)
++#   Max_Pull_Speed           - maximum pull velocity per tick (default 1.8)
++#   Pull_Acceleration        - velocity gain per tick toward the anchor (default 0.35)
++#   Arrival_Distance         - distance from the anchor at which the pull auto-stops (default 1.5)
++#   Cooldown_Seconds         - seconds before the same player can launch again (default 8)
++#   Max_Duration_Ticks       - hard timeout for a single pull (default 100)
++#   Fall_Damage_Grace_Ticks  - one-shot fall-damage immunity window after a pull ends (default 40)
++#   Require_Line_Of_Sight    - cancel the pull if a block occludes the anchor (default true)
++#
++# No fuel/durability model - cooldown only (WS8-D1).
++#
++# Permission nodes are derived automatically as "gangland.grapples.<key>"
++# (e.g. grapple → gangland.grapples.grapple).
++
++grapple:
++   Material: FISHING_ROD
++   Display_Name: "&b&lGrappling Hook"
++   Custom_Model_Data: 0
++   Lore:
++      - "&7Right-click to launch. Hooks a block within range and reels you in."
++      - "&7Sneak, take damage, or wait it out to cancel mid-pull."
++   Max_Distance: 25
++   Max_Pull_Speed: 1.8
++   Pull_Acceleration: 0.35
++   Arrival_Distance: 1.5
++   Cooldown_Seconds: 8
++   Max_Duration_Ticks: 100
++   Fall_Damage_Grace_Ticks: 40
++   Require_Line_Of_Sight: true
+diff --git a/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/grapple/GrappleNbtIdentityTest.java b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/grapple/GrappleNbtIdentityTest.java
+new file mode 100644
+index 00000000..5647f1c3
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/grapple/GrappleNbtIdentityTest.java
+@@ -0,0 +1,111 @@
++package org.luckyraven.gangland.gadget.grapple;
++
++import org.bukkit.Material;
++import org.bukkit.inventory.ItemStack;
++import org.junit.jupiter.api.AfterEach;
++import org.junit.jupiter.api.BeforeAll;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.gangland.core.testsupport.BukkitRegistryFixture;
++import org.luckyraven.gangland.gadget.item.GadgetItemPredicates;
++import org.luckyraven.keystone.item.ItemBuilder;
++import org.luckyraven.keystone.item.nbt.NbtBridge;
++import org.luckyraven.keystone.testkit.RecordingNbtAccessor;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertFalse;
++import static org.junit.jupiter.api.Assertions.assertNull;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++
++/**
++ * Pins {@link Grapple#isGrappleItem}/{@link Grapple#getGrappleId}/{@link Grapple#getPermission} NBT-tag identity
++ * checks, mirroring {@code jetpack.JetpackNbtIdentityTest} (itself mirroring {@code car.CarNbtIdentityTest}, S4) —
++ * including the permission assertion.
++ */
++@DisplayName("Grapple — NBT tag identity (isGrappleItem / getGrappleId / getPermission)")
++class GrappleNbtIdentityTest {
++
++	@BeforeAll
++	static void bootstrapBukkitRegistry() {
++		// Subject code reaches Material.isAir() / an XSeries registry lookup — see the fixture javadoc.
++		BukkitRegistrywarning: in the working copy of 'gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/grapple/config/GrappleAddonLoadTest.java', LF will be replaced by CRLF the next time Git touches it
+Fixture.install();
++	}
++
++	private RecordingNbtAccessor nbt;
++
++	@BeforeEach
++	void setUp() {
++		nbt = new RecordingNbtAccessor();
++		NbtBridge.install(nbt);
++	}
++
++	@AfterEach
++	void tearDown() {
++		NbtBridge.reset();
++	}
++
++	@Test
++	@DisplayName("isGrappleItem/getGrappleId are false/null for an item with no grapple NBT tag at all")
++	void isGrappleItem_noTag_false() {
++		ItemStack plain = new ItemStack(Material.FISHING_ROD);
++
++		assertFalse(Grapple.isGrappleItem(plain));
++		assertNull(Grapple.getGrappleId(plain));
++	}
++
++	@Test
++	@DisplayName("isGrappleItem/getGrappleId read back exactly what buildItem's NBT-tag step would have stamped")
++	void isGrappleItem_stampedTag_readsBack() {
++		ItemStack stack = new ItemStack(Material.FISHING_ROD);
++		new ItemBuilder(stack).addTag(GrappleKey.GRAPPLE_ID.getKey(), "grapple");
++
++		assertTrue(Grapple.isGrappleItem(stack));
++		assertEquals("grapple", Grapple.getGrappleId(stack));
++	}
++
++	@Test
++	@DisplayName("isGrappleItem/getGrappleId are false/null for a null item or an AIR stack")
++	void isGrappleItem_nullOrAir_falseNull() {
++		assertFalse(Grapple.isGrappleItem(null));
++		assertNull(Grapple.getGrappleId(null));
++
++		ItemStack air = new ItemStack(Material.AIR);
++		assertFalse(Grapple.isGrappleItem(air));
++		assertNull(Grapple.getGrappleId(air));
++	}
++
++	@Test
++	@DisplayName("getPermission derives 'gangland.grapples.<grappleId>' from the identity field, independent of NBT")
++	void getPermission_derivedFromGrappleId() {
++		Grapple grapple = Grapple.builder().grappleId("grapple").build();
++
++		assertEquals("gangland.grapples.grapple", grapple.getPermission());
++	}
++
++	@Test
++	@DisplayName("GadgetItemPredicates.CAR/JETPACK and GRAPPLE are mutually exclusive on a grapple-tagged stack")
++	void carJetpackAndGrapplePredicates_mutuallyExclusive() {
++		ItemStack stack = new ItemStack(Material.FISHING_ROD);
++		new ItemBuilder(stack).addTag(GrappleKey.GRAPPLE_ID.getKey(), "grapple");
++
++		assertTrue(GadgetItemPredicates.GRAPPLE.test(stack));
++		assertFalse(GadgetItemPredicates.CAR.test(stack));
++		assertFalse(GadgetItemPredicates.JETPACK.test(stack));
++	}
++
++	@Test
++	@DisplayName("buildItem() stamps GRAPPLE_ID and carries no fuel NBT tags (cooldown only, WS8-D1)")
++	void buildItem_stampsIdentityOnly_noFuelTags() {
++		Grapple grapple = Grapple.builder()
++		                         .grappleId("grapple")
++		                         .displayName("&bGrappling Hook")
++		                         .material(Material.FISHING_ROD)
++		                         .build();
++
++		ItemStack stack = grapple.buildItem();
++
++		assertTrue(Grapple.isGrappleItem(stack));
++		assertEquals("grapple", Grapple.getGrappleId(stack));
++	}
++}
+diff --git a/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/grapple/config/GrappleAddonLoadTest.java b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/grapple/config/GrappleAddonLoadTest.java
+new file mode 100644
+index 00000000..85a161ce
+--- /dev/null
++++ b/gangland-features/gangland-gadget/src/test/java/org/luckyraven/gangland/gadget/grapple/config/GrappleAddonLoadTest.java
+@@ -0,0 +1,147 @@
++package org.luckyraven.gangland.gadget.grapple.config;
++
++import org.bukkit.Bukkit;
++import org.bukkit.Material;
++import org.bukkit.configuration.InvalidConfigurationException;
++import org.bukkit.configuration.file.YamlConfiguration;
++import org.junit.jupiter.api.BeforeAll;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.gangland.core.testsupport.BukkitRegistryFixture;
++import org.luckyraven.gangland.gadget.grapple.Grapple;
++import org.luckyraven.keystone.persistence.FileHandler;
++import org.luckyraven.keystone.persistence.FileManager;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertNotNull;
++import static org.junit.jupiter.api.Assertions.assertNull;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.when;
++
++/**
++ * Mirrors {@code jetpack.config.JetpackAddonLoadTest}. Grapple has no fuel/Bartizan model (WS8-D1) so the only
++ * mandatory keys are {@code Material}/{@code Display_Name}, mirroring {@code car.config.CarAddon}'s check exactly
++ * — everything else defaults, same as Car's Vehicle/Fuel/Repair sections.
++ */
++@DisplayName("GrappleAddon — loadGrapples (Material/Display_Name mandatory, field round-trip)")
++class GrappleAddonLoadTest {
++
++	private static final String YAML = """
++			valid_grapple:
++			   Material: FISHING_ROD
++			   Display_Name: "&bTest Grapple"
++			   Custom_Model_Data: 7
++			   Lore:
++			      - "&7Line one"
++			   Max_Distance: 30
++			   Max_Pull_Speed: 2.0
++			   Pull_Acceleration: 0.4
++			   Arrival_Distance: 2.0
++			   Cooldown_Seconds: 5
++			   Max_Duration_Ticks: 120
++			   Fall_Damage_Grace_Ticks: 30
++			   Require_Line_Of_Sight: false
++
++			missing_display_name:
++			   Material: FISHING_ROD
++
++			missing_material:
++			   Display_Name: "&bNo Material"
++
++			defaults_only:
++			   Material: FISHING_ROD
++			   Display_Name: "&bDefaults Only"
++			""";
++
++	@BeforeAll
++	static void bootstrapBukkitRegistry() {
++		// Subject code reaches Material.isAir() via an XSeries registry lookup — see the fixture javadoc.
++		BukkitRegistryFixture.install();
++
++		// XMaterial's enum <clinit> parses "MC: 1.xx" out of Bukkit.getVersion() the first time any XMaterial
++		// constant is touched (GrappleAddon.loadGrapples calls XMaterial.matchXMaterial). The fixture's own
++		// server.getVersion() stub ("test") does not match that pattern and permanently poisons XMaterial's class
++		// init for the rest of this fork, so it is overridden here before the first touch.
++		when(Bukkit.getServer().getVersion()).thenReturn("git-Spigot-abcdef (MC: 1.21.11)");
++	}
++
++	private static GrappleAddon addon() {
++		FileManager fileManager = mock(FileManager.class);
++		FileHandler fileHandler = mock(FileHandler.class);
++		when(fileManager.getFile("grapples")).thenReturn(fileHandler);
++
++		return new GrappleAddon(key -> {}, fileManager, null);
++	}
++
++	private static YamlConfiguration loadYaml(String yaml) {
++		YamlConfiguration config = new YamlConfiguration();
++		try {
++			config.loadFromString(yaml);
++		} catch (InvalidConfigurationException exception) {
++			throw new IllegalStateException(exception);
++		}
++		return config;
++	}
++
++	@Test
++	@DisplayName("an entry missing Display_Name is skipped, not loaded")
++	void missingDisplayName_skipped() {
++		GrappleAddon addon = addon();
++		addon.loadGrapples(loadYaml(YAML));
++
++		assertNull(addon.getGrapple("missing_display_name"));
++	}
++
++	@Test
++	@DisplayName("an entry missing Material is skipped, not loaded")
++	void missingMaterial_skipped() {
++		GrappleAddon addon = addon();
++		addon.loadGrapples(loadYaml(YAML));
++
++		assertNull(addon.getGrapple("missing_material"));
++	}
++
++	@Test
++	@DisplayName("an entry with only the mandatory keys loads with every mechanics knob defaulted")
++	void defaultsOnly_loadsWithDefaults() {
++		GrappleAddon addon = addon();
++		addon.loadGrapples(loadYaml(YAML));
++
++		Grapple grapple = addon.getGrapple("defaults_only");
++		assertNotNull(grapple);
++
++		assertEquals(25, grapple.getMaxDistance());
++		assertEquals(1.8, grapple.getMaxPullSpeed());
++		assertEquals(0.35, grapple.getPullAcceleration());
++		assertEquals(1.5, grapple.getArrivalDistance());
++		assertEquals(8, grapple.getCooldownSeconds());
++		assertEquals(100, grapple.getMaxDurationTicks());
++		assertEquals(40, grapple.getFallDamageGraceTicks());
++		assertTrue(grapple.isRequireLineOfSight());
++	}
++
++	@Test
++	@DisplayName("a complete entry round-trips every field through loadGrapples")
++	void completeEntry_roundTrips() {
++		GrappleAddon addon = addon();
++		addon.loadGrapples(loadYaml(YAML));
++
++		Grapple grapple = addon.getGrapple("valid_grapple");
++		assertNotNull(grapple);
++
++		assertEquals("valid_grapple", grapple.getGrappleId());
++		assertEquals(Material.FISHING_ROD, grapple.getMaterial());
++		assertEquals("&bTest Grapple", grapple.getDisplayName());
++		assertEquals(7, grapple.getCustomModelData());
++		assertEquals(30, grapple.getMaxDistance());
++		assertEquals(2.0, grapple.getMaxPullSpeed());
++		assertEquals(0.4, grapple.getPullAcceleration());
++		assertEquals(2.0, grapple.getArrivalDistance());
++		assertEquals(5, grapple.getCooldownSeconds());
++		assertEquals(120, grapple.getMaxDurationTicks());
++		assertEquals(30, grapple.getFallDamageGraceTicks());
++		assertEquals(false, grapple.isRequireLineOfSight());
++		assertEquals("gangland.grapples.valid_grapple", grapple.getPermission());
++	}
++}
+diff --git a/gangland-infra/gangland-item/src/main/java/org/luckyraven/gangland/item/ItemKind.java b/gangland-infra/gangland-item/src/main/java/org/luckyraven/gangland/item/ItemKind.java
+index 0be8b1c8..24376e4b 100644
+--- a/gangland-infra/gangland-item/src/main/java/org/luckyraven/gangland/item/ItemKind.java
++++ b/gangland-infra/gangland-item/src/main/java/org/luckyraven/gangland/item/ItemKind.java
+@@ -13,10 +13,11 @@ package org.luckyraven.gangland.item;
+  */
+ public enum ItemKind implements org.luckyraven.keystone.item.ItemKind {
+ 	UNIQUE("unique"),
+ 	CAR("car"),
+ 	JETPACK("jetpack"),
++	GRAPPLE("grapple"),
+ 	MONEY("money"),
+ 	MATERIAL("material");
+ 
+ 	private final String label;
+ 

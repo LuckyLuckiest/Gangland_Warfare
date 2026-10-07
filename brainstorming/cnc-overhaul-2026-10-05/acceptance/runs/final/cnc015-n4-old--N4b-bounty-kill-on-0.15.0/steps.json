@@ -1,0 +1,183 @@
+[
+ {
+  "i": 0,
+  "step": {
+   "join": "Target",
+   "after": 2500
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "spawned 26.1"
+ },
+ {
+  "i": 1,
+  "step": {
+   "join": "Hunter",
+   "after": 2500
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "spawned 26.1"
+ },
+ {
+  "i": 2,
+  "step": {
+   "console": "gamemode survival Target",
+   "after": 200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "gamemode survival Target"
+ },
+ {
+  "i": 3,
+  "step": {
+   "console": "gamemode survival Hunter",
+   "after": 200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "gamemode survival Hunter"
+ },
+ {
+  "i": 4,
+  "step": {
+   "chat": "/glw balance",
+   "bot": "Hunter",
+   "after": 1200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "/glw balance"
+ },
+ {
+  "i": 5,
+  "step": {
+   "console": "say CNCMARK:N4:BAL0",
+   "after": 100
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "say CNCMARK:N4:BAL0"
+ },
+ {
+  "i": 6,
+  "step": {
+   "console": "damage Target 1000 minecraft:player_attack by Hunter",
+   "after": 1500
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "damage Target 1000 minecraft:player_attack by Hunter"
+ },
+ {
+  "i": 7,
+  "step": {
+   "wait": 3000
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "3000ms"
+ },
+ {
+  "i": 8,
+  "step": {
+   "chat": "/glw balance",
+   "bot": "Hunter",
+   "after": 1200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "/glw balance"
+ },
+ {
+  "i": 9,
+  "step": {
+   "console": "say CNCMARK:N4:BAL1-after-first-kill",
+   "after": 100
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "say CNCMARK:N4:BAL1-after-first-kill"
+ },
+ {
+  "i": 10,
+  "step": {
+   "wait": 6000
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "6000ms"
+ },
+ {
+  "i": 11,
+  "step": {
+   "console": "damage Target 1000 minecraft:player_attack by Hunter",
+   "after": 1500
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "damage Target 1000 minecraft:player_attack by Hunter"
+ },
+ {
+  "i": 12,
+  "step": {
+   "wait": 3000
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "3000ms"
+ },
+ {
+  "i": 13,
+  "step": {
+   "chat": "/glw balance",
+   "bot": "Hunter",
+   "after": 1200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "/glw balance"
+ },
+ {
+  "i": 14,
+  "step": {
+   "console": "say CNCMARK:N4:BAL2-after-second-kill",
+   "after": 100
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "say CNCMARK:N4:BAL2-after-second-kill"
+ },
+ {
+  "i": 15,
+  "step": {
+   "chat": "/glw bounty",
+   "bot": "Target",
+   "after": 1200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "/glw bounty"
+ },
+ {
+  "i": 16,
+  "step": {
+   "quit": true,
+   "bot": "Target"
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "quit Target"
+ },
+ {
+  "i": 17,
+  "step": {
+   "quit": true,
+   "bot": "Hunter"
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "quit Hunter"
+ }
+]

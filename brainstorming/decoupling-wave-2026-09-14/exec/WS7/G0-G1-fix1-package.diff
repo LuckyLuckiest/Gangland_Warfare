@@ -1,0 +1,1077 @@
+# Fix-round-1 package — WS7 batch 1 — full working-tree diff vs HEAD (Bartizan 0.4.0 worktree + Gangland pom)
+
+=================== /e/Programming/java/wt/bartizan-0.4.0 (HEAD 0e9e456) ===================
+--- diffstat ---
+warning: in the working copy of 'bartizan-plugin/src/test/java/org/luckyraven/bartizan/wearable/WearableExternalRegistrationTest.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'bartizan-plugin/src/test/java/org/luckyraven/bartizan/wearable/WearableExternalRegistrationTest.java', LF will be replaced by CRLF the next time Git touches it
+ .../luckyraven/bartizan/api/wearable/Wearable.java |  15 +-
+ .../bartizan/api/wearable/WearableCatalog.java     |  18 +++
+ .../command/wearable/WearableGiveCommand.java      |   8 +-
+ .../command/wearable/WearableInfoCommand.java      |   4 +-
+ .../command/wearable/WearableListCommand.java      |  12 +-
+ .../org/luckyraven/bartizan/config/ItemConfig.java |   4 +-
+ .../bartizan/item/BartizanItemVocabulary.java      |   5 +-
+ .../bartizan/item/WearableConverter.java           |   4 +-
+ .../bartizan/item/WearableItemSerializer.java      |  18 +++
+ .../bartizan/item/WearableRefresher.java           |   7 +-
+ .../bartizan/wearable/WearableAddon.java           |  71 +--------
+ .../bartizan/wearable/WearableService.java         |   1 +
+ .../src/main/resources/items/wearables.yml         |  33 ----
+ .../wearable/WearableAddonLegacyJetpackTest.java   |  58 -------
+ .../bartizan/wearable/WearableAddonTest.java       |   3 +-
+ .../wearable/WearableExternalRegistrationTest.java | 166 +++++++++++++++++++++
+ documentation/bartizan-api.md                      |  21 ++-
+ documentation/migration.md                         |  25 +++-
+ pom.xml                                            |   2 +-
+ 19 files changed, 294 insertions(+), 181 deletions(-)
+--- diff ---
+warning: in the working copy of 'bartizan-plugin/src/test/java/org/luckyraven/bartizan/wearable/WearableExternalRegistrationTest.java', LF will be replaced by CRLF the next time Git touches it
+diff --git a/bartizan-api/src/main/java/org/luckyraven/bartizan/api/wearable/Wearable.java b/bartizan-api/src/main/java/org/luckyraven/bartizan/api/wearable/Wearable.java
+index 479c1cf..f9b5e5d 100644
+--- a/bartizan-api/src/main/java/org/luckyraven/bartizan/api/wearable/Wearable.java
++++ b/bartizan-api/src/main/java/org/luckyraven/bartizan/api/wearable/Wearable.java
+@@ -86,12 +86,21 @@ public class Wearable {
+ 	private final Map<String, Integer> traits;
+ 	private final double               baseDamageReduction;
+ 	@Nullable
+ 	private final Color                leatherColor;
+ 	private final boolean              temporary;
+ 
++	/**
++	 * {@code true} for a {@code WearableCatalog.register}-registered entry (WS7-D4): an armour identity + traits
++	 * handed to Bartizan by another plugin, damage-reduction/effects only. Bartizan never builds, converts, gives,
++	 * lists or serialises an external wearable — the owning plugin does; see {@code WearableCatalog.register}'s
++	 * javadoc for the full contract.
++	 */
++	@Builder.Default
++	private final boolean external = false;
++
+ 	/**
+ 	 * {@code Attributes:} — Bukkit attribute modifiers stamped on the piece's own armour slot group (gate
+ 	 * {@code HL}, §2), stamped via the same {@link AttributeModifiers#apply} helper {@code Weapon} uses.
+ 	 */
+ 	@Builder.Default
+ 	private final List<HandlingData.AttributeEntry> attributes = List.of();
+@@ -290,16 +299,18 @@ public class Wearable {
+ 		return 0.03; // TURTLE_HELMET or unknown
+ 	}
+ 
+ 	/**
+ 	 * Returns the permission node for this wearable, derived from its registry key.
+ 	 *
+-	 * @return {@code "bartizan.wearables.<wearableKey>"}, or {@code null} for temporary wearables
++	 * @return {@code "bartizan.wearables.<wearableKey>"}, or {@code null} for a temporary or external wearable
++	 *         (an external key is never registered with Bukkit — {@code WearableEquipListener} treats a
++	 *         {@code null} permission as "no gate", so an unregistered node never silently blocks equipping)
+ 	 */
+ 	public String getPermission() {
+-		if (temporary || wearableKey == null) return null;
++		if (temporary || external || wearableKey == null) return null;
+ 		return "bartizan.wearables." + wearableKey;
+ 	}
+ 
+ 	/** The trait keys (lower-case) this wearable carries a non-zero level for. */
+ 	public Set<String> traits() {
+ 		return traits == null ? Collections.emptySet() : traits.keySet();
+diff --git a/bartizan-api/src/main/java/org/luckyraven/bartizan/api/wearable/WearableCatalog.java b/bartizan-api/src/main/java/org/luckyraven/bartizan/api/wearable/WearableCatalog.java
+index 3be3f43..be57a09 100644
+--- a/bartizan-api/src/main/java/org/luckyraven/bartizan/api/wearable/WearableCatalog.java
++++ b/bartizan-api/src/main/java/org/luckyraven/bartizan/api/wearable/WearableCatalog.java
+@@ -15,12 +15,30 @@ public interface WearableCatalog {
+ 	/** @return the configured wearable, or {@code null} when no wearable has that key. */
+ 	@Nullable
+ 	Wearable getWearable(@Nullable String key);
+ 
+ 	Map<String, Wearable> getWearables();
+ 
++	/**
++	 * Registers a {@link Wearable} under {@code key} so a worn item carrying the matching {@code "wearable"} NBT
++	 * tag ({@link Wearable#NBT_KEY}) resolves to it for damage-reduction/effects purposes (WS7-D4: the
++	 * external-registration hook a soft-dependent plugin uses to hand Bartizan an armour identity + traits without
++	 * Bartizan gaining any caller-specific code).
++	 *
++	 * <p>{@code wearable} must be built with {@code .external(true)} and at minimum {@code wearableKey}/
++	 * {@code baseDamageReduction}/{@code traits} (an optional {@code effects} block is honoured too). Bartizan
++	 * applies its armour behaviour to any worn item carrying the matching tag, but an external entry is
++	 * damage-only: it is never built, converted, given, listed or serialised by Bartizan — {@link Wearable#getPermission()}
++	 * returns {@code null} for it, {@code /bartizan wearable give/info/list} all skip it, and Bartizan's own
++	 * {@code wearable:} item-vocabulary converter/serializer/refresher never claim it. The owning plugin is
++	 * responsible for building the ItemStack, stamping the {@code "wearable"} tag itself, and for its own
++	 * give/converter/refresher/list surface — Bartizan only ever reads the registered definition to compute a
++	 * reduction or run an effect.
++	 */
++	void register(String key, Wearable wearable);
++
+ 	@Nullable
+ 	Wearable resolveWearable(@Nullable ItemStack item);
+ 
+ 	double applyWearableReduction(double damage, LivingEntity entity, boolean projectile);
+ 
+ 	double reduceCritBonus(double bonus, LivingEntity entity);
+diff --git a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/command/wearable/WearableGiveCommand.java b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/command/wearable/WearableGiveCommand.java
+index 3d6a9e0..52e91d0 100644
+--- a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/command/wearable/WearableGiveCommand.java
++++ b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/command/wearable/WearableGiveCommand.java
+@@ -58,14 +58,15 @@ class WearableGiveCommand extends SubArgument {
+ 				                                                 .replace("%name%", itemName)
+ 				                                                 .replace("%amount%", "1"));
+ 			} else {
+ 				player.sendMessage(BartizanMessages.WEARABLE_INVALID.toString().replace("%name%", itemName));
+ 			}
+ 		}, sender -> {
+-			return wearableAddon.getWearables().keySet()
+-					.stream().toList();
++			return wearableAddon.getWearables().entrySet().stream()
++					.filter(entry -> !entry.getValue().isExternal())
++					.map(Map.Entry::getKey).toList();
+ 		});
+ 
+ 		OptionalArgument amount = new OptionalArgument(bartizan, tree, (argument, sender, args) -> {
+ 			Player player = (Player) sender;
+ 
+ 			String itemName = args[2];
+@@ -96,13 +97,14 @@ class WearableGiveCommand extends SubArgument {
+ 		this.addSubArgument(name);
+ 	}
+ 
+ 	private boolean giveWearable(Player player, String name, int amount) {
+ 		Wearable wearable = wearableAddon.getWearable(name);
+ 
+-		if (wearable == null) return false;
++		// An external (WS7-D4) entry was never built through Bartizan - the registrant's own give path handles it.
++		if (wearable == null || wearable.isExternal()) return false;
+ 
+ 		ItemStack       sampleItem   = wearable.buildItem(player);
+ 		int             maxStackSize = sampleItem.getMaxStackSize();
+ 		int             slots        = (int) Math.ceil(amount / (double) maxStackSize);
+ 		int             amountLeft   = amount;
+ 		PlayerInventory inventory    = player.getInventory();
+diff --git a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/command/wearable/WearableInfoCommand.java b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/command/wearable/WearableInfoCommand.java
+index fb62fd3..0ca8641 100644
+--- a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/command/wearable/WearableInfoCommand.java
++++ b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/command/wearable/WearableInfoCommand.java
+@@ -47,13 +47,15 @@ class WearableInfoCommand extends SubArgument {
+ 			String key = Wearable.getWearableKey(itemStack);
+ 
+ 			if (key == null) return;
+ 
+ 			Wearable wearable = wearableAddon.getWearable(key);
+ 
+-			if (wearable == null) {
++			// An external (WS7-D4) entry has no Material/Name/Lore of its own - treat it as unregistered here,
++			// the same as no entry at all.
++			if (wearable == null || wearable.isExternal()) {
+ 				player.sendMessage(BartizanMessages.WEARABLE_NOT_REGISTERED.toString().replace("%key%", key));
+ 				return;
+ 			}
+ 
+ 			StringBuilder traitsBuilder = new StringBuilder();
+ 			Set<String>   traits        = wearable.traits();
+diff --git a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/command/wearable/WearableListCommand.java b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/command/wearable/WearableListCommand.java
+index e92e3df..6b8b7d7 100644
+--- a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/command/wearable/WearableListCommand.java
++++ b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/command/wearable/WearableListCommand.java
+@@ -9,13 +9,13 @@ import org.luckyraven.keystone.datastructure.Tree;
+ import org.luckyraven.bartizan.file.BartizanMessages;
+ import org.luckyraven.bartizan.wearable.WearableAddon;
+ import org.luckyraven.bartizan.api.wearable.Wearable;
+ import org.luckyraven.bartizan.util.BartizanChatUtil;
+ 
+ import java.util.Iterator;
+-import java.util.Map;
++import java.util.List;
+ 
+ class WearableListCommand extends SubArgument {
+ 
+ 	private final WearableAddon wearableAddon;
+ 
+ 	WearableListCommand(Bartizan bartizan, Tree<Argument> tree, Argument parent, WearableAddon wearableAddon) {
+@@ -24,21 +24,23 @@ class WearableListCommand extends SubArgument {
+ 		this.wearableAddon = wearableAddon;
+ 	}
+ 
+ 	@Override
+ 	protected TriConsumer<Argument, CommandSender, String[]> action() {
+ 		return (argument, sender, args) -> {
+-			Map<String, Wearable> wearables = wearableAddon.getWearables();
++			// External (WS7-D4) entries have no display Name of their own and are not Bartizan's to list.
++			List<Wearable> wearables = wearableAddon.getWearables().values().stream()
++					.filter(wearable -> !wearable.isExternal()).toList();
+ 
+ 			sender.sendMessage(BartizanMessages.WEARABLE_LIST_HEADER.toString());
+ 
+-			Iterator<Map.Entry<String, Wearable>> iterator = wearables.entrySet().iterator();
+-			StringBuilder                         builder  = new StringBuilder();
++			Iterator<Wearable> iterator = wearables.iterator();
++			StringBuilder      builder  = new StringBuilder();
+ 
+ 			while (iterator.hasNext()) {
+-				Wearable wearable = iterator.next().getValue();
++				Wearable wearable = iterator.next();
+ 
+ 				builder.append("&b").append(wearable.getName());
+ 				if (iterator.hasNext()) builder.append("&7, ");
+ 			}
+ 
+ 			sender.sendMessage(BartizanChatUtil.color(builder.toString()));
+diff --git a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/config/ItemConfig.java b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/config/ItemConfig.java
+index eb165c2..03f7496 100644
+--- a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/config/ItemConfig.java
++++ b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/config/ItemConfig.java
+@@ -63,14 +63,14 @@ public final class ItemConfig {
+ 	@Bean
+ 	public AmmunitionItemSerializer ammunitionItemSerializer() {
+ 		return new AmmunitionItemSerializer();
+ 	}
+ 
+ 	@Bean
+-	public WearableItemSerializer wearableItemSerializer() {
+-		return new WearableItemSerializer();
++	public WearableItemSerializer wearableItemSerializer(WearableService wearableService) {
++		return new WearableItemSerializer(wearableService);
+ 	}
+ 
+ 	@Bean
+ 	public WeaponRefresher weaponRefresher(WeaponService weaponService) {
+ 		return new WeaponRefresher(weaponService);
+ 	}
+diff --git a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/item/BartizanItemVocabulary.java b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/item/BartizanItemVocabulary.java
+index 16bb6cc..2fc0d29 100644
+--- a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/item/BartizanItemVocabulary.java
++++ b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/item/BartizanItemVocabulary.java
+@@ -51,13 +51,16 @@ public final class BartizanItemVocabulary implements ItemVocabulary {
+ 		registrar.converter("weapon", weaponConverter);
+ 		registrar.converter(new String[] {"ammunition", "ammo"}, ammunitionConverter);
+ 		registrar.converter("wearable", wearableConverter);
+ 
+ 		registrar.serializer(WeaponItemPredicates.WEAPON, weaponItemSerializer, 0);
+ 		registrar.serializer(WeaponItemPredicates.AMMUNITION, ammunitionItemSerializer, 0);
+-		registrar.serializer(BartizanItemPredicates.WEARABLE, wearableItemSerializer, 0);
++		// WS7-D4 Important-3 fix: excludes an externally-registered key (see WearableItemSerializer#claims) so a
++		// foreign plugin's own item is never claimed here - only BartizanItemPredicates.WEARABLE's raw tag check
++		// would have.
++		registrar.serializer(BartizanItemPredicates.WEARABLE.and(wearableItemSerializer::claims), wearableItemSerializer, 0);
+ 
+ 		registrar.refresher(weaponRefresher, 10);
+ 		registrar.refresher(wearableRefresher, 10);
+ 		registrar.refresher(ammunitionItemRefresher, 0);
+ 	}
+ 
+diff --git a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/item/WearableConverter.java b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/item/WearableConverter.java
+index cf6e316..40280bd 100644
+--- a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/item/WearableConverter.java
++++ b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/item/WearableConverter.java
+@@ -28,13 +28,15 @@ public class WearableConverter extends ItemAttributes {
+ 	@Override
+ 	public ItemStack convert(String type, String modifier, Map<String, String> attributes) {
+ 		if (modifier == null || modifier.isBlank()) return null;
+ 
+ 		Wearable wearable = wearableService.getWearable(modifier.trim());
+ 
+-		if (wearable == null) return null;
++		// An external (WS7-D4) entry is damage-reduction/effects only - it was never built by the registrant
++		// through this converter, and Wearable#buildItem() throws on its incomplete Material.
++		if (wearable == null || wearable.isExternal()) return null;
+ 
+ 		ItemStack itemStack = wearable.buildItem();
+ 
+ 		applyAttributes(itemStack, attributes);
+ 
+ 		return itemStack;
+diff --git a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/item/WearableItemSerializer.java b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/item/WearableItemSerializer.java
+index ef0b562..9cabfba 100644
+--- a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/item/WearableItemSerializer.java
++++ b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/item/WearableItemSerializer.java
+@@ -1,20 +1,38 @@
+ package org.luckyraven.bartizan.item;
+ 
++import lombok.RequiredArgsConstructor;
+ import org.bukkit.inventory.ItemStack;
+ import org.jetbrains.annotations.Nullable;
+ import org.luckyraven.keystone.item.ItemBuilder;
+ import org.luckyraven.keystone.item.ItemKind;
+ import org.luckyraven.keystone.item.ItemSerializer;
+ import org.luckyraven.bartizan.api.wearable.Wearable;
++import org.luckyraven.bartizan.wearable.WearableService;
+ 
+ /**
+  * Extracts the wearable registry name from {@link Wearable#NBT_KEY}.
+  */
++@RequiredArgsConstructor
+ public final class WearableItemSerializer implements ItemSerializer {
+ 
++	private final WearableService wearableService;
++
++	/**
++	 * Registered alongside {@link org.luckyraven.bartizan.api.BartizanItemPredicates#WEARABLE} at
++	 * {@code BartizanItemVocabulary} (WS7-D4, Important-3 fix): excludes an externally-registered key so a foreign
++	 * plugin's own item is never claimed by Bartizan's priority-0 serializer - the registrant's own serializer
++	 * claims it instead.
++	 */
++	public boolean claims(ItemStack stack) {
++		String key = new ItemBuilder(stack).getStringTagData(Wearable.NBT_KEY);
++		if (key == null) return false;
++		Wearable wearable = wearableService.getWearable(key);
++		return wearable == null || !wearable.isExternal();
++	}
++
+ 	@Override
+ 	public ItemKind kind() {
+ 		return BartizanItemKind.WEARABLE;
+ 	}
+ 
+ 	@Override
+diff --git a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/item/WearableRefresher.java b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/item/WearableRefresher.java
+index 5336fa8..b9f6ee9 100644
+--- a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/item/WearableRefresher.java
++++ b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/item/WearableRefresher.java
+@@ -17,14 +17,17 @@ import org.luckyraven.bartizan.wearable.WearableService;
+ public class WearableRefresher implements ItemRefresher {
+ 
+ 	private final WearableService wearableService;
+ 
+ 	@Override
+ 	public boolean canRefresh(ItemStack source) {
+-		if (source == null) return false;
+-		return new ItemBuilder(source).hasNBTTag(Wearable.NBT_KEY);
++		if (source == null || !new ItemBuilder(source).hasNBTTag(Wearable.NBT_KEY)) return false;
++		Wearable wearable = wearableService.getWearable(new ItemBuilder(source).getStringTagData(Wearable.NBT_KEY));
++		// null (unregistered/foreign tag) still claims - refresh() below no-ops safely; only an external
++		// (WS7-D4) entry is excluded, since Wearable#buildItem() throws on its incomplete Material.
++		return wearable == null || !wearable.isExternal();
+ 	}
+ 
+ 	@Override
+ 	@Nullable
+ 	public ItemStack refresh(ItemStack source, @Nullable Player context) {
+ 		String key = new ItemBuilder(source).getStringTagData(Wearable.NBT_KEY);
+diff --git a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/wearable/WearableAddon.java b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/wearable/WearableAddon.java
+index d07e8d8..4863827 100644
+--- a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/wearable/WearableAddon.java
++++ b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/wearable/WearableAddon.java
+@@ -4,14 +4,12 @@ import com.cryptomorin.xseries.XAttribute;
+ import com.cryptomorin.xseries.XMaterial;
+ import lombok.CustomLog;
+ import org.bukkit.Color;
+ import org.bukkit.attribute.Attribute;
+ import org.bukkit.attribute.AttributeModifier;
+ import org.bukkit.Material;
+-import org.bukkit.configuration.ConfigurationSection;
+-import org.bukkit.configuration.MemoryConfiguration;
+ import org.jetbrains.annotations.Nullable;
+ import org.luckyraven.keystone.util.Placeholder;
+ import org.luckyraven.keystone.exception.PluginException;
+ import org.luckyraven.bartizan.api.weapon.dto.EffectsData;
+ import org.luckyraven.bartizan.api.weapon.dto.HandlingData;
+ import org.luckyraven.bartizan.api.wearable.Wearable;
+@@ -38,14 +36,13 @@ import java.util.regex.Pattern;
+ /**
+  * Parser for {@code items/wearables.yml}, rewritten onto the {@code FileHandlerReader}/{@code NodeReader}/
+  * {@code ConfigReport} pipeline {@code WeaponAddon.registerWeapon} already uses (weapons-roadmap.md gate
+  * {@code HL}, §1) — a bad wearable entry is reported exactly like a bad weapon instead of a bare {@code log.warn}.
+  * Traits are read as a {@code Map<String,Integer>} keyed by lower-cased trait name (the YAML {@code Traits:} keys
+  * stay upper-case unchanged — lower-casing happens here on read) instead of the deleted {@code WearableTrait}
+- * enum, and the old {@code Jetpack:} block is translated into the generic {@code Extra_Tags:} map read into
+- * {@link Wearable#extraTags()}.
++ * enum. {@code Extra_Tags:} is read generically into {@link Wearable#extraTags()}.
+  *
+  * <p>Only a missing/invalid {@code Material} skips the whole entry (with a {@link Severity#WARNING}); every other
+  * bad value (an unrecognised trait/attribute key, a malformed {@code Sets} tier key, an out-of-range number) is
+  * itself reported by {@code NodeReader}'s typed accessors or a targeted warning here, and defaults/skips just that
+  * one value.
+  */
+@@ -98,69 +95,15 @@ public class WearableAddon extends WearableService implements FileInitializer {
+ 			return Color.fromRGB((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF);
+ 		} catch (NumberFormatException e) {
+ 			return null;
+ 		}
+ 	}
+ 
+-	/**
+-	 * Translates the pre-split {@code Jetpack:} block (Gangland 0.8.4 {@code wearables.yml}) into the
+-	 * {@code Extra_Tags:} shape the gadget module reads: the fuel tags Gangland's {@code FuelKey} expects plus the
+-	 * lower-cased, {@code jetpack_}-prefixed physics scalars. Defaults mirror the 0.8.4 loader.
+-	 * {@code Glide_Descent_Rate} is dropped (dead since 152eba4); {@code Sound:} is carried over as {@code Sounds:}.
+-	 *
+-	 * <p>Kept on a plain {@link ConfigurationSection} parameter (unchanged since before the {@code HL}
+-	 * {@code NodeReader} rewrite): the loader below wraps the positional {@code Jetpack:} {@link MappingNode} into
+-	 * one via {@link #asConfigurationSection} — the smallest way to reuse this method's body verbatim.
+-	 */
+-	static Map<String, Object> legacyJetpackToExtraTags(ConfigurationSection jetpack) {
+-		Map<String, Object> tags    = new LinkedHashMap<>();
+-		int                 maxFuel = jetpack.getInt("Max_Fuel", 3600);
+-
+-		tags.put("fuel", jetpack.getString("Fuel_Key", ""));
+-		tags.put("fuel_current", maxFuel);
+-		tags.put("fuel_max", maxFuel);
+-		tags.put("jetpack_fuel_consumption_rate", jetpack.getInt("Fuel_Consumption_Rate", 2));
+-		tags.put("jetpack_ascend_power", jetpack.getDouble("Ascend_Power", 0.35));
+-		tags.put("jetpack_max_speed_y", jetpack.getDouble("Max_Speed_Y", 0.8));
+-
+-		ConfigurationSection sound = jetpack.getConfigurationSection("Sound");
+-		if (sound != null) tags.put("Sounds", sectionToMap(sound));
+-
+-		return tags;
+-	}
+-
+-	/**
+-	 * Recursively converts a {@link ConfigurationSection} into a plain {@code Map<String,Object>} so nested blocks
+-	 * (e.g. {@code Extra_Tags.Sounds}) come out as real {@code Map} instances rather than {@code MemorySection}
+-	 * objects — the shape {@code extraTags()} consumers (gadget's jetpack code, per bartizan.md §1.6(6)) expect.
+-	 */
+-	private static Map<String, Object> sectionToMap(ConfigurationSection section) {
+-		Map<String, Object> map = new LinkedHashMap<>();
+-		for (String key : section.getKeys(false)) {
+-			Object value = section.get(key);
+-			if (value instanceof ConfigurationSection nested) {
+-				value = sectionToMap(nested);
+-			}
+-			map.put(key, value);
+-		}
+-		return map;
+-	}
+-
+-	/**
+-	 * Wraps a positional {@link MappingNode} as a {@link ConfigurationSection} — the smallest bridge back to
+-	 * {@link #legacyJetpackToExtraTags}'s unchanged, {@code ConfigurationSection}-typed signature (and its pinned
+-	 * test). {@link MemoryConfiguration#createSection(String, Map)} recursively turns nested {@code Map} values
+-	 * (from {@link #nodeToMap}) into real nested sections, so {@code getConfigurationSection("Sound")} still works.
+-	 */
+-	private static ConfigurationSection asConfigurationSection(MappingNode mapping) {
+-		return new MemoryConfiguration().createSection("tmp", nodeToMap(mapping));
+-	}
+-
+ 	/**
+ 	 * Converts a positional {@link MappingNode} into a plain {@code Map<String,Object>} — the {@code Extra_Tags:}
+-	 * read path's replacement for the old {@code ConfigurationSection}-based {@link #sectionToMap}. Nested mappings
++	 * read path used for the {@code Extra_Tags:} block. Nested mappings
+ 	 * become nested maps, sequences become lists, scalars are best-effort typed (int, then double, then boolean,
+ 	 * else the raw string) so downstream {@code ConfigurationSection}/{@code Map} readers see the type they expect.
+ 	 */
+ 	private static Map<String, Object> nodeToMap(MappingNode mapping) {
+ 		Map<String, Object> map = new LinkedHashMap<>();
+ 		for (Map.Entry<String, ConfigNode> entry : mapping.entries().entrySet()) {
+@@ -409,27 +352,19 @@ public class WearableAddon extends WearableService implements FileInitializer {
+ 
+ 	private Optional<Attribute> resolveAttribute(String key) {
+ 		return XAttribute.of(key.toUpperCase(Locale.ROOT)).map(XAttribute::get);
+ 	}
+ 
+ 	/**
+-	 * {@code Extra_Tags:} (generic) or the legacy {@code Jetpack:} block, translated via
+-	 * {@link #legacyJetpackToExtraTags}. {@code null} when neither is present.
++	 * {@code Extra_Tags:} (generic). {@code null} when absent.
+ 	 */
+ 	@Nullable
+ 	private Map<String, Object> readExtraTags(NodeReader wearable, String key) {
+ 		MappingNode extraSection = wearable.get("Extra_Tags").asMapping().orNull();
+ 		if (extraSection != null) return nodeToMap(extraSection);
+ 
+-		MappingNode jetpackSection = wearable.get("Jetpack").asMapping().orNull();
+-		if (jetpackSection != null) {
+-			log.warn("Wearable '{}' uses the legacy Jetpack: block - translated to Extra_Tags for this load; " +
+-			         "rename it in wearables.yml (see documentation/migration.md).", key);
+-			return legacyJetpackToExtraTags(asConfigurationSection(jetpackSection));
+-		}
+-
+ 		return null;
+ 	}
+ 
+ 	private static String joinPath(@Nullable String parent, String key) {
+ 		return parent == null || parent.isEmpty() ? key : parent + "." + key;
+ 	}
+diff --git a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/wearable/WearableService.java b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/wearable/WearableService.java
+index 78ef34c..6d93d4b 100644
+--- a/bartizan-plugin/src/main/java/org/luckyraven/bartizan/wearable/WearableService.java
++++ b/bartizan-plugin/src/main/java/org/luckyraven/bartizan/wearable/WearableService.java
+@@ -59,12 +59,13 @@ public class WearableService implements WearableCatalog {
+ 	 * One {@code Sets.<name>.Pieces_N} tier — the trait levels and worn-effect tokens a set grants once that many
+ 	 * pieces of the set are worn.
+ 	 */
+ 	public record SetTier(Map<String, Integer> traits, List<String> effectsWhileWorn) {
+ 	}
+ 
++	@Override
+ 	public void register(String key, Wearable wearable) {
+ 		wearables.put(key.toLowerCase(), wearable);
+ 	}
+ 
+ 	/**
+ 	 * Registers one {@code Sets.<name>} entry — called by {@code WearableAddon} while loading {@code wearables.yml}.
+diff --git a/bartizan-plugin/src/main/resources/items/wearables.yml b/bartizan-plugin/src/main/resources/items/wearables.yml
+index 4177e0e..c105578 100644
+--- a/bartizan-plugin/src/main/resources/items/wearables.yml
++++ b/bartizan-plugin/src/main/resources/items/wearables.yml
+@@ -39,14 +39,12 @@
+ #     BULLETPROOF       - extra projectile reduction (4% per level, max 3)
+ #     PADDED            - extra explosion reduction (8% per level, max 2) - parsed, currently unused (no caller)
+ #     TOUGHENED         - reduces critical hit bonus damage (10% per level, max 3)
+ #     FIRE_RESISTANT    - reduces fire ticks applied (25% per level, max 2)
+ #     REACTIVE          - chance to nullify an incoming hit entirely (2% per level, max 3)
+ #     LIGHTWEIGHT       - cosmetic only, no combat effect (max 2)
+-#     FUEL_EFFICIENT    - jetpack fuel consumption reduction (10% per level, max 2); read by the jetpack gadget,
+-#                         not by Bartizan itself
+ #     SEALED            - reduces the incoming level of a biological status by this many levels (max 3)
+ #     INSULATED         - reduces beam/energy weapon damage (8% per level, max 3)
+ #     NIGHT_VISION      - worn effect only, no numeric bonus (max 1) - grants vanilla Night Vision while worn;
+ #                         list it under Effects_While_Worn too (e.g. "NIGHT_VISION-0-1") to actually apply it
+ #     SWIFT             - a MOVEMENT_SPEED attribute bonus stamped on the item at build time (5% per level, max 3),
+ #                         not a runtime-calculated reduction like the others
+@@ -232,43 +230,12 @@ tactical_boots:
+    Lore:
+       - "&bHigh-speed assault boots"
+    Traits:
+       REINFORCED: 1
+       LIGHTWEIGHT: 1
+ 
+-jetpack:
+-   Material: IRON_CHESTPLATE
+-   Name: "&b&lJetpack"
+-   Base_Damage_Reduction: 0.05
+-   Leather_Color: ""
+-   Lore:
+-      - "&7Strap it on and take flight"
+-      - "&7Hold &bSPACE &7to fly upward"
+-      - "&7Fuel: &fGasoline"
+-   Traits:
+-      REINFORCED: 1
+-      LIGHTWEIGHT: 2
+-   Extra_Tags:
+-      fuel: "gasoline"
+-      fuel_current: 3600
+-      fuel_max: 3600
+-      jetpack_fuel_consumption_rate: 1
+-      jetpack_ascend_power: 0.2
+-      jetpack_max_speed_y: 0.45
+-      Sounds:
+-         Thrust:
+-            Default_Sound:
+-               Sound: ENTITY_BLAZE_SHOOT
+-               Volume: 0.6
+-               Pitch: 1.8
+-         Glide:
+-            Default_Sound:
+-               Sound: ITEM_ELYTRA_FLYING
+-               Volume: 0.4
+-               Pitch: 1.0
+-
+ hazmat_chest:
+    Material: LEATHER_CHESTPLATE
+    Name: "&2Hazmat Suit"
+    Base_Damage_Reduction: 0.05
+    Leather_Color: "#4C7A3D"
+    Lore:
+diff --git a/bartizan-plugin/src/test/java/org/luckyraven/bartizan/wearable/WearableAddonLegacyJetpackTest.java b/bartizan-plugin/src/test/java/org/luckyraven/bartizan/wearable/WearableAddonLegacyJetpackTest.java
+deleted file mode 100644
+index f49b977..0000000
+--- a/bartizan-plugin/src/test/java/org/luckyraven/bartizan/wearable/WearableAddonLegacyJetpackTest.java
++++ /dev/null
+@@ -1,58 +0,0 @@
+-package org.luckyraven.bartizan.wearable;
+-
+-import org.bukkit.configuration.ConfigurationSection;
+-import org.bukkit.configuration.file.YamlConfiguration;
+-import org.junit.jupiter.api.Test;
+-
+-import java.util.Map;
+-
+-import static org.junit.jupiter.api.Assertions.assertEquals;
+-import static org.junit.jupiter.api.Assertions.assertFalse;
+-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+-
+-/**
+- * A wearables.yml carried over from Gangland 0.8.4 keeps the pre-split {@code Jetpack:} block. The loader must
+- * translate it into the {@code Extra_Tags:} shape, or the built item never carries the {@code fuel} tag that the
+- * gadget moduwarning: in the working copy of 'bartizan-plugin/src/test/java/org/luckyraven/bartizan/wearable/WearableExternalRegistrationTest.java', LF will be replaced by CRLF the next time Git touches it
+le's {@code isJetpack} check keys on and the jetpack silently never activates.
+- */
+-class WearableAddonLegacyJetpackTest {
+-
+-	private static final String LEGACY = """
+-			jetpack:
+-			   Material: IRON_CHESTPLATE
+-			   Jetpack:
+-			      Fuel_Key: "gasoline"
+-			      Fuel_Consumption_Rate: 1
+-			      Ascend_Power: 0.2
+-			      Glide_Descent_Rate: -0.05
+-			      Max_Speed_Y: 0.45
+-			      Sound:
+-			         Thrust:
+-			            Default_Sound:
+-			               Sound: ENTITY_BLAZE_SHOOT
+-			               Volume: 0.6
+-			               Pitch: 1.8
+-			""";
+-
+-	@Test
+-	void legacyJetpackBlockBecomesExtraTags() throws Exception {
+-		YamlConfiguration yaml = new YamlConfiguration();
+-		yaml.loadFromString(LEGACY);
+-		ConfigurationSection jetpack = yaml.getConfigurationSection("jetpack.Jetpack");
+-
+-		Map<String, Object> tags = WearableAddon.legacyJetpackToExtraTags(jetpack);
+-
+-		assertEquals("gasoline", tags.get("fuel"));
+-		assertEquals(3600, tags.get("fuel_current"));
+-		assertEquals(3600, tags.get("fuel_max"));
+-		assertEquals(1, tags.get("jetpack_fuel_consumption_rate"));
+-		assertEquals(0.2, tags.get("jetpack_ascend_power"));
+-		assertEquals(0.45, tags.get("jetpack_max_speed_y"));
+-		assertFalse(tags.containsKey("jetpack_glide_descent_rate"));
+-
+-		Map<?, ?> sounds = assertInstanceOf(Map.class, tags.get("Sounds"));
+-		Map<?, ?> thrust = assertInstanceOf(Map.class, sounds.get("Thrust"));
+-		Map<?, ?> sound  = assertInstanceOf(Map.class, thrust.get("Default_Sound"));
+-		assertEquals("ENTITY_BLAZE_SHOOT", sound.get("Sound"));
+-	}
+-}
+diff --git a/bartizan-plugin/src/test/java/org/luckyraven/bartizan/wearable/WearableAddonTest.java b/bartizan-plugin/src/test/java/org/luckyraven/bartizan/wearable/WearableAddonTest.java
+index 6eb0909..3983150 100644
+--- a/bartizan-plugin/src/test/java/org/luckyraven/bartizan/wearable/WearableAddonTest.java
++++ b/bartizan-plugin/src/test/java/org/luckyraven/bartizan/wearable/WearableAddonTest.java
+@@ -35,14 +35,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
+ 
+ /**
+  * Regression net for the {@code HL} loader rewrite (weapons-roadmap.md gate {@code HL}, §1): loads the bundled
+  * {@code items/wearables.yml} through the real {@code NodeReader}/{@code ConfigReport} pipeline and asserts zero
+  * issues, plus one registered wearable per top-level entry (mirrors {@code WeaponAddonTest}). Also covers a
+  * {@code Sets}/{@code Attributes}/{@code Effects_While_Worn} fixture and the missing/invalid {@code Material}
+- * warning path. {@code WearableAddonLegacyJetpackTest} covers {@code legacyJetpackToExtraTags} separately and is
+- * untouched by this rewrite; runtime set-bonus/trait resolution is covered by {@code WearableServiceTest}, not
++ * warning path. Runtime set-bonus/trait resolution is covered by {@code WearableServiceTest}, not
+  * here — this class only pins what the loader produces from YAML.
+  */
+ class WearableAddonTest {
+ 
+ 	@TempDir
+ 	Path tempDir;
+diff --git a/bartizan-plugin/src/test/java/org/luckyraven/bartizan/wearable/WearableExternalRegistrationTest.java b/bartizan-plugin/src/test/java/org/luckyraven/bartizan/wearable/WearableExternalRegistrationTest.java
+new file mode 100644
+index 0000000..1ffebbe
+--- /dev/null
++++ b/bartizan-plugin/src/test/java/org/luckyraven/bartizan/wearable/WearableExternalRegistrationTest.java
+@@ -0,0 +1,166 @@
++package org.luckyraven.bartizan.wearable;
++
++import org.bukkit.Material;
++import org.bukkit.entity.LivingEntity;
++import org.bukkit.inventory.EntityEquipment;
++import org.bukkit.inventory.EquipmentSlot;
++import org.bukkit.inventory.ItemStack;
++import org.junit.jupiter.api.AfterEach;
++import org.junit.jupiter.api.BeforeAll;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.luckyraven.bartizan.api.testsupport.BukkitRegistryFixture;
++import org.luckyraven.bartizan.api.wearable.Wearable;
++import org.luckyraven.bartizan.item.WearableConverter;
++import org.luckyraven.bartizan.item.WearableItemSerializer;
++import org.luckyraven.bartizan.item.WearableRefresher;
++import org.luckyraven.bartizan.support.PerStackNbtAccessor;
++import org.luckyraven.keystone.item.ItemBuilder;
++import org.luckyraven.keystone.item.nbt.NbtBridge;
++
++import java.util.Map;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertFalse;
++import static org.junit.jupiter.api.Assertions.assertNotNull;
++import static org.junit.jupiter.api.Assertions.assertNull;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.when;
++
++/**
++ * WS7-D4 fix round 1: pins the settled "external wearable" contract (review findings C1/C2/I3/I4, orchestrator
++ * ruling W11). An external entry is registered via {@link org.luckyraven.bartizan.api.wearable.WearableCatalog#register}
++ * for damage-reduction/effects purposes only — it must resolve and apply a reduction exactly like a
++ * {@code wearables.yml} entry, but every item-producing/listing path must skip it since {@link Wearable#buildItem()}
++ * throws on its incomplete {@code Material} (Critical 1) and an unregistered permission node must never silently
++ * block equip (Critical 2, covered by {@link #getPermission_nullForExternal}).
++ *
++ * <p>{@code WearableGiveCommand}/{@code WearableListCommand}/{@code WearableInfoCommand}'s give-tab/list/info
++ * guards are not separately driven end-to-end here: this codebase has zero existing unit tests over the
++ * {@code command/} package (no {@code SubArgument}/{@code Tree<Argument>} test scaffolding to build on), and all
++ * three guards read the exact same {@link Wearable#isExternal()} flag pinned directly by this class and by
++ * {@link #getPermission_nullForExternal} — flagged in the fix-round report rather than silently skipped.
++ */
++@DisplayName("WearableService - external registration (WS7-D4)")
++class WearableExternalRegistrationTest {
++
++	@BeforeAll
++	static void bootstrapBukkitRegistry() {
++		BukkitRegistryFixture.install();
++	}
++
++	@BeforeEach
++	void setUp() {
++		NbtBridge.install(new PerStackNbtAccessor());
++	}
++
++	@AfterEach
++	void tearDown() {
++		NbtBridge.reset();
++	}
++
++	private static Wearable externalWearable() {
++		return Wearable.builder()
++		               .wearableKey("test_external")
++		               .baseDamageReduction(0.05)
++		               .traits(Map.of("reinforced", 1))
++		               .external(true)
++		               .build();
++	}
++
++	/** Simulates the registrant (Gangland's future bridge) building its own item and stamping the tag itself. */
++	private static ItemStack taggedItem(String key) {
++		ItemBuilder builder = new ItemBuilder(Material.IRON_CHESTPLATE);
++		builder.addTag(Wearable.NBT_KEY, key);
++		return builder.build();
++	}
++
++	@Test
++	@DisplayName("register -> resolveWearable finds it -> applyWearableReduction applies the reduction")
++	void register_resolvesAndAppliesReduction() {
++		WearableService service = new WearableService();
++		service.register("test_external", externalWearable());
++
++		ItemStack registered = taggedItem("test_external");
++		Wearable  resolved   = service.resolveWearable(registered);
++
++		assertNotNull(resolved);
++		assertTrue(resolved.isExternal());
++
++		EntityEquipment equipment = mock(EntityEquipment.class);
++		when(equipment.getItem(EquipmentSlot.HEAD)).thenReturn(new ItemStack(Material.AIR));
++		when(equipment.getItem(EquipmentSlot.CHEST)).thenReturn(registered);
++		when(equipment.getItem(EquipmentSlot.LEGS)).thenReturn(new ItemStack(Material.AIR));
++		when(equipment.getItem(EquipmentSlot.FEET)).thenReturn(new ItemStack(Material.AIR));
++
++		LivingEntity target = mock(LivingEntity.class);
++		when(target.getEquipment()).thenReturn(equipment);
++
++		double result = service.applyWearableReduction(100, target, false);
++
++		// getGenericDamageReduction = min(0.05 base + 1*0.05 reinforced, 0.80) = 0.10.
++		assertEquals(90.0, result, 1e-9);
++	}
++
++	@Test
++	@DisplayName("WearableRefresher.canRefresh does not claim an external entry (Critical 1)")
++	void refresher_skipsExternal() {
++		WearableService    service   = new WearableService();
++		service.register("test_external", externalWearable());
++		WearableRefresher refresher = new WearableRefresher(service);
++
++		assertFalse(refresher.canRefresh(taggedItem("test_external")));
++	}
++
++	@Test
++	@DisplayName("WearableConverter resolves null for a wearable:<key> string naming an external entry (Critical 1)")
++	void converter_skipsExternal() {
++		WearableService  service   = new WearableService();
++		service.register("test_external", externalWearable());
++		WearableConverter converter = new WearableConverter(service);
++
++		assertNull(converter.convert("wearable", "test_external", Map.of()));
++	}
++
++	@Test
++	@DisplayName("WearableItemSerializer#claims does not claim an external entry's stack (Important 3)")
++	void serializer_doesNotClaimExternal() {
++		WearableService       service    = new WearableService();
++		service.register("test_external", externalWearable());
++		WearableItemSerializer serializer = new WearableItemSerializer(service);
++
++		assertFalse(serializer.claims(taggedItem("test_external")));
++	}
++
++	@Test
++	@DisplayName("a registered (non-external) entry is still claimed/refreshed/converted normally")
++	void nonExternalEntry_stillHandledNormally() {
++		WearableService service = new WearableService();
++		Wearable registered = Wearable.builder()
++		                              .material(Material.IRON_HELMET)
++		                              .name("Test Helmet")
++		                              .wearableKey("test_registered")
++		                              .baseDamageReduction(0.05)
++		                              .traits(Map.of())
++		                              .build();
++		service.register("test_registered", registered);
++
++		ItemStack             item       = taggedItem("test_registered");
++		WearableRefresher     refresher  = new WearableRefresher(service);
++		WearableConverter     converter  = new WearableConverter(service);
++		WearableItemSerializer serializer = new WearableItemSerializer(service);
++
++		assertTrue(refresher.canRefresh(item));
++		assertNotNull(converter.convert("wearable", "test_registered", Map.of()));
++		assertTrue(serializer.claims(item));
++	}
++
++	@Test
++	@DisplayName("Wearable#getPermission is null for an external entry - never blocks equip with an unregistered node (Critical 2)")
++	void getPermission_nullForExternal() {
++		assertNull(externalWearable().getPermission());
++	}
++
++}
+diff --git a/documentation/bartizan-api.md b/documentation/bartizan-api.md
+index d0a3c29..4372528 100644
+--- a/documentation/bartizan-api.md
++++ b/documentation/bartizan-api.md
+@@ -87,13 +87,13 @@ mode. Returns `false` when the player holds no weapon or the reload was refused.
+ > `NpcWeaponFactory.create` throws `IllegalArgumentException` for a weapon name that is not configured; call `items().isValidWeaponName(name)` first (Gangland's `BartizanNpcWeapons` does, returning `NpcRangedAttack.NONE`).
+ 
+ 
+ | Accessor | Returns | Members |
+ |---|---|---|
+ | `weapons()` | `weapon.WeaponCatalog` | `getWeaponTemplate(String)`, `getWeaponTemplates()`, `createTransientWeapon(String)`, `isWeapon(ItemStack)` — read-only lookups: each may return `null`/empty for an unknown name, and none of them mints or registers a weapon instance. `validateAndGetWeapon(Player, ItemStack)` is **not** read-only — it resolves the held item's uuid and, when that uuid is not yet in the runtime registry, mints and registers a live `Weapon` instance for it (`WeaponService.getWeapon` → `weapons.put`); use `getWeaponTemplate(...)` instead for a read-only lookup. |
+-| `wearables()` | `wearable.WearableCatalog` | `getWearable(String)`, `getWearables()`, `resolveWearable(@Nullable ItemStack)`, `applyWearableReduction(double, LivingEntity, boolean)`, `reduceCritBonus(double, LivingEntity)`, `reduceFireTicks(int, LivingEntity)` |
++| `wearables()` | `wearable.WearableCatalog` | `getWearable(String)`, `getWearables()`, `resolveWearable(@Nullable ItemStack)`, `applyWearableReduction(double, LivingEntity, boolean)`, `reduceCritBonus(double, LivingEntity)`, `reduceFireTicks(int, LivingEntity)`, `register(String, Wearable)` (0.4.0, WS7-D4 — external registration hook, see below) |
+ | `ammunition()` | `ammo.AmmunitionCatalog` | `getAmmunitionKeys()`, `getAmmunition(String)` |
+ | `npcWeapons()` | `npc.NpcWeaponFactory` | `create(LivingEntity shooter, String weaponName, double fireRateMultiplier, double aimErrorDegrees)` → `npc.NpcWeaponController extends org.luckyraven.keystone.npc.spi.NpcRangedAttack` — the sole implementation of that Keystone SPI. A consumer with no Bartizan installed uses `NpcRangedAttack.NONE` instead of calling this accessor. |
+ | `getHeldWeapon(Player)` | `@Nullable weapon.Weapon` | Gate `HD`. Main hand, then off hand; `null` when neither holds a valid weapon. |
+ | `isScoping(Player)` | `boolean` | Gate `HD`. `getHeldWeapon(player)` scoped in. |
+ | `isReloading(Player)` | `boolean` | Gate `HD`. `getHeldWeapon(player)` mid-reload. |
+ | `tryReload(Player)` | `boolean` | Gate `HH`. Starts a reload for `getHeldWeapon(player)` via `WeaponService.tryReload`; `false` when no weapon is held or the reload was refused. |
+@@ -285,12 +285,31 @@ of the existing per-piece trait math, exposed so `WearableService` can apply it
+ only one piece's own level — `WearableService.resolveTraitLevels(LivingEntity)` is the one place that resolution
+ happens now, and `applyWearableReduction`/`traitLevel`/`reduceCritBonus`/`reduceFireTicks`/the new
+ `applyInsulatedReduction` all read through it. `WearableService.SetTier`/`registerSet`/`activeSetTiers` (the
+ `Sets:` runtime) and `WearableEffectsService` are plugin-only — not part of the api surface, since nothing in
+ `WearableCatalog`'s own signature requires them.
+ 
++### External wearable registration (`WearableCatalog.register`, 0.4.0, WS7-D4)
++
++`register(String key, Wearable wearable)` lets a soft-dependent plugin hand Bartizan an armour identity + traits
++without Bartizan gaining any caller-specific code — the mechanism Gangland's rehomed jetpack uses to keep its old
++damage-reduction values (`documentation/migration.md` §12).
++
++**Damage-reduction/effects only — Bartizan never produces the item.** `wearable` must be built with
++`.external(true)` plus at minimum `wearableKey`/`baseDamageReduction`/`traits` (an optional `effects` block is
++honoured too — every other field, including `material`, stays unset). The registrant stamps its own `ItemStack`
++with the raw `"wearable"` NBT tag (`Wearable.NBT_KEY`) under the same key, and from then on
++`resolveWearable`/`applyWearableReduction`/`reduceCritBonus`/`reduceFireTicks` resolve and apply it exactly like a
++`wearables.yml`-loaded entry — but an external entry is excluded from every path that would try to *build* it:
++`Wearable#getPermission()` returns `null` for it (no unregistered permission node silently blocking equip),
++`/bartizan wearable give`/`info`/`list` all skip it, and Bartizan's own `wearable:` item-vocabulary
++converter/serializer/refresher never claim it (each would call `Wearable#buildItem()`, which requires a real
++`Material` an external entry does not carry). The registering plugin owns building the ItemStack, stamping the
++tag, and its own give/converter/refresher/list surface for that item — Bartizan's role is strictly "read the
++registered definition to compute a reduction or run an effect."
++
+ `weapon.dto.EffectHook` gained `ON_UNEQUIP` and `ON_HIT_TAKEN` (28 hooks total). `effect.EffectContext.getWeapon()`
+ (`bartizan-plugin`) is now `@Nullable` — a wearable's equip/unequip/hit-taken context has no weapon — and
+ `%weapon%` falls back to a new `ownerName` field (the wearable's own display name) when `weapon` is absent.
+ `effect.EffectRunner` gained a `run(EffectsData, String ownerName, EffectHook, EffectContext)` overload alongside
+ the existing `run(Weapon, EffectHook, EffectContext)`, for exactly this non-weapon-owner case.
+ 
+diff --git a/documentation/migration.md b/documentation/migration.md
+index 85647f2..0165599 100644
+--- a/documentation/migration.md
++++ b/documentation/migration.md
+@@ -38,13 +38,16 @@ plugins/Bartizan/items/wearables.yml
+ 
+ A server that customised the old files under `plugins/Gangland_Warfare/` copies them to `plugins/Bartizan/` at the
+ **same relative paths** (`weapon/rifle.yml` stays `weapon/rifle.yml`, etc.) before first boot, then applies the one
+ required edit below. Do this before starting the server with Bartizan installed — Keystone's file recovery only
+ regenerates a *missing* file from the jar's bundled defaults, it does not merge an existing one.
+ 
+-### `items/wearables.yml` edit — `Jetpack:` → `Extra_Tags:`
++### `items/wearables.yml` edit — `Jetpack:` → `Extra_Tags:` (superseded by §12 — historical, 0.1.0–0.3.0 installs only)
++
++**Superseded as of 0.4.0**: the jetpack itself left `wearables.yml` entirely — see §12. This section stays for an
++install still mid-upgrade from a pre-0.2.0 `Jetpack:` block on a Bartizan version before 0.4.0.
+ 
+ The wearable's jetpack-specific block was renamed and its keys lower-cased/flattened. Rename the block and its
+ child keys; values carry over unchanged. Before (Gangland 0.8.4):
+ 
+ ```yaml
+ jetpack:
+@@ -240,6 +243,26 @@ own `Stim`) is skipped entirely.
+ 
+ Players' existing WM items keep working without being reissued: `WmItemConverterListener` (gated by
+ `settings.yml`'s `Import.Convert_WeaponMechanics_Items`, flipped on for the running session by a successful
+ import) rebuilds a held/clicked/carried item that still carries WM's own `weaponmechanics:weapon-title` NBT tag
+ into its imported Bartizan equivalent, carrying `ammo-left` over, the moment it's next held, clicked, or the
+ player logs in.
++
++## 12. 0.4.0 — jetpack leaves Bartizan entirely (Gangland WS7)
++
++The `jetpack:` entry left `items/wearables.yml` (deleted, not renamed) along with the `FUEL_EFFICIENT`-jetpack
++comment and the legacy `Jetpack:`→`Extra_Tags:` migration converter (`legacyJetpackToExtraTags`, superseding §3.4
++above). The jetpack is now a Gangland-owned item, defined in `gangland-gadget`'s own `items/jetpacks.yml`
++(Gangland 0.9.2+) — Bartizan no longer knows about it as a catalogued wearable.
++
++**Armour/trait loss, and the opt-in fix**: the jetpack's `Base_Damage_Reduction: 0.05` and
++`Traits: {REINFORCED: 1, LIGHTWEIGHT: 2}` are gone by default — a rehomed jetpack is a plain fuel/thrust
++chestplate with vanilla `IRON_CHESTPLATE` protection only. A server owner who wants those values back configures
++an optional `Bartizan_Traits:` block in Gangland's `items/jetpacks.yml`; when Bartizan is installed, Gangland
++registers that definition into Bartizan's wearable catalog through the new `WearableCatalog.register(String,
++Wearable)` api method (added this version) so Bartizan's existing damage-reduction path applies to the jetpack
++exactly as it did before — Bartizan gains no jetpack-specific code to do this, it is a generic external
++registration hook any soft-dependent plugin can use.
++
++**Data**: any shop/loot-chest entry that still references `wearable:jetpack` stops resolving — re-add it as
++`jetpack:<id>` through Gangland's own item vocabulary. Bartizan keeps no database, so there is nothing to migrate
++on this side.
+diff --git a/pom.xml b/pom.xml
+index f49403f..b9fa15c 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -45,13 +45,13 @@
+     </modules>
+ 
+     <properties>
+         <!-- Single source of truth for the Bartizan version (CI-friendly versioning).
+              Bump ONLY this property; child poms reference ${revision} and flatten-maven-plugin
+              resolves it in the installed/deployed poms. -->
+-        <revision>0.3.0</revision>
++        <revision>0.4.0</revision>
+ 
+         <!-- Java 17, matching Keystone's floor. -->
+         <maven.compiler.release>17</maven.compiler.release>
+         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+ 
+         <!-- API floor: Spigot 1.16.5, matching Keystone's floor and plugin.yml's api-version. -->
+
+=================== /e/Programming/java/wt/gangland-0.9.2 (HEAD fb460b35) ===================
+--- diffstat ---
+ .../src/main/java/org/luckyraven/gangland/GanglandApi.java   |  2 +-
+ .../org/luckyraven/gangland/file/configuration/Settings.java | 12 ++++++++++++
+ .../gangland-gadget/src/main/resources/module.yml            |  2 +-
+ .../src/main/java/org/luckyraven/gangland/item/ItemKind.java |  1 +
+ pom.xml                                                      |  4 ++--
+ 5 files changed, 17 insertions(+), 4 deletions(-)
+--- diff ---
+diff --git a/gangland-api/src/main/java/org/luckyraven/gangland/GanglandApi.java b/gangland-api/src/main/java/org/luckyraven/gangland/GanglandApi.java
+index 12b1c1e9..454918f7 100644
+--- a/gangland-api/src/main/java/org/luckyraven/gangland/GanglandApi.java
++++ b/gangland-api/src/main/java/org/luckyraven/gangland/GanglandApi.java
+@@ -7,13 +7,13 @@ public final class GanglandApi {
+ 
+ 	/**
+ 	 * The module API line a {@code module.yml} {@code Host_Api} is matched against. Bump the minor when the host adds
+ 	 * API a module may rely on, the major only on a breaking change; it is independent of the plugin version, so a
+ 	 * patch or feature release of Gangland does not invalidate every module jar on the server.
+ 	 */
+-	public static final String VERSION = "1.0";
++	public static final String VERSION = "1.1";
+ 
+ 	/**
+ 	 * The permission namespace and long command alias ({@code /gangland}).
+ 	 */
+ 	public static final String FULL_PREFIX = "gangland";
+ 
+diff --git a/gangland-api/src/main/java/org/luckyraven/gangland/file/configuration/Settings.java b/gangland-api/src/main/java/org/luckyraven/gangland/file/configuration/Settings.java
+index ce98c0b6..4dd0b3cb 100644
+--- a/gangland-api/src/main/java/org/luckyraven/gangland/file/configuration/Settings.java
++++ b/gangland-api/src/main/java/org/luckyraven/gangland/file/configuration/Settings.java
+@@ -9,12 +9,13 @@ import org.luckyraven.keystone.persistence.FileHandler;
+ import org.luckyraven.keystone.persistence.FileInitializer;
+ import org.luckyraven.keystone.persistence.FileManager;
+ import org.luckyraven.keystone.persistence.config.ConfigReport;
+ import org.luckyraven.keystone.persistence.config.FileHandlerReader;
+ import org.luckyraven.keystone.persistence.config.MappingNode;
+ import org.luckyraven.keystone.persistence.config.NodeReader;
++import org.bukkit.Bukkit;
+ import org.luckyraven.keystone.npc.NpcSupport;
+ 
+ import java.io.IOException;
+ import java.lang.reflect.Field;
+ import java.lang.reflect.Method;
+ import java.lang.reflect.Modifier;
+@@ -292,12 +293,23 @@ public class Settings implements FileInitializer {
+ 	 * (REVIEW-gangland-RI.md finding I-2).
+ 	 */
+ 	public static boolean isCitizensAvailable() {
+ 		return NpcSupport.available();
+ 	}
+ 
++	/**
++	 * Whether Bartizan is installed and enabled right now. Same shape and same reason as
++	 * {@link #isCitizensAvailable()}: a class whose method signature names a Bartizan type must gate its own
++	 * construction/registration with {@code condition = "isBartizanAvailable"} rather than rely on a null-check
++	 * inside the body, since Bukkit's reflective scan resolves every signature's parameter/return types eagerly
++	 * (WS7 — gadget's `module.yml` drops `Plugins: [Bartizan]`, so Bartizan is no longer fail-fast guaranteed).
++	 */
++	public static boolean isBartizanAvailable() {
++		return Bukkit.getPluginManager().isPluginEnabled("Bartizan");
++	}
++
+ 	public static Method getSetting(String methodName) {
+ 		Method[] methods = Settings.class.getDeclaredMethods();
+ 
+ 		for (Method method : methods) {
+ 			if (!method.getName().endsWith(methodName)) continue;
+ 
+diff --git a/gangland-features/gangland-gadget/src/main/resources/module.yml b/gangland-features/gangland-gadget/src/main/resources/module.yml
+index 1986e047..6d4f6c7e 100644
+--- a/gangland-features/gangland-gadget/src/main/resources/module.yml
++++ b/gangland-features/gangland-gadget/src/main/resources/module.yml
+@@ -1,9 +1,9 @@
+ # Keystone module descriptor - read by Gangland's ModuleLoader from plugins/Gangland_Warfare/modules/.
+ Id: gadget
+ Name: Gangland Gadgets
+ Version: ${project.version}
+ Main: org.luckyraven.gangland.gadget.GadgetModule
+-Host_Api: 1.0
++Host_Api: 1.1
+ Plugins:
+   - Bartizan
+ Artifact: org.luckyraven:gangland-gadget
+diff --git a/gangland-infra/gangland-item/src/main/java/org/luckyraven/gangland/item/ItemKind.java b/gangland-infra/gangland-item/src/main/java/org/luckyraven/gangland/item/ItemKind.java
+index 46cb1ddf..0be8b1c8 100644
+--- a/gangland-infra/gangland-item/src/main/java/org/luckyraven/gangland/item/ItemKind.java
++++ b/gangland-infra/gangland-item/src/main/java/org/luckyraven/gangland/item/ItemKind.java
+@@ -11,12 +11,13 @@ package org.luckyraven.gangland.item;
+  * NBT-key constants that belong to feature modules ({@code gangland-gadget}, …). They live in a parallel
+  * {@code ItemPredicates} class in {@code gangland-impl}.
+  */
+ public enum ItemKind implements org.luckyraven.keystone.item.ItemKind {
+ 	UNIQUE("unique"),
+ 	CAR("car"),
++	JETPACK("jetpack"),
+ 	MONEY("money"),
+ 	MATERIAL("material");
+ 
+ 	private final String label;
+ 
+ 	ItemKind(String label) {
+diff --git a/pom.xml b/pom.xml
+index b6578671..d1ad7ad8 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -51,13 +51,13 @@
+         <module>gangland-infra</module>
+         <module>gangland-ui</module>
+         <module>gangland-features</module>
+     </modules>
+ 
+     <properties>
+-        <revision>0.9.1</revision>
++        <revision>0.9.2</revision>
+         <!-- Matches Keystone's release (17): the shaded jar must load on every JVM Keystone
+              loads on, or the MC 1.16+ support floor is silently broken. release (not
+              source/target) also validates against the Java 17 API, so building on a newer
+              JDK cannot leak newer APIs into the plugin. -->
+         <maven.compiler.release>17</maven.compiler.release>
+         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+@@ -65,13 +65,13 @@
+         <!-- The version used to run the plugin -->
+         <bukkit.version>1.21.11-R0.1-SNAPSHOT</bukkit.version>
+ 
+         <!-- Dependencies/Libraries versions -->
+         <!-- Shared infrastructure (Keystone.jar provides it at runtime — provided scope, never shaded) -->
+         <keystone.version>1.9.2</keystone.version>
+-        <bartizan.version>0.1.0</bartizan.version>
++        <bartizan.version>0.4.0</bartizan.version>
+         <nbt.version>2.15.7</nbt.version>
+         <xseries.version>13.6.0</xseries.version>
+         <anvilgui.version>1.10.11-SNAPSHOT</anvilgui.version>
+         <fastboard.version>2.1.5</fastboard.version>
+         <viaversion.version>5.8.1</viaversion.version>
+         <placeholderapi.version>2.12.2</placeholderapi.version>

@@ -1,0 +1,2119 @@
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/integration/detainment/GanglandDetainmentEconomyContract.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/integration/detainment/GanglandDetainmentEconomyContract.java
+index 6de24ca9..7864b52d 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/integration/detainment/GanglandDetainmentEconomyContract.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/integration/detainment/GanglandDetainmentEconomyContract.java
+@@ -11,12 +11,13 @@ import org.luckyraven.gangland.core.user.UserManager;
+ 
+ import java.math.BigDecimal;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ @CustomLog
+ public final class GanglandDetainmentEconomyContract implements DetainmentEconomyContract {
+ 
+ 	private final UserManager<Player> userManager;
+ 
+-	public GanglandDetainmentEconomyContract(UserManager<Player> userManager) {
++	public GanglandDetainmentEconomyContract(@Qualifier("online") UserManager<Player> userManager) {
+ 		this.userManager = userManager;
+ 	}
+ 
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/integration/detainment/GanglandWantedClearContract.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/integration/detainment/GanglandWantedClearContract.java
+index 70a540ba..0d28b008 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/integration/detainment/GanglandWantedClearContract.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/integration/detainment/GanglandWantedClearContract.java
+@@ -9,11 +9,13 @@ import org.luckyraven.gangland.core.wanted.Wanted;
+ 
+ import java.util.UUID;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ public final class GanglandWantedClearContract implements WantedClearContract {
+ 
+ 	private final UserManager<Player> userManager;
+ 
+-	public GanglandWantedClearContract(UserManager<Player> userManager) {
++	public GanglandWantedClearContract(@Qualifier("online") UserManager<Player> userManager) {
+ 		this.userManager = userManager;
+ 	}
+ 
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/CarGiveCommand.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/CarGiveCommand.java
+index 9f6764a7..e4001a30 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/CarGiveCommand.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/CarGiveCommand.java
+@@ -20,6 +20,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ import java.util.List;
+ import java.util.Map;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class CarGiveCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            plugin;
+@@ -28,7 +30,7 @@ class CarGiveCommand extends SubArgument {
+ 	private final CarAddon            carAddon;
+ 
+ 	CarGiveCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
+-	               UserManager<Player> userManager, CarAddon carAddon) {
++	               @Qualifier("online") UserManager<Player> userManager, CarAddon carAddon) {
+ 		super(plugin, "give", tree, parent);
+ 
+ 		this.plugin    = plugin;
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/CarInfoCommand.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/CarInfoCommand.java
+index aaa100bb..1f4ee137 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/CarInfoCommand.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/command/CarInfoCommand.java
+@@ -16,13 +16,15 @@ import org.luckyraven.gangland.core.user.User;
+ import org.luckyraven.gangland.core.user.UserManager;
+ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class CarInfoCommand extends SubArgument {
+ 
+ 	private final UserManager<Player> userManager;
+ 	private final CarAddon            carAddon;
+ 
+ 	CarInfoCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
+-	               UserManager<Player> userManager, CarAddon carAddon) {
++	               @Qualifier("online") UserManager<Player> userManager, CarAddon carAddon) {
+ 		super(plugin, "info", tree, parent);
+ 
+ 		this.userManager = userManager;
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/sign/CarBuySign.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/sign/CarBuySign.java
+index eb6c5369..2e9b028a 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/sign/CarBuySign.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/sign/CarBuySign.java
+@@ -25,6 +25,8 @@ import org.luckyraven.gangland.sign.validation.SignValidator;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ public class CarBuySign extends BaseTradeSign implements BulkSignHandler {
+ 
+ 	private final UserManager<Player> userManager;
+@@ -33,7 +35,7 @@ public class CarBuySign extends BaseTradeSign implements BulkSignHandler {
+ 
+ 	private SignHandler handler;
+ 
+-	public CarBuySign(UserManager<Player> userManager, CarManager carManager, SignType signType) {
++	public CarBuySign(@Qualifier("online") UserManager<Player> userManager, CarManager carManager, SignType signType) {
+ 		this.userManager = userManager;
+ 		this.carManager  = carManager;
+ 		this.signType    = signType;
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/sign/CarSellSign.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/sign/CarSellSign.java
+index 67c12ca3..f8a13e5f 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/sign/CarSellSign.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/sign/CarSellSign.java
+@@ -25,6 +25,8 @@ import org.luckyraven.gangland.sign.validation.SignValidator;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ public class CarSellSign extends BaseTradeSign implements BulkSignHandler {
+ 
+ 	private final UserManager<Player> userManager;
+@@ -33,7 +35,7 @@ public class CarSellSign extends BaseTradeSign implements BulkSignHandler {
+ 
+ 	private SignHandler handler;
+ 
+-	public CarSellSign(UserManager<Player> userManager, CarManager carManager, SignType signType) {
++	public CarSellSign(@Qualifier("online") UserManager<Player> userManager, CarManager carManager, SignType signType) {
+ 		this.userManager = userManager;
+ 		this.carManager  = carManager;
+ 		this.signType    = signType;
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/sign/CarSignContribution.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/sign/CarSignContribution.java
+index 0205fb31..b4584cb1 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/sign/CarSignContribution.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/sign/CarSignContribution.java
+@@ -9,6 +9,7 @@ import org.luckyraven.gangland.sign.type.Sign;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ /**
+  * Adds the {@code car-buy} and {@code car-sell} sign types to the core catalogue. Rebuilds exactly what
+  * {@code SignManager.setupSigns()} used to build inline before the sign extension seam existed.
+@@ -18,7 +19,7 @@ public class CarSignContribution implements SignTypeContribution {
+ 	private final UserManager<Player> userManager;
+ 	private final CarManager          carManager;
+ 
+-	public CarSignContribution(UserManager<Player> userManager, CarManager carManager) {
++	public CarSignContribution(@Qualifier("online") UserManager<Player> userManager, CarManager carManager) {
+ 		this.userManager = userManager;
+ 		this.carManager  = carManager;
+ 	}
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangBalanceCommand.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangBalanceCommand.java
+index e3dfa411..6a113cf2 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangBalanceCommand.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangBalanceCommand.java
+@@ -14,13 +14,15 @@ import org.luckyraven.gangland.gang.GangManager;
+ import org.luckyraven.gangland.core.user.User;
+ import org.luckyraven.gangland.core.user.UserManager;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class GangBalanceCommand extends SubArgument {
+ 
+ 	private final UserManager<Player> userManager;
+ 	private final GangManager         gangManager;
+ 
+ 	protected GangBalanceCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                             UserManager<Player> userManager, GangManager gangManager) {
++	                             @Qualifier("online") UserManager<Player> userManager, GangManager gangManager) {
+ 		super(gangland, new String[]{"balance", "bal"}, tree, parent);
+ 
+ 		this.userManager = userManager;
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangColorCommand.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangColorCommand.java
+index 0aac6abe..ebd871fb 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangColorCommand.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangColorCommand.java
+@@ -30,6 +30,8 @@ import org.luckyraven.gangland.core.user.User;
+ import org.luckyraven.gangland.core.user.UserManager;
+ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class GangColorCommand extends SubArgument {
+ 
+ 	// Mirrors gangland-impl's menu.InventoryBuilder.DEFAULT_FILL_ITEM/DEFAULT_FILL_NAME/DEFAULT_LINE_NAME — that
+@@ -46,7 +48,7 @@ class GangColorCommand extends SubArgument {
+ 	private final InventoryService    inventoryService;
+ 
+ 	protected GangColorCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                           UserManager<Player> userManager, MemberManager memberManager,
++	                           @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
+ 	                           GangManager gangManager, InventoryService inventoryService) {
+ 		super(gangland, "color", tree, parent);
+ 
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangCreateCommand.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangCreateCommand.java
+index c0c01491..06a2cb12 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangCreateCommand.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangCreateCommand.java
+@@ -32,6 +32,8 @@ import java.util.List;
+ import java.util.Map;
+ import java.util.concurrent.atomic.AtomicReference;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class GangCreateCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -43,7 +45,7 @@ class GangCreateCommand extends SubArgument {
+ 	private final RepositoryRegistry  repositoryRegistry;
+ 
+ 	protected GangCreateCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                            UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
++	                            @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+ 	                            RankManager rankManager, RepositoryRegistry repositoryRegistry) {
+ 		super(gangland, "create", tree, parent);
+ 
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDeleteCommand.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDeleteCommand.java
+index 3363c68d..59c2a1a8 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDeleteCommand.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDeleteCommand.java
+@@ -38,6 +38,8 @@ import java.util.UUID;
+ import java.util.concurrent.atomic.AtomicReference;
+ import java.util.stream.Collectors;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class GangDeleteCommand extends SubArgument {
+ 
+ 	private final JavaPlugin                   gangland;
+@@ -55,7 +57,7 @@ class GangDeleteCommand extends SubArgument {
+ 	private final ConfirmArgument confirmDelete;
+ 
+ 	protected GangDeleteCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                            UserManager<Player> userManager, UserManager<OfflinePlayer> offlineUserManager,
++	                            @Qualifier("online") UserManager<Player> userManager, @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
+ 	                            MemberManager memberManager, GangManager gangManager,
+ 	                            RankManager rankManager, RepositoryRegistry repositoryRegistry) {
+ 		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDemoteCommand.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDemoteCommand.java
+index af481fa4..47618d23 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDemoteCommand.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDemoteCommand.java
+@@ -25,6 +25,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.util.Objects;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class GangDemoteCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -35,7 +37,7 @@ class GangDemoteCommand extends SubArgument {
+ 	private final RankManager         rankManager;
+ 
+ 	protected GangDemoteCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                            UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
++	                            @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+ 	                            RankManager rankManager) {
+ 		super(gangland, "demote", tree, parent);
+ 
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDepositCommand.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDepositCommand.java
+index b3cdf97d..ee7ab262 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDepositCommand.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDepositCommand.java
+@@ -26,6 +26,8 @@ import java.math.BigDecimal;
+ import java.util.List;
+ import java.util.NavigableSet;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class GangDepositCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -35,7 +37,7 @@ class GangDepositCommand extends SubArgument {
+ 	private final GangManager         gangManager;
+ 
+ 	protected GangDepositCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                             UserManager<Player> userManager, MemberManager memberManager,
++	                             @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
+ 	                             GangManager gangManager) {
+ 		super(gangland, "deposit", tree, parent);
+ 
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDescriptionCommand.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDescriptionCommand.java
+index 012a7684..60eb2a53 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDescriptionCommand.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDescriptionCommand.java
+@@ -19,6 +19,8 @@ import org.luckyraven.gangland.core.user.UserManager;
+ import java.util.Collections;
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class GangDescriptionCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -27,7 +29,7 @@ class GangDescriptionCommand extends SubArgument {
+ 	private final GangManager         gangManager;
+ 
+ 	protected GangDescriptionCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                                 UserManager<Player> userManager, MemberManager memberManager,
++	                                 @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
+ 	                                 GangManager gangManager) {
+ 		super(gangland, new String[]{"desc", "description"}, tree, parent, "description");
+ 
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDisplayCommand.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDisplayCommand.java
+index 45590ca2..eb9f5316 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDisplayCommand.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangDisplayCommand.java
+@@ -19,6 +19,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class GangDisplayCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -28,7 +30,7 @@ class GangDisplayCommand extends SubArgument {
+ 	private final GangManager         gangManager;
+ 
+ 	protected GangDisplayCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                             UserManager<Player> userManager, MemberManager memberManager,
++	                             @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
+ 	                             GangManager gangManager) {
+ 		super(gangland, "display", tree, parent);
+ 
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangKickCommand.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangKickCommand.java
+index f1e2faa1..e776f2c5 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangKickCommand.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangKickCommand.java
+@@ -25,6 +25,8 @@ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.Objects;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class GangKickCommand extends SubArgument {
+ 
+ 	private final JavaPlugin                   gangland;
+@@ -36,7 +38,7 @@ class GangKickCommand extends SubArgument {
+ 	private final RankManager                rankManager;
+ 
+ 	protected GangKickCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                          UserManager<Player> userManager, UserManager<OfflinePlayer> offlineUserManager,
++	                          @Qualifier("online") UserManager<Player> userManager, @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
+ 	                          MemberManager memberManager, GangManager gangManager, RankManager rankManager) {
+ 		super(gangland, "kick", tree, parent);
+ 
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangLeaveCommand.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangLeaveCommand.java
+index 2252b167..0a17dcb6 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangLeaveCommand.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangLeaveCommand.java
+@@ -23,6 +23,8 @@ import org.luckyraven.gangland.core.user.UserManager;
+ 
+ import java.util.HashMap;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class GangLeaveCommand extends SubArgument {
+ 
+ 	private static final long CONFIRM_WINDOW_TICKS = 20L * 60L;
+@@ -36,7 +38,7 @@ class GangLeaveCommand extends SubArgument {
+ 	private final HashMap<CommandSender, BukkitTask> autoUnlock = new HashMap<>();
+ 
+ 	protected GangLeaveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                           UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
++	                           @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+ 	                           RankManager rankManager) {
+ 		super(gangland, "leave", tree, parent);
+ 
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangMembersCommand.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangMembersCommand.java
+index 6aa5531f..c1a2ef62 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangMembersCommand.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangMembersCommand.java
+@@ -18,13 +18,15 @@ import org.luckyraven.gangland.gang.rank.Rank;
+ import org.luckyraven.gangland.core.user.User;
+ import org.luckyraven.gangland.core.user.UserManager;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class GangMembersCommand extends SubArgument {
+ 
+ 	private final UserManager<Player> userManager;
+ 	private final GangManager         gangManager;
+ 
+ 	protected GangMembersCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                             UserManager<Player> userManager, GangManager gangManager) {
++	                             @Qualifier("online") UserManager<Player> userManager, GangManager gangManager) {
+ 		super(gangland, new String[]{"members", "list"}, tree, parent);
+ 
+ 		this.userManager = userManager;
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangPromoteCommand.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangPromoteCommand.java
+index 772748ff..00d9c39d 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangPromoteCommand.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangPromoteCommand.java
+@@ -29,6 +29,8 @@ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.Objects;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class GangPromoteCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -39,7 +41,7 @@ class GangPromoteCommand extends SubArgument {
+ 	private final RankManager         rankManager;
+ 
+ 	protected GangPromoteCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                             UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
++	                             @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+ 	                             RankManager rankManager) {
+ 		super(gangland, "promote", tree, parent);
+ 
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangRenameCommand.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangRenameCommand.java
+index 6dd2c842..95e36a41 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangRenameCommand.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangRenameCommand.java
+@@ -20,6 +20,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class GangRenameCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -29,7 +31,7 @@ class GangRenameCommand extends SubArgument {
+ 	private final GangManager         gangManager;
+ 
+ 	protected GangRenameCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                            UserManager<Player> userManager, MemberManager memberManager,
++	                            @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
+ 	                            GangManager gangManager) {
+ 		super(gangland, "rename", tree, parent);
+ 
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangTransferCommand.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangTransferCommand.java
+index 9ceae84f..2ef8c2f2 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangTransferCommand.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangTransferCommand.java
+@@ -30,6 +30,7 @@ import java.util.List;
+ import java.util.UUID;
+ import java.util.concurrent.atomic.AtomicReference;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ /**
+  * {@code /glw gang transfer <player>} → confirm via {@code /glw gang transfer confirm} → swaps the gang's owner rank
+  * onto the target player and demotes the original owner to the rank directly below owner. Mirrors the
+@@ -48,7 +49,7 @@ class GangTransferCommand extends SubArgument {
+ 	private final ConfirmArgument                              confirmTransfer;
+ 
+ 	protected GangTransferCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                              UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
++	                              @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
+ 	                              RankManager rankManager) {
+ 		super(gangland, "transfer", tree, parent);
+ 
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangWithdrawCommand.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangWithdrawCommand.java
+index 3b8dd8f5..b3ab439c 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangWithdrawCommand.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/GangWithdrawCommand.java
+@@ -26,6 +26,8 @@ import java.math.BigDecimal;
+ import java.util.List;
+ import java.util.NavigableSet;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class GangWithdrawCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -35,7 +37,7 @@ class GangWithdrawCommand extends SubArgument {
+ 	private final GangManager         gangManager;
+ 
+ 	protected GangWithdrawCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                              UserManager<Player> userManager, MemberManager memberManager,
++	                              @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
+ 	                              GangManager gangManager) {
+ 		super(gangland, "withdraw", tree, parent);
+ 
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/ally/GangAllyAbandonCommand.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/ally/GangAllyAbandonCommand.java
+index cdb8a870..dcf57d60 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/ally/GangAllyAbandonCommand.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/ally/GangAllyAbandonCommand.java
+@@ -26,6 +26,8 @@ import java.util.HashMap;
+ import java.util.List;
+ import java.util.Map;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class GangAllyAbandonCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -34,7 +36,7 @@ class GangAllyAbandonCommand extends SubArgument {
+ 	private final MemberManager       memberManager;
+ 	private final GangManager         gangManager;
+ 
+-	GangAllyAbandonCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
++	GangAllyAbandonCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
+ 	                       MemberManager memberManager, GangManager gangManager) {
+ 		super(gangland, "abandon", tree, parent);
+ 
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/ally/GangAllyCommand.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/ally/GangAllyCommand.java
+index daee4e6f..e3f30d45 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/ally/GangAllyCommand.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/command/sub/gang/ally/GangAllyCommand.java
+@@ -18,6 +18,7 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ import java.util.ArrayList;
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ /**
+  * {@code /glw gang ally}. The core owns {@code abandon}; the request/accept/reject/pending flow is mail and arrives
+  * through the {@code gang.ally} {@link CommandContributions} when the mail module is installed.
+@@ -33,7 +34,7 @@ public class GangAllyCommand extends SubArgument {
+ 	private final GangManager          gangManager;
+ 	private final CommandContributions contributions;
+ 
+-	public GangAllyCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
++	public GangAllyCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
+ 	                       MemberManager memberManager, GangManager gangManager, CommandContributions contributions) {
+ 		super(gangland, "ally", tree, parent);
+ 
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/GangConfig.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/GangConfig.java
+index 6a290812..dab6ca61 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/GangConfig.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/GangConfig.java
+@@ -31,6 +31,7 @@ import org.luckyraven.gangland.menu.filter.FilterStore;
+ import org.bukkit.entity.Player;
+ import org.luckyraven.keystone.bean.Bean;
+ import org.luckyraven.keystone.bean.Configuration;
++import org.luckyraven.keystone.bean.Qualifier;
+ import org.luckyraven.keystone.persistence.database.DatabaseHandler;
+ import org.luckyraven.keystone.persistence.repository.IRepository;
+ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
+@@ -122,7 +123,7 @@ public final class GangConfig {
+ 	 * 12, S4) — see {@link GangPlaceholderContribution}'s javadoc.
+ 	 */
+ 	@Bean
+-	public PlaceholderContribution gangPlaceholderContribution(UserManager<Player> userManager,
++	public PlaceholderContribution gangPlaceholderContribution(@Qualifier("online") UserManager<Player> userManager,
+ 	                                                           MemberManager memberManager, GangManager gangManager) {
+ 		return new GangPlaceholderContribution(userManager, memberManager, gangManager);
+ 	}
+@@ -132,7 +133,8 @@ public final class GangConfig {
+ 	 * step 14) — see {@link GangOptionContribution}'s javadoc.
+ 	 */
+ 	@Bean
+-	public CommandContribution gangOptionContribution(JavaPlugin plugin, UserManager<Player> userManager,
++	public CommandContribution gangOptionContribution(JavaPlugin plugin,
++	                                                   @Qualifier("online") UserManager<Player> userManager,
+ 	                                                   MemberManager memberManager, GangManager gangManager,
+ 	                                                   RankManager rankManager) {
+ 		return new GangOptionContribution(plugin, userManager, memberManager, gangManager, rankManager);
+@@ -143,7 +145,8 @@ public final class GangConfig {
+ 	 * step 14) — see {@link GangDebugContribution}'s javadoc.
+ 	 */
+ 	@Bean
+-	public CommandContribution gangDebugContribution(JavaPlugin plugin, UserManager<Player> userManager,
++	public CommandContribution gangDebugContribution(JavaPlugin plugin,
++	                                                  @Qualifier("online") UserManager<Player> userManager,
+ 	                                                  GangManager gangManager, MemberManager memberManager,
+ 	                                                  RankManager rankManager) {
+ 		return new GangDebugContribution(plugin, userManager, gangManager, memberManager, rankManager);
+@@ -171,7 +174,7 @@ public final class GangConfig {
+ 	 * other cross-boundary bean (e.g. {@code RepositoryRegistry}, {@code PermissionManager}).
+ 	 */
+ 	@Bean
+-	public GangItemSourceContribution gangItemSourceContribution(UserManager<Player> userManager,
++	public GangItemSourceContribution gangItemSourceContribution(@Qualifier("online") UserManager<Player> userManager,
+ 	                                                              GangManager gangManager, FilterStore filterStore,
+ 	                                                              FilterApplier filterApplier,
+ 	                                                              GangFilterAdapter gangFilterAdapter,
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/command/debug/GangDebugContribution.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/command/debug/GangDebugContribution.java
+index 340ce693..a4f0ebac 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/command/debug/GangDebugContribution.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/command/debug/GangDebugContribution.java
+@@ -18,6 +18,7 @@ import org.luckyraven.keystone.datastructure.Tree;
+ import java.util.Collection;
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ /**
+  * Attaches {@code /glw debug gang-data|member-data|rank-data} under the core's {@code debug} command (WS5 G2 step
+  * 14) — moved out of gangland-impl's {@code DebugCommand} wholesale; impl can no longer name
+@@ -31,7 +32,7 @@ public final class GangDebugContribution implements CommandContribution {
+ 	private final MemberManager       memberManager;
+ 	private final RankManager         rankManager;
+ 
+-	public GangDebugContribution(JavaPlugin plugin, UserManager<Player> userManager, GangManager gangManager,
++	public GangDebugContribution(JavaPlugin plugin, @Qualifier("online") UserManager<Player> userManager, GangManager gangManager,
+ 	                             MemberManager memberManager, RankManager rankManager) {
+ 		this.plugin        = plugin;
+ 		this.userManager   = userManager;
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/menu/GangMenuItemSourceContribution.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/menu/GangMenuItemSourceContribution.java
+index 1a2888cc..2dbfb3a3 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/menu/GangMenuItemSourceContribution.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/menu/GangMenuItemSourceContribution.java
+@@ -26,6 +26,7 @@ import java.util.Map;
+ import java.util.Set;
+ import java.util.UUID;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ /**
+  * Feeds the {@code gangs}/{@code gang_members}/{@code gang_allies} YAML menu item sources (W54 F1) — the direct
+  * port of the deleted {@code GangItemSourceProvider}'s body, rows returned as plain
+@@ -51,7 +52,7 @@ public final class GangMenuItemSourceContribution implements GangItemSourceContr
+ 	private final GangFilterAdapter   gangFilterAdapter;
+ 	private final MemberFilterAdapter memberFilterAdapter;
+ 
+-	public GangMenuItemSourceContribution(UserManager<Player> userManager, GangManager gangManager,
++	public GangMenuItemSourceContribution(@Qualifier("online") UserManager<Player> userManager, GangManager gangManager,
+ 	                                      FilterStore filterStore, FilterApplier filterApplier,
+ 	                                      GangFilterAdapter gangFilterAdapter, MemberFilterAdapter memberFilterAdapter) {
+ 		this.userManager         = userManager;
+diff --git a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/placeholder/GangPlaceholderContribution.java b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/placeholder/GangPlaceholderContribution.java
+index 59044458..130c5225 100644
+--- a/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/placeholder/GangPlaceholderContribution.java
++++ b/gangland-features/gangland-gang/src/main/java/org/luckyraven/gangland/gang/placeholder/GangPlaceholderContribution.java
+@@ -14,6 +14,7 @@ import org.luckyraven.gangland.gang.member.MemberManager;
+ import org.luckyraven.keystone.color.ColorUtil;
+ import org.luckyraven.keystone.util.NumberUtil;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ /**
+  * Answers the {@code gang_*} placeholders and the member-touching {@code user_*} family (has-gang, gang-id,
+  * gang-join-date, contribution, contributed-amount, has-rank, rank) that used to live inline in
+@@ -30,7 +31,7 @@ public final class GangPlaceholderContribution implements PlaceholderContributio
+ 	private final MemberManager       memberManager;
+ 	private final GangManager         gangManager;
+ 
+-	public GangPlaceholderContribution(UserManager<Player> userManager, MemberManager memberManager,
++	public GangPlaceholderContribution(@Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
+ 	                                   GangManager gangManager) {
+ 		this.userManager   = userManager;
+ 		this.memberManager = memberManager;
+diff --git a/gangland-features/gangland-gang/src/test/java/org/luckyraven/gangland/gang/GangConfigBeanGraphTest.java b/gangland-features/gangland-gang/src/test/java/org/luckyraven/gangland/gang/GangConfigBeanGraphTest.java
+index cef48aaf..f8fe9a35 100644
+--- a/gangland-features/gangland-gang/src/test/java/org/luckyraven/gangland/gang/GangConfigBeanGraphTest.java
++++ b/gangland-features/gangland-gang/src/test/java/org/luckyraven/gangland/gang/GangConfigBeanGraphTest.java
+@@ -1,5 +1,6 @@
+ package org.luckyraven.gangland.gang;
+ 
++import org.bukkit.OfflinePlayer;
+ import org.bukkit.entity.Player;
+ import org.bukkit.plugin.java.JavaPlugin;
+ import org.junit.jupiter.api.BeforeEach;
+@@ -50,6 +51,18 @@ import static org.mockito.Mockito.when;
+  * class than the one that needs it — without violating it. Every other {@code GangConfig} dependency
+  * (repositories, plugin, database handler, user manager, filter plumbing) is mocked, matching every other
+  * config-class bean test's rig in this codebase.
++ *
++ * <p>Also pins T-55 (W55, P0): {@code setUp()} registers <b>two</b> {@code UserManager} mocks named
++ * {@code online}/{@code offline} — exactly like the real {@code DataConfig} does ({@code isGeneric = true} on
++ * both {@code @Bean} methods, both stored under the same erased {@code UserManager.class} key) — so this rig
++ * can reproduce the real "2 candidates registered" ambiguity a {@code @Bean} method parameter with no
++ * {@code @Qualifier} hits (confirmed against {@code BeanFactory.resolveParameter}: unlike constructor
++ * injection, which silently falls back to "first registered" via {@code DependencyContainer.getInstance} and
++ * never throws, a {@code @Bean} method parameter resolves through {@code container.getAllInstances(type)} and
++ * throws {@code IllegalStateException} the moment more than one distinct candidate comes back). Before this
++ * gate's fix, {@code GangConfig.gangPlaceholderContribution}/{@code gangOptionContribution}/
++ * {@code gangDebugContribution}/{@code gangItemSourceContribution} all took a bare, unqualified
++ * {@code UserManager<Player>} parameter and hit exactly this; all four now carry {@code @Qualifier("online")}.
+  */
+ @DisplayName("GangConfig bean graph - real BeanFactory wiring (T-53)")
+ class GangConfigBeanGraphTest {
+@@ -74,6 +87,13 @@ class GangConfigBeanGraphTest {
+ 		UserManager<Player> userManager = mock(UserManager.class);
+ 		container.registerInstance("online", UserManager.class, userManager);
+ 
++		// T-55 (W55): DataConfig registers TWO UserManager beans under the raw erased type (online/offline,
++		// isGeneric = true) — both must be present here too, or this rig can never reproduce the "2 candidates
++		// registered" ambiguity a consumer with no @Qualifier hits in the real container.
++		@SuppressWarnings("unchecked")
++		UserManager<OfflinePlayer> offlineUserManager = mock(UserManager.class);
++		container.registerInstance("offline", UserManager.class, offlineUserManager);
++
+ 		factory.registerConfiguration(FixtureGangMembershipProducer.class);
+ 		factory.registerConfiguration(GangConfig.class);
+ 		// Harmless no-op once GangMembershipInstaller isn't @Configuration-annotated any more
+@@ -124,6 +144,51 @@ class GangConfigBeanGraphTest {
+ 		           "GangMembershipInstaller's @PostConstruct install() must have run against the real bean graph");
+ 	}
+ 
++	/**
++	 * Pins T-55 directly: with two {@code UserManager} beans registered (online/offline, as {@code DataConfig}
++	 * does), every one of {@link GangConfig}'s {@code @Bean} methods must resolve without ambiguity. This
++	 * exercises the same {@code factory.instantiate()} call as {@link #gangMembershipInstaller_resolvesAndInstalls()}
++	 * — kept as its own named test so the T-55 regression has a dedicated, discoverable pin rather than riding
++	 * along on a test named for a different bug.
++	 */
++	@Test
++	@DisplayName("every GangConfig @Bean method resolves UserManager unambiguously with online+offline both registered (T-55)")
++	void gangConfig_userManagerConsumers_resolveUnambiguously() {
++		assertDoesNotThrow(() -> factory.instantiate(),
++		                   "GangConfig's gangPlaceholderContribution/gangOptionContribution/gangDebugContribution/"
++		                   + "gangItemSourceContribution must all qualify their UserManager<Player> parameter");
++	}
++
++	/**
++	 * Standalone repro of T-55's failure mode in isolation, independent of whatever {@link GangConfig} does or
++	 * stops doing: an unqualified {@code @Bean} method parameter of an ambiguously-registered type throws
++	 * exactly the "Ambiguous bean ... N candidates registered" error {@code BeanFactory.resolveParameter}
++	 * produces — mirrors {@link #bareConfigurationClass_constructorInjectingABeanProducedType_fails()}'s pattern
++	 * for T-53.
++	 */
++	@Test
++	@DisplayName("an unqualified @Bean method parameter of an ambiguously-registered type fails with the T-55 error")
++	void unqualifiedBeanParameter_ofAmbiguouslyRegisteredType_fails() {
++		DependencyContainer isolated       = new DependencyContainer();
++		BeanFactory          isolatedFactory = new BeanFactory(isolated, mock(JavaPlugin.class), key -> false);
++
++		@SuppressWarnings("unchecked")
++		UserManager<Player> online = mock(UserManager.class);
++		isolated.registerInstance("online", UserManager.class, online);
++
++		@SuppressWarnings("unchecked")
++		UserManager<OfflinePlayer> offline = mock(UserManager.class);
++		isolated.registerInstance("offline", UserManager.class, offline);
++
++		isolatedFactory.registerConfiguration(UnqualifiedUserManagerConsumer.class);
++
++		IllegalStateException thrown =
++				assertThrows(IllegalStateException.class, isolatedFactory::instantiate);
++		assertTrue(thrown.getMessage().contains("Ambiguous bean")
++		           && thrown.getMessage().contains("2 candidates registered"),
++		           thrown.getMessage());
++	}
++
+ 	/**
+ 	 * Reproduces the exact pre-fix crash: a bare {@code @Configuration} class construction-injecting a
+ 	 * {@code @Bean}-produced type. Standalone from the test above so a reader can run just this one to see the
+@@ -166,4 +231,16 @@ class GangConfigBeanGraphTest {
+ 		}
+ 	}
+ 
++	/** Minimal repro fixture for the T-55 isolation test: a {@code @Bean} method parameter of type
++	 * {@code UserManager<Player>} with no {@code @Qualifier}, exactly the shape all four of
++	 * {@link GangConfig}'s affected methods used to have. */
++	@Configuration
++	public static final class UnqualifiedUserManagerConsumer {
++
++		@Bean
++		public String consumer(UserManager<Player> userManager) {
++			return "unused";
++		}
++	}
++
+ }
+diff --git a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/GangAllyMailContribution.java b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/GangAllyMailContribution.java
+index fa286f3a..7bfd0015 100644
+--- a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/GangAllyMailContribution.java
++++ b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/GangAllyMailContribution.java
+@@ -16,6 +16,7 @@ import org.luckyraven.keystone.datastructure.Tree;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ /**
+  * Attaches the mail-backed alliance flow - {@code request}, {@code accept}, {@code reject}, {@code pending}
+  * ({@code + cancel}) - under the core's {@code /glw gang ally} argument. {@code abandon} is not mail and stays in
+@@ -31,7 +32,7 @@ public final class GangAllyMailContribution implements CommandContribution {
+ 	private final GangManager         gangManager;
+ 	private final MailManager         mailManager;
+ 
+-	public GangAllyMailContribution(JavaPlugin plugin, UserManager<Player> userManager, MemberManager memberManager,
++	public GangAllyMailContribution(JavaPlugin plugin, @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
+ 	                                GangManager gangManager, MailManager mailManager) {
+ 		this.plugin      = plugin;
+ 		this.userManager   = userManager;
+diff --git a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/GangMailContribution.java b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/GangMailContribution.java
+index f9c42e5f..4fd7732d 100644
+--- a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/GangMailContribution.java
++++ b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/GangMailContribution.java
+@@ -15,6 +15,7 @@ import org.luckyraven.keystone.datastructure.Tree;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ /**
+  * Attaches {@code /glw gang invite [cancel] <player>} and its sibling {@code /glw gang accept} under the core's
+  * {@code gang} command. Registered as a bean by {@link org.luckyraven.gangland.mail.MailModuleConfig}; without the
+@@ -32,8 +33,8 @@ public final class GangMailContribution implements CommandContribution {
+ 	private final RankManager                rankManager;
+ 	private final MailManager                mailManager;
+ 
+-	public GangMailContribution(JavaPlugin plugin, UserManager<Player> userManager,
+-	                            UserManager<OfflinePlayer> offlineUserManager, MemberManager memberManager,
++	public GangMailContribution(JavaPlugin plugin, @Qualifier("online") UserManager<Player> userManager,
++	                            @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager, MemberManager memberManager,
+ 	                            GangManager gangManager, RankManager rankManager, MailManager mailManager) {
+ 		this.plugin           = plugin;
+ 		this.userManager        = userManager;
+diff --git a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyAcceptCommand.java b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyAcceptCommand.java
+index 80412505..d46ed3d3 100644
+--- a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyAcceptCommand.java
++++ b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyAcceptCommand.java
+@@ -20,6 +20,7 @@ import org.luckyraven.gangland.mail.MailItem;
+ import org.luckyraven.gangland.mail.MailManager;
+ import org.luckyraven.gangland.mail.MailType;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ import java.util.*;
+ 
+ public class GangAllyAcceptCommand extends SubArgument {
+@@ -31,7 +32,7 @@ public class GangAllyAcceptCommand extends SubArgument {
+ 	private final GangManager         gangManager;
+ 	private final MailManager         mailManager;
+ 
+-	public GangAllyAcceptCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
++	public GangAllyAcceptCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
+ 	                      MemberManager memberManager, GangManager gangManager, MailManager mailManager) {
+ 		super(plugin, "accept", tree, parent);
+ 
+diff --git a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyPendingCancelCommand.java b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyPendingCancelCommand.java
+index 5c7f1d8e..c1669242 100644
+--- a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyPendingCancelCommand.java
++++ b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyPendingCancelCommand.java
+@@ -19,6 +19,7 @@ import org.luckyraven.gangland.mail.MailManager;
+ import org.luckyraven.gangland.mail.MailType;
+ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ import java.util.*;
+ 
+ public class GangAllyPendingCancelCommand extends SubArgument {
+@@ -30,7 +31,7 @@ public class GangAllyPendingCancelCommand extends SubArgument {
+ 	private final MailManager         mailManager;
+ 
+ 	public GangAllyPendingCancelCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
+-	                             UserManager<Player> userManager, GangManager gangManager, MailManager mailManager) {
++	                             @Qualifier("online") UserManager<Player> userManager, GangManager gangManager, MailManager mailManager) {
+ 		super(plugin, "cancel", tree, parent);
+ 
+ 		this.plugin    = plugin;
+diff --git a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyPendingCommand.java b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyPendingCommand.java
+index d3a81763..f2d07e69 100644
+--- a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyPendingCommand.java
++++ b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyPendingCommand.java
+@@ -19,13 +19,15 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ public class GangAllyPendingCommand extends SubArgument {
+ 
+ 	private final UserManager<Player> userManager;
+ 	private final GangManager         gangManager;
+ 	private final MailManager         mailManager;
+ 
+-	public GangAllyPendingCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
++	public GangAllyPendingCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
+ 	                       GangManager gangManager, MailManager mailManager) {
+ 		super(plugin, "pending", tree, parent);
+ 
+diff --git a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyRejectCommand.java b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyRejectCommand.java
+index 51bc75f2..8e185fa6 100644
+--- a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyRejectCommand.java
++++ b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyRejectCommand.java
+@@ -20,6 +20,7 @@ import org.luckyraven.gangland.mail.MailItem;
+ import org.luckyraven.gangland.mail.MailManager;
+ import org.luckyraven.gangland.mail.MailType;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ import java.util.*;
+ 
+ public class GangAllyRejectCommand extends SubArgument {
+@@ -31,7 +32,7 @@ public class GangAllyRejectCommand extends SubArgument {
+ 	private final GangManager         gangManager;
+ 	private final MailManager         mailManager;
+ 
+-	public GangAllyRejectCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
++	public GangAllyRejectCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
+ 	                      MemberManager memberManager, GangManager gangManager, MailManager mailManager) {
+ 		super(plugin, "reject", tree, parent);
+ 
+diff --git a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyRequestCommand.java b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyRequestCommand.java
+index 47cbc0db..c388f011 100644
+--- a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyRequestCommand.java
++++ b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/ally/GangAllyRequestCommand.java
+@@ -27,6 +27,8 @@ import java.util.Collection;
+ import java.util.HashMap;
+ import java.util.Map;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ public class GangAllyRequestCommand extends SubArgument {
+ 
+ 	private static final long REQUEST_EXPIRY_MS = 60_000L;
+@@ -38,7 +40,7 @@ public class GangAllyRequestCommand extends SubArgument {
+ 	private final GangManager         gangManager;
+ 	private final MailManager         mailManager;
+ 
+-	public GangAllyRequestCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
++	public GangAllyRequestCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
+ 	                       MemberManager memberManager, GangManager gangManager, MailManager mailManager) {
+ 		super(plugin, "request", tree, parent);
+ 
+diff --git a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/invite/GangInviteAcceptCommand.java b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/invite/GangInviteAcceptCommand.java
+index f41bb0a9..6b902cde 100644
+--- a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/invite/GangInviteAcceptCommand.java
++++ b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/invite/GangInviteAcceptCommand.java
+@@ -28,6 +28,8 @@ import java.util.HashMap;
+ import java.util.List;
+ import java.util.Map;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class GangInviteAcceptCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            plugin;
+@@ -38,7 +40,7 @@ class GangInviteAcceptCommand extends SubArgument {
+ 	private final RankManager         rankManager;
+ 	private final MailManager         mailManager;
+ 
+-	GangInviteAcceptCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
++	GangInviteAcceptCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
+ 	                        MemberManager memberManager, GangManager gangManager, RankManager rankManager,
+ 	                        MailManager mailManager) {
+ 		super(plugin, "accept", tree, parent);
+diff --git a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/invite/GangInviteCancelCommand.java b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/invite/GangInviteCancelCommand.java
+index ee5b2272..63797013 100644
+--- a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/invite/GangInviteCancelCommand.java
++++ b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/invite/GangInviteCancelCommand.java
+@@ -22,6 +22,8 @@ import java.util.List;
+ import java.util.Optional;
+ import java.util.UUID;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class GangInviteCancelCommand extends SubArgument {
+ 
+ 	private final JavaPlugin                   plugin;
+@@ -30,8 +32,8 @@ class GangInviteCancelCommand extends SubArgument {
+ 	private final UserManager<OfflinePlayer> offlineUserManager;
+ 	private final MailManager                mailManager;
+ 
+-	GangInviteCancelCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+-	                        UserManager<OfflinePlayer> offlineUserManager, MailManager mailManager) {
++	GangInviteCancelCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
++	                        @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager, MailManager mailManager) {
+ 		super(plugin, "cancel", tree, parent);
+ 
+ 		this.plugin           = plugin;
+diff --git a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/invite/GangInviteCommand.java b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/invite/GangInviteCommand.java
+index 681dba5a..372897cf 100644
+--- a/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/invite/GangInviteCommand.java
++++ b/gangland-features/gangland-mail/src/main/java/org/luckyraven/gangland/mail/command/invite/GangInviteCommand.java
+@@ -28,6 +28,8 @@ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.UUID;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ public class GangInviteCommand extends SubArgument {
+ 
+ 	private static final long INVITE_EXPIRY_MS = 60_000L;
+@@ -42,8 +44,8 @@ public class GangInviteCommand extends SubArgument {
+ 	private final RankManager                rankManager;
+ 	private final MailManager                mailManager;
+ 
+-	public GangInviteCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, UserManager<Player> userManager,
+-	                         UserManager<OfflinePlayer> offlineUserManager, MemberManager memberManager,
++	public GangInviteCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
++	                         @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager, MemberManager memberManager,
+ 	                         GangManager gangManager, RankManager rankManager, MailManager mailManager) {
+ 		super(plugin, new String[]{"invite", "add"}, tree, parent);
+ 
+diff --git a/gangland-features/gangland-npc-shops/src/main/java/org/luckyraven/gangland/npcshops/integration/GanglandBankerEconomy.java b/gangland-features/gangland-npc-shops/src/main/java/org/luckyraven/gangland/npcshops/integration/GanglandBankerEconomy.java
+index 63879660..7c586926 100644
+--- a/gangland-features/gangland-npc-shops/src/main/java/org/luckyraven/gangland/npcshops/integration/GanglandBankerEconomy.java
++++ b/gangland-features/gangland-npc-shops/src/main/java/org/luckyraven/gangland/npcshops/integration/GanglandBankerEconomy.java
+@@ -20,6 +20,7 @@ import java.math.BigDecimal;
+ import java.time.Duration;
+ import java.time.Instant;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ /**
+  * Gangland-side implementation of {@link BankerEconomyContract}. Bridges the cops-n-crooks banker views to the real
+  * {@link UserManager} + {@link Bank} entities + tier registry + Bank repository. Every entry point routes through
+@@ -36,7 +37,7 @@ public final class GanglandBankerEconomy implements BankerEconomyContract {
+ 	private final BankerSettings      settings;
+ 	private final IRepository<Bank>   bankRepository;
+ 
+-	public GanglandBankerEconomy(UserManager<Player> userManager, BankTierRegistry tierRegistry,
++	public GanglandBankerEconomy(@Qualifier("online") UserManager<Player> userManager, BankTierRegistry tierRegistry,
+ 	                             BankerSettings settings, IRepository<Bank> bankRepository) {
+ 		this.userManager    = userManager;
+ 		this.tierRegistry   = tierRegistry;
+diff --git a/gangland-features/gangland-npc-shops/src/main/java/org/luckyraven/gangland/npcshops/integration/GanglandTraderEconomy.java b/gangland-features/gangland-npc-shops/src/main/java/org/luckyraven/gangland/npcshops/integration/GanglandTraderEconomy.java
+index 472d3f90..69bb76de 100644
+--- a/gangland-features/gangland-npc-shops/src/main/java/org/luckyraven/gangland/npcshops/integration/GanglandTraderEconomy.java
++++ b/gangland-features/gangland-npc-shops/src/main/java/org/luckyraven/gangland/npcshops/integration/GanglandTraderEconomy.java
+@@ -10,12 +10,13 @@ import org.luckyraven.gangland.core.user.UserManager;
+ 
+ import java.math.BigDecimal;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ @CustomLog
+ public final class GanglandTraderEconomy implements TraderEconomyContract {
+ 
+ 	private final UserManager<Player> userManager;
+ 
+-	public GanglandTraderEconomy(UserManager<Player> userManager) {
++	public GanglandTraderEconomy(@Qualifier("online") UserManager<Player> userManager) {
+ 		this.userManager = userManager;
+ 	}
+ 
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/PeriodicalUpdates.java b/gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/PeriodicalUpdates.java
+index 8431d9a6..b4b53326 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/PeriodicalUpdates.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/PeriodicalUpdates.java
+@@ -6,6 +6,7 @@ import org.bukkit.OfflinePlayer;
+ import org.bukkit.entity.Player;
+ import org.luckyraven.gangland.Gangland;
+ import org.luckyraven.keystone.bean.BeanLifecycle;
++import org.luckyraven.keystone.bean.Qualifier;
+ import org.luckyraven.keystone.timer.RepeatingTimer;
+ import org.luckyraven.keystone.util.TimeUtil;
+ import org.luckyraven.gangland.data.plugin.PluginData;
+@@ -43,8 +44,8 @@ public final class PeriodicalUpdates implements BeanLifecycle {
+ 	public PeriodicalUpdates(Gangland gangland,
+ 	                         GanglandDatabase database,
+ 	                         PluginManager pluginManager,
+-	                         UserManager<Player> userManager,
+-	                         UserManager<OfflinePlayer> offlineUserManager,
++	                         @Qualifier("online") UserManager<Player> userManager,
++	                         @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
+ 	                         DependencyContainer container,
+ 	                         long interval) {
+ 		this(gangland, database, pluginManager, userManager, offlineUserManager, container);
+@@ -54,8 +55,8 @@ public final class PeriodicalUpdates implements BeanLifecycle {
+ 	public PeriodicalUpdates(Gangland gangland,
+ 	                         GanglandDatabase database,
+ 	                         PluginManager pluginManager,
+-	                         UserManager<Player> userManager,
+-	                         UserManager<OfflinePlayer> offlineUserManager,
++	                         @Qualifier("online") UserManager<Player> userManager,
++	                         @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
+ 	                         DependencyContainer container) {
+ 		this.gangland           = gangland;
+ 		this.database           = database;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/PlayerBootstrapService.java b/gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/PlayerBootstrapService.java
+index fa5185fe..acc4b839 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/PlayerBootstrapService.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/bootstrap/PlayerBootstrapService.java
+@@ -6,6 +6,7 @@ import org.bukkit.OfflinePlayer;
+ import org.bukkit.entity.Player;
+ import org.luckyraven.gangland.Gangland;
+ import org.luckyraven.keystone.bean.BeanPostInitialize;
++import org.luckyraven.keystone.bean.Qualifier;
+ import org.luckyraven.gangland.data.user.UserDataLoader;
+ import org.luckyraven.gangland.database.GanglandDatabase;
+ import org.luckyraven.gangland.database.TableLookup;
+@@ -46,8 +47,8 @@ public final class PlayerBootstrapService implements BeanPostInitialize {
+ 
+ 	public PlayerBootstrapService(Gangland gangland,
+ 	                              GanglandDatabase ganglandDatabase,
+-	                              UserManager<Player> userManager,
+-	                              UserManager<OfflinePlayer> offlineUserManager,
++	                              @Qualifier("online") UserManager<Player> userManager,
++	                              @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
+ 	                              UserDataLoader userDataLoader,
+ 	                              UniqueItemAddon uniqueItemAddon) {
+ 		this.gangland           = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankBalanceCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankBalanceCommand.java
+index e8e2654b..b0f69f72 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankBalanceCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankBalanceCommand.java
+@@ -13,12 +13,14 @@ import org.luckyraven.gangland.file.configuration.Settings;
+ import org.luckyraven.gangland.core.user.User;
+ import org.luckyraven.gangland.core.user.UserManager;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class BankBalanceCommand extends SubArgument {
+ 
+ 	private final UserManager<Player> userManager;
+ 
+ 	protected BankBalanceCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                             UserManager<Player> userManager) {
++	                             @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, new String[]{"balance", "bal"}, tree, parent);
+ 
+ 		this.userManager = userManager;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankCreateCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankCreateCommand.java
+index ced4d379..bc48cc46 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankCreateCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankCreateCommand.java
+@@ -26,6 +26,8 @@ import java.util.HashMap;
+ import java.util.List;
+ import java.util.concurrent.atomic.AtomicReference;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class BankCreateCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -33,7 +35,7 @@ class BankCreateCommand extends SubArgument {
+ 	private final UserManager<Player> userManager;
+ 
+ 	protected BankCreateCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                            UserManager<Player> userManager) {
++	                            @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, "create", tree, parent);
+ 
+ 		this.gangland = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankDepositCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankDepositCommand.java
+index 46b658b8..fe00fc42 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankDepositCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankDepositCommand.java
+@@ -30,6 +30,8 @@ import java.time.Instant;
+ import java.util.List;
+ import java.util.NavigableSet;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class BankDepositCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -39,7 +41,7 @@ class BankDepositCommand extends SubArgument {
+ 	private final BankTiers           bankTiers;
+ 
+ 	protected BankDepositCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                             UserManager<Player> userManager, GanglandDatabase ganglandDatabase,
++	                             @Qualifier("online") UserManager<Player> userManager, GanglandDatabase ganglandDatabase,
+ 	                             BankTiers bankTiers) {
+ 		super(gangland, "deposit", tree, parent);
+ 
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankResetCapCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankResetCapCommand.java
+index 7ac79180..7ee30100 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankResetCapCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankResetCapCommand.java
+@@ -20,6 +20,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ import java.util.ArrayList;
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class BankResetCapCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -28,7 +30,7 @@ class BankResetCapCommand extends SubArgument {
+ 	private final GanglandDatabase    ganglandDatabase;
+ 
+ 	protected BankResetCapCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                              UserManager<Player> userManager, GanglandDatabase ganglandDatabase) {
++	                              @Qualifier("online") UserManager<Player> userManager, GanglandDatabase ganglandDatabase) {
+ 		super(gangland, "resetcap", tree, parent);
+ 
+ 		this.gangland         = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankWithdrawCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankWithdrawCommand.java
+index e05da965..0542370d 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankWithdrawCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bank/BankWithdrawCommand.java
+@@ -26,6 +26,8 @@ import java.math.BigDecimal;
+ import java.util.List;
+ import java.util.NavigableSet;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class BankWithdrawCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -34,7 +36,7 @@ class BankWithdrawCommand extends SubArgument {
+ 	private final GanglandDatabase    ganglandDatabase;
+ 
+ 	protected BankWithdrawCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                              UserManager<Player> userManager, GanglandDatabase ganglandDatabase) {
++	                              @Qualifier("online") UserManager<Player> userManager, GanglandDatabase ganglandDatabase) {
+ 		super(gangland, "withdraw", tree, parent);
+ 
+ 		this.gangland         = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bounty/BountyClearCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bounty/BountyClearCommand.java
+index c7361472..541f137b 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bounty/BountyClearCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bounty/BountyClearCommand.java
+@@ -18,6 +18,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.math.BigDecimal;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class BountyClearCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -25,7 +27,7 @@ class BountyClearCommand extends SubArgument {
+ 	private final UserManager<Player> userManager;
+ 
+ 	public BountyClearCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                          UserManager<Player> userManager) {
++	                          @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, new String[]{"clear", "remove", "delete", "del"}, tree, parent);
+ 
+ 		this.gangland    = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bounty/BountySetCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bounty/BountySetCommand.java
+index 93163449..d99ca365 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bounty/BountySetCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/bounty/BountySetCommand.java
+@@ -24,6 +24,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ import java.math.BigDecimal;
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class BountySetCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -31,7 +33,7 @@ class BountySetCommand extends SubArgument {
+ 	private final UserManager<Player> userManager;
+ 
+ 	public BountySetCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                        UserManager<Player> userManager) {
++	                        @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, new String[]{"set", "add"}, tree, parent);
+ 
+ 		this.gangland    = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/economy/EconomyDepositCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/economy/EconomyDepositCommand.java
+index 289669ce..f7f418f5 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/economy/EconomyDepositCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/economy/EconomyDepositCommand.java
+@@ -20,6 +20,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ import java.math.BigDecimal;
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class EconomyDepositCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -27,7 +29,7 @@ class EconomyDepositCommand extends SubArgument {
+ 	private final UserManager<Player> userManager;
+ 
+ 	protected EconomyDepositCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                                UserManager<Player> userManager) {
++	                                @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, new String[]{"deposit", "add"}, tree, parent);
+ 
+ 		this.gangland    = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/economy/EconomyResetCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/economy/EconomyResetCommand.java
+index 8708de42..e4f497e9 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/economy/EconomyResetCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/economy/EconomyResetCommand.java
+@@ -14,6 +14,8 @@ import org.luckyraven.gangland.file.configuration.Messages;
+ import org.luckyraven.gangland.core.user.User;
+ import org.luckyraven.gangland.core.user.UserManager;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class EconomyResetCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -21,7 +23,7 @@ class EconomyResetCommand extends SubArgument {
+ 	private final UserManager<Player> userManager;
+ 
+ 	protected EconomyResetCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                              UserManager<Player> userManager) {
++	                              @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, "reset", tree, parent);
+ 
+ 		this.gangland    = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/economy/EconomySetCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/economy/EconomySetCommand.java
+index 02c51be4..f4cc35b6 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/economy/EconomySetCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/economy/EconomySetCommand.java
+@@ -20,6 +20,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ import java.math.BigDecimal;
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class EconomySetCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -27,7 +29,7 @@ class EconomySetCommand extends SubArgument {
+ 	private final UserManager<Player> userManager;
+ 
+ 	protected EconomySetCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                            UserManager<Player> userManager) {
++	                            @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, "set", tree, parent);
+ 
+ 		this.gangland    = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/economy/EconomyWithdrawCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/economy/EconomyWithdrawCommand.java
+index edc032ff..98e29eaa 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/economy/EconomyWithdrawCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/economy/EconomyWithdrawCommand.java
+@@ -20,6 +20,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ import java.math.BigDecimal;
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class EconomyWithdrawCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -27,7 +29,7 @@ class EconomyWithdrawCommand extends SubArgument {
+ 	private final UserManager<Player> userManager;
+ 
+ 	protected EconomyWithdrawCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                                 UserManager<Player> userManager) {
++	                                 @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, new String[]{"withdraw", "take"}, tree, parent);
+ 
+ 		this.gangland    = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelAddCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelAddCommand.java
+index 81bc890e..032df9c7 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelAddCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelAddCommand.java
+@@ -17,13 +17,15 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class FuelAddCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+ 	private final Tree<Argument>      tree;
+ 	private final UserManager<Player> userManager;
+ 
+-	FuelAddCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager) {
++	FuelAddCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, "add", tree, parent);
+ 
+ 		this.gangland    = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelDefuelCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelDefuelCommand.java
+index 7a160901..4a60c351 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelDefuelCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelDefuelCommand.java
+@@ -16,13 +16,15 @@ import org.luckyraven.gangland.item.fuel.Fuel;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class FuelDefuelCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+ 	private final Tree<Argument>      tree;
+ 	private final UserManager<Player> userManager;
+ 
+-	FuelDefuelCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager) {
++	FuelDefuelCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, "defuel", tree, parent);
+ 
+ 		this.gangland    = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelInfoCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelInfoCommand.java
+index 1f2f96db..411d660c 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelInfoCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelInfoCommand.java
+@@ -16,11 +16,13 @@ import org.luckyraven.gangland.item.fuel.Fuel;
+ import org.luckyraven.gangland.item.fuel.FuelBar;
+ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class FuelInfoCommand extends SubArgument {
+ 
+ 	private final UserManager<Player> userManager;
+ 
+-	FuelInfoCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager) {
++	FuelInfoCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, "info", tree, parent);
+ 
+ 		this.userManager = userManager;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelRefuelCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelRefuelCommand.java
+index d099745d..150cf1a5 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelRefuelCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelRefuelCommand.java
+@@ -16,13 +16,15 @@ import org.luckyraven.gangland.item.fuel.Fuel;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class FuelRefuelCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+ 	private final Tree<Argument>      tree;
+ 	private final UserManager<Player> userManager;
+ 
+-	FuelRefuelCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager) {
++	FuelRefuelCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, "refuel", tree, parent);
+ 
+ 		this.gangland    = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelRemoveCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelRemoveCommand.java
+index ca7a6978..e77baa8e 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelRemoveCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/fuel/FuelRemoveCommand.java
+@@ -17,13 +17,15 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class FuelRemoveCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+ 	private final Tree<Argument>      tree;
+ 	private final UserManager<Player> userManager;
+ 
+-	FuelRemoveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager) {
++	FuelRemoveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, "remove", tree, parent);
+ 
+ 		this.gangland    = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/money/ItemMoneyCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/money/ItemMoneyCommand.java
+index 5b4246da..e7982f44 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/money/ItemMoneyCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/money/ItemMoneyCommand.java
+@@ -16,6 +16,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ import java.util.ArrayList;
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ public class ItemMoneyCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -25,7 +27,7 @@ public class ItemMoneyCommand extends SubArgument {
+ 	private final MoneyDepositService moneyDepositService;
+ 
+ 	public ItemMoneyCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                        UserManager<Player> userManager,
++	                        @Qualifier("online") UserManager<Player> userManager,
+ 	                        MoneyAddon moneyAddon,
+ 	                        MoneyDepositService moneyDepositService) {
+ 		super(gangland, "money", tree, parent);
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/money/ItemMoneyGiveCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/money/ItemMoneyGiveCommand.java
+index 184569da..4ec3600c 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/money/ItemMoneyGiveCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/money/ItemMoneyGiveCommand.java
+@@ -22,6 +22,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ import java.util.List;
+ import java.util.Map;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class ItemMoneyGiveCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -31,7 +33,7 @@ class ItemMoneyGiveCommand extends SubArgument {
+ 	private final MoneyDepositService moneyDepositService;
+ 
+ 	ItemMoneyGiveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                     UserManager<Player> userManager,
++	                     @Qualifier("online") UserManager<Player> userManager,
+ 	                     MoneyAddon moneyAddon,
+ 	                     MoneyDepositService moneyDepositService) {
+ 		super(gangland, "give", tree, parent);
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/money/ItemMoneyInfoCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/money/ItemMoneyInfoCommand.java
+index 32064a5e..1d35dfb4 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/money/ItemMoneyInfoCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/money/ItemMoneyInfoCommand.java
+@@ -18,6 +18,8 @@ import org.luckyraven.gangland.item.money.MoneyItem;
+ import org.luckyraven.gangland.item.money.MoneyItemUtil;
+ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class ItemMoneyInfoCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -26,7 +28,7 @@ class ItemMoneyInfoCommand extends SubArgument {
+ 	private final MoneyAddon          moneyAddon;
+ 
+ 	ItemMoneyInfoCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                     UserManager<Player> userManager,
++	                     @Qualifier("online") UserManager<Player> userManager,
+ 	                     MoneyAddon moneyAddon) {
+ 		super(gangland, "info", tree, parent);
+ 
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/unique/ItemUniqueCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/unique/ItemUniqueCommand.java
+index c5317755..319f3c25 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/unique/ItemUniqueCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/unique/ItemUniqueCommand.java
+@@ -15,6 +15,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ import java.util.ArrayList;
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ public class ItemUniqueCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -23,7 +25,7 @@ public class ItemUniqueCommand extends SubArgument {
+ 	private final UniqueItemAddon     uniqueItemAddon;
+ 
+ 	public ItemUniqueCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                         UserManager<Player> userManager,
++	                         @Qualifier("online") UserManager<Player> userManager,
+ 	                         UniqueItemAddon uniqueItemAddon) {
+ 		super(gangland, "unique", tree, parent);
+ 
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/unique/ItemUniqueGiveCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/unique/ItemUniqueGiveCommand.java
+index ee0c040d..675f55c3 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/unique/ItemUniqueGiveCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/unique/ItemUniqueGiveCommand.java
+@@ -20,6 +20,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ import java.util.List;
+ import java.util.Map;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class ItemUniqueGiveCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -28,7 +30,7 @@ class ItemUniqueGiveCommand extends SubArgument {
+ 	private final UniqueItemAddon     uniqueItemAddon;
+ 
+ 	ItemUniqueGiveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                      UserManager<Player> userManager,
++	                      @Qualifier("online") UserManager<Player> userManager,
+ 	                      UniqueItemAddon uniqueItemAddon) {
+ 		super(gangland, "give", tree, parent);
+ 
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/unique/ItemUniqueInfoCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/unique/ItemUniqueInfoCommand.java
+index 44646c40..a979a169 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/unique/ItemUniqueInfoCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/item/unique/ItemUniqueInfoCommand.java
+@@ -17,13 +17,15 @@ import org.luckyraven.gangland.item.unique.UniqueItem;
+ import org.luckyraven.gangland.item.unique.UniqueItemUtil;
+ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class ItemUniqueInfoCommand extends SubArgument {
+ 
+ 	private final UserManager<Player> userManager;
+ 	private final UniqueItemAddon     uniqueItemAddon;
+ 
+ 	ItemUniqueInfoCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                      UserManager<Player> userManager,
++	                      @Qualifier("online") UserManager<Player> userManager,
+ 	                      UniqueItemAddon uniqueItemAddon) {
+ 		super(gangland, "info", tree, parent);
+ 
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/LevelAddCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/LevelAddCommand.java
+index 34dc1bdf..912246ed 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/LevelAddCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/LevelAddCommand.java
+@@ -18,6 +18,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class LevelAddCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -25,7 +27,7 @@ class LevelAddCommand extends SubArgument {
+ 	private final UserManager<Player> userManager;
+ 
+ 	protected LevelAddCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                          UserManager<Player> userManager) {
++	                          @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, "add", tree, parent);
+ 
+ 		this.gangland    = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/LevelNextCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/LevelNextCommand.java
+index 7c3e13a1..5083f06b 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/LevelNextCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/LevelNextCommand.java
+@@ -12,12 +12,14 @@ import org.luckyraven.gangland.core.user.Level;
+ import org.luckyraven.gangland.core.user.User;
+ import org.luckyraven.gangland.core.user.UserManager;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class LevelNextCommand extends SubArgument {
+ 
+ 	private final UserManager<Player> userManager;
+ 
+ 	protected LevelNextCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                           UserManager<Player> userManager) {
++	                           @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, "next", tree, parent);
+ 
+ 		this.userManager = userManager;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/LevelRemoveCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/LevelRemoveCommand.java
+index 924c9bde..07907a53 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/LevelRemoveCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/LevelRemoveCommand.java
+@@ -16,6 +16,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class LevelRemoveCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -23,7 +25,7 @@ class LevelRemoveCommand extends SubArgument {
+ 	private final UserManager<Player> userManager;
+ 
+ 	protected LevelRemoveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                             UserManager<Player> userManager) {
++	                             @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, "remove", tree, parent);
+ 
+ 		this.gangland    = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/experience/LevelExperienceAddCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/experience/LevelExperienceAddCommand.java
+index 766c2055..fecb5f8a 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/experience/LevelExperienceAddCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/experience/LevelExperienceAddCommand.java
+@@ -19,6 +19,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class LevelExperienceAddCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -26,7 +28,7 @@ class LevelExperienceAddCommand extends SubArgument {
+ 	private final UserManager<Player> userManager;
+ 
+ 	LevelExperienceAddCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                          UserManager<Player> userManager) {
++	                          @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, "add", tree, parent);
+ 
+ 		this.gangland    = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/experience/LevelExperienceCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/experience/LevelExperienceCommand.java
+index ad19a903..31fa4479 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/experience/LevelExperienceCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/experience/LevelExperienceCommand.java
+@@ -14,6 +14,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ import java.util.ArrayList;
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ public class LevelExperienceCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -21,7 +23,7 @@ public class LevelExperienceCommand extends SubArgument {
+ 	private final UserManager<Player> userManager;
+ 
+ 	public LevelExperienceCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                              UserManager<Player> userManager) {
++	                              @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, new String[]{"experience", "exp"}, tree, parent);
+ 
+ 		this.gangland    = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/experience/LevelExperienceRemoveCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/experience/LevelExperienceRemoveCommand.java
+index da3c172d..d0c98bcf 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/experience/LevelExperienceRemoveCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/level/experience/LevelExperienceRemoveCommand.java
+@@ -17,6 +17,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class LevelExperienceRemoveCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -24,7 +26,7 @@ class LevelExperienceRemoveCommand extends SubArgument {
+ 	private final UserManager<Player> userManager;
+ 
+ 	LevelExperienceRemoveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                             UserManager<Player> userManager) {
++	                             @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, "remove", tree, parent);
+ 
+ 		this.gangland    = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/wanted/WantedAddCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/wanted/WantedAddCommand.java
+index 90c4fd55..f06a67e2 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/wanted/WantedAddCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/wanted/WantedAddCommand.java
+@@ -15,13 +15,15 @@ import org.luckyraven.gangland.core.wanted.Wanted;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class WantedAddCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+ 	private final Tree<Argument>      tree;
+ 	private final UserManager<Player> userManager;
+ 
+-	public WantedAddCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, UserManager<Player> userManager) {
++	public WantedAddCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, "add", tree, parent);
+ 
+ 		this.gangland = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/wanted/WantedClearCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/wanted/WantedClearCommand.java
+index a69dc399..58ec2c9c 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/wanted/WantedClearCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/wanted/WantedClearCommand.java
+@@ -14,6 +14,8 @@ import org.luckyraven.gangland.core.user.User;
+ import org.luckyraven.gangland.core.user.UserManager;
+ import org.luckyraven.gangland.core.wanted.Wanted;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class WantedClearCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -21,7 +23,7 @@ class WantedClearCommand extends SubArgument {
+ 	private final UserManager<Player> userManager;
+ 
+ 	public WantedClearCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                          UserManager<Player> userManager) {
++	                          @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, "clear", tree, parent);
+ 
+ 		this.gangland = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/wanted/WantedRemoveCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/wanted/WantedRemoveCommand.java
+index 2491edc8..75eecc63 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/wanted/WantedRemoveCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/wanted/WantedRemoveCommand.java
+@@ -15,6 +15,8 @@ import org.luckyraven.gangland.core.wanted.Wanted;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class WantedRemoveCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -22,7 +24,7 @@ class WantedRemoveCommand extends SubArgument {
+ 	private final UserManager<Player> userManager;
+ 
+ 	public WantedRemoveCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                           UserManager<Player> userManager) {
++	                           @Qualifier("online") UserManager<Player> userManager) {
+ 		super(gangland, "remove", tree, parent);
+ 
+ 		this.gangland = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointCooldownCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointCooldownCommand.java
+index a0125084..ffe8511d 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointCooldownCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointCooldownCommand.java
+@@ -17,6 +17,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class WaypointCooldownCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -25,7 +27,7 @@ class WaypointCooldownCommand extends SubArgument {
+ 	private final WaypointManager     waypointManager;
+ 
+ 	protected WaypointCooldownCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                                  UserManager<Player> userManager, WaypointManager waypointManager) {
++	                                  @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager) {
+ 		super(gangland, "cooldown", tree, parent);
+ 
+ 		this.gangland        = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointCostCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointCostCommand.java
+index 4c7144d8..e649772c 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointCostCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointCostCommand.java
+@@ -17,6 +17,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class WaypointCostCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -25,7 +27,7 @@ class WaypointCostCommand extends SubArgument {
+ 	private final WaypointManager     waypointManager;
+ 
+ 	protected WaypointCostCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                              UserManager<Player> userManager, WaypointManager waypointManager) {
++	                              @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager) {
+ 		super(gangland, "cost", tree, parent);
+ 
+ 		this.gangland        = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointCreateCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointCreateCommand.java
+index d7fe4f65..c40fe67d 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointCreateCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointCreateCommand.java
+@@ -29,6 +29,8 @@ import java.util.Map;
+ import java.util.Objects;
+ import java.util.concurrent.atomic.AtomicReference;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class WaypointCreateCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -38,7 +40,7 @@ class WaypointCreateCommand extends SubArgument {
+ 	private final PermissionManager   permissionManager;
+ 
+ 	protected WaypointCreateCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                                UserManager<Player> userManager, WaypointManager waypointManager,
++	                                @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager,
+ 	                                PermissionManager permissionManager) {
+ 		super(gangland, "create", tree, parent);
+ 
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointDeleteCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointDeleteCommand.java
+index 9e582ac3..53c2f4b3 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointDeleteCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointDeleteCommand.java
+@@ -28,6 +28,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ import java.util.*;
+ import java.util.concurrent.atomic.AtomicReference;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class WaypointDeleteCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -38,7 +40,7 @@ class WaypointDeleteCommand extends SubArgument {
+ 	private final PermissionManager   permissionManager;
+ 
+ 	protected WaypointDeleteCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                                UserManager<Player> userManager, WaypointManager waypointManager,
++	                                @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager,
+ 	                                GanglandDatabase ganglandDatabase, PermissionManager permissionManager) {
+ 		super(gangland, new String[]{"delete", "remove", "del"}, tree, parent);
+ 
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointDeselectCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointDeselectCommand.java
+index 04b49df6..cc5124fd 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointDeselectCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointDeselectCommand.java
+@@ -13,13 +13,15 @@ import org.luckyraven.gangland.file.configuration.Messages;
+ import org.luckyraven.gangland.core.user.User;
+ import org.luckyraven.gangland.core.user.UserManager;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class WaypointDeselectCommand extends SubArgument {
+ 
+ 	private final UserManager<Player> userManager;
+ 	private final WaypointManager     waypointManager;
+ 
+ 	protected WaypointDeselectCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                                  UserManager<Player> userManager, WaypointManager waypointManager) {
++	                                  @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager) {
+ 		super(gangland, "deselect", tree, parent);
+ 
+ 		this.userManager     = userManager;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointGangIdCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointGangIdCommand.java
+index dd4fd220..fa88fd4c 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointGangIdCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointGangIdCommand.java
+@@ -21,6 +21,7 @@ import java.util.HashMap;
+ import java.util.List;
+ import java.util.Map;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ /**
+  * {@code /glw waypoint gangId <id>} — {@code user.getGangId() != id} is the primary validation (a player can
+  * only ever set this to their own gang's id), but the original {@code gang == null -> GANG_DOESNT_EXIST} guard
+@@ -42,7 +43,7 @@ class WaypointGangIdCommand extends SubArgument {
+ 	private final GangMembership      gangMembership;
+ 
+ 	protected WaypointGangIdCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                                UserManager<Player> userManager, WaypointManager waypointManager,
++	                                @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager,
+ 	                                GangMembership gangMembership) {
+ 		super(gangland, "gangId", tree, parent, "gang_id");
+ 
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointListCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointListCommand.java
+index 78377763..65f48220 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointListCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointListCommand.java
+@@ -24,13 +24,15 @@ import java.util.Collection;
+ import java.util.Comparator;
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class WaypointListCommand extends SubArgument {
+ 
+ 	private final UserManager<Player> userManager;
+ 	private final WaypointManager     waypointManager;
+ 
+ 	protected WaypointListCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                              UserManager<Player> userManager, WaypointManager waypointManager) {
++	                              @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager) {
+ 		super(gangland, "list", tree, parent);
+ 
+ 		this.userManager     = userManager;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointRadiusCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointRadiusCommand.java
+index 6256a86c..365fbc9b 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointRadiusCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointRadiusCommand.java
+@@ -17,6 +17,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class WaypointRadiusCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -25,7 +27,7 @@ class WaypointRadiusCommand extends SubArgument {
+ 	private final WaypointManager     waypointManager;
+ 
+ 	protected WaypointRadiusCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                                UserManager<Player> userManager, WaypointManager waypointManager) {
++	                                @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager) {
+ 		super(gangland, "radius", tree, parent);
+ 
+ 		this.gangland        = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointSelectCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointSelectCommand.java
+index 02d6fa05..25a992db 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointSelectCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointSelectCommand.java
+@@ -16,6 +16,7 @@ import org.luckyraven.gangland.core.user.User;
+ import org.luckyraven.gangland.core.user.UserManager;
+ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ import java.util.*;
+ 
+ class WaypointSelectCommand extends SubArgument {
+@@ -26,7 +27,7 @@ class WaypointSelectCommand extends SubArgument {
+ 	private final WaypointManager     waypointManager;
+ 
+ 	protected WaypointSelectCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                                UserManager<Player> userManager, WaypointManager waypointManager) {
++	                                @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager) {
+ 		super(gangland, new String[]{"select", "selects"}, tree, parent);
+ 
+ 		this.gangland        = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointShieldCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointShieldCommand.java
+index b4f3c04b..31b19506 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointShieldCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointShieldCommand.java
+@@ -17,6 +17,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class WaypointShieldCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -25,7 +27,7 @@ class WaypointShieldCommand extends SubArgument {
+ 	private final WaypointManager     waypointManager;
+ 
+ 	protected WaypointShieldCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                                UserManager<Player> userManager, WaypointManager waypointManager) {
++	                                @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager) {
+ 		super(gangland, "shield", tree, parent);
+ 
+ 		this.gangland        = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointTimerCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointTimerCommand.java
+index 213b856a..b5cf0c10 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointTimerCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointTimerCommand.java
+@@ -17,6 +17,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class WaypointTimerCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -25,7 +27,7 @@ class WaypointTimerCommand extends SubArgument {
+ 	private final WaypointManager     waypointManager;
+ 
+ 	protected WaypointTimerCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                               UserManager<Player> userManager, WaypointManager waypointManager) {
++	                               @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager) {
+ 		super(gangland, "timer", tree, parent);
+ 
+ 		this.gangland        = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointTypeCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointTypeCommand.java
+index ee29ea52..fc6b47f5 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointTypeCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/waypoint/WaypointTypeCommand.java
+@@ -17,6 +17,8 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
+ 
+ import java.util.Arrays;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ class WaypointTypeCommand extends SubArgument {
+ 
+ 	private final JavaPlugin            gangland;
+@@ -25,7 +27,7 @@ class WaypointTypeCommand extends SubArgument {
+ 	private final WaypointManager     waypointManager;
+ 
+ 	protected WaypointTypeCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
+-	                              UserManager<Player> userManager, WaypointManager waypointManager) {
++	                              @Qualifier("online") UserManager<Player> userManager, WaypointManager waypointManager) {
+ 		super(gangland, "type", tree, parent);
+ 
+ 		this.gangland        = gangland;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/data/placeholder/worker/GanglandPlaceholder.java b/gangland-impl/src/main/java/org/luckyraven/gangland/data/placeholder/worker/GanglandPlaceholder.java
+index 30757f06..7b9226b9 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/data/placeholder/worker/GanglandPlaceholder.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/data/placeholder/worker/GanglandPlaceholder.java
+@@ -30,6 +30,8 @@ import java.time.Duration;
+ import java.time.Instant;
+ import java.util.Map;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ public class GanglandPlaceholder extends PlaceholderHandler {
+ 
+ 	private final UserManager<Player> userManager;
+@@ -49,7 +51,7 @@ public class GanglandPlaceholder extends PlaceholderHandler {
+ 
+ 	public GanglandPlaceholder(String prefix,
+ 	                           Replacer.Closure closure,
+-	                           UserManager<Player> userManager,
++	                           @Qualifier("online") UserManager<Player> userManager,
+ 	                           UniqueItemAddon uniqueItemAddon,
+ 	                           BankTiers bankTiers,
+ 	                           DependencyContainer container,
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/gang/GanglandUserLookup.java b/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/gang/GanglandUserLookup.java
+index 315f285d..883ec255 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/gang/GanglandUserLookup.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/gang/GanglandUserLookup.java
+@@ -6,6 +6,7 @@ import org.luckyraven.gangland.core.user.UserLookupContract;
+ import org.luckyraven.gangland.core.user.User;
+ import org.luckyraven.gangland.core.user.UserManager;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ /**
+  * Adapter over the impl-side {@link UserManager} so feature modules can resolve a {@link User} through
+  * {@link UserLookupContract}.
+@@ -14,7 +15,7 @@ public final class GanglandUserLookup implements UserLookupContract {
+ 
+ 	private final UserManager<Player> delegate;
+ 
+-	public GanglandUserLookup(UserManager<Player> delegate) {
++	public GanglandUserLookup(@Qualifier("online") UserManager<Player> delegate) {
+ 		this.delegate = delegate;
+ 	}
+ 
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryRuntimeContext.java b/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryRuntimeContext.java
+index c343f52b..56bc64fa 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryRuntimeContext.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryRuntimeContext.java
+@@ -32,6 +32,7 @@ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.function.Function;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ /**
+  * Runtime half of the former static {@code InventoryAddon}: holds the service references that registration and
+  * open-inventory logic need. Lives in the CONFIG phase because some of its dependencies (e.g. {@link UserManager},
+@@ -61,7 +62,7 @@ public class InventoryRuntimeContext {
+ 	                               InventoryDefinitionStore definitionStore,
+ 	                               ItemSourceProvider itemSourceProvider,
+ 	                               ConditionEvaluator conditionEvaluator,
+-	                               UserManager<Player> userManager,
++	                               @Qualifier("online") UserManager<Player> userManager,
+ 	                               PermissionManager permissionManager,
+ 	                               PlaceholderService placeholderService,
+ 	                               ItemParser itemParser,
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/sign/SignManager.java b/gangland-impl/src/main/java/org/luckyraven/gangland/sign/SignManager.java
+index 2ad98650..7a405e8f 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/sign/SignManager.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/sign/SignManager.java
+@@ -28,6 +28,7 @@ import org.luckyraven.keystone.item.ItemSerializerRegistry;
+ import java.util.ArrayList;
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
+ /**
+  * Builds the core sign catalogue and, through {@link SignContributions}, whatever car/weapon/wearable sign types
+  * runtime modules contribute. {@code setupSigns()} resolves {@link SignContributions#from(DependencyContainer)}
+@@ -65,8 +66,8 @@ public class SignManager extends SignService {
+ 	                   UniqueItemAddon uniqueItemAddon,
+ 	                   ItemSerializerRegistry serializers,
+ 	                   ItemParser itemParser,
+-	                   UserManager<Player> userManager,
+-	                   UserManager<OfflinePlayer> offlineUserManager,
++	                   @Qualifier("online") UserManager<Player> userManager,
++	                   @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
+ 	                   DependencyContainer container,
+ 	                   LegacySignRewriter legacyAliasRewriter) {
+ 		super(registry, signInteraction);
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/trade/BuySign.java b/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/trade/BuySign.java
+index e49dd800..cfcdc2fd 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/trade/BuySign.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/trade/BuySign.java
+@@ -26,6 +26,8 @@ import org.luckyraven.keystone.item.ItemSerializerRegistry;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ public class BuySign extends BaseTradeSign implements BulkSignHandler {
+ 
+ 	private final UserManager<Player>    userManager;
+@@ -39,7 +41,7 @@ public class BuySign extends BaseTradeSign implements BulkSignHandler {
+ 	 */
+ 	private SignHandler handler;
+ 
+-	public BuySign(UserManager<Player> userManager, UniqueItemAddon uniqueItemAddon,
++	public BuySign(@Qualifier("online") UserManager<Player> userManager, UniqueItemAddon uniqueItemAddon,
+ 	               ItemSerializerRegistry serializers, ItemParser itemParser, SignType signType) {
+ 		this.userManager     = userManager;
+ 		this.uniqueItemAddon = uniqueItemAddon;
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/trade/SellSign.java b/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/trade/SellSign.java
+index 9a410a6f..2a65197c 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/trade/SellSign.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/trade/SellSign.java
+@@ -26,6 +26,8 @@ import org.luckyraven.keystone.item.ItemSerializerRegistry;
+ 
+ import java.util.List;
+ 
++import org.luckyraven.keystone.bean.Qualifier;
++
+ public class SellSign extends BaseTradeSign implements BulkSignHandler {
+ 
+ 	private final UserManager<Player>    userManager;
+@@ -39,7 +41,7 @@ public class SellSign extends BaseTradeSign implements BulkSignHandler {
+ 	 */
+ 	private SignHandler handler;
+ 
+-	public SellSign(UserManager<Player> userManager, UniqueItemAddon uniqueItemAddon,
++	public SellSign(@Qualifier("online") UserManager<Player> userManager, UniqueItemAddon uniqueItemAddon,
+ 	                ItemSerializerRegistry serializers, ItemParser itemParser, SignType signType) {
+ 		this.userManager     = userManager;
+ 		this.uniqueItemAddon = uniqueItemAddon;

@@ -1,0 +1,51 @@
+RUN cnc015-default jar=paper-1.21.11.jar java=jdk-26.0.2.1 client=26.1
+boot=20.6s exit={"code":0,"sig":null} steps=27/27 ok  logLines=485  artifacts=E:\Programming\java\wt\_programme\runs\cnc015-default--N8-regroup
+== WARN/ERROR (15 distinct; 4 harness-noise lines suppressed) ==
+  1x STDERR [stderr] WARNING: Final field hashes in class io.papermc.paper.pluginremap.RemappedPluginIndex$State has been mutated reflectively by class com.google.gson.internal.bind.ReflectiveTypeAdapterFactory$2 in unnamed module @
+  1x STDERR [stderr] WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+  1x STDERR [stderr] WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+  1x STDERR [stderr] WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+  1x STDERR [stderr] WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.joml.MemUtil$MemUtilUnsafe (file:/E:/Programming/java/wt/_programme/servers/cnc015-default/libraries/org/joml/joml/1.10.8/joml-1.10.8.jar)
+  1x STDERR [stderr] WARNING: Please consider reporting this to the maintainers of class org.joml.MemUtil$MemUtilUnsafe
+  1x STDERR [stderr] WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+  3x ERROR No key layers in MapLike[{}]
+  1x WARN [DeluxeMenus] Could not setup a NMS hook for your server version! The following Item options will not work: nbt_int, nbt_ints, nbt_string and nbt_strings.
+  1x WARN [Oriel.VaultConfig] Vault is installed but no economy provider is registered — economy actions/requirements will no-op
+  1x WARN [DeluxeMenus] Could not hook into Vault!
+  1x WARN [DeluxeMenus] Found 'data' option for item: teststone in menu: basics_menu. This option is deprecated and will be removed soon. Please use 'damage' instead.
+  1x WARN [ViaVersion] There is a newer plugin version available: 5.12.0, you're on: 5.12.0-SNAPSHOT
+  1x WARN *** You are running an outdated version of Minecraft, which is 4 release(s) and 3 build(s) behind!
+  1x WARN *** Please update to the latest stable version on https://papermc.io/downloads/paper ***
+== EXCEPTIONS (0 distinct) ==
+== FAILED STEPS (0) ==
+== CHAT (last 30 of 41) ==
+[DISPATCH] All units, be advised: Runner is wanted, level 3.
+[GLW] Your wanted level has been increased ★★★☆☆.
+[RADIO] Lieutenant Commander Rick #1000: Contact! Suspect 34 blocks south-east!
+[RADIO] Lieutenant Commander Rick #1000: Squad, positions! Watch your sectors, south-east first!
+[RADIO] Lieutenant Defender Ray #1002: Covering the squad, shields up!
+[Ray #1002: Added tag 'cncc' to Ray #1002]
+[Pete #1003: Added tag 'cncc' to Pete #1003]
+[Rosa #1001: Added tag 'cncc' to Rosa #1001]
+[Rick #1000: Added tag 'cncc' to Rick #1000]
+[Server] CNCMARK:N8:KILL1
+[RADIO] Lieutenant Commander Rick #1000: Officer down! Lieutenant Pointman Rosa #1001 is down!
+[RADIO] Lieutenant Commander Rick #1000: Requesting backup at my location!
+[Server: Applied 1000 damage to Rosa #1001]
+[RADIO] Lieutenant Commander Rick #1000: Suspect is resisting! Take him down!
+[RADIO] Lieutenant Commander Rick #1000: Man down, Lieutenant Pointman Rosa #1001! Pull back to cover, medic on him!
+[DISPATCH] SWAT units en route to Runner.
+[RADIO] Lieutenant Commander Rick #1000: Reloading, cover me!
+[RADIO] Lieutenant Marksman Pete #1003: Overwatch in position, 30 blocks west, I have eyes on the suspect.
+[RADIO] SWAT Assault Sue #1006: Moving to flank, south-west!
+[Server: Applied 1000 damage to Ray #1002]
+[Server] CNCMARK:N8:KILL2
+[DISPATCH] Military units en route to Runner.
+[RADIO] Lieutenant Commander Rick #1000: Two down! Pull back to cover, backup is coming!
+[Server] CNCMARK:N8:REGROUP
+[RADIO] Lieutenant Commander Rick #1000: Lieutenant Marksman Pete #1003, take his front!
+[RADIO] Lieutenant Marksman Pete #1003: On it.
+[RADIO] Lieutenant Commander Rick #1000: Squad, positions! Defender hold, Assault flank, Marksman take the high ground!
+[RADIO] Lieutenant Commander Rick #1000: Backup's here! All units, push together!
+[Server] CNCMARK:N8:PUSH
+[END] disconnect.quitting

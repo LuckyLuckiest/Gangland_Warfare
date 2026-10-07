@@ -1,0 +1,2973 @@
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/debug/DebugCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/debug/DebugCommand.java
+index b395a8b3..9f374ee2 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/debug/DebugCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/debug/DebugCommand.java
+@@ -42,14 +42,11 @@ import org.luckyraven.gangland.gang.rank.Rank;
+ import org.luckyraven.gangland.gang.rank.RankManager;
+ import org.luckyraven.gangland.gang.user.User;
+ import org.luckyraven.gangland.gang.user.UserManager;
+ import org.luckyraven.gangland.inventory.InventoryHandler;
+ import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
+-import org.luckyraven.gangland.menu.multi.ListEntry;
+-import org.luckyraven.gangland.menu.multi.MultiInventory;
+-import org.luckyraven.gangland.menu.multi.MultiInventoryCreation;
+-import org.luckyraven.gangland.menu.part.ButtonTags;
++import org.luckyraven.gangland.menu.SimplePagedMenu;
+ import org.luckyraven.gangland.inventory.part.Fill;
+ import org.luckyraven.gangland.menu.villager.VillagerInventory;
+ import org.luckyraven.gangland.menu.villager.VillagerInventoryRegistry;
+ import org.luckyraven.gangland.menu.villager.VillagerTrade;
+ import org.luckyraven.keystone.inventory.InventoryService;
+@@ -309,23 +306,11 @@ public final class DebugCommand extends Command {
+ 				items.addAll(swords.stream().map(ItemStack::new).toList());
+ 
+ 				String title = "&6&lDebug items";
+ 				Fill   fill  = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
+ 
+-				ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
+-				                                       Settings.getNextPage());
+-
+-				List<ListEntry> entries = items.stream().map(ListEntry::of).toList();
+-
+-				MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getPlugin(), player, entries,
+-				                                                                    title,
+-				                                                                    false, 0, fill, buttonTags,
+-				                                                                    null);
+-
+-				if (multi == null) return;
+-
+-				multi.open(player);
++				SimplePagedMenu.open(inventoryService, player, items, title, fill);
+ 			} else {
+ 				sender.sendMessage("How will you see the inventory?");
+ 			}
+ 		});
+ 	}
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/gang/GangCommand.java b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/gang/GangCommand.java
+index 786d4167..30b850db 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/gang/GangCommand.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/gang/GangCommand.java
+@@ -34,14 +34,12 @@ import org.luckyraven.gangland.gang.member.MemberManager;
+ import org.luckyraven.gangland.gang.rank.Rank;
+ import org.luckyraven.gangland.gang.rank.RankManager;
+ import org.luckyraven.gangland.gang.user.User;
+ import org.luckyraven.gangland.gang.user.UserManager;
+ import org.luckyraven.gangland.inventory.InventoryHandler;
+-import org.luckyraven.gangland.menu.multi.ListEntry;
+-import org.luckyraven.gangland.menu.multi.MultiInventory;
+-import org.luckyraven.gangland.menu.multi.MultiInventoryCreation;
+-import org.luckyraven.gangland.menu.part.ButtonTags;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.gangland.menu.SimplePagedMenu;
+ import org.luckyraven.gangland.inventory.part.Fill;
+ import org.luckyraven.gangland.inventory.util.InventoryUtil;
+ 
+ import java.math.BigDecimal;
+ import java.util.ArrayList;
+@@ -62,10 +60,11 @@ public final class GangCommand extends Command {
+ 	/**
+ 	 * Sub-arguments runtime modules attach under {@code gang} and {@code gang.ally} (the mail module contributes
+ 	 * invite/accept and the alliance request flow). Empty when no module is installed — the core never names them.
+ 	 */
+ 	private final CommandContributions       contributions;
++	private final InventoryService           inventoryService;
+ 
+ 	private final Gangland gangland;
+ 
+ 	public GangCommand(Gangland gangland,
+ 	                   @Qualifier("online") UserManager<Player> userManager,
+@@ -73,11 +72,12 @@ public final class GangCommand extends Command {
+ 	                   GangManager gangManager,
+ 	                   MemberManager memberManager,
+ 	                   RankManager rankManager,
+ 	                   GanglandDatabase ganglandDatabase,
+ 	                   UserDataLoader userDataLoader,
+-	                   DependencyContainer container
++	                   DependencyContainer container,
++	                   InventoryService inventoryService
+ 	) {
+ 		super(gangland, "gang", true);
+ 
+ 		this.gangland = gangland;
+ 
+@@ -86,10 +86,11 @@ public final class GangCommand extends Command {
+ 		this.gangManager        = gangManager;
+ 		this.memberManager      = memberManager;
+ 		this.rankManager        = rankManager;
+ 		this.ganglandDatabase   = ganglandDatabase;
+ 		this.userDataLoader     = userDataLoader;
++		this.inventoryService   = inventoryService;
+ 		this.contributions      = CommandContributions.from(container);
+ 
+ 		var list = getCommands().entrySet()
+ 				.stream()
+ 				.filter(entry -> entry.getKey().startsWith("gang"))
+@@ -227,13 +228,10 @@ public final class GangCommand extends Command {
+ 					player.performCommand(argumentSequence);
+ 				});
+ 
+ 		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
+ 
+-		ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
+-		                                       Settings.getNextPage());
+-
+ 		// members
+ 		gui.setItem(19, XMaterial.PLAYER_HEAD.get(), "&bMembers", new ArrayList<>(
+ 							List.of("&a" + gang.getOnlineMembers(userManager::getUser).size() + "&7/&e" +
+ 				                    gang.getMembers().size())), false,
+ 		            false, (player, inventory, item) -> {
+@@ -263,19 +261,11 @@ public final class GangCommand extends Command {
+ 						itemBuilder.customHead(offlinePlayer);
+ 
+ 						items.add(itemBuilder.build());
+ 					}
+ 
+-					String          title1  = "&6&lGang Members";
+-					List<ListEntry> entries = items.stream().map(ListEntry::of).toList();
+-					MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getPlugin(), player, entries,
+-					                                                                    title1, false, 0, fill,
+-					                                                                    buttonTags, null);
+-
+-					if (multi == null) return;
+-
+-					multi.open(player);
++					SimplePagedMenu.open(inventoryService, player, items, "&6&lGang Members", fill);
+ 				});
+ 
+ 		// bounty
+ 		gui.setItem(22, XMaterial.BLAZE_ROD.get(), "&bBounty", new ArrayList<>(
+ 				List.of(String.format("&e%s%s", Settings.getMoneySymbol(),
+@@ -305,20 +295,11 @@ public final class GangCommand extends Command {
+ 									"&b" + ally.getDisplayNameString()).setLore(data);
+ 
+ 							items.add(itemBuilder.build());
+ 						}
+ 
+-						String          title1  = "&6&lGang Allies";
+-						List<ListEntry> entries = items.stream().map(ListEntry::of).toList();
+-						MultiInventory multi = MultiInventoryCreation.dynamicMultiInventory(getPlugin(), player,
+-			                                                                                entries, title1, false,
+-			                                                                                0,
+-			                                                                                fill, buttonTags, null);
+-
+-						if (multi == null) return;
+-
+-						multi.open(player);
++						SimplePagedMenu.open(inventoryService, player, items, "&6&lGang Allies", fill);
+ 					});
+ 
+ 		// date created
+ 		gui.setItem(29, XMaterial.WRITABLE_BOOK.get(), "&bCreated",
+ 		            new ArrayList<>(List.of("&e" + gang.getDateCreatedString())), true, false);
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java b/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java
+index 1a6d7560..fe7d1641 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/config/GameplayConfig.java
+@@ -26,11 +26,10 @@ import org.luckyraven.gangland.gang.member.MemberFilterAdapter;
+ import org.luckyraven.gangland.gang.user.UserManager;
+ import org.luckyraven.gangland.hologram.HologramService;
+ import org.luckyraven.gangland.menu.condition.BooleanExpressionEvaluator;
+ import org.luckyraven.gangland.menu.filter.*;
+ import org.luckyraven.gangland.menu.multi.ItemSourceProvider;
+-import org.luckyraven.gangland.inventory.service.InventoryRegistry;
+ import org.luckyraven.keystone.cooldown.InMemoryCooldownService;
+ import org.luckyraven.keystone.inventory.InventoryService;
+ import org.luckyraven.keystone.item.ItemConverterRegistry;
+ import org.luckyraven.keystone.item.ItemParser;
+ import org.luckyraven.keystone.item.ItemSerializerRegistry;
+@@ -152,17 +151,17 @@ public class GameplayConfig {
+ 	                                                       FilterStore filterStore,
+ 	                                                       FilterApplier filterApplier,
+ 	                                                       GangFilterAdapter gangFilterAdapter,
+ 	                                                       MemberFilterAdapter memberFilterAdapter,
+ 	                                                       ItemParser itemParser,
+-	                                                       InventoryRegistry inventoryRegistry) {
++	                                                       InventoryService inventoryService) {
+ 		ItemSourceProvider itemSourceProvider = new GangItemSourceProvider(userManager, gangManager, filterStore,
+ 		                                                                   filterApplier, gangFilterAdapter,
+ 		                                                                   memberFilterAdapter);
+ 		return new InventoryRuntimeContext(gangland, definitionStore, itemSourceProvider, conditionEvaluator,
+ 		                                   userManager, permissionManager, placeholderService, itemParser,
+-		                                   inventoryRegistry);
++		                                   inventoryService);
+ 	}
+ 
+ 	/**
+ 	 * {@link InventoryLoader} can't initialize during the FILE phase because its load callback parses prefixed item
+ 	 * refs (weapon:awp, wearable:police_vest, …) via {@link ItemParser}, which is a CONFIG-phase bean. The
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryParser.java b/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryParser.java
+index f3d4f4db..7ac1be4e 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryParser.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryParser.java
+@@ -6,12 +6,12 @@ import org.bukkit.event.block.Action;
+ import org.bukkit.event.inventory.InventoryClickEvent;
+ import org.bukkit.event.inventory.InventoryEvent;
+ import org.bukkit.event.player.PlayerEvent;
+ import org.bukkit.inventory.ItemStack;
+ import org.jetbrains.annotations.Nullable;
++import org.luckyraven.keystone.inventory.registry.MenuOpener;
+ import org.luckyraven.gangland.menu.InventoryData;
+-import org.luckyraven.gangland.inventory.InventoryOpener;
+ import org.luckyraven.gangland.menu.handler.SlotContext;
+ import org.luckyraven.gangland.menu.handler.SlotEventHandler;
+ import org.luckyraven.gangland.menu.handler.SlotItemFactory;
+ import org.luckyraven.gangland.menu.part.Slot;
+ 
+@@ -181,11 +181,11 @@ final class InventoryParser {
+ 	                                      boolean draggable) {
+ 		String slotsBase = basePath + "." + slotLoc + ".";
+ 
+ 		var rightClickSection = config.getConfigurationSection(slotsBase + "OnRightClick");
+ 
+-		InventoryOpener             opener          = runtimeContext::openInventoryForPlayer;
++		MenuOpener                  opener          = runtimeContext::openInventoryForPlayer;
+ 		InventoryDefinitionStore    definitionStore = runtimeContext.definitionStore();
+ 		Function<String, ItemStack> itemResolver    = runtimeContext.itemResolver();
+ 
+ 		for (Map.Entry<String, Class<? extends InventoryEvent>> entry : definitionStore.inventoryEvents().entrySet()) {
+ 			var eventSection = config.getConfigurationSection(slotsBase + entry.getKey());
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryRuntimeContext.java b/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryRuntimeContext.java
+index c8ba5977..b85d7c69 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryRuntimeContext.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/file/configuration/inventory/InventoryRuntimeContext.java
+@@ -5,48 +5,49 @@ import org.bukkit.configuration.ConfigurationSection;
+ import org.bukkit.configuration.file.FileConfiguration;
+ import org.bukkit.entity.Player;
+ import org.bukkit.inventory.ItemStack;
+ import org.jetbrains.annotations.Nullable;
+ import org.luckyraven.gangland.Gangland;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.registry.MenuOpener;
+ import org.luckyraven.keystone.util.Pair;
+ import org.luckyraven.keystone.util.Placeholder;
+ import org.luckyraven.keystone.permission.PermissionManager;
+ import org.luckyraven.gangland.data.placeholder.PlaceholderService;
+ import org.luckyraven.gangland.file.configuration.Settings;
+ import org.luckyraven.gangland.gang.user.User;
+ import org.luckyraven.gangland.gang.user.UserManager;
+ import org.luckyraven.gangland.inventory.InventoryHandler;
+-import org.luckyraven.gangland.inventory.InventoryOpener;
+ import org.luckyraven.gangland.menu.InventoryBuilder;
+ import org.luckyraven.gangland.menu.InventoryData;
+ import org.luckyraven.gangland.menu.OpenInventory;
+ import org.luckyraven.gangland.menu.State;
+ import org.luckyraven.gangland.menu.condition.ConditionEvaluator;
+-import org.luckyraven.gangland.menu.multi.ItemSourceEntry;
+ import org.luckyraven.gangland.menu.multi.ItemSourceProvider;
+-import org.luckyraven.gangland.menu.multi.MultiInventory;
+ import org.luckyraven.gangland.menu.part.ButtonTags;
+ import org.luckyraven.gangland.inventory.part.Fill;
+ import org.luckyraven.gangland.menu.part.Slot;
+-import org.luckyraven.gangland.inventory.service.InventoryRegistry;
+ import org.luckyraven.gangland.menu.unique.UniqueItemHandler;
+ import org.luckyraven.keystone.item.ItemParser;
+ import org.luckyraven.keystone.persistence.FileHandler;
+ import org.luckyraven.keystone.persistence.config.*;
+ 
+ import java.util.ArrayList;
+ import java.util.List;
+-import java.util.Map;
+-import java.util.UUID;
+-import java.util.concurrent.ConcurrentHashMap;
+ import java.util.function.Function;
+ 
+ /**
+  * Runtime half of the former static {@code InventoryAddon}: holds the service references that registration and
+  * open-inventory logic need. Lives in the CONFIG phase because some of its dependencies (e.g. {@link UserManager},
+  * {@link ItemSourceProvider}) are CONFIG-phase beans. Reads/writes the {@link InventoryDefinitionStore} that was
+  * constructed in FILE phase.
++ *
++ * <p>WS2 G3: {@code openInventoryForPlayer} now builds a fresh Keystone {@code ChestMenu} per call (via
++ * {@link InventoryBuilder#createMenu}/{@link InventoryBuilder#createPagedMenu}) and opens it through the
++ * {@link InventoryService} bean, so the service's own {@code OpenMenuTracker} sees every core menu — the G2
++ * {@code openInventories} shim (a private "is this already open" map) is gone; Keystone always builds fresh,
++ * matching {@code MenuRegistry}'s own stateless-factory philosophy.
+  */
+ @CustomLog
+ public class InventoryRuntimeContext {
+ 
+ 	private final Gangland                 gangland;
+@@ -55,39 +56,30 @@ public class InventoryRuntimeContext {
+ 	private final ConditionEvaluator       conditionEvaluator;
+ 	private final UserManager<Player>      userManager;
+ 	private final PermissionManager        permissionManager;
+ 	private final PlaceholderService       placeholderService;
+ 	private final ItemParser               itemParser;
+-	private final InventoryRegistry        inventoryRegistry;
+-
+-	// ponytail: interim shim, deleted at WS2 G3 when menus open through the Keystone service. The shared
+-	// InventoryRegistry is a superset of what this class needs for its own "is this menu already open for this
+-	// player" lookup — every feature's InventoryHandler self-registers into it (sign views, wand views,
+-	// PaperworkView/HandcuffBribeView, CarSignViewProvider, MultiPanelInventory panels), so filtering it by title
+-	// key risked reopening a foreign handler whose key happened to collide with a core YAML menu name (review F1,
+-	// ruling W38). This map is exactly what the old User.inventories field was: per-player, de-duplicated by menu
+-	// name, scoped to only the menus THIS class opened.
+-	private final Map<UUID, Map<String, InventoryHandler>> openInventories = new ConcurrentHashMap<>();
++	private final InventoryService         inventoryService;
+ 
+ 	public InventoryRuntimeContext(Gangland gangland,
+ 	                               InventoryDefinitionStore definitionStore,
+ 	                               ItemSourceProvider itemSourceProvider,
+ 	                               ConditionEvaluator conditionEvaluator,
+ 	                               UserManager<Player> userManager,
+ 	                               PermissionManager permissionManager,
+ 	                               PlaceholderService placeholderService,
+ 	                               ItemParser itemParser,
+-	                               InventoryRegistry inventoryRegistry) {
++	                               InventoryService inventoryService) {
+ 		this.gangland           = gangland;
+ 		this.definitionStore    = definitionStore;
+ 		this.itemSourceProvider = itemSourceProvider;
+ 		this.conditionEvaluator = conditionEvaluator;
+ 		this.userManager        = userManager;
+ 		this.permissionManager  = permissionManager;
+ 		this.placeholderService = placeholderService;
+ 		this.itemParser         = itemParser;
+-		this.inventoryRegistry  = inventoryRegistry;
++		this.inventoryService   = inventoryService;
+ 	}
+ 
+ 	public InventoryDefinitionStore definitionStore() {
+ 		return definitionStore;
+ 	}
+@@ -237,17 +229,10 @@ public class InventoryRuntimeContext {
+ 		if (user == null) {
+ 			log.warn("Cannot open inventory '{}' — no User record for player {}", inventoryName, player.getName());
+ 			return;
+ 		}
+ 
+-		String           lookupKey = inventoryName.toLowerCase();
+-		InventoryHandler existing  = openInventories.getOrDefault(user.getUuid(), Map.of()).get(lookupKey);
+-		if (existing != null) {
+-			existing.open(player);
+-			return;
+-		}
+-
+ 		InventoryBuilder invBuilder = definitionStore.inventories().get(inventoryName);
+ 		if (invBuilder == null) {
+ 			log.warn("Cannot open inventory '{}' — not registered in the definition store (check YAML parse errors)",
+ 			         inventoryName);
+ 			return;
+@@ -260,47 +245,26 @@ public class InventoryRuntimeContext {
+ 		}
+ 
+ 		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
+ 		Fill line = new Fill(Settings.getInventoryLineName(), Settings.getInventoryLineItem());
+ 
+-		InventoryOpener opener      = this::openInventoryForPlayer;
+-		Placeholder     placeholder = placeholderService;
++		MenuOpener  opener      = this::openInventoryForPlayer;
++		Placeholder placeholder = placeholderService;
+ 
+ 		if (invBuilder.inventoryData().isMultiInventory()) {
+-			String                itemSource = invBuilder.inventoryData().getItemSource();
+-			List<ItemSourceEntry> entries    = itemSourceProvider.getEntries(player, itemSource);
+ 			ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
+ 			                                       Settings.getNextPage());
+-			MultiInventory multi = invBuilder.createMultiInventory(gangland, placeholder, player, entries, buttonTags,
+-			                                                       fill);
+-			if (multi != null) {
+-				multi.open(player);
+-				inventoryRegistry.registerInventory(user.getUuid(), multi);
+-				openInventories.computeIfAbsent(user.getUuid(), k -> new ConcurrentHashMap<>()).put(lookupKey, multi);
+-			} else {
+-				log.warn(
+-						"Cannot open multi-inventory '{}' — createMultiInventory returned null (source='{}', entries={})",
+-						inventoryName, itemSource, entries.size());
+-			}
++			var menu = invBuilder.createPagedMenu(inventoryService, gangland, placeholder, player, conditionEvaluator,
++			                                      fill, buttonTags, itemSourceProvider, opener, 0);
++			menu.open(player);
+ 		} else {
+-			InventoryHandler handler = invBuilder.createInventory(gangland, placeholder, user.getUser(), fill, line,
+-			                                                      conditionEvaluator, opener);
+-			handler.open(player);
+-			inventoryRegistry.registerInventory(user.getUuid(), handler);
+-			openInventories.computeIfAbsent(user.getUuid(), k -> new ConcurrentHashMap<>()).put(lookupKey, handler);
++			var menu = invBuilder.createMenu(inventoryService, gangland, placeholder, player, fill, line,
++			                                 conditionEvaluator, opener);
++			menu.open(player);
+ 		}
+ 	}
+ 
+-	/**
+-	 * Forgets every menu this class has tracked as open for {@code uuid}. Called by {@code RemoveAccountListener}
+-	 * alongside its existing {@code inventoryRegistry.clear(uuid)} call, on the same quit path — parity with what
+-	 * {@code User.clearInventories()} used to do for this class's own bookkeeping.
+-	 */
+-	public void clearPlayer(UUID uuid) {
+-		openInventories.remove(uuid);
+-	}
+-
+ 	Gangland gangland() {
+ 		return gangland;
+ 	}
+ 
+ 	private void registerUniqueItemHandler(String inventoryName, ConfigurationSection informationSection,
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/listener/inventory/InventoryOpenByCommandListener.java b/gangland-impl/src/main/java/org/luckyraven/gangland/listener/inventory/InventoryOpenByCommandListener.java
+index dff75910..2a8ec475 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/listener/inventory/InventoryOpenByCommandListener.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/listener/inventory/InventoryOpenByCommandListener.java
+@@ -4,16 +4,17 @@ import org.bukkit.entity.Player;
+ import org.bukkit.event.EventHandler;
+ import org.bukkit.event.Listener;
+ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+ import org.luckyraven.gangland.Gangland;
+ import org.luckyraven.keystone.bean.listener.ListenerHandler;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.registry.MenuOpener;
+ import org.luckyraven.gangland.data.placeholder.PlaceholderService;
+ import org.luckyraven.gangland.file.configuration.Settings;
+ import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionStore;
+ import org.luckyraven.gangland.file.configuration.inventory.InventoryRuntimeContext;
+ import org.luckyraven.gangland.menu.InventoryBuilder;
+-import org.luckyraven.gangland.inventory.InventoryOpener;
+ import org.luckyraven.gangland.menu.OpenInventory;
+ import org.luckyraven.gangland.menu.State;
+ import org.luckyraven.gangland.menu.condition.ConditionEvaluator;
+ import org.luckyraven.gangland.inventory.part.Fill;
+ 
+@@ -27,21 +28,24 @@ public class InventoryOpenByCommandListener implements Listener {
+ 	private final Gangland                 gangland;
+ 	private final PlaceholderService       placeholderService;
+ 	private final ConditionEvaluator       conditionEvaluator;
+ 	private final InventoryDefinitionStore definitionStore;
+ 	private final InventoryRuntimeContext  runtimeContext;
++	private final InventoryService         inventoryService;
+ 
+ 	public InventoryOpenByCommandListener(Gangland gangland,
+ 	                                      PlaceholderService placeholderService,
+ 	                                      ConditionEvaluator conditionEvaluator,
+ 	                                      InventoryDefinitionStore definitionStore,
+-	                                      InventoryRuntimeContext runtimeContext) {
++	                                      InventoryRuntimeContext runtimeContext,
++	                                      InventoryService inventoryService) {
+ 		this.gangland           = gangland;
+ 		this.placeholderService = placeholderService;
+ 		this.conditionEvaluator = conditionEvaluator;
+ 		this.definitionStore    = definitionStore;
+ 		this.runtimeContext     = runtimeContext;
++		this.inventoryService   = inventoryService;
+ 	}
+ 
+ 	@EventHandler
+ 	public void onInventoryCommand(PlayerCommandPreprocessEvent event) {
+ 		// includes the '/' at the beginning
+@@ -89,16 +93,16 @@ public class InventoryOpenByCommandListener implements Listener {
+ 			try {
+ 				Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
+ 				Fill line = new Fill(Settings.getInventoryLineName(), Settings.getInventoryLineItem());
+ 
+ 				// Create the opener callback
+-				InventoryOpener opener = runtimeContext::openInventoryForPlayer;
++				MenuOpener opener = runtimeContext::openInventoryForPlayer;
+ 
+-				var inventoryHandler = builder.createInventory(gangland, placeholderService, player, fill, line,
+-				                                               conditionEvaluator, opener);
++				var menu = builder.createMenu(inventoryService, gangland, placeholderService, player, fill, line,
++				                              conditionEvaluator, opener);
+ 
+-				inventoryHandler.open(player);
++				menu.open(player);
+ 				event.setCancelled(true);
+ 				break;
+ 			} catch (Exception exception) {
+ 				return true;
+ 			}
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/RemoveAccountListener.java b/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/RemoveAccountListener.java
+index bb6eb077..0c470bed 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/RemoveAccountListener.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/RemoveAccountListener.java
+@@ -15,11 +15,10 @@ import org.luckyraven.gangland.database.GanglandDatabase;
+ import org.luckyraven.keystone.economy.bank.Bank;
+ import org.luckyraven.gangland.gang.bounty.Bounty;
+ import org.luckyraven.gangland.gang.user.User;
+ import org.luckyraven.gangland.gang.user.UserManager;
+ import org.luckyraven.gangland.gang.wanted.Wanted;
+-import org.luckyraven.gangland.file.configuration.inventory.InventoryRuntimeContext;
+ import org.luckyraven.gangland.inventory.service.InventoryRegistry;
+ import org.luckyraven.keystone.persistence.repository.IRepository;
+ 
+ @ListenerHandler(priority = ListenerPriority.LOW)
+ public final class RemoveAccountListener implements Listener {
+@@ -27,49 +26,37 @@ public final class RemoveAccountListener implements Listener {
+ 	private final Gangland                   gangland;
+ 	private final GanglandDatabase           ganglandDatabase;
+ 	private final UserManager<Player>        userManager;
+ 	private final UserManager<OfflinePlayer> offlineUserManager;
+ 	private final InventoryRegistry          inventoryRegistry;
+-	private final InventoryRuntimeContext    inventoryRuntimeContext;
+ 
+ 	public RemoveAccountListener(Gangland gangland,
+ 	                             GanglandDatabase ganglandDatabase,
+ 	                             @Qualifier("online") UserManager<Player> userManager,
+ 	                             @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
+-	                             InventoryRegistry inventoryRegistry,
+-	                             InventoryRuntimeContext inventoryRuntimeContext) {
++	                             InventoryRegistry inventoryRegistry) {
+ 		this.gangland                = gangland;
+ 		this.ganglandDatabase        = ganglandDatabase;
+ 		this.userManager             = userManager;
+ 		this.offlineUserManager      = offlineUserManager;
+ 		this.inventoryRegistry       = inventoryRegistry;
+-		this.inventoryRuntimeContext = inventoryRuntimeContext;
+ 	}
+ 
+ 	@EventHandler(priority = EventPriority.LOWEST)
+ 	public synchronized void onPlayerQuit(PlayerQuitEvent event) {
+ 		Player player = event.getPlayer();
+ 
+-		// Unconditional and synchronous — mirrors PlayerInventoryCleanup's shape (WS2 G1+G2 fix round 2). Must run
+-		// even when the User lookup below fails (a real path — InventoryRuntimeContext.openInventoryForPlayer
+-		// itself guards against a null User the same way), or that player's entry in InventoryRuntimeContext's
+-		// interim per-player map leaks forever: the CONFIG-phase bean is a singleton that survives reload, so
+-		// nothing else ever clears it. ConcurrentHashMap-backed, safe on the main thread.
+-		inventoryRuntimeContext.clearPlayer(player.getUniqueId());
+-
+ 		User<Player> user = userManager.getUser(player);
+ 
+ 		if (user == null) return;
+ 
+ 		Bukkit.getScheduler().runTaskAsynchronously(gangland, () -> {
+-			// remove all the inventories of that player only (WS2 G2: severed off User, goes through the
+-			// registry bean directly). NOTE (ruling W38): this only clears bookkeeping, exactly as
+-			// User.clearInventories() did before it — no held item was ever returned on quit here, before or
+-			// after this change. Once WS2 G3 retargets menu-opening onto keystone-inventory, Keystone's own
+-			// MenuListener.onQuit takes over and DOES return held items (its OpenMenuTracker-driven close path),
+-			// closing that longstanding gap as a side effect of the G3 retarget rather than something this gate
+-			// fixes.
++			// Remove all the legacy InventoryHandler entries this player registered (WS2 G2: severed off User,
++			// goes through the registry bean directly) — still needed for the not-yet-migrated module/legacy
++			// InventoryHandler views (WS2 G4/G5). The 9 core YAML menus themselves no longer register here at
++			// all: since WS2 G3 they open through keystone-inventory's InventoryService, whose own
++			// MenuListener.onQuit returns any held items and untracks the player automatically.
+ 			inventoryRegistry.clear(user.getUuid());
+ 
+ 			user.getWanted().stopTimer();
+ 			user.getBounty().stopTimer();
+ 		});
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/InventoryBuilder.java b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/InventoryBuilder.java
+index c2da7588..f731abe7 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/InventoryBuilder.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/InventoryBuilder.java
+@@ -1,268 +1,332 @@
+ package org.luckyraven.gangland.menu;
+ 
+ import com.cryptomorin.xseries.XEnchantment;
++import com.cryptomorin.xseries.XMaterial;
+ import net.wesjd.anvilgui.AnvilGUI;
+ import org.bukkit.Material;
+ import org.bukkit.entity.Player;
+ import org.bukkit.inventory.ItemFlag;
+ import org.bukkit.inventory.ItemStack;
+ import org.bukkit.plugin.java.JavaPlugin;
++import org.jetbrains.annotations.Nullable;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.chest.ChestMenu;
++import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
++import org.luckyraven.keystone.inventory.click.ClickContext;
++import org.luckyraven.keystone.inventory.click.ClickHandler;
++import org.luckyraven.keystone.inventory.component.BorderComponent;
++import org.luckyraven.keystone.inventory.component.FillComponent;
++import org.luckyraven.keystone.inventory.component.ItemComponent;
++import org.luckyraven.keystone.inventory.component.LineComponent;
++import org.luckyraven.keystone.inventory.page.PageConfig;
++import org.luckyraven.keystone.inventory.page.PagedRegion;
++import org.luckyraven.keystone.inventory.registry.MenuOpener;
+ import org.luckyraven.keystone.item.ItemBuilder;
+ import org.luckyraven.keystone.util.Placeholder;
+-import org.luckyraven.keystone.util.TriConsumer;
+ import org.luckyraven.keystone.color.ColorUtil;
+ import org.luckyraven.keystone.color.MaterialType;
+ import org.luckyraven.gangland.menu.condition.ConditionEvaluator;
+ import org.luckyraven.gangland.menu.condition.ConditionalSlotData;
+-import org.luckyraven.gangland.menu.multi.*;
++import org.luckyraven.gangland.menu.multi.ItemSourceEntry;
++import org.luckyraven.gangland.menu.multi.ItemSourceProvider;
+ import org.luckyraven.gangland.menu.part.ButtonTags;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+-import org.luckyraven.gangland.inventory.InventoryOpener;
+ import org.luckyraven.gangland.inventory.part.Fill;
++import org.luckyraven.gangland.menu.part.ConditionalSlotResult;
+ import org.luckyraven.gangland.menu.part.Slot;
+-import org.luckyraven.gangland.inventory.util.InventoryUtil;
+-
+-import java.util.*;
+ 
++import java.util.Collections;
++import java.util.List;
++import java.util.Map;
++
++/**
++ * Builds a Keystone {@link ChestMenu} from the parsed {@link InventoryData} (WS2 G3: retargets off the deleted
++ * {@code InventoryHandler}/{@code InventoryBuilder.createInventory}/{@code createMultiInventory} pair). Every menu
++ * this class builds is FRESH per call — there is no cached {@code MenuRegistry} factory — because
++ * {@code openInventoryForPlayer} (the one caller, via {@link org.luckyraven.gangland.file.configuration.inventory.InventoryRuntimeContext})
++ * always has the real viewing {@link Player} in hand, so every placeholder (including the paginated menus' item
++ * source, which needs the player to filter/sort per {@code FilterStore}) resolves eagerly at build time, exactly as
++ * the old {@code InventoryHandler}-based builder did. This is also why menu-to-menu navigation
++ * ({@code OnClick.Inventory: xyz}) goes through the {@link MenuOpener} captured at parse time
++ * (see {@code menu.handler.*}) rather than {@code ClickContext.openMenu}/a registered {@code MenuRegistry} entry: a
++ * registry factory is a zero-arg {@code Supplier<Menu>} with no player to build paginated content against.
++ */
+ public record InventoryBuilder(InventoryData inventoryData, String permission) {
+ 
+-	private static String substituteEntry(String template, Map<String, String> entry) {
+-		if (template == null || template.isEmpty() || entry.isEmpty()) return template;
+-		String result = template;
+-		for (Map.Entry<String, String> e : entry.entrySet()) {
+-			result = result.replace("%" + e.getKey() + "%", e.getValue());
+-		}
+-		return result;
+-	}
+-
+-	public InventoryHandler createInventory(JavaPlugin plugin, Placeholder placeholder, Player player, Fill fill,
+-	                                        Fill line, ConditionEvaluator evaluator, InventoryOpener inventoryOpener) {
+-		// create a new instance
+-		String     displayName = inventoryData.getDisplayName();
+-		int        size        = inventoryData.getSize();
+-		List<Slot> slots       = inventoryData.getSlots();
++	private static final String COLOR_TAG = "color";
++	private static final String HEAD_TAG  = "head";
++	private static final String DATA_TAG  = "data";
++
++	/**
++	 * Builds a single (non-paginated) menu. Mirrors the old {@code createInventory}'s slot/line/border/fill
++	 * composition; Keystone's own {@link ChestMenuBuilder#build()} applies the same priority order (border, then
++	 * lines, then explicit slots override both) the old {@code InventoryUtil} calls approximated by skipping
++	 * already-occupied slots.
++	 */
++	public ChestMenu createMenu(InventoryService inventoryService, JavaPlugin plugin, Placeholder placeholder,
++	                            Player player, Fill fill, Fill line, ConditionEvaluator evaluator, MenuOpener opener) {
++		String title = placeholder.convert(player, inventoryData.getDisplayName());
++		int    rows  = Math.max(1, Math.min(6, inventoryData.getSize() / 9));
+ 
+-		// it is special when there is a click event
+-		var title   = placeholder.convert(player, displayName);
+-		var handler = new InventoryHandler(plugin, title, size, player);
++		ChestMenuBuilder builder = ChestMenu.builder(inventoryService).title(title).rows(rows);
++		if (permission != null) builder.permission(permission);
+ 
+-		for (Slot slot : slots) {
+-			// get conditional result for this slot
++		for (Slot slot : inventoryData.getSlots()) {
+ 			var result = slot.getConditionalResult(player, evaluator);
++			ItemBuilder rawItem = result.item();
++			if (rawItem == null) continue;
+ 
+-			int         usedSlot = slot.getSlot();
+-			ItemBuilder item     = result.item();
+-			if (item == null) continue;
+-
+-			// handles color tag
+-			String   colorTag = "color";
+-			Material type     = item.getType();
+-			if (item.hasNBTTag(colorTag)) {
+-				// special treatment for colored data
+-				String value = placeholder.convert(player, item.getStringTagData(colorTag));
++			ItemStack resolvedStack = resolveItemStack(rawItem, placeholder, player);
+ 
+-				MaterialType material = MaterialType.WOOL;
+-				for (MaterialType materialType : MaterialType.values()) {
+-					if (!type.name().contains(materialType.name())) continue;
++			ItemComponent component = ItemComponent.of(resolvedStack);
++			if (result.draggable()) component.interactive(true);
+ 
+-					material = materialType;
+-					break;
+-				}
++			ClickHandler leftClick = resolveClickHandler(result.clickAction(), result.rawClickAction(), plugin,
++			                                             placeholder, player, opener);
++			if (leftClick != null) component.onLeftClick(leftClick);
+ 
+-				type = ColorUtil.getMaterialByColor(value, material.name());
+-			}
+-
+-			ItemBuilder newItem = new ItemBuilder(type);
+-
+-			// handles head data
+-			String headTag = "head";
+-			if (item.hasNBTTag(headTag)) {
+-				String value = placeholder.convert(player, item.getStringTagData(headTag));
+-				newItem.customHead(value);
+-			}
+-
+-			String itemDisplayName = placeholder.convert(player, item.getDisplayName());
+-			newItem.setDisplayName(itemDisplayName);
+-
+-			List<String> lore = item.getLore()
+-					.stream().map(s -> placeholder.convert(player, s)).toList();
+-			newItem.setLore(lore);
++			ClickHandler rightClick = resolveRightClickHandler(slot, result, plugin, placeholder, player, opener);
++			if (rightClick != null) component.onRightClick(rightClick);
+ 
+-			if (!item.getEnchantments().isEmpty()) {
+-				newItem.addEnchantment(XEnchantment.UNBREAKING.get(), 1)
+-				       .addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+-			}
+-
+-			// handle click actions, including anvil inventories
+-			var clickAction      = result.clickAction();
+-			var rightClickAction = (TriConsumer<Player, InventoryHandler, ItemBuilder>) null;
++			builder.slot(slot.getSlot(), component);
++		}
+ 
+-			if (result.rawClickAction() instanceof ConditionalSlotData.AnvilAction anvilAction) {
+-				clickAction = (p, inv, builder) -> openAnvilInventory(plugin, placeholder, p, anvilAction);
+-			} else if (result.rawClickAction() != null) {
+-				// Wrap the action to pass the opener
+-				ConditionalSlotData.ClickAction rawAction = result.rawClickAction();
+-				clickAction = (p, inv, builder) -> rawAction.execute(p, inv, builder, inventoryOpener);
+-			}
++		applyDecoration(builder, fill, line);
+ 
+-			// Handle right-click action
+-			if (result.rawRightClickAction() instanceof ConditionalSlotData.AnvilAction anvilAction) {
+-				rightClickAction = (p, inv, builder) -> openAnvilInventory(plugin, placeholder, p, anvilAction);
+-			} else if (result.rawRightClickAction() != null) {
+-				ConditionalSlotData.ClickAction rawRightAction = result.rawRightClickAction();
+-				rightClickAction = (p, inv, builder) -> rawRightAction.execute(p, inv, builder, inventoryOpener);
+-			} else if (slot.getRightClickSlot() != null) {
+-				rightClickAction = slot.getRightClickSlot();
+-			}
++		return builder.build();
++	}
+ 
+-			// Use the overload that supports both left and right click
+-			if (rightClickAction != null) {
+-				handler.setItem(usedSlot, newItem, result.draggable(), clickAction, rightClickAction);
+-			} else {
+-				handler.setItem(usedSlot, newItem, result.draggable(), clickAction);
++	/**
++	 * Builds a paginated menu (the old {@code Type: multi-inventory}) — one fixed-size {@link ChestMenu}, its
++	 * interior grid rendered via {@link PagedRegion} for {@code page}, replacing the old model of a chained
++	 * linked-list of differently-titled Bukkit inventories ({@code MultiInventory}/{@code MultiInventoryCreation}).
++	 * Next/previous buttons rebuild a fresh menu for the target page and swap it into the currently-open one via
++	 * {@link ChestMenu#adoptComponentsFrom} — an in-place render, no close/reopen flicker.
++	 */
++	public ChestMenu createPagedMenu(InventoryService inventoryService, JavaPlugin plugin, Placeholder placeholder,
++	                                 Player player, ConditionEvaluator evaluator, Fill fill, ButtonTags buttonTags,
++	                                 ItemSourceProvider itemSourceProvider, MenuOpener opener, int page) {
++		Map<Integer, Slot> staticItems = inventoryData.getStaticItems();
++		boolean             hasStatic  = staticItems != null && !staticItems.isEmpty();
++
++		List<ItemSourceEntry> sourceEntries = itemSourceProvider.getEntries(player, inventoryData.getItemSource());
++		List<PagedRegion.Entry> entries = renderTemplateEntries(sourceEntries, placeholder, player, plugin, opener);
++
++		int        rows       = computeRows(entries.size(), hasStatic ? staticItems.size() : 0, hasStatic);
++		int        firstCol   = hasStatic ? 2 : 1;
++		PageConfig pageConfig = PageConfig.forSize(rows, 1, rows - 2, firstCol, 7, entries.size());
++		int        resolvedPage = Math.min(Math.max(page, 0), Math.max(0, pageConfig.pageCount() - 1));
++
++		// The old MultiInventoryNavigation.addNavigationButtons renamed every page's title to include the
++		// "[current/total]" suffix, including a single-page menu — matched here for parity.
++		String title = placeholder.convert(player, inventoryData.getDisplayName())
++		                          + String.format(" &8[&b%d&8/&3%d&8]&r", resolvedPage + 1, pageConfig.pageCount());
++
++		ChestMenuBuilder builder = ChestMenu.builder(inventoryService).title(title).rows(rows);
++		if (permission != null) builder.permission(permission);
++
++		if (hasStatic) {
++			for (Map.Entry<Integer, Slot> entry : staticItems.entrySet()) {
++				int  slotIndex = entry.getKey();
++				Slot slot      = entry.getValue();
++				ItemBuilder rawItem = slot.getItem();
++				if (rawItem == null) continue;
++
++				ItemComponent component = ItemComponent.of(resolveItemStack(rawItem, placeholder, player));
++				ClickHandler clickHandler = slot.getClickableSlot();
++				if (clickHandler != null) component.onLeftClick(clickHandler);
++				builder.slot(slotIndex, component);
+ 			}
++			// Visual separator between the static-items column and the paged entries, matching the old
++			// InventoryUtil.verticalLine(multi, fill, 2, true) call (1-indexed column 2 = 0-indexed column 1).
++			builder.line(LineComponent.vertical(1, materialOf(fill.material())).name(fill.name()));
+ 		}
+ 
+-		List<Integer> verticalLine   = inventoryData.getVerticalLine();
+-		List<Integer> horizontalLine = inventoryData.getHorizontalLine();
+-
+-		if (!verticalLine.isEmpty()) {
+-			for (int l : verticalLine) {
+-				InventoryUtil.verticalLine(handler, line, l);
+-			}
+-		}
++		PagedRegion.render(builder, pageConfig, entries, resolvedPage);
+ 
+-		if (!horizontalLine.isEmpty()) {
+-			for (int l : horizontalLine) {
+-				InventoryUtil.horizontalLine(handler, line, l);
+-			}
+-		}
++		addNavigationButtons(builder, inventoryService, plugin, placeholder, player, evaluator, fill, buttonTags,
++		                     itemSourceProvider, opener, rows, resolvedPage, pageConfig.pageCount());
+ 
+ 		if (inventoryData.isBorder()) {
+-			InventoryUtil.createBoarder(handler, fill);
++			builder.border(BorderComponent.of(materialOf(fill.material())).name(fill.name()));
+ 		} else if (inventoryData.isFill()) {
+-			InventoryUtil.fillInventory(handler, fill);
++			builder.fill(FillComponent.of(materialOf(fill.material())).name(fill.name()));
+ 		}
+ 
+-		return handler;
++		return builder.build();
+ 	}
+ 
+-	public MultiInventory createMultiInventory(JavaPlugin plugin, Placeholder placeholder, Player player,
+-	                                           List<ItemSourceEntry> entries, ButtonTags buttonTags, Fill fill) {
+-		if (!inventoryData.isMultiInventory()) {
+-			throw new IllegalStateException("This inventory is not configured as a multi-inventory");
++	private void addNavigationButtons(ChestMenuBuilder builder, InventoryService inventoryService, JavaPlugin plugin,
++	                                  Placeholder placeholder, Player player, ConditionEvaluator evaluator, Fill fill,
++	                                  ButtonTags buttonTags, ItemSourceProvider itemSourceProvider, MenuOpener opener,
++	                                  int rows, int page, int pageCount) {
++		int size = rows * 9;
++
++		if (page < pageCount - 1) {
++			builder.slot(size - 1, ItemComponent.of(headItem("&a->", buttonTags.nextPage()))
++			                                    .onLeftClick(ctx -> {
++				var fresh = createPagedMenu(inventoryService, plugin, placeholder, player, evaluator, fill,
++				                            buttonTags, itemSourceProvider, opener, page + 1);
++				swapInPlace(ctx, fresh);
++			}));
+ 		}
+ 
+-		String title = placeholder.convert(player, inventoryData.getDisplayName());
+-
+-		MultiInventory multiInventory;
+-
+-		// Prepare static items, keyed by the explicit YAML slot so placement is deterministic and matches the user's
+-		// layout rather than being collapsed into a hash-ordered column fill.
+-		Map<Integer, StaticSlotEntry> staticItemsMap = null;
+-
+-		if (inventoryData.getStaticItems() != null && !inventoryData.getStaticItems().isEmpty()) {
+-			staticItemsMap = new TreeMap<>();
+-
+-			for (Map.Entry<Integer, Slot> entry : inventoryData.getStaticItems().entrySet()) {
+-				int         slotIndex = entry.getKey();
+-				Slot        slot      = entry.getValue();
+-				ItemBuilder item      = slot.getItem();
+-				if (item == null) continue;
+-
+-				// Process placeholders and create item
+-				ItemStack processedItem = processItemStack(item, placeholder, player);
+-
+-				TriConsumer<Player, InventoryHandler, ItemBuilder> onClick =
+-						slot.isClickable() && slot.getClickableSlot() != null ? slot.getClickableSlot() :
+-						(p, inv, builder) -> { };
+-
+-				staticItemsMap.put(slotIndex, new StaticSlotEntry(processedItem, onClick));
+-			}
++		if (page > 0) {
++			builder.slot(size - 5, ItemComponent.of(headItem("&cBack to " + placeholder.convert(player,
++			                                                                                   inventoryData.getDisplayName()),
++			                                                 buttonTags.homePage()))
++			                                    .onLeftClick(ctx -> {
++				var fresh = createPagedMenu(inventoryService, plugin, placeholder, player, evaluator, fill,
++				                            buttonTags, itemSourceProvider, opener, 0);
++				swapInPlace(ctx, fresh);
++			}));
++			builder.slot(size - 9, ItemComponent.of(headItem("&c<-", buttonTags.previousPage()))
++			                                    .onLeftClick(ctx -> {
++				var fresh = createPagedMenu(inventoryService, plugin, placeholder, player, evaluator, fill,
++				                            buttonTags, itemSourceProvider, opener, page - 1);
++				swapInPlace(ctx, fresh);
++			}));
+ 		}
++	}
+ 
+-		boolean staticItems = staticItemsMap != null && !staticItemsMap.isEmpty();
+-
+-		List<ListEntry> listEntries = renderListEntries(entries, placeholder, player);
++	private static void swapInPlace(ClickContext ctx, ChestMenu fresh) {
++		if (ctx.menu() instanceof ChestMenu current) {
++			current.adoptComponentsFrom(fresh);
++		}
++	}
+ 
+-		multiInventory = MultiInventoryCreation.dynamicMultiInventory(plugin, player, listEntries, title, staticItems,
+-		                                                              inventoryData.getSize(), fill, buttonTags,
+-		                                                              staticItemsMap);
++	private static ItemStack headItem(String name, String base64Texture) {
++		ItemBuilder item = new ItemBuilder(Material.PLAYER_HEAD).setDisplayName(name);
++		item.customHead(base64Texture);
++		return item.build();
++	}
+ 
+-		return multiInventory;
++	/**
++	 * Row determination ported from the old {@code MultiInventoryCreation.computeConfigForCreation}: explicit YAML
++	 * size first, then static-item-driven, then item-count-driven, clamped to [3, 6].
++	 */
++	private int computeRows(int itemsCount, int staticItemCount, boolean hasStatic) {
++		int maxColumns = hasStatic ? 6 : 7;
++		int size       = inventoryData.getSize();
++
++		int rows;
++		if (size >= 18 && size % 9 == 0) {
++			rows = size / 9;
++		} else if (hasStatic && staticItemCount > 0) {
++			rows = staticItemCount + 2;
++		} else {
++			rows = (int) Math.ceil((double) Math.max(itemsCount, 1) / maxColumns) + 2;
++		}
++		return Math.max(3, Math.min(rows, 6));
+ 	}
+ 
+-	private List<ListEntry> renderListEntries(List<ItemSourceEntry> entries, Placeholder placeholder, Player player) {
++	private List<PagedRegion.Entry> renderTemplateEntries(List<ItemSourceEntry> sourceEntries, Placeholder placeholder,
++	                                                      Player player, JavaPlugin plugin, MenuOpener opener) {
+ 		Slot   template        = inventoryData.getItemTemplate();
+ 		String commandTemplate = inventoryData.getItemTemplateCommand();
+-
+ 		if (template == null || template.getItem() == null) return List.of();
+ 
+-		List<ListEntry> out = new ArrayList<>(entries.size());
+-		for (ItemSourceEntry entry : entries) {
+-			out.add(renderListEntry(template, commandTemplate, entry.placeholders(), placeholder, player));
+-		}
+-		return out;
++		return sourceEntries.stream()
++		                    .map(entry -> renderTemplateEntry(template, commandTemplate, entry.placeholders(),
++		                                                      placeholder, player))
++		                    .toList();
+ 	}
+ 
+-	private ListEntry renderListEntry(Slot template, @org.jetbrains.annotations.Nullable String commandTemplate,
+-	                                  Map<String, String> entry, Placeholder placeholder, Player player) {
++	private PagedRegion.Entry renderTemplateEntry(Slot template, String commandTemplate, Map<String, String> entry,
++	                                              Placeholder placeholder, Player player) {
+ 		ItemBuilder source = template.getItem();
+ 		Material    type   = source.getType();
+ 
+-		String colorTag = "color";
+-		if (source.hasNBTTag(colorTag)) {
+-			String raw   = substituteEntry(source.getStringTagData(colorTag), entry);
++		if (source.hasNBTTag(COLOR_TAG)) {
++			String raw   = substituteEntry(source.getStringTagData(COLOR_TAG), entry);
+ 			String value = placeholder.convert(player, raw);
+-
+-			MaterialType material = MaterialType.WOOL;
+-			for (MaterialType m : MaterialType.values()) {
+-				if (!type.name().contains(m.name())) continue;
+-				material = m;
+-				break;
+-			}
+-
+-			type = ColorUtil.getMaterialByColor(value, material.name());
++			type = resolveColorMaterial(type, value);
+ 		}
+ 
+ 		ItemBuilder fresh = new ItemBuilder(type);
+ 
+-		String headTag = "head";
+-		String dataTag = "data";
+-		if (source.hasNBTTag(headTag) || source.hasNBTTag(dataTag)) {
+-			String raw = source.hasNBTTag(headTag) ?
+-			             source.getStringTagData(headTag) :
+-			             source.getStringTagData(dataTag);
+-			String value = placeholder.convert(player, substituteEntry(raw, entry));
+-			fresh.customHead(value);
++		if (source.hasNBTTag(HEAD_TAG) || source.hasNBTTag(DATA_TAG)) {
++			String raw = source.hasNBTTag(HEAD_TAG) ? source.getStringTagData(HEAD_TAG) : source.getStringTagData(DATA_TAG);
++			fresh.customHead(placeholder.convert(player, substituteEntry(raw, entry)));
+ 		}
+ 
+-		String displayName = placeholder.convert(player, substituteEntry(source.getDisplayName(), entry));
+-		fresh.setDisplayName(displayName);
+-
+-		List<String> lore = source.getLore()
+-				.stream()
+-				.map(s -> placeholder.convert(player, substituteEntry(s, entry)))
+-				.toList();
+-		fresh.setLore(lore);
+-
+-		if (!source.getEnchantments().isEmpty()) {
+-			fresh.addEnchantment(XEnchantment.UNBREAKING.get(), 1)
+-			     .addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
+-		}
++		fresh.setDisplayName(placeholder.convert(player, substituteEntry(source.getDisplayName(), entry)));
++		fresh.setLore(source.getLore().stream().map(s -> placeholder.convert(player, substituteEntry(s, entry))).toList());
++		applyEnchantGlint(fresh, source);
+ 
+ 		ItemStack stack = fresh.build();
+ 
+-		TriConsumer<Player, InventoryHandler, ItemBuilder> onClick = null;
++		ClickHandler onClick = null;
+ 		if (commandTemplate != null && !commandTemplate.isEmpty()) {
+ 			String substituted = placeholder.convert(player, substituteEntry(commandTemplate, entry));
+ 			String cleaned     = substituted.startsWith("/") ? substituted.substring(1) : substituted;
+-			onClick = (p, inv, builder) -> p.performCommand(cleaned);
++			onClick = ctx -> ctx.player().performCommand(cleaned);
+ 		}
+ 
+-		return new ListEntry(stack, onClick);
++		return new PagedRegion.Entry(stack, onClick);
++	}
++
++	private static String substituteEntry(String template, Map<String, String> entry) {
++		if (template == null || template.isEmpty() || entry.isEmpty()) return template;
++		String result = template;
++		for (Map.Entry<String, String> e : entry.entrySet()) {
++			result = result.replace("%" + e.getKey() + "%", e.getValue());
++		}
++		return result;
++	}
++
++	private void applyDecoration(ChestMenuBuilder builder, Fill fill, Fill line) {
++		List<Integer> verticalLine   = inventoryData.getVerticalLine();
++		List<Integer> horizontalLine = inventoryData.getHorizontalLine();
++
++		if (verticalLine != null) {
++			// YAML columns are 1-indexed (old InventoryUtil.verticalLine convention); Keystone's LineComponent is
++			// 0-indexed.
++			for (int l : verticalLine) builder.line(LineComponent.vertical(l - 1, materialOf(line.material())).name(line.name()));
++		}
++		if (horizontalLine != null) {
++			for (int l : horizontalLine) builder.line(LineComponent.horizontal(l - 1, materialOf(line.material())).name(line.name()));
++		}
++
++		if (inventoryData.isBorder()) {
++			builder.border(BorderComponent.of(materialOf(fill.material())).name(fill.name()));
++		} else if (inventoryData.isFill()) {
++			builder.fill(FillComponent.of(materialOf(fill.material())).name(fill.name()));
++		}
++	}
++
++	private static Material materialOf(String name) {
++		var xMaterial = XMaterial.matchXMaterial(name);
++		return xMaterial.map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
++	}
++
++	@Nullable
++	private ClickHandler resolveClickHandler(@Nullable ClickHandler prebuilt,
++	                                         @Nullable ConditionalSlotData.ClickAction raw,
++	                                         JavaPlugin plugin, Placeholder placeholder, Player player,
++	                                         MenuOpener opener) {
++		if (raw instanceof ConditionalSlotData.AnvilAction anvilAction) {
++			return ctx -> openAnvilInventory(plugin, placeholder, ctx.player(), anvilAction);
++		}
++		if (raw != null) {
++			return ctx -> raw.execute(ctx, opener);
++		}
++		return prebuilt;
++	}
++
++	@Nullable
++	private ClickHandler resolveRightClickHandler(Slot slot, ConditionalSlotResult result,
++	                                              JavaPlugin plugin, Placeholder placeholder, Player player,
++	                                              MenuOpener opener) {
++		if (result.rawRightClickAction() instanceof ConditionalSlotData.AnvilAction anvilAction) {
++			return ctx -> openAnvilInventory(plugin, placeholder, ctx.player(), anvilAction);
++		}
++		if (result.rawRightClickAction() != null) {
++			var rawRight = result.rawRightClickAction();
++			return ctx -> rawRight.execute(ctx, opener);
++		}
++		return slot.getRightClickSlot();
+ 	}
+ 
+ 	private void openAnvilInventory(JavaPlugin plugin, Placeholder placeholder, Player player,
+ 	                                ConditionalSlotData.AnvilAction anvilAction) {
+ 		String title          = placeholder.convert(player, anvilAction.title());
+@@ -275,11 +339,10 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
+ 			}
+ 
+ 			String output = stateSnapshot.getText();
+ 
+ 			if (successCommand != null) {
+-				// Replace %gangland_anvil_output% with the actual output
+ 				String command = successCommand.replace("%gangland_anvil_output%", output);
+ 				command = placeholder.convert(player, command);
+ 
+ 				if (command.startsWith("/")) command = command.substring(1);
+ 				stateSnapshot.getPlayer().performCommand(command);
+@@ -287,48 +350,44 @@ public record InventoryBuilder(InventoryData inventoryData, String permission) {
+ 
+ 			return List.of(AnvilGUI.ResponseAction.close());
+ 		}).text(text).title(title).plugin(plugin).open(player);
+ 	}
+ 
+-	private ItemStack processItemStack(ItemBuilder item, Placeholder placeholder, Player player) {
+-		String   colorTag = "color";
+-		Material type     = item.getType();
+-
+-		if (item.hasNBTTag(colorTag)) {
+-			String       value    = placeholder.convert(player, item.getStringTagData(colorTag));
+-			MaterialType material = MaterialType.WOOL;
++	private static ItemStack resolveItemStack(ItemBuilder item, Placeholder placeholder, Player player) {
++		Material type = item.getType();
+ 
+-			for (MaterialType materialType : MaterialType.values()) {
+-				if (!type.name().contains(materialType.name())) continue;
+-				material = materialType;
+-				break;
+-			}
+-
+-			type = ColorUtil.getMaterialByColor(value, material.name());
++		if (item.hasNBTTag(COLOR_TAG)) {
++			String value = placeholder.convert(player, item.getStringTagData(COLOR_TAG));
++			type = resolveColorMaterial(type, value);
+ 		}
+ 
+ 		ItemBuilder newItem = new ItemBuilder(type);
+ 
+-		String headTag = "head";
+-		String dataTag = "data";
+-		if (item.hasNBTTag(headTag) || item.hasNBTTag(dataTag)) {
+-			String head  = item.hasNBTTag(headTag) ? item.getStringTagData(headTag) : item.getStringTagData(dataTag);
+-			String value = placeholder.convert(player, head);
+-			newItem.customHead(value);
++		if (item.hasNBTTag(HEAD_TAG)) {
++			newItem.customHead(placeholder.convert(player, item.getStringTagData(HEAD_TAG)));
+ 		}
+ 
+-		String itemDisplayName = placeholder.convert(player, item.getDisplayName());
+-		newItem.setDisplayName(itemDisplayName);
++		newItem.setDisplayName(placeholder.convert(player, item.getDisplayName()));
++		newItem.setLore(item.getLore().stream().map(s -> placeholder.convert(player, s)).toList());
++		applyEnchantGlint(newItem, item);
+ 
+-		List<String> lore = item.getLore()
+-				.stream().map(s -> placeholder.convert(player, s)).toList();
+-		newItem.setLore(lore);
++		return newItem.build();
++	}
+ 
+-		if (!item.getEnchantments().isEmpty()) {
+-			newItem.addEnchantment(XEnchantment.UNBREAKING.get(), 1)
+-			       .addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
++	private static Material resolveColorMaterial(Material type, String colorValue) {
++		MaterialType material = MaterialType.WOOL;
++		for (MaterialType materialType : MaterialType.values()) {
++			if (!type.name().contains(materialType.name())) continue;
++			material = materialType;
++			break;
+ 		}
++		return ColorUtil.getMaterialByColor(colorValue, material.name());
++	}
+ 
+-		return newItem.build();
++	private static void applyEnchantGlint(ItemBuilder target, ItemBuilder source) {
++		if (!source.getEnchantments().isEmpty()) {
++			target.addEnchantment(XEnchantment.UNBREAKING.get(), 1)
++			      .addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_ATTRIBUTES);
++		}
+ 	}
+ 
+ }
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/SimplePagedMenu.java b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/SimplePagedMenu.java
+new file mode 100644
+index 00000000..089aee61
+--- /dev/null
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/SimplePagedMenu.java
+@@ -0,0 +1,78 @@
++package org.luckyraven.gangland.menu;
++
++import com.cryptomorin.xseries.XMaterial;
++import org.bukkit.Material;
++import org.bukkit.entity.Player;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.chest.ChestMenu;
++import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
++import org.luckyraven.keystone.inventory.click.ClickContext;
++import org.luckyraven.keystone.inventory.component.BorderComponent;
++import org.luckyraven.keystone.inventory.component.ItemComponent;
++import org.luckyraven.keystone.inventory.page.PageConfig;
++import org.luckyraven.keystone.inventory.page.PagedRegion;
++import org.luckyraven.keystone.item.ItemBuilder;
++import org.luckyraven.gangland.inventory.part.Fill;
++
++import java.util.List;
++
++/**
++ * A no-static-items, no-per-entry-click paginated {@link ChestMenu} of plain {@link org.bukkit.inventory.ItemStack}s
++ * — the shape {@code DebugCommand}, {@code GangCommand} (member/ally lists) and {@code BountyAspect} each built via
++ * the old {@code MultiInventoryCreation.dynamicMultiInventory(plugin, player, entries, title, false, 0, fill,
++ * buttonTags, null)} call. WS2 G3: replaces that chained-Bukkit-inventory model with one fixed-size menu whose
++ * interior grid renders via {@link PagedRegion}; next/prev rebuild the target page and swap it into the
++ * already-open menu via {@link ChestMenu#adoptComponentsFrom} (no close/reopen flicker).
++ */
++public final class SimplePagedMenu {
++
++	private SimplePagedMenu() { }
++
++	/** Builds and opens page 0 for {@code player}. */
++	public static void open(InventoryService inventoryService, Player player, List<org.bukkit.inventory.ItemStack> items,
++	                        String title, Fill fill) {
++		build(inventoryService, player, items, title, fill, 0).open(player);
++	}
++
++	private static ChestMenu build(InventoryService inventoryService, Player player,
++	                               List<org.bukkit.inventory.ItemStack> items, String title, Fill fill, int page) {
++		List<PagedRegion.Entry> entries = items.stream().map(PagedRegion.Entry::new).toList();
++
++		// Mirrors the old computeConfigForCreation(itemsCount, size=0, staticItemCount=0, staticItemsAllowed=false):
++		// 7 columns, ceil(itemsCount / 7) + 2 rows, clamped to [3, 6].
++		int rows = Math.max(3, Math.min(6, (int) Math.ceil(Math.max(entries.size(), 1) / 7.0) + 2));
++
++		PageConfig pageConfig   = PageConfig.forSize(rows, 1, rows - 2, 1, 7, entries.size());
++		int        resolvedPage = Math.min(Math.max(page, 0), Math.max(0, pageConfig.pageCount() - 1));
++
++		String pagedTitle = title + String.format(" &8[&b%d&8/&3%d&8]&r", resolvedPage + 1, pageConfig.pageCount());
++
++		ChestMenuBuilder builder = ChestMenu.builder(inventoryService).title(pagedTitle).rows(rows);
++		PagedRegion.render(builder, pageConfig, entries, resolvedPage);
++
++		Material fillMaterial = XMaterial.matchXMaterial(fill.material()).map(XMaterial::get)
++		                                 .orElse(Material.BLACK_STAINED_GLASS_PANE);
++		builder.border(BorderComponent.of(fillMaterial).name(fill.name()));
++
++		int size = rows * 9;
++		if (resolvedPage < pageConfig.pageCount() - 1) {
++			builder.slot(size - 1, ItemComponent.of(navHead("&a->")).onLeftClick(ctx ->
++					swap(ctx, build(inventoryService, player, items, title, fill, resolvedPage + 1))));
++		}
++		if (resolvedPage > 0) {
++			builder.slot(size - 9, ItemComponent.of(navHead("&c<-")).onLeftClick(ctx ->
++					swap(ctx, build(inventoryService, player, items, title, fill, resolvedPage - 1))));
++		}
++
++		return builder.build();
++	}
++
++	private static void swap(ClickContext ctx, ChestMenu fresh) {
++		if (ctx.menu() instanceof ChestMenu current) current.adoptComponentsFrom(fresh);
++	}
++
++	private static org.bukkit.inventory.ItemStack navHead(String name) {
++		return new ItemBuilder(XMaterial.PLAYER_HEAD.get()).setDisplayName(name).build();
++	}
++
++}
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/condition/ConditionalSlotData.java b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/condition/ConditionalSlotData.java
+index 1bd19c0c..fac74ad9 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/condition/ConditionalSlotData.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/condition/ConditionalSlotData.java
+@@ -1,13 +1,13 @@
+ package org.luckyraven.gangland.menu.condition;
+ 
+ import lombok.Getter;
+ import org.bukkit.entity.Player;
+ import org.jetbrains.annotations.Nullable;
++import org.luckyraven.keystone.inventory.click.ClickContext;
++import org.luckyraven.keystone.inventory.registry.MenuOpener;
+ import org.luckyraven.keystone.item.ItemBuilder;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+-import org.luckyraven.gangland.inventory.InventoryOpener;
+ 
+ import java.util.List;
+ 
+ /**
+  * Represents conditional data for a slot that can have True/False branches
+@@ -31,14 +31,20 @@ public class ConditionalSlotData {
+ 	public BranchData resolve(Player player, ConditionEvaluator evaluator) {
+ 		return condition.evaluate(player, evaluator) ? trueData : falseData;
+ 	}
+ 
+ 	/**
+-	 * Represents a click action which can be command, inventory, or anvil
++	 * Represents a click action which can be command, inventory, or anvil. {@code opener} is the {@link MenuOpener}
++	 * captured at parse time (WS2 G3: replaces the old {@code InventoryOpener}) — Gangland's own menus are opened
++	 * through it directly rather than through {@code ClickContext.openMenu}/a registered {@code MenuRegistry}
++	 * factory, because the paginated core menus need a real {@code Player} at menu-BUILD time (to fetch that
++	 * player's filtered item-source entries before {@code PagedRegion.render} bakes them into explicit slots) and a
++	 * zero-arg {@code Supplier<Menu>} factory cannot supply one; using {@code MenuOpener} uniformly for every core
++	 * menu (paginated or not) keeps the open path consistent instead of half on the registry, half not.
+ 	 */
+ 	public interface ClickAction {
+-		void execute(Player player, InventoryHandler handler, ItemBuilder builder, InventoryOpener opener);
++		void execute(ClickContext ctx, MenuOpener opener);
+ 	}
+ 
+ 	/**
+ 	 * Represents a branch (True or False) which can have its own nested conditions
+ 	 */
+@@ -77,25 +83,25 @@ public class ConditionalSlotData {
+ 		}
+ 	}
+ 
+ 	public record CommandAction(String command) implements ClickAction {
+ 		@Override
+-		public void execute(Player player, InventoryHandler handler, ItemBuilder builder, InventoryOpener opener) {
++		public void execute(ClickContext ctx, MenuOpener opener) {
+ 			String cmd = command.startsWith("/") ? command.substring(1) : command;
+-			player.performCommand(cmd);
++			ctx.player().performCommand(cmd);
+ 		}
+ 	}
+ 
+ 	public record InventoryAction(String inventoryName) implements ClickAction {
+ 		@Override
+-		public void execute(Player player, InventoryHandler handler, ItemBuilder builder, InventoryOpener opener) {
+-			opener.openInventory(player, inventoryName);
++		public void execute(ClickContext ctx, MenuOpener opener) {
++			opener.open(ctx.player(), inventoryName);
+ 		}
+ 	}
+ 
+ 	public record AnvilAction(String title, String text, String successCommand) implements ClickAction {
+ 		@Override
+-		public void execute(Player player, InventoryHandler handler, ItemBuilder builder, InventoryOpener opener) {
++		public void execute(ClickContext ctx, MenuOpener opener) {
+ 			// Will be handled by InventoryBuilder with AnvilGUI
+ 		}
+ 	}
+ }
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/AbstractCommandSlotHandler.java b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/AbstractCommandSlotHandler.java
+index 397eb8f2..193f3b4b 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/AbstractCommandSlotHandler.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/AbstractCommandSlotHandler.java
+@@ -1,12 +1,11 @@
+ package org.luckyraven.gangland.menu.handler;
+ 
+ import org.bukkit.configuration.ConfigurationSection;
+-import org.bukkit.entity.Player;
++import org.luckyraven.keystone.inventory.click.ClickContext;
++import org.luckyraven.keystone.inventory.registry.MenuOpener;
+ import org.luckyraven.keystone.item.ItemBuilder;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+-import org.luckyraven.gangland.inventory.InventoryOpener;
+ import org.luckyraven.gangland.menu.part.Slot;
+ 
+ /**
+  * Base handler that reads {@code Command}, {@code Inventory}, and {@code Permission} from the event config section and
+  * wires them as a left-click action.
+@@ -19,11 +18,11 @@ public abstract class AbstractCommandSlotHandler implements SlotEventHandler {
+ 	protected static String stripSlash(String cmd) {
+ 		return cmd.startsWith("/") ? cmd.substring(1) : cmd;
+ 	}
+ 
+ 	@Override
+-	public Slot handle(SlotContext ctx, InventoryOpener opener) {
++	public Slot handle(SlotContext ctx, MenuOpener opener) {
+ 		ItemBuilder item = SlotItemFactory.create(ctx.itemResolver(), ctx.item(), ctx.itemName(), ctx.data(),
+ 		                                          ctx.lore(), ctx.enchanted());
+ 		Slot slot = new Slot(ctx.slotLoc(), true, ctx.draggable(), item);
+ 
+ 		ConfigurationSection configurationSection = ctx.eventSection();
+@@ -32,21 +31,21 @@ public abstract class AbstractCommandSlotHandler implements SlotEventHandler {
+ 
+ 		String command    = configurationSection.getString("Command");
+ 		String inventory  = configurationSection.getString("Inventory");
+ 		String permission = configurationSection.getString("Permission");
+ 
+-		slot.setClickable((player, inv, builder) -> {
+-			if (permission != null && !player.hasPermission(permission)) return;
+-			if (command != null) player.performCommand(stripSlash(command));
+-			if (inventory != null) opener.openInventory(player, inventory);
+-			onSlotAction(player, inv, builder);
++		slot.setClickable(clickCtx -> {
++			if (permission != null && !clickCtx.player().hasPermission(permission)) return;
++			if (command != null) clickCtx.player().performCommand(stripSlash(command));
++			if (inventory != null) opener.open(clickCtx.player(), inventory);
++			onSlotAction(clickCtx);
+ 		});
+ 
+ 		return slot;
+ 	}
+ 
+ 	/**
+ 	 * Called after the command / inventory action. Override to add event-specific behavior.
+ 	 */
+-	protected void onSlotAction(Player player, InventoryHandler inv, ItemBuilder builder) { }
++	protected void onSlotAction(ClickContext ctx) { }
+ 
+ }
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/ClickSlotHandler.java b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/ClickSlotHandler.java
+index f0021be8..a9829656 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/ClickSlotHandler.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/ClickSlotHandler.java
+@@ -2,14 +2,14 @@ package org.luckyraven.gangland.menu.handler;
+ 
+ import net.wesjd.anvilgui.AnvilGUI;
+ import org.bukkit.configuration.ConfigurationSection;
+ import org.bukkit.entity.Player;
+ import org.bukkit.plugin.java.JavaPlugin;
++import org.luckyraven.keystone.inventory.click.ClickContext;
++import org.luckyraven.keystone.inventory.click.ClickHandler;
++import org.luckyraven.keystone.inventory.registry.MenuOpener;
+ import org.luckyraven.keystone.item.ItemBuilder;
+-import org.luckyraven.keystone.util.TriConsumer;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+-import org.luckyraven.gangland.inventory.InventoryOpener;
+ import org.luckyraven.gangland.menu.part.Slot;
+ 
+ import java.util.Collections;
+ import java.util.List;
+ 
+@@ -30,11 +30,11 @@ public class ClickSlotHandler implements SlotEventHandler {
+ 	private static String stripSlash(String command) {
+ 		return command.startsWith("/") ? command.substring(1) : command;
+ 	}
+ 
+ 	@Override
+-	public Slot handle(SlotContext ctx, InventoryOpener opener) {
++	public Slot handle(SlotContext ctx, MenuOpener opener) {
+ 		ItemBuilder item = SlotItemFactory.create(ctx.itemResolver(), ctx.item(), ctx.itemName(), ctx.data(),
+ 		                                          ctx.lore(), ctx.enchanted());
+ 
+ 		// Right-click-only: no left-click event section was found in the YAML
+ 		if (ctx.eventSection() == null) {
+@@ -50,33 +50,32 @@ public class ClickSlotHandler implements SlotEventHandler {
+ 		}
+ 
+ 		return slot;
+ 	}
+ 
+-	private Slot buildRightClickOnly(SlotContext ctx, ItemBuilder item, InventoryOpener opener) {
++	private Slot buildRightClickOnly(SlotContext ctx, ItemBuilder item, MenuOpener opener) {
+ 		Slot slot = new Slot(ctx.slotLoc(), true, ctx.draggable(), item);
+ 
+ 		// Empty left-click so the slot is still registered as clickable
+-		slot.setClickable((player, inv, builder) -> { });
++		slot.setClickable(clickCtx -> { });
+ 
+ 		if (ctx.rightClickSection() != null) {
+ 			applyRightClick(slot, ctx.rightClickSection(), opener);
+ 		}
+ 
+ 		return slot;
+ 	}
+ 
+-	private void applyLeftClick(Slot slot, ConfigurationSection section, InventoryOpener opener) {
++	private void applyLeftClick(Slot slot, ConfigurationSection section, MenuOpener opener) {
+ 		slot.setClickable(buildAction(section, opener));
+ 	}
+ 
+-	private void applyRightClick(Slot slot, ConfigurationSection section, InventoryOpener opener) {
++	private void applyRightClick(Slot slot, ConfigurationSection section, MenuOpener opener) {
+ 		slot.setRightClickable(buildAction(section, opener));
+ 	}
+ 
+-	private TriConsumer<Player, InventoryHandler, ItemBuilder>
+-	buildAction(ConfigurationSection section, InventoryOpener opener) {
++	private ClickHandler buildAction(ConfigurationSection section, MenuOpener opener) {
+ 		String command    = section.getString("Command");
+ 		String permission = section.getString("Permission");
+ 
+ 		String inventoryName = section.isString("Inventory") ? section.getString("Inventory") : null;
+ 		ConfigurationSection inventorySection =
+@@ -91,14 +90,15 @@ public class ClickSlotHandler implements SlotEventHandler {
+ 			                          inventorySection.getString("Text", ""), successCommand);
+ 		}
+ 
+ 		final AnvilSpec finalAnvilSpec = anvilSpec;
+ 
+-		return (player, inv, builder) -> {
++		return (ClickContext ctx) -> {
++			Player player = ctx.player();
+ 			if (permission != null && !player.hasPermission(permission)) return;
+ 			if (command != null) player.performCommand(stripSlash(command));
+-			if (inventoryName != null) opener.openInventory(player, inventoryName);
++			if (inventoryName != null) opener.open(player, inventoryName);
+ 			if (finalAnvilSpec != null) openAnvil(player, finalAnvilSpec);
+ 		};
+ 	}
+ 
+ 	private void openAnvil(Player player, AnvilSpec spec) {
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/CloseSlotHandler.java b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/CloseSlotHandler.java
+index e2be1491..3a53729d 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/CloseSlotHandler.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/CloseSlotHandler.java
+@@ -1,18 +1,16 @@
+ package org.luckyraven.gangland.menu.handler;
+ 
+-import org.bukkit.entity.Player;
+-import org.luckyraven.keystone.item.ItemBuilder;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
++import org.luckyraven.keystone.inventory.click.ClickContext;
+ 
+ /**
+  * Handles {@code OnClose} slot events — a "close button" that runs the configured command then closes the player's
+  * current inventory.
+  */
+ public class CloseSlotHandler extends AbstractCommandSlotHandler {
+ 
+ 	@Override
+-	protected void onSlotAction(Player player, InventoryHandler inv, ItemBuilder builder) {
+-		player.closeInventory();
++	protected void onSlotAction(ClickContext ctx) {
++		ctx.closeMenu();
+ 	}
+ 
+ }
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/SlotEventHandler.java b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/SlotEventHandler.java
+index a1151fdb..cf065f75 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/SlotEventHandler.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/handler/SlotEventHandler.java
+@@ -1,16 +1,17 @@
+ package org.luckyraven.gangland.menu.handler;
+ 
+-import org.luckyraven.gangland.inventory.InventoryOpener;
++import org.luckyraven.keystone.inventory.registry.MenuOpener;
+ import org.luckyraven.gangland.menu.part.Slot;
+ 
+ /**
+  * Contract for building a {@link Slot} from a YAML slot-event config section.
+  *
+- * <p>Implementations live in {@code inventory-api} and receive an {@link InventoryOpener}
+- * instead of a direct reference to the plugin — keeping them decoupled from {@code gangland-impl}.
++ * <p>Implementations receive a {@link MenuOpener} (WS2 G3: replaces the old {@code InventoryOpener}) instead of a
++ * direct reference to the plugin, so the built {@code ClickHandler}s can open another named menu without depending
++ * on a concrete menu-opening implementation.
+  */
+ public interface SlotEventHandler {
+ 
+-	Slot handle(SlotContext context, InventoryOpener opener);
++	Slot handle(SlotContext context, MenuOpener opener);
+ 
+ }
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/ListEntry.java b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/ListEntry.java
+deleted file mode 100644
+index f5331c7c..00000000
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/ListEntry.java
++++ /dev/null
+@@ -1,20 +0,0 @@
+-package org.luckyraven.gangland.menu.multi;
+-
+-import org.bukkit.entity.Player;
+-import org.bukkit.inventory.ItemStack;
+-import org.jetbrains.annotations.Nullable;
+-import org.luckyraven.keystone.item.ItemBuilder;
+-import org.luckyraven.keystone.util.TriConsumer;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+-
+-/**
+- * A single dynamic entry in a multi-inventory's paged list — the rendered ItemStack plus its optional click action.
+- * Non-clickable entries use {@code onClick == null}.
+- */
+-public record ListEntry(ItemStack item, @Nullable TriConsumer<Player, InventoryHandler, ItemBuilder> onClick) {
+-
+-	public static ListEntry of(ItemStack item) {
+-		return new ListEntry(item, null);
+-	}
+-
+-}
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/MultiInventory.java b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/MultiInventory.java
+deleted file mode 100644
+index ced3911a..00000000
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/MultiInventory.java
++++ /dev/null
+@@ -1,195 +0,0 @@
+-package org.luckyraven.gangland.menu.multi;
+-
+-import com.google.common.base.Preconditions;
+-import lombok.AccessLevel;
+-import lombok.Getter;
+-import org.bukkit.NamespacedKey;
+-import org.bukkit.entity.Player;
+-import org.bukkit.plugin.java.JavaPlugin;
+-import org.jetbrains.annotations.Nullable;
+-import org.luckyraven.keystone.datastructure.LinkedList;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+-import org.luckyraven.gangland.inventory.part.Fill;
+-import org.luckyraven.gangland.inventory.part.PageConfig;
+-import org.luckyraven.gangland.inventory.util.InventoryUtil;
+-
+-import java.util.List;
+-import java.util.Map;
+-
+-import static org.luckyraven.gangland.menu.multi.MultiInventoryCreation.computeConfigForUpdate;
+-import static org.luckyraven.gangland.inventory.util.InventoryUtil.titleRefactor;
+-
+-
+-public class MultiInventory extends InventoryHandler {
+-
+-	static long ID = 0;
+-
+-	private final LinkedList<InventoryHandler> inventories;
+-
+-	@Getter(AccessLevel.PACKAGE)
+-	private int currentPage;
+-
+-	public MultiInventory(JavaPlugin plugin, String title, int size, Player player) {
+-		super(title, size, player, new NamespacedKey(plugin, titleRefactor(String.format("%s_%d", title, ++ID))));
+-
+-		this.inventories = new LinkedList<>();
+-		this.currentPage = 0;
+-
+-		this.inventories.add(this);
+-	}
+-
+-	public void updateItems(JavaPlugin plugin, List<ListEntry> items, Player player, boolean staticItemsAllowed,
+-	                        Fill fill, @Nullable Map<Integer, StaticSlotEntry> staticItems) {
+-		if (inventories.isEmpty()) {
+-			return; // No inventories to update
+-		}
+-
+-		PageConfig cfg = computeConfigForUpdate(items.size(), inventories.getHead().getData().getSize());
+-
+-		int              inventoryIndex = 0;
+-		InventoryHandler firstPage      = inventories.getHead().getData();
+-
+-		// Update the first page with new items
+-		firstPage.clear();
+-
+-		addItems(firstPage, items, 0, Math.min(cfg.perPage(), items.size()), staticItemsAllowed, staticItems);
+-		InventoryUtil.createBoarder(firstPage, fill);
+-		if (staticItemsAllowed) InventoryUtil.verticalLine(firstPage, fill, 2, true);
+-
+-		for (int i = 1; i < cfg.pages(); i++) {
+-			int              size = i == cfg.pages() - 1 ? cfg.finalPage() : cfg.initialPage();
+-			InventoryHandler inv;
+-
+-			int startIndex = i * cfg.perPage();
+-			if (i >= inventories.getSize()) {
+-				// If there's no corresponding inventory for this page, create a new one
+-				NamespacedKey namespacedKey = new NamespacedKey(plugin, titleRefactor(
+-						String.format("%s_%d", firstPage.getDisplayTitle(), ++ID)));
+-				inv = new InventoryHandler(firstPage.getDisplayTitle(), size, player, namespacedKey);
+-
+-				addItems(inv, items, startIndex, Math.min((i + 1) * cfg.perPage(), items.size()), staticItemsAllowed,
+-				         staticItems);
+-				addPage(inv);
+-			} else {
+-				// If there's already an inventory for this page, update its items and title
+-				inv = inventories.get(i);
+-
+-				if (inv == null) continue;
+-
+-				inv.clear();
+-				addItems(inv, items, startIndex, Math.min((i + 1) * cfg.perPage(), items.size()), false, null);
+-			}
+-			InventoryUtil.createBoarder(inv, fill);
+-			if (staticItemsAllowed) InventoryUtil.verticalLine(inv, fill, 2, true);
+-
+-			inventoryIndex++;
+-		}
+-
+-		// Remove any extra inventories if there were more pages before the update
+-		while (inventories.getSize() > inventoryIndex + 1) {
+-			removePage(inventories.getTail().getData());
+-		}
+-	}
+-
+-	public void addPage(InventoryHandler currentInv) {
+-		inventories.add(currentInv);
+-	}
+-
+-	public boolean removePage(InventoryHandler gui) {
+-		int current = inventories.lastIndexOf(gui);
+-		if (current == -1) return false;
+-
+-		int next = current + 1, prev = current - 1;
+-
+-		if (current == 0) if (inventories.getSize() > 1) {
+-			InventoryHandler nextInventory = inventories.get(next);
+-
+-			if (nextInventory == null) return false;
+-
+-			nextInventory.removeItem(nextInventory.getSize() - 9);
+-		} else if (current == inventories.getSize() - 1) {
+-			InventoryHandler prevInventory = inventories.get(prev);
+-
+-			if (prevInventory == null) return false;
+-
+-			prevInventory.removeItem(prevInventory.getSize() - 1);
+-		}
+-
+-		inventories.remove(current);
+-		return true;
+-	}
+-
+-	public InventoryHandler nextPage() {
+-		++currentPage;
+-		if (currentPage >= inventories.getSize()) currentPage = inventories.getSize() - 1;
+-		return inventories.get(currentPage);
+-	}
+-
+-	public InventoryHandler previousPage() {
+-		--currentPage;
+-		if (currentPage < 0) currentPage = 0;
+-		return inventories.get(currentPage);
+-	}
+-
+-	public boolean hasNextPage() {
+-		return currentPage < inventories.getSize();
+-	}
+-
+-	public InventoryHandler homePage() {
+-		currentPage = 0;
+-		return inventories.getHead().getData();
+-	}
+-
+-	public LinkedList<InventoryHandler> getLinkedInventories() {
+-		return inventories;
+-	}
+-
+-	void addItems(InventoryHandler inv, List<ListEntry> items, int startIndex, int endIndex, boolean staticItemsAllowed,
+-	              @Nullable Map<Integer, StaticSlotEntry> staticItems) {
+-		if (staticItemsAllowed) {
+-			Preconditions.checkNotNull(staticItems, "No static items set");
+-			Preconditions.checkArgument(staticItems.size() <= 6, "Can't add more items than max rows");
+-		}
+-
+-		int additional = staticItemsAllowed ? 1 : 0;
+-		int row        = 2;
+-		int column     = 2 + additional;
+-
+-		// Items live between the top border (row 1) and the bottom border (last row); compute the last usable row from
+-		// the inventory size so smaller inventories fill fewer rows.
+-		int maxItemRow = inv.getSize() / 9 - 1;
+-
+-		if (staticItemsAllowed) placeStaticItems(inv, staticItems);
+-
+-		for (int i = startIndex; i < endIndex && row <= maxItemRow; i++) {
+-			ListEntry entry = items.get(i);
+-			int       slot  = (row - 1) * 9 + (column - 1);
+-			if (entry.onClick() != null) {
+-				inv.setItem(slot, entry.item(), false, entry.onClick());
+-			} else {
+-				inv.setItem(slot, entry.item(), false);
+-			}
+-
+-			if (column % 8 == 0) {
+-				column = 2 + additional;
+-				++row;
+-			} else ++column;
+-		}
+-	}
+-
+-	/**
+-	 * Places each {@link StaticSlotEntry} at its declared YAML slot. Authors control placement directly via the slot
+-	 * key — entries are never reshuffled into column-1 order. Unclaimed column-1 slots fall through to
+-	 * {@link InventoryUtil#createBoarder}.
+-	 */
+-	private void placeStaticItems(InventoryHandler inv, Map<Integer, StaticSlotEntry> staticItems) {
+-		for (Map.Entry<Integer, StaticSlotEntry> entry : staticItems.entrySet()) {
+-			int             slot = entry.getKey();
+-			StaticSlotEntry data = entry.getValue();
+-			if (slot < 0 || slot >= inv.getSize()) continue;
+-			if (inv.getInventory().getItem(slot) != null) continue;
+-			inv.setItem(slot, data.item(), false, data.onClick());
+-		}
+-	}
+-
+-}
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/MultiInventoryCreation.java b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/MultiInventoryCreation.java
+deleted file mode 100644
+index d565c1b1..00000000
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/MultiInventoryCreation.java
++++ /dev/null
+@@ -1,134 +0,0 @@
+-package org.luckyraven.gangland.menu.multi;
+-
+-import org.bukkit.entity.Player;
+-import org.bukkit.plugin.java.JavaPlugin;
+-import org.jetbrains.annotations.Nullable;
+-import org.luckyraven.keystone.datastructure.LinkedList;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+-import org.luckyraven.gangland.menu.part.ButtonTags;
+-import org.luckyraven.gangland.inventory.part.Fill;
+-import org.luckyraven.gangland.inventory.part.PageConfig;
+-import org.luckyraven.gangland.inventory.util.InventoryUtil;
+-
+-import java.util.List;
+-import java.util.Map;
+-
+-import static org.luckyraven.gangland.menu.multi.MultiInventoryNavigation.addNavigationButtons;
+-import static org.luckyraven.gangland.inventory.util.InventoryUtil.titleRefactor;
+-
+-public class MultiInventoryCreation {
+-
+-	@Nullable
+-	public static MultiInventory dynamicMultiInventory(JavaPlugin plugin, Player player, List<ListEntry> items,
+-	                                                   String title, boolean staticItemsAllowed, int size,
+-	                                                   Fill fill, ButtonTags buttonTags,
+-	                                                   @Nullable Map<Integer, StaticSlotEntry> staticItems) {
+-		if (staticItemsAllowed) {
+-			if (staticItems == null || staticItems.isEmpty() || staticItems.size() > 6) return null;
+-		}
+-
+-		int        staticCount = staticItems == null ? 0 : staticItems.size();
+-		PageConfig cfg         = computeConfigForCreation(items.size(), size, staticCount, staticItemsAllowed);
+-
+-		// the first page
+-		MultiInventory multi = new MultiInventory(plugin, title, cfg.initialPage(), player);
+-
+-		int firstPageEnd = Math.min(cfg.perPage(), items.size());
+-		multi.addItems(multi, items, 0, firstPageEnd, staticItemsAllowed, staticItems);
+-		InventoryUtil.createBoarder(multi, fill);
+-		// if there is a static items column, then create a line at column 2
+-		if (staticItemsAllowed) InventoryUtil.verticalLine(multi, fill, 2, true);
+-
+-		// the other pages
+-		int totalPages = cfg.pages();
+-
+-		for (int page = 1; page < totalPages; page++) {
+-			int  pageSize = cfg.initialPage();
+-			long id       = MultiInventory.ID;
+-
+-			String format          = String.format("%s_%d", title, id);
+-			String titleRefactored = titleRefactor(format);
+-
+-			MultiInventory.ID = id + 1;
+-
+-			InventoryHandler inv = new InventoryHandler(plugin, titleRefactored, pageSize, player);
+-
+-			int startIndex = page * cfg.perPage();
+-			int endIndex   = Math.min(startIndex + cfg.perPage(), items.size());
+-
+-			multi.addItems(inv, items, startIndex, endIndex, staticItemsAllowed, staticItems);
+-			InventoryUtil.createBoarder(inv, fill);
+-			// if there is a static items column, then create a line at column 2
+-			if (staticItemsAllowed) InventoryUtil.verticalLine(inv, fill, 2, true);
+-
+-			multi.addPage(inv);
+-		}
+-
+-		// add the navigation buttons
+-		var linkedInventories = multi.getLinkedInventories();
+-
+-		int pageCount = linkedInventories.getSize();
+-		int pageIndex = 0;
+-
+-		String originalTitle = multi.getDisplayTitle();
+-
+-		for (LinkedList.Node<InventoryHandler> node : linkedInventories) {
+-			InventoryHandler currentInv = node.getData();
+-			InventoryHandler nextInv    = node.getNext() == null ? null : node.getNext().getData();
+-
+-			addNavigationButtons(plugin, currentInv, nextInv, originalTitle, pageIndex, pageCount, buttonTags,
+-			                     p -> multi.nextPage().open(p), p -> multi.previousPage().open(p),
+-			                     p -> multi.homePage().open(p));
+-
+-			pageIndex++;
+-		}
+-
+-		return multi;
+-	}
+-
+-	/**
+-	 * Determines the per-page layout. Priority resolves Row count:
+-	 * <ol>
+-	 *     <li>the explicit {@code size} from YAML (size / 9 rows)</li>
+-	 *     <li>{@code staticItemCount + 2} border rows when static items are present</li>
+-	 *     <li>{@code ceil(itemsCount / maxColumns) + 2} border rows as a last resort</li>
+-	 * </ol>
+-	 * Rows are clamped to [3, 6]. Pages are always full-size (rows × 9).
+-	 */
+-	static PageConfig computeConfigForCreation(int itemsCount, int size, int staticItemCount,
+-	                                           boolean staticItemsAllowed) {
+-		int maxColumns = staticItemsAllowed ? 6 : 7;
+-
+-		int rows;
+-		if (size >= 18 && size % 9 == 0) {
+-			rows = size / 9;
+-		} else if (staticItemsAllowed && staticItemCount > 0) {
+-			rows = staticItemCount + 2;
+-		} else {
+-			rows = (int) Math.ceil((double) Math.max(itemsCount, 1) / maxColumns) + 2;
+-		}
+-		rows = Math.max(3, Math.min(rows, 6));
+-
+-		int maxRows         = Math.max(1, rows - 2);
+-		int perPage         = maxRows * maxColumns;
+-		int pages           = Math.max(1, (int) Math.ceil((double) itemsCount / perPage));
+-		int pageSlots       = rows * 9;
+-		int remainingAmount = itemsCount - (pages - 1) * perPage;
+-
+-		return new PageConfig(maxRows, maxColumns, perPage, pages, remainingAmount, pageSlots, pageSlots);
+-	}
+-
+-	static PageConfig computeConfigForUpdate(int itemsCount, int inventorySize) {
+-		int rows       = Math.max(3, Math.min(inventorySize / 9, 6));
+-		int maxRows    = Math.max(1, rows - 2);
+-		int maxColumns = 6;
+-		int perPage    = maxRows * maxColumns;
+-
+-		int pages           = Math.max(1, (int) Math.ceil((double) itemsCount / perPage));
+-		int pageSlots       = rows * 9;
+-		int remainingAmount = itemsCount - (pages - 1) * perPage;
+-
+-		return new PageConfig(maxRows, maxColumns, perPage, pages, remainingAmount, pageSlots, pageSlots);
+-	}
+-
+-}
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/MultiInventoryNavigation.java b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/MultiInventoryNavigation.java
+deleted file mode 100644
+index 97e962d8..00000000
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/MultiInventoryNavigation.java
++++ /dev/null
+@@ -1,93 +0,0 @@
+-package org.luckyraven.gangland.menu.multi;
+-
+-import com.cryptomorin.xseries.XMaterial;
+-import com.cryptomorin.xseries.XSound;
+-import org.bukkit.Sound;
+-import org.bukkit.entity.Player;
+-import org.bukkit.plugin.java.JavaPlugin;
+-import org.jetbrains.annotations.Nullable;
+-import org.luckyraven.keystone.item.ItemBuilder;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+-import org.luckyraven.gangland.menu.part.ButtonTags;
+-
+-import java.util.function.Consumer;
+-
+-/**
+- * Utility for adding navigation buttons to paged inventories.
+- */
+-final class MultiInventoryNavigation {
+-
+-	private MultiInventoryNavigation() { }
+-
+-	static void addNavigationButtons(JavaPlugin plugin, InventoryHandler currentInv, InventoryHandler nextInv,
+-	                                 String homeTitle, int displayCurrentPageIndex, int totalPages,
+-	                                 ButtonTags buttonTags, Consumer<Player> onNext, Consumer<Player> onPrev,
+-	                                 Consumer<Player> onHome) {
+-		String titleWithPages = String.format("%s &8[&b%d&8/&3%d&8]&r", homeTitle, displayCurrentPageIndex + 1,
+-		                                      totalPages);
+-
+-		currentInv.rename(plugin, titleWithPages);
+-
+-		// next page -> only show if there is a next page
+-		if (nextInv != null && displayCurrentPageIndex < totalPages - 1) {
+-			addNextPageItem(currentInv, buttonTags.nextPage(), displayCurrentPageIndex, totalPages, onNext);
+-		}
+-
+-		// show on all pages except the first
+-		if (displayCurrentPageIndex > 0) {
+-			// home page
+-			addHomePageItem(currentInv, buttonTags.homePage(), homeTitle, onHome);
+-			// prev page
+-			addPreviousPageItem(currentInv, buttonTags.previousPage(), displayCurrentPageIndex, totalPages, onPrev);
+-		}
+-	}
+-
+-	private static void addNextPageItem(InventoryHandler linkedInventory, String nextPageTag,
+-	                                    int displayCurrentPageIndex, int totalPages, Consumer<Player> onClick) {
+-		String      page = String.format("&7(%d/%d)", displayCurrentPageIndex + 2, totalPages);
+-		ItemBuilder item = createItemHead("&a->", page);
+-
+-		item.customHead(nextPageTag);
+-		linkedInventory.setItem(linkedInventory.getSize() - 1, item.build(), false,
+-		                        (player, inventory, itemBuilder) -> {
+-									onClick.accept(player);
+-									buttonClickSound(player);
+-								});
+-	}
+-
+-	private static void addPreviousPageItem(InventoryHandler linkedInventory, String previousPageTag,
+-	                                        int displayCurrentPageIndex, int totalPages, Consumer<Player> onClick) {
+-		String      page = String.format("&7(%d/%d)", displayCurrentPageIndex, totalPages);
+-		ItemBuilder item = createItemHead("&c<-", page);
+-
+-		item.customHead(previousPageTag);
+-		linkedInventory.setItem(linkedInventory.getSize() - 9, item.build(), false,
+-		                        (player, inventory, itemBuilder) -> {
+-									onClick.accept(player);
+-									buttonClickSound(player);
+-								});
+-	}
+-
+-	private static void addHomePageItem(InventoryHandler linkedInventory, String homePageTag, String homeTitle,
+-	                                    Consumer<Player> onClick) {
+-		ItemBuilder item = createItemHead("&cBack to " + homeTitle);
+-
+-		item.customHead(homePageTag);
+-		linkedInventory.setItem(linkedInventory.getSize() - 5, item.build(), false,
+-		                        (player, inventory, itemBuilder) -> {
+-									onClick.accept(player);
+-									buttonClickSound(player);
+-								});
+-	}
+-
+-	private static ItemBuilder createItemHead(String name, @Nullable String... lore) {
+-		ItemBuilder item = new ItemBuilder(XMaterial.PLAYER_HEAD.get()).setDisplayName(name);
+-		if (lore != null) item.setLore(lore);
+-		return item;
+-	}
+-
+-	private static void buttonClickSound(Player player) {
+-		Sound sound = XSound.BLOCK_WOODEN_BUTTON_CLICK_ON.get();
+-		if (sound != null) player.playSound(player.getLocation(), sound, 1F, 1F);
+-	}
+-}
+\ No newline at end of file
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/StaticSlotEntry.java b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/StaticSlotEntry.java
+deleted file mode 100644
+index 99881561..00000000
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/multi/StaticSlotEntry.java
++++ /dev/null
+@@ -1,14 +0,0 @@
+-package org.luckyraven.gangland.menu.multi;
+-
+-import org.bukkit.entity.Player;
+-import org.bukkit.inventory.ItemStack;
+-import org.luckyraven.keystone.item.ItemBuilder;
+-import org.luckyraven.keystone.util.TriConsumer;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+-
+-/**
+- * A static item pinned to an explicit inventory slot on every page of a {@link MultiInventory}. The slot index is
+- * authoritative — items are placed at exactly the slot declared in the YAML {@code Static_Items} section, not inferred
+- * from their order or collapsed onto column 1.
+- */
+-public record StaticSlotEntry(ItemStack item, TriConsumer<Player, InventoryHandler, ItemBuilder> onClick) { }
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/part/ConditionalSlotResult.java b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/part/ConditionalSlotResult.java
+index b861c8ba..852dd067 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/part/ConditionalSlotResult.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/part/ConditionalSlotResult.java
+@@ -1,13 +1,11 @@
+ package org.luckyraven.gangland.menu.part;
+ 
+-import org.bukkit.entity.Player;
+ import org.jetbrains.annotations.Nullable;
++import org.luckyraven.keystone.inventory.click.ClickHandler;
+ import org.luckyraven.keystone.item.ItemBuilder;
+-import org.luckyraven.keystone.util.TriConsumer;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+ import org.luckyraven.gangland.menu.condition.ConditionalSlotData;
+ 
+ public record ConditionalSlotResult(ItemBuilder item, boolean clickable, boolean draggable,
+-                                    TriConsumer<Player, InventoryHandler, ItemBuilder> clickAction,
++                                    @Nullable ClickHandler clickAction,
+                                     @Nullable ConditionalSlotData.ClickAction rawClickAction,
+                                     @Nullable ConditionalSlotData.ClickAction rawRightClickAction) { }
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/part/Slot.java b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/part/Slot.java
+index 2571de08..5d467c7d 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/menu/part/Slot.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/menu/part/Slot.java
+@@ -3,13 +3,12 @@ package org.luckyraven.gangland.menu.part;
+ import com.google.common.base.Preconditions;
+ import lombok.Getter;
+ import lombok.RequiredArgsConstructor;
+ import lombok.Setter;
+ import org.bukkit.entity.Player;
++import org.luckyraven.keystone.inventory.click.ClickHandler;
+ import org.luckyraven.keystone.item.ItemBuilder;
+-import org.luckyraven.keystone.util.TriConsumer;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+ import org.luckyraven.gangland.menu.condition.ConditionEvaluator;
+ import org.luckyraven.gangland.menu.condition.ConditionalSlotData;
+ 
+ @Getter
+ @RequiredArgsConstructor
+@@ -21,12 +20,12 @@ public class Slot {
+ 	private final ItemBuilder item;
+ 
+ 	@Setter
+ 	private ConditionalSlotData conditionalData;
+ 
+-	private TriConsumer<Player, InventoryHandler, ItemBuilder> clickableSlot;
+-	private TriConsumer<Player, InventoryHandler, ItemBuilder> rightClickSlot;
++	private ClickHandler clickableSlot;
++	private ClickHandler rightClickSlot;
+ 
+ 	/**
+ 	 * Gets the appropriate item and click action based on conditions
+ 	 */
+ 	public ConditionalSlotResult getConditionalResult(Player player, ConditionEvaluator evaluator) {
+@@ -37,28 +36,25 @@ public class Slot {
+ 
+ 			ItemBuilder resolvedItem      = resolved.getItem();
+ 			boolean     resolvedClickable = resolved.isClickable();
+ 			boolean     resolvedDraggable = resolved.isDraggable();
+ 
+-			// Create click action from the resolved data
+-			TriConsumer<Player, InventoryHandler, ItemBuilder> action = null;
+-			if (resolved.getClickAction() != null) {
+-				action = (p, inv, builder) -> { }; // Placeholder, will be replaced in InventoryBuilder
+-			}
+-
+-			return new ConditionalSlotResult(resolvedItem, resolvedClickable, resolvedDraggable, action,
++			// The real click action is built from resolved.getClickAction()/getRightClickAction() by the caller
++			// (InventoryBuilder), which has the ClickContext at click time; this result just carries the raw
++			// ConditionalSlotData.ClickAction through.
++			return new ConditionalSlotResult(resolvedItem, resolvedClickable, resolvedDraggable, null,
+ 			                                 resolved.getClickAction(), resolved.getRightClickAction());
+ 		}
+ 
+ 		return new ConditionalSlotResult(item, clickable, draggable, clickableSlot, null, null);
+ 	}
+ 
+-	public void setClickable(TriConsumer<Player, InventoryHandler, ItemBuilder> clickable) {
++	public void setClickable(ClickHandler clickable) {
+ 		Preconditions.checkArgument(this.clickable, "The slot is not clickable");
+ 		this.clickableSlot = clickable;
+ 	}
+ 
+-	public void setRightClickable(TriConsumer<Player, InventoryHandler, ItemBuilder> rightClickable) {
++	public void setRightClickable(ClickHandler rightClickable) {
+ 		this.rightClickSlot = rightClickable;
+ 	}
+ 
+ }
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/sign/SignManager.java b/gangland-impl/src/main/java/org/luckyraven/gangland/sign/SignManager.java
+index cf964f45..464cc06e 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/sign/SignManager.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/sign/SignManager.java
+@@ -154,11 +154,12 @@ public class SignManager extends SignService {
+ 		definitions.add(wanted.createDefinition());
+ 
+ 		// bounty
+ 		String   bountyKey  = signPrefix + "bounty";
+ 		SignType bountyType = new SignType(bountyKey, "BOUNTY");
+-		Sign     bounty     = new BountySign(gangland, offlineUserManager, userManager, bountyType);
++		Sign     bounty     = new BountySign(gangland, offlineUserManager, userManager, bountyType,
++		                                    container.getInstance(org.luckyraven.keystone.inventory.InventoryService.class));
+ 
+ 		formatRegistry.register(bounty.createFormat());
+ 
+ 		definitions.add(bounty.createDefinition());
+ 
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/sign/aspect/BountyAspect.java b/gangland-impl/src/main/java/org/luckyraven/gangland/sign/aspect/BountyAspect.java
+index f3196882..52363658 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/sign/aspect/BountyAspect.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/sign/aspect/BountyAspect.java
+@@ -6,37 +6,35 @@ import org.bukkit.Bukkit;
+ import org.bukkit.Material;
+ import org.bukkit.OfflinePlayer;
+ import org.bukkit.entity.Player;
+ import org.bukkit.inventory.ItemStack;
+ import org.bukkit.plugin.java.JavaPlugin;
++import org.luckyraven.keystone.inventory.InventoryService;
+ import org.luckyraven.keystone.item.ItemBuilder;
+ import org.luckyraven.keystone.economy.exception.EconomyException;
+ import org.luckyraven.gangland.file.configuration.Messages;
+ import org.luckyraven.gangland.file.configuration.Settings;
+ import org.luckyraven.gangland.gang.user.User;
+ import org.luckyraven.gangland.gang.user.UserManager;
+-import org.luckyraven.gangland.menu.multi.ListEntry;
+-import org.luckyraven.gangland.menu.multi.MultiInventory;
+-import org.luckyraven.gangland.menu.part.ButtonTags;
+ import org.luckyraven.gangland.inventory.part.Fill;
++import org.luckyraven.gangland.menu.SimplePagedMenu;
+ import org.luckyraven.gangland.sign.model.ParsedSign;
+ import org.luckyraven.gangland.sign.type.BountySign;
+ 
+ import java.math.BigDecimal;
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.Objects;
+ import java.util.UUID;
+ 
+-import static org.luckyraven.gangland.menu.multi.MultiInventoryCreation.dynamicMultiInventory;
+-
+ @RequiredArgsConstructor
+ public class BountyAspect implements SignAspect {
+ 
+ 	private final JavaPlugin                 plugin;
+ 	private final UserManager<OfflinePlayer> offlinePlayerUserManager;
+ 	private final UserManager<Player>        onlinePlayerUserManager;
++	private final InventoryService           inventoryService;
+ 
+ 	@Override
+ 	public AspectResult execute(Player player, ParsedSign sign) {
+ 		User<Player> user = onlinePlayerUserManager.getUser(player);
+ 
+@@ -111,25 +109,12 @@ public class BountyAspect implements SignAspect {
+ 			if (!user.getBounty().hasBounty()) continue;
+ 
+ 			generateData(user, type, heads, "&cOFFLINE");
+ 		}
+ 
+-		// create a multi inventory
+-		String title = "&c&lBounties";
+-		Fill   fill  = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
+-
+-		ButtonTags buttonTags = new ButtonTags(Settings.getPreviousPage(), Settings.getHomePage(),
+-		                                       Settings.getNextPage());
+-
+-		List<ListEntry> headEntries = heads.stream().map(ListEntry::of).toList();
+-
+-		MultiInventory multiInventory = dynamicMultiInventory(plugin, player, headEntries, title, false, 0, fill,
+-		                                                      buttonTags, null);
+-
+-		if (multiInventory == null) return;
+-
+-		multiInventory.open(player);
++		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
++		SimplePagedMenu.open(inventoryService, player, heads, "&c&lBounties", fill);
+ 	}
+ 
+ 	private void generateData(User<? extends OfflinePlayer> user, Material type, List<ItemStack> heads, String status) {
+ 		ItemStack   headItem    = new ItemStack(type);
+ 		ItemBuilder headBuilder = new ItemBuilder(headItem);
+diff --git a/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/BountySign.java b/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/BountySign.java
+index 1e39e029..65484d5a 100644
+--- a/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/BountySign.java
++++ b/gangland-impl/src/main/java/org/luckyraven/gangland/sign/type/BountySign.java
+@@ -3,10 +3,11 @@ package org.luckyraven.gangland.sign.type;
+ import lombok.RequiredArgsConstructor;
+ import org.bukkit.OfflinePlayer;
+ import org.bukkit.entity.Player;
+ import org.bukkit.plugin.java.JavaPlugin;
+ import org.luckyraven.keystone.color.Color;
++import org.luckyraven.keystone.inventory.InventoryService;
+ import org.luckyraven.gangland.gang.user.UserManager;
+ import org.luckyraven.gangland.sign.SignType;
+ import org.luckyraven.gangland.sign.aspect.BountyAspect;
+ import org.luckyraven.gangland.sign.aspect.SignAspect;
+ import org.luckyraven.gangland.sign.handler.AspectBasedSignHandler;
+@@ -26,19 +27,20 @@ public class BountySign implements Sign {
+ 
+ 	private final JavaPlugin                 plugin;
+ 	private final UserManager<OfflinePlayer> offlineUserManager;
+ 	private final UserManager<Player>        userManager;
+ 	private final SignType                   signType;
++	private final InventoryService           inventoryService;
+ 
+ 	@Override
+ 	public SignTypeDefinition createDefinition() {
+ 		// validator & parser
+ 		SignValidator validator = new BountySignValidator(signType);
+ 		SignParser    parser    = new BountyParser(signType);
+ 
+ 		// aspect
+-		SignAspect wantedAspect = new BountyAspect(plugin, offlineUserManager, userManager);
++		SignAspect wantedAspect = new BountyAspect(plugin, offlineUserManager, userManager, inventoryService);
+ 
+ 		// handler
+ 		List<SignAspect> aspects = List.of(wantedAspect);
+ 		SignHandler      handler = new AspectBasedSignHandler(aspects);
+ 
+diff --git a/gangland-impl/src/test/java/org/luckyraven/gangland/file/configuration/inventory/InventoryParserRoundTripTest.java b/gangland-impl/src/test/java/org/luckyraven/gangland/file/configuration/inventory/InventoryParserRoundTripTest.java
+new file mode 100644
+index 00000000..28c14481
+--- /dev/null
++++ b/gangland-impl/src/test/java/org/luckyraven/gangland/file/configuration/inventory/InventoryParserRoundTripTest.java
+@@ -0,0 +1,520 @@
++package org.luckyraven.gangland.file.configuration.inventory;
++
++import org.bukkit.Bukkit;
++import org.bukkit.Material;
++import org.bukkit.entity.Player;
++import org.bukkit.event.inventory.ClickType;
++import org.bukkit.event.inventory.InventoryClickEvent;
++import org.bukkit.inventory.Inventory;
++import org.bukkit.inventory.InventoryHolder;
++import org.bukkit.inventory.InventoryView;
++import org.bukkit.inventory.ItemFactory;
++import org.bukkit.inventory.ItemStack;
++import org.bukkit.plugin.java.JavaPlugin;
++import org.jetbrains.annotations.Nullable;
++import org.junit.jupiter.api.AfterEach;
++import org.junit.jupiter.api.BeforeAll;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.DisplayName;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.io.CleanupMode;
++import org.junit.jupiter.api.io.TempDir;
++import org.luckyraven.gangland.Gangland;
++import org.luckyraven.gangland.core.testsupport.BukkitRegistryFixture;
++import org.luckyraven.gangland.data.placeholder.PlaceholderService;
++import org.luckyraven.gangland.gang.user.User;
++import org.luckyraven.gangland.gang.user.UserManager;
++import org.luckyraven.gangland.menu.InventoryBuilder;
++import org.luckyraven.gangland.menu.condition.ConditionEvaluator;
++import org.luckyraven.gangland.menu.multi.ItemSourceEntry;
++import org.luckyraven.gangland.menu.multi.ItemSourceProvider;
++import org.luckyraven.keystone.cooldown.CooldownService;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.chest.ChestMenu;
++import org.luckyraven.keystone.inventory.registry.MenuOpener;
++import org.luckyraven.keystone.item.ItemParser;
++import org.luckyraven.keystone.item.nbt.ItemNbtAccessor;
++import org.luckyraven.keystone.item.nbt.NbtBridge;
++import org.luckyraven.keystone.item.nbt.NbtType;
++import org.luckyraven.keystone.permission.PermissionManager;
++import org.luckyraven.keystone.persistence.FileHandler;
++import org.luckyraven.keystone.testkit.BukkitStatics;
++import org.luckyraven.keystone.testkit.PluginMocks;
++
++import java.io.IOException;
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.util.HashMap;
++import java.util.IdentityHashMap;
++import java.util.Map;
++import java.util.UUID;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertNotNull;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.ArgumentMatchers.anyInt;
++import static org.mockito.ArgumentMatchers.anyString;
++import static org.mockito.Mockito.doAnswer;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.times;
++import static org.mockito.Mockito.verify;
++import static org.mockito.Mockito.when;
++
++/**
++ * Round-trips each of the 9 core YAML menus under {@code gangland-impl/src/main/resources/inventory/} through
++ * {@link InventoryRuntimeContext#registerInventory}/{@link InventoryBuilder#createMenu}/{@code createPagedMenu} —
++ * the WS2 G3 retarget onto Keystone's {@code ChestMenuBuilder}. Pins: slot count (rows), a sample of item
++ * materials/names per menu, and at least one handler binding (a click dispatched through
++ * {@link ChestMenu#dispatchClick} produces the YAML-declared effect — a command run or another menu opened via the
++ * {@link MenuOpener} captured at parse time).
++ *
++ * <p>None of the 9 core menus declare {@code Draggable: true} on any slot (verified by inspection of every YAML file
++ * under {@code inventory/} — grep for {@code Draggable} returns zero hits), so none of them have an interactive
++ * slot and the keystone-inventory item-return contract's "interactive non-ItemHoldingComponent slots discard player
++ * items on close" caveat does not apply to any core menu.
++ */
++class InventoryParserRoundTripTest {
++
++	@TempDir(cleanup = CleanupMode.NEVER)
++	Path tempDir;
++
++	private static final Path RESOURCES = Path.of("src/main/resources/inventory");
++
++	private JavaPlugin              plugin;
++	private InventoryDefinitionStore definitionStore;
++	private InventoryRuntimeContext context;
++	private InventoryService        inventoryService;
++	private MenuOpener              opener;
++	private Player                  player;
++
++	@BeforeAll
++	static void bootstrapBukkitRegistry() {
++		BukkitRegistryFixture.install();
++		// XMaterial$Data's clinit parses a real NMS version out of Bukkit.getServer().getVersion() — the
++		// fixture's own "test" placeholder doesn't parse and permanently poisons the class for the whole fork
++		// (a failed static initializer stays failed). Re-stub the shared mock server with a real version string
++		// before any XMaterial.valueOf/get call in this test class forces the class to load.
++		org.bukkit.Server server = Bukkit.getServer();
++		if (server != null) {
++			when(server.getVersion()).thenReturn("git-Paper-1 (MC: 1.21.1)");
++		}
++	}
++
++	@BeforeEach
++	@SuppressWarnings("unchecked")
++	void setUp() {
++		// The real NBT-API accessor reflects into com.mojang.authlib.GameProfile, which a plain unit-test JVM
++		// doesn't have on its classpath (it's a server-runtime class). SlotItemFactory.create/ItemBuilder.hasNBTTag
++		// touch it for every item (color/head tag checks), so swap in an in-memory fake for this test — same
++		// fixture shape as ItemDefinitionSimilarityTest's PerStackNbtAccessor.
++		NbtBridge.install(new InMemoryNbtAccessor());
++
++		// InventoryRuntimeContext.openInventoryForPlayer reads Settings.getInventoryFillName/Item directly (a
++		// real navigation triggered by registerNavigationTarget's click tests goes through it) — Settings' ~200
++		// fields are process-wide statics that must be initialized once (documentation/TESTING.md §4).
++		org.luckyraven.gangland.support.SettingsFixture.initializeMinimal(tempDir);
++
++		plugin           = PluginMocks.plugin(tempDir);
++		definitionStore  = new InventoryDefinitionStore(plugin);
++		inventoryService = new InventoryService(mock(CooldownService.class));
++		opener           = mock(MenuOpener.class);
++
++		Gangland gangland = mock(Gangland.class);
++
++		UUID uuid = UUID.randomUUID();
++		player = mock(Player.class);
++		when(player.getUniqueId()).thenReturn(uuid);
++		when(player.hasPermission(anyString())).thenReturn(true);
++
++		User<Player> user = mock(User.class);
++		when(user.getUuid()).thenReturn(uuid);
++		when(user.getUser()).thenReturn(player);
++
++		UserManager<Player> userManager = mock(UserManager.class);
++		when(userManager.getUser(player)).thenReturn(user);
++
++		// Pass-through placeholder resolver — the round-trip is about the parse->build pipeline, not the
++		// placeholder catalogue (that's PlaceholderService's own test coverage).
++		PlaceholderService placeholderService = mock(PlaceholderService.class);
++		when(placeholderService.convert(any(), any())).thenAnswer(invocation -> invocation.getArgument(1));
++
++		// The evaluator always takes the True branch — every core menu's Condition slot is exercised, matching
++		// how the shipped YAML is expected to render for a normal player (e.g. %gangland_user_has-bank%).
++		ConditionEvaluator conditionEvaluator = mock(ConditionEvaluator.class);
++		when(conditionEvaluator.evaluate(any(), any())).thenReturn(true);
++
++		ItemParser itemParser = mock(ItemParser.class); // no prefixed item refs in the 9 core menus
++
++		// Empty for every source: the shipped Item_Template for every paginated core menu is Type: PLAYER_HEAD,
++		// which needs com.mojang.authlib (XSkull) — absent from a plain unit-test JVM. registerNavigationTarget
++		// drives real navigation through this context (e.g. phone -> phone_gang -> ... -> user_stat), so this
++		// provider backs every such path, not just the paginated menus' own direct tests (which build their own
++		// separate provider where non-empty coverage is safe, e.g. allianceStat's REDSTONE template).
++		ItemSourceProvider itemSourceProvider = (p, source) -> java.util.List.of();
++
++		context = new InventoryRuntimeContext(gangland, definitionStore, itemSourceProvider, conditionEvaluator,
++		                                      userManager, mock(PermissionManager.class), placeholderService,
++		                                      itemParser, inventoryService);
++	}
++
++	@AfterEach
++	void tearDown() {
++		NbtBridge.reset();
++	}
++
++	/** In-memory {@link ItemNbtAccessor} — same shape as {@code ItemDefinitionSimilarityTest}'s own fixture. */
++	private static final class InMemoryNbtAccessor implements ItemNbtAccessor {
++
++		private final Map<ItemStack, Map<String, Object>> storage = new IdentityHashMap<>();
++
++		private Map<String, Object> tagsOf(ItemStack stack) {
++			return storage.computeIfAbsent(stack, s -> new HashMap<>());
++		}
++
++		@Override
++		public boolean isAvailable() {
++			return true;
++		}
++
++		@Override
++		public boolean has(ItemStack stack, String tag) {
++			return tagsOf(stack).containsKey(tag);
++		}
++
++		@Override
++		@Nullable
++		public Object get(ItemStack stack, String tag) {
++			return tagsOf(stack).get(tag);
++		}
++
++		@Override
++		@Nullable
++		public String getString(ItemStack stack, String tag) {
++			Object value = tagsOf(stack).get(tag);
++			return value == null ? null : String.valueOf(value);
++		}
++
++		@Override
++		public int getInt(ItemStack stack, String tag) {
++			Object value = tagsOf(stack).get(tag);
++			return value instanceof Number number ? number.intValue() : 0;
++		}
++
++		@Override
++		public void set(ItemStack stack, String tag, NbtType type, @Nullable Object value) {
++			tagsOf(stack).put(tag, value);
++		}
++
++		@Override
++		public void remove(ItemStack stack, String tag) {
++			tagsOf(stack).remove(tag);
++		}
++
++		@Override
++		@Nullable
++		public String describe(ItemStack stack) {
++			return tagsOf(stack).toString();
++		}
++	}
++
++	private static ItemSourceEntry entry(String key, String value) {
++		return new ItemSourceEntry(Map.of(key, value));
++	}
++
++	// ---- shared round-trip machinery ----
++
++	private FileHandler load(String name) throws IOException {
++		Path source = RESOURCES.resolve(name + ".yml");
++		Path copy   = tempDir.resolve(name + ".yml");
++		Files.copy(source, copy);
++		return new FileHandler(plugin, copy.toFile());
++	}
++
++	private static Inventory fakeInventory(InventoryHolder holder, int size) {
++		ItemStack[] contents = new ItemStack[size];
++		Inventory   inv      = mock(Inventory.class);
++		when(inv.getHolder()).thenReturn(holder);
++		when(inv.getSize()).thenReturn(size);
++		when(inv.getItem(anyInt())).thenAnswer(invocation -> {
++			int idx = invocation.getArgument(0);
++			return idx >= 0 && idx < contents.length ? contents[idx] : null;
++		});
++		doAnswer(invocation -> {
++			int       idx  = invocation.getArgument(0);
++			ItemStack item = invocation.getArgument(1);
++			if (idx >= 0 && idx < contents.length) contents[idx] = item;
++			return null;
++		}).when(inv).setItem(anyInt(), any());
++		return inv;
++	}
++
++	private static BukkitStatics installBukkit() {
++		BukkitStatics bukkit = BukkitStatics.install();
++		// BukkitStatics.install() fully mocks the static Bukkit class for its scope, so any method it doesn't
++		// stub itself (getItemFactory among them) answers null instead of falling through to the real server
++		// BukkitRegistryFixture installed outside this block — stub it explicitly, same as Keystone's own
++		// PagedRegionTest.
++		bukkit.statics().when(Bukkit::getItemFactory).thenReturn(mock(ItemFactory.class));
++		bukkit.statics().when(() -> Bukkit.createInventory(any(InventoryHolder.class), anyInt(), anyString()))
++		      .thenAnswer(invocation -> fakeInventory(invocation.getArgument(0), invocation.getArgument(1)));
++		return bukkit;
++	}
++
++	/** Opens {@code player} into {@code menu} inside a faked Bukkit — needed because {@code build()} alone does not
++	 *  render (rendering happens at {@code open(Player)}). */
++	private static void open(ChestMenu menu, Player player) {
++		InventoryView view = mock(InventoryView.class);
++		when(player.getOpenInventory()).thenReturn(view);
++		when(view.getTopInventory()).thenReturn(mock(Inventory.class));
++		menu.open(player);
++	}
++
++	private static InventoryClickEvent clickEvent(ChestMenu menu, int slot) {
++		// Resolve the current item BEFORE opening any when(...) chain — evaluating another mock's method (the
++		// fake Inventory's getItem) in between when(event.getCurrentItem()) and .thenReturn(...) corrupts
++		// Mockito's ongoing-stubbing state (its thread-local tracks the *last* mock invocation).
++		ItemStack currentItem = menu.bukkitInventory().getItem(slot);
++
++		InventoryClickEvent event = mock(InventoryClickEvent.class);
++		when(event.getRawSlot()).thenReturn(slot);
++		when(event.getClick()).thenReturn(ClickType.LEFT);
++		when(event.getCurrentItem()).thenReturn(currentItem);
++		return event;
++	}
++
++	private ChestMenu registerAndBuild(String name) throws IOException {
++		return registerAndBuild(name, menu -> { });
++	}
++
++	/**
++	 * {@code withinBukkitScope} runs INSIDE the same {@code BukkitStatics} try-with-resources this method opens to
++	 * build and open the menu — required for a test that also dispatches a click causing a real internal
++	 * navigation (via {@code context::openInventoryForPlayer}, baked into regular/static slots' handlers at parse
++	 * time): that navigation calls {@code Bukkit.createInventory} again to build the destination menu, and the
++	 * scope closes the instant this method would otherwise return, taking the faked answer with it.
++	 */
++	private ChestMenu registerAndBuild(String name, java.util.function.Consumer<ChestMenu> withinBukkitScope)
++			throws IOException {
++		context.registerInventory(load(name));
++		InventoryBuilder builder = definitionStore.getInventory(name);
++		assertNotNull(builder, name + " must be registered in the definition store");
++
++		var fill = new org.luckyraven.gangland.inventory.part.Fill(" ", "BLACK_STAINED_GLASS_PANE");
++		var line = new org.luckyraven.gangland.inventory.part.Fill(" ", "WHITE_STAINED_GLASS_PANE");
++
++		try (BukkitStatics ignored = installBukkit()) {
++			ChestMenu menu = builder.createMenu(inventoryService, plugin, placeholderOf(), player, fill,
++			                                    line, conditionEvaluatorOf(), opener);
++			open(menu, player);
++			withinBukkitScope.accept(menu);
++			return menu;
++		}
++	}
++
++	// Pass-through, except %gangland_gang_color% (gang_info.yml slots 31/33 feed it into a Color: YAML key, which
++	// needs a real color name to resolve a material — everything else passes through unresolved).
++	private org.luckyraven.keystone.util.Placeholder placeholderOf() {
++		return (p, raw) -> raw == null ? null : raw.replace("%gangland_gang_color%", "GREEN");
++	}
++
++	private ConditionEvaluator conditionEvaluatorOf() {
++		ConditionEvaluator evaluator = mock(ConditionEvaluator.class);
++		when(evaluator.evaluate(any(), any())).thenReturn(true);
++		return evaluator;
++	}
++
++	/**
++	 * Registers {@code targetMenu} as a real navigation destination. A regular/static slot's click handler is
++	 * built at PARSE time (menu.handler.*) with {@code context::openInventoryForPlayer} baked in as its
++	 * {@code MenuOpener} — not the separate {@code opener} mock passed to {@code createMenu}/{@code createPagedMenu}
++	 * (that one only backs a CONDITIONAL slot's raw action, resolved lazily at build time). So the real proof a
++	 * click navigated is a second live {@code player.openInventory(...)} call, once {@code targetMenu} is actually
++	 * registered for {@code context} to find.
++	 */
++	private void registerNavigationTarget(String targetMenu) throws IOException {
++		context.registerInventory(load(targetMenu));
++	}
++
++	// ---- the 9 core menus ----
++
++	@Test
++	@DisplayName("phone.yml — 6 rows, wallet/bank/bounty/gang slots, OnClick.Inventory navigates via MenuOpener")
++	void phone() throws IOException {
++		registerNavigationTarget("phone_gang");
++
++		registerAndBuild("phone", menu -> {
++			assertEquals(54, menu.bukkitInventory().getSize());
++			// Type: LEATHER_CHESTPLATE + Color: GREEN goes through the same color-swap path as the old
++			// InventoryBuilder.createInventory: "LEATHER_CHESTPLATE" doesn't contain any MaterialType name, so the
++			// resolver falls back to its WOOL default and yields GREEN_WOOL — pinned here exactly as ported, not as
++			// a new design choice.
++			assertEquals(Material.GREEN_WOOL, menu.bukkitInventory().getItem(20).getType());
++			assertEquals(Material.FURNACE, menu.bukkitInventory().getItem(22).getType());
++			assertEquals(Material.PAPER, menu.bukkitInventory().getItem(24).getType());
++			assertEquals(Material.EMERALD, menu.bukkitInventory().getItem(40).getType());
++
++			// slot 20 -> OnClick.Inventory: phone_gang
++			menu.dispatchClick(clickEvent(menu, 20), player);
++			verify(player, times(2)).openInventory(any(Inventory.class));
++		});
++	}
++
++	@Test
++	@DisplayName("gang_info.yml — 5 rows, balance/id/members slots, OnClick.Inventory navigates to user_stat")
++	void gangInfo() throws IOException {
++		registerNavigationTarget("user_stat");
++
++		registerAndBuild("gang_info", menu -> {
++			assertEquals(45, menu.bukkitInventory().getSize());
++			assertEquals(Material.GOLD_BLOCK, menu.bukkitInventory().getItem(11).getType());
++			assertEquals(Material.CRAFTING_TABLE, menu.bukkitInventory().getItem(13).getType());
++			assertTrue(menu.bukkitInventory().getItem(19).getType().name().contains("HEAD")
++			           || menu.bukkitInventory().getItem(19).getType() == Material.PLAYER_HEAD);
++
++			menu.dispatchClick(clickEvent(menu, 19), player);
++			verify(player, times(2)).openInventory(any(Inventory.class));
++		});
++	}
++
++	@Test
++	@DisplayName("gang_stat.yml — 6 rows, no slots, fill-only")
++	void gangStat() throws IOException {
++		ChestMenu menu = registerAndBuild("gang_stat");
++
++		assertEquals(54, menu.bukkitInventory().getSize());
++	}
++
++	@Test
++	@DisplayName("phone_banking.yml — 3 rows, Condition-driven bank slot renders the True branch")
++	void phoneBanking() throws IOException {
++		registerNavigationTarget("phone");
++
++		registerAndBuild("phone_banking", menu -> {
++			assertEquals(27, menu.bukkitInventory().getSize());
++			// slot 4 has a True/False Condition on %gangland_user_has-bank%; the evaluator stub always returns
++			// true, so the BOOK item (both branches use BOOK) renders with the True-branch name.
++			assertEquals(Material.BOOK, menu.bukkitInventory().getItem(4).getType());
++
++			// slot 22 -> OnClick.Inventory: phone (fixed action, not conditional)
++			menu.dispatchClick(clickEvent(menu, 22), player);
++			verify(player, times(2)).openInventory(any(Inventory.class));
++		});
++	}
++
++	@Test
++	@DisplayName("phone_bounty.yml — 6 rows, static bounty slots, Back button navigates to phone")
++	void phoneBounty() throws IOException {
++		registerNavigationTarget("phone");
++
++		registerAndBuild("phone_bounty", menu -> {
++			assertEquals(54, menu.bukkitInventory().getSize());
++			assertEquals(Material.ENCHANTED_BOOK, menu.bukkitInventory().getItem(21).getType());
++			assertEquals(Material.EMERALD, menu.bukkitInventory().getItem(40).getType());
++
++			menu.dispatchClick(clickEvent(menu, 49), player);
++			verify(player, times(2)).openInventory(any(Inventory.class));
++		});
++	}
++
++	@Test
++	@DisplayName("phone_gang.yml — 5 rows, Condition-driven gang slot, Search Gang navigates")
++	void phoneGang() throws IOException {
++		registerNavigationTarget("phone_gang_search");
++
++		registerAndBuild("phone_gang", menu -> {
++			assertEquals(45, menu.bukkitInventory().getSize());
++			assertEquals(Material.SLIME_BALL, menu.bukkitInventory().getItem(21).getType());
++			assertEquals(Material.BOOKSHELF, menu.bukkitInventory().getItem(23).getType());
++
++			menu.dispatchClick(clickEvent(menu, 23), player);
++			verify(player, times(2)).openInventory(any(Inventory.class));
++		});
++	}
++
++	@Test
++	@DisplayName("phone_gang_search.yml — paginated, static filter buttons render, page suffix on the title")
++	void phoneGangSearch() throws IOException {
++		context.registerInventory(load("phone_gang_search"));
++		InventoryBuilder builder = definitionStore.getInventory("phone_gang_search");
++		assertNotNull(builder);
++
++		var fill       = new org.luckyraven.gangland.inventory.part.Fill(" ", "BLACK_STAINED_GLASS_PANE");
++		var buttonTags = new org.luckyraven.gangland.menu.part.ButtonTags("prev", "home", "next");
++
++		try (BukkitStatics ignored = installBukkit()) {
++			// Empty item source: this YAML's Item_Template is Type: PLAYER_HEAD + a placeholder Data tag, which
++			// needs com.mojang.authlib (XSkull) — absent from a plain unit-test JVM (only a real server jar
++			// carries it), and the module pom may never grow a test dependency to add it (documentation/TESTING.md
++			// §1). An empty source list means renderTemplateEntries' map never actually runs the per-entry
++			// resolver, so this still exercises real coverage: registration, PageConfig with 0 entries, the static
++			// filter buttons (none of them are player heads) and their click bindings, and decoration.
++			ItemSourceProvider provider = (p, source) -> java.util.List.of();
++
++			ChestMenu menu = builder.createPagedMenu(inventoryService, plugin, placeholderOf(), player,
++			                                         conditionEvaluatorOf(), fill, buttonTags, provider, opener, 0);
++			open(menu, player);
++
++			// 54-slot region -> rows clamp to 6; static filter buttons at slots 9/18/19/27/28/36 per the YAML.
++			assertEquals(54, menu.bukkitInventory().getSize());
++			assertEquals(Material.ARROW, menu.bukkitInventory().getItem(9).getType());
++			assertEquals(Material.NAME_TAG, menu.bukkitInventory().getItem(18).getType());
++			assertEquals(Material.BARRIER, menu.bukkitInventory().getItem(27).getType());
++
++			// slot 9 -> OnClick.Inventory: phone_gang
++			registerNavigationTarget("phone_gang");
++			menu.dispatchClick(clickEvent(menu, 9), player);
++			verify(player, times(2)).openInventory(any(Inventory.class));
++		}
++	}
++
++	@Test
++	@DisplayName("user_stat.yml — paginated gang-members list, static filter buttons render")
++	void userStat() throws IOException {
++		context.registerInventory(load("user_stat"));
++		InventoryBuilder builder = definitionStore.getInventory("user_stat");
++		assertNotNull(builder);
++
++		var fill       = new org.luckyraven.gangland.inventory.part.Fill(" ", "BLACK_STAINED_GLASS_PANE");
++		var buttonTags = new org.luckyraven.gangland.menu.part.ButtonTags("prev", "home", "next");
++
++		try (BukkitStatics ignored = installBukkit()) {
++			// Empty item source — see phoneGangSearch's comment; user_stat.yml's Item_Template is also
++			// Type: PLAYER_HEAD.
++			ItemSourceProvider provider = (p, source) -> java.util.List.of();
++
++			ChestMenu menu = builder.createPagedMenu(inventoryService, plugin, placeholderOf(), player,
++			                                         conditionEvaluatorOf(), fill, buttonTags, provider, opener, 0);
++			open(menu, player);
++
++			assertEquals(54, menu.bukkitInventory().getSize());
++			assertEquals(Material.NAME_TAG, menu.bukkitInventory().getItem(18).getType());
++			assertEquals(Material.BARRIER, menu.bukkitInventory().getItem(27).getType());
++			assertEquals(Material.COMPASS, menu.bukkitInventory().getItem(36).getType());
++		}
++	}
++
++	@Test
++	@DisplayName("alliance_stat.yml — paginated ally list, no static items, 3-row minimum clamp")
++	void allianceStat() throws IOException {
++		context.registerInventory(load("alliance_stat"));
++		InventoryBuilder builder = definitionStore.getInventory("alliance_stat");
++		assertNotNull(builder);
++
++		var fill       = new org.luckyraven.gangland.inventory.part.Fill(" ", "BLACK_STAINED_GLASS_PANE");
++		var buttonTags = new org.luckyraven.gangland.menu.part.ButtonTags("prev", "home", "next");
++
++		try (BukkitStatics ignored = installBukkit()) {
++			ItemSourceProvider provider = (p, source) -> java.util.List.of(
++					entry("ally_id", "2"), entry("ally_name", "Ally Gang"), entry("ally_online", "1"),
++					entry("ally_total", "3"), entry("ally_created", "today"));
++
++			ChestMenu menu = builder.createPagedMenu(inventoryService, plugin, placeholderOf(), player,
++			                                         conditionEvaluatorOf(), fill, buttonTags, provider, opener, 0);
++			open(menu, player);
++
++			assertTrue(menu.bukkitInventory().getSize() >= 27); // rows clamped to [3,6]
++		}
++	}
++
++}
+diff --git a/gangland-impl/src/test/java/org/luckyraven/gangland/file/configuration/inventory/InventoryRuntimeContextTest.java b/gangland-impl/src/test/java/org/luckyraven/gangland/file/configuration/inventory/InventoryRuntimeContextTest.java
+deleted file mode 100644
+index 4ef3e93e..00000000
+--- a/gangland-impl/src/test/java/org/luckyraven/gangland/file/configuration/inventory/InventoryRuntimeContextTest.java
++++ /dev/null
+@@ -1,146 +0,0 @@
+-package org.luckyraven.gangland.file.configuration.inventory;
+-
+-import org.bukkit.NamespacedKey;
+-import org.bukkit.entity.Player;
+-import org.bukkit.plugin.java.JavaPlugin;
+-import org.junit.jupiter.api.BeforeAll;
+-import org.junit.jupiter.api.DisplayName;
+-import org.junit.jupiter.api.Test;
+-import org.luckyraven.gangland.Gangland;
+-import org.luckyraven.gangland.core.testsupport.BukkitRegistryFixture;
+-import org.luckyraven.gangland.data.placeholder.PlaceholderService;
+-import org.luckyraven.gangland.gang.user.User;
+-import org.luckyraven.gangland.gang.user.UserManager;
+-import org.luckyraven.gangland.menu.InventoryBuilder;
+-import org.luckyraven.gangland.menu.InventoryData;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+-import org.luckyraven.gangland.menu.condition.ConditionEvaluator;
+-import org.luckyraven.gangland.menu.multi.ItemSourceProvider;
+-import org.luckyraven.gangland.inventory.service.InventoryRegistry;
+-import org.luckyraven.keystone.item.ItemParser;
+-import org.luckyraven.keystone.permission.PermissionManager;
+-
+-import java.util.UUID;
+-
+-import static org.mockito.ArgumentMatchers.any;
+-import static org.mockito.Mockito.mock;
+-import static org.mockito.Mockito.never;
+-import static org.mockito.Mockito.times;
+-import static org.mockito.Mockito.verify;
+-import static org.mockito.Mockito.when;
+-
+-/**
+- * WS2 G1+G2 fix round 1 (Opus review F1, orchestrator ruling W38). {@link InventoryRuntimeContext#openInventoryForPlayer}
+- * used to look up "is this menu already open for this player" through the shared {@link InventoryRegistry} — but that
+- * registry is a superset of what {@code User.inventories} used to isolate (every feature's {@link InventoryHandler}
+- * self-registers into it: sign views, wand views, paperwork/bribe views, the car-sign preview, {@code MultiPanelInventory}
+- * panels — anything constructed with a non-null {@code Player}, see {@code InventoryHandler.java:82-84}). A foreign
+- * handler from a completely different feature whose title key happens to collide with a YAML core-menu name would be
+- * "reopened" instead of a fresh core menu being built. Pins that {@link InventoryRuntimeContext} keeps its own
+- * per-player, per-name lookup — exactly what {@code User.inventories} was — so a same-key foreign handler in the shared
+- * registry is never mistaken for one of the menus this class itself opened.
+- */
+-@DisplayName("InventoryRuntimeContext.openInventoryForPlayer — a same-key foreign handler in the shared registry is not reopened")
+-class InventoryRuntimeContextTest {
+-
+-	@BeforeAll
+-	static void bootstrapBukkitRegistry() {
+-		BukkitRegistryFixture.install();
+-	}
+-
+-	@Test
+-	@DisplayName("a foreign handler registered under a key equal to a YAML menu name is not reopened - a fresh menu is built instead")
+-	void foreignHandlerWithCollidingKey_isNotReopened_freshMenuIsBuilt() {
+-		Gangland gangland = mock(Gangland.class);
+-		JavaPlugin plugin = gangland;
+-
+-		Player player = mock(Player.class);
+-		UUID   uuid   = UUID.randomUUID();
+-		when(player.getUniqueId()).thenReturn(uuid);
+-
+-		@SuppressWarnings("unchecked")
+-		User<Player> user = mock(User.class);
+-		when(user.getUuid()).thenReturn(uuid);
+-		when(user.getUser()).thenReturn(player);
+-
+-		@SuppressWarnings("unchecked")
+-		UserManager<Player> userManager = mock(UserManager.class);
+-		when(userManager.getUser(player)).thenReturn(user);
+-
+-		// A completely unrelated feature (e.g. a sign view) already has a handler open for this same player, whose
+-		// title key happens to collide with the core menu name we're about to open ("phone").
+-		InventoryRegistry sharedRegistry = new InventoryRegistry();
+-		InventoryHandler  foreignHandler = mock(InventoryHandler.class);
+-		when(foreignHandler.getTitle()).thenReturn(new NamespacedKey("gangland", "phone"));
+-		sharedRegistry.registerInventory(uuid, foreignHandler);
+-
+-		// The definition store has a real YAML-backed "phone" menu registered; its builder is mocked so
+-		// createInventory(...) returns a controlled fresh handler without running the real slot-render pipeline.
+-		InventoryDefinitionStore definitionStore = new InventoryDefinitionStore(plugin);
+-		InventoryData            inventoryData   = mock(InventoryData.class);
+-		when(inventoryData.isMultiInventory()).thenReturn(false);
+-
+-		InventoryHandler freshHandler = mock(InventoryHandler.class);
+-		InventoryBuilder builder      = mock(InventoryBuilder.class);
+-		when(builder.permission()).thenReturn(null);
+-		when(builder.inventoryData()).thenReturn(inventoryData);
+-		when(builder.createInventory(any(), any(), any(), any(), any(), any(), any())).thenReturn(freshHandler);
+-		definitionStore.inventories().put("phone", builder);
+-
+-		InventoryRuntimeContext context = new InventoryRuntimeContext(gangland, definitionStore,
+-				mock(ItemSourceProvider.class), mock(ConditionEvaluator.class), userManager,
+-				mock(PermissionManager.class), mock(PlaceholderService.class), mock(ItemParser.class),
+-				sharedRegistry);
+-
+-		context.openInventoryForPlayer(player, "phone");
+-
+-		verify(foreignHandler, never()).open(any());
+-		verify(freshHandler).open(player);
+-	}
+-
+-	@Test
+-	@DisplayName("a menu this context already opened for the player IS reopened on a second call")
+-	void ownHandler_secondOpen_reopensTheSameInstance() {
+-		Gangland gangland = mock(Gangland.class);
+-		JavaPlugin plugin = gangland;
+-
+-		Player player = mock(Player.class);
+-		UUID   uuid   = UUID.randomUUID();
+-		when(player.getUniqueId()).thenReturn(uuid);
+-
+-		@SuppressWarnings("unchecked")
+-		User<Player> user = mock(User.class);
+-		when(user.getUuid()).thenReturn(uuid);
+-		when(user.getUser()).thenReturn(player);
+-
+-		@SuppressWarnings("unchecked")
+-		UserManager<Player> userManager = mock(UserManager.class);
+-		when(userManager.getUser(player)).thenReturn(user);
+-
+-		InventoryRegistry        sharedRegistry  = new InventoryRegistry();
+-		InventoryDefinitionStore definitionStore = new InventoryDefinitionStore(plugin);
+-		InventoryData            inventoryData   = mock(InventoryData.class);
+-		when(inventoryData.isMultiInventory()).thenReturn(false);
+-
+-		InventoryHandler builtHandler = mock(InventoryHandler.class);
+-		InventoryBuilder builder      = mock(InventoryBuilder.class);
+-		when(builder.permission()).thenReturn(null);
+-		when(builder.inventoryData()).thenReturn(inventoryData);
+-		when(builder.createInventory(any(), any(), any(), any(), any(), any(), any())).thenReturn(builtHandler);
+-		definitionStore.inventories().put("phone", builder);
+-
+-		InventoryRuntimeContext context = new InventoryRuntimeContext(gangland, definitionStore,
+-				mock(ItemSourceProvider.class), mock(ConditionEvaluator.class), userManager,
+-				mock(PermissionManager.class), mock(PlaceholderService.class), mock(ItemParser.class),
+-				sharedRegistry);
+-
+-		context.openInventoryForPlayer(player, "phone");
+-		context.openInventoryForPlayer(player, "phone");
+-
+-		// createInventory only ran once - the second call found the same instance through this context's own
+-		// per-player lookup and just reopened it.
+-		verify(builder, times(1)).createInventory(any(), any(), any(), any(), any(), any(), any());
+-		verify(builtHandler, times(2)).open(player);
+-	}
+-
+-}
+diff --git a/gangland-impl/src/test/java/org/luckyraven/gangland/listener/player/RemoveAccountListenerTest.java b/gangland-impl/src/test/java/org/luckyraven/gangland/listener/player/RemoveAccountListenerTest.java
+deleted file mode 100644
+index 19714479..00000000
+--- a/gangland-impl/src/test/java/org/luckyraven/gangland/listener/player/RemoveAccountListenerTest.java
++++ /dev/null
+@@ -1,63 +0,0 @@
+-package org.luckyraven.gangland.listener.player;
+-
+-import org.bukkit.OfflinePlayer;
+-import org.bukkit.entity.Player;
+-import org.bukkit.event.player.PlayerQuitEvent;
+-import org.junit.jupiter.api.DisplayName;
+-import org.junit.jupiter.api.Test;
+-import org.luckyraven.gangland.Gangland;
+-import org.luckyraven.gangland.database.GanglandDatabase;
+-import org.luckyraven.gangland.file.configuration.inventory.InventoryRuntimeContext;
+-import org.luckyraven.gangland.gang.user.UserManager;
+-import org.luckyraven.gangland.inventory.service.InventoryRegistry;
+-
+-import java.util.UUID;
+-
+-import static org.mockito.Mockito.mock;
+-import static org.mockito.Mockito.verify;
+-import static org.mockito.Mockito.when;
+-
+-/**
+- * WS2 G1+G2 fix round 2 (re-review, one-line finding). {@link RemoveAccountListener#onPlayerQuit} used to look up
+- * the quitting player's {@code User} record and return early when it was {@code null} — before the async task that
+- * cleared {@link InventoryRuntimeContext}'s interim per-player lookup map ever ran. A player whose account lookup
+- * fails (a real path — {@code InventoryRuntimeContext.openInventoryForPlayer} itself guards against a null
+- * {@code User} the same way) leaked an entry in that map forever, since the CONFIG-phase bean is a singleton that
+- * survives reload. Pins that {@code clearPlayer} now runs unconditionally, synchronously, ahead of the
+- * {@code user == null} guard — mirroring {@code PlayerInventoryCleanup}'s shape.
+- */
+-@DisplayName("RemoveAccountListener.onPlayerQuit — clears InventoryRuntimeContext's per-player map even when the "
+-             + "User lookup fails")
+-class RemoveAccountListenerTest {
+-
+-	@Test
+-	@DisplayName("a quitting player with no User record still gets InventoryRuntimeContext.clearPlayer called")
+-	void onPlayerQuit_userLookupFails_stillClearsInventoryRuntimeContext() {
+-		Gangland          gangland         = mock(Gangland.class);
+-		GanglandDatabase  ganglandDatabase = mock(GanglandDatabase.class);
+-		@SuppressWarnings("unchecked")
+-		UserManager<Player>        userManager        = mock(UserManager.class);
+-		@SuppressWarnings("unchecked")
+-		UserManager<OfflinePlayer> offlineUserManager = mock(UserManager.class);
+-		InventoryRegistry          inventoryRegistry       = mock(InventoryRegistry.class);
+-		InventoryRuntimeContext    inventoryRuntimeContext = mock(InventoryRuntimeContext.class);
+-
+-		Player player = mock(Player.class);
+-		UUID   uuid   = UUID.randomUUID();
+-		when(player.getUniqueId()).thenReturn(uuid);
+-
+-		// The account lookup fails - this is exactly the scenario the fix targets.
+-		when(userManager.getUser(player)).thenReturn(null);
+-
+-		RemoveAccountListener listener = new RemoveAccountListener(gangland, ganglandDatabase, userManager,
+-				offlineUserManager, inventoryRegistry, inventoryRuntimeContext);
+-
+-		PlayerQuitEvent event = mock(PlayerQuitEvent.class);
+-		when(event.getPlayer()).thenReturn(player);
+-
+-		listener.onPlayerQuit(event);
+-
+-		verify(inventoryRuntimeContext).clearPlayer(uuid);
+-	}
+-
+-}

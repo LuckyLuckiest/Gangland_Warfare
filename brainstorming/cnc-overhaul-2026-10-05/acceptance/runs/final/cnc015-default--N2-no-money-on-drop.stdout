@@ -1,0 +1,50 @@
+RUN cnc015-default jar=paper-1.21.11.jar java=jdk-26.0.2.1 client=26.1
+boot=33.8s exit={"code":0,"sig":null} steps=30/30 ok  logLines=466  artifacts=E:\Programming\java\wt\_programme\runs\cnc015-default--N2-no-money-on-drop
+== WARN/ERROR (15 distinct; 4 harness-noise lines suppressed) ==
+  1x STDERR [stderr] WARNING: Final field hashes in class io.papermc.paper.pluginremap.RemappedPluginIndex$State has been mutated reflectively by class com.google.gson.internal.bind.ReflectiveTypeAdapterFactory$2 in unnamed module @
+  1x STDERR [stderr] WARNING: Use --enable-final-field-mutation=ALL-UNNAMED to avoid a warning
+  1x STDERR [stderr] WARNING: Mutating final fields will be blocked in a future release unless final field mutation is enabled
+  1x STDERR [stderr] WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+  1x STDERR [stderr] WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.joml.MemUtil$MemUtilUnsafe (file:/E:/Programming/java/wt/_programme/servers/cnc015-default/libraries/org/joml/joml/1.10.8/joml-1.10.8.jar)
+  1x STDERR [stderr] WARNING: Please consider reporting this to the maintainers of class org.joml.MemUtil$MemUtilUnsafe
+  1x STDERR [stderr] WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+  3x ERROR No key layers in MapLike[{}]
+  1x WARN [DeluxeMenus] Could not setup a NMS hook for your server version! The following Item options will not work: nbt_int, nbt_ints, nbt_string and nbt_strings.
+  1x WARN [Oriel.VaultConfig] Vault is installed but no economy provider is registered — economy actions/requirements will no-op
+  1x WARN [DeluxeMenus] Could not hook into Vault!
+  1x WARN [DeluxeMenus] Found 'data' option for item: teststone in menu: basics_menu. This option is deprecated and will be removed soon. Please use 'damage' instead.
+  1x WARN [ViaVersion] There is a newer plugin version available: 5.12.0, you're on: 5.12.0-SNAPSHOT
+  1x WARN *** You are running an outdated version of Minecraft, which is 4 release(s) and 3 build(s) behind!
+  1x WARN *** Please update to the latest stable version on https://papermc.io/downloads/paper ***
+== EXCEPTIONS (0 distinct) ==
+== FAILED STEPS (0) ==
+== CHAT (last 29 of 29) ==
+Runner joined the game
+[ViaVersion] There is a newer plugin version available: 5.12.0, you're on: 5.12.0-SNAPSHOT
+[Server: Gamerule spawn_mobs is now set to: false]
+[Server: Gamerule spawn_monsters is now set to: false]
+[Server: Gamerule advance_time is now set to: false]
+[Server: Set the time to 6000]
+[Server: Set the weather to clear]
+[Server: Killed Slime]
+[Server: Applied effect Resistance to Runner]
+[Server: Applied effect Instant Health to Runner]
+GLW >> Your account balance has been set to $5,000.
+Runner balance:
+$5,000
+[Server] CNCMARK:BAL:before
+[Server: Teleported Runner to 100.500000, -60.000000, 100.500000]
+[DISPATCH] All units, be advised: Runner is wanted, level 2.
+[GLW] Your wanted level has been increased ★★☆☆☆.
+[Server: Successfully filled 290 block(s)]
+[RADIO] Sergeant Pointman Kate #1000: Sweep the area!
+[Server: Teleported Runner to 100.500000, -60.000000, 130.500000]
+[GLW] Your wanted level has been decreased ★☆☆☆☆.
+[Server] CNCMARK:N2:DROPPED
+Runner balance:
+$5,000
+[Server] CNCMARK:BAL:after
+GLW >> Wanted Status:
+★☆☆☆☆
+[Server] CNCMARK:STATUS:N2-after-drop
+[END] disconnect.quitting

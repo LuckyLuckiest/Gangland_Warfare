@@ -1,0 +1,155 @@
+[
+ {
+  "i": 0,
+  "step": {
+   "join": "Poster",
+   "after": 800
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "spawned 26.1"
+ },
+ {
+  "i": 1,
+  "step": {
+   "console": "gamemode survival Poster",
+   "after": 200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "gamemode survival Poster"
+ },
+ {
+  "i": 2,
+  "step": {
+   "join": "Target",
+   "after": 800
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "spawned 26.1"
+ },
+ {
+  "i": 3,
+  "step": {
+   "console": "gamemode survival Target",
+   "after": 200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "gamemode survival Target"
+ },
+ {
+  "i": 4,
+  "step": {
+   "join": "Hunter",
+   "after": 800
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "spawned 26.1"
+ },
+ {
+  "i": 5,
+  "step": {
+   "console": "gamemode survival Hunter",
+   "after": 200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "gamemode survival Hunter"
+ },
+ {
+  "i": 6,
+  "step": {
+   "chat": "/glw economy set 2000",
+   "bot": "Poster",
+   "after": 1000
+  },
+  "ok": true,
+  "ms": 1,
+  "detail": "/glw economy set 2000"
+ },
+ {
+  "i": 7,
+  "step": {
+   "chat": "/glw bounty set Target 500",
+   "bot": "Poster",
+   "after": 1500
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "/glw bounty set Target 500"
+ },
+ {
+  "i": 8,
+  "step": {
+   "chat": "/glw bounty",
+   "bot": "Target",
+   "after": 1200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "/glw bounty"
+ },
+ {
+  "i": 9,
+  "step": {
+   "console": "say CNCMARK:N4:POSTED",
+   "after": 100
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "say CNCMARK:N4:POSTED"
+ },
+ {
+  "i": 10,
+  "step": {
+   "chat": "/glw economy set 0",
+   "bot": "Hunter",
+   "after": 800
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "/glw economy set 0"
+ },
+ {
+  "i": 11,
+  "step": {
+   "wait": 1500
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "1500ms"
+ },
+ {
+  "i": 12,
+  "step": {
+   "quit": true,
+   "bot": "Poster"
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "quit Poster"
+ },
+ {
+  "i": 13,
+  "step": {
+   "quit": true,
+   "bot": "Target"
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "quit Target"
+ },
+ {
+  "i": 14,
+  "step": {
+   "quit": true,
+   "bot": "Hunter"
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "quit Hunter"
+ }
+]

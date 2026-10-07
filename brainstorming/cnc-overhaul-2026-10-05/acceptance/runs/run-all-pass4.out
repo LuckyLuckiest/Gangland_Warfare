@@ -1,0 +1,32 @@
+
+######## R3
+== R3 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+FAIL   no star drop while cuffed
+PASS   stars kept R3-cuffed-0 - [Runner] ★★☆☆☆ | [Runner/game_info] Break free - 0/25 (tap SNEAK!)
+PASS   stars kept R3-cuffed-15 - [Runner] ★★☆☆☆ | [Runner/game_info] Break free - 0/25 (tap SNEAK!) | [Runner/game_info] Break free - 0/25 (tap SNEAK!)
+PASS   stars kept R3-cuffed-30 - [Runner] GLW >> Wanted Status: | [Runner] ☆☆☆☆☆ | [Runner/game_info] Serving sentence - 356s
+PASS   intake reached
+REVIEW stars cleared at intake - [Runner] GLW >> Wanted Status: | [Runner] ☆☆☆☆☆ | [Runner/game_info] Serving sentence - 351s
+== REVIEW ==
+
+######## N7
+== N7 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+       [Runner] [Server] CNCMARK:BAL:before
+       [Runner] [Server] CNCMARK:N7:CUFFED
+       [Runner] ----- CHARGE SHEET -----
+       [Runner] Paid from your wallet: $300
+       [Runner] Unpaid $400 served as +40s
+       [Runner] [Server] CNCMARK:N7:SHEET
+       [Runner] [Server] CNCMARK:BAL:after
+       [Runner] [Server] CNCMARK:STATUS:N7
+REVIEW N7 best effort: read the transcript above against the pass line
+== REVIEW ==
+
+======== SUMMARY (0 = PASS, 1 = FAIL, 2 = REVIEW by a human, ERROR = could not run)
+R3: 2
+N7: 2
+Pass criterion for 0.15: R1 R2 R3 R4 N1 N2 N3 N4 all 0 (R1 and N4 may be 2 when only the human read-through is left).

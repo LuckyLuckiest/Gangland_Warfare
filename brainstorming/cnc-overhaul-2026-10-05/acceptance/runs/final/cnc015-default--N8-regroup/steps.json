@@ -1,0 +1,262 @@
+[
+ {
+  "i": 0,
+  "step": {
+   "join": "Runner",
+   "after": 800
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "spawned 26.1"
+ },
+ {
+  "i": 1,
+  "step": {
+   "console": "gamerule spawn_mobs false"
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "gamerule spawn_mobs false"
+ },
+ {
+  "i": 2,
+  "step": {
+   "console": "gamerule spawn_monsters false"
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "gamerule spawn_monsters false"
+ },
+ {
+  "i": 3,
+  "step": {
+   "console": "gamerule advance_time false"
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "gamerule advance_time false"
+ },
+ {
+  "i": 4,
+  "step": {
+   "console": "time set 6000"
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "time set 6000"
+ },
+ {
+  "i": 5,
+  "step": {
+   "console": "weather clear"
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "weather clear"
+ },
+ {
+  "i": 6,
+  "step": {
+   "console": "kill @e[type=minecraft:slime]"
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "kill @e[type=minecraft:slime]"
+ },
+ {
+  "i": 7,
+  "step": {
+   "console": "gamemode survival Runner",
+   "after": 200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "gamemode survival Runner"
+ },
+ {
+  "i": 8,
+  "step": {
+   "console": "effect give Runner minecraft:resistance 100000 4 true",
+   "after": 200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "effect give Runner minecraft:resistance 100000 4 true"
+ },
+ {
+  "i": 9,
+  "step": {
+   "console": "attribute Runner minecraft:max_health base set 1024",
+   "after": 200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "attribute Runner minecraft:max_health base set 1024"
+ },
+ {
+  "i": 10,
+  "step": {
+   "console": "effect give Runner minecraft:instant_health 1 8 true",
+   "after": 200
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "effect give Runner minecraft:instant_health 1 8 true"
+ },
+ {
+  "i": 11,
+  "step": {
+   "console": "tp Runner 100 -60 100 0 0",
+   "after": 500
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "tp Runner 100 -60 100 0 0"
+ },
+ {
+  "i": 12,
+  "step": {
+   "chat": "/glw wanted add 3",
+   "after": 800
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "/glw wanted add 3"
+ },
+ {
+  "i": 13,
+  "step": {
+   "expectChat": "increased|wanted",
+   "timeout": 5000
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "[DISPATCH] All units, be advised: Runner is wanted, level 3."
+ },
+ {
+  "i": 14,
+  "step": {
+   "wait": 10000
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "10000ms"
+ },
+ {
+  "i": 15,
+  "step": {
+   "console": "execute positioned 100 -60 105 as @e[distance=..100] if entity @s[type=minecraft:player,name=!Runner] run tag @s add cncc",
+   "after": 300
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "execute positioned 100 -60 105 as @e[distance=..100] if entity @s[type=minecraft:player,name=!Runner] run tag @s add cncc"
+ },
+ {
+  "i": 16,
+  "step": {
+   "console": "say CNCMARK:N8:KILL1",
+   "after": 100
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "say CNCMARK:N8:KILL1"
+ },
+ {
+  "i": 17,
+  "step": {
+   "console": "damage @e[tag=cncc,limit=1,sort=nearest] 1000 minecraft:player_attack by Runner",
+   "after": 500
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "damage @e[tag=cncc,limit=1,sort=nearest] 1000 minecraft:player_attack by Runner"
+ },
+ {
+  "i": 18,
+  "step": {
+   "wait": 4000
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "4000ms"
+ },
+ {
+  "i": 19,
+  "step": {
+   "console": "damage @e[tag=cncc,limit=1,sort=nearest] 1000 minecraft:player_attack by Runner",
+   "after": 500
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "damage @e[tag=cncc,limit=1,sort=nearest] 1000 minecraft:player_attack by Runner"
+ },
+ {
+  "i": 20,
+  "step": {
+   "console": "say CNCMARK:N8:KILL2",
+   "after": 100
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "say CNCMARK:N8:KILL2"
+ },
+ {
+  "i": 21,
+  "step": {
+   "expectChat": "two down|losing men|backup is coming",
+   "timeout": 12000
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "[RADIO] Lieutenant Commander Rick #1000: Two down! Pull back to cover, backup is coming!"
+ },
+ {
+  "i": 22,
+  "step": {
+   "console": "say CNCMARK:N8:REGROUP",
+   "after": 100
+  },
+  "ok": true,
+  "ms": 1,
+  "detail": "say CNCMARK:N8:REGROUP"
+ },
+ {
+  "i": 23,
+  "step": {
+   "expectChat": "backup.s here|push together|everyone move in",
+   "timeout": 25000
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "[RADIO] Lieutenant Commander Rick #1000: Backup's here! All units, push together!"
+ },
+ {
+  "i": 24,
+  "step": {
+   "console": "say CNCMARK:N8:PUSH",
+   "after": 100
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "say CNCMARK:N8:PUSH"
+ },
+ {
+  "i": 25,
+  "step": {
+   "wait": 1500
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "1500ms"
+ },
+ {
+  "i": 26,
+  "step": {
+   "quit": true
+  },
+  "ok": true,
+  "ms": 0,
+  "detail": "quit Runner"
+ }
+]

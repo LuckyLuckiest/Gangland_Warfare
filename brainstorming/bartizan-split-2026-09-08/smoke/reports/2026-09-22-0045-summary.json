@@ -1,0 +1,16 @@
+[
+  {
+    "id": "ws4-g1a-shop-boot",
+    "title": "WS4 G1a+G1b (0.10.0): shop-api deleted, keystone-shop provided everywhere (B2), 9 admin-UI files relocated to gangland-impl shop/admin/{view,listener} -- G1a left them on inventory-api unchanged, G1b (reuses this same row) rebuilt them onto keystone-inventory's MenuFlow/ChestMenuBuilder, so ShopConfig.shopAdminFlow now also takes InventoryService. ShopAdminOpener seam (B1) lets npcshops open the admin editor without naming gangland-impl. Drives the console-usable half of M-SHOP-1: /glw shop create|list|title|remove against the core ShopRegistry/ShopConfig wiring, with npcshops deployed alongside so TraderModuleConfig/BankerModuleConfig's FileManager-backed TraderSettingsImpl/BankerSettingsImpl (reading the module-owned npc/trader_settings.yml + npc/banker_settings.yml) and the ShopAdminOpener/InventoryService-consuming ShopAdminFlow bean all construct without a fault. Cannot drive /glw shop edit's chest GUI, trader buy/sell/barter, or banker deposit/withdraw (no in-game player) -- those rows go in exec/G010/WS2-manual-checklist.md's WS4 G1a and WS4 G1b sections.",
+    "verdict": "PASS",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "npcshops"
+    ],
+    "distinct_error_count": 0,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-22-0045-ws4-g1a-shop-boot.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-22-0045-ws4-g1a-shop-boot.log"
+  }
+]

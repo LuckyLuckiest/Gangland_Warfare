@@ -1,0 +1,15 @@
+[Runner] Runner joined the game
+[Runner] [DISPATCH] All units, be advised: Runner is wanted, level 2.
+[Runner] [ViaVersion] There is a newer plugin version available: 5.12.0, you're on: 5.12.0-SNAPSHOT
+[Runner] [RADIO] Sergeant Pointman Dave #1003: Eyes on Runner, west!
+[Runner] GLW >> Wanted Status:
+[Runner] ★★☆☆☆
+[Runner] [RADIO] Sergeant Assault Nick #1004: Moving to flank, west!
+[Runner] [Server] CNCMARK:STATUS:R4-after-rejoin
+[Runner] [Server] CNCMARK:R4:REJOINED
+[Runner] [GLW] Your wanted level has been decreased ★☆☆☆☆.
+[Runner] [Server] CNCMARK:R4:DECAYED
+[Runner] GLW >> Wanted Status:
+[Runner] ★☆☆☆☆
+[Runner] [Server] CNCMARK:STATUS:R4-after-decay
+[Runner/end] [END] disconnect.quitting

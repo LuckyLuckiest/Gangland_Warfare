@@ -1,0 +1,862 @@
+warning: in the working copy of 'gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/detainment/paperwork/HandcuffBribeView.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/detainment/paperwork/PaperworkView.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/sign/CarSignViewProvider.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupBuffCatalogueView.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupFlow.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupGarrisonView.java', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupMenuView.java', LF will be replaced by CRLF the next time Git touches it
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/config/CopsNCrooksModuleConfig.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/config/CopsNCrooksModuleConfig.java
+index f74df203..c86aab3b 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/config/CopsNCrooksModuleConfig.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/config/CopsNCrooksModuleConfig.java
+@@ -3,10 +3,11 @@ package org.luckyraven.gangland.copsncrooks.config;
+ import lombok.CustomLog;
+ import org.bukkit.entity.Player;
+ import org.bukkit.plugin.java.JavaPlugin;
+ import org.luckyraven.gangland.GanglandApi;
+ import org.luckyraven.keystone.bean.autowire.DependencyContainer;
++import org.luckyraven.keystone.inventory.InventoryService;
+ import org.luckyraven.gangland.copsncrooks.combo.KillCombo;
+ import org.luckyraven.gangland.copsncrooks.detainment.DetainedPlayer;
+ import org.luckyraven.gangland.copsncrooks.detainment.DetainmentRegistry;
+ import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
+ import org.luckyraven.gangland.copsncrooks.detainment.bail.BailService;
+@@ -269,24 +270,25 @@ public class CopsNCrooksModuleConfig {
+ 	                                         DetainmentSoundContract sounds) {
+ 		return new BreakFreeService(plugin, detainmentService, costs, messages, releasePipeline, sounds);
+ 	}
+ 
+ 	@Bean
+-	public HandcuffBribeView handcuffBribeView(BribeService bribeService, DetainmentEconomyContract economy,
++	public HandcuffBribeView handcuffBribeView(InventoryService inventoryService, BribeService bribeService,
++	                                           DetainmentEconomyContract economy,
+ 	                                           MoneyIconProvider moneyIconProvider,
+ 	                                           DetainmentMessageContract messages) {
+-		return new HandcuffBribeView(plugin, bribeService, economy, moneyIconProvider, messages);
++		return new HandcuffBribeView(plugin, inventoryService, bribeService, economy, moneyIconProvider, messages);
+ 	}
+ 
+ 	@Bean
+-	public PaperworkView paperworkView(DetainmentRegistry detainmentRegistry, DetainmentCostsContract costs,
+-	                                   DetainmentEconomyContract economy, BailService bailService,
+-	                                   BribeService bribeService, SentenceService sentenceService,
+-	                                   MoneyIconProvider moneyIconProvider,
++	public PaperworkView paperworkView(InventoryService inventoryService, DetainmentRegistry detainmentRegistry,
++	                                   DetainmentCostsContract costs, DetainmentEconomyContract economy,
++	                                   BailService bailService, BribeService bribeService,
++	                                   SentenceService sentenceService, MoneyIconProvider moneyIconProvider,
+ 	                                   DetainmentMessageContract messages) {
+-		return new PaperworkView(plugin, detainmentRegistry, costs, economy, bailService, bribeService,
+-		                         sentenceService, moneyIconProvider, messages);
++		return new PaperworkView(plugin, inventoryService, detainmentRegistry, costs, economy, bailService,
++		                         bribeService, sentenceService, moneyIconProvider, messages);
+ 	}
+ 
+ 	// ---------------------------------------------------------------------------------------------------------------
+ 	// Cop services
+ 	// ---------------------------------------------------------------------------------------------------------------
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/detainment/paperwork/HandcuffBribeView.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/detainment/paperwork/HandcuffBribeView.java
+index eba824bb..a4d9086d 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/detainment/paperwork/HandcuffBribeView.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/detainment/paperwork/HandcuffBribeView.java
+@@ -9,64 +9,67 @@ import org.bukkit.plugin.java.JavaPlugin;
+ import org.luckyraven.gangland.copsncrooks.detainment.bribe.BribeResult;
+ import org.luckyraven.gangland.copsncrooks.detainment.bribe.BribeService;
+ import org.luckyraven.gangland.copsncrooks.detainment.economy.DetainmentEconomyContract;
+ import org.luckyraven.gangland.copsncrooks.detainment.message.DetainmentMessageContract;
+ import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.chest.ChestMenu;
++import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
++import org.luckyraven.keystone.inventory.component.FillComponent;
++import org.luckyraven.keystone.inventory.component.ItemComponent;
+ import org.luckyraven.keystone.item.ItemBuilder;
+ import org.luckyraven.keystone.util.ChatUtil;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+-import org.luckyraven.gangland.inventory.part.Fill;
+-import org.luckyraven.gangland.inventory.util.InventoryUtil;
+ 
+ /**
+  * GUI opened when a HANDCUFFED player right-clicks the cop currently guarding them. Shows a single bribe button —
+  * clicking it charges the player's balance and releases them if they have enough.
+  */
+ @RequiredArgsConstructor
+ public final class HandcuffBribeView {
+ 
+-	private static final int SIZE       = 27;
++	private static final int ROWS       = 3;
+ 	private static final int SLOT_BRIBE = 13;
+ 	private static final int SLOT_CLOSE = 22;
+ 
+ 	private final JavaPlugin                plugin;
++	private final InventoryService          inventoryService;
+ 	private final BribeService              bribeService;
+ 	private final DetainmentEconomyContract economy;
+ 	private final MoneyIconProvider         moneyIconProvider;
+ 	private final DetainmentMessageContract messages;
+ 
+ 	private static String formatMoney(double amount) {
+ 		return String.format("%,.2f", amount);
+ 	}
+ 
+ 	public void open(Player player, CopNpc cop) {
+-		String           title   = ChatUtil.color(messages.handcuffBribeGuiTitle());
+-		InventoryHandler handler = new InventoryHandler(plugin, title, SIZE, player);
++		String title = ChatUtil.color(messages.handcuffBribeGuiTitle());
+ 
+ 		double cost    = bribeService.computeHandcuffBribeCost(player);
+ 		double balance = economy.getBalance(player);
+ 
++		ChestMenuBuilder builder = ChestMenu.builder(inventoryService).title(title).rows(ROWS);
++
+ 		ItemStack   iconSource = moneyIconProvider.buildIcon(cost);
+ 		ItemBuilder button     = new ItemBuilder(iconSource);
+ 		button.setDisplayName(messages.handcuffBribeButtonLabel(formatMoney(cost)))
+ 		      .setLore(messages.handcuffBribeButtonLore(formatMoney(cost), formatMoney(balance)));
+-
+-		handler.setItem(SLOT_BRIBE, button, false, (p, inv, b) -> {
+-			p.closeInventory();
+-			BribeResult result = bribeService.tryHandcuffBribe(p, cop);
+-			handleResult(p, result);
+-		});
++		builder.slot(SLOT_BRIBE, ItemComponent.of(button).onAnyClick(ctx -> {
++			ctx.player().closeInventory();
++			BribeResult result = bribeService.tryHandcuffBribe(ctx.player(), cop);
++			handleResult(ctx.player(), result);
++		}));
+ 
+ 		ItemStack   closeSource = XMaterial.BARRIER.parseItem();
+ 		ItemBuilder close       = new ItemBuilder(closeSource != null ? closeSource : new ItemStack(Material.BARRIER));
+ 		close.setDisplayName(ChatUtil.color("&cClose"));
+-		handler.setItem(SLOT_CLOSE, close, false, (p, inv, b) -> p.closeInventory());
++		builder.slot(SLOT_CLOSE, ItemComponent.of(close).onAnyClick(ctx -> ctx.player().closeInventory()));
+ 
+-		InventoryUtil.fillInventory(handler, new Fill(" ", "BLACK_STAINED_GLASS_PANE"));
++		builder.fill(FillComponent.of(Material.BLACK_STAINED_GLASS_PANE).name(" "));
+ 
+ 		DetainmentGuiAccess.authorize(player.getUniqueId());
+-		handler.open(player);
++		builder.build().open(player);
+ 	}
+ 
+ 	private void handleResult(Player player, BribeResult result) {
+ 		switch (result) {
+ 			case SUCCESS:
+diff --git a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/detainment/paperwork/PaperworkView.java b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/detainment/paperwork/PaperworkView.java
+index 1e74dc99..5861d8f7 100644
+--- a/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/detainment/paperwork/PaperworkView.java
++++ b/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/detainment/paperwork/PaperworkView.java
+@@ -14,31 +14,34 @@ import org.luckyraven.gangland.copsncrooks.detainment.bribe.BribeResult;
+ import org.luckyraven.gangland.copsncrooks.detainment.bribe.BribeService;
+ import org.luckyraven.gangland.copsncrooks.detainment.economy.DetainmentCostsContract;
+ import org.luckyraven.gangland.copsncrooks.detainment.economy.DetainmentEconomyContract;
+ import org.luckyraven.gangland.copsncrooks.detainment.message.DetainmentMessageContract;
+ import org.luckyraven.gangland.copsncrooks.detainment.sentence.SentenceService;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.chest.ChestMenu;
++import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
++import org.luckyraven.keystone.inventory.component.FillComponent;
++import org.luckyraven.keystone.inventory.component.ItemComponent;
+ import org.luckyraven.keystone.item.ItemBuilder;
+ import org.luckyraven.keystone.util.ChatUtil;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+-import org.luckyraven.gangland.inventory.part.Fill;
+-import org.luckyraven.gangland.inventory.util.InventoryUtil;
+ 
+ /**
+  * Three-row menu opened when a jailed player right-clicks their Jail Paperwork item. Bail / Bribe / Sentence release
+  * paths all funnel through the appropriate service, which in turn routes successful exits through the release
+  * pipeline.
+  */
+ @RequiredArgsConstructor
+ public final class PaperworkView {
+ 
+-	private static final int SIZE          = 27;
++	private static final int ROWS          = 3;
+ 	private static final int SLOT_BAIL     = 11;
+ 	private static final int SLOT_BRIBE    = 13;
+ 	private static final int SLOT_SENTENCE = 15;
+ 	private static final int SLOT_INFO     = 22;
+ 
+ 	private final JavaPlugin                plugin;
++	private final InventoryService          inventoryService;
+ 	private final DetainmentRegistry        detainmentRegistry;
+ 	private final DetainmentCostsContract   costs;
+ 	private final DetainmentEconomyContract economy;
+ 	private final BailService               bailService;
+ 	private final BribeService              bribeService;
+@@ -49,12 +52,11 @@ public final class PaperworkView {
+ 	private static String formatMoney(double amount) {
+ 		return String.format("%,.2f", amount);
+ 	}
+ 
+ 	public void open(Player player) {
+-		String           title   = ChatUtil.color(messages.paperworkGuiTitle());
+-		InventoryHandler handler = new InventoryHandler(plugin, title, SIZE, player);
++		String title = ChatUtil.color(messages.paperworkGuiTitle());
+ 
+ 		double bailCost  = bailService.computeCost(player);
+ 		double bribeCost = bribeService.computeJailBribeCost(player);
+ 		double balance   = economy.getBalance(player);
+ 
+@@ -62,52 +64,54 @@ public final class PaperworkView {
+ 		int wantedAtArrest = detained == null || detained.getWantedAtArrest() == null
+ 		                     ? 0 : detained.getWantedAtArrest();
+ 		long   remainingSec  = sentenceService.getRemainingSeconds(player);
+ 		double chancePercent = costs.getJailBribeSuccessChance() * 100.0;
+ 
++		ChestMenuBuilder builder = ChestMenu.builder(inventoryService).title(title).rows(ROWS);
++
+ 		// Bail
+ 		ItemStack   bailIcon   = moneyIconProvider.buildIcon(bailCost);
+ 		ItemBuilder bailButton = new ItemBuilder(bailIcon);
+ 		bailButton.setDisplayName(messages.paperworkBailLabel(formatMoney(bailCost)))
+ 		          .setLore(messages.paperworkBailLore(formatMoney(bailCost), formatMoney(balance)));
+-		handler.setItem(SLOT_BAIL, bailButton, false, (p, inv, b) -> {
+-			p.closeInventory();
+-			BailResult result = bailService.tryPayBail(p);
+-			handleBailResult(p, result);
+-		});
++		builder.slot(SLOT_BAIL, ItemComponent.of(bailButton).onAnyClick(ctx -> {
++			ctx.player().closeInventory();
++			BailResult result = bailService.tryPayBail(ctx.player());
++			handleBailResult(ctx.player(), result);
++		}));
+ 
+ 		// Bribe
+ 		ItemStack   bribeIcon   = moneyIconProvider.buildIcon(bribeCost);
+ 		ItemBuilder bribeButton = new ItemBuilder(bribeIcon);
+ 		bribeButton.setDisplayName(messages.paperworkBribeLabel(formatMoney(bribeCost)))
+ 		           .setLore(messages.paperworkBribeLore(formatMoney(bribeCost),
+ 		                                                String.format("%.0f", chancePercent)));
+-		handler.setItem(SLOT_BRIBE, bribeButton, false, (p, inv, b) -> {
+-			p.closeInventory();
+-			BribeResult result = bribeService.tryJailBribe(p);
+-			handleBribeResult(p, result);
+-		});
++		builder.slot(SLOT_BRIBE, ItemComponent.of(bribeButton).onAnyClick(ctx -> {
++			ctx.player().closeInventory();
++			BribeResult result = bribeService.tryJailBribe(ctx.player());
++			handleBribeResult(ctx.player(), result);
++		}));
+ 
+ 		// Sentence
+ 		ItemStack sentenceIcon = XMaterial.CLOCK.parseItem();
+ 		ItemBuilder sentenceButton = new ItemBuilder(
+ 				sentenceIcon != null ? sentenceIcon : new ItemStack(Material.CLOCK));
+ 		sentenceButton.setDisplayName(messages.paperworkSentenceLabel())
+ 		              .setLore(messages.paperworkSentenceLore(remainingSec));
+-		handler.setItem(SLOT_SENTENCE, sentenceButton, false, (p, inv, b) -> p.closeInventory());
++		builder.slot(SLOT_SENTENCE, ItemComponent.of(sentenceButton).onAnyClick(ctx -> ctx.player().closeInventory()));
+ 
+ 		// Info
+ 		ItemStack   infoIcon = XMaterial.PAPER.parseItem();
+ 		ItemBuilder info     = new ItemBuilder(infoIcon != null ? infoIcon : new ItemStack(Material.PAPER));
+ 		info.setDisplayName(messages.paperworkInfoLabel())
+ 		    .setLore(messages.paperworkInfoLore(wantedAtArrest, remainingSec, formatMoney(balance)));
+-		handler.setItem(SLOT_INFO, info, false, (p, inv, b) -> { });
++		builder.slot(SLOT_INFO, ItemComponent.of(info));
+ 
+-		InventoryUtil.fillInventory(handler, new Fill(" ", "BLACK_STAINED_GLASS_PANE"));
++		builder.fill(FillComponent.of(Material.BLACK_STAINED_GLASS_PANE).name(" "));
+ 
+ 		DetainmentGuiAccess.authorize(player.getUniqueId());
+-		handler.open(player);
++		builder.build().open(player);
+ 	}
+ 
+ 	private void handleBailResult(Player player, BailResult result) {
+ 		switch (result) {
+ 			case SUCCESS:
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java
+index 4c266c67..67f62eea 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/config/GadgetModuleConfig.java
+@@ -36,10 +36,11 @@ import org.luckyraven.keystone.item.ItemRefresherRegistry;
+ import org.luckyraven.keystone.item.ItemSerializerRegistry;
+ import org.luckyraven.gangland.item.fuel.FuelService;
+ import org.luckyraven.keystone.bean.Bean;
+ import org.luckyraven.keystone.bean.Configuration;
+ import org.luckyraven.keystone.bean.Qualifier;
++import org.luckyraven.keystone.inventory.InventoryService;
+ import org.luckyraven.keystone.permission.PermissionManager;
+ import org.luckyraven.keystone.persistence.repository.IRepository;
+ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
+ 
+ /**
+@@ -195,9 +196,9 @@ public class GadgetModuleConfig {
+ 	                                               CarAddon carAddon) {
+ 		return new CarSignContribution(userManager, carAddon);
+ 	}
+ 
+ 	@Bean
+-	public CarSignViewProvider carSignViewProvider(CarAddon carAddon) {
+-		return new CarSignViewProvider(plugin, carAddon);
++	public CarSignViewProvider carSignViewProvider(InventoryService inventoryService, CarAddon carAddon) {
++		return new CarSignViewProvider(plugin, inventoryService, carAddon);
+ 	}
+ }
+diff --git a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/sign/CarSignViewProvider.java b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/sign/CarSignViewProvider.java
+index bc773e7c..17f0fc02 100644
+--- a/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/sign/CarSignViewProvider.java
++++ b/gangland-features/gangland-gadget/src/main/java/org/luckyraven/gangland/gadget/sign/CarSignViewProvider.java
+@@ -1,34 +1,44 @@
+ package org.luckyraven.gangland.gadget.sign;
+ 
++import org.bukkit.Material;
+ import org.bukkit.entity.Player;
+ import org.bukkit.inventory.ItemStack;
+ import org.bukkit.plugin.java.JavaPlugin;
+ import org.luckyraven.gangland.file.configuration.Settings;
+ import org.luckyraven.gangland.gadget.car.Car;
+ import org.luckyraven.gangland.gadget.car.CarManager;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+ import org.luckyraven.gangland.inventory.part.Fill;
+-import org.luckyraven.gangland.inventory.util.InventoryUtil;
+ import org.luckyraven.gangland.sign.extension.SignViewProvider;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.chest.ChestMenu;
++import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
++import org.luckyraven.keystone.inventory.component.FillComponent;
++import org.luckyraven.keystone.inventory.component.ItemComponent;
+ import org.luckyraven.keystone.item.ItemBuilder;
+ 
++import com.cryptomorin.xseries.XMaterial;
++
+ import java.util.ArrayList;
+ import java.util.List;
+ 
+ /**
+  * The {@code view} sign's car branch, moved out of the core's {@code ViewInventoryAspect.openCarView} verbatim
+  * when the sign extension seam was introduced.
+  */
+ public class CarSignViewProvider implements SignViewProvider {
+ 
+-	private final JavaPlugin  plugin;
+-	private final CarManager  carManager;
++	private static final int SLOT_ITEM = 4;
++
++	private final JavaPlugin       plugin;
++	private final InventoryService inventoryService;
++	private final CarManager       carManager;
+ 
+-	public CarSignViewProvider(JavaPlugin plugin, CarManager carManager) {
+-		this.plugin     = plugin;
+-		this.carManager = carManager;
++	public CarSignViewProvider(JavaPlugin plugin, InventoryService inventoryService, CarManager carManager) {
++		this.plugin           = plugin;
++		this.inventoryService = inventoryService;
++		this.carManager       = carManager;
+ 	}
+ 
+ 	@Override
+ 	public boolean open(Player player, String content) {
+ 		Car car = carManager.getCar(content);
+@@ -41,12 +51,10 @@ public class CarSignViewProvider implements SignViewProvider {
+ 	}
+ 
+ 	private void openCarView(Player player, Car car) {
+ 		String title = "&6View: &e" + car.getDisplayName();
+ 
+-		InventoryHandler inventory = new InventoryHandler(plugin, title, 9, player);
+-
+ 		List<String> lore = new ArrayList<>();
+ 		lore.add("&7Speed: &f" + car.getMaxSpeed() + " &7blocks/tick");
+ 		lore.add("&7Acceleration: &f" + car.getAcceleration());
+ 		lore.add("&7Health: &f" + car.getMaxHealth() + " HP");
+ 		lore.add("&7Durability: &f" + car.getMaxDurability());
+@@ -58,14 +66,18 @@ public class CarSignViewProvider implements SignViewProvider {
+ 			lore.add("&7Fuel: &aUnlimited");
+ 		}
+ 
+ 		ItemStack carItem = new ItemBuilder(car.buildItem(player)).setLore(lore).build();
+ 
+-		inventory.setItem(4, carItem, false, null);
+-
+ 		Fill fill = new Fill(Settings.getInventoryFillName(), Settings.getInventoryFillItem());
+ 
+-		InventoryUtil.fillInventory(inventory, fill);
++		ChestMenuBuilder builder = ChestMenu.builder(inventoryService).title(title).rows(1);
++		builder.slot(SLOT_ITEM, ItemComponent.of(carItem));
++		builder.fill(FillComponent.of(materialOf(fill.material())).name(fill.name()));
++
++		builder.build().open(player);
++	}
+ 
+-		inventory.open(player);
++	private static Material materialOf(String name) {
++		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
+ 	}
+ }
+diff --git a/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/TurfModuleConfig.java b/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/TurfModuleConfig.java
+index 1cb50931..4242ace6 100644
+--- a/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/TurfModuleConfig.java
++++ b/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/TurfModuleConfig.java
+@@ -1,10 +1,11 @@
+ package org.luckyraven.gangland.turf;
+ 
+ import org.bukkit.plugin.java.JavaPlugin;
+ import org.luckyraven.keystone.bean.Bean;
+ import org.luckyraven.keystone.bean.Configuration;
++import org.luckyraven.keystone.inventory.InventoryService;
+ import org.luckyraven.keystone.permission.PermissionManager;
+ import org.luckyraven.gangland.civilians.npc.CivilianService;
+ import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
+ import org.luckyraven.gangland.turf.database.ActiveTurfBuffRepository;
+ import org.luckyraven.gangland.turf.database.TurfGarrisonRepository;
+@@ -265,14 +266,14 @@ public final class TurfModuleConfig {
+ 		return new TurfPowerupGarrisonView(garrisons,
+ 		                                   Settings.getInventoryFillItem(), Settings.getInventoryFillName());
+ 	}
+ 
+ 	@Bean
+-	public TurfPowerupFlow turfPowerupFlow(JavaPlugin plugin, TurfPowerupMenuView menuView,
+-	                                       TurfPowerupBuffCatalogueView buffsView,
++	public TurfPowerupFlow turfPowerupFlow(JavaPlugin plugin, InventoryService inventoryService,
++	                                       TurfPowerupMenuView menuView, TurfPowerupBuffCatalogueView buffsView,
+ 	                                       TurfPowerupGarrisonView garrisonView) {
+-		return new TurfPowerupFlow(plugin, menuView, buffsView, garrisonView);
++		return new TurfPowerupFlow(plugin, inventoryService, menuView, buffsView, garrisonView);
+ 	}
+ 
+ 	@Bean
+ 	public TurfPowerupOpenContract turfPowerupOpenContract(TurfPowerupFlow flow, TurfManager turfs,
+ 	                                                       TurfPowerupManager npcs, GangLookupContract gangs,
+diff --git a/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/TurfPowerupOpenContract.java b/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/TurfPowerupOpenContract.java
+index b211c58d..29276bd0 100644
+--- a/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/TurfPowerupOpenContract.java
++++ b/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/TurfPowerupOpenContract.java
+@@ -1,15 +1,15 @@
+ package org.luckyraven.gangland.turf.npc;
+ 
+ import org.bukkit.entity.Player;
+-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
++import org.luckyraven.keystone.inventory.flow.MenuFlow;
+ 
+ /**
+- * Opens the per-turf Quartermaster panel for {@code viewer}. The implementation lives in gangland-impl (where the turf
+- * module + gang module + economy are all visible) and constructs the {@link MultiPanelInventory} chain. Cops-n-crooks
+- * only holds this seam so the right-click listener stays free of turf-module imports while still being able to drive
+- * the panel.
++ * Opens the per-turf Quartermaster panel for {@code viewer}. The implementation ({@code TurfPowerupOpenContractImpl})
++ * lives in gangland-turf itself (where the turf module + gang module + economy are all visible) and constructs the
++ * {@link MenuFlow} chain. Cops-n-crooks only holds this seam so the right-click listener stays free of turf-module
++ * imports while still being able to drive the panel.
+  *
+  * <p>Owner-gang gating, no-owner / no-gang denial, and "turf was deleted" handling all live in the impl — this
+  * interface just receives the request and is expected to either show a panel or send the viewer a deny chat.
+  */
+ public interface TurfPowerupOpenContract {
+diff --git a/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupBuffCatalogueView.java b/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupBuffCatalogueView.java
+index 2bf57122..db8a7d0e 100644
+--- a/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupBuffCatalogueView.java
++++ b/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupBuffCatalogueView.java
+@@ -1,20 +1,21 @@
+ package org.luckyraven.gangland.turf.npc.view;
+ 
++import com.cryptomorin.xseries.XMaterial;
+ import lombok.RequiredArgsConstructor;
+ import org.bukkit.Material;
+ import org.bukkit.entity.Player;
++import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
++import org.luckyraven.keystone.inventory.component.FillComponent;
++import org.luckyraven.keystone.inventory.component.ItemComponent;
++import org.luckyraven.keystone.inventory.flow.MenuFlow;
++import org.luckyraven.keystone.inventory.flow.Panel;
+ import org.luckyraven.keystone.item.ItemBuilder;
+ import org.luckyraven.keystone.util.ChatUtil;
+ import org.luckyraven.keystone.util.NumberUtil;
+ import org.luckyraven.keystone.economy.exception.EconomyException;
+ import org.luckyraven.gangland.gang.Gang;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
+-import org.luckyraven.gangland.inventory.flow.Panel;
+-import org.luckyraven.gangland.inventory.part.Fill;
+-import org.luckyraven.gangland.inventory.util.InventoryUtil;
+ import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
+ import org.luckyraven.gangland.turf.powerups.PowerupDefinition;
+ import org.luckyraven.gangland.turf.powerups.PowerupRegistry;
+ 
+ import java.util.ArrayList;
+@@ -26,11 +27,11 @@ import java.util.List;
+  * visible). Bottom-row navigation: back to menu + close.
+  */
+ @RequiredArgsConstructor
+ public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlowSession> {
+ 
+-	private static final int SIZE       = 36;
++	private static final int ROWS       = 4;
+ 	private static final int BUFF_START = 9;
+ 	private static final int BUFF_END   = 18;
+ 	private static final int SLOT_BACK  = 27;
+ 	private static final int SLOT_CLOSE = 35;
+ 
+@@ -38,39 +39,38 @@ public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlow
+ 	private final ActiveBuffManager buffs;
+ 	private final String            fillItem;
+ 	private final String            fillName;
+ 
+ 	@Override
+-	public int size(TurfPowerupFlowSession session) {
+-		return SIZE;
++	public int rows(TurfPowerupFlowSession session) {
++		return ROWS;
+ 	}
+ 
+ 	@Override
+ 	public String title(TurfPowerupFlowSession session) {
+ 		return "&8&l[&b&lBuffs &8— &6" + session.getNpcDisplayName() + "&8&l]";
+ 	}
+ 
+ 	@Override
+-	public void render(MultiPanelInventory<TurfPowerupFlowSession> host, InventoryHandler handler, Player viewer,
+-	                   TurfPowerupFlowSession session) {
++	public void render(MenuFlow<TurfPowerupFlowSession> flow, ChestMenuBuilder builder, TurfPowerupFlowSession session) {
+ 		Gang gang = session.getViewerGang();
+ 
+ 		int slot = BUFF_START;
+ 		for (PowerupDefinition def : registry.all()) {
+ 			if (slot >= BUFF_END) break;
+ 			final PowerupDefinition captured = def;
+-			handler.setItem(slot++, buffItem(captured, gang), false,
+-			                (p, inv, b) -> attemptBuy(host, viewer, session, captured));
++			builder.slot(slot++, ItemComponent.of(buffItem(captured, gang))
++			                                  .onAnyClick(ctx -> attemptBuy(flow, ctx.player(), session, captured)));
+ 		}
+ 
+ 		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&7← Back");
+-		handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> host.back());
++		builder.slot(SLOT_BACK, ItemComponent.of(back).onAnyClick(ctx -> flow.back()));
+ 
+ 		ItemBuilder close = new ItemBuilder(Material.BARRIER).setDisplayName("&cClose");
+-		handler.setItem(SLOT_CLOSE, close, false, (p, inv, b) -> host.end());
++		builder.slot(SLOT_CLOSE, ItemComponent.of(close).onAnyClick(ctx -> flow.end()));
+ 
+-		InventoryUtil.fillInventory(handler, new Fill(fillName, fillItem));
++		builder.fill(FillComponent.of(materialOf(fillItem)).name(fillName));
+ 	}
+ 
+ 	private ItemBuilder buffItem(PowerupDefinition def, Gang viewerGang) {
+ 		List<String> lore = new ArrayList<>();
+ 		lore.add("&7Effect: &f" + def.effectType().name() + " &7x&f" + def.magnitude());
+@@ -82,12 +82,12 @@ public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlow
+ 		return new ItemBuilder(Material.POTION)
+ 				.setDisplayName(def.displayName())
+ 				.setLore(lore);
+ 	}
+ 
+-	private void attemptBuy(MultiPanelInventory<TurfPowerupFlowSession> host, Player viewer,
+-	                        TurfPowerupFlowSession session, PowerupDefinition def) {
++	private void attemptBuy(MenuFlow<TurfPowerupFlowSession> flow, Player viewer, TurfPowerupFlowSession session,
++	                        PowerupDefinition def) {
+ 		Gang gang = session.getViewerGang();
+ 		try {
+ 			gang.getEconomy().withdrawAmount(def.cost());
+ 		} catch (EconomyException exception) {
+ 			viewer.sendMessage(ChatUtil.color("&cYour gang bank can't cover &f$"
+@@ -95,8 +95,12 @@ public final class TurfPowerupBuffCatalogueView implements Panel<TurfPowerupFlow
+ 			return;
+ 		}
+ 		buffs.activate(session.getTurf().getId(), def);
+ 		viewer.sendMessage(ChatUtil.color("&aActivated &f" + def.id() + " &aon &f"
+ 		                                  + session.getTurf().getDisplayName() + "&a."));
+-		host.rerender();
++		flow.rerender();
++	}
++
++	private static Material materialOf(String name) {
++		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
+ 	}
+ }
+diff --git a/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupFlow.java b/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupFlow.java
+index 67e56fa9..4a93b9a6 100644
+--- a/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupFlow.java
++++ b/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupFlow.java
+@@ -2,31 +2,33 @@ package org.luckyraven.gangland.turf.npc.view;
+ 
+ import lombok.RequiredArgsConstructor;
+ import org.bukkit.entity.Player;
+ import org.bukkit.plugin.java.JavaPlugin;
+ import org.luckyraven.gangland.gang.Gang;
+-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
++import org.luckyraven.keystone.inventory.InventoryService;
++import org.luckyraven.keystone.inventory.flow.MenuFlow;
+ import org.luckyraven.gangland.turf.data.Turf;
+ 
+ /**
+  * Entry point for the Quartermaster panel chain. Registers the three panels (root menu / buff catalogue / garrison) on
+- * a fresh {@link MultiPanelInventory} per viewer and opens the menu. Click handlers in each panel navigate via
+- * {@link MultiPanelInventory#switchTo(String)} / {@link MultiPanelInventory#back()}.
++ * a fresh {@link MenuFlow} per viewer and opens the menu. Click handlers in each panel navigate via
++ * {@link MenuFlow#switchTo(String)} / {@link MenuFlow#back()}.
+  */
+ @RequiredArgsConstructor
+ public final class TurfPowerupFlow {
+ 
+ 	private final JavaPlugin                   plugin;
++	private final InventoryService             inventoryService;
+ 	private final TurfPowerupMenuView          menuView;
+ 	private final TurfPowerupBuffCatalogueView buffsView;
+ 	private final TurfPowerupGarrisonView      garrisonView;
+ 
+ 	public void start(Player viewer, Turf turf, Gang ownerGang, Gang viewerGang, String npcDisplayName) {
+-		TurfPowerupFlowSession session = new TurfPowerupFlowSession(turf, ownerGang, viewerGang,
+-		                                                            npcDisplayName);
+-		MultiPanelInventory<TurfPowerupFlowSession> host = new MultiPanelInventory<>(plugin, viewer, session);
+-		host.register(TurfPowerupFlowSession.PANEL_MENU, menuView);
+-		host.register(TurfPowerupFlowSession.PANEL_BUFFS, buffsView);
+-		host.register(TurfPowerupFlowSession.PANEL_GARRISON, garrisonView);
+-		host.openAt(TurfPowerupFlowSession.PANEL_MENU);
++		TurfPowerupFlowSession session = new TurfPowerupFlowSession(turf, ownerGang, viewerGang, npcDisplayName);
++		MenuFlow<TurfPowerupFlowSession> flow = MenuFlow.builder(inventoryService, plugin, viewer, session)
++		                                                .panel(TurfPowerupFlowSession.PANEL_MENU, menuView)
++		                                                .panel(TurfPowerupFlowSession.PANEL_BUFFS, buffsView)
++		                                                .panel(TurfPowerupFlowSession.PANEL_GARRISON, garrisonView)
++		                                                .build();
++		flow.openAt(TurfPowerupFlowSession.PANEL_MENU);
+ 	}
+ }
+diff --git a/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupFlowSession.java b/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupFlowSession.java
+index 655fcdcf..9759c6d7 100644
+--- a/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupFlowSession.java
++++ b/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupFlowSession.java
+@@ -1,19 +1,19 @@
+ package org.luckyraven.gangland.turf.npc.view;
+ 
+ import lombok.Getter;
+ import org.luckyraven.gangland.gang.Gang;
+-import org.luckyraven.gangland.inventory.flow.FlowSession;
++import org.luckyraven.keystone.inventory.flow.FlowState;
+ import org.luckyraven.gangland.turf.data.Turf;
+ 
+ /**
+  * Per-viewer state carried across panel switches in the Quartermaster flow. Holds the {@link Turf} the panel targets
+  * (resolved at open time so the view never looks it up again) and the viewer's {@link Gang} (for owner-gang gating and
+  * bank-balance reads). Both are resolved by {@code TurfPowerupOpenContractImpl} before opening the flow — if either is
+  * missing, the contract sends a deny chat and never constructs a session.
+  */
+-public final class TurfPowerupFlowSession implements FlowSession {
++public final class TurfPowerupFlowSession implements FlowState {
+ 
+ 	public static final String PANEL_MENU     = "menu";
+ 	public static final String PANEL_BUFFS    = "buffs";
+ 	public static final String PANEL_GARRISON = "garrison";
+ 
+diff --git a/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupGarrisonView.java b/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupGarrisonView.java
+index b9aa3c6b..368deec5 100644
+--- a/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupGarrisonView.java
++++ b/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupGarrisonView.java
+@@ -1,20 +1,21 @@
+ package org.luckyraven.gangland.turf.npc.view;
+ 
++import com.cryptomorin.xseries.XMaterial;
+ import lombok.RequiredArgsConstructor;
+ import org.bukkit.Material;
+ import org.bukkit.entity.Player;
++import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
++import org.luckyraven.keystone.inventory.component.FillComponent;
++import org.luckyraven.keystone.inventory.component.ItemComponent;
++import org.luckyraven.keystone.inventory.flow.MenuFlow;
++import org.luckyraven.keystone.inventory.flow.Panel;
+ import org.luckyraven.keystone.item.ItemBuilder;
+ import org.luckyraven.keystone.util.ChatUtil;
+ import org.luckyraven.keystone.util.NumberUtil;
+ import org.luckyraven.keystone.economy.exception.EconomyException;
+ import org.luckyraven.gangland.gang.Gang;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
+-import org.luckyraven.gangland.inventory.flow.Panel;
+-import org.luckyraven.gangland.inventory.part.Fill;
+-import org.luckyraven.gangland.inventory.util.InventoryUtil;
+ import org.luckyraven.gangland.turf.data.Turf;
+ import org.luckyraven.gangland.turf.powerups.GarrisonManager;
+ 
+ import java.math.BigDecimal;
+ import java.util.List;
+@@ -28,11 +29,11 @@ import java.util.List;
+  * once that section is added back to the config.
+  */
+ @RequiredArgsConstructor
+ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSession> {
+ 
+-	private static final int SIZE       = 27;
++	private static final int ROWS       = 3;
+ 	private static final int SLOT_INFO  = 4;
+ 	private static final int SLOT_BUY   = 13;
+ 	private static final int SLOT_BACK  = 18;
+ 	private static final int SLOT_CLOSE = 26;
+ 
+@@ -41,36 +42,35 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
+ 	private final GarrisonManager garrisons;
+ 	private final String          fillItem;
+ 	private final String          fillName;
+ 
+ 	@Override
+-	public int size(TurfPowerupFlowSession session) {
+-		return SIZE;
++	public int rows(TurfPowerupFlowSession session) {
++		return ROWS;
+ 	}
+ 
+ 	@Override
+ 	public String title(TurfPowerupFlowSession session) {
+ 		return "&8&l[&c&lGarrison &8— &6" + session.getNpcDisplayName() + "&8&l]";
+ 	}
+ 
+ 	@Override
+-	public void render(MultiPanelInventory<TurfPowerupFlowSession> host, InventoryHandler handler, Player viewer,
+-	                   TurfPowerupFlowSession session) {
++	public void render(MenuFlow<TurfPowerupFlowSession> flow, ChestMenuBuilder builder, TurfPowerupFlowSession session) {
+ 		Turf turf = session.getTurf();
+ 		Gang gang = session.getViewerGang();
+ 
+-		handler.setItem(SLOT_INFO, infoItem(turf, gang), false, (p, inv, b) -> { });
+-		handler.setItem(SLOT_BUY, buyItem(gang), false,
+-		                (p, inv, b) -> attemptBuy(host, viewer, session));
++		builder.slot(SLOT_INFO, ItemComponent.of(infoItem(turf, gang)));
++		builder.slot(SLOT_BUY, ItemComponent.of(buyItem(gang))
++		                                   .onAnyClick(ctx -> attemptBuy(flow, ctx.player(), session)));
+ 
+ 		ItemBuilder back = new ItemBuilder(Material.ARROW).setDisplayName("&7← Back");
+-		handler.setItem(SLOT_BACK, back, false, (p, inv, b) -> host.back());
++		builder.slot(SLOT_BACK, ItemComponent.of(back).onAnyClick(ctx -> flow.back()));
+ 
+ 		ItemBuilder close = new ItemBuilder(Material.BARRIER).setDisplayName("&cClose");
+-		handler.setItem(SLOT_CLOSE, close, false, (p, inv, b) -> host.end());
++		builder.slot(SLOT_CLOSE, ItemComponent.of(close).onAnyClick(ctx -> flow.end()));
+ 
+-		InventoryUtil.fillInventory(handler, new Fill(fillName, fillItem));
++		builder.fill(FillComponent.of(materialOf(fillItem)).name(fillName));
+ 	}
+ 
+ 	private ItemBuilder infoItem(Turf turf, Gang gang) {
+ 		return new ItemBuilder(Material.IRON_HELMET)
+ 				.setDisplayName("&c&lGarrison")
+@@ -90,12 +90,11 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
+ 						" ",
+ 						canAfford ? "&aClick to add &f1 &ato the garrison."
+ 						          : "&cInsufficient gang funds."));
+ 	}
+ 
+-	private void attemptBuy(MultiPanelInventory<TurfPowerupFlowSession> host, Player viewer,
+-	                        TurfPowerupFlowSession session) {
++	private void attemptBuy(MenuFlow<TurfPowerupFlowSession> flow, Player viewer, TurfPowerupFlowSession session) {
+ 		Gang gang = session.getViewerGang();
+ 		try {
+ 			gang.getEconomy().withdrawAmount(PER_DEFENDER_COST);
+ 		} catch (EconomyException exception) {
+ 			viewer.sendMessage(ChatUtil.color("&cYour gang bank can't cover &f$"
+@@ -103,8 +102,12 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
+ 			return;
+ 		}
+ 		garrisons.add(session.getTurf().getId(), 1);
+ 		viewer.sendMessage(ChatUtil.color("&aBought &f1 &adefender for &f"
+ 		                                  + session.getTurf().getDisplayName() + "&a."));
+-		host.rerender();
++		flow.rerender();
++	}
++
++	private static Material materialOf(String name) {
++		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
+ 	}
+ }
+diff --git a/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupMenuView.java b/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupMenuView.java
+index 98d16867..e85cee27 100644
+--- a/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupMenuView.java
++++ b/gangland-features/gangland-turf/src/main/java/org/luckyraven/gangland/turf/npc/view/TurfPowerupMenuView.java
+@@ -1,18 +1,18 @@
+ package org.luckyraven.gangland.turf.npc.view;
+ 
++import com.cryptomorin.xseries.XMaterial;
+ import lombok.RequiredArgsConstructor;
+ import org.bukkit.Material;
+-import org.bukkit.entity.Player;
++import org.luckyraven.keystone.inventory.chest.ChestMenuBuilder;
++import org.luckyraven.keystone.inventory.component.FillComponent;
++import org.luckyraven.keystone.inventory.component.ItemComponent;
++import org.luckyraven.keystone.inventory.flow.MenuFlow;
++import org.luckyraven.keystone.inventory.flow.Panel;
+ import org.luckyraven.keystone.item.ItemBuilder;
+ import org.luckyraven.keystone.util.NumberUtil;
+ import org.luckyraven.gangland.gang.Gang;
+-import org.luckyraven.gangland.inventory.InventoryHandler;
+-import org.luckyraven.gangland.inventory.flow.MultiPanelInventory;
+-import org.luckyraven.gangland.inventory.flow.Panel;
+-import org.luckyraven.gangland.inventory.part.Fill;
+-import org.luckyraven.gangland.inventory.util.InventoryUtil;
+ import org.luckyraven.gangland.turf.data.Turf;
+ import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
+ import org.luckyraven.gangland.turf.powerups.GarrisonManager;
+ 
+ import java.util.ArrayList;
+@@ -24,11 +24,11 @@ import java.util.List;
+  * padded with the configured global inventory-fill item (matches BankerMenuView style).
+  */
+ @RequiredArgsConstructor
+ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession> {
+ 
+-	private static final int SIZE          = 27;
++	private static final int ROWS         = 3;
+ 	private static final int SLOT_INFO     = 4;
+ 	private static final int SLOT_BUFFS    = 11;
+ 	private static final int SLOT_GARRISON = 15;
+ 	private static final int SLOT_CLOSE    = 22;
+ 
+@@ -36,36 +36,35 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession>
+ 	private final ActiveBuffManager buffs;
+ 	private final String            fillItem;
+ 	private final String            fillName;
+ 
+ 	@Override
+-	public int size(TurfPowerupFlowSession session) {
+-		return SIZE;
++	public int rows(TurfPowerupFlowSession session) {
++		return ROWS;
+ 	}
+ 
+ 	@Override
+ 	public String title(TurfPowerupFlowSession session) {
+ 		return "&8&l[&6&l" + session.getNpcDisplayName() + "&8&l]";
+ 	}
+ 
+ 	@Override
+-	public void render(MultiPanelInventory<TurfPowerupFlowSession> host, InventoryHandler handler, Player viewer,
+-	                   TurfPowerupFlowSession session) {
++	public void render(MenuFlow<TurfPowerupFlowSession> flow, ChestMenuBuilder builder, TurfPowerupFlowSession session) {
+ 		Turf turf       = session.getTurf();
+ 		Gang ownerGang  = session.getOwnerGang();
+ 		Gang viewerGang = session.getViewerGang();
+ 
+-		handler.setItem(SLOT_INFO, infoItem(turf, ownerGang, viewerGang), false, (p, inv, b) -> { });
+-		handler.setItem(SLOT_BUFFS, buffsButton(turf), false,
+-		                (p, inv, b) -> host.switchTo(TurfPowerupFlowSession.PANEL_BUFFS));
+-		handler.setItem(SLOT_GARRISON, garrisonButton(turf), false,
+-		                (p, inv, b) -> host.switchTo(TurfPowerupFlowSession.PANEL_GARRISON));
++		builder.slot(SLOT_INFO, ItemComponent.of(infoItem(turf, ownerGang, viewerGang)));
++		builder.slot(SLOT_BUFFS, ItemComponent.of(buffsButton(turf))
++		                                     .onAnyClick(ctx -> flow.switchTo(TurfPowerupFlowSession.PANEL_BUFFS)));
++		builder.slot(SLOT_GARRISON, ItemComponent.of(garrisonButton(turf))
++		                                        .onAnyClick(ctx -> flow.switchTo(TurfPowerupFlowSession.PANEL_GARRISON)));
+ 
+ 		ItemBuilder close = new ItemBuilder(Material.BARRIER).setDisplayName("&cClose");
+-		handler.setItem(SLOT_CLOSE, close, false, (p, inv, b) -> host.end());
++		builder.slot(SLOT_CLOSE, ItemComponent.of(close).onAnyClick(ctx -> flow.end()));
+ 
+-		InventoryUtil.fillInventory(handler, new Fill(fillName, fillItem));
++		builder.fill(FillComponent.of(materialOf(fillItem)).name(fillName));
+ 	}
+ 
+ 	private ItemBuilder infoItem(Turf turf, Gang ownerGang, Gang viewerGang) {
+ 		List<String> lore = new ArrayList<>();
+ 		lore.add("&7Owning gang: &e" + ownerGang.getName());
+@@ -95,6 +94,10 @@ public final class TurfPowerupMenuView implements Panel<TurfPowerupFlowSession>
+ 				.setLore("&7View / buy defender stock.",
+ 				         "&7These civilian defenders auto-spawn",
+ 				         "&7when an enemy attacks the turf.",
+ 				         "&7Current stock: &f" + garrisons.count(turf.getId()));
+ 	}
++
++	private static Material materialOf(String name) {
++		return XMaterial.matchXMaterial(name).map(XMaterial::get).orElse(Material.BLACK_STAINED_GLASS_PANE);
++	}
+ }

@@ -1,0 +1,33 @@
+[Runner] Runner joined the game
+[Runner] [ViaVersion] There is a newer plugin version available: 5.12.0, you're on: 5.12.0-SNAPSHOT
+[Runner] [Server: Gamerule spawn_mobs is now set to: false]
+[Runner] [Server: Gamerule spawn_monsters is now set to: false]
+[Runner] [Server: Gamerule advance_time is now set to: false]
+[Runner] [Server: Set the time to 6000]
+[Runner] [Server: Set the weather to clear]
+[Runner] [Server: Killed 2 entities]
+[Runner] [Server: Applied effect Resistance to Runner]
+[Runner] [Server: Applied effect Instant Health to Runner]
+[Runner] [Server: Teleported Runner to 100.500000, -60.000000, 100.500000]
+[Runner] [DISPATCH] All units, be advised: Runner is wanted, level 1.
+[Runner] [GLW] Your wanted level has been increased ★☆☆☆☆.
+[Runner] [RADIO] Officer Pointman Walt #1000: Officer Assault Jim #1001, take his right!
+[Runner] [RADIO] Officer Assault Jim #1001: Moving.
+[Runner] [RADIO] Officer Pointman Walt #1000: Eyes on Runner, south-west!
+[Runner] [RADIO] Officer Assault Jim #1001: Moving to flank, south!
+[Runner] [Jim #1001: Added tag 'cncc' to Jim #1001]
+[Runner] [Walt #1000: Added tag 'cncc' to Walt #1000]
+[Runner] [RADIO] Officer Pointman Walt #1000: Suspect cleared. Returning to patrol.
+[Runner] [GLW] Your wanted level has been cleared.
+[Runner] GLW >> Wanted Status:
+[Runner] ☆☆☆☆☆
+[Runner] [Server] CNCMARK:STATUS:N6-cleared
+[Runner] [DISPATCH] All units, be advised: Runner is wanted, level 1.
+[Runner] [Server: Applied 1 damage to Jim #1001]
+[Runner] [RADIO] Officer Pointman Walt #1000: Contact! Suspect 18 blocks south-west!
+[Runner] [RADIO] Officer Pointman Walt #1000: Suspect is resisting! Take him down!
+[Runner] GLW >> Wanted Status:
+[Runner] ★☆☆☆☆
+[Runner] [RADIO] Officer Assault Jim #1001: Moving to flank, south!
+[Runner] [Server] CNCMARK:STATUS:N6-after-hit
+[Runner/end] [END] disconnect.quitting

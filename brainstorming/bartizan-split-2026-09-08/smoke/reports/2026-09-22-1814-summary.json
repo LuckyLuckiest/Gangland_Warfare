@@ -1,0 +1,21 @@
+[
+  {
+    "id": "cut-full-regression",
+    "title": "WS2 CUT (0.10.0): gangland-ui/inventory-api deleted outright, every menu now on keystone-inventory + gangland-impl's menu.* dialect -- full six-module + Bartizan regression boot (mail, turf, civilians, cops-n-crooks, gadget, npcshops), then /glw reload and /glw debug inv-data from console. Console can only confirm the bean graph boots clean and the tracker command resolves without an exception -- it CANNOT open a real chest menu or drive a click (no in-game player); the CUT manual checklist (exec/G010/WS2-manual-checklist.md, CUT section) covers loot-chest open/take and wand-preview rows a human must run.",
+    "verdict": "PASS",
+    "boot_ok": true,
+    "stop_ok": true,
+    "stop_reason": "exited_after_quiet",
+    "loaded_modules": [
+      "civilians",
+      "gadget",
+      "mail",
+      "npcshops",
+      "turf",
+      "copsncrooks"
+    ],
+    "distinct_error_count": 1,
+    "report_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-22-1814-cut-full-regression.md",
+    "log_path": "E:\\Programming\\java\\Gangland Warfare [Cubed-GTA recoded]\\brainstorming\\bartizan-split-2026-09-08\\smoke\\reports\\2026-09-22-1814-cut-full-regression.log"
+  }
+]
