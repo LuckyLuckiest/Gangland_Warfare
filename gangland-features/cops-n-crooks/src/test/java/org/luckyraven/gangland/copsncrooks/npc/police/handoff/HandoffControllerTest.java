@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -232,5 +233,13 @@ class HandoffControllerTest {
 
 		assertNull(group.biasAt(clock[0]));
 		verify(radio, never()).sayFromLeader(any(), eq("Handoff"), any());
+	}
+
+	@Test
+	@DisplayName("no loaded cop config (a reload window) skips the tick instead of throwing")
+	void noLoadedProvider_skipsTheTick() {
+		HandoffController unloaded = new HandoffController(manager, radio, () -> null);
+
+		assertDoesNotThrow(() -> unloaded.tick(player, group));
 	}
 }
