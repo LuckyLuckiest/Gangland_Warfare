@@ -142,6 +142,18 @@ class ChaseArcListenerTest {
 	}
 
 	@Test
+	@DisplayName("a stale sub-threshold crime from hours before an admin chase does not make it a crime chase")
+	void chaseEnd_withOnlyAStalePreChaseCrime_leavesNoRecent() {
+		ledger.record(crime(Crimes.KILL_PLAYER));
+		clock.addAndGet(2 * 60 * 60_000L);
+		start(WantedCause.ADMIN, 3);
+
+		listener.onChaseEnd(new WantedEndEvent(player, wanted, WantedCause.ADMIN));
+
+		assertEquals(0, arcs.recentEnds(playerId, 30));
+	}
+
+	@Test
 	@DisplayName("an end with no arc records nothing")
 	void chaseEnd_withNoArc_doesNothing() {
 		listener.onChaseEnd(new WantedEndEvent(player, wanted, WantedCause.EVASION));

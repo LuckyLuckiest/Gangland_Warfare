@@ -83,7 +83,7 @@ public class ChaseArcListener implements Listener {
 
 		learner.record(new ChaseRecord(id, arc.startCause(), event.getCause(), arc.peak(), until - arc.startedAt(),
 		                               contact, now), now);
-		arcs.end(id, !heat.chaseCrimes(id).isEmpty());
+		arcs.end(id, arcs.hadCrime(id, heat.chaseCrimes(id), config.get().evasion().auto()));
 	}
 
 	/** Not via UserManager: RemoveAccountListener (HIGHEST) has already removed the user. */

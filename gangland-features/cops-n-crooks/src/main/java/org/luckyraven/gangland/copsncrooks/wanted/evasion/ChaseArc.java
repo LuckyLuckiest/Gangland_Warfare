@@ -13,6 +13,8 @@ public final class ChaseArc {
 
 	final WantedCause startCause;
 
+	/** Clock millis at the start, never shifted by a restore: the cut-off against the ledger's own crime stamps. */
+	long                        begunAt;
 	long                        startedAt;
 	long                        lastHotAt;
 	long                        lastLostAt;

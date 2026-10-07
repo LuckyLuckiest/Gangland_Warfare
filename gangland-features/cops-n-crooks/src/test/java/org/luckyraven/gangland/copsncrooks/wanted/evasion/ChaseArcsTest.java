@@ -194,6 +194,35 @@ class ChaseArcsTest {
 	}
 
 	@Test
+	@DisplayName("a stale sub-threshold crime from long before the chase is not on it; a build-up crime just before is")
+	void view_ignoresStalePreChaseCrimes() {
+		long t = clock.get();
+		CrimeRecord stale   = crime(Crimes.KILL_PLAYER, t - 120 * MIN);
+		CrimeRecord buildUp = crime(Crimes.KILL_PLAYER, t - 10_000);
+		arcs.start(id, WantedCause.CRIME, 2);
+		List<CrimeRecord> crimes = List.of(stale, buildUp, crime(Crimes.KILL_PLAYER, t),
+		                                   crime(Crimes.KILL_PLAYER, t + 15_000));
+
+		AutoDrop.ChaseView v = arcs.view(id, crimes, settings);
+
+		assertEquals(3, v.crimes());
+		assertEquals(3, v.opening());
+	}
+
+	@Test
+	@DisplayName("a restore does not move the crime cut-off: crimes keep their own unshifted stamps")
+	void view_afterRestore_keepsTheChasesCrimes() {
+		long t = clock.get();
+		arcs.start(id, WantedCause.CRIME, 2);
+		List<CrimeRecord> crimes = List.of(crime(Crimes.KILL_PLAYER, t));
+		arcs.quit(id);
+		clock.addAndGet(20 * MIN);
+		arcs.restore(id);
+
+		assertEquals(1, arcs.view(id, crimes, settings).crimes());
+	}
+
+	@Test
 	@DisplayName("pending plan is taken once")
 	void pending_isTakenOnce() {
 		arcs.start(id, WantedCause.CRIME, 2);

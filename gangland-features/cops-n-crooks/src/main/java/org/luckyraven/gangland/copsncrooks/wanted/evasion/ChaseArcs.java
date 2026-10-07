@@ -51,6 +51,7 @@ public final class ChaseArcs {
 		prune();
 		long     now = clock.getAsLong();
 		ChaseArc arc = new ChaseArc(cause);
+		arc.begunAt   = now;
 		arc.startedAt = now;
 		arc.lastHotAt = now;
 		arc.peak      = level;
@@ -129,6 +130,7 @@ public final class ChaseArcs {
 		ChaseArc arc = arcs.get(id);
 		if (arc == null) return null;
 
+		crimes = onChase(arc, crimes, settings);
 		long    now     = arc.offlineAt != 0 ? arc.offlineAt : clock.getAsLong();
 		long    cutoff  = crimes.isEmpty() ? 0 : crimes.get(0).at() + settings.openingSeconds() * 1000L;
 		int     opening = 0;
@@ -141,6 +143,23 @@ public final class ChaseArcs {
 		return new AutoDrop.ChaseView(crimes.size(), opening, kill, arc.peak, now - arc.startedAt,
 		                              now - arc.lastHotAt, arc.quits, arc.respots,
 		                              recentEnds(id, settings.repeatWindowMinutes()));
+	}
+
+	/** Whether any of the ledger's crimes is on this player's current chase; false with no arc. */
+	public boolean hadCrime(UUID id, List<CrimeRecord> crimes, AutoSettings settings) {
+		ChaseArc arc = arcs.get(id);
+		return arc != null && !onChase(arc, crimes, settings).isEmpty();
+	}
+
+	/**
+	 * The ledger keeps sub-threshold crimes with no decay, so its list can hold a crime from long before this chase. A
+	 * crime counts only from {@code Opening_Seconds} before the start on: the build-up that raised the first star.
+	 */
+	private static List<CrimeRecord> onChase(ChaseArc arc, List<CrimeRecord> crimes, AutoSettings settings) {
+		long from = arc.begunAt - settings.openingSeconds() * 1000L;
+		if (crimes.isEmpty() || crimes.get(0).at() >= from) return crimes;
+
+		return crimes.stream().filter(crime -> crime.at() >= from).toList();
 	}
 
 	/** Crime chases this player ended inside the window. */
