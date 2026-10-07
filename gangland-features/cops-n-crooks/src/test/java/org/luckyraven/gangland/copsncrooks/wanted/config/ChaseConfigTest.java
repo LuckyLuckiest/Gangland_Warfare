@@ -2,6 +2,11 @@ package org.luckyraven.gangland.copsncrooks.wanted.config;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop;
+import org.luckyraven.keystone.persistence.config.ConfigIssue;
+import org.luckyraven.keystone.persistence.config.Severity;
 import org.luckyraven.keystone.persistence.config.ConfigParser;
 import org.luckyraven.keystone.persistence.config.ConfigReport;
 import org.luckyraven.keystone.persistence.config.MappingNode;
@@ -205,5 +210,239 @@ class ChaseConfigTest {
 		assertEquals(600, sheet.extraSecondsFor(1e9));
 		assertEquals(0, sheet.extraSecondsFor(0));
 		assertEquals(0, sheet.extraSecondsFor(-5));
+	}
+
+	private static ChaseConfig parseEvasion(String evasionBody, ConfigReport report) {
+		return ChaseConfig.parse(wantedRoot("Wanted:\n   Evasion:\n" + evasionBody, report), report);
+	}
+
+	@Test
+	@DisplayName("AUTO parses, and a file without the Auto block reads as the default with no issues")
+	void auto_parsesAndMissingBlockIsDefault() {
+		ConfigReport report = new ConfigReport();
+
+		ChaseConfig c = parseEvasion("      Drop_Mode: auto\n", report);
+
+		assertEquals(DropMode.AUTO, c.evasion().dropMode());
+		assertEquals(AutoSettings.DEFAULT, c.evasion().auto());
+		assertTrue(report.isEmpty(), report.issues().toString());
+	}
+
+	@Test
+	@DisplayName("every Auto key is overridden key by key and round-trips")
+	void auto_overridesEveryKey() {
+		String yaml = """
+				      Drop_Mode: AUTO
+				      Auto:
+				         Opening_Seconds: 11
+				         Rampage_Crimes: 3
+				         Rampage_Peak_Level: 5
+				         Lock_Cool_Seconds: 61
+				         Respot_Limit: 2
+				         Petty:
+				            Max_Crimes: 1
+				            Max_Peak_Level: 3
+				         Cold_Trail:
+				            Typical_Seconds:
+				               - 10
+				               - 20
+				            Ratio: 1.5
+				            Quiet_Seconds: 45
+				         Clean_Break:
+				            Outside_Ratio: 0.25
+				            Drop_Fraction: 1
+				         Momentum:
+				            Step_Speed: 0.8
+				            Narrow_Step_Speed: 0.6
+				            Narrow_Seen_Seconds: 9
+				            Floor: 0.3
+				         Repeat_Chases: 0
+				         Repeat_Window_Minutes: 5
+				         Learning:
+				            Enable: false
+				            Escape_Rate:
+				               - 0.5
+				               - 0.25
+				            Prior_Chases: 7
+				            Decay_Per_Chase: 0.8
+				            Habitual_Escaper_Delta: 0.3
+				            Habit_Time_Strength: 1.0
+				            Min_Time_Factor: 0.7
+				            Max_Time_Factor: 2.0
+				            Min_Chase_Seconds: 5
+				            Min_Seconds_Between_Outcomes: 6
+				            Forget_After_Days: 7
+				""";
+		ConfigReport report = new ConfigReport();
+
+		AutoSettings a = parseEvasion(yaml, report).evasion().auto();
+
+		AutoSettings expected = new AutoSettings(11, 3, 5, 61, 2, new AutoSettings.Petty(1, 3),
+		                                         new AutoSettings.ColdTrail(List.of(10, 20), 1.5, 45),
+		                                         new AutoSettings.CleanBreak(0.25, 1.0),
+		                                         new AutoSettings.Momentum(0.8, 0.6, 9, 0.3), 0, 5,
+		                                         new AutoSettings.Learning(false, List.of(0.5, 0.25), 7, 0.8, 0.3, 1.0,
+		                                                                   0.7, 2.0, 5, 6, 7));
+		assertEquals(expected, a);
+		assertTrue(report.isEmpty(), report.issues().toString());
+	}
+
+	@Test
+	@DisplayName("typicalFor and escapeRateFor clamp the level into the list")
+	void auto_lookupsClamp() {
+		AutoSettings a = AutoSettings.DEFAULT;
+
+		assertEquals(30, a.typicalFor(0));
+		assertEquals(90, a.typicalFor(3));
+		assertEquals(150, a.typicalFor(9));
+		assertEquals(0.90, a.escapeRateFor(1));
+		assertEquals(0.20, a.escapeRateFor(9));
+	}
+
+	@Test
+	@DisplayName("Learned.cold is a stranger with the configured typical time")
+	void learnedCold() {
+		AutoDrop.Learned l = AutoDrop.Learned.cold(AutoSettings.DEFAULT, 3);
+
+		assertEquals(0.0, l.delta());
+		assertEquals(90.0, l.typicalSeconds());
+	}
+
+	@ParameterizedTest(name = "{0}: {1}")
+	@CsvSource({"Opening_Seconds,-1", "Lock_Cool_Seconds,-1", "Respot_Limit,-1", "Repeat_Chases,-1",
+	            "Repeat_Window_Minutes,-1", "Rampage_Crimes,0", "Rampage_Peak_Level,0"})
+	@DisplayName("a top-level Auto key out of range is an ERROR config.range and takes its default")
+	void auto_topLevelRange(String key, String value) {
+		ConfigReport report = new ConfigReport();
+
+		ChaseConfig c = parseEvasion("      Drop_Mode: AUTO\n      Auto:\n         " + key + ": " + value + "\n", report);
+
+		assertEquals(AutoSettings.DEFAULT, c.evasion().auto());
+		assertRangeError(report, key);
+	}
+
+	@ParameterizedTest(name = "{0}.{1}: {2}")
+	@CsvSource({"Petty,Max_Crimes,0", "Petty,Max_Peak_Level,0", "Cold_Trail,Quiet_Seconds,-1", "Cold_Trail,Ratio,0",
+	            "Clean_Break,Outside_Ratio,1.5", "Clean_Break,Drop_Fraction,-0.1", "Momentum,Step_Speed,1.5",
+	            "Momentum,Narrow_Step_Speed,0", "Momentum,Narrow_Seen_Seconds,-1", "Momentum,Floor,2",
+	            "Learning,Prior_Chases,0", "Learning,Decay_Per_Chase,0.2", "Learning,Habitual_Escaper_Delta,0.01",
+	            "Learning,Habit_Time_Strength,3", "Learning,Min_Time_Factor,0.05", "Learning,Max_Time_Factor,0.5",
+	            "Learning,Min_Chase_Seconds,-1", "Learning,Min_Seconds_Between_Outcomes,-1",
+	            "Learning,Forget_After_Days,0"})
+	@DisplayName("a nested Auto key out of range is an ERROR config.range and takes its default")
+	void auto_nestedRange(String block, String key, String value) {
+		ConfigReport report = new ConfigReport();
+
+		ChaseConfig c = parseEvasion(
+				"      Drop_Mode: AUTO\n      Auto:\n         " + block + ":\n            " + key + ": " + value + "\n",
+				report);
+
+		assertEquals(AutoSettings.DEFAULT, c.evasion().auto());
+		assertRangeError(report, key);
+	}
+
+	private static void assertRangeError(ConfigReport report, String key) {
+		List<ConfigIssue> hits = report.issues().stream().filter(i -> "config.range".equals(i.code())).toList();
+		assertEquals(1, hits.size(), report.issues().toString());
+		assertEquals(Severity.ERROR, hits.get(0).severity());
+		assertTrue(hits.get(0).path().endsWith(key) || hits.get(0).message().contains(key), hits.get(0).render());
+	}
+
+	@Test
+	@DisplayName("a Typical_Seconds entry below 5 repeats the previous entry (the first takes the default), WARNING config.range")
+	void auto_typicalSecondsBelowFive() {
+		ConfigReport report = new ConfigReport();
+
+		ChaseConfig c = parseEvasion("      Auto:\n         Cold_Trail:\n            Typical_Seconds: [3, 40, 2]\n",
+		                             report);
+
+		assertEquals(List.of(30, 40, 40), c.evasion().auto().coldTrail().typicalSeconds());
+		assertEquals(2, report.issues().size(), report.issues().toString());
+		assertTrue(report.issues().stream()
+		                 .allMatch(i -> i.severity() == Severity.WARNING && "config.range".equals(i.code())));
+	}
+
+	@Test
+	@DisplayName("an empty Typical_Seconds list is the default, silently")
+	void auto_typicalSecondsEmpty() {
+		ConfigReport report = new ConfigReport();
+
+		ChaseConfig c = parseEvasion("      Auto:\n         Cold_Trail:\n            Typical_Seconds: []\n", report);
+
+		assertEquals(AutoSettings.DEFAULT.coldTrail().typicalSeconds(),
+		             c.evasion().auto().coldTrail().typicalSeconds());
+		assertTrue(report.isEmpty(), report.issues().toString());
+	}
+
+	@Test
+	@DisplayName("an Escape_Rate entry outside 0..1 is clamped, WARNING config.range")
+	void auto_escapeRateClamped() {
+		ConfigReport report = new ConfigReport();
+
+		ChaseConfig c = parseEvasion("      Auto:\n         Learning:\n            Escape_Rate: [1.5, 0.5, -0.2]\n",
+		                             report);
+
+		assertEquals(List.of(1.0, 0.5, 0.0), c.evasion().auto().learning().escapeRate());
+		assertEquals(2, report.issues().size(), report.issues().toString());
+		assertTrue(report.issues().stream()
+		                 .allMatch(i -> i.severity() == Severity.WARNING && "config.range".equals(i.code())));
+	}
+
+	@Test
+	@DisplayName("Narrow_Step_Speed above Step_Speed is set to Step_Speed, WARNING config.conflict")
+	void auto_narrowAboveStep() {
+		ConfigReport report = new ConfigReport();
+
+		ChaseConfig c = parseEvasion(
+				"      Auto:\n         Momentum:\n            Step_Speed: 0.5\n            Narrow_Step_Speed: 0.9\n",
+				report);
+
+		assertEquals(0.5, c.evasion().auto().momentum().narrowStepSpeed());
+		assertEquals(1, report.issues().size(), report.issues().toString());
+		assertEquals(Severity.WARNING, report.issues().get(0).severity());
+		assertEquals("config.conflict", report.issues().get(0).code());
+	}
+
+	@Test
+	@DisplayName("Petty.Max_Peak_Level at or above Rampage_Peak_Level is kept with a WARNING config.conflict")
+	void auto_pettyOverlapsRampage() {
+		ConfigReport report = new ConfigReport();
+
+		ChaseConfig c = parseEvasion(
+				"      Auto:\n         Rampage_Peak_Level: 3\n         Petty:\n            Max_Peak_Level: 3\n", report);
+
+		assertEquals(3, c.evasion().auto().petty().maxPeakLevel());
+		assertEquals(1, report.issues().size(), report.issues().toString());
+		assertEquals(Severity.WARNING, report.issues().get(0).severity());
+		assertEquals("config.conflict", report.issues().get(0).code());
+		assertTrue(report.issues().get(0).message().contains("rampage lock wins"));
+	}
+
+	@Test
+	@DisplayName("AUTO with evasion off and the heat ledger off gets an INFO note each; other modes are silent")
+	void auto_crossBlockNotes() {
+		ConfigReport report = new ConfigReport();
+		ChaseConfig.parse(wantedRoot(
+				"Wanted:\n   Heat:\n      Enable: false\n   Evasion:\n      Enable: false\n      Drop_Mode: AUTO\n",
+				report), report);
+
+		assertEquals(2, report.issues().size(), report.issues().toString());
+		assertTrue(report.issues().stream().allMatch(i -> i.severity() == Severity.INFO));
+		assertTrue(report.issues().toString().contains("AUTO does nothing while evasion is off"));
+		assertTrue(report.issues().toString().contains("no heat ledger"));
+
+		ConfigReport quiet = new ConfigReport();
+		ChaseConfig.parse(wantedRoot("Wanted:\n   Heat:\n      Enable: false\n   Evasion:\n      Enable: false\n"
+		                             + "      Drop_Mode: ONE_STAR\n      Auto:\n         Respot_Limit: 1\n", quiet),
+		                  quiet);
+		assertTrue(quiet.isEmpty(), quiet.issues().toString());
+	}
+
+	@Test
+	@DisplayName("the six-argument EvasionSettings constructor carries the default Auto block")
+	void evasionSettings_sixArgConstructor() {
+		EvasionSettings e = new EvasionSettings(true, 3, DropMode.AUTO, List.of(1), List.of(1), 2.0);
+
+		assertEquals(AutoSettings.DEFAULT, e.auto());
 	}
 }
