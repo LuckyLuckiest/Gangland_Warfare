@@ -42,7 +42,7 @@ else
   if [ "$PROFILE" = n4-old ]; then GL=$WT13; REV=0.13.0; else GL=$WT15; REV=0.15.0; fi
 fi
 rm -f "$P"/Keystone-*.jar "$P"/Bartizan-*.jar "$P"/gangland_warfare-*.jar "$G"/modules/*.jar
-mkdir -p "$G/modules" "$G/npc" "$P/Citizens"
+mkdir -p "$G/modules" "$G/copsncrooks" "$G/npc" "$P/Citizens"
 cp "$KS" "$BZ" "$P/"
 cp "$GL/gangland_warfare-$REV.jar" "$P/"
 cp "$GL"/modules/*-$REV.jar "$G/modules/"
@@ -60,8 +60,8 @@ sed -i -e '/^Debug:/,/^   Modules:/ s/^   Enabled: false/   Enabled: true/' \
 case $PROFILE in
   r3) Y "$G/settings.yml" Wanted.Repeating_Timer.Time 10;;
   r4) Y "$G/settings.yml" Wanted.Repeating_Timer.Time 10
-      jarcat "$P/Gangland_Warfare/modules/cops-n-crooks-$REV.jar" npc/wanted.yml > "$G/npc/wanted.yml"
-      Y "$G/npc/wanted.yml" Wanted.Evasion.Enable false;;
+      jarcat "$P/Gangland_Warfare/modules/cops-n-crooks-$REV.jar" copsncrooks/wanted.yml > "$G/copsncrooks/wanted.yml"
+      Y "$G/copsncrooks/wanted.yml" Wanted.Evasion.Enable false;;
   n3) Y "$G/settings.yml" Wanted.Take_Money.Enable true;;
   n3-broken) Y "$G/settings.yml" Wanted.Take_Money.Enable true
              Y "$G/settings.yml" Wanted.Take_Money.Formula '"amount * ("';;
