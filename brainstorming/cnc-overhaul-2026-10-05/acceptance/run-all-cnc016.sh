@@ -39,6 +39,8 @@ for row in "${ROWS[@]}"; do
     S14) srow S14 cnc016-S14-hospital-downed s14;;
     S15) srow S15 cnc016-S15-hospital-vanilla-death;;
     S16) srow S16 cnc016-S16-logout-restore;;
+    S17a) srow S17a cnc016-S17a-bribe-star-taken;;
+    S17b) srow S17b cnc016-S17b-bribe-star-seen;;
     R1) prep default-016 && { run cnc016-default-016 "$SC/R1-reg-ladder-1-3-5.json"; judge R1 "$RUNS/cnc016-default-016--R1-reg-ladder-1-3-5"; } || RESULT[R1]=ERROR;;
     R2) prep default-016 && { run cnc016-default-016 "$SC/R2-reg-los-break.json"
           rm -rf "$RUNS/_r2"; mkdir -p "$RUNS/_r2"; cp -r "$RUNS/cnc016-default-016--R2-reg-los-break" "$RUNS/_r2/h11-losbreak-1"

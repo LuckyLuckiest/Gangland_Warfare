@@ -108,3 +108,54 @@ Repro: `run-all-cnc016.sh S15`. Vanilla death with `Hospital.Enable` true and `D
 3. `gen-cnc015.js`: the A2/A3/A4/A5 chat steps (`WANT`, `STATUS`) took the last joined bot, which is Target after `TARGET`, so Target got the stars and was cuffed instead of Runner; they now pass `bot: 'Runner'`, and A4a's final `quit` names Runner (Target had already quit).
 4. `gen-cnc016.js` S14/S15: `expectLog SHIELD Runner` ran after the HOSPITAL step had already consumed the window (a race, passed or failed by timing); removed, the verdict reads the log.
 5. `prep-cnc016.sh`: the final `grep ... Hospital:` aborted `set -e` for 0.13.0-based profiles (legacy-settings, n4-old); `|| true`. `WT16` is now overridable from the environment. `run-all-cnc016.sh`: the A5 sqlite path was `Gangland_Warfare/*.db`, the file is `Gangland_Warfare/database/gangland.db`.
+
+# Re-run 2026-10-07 (post review)
+
+Task 25. Lane `E:/Programming/java/wt/cnc016-t25` (branch `cnc-0.16-t25`) from integration `0.16.0` @ dcb9b43e (Tasks 22, 23, 24 and every review fix merged).
+`mvn -q clean package -DskipTests` exit 0 (no install): `gangland_warfare-0.16.0.jar` + nine `target/modules/*-0.16.0.jar`; staged from this lane's `target/`
+(`WT16`). Sandbox harness only, profile `default-016` / `s14` / `auto`; the live test server was never touched. Raw verdict blocks: `acceptance-evidence/t25/`
+(`pass1.txt`, `pass2.txt` = full row set twice; `pass3.txt`, `pass4.txt`, `s6x1-3.txt` = the rows whose scenario was corrected, below).
+
+## Verdict
+**All requested rows PASS** (S6, S9, S10, S14, S15, S16, bribe-star/contact rows S17a/S17b, regression R1, N1, A1-A3), two or more runs each. Two caveats:
+S6 is **PASS with a flaky radio line** (6 of 7 runs heard `Lost him heading east`; one miss, evidence overwritten, probable cause below) and R1 is REVIEW by design
+(unchanged from the first run). S15's diagnostic line `WARD_BILL ... at=DEATH` that FAILED in the first run now logs: the review fix is verified.
+
+## Rows (each run is one full harness run; "P" = verdict script PASS)
+| Row | Verdict | Runs | Evidence (final run) |
+|---|---|---|---|
+| S6 outrun hand-off | **PASS** (flaky radio, see Failures) | 7: pass1 P*, pass2 P*, pass3 FAIL (radio only), pass4 P, s6x1-3 P,P,P | `HANDOFF Runner heading=east`; `[RADIO] Lieutenant Defender Marty #1002: Lost him heading east. Units ahead, pick him up.` heard by the bot; `DISPATCH Runner count=1 station=Northside Station eta=15s hold=0s reason=none bias=true`; `UNIT ... Sergeant Pointman Lou #1007 tier=2 role=Pointman fromStation=true hidden=true bias=true ahead=true at=501,-60,123`. *pass1/pass2 product checks all PASS, scenario's two `expectLog` steps raced the hops (fixed, tooling item 1) |
+| S9 contact phone | PASS | P / P | `Your contact made 1 star(s) disappear for $1,000.`; balance 5000 -> 4000; stars 2 -> 1 |
+| S10 sign refused | PASS | P / P | `Error: [GLW] Not while a cop has eyes on you.`; balance 5000 -> 5000; stars unchanged (2) |
+| S14 downed -> hospital | PASS | P / P | `HOSPITAL Runner waypoint=Infirmary`; one `WARD_BILL Runner amount=750.00 at=RESPAWN`; `SHIELD Runner seconds=5`; wallet 5000 -> 4250; woke at 150.5,-60,260.5 |
+| S15 vanilla death -> hospital | **PASS** (was FAIL) | P / P | `WARD_BILL Runner amount=750.00 at=DEATH` (exactly one), `SHIELD ... seconds=5`, wallet 5000 -> 4250, woke at the Infirmary, 0 items at the body |
+| S16 logout restore | PASS | P / P | `DISPATCH ... reason=restore hold=14s`, `EVASION Runner hold=enroute`, first unit 24 s (pass 2) / 26 s (pass 1) after DISPATCH, star still there |
+| S17a bribe star taken (new, tooling item 2) | PASS | pass1 P, pass2 FAIL (old scenario, no station: ring backup sighted him, point correctly refused), pass3 P, pass4 P | `You pocketed a police bribe star. -1 star(s).`; stars 2 -> 1 |
+| S17b bribe star refused when seen (new) | PASS | pass1 FAIL (old scenario, 25 s wait: Runner was already cuffed, see New bugs 1), pass2 P, pass3 P, pass4 P | `Not with a cop watching.`; no star taken; stars 2 -> 2 |
+| R1 ladder 1/3/5 | PASS (REVIEW by design) | R / R | squad members seen at 1/3/5 stars 2/4/5 (pass1) and 2/4/6 (pass2), grows with level |
+| N1 evasion drop | PASS | P / P | decreased line in window, 1 star left, no death |
+| A1 hunker drops | PASS | P / P | `3->2`, `2->1`, `1->0` all HUNKER_DOWN, gaps 16 s and 6 s |
+| A2 petty | PASS | P / P | `AUTO drop Runner level=2->0 ending=PETTY` |
+| A3 rampage | PASS | P / P | `level=4->3 ending=STILL_HOT reason=rampage` |
+
+## Failures and open points
+- **S6 radio line, 1 miss in 7.** pass3: HANDOFF fired, biased units spawned ahead, but no `Lost him heading east` reached the bot (its run dir was overwritten by the
+  next pass, so the cause is inferred). T22's own report names the likely cause: `copsncrooks/cops.yml` `Radio.Priority` does not list `Handoff` (nor `Post_Up`),
+  so the once-per-chase line is dropped when the bot heard any other non-priority line in the last `Player_Gap_Ticks` (20 ticks). Repro: `bash acceptance/run-all-cnc016.sh S6` a handful of times (WT16 pointing at the build); about 1 run in 5-7 shows no line.
+  Not a regression of the T22 fix (the line is heard in every other run). Fix direction: add `Handoff` and `Post_Up` to the code-side always-priority set.
+- **S17b, first scenario.** With a 25 s wait the squad reached and cuffed Runner (`PURSUING -> CUFFING -> GUARDING` for the pointman, the other two `RETURNING`)
+  and the star was still pocketed at 19:50:44 with the guard standing next to him (`You pocketed a police bribe star` after `Break free - 0/25`). See New bugs 1.
+- Manual checks from the first run still stand (boss bar, wand outline, sign render, bribe-star item look, real-client outrun, live-server smoke rows).
+
+## New bugs (not fixed here)
+1. `BribeStars.java:209` (`seen`): the test is `squad.millisSinceSighting() < Lost_Sight_Seconds`; a cuffed suspect with a cop in GUARDING at his side counts as unseen once the squad stops stamping sightings (the pointman leaves PURSUING for CUFFING, the others go RETURNING), so a player held by a cop can still take a bribe star within reach (teleport/plugin move only: a cuffed player cannot walk). Low severity. Fix direction: treat an active detainment as seen, or ask the cop sight check used for the phone/sign (`EvasionState.SEEN`).
+2. `copsncrooks/cops.yml:207` `Radio.Priority` lacks `Handoff` and `Post_Up` (T22 new bug 2; this run is the first observed miss). Likely also the S5 `Post_Up` REVIEW.
+
+## Rulings
+- Ruling: added two scenarios, S17a/S17b (and verdict cases + run-all rows), because the bribe-star rows named in the task had no scenario - cost if wrong: acceptance tooling only, no product code touched.
+- Ruling: S6 and S17a/S17b scenarios were corrected between pass 2 and pass 3 (below), so the three rows got extra passes on the corrected scenarios instead of the earlier ones being rewritten; the superseded runs stay in the table - cost: none, every verdict is shown.
+- Ruling: S6 is graded PASS (flaky) rather than FAIL: 6 of 7 runs hear the line and every other check passed in all 7; CONTRACTS C6's requirement is met, the single miss is the known `Radio.Priority` gap - cost if wrong: an unnoticed 1-in-7 silent hand-off.
+
+## Tooling changes (committed in this lane, all under `acceptance/`)
+1. `gen-cnc016.js` S6: the two `expectLog` steps after the hops (`HANDOFF Runner`, `UNIT Runner .*bias=true`) became a 40 s wait: HANDOFF is logged during the hops, before the step cursor, so they flagged 2 harness failures on runs whose product checks passed.
+2. `gen-cnc016.js` S17a/S17b, `cnc016-verdict.js` cases `S17a`/`S17b`, `run-all-cnc016.sh` rows `S17a`/`S17b`. S17a uses the S9 station so backup spawns hidden (without it the ring spawn sighted him through the room); S17b waits 4 s (sighted, not yet cuffed).

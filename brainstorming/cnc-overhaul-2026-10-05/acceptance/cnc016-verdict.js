@@ -222,6 +222,21 @@ switch (row) {
     ok(`the star is still there when the first unit spawns (${stars(statusAt('S16-at-first-unit'))})`, stars(statusAt('S16-at-first-unit')) >= 1, statusAt('S16-at-first-unit'));
     break;
   }
+  case 'S17a': {
+    const t = chat.find(l => /police bribe star/i.test(l));
+    ok('Bribe_Star.Taken text', !!t, t);
+    const s0 = stars(statusAt('S17-before')), s1 = stars(statusAt('S17-after'));
+    ok(`star level fell by one (${s0} -> ${s1})`, s0 >= 2 && s1 === s0 - 1, statusAt('S17-after'));
+    break;
+  }
+  case 'S17b': {
+    const t = chat.find(l => /Not with a cop watching/i.test(l));
+    ok('Bribe_Star.Seen text', !!t, t);
+    ok('no star taken', !chat.some(l => /police bribe star/i.test(l)));
+    const s0 = stars(statusAt('S17-before')), s1 = stars(statusAt('S17-after'));
+    ok(`star level unchanged (${s0} -> ${s1})`, s0 >= 2 && s1 === s0, statusAt('S17-after'));
+    break;
+  }
   default:
     console.error('unknown row ' + row);
     process.exit(64);

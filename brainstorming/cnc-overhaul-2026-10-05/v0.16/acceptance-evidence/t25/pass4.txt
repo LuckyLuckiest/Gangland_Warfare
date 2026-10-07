@@ -1,0 +1,36 @@
+
+######## S6
+== S6 ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   HANDOFF line - HANDOFF Runner heading=east
+PASS   heading is east (Runner moved +x) - HANDOFF Runner heading=east
+PASS   Handoff radio line
+PASS   DISPATCH ... bias=true after the hand-off - DISPATCH Runner count=2 station=Northside Station eta=15s hold=0s reason=none bias=true
+PASS   UNIT bias=true - UNIT Runner callsign=Sergeant Pointman Joe #1006 tier=2 role=Pointman fromStation=true hidden=true bias=true ahead=true at=498,-60,63
+PASS   UNIT ahead=true on every hidden biased unit
+== PASS ==
+
+######## S17a
+== S17a ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   Bribe_Star.Taken text - [Runner] You pocketed a police bribe star. -1 star(s).
+PASS   star level fell by one (2 -> 1) - [Runner] ★☆☆☆☆ | [Runner] [RADIO] Sergeant Pointman Mike #1000: Sweep the area!
+== PASS ==
+
+######## S17b
+== S17b ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   Bribe_Star.Seen text - [Runner] Not with a cop watching.
+PASS   no star taken
+PASS   star level unchanged (2 -> 2) - [Runner] ★★☆☆☆
+== PASS ==
+
+======== SUMMARY (0 = PASS, 1 = FAIL, 2 = REVIEW by a human, ERROR = could not run)
+S6: 0
+S17a: 0
+S17b: 0
+Pass criterion for 0.16: S1-S16 all 0 (S2 S5 S6 S8 may be 2 where the radio rate-limits or a spawn spot is soft: read the transcript); R1-R4, N1-N8, A1-A9 as in 0.15 and 0.15.2:
+  R1 R2 R3 R4 N1 N2 N3 N4 = 0 (R1 and N4 may be 2), A1 A2 A3 A5 A6 = 0, A4 = 0 or 2, A7 A8 A9 = 2 read by a human.
