@@ -40,7 +40,9 @@ public class WantedMessages extends LocalizedModuleYaml {
 		SHEET_TOTAL("Charge_Sheet.Total", "&7Fine: &c%money_symbol%%amount%"),
 		SHEET_PAID("Charge_Sheet.Paid", "&7Paid from your wallet: &a%money_symbol%%amount%"),
 		SHEET_EXTRA("Charge_Sheet.Extra_Time", "&7Unpaid &c%money_symbol%%amount% &7served as &c+%time%"),
-		PAPERWORK_FINE("Charge_Sheet.Paperwork", "&7Fine paid: &a%money_symbol%%paid% &8| &7Extra time: &c%time%");
+		PAPERWORK_FINE("Charge_Sheet.Paperwork", "&7Fine paid: &a%money_symbol%%paid% &8| &7Extra time: &c%time%"),
+		BRIBE_STAR_TAKEN("Bribe_Star.Taken", "&6You pocketed a police bribe star. &e-%stars% star(s)."),
+		BRIBE_STAR_SEEN("Bribe_Star.Seen", "&cNot with a cop watching.");
 
 		public final String path;
 		public final String fallback;
