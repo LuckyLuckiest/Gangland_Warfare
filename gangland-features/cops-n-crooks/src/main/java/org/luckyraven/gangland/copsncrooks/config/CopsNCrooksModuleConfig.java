@@ -41,6 +41,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.CopService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.Dispatcher;
+import org.luckyraven.gangland.copsncrooks.npc.police.handoff.HandoffController;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawner;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
@@ -379,6 +380,14 @@ public class CopsNCrooksModuleConfig {
 	@Bean
 	public Dispatcher dispatcher(StationRegistry stationRegistry, CopLoader copLoader) {
 		return new Dispatcher(stationRegistry, copLoader::getLoadedProvider);
+	}
+
+	/** The pursuit hand-off: samples the suspect on every cop AI tick and biases the next dispatch ahead of him. */
+	@Bean
+	public HandoffController handoffController(CopManager copManager, CopRadio copRadio, CopLoader copLoader) {
+		HandoffController controller = new HandoffController(copManager, copRadio, copLoader::getLoadedProvider);
+		copManager.addAiTickHook(controller::tick);
+		return controller;
 	}
 
 	@Bean
