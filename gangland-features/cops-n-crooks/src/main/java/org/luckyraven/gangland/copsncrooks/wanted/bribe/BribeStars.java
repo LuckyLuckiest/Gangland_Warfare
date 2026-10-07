@@ -176,8 +176,10 @@ public class BribeStars implements BeanLifecycle {
 				continue;
 			}
 
-			int taken = Math.min(config.stars(), wanted.getLevel());
-			wanted.setLevel(Math.max(0, wanted.getLevel() - config.stars()), WantedCause.CONTACT);
+			int level = wanted.getLevel();
+			int taken = Math.min(config.stars(), level);
+			wanted.setLevel(Math.max(0, level - config.stars()), WantedCause.CONTACT);
+			if (wanted.getLevel() >= level) return;   // another plugin cancelled the drop: the star stays
 			slot.item.remove();
 			slot.item      = null;
 			slot.respawnAt = now + config.respawnSeconds() * 1000L;

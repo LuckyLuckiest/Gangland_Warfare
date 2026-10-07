@@ -32,6 +32,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -55,6 +56,8 @@ class BribeStarsTest {
 	private int                 lostSight = 10;
 	private Player              player;
 	private Wanted              wanted;
+	private final int[]         level = {3};
+	private boolean             cancelDrops;
 
 	@SuppressWarnings("unchecked")
 	@BeforeEach
@@ -75,7 +78,11 @@ class BribeStarsTest {
 		when(player.getLocation()).thenReturn(new Location(world, 10, 64, 10));
 		wanted = mock(Wanted.class);
 		when(wanted.isWanted()).thenReturn(true);
-		when(wanted.getLevel()).thenReturn(3);
+		when(wanted.getLevel()).thenAnswer(invocation -> level[0]);
+		doAnswer(invocation -> {
+			if (!cancelDrops) level[0] = invocation.getArgument(0);
+			return null;
+		}).when(wanted).setLevel(anyInt(), any());
 		User<Player> user = mock(User.class);
 		when(user.getWanted()).thenReturn(wanted);
 		users = mock(UserManager.class);
@@ -268,6 +275,19 @@ class BribeStarsTest {
 
 		verify(items.get(0)).remove();
 		assertEquals(2, items.size());
+	}
+
+	@Test
+	@DisplayName("a star drop cancelled by another plugin leaves the star where it is")
+	void cancelledDrop_keepsTheStar() {
+		cancelDrops = true;
+		BribeStars stars = stars();
+		stars.tick();
+		nearby.add(player);
+		stars.tick();
+
+		verify(items.get(0), never()).remove();
+		assertTrue(stars.isStar(items.get(0)));
 	}
 
 	@Test
