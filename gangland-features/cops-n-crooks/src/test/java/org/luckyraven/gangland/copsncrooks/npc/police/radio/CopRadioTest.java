@@ -20,6 +20,10 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio.RadioCall;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
+import org.luckyraven.gangland.data.region.PlaceNames;
+import org.luckyraven.gangland.data.region.PlaceRegion;
+import org.luckyraven.gangland.data.region.RegionProvider;
+import org.luckyraven.gangland.data.region.RegionShape;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.npc.FieldCareSettings;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
@@ -284,6 +288,75 @@ class CopRadioTest {
 		assertTrue(radio.dispatch(group, suspect, "Dispatch_Wanted", 2, "SWAT"));
 
 		verify(near).sendMessage("[DISPATCH] wanted in the area");
+	}
+
+	/** A radio whose lines say {@code line} for everything and {@code Unknown_Place} "the area", with {@code Docks} at (25..35, 25..35). */
+	private CopRadio placeRadio(String line) {
+		when(world.getName()).thenReturn("world");
+		CopRadio placed = new CopRadio(() -> provider, key -> switch (key) {
+			case "Dispatch_Format" -> List.of("[DISPATCH] %line%");
+			case "Format" -> List.of("[%unit%] %line%");
+			case "Unknown_Place" -> List.of("the area");
+			default -> List.of(line);
+		}, () -> clock[0], (task, ticks) -> { });
+		PlaceNames names = new PlaceNames();
+		names.register(new RegionProvider() {
+			@Override
+			public String source() {
+				return "test";
+			}
+
+			@Override
+			public List<PlaceRegion> regionsAt(Location at) {
+				PlaceRegion docks = new PlaceRegion("test:1", "the Docks", "world",
+				                                    RegionShape.Cuboid.of(25, 0, 25, 35, 100, 35),
+				                                    PlaceRegion.NO_OWNER, Set.of(PlaceRegion.TAG_DISTRICT));
+				return docks.contains(at) ? List.of(docks) : List.of();
+			}
+		});
+		placed.setPlaceNames(names);
+		return placed;
+	}
+
+	@Test
+	@DisplayName("placeOf returns the district name, and the Unknown_Place word when no place is there or none is set")
+	void placeOf_returnsTheDistrictName() {
+		CopRadio placed = placeRadio("x");
+
+		assertEquals("the Docks", placed.placeOf(new Location(world, 30, 64, 30)));
+		assertEquals("the area", placed.placeOf(new Location(world, 0, 64, 0)));
+		assertEquals("the area", placed.placeOf(null));
+		assertEquals("Unknown_Place line", radio.placeOf(new Location(world, 30, 64, 30)),
+		             "a radio nobody gave PlaceNames stays inert");
+	}
+
+	@Test
+	@DisplayName("dispatch_addsThePlaceOfTheTarget: %place% is where the suspect stands")
+	void dispatch_addsThePlaceOfTheTarget() {
+		radio = placeRadio("wanted in %place%");
+		Player target = player(30, 30);
+		Player near   = listener(32, 30);
+		CopGroup g    = new CopGroup(target.getUniqueId());
+
+		assertTrue(radio.dispatch(g, target, "Dispatch_Wanted", 2, "SWAT"));
+
+		verify(near).sendMessage("[DISPATCH] wanted in the Docks");
+	}
+
+	@Test
+	@DisplayName("contactLost_namesTheLastKnownPlace: the squad's last sighting, not the suspect's live position")
+	void contactLost_namesTheLastKnownPlace() {
+		radio = placeRadio("lost near %place%");
+		CopGroup g = new CopGroup(suspect.getUniqueId());
+		g.setListener(radio.listenerFor(g, calls::add));
+		CopNpc cop = cop(5, "&9&lSWAT", 12, 0);
+		g.add(cop);
+		g.getSquad().reportSighting(new Location(world, 30, 64, 30));   // last seen at the Docks; the suspect is at (0, 0)
+		Player near = listener(10, 0);
+
+		g.getListener().onSignal(g.getSquad(), NpcSquadSignal.CONTACT_LOST, cop, new Location(world, 30, 64, 30));
+
+		verify(near).sendMessage("[SWAT-5] lost near the Docks");
 	}
 
 	@Test

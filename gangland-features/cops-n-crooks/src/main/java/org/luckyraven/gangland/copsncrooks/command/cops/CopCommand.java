@@ -6,7 +6,9 @@ import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.copsncrooks.command.cops.spawner.CopSpawnerCommand;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopService;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
+import org.luckyraven.gangland.copsncrooks.station.StationRegistry;
 import org.luckyraven.keystone.bean.command.CommandHandler;
 
 import java.util.ArrayList;
@@ -18,12 +20,17 @@ public class CopCommand extends Command {
 
 	private final CopService      copService;
 	private final CopSpawnManager copSpawnManager;
+	private final StationRegistry stationRegistry;
+	private final CopLoader       copLoader;
 
-	public CopCommand(JavaPlugin plugin, CopService copService, CopSpawnManager copSpawnManager) {
+	public CopCommand(JavaPlugin plugin, CopService copService, CopSpawnManager copSpawnManager,
+	                  StationRegistry stationRegistry, CopLoader copLoader) {
 		super(plugin, "cop", false, "cops");
 
 		this.copService      = copService;
 		this.copSpawnManager = copSpawnManager;
+		this.stationRegistry = stationRegistry;
+		this.copLoader       = copLoader;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -41,7 +48,8 @@ public class CopCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		Argument spawner = new CopSpawnerCommand(getPlugin(), getArgumentTree(), getArgument(), copSpawnManager);
+		Argument spawner = new CopSpawnerCommand(getPlugin(), getArgumentTree(), getArgument(), copSpawnManager,
+		                                           stationRegistry, copLoader);
 		Argument list    = new CopListCommand(getPlugin(), getArgumentTree(), getArgument(), copService);
 
 		List<Argument> arguments = new ArrayList<>();

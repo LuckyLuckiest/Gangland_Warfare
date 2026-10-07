@@ -16,6 +16,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.RegroupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.gangland.npc.radio.RadioLines;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
 import org.luckyraven.gangland.npc.radio.RadioSides;
@@ -62,6 +63,8 @@ public class CopRadio {
 	private final SquadRadio                  radio;
 	private final LongSupplier                clock;
 	private final RadioLines                  lines;
+	/** Inert until the module config hands over the core's holder bean ({@link #setPlaceNames}). */
+	private       PlaceNames                  places = new PlaceNames();
 
 	public CopRadio(JavaPlugin plugin, CopLoader copLoader, CopRadioMessages messages) {
 		this(copLoader::getLoadedProvider, messages, System::currentTimeMillis,
@@ -75,6 +78,16 @@ public class CopRadio {
 		this.lines    = lines;
 		this.radio    = new SquadRadio(this::settings, lines, clock, () -> ThreadLocalRandom.current().nextDouble(),
 		                               later);
+	}
+
+	/** Where {@code %place%} gets its district, hideout, turf or waypoint name from. */
+	public void setPlaceNames(PlaceNames places) {
+		this.places = places;
+	}
+
+	/** The name of the place at {@code at} (smallest region wins), or the radio file's {@code Unknown_Place} word. */
+	public String placeOf(@Nullable Location at) {
+		return places.locate(at).orElseGet(this::unknownPlace);
 	}
 
 	/** The radio's clock, in milliseconds; backup timing runs on it too. */
@@ -118,6 +131,7 @@ public class CopRadio {
 	public boolean dispatch(CopGroup group, Player target, String key, int level, String tier,
 	                        Map<String, String> extra) {
 		Map<String, String> merged = new HashMap<>(extra);
+		merged.putIfAbsent("place", placeOf(target.getLocation()));
 		merged.put("level", String.valueOf(level));
 		merged.put("tier", tier);
 		return radio.say(group.getSquad(), voice(group), null, "Dispatch", key, "Dispatch_Format", target.getLocation(),
@@ -546,8 +560,9 @@ public class CopRadio {
 
 			@Override
 			public Map<String, String> extras(NpcSquad squad) {
+				// last-known, never the live position of the suspect
 				return Map.of("tier", group.getTierName(), "level", String.valueOf(group.getLevel()), "place",
-				              unknownPlace());
+				              placeOf(group.getSquad().lastKnownLocation()));
 			}
 		};
 	}
