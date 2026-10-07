@@ -589,6 +589,48 @@ class EvasionClockTest {
 	}
 
 	@Test
+	@DisplayName("a squad wiped out while he is in sight ends the contact: lastLostAt is the wipe, not 0")
+	void squadDiesWhileSeen_stampsLastLostAtAtTheWipe() {
+		arcs.start(id, WantedCause.CRIME, 2);
+		unseenMs = 100;
+		tickSeconds(5);
+		assertEquals(0, arcs.arc(id).lastLostAt());
+
+		CopNpc dead = cop(CopState.PURSUING);
+		when(dead.isValid()).thenReturn(false);
+		when(group.getCops()).thenReturn(List.of(dead));
+		tickSeconds(1);
+		long wipedAt = now[0];
+		assertNull(clock.snapshot(id));
+
+		List<CopNpc> fresh = List.of(cop(CopState.PURSUING));
+		when(group.getCops()).thenReturn(fresh);
+		unseenMs = Long.MAX_VALUE;
+		tickSeconds(1);
+
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
+		assertEquals(wipedAt, arcs.arc(id).lastLostAt());
+	}
+
+	@Test
+	@DisplayName("a quit while in sight stamps lastLostAt at the quit; a quit while searching keeps the earlier loss")
+	void clearWhileSeen_stampsLost_clearWhileSearching_doesNot() {
+		arcs.start(id, WantedCause.CRIME, 2);
+		unseenMs = 100;
+		tickSeconds(3);
+		clock.clear(player);
+		long quitAt = now[0];
+		assertEquals(quitAt, arcs.arc(id).lastLostAt());
+
+		unseenMs = 10_000;
+		tickSeconds(1);
+		long searchingSince = arcs.arc(id).lastLostAt();
+		now[0] += 1000;
+		clock.clear(player);
+		assertEquals(searchingSince, arcs.arc(id).lastLostAt());
+	}
+
+	@Test
 	@DisplayName("AUTO: a narrow escape (20 s in sight) steps the next timer by 0.5 when the chase is not locked")
 	void auto_narrowEscape_notLocked_stepsByHalf() {
 		auto();

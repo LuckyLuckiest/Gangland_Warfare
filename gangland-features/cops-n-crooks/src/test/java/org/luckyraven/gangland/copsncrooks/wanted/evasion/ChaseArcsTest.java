@@ -210,6 +210,24 @@ class ChaseArcsTest {
 	}
 
 	@Test
+	@DisplayName("Opening_Seconds 0: the crime that raised the first star, stamped a few ms before the start, is on the chase")
+	void view_openingZero_keepsTheTriggeringCrime() {
+		AutoSettings d = AutoSettings.DEFAULT;
+		AutoSettings zero = new AutoSettings(0, d.rampageCrimes(), d.rampagePeakLevel(), d.lockCoolSeconds(),
+		                                     d.respotLimit(), d.petty(), d.coldTrail(), d.cleanBreak(), d.momentum(),
+		                                     d.repeatChases(), d.repeatWindowMinutes(), d.learning());
+		List<CrimeRecord> crimes = List.of(crime(Crimes.KILL_COP, clock.get()));
+		clock.addAndGet(5);
+		arcs.start(id, WantedCause.CRIME, 1);
+
+		AutoDrop.ChaseView v = arcs.view(id, crimes, zero);
+
+		assertEquals(1, v.crimes());
+		assertTrue(v.copKilled());
+		assertTrue(arcs.hadCrime(id, crimes, zero));
+	}
+
+	@Test
 	@DisplayName("a restore does not move the crime cut-off: crimes keep their own unshifted stamps")
 	void view_afterRestore_keepsTheChasesCrimes() {
 		long t = clock.get();

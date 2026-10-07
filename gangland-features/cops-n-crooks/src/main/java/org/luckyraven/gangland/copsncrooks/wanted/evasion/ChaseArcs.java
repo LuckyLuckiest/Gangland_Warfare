@@ -23,6 +23,8 @@ public final class ChaseArcs {
 	/** An arc whose player has been offline longer than this is dropped; he comes back as a RESTORE start. */
 	static final long OFFLINE_KEEP_MS = 30L * 60_000L;
 	static final int  RECENT_CAP      = 8;
+	/** How far before the start the triggering crime may be stamped: the start listeners run after the ledger. */
+	static final long START_SLACK_MS  = 1000L;
 
 	private final LongSupplier clock;
 
@@ -153,10 +155,11 @@ public final class ChaseArcs {
 
 	/**
 	 * The ledger keeps sub-threshold crimes with no decay, so its list can hold a crime from long before this chase. A
-	 * crime counts only from {@code Opening_Seconds} before the start on: the build-up that raised the first star.
+	 * crime counts only from {@code Opening_Seconds} before the start on: the build-up that raised the first star. The
+	 * slack keeps the triggering crime, stamped a few ms before the start listeners run, even at {@code Opening_Seconds: 0}.
 	 */
 	private static List<CrimeRecord> onChase(ChaseArc arc, List<CrimeRecord> crimes, AutoSettings settings) {
-		long from = arc.begunAt - settings.openingSeconds() * 1000L;
+		long from = arc.begunAt - settings.openingSeconds() * 1000L - START_SLACK_MS;
 		if (crimes.isEmpty() || crimes.get(0).at() >= from) return crimes;
 
 		return crimes.stream().filter(crime -> crime.at() >= from).toList();

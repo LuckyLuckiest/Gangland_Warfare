@@ -282,6 +282,19 @@ class ChaseLearnerTest {
 	}
 
 	@Test
+	@DisplayName("a getaway with no measured contact time (never in sight) teaches no typical length, so 0 cannot pin it")
+	void zeroContactGetaway_teachesNoTypical() {
+		escape(UUID.randomUUID(), 2, 0);
+		assertEquals(1, level(2).escaped(), EPS);
+		assertEquals(0, level(2).typicalCount(), 0);
+		assertEquals(AUTO.typicalFor(2), learner.typicalSeconds(2, AUTO), 0);
+
+		escape(UUID.randomUUID(), 2, 60);
+		assertEquals(60, level(2).typicalSeconds(), EPS);
+		assertEquals(1, level(2).typicalCount(), EPS);
+	}
+
+	@Test
 	@DisplayName("typicalCount is capped at 100")
 	void typicalCountCapped() {
 		for (int i = 0; i < 120; i++) {

@@ -132,7 +132,8 @@ public class ChaseLearner implements BeanLifecycle {
 		double weight  = Math.min(1, FAIR_SHARE / Math.max(1, hN));
 		double typical = level == null ? 0 : level.typicalSeconds();
 		double count   = level == null ? 0 : level.typicalCount();
-		if (outcome == 1) {
+		// no measured contact (never in sight) is no sample: a 0 would pin the multiplicative median at 0 for good
+		if (outcome == 1 && chase.contactMs() > 0) {
 			double contact = chase.contactMs() / 1000.0;
 			typical = count == 0 ? contact : typical + Math.signum(contact - typical) * MEDIAN_STEP * typical * weight;
 			count   = Math.min(MAX_TYPICAL_COUNT, count + weight);

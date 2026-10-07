@@ -121,10 +121,14 @@ public final class EvasionClock implements WantedDecayPolicy {
 		return new EvasionSnapshot(t.state, t.level, Math.max(0, t.secondsLeft), t.centre, t.radius);
 	}
 
-	/** Fires OFF once when the player was tracked, then forgets him. */
+	/**
+	 * Fires OFF once when the player was tracked, then forgets him. Dropping a SEEN track (quit, squad dead or walking
+	 * home) ends the contact, so it stamps the loss of sight the next, null-track search no longer can.
+	 */
 	public void clear(Player player) {
 		Track t = tracks.remove(player.getUniqueId());
 		if (t == null) return;
+		if (t.state == EvasionState.SEEN) arcs.lost(player.getUniqueId());
 
 		User<Player> user  = users.getUser(player);
 		int          level = user == null ? 0 : user.getWanted().getLevel();
