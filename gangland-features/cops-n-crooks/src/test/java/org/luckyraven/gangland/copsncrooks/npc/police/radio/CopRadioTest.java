@@ -257,6 +257,89 @@ class CopRadioTest {
 	}
 
 	@Test
+	@DisplayName("dispatch with extras fills %station%, %eta% and %count% beside %level%")
+	void dispatch_withExtras_fillsTheLine() {
+		radio = new CopRadio(() -> provider, key -> switch (key) {
+			case "Dispatch_Format" -> List.of("[DISPATCH] %line%");
+			default -> List.of("%count% from %station% in %eta% at %place%, level %level%");
+		}, () -> clock[0], (task, ticks) -> { });
+		Player near = listener(10, 0);
+
+		assertTrue(radio.dispatch(group, suspect, "Dispatch_En_Route", 3, "SWAT",
+		                          Map.of("count", "4", "station", "Central", "eta", "12", "place", "Dock")));
+
+		verify(near).sendMessage("[DISPATCH] 4 from Central in 12 at Dock, level 3");
+	}
+
+	@Test
+	@DisplayName("a %place% no caller names reads Unknown_Place, never the raw token")
+	void place_unnamed_readsUnknownPlace() {
+		radio = new CopRadio(() -> provider, key -> switch (key) {
+			case "Dispatch_Format" -> List.of("[DISPATCH] %line%");
+			case "Unknown_Place" -> List.of("the area");
+			default -> List.of("wanted in %place%");
+		}, () -> clock[0], (task, ticks) -> { });
+		Player near = listener(10, 0);
+
+		assertTrue(radio.dispatch(group, suspect, "Dispatch_Wanted", 2, "SWAT"));
+
+		verify(near).sendMessage("[DISPATCH] wanted in the area");
+	}
+
+	@Test
+	@DisplayName("enRoute_rightAfterDispatchWanted_isDelivered: with the default settings the same player hears both in one tick")
+	void enRoute_rightAfterDispatchWanted_isDelivered() {
+		RadioSettings defaults = CopConfigProvider.COP_RADIO_DEFAULTS;
+		// no click: the sound would need a live server
+		when(provider.getRadioSettings()).thenReturn(new RadioSettings(true, defaults.range(), defaults.targetRange(),
+		                                                               defaults.squadGapMs(), defaults.playerGapMs(),
+		                                                               defaults.ackDelayTicks(), defaults.responderMax(),
+		                                                               defaults.cooldownMs(), defaults.priority(), null,
+		                                                               1f, 1f));
+		Player near = listener(10, 0);
+
+		assertTrue(radio.dispatch(group, suspect, "Dispatch_Wanted", 2, "SWAT"));
+		assertTrue(radio.dispatch(group, suspect, "Dispatch_En_Route", 2, "SWAT", Map.of("count", "2")));
+
+		verify(near).sendMessage("[DISPATCH] Dispatch_Wanted line");
+		verify(near).sendMessage("[DISPATCH] Dispatch_En_Route line");
+	}
+
+	@Test
+	@DisplayName("sayFromLeader with extras: the leader speaks the key with %direction% filled from the extras")
+	void sayFromLeader_withExtras() {
+		radio = new CopRadio(() -> provider, key -> switch (key) {
+			case "Format" -> List.of("[%unit%] %line%");
+			default -> List.of("heading %direction%");
+		}, () -> clock[0], (task, ticks) -> { });
+		Player bystander = listener(10, 0);
+		CopNpc leader    = cop(3, "SWAT", 4, 0);
+		group.add(leader);
+
+		assertTrue(radio.sayFromLeader(group, "Handoff", Map.of("direction", "north")));
+
+		verify(bystander).sendMessage("[SWAT-3] heading north");
+	}
+
+	@Test
+	@DisplayName("compassWord returns the file's word for each of the 8 sides, empty across worlds or with no compass lines")
+	void compassWord_eightSides() {
+		List<String> words = List.of("N", "NE", "E", "SE", "S", "SW", "W", "NW");
+		radio = new CopRadio(() -> provider, key -> "Compass".equals(key) ? words : List.of(), () -> clock[0],
+		                     (task, ticks) -> { });
+		Location from = new Location(world, 0, 64, 0);
+		Location[] targets = {new Location(world, 0, 64, -10), new Location(world, 10, 64, -10),
+		                      new Location(world, 10, 64, 0), new Location(world, 10, 64, 10),
+		                      new Location(world, 0, 64, 10), new Location(world, -10, 64, 10),
+		                      new Location(world, -10, 64, 0), new Location(world, -10, 64, -10)};
+
+		for (int side = 0; side < 8; side++) assertEquals(words.get(side), radio.compassWord(from, targets[side]), "side " + side);
+
+		assertEquals("", radio.compassWord(from, new Location(mock(World.class), 0, 64, -10)));
+		assertEquals("", radio.compassWord(null, from));
+	}
+
+	@Test
 	@DisplayName("sayAs: the cop speaks the key itself, with its callsign and the extras filling the line")
 	void sayAs_speaksFromTheCopWithExtras() {
 		radio = new CopRadio(() -> provider, key -> switch (key) {

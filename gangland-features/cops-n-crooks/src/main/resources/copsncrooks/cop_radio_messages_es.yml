@@ -13,6 +13,9 @@ Compass:
    - "oeste"
    - "noroeste"
 
+# La palabra que %place% usa cuando no hay un lugar con nombre cerca.
+Unknown_Place: "la zona"
+
 Sides:
    - "frente"
    - "izquierda"
@@ -24,8 +27,7 @@ Lines:
       - "¡Contacto! Sospechoso a %distance% bloques al %direction%!"
       - "¡Tengo a %target% a la vista, al %direction%!"
    Contact_Lost:
-      - "¡Perdí el contacto visual! Revisa su última posición."
-      - "¡¿A dónde se fue?!"
+      - "Perdí el contacto visual cerca de %place%. Buscando en la última posición conocida."
    Engage:
       - "¡Sospechoso a la vista, atacando!"
       - "¡Disparos, atacando!"
@@ -167,7 +169,7 @@ Lines:
       - "¡Solicito refuerzos en mi ubicación!"
       - "¡Necesito más unidades aquí, ya!"
    Dispatch_Wanted:
-      - "Atención a todas las unidades: %target% está buscado, nivel %level%."
+      - "Atención a todas las unidades: %target% está buscado en %place%, nivel %level%."
    Escalate:
       - "Unidades %tier% en camino hacia %target%."
    Stand_Down:
@@ -181,3 +183,15 @@ Lines:
    Shots_Fired:
       - "¡Disparos! ¡Converjan hacia el sonido!"
       - "¡Tiros, está cerca! ¡Avancen!"
+   Dispatch_En_Route:
+      - "%count% unidades en camino desde %station%, llegada en %eta% s."
+   Wipe_Refill:
+      - "Escuadra caída. Refuerzo en camino, llega en %eta% s."
+   Handoff:
+      - "Lo perdí rumbo al %direction%. Unidades adelante, atrápenlo."
+   Post_Up:
+      - "Cubriendo la esquina."
+   Eyes_On:
+      - "Sospechoso a la vista cerca de %place%, avanza al %direction%."
+   Returning_To_Patrol:
+      - "Unidades volviendo a patrullar."

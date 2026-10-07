@@ -11,7 +11,7 @@ import java.util.Map;
  * Police-radio lines, backed by the module's own {@code copsncrooks/cop_radio_messages.yml} (English, always shipped) /
  * {@code copsncrooks/cop_radio_messages_es.yml} (Spanish, optional — picked by {@code Settings.getLanguagePicked()} via
  * {@link LocalizedModuleYaml}). {@code Lines.<key>} holds the candidate lines for one radio signal; {@code Format},
- * {@code Dispatch_Format}, {@code Compass} and {@code Sides} live at the document root, not under {@code Lines}, and
+ * {@code Dispatch_Format}, {@code Compass}, {@code Sides} and {@code Unknown_Place} live at the document root, not under {@code Lines}, and
  * are read straight from there.
  *
  * @since 1.13.0
@@ -25,11 +25,12 @@ public class CopRadioMessages extends LocalizedModuleYaml implements RadioLines 
 	private static final List<String> DEFAULT_COMPASS         = List.of("north", "north-east", "east", "south-east",
 	                                                                    "south", "south-west", "west", "north-west");
 	private static final List<String> DEFAULT_SIDES           = List.of("front", "left", "right", "back");
+	private static final List<String> DEFAULT_UNKNOWN_PLACE   = List.of("the area");
 
 	private static final Map<String, List<String>> DEFAULT_LINES = Map.ofEntries(
 			Map.entry("Contact", List.of("Contact! Suspect %distance% blocks %direction%!",
 			                             "Eyes on %target%, %direction%!")),
-			Map.entry("Contact_Lost", List.of("Lost visual! Check his last known.", "Where'd he go?!")),
+			Map.entry("Contact_Lost", List.of("Lost visual near %place%. Searching the last known position.")),
 			Map.entry("Engage", List.of("Suspect in sight, engaging!", "Shots fired, engaging!")),
 			Map.entry("Push", List.of("%member%, move in on him!", "%member%, close the distance!")),
 			Map.entry("Flank_Left", List.of("%member%, take his %side%!",
@@ -72,7 +73,13 @@ public class CopRadioMessages extends LocalizedModuleYaml implements RadioLines 
 			Map.entry("Medic_Treating", List.of("Applying field dressing, %member%, stay with me.", "Hold still %member%, patching you up. You're at %health%%.", "%role% here, applying pressure, hold still, %member%!")),
 			Map.entry("Resisting", List.of("Suspect is resisting! Take him down!")),
 			Map.entry("Backup", List.of("Requesting backup at my location!", "Need more units here, now!")),
-			Map.entry("Dispatch_Wanted", List.of("All units, be advised: %target% is wanted, level %level%.")),
+			Map.entry("Dispatch_Wanted", List.of("All units, be advised: %target% is wanted in %place%, level %level%.")),
+			Map.entry("Dispatch_En_Route", List.of("%count% units en route from %station%, ETA %eta% s.")),
+			Map.entry("Wipe_Refill", List.of("Squad down. Backup inbound in %eta% s.")),
+			Map.entry("Handoff", List.of("Lost him heading %direction%. Units ahead, pick him up.")),
+			Map.entry("Post_Up", List.of("Holding the corner.")),
+			Map.entry("Eyes_On", List.of("Eyes on suspect near %place%, moving %direction%.")),
+			Map.entry("Returning_To_Patrol", List.of("Units returning to patrol.")),
 			Map.entry("Escalate", List.of("%tier% units en route to %target%.")),
 			Map.entry("Stand_Down", List.of("Suspect cleared. Returning to patrol.")),
 			Map.entry("Regroup", List.of("Two down! Pull back to cover, backup is coming!", "We're losing men, fall back and wait for backup!")),
@@ -95,6 +102,7 @@ public class CopRadioMessages extends LocalizedModuleYaml implements RadioLines 
 			case "Dispatch_Format" -> list("Dispatch_Format", DEFAULT_DISPATCH_FORMAT);
 			case "Compass" -> list("Compass", DEFAULT_COMPASS);
 			case "Sides" -> list("Sides", DEFAULT_SIDES);
+			case "Unknown_Place" -> list("Unknown_Place", DEFAULT_UNKNOWN_PLACE);
 			default -> list("Lines." + key, DEFAULT_LINES.getOrDefault(key, List.of()));
 		};
 	}

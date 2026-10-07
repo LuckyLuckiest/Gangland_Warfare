@@ -587,6 +587,238 @@ class YamlCopConfigProviderTest {
 		assertFalse(provider.getRadioSettings().isPriority("Regroup"), "priority list stays as the file wrote it");
 	}
 
+	// ── 0.16 dispatch / breather / hand-off / perimeter / mixed tiers ─────────
+
+	private static final String TIER_BLOCK = """
+			   Tiers:
+			      1:
+			         Display_Name: "&9Officer"
+			         Health: 20.0
+			         Damage: 2.0
+			      3:
+			         Display_Name: "&5Lieutenant"
+			         Health: 30.0
+			         Damage: 4.0
+			""";
+
+	@Test
+	@DisplayName("each new block parses key by key")
+	void newBlocks_parsed() {
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Dispatch:
+				      Enabled: false
+				      Unit_Speed: 5.0
+				      Min_Eta_Seconds: 2
+				      Max_Eta_Seconds: 20
+				      Station_Radius: 48.0
+				      Rejoin_Grace_Seconds: 30
+				   Breather:
+				      Enabled: false
+				      Seconds:
+				         - 30
+				         - 20
+				      Wipe_Window_Seconds: 5
+				   Handoff:
+				      Enabled: false
+				      Heading_Seconds: 4
+				      Bias_Seconds: 20
+				      Cone_Degrees: 45.0
+				   Perimeter:
+				      Enabled: false
+				      Min_Level: 4
+				      Posts: 3
+				      Roles:
+				         - "Medic"
+				      Max_Seconds: 30
+				      Lane_Length: 8.0
+				      Sight_Range: 30.0
+				      Leash_Radius: 2.0
+				""" + TIER_BLOCK);
+
+		assertEquals(new DispatchSettings(false, 5.0, 2, 20, 48.0, 30), provider.getDispatchSettings());
+		assertEquals(new BreatherSettings(false, List.of(30, 20), 5), provider.getBreatherSettings());
+		assertEquals(new HandoffSettings(false, 4, 20, 45.0), provider.getHandoffSettings());
+		assertEquals(new PerimeterSettings(false, 4, 3, List.of("Medic"), 30, 8.0, 30.0, 2.0),
+		             provider.getPerimeterSettings());
+	}
+
+	@Test
+	@DisplayName("a missing block is the DEFAULT")
+	void missingNewBlocks_areDefault() {
+		CopConfigProvider provider = parse("Cops:\n" + TIER_BLOCK);
+
+		assertEquals(DispatchSettings.DEFAULT, provider.getDispatchSettings());
+		assertEquals(BreatherSettings.DEFAULT, provider.getBreatherSettings());
+		assertEquals(HandoffSettings.DEFAULT, provider.getHandoffSettings());
+		assertEquals(PerimeterSettings.DEFAULT, provider.getPerimeterSettings());
+	}
+
+	@Test
+	@DisplayName("a bad number keeps that key's default and reports a warning; its sibling keys still read")
+	void badNumber_defaultsAndWarns() {
+		ConfigReport      report   = new ConfigReport();
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Dispatch:
+				      Unit_Speed: fast
+				      Max_Eta_Seconds: 25
+				   Breather:
+				      Seconds:
+				         - 9
+				         - soon
+				""" + TIER_BLOCK, report);
+
+		assertEquals(10.0, provider.getDispatchSettings().unitSpeed());
+		assertEquals(25, provider.getDispatchSettings().maxEtaSeconds());
+		assertEquals(BreatherSettings.DEFAULT.seconds(), provider.getBreatherSettings().seconds());
+		assertTrue(report.issues().size() >= 2, () -> "expected warnings: " + report.issues());
+	}
+
+	@Test
+	@DisplayName("the bundled cops.yml's new blocks equal the code defaults, with no unknown keys")
+	void bundledNewBlocks_equalDefaults() throws IOException {
+		String yaml;
+		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("copsncrooks/cops.yml"))) {
+			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+		}
+		for (String block : List.of("   Dispatch:", "   Breather:", "   Handoff:", "   Perimeter:"))
+			assertTrue(yaml.contains(block), block + " must be declared");
+
+		ConfigReport      report   = new ConfigReport();
+		CopConfigProvider provider = parse(yaml, report);
+
+		assertTrue(report.issues().stream().noneMatch(issue -> "config.unknown_key".equals(issue.code())),
+		           () -> "unknown keys: " + report.issues());
+		assertEquals(DispatchSettings.DEFAULT, provider.getDispatchSettings());
+		assertEquals(BreatherSettings.DEFAULT, provider.getBreatherSettings());
+		assertEquals(HandoffSettings.DEFAULT, provider.getHandoffSettings());
+		assertEquals(PerimeterSettings.DEFAULT, provider.getPerimeterSettings());
+		for (String key : List.of("Dispatch_En_Route", "Wipe_Refill", "Handoff", "Post_Up", "Eyes_On",
+		                          "Returning_To_Patrol")) {
+			assertEquals(CopConfigProvider.COP_RADIO_DEFAULTS.cooldownFor(key), provider.getRadioSettings().cooldownFor(key), key);
+		}
+		assertEquals(200 * 50L, provider.getRadioSettings().cooldownFor("Handoff"));
+		assertEquals(100 * 50L, provider.getRadioSettings().cooldownFor("Post_Up"));
+		assertEquals(60 * 50L, provider.getRadioSettings().cooldownFor("Eyes_On"));
+		assertEquals(1200 * 50L, provider.getRadioSettings().cooldownFor("Returning_To_Patrol"));
+		assertEquals(0L, provider.getRadioSettings().cooldownFor("Dispatch_En_Route"));
+		assertEquals(0L, provider.getRadioSettings().cooldownFor("Wipe_Refill"));
+	}
+
+	@Test
+	@DisplayName("the dispatch lines are priority in the bundled list and the code default")
+	void dispatchLines_arePriorityInBundledAndDefault() throws IOException {
+		String yaml;
+		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("copsncrooks/cops.yml"))) {
+			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+		}
+		CopConfigProvider provider = parse(yaml);
+
+		for (String key : List.of("Dispatch_En_Route", "Wipe_Refill")) {
+			assertTrue(CopConfigProvider.COP_RADIO_DEFAULTS.isPriority(key), key);
+			assertTrue(provider.getRadioSettings().isPriority(key), key);
+		}
+	}
+
+	@Test
+	@DisplayName("customPriorityList_stillHoldsTheDispatchLines: a server's own Priority list keeps En_Route and Wipe_Refill (R43)")
+	void customPriorityList_stillHoldsTheDispatchLines() {
+		CopConfigProvider provider = parse("""
+				Cops:
+				   Radio:
+				      Priority:
+				         - "Contact"
+				""" + TIER_BLOCK);
+
+		assertTrue(provider.getRadioSettings().isPriority("Contact"));
+		assertTrue(provider.getRadioSettings().isPriority("Dispatch_En_Route"));
+		assertTrue(provider.getRadioSettings().isPriority("Wipe_Refill"));
+		assertFalse(provider.getRadioSettings().isPriority("Man_Down"), "the rest of the list stays as the file wrote it");
+	}
+
+	@Test
+	@DisplayName("breatherMs by stars: 1 star 15 s, 5 stars 6 s, out-of-range levels clamp to the ends, disabled is 0")
+	void breatherMs_byStars() {
+		BreatherSettings breather = BreatherSettings.DEFAULT;
+
+		assertEquals(15_000L, breather.breatherMs(1));
+		assertEquals(13_000L, breather.breatherMs(2));
+		assertEquals(6_000L, breather.breatherMs(5));
+		assertEquals(15_000L, breather.breatherMs(0));
+		assertEquals(6_000L, breather.breatherMs(7));
+		assertEquals(0L, BreatherSettings.DISABLED.breatherMs(3));
+		assertEquals(0L, new BreatherSettings(true, List.of(), 10).breatherMs(3));
+	}
+
+	@Test
+	@DisplayName("etaMs: horizontal distance over Unit_Speed, clamped to Min..Max and rounded up to whole seconds")
+	void etaMs_clampedAndCeiled() {
+		DispatchSettings dispatch = DispatchSettings.DEFAULT;
+
+		assertEquals(0L, dispatch.etaMs(0));
+		assertEquals(1_000L, dispatch.etaMs(0.1));
+		assertEquals(3_000L, dispatch.etaMs(25));
+		assertEquals(40_000L, dispatch.etaMs(10_000));
+		assertEquals(5_000L, new DispatchSettings(true, 10.0, 5, 40, 32.0, 15).etaMs(10));
+	}
+
+	@Test
+	@DisplayName("Squad_Composition '<Role>@<tier>' reads the tier, a bare role is tier 0, getSquadTiers matches the composition length")
+	void squadComposition_tierSuffix() {
+		ConfigReport      report   = new ConfigReport();
+		CopConfigProvider provider = copRoles("""
+				Squad_Composition:
+				   3:
+				      - "Marksman@3"
+				      - "Pointman"
+				      - "Assault@1"
+				""", report);
+
+		assertEquals(List.of("Marksman", "Pointman", "Assault"), names(provider.getSquadComposition(3)));
+		assertEquals(List.of(3, 0, 1), provider.getSquadTiers(3));
+		assertEquals(provider.getSquadComposition(3).size(), provider.getSquadTiers(3).size());
+		assertEquals(provider.getSquadComposition(4).size(), provider.getSquadTiers(4).size(), "a higher star floors to 3");
+		assertTrue(report.issues().isEmpty(), report.issues()::toString);
+	}
+
+	@Test
+	@DisplayName("an unknown or non-numeric tier id is tier 0 with one warning and the entry keeps its role")
+	void squadComposition_badTier_zeroAndWarns() {
+		ConfigReport      report   = new ConfigReport();
+		CopConfigProvider provider = copRoles("""
+				Squad_Composition:
+				   3:
+				      - "Medic@x"
+				      - "Marksman@9"
+				      - "Pointman@3"
+				""", report);
+
+		assertEquals(List.of("Medic", "Marksman", "Pointman"), names(provider.getSquadComposition(3)));
+		assertEquals(List.of(0, 0, 3), provider.getSquadTiers(3));
+		assertEquals(2, report.issues().size(), report.issues()::toString);
+	}
+
+	@Test
+	@DisplayName("no Squad_Composition block: the code defaults, all tier 0; roles off: no tiers")
+	void squadTiers_defaultsAndRolesOff() {
+		CopConfigProvider defaults = copRoles("Roles:\n   Marksman:\n      Health_Multiplier: 1.0\n", new ConfigReport());
+		assertEquals(List.of(0, 0, 0, 0, 0), defaults.getSquadTiers(3));
+
+		CopConfigProvider off = copRoles("Roles_Enabled: false\n", new ConfigReport());
+		assertTrue(off.getSquadTiers(3).isEmpty());
+		assertNull(off.getSquadComposition(3));
+	}
+
+	private static CopConfigProvider copRoles(String roles, ConfigReport report) {
+		ConfigParser parser = new ConfigParser();
+		NodeReader cops = NodeReader.of(parser.parse(Path.of("cops.yml"), new StringReader("Cops:\n" + TIER_BLOCK),
+		                                             report).root(), report);
+		NodeReader rolesReader = NodeReader.of(parser.parse(Path.of("cop_roles.yml"), new StringReader(roles), report)
+		                                             .root(), report);
+		return new YamlCopConfigProvider(cops, rolesReader, report, null, null);
+	}
+
 	private static List<String> names(List<CopRole> roles) {
 		return roles.stream().map(CopRole::name).toList();
 	}

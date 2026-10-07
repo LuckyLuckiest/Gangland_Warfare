@@ -12,6 +12,10 @@
 #   %eta%       seconds the medic needs to reach the patient (Medic_Moving)
 #   %role%      the speaker's role, e.g. Medic, Marksman
 #   %tier%, %level% dispatch lines only
+#   %place%     the named place near the spot (a district, hideout, turf or waypoint), or Unknown_Place
+#   %station%   the police station the units leave from (Dispatch_En_Route)
+#   %count%     how many units are on their way (Dispatch_En_Route)
+#   %eta%       also seconds until backup arrives (Dispatch_En_Route, Wipe_Refill)
 
 # Line-wrapping template for an ordinary radio line.
 Format: "&9&l[RADIO] &b%unit%&8: &7%line%"
@@ -29,6 +33,9 @@ Compass:
    - "west"
    - "north-west"
 
+# The word %place% falls back to when no named place is near.
+Unknown_Place: "the area"
+
 # Words for %side%, relative to the way the suspect faces.
 Sides:
    - "front"
@@ -43,8 +50,7 @@ Lines:
       - "Eyes on %target%, %direction%!"
    # No member has seen the suspect for a while after contact.
    Contact_Lost:
-      - "Lost visual! Check his last known."
-      - "Where'd he go?!"
+      - "Lost visual near %place%. Searching the last known position."
    # A ranged shooter's order becomes the squad's fan centre.
    Engage:
       - "Suspect in sight, engaging!"
@@ -219,7 +225,7 @@ Lines:
       - "Need more units here, now!"
    # Dispatch announces a fresh wanted level.
    Dispatch_Wanted:
-      - "All units, be advised: %target% is wanted, level %level%."
+      - "All units, be advised: %target% is wanted in %place%, level %level%."
    # Dispatch announces a wanted-tier escalation.
    Escalate:
       - "%tier% units en route to %target%."
@@ -238,3 +244,21 @@ Lines:
    Shots_Fired:
       - "Shots fired! Converge on the sound!"
       - "Gunfire, he's close! Move in!"
+   # Dispatch announces the units sent from a station and their ETA.
+   Dispatch_En_Route:
+      - "%count% units en route from %station%, ETA %eta% s."
+   # Dispatch announces backup for a wiped squad.
+   Wipe_Refill:
+      - "Squad down. Backup inbound in %eta% s."
+   # The leader reports the heading of a suspect who broke contact.
+   Handoff:
+      - "Lost him heading %direction%. Units ahead, pick him up."
+   # A cop takes a post on the perimeter.
+   Post_Up:
+      - "Holding the corner."
+   # A posted cop sees the suspect.
+   Eyes_On:
+      - "Eyes on suspect near %place%, moving %direction%."
+   # The leader calls the squad back to patrol.
+   Returning_To_Patrol:
+      - "Units returning to patrol."
