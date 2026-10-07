@@ -26,6 +26,8 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -202,13 +204,69 @@ class BribeStarsTest {
 	}
 
 	@Test
-	@DisplayName("despawnedItem_respawnsAtOnce")
-	void despawnedItem_respawnsAtOnce() {
+	@DisplayName("an item that vanished in a loaded chunk without a take (a hopper, a plugin) waits out Respawn_Seconds")
+	void vanishedItem_waitsForTheRespawnTimer() {
 		BribeStars stars = stars();
 		stars.tick();
 		when(items.get(0).isValid()).thenReturn(false);
 		stars.tick();
+		now.addAndGet(299_000L);
+		stars.tick();
+		assertEquals(1, items.size(), "no fresh star before the timer");
 
+		now.addAndGet(1_000L);
+		stars.tick();
+		assertEquals(2, items.size());
+	}
+
+	@Test
+	@DisplayName("an item unloaded with its chunk returns at once when the chunk loads again")
+	void unloadedWithItsChunk_returnsAtOnce() {
+		BribeStars stars = stars();
+		stars.tick();
+		when(items.get(0).isValid()).thenReturn(false);
+		when(world.isChunkLoaded(anyInt(), anyInt())).thenReturn(false);
+		stars.tick();
+		when(world.isChunkLoaded(anyInt(), anyInt())).thenReturn(true);
+		stars.tick();
+
+		assertEquals(2, items.size());
+	}
+
+	@Test
+	@DisplayName("isStar knows the live star item and nothing else")
+	void isStar_onlyTheLiveItem() {
+		BribeStars stars = stars();
+		stars.tick();
+
+		assertTrue(stars.isStar(items.get(0)));
+		assertFalse(stars.isStar(mock(Item.class)));
+	}
+
+	@Test
+	@DisplayName("a removed pickup point takes its floating star with it")
+	void removedPoint_removesItsStar() {
+		BribeStars stars = stars();
+		stars.tick();
+		when(points.ofKind(SetupPoint.PICKUP)).thenReturn(List.of());
+		stars.tick();
+
+		verify(items.get(0)).remove();
+		assertFalse(stars.isStar(items.get(0)));
+	}
+
+	@Test
+	@DisplayName("a point id reused at another spot does not keep serving the old star")
+	void reusedPointId_dropsAFreshStarAtTheNewSpot() {
+		BribeStars stars = stars();
+		stars.tick();
+		SetupPoint moved = mock(SetupPoint.class);
+		when(moved.getId()).thenReturn(1);
+		when(moved.getLocation()).thenReturn(new Location(world, 200, 64, 200));
+		when(points.ofKind(SetupPoint.PICKUP)).thenReturn(List.of(moved));
+		stars.tick();
+
+		verify(items.get(0)).remove();
 		assertEquals(2, items.size());
 	}
 
