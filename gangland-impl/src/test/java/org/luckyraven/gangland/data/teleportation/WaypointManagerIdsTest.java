@@ -102,4 +102,25 @@ class WaypointManagerIdsTest {
 		assertEquals(3, c.getUsedId());
 		assertEquals(4, new Waypoint("new", "gangland").getUsedId());
 	}
+
+	@Test
+	@DisplayName("refactorIds never moves the next id below a waypoint created but not yet autosaved")
+	void refactorIds_keepsTheNextIdAboveAnUnsavedWaypoint() throws SQLException {
+		manager.add(waypoint("a", 1));
+		manager.add(waypoint("c", 3));
+		Waypoint unsaved = waypoint("w", 5);
+		manager.add(unsaved);
+		Database db = mock(Database.class);
+		when(database.getDatabase()).thenReturn(db);
+		when(db.table(anyString())).thenReturn(db);
+		List<Object[]> rows = new ArrayList<>();
+		rows.add(new Object[]{1});
+		rows.add(new Object[]{3});
+		when(db.selectAll(any(String[].class))).thenReturn(rows);
+
+		manager.refactorIds();
+
+		assertSame(unsaved, manager.get(5));
+		assertEquals(6, new Waypoint("new", "gangland").getUsedId());
+	}
 }

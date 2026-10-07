@@ -158,6 +158,8 @@ public class WaypointManager implements BeanLifecycle, WaypointLookupContract {
 				tempId++;
 			}
 
+			// a waypoint created since the last autosave has no row yet: never hand its id out again
+			for (int id : waypoints.keySet()) maxId = Math.max(maxId, id);
 			Waypoint.setID(maxId);
 		});
 	}
