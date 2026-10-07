@@ -60,8 +60,8 @@ declares `Plugins: [Bartizan]`; the other five load on a Bartizan-less server (`
 
 ## How the core loads modules
 
-`GanglandContext` owns one `ModuleLoader` (`<dataFolder>/modules`, `Host_Api` = `GanglandApi.VERSION`, today
-`1.0`):
+`GanglandContext` owns one `ModuleLoader` (`<dataFolder>/modules`, `Host_Api` = `GanglandApi.VERSION`, `2.3` since
+0.16.0):
 
 1. `bootstrap()` calls `moduleLoader.load()` **before** the configuration scan: descriptors are read, `Host_Api`
    and `Depends` checked, every accepted jar added to one parent-first classloader, each `Main` instantiated and
@@ -81,6 +81,29 @@ rely on, its major only on a breaking change. A module built for `1.x` loads on 
 `y >= x`; releasing Gangland 0.9.2 or 1.4.0 does not invalidate a single module jar.
 
 Modules load once. A changed `modules/` folder — including an update — takes effect on the next start.
+
+
+### `Host_Api` per module (0.16.0)
+
+`GanglandApi.VERSION` is `2.3`. A module's `Host_Api` is the API line it was built against; the loader accepts it when the
+major matches and its minor is at most the host's (Keystone 1.9.2), so every row below loads on a 0.16.0 core. Only a
+module that uses a newer surface than an older core offers needs the higher line.
+
+| Module | id | `Host_Api` | Why that line |
+|---|---|---|---|
+| `cops-n-crooks` | `copsncrooks` | `2.3` | `RegionProvider`/`PlaceNames`, `WantedCause.CONTACT`, the moved settings; `Depends: [turf, civilians]`, `Plugins: [Bartizan]` |
+| `gangland-turf` | `turf` | `2.3` | `TurfRegionProvider` (`RegionProvider`, `PlaceNames`); `Depends: [civilians]` |
+| `gangland-civilians` | `civilians` | `2.2` | `MovedSetting` |
+| `gangland-gadget` | `gadget` | `2.2` | `MovedSetting` |
+| `gangland-gang` | `gang` | `2.2` | `MovedSetting` |
+| `gangland-npc-shops` | `npcshops` | `2.2` | `MovedSetting` |
+| `gangland-mail` | `mail` | `2.0` | nothing newer |
+| `gangland-lootchest` | `lootchest` | `2.0` | nothing newer |
+| `gangland-healthbars` | `healthbars` | `2.0` | nothing newer |
+
+A `2.3` module (cops, turf) does **not** load on a 0.15.x core (`module.host.incompatible`): upgrade the core jar with them.
+Gangland 0.16.0 itself needs **Keystone 1.15.0 or newer** and disables itself with one console line on an older jar
+(see [migration-0.16.0.md](./migration-0.16.0.md)).
 
 ## Writing a module
 
