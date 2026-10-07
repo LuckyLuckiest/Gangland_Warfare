@@ -243,7 +243,7 @@ User:
             Waypoint: "spawn"
          Health: 20
          Hunger: 20
-      # Respawning at the nearest HOSPITAL waypoint (/glw waypoint type <name> hospital) instead of the vanilla spawn.
+      # Respawning at the nearest HOSPITAL waypoint (/glw waypoint select <id>, then /glw waypoint type hospital) instead of the vanilla spawn.
       Hospital:
          Enable: true
          # Seconds of damage immunity after a hospital respawn; attacking anything ends it. 0 = off.

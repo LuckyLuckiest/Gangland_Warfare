@@ -52,7 +52,7 @@ a default, so an old config keeps working; the notes below say what changes and 
   keys copied from the bundled `_es` file for Spanish lines), and your own `Dispatch_Wanted` and `Contact_Lost` text is kept
   (without the place).
 - **Hospitals.** Nothing changes until an admin makes a hospital: `/glw waypoint create <name>` then
-  `/glw waypoint type <name> hospital`, and (for the downed screen) `User.Death.Respawn.Enable: true`. With a hospital in the
+  `/glw waypoint select <id>` and `/glw waypoint type hospital`, and (for the downed screen) `User.Death.Respawn.Enable: true`. With a hospital in the
   world, deaths respawn at the nearest one. **Even with no hospital, the death bill now follows the "one bill" rule** (taken
   at the down, reported with the new "Ward bill" line when a downed player respawns), unless you set `User.Death.Hospital.Enable: false`.
 - **The hospital respawn shield is on.** `User.Death.Hospital.Shield_Seconds` is 5 in the fresh `settings.yml`, and a

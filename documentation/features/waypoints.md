@@ -106,7 +106,7 @@ the waypoint's radius is 0, at most 64) the "nobody has seen you" clock runs fas
 
 ## Hospitals (0.16.0)
 
-Create a waypoint where players should wake up and set it with `/glw waypoint type <name> hospital`. Several hospitals
+Create a waypoint where players should wake up, select it with `/glw waypoint select <id>` and set it with `/glw waypoint type hospital`. Several hospitals
 can exist; the **nearest one in the world where the player died** is used. The setting is `User.Death.Hospital.Enable`
 (default true, in `settings.yml`).
 
