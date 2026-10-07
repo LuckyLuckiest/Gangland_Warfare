@@ -177,18 +177,29 @@ public record CopRole(
 	 */
 	public static @Nullable CopRole nextRole(@Nullable List<CopRole> composition,
 	                                         Collection<? extends @Nullable CopRole> liveRoles) {
-		if (composition == null || composition.isEmpty()) return null;
+		int slot = nextSlot(composition, liveRoles);
+		return slot < 0 ? null : composition.get(slot);
+	}
+
+	/**
+	 * The index {@link #nextRole} picks: the first composition entry no live cop fills, else the last index; {@code -1}
+	 * when there is no composition. The index also addresses {@code CopConfigProvider.getSquadTiers}.
+	 */
+	public static int nextSlot(@Nullable List<CopRole> composition,
+	                           Collection<? extends @Nullable CopRole> liveRoles) {
+		if (composition == null || composition.isEmpty()) return -1;
 
 		Map<String, Integer> held = new HashMap<>();
 		for (CopRole role : liveRoles)
 			if (role != null) held.merge(role.name(), 1, Integer::sum);
 
-		for (CopRole role : composition) {
-			int count = held.getOrDefault(role.name(), 0);
-			if (count == 0) return role;
-			held.put(role.name(), count - 1);
+		for (int slot = 0; slot < composition.size(); slot++) {
+			String name  = composition.get(slot).name();
+			int    count = held.getOrDefault(name, 0);
+			if (count == 0) return slot;
+			held.put(name, count - 1);
 		}
-		return composition.get(composition.size() - 1);
+		return composition.size() - 1;
 	}
 
 	/**

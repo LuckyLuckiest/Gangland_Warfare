@@ -51,6 +51,14 @@ class CopRolesFileTest {
 			         Can_Use_Weapons: true
 			""";
 
+	/** TIERS plus tier 2: the shipped Squad_Composition names tiers 2-5, so every tier id must be declared. */
+	private static final String ALL_TIERS = TIERS.replace("      3:", """
+			      2:
+			         Display_Name: "&3Sergeant"
+			         Health: 25.0
+			         Damage: 3.0
+			""" + "      3:");
+
 	// ── absent file / shipped file ─────────────────────────────────────────────
 
 	@Test
@@ -82,7 +90,7 @@ class CopRolesFileTest {
 	@DisplayName("the shipped cop_roles.yml reads with no issues and matches the built-in catalogue exactly")
 	void shippedFile_matchesBuiltIns() throws IOException {
 		ConfigReport      report  = new ConfigReport();
-		CopConfigProvider shipped = provider(TIERS, shipped("copsncrooks/cop_roles.yml"), report);
+		CopConfigProvider shipped = provider(ALL_TIERS, shipped("copsncrooks/cop_roles.yml"), report);
 		CopConfigProvider builtIn = provider(TIERS, null, new ConfigReport());
 
 		assertTrue(report.issues().isEmpty(), report.issues()::toString);
@@ -401,6 +409,22 @@ class CopRolesFileTest {
 	}
 
 	// ── helpers ───────────────────────────────────────────────────────────────
+
+	@Test
+	@DisplayName("the shipped cop_roles.yml mixes tiers: 3 stars [3,2,3,3,2], 4 stars [4,3,4,4,3,3], 5 stars [5,4,5,5,4,4], 1-2 stars unchanged")
+	void shippedFile_mixedTiers() throws IOException {
+		ConfigReport      report  = new ConfigReport();
+		CopConfigProvider shipped = provider(ALL_TIERS, shipped("copsncrooks/cop_roles.yml"), report);
+
+		assertEquals(List.of(3, 2, 3, 3, 2), shipped.getSquadTiers(3));
+		assertEquals(List.of(4, 3, 4, 4, 3, 3), shipped.getSquadTiers(4));
+		assertEquals(List.of(5, 4, 5, 5, 4, 4), shipped.getSquadTiers(5));
+		assertEquals(List.of(0, 0), shipped.getSquadTiers(1));
+		assertEquals(List.of(0, 0, 0), shipped.getSquadTiers(2));
+		assertEquals(List.of("Commander", "Pointman", "Defender", "Marksman", "Assault"),
+		             names(shipped.getSquadComposition(3)));
+		assertTrue(report.issues().isEmpty(), report.issues()::toString);
+	}
 
 	static CopConfigProvider provider(String cops, @Nullable String roles, ConfigReport report) {
 		ConfigParser parser      = new ConfigParser();

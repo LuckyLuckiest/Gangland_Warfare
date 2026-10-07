@@ -45,6 +45,9 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	static final TacticsConfig        COP_TACTICS_DEFAULT = new TacticsConfig(TacticsConfig.DEFAULT.engagement(), 270.0);
 	static final Map<Integer, Double> TIER_ARC_DEFAULTS   = Map.of(3, 200.0, 4, 270.0, 5, 330.0);
 
+	/** The dispatch-origin lines that must never be swallowed by the player gap (Ruling R43). */
+	static final Set<String> DISPATCH_PRIORITY = Set.of("Dispatch_En_Route", "Wipe_Refill");
+
 	/**
 	 * Code default for a cop_roles.yml with no Squad_Composition block (or no such file): roles are on, filled in this
 	 * order per wanted level from the {@link #builtInRoles built-in catalogue}. A Commander leads from level 3; Assault
@@ -124,9 +127,15 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private final CopNames        names;
 	private final StuckSettings   stuckSettings;
 	private final FieldCareSettings fieldCareSettings;
+	private final DispatchSettings  dispatchSettings;
+	private final BreatherSettings  breatherSettings;
+	private final HandoffSettings   handoffSettings;
+	private final PerimeterSettings perimeterSettings;
 
 	// Roles (phase H13): the composition per wanted level; empty with roles off
 	private final TreeMap<Integer, List<CopRole>> compositions = new TreeMap<>();
+	// the '@<tier id>' of each composition entry, parallel to compositions; 0 = the star's own tier
+	private final TreeMap<Integer, List<Integer>> squadTiers = new TreeMap<>();
 
 	/** {@link #YamlCopConfigProvider(NodeReader, NodeReader, ConfigReport, CopSettings, ItemParser)} with no roles file. */
 	public YamlCopConfigProvider(NodeReader copsReader, ConfigReport report,
@@ -217,6 +226,11 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 		MappingNode careSection = cops == null ? null : cops.get("Field_Care").asMapping().orNull();
 		this.fieldCareSettings = FieldCareSettings.read(careSection != null ? NodeReader.of(careSection, report) : null,
 		                                                report, FieldCareSettings.DEFAULT);
+
+		this.dispatchSettings  = parseDispatchSettings(cops, report);
+		this.breatherSettings  = parseBreatherSettings(cops, report);
+		this.handoffSettings   = parseHandoffSettings(cops, report);
+		this.perimeterSettings = parsePerimeterSettings(cops, report);
 
 		loadTiers(cops, report, itemParser);
 		loadRoles(rolesReader, report, itemParser);
@@ -466,6 +480,32 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	}
 
 	@Override
+	public DispatchSettings getDispatchSettings() {
+		return dispatchSettings;
+	}
+
+	@Override
+	public BreatherSettings getBreatherSettings() {
+		return breatherSettings;
+	}
+
+	@Override
+	public HandoffSettings getHandoffSettings() {
+		return handoffSettings;
+	}
+
+	@Override
+	public PerimeterSettings getPerimeterSettings() {
+		return perimeterSettings;
+	}
+
+	@Override
+	public List<Integer> getSquadTiers(int wantedLevel) {
+		Map.Entry<Integer, List<Integer>> entry = squadTiers.floorEntry(wantedLevel);
+		return entry != null ? entry.getValue() : List.of();
+	}
+
+	@Override
 	public @Nullable List<CopRole> getSquadComposition(int wantedLevel) {
 		Map.Entry<Integer, List<CopRole>> entry = compositions.floorEntry(wantedLevel);
 		return entry != null ? entry.getValue() : null;
@@ -620,7 +660,10 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 		MappingNode compositionSection = file == null ? null : file.get("Squad_Composition").asMapping().orNull();
 		if (compositionSection == null) {
-			COMPOSITION_DEFAULTS.forEach((level, names) -> compositions.put(level, names.stream().map(roles::get).toList()));
+			COMPOSITION_DEFAULTS.forEach((level, names) -> {
+				compositions.put(level, names.stream().map(roles::get).toList());
+				squadTiers.put(level, Collections.nCopies(names.size(), 0));
+			});
 			return;
 		}
 
@@ -636,15 +679,41 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 				continue;
 			}
 
-			List<CopRole> list = new ArrayList<>();
-			for (String name : access.asList().ofStrings().orEmpty()) {
+			List<CopRole> list    = new ArrayList<>();
+			List<Integer> tierIds = new ArrayList<>();
+			for (String entry : access.asList().ofStrings().orEmpty()) {
+				// "<Role>" or "<Role>@<tier id>": the tier a slot is spawned at instead of the star's own
+				String name   = entry;
+				int    tierId = 0;
+				int    at     = entry != null ? entry.indexOf('@') : -1;
+				if (at >= 0) {
+					name = entry.substring(0, at);
+					String rawTier = entry.substring(at + 1).trim();
+					try {
+						tierId = Integer.parseInt(rawTier);
+					} catch (NumberFormatException e) {
+						tierId = -1;
+					}
+					if (!tiers.containsKey(tierId)) {
+						report.add(Severity.WARNING, locationOf(access, composition), "Squad_Composition." + key,
+						           "unknown tier '" + rawTier + "' in '" + entry + "', the star's own tier is used",
+						           "config.unknown_tier");
+						tierId = 0;
+					}
+				}
 				CopRole role = name != null ? roles.get(name.trim()) : null;
-				if (role != null) list.add(role);
+				if (role != null) {
+					list.add(role);
+					tierIds.add(tierId);
+				}
 				else report.add(Severity.WARNING, locationOf(access, composition), "Squad_Composition." + key,
 				                "unknown role '" + name + "' skipped (not under Roles or built in)",
 				                "config.unknown_role");
 			}
-			if (!list.isEmpty()) compositions.put(level, List.copyOf(list));
+			if (!list.isEmpty()) {
+				compositions.put(level, List.copyOf(list));
+				squadTiers.put(level, List.copyOf(tierIds));
+			}
 		}
 	}
 
@@ -862,7 +931,14 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	private RadioSettings parseRadioSettings(@Nullable NodeReader cops, ConfigReport report) {
 		MappingNode radioSection = cops == null ? null : cops.get("Radio").asMapping().orNull();
 		NodeReader  radio        = radioSection != null ? NodeReader.of(radioSection, report) : null;
-		return RadioSettings.read(radio, report, COP_RADIO_DEFAULTS);
+		RadioSettings read = RadioSettings.read(radio, report, COP_RADIO_DEFAULTS);
+
+		// Ruling R43: a server's own Priority list replaces the bundled one, but never silences the dispatch lines
+		Set<String> priority = new LinkedHashSet<>(read.priority());
+		priority.addAll(DISPATCH_PRIORITY);
+		return new RadioSettings(read.enabled(), read.range(), read.targetRange(), read.squadGapMs(), read.playerGapMs(),
+		                         read.ackDelayTicks(), read.responderMax(), read.cooldownMs(), priority, read.soundName(),
+		                         read.volume(), read.pitch());
 	}
 
 	/** {@code Cops.Names}: an absent {@code First_Names} keeps the built-in pool, {@code []} means no first name. */
@@ -911,6 +987,83 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 
 		return new RegroupSettings(enabled, casualties, windowSeconds * 1000L, fallBackSeconds * 1000L,
 		                           cooldownSeconds * 1000L, arrival);
+	}
+
+	private DispatchSettings parseDispatchSettings(@Nullable NodeReader cops, ConfigReport report) {
+		DispatchSettings defaults = DispatchSettings.DEFAULT;
+		MappingNode      section  = cops == null ? null : cops.get("Dispatch").asMapping().orNull();
+		if (section == null) return defaults;
+
+		NodeReader dispatch = NodeReader.of(section, report);
+		int        minEta   = dispatch.get("Min_Eta_Seconds").asInt().min(0).orDefault(defaults.minEtaSeconds());
+		int        maxEta   = dispatch.get("Max_Eta_Seconds").asInt().min(0).orDefault(defaults.maxEtaSeconds());
+		return new DispatchSettings(dispatch.get("Enabled").asBool().orDefault(defaults.enabled()),
+		                            dispatch.get("Unit_Speed").asDouble().min(0.1).orDefault(defaults.unitSpeed()),
+		                            Math.min(minEta, maxEta), maxEta,
+		                            dispatch.get("Station_Radius").asDouble().min(0.0).orDefault(defaults.stationRadius()),
+		                            dispatch.get("Rejoin_Grace_Seconds").asInt().min(0)
+		                                    .orDefault(defaults.rejoinGraceSeconds()));
+	}
+
+	private BreatherSettings parseBreatherSettings(@Nullable NodeReader cops, ConfigReport report) {
+		BreatherSettings defaults = BreatherSettings.DEFAULT;
+		MappingNode      section  = cops == null ? null : cops.get("Breather").asMapping().orNull();
+		if (section == null) return defaults;
+
+		NodeReader    breather = NodeReader.of(section, report);
+		List<Integer> seconds  = breatherSeconds(breather, report);
+		return new BreatherSettings(breather.get("Enabled").asBool().orDefault(defaults.enabled()),
+		                            seconds == null || seconds.isEmpty() ? defaults.seconds() : seconds,
+		                            breather.get("Wipe_Window_Seconds").asInt().min(0)
+		                                    .orDefault(defaults.wipeWindowSeconds()));
+	}
+
+	/** {@code Seconds}: a list of whole numbers; a non-number entry is reported and the whole list falls back. */
+	private static @Nullable List<Integer> breatherSeconds(NodeReader breather, ConfigReport report) {
+		NodeReader.NodeAccess access = breather.get("Seconds");
+		List<String>          raw    = access.asList().ofStrings().orNull();
+		if (raw == null) return null;
+
+		List<Integer> parsed = new ArrayList<>();
+		for (String entry : raw) {
+			try {
+				parsed.add(Math.max(0, Integer.parseInt(entry.trim())));
+			} catch (NumberFormatException e) {
+				report.add(Severity.WARNING, breather.mapping().location(), "Breather.Seconds",
+				           "'" + entry + "' is not a number, the default breathers are used", "config.type");
+				return null;
+			}
+		}
+		return parsed;
+	}
+
+	private HandoffSettings parseHandoffSettings(@Nullable NodeReader cops, ConfigReport report) {
+		HandoffSettings defaults = HandoffSettings.DEFAULT;
+		MappingNode     section  = cops == null ? null : cops.get("Handoff").asMapping().orNull();
+		if (section == null) return defaults;
+
+		NodeReader handoff = NodeReader.of(section, report);
+		return new HandoffSettings(handoff.get("Enabled").asBool().orDefault(defaults.enabled()),
+		                           handoff.get("Heading_Seconds").asInt().min(1).orDefault(defaults.headingSeconds()),
+		                           handoff.get("Bias_Seconds").asInt().min(0).orDefault(defaults.biasSeconds()),
+		                           handoff.get("Cone_Degrees").asDouble().min(1.0).orDefault(defaults.coneDegrees()));
+	}
+
+	private PerimeterSettings parsePerimeterSettings(@Nullable NodeReader cops, ConfigReport report) {
+		PerimeterSettings defaults = PerimeterSettings.DEFAULT;
+		MappingNode       section  = cops == null ? null : cops.get("Perimeter").asMapping().orNull();
+		if (section == null) return defaults;
+
+		NodeReader   perimeter = NodeReader.of(section, report);
+		List<String> roles     = perimeter.get("Roles").asList().ofStrings().orNull();
+		return new PerimeterSettings(perimeter.get("Enabled").asBool().orDefault(defaults.enabled()),
+		                             perimeter.get("Min_Level").asInt().min(1).orDefault(defaults.minLevel()),
+		                             perimeter.get("Posts").asInt().min(0).orDefault(defaults.posts()),
+		                             roles != null ? roles.stream().map(String::trim).toList() : defaults.roles(),
+		                             perimeter.get("Max_Seconds").asInt().min(0).orDefault(defaults.maxSeconds()),
+		                             perimeter.get("Lane_Length").asDouble().min(0.0).orDefault(defaults.laneLength()),
+		                             perimeter.get("Sight_Range").asDouble().min(1.0).orDefault(defaults.sightRange()),
+		                             perimeter.get("Leash_Radius").asDouble().min(0.0).orDefault(defaults.leashRadius()));
 	}
 
 	private ShotNoiseSettings parseShotNoiseSettings(@Nullable NodeReader cops, ConfigReport report) {

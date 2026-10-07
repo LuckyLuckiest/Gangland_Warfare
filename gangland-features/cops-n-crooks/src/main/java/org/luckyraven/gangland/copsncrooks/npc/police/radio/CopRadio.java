@@ -111,16 +111,30 @@ public class CopRadio {
 
 	/** Dispatch speaking about {@code target}, heard around the target: wanted starts and escalations. */
 	public boolean dispatch(CopGroup group, Player target, String key, int level, String tier) {
-		return radio.say(group.getSquad(), voice(group), null, "Dispatch", key, "Dispatch_Format",
-		                 target.getLocation(), null, Map.of("level", String.valueOf(level), "tier", tier));
+		return dispatch(group, target, key, level, tier, Map.of());
+	}
+
+	/** {@link #dispatch(CopGroup, Player, String, int, String)} with {@code extra} placeholders (%station%, %eta%, %count%, %place%). */
+	public boolean dispatch(CopGroup group, Player target, String key, int level, String tier,
+	                        Map<String, String> extra) {
+		Map<String, String> merged = new HashMap<>(extra);
+		merged.put("level", String.valueOf(level));
+		merged.put("tier", tier);
+		return radio.say(group.getSquad(), voice(group), null, "Dispatch", key, "Dispatch_Format", target.getLocation(),
+		                 null, merged);
 	}
 
 	/** The group's leader (or, with the squad empty, any live cop of the group) speaks {@code key}. */
 	public boolean sayFromLeader(CopGroup group, String key) {
+		return sayFromLeader(group, key, Map.of());
+	}
+
+	/** {@link #sayFromLeader(CopGroup, String)} with {@code extra} placeholders (%direction%, %place%). */
+	public boolean sayFromLeader(CopGroup group, String key, Map<String, String> extra) {
 		AbstractNpc speaker = leaderSpeaker(group);
 		if (speaker == null) return false;
 		return radio.say(group.getSquad(), voice(group), speaker.getEntity(), callsign(speaker), key, "Format", null,
-		                 null, Map.of());
+		                 null, extra);
 	}
 
 	private @Nullable AbstractNpc leaderSpeaker(CopGroup group) {
@@ -452,10 +466,19 @@ public class CopRadio {
 	/** The compass word ({@code Compass} lines) from {@code from} to {@code where}; empty with either missing. */
 	private String directionTo(AbstractNpc from, @Nullable Location where) {
 		LivingEntity self = from.getEntity();
+		if (self == null) return "";
+		return compassWord(self.getLocation(), where);
+	}
+
+	/**
+	 * The radio file's {@code Compass} word for the side of {@code from} that {@code to} lies on; empty with either
+	 * missing, in another world, or no compass lines.
+	 */
+	public String compassWord(@Nullable Location from, @Nullable Location to) {
 		List<String> compass = lines.lines("Compass");
-		if (self == null || where == null || compass.isEmpty() || where.getWorld() == null ||
-		    !where.getWorld().equals(self.getWorld())) return "";
-		return compass.get(RadioSides.compass8(self.getLocation(), where) % compass.size());
+		if (from == null || to == null || compass.isEmpty() || from.getWorld() == null ||
+		    !from.getWorld().equals(to.getWorld())) return "";
+		return compass.get(RadioSides.compass8(from, to) % compass.size());
 	}
 
 	/** The whole blocks from {@code from} to {@code where}; empty with either missing or in another world. */
@@ -498,7 +521,13 @@ public class CopRadio {
 		return cfg != null ? cfg.getRadioSettings() : CopConfigProvider.COP_RADIO_DEFAULTS;
 	}
 
-	private static RadioVoice voice(CopGroup group) {
+	/** The word a {@code %place%} no caller named falls back to ({@code Unknown_Place}, "the area"). */
+	private String unknownPlace() {
+		List<String> words = lines.lines("Unknown_Place");
+		return words.isEmpty() ? "the area" : words.get(0);
+	}
+
+	private RadioVoice voice(CopGroup group) {
 		return new RadioVoice() {
 			@Override
 			public String callsign(AbstractNpc npc) {
@@ -517,7 +546,8 @@ public class CopRadio {
 
 			@Override
 			public Map<String, String> extras(NpcSquad squad) {
-				return Map.of("tier", group.getTierName(), "level", String.valueOf(group.getLevel()));
+				return Map.of("tier", group.getTierName(), "level", String.valueOf(group.getLevel()), "place",
+				              unknownPlace());
 			}
 		};
 	}

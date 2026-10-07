@@ -188,10 +188,14 @@ class CopRadioMessagesTest {
 			Map.entry("Commander_Orders", java.util.Set.of("role")),
 			Map.entry("Commander_Orders_Undirected", java.util.Set.of("role")),
 			Map.entry("Commander_Orders_Basic", java.util.Set.of("role")),
-			Map.entry("Status_Check", java.util.Set.of("role")));
+			Map.entry("Status_Check", java.util.Set.of("role")),
+			Map.entry("Dispatch_En_Route", java.util.Set.of("count", "station", "eta")),
+			Map.entry("Wipe_Refill", java.util.Set.of("eta")));
 
+	// %place% is supplied by every radio voice (Unknown_Place when no caller names one)
 	private static final java.util.Set<String> ALWAYS = java.util.Set.of("%unit%", "%target%", "%distance%",
-	                                                                      "%direction%", "%side%", "%tier%", "%level%");
+	                                                                      "%direction%", "%side%", "%tier%", "%level%",
+	                                                                      "%place%");
 
 	@Test
 	@DisplayName("no variant of any line, in the code defaults, the English file or the Spanish file, names a placeholder its caller does not fill")
@@ -219,6 +223,44 @@ class CopRadioMessagesTest {
 					for (String used : placeholders(List.of(line)))
 						assertTrue(filled.contains(used), key + " uses " + used + " that no caller fills: " + line);
 		}
+	}
+
+	private static final Map<String, String> NEW_LINES = Map.of(
+			"Dispatch_Wanted", "All units, be advised: %target% is wanted in %place%, level %level%.",
+			"Dispatch_En_Route", "%count% units en route from %station%, ETA %eta% s.",
+			"Wipe_Refill", "Squad down. Backup inbound in %eta% s.",
+			"Handoff", "Lost him heading %direction%. Units ahead, pick him up.",
+			"Post_Up", "Holding the corner.",
+			"Eyes_On", "Eyes on suspect near %place%, moving %direction%.",
+			"Returning_To_Patrol", "Units returning to patrol.",
+			"Contact_Lost", "Lost visual near %place%. Searching the last known position.");
+
+	@Test
+	@DisplayName("an upgraded file without the new keys still yields the 0.16 lines from the code defaults")
+	void upgradedFile_withoutTheNewKeys_stillSpeaksThem() throws IOException {
+		CopRadioMessages upgraded = build("""
+				Lines:
+				   Contact:
+				      - "Contact!"
+				""");
+
+		NEW_LINES.forEach((key, text) -> assertEquals(List.of(text), upgraded.lines(key), key));
+	}
+
+	@Test
+	@DisplayName("the bundled English file carries the 0.16 lines word for word")
+	void bundledEnglish_carriesTheNewLines() throws IOException {
+		CopRadioMessages english = build(shipped("copsncrooks/cop_radio_messages.yml"));
+
+		NEW_LINES.forEach((key, text) -> assertEquals(List.of(text), english.lines(key), key));
+		assertEquals(List.of("the area"), english.lines("Unknown_Place"));
+	}
+
+	@Test
+	@DisplayName("Unknown_Place falls back to 'the area' without the key, and reads the file's word with it")
+	void unknownPlace_fallsBackToTheArea() throws IOException {
+		assertEquals(List.of("the area"), build("Lines: {}\n").lines("Unknown_Place"));
+		assertEquals(List.of("la zona"), build("Unknown_Place: \"la zona\"\n").lines("Unknown_Place"));
 	}
 
 	private static java.util.Set<String> placeholders(List<String> pool) {
