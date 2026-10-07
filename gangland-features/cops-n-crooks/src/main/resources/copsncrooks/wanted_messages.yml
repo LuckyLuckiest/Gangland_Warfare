@@ -63,6 +63,13 @@ Charge_Sheet:
    # The line on the paperwork screen
    Paperwork: "&7Fine paid: &a%money_symbol%%paid% &8| &7Extra time: &c%time%"
 
+# The police bribe star pickups (Wanted.Bribe_Stars in wanted.yml)
+Bribe_Star:
+   # You took one; %stars% is how many stars it removed
+   Taken: "&6You pocketed a police bribe star. &e-%stars% star(s)."
+   # You tried while a cop had seen you recently (shown at most once every 5 seconds)
+   Seen: "&cNot with a cop watching."
+
 # Crime names used on the charge sheet and the star card
 Crimes:
    Brandish_Near_Cop: "Brandishing a weapon near an officer"
