@@ -23,6 +23,9 @@ import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfig;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.config.HudSettings;
+import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.DropPlan;
+import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.Ending;
+import org.luckyraven.gangland.copsncrooks.wanted.evasion.ChaseArcs;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.CrimeRecord;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.copsncrooks.wanted.hud.HudFixtures;
@@ -71,6 +74,7 @@ class WantedHudListenerTest {
 	private Player        player;
 	private BossBar       bar;
 	private WantedMessages messages;
+	private ChaseArcs      arcs;
 
 	@BeforeAll
 	static void prime() throws ReflectiveOperationException {
@@ -86,6 +90,7 @@ class WantedHudListenerTest {
 		      .thenReturn(bar);
 
 		plugin   = mock(JavaPlugin.class);
+		arcs     = new ChaseArcs(() -> 0L);
 		ledger   = mock(HeatLedger.class);
 		stars    = mock(WantedStars.class);
 		messages = HudFixtures.messages(tempDir);
@@ -129,7 +134,7 @@ class WantedHudListenerTest {
 		when(ledger.lastCrime(player.getUniqueId())).thenReturn(
 				new CrimeRecord("Assault_Cop", 100, 0L, new Location(mock(World.class), 0, 64, 0)));
 
-		return new WantedHudListener(plugin, chase, messages, ledger, spawns, copLoader, stars);
+		return new WantedHudListener(plugin, chase, messages, ledger, spawns, copLoader, stars, arcs);
 	}
 
 	private WantedLevelChangeEvent change(int from, int to, WantedCause cause) {
@@ -275,5 +280,60 @@ class WantedHudListenerTest {
 		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(40), eq(10));
 		assertEquals("You stayed out of sight", ChatColor.stripColor(subtitle.getValue()));
 		verify(bar).removeAll();
+	}
+
+	@Test
+	@DisplayName("an evasion drop with a pending AUTO plan shows its ending card with the count, and consumes the plan")
+	void evasionDrop_withPendingPlan_showsTheEndingCard_andConsumesIt() {
+		WantedHudListener listener = listener(HudSettings.DEFAULT);
+		arcs.start(player.getUniqueId(), WantedCause.CRIME, 3);
+		arcs.stashPending(player.getUniqueId(), new DropPlan(3, Ending.PETTY, "petty"));
+
+		listener.onLevelChange(change(3, 0, WantedCause.EVASION));
+
+		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
+		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(40), eq(10));
+		assertEquals("Small fry, they dropped the case (-3)", ChatColor.stripColor(subtitle.getValue()));
+		assertEquals(null, arcs.takePending(player.getUniqueId()));
+	}
+
+	@Test
+	@DisplayName("an evasion drop with no pending plan keeps today's card")
+	void evasionDrop_withoutPendingPlan_keepsTodaysCard() {
+		WantedHudListener listener = listener(HudSettings.DEFAULT);
+		arcs.start(player.getUniqueId(), WantedCause.CRIME, 3);
+
+		listener.onLevelChange(change(3, 2, WantedCause.EVASION));
+
+		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
+		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(40), eq(10));
+		assertEquals("You stayed out of sight", ChatColor.stripColor(subtitle.getValue()));
+	}
+
+	@Test
+	@DisplayName("a DECAY or ARREST drop never reads or consumes the pending plan")
+	void decayAndArrestDrops_leaveThePendingPlanAlone() {
+		WantedHudListener listener = listener(HudSettings.DEFAULT);
+		arcs.start(player.getUniqueId(), WantedCause.CRIME, 3);
+		DropPlan plan = new DropPlan(3, Ending.PETTY, "petty");
+		arcs.stashPending(player.getUniqueId(), plan);
+
+		listener.onLevelChange(change(3, 2, WantedCause.DECAY));
+		listener.onLevelChange(change(2, 1, WantedCause.ARREST));
+
+		assertEquals(plan, arcs.takePending(player.getUniqueId()));
+	}
+
+	@Test
+	@DisplayName("a drop of several stars puts -N STARS on the green bar")
+	void multiStarDrop_tellsTheBar() {
+		WantedHudListener listener = listener(HudSettings.DEFAULT);
+		listener.onStart(new WantedStartEvent(player, wanted, 4, WantedCause.CRIME));
+
+		listener.onLevelChange(change(4, 1, WantedCause.EVASION));
+		listener.onEvasionState(new org.luckyraven.gangland.events.wanted.WantedEvasionStateEvent(
+				player, org.luckyraven.gangland.events.wanted.EvasionState.EVADED, 1, 0, null, 0));
+
+		verify(bar).setTitle(org.mockito.ArgumentMatchers.contains("-3 STARS"));
 	}
 }

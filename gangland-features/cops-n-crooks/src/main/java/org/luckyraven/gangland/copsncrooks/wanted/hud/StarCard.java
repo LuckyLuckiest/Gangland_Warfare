@@ -2,8 +2,10 @@ package org.luckyraven.gangland.copsncrooks.wanted.hud;
 
 import org.bukkit.Location;
 import org.bukkit.boss.BarColor;
+import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages.Key;
+import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.DropPlan;
 import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.gangland.events.wanted.EvasionState;
 
@@ -42,12 +44,45 @@ public final class StarCard {
 		return messages.format(key, Map.of());
 	}
 
+	/**
+	 * Why {@code lost} stars were lost. An evasion drop with a {@code pending} AUTO plan reads the card of its ending
+	 * (HUNKER_DOWN by its reason: a known face, a narrow escape, else the plain evasion line); anything else is the
+	 * plain card of {@link #dropCard(WantedMessages, WantedCause)}.
+	 *
+	 * @since 0.15.2
+	 */
+	public static String dropCard(WantedMessages messages, WantedCause cause, @Nullable DropPlan pending, int lost) {
+		if (cause != WantedCause.EVASION || pending == null) return dropCard(messages, cause);
+
+		Key key = switch (pending.ending()) {
+			case STILL_HOT -> Key.CARD_DROP_STILL_HOT;
+			case PETTY -> Key.CARD_DROP_PETTY;
+			case COLD_TRAIL -> Key.CARD_DROP_COLD_TRAIL;
+			case CLEAN_BREAK -> Key.CARD_DROP_CLEAN_BREAK;
+			case HUNKER_DOWN -> switch (pending.reason()) {
+				case "known_face" -> Key.CARD_DROP_KNOWN_FACE;
+				case "narrow" -> Key.CARD_DROP_NARROW;
+				default -> Key.CARD_DROP_EVASION;
+			};
+		};
+
+		return messages.format(key, Map.of("count", String.valueOf(lost)));
+	}
+
 	/** The boss bar title for {@code state}; OFF reads as SEEN (still wanted, nobody searching). */
 	public static String barTitle(WantedMessages messages, EvasionState state, String stars, int secondsLeft) {
+		return barTitle(messages, state, stars, secondsLeft, 1);
+	}
+
+	/** As above; the green EVADED bar names the count when {@code lost} is 2 or more. @since 0.15.2 */
+	public static String barTitle(WantedMessages messages, EvasionState state, String stars, int secondsLeft,
+	                              int lost) {
 		return switch (state) {
 			case SEARCHING -> messages.format(Key.BAR_SEARCHING, Map.of("stars", stars, "time",
 			                                                           WantedMessages.duration(secondsLeft)));
-			case EVADED -> messages.format(Key.BAR_EVADED, Map.of("stars", stars));
+			case EVADED -> lost >= 2 ? messages.format(Key.BAR_EVADED_MANY,
+			                                           Map.of("stars", stars, "count", String.valueOf(lost)))
+			                         : messages.format(Key.BAR_EVADED, Map.of("stars", stars));
 			default -> messages.format(Key.BAR_SEEN, Map.of("stars", stars));
 		};
 	}
