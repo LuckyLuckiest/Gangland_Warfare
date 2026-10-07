@@ -4,7 +4,9 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.gangland.data.region.PlaceRegion;
+import org.luckyraven.gangland.data.region.RegionShape;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
@@ -85,24 +87,49 @@ class TurfRegionProviderTest {
 	void yIsIgnored() {
 		Turf turf = new Turf(3, "YIgnored", new CuboidRegion("world", 0, 0, 10, 10), null,
 		                      BigDecimal.ZERO, System.currentTimeMillis(), 0);
-		// Different Y coordinates should still find the turf
-		Location at1 = new Location(world, 5, 0, 5);
-		Location at2 = new Location(world, 5, 64, 5);
-		Location at3 = new Location(world, 5, 255, 5);
+		Location at = new Location(world, 5, 64, 5);
 
-		when(turfManager.findAt(at1)).thenReturn(turf);
-		when(turfManager.findAt(at2)).thenReturn(turf);
-		when(turfManager.findAt(at3)).thenReturn(turf);
+		when(turfManager.findAt(at)).thenReturn(turf);
 
-		List<PlaceRegion> regions1 = provider.regionsAt(at1);
-		List<PlaceRegion> regions2 = provider.regionsAt(at2);
-		List<PlaceRegion> regions3 = provider.regionsAt(at3);
+		List<PlaceRegion> regions = provider.regionsAt(at);
 
-		assertEquals(1, regions1.size());
-		assertEquals(1, regions2.size());
-		assertEquals(1, regions3.size());
-		// All should return the same turf region
-		assertEquals(regions1.get(0).id(), regions2.get(0).id());
-		assertEquals(regions2.get(0).id(), regions3.get(0).id());
+		assertEquals(1, regions.size());
+		PlaceRegion region = regions.get(0);
+
+		// The shape must be a column: unbounded in Y
+		assertTrue(region.shape() instanceof RegionShape.Cuboid);
+		RegionShape.Cuboid cuboid = (RegionShape.Cuboid) region.shape();
+		assertEquals(Integer.MIN_VALUE, cuboid.minY());
+		assertEquals(Integer.MAX_VALUE, cuboid.maxY());
+
+		// X and Z are bounded by the turf region
+		assertEquals(0, cuboid.minX());
+		assertEquals(10, cuboid.maxX());
+		assertEquals(0, cuboid.minZ());
+		assertEquals(10, cuboid.maxZ());
+
+		// Verify column containment: same X/Z but different Y
+		assertTrue(cuboid.contains(5, 0, 5), "Should contain Y=0");
+		assertTrue(cuboid.contains(5, 64, 5), "Should contain Y=64");
+		assertTrue(cuboid.contains(5, 255, 5), "Should contain Y=255");
+	}
+
+	@Test
+	void placeNamesLocate_returnsDisplayName() {
+		Turf turf = new Turf(4, "Named Place", new CuboidRegion("world", 10, 10, 20, 20), null,
+		                      BigDecimal.ZERO, System.currentTimeMillis(), 0);
+		Location at = new Location(world, 15, 64, 15);
+
+		when(turfManager.findAt(at)).thenReturn(turf);
+
+		// Build a real PlaceNames and register the provider
+		PlaceNames places = new PlaceNames();
+		places.register(provider);
+
+		// Query through PlaceNames
+		var optionalName = places.locate(at);
+
+		assertTrue(optionalName.isPresent());
+		assertEquals("Named Place", optionalName.get());
 	}
 }
