@@ -197,4 +197,25 @@ class MessagesTest {
 		}
 		return captured;
 	}
+
+	@Test
+	@DisplayName("0.16: the contact, ward-bill and hospital-shield constants resolve in both bundled languages")
+	void cnc016Constants_resolveInEnAndEs() throws java.io.IOException {
+		List<Messages> added = List.of(Messages.CONTACT_USED, Messages.CONTACT_SEEN, Messages.CONTACT_COOLDOWN,
+				Messages.CONTACT_NOT_WANTED, Messages.CONTACT_NO_MONEY, Messages.CONTACT_DISABLED,
+				Messages.DEATH_WARD_BILL, Messages.DEATH_HOSPITAL_SHIELD);
+
+		for (String file : List.of("/message/message_en.yml", "/message/message_es.yml")) {
+			YamlConfiguration yaml;
+			try (java.io.Reader reader = new java.io.InputStreamReader(MessagesTest.class.getResourceAsStream(file),
+					java.nio.charset.StandardCharsets.UTF_8)) {
+				yaml = YamlConfiguration.loadConfiguration(reader);
+			}
+			for (Messages message : added) {
+				assertTrue(yaml.isString(message.getPath()), file + " lacks " + message.getPath());
+			}
+		}
+		assertEquals("Wanted_Level.Contact.Used", Messages.CONTACT_USED.getPath());
+		assertEquals("Death.Hospital_Shield", Messages.DEATH_HOSPITAL_SHIELD.getPath());
+	}
 }

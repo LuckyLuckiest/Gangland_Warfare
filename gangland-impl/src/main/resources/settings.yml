@@ -243,6 +243,11 @@ User:
             Waypoint: "spawn"
          Health: 20
          Hunger: 20
+      # Respawning at the nearest HOSPITAL waypoint (/glw waypoint type <name> hospital) instead of the vanilla spawn.
+      Hospital:
+         Enable: true
+         # Seconds of damage immunity after a hospital respawn; attacking anything ends it. 0 = off.
+         Shield_Seconds: 5
 
 # +---------------+ #
 # | Bounty Config | #
@@ -253,6 +258,9 @@ Bounty:
    Minimum: 0
    # true also pays the server-made notoriety part on a kill, as before 0.15.0.
    Pay_Notoriety: false
+   # A kill of a player with a posted bounty is a crime-free takedown only when other players' escrow on the victim is
+   # at least this much (and above Minimum). A cheaper bounty still pays out, but the kill is an ordinary crime.
+   Takedown_Minimum: 100
    Kill:
       # Each kill committed will be added on the total bounty amount.
       Each: 5
@@ -297,6 +305,24 @@ Wanted:
       Formula: "amount * multiplier ^ wanted"
       Amount: 50
       Multiplier: 5
+   # Hitting back is not a crime: a player who was hit first by another player may hit that player without a charge.
+   Self_Defence:
+      Enable: true
+      # How long after being hit the victim may hit back crime-free.
+      Window_Seconds: 8
+      # Hits for less damage than this do not open the window.
+      Min_Damage: 2.0
+      # The same attacker and victim pair gets a fresh window only after this many seconds.
+      Pair_Cooldown_Seconds: 600
+   # Crooked contacts: pay to make stars disappear (/glw contact and the [WANTED] sign), only while no cop sees you.
+   Contacts:
+      Enable: true
+      # Price of each star wiped.
+      Price_Per_Star: 1000
+      # Seconds a contact lies low after a paid wipe.
+      Cooldown_Seconds: 600
+      # The most stars one /glw contact call may wipe.
+      Max_Stars: 2
    # A timer that reduces the wanted level after the specified time.
    Repeating_Timer:
       Enable: true

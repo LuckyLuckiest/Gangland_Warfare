@@ -318,4 +318,102 @@ class SettingsTest {
 		assertFalse(Settings.isBountyPayNotoriety());
 		assertEquals("amount * multiplier ^ wanted", Settings.getWantedTakeMoneyFormula());
 	}
+
+	@Test
+	@DisplayName("0.16 keys absent: self-defence, takedown minimum, contacts and hospital read their shipped values")
+	void cnc016Keys_absent_readShippedDefaults() throws IOException {
+		SettingsFixture.write(tempDir, "Money_Symbol: '$'\n");
+
+		SettingsFixture.initialize(tempDir);
+
+		assertTrue(Settings.isSelfDefenceEnabled());
+		assertEquals(8, Settings.getSelfDefenceWindowSeconds());
+		assertEquals(2.0, Settings.getSelfDefenceMinDamage());
+		assertEquals(600, Settings.getSelfDefencePairCooldownSeconds());
+		assertEquals(0, new BigDecimal("100").compareTo(Settings.getBountyTakedownMinimum()));
+		assertTrue(Settings.isContactsEnabled());
+		assertEquals(0, new BigDecimal("1000").compareTo(Settings.getContactsPricePerStar()));
+		assertEquals(600, Settings.getContactsCooldownSeconds());
+		assertEquals(2, Settings.getContactsMaxStars());
+		assertTrue(Settings.isHospitalEnabled());
+		assertEquals(5, Settings.getHospitalShieldSeconds());
+	}
+
+	@Test
+	@DisplayName("0.16 keys present: every value is read as written")
+	void cnc016Keys_present_readAsWritten() throws IOException {
+		SettingsFixture.write(tempDir, """
+				Money_Symbol: '$'
+				User:
+				  Death:
+				    Hospital:
+				      Enable: false
+				      Shield_Seconds: 12
+				Bounty:
+				  Takedown_Minimum: 250
+				Wanted:
+				  Self_Defence:
+				    Enable: false
+				    Window_Seconds: 3
+				    Min_Damage: 4.5
+				    Pair_Cooldown_Seconds: 90
+				  Contacts:
+				    Enable: false
+				    Price_Per_Star: 77
+				    Cooldown_Seconds: 30
+				    Max_Stars: 4
+				""");
+
+		SettingsFixture.initialize(tempDir);
+
+		assertFalse(Settings.isSelfDefenceEnabled());
+		assertEquals(3, Settings.getSelfDefenceWindowSeconds());
+		assertEquals(4.5, Settings.getSelfDefenceMinDamage());
+		assertEquals(90, Settings.getSelfDefencePairCooldownSeconds());
+		assertEquals(0, new BigDecimal("250").compareTo(Settings.getBountyTakedownMinimum()));
+		assertFalse(Settings.isContactsEnabled());
+		assertEquals(0, new BigDecimal("77").compareTo(Settings.getContactsPricePerStar()));
+		assertEquals(30, Settings.getContactsCooldownSeconds());
+		assertEquals(4, Settings.getContactsMaxStars());
+		assertFalse(Settings.isHospitalEnabled());
+		assertEquals(12, Settings.getHospitalShieldSeconds());
+	}
+
+	@Test
+	@DisplayName("Hospital.Shield_Seconds: 0 is read as 0 (off), not replaced by the default")
+	void hospitalShield_zeroReadsAsZero() throws IOException {
+		SettingsFixture.write(tempDir, """
+				Money_Symbol: '$'
+				User:
+				  Death:
+				    Hospital:
+				      Shield_Seconds: 0
+				""");
+
+		SettingsFixture.initialize(tempDir);
+
+		assertEquals(0, Settings.getHospitalShieldSeconds());
+	}
+
+	@Test
+	@DisplayName("the bundled settings.yml ships every 0.16 key at the value the code defaults to")
+	void bundledSettings_cnc016KeysMatchCodeDefaults() throws IOException {
+		try (java.io.InputStream in = SettingsTest.class.getResourceAsStream("/settings.yml")) {
+			java.nio.file.Files.write(tempDir.resolve("settings.yml"), in.readAllBytes());
+		}
+
+		SettingsFixture.initialize(tempDir);
+
+		assertTrue(Settings.isSelfDefenceEnabled());
+		assertEquals(8, Settings.getSelfDefenceWindowSeconds());
+		assertEquals(2.0, Settings.getSelfDefenceMinDamage());
+		assertEquals(600, Settings.getSelfDefencePairCooldownSeconds());
+		assertEquals(0, new BigDecimal("100").compareTo(Settings.getBountyTakedownMinimum()));
+		assertTrue(Settings.isContactsEnabled());
+		assertEquals(0, new BigDecimal("1000").compareTo(Settings.getContactsPricePerStar()));
+		assertEquals(600, Settings.getContactsCooldownSeconds());
+		assertEquals(2, Settings.getContactsMaxStars());
+		assertTrue(Settings.isHospitalEnabled());
+		assertEquals(5, Settings.getHospitalShieldSeconds());
+	}
 }

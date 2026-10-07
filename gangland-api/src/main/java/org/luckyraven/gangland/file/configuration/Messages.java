@@ -308,6 +308,12 @@ public enum Messages {
 	NOT_WANTED("Wanted_Level.Not_Wanted", Type.PREFIX),
 	WANTED_CLEARED("Wanted_Level.Cleared", Type.PREFIX),
 	PAID_WANTED("Wanted_Level.Paid", Type.PREFIX),
+	CONTACT_USED("Wanted_Level.Contact.Used", Type.PREFIX),
+	CONTACT_SEEN("Wanted_Level.Contact.Seen", Type.PREFIX),
+	CONTACT_COOLDOWN("Wanted_Level.Contact.Cooldown", Type.PREFIX),
+	CONTACT_NOT_WANTED("Wanted_Level.Contact.Not_Wanted", Type.PREFIX),
+	CONTACT_NO_MONEY("Wanted_Level.Contact.No_Money", Type.PREFIX),
+	CONTACT_DISABLED("Wanted_Level.Contact.Disabled", Type.PREFIX),
 
 	// level
 	LEVEL_STATS("Level.Stats", Type.OTHER, true),
@@ -415,6 +421,8 @@ public enum Messages {
 	DEATH_RESPAWN_WASTED_PREFIX("Death.Respawn.Wasted_Prefix", Type.OTHER),
 	DEATH_RESPAWN_BUTTON("Death.Respawn.Click_Button", Type.OTHER),
 	DEATH_GLOBAL("Death.Global", Type.OTHER, true),
+	DEATH_WARD_BILL("Death.Ward_Bill", Type.OTHER),
+	DEATH_HOSPITAL_SHIELD("Death.Hospital_Shield", Type.PREFIX),
 
 	// commands - update
 	UPDATE_AVAILABLE("Commands.Update.Available", Type.COMMAND),
