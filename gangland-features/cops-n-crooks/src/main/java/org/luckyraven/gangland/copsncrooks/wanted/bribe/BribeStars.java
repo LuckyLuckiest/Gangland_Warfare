@@ -123,8 +123,10 @@ public class BribeStars implements BeanLifecycle {
 		});
 
 		for (SetupPoint point : pickups) {
-			Location at = point.getLocation();
-			if (at == null || at.getWorld() == null) continue;
+			Location corner = point.getLocation();
+			if (corner == null || corner.getWorld() == null) continue;
+			// a wand point is the clicked block's corner: a star dropped there spawns inside the block and is pushed out
+			Location at = corner.clone().add(0.5, 1.0, 0.5);
 
 			Slot slot = slots.computeIfAbsent(point.getId(), id -> new Slot());
 			if (!at.getWorld().isChunkLoaded(at.getBlockX() >> 4, at.getBlockZ() >> 4)) {
@@ -150,6 +152,7 @@ public class BribeStars implements BeanLifecycle {
 			}
 
 			slot.item.setTicksLived(1);   // the 5 minute despawn clock never runs out while the point is being served
+			slot.item.setVelocity(new Vector());   // no gravity, so a nudge would otherwise carry it off its point
 			tryTake(slot, config, now);
 		}
 	}

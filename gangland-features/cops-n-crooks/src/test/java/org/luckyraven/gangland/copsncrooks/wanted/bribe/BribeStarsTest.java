@@ -58,6 +58,9 @@ class BribeStarsTest {
 	private Wanted              wanted;
 	private final int[]         level = {3};
 	private boolean             cancelDrops;
+	/** Where a dropped star sits once the server has ticked it; {@code null}: exactly where it was dropped. */
+	private Location            settlesAt;
+	private final List<Location> dropsAt = new ArrayList<>();
 
 	@SuppressWarnings("unchecked")
 	@BeforeEach
@@ -100,7 +103,8 @@ class BribeStarsTest {
 			protected Item drop(Location at, String material) {
 				Item item = mock(Item.class);
 				when(item.isValid()).thenReturn(true);
-				when(item.getLocation()).thenReturn(at);
+				when(item.getLocation()).thenReturn(settlesAt != null ? settlesAt : at);
+				dropsAt.add(at);
 				items.add(item);
 				return item;
 			}
@@ -260,6 +264,24 @@ class BribeStarsTest {
 
 		verify(items.get(0)).remove();
 		assertFalse(stars.isStar(items.get(0)));
+	}
+
+	@Test
+	@DisplayName("a wand point is a block corner: the star floats in free air above the block and is not re-dropped")
+	void wandPoint_starFloatsAboveTheBlock_andIsNotRedropped() {
+		// the point is the clicked block's minimum corner (10,64,10); the live star sits above that block, not at the corner
+		settlesAt = new Location(world, 10.5, 65.4, 10.5);
+		BribeStars stars = stars();
+		for (int i = 0; i < 6; i++) stars.tick();
+
+		assertEquals(1, items.size(), "one star, no re-drop loop");
+		verify(items.get(0), never()).remove();
+		Location at = dropsAt.get(0);
+		assertEquals(10.5, at.getX());
+		assertEquals(65.0, at.getY());
+		assertEquals(10.5, at.getZ());
+		// a star pushed by anything is stopped on every pass, so it cannot drift off its point
+		verify(items.get(0), times(6)).setVelocity(any());
 	}
 
 	@Test
