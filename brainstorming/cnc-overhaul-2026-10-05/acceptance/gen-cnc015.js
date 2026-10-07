@@ -116,3 +116,38 @@ write('N8-regroup', [...SETUP('Runner'), STAGE, ...WANT(3), { wait: 10000 },
   TAGCOPS, say('N8:KILL1'), HIT(1000),
   { wait: 4000 }, HIT(1000), say('N8:KILL2'),
   { expectChat: 'two down|losing men|backup is coming', timeout: 12000 }, say('N8:REGROUP'), { expectChat: 'backup.s here|push together|everyone move in', timeout: 25000 }, say('N8:PUSH'), ...END]);
+
+// ---- 0.15.2 AUTO rows (profile auto; see auto-drop/PLAN.md section 9). Verdicts read the `AUTO drop ... ending=` debug lines. ----
+// Target must be killable: no resistance effect (N4a pattern), so he joins after SETUP.
+const TARGET = [{ join: 'Target', after: 800 }, { console: 'gamemode survival Target', after: 200 }];
+const KILL = { console: 'damage Target 1000 minecraft:player_attack by Runner', after: 1500 };
+const DROPS = (tag, n, timeout = 60000) => Array.from({ length: n }, (_, i) =>
+  [{ expectChat: 'decreased|cleared', timeout }, say(`${tag}:DROP${i + 1}`)]).flat();
+
+// A1 auto-hunker: 3 stars, sealed -> three single drops (about 30 / 15 / 6 s), ending=HUNKER_DOWN x3
+write('A1-auto-hunker', [...SETUP('Runner'), STAGE, ...WANT(3), { wait: 5000 }, say('A1:HIDING'), ...HIDE, ...DROPS('A1', 3), ...END]);
+// A2 auto-petty: one kill (80 heat, no star) then 2 admin stars, sealed -> 2 -> 0 in one drop, ending=PETTY
+write('A2-auto-petty', [...SETUP('Runner'), ...TARGET, STAGE, KILL, ...WANT(2), { wait: 3000 }, say('A2:HIDING'), ...HIDE, ...DROPS('A2', 1, 90000), ...END]);
+// A3 auto-rampage-lock: 4 stars plus a kill, sealed at once -> first drop 4 -> 3, ending=STILL_HOT reason=rampage
+write('A3-auto-rampage-lock', [...SETUP('Runner'), ...TARGET, STAGE, ...WANT(4), KILL, say('A3:HIDING'), ...HIDE, ...DROPS('A3', 1, 90000), ...END]);
+// A4 auto-logout-lock (two runs on one server, no re-prep): A4a = A2 setup then quit; A4b = rejoin, wait for the squad, seal
+write('A4a-auto-logout-quit', [...SETUP('Runner'), ...TARGET, STAGE, KILL, ...WANT(2), { wait: 2000 }, ...STATUS('A4-before-quit'),
+  { quit: true, bot: 'Target' }, { quit: true }]);
+write('A4b-auto-logout-rejoin', [{ join: 'Runner', after: 3000 }, { console: 'gamemode survival Runner', after: 200 },
+  ...STATUS('A4-after-rejoin'), { wait: 8000 }, mark('A4-squad'), say('A4:HIDING'), ...HIDE, ...DROPS('A4', 1, 90000), ...END]);
+// A5 auto-learn-persist: A5a = two PETTY chases in one boot (two kills inside 10 s = 200 heat = 1 star, cause CRIME); the run-all
+// script then reads chase_habit with sqlite3 (server stopped); A5b = a third chase after the restart, its debug line shows delta > 0
+const CHASE = (tag) => [STAGE, KILL, { console: 'damage Target 1000 minecraft:player_attack by Runner', after: 1500 }, say(`${tag}:START`),
+  ...HIDE, ...DROPS(tag, 1, 60000), { console: 'fill 96 -61 126 104 -56 134 minecraft:air', after: 500 }, { wait: 7000 }];
+write('A5a-auto-learn-two-chases', [...SETUP('Runner'), ...TARGET, ...CHASE('A5-1'), ...CHASE('A5-2'), ...END]);
+write('A5b-auto-learn-after-restart', [{ join: 'Runner', after: 3000 }, { console: 'gamemode survival Runner', after: 200 },
+  { join: 'Target', after: 800 }, { console: 'gamemode survival Target', after: 200 }, ...CHASE('A5-3'), ...END]);
+// A6 auto-config-compat: boot only, twice (run-all swaps the wanted.yml between the runs)
+write('A6-auto-config-compat', [{ join: 'Runner', after: 3000 }, say('A6:BOOTED'), { wait: 1000 }, { quit: true }]);
+// A7-A9 (REVIEW): 3 stars, seal, wait for the loss of sight, then hop Runner out of the zone
+const HOPS = (n, step) => Array.from({ length: n }, (_, k) => ({ console: `tp Runner ${100 + step * (k + 1)} -60 130`, after: 1000 }));
+const OUTRUN = (tag, ...hops) => [...SETUP('Runner'), STAGE, ...WANT(3), { wait: 5000 }, ...HIDE, { wait: 5000 }, say(tag + ':RUN'), ...hops,
+  { wait: 3000 }, say(tag + ':DONE'), ...END];
+write('A7-auto-clean-break', OUTRUN('A7', ...HOPS(30, 15)));      // 15 blocks a second, each hop under the 32-block teleport rule
+write('A8-auto-flee-on-foot', OUTRUN('A8', ...HOPS(40, 5)));     // 5 blocks a second, about a sprint
+write('A9-auto-teleport', OUTRUN('A9', tpR(250, -60, 130), { wait: 35000 })); // one jump of 150 blocks

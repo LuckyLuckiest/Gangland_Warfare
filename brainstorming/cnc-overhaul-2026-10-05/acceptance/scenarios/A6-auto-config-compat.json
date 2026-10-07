@@ -1,0 +1,1 @@
+[{"join":"Runner","after":3000},{"console":"say CNCMARK:A6:BOOTED","after":100},{"wait":1000},{"quit":true}]
