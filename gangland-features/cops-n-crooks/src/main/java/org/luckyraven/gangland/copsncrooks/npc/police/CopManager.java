@@ -700,7 +700,7 @@ public class CopManager implements BeanLifecycle {
 
 	/**
 	 * Spawns the queued units that are due. The first one that finds no spot stops the run (the 0.15 "stop trying this
-	 * interval" rule): it and the rest of the due units are requeued untried, so a suspect with no valid spot around him
+	 * interval" rule): the rest of the due units are requeued untried, ahead of it, so a suspect with no valid spot around him
 	 * costs one failed search per run, not one per unit. A unit enqueued under a hand-off bias
 	 * seeds the squad with the bias's last sighting and a tip-off when it spawns (CONTRACTS C11), so the evasion clock
 	 * holds instead of reading the seed as a fresh sighting.
@@ -712,7 +712,9 @@ public class CopManager implements BeanLifecycle {
 			PendingUnit unit   = due.get(i);
 			CopNpc      newCop = spawnManager.spawnUnit(player, unit, loc -> !group.isAvoided(loc, now));
 			if (newCop == null) {
-				due.subList(i, due.size()).forEach(group::requeue);
+				// the untried units go first next run: a unit refused at its one spot must not block those behind it
+				due.subList(i + 1, due.size()).forEach(group::requeue);
+				group.requeue(unit);
 				return;
 			}
 

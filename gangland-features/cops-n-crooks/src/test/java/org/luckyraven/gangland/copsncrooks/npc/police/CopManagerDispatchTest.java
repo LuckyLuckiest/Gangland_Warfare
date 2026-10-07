@@ -389,6 +389,25 @@ class CopManagerDispatchTest {
 	}
 
 	@Test
+	@DisplayName("a unit refused every time goes to the back of the queue, so the units behind it still get tried")
+	void unitRefusedEveryTime_rotatesToTheBack() {
+		PendingUnit[] refused = {null};
+		when(fx.spawner.spawnUnit(any(), any(), any())).thenAnswer(inv -> {
+			PendingUnit unit = inv.getArgument(1);
+			if (refused[0] == null) refused[0] = unit;
+			return unit == refused[0] ? null : fx.cop(CopState.IDLE, 0, 0);
+		});
+		manager.onWantedStart(player, wanted);
+
+		manager.spawnTick(playerId, wanted);
+		fx.clock[0] = 2_000L;
+		manager.spawnTick(playerId, wanted);
+
+		assertEquals(1, group().getCops().size());
+		assertEquals(1, group().pendingCount());
+	}
+
+	@Test
 	@DisplayName("three stars: each composition slot spawns at its own tier (Pointman 2, Marksman 3)")
 	void threeStars_slotsGetTheirTiers() {
 		Wanted three = CopManagerFixture.wanted(3);
