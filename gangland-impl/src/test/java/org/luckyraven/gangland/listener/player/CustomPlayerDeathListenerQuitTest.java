@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
+import org.luckyraven.gangland.data.teleportation.HospitalShield;
 import org.luckyraven.gangland.data.teleportation.WaypointManager;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.support.SettingsFixture;
@@ -63,7 +64,8 @@ class CustomPlayerDeathListenerQuitTest {
 
 		listener = new CustomPlayerDeathListener(mock(Gangland.class),
 		                                         mock(UserManager.class),
-		                                         mock(WaypointManager.class));
+		                                         mock(WaypointManager.class),
+		                                         mock(HospitalShield.class));
 	}
 
 	@AfterEach

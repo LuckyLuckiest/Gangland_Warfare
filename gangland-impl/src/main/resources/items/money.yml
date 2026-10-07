@@ -54,7 +54,8 @@ Money:
    Pickup_Action_Bar: "&a&l+ %gangland_money_symbol%%amount%"
    Drop_Sources:
       PLAYER:
-         Enabled: true
+         # One death costs one bill (User.Death.Money in settings.yml); set true to also drop part of the wallet at the body.
+         Enabled: false
          Variations:
             small:
                weight: 50

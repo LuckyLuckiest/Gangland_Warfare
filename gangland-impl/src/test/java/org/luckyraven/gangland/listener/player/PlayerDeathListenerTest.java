@@ -2,6 +2,14 @@ package org.luckyraven.gangland.listener.player;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.luckyraven.gangland.core.bounty.Bounty;
+import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
+import org.luckyraven.gangland.core.downed.PlayerUndownedEvent;
+import org.luckyraven.gangland.core.user.Level;
+import org.luckyraven.gangland.core.wanted.Wanted;
+import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.support.FakeMessageProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,11 +29,17 @@ import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.luckyraven.keystone.util.Placeholder;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.Mockito.mock;
@@ -48,11 +62,14 @@ class PlayerDeathListenerTest {
 	private Player               player;
 	private User<Player>         user;
 	private PlayerDeathListener  listener;
+	private UserManager<Player>  userManager;
 
 	@SuppressWarnings("unchecked")
 	@BeforeEach
 	void setUp() {
 		bukkit = BukkitStatics.install();
+		Messages.init(new FakeMessageProvider().withString("Death.Ward_Bill",
+		                                                   "Ward bill: -%money_symbol%%amount%"));
 		EconomyHandler.setVaultEconomy(null);
 
 		IdentitySettingsContract identity = mock(IdentitySettingsContract.class);
@@ -68,7 +85,7 @@ class PlayerDeathListenerTest {
 		user = new User<>(mock(JavaPlugin.class), player, placeholder);
 		user.getEconomy().setAmount(Currency.of(10_000));
 
-		UserManager<Player> userManager = mock(UserManager.class);
+		userManager = mock(UserManager.class);
 		when(userManager.getUser(player)).thenReturn(user);
 		listener = new PlayerDeathListener(userManager, mock(GanglandPlaceholder.class), mock(BankTiers.class));
 	}
@@ -134,7 +151,158 @@ class PlayerDeathListenerTest {
 		verify(player, never()).sendMessage(anyString());
 	}
 
+	@Test
+	@DisplayName("Hospital.Enable: a down charges nothing yet, the bill waits for the stand-up")
+	void downed_withHospital_chargesNothingAtTheDown() throws IOException {
+		settings("true", "balance * 0.15", 1000, true);
+
+		listener.onPlayerDowned(new PlayerDownedEvent(player));
+
+		assertEquals(0, Currency.of(10_000).compareTo(user.getEconomy().getAmount()));
+		verify(player, never()).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("the stand-up charges the quoted bill once, with the ward-bill line")
+	void undowned_chargesTheQuotedBillOnce() throws IOException {
+		settings("true", "balance * 0.15", 1000, true);
+		listener.onPlayerDowned(new PlayerDownedEvent(player));
+
+		listener.onPlayerUndowned(new PlayerUndownedEvent(player));
+		listener.onPlayerUndowned(new PlayerUndownedEvent(player));
+
+		assertEquals(0, Currency.of(8_500).compareTo(user.getEconomy().getAmount()));
+		verify(player).sendMessage(contains("Ward bill: -$1.5K"));
+	}
+
+	@Test
+	@DisplayName("quitting while downed does not dodge the bill")
+	void quitWhileDowned_chargesTheBill() throws IOException {
+		settings("true", "balance * 0.15", 1000, true);
+		listener.onPlayerDowned(new PlayerDownedEvent(player));
+		PlayerQuitEvent quit = mock(PlayerQuitEvent.class);
+		when(quit.getPlayer()).thenReturn(player);
+
+		listener.onQuit(quit);
+		listener.onPlayerUndowned(new PlayerUndownedEvent(player));
+
+		assertEquals(0, Currency.of(8_500).compareTo(user.getEconomy().getAmount()), "charged once, on the quit");
+	}
+
+	@Test
+	@DisplayName("the bill is quoted with the wanted level of the down, not the level after the DEATH reset")
+	@SuppressWarnings("unchecked")
+	void quote_usesTheWantedLevelBeforeTheDeathReset() throws IOException {
+		settings("true", "wanted * 100", 1000, true);
+		AtomicInteger stars  = new AtomicInteger(3);
+		Wanted        wanted = mock(Wanted.class);
+		when(wanted.getLevel()).thenAnswer(inv -> stars.get());
+		Level level = mock(Level.class);
+		when(level.getLevelValue()).thenReturn(1);
+		Bounty bounty = mock(Bounty.class);
+		when(bounty.getAmount()).thenReturn(BigDecimal.ZERO);
+		User<Player>   mocked = mock(User.class);
+		EconomyHandler wallet = mock(EconomyHandler.class);
+		when(wallet.getAmount()).thenReturn(Currency.of(10_000));
+		when(mocked.getEconomy()).thenReturn(wallet);
+		when(mocked.getWanted()).thenReturn(wanted);
+		when(mocked.getLevel()).thenReturn(level);
+		when(mocked.getBounty()).thenReturn(bounty);
+		when(mocked.withdraw(any(BigDecimal.class))).thenAnswer(inv -> inv.getArgument(0));
+		when(userManager.getUser(player)).thenReturn(mocked);
+
+		listener.onPlayerDowned(new PlayerDownedEvent(player));
+		stars.set(0); // the DEATH wanted reset
+		listener.onPlayerUndowned(new PlayerUndownedEvent(player));
+
+		verify(mocked).withdraw(Currency.of(300));
+	}
+
+	@Test
+	@DisplayName("Hospital.Enable false charges at the down, as before")
+	void hospitalDisabled_chargesAtTheDownAsBefore() throws IOException {
+		settings("true", "balance * 0.15", 1000, false);
+
+		listener.onPlayerDowned(new PlayerDownedEvent(player));
+
+		assertEquals(0, Currency.of(8_500).compareTo(user.getEconomy().getAmount()));
+		listener.onPlayerUndowned(new PlayerUndownedEvent(player));
+		assertEquals(0, Currency.of(8_500).compareTo(user.getEconomy().getAmount()), "nothing more at the stand-up");
+	}
+
+	@Test
+	@DisplayName("Hospital.Enable false keeps the hard-coded Death penalty line")
+	void hospitalDisabled_keepsTheDeathPenaltyLine() throws IOException {
+		settings("true", "balance * 0.15", 1000, false);
+
+		listener.handleMoney(user);
+
+		verify(player).sendMessage(contains("Death penalty"));
+		verify(player, never()).sendMessage(contains("Ward bill"));
+	}
+
+	@Test
+	@DisplayName("a downed player who then really dies pays the bill once, not twice")
+	@SuppressWarnings("unchecked")
+	void downedThenDies_paysOnce() throws ReflectiveOperationException, IOException {
+		settings("true", "balance * 0.15", 1000, true);
+		PlayerDeathEvent death = mock(PlayerDeathEvent.class);
+		when(death.getEntity()).thenReturn(player);
+
+		// the death lands inside the dedup window of the down: the pending bill is the one charge
+		listener.onPlayerDowned(new PlayerDownedEvent(player));
+		listener.onPlayerDeath(death);
+		listener.onPlayerUndowned(new PlayerUndownedEvent(player));
+
+		assertEquals(0, Currency.of(8_500).compareTo(user.getEconomy().getAmount()));
+
+		// the death lands after the window: the fresh quote replaces the pending bill
+		Field field = PlayerDeathListener.class.getDeclaredField("recentDeaths");
+		field.setAccessible(true);
+		((Map<UUID, Long>) field.get(listener)).clear();
+		user.getEconomy().setAmount(Currency.of(10_000));
+		listener.onPlayerDowned(new PlayerDownedEvent(player));
+		((Map<UUID, Long>) field.get(listener)).clear();
+		listener.onPlayerDeath(death);
+		listener.onPlayerUndowned(new PlayerUndownedEvent(player));
+
+		assertEquals(0, Currency.of(8_500).compareTo(user.getEconomy().getAmount()));
+	}
+
+	@Test
+	@DisplayName("a down below the threshold leaves no bill to charge later")
+	void belowThreshold_noPendingBill() throws IOException {
+		settings("true", "balance * 0.15", 20_000, true);
+
+		listener.onPlayerDowned(new PlayerDownedEvent(player));
+		listener.onPlayerUndowned(new PlayerUndownedEvent(player));
+
+		assertEquals(0, Currency.of(10_000).compareTo(user.getEconomy().getAmount()));
+		verify(player, never()).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("US-33/WB-17: a death entry outside the dedup window is dropped on the next put")
+	@SuppressWarnings("unchecked")
+	void recentDeaths_arePruned() throws ReflectiveOperationException, IOException {
+		settings("true", "balance * 0.15", 1000, true);
+		Field field = PlayerDeathListener.class.getDeclaredField("recentDeaths");
+		field.setAccessible(true);
+		Map<UUID, Long> recent = (Map<UUID, Long>) field.get(listener);
+		UUID            stale  = UUID.randomUUID();
+		recent.put(stale, System.currentTimeMillis() - 60_000L);
+
+		listener.onPlayerDowned(new PlayerDownedEvent(player));
+
+		assertFalse(recent.containsKey(stale), "the stale entry is gone");
+		assertTrue(recent.containsKey(player.getUniqueId()), "the fresh one is kept");
+	}
+
 	private void settings(String loseMoney, String formula, int threshold) throws IOException {
+		settings(loseMoney, formula, threshold, true);
+	}
+
+	private void settings(String loseMoney, String formula, int threshold, boolean hospital) throws IOException {
 		SettingsFixture.write(dir, """
 				Money_Symbol: '$'
 				Database:
@@ -146,7 +314,9 @@ class PlayerDeathListenerTest {
 				      Lose_Money: %s
 				      Formula: "%s"
 				      Threshold: %d
-				""".formatted(loseMoney, formula, threshold));
+				    Hospital:
+				      Enable: %s
+				""".formatted(loseMoney, formula, threshold, hospital));
 		SettingsFixture.initialize(dir);
 	}
 

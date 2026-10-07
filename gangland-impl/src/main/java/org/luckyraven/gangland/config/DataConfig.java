@@ -17,7 +17,9 @@ import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.gangland.data.economy.GanglandMoneyDropClassifier;
 import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.data.plugin.PluginManager;
+import org.luckyraven.gangland.data.teleportation.HospitalShield;
 import org.luckyraven.gangland.data.teleportation.WaypointManager;
+import org.luckyraven.gangland.data.teleportation.WaypointRegionProvider;
 import org.luckyraven.gangland.data.user.UserDataLoader;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.core.bounty.BountySettings;
@@ -112,6 +114,23 @@ public class DataConfig {
 	@Bean
 	public WaypointManager waypointManager(GanglandDatabase database, PermissionManager permissionManager) {
 		return new WaypointManager(gangland, database, permissionManager);
+	}
+
+	/**
+	 * Publishes the gang waypoints as hideout places through {@link PlaceNames}. The provider registers itself here
+	 * (R4), so the places exist whether or not any module is installed.
+	 */
+	@Bean
+	public WaypointRegionProvider waypointRegionProvider(PlaceNames placeNames, WaypointManager waypointManager) {
+		WaypointRegionProvider provider = new WaypointRegionProvider(waypointManager);
+		placeNames.register(provider);
+		return provider;
+	}
+
+	/** The hospital respawn shield's memory; granted by {@code CustomPlayerDeathListener}, enforced by its listener. */
+	@Bean
+	public HospitalShield hospitalShield() {
+		return new HospitalShield();
 	}
 
 	/**

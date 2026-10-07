@@ -234,6 +234,19 @@ class JailIntakeServiceTest {
 	}
 
 	@Test
+	@DisplayName("the deathCommit flag skips the sheet for a LIVE player (a handcuffed player downed, Ruling R48)")
+	void deathCommitFlag_skipsTheSheet_forALivePlayer() {
+		economy.balance = 5000;
+
+		intake.admit(player, true);
+
+		assertNull(row().getFinePaid());
+		assertEquals(5000, economy.balance);
+		assertEquals(300, sentenceSeconds());
+		assertTrue(chat.isEmpty());
+	}
+
+	@Test
 	@DisplayName("Charge_Sheet.Enable false charges nothing and leaves the sentence alone")
 	void sheetDisabled_chargesNothing_sentenceUnchanged() {
 		sheet(new ChargeSheetSettings(false, 200, 250, 10000, 0.1, 600));

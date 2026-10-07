@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.data.teleportation;
 
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.Gangland;
@@ -84,6 +85,34 @@ public class WaypointManager implements BeanLifecycle, WaypointLookupContract {
 	public Waypoint get(String name) {
 		return waypoints.values()
 				.stream().filter(waypoint -> waypoint.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
+	}
+
+	/**
+	 * The closest waypoint of {@code type} in the same world as {@code at} (by name) whose world is loaded; {@code null}
+	 * when there is none.
+	 */
+	@Nullable
+	public Waypoint nearest(Location at, Waypoint.WaypointType type) {
+		if (at == null || at.getWorld() == null) return null;
+
+		String   world = at.getWorld().getName();
+		Waypoint best  = null;
+		double   bestD = Double.MAX_VALUE;
+
+		for (Waypoint waypoint : waypoints.values()) {
+			if (waypoint.getType() != type || !world.equals(waypoint.getWorld())) continue;
+
+			Location location = waypoint.getLocation();
+			if (location == null) continue;
+
+			double distance = location.distanceSquared(at);
+			if (distance < bestD) {
+				bestD = distance;
+				best  = waypoint;
+			}
+		}
+
+		return best;
 	}
 
 	public void refactorIds() {

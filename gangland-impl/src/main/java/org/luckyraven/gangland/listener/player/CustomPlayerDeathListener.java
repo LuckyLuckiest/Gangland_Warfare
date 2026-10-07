@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.listener.player;
 
 import com.cryptomorin.xseries.XAttribute;
+import lombok.CustomLog;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -12,6 +13,8 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
@@ -30,6 +33,7 @@ import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
 import org.luckyraven.gangland.core.downed.PlayerUndownedEvent;
 import org.luckyraven.keystone.util.ChatUtil;
 import org.luckyraven.keystone.util.TimeUtil;
+import org.luckyraven.gangland.data.teleportation.HospitalShield;
 import org.luckyraven.gangland.data.teleportation.IllegalTeleportException;
 import org.luckyraven.gangland.data.teleportation.Waypoint;
 import org.luckyraven.gangland.data.teleportation.WaypointManager;
@@ -44,6 +48,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+@CustomLog
 @ListenerHandler
 public class CustomPlayerDeathListener implements Listener {
 
@@ -67,15 +72,19 @@ public class CustomPlayerDeathListener implements Listener {
 	private final Gangland              gangland;
 	private final UserManager<Player>   userManager;
 	private final WaypointManager       waypointManager;
+	private final HospitalShield        hospitalShield;
 	private final Map<UUID, BukkitTask> respawnTasks   = new ConcurrentHashMap<>();
 	private final Map<UUID, GameMode>   savedGameModes = new ConcurrentHashMap<>();
+	private final Map<UUID, Location>   deathLocations = new ConcurrentHashMap<>();
 
 	public CustomPlayerDeathListener(Gangland gangland,
 	                                 @Qualifier("online") UserManager<Player> userManager,
-	                                 WaypointManager waypointManager) {
+	                                 WaypointManager waypointManager,
+	                                 HospitalShield hospitalShield) {
 		this.gangland        = gangland;
 		this.userManager     = userManager;
 		this.waypointManager = waypointManager;
+		this.hospitalShield  = hospitalShield;
 		instance             = this;
 	}
 
@@ -282,7 +291,13 @@ public class CustomPlayerDeathListener implements Listener {
 		player.setAllowFlight(false);
 		player.setFlying(false);
 
-		if (Settings.isRespawnTeleportEnabled()) {
+		Waypoint hospital = Settings.isHospitalEnabled() ? hospitalFor(player, player.getLocation()) : null;
+
+		if (hospital != null) {
+			// a hospital is a direct teleport: no timer, cooldown or cost
+			player.teleport(Objects.requireNonNull(hospital.getLocation()));
+			hospitalShield.grant(player);
+		} else if (Settings.isRespawnTeleportEnabled()) {
 			User<Player> user     = userManager.getUser(player);
 			Waypoint     waypoint = waypointManager.get(Settings.getRespawnTeleportWaypoint());
 			if (user != null && waypoint != null) {
@@ -301,6 +316,43 @@ public class CustomPlayerDeathListener implements Listener {
 		// Vanilla PlayerRespawnEvent does not fire here (player never actually died), so notify listeners
 		// that the player is back on their feet via the custom counterpart.
 		Bukkit.getPluginManager().callEvent(new PlayerUndownedEvent(player));
+	}
+
+	/** The nearest hospital in {@code at}'s world that has a loaded world, or null. */
+	private Waypoint hospitalFor(Player player, Location at) {
+		Waypoint hospital = waypointManager.nearest(at, Waypoint.WaypointType.HOSPITAL);
+		if (hospital == null || hospital.getLocation() == null) return null;
+
+		log.debug("HOSPITAL {} waypoint={}", player.getName(), hospital.getName());
+		return hospital;
+	}
+
+	/** Vanilla death: remember where, because {@code PlayerRespawnEvent} only knows the spawn it is about to use. */
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onPlayerDeath(PlayerDeathEvent event) {
+		Player player = event.getEntity();
+		if (NpcSupport.isNpc(player)) return;
+
+		deathLocations.put(player.getUniqueId(), player.getLocation());
+	}
+
+	/**
+	 * Vanilla respawn: the nearest hospital where he died, unless he is going to his bed or anchor. The jail override
+	 * ({@code DetainmentListener}, MONITOR) still wins afterwards.
+	 */
+	@EventHandler(priority = EventPriority.HIGH)
+	public void onPlayerRespawn(PlayerRespawnEvent event) {
+		Player   player = event.getPlayer();
+		Location died   = deathLocations.remove(player.getUniqueId());
+
+		if (died == null || !Settings.isHospitalEnabled()) return;
+		if (event.isBedSpawn() || event.isAnchorSpawn()) return;
+
+		Waypoint hospital = hospitalFor(player, died);
+		if (hospital == null) return;
+
+		event.setRespawnLocation(Objects.requireNonNull(hospital.getLocation()));
+		hospitalShield.grant(player);
 	}
 
 	private void cleanup(UUID uuid) {
