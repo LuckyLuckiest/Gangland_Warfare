@@ -23,7 +23,7 @@ HERE="$(cd "$(dirname "$0")" && pwd -W)"
 PROG="E:/Programming/java/wt/_programme"
 H="$PROG/harness"
 LIVE="$PROG/servers/base"
-WT16="E:/Programming/java/wt/gangland-0.16.0/target"
+WT16="${WT16:-E:/Programming/java/wt/gangland-0.16.0/target}"
 WT13="E:/Programming/java/wt/gangland-0.13.0/target"
 KS="E:/Programming/java/wt/keystone-1.15.0/keystone-plugin/target/Keystone-1.15.0.jar"
 BZ="E:/Programming/java/wt/bartizan-0.6.0/bartizan-plugin/target/Bartizan-0.6.0.jar"
@@ -92,6 +92,6 @@ case $PROFILE in
              Y "$G/settings.yml" Wanted.Take_Money.Formula '"amount * ("';;
 esac
 grep -n -A8 '^Debug:' "$G/settings.yml" | head -10
-grep -n -A4 '^      Hospital:' "$G/settings.yml" | head -6
+grep -n -A4 '^      Hospital:' "$G/settings.yml" | head -6 || true
 cd "$P" && md5sum *.jar Gangland_Warfare/modules/*.jar Citizens/config.yml | sed 's#  # #'
 echo "ready: $S (port $PORT)"

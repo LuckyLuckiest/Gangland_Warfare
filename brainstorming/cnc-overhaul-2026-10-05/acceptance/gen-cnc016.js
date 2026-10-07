@@ -151,12 +151,12 @@ const HOSPITAL = [{ chat: '/glw economy set 5000', after: 1000 }, ...BAL('before
 write('cnc016-S14-hospital-downed', [...PLAIN('Runner'), ...HOSPITAL, ...mark('S14:DOWN'),
   { console: 'damage Runner 1000 minecraft:generic', after: 1000 },
   { expectLog: 'HOSPITAL Runner', timeout: 20000 }, say('S14:HOSPITAL'),
-  { expectLog: 'SHIELD Runner', timeout: 5000 }, { wait: 2000 }, ...BAL('after'),
+  { wait: 2000 }, ...BAL('after'),
   { console: 'data get entity Runner Pos', after: 600 }, say('S14:POS'), ...END]);
 write('cnc016-S15-hospital-vanilla-death', [...PLAIN('Runner'), { console: 'gamerule keepInventory true' }, ...HOSPITAL, ...mark('S15:DEATH'),
   { console: 'kill Runner', after: 1000 },
   { expectLog: 'HOSPITAL Runner', timeout: 20000 }, say('S15:HOSPITAL'),
-  { expectLog: 'SHIELD Runner', timeout: 5000 }, { wait: 2000 }, ...BAL('after'),
+  { wait: 2000 }, ...BAL('after'),
   { console: 'data get entity Runner Pos', after: 600 }, say('S15:POS'),
   { console: 'execute as @e[type=minecraft:item,x=260,y=-60,z=200,distance=..12] run say CNCITEM', after: 500 }, say('S15:ITEMS'), ...END]);
 

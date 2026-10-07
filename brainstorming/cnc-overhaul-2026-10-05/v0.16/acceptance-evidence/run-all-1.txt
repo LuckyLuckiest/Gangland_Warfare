@@ -1,0 +1,425 @@
+
+######## S1
+== S1 ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   station Northside Station saved (chat)
+PASS   district Docks saved (chat)
+PASS   list shows the station row - [Runner] station 1 Northside Station world 100 -61 40
+PASS   list shows the Docks region row with its district tag - [Runner] region 1 Docks world 80 -61 110 [district]
+== PASS ==
+
+######## S2
+== S2 ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   radio: units en route from Northside Station with an ETA - [Runner] [DISPATCH] 2 units en route from Northside Station, ETA 10 s.
+PASS   ETA about 9 s (90 blocks at Unit_Speed 10): 10
+PASS   DISPATCH line names Northside Station with the same ETA - DISPATCH Runner count=2 station=Northside Station eta=10s hold=0s reason=none bias=false
+PASS   first UNIT line hidden=true fromStation=true - UNIT Runner callsign=Officer Pointman Dave #1000 tier=1 role=Pointman fromStation=true hidden=true bias=false ahead=- at=80,-60,97
+PASS   first unit arrives after the delay (10 s after DISPATCH, ETA 10)
+== PASS ==
+
+######## S3
+== S3 ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   UNIT lines at tiers 2 and 3 (seen 2,3 over 6 units)
+PASS   roles carry their configured tier (Pointman/Assault 2, Commander/Defender/Marksman 3)
+== PASS ==
+
+######## S4
+== S4 ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   Wipe_Refill radio line
+PASS   DISPATCH ... reason=wipe hold>0 - DISPATCH Runner count=5 station=Northside Station eta=10s hold=10s reason=wipe bias=false
+PASS   hold = Breather.Seconds for 3 stars (10): 10
+FAIL   a refill unit spawned after the wipe
+== FAIL ==
+
+######## S5
+== S5 ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   PERIMETER start posts=2 - PERIMETER Runner start posts=2 radius=32.0
+PASS   post ring radius <= 32 (min(zone, 0.8 x Sight_Range 40)): 32
+REVIEW two Post_Up lines (seen 0) - radio rate-limiting can fold two lines into one: read the transcript
+       PERIMETER Runner start","timeout":90000} | PERIMETER Runner start posts=2 radius=32.0 | PERIMETER Runner end reason=OFF
+== REVIEW ==
+
+######## S6
+== S6 ==
+PASS   no server ERROR / org.luckyraven exception
+FAIL   harness steps - 2 failed step(s)
+FAIL   HANDOFF line
+FAIL   Handoff radio line
+FAIL   DISPATCH ... bias=true after the hand-off
+FAIL   UNIT bias=true
+FAIL   UNIT ahead=true on every biased unit
+== FAIL ==
+
+######## S7
+== S7 ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   EVASION line with hideout=2.0 - EVASION Runner speed=2.00 zone=1.00 hideout=2.00 quiet=1.00
+PASS   speed is zone x hideout (capped at Max_Speed 4): 2 - EVASION Runner speed=2.00 zone=1.00 hideout=2.00 quiet=1.00
+PASS   no hideout bonus before Runner entered the Boathouse
+== PASS ==
+
+######## S8
+== S8 ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   Returning_To_Patrol radio line
+REVIEW after about a quiet minute (NaN s from the crime)
+PASS   EVASION line with quiet>1 - EVASION Runner speed=1.25 zone=1.00 hideout=1.00 quiet=1.25
+== REVIEW ==
+
+######## S9
+== S9 ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   Contact.Used text - [Runner] [GLW] Your contact made 1 star(s) disappear for $1,000.
+PASS   price 1000 (Price_Per_Star x 1): 1000
+PASS   balance 5000 -> 4000, paid 1000
+PASS   star level fell by one (2 -> 1) - [Runner] ★☆☆☆☆
+== PASS ==
+
+######## S10
+== S10 ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   Contact.Seen text - [Runner] Error: [GLW] Not while a cop has eyes on you.
+PASS   balance unchanged (5000 -> 5000)
+PASS   star level unchanged (still wanted) - [Runner] ★★☆☆☆ | [Runner/game_info] Break free - 0/25 (tap SNEAK!)
+PASS   sign did not report an invalid sign - if this fails the console-set sign was not recognised: place it by hand
+== PASS ==
+
+######## S11
+== S11 ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   not wanted before - [Runner] ☆☆☆☆☆
+PASS   two provoked kills, no star - [Runner] ☆☆☆☆☆
+== PASS ==
+
+######## S12
+== S12 ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   two posted bounties claimed, no star - [Hunter] ☆☆☆☆☆
+PASS   both bounties paid (0 -> 1000) - other rewards also show: read the transcript
+== PASS ==
+
+######## S13
+== S13 ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   Hunter not wanted before
+PASS   two unposted five-star kills, Hunter gains a star (1) - [Hunter] ★☆☆☆☆ | [Hunter] [RADIO] Officer Assault Maria #1013: Moving to flank, south-east!
+== PASS ==
+
+######## S14
+== S14 ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   HOSPITAL line names the Infirmary - HOSPITAL Runner waypoint=Infirmary
+PASS   exactly one WARD_BILL (1) - WARD_BILL Runner amount=750.00 at=RESPAWN
+PASS   bill charged at RESPAWN (RESPAWN)
+PASS   bill amount 750 (15% of 5000): 750
+PASS   SHIELD line seconds=5 (owner ruling D19) - SHIELD Runner seconds=5
+PASS   wallet paid the one bill (5000 -> 4250)
+PASS   woke at the Infirmary (150,260): 150.5,260.5 - [17:12:58 INFO]: Runner has the following entity data: [150.5d, -60.0d, 260.5d]
+== PASS ==
+
+######## S15
+== S15 ==
+PASS   no server ERROR / org.luckyraven exception
+FAIL   harness steps - 1 failed step(s)
+PASS   HOSPITAL line names the Infirmary - HOSPITAL Runner waypoint=Infirmary
+FAIL   exactly one WARD_BILL (0)
+PASS   SHIELD line seconds=5 (owner ruling D19) - SHIELD Runner seconds=5
+PASS   wallet paid the one bill (5000 -> 4250)
+PASS   woke at the Infirmary (150,260): 150.5,260.5 - [17:14:00 INFO]: Runner has the following entity data: [150.5d, -60.0d, 260.5d]
+PASS   no cash item at the body with the bundled money.yml (0 item(s))
+== FAIL ==
+
+######## S16
+== S16 ==
+PASS   no server ERROR / org.luckyraven exception
+PASS   harness steps - 0 failed step(s)
+PASS   wanted before quit - [Runner] ★☆☆☆☆
+FAIL   DISPATCH ... reason=restore hold=15s - DISPATCH Runner count=2 station=Northside Station eta=10s hold=14s reason=restore bias=false
+PASS   EVASION hold=enroute after the restore - EVASION Runner hold=enroute
+PASS   first unit only after the rejoin grace (24 s after the DISPATCH line, hold 14)
+PASS   the star is still there when the first unit spawns (1) - [Runner] ★☆☆☆☆
+== FAIL ==
+
+######## R1
+== R1 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   squad members seen at 1/3/5 stars: 2/4/6
+PASS   squad grows (or holds) with the star level
+REVIEW compare with Cops.Count (settings.yml) and Squad_Composition (cop_roles.yml) for 1/3/5 stars - human read, see README R1
+== REVIEW ==
+
+######## R2
+| # | Scenario | Trial 1 | Trial 2 | Evidence |
+|---|---|---|---|---|
+| 9 | Line of sight broken | FAIL | NOT RUN | T1: last-seen spot reached: no; beeline behind the wall: true; fanned out: false; re-acquired: true; T2: not run |
+
+######## R3
+== R3 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   no star drop while cuffed (until the charge sheet)
+PASS   stars kept R3-cuffed-0 - [Runner] ★★☆☆☆ | [Runner/game_info] Break free - 0/25 (tap SNEAK!)
+PASS   stars kept R3-cuffed-15 - [Runner] ★★☆☆☆ | [Runner/game_info] Break free - 0/25 (tap SNEAK!)
+PASS   stars kept R3-cuffed-30 - sampled after intake (window ended at the charge sheet), see after-intake row
+PASS   intake reached
+PASS   stars cleared at intake - [Runner] GLW >> Wanted Status: | [Runner] ☆☆☆☆☆ | [Runner/game_info] Serving sentence - 351s
+== PASS ==
+
+######## R4
+== R4 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   run 2: no server ERROR / org.luckyraven exception
+PASS   run 2: harness steps - 0 failed step(s)
+PASS   2 stars before quit - [Runner] ★★☆☆☆ | [Runner] [RADIO] Sergeant Assault Walt #1002: Moving to flank, south-east!
+PASS   still wanted after rejoin - [Runner] ★★☆☆☆
+PASS   decay clock runs after rejoin (decreased line within 60 s, Time 10)
+== PASS ==
+
+######## N1
+== N1 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   decreased line within 3 + 20 + 5 s
+PASS   1 star left (status still wanted) - [Runner] ★☆☆☆☆
+PASS   no death
+== PASS ==
+
+######## N2
+prep legacy-settings FAILED, see E:/Programming/java/wt/_programme/runs/prep-legacy-settings.log
+
+######## N3
+== N3 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   run 1: balance 5000 -> 3750, charge 1250 (expected 1250)
+PASS   star fell
+== PASS ==
+
+######## N3b
+== N3b ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   run 1: balance 5000 -> 3500, charge 1500 (expected 1500)
+PASS   exactly one "Money formula" warning over two drops - 1 seen
+PASS   both stars fell
+== PASS ==
+
+######## N4
+prep n4-old FAILED, see E:/Programming/java/wt/_programme/runs/prep-n4-old.log
+
+######## N5
+== N5 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+       [Runner] [RADIO] Sergeant Pointman Jim #1000: Contact! Suspect 33 blocks south-west!
+       [Runner] [RADIO] Sergeant Assault Pete #1001: Going wide south, I'll get behind him!
+       [Runner] [Server] CNCMARK:N5:SHOT1
+       [Runner] [RADIO] Sergeant Pointman Jim #1000: Gunfire, he's close! Move in!
+       [Runner] [Server] CNCMARK:N5:RADIO
+       [Runner] [Server] CNCMARK:N5:SHOT2
+       [Runner] [Server] CNCMARK:STATUS:N5
+REVIEW N5 best effort: read the transcript above against the pass line
+== REVIEW ==
+
+######## N6
+== N6 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+       [Runner] [DISPATCH] All units, be advised: Runner is wanted in the area, level 1.
+       [Runner] [GLW] Your wanted level has been increased ★☆☆☆☆.
+       [Runner] [GLW] Your wanted level has been cleared.
+       [Runner] GLW >> Wanted Status:
+       [Runner] [Server] CNCMARK:STATUS:N6-cleared
+       [Runner] [DISPATCH] All units, be advised: Runner is wanted in the area, level 1.
+       [Runner] GLW >> Wanted Status:
+       [Runner] [Server] CNCMARK:STATUS:N6-after-hit
+REVIEW N6 best effort: read the transcript above against the pass line
+== REVIEW ==
+
+######## N7
+== N7 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+       [Runner] [Server] CNCMARK:BAL:before
+       [Runner] [Server] CNCMARK:N7:CUFFED
+       [Runner] ----- CHARGE SHEET -----
+       [Runner] Paid from your wallet: $300
+       [Runner] Unpaid $400 served as +40s
+       [Runner] [Server] CNCMARK:N7:SHEET
+       [Runner] [Server] CNCMARK:BAL:after
+       [Runner] [Server] CNCMARK:STATUS:N7
+REVIEW N7 best effort: read the transcript above against the pass line
+== REVIEW ==
+
+######## N8
+== N8 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+       [Runner] [RADIO] Lieutenant Commander Carl #1000: Eyes on Runner, south-east!
+       [Runner] [RADIO] Lieutenant Commander Carl #1000: Contact ahead, south-east! Spread out and keep him pinned!
+       [Runner] [RADIO] Lieutenant Defender Tina #1002: Covering the squad, shields up!
+       [Runner] [RADIO] Lieutenant Marksman Steve #1003: Marksman set, 33 blocks south-east. Eyes on Runner.
+       [Runner] [RADIO] Lieutenant Commander Carl #1000: Changing position!
+       [Runner] [Server] CNCMARK:N8:KILL1
+       [Runner] [RADIO] Lieutenant Commander Carl #1000: Man down!
+       [Runner] [RADIO] Lieutenant Commander Carl #1000: Requesting backup at my location!
+       [Runner] [RADIO] Lieutenant Commander Carl #1000: Suspect is resisting! Take him down!
+       [Runner] [RADIO] Lieutenant Commander Carl #1000: Lieutenant Defender Tina #1002 is down! Everyone fall back to cover and regroup on me!
+       [Runner] [RADIO] Lieutenant Marksman Steve #1003: Check your fire, friendly in the line!
+       [Runner] [RADIO] Lieutenant Assault Dave #1006: Moving to flank, south-east!
+       [Runner] [RADIO] Sergeant Pointman Vince #1001: Commander down! Fall back, fall back!
+       [Runner] [Server] CNCMARK:N8:KILL2
+       [Runner] [RADIO] Sergeant Pointman Vince #1001: Two down! Pull back to cover, backup is coming!
+       [Runner] [Server] CNCMARK:N8:REGROUP
+       [Runner] [RADIO] Lieutenant Marksman Steve #1003: Moving, cover me!
+       [Runner] [RADIO] Military Commander Joe #1007: SWAT Assault Vince #1008, take his left!
+       [Runner] [RADIO] SWAT Assault Vince #1008: Copy.
+       [Runner] [RADIO] Military Commander Joe #1007: Backup's here! All units, push together!
+       [Runner] [Server] CNCMARK:N8:PUSH
+       [Runner] [RADIO] Lieutenant Marksman Steve #1003: Overwatch in position, 21 blocks west, I have eyes on the suspect.
+REVIEW N8 best effort: read the transcript above against the pass line
+== REVIEW ==
+
+######## A1
+== A1 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   three AUTO drops, each one star at HUNKER_DOWN - 3->2 HUNKER_DOWN, 2->1 HUNKER_DOWN, 1->0 HUNKER_DOWN
+PASS   gap 1st -> 2nd drop about 15 s (12-18): 15
+PASS   gap 2nd -> 3rd drop about 6 s (3-9): 6
+REVIEW first drop about 30 s after the search starts (hide marker to drop NaN s, 28-42 incl. the 3 s lost-sight)
+== REVIEW ==
+
+######## A2
+== A2 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+FAIL   run 1: harness steps - 1 failed step(s)
+FAIL   first drop ending=PETTY - no AUTO drop debug line (Debug on for "Cops N Crooks", Drop_Mode AUTO?)
+== FAIL ==
+
+######## A3
+== A3 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+FAIL   run 1: harness steps - 1 failed step(s)
+FAIL   first drop ending=STILL_HOT reason=rampage - no AUTO drop debug line (Debug on for "Cops N Crooks", Drop_Mode AUTO?)
+== FAIL ==
+
+######## A4
+== A4 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+FAIL   run 1: harness steps - 1 failed step(s)
+PASS   run 2: no server ERROR / org.luckyraven exception
+FAIL   run 2: harness steps - 1 failed step(s)
+PASS   wanted before quit - [Target] ★★☆☆☆ | [Target] [RADIO] Sergeant Assault Steve #1001: Flanking west, keep him busy!
+FAIL   still wanted after rejoin - [Runner] GLW >> Wanted Status: | [Runner] ☆☆☆☆☆
+FAIL   first drop 2 -> 1, reason=logout - no AUTO drop debug line
+== FAIL ==
+
+######## A5
+ls: cannot access 'E:/Programming/java/wt/_programme/servers/cnc016-auto/plugins/Gangland_Warfare/*.db': No such file or directory
+Error: in prepare, no such table: chase_habit
+== A5 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   run 2: no server ERROR / org.luckyraven exception
+PASS   run 2: harness steps - 0 failed step(s)
+PASS   run A: both chases ended PETTY - PETTY,PETTY
+PASS   run A: the second chase already reads a learned delta > 0 (0.02)
+FAIL   chase_habit row for Runner after run A has n = 1.9 (chase_habit.txt missing)
+PASS   after the restart the next debug line shows delta > 0, about 0.03 (0.03) - AUTO drop Runner level=1->0 ending=PETTY reason= crimes=2 opening=2 peak=1 chase=16s quiet=16s quits=0 respots=0 outside=0.00 teleported=false steps=0 narrow=false delta=
+== FAIL ==
+
+######## A6
+inserted Wanted.Evasion.Auto.Momentum.Step_Speed: 1.5
+== A6 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+PASS   run 2: no server ERROR / org.luckyraven exception
+PASS   run 2: harness steps - 0 failed step(s)
+PASS   run 1: Done ( present
+PASS   run 2: Done ( present
+PASS   0.15.1 wanted.yml (no Auto block): no config. line
+PASS   Step_Speed 1.5: exactly one config.range line naming Step_Speed - [17:44:24 ERROR]: [Cops N Crooks.ChaseConfigLoader] wanted.yml:78:25 at Wanted.Evasion.Auto.Momentum.Step_Speed | value 1.5 above maximum 1.0 [config.range]
+== PASS ==
+
+######## A7
+== A7 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+FAIL   A7: an AUTO drop was logged - no AUTO drop debug line
+== FAIL ==
+
+######## A8
+== A8 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+FAIL   A8: an AUTO drop was logged - no AUTO drop debug line
+== FAIL ==
+
+######## A9
+== A9 ==
+PASS   run 1: no server ERROR / org.luckyraven exception
+PASS   run 1: harness steps - 0 failed step(s)
+FAIL   A9: an AUTO drop was logged - no AUTO drop debug line
+== FAIL ==
+
+======== SUMMARY (0 = PASS, 1 = FAIL, 2 = REVIEW by a human, ERROR = could not run)
+S1: 0
+S2: 0
+S3: 0
+S4: 1
+S5: 2
+S6: 1
+S7: 0
+S8: 2
+S9: 0
+S10: 0
+S11: 0
+S12: 0
+S13: 0
+S14: 0
+S15: 1
+S16: 1
+R1: 2
+R2: 1
+R3: 0
+R4: 0
+N1: 0
+N2: ERROR
+N3: 0
+N3b: 0
+N4: ERROR
+N5: 2
+N6: 2
+N7: 2
+N8: 2
+A1: 2
+A2: 1
+A3: 1
+A4: 1
+A5: 1
+A6: 0
+A7: 1
+A8: 1
+A9: 1
+Pass criterion for 0.16: S1-S16 all 0 (S2 S5 S6 S8 may be 2 where the radio rate-limits or a spawn spot is soft: read the transcript); R1-R4, N1-N8, A1-A9 as in 0.15 and 0.15.2:
+  R1 R2 R3 R4 N1 N2 N3 N4 = 0 (R1 and N4 may be 2), A1 A2 A3 A5 A6 = 0, A4 = 0 or 2, A7 A8 A9 = 2 read by a human.

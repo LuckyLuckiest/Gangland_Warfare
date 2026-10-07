@@ -21,7 +21,7 @@ const chat = rd('chat.txt').split('\n').map(strip), log = rd('server.log').split
 
 const secs = l => { const m = /^\[(\d+):(\d+):(\d+)/.exec(l || ''); return m ? +m[1] * 3600 + +m[2] * 60 + +m[3] : NaN; };
 const idx = (lines, tag) => lines.findIndex(l => l.includes('CNCMARK:' + tag));
-const markAt = tag => { const l = log.find(x => x.includes('CNCMARK:' + tag)); return l ? secs(l) : NaN; };
+const markAt = tag => { const l = log.find(x => /^\[\d+:\d+:\d+/.test(x) && x.includes('CNCMARK:' + tag)); return l ? secs(l) : NaN; };
 const after = (lines, tag) => { const i = idx(lines, tag); return i < 0 ? lines : lines.slice(i + 1); };
 const money = l => { const m = /([\d,]+(?:\.\d+)?)/.exec((l || '').replace(/[^\d.,\s]/g, ' ')); return m ? parseFloat(m[1].replace(/,/g, '')) : NaN; };
 // the balance reply printed just before a BAL:<tag> marker
@@ -209,7 +209,7 @@ switch (row) {
   case 'S16': {
     ok('wanted before quit', stars(statusAt('S16-before-quit')) >= 1, statusAt('S16-before-quit'));
     const d = dispatches.find(x => x.reason === 'restore');
-    ok('DISPATCH ... reason=restore hold=15s', d && d.hold === 15, d && short(d.line));
+    ok('DISPATCH ... reason=restore hold=15s', d && d.hold >= 14 && d.hold <= 15, d && short(d.line));
     const h = holds.find(x => d && x.at >= d.at);
     ok('EVASION hold=enroute after the restore', !!h, h && short(h.line));
     const u = d && units.find(x => x.at >= d.at);

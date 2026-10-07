@@ -180,7 +180,9 @@ public class PlayerDeathListener implements Listener {
 
 	// package-private: test seam
 	void handleMoney(User<Player> user) {
-		charge(user, quote(user));
+		BigDecimal bill = quote(user);
+		if (bill.signum() > 0) log.debug("WARD_BILL {} amount={} at=DEATH", user.getUser().getName(), bill);
+		charge(user, bill);
 	}
 
 	/**

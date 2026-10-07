@@ -67,7 +67,7 @@ for row in "${ROWS[@]}"; do
           judge A4 "$RUNS/cnc016-auto--A4a-auto-logout-quit" "$RUNS/cnc016-auto--A4b-auto-logout-rejoin"; } || RESULT[A4]=ERROR;;
     A5) prep auto && { run cnc016-auto "$SC/A5a-auto-learn-two-chases.json"
           # server is stopped now: read the learned row (one *.db file in plugins/Gangland_Warfare/) for the verdict, then restart on it
-          DB=$(ls "$PROG/servers/cnc016-auto/plugins/Gangland_Warfare/"*.db | head -1)
+          DB=$(find "$PROG/servers/cnc016-auto/plugins/Gangland_Warfare" -name gangland.db | head -1)
           /c/msys64/ucrt64/bin/sqlite3 "$DB" "SELECT player_uuid, n, actual, expected FROM chase_habit;" | tee "$RUNS/cnc016-auto--A5a-auto-learn-two-chases/chase_habit.txt"
           run cnc016-auto "$SC/A5b-auto-learn-after-restart.json"
           judge A5 "$RUNS/cnc016-auto--A5a-auto-learn-two-chases" "$RUNS/cnc016-auto--A5b-auto-learn-after-restart"; } || RESULT[A5]=ERROR;;
