@@ -20,7 +20,7 @@ Cops N Crooks 0.15.2 introduces **AUTO mode** for star drops: instead of always 
 - **Learning and warm-up** — The server learns two things: how long chases at each star level typically last (contact time from chase start to the last loss of sight), and each player's escape habit (how often they get away compared to what the server expects). Both survive restarts and feed back into the AUTO decision. Cold starts use guessed numbers; warm servers tune based on play. A player who always escapes gets no small-fry or clean-break lumps.
 - **Momentum and narrow escapes** — After each star drops, the next timer is shorter (75% by default, or 50% after a narrow escape where the cop kept you in sight for 20+ seconds). A rampage or logout lock freezes the momentum so you face a steady timer while the heat cools. The timer never shrinks below 40% of the base `Seconds_To_Drop`.
 - **HUD for AUTO** — New `Evaded_Many` bar line when 2+ stars drop at once, and six ending cards name the cause: Small fry, The trail went stone cold, Clean break, Still hot, They know your face, That was close.
-- **Database and persistence** — Two tables track habits (one row per player who finished a chase) and level stats (one per peak star level), capped at 100 samples each. Forgotten after 90 days of inactivity. Autosave and restart-safe.
+- **Database and persistence** — Two tables track habits (one row per player who finished a chase) and level stats (one row per peak star level, with the server-wide typical-length sample capped at 100). Forgotten after 90 days of inactivity. Autosave and restart-safe.
 
 ---
 
@@ -34,8 +34,7 @@ Cops N Crooks 0.15.2 introduces **AUTO mode** for star drops: instead of always 
 
 ## 🐛 Fixed / Known
 
-- **D9 (open)** — Progress carried over a mid-search star raise stays until 0.16. The bar may flicker if the new level needs more progress than the old one gave.
-- **One new docket row** — A P3 finding on AUTO defaults discovered in section 3.6 (E-series worked examples).
+- **D9 (open)** — Progress carried over a mid-search star raise stays until 0.16. The bar may flicker if the new level needs more progress than the old one gave. Docket P3 id 179.
 
 ---
 
