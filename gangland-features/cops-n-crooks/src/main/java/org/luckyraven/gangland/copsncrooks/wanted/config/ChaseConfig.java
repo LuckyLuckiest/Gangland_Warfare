@@ -91,7 +91,7 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 
 		SourceLocation at = access.node() != null ? access.node().location() : SourceLocation.none();
 		report.add(Severity.WARNING, at, "Wanted.Evasion.Drop_Mode",
-		           "unknown Drop_Mode \"" + text + "\", using ONE_STAR (ONE_STAR or ALL_STARS)", "config.enum");
+		           "unknown Drop_Mode \"" + text + "\", using ONE_STAR (ONE_STAR, ALL_STARS or AUTO)", "config.enum");
 		return DropMode.ONE_STAR;
 	}
 
