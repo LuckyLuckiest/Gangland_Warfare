@@ -4,6 +4,7 @@ import lombok.CustomLog;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.GanglandApi;
+import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.gangland.copsncrooks.combo.KillCombo;
@@ -39,12 +40,15 @@ import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadioMessages;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopSettings;
+import org.luckyraven.gangland.copsncrooks.npc.police.dispatch.Dispatcher;
+import org.luckyraven.gangland.copsncrooks.npc.police.handoff.HandoffController;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawner;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 import org.luckyraven.gangland.copsncrooks.npc.police.targeting.WantedTargetingManager;
 import org.luckyraven.gangland.copsncrooks.seam.CopsMoneyDropSource;
 import org.luckyraven.gangland.copsncrooks.seam.HeatWantedTracker;
+import org.luckyraven.gangland.copsncrooks.station.StationRegistry;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
@@ -353,8 +357,10 @@ public class CopsNCrooksModuleConfig {
 	}
 
 	@Bean
-	public CopRadio copRadio(CopLoader copLoader, CopRadioMessages copRadioMessages) {
-		return new CopRadio(plugin, copLoader, copRadioMessages);
+	public CopRadio copRadio(CopLoader copLoader, CopRadioMessages copRadioMessages, PlaceNames placeNames) {
+		CopRadio radio = new CopRadio(plugin, copLoader, copRadioMessages);
+		radio.setPlaceNames(placeNames);
+		return radio;
 	}
 
 	@Bean
@@ -364,9 +370,24 @@ public class CopsNCrooksModuleConfig {
 	                             NpcMarkManager markManager,
 	                             DetainmentService detainmentService,
 	                             CivilianNpcRegistry civilianNpcRegistry,
-	                             CopRadio copRadio) {
+	                             CopRadio copRadio,
+	                             Dispatcher dispatcher) {
 		return new CopManager(plugin, copSpawnManager, wantedTargetingManager, copLoader, markManager,
-		                      detainmentService, civilianNpcRegistry, copRadio);
+		                      detainmentService, civilianNpcRegistry, copRadio, dispatcher);
+	}
+
+	/** Station and ETA of each dispatched unit; reads the cop config per call ({@code /glw reload}). */
+	@Bean
+	public Dispatcher dispatcher(StationRegistry stationRegistry, CopLoader copLoader) {
+		return new Dispatcher(stationRegistry, copLoader::getLoadedProvider);
+	}
+
+	/** The pursuit hand-off: samples the suspect on every cop AI tick and biases the next dispatch ahead of him. */
+	@Bean
+	public HandoffController handoffController(CopManager copManager, CopRadio copRadio, CopLoader copLoader) {
+		HandoffController controller = new HandoffController(copManager, copRadio, copLoader::getLoadedProvider);
+		copManager.addAiTickHook(controller::tick);
+		return controller;
 	}
 
 	@Bean

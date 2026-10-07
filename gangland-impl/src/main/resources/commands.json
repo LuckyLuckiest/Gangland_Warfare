@@ -71,6 +71,10 @@
 		"usage": "/glw economy reset [player]",
 		"description": "Resets your account balance, or the target player's when specified."
 	},
+	"contact": {
+		"usage": "/glw contact [stars]",
+		"description": "Pays a crooked desk sergeant to wipe stars while no cop sees you."
+	},
 	"balance": {
 		"usage": "/glw balance",
 		"description": "Shows account balance."

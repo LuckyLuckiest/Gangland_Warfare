@@ -18,6 +18,8 @@ import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfig;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.config.DropMode;
 import org.luckyraven.gangland.copsncrooks.wanted.config.EvasionSettings;
+import org.luckyraven.gangland.copsncrooks.wanted.config.HideoutSettings;
+import org.luckyraven.gangland.copsncrooks.wanted.config.QuietSpeedSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.DropPlan;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.Ending;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.CrimeRecord;
@@ -28,6 +30,7 @@ import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.gangland.core.wanted.WantedStars;
+import org.luckyraven.gangland.data.region.PlaceRegion;
 import org.luckyraven.gangland.events.wanted.EvasionState;
 import org.luckyraven.gangland.events.wanted.WantedEvasionStateEvent;
 import org.luckyraven.keystone.npc.NpcSquad;
@@ -83,6 +86,9 @@ class EvasionClockTest {
 	private ChaseArcs         arcs;
 	private ChaseLearner      learner;
 	private List<DropPlan>    plansAtDrop;
+	private Hideouts          hideouts;
+	private QuietTrail        quiet;
+	private List<CopNpc>      hunters;
 	private EvasionClock      clock;
 
 	@BeforeEach
@@ -112,8 +118,8 @@ class EvasionClockTest {
 		when(squad.lastKnownLocation()).thenAnswer(inv -> centre.clone());
 		group = mock(CopGroup.class);
 		when(group.getSquad()).thenReturn(squad);
-		List<CopNpc> hunters = List.of(cop(CopState.PURSUING));
-		when(group.getCops()).thenReturn(hunters);
+		hunters = new ArrayList<>(List.of(cop(CopState.PURSUING)));
+		when(group.getCops()).thenAnswer(inv -> hunters);
 		when(group.tippedOffWithin(anyLong(), anyLong())).thenReturn(false);
 		when(copManager.groupOf(id)).thenReturn(group);
 
@@ -135,8 +141,13 @@ class EvasionClockTest {
 			return n;
 		});
 
-		clock = new EvasionClock(config, copManager, detainment, stars, users, ledger, arcs, learner, () -> now[0],
-		                         events::add);
+		// every existing case keeps speed 1.0: no hideout, no cold trail
+		hideouts = mock(Hideouts.class);
+		quiet    = mock(QuietTrail.class);
+		when(quiet.speed(any(), anyLong())).thenReturn(1.0);
+
+		clock = new EvasionClock(config, copManager, detainment, stars, users, ledger, arcs, learner, hideouts, quiet,
+		                         () -> now[0], events::add);
 	}
 
 	private static CopNpc cop(CopState state) {
@@ -693,6 +704,26 @@ class EvasionClockTest {
 	}
 
 	@Test
+	@DisplayName("a rejoin's seeded sighting fires no SEEN (no cop has eyes on him); a real sighting after it does")
+	void restoreSeed_firesNoSeen_untilACopReallySeesHim() {
+		arcs.start(id, WantedCause.CRIME, 2);
+		unseenMs = 100;
+		tickSeconds(10);
+		loseSight();
+		tickSeconds(5);
+
+		quitAndRejoin(300_000);
+		events.clear();
+		unseenMs = 1000;
+		tickSeconds(1);
+		assertFalse(stateNames().contains(EvasionState.SEEN), "the seed is no sighting: contacts stay open");
+
+		unseenMs = 100;
+		tickSeconds(1);
+		assertEquals(List.of(EvasionState.SEEN), stateNames());
+	}
+
+	@Test
 	@DisplayName("AUTO: 17.9 s in sight plus the 3 s Lost_Sight_Seconds grace is not a narrow escape")
 	void auto_lostSightGrace_isNotTimeInSight() {
 		auto();
@@ -824,7 +855,212 @@ class EvasionClockTest {
 
 		verify(stars, times(2)).drop(any(), eq(1), eq(WantedCause.EVASION));
 		verifyNoInteractions(ledger, learner);
-		verify(arcs, never()).view(any(), any(), any());
+		verify(arcs, never()).view(any(), any(), any(), any());
 		verify(arcs, never()).stashPending(any(), any());
+	}
+
+	// ---- 0.16.0: hideouts, cold trail, units en route ----
+
+	/** The default settings with the given hideout, quiet speed and speed cap. */
+	private static EvasionSettings with(HideoutSettings hideout, QuietSpeedSettings quietSpeed, double maxSpeed) {
+		EvasionSettings d = EvasionSettings.DEFAULT;
+		return new EvasionSettings(true, 3, DropMode.ONE_STAR, d.searchRadius(), d.secondsToDrop(), 2.0,
+		                           AutoSettings.DEFAULT, hideout, quietSpeed, maxSpeed);
+	}
+
+	/** The player stands in the hideout {@code regionId}, open to him. */
+	private void inHideout(String regionId) {
+		PlaceRegion region = mock(PlaceRegion.class);
+		when(region.id()).thenReturn(regionId);
+		when(hideouts.at(player)).thenReturn(region);
+	}
+
+	@Test
+	@DisplayName("inside a hideout he reached unseen the timer runs at Hideout.Speed: a two-star drop takes 10 s")
+	void insideAHideoutReachedUnseen_countsAtHideoutSpeed() {
+		unseenMs = 10_000;
+		inHideout("copsncrooks:1");
+
+		tickSeconds(10);
+		verify(stars, never()).drop(any(), anyInt(), any());
+		tickSeconds(1);
+
+		verify(stars).drop(any(), eq(1), eq(WantedCause.EVASION));
+	}
+
+	@Test
+	@DisplayName("the hideout that holds the last sighting never counts: he was seen walking in")
+	void hideoutHoldingTheLastSighting_doesNotCount() {
+		unseenMs = 10_000;
+		inHideout("copsncrooks:1");
+		when(hideouts.idAt(any(), eq(id))).thenReturn("copsncrooks:1");
+
+		tickSeconds(20);
+		verify(stars, never()).drop(any(), anyInt(), any());
+		tickSeconds(1);
+
+		verify(stars).drop(any(), eq(1), eq(WantedCause.EVASION));
+	}
+
+	@Test
+	@DisplayName("a hideout Hideouts refuses him (a rival gang's) is open ground: speed 1")
+	void rivalGangHideout_doesNotCount() {
+		unseenMs = 10_000;
+		when(hideouts.at(player)).thenReturn(null);
+
+		tickSeconds(20);
+
+		verify(stars, never()).drop(any(), anyInt(), any());
+	}
+
+	@Test
+	@DisplayName("Hideout.Enable false makes a hideout open ground")
+	void hideoutDisabled_speedOne() {
+		settings = with(new HideoutSettings(false, 2.0), QuietSpeedSettings.DEFAULT, 4.0);
+		unseenMs = 10_000;
+		inHideout("copsncrooks:1");
+
+		tickSeconds(20);
+
+		verify(stars, never()).drop(any(), anyInt(), any());
+	}
+
+	@Test
+	@DisplayName("two quiet minutes (the QuietTrail's 1.5) speed the timer: the first countdown reads 14 s, the drop lands on the 15th tick")
+	void quietTwoMinutes_countsOneAndAHalfTimesFaster() {
+		unseenMs = 10_000;
+		when(quiet.speed(any(), anyLong())).thenReturn(1.5);
+
+		tickSeconds(14);
+		assertEquals(14, states().get(0).getSecondsLeft());
+		verify(stars, never()).drop(any(), anyInt(), any());
+		tickSeconds(1);
+
+		verify(stars).drop(any(), eq(1), eq(WantedCause.EVASION));
+	}
+
+	@Test
+	@DisplayName("a quiet factor under 1 is ignored: cold trail only ever speeds up")
+	void quietFactorUnderOne_isFlooredAtOne() {
+		unseenMs = 10_000;
+		when(quiet.speed(any(), anyLong())).thenReturn(0.0);
+
+		tickSeconds(21);
+
+		verify(stars).drop(any(), eq(1), eq(WantedCause.EVASION));
+	}
+
+	@Test
+	@DisplayName("outside 2 x hideout 2 x quiet 2 is capped at Max_Speed 4: the drop lands on the sixth tick, not the fourth")
+	void speedsMultiply_andAreCappedAtMaxSpeed() {
+		unseenMs = 10_000;
+		playerAt = new Location(world, 500, 64, 0);
+		inHideout("copsncrooks:1");
+		when(quiet.speed(any(), anyLong())).thenReturn(2.0);
+
+		tickSeconds(5);
+		verify(stars, never()).drop(any(), anyInt(), any());
+		tickSeconds(1);
+
+		verify(stars).drop(any(), eq(1), eq(WantedCause.EVASION));
+	}
+
+	@Test
+	@DisplayName("while a cop has him in sight no multiplier is read and nothing counts (characterization pin)")
+	void seen_noMultiplierApplies() {
+		unseenMs = 500;
+		inHideout("copsncrooks:1");
+		when(quiet.speed(any(), anyLong())).thenReturn(2.0);
+
+		tickSeconds(60);
+
+		verify(stars, never()).drop(any(), anyInt(), any());
+		verify(hideouts, never()).at(any());
+		assertEquals(EvasionState.SEEN, clock.snapshot(id).state());
+	}
+
+	@Test
+	@DisplayName("units en route keep the stars (the clock owns decay) but the clock makes no progress until one stands in the world")
+	void unitsEnRouteOnly_ownDecay_butMakeNoProgress() {
+		hunters.clear();
+		when(group.unitsEnRoute(anyLong())).thenReturn(true);
+		unseenMs = 10_000;
+
+		tickSeconds(30);
+
+		assertTrue(clock.handlesDecay(player, wanted));
+		assertEquals(2, wanted.getLevel());
+		assertNull(clock.snapshot(id));
+		assertTrue(events.isEmpty());
+		verify(stars, never()).drop(any(), anyInt(), any());
+	}
+
+	@Test
+	@DisplayName("a search under way holds while the squad is wiped and its units travel, and resumes with the first one")
+	void unitsEnRoute_holdAnExistingSearch() {
+		unseenMs = 10_000;
+		tickSeconds(5);
+		int    secondsLeft = clock.snapshot(id).secondsLeft();
+		CopNpc cop         = hunters.remove(0);
+		when(group.unitsEnRoute(anyLong())).thenReturn(true);
+
+		tickSeconds(60);
+		assertEquals(secondsLeft, clock.snapshot(id).secondsLeft());
+		verify(stars, never()).drop(any(), anyInt(), any());
+
+		hunters.add(cop);
+		tickSeconds(1);
+
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
+		assertEquals(secondsLeft - 1, clock.snapshot(id).secondsLeft());
+	}
+
+	@Test
+	@DisplayName("a RESTORE start's grace and ETA pass with units queued: no search, no progress, the arc untouched; the first unit starts it")
+	void restoreGrace_noProgressUntilAUnitSpawns() {
+		arcs.start(id, WantedCause.RESTORE, 2);
+		long lastHotAt = arcs.arc(id).lastHotAt;
+		hunters.clear();
+		when(group.unitsEnRoute(anyLong())).thenReturn(true);
+		unseenMs = 10_000;
+
+		tickSeconds(15 + 25);
+
+		assertTrue(clock.handlesDecay(player, wanted));
+		assertNull(clock.snapshot(id));
+		assertEquals(1, arcs.arc(id).quits);
+		assertEquals(lastHotAt, arcs.arc(id).lastHotAt);
+		verify(stars, never()).drop(any(), anyInt(), any());
+
+		hunters.add(cop(CopState.PURSUING));
+		tickSeconds(1);
+
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
+	}
+
+	@Test
+	@DisplayName("a unit 11 s past its ETA stops counting: the clock hands decay back (the 0.15 behaviour)")
+	void stuckUnits_releaseOwnership() {
+		hunters.clear();
+		long arriveAt = now[0];
+		when(group.unitsEnRoute(anyLong())).thenAnswer(inv -> arriveAt + 10_000 > inv.<Long>getArgument(0));
+
+		now[0] = arriveAt + 9_000;
+		assertTrue(clock.handlesDecay(player, wanted));
+		now[0] = arriveAt + 11_000;
+		assertFalse(clock.handlesDecay(player, wanted));
+	}
+
+	@Test
+	@DisplayName("a POSTED cop counts as live and the search runs (characterization pin)")
+	void postedCop_countsAsLive() {
+		hunters.clear();
+		hunters.add(cop(CopState.POSTED));
+		unseenMs = 10_000;
+
+		tickSeconds(1);
+
+		assertTrue(clock.handlesDecay(player, wanted));
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
 	}
 }

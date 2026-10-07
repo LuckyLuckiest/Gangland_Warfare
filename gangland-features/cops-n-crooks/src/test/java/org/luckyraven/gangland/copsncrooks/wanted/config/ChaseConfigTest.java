@@ -445,4 +445,123 @@ class ChaseConfigTest {
 
 		assertEquals(AutoSettings.DEFAULT, e.auto());
 	}
+
+	@Test
+	@DisplayName("a file without the new blocks and keys reads the shipped hideout, quiet speed, cap, rampage weight and bribe stars")
+	void newBlocksAbsent_areDefaults() {
+		ConfigReport report = new ConfigReport();
+
+		ChaseConfig c = ChaseConfig.parse(wantedRoot("Wanted:\n   Evasion:\n      Enable: true\n", report), report);
+
+		assertEquals(HideoutSettings.DEFAULT, c.evasion().hideout());
+		assertEquals(QuietSpeedSettings.DEFAULT, c.evasion().quietSpeed());
+		assertEquals(4.0, c.evasion().maxSpeed());
+		assertEquals(80, c.evasion().auto().rampageMinWeight());
+		assertEquals(BribeStarSettings.DEFAULT, c.bribeStars());
+		assertTrue(report.isEmpty(), report.issues().toString());
+	}
+
+	@Test
+	@DisplayName("the new blocks override key by key")
+	void newBlocks_override() {
+		ConfigReport report = new ConfigReport();
+		String yaml = """
+				Wanted:
+				   Evasion:
+				      Hideout:
+				         Enable: false
+				         Speed: 3.0
+				      Quiet_Speed:
+				         Enable: false
+				         Per_Minute: 0.5
+				         Max: 3.0
+				         Backup_Skip_Seconds: 30
+				      Max_Speed: 6.0
+				      Auto:
+				         Rampage_Min_Weight: 50
+				   Bribe_Stars:
+				      Enable: false
+				      Stars: 2
+				      Respawn_Seconds: 60
+				      Pickup_Radius: 3.0
+				      Item: DIAMOND
+				""";
+
+		ChaseConfig c = ChaseConfig.parse(wantedRoot(yaml, report), report);
+
+		assertEquals(new HideoutSettings(false, 3.0), c.evasion().hideout());
+		assertEquals(new QuietSpeedSettings(false, 0.5, 3.0, 30), c.evasion().quietSpeed());
+		assertEquals(6.0, c.evasion().maxSpeed());
+		assertEquals(50, c.evasion().auto().rampageMinWeight());
+		assertEquals(new BribeStarSettings(false, 2, 60, 3.0, "DIAMOND"), c.bribeStars());
+		assertTrue(report.isEmpty(), report.issues().toString());
+	}
+
+	@Test
+	@DisplayName("bad values log and fall back: speeds <= 0, Max_Speed < 1, Per_Minute < 0, negative Rampage_Min_Weight")
+	void newKeys_badValuesFallBack() {
+		ConfigReport report = new ConfigReport();
+		String yaml = """
+				Wanted:
+				   Evasion:
+				      Hideout:
+				         Speed: 0
+				      Quiet_Speed:
+				         Per_Minute: -1
+				         Max: -2
+				      Max_Speed: 0.5
+				      Auto:
+				         Rampage_Min_Weight: -5
+				""";
+
+		ChaseConfig c = ChaseConfig.parse(wantedRoot(yaml, report), report);
+
+		assertEquals(2.0, c.evasion().hideout().speed());
+		assertEquals(0.25, c.evasion().quietSpeed().perMinute());
+		assertEquals(2.0, c.evasion().quietSpeed().max());
+		assertEquals(4.0, c.evasion().maxSpeed());
+		assertEquals(80, c.evasion().auto().rampageMinWeight());
+		assertEquals(5, report.issues().size(), report.issues().toString());
+	}
+
+	/** Final fix round 1: a 0.15.2 Outside_Zone_Speed above the new Max_Speed default is capped, so say so. */
+	@Test
+	@DisplayName("Outside_Zone_Speed above Max_Speed warns that the timer is capped")
+	void outsideZoneSpeedAboveMaxSpeed_warns() {
+		ConfigReport report = new ConfigReport();
+		String yaml = """
+				Wanted:
+				   Evasion:
+				      Outside_Zone_Speed: 6.0
+				""";
+
+		ChaseConfig c = ChaseConfig.parse(wantedRoot(yaml, report), report);
+
+		assertEquals(4.0, c.evasion().maxSpeed());
+		assertEquals(1, report.issues().size(), report.issues().toString());
+		assertTrue(report.issues().toString().contains("config.conflict"), report.issues().toString());
+	}
+
+	@Test
+	@DisplayName("quiet speed: 0 min = 1.0, 2 min = 1.5, 10 min capped at 2.0, disabled = 1.0")
+	void quietSpeed_speedFor() {
+		QuietSpeedSettings q = QuietSpeedSettings.DEFAULT;
+
+		assertEquals(1.0, q.speedFor(0));
+		assertEquals(1.0, q.speedFor(59_999));
+		assertEquals(1.5, q.speedFor(2 * 60_000L));
+		assertEquals(2.0, q.speedFor(10 * 60_000L));
+		assertEquals(1.0, new QuietSpeedSettings(false, 0.25, 2.0, 60).speedFor(10 * 60_000L));
+	}
+
+	@Test
+	@DisplayName("the 4-argument constructor defaults the bribe stars, and a null bribeStars maps to the default")
+	void fourArgConstructor_defaultsBribeStars() {
+		ChaseConfig d = ChaseConfig.DEFAULT;
+
+		assertEquals(BribeStarSettings.DEFAULT,
+		             new ChaseConfig(d.heat(), d.evasion(), d.hud(), d.chargeSheet()).bribeStars());
+		assertEquals(BribeStarSettings.DEFAULT,
+		             new ChaseConfig(d.heat(), d.evasion(), d.hud(), d.chargeSheet(), null).bribeStars());
+	}
 }

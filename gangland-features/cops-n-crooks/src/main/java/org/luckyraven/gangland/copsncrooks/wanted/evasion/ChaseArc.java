@@ -21,10 +21,14 @@ public final class ChaseArc {
 	long                        offlineAt;
 	/** The last RESTORE start (rejoin), on the same timeline; 0 for a chase never restored. */
 	long                        seededAt;
+	/** Sum of the shifted offline gaps ({@link ChaseArcs#restore}). */
+	long                        offlineTotal;
 	int                         peak;
 	int                         respots;
 	int                         quits;
 	boolean                     searched;
+	/** A contact or bribe star took stars off mid-chase: the peak no longer says what was escaped. */
+	boolean                     boughtDown;
 	@Nullable AutoDrop.DropPlan pending;
 
 	ChaseArc(WantedCause startCause) {
@@ -39,6 +43,10 @@ public final class ChaseArc {
 		return peak;
 	}
 
+	public boolean boughtDown() {
+		return boughtDown;
+	}
+
 	public long startedAt() {
 		return startedAt;
 	}
@@ -51,5 +59,10 @@ public final class ChaseArc {
 	/** 0 while the player is online. */
 	public long offlineAt() {
 		return offlineAt;
+	}
+
+	/** Every offline gap the restores shifted out of this chase, summed. */
+	public long offlineTotal() {
+		return offlineTotal;
 	}
 }

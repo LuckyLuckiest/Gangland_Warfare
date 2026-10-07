@@ -6,11 +6,18 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
+import org.luckyraven.gangland.copsncrooks.npc.police.perimeter.PerimeterController;
+import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.EvasionClock;
+import org.luckyraven.gangland.copsncrooks.wanted.evasion.Hideouts;
+import org.luckyraven.gangland.copsncrooks.wanted.evasion.QuietTrail;
+import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.copsncrooks.wanted.learn.ChaseHabit;
 import org.luckyraven.gangland.copsncrooks.wanted.learn.ChaseLevelStat;
 import org.luckyraven.gangland.core.wanted.WantedStars;
+import org.luckyraven.gangland.data.gang.GangMembership;
+import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.keystone.bean.PostConstruct;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.persistence.repository.IRepository;
@@ -19,29 +26,35 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.function.BiConsumer;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Pins the evasion wiring: once every bean exists the module hands its clock to the core as the decay policy and to the
- * cop AI as a per-tick hook. Without either, line of sight never drops a star.
+ * Pins the evasion wiring: once every bean exists the module hands its clock to the core as the decay policy and the clock,
+ * the perimeter and the cold trail to the cop AI as per-tick hooks. Without the clock, line of sight never drops a star.
  */
 @DisplayName("EvasionModuleConfig")
 class EvasionModuleConfigTest {
 
 	@Test
-	@DisplayName("installEvasion installs the clock as the decay policy and as an AI-tick hook that ticks it")
+	@DisplayName("installEvasion installs the clock as the decay policy and the clock, the perimeter and the cold trail as AI-tick hooks")
 	@SuppressWarnings("unchecked")
-	void installEvasion_installsTheDecayPolicyAndTheAiTickHook() {
-		EvasionClock clock   = mock(EvasionClock.class);
-		WantedStars  stars   = mock(WantedStars.class);
-		CopManager   manager = mock(CopManager.class);
+	void installEvasion_installsTheDecayPolicyAndAllThreeAiTickHooks() {
+		EvasionClock        clock     = mock(EvasionClock.class);
+		PerimeterController perimeter = mock(PerimeterController.class);
+		QuietTrail          quiet     = mock(QuietTrail.class);
+		WantedStars         stars     = mock(WantedStars.class);
+		CopManager          manager   = mock(CopManager.class);
 
 		DependencyContainer container = new DependencyContainer();
 		container.registerInstance(EvasionClock.class, clock);
+		container.registerInstance(PerimeterController.class, perimeter);
+		container.registerInstance(QuietTrail.class, quiet);
 		container.registerInstance(WantedStars.class, stars);
 		container.registerInstance(CopManager.class, manager);
 
@@ -49,12 +62,15 @@ class EvasionModuleConfigTest {
 
 		verify(stars).installDecayPolicy(clock);
 		ArgumentCaptor<BiConsumer<Player, CopGroup>> hook = ArgumentCaptor.forClass(BiConsumer.class);
-		verify(manager).addAiTickHook(hook.capture());
+		verify(manager, times(3)).addAiTickHook(hook.capture());
 
 		Player   player = mock(Player.class);
 		CopGroup group  = mock(CopGroup.class);
-		hook.getValue().accept(player, group);
+		for (BiConsumer<Player, CopGroup> each : hook.getAllValues())
+			each.accept(player, group);
 		verify(clock).tick(player, group);
+		verify(perimeter).tick(player, group);
+		verify(quiet).tick(player, group);
 	}
 
 	@Test
@@ -78,5 +94,15 @@ class EvasionModuleConfigTest {
 
 		verify(habits).setDataSupplier(any());
 		verify(levels).setDataSupplier(any());
+	}
+
+	@Test
+	@DisplayName("hideouts and quietTrail build from the core holders, the ledger, the arcs, the config and the radio")
+	void hideoutsAndQuietTrail_areBuilt() {
+		EvasionModuleConfig config = new EvasionModuleConfig(mock(JavaPlugin.class), new DependencyContainer());
+
+		assertNotNull(config.hideouts(new PlaceNames(), new GangMembership()));
+		assertNotNull(config.quietTrail(mock(HeatLedger.class), config.chaseArcs(), mock(ChaseConfigLoader.class),
+		                                mock(CopRadio.class)));
 	}
 }

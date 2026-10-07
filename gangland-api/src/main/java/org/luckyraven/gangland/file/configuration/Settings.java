@@ -71,6 +71,8 @@ public class Settings implements FileInitializer {
 	private static @Getter String  userSkillFormula;
 	// user death
 	private static @Getter boolean deathEnabled, deathMoneyCommandEnabled, deathLoseMoney;
+	private static @Getter boolean hospitalEnabled;
+	private static @Getter int     hospitalShieldSeconds;
 	private static @Getter List<String> deathMoneyCommandExecutables;
 	private static @Getter String       deathLoseMoneyFormula;
 	private static @Getter double       deathThreshold;
@@ -86,13 +88,18 @@ public class Settings implements FileInitializer {
 	private static @Getter boolean    respawnTeleportEnabled;
 	private static @Getter String     respawnTeleportWaypoint;
 	// bounty configuration
-	private static @Getter BigDecimal bountyMinimum;
+	private static @Getter BigDecimal bountyMinimum, bountyTakedownMinimum;
 	private static @Getter BigDecimal bountyEachKillValue;
 	private static @Getter BigDecimal bountyMaxKill;
 	private static @Getter boolean    bountyTimerEnabled;
 	private static @Getter double     bountyTimerMultiple, bountyTimerMax;
 	private static @Getter int        bountyTimeInterval;
 	// wanted configuration
+	private static @Getter boolean    selfDefenceEnabled, contactsEnabled;
+	private static @Getter int        selfDefenceWindowSeconds, selfDefencePairCooldownSeconds, contactsCooldownSeconds,
+			contactsMaxStars;
+	private static @Getter double     selfDefenceMinDamage;
+	private static @Getter BigDecimal contactsPricePerStar;
 	private static @Getter BigDecimal wantedTakeMoneyAmount;
 	private static @Getter boolean    wantedTakeMoneyEnabled, bountyPayNotoriety;
 	private static @Getter String     wantedTakeMoneyFormula;
@@ -606,6 +613,11 @@ public class Settings implements FileInitializer {
 		deathLoseMoneyFormula        = str(deathMoney, "Formula", "balance * 0.15");
 		deathThreshold               = dbl(deathMoney, "Threshold", 1_000);
 
+		NodeReader hospital = section(death, "Hospital", report);
+
+		hospitalEnabled       = bool(hospital, "Enable", true);
+		hospitalShieldSeconds = intVal(hospital, "Shield_Seconds", 5);
+
 		// respawn
 		NodeReader respawn  = section(death, "Respawn", report);
 		NodeReader screen   = section(respawn, "Screen", report);
@@ -633,6 +645,7 @@ public class Settings implements FileInitializer {
 		bountyEachKillValue = money(bountyKill, "Each", "5");
 		bountyMaxKill       = money(bountyKill, "Maximum", "50000");
 		bountyPayNotoriety  = bool(bounty, "Pay_Notoriety", false);
+		bountyTakedownMinimum = money(bounty, "Takedown_Minimum", "100");
 		bountyTimerEnabled  = bool(bountyTimer, "Enable", true);
 		bountyTimerMultiple = dbl(bountyTimer, "Multiple", 2);
 		bountyTimeInterval  = intVal(bountyTimer, "Time", 300);
@@ -645,12 +658,22 @@ public class Settings implements FileInitializer {
 		NodeReader wantedMultiplier   = section(wantedTimer, "Multiplier", report);
 		NodeReader wantedLevel        = section(wanted, "Level", report);
 		NodeReader wantedKillComboSec = section(wanted, "Kill_Combo", report);
+		NodeReader selfDefence        = section(wanted, "Self_Defence", report);
+		NodeReader contacts           = section(wanted, "Contacts", report);
 
 		wantedEnabled                = bool(wanted, "Enable", true);
 		wantedTakeMoneyEnabled       = bool(wantedTakeMoney, "Enable", false);
 		wantedTakeMoneyFormula       = str(wantedTakeMoney, "Formula", "amount * multiplier ^ wanted");
 		wantedTakeMoneyAmount        = money(wantedTakeMoney, "Amount", "50");
 		wantedTakeMoneyMultiplier    = dbl(wantedTakeMoney, "Multiplier", 5);
+		selfDefenceEnabled             = bool(selfDefence, "Enable", true);
+		selfDefenceWindowSeconds       = intVal(selfDefence, "Window_Seconds", 8);
+		selfDefenceMinDamage           = dbl(selfDefence, "Min_Damage", 2.0);
+		selfDefencePairCooldownSeconds = intVal(selfDefence, "Pair_Cooldown_Seconds", 600);
+		contactsEnabled                = bool(contacts, "Enable", true);
+		contactsPricePerStar           = money(contacts, "Price_Per_Star", "1000");
+		contactsCooldownSeconds        = intVal(contacts, "Cooldown_Seconds", 600);
+		contactsMaxStars               = intVal(contacts, "Max_Stars", 2);
 		wantedTimerEnabled           = bool(wantedTimer, "Enable", true);
 		wantedTimerTime              = intVal(wantedTimer, "Time", 120);
 		wantedTimerMultiplierEnabled = bool(wantedMultiplier, "Enable", true);

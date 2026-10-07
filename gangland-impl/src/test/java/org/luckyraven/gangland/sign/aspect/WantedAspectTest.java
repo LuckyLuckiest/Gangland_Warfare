@@ -18,6 +18,8 @@ import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.gangland.core.wanted.WantedSettings;
 import org.luckyraven.gangland.core.wanted.WantedStars;
+import org.luckyraven.gangland.data.wanted.ContactDesk;
+import org.luckyraven.gangland.events.wanted.EvasionState;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.sign.model.ParsedSign;
 import org.luckyraven.gangland.support.FakeMessageProvider;
@@ -27,6 +29,8 @@ import org.luckyraven.keystone.testkit.BukkitStatics;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -50,6 +54,9 @@ class WantedAspectTest {
 	private User<Player>        user;
 	private Wanted              wanted;
 	private WantedAspect        aspect;
+	private ContactDesk         desk;
+	private UUID                id;
+	private final AtomicLong    now = new AtomicLong(1_000_000L);
 	private List<Event>         events;
 
 	@SuppressWarnings("unchecked")
@@ -57,7 +64,8 @@ class WantedAspectTest {
 	void setUp() {
 		bukkit = BukkitStatics.install();
 		SettingsFixture.initializeMinimal(dir);
-		Messages.init(new FakeMessageProvider());
+		Messages.init(new FakeMessageProvider().withString("Wanted_Level.Contact.Seen", "SEEN")
+		                                       .withString("Wanted_Level.Contact.Cooldown", "COOLDOWN %time%"));
 		bukkit.statics().when(Bukkit::isPrimaryThread).thenReturn(true);
 
 		events = new ArrayList<>();
@@ -73,7 +81,9 @@ class WantedAspectTest {
 		when(settings.isTimerEnabled()).thenReturn(true);
 		when(settings.getTimerTime()).thenReturn(120);
 
+		id     = UUID.randomUUID();
 		player = mock(Player.class);
+		when(player.getUniqueId()).thenReturn(id);
 		when(player.isOnline()).thenReturn(true);
 		wanted = new Wanted(plugin, 1, 5);
 		wanted.setOwner(player);
@@ -83,7 +93,8 @@ class WantedAspectTest {
 		UserManager<Player> users = mock(UserManager.class);
 		when(users.getUser(player)).thenReturn(user);
 
-		aspect = new WantedAspect(users, new WantedStars(plugin, settings));
+		desk   = new ContactDesk(now::get);
+		aspect = new WantedAspect(users, new WantedStars(plugin, settings), desk);
 	}
 
 	@AfterEach
@@ -145,6 +156,78 @@ class WantedAspectTest {
 		assertEquals(0, wanted.getLevel());
 	}
 
+	@Test
+	@DisplayName("REMOVE while a cop sees the player is refused with the contact-seen text")
+	void remove_whileSeen_refusesWithReason() {
+		wanted.setLevel(3);
+		desk.observe(id, EvasionState.SEEN);
+
+		assertFalse(aspect.canExecute(player, sign("remove", 1, 500)));
+		assertEquals(Messages.CONTACT_SEEN.toString(), aspect.failureReason(player, sign("remove", 1, 500)));
+		assertFalse(aspect.canExecute(player, sign("clear", 0, 500)));
+	}
+
+	@Test
+	@DisplayName("a paid REMOVE starts the shared contact cooldown")
+	void paidRemove_startsTheCooldown() {
+		wanted.setLevel(3);
+
+		aspect.execute(player, sign("remove", 1, 500));
+
+		assertTrue(desk.cooldownLeftMs(id) > 0);
+	}
+
+	@Test
+	@DisplayName("a paid CLEAR inside the cooldown is refused with the cooldown text and a time")
+	void paidClear_insideTheCooldown_refuses() {
+		wanted.setLevel(3);
+		desk.startCooldown(id);
+
+		assertFalse(aspect.canExecute(player, sign("clear", 0, 500)));
+		assertTrue(aspect.failureReason(player, sign("clear", 0, 500)).contains("10m"),
+		           "the refusal names the time left");
+	}
+
+	@Test
+	@DisplayName("a free (price 0) sign refuses while seen but neither checks nor starts the cooldown")
+	void freeSign_whileSeen_refuses_butNeverCoolsDown() {
+		wanted.setLevel(3);
+		desk.startCooldown(id);
+
+		assertTrue(aspect.canExecute(player, sign("remove", 1, 0)), "price 0 ignores the cooldown");
+		aspect.execute(player, sign("remove", 1, 0));
+		now.addAndGet(601_000L);
+		assertEquals(0, desk.cooldownLeftMs(id));
+
+		desk.observe(id, EvasionState.SEEN);
+		assertFalse(aspect.canExecute(player, sign("remove", 1, 0)));
+		assertEquals(0, desk.cooldownLeftMs(id), "a refusal never cools down");
+	}
+
+	@Test
+	@DisplayName("INCREASE ignores both the sight gate and the cooldown")
+	void increase_isNeverGated() {
+		desk.observe(id, EvasionState.SEEN);
+		desk.startCooldown(id);
+
+		assertTrue(aspect.canExecute(player, sign("increase", 1, 500)));
+		assertNull(aspect.failureReason(player, sign("increase", 1, 500)));
+	}
+
+	@Test
+	@DisplayName("with Wanted.Contacts disabled the sign behaves as before")
+	void contactsDisabled_signAsBefore() throws Exception {
+		SettingsFixture.write(dir, "Wanted:\n  Contacts:\n    Enable: false\n");
+		SettingsFixture.initialize(dir);
+		wanted.setLevel(3);
+		desk.observe(id, EvasionState.SEEN);
+		desk.startCooldown(id);
+
+		assertTrue(aspect.canExecute(player, sign("remove", 1, 500)));
+		aspect.execute(player, sign("remove", 1, 500));
+		assertEquals(2, wanted.getLevel());
+	}
+
 	private WantedLevelChangeEvent change() {
 		return events.stream()
 		             .filter(WantedLevelChangeEvent.class::isInstance)
@@ -154,7 +237,12 @@ class WantedAspectTest {
 	}
 
 	private static ParsedSign sign(String content, int amount) {
+		return sign(content, amount, 0);
+	}
+
+	private static ParsedSign sign(String content, int amount, double price) {
 		ParsedSign sign = mock(ParsedSign.class);
+		when(sign.getPrice()).thenReturn(price);
 		when(sign.getContent()).thenReturn(content);
 		when(sign.getAmount()).thenReturn(amount);
 		return sign;

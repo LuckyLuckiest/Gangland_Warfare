@@ -353,14 +353,261 @@ class EntityDamageListenerTest {
 	}
 
 	@Test
-	@DisplayName("a fight with no hit for 30 seconds is forgotten, so a later kill is a crime")
-	void fightOlderThanThirtySeconds_isForgotten_soTheKillIsACrime() {
+	@DisplayName("a fight with no hit for longer than Self_Defence.Window_Seconds (8) is forgotten, so a later kill is a crime")
+	void fightOlderThanTheWindow_isForgotten_soTheKillIsACrime() {
 		EntityDamageListener listener = listener(new WantedKillTrackers());
 		long[] now = {0L};
 		listener.clock = () -> now[0];
 
 		hit(listener, bob, alice);
-		now[0] = 31_000L;
+		now[0] = 9_000L;
+		kill(listener, alice, bob);
+
+		assertEquals(1, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("R36: the victim's damage to the killer must reach Self_Defence.Min_Damage (2.0)")
+	void victimBelowMinDamage_killIsACrime() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+
+		hit(listener, bob, alice, 1.0);
+		kill(listener, alice, bob);
+
+		assertEquals(1, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("R36 (characterization pin): two light hits adding up to the minimum, struck first, are self-defence")
+	void victimHitFirstWithEnoughDamage_isSelfDefence() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+
+		hit(listener, bob, alice, 1.0);
+		hit(listener, bob, alice, 1.0);
+		kill(listener, alice, bob);
+
+		assertEquals(0, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("R36: a gangmate's first strike never counts as self-defence")
+	void gangmateFirstStrike_neverCounts() {
+		GangMembershipView view = mock(GangMembershipView.class);
+		when(view.gangIdOf(any())).thenReturn(7);
+		gangs.install(view);
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+
+		hit(listener, bob, alice);
+		kill(listener, alice, bob);
+
+		assertEquals(1, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("R36: a second exemption for the same pair inside Pair_Cooldown_Seconds is a crime")
+	void secondExemptionInsideThePairCooldown_isACrime() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+
+		hit(listener, bob, alice);
+		kill(listener, alice, bob);
+		assertEquals(0, aliceUser.getWanted().getLevel(), "the first one is self-defence");
+
+		hit(listener, bob, alice);
+		kill(listener, alice, bob);
+
+		assertEquals(1, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("R36: Self_Defence.Enable false means no self-defence exemption at all")
+	void selfDefenceDisabled_killIsACrime() throws IOException {
+		SettingsFixture.write(dir, """
+				Money_Symbol: '$'
+				Database:
+				  Auto_Save:
+				    Debug: false
+				Bounty:
+				  Repeating_Timer:
+				    Enable: false
+				Wanted:
+				  Self_Defence:
+				    Enable: false
+				  Kill_Combo:
+				    Enable: false
+				""");
+		SettingsFixture.initialize(dir);
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+
+		hit(listener, bob, alice);
+		kill(listener, alice, bob);
+
+		assertEquals(1, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("R36: provoke, wait out the window, let the victim retaliate: the kill is a crime")
+	void provokeWaitRetaliate_isACrime() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+		long[] now = {0L};
+		listener.clock = () -> now[0];
+
+		hit(listener, alice, bob);
+		now[0] = 9_000L;
+		hit(listener, bob, alice, 4.0);
+		kill(listener, alice, bob);
+
+		assertEquals(1, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("R36: the same retaliation after the 60 s provocation memory is self-defence again")
+	void retaliationAfterTheProvocationMemory_isSelfDefence() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+		long[] now = {0L};
+		listener.clock = () -> now[0];
+
+		hit(listener, alice, bob);
+		now[0] = 61_000L;
+		hit(listener, bob, alice, 4.0);
+		kill(listener, alice, bob);
+
+		assertEquals(0, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("R37, WB-48: a takedown of a bounty below Takedown_Minimum pays but is a crime")
+	void takedownBelowTakedownMinimum_paysButIsACrime() {
+		bobUser.getBounty().addBounty(poster("poster"), new BigDecimal("0.01"), 0);
+
+		kill(listener(new WantedKillTrackers()), alice, bob);
+
+		assertEquals(0, new BigDecimal("0.01").compareTo(aliceUser.getEconomy().getAmount()), "still paid");
+		assertEquals(1, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("R37 (characterization pin): a takedown at exactly Takedown_Minimum (100) is not a crime")
+	void takedownAtTheMinimum_isNotACrime() {
+		post(bobUser, "poster", 100);
+
+		kill(listener(new WantedKillTrackers()), alice, bob);
+
+		assertEquals(0, BigDecimal.valueOf(100).compareTo(aliceUser.getEconomy().getAmount()));
+		assertEquals(0, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("R37: a second takedown of the same pair inside the pair cooldown is a crime")
+	void takedownInsideThePairCooldown_isACrime() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+
+		post(bobUser, "poster", 1000);
+		kill(listener, alice, bob);
+		assertEquals(0, aliceUser.getWanted().getLevel());
+
+		post(bobUser, "poster", 1000);
+		kill(listener, alice, bob);
+
+		assertEquals(0, BigDecimal.valueOf(2000).compareTo(aliceUser.getEconomy().getAmount()), "still paid");
+		assertEquals(1, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("R37, D20: the fourth takedown by one killer inside the hour pays but is a crime")
+	void fourthTakedownWithinTheHour_paysButIsACrime() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+		List<User<Player>>   victims  = new ArrayList<>();
+
+		for (int i = 0; i < 4; i++) {
+			Player           extra = player("Victim" + i);
+			User<Player>     user  = new User<>(plugin, extra, (p, raw) -> raw);
+			when(userManager.getUser(extra)).thenReturn(user);
+			post(user, "poster", 1000);
+			victims.add(user);
+		}
+
+		for (int i = 0; i < 3; i++) {
+			kill(listener, alice, victims.get(i).getUser());
+			assertEquals(0, aliceUser.getWanted().getLevel(), "takedown " + (i + 1) + " is crime-free");
+		}
+
+		kill(listener, alice, victims.get(3).getUser());
+
+		assertEquals(0, BigDecimal.valueOf(4000).compareTo(aliceUser.getEconomy().getAmount()), "all four paid");
+		assertEquals(1, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("R36: pruning drops the anti-abuse memories by time; a quit drops only the fight state")
+	void pruneAndQuit_dropTheNewMemories() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+		long[] now = {0L};
+		listener.clock = () -> now[0];
+		Player carol = player("Carol");
+		Player dave  = player("Dave");
+		when(userManager.getUser(carol)).thenReturn(aliceUser);
+		when(userManager.getUser(dave)).thenReturn(bobUser);
+
+		hit(listener, bob, alice);
+		kill(listener, alice, bob);
+		post(bobUser, "poster", 1000);
+		kill(listener, alice, bob);
+		assertTrue(listener.trackedMemories() > 0);
+
+		now[0] = 3_700_000L;
+		hit(listener, carol, dave);
+		assertEquals(3, listener.trackedMemories(), "only carol>dave: its damage, last hit and provocation flag remain");
+
+		listener.onPlayerQuit(new org.bukkit.event.player.PlayerQuitEvent(carol, "bye"));
+		assertEquals(1, listener.trackedMemories(), "the carol>dave last-hit stamp waits for its 60 s prune");
+	}
+
+	@Test
+	@DisplayName("R37, D20: relogging does not reset the killer's crime-free takedown tally")
+	void relog_keepsTheTakedownTally() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+		List<User<Player>>   victims  = new ArrayList<>();
+
+		for (int i = 0; i < 4; i++) {
+			Player       extra = player("Victim" + i);
+			User<Player> user  = new User<>(plugin, extra, (p, raw) -> raw);
+			when(userManager.getUser(extra)).thenReturn(user);
+			post(user, "poster", 1000);
+			victims.add(user);
+		}
+
+		for (int i = 0; i < 3; i++) kill(listener, alice, victims.get(i).getUser());
+		listener.onPlayerQuit(new org.bukkit.event.player.PlayerQuitEvent(alice, "relog"));
+		kill(listener, alice, victims.get(3).getUser());
+
+		assertEquals(1, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("R37: the victim relogging does not reset the pair cooldown")
+	void relog_keepsThePairCooldown() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+
+		post(bobUser, "poster", 1000);
+		kill(listener, alice, bob);
+		listener.onPlayerQuit(new org.bukkit.event.player.PlayerQuitEvent(bob, "relog"));
+		post(bobUser, "poster", 1000);
+		kill(listener, alice, bob);
+
+		assertEquals(1, aliceUser.getWanted().getLevel());
+	}
+
+	@Test
+	@DisplayName("R36: provoke, relog, let the victim retaliate: the kill is still a crime")
+	void relog_keepsTheProvocation() {
+		EntityDamageListener listener = listener(new WantedKillTrackers());
+		long[] now = {0L};
+		listener.clock = () -> now[0];
+
+		hit(listener, alice, bob);
+		listener.onPlayerQuit(new org.bukkit.event.player.PlayerQuitEvent(alice, "relog"));
+		now[0] = 9_000L;
+		hit(listener, bob, alice, 4.0);
 		kill(listener, alice, bob);
 
 		assertEquals(1, aliceUser.getWanted().getLevel());
@@ -527,14 +774,25 @@ class EntityDamageListenerTest {
 		target.getBounty().addBounty(sender, BigDecimal.valueOf(amount), 0);
 	}
 
+	private static CommandSender poster(String name) {
+		CommandSender sender = mock(CommandSender.class);
+		when(sender.getName()).thenReturn(name);
+		return sender;
+	}
+
+	/** A hit of 4.0, above Self_Defence.Min_Damage (2.0): the helper is fixed, never the rule. */
 	private void hit(EntityDamageListener listener, Player attacker, Player victim) {
+		hit(listener, attacker, victim, 4.0);
+	}
+
+	private void hit(EntityDamageListener listener, Player attacker, Player victim, double damage) {
 		when(victim.getHealth()).thenReturn(20.0);
 		when(victim.getLocation()).thenReturn(new Location(null, 0, 0, 0));
 
 		EntityDamageByEntityEvent event = mock(EntityDamageByEntityEvent.class);
 		when(event.getDamager()).thenReturn(attacker);
 		when(event.getEntity()).thenReturn(victim);
-		when(event.getFinalDamage()).thenReturn(1.0);
+		when(event.getFinalDamage()).thenReturn(damage);
 
 		listener.onPlayerEntityDeath(event);
 	}

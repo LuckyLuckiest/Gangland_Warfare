@@ -636,11 +636,20 @@ Wanted_Level:
    Not_Wanted: "You don't have a wanted level."
    Cleared: "Your wanted level has been cleared."
    Paid: "Paid wanted level fees, totaling &a%money_symbol%%amount%&7."
+   Contact:
+      Used: "&aYour contact made &e%stars% &astar(s) disappear for &e%money_symbol%%amount%&a."
+      Seen: "&cNot while a cop has eyes on you."
+      Cooldown: "&cYour contact is lying low. Try again in &e%time%&c."
+      Not_Wanted: "&7You have no stars to wipe."
+      No_Money: "&cYou need &e%money_symbol%%amount%&c."
+      Disabled: "&7Nobody picks up."
 
 Death:
    Global:
       - "%killer% killed %victim%."
       - "%victim% was killed by %killer%."
+   Ward_Bill: "&3Ward bill: &c&l-%money_symbol%%amount%"
+   Hospital_Shield: "&7Hospital protection for &e%seconds%&7 s. Attacking anything ends it."
    Respawn:
       Wasted_Prefix: "&8[&cWASTED&8] "
       Click_Button: "&7[&aClick to respawn instantly&7]"

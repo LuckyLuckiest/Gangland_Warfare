@@ -45,14 +45,15 @@ public class JailRepository extends AbstractRepository<Jail> {
 			double z           = (double) result[v++];
 			int    maxCapacity = (int) result[v];
 
+			// before the unloaded-world skip, and a floor (never lowered): the next created jail must not reuse this id
+			JailService.ID = Math.max(JailService.ID, id);
+
 			World world = Bukkit.getWorld(worldName);
 
 			if (world == null) continue;
 
 			Location location = new Location(world, x, y, z);
 			jails.add(new Jail(id, location, maxCapacity));
-
-			JailService.ID = id;
 		}
 
 		return jails;

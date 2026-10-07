@@ -45,9 +45,14 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 					Map.entry("Flanking", 10000L), Map.entry("Commander_Orders", 20000L),
 					Map.entry("Status_Check", 20000L),
 					Map.entry("Pull_Back", 15000L),
-					Map.entry("Medic_Treating", 10000L)),
+					Map.entry("Medic_Treating", 10000L),
+					// 0.16 dispatch, hand-off and perimeter lines
+					Map.entry("Dispatch_En_Route", 0L), Map.entry("Wipe_Refill", 0L), Map.entry("Handoff", 10000L),
+					Map.entry("Post_Up", 5000L), Map.entry("Eyes_On", 3000L),
+					Map.entry("Returning_To_Patrol", 60000L)),
 			Set.of("Contact", "Man_Down", "Leader_Down", "Commander_Down", "Backup", "Resisting", "Dispatch_Wanted",
-			      "Escalate", "Stand_Down", "Fall_Back", "In_Cover", "Hit", "Patched_Up", "Marksman_Spotted"),
+			      "Escalate", "Stand_Down", "Fall_Back", "In_Cover", "Hit", "Patched_Up", "Marksman_Spotted",
+			      "Dispatch_En_Route", "Wipe_Refill", "Handoff", "Post_Up"),
 			"BLOCK_NOTE_BLOCK_HAT", 0.4f, 1.8f);
 
 	/**
@@ -306,6 +311,34 @@ public interface CopConfigProvider extends NpcNavigationConfig, SpawnConfigProvi
 	/** When a cop that cannot reach its suspect is recycled out of his view ({@code Cops.Stuck}). */
 	default StuckSettings getStuckSettings() {
 		return StuckSettings.DEFAULT;
+	}
+
+	/** Where a wanted level's cops come from and how long they take ({@code Cops.Dispatch}). */
+	default DispatchSettings getDispatchSettings() {
+		return DispatchSettings.DEFAULT;
+	}
+
+	/** The pause after a wiped squad before backup is dispatched ({@code Cops.Breather}). */
+	default BreatherSettings getBreatherSettings() {
+		return BreatherSettings.DEFAULT;
+	}
+
+	/** The pursuit hand-off when a suspect breaks contact ({@code Cops.Handoff}). */
+	default HandoffSettings getHandoffSettings() {
+		return HandoffSettings.DEFAULT;
+	}
+
+	/** The containment perimeter around an out-of-sight suspect ({@code Cops.Perimeter}). */
+	default PerimeterSettings getPerimeterSettings() {
+		return PerimeterSettings.DEFAULT;
+	}
+
+	/**
+	 * The tier id each {@link #getSquadComposition} entry of {@code wantedLevel} is spawned at ({@code "<Role>@<tier>"}),
+	 * the same length as that composition; {@code 0} means the star's own tier. Empty when there is no composition.
+	 */
+	default List<Integer> getSquadTiers(int wantedLevel) {
+		return List.of();
 	}
 
 	/** Hurt cops limping and bleeding, and medics patching them up ({@code Cops.Field_Care}). */

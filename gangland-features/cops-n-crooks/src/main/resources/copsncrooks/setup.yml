@@ -1,0 +1,54 @@
+#   +------------------------------------------------------+   #
+# |                  File: setup.yml                         | #
+#   +------------------------------------------------------+   #
+#
+# The admin setup wand of /glw cop setup (stations, districts, hideouts, pickup points, restricted zones and
+# breaker structures): the wand item, how its outline is drawn, and its messages. & colour codes work. Placeholders in
+# %percent% signs are filled in by the plugin.
+
+Setup:
+   Wand:
+      # The material of the wand (any Material name; BLAZE_ROD when it does not resolve)
+      Item: "BLAZE_ROD"
+   Outline:
+      # The particle drawn along the selected cuboid, shown only to the admin holding the wand (DUST when it does not resolve)
+      Particle: "DUST"
+      # Ticks between two draws (10 = twice a second)
+      Interval_Ticks: 10
+   Messages:
+      # Shown for /glw cop setup with no or an unknown sub-command
+      Usage: "&cUsage: /glw cop setup <wand|mode|save|list|remove|tp|link>"
+      Not_Player: "&cOnly a player can do that."
+      No_Permission: "&cYou may not use the setup tools."
+      # The wand's name and lore
+      Wand_Name: "&6Cops Setup Wand"
+      Wand_Lore: "&7Left-click = pos1, right-click = pos2."
+      # %mode%: the current mode
+      Wand_Given: "&aSetup wand given. Mode: &e%mode%&a. Left-click = pos1, right-click = pos2."
+      Mode_Set: "&7Setup mode: &e%mode%"
+      # %modes%: the valid modes
+      Mode_Unknown: "&cUnknown mode. Use: %modes%"
+      # %corner%: pos1 or pos2, %x% %y% %z% %world%: the clicked block
+      Pos_Set: "&7%corner% set to &f(%x%, %y%, %z%) &7in &f%world%"
+      # %needed%: what is missing (pos1, or pos1 and pos2), %mode%: the current mode
+      Incomplete: "&cSelect %needed% first (mode %mode%)."
+      Name_Missing: "&cGive it a name: /glw cop setup save <name>"
+      # %name% %id%, and %spawners%: how many cop spawners joined the station
+      Station_Saved: "&aStation &f%name% &a(#%id%) saved, %spawners% spawner(s) assigned."
+      Station_Duplicate: "&cA station named &f%name% &calready exists, nothing was saved."
+      # %tag%: district, hideout, restricted or breaker
+      Region_Saved: "&aRegion &f%name% &a(#%id%, %tag%) saved."
+      # %kind%: pickup or breaker_trigger
+      Point_Saved: "&aPoint &f%name% &a(#%id%, %kind%) saved."
+      List_Empty: "&7Nothing placed yet."
+      # %kind%: station, region or point
+      Removed: "&aRemoved %kind% #%id%."
+      Not_Found: "&cNo %kind% with id %id%."
+      Teleported: "&7Teleported to %kind% #%id%."
+      No_Location: "&cThat place is in a world that is not loaded."
+      Linked: "&aStation #%station% now uses jail #%jail%."
+      Unlinked: "&aStation #%station% no longer has a jail."
+      Unknown_Jail: "&cNo jail with id %id%."
+      Unknown_Kind: "&cKind must be station, region or point."
+      # %value%: what was typed
+      Bad_Id: "&c%value% is not a number."

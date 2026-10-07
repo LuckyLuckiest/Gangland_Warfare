@@ -29,6 +29,7 @@ import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.file.configuration.inventory.InventoryDefinitionStore;
 import org.luckyraven.keystone.sound.ResourcePackTracker;
 import org.luckyraven.gangland.util.GanglandChatUtil;
+import org.luckyraven.gangland.util.KeystoneFloor;
 import org.luckyraven.keystone.update.UpdateNotifier;
 import org.luckyraven.keystone.update.UpdateChecker;
 
@@ -91,6 +92,17 @@ public final class Gangland extends JavaPlugin {
 		// Create the root DI context and drive the full phased bean pipeline (KERNEL → FILE → DATABASE →
 		// CONFIG → LIFECYCLE → LISTENER → COMMAND). KernelConfig produces every bootstrap-critical singleton;
 		// all managers, services, and addons are wired by @Configuration classes under org.luckyraven.gangland.config.
+		// Keystone floor first: an older Keystone jar lacks API this build calls; refuse readably before any bean runs.
+		String floor = KeystoneFloor.floor(this);
+		Plugin keystone = getServer().getPluginManager().getPlugin("Keystone");
+		String installed = keystone == null ? null : keystone.getDescription().getVersion();
+		if (floor != null && !KeystoneFloor.satisfied(installed, floor)) {
+			log.error("Gangland {} needs Keystone {} or newer; found {}", getDescription().getVersion(), floor,
+			          installed);
+			getServer().getPluginManager().disablePlugin(this);
+			return;
+		}
+
 		this.context = new GanglandContext(this);
 		context.bootstrap();
 

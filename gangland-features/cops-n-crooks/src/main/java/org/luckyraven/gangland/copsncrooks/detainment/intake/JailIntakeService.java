@@ -23,6 +23,7 @@ import org.luckyraven.gangland.copsncrooks.wanted.config.ChargeSheetSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.CrimeRecord;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
+import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
 import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.gangland.file.configuration.Settings;
 
@@ -55,6 +56,16 @@ public class JailIntakeService {
 	private final WantedMessages          messages;
 
 	public boolean admit(Player player) {
+		// a downed player (the transit timer fired mid-down) pays the ward bill on undown, so he gets no sheet either
+		return admit(player, player != null &&
+		                     (player.isDead() || DownedPlayerRegistry.isDowned(player.getUniqueId())));
+	}
+
+	/**
+	 * @param deathCommit true when the hospital bill already is the one charge (a death, or a handcuffed player downed):
+	 *                    the arrest then gets no charge sheet
+	 */
+	public boolean admit(Player player, boolean deathCommit) {
 		if (player == null || !player.isOnline()) return false;
 
 		Jail jail = pickJail(player);
@@ -79,7 +90,7 @@ public class JailIntakeService {
 			detained.setTransitExpiresAt(null);
 			detained.setWantedAtArrest(wantedLevel);
 			// a death-commit already paid the hospital bill, so it gets no sheet
-			int extraSeconds = player.isDead() ? 0 : chargeSheet(player, detained, wantedLevel, crimes);
+			int extraSeconds = deathCommit ? 0 : chargeSheet(player, detained, wantedLevel, crimes);
 			long sentenceExpiresAt = System.currentTimeMillis() +
 			                         (costs.computeSentenceSeconds(wantedLevel) + extraSeconds) * 1000L;
 			detained.setSentenceExpiresAt(sentenceExpiresAt);

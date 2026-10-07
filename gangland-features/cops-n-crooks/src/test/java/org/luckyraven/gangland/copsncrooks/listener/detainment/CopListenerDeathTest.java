@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
@@ -213,6 +214,59 @@ class CopListenerDeathTest {
 		ArgumentCaptor<CopDeathEvent> captor = ArgumentCaptor.forClass(CopDeathEvent.class);
 		verify(bukkit.pluginManager()).callEvent(captor.capture());
 		assertNull(captor.getValue().getKiller());
+	}
+
+	/**
+	 * Final fix round 1: the cold-trail hold is only re-evaluated on the next AI tick, but the officer-down backup is
+	 * requested synchronously inside this event. Killing a cop is a crime, so the suspect's kill releases the hold
+	 * before the squad hears of it; anyone else's kill leaves it alone.
+	 */
+	@Test
+	@DisplayName("the suspect killing a cop releases the cold-trail backup hold before the squad hears of it")
+	void suspectKill_releasesTheBackupHold_beforeManDown() {
+		CopManager   manager = mock(CopManager.class);
+		LivingEntity body    = mock(LivingEntity.class);
+		CopNpc       cop     = mock(CopNpc.class);
+		Player       suspect = mock(Player.class);
+		when(manager.findDyingCop(body)).thenReturn(cop);
+
+		CopGroup group = new CopGroup(UUID.randomUUID());
+		when(suspect.getUniqueId()).thenReturn(group.getTargetPlayerId());
+		when(body.getKiller()).thenReturn(suspect);
+		List<Boolean> heldAtSignal = new ArrayList<>();
+		group.setListener((squad, signal, member, where) -> heldAtSignal.add(group.isBackupHeld()));
+		group.add(cop);
+		group.add(mock(CopNpc.class));
+		group.setBackupHeld(true);
+		when(cop.getGroup()).thenReturn(group);
+		when(cop.getCurrentSquad()).thenReturn(group.getSquad());
+
+		new CopListener(manager).onCopDeath(deathOf(body));
+
+		assertEquals(List.of(false), heldAtSignal);
+	}
+
+	@Test
+	@DisplayName("a cop killed by someone other than the suspect keeps the cold-trail hold")
+	void otherKiller_keepsTheBackupHold() {
+		CopManager   manager = mock(CopManager.class);
+		LivingEntity body    = mock(LivingEntity.class);
+		CopNpc       cop     = mock(CopNpc.class);
+		Player       other   = mock(Player.class);
+		when(manager.findDyingCop(body)).thenReturn(cop);
+		when(other.getUniqueId()).thenReturn(UUID.randomUUID());
+		when(body.getKiller()).thenReturn(other);
+
+		CopGroup group = new CopGroup(UUID.randomUUID());
+		group.add(cop);
+		group.add(mock(CopNpc.class));
+		group.setBackupHeld(true);
+		when(cop.getGroup()).thenReturn(group);
+		when(cop.getCurrentSquad()).thenReturn(group.getSquad());
+
+		new CopListener(manager).onCopDeath(deathOf(body));
+
+		assertTrue(group.isBackupHeld());
 	}
 
 	private static EntityDeathEvent deathOf(LivingEntity body) {

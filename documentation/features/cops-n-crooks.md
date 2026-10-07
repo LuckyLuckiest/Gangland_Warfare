@@ -207,6 +207,10 @@ blocks). Each line plays a short click sound.
 - **Regroup (0.15.0):** "Two down! Pull back to cover, backup is coming!" when the squad falls back, and "Backup's
   here! All units, push together!" when it pushes. See Regroup below.
 - **Shots fired (0.15.0):** the nearest cop of the hunted player's squad says where it heard a shot. See Shot Noise below.
+- **Dispatch (0.16.0):** "3 units en route from Central, ETA 12 s." when units leave a station, "Squad down. Backup inbound
+  in 13 s." after a wipe, "Lost him heading north-east. Units ahead, pick him up." on a hand-off, "Holding the corner." and
+  "Eyes on suspect near the Docks, moving north-east." from posted cops, and "Units returning to patrol." when the trail
+  goes cold. Every line may carry `%place%`, the district name at the spot, or "the area" (`Unknown_Place`).
 - **Resisting**, **retreat** and **field care** lines, as described above.
 
 Lines are throttled per squad and per player, so chat never floods. Every line is in `copsncrooks/cop_radio_messages.yml`
@@ -242,6 +246,122 @@ The chase around a wanted player is configured in `copsncrooks/wanted.yml` (heat
 
 ---
 
+## Where the Police Come From (0.16.0)
+
+Until 0.15 a cop popped into existence near the suspect. From 0.16.0 the police have **stations**: units leave the
+nearest station, take time to arrive, and the squad plays out like a response, not a spawn. Everything here has its own
+`Enabled` switch in `copsncrooks/cops.yml` (`Cops.Dispatch`, `Breather`, `Handoff`, `Perimeter`) and `wanted.yml`; switching
+one off restores the 0.15 behaviour for that part.
+
+### Stations, dispatch and ETA
+
+An admin places a **station** with the setup wand (below). Cop spawners within `Dispatch.Station_Radius` (32 blocks)
+of a station belong to it; `/glw cop spawner set` assigns a new spawner to a station that close, and saving a station
+takes the spawners already standing near it.
+
+When a player turns wanted, every missing cop becomes a **pending unit** that leaves the nearest station of the
+player's world:
+
+- The **ETA** is the horizontal distance from the station to the suspect divided by `Dispatch.Unit_Speed` (10
+  blocks per second), clamped to `Min_Eta_Seconds` (0) .. `Max_Eta_Seconds` (40) and rounded up to whole seconds.
+- The squad radios it: "3 units en route from Central, ETA 12 s." (`Dispatch_En_Route`, with the place of the crime in
+  the `Dispatch_Wanted` line).
+- A unit appears out of sight: first at a spawner of its station, otherwise on a hidden ring around the suspect,
+  otherwise (every spot is visible) the old spawn rules. "Out of sight" means no player who matters has a clear line
+  of sight to the spot (a block ray, not a facing cone); the hunted player counts at any distance.
+- A world with no station keeps the old ring spawn with no delay (ETA 0).
+- **The chase clock waits for the cops.** While units are on the road and none stands in the world, the evasion clock holds:
+  no search opens and no star can drop. A unit that fails to spawn for 10 s past its ETA stops counting.
+- A **logout** drops every unit on its way. After the **rejoin** the first units are sent only once
+  `Rejoin_Grace_Seconds` (15) have passed, and still need their ETA; the cops are not dropped on the spot where he
+  reappeared, and the chase clock holds until a unit arrives.
+
+### Mixed squads
+
+`cop_roles.yml` `Squad_Composition` entries may carry a tier: `"Marksman@3"` is a Marksman of tier 3; `"Marksman"` keeps
+the star's tier. The bundled file mixes tiers from three stars up (1-2 stars have no `@`):
+
+| Stars | Squad |
+|---|---|
+| 3 | Commander@3, Pointman@2, Defender@3, Marksman@3, Assault@2 |
+| 4 | Commander@4, Pointman@3, Defender@4, Marksman@4, Medic@3, Assault@3 |
+| 5 | Commander@5, Pointman@4, Defender@5, Marksman@5, Medic@4, Assault@4 |
+
+Five stars used to fall back to the four-star squad; it now has its own entry. Remove the `@suffixes` from a line to
+get one tier for the whole squad again. An unknown or invalid tier is reported at startup and counts as "the star's tier".
+
+### The breather
+
+When a squad is **wiped out** (it loses every cop within `Breather.Wipe_Window_Seconds`, 10 s) the replacement does not
+arrive at once: the player gets a breather of `Breather.Seconds` for his star level (15, 13, 10, 8 and 6 seconds for
+1 to 5 stars) plus the units' ETA, and the radio says "Squad down. Backup inbound in N s." (`Wipe_Refill`). A wipe is
+counted once; a new casualty after the breather starts a new one.
+
+### The perimeter
+
+When a suspect of at least `Perimeter.Min_Level` (3) stars is out of sight and a search opens, up to `Perimeter.Posts` (2)
+cops (Marksmen and Defenders first; the last free cop is never posted) walk to **posts** on a ring around the search
+zone, hold within `Leash_Radius` (4 blocks) and watch him. The ring radius is the smaller of the zone radius and 0.8 x
+`Sight_Range` (40), so the posts can see the middle of the zone, and each post keeps `Lane_Length` (16) blocks of clear
+lane toward the centre. The perimeter ends when a post sights him ("Eyes on suspect near the docks, moving north-east."),
+when he is seen by anyone (the cops pursue again), when the search ends, or after `Max_Seconds` (60). It posts once per
+search; a new sighting re-arms it. A posted cop that the suspect attacks drops its post and fights.
+
+### The hand-off
+
+When the suspect outruns the cops that chased him (the pursuers give up and walk home) the squad leader radios his
+heading ("Lost him heading north-east. Units ahead, pick him up.") and the **next units appear ahead of him**: for
+`Handoff.Bias_Seconds` (10) new units spawn within `Cone_Degrees` (60) of the heading and report his last position,
+not his live one. The heading is read over the last `Heading_Seconds` (2) of his movement.
+
+### Hideouts and the cold trail
+
+Two things change how fast the "nobody has seen you" clock runs (`wanted.yml` `Wanted.Evasion`, capped together with
+the zone speed by `Max_Speed`, 4.0):
+
+- **Hideout** (`Hideout.Speed`, 2.0): searching **inside a hideout** that is not the one he was last seen in. A hideout is
+  a turf owned by a gang (open to that gang's members only), a gang waypoint (radius 8 blocks when the waypoint's own
+  radius is 0, at most 64) or an admin-placed `hideout` region (open to everyone). A rival gang's hideout does not count.
+- **Cold trail** (`Quiet_Speed`): the longer he stays quiet (no crime, no new star, no cop sighting, offline time
+  never counts) the faster the clock runs, `Per_Minute` (0.25) for every full quiet minute up to `Max` (2.0). After
+  `Backup_Skip_Seconds` (60) of quiet the next backup wave is skipped and the squad radios "Units returning to patrol."
+
+### Bribe stars
+
+An admin can place **pickup points** (wand mode `pickup`). Each holds a floating `NETHER_STAR` (`Wanted.Bribe_Stars.Item`).
+A wanted player who stands within `Pickup_Radius` (1.5 blocks) while **no cop has seen him recently** takes it: he
+loses `Stars` (1) and the item returns `Respawn_Seconds` (300) later. With a cop watching he gets "Not with a cop
+watching." and the star stays. Taking one counts as a crooked contact (cause `CONTACT`); see
+[Wanted & Bounty](./wanted-bounty.md) for the phone and the sign, which follow the same unseen rule.
+
+### The setup wand
+
+`/glw cop setup wand` gives admins the **setup wand** (`Setup.Wand.Item`, `BLAZE_ROD` unless changed in
+`copsncrooks/setup.yml`): left click sets pos1, right click pos2, and a particle outline of the selection is shown to
+the admin holding it. `mode` chooses what `save <name>` stores:
+
+| Mode | Stores | Uses |
+|---|---|---|
+| `station` | a police station at pos1 (and assigns the cop spawners within `Station_Radius`) | pos1 |
+| `district` | a named district: the place name the radio speaks ("the Docks") | pos1 + pos2 cuboid |
+| `hideout` | a hideout region, open to everyone | cuboid |
+| `restricted` | a restricted-area region (tag `restricted`; stored for later releases, no behaviour in 0.16) | cuboid |
+| `breaker` | a breaker structure region plus a trigger point where you stand (stored for later releases, no behaviour in 0.16) | cuboid |
+| `pickup` | a bribe-star pickup point | pos1 |
+
+Regions are cuboids bounded in height as well as width, so pick pos2 at the right height. A station name must be
+unique (a duplicate saves nothing). The commands are listed under Commands below; the wand and every sub-command need the
+`gangland.command.cop.setup` permission.
+
+### Districts and place names
+
+A district is a named region (`district` tag). The radio uses it everywhere: "wanted in the Docks", "Lost visual near the
+Docks", "Eyes on suspect near the Docks". Any module can publish places: a named turf, an admin region or a gang hideout waypoint all
+answer to `PlaceNames` (see [the api guide](../gangland-api.md)). The smallest region at a spot wins. With no named
+region the radio says "the area" (`Unknown_Place`).
+
+---
+
 ## Spawner System
 
 Cops spawn from **spawner locations** you place in the world. When the system needs to spawn cops for a wanted player,
@@ -255,6 +375,11 @@ If no configured spawner is nearby, it falls back through a series of phases:
 
 Each spawner candidate is validated: the location must have at least two open sides and solid ground beneath it, and
 must not be indoors in a way that would trap the NPC.
+
+Since 0.16.0 spawners also **belong to stations** (`Cops.Dispatch.Station_Radius`): a station's units spawn at its own
+spawners first, out of sight of the suspect. See "Where the Police Come From" above. A spawner or jail you placed in a world
+that was not loaded yet when Gangland started keeps its id (older versions could hand that id to a new row and overwrite
+the unloaded world's row).
 
 ---
 
@@ -271,6 +396,20 @@ All commands require appropriate permissions.
 | `/glw cop spawner list`          | Lists all configured spawners with their IDs and locations. |
 | `/glw cop spawner info <id>`     | Shows details about a specific spawner.                     |
 | `/glw cop spawner teleport <id>` | Teleports you to a spawner's location.                      |
+
+### Setup (0.16.0)
+
+Needs `gangland.command.cop.setup`. Kinds for `list`, `remove` and `tp` are `station`, `region` and `point`.
+
+| Command                                    | Description                                                                              |
+|--------------------------------------------|------------------------------------------------------------------------------------------|
+| `/glw cop setup wand`                      | Gives you the setup wand: left click = pos1, right click = pos2.                         |
+| `/glw cop setup mode <mode>`               | `station`, `district`, `hideout`, `pickup`, `restricted` or `breaker`: what `save` stores. |
+| `/glw cop setup save <name...>`            | Stores the selection under a name according to the mode.                                 |
+| `/glw cop setup list [kind]`               | One line per row: `kind id name world x y z [tags]`.                                     |
+| `/glw cop setup remove <kind> <id>`        | Removes a row; removing a station frees its spawners.                                    |
+| `/glw cop setup tp <kind> <id>`            | Teleports you to a station, a point, or the centre of a region.                          |
+| `/glw cop setup link <stationId> <jailId\|none>` | Sets the jail a station books arrests into, or `none`.                             |
 
 ### Active Cops
 
@@ -294,6 +433,11 @@ The module's own files (`cops.yml`, `cop_roles.yml`, `cop_radio_messages(_es).ym
 `wanted_messages.yml`, `detainment.yml`) live in `plugins/Gangland_Warfare/copsncrooks/`. Older versions kept them in `npc/`; on the
 first boot after the update each one is moved from `npc/` to `copsncrooks/` with its values intact. If a file exists in
 both folders, the `copsncrooks/` one is used and the `npc/` copy is left alone with a console warning.
+
+The 0.16.0 blocks (`Cops.Dispatch`, `Breather`, `Handoff`, `Perimeter` in `cops.yml`; `Wanted.Evasion.Hideout`,
+`Quiet_Speed`, `Max_Speed` and `Wanted.Bribe_Stars` in `wanted.yml`; `setup.yml`) are listed with every default in the
+[Configuration Reference](../developer/configuration.md). A server that keeps its old files reads the shipped defaults for
+every key it lacks; see the [0.16.0 migration guide](../migration-0.16.0.md).
 
 ---
 
@@ -554,6 +698,23 @@ Cops:
       Max: 8                        # Hard cap — result is always clamped to this value
 
 ```
+
+---
+
+## Known Limits (0.16.0)
+
+These are accepted for 0.16 and are the next cards, not bugs to report:
+
+- **Dying resets all stars.** A death clears the wanted level, which also ends a chase the cops were winning.
+- **Hospital camping.** After the 5 second hospital respawn shield a player can wait at his hospital; nothing keeps cops
+  there yet.
+- **Vehicles and pearls outrun posts.** Perimeter posts are on foot and fixed; a car, a boat or an ender pearl crosses the
+  ring unseen.
+- **Waypoint teleports still escape**, under the normal waypoint rules (cost, timer, cooldown).
+- **A logout no longer escapes.** The chase is restored on rejoin (the pending units wait out `Rejoin_Grace_Seconds`).
+- **Spawn distances need a restart.** After `/glw reload` the `Cops.Spawn` distances and attempts keep their boot values for
+  the out-of-sight search until the server restarts; everything else reloads at once.
+- **Restricted and breaker regions do nothing yet.** They are stored for a later release.
 
 ---
 

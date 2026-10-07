@@ -219,6 +219,12 @@ Cops:
          - "Hit"
          - "Patched_Up"
          - "Marksman_Spotted"
+         # Dispatch lines read right after Dispatch_Wanted: they must not lose to the player gap.
+         - "Dispatch_En_Route"
+         - "Wipe_Refill"
+         # Once-per-chase lines: dropping one loses it for the whole chase.
+         - "Handoff"
+         - "Post_Up"
       # One squad never repeats the same kind of line within this many ticks.
       Cooldown_Ticks:
          Contact: 160
@@ -265,6 +271,14 @@ Cops:
          Regroup_Push: 1200
          # A shot heard by cops; one squad hunts one player, so this is the per-shooter throttle (60 = 3 s).
          Shots_Fired: 60
+         # Dispatch and perimeter lines (see Cops.Dispatch, Cops.Handoff, Cops.Perimeter). The two dispatch lines have
+         # no cooldown: each is one announcement.
+         Dispatch_En_Route: 0
+         Wipe_Refill: 0
+         Handoff: 200
+         Post_Up: 100
+         Eyes_On: 60
+         Returning_To_Patrol: 1200
       # Short click played to each listener with every line (SoundConfiguration shape).
       Sound:
          Name: BLOCK_NOTE_BLOCK_HAT
@@ -291,6 +305,61 @@ Cops:
       Fall_Back_Seconds: 15
       Cooldown_Seconds: 60
       Arrival_Radius: 24.0
+   # Where a wanted level's cops come from. With Enabled, units leave the nearest police station (spawners within
+   # Station_Radius blocks of a station belong to it) and arrive after an ETA of distance / Unit_Speed, clamped to
+   # Min_Eta_Seconds..Max_Eta_Seconds and rounded up; the radio announces the units en route. A world with no
+   # station keeps the old ring spawn around the suspect. Disabled = the 0.15 instant ring spawn.
+   Dispatch:
+      Enabled: true
+      # Blocks a unit covers per second on its way.
+      Unit_Speed: 10.0
+      # Shortest and longest ETA, in seconds.
+      Min_Eta_Seconds: 0
+      Max_Eta_Seconds: 40
+      # Spawners within this many blocks of a station join that station.
+      Station_Radius: 32.0
+      # Seconds after a wanted player rejoins before his first units are sent (they still need their ETA on top).
+      # A logout drops every unit on its way; the search clock holds until a unit arrives. 0 = sent at once.
+      Rejoin_Grace_Seconds: 15
+   # The pause after a squad is wiped out before its replacement is dispatched.
+   Breather:
+      Enabled: true
+      # Seconds of breather for 1, 2, 3, 4 and 5 stars (more stars, shorter pause); other levels use the nearest end.
+      Seconds:
+         - 15
+         - 13
+         - 10
+         - 8
+         - 6
+      # A squad counts as wiped when it loses every cop within this many seconds.
+      Wipe_Window_Seconds: 10
+   # When a suspect breaks contact the squad radios the heading and units ahead pick him up.
+   Handoff:
+      Enabled: true
+      # Seconds of travel used to read the suspect's heading.
+      Heading_Seconds: 2
+      # Seconds the hand-off biases where reinforcements appear.
+      Bias_Seconds: 10
+      # Half-angle, in degrees, either side of the heading of that bias.
+      Cone_Degrees: 60.0
+   # While a suspect of at least Min_Level stars is out of sight, up to Posts cops hold posts on a ring around the zone
+   # (Roles first) and watch for him, for at most Max_Seconds.
+   Perimeter:
+      Enabled: true
+      Min_Level: 3
+      # Most cops posted at once; the last free cop is never posted.
+      Posts: 2
+      # Roles posted first.
+      Roles:
+         - "Marksman"
+         - "Defender"
+      Max_Seconds: 60
+      # Blocks of clear lane kept toward the centre of the zone.
+      Lane_Length: 16.0
+      # How far a posted cop sees. The ring radius is the smaller of the zone radius and 0.8 x this.
+      Sight_Range: 40.0
+      # How far a posted cop may stray from its post.
+      Leash_Radius: 4.0
    # How far cops hear a shot, in blocks, by weapon type (0 = silent). Unlisted types are silent. The ids below are
    # weapon-type enum names (GUN, THROWABLE, MELEE), matched case-insensitively; they are not config keys in the
    # Capitalized_Underscore style.

@@ -234,6 +234,37 @@ class JailIntakeServiceTest {
 	}
 
 	@Test
+	@DisplayName("the deathCommit flag skips the sheet for a LIVE player (a handcuffed player downed, Ruling R48)")
+	void deathCommitFlag_skipsTheSheet_forALivePlayer() {
+		economy.balance = 5000;
+
+		intake.admit(player, true);
+
+		assertNull(row().getFinePaid());
+		assertEquals(5000, economy.balance);
+		assertEquals(300, sentenceSeconds());
+		assertTrue(chat.isEmpty());
+	}
+
+	@Test
+	@DisplayName("the transit timer firing while the cuffed player is downed pays only the ward bill, no sheet (D23)")
+	void transitTimerWhileDowned_chargesNoSheet() {
+		UUID id = player.getUniqueId();
+		org.luckyraven.gangland.core.downed.DownedPlayerRegistry.add(id);
+		try {
+			economy.balance = 5000;
+
+			intake.admit(player);
+
+			assertNull(row().getFinePaid());
+			assertEquals(5000, economy.balance);
+			assertEquals(300, sentenceSeconds());
+		} finally {
+			org.luckyraven.gangland.core.downed.DownedPlayerRegistry.remove(id);
+		}
+	}
+
+	@Test
 	@DisplayName("Charge_Sheet.Enable false charges nothing and leaves the sentence alone")
 	void sheetDisabled_chargesNothing_sentenceUnchanged() {
 		sheet(new ChargeSheetSettings(false, 200, 250, 10000, 0.1, 600));

@@ -39,6 +39,7 @@ import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.gangland.sign.LegacySignRewriter;
+import org.luckyraven.gangland.data.wanted.ContactDesk;
 import org.luckyraven.gangland.sign.SignManager;
 import org.luckyraven.gangland.sign.bulk.BulkActionManager;
 import org.luckyraven.gangland.sign.registry.SignFormatRegistry;
@@ -187,6 +188,7 @@ public class GameplayConfig {
 		loader.addExpectedFile(new FileHandler(gangland, "phone", "inventory", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "phone_banking", "inventory", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "phone_bounty", "inventory", ".yml"));
+		loader.addExpectedFile(new FileHandler(gangland, "phone_contacts", "inventory", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "phone_gang", "inventory", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "phone_gang_search", "inventory", ".yml"));
 		loader.addExpectedFile(new FileHandler(gangland, "user_stat", "inventory", ".yml"));
@@ -253,10 +255,16 @@ public class GameplayConfig {
 	                               @Qualifier("online") UserManager<Player> userManager,
 	                               @Qualifier("offline") UserManager<OfflinePlayer> offlineUserManager,
 	                               DependencyContainer container, LegacySignRewriter legacySignRewriter,
-	                               WantedStars wantedStars) {
+	                               WantedStars wantedStars, ContactDesk contactDesk) {
 		return new SignManager(gangland, Gangland.SHORT_PREFIX, signTypeRegistry, signInteraction,
 		                       uniqueItemAddon, itemSerializerRegistry, itemParser, userManager, offlineUserManager,
-		                       container, legacySignRewriter, wantedStars);
+		                       container, legacySignRewriter, wantedStars, contactDesk);
+	}
+
+	/** Crooked contacts: the sighting cache and the shared cooldown behind {@code /glw contact}, the phone and the sign. */
+	@Bean
+	public ContactDesk contactDesk() {
+		return new ContactDesk(System::currentTimeMillis);
 	}
 
 	@Bean

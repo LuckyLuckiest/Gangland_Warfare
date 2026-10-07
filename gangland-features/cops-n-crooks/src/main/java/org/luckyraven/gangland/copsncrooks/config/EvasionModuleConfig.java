@@ -5,15 +5,22 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.npc.police.perimeter.PerimeterController;
+import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.ChaseArcs;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.EvasionClock;
+import org.luckyraven.gangland.copsncrooks.wanted.evasion.Hideouts;
+import org.luckyraven.gangland.copsncrooks.wanted.evasion.QuietTrail;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.copsncrooks.wanted.learn.ChaseHabit;
 import org.luckyraven.gangland.copsncrooks.wanted.learn.ChaseLearner;
 import org.luckyraven.gangland.copsncrooks.wanted.learn.ChaseLevelStat;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.WantedStars;
+import org.luckyraven.gangland.data.gang.GangMembership;
+import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.keystone.bean.Bean;
 import org.luckyraven.keystone.bean.Configuration;
 import org.luckyraven.keystone.bean.PostConstruct;
@@ -23,7 +30,7 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 /**
  * Beans of the evasion clock (0.15.0): the clock itself and its two installs; since 0.15.2 also the chase arcs and the
- * learner that {@code Drop_Mode: AUTO} reads.
+ * learner that {@code Drop_Mode: AUTO} reads; since 0.16.0 also the containment perimeter, the hideouts and the cold trail.
  */
 @Configuration
 public class EvasionModuleConfig {
@@ -46,17 +53,37 @@ public class EvasionModuleConfig {
 	}
 
 	@Bean
+	public Hideouts hideouts(PlaceNames placeNames, GangMembership gangMembership) {
+		return new Hideouts(placeNames, gangMembership);
+	}
+
+	@Bean
+	public QuietTrail quietTrail(HeatLedger heatLedger, ChaseArcs chaseArcs, ChaseConfigLoader config, CopRadio copRadio) {
+		return new QuietTrail(heatLedger, chaseArcs, config, copRadio, System::currentTimeMillis);
+	}
+
+	@Bean
 	public EvasionClock evasionClock(ChaseConfigLoader config, CopManager copManager, DetainmentService detainment,
 	                                 WantedStars wantedStars, @Qualifier("online") UserManager<Player> users,
-	                                 HeatLedger heatLedger, ChaseArcs chaseArcs, ChaseLearner chaseLearner) {
+	                                 HeatLedger heatLedger, ChaseArcs chaseArcs, ChaseLearner chaseLearner,
+	                                 Hideouts hideouts, QuietTrail quietTrail) {
 		return new EvasionClock(config, copManager, detainment, wantedStars, users, heatLedger, chaseArcs, chaseLearner,
-		                        System::currentTimeMillis, event -> Bukkit.getPluginManager().callEvent(event));
+		                        hideouts, quietTrail, System::currentTimeMillis,
+		                        event -> Bukkit.getPluginManager().callEvent(event));
+	}
+
+	@Bean
+	public PerimeterController perimeterController(CopLoader copLoader, CopManager copManager, CopRadio copRadio) {
+		return new PerimeterController(copLoader::getLoadedProvider, copManager, copRadio, System::currentTimeMillis);
 	}
 
 	@PostConstruct
 	public void installEvasion() {
 		EvasionClock clock = container.getInstance(EvasionClock.class);
 		container.getInstance(WantedStars.class).installDecayPolicy(clock);
-		container.getInstance(CopManager.class).addAiTickHook(clock::tick);
+		CopManager manager = container.getInstance(CopManager.class);
+		manager.addAiTickHook(clock::tick);
+		manager.addAiTickHook(container.getInstance(PerimeterController.class)::tick);
+		manager.addAiTickHook(container.getInstance(QuietTrail.class)::tick);
 	}
 }

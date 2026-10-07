@@ -370,6 +370,9 @@ Roles:
                Boots: DIAMOND_BOOTS
 # The roles a squad fills, in order, per wanted level. A level with no entry uses the highest lower one; cops past the
 # end of the list (backup, extra cops) take its last role.
+# An entry is "<Role>" or "<Role>@<tier id>": with "@<tier id>" that slot is spawned at the tier of that id (the keys
+# under Tiers in cops.yml, 1-5) instead of the tier of the wanted level, so a 3 star squad can mix SWAT and Lieutenant
+# cops. Without it the cop takes its star's own tier. An unknown tier id is reported and ignored.
 Squad_Composition:
    1:
       - "Pointman"
@@ -379,15 +382,22 @@ Squad_Composition:
       - "Assault"
       - "Assault"
    3:
-      - "Commander"
-      - "Pointman"
-      - "Defender"
-      - "Marksman"
-      - "Assault"
+      - "Commander@3"
+      - "Pointman@2"
+      - "Defender@3"
+      - "Marksman@3"
+      - "Assault@2"
    4:
-      - "Commander"
-      - "Pointman"
-      - "Defender"
-      - "Marksman"
-      - "Medic"
-      - "Assault"
+      - "Commander@4"
+      - "Pointman@3"
+      - "Defender@4"
+      - "Marksman@4"
+      - "Medic@3"
+      - "Assault@3"
+   5:
+      - "Commander@5"
+      - "Pointman@4"
+      - "Defender@5"
+      - "Marksman@5"
+      - "Medic@4"
+      - "Assault@4"

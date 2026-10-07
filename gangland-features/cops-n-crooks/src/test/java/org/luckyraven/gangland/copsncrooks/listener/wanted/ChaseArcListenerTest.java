@@ -285,4 +285,17 @@ class ChaseArcListenerTest {
 		assertEquals(1, view().quits());
 		assertEquals(3, view().peak());
 	}
+
+	@Test
+	@DisplayName("a chase bought down by a contact is not learned: a later EVASION end is no escape from the old peak")
+	void contactBuyDown_thenEvasion_isNotLearned() {
+		start(WantedCause.CRIME, 3);
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 3, 1, WantedCause.CONTACT));
+		clock.addAndGet(120_000);
+
+		listener.onChaseEnd(new WantedEndEvent(player, wanted, WantedCause.EVASION));
+
+		verify(learner, never()).record(any(), anyLong());
+		assertFalse(arcs.has(playerId), "the arc still ends");
+	}
 }

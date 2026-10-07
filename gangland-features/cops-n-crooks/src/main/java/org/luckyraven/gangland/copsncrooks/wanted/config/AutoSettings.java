@@ -18,11 +18,21 @@ import java.util.List;
  * @param repeatChases      recent crime chases that make a known face (0 = off).
  * @param repeatWindowMinutes how far back those chases count.
  * @param learning          learning from finished chases.
+ * @param rampageMinWeight  a crime counts toward the rampage opening only when its heat weight is at least this.
  * @since 0.15.2
  */
 public record AutoSettings(int openingSeconds, int rampageCrimes, int rampagePeakLevel, int lockCoolSeconds,
                            int respotLimit, Petty petty, ColdTrail coldTrail, CleanBreak cleanBreak,
-                           Momentum momentum, int repeatChases, int repeatWindowMinutes, Learning learning) {
+                           Momentum momentum, int repeatChases, int repeatWindowMinutes, Learning learning, int rampageMinWeight) {
+
+	/** The 0.15.2 shape: every crime weighing at least 80 counts toward the rampage opening. */
+	public AutoSettings(int openingSeconds, int rampageCrimes, int rampagePeakLevel, int lockCoolSeconds,
+	                    int respotLimit, Petty petty, ColdTrail coldTrail, CleanBreak cleanBreak, Momentum momentum,
+	                    int repeatChases, int repeatWindowMinutes, Learning learning) {
+		this(openingSeconds, rampageCrimes, rampagePeakLevel, lockCoolSeconds, respotLimit, petty, coldTrail, cleanBreak,
+		     momentum, repeatChases, repeatWindowMinutes, learning, 80);
+	}
+
 
 	/** The shipped {@code Wanted.Evasion.Auto}. */
 	public static final AutoSettings DEFAULT = new AutoSettings(30, 4, 4, 180, 4, new Petty(2, 2),
@@ -30,7 +40,8 @@ public record AutoSettings(int openingSeconds, int rampageCrimes, int rampagePea
 	                                                            new CleanBreak(0.5, 0.5),
 	                                                            new Momentum(0.75, 0.5, 20, 0.4), 3, 30,
 	                                                            new Learning(true, List.of(0.90, 0.75, 0.55, 0.35, 0.20),
-	                                                                         5, 0.90, 0.20, 0.8, 0.6, 1.6, 30, 180, 90));
+	                                                                         5, 0.90, 0.20, 0.8, 0.6, 1.6, 30, 180, 90),
+	                                                            80);
 
 	/**
 	 * @param maxCrimes    most crimes a small chase may hold (a chase with none never counts).

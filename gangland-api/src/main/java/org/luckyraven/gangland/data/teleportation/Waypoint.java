@@ -85,7 +85,8 @@ public class Waypoint {
 		GANG(true),
 		QUEST(false),
 		SAFE_ZONE(true),
-		GLOBAL(false);
+		GLOBAL(false),
+		HOSPITAL(true);
 
 		private final boolean safe;
 

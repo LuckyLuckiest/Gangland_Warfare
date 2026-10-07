@@ -70,5 +70,33 @@
 	"cop_spawner_teleport": {
 		"usage": "/glw cop spawner teleport <id>",
 		"description": "Teleports the player to the cop spawner with the specified id."
+	},
+	"cop_setup_wand": {
+		"usage": "/glw cop setup wand",
+		"description": "Gives you the setup wand: left-click a block for pos1, right-click for pos2."
+	},
+	"cop_setup_mode": {
+		"usage": "/glw cop setup mode <station|district|hideout|pickup|restricted|breaker>",
+		"description": "Chooses what the next save stores. Station and pickup use pos1 only, the others a cuboid."
+	},
+	"cop_setup_save": {
+		"usage": "/glw cop setup save <name...>",
+		"description": "Stores the wand selection under a name according to the mode (a station also takes the spawners near it)."
+	},
+	"cop_setup_list": {
+		"usage": "/glw cop setup list [station|region|point]",
+		"description": "Lists the stations, regions and points: kind id name world x y z [tags]."
+	},
+	"cop_setup_remove": {
+		"usage": "/glw cop setup remove <station|region|point> <id>",
+		"description": "Removes a station, region or point (a station frees its spawners)."
+	},
+	"cop_setup_tp": {
+		"usage": "/glw cop setup tp <station|region|point> <id>",
+		"description": "Teleports you to a station, a point, or the centre of a region."
+	},
+	"cop_setup_link": {
+		"usage": "/glw cop setup link <stationId> <jailId|none>",
+		"description": "Sets the jail a station books arrests into, or none to unlink it."
 	}
 }

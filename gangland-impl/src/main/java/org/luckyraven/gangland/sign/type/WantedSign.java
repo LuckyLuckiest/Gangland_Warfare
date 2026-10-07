@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 import org.luckyraven.keystone.color.Color;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.WantedStars;
+import org.luckyraven.gangland.data.wanted.ContactDesk;
 import org.luckyraven.gangland.sign.SignType;
 import org.luckyraven.gangland.sign.aspect.MoneyAspect;
 import org.luckyraven.gangland.sign.aspect.SignAspect;
@@ -27,6 +28,7 @@ public class WantedSign implements Sign {
 	private final UserManager<Player> userManager;
 	private final SignType            signType;
 	private final WantedStars         wantedStars;
+	private final ContactDesk         contactDesk;
 
 	@Override
 	public SignTypeDefinition createDefinition() {
@@ -35,7 +37,7 @@ public class WantedSign implements Sign {
 		SignParser    parser    = new WantedParser(signType);
 
 		// aspect
-		SignAspect wantedAspect = new WantedAspect(userManager, wantedStars);
+		SignAspect wantedAspect = new WantedAspect(userManager, wantedStars, contactDesk);
 		SignAspect moneyAspect  = new MoneyAspect(userManager, MoneyAspect.TransactionType.WITHDRAW);
 
 		// handler

@@ -7,6 +7,7 @@ import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksYamlConfig;
 import org.luckyraven.gangland.copsncrooks.config.EvasionModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.HeatModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.RegistryModuleConfig;
 import org.luckyraven.keystone.diagnostics.Diagnostics;
 import org.luckyraven.keystone.diagnostics.Fault;
 import org.luckyraven.keystone.module.KeystoneModule;
@@ -21,7 +22,8 @@ import org.luckyraven.keystone.npc.NpcSupport;
  * <p>Three configuration classes (down from six) after D5 (civilians, group H) + D6 (npc-shops, group J):
  * {@code BankerModuleConfig}/{@code TraderModuleConfig} moved to {@code gangland-npc-shops} and
  * {@code TurfNpcsModuleConfig} was folded into {@code gangland-turf}'s {@code TurfModuleConfig} (group I).
- * 0.15.0 adds {@code ChaseModuleConfig}, {@code HeatModuleConfig} and {@code EvasionModuleConfig} (the chase).
+ * 0.15.0 adds {@code ChaseModuleConfig}, {@code HeatModuleConfig} and {@code EvasionModuleConfig} (the chase);
+ * 0.16.0 adds {@code RegistryModuleConfig} (stations, admin regions, setup points).
  */
 @CustomLog
 public final class CopsNCrooksModule implements KeystoneModule {
@@ -38,6 +40,7 @@ public final class CopsNCrooksModule implements KeystoneModule {
 		         .configuration(ChaseModuleConfig.class)
 		         .configuration(HeatModuleConfig.class)
 		         .configuration(EvasionModuleConfig.class)
+		         .configuration(RegistryModuleConfig.class)
 		         .listenerPackage(LISTENER_PACKAGE)
 		         .commandPackage(COMMAND_PACKAGE)
 		         .repositoryPackage(REPOSITORY_PACKAGE);

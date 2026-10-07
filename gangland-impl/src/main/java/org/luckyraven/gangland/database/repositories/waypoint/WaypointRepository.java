@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.database.repositories.waypoint;
 
+import lombok.CustomLog;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.data.teleportation.Waypoint;
@@ -16,10 +17,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
+@CustomLog
 @Repository(Waypoint.class)
 public class WaypointRepository extends AbstractRepository<Waypoint> {
 
 	private final WaypointTable waypointTable;
+	private       int           highestStoredId;
 
 	public WaypointRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
 		super(plugin, databaseHandler, backend);
@@ -27,14 +30,23 @@ public class WaypointRepository extends AbstractRepository<Waypoint> {
 		this.waypointTable = new WaypointTable();
 	}
 
+	/** The highest id of every row the last load saw, rows skipped for an unknown type included. */
+	public int getHighestStoredId() {
+		return highestStoredId;
+	}
+
 	@Override
 	protected Collection<Waypoint> doLoadAll() throws SQLException {
 		List<Waypoint> waypoints = new ArrayList<>();
 		List<Object[]> data      = tableBackend().selectAll();
 
+		highestStoredId = 0;
+
 		for (Object[] result : data) {
 			int    v        = 0;
 			int    id       = (int) result[v++];
+			// before the unknown-type skip: the next created waypoint must never reuse that row's id
+			highestStoredId = Math.max(highestStoredId, id);
 			int    gangId   = (int) result[v++];
 			String name     = String.valueOf(result[v++]);
 			String world    = String.valueOf(result[v++]);
@@ -50,10 +62,19 @@ public class WaypointRepository extends AbstractRepository<Waypoint> {
 			double cost     = (double) result[v++];
 			double radius   = (double) result[v];
 
+			// R35: a type this version does not know (a row written by a newer one) skips the row, not the whole load
+			Waypoint.WaypointType waypointType;
+			try {
+				waypointType = Waypoint.WaypointType.valueOf(type.toUpperCase());
+			} catch (IllegalArgumentException e) {
+				log.warn("Skipping waypoint '{}' (id {}): unknown type '{}'.", name, id, type);
+				continue;
+			}
+
 			Waypoint waypoint = new Waypoint(name, Gangland.FULL_PREFIX);
 			waypoint.setUsedId(id);
 			waypoint.setCoordinates(world, x, y, z, (float) yaw, (float) pitch);
-			waypoint.setType(Waypoint.WaypointType.valueOf(type.toUpperCase()));
+			waypoint.setType(waypointType);
 			waypoint.setGangId(gangId);
 			waypoint.setTimer(timer);
 			waypoint.setCooldown(cooldown);

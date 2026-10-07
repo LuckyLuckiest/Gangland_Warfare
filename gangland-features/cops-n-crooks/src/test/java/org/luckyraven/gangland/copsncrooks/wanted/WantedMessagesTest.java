@@ -76,6 +76,16 @@ class WantedMessagesTest {
 	}
 
 	@Test
+	@DisplayName("the bribe-star lines fall back in code on a file that predates them")
+	void bribeStarKeys_fallBackOnAnOldFile() throws IOException {
+		WantedMessages messages = messages("Hud:\n   Title: \"&c%stars%\"\n");
+
+		assertEquals("§6You pocketed a police bribe star. §e-2 star(s).",
+		             messages.format(WantedMessages.Key.BRIBE_STAR_TAKEN, Map.of("stars", "2")));
+		assertEquals("§cNot with a cop watching.", messages.format(WantedMessages.Key.BRIBE_STAR_SEEN, Map.of()));
+	}
+
+	@Test
 	@DisplayName("duration is whole seconds under a minute, else minutes and zero-padded seconds")
 	void duration_formats() {
 		assertEquals("45s", WantedMessages.duration(45));

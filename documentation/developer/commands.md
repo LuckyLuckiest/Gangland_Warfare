@@ -185,6 +185,7 @@ When no argument matches, the system provides helpful suggestions:
 |---------------------|---------------------------|---------------------------------------|
 | `/glw bank`         | `gangland.command.bank`   | Deposit, withdraw, statement, balance |
 | `/glw bounty`       | `gangland.command.bounty` | Post bounties, view bounty board      |
+| `/glw contact`      | `gangland.command.contact` | Pay a contact to wipe stars while no cop sees you (0.16.0) |
 | `/glw fuel`         | `gangland.command.fuel`   | Refuel vehicles/jetpacks              |
 | `/glw gang`         | `gangland.command.gang`   | Create, invite, leave, disband, ally  |
 | `/glw gang promote` | `gangland.command.gang`   | Promote/demote gang members           |
@@ -196,7 +197,7 @@ When no argument matches, the system provides helpful suggestions:
 |------------------|------------------------------|---------------------------------|
 | `/glw car`       | `gangland.command.car`       | Place, pickup, list vehicles    |
 | `/glw civilians` | `gangland.command.civilians` | Spawn/despawn civilian NPCs     |
-| `/glw cops`      | `gangland.command.cops`      | Spawn/despawn cop NPCs          |
+| `/glw cop`       | `gangland.command.cop`       | Spawners (`spawner`), active cops (`list`) and, since 0.16.0, the station/region/point setup wand (`setup`, `gangland.command.cop.setup`) |
 | `/glw cuff`      | `gangland.command.cuff`      | Handcuff/release players        |
 | `/glw debug`     | `gangland.command.debug`     | Debug tools, permission list    |
 | `/glw item`      | `gangland.command.item`      | Give unique items               |
@@ -206,6 +207,26 @@ When no argument matches, the system provides helpful suggestions:
 | `/glw waypoint`  | `gangland.command.waypoint`  | Create/delete waypoints         |
 | `/glw weapon`    | `gangland.command.weapon`    | Give weapons, reload configs    |
 | `/glw reload`    | `gangland.command.reload`    | Hot reload plugin configuration |
+
+### Commands and help entries added in 0.16.0
+
+| Command | Jar that owns it | `commands.json` keys | Permission |
+|---|---|---|---|
+| `/glw contact [stars]` | core (`gangland-impl`, `command/sub/contact/ContactCommand`) | `contact` | `gangland.command.contact` (grant it like `/glw bounty`; no default in `plugin.yml`) |
+| `/glw cop setup wand\|mode\|save\|list\|remove\|tp\|link` | `cops-n-crooks` (`command/cops/setup/SetupCommand`) | `cop_setup_wand`, `cop_setup_mode`, `cop_setup_save`, `cop_setup_list`, `cop_setup_remove`, `cop_setup_tp`, `cop_setup_link` | `gangland.command.cop.setup` (the wand listener and every action check it too) |
+
+A command's help page is the `commands.json` entries whose key starts with its name (`CopCommand` filters on `cop`,
+`ContactCommand` on `contact`), so a new sub-command only needs a `<command>_<sub>` entry in the jar that owns the
+command. `/glw cop help` lists the seven setup lines with the spawner lines. Positional input (`mode`, `remove`, `tp`
+kinds and ids, `link`) is chained `OptionalArgument` nodes with tab completion; the `remove`/`tp` id completion offers the
+ids of every kind because Keystone's completion source only sees the sender.
+
+**Audit (0.16.0).** Every `@CommandHandler` class was compared with the core and module `commands.json` files. Both new
+commands have their entries and the entries match the usage and sub-commands. Pre-existing gaps, left unchanged because
+they are not 0.16 commands: the keys `dealer*`, `kit*`, `safe_wand`, `spawn*` and `warp*` in the core `commands.json` name
+no command class any more (stale), `/glw cop` has no root `cop` key (the page is built from `cop_*` and `cop_help`), and
+`contact` has no `contact_help` (it has no sub-commands).
+
 
 ---
 

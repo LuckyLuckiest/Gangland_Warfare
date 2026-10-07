@@ -1,0 +1,273 @@
+{
+ "confirmed": [
+  {
+   "severity": "important",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManager.java",
+   "line": "662-668 (dispatchMissing: wipe sets breatherUntil, then missing = lacking - pendingCount)",
+   "problem": "A wipe sets breatherUntil but only delays units enqueued after it. Units already in the queue (replacements for earlier casualties in the same fight) keep their old arriveAt and spawn during the breather. When every missing slot is already queued, missing <= 0 returns before the radio, so the wipe gets no Wipe_Refill line and no unit is delayed at all. Ruling R19 says 'the refill arrives at now + breather + ETA'. wipe_addsTheBreather_andRadiosWipeRefill only covers a squad with nothing queued.",
+   "scenario": "Two stars, 3 cops, station 50 blocks away (ETA 5 s). Cop A dies at t=0, and the spawn tick at t=1 queues A' for t=6. Cops B and C die at t=3 and t=4. The tick at t=5 detects the wipe and sets breatherUntil to t=18. B' and C' are queued for t=23 and the radio says the refill is 18 s out, but A' spawns at t=6, one second into the 13 s breather. If B and C die before any tick in which A's slot was not yet queued, so the wipe tick has missing <= 0, nothing is radioed and every queued unit arrives on its pre-wipe schedule.",
+   "fix": "When wipe is true, push every pending unit back to at least breatherUntil plus its own ETA (keep the ETA on PendingUnit, or rebuild the unit with max(arriveAt, breatherUntil + eta)). Radio Wipe_Refill before the missing <= 0 early return. Add a test: unit queued, then the squad wiped, then the queued unit is not spawned before breatherUntil.",
+   "lens": "dispatch",
+   "reasons": [
+    "CONFIRMED: The finding holds. In CopManager.dispatchMissing (lines 657-692), a wipe only calls group.setBreatherUntil(...). The hold is applied only to units enqueued afterwards, through arriveAt = now + hold + eta. Units already queued keep their old arriveAt. CopGroup.takeDue (CopGroup.java:~303) releases any unit with arriveAt <= now and never reads breatherUntil, so a pre-wipe queued unit can spawn inside the breather. The wipe test is liveRoles.isEmpty() plus a casualty within the window. Queued-but-unspawned units are not counted as live, so the scenario's wipe tick (A' queued, not yet spawned, B and C dead) does satisfy it. The `if (missing <= 0) return;` check at line 668 sits before the Wipe_Refill radio call. When lacking equals pendingCount, the wipe therefore gets no radio line and no delay at all. R19 in PLAN.md:159 says the refill arrives at now + breather + ETA and says nothing about leaving earlier queued units on their old schedule. The plan and owner rulings do not endorse this behaviour, and nothing else handles it. Impact is modest: queued replacements arrive early during the breather, and the radio line can be silent. It is a real gap against the spec's \"real breather\" intent, though I would grade it important-to-minor. I did not run the tests; the conclusion is from code reading only.",
+    "CONFIRMED: Confirmed in CopManager.dispatchMissing (lines 657-695). A wipe only does group.setBreatherUntil(...) at 665. The hold is applied only to units enqueued afterwards (672-679). takeDue (CopGroup 305-307) checks only arriveAt <= now and ignores breatherUntil. Units already pending therefore keep their pre-wipe arriveAt and spawn mid-breather. If lacking - pendingCount() <= 0, the method returns at 668 before the Wipe_Refill radio line and before any delay, so a fully queued wipe gets no breather and no line. The wipe condition (liveRoles empty plus a casualty inside the window) can hold while earlier replacements are still queued. PLAN T11 and R19 specify arriveAt = max(now, breatherUntil) + eta and missing = target - counted - pending for new slots only, so the plan does not explicitly require delaying queued units. It also does not endorse them spawning inside the breather, which R19's wording ('the refill arrives at now + breather + ETA') and the spec's 'real breather' contradict. The finding is a real gap. Its practical severity is moderate and arguably minor, since it needs overlapping casualties in a fast fight."
+   ],
+   "confirmed": true
+  },
+  {
+   "severity": "important",
+   "file": "gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cops.yml",
+   "line": "318-319 (also DispatchSettings.java:12)",
+   "problem": "Rejoin_Grace_Seconds is documented as 'Seconds a player's pending units survive his logout, so a quick rejoin keeps them', but the code does the opposite. CopListener.onPlayerQuit (CopListener.java:76) calls onWantedEnd, which calls group.clearPending(), so the queue is dropped on every logout. The key is only read on a RESTORE start (CopManager.java:143-147) as an extra delay before any unit is sent, during which the evasion clock holds (R20/R21). An admin tuning from the comment gets the inverse of what they expect.",
+   "scenario": "An admin wants a rejoin to be met quickly, reads 'how long pending units survive a logout' and raises it to 60 so pending units are kept longer. The effect is that every rejoining wanted player gets 60 s with no cops (plus the ETA) while his stars are frozen. An admin who sets 0 thinking 'units vanish at logout' actually gets an immediate re-dispatch on rejoin.",
+   "fix": "Reword the cops.yml comment and the DispatchSettings @param, for example: 'Seconds after a wanted player rejoins before his first units are sent (they then still need their ETA); the evasion clock holds until a unit arrives. 0 = sent at once.' The 0.16 docs and migration notes need the same wording.",
+   "lens": "dispatch",
+   "reasons": [
+    "CONFIRMED: The finding stands. cops.yml:318 and the DispatchSettings @param say pending units survive logout, but CopListener.onPlayerQuit (line 76) calls CopManager.onWantedEnd, which runs group.clearPending() at CopManager.java:181 and drops the queue. The key is read only for a RESTORE start (CopManager.java:143-147). There it sets breatherUntil to now + rejoinGraceSeconds*1000, which delays the first units after a rejoin. The plan agrees with that behaviour: Ruling R21 in PLAN.md:161 and CONTRACTS.md:416 describe the grace as a delay added to the first units on a RESTORE start, with the evasion clock held. No ruling says pending units survive a logout, so the comment contradicts the intended behaviour. This is a documentation defect only (an admin tuning from the comment gets the opposite effect), not a code bug. The suggested rewording is correct.",
+    "CONFIRMED: The finding holds. cops.yml:318 says \"Seconds a player's pending units survive his logout, so a quick rejoin keeps them\", and the DispatchSettings.java:12 @param says the same. The code does something different. CopListener.onPlayerQuit (CopListener.java:76) calls copManager.onWantedEnd. onWantedEnd (CopManager.java:170-183) calls group.clearPending() and removes the group's pendingCalls, so nothing survives a logout. The only reader of rejoinGraceSeconds is the RESTORE start (CopManager.java:143-146). It sets group.setBreatherUntil(now + rejoinGraceSeconds*1000), a delay before the first unit is sent. PLAN.md:161 (R21) and CONTRACTS.md:416 describe that same delay and never describe a pending-queue survival window. So the plan intends the delay behavior, but nothing in the plan or owner rulings endorses the comment's wording. The scenario follows directly: raising the key to 60 gives a rejoining player a 60 s gap with no cops, not a longer-lived queue. The fix is wording only, in the cops.yml comment, the DispatchSettings @param, and the 0.16 docs."
+   ],
+   "confirmed": true
+  },
+  {
+   "severity": "important",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManager.java",
+   "line": "704-709 (spawnDueUnits)",
+   "problem": "The 0.15 loop stopped at the first failed spawn ('stop trying this interval'). spawnDueUnits keeps going and runs the full search chain for every due unit, and a failed unit is requeued and searched again on every later tick. For each unit, spawnUnit can run up to four findHiddenSpawnLocation passes (cone or station side, then any, each with the anyRoof retry; each candidate ray-traces from the target and every nearby player), then spawnNearPlayer's spawner scan and two more ring passes. A suspect with no valid spot around him therefore costs N times the 0.15 work on the main thread, every spawn tick, for as long as he stays wanted. Requeued units keep retrying after unitsEnRoute stops counting them.",
+   "scenario": "A 5-star player (7 to 8 slots including backup) hides in a sealed bunker or a cave under open ground. Every unit fails, so each spawn tick runs about 8 x (4 hidden-ring passes + 1 spawner scan + 2 ring passes) location searches with ray traces against every player within Visibility_Check_Distance. On a busy server this causes tick spikes each Spawn_Check_Rate for as long as he stays wanted, where 0.15 ran one failed search per tick.",
+   "fix": "After the first null from spawnUnit, requeue that unit and the rest of the due list without trying them (break and requeue the remainder), which restores the 0.15 'stop trying this interval' rule. Add a CopManagerDispatchTest: with 3 due units and a spawnUnit that returns null, spawnUnit is called once per tick and all 3 stay queued.",
+   "lens": "dispatch",
+   "reasons": [
+    "CONFIRMED: The finding holds. In CopManager.spawnDueUnits (lines 702-721), a null from spawnUnit only requeues that unit and then `continue`s, so every due unit runs the full search chain. The 0.15 loop (line 615) did `break` on the first null. CopGroup.takeDue/requeue (lines 305-314) mean a failed unit comes back due on the next spawn run, and nothing backs off. I did not run the code or a test. The plan and owner rulings are silent on this: CONTRACTS.md line 407 and PLAN.md line 502 say only that a failed unit is requeued. They don't say to keep trying the rest of the due list after one failure, so the plan doesn't intend the extra cost. The claim that spawnUnit can run up to four hidden-ring passes plus the spawner scan and two ring passes comes from CONTRACTS.md C8 (line 407), not from reading the spawnUnit body. The cost is bounded by the number of due units and only applies to a suspect with no valid spot, so \"important\" is plausible, not certain. The suggested break-and-requeue fix is reasonable.",
+    "CONFIRMED: The finding holds. At CopManager.java:702-721, spawnDueUnits does `group.requeue(unit); continue;` on a null spawn, so it tries every due unit each tick. The 0.15 loop (master, around line 581) did `if (newCop == null) break; // stop trying this interval`. CopGroup.requeue (line 312) adds the unit straight back to pending with no backoff, and takeDue (line 305) returns it again on the next tick because its arriveAt has already passed. A suspect with no valid spot therefore costs N full spawnUnit searches per spawn tick instead of one. The plan only requires that a failed spawn is requeued (CONTRACTS.md:407, test `failedSpawn_isRequeued`). It does not say to keep trying the other due units after a failure, and I found no owner ruling that does. I did not run the code. The cost multiplier follows from the loop structure, and I did not count the exact number of search passes inside spawnUnit."
+   ],
+   "confirmed": true
+  },
+  {
+   "severity": "critical",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/evasion/QuietTrail.java",
+   "line": "96 (with CopGroup.java:174-188, CopListener.java:237, CopRadio.java:118/189)",
+   "problem": "The cold-trail backup hold is a flag that only QuietTrail.tick writes, once per cop AI tick. CopGroup.requestBackup and grantRegroupBackup read that flag at the moment they are called, and they are called synchronously from CopListener.onCopDeath (EntityDeathEvent, LOWEST) through squad.memberDown, CopRadio's listener, requestBackup and regroupCheck. When the suspect kills a cop, the flag still holds the previous tick's value. The Kill_Cop crime does reset quietMs, but only from the next AI tick on. By then the officer-down backup and the regroup backup have already been refused, and nothing asks for them again.",
+   "scenario": "A 3-star player hides out of every cop's sight for 60 s with no crime, so QuietTrail.tick sets backupHeld=true. He then kills a cop with one long-range shot. onCopDeath fires MAN_DOWN, CopRadio.requestBackup runs, and group.requestBackup returns false because backupHeld is still true. There is no 'Backup' line and no +1 cop. A second quick kill starts a regroup that falls back waiting for backup that never comes. If he waits 60 s between kills, no kill ever brings backup. The spec says 'Keep fighting and they keep coming... any new crime resets it.' QuietTrailTest.crimeAfterHold_releases_andRearmsTheLine only re-ticks after the crime, so it cannot catch this.",
+   "fix": "Decide the hold when backup is requested, not on the previous tick. Option A: CopGroup takes a BooleanSupplier (QuietTrail.isHeld(groupTarget)) and evaluates it inside requestBackup/grantRegroupBackup. Option B: release the hold whenever the group records a casualty caused by its target (clear backupHeld in onCopDeath/recordCasualty before memberDown). Add a test: hold armed, cop killed by the suspect, requestBackup granted.",
+   "lens": "evasion-016",
+   "reasons": [
+    "CONFIRMED: The mechanism is real. Only QuietTrail.tick calls setBackupHeld, and it runs as an AI tick hook (EvasionModuleConfig:87). CopListener.onCopDeath (lines 236-242) calls squad.memberDown synchronously. That fires CopRadio's listener, which calls regroupCheck (which calls grantRegroupBackup at CopRadio:189) and requestBackup (CopRadio:526). Both CopGroup methods return false while backupHeld is stale-true (CopGroup:175, 187). The Kill_Cop crime is committed afterward, on CopDeathEvent via HeatWantedTracker:100, and nothing clears the flag until the next tick. The spec (SPEC-0.16.md:159) says \"any new crime resets it\" and \"Keep fighting and they keep coming\", and CONTRACTS.md:396-397 and R13 only describe a flag checked at request time. Nothing in the plan or the owner rulings I grepped intends refusing officer-down backup right after the suspect kills a cop. The only mitigation is a corner case: the hold is also off whenever the squad has a fresh sighting. A sniper hidden for 60 s can still kill with no fresh sighting, so the scenario stands. I found no counter-evidence in the code or the plan. I did not run tests, so the severity (critical versus moderate) is my judgement.",
+    "CONFIRMED: The finding holds. Only QuietTrail.tick calls setBackupHeld(), and EvasionModuleConfig:87 registers it as an AI tick hook, so the flag changes once per cop AI tick. CopGroup.requestBackup (line 175) and grantRegroupBackup (line 187) read backupHeld directly. CopRadio's squad listener calls both synchronously on MAN_DOWN/LEADER_DOWN through regroupCheck and requestBackup (CopRadio:114-118, 189, 526). No other code clears the flag, and no QuietTrail call exists outside the tick hook and EvasionClock's quiet-speed use. A kill therefore sees the previous tick's hold. I did not read CopListener.onCopDeath, because the file was not at the path I tried. I did not run a test and did not check the plan or owner rulings for an intent to hold backup after a kill. My grep of OWNER-RULINGS.md for hold-related terms returned nothing. The stale-flag race is real whenever the suspect was out of sight when the last tick ran."
+   ],
+   "confirmed": true
+  },
+  {
+   "severity": "important",
+   "file": "gangland-impl/src/main/java/org/luckyraven/gangland/data/teleportation/WaypointManager.java",
+   "line": "46-49, 118-145 (with WaypointRepository.java:55-62)",
+   "problem": "The R35 downgrade guard skips a waypoint row of an unknown type, so the row stays in the table but not in memory. initialize() still computes Waypoint.setID(maxId) from loaded rows only. refactorIds() still walks every table row.",
+   "scenario": "A 0.16 server stores a HOSPITAL waypoint at the highest id, then the owner runs 0.15.2, which knows no HOSPITAL type. The load skips the row and maxId excludes it, so the next created waypoint takes that id and the upsert overwrites the newer version's row. Separately, refactorIds() runs config.delete(\"\", ...) to empty the table, then reads each row from rowsData. For the skipped id, waypoints.get(id) returns null and waypoint.getUsedId() throws a NullPointerException. This happens after the delete and before the reinserts finish, so the table is left partly emptied. The test WaypointRepositoryTypeTest only checks that the load survives.",
+   "fix": "Have the repository record the highest stored id, as CopSpawnerRepository.getHighestStoredId does. Make initialize() floor Waypoint.setID on it. Make refactorIds() skip or preserve ids missing from memory (null-check waypoints.get(id)), or do the delete and reinsert in one transaction. Add a test for each.",
+   "lens": "registries-wand",
+   "reasons": [
+    "CONFIRMED: The code defects are real. WaypointRepository.doLoadAll skips unknown-type rows with `continue`. WaypointManager.initialize() then computes maxId from the loaded rows only, so a skipped highest-id row gets reused by the next waypoint and overwritten on upsert. refactorIds() (called from WaypointDeleteCommand:89) deletes the whole table, then does `waypoints.get(id)` for every stored row. A skipped id returns null, and `waypoint.getUsedId()` throws an NPE after the delete, leaving the table partly emptied. Ruling R35 (PLAN.md:175) intends only that the row is skipped. It says nothing about id collisions or refactorIds, so the plan does not cover this. One wording error in the finding: 0.15.2 has no guard, so it would fail the whole load on an unknown type rather than skip the row. The skip only happens in 0.16 or later, and the id-collision and NPE hold whenever a 0.16+ server meets a row of a type it does not know. refactorIds() has no null check, but I did not check whether it already had that gap before this branch.",
+    "CONFIRMED: The code matches the finding. WaypointRepository.doLoadAll skips rows with an unknown type. WaypointManager.initialize() computes maxId only from the loaded waypoints. refactorIds() deletes the whole table, then does waypoints.get(id) for every stored row and dereferences it without a null check, so a skipped id throws an NPE after the delete. refactorIds() is reachable from WaypointDeleteCommand.java:89. PLAN.md R35 says a downgrade \"loses only the hospital rows\", so the id collision and the half-emptied table are not intended. One detail in the finding is wrong. The guard lives in 0.16 code, so 0.15.2 would not skip the row; it would abort the whole load because it has no guard. The scenario applies when 0.16 meets a type it does not know, for example after a later version writes a new type and the admin downgrades to 0.16. The defect is real, so it is not refuted."
+   ],
+   "confirmed": true
+  },
+  {
+   "severity": "important",
+   "file": "E:/Programming/java/wt/keystone-1.15.0/keystone-npc/src/test/java/org/luckyraven/keystone/npc/entity/EntitySpawnerTest.java",
+   "line": "292",
+   "problem": "The ray stub matches every argument with any(...): any(FluidCollisionMode.class), anyBoolean() and an end point taken from whatever the code passes. None of the out-of-sight tests check the three ray settings that CONTRACTS C3 requires, which EntitySpawner.java:294 sends: FluidCollisionMode.NEVER, ignorePassable=true, and an end point of spot+1.6.",
+   "scenario": "Someone changes EntitySpawner.java:294 to rayTraceBlocks(eye, dir, distance, FluidCollisionMode.ALWAYS, false), or drops the +1.6 offset at :238. Tall grass, flowers, open doors and water then count as cover, so isOutOfSight calls a spot hidden when the suspect can see it through grass, and cops appear in plain view. All nine new tests still pass, because the stub answers the same way whatever the arguments are.",
+   "fix": "In one test, capture the arguments with an ArgumentCaptor or use eq(FluidCollisionMode.NEVER) and eq(true). Also assert that the ray's end point is spot.getY()+1.6, for example origin+dir*dist == (x, GROUND_Y+1.6, z).",
+   "lens": "keystone-api",
+   "reasons": [
+    "CONFIRMED: The finding is accurate. The ray stub at EntitySpawnerTest.java:292 uses any() for all arguments, and no test checks FluidCollisionMode.NEVER, ignorePassable=true or the +1.6 end point. No other test in the Keystone worktree checks these values either (the only other uses of FluidCollisionMode in tests are the any() stubs in NpcFormationTest). CONTRACTS C3 requires those exact values, and the plan and owner rulings do not make the unpinned arguments intentional. A change to EntitySpawner.java:294 or :238 would leave all nine new tests green.",
+    "CONFIRMED: The finding holds. The stub in EntitySpawnerTest.java:292 matches every argument with any(FluidCollisionMode.class) and anyBoolean(). The answer lambda only passes the eye point and the computed end point to the test predicates. The file has no verify(...), ArgumentCaptor or FluidCollisionMode.NEVER. None of the predicates at lines 183-268 look at the end point's Y, so the +1.6 offset is not checked either. Production code at EntitySpawner.java:294 uses FluidCollisionMode.NEVER and ignorePassable=true, and :238 adds +1.6. CONTRACTS.md:139 requires all three. Changing the mode to ALWAYS or the flag to false would leave all nine tests green. The other tests that verify rayTraceBlocks (NpcFormationTest, NpcNavigationDelegateTest) are for different code, so they do not cover this spawner path. Neither the plan nor the owner rulings intend the gap. The \"important\" severity is arguable, since this is a test-strength gap and not a runtime bug."
+   ],
+   "confirmed": true
+  }
+ ],
+ "refuted": [
+  {
+   "lens": "dispatch",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/spawn/CopSpawnManager.java",
+   "problem": "With no station in the world, a unit runs two hidden-ring searches before it ever reaches spawnNearPlayer, which is the only step that uses the legacy cop spawners (findClosestSpawnerLocation). Ruling R15 says 'a world without stations behaves as 0.15', and the lens asks for zero stations to fall back to the legacy spawners. Turning Dispatch off does not restore 0.15 either: the Breather is on by default, so the queue path and spawnUnit still run with Plan(null, 0). The only way back to spawner-first spawning is to disable both features. DispatchSettings.java:7 ('false keeps the 0.15 instant ring spawn') is wrong in that case. No test pins it: CopManagerDispatchTest.noStation_ringUnitsArriveAtOnce_fromStationFalse stubs spawnUnit, and CopSpawnManagerUnitTest.removedStation_fallsBackToTheRing asserts the ring.",
+   "reasons": [
+    "REFUTED: The plan prescribes exactly this order. CONTRACTS.md:402-407 defines spawnUnit as (1) the station's spawners, (2) hiddenRing biased, (3) hiddenRing anywhere, (4) spawnNearPlayer. It says \"no station: any\" for the bias, and it calls spawnNearPlayer, the only step that uses the legacy spawners, the fallback. Falling through to the ring when a station has been removed is intended, per CONTRACTS.md:401-402. The code in CopSpawnManager.spawnUnit (lines 201-213) matches that contract. R15 (PLAN.md:155) says \"no station in the world = ring at ETA 0 with fromStation=false\". That is a statement about dispatch timing and fromStation, not about spawner-first placement. SPEC-0.16.md:51 says existing spawners are grouped under stations through an additive column, so legacy spawners are meant to be adopted into stations rather than kept as a separate fallback path. The finding is a fair point that \"behaves as 0.15\" is loose wording when Breather keeps the queue path on, but it describes a documented design choice and not a defect in the implementation. I did not run any tests.",
+    "REFUTED: The code matches the binding plan, so I'm calling this refuted. The plan fixes the arrival order for every unit, and a unit with no station has no spawner step. PLAN.md R16 gives the order as station spawners, hidden ring on the station side, any hidden ring, then spawnNearPlayer. CONTRACTS.md C8 (lines 404-407) says the same for spawnUnit and adds \"no station: any\" for the bias. C8 also says CopSpawnManager has no station registry, so a unit with a null station falls to the ring. CONSTRAINTS.md line 30 says \"No station in the player's world -> ring, ETA 0\", and R15 says \"no station = ring at ETA 0 with fromStation=false\". spawnUnit (CopSpawnManager.java:196-217) does exactly that, and the legacy spawner path stays as the last resort inside spawnNearPlayer. R15's line \"behaves as 0.15\" is a loose summary next to those explicit contracts. The finding's fix would reorder the specified spawner priority, which is a plan change and not a code bug. The Breather also keeps the queue path running when Dispatch is off, but PLAN.md line 498 stubs Dispatch and Breather as DISABLED in the fixture and treats them as the opt-in queue path. This is at most a documentation or product question about whether legacy spawners should rank above the hidden ring for a no-station world."
+   ]
+  }
+ ],
+ "minors": [
+  {
+   "severity": "minor",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManager.java",
+   "line": "170-186 (onWantedEnd) with 138-147 (onWantedStart reuses the group)",
+   "problem": "onWantedEnd clears the queue but keeps a non-empty group (cops walking home) with its breatherUntil, lastCasualtyAt and bias. A new wanted start within that time reuses the group (computeIfAbsent), so the previous episode's breather or rejoin grace still delays the new crime's units (hold = breatherUntil - now).",
+   "scenario": "A squad is wiped while one stranded cop is walking home, and breatherUntil is set 15 s ahead. The player phones the desk and gets his stars cleared (onWantedEnd); the group stays because of the returning cop. He commits a new crime 3 s later. The new crime's first units are held the remaining ~12 s by the old breather, and Dispatch_En_Route reports that extra delay as part of the ETA.",
+   "fix": "In onWantedEnd, also reset group.setBreatherUntil(0) and group.setBias(null) next to clearPending() (and clear the restoring flag, which is already done).",
+   "lens": "dispatch"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/evasion/EvasionClock.java",
+   "line": "184-188 (and 223)",
+   "problem": "The en-route hold returns before the SEEN/lost logic. A SEEN track whose last standing cop dies or leashes out while units are already queued therefore stays SEEN through the whole hold. arcs.lost(id) is stamped only when the first unit spawns and the stale sighting finally flips the track to SEARCHING. ChaseArc.lastLostAt is late by the remaining ETA plus any breather. ChaseArcListener.onChaseEnd turns lastLostAt into ChaseRecord.contactMs, which feeds ChaseLearner's typical-getaway median (the AUTO COLD_TRAIL ratio). In 0.15.2 the same situation cleared the track and stamped the loss when the squad vanished. The HUD also shows SEEN while no cop exists.",
+   "scenario": "A cop dies mid-fight and its replacement is queued with a 25 s ETA. The player kills the remaining cops while seen. Every AI tick then holds (no standing cop, unitsEnRoute true) with the track still SEEN. 25 s later the unit spawns, unseen >= Lost_Sight_Seconds, and arcs.lost is stamped 25 s late. The getaway's contact time is recorded about 25 s too long, which can flip the sign of the learner's median step for that peak level.",
+   "fix": "In the hold branch, when track != null && track.state == SEEN and squad.millisSinceSighting() >= lostMs, end the contact as clear() does: call arcs.lost(id) (or stamp it at the squad's last sighting), and optionally drop or flag the track so the HUD stops showing SEEN. Add an EvasionClockTest case: SEEN track, squad wiped with a unit queued, lastLostAt equals the wipe time.",
+   "lens": "evasion-016"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/evasion/EvasionClock.java",
+   "line": "386 (ChaseConfig.java:106)",
+   "problem": "The new Max_Speed cap (default 4.0) also caps the zone factor alone. A 0.15.2 server that set Outside_Zone_Speed above 4 now has its ONE_STAR/AUTO outside-zone timer silently slowed to 4x after the upgrade. ChaseConfig warns about neither the conflict nor the clamp.",
+   "scenario": "wanted.yml has Outside_Zone_Speed: 6.0 (valid in 0.15.2) and Max_Speed absent, so it defaults to 4.0. A player outside the zone with no hideout and no quiet bonus now evades at 4x instead of 6x, with no console warning.",
+   "fix": "In ChaseConfig.evasion, warn (config.conflict) when outsideZoneSpeed > maxSpeed, or default Max_Speed to max(4.0, Outside_Zone_Speed) when the key is absent.",
+   "lens": "evasion-016"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-features/cops-n-crooks/src/main/resources/copsncrooks/wanted.yml",
+   "line": "105",
+   "problem": "The Quiet_Speed comment says quiet means 'no crime, no new star, no cop sighting'. The implementation (Ruling R12, C10) anchors quiet only on heat-ledger crimes. Star raises from signs, commands or the kill combo do not reset it, and a cop sighting only pauses the multiplier and the backup hold; it does not reset the quiet time. Server owners reading the shipped config are told the opposite of the owner-ruled behaviour.",
+   "scenario": "An admin raises a player's stars with a sign or command, expecting the cold trail to restart as the comment says. Quiet keeps running from the last ledger crime or the chase start, so the clock runs at up to 2x right away.",
+   "fix": "Reword: 'The longer you go without a crime (stars from signs or commands do not count) the faster the timer runs; it never applies while a cop sees you.'",
+   "lens": "evasion-016"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-features/cops-n-crooks/src/main/resources/copsncrooks/cops.yml",
+   "line": "318 (DispatchSettings.java:12)",
+   "problem": "Rejoin_Grace_Seconds is documented as 'Seconds a player's pending units survive his logout, so a quick rejoin keeps them.' The code does the opposite. despawnAllForPlayer removes the group, and its pending queue with it, on logout. On a RESTORE start, CopManager.onWantedStart uses the value as a delay (breatherUntil) that every unit dispatched after the rejoin waits out (Ruling R21), and the evasion clock holds through it.",
+   "scenario": "An owner raises Rejoin_Grace_Seconds to 60, expecting queued units to survive a short disconnect. Instead every rejoin delays the first cops by 60 s, and the evasion clock holds for the whole time.",
+   "fix": "Fix the comment and the Javadoc: 'Seconds the first units wait after a player rejoins mid-chase (no crime-scene sighting; the search clock holds until they arrive).'",
+   "lens": "evasion-016"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/PlayerDeathListener.java",
+   "line": "65-90",
+   "problem": "The pending-bill handoff on a downed player's real death only charges the quoted bill inside the 500 ms dedup window. Past that window the quote is discarded and the fresh path re-quotes and re-counts the death (setDeaths +1 a second time).",
+   "scenario": "A player is downed with a $5000 wallet (bill quoted, pending) and finishes dying 3 s later. pendingBills.remove drops the quote, the fresh path runs, deaths goes up twice for one down, and the player pays a re-quote made at the later balance and wanted level. Only one bill is charged, so there is no money loss, but the 'quote at the down' guarantee in the spec holds only for deaths inside 500 ms.",
+   "fix": "On the fresh path, when a pending quote exists, charge it instead of re-quoting, and skip the second setDeaths. Or document that the re-quote is intended.",
+   "lens": "death-takedown"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/CustomPlayerDeathListener.java",
+   "line": "326-349",
+   "problem": "deathLocations is filled on every non-NPC PlayerDeathEvent and only removed by a PlayerRespawnEvent. Nothing clears it on quit or disable.",
+   "scenario": "A player dies and disconnects on the death screen, so no respawn event fires and the Location (which holds a World reference) stays in the map until that player dies again. The leak is bounded by one entry per UUID. The stale entry is overwritten on the next death, so it never produces a wrong teleport.",
+   "fix": "Remove the entry in the existing quit cleanup (cleanup(uuid)) or on PlayerQuitEvent.",
+   "lens": "death-takedown"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/PlayerDeathListener.java",
+   "line": "47-50",
+   "problem": "pendingBills is memory only. A server stop or plugin disable while someone is downed drops the quoted ward bill without charging it. Quit is covered, shutdown is not.",
+   "scenario": "Players are downed at /stop. onDisable does not call chargePending, and on rejoin the player is no longer downed, so the bill is never taken.",
+   "fix": "Charge or drop deliberately on disable. If forgiving is intended, say so in the javadoc.",
+   "lens": "death-takedown"
+  },
+  {
+   "severity": "minor",
+   "file": "E:/Programming/java/wt/gangland-0.16.0/gangland-impl/src/test/java/org/luckyraven/gangland/sign/aspect/WantedAspectTest.java",
+   "line": "161-205",
+   "problem": "The money guarantee for a refused [WANTED] sign is not tested. WantedAspectTest only checks WantedAspect.canExecute and failureReason on their own. Nothing runs the real [money, wanted] aspect list through AspectBasedSignHandler.",
+   "scenario": "The guarantee that a seen or cooling-down sign moves no money rests entirely on AspectBasedSignHandler.canHandle (gangland-ui/sign-api/.../AspectBasedSignHandler.java:41-48) asking every aspect before any executes. I traced the code and it holds today. If someone changes that loop to check each aspect just before it runs, MoneyAspect would withdraw first and WantedAspect would then refuse. No test would fail.",
+   "fix": "Add one test that builds AspectBasedSignHandler(MoneyAspect WITHDRAW, WantedAspect) with a seen player holding cash. Assert canHandle is false, failureReason is CONTACT_SEEN, and the balance is unchanged.",
+   "lens": "contacts-bribes"
+  },
+  {
+   "severity": "minor",
+   "file": "E:/Programming/java/wt/gangland-0.16.0/gangland-features/cops-n-crooks/src/test/java/org/luckyraven/gangland/copsncrooks/wanted/bribe/BribeStarsTest.java",
+   "line": "154-172",
+   "problem": "No test covers the no-group case that D16/D22 name explicitly. BribeStars.seen (BribeStars.java:158-161) treats copManager.groupOf(id) == null as unseen. The tests only mock a group with a sighting age. The case where a squad exists but has never sighted the player (millisSinceSighting() == Long.MAX_VALUE, NpcSquad.java:247-248) is also untested.",
+   "scenario": "If someone turns `group != null && ...` into `group == null || ...`, or swaps the comparison, a wanted player with no squad is refused a star, or one a squad has seen is allowed one. The existing tests would still pass, because the default mock setup is not asserted for the null-group path.",
+   "fix": "Add two cases to BribeStarsTest. First, groupOf returns null and the player takes the star. Second, groupOf returns a group with millisSinceSighting() = Long.MAX_VALUE and the player takes the star.",
+   "lens": "contacts-bribes"
+  },
+  {
+   "severity": "minor",
+   "file": "E:/Programming/java/wt/gangland-0.16.0/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/bribe/BribeStars.java",
+   "line": "87-90, 117-135",
+   "problem": "The `told` map (UUID to last notice time) is only cleared in onClear(). Entries are never removed when a player quits.",
+   "scenario": "On a long-running server every distinct wanted player who walked over a bribe star while seen leaves one UUID/Long entry until the next reload or shutdown. The growth is tiny and bounded by the number of distinct players, so it is a leak, not a behaviour bug.",
+   "fix": "Prune `told` entries older than TOLD_EVERY_MS inside tick(), or remove the entry when the player takes a star.",
+   "lens": "contacts-bribes"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/setup/SetupCommands.java",
+   "line": "~262-266 (remove STATION) with StationRegistry.java:42",
+   "problem": "Removing a station only unassigns loaded spawners (spawns.unassignStation). A cop_spawner row of an unloaded world keeps its station_id. StationRegistry.create reuses lastKey()+1, so after the highest station is removed the same id is handed out again.",
+   "scenario": "Station #5 exists and a spawner in an unloaded world references it. Remove #5, then save a new station, which gets id 5. When the world loads, that spawner silently belongs to the new, unrelated station and dispatch posts units from the wrong place. Station ids need a never-reuse floor, or the unassign needs to cover stored rows.",
+   "fix": "Track a monotonic station id floor, or have the repository clear station_id on stored cop_spawner rows when a station is removed.",
+   "lens": "registries-wand"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/place/AdminRegion.java",
+   "line": "29-37 (SetupCommands.saveRegion)",
+   "problem": "Admin regions are saved as exactly the cuboid between the two clicked blocks, including Y, with no vertical expansion or option. A district drawn by clicking two ground-level blocks is one block thick.",
+   "scenario": "An admin saves 'Docks' by clicking floor-level corners (y=64 both). PlaceRegion.contains uses the player's floor(y), so a player standing at y=65 is outside the district. The radio PlaceNames.locate then finds no place, and the Hideouts and tag lookups fail. The acceptance scenario only works because its two clicks happen to span 3 blocks of Y.",
+   "fix": "Add a setup.yml key for a default vertical extent or a full-height flag for district, hideout and restricted modes (use Cuboid.column semantics), or at least warn when the saved Y span is under 3 blocks.",
+   "lens": "registries-wand"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-api/src/main/java/org/luckyraven/gangland/data/region/PlaceNames.java",
+   "line": "53-57",
+   "problem": "Only RuntimeException is caught around provider.regionsAt. A module provider that fails with a LinkageError (for example NoClassDefFoundError from a soft-dependency class) propagates out of PlaceNames.",
+   "scenario": "A late-registered provider hits NoClassDefFoundError. Every PlaceNames.locate caller then throws, including the CopRadio and Hideouts paths, instead of skipping that provider as the Javadoc promises.",
+   "fix": "Catch RuntimeException | LinkageError.",
+   "lens": "registries-wand"
+  },
+  {
+   "severity": "minor",
+   "file": "E:/Programming/java/wt/keystone-1.15.0/keystone-npc/src/main/java/org/luckyraven/keystone/npc/AbstractNpc.java",
+   "line": "601",
+   "problem": "In tickPost, the 'not arrived and no longer walking -> navigateTo(anchor)' re-send does nothing in one band of distances. NpcPost.ARRIVE_RADIUS is 1.5 blocks horizontal, but NpcPursuit.movementFailed treats any stop within ARRIVE_DISTANCE 2.0 (3D) as success. NpcNavigationDelegate.moveTo (:260-261) then drops the order as a duplicate of lastIssued. Nothing clears the issued order before the re-send. The unit test (AbstractNpcPostTest:86) overrides navigateTo with a recorder, so it never reaches the real pursuit or navigation path and cannot catch this.",
+   "scenario": "A perimeter post anchor sits on a ledge edge or a spot that cannot be reached exactly. Citizens ends the path 1.7 blocks from the anchor. Every AI tick, tickPost sees arrived=false and isCitizensNavigating=false and calls navigateTo. walkTo stays in MOVE mode, movementFailed returns false (1.7 <= 2.0), and moveTo returns early because the destination equals lastIssued. The cop stands still for the whole perimeter, never faces the watch point, and tickPost never returns true. That breaks the contract in the javadoc and in docs/keystone-npc.md ('no longer walking, it re-sends the NPC').",
+   "fix": "Align the two radii: make NpcPost.ARRIVE_RADIUS match NpcPursuit.ARRIVE_DISTANCE, or treat a stopped NPC within ARRIVE_DISTANCE as arrived. Alternatively, clear the issued order (navigation.pauseNavigation()/clearIssued) before the re-send navigateTo. Add a test that drives the real navigation delegate with Navigator.isNavigating()=false at 1.7 blocks and verifies navigator.setTarget is called again.",
+   "lens": "keystone-api"
+  },
+  {
+   "severity": "minor",
+   "file": "E:/Programming/java/wt/keystone-1.15.0/keystone-npc/src/main/java/org/luckyraven/keystone/npc/entity/EntitySpawner.java",
+   "line": "260",
+   "problem": "findHiddenSpawnLocation has no total attempt budget. It runs isOutOfSight after every successful ring attempt, and each call traces one ray from the target plus one from every bystander within 48 blocks. With the shipped cops.yml (Phase1 20, Phase2 15, Max 50, Min 10, step 5) one pass is 20 + 9x15 = 155 attempts. CopSpawnManager.spawnUnit runs up to 4 passes per unit: biased hiddenRing, unbiased hiddenRing, and the anyRoof retry of each. Before 0.16, findSpawnLocation usually returned on the first valid spot. Also, on Spigot (not Paper), World.rayTraceBlocks loads the chunks it crosses synchronously, and isOutOfSight never checks whether a chunk is loaded. A target ray of any length toward a station spawner up to Spawner_Preference_Radius 80 (CopSpawnManager.hiddenStationSpawner, which has no isChunkLoaded check) can therefore load a chunk on the main thread.",
+   "scenario": "A suspect at 3 stars on open flat ground, where every ring spot is visible, gets a 3-4 unit wave whose ETAs land on the same tick. That is roughly 600 trySingleSpawnAttempt ground searches and 600+ ray traces per unit, a few thousand per tick, before the visible fallback. The result is a visible TPS hitch at every dispatch on large open maps. On a server with view-distance 4 or less, a station spawner 70-80 blocks away forces a synchronous chunk load from disk inside the ray trace.",
+   "fix": "Cap the hidden search: one pass of Phase1 plus at most N rings, or a total attempt budget in SpawnConfigProvider. In CopSpawnManager.hiddenRing, skip the second pass when the first pass found ground spots but none were hidden. In isOutOfSight, return false (treat as not hideable) when the chunk at the spot is not loaded, so a ray never runs into unloaded terrain.",
+   "lens": "keystone-api"
+  },
+  {
+   "severity": "minor",
+   "file": "E:/Programming/java/wt/keystone-1.15.0/keystone-npc/src/main/java/org/luckyraven/keystone/npc/entity/EntitySpawner.java",
+   "line": "294",
+   "problem": "The line-of-sight test counts any block with a collision shape as cover, including glass, glass panes, iron bars, fences and leaves. A player can see through these, so isOutOfSight calls a spot behind a storefront window or a fence hidden even though it is in full view. The contract wording matches the code, but the feature goal ('units appear out of sight') is not met in city builds, which are this plugin's main setting.",
+   "scenario": "A suspect hides in a shop with a glass front. The dispatch picks a ring spot or station spawner on the street outside. The ray from the suspect's eye hits the glass, so the spot counts as hidden, and a cop materialises in plain view a few blocks beyond the window.",
+   "fix": "When rayTraceBlocks returns a hit on a non-occluding block (!hit.getHitBlock().getType().isOccluding()), keep tracing from just past the hit point until an occluding block or the end point is reached. Alternatively, document the limitation in docs/keystone-npc.md and CONTRACTS C3 so the owner accepts it explicitly.",
+   "lens": "keystone-api"
+  },
+  {
+   "severity": "minor",
+   "file": "E:/Programming/java/wt/gangland-0.16.0/gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/CustomPlayerDeathListener.java",
+   "line": "78, 128-139, 336",
+   "problem": "deathLocations (UUID to Location) is filled on every vanilla PlayerDeathEvent and only drained by PlayerRespawnEvent. onPlayerQuit/cleanup never removes the entry.",
+   "scenario": "A player dies and quits from the death screen. The entry, which holds a Location and so its World, stays until that UUID next respawns. It never goes away if he never returns. The leak is bounded by one entry per UUID, so the impact is small. Fix: add deathLocations.remove(uuid) in onPlayerQuit.",
+   "fix": "Call deathLocations.remove(player.getUniqueId()) in onPlayerQuit, or inside cleanup(uuid).",
+   "lens": "cross-cutting"
+  },
+  {
+   "severity": "minor",
+   "file": "E:/Programming/java/wt/gangland-0.16.0/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/bribe/BribeStars.java",
+   "line": "62-63, 150-155",
+   "problem": "The told map (UUID to last-told time) is only cleared in onClear. It is not pruned on quit or on expiry.",
+   "scenario": "Every wanted player who steps near a pickup point while a cop sees him adds an entry. These stay until /glw reload or shutdown. Growth is bounded by distinct players, so the impact is small.",
+   "fix": "Add a PlayerQuitEvent hook, or run told.values().removeIf(t -> now - t >= TOLD_EVERY_MS) once per tick.",
+   "lens": "cross-cutting"
+  }
+ ],
+ "died": []
+}

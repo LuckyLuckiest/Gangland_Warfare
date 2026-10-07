@@ -17,7 +17,9 @@ import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.gangland.data.economy.GanglandMoneyDropClassifier;
 import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.data.plugin.PluginManager;
+import org.luckyraven.gangland.data.teleportation.HospitalShield;
 import org.luckyraven.gangland.data.teleportation.WaypointManager;
+import org.luckyraven.gangland.data.teleportation.WaypointRegionProvider;
 import org.luckyraven.gangland.data.user.UserDataLoader;
 import org.luckyraven.gangland.database.GanglandDatabase;
 import org.luckyraven.gangland.core.bounty.BountySettings;
@@ -28,6 +30,7 @@ import org.luckyraven.gangland.core.wanted.WantedKillTrackers;
 import org.luckyraven.gangland.core.wanted.WantedSettings;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.core.wanted.WantedStars;
+import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.gangland.item.money.MoneyDropClassifier;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
@@ -114,6 +117,23 @@ public class DataConfig {
 	}
 
 	/**
+	 * Publishes the gang waypoints as hideout places through {@link PlaceNames}. The provider registers itself here
+	 * (R4), so the places exist whether or not any module is installed.
+	 */
+	@Bean
+	public WaypointRegionProvider waypointRegionProvider(PlaceNames placeNames, WaypointManager waypointManager) {
+		WaypointRegionProvider provider = new WaypointRegionProvider(waypointManager);
+		placeNames.register(provider);
+		return provider;
+	}
+
+	/** The hospital respawn shield's memory; granted by {@code CustomPlayerDeathListener}, enforced by its listener. */
+	@Bean
+	public HospitalShield hospitalShield() {
+		return new HospitalShield();
+	}
+
+	/**
 	 * Seam 1 holder. Always present so {@code MoneyDropListener} constructs whether or not the cops-n-crooks
 	 * module is installed; inert (players and vanilla mobs only) until the module installs a delegate. See
 	 * documentation/module-loader.md, "Core seams".
@@ -131,6 +151,15 @@ public class DataConfig {
 	@Bean
 	public BankTiers bankTiers() {
 		return new BankTiers();
+	}
+
+	/**
+	 * Region lookup holder (api 2.3). Always present; inert (empty answers) until a module or core provider registers
+	 * a {@code RegionProvider}. See documentation/module-loader.md, "Core seams".
+	 */
+	@Bean
+	public PlaceNames placeNames() {
+		return new PlaceNames();
 	}
 
 	/**

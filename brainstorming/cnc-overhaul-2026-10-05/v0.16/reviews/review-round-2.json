@@ -1,0 +1,145 @@
+{
+ "confirmed": [
+  {
+   "severity": "important",
+   "file": "gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/EntityDamageListener.java",
+   "line": "237-247",
+   "problem": "onPlayerQuit deletes the anti-abuse memory along with the fight memory: the pair-exemption cooldowns (246), the per-killer takedown tally (247) and the provocation `lastHit` stamps (244). Logging out and back in therefore resets every 0.16 exploit guard. PLAN Task 9 / R36 only asks quit to clear the damage and provocation entries. Expired cooldowns and takedown stamps are already pruned by time, so clearing them on quit adds nothing and opens this hole.",
+   "scenario": "(a) D20 cap: killer K makes 3 crime-free posted-bounty takedowns in an hour. K relogs, `takedowns.remove(K)` runs, and the 4th, 5th and 6th takedowns are crime-free as well. (b) Pair cooldown (600 s): K takes down V, V relogs, the cooldown key holding V's UUID is removed, an accomplice posts again and the next K-on-V kill is crime-free. (c) Provocation (R36 test provokeWaitRetaliate): K hits V, then relogs (that removes lastHit K>V and firstHit). V swings back, so V's first strike is not marked provoked, and K kills V with no star.",
+   "fix": "On quit, clear only firstHit, damage and lastExchange (the per-fight state). Leave cooldowns, takedowns, lastHit and provoked to the time-based pruning in pruneStale, which already bounds them. Update the R36 test that pins trackedMemories()==0 after a quit, and add relog-bypass tests for the cap, the pair cooldown and provocation.",
+   "lens": "generalist-play",
+   "reasons": [
+    "CONFIRMED: Confirmed in cnc016-fix1. `EntityDamageListener.onPlayerQuit` (lines 237-248) removes every `cooldowns` key containing the quitter's UUID and calls `takedowns.remove(uuid)`. Those two lines are new in the branch diff. PLAN Task 9 (PLAN.md ~line 431) says quit clears \"damage and provocation entries\" and that \"expired cooldowns and takedown stamps are pruned with stale fights\". That puts cooldowns and takedowns under time-based `pruneStale`, not quit. `pruneStale` (lines 269-273) already bounds both maps, so clearing them on quit buys no memory benefit. The behavioural hole is real. A killer who relogs resets the 3-per-hour crime-free takedown cap. A relog of either player in the pair drops the 600 s pair-exemption cooldown. The test `pruneAndQuit_dropTheNewMemories` (line 562, `assertEquals(0, listener.trackedMemories())` after a quit) pins the over-clearing, which is why no test caught it. The part of the finding about `lastHit` and `provoked` is weaker. The plan says quit clears \"provocation entries\", so that wiping is arguably intended. The cooldown and takedown wiping is not intended.",
+    "CONFIRMED: Confirmed in code. EntityDamageListener.onPlayerQuit (lines 237-248) removes cooldowns (246), takedowns.remove(uuid) (247) and lastHit and provoked entries, as well as the fight state. PLAN.md ~line 431 only says quit clears \"damage and provocation entries\". It says expired cooldowns and takedown stamps are pruned with stale fights, and pruneStale (254-274) already expires them by time. The plan's \"cooldown survives quit\" tests (B28, C12) are about ContactDesk, not this listener, so no ruling intends the reset. Nothing blocks the scenarios. A killer who relogs has takedowns.remove(killer) run, so the 3-per-hour cap (D20) restarts. Relogging also drops the pair-cooldown key and the lastHit provocation stamp, which re-opens the R36 provokeWaitRetaliate exploit. The finding is valid and not already handled. The test at EntityDamageListenerTest line 541 pins the over-broad clearing."
+   ],
+   "confirmed": true
+  },
+  {
+   "severity": "important",
+   "file": "gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/PlayerDeathListener.java",
+   "line": "129 (quote at down), 150-160 / 216 (charge at undown)",
+   "problem": "With Hospital.Enable on, the ward bill is quoted at the down but only withdrawn at PlayerUndownedEvent, and the withdrawal is clamped to the wallet at that moment. A downed player can still run commands: only interact, block, drop, consume and pickup are blocked, and PlayerCommandPreprocessEvent is not blocked unless he is detained. So during the Respawn.Delay countdown (10 s shipped) he can empty his wallet and pay nothing. Before 0.16 the same bill was taken at the down, so this window is new.",
+   "scenario": "Respawn.Enable true, Hospital.Enable true, wallet $10,000, formula balance*0.15, so the quoted bill is $1,500. He is downed and, while spectating for 10 s, types `/glw bank deposit 10000`; BankDepositCommand has no location gate. performRespawn fires Undowned and charge() calls user.withdraw(1500) on a $0 wallet: taken = 0, no message, and the bill is fully dodged. Paying another player or buying from a remote shop works the same way.",
+   "fix": "Withdraw the quoted bill at the down into an escrow and report it at respawn. Or keep the deferral but charge min(quote, wallet at the down) at the down and only display it at respawn. Or block economy commands while DownedPlayerRegistry.isDowned (a PlayerCommandPreprocessEvent guard in CustomPlayerDeathListener). Add a test: downed, deposit everything, undowned, wallet+bank loses the bill.",
+   "lens": "generalist-play",
+   "reasons": [
+    "CONFIRMED: The scenario holds. PlayerDeathListener quotes the bill at the down (lines 127-130) and only withdraws it in chargePending, on PlayerUndownedEvent or quit. charge() clamps to the wallet at that moment, so the withdrawal takes 0 from an empty wallet and sends no message. CustomPlayerDeathListener blocks only interact, block break, block place, drop, consume and pickup for a downed player. The only PlayerCommandPreprocessEvent listener in gangland-impl is InventoryOpenByCommandListener, and it has no downed check. So commands like `/glw bank deposit` stay open during the Respawn.Delay countdown. SPEC 2.8 and DECISIONS D3 intend the bill to be charged at respawn, but no spec, decision or ruling text mentions this wallet-emptying window. The grep for dodge, deposit and command-while-downed found nothing in the plan docs. The finding is a new, unplanned exploit created by the deferral. I did not read BankDepositCommand, so the claim that it has no location gate is unchecked. I also did not check whether another listener blocks commands for downed players.",
+    "CONFIRMED: The scenario holds in the code. PlayerDeathListener.onPlayerDowned (line 129) only quotes the bill into pendingBills when Hospital.Enable is on. charge() runs from onPlayerUndowned/onQuit (lines 141-158) and clamps to the wallet (user.withdraw returns 0 and sends no message on an empty wallet). CustomPlayerDeathListener blocks only interact, block break/place, drop, consume, pickup and damage for a downed player (lines 111-207). I grepped the gangland-impl command package for isDowned and found only RespawnCommand, so there is no command or economy gate. A downed player can therefore run /glw bank deposit during the Respawn.Delay countdown and pay nothing at respawn. The plan fixes only the timing of the charge, not this consequence. SPEC 2.8 says the bill is \"charged at performRespawn on the downed path... or at quit while downed\". It never says a downed player may empty his wallet first. The spec also keeps the old dodge-at-quit guard, which shows the intent that the bill cannot be avoided. Before 0.16 the bill was taken at the down, so the dodge window is new. I did not confirm whether BankDepositCommand has its own gate. The grep found none in the command package."
+   ],
+   "confirmed": true
+  },
+  {
+   "severity": "important",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/bribe/BribeStars.java",
+   "line": "115-120, 176-188",
+   "problem": "The bribe-star item is protected only by setPickupDelay(MAX), and vanilla hoppers and hopper minecarts ignore pickup delay; nothing cancels InventoryPickupItemEvent. When the item disappears, `slot.item` is invalid and `respawnAt` is still 0 (it is only set when a player takes the star), so tick() drops a fresh item on the next pass, every 10 ticks. The result is an unlimited supply of the configured item (NETHER_STAR by default).",
+   "scenario": "Admin places a pickup point on a street. A player who can build there puts a hopper (or a hopper minecart on rail) under the floating star. The hopper pulls it in, the next BribeStars.tick 0.5 s later drops a new star, and the hopper pulls that in too: about 2 nether stars per second into the chest, at no wanted cost.",
+   "fix": "Tag the dropped item (PDC key or a Set<UUID> of live slot items) and cancel InventoryPickupItemEvent (hoppers and hopper minecarts) for it. Also treat an item that vanished without a player take as a respawn on the normal Respawn_Seconds timer, not an immediate one. Add a test: the item becomes invalid without a take, and no new item appears before respawnAt.",
+   "lens": "generalist-play",
+   "reasons": [
+    "REFUTED: The plan already accepts this. PLAN.md line 125 (known risks, item 9) says \"Floating bribe-star items: hoppers or other plugins could still collect them\", and it names the mitigations it chose: the proximity check, `setPersistent(false)`, and a \"respawn-on-death rule\". That last one is the immediate re-drop when `slot.item` is invalid, which is what tick() does (BribeStars.java lines 115-120). I found no hopper or InventoryPickupItemEvent handling anywhere in cops-n-crooks or gangland-impl, so the code matches the stated gap. The scenario is real but it is a documented, accepted risk. It needs an admin-placed pickup point and a player who can build a hopper there, and the plan's chosen design produces the re-drop. A hardening ticket would be reasonable, but I found no spec or ruling that makes it a defect in this review.",
+    "CONFIRMED: Not refuted. In BribeStars.java, drop() protects the item only with setPickupDelay(Integer.MAX_VALUE), setInvulnerable and setGravity(false). A repo-wide grep of the worktree for InventoryPickupItemEvent found nothing, so no listener cancels hopper pulls. Vanilla hoppers and hopper minecarts ignore pickup delay, so a hopper placed under the floating item would take it. Once the item is invalid, tick() sets slot.item = null and checks `now < slot.respawnAt`. respawnAt is only set inside tryTake when a player takes the star, so it is still 0 and the check passes. A fresh item is dropped on the next pass, every 10 ticks, which gives an unbounded supply. I found no plan clause or owner ruling that accepts this. I judged it a real but narrow exploit, because it needs a player who can build at a pickup point. I did not run the hopper case in a test, so the hopper behaviour is from my knowledge of vanilla, not from this session."
+   ],
+   "confirmed": true
+  },
+  {
+   "severity": "important",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/setup/SetupOutline.java",
+   "line": "114-134 (points), 91-105 (tick)",
+   "problem": "The 256-particle cap is applied only after the full edge set has been built. points() adds every edge block of the cuboid to a LinkedHashSet<Location> before the stride thinning, and SetupSelection.set() puts no limit on pos1/pos2 distance. The work and allocation per tick grow with selection size, not with the cap.",
+   "scenario": "An admin holding the wand marks a district-sized region, or mis-clicks two corners 20k-50k blocks apart. Every Interval_Ticks, tick() builds about 4*(dx+dy+dz) Locations on the main thread, roughly 100k-400k per admin, hashing each one, then discards all but 256. The result is steady GC churn and tick lag for as long as the wand is held. A cross-continent selection can OOM the server.",
+   "fix": "Compute the edge count arithmetically and the stride first. Walk each of the 12 edges with that stride, or emit at most MAX_PARTICLES points directly without materialising the set. Optionally skip points farther than the viewing distance from the admin.",
+   "lens": "generalist-code",
+   "reasons": [
+    "CONFIRMED: The code matches the finding. SetupOutline.points() (lines 114-134) puts every edge block into a LinkedHashSet<Location> and only afterwards thins it by stride to 256. tick() calls points() for each wand-holding admin every Interval_Ticks, on the main thread. I grepped the setup package and found no distance or size limit on pos1/pos2. The grep also found no limit on selection size in the plan's OWNER-RULINGS.md or DECISIONS.md. Two corrections: the scenario needs an admin-only wand holder, and \"OOM\" is overstated, because the sets are rebuilt and discarded each tick. The cost still scales with selection size instead of the cap, so large or mis-clicked selections give real tick lag and GC churn. I'd rate it moderate rather than important. The suggested fix is to compute the stride arithmetically and walk the edges with it.",
+    "CONFIRMED: The mechanism is real. In SetupOutline.points() (SetupOutline.java:114-134) every edge block goes into a LinkedHashSet<Location> before the stride thinning to 256. SetupSelection.set() has no span or distance limit, and a grep for max-span or \"too large\" checks in the setup package found nothing. tick() runs this per wand holder every Interval_Ticks on the main thread. Two corners 20k or more blocks apart therefore build and hash well over 100k Locations per tick, which causes sustained GC churn and lag. I did not find a plan or owner ruling that intends this. I did not read OWNER-RULINGS.md because my grep for it used a wrong relative path and returned nothing. The finding is overstated in two ways. It needs an admin to make a very large or mis-clicked selection while holding the wand. The allocations are transient, so the \"can OOM the server\" claim is a stretch. Realistic district-sized selections (hundreds of blocks) cost only a few thousand Locations per tick. Treat it as a minor-to-moderate efficiency defect, not an important one."
+   ],
+   "confirmed": true
+  }
+ ],
+ "refuted": [],
+ "minors": [
+  {
+   "severity": "minor",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManager.java",
+   "line": "662-676 (wipe test + holdPendingUntil); casualty source CopListener.java:245-249 / CopRadio.java:184",
+   "problem": "Since round 1, every wipe calls holdPendingUntil and radios Wipe_Refill even when nothing is missing, so any later 'wipe' pushes back the refill that is already on its way. The re-trigger guard only requires a casualty after breatherUntil while liveRoles is empty. A stranded RETURNING cop is not counted, so liveRoles stays empty, but it is still added to the group squad as a casualty when it dies, whoever or whatever kills it.",
+   "scenario": "At 3 stars the squad is wiped at t0. breatherUntil becomes t0+10s and the refill is queued for t0+10s+ETA (say 25s). One earlier cop is RETURNING beyond Pursuit_Max_Distance. At t0+15s, after the breather but before the refill arrives, that cop dies (another player, a mob or a fall). recordCasualty(t0+15s) is later than breatherUntil and liveRoles is empty, so it counts as a new wipe: breatherUntil becomes t0+25s, holdPendingUntil moves every queued unit to t0+25s+ETA, and Wipe_Refill plays again. Before round 1, units already queued kept their arrival time (the run returned on missing<=0). Each stray that dies in that gap delays the refill again.",
+   "fix": "Treat as a re-wipe only a casualty among cops that were counted. One option: record the casualty only for non-stranded cops. Another: also require that no refill was already queued after the previous breather (group.getBreatherUntil() < now and every pending unit's arriveAt <= breatherUntil + ETA). Or call holdPendingUntil only when the queue does not already arrive after the current breather.",
+   "lens": "fix-commits"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/CopManager.java",
+   "line": "710-716 (with CopSpawnManager.java:201-212)",
+   "problem": "Stop-at-first-failure assumes every failure means the area has no spot. spawnUnit can fail for one unit only: when a station unit finds its hidden station spawner but createCop returns null (npc.spawn refused or the entity is not spawned), there is no fallback to the ring. requeue appends the failed unit and the untried ones in their original order, so the same unit is first again on every run. Every unit behind it, including ring and other-station units that would have spawned, is never tried.",
+   "scenario": "An earlier batch queues a unit from Northside Station; a later batch (hand-off bias) queues ring units. The player stands where Northside's nearest out-of-sight spawner is chosen, but Citizens fails npc.spawn there, for example because a protection plugin cancels the spawn at that block. Each spawn run tries the Northside unit, gets null and requeues everything untried. The ring units, which have valid hidden ring spots, never spawn while the player stays near that spawner. Before round 1 they spawned and only the station unit waited. The squad stays empty, and the evasion clock behaves as if units were still en route.",
+   "fix": "Stop only on a location failure: let spawnUnit report 'no spot' separately from 'spawn refused'. Or rotate the failed unit to the back of the due list so the next run tries a different head. Or, when createCop at the station spot returns null, fall back to the ring path inside spawnUnit, as is already done when no station spot is found.",
+   "lens": "fix-commits"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-impl/src/main/java/org/luckyraven/gangland/data/teleportation/WaypointManager.java",
+   "line": "138-161",
+   "problem": "The round-1 id-reuse fix sets the counter to the highest id in the table (rows of unknown type included) but ignores waypoints that exist only in memory. WaypointCreateCommand only puts a new waypoint in the map, and autosave writes it later, so it has no row yet. Waypoint.setID(maxId) can therefore move the counter below an unsaved waypoint's id. The next waypoint created reuses that id, and waypointManager.add overwrites the unsaved one. The unsaved waypoint is lost, along with its permission node.",
+   "scenario": "Rows 1-4 exist. An admin creates waypoint W (id 5, in memory, not yet autosaved), then deletes waypoint 2 before the next autosave. refactorIds sees rows [1,3,4], renumbers them to 1,2,3 and calls setID(3). The next /glw waypoint create gets id 4 and the one after gets id 5. The fifth put overwrites W in the map, and autosave never writes W.",
+   "fix": "Include the in-memory ids: before setID, for each id in waypoints.keySet() do maxId = Math.max(maxId, id). An unsaved waypoint keeps its id because it is not in rowsData.",
+   "lens": "fix-commits"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-impl/src/main/java/org/luckyraven/gangland/listener/player/CustomPlayerDeathListener.java",
+   "line": "294",
+   "problem": "On the downed path, performRespawn picks the hospital nearest to `player.getLocation()` at the moment of respawn. The downed player has been in spectator mode with Allow_Fly (shipped defaults) for the whole Respawn.Delay, so that is wherever he flew, not where he went down. The vanilla path correctly uses the death location saved in deathLocations; the downed path saves none. The spec reads \"nearest HOSPITAL waypoint in the death world\" relative to the death.",
+   "scenario": "Two hospitals: H1 next to the Docks, where he is downed, and H2 beside his gang base 180 blocks away. During the 10 s countdown he flies through walls toward H2. performRespawn resolves nearest(spectatorPos) = H2 and teleports him home, so he picks his own respawn point.",
+   "fix": "Record the location in enterDownedState (or at the cancelled lethal hit) into deathLocations or a downed-location map, use it in performRespawn's hospitalFor, and remove it there and in cleanup.",
+   "lens": "generalist-play"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/bribe/BribeStars.java",
+   "line": "114 (slots keyed by point id); place/SetupPointRegistry.java:27",
+   "problem": "BribeStars keeps one Slot per point id and never drops slots whose point was removed. SetupPointRegistry reuses ids: lastKey()+1, so removing the highest id frees it for the next point. A removed pickup leaves its star floating, and when a new pickup reuses the id the old item is treated as the new point's star. tick() refreshes its ticksLived and tryTake() serves it at the old location, so the new point never gets a star.",
+   "scenario": "Admin creates pickup #3 at A, runs `/glw cop setup remove point 3`, then creates a pickup at B, which gets id 3 again. tick: slot 3's item (at A) is still valid, so setTicksLived(1) keeps it alive and players at A keep collecting a star from the deleted point. B stays empty while A's chunk stays loaded, for example near spawn.",
+   "fix": "In tick(), remove and despawn slots whose id is no longer in points.ofKind(PICKUP), and check that slot.item is near the point's current location before reusing it. Or give SetupPointRegistry a highest-ever-id floor, as the station and spawner fixes did.",
+   "lens": "generalist-play"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-impl/src/main/java/org/luckyraven/gangland/command/sub/contact/ContactCommand.java",
+   "line": "117-121 (also BribeStars.java tryTake 150-157)",
+   "problem": "The player is charged and the cooldown started (or the pickup item consumed) before checking that Wanted.setLevel took effect. Wanted.setLevel fires a cancellable WantedLevelChangeEvent and silently returns when it is cancelled. The result is never inspected.",
+   "scenario": "Another plugin cancels WantedLevelChangeEvent, for example a wanted-lock or protection plugin. The player runs /glw contact 2. withdrawAmount succeeds and startCooldown runs. setLevel returns without changing the level, and the player sees 'Contact used' with the stars unchanged. The BribeStars pickup is likewise removed and its respawn timer started with no stars taken. EvasionClock already handles the cancelled-drop case.",
+   "fix": "Compare wanted.getLevel() after setLevel. If it did not drop, refund the withdrawal and do not start the cooldown or consume the item. Alternatively, check the event outcome through a WantedStars.drop-style return value.",
+   "lens": "generalist-code"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/bribe/BribeStars.java",
+   "line": "98-103, 108-127, 195-200",
+   "problem": "slots is keyed by point id and is only cleaned when the whole feature is disabled or cleared. tick() iterates only points that still exist, so a removed pickup point keeps its Slot and its floating Item. The class also has no onShutdown/disable hook, so items are not removed on a plugin disable that bypasses onClear.",
+   "scenario": "An admin runs /glw cop setup remove point 3. The floating star stays in the world, because nothing refreshes or removes it once tick() stops visiting that id, until the 5-minute despawn. SetupPointRegistry.create reuses lastKey()+1, so deleting the highest id and creating a new point gives the new point the old id with the stale Slot. That Slot may hold a future respawnAt, or an item at the old location that is then re-ticked at the new point's location.",
+   "fix": "At the start of tick(), drop and remove() the slots whose id is not in points.ofKind(PICKUP). Also remove items from onShutdown if BeanLifecycle calls it separately from onClear.",
+   "lens": "generalist-code"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/handoff/HandoffController.java",
+   "line": "61-69 (also QuietTrail.java 83-92)",
+   "problem": "The per-player state in HandoffController (samples, engaged) and QuietTrail (anchors, announced) is cleared only by a tick that sees the player offline-safe or group == null. When a player quits mid-chase, spawnTick calls despawnAllForPlayer and stops the tasks without running the AI-tick hooks. Only CopManager.shutdown() runs them with a null group.",
+   "scenario": "A player quits while wanted. His Deque<Sample> (Location clones holding World references) and the engaged/announced/anchor entries stay in the maps indefinitely if he never returns. One entry set leaks per quitter. After a quit-and-rejoin, a stale engaged=true can also make the first tick look like an engaged to not-engaged edge.",
+   "fix": "Add a PlayerQuitEvent hook that removes the UUID from these maps, as EvasionListener does for the clock. Alternatively, have despawnAllForPlayer call runAiTickHooks(player, null) for the offline case with a UUID-keyed forget.",
+   "lens": "generalist-code"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/handoff/HandoffController.java",
+   "line": "58 and 111",
+   "problem": "provider.get() is dereferenced without a null check at 58 (getHandoffSettings) and 111 (getPursuitMaxDistance). PerimeterController.settings() and Dispatcher.plan() both guard the same CopLoader::getLoadedProvider supplier against null.",
+   "scenario": "If CopLoader.getLoadedProvider() returns null during a /glw reload window or a failed config load, every AI tick for every wanted player throws an NPE. CopManager.runAiTickHooks catches it and logs 'AI-tick hook failed' each tick, so the hand-off is silently dead and the log is spammed.",
+   "fix": "Mirror the null guard used in Dispatcher and PerimeterController: CopConfigProvider p = provider.get(); then requireNonNullElse(p == null ? null : p.getHandoffSettings(), HandoffSettings.DEFAULT).",
+   "lens": "generalist-code"
+  }
+ ],
+ "died": []
+}

@@ -13,6 +13,7 @@ import org.luckyraven.gangland.crime.CrimeService;
 import org.luckyraven.gangland.data.economy.BankTiers;
 import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.data.teleportation.WaypointLookupContract;
+import org.luckyraven.gangland.data.wanted.ContactDesk;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.keystone.module.ModuleLoader;
@@ -111,10 +112,11 @@ public class WiringConfig {
 	                                               UniqueItemAddon uniqueItemAddon,
 	                                               BankTiers bankTiers,
 	                                               DependencyContainer container,
-	                                               PlaceholderService placeholderService) {
+	                                               PlaceholderService placeholderService,
+	                                               ContactDesk contactDesk) {
 		GanglandPlaceholder placeholder = new GanglandPlaceholder(Gangland.FULL_PREFIX, Replacer.Closure.PERCENT,
 		                                                          userManager, uniqueItemAddon, bankTiers,
-		                                                          container, placeholderService);
+		                                                          container, placeholderService, contactDesk);
 		Bukkit.getServicesManager()
 		      .register(PlaceholderProvider.class, placeholder.asProvider(), gangland, ServicePriority.Normal);
 		log.info("Placeholder provider published for external consumers (e.g. Plaque)");

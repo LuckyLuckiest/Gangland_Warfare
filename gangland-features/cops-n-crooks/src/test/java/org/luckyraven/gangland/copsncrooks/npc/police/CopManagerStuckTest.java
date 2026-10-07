@@ -343,4 +343,15 @@ class CopManagerStuckTest {
 		assertFalse(group.isAvoided(spawner, fx.clock[0] + 61_000));
 		verify(fx.listeners.get(group), never()).onSignal(any(), eq(NpcSquadSignal.MAN_DOWN), any(), any());
 	}
+
+	@Test
+	@DisplayName("a POSTED cop is never recycled, however long it has been stranded (characterization pin)")
+	void postedCop_isNeverRecycled() {
+		CopNpc posted = stranded(CopState.POSTED, 10, 64, 0, 600_000);
+
+		manager.spawnTick(playerId, wanted);
+
+		assertTrue(group.getCops().contains(posted));
+		verify(posted, never()).destroy(any());
+	}
 }

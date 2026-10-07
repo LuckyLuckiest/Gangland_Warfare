@@ -21,6 +21,7 @@ import java.util.function.Consumer;
 public class CivilianSpawnerRepository extends AbstractRepository<CivilianSpawner> {
 
 	private final CivilianSpawnerTable copSpawnerTable;
+	private       int                  highestStoredId;
 
 	public CivilianSpawnerRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
 		super(plugin, databaseHandler, backend);
@@ -28,15 +29,24 @@ public class CivilianSpawnerRepository extends AbstractRepository<CivilianSpawne
 		this.copSpawnerTable = new CivilianSpawnerTable();
 	}
 
+	/** The highest id of every row the last load saw, rows of unloaded worlds included (docket T-180). */
+	public int getHighestStoredId() {
+		return highestStoredId;
+	}
+
 	@Override
 	protected Collection<CivilianSpawner> doLoadAll() throws SQLException {
 		List<CivilianSpawner> copSpawners = new ArrayList<>();
 		List<Object[]>        data        = tableBackend().selectAll();
 
+		highestStoredId = 0;
+
 		for (Object[] result : data) {
 			int v = 0;
 
 			int    id     = (int) result[v++];
+			// before the unloaded-world skip: the next created spawner must never reuse that row's id
+			highestStoredId = Math.max(highestStoredId, id);
 			String typeId = result[v] != null ? String.valueOf(result[v]) : null;
 			v++;
 			String groupId = result[v] != null ? String.valueOf(result[v]) : null;

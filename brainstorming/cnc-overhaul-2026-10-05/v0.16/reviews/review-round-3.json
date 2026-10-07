@@ -1,0 +1,58 @@
+{
+ "confirmed": [
+  {
+   "severity": "important",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/bribe/BribeStars.java",
+   "line": "137-140 (with drop() at 226 and the point source SetupWandListener.java:48)",
+   "problem": "The round-2 off-point check (`near(item, at)` within 1 block, else remove and re-drop at once) puts a star into an endless re-drop loop for any pickup point placed with the wand. The only way to place a point is a wand click, and it stores `clicked.getLocation()` (SetupWandListener:48 -> SetupCommands.savePoint -> SetupPoint x/y/z), which is the minimum corner of the solid block that was clicked. `drop()` calls `world.dropItem(at, ...)`, and that spawns the item exactly at the corner, inside the solid block. Vanilla's push-out-of-block (EntityItem.tick -> Entity.k) gives the item a velocity of 0.1 to 0.3 toward the nearest open face. Because the star has `setGravity(false)`, that velocity decays only by about 0.98 per tick, so the star floats several blocks away. The next 10-tick pass sees it more than 1 block off its point. It removes the star and leaves `respawnAt` unset (only a vanished item gets the timer), so `slot.item == null` triggers a fresh drop at the same corner, inside the block again. Before round 2 the star drifted off and stayed there. Now it is spawned and removed twice a second for as long as the chunk is loaded.",
+   "scenario": "An admin uses the setup wand in pickup mode and left-clicks a floor block at (10,64,10), then saves the point. On a real server, BribeStars.tick drops the star at (10.0,64.0,10.0), inside the clicked block. The game pushes it up through the block's top face and it keeps rising (no gravity). About 10 ticks later it is more than 1 block from the point, so line 137 removes it and line 148 drops a new one at the corner. Players see a star that flickers and climbs, and the server creates and removes an Item entity every 10 ticks per pickup point. The unit test does not catch this because its mocked item's getLocation() always returns `at`.",
+   "fix": "Drop the star in free air above the clicked block and check the distance against that same spot. For example, compute `Location spot = at.clone().add(0.5, 1.0, 0.5)` once per point and use it for both `drop(spot, ...)` and `near(slot.item.getLocation(), spot)`. Alternatively, call `slot.item.setVelocity(new Vector())` on each pass so a pushed star cannot drift. Add a test where the dropped item reports a location 1.5 blocks above `at` after a tick, and check that it is not re-dropped in a loop.",
+   "lens": "round2-fixes",
+   "reasons": [
+    "CONFIRMED: I could not refute it. The code matches the finding at each step. SetupWandListener:49 stores `clicked.getLocation()`, the block's minimum corner with no offset. `SetupPointRegistry:28` copies x/y/z straight from that location, and `SetupPoint.getLocation()` returns `new Location(world, x, y, z)`. `BribeStars.drop()` then calls `world.dropItem(at, stack)` at that corner, so the star spawns inside the clicked solid block, with its box overlapping the block. Vanilla pushes an item out of a block along a nearest-free-direction velocity. The `setVelocity(0)` call in `drop()` runs before that first tick, so it does not stop the push. With gravity off, the velocity decays slowly, so the star can drift past the 1-block `near()` limit within the 10-tick pass. Lines 137-140 then remove it and set `slot.item = null` without setting `respawnAt`, so line 148 drops a new star at the same corner. Neither the plan nor the rulings mention a drop offset, and final-fix.md's M5/M7 describes the off-point check only for an id reused elsewhere or a star pushed by water. The unit test mocks `getLocation()` to return `at`, so it cannot catch this. The exact number of ticks before the star leaves the 1-block radius depends on vanilla physics. That is borderline, but the push-out and the re-drop on removal are real.",
+    "CONFIRMED: Not refuted. Pickup points can only come from a wand click: SetupCommands.java:172 saves pos1, and SetupWandListener.java:49 sets pos1 to clicked.getLocation(), the integer corner of the clicked block. SetupPointRegistry.create (line 28) stores x/y/z unchanged, and SetupPoint.getLocation (line 37) returns them with no centering or offset. BribeStars.drop (line 226) calls world.dropItem(at, ...) at that corner, which is inside a solid block when the admin clicks a floor or wall. Vanilla's push-out-of-block still runs on the next tick even with setGravity(false). The star then drifts away on its own velocity, which only decays by about 0.98 per tick. The next 10-tick pass sees it more than 1 block from the point, and near() at lines 137-140 fails. The code removes it and sets slot.item to null. respawnAt is left unset, since only the vanished-item branch sets it. The slot.item == null branch then drops a new star at the same corner immediately. The loop is real, and no plan text or owner ruling intends it. I could not run a server, so the exact drift distance after 10 ticks is an estimate. It is probably above 1 block, but even if it varies, the corner placement still gives a flicker or re-drop loop. The unit test mocks getLocation() to return `at`, which would hide this."
+   ],
+   "confirmed": true
+  }
+ ],
+ "refuted": [],
+ "minors": [
+  {
+   "severity": "minor",
+   "file": "E:/Programming/java/wt/cnc016-fix1/gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/npc/police/perimeter/PerimeterController.java",
+   "line": "86-87",
+   "problem": "`cop.holdPost(...)` runs before `cop.transitionTo(CopState.POSTED)`. The candidate is always PURSUING or COMBAT, and both `onExit` methods call `cop.stopNavigation()` (PursuingBehavior.java:136, CombatBehavior.java:85). Keystone's `stopNavigation` runs `pursuit.reset()` and `navigation.stopNavigation()` (Citizens `cancelNavigation` plus a tracking reset), so the walk to the anchor that `holdPost` just started (AbstractNpc.java:556-559 -> `navigateTo` -> `NpcPursuit.goTo` -> Citizens `setTarget`) is cancelled at once. The post field is kept, so the cop only walks again on the next AI tick, when `tickPost` finds it 'not arrived, not navigating' and sends it again.",
+   "scenario": "A suspect at 3 stars enters the perimeter zone. PerimeterListener calls `start` between AI ticks. For each posted cop, Citizens computes a path to the anchor, then the PURSUING->POSTED exit cancels it the same instant. The cop stands still until the next AI tick and then computes the same path again. That is one wasted Citizens path per post and up to one AI interval of standing still when containment should start. It also resets the stuck and stranded tracking that the first order just armed.",
+   "fix": "Swap the two lines: call `cop.transitionTo(CopState.POSTED)` first (its onExit stops the chase), then `cop.holdPost(new NpcPost(spot, settings.leashRadius(), centre))`. PostedBehavior.onEnter is empty, so nothing else depends on the order.",
+   "lens": "keystone-npc"
+  },
+  {
+   "severity": "minor",
+   "file": "E:/Programming/java/wt/keystone-1.15.0/CLAUDE.md",
+   "line": "134",
+   "problem": "The tracked Keystone CLAUDE.md phase list ends at H13 (v1.14.0). It has no entry for H14 (v1.15.0: `EntitySpawner.isOutOfSight`/`findHiddenSpawnLocation`, `NpcPost` plus `AbstractNpc.holdPost`/`tickPost`/`releasePost`), although docs/README.md and docs/phase-h14-dispatch-posts.md were both added in 6e082f1. Every previous phase release updated this list.",
+   "scenario": "A future Keystone session orients from CLAUDE.md, sees 1.14.0 / H13 as the latest phase, and misses that `keystone-npc` now has a hold-post API and an out-of-sight spawn helper with Gangland 0.16 as their consumer. It may then re-implement or break them, or skip the new docs.",
+   "fix": "Append the H14 sentence to the phase list at CLAUDE.md:134: 'H14 (v1.15.0 — out-of-sight spawn ring `EntitySpawner.isOutOfSight`/`findHiddenSpawnLocation` and `NpcPost` hold-post/leash on `AbstractNpc`, additive) is recorded in docs/phase-h14-dispatch-posts.md'.",
+   "lens": "keystone-npc"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/wanted/evasion/EvasionClock.java",
+   "line": "199-206",
+   "problem": "A rejoin's seeded track (seed=true, no cop has really seen him) still fires WantedEvasionStateEvent SEEN, and ContactDesk.seen() treats any SEEN as 'a cop has eyes on you'.",
+   "scenario": "Wanted player relogs; CopManager seeds the squad's lastKnownLocation, millisSinceSighting < Lost_Sight_Seconds, so a SEEN track with seed=true is created and the event is fired. For that window /glw contact and the [WANTED] REMOVE/CLEAR signs refuse with CONTACT_SEEN although no cop saw him. This is the one case where contact refusal and the evasion clock's own 'in sight' notion (which excludes seeds from arcs.lost/seen) disagree. Window is only Lost_Sight_Seconds, so low impact.",
+   "fix": "Fire the SEEN event only when !seed (or give the event/ContactDesk a seed flag and let ContactDesk.observe ignore seeded SEEN).",
+   "lens": "turf-contacts-regions"
+  },
+  {
+   "severity": "minor",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/listener/wanted/ChaseArcListener.java",
+   "line": "57-62, 74-87",
+   "problem": "CONTACT end is not learned (ChaseLearner.outcome returns NaN), but a partial contact wipe leaves arc.peak at the pre-wipe level, so a later EVASION end is recorded as an escape from that higher peak.",
+   "scenario": "Crime takes the player to 3 stars (arc.peak=3). While unseen he pays /glw contact for 2 stars (3 to 1, cause CONTACT; ArcPeak is Math.max so it stays 3). He then evades the 1-star chase quickly; WantedEndEvent cause EVASION gives outcome=1 with peak=3 and chaseMs >= Min_Chase_Seconds, so ChaseLearner credits an easy 3-star escape to his habit and to the server's level-3 stats (including typicalSeconds). Buying stars down then escaping thereby trains AUTO to shorten his and the server's 3-star drops, which is the farmable signal the 'not learned as an escape' rule is meant to block.",
+   "fix": "On a WantedLevelChangeEvent with cause CONTACT (and a decrease) mark the arc as 'bought down' and have onChaseEnd skip learner.record for it (or lower arc.peak to the new level).",
+   "lens": "turf-contacts-regions"
+  }
+ ],
+ "died": []
+}

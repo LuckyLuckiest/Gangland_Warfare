@@ -18,6 +18,7 @@ file is renamed with a `-old` suffix and a fresh default is generated.
 |--------------------|----------------------------------------------|
 | `settings.yml`     | Main runtime configuration (all systems)     |
 | `cops.yml`         | Per-tier cop NPC definitions                 |
+| `setup.yml`        | Cops setup wand: item, outline, messages (0.16.0) |
 | `civilians.yml`    | Civilian type definitions and spawner config |
 | `cars.yml`         | Car type definitions                         |
 | `wearables.yml`    | Wearable armor definitions                   |
@@ -165,6 +166,10 @@ User:
             Waypoint: "spawn"
          Health: 20
          Hunger: 20
+      Hospital:                    # 0.16.0: respawn at the nearest HOSPITAL waypoint (/glw waypoint type <name> hospital)
+         Enable: true              # false = the old respawn rules and the old "Death penalty" line
+         Shield_Seconds: 5         # Damage immunity after a hospital respawn; attacking anything ends it; 0 = off.
+                                   # A settings.yml without the key reads 5
 ```
 
 ### Bounty
@@ -172,6 +177,7 @@ User:
 ```yaml
 Bounty:
    Pay_Notoriety: false           # 0.15.0: true also pays the server-made part of a bounty on a kill
+   Takedown_Minimum: 100          # 0.16.0: escrow a posted bounty needs for the kill to be a crime-free takedown (and above Minimum)
    Kill:
       Each: 5                      # Bounty added per kill
       Maximum: 50_000
@@ -201,6 +207,16 @@ Wanted:
    Level:
       Increment: 1
       Maximum: 5
+   Self_Defence:                   # 0.16.0: hitting back is not a crime
+      Enable: true                 # false = every kill is a crime
+      Window_Seconds: 8            # how long after being hit the victim may hit back crime-free
+      Min_Damage: 2.0              # weaker hits do not open the window
+      Pair_Cooldown_Seconds: 600   # the same pair gets a fresh exemption only after this long
+   Contacts:                       # 0.16.0: /glw contact and the [WANTED] sign, only while no cop sees you
+      Enable: true
+      Price_Per_Star: 1000
+      Cooldown_Seconds: 600        # lying low after a paid wipe (shared by the command, the phone and the sign)
+      Max_Stars: 2                 # most stars one /glw contact call wipes
    Kill_Combo:
       Enable: true
       Reset_After: 10              # Seconds of inactivity to reset combo
@@ -447,6 +463,28 @@ Cops:
 | `Radio.*` | see above | Police radio in chat: who hears it, throttling, ack delay, `Responder_Max` cross-group responders |
 | `Backup.*` | see above | Extra cops requested when a cop goes down, for how long, and how often |
 | `Retreat.*` | see above | When a hurt cop breaks off to cover, and how far it looks |
+| `Dispatch.Enabled` | `true` | 0.16.0. Units leave the nearest station and arrive after an ETA. `false` = the 0.15 instant ring spawn |
+| `Dispatch.Unit_Speed` | `10.0` | Blocks per second a unit covers (at least 0.1) |
+| `Dispatch.Min_Eta_Seconds` / `Max_Eta_Seconds` | `0` / `40` | ETA = horizontal distance / `Unit_Speed`, clamped, rounded up. A max below the min is clamped to the min |
+| `Dispatch.Station_Radius` | `32.0` | Spawners within this of a station belong to it (`/glw cop spawner set`, saving a station) |
+| `Dispatch.Rejoin_Grace_Seconds` | `15` | Seconds after a wanted player rejoins before his first units are sent (ETA on top; the clock holds meanwhile). A logout drops the queue; the reappearance spot is not seeded |
+| `Breather.Enabled` | `true` | 0.16.0. `false` = a wiped squad is refilled at once |
+| `Breather.Seconds` | `15, 13, 10, 8, 6` | Pause after a wipe for 1 to 5 stars (other levels clamp to the nearest end); a non-number entry makes the whole list default |
+| `Breather.Wipe_Window_Seconds` | `10` | A squad is wiped when it loses every cop inside this |
+| `Handoff.Enabled` | `true` | 0.16.0. `false` = no heading call and no ahead-of-him spawns |
+| `Handoff.Heading_Seconds` | `2` | Seconds of the suspect's movement used for the heading |
+| `Handoff.Bias_Seconds` | `10` | How long new units spawn ahead of him (also how much slower a station ahead may be and still win) |
+| `Handoff.Cone_Degrees` | `60.0` | Half-angle either side of the heading |
+| `Perimeter.Enabled` | `true` | 0.16.0. `false` = no posts |
+| `Perimeter.Min_Level` | `3` | Stars needed |
+| `Perimeter.Posts` | `2` | Most cops posted at once; the last free cop is never posted |
+| `Perimeter.Roles` | `Marksman, Defender` | Roles posted first |
+| `Perimeter.Max_Seconds` | `60` | The longest a perimeter holds |
+| `Perimeter.Lane_Length` | `16.0` | Blocks of clear lane kept toward the centre of the zone |
+| `Perimeter.Sight_Range` | `40.0` | How far a posted cop sees; the ring radius is the smaller of the zone radius and 0.8 x this |
+| `Perimeter.Leash_Radius` | `4.0` | How far a posted cop may stray (a post never uses less than 1.5) |
+| `Radio.Cooldown_Ticks.Dispatch_En_Route` / `Wipe_Refill` / `Handoff` / `Post_Up` / `Eyes_On` / `Returning_To_Patrol` | `0` / `0` / `200` / `100` / `60` / `1200` | 0.16.0 repeat cooldowns of the new radio lines |
+| `Radio.Priority` | see the file | `Dispatch_En_Route` and `Wipe_Refill` are always added to the list a server file carries (they must not be swallowed by the gap after `Dispatch_Wanted`) |
 | `Regroup.Enabled` | `true` | 0.15.0. `false` = no pull-back after casualties |
 | `Regroup.Casualties` | `2` | Cops lost inside `Window_Seconds` that trigger the pull-back |
 | `Regroup.Window_Seconds` | `20` | The window for those casualties |
@@ -487,6 +525,17 @@ restores the 0.13.0 behaviour of that piece. Texts are in `copsncrooks/wanted_me
 | `Wanted.Evasion.Search_Radius` | `40, 60, 90, 130, 180` | Zone radius in blocks by wanted level |
 | `Wanted.Evasion.Seconds_To_Drop` | `10, 20, 30, 45, 60` | Seconds hidden for a drop, by wanted level |
 | `Wanted.Evasion.Outside_Zone_Speed` | `2.0` | Clock speed outside the zone |
+| `Wanted.Evasion.Hideout.Enable` / `Speed` | `true` / `2.0` | 0.16.0. Clock speed while searching inside a hideout (a gang's turf, a gang waypoint, an admin `hideout` region) that is not the one he was seen in; a rival gang's hideout never counts |
+| `Wanted.Evasion.Quiet_Speed.Enable` | `true` | 0.16.0. The cold trail |
+| `Wanted.Evasion.Quiet_Speed.Per_Minute` / `Max` | `0.25` / `2.0` | Speed added for each full quiet minute (no crime, no new star, no cop sighting; offline time never counts), and its ceiling |
+| `Wanted.Evasion.Quiet_Speed.Backup_Skip_Seconds` | `60` | After this much quiet the next backup wave is skipped and the squad says `Returning_To_Patrol` |
+| `Wanted.Evasion.Max_Speed` | `4.0` | Cap on the zone, hideout and quiet speeds multiplied together (below 1 resets to 4.0) |
+| `Wanted.Evasion.Auto.Rampage_Min_Weight` | `80` | 0.16.0, AUTO only. A crime counts toward the rampage opening only at this heat weight or more (the shipped cheap crimes never do) |
+| `Wanted.Bribe_Stars.Enable` | `true` | 0.16.0. `false` = no pickups |
+| `Wanted.Bribe_Stars.Stars` | `1` | Stars a pickup takes (at least 1) |
+| `Wanted.Bribe_Stars.Respawn_Seconds` | `300` | Seconds before a taken pickup returns |
+| `Wanted.Bribe_Stars.Pickup_Radius` | `1.5` | Blocks within which a player takes it (zero or less resets to 1.5) |
+| `Wanted.Bribe_Stars.Item` | `NETHER_STAR` | The pickup's material (an unknown name uses `NETHER_STAR` with a warning) |
 | `Wanted.Hud.Boss_Bar.Enable`, `Star_Card.Enable`, `Title.Enable`, `Zone_Ring.Enable`, `Compass.Enable` | `true` | Each switch removes only its own piece |
 | `Wanted.Hud.Siren.Enable` / `Sound` / `Volume` / `Pitch` | `true` / `BLOCK_NOTE_BLOCK_BELL` / `1.0` / `0.5` | The siren when stars rise |
 | `Wanted.Hud.Zone_Ring.Particle` / `Points` | `DUST` / `48` | The ring around the search zone; an unknown particle uses `DUST` |
@@ -499,7 +548,7 @@ Shipped crime weights (`Heat.Crimes`): `Brandish_Near_Cop` 25, `Assault_Civilian
 `Trespass_Restricted` 300, `Jailbreak` 450. 0.15.0 reports `Kill_Player`, `Kill_Civilian`, `Kill_Cop`, `Assault_Cop`
 and `Resisting_Arrest`; the others are read by later releases. A weight of 0 ignores that crime.
 
-`copsncrooks/wanted_messages.yml` holds `Hud.Bar.Seen` / `Searching` / `Evaded` / `Evaded_Many`, `Hud.Title`, `Hud.Card.Raise` /
+`copsncrooks/wanted_messages.yml` also holds (0.16.0) `Bribe_Star.Taken` (`%stars%`) and `Bribe_Star.Seen`, and holds `Hud.Bar.Seen` / `Searching` / `Evaded` / `Evaded_Many`, `Hud.Title`, `Hud.Card.Raise` /
 `Stance_Cuffs` / `Stance_Shoot` / `Drop_Evasion` / `Drop_Decay` / `Drop_Other` / `Drop_Petty` / `Drop_Cold_Trail` / 
 `Drop_Clean_Break` / `Drop_Still_Hot` / `Drop_Known_Face` / `Drop_Narrow`, `Charge_Sheet.Header` / `Crime` / `Total` /
 `Paid` / `Extra_Time` / `Paperwork`, and `Crimes.<Id>` (including `Crimes.Unknown_Crime`, the card text when no crime is
@@ -549,6 +598,51 @@ All keys are under `Wanted.Evasion.Auto`. A missing key uses its default; a valu
 | `Learning.Min_Chase_Seconds` | `30` | >= 0 | Shorter chases are not learned from |
 | `Learning.Min_Seconds_Between_Outcomes` | `180` | >= 0 | A player's chases ending closer together are not learned from |
 | `Learning.Forget_After_Days` | `90` | >= 1 | Habit and level rows untouched this long are deleted at startup |
+
+---
+
+## Other 0.16.0 files and keys
+
+### setup.yml (`copsncrooks/setup.yml`)
+
+New in 0.16.0; ships inside the cops-n-crooks jar and is copied to `plugins/Gangland_Warfare/copsncrooks/` on first boot
+(it is in `CopsNCrooksYamlConfig.FILES`). It configures the `/glw cop setup` wand; the shipped file lists every message
+with its placeholders, so copy key names from it.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `Setup.Wand.Item` | `BLAZE_ROD` | The wand's material (an unknown name uses `BLAZE_ROD`) |
+| `Setup.Outline.Particle` | `DUST` | The particle of the selection outline, shown only to the admin holding the wand (an unknown name uses `DUST`) |
+| `Setup.Outline.Interval_Ticks` | `10` | Ticks between two draws |
+| `Setup.Messages.*` | see the file | Every wand and command message (`Usage`, `Wand_Given`, `Mode_Set`, `Pos_Set`, `Station_Saved`, `Region_Saved`, `Point_Saved`, `Removed`, `Linked`, ...), `&` colour codes, `%placeholders%` |
+
+### cop_roles.yml `Squad_Composition`
+
+An entry is `"<Role>"` or `"<Role>@<tier id>"`. The bundled 3, 4 and 5 star squads carry tiers (5 stars has its own entry
+since 0.16.0); 1-2 stars and the code defaults have none. A bad `@` value counts as 0 (the star's tier) with a
+`config.unknown_tier` warning. Removing the `@suffixes` from a server's file restores one tier per squad.
+
+### cop_radio_messages.yml
+
+0.16.0 adds the keys `Dispatch_En_Route` (`%count% %station% %eta% %place%`), `Wipe_Refill` (`%eta%`), `Handoff`
+(`%direction%`), `Post_Up` (`%place%`), `Eyes_On` (`%place% %direction%`) and `Returning_To_Patrol`, the root word
+`Unknown_Place` ("the area"), and the places in the texts of `Dispatch_Wanted` (`%target% %level% %place%`) and
+`Contact_Lost` (`%place%`). The code carries the same texts as fallbacks (`CopRadioMessages.DEFAULT_LINES`), so an old
+server file keeps working and speaks the new lines; a server file keeps its own text for an old key. The Spanish file has
+the same keys.
+
+### items/money.yml
+
+The bundled `Money.Drop_Sources.PLAYER.Enabled` is `false` since 0.16.0: one death costs one bill (the ward bill) and no
+longer also drops part of the wallet at the body. The key stays; set it to `true` to get the drop back. A server's existing
+`money.yml` is never rewritten, so only new installs change. `COP` is unchanged.
+
+### New messages (`message_en.yml`, `message_es.yml`)
+
+`Wanted_Level.Contact.Used` (`%stars% %money_symbol% %amount%`), `.Seen`, `.Cooldown` (`%time%`), `.Not_Wanted`, `.No_Money`
+(`%money_symbol% %amount%`), `.Disabled`, `Death.Ward_Bill` (`%money_symbol% %amount%`) and `Death.Hospital_Shield`
+(`%seconds%`). A message file kept from an older version lacks them and prints `<missing: ...>` for the line until it is
+regenerated (see the migration guide).
 
 ---
 

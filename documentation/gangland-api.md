@@ -95,6 +95,75 @@ module/core package and is reachable transitively (`gangland-core`'s general-pur
   civilians' 1 event and gangland-item's `PlayerItemInitEvent` all stay module/infra-owned — no named consumer
   outside their own module, so none were promoted (WS3's explicit decline for the loot-chest 9 still stands).
 
+## Api 2.3 (0.16.0)
+
+`GanglandApi.VERSION` is `"2.3"`. `cops-n-crooks` and `gangland-turf` declare `Host_Api: 2.3` because they publish places
+through the region SPI; every other module keeps its `2.0` or `2.2` line and still loads (same major, module minor `<=`
+host minor). A `2.3` module does not load on a 0.15.x core. Nothing was removed or changed; every row is an addition.
+The bump is one minor for everything below (owner ruling D14, 2026-10-07).
+
+| Addition | Package | Kind |
+|---|---|---|
+| `RegionShape` (sealed: `Cuboid`, `Sphere`) | `org.luckyraven.gangland.data.region` | `contains(x, y, z)` and `footprint()` (horizontal area, the "smaller wins" key). `Cuboid.of(x1, y1, z1, x2, y2, z2)` normalises two corners (inclusive block coordinates); `Cuboid.column(x1, z1, x2, z2)` is unbounded in Y (a turf column). `Sphere(x, y, z, radius)` |
+| `PlaceRegion` | same | Record `(id, name, world, shape, ownerGangId, tags)`; `id` is `<source>:<local id>` (`copsncrooks:12`, `turf:3`, `waypoint:7`). Tag constants `TAG_DISTRICT`, `TAG_HIDEOUT`, `TAG_RESTRICTED`, `TAG_TURF`, `TAG_BREAKER` (`district`, `hideout`, `restricted`, `turf`, `breaker`); `NO_OWNER` is `-1`; `contains(Location)` and `hasTag(tag)` |
+| `RegionProvider` | same | The SPI: `String source()` and `List<PlaceRegion> regionsAt(Location at)` (every region of that provider containing `at`; empty, never null; main thread) |
+| `PlaceNames` | same | Core holder bean, inert until a provider registers. `register(provider)` (a second provider with the same `source()` replaces the first), `unregister(source)`, `regionsAt(at)` (smallest footprint first, ties in registration order; a provider that throws is skipped for that call and logged at warn), `placeAt(at)` (first region with a non-blank name), `locate(at)` (its name) and `withTag(at, tag)` (smallest region carrying the tag). Empty for a null location or world |
+| `Waypoint.WaypointType.HOSPITAL` | `org.luckyraven.gangland.data.teleportation` | Enum constant (safe zone: true). The database stores the name, so no migration |
+| `WantedCause.CONTACT` | `org.luckyraven.gangland.core.wanted` | Enum constant: the phone/command/sign contacts and the bribe-star pickups. Lives in `gangland-core`, re-exported by the api |
+| `Settings.isSelfDefenceEnabled()`, `getSelfDefenceWindowSeconds()`, `getSelfDefenceMinDamage()`, `getSelfDefencePairCooldownSeconds()` | `org.luckyraven.gangland.file.configuration` | `Wanted.Self_Defence.Enable` / `Window_Seconds` / `Min_Damage` / `Pair_Cooldown_Seconds` |
+| `Settings.getBountyTakedownMinimum()` | same | `Bounty.Takedown_Minimum` (`BigDecimal`) |
+| `Settings.isContactsEnabled()`, `getContactsPricePerStar()`, `getContactsCooldownSeconds()`, `getContactsMaxStars()` | same | `Wanted.Contacts.Enable` / `Price_Per_Star` / `Cooldown_Seconds` / `Max_Stars` |
+| `Settings.isHospitalEnabled()`, `getHospitalShieldSeconds()` | same | `User.Death.Hospital.Enable` and `Shield_Seconds` (5; 0 or less = no shield) |
+| `Messages.CONTACT_USED`, `CONTACT_SEEN`, `CONTACT_COOLDOWN`, `CONTACT_NOT_WANTED`, `CONTACT_NO_MONEY`, `CONTACT_DISABLED`, `DEATH_WARD_BILL`, `DEATH_HOSPITAL_SHIELD` | same | The eight new message constants, paths `Wanted_Level.Contact.*`, `Death.Ward_Bill`, `Death.Hospital_Shield`, English and Spanish |
+| `PlaceNames` core bean | `gangland-impl` `DataConfig.placeNames()` | The one instance a module injects |
+
+That is 4 + 1 + 4 + 2 = eleven `Settings` getters and eight `Messages` constants. `GanglandApi` keeps its four accessors
+(`users()`, `gangs()`, `waypoints()`, `bankTiers()`); `PlaceNames` is a bean, not a facade accessor.
+
+### Publishing places from a module (RegionProvider how-to)
+
+Implement `RegionProvider`, then register it with the `PlaceNames` bean **from a bean method** (the module's own
+`@Configuration`), so no module needs a `Depends:` on another to read places:
+
+```java
+public final class TurfRegionProvider implements RegionProvider {
+	private final TurfManager turfs;
+
+	public TurfRegionProvider(TurfManager turfs) {
+		this.turfs = turfs;
+	}
+
+	@Override
+	public String source() {
+		return "turf";                       // also the id prefix
+	}
+
+	@Override
+	public List<PlaceRegion> regionsAt(Location at) {
+		Turf turf = turfs.findAt(at);
+		if (turf == null) return List.of();
+		// ... id "turf:<id>", the display name, a Cuboid.column, the owner gang or NO_OWNER, tags {turf[, hideout]}
+	}
+}
+
+@Bean
+public TurfRegionProvider turfRegionProvider(TurfManager turfs, PlaceNames places) {
+	TurfRegionProvider provider = new TurfRegionProvider(turfs);
+	places.register(provider);
+	return provider;
+}
+```
+
+Rules: the `id` must be globally unique (`<source>:<local id>`); `name` is what the radio says (leave it blank for a region
+that must not be spoken); tag a region `hideout` to make it a hideout for the evasion clock (owner `-1` = open to everyone,
+a gang id = that gang only); keep `regionsAt` cheap (it is called on the AI tick) and free of side effects; never cache a
+`PlaceNames` result. A consumer reads `placeNames.locate(location)`, `placeAt` or `withTag(location, PlaceRegion.TAG_HIDEOUT)`.
+Providers shipped in 0.16.0: `copsncrooks` (admin regions placed with the setup wand), `turf` (owned turfs are hideouts of
+their gang) and `waypoint` (gang waypoints are hideouts of their gang, a sphere of the waypoint's radius, 8 blocks when it is 0,
+at most 64).
+
+---
+
 ## Api 2.2 (0.15.1)
 
 `GanglandApi.VERSION` is `"2.2"`. cops-n-crooks, gangland-civilians, gangland-turf, gangland-gang, gangland-gadget and

@@ -16,6 +16,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.RegroupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.gangland.npc.radio.RadioLines;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
 import org.luckyraven.gangland.npc.radio.RadioSides;
@@ -62,6 +63,8 @@ public class CopRadio {
 	private final SquadRadio                  radio;
 	private final LongSupplier                clock;
 	private final RadioLines                  lines;
+	/** Inert until the module config hands over the core's holder bean ({@link #setPlaceNames}). */
+	private       PlaceNames                  places = new PlaceNames();
 
 	public CopRadio(JavaPlugin plugin, CopLoader copLoader, CopRadioMessages messages) {
 		this(copLoader::getLoadedProvider, messages, System::currentTimeMillis,
@@ -75,6 +78,16 @@ public class CopRadio {
 		this.lines    = lines;
 		this.radio    = new SquadRadio(this::settings, lines, clock, () -> ThreadLocalRandom.current().nextDouble(),
 		                               later);
+	}
+
+	/** Where {@code %place%} gets its district, hideout, turf or waypoint name from. */
+	public void setPlaceNames(PlaceNames places) {
+		this.places = places;
+	}
+
+	/** The name of the place at {@code at} (smallest region wins), or the radio file's {@code Unknown_Place} word. */
+	public String placeOf(@Nullable Location at) {
+		return places.locate(at).orElseGet(this::unknownPlace);
 	}
 
 	/** The radio's clock, in milliseconds; backup timing runs on it too. */
@@ -111,16 +124,40 @@ public class CopRadio {
 
 	/** Dispatch speaking about {@code target}, heard around the target: wanted starts and escalations. */
 	public boolean dispatch(CopGroup group, Player target, String key, int level, String tier) {
-		return radio.say(group.getSquad(), voice(group), null, "Dispatch", key, "Dispatch_Format",
-		                 target.getLocation(), null, Map.of("level", String.valueOf(level), "tier", tier));
+		return dispatch(group, target, key, level, tier, Map.of());
+	}
+
+	/** {@link #dispatch(CopGroup, Player, String, int, String)} with {@code extra} placeholders (%station%, %eta%, %count%, %place%). */
+	public boolean dispatch(CopGroup group, Player target, String key, int level, String tier,
+	                        Map<String, String> extra) {
+		Map<String, String> merged = new HashMap<>(extra);
+		merged.putIfAbsent("place", placeOf(target.getLocation()));
+		merged.put("level", String.valueOf(level));
+		merged.put("tier", tier);
+		return radio.say(group.getSquad(), voice(group), null, "Dispatch", key, "Dispatch_Format", target.getLocation(),
+		                 null, merged);
 	}
 
 	/** The group's leader (or, with the squad empty, any live cop of the group) speaks {@code key}. */
 	public boolean sayFromLeader(CopGroup group, String key) {
+		return sayFromLeader(group, key, Map.of());
+	}
+
+	/** {@link #sayFromLeader(CopGroup, String)} with {@code extra} placeholders (%direction%, %place%). */
+	public boolean sayFromLeader(CopGroup group, String key, Map<String, String> extra) {
+		return sayFromLeader(group, key, extra, null);
+	}
+
+	/**
+	 * {@link #sayFromLeader(CopGroup, String, Map)}, also heard within {@code Radio.Range} of {@code addressee}: a
+	 * line about a suspect the speaker is far from (the hand-off, said by a cop walking home) still reaches him.
+	 */
+	public boolean sayFromLeader(CopGroup group, String key, Map<String, String> extra,
+	                             @Nullable LivingEntity addressee) {
 		AbstractNpc speaker = leaderSpeaker(group);
 		if (speaker == null) return false;
 		return radio.say(group.getSquad(), voice(group), speaker.getEntity(), callsign(speaker), key, "Format", null,
-		                 null, Map.of());
+		                 addressee, extra);
 	}
 
 	private @Nullable AbstractNpc leaderSpeaker(CopGroup group) {
@@ -452,10 +489,19 @@ public class CopRadio {
 	/** The compass word ({@code Compass} lines) from {@code from} to {@code where}; empty with either missing. */
 	private String directionTo(AbstractNpc from, @Nullable Location where) {
 		LivingEntity self = from.getEntity();
+		if (self == null) return "";
+		return compassWord(self.getLocation(), where);
+	}
+
+	/**
+	 * The radio file's {@code Compass} word for the side of {@code from} that {@code to} lies on; empty with either
+	 * missing, in another world, or no compass lines.
+	 */
+	public String compassWord(@Nullable Location from, @Nullable Location to) {
 		List<String> compass = lines.lines("Compass");
-		if (self == null || where == null || compass.isEmpty() || where.getWorld() == null ||
-		    !where.getWorld().equals(self.getWorld())) return "";
-		return compass.get(RadioSides.compass8(self.getLocation(), where) % compass.size());
+		if (from == null || to == null || compass.isEmpty() || from.getWorld() == null ||
+		    !from.getWorld().equals(to.getWorld())) return "";
+		return compass.get(RadioSides.compass8(from, to) % compass.size());
 	}
 
 	/** The whole blocks from {@code from} to {@code where}; empty with either missing or in another world. */
@@ -498,7 +544,13 @@ public class CopRadio {
 		return cfg != null ? cfg.getRadioSettings() : CopConfigProvider.COP_RADIO_DEFAULTS;
 	}
 
-	private static RadioVoice voice(CopGroup group) {
+	/** The word a {@code %place%} no caller named falls back to ({@code Unknown_Place}, "the area"). */
+	private String unknownPlace() {
+		List<String> words = lines.lines("Unknown_Place");
+		return words.isEmpty() ? "the area" : words.get(0);
+	}
+
+	private RadioVoice voice(CopGroup group) {
 		return new RadioVoice() {
 			@Override
 			public String callsign(AbstractNpc npc) {
@@ -517,7 +569,9 @@ public class CopRadio {
 
 			@Override
 			public Map<String, String> extras(NpcSquad squad) {
-				return Map.of("tier", group.getTierName(), "level", String.valueOf(group.getLevel()));
+				// last-known, never the live position of the suspect
+				return Map.of("tier", group.getTierName(), "level", String.valueOf(group.getLevel()), "place",
+				              placeOf(group.getSquad().lastKnownLocation()));
 			}
 		};
 	}

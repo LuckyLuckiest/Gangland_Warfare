@@ -105,6 +105,19 @@ class CopRoleTest {
 	}
 
 	@Test
+	@DisplayName("nextSlot: the first unfilled entry, the last index when all are filled, -1 without a composition")
+	void nextSlot_firstUnfilled_lastWhenFull_minusOneForNull() {
+		List<CopRole> composition = List.of(POINTMAN, DEFENDER, ASSAULT);
+
+		assertEquals(0, CopRole.nextSlot(composition, List.of()));
+		assertEquals(1, CopRole.nextSlot(composition, List.of(POINTMAN)));
+		assertEquals(2, CopRole.nextSlot(composition, Arrays.asList(DEFENDER, POINTMAN, null)));
+		assertEquals(2, CopRole.nextSlot(composition, List.of(POINTMAN, DEFENDER, ASSAULT)));
+		assertEquals(-1, CopRole.nextSlot(null, List.of()));
+		assertEquals(-1, CopRole.nextSlot(List.of(), List.of()));
+	}
+
+	@Test
 	@DisplayName("rangedBand: clamped under the weapon's reach, keeping a valid min < max; no reach leaves it as declared")
 	void rangedBand_clampedToReach() {
 		CopRole marksman = new CopRole("Marksman", "Marksman", NpcFanPlacement.ANY, 14.0, 22.0, 1.0, null, 0, null,
