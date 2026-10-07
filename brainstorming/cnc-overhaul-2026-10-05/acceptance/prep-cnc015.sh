@@ -21,6 +21,7 @@ PROG="E:/Programming/java/wt/_programme"
 H="$PROG/harness"
 LIVE="E:/Programming/java/wt/_programme/servers/base"  # T18: base copied from the Keystone harness base, live server never read
 WT15="E:/Programming/java/wt/gangland-0.15.0/target"
+WT152="E:/Programming/java/wt/gangland-0.15.2/target"
 WT13="E:/Programming/java/wt/gangland-0.13.0/target"
 KS="E:/Programming/java/wt/keystone-1.14.0/keystone-plugin/target/Keystone-1.14.0.jar"
 BZ="E:/Programming/java/wt/bartizan-0.6.1/bartizan-plugin/target/Bartizan-0.6.1.jar"
