@@ -16,13 +16,13 @@ Cops N Crooks expands from the squad mechanic into a full police response. Crime
 
 ## ✨ New
 
-- **Dispatch from stations** — Crimes call units from the nearest station in your world (or ring when none exists). ETA = clamp(distance / 10 blocks/s, 0–40 s). Rejoin grace (15 s) pauses the search while units arrive. Reload the server to refresh the dispatch cache.
-- **Mixed-tier squads and breather** — A squad composition can specify role-at-tier entries (`Commander@3, Pointman@2, ...`) instead of tier-per-star. When half a squad dies inside 10 s, the survivors fall back and regroup for 15–6 s (by stars); a full wipe triggers an immediate backup with a full new squad after the breather.
-- **Hand-off and perimeter posts** — When a cop walks home more than 40 blocks away while the squad is not pursuing, hand-off seeds the next units ahead of the suspect with a 60-degree cone bias (10 s window). A 3+ star evasion spawns two posts (Marksman, Defender) on a ring around the search zone that hold the perimeter, radio sight updates and fight if attacked; posts release when the suspect is spotted, all posts return, or 60 s elapse.
-- **Hideouts and cold trail** — Gang waypoints (with radius > 0) and districts/hideouts tagged `hideout` speed the clock 2× when the suspect is inside and unseen. Cold trail adds more speed (0.25×/min, capped at 2×) when no heat has been ledged in the last minute (crimes from signs, commands, or the kill-combo do not reset quiet).
-- **Crooked contacts and bribe-star pickups** — Phone desk `/glw contact [stars]` clears 1–Max_Stars for a price per star when not in a cop's sight (same cooldown as paid REMOVE signs). Bribe-star pickups sit on the map (NETHER_STAR by default) and disappear when a wanted player walks over them (unseen), clawing back 1 star each; they respawn every 5 min.
-- **Hospital respawn and one bill** — Death waypoints tagged `HOSPITAL` become respawn points (nearest by world and distance). Downed players are quoted a bill at the down and charged on recovery or quit. Hospital respawns (both paths) grant 5 s of damage immunity (the shield); attacking anything ends it early. Jailed arrests pay one charge, the bill, not a charge sheet.
-- **Setup wand and place names** — `/glw cop setup` places and edits stations (anchors), admin regions (districts, hideouts, restricted, breaker trigger points) and pickup points on the map. PlaceNames queries rank regions by footprint (smallest first); dispatch radio and `%place%` token use them. Every admin region is a PlaceRegion with source `copsncrooks`.
+- **Dispatch from stations** — Crimes call units from the nearest station in your world (or ring when none exists). ETA = clamp(distance / Unit_Speed, Min_Eta_Seconds–Max_Eta_Seconds, default 0–40 s). Rejoin grace (default 15 s) pauses the search while units arrive. Reload the server to refresh the dispatch cache.
+- **Mixed-tier squads and breather** — A squad composition can specify role-at-tier entries (`Marksman@3`, `Pointman@2`, etc.) instead of one tier per star. When every cop in the squad dies within Wipe_Window_Seconds (default 10 s), the survivors fall back and regroup for 6–15 s (by stars); a full wipe triggers an immediate backup with a fresh full squad after the breather.
+- **Hand-off and perimeter posts** — When a cop walks out of pursuit beyond 40 blocks while the squad is not actively pursuing, hand-off biases the next dispatch ahead of the suspect within a cone (default 60 degrees, 10 s window). A 3+ star evasion spawns perimeter posts (default two, Marksman and Defender) on a ring around the search zone; posts hold the perimeter, radio sight updates and fight if attacked; they release when the suspect is spotted, all posts return, or Max_Seconds elapse (default 60 s).
+- **Hideouts and cold trail** — Gang waypoints and admin regions tagged `hideout` speed the clock 2× when the suspect is inside and unseen. Cold trail speeds it further (default 0.25×/min, capped at 2×) when no crime has been reported in the last minute (crimes from signs, commands, or the kill-combo do not reset quiet).
+- **Crooked contacts and bribe-star pickups** — Phone desk `/glw contact [stars]` costs Price_Per_Star per star (default 1000) and clears up to Max_Stars (default 2) when no cop has seen the player recently (same cooldown as paid REMOVE signs). Bribe-star pickups sit on the map (NETHER_STAR by default) and vanish when a wanted player walks over them (unseen), clawing back 1 star each; they respawn every Respawn_Seconds (default 300 s / 5 min).
+- **Hospital respawn and one bill** — Waypoints tagged `HOSPITAL` become respawn points (nearest by world and distance). Downed players receive one bill charged when they respawn or quit. Hospital respawns grant Shield_Seconds of damage immunity (default 5 s); attacking anything cancels it early. Arrests charged when a downed player is brought to jail.
+- **Setup wand and place names** — `/glw cop setup` places and edits stations (anchors), admin regions (districts, hideouts, restricted, breaker trigger points) and setup points on the map. PlaceNames ranks regions by horizontal footprint (smallest first); dispatch radio and `%place%` token use them. Every admin region is a PlaceRegion with source `copsncrooks`.
 
 ---
 
@@ -37,19 +37,24 @@ Cops N Crooks expands from the squad mechanic into a full police response. Crime
 
 ## 🐛 Fixed
 
-- **WB-48** — Crime-free takedowns now require a minimum bounty of $100 to avoid turns-into-a-murder edge cases.
-- **US-33 / WB-17** — Duplicate death entries in the recent-deaths map are pruned on every charge; servers no longer grow unbounded memory from repeated deaths.
-- **T-180** — Spawner and jail IDs are no longer reused for rows in worlds that load after Gangland boots. A world loaded later keeps its old rows and new rows get fresh IDs.
-- Every docket ID marked fixed in the task reports (see Docket section below).
+- **WB-48** — Crime-free takedowns require a minimum bounty threshold before the kill is crime-free; docket case, T19 docs, T20 reflects migration rule (D20).
+- **US-33 / WB-17** — Duplicate recent-death entries are pruned on every charge; servers no longer grow unbounded memory from repeated deaths (both rows from the same cause).
+- **T-180** — Spawner and jail IDs are no longer reused for rows in worlds that load after Gangland boots; each world keeps its row-id namespace, new rows take fresh IDs, and unloaded worlds' rows are unaffected.
+- **risk-11** — Rampage-weighted crime count threshold enforces `Auto.Rampage_Min_Weight` default 80, fixing rampage openings from cheap crimes alone.
 
 ---
 
 ## ⚙️ Configuration
 
-### New Files
-- **`copsncrooks/cops.yml`** — New blocks: `Cops.Dispatch` (Enabled, Unit_Speed, Min_ETA, Max_ETA, Station_Radius, Rejoin_Grace), `Cops.Breather` (Enabled, Seconds, Wipe_Window), `Cops.Handoff` (Enabled, Heading_Seconds, Bias_Seconds, Cone_Degrees), `Cops.Perimeter` (Enabled, Min_Level, Posts, Roles, Max_Seconds, Lane_Length, Sight_Range, Leash_Radius). Moved to `copsncrooks/wanted.yml`: Evasion, Hideout, Quiet_Speed, Max_Speed, Auto.Rampage_Min_Weight, Bribe_Stars blocks.
+### New Files and Tables
 - **`copsncrooks/setup.yml`** — Setup wand configuration: `Setup.Wand.Item`, `Setup.Outline.Particle`, `Setup.Outline.Interval_Ticks`, and message strings.
-- **Database tables**: `cop_station` (id, name, world, x, y, z, yaw, jail_id), `cop_region` (id, name, world, min_x..max_z, tags), `cop_point` (id, kind, name, world, x, y, z).
+- **Database tables**: `cop_station` (id, name, world, x, y, z, yaw, jail_id), `cop_region` (id, name, world, min_x..max_z, tags), `cop_point` (id, kind, name, world, x, y, z). `cop_spawner` table gains column `station_id`.
+
+### New Blocks in copsncrooks YAML Files
+- **`copsncrooks/cops.yml`** gains: `Cops.Dispatch` (Enabled, Unit_Speed, Min_Eta_Seconds, Max_Eta_Seconds, Station_Radius, Rejoin_Grace_Seconds), `Cops.Breather` (Enabled, Seconds, Wipe_Window_Seconds), `Cops.Handoff` (Enabled, Heading_Seconds, Bias_Seconds, Cone_Degrees), `Cops.Perimeter` (Enabled, Min_Level, Posts, Roles, Max_Seconds, Lane_Length, Sight_Range, Leash_Radius).
+- **`copsncrooks/wanted.yml`** gains: `Wanted.Evasion.Hideout.*` (Enable, Speed), `Quiet_Speed.*` (Enable, Per_Minute, Max, Backup_Skip_Seconds), `Max_Speed`, `Auto.Rampage_Min_Weight`, `Wanted.Bribe_Stars.*` (Enable, Stars, Respawn_Seconds, Pickup_Radius, Item).
+- **`copsncrooks/wanted_messages.yml`** gains: `Bribe_Star.Taken`, `Bribe_Star.Seen`.
+- **`copsncrooks/cop_radio_messages(_es).yml`** gains: `Dispatch_En_Route`, `Wipe_Refill`, `Handoff`, `Post_Up`, `Eyes_On`, `Returning_To_Patrol`, `Unknown_Place` (fallback when a station/last-known position has no district).
 
 ### Settings Changes
 - `settings.yml` **Wanted block** gains: `Self_Defence.Enable` true, `Self_Defence.Window_Seconds` 8, `Self_Defence.Min_Damage` 2.0, `Self_Defence.Pair_Cooldown_Seconds` 600; `Contacts.Enable` true, `Contacts.Price_Per_Star` 1000, `Contacts.Cooldown_Seconds` 600, `Contacts.Max_Stars` 2.
@@ -57,33 +62,40 @@ Cops N Crooks expands from the squad mechanic into a full police response. Crime
 - `settings.yml` **User.Death block** gains: `Hospital.Enable` true, `Hospital.Shield_Seconds` 5 (0 = off).
 - `items/money.yml` **PLAYER entry**: `Enabled` false (was true).
 
-### Existing Blocks Extended
-- `cops.yml` `Cops.Radio.Priority` list now includes `Dispatch_En_Route` and `Wipe_Refill` (bundled defaults; servers cannot deprioritize them).
-- `cops.yml` `Cops.Radio.Compass` root word `Unknown_Place` (fallback when a station/last-known position has no district).
-- `npc/wanted_messages.yml` new keys: `Dispatch_Wanted` (text change), `Dispatch_En_Route`, `Wipe_Refill`, `Handoff`, `Post_Up`, `Eyes_On`, `Returning_To_Patrol`, `Contact_Used`, `Contact_Seen`, `Contact_Cooldown`, `Contact_Not_Wanted`, `Contact_No_Money`, `Contact_Disabled`, `Bribe_Star_Seen`, `Bribe_Star_Taken`, and Ward_Bill (`Death.Ward_Bill`), Hospital Shield (`Death.Hospital_Shield`).
-
 ---
 
 ## 🧩 API 2.3
 
-- **`GanglandApi.VERSION` is 2.3** — Additive only. Modules that declare `Host_Api: 2.2` keep loading.
-- **Region SPI** — `RegionShape`, `PlaceRegion`, `RegionProvider`, `PlaceNames` let any module publish geographic data (stations, turfs, hideouts). Core places: waypoints (GANG, tagged hideout), admin regions (cops, tagged by kind). Turf contributes a RegionProvider.
-- **New place types** — `Waypoint.WaypointType.HOSPITAL`.
-- **New cause** — `WantedCause.CONTACT` (crooked contact and bribe-star payments).
-- **New settings & messages** — Self-defence, contacts, hospital, takedown minimum (Ruling R2).
-- **Keystone 1.15.0** — `EntitySpawner.isOutOfSight` and `findHiddenSpawnLocation` spawn helpers. `NpcPost` and `AbstractNpc.holdPost/tickPost/releasePost` for perimeter posts and point-of-interest holds.
+- **`GanglandApi.VERSION` is 2.3** — Additive only; modules that declare `Host_Api: 2.2` keep loading on a 0.16.0 host. `cops-n-crooks` and `gangland-turf` declare `Host_Api: 2.3` because they implement the region SPI; they do not load on a 0.15.x core.
+- **Region SPI** — Four new types: `RegionShape` (sealed: `Cuboid`, `Sphere`), `PlaceRegion` (record: id, name, world, shape, ownerGangId, tags), `RegionProvider` (interface: `source()`, `regionsAt(Location)`), `PlaceNames` (core holder bean: register providers, query regions by location/tag/name). Core places: waypoints (GANG type, tagged hideout), admin regions (cops-n-crooks, tagged district/hideout/restricted/breaker). Turf contributes `TurfRegionProvider` at 2.3.
+- **New waypoint type** — `Waypoint.WaypointType.HOSPITAL` (safe-zone waypoint for respawns).
+- **New wanted cause** — `WantedCause.CONTACT` (crooked contact and bribe-star payments).
+- **New Settings getters (11 total)** — `isSelfDefenceEnabled()`, `getSelfDefenceWindowSeconds()`, `getSelfDefenceMinDamage()`, `getSelfDefencePairCooldownSeconds()`, `getBountyTakedownMinimum()`, `isContactsEnabled()`, `getContactsPricePerStar()`, `getContactsCooldownSeconds()`, `getContactsMaxStars()`, `isHospitalEnabled()`, `getHospitalShieldSeconds()`.
+- **New Messages constants (8 total)** — `CONTACT_USED`, `CONTACT_SEEN`, `CONTACT_COOLDOWN`, `CONTACT_NOT_WANTED`, `CONTACT_NO_MONEY`, `CONTACT_DISABLED`, `DEATH_WARD_BILL`, `DEATH_HOSPITAL_SHIELD`.
+- **Keystone 1.15.0 required** — `EntitySpawner.isOutOfSight()` and `findHiddenSpawnLocation()` spawn helpers, `NpcPost` and `AbstractNpc.holdPost/tickPost/releasePost` for perimeter posts and point-of-interest holds (see [Keystone docs](../docs/phase-h14-dispatch-posts.md)).
 
 ---
 
 ## ⬆️ Upgrade notes
 
-- **Read the migration guide** — See [migration-0.16.0.md](../migration-0.16.0.md) before upgrading.
-- **Database** — New tables for stations, admin regions and setup points. No schema breaking changes; waypoints with type name `HOSPITAL` are recognized.
-- **Dispatch configuration** — Set `Cops.Dispatch.Enabled` false to use the instant ring spawning of 0.15.2.
-- **Hideout and cold trail** — Both default enabled; set `Wanted.Evasion.Hideout.Enable` or `Quiet_Speed.Enable` false to disable.
-- **Hospital respawn** — Set `User.Death.Hospital.Enable` false to use the configured waypoint as in 0.15.2.
-- **Crooked contacts** — Set `Wanted.Contacts.Enable` false to keep the old phone (no sight gate).
-- **Bounty security** — A posted bounty must reach `Bounty.Takedown_Minimum` (default 100, new) for the kill to be crime-free. Existing servers should review and raise their Minimum as intended.
-- **Tier mix** — Existing `cop_roles.yml` files without role-at-tier entries continue working; edit `Squad_Composition` to mix tiers.
-- **Bartizan** — `cops-n-crooks` still needs Bartizan 0.6.0 or newer; without it, the whole dispatch, posts, and wand (all 0.16 features) are skipped.
+**Read [migration-0.16.0.md](../migration-0.16.0.md) before upgrading.**
+
+- **Keystone 1.15.0 is required.** Gangland 0.16.0 refuses to start on Keystone 1.14.0 or older and displays a clear error message. Replace your Keystone jar first.
+- **Module jars.** Replace every runtime module with the 0.16.0 build; `cops-n-crooks` and `gangland-turf` declare `Host_Api: 2.3` and do not load on a 0.15.x core.
+- **Settings and message files regenerate.** On first 0.16.0 boot, your old `settings.yml` and message files are renamed to `-old` backups, and fresh files are written from the jar (as in 0.15.1). Core keys you tuned are back at defaults until you copy them from the backup; the fresh files carry the new keys below and the eight new message lines. Copy the new blocks from the backup or the jar to keep the 0.16.0 behaviour.
+- **New file:** `copsncrooks/setup.yml` is copied from the module jar on first boot.
+- **Database.** New tables `cop_station`, `cop_region`, `cop_point`, and a new column `cop_spawner.station_id` are added automatically. No schema breaking changes; waypoints with type `HOSPITAL` are recognized.
+- **Stations must be placed before dispatch changes anything.** Use `/glw cop setup` to place a station; only then will cop spawners in `Station_Radius` (default 32 blocks) join it and units dispatch with an ETA. Until then, all worlds behave as in 0.15 (ring spawning).
+- **Permissions to grant.** Grant `gangland.command.cop.setup` (admins) and `gangland.command.contact` (players for crooked contacts).
+- **Dispatch disabled?** Set `Cops.Dispatch.Enabled` false to restore instant ring spawning; the default is true.
+- **Hideouts and cold trail disabled?** Set `Wanted.Evasion.Hideout.Enable` or `Quiet_Speed.Enable` false; both default true.
+- **Hospital respawn disabled?** Set `User.Death.Hospital.Enable` false; the default is true and adds one-bill charged on respawn even without a hospital waypoint.
+- **Crooked contacts disabled?** Set `Wanted.Contacts.Enable` false to keep the old phone (no sight gate); the default is true.
+- **Bounty takedown minimum.** A posted bounty must reach `Bounty.Takedown_Minimum` (default 100, new) for the kill to be crime-free (docket WB-48); existing servers should review their threshold.
+- **The hospital shield is on.** `User.Death.Hospital.Shield_Seconds` default 5; set to 0 to turn it off.
+- **Tier mix.** Edit `cop_roles.yml` `Squad_Composition` to mix tiers with role-at-tier entries; existing entries without `@` suffixes continue working unchanged.
+- **Rampage opening weight.** In `Drop_Mode: AUTO` only crimes ≥ `Auto.Rampage_Min_Weight` (default 80) count toward a rampage opening; set to 0 for 0.15.2 behaviour (docket risk-11).
+- **Player cash drop is off.** `items/money.yml` `Money.Drop_Sources.PLAYER.Enabled` now defaults to false (one death bill pays the cost). Flip it true to restore the drop.
+- **Self-defence tuned.** The window is now configurable (default 8 s, was fixed at 30 s), with `Min_Damage` (2.0), a provocation check and a `Pair_Cooldown` (600 s). To loosen it, set `Window_Seconds: 30`, `Min_Damage: 0`, `Pair_Cooldown_Seconds: 0`.
+- **Bartizan unchanged.** `cops-n-crooks` still requires Bartizan 0.6.0 or newer; without it, all 0.16 dispatch/posts/wand features are skipped.
 
