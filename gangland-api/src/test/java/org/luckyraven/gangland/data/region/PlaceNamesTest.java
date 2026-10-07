@@ -99,6 +99,27 @@ class PlaceNamesTest {
 		assertEquals("Fine", names.locate(here).orElseThrow());
 	}
 
+	/** Final fix round 1: a module provider whose soft-dependency class is gone fails with a LinkageError. */
+	@Test
+	@DisplayName("a provider failing with a LinkageError is skipped and the others still answer")
+	void linkageErrorProviderIsSkipped() {
+		PlaceNames names = names();
+		names.register(new RegionProvider() {
+			@Override
+			public String source() {
+				return "gone";
+			}
+
+			@Override
+			public List<PlaceRegion> regionsAt(Location at) {
+				throw new NoClassDefFoundError("com/example/Missing");
+			}
+		});
+		names.register(provider("a", region("a:1", "Fine", 10)));
+
+		assertEquals("Fine", names.locate(here).orElseThrow());
+	}
+
 	@Test
 	@DisplayName("locate skips a smaller region whose name is blank")
 	void locate_skipsBlankNames() {
