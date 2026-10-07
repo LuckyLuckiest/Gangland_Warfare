@@ -50,18 +50,107 @@ Cops N Crooks expands from the squad mechanic into a full police response. Crime
 - **`copsncrooks/setup.yml`** — Setup wand configuration: `Setup.Wand.Item`, `Setup.Outline.Particle`, `Setup.Outline.Interval_Ticks`, and message strings.
 - **Database tables**: `cop_station` (id, name, world, x, y, z, yaw, jail_id), `cop_region` (id, name, world, min_x..max_z, tags), `cop_point` (id, kind, name, world, x, y, z). `cop_spawner` table gains column `station_id`.
 
-### New Blocks in copsncrooks YAML Files
-- **`copsncrooks/cops.yml`** gains: `Cops.Dispatch` (Enabled, Unit_Speed, Min_Eta_Seconds, Max_Eta_Seconds, Station_Radius, Rejoin_Grace_Seconds), `Cops.Breather` (Enabled, Seconds, Wipe_Window_Seconds), `Cops.Handoff` (Enabled, Heading_Seconds, Bias_Seconds, Cone_Degrees), `Cops.Perimeter` (Enabled, Min_Level, Posts, Roles, Max_Seconds, Lane_Length, Sight_Range, Leash_Radius).
-- **`copsncrooks/wanted.yml`** gains: `Wanted.Evasion.Hideout.*` (Enable, Speed), `Quiet_Speed.*` (Enable, Per_Minute, Max, Backup_Skip_Seconds), `Max_Speed`, `Auto.Rampage_Min_Weight`, `Wanted.Bribe_Stars.*` (Enable, Stars, Respawn_Seconds, Pickup_Radius, Item).
-- **`copsncrooks/wanted_messages.yml`** gains: `Bribe_Star.Taken`, `Bribe_Star.Seen`.
-- **`copsncrooks/cop_radio_messages(_es).yml`** gains: `Dispatch_En_Route`, `Wipe_Refill`, `Handoff`, `Post_Up`, `Eyes_On`, `Returning_To_Patrol`, `Unknown_Place` (fallback when a station/last-known position has no district).
+### New Blocks in copsncrooks/cops.yml
+- **`Cops.Dispatch`** — Dispatch control:
+  - `Enabled: true` — Enable dispatch from stations (false = instant ring spawn, 0.15 behavior)
+  - `Unit_Speed: 10.0` — Blocks per second a unit travels
+  - `Min_Eta_Seconds: 0` — Minimum ETA from a station
+  - `Max_Eta_Seconds: 40` — Maximum ETA from a station
+  - `Station_Radius: 32.0` — Radius where spawners join a station
+  - `Rejoin_Grace_Seconds: 15` — Grace period when a player rejoins before first units dispatch
+- **`Cops.Breather`** — Squad respawn delay after a wipe:
+  - `Enabled: true` — Enable breather delays
+  - `Seconds: [15, 13, 10, 8, 6]` — Pause duration by star level (1–5 stars; others clamp to nearest)
+  - `Wipe_Window_Seconds: 10` — Window in which a squad is considered "wiped" if all cops die
+- **`Cops.Handoff`** — Ahead-of-target dispatch:
+  - `Enabled: true` — Enable hand-off (false = no heading call)
+  - `Heading_Seconds: 2` — Duration of heading calculation
+  - `Bias_Seconds: 10` — Time units spawn ahead
+  - `Cone_Degrees: 60.0` — Half-angle either side of heading direction
+- **`Cops.Perimeter`** — Perimeter posts configuration:
+  - `Enabled: true` — Enable perimeter posts
+  - `Min_Level: 3` — Star level needed to spawn posts
+  - `Posts: 2` — Maximum posts at once
+  - `Roles: [Marksman, Defender]` — Roles to post first
+  - `Max_Seconds: 60` — Longest a perimeter holds
+  - `Lane_Length: 16.0` — Blocks of clear lane kept toward zone center
+  - `Sight_Range: 40.0` — How far a posted cop sees
+  - `Leash_Radius: 4.0` — How far a posted cop may stray
+- **Six radio cooldowns** — Under `Radio.Cooldown_Ticks`:
+  - `Dispatch_En_Route: 0` — Dispatch arrival announcement cooldown (ticks)
+  - `Wipe_Refill: 0` — Squad-wiped/backup-inbound cooldown
+  - `Handoff: 200` — Hand-off call cooldown
+  - `Post_Up: 100` — Post-up cooldown
+  - `Eyes_On: 60` — "Eyes on" (sight update) cooldown
+  - `Returning_To_Patrol: 1200` — "Returning to patrol" cooldown
 
-### Settings Changes
-- `settings.yml` **Wanted block** gains: `Self_Defence.Enable` true, `Self_Defence.Window_Seconds` 8, `Self_Defence.Min_Damage` 2.0, `Self_Defence.Pair_Cooldown_Seconds` 600; `Contacts.Enable` true, `Contacts.Price_Per_Star` 1000, `Contacts.Cooldown_Seconds` 600, `Contacts.Max_Stars` 2.
-- `settings.yml` **Bounty block** gains: `Takedown_Minimum` 100.
-- `settings.yml` **User.Death block** gains: `Hospital.Enable` true, `Hospital.Shield_Seconds` 5 (0 = off).
-- `message_en.yml` (and `message_es.yml`) **new keys**: `Wanted_Level.Contact.Used`, `Wanted_Level.Contact.Seen`, `Wanted_Level.Contact.Cooldown`, `Wanted_Level.Contact.Not_Wanted`, `Wanted_Level.Contact.No_Money`, `Wanted_Level.Contact.Disabled`, `Death.Ward_Bill`, `Death.Hospital_Shield`.
-- `items/money.yml` **PLAYER entry**: `Enabled` false (was true).
+### New Blocks in copsncrooks/wanted.yml
+- **`Wanted.Evasion.Hideout`** — Hideout speedup:
+  - `Enable: true` — Speed clock inside hideouts
+  - `Speed: 2.0` — Clock multiplier when unseen in hideout
+- **`Wanted.Evasion.Quiet_Speed`** — Cold trail speedup:
+  - `Enable: true` — Enable cold trail bonus
+  - `Per_Minute: 0.25` — Speed gained per minute of quiet
+  - `Max: 2.0` — Maximum cold trail speed cap
+  - `Backup_Skip_Seconds: 60` — Quiet time after which a backup wave is skipped
+- **`Wanted.Evasion.Max_Speed: 4.0`** — Overall speed cap (hideout + quiet + zone)
+- **`Wanted.Auto.Rampage_Min_Weight: 80`** — Crime weight threshold for rampage opening in AUTO mode
+- **`Wanted.Bribe_Stars`** — Bribe-star pickups:
+  - `Enable: true` — Enable bribe-star drops
+  - `Stars: 1` — Stars a pickup removes
+  - `Respawn_Seconds: 300` — Time before a taken pickup returns
+  - `Pickup_Radius: 1.5` — Range in which a player collects it
+  - `Item: NETHER_STAR` — Pickup material
+
+### New Blocks in copsncrooks/cop_roles.yml
+- **`Squad_Composition` entries with `@<tier>` suffix** — Mix roles across tiers:
+  - 3-star: `[Commander@3, Pointman@2, Defender@3, Marksman@3, Assault@2]`
+  - 4-star: `[Commander@4, Pointman@3, Defender@4, Marksman@4, Medic@3, Assault@3]`
+  - 5-star: `[Commander@5, Pointman@4, Defender@5, Marksman@5, Medic@4, Assault@4]` (new)
+
+### New Lines in copsncrooks/wanted_messages.yml
+- **`Bribe_Star.Taken`** — Message when a player collects a bribe-star
+- **`Bribe_Star.Seen`** — Message when a cop sees a bribe-star
+
+### New Lines in copsncrooks/cop_radio_messages(_es).yml
+- **`Dispatch_En_Route`** — Dispatch arrival announcement (replaces default)
+- **`Wipe_Refill`** — Squad-wiped-and-backup-inbound announcement
+- **`Handoff`** — Hand-off direction announcement
+- **`Post_Up`** — Perimeter-posts deployed announcement
+- **`Eyes_On`** — Cop sight update announcement
+- **`Returning_To_Patrol`** — Units returning to patrol after cold trail expires
+- **`Unknown_Place`** — Fallback place name when no district applies to a station or last-known location
+
+### Settings Changes (settings.yml)
+- **Wanted block** gains:
+  - `Self_Defence.Enable: true` — Enable self-defence exemption
+  - `Self_Defence.Window_Seconds: 8` — Time to respond to incoming damage
+  - `Self_Defence.Min_Damage: 2.0` — Minimum damage required to trigger exemption
+  - `Self_Defence.Pair_Cooldown_Seconds: 600` — Cooldown before same pair may trigger again
+  - `Contacts.Enable: true` — Enable crooked contacts
+  - `Contacts.Price_Per_Star: 1000` — Cost per star to wipe
+  - `Contacts.Cooldown_Seconds: 600` — Cooldown between uses
+  - `Contacts.Max_Stars: 2` — Maximum stars that can be wiped per use
+- **Bounty block** gains:
+  - `Takedown_Minimum: 100` — Minimum escrow for crime-free takedown
+- **User.Death block** gains:
+  - `Hospital.Enable: true` — Enable hospital respawn
+  - `Hospital.Shield_Seconds: 5` — Damage immunity at hospital respawn (0 = off)
+
+### Message Changes (message_en.yml, message_es.yml)
+- **Eight new keys**:
+  - `Wanted_Level.Contact.Used` — Contact successful
+  - `Wanted_Level.Contact.Seen` — Contact refused (cop has eyes on you)
+  - `Wanted_Level.Contact.Cooldown` — Contact on cooldown
+  - `Wanted_Level.Contact.Not_Wanted` — Contact when no stars to wipe
+  - `Wanted_Level.Contact.No_Money` — Contact when player can't afford
+  - `Wanted_Level.Contact.Disabled` — Contact disabled on server
+  - `Death.Ward_Bill` — Bill charged at hospital respawn
+  - `Death.Hospital_Shield` — Hospital protection timer display
+
+### Other Changes
+- **`items/money.yml`** — `Money.Drop_Sources.PLAYER.Enabled: false` (was true; one bill now pays the cost)
+- **`cop_roles.yml`** — Five-star squad composition entry (new): `Squad_Composition: [Commander@5, Pointman@4, Defender@5, Marksman@5, Medic@4, Assault@4]`
 
 ---
 
