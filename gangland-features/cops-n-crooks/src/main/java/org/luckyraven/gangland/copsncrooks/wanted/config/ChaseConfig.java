@@ -19,10 +19,20 @@ import java.util.Map;
  * @since 0.15.0
  */
 public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSettings hud,
-                          ChargeSheetSettings chargeSheet) {
+                          ChargeSheetSettings chargeSheet, BribeStarSettings bribeStars) {
 
 	public static final ChaseConfig DEFAULT = new ChaseConfig(HeatSettings.DEFAULT, EvasionSettings.DEFAULT,
-	                                                          HudSettings.DEFAULT, ChargeSheetSettings.DEFAULT);
+	                                                          HudSettings.DEFAULT, ChargeSheetSettings.DEFAULT,
+	                                                          BribeStarSettings.DEFAULT);
+
+	public ChaseConfig {
+		if (bribeStars == null) bribeStars = BribeStarSettings.DEFAULT;
+	}
+
+	/** The 0.15.x shape, with the default bribe stars. */
+	public ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSettings hud, ChargeSheetSettings chargeSheet) {
+		this(heat, evasion, hud, chargeSheet, BribeStarSettings.DEFAULT);
+	}
 
 	/** Reads the {@code Wanted} section; a null section, or a missing block or key, is its default. */
 	public static ChaseConfig parse(@Nullable NodeReader wantedRoot, ConfigReport report) {
@@ -34,7 +44,8 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 		ChaseConfig parsed = new ChaseConfig(heat(block(wantedRoot, "Heat", report)),
 		                                     evasion(block(wantedRoot, "Evasion", report), report),
 		                                     hud(block(wantedRoot, "Hud", report), report),
-		                                     chargeSheet(block(wantedRoot, "Charge_Sheet", report)));
+		                                     chargeSheet(block(wantedRoot, "Charge_Sheet", report)),
+		                                     bribeStars(block(wantedRoot, "Bribe_Stars", report), report));
 
 		if (parsed.evasion().dropMode() == DropMode.AUTO) {
 			SourceLocation at = SourceLocation.none();
@@ -93,7 +104,66 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 		                           dropMode(n, report), radius.isEmpty() ? d.searchRadius() : List.copyOf(radius),
 		                           drops.isEmpty() ? d.secondsToDrop() : List.copyOf(drops),
 		                           n.get("Outside_Zone_Speed").asDouble().min(0).orDefault(d.outsideZoneSpeed()),
-		                           auto(block(n, "Auto", report), report));
+		                           auto(block(n, "Auto", report), report), hideout(block(n, "Hideout", report), report),
+		                           quietSpeed(block(n, "Quiet_Speed", report), report),
+		                           maxSpeed(n.get("Max_Speed"), report));
+	}
+
+	private static HideoutSettings hideout(@Nullable NodeReader n, ConfigReport report) {
+		if (n == null) return HideoutSettings.DEFAULT;
+
+		HideoutSettings d = HideoutSettings.DEFAULT;
+		return new HideoutSettings(n.get("Enable").asBool().orDefault(d.enabled()),
+		                           positive(n.get("Speed"), d.speed(), "Wanted.Evasion.Hideout.Speed", report));
+	}
+
+	private static QuietSpeedSettings quietSpeed(@Nullable NodeReader n, ConfigReport report) {
+		if (n == null) return QuietSpeedSettings.DEFAULT;
+
+		QuietSpeedSettings d = QuietSpeedSettings.DEFAULT;
+		return new QuietSpeedSettings(n.get("Enable").asBool().orDefault(d.enabled()),
+		                              nonNegative(n.get("Per_Minute"), d.perMinute(),
+		                                          "Wanted.Evasion.Quiet_Speed.Per_Minute", report),
+		                              positive(n.get("Max"), d.max(), "Wanted.Evasion.Quiet_Speed.Max", report),
+		                              n.get("Backup_Skip_Seconds").asInt().min(0).orDefault(d.backupSkipSeconds()));
+	}
+
+	private static double maxSpeed(NodeReader.NodeAccess access, ConfigReport report) {
+		double def   = EvasionSettings.DEFAULT.maxSpeed();
+		double value = access.asDouble().orDefault(def);
+		if (value >= 1) return value;
+
+		report.add(Severity.WARNING, locationOf(access), "Wanted.Evasion.Max_Speed",
+		           "Max_Speed is " + value + ", below 1; using " + def, "config.range");
+		return def;
+	}
+
+	private static double positive(NodeReader.NodeAccess access, double def, String path, ConfigReport report) {
+		double value = access.asDouble().orDefault(def);
+		if (value > 0) return value;
+
+		report.add(Severity.WARNING, locationOf(access), path, "must be above 0, using " + def, "config.range");
+		return def;
+	}
+
+	private static double nonNegative(NodeReader.NodeAccess access, double def, String path, ConfigReport report) {
+		double value = access.asDouble().orDefault(def);
+		if (value >= 0) return value;
+
+		report.add(Severity.WARNING, locationOf(access), path, "must not be negative, using " + def, "config.range");
+		return def;
+	}
+
+	private static BribeStarSettings bribeStars(@Nullable NodeReader n, ConfigReport report) {
+		if (n == null) return BribeStarSettings.DEFAULT;
+
+		BribeStarSettings d = BribeStarSettings.DEFAULT;
+		return new BribeStarSettings(n.get("Enable").asBool().orDefault(d.enabled()),
+		                             n.get("Stars").asInt().min(1).orDefault(d.stars()),
+		                             n.get("Respawn_Seconds").asInt().min(0).orDefault(d.respawnSeconds()),
+		                             positive(n.get("Pickup_Radius"), d.pickupRadius(),
+		                                      "Wanted.Bribe_Stars.Pickup_Radius", report),
+		                             n.get("Item").asString().orDefault(d.item()));
 	}
 
 	private static AutoSettings auto(@Nullable NodeReader n, ConfigReport report) {
@@ -159,7 +229,17 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 		                        n.get("Respot_Limit").asInt().min(0).orDefault(d.respotLimit()), pettyOut, coldOut,
 		                        brkOut, momOut, n.get("Repeat_Chases").asInt().min(0).max(8).orDefault(d.repeatChases()),
 		                        n.get("Repeat_Window_Minutes").asInt().min(0).orDefault(d.repeatWindowMinutes()),
-		                        learning(learn, d.learning(), report));
+		                        learning(learn, d.learning(), report), rampageMinWeight(n, d, report));
+	}
+
+	private static int rampageMinWeight(NodeReader n, AutoSettings d, ConfigReport report) {
+		NodeReader.NodeAccess access = n.get("Rampage_Min_Weight");
+		int                   value  = access.asInt().orDefault(d.rampageMinWeight());
+		if (value >= 0) return value;
+
+		report.add(Severity.WARNING, locationOf(access), "Wanted.Evasion.Auto.Rampage_Min_Weight",
+		           "is " + value + ", below 0; using " + d.rampageMinWeight(), "config.range");
+		return d.rampageMinWeight();
 	}
 
 	private static List<Integer> typical(NodeReader cold, AutoSettings.ColdTrail d, ConfigReport report) {

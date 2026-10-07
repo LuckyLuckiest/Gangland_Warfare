@@ -97,6 +97,22 @@ Wanted:
          - 60
       # How much faster the timer runs while you are outside the search zone
       Outside_Zone_Speed: 2.0
+      # While you are inside a hideout (a gang waypoint, or a region tagged hideout) the timer runs this many times
+      # faster; set Enable false to make hideouts no different from open ground
+      Hideout:
+         Enable: true
+         Speed: 2.0
+      # The longer you stay quiet (no crime, no new star, no cop sighting) the faster the timer runs
+      Quiet_Speed:
+         Enable: true
+         # Speed added for every full quiet minute
+         Per_Minute: 0.25
+         # Highest speed the quiet bonus reaches
+         Max: 2.0
+         # After this many quiet seconds the next backup wave is skipped
+         Backup_Skip_Seconds: 60
+      # Cap on the zone, hideout and quiet speeds multiplied together (at least 1)
+      Max_Speed: 4.0
       # Read only while Drop_Mode is AUTO. First match wins when the hide timer runs out: a hot chase loses one star;
       # a small chase or a long quiet one loses every star; leaving the search zone loses half your stars; anything
       # else loses one star, and the next timer is shorter
@@ -105,6 +121,9 @@ Wanted:
          Opening_Seconds: 30
          # Crimes in the opening that make the chase a rampage
          Rampage_Crimes: 4
+         # Only crimes at least this heavy count toward the rampage opening; the shipped cheap crimes
+         # (Brandish_Near_Cop 25, Assault_Civilian 30, Car_Theft 60) never do
+         Rampage_Min_Weight: 80
          # Peak stars that make a chase a rampage however it started (killing a cop always does)
          Rampage_Peak_Level: 4
          # A rampage, or a chase you logged out of, loses one star at a time until this many seconds pass with no
@@ -239,3 +258,16 @@ Wanted:
       Seconds_Per_Unpaid: 0.1
       # The extra jail time never exceeds this many seconds
       Max_Extra_Seconds: 600
+
+   # A nether star lying somewhere in the world: pick it up while wanted and the cops let some stars go.
+   Bribe_Stars:
+      # false = no bribe stars
+      Enable: true
+      # Stars a pickup takes
+      Stars: 1
+      # Seconds before a taken pickup comes back
+      Respawn_Seconds: 300
+      # Blocks within which a player takes it
+      Pickup_Radius: 1.5
+      # The pickup's material
+      Item: NETHER_STAR

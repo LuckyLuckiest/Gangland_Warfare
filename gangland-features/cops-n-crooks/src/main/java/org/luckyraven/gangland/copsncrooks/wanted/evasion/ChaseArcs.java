@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.LongSupplier;
+import java.util.function.ToIntFunction;
 
 /**
  * Per-player {@link ChaseArc}s plus the memory of recently ended crime chases. Memory only; main thread only.
@@ -145,17 +146,33 @@ public final class ChaseArcs {
 
 	/** The planner's view of the chase, or null when no arc exists. */
 	public @Nullable AutoDrop.ChaseView view(UUID id, List<CrimeRecord> crimes, AutoSettings settings) {
+		return view(id, crimes, settings, crimeId -> Integer.MAX_VALUE);
+	}
+
+	/**
+	 * As the 3-argument form, but only a crime weighing at least {@code Rampage_Min_Weight} counts toward the opening,
+	 * and the opening window starts at the first such crime: cheap crimes (a brandish, a punch) never make a rampage.
+	 */
+	public @Nullable AutoDrop.ChaseView view(UUID id, List<CrimeRecord> crimes, AutoSettings settings,
+	                                         ToIntFunction<String> weightOf) {
 		ChaseArc arc = arcs.get(id);
 		if (arc == null) return null;
 
 		crimes = onChase(arc, crimes, settings);
 		long    now     = arc.offlineAt != 0 ? arc.offlineAt : clock.getAsLong();
-		long    cutoff  = crimes.isEmpty() ? 0 : crimes.get(0).at() + settings.openingSeconds() * 1000L;
+		long    cutoff  = 0;
+		boolean found   = false;
 		int     opening = 0;
 		boolean kill    = false;
 		for (CrimeRecord crime : crimes) {
-			if (crime.at() <= cutoff) opening++;
 			if (Crimes.KILL_COP.equals(crime.crimeId())) kill = true;
+			if (weightOf.applyAsInt(crime.crimeId()) < settings.rampageMinWeight()) continue;
+
+			if (!found) {
+				found  = true;
+				cutoff = crime.at() + settings.openingSeconds() * 1000L;
+			}
+			if (crime.at() <= cutoff) opening++;
 		}
 
 		return new AutoDrop.ChaseView(crimes.size(), opening, kill, arc.peak, now - arc.startedAt,
