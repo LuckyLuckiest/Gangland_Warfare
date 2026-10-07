@@ -138,6 +138,7 @@ class ChaseConfigTest {
 
 		assertEquals(DropMode.ONE_STAR, c.evasion().dropMode());
 		assertFalse(report.isEmpty());
+		assertTrue(report.issues().toString().contains("AUTO"), report.issues().toString());
 	}
 
 	@Test
