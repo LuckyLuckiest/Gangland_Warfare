@@ -233,9 +233,15 @@ public class CopListener implements Listener {
 		CopNpc cop = copManager.findDyingCop(event.getEntity());
 		if (cop == null) return;
 
+		// Killing a cop is a crime, which ends a cold trail: release the hold now, because the officer-down and regroup
+		// backup are requested inside memberDown below, before QuietTrail's next tick would see the crime.
+		Player   killer = event.getEntity().getKiller();
+		CopGroup group  = cop.getGroup();
+		if (killer != null && group != null && killer.getUniqueId().equals(group.getTargetPlayerId()))
+			group.setBackupHeld(false);
+
 		NpcSquad squad = cop.getCurrentSquad();
 		if (squad != null) squad.memberDown(cop);
-		CopGroup group = cop.getGroup();
 		if (group != null && group.getSquad() != squad) {
 			NpcSquad groupSquad = group.getSquad();
 			if (squad == null) groupSquad.add(cop); // RETURNING: in no squad, still the group's casualty
@@ -250,6 +256,6 @@ public class CopListener implements Listener {
 			playerDeathEvent.setKeepInventory(true);
 		}
 
-		Bukkit.getPluginManager().callEvent(new CopDeathEvent(cop, event.getEntity().getKiller()));
+		Bukkit.getPluginManager().callEvent(new CopDeathEvent(cop, killer));
 	}
 }
