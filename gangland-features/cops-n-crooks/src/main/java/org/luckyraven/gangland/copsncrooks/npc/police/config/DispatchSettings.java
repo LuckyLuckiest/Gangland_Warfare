@@ -9,7 +9,9 @@ package org.luckyraven.gangland.copsncrooks.npc.police.config;
  * @param minEtaSeconds     shortest ETA.
  * @param maxEtaSeconds     longest ETA.
  * @param stationRadius     spawners within this many blocks of a station belong to it.
- * @param rejoinGraceSeconds how long a player's pending units survive his logout.
+ * @param rejoinGraceSeconds seconds after a wanted player rejoins before his first units are sent (they still need their
+ *                           ETA on top); the evasion clock holds until a unit arrives. 0 = sent at once. A logout
+ *                           drops the queue.
  * @since 0.16.0
  */
 public record DispatchSettings(boolean enabled, double unitSpeed, int minEtaSeconds, int maxEtaSeconds,

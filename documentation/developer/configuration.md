@@ -467,7 +467,7 @@ Cops:
 | `Dispatch.Unit_Speed` | `10.0` | Blocks per second a unit covers (at least 0.1) |
 | `Dispatch.Min_Eta_Seconds` / `Max_Eta_Seconds` | `0` / `40` | ETA = horizontal distance / `Unit_Speed`, clamped, rounded up. A max below the min is clamped to the min |
 | `Dispatch.Station_Radius` | `32.0` | Spawners within this of a station belong to it (`/glw cop spawner set`, saving a station) |
-| `Dispatch.Rejoin_Grace_Seconds` | `15` | After a logout and rejoin, pending units are held this long and the suspect's reappearance spot is not seeded |
+| `Dispatch.Rejoin_Grace_Seconds` | `15` | Seconds after a wanted player rejoins before his first units are sent (ETA on top; the clock holds meanwhile). A logout drops the queue; the reappearance spot is not seeded |
 | `Breather.Enabled` | `true` | 0.16.0. `false` = a wiped squad is refilled at once |
 | `Breather.Seconds` | `15, 13, 10, 8, 6` | Pause after a wipe for 1 to 5 stars (other levels clamp to the nearest end); a non-number entry makes the whole list default |
 | `Breather.Wipe_Window_Seconds` | `10` | A squad is wiped when it loses every cop inside this |
