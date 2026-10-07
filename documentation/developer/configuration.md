@@ -482,7 +482,8 @@ restores the 0.13.0 behaviour of that piece. Texts are in `copsncrooks/wanted_me
 | `Wanted.Heat.Crimes.<Id>` | see below | Heat per crime. Merged key by key over the defaults |
 | `Wanted.Evasion.Enable` | `true` | `false` = only the fixed decay timer |
 | `Wanted.Evasion.Lost_Sight_Seconds` | `3` | No cop sighting for this long opens the search zone |
-| `Wanted.Evasion.Drop_Mode` | `ONE_STAR` | `ONE_STAR` or `ALL_STARS` per completed evasion; an unknown value warns and uses `ONE_STAR` |
+| `Wanted.Evasion.Drop_Mode` | `ONE_STAR` | `ONE_STAR`, `ALL_STARS` or `AUTO` per completed evasion; an unknown value warns and uses `ONE_STAR` |
+| `Wanted.Evasion.Auto.*` | *see below* | AUTO mode only: the cops judge how the chase went and take 1, part or all stars (29 tunable keys under `Auto`, if missing uses defaults) |
 | `Wanted.Evasion.Search_Radius` | `40, 60, 90, 130, 180` | Zone radius in blocks by wanted level |
 | `Wanted.Evasion.Seconds_To_Drop` | `10, 20, 30, 45, 60` | Seconds hidden for a drop, by wanted level |
 | `Wanted.Evasion.Outside_Zone_Speed` | `2.0` | Clock speed outside the zone |
@@ -498,11 +499,22 @@ Shipped crime weights (`Heat.Crimes`): `Brandish_Near_Cop` 25, `Assault_Civilian
 `Trespass_Restricted` 300, `Jailbreak` 450. 0.15.0 reports `Kill_Player`, `Kill_Civilian`, `Kill_Cop`, `Assault_Cop`
 and `Resisting_Arrest`; the others are read by later releases. A weight of 0 ignores that crime.
 
-`copsncrooks/wanted_messages.yml` holds `Hud.Bar.Seen` / `Searching` / `Evaded`, `Hud.Title`, `Hud.Card.Raise` /
-`Stance_Cuffs` / `Stance_Shoot` / `Drop_Evasion` / `Drop_Decay` / `Drop_Other`, `Charge_Sheet.Header` / `Crime` / `Total` /
+`copsncrooks/wanted_messages.yml` holds `Hud.Bar.Seen` / `Searching` / `Evaded` / `Evaded_Many`, `Hud.Title`, `Hud.Card.Raise` /
+`Stance_Cuffs` / `Stance_Shoot` / `Drop_Evasion` / `Drop_Decay` / `Drop_Other` / `Drop_Petty` / `Drop_Cold_Trail` / 
+`Drop_Clean_Break` / `Drop_Still_Hot` / `Drop_Known_Face` / `Drop_Narrow`, `Charge_Sheet.Header` / `Crime` / `Total` /
 `Paid` / `Extra_Time` / `Paperwork`, and `Crimes.<Id>` (including `Crimes.Unknown_Crime`, the card text when no crime is
-on record). Placeholders: `%stars%`, `%time%`, `%crime%`, `%tier%`, `%stance%`, `%count%`, `%amount%`, `%paid%`,
-`%money_symbol%`.
+on record). AUTO ending cards (`Drop_*`) are new in 0.15.2. Placeholders: `%stars%`, `%time%`, `%crime%`, `%tier%`, `%stance%`, `%count%`, `%amount%`, `%paid%`,
+`%money_symbol%`, and `%count%` fills the star-drop lines.
+
+#### AUTO mode settings
+
+When `Wanted.Evasion.Drop_Mode: AUTO`, the cops decide how many stars to drop based on how the chase went. 29 tunable keys live under `Wanted.Evasion.Auto` in `copsncrooks/wanted.yml`. If the block is missing, all keys use their defaults. The mode reads:
+1. **How the chase started** — rampage (4+ opening crimes, 4+ peak stars, or a cop killed) or small fry (1-2 crimes, max 2 stars).
+2. **How long was the chase** — wall-clock seconds since the first crime (with offline time removed), compared to a learned typical getaway length per star level.
+3. **After a specific period** — the lock lifts after 180 s with no new crime; a cold trail needs 90 s quiet. Logging out during a chase locks it until quiet is restored.
+4. **How it might end** — did you leave the search zone (clean break), sit tight (hunker down), or slip after a long pursuit (narrow escape, faster next timer).
+
+Five **endings** map these rules to 1, part or all stars: **Still Hot** (1, a rampage or logout lock), **Petty** (all, a small chase), **Cold Trail** (all, a long quiet chase), **Clean Break** (half, leaving the zone), **Hunker Down** (1, the default). The `Learning` sub-block (7 keys) lets the server track how long chases typically last and how often each player gets away, then adjusts timers and denies small-fry lumps to repeat offenders.
 
 ---
 

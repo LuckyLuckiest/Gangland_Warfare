@@ -215,7 +215,7 @@ Lines are throttled per squad and per player, so chat never floods. Every line i
 
 ---
 
-## Losing the Cops and the Chase (0.15.0)
+## Losing the Cops and the Chase (0.15.0 and 0.15.2)
 
 The chase around a wanted player is configured in `copsncrooks/wanted.yml` (heat, evasion, HUD, charge sheet) and
 `copsncrooks/wanted_messages.yml`; see [Wanted & Bounty](./wanted-bounty.md) for the player-facing rules.
@@ -223,6 +223,7 @@ The chase around a wanted player is configured in `copsncrooks/wanted.yml` (heat
 - **Evasion reads the squad's sightings.** Every cop in the group shares what it sees. The evasion clock counts "no
   cop has seen you" from the squad's last sighting, and a cop that is walking home (`RETURNING`) does not count as
   pursuit. When no live hunting cop is left the evasion state turns off and the fixed decay timer takes over.
+- **Evasion end decisions (0.15.2+).** With `Drop_Mode: ONE_STAR` (the default), every evasion drops one star. With `ALL_STARS`, every evasion drops all. With `AUTO`, the cops judge the chase and decide: a rampage drops one star at a time, a small chase or a long quiet one drops all stars, leaving the zone drops half your stars. The server can learn typical chase lengths and escape habits to tune timers and identify repeat offenders. Full rules in [Wanted & Bounty](./wanted-bounty.md).
 - **Regroup.** When `Regroup.Casualties` (2) cops of one squad die within `Regroup.Window_Seconds` (20), the whole squad
   falls back to cover for at most `Regroup.Fall_Back_Seconds` (15), radios for backup (the regroup grants it itself
   when none is active), and pushes together once all of it, backup included, is within `Regroup.Arrival_Radius` (24)
