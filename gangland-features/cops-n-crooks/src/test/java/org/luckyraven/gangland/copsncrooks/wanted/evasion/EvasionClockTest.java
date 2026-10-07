@@ -549,6 +549,30 @@ class EvasionClockTest {
 	}
 
 	@Test
+	@DisplayName("a replacement squad that never sees him starts a search but leaves lastLostAt at the last real loss")
+	void replacementSquad_neverSeesHim_keepsLastLostAt() {
+		arcs.start(id, WantedCause.CRIME, 2);
+		unseenMs = 100;
+		tickSeconds(1);
+		unseenMs = 10_000;
+		tickSeconds(1);
+		long lostAt = arcs.arc(id).lastLostAt();
+		assertTrue(lostAt > 0);
+
+		List<CopNpc> walkingHome = List.of(cop(CopState.RETURNING));
+		when(group.getCops()).thenReturn(walkingHome);
+		tickSeconds(1);
+		assertNull(clock.snapshot(id));
+
+		List<CopNpc> fresh = List.of(cop(CopState.PURSUING));
+		when(group.getCops()).thenReturn(fresh);
+		tickSeconds(1);
+
+		assertEquals(EvasionState.SEARCHING, clock.snapshot(id).state());
+		assertEquals(lostAt, arcs.arc(id).lastLostAt());
+	}
+
+	@Test
 	@DisplayName("AUTO: a narrow escape (20 s in sight) steps the next timer by 0.5 when the chase is not locked")
 	void auto_narrowEscape_notLocked_stepsByHalf() {
 		auto();

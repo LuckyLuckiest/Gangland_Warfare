@@ -174,10 +174,11 @@ public final class EvasionClock implements WantedDecayPolicy {
 		// A new search starts at the last sighting; one that follows a drop keeps its centre.
 		if (track == null || track.state == EvasionState.SEEN) {
 			Track spell = track == null ? new Track() : track;
+			// contact ends at the SEEN -> SEARCHING switch only; a null track (relog, replaced squad) was never in sight
 			if (track != null) {
 				spell.narrow = now - spell.seenSince >= cfg.auto().momentum().narrowSeenSeconds() * 1000L;
+				arcs.lost(id);
 			}
-			arcs.lost(id);
 			arcs.searchStarted(id);
 			Location last = group.getSquad().lastKnownLocation();
 			startSearch(player, spell, last != null ? last : player.getLocation(), level, cfg, now);
