@@ -29,8 +29,11 @@ public interface GanglandApi {
 	 * <p>2.1 adds the crime event bus ({@code CrimeService}, {@code CrimeCommittedEvent}) and {@code WantedEvasionStateEvent}.
 	 * <p>2.2 adds {@code MovedSetting} (the one-release settings.yml fallback for module-owned settings) and
 	 * {@code WantedKillTracker.readsComboSettings()}.
+	 * <p>2.3 adds {@code RegionProvider}, {@code PlaceRegion}, {@code RegionShape}, {@code PlaceNames},
+	 * {@code Waypoint.WaypointType.HOSPITAL}, {@code WantedCause.CONTACT} and the self-defence, contacts and hospital
+	 * settings (the hospital respawn shield included).
 	 */
-	String VERSION = "2.2";
+	String VERSION = "2.3";
 
 	/**
 	 * The permission namespace and long command alias ({@code /gangland}).

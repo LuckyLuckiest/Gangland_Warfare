@@ -498,6 +498,13 @@ Wanted_Level:
    Not_Wanted: "No tienes un nivel de búsqueda."
    Cleared: "Tu nivel de búsqueda ha sido eliminado."
    Paid: "Se pagaron las tarifas del nivel de búsqueda, con un total de &a%money_symbol%%amount%&7."
+   Contact:
+      Used: "&aTu contacto hizo desaparecer &e%stars% &aestrella(s) por &e%money_symbol%%amount%&a."
+      Seen: "&cNo mientras un policía te tenga a la vista."
+      Cooldown: "&cTu contacto se esconde. Inténtalo de nuevo en &e%time%&c."
+      Not_Wanted: "&7No tienes estrellas que borrar."
+      No_Money: "&cNecesitas &e%money_symbol%%amount%&c."
+      Disabled: "&7Nadie contesta."
 
 Weapons:
    Not_Valid_Ammo: "&cTipo de munición inválido &3%args%&c."
@@ -513,6 +520,8 @@ Weapons:
    Not_Enough_Ammo: "¡No tienes suficiente munición para vender!"
 
 Death:
+   Ward_Bill: "&3Factura del hospital: &c&l-%money_symbol%%amount%"
+   Hospital_Shield: "&7Protección hospitalaria durante &e%seconds%&7 s. Atacar a cualquiera la termina."
    Weapon:
       - "%killer% mató a %victim% con mucho vigor usando %item%."
       - "%victim% fue asesinado por %killer% usando %item%."

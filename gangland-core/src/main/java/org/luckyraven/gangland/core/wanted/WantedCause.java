@@ -24,5 +24,7 @@ public enum WantedCause {
 	/** Death / down reset (EntityDamageListener.onPlayerDeathResetWanted). */
 	DEATH,
 	/** Legacy no-cause calls. */
-	UNKNOWN
+	UNKNOWN,
+	/** Crooked contact: the phone desk ({@code /glw contact}) and bribe-star pickups. */
+	CONTACT
 }

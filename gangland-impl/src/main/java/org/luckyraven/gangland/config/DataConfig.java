@@ -28,6 +28,7 @@ import org.luckyraven.gangland.core.wanted.WantedKillTrackers;
 import org.luckyraven.gangland.core.wanted.WantedSettings;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.core.wanted.WantedStars;
+import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.gangland.item.money.MoneyDropClassifier;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
@@ -131,6 +132,15 @@ public class DataConfig {
 	@Bean
 	public BankTiers bankTiers() {
 		return new BankTiers();
+	}
+
+	/**
+	 * Region lookup holder (api 2.3). Always present; inert (empty answers) until a module or core provider registers
+	 * a {@code RegionProvider}. See documentation/module-loader.md, "Core seams".
+	 */
+	@Bean
+	public PlaceNames placeNames() {
+		return new PlaceNames();
 	}
 
 	/**
