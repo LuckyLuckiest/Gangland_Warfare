@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
+import org.luckyraven.gangland.copsncrooks.npc.police.perimeter.PerimeterController;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.EvasionClock;
 import org.luckyraven.gangland.copsncrooks.wanted.learn.ChaseHabit;
@@ -22,26 +23,29 @@ import java.util.function.BiConsumer;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Pins the evasion wiring: once every bean exists the module hands its clock to the core as the decay policy and to the
- * cop AI as a per-tick hook. Without either, line of sight never drops a star.
+ * Pins the evasion wiring: once every bean exists the module hands its clock to the core as the decay policy and the clock
+ * and the perimeter to the cop AI as per-tick hooks. Without the clock, line of sight never drops a star.
  */
 @DisplayName("EvasionModuleConfig")
 class EvasionModuleConfigTest {
 
 	@Test
-	@DisplayName("installEvasion installs the clock as the decay policy and as an AI-tick hook that ticks it")
+	@DisplayName("installEvasion installs the clock as the decay policy and the clock and the perimeter as AI-tick hooks")
 	@SuppressWarnings("unchecked")
-	void installEvasion_installsTheDecayPolicyAndTheAiTickHook() {
-		EvasionClock clock   = mock(EvasionClock.class);
-		WantedStars  stars   = mock(WantedStars.class);
-		CopManager   manager = mock(CopManager.class);
+	void installEvasion_installsTheDecayPolicyAndBothAiTickHooks() {
+		EvasionClock        clock     = mock(EvasionClock.class);
+		PerimeterController perimeter = mock(PerimeterController.class);
+		WantedStars         stars     = mock(WantedStars.class);
+		CopManager          manager   = mock(CopManager.class);
 
 		DependencyContainer container = new DependencyContainer();
 		container.registerInstance(EvasionClock.class, clock);
+		container.registerInstance(PerimeterController.class, perimeter);
 		container.registerInstance(WantedStars.class, stars);
 		container.registerInstance(CopManager.class, manager);
 
@@ -49,12 +53,14 @@ class EvasionModuleConfigTest {
 
 		verify(stars).installDecayPolicy(clock);
 		ArgumentCaptor<BiConsumer<Player, CopGroup>> hook = ArgumentCaptor.forClass(BiConsumer.class);
-		verify(manager).addAiTickHook(hook.capture());
+		verify(manager, times(2)).addAiTickHook(hook.capture());
 
 		Player   player = mock(Player.class);
 		CopGroup group  = mock(CopGroup.class);
-		hook.getValue().accept(player, group);
+		for (BiConsumer<Player, CopGroup> each : hook.getAllValues())
+			each.accept(player, group);
 		verify(clock).tick(player, group);
+		verify(perimeter).tick(player, group);
 	}
 
 	@Test
