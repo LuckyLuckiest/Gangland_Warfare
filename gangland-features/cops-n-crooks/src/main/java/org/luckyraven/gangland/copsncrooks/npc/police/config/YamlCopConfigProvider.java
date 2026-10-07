@@ -45,8 +45,11 @@ public class YamlCopConfigProvider implements CopConfigProvider {
 	static final TacticsConfig        COP_TACTICS_DEFAULT = new TacticsConfig(TacticsConfig.DEFAULT.engagement(), 270.0);
 	static final Map<Integer, Double> TIER_ARC_DEFAULTS   = Map.of(3, 200.0, 4, 270.0, 5, 330.0);
 
-	/** The dispatch-origin lines that must never be swallowed by the player gap (Ruling R43). */
-	static final Set<String> DISPATCH_PRIORITY = Set.of("Dispatch_En_Route", "Wipe_Refill");
+	/**
+	 * The dispatch-origin lines and the once-per-chase Handoff / Post_Up lines that must never be swallowed by the player
+	 * gap (Ruling R43, T26): added in code so an older cops.yml Priority list is covered too.
+	 */
+	static final Set<String> DISPATCH_PRIORITY = Set.of("Dispatch_En_Route", "Wipe_Refill", "Handoff", "Post_Up");
 
 	/**
 	 * Code default for a cop_roles.yml with no Squad_Composition block (or no such file): roles are on, filled in this

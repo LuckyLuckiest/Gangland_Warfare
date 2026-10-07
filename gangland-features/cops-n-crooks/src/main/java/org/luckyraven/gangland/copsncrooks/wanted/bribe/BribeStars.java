@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.IntSupplier;
 import java.util.function.LongSupplier;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -64,6 +65,7 @@ public class BribeStars implements BeanLifecycle {
 	private final WantedMessages            messages;
 	private final CopManager                copManager;
 	private final LongSupplier              clock;
+	private final Predicate<UUID>           held;
 
 	private final Map<Integer, Slot> slots = new HashMap<>();
 	private final Map<UUID, Long>    told  = new HashMap<>();
@@ -73,7 +75,7 @@ public class BribeStars implements BeanLifecycle {
 
 	public BribeStars(JavaPlugin plugin, SetupPointRegistry points, UserManager<Player> users,
 	                  Supplier<BribeStarSettings> settings, IntSupplier lostSightSeconds, WantedMessages messages,
-	                  CopManager copManager, LongSupplier clock) {
+	                  CopManager copManager, LongSupplier clock, Predicate<UUID> held) {
 		this.plugin           = plugin;
 		this.points           = points;
 		this.users            = users;
@@ -82,6 +84,7 @@ public class BribeStars implements BeanLifecycle {
 		this.messages         = messages;
 		this.copManager       = copManager;
 		this.clock            = clock;
+		this.held             = held;
 	}
 
 	@Override
@@ -169,6 +172,9 @@ public class BribeStars implements BeanLifecycle {
 			User<Player> user = users.getUser(player);
 			Wanted       wanted = user == null ? null : user.getWanted();
 			if (wanted == null || !wanted.isWanted()) continue;
+
+			// a cuffed, in-transit or jailed suspect never takes a star: a guarding cop stops stamping sightings (T26)
+			if (held.test(player.getUniqueId())) continue;
 
 			if (seen(player.getUniqueId())) {
 				Long last = told.get(player.getUniqueId());

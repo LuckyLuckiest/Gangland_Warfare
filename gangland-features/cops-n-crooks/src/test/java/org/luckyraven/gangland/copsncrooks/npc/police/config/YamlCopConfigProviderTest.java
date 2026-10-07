@@ -738,6 +738,27 @@ class YamlCopConfigProviderTest {
 	}
 
 	@Test
+	@DisplayName("Handoff and Post_Up are always priority (once-per-chase lines): code default, bundled list, and an old/custom Priority list (T26)")
+	void handoffAndPostUp_alwaysPriority() throws IOException {
+		String yaml;
+		try (InputStream in = Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("copsncrooks/cops.yml"))) {
+			yaml = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+		}
+		CopConfigProvider old = parse("""
+				Cops:
+				   Radio:
+				      Priority:
+				         - "Contact"
+				""" + TIER_BLOCK);
+
+		for (String key : List.of("Handoff", "Post_Up")) {
+			assertTrue(CopConfigProvider.COP_RADIO_DEFAULTS.isPriority(key), key);
+			assertTrue(parse(yaml).getRadioSettings().isPriority(key), key);
+			assertTrue(old.getRadioSettings().isPriority(key), key);
+		}
+	}
+
+	@Test
 	@DisplayName("breatherMs by stars: 1 star 15 s, 5 stars 6 s, out-of-range levels clamp to the ends, disabled is 0")
 	void breatherMs_byStars() {
 		BreatherSettings breather = BreatherSettings.DEFAULT;
