@@ -184,6 +184,73 @@ class CopManagerDispatchTest {
 		assertEquals(2, group().getCops().size());
 	}
 
+	/**
+	 * Fix round 1: at five stars the breather (6 s) is shorter than the wipe window (10 s), so on the tick it ends the
+	 * squad is still empty (the refill spawns after the dispatch pass) and the old casualty is still in the window. That
+	 * is the same wipe, not a new one: the breather must not be pushed out again, and a cop lost right after the refill
+	 * comes back at once.
+	 */
+	@Test
+	@DisplayName("a breather shorter than the wipe window is not renewed when it ends; a later loss refills at once")
+	void wipe_breatherShorterThanWindow_isNotRenewed() {
+		Wanted five = CopManagerFixture.wanted(5);
+		manager.onWantedStart(player, five);
+		manager.spawnTick(playerId, five);
+		for (CopNpc cop : group().getCops()) when(cop.isMarkedForRemoval()).thenReturn(true);
+		group().recordCasualty(1_500L);
+
+		fx.clock[0] = 2_000L;
+		manager.spawnTick(playerId, five);
+		assertEquals(8_000L, group().getBreatherUntil(), "6 s at five stars");
+
+		fx.clock[0] = 8_000L;
+		manager.spawnTick(playerId, five);
+
+		assertEquals(8_000L, group().getBreatherUntil(), "the wipe already seen does not start a second breather");
+		assertEquals(2, group().getCops().size());
+
+		CopNpc lost = group().getCops().get(0);
+		when(lost.isMarkedForRemoval()).thenReturn(true);
+		group().recordCasualty(8_500L);
+		fx.clock[0] = 9_000L;
+		manager.spawnTick(playerId, five);
+
+		assertEquals(2, group().getCops().size(), "the lost cop is refilled with no extra hold");
+		assertEquals(0, group().pendingCount());
+		verify(fx.radio, times(1)).dispatch(any(), any(), eq("Wipe_Refill"), anyInt(), anyString(), anyMap());
+	}
+
+	/**
+	 * Fix round 1: a backup unit whose station ETA (40 s) outlasts the backup (30 s) is still queued when the backup
+	 * runs out. It is the surplus, so it is dropped from the queue instead of arriving later and staying for good.
+	 */
+	@Test
+	@DisplayName("a backup unit still en route when the backup runs out is called off, never spawned")
+	void backupExpired_queuedExtraIsCalledOff() {
+		manager.onWantedStart(player, wanted);
+		manager.spawnTick(playerId, wanted);
+		assertEquals(2, group().getCops().size());
+		stations.add(new Station(2, "Faraway", "world", 510, 64, 10, 0f, null));
+
+		assertTrue(group().requestBackup(fx.clock[0], fx.provider.getBackupSettings()));
+		manager.spawnTick(playerId, wanted);
+		assertEquals(1, group().pendingCount());
+		assertEquals(41_000L, group().getPending().get(0).arriveAt(), "40 s ETA, past the 30 s backup");
+
+		fx.clock[0] = 31_000L;
+		manager.spawnTick(playerId, wanted);
+
+		assertEquals(0, group().pendingCount(), "the extra still en route is called off");
+		assertEquals(0, group().getPendingRelease());
+
+		fx.clock[0] = 41_000L;
+		manager.spawnTick(playerId, wanted);
+
+		assertEquals(2, group().getCops().size());
+		verify(fx.spawner, times(2)).spawnUnit(eq(player), any(), any());
+		for (CopNpc cop : group().getCops()) assertFalse(cop.getCurrentState() == CopState.RETURNING);
+	}
+
 	/** Characterization pin: also passes on the pre-change code (no breather existed); it pins that only a casualty makes a wipe. */
 	@Test
 	@DisplayName("cops lost without a recent casualty are no wipe: the refill comes at once, no breather")

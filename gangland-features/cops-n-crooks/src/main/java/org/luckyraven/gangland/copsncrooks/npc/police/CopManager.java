@@ -657,8 +657,11 @@ public class CopManager implements BeanLifecycle {
 	private void dispatchMissing(Player player, CopGroup group, int wantedLevel, int starTier, int lacking,
 	                             @Nullable List<CopRole> composition, List<CopRole> liveRoles, long now) {
 		BreatherSettings breather = breatherSettings();
+		// only a casualty after the current breather is a new wipe: a breather shorter than the window ends while the
+		// refill is still queued and the old casualty is still inside it
 		boolean wipe = breather.enabled() && liveRoles.isEmpty() &&
-		               group.casualtyWithin(now, breather.wipeWindowSeconds() * 1000L) && group.getBreatherUntil() <= now;
+		               group.casualtyWithin(now, breather.wipeWindowSeconds() * 1000L) &&
+		               group.getLastCasualtyAt() > group.getBreatherUntil();
 		if (wipe) group.setBreatherUntil(now + breather.breatherMs(wantedLevel));
 
 		int missing = lacking - group.pendingCount();
@@ -815,7 +818,8 @@ public class CopManager implements BeanLifecycle {
 	 * cops of a role the group holds more of than its base squad of {@code targetCount} ({@link CopRole#nextRole}), so a
 	 * replacement spawned mid-backup for a fallen Commander or Pointman stays (T-146). The group's last Commander is
 	 * never sent, even when the wanted level fell to a composition without one. A cop in a fight, cuffing or guarding
-	 * is never sent; what cannot go this run is retried on the next.
+	 * is never sent; what cannot go this run is retried on the next. Queued units count toward the group and a surplus
+	 * one still en route is called off before any live cop is sent.
 	 */
 	private void releaseSurplus(CopGroup group, int targetCount, @Nullable List<CopRole> composition) {
 		List<CopNpc> live = new ArrayList<>();
@@ -823,20 +827,38 @@ public class CopManager implements BeanLifecycle {
 			for (CopNpc cop : group.getCops())
 				if (cop.isValid() && cop.getCurrentState() != CopState.RETURNING) live.add(cop);
 		}
+		List<PendingUnit> queued = group.getPending();
 
-		int surplus = live.size() - targetCount;
+		int surplus = live.size() + queued.size() - targetCount;
 		if (surplus <= 0) {
 			group.setPendingRelease(0);
 			return;
 		}
 
-		// live cops per role less the base squad's: what is left over came with the backup (roles off: every cop)
+		// live and queued cops per role less the base squad's: what is left over came with the backup (roles off: every cop)
 		Map<String, Integer> excess = new HashMap<>();
 		for (CopNpc cop : live) excess.merge(roleName(cop.getRole()), 1, Integer::sum);
+		for (PendingUnit unit : queued) excess.merge(roleName(unit.role()), 1, Integer::sum);
 		List<CopRole> base = new ArrayList<>();
 		for (int i = 0; i < targetCount; i++) base.add(CopRole.nextRole(composition, base));
 		for (CopRole role : base) excess.merge(roleName(role), -1, Integer::sum);
-		long commanders = live.stream().filter(CopManager::isCommander).count();
+		long commanders = live.stream().filter(CopManager::isCommander).count() +
+		                  queued.stream().filter(unit -> unit.role() != null && unit.role().commander()).count();
+
+		// a backup unit still en route is called off first, newest first: it outlived the backup on a long ETA
+		for (int i = queued.size() - 1; i >= 0 && surplus > 0 && group.getPendingRelease() > 0; i--) {
+			CopRole role = queued.get(i).role();
+			if (excess.get(roleName(role)) <= 0) continue;
+			if (role != null && role.commander()) {
+				if (commanders <= 1) continue; // the squad's leader stays (T-146)
+				commanders--;
+			}
+
+			excess.merge(roleName(role), -1, Integer::sum);
+			queued.remove(i);
+			group.setPendingRelease(group.getPendingRelease() - 1);
+			surplus--;
+		}
 
 		for (int i = live.size() - 1; i >= 0 && surplus > 0 && group.getPendingRelease() > 0; i--) {
 			CopNpc   cop   = live.get(i);
