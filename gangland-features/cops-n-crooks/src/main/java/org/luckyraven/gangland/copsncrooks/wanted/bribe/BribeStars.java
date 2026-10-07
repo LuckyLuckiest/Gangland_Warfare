@@ -25,7 +25,10 @@ import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.IntSupplier;
 import java.util.function.LongSupplier;
@@ -34,7 +37,9 @@ import java.util.function.Supplier;
 /**
  * Police bribe stars (CONTRACTS C14): each admin {@code pickup} setup point shows a floating item; a wanted player whom no cop
  * has seen within {@code Lost_Sight_Seconds} pockets it for {@code Stars} wanted stars. A taken item returns after
- * {@code Respawn_Seconds} (in memory, so a restart respawns every star at once); an item that vanished otherwise returns at once.
+ * {@code Respawn_Seconds} (in memory, so a restart respawns every star at once), and so does one that vanished in a loaded
+ * chunk without a take (a hopper is cancelled by {@code BribeStarListener}, but a plugin or {@code /kill} may still remove
+ * it); one unloaded with its chunk returns at once when the chunk loads again.
  *
  * @since 0.16.0
  */
@@ -104,20 +109,50 @@ public class BribeStars implements BeanLifecycle {
 		}
 
 		long now = clock.getAsLong();
-		for (SetupPoint point : points.ofKind(SetupPoint.PICKUP)) {
-			Location at = point.getLocation();
-			if (at == null || at.getWorld() == null) continue;
-			if (!at.getWorld().isChunkLoaded(at.getBlockX() >> 4, at.getBlockZ() >> 4)) continue;
+		// an entry this old is as good as none: drop it so a player who walked away does not stay in the map
+		told.values().removeIf(last -> now - last >= TOLD_EVERY_MS);
+
+		List<SetupPoint> pickups = points.ofKind(SetupPoint.PICKUP);
+		Set<Integer>     live    = new HashSet<>();
+		for (SetupPoint point : pickups) live.add(point.getId());
+		// a removed point takes its star with it, so an id reused later starts clean
+		slots.entrySet().removeIf(entry -> {
+			if (live.contains(entry.getKey())) return false;
+			if (entry.getValue().item != null) entry.getValue().item.remove();
+			return true;
+		});
+
+		for (SetupPoint point : pickups) {
+			Location corner = point.getLocation();
+			if (corner == null || corner.getWorld() == null) continue;
+			// a wand point is the clicked block's corner: a star dropped there spawns inside the block and is pushed out
+			Location at = corner.clone().add(0.5, 1.0, 0.5);
 
 			Slot slot = slots.computeIfAbsent(point.getId(), id -> new Slot());
-			if (slot.item == null || !slot.item.isValid()) {
+			if (!at.getWorld().isChunkLoaded(at.getBlockX() >> 4, at.getBlockZ() >> 4)) {
+				// unloaded with its chunk (setPersistent false), not taken: back at once when the chunk loads
+				if (slot.item != null && !slot.item.isValid()) slot.item = null;
+				continue;
+			}
+
+			// an id reused at another spot, or a star pushed off its point: serve a fresh one at the point
+			if (slot.item != null && slot.item.isValid() && !near(slot.item.getLocation(), at)) {
+				slot.item.remove();
 				slot.item = null;
+			}
+			if (slot.item != null && !slot.item.isValid()) {
+				// vanished in a loaded chunk without a take: no instant re-drop, or a hopper farms it
+				slot.item      = null;
+				slot.respawnAt = now + config.respawnSeconds() * 1000L;
+			}
+			if (slot.item == null) {
 				if (now < slot.respawnAt) continue;
 				slot.item = drop(at, config.item());
 				if (slot.item == null) continue;
 			}
 
 			slot.item.setTicksLived(1);   // the 5 minute despawn clock never runs out while the point is being served
+			slot.item.setVelocity(new Vector());   // no gravity, so a nudge would otherwise carry it off its point
 			tryTake(slot, config, now);
 		}
 	}
@@ -144,14 +179,28 @@ public class BribeStars implements BeanLifecycle {
 				continue;
 			}
 
-			int taken = Math.min(config.stars(), wanted.getLevel());
-			wanted.setLevel(Math.max(0, wanted.getLevel() - config.stars()), WantedCause.CONTACT);
+			int level = wanted.getLevel();
+			int taken = Math.min(config.stars(), level);
+			wanted.setLevel(Math.max(0, level - config.stars()), WantedCause.CONTACT);
+			if (wanted.getLevel() >= level) return;   // another plugin cancelled the drop: the star stays
 			slot.item.remove();
 			slot.item      = null;
 			slot.respawnAt = now + config.respawnSeconds() * 1000L;
 			player.sendMessage(messages.format(WantedMessages.Key.BRIBE_STAR_TAKEN, Map.of("stars", String.valueOf(taken))));
 			return;
 		}
+	}
+
+	/** True for a live bribe-star item (hoppers must not collect it). */
+	public boolean isStar(Item item) {
+		for (Slot slot : slots.values()) {
+			if (item.equals(slot.item)) return true;
+		}
+		return false;
+	}
+
+	private static boolean near(Location item, Location point) {
+		return item != null && item.getWorld() == point.getWorld() && item.distanceSquared(point) <= 1.0;
 	}
 
 	/** A squad has a sighting younger than {@code Lost_Sight_Seconds} (Ruling R31). */

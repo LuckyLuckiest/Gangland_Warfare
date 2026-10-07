@@ -76,6 +76,8 @@ public class CustomPlayerDeathListener implements Listener {
 	private final Map<UUID, BukkitTask> respawnTasks   = new ConcurrentHashMap<>();
 	private final Map<UUID, GameMode>   savedGameModes = new ConcurrentHashMap<>();
 	private final Map<UUID, Location>   deathLocations = new ConcurrentHashMap<>();
+	/** Where a downed player went down: a spectator who flies off must not pick his own hospital. */
+	private final Map<UUID, Location>   downedAt       = new ConcurrentHashMap<>();
 
 	public CustomPlayerDeathListener(Gangland gangland,
 	                                 @Qualifier("online") UserManager<Player> userManager,
@@ -117,6 +119,7 @@ public class CustomPlayerDeathListener implements Listener {
 		if (resultHealth <= 0) {
 			event.setCancelled(true);
 			player.setHealth(DOWNED_HEALTH);
+			downedAt.put(uuid, player.getLocation());
 			// Mark as downed immediately so any damage in the 1-tick scheduler delay is absorbed.
 			DownedPlayerRegistry.add(uuid);
 			// Delay 1 tick so the cancelled damage is fully processed first.
@@ -291,7 +294,9 @@ public class CustomPlayerDeathListener implements Listener {
 		player.setAllowFlight(false);
 		player.setFlying(false);
 
-		Waypoint hospital = Settings.isHospitalEnabled() ? hospitalFor(player, player.getLocation()) : null;
+		Location fell     = downedAt.remove(uuid);
+		Waypoint hospital = Settings.isHospitalEnabled()
+		                    ? hospitalFor(player, fell != null ? fell : player.getLocation()) : null;
 
 		if (hospital != null) {
 			// a hospital is a direct teleport: no timer, cooldown or cost
@@ -360,6 +365,7 @@ public class CustomPlayerDeathListener implements Listener {
 		if (task != null) task.cancel();
 		DownedPlayerRegistry.remove(uuid);
 		savedGameModes.remove(uuid);
+		downedAt.remove(uuid);
 	}
 
 	private void dropInventoryIfAllowed(Player player) {

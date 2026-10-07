@@ -99,6 +99,11 @@ public final class ChaseArcs {
 		if (arc != null) arc.peak = Math.max(arc.peak, level);
 	}
 
+	public void boughtDown(UUID id) {
+		ChaseArc arc = arcs.get(id);
+		if (arc != null) arc.boughtDown = true;
+	}
+
 	public void searchStarted(UUID id) {
 		ChaseArc arc = arcs.get(id);
 		if (arc != null) arc.searched = true;

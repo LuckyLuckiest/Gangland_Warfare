@@ -102,7 +102,8 @@ Wanted:
       Hideout:
          Enable: true
          Speed: 2.0
-      # The longer you stay quiet (no crime, no new star, no cop sighting) the faster the timer runs
+      # The longer you go without a crime the faster the timer runs (stars from signs or commands do not count);
+      # it never applies while a cop sees you
       Quiet_Speed:
          Enable: true
          # Speed added for every full quiet minute

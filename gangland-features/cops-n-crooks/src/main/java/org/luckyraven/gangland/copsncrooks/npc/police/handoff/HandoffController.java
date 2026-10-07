@@ -60,8 +60,11 @@ public class HandoffController {
 
 	/** Per AI tick: records the suspect's position and sets the bias on the engaged -> not engaged edge. */
 	public void tick(Player player, @Nullable CopGroup group) {
-		UUID id = player.getUniqueId();
-		HandoffSettings settings = requireNonNullElse(provider.get().getHandoffSettings(), HandoffSettings.DEFAULT);
+		UUID              id     = player.getUniqueId();
+		CopConfigProvider config = provider.get();
+		if (config == null) return;   // no cop config loaded (a reload window): skip the tick, keep the state
+
+		HandoffSettings settings = requireNonNullElse(config.getHandoffSettings(), HandoffSettings.DEFAULT);
 		if (!settings.enabled() || group == null || group.getLevel() <= 0) {
 			samples.remove(id);
 			engaged.remove(id);
@@ -80,7 +83,7 @@ public class HandoffController {
 		else engaged.remove(id);
 
 		if (!wasEngaged || isEngaged || group.biasAt(now) != null) return;
-		if (!leashedOut(group, id, player)) return;
+		if (!leashedOut(group, id, player, config.getPursuitMaxDistance())) return;
 
 		Location oldest  = window.peekFirst().at();
 		Location newest  = window.peekLast().at();
@@ -103,8 +106,7 @@ public class HandoffController {
 	}
 
 	/** A cop still hunting this player (target kept: a stood-down chase clears it) is RETURNING beyond the pursuit range. */
-	private boolean leashedOut(CopGroup group, UUID id, Player player) {
-		double maxDistance = provider.get().getPursuitMaxDistance();
+	private static boolean leashedOut(CopGroup group, UUID id, Player player, double maxDistance) {
 		for (CopNpc cop : List.copyOf(group.getCops())) {
 			Entity body = cop.getEntity();
 			if (!cop.isValid() || body == null || cop.getCurrentState() != CopState.RETURNING ||

@@ -119,31 +119,30 @@ public final class SetupOutline implements BeanLifecycle {
 		int minY = Math.min(a.getBlockY(), b.getBlockY()), maxY = Math.max(a.getBlockY(), b.getBlockY());
 		int minZ = Math.min(a.getBlockZ(), b.getBlockZ()), maxZ = Math.max(a.getBlockZ(), b.getBlockZ());
 
-		Set<Location> edges = new LinkedHashSet<>();
+		// the stride comes from the edge lengths, so the work is bounded by the cap, never by the selection's size;
+		// each edge rounds up once, so MAX_PARTICLES - 12 keeps the 12 edges together under the hard cap
+		long nx     = (long) maxX - minX + 1, ny = (long) maxY - minY + 1, nz = (long) maxZ - minZ + 1;
+		long total  = 4 * (nx + ny + nz);
+		long stride = Math.max(1, (total + MAX_PARTICLES - 13) / (MAX_PARTICLES - 12));
+
+		// ponytail: stride thinning, not an even re-walk; the outline stays recognisable, the cap is hard
+		Set<Location> kept = new LinkedHashSet<>();
 		for (int y : new int[]{minY, maxY}) {
 			for (int z : new int[]{minZ, maxZ}) {
-				for (int x = minX; x <= maxX; x++) edges.add(centre(world, x, y, z));
+				for (long x = minX; x <= maxX; x += stride) kept.add(centre(world, (int) x, y, z));
 			}
 		}
 		for (int x : new int[]{minX, maxX}) {
 			for (int z : new int[]{minZ, maxZ}) {
-				for (int y = minY; y <= maxY; y++) edges.add(centre(world, x, y, z));
+				for (long y = minY; y <= maxY; y += stride) kept.add(centre(world, x, (int) y, z));
 			}
 		}
 		for (int x : new int[]{minX, maxX}) {
 			for (int y : new int[]{minY, maxY}) {
-				for (int z = minZ; z <= maxZ; z++) edges.add(centre(world, x, y, z));
+				for (long z = minZ; z <= maxZ; z += stride) kept.add(centre(world, x, y, (int) z));
 			}
 		}
-
-		// ponytail: stride thinning, not an even re-walk; the outline stays recognisable, the cap is hard
-		int            stride = (edges.size() + MAX_PARTICLES - 1) / MAX_PARTICLES;
-		List<Location> kept   = new ArrayList<>();
-		int            index  = 0;
-		for (Location edge : edges) {
-			if (index++ % Math.max(1, stride) == 0) kept.add(edge);
-		}
-		return kept;
+		return new ArrayList<>(kept);
 	}
 
 	private static Location centre(World world, int x, int y, int z) {

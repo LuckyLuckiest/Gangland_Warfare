@@ -94,6 +94,25 @@ class WaypointRepositoryTypeTest {
 		assertFalse(loaded.containsKey("future"));
 	}
 
+	/** Final fix round 1: the skipped row's id still floors the next new waypoint's, so it is never reused. */
+	@Test
+	@DisplayName("a skipped row still counts toward the highest stored id")
+	void unknownTypeRow_countsTowardTheHighestStoredId() throws SQLException {
+		Waypoint kept   = waypoint("kept", Waypoint.WaypointType.SPAWN);
+		Waypoint future = waypoint("future", Waypoint.WaypointType.GLOBAL);
+		kept.setUsedId(3);
+		future.setUsedId(9);
+		repository.save(kept);
+		repository.save(future);
+		try (Connection connection = DriverManager.getConnection("jdbc:sqlite:" + db.toAbsolutePath());
+		     Statement statement = connection.createStatement()) {
+			statement.executeUpdate("UPDATE waypoint SET type = 'hospital_v2' WHERE name = 'future'");
+		}
+
+		assertEquals(1, repository.loadAll().size());
+		assertEquals(9, repository.getHighestStoredId());
+	}
+
 	@Test
 	@DisplayName("a hospital waypoint saves and loads back as a hospital")
 	void hospital_loads() {

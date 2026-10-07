@@ -18,6 +18,7 @@ import org.luckyraven.keystone.item.ItemBuilder;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +29,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -121,6 +123,18 @@ class SetupOutlineTest {
 
 		assertTrue(size <= SetupOutline.MAX_PARTICLES, "size " + size);
 		assertTrue(size >= 128, "still a recognisable outline, size " + size);
+	}
+
+	@Test
+	@DisplayName("a mis-clicked selection millions of blocks wide costs the cap, not the edge count")
+	void hugeSelection_isBoundedByTheCap_notTheEdgeSet() {
+		SetupSelection huge = cuboid(-1_000_000, 0, -1_000_000, 1_000_000, 255, 1_000_000);
+
+		List<Location> points = assertTimeoutPreemptively(Duration.ofSeconds(2), () -> SetupOutline.points(huge));
+
+		assertTrue(points.size() <= SetupOutline.MAX_PARTICLES, "size " + points.size());
+		assertTrue(points.size() >= 128, "size " + points.size());
+		assertTrue(blocks(points).contains(List.of(-1_000_000, 0, -1_000_000)), "a corner is drawn");
 	}
 
 	@Test

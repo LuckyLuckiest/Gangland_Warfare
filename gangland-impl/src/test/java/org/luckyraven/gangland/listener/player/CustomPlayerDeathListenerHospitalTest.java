@@ -3,6 +3,7 @@ package org.luckyraven.gangland.listener.player;
 import org.bukkit.Location;
 import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.junit.jupiter.api.AfterEach;
@@ -102,6 +103,7 @@ class CustomPlayerDeathListenerHospitalTest {
 				User:
 				  Death:
 				    Respawn:
+				      Enable: true
 				      Teleport:
 				        Enable: true
 				        Waypoint: "spawn"
@@ -136,6 +138,28 @@ class CustomPlayerDeathListenerHospitalTest {
 
 		verify(player).teleport(wardLocation);
 		verify(waypoints, never()).get(any(String.class));
+	}
+
+	@Test
+	@DisplayName("a downed player wakes at the hospital nearest where he went down, not where he flew as a spectator")
+	void downedPath_usesWhereHeWentDown_notTheSpectatorPosition() throws IOException {
+		settings(true);
+		Location flewTo   = mock(Location.class);
+		Waypoint homeWard = mock(Waypoint.class);
+		when(homeWard.getLocation()).thenReturn(mock(Location.class));
+		when(waypoints.nearest(here, Waypoint.WaypointType.HOSPITAL)).thenReturn(ward);
+		when(waypoints.nearest(flewTo, Waypoint.WaypointType.HOSPITAL)).thenReturn(homeWard);
+		CustomPlayerDeathListener listener = listener();
+		EntityDamageEvent         lethal   = mock(EntityDamageEvent.class);
+		when(lethal.getEntity()).thenReturn(player);
+		when(lethal.getFinalDamage()).thenReturn(100.0);
+		when(player.getHealth()).thenReturn(20.0);
+
+		listener.onEntityDamage(lethal);
+		when(player.getLocation()).thenReturn(flewTo);
+		CustomPlayerDeathListener.triggerManualRespawn(player);
+
+		verify(player).teleport(wardLocation);
 	}
 
 	@Test

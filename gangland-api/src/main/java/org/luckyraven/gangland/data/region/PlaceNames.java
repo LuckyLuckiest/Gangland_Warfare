@@ -46,7 +46,8 @@ public final class PlaceNames {
 		for (RegionProvider provider : providers) {
 			try {
 				found.addAll(provider.regionsAt(at));
-			} catch (RuntimeException exception) {
+			} catch (RuntimeException | LinkageError exception) {
+				// LinkageError: a module provider whose soft-dependency class is gone is skipped like a failing one
 				log.warn("Region provider '{}' failed: {}", provider.source(), exception.toString());
 			}
 		}

@@ -704,6 +704,26 @@ class EvasionClockTest {
 	}
 
 	@Test
+	@DisplayName("a rejoin's seeded sighting fires no SEEN (no cop has eyes on him); a real sighting after it does")
+	void restoreSeed_firesNoSeen_untilACopReallySeesHim() {
+		arcs.start(id, WantedCause.CRIME, 2);
+		unseenMs = 100;
+		tickSeconds(10);
+		loseSight();
+		tickSeconds(5);
+
+		quitAndRejoin(300_000);
+		events.clear();
+		unseenMs = 1000;
+		tickSeconds(1);
+		assertFalse(stateNames().contains(EvasionState.SEEN), "the seed is no sighting: contacts stay open");
+
+		unseenMs = 100;
+		tickSeconds(1);
+		assertEquals(List.of(EvasionState.SEEN), stateNames());
+	}
+
+	@Test
 	@DisplayName("AUTO: 17.9 s in sight plus the 3 s Lost_Sight_Seconds grace is not a narrow escape")
 	void auto_lostSightGrace_isNotTimeInSight() {
 		auto();

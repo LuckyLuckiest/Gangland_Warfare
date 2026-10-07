@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 public class WaypointRepository extends AbstractRepository<Waypoint> {
 
 	private final WaypointTable waypointTable;
+	private       int           highestStoredId;
 
 	public WaypointRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
 		super(plugin, databaseHandler, backend);
@@ -29,14 +30,23 @@ public class WaypointRepository extends AbstractRepository<Waypoint> {
 		this.waypointTable = new WaypointTable();
 	}
 
+	/** The highest id of every row the last load saw, rows skipped for an unknown type included. */
+	public int getHighestStoredId() {
+		return highestStoredId;
+	}
+
 	@Override
 	protected Collection<Waypoint> doLoadAll() throws SQLException {
 		List<Waypoint> waypoints = new ArrayList<>();
 		List<Object[]> data      = tableBackend().selectAll();
 
+		highestStoredId = 0;
+
 		for (Object[] result : data) {
 			int    v        = 0;
 			int    id       = (int) result[v++];
+			// before the unknown-type skip: the next created waypoint must never reuse that row's id
+			highestStoredId = Math.max(highestStoredId, id);
 			int    gangId   = (int) result[v++];
 			String name     = String.valueOf(result[v++]);
 			String world    = String.valueOf(result[v++]);

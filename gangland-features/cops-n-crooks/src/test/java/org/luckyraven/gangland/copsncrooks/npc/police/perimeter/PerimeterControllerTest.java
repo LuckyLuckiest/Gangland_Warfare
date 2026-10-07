@@ -18,6 +18,7 @@ import org.luckyraven.keystone.npc.NpcFanPlacement;
 import org.luckyraven.keystone.npc.NpcPost;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -144,6 +146,10 @@ class PerimeterControllerTest {
 		verify(commander, never()).holdPost(any());
 		assertEquals(CopState.POSTED, stateOf(marksman));
 		assertEquals(CopState.POSTED, stateOf(defender));
+		// the chase state's exit stops navigation: the post walk must start after it, or it is cancelled at once
+		InOrder order = inOrder(marksman);
+		order.verify(marksman).transitionTo(CopState.POSTED);
+		order.verify(marksman).holdPost(any());
 		assertTrue(controller.isActive(playerId));
 		verify(radio).sayAs(eq(group), eq(marksman), eq("Post_Up"), eq(Map.of("place", "the plaza")));
 		verify(radio).sayAs(eq(group), eq(defender), eq("Post_Up"), eq(Map.of("place", "the plaza")));

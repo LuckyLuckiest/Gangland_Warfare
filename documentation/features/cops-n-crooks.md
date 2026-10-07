@@ -272,8 +272,9 @@ player's world:
 - A world with no station keeps the old ring spawn with no delay (ETA 0).
 - **The chase clock waits for the cops.** While units are on the road and none stands in the world, the evasion clock holds:
   no search opens and no star can drop. A unit that fails to spawn for 10 s past its ETA stops counting.
-- After a **logout and rejoin** inside `Rejoin_Grace_Seconds` (15) the pending units are held that long and the
-  cops are not dropped on the spot where he reappeared.
+- A **logout** drops every unit on its way. After the **rejoin** the first units are sent only once
+  `Rejoin_Grace_Seconds` (15) have passed, and still need their ETA; the cops are not dropped on the spot where he
+  reappeared, and the chase clock holds until a unit arrives.
 
 ### Mixed squads
 

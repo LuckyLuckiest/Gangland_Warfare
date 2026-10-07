@@ -119,6 +119,11 @@ public final class ContactCommand extends Command {
 		}
 
 		wanted.setLevel(level - stars, WantedCause.CONTACT);
+		// another plugin cancelled the drop: the call bought nothing
+		if (wanted.getLevel() >= level) {
+			user.getEconomy().depositAmount(price);
+			return;
+		}
 		desk.startCooldown(player.getUniqueId());
 
 		player.sendMessage(replaceMoney(Messages.CONTACT_USED.toString(), price).replace("%stars%",

@@ -665,12 +665,15 @@ public class CopManager implements BeanLifecycle {
 		if (wipe) group.setBreatherUntil(now + breather.breatherMs(wantedLevel));
 
 		int missing = lacking - group.pendingCount();
-		if (missing <= 0) return;
+		// a wipe is radioed and holds the queue even when every missing slot was already queued before it
+		if (missing <= 0 && !wipe) return;
 
 		SpawnBias       bias     = group.biasAt(now);
 		Dispatcher.Plan plan     = dispatcher.plan(player, now, bias);
 		long            hold     = Math.max(0L, group.getBreatherUntil() - now);
 		long            arriveAt = now + hold + plan.etaMs();
+		// R19: the whole refill arrives after the breather, units queued before the wipe included
+		if (wipe) group.holdPendingUntil(arriveAt);
 		List<CopRole>   held     = new ArrayList<>(liveRoles);
 		for (PendingUnit unit : group.getPending()) held.add(unit.role());
 		for (int i = 0; i < missing; i++) {
@@ -689,23 +692,30 @@ public class CopManager implements BeanLifecycle {
 		}
 
 		String reason = wipe ? "wipe" : restoring.remove(player.getUniqueId()) ? "restore" : "none";
-		log.debug("DISPATCH {} count={} station={} eta={}s hold={}s reason={} bias={}", player.getName(), missing,
+		log.debug("DISPATCH {} count={} station={} eta={}s hold={}s reason={} bias={}", player.getName(),
+		          Math.max(0, missing),
 		          plan.station() == null ? "ring" : plan.station().getName(), plan.etaMs() / 1000, (hold + 999) / 1000,
 		          reason, bias != null);
 	}
 
 	/**
-	 * Spawns every queued unit that is due; one that finds no spot is requeued. A unit enqueued under a hand-off bias
+	 * Spawns the queued units that are due. The first one that finds no spot stops the run (the 0.15 "stop trying this
+	 * interval" rule): the rest of the due units are requeued untried, ahead of it, so a suspect with no valid spot around him
+	 * costs one failed search per run, not one per unit. A unit enqueued under a hand-off bias
 	 * seeds the squad with the bias's last sighting and a tip-off when it spawns (CONTRACTS C11), so the evasion clock
 	 * holds instead of reading the seed as a fresh sighting.
 	 */
 	private void spawnDueUnits(Player player, CopGroup group, long now) {
 		UUID playerId = player.getUniqueId();
-		for (PendingUnit unit : group.takeDue(now)) {
-			CopNpc newCop = spawnManager.spawnUnit(player, unit, loc -> !group.isAvoided(loc, now));
+		List<PendingUnit> due = group.takeDue(now);
+		for (int i = 0; i < due.size(); i++) {
+			PendingUnit unit   = due.get(i);
+			CopNpc      newCop = spawnManager.spawnUnit(player, unit, loc -> !group.isAvoided(loc, now));
 			if (newCop == null) {
+				// the untried units go first next run: a unit refused at its one spot must not block those behind it
+				due.subList(i + 1, due.size()).forEach(group::requeue);
 				group.requeue(unit);
-				continue;
+				return;
 			}
 
 			newCop.setTargetPlayerId(playerId);

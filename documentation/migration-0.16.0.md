@@ -53,8 +53,8 @@ a default, so an old config keeps working; the notes below say what changes and 
   (without the place).
 - **Hospitals.** Nothing changes until an admin makes a hospital: `/glw waypoint create <name>` then
   `/glw waypoint type <name> hospital`, and (for the downed screen) `User.Death.Respawn.Enable: true`. With a hospital in the
-  world, deaths respawn at the nearest one. **Even with no hospital, the death bill now follows the "one bill" rule** (charged
-  when a downed player respawns, with the new "Ward bill" line), unless you set `User.Death.Hospital.Enable: false`.
+  world, deaths respawn at the nearest one. **Even with no hospital, the death bill now follows the "one bill" rule** (taken
+  at the down, reported with the new "Ward bill" line when a downed player respawns), unless you set `User.Death.Hospital.Enable: false`.
 - **The hospital respawn shield is on.** `User.Death.Hospital.Shield_Seconds` is 5 in the fresh `settings.yml`, and a
   `settings.yml` that lacks the key (an old file you copied back) reads the same code default 5. Add
   `Shield_Seconds: 0` to turn it off.

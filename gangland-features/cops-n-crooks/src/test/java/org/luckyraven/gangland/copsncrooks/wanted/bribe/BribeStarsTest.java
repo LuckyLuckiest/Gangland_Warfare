@@ -26,10 +26,13 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -53,6 +56,11 @@ class BribeStarsTest {
 	private int                 lostSight = 10;
 	private Player              player;
 	private Wanted              wanted;
+	private final int[]         level = {3};
+	private boolean             cancelDrops;
+	/** Where a dropped star sits once the server has ticked it; {@code null}: exactly where it was dropped. */
+	private Location            settlesAt;
+	private final List<Location> dropsAt = new ArrayList<>();
 
 	@SuppressWarnings("unchecked")
 	@BeforeEach
@@ -73,7 +81,11 @@ class BribeStarsTest {
 		when(player.getLocation()).thenReturn(new Location(world, 10, 64, 10));
 		wanted = mock(Wanted.class);
 		when(wanted.isWanted()).thenReturn(true);
-		when(wanted.getLevel()).thenReturn(3);
+		when(wanted.getLevel()).thenAnswer(invocation -> level[0]);
+		doAnswer(invocation -> {
+			if (!cancelDrops) level[0] = invocation.getArgument(0);
+			return null;
+		}).when(wanted).setLevel(anyInt(), any());
 		User<Player> user = mock(User.class);
 		when(user.getWanted()).thenReturn(wanted);
 		users = mock(UserManager.class);
@@ -91,7 +103,8 @@ class BribeStarsTest {
 			protected Item drop(Location at, String material) {
 				Item item = mock(Item.class);
 				when(item.isValid()).thenReturn(true);
-				when(item.getLocation()).thenReturn(at);
+				when(item.getLocation()).thenReturn(settlesAt != null ? settlesAt : at);
+				dropsAt.add(at);
 				items.add(item);
 				return item;
 			}
@@ -170,6 +183,19 @@ class BribeStarsTest {
 		verify(wanted).setLevel(2, WantedCause.CONTACT);
 	}
 
+	/** Final fix round 1: a squad that never sighted him (no sighting = Long.MAX_VALUE ms ago) does not see him. */
+	@Test
+	@DisplayName("a squad that never sighted the player lets him take the star")
+	void neverSightedBySquad_takesTheStar() {
+		seenBy(Long.MAX_VALUE);
+		BribeStars stars = stars();
+		stars.tick();
+		nearby.add(player);
+		stars.tick();
+
+		verify(wanted).setLevel(2, WantedCause.CONTACT);
+	}
+
 	@Test
 	@DisplayName("takenStar_respawnsAfterTheTimer")
 	void takenStar_respawnsAfterTheTimer() {
@@ -189,14 +215,101 @@ class BribeStarsTest {
 	}
 
 	@Test
-	@DisplayName("despawnedItem_respawnsAtOnce")
-	void despawnedItem_respawnsAtOnce() {
+	@DisplayName("an item that vanished in a loaded chunk without a take (a hopper, a plugin) waits out Respawn_Seconds")
+	void vanishedItem_waitsForTheRespawnTimer() {
 		BribeStars stars = stars();
 		stars.tick();
 		when(items.get(0).isValid()).thenReturn(false);
 		stars.tick();
+		now.addAndGet(299_000L);
+		stars.tick();
+		assertEquals(1, items.size(), "no fresh star before the timer");
+
+		now.addAndGet(1_000L);
+		stars.tick();
+		assertEquals(2, items.size());
+	}
+
+	@Test
+	@DisplayName("an item unloaded with its chunk returns at once when the chunk loads again")
+	void unloadedWithItsChunk_returnsAtOnce() {
+		BribeStars stars = stars();
+		stars.tick();
+		when(items.get(0).isValid()).thenReturn(false);
+		when(world.isChunkLoaded(anyInt(), anyInt())).thenReturn(false);
+		stars.tick();
+		when(world.isChunkLoaded(anyInt(), anyInt())).thenReturn(true);
+		stars.tick();
 
 		assertEquals(2, items.size());
+	}
+
+	@Test
+	@DisplayName("isStar knows the live star item and nothing else")
+	void isStar_onlyTheLiveItem() {
+		BribeStars stars = stars();
+		stars.tick();
+
+		assertTrue(stars.isStar(items.get(0)));
+		assertFalse(stars.isStar(mock(Item.class)));
+	}
+
+	@Test
+	@DisplayName("a removed pickup point takes its floating star with it")
+	void removedPoint_removesItsStar() {
+		BribeStars stars = stars();
+		stars.tick();
+		when(points.ofKind(SetupPoint.PICKUP)).thenReturn(List.of());
+		stars.tick();
+
+		verify(items.get(0)).remove();
+		assertFalse(stars.isStar(items.get(0)));
+	}
+
+	@Test
+	@DisplayName("a wand point is a block corner: the star floats in free air above the block and is not re-dropped")
+	void wandPoint_starFloatsAboveTheBlock_andIsNotRedropped() {
+		// the point is the clicked block's minimum corner (10,64,10); the live star sits above that block, not at the corner
+		settlesAt = new Location(world, 10.5, 65.4, 10.5);
+		BribeStars stars = stars();
+		for (int i = 0; i < 6; i++) stars.tick();
+
+		assertEquals(1, items.size(), "one star, no re-drop loop");
+		verify(items.get(0), never()).remove();
+		Location at = dropsAt.get(0);
+		assertEquals(10.5, at.getX());
+		assertEquals(65.0, at.getY());
+		assertEquals(10.5, at.getZ());
+		// a star pushed by anything is stopped on every pass, so it cannot drift off its point
+		verify(items.get(0), times(6)).setVelocity(any());
+	}
+
+	@Test
+	@DisplayName("a point id reused at another spot does not keep serving the old star")
+	void reusedPointId_dropsAFreshStarAtTheNewSpot() {
+		BribeStars stars = stars();
+		stars.tick();
+		SetupPoint moved = mock(SetupPoint.class);
+		when(moved.getId()).thenReturn(1);
+		when(moved.getLocation()).thenReturn(new Location(world, 200, 64, 200));
+		when(points.ofKind(SetupPoint.PICKUP)).thenReturn(List.of(moved));
+		stars.tick();
+
+		verify(items.get(0)).remove();
+		assertEquals(2, items.size());
+	}
+
+	@Test
+	@DisplayName("a star drop cancelled by another plugin leaves the star where it is")
+	void cancelledDrop_keepsTheStar() {
+		cancelDrops = true;
+		BribeStars stars = stars();
+		stars.tick();
+		nearby.add(player);
+		stars.tick();
+
+		verify(items.get(0), never()).remove();
+		assertTrue(stars.isStar(items.get(0)));
 	}
 
 	@Test

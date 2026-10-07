@@ -115,9 +115,9 @@ can exist; the **nearest one in the world where the player died** is used. The s
   teleported straight to the nearest hospital, with no timer, cooldown or cost. With no hospital in that world the old
   behaviour applies (the configured respawn waypoint, or the vanilla spawn). A jail can still override the respawn of a
   jailed or handcuffed player.
-- **One bill.** The death penalty (`Lose_Money`) is now charged once, as the "Ward bill", when the downed player
-  gets up (respawn), or when he quits while downed; a player who is downed and then really dies pays once. With
-  `Hospital.Enable: false` the old message and timing stay (charged at the down).
+- **One bill.** The death penalty (`Lose_Money`) is now one "Ward bill": taken from the wallet at the down (so emptying
+  the wallet while downed dodges nothing) and reported when the downed player gets up (respawn); a player who is
+  downed and then really dies pays once. With `Hospital.Enable: false` the old message stays (also charged at the down).
 - **The respawn shield.** After a hospital respawn the player takes no damage for `User.Death.Hospital.Shield_Seconds`
   (5) seconds, so a hospital cannot be camped the moment he wakes. Incoming damage is cancelled (the void still kills);
   the shield ends early when he attacks anything, quits, or the time runs out. A bed, anchor or fallback respawn gets no

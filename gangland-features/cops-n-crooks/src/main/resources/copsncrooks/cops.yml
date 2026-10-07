@@ -315,7 +315,8 @@ Cops:
       Max_Eta_Seconds: 40
       # Spawners within this many blocks of a station join that station.
       Station_Radius: 32.0
-      # Seconds a player's pending units survive his logout, so a quick rejoin keeps them.
+      # Seconds after a wanted player rejoins before his first units are sent (they still need their ETA on top).
+      # A logout drops every unit on its way; the search clock holds until a unit arrives. 0 = sent at once.
       Rejoin_Grace_Seconds: 15
    # The pause after a squad is wiped out before its replacement is dispatched.
    Breather:
