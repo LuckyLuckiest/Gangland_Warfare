@@ -2,6 +2,8 @@ package org.luckyraven.gangland.copsncrooks.command.cops.spawner;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.station.StationRegistry;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
@@ -18,13 +20,18 @@ public class CopSpawnerCommand extends SubArgument {
 	private final JavaPlugin        plugin;
 	private final Tree<Argument>  tree;
 	private final CopSpawnManager copSpawnManager;
+	private final StationRegistry stations;
+	private final CopLoader       copLoader;
 
-	public CopSpawnerCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, CopSpawnManager copSpawnManager) {
+	public CopSpawnerCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, CopSpawnManager copSpawnManager,
+	                         StationRegistry stations, CopLoader copLoader) {
 		super(plugin, "spawner", tree, parent);
 
 		this.plugin        = plugin;
 		this.tree            = tree;
 		this.copSpawnManager = copSpawnManager;
+		this.stations        = stations;
+		this.copLoader       = copLoader;
 
 		initializeArguments();
 	}
@@ -39,7 +46,7 @@ public class CopSpawnerCommand extends SubArgument {
 	}
 
 	private void initializeArguments() {
-		Argument setArg      = new CopSpawnerSetCommand(plugin, tree, this, copSpawnManager);
+		Argument setArg      = new CopSpawnerSetCommand(plugin, tree, this, copSpawnManager, stations, copLoader);
 		Argument removeArg   = new CopSpawnerRemoveCommand(plugin, tree, this, copSpawnManager);
 		Argument listArg     = new CopSpawnerListCommand(plugin, tree, this, copSpawnManager);
 		Argument infoArg     = new CopSpawnerInfoCommand(plugin, tree, this, copSpawnManager);

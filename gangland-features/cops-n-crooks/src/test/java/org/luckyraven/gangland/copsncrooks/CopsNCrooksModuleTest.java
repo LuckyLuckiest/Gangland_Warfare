@@ -9,6 +9,7 @@ import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.CopsNCrooksYamlConfig;
 import org.luckyraven.gangland.copsncrooks.config.EvasionModuleConfig;
 import org.luckyraven.gangland.copsncrooks.config.HeatModuleConfig;
+import org.luckyraven.gangland.copsncrooks.config.RegistryModuleConfig;
 import org.luckyraven.gangland.copsncrooks.database.DetainmentRepository;
 import org.luckyraven.gangland.copsncrooks.listener.detainment.CopListener;
 import org.luckyraven.keystone.module.ModuleRegistrations;
@@ -20,7 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The cops-n-crooks module's declaration to the host: the six configuration classes in declaration order (the
+ * The cops-n-crooks module's declaration to the host: the seven configuration classes (the last, 0.16.0's
+ * {@code RegistryModuleConfig}, holds the station, admin-region and setup-point registries) in declaration order (the
  * three survivors of the six that were left after D5/civilians in group H and D6/npc-shops in group J moved
  * {@code BankerModuleConfig}/{@code TraderModuleConfig} out to {@code gangland-npc-shops} and folded
  * {@code TurfNpcsModuleConfig} into {@code gangland-turf}'s {@code TurfModuleConfig} — review I-1/T-IR1, plus the 0.15.0 chase, heat and
@@ -32,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CopsNCrooksModuleTest {
 
 	@Test
-	@DisplayName("configure registers the six configuration classes and the three packages")
+	@DisplayName("configure registers the seven configuration classes and the three packages")
 	void configure_declaresConfigsAndPackages() {
 		ModuleRegistrations registrations = new ModuleRegistrations();
 
@@ -40,7 +42,7 @@ class CopsNCrooksModuleTest {
 
 		assertEquals(List.of(CopsNCrooksYamlConfig.class, CopsNCrooksFileConfig.class,
 				CopsNCrooksModuleConfig.class, ChaseModuleConfig.class, HeatModuleConfig.class,
-				EvasionModuleConfig.class), registrations.configurations());
+				EvasionModuleConfig.class, RegistryModuleConfig.class), registrations.configurations());
 		assertEquals(List.of(CopsNCrooksModule.LISTENER_PACKAGE), registrations.listenerPackages());
 		assertEquals(List.of(CopsNCrooksModule.COMMAND_PACKAGE), registrations.commandPackages());
 		assertEquals(List.of(CopsNCrooksModule.REPOSITORY_PACKAGE), registrations.repositoryPackages());

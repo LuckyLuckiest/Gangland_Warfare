@@ -4,6 +4,7 @@ import lombok.CustomLog;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.civilians.database.CivilianSpawnerRepository;
 import org.luckyraven.gangland.civilians.npc.CivilianNpcRegistry;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.config.CivilianTypeConfig;
@@ -58,7 +59,24 @@ public class CivilianSpawnManager extends EntitySpawner<CivilianSpawner> {
 	@Override
 	public void onInitialize(boolean firstLoad) {
 		super.onInitialize(firstLoad);
+		raiseIdFloor();
 		this.civiliansConfig = civiliansLoader.getLoadedConfig();
+	}
+
+	@Override
+	public void reloadSpawners() {
+		super.reloadSpawners();
+		raiseIdFloor();
+	}
+
+	/**
+	 * Docket T-180: the loader skips spawners of unloaded worlds, so {@code ID} restarts at the highest LOADED id and the
+	 * next spawner would overwrite a stored row. The repository saw every row; the counter never goes below it.
+	 */
+	// ponytail: instanceof, a mocked IRepository keeps today's floor; a Keystone hook (protected storedMaxId()) if a
+	// third spawner needs it
+	private void raiseIdFloor() {
+		if (repository instanceof CivilianSpawnerRepository stored) ID = Math.max(ID, stored.getHighestStoredId());
 	}
 
 	// ── EntitySpawner contract ────────────────────────────────────────────────

@@ -4,6 +4,7 @@ import lombok.CustomLog;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.GanglandApi;
+import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.keystone.bean.autowire.DependencyContainer;
 import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.gangland.copsncrooks.combo.KillCombo;
@@ -353,8 +354,10 @@ public class CopsNCrooksModuleConfig {
 	}
 
 	@Bean
-	public CopRadio copRadio(CopLoader copLoader, CopRadioMessages copRadioMessages) {
-		return new CopRadio(plugin, copLoader, copRadioMessages);
+	public CopRadio copRadio(CopLoader copLoader, CopRadioMessages copRadioMessages, PlaceNames placeNames) {
+		CopRadio radio = new CopRadio(plugin, copLoader, copRadioMessages);
+		radio.setPlaceNames(placeNames);
+		return radio;
 	}
 
 	@Bean

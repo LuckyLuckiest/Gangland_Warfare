@@ -7,6 +7,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.civilians.npc.combat.BartizanNpcWeapons;
 import org.luckyraven.gangland.civilians.npc.combat.DownedTargetFilter;
+import org.luckyraven.gangland.copsncrooks.database.CopSpawnerRepository;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
@@ -14,10 +15,14 @@ import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpcFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopBehaviorFactory;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
+import org.luckyraven.gangland.copsncrooks.station.Station;
 import org.luckyraven.keystone.npc.entity.EntitySpawner;
 import org.luckyraven.keystone.npc.entity.NpcMarkManager;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 public class CopSpawnManager extends EntitySpawner<CopSpawner> {
@@ -61,7 +66,70 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	@Override
 	public void onInitialize(boolean firstLoad) {
 		super.onInitialize(firstLoad);
+		raiseIdFloor();
 		rebuildFactories();
+	}
+
+	@Override
+	public void reloadSpawners() {
+		super.reloadSpawners();
+		raiseIdFloor();
+	}
+
+	/**
+	 * Docket T-180: the loader skips spawners of unloaded worlds, so {@code ID} restarts at the highest LOADED id and the
+	 * next spawner would overwrite a stored row. The repository saw every row; the counter never goes below it.
+	 */
+	// ponytail: instanceof, a mocked IRepository keeps today's floor; a Keystone hook (protected storedMaxId()) if a
+	// third spawner needs it
+	private void raiseIdFloor() {
+		if (repository instanceof CopSpawnerRepository stored) ID = Math.max(ID, stored.getHighestStoredId());
+	}
+
+	/** Puts spawner {@code spawnerId} in {@code stationId}'s group ({@code null} = none) and persists it. */
+	public void assignStation(int spawnerId, @Nullable Integer stationId) {
+		CopSpawner spawner = spawners.get(spawnerId);
+		if (spawner == null) return;
+		spawner.setStationId(stationId);
+		repository.save(spawner);
+	}
+
+	/**
+	 * Gives {@code station} every UNASSIGNED spawner within {@code radius} blocks of its anchor (horizontal, same world);
+	 * a spawner already in another station is skipped.
+	 *
+	 * @return how many spawners joined
+	 */
+	public int assignNearby(Station station, double radius) {
+		Location anchor = station.getLocation();
+		if (anchor == null) return 0;
+
+		int joined = 0;
+		for (CopSpawner spawner : new ArrayList<>(spawners.values())) {
+			Location at = spawner.getLocation();
+			if (spawner.getStationId() != null || at == null || !Objects.equals(at.getWorld(), anchor.getWorld()))
+				continue;
+			double dx = at.getX() - anchor.getX();
+			double dz = at.getZ() - anchor.getZ();
+			if (dx * dx + dz * dz > radius * radius) continue;
+
+			assignStation(spawner.getId(), station.getId());
+			joined++;
+		}
+		return joined;
+	}
+
+	/** Frees every spawner of {@code stationId} (a station was removed). */
+	public void unassignStation(int stationId) {
+		for (CopSpawner spawner : spawnersOf(stationId)) assignStation(spawner.getId(), null);
+	}
+
+	/** The spawners that belong to {@code stationId}. */
+	public List<CopSpawner> spawnersOf(int stationId) {
+		List<CopSpawner> result = new ArrayList<>();
+		for (CopSpawner spawner : spawners.values())
+			if (Objects.equals(spawner.getStationId(), stationId)) result.add(spawner);
+		return result;
 	}
 
 	/**
