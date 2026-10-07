@@ -2,7 +2,9 @@ package org.luckyraven.gangland.sign.aspect;
 
 import lombok.RequiredArgsConstructor;
 import org.bukkit.entity.Player;
+import org.luckyraven.gangland.data.wanted.ContactDesk;
 import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
@@ -16,6 +18,7 @@ public class WantedAspect implements SignAspect {
 
 	private final UserManager<Player> userManager;
 	private final WantedStars         wantedStars;
+	private final ContactDesk         desk;
 
 	@Override
 	public AspectResult execute(Player player, ParsedSign sign) {
@@ -41,6 +44,7 @@ public class WantedAspect implements SignAspect {
 			}
 			case REMOVE -> {
 				wanted.setLevel(Math.max(0, wanted.getLevel() - amount), WantedCause.SIGN);
+				startCooldownIfPaid(player, sign);
 
 				String string = Messages.WANTED_DECREASED.toString(Messages.Type.NO_CHANGE);
 				String replace = string.replace("%amount%", String.valueOf(amount))
@@ -49,6 +53,7 @@ public class WantedAspect implements SignAspect {
 			}
 			case CLEAR -> {
 				wanted.reset(WantedCause.SIGN);
+				startCooldownIfPaid(player, sign);
 
 				String string  = Messages.WANTED_CLEARED.toString(Messages.Type.NO_CHANGE);
 				String replace = string.replace("%stars%", wanted.getLevelStars());
@@ -75,10 +80,43 @@ public class WantedAspect implements SignAspect {
 		if (wantedType != WantedSign.WantedType.INCREASE) {
 			Wanted wanted = user.getWanted();
 
-			return wanted.getLevel() > 0;
+			return wanted.getLevel() > 0 && refusal(player, sign, wantedType) == null;
 		}
 
 		return true;
+	}
+
+	@Override
+	public String failureReason(Player player, ParsedSign sign) {
+		WantedSign.WantedType wantedType = parseType(sign);
+
+		if (wantedType == null || wantedType == WantedSign.WantedType.INCREASE) return null;
+
+		return refusal(player, sign, wantedType);
+	}
+
+	/**
+	 * Why a paying-off sign must refuse right now, or {@code null}. A cop's sight blocks every REMOVE/CLEAR sign; the
+	 * shared contact cooldown blocks only a priced one (an admin sign at price 0 never checks or starts it).
+	 */
+	private String refusal(Player player, ParsedSign sign, WantedSign.WantedType type) {
+		if (!Settings.isContactsEnabled() || type == WantedSign.WantedType.INCREASE) return null;
+
+		if (desk.seen(player.getUniqueId())) return Messages.CONTACT_SEEN.toString();
+
+		if (sign.getPrice() > 0) {
+			long left = desk.cooldownLeftMs(player.getUniqueId());
+
+			if (left > 0) {
+				return Messages.CONTACT_COOLDOWN.toString().replace("%time%", ContactDesk.formatLeft(left));
+			}
+		}
+
+		return null;
+	}
+
+	private void startCooldownIfPaid(Player player, ParsedSign sign) {
+		if (Settings.isContactsEnabled() && sign.getPrice() > 0) desk.startCooldown(player.getUniqueId());
 	}
 
 	/** The sign's operation, or {@code null} when its content is not one (a hand-edited or stale sign). */

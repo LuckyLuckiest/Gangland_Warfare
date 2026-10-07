@@ -59,7 +59,8 @@ class SignManagerLegacyAliasTest {
 		return new SignManager(mock(Gangland.class), "glw", new SignTypeRegistry(), signInteraction,
 		                       mock(UniqueItemAddon.class), mock(ItemSerializerRegistry.class),
 		                       mock(ItemParser.class), onlineUsers, offlineUsers, container, legacySignRewriter,
-		                       mock(WantedStars.class));
+		                       mock(WantedStars.class),
+		                       new org.luckyraven.gangland.data.wanted.ContactDesk(() -> 0L));
 	}
 
 	@Test

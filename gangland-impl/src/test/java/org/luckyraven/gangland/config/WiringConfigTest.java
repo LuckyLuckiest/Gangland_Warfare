@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.luckyraven.gangland.Gangland;
 import org.luckyraven.gangland.data.economy.BankTiers;
+import org.luckyraven.gangland.data.wanted.ContactDesk;
 import org.luckyraven.gangland.data.placeholder.PlaceholderService;
 import org.luckyraven.gangland.data.placeholder.worker.GanglandPlaceholder;
 import org.luckyraven.gangland.core.user.UserManager;
@@ -66,7 +67,8 @@ class WiringConfigTest {
 			PlaceholderService  placeholderService  = mock(PlaceholderService.class);
 
 			GanglandPlaceholder placeholder = config.ganglandPlaceholder(userManager, uniqueItemAddon, bankTiers,
-			                                                             container, placeholderService);
+			                                                             container, placeholderService,
+			                                                             new ContactDesk(() -> 0L));
 
 			assertNotNull(placeholder);
 			verify(bukkit.servicesManager()).register(eq(PlaceholderProvider.class), any(PlaceholderProvider.class),
