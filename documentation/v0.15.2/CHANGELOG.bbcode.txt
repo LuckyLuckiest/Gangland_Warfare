@@ -1,0 +1,67 @@
+[SIZE=7][B]🚔 Smart Star Drops — v0.15.2 Changelog[/B][/SIZE]
+
+[QUOTE]The cops learn how chases go. Stop running, and they might let you go with a warning. Go hard and get away every time, and they'll mark you as trouble. Welcome to [B]Cops N Crooks 0.15.2[/B].[/QUOTE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]Overview[/B][/SIZE]
+
+Cops N Crooks 0.15.2 introduces [B]AUTO mode[/B] for star drops: instead of always losing one star or all of them, the cops judge how the chase went. A small getaway, a long quiet spell, or a clean break out of the search zone drop different numbers of stars. The server learns which players keep getting away and how long chases typically last, then tunes the timers and marks repeat offenders so they play a harder game. [B]Momentum[/B] makes each successive drop faster while you stay hidden.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]✨ New[/B][/SIZE]
+
+[LIST]
+[*][B]AUTO star-drop judgement[/B] — With [ICODE]Drop_Mode: AUTO[/ICODE], the cops read the chase and decide: a rampage locks you to one star at a time; a small chase (1-2 crimes, up to 2 stars) drops them all at once; a long chase with 90+ seconds of quiet drops all stars; leaving the search zone and running outside drops half your stars (rounded up); anything else drops one star and the timer gets faster (momentum). Five named endings — Still Hot, Petty, Cold Trail, Clean Break, Hunker Down — each show a card so you know why.
+[*][B]Learning and warm-up[/B] — The server learns two things: how long chases at each star level typically last (contact time from chase start to the last loss of sight), and each player's escape habit (how often they get away compared to what the server expects). Both survive restarts and feed back into the AUTO decision. Cold starts use guessed numbers; warm servers tune based on play. A player who always escapes gets no small-fry or clean-break lumps.
+[*][B]Momentum and narrow escapes[/B] — After each star drops, the next timer is shorter (75% by default, or 50% after a narrow escape where the cop kept you in sight for 20+ seconds). A rampage or logout lock freezes the momentum so you face a steady timer while the heat cools. The timer never shrinks below 40% of the base [ICODE]Seconds_To_Drop[/ICODE].
+[*][B]HUD for AUTO[/B] — New [ICODE]Evaded_Many[/ICODE] bar line when 2+ stars drop at once, and six ending cards name the cause: Small fry, The trail went stone cold, Clean break, Still hot, They know your face, That was close.
+[*][B]Database and persistence[/B] — Two tables track habits (one row per player who finished a chase) and level stats (one row per peak star level, with the server-wide typical-length sample capped at 100). Forgotten after 90 days of inactivity. Autosave and restart-safe.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]🔧 Changed[/B][/SIZE]
+
+[LIST]
+[*][B][ICODE]Drop_Mode[/ICODE] expands[/B] — [ICODE]ONE_STAR[/ICODE] (the default, unchanged), [ICODE]ALL_STARS[/ICODE] (unchanged), [ICODE]AUTO[/ICODE] (new).
+[*][B]Evasion learning runs only in AUTO mode[/B] — Keeps the learning tables clean on servers that don't use AUTO; can be toggled per server with [ICODE]Learning.Enable[/ICODE].
+[*][B]Upgrade path from 0.15.1[/B] — Your old [ICODE]wanted.yml[/ICODE] stays, but without the new [ICODE]Auto[/ICODE] block it reads AUTO defaults. Copy the block from [ICODE]plugins/Gangland_Warfare/modules/cops-n-crooks-0.15.2.jar[/ICODE] (or any copy/paste) into your [ICODE]Auto:[/ICODE] section to tune, or stay on [ICODE]ONE_STAR[/ICODE] / [ICODE]ALL_STARS[/ICODE].
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]🐛 Fixed / Known[/B][/SIZE]
+
+[LIST]
+[*][B]D9 (open)[/B] — Progress carried over a mid-search star raise stays until 0.16. The bar may flicker if the new level needs more progress than the old one gave. Docket P3 id 179.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]⚙️ Configuration[/B][/SIZE]
+
+[LIST]
+[*][B]New [ICODE]copsncrooks/wanted.yml[/ICODE] block[/B] — [ICODE]Wanted.Evasion.Auto[/ICODE] with 29 tunable keys (Opening_Seconds, Rampage_Crimes, Petty, Cold_Trail, Clean_Break, Momentum, Repeat_Chases, Learning). Shipped inside the cops-n-crooks module jar; falls back to defaults if missing.
+[*][B]New message keys[/B] in [ICODE]copsncrooks/wanted_messages.yml[/ICODE] — [ICODE]Hud.Bar.Evaded_Many[/ICODE], [ICODE]Hud.Card.Drop_Petty[/ICODE], [ICODE]Drop_Cold_Trail[/ICODE], [ICODE]Drop_Clean_Break[/ICODE], [ICODE]Drop_Still_Hot[/ICODE], [ICODE]Drop_Known_Face[/ICODE], [ICODE]Drop_Narrow[/ICODE].
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]🧩 API 2.2[/B][/SIZE]
+
+[LIST]
+[*][B][ICODE]GanglandApi.VERSION[/ICODE] stays 2.2[/B] — No API change; [ICODE]gangland-api[/ICODE] is unchanged. Modules built for 2.2 load as-is.
+[*][B]No new events[/B] — The HUD reads the pending [ICODE]DropPlan[/ICODE] from the [ICODE]ChaseArcs[/ICODE] bean. Upgrade path: a future 0.16 may add [ICODE]WantedEvasionDropEvent[/ICODE] in API 2.3 when criminal record or XP reads the ending.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]⬆️ Upgrade notes[/B][/SIZE]
+
+[LIST]
+[*][B]Read the wanted-bounty guide[/B] — See the [URL]../features/wanted-bounty.md[/URL] for the full AUTO rules and examples.
+[*][B]No restore migration[/B] — No database migration needed; the two new tables start empty (cold server).
+[*][B]YAML format[/B] — [ICODE]Auto[/ICODE] block is block style with Capitalized_Underscore keys, like the rest of [ICODE]wanted.yml[/ICODE]. One admin copy/paste; 29 keys, all commented.
+[/LIST]

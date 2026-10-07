@@ -10,7 +10,8 @@
 
 | Version                                 | Status  | Changelog                                                      |
 |-----------------------------------------|---------|----------------------------------------------------------------|
-| [v0.15.0](./v0.15.0/CHANGELOG.md)       | Current | Cops N Crooks "Lose them": heat, evasion, wanted HUD, charge sheet, regroup, paid bounties |
+| [v0.15.2](./v0.15.2/CHANGELOG.md)       | Current | Cops N Crooks "Smart star drops": AUTO mode judges chase endings, learning per player and level, momentum timers |
+| [v0.15.0](./v0.15.0/CHANGELOG.md)       | Stable  | Cops N Crooks "Lose them": heat, evasion, wanted HUD, charge sheet, regroup, paid bounties |
 | [v0.7.5-DEV](./v0.7.5-DEV/CHANGELOG.md) | Stable | Traders, Banker NPC, Bail — **Cops N Crooks feature-complete** |
 | [v0.7.4-DEV](./v0.7.4-DEV/CHANGELOG.md) | Stable  | Civilians, five weapon categories, gadgets (cars + jetpacks)   |
 | [v0.7.3-DEV](./v0.7.3-DEV/CHANGELOG.md) | Stable  | Cops N Crooks, Wearables                                       |
