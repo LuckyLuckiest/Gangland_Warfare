@@ -7,6 +7,7 @@ import org.luckyraven.gangland.Gangland;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.database.GanglandDatabase;
+import org.luckyraven.gangland.database.repositories.waypoint.WaypointRepository;
 import org.luckyraven.gangland.database.tables.waypoint.WaypointTable;
 import org.luckyraven.keystone.persistence.database.Database;
 import org.luckyraven.keystone.persistence.database.DatabaseHelper;
@@ -46,6 +47,8 @@ public class WaypointManager implements BeanLifecycle, WaypointLookupContract {
 			waypoints.put(id, waypoint);
 		}
 
+		// a row skipped for an unknown type (R35) stays in the table: its id is never handed out again
+		if (repository instanceof WaypointRepository stored) maxId = Math.max(maxId, stored.getHighestStoredId());
 		Waypoint.setID(maxId);
 
 		repository.setDataSupplier(waypoints::values);
@@ -124,25 +127,38 @@ public class WaypointManager implements BeanLifecycle, WaypointLookupContract {
 
 			List<Object[]> rowsData = waypointTable.selectAllTableQuery(database);
 
-			// remove all the data from the table
-
-			config.delete("", null, Types.NULL);
-			int tempId = 1;
+			// A row not in memory was skipped at load (a type this version does not know, R35): it keeps its row and
+			// its id, and the loaded waypoints are renumbered around it.
+			Set<Integer> unloaded = new HashSet<>();
 			for (Object[] result : rowsData) {
 				int id = (int) result[0];
+				if (!waypoints.containsKey(id)) unloaded.add(id);
+			}
 
-				Waypoint waypoint = waypoints.get(id);
-				waypoints.remove(waypoint.getUsedId());
+			int tempId = 1;
+			int maxId  = 0;
+			for (Object[] result : rowsData) {
+				int id = (int) result[0];
+				if (unloaded.contains(id)) {
+					maxId = Math.max(maxId, id);
+					continue;
+				}
+
+				while (unloaded.contains(tempId)) tempId++;
+
+				Waypoint waypoint = waypoints.remove(id);
+				config.delete("id", id, Types.INTEGER);
 
 				waypoint.setUsedId(tempId);
 				waypoints.put(tempId, waypoint);
 
 				waypointTable.insertTableQuery(database, waypoint);
 
+				maxId = Math.max(maxId, tempId);
 				tempId++;
 			}
 
-			Waypoint.setID(tempId - 1);
+			Waypoint.setID(maxId);
 		});
 	}
 
