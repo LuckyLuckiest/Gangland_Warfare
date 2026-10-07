@@ -43,6 +43,8 @@ public class ChaseArcListener implements Listener {
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onStart(WantedStartEvent event) {
 		UUID id = event.getPlayer().getUniqueId();
+		// prune first: a rejoin after 30+ minutes offline must not restore the stale arc (PLAN section 5, "start/join")
+		arcs.prune();
 		if (event.getCause() == WantedCause.RESTORE && arcs.has(id)) {
 			arcs.restore(id);
 		} else {

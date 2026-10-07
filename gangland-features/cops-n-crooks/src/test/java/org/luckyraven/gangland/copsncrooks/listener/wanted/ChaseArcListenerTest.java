@@ -223,6 +223,22 @@ class ChaseArcListenerTest {
 	}
 
 	@Test
+	@DisplayName("a rejoin after 30+ minutes offline gets a fresh RESTORE arc even when no other chase started")
+	void restoreStart_afterLongOffline_prunesFirst() {
+		start(WantedCause.CRIME, 2);
+		clock.addAndGet(200_000);
+		listener.onQuit(new PlayerQuitEvent(player, "bye"));
+		clock.addAndGet(31 * 60_000L);
+
+		start(WantedCause.RESTORE, 2);
+
+		assertEquals(WantedCause.RESTORE, arcs.arc(playerId).startCause());
+		assertEquals(1, view().quits());
+		assertEquals(0, view().quietMs());
+		assertEquals(0, view().chaseMs());
+	}
+
+	@Test
 	@DisplayName("a RESTORE start with a live arc restores it; without one it starts a fresh arc with quits = 1")
 	void restoreStart_restoresOrStarts() {
 		start(WantedCause.RESTORE, 3);
