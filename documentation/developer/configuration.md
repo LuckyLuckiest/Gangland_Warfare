@@ -167,7 +167,7 @@ User:
          Health: 20
          Hunger: 20
       Hospital:                    # 0.16.0: respawn at the nearest HOSPITAL waypoint (/glw waypoint type <name> hospital)
-         Enable: true              # false = the old respawn rules and the old death-penalty timing (charged at the down)
+         Enable: true              # false = the old respawn rules and the old "Death penalty" line
          Shield_Seconds: 5         # Damage immunity after a hospital respawn; attacking anything ends it; 0 = off.
                                    # A settings.yml without the key reads 5
 ```

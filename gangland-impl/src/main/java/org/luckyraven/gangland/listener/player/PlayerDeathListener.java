@@ -45,7 +45,10 @@ public class PlayerDeathListener implements Listener {
 	private final BankTiers                                 bankTiers;
 	private final Map<UUID, Long>                           recentDeaths      = new ConcurrentHashMap<>();
 	private final Set<UUID>                                 downedBroadcasted = ConcurrentHashMap.newKeySet();
-	/** Hospital.Enable: the bill quoted at a down, charged when the player stands up (or quits while downed). */
+	/**
+	 * Hospital.Enable: the bill taken at a down (clamped to the wallet then, so emptying the wallet while downed
+	 * dodges nothing), reported when the player stands up.
+	 */
 	private final Map<UUID, BigDecimal>                     pendingBills      = new ConcurrentHashMap<>();
 
 	public PlayerDeathListener(@Qualifier("online") UserManager<Player> userManager,
@@ -67,15 +70,14 @@ public class PlayerDeathListener implements Listener {
 		UUID   uuid   = player.getUniqueId();
 		long   now    = System.currentTimeMillis();
 
-		// a downed player who really dies pays once, at the death: a bill still pending from the down is either the
-		// one the dedup below lets stand, or is replaced by the fresh quote
+		// a downed player who really dies pays once: the bill taken at the down is that payment
 		BigDecimal pending = pendingBills.remove(uuid);
 
 		Long lastDeath = recentDeaths.get(uuid);
 		if (lastDeath != null && now - lastDeath < DEATH_DEDUP_WINDOW_MS) {
 			if (pending != null) {
 				User<Player> dying = userManager.getUser(player);
-				if (dying != null) charge(dying, pending);
+				if (dying != null) report(dying, pending);
 			}
 			// Always suppress: either the downed handler already broadcast, or the FRESH path
 			// already ran for this death (e.g. duplicate PlayerDeathEvent from vanilla Player.attack
@@ -95,7 +97,8 @@ public class PlayerDeathListener implements Listener {
 		user.setDeaths(user.getDeaths() + 1);
 
 		// punish the player if they die; if commands ran, skip direct money deduction
-		if (!handleCommandExecution(user, player)) {
+		if (pending != null) report(user, pending);
+		else if (!handleCommandExecution(user, player)) {
 			// take money from their balance (NOT THEIR BANK)
 			handleMoney(user);
 		}
@@ -125,8 +128,9 @@ public class PlayerDeathListener implements Listener {
 
 		if (!handleCommandExecution(user, player)) {
 			if (Settings.isHospitalEnabled()) {
-				// one bill: quoted now (the formula still sees the pre-reset wanted level), charged on getting up
-				pendingBills.put(uuid, quote(user));
+				// one bill: taken now (the formula still sees the pre-reset wanted level), reported on getting up
+				BigDecimal taken = take(user, quote(user));
+				if (taken.signum() > 0) pendingBills.put(uuid, taken);
 			} else {
 				handleMoney(user);
 			}
@@ -135,19 +139,19 @@ public class PlayerDeathListener implements Listener {
 		broadcastDeathMessage(player);
 	}
 
-	/** The ward bill of a downed player comes due when he stands up (a respawn, a release from the ward). */
+	/** The ward bill taken at the down is reported when he stands up (a respawn, a release from the ward). */
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onPlayerUndowned(PlayerUndownedEvent event) {
-		chargePending(event.getPlayer(), "RESPAWN");
+		reportPending(event.getPlayer(), "RESPAWN");
 	}
 
-	/** Quitting while downed must not dodge the bill. */
+	/** Quitting while downed: the bill was already taken at the down; forget the entry. */
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onQuit(PlayerQuitEvent event) {
-		chargePending(event.getPlayer(), "QUIT");
+		reportPending(event.getPlayer(), "QUIT");
 	}
 
-	private void chargePending(Player player, String at) {
+	private void reportPending(Player player, String at) {
 		BigDecimal bill = pendingBills.remove(player.getUniqueId());
 		if (bill == null) return;
 
@@ -155,7 +159,7 @@ public class PlayerDeathListener implements Listener {
 		if (user == null) return;
 
 		log.debug("WARD_BILL {} amount={} at={}", player.getName(), bill, at);
-		charge(user, bill);
+		report(user, bill);
 	}
 
 	/** US-33/WB-17: entries only ever grew; drop the ones outside the dedup window on every put. */
@@ -211,9 +215,18 @@ public class PlayerDeathListener implements Listener {
 
 	/** Takes the quoted bill from the wallet (clamped to it, never throws) and tells the player. */
 	void charge(User<Player> user, BigDecimal bill) {
-		if (bill == null || bill.signum() <= 0) return;
+		report(user, take(user, bill));
+	}
 
-		BigDecimal taken = user.withdraw(Currency.of(bill.doubleValue()));
+	/** Takes the quoted bill from the wallet, clamped to it; returns what was taken. Never throws. */
+	private static BigDecimal take(User<Player> user, BigDecimal bill) {
+		if (bill == null || bill.signum() <= 0) return BigDecimal.ZERO;
+
+		return user.withdraw(Currency.of(bill.doubleValue()));
+	}
+
+	/** Tells the player what was taken; nothing for nothing. */
+	private void report(User<Player> user, BigDecimal taken) {
 		if (taken.signum() == 0) return;
 
 		// inform the player

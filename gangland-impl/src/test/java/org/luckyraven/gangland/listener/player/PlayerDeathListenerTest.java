@@ -152,14 +152,28 @@ class PlayerDeathListenerTest {
 	}
 
 	@Test
-	@DisplayName("Hospital.Enable: a down charges nothing yet, the bill waits for the stand-up")
-	void downed_withHospital_chargesNothingAtTheDown() throws IOException {
+	@DisplayName("Hospital.Enable: a down takes the bill at once, silently; the ward-bill line waits for the stand-up")
+	void downed_withHospital_takesTheBillSilentlyAtTheDown() throws IOException {
 		settings("true", "balance * 0.15", 1000, true);
 
 		listener.onPlayerDowned(new PlayerDownedEvent(player));
 
-		assertEquals(0, Currency.of(10_000).compareTo(user.getEconomy().getAmount()));
+		assertEquals(0, Currency.of(8_500).compareTo(user.getEconomy().getAmount()));
 		verify(player, never()).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("downed, deposit everything, undowned: the bill is still paid")
+	void downed_depositEverything_undowned_billStillPaid() throws IOException {
+		settings("true", "balance * 0.15", 1000, true);
+		listener.onPlayerDowned(new PlayerDownedEvent(player));
+
+		BigDecimal banked = user.getEconomy().getAmount(); // /glw bank deposit <all> while spectating
+		user.getEconomy().setAmount(BigDecimal.ZERO);
+		listener.onPlayerUndowned(new PlayerUndownedEvent(player));
+
+		assertEquals(0, Currency.of(8_500).compareTo(banked.add(user.getEconomy().getAmount())), "wallet + bank lost the bill");
+		verify(player).sendMessage(contains("Ward bill: -$1.5K"));
 	}
 
 	@Test
@@ -256,7 +270,7 @@ class PlayerDeathListenerTest {
 
 		assertEquals(0, Currency.of(8_500).compareTo(user.getEconomy().getAmount()));
 
-		// the death lands after the window: the fresh quote replaces the pending bill
+		// the death lands after the window: the bill taken at the down already paid for it
 		Field field = PlayerDeathListener.class.getDeclaredField("recentDeaths");
 		field.setAccessible(true);
 		((Map<UUID, Long>) field.get(listener)).clear();

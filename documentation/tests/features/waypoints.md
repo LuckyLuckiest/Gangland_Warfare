@@ -55,7 +55,7 @@ binding. Managed by `WaypointManager`.
 - [ ] `/glw waypoint create Ward`, `select`, `type hospital` (`/glw waypoint type` accepts `hospital`); `/glw waypoint info` shows type HOSPITAL.
 - [ ] Die and respawn through the downed screen: you are teleported straight to Ward (no timer, cooldown or cost) and told
       "Hospital protection for 5 s. Attacking anything ends it."
-- [ ] One bill: "Ward bill: -N" is charged once, when you respawn (not at the down), only above `Death.Money.Threshold`.
+- [ ] One bill: "Ward bill: -N" is taken once at the down and shown when you respawn, only above `Death.Money.Threshold`; depositing the whole wallet while downed does not dodge it.
       Quit while downed: the bill is charged at the quit. Downed, then killed: still one bill.
 - [ ] With two hospitals in the world the nearest one to where you died is used; one in another world is ignored.
 
