@@ -1,0 +1,14 @@
+# +-----------------+ #
+# | Mail messages   | #
+# +-----------------+ #
+#
+# Shown to the inviter when the invited player is offline. %hours% = Invite_Offline_Expiry_Hours from mail_rules.yml.
+Invite_Offline_Expires: "&7They are offline - the invitation stays open for &e%hours% hours&7."
+# Shown to the player after /glw gang decline. %gang% = the inviting gang's name.
+Invite_Declined: "&7You declined the invitation from &e%gang%&7."
+# Shown to the inviting gang's online members. %player% = the player who declined.
+Invite_Declined_Notice: "&e%player% &7declined your gang's invitation."
+# Shown for /glw gang decline when there is no pending invitation to decline.
+Invite_Decline_None: "&cYou have no pending gang invitation to decline."
+# Shown to a player who joined a gang while other gang invitations were still pending; they were cancelled.
+Invite_Siblings_Cancelled: "&7Your other pending gang invitations were cancelled."

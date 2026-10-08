@@ -1,6 +1,5 @@
 package org.luckyraven.gangland.mail.command.ally;
 
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -16,6 +15,7 @@ import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.mail.command.OnlineGangMembers;
 import org.luckyraven.gangland.mail.MailItem;
 import org.luckyraven.gangland.mail.MailManager;
 import org.luckyraven.gangland.mail.MailType;
@@ -189,20 +189,10 @@ public class GangAllyAcceptCommand extends SubArgument {
 		userGang.addAlly(sending);
 		sending.addAlly(userGang);
 
-		Bukkit.getOnlinePlayers()
-				.stream()
-				.filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
-				                        sending.getId())
-				.toList()
-				.forEach(pl -> pl.sendMessage(
+		OnlineGangMembers.of(memberManager, sending.getId()).forEach(pl -> pl.sendMessage(
 						Messages.GANG_ALLY_ACCEPT.toString().replace("%gang%", userGang.getDisplayNameString())));
 
-		Bukkit.getOnlinePlayers()
-				.stream()
-				.filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
-				                        userGang.getId())
-				.toList()
-				.forEach(pl -> pl.sendMessage(
+		OnlineGangMembers.of(memberManager, userGang.getId()).forEach(pl -> pl.sendMessage(
 						Messages.GANG_ALLY_ACCEPT.toString().replace("%gang%", sending.getDisplayNameString())));
 
 		mailManager.accept(mail);

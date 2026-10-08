@@ -4,8 +4,12 @@
 		"description": "Invites the player to the gang."
 	},
 	"gang_invite_accept": {
-		"usage": "/glw gang accept",
-		"description": "Accept gang join invitation."
+		"usage": "/glw gang accept [gang]",
+		"description": "Accept a gang join invitation. Accepting one cancels your other pending invitations."
+	},
+	"gang_invite_decline": {
+		"usage": "/glw gang decline [gang]",
+		"description": "Decline a pending gang join invitation."
 	},
 	"gang_invite_pending": {
 		"usage": "/glw gang invite",
@@ -18,6 +22,14 @@
 	"gang_ally_request": {
 		"usage": "/glw gang ally request <id>",
 		"description": "Request alliances to the other gang."
+	},
+	"gang_ally_accept": {
+		"usage": "/glw gang ally accept [gang]",
+		"description": "Accept a pending alliance request from another gang."
+	},
+	"gang_ally_reject": {
+		"usage": "/glw gang ally reject [gang]",
+		"description": "Reject a pending alliance request from another gang."
 	},
 	"gang_ally_pending": {
 		"usage": "/glw gang ally pending",
