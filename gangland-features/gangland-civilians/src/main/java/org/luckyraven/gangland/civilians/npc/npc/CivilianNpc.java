@@ -237,6 +237,14 @@ public class CivilianNpc extends AbstractNpc {
 		entityTargetQueue.addFirst(entity);
 	}
 
+	/**
+	 * RED STUB (0.16.1 T-189): removes nothing yet. Real behaviour: drop only {@code entity} from the entity target
+	 * queue, keep the rest in order, return whether it was present.
+	 */
+	public boolean removeEntityTarget(LivingEntity entity) {
+		return false;
+	}
+
 	// ── Combat squad ──────────────────────────────────────────────────────────
 
 	/**

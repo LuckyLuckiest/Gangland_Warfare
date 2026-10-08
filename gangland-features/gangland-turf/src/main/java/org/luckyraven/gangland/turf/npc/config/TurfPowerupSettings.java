@@ -6,5 +6,5 @@ package org.luckyraven.gangland.turf.npc.config;
  * civilian NPCs, just with right-click panel access layered on top and a hostile target set when the turf is being
  * contested.
  */
-public record TurfPowerupSettings(String typeId) {
+public record TurfPowerupSettings(String typeId, double targetingRadius) {
 }

@@ -132,6 +132,14 @@ public final class TurfPowerupManager implements BeanLifecycle {
 		npc.engage(attackers, 32.0);
 	}
 
+	/**
+	 * RED STUB (T-189): the Quartermaster civilians of {@code turfId}, for the cop guard. Real behaviour: the single
+	 * live Quartermaster for the turf, if any.
+	 */
+	public java.util.List<org.luckyraven.gangland.civilians.npc.npc.CivilianNpc> civilianNpcsOf(int turfId) {
+		return java.util.List.of();
+	}
+
 	public void disengage(int turfId) {
 		TurfPowerupNpc npc = byTurfId.get(turfId);
 		if (npc == null) return;

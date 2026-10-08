@@ -3,6 +3,7 @@ package org.luckyraven.gangland.turf.npc.config;
 import lombok.CustomLog;
 import lombok.Getter;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
+import org.luckyraven.gangland.turf.npc.guard.CopGuardConfig;
 import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
@@ -35,6 +36,8 @@ public final class TurfNpcsConfigLoader {
 	private TurfPowerupSettings powerupSettings;
 	@Getter
 	private TurfDefenderConfig  defenderConfig;
+	@Getter
+	private CopGuardConfig      copGuardConfig;
 
 	public TurfNpcsConfigLoader(FileManager fileManager) {
 		try {
@@ -53,9 +56,9 @@ public final class TurfNpcsConfigLoader {
 		MappingNode powerupNode = root.get("Powerup_Npc").asMapping().required().orNull();
 		if (powerupNode != null) {
 			NodeReader pr = NodeReader.of(powerupNode, report);
-			powerupSettings = new TurfPowerupSettings(pr.get("Type_Id").asString().orDefault("quartermaster"));
+			powerupSettings = new TurfPowerupSettings(pr.get("Type_Id").asString().orDefault("quartermaster"), 32.0); // RED: literal (T-189)
 		} else {
-			powerupSettings = new TurfPowerupSettings("quartermaster");
+			powerupSettings = new TurfPowerupSettings("quartermaster", 32.0); // RED: literal (T-189)
 		}
 
 		MappingNode defNode = root.get("Defender").asMapping().required().orNull();
@@ -68,6 +71,9 @@ public final class TurfNpcsConfigLoader {
 		} else {
 			defenderConfig = new TurfDefenderConfig("turf_defender", 32.0, 600);
 		}
+
+		// RED STUB (T-189): Cop_Response is not parsed yet; this is all-off so the defaults tests fail.
+		copGuardConfig = new CopGuardConfig(false, 0.0, false);
 
 		if (!report.isEmpty()) report.log(log);
 	}

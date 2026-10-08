@@ -130,6 +130,13 @@ public final class TurfDefenderDeployer {
 	}
 
 	/**
+	 * RED STUB (T-189): live defenders of {@code turfId}. Real behaviour filters dead/expired entries.
+	 */
+	public List<CivilianNpc> liveDefenders(int turfId) {
+		return List.of();
+	}
+
+	/**
 	 * Bound to {@link CivilianService} via constructor injection so it stays referenced — used to acknowledge the
 	 * dependency chain even though deploys go through {@link CivilianSpawnManager}. Civilians spawned via the spawn
 	 * manager auto-register with the service's tick loop.
