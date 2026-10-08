@@ -56,9 +56,14 @@ public final class HudFixtures {
 	/** The shipped HUD with each switch given. */
 	public static HudSettings hud(boolean bossBar, boolean starCard, boolean title, boolean siren, boolean zoneRing,
 	                              boolean compass) {
-		TitleCue on  = TitleCue.DEFAULT;
-		TitleCue off = new TitleCue(false, on.title(), on.subtitle(), on.fadeIn(), on.stay(), on.fadeOut());
-		return cues(bossBar, starCard, title ? on : off, title ? on : off, title ? on : off, siren, zoneRing, compass);
+		TitleCue gain    = TitleCue.DEFAULT;
+		TitleCue escaped = TitleCue.ESCAPED;
+		return cues(bossBar, starCard, title ? gain : muted(gain), title ? gain : muted(gain),
+		            title ? escaped : muted(escaped), siren, zoneRing, compass);
+	}
+
+	private static TitleCue muted(TitleCue cue) {
+		return new TitleCue(false, cue.title(), cue.subtitle(), cue.fadeIn(), cue.stay(), cue.fadeOut());
 	}
 
 	/** The shipped HUD with the three title cues given. */

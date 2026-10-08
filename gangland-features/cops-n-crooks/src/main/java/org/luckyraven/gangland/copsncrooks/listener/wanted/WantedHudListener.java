@@ -20,6 +20,7 @@ import org.luckyraven.gangland.copsncrooks.wanted.evasion.ChaseArcs;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.CrimeRecord;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.copsncrooks.wanted.hud.StarCard;
+import org.luckyraven.gangland.copsncrooks.wanted.hud.TitleCue;
 import org.luckyraven.gangland.copsncrooks.wanted.hud.WantedHud;
 import org.luckyraven.gangland.core.events.wanted.WantedEndEvent;
 import org.luckyraven.gangland.core.events.wanted.WantedLevelChangeEvent;
@@ -31,7 +32,6 @@ import org.luckyraven.gangland.events.wanted.WantedEvasionStateEvent;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import org.luckyraven.keystone.sound.SoundEffect;
 import org.luckyraven.keystone.sound.SoundEffect.SoundType;
-import org.luckyraven.keystone.util.ChatUtil;
 
 import java.util.Map;
 
@@ -79,13 +79,15 @@ public class WantedHudListener implements Listener {
 		String stars    = Wanted.buildStars(newLevel, event.getWanted().getMaxLevel());
 
 		if (newLevel > event.getOldLevel()) {
-			announce(player, stars, raiseCard(player, event));
+			announce(player, newLevel, stars, raiseCard(player, event), chase.get().hud().gain());
 			playSiren(player);
 		} else if (newLevel < event.getOldLevel() && (newLevel > 0 || isGetaway(event.getCause()))) {
-			int      lost    = event.getOldLevel() - newLevel;
-			DropPlan pending = event.getCause() == WantedCause.EVASION ? arcs.takePending(player.getUniqueId()) : null;
+			int          lost     = event.getOldLevel() - newLevel;
+			DropPlan     pending  = event.getCause() == WantedCause.EVASION ? arcs.takePending(player.getUniqueId()) : null;
+			String       card     = StarCard.dropCard(messages, event.getCause(), pending, lost);
+			HudSettings  settings = chase.get().hud();
 
-			announce(player, stars, StarCard.dropCard(messages, event.getCause(), pending, lost));
+			announce(player, newLevel, stars, card, newLevel > 0 ? settings.lost() : settings.escaped());
 			hud.lost(player, lost);
 		}
 
@@ -124,14 +126,16 @@ public class WantedHudListener implements Listener {
 		return StarCard.raiseCard(messages, crime, CopRadio.tierName(tier), tier != null && tier.skipCuffing());
 	}
 
-	/** The card as the title's subtitle when Title is on, else in chat; each only when Star_Card is on. */
-	private void announce(Player player, String stars, String card) {
+	/**
+	 * The event's title cue, with the card shown only while Star_Card is on. The card goes to chat only when the cue is
+	 * switched off; a cue that is on but blank sends nothing.
+	 */
+	private void announce(Player player, int level, String stars, String card, TitleCue cue) {
 		HudSettings settings = chase.get().hud();
+		String      shownCard = settings.starCard() ? card : "";
 
-		if (settings.gain().enabled()) {
-			ChatUtil.sendTitle(player, messages.format(WantedMessages.Key.TITLE, Map.of("stars", stars)),
-			                   settings.starCard() ? card : "", 5, 40, 10);
-		} else if (settings.starCard()) {
+		boolean sent = cue.send(player, Map.of("stars", stars, "level", String.valueOf(level), "card", shownCard));
+		if (!sent && !cue.enabled() && settings.starCard()) {
 			player.sendMessage(card);
 		}
 	}

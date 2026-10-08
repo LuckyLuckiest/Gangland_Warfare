@@ -97,6 +97,11 @@ a title and, when a star is gained, a siren, a particle ring marking the search 
 out of the zone (it never shows where the cops are). Switch each off under `Wanted.Hud` (`Boss_Bar`, `Star_Card`, `Title`, `Siren`, `Zone_Ring`, `Compass`);
 the text is in `copsncrooks/wanted_messages.yml`.
 
+The title is set per event under `Wanted.Hud.Title` (`Gain`, `Lost`, `Escaped`), each with its own `Title`, `Subtitle`
+and `Fade_In` / `Stay` / `Fade_Out` in ticks. The shipped default is a small subtitle (the star row and the star card) with no big
+title and a one-second stay, so the screen stays readable mid-chase. To get the old full-screen star count back, set
+`Title` to `"&c%stars%"`, `Stay` to `40` and `Fade_Out` to `10` on each event. Blank title and subtitle send nothing.
+
 ### Police Response Per Star
 
 | Stars   | Cops Sent | Minimum Tier    |

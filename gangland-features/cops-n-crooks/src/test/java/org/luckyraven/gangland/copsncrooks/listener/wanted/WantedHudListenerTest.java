@@ -199,7 +199,7 @@ class WantedHudListenerTest {
 		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
 		verify(player).sendTitle(title.capture(), subtitle.capture(), eq(5), eq(20), eq(5));
 		assertEquals("", ChatColor.stripColor(title.getValue()));
-		assertEquals("Assault on an officer: Sergeant inbound, they still want you in cuffs",
+		assertEquals("★★☆☆☆ Assault on an officer: Sergeant inbound, they still want you in cuffs",
 		             ChatColor.stripColor(subtitle.getValue()));
 		assertEquals(1, playSoundCalls());
 	}
@@ -213,7 +213,7 @@ class WantedHudListenerTest {
 
 		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
 		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(20), eq(5));
-		assertEquals("Reported crime: Sergeant inbound, they still want you in cuffs",
+		assertEquals("★★☆☆☆ Reported crime: Sergeant inbound, they still want you in cuffs",
 		             ChatColor.stripColor(subtitle.getValue()));
 	}
 
@@ -232,14 +232,28 @@ class WantedHudListenerTest {
 	}
 
 	@Test
-	@DisplayName("with Title on and Star_Card off the blank cue sends nothing")
-	void titleOn_starCardOff_sendsNothing() {
+	@DisplayName("with Title on and Star_Card off the subtitle is the star row alone, and nothing goes to chat")
+	void titleOn_starCardOff_sendsTheStarRowOnly() {
 		WantedHudListener listener = listener(HudFixtures.hud(true, false, true, true, true, true));
 
 		listener.onLevelChange(change(1, 2, WantedCause.CRIME));
 
-		verify(player, never()).sendTitle(anyString(), anyString(), anyInt(), anyInt(), anyInt());
+		verify(player).sendTitle("", "★★☆☆☆", 5, 20, 5);
 		verify(player, never()).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("a star gained with both Boss_Bar and Star_Card off still names the count in the subtitle")
+	void gain_bossBarOff_starCardOff_namesTheCount() {
+		HudSettings hud = new HudSettings(false, false, TitleCue.DEFAULT, TitleCue.DEFAULT, TitleCue.ESCAPED, true,
+		                                  HudSettings.DEFAULT.sirenSound(), HudSettings.DEFAULT.sirenVolume(),
+		                                  HudSettings.DEFAULT.sirenPitch(), true, HudSettings.DEFAULT.zoneParticle(),
+		                                  HudSettings.DEFAULT.zonePoints(), true);
+		WantedHudListener listener = listener(hud);
+
+		listener.onLevelChange(change(2, 3, WantedCause.CRIME));
+
+		verify(player).sendTitle("", "★★★☆☆", 5, 20, 5);
 	}
 
 	@Test
@@ -262,7 +276,7 @@ class WantedHudListenerTest {
 
 		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
 		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(20), eq(5));
-		assertEquals("You stayed out of sight", ChatColor.stripColor(subtitle.getValue()));
+		assertEquals("★☆☆☆☆ You stayed out of sight", ChatColor.stripColor(subtitle.getValue()));
 		assertEquals(0, playSoundCalls());
 	}
 
@@ -308,7 +322,7 @@ class WantedHudListenerTest {
 
 		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
 		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(20), eq(5));
-		assertEquals("You stayed out of sight", ChatColor.stripColor(subtitle.getValue()));
+		assertEquals("★★☆☆☆ You stayed out of sight", ChatColor.stripColor(subtitle.getValue()));
 	}
 
 	@Test
