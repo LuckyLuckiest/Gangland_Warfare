@@ -51,6 +51,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -266,7 +267,7 @@ class WantedHudListenerTest {
 	}
 
 	@Test
-	@DisplayName("losing the last star by evasion sends the escape card, then the bar goes with the chase")
+	@DisplayName("losing the last star by evasion sends the escape card, and the bar stays up for the bounty")
 	void lastStarDropByEvasion_sendsTheEscapeCard_thenHides() {
 		WantedHudListener listener = listener(HudSettings.DEFAULT);
 		listener.onStart(new WantedStartEvent(player, wanted, 1, WantedCause.CRIME));
@@ -279,7 +280,45 @@ class WantedHudListenerTest {
 		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
 		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(40), eq(10));
 		assertEquals("You stayed out of sight", ChatColor.stripColor(subtitle.getValue()));
+		verify(bar, never()).removeAll();
+	}
+
+	@Test
+	@DisplayName("a post-escape bounty keeps the bar up; the expiry removes it and says the cops gave up the search")
+	void bountyBar_expiry_removesBar_andSaysGaveUp() {
+		WantedHudListener listener = listener(HudSettings.DEFAULT);
+		ArgumentCaptor<Runnable> beat = ArgumentCaptor.forClass(Runnable.class);
+		verify(bukkit.scheduler()).runTaskTimer(any(JavaPlugin.class), beat.capture(), eq(10L), eq(10L));
+		listener.onStart(new WantedStartEvent(player, wanted, 1, WantedCause.CRIME));
+
+		listener.onWantedEnd(new WantedEndEvent(player, wanted, WantedCause.EVASION));
+		verify(bar, never()).removeAll();
+
+		// 300 beats of 10 ticks = 150 s, past the 120 s Search_Seconds proposed in the spec
+		for (int i = 0; i < 300; i++) beat.getValue().run();
+
 		verify(bar).removeAll();
+		ArgumentCaptor<String> said = ArgumentCaptor.forClass(String.class);
+		verify(player, atLeastOnce()).sendMessage(said.capture());
+		assertTrue(said.getAllValues()
+		               .stream()
+		               .map(ChatColor::stripColor)
+		               .anyMatch(line -> line.contains("cops gave up the search")));
+	}
+
+	@Test
+	@DisplayName("a new wanted start takes the bar back from the bounty: the wanted title, never the bounty line")
+	void reWanted_takesBarBackFromBounty() {
+		WantedHudListener listener = listener(HudSettings.DEFAULT);
+		listener.onStart(new WantedStartEvent(player, wanted, 1, WantedCause.CRIME));
+		listener.onWantedEnd(new WantedEndEvent(player, wanted, WantedCause.EVASION));
+		verify(bar, never()).removeAll();
+
+		listener.onStart(new WantedStartEvent(player, wanted, 1, WantedCause.CRIME));
+
+		ArgumentCaptor<String> titles = ArgumentCaptor.forClass(String.class);
+		verify(bar, atLeastOnce()).setTitle(titles.capture());
+		assertFalse(ChatColor.stripColor(titles.getValue()).contains("Cops still looking"));
 	}
 
 	@Test

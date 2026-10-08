@@ -39,6 +39,14 @@ public class PursuingBehavior implements CopBehavior {
 		     System::currentTimeMillis);
 	}
 
+	// stub (0.16.1 T-187): the searching predicate is accepted but the cuff guard is not written yet
+	PursuingBehavior(double cuffRadius, double alertRange, double maxPursuitDistance, int maxPursuitTicks,
+	                 DetainmentService detainmentService, CuffLockRegistry cuffLocks, RetreatSettings retreat,
+	                 LongSupplier clock, java.util.function.Predicate<UUID> searching) {
+		this(cuffRadius, alertRange, maxPursuitDistance, maxPursuitTicks, detainmentService, cuffLocks, retreat,
+		     clock);
+	}
+
 	PursuingBehavior(double cuffRadius, double alertRange, double maxPursuitDistance, int maxPursuitTicks,
 	                 DetainmentService detainmentService, CuffLockRegistry cuffLocks, RetreatSettings retreat,
 	                 LongSupplier clock) {

@@ -13,6 +13,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.core.wanted.Wanted;
+import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.NpcSquadSignal;
 import org.mockito.InOrder;
@@ -449,6 +450,51 @@ class CopManagerSquadTest {
 		manager.onWantedEnd(player);
 
 		verify(fx.radio, times(1)).sayFromLeader(group, "Stand_Down");
+	}
+
+	@Test
+	@DisplayName("an escape wanted end keeps the squad and does not stand the cops down (0.16.1 T-187)")
+	void escapeWantedEnd_keepsGroup_andSkipsStandDown() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		group.add(fx.cop(CopState.PURSUING, 0, 0));
+
+		manager.onWantedEnd(player, WantedCause.EVASION);
+
+		verify(fx.radio, never()).sayFromLeader(group, "Stand_Down");
+		assertSame(group, manager.groupFor(playerId));
+		assertFalse(group.isEmpty());
+	}
+
+	@Test
+	@DisplayName("a death wanted end despawns the squad and forgets the cop attacker (0.16.1 T-187)")
+	void deathWantedEnd_despawnsSquad_andClearsAttackerLock() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		CopNpc   cop   = fx.cop(CopState.PURSUING, 0, 0);
+		group.add(cop);
+		manager.onCopAttacked(cop, player);
+
+		manager.onWantedEnd(player, WantedCause.DEATH);
+
+		assertNull(manager.groupFor(playerId));
+		verify(cop).destroy(any());
+		assertFalse(manager.isCopAttacker(playerId));
+	}
+
+	@Test
+	@DisplayName("an arrest wanted end despawns the squad and forgets the cop attacker (0.16.1 T-187)")
+	void arrestWantedEnd_despawnsSquad_andClearsCopAttacker() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		CopNpc   cop   = fx.cop(CopState.PURSUING, 0, 0);
+		group.add(cop);
+		manager.onCopAttacked(cop, player);
+
+		manager.onWantedEnd(player, WantedCause.ARREST);
+
+		assertNull(manager.groupFor(playerId));
+		assertFalse(manager.isCopAttacker(playerId));
 	}
 
 	@Test

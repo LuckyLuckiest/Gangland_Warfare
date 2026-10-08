@@ -167,6 +167,16 @@ public class CopManager implements BeanLifecycle {
 	 *
 	 * @param player the player
 	 */
+	public void onWantedEnd(Player player, WantedCause cause) {
+		// stub (0.16.1 T-187): the escape branch and the endAll on death/arrest are not written yet
+		onWantedEnd(player);
+	}
+
+	/** Test seam: whether a cop has been attacked by this player since the last clear. */
+	boolean isCopAttacker(UUID playerId) {
+		return copAttackers.contains(playerId);
+	}
+
 	public void onWantedEnd(Player player) {
 		UUID playerId = player.getUniqueId();
 

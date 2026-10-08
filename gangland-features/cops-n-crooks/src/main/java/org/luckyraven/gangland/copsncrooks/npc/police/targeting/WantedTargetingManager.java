@@ -33,6 +33,10 @@ public class WantedTargetingManager implements TargetingManager {
 		return wanted != null && wanted.isWanted();
 	}
 
+	/** stub (0.16.1 T-187): the searching set is not written yet, so a post-escape search is not tracked. */
+	public void markSearching(UUID playerId) {
+	}
+
 	@Override
 	public int getWantedLevel(UUID playerId) {
 		Wanted wanted = wantedPlayers.get(playerId);
