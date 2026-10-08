@@ -28,7 +28,8 @@ public class TurfSequenceRepository extends AbstractRepository<TurfSequence> imp
 		super(plugin, databaseHandler, backend);
 
 		this.table = new TurfSequenceTable();
-		setDataSupplier(() -> List.of(new TurfSequence(1, highest)));
+		// Nothing to write until loadHighWaterMark() ran: an unloaded repository must not overwrite the stored mark with 0.
+		setDataSupplier(() -> highest == 0 ? List.of() : List.of(new TurfSequence(1, highest)));
 	}
 
 	@Override
@@ -44,6 +45,8 @@ public class TurfSequenceRepository extends AbstractRepository<TurfSequence> imp
 	@Override
 	public void saveHighWaterMark(int highestAllocatedId) {
 		highest = Math.max(highest, highestAllocatedId);
+		// ponytail: save() is async, so two allocations in one tick can land out of order; the next autosave or
+		// shutdown rewrites the max through the data supplier. Add per-write sequencing if that window matters.
 		save(new TurfSequence(1, highest));
 	}
 

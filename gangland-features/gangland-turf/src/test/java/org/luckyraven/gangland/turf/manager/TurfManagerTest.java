@@ -82,6 +82,24 @@ class TurfManagerTest {
 	}
 
 	@Test
+	@DisplayName("TF-05: deleting a turf without allocating, then restarting, never reuses its id")
+	void idAllocation_deleteWithoutAllocateThenRestart_neverReusesId() {
+		InMemoryTurfSequence sequence = new InMemoryTurfSequence();
+		repository.seed(turf(1, "world", 0, 0, 10, 10));
+		repository.seed(turf(2, "world", 20, 20, 30, 30));
+		repository.seed(turf(3, "world", 40, 40, 50, 50));
+		manager = new TurfManager(repository, sequence);
+		manager.initialize();
+
+		manager.delete(manager.get(3));
+
+		TurfManager restarted = new TurfManager(repository, sequence);
+		restarted.initialize();
+
+		assertEquals(4, restarted.allocateId(), "id 3 was used before the delete and must not come back");
+	}
+
+	@Test
 	@DisplayName("findConflict only scans the same world's turfs")
 	void findConflict_scopesToWorld() {
 		manager.create(turf(1, "world", 0, 0, 10, 10));

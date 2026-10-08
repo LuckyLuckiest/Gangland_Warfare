@@ -190,7 +190,8 @@ class ActiveBuffManagerTest {
 	@DisplayName("TF-32: one prune sweep removes every expired buff with a single deleteExpired call, not one delete each")
 	void prune_deletesAllExpiredInOneCall() throws InterruptedException {
 		// Short-lived buffs survive the load-time check, then expire before the captured prune task runs.
-		long soon      = System.currentTimeMillis() + 300L;
+		// 1 s window with a 500 ms margin on each side, so a slow runner cannot expire them during load or miss the sweep.
+		long soon      = System.currentTimeMillis() + 1_000L;
 		long farFuture = System.currentTimeMillis() + 3_600_000L;
 		repository.seed(buff(1L, 1, EffectType.INCOME_MULTIPLIER, 1.25, soon));
 		repository.seed(buff(2L, 1, EffectType.INCOME_MULTIPLIER, 1.25, soon));
@@ -202,7 +203,7 @@ class ActiveBuffManagerTest {
 			ArgumentCaptor<Runnable> prune = ArgumentCaptor.forClass(Runnable.class);
 			verify(bukkit.scheduler()).runTaskTimer(any(Plugin.class), prune.capture(), anyLong(), anyLong());
 
-			Thread.sleep(400L);
+			Thread.sleep(1_500L);
 			prune.getValue().run();
 
 			assertEquals(1, repository.deleteExpiredCalls, "one batched statement per sweep");
