@@ -54,8 +54,8 @@ class WantedMessagesTest {
 
 		assertEquals("§c*** seen by Rex",
 		             messages.format(WantedMessages.Key.BAR_SEEN, Map.of("stars", "***", "who", "Rex")));
-		// Hud.Title is absent from the file: the fallback "&c%stars%" is used.
-		assertEquals("§c**", messages.format(WantedMessages.Key.TITLE, Map.of("stars", "**")));
+		// Hud.Bar.Evaded is absent from the file: the fallback "&a%stars% &2&lSTAR LOST" is used.
+		assertEquals("§a** §2§lSTAR LOST", messages.format(WantedMessages.Key.BAR_EVADED, Map.of("stars", "**")));
 	}
 
 	@Test

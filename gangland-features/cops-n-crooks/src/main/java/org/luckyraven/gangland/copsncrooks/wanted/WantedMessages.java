@@ -22,7 +22,6 @@ public class WantedMessages extends LocalizedModuleYaml {
 		BAR_EVADED("Hud.Bar.Evaded", "&a%stars% &2&lSTAR LOST"),
 		BAR_EVADED_MANY("Hud.Bar.Evaded_Many", "&a%stars% &2&l-%count% STARS"),
 		BAR_WAY("Hud.Bar.Way", "   &f%arrow% %distance%m"),
-		TITLE("Hud.Title", "&c%stars%"),
 		CARD_RAISE("Hud.Card.Raise", "&f%crime%&7: &e%tier% &7inbound, %stance%"),
 		STANCE_CUFFS("Hud.Card.Stance_Cuffs", "they still want you in cuffs"),
 		STANCE_SHOOT("Hud.Card.Stance_Shoot", "they shoot first"),

@@ -537,6 +537,9 @@ restores the 0.13.0 behaviour of that piece. Texts are in `copsncrooks/wanted_me
 | `Wanted.Bribe_Stars.Pickup_Radius` | `1.5` | Blocks within which a player takes it (zero or less resets to 1.5) |
 | `Wanted.Bribe_Stars.Item` | `NETHER_STAR` | The pickup's material (an unknown name uses `NETHER_STAR` with a warning) |
 | `Wanted.Hud.Boss_Bar.Enable`, `Star_Card.Enable`, `Title.Enable`, `Zone_Ring.Enable`, `Compass.Enable` | `true` | Each switch removes only its own piece |
+| `Wanted.Hud.Title.Enable` | `true` | 0.16.1. Master switch for the wanted-level title; `false` = no title on any event |
+| `Wanted.Hud.Title.Gain` / `Lost` / `Escaped` `.Enable`, `Title`, `Subtitle` | `true`, `""`, `"%stars% %card%"` (`Escaped`: `"%card%"`) | 0.16.1. One cue per event: a star gained, a star lost while still wanted, and wanted cleared (level 0 by evasion or decay). `Title` and `Subtitle` take `%stars%`, `%level%` (the new star count) and `%card%` (the star card line, empty while `Star_Card` is off). Gained and Lost name the star row, so the count shows even with `Star_Card` off. A blank title and a blank subtitle send nothing (write `Title: ""` / `Subtitle: ""` to blank a line; a bare key with no value takes the default). A cue that is switched off sends its card to chat when `Star_Card` is on |
+| `Wanted.Hud.Title.<event>.Fade_In` / `Stay` / `Fade_Out` | `5` / `20` / `5` | 0.16.1. Ticks (20 = 1 second). The old look (before 0.16.1) was `Title` `"&c%stars%"`, `Subtitle` `"%card%"`, `5` / `40` / `10` on every event; set it back in `wanted.yml` to restore it |
 | `Wanted.Hud.Siren.Enable` / `Sound` / `Volume` / `Pitch` | `true` / `BLOCK_NOTE_BLOCK_BELL` / `1.0` / `0.5` | The siren when stars rise |
 | `Wanted.Hud.Zone_Ring.Particle` / `Points` | `DUST` / `48` | The ring around the search zone; an unknown particle uses `DUST` |
 | `Wanted.Charge_Sheet.Enable` | `true` | `false` = no fine |
@@ -548,7 +551,7 @@ Shipped crime weights (`Heat.Crimes`): `Brandish_Near_Cop` 25, `Assault_Civilian
 `Trespass_Restricted` 300, `Jailbreak` 450. 0.15.0 reports `Kill_Player`, `Kill_Civilian`, `Kill_Cop`, `Assault_Cop`
 and `Resisting_Arrest`; the others are read by later releases. A weight of 0 ignores that crime.
 
-`copsncrooks/wanted_messages.yml` also holds (0.16.0) `Bribe_Star.Taken` (`%stars%`) and `Bribe_Star.Seen`, and holds `Hud.Bar.Seen` / `Searching` / `Evaded` / `Evaded_Many`, `Hud.Title`, `Hud.Card.Raise` /
+`copsncrooks/wanted_messages.yml` also holds (0.16.0) `Bribe_Star.Taken` (`%stars%`) and `Bribe_Star.Seen`, and holds `Hud.Bar.Seen` / `Searching` / `Evaded` / `Evaded_Many`, `Hud.Card.Raise` /
 `Stance_Cuffs` / `Stance_Shoot` / `Drop_Evasion` / `Drop_Decay` / `Drop_Other` / `Drop_Petty` / `Drop_Cold_Trail` / 
 `Drop_Clean_Break` / `Drop_Still_Hot` / `Drop_Known_Face` / `Drop_Narrow`, `Charge_Sheet.Header` / `Crime` / `Total` /
 `Paid` / `Extra_Time` / `Paperwork`, and `Crimes.<Id>` (including `Crimes.Unknown_Crime`, the card text when no crime is

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop;
+import org.luckyraven.gangland.copsncrooks.wanted.hud.TitleCue;
 import org.luckyraven.keystone.persistence.config.ConfigIssue;
 import org.luckyraven.keystone.persistence.config.Severity;
 import org.luckyraven.keystone.persistence.config.ConfigParser;
@@ -128,8 +129,10 @@ class ChaseConfigTest {
 		assertEquals(List.of(1, 2), ev.searchRadius());
 		assertEquals(List.of(3, 4), ev.secondsToDrop());
 		assertEquals(4.5, ev.outsideZoneSpeed());
-		assertEquals(new HudSettings(false, false, false, false, "ENTITY_BAT_TAKEOFF", 0.5f, 1.5f, false, "FLAME", 12,
-		                             false), c.hud());
+		TitleCue offCue = new TitleCue(false, "", "%stars% %card%", 5, 20, 5);
+		TitleCue offEsc = new TitleCue(false, "", "%card%", 5, 20, 5);
+		assertEquals(new HudSettings(false, false, offCue, offCue, offEsc, false, "ENTITY_BAT_TAKEOFF", 0.5f, 1.5f,
+		                             false, "FLAME", 12, false), c.hud());
 		assertEquals(new ChargeSheetSettings(false, 1, 2, 3, 0.5, 9), c.chargeSheet());
 	}
 
@@ -563,5 +566,71 @@ class ChaseConfigTest {
 		             new ChaseConfig(d.heat(), d.evasion(), d.hud(), d.chargeSheet()).bribeStars());
 		assertEquals(BribeStarSettings.DEFAULT,
 		             new ChaseConfig(d.heat(), d.evasion(), d.hud(), d.chargeSheet(), null).bribeStars());
+	}
+
+	private static final String TITLE_EVENTS = """
+			Wanted:
+			   Hud:
+			      Title:
+			         Enable: true
+			         Gain:
+			            Enable: false
+			            Title: "&cG %stars%"
+			            Subtitle: "g-sub"
+			            Fade_In: 2
+			            Stay: 30
+			            Fade_Out: 3
+			         Lost:
+			            Enable: true
+			            Title: "L %level%"
+			            Subtitle: "%card%"
+			            Fade_In: 4
+			            Stay: 50
+			            Fade_Out: 6
+			         Escaped:
+			            Enable: true
+			            Title: ""
+			            Subtitle: "e-sub"
+			            Fade_In: 7
+			            Stay: 8
+			            Fade_Out: 9
+			""";
+
+	@Test
+	@DisplayName("each title event parses its own Enable, Title, Subtitle and fades")
+	void hud_titleEvents_parsePerEvent() {
+		ConfigReport report = new ConfigReport();
+
+		ChaseConfig c = ChaseConfig.parse(wantedRoot(TITLE_EVENTS, report), report);
+
+		assertEquals(new TitleCue(false, "&cG %stars%", "g-sub", 2, 30, 3), c.hud().gain());
+		assertEquals(new TitleCue(true, "L %level%", "%card%", 4, 50, 6), c.hud().lost());
+		assertEquals(new TitleCue(true, "", "e-sub", 7, 8, 9), c.hud().escaped());
+	}
+
+	@Test
+	@DisplayName("absent title blocks read as the shipped TitleCue defaults")
+	void hud_absentTitleBlocks_useDefaults() {
+		ConfigReport report = new ConfigReport();
+
+		ChaseConfig c = ChaseConfig.parse(wantedRoot("Wanted:\n   Hud:\n      Boss_Bar:\n         Enable: true\n", report),
+		                                  report);
+
+		assertEquals(TitleCue.DEFAULT, c.hud().gain());
+		assertEquals(TitleCue.DEFAULT, c.hud().lost());
+		assertEquals(TitleCue.ESCAPED, c.hud().escaped());
+	}
+
+	@Test
+	@DisplayName("the master Title Enable false disables every event, even one that says Enable true")
+	void hud_masterTitleOff_disablesEveryEvent() {
+		ConfigReport report = new ConfigReport();
+		String yaml = "Wanted:\n   Hud:\n      Title:\n         Enable: false\n         Gain:\n            Enable: true\n";
+
+		ChaseConfig c = ChaseConfig.parse(wantedRoot(yaml, report), report);
+
+		assertFalse(c.hud().gain().enabled());
+		assertFalse(c.hud().lost().enabled());
+		assertFalse(c.hud().escaped().enabled());
 	}
 }
