@@ -14,6 +14,7 @@ import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.luckyraven.gangland.copsncrooks.events.npc.CopDeathEvent;
+import org.luckyraven.gangland.copsncrooks.events.police.ArrestedEvent;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
@@ -25,6 +26,7 @@ import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
 import org.luckyraven.gangland.core.events.wanted.WantedEndEvent;
 import org.luckyraven.gangland.core.events.wanted.WantedLevelChangeEvent;
 import org.luckyraven.gangland.core.events.wanted.WantedStartEvent;
+import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
 import org.luckyraven.bartizan.api.raytrace.WeaponRaytracer;
 
@@ -51,7 +53,7 @@ public class CopListener implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onWantedEnd(WantedEndEvent event) {
-		copManager.onWantedEnd(event.getPlayer());
+		copManager.onWantedEnd(event.getPlayer(), event.getCause());
 	}
 
 	/**
@@ -61,7 +63,18 @@ public class CopListener implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onWantedChange(WantedLevelChangeEvent event) {
-		copManager.onWantedLevelChange(event.getPlayer(), event.getWanted(), event.getOldLevel(), event.getNewLevel());
+		copManager.onWantedLevelChange(event.getPlayer(), event.getWanted(), event.getOldLevel(), event.getNewLevel(),
+		                               event.getCause());
+	}
+
+	/**
+	 * Ends the squad when a player is admitted to jail: a searched player at zero stars fires no wanted end (0.16.1 T-187).
+	 *
+	 * @param event the arrest event
+	 */
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onArrested(ArrestedEvent event) {
+		copManager.endSquad(event.getPlayer().getUniqueId());
 	}
 
 	/**
@@ -71,9 +84,8 @@ public class CopListener implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onPlayerQuit(PlayerQuitEvent event) {
-		Player player = event.getPlayer();
-		copManager.removeCopAttacker(player.getUniqueId());
-		copManager.onWantedEnd(player);
+		// A quit while wanted takes the squad with him, search or not (0.16.1 T-187)
+		copManager.endSquad(event.getPlayer().getUniqueId());
 	}
 
 	/**
@@ -84,7 +96,9 @@ public class CopListener implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onPlayerDeath(PlayerDeathEvent event) {
-		copManager.removeCopAttacker(event.getEntity().getUniqueId());
+		// A player on the post-escape search is at 0 stars, so his death fires no wanted end: the squad stands down here
+		// (a second end is harmless) (0.16.1 T-187)
+		copManager.onWantedEnd(event.getEntity(), WantedCause.DEATH);
 	}
 
 	/**
@@ -95,7 +109,8 @@ public class CopListener implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onPlayerDowned(PlayerDownedEvent event) {
-		copManager.removeCopAttacker(event.getPlayer().getUniqueId());
+		// As onPlayerDeath: a downed player on the post-escape search gets no wanted end (0.16.1 T-187)
+		copManager.onWantedEnd(event.getPlayer(), WantedCause.DEATH);
 	}
 
 	/**

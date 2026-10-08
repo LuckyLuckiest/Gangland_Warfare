@@ -14,7 +14,12 @@ import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.core.wanted.WantedCause;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -35,6 +40,7 @@ class PostEscapeListenerTest {
 	private Wanted    wanted;
 	private Bounty    bounty;
 	private PostEscapeListener listener;
+	private PostEscapeSearch   search;
 
 	@BeforeEach
 	void setUp() {
@@ -55,7 +61,23 @@ class PostEscapeListenerTest {
 		UserManager<Player> users = mock(UserManager.class);
 		when(users.getUser(player)).thenReturn(user);
 
-		listener = new PostEscapeListener(new PostEscapeSearch(users, () -> 0L));
+		search   = new PostEscapeSearch(users);
+		listener = new PostEscapeListener(search);
+	}
+
+	@Test
+	@DisplayName("the search running out gives the cops up once, and the search ends")
+	void expire_givesUpOnce_thenEnds() {
+		List<UUID> givenUp = new ArrayList<>();
+		search.onGiveUp(givenUp::add);
+		UUID id = player.getUniqueId();
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 1, 0, WantedCause.EVASION));
+
+		search.expire(id);
+		search.expire(id);
+
+		assertEquals(List.of(id), givenUp);
+		assertFalse(search.isSearching(id));
 	}
 
 	@Test

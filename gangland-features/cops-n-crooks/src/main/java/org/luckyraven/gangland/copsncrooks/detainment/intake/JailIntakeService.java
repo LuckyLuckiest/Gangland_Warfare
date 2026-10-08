@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.detainment.intake;
 
 import lombok.CustomLog;
 import lombok.RequiredArgsConstructor;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -14,6 +15,7 @@ import org.luckyraven.gangland.copsncrooks.detainment.paperwork.PaperworkItemFac
 import org.luckyraven.gangland.copsncrooks.detainment.sound.DetainmentSoundContract;
 import org.luckyraven.gangland.copsncrooks.detainment.transit.TransitService;
 import org.luckyraven.gangland.copsncrooks.detainment.wanted.WantedClearContract;
+import org.luckyraven.gangland.copsncrooks.events.police.ArrestedEvent;
 import org.luckyraven.gangland.copsncrooks.jail.Jail;
 import org.luckyraven.gangland.copsncrooks.jail.JailRegistry;
 import org.luckyraven.gangland.copsncrooks.jail.JailService;
@@ -97,6 +99,8 @@ public class JailIntakeService {
 			detainmentRegistry.save(detained);
 		}
 
+		// A searched player is at zero stars, so the clear above fires no wanted end: this event ends the chase (T-187)
+		Bukkit.getPluginManager().callEvent(new ArrestedEvent(player));
 		sounds.playTransitCommit(player);
 
 		return true;

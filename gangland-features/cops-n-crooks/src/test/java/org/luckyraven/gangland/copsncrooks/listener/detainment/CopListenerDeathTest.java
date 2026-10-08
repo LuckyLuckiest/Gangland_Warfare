@@ -14,6 +14,9 @@ import org.luckyraven.gangland.copsncrooks.events.npc.CopDeathEvent;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.luckyraven.gangland.core.downed.PlayerDownedEvent;
+import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.NpcSquadSignal;
@@ -272,5 +275,31 @@ class CopListenerDeathTest {
 	private static EntityDeathEvent deathOf(LivingEntity body) {
 		List<ItemStack> drops = new ArrayList<>();
 		return new EntityDeathEvent(body, drops, 5);
+	}
+
+	@Test
+	@DisplayName("a player's death ends the hunt as DEATH, so the squad is removed (0.16.1 T-187)")
+	void playerDeath_endsTheHuntAsDeath() {
+		CopManager        manager = mock(CopManager.class);
+		Player            player  = mock(Player.class);
+		PlayerDeathEvent  event   = mock(PlayerDeathEvent.class);
+		when(event.getEntity()).thenReturn(player);
+
+		new CopListener(manager).onPlayerDeath(event);
+
+		verify(manager).onWantedEnd(player, WantedCause.DEATH);
+	}
+
+	@Test
+	@DisplayName("a downed player ends the hunt as DEATH too (0.16.1 T-187)")
+	void playerDowned_endsTheHuntAsDeath() {
+		CopManager       manager = mock(CopManager.class);
+		Player           player  = mock(Player.class);
+		PlayerDownedEvent event  = mock(PlayerDownedEvent.class);
+		when(event.getPlayer()).thenReturn(player);
+
+		new CopListener(manager).onPlayerDowned(event);
+
+		verify(manager).onWantedEnd(player, WantedCause.DEATH);
 	}
 }

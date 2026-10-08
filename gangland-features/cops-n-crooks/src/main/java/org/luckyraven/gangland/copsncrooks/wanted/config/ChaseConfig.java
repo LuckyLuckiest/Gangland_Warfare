@@ -40,6 +40,8 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 
 		// Kill_Combo (0.15.1) is read by ChaseConfigLoader through the settings.yml bridge (KillComboSettings)
 		wantedRoot.get("Kill_Combo");
+		// Post_Escape (0.16.1) is read by PostEscapeSettings, loaded beside this config by ChaseConfigLoader
+		wantedRoot.get("Post_Escape");
 
 		ChaseConfig parsed = new ChaseConfig(heat(block(wantedRoot, "Heat", report)),
 		                                     evasion(block(wantedRoot, "Evasion", report), report),
@@ -330,6 +332,12 @@ public record ChaseConfig(HeatSettings heat, EvasionSettings evasion, HudSetting
 		HudSettings d     = HudSettings.DEFAULT;
 		NodeReader  siren = block(n, "Siren", report);
 		NodeReader  ring  = block(n, "Zone_Ring", report);
+		// Bounty (0.16.1) is read by PostEscapeSettings, loaded beside this config by ChaseConfigLoader
+		NodeReader bounty = block(n, "Bounty", report);
+		if (bounty != null) {
+			bounty.get("Enable");
+			bounty.get("Bar_Color");
+		}
 
 		return new HudSettings(enabled(block(n, "Boss_Bar", report), d.bossBar()),
 		                       enabled(block(n, "Star_Card", report), d.starCard()),

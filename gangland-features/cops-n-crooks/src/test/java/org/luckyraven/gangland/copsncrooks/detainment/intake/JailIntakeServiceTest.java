@@ -5,6 +5,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,6 +21,7 @@ import org.luckyraven.gangland.copsncrooks.detainment.inventory.SeizedInventoryS
 import org.luckyraven.gangland.copsncrooks.detainment.paperwork.PaperworkItemFactory;
 import org.luckyraven.gangland.copsncrooks.detainment.sound.DetainmentSoundContract;
 import org.luckyraven.gangland.copsncrooks.detainment.wanted.WantedClearContract;
+import org.luckyraven.gangland.copsncrooks.events.police.ArrestedEvent;
 import org.luckyraven.gangland.copsncrooks.jail.JailRegistry;
 import org.luckyraven.gangland.copsncrooks.jail.JailService;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
@@ -28,6 +30,7 @@ import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfig;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.CrimeRecord;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
+import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.keystone.persistence.FileHandler;
@@ -92,8 +95,16 @@ class JailIntakeServiceTest {
 		}
 	}
 
+	private BukkitStatics bukkit;
+
+	@AfterEach
+	void tearDown() {
+		bukkit.close();
+	}
+
 	@BeforeEach
 	void setUp() throws IOException {
+		bukkit = BukkitStatics.install(); // the admit fires ArrestedEvent through Bukkit
 		player = mock(Player.class);
 		when(player.isOnline()).thenReturn(true);
 		when(player.getUniqueId()).thenReturn(ID);
@@ -315,6 +326,16 @@ class JailIntakeServiceTest {
 		InOrder order = inOrder(ledger, wanted);
 		order.verify(ledger).chaseCrimes(ID);
 		order.verify(wanted).clearWanted(eq(ID), any(WantedCause.class));
+	}
+
+	@Test
+	@DisplayName("the admit fires ArrestedEvent after the wanted clear: a zero-star arrest still ends the chase (0.16.1 T-187)")
+	void admit_firesArrestedEvent_afterTheWantedClear() {
+		intake.admit(player);
+
+		InOrder order = inOrder(wanted, bukkit.pluginManager());
+		order.verify(wanted).clearWanted(eq(ID), any(WantedCause.class));
+		order.verify(bukkit.pluginManager()).callEvent(any(ArrestedEvent.class));
 	}
 
 	@Test

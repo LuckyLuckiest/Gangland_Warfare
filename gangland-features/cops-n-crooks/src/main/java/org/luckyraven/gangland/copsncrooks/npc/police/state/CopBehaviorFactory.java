@@ -8,6 +8,8 @@ import org.luckyraven.gangland.copsncrooks.npc.police.state.behavior.*;
 
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -20,13 +22,17 @@ public class CopBehaviorFactory {
 	private final DetainmentService         detainmentService;
 	@Getter
 	private final CuffLockRegistry          cuffLockRegistry;
+	/** Whether a player is on the post-escape search; a searched player is never cuffed (0.16.1 T-187). */
+	private final Predicate<UUID>           searching;
 
 	public CopBehaviorFactory(CopConfigProvider configProvider, Supplier<CopSpawnManager> spawnManagerSupplier,
-	                          DetainmentService detainmentService, CuffLockRegistry cuffLockRegistry) {
+	                          DetainmentService detainmentService, CuffLockRegistry cuffLockRegistry,
+	                          Predicate<UUID> searching) {
 		this.configProvider       = configProvider;
 		this.spawnManagerSupplier = spawnManagerSupplier;
 		this.detainmentService    = detainmentService;
 		this.cuffLockRegistry     = cuffLockRegistry;
+		this.searching            = searching;
 	}
 
 	/**
@@ -51,10 +57,11 @@ public class CopBehaviorFactory {
 		                                                      configProvider.getPursuitMaxDistance(),
 		                                                      configProvider.getPursuitMaxTicks(),
 		                                                      detainmentService, cuffLockRegistry,
-		                                                      configProvider.getRetreatSettings()));
+		                                                      configProvider.getRetreatSettings(),
+		                                                      System::currentTimeMillis, searching));
 		behaviors.put(CopState.CUFFING,
 		              new CuffingBehavior(configProvider.getCuffRadius(), configProvider.getMaxCuffAttempts(),
-		                                  cuffAiTicks, aiTickRate, cuffLockRegistry, detainmentService));
+		                                  cuffAiTicks, aiTickRate, cuffLockRegistry, detainmentService, searching));
 		behaviors.put(CopState.GUARDING,
 		              new GuardingBehavior(configProvider.getGuardRadius(), cuffLockRegistry, detainmentService));
 		behaviors.put(CopState.COMBAT, new CombatBehavior(configProvider.getCombatRange(), configProvider.getAlertRange(),

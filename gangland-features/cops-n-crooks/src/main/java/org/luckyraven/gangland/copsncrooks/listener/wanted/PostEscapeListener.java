@@ -5,13 +5,15 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.luckyraven.gangland.copsncrooks.wanted.escape.PostEscapeSearch;
 import org.luckyraven.gangland.core.events.wanted.WantedLevelChangeEvent;
-import org.luckyraven.gangland.core.wanted.WantedCause;
+import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 /**
- * Starts the post-escape search when evasion takes the last star (0.16.1 T-187).
- * <p>
- * stub (0.16.1 T-187): not registered as a bean yet; the guard is the only logic here.
+ * Starts the post-escape search when evasion takes the last star (0.16.1 T-187). The one predicate that decides an escape
+ * is {@link PostEscapeSearch#isEscape}, so the HUD, the cops and this listener agree.
+ *
+ * @since 0.16.1
  */
+@ListenerHandler
 public class PostEscapeListener implements Listener {
 
 	private final PostEscapeSearch search;
@@ -22,7 +24,7 @@ public class PostEscapeListener implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onLevelChange(WantedLevelChangeEvent event) {
-		if (event.getCause() != WantedCause.EVASION || event.getNewLevel() != 0) return;
+		if (event.getNewLevel() != 0 || !search.isEscape(event.getCause())) return;
 
 		search.begin(event.getPlayer(), event.getOldLevel());
 	}

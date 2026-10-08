@@ -97,6 +97,31 @@ a title and, when a star is gained, a siren, a particle ring marking the search 
 out of the zone (it never shows where the cops are). Switch each off under `Wanted.Hud` (`Boss_Bar`, `Star_Card`, `Title`, `Siren`, `Zone_Ring`, `Compass`);
 the text is in `copsncrooks/wanted_messages.yml`.
 
+### After An Escape: The Search And The Bounty (0.16.1)
+
+Losing your last star by staying out of sight is an escape, but the cops do not stand down. For
+`Wanted.Post_Escape.Search_Seconds` (120) they keep searching for you, and a bounty goes on you:
+
+- **The bounty.** The escape adds the auto bounty of your level and the wanted level you fled at, as notoriety, once per
+  escape. A chat line (`Wanted.Post_Escape.Announce`) says the bounty is on you, and the bar turns into the bounty bar: `BOUNTY $amount · Cops still
+  looking`, in the colour of `Wanted.Hud.Bounty.Bar_Color` (`YELLOW`), counting down with the search. With no bounty
+  standing the bar reads only `Cops still looking`. The amount is read live, so a bounty posted on you during the
+  search shows at once.
+- **The search.** Cops keep hunting you as they would a wanted player, but they never cuff or shoot at you during it.
+  The squad keeps looking: the cops walking home come back to the search, and the spawns carry on at the lowest tier
+  (one star's squad) until the search ends. A cop you hit stops fighting you and chases you instead.
+- **The end.** The search ends when it runs out, when you are wanted again (the normal wanted HUD takes the bar back),
+  or when you die or are arrested. Death and arrest end the cops' hunt at once: the squad stands down and is removed,
+  and the bounty bar goes. Quitting removes the squad at once, with no stand-down line. When the search runs out on its
+  own the cops give up (a cop you hit stops hunting you too), and the chat says so, with the bounty still standing if it is.
+- **The bounty is not a second money system.** It is the server-made notoriety of the bounty system: a player who kills
+  you can collect it when `Pay_Notoriety` is on, like any other notoriety.
+
+`Wanted.Post_Escape.Enable: false` makes an escape end the chase at once, as in 0.16.0: the cops stand down and walk home,
+with no search and no bounty. `Wanted.Hud.Bounty.Enable: false` hides the bounty bar and keeps the chat line and the countdown.
+`Wanted.Post_Escape.Announce: false` drops the chat lines. The search is not carried through a server restart, and a rejoin
+finds the cops gone; the bounty itself is saved with the player and comes back with him.
+
 ### Police Response Per Star
 
 | Stars   | Cops Sent | Minimum Tier    |

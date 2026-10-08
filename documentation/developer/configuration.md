@@ -538,6 +538,11 @@ restores the 0.13.0 behaviour of that piece. Texts are in `copsncrooks/wanted_me
 | `Wanted.Bribe_Stars.Item` | `NETHER_STAR` | The pickup's material (an unknown name uses `NETHER_STAR` with a warning) |
 | `Wanted.Hud.Boss_Bar.Enable`, `Star_Card.Enable`, `Title.Enable`, `Zone_Ring.Enable`, `Compass.Enable` | `true` | Each switch removes only its own piece |
 | `Wanted.Hud.Siren.Enable` / `Sound` / `Volume` / `Pitch` | `true` / `BLOCK_NOTE_BLOCK_BELL` / `1.0` / `0.5` | The siren when stars rise |
+| `Wanted.Post_Escape.Enable` | `true` | 0.16.1. `false` = an escape by evasion ends the chase at once, as in 0.16.0 (the cops stand down and walk home; no search, no bounty) |
+| `Wanted.Post_Escape.Search_Seconds` | `120` | 0.16.1. How long the cops keep searching after an escape; the bounty bar counts it down |
+| `Wanted.Post_Escape.Announce` | `true` | 0.16.1. `false` = no chat line when the bounty goes on you and when the cops give up (the bounty bar still shows) |
+| `Wanted.Hud.Bounty.Enable` | `true` | 0.16.1. `false` = no bounty bar after an escape (the chat line and the countdown stay) |
+| `Wanted.Hud.Bounty.Bar_Color` | `YELLOW` | 0.16.1. The bounty bar colour (`BLUE`, `GREEN`, `PINK`, `PURPLE`, `RED`, `WHITE`, `YELLOW`); anything else is `YELLOW` |
 | `Wanted.Hud.Zone_Ring.Particle` / `Points` | `DUST` / `48` | The ring around the search zone; an unknown particle uses `DUST` |
 | `Wanted.Charge_Sheet.Enable` | `true` | `false` = no fine |
 | `Wanted.Charge_Sheet.Base` / `Per_Wanted_Level` / `Maximum` | `200` / `250` / `10000` | Fine = `Base + Per_Wanted_Level x stars`, capped; paid from the wallet only |
