@@ -5,6 +5,7 @@ import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfig;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.config.HudSettings;
+import org.luckyraven.gangland.copsncrooks.wanted.hud.TitleCue;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
@@ -55,8 +56,20 @@ public final class HudFixtures {
 	/** The shipped HUD with each switch given. */
 	public static HudSettings hud(boolean bossBar, boolean starCard, boolean title, boolean siren, boolean zoneRing,
 	                              boolean compass) {
+		TitleCue on  = TitleCue.DEFAULT;
+		TitleCue off = new TitleCue(false, on.title(), on.subtitle(), on.fadeIn(), on.stay(), on.fadeOut());
+		return cues(bossBar, starCard, title ? on : off, title ? on : off, title ? on : off, siren, zoneRing, compass);
+	}
+
+	/** The shipped HUD with the three title cues given. */
+	public static HudSettings cues(boolean starCard, TitleCue gain, TitleCue lost, TitleCue escaped) {
+		return cues(true, starCard, gain, lost, escaped, true, true, true);
+	}
+
+	private static HudSettings cues(boolean bossBar, boolean starCard, TitleCue gain, TitleCue lost, TitleCue escaped,
+	                                boolean siren, boolean zoneRing, boolean compass) {
 		HudSettings d = HudSettings.DEFAULT;
-		return new HudSettings(bossBar, starCard, title, siren, d.sirenSound(), d.sirenVolume(), d.sirenPitch(),
-		                       zoneRing, d.zoneParticle(), d.zonePoints(), compass);
+		return new HudSettings(bossBar, starCard, gain, lost, escaped, siren, d.sirenSound(), d.sirenVolume(),
+		                       d.sirenPitch(), zoneRing, d.zoneParticle(), d.zonePoints(), compass);
 	}
 }

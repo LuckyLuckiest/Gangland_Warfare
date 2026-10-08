@@ -128,7 +128,7 @@ public class WantedHudListener implements Listener {
 	private void announce(Player player, String stars, String card) {
 		HudSettings settings = chase.get().hud();
 
-		if (settings.title()) {
+		if (settings.gain().enabled()) {
 			ChatUtil.sendTitle(player, messages.format(WantedMessages.Key.TITLE, Map.of("stars", stars)),
 			                   settings.starCard() ? card : "", 5, 40, 10);
 		} else if (settings.starCard()) {
