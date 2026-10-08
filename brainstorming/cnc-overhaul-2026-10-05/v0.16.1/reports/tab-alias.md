@@ -20,7 +20,7 @@ For each level, P = permitted, visible primary tokens (root: command labels plus
 - Empty prefix with P non-empty returns P.
 - On a tree client (`clientTree` flag set by the registrar), P is used for the decision but omitted from output. Output is OptionalArgument suggestions plus the alias fallback. This avoids duplicating the client's literals.
 
-Client tree: primary literals only. If a parent has at least one permitted alias and no free-text child of its own, one fallback child `argument("alias", string())` with `NOOP` and `ASK_SERVER` suggestions, carrying a `greedyString("rest")` child with the same. Typed aliases still execute. On Paper each master alias is a redirect literal at the root pointing at the primary tree, so `/gangland` completes exactly like `/glw` (judge round 1, finding tab-1; the owner accepts `/gangland` among the root commands when typing `/`).
+Client tree: primary literals only. If a parent has at least one permitted alias and no free-text child of its own, one fallback child `argument("alias", string())` with `NOOP` and `ASK_SERVER` suggestions, carrying a `greedyString("rest")` child with the same. Typed aliases still execute. On Paper each master alias is a redirect literal at the root pointing at the primary tree, so `/gangland` completes exactly like `/glw` (judge round 1, finding tab-1).
 
 Also: `BrigadierTabRegistrar.receivesTree(Player)` gates tree delivery on protocol 393 through ViaVersion reflection (pre-1.13 clients keep the old behaviour), and `CommandTabCompleter.offersHelp(Command)` gates the sub-level `help` literal so it appears only where the server offers it on both backends.
 
@@ -65,7 +65,7 @@ Bumped: 1.15.0 to 1.15.1 (Keystone root pom, Gangland `<keystone.version>`). Key
 
 ## Follow-ups
 
-- Resolved in round 1 (finding tab-1): `/gangland` completes through a redirect literal on Paper. The owner ruling accepts `/gangland` among the root commands. Spigot keeps Commodore's own alias literals (KS-CM-28, open).
+- Resolved in round 1 (finding tab-1) and rounds 2-3: `/gangland` completes through a redirect literal, as `/glw` does. Spigot: Commodore covers alias completion through its own redirects.
 - Unverified in game on Paper 1.21.11: no duplicates between literal and server suggestions; typed aliases render valid; pre-1.13 ViaVersion path (`receivesTree`, no unit test because ViaVersion is not on the Keystone test classpath); Spigot Commodore alias leak (KS-CM-28, open); Spigot fallback requires (KS-CM-31, open).
 - Adjacent findings to triage: deep-level aliases never listed (now covered by KS-CM-33), `clientTree` duplicate risk (covered by the flag, to confirm in game).
 - The artifact page `4a903fb6-cbdd-4810-90b8-88a863e9013c` was not republished; status rows for KS-CM-18/19/26/27/29/30/32/33 were written to its `bugs` collection in the prior pass.
@@ -83,8 +83,26 @@ Gangland lane (`cnc-0.16.1-tabalias`): no code change, the pin stays 1.15.1. Thi
 | tab-3 | minor | fixed | A level with an `OptionalArgument` or `ListArgument` child gets no alias fallback, so it has at most one server-asking child. Test `BrigadierTabRegistrarTest.atMostOneFreeTextChildPerParent` (Paper and Spigot trees). Red on the pre-fix HEAD: `give has several server-asking free-text children: [name, alias] ==> expected: <true> but was: <false>`. The limit (a typed alias at such a level loses its own sub-level completion; no Gangland level has this shape) is in the phase doc. |
 | tab-4 | minor | fixed (this section) | Real assertion-level red now recorded for every new or flipped test. `helpLiteralFollowsTheCompleterPredicate` re-run with the `offersHelp` gate temporarily replaced by `if (true)` in both builders: `the server offers no sub-level help, so the client must not ==> expected: <null> but was: <<literal help>>`. The file was restored from git afterwards (clean tree). |
 
-Spigot path: unchanged. Commodore still adds its own alias literals (KS-CM-28, open). The redirect fix covers Paper only.
+Spigot path: Commodore covers Spigot alias completion through its own redirects (see rounds 2-3).
 
 Test counts:
 - Keystone, `mvn -o -pl keystone-command -am test` (full reactor): BUILD SUCCESS. Keystone Command module 162 tests, 0 failures, 0 errors (BrigadierPaperListenerTest 5, BrigadierTabRegistrarTest 9). Other modules: Common 272, Bean 66, Item 143, Persistence 443, Testkit 5, all 0 failures.
 - Gangland, `mvn -o -pl gangland-impl -am test`: BUILD SUCCESS. Reactor: Gangland Core 124, Gangland Item 48, Sign API 66, Gangland API 154, Gangland 460 tests, 0 failures, 0 errors (same count as before the round; the Keystone change is covered by the existing alias and tab-completion tests).
+
+## Judge rounds 2-3
+
+Keystone lane (`E:/Programming/java/wt/ks1151-tabalias`, branch `ks-1.15.1-tabalias`):
+- tab-5 and tab-6 were fixed in Keystone `4cce5d4`. Namespaced forms (`<plugin>:<label>`) redirect to the primary tree, so a marked client completes `gangland_warfare:glw <TAB>` as `/glw <TAB>`. Each redirect carries the primary's command, so a bare alias parses without the "incomplete command" hint. Test: `BrigadierPaperListenerTest.namespacedFormsRedirectToThePrimaryTree`.
+- tab-7 (judge r3, minor): a namespaced redirect is added only for a namespaced stub the server actually sent. With spigot.yml `commands.send-namespaced: false` the listener no longer injects `gangland_warfare:glw` (and the other namespaced forms) into the client root. Bare-alias redirects stay unconditional. Fix commit: Keystone `f844a561`, the same commit as the tab-8 doc fixes. Test: `BrigadierPaperListenerTest.namespacedRedirectsAreOnlyAddedForStubsTheServerSent`. Red before the fix: `no namespaced stub was sent, so none may be injected ==> expected: <null> but was: <<literal testplugin:master>>`. The existing `namespacedFormsRedirectToThePrimaryTree` now also sends its `testplugin:m` alias stub, because the server sends one per alias.
+- tab-8 (docs): `CLAUDE.md`, `docs/README.md` and `docs/phase-h15-tab-aliases.md` now describe master aliases and their namespaced forms as redirects to the primary tree. The Spigot alias leak is accepted under the owner ruling. The client-dedupe claim is softened to "possibly deduped by `Suggestions.merge`".
+
+Test counts:
+- Keystone `mvn -o -pl keystone-command -am test`: keystone-command 163 before tab-7, 164 after (the new test added). Other modules unchanged: Common 272, Bean 66, Item 143, Persistence 443, Testkit 5. BUILD SUCCESS. `mvn -o clean install -DskipTests` in the Keystone lane: BUILD SUCCESS.
+- Gangland, `gangland-impl`: 460 tests (the round-1 figure). Gangland's code did not change in rounds 2-3, and I did not re-run it this round.
+
+Gangland lane (`E:/Programming/java/wt/cnc161-tabalias`, branch `cnc-0.16.1-tabalias`): this report is the only change. The pin stays 1.15.1.
+
+Owner rulings, as now reflected in this report:
+- `/gangland` completes through its redirect literal, as `/glw` does. The earlier "owner trade-off: /gangland no longer completes" statements are removed.
+- Spigot: Commodore covers alias completion through its own redirects. This matches the Paper behaviour and is accepted under the owner ruling.
+- Docket: KS-CM-28 is superseded under the owner ruling. The orchestrator records the docket status. This session did not edit any docket file or artifact.
