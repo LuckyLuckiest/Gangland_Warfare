@@ -219,7 +219,10 @@ public class WantedHudListener implements Listener {
 
 	private String raiseCard(Player player, WantedLevelChangeEvent event) {
 		CrimeRecord record = event.getCause() == WantedCause.CRIME ? ledger.lastCrime(player.getUniqueId()) : null;
-		String crime = messages.crimeName(record == null ? "Unknown_Crime" : record.crimeId());
+		// An UNKNOWN raise of a searched player is a sighting (PostEscapeSpotting): it fires before the search ends (wanted-15)
+		boolean spotted = record == null && event.getCause() == WantedCause.UNKNOWN &&
+		                  search.isSearching(player.getUniqueId());
+		String crime = messages.crimeName(record != null ? record.crimeId() : spotted ? "Spotted" : "Unknown_Crime");
 
 		CopConfigProvider provider = copLoader.getLoadedProvider();
 		CopTierConfig     tier     = provider == null ? null

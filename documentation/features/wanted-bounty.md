@@ -109,8 +109,8 @@ Losing your last star by staying out of sight is an escape, but the cops do not 
 `Wanted.Post_Escape.Search_Seconds` (120) they keep searching for you, and a bounty goes on you:
 
 - **The bounty.** The escape adds the auto bounty of your level and the peak star count of the chase (the highest level you
-  reached, not only the star you lost last), as notoriety, once per escape. Nothing is added while your notoriety already
-  sits at `Bounty.Kill.Maximum`. A chat line (`Wanted.Post_Escape.Announce`) says the bounty is on you, and the bar turns into the bounty bar: `BOUNTY $amount · Cops still
+  reached, not only the star you lost last), as notoriety, once per escape. Nothing is added when the increase would take
+  your notoriety past `Bounty.Kill.Maximum` (the kill path's rule). A chat line (`Wanted.Post_Escape.Announce`) says the bounty is on you, and the bar turns into the bounty bar: `BOUNTY $amount · Cops still
   looking`, in the colour of `Wanted.Hud.Bounty.Bar_Color` (`YELLOW`), counting down with the search. With no bounty
   standing the bar reads only `Cops still looking`. The amount is read live, so a bounty posted on you during the
   search shows at once.

@@ -96,5 +96,7 @@ Crimes:
    Store_Robbery: "Store robbery"
    Trespass_Restricted: "Trespassing"
    Jailbreak: "Jailbreak"
+   # A sighting by the post-escape search: the cops spotted a player they were looking for
+   Spotted: "Spotted by the cops"
    # The star card's text when no crime is on record, for example a sign or an admin raise
    Unknown_Crime: "Reported crime"

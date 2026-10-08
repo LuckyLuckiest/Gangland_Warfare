@@ -208,7 +208,7 @@ Wanted:
             Forget_After_Days: 90
 
    # What happens after an escape: you lost your last star by staying out of sight. The cops keep searching, and a
-   # bounty is put on you (the auto bounty of your level and the wanted level you fled at).
+   # bounty is put on you (the auto bounty of your level and the highest wanted level of the chase).
    Post_Escape:
       # false = an escape ends the chase at once, as before the search: the cops stand down and walk home, no search,
       # no bounty

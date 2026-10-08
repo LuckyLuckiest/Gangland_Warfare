@@ -575,4 +575,19 @@ class WantedHudListenerTest {
 		for (int i = 0; i < 300; i++) beat.getValue().run();
 		verify(player, never()).sendMessage(argThat((String line) -> line.contains("cops gave up the search")));
 	}
+
+	@Test
+	@DisplayName("a sighting that re-wants a searched player names him spotted, not an unknown crime (wanted-15)")
+	void spottedRaise_ofSearchedPlayer_namesTheSpotting() {
+		WantedHudListener listener = listener(HudSettings.DEFAULT);
+		listener.onStart(new WantedStartEvent(player, wanted, 1, WantedCause.CRIME));
+		beginSearch();
+
+		listener.onLevelChange(change(0, 1, WantedCause.UNKNOWN));
+
+		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
+		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(20), eq(5));
+		assertEquals("★☆☆☆☆ Spotted by the cops: Sergeant inbound, they still want you in cuffs",
+		             ChatColor.stripColor(subtitle.getValue()));
+	}
 }

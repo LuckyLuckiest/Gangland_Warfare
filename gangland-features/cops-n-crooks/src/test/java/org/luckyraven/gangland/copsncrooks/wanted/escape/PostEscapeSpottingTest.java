@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.wanted.escape;
 
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,6 +22,7 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -36,6 +39,7 @@ class PostEscapeSpottingTest {
 	/** The radio clock the spotting reads; tip-offs are stamped on it. */
 	private static final long NOW = 10_000L;
 
+	private World              world;
 	private Player             player;
 	private User<Player>       user;
 	private CopGroup           group;
@@ -47,8 +51,10 @@ class PostEscapeSpottingTest {
 
 	@BeforeEach
 	void setUp() {
+		world  = mock(World.class);
 		player = mock(Player.class);
 		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
+		when(player.getLocation()).thenReturn(new Location(world, 0, 64, 0));
 
 		Bounty bounty = mock(Bounty.class);
 		when(bounty.getNotoriety()).thenReturn(BigDecimal.ZERO);
@@ -69,6 +75,8 @@ class PostEscapeSpottingTest {
 		group = mock(CopGroup.class);
 		when(group.getSquad()).thenReturn(squad);
 		when(group.isEmpty()).thenReturn(false);
+		// the squad's sighting is of the searched player, a few blocks from him (wanted-14)
+		when(squad.lastKnownLocation()).thenReturn(new Location(world, 2, 64, 1));
 
 		stars    = mock(WantedStars.class);
 		settings = new PostEscapeSettings(true, 120, true, "YELLOW", true, 1);
@@ -89,7 +97,7 @@ class PostEscapeSpottingTest {
 	@DisplayName("a fresh sighting that is a tip-off (stuck recycle, hand-off) is not a sighting: nobody is raised")
 	void tipOffSeededSighting_isNotRaised() {
 		when(squad.hasFreshSighting()).thenReturn(true);
-		when(group.tippedOffWithin(NOW, NpcSquad.SIGHTING_GRACE_MS)).thenReturn(true);
+		when(group.tippedOffWithin(NOW, PostEscapeSpotting.TIP_OFF_WINDOW_MS)).thenReturn(true);
 
 		spotting.onAiTick(player, group);
 
@@ -100,11 +108,36 @@ class PostEscapeSpottingTest {
 	@DisplayName("a tip-off older than the grace window does not hide a real sighting")
 	void oldTipOff_doesNotBlockRealSighting() {
 		when(squad.hasFreshSighting()).thenReturn(true);
-		when(group.tippedOffWithin(NOW, NpcSquad.SIGHTING_GRACE_MS)).thenReturn(false);
+		when(group.tippedOffWithin(NOW, PostEscapeSpotting.TIP_OFF_WINDOW_MS)).thenReturn(false);
 
 		spotting.onAiTick(player, group);
 
 		verify(stars).raise(any(WantedContext.class), eq(1), eq(WantedCause.UNKNOWN));
+	}
+
+	@Test
+	@DisplayName("a tip-off stamped 5 ms before its seeded sighting still covers that sighting at the grace edge (wanted-13)")
+	void tipOffJustBeforeItsSighting_isNotRaised() {
+		// the tip-off is stamped at the tick start; the sighting lands 5 ms later and reads fresh 1500 ms after it
+		long tipOffAt = NOW - NpcSquad.SIGHTING_GRACE_MS - 5L;
+		when(squad.hasFreshSighting()).thenReturn(true);
+		when(group.tippedOffWithin(anyLong(), anyLong()))
+				.thenAnswer(inv -> NOW - tipOffAt <= (Long) inv.getArgument(1));
+
+		spotting.onAiTick(player, group);
+
+		verify(stars, never()).raise(any(WantedContext.class), anyInt(), any());
+	}
+
+	@Test
+	@DisplayName("a sighting of someone else far from the searched player does not raise him (wanted-14)")
+	void sightingFarFromSearchedPlayer_isNotRaised() {
+		when(squad.hasFreshSighting()).thenReturn(true);
+		when(squad.lastKnownLocation()).thenReturn(new Location(world, 200, 64, 200));
+
+		spotting.onAiTick(player, group);
+
+		verify(stars, never()).raise(any(WantedContext.class), anyInt(), any());
 	}
 
 	@Test

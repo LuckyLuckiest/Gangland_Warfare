@@ -38,7 +38,7 @@ public final class HudFixtures {
 	/** Messages with every line at its in-code fallback. */
 	public static WantedMessages messages(Path dir) throws IOException {
 		Path file = dir.resolve("wanted_messages.yml");
-		Files.writeString(file, "Crimes:\n   Assault_Cop: \"Assault on an officer\"\n   Unknown_Crime: \"Reported crime\"\n", StandardCharsets.UTF_8);
+		Files.writeString(file, "Crimes:\n   Assault_Cop: \"Assault on an officer\"\n   Spotted: \"Spotted by the cops\"\n   Unknown_Crime: \"Reported crime\"\n", StandardCharsets.UTF_8);
 		JavaPlugin  plugin      = PluginMocks.plugin(dir);
 		FileManager fileManager = new FileManager(plugin);
 		fileManager.addFile(new FileHandler(plugin, file.toFile()), false);
