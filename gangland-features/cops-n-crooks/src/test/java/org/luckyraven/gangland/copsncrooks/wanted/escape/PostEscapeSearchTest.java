@@ -13,6 +13,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -30,6 +31,7 @@ class PostEscapeSearchTest {
 
 		Bounty bounty = mock(Bounty.class);
 		when(bounty.getNotoriety()).thenReturn(BigDecimal.ZERO);
+		when(bounty.getAutoBountyIncrease(anyInt(), anyInt())).thenReturn(BigDecimal.ZERO);
 		Level level = mock(Level.class);
 		when(level.getLevelValue()).thenReturn(1);
 		User<Player> user = mock(User.class);

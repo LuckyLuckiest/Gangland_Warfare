@@ -3,6 +3,7 @@ package org.luckyraven.gangland.copsncrooks.listener.wanted;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.luckyraven.gangland.copsncrooks.wanted.escape.PostEscapeSearch;
 import org.luckyraven.gangland.core.events.wanted.WantedLevelChangeEvent;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
@@ -40,5 +41,11 @@ public class PostEscapeListener implements Listener {
 		if (!search.isEscape(event.getCause())) return;
 
 		search.begin(event.getPlayer(), peak);
+	}
+
+	/** A quitter's chase peak is forgotten (0.16.1 wanted-11): his stars may be cleared offline with no event to take it. */
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onQuit(PlayerQuitEvent event) {
+		search.forgetPeak(event.getPlayer().getUniqueId());
 	}
 }

@@ -33,6 +33,9 @@ import static org.mockito.Mockito.when;
 @DisplayName("PostEscapeSpotting - a sighting during the search raises the searched player")
 class PostEscapeSpottingTest {
 
+	/** The radio clock the spotting reads; tip-offs are stamped on it. */
+	private static final long NOW = 10_000L;
+
 	private Player             player;
 	private User<Player>       user;
 	private CopGroup           group;
@@ -49,6 +52,7 @@ class PostEscapeSpottingTest {
 
 		Bounty bounty = mock(Bounty.class);
 		when(bounty.getNotoriety()).thenReturn(BigDecimal.ZERO);
+		when(bounty.getAutoBountyIncrease(anyInt(), anyInt())).thenReturn(BigDecimal.ZERO);
 		Level level = mock(Level.class);
 		when(level.getLevelValue()).thenReturn(1);
 		user = mock(User.class);
@@ -68,17 +72,39 @@ class PostEscapeSpottingTest {
 
 		stars    = mock(WantedStars.class);
 		settings = new PostEscapeSettings(true, 120, true, "YELLOW", true, 1);
-		spotting = new PostEscapeSpotting(search, stars, users, () -> settings);
+		spotting = new PostEscapeSpotting(search, stars, users, () -> settings, () -> NOW);
 	}
 
 	@Test
-	@DisplayName("a squad with a fresh sighting raises the searched player by Spotted_Stars, as a crime")
+	@DisplayName("a squad with a fresh sighting raises the searched player by Spotted_Stars, not as a crime")
 	void sightedSearchedPlayer_isRaised() {
 		when(squad.hasFreshSighting()).thenReturn(true);
 
 		spotting.onAiTick(player, group);
 
-		verify(stars).raise(any(WantedContext.class), eq(1), eq(WantedCause.CRIME));
+		verify(stars).raise(any(WantedContext.class), eq(1), eq(WantedCause.UNKNOWN));
+	}
+
+	@Test
+	@DisplayName("a fresh sighting that is a tip-off (stuck recycle, hand-off) is not a sighting: nobody is raised")
+	void tipOffSeededSighting_isNotRaised() {
+		when(squad.hasFreshSighting()).thenReturn(true);
+		when(group.tippedOffWithin(NOW, NpcSquad.SIGHTING_GRACE_MS)).thenReturn(true);
+
+		spotting.onAiTick(player, group);
+
+		verify(stars, never()).raise(any(WantedContext.class), anyInt(), any());
+	}
+
+	@Test
+	@DisplayName("a tip-off older than the grace window does not hide a real sighting")
+	void oldTipOff_doesNotBlockRealSighting() {
+		when(squad.hasFreshSighting()).thenReturn(true);
+		when(group.tippedOffWithin(NOW, NpcSquad.SIGHTING_GRACE_MS)).thenReturn(false);
+
+		spotting.onAiTick(player, group);
+
+		verify(stars).raise(any(WantedContext.class), eq(1), eq(WantedCause.UNKNOWN));
 	}
 
 	@Test

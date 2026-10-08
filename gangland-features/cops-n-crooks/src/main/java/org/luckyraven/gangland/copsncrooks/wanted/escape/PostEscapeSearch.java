@@ -77,9 +77,20 @@ public final class PostEscapeSearch {
 	}
 
 	/**
+	 * Forgets a player's chase peak when he quits (0.16.1 wanted-11): a stale peak must not price his next, unrelated escape.
+	 * A rejoin's restore records the level he comes back with.
+	 */
+	public void forgetPeak(UUID playerId) {
+		peaks.remove(playerId);
+	}
+
+	/**
 	 * An escape by evasion took the last star; {@code peak} is the highest star count of that chase. Adds the auto-bounty
-	 * notoriety once per spell, unless the notoriety already sits at {@code Bounty.Kill.Maximum}, and marks the player as
-	 * searched for. A second call while the search runs does nothing.
+	 * notoriety once per spell, refused whole when it would take the notoriety past {@code Bounty.Kill.Maximum} (the kill
+	 * path's rule), and marks the player as searched for. A second call while the search runs does nothing.
+	 * <p>
+	 * No {@code UserBountyEvent} is fired, unlike the kill path: {@code BountyIncreaseListener} would chat
+	 * {@code BOUNTY_INCREMENT} on top of the escape's own announcement (0.16.1 wanted-10).
 	 */
 	public void begin(Player player, int peak) {
 		if (!settings.get().enabled()) return;
@@ -90,22 +101,22 @@ public final class PostEscapeSearch {
 		User<Player> user = users.getUser(player);
 		if (user == null) return;
 
-		Bounty bounty = user.getBounty();
-		if (!atKillCap(bounty)) {
-			bounty.addNotoriety(bounty.getAutoBountyIncrease(user.getLevel().getLevelValue(), peak));
-		}
+		Bounty     bounty   = user.getBounty();
+		BigDecimal increase = bounty.getAutoBountyIncrease(user.getLevel().getLevelValue(), peak);
+		if (fitsCap(bounty, increase)) bounty.addNotoriety(increase);
 
 		searches.put(id, player);
 		targeting.markSearching(id);
 	}
 
 	/**
-	 * Whether the notoriety already reached {@code Bounty.Kill.Maximum}: a kill then adds nothing (EntityDamageListener),
-	 * and an escape adds nothing either. A null cap is an unloaded config (a test double), so no cap applies.
+	 * Whether adding {@code increase} keeps the notoriety within {@code Bounty.Kill.Maximum}: the same refusal as the kill
+	 * path (EntityDamageListener.handleBounty), so an escape cannot pump notoriety past the cap. A null cap is an unloaded
+	 * config (a test double), so no cap applies.
 	 */
-	private static boolean atKillCap(Bounty bounty) {
+	private static boolean fitsCap(Bounty bounty, BigDecimal increase) {
 		BigDecimal cap = Settings.getBountyMaxKill();
-		return cap != null && bounty.getNotoriety().compareTo(cap) >= 0;
+		return cap == null || bounty.getNotoriety().add(increase).compareTo(cap) <= 0;
 	}
 
 	/** Whether {@code playerId} is on a post-escape search. */

@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.listener.wanted;
 
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,9 @@ import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.core.wanted.WantedCause;
+import org.luckyraven.gangland.file.configuration.Settings;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +23,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -118,5 +122,50 @@ class PostEscapeListenerTest {
 
 		verify(bounty).getAutoBountyIncrease(7, 1);
 		verify(bounty, never()).getAutoBountyIncrease(7, 5);
+	}
+
+	@Test
+	@DisplayName("a quitter's chase peak is forgotten: his next escape is priced on that chase alone")
+	void quitForgetsPeak() {
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 0, 5, WantedCause.CRIME));
+		listener.onQuit(new PlayerQuitEvent(player, ""));
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 0, 1, WantedCause.CRIME));
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 1, 0, WantedCause.EVASION));
+
+		verify(bounty).getAutoBountyIncrease(7, 1);
+		verify(bounty, never()).getAutoBountyIncrease(7, 5);
+	}
+
+	@Test
+	@DisplayName("an escape whose increase would take the notoriety past Bounty.Kill.Maximum adds nothing, as a kill does")
+	void escapePastKillCap_addsNothing() throws ReflectiveOperationException {
+		Field field = Settings.class.getDeclaredField("bountyMaxKill");
+		field.setAccessible(true);
+		Object previous = field.get(null);
+		field.set(null, BigDecimal.valueOf(200));
+		try {
+			listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 1, 0, WantedCause.EVASION));
+
+			verify(bounty, never()).addNotoriety(any());
+			assertTrue(search.isSearching(player.getUniqueId()), "the search still starts");
+		} finally {
+			field.set(null, previous);
+		}
+	}
+
+	@Test
+	@DisplayName("an escape whose increase stays within Bounty.Kill.Maximum adds it")
+	void escapeWithinKillCap_addsIncrease() throws ReflectiveOperationException {
+		Field field = Settings.class.getDeclaredField("bountyMaxKill");
+		field.setAccessible(true);
+		Object previous = field.get(null);
+		field.set(null, BigDecimal.valueOf(300));
+		try {
+			listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 1, 0, WantedCause.EVASION));
+
+			verify(bounty).addNotoriety(BigDecimal.valueOf(250));
+		} finally {
+			field.set(null, previous);
+		}
 	}
 }

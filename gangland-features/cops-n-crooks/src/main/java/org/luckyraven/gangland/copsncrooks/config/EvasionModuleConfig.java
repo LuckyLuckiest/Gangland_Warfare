@@ -95,8 +95,8 @@ public class EvasionModuleConfig {
 	/** A sighting of a searched player raises him by {@code Spotted_Stars} (0.16.1 wanted-1). */
 	@Bean
 	public PostEscapeSpotting postEscapeSpotting(ChaseConfigLoader config, @Qualifier("online") UserManager<Player> users,
-	                                             WantedStars wantedStars, PostEscapeSearch search) {
-		return new PostEscapeSpotting(search, wantedStars, users, config::getPostEscape);
+	                                             WantedStars wantedStars, PostEscapeSearch search, CopRadio copRadio) {
+		return new PostEscapeSpotting(search, wantedStars, users, config::getPostEscape, copRadio::now);
 	}
 
 	@Bean

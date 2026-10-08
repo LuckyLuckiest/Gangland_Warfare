@@ -131,6 +131,7 @@ class WantedHudListenerTest {
 		Bounty bounty = mock(Bounty.class);
 		when(bounty.getPostedAmount()).thenReturn(BigDecimal.ZERO);
 		when(bounty.getNotoriety()).thenReturn(BigDecimal.ZERO);
+		when(bounty.getAutoBountyIncrease(anyInt(), anyInt())).thenReturn(BigDecimal.ZERO);
 		User<Player> user = mock(User.class);
 		when(user.getBounty()).thenReturn(bounty);
 		when(user.getLevel()).thenReturn(mock(Level.class));
