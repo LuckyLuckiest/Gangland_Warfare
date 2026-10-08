@@ -15,7 +15,10 @@ import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.config.ConfigDocument;
 import org.luckyraven.keystone.persistence.config.ConfigParser;
 import org.luckyraven.keystone.persistence.config.ConfigReport;
+import org.luckyraven.gangland.turf.contract.TurfRepositoryContract;
+import org.luckyraven.gangland.turf.database.TurfSequenceRepository;
 import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
+import org.luckyraven.gangland.turf.powerups.GarrisonRepositoryContract;
 import org.luckyraven.gangland.turf.powerups.ActiveBuffRepositoryContract;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.luckyraven.keystone.testkit.PluginMocks;
@@ -30,20 +33,20 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 /**
- * Pins GI-82 (P3, docketed as the same bug class already fixed once for {@code SignManager} — see
+ * Pins GI-82 (P3, docketed as the same bug class already fixed once for {@code SignManager} â€” see
  * {@code new-findings.txt} row 7, commit 4304172c): {@code TurfModuleConfig.activeBuffManager()} used to call
  * {@code manager.initialize()} itself right after construction. Gangland never disables {@code BeanFactory}'s
  * LIFECYCLE-phase convention pass ({@code setConventionInitializeEnabled(false)}, unlike Oriel), so that pass calls
- * the bean's public {@code initialize()} again — and {@code ActiveBuffManager.initialize()} is not idempotent: it
+ * the bean's public {@code initialize()} again â€” and {@code ActiveBuffManager.initialize()} is not idempotent: it
  * unconditionally reassigns {@code pruneTask} via {@code Bukkit.getScheduler().runTaskTimer(...)} with no
  * cancel-if-present guard, leaking the first {@link org.bukkit.scheduler.BukkitTask} and leaving two identical 1Hz
  * prune timers running forever.
  *
  * <p>The fix is to stop calling {@code initialize()} from the {@code @Bean} method at all and leave it solely to
- * the framework's convention pass — so the bean-factory method itself must produce an {@code ActiveBuffManager}
+ * the framework's convention pass â€” so the bean-factory method itself must produce an {@code ActiveBuffManager}
  * that has not scheduled anything yet.
  */
-@DisplayName("TurfModuleConfig.activeBuffManager — GI-82: does not self-initialize")
+@DisplayName("TurfModuleConfig.activeBuffManager â€” GI-82: does not self-initialize")
 class TurfModuleConfigTest {
 
 	@TempDir(cleanup = CleanupMode.NEVER)
@@ -64,13 +67,13 @@ class TurfModuleConfigTest {
 			verify(scheduler, never()).runTaskTimer(any(Plugin.class), any(Runnable.class), anyLong(), anyLong());
 
 			// The framework's own convention pass calling initialize() exactly once (simulated here) must be the
-			// only thing that schedules the prune task — proving a single, not double, prune timer.
+			// only thing that schedules the prune task â€” proving a single, not double, prune timer.
 			manager.initialize();
 			verify(scheduler, times(1)).runTaskTimer(any(Plugin.class), any(Runnable.class), anyLong(), anyLong());
 		}
 	}
 
-	// ── T-189 (0.16.1): turf_npcs.yml Cop_Response + Powerup_Npc.Targeting_Radius ────────────────────────────
+	// â”€â”€ T-189 (0.16.1): turf_npcs.yml Cop_Response + Powerup_Npc.Targeting_Radius â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 	@Test
 	@DisplayName("T-189: Cop_Response defaults to on, 32 blocks, allies included; Powerup radius defaults to 32")
@@ -119,5 +122,28 @@ class TurfModuleConfigTest {
 		FileManager fileManager = mock(FileManager.class);
 		when(fileManager.getFile("turf_npcs")).thenReturn(handler);
 		return new TurfNpcsConfigLoader(fileManager);
+	}
+
+	@Test
+	@DisplayName("TF-41: the turfManager bean leaves initialize() to the convention pass, so loadAll runs once, not twice")
+	void turfManager_doesNotSelfInitialize() {
+		TurfRepositoryContract repo     = mock(TurfRepositoryContract.class);
+		TurfSequenceRepository sequence = mock(TurfSequenceRepository.class);
+		when(repo.loadAll()).thenReturn(List.of());
+
+		new TurfModuleConfig().turfManager(repo, sequence);
+
+		verify(repo, never()).loadAll();
+	}
+
+	@Test
+	@DisplayName("TF-41: the garrisonManager bean leaves initialize() to the convention pass, so loadAll runs once, not twice")
+	void garrisonManager_doesNotSelfInitialize() {
+		GarrisonRepositoryContract repo = mock(GarrisonRepositoryContract.class);
+		when(repo.loadAll()).thenReturn(List.of());
+
+		new TurfModuleConfig().garrisonManager(repo);
+
+		verify(repo, never()).loadAll();
 	}
 }
