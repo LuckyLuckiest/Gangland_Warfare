@@ -11,6 +11,7 @@ import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
+import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.npc.NpcSupport;
 
 import java.util.*;
@@ -29,7 +30,7 @@ import java.util.function.Supplier;
  * target, and forces a transition into COMBAT if not already there.
  */
 @CustomLog
-public final class TurfDefenderDeployer {
+public final class TurfDefenderDeployer implements BeanLifecycle {
 
 	private static final long TICK_PERIOD = 5L;
 
@@ -51,6 +52,11 @@ public final class TurfDefenderDeployer {
 	public void start() {
 		if (tickTask != null) return;
 		tickTask = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, TICK_PERIOD, TICK_PERIOD);
+	}
+
+	@Override
+	public void onShutdown() {
+		stop();
 	}
 
 	public void stop() {

@@ -5,6 +5,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.core.downed.DownedPlayerRegistry;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiPredicate;
+import java.util.function.Supplier;
 
 /**
  * Turf defenders and the Quartermaster answer a cop that hits a player standing on a turf their gang protects (the
@@ -33,7 +35,7 @@ import java.util.function.BiPredicate;
  *
  * <p>Main-thread only: the engagement map is touched from listeners and the sync task.
  */
-public final class TurfCopGuard {
+public final class TurfCopGuard implements BeanLifecycle {
 
 	private static final long TICK_PERIOD = 5L;
 
@@ -43,7 +45,7 @@ public final class TurfCopGuard {
 	private final GangMembership            membership;
 	private final TurfPowerupManager        powerups;
 	private final TurfDefenderDeployer      defenders;
-	private final CopGuardConfig            config;
+	private final Supplier<CopGuardConfig>  config;
 	private final Map<UUID, Engagement>     engagements = new HashMap<>();
 	private       CopTargetLookup           copTargets  = cop -> null;
 	private       BukkitTask                tickTask;
@@ -64,7 +66,7 @@ public final class TurfCopGuard {
 	                    GangMembership membership,
 	                    TurfPowerupManager powerups,
 	                    TurfDefenderDeployer defenders,
-	                    CopGuardConfig config) {
+	                    Supplier<CopGuardConfig> config) {
 		this.plugin     = plugin;
 		this.turfs      = turfs;
 		this.users      = users;
@@ -87,12 +89,25 @@ public final class TurfCopGuard {
 		tickTask = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, TICK_PERIOD, TICK_PERIOD);
 	}
 
+	public void stop() {
+		if (tickTask != null) {
+			tickTask.cancel();
+			tickTask = null;
+		}
+	}
+
+	@Override
+	public void onShutdown() {
+		stop();
+	}
+
 	/**
 	 * A cop hit {@code victim}. If the victim stands on a turf their gang protects, the defenders and Quartermaster of
 	 * that turf within range of the cop take it on.
 	 */
 	public void onCopHitPlayer(LivingEntity cop, Player victim) {
-		if (!config.enabled()) return;
+		CopGuardConfig cfg = config.get();
+		if (!cfg.enabled()) return;
 
 		Turf       turf     = turfs.findAt(victim.getLocation());
 		Engagement previous = engagements.get(cop.getUniqueId());
@@ -109,7 +124,7 @@ public final class TurfCopGuard {
 
 		engagements.put(cop.getUniqueId(), new Engagement(cop, turf.getId(), victim));
 		for (CivilianNpc npc : npcsOf(turf.getId())) {
-			if (!npc.isHostile() || distance(npc, cop) > config.radius()) continue;
+			if (!npc.isHostile() || distance(npc, cop) > cfg.radius()) continue;
 			npc.addEntityTargetToFront(cop);
 			engageCombat(npc);
 		}
@@ -147,7 +162,7 @@ public final class TurfCopGuard {
 
 			boolean anyInRange = false;
 			for (CivilianNpc npc : npcsOf(engagement.turfId())) {
-				if (distance(npc, cop) > config.radius()) {
+				if (distance(npc, cop) > config.get().radius()) {
 					detach(npc, cop);
 				} else {
 					anyInRange = true;
@@ -166,7 +181,7 @@ public final class TurfCopGuard {
 		Integer owner = turf.getOwnerGangId();
 		User<Player> user = users.findByPlayer(victim);
 		if (owner == null || user == null || !user.hasGang()) return false;
-		return protects(user.getGangId(), owner, config.includeAllies(), membership::gangsAllied);
+		return protects(user.getGangId(), owner, config.get().includeAllies(), membership::gangsAllied);
 	}
 
 	/**
