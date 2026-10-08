@@ -8,6 +8,7 @@ import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,22 +26,29 @@ import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.config.HudSettings;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.DropPlan;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.Ending;
+import org.luckyraven.gangland.copsncrooks.wanted.escape.PostEscapeSearch;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.ChaseArcs;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.CrimeRecord;
 import org.luckyraven.gangland.copsncrooks.wanted.heat.HeatLedger;
 import org.luckyraven.gangland.copsncrooks.wanted.hud.HudFixtures;
 import org.luckyraven.gangland.copsncrooks.wanted.hud.TitleCue;
+import org.luckyraven.gangland.copsncrooks.events.police.ArrestedEvent;
+import org.luckyraven.gangland.core.bounty.Bounty;
 import org.luckyraven.gangland.core.events.wanted.WantedEndEvent;
 import org.luckyraven.gangland.core.events.wanted.WantedLevelChangeEvent;
 import org.luckyraven.gangland.core.events.wanted.WantedStartEvent;
 import org.luckyraven.gangland.core.wanted.Wanted;
 import org.luckyraven.gangland.core.wanted.WantedCause;
+import org.luckyraven.gangland.core.user.Level;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.WantedStars;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.UUID;
 import java.util.function.BooleanSupplier;
@@ -49,9 +57,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -114,6 +124,26 @@ class WantedHudListenerTest {
 		bukkit.close();
 	}
 
+	private PostEscapeSearch search;
+
+	/** The search as production builds it: a user behind it (zero bounty), so {@code begin} marks the player. */
+	private PostEscapeSearch searchWithUser() {
+		Bounty bounty = mock(Bounty.class);
+		when(bounty.getPostedAmount()).thenReturn(BigDecimal.ZERO);
+		when(bounty.getNotoriety()).thenReturn(BigDecimal.ZERO);
+		User<Player> user = mock(User.class);
+		when(user.getBounty()).thenReturn(bounty);
+		when(user.getLevel()).thenReturn(mock(Level.class));
+		UserManager<Player> users = mock(UserManager.class);
+		when(users.getUser(player)).thenReturn(user);
+		return new PostEscapeSearch(users);
+	}
+
+	/** The escape's search start, as {@link PostEscapeListener} runs it on the last star's level change. */
+	private void beginSearch() {
+		new PostEscapeListener(search).onLevelChange(change(1, 0, WantedCause.EVASION));
+	}
+
 	private WantedHudListener listener(HudSettings hud) {
 		return listener(HudFixtures.loader(hud));
 	}
@@ -135,7 +165,8 @@ class WantedHudListenerTest {
 		when(ledger.lastCrime(player.getUniqueId())).thenReturn(
 				new CrimeRecord("Assault_Cop", 100, 0L, new Location(mock(World.class), 0, 64, 0)));
 
-		return new WantedHudListener(plugin, chase, messages, ledger, spawns, copLoader, stars, arcs);
+		search = searchWithUser();
+		return new WantedHudListener(plugin, chase, messages, ledger, spawns, copLoader, stars, arcs, search);
 	}
 
 	private WantedLevelChangeEvent change(int from, int to, WantedCause cause) {
@@ -281,7 +312,7 @@ class WantedHudListenerTest {
 	}
 
 	@Test
-	@DisplayName("losing the last star by evasion sends the escape card, then the bar goes with the chase")
+	@DisplayName("losing the last star by evasion sends the escape card, and the bar stays up for the bounty")
 	void lastStarDropByEvasion_sendsTheEscapeCard_thenHides() {
 		WantedHudListener listener = listener(HudSettings.DEFAULT);
 		listener.onStart(new WantedStartEvent(player, wanted, 1, WantedCause.CRIME));
@@ -289,12 +320,53 @@ class WantedHudListenerTest {
 		listener.onLevelChange(change(1, 0, WantedCause.EVASION));
 		verify(bar, never()).removeAll();
 
+		beginSearch();
 		listener.onWantedEnd(new WantedEndEvent(player, wanted, WantedCause.EVASION));
 
 		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
 		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(20), eq(5));
 		assertEquals("You stayed out of sight", ChatColor.stripColor(subtitle.getValue()));
+		verify(bar, never()).removeAll();
+	}
+
+	@Test
+	@DisplayName("a post-escape bounty keeps the bar up; the expiry removes it and says the cops gave up the search")
+	void bountyBar_expiry_removesBar_andSaysGaveUp() {
+		WantedHudListener listener = listener(HudSettings.DEFAULT);
+		ArgumentCaptor<Runnable> beat = ArgumentCaptor.forClass(Runnable.class);
+		verify(bukkit.scheduler()).runTaskTimer(any(JavaPlugin.class), beat.capture(), eq(10L), eq(10L));
+		listener.onStart(new WantedStartEvent(player, wanted, 1, WantedCause.CRIME));
+
+		beginSearch();
+		listener.onWantedEnd(new WantedEndEvent(player, wanted, WantedCause.EVASION));
+		verify(bar, never()).removeAll();
+
+		// 300 beats of 10 ticks = 150 s, past the 120 s Search_Seconds proposed in the spec
+		for (int i = 0; i < 300; i++) beat.getValue().run();
+
 		verify(bar).removeAll();
+		ArgumentCaptor<String> said = ArgumentCaptor.forClass(String.class);
+		verify(player, atLeastOnce()).sendMessage(said.capture());
+		assertTrue(said.getAllValues()
+		               .stream()
+		               .map(ChatColor::stripColor)
+		               .anyMatch(line -> line.contains("cops gave up the search")));
+	}
+
+	@Test
+	@DisplayName("a new wanted start takes the bar back from the bounty: the wanted title, never the bounty line")
+	void reWanted_takesBarBackFromBounty() {
+		WantedHudListener listener = listener(HudSettings.DEFAULT);
+		listener.onStart(new WantedStartEvent(player, wanted, 1, WantedCause.CRIME));
+		beginSearch();
+		listener.onWantedEnd(new WantedEndEvent(player, wanted, WantedCause.EVASION));
+		verify(bar, never()).removeAll();
+
+		listener.onStart(new WantedStartEvent(player, wanted, 1, WantedCause.CRIME));
+
+		ArgumentCaptor<String> titles = ArgumentCaptor.forClass(String.class);
+		verify(bar, atLeastOnce()).setTitle(titles.capture());
+		assertFalse(ChatColor.stripColor(titles.getValue()).contains("Cops still looking"));
 	}
 
 	@Test
@@ -447,5 +519,57 @@ class WantedHudListenerTest {
 		listener.onLevelChange(change(1, 2, WantedCause.CRIME));
 
 		assertEquals(1, playSoundCalls());
+	}
+
+	@Test
+	@DisplayName("a death or a downing hides the bounty bar: the searched player is at zero stars, so no wanted end fires")
+	void deathOrDowned_hidesTheBountyBar() {
+		WantedHudListener listener = listener(HudSettings.DEFAULT);
+		listener.onStart(new WantedStartEvent(player, wanted, 1, WantedCause.CRIME));
+		beginSearch();
+		listener.onWantedEnd(new WantedEndEvent(player, wanted, WantedCause.EVASION));
+		verify(bar, never()).removeAll();
+
+		PlayerDeathEvent death = mock(PlayerDeathEvent.class);
+		when(death.getEntity()).thenReturn(player);
+		listener.onDeath(death);
+
+		verify(bar).removeAll();
+	}
+
+	@Test
+	@DisplayName("an arrest of a searched player (zero stars, no wanted end) hides the bounty bar and ends the search")
+	void arrestedWhileSearched_hidesTheBountyBar_andEndsTheSearch() {
+		WantedHudListener listener = listener(HudSettings.DEFAULT);
+		listener.onStart(new WantedStartEvent(player, wanted, 1, WantedCause.CRIME));
+		beginSearch();
+		listener.onWantedEnd(new WantedEndEvent(player, wanted, WantedCause.EVASION));
+		UUID id = player.getUniqueId();
+		assertTrue(search.isSearching(id));
+
+		listener.onArrested(new ArrestedEvent(player));
+
+		verify(bar).removeAll();
+		assertFalse(search.isSearching(id));
+	}
+
+	@Test
+	@DisplayName("an escape that started no search shows no bounty bar and no give-up line")
+	void escapeWithNoSearch_showsNoBountyBar() {
+		WantedHudListener listener = listener(HudSettings.DEFAULT);
+		ArgumentCaptor<Runnable> beat = ArgumentCaptor.forClass(Runnable.class);
+		verify(bukkit.scheduler()).runTaskTimer(any(JavaPlugin.class), beat.capture(), eq(10L), eq(10L));
+		listener.onStart(new WantedStartEvent(player, wanted, 1, WantedCause.CRIME));
+
+		listener.onWantedEnd(new WantedEndEvent(player, wanted, WantedCause.EVASION));
+
+		ArgumentCaptor<String> titles = ArgumentCaptor.forClass(String.class);
+		verify(bar, atLeastOnce()).setTitle(titles.capture());
+		assertTrue(titles.getAllValues()
+		                 .stream()
+		                 .map(ChatColor::stripColor)
+		                 .noneMatch(line -> line.contains("Cops still looking")));
+		for (int i = 0; i < 300; i++) beat.getValue().run();
+		verify(player, never()).sendMessage(argThat((String line) -> line.contains("cops gave up the search")));
 	}
 }

@@ -541,6 +541,11 @@ restores the 0.13.0 behaviour of that piece. Texts are in `copsncrooks/wanted_me
 | `Wanted.Hud.Title.Gain` / `Lost` / `Escaped` `.Enable`, `Title`, `Subtitle` | `true`, `""`, `"%stars% %card%"` (`Escaped`: `"%card%"`) | 0.16.1. One cue per event: a star gained, a star lost while still wanted, and wanted cleared (level 0 by evasion or decay). `Title` and `Subtitle` take `%stars%`, `%level%` (the new star count) and `%card%` (the star card line, empty while `Star_Card` is off). Gained and Lost name the star row, so the count shows even with `Star_Card` off. A blank title and a blank subtitle send nothing (write `Title: ""` / `Subtitle: ""` to blank a line; a bare key with no value takes the default). A cue that is switched off sends its card to chat when `Star_Card` is on |
 | `Wanted.Hud.Title.<event>.Fade_In` / `Stay` / `Fade_Out` | `5` / `20` / `5` | 0.16.1. Ticks (20 = 1 second). The old look (before 0.16.1) was `Title` `"&c%stars%"`, `Subtitle` `"%card%"`, `5` / `40` / `10` on every event; set it back in `wanted.yml` to restore it |
 | `Wanted.Hud.Siren.Enable` / `Sound` / `Volume` / `Pitch` | `true` / `BLOCK_NOTE_BLOCK_BELL` / `1.0` / `0.5` | The siren when stars rise |
+| `Wanted.Post_Escape.Enable` | `true` | 0.16.1. `false` = an escape by evasion ends the chase at once, as in 0.16.0 (the cops stand down and walk home; no search, no bounty) |
+| `Wanted.Post_Escape.Search_Seconds` | `120` | 0.16.1. How long the cops keep searching after an escape; the bounty bar counts it down |
+| `Wanted.Post_Escape.Announce` | `true` | 0.16.1. `false` = no chat line when the bounty goes on you and when the cops give up (the bounty bar still shows) |
+| `Wanted.Hud.Bounty.Enable` | `true` | 0.16.1. `false` = no bounty bar after an escape (the chat line and the countdown stay) |
+| `Wanted.Hud.Bounty.Bar_Color` | `YELLOW` | 0.16.1. The bounty bar colour (`BLUE`, `GREEN`, `PINK`, `PURPLE`, `RED`, `WHITE`, `YELLOW`); anything else is `YELLOW` |
 | `Wanted.Hud.Zone_Ring.Particle` / `Points` | `DUST` / `48` | The ring around the search zone; an unknown particle uses `DUST` |
 | `Wanted.Charge_Sheet.Enable` | `true` | `false` = no fine |
 | `Wanted.Charge_Sheet.Base` / `Per_Wanted_Level` / `Maximum` | `200` / `250` / `10000` | Fine = `Base + Per_Wanted_Level x stars`, capped; paid from the wallet only |

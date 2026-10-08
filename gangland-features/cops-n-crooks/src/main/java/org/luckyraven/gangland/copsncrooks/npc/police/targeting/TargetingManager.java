@@ -36,6 +36,18 @@ public interface TargetingManager {
 	boolean isWanted(UUID playerId);
 
 	/**
+	 * Whether the player is on the post-escape search (0.16.1 T-187): cops still hunt him, at zero stars, and never cuff or
+	 * shoot at him. Only a targeting manager that runs the search answers yes.
+	 *
+	 * @param playerId the player UUID
+	 *
+	 * @return true while the player is searched for after an escape
+	 */
+	default boolean isSearching(UUID playerId) {
+		return false;
+	}
+
+	/**
 	 * Returns the wanted level for a given player.
 	 *
 	 * @param playerId the player UUID

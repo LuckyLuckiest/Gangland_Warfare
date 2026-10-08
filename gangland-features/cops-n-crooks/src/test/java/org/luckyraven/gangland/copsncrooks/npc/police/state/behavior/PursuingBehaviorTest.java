@@ -265,6 +265,20 @@ class PursuingBehaviorTest {
 		verify(cop, never()).pursue(any(), any(), anyDouble());
 	}
 
+	@Test
+	@DisplayName("a suspect on the post-escape search is never cuffed, even in cuff range with the lock free (0.16.1 T-187)")
+	void searchingTarget_isNotCuffed() {
+		PursuingBehavior searching = new PursuingBehavior(CUFF_RADIUS, ALERT_RANGE, MAX_DISTANCE, MAX_TICKS,
+		                                                  mock(DetainmentService.class), cuffLocks,
+		                                                  RetreatSettings.DEFAULT, now::get,
+		                                                  id -> id.equals(player.getUniqueId()));
+		inCuffRange();
+
+		searching.tick(cop);
+
+		verify(cop, never()).transitionTo(CopState.CUFFING);
+	}
+
 	private void badlyHurtShooter() {
 		LivingEntity self = mock(LivingEntity.class);
 		when(self.getHealth()).thenReturn(5.0);

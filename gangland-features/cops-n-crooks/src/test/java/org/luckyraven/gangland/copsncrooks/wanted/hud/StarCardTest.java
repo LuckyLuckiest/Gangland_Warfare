@@ -16,8 +16,11 @@ import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.Ending;
 import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.gangland.events.wanted.EvasionState;
 
+import org.bukkit.boss.BarColor;
+
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -203,5 +206,17 @@ class StarCardTest {
 
 		// facing +X, 30 blocks short of the east edge
 		assertEquals("↑ 30m", plain(StarCard.wayHint(messages, centre, 40, from)).trim());
+	}
+
+	@Test
+	@DisplayName("the bar colour is read in ROOT locale: a Turkish default still reads WHITE, not WHİTE")
+	void bountyColor_isReadInRootLocale() {
+		Locale previous = Locale.getDefault();
+		Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+		try {
+			assertEquals(BarColor.WHITE, StarCard.bountyColor("white"));
+		} finally {
+			Locale.setDefault(previous);
+		}
 	}
 }

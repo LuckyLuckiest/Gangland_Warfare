@@ -207,6 +207,18 @@ Wanted:
             # many days, are deleted at startup
             Forget_After_Days: 90
 
+   # What happens after an escape: you lost your last star by staying out of sight. The cops keep searching, and a
+   # bounty is put on you (the auto bounty of your level and the wanted level you fled at).
+   Post_Escape:
+      # false = an escape ends the chase at once, as before the search: the cops stand down and walk home, no search,
+      # no bounty
+      Enable: true
+      # How long the cops keep searching after the escape, in seconds. The search ends early if you are arrested, die
+      # or get wanted again
+      Search_Seconds: 120
+      # false = no chat line when the bounty goes on you and when the cops give up (the bounty bar still shows)
+      Announce: true
+
    # What the player sees and hears while chased.
    Hud:
       # The boss bar with the stars and the state of the chase
@@ -274,6 +286,13 @@ Wanted:
       Compass:
          # false = no arrow, and a held compass keeps its own target
          Enable: true
+      # The bounty bar after an escape: the bounty on you and that the cops are still looking, counting down with the
+      # search. Shown only while Post_Escape is on
+      Bounty:
+         # false = no bounty bar (the chat line about the bounty still shows)
+         Enable: true
+         # Bar colour: BLUE, GREEN, PINK, PURPLE, RED, WHITE or YELLOW
+         Bar_Color: "YELLOW"
 
    # The fine charged when you are arrested. Wallet only, never the bank, never below zero.
    Charge_Sheet:

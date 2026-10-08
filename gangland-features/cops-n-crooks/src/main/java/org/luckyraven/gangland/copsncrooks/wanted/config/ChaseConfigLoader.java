@@ -31,6 +31,7 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 
 	private volatile ChaseConfig       loaded    = ChaseConfig.DEFAULT;
 	private volatile KillComboSettings killCombo = KillComboSettings.DEFAULT;
+	private volatile PostEscapeSettings postEscape = PostEscapeSettings.DEFAULT;
 
 	public ChaseConfigLoader(JavaPlugin plugin, FileManager fileManager) {
 		super(plugin, false, null, fileManager);
@@ -46,10 +47,16 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 		return killCombo;
 	}
 
+	/** The current {@code Wanted.Post_Escape} and {@code Wanted.Hud.Bounty}, never null. @since 0.16.1 */
+	public PostEscapeSettings getPostEscape() {
+		return postEscape;
+	}
+
 	@Override
 	public void clear() {
-		loaded    = ChaseConfig.DEFAULT;
-		killCombo = KillComboSettings.DEFAULT;
+		loaded     = ChaseConfig.DEFAULT;
+		killCombo  = KillComboSettings.DEFAULT;
+		postEscape = PostEscapeSettings.DEFAULT;
 	}
 
 	@Override
@@ -72,8 +79,11 @@ public class ChaseConfigLoader extends FileLoader<ChaseConfig> {
 		NodeReader   reader  = FileHandlerReader.read(handler, report);
 		MappingNode  section = reader.get("Wanted").asMapping().orNull();
 
-		loaded    = ChaseConfig.parse(section != null ? NodeReader.of(section, report) : null, report);
-		killCombo = KillComboSettings.read(MovedSetting.of(handler, fileManager, CopsNCrooksYamlConfig.MODULE_ID));
+		NodeReader wanted = section != null ? NodeReader.of(section, report) : null;
+
+		loaded     = ChaseConfig.parse(wanted, report);
+		killCombo  = KillComboSettings.read(MovedSetting.of(handler, fileManager, CopsNCrooksYamlConfig.MODULE_ID));
+		postEscape = PostEscapeSettings.parse(wanted);
 
 		if (!report.isEmpty()) report.log(log);
 

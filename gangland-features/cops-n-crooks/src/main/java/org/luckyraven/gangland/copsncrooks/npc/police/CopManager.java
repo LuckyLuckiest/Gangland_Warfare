@@ -45,6 +45,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 
 import static java.util.Objects.requireNonNullElse;
 
@@ -83,6 +84,11 @@ public class CopManager implements BeanLifecycle {
 	 */
 	private final Deque<RadioCall>      pendingCalls = new ArrayDeque<>();
 	private       CopConfigProvider     configProvider;
+	/**
+	 * Whether a wanted end of this cause keeps the squad on the post-escape search (0.16.1 T-187). The module wires
+	 * {@code PostEscapeSearch#isEscape}, which also honours {@code Wanted.Post_Escape.Enable}; the default is the escape cause.
+	 */
+	private volatile Predicate<WantedCause> escape = cause -> cause == WantedCause.EVASION;
 	/** Called on every AI tick of an online player's chase; see {@link #addAiTickHook}. */
 	private final List<BiConsumer<Player, @Nullable CopGroup>> aiTickHooks     = new CopyOnWriteArrayList<>();
 	/** Called first thing when a player hits a cop; see {@link #addCopAttackedHook}. */
@@ -152,29 +158,41 @@ public class CopManager implements BeanLifecycle {
 		// A new wanted start is a new episode: pull the group's returning cops back into the hunt instead of letting
 		// them walk home for up to Return.Max_Ticks. "Never give up while wanted" outranks the D1 re-engage rule,
 		// which only guards against a per-tick bounce inside a single episode.
-		for (CopNpc cop : group.getCops()) {
-			if (!cop.isValid() || cop.getCurrentState() != CopState.RETURNING) continue;
-			cop.setTargetPlayerId(playerId);
-			cop.transitionTo(CopState.PURSUING);
-		}
+		reengageReturning(group, playerId);
 
 		startSpawnTask(playerId, wanted);
 		startAITask(playerId);
 	}
 
 	/**
-	 * Called when a player is no longer wanted. Despawns all cops and stops tasks.
+	 * Called when a player is no longer wanted, and why (0.16.1 T-187). An escape by evasion keeps the squad on the
+	 * post-escape search: no Stand_Down, no targeting clear, the AI task runs on. Death and arrest end the hunt outright:
+	 * the cops stand down once and the squad is removed. Any other end (admin, sign, bribe, contact, decay, unknown) is the
+	 * 0.16.0 stand-down: the cops stop targeting him and walk home.
 	 *
 	 * @param player the player
+	 * @param cause  why the wanted level reached 0
 	 */
-	public void onWantedEnd(Player player) {
+	public void onWantedEnd(Player player, WantedCause cause) {
 		UUID playerId = player.getUniqueId();
+
+		if (escape.test(cause)) {
+			keepSquadOnSearch(playerId);
+			return;
+		}
+
+		CopGroup group = groups.get(playerId);
+		// WantedEndEvent and the level change to 0 both land here for one clear: announce it once per episode.
+		if (group != null && !group.isEmpty() && stoodDown.add(playerId)) copRadio.sayFromLeader(group, "Stand_Down");
+
+		if (cause == WantedCause.DEATH || cause == WantedCause.ARREST) {
+			endSquad(playerId);
+			return;
+		}
 
 		targetingManager.unregisterWanted(playerId);
 		stopSpawnTask(playerId);
 		clearCombatAlert(playerId);
-
-		CopGroup group = groups.get(playerId);
 		restoring.remove(playerId);
 		if (group != null) {
 			group.clearCombatAlert();
@@ -187,21 +205,103 @@ public class CopManager implements BeanLifecycle {
 			return;
 		}
 
-		// WantedEndEvent and the level change to 0 both land here for one clear: announce it once per episode.
-		if (stoodDown.add(playerId)) copRadio.sayFromLeader(group, "Stand_Down");
-
-		// Clear targeting only for cops still pointing at the now-unwanted player.
-		// Cops that already retargeted to an attacker keep their state so resolveTarget
-		// can evaluate them correctly on the next AI tick.
+		// Clear targeting only for cops still pointing at the now-unwanted player. Do not despawn: they walk home.
 		for (CopNpc cop : group.getCops()) {
 			if (!playerId.equals(cop.getTargetPlayerId())) continue;
 
 			cop.setTargetPlayerId(null);
 			cop.setCombatForced(false);
 		}
+	}
 
-		// Do not stop the AI task or despawn — let cops organically find new targets.
-		// The AI task will self-terminate once all cops have returned and despawned.
+	/**
+	 * The post-escape search ran out on its own (0.16.1 T-187): the cops give up. The cop-attacker lock goes with it, so no
+	 * cop keeps hunting someone who hit one. With no target left, the squad walks home on its next AI tick, and the spawn
+	 * task stops itself once the player is no longer searched.
+	 *
+	 * @param playerId the player UUID
+	 */
+	public void searchGaveUp(UUID playerId) {
+		removeCopAttacker(playerId);
+
+		CopGroup group = groups.get(playerId);
+		if (group != null && !group.isEmpty() && stoodDown.add(playerId)) copRadio.sayFromLeader(group, "Stand_Down");
+	}
+
+	/**
+	 * Called when a player is no longer wanted, without a cause: the same as an end by {@link WantedCause#UNKNOWN}.
+	 *
+	 * @param player the player
+	 */
+	public void onWantedEnd(Player player) {
+		onWantedEnd(player, WantedCause.UNKNOWN);
+	}
+
+	/**
+	 * Ends the player's squad outright: the targeting, the spawn task, the cop-attacker lock and every cop of the group.
+	 * The AI task notices the missing group and stops itself on its next tick. Used when a player dies, is arrested or
+	 * quits (0.16.1 T-187).
+	 *
+	 * @param playerId the player UUID
+	 */
+	public void endSquad(UUID playerId) {
+		targetingManager.unregisterWanted(playerId);
+		stopSpawnTask(playerId);
+		clearCombatAlert(playerId);
+		restoring.remove(playerId);
+		removeCopAttacker(playerId);
+
+		CopGroup group = groups.get(playerId);
+		if (group != null) {
+			group.clearCombatAlert();
+			group.clearPending();
+			pendingCalls.removeIf(call -> call.group() == group);
+		}
+		despawnAllForPlayer(playerId);
+	}
+
+	/**
+	 * Tells the squads which wanted ends are escapes that keep the squad on the search (0.16.1 T-187). Read per end, so it
+	 * may be set after construction.
+	 */
+	public void setEscapePredicate(Predicate<WantedCause> escape) {
+		this.escape = escape;
+	}
+
+	/** Test seam: whether a cop has been attacked by this player since the last clear. */
+	boolean isCopAttacker(UUID playerId) {
+		return copAttackers.contains(playerId);
+	}
+
+	/**
+	 * The escape branch of {@link #onWantedEnd(Player, WantedCause)}: the squad stays on the search and the spawn task runs
+	 * on (it keeps a lowest-tier squad, see {@link #spawnTick}). A cop mid-cuff drops the cuff: a searched player is never
+	 * cuffed.
+	 */
+	private void keepSquadOnSearch(UUID playerId) {
+		clearCombatAlert(playerId);
+		restoring.remove(playerId);
+
+		CopGroup group = groups.get(playerId);
+		if (group != null) {
+			group.clearCombatAlert();
+			group.clearPending();
+			pendingCalls.removeIf(call -> call.group() == group);
+			for (CopNpc cop : group.getCops()) {
+				if (cop.getCurrentState() == CopState.CUFFING) cop.transitionTo(CopState.PURSUING);
+			}
+			// The owner ruling: the search goes on, so cops already walking home come back to it
+			reengageReturning(group, playerId);
+		}
+	}
+
+	/** Pulls the group's returning cops back into the hunt for {@code playerId}. */
+	private void reengageReturning(CopGroup group, UUID playerId) {
+		for (CopNpc cop : group.getCops()) {
+			if (!cop.isValid() || cop.getCurrentState() != CopState.RETURNING) continue;
+			cop.setTargetPlayerId(playerId);
+			cop.transitionTo(CopState.PURSUING);
+		}
 	}
 
 	/**
@@ -213,10 +313,20 @@ public class CopManager implements BeanLifecycle {
 	 * @param newLevel the new level
 	 */
 	public void onWantedLevelChange(Player player, Wanted wanted, int oldLevel, int newLevel) {
+		onWantedLevelChange(player, wanted, oldLevel, newLevel, WantedCause.UNKNOWN);
+	}
+
+	/**
+	 * As {@link #onWantedLevelChange(Player, Wanted, int, int)}, knowing why the level changed: an escape by evasion
+	 * keeps the squad on the post-escape search (0.16.1 T-187).
+	 *
+	 * @param cause why the level changed
+	 */
+	public void onWantedLevelChange(Player player, Wanted wanted, int oldLevel, int newLevel, WantedCause cause) {
 		if (oldLevel == 0 && newLevel > 0) {
 			onWantedStart(player, wanted);
 		} else if (oldLevel > 0 && newLevel == 0) {
-			onWantedEnd(player);
+			onWantedEnd(player, cause);
 		}
 	}
 
@@ -549,8 +659,12 @@ public class CopManager implements BeanLifecycle {
 
 		int wantedLevel = wanted.getLevel();
 		if (wantedLevel <= 0) {
-			stopSpawnTask(playerId);
-			return;
+			if (!targetingManager.isSearching(playerId)) {
+				stopSpawnTask(playerId);
+				return;
+			}
+			// A post-escape search keeps a squad at the lowest tier until it runs out (0.16.1 T-187)
+			wantedLevel = 1;
 		}
 
 		// check if the player was detained before spawning a new cop
@@ -942,6 +1056,9 @@ public class CopManager implements BeanLifecycle {
 
 			LivingEntity target = resolveTarget(cop, player);
 			cop.tick(target);
+			// The cop's hit may have ended the squad (a kill or a down ends the hunt): its list is cleared by now, so the
+			// iterator must not be advanced again (0.16.1 T-187)
+			if (groups.get(playerId) != group) break;
 		}
 		fieldCare.tick(group);
 
@@ -1099,6 +1216,12 @@ public class CopManager implements BeanLifecycle {
 
 			if (currentTarget != null && currentTarget.isOnline() && !currentTarget.isDead() &&
 			    !DownedPlayerRegistry.isDowned(currentTargetId)) {
+				// A searched player is never fought: a cop still in COMBAT on him goes back to the chase (0.16.1 T-187)
+				if (targetingManager.isSearching(currentTargetId) && cop.getCurrentState() == CopState.COMBAT) {
+					cop.setCombatForced(false);
+					cop.transitionTo(CopState.PURSUING);
+				}
+
 				// Keep if still wanted
 				if (targetingManager.isWanted(currentTargetId)) {
 					return currentTarget;

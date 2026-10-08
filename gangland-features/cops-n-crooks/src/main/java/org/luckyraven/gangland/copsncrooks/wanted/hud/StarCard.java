@@ -8,7 +8,10 @@ import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages.Key;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.DropPlan;
 import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.gangland.events.wanted.EvasionState;
+import org.luckyraven.gangland.file.configuration.Settings;
 
+import java.math.BigDecimal;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -95,6 +98,26 @@ public final class StarCard {
 
 		return messages.format(Key.BAR_WAY, Map.of("arrow", arrow(from.getYaw(), dx, dz), "distance",
 		                                           String.valueOf(Math.round(Math.sqrt(dx * dx + dz * dz)))));
+	}
+
+	/**
+	 * The post-escape bar title (0.16.1 T-187): the bounty and that the cops are still looking; without a bounty, only the
+	 * latter.
+	 */
+	public static String bountyTitle(WantedMessages messages, BigDecimal amount) {
+		if (amount == null || amount.signum() <= 0) return messages.format(Key.BAR_BOUNTY_NONE, Map.of());
+
+		return messages.format(Key.BAR_BOUNTY, Map.of("money_symbol", Settings.getMoneySymbol(), "amount",
+		                                              Settings.formatAmount(amount)));
+	}
+
+	/** The bounty bar colour named in {@code Wanted.Post_Escape.Bar_Color}; anything that is not a colour is YELLOW. */
+	public static BarColor bountyColor(String name) {
+		try {
+			return BarColor.valueOf(name.trim().toUpperCase(Locale.ROOT));
+		} catch (IllegalArgumentException | NullPointerException exception) {
+			return BarColor.YELLOW;
+		}
 	}
 
 	/** One of eight arrows for the direction ({@code dx}, {@code dz}) to someone facing {@code yaw} (0 = +Z). */
