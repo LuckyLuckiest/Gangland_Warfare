@@ -293,4 +293,50 @@ class MailManagerTest {
 
 	}
 
+
+	@Nested
+	@DisplayName("accept() sibling cancel (GR-23)")
+	class AcceptSiblingsTest {
+
+		@Test
+		@DisplayName("accepting one gang's invite cancels the recipient's other pending gang invites")
+		void accept_invite_cancelsRecipientsOtherPendingInvites() {
+			FakeMailRepositoryContract repo = new FakeMailRepositoryContract();
+			MailManager manager = new MailManager(repo);
+			manager.initialize();
+			UUID recipient = UUID.randomUUID();
+
+			MailItem accepted = mail(manager.allocateId(), MailType.GANG_INVITE, UUID.randomUUID(), 10, recipient, MailItem.NO_GANG, FAR_FUTURE, MailStatus.PENDING);
+			MailItem sibling  = mail(manager.allocateId(), MailType.GANG_INVITE, UUID.randomUUID(), 11, recipient, MailItem.NO_GANG, FAR_FUTURE, MailStatus.PENDING);
+			manager.send(accepted);
+			manager.send(sibling);
+
+			manager.accept(accepted);
+
+			assertEquals(MailStatus.CANCELLED, sibling.getStatus(), "the other gang's invite must be cancelled");
+			assertTrue(manager.findById(sibling.getId()).isEmpty());
+			assertTrue(repo.deleted().contains(sibling));
+		}
+
+		@Test
+		@DisplayName("accepting an ally request leaves the recipient's pending gang invites alone")
+		void accept_allyRequest_leavesOtherMailAlone() {
+			FakeMailRepositoryContract repo = new FakeMailRepositoryContract();
+			MailManager manager = new MailManager(repo);
+			manager.initialize();
+			UUID recipient = UUID.randomUUID();
+
+			MailItem request = mail(manager.allocateId(), MailType.GANG_ALLY_REQUEST, null, 10, recipient, 11, FAR_FUTURE, MailStatus.PENDING);
+			MailItem invite  = mail(manager.allocateId(), MailType.GANG_INVITE, UUID.randomUUID(), 12, recipient, MailItem.NO_GANG, FAR_FUTURE, MailStatus.PENDING);
+			manager.send(request);
+			manager.send(invite);
+
+			manager.accept(request);
+
+			assertEquals(MailStatus.PENDING, invite.getStatus());
+			assertTrue(manager.findById(invite.getId()).isPresent());
+		}
+
+	}
+
 }
