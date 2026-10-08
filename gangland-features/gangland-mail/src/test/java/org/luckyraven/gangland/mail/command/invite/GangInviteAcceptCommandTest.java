@@ -24,6 +24,7 @@ import org.luckyraven.gangland.mail.MailStatus;
 import org.luckyraven.gangland.mail.MailType;
 import org.luckyraven.gangland.mail.support.FakeMailRepositoryContract;
 import org.luckyraven.keystone.command.argument.Argument;
+import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.message.MessageProvider;
 import org.luckyraven.keystone.persistence.FileHandler;
@@ -142,6 +143,24 @@ class GangInviteAcceptCommandTest {
 		verify(gangThree, never()).addMember(any(), any(), any());
 		verify(user, atLeastOnce()).sendMessage(anyString());
 		assertTrue(repo.deleted().isEmpty());
+	}
+
+	@Test
+	@DisplayName("accept with a gang name that has no pending invite says no invite from it, not 'must be numbers'")
+	void accept_withNameWithoutInvite_saysNoInviteFrom() {
+		invite(2);
+		when(player.hasPermission(anyString())).thenReturn(true);
+
+		optionalChild(accept).executeArgument(player, new String[]{"gang", "accept", "Cats"});
+
+		verify(user).sendMessage(Messages.GANG_INVITE_NO_INVITE_FROM.toString().replace("%gang%", "Cats"));
+		verify(user, never()).sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", "Cats"));
+		assertEquals(1, mailManager.findPendingForRecipient(uuid, MailType.GANG_INVITE).size());
+	}
+
+	private static Argument optionalChild(Argument parent) {
+		return parent.getNode().getChildren().stream().map(Tree.Node::getData)
+		             .filter(OptionalArgument.class::isInstance).findFirst().orElseThrow();
 	}
 
 	private MailItem invite(int senderGangId) {

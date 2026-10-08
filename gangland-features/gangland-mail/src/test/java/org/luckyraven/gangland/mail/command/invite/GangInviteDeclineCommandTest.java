@@ -23,6 +23,7 @@ import org.luckyraven.gangland.mail.MailStatus;
 import org.luckyraven.gangland.mail.MailType;
 import org.luckyraven.gangland.mail.support.FakeMailRepositoryContract;
 import org.luckyraven.keystone.command.argument.Argument;
+import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.message.MessageProvider;
 import org.luckyraven.keystone.persistence.FileHandler;
@@ -147,6 +148,25 @@ class GangInviteDeclineCommandTest {
 		verify(user, atLeastOnce()).sendMessage(sent.capture());
 		assertTrue(sent.getAllValues().stream().anyMatch(m -> m.contains("no pending gang invitation")),
 		           "expected the none-pending line, got " + sent.getAllValues());
+	}
+
+	@Test
+	@DisplayName("declining a gang name with no pending invite says none pending, not 'must be numbers'")
+	void decline_withNameWithoutInvite_saysNone() {
+		when(player.hasPermission(anyString())).thenReturn(true);
+
+		optionalChild(decline).executeArgument(player, new String[]{"gang", "decline", "Cats"});
+
+		ArgumentCaptor<String> sent = ArgumentCaptor.forClass(String.class);
+		verify(user, atLeastOnce()).sendMessage(sent.capture());
+		assertTrue(sent.getAllValues().stream().anyMatch(m -> m.contains("no pending gang invitation")),
+		           "expected the none-pending line, got " + sent.getAllValues());
+		verify(user, never()).sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", "Cats"));
+	}
+
+	private static Argument optionalChild(Argument parent) {
+		return parent.getNode().getChildren().stream().map(Tree.Node::getData)
+		             .filter(OptionalArgument.class::isInstance).findFirst().orElseThrow();
 	}
 
 }

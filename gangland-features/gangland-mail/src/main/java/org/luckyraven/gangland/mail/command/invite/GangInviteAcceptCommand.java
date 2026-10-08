@@ -146,7 +146,8 @@ class GangInviteAcceptCommand extends SubArgument {
 			try {
 				senderId = Integer.parseInt(value);
 			} catch (NumberFormatException exception) {
-				user.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", value));
+				// Not a sender id: a gang name with no pending invite from it (the gang token is free text).
+				user.sendMessage(Messages.GANG_INVITE_NO_INVITE_FROM.toString().replace("%gang%", value));
 				return;
 			}
 
