@@ -1,0 +1,14 @@
+# +-----------------+ #
+# | Mail messages   | #
+# +-----------------+ #
+#
+# Mostrado al que invita cuando el jugador invitado está desconectado. %hours% = Invite_Offline_Expiry_Hours de mail_rules.yml.
+Invite_Offline_Expires: "&7Está desconectado - la invitación sigue abierta durante &e%hours% horas&7."
+# Mostrado al jugador tras /glw gang decline. %gang% = nombre de la banda que invita.
+Invite_Declined: "&7Rechazaste la invitación de &e%gang%&7."
+# Mostrado a los miembros conectados de la banda que invita. %player% = el jugador que rechazó.
+Invite_Declined_Notice: "&e%player% &7rechazó la invitación de tu banda."
+# Mostrado con /glw gang decline cuando no hay ninguna invitación pendiente que rechazar.
+Invite_Decline_None: "&cNo tienes ninguna invitación de banda pendiente que rechazar."
+# Mostrado a un jugador que se unió a una banda mientras tenía otras invitaciones pendientes; se cancelaron.
+Invite_Siblings_Cancelled: "&7Tus otras invitaciones de banda pendientes fueron canceladas."

@@ -20,6 +20,7 @@ import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.mail.MailItem;
 import org.luckyraven.gangland.mail.MailManager;
+import org.luckyraven.gangland.mail.MailMessages;
 import org.luckyraven.gangland.mail.MailType;
 
 import java.time.Instant;
@@ -39,10 +40,11 @@ class GangInviteAcceptCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final RankManager         rankManager;
 	private final MailManager         mailManager;
+	private final MailMessages        messages;
 
 	GangInviteAcceptCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, @Qualifier("online") UserManager<Player> userManager,
 	                        MemberManager memberManager, GangManager gangManager, RankManager rankManager,
-	                        MailManager mailManager) {
+	                        MailManager mailManager, MailMessages messages) {
 		super(plugin, "accept", tree, parent);
 
 		this.plugin      = plugin;
@@ -52,6 +54,7 @@ class GangInviteAcceptCommand extends SubArgument {
 		this.gangManager   = gangManager;
 		this.rankManager   = rankManager;
 		this.mailManager   = mailManager;
+		this.messages      = messages;
 
 		this.addSubArgument(senderGangArgument());
 	}
@@ -182,7 +185,13 @@ class GangInviteAcceptCommand extends SubArgument {
 		gang.addMember(user, member, rank);
 		player.sendMessage(Messages.GANG_INVITE_ACCEPT.toString().replace("%gang%", gang.getDisplayNameString()));
 
+		// GR-23: accepting cancels the rest of this player's gang invites; say so if there were any.
+		long others = mailManager.findPendingForRecipient(player.getUniqueId(), MailType.GANG_INVITE)
+		                         .stream()
+		                         .filter(pending -> pending != mail)
+		                         .count();
 		mailManager.accept(mail);
+		if (others > 0) user.sendMessage(messages.inviteSiblingsCancelled());
 	}
 
 }

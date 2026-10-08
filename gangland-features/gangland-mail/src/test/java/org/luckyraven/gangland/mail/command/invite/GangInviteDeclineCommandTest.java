@@ -11,6 +11,7 @@ import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
@@ -29,6 +30,7 @@ import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.luckyraven.keystone.testkit.PluginMocks;
 import org.mockito.ArgumentCaptor;
+import org.mockito.MockedStatic;
 
 import java.util.List;
 import java.util.UUID;
@@ -37,6 +39,7 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 
 /**
  * Pins GR-24: {@code /glw gang decline} rejects the one pending gang invite the player has, and says so when there is
@@ -50,6 +53,7 @@ class GangInviteDeclineCommandTest {
 	@TempDir(cleanup = CleanupMode.NEVER)
 	Path tempDir;
 
+	private MockedStatic<Settings> settings;
 	private BukkitStatics        statics;
 	private FakeMailRepositoryContract repo;
 	private MailManager          mailManager;
@@ -71,6 +75,9 @@ class GangInviteDeclineCommandTest {
 				return List.of();
 			}
 		});
+
+		settings = mockStatic(Settings.class, CALLS_REAL_METHODS);
+		settings.when(Settings::getMoneySymbol).thenReturn("$");
 
 		statics = BukkitStatics.install();
 		statics.statics().when(Bukkit::getOnlinePlayers).thenAnswer(i -> List.of());
@@ -112,6 +119,7 @@ class GangInviteDeclineCommandTest {
 
 	@AfterEach
 	void tearDown() {
+		settings.close();
 		statics.close();
 	}
 

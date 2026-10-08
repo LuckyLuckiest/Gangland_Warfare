@@ -26,7 +26,8 @@ public final class MailModule implements KeystoneModule {
 
 	@Override
 	public void configure(ModuleRegistrar registrar) {
-		registrar.configuration(MailModuleConfig.class)
+		registrar.configuration(MailModuleFileConfig.class)
+		         .configuration(MailModuleConfig.class)
 		         .listenerPackage(LISTENER_PACKAGE)
 		         .repositoryPackage(REPOSITORY_PACKAGE);
 	}

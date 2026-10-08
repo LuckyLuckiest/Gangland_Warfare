@@ -698,7 +698,8 @@ public class Settings implements FileInitializer {
 		gangNameDuplicates   = bool(gang, "Name_Duplicates", false);
 		gangRankHead         = str(gangRank, "Head", "member");
 		gangRankTail         = str(gangRank, "Tail", "owner");
-		gangDisplayNameChar  = str(gang, "Display_Name_Char", "*").substring(0, 1);
+		String displayNameChar = str(gang, "Display_Name_Char", "*");
+		gangDisplayNameChar    = displayNameChar.isEmpty() ? "*" : displayNameChar.substring(0, 1);
 		gangInitialBalance   = money(gangAccount, "Initial_Balance", "0");
 		gangCreateFee        = money(gangAccount, "Create_Cost", "100000");
 		gangMaxBalance       = money(gangAccount, "Maximum_Balance", "100000000000");

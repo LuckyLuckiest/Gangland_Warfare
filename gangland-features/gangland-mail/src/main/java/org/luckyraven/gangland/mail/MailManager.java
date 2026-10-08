@@ -152,6 +152,11 @@ public final class MailManager {
 	 */
 	public void accept(MailItem mail) {
 		finish(mail, MailStatus.ACCEPTED);
+		// GR-23: a player in a gang cannot be in a second one, so the rest of their gang invites lapse with it.
+		if (mail.getType() != MailType.GANG_INVITE) return;
+		for (MailItem sibling : findPendingForRecipient(mail.getRecipientUuid(), MailType.GANG_INVITE)) {
+			finish(sibling, MailStatus.CANCELLED);
+		}
 	}
 
 	/**
