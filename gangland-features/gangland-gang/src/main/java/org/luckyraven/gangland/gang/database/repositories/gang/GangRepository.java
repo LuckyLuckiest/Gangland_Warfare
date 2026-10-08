@@ -82,6 +82,10 @@ public class GangRepository extends AbstractRepository<Gang> {
 		tableBackend().delete("id = ?", data.getId());
 	}
 
+	static String text(Object raw, String fallback) {
+		return String.valueOf(raw);
+	}
+
 	private Gang.State parseState(String raw) {
 		if (raw == null || raw.equals("null")) {
 			return Gang.State.OPEN;

@@ -16,10 +16,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * override, per the gangs-ranks-mail.md Test Surface line "Gang.isAlly / addAlly / removeAlly symmetry and
  * getAllies() immutability; Gang.equals vs missing hashCode (Obs. #35)".
  *
- * <p>Disproves the implicit assumption that {@code isAlly} is symmetric: {@code Gang} only ever mutates its own
- * {@code allies} set, so symmetry is entirely the caller's responsibility (as done by
- * {@code GangAllyAcceptCommand.doAccept}, which calls {@code addAlly} on both sides). A single {@code addAlly}
- * call is one-directional.
+ * <p>{@link Gang#isAlly} is symmetric (TF-24): an alliance listed on either side counts for both gangs. Each
+ * {@code Gang} still mutates only its own {@code allies} set; {@code GangManager} drops both sides when an alliance
+ * ends.
  */
 @DisplayName("Gang - alliances and identity")
 class GangAllianceTest {
@@ -31,15 +30,15 @@ class GangAllianceTest {
 	}
 
 	@Test
-	@DisplayName("addAlly(Gang) is one-directional: only the calling gang's own allies set gains the entry")
-	void addAlly_isOneDirectional() {
+	@DisplayName("addAlly(Gang) on one side makes the alliance visible from both sides (TF-24: isAlly is symmetric)")
+	void addAlly_isAllyFromBothSides() {
 		Gang a = new Gang(10);
 		Gang b = new Gang(11);
 
 		a.addAlly(b);
 
 		assertTrue(a.isAlly(b), "A added B as an ally");
-		assertFalse(b.isAlly(a), "B's own allies set was never touched - isAlly is NOT automatically symmetric");
+		assertTrue(b.isAlly(a), "B lists nothing, but isAlly checks both sides, so the alliance is mutual");
 	}
 
 	@Test
@@ -56,8 +55,8 @@ class GangAllianceTest {
 	}
 
 	@Test
-	@DisplayName("removeAlly drops the alliance from the calling gang's own set only, matched by ally id")
-	void removeAlly_dropsMatchingAllyId() {
+	@DisplayName("removeAlly drops only the calling side's entry; the alliance stays until the other side drops too")
+	void removeAlly_oneSided_stillAllyUntilBothSidesDrop() {
 		Gang a = new Gang(14);
 		Gang b = new Gang(15);
 		a.addAlly(b);
@@ -65,9 +64,13 @@ class GangAllianceTest {
 
 		a.removeAlly(b);
 
-		assertFalse(a.isAlly(b), "A no longer lists B");
-		assertTrue(b.isAlly(a), "abandon on one side (Gang.removeAlly) does not touch the other gang's set - "
-		                        + "matches GangAllyAbandonCommand needing to call removeAlly on both gangs itself");
+		assertTrue(a.isAlly(b), "B still lists A, so the symmetric isAlly keeps them allied");
+		assertTrue(b.isAlly(a));
+
+		b.removeAlly(a);
+
+		assertFalse(a.isAlly(b), "both sides dropped - no longer allied");
+		assertFalse(b.isAlly(a));
 	}
 
 	@Test
@@ -80,22 +83,18 @@ class GangAllianceTest {
 	}
 
 	@Test
-	@DisplayName("Observation #35 (gangs-ranks-mail.md): equals() is overridden on id, but hashCode() is not")
-	void equals_overriddenById_hashCodeNotOverridden() {
+	@DisplayName("GR-35: equal gangs (same id) have equal hashCodes")
+	void equalGangs_haveEqualHashCodes() {
 		Gang first  = new Gang(42);
 		Gang second = new Gang(42);
 
 		assertEquals(first, second, "same id must be equal");
-		// Object identity hashCode is used because Gang never overrides hashCode(); two distinct instances with
-		// the same id will (in practice, always) differ, breaking the equals/hashCode contract.
-		assertNotEquals(System.identityHashCode(first), System.identityHashCode(second));
-		assertNotEquals(first.hashCode(), second.hashCode(),
-				"hashCode falls back to Object's identity hash since Gang does not override it");
+		assertEquals(first.hashCode(), second.hashCode(), "hashCode must follow the id, like equals");
 	}
 
 	@Test
-	@DisplayName("Observation #35 consequence: a HashSet cannot find an equal Gang by a different instance because hashCode is identity-based")
-	void hashSet_missesEqualGang_becauseHashCodeIsIdentityBased() {
+	@DisplayName("GR-35: a HashSet finds an equal Gang held by a different instance")
+	void hashSet_findsEqualGang() {
 		Gang first  = new Gang(99);
 		Gang second = new Gang(99);
 
@@ -103,7 +102,7 @@ class GangAllianceTest {
 		set.add(first);
 
 		assertTrue(first.equals(second), "equals() says they are the same gang");
-		assertFalse(set.contains(second), "but the HashSet bucket lookup uses the identity hashCode, so it misses");
+		assertTrue(set.contains(second), "the hashCode is id-based, so the bucket lookup finds it");
 	}
 
 }
