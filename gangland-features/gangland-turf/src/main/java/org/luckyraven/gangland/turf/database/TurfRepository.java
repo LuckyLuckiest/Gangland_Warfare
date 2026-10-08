@@ -35,34 +35,41 @@ public class TurfRepository extends AbstractRepository<Turf> implements TurfRepo
 		List<Object[]> turfData = tableBackend().selectAll();
 
 		for (Object[] result : turfData) {
-			int    v                    = 0;
-			int    id                   = ((Number) result[v++]).intValue();
-			String displayName          = String.valueOf(result[v++]);
-			String world                = String.valueOf(result[v++]);
-			int    minX                 = (int) result[v++];
-			int    maxX                 = (int) result[v++];
-			int    minZ                 = (int) result[v++];
-			int    maxZ                 = (int) result[v++];
-			Object ownerGangId          = result[v++];
-			double incomeAmount         = (double) result[v++];
-			long   createdAt            = (long) result[v++];
-			long   lastCaptureTimestamp = (long) result[v];
-
-			CuboidRegion region = new CuboidRegion(world, minX, minZ, maxX, maxZ);
-
-			Turf turf = new Turf(
-					id,
-					displayName,
-					region,
-					ownerGangId == null ? null : (Integer) ownerGangId,
-					sanitizeIncomeAmount(incomeAmount),
-					createdAt,
-					lastCaptureTimestamp);
-
-			turfs.add(turf);
+			turfs.add(fromRow(result));
 		}
 
 		return turfs;
+	}
+
+	/**
+	 * TF-14: maps one {@code turf} row. Numeric columns are read through {@link Number} because SQLite and MySQL hand
+	 * back different Java types for the same column (Integer/Long/Float/Double), and a hard cast failed on MySQL.
+	 * Package-private so TurfRepositoryTest can pin it.
+	 */
+	static Turf fromRow(Object[] row) {
+		int    v                    = 0;
+		int    id                   = ((Number) row[v++]).intValue();
+		String displayName          = String.valueOf(row[v++]);
+		String world                = String.valueOf(row[v++]);
+		int    minX                 = ((Number) row[v++]).intValue();
+		int    maxX                 = ((Number) row[v++]).intValue();
+		int    minZ                 = ((Number) row[v++]).intValue();
+		int    maxZ                 = ((Number) row[v++]).intValue();
+		Object ownerGangId          = row[v++];
+		double incomeAmount         = ((Number) row[v++]).doubleValue();
+		long   createdAt            = ((Number) row[v++]).longValue();
+		long   lastCaptureTimestamp = ((Number) row[v]).longValue();
+
+		CuboidRegion region = new CuboidRegion(world, minX, minZ, maxX, maxZ);
+
+		return new Turf(
+				id,
+				displayName,
+				region,
+				ownerGangId == null ? null : ((Number) ownerGangId).intValue(),
+				sanitizeIncomeAmount(incomeAmount),
+				createdAt,
+				lastCaptureTimestamp);
 	}
 
 	/**

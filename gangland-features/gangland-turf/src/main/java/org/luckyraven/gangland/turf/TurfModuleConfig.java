@@ -13,6 +13,7 @@ import org.luckyraven.gangland.turf.database.ActiveTurfBuffRepository;
 import org.luckyraven.gangland.turf.database.TurfGarrisonRepository;
 import org.luckyraven.gangland.turf.database.TurfPowerupNpcRepository;
 import org.luckyraven.gangland.turf.database.TurfRepository;
+import org.luckyraven.gangland.turf.database.TurfSequenceRepository;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.turf.config.GanglandTurfMessages;
 import org.luckyraven.gangland.turf.config.GanglandTurfSounds;
@@ -99,11 +100,11 @@ public final class TurfModuleConfig {
 		return new ActiveBuffManager(plugin, repository);
 	}
 
+	// TF-41: no explicit manager.initialize() — the LIFECYCLE convention pass calls it once (same reasoning as
+	// activeBuffManager above). Calling it here as well loaded the table twice at boot.
 	@Bean
 	public GarrisonManager garrisonManager(GarrisonRepositoryContract repository) {
-		GarrisonManager manager = new GarrisonManager(repository);
-		manager.initialize();
-		return manager;
+		return new GarrisonManager(repository);
 	}
 
 	@Bean
@@ -121,11 +122,11 @@ public final class TurfModuleConfig {
 		return settings::isShowEnterTitle;
 	}
 
+	// TF-41: no explicit manager.initialize() — the LIFECYCLE convention pass calls it once. The sequence repository
+	// supplies the persisted turf id high-water mark (TF-05) so deleted ids are never handed out again.
 	@Bean
-	public TurfManager turfManager(TurfRepositoryContract repository) {
-		TurfManager manager = new TurfManager(repository);
-		manager.initialize();
-		return manager;
+	public TurfManager turfManager(TurfRepositoryContract repository, TurfSequenceRepository sequence) {
+		return new TurfManager(repository, sequence);
 	}
 
 	@Bean

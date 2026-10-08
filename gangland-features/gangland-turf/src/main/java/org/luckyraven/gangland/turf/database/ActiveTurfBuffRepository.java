@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.turf.database;
 
+import lombok.CustomLog;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
 import org.luckyraven.keystone.persistence.database.backend.DatabaseBackend;
@@ -16,16 +18,19 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
+@CustomLog
 @Repository(ActiveTurfBuff.class)
 public class ActiveTurfBuffRepository extends AbstractRepository<ActiveTurfBuff>
 		implements ActiveBuffRepositoryContract {
 
+	private final JavaPlugin          plugin;
 	private final ActiveTurfBuffTable table;
 
 	public ActiveTurfBuffRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
 		super(plugin, databaseHandler, backend);
 
-		this.table = new ActiveTurfBuffTable();
+		this.plugin = plugin;
+		this.table  = new ActiveTurfBuffTable();
 	}
 
 	@Override
@@ -51,6 +56,25 @@ public class ActiveTurfBuffRepository extends AbstractRepository<ActiveTurfBuff>
 			buffs.add(new ActiveTurfBuff(id, turfId, powerupId, effectType, magnitude, expiresAt));
 		}
 		return buffs;
+	}
+
+	/**
+	 * Same comparison as {@link ActiveTurfBuff#isExpired(long)} ({@code now >= expiresAt}), so SQL and memory agree.
+	 */
+	@Override
+	public void deleteExpired(long now) {
+		Runnable work = () -> {
+			try {
+				tableBackend().delete("expires_at <= ?", now);
+			} catch (SQLException exception) {
+				log.warn("Could not prune expired turf buffs: {}", exception.getMessage());
+			}
+		};
+		if (plugin.isEnabled()) {
+			Bukkit.getScheduler().runTaskAsynchronously(plugin, work);
+		} else {
+			work.run();
+		}
 	}
 
 	@Override

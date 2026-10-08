@@ -4,12 +4,14 @@ import lombok.CustomLog;
 import org.bukkit.Location;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.turf.contract.TurfRepositoryContract;
+import org.luckyraven.gangland.turf.contract.TurfSequenceContract;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.data.TurfRuntimeState;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -17,19 +19,31 @@ import java.util.concurrent.atomic.AtomicInteger;
  * etc.). Persistence is delegated to the {@link TurfRepositoryContract} — the repo lives in gangland-impl.
  *
  * <p>Turf ids are auto-incrementing integers; callers ask for a fresh id via {@link #allocateId()} before constructing
- * a new {@link Turf}. On {@link #initialize()} the counter is seeded to {@code max(existingIds) + 1} so restart-safe.
+ * a new {@link Turf}. Ids are never reused, also across restarts: every allocation is recorded in the
+ * {@link TurfSequenceContract} high-water mark (TF-05), and {@link #initialize()} seeds the counter past both the
+ * highest loaded id and that mark.
  */
 @CustomLog
 public final class TurfManager {
 
 	private final TurfRepositoryContract         repository;
+	private final TurfSequenceContract           sequence;
 	private final Map<Integer, Turf>             turfsById;
 	private final Map<String, List<Turf>>        turfsByWorld;
 	private final Map<Integer, TurfRuntimeState> runtimeStates;
 	private final AtomicInteger                  nextId = new AtomicInteger(1);
 
+	/**
+	 * Without a persisted sequence the id mark lives only in memory, so ids are reused across restarts. Production
+	 * wiring always uses the two-argument form.
+	 */
 	public TurfManager(TurfRepositoryContract repository) {
+		this(repository, new TransientSequence());
+	}
+
+	public TurfManager(TurfRepositoryContract repository, TurfSequenceContract sequence) {
 		this.repository    = repository;
+		this.sequence      = sequence;
 		this.turfsById     = new ConcurrentHashMap<>();
 		this.turfsByWorld  = new ConcurrentHashMap<>();
 		this.runtimeStates = new ConcurrentHashMap<>();
@@ -53,7 +67,7 @@ public final class TurfManager {
 				highest = turf.getId();
 			}
 		}
-		nextId.set(highest + 1);
+		nextId.set(Math.max(highest, sequence.loadHighWaterMark()) + 1);
 
 		// Hand the repo a supplier so RepositoryRegistry.saveAll() (periodic autosave + shutdown)
 		// can flush the current in-memory turf set to the DB. Without this, saveAllFromMemory()
@@ -65,7 +79,9 @@ public final class TurfManager {
 	}
 
 	public int allocateId() {
-		return nextId.getAndIncrement();
+		int id = nextId.getAndIncrement();
+		sequence.saveHighWaterMark(id);
+		return id;
 	}
 
 	public Collection<Turf> getAll() {
@@ -77,7 +93,8 @@ public final class TurfManager {
 	}
 
 	public List<Turf> getTurfsInWorld(String world) {
-		return turfsByWorld.getOrDefault(world, Collections.emptyList());
+		List<Turf> turfs = turfsByWorld.get(world);
+		return turfs == null ? List.of() : Collections.unmodifiableList(turfs);
 	}
 
 	public TurfRuntimeState getRuntimeState(int turfId) {
@@ -135,7 +152,20 @@ public final class TurfManager {
 
 	private void register(Turf turf) {
 		turfsById.put(turf.getId(), turf);
-		turfsByWorld.computeIfAbsent(turf.getRegion().getWorld(), k -> new ArrayList<>()).add(turf);
+		turfsByWorld.computeIfAbsent(turf.getRegion().getWorld(), k -> new CopyOnWriteArrayList<>()).add(turf);
 		runtimeStates.put(turf.getId(), new TurfRuntimeState(turf.getId()));
+	}
+
+	/** Per-process stand-in used only by the one-argument constructor: remembers nothing across restarts. */
+	private static final class TransientSequence implements TurfSequenceContract {
+
+		@Override
+		public int loadHighWaterMark() {
+			return 0;
+		}
+
+		@Override
+		public void saveHighWaterMark(int highestAllocatedId) {
+		}
 	}
 }
