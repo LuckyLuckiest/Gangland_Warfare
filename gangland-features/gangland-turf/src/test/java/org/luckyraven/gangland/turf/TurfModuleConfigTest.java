@@ -8,16 +8,19 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.luckyraven.gangland.turf.npc.config.TurfNpcsConfigLoader;
 import org.luckyraven.gangland.turf.npc.guard.CopGuardConfig;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
+import org.luckyraven.keystone.persistence.config.ConfigDocument;
+import org.luckyraven.keystone.persistence.config.ConfigParser;
+import org.luckyraven.keystone.persistence.config.ConfigReport;
 import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
 import org.luckyraven.gangland.turf.powerups.ActiveBuffRepositoryContract;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.luckyraven.keystone.testkit.PluginMocks;
 
+import java.io.StringReader;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -107,13 +110,12 @@ class TurfModuleConfigTest {
 		assertEquals(1.0, loader.getPowerupSettings().targetingRadius());
 	}
 
+	/** Parses {@code yaml} the way FileHandler does (ConfigParser into the handler's parsed document). */
 	private static TurfNpcsConfigLoader loaderFor(String yaml) throws Exception {
-		YamlConfiguration configuration = new YamlConfiguration();
-		configuration.loadFromString(yaml);
+		ConfigDocument document = new ConfigParser().parse(Path.of("turf_npcs.yml"), new StringReader(yaml),
+		                                                   new ConfigReport());
 		FileHandler handler = mock(FileHandler.class);
-		when(handler.getFileConfiguration()).thenReturn(configuration);
-		when(handler.getDirectory()).thenReturn("turf/turf_npcs");
-		when(handler.getFileType()).thenReturn(".yml");
+		when(handler.getParsedDocument()).thenReturn(document);
 		FileManager fileManager = mock(FileManager.class);
 		when(fileManager.getFile("turf_npcs")).thenReturn(handler);
 		return new TurfNpcsConfigLoader(fileManager);

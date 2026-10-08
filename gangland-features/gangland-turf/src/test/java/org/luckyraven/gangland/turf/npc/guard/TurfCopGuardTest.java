@@ -306,6 +306,8 @@ class TurfCopGuardTest {
 
 		CivilianNpc emptied    = npcAt(100, true);            // out of range, nothing left -> IDLE
 		CivilianNpc stillTarget = npcAt(100, true);           // out of range, but a player target remains -> stays
+		when(emptied.removeEntityTarget(cop)).thenReturn(true);
+		when(stillTarget.removeEntityTarget(cop)).thenReturn(true);
 		when(stillTarget.getTargetPlayerId()).thenReturn(UUID.randomUUID());
 		wirePowerupsAndDefenders(1, List.of(), List.of(emptied, stillTarget));
 
@@ -315,6 +317,53 @@ class TurfCopGuardTest {
 
 		verify(emptied).transitionTo(CivilianState.IDLE);
 		verify(stillTarget, never()).transitionTo(CivilianState.IDLE);
+	}
+
+	@Test
+	@DisplayName("tick: an NPC that never held the cop keeps its WANDERING state through a release")
+	void tick_unengagedNpc_keepsState() {
+		LivingEntity cop    = living(0);
+		Location     spot   = loc(0);
+		Player       victim = victim(spot, UUID.randomUUID());
+		whenVictimOn(victim, spot, turf1, 1);
+
+		CivilianNpc near     = npcAt(5, true);      // engaged at the hit
+		CivilianNpc wanderer = npcAt(100, true);    // out of range, never held the cop
+		when(wanderer.getCurrentState()).thenReturn(CivilianState.WANDERING);
+		wirePowerupsAndDefenders(1, List.of(), List.of(near, wanderer));
+
+		TurfCopGuard guard = guard(enabledConfig());
+		guard.onCopHitPlayer(cop, victim);
+		guard.tick();
+
+		verify(wanderer, never()).transitionTo(any());
+	}
+
+	@Test
+	@DisplayName("a cop that then hits a non-member is released from the turf it was defending")
+	void copHitsNonMemberAfterProtectedMember_released() throws Exception {
+		LivingEntity cop    = living(0);
+		Location     spot   = loc(0);
+		Player       member = victim(spot, UUID.randomUUID());
+		whenVictimOn(member, spot, turf1, 1);
+
+		Location nonMemberSpot = loc(2);
+		Player   nonMember     = victim(nonMemberSpot, UUID.randomUUID());
+		when(turfs.findAt(nonMemberSpot)).thenReturn(turf1);
+		User<Player> challenger = user(3);                         // challenger gang, not protected
+		when(users.findByPlayer(nonMember)).thenReturn(challenger);
+
+		CivilianNpc quartermaster = npcAt(5, true);
+		wirePowerupsAndDefenders(1, List.of(quartermaster), List.of());
+
+		TurfCopGuard guard = guard(enabledConfig());
+		guard.onCopHitPlayer(cop, member);
+		verify(quartermaster).addEntityTargetToFront(cop);
+
+		guard.onCopHitPlayer(cop, nonMember);
+
+		verify(quartermaster).removeEntityTarget(cop);
+		assertEquals(0, engagementCount(guard));
 	}
 
 	// ── static protects() helper ─────────────────────────────────────────────

@@ -56,9 +56,11 @@ public final class TurfNpcsConfigLoader {
 		MappingNode powerupNode = root.get("Powerup_Npc").asMapping().required().orNull();
 		if (powerupNode != null) {
 			NodeReader pr = NodeReader.of(powerupNode, report);
-			powerupSettings = new TurfPowerupSettings(pr.get("Type_Id").asString().orDefault("quartermaster"), 32.0); // RED: literal (T-189)
+			powerupSettings = new TurfPowerupSettings(
+					pr.get("Type_Id").asString().orDefault("quartermaster"),
+					radius(pr));
 		} else {
-			powerupSettings = new TurfPowerupSettings("quartermaster", 32.0); // RED: literal (T-189)
+			powerupSettings = new TurfPowerupSettings("quartermaster", 32.0);
 		}
 
 		MappingNode defNode = root.get("Defender").asMapping().required().orNull();
@@ -72,9 +74,25 @@ public final class TurfNpcsConfigLoader {
 			defenderConfig = new TurfDefenderConfig("turf_defender", 32.0, 600);
 		}
 
-		// RED STUB (T-189): Cop_Response is not parsed yet; this is all-off so the defaults tests fail.
-		copGuardConfig = new CopGuardConfig(false, 0.0, false);
+		MappingNode copNode = root.get("Cop_Response").asMapping().orNull();
+		if (copNode != null) {
+			NodeReader cr = NodeReader.of(copNode, report);
+			copGuardConfig = new CopGuardConfig(
+					cr.get("Enabled").asBool().orDefault(true),
+					radius(cr),
+					cr.get("Include_Allies").asBool().orDefault(true));
+		} else {
+			copGuardConfig = new CopGuardConfig(true, 32.0, true);
+		}
 
 		if (!report.isEmpty()) report.log(log);
+	}
+
+	/**
+	 * A {@code Targeting_Radius} clamped up to one block (absent means 32). Keystone's {@code min} would reject a value
+	 * below the floor and fall back to the default, so the clamp is explicit.
+	 */
+	private static double radius(NodeReader reader) {
+		return Math.max(1.0, reader.get("Targeting_Radius").asDouble().orDefault(32.0));
 	}
 }

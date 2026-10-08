@@ -130,10 +130,17 @@ public final class TurfDefenderDeployer {
 	}
 
 	/**
-	 * RED STUB (T-189): live defenders of {@code turfId}. Real behaviour filters dead/expired entries.
+	 * The defenders of {@code turfId} that are still alive and not yet expired; empty when the turf has no group.
 	 */
 	public List<CivilianNpc> liveDefenders(int turfId) {
-		return List.of();
+		Group group = byTurfId.get(turfId);
+		if (group == null) return List.of();
+		long now = System.currentTimeMillis();
+		List<CivilianNpc> live = new ArrayList<>(group.defenders.size());
+		for (TrackedDefender d : group.defenders) {
+			if (d.npc.isValid() && !d.npc.isMarkedForRemoval() && now < d.expiresAt) live.add(d.npc);
+		}
+		return live;
 	}
 
 	/**

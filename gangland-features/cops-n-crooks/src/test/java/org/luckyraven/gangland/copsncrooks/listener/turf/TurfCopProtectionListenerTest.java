@@ -10,7 +10,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.bartizan.api.event.WeaponRaytraceImpactEvent;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
-import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.turf.npc.guard.TurfCopGuard;
 import org.luckyraven.keystone.npc.NpcSupport;
 import org.mockito.MockedStatic;
@@ -28,7 +27,6 @@ class TurfCopProtectionListenerTest {
 
 	private CopManager                copManager;
 	private TurfCopGuard              guard;
-	private UserLookupContract        users;
 	private TurfCopProtectionListener listener;
 	private MockedStatic<NpcSupport>  npcSupport;
 
@@ -36,8 +34,7 @@ class TurfCopProtectionListenerTest {
 	void setUp() {
 		copManager = mock(CopManager.class);
 		guard      = mock(TurfCopGuard.class);
-		users      = mock(UserLookupContract.class);
-		listener   = new TurfCopProtectionListener(copManager, guard, users);
+		listener   = new TurfCopProtectionListener(copManager, guard);
 
 		npcSupport = mockStatic(NpcSupport.class);
 		npcSupport.when(() -> NpcSupport.isNpc(any())).thenReturn(false);
