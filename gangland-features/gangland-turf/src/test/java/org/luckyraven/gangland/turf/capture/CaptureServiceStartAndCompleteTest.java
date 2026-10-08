@@ -4,6 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.junit.jupiter.api.BeforeEach;
+import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.gang.Gang;
@@ -11,7 +12,9 @@ import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.data.TurfRuntimeState;
 import org.luckyraven.gangland.turf.events.TurfCaptureStartEvent;
+import org.luckyraven.gangland.turf.events.TurfCaptureFailedEvent;
 import org.luckyraven.gangland.turf.events.TurfCapturedEvent;
+import org.luckyraven.gangland.turf.events.TurfOwnerChangedEvent;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.state.CapturePhase;
 import org.luckyraven.gangland.turf.state.TurfState;
@@ -28,9 +31,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.any;
 
 /**
  * Proves {@code CaptureService.tickIdle} (contest start conditions, W6 in turf.md) and {@code complete} (ownership
@@ -74,7 +76,7 @@ class CaptureServiceStartAndCompleteTest {
 
 	private CaptureService service(int... progressMilestones) {
 		CaptureSettings settings = CaptureFixtures.settings(180, 15, 15, 10, progressMilestones, 90, 90);
-		return new CaptureService(turfManager, gangs, users, settings, sounds);
+		return new CaptureService(turfManager, gangs, users, settings, sounds, new TurfOwnership(turfManager));
 	}
 
 	private Turf createTurf(Integer ownerGangId) {
@@ -222,8 +224,8 @@ class CaptureServiceStartAndCompleteTest {
 	}
 
 	@Test
-	@DisplayName("complete against a disbanded challenger gang writes the dangling owner id but fires no event (Observation #1)")
-	void complete_writesDanglingOwnerIdWhenChallengerGangIsGone() {
+	@DisplayName("complete against a disbanded challenger gang cancels the capture, keeps the owner and fires CANCELLED (TF-01)")
+	void complete_cancelsWhenChallengerGangIsGone() {
 		Turf turf = createTurf(owner.getId());
 		// Simulate the challenger disbanding mid-contest: never registered in the gang lookup.
 		Gang ghostChallenger = CaptureFixtures.gang(999);
@@ -242,10 +244,41 @@ class CaptureServiceStartAndCompleteTest {
 			}
 			service.tick(cache);
 
-			assertEquals(ghostChallenger.getId(), turf.getOwnerGangId(),
-			            "the dangling owner id is written even though the gang record does not exist");
-			assertEquals(TurfState.COOLDOWN, state.getState());
-			verify(bukkit.pluginManager(), never()).callEvent(any());
+			assertEquals(owner.getId(), turf.getOwnerGangId(),
+			            "no dangling owner id: the original owner keeps the turf");
+			assertEquals(TurfState.IDLE, state.getState());
+			ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+			verify(bukkit.pluginManager(), times(1)).callEvent(captor.capture());
+			TurfCaptureFailedEvent failed = (TurfCaptureFailedEvent) captor.getValue();
+			assertEquals(TurfCaptureFailedEvent.Reason.CANCELLED, failed.getReason());
+		}
+	}
+
+	@Test
+	@DisplayName("complete fires one TurfOwnerChangedEvent (cause CAPTURE) before TurfCapturedEvent")
+	void complete_firesOneOwnerChangedEventWithCauseCaptureThenCaptured() {
+		Turf turf = createTurf(owner.getId());
+		CaptureService   service = service(); // no milestones
+		TurfRuntimeState state   = turfManager.getRuntimeState(turf.getId());
+		state.setState(TurfState.CONTESTING);
+		state.setChallengerGangId(challenger.getId());
+		state.setCaptureProgress(99.9);
+		Map<UUID, Turf> cache = new HashMap<>();
+		playerInGang(challenger.getId(), cache, turf);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			for (UUID id : cache.keySet()) {
+				bukkit.statics().when(() -> Bukkit.getPlayer(id)).thenReturn(playersByUuid.get(id));
+			}
+			service.tick(cache);
+
+			ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+			verify(bukkit.pluginManager(), times(2)).callEvent(captor.capture());
+			TurfOwnerChangedEvent changed = (TurfOwnerChangedEvent) captor.getAllValues().get(0);
+			assertEquals(owner.getId(), changed.getOldOwnerGangId());
+			assertEquals(challenger.getId(), changed.getNewOwnerGangId());
+			assertEquals(TurfOwnerChangedEvent.Cause.CAPTURE, changed.getCause());
+			assertInstanceOf(TurfCapturedEvent.class, captor.getAllValues().get(1));
 		}
 	}
 }

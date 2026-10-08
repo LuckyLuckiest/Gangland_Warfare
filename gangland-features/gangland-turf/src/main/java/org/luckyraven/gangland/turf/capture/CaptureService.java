@@ -14,6 +14,7 @@ import org.luckyraven.gangland.turf.events.TurfCaptureFailedEvent;
 import org.luckyraven.gangland.turf.events.TurfCaptureProgressEvent;
 import org.luckyraven.gangland.turf.events.TurfCaptureStartEvent;
 import org.luckyraven.gangland.turf.events.TurfCapturedEvent;
+import org.luckyraven.gangland.turf.events.TurfOwnerChangedEvent;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.state.CapturePhase;
 import org.luckyraven.gangland.turf.state.TurfState;
@@ -55,17 +56,20 @@ public final class CaptureService {
 	private final UserLookupContract users;
 	private final CaptureSettings    settings;
 	private final TurfSoundContract  sounds;
+	private final TurfOwnership      ownership;
 
 	public CaptureService(TurfManager turfs,
 	                      GangLookupContract gangs,
 	                      UserLookupContract users,
 	                      CaptureSettings settings,
-	                      TurfSoundContract sounds) {
-		this.turfs    = turfs;
-		this.gangs    = gangs;
-		this.users    = users;
-		this.settings = settings;
-		this.sounds   = sounds;
+	                      TurfSoundContract sounds,
+	                      TurfOwnership ownership) {
+		this.turfs     = turfs;
+		this.gangs     = gangs;
+		this.users     = users;
+		this.settings  = settings;
+		this.sounds    = sounds;
+		this.ownership = ownership;
 	}
 
 	private static double clamp(double value, double min, double max) {
@@ -386,26 +390,31 @@ public final class CaptureService {
 	}
 
 	private void complete(Turf turf, TurfRuntimeState state, List<Player> playersInside, long now) {
+		Integer newOwnerId = state.getChallengerGangId();
+		Gang    newOwner   = newOwnerId == null ? null : gangs.findById(newOwnerId);
+		if (newOwner == null) {
+			// The challenger disbanded mid-contest: cancel instead of writing a dangling owner id (TF-01).
+			cancel(turf, state, playersInside, TurfCaptureFailedEvent.Reason.CANCELLED);
+			return;
+		}
+
 		Integer oldOwnerId = turf.getOwnerGangId();
-		int     newOwnerId = state.getChallengerGangId();
+		Gang    oldOwner   = oldOwnerId == null ? null : gangs.findById(oldOwnerId);
 
-		Gang oldOwner = oldOwnerId == null ? null : gangs.findById(oldOwnerId);
-		Gang newOwner = gangs.findById(newOwnerId);
-
-		turf.setOwnerGangId(newOwnerId);
 		turf.setLastCaptureTimestamp(now);
 		state.setState(TurfState.COOLDOWN);
 		state.setPhase(CapturePhase.CLAIM);
 		state.setCaptureProgress(0.0);
 		state.setChallengerGangId(null);
-		turfs.persist(turf);
+		boolean changed = ownership.setOwner(turf, newOwnerId, TurfOwnerChangedEvent.Cause.CAPTURE);
+		if (!changed) {
+			turfs.persist(turf);
+		}
 
 		for (Player player : playersInside) {
 			sounds.playCaptureComplete(player);
 		}
-		if (newOwner != null) {
-			Bukkit.getPluginManager().callEvent(new TurfCapturedEvent(turf, oldOwner, newOwner));
-		}
+		Bukkit.getPluginManager().callEvent(new TurfCapturedEvent(turf, oldOwner, newOwner));
 	}
 
 	private void cancel(Turf turf, TurfRuntimeState state, List<Player> playersInside,

@@ -77,7 +77,7 @@ class CaptureServiceUnclaimedTurfTest {
 	private CaptureService service(int phase1Seconds, int phase2Seconds, int abandonGraceSeconds) {
 		CaptureSettings settings = CaptureFixtures.settings(180, 15, abandonGraceSeconds, 10,
 		                                                    new int[]{25, 50, 75}, phase1Seconds, phase2Seconds);
-		return new CaptureService(turfManager, gangs, users, settings, sounds);
+		return new CaptureService(turfManager, gangs, users, settings, sounds, new TurfOwnership(turfManager));
 	}
 
 	private TurfRuntimeState stateAt(CapturePhase phase, double progress, Integer challengerGangId, long lastSeenAt) {

@@ -81,7 +81,7 @@ class CaptureServiceOwnedTurfTest {
 	private CaptureService service(int durationSeconds) {
 		CaptureSettings settings = CaptureFixtures.settings(durationSeconds, 15, 15, 10,
 		                                                    new int[]{25, 50, 75}, 90, 90);
-		return new CaptureService(turfManager, gangs, users, settings, sounds);
+		return new CaptureService(turfManager, gangs, users, settings, sounds, new TurfOwnership(turfManager));
 	}
 
 	private TurfRuntimeState contestAt(double progress) {
@@ -182,7 +182,8 @@ class CaptureServiceOwnedTurfTest {
 		// Abandon_Grace_Seconds is configured very short (1s) here to make the point: it is never read on this
 		// path, so the contest survives well past it and only ends once the -1v0 decay walks progress to zero.
 		CaptureSettings settings = CaptureFixtures.settings(20, 15, 1, 10, new int[]{25, 50, 75}, 90, 90);
-		CaptureService  service  = new CaptureService(turfManager, gangs, users, settings, sounds);
+		CaptureService  service  = new CaptureService(turfManager, gangs, users, settings, sounds,
+		                                              new TurfOwnership(turfManager));
 		contestAt(3.0); // base = 5, one tick of -1 net drives 3 -> 0 (clamped), not -2
 
 		tick(service, new HashMap<>());
@@ -295,8 +296,9 @@ class CaptureServiceOwnedTurfTest {
 			service.tick(cache);
 
 			ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
-			// 3 progress-milestone events (25, 50, 75) plus the TurfCapturedEvent from completion.
-			verify(bukkit.pluginManager(), org.mockito.Mockito.times(4)).callEvent(captor.capture());
+			// 3 progress-milestone events (25, 50, 75) plus the TurfOwnerChangedEvent (cause CAPTURE) and the
+			// TurfCapturedEvent from completion (W0-A: a capture now fires one owner-changed event).
+			verify(bukkit.pluginManager(), org.mockito.Mockito.times(5)).callEvent(captor.capture());
 			long progressEvents = captor.getAllValues().stream().filter(TurfCaptureProgressEvent.class::isInstance).count();
 			long capturedEvents = captor.getAllValues().stream().filter(TurfCapturedEvent.class::isInstance).count();
 			assertEquals(3, progressEvents);
