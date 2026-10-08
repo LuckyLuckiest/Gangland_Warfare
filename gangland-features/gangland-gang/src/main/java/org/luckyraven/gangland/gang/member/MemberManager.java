@@ -3,7 +3,6 @@ package org.luckyraven.gangland.gang.member;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.bean.BeanLifecycle;
-import org.luckyraven.gangland.core.user.IdentitySettings;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.contract.MemberRepositoryContract;
 import org.luckyraven.gangland.gang.contract.RankLookupContract;
@@ -58,14 +57,15 @@ public class MemberManager implements BeanLifecycle {
 			                                (int[]) search.get("type"), new String[]{"*"});
 
 			// create member data into a database
+			// GR-32: a member row missing from the database is inserted right away.
 			if (memberInfo.length == 0) {
-				if (!IdentitySettings.isAutoSave()) memberTable.insertTableQuery(db, member);
+				memberTable.insertTableQuery(db, member);
 			} else {
 				int    v            = 1;
-				int    gangId       = (int) memberInfo[v++];
-				double contribution = (double) memberInfo[v++];
-				int    rankId       = (int) memberInfo[v++];
-				long   gangJoin     = (long) memberInfo[v];
+				int    gangId       = number(memberInfo[v++]).intValue();
+				double contribution = number(memberInfo[v++]).doubleValue();
+				int    rankId       = number(memberInfo[v++]).intValue();
+				long   gangJoin     = number(memberInfo[v]).longValue();
 
 				Rank rank = rankLookup.get(rankId);
 
@@ -80,6 +80,11 @@ public class MemberManager implements BeanLifecycle {
 				member.setGangJoinDateLong(gangJoin);
 			}
 		});
+	}
+
+	/** A SQL NULL numeric column reads as 0; any other value is read through {@link Number}. */
+	private static Number number(Object raw) {
+		return raw instanceof Number n ? n : 0;
 	}
 
 	public void add(Member member) {

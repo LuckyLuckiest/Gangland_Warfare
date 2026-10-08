@@ -6,6 +6,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.ConfirmArgument;
@@ -45,7 +46,11 @@ class GangTransferCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final RankManager         rankManager;
 
+	/** GR-10: the confirm window, same as {@code gang leave}; a second request re-arms it. */
+	private static final long CONFIRM_WINDOW_TICKS = 20L * 60L;
+
 	private final HashMap<User<Player>, AtomicReference<UUID>> pendingTargets = new HashMap<>();
+	private final HashMap<CommandSender, BukkitTask>           autoUnlock     = new HashMap<>();
 	private final ConfirmArgument                              confirmTransfer;
 
 	protected GangTransferCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
@@ -124,11 +129,30 @@ class GangTransferCommand extends SubArgument {
 			user.sendMessage(GanglandChatUtil.confirmCommand(new String[]{"gang", "transfer"}));
 
 			confirmTransfer.lock(sender);
+			armConfirmWindow(sender, user);
 		}, this::tabCompleteGangMembers);
+	}
+
+	/**
+	 * Expires the request after {@link #CONFIRM_WINDOW_TICKS}: releases the confirm lock and forgets the target. A
+	 * player who quits is covered by the same timeout (no quit listener).
+	 */
+	private void armConfirmWindow(CommandSender sender, User<Player> user) {
+		BukkitTask previous = autoUnlock.remove(sender);
+		if (previous != null) previous.cancel();
+
+		autoUnlock.put(sender, Bukkit.getScheduler().runTaskLater(gangland, () -> {
+			confirmTransfer.unlock(sender);
+			pendingTargets.remove(user);
+			autoUnlock.remove(sender);
+		}, CONFIRM_WINDOW_TICKS));
 	}
 
 	private ConfirmArgument transferConfirm() {
 		return new ConfirmArgument(gangland, tree, (argument, sender, args) -> {
+			BukkitTask window = autoUnlock.remove(sender);
+			if (window != null) window.cancel();
+
 			Player       player = (Player) sender;
 			User<Player> user   = userManager.getUser(player);
 

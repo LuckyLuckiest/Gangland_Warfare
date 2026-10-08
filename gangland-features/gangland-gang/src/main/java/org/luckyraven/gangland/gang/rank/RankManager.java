@@ -293,8 +293,12 @@ public class RankManager implements BeanLifecycle {
 
 	public void clear() {
 		Rank.setID(0);
+		Permission.setID(0);
 		ranks.clear();
 		rankTree.clear();
+		ranksParent.clear();
+		permissions.clear();
+		ranksPermissions.clear();
 	}
 
 	@Override

@@ -2,6 +2,7 @@ package org.luckyraven.gangland.gang.database.repositories.gang;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.gang.database.tables.gang.GangTable;
+import org.luckyraven.keystone.color.Color;
 import org.luckyraven.keystone.economy.Currency;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
@@ -35,17 +36,17 @@ public class GangRepository extends AbstractRepository<Gang> {
 		for (Object[] result : gangsData) {
 			int    v                  = 0;
 			int    id                 = (int) result[v++];
-			String name               = String.valueOf(result[v++]);
-			String displayName        = String.valueOf(result[v++]);
-			String description        = String.valueOf(result[v++]);
-			String color              = String.valueOf(result[v++]);
-			double balance            = (double) result[v++];
-			int    level              = (int) result[v++];
-			double experience         = (double) result[v++];
-			double bounty             = (double) result[v++];
-			long   created            = (long) result[v++];
-			long   lastMemberOnlineAt = (long) result[v++];
-			String state              = String.valueOf(result[v]);
+			String name               = text(result[v++], "");
+			String displayName        = text(result[v++], "");
+			String description        = text(result[v++], "Conquering the hood");
+			String color              = text(result[v++], Color.LIGHT_BLUE.name());
+			double balance            = num(result[v++]).doubleValue();
+			int    level              = num(result[v++]).intValue();
+			double experience         = num(result[v++]).doubleValue();
+			double bounty             = num(result[v++]).doubleValue();
+			long   created            = num(result[v++]).longValue();
+			long   lastMemberOnlineAt = num(result[v++]).longValue();
+			String state              = text(result[v], "OPEN");
 
 			Gang gang = new Gang(id);
 
@@ -82,8 +83,16 @@ public class GangRepository extends AbstractRepository<Gang> {
 		tableBackend().delete("id = ?", data.getId());
 	}
 
+	/**
+	 * GR-20: a SQL NULL text column loads as the fallback, never as the literal string {@code "null"}.
+	 */
 	static String text(Object raw, String fallback) {
-		return String.valueOf(raw);
+		return raw == null ? fallback : String.valueOf(raw);
+	}
+
+	/** A SQL NULL numeric column reads as 0; any other value is read through {@link Number}. */
+	static Number num(Object raw) {
+		return raw instanceof Number number ? number : 0;
 	}
 
 	private Gang.State parseState(String raw) {

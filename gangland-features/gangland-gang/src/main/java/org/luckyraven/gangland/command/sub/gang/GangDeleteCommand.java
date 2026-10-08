@@ -219,7 +219,10 @@ class GangDeleteCommand extends SubArgument {
 				// inform the online users
 				String kickedFromGang      = Messages.KICKED_FROM_GANG.toString();
 				String gangRemoved         = Messages.GANG_REMOVED.toString();
-				String gangRemovedReplace  = gangRemoved.replace("%gang%", deleteGangName.get(user).get());
+				// GR-30: the confirm map entry can be gone; fall back to the gang's current name.
+				AtomicReference<String> confirmedName = deleteGangName.get(user);
+				String gangName = confirmedName != null && confirmedName.get() != null ? confirmedName.get() : gang.getName();
+				String gangRemovedReplace  = gangRemoved.replace("%gang%", gangName);
 				String depositMoneyReplace = depositMoney.replace("%amount%", Settings.formatAmount(amount));
 				gangUser.sendMessage(kickedFromGang, gangRemovedReplace, depositMoneyReplace);
 			}

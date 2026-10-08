@@ -45,7 +45,11 @@ public class GangMembersDamageListener implements Listener {
 		Gang gang1 = gangManager.getGang(userDamager.getGangId());
 		Gang gang2 = gangManager.getGang(userDamaged.getGangId());
 
-		if (gang1.isAlly(gang2) || userDamager.getGangId() == userDamaged.getGangId()) event.setCancelled(true);
+		// GR-15: a gang record can be missing (stale id); only the same-gang check applies then.
+		boolean sameGang = userDamager.getGangId() == userDamaged.getGangId();
+		boolean allied   = gang1 != null && gang2 != null && gang1.isAlly(gang2);
+
+		if (sameGang || allied) event.setCancelled(true);
 	}
 
 }
