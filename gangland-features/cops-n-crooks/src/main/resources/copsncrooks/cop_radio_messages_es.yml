@@ -1,5 +1,6 @@
-# Cops N Crooks: líneas de radio policial (español). Se usa cuando Settings.Language es "es"; si falta una clave,
-# se recurre a cop_radio_messages.yml (inglés). Mismas claves y marcadores que el archivo en inglés.
+# Cops N Crooks: líneas de radio policial (español). Se usa cuando Settings.Language es "es". Este archivo reemplaza
+# por completo al inglés (no hay recurso clave a clave): cada clave debe estar aquí. Mismas claves y marcadores que el
+# archivo en inglés.
 Format: "&9&l[RADIO] &b%unit%&8: &7%line%"
 Dispatch_Format: "&9&l[DESPACHO] &7%line%"
 
@@ -21,6 +22,15 @@ Sides:
    - "izquierda"
    - "derecha"
    - "espalda"
+
+# Cómo se nombra a un agente en la radio (%unit%, y un agente nombrado en una línea). Marcadores:
+#   {rank}    el Display_Name del rango, con sus colores, p. ej. "&9Officer"
+#   {role}    la palabra del rol en su color, sin símbolo, p. ej. "&cMedic"; vacío si el agente no tiene rol
+#   {name}    el nombre de pila (Cops.Names.First_Names); vacío si esa lista está vacía
+#   {number}  el número de placa, p. ej. 1592
+# Un marcador vacío se lleva su código de color y el doble espacio desaparece.
+# El color de la línea se reanuda después del nombre. Solo rango y nombre: "{rank} {name}"
+Speaker_Name: "{rank} {role} &f{name} &7#{number}"
 
 Lines:
    Contact:

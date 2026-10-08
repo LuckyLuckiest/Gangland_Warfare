@@ -378,12 +378,13 @@ Cops:
       Health_Fraction: 0.3
       # Blocks searched around the cop for a spot the suspect cannot see (2-32).
       Radius: 12.0
-   # Every cop gets a callsign such as "Officer ✚ Medic Bob #1592", shown above its head and (without colours) used
-   # on the radio.
+   # Every cop gets a callsign such as "Officer ✚ Medic Bob #1592", shown above its head. The radio names a cop with
+   # Speaker_Name in copsncrooks/cop_radio_messages.yml instead; it does not read this Format.
    Names:
       # %rank% = the tier's Display_Name, %role% = the cop's squad role as its coloured symbol and word (Display in
       # copsncrooks/cop_roles.yml; for a cop with no role it goes away with the extra space), %name% = a first name from
-      # First_Names, %badge% = 1000 + the NPC id (unique among live NPCs). Remove %role% to hide the role.
+      # First_Names, %badge% = 1000 + the NPC id (unique among live NPCs). Remove %role% to hide the role from the
+      # hologram; the radio's name is set by Speaker_Name.
       Format: "%rank% %role% &f%name% &7#%badge%"
       # Leave the list empty ([]) for no first name ("Officer #1592"); remove the key for the built-in names.
       First_Names:

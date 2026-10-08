@@ -2,7 +2,7 @@
 # Spanish variant: cop_radio_messages_es.yml, picked by Settings.Language (see CopRadioMessages/LocalizedModuleYaml).
 #
 # Placeholders:
-#   %unit%      speaker callsign, e.g. Officer Bob #1592
+#   %unit%      speaker name, built from Speaker_Name below, e.g. Officer Medic Bob #1592
 #   %member%    the addressed or downed cop
 #   %target%    suspect name
 #   %distance%  blocks from the speaker to the spot (Medic_Moving: to the patient)
@@ -35,6 +35,15 @@ Compass:
 
 # The word %place% falls back to when no named place is near.
 Unknown_Place: "the area"
+
+# How a speaker is named on the radio (%unit%, and a cop named in a line). Placeholders:
+#   {rank}    the tier's Display_Name, colour kept, e.g. "&9Officer"
+#   {role}    the role word in its colour, no symbol, e.g. "&cMedic"; empty for a role-less cop
+#   {name}    the first name (Cops.Names.First_Names); empty when that list is empty
+#   {number}  the badge number, e.g. 1592
+# An empty placeholder takes its colour code with it and the doubled space goes.
+# The line's own colour resumes after the name. Rank and name only: "{rank} {name}"
+Speaker_Name: "{rank} {role} &f{name} &7#{number}"
 
 # Words for %side%, relative to the way the suspect faces.
 Sides:

@@ -7,8 +7,9 @@ import java.util.Random;
 
 /**
  * Cop callsigns ({@code Cops.Names}): {@code "Officer ✚ Medic Bob #1592"}. The coloured callsign is the cop's hologram
- * line and (colours stripped) its radio callsign; {@link #shortName} is the plain Citizens name, kept at 16 characters
- * or fewer so Citizens never swaps the entity's profile name for its {@code CIT-...} scoreboard team name.
+ * line only; the radio names a cop from {@code Speaker_Name} in {@code copsncrooks/cop_radio_messages.yml}, not from
+ * this string. {@link #shortName} is the plain Citizens name, kept at 16 characters or fewer so Citizens never swaps
+ * the entity's profile name for its {@code CIT-...} scoreboard team name.
  *
  * @param format {@code %rank%} (the tier's {@code Display_Name}, in its colour), {@code %role%} (the squad role's
  *               coloured display with its symbol, {@code "&c✚ Medic"}; empty for a cop with no role, its colour code

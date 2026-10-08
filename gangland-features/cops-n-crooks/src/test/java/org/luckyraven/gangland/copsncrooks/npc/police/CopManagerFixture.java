@@ -110,6 +110,7 @@ final class CopManagerFixture implements AutoCloseable {
 		when(spawner.spawnUnit(any(), any(), any())).thenAnswer(inv -> cop(CopState.IDLE, 0, 0));
 
 		when(radio.now()).thenAnswer(inv -> clock[0]);
+		when(radio.speakerName(any())).thenAnswer(inv -> CopRadio.callsign(inv.getArgument(0)));
 		when(radio.listenerFor(any(), any())).thenAnswer(inv -> {
 			CopGroup         group    = inv.getArgument(0);
 			NpcSquadListener listener = mock(NpcSquadListener.class);

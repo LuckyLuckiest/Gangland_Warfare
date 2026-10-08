@@ -77,6 +77,7 @@ class CopFieldCareTest {
 		when(provider.getFieldCareSettings()).thenReturn(FieldCareSettings.DEFAULT);
 		when(provider.getAiTickRate()).thenReturn(10);
 		radio = mock(CopRadio.class);
+		when(radio.speakerName(any())).thenAnswer(call -> CopRadio.callsign(call.getArgument(0)));
 		clock = new AtomicLong(1_000);
 		cops  = new ArrayList<>();
 		group = mock(CopGroup.class);
@@ -165,6 +166,22 @@ class CopFieldCareTest {
 	}
 
 	@Test
+	@DisplayName("Medic_Moving names the patient the way the radio names a cop: speakerName, not the plain callsign")
+	void medicMoving_namesPatientWithSpeakerName() {
+		CopNpc patient = cop(1, 10.0, CopState.PURSUING, null);
+		CopNpc medic   = cop(3, 20.0, CopState.PURSUING, MEDIC);
+		CopNpc leader  = cop(4, 20.0, CopState.PURSUING, null);
+		when(squad.leader()).thenReturn(leader);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(10.0);
+		when(radio.speakerName(patient)).thenReturn("&9Officer Bob&7");
+
+		care.tick(group);
+
+		Map<String, String> toPatient = Map.of("member", "&9Officer Bob&7", "distance", "10", "eta", "2");
+		verify(radio).sayAsLater(eq(group), eq(medic), eq("Medic_Moving"), eq(toPatient), eq(1), any());
+	}
+
+	@Test
 	@DisplayName("a hurt cop gets the nearest medic: Medic_Moving and Covering_Fire (from the leader); one medic, one patient")
 	void hurtCop_getsMedic_andSecondHurtCopWaits() {
 		CopNpc patient = cop(1, 10.0, CopState.PURSUING, null);
@@ -177,8 +194,8 @@ class CopFieldCareTest {
 		care.tick(group);
 
 		assertSame(patient, medic.getPatient());
-		Map<String, String> toPatient = Map.of("member", CopRadio.callsign(patient), "distance", "10", "eta", "2");
-		Map<String, String> toOther   = Map.of("member", CopRadio.callsign(other), "distance", "10", "eta", "2");
+		Map<String, String> toPatient = Map.of("member", radio.speakerName(patient), "distance", "10", "eta", "2");
+		Map<String, String> toOther   = Map.of("member", radio.speakerName(other), "distance", "10", "eta", "2");
 		verify(radio).sayAsLater(eq(group), eq(medic), eq("Medic_Moving"), eq(toPatient), eq(1), any());
 		verify(radio).sayAsLater(eq(group), eq(leader), eq("Covering_Fire"), anyMap(), eq(2), any());
 		verify(medic).navigateTo(patient.getEntity().getLocation());
@@ -274,7 +291,7 @@ class CopFieldCareTest {
 		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(2.0);
 		when(medic.getEntity().getHealth()).thenReturn(16.0);
 		care.tick(group); // arrives and is hit on the same tick
-		Map<String, String> pinned = Map.of("member", CopRadio.callsign(patient));
+		Map<String, String> pinned = Map.of("member", radio.speakerName(patient));
 		verify(radio).sayAsLater(eq(group), eq(medic), eq("Medic_Pinned"), eq(pinned), eq(1), any());
 		verify(radio, never()).sayAs(any(), any(), eq("Medic_Treating"), anyMap());
 
@@ -311,7 +328,7 @@ class CopFieldCareTest {
 		when(medic.getTierConfig()).thenReturn(tier);
 		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(10.0);
 
-		Map<String, String> expected = Map.of("member", CopRadio.callsign(patient), "distance", "10", "eta", "5");
+		Map<String, String> expected = Map.of("member", radio.speakerName(patient), "distance", "10", "eta", "5");
 
 		care.tick(group);
 
@@ -442,7 +459,7 @@ class CopFieldCareTest {
 		when(medic.getEntity().getHealth()).thenReturn(16.0);
 		care.tick(group); // hit: back to 0
 
-		Map<String, String> pinned = Map.of("member", CopRadio.callsign(patient));
+		Map<String, String> pinned = Map.of("member", radio.speakerName(patient));
 		verify(radio).sayAsLater(eq(group), eq(medic), eq("Medic_Pinned"), eq(pinned), eq(1), any());
 		for (int i = 0; i < 5; i++) care.tick(group);
 		verify(patient.getEntity(), never()).setHealth(anyDouble());

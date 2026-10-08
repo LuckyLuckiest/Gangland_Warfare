@@ -14,7 +14,6 @@ import org.luckyraven.keystone.npc.NpcFanPlacement;
 import org.mockito.ArgumentCaptor;
 
 import java.util.List;
-import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -50,7 +49,7 @@ class CopNpcFactoryNameplateTest {
 
 		String callsign = CopNpcFactory.CitizensBridge.nameplate(npc, new CopNames(CopNames.DEFAULT.format(),
 		                                                                           List.of("Bob")), tier("&9Officer"),
-		                                                         null, new Random(1));
+		                                                         null, "Bob");
 
 		assertEquals("&9Officer &fBob &7#1592", callsign);
 
@@ -69,7 +68,7 @@ class CopNpcFactoryNameplateTest {
 		String callsign = CopNpcFactory.CitizensBridge.nameplate(npc(mock(HologramTrait.class)),
 		                                                         new CopNames(CopNames.DEFAULT.format(),
 		                                                                      List.of("Bob")), tier("&1SWAT"), MEDIC,
-		                                                         new Random(1));
+		                                                         "Bob");
 
 		assertEquals("&1SWAT &c✚ Medic &fBob &7#1592", callsign);
 		assertEquals("SWAT ✚ Medic Bob #1592",
@@ -84,10 +83,10 @@ class CopNpcFactoryNameplateTest {
 		NPC           npc      = npc(hologram);
 
 		assertEquals("&1SWAT &e&c✚ Medic &fBob &7#1592",
-		             CopNpcFactory.CitizensBridge.nameplate(npc, names, tier("&1SWAT"), MEDIC, new Random(1)));
+		             CopNpcFactory.CitizensBridge.nameplate(npc, names, tier("&1SWAT"), MEDIC, "Bob"));
 		verify(hologram).addLine(ChatColor.translateAlternateColorCodes('&', "&1SWAT &e&c✚ Medic &fBob &7#1592"));
 
 		assertEquals("&1SWAT &fBob &7#1592",
-		             CopNpcFactory.CitizensBridge.nameplate(npc, names, tier("&1SWAT"), null, new Random(1)));
+		             CopNpcFactory.CitizensBridge.nameplate(npc, names, tier("&1SWAT"), null, "Bob"));
 	}
 }
