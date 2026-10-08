@@ -1,7 +1,13 @@
 package org.luckyraven.gangland.turf.command;
 
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.mockito.ArgumentCaptor;
+import org.luckyraven.gangland.turf.capture.TurfOwnership;
+import org.luckyraven.gangland.turf.data.TurfRuntimeState;
+import org.luckyraven.gangland.turf.events.TurfCaptureFailedEvent;
+import org.luckyraven.gangland.turf.state.TurfState;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -103,7 +109,7 @@ class TurfDeleteCommandTest {
 
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
 			command = new TurfDeleteCommand(plugin, tree, parent, turfs, selections, messages,
-			                                garrisons, buffs, powerupNpcs);
+			                                garrisons, buffs, powerupNpcs, new TurfOwnership(turfs));
 		}
 
 		turf = new Turf(5, "Dup", new CuboidRegion("world", 0, 0, 10, 10), null,
@@ -148,5 +154,27 @@ class TurfDeleteCommandTest {
 		verify(buffs).removeAll(5);
 		verify(powerupNpcs).remove(5);
 		verify(player, never()).sendMessage(Messages.COMMAND_NO_PERM.toString());
+	}
+
+	@Test
+	@DisplayName("TF-40: delete during a contest cancels it first, firing one TurfCaptureFailedEvent(CANCELLED)")
+	void delete_duringContest_firesCancelledOnce() {
+		TurfRuntimeState state = new TurfRuntimeState(5);
+		state.setState(TurfState.CONTESTING);
+		state.setChallengerGangId(2);
+		when(turfs.getRuntimeState(5)).thenReturn(state);
+		Player player = adminPlayer(true);
+		selections.get(player).setActiveTurfId(5);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			command.action().accept(command, player, new String[]{"turf", "delete"});
+
+			assertEquals(TurfState.IDLE, state.getState());
+			ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+			verify(bukkit.pluginManager(), times(1)).callEvent(captor.capture());
+			TurfCaptureFailedEvent failed = (TurfCaptureFailedEvent) captor.getValue();
+			assertEquals(TurfCaptureFailedEvent.Reason.CANCELLED, failed.getReason());
+		}
+		verify(turfs).delete(turf);
 	}
 }

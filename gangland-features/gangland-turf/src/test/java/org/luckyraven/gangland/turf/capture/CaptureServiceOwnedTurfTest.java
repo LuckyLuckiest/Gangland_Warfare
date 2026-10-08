@@ -81,7 +81,7 @@ class CaptureServiceOwnedTurfTest {
 	private CaptureService service(int durationSeconds) {
 		CaptureSettings settings = CaptureFixtures.settings(durationSeconds, 15, 15, 10,
 		                                                    new int[]{25, 50, 75}, 90, 90);
-		return new CaptureService(turfManager, gangs, users, settings, sounds);
+		return new CaptureService(turfManager, gangs, users, settings, sounds, new TurfOwnership(turfManager));
 	}
 
 	private TurfRuntimeState contestAt(double progress) {
@@ -182,7 +182,8 @@ class CaptureServiceOwnedTurfTest {
 		// Abandon_Grace_Seconds is configured very short (1s) here to make the point: it is never read on this
 		// path, so the contest survives well past it and only ends once the -1v0 decay walks progress to zero.
 		CaptureSettings settings = CaptureFixtures.settings(20, 15, 1, 10, new int[]{25, 50, 75}, 90, 90);
-		CaptureService  service  = new CaptureService(turfManager, gangs, users, settings, sounds);
+		CaptureService  service  = new CaptureService(turfManager, gangs, users, settings, sounds,
+		                                              new TurfOwnership(turfManager));
 		contestAt(3.0); // base = 5, one tick of -1 net drives 3 -> 0 (clamped), not -2
 
 		tick(service, new HashMap<>());

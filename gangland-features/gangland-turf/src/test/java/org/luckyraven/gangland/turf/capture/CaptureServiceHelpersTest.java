@@ -51,7 +51,8 @@ class CaptureServiceHelpersTest {
 		FakeUserLookup             users      = new FakeUserLookup();
 		RecordingTurfSoundContract sounds     = new RecordingTurfSoundContract();
 		CaptureSettings settings = CaptureFixtures.settings(180, 15, 15, 10, new int[]{25, 50, 75}, 90, 90);
-		service = new CaptureService(new TurfManager(repository), gangs, users, settings, sounds);
+		TurfManager turfs = new TurfManager(repository);
+		service = new CaptureService(turfs, gangs, users, settings, sounds, new TurfOwnership(turfs));
 	}
 
 	private static Turf turf(Integer ownerGangId, long lastCaptureTimestamp) {
