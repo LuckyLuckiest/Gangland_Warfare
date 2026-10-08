@@ -304,7 +304,7 @@ keyed by the signal name (`CONTACT` -> `Lines.Contact`, `FLANK_LEFT` -> `Lines.F
   `Ack_Delay_Ticks` (forced to at least `Player_Gap_Ticks + 5`, so the ack isn't throttled by its own order).
 - **Direct lines:** `CopRadio.dispatch` (`Dispatch_Wanted` on `onWantedStart`, `Escalate` when the group's tier rises)
   and `CopRadio.sayFromLeader` (`Stand_Down`, `Resisting`) speak outside the signal flow.
-- `CopRadio.callsign` is the cop's own callsign with colours stripped (`Officer ✚ Medic Bob #1592`), falling back to `SWAT-17` (tier name plus Citizens id) when a cop has none.
+- The radio names a cop with `CopRadio.speakerName`, which renders the `Speaker_Name` template (`{rank}`, `{role}`, `{name}`, `{number}`) from `copsncrooks/cop_radio_messages.yml` with its colours kept (default `{rank} {role} &f{name} &7#{number}`, so `&9Officer &cMedic &fBob &7#1592&7`); the line's own colour is appended so it resumes after the name. `CopRadio.callsign` is that default with colours stripped (`Officer Medic Bob #1592`), used only by logs and `CopListCommand`; it does not follow an owner's `Speaker_Name` edit. A cop with no callsign falls back to `SWAT-17` (tier name plus Citizens id).
 
 #### Role radio lines (0.13.0, H13b)
 

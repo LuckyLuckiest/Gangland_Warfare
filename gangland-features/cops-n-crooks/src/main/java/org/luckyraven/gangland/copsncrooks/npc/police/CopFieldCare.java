@@ -171,7 +171,7 @@ public class CopFieldCare {
 			BooleanSupplier standing = () -> healer.isValid() && patient.isValid() && healer.getPatient() == patient;
 			double distance = nearest;
 			radio.sayAsLater(group, medic, "Medic_Moving",
-			                 Map.of("member", CopRadio.callsign(patient), "distance", String.valueOf(Math.round(distance)),
+			                 Map.of("member", radio.speakerName(patient), "distance", String.valueOf(Math.round(distance)),
 			                        "eta", String.valueOf(Math.max(1, Math.round(distance / pace(medic))))),
 			                 1, standing);
 			coveringFire(group, cops, medic, patient, standing);
@@ -300,7 +300,7 @@ public class CopFieldCare {
 		if (hit) {
 			treatment.progressTicks = 0;
 			// a follow-up (past the squad and player gaps): the hit that pinned the medic just spoke, e.g. a Hit line
-			radio.sayAsLater(group, medic, "Medic_Pinned", Map.of("member", CopRadio.callsign(patient)), 1,
+			radio.sayAsLater(group, medic, "Medic_Pinned", Map.of("member", radio.speakerName(patient)), 1,
 			                 () -> medic.getPatient() == patient);
 			return false;
 		}
@@ -308,7 +308,7 @@ public class CopFieldCare {
 		if (!treatment.announced) {
 			treatment.announced = true;
 			radio.sayAs(group, medic, "Medic_Treating",
-			            Map.of("member", CopRadio.callsign(patient), "health", CopRadio.percent(patientBody)));
+			            Map.of("member", radio.speakerName(patient), "health", CopRadio.percent(patientBody)));
 		}
 		if (arriving) return false;
 
@@ -322,7 +322,7 @@ public class CopFieldCare {
 			return true;
 		}
 		radio.sayAs(group, medic, "Patched_Up",
-		            Map.of("member", CopRadio.callsign(patient),
+		            Map.of("member", radio.speakerName(patient),
 		                   "health", String.valueOf(Math.round(healed / patientBody.getMaxHealth() * 100))));
 		return true;
 	}

@@ -126,31 +126,6 @@ class CopRadioTest {
 	}
 
 	@Test
-	@DisplayName("the radio callsign keeps the role word but not its symbol; the nameplate keeps both")
-	void callsign_dropsRoleSymbol() {
-		CopNpc cop = cop(17, "&9&lSWAT", 5, 0);
-		when(cop.getCallsign()).thenReturn("&9Officer &c✚ Medic &fBob &7#1592");
-		CopRole medic = role("Medic", "✚");
-		when(cop.getRole()).thenReturn(medic);
-
-		assertEquals("Officer Medic Bob #1592", CopRadio.callsign(cop));
-		assertEquals("&9Officer &c✚ Medic &fBob &7#1592", cop.getCallsign());
-	}
-
-	@Test
-	@DisplayName("only the role's own symbol is removed, never a look-alike inside the name or tier word; no stray edge space")
-	void callsign_symbolRemovalIsAnchored() {
-		CopNpc cop = cop(17, "&9&lSWAT", 5, 0);
-		when(cop.getCallsign()).thenReturn("&9Alpha &ca Medic &fBea &7#1");
-		CopRole medic = role("Medic", "a");
-		when(cop.getRole()).thenReturn(medic);
-		assertEquals("Alpha Medic Bea #1", CopRadio.callsign(cop));
-
-		when(cop.getCallsign()).thenReturn("&ca Medic &fBob");
-		assertEquals("Medic Bob", CopRadio.callsign(cop));
-	}
-
-	@Test
 	@DisplayName("speakerName keeps the rank and role colours and the name's colour, and resumes the line's grey after the badge")
 	void speakerName_exampleA_coloursKeptLineColourResumes() {
 		assertEquals("&9Officer &cMedic &fBob &7#1592&7", radioWith(FORMAT, SPEAKER_TEMPLATE).speakerName(copA()));
@@ -194,7 +169,28 @@ class CopRadioTest {
 	@Test
 	@DisplayName("a rank-and-name template renders with no role and no badge number")
 	void speakerName_ranknameTemplate() {
-		assertEquals("&9Officer Bob&7", radioWith(FORMAT, "{rank} {name}").speakerName(copA()));
+		// &r before the name is invisible here; it is what stops a bold rank bleeding into the name
+		assertEquals("&9Officer &rBob&7", radioWith(FORMAT, "{rank} {name}").speakerName(copA()));
+	}
+
+	@Test
+	@DisplayName("a bold rank does not bleed into a name that has no colour code of its own before it")
+	void speakerName_boldRank_resetBeforeUncolouredName() {
+		CopNpc cop = cop(204, "&1&lSWAT", 4, 0);
+		when(cop.getCallsign()).thenReturn("&1&lSWAT Tony #1204");
+		when(cop.getFirstName()).thenReturn("Tony");
+
+		assertEquals("&1&lSWAT &rTony&7", radioWith(FORMAT, "{rank} {name}").speakerName(cop));
+		assertEquals("&1&lSWAT&rTony&7", radioWith(FORMAT, "{rank}{name}").speakerName(cop));
+	}
+
+	@Test
+	@DisplayName("a bold rank does not bleed into literal text placed right after it (no colour code or space between)")
+	void speakerName_boldRank_resetBeforeLiteralText() {
+		CopNpc cop = cop(204, "&1&lSWAT", 4, 0);
+		when(cop.getCallsign()).thenReturn("&1&lSWAT #1204");
+
+		assertEquals("&1&lSWAT&r#1204&7", radioWith(FORMAT, "{rank}#{number}").speakerName(cop));
 	}
 
 	@Test

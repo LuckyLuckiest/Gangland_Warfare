@@ -257,6 +257,15 @@ class CopRadioMessagesTest {
 	}
 
 	@Test
+	@DisplayName("the Spanish file carries its own Speaker_Name root key: a Spanish server never reads the English key")
+	void spanishFile_carriesItsOwnSpeakerName() throws IOException {
+		String spanish = shipped("copsncrooks/cop_radio_messages_es.yml");
+
+		assertTrue(spanish.contains("\nSpeaker_Name: "), "Spanish file has no Speaker_Name root key");
+		assertEquals(List.of("{rank} {role} &f{name} &7#{number}"), build(spanish).lines("Speaker_Name"));
+	}
+
+	@Test
 	@DisplayName("the bundled English file carries the 0.16 lines word for word")
 	void bundledEnglish_carriesTheNewLines() throws IOException {
 		CopRadioMessages english = build(shipped("copsncrooks/cop_radio_messages.yml"));

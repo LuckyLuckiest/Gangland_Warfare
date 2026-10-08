@@ -12,6 +12,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopConfigProvider;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
+import org.luckyraven.gangland.copsncrooks.npc.police.config.CopNames;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopRole;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopTierConfig;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.RegroupSettings;
@@ -43,6 +44,8 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The police radio: one {@link SquadRadio} speaking for every {@link CopGroup}. It voices the squads' signals, lets
@@ -156,7 +159,7 @@ public class CopRadio {
 	                             @Nullable LivingEntity addressee) {
 		AbstractNpc speaker = leaderSpeaker(group);
 		if (speaker == null) return false;
-		return radio.say(group.getSquad(), voice(group), speaker.getEntity(), callsign(speaker), key, "Format", null,
+		return radio.say(group.getSquad(), voice(group), speaker.getEntity(), speakerName(speaker), key, "Format", null,
 		                 addressee, extra);
 	}
 
@@ -202,7 +205,7 @@ public class CopRadio {
 
 	/** {@code cop} answers a call from {@code squad}. */
 	public boolean respond(CopGroup group, NpcSquad squad, CopNpc cop) {
-		return radio.say(squad, voice(group), cop.getEntity(), callsign(cop), "Responding", "Format", null, null,
+		return radio.say(squad, voice(group), cop.getEntity(), speakerName(cop), "Responding", "Format", null, null,
 		                 Map.of());
 	}
 
@@ -213,7 +216,7 @@ public class CopRadio {
 	public boolean sayAs(CopGroup group, CopNpc cop, String key, Map<String, String> extra) {
 		LivingEntity self = cop.getEntity();
 		if (self == null) return false;
-		return radio.say(group.getSquad(), voice(group), self, callsign(cop), key, "Format", null, null,
+		return radio.say(group.getSquad(), voice(group), self, speakerName(cop), key, "Format", null, null,
 		                 withRole(cop, extra));
 	}
 
@@ -231,37 +234,82 @@ public class CopRadio {
 		return voice(group).hunted(squad);
 	}
 
+	/** The radio's default speaker name ({@code Speaker_Name} in {@code copsncrooks/cop_radio_messages.yml}). */
+	static final String DEFAULT_SPEAKER_NAME = "{rank} {role} &f{name} &7#{number}";
+
+	/** The colour codes at the end of a Format's text before its {@code %line%}. */
+	private static final Pattern LINE_COLOUR = Pattern.compile("((?:&[0-9a-fk-orA-FK-OR])+)$");
+
+	/** A {@code {name}} with no colour code right before it: it gets an {@code &r} so a bold rank cannot bleed into it. */
+	private static final Pattern UNCOLOURED_NAME = Pattern.compile("(?<!&[0-9a-fk-orA-FK-OR])\\{name\\}");
+
+	/** A {@code {rank}} with literal text right after it: a bold rank would run into that text, so it gets an {@code &r}. */
+	private static final Pattern BLEEDING_RANK = Pattern.compile("\\{rank\\}(?=[^\\s&])");
+
 	/**
-	 * The cop's own callsign without colours or the role's symbol ({@code "Officer Medic Bob #1592"}, its hologram
-	 * line less the {@code Display.Symbol}), or
-	 * {@code "SWAT-17"} for a cop without one: the tier's display name without colours, then the Citizens id.
+	 * The cop's plain radio callsign: the default speaker name with its colours stripped ({@code "Officer Medic Bob
+	 * #1592"}), or {@code "SWAT-17"} for a cop without one: the tier's display name without colours, then the Citizens
+	 * id.
 	 */
 	public static String callsign(AbstractNpc npc) {
-		if (npc instanceof CopNpc cop && cop.getCallsign() != null) {
-			String plain = ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', cop.getCallsign()));
-			// the role's symbol is for the nameplate; the radio keeps the role word ("Officer Medic Bob #1592")
-			CopRole role   = cop.getRole();
-			String  symbol = role != null && role.symbol() != null ? role.symbol() : "";
-			// CopRole.display() builds color + symbol + ' ' + word: drop that symbol only, anchored on the word
-			if (plain != null && !symbol.isEmpty() && role.displayName() != null)
-				plain = plain.replace(strip(symbol) + " " + role.displayName(), role.displayName());
-			if (plain != null) plain = plain.replaceAll(" {2,}", " ").trim();
-			if (plain != null) return plain;
-		}
+		return ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', render(npc, DEFAULT_SPEAKER_NAME, "")));
+	}
+
+	/**
+	 * How {@code npc} is named on the radio: the {@code Speaker_Name} template with its colours kept, then the line's
+	 * own colour ({@link #lineColour}), so the line resumes its colour after the name. A cop with no callsign is named
+	 * as {@link #callsign} names it.
+	 */
+	public String speakerName(AbstractNpc npc) {
+		List<String> templates = lines.lines("Speaker_Name");
+		return render(npc, templates.isEmpty() ? DEFAULT_SPEAKER_NAME : templates.get(0), lineColour());
+	}
+
+	/**
+	 * {@code template} filled with the cop's rank, role word, first name and badge, then {@code lineColour}. A cop with
+	 * no callsign ({@code getCallsign()} null: tests, stray spawns) keeps the tier-and-id name, with no colour suffix.
+	 */
+	static String render(AbstractNpc npc, String template, String lineColour) {
+		if (!(npc instanceof CopNpc cop) || cop.getCallsign() == null) return fallbackName(npc);
+
+		CopTierConfig tier     = cop.getTierConfig();
+		String        rank     = tier != null ? nullToEmpty(tier.displayName()) : "";
+		CopRole       role     = cop.getRole();
+		String        word     = role != null ? nullToEmpty(role.displayName()) : "";
+		String        roleWord = word.isEmpty() ? "" : nullToEmpty(role.color()) + word;
+		String        name     = nullToEmpty(cop.getFirstName());
+		String        number   = cop.getNpc() != null ? String.valueOf(CopNames.badge(cop.getNpc().getId())) : "";
+
+		String guarded   = UNCOLOURED_NAME.matcher(template).replaceAll("&r{name}");
+		String rankValue = !rank.isEmpty() && BLEEDING_RANK.matcher(guarded).find() ? rank + "&r" : rank;
+		String filled    = fill(fill(fill(fill(guarded, "rank", rankValue), "role", roleWord), "name", name), "number", number);
+		return filled.replaceAll(" {2,}", " ").trim() + lineColour;
+	}
+
+	/** {@code {key}} replaced by {@code value}; an empty value takes the colour code before it and the doubled space goes. */
+	private static String fill(String text, String key, String value) {
+		if (!value.isEmpty()) return text.replace("{" + key + "}", value);
+		return text.replaceAll("(&[0-9a-fk-orA-FK-OR])*\\{" + key + "\\}", "");
+	}
+
+	/** The tier-and-id name of a cop with no callsign: {@code "SWAT-17"}; {@code "Unit-17"} for a non-cop. */
+	private static String fallbackName(AbstractNpc npc) {
 		String tier = npc instanceof CopNpc cop && cop.getTierConfig() != null ? tierName(cop.getTierConfig()) : "Unit";
 		return tier + "-" + npc.getNpc().getId();
 	}
 
-	private static String strip(String colored) {
-		return ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', colored));
+	/** The colour codes just before {@code %line%} in the Format, the colour a line resumes in; empty for none. */
+	private String lineColour() {
+		List<String> formats = lines.lines("Format");
+		String       format  = formats.isEmpty() ? "" : formats.get(0);
+		int          at      = format.indexOf("%line%");
+		if (at < 0) return "";
+		Matcher trailing = LINE_COLOUR.matcher(format.substring(0, at));
+		return trailing.find() ? trailing.group(1) : "";
 	}
 
-	/**
-	 * How {@code npc} is named on the radio: rank, role word, name and badge, colours kept, the line's colour resumed
-	 * after it. Red-phase stub (0.16.1): still today's plain callsign.
-	 */
-	public String speakerName(AbstractNpc npc) {
-		return callsign(npc);
+	private static String nullToEmpty(@Nullable String text) {
+		return text != null ? text : "";
 	}
 
 	/** The tier's display name without colours; empty for no tier. */
@@ -340,7 +388,7 @@ public class CopRadio {
 		// order and the Marksman's Overwatch_Set in the squad gap and is dropped (order: 1 Commander, 2 Flanking, 3 this)
 		if (kindOf(((CopNpc) member).getRole()) == RoleKind.DEFENDER)
 			radio.sayLater(squad, voice, member, key, extra, 3, () -> shieldRelevant(member, squad, voice));
-		else radio.say(squad, voice, member.getEntity(), callsign(member), key, "Format", where, null, extra);
+		else radio.say(squad, voice, member.getEntity(), speakerName(member), key, "Format", where, null, extra);
 		return true;
 	}
 
@@ -364,7 +412,7 @@ public class CopRadio {
 			}
 			case CONTACT_LOST -> commanderSays(group, squad, voice, "Status_Check", where, Map.of());
 			case MAN_DOWN, LEADER_DOWN -> commanderSays(group, squad, voice, "Pull_Back", where,
-			                                            Map.of("member", callsign(member)), member);
+			                                            Map.of("member", speakerName(member)), member);
 			case FLANK_LEFT, FLANK_RIGHT, PUSH -> {
 				postLine(squad, voice, member);
 				AbstractNpc leader = squad.leader();
@@ -532,8 +580,8 @@ public class CopRadio {
 		group.setFallBackUntil(Math.max(group.getFallBackUntil(), now() + COMMANDER_FALL_BACK_MS));
 		AbstractNpc speaker = squad.leader();
 		if (speaker == null) return;
-		radio.say(squad, voice, speaker.getEntity(), callsign(speaker), "Commander_Down", "Format", where, null,
-		          Map.of("member", callsign(commander)));
+		radio.say(squad, voice, speaker.getEntity(), speakerName(speaker), "Commander_Down", "Format", where, null,
+		          Map.of("member", speakerName(commander)));
 	}
 
 	private void requestBackup(CopGroup group, NpcSquad squad, RadioVoice voice, AbstractNpc downed,
@@ -543,7 +591,7 @@ public class CopRadio {
 		if (!group.requestBackup(now(), backup)) return;
 
 		AbstractNpc speaker = squad.leader() != null ? squad.leader() : downed;
-		radio.say(squad, voice, speaker == downed ? null : speaker.getEntity(), callsign(speaker), "Backup", "Format",
+		radio.say(squad, voice, speaker == downed ? null : speaker.getEntity(), speakerName(speaker), "Backup", "Format",
 		          where, null, Map.of());
 	}
 
@@ -562,7 +610,7 @@ public class CopRadio {
 		return new RadioVoice() {
 			@Override
 			public String callsign(AbstractNpc npc) {
-				return CopRadio.callsign(npc);
+				return CopRadio.this.speakerName(npc);
 			}
 
 			@Override

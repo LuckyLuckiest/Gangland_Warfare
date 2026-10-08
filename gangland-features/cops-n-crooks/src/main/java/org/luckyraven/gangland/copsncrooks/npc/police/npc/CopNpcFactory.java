@@ -38,7 +38,6 @@ import org.luckyraven.keystone.util.ChatUtil;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
@@ -116,7 +115,8 @@ public class CopNpcFactory {
 
 		// Created under a placeholder: the badge is the Citizens id, only known once the NPC exists.
 		NPC    npc      = CitizensNpcs.create(EntityType.PLAYER, "Officer");
-		String callsign = CitizensBridge.nameplate(npc, names, baseTier, role, ThreadLocalRandom.current());
+		String firstName = names.pickName(ThreadLocalRandom.current());
+		String callsign  = CitizensBridge.nameplate(npc, names, baseTier, role, firstName);
 		npc.setProtected(false);
 		npc.data().setPersistent(NPC.Metadata.SHOULD_SAVE, false);
 		// The callsign hologram line stands in for the nameplate (CitizensBridge#nameplate).
@@ -136,6 +136,7 @@ public class CopNpcFactory {
 
 		CopNpc copNpc = new CopNpc(plugin, npc, tierConfig, behaviors, spawnLocation, configProvider);
 		copNpc.setCallsign(callsign);
+		copNpc.setFirstName(firstName);
 		copNpc.setTargetFilter(downedTargetFilter);
 		copNpc.setRole(role);
 
@@ -346,10 +347,10 @@ public class CopNpcFactory {
 		 * line 0 in its place ({@code HologramTrait} stacks lines upward from the hidden plate, so a line inserted
 		 * at 0, e.g. the healthbars module's bar, sits directly under the callsign). {@code %rank%} is always the
 		 * tier's {@code Display_Name}; {@code %role%} is the role's coloured {@link CopRole#display()} (empty with no
-		 * role), so the radio callsign, the same text without colours, carries the role word too.
+		 * role). This hologram text is the only consumer of it: the radio names a cop from its own
+		 * {@code Speaker_Name} template ({@code CopRadio#speakerName}), not from this string.
 		 */
-		static String nameplate(NPC npc, CopNames names, CopTierConfig tier, @Nullable CopRole role, Random random) {
-			String firstName = names.pickName(random);
+		static String nameplate(NPC npc, CopNames names, CopTierConfig tier, @Nullable CopRole role, String firstName) {
 			int    badge     = CopNames.badge(npc.getId());
 			String callsign  = names.callsign(tier.displayName(), role != null ? role.display() : "", firstName, badge);
 
