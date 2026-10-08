@@ -220,7 +220,8 @@ Wanted:
       # The title flashed on the screen when the wanted level changes. Enable (false = no title on any event)
       # is the master switch. Each event has its own Title and Subtitle. Placeholders: %stars% the star row,
       # %level% the new star count, %card% the star card line (empty while Star_Card is off). A blank Title
-      # and a blank Subtitle send nothing. Gained and Lost show the star row in the subtitle, so the count is still
+      # and a blank Subtitle send nothing. To blank a line write Title: "" or Subtitle: "" (a bare key with no
+      # value reads as absent and takes the default). Gained and Lost show the star row in the subtitle, so the count is still
       # shown with Star_Card off. Fade_In, Stay and Fade_Out are in ticks (20 = 1 second).
       # Old look (before 0.16.1): Title "&c%stars%", Subtitle "%card%", Fade_In 5, Stay 40, Fade_Out 10 on every event.
       Title:
