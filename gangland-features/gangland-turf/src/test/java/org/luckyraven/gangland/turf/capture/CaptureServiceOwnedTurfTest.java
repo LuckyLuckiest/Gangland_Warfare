@@ -296,8 +296,9 @@ class CaptureServiceOwnedTurfTest {
 			service.tick(cache);
 
 			ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
-			// 3 progress-milestone events (25, 50, 75) plus the TurfCapturedEvent from completion.
-			verify(bukkit.pluginManager(), org.mockito.Mockito.times(4)).callEvent(captor.capture());
+			// 3 progress-milestone events (25, 50, 75) plus the TurfOwnerChangedEvent (cause CAPTURE) and the
+			// TurfCapturedEvent from completion (W0-A: a capture now fires one owner-changed event).
+			verify(bukkit.pluginManager(), org.mockito.Mockito.times(5)).callEvent(captor.capture());
 			long progressEvents = captor.getAllValues().stream().filter(TurfCaptureProgressEvent.class::isInstance).count();
 			long capturedEvents = captor.getAllValues().stream().filter(TurfCapturedEvent.class::isInstance).count();
 			assertEquals(3, progressEvents);

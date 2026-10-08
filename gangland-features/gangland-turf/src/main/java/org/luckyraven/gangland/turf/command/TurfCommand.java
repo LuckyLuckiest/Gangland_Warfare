@@ -14,6 +14,7 @@ import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.turf.capture.TurfOwnership;
 import org.luckyraven.gangland.turf.config.TurfSettings;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.Turf;
@@ -47,6 +48,7 @@ public final class TurfCommand extends Command {
 	private final PowerupRegistry      powerupRegistry;
 	private final ActiveBuffManager    activeBuffs;
 	private final TurfPowerupManager   powerupNpcs;
+	private final TurfOwnership        ownership;
 	private final TurfSettings         settings;
 	/**
 	 * Sub-arguments a runtime module attaches under {@code turf}. Empty when no module is installed — the core
@@ -67,6 +69,7 @@ public final class TurfCommand extends Command {
 	                   ActiveBuffManager activeBuffs,
 	                   TurfPowerupManager powerupNpcs,
 	                   TurfSettings settings,
+	                   TurfOwnership ownership,
 	                   DependencyContainer container) {
 		super(plugin, "turf", false);
 
@@ -82,6 +85,7 @@ public final class TurfCommand extends Command {
 		this.powerupNpcs     = powerupNpcs;
 		this.settings        = settings;
 		this.contributions   = CommandContributions.from(container);
+		this.ownership       = ownership;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -121,9 +125,9 @@ public final class TurfCommand extends Command {
 		                                                 selections, messages, settings);
 		TurfDeleteCommand delete = new TurfDeleteCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                 turfs, selections, messages,
-		                                                 garrisons, activeBuffs, powerupNpcs);
+		                                                 garrisons, activeBuffs, powerupNpcs, ownership);
 		TurfSetOwnerCommand setOwner = new TurfSetOwnerCommand(getPlugin(), getArgumentTree(), getArgument(),
-		                                                       turfs, gangs, selections, messages);
+		                                                       turfs, gangs, selections, messages, ownership);
 		TurfListCommand listSub = new TurfListCommand(getPlugin(), getArgumentTree(), getArgument(), turfs, gangs,
 		                                              messages);
 		TurfInfoCommand info = new TurfInfoCommand(getPlugin(), getArgumentTree(), getArgument(),

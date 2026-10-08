@@ -22,6 +22,7 @@ import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.gangland.turf.capture.CaptureService;
+import org.luckyraven.gangland.turf.capture.TurfOwnership;
 import org.luckyraven.gangland.turf.capture.CaptureSettings;
 import org.luckyraven.gangland.turf.contract.TurfDisplayContract;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
@@ -162,12 +163,18 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
+	public TurfOwnership turfOwnership(TurfManager turfs) {
+		return new TurfOwnership(turfs);
+	}
+
+	@Bean
 	public CaptureService captureService(TurfManager turfs,
 	                                     GangLookupContract gangs,
 	                                     UserLookupContract users,
 	                                     CaptureSettings settings,
-	                                     TurfSoundContract sounds) {
-		return new CaptureService(turfs, gangs, users, settings, sounds);
+	                                     TurfSoundContract sounds,
+	                                     TurfOwnership ownership) {
+		return new CaptureService(turfs, gangs, users, settings, sounds, ownership);
 	}
 
 	@Bean
@@ -181,9 +188,10 @@ public final class TurfModuleConfig {
 	public TurfIncomeDistributor turfIncomeDistributor(JavaPlugin plugin, TurfSettings settings,
 	                                                   TurfManager turfs,
 	                                                   GangLookupContract gangs,
-	                                                   ActiveBuffManager buffs) {
-		long                  intervalTicks = settings.getIncomeIntervalMinutes() * 60L * 20L;
-		TurfIncomeDistributor distributor   = new TurfIncomeDistributor(plugin, turfs, gangs, buffs, intervalTicks);
+	                                                   ActiveBuffManager buffs,
+	                                                   TurfOwnership ownership) {
+		long                 intervalTicks = settings.getIncomeIntervalMinutes() * 60L * 20L;
+		TurfIncomeDistributor distributor   = new TurfIncomeDistributor(plugin, turfs, gangs, buffs, ownership, intervalTicks);
 		distributor.start();
 		return distributor;
 	}
@@ -191,8 +199,9 @@ public final class TurfModuleConfig {
 	@Bean
 	public InactivityReleaseTask inactivityReleaseTask(TurfManager turfs,
 	                                                   GangLookupContract gangs,
-	                                                   CaptureSettings settings) {
-		return new InactivityReleaseTask(turfs, gangs, settings.getInactivityAutoReleaseDays());
+	                                                   CaptureSettings settings,
+	                                                   TurfOwnership ownership) {
+		return new InactivityReleaseTask(turfs, gangs, ownership, settings.getInactivityAutoReleaseDays());
 	}
 
 	@Bean

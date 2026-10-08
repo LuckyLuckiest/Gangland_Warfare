@@ -8,7 +8,9 @@ import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.turf.capture.TurfOwnership;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
+import org.luckyraven.gangland.turf.events.TurfCaptureFailedEvent;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
@@ -33,10 +35,12 @@ class TurfDeleteCommand extends SubArgument {
 	private final GarrisonManager      garrisons;
 	private final ActiveBuffManager    buffs;
 	private final TurfPowerupManager   powerupNpcs;
+	private final TurfOwnership        ownership;
 
 	protected TurfDeleteCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                            TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages,
-	                            GarrisonManager garrisons, ActiveBuffManager buffs, TurfPowerupManager powerupNpcs) {
+	                            GarrisonManager garrisons, ActiveBuffManager buffs, TurfPowerupManager powerupNpcs,
+	                            TurfOwnership ownership) {
 		super(plugin, "delete", tree, parent);
 
 		this.turfs       = turfs;
@@ -45,6 +49,7 @@ class TurfDeleteCommand extends SubArgument {
 		this.garrisons   = garrisons;
 		this.buffs       = buffs;
 		this.powerupNpcs = powerupNpcs;
+		this.ownership   = ownership;
 	}
 
 	@Override
@@ -60,6 +65,7 @@ class TurfDeleteCommand extends SubArgument {
 			if (turf == null) {
 				return;
 			}
+			ownership.cancelContest(turf, TurfCaptureFailedEvent.Reason.CANCELLED);
 			turfs.delete(turf);
 			garrisons.remove(turf.getId());
 			buffs.removeAll(turf.getId());
