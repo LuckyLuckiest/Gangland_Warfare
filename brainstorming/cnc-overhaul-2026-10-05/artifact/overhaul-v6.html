@@ -1,6 +1,6 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Cops N Crooks Overhaul</title>
-<meta name="description" content="The police plan for Gangland Warfare, re-audited against 0.12.0 and the 0.13.0 branch, re-versioned to 0.15–0.20, with a dependency graph of what each release needs. 0.15.0 “Lose them” shipped on 5 October 2026; 0.15.1, 0.15.2 and 0.16.0 have shipped too, and 0.16.1 is in progress.">
+<meta name="description" content="The police plan for Gangland Warfare, re-audited against 0.12.0 and the 0.13.0 branch, re-versioned to 0.15–0.20, with a dependency graph of what each release needs. 0.15.0 “Lose them” shipped on 5 October 2026; 0.15.1, 0.15.2 and 0.16.0 have shipped too, and 0.16.1 shipped on 8 October 2026.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Pixelify+Sans:wght@400;600&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
@@ -547,7 +547,7 @@ table.money td.today { font-size: .86rem; }
       <h1><span class="cops">Cops</span> N <span class="crooks">Crooks</span> <span class="over">Overhaul</span></h1>
       <p class="lede">Right now the cheapest way to lose five stars is to jump off a roof. This plan makes the police something you outplay. Crimes need a witness, units arrive from a station, stars fade only when you break line of sight, and whatever you get away with follows you afterwards.</p>
       <ul class="facts-line">
-        <li>Shipped <b>0.15.0</b>, <b>0.15.1</b>, <b>0.15.2</b> and <b>0.16.0</b> on top of <b>0.13.0</b>; <b>0.16.1</b> in progress</li>
+        <li>Shipped <b>0.15.0</b>, <b>0.15.1</b>, <b>0.15.2</b>, <b>0.16.0</b> and <b>0.16.1</b> on top of <b>0.13.0</b></li>
         <li><b>55</b> features, <b>25</b> new</li>
         <li><b>13</b> foundations</li>
         <li><b>6</b> releases, 0.15 to 0.20, plus patch releases <b>0.15.1</b>, <b>0.15.2</b> and <b>0.16.1</b></li>
@@ -796,12 +796,12 @@ table.money td.today { font-size: .86rem; }
               <span class="vt-scope">Shipped 2026-10-07 as master b23d108a and deployed to the Test Server, where it booted clean. Stations and dispatch with ETA, hand-off, perimeter, contacts, bribe stars, hospital respawn shield, admin regions. The owner confirmed in game on 2026-10-08 that it works as expected.</span>
               <span class="vt-deps"><span>Keystone 1.15.0</span><span>gangland-api 2.3</span></span>
             </li>
-            <li class="vt vt-verifying vt-cnc">
+            <li class="vt vt-shipped vt-cnc">
               <span class="vt-dot" aria-hidden="true"></span>
               <span class="vt-v"><a href="#r0161">0.16.1</a></span>
               <span class="vt-label">Cops N Crooks · Owner playtest fixes</span>
-              <span class="st st-v-verifying">In progress</span>
-              <span class="vt-scope">Branch 0.16.1, started 2026-10-08. Five items: the last star ends the chase with “lost the cops” feedback (T-187); cops-n-crooks command output matches the core style (T-188); turf defenders protect their gang from cops (T-189); radio names keep their colours and the speaker format is configurable (T-190); quieter, configurable wanted-level titles.</span>
+              <span class="st st-v-shipped">Shipped</span>
+              <span class="vt-scope">Shipped 8 October 2026, master b6d2ec0e, with Keystone 1.15.1. Six items: after an escape the cops keep searching and a bounty goes on you (T-187); cops-n-crooks command replies use the core style, with help entries (T-188); turf defenders and the Quartermaster fight cops that hit members of the owning gang (T-189); radio names keep their colours, with a configurable Speaker_Name format (T-190); wanted-level titles are configurable per event and quiet by default (T-191); tab completion lists primary command names only (T-192).</span>
               <span class="vt-deps"><span>0.16.0 shipped</span></span>
             </li>
             <li class="vt vt-proposed vt-cnc">
@@ -958,7 +958,7 @@ table.money td.today { font-size: .86rem; }
           </g>
         </svg>
           </div>
-          <figcaption>Everything in the 0.15 column shipped in 0.15.0 on 5 October 2026, and Smart star drops (Drop_Mode AUTO) shipped as the 0.15.2 point release on 7 October 2026. The 0.16 column shipped as 0.16.0 on 7 October 2026, with the 0.16.1 playtest fixes in progress. Two foundations in 0.15, the wanted seam and the crime event bus, feed the heat ledger and line-of-sight evasion, and most of the plan hangs off those two. Districts and stations in 0.16 are the second spine: dispatch, hideouts, the record and on-duty police all need them. The longest chain runs districts, stations, setup wand, hideouts, scanner map, on-duty police, and ends at the event. Nothing needs a Bartizan release. Keystone moves twice: 1.15.0 promotions in 0.16 and NPC carrier bodies (1.16.0) in 0.20. Boxes under “No prerequisites” can be built any time within their release.</figcaption>
+          <figcaption>Everything in the 0.15 column shipped in 0.15.0 on 5 October 2026, and Smart star drops (Drop_Mode AUTO) shipped as the 0.15.2 point release on 7 October 2026. The 0.16 column shipped as 0.16.0 on 7 October 2026, with the 0.16.1 playtest fixes shipped on 8 October 2026. Two foundations in 0.15, the wanted seam and the crime event bus, feed the heat ledger and line-of-sight evasion, and most of the plan hangs off those two. Districts and stations in 0.16 are the second spine: dispatch, hideouts, the record and on-duty police all need them. The longest chain runs districts, stations, setup wand, hideouts, scanner map, on-duty police, and ends at the event. Nothing needs a Bartizan release. Keystone moves twice: 1.15.0 promotions in 0.16 and NPC carrier bodies (1.16.0) in 0.20. Boxes under “No prerequisites” can be built any time within their release.</figcaption>
         </figure>
         <p class="subhead">Foundations</p>
         <ul class="found-list">
@@ -2568,7 +2568,7 @@ table.money td.today { font-size: .86rem; }
       <section id="roadmap" class="sec">
         <p class="eyebrow">Order of work</p>
         <h2>Roadmap</h2>
-        <p class="intro">6 releases after Gang &amp; Turf, each playable on its own, plus patch releases 0.15.1, 0.15.2 and 0.16.1 (0.15.1 and 0.15.2 shipped, 0.16.1 in progress) between the numbered ones. Every release has a test you can run in game to know it's done, and names the Keystone, Bartizan and API versions it needs.</p>
+        <p class="intro">6 releases after Gang &amp; Turf, each playable on its own, plus patch releases 0.15.1, 0.15.2 and 0.16.1 (0.15.1, 0.15.2 and 0.16.1 shipped) between the numbered ones. Every release has a test you can run in game to know it's done, and names the Keystone, Bartizan and API versions it needs.</p>
 
         <ol class="roadmap">
           <li id="r015">
@@ -2674,17 +2674,19 @@ table.money td.today { font-size: .86rem; }
             <p class="done"><span>Done when</span>An admin uses the setup wand to place 'Northside Station' and a 'Docks' district. Commit a crime in the Docks: the radio says units are en route from Northside Station with an ETA, and they arrive after the delay from a spot you cannot see. At three stars the squad mixes tiers: sergeants push in while higher-tier officers hold back. Wipe a three-star squad and get a breather before the refill. Break contact and two cops post up on the corners while the rest search. Outrun the squad and the next units come from ahead of you. Reach a hideout unseen and the clock runs faster. Stop committing crimes for a minute and the radio says units are returning to patrol while your clock speeds up. Wipe a star from the phone contacts page while unseen; try a [WANTED] sign in a cop's view and it refuses. A rival shoots first and you kill them: no star. Claim a posted bounty: no star. Kill a five-star player nobody has put money on: you gain a star. Die and wake at the nearest hospital with one bill, charged when you respawn, and with the bundled settings none of your own cash on the street. “A rival shoots first and you kill them: no star” and “Claim a posted bounty: no star” already hold on 0.15.0, with a fixed 30 s first-strike window; 0.16 adds the tuning keys and the exploit guards.</p>
           </li>
           <li id="r0161">
-            <div><div class="rel-v pt">0.16.1</div><div class="rel-name">Owner playtest fixes</div><span class="st st-v-verifying">In progress</span><ul class="rel-deps"><li>0.16.0 merged</li></ul></div>
+            <div><div class="rel-v pt">0.16.1</div><div class="rel-name">Owner playtest fixes</div><span class="st st-v-shipped">Shipped</span><ul class="rel-deps"><li>0.16.0 merged</li></ul></div>
             <div>
-              <p class="rel-goal">Patch release on branch 0.16.1, started 2026-10-08, from the owner's playtest of 0.16.0. Five items, each a small fix rather than a new mechanic.</p>
+              <p class="rel-goal">Patch release on branch 0.16.1, started 2026-10-08, from the owner's playtest of 0.16.0. Six items, each a small fix rather than a new mechanic.</p>
               <ul class="rel-items">
-                <li>Last star ends the chase, with “lost the cops” feedback (T-187)</li>
-                <li>cops-n-crooks command output matches the core style (T-188)</li>
-                <li>Turf defenders protect their gang from cops (T-189)</li>
-                <li>Radio names keep their colours, and the speaker format is configurable (T-190)</li>
-                <li>Quieter, configurable titles when the wanted level goes up</li>
+                <li>After an escape the cops keep searching, and a bounty goes on you (notoriety, once per escape), with a chat line and a BOUNTY boss bar; if the search squad sees you, you are wanted again; death or arrest ends it (T-187)</li>
+                <li>cops-n-crooks command replies use the core style, with help entries (T-188)</li>
+                <li>Turf defenders and the Quartermaster fight cops that hit members of the owning gang (T-189)</li>
+                <li>Radio names keep their colours, with a configurable Speaker_Name format such as “{rank} {name}” (T-190)</li>
+                <li>Wanted-level titles are configurable per event and quiet by default: subtitle only, one second (T-191)</li>
+                <li>Tab completion lists primary command names only, no aliases (T-192, Keystone 1.15.1)</li>
               </ul>
-              <p class="rel-why">Tracked in the Cops N Crooks docket as T-187 to T-190 (0.16 owner playtest) plus the wanted-title item. Still open: no release yet.</p>
+              <p class="rel-why">Tracked in the Cops N Crooks docket as T-187 to T-192 (0.16 owner playtest).</p>
+            <p class="rel-found"><span>Shipped</span>8 October 2026, master b6d2ec0e, with Keystone 1.15.1.</p>
             </div>
           </li>
           <li id="r017">
