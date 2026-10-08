@@ -130,6 +130,20 @@ public final class TurfDefenderDeployer {
 	}
 
 	/**
+	 * The defenders of {@code turfId} that are still alive and not yet expired; empty when the turf has no group.
+	 */
+	public List<CivilianNpc> liveDefenders(int turfId) {
+		Group group = byTurfId.get(turfId);
+		if (group == null) return List.of();
+		long now = System.currentTimeMillis();
+		List<CivilianNpc> live = new ArrayList<>(group.defenders.size());
+		for (TrackedDefender d : group.defenders) {
+			if (d.npc.isValid() && !d.npc.isMarkedForRemoval() && now < d.expiresAt) live.add(d.npc);
+		}
+		return live;
+	}
+
+	/**
 	 * Bound to {@link CivilianService} via constructor injection so it stays referenced — used to acknowledge the
 	 * dependency chain even though deploys go through {@link CivilianSpawnManager}. Civilians spawned via the spawn
 	 * manager auto-register with the service's tick loop.

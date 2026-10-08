@@ -30,6 +30,19 @@ Powerup_Npc:
    # to it. While the turf is being contested, TurfPowerupNpc.engage() flips this NPC into COMBAT and points
    # its target at the closest attacker; on capture-end it pacifies back to IDLE.
    Type_Id: quartermaster
+   # Blocks from the Quartermaster within which a contest target (an attacker) is picked up. Minimum 1.0.
+   Targeting_Radius: 32.0
+# Cop response (T-189): while a cop NPC hits a player standing on a turf their gang protects, the turf's
+# Quartermaster and garrison defenders within range of the cop turn on it. They never start a fight with a cop on
+# their own, and they stop again when the cop dies, the victim leaves or stops being protected, or the cop moves
+# out of range.
+Cop_Response:
+   # Set to false and turf defenders ignore cops entirely.
+   Enabled: true
+   # Blocks from the defender or Quartermaster within which it answers a cop. Minimum 1.0.
+   Targeting_Radius: 32.0
+   # Also protect members of gangs allied with the turf owner, not only the owner's own members.
+   Include_Allies: true
 Defender:
    # civilians.yml type id to spawn for each garrisoned defender. The type's combat behaviour, equipment, and
    # stats are fully owned by civilians.yml.

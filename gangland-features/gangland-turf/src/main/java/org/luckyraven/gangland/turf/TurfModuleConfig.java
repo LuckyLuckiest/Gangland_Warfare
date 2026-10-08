@@ -7,6 +7,7 @@ import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.civilians.npc.CivilianService;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
+import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.data.region.PlaceNames;
 import org.luckyraven.gangland.turf.database.ActiveTurfBuffRepository;
 import org.luckyraven.gangland.turf.database.TurfGarrisonRepository;
@@ -35,6 +36,8 @@ import org.luckyraven.gangland.turf.npc.config.TurfNpcsConfigLoader;
 import org.luckyraven.gangland.turf.npc.config.TurfPowerupOpenContractImpl;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
+import org.luckyraven.gangland.turf.npc.guard.CopGuardConfig;
+import org.luckyraven.gangland.turf.npc.guard.TurfCopGuard;
 import org.luckyraven.gangland.turf.npc.view.TurfPowerupBuffCatalogueView;
 import org.luckyraven.gangland.turf.npc.view.TurfPowerupFlow;
 import org.luckyraven.gangland.turf.npc.view.TurfPowerupGarrisonView;
@@ -255,6 +258,22 @@ public final class TurfModuleConfig {
 		TurfDefenderDeployer deployer = new TurfDefenderDeployer(plugin, civilianService, spawnManager);
 		deployer.start();
 		return deployer;
+	}
+
+	@Bean
+	public CopGuardConfig copGuardConfig(TurfNpcsConfigLoader loader) {
+		return loader.getCopGuardConfig();
+	}
+
+	// T-189: turf defenders and the Quartermaster answer cops that hit a player standing on their gang's turf. The
+	// cops-n-crooks listener feeds the hits in; this bean only owns the 5-tick engagement release task.
+	@Bean
+	public TurfCopGuard turfCopGuard(JavaPlugin plugin, TurfManager turfs, UserLookupContract users,
+	                                 GangMembership membership, TurfPowerupManager powerups,
+	                                 TurfDefenderDeployer defenders, CopGuardConfig config) {
+		TurfCopGuard guard = new TurfCopGuard(plugin, turfs, users, membership, powerups, defenders, config);
+		guard.start();
+		return guard;
 	}
 
 	@Bean
