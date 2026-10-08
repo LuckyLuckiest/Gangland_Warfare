@@ -58,10 +58,6 @@ public class Gang {
 		this.members.addAll(members);
 	}
 
-	public Gang() {
-		this(generateId());
-	}
-
 	public Gang(int id) {
 		this.id      = id;
 		this.allies  = new HashSet<>();
@@ -99,8 +95,15 @@ public class Gang {
 		allies.removeIf(gangAlliance -> gangAlliance.ally().getId() == gang.getId());
 	}
 
+	/**
+	 * Alliances are mutual (TF-24): true when either gang lists the other, so a one-sided entry counts for both.
+	 */
 	public boolean isAlly(Gang gang) {
-		return !allies.stream().filter(gangAlliance -> gangAlliance.ally().getId() == gang.getId()).toList().isEmpty();
+		return gang != null && (listsAlly(gang.getId()) || gang.listsAlly(this.id));
+	}
+
+	private boolean listsAlly(int gangId) {
+		return allies.stream().anyMatch(alliance -> alliance.ally().getId() == gangId);
 	}
 
 	public Set<GangAlliance> getAllies() {
@@ -213,6 +216,11 @@ public class Gang {
 		Gang gang = (Gang) o;
 
 		return getId() == gang.getId();
+	}
+
+	@Override
+	public int hashCode() {
+		return Integer.hashCode(id);
 	}
 
 	@Override

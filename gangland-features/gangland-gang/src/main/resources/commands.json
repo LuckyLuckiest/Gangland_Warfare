@@ -44,7 +44,7 @@
 		"description": "Lists every gang member and their current rank."
 	},
 	"gang_change_name": {
-		"usage": "/glw gang name <name>",
+		"usage": "/glw gang rename <name>",
 		"description": "Changes the current gang name."
 	},
 	"gang_change_desc": {

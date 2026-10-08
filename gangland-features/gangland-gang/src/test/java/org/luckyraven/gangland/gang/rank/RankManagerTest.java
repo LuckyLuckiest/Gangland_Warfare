@@ -378,8 +378,8 @@ class RankManagerTest {
 	class ClearReloadTest {
 
 		@Test
-		@DisplayName("clear() resets ranks and rankTree but leaves permissions, ranksParent and ranksPermissions populated")
-		void clear_wipesRanksAndTree_butNotThePermissionOrParentSets() {
+		@DisplayName("GR-12: clear() empties ranks, rankTree, permissions, ranksParent and ranksPermissions")
+		void clear_wipesEverything() {
 			Rank tail = new Rank("owner", 1);
 			Rank head = new Rank("member", 2);
 			when(rankRepo.loadAll()).thenReturn(List.of(tail, head));
@@ -398,18 +398,14 @@ class RankManagerTest {
 
 			assertTrue(manager.getRanks().isEmpty(), "clear() empties the ranks map");
 			assertTrue(manager.getRankTree().isEmpty(), "clear() empties the rank tree");
-			assertEquals(1, manager.getRanksParent().size(),
-					"ranksParent survives clear() untouched - Observation #12");
-			assertEquals(1, manager.getPermissions().size(),
-					"permissions survives clear() untouched - Observation #12");
-			assertEquals(1, manager.getRanksPermissions().size(),
-					"ranksPermissions survives clear() untouched - Observation #12");
+			assertTrue(manager.getRanksParent().isEmpty(), "clear() empties ranksParent (GR-12)");
+			assertTrue(manager.getPermissions().isEmpty(), "clear() empties permissions (GR-12)");
+			assertTrue(manager.getRanksPermissions().isEmpty(), "clear() empties ranksPermissions (GR-12)");
 		}
 
 		@Test
-		@DisplayName("a reload after a rank was actually removed from the backing store crashes initialize(), because the "
-		             + "stale ranksParent entry from before clear() now points at a rank id that never gets reloaded")
-		void clear_thenReinitializeAfterARankWasDeletedUpstream_throwsNpeBuildingTheTree() {
+		@DisplayName("GR-12: a reload after clear() does not NPE on a stale ranksParent entry (the set is now empty)")
+		void clear_thenReinitializeAfterARankWasDeletedUpstream_doesNotThrow() {
 			Rank tail = new Rank("owner", 1);
 			Rank head = new Rank("member", 2);
 			// First load: both ranks and the head-to-tail link exist.
@@ -423,9 +419,8 @@ class RankManagerTest {
 			// /glw rank delete, which per Observation #9 does not prune RankManager.ranksParent either) - the
 			// repository now reports zero rank_parent rows and only the surviving "member" rank, but the
 			// in-memory ranksParent set from before clear() still references tail's id (1).
-			assertThrows(NullPointerException.class, manager::initialize,
-					"initialize() looks up ranks.get(rp.parentId()) unguarded while building the child-name list; "
-					+ "a stale ranksParent entry pointing at a now-unloaded rank id NPEs instead of being skipped");
+			assertDoesNotThrow(manager::initialize,
+					"clear() dropped the stale ranksParent entry, so the reload has nothing to resolve");
 		}
 
 	}

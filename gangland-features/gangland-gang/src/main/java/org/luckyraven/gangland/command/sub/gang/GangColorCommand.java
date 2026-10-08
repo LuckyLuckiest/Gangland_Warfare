@@ -131,7 +131,12 @@ class GangColorCommand extends SubArgument {
 
 					if (user == null) return;
 
+					// GR-34: the user may have left the gang since the preview was opened.
+					if (!user.hasGang()) return;
+
 					Gang gang = gangManager.getGang(user.getGangId());
+					if (gang == null) return;
+
 					// save the data in gang
 					gang.setColor(colorName);
 
