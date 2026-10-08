@@ -645,6 +645,29 @@ since 0.16.0); 1-2 stars and the code defaults have none. A bad `@` value counts
 server file keeps working and speaks the new lines; a server file keeps its own text for an old key. The Spanish file has
 the same keys.
 
+0.16.1 adds the root key `Speaker_Name` (default `"{rank} {role} &f{name} &7#{number}"`, also in `cop_radio_messages_es.yml`).
+It is the template for a cop's name on the radio, with `{rank}`, `{role}`, `{name}` and `{number}`; the colours in it are
+kept and the line's colour resumes after the name. `{rank} {name}` speaks `Officer Bob`.
+
+### turf_npcs.yml (`turf/turf_npcs.yml`)
+
+Ships inside the gangland-turf jar (0.16.1 added `Cop_Response`). A server that already has its `turf_npcs.yml` keeps the
+old file, so the `Cop_Response` block is absent until it is added by hand; the code defaults below apply until then.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `Cop_Response.Enabled` | `true` | `false`: turf defenders and the Quartermaster ignore cops. A cop that hits a protected player on a turf is answered when on |
+| `Cop_Response.Targeting_Radius` | `32.0` | Blocks from a defender or the Quartermaster within which it answers a cop. Minimum 1.0 |
+| `Cop_Response.Include_Allies` | `true` | Also protect members of gangs allied with the turf owner |
+| `Powerup_Npc.Targeting_Radius` | `32.0` | Blocks from the Quartermaster within which a contest attacker is picked up. Minimum 1.0 (was hard-coded before 0.16.1) |
+
+To switch the cop response off on an existing server, add to `turf_npcs.yml`:
+
+```yaml
+Cop_Response:
+   Enabled: false
+```
+
 ### items/money.yml
 
 The bundled `Money.Drop_Sources.PLAYER.Enabled` is `false` since 0.16.0: one death costs one bill (the ward bill) and no

@@ -429,7 +429,7 @@ Needs `gangland.command.cop.setup`. Kinds for `list`, `remove` and `tp` are `sta
 
 | Command         | Description                          |
 |-----------------|--------------------------------------|
-| `/glw cop list` | Lists all currently active cop NPCs. |
+| `/glw cop list` | Lists all currently active cop NPCs. Each cop is named with the fixed default format (`Officer Medic Bob #1592`), not your `Speaker_Name` or `Cops.Names.Format`. |
 
 ---
 

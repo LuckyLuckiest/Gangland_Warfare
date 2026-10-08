@@ -15,6 +15,10 @@ public class WantedMessages extends LocalizedModuleYaml {
 
 	private static final String BASE_NAME = "wanted_messages";
 
+	/** Shipped {@code Crimes} lines whose id does not read as a name, so a file that predates them shows the same text. */
+	private static final Map<String, String> SHIPPED_CRIMES = Map.of("Spotted", "Spotted by the cops",
+	                                                                 "Unknown_Crime", "Reported crime");
+
 	/** One line of {@code wanted_messages.yml}: its path in the file and the text used when the file lacks it. */
 	public enum Key {
 		BAR_SEEN("Hud.Bar.Seen", "&c%stars% &4&lIN SIGHT"),
@@ -74,9 +78,9 @@ public class WantedMessages extends LocalizedModuleYaml {
 		return line;
 	}
 
-	/** The display name of a crime id: {@code Crimes.<id>} in the file, else the id with spaces. */
+	/** The display name of a crime id: {@code Crimes.<id>} in the file, else the shipped text, else the id with spaces. */
 	public String crimeName(String crimeId) {
-		return color("Crimes." + crimeId, crimeId.replace('_', ' '));
+		return color("Crimes." + crimeId, SHIPPED_CRIMES.getOrDefault(crimeId, crimeId.replace('_', ' ')));
 	}
 
 	/** {@code 45s}, or {@code 1m 05s} from a minute up. */

@@ -76,6 +76,14 @@ class WantedMessagesTest {
 	}
 
 	@Test
+	@DisplayName("a file that predates Crimes.Spotted reads the shipped Spotted line, not the id turned into words")
+	void crimeName_spotted_fallsBackToTheShippedText() throws IOException {
+		WantedMessages messages = messages("Crimes:\n   Kill_Cop: \"Killing an officer\"\n");
+
+		assertEquals("Spotted by the cops", messages.crimeName("Spotted"));
+	}
+
+	@Test
 	@DisplayName("the bribe-star lines fall back in code on a file that predates them")
 	void bribeStarKeys_fallBackOnAnOldFile() throws IOException {
 		WantedMessages messages = messages("Hud:\n   Title: \"&c%stars%\"\n");
