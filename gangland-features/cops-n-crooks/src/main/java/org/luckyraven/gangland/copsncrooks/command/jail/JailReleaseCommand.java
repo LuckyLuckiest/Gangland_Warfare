@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.command.jail;
 
+import java.util.Map;
+import org.luckyraven.gangland.copsncrooks.command.CommandMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -12,8 +14,6 @@ import org.luckyraven.gangland.copsncrooks.detainment.release.ReleasePipeline;
 import org.luckyraven.gangland.copsncrooks.detainment.release.ReleaseReason;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
-import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.Collection;
 
@@ -23,15 +23,17 @@ class JailReleaseCommand extends SubArgument {
 	private final Tree<Argument>    tree;
 	private final DetainmentService detainmentService;
 	private final ReleasePipeline   releasePipeline;
+	private final CommandMessages commandMessages;
 
 	protected JailReleaseCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                             DetainmentService detainmentService, ReleasePipeline releasePipeline) {
+	                             DetainmentService detainmentService, ReleasePipeline releasePipeline, CommandMessages commandMessages) {
 		super(plugin, "release", tree, parent);
 
 		this.plugin          = plugin;
 		this.tree              = tree;
 		this.detainmentService = detainmentService;
 		this.releasePipeline   = releasePipeline;
+		this.commandMessages = commandMessages;
 
 		playerInfo();
 	}
@@ -39,7 +41,7 @@ class JailReleaseCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<player>"));
+			sender.sendMessage(commandMessages.usage("/glw jail release <player>"));
 		};
 	}
 
@@ -49,18 +51,18 @@ class JailReleaseCommand extends SubArgument {
 			Player target    = Bukkit.getPlayer(playerStr);
 
 			if (target == null) {
-				sender.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", playerStr));
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.PLAYER_NOT_FOUND, Map.of("player", playerStr)));
 				return;
 			}
 
 			if (!detainmentService.isJailed(target)) {
-				sender.sendMessage(Messages.JAIL_NOT_JAILED.toString().replace("%target%", target.getName()));
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_NOT_JAILED, Map.of("target", target.getName())));
 				return;
 			}
 
 			releasePipeline.release(target, ReleaseReason.ADMIN);
 
-			sender.sendMessage(Messages.JAIL_RELEASED.toString().replace("%target%", target.getName()));
+			sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_RELEASED, Map.of("target", target.getName())));
 		}, sender -> {
 			Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
 

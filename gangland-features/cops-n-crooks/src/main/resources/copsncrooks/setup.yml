@@ -16,23 +16,25 @@ Setup:
       # Ticks between two draws (10 = twice a second)
       Interval_Ticks: 10
    Messages:
-      # Shown for /glw cop setup with no or an unknown sub-command
-      Usage: "&cUsage: /glw cop setup <wand|mode|save|list|remove|tp|link>"
+      # Put before the full usage line when a sub-command is missing an operand, e.g. /glw cop setup mode
+      Arguments_Missing: "&4Missing Arguments&7: "
+      # The header of a list: %kind% what is listed, %count% how many
+      List_Header: "&7Setup %kind% &8(&f%count%&8)&7:"
       Not_Player: "&cOnly a player can do that."
       No_Permission: "&cYou may not use the setup tools."
       # The wand's name and lore
       Wand_Name: "&6Cops Setup Wand"
       Wand_Lore: "&7Left-click = pos1, right-click = pos2."
       # %mode%: the current mode
-      Wand_Given: "&aSetup wand given. Mode: &e%mode%&a. Left-click = pos1, right-click = pos2."
-      Mode_Set: "&7Setup mode: &e%mode%"
+      Wand_Given: "&aSetup wand given. Mode: &f%mode%&a. Left-click = pos1, right-click = pos2."
+      Mode_Set: "&7Setup mode: &f%mode%"
       # %modes%: the valid modes
       Mode_Unknown: "&cUnknown mode. Use: %modes%"
       # %corner%: pos1 or pos2, %x% %y% %z% %world%: the clicked block
       Pos_Set: "&7%corner% set to &f(%x%, %y%, %z%) &7in &f%world%"
       # %needed%: what is missing (pos1, or pos1 and pos2), %mode%: the current mode
       Incomplete: "&cSelect %needed% first (mode %mode%)."
-      Name_Missing: "&cGive it a name: /glw cop setup save <name>"
+      Name_Missing: "&cGive it a name: /glw cop setup save <name...>"
       # %name% %id%, and %spawners%: how many cop spawners joined the station
       Station_Saved: "&aStation &f%name% &a(#%id%) saved, %spawners% spawner(s) assigned."
       Station_Duplicate: "&cA station named &f%name% &calready exists, nothing was saved."
@@ -52,3 +54,10 @@ Setup:
       Unknown_Kind: "&cKind must be station, region or point."
       # %value%: what was typed
       Bad_Id: "&c%value% is not a number."
+      # The word that stands for every kind in a list header when no kind was given
+      Kind_All: "all"
+      # One row of a list: %id% %name%, then %world% %x% %y% %z% and %tags% (the kinds of a region) in the hover text
+      Row_Label: " &b- &f#%id% &f%name% "
+      Row_Where: "&f%world% &7- &f%x%&7, &f%y%&7, &f%z%&8%tags%"
+      # The clickable action at the end of a row
+      Row_Tp: "&e(&btp&e)"

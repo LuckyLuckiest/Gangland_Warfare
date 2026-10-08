@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.command.cops;
 
+import org.luckyraven.gangland.copsncrooks.command.CommandMessages;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
@@ -25,9 +26,11 @@ public class CopCommand extends Command {
 	private final StationRegistry stationRegistry;
 	private final CopLoader       copLoader;
 	private final SetupCommands   setupCommands;
+	private final CommandMessages commandMessages;
 
 	public CopCommand(JavaPlugin plugin, CopService copService, CopSpawnManager copSpawnManager,
-	                  StationRegistry stationRegistry, CopLoader copLoader, SetupCommands setupCommands) {
+	                  StationRegistry stationRegistry, CopLoader copLoader, SetupCommands setupCommands,
+	                  CommandMessages commandMessages) {
 		super(plugin, "cop", false, "cops");
 
 		this.copService      = copService;
@@ -35,6 +38,7 @@ public class CopCommand extends Command {
 		this.stationRegistry = stationRegistry;
 		this.copLoader       = copLoader;
 		this.setupCommands   = setupCommands;
+		this.commandMessages = commandMessages;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -53,8 +57,8 @@ public class CopCommand extends Command {
 	@Override
 	protected void initializeArguments() {
 		Argument spawner = new CopSpawnerCommand(getPlugin(), getArgumentTree(), getArgument(), copSpawnManager,
-		                                           stationRegistry, copLoader);
-		Argument list    = new CopListCommand(getPlugin(), getArgumentTree(), getArgument(), copService);
+		                                           stationRegistry, copLoader, commandMessages);
+		Argument list    = new CopListCommand(getPlugin(), getArgumentTree(), getArgument(), copService, commandMessages);
 		Argument setup   = new SetupCommand(getPlugin(), getArgumentTree(), getArgument(), setupCommands);
 
 		List<Argument> arguments = new ArrayList<>();

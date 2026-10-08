@@ -7,15 +7,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
+import org.luckyraven.gangland.copsncrooks.command.CommandMessages;
 import org.luckyraven.gangland.copsncrooks.jail.Jail;
 import org.luckyraven.gangland.copsncrooks.jail.JailExitService;
 import org.luckyraven.gangland.copsncrooks.jail.JailRegistry;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
-import org.luckyraven.gangland.file.configuration.Messages;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Sets a jail exit location:
@@ -32,15 +33,17 @@ class JailSetExitCommand extends SubArgument {
 	private final Tree<Argument>  tree;
 	private final JailRegistry    jailRegistry;
 	private final JailExitService jailExitService;
+	private final CommandMessages commandMessages;
 
 	protected JailSetExitCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, JailRegistry jailRegistry,
-	                             JailExitService jailExitService) {
+	                             JailExitService jailExitService, CommandMessages commandMessages) {
 		super(plugin, "setexit", tree, parent);
 
-		this.plugin        = plugin;
+		this.plugin          = plugin;
 		this.tree            = tree;
 		this.jailRegistry    = jailRegistry;
 		this.jailExitService = jailExitService;
+		this.commandMessages = commandMessages;
 
 		specificJail();
 	}
@@ -50,19 +53,19 @@ class JailSetExitCommand extends SubArgument {
 		// No-arg form: set the global/universal exit.
 		return (argument, sender, args) -> {
 			if (!(sender instanceof Player player)) {
-				sender.sendMessage(Messages.NOT_PLAYER.toString());
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.NOT_PLAYER, Map.of()));
 				return;
 			}
 
 			jailExitService.setGlobalExit(player.getLocation());
-			sender.sendMessage(Messages.JAIL_EXIT_SET_GLOBAL.toString());
+			sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_EXIT_SET_GLOBAL, Map.of()));
 		};
 	}
 
 	private void specificJail() {
 		Argument jailIdArg = new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			if (!(sender instanceof Player player)) {
-				sender.sendMessage(Messages.NOT_PLAYER.toString());
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.NOT_PLAYER, Map.of()));
 				return;
 			}
 
@@ -71,20 +74,21 @@ class JailSetExitCommand extends SubArgument {
 			try {
 				jailId = Integer.parseInt(rawId);
 			} catch (NumberFormatException e) {
-				sender.sendMessage(Messages.ARGUMENTS_WRONG.toString().replace("%arguments%", "<jailId>"));
+				// a non-numeric id is a bad operand, not an unknown jail
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.BAD_ID, Map.of("value", rawId)));
 				return;
 			}
 
 			Jail jail = jailRegistry.getJail(jailId);
 			if (jail == null) {
-				sender.sendMessage(Messages.JAIL_NOT_JAILED.toString().replace("%target%", rawId));
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_UNKNOWN, Map.of("id", rawId)));
 				return;
 			}
 
 			Location location = player.getLocation();
 			jailExitService.setExit(jailId, location);
 
-			sender.sendMessage(Messages.JAIL_EXIT_SET.toString().replace("%id%", String.valueOf(jailId)));
+			sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_EXIT_SET, Map.of("id", String.valueOf(jailId))));
 		}, sender -> {
 			List<String> ids = new ArrayList<>();
 			for (Jail jail : jailRegistry.getCells()) ids.add(String.valueOf(jail.getId()));

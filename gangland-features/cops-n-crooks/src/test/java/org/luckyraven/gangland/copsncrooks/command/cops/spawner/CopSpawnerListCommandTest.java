@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.command.cops.spawner;
 
+import org.luckyraven.gangland.copsncrooks.command.CommandMessages;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.AfterEach;
@@ -26,7 +27,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -84,10 +86,13 @@ class CopSpawnerListCommandTest {
 
 		CommandSender sender = mock(CommandSender.class);
 
-		new CopSpawnerListCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class), manager)
+		CommandMessages messages = mock(CommandMessages.class);
+		when(messages.format(CommandMessages.Key.SPAWNER_LIST_EMPTY, Map.of())).thenReturn("no spawners");
+
+		new CopSpawnerListCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class), manager, messages)
 				.executeArgument(sender, new String[0]);
 
-		verify(sender).sendMessage(Messages.COP_SPAWNER_LIST_EMPTY.toString());
-		verify(sender, never()).sendMessage(Messages.COP_SPAWNER_LIST_HEADER.toString());
+		verify(sender).sendMessage("no spawners");
+		verify(sender, times(1)).sendMessage(anyString());
 	}
 }

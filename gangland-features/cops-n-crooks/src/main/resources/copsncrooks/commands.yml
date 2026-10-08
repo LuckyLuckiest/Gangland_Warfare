@@ -1,0 +1,95 @@
+#   +------------------------------------------------------+   #
+# |                  File: commands.yml                      | #
+#   +------------------------------------------------------+   #
+#
+# The replies of /glw cop, /glw jail and /glw cuff: the lists, their headers and rows, the actions and the errors. & colour
+# codes work. Placeholders in %percent% signs are filled in by the plugin. The GLW prefix and the error prefix come from
+# the core messages, so a line here carries only its body colour.
+
+# Put before the full usage line when a sub-command is missing an operand
+Arguments_Missing: "&4Missing Arguments&7: "
+# %value%: what was typed where a number was expected
+Bad_Id: "&c%value% is not a number."
+# %player%: the name that was typed
+Player_Not_Found: "&c%player% &7is not found!"
+# Sent to a sender that is not a player (the console, a command block) by a command that needs one
+Not_Player: "&cYou need to be a player to use this!"
+
+Cop:
+   List:
+      # %count%: how many players are being chased
+      Header: "&7Players being chased by cops &8(&f%count%&8)&7:"
+      Empty: "&7No player is being chased by cops."
+      # One chased player per row: %player%
+      Row: " &b- &f%player%"
+   Target:
+      # %player%: the chased player
+      Header: "&7Player &f%player% &7is being chased by cops:"
+      # One cop per row: %callsign% and %uuid%
+      Row: " &b- &f%callsign%&7 (%uuid%)"
+      # %target%: the player that was named
+      Not_Chased: "&cPlayer &f%target%&c is not being chased by cops."
+
+Spawner:
+   Set: "&aCop spawner set at your location."
+   # %id%: the spawner id
+   Removed: "&aCop spawner &f%id%&a removed."
+   Teleported: "&7Teleported to cop spawner &f%id%&7."
+   List:
+      # %count%: how many cop spawners are placed
+      Header: "&7Cop spawners &8(&f%count%&8)&7:"
+      Empty: "&7No cop spawners are placed yet."
+      # %id%: the spawner id, the (tp) action is clickable
+      Row: " &b- &f#%id% &e(&btp&e)"
+      # Hover text of a row: %world% and %x% %y% %z%
+      Hover: "%world% - %x%, %y%, %z%"
+   Info:
+      # %id%: the spawner id. The header is followed by the Tp action, which is the clickable part
+      Header: "&7Cop spawner &f#%id%&7: "
+      Tp: "&e(&btp&e)"
+      Line: " &bWorld: &f%world% &bX: &f%x% &bY: &f%y% &bZ: &f%z%"
+   # %id%: the id that was typed
+   Unknown: "&cNo cop spawner with id %id%."
+
+Jail:
+   # %id%: the jail id
+   Created: "&aJail &f%id%&a created at your location."
+   # %blocks%: the distance that must be kept free
+   Exists_Nearby: "&cA jail already exists within %blocks% blocks of this location!"
+   Removed: "&aJail &f%id%&a removed."
+   # %target%: the player that was released
+   Released: "&aReleased &f%target%&a from jail."
+   # %target%: the player that is not jailed
+   Not_Jailed: "&cPlayer &f%target%&c is not jailed."
+   # %id%: the jail that got the exit
+   Exit_Set: "&aExit location set for jail &f%id%&a."
+   Exit_Set_Global: "&aGlobal jail exit set to your current location."
+   # %id%: the jail that was teleported to
+   Teleported: "&7Teleported to jail &f%id%&7."
+   # %target%: the player that was thrown into jail
+   Thrown: "&aThrown &f%target%&a to jail."
+   No_Empty: "&cNo empty jail found!"
+   Already_Jailed: "&cPlayer is already jailed!"
+   List:
+      # %count%: how many jails are placed
+      Header: "&7Jails &8(&f%count%&8)&7:"
+      Empty: "&7No jails are placed yet."
+      # %id%: the jail id, the (tp) action is clickable
+      Row: " &b- &f#%id% &e(&btp&e)"
+      # Hover text of a row: %world% and %x% %y% %z%
+      Hover: "%world% - %x%, %y%, %z%"
+   Info:
+      # %id%: the jail id. The header is followed by the Tp action, which is the clickable part
+      Header: "&7Jail &f#%id%&7: "
+      Tp: "&e(&btp&e)"
+      # %capacity%: how many prisoners the jail holds
+      Line: " &bWorld: &f%world% &bX: &f%x% &bY: &f%y% &bZ: &f%z% &bCapacity: &f%capacity%"
+   # %id%: the id that was typed
+   Unknown: "&cNo jail with id %id%."
+
+Cuff:
+   # %target%: the handcuffed player
+   Handcuffed: "&aHandcuffed &f%target%&a."
+   Released: "&aReleased &f%target%&a from handcuffs."
+   Already_Cuffed: "&cThis player is already cuffed!"
+   Not_Cuffed: "&cThis player is not handcuffed!"

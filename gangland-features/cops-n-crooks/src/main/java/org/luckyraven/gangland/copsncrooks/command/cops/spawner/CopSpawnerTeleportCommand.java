@@ -10,22 +10,25 @@ import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
-import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.util.GanglandChatUtil;
+import org.luckyraven.gangland.copsncrooks.command.CommandMessages;
+
+import java.util.Map;
 
 class CopSpawnerTeleportCommand extends SubArgument {
 
 	private final JavaPlugin        plugin;
 	private final Tree<Argument>  tree;
 	private final CopSpawnManager copSpawnManager;
+	private final CommandMessages commandMessages;
 
 	CopSpawnerTeleportCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                          CopSpawnManager copSpawnManager) {
+	                          CopSpawnManager copSpawnManager, CommandMessages commandMessages) {
 		super(plugin, new String[]{"teleport", "tp"}, tree, parent);
 
 		this.plugin        = plugin;
 		this.tree            = tree;
 		this.copSpawnManager = copSpawnManager;
+		this.commandMessages = commandMessages;
 
 		this.idArgument();
 	}
@@ -33,14 +36,14 @@ class CopSpawnerTeleportCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
+			sender.sendMessage(commandMessages.usage("/glw cop spawner teleport <id>"));
 		};
 	}
 
 	private void idArgument() {
 		Argument idArg = new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			if (!(sender instanceof Player player)) {
-				sender.sendMessage(Messages.NOT_PLAYER.toString());
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.NOT_PLAYER, Map.of()));
 				return;
 			}
 
@@ -49,19 +52,19 @@ class CopSpawnerTeleportCommand extends SubArgument {
 			try {
 				id = Integer.parseInt(idStr);
 			} catch (NumberFormatException e) {
-				sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", idStr));
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.BAD_ID, Map.of("value", idStr)));
 				return;
 			}
 
 			Location location = copSpawnManager.getSpawnerLocation(id);
 
 			if (location == null) {
-				sender.sendMessage(Messages.LOCATION_NOT_FOUND.toString().replace("%location%", idStr));
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.SPAWNER_UNKNOWN, Map.of("id", idStr)));
 				return;
 			}
 
 			player.teleport(location);
-			sender.sendMessage(Messages.COP_SPAWNER_TELEPORTED.toString().replace("%id%", String.valueOf(id)));
+			sender.sendMessage(commandMessages.format(CommandMessages.Key.SPAWNER_TELEPORTED, Map.of("id", String.valueOf(id))));
 		}, sender -> copSpawnManager.getSpawnerIds()
 				.stream().map(String::valueOf).toList());
 
