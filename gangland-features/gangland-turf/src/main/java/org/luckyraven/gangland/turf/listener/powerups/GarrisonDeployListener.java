@@ -16,6 +16,7 @@ import org.luckyraven.gangland.turf.events.TurfCaptureFailedEvent;
 import org.luckyraven.gangland.turf.events.TurfCaptureStartEvent;
 import org.luckyraven.gangland.turf.events.TurfCapturedEvent;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
+import org.luckyraven.gangland.turf.npc.config.TurfNpcsConfigLoader;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
@@ -44,7 +45,7 @@ public final class GarrisonDeployListener implements Listener {
 
 	private final GarrisonManager      garrisons;
 	private final TurfDefenderDeployer defenders;
-	private final TurfDefenderConfig   defenderConfig;
+	private final TurfNpcsConfigLoader npcConfig;
 	private final TurfPowerupManager   powerupNpcs;
 	private final GangLookupContract   gangs;
 
@@ -70,6 +71,8 @@ public final class GarrisonDeployListener implements Listener {
 		int consumed = garrisons.consume(turf.getId(), stock);
 		if (consumed <= 0) return;
 
+		// TF-36: read the live config at deploy time, so a /glw reload of turf_npcs.yml applies to the next contest.
+		TurfDefenderConfig defenderConfig = npcConfig.getDefenderConfig();
 		defenders.deploy(turf.getId(), spawn, defenderConfig.typeId(), () -> challengerMemberIds(challengerGangId),
 		                 consumed, defenderConfig.targetingRadius(), defenderConfig.lifespanSeconds());
 	}

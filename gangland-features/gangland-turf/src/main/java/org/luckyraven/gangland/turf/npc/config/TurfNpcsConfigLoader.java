@@ -4,6 +4,7 @@ import lombok.CustomLog;
 import lombok.Getter;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
 import org.luckyraven.gangland.turf.npc.guard.CopGuardConfig;
+import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.exception.PluginException;
 import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
@@ -26,7 +27,7 @@ import java.util.Objects;
  * </ul>
  */
 @CustomLog
-public final class TurfNpcsConfigLoader {
+public final class TurfNpcsConfigLoader implements BeanLifecycle {
 
 	private static final String FILE_NAME = "turf_npcs";
 
@@ -47,6 +48,17 @@ public final class TurfNpcsConfigLoader {
 			throw new PluginException(exception);
 		}
 		load();
+	}
+
+	/**
+	 * TF-36: {@code /glw reload} re-reads the file before this pass, so a later lifecycle pass re-parses it. The first
+	 * pass skips the parse because the constructor already loaded it.
+	 */
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		if (!firstLoad) {
+			load();
+		}
 	}
 
 	public void load() {

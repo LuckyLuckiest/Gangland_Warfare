@@ -5,11 +5,13 @@ import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.turf.capture.CaptureService;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.events.TurfEnterEvent;
@@ -28,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * tally attackers / defenders inside a turf without re-scanning.
  */
 @CustomLog
-public final class TurfLocationTracker implements Listener {
+public final class TurfLocationTracker implements Listener, BeanLifecycle {
 
 	private final JavaPlugin      plugin;
 	private final TurfManager     turfs;
@@ -50,6 +52,8 @@ public final class TurfLocationTracker implements Listener {
 			return;
 		}
 		task = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, 20L, 20L);
+		// TF-06: this is a @Bean, not a @ListenerHandler, so nothing else registers onQuit. Register it here.
+		Bukkit.getPluginManager().registerEvents(this, plugin);
 	}
 
 	public void stop() {
@@ -57,7 +61,13 @@ public final class TurfLocationTracker implements Listener {
 			task.cancel();
 			task = null;
 		}
+		HandlerList.unregisterAll(this);
 		playerTurfCache.clear();
+	}
+
+	@Override
+	public void onShutdown() {
+		stop();
 	}
 
 	@EventHandler

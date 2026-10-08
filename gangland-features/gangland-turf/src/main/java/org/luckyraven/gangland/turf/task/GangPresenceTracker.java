@@ -5,6 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.core.user.UserLookupContract;
@@ -13,14 +14,16 @@ import org.luckyraven.gangland.core.user.User;
 /**
  * Heartbeat that refreshes each gang's {@code lastMemberOnlineAt} timestamp while at least one member is online. When
  * the last member logs off the value freezes at their last heartbeat, giving the spec's 10-minute post-logoff grace
- * window a stable anchor. Also drives the 10-day inactivity auto-release on a once-a-day tick (folded into the same
- * runnable — cheap).
+ * window a stable anchor. Also drives the inactivity auto-release (the {@code Inactivity_Auto_Release_Days} setting)
+ * on a once-a-day tick (folded into the same runnable — cheap). The first release sweep runs five minutes after start
+ * (TF-09), so a server restarted daily still releases an inactive gang's turf.
  */
 @CustomLog
-public final class GangPresenceTracker {
+public final class GangPresenceTracker implements BeanLifecycle {
 
-	private static final long HEARTBEAT_TICKS = 20L * 60L;   // 1 minute
-	private static final long RELEASE_TICKS   = 20L * 60L * 60L * 24L; // 24 hours
+	private static final long HEARTBEAT_TICKS         = 20L * 60L;   // 1 minute
+	static final long FIRST_RELEASE_DELAY_TICKS = 5L * 60L * 20L;      // 5 minutes (TF-09)
+	private static final long RELEASE_TICKS           = 20L * 60L * 60L * 24L; // 24 hours
 
 	private final JavaPlugin         plugin;
 	private final GangLookupContract gangs;
@@ -50,7 +53,7 @@ public final class GangPresenceTracker {
 		}
 		if (releaseTask == null) {
 			releaseTask = Bukkit.getScheduler()
-			                    .runTaskTimer(plugin, turfReleaseFn, RELEASE_TICKS, RELEASE_TICKS);
+			                    .runTaskTimer(plugin, turfReleaseFn, FIRST_RELEASE_DELAY_TICKS, RELEASE_TICKS);
 		}
 	}
 
@@ -63,6 +66,11 @@ public final class GangPresenceTracker {
 			releaseTask.cancel();
 			releaseTask = null;
 		}
+	}
+
+	@Override
+	public void onShutdown() {
+		stop();
 	}
 
 	public int getInactivityAutoReleaseDays() {

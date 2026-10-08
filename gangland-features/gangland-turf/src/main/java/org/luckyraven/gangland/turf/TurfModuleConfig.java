@@ -34,9 +34,7 @@ import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupOpenContract;
 import org.luckyraven.gangland.turf.npc.config.TurfNpcsConfigLoader;
 import org.luckyraven.gangland.turf.npc.config.TurfPowerupOpenContractImpl;
-import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
-import org.luckyraven.gangland.turf.npc.guard.CopGuardConfig;
 import org.luckyraven.gangland.turf.npc.guard.TurfCopGuard;
 import org.luckyraven.gangland.turf.npc.view.TurfPowerupBuffCatalogueView;
 import org.luckyraven.gangland.turf.npc.view.TurfPowerupFlow;
@@ -248,11 +246,6 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
-	public TurfDefenderConfig turfDefenderConfig(TurfNpcsConfigLoader loader) {
-		return loader.getDefenderConfig();
-	}
-
-	@Bean
 	public TurfDefenderDeployer turfDefenderDeployer(JavaPlugin plugin, CivilianService civilianService,
 	                                                 CivilianSpawnManager spawnManager) {
 		TurfDefenderDeployer deployer = new TurfDefenderDeployer(plugin, civilianService, spawnManager);
@@ -260,18 +253,14 @@ public final class TurfModuleConfig {
 		return deployer;
 	}
 
-	@Bean
-	public CopGuardConfig copGuardConfig(TurfNpcsConfigLoader loader) {
-		return loader.getCopGuardConfig();
-	}
-
 	// T-189: turf defenders and the Quartermaster answer cops that hit a player standing on their gang's turf. The
 	// cops-n-crooks listener feeds the hits in; this bean only owns the 5-tick engagement release task.
 	@Bean
 	public TurfCopGuard turfCopGuard(JavaPlugin plugin, TurfManager turfs, UserLookupContract users,
 	                                 GangMembership membership, TurfPowerupManager powerups,
-	                                 TurfDefenderDeployer defenders, CopGuardConfig config) {
-		TurfCopGuard guard = new TurfCopGuard(plugin, turfs, users, membership, powerups, defenders, config);
+	                                 TurfDefenderDeployer defenders, TurfNpcsConfigLoader loader) {
+		TurfCopGuard guard = new TurfCopGuard(plugin, turfs, users, membership, powerups, defenders,
+		                                      loader::getCopGuardConfig);
 		guard.start();
 		return guard;
 	}
@@ -279,7 +268,7 @@ public final class TurfModuleConfig {
 	@Bean
 	public TurfPowerupManager turfPowerupManager(JavaPlugin plugin, TurfPowerupNpcRepository repository,
 	                                             TurfNpcsConfigLoader loader, CivilianSpawnManager spawnManager) {
-		return new TurfPowerupManager(plugin, repository, loader.getPowerupSettings(), spawnManager);
+		return new TurfPowerupManager(plugin, repository, loader::getPowerupSettings, spawnManager);
 	}
 
 	@Bean
