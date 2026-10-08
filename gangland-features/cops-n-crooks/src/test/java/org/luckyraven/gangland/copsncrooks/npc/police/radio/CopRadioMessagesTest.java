@@ -248,6 +248,15 @@ class CopRadioMessagesTest {
 	}
 
 	@Test
+	@DisplayName("Speaker_Name is a root key: the default without it, and the bundled English file carries it")
+	void speakerName_isARootKey_defaultAndShipped() throws IOException {
+		List<String> def = List.of("{rank} {role} &f{name} &7#{number}");
+
+		assertEquals(def, build("Lines: {}\n").lines("Speaker_Name"));
+		assertEquals(def, build(shipped("copsncrooks/cop_radio_messages.yml")).lines("Speaker_Name"));
+	}
+
+	@Test
 	@DisplayName("the bundled English file carries the 0.16 lines word for word")
 	void bundledEnglish_carriesTheNewLines() throws IOException {
 		CopRadioMessages english = build(shipped("copsncrooks/cop_radio_messages.yml"));

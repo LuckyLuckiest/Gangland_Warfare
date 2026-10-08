@@ -110,6 +110,10 @@ public class CopNpc extends AbstractNpc {
 	@Getter
 	@Setter
 	private @Nullable String                 callsign;
+	/** The first name the cop was picked with ({@code Cops.Names.First_Names}); {@code null} for tests and stray spawns. */
+	@Getter
+	@Setter
+	private @Nullable String                 firstName;
 
 	public CopNpc(JavaPlugin plugin, NPC npc, CopTierConfig tierConfig, Map<CopState, CopBehavior> behaviors,
 	              Location spawnLocation, CopConfigProvider configProvider) {

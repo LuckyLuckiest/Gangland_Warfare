@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.npc.police.radio;
 
 import net.citizensnpcs.api.npc.NPC;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
@@ -27,10 +28,12 @@ import org.luckyraven.gangland.data.region.RegionShape;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.npc.FieldCareSettings;
 import org.luckyraven.gangland.npc.radio.RadioSettings;
+import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.keystone.npc.NpcFanPlacement;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.NpcSquadSignal;
 import org.luckyraven.keystone.testkit.BukkitStatics;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 
 import java.lang.reflect.Field;
@@ -65,6 +68,9 @@ class CopRadioTest {
 	                                                                Map.of("Man_Down", 5000L), Set.of("Man_Down",
 	                                                                "Backup", "Dispatch_Wanted"), null, 1f, 1f);
 
+	private static final String FORMAT           = "&9&l[RADIO] &b%unit%&8: &7%line%";
+	private static final String SPEAKER_TEMPLATE = "{rank} {role} &f{name} &7#{number}";
+
 	private BukkitStatics     bukkit;
 	private World             world;
 	private List<Player>      listeners;
@@ -89,6 +95,7 @@ class CopRadioTest {
 		radio = new CopRadio(() -> provider, key -> switch (key) {
 			case "Format" -> List.of("[%unit%] %line%");
 			case "Dispatch_Format" -> List.of("[DISPATCH] %line%");
+			case "Speaker_Name" -> List.of(SPEAKER_TEMPLATE);
 			default -> List.of(key + " line");
 		}, () -> clock[0], (task, ticks) -> { });
 
@@ -110,12 +117,12 @@ class CopRadioTest {
 	}
 
 	@Test
-	@DisplayName("a cop with a badge callsign speaks under it, colours stripped")
+	@DisplayName("a plain callsign is built from the parts (rank, name, badge), not parsed from the stored string")
 	void callsign_usesCopsOwnCallsignStripped() {
 		CopNpc cop = cop(17, "&9&lSWAT", 5, 0);
 		when(cop.getCallsign()).thenReturn("&9Officer &fBob &7#1017");
 
-		assertEquals("Officer Bob #1017", CopRadio.callsign(cop));
+		assertEquals("SWAT #1017", CopRadio.callsign(cop));
 	}
 
 	@Test
@@ -141,6 +148,103 @@ class CopRadioTest {
 
 		when(cop.getCallsign()).thenReturn("&ca Medic &fBob");
 		assertEquals("Medic Bob", CopRadio.callsign(cop));
+	}
+
+	@Test
+	@DisplayName("speakerName keeps the rank and role colours and the name's colour, and resumes the line's grey after the badge")
+	void speakerName_exampleA_coloursKeptLineColourResumes() {
+		assertEquals("&9Officer &cMedic &fBob &7#1592&7", radioWith(FORMAT, SPEAKER_TEMPLATE).speakerName(copA()));
+	}
+
+	@Test
+	@DisplayName("the plain callsign of cop A is today's: Officer Medic Bob #1592")
+	void callsign_exampleA_plainMatchesToday() {
+		assertEquals("Officer Medic Bob #1592", CopRadio.callsign(copA()));
+	}
+
+	@Test
+	@DisplayName("the plain callsign carries no colour codes")
+	void callsign_plainHasNoColourCodes() {
+		String plain = CopRadio.callsign(copA());
+		assertFalse(plain.contains("&") || plain.contains("§"), plain);
+	}
+
+	@Test
+	@DisplayName("a bold tier and a coloured role keep their codes; the grey resumes after the badge")
+	void speakerName_exampleB_boldRankAndRoleColour() {
+		CopNpc cop = cop(204, "&1&lSWAT", 4, 0);
+		when(cop.getCallsign()).thenReturn("&1&lSWAT &2⌖ Marksman &fTony &7#1204");
+		when(cop.getRole()).thenReturn(coloured("Marksman", "&2", "⌖"));
+		when(cop.getFirstName()).thenReturn("Tony");
+
+		assertEquals("&1&lSWAT &2Marksman &fTony &7#1204&7", radioWith(FORMAT, SPEAKER_TEMPLATE).speakerName(cop));
+	}
+
+	@Test
+	@DisplayName("a role-less cop with no name drops both gaps: no double space on the radio or plain")
+	void speakerName_exampleC_emptyRoleAndName_noDoubleSpace() {
+		CopNpc cop = cop(1, "Officer", 4, 0);
+		when(cop.getCallsign()).thenReturn("Officer &7#1001");
+		when(cop.getFirstName()).thenReturn("");
+
+		assertEquals("Officer &7#1001&7", radioWith(FORMAT, SPEAKER_TEMPLATE).speakerName(cop));
+		assertEquals("Officer #1001", CopRadio.callsign(cop));
+	}
+
+	@Test
+	@DisplayName("a rank-and-name template renders with no role and no badge number")
+	void speakerName_ranknameTemplate() {
+		assertEquals("&9Officer Bob&7", radioWith(FORMAT, "{rank} {name}").speakerName(copA()));
+	}
+
+	@Test
+	@DisplayName("a format with no colour before %line% adds no colour suffix to the speaker name")
+	void speakerName_noColourBeforeLine_noSuffix() {
+		assertEquals("&9Officer &cMedic &fBob &7#1592",
+		             radioWith("[%unit%] %line%", SPEAKER_TEMPLATE).speakerName(copA()));
+	}
+
+	@Test
+	@DisplayName("sayAs: the line's grey resumes after the coloured speaker name in the prefix")
+	void sayAs_lineColourResumesAfterName() {
+		radio = radioWith(FORMAT, SPEAKER_TEMPLATE);
+		Player bystander = listener(10, 0);
+		CopNpc cop       = copA();
+		group.add(cop);
+
+		assertTrue(radio.sayAs(group, cop, "Ack", Map.of()));
+
+		verify(bystander).sendMessage(
+				GanglandChatUtil.color("&9&l[RADIO] &b&9Officer &cMedic &fBob &7#1592&7&8: &7Copy."));
+	}
+
+	@Test
+	@DisplayName("sayAs: a %unit% in the body gets the same colours and the grey resumes after it")
+	void sayAs_bodyCallsignResumesLineColour() {
+		radio = radioWith(FORMAT, SPEAKER_TEMPLATE);
+		Player bystander = listener(10, 0);
+		CopNpc cop       = copA();
+		group.add(cop);
+
+		assertTrue(radio.sayAs(group, cop, "Responding", Map.of()));
+
+		verify(bystander).sendMessage(GanglandChatUtil.color("&9&l[RADIO] &b&9Officer &cMedic &fBob &7#1592&7&8: &7"
+		                                                     + "&9Officer &cMedic &fBob &7#1592&7 responding, en route!"));
+	}
+
+	@Test
+	@DisplayName("the default format's visible radio line is unchanged: [RADIO] Officer Medic Bob #1592: Copy.")
+	void defaultFormat_visibleLineMatchesToday() {
+		radio = radioWith(FORMAT, SPEAKER_TEMPLATE);
+		Player bystander = listener(10, 0);
+		CopNpc cop       = copA();
+		group.add(cop);
+
+		assertTrue(radio.sayAs(group, cop, "Ack", Map.of()));
+
+		ArgumentCaptor<String> sent = ArgumentCaptor.forClass(String.class);
+		verify(bystander).sendMessage(sent.capture());
+		assertEquals("[RADIO] Officer Medic Bob #1592: Copy.", ChatColor.stripColor(sent.getValue()));
 	}
 
 	@Test
@@ -641,6 +745,32 @@ class CopRadioTest {
 		if (field.get(null) == null) {
 			field.set(null, "$");
 		}
+	}
+
+	/** Cop A of the spec: Officer tier, Medic, Bob, badge 1592. */
+	private CopNpc copA() {
+		CopNpc cop = cop(592, "&9Officer", 4, 0);
+		when(cop.getCallsign()).thenReturn("&9Officer &c✚ Medic &fBob &7#1592");
+		when(cop.getRole()).thenReturn(coloured("Medic", "&c", "✚"));
+		when(cop.getFirstName()).thenReturn("Bob");
+		return cop;
+	}
+
+	/** A radio whose Format and Speaker_Name are as given; the "Responding" and "Ack" lines are fixed. */
+	private CopRadio radioWith(String format, String speakerName) {
+		return new CopRadio(() -> provider, key -> switch (key) {
+			case "Format" -> List.of(format);
+			case "Speaker_Name" -> List.of(speakerName);
+			case "Responding" -> List.of("%unit% responding, en route!");
+			case "Ack" -> List.of("Copy.");
+			default -> List.of(key + " line");
+		}, () -> clock[0], (task, ticks) -> { });
+	}
+
+	/** A real role with a colour and a symbol: {@link CopRole} is a record, which Mockito cannot mock. */
+	private static CopRole coloured(String displayName, String color, String symbol) {
+		return new CopRole(displayName, displayName, NpcFanPlacement.ANY, null, null, 1.0, 0, null, 1.0, 0, null, 0, 60,
+		                   false, false, color, symbol, CopRole.Kit.EMPTY, Map.of());
 	}
 
 	private Player player(double x, double z) {

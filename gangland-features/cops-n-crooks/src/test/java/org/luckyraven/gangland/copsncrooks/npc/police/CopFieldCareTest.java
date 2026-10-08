@@ -165,6 +165,22 @@ class CopFieldCareTest {
 	}
 
 	@Test
+	@DisplayName("Medic_Moving names the patient the way the radio names a cop: speakerName, not the plain callsign")
+	void medicMoving_namesPatientWithSpeakerName() {
+		CopNpc patient = cop(1, 10.0, CopState.PURSUING, null);
+		CopNpc medic   = cop(3, 20.0, CopState.PURSUING, MEDIC);
+		CopNpc leader  = cop(4, 20.0, CopState.PURSUING, null);
+		when(squad.leader()).thenReturn(leader);
+		when(medic.distanceTo(any(LivingEntity.class))).thenReturn(10.0);
+		when(radio.speakerName(patient)).thenReturn("&9Officer Bob&7");
+
+		care.tick(group);
+
+		Map<String, String> toPatient = Map.of("member", "&9Officer Bob&7", "distance", "10", "eta", "2");
+		verify(radio).sayAsLater(eq(group), eq(medic), eq("Medic_Moving"), eq(toPatient), eq(1), any());
+	}
+
+	@Test
 	@DisplayName("a hurt cop gets the nearest medic: Medic_Moving and Covering_Fire (from the leader); one medic, one patient")
 	void hurtCop_getsMedic_andSecondHurtCopWaits() {
 		CopNpc patient = cop(1, 10.0, CopState.PURSUING, null);

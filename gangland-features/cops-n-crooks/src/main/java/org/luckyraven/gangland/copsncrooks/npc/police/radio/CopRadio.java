@@ -256,6 +256,14 @@ public class CopRadio {
 		return ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', colored));
 	}
 
+	/**
+	 * How {@code npc} is named on the radio: rank, role word, name and badge, colours kept, the line's colour resumed
+	 * after it. Red-phase stub (0.16.1): still today's plain callsign.
+	 */
+	public String speakerName(AbstractNpc npc) {
+		return callsign(npc);
+	}
+
 	/** The tier's display name without colours; empty for no tier. */
 	public static String tierName(@Nullable CopTierConfig tier) {
 		if (tier == null || tier.displayName() == null) return "";
