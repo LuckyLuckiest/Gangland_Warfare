@@ -158,13 +158,16 @@ public class GangAllyRequestCommand extends SubArgument {
 				return;
 			}
 
-			OnlineGangMembers.of(memberManager, sending.getId()).forEach(pl -> pl.sendMessage(Messages.GANG_ALLY_SEND_REQUEST.toString()
-					                                                             .replace("%gang%",
-					                                                                      receiving.getDisplayNameString())));
+			String sendingName   = sending.getDisplayNameString();
+			String receivingName = receiving.getDisplayNameString();
 
-			OnlineGangMembers.of(memberManager, receiving.getId()).forEach(pl -> pl.sendMessage(Messages.GANG_ALLY_RECEIVE_REQUEST.toString()
-					                                                                .replace("%gang%",
-					                                                                         sending.getDisplayNameString())));
+			for (Player pl : OnlineGangMembers.of(memberManager, sending.getId())) {
+				pl.sendMessage(Messages.GANG_ALLY_SEND_REQUEST.toString().replace("%gang%", receivingName));
+			}
+
+			for (Player pl : OnlineGangMembers.of(memberManager, receiving.getId())) {
+				pl.sendMessage(Messages.GANG_ALLY_RECEIVE_REQUEST.toString().replace("%gang%", sendingName));
+			}
 
 			long now      = System.currentTimeMillis();
 			long expireAt = now + REQUEST_EXPIRY_MS;

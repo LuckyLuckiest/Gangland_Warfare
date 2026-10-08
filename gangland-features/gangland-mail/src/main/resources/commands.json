@@ -24,11 +24,11 @@
 		"description": "Request alliances to the other gang."
 	},
 	"gang_ally_accept": {
-		"usage": "/glw gang ally accept <gang>",
+		"usage": "/glw gang ally accept [gang]",
 		"description": "Accept a pending alliance request from another gang."
 	},
 	"gang_ally_reject": {
-		"usage": "/glw gang ally reject <gang>",
+		"usage": "/glw gang ally reject [gang]",
 		"description": "Reject a pending alliance request from another gang."
 	},
 	"gang_ally_pending": {

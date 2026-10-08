@@ -88,9 +88,19 @@ class GangInviteDeclineCommand extends SubArgument {
 		Map<String, String> map = new HashMap<>();
 		if (!(sender instanceof Player player)) return map;
 
+		List<Gang> senders = new ArrayList<>();
 		for (MailItem mail : mailManager.findPendingForRecipient(player.getUniqueId(), MailType.GANG_INVITE)) {
 			Gang gang = gangManager.getGang(mail.getSenderGangId());
-			if (gang != null) map.put(gang.getName(), String.valueOf(gang.getId()));
+			if (gang != null) senders.add(gang);
+		}
+
+		// Same-named gangs get name:id so each stays selectable (mirrors accept).
+		Map<String, Integer> nameCount = new HashMap<>();
+		for (Gang gang : senders) nameCount.merge(gang.getName(), 1, Integer::sum);
+
+		for (Gang gang : senders) {
+			String displayName = nameCount.get(gang.getName()) > 1 ? gang.getName() + ":" + gang.getId() : gang.getName();
+			map.put(displayName, String.valueOf(gang.getId()));
 		}
 		return map;
 	}
@@ -132,13 +142,17 @@ class GangInviteDeclineCommand extends SubArgument {
 	}
 
 	private void decline(User<Player> user, MailItem mail) {
-		Gang   gang = gangManager.getGang(mail.getSenderGangId());
-		String name = gang == null ? "?" : gang.getDisplayNameString();
+		Gang gang = gangManager.getGang(mail.getSenderGangId());
+		if (gang == null) {
+			// The sending gang is gone: drop the stale invite, as accept does.
+			mailManager.cancel(mail);
+			user.sendMessage(Messages.NO_GANG_INVITATION.toString());
+			return;
+		}
 
 		mailManager.reject(mail);
-		user.sendMessage(messages.inviteDeclined(name));
+		user.sendMessage(messages.inviteDeclined(gang.getDisplayNameString()));
 
-		if (gang == null) return;
 		for (Player member : OnlineGangMembers.of(memberManager, gang.getId())) {
 			member.sendMessage(messages.inviteDeclinedNotice(user.getUser().getName()));
 		}

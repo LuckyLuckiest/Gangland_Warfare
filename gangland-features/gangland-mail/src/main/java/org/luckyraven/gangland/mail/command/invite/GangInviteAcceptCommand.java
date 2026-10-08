@@ -10,6 +10,7 @@ import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.Member;
@@ -79,19 +80,18 @@ class GangInviteAcceptCommand extends SubArgument {
 				return;
 			}
 
+			if (pending.size() > 1) {
+				// Accepting cancels the other invites, so auto-picking one would take the choice away. Ask for the gang.
+				user.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<gang>"));
+				return;
+			}
+
 			MailItem mail = pending.get(0);
 			Gang     gang = gangManager.getGang(mail.getSenderGangId());
 			if (gang == null) {
 				mailManager.cancel(mail);
 				user.sendMessage(Messages.NO_GANG_INVITATION.toString());
 				return;
-			}
-
-			if (pending.size() > 1) {
-				user.sendMessage(Messages.GANG_INVITE_ACCEPT_MULTIPLE.toString()
-				                                                     .replace("%count%",
-				                                                              String.valueOf(pending.size()))
-				                                                     .replace("%gang%", gang.getDisplayNameString()));
 			}
 
 			doAccept(user, player, gang, mail);

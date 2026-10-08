@@ -55,9 +55,7 @@ public class MailModuleConfig {
 
 	@Bean
 	public MailExpirySweep mailExpirySweep(JavaPlugin plugin, MailManager manager) {
-		MailExpirySweep sweep = new MailExpirySweep(plugin, manager);
-		sweep.onInitialize(true);
-		return sweep;
+		return new MailExpirySweep(plugin, manager);
 	}
 
 	@Bean
