@@ -1,0 +1,28 @@
+[SIZE=7][B]0.16.1 Changelog[/B][/SIZE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]✨ New[/B][/SIZE]
+
+[LIST]
+[*][B]Post-escape search and bounty bar[/B] — An escape by evasion no longer ends the hunt. The cops keep searching for [ICODE]Wanted.Post_Escape.Search_Seconds[/ICODE] (default 120 s), a bounty goes on you once and a chat line says so, and a bounty bar counts the search down. Death, arrest and quitting end it at once. A sighting during the search raises you by [ICODE]Spotted_Stars[/ICODE] (default 1), which resumes the normal chase.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]🔧 Changed[/B][/SIZE]
+
+[LIST]
+[*][B]Wanted titles are quieter and configurable[/B] — The star title no longer fills the screen on every change. Titles are set per event in [ICODE]wanted.yml[/ICODE] under [ICODE]Hud.Title.Gain[/ICODE], [ICODE]Hud.Title.Lost[/ICODE] and [ICODE]Hud.Title.Escaped[/ICODE] (each with its own [ICODE]Title[/ICODE], [ICODE]Subtitle[/ICODE] and fades). [ICODE]wanted_messages.yml[/ICODE] [ICODE]Hud.Title[/ICODE] is no longer read. To restore the old look, set [ICODE]Title: "&c%stars%"[/ICODE], [ICODE]Subtitle: "%card%"[/ICODE], [ICODE]Stay: 40[/ICODE] and [ICODE]Fade_Out: 10[/ICODE] on each event.
+[*][B]Escape bounty is priced on the chase's peak[/B] — The notoriety added by an escape follows the highest star count of that chase, not the star it dropped from. Nothing is added while notoriety already sits at [ICODE]Bounty.Kill.Maximum[/ICODE].
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]🐛 Fixed[/B][/SIZE]
+
+[LIST]
+[*]A bounty-less escape left the red chase bar on screen until death or the next wanted episode.
+[*]A reload of the cops left a searched player with the bounty bar and no cops.
+[*]A cop kill that ended the squad mid-tick let the rest of that tick run on the destroyed group.
+[/LIST]

@@ -61,6 +61,7 @@ class PostEscapeSettingsTest {
 		              + "      Enable: false\n"
 		              + "      Search_Seconds: 45\n"
 		              + "      Announce: false\n"
+		              + "      Spotted_Stars: 2\n"
 		              + "   Hud:\n"
 		              + "      Bounty:\n"
 		              + "         Enable: false\n"
@@ -68,6 +69,6 @@ class PostEscapeSettingsTest {
 
 		PostEscapeSettings parsed = PostEscapeSettings.parse(wantedRoot(yaml, new ConfigReport()));
 
-		assertEquals(new PostEscapeSettings(false, 45, false, "RED", false), parsed);
+		assertEquals(new PostEscapeSettings(false, 45, false, "RED", false, 2), parsed);
 	}
 }

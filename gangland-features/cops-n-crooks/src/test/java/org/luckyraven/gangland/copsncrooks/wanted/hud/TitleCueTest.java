@@ -70,7 +70,8 @@ class TitleCueTest {
 
 		boolean sent = cue.send(player, Map.of());
 
-		verify(player).sendTitle("", "x", 5, 20, 5);
+		// a blank title goes as the reset code, a non-null component on every version (0.16.1 wanted-4)
+		verify(player).sendTitle(ChatColor.RESET.toString(), "x", 5, 20, 5);
 		assertTrue(sent);
 	}
 

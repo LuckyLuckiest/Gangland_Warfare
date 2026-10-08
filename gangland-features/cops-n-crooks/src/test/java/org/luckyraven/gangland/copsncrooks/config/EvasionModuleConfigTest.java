@@ -9,6 +9,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.perimeter.PerimeterController;
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
+import org.luckyraven.gangland.copsncrooks.wanted.escape.PostEscapeSpotting;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.EvasionClock;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.Hideouts;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.QuietTrail;
@@ -42,12 +43,13 @@ import static org.mockito.Mockito.when;
 class EvasionModuleConfigTest {
 
 	@Test
-	@DisplayName("installEvasion installs the clock as the decay policy and the clock, the perimeter and the cold trail as AI-tick hooks")
+	@DisplayName("installEvasion installs the clock as the decay policy and the clock, the sighting, the perimeter and the cold trail as AI-tick hooks")
 	@SuppressWarnings("unchecked")
-	void installEvasion_installsTheDecayPolicyAndAllThreeAiTickHooks() {
+	void installEvasion_installsTheDecayPolicyAndAllAiTickHooks() {
 		EvasionClock        clock     = mock(EvasionClock.class);
 		PerimeterController perimeter = mock(PerimeterController.class);
 		QuietTrail          quiet     = mock(QuietTrail.class);
+		PostEscapeSpotting  spotting  = mock(PostEscapeSpotting.class);
 		WantedStars         stars     = mock(WantedStars.class);
 		CopManager          manager   = mock(CopManager.class);
 
@@ -55,6 +57,7 @@ class EvasionModuleConfigTest {
 		container.registerInstance(EvasionClock.class, clock);
 		container.registerInstance(PerimeterController.class, perimeter);
 		container.registerInstance(QuietTrail.class, quiet);
+		container.registerInstance(PostEscapeSpotting.class, spotting);
 		container.registerInstance(WantedStars.class, stars);
 		container.registerInstance(CopManager.class, manager);
 
@@ -62,13 +65,14 @@ class EvasionModuleConfigTest {
 
 		verify(stars).installDecayPolicy(clock);
 		ArgumentCaptor<BiConsumer<Player, CopGroup>> hook = ArgumentCaptor.forClass(BiConsumer.class);
-		verify(manager, times(3)).addAiTickHook(hook.capture());
+		verify(manager, times(4)).addAiTickHook(hook.capture());
 
 		Player   player = mock(Player.class);
 		CopGroup group  = mock(CopGroup.class);
 		for (BiConsumer<Player, CopGroup> each : hook.getAllValues())
 			each.accept(player, group);
 		verify(clock).tick(player, group);
+		verify(spotting).onAiTick(player, group);
 		verify(perimeter).tick(player, group);
 		verify(quiet).tick(player, group);
 	}

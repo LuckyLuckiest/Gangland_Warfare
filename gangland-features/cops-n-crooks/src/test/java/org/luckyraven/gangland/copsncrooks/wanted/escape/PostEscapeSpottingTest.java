@@ -1,0 +1,116 @@
+package org.luckyraven.gangland.copsncrooks.wanted.escape;
+
+import org.bukkit.entity.Player;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.copsncrooks.npc.police.CopGroup;
+import org.luckyraven.gangland.copsncrooks.wanted.config.PostEscapeSettings;
+import org.luckyraven.gangland.core.bounty.Bounty;
+import org.luckyraven.gangland.core.user.Level;
+import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.core.wanted.WantedCause;
+import org.luckyraven.gangland.core.wanted.WantedContext;
+import org.luckyraven.gangland.core.wanted.WantedStars;
+import org.luckyraven.keystone.npc.NpcSquad;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+/**
+ * {@link PostEscapeSpotting} (0.16.1 wanted-1): a squad that sights a searched player raises him by the configured stars;
+ * nothing else triggers it.
+ */
+@DisplayName("PostEscapeSpotting - a sighting during the search raises the searched player")
+class PostEscapeSpottingTest {
+
+	private Player             player;
+	private User<Player>       user;
+	private CopGroup           group;
+	private NpcSquad           squad;
+	private WantedStars        stars;
+	private PostEscapeSearch   search;
+	private PostEscapeSettings settings;
+	private PostEscapeSpotting spotting;
+
+	@BeforeEach
+	void setUp() {
+		player = mock(Player.class);
+		when(player.getUniqueId()).thenReturn(UUID.randomUUID());
+
+		Bounty bounty = mock(Bounty.class);
+		when(bounty.getNotoriety()).thenReturn(BigDecimal.ZERO);
+		Level level = mock(Level.class);
+		when(level.getLevelValue()).thenReturn(1);
+		user = mock(User.class);
+		when(user.getBounty()).thenReturn(bounty);
+		when(user.getLevel()).thenReturn(level);
+
+		UserManager<Player> users = mock(UserManager.class);
+		when(users.getUser(player)).thenReturn(user);
+
+		search = new PostEscapeSearch(users);
+		search.begin(player, 1);
+
+		squad = mock(NpcSquad.class);
+		group = mock(CopGroup.class);
+		when(group.getSquad()).thenReturn(squad);
+		when(group.isEmpty()).thenReturn(false);
+
+		stars    = mock(WantedStars.class);
+		settings = new PostEscapeSettings(true, 120, true, "YELLOW", true, 1);
+		spotting = new PostEscapeSpotting(search, stars, users, () -> settings);
+	}
+
+	@Test
+	@DisplayName("a squad with a fresh sighting raises the searched player by Spotted_Stars, as a crime")
+	void sightedSearchedPlayer_isRaised() {
+		when(squad.hasFreshSighting()).thenReturn(true);
+
+		spotting.onAiTick(player, group);
+
+		verify(stars).raise(any(WantedContext.class), eq(1), eq(WantedCause.CRIME));
+	}
+
+	@Test
+	@DisplayName("no fresh sighting: the searched player is not raised")
+	void unsightedSearchedPlayer_isNotRaised() {
+		when(squad.hasFreshSighting()).thenReturn(false);
+
+		spotting.onAiTick(player, group);
+
+		verify(stars, never()).raise(any(WantedContext.class), anyInt(), any());
+	}
+
+	@Test
+	@DisplayName("a player who is not on the search is not raised by a sighting")
+	void notSearched_isNotRaised() {
+		Player other = mock(Player.class);
+		when(other.getUniqueId()).thenReturn(UUID.randomUUID());
+		when(squad.hasFreshSighting()).thenReturn(true);
+
+		spotting.onAiTick(other, group);
+
+		verify(stars, never()).raise(any(WantedContext.class), anyInt(), any());
+	}
+
+	@Test
+	@DisplayName("Spotted_Stars 0 keeps the search harmless: a sighting raises nobody")
+	void zeroSpottedStars_isNotRaised() {
+		settings = new PostEscapeSettings(true, 120, true, "YELLOW", true, 0);
+		when(squad.hasFreshSighting()).thenReturn(true);
+
+		spotting.onAiTick(player, group);
+
+		verify(stars, never()).raise(any(WantedContext.class), anyInt(), any());
+	}
+}

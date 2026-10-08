@@ -12,6 +12,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.targeting.WantedTargetingManager;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.escape.PostEscapeSearch;
+import org.luckyraven.gangland.copsncrooks.wanted.escape.PostEscapeSpotting;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.ChaseArcs;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.EvasionClock;
 import org.luckyraven.gangland.copsncrooks.wanted.evasion.Hideouts;
@@ -87,7 +88,15 @@ public class EvasionModuleConfig {
 		copSpawnManager.setSearchGuard(targeting::isSearching);
 		copManager.setEscapePredicate(search::isEscape);
 		search.onGiveUp(copManager::searchGaveUp);
+		copManager.addShutdownHook(search::endAll);
 		return search;
+	}
+
+	/** A sighting of a searched player raises him by {@code Spotted_Stars} (0.16.1 wanted-1). */
+	@Bean
+	public PostEscapeSpotting postEscapeSpotting(ChaseConfigLoader config, @Qualifier("online") UserManager<Player> users,
+	                                             WantedStars wantedStars, PostEscapeSearch search) {
+		return new PostEscapeSpotting(search, wantedStars, users, config::getPostEscape);
 	}
 
 	@Bean
@@ -101,6 +110,7 @@ public class EvasionModuleConfig {
 		container.getInstance(WantedStars.class).installDecayPolicy(clock);
 		CopManager manager = container.getInstance(CopManager.class);
 		manager.addAiTickHook(clock::tick);
+		manager.addAiTickHook(container.getInstance(PostEscapeSpotting.class)::onAiTick);
 		manager.addAiTickHook(container.getInstance(PerimeterController.class)::tick);
 		manager.addAiTickHook(container.getInstance(QuietTrail.class)::tick);
 	}

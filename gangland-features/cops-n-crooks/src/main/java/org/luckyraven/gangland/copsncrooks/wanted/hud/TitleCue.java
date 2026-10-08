@@ -26,7 +26,8 @@ public record TitleCue(boolean enabled, String title, String subtitle, int fadeI
 		String resolvedSubtitle = fill(subtitle, placeholders);
 		if (resolvedTitle.isBlank() && resolvedSubtitle.isBlank()) return false;
 
-		ChatUtil.sendTitle(player, resolvedTitle, resolvedSubtitle, fadeIn, stay, fadeOut);
+		// A blank title is sent as a reset code: a 1.16 client drops the subtitle when the title component is null (wanted-4)
+		ChatUtil.sendTitle(player, resolvedTitle.isEmpty() ? "&r" : resolvedTitle, resolvedSubtitle, fadeIn, stay, fadeOut);
 		return true;
 	}
 

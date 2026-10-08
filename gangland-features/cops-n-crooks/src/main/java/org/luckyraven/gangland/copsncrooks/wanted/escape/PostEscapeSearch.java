@@ -7,8 +7,10 @@ import org.luckyraven.gangland.core.bounty.Bounty;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.core.wanted.WantedCause;
+import org.luckyraven.gangland.file.configuration.Settings;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -18,7 +20,7 @@ import java.util.function.Supplier;
 /**
  * The post-escape search (0.16.1 T-187): cops keep looking for a player who escaped by evasion, with a bounty on him. One
  * record per searched player, ended by the HUD's expiry (its beat count is the timer), by re-wanted, by death, arrest or
- * quit. Targeting is marked on {@link #begin} and cleared on {@link #end}.
+ * quit, or by a shutdown. Targeting is marked on {@link #begin} and cleared on {@link #end}.
  *
  * @since 0.16.1
  */
@@ -28,6 +30,8 @@ public final class PostEscapeSearch {
 	private final WantedTargetingManager       targeting;
 	private final Supplier<PostEscapeSettings> settings;
 	private final Map<UUID, Player>            searches = new HashMap<>();
+	/** The highest star count each player reached in his current chase; see {@link #recordLevel}. */
+	private final Map<UUID, Integer>           peaks    = new HashMap<>();
 	/** Told when the search runs out on its own; the cops give up then. Set by the module wiring. */
 	private       Consumer<UUID>               giveUp;
 
@@ -58,11 +62,26 @@ public final class PostEscapeSearch {
 		return settings.get().searchSeconds() * 2;
 	}
 
+	/** Notes a star count the player reached in his chase, so an escape is paid on the peak, not the last star. */
+	public void recordLevel(UUID playerId, int level) {
+		peaks.merge(playerId, level, Math::max);
+	}
+
 	/**
-	 * An escape by evasion took the last star; {@code oldLevel} is the star count before that drop. Adds the auto-bounty
-	 * notoriety once per spell and marks the player as searched for. A second call while the search runs does nothing.
+	 * The chase's peak for an escape, and forgets it: the highest level recorded, or {@code level} when that is higher.
+	 * Called on every drop to 0, escape or not, so a finished chase leaves nothing behind.
 	 */
-	public void begin(Player player, int oldLevel) {
+	public int takePeak(UUID playerId, int level) {
+		Integer peak = peaks.remove(playerId);
+		return peak == null ? level : Math.max(peak, level);
+	}
+
+	/**
+	 * An escape by evasion took the last star; {@code peak} is the highest star count of that chase. Adds the auto-bounty
+	 * notoriety once per spell, unless the notoriety already sits at {@code Bounty.Kill.Maximum}, and marks the player as
+	 * searched for. A second call while the search runs does nothing.
+	 */
+	public void begin(Player player, int peak) {
 		if (!settings.get().enabled()) return;
 
 		UUID id = player.getUniqueId();
@@ -72,10 +91,21 @@ public final class PostEscapeSearch {
 		if (user == null) return;
 
 		Bounty bounty = user.getBounty();
-		bounty.addNotoriety(bounty.getAutoBountyIncrease(user.getLevel().getLevelValue(), oldLevel));
+		if (!atKillCap(bounty)) {
+			bounty.addNotoriety(bounty.getAutoBountyIncrease(user.getLevel().getLevelValue(), peak));
+		}
 
 		searches.put(id, player);
 		targeting.markSearching(id);
+	}
+
+	/**
+	 * Whether the notoriety already reached {@code Bounty.Kill.Maximum}: a kill then adds nothing (EntityDamageListener),
+	 * and an escape adds nothing either. A null cap is an unloaded config (a test double), so no cap applies.
+	 */
+	private static boolean atKillCap(Bounty bounty) {
+		BigDecimal cap = Settings.getBountyMaxKill();
+		return cap != null && bounty.getNotoriety().compareTo(cap) >= 0;
 	}
 
 	/** Whether {@code playerId} is on a post-escape search. */
@@ -86,6 +116,14 @@ public final class PostEscapeSearch {
 	/** Ends the search, if any; the player is no longer a cop target through it. The bounty stays on the user. */
 	public void end(UUID playerId) {
 		if (searches.remove(playerId) != null) targeting.clearSearching(playerId);
+	}
+
+	/**
+	 * Ends every search: a shutdown or reload of the cops. No cop gives up here (nobody is left to); the HUD hides the bar
+	 * on its next beat, since its player is no longer searched.
+	 */
+	public void endAll() {
+		for (UUID playerId : new ArrayList<>(searches.keySet())) end(playerId);
 	}
 
 	/** The search ran out on its own: the cops give up, then the search ends. */

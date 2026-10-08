@@ -143,6 +143,15 @@ public class WantedHud {
 	}
 
 	/** Removes the bar and the ring and gives the compass back. */
+	/** The players whose bar shows a post-escape bounty (0.16.1 wanted-6: the bar is checked against the search each beat). */
+	public List<Player> bountyViewers() {
+		List<Player> viewers = new ArrayList<>();
+		for (Entry entry : entries.values()) {
+			if (entry.bounty) viewers.add(entry.player);
+		}
+		return viewers;
+	}
+
 	public void hide(Player player) {
 		Entry entry = entries.remove(player.getUniqueId());
 		if (entry == null) return;

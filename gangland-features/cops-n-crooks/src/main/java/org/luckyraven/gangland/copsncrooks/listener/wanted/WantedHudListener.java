@@ -126,8 +126,11 @@ public class WantedHudListener implements Listener {
 			return;
 		}
 
-		// An escape that started no search (no user to bounty) shows nothing
-		if (!search.isSearching(id)) return;
+		// An escape that started no search (no user to bounty) shows no bounty: the chase bar goes
+		if (!search.isSearching(id)) {
+			hud.hide(player);
+			return;
+		}
 
 		hud.bounty(player, search.beats(), () -> search.bountyAmount(id));
 		announceBounty(player, search.bountyAmount(id));
@@ -161,8 +164,15 @@ public class WantedHudListener implements Listener {
 		search.end(player.getUniqueId());
 	}
 
-	/** One half-second beat: the HUD's tick, which counts the post-escape bounty down; an expired search ends here. */
+	/**
+	 * One half-second beat: a bounty bar whose search ended without a wanted end (a shutdown) is hidden, then the HUD's tick,
+	 * which counts the post-escape bounty down; an expired search ends here.
+	 */
 	private void beat() {
+		for (Player player : hud.bountyViewers()) {
+			if (!search.isSearching(player.getUniqueId())) hud.hide(player);
+		}
+
 		for (Player player : hud.tick()) {
 			UUID       id       = player.getUniqueId();
 			BigDecimal amount   = search.bountyAmount(id);

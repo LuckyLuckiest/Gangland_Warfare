@@ -269,7 +269,7 @@ class WantedHudListenerTest {
 
 		listener.onLevelChange(change(1, 2, WantedCause.CRIME));
 
-		verify(player).sendTitle("", "★★☆☆☆", 5, 20, 5);
+		verify(player).sendTitle(ChatColor.RESET.toString(), "★★☆☆☆", 5, 20, 5);
 		verify(player, never()).sendMessage(anyString());
 	}
 
@@ -284,7 +284,7 @@ class WantedHudListenerTest {
 
 		listener.onLevelChange(change(2, 3, WantedCause.CRIME));
 
-		verify(player).sendTitle("", "★★★☆☆", 5, 20, 5);
+		verify(player).sendTitle(ChatColor.RESET.toString(), "★★★☆☆", 5, 20, 5);
 	}
 
 	@Test
@@ -563,6 +563,8 @@ class WantedHudListenerTest {
 
 		listener.onWantedEnd(new WantedEndEvent(player, wanted, WantedCause.EVASION));
 
+		// the chase bar goes with no bounty on it; nothing keeps drawing it (0.16.1 wanted-2)
+		verify(bar).removeAll();
 		ArgumentCaptor<String> titles = ArgumentCaptor.forClass(String.class);
 		verify(bar, atLeastOnce()).setTitle(titles.capture());
 		assertTrue(titles.getAllValues()

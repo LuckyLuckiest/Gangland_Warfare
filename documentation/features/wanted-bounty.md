@@ -108,14 +108,18 @@ write `Title: ""` to blank a line, since a bare key with no value takes the defa
 Losing your last star by staying out of sight is an escape, but the cops do not stand down. For
 `Wanted.Post_Escape.Search_Seconds` (120) they keep searching for you, and a bounty goes on you:
 
-- **The bounty.** The escape adds the auto bounty of your level and the wanted level you fled at, as notoriety, once per
-  escape. A chat line (`Wanted.Post_Escape.Announce`) says the bounty is on you, and the bar turns into the bounty bar: `BOUNTY $amount · Cops still
+- **The bounty.** The escape adds the auto bounty of your level and the peak star count of the chase (the highest level you
+  reached, not only the star you lost last), as notoriety, once per escape. Nothing is added while your notoriety already
+  sits at `Bounty.Kill.Maximum`. A chat line (`Wanted.Post_Escape.Announce`) says the bounty is on you, and the bar turns into the bounty bar: `BOUNTY $amount · Cops still
   looking`, in the colour of `Wanted.Hud.Bounty.Bar_Color` (`YELLOW`), counting down with the search. With no bounty
   standing the bar reads only `Cops still looking`. The amount is read live, so a bounty posted on you during the
   search shows at once.
 - **The search.** Cops keep hunting you as they would a wanted player, but they never cuff or shoot at you during it.
   The squad keeps looking: the cops walking home come back to the search, and the spawns carry on at the lowest tier
   (one star's squad) until the search ends. A cop you hit stops fighting you and chases you instead.
+- **Contact.** A squad that sights you during the search raises you by `Wanted.Post_Escape.Spotted_Stars` (default 1). That
+  is a new wanted start: the search ends and the normal chase resumes, with its HUD. `Spotted_Stars: 0` keeps the search
+  harmless: the cops only trail you and a sighting changes nothing.
 - **The end.** The search ends when it runs out, when you are wanted again (the normal wanted HUD takes the bar back),
   or when you die or are arrested. Death and arrest end the cops' hunt at once: the squad stands down and is removed,
   and the bounty bar goes. Quitting removes the squad at once, with no stand-down line. When the search runs out on its
@@ -126,7 +130,8 @@ Losing your last star by staying out of sight is an escape, but the cops do not 
 `Wanted.Post_Escape.Enable: false` makes an escape end the chase at once, as in 0.16.0: the cops stand down and walk home,
 with no search and no bounty. `Wanted.Hud.Bounty.Enable: false` hides the bounty bar and keeps the chat line and the countdown.
 `Wanted.Post_Escape.Announce: false` drops the chat lines. The search is not carried through a server restart, and a rejoin
-finds the cops gone; the bounty itself is saved with the player and comes back with him.
+finds the cops gone; the bounty itself is saved with the player and comes back with him. A reload of the cops (a bean
+reload) ends every search at once, and the bounty bar goes with it on its next beat.
 
 ### Police Response Per Star
 

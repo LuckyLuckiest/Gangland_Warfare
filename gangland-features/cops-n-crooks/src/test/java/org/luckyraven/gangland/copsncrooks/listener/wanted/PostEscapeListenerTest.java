@@ -50,6 +50,7 @@ class PostEscapeListenerTest {
 		when(wanted.getMaxLevel()).thenReturn(5);
 
 		bounty = mock(Bounty.class);
+		when(bounty.getNotoriety()).thenReturn(BigDecimal.ZERO);
 		when(bounty.getAutoBountyIncrease(anyInt(), anyInt())).thenReturn(BigDecimal.valueOf(250));
 
 		Level level = mock(Level.class);
@@ -95,5 +96,27 @@ class PostEscapeListenerTest {
 		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 2, 1, WantedCause.EVASION));
 
 		verify(bounty, never()).addNotoriety(any());
+	}
+
+	@Test
+	@DisplayName("an escape is priced on the chase's peak star count, not on the star it dropped from")
+	void escapeAfterClimb_isPricedOnPeak() {
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 0, 5, WantedCause.CRIME));
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 5, 1, WantedCause.EVASION));
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 1, 0, WantedCause.EVASION));
+
+		verify(bounty).getAutoBountyIncrease(7, 5);
+	}
+
+	@Test
+	@DisplayName("a chase that ends without an escape leaves no peak for the next chase")
+	void finishedChase_leavesNoPeak() {
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 0, 5, WantedCause.CRIME));
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 5, 0, WantedCause.ARREST));
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 0, 1, WantedCause.CRIME));
+		listener.onLevelChange(new WantedLevelChangeEvent(player, wanted, 1, 0, WantedCause.EVASION));
+
+		verify(bounty).getAutoBountyIncrease(7, 1);
+		verify(bounty, never()).getAutoBountyIncrease(7, 5);
 	}
 }

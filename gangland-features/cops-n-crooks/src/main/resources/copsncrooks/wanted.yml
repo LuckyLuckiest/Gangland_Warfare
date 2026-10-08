@@ -216,6 +216,9 @@ Wanted:
       # How long the cops keep searching after the escape, in seconds. The search ends early if you are arrested, die
       # or get wanted again
       Search_Seconds: 120
+      # Stars the cops raise you by when they sight you during the search: the search ends and the chase resumes.
+      # 0 = a sighting changes nothing and the cops only trail you
+      Spotted_Stars: 1
       # false = no chat line when the bounty goes on you and when the cops give up (the bounty bar still shows)
       Announce: true
 

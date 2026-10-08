@@ -91,6 +91,7 @@ public class CopManager implements BeanLifecycle {
 	private volatile Predicate<WantedCause> escape = cause -> cause == WantedCause.EVASION;
 	/** Called on every AI tick of an online player's chase; see {@link #addAiTickHook}. */
 	private final List<BiConsumer<Player, @Nullable CopGroup>> aiTickHooks     = new CopyOnWriteArrayList<>();
+	private final List<Runnable>                               shutdownHooks  = new CopyOnWriteArrayList<>();
 	/** Called first thing when a player hits a cop; see {@link #addCopAttackedHook}. */
 	private final List<BiConsumer<CopNpc, Player>>             copAttackedHooks = new CopyOnWriteArrayList<>();
 
@@ -505,6 +506,15 @@ public class CopManager implements BeanLifecycle {
 			if (player != null) runAiTickHooks(player, null);
 		}
 		copAttackers.clear();
+		for (Runnable hook : shutdownHooks) hook.run();
+	}
+
+	/**
+	 * Registers a hook run at the end of {@link #shutdown()}, after the cops are gone: a reload or disable ends the
+	 * post-escape search through it (0.16.1 wanted-6).
+	 */
+	public void addShutdownHook(Runnable hook) {
+		shutdownHooks.add(hook);
 	}
 
 	@Override
@@ -1059,6 +1069,12 @@ public class CopManager implements BeanLifecycle {
 			// The cop's hit may have ended the squad (a kill or a down ends the hunt): its list is cleared by now, so the
 			// iterator must not be advanced again (0.16.1 T-187)
 			if (groups.get(playerId) != group) break;
+		}
+		// The squad was ended mid-tick: the group is gone, so the hooks see no group and nothing else runs on it
+		if (groups.get(playerId) != group) {
+			runAiTickHooks(player, null);
+			drainRadioCalls();
+			return;
 		}
 		fieldCare.tick(group);
 
