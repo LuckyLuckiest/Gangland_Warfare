@@ -8,22 +8,26 @@ import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.GanglandApi;
+import org.luckyraven.gangland.copsncrooks.command.CommandMessages;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.gangland.copsncrooks.jail.JailRegistry;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
-import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.util.GanglandChatUtil;
+
+import java.util.Map;
 
 class JailListCommand extends SubArgument {
 
-	private final JailRegistry jailRegistry;
+	private final JailRegistry    jailRegistry;
+	private final CommandMessages messages;
 
-	protected JailListCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, JailRegistry jailRegistry) {
+	protected JailListCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, JailRegistry jailRegistry,
+	                          CommandMessages messages) {
 		super(plugin, "list", tree, parent);
 
 		this.jailRegistry = jailRegistry;
+		this.messages     = messages;
 	}
 
 	@Override
@@ -32,24 +36,21 @@ class JailListCommand extends SubArgument {
 			var cells = jailRegistry.getCells();
 
 			if (cells.isEmpty()) {
-				sender.sendMessage(Messages.JAIL_LIST_EMPTY.toString());
+				sender.sendMessage(messages.format(CommandMessages.Key.JAIL_LIST_EMPTY, Map.of()));
 				return;
 			}
 
-			sender.sendMessage(Messages.JAIL_LIST_HEADER.toString());
+			sender.sendMessage(messages.format(CommandMessages.Key.JAIL_LIST_HEADER,
+			                                   Map.of("count", String.valueOf(cells.size()))));
 			cells.forEach(jail -> {
-				Location location = jail.getLocation();
-				int      x        = location.getBlockX();
-				int      y        = location.getBlockY();
-				int      z        = location.getBlockZ();
-				String   world    = location.getWorld() != null ? location.getWorld().getName() : "?";
-
 				int    id        = jail.getId();
 				String tpCommand = String.format("/%s jail teleport %d", GanglandApi.SHORT_PREFIX, id);
-				String hoverText = String.format("%s - %d, %d, %d", world, x, y, z);
+				String hoverText = messages.format(CommandMessages.Key.JAIL_LIST_HOVER,
+				                                   location(jail.getLocation()));
+				String row       = messages.format(CommandMessages.Key.JAIL_LIST_ROW,
+				                                   Map.of("id", String.valueOf(id)));
 
-				var message = new ComponentBuilder(GanglandChatUtil.color(" &b- &7" + id + " "))
-						.append(GanglandChatUtil.color("&e(&btp&e)"))
+				var message = new ComponentBuilder(row)
 						.event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, tpCommand))
 						.event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(hoverText)))
 						.create();
@@ -57,5 +58,14 @@ class JailListCommand extends SubArgument {
 				sender.spigot().sendMessage(message);
 			});
 		};
+	}
+
+	private static Map<String, String> location(Location location) {
+		String world = location.getWorld() != null ? location.getWorld().getName() : "?";
+
+		return Map.of("world", world,
+		              "x", String.valueOf(location.getBlockX()),
+		              "y", String.valueOf(location.getBlockY()),
+		              "z", String.valueOf(location.getBlockZ()));
 	}
 }

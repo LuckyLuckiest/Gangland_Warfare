@@ -4,6 +4,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
+import org.luckyraven.gangland.copsncrooks.command.CommandMessages;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentRegistry;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.detainment.intake.JailIntakeService;
@@ -13,8 +14,6 @@ import org.luckyraven.gangland.copsncrooks.jail.JailExitService;
 import org.luckyraven.gangland.copsncrooks.jail.JailRegistry;
 import org.luckyraven.gangland.copsncrooks.jail.JailService;
 import org.luckyraven.keystone.bean.command.CommandHandler;
-import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +30,7 @@ public final class JailCommand extends Command {
 	private final ReleasePipeline    releasePipeline;
 	private final JailExitService    jailExitService;
 	private final DetainmentSettings detainmentSettings;
+	private final CommandMessages    commandMessages;
 
 	public JailCommand(JavaPlugin plugin,
 	                   JailService jailService,
@@ -40,7 +40,8 @@ public final class JailCommand extends Command {
 	                   JailIntakeService jailIntakeService,
 	                   ReleasePipeline releasePipeline,
 	                   JailExitService jailExitService,
-	                   DetainmentSettings detainmentSettings) {
+	                   DetainmentSettings detainmentSettings,
+	                   CommandMessages commandMessages) {
 		super(plugin, "jail", false);
 
 		this.jailService        = jailService;
@@ -51,6 +52,7 @@ public final class JailCommand extends Command {
 		this.releasePipeline    = releasePipeline;
 		this.jailExitService    = jailExitService;
 		this.detainmentSettings = detainmentSettings;
+		this.commandMessages    = commandMessages;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -63,25 +65,27 @@ public final class JailCommand extends Command {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
-		commandSender.sendMessage(
-				GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<create|remove|release>"));
+		help(commandSender, 1);
 	}
 
 	@Override
 	protected void initializeArguments() {
 		Argument createArg = new JailCreateCommand(getPlugin(), getArgumentTree(), getArgument(), jailService,
-		                                           jailRegistry, detainmentSettings);
+		                                           jailRegistry, detainmentSettings, commandMessages);
 		Argument removeArg = new JailRemoveCommand(getPlugin(), getArgumentTree(), getArgument(), jailService,
-		                                           jailRegistry);
+		                                           jailRegistry, commandMessages);
 		Argument playerArg = new JailThrowCommand(getPlugin(), getArgumentTree(), getArgument(), detainmentService,
-		                                          detainmentRegistry, jailIntakeService);
+		                                          detainmentRegistry, jailIntakeService, commandMessages);
 		Argument releaseArg = new JailReleaseCommand(getPlugin(), getArgumentTree(), getArgument(),
-		                                             detainmentService, releasePipeline);
-		Argument listArg     = new JailListCommand(getPlugin(), getArgumentTree(), getArgument(), jailRegistry);
-		Argument infoArg     = new JailInfoCommand(getPlugin(), getArgumentTree(), getArgument(), jailRegistry);
-		Argument teleportArg = new JailTeleportCommand(getPlugin(), getArgumentTree(), getArgument(), jailRegistry);
+		                                             detainmentService, releasePipeline, commandMessages);
+		Argument listArg     = new JailListCommand(getPlugin(), getArgumentTree(), getArgument(), jailRegistry,
+		                                           commandMessages);
+		Argument infoArg     = new JailInfoCommand(getPlugin(), getArgumentTree(), getArgument(), jailRegistry,
+		                                           commandMessages);
+		Argument teleportArg = new JailTeleportCommand(getPlugin(), getArgumentTree(), getArgument(), jailRegistry,
+		                                               commandMessages);
 		Argument setExitArg = new JailSetExitCommand(getPlugin(), getArgumentTree(), getArgument(), jailRegistry,
-		                                             jailExitService);
+		                                             jailExitService, commandMessages);
 
 		List<Argument> arguments = new ArrayList<>();
 

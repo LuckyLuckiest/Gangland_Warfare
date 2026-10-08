@@ -8,6 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
+import org.luckyraven.gangland.copsncrooks.command.CommandMessages;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopManager;
 import org.luckyraven.gangland.copsncrooks.npc.police.CopService;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
@@ -15,26 +16,28 @@ import org.luckyraven.gangland.copsncrooks.npc.police.targeting.TargetingManager
 import org.luckyraven.gangland.copsncrooks.npc.police.radio.CopRadio;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
-import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 class CopListCommand extends SubArgument {
 
 	private final JavaPlugin         plugin;
-	private final Tree<Argument>   tree;
-	private final TargetingManager targetingManager;
-	private final CopManager       copManager;
+	private final Tree<Argument>     tree;
+	private final TargetingManager   targetingManager;
+	private final CopManager         copManager;
+	private final CommandMessages    messages;
 
-	CopListCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, CopService copService) {
+	CopListCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, CopService copService,
+	               CommandMessages messages) {
 		super(plugin, "list", tree, parent);
 
-		this.plugin         = plugin;
+		this.plugin           = plugin;
 		this.tree             = tree;
 		this.targetingManager = copService.getTargetingManager();
 		this.copManager       = copService.getCopManager();
+		this.messages         = messages;
 
 		playerTarget();
 	}
@@ -49,13 +52,14 @@ class CopListCommand extends SubArgument {
 					.toList();
 
 			if (targetedPlayers.isEmpty()) {
-				sender.sendMessage(Messages.COP_LIST_NONE.toString());
+				sender.sendMessage(messages.format(CommandMessages.Key.COP_LIST_EMPTY, Map.of()));
 				return;
 			}
 
-			List<String> list = targetedPlayers.stream().map(player -> "&b- &r" + player.getName()).toList();
-			sender.sendMessage(GanglandChatUtil.color("&7Players being chased by cops:"));
-			sender.sendMessage(GanglandChatUtil.color(String.join("\n", list)));
+			sender.sendMessage(messages.format(CommandMessages.Key.COP_LIST_HEADER,
+			                                   Map.of("count", String.valueOf(targetedPlayers.size()))));
+			targetedPlayers.forEach(player -> sender.sendMessage(messages.format(CommandMessages.Key.COP_LIST_ROW,
+			                                                                     Map.of("player", player.getName()))));
 		};
 	}
 
@@ -65,24 +69,23 @@ class CopListCommand extends SubArgument {
 			Player target     = Bukkit.getPlayer(playerName);
 
 			if (target == null || !target.isOnline()) {
-				sender.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", playerName));
+				sender.sendMessage(messages.format(CommandMessages.Key.PLAYER_NOT_FOUND, Map.of("player", playerName)));
 				return;
 			}
 
 			List<CopNpc> cops = copManager.getCopsForPlayer(target.getUniqueId());
 
 			if (cops.isEmpty()) {
-				sender.sendMessage(Messages.COP_TARGET_NOT_CHASED.toString()
-				                                                 .replace("%target%", target.getName()));
+				sender.sendMessage(messages.format(CommandMessages.Key.COP_TARGET_NOT_CHASED, Map.of("target", target.getName())));
 				return;
 			}
 
-			sender.sendMessage(
-					GanglandChatUtil.color("&7Player &e" + target.getName() + "&7 is being chased by cops:"));
+			sender.sendMessage(messages.format(CommandMessages.Key.COP_TARGET_HEADER, Map.of("player", target.getName())));
 			cops.forEach(cop -> {
 				NPC npc = cop.getNpc();
-				sender.sendMessage(
-						GanglandChatUtil.color("&b- &a" + CopRadio.callsign(cop) + "&7 (" + npc.getUniqueId() + ")"));
+				sender.sendMessage(messages.format(CommandMessages.Key.COP_TARGET_ROW,
+				                                   Map.of("callsign", CopRadio.callsign(cop),
+				                                          "uuid", String.valueOf(npc.getUniqueId()))));
 			});
 		}, sender -> Bukkit.getOnlinePlayers()
 				.stream()

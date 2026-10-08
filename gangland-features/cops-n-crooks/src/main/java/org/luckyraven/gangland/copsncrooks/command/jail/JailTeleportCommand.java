@@ -7,24 +7,28 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
+import org.luckyraven.gangland.copsncrooks.command.CommandMessages;
 import org.luckyraven.gangland.copsncrooks.jail.JailRegistry;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
-import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.util.GanglandChatUtil;
+
+import java.util.Map;
 
 class JailTeleportCommand extends SubArgument {
 
 	private final JavaPlugin       plugin;
 	private final Tree<Argument> tree;
 	private final JailRegistry   jailRegistry;
+	private final CommandMessages commandMessages;
 
-	JailTeleportCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, JailRegistry jailRegistry) {
+	JailTeleportCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent, JailRegistry jailRegistry,
+	                    CommandMessages commandMessages) {
 		super(plugin, new String[]{"teleport", "tp"}, tree, parent);
 
-		this.plugin     = plugin;
-		this.tree         = tree;
-		this.jailRegistry = jailRegistry;
+		this.plugin          = plugin;
+		this.tree            = tree;
+		this.jailRegistry    = jailRegistry;
+		this.commandMessages = commandMessages;
 
 		this.idArgument();
 	}
@@ -32,14 +36,14 @@ class JailTeleportCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			sender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<id>"));
+			sender.sendMessage(commandMessages.usage("/glw jail teleport <id>"));
 		};
 	}
 
 	private void idArgument() {
 		Argument idArg = new OptionalArgument(plugin, tree, (argument, sender, args) -> {
 			if (!(sender instanceof Player player)) {
-				sender.sendMessage(Messages.NOT_PLAYER.toString());
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.NOT_PLAYER, Map.of()));
 				return;
 			}
 
@@ -48,19 +52,19 @@ class JailTeleportCommand extends SubArgument {
 			try {
 				id = Integer.parseInt(idStr);
 			} catch (NumberFormatException e) {
-				sender.sendMessage(Messages.MUST_BE_NUMBERS.toString().replace("%command%", idStr));
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.BAD_ID, Map.of("value", idStr)));
 				return;
 			}
 
 			Location location = jailRegistry.getJailLocation(id);
 
 			if (location == null) {
-				sender.sendMessage(Messages.LOCATION_NOT_FOUND.toString().replace("%location%", idStr));
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_UNKNOWN, Map.of("id", idStr)));
 				return;
 			}
 
 			player.teleport(location);
-			sender.sendMessage(Messages.JAIL_TELEPORTED.toString().replace("%id%", String.valueOf(id)));
+			sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_TELEPORTED, Map.of("id", String.valueOf(id))));
 		}, sender -> {
 			return jailRegistry.getCells()
 					.stream().map(jail -> String.valueOf(jail.getId())).toList();

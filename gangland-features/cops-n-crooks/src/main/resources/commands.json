@@ -37,7 +37,7 @@
 	},
 	"jail_teleport": {
 		"usage": "/glw jail teleport <id>",
-		"description": "Teleports to the specified jail."
+		"description": "Teleports to the specified jail. The tp alias works too."
 	},
 	"jail_setexit": {
 		"usage": "/glw jail setexit [jailId]",
@@ -48,8 +48,8 @@
 		"description": "Shows the specified page in cop menu."
 	},
 	"cop_list": {
-		"usage": "/glw cop list",
-		"description": "Shows all the available cops."
+		"usage": "/glw cop list <player>",
+		"description": "Shows the players being chased by cops. The player is optional: with one, shows that player's cops."
 	},
 	"cop_spawner_set": {
 		"usage": "/glw cop spawner set",
@@ -69,7 +69,7 @@
 	},
 	"cop_spawner_teleport": {
 		"usage": "/glw cop spawner teleport <id>",
-		"description": "Teleports the player to the cop spawner with the specified id."
+		"description": "Teleports the player to the cop spawner with the specified id. The tp alias works too."
 	},
 	"cop_setup_wand": {
 		"usage": "/glw cop setup wand",
