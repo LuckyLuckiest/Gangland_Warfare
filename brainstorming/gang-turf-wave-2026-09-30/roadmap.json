@@ -886,6 +886,70 @@
           "wave": "W6"
         }
       ]
+    },
+    {
+      "id": "P9",
+      "name": "Quartermaster and guards that just work",
+      "why": "Owners cannot see that their Quartermaster and guards exist, who they protect or what they cost. The Quartermaster is placed by a hidden admin command, refusals and purchase feedback are hard-coded chat lines, and nothing tells the owner when a cop is shot at. Players should find the NPCs in the world, read who owns them, and get a short line when their guards act.",
+      "features": [
+        {
+          "id": "P9.1",
+          "name": "Defenders protect the owning gang from cops",
+          "wave": "W7",
+          "player_view": "A cop that hits a member of the gang that owns the turf, while that member stands on the turf, becomes the target of the Quartermaster and the guards in range. They drop it when the cop dies or leaves range, or when the member is no longer protected. They never start a fight with a cop on their own and never target the protected players.",
+          "mechanics": "Delivered on 0.16.1 (T-189; branch cnc-0.16.1-qm, commits 8062b8a1, 461472ed, 69f5ccc7; not yet merged into 0.16.1). TurfCopProtectionListener (cops-n-crooks) hands EntityDamageByEntityEvent and WeaponRaytraceImpactEvent to TurfCopGuard when CopManager.isCopNpc(attacker). TurfCopGuard (gangland-turf npc/guard) runs a 5-tick sync task, skips non-hostile NPCs and anything out of range, and releases a cop that switches its chase to a non-member (CopTargetLookup). Knobs in turf_npcs.yml: Cop_Response.Enabled (true), Cop_Response.Targeting_Radius (32.0), Cop_Response.Include_Allies (true); Powerup_Npc.Targeting_Radius (32.0) replaces the 32.0 literal that TurfPowerupManager used. CivilianNpc.removeEntityTarget added in gangland-civilians.",
+          "code": [
+            "TurfCopGuard",
+            "TurfCopProtectionListener",
+            "CivilianNpc.removeEntityTarget"
+          ],
+          "docket": [
+            "T-189"
+          ]
+        },
+        {
+          "id": "P9.2",
+          "name": "Right-click the Quartermaster for its hub",
+          "wave": "W7",
+          "player_view": "Right-click the Quartermaster and one menu opens: Garrison, Buffs, who owns the turf and how many guards are armed. Nothing has to be known in advance.",
+          "mechanics": "TurfPowerupOpenContractImpl already opens the menu for the owning gang and its allies. The hub adds the rows; the /glw turf powerupnpc, garrison and buff commands stay as shortcuts. Who may spend is D25."
+        },
+        {
+          "id": "P9.3",
+          "name": "Say who owns it",
+          "wave": "W7",
+          "player_view": "The nameplate and hover name the owning gang. A player refused the menu is told who owns the turf and how to get access, not just that they cannot use it.",
+          "mechanics": "Today civilians.yml names the Quartermaster '&6&lQuartermaster' and the defenders 'Turf Defender'. TurfPowerupNpcCommand places it with a null display name, so TurfPowerupOpenContractImpl falls back to 'Quartermaster'. The refusal is hard-coded English. Nameplate content is D27; the new text lives in the turf module YAML."
+        },
+        {
+          "id": "P9.4",
+          "name": "Guards tell you what they do",
+          "wave": "W7",
+          "player_view": "Owners get a short line when a guard engages a cop, when a guard falls, and when the Quartermaster is attacked. Repeats are rate-limited per turf.",
+          "mechanics": "Threat response runs only during an active capture (GarrisonDeployListener), and the owner gets no notice today. Channel and cooldown are D28; the cooldown is a turf_npcs.yml knob. Action bar goes through ActionBarManager, chat through ChatUtil."
+        },
+        {
+          "id": "P9.5",
+          "name": "Order your guards from the menu",
+          "wave": "W7",
+          "player_view": "The Garrison menu can set the guards to hold the turf or defend it. The current order shows in the menu and the status line.",
+          "mechanics": "Order set is D26. Hold rides the P5.1 posts and leash (W3). The order is stored through a turf repository; NPC persistence stays with our repositories, never Citizens saves."
+        },
+        {
+          "id": "P9.6",
+          "name": "Hire and top up guards in the menu",
+          "wave": "W7",
+          "player_view": "The Garrison menu shows guards alive, the reserve, the next wave's cost and a top-up button.",
+          "mechanics": "Builds on the P5.2 reserve and waves (W3). TurfPowerupGarrisonView already sells stock; this adds the alive count, the reserve and the top-up action, not a new economy."
+        },
+        {
+          "id": "P9.7",
+          "name": "A Quartermaster you can place without a command",
+          "wave": "W7",
+          "player_view": "Turf owners can place their own Quartermaster from an in-world menu on their own turf, if D29 picks that option. Staff keep the command.",
+          "mechanics": "Today only /glw turf powerupnpc set <turf> places it, and it needs a resolved turf selection (TurfSelectionResolver)."
+        }
+      ]
     }
   ],
   "map": {
@@ -2405,6 +2469,146 @@
           "exit": "go"
         }
       ]
+    },
+    {
+      "id": "W7",
+      "name": "NPC interaction: Quartermaster and guards that just work",
+      "goal": "Owners find, understand and steer their Quartermaster and guards without hidden commands. The cop-response protection (T-189) ships in 0.16.1; the hub, nameplates, feedback lines, orders and hiring follow on the 0.14.0 line after the pillar waves they touch.",
+      "depends_on": [
+        "W7-A: cnc-0.16.1-qm merged into 0.16.1 by the orchestrator (commits 8062b8a1, 461472ed, 69f5ccc7); no gang-turf-territory dependency",
+        "W7-B, W7-C, W7-D: the W2 gate (P3.6 and P3.4 touch the same menu views and open contract)",
+        "W7-E: W7-A merged and the W3 gate (P5.1 posts, P5.3 tags)",
+        "W7-F, W7-H: the W3 gate (P5.1 posts and leash; P5.2 reserve and waves)",
+        "D25 to D29 answered before the lane each one blocks starts"
+      ],
+      "branch": "cnc-0.16.1-qm (W7-A); gang-turf-territory (W7-B to W7-H)",
+      "gate": "W7-A: owner playtest on the Test Server (a cop hits a member on owned Quartermaster turf; the Quartermaster and the guards in range engage and stop when the cop dies or leaves range) and mvn -q -o -pl gangland-features/gangland-turf,gangland-features/cops-n-crooks,gangland-features/gangland-civilians -am test green. W7-B to W7-H: W7-G opus review of the lane diffs; orchestrator go/no-go; no new hard-coded player-facing strings in the touched views; live smoke of one hub round trip and one owner alert (about 15 min owner time).",
+      "lanes": [
+        {
+          "id": "W7-A",
+          "name": "Defenders protect the owning gang from cops (delivered in 0.16.1)",
+          "model": "haiku",
+          "role": "executor",
+          "parallel": false,
+          "worktree": "E:/Programming/java/wt/cnc161-qm",
+          "scope": "Friction: the Quartermaster and guards ignored cops hitting the owner's players on owned turf (T-189). Change: TurfCopGuard, TurfCopProtectionListener, Cop_Response knobs, and Powerup_Npc.Targeting_Radius replaces the 32.0 literal. Size S.",
+          "modules": [
+            "gangland-turf",
+            "cops-n-crooks",
+            "gangland-civilians"
+          ],
+          "docket": [
+            "T-189"
+          ],
+          "tests": "TurfCopGuardTest, TurfCopProtectionListenerTest, CivilianNpcEntityTargetTest, TurfModuleConfigTest (Cop_Response defaults, 1.0 clamp); TurfDefenderDeployerTest and TurfPowerupManagerTest unchanged",
+          "exit": "Committed on cnc-0.16.1-qm (8062b8a1 red tests, 461472ed, 69f5ccc7). Orchestrator merges it into 0.16.1; owner playtest on the Test Server still to do."
+        },
+        {
+          "id": "W7-B",
+          "name": "Quartermaster hub and placement",
+          "model": "sonnet",
+          "role": "executor",
+          "parallel": false,
+          "worktree": "E:/Programming/java/wt/gt14-w7b-hub",
+          "scope": "Friction: placement is only /glw turf powerupnpc set (TurfPowerupNpcCommand.java:66-80, needs TurfSelectionResolver); the garrison and buff menus are subcommands nobody sees. Change: right-click opens one hub through TurfPowerupOpenContractImpl; placement per D29; commands stay as shortcuts. Size M. Runs after the W2 gate (P3.6 touches the same menu views).",
+          "modules": [
+            "gangland-turf"
+          ],
+          "docket": [],
+          "tests": "Hub row routing; open contract access per D25; placement permission per D29; existing command behaviour unchanged",
+          "exit": "Owner round trip on the Test Server: place, right-click, buy a guard, close; the old commands still run."
+        },
+        {
+          "id": "W7-C",
+          "name": "Say who owns it: nameplate, hover and refusal",
+          "model": "sonnet",
+          "role": "executor",
+          "parallel": false,
+          "worktree": "E:/Programming/java/wt/gt14-w7c-owner",
+          "scope": "Friction: the NPC name hides the owner (civilians.yml names; TurfPowerupOpenContractImpl falls back to 'Quartermaster' when the display name is null; TurfPowerupNpcCommand places with null); the refusal is hard-coded English with no owner or access hint. Change: nameplate and hover per D27; refusal names the owner and how to ally; text in turf_npcs.yml. Size S.",
+          "modules": [
+            "gangland-turf"
+          ],
+          "docket": [],
+          "tests": "Nameplate formatter (no gang, unclaimed, long name, 16-character limit as in P5.3); refusal text for owner and stranger",
+          "exit": "Test Server: the owner's tag shows on the NPC; a stranger gets the owner line."
+        },
+        {
+          "id": "W7-D",
+          "name": "Menu and feedback copy into the module YAML",
+          "model": "haiku",
+          "role": "executor",
+          "parallel": true,
+          "worktree": "E:/Programming/java/wt/gt14-w7d-copy",
+          "scope": "Friction: menu lore and purchase, activation and engage lines are inline ChatUtil.color strings (TurfPowerupMenuView.java:69-80, TurfPowerupGarrisonView.java:76-106, TurfPowerupBuffCatalogueView.java:93-99), so they cannot be tuned or localised. Change: a text block in turf/turf_npcs.yml (block style, Capitalized_Underscore keys, & colours), defaults equal to today's text. Size S. Parallel with W7-B.",
+          "modules": [
+            "gangland-turf"
+          ],
+          "docket": [],
+          "tests": "Characterisation test: YAML defaults give today's strings; a missing key falls back to the same text",
+          "exit": "Menus render identical text; no Messages or settings.yml change."
+        },
+        {
+          "id": "W7-E",
+          "name": "Owner feedback: guard engages, guard falls, Quartermaster attacked",
+          "model": "sonnet",
+          "role": "executor",
+          "parallel": false,
+          "worktree": "E:/Programming/java/wt/gt14-w7e-feedback",
+          "scope": "Friction: threat response runs only during a capture and the owner gets no notice when a cop hits a member or a guard or the Quartermaster falls. Change: TurfCopGuard raises an owner notice per D28, with a per-turf cooldown knob in turf_npcs.yml; one death notice per NPC. Size M. Needs W7-A merged.",
+          "modules": [
+            "gangland-turf",
+            "cops-n-crooks"
+          ],
+          "docket": [],
+          "tests": "Cooldown per turf; notice never reaches non-owners; a death notice fires once per NPC",
+          "exit": "Test Server: one owner line per cooldown during a cop attack; no spam."
+        },
+        {
+          "id": "W7-F",
+          "name": "Guard orders: hold and defend from the menu",
+          "model": "opus",
+          "role": "executor",
+          "parallel": false,
+          "worktree": "E:/Programming/java/wt/gt14-w7f-orders",
+          "scope": "Friction: the owner cannot steer guards; they react only inside a capture and the P5.1 posts are not yet an owner control. Change: per-turf order per D26 stored through a turf repository, applied as the P5.1 post and leash; menu row and status line. Size L. Needs the W3 gate.",
+          "modules": [
+            "gangland-turf",
+            "gangland-civilians"
+          ],
+          "docket": [],
+          "tests": "Order persists across restart (repository test per documentation/TESTING.md); hold keeps posts; defend re-enables the T-189 response",
+          "exit": "Test Server: order a hold, a cop attacks, guards stay on posts; defend restores the response."
+        },
+        {
+          "id": "W7-H",
+          "name": "Hire, reserve and top up guards in the menu",
+          "model": "sonnet",
+          "role": "executor",
+          "parallel": false,
+          "worktree": "E:/Programming/java/wt/gt14-w7h-hire",
+          "scope": "Friction: guard stock is sold in the Garrison view, but the owner cannot see guards alive, the reserve or the next wave's cost, and buys blind. Change: a menu row with alive, reserve, next wave cost and a top-up button on the P5.2 reserve; no new economy. Size S. Needs the W3 gate.",
+          "modules": [
+            "gangland-turf"
+          ],
+          "docket": [],
+          "tests": "Row numbers from TurfDefenderDeployer alive count and reserve; top-up respects the reserve",
+          "exit": "Test Server: buy, lose a guard, top up; the counts match."
+        },
+        {
+          "id": "W7-G",
+          "name": "Gate: opus review and smoke",
+          "model": "opus",
+          "role": "reviewer",
+          "parallel": false,
+          "worktree": "E:/Programming/java/wt/cnc161-qm (W7-A) and the integration worktree (W7-B to W7-H)",
+          "scope": "Review W7-A for protection bypasses (chase switch, raytrace shooter, ally flag off, cop on a second turf) and W7-B to W7-H for hard-coded strings, access bypass through the hub, and spend without the reserve. Orchestrator go/no-go. Size S.",
+          "modules": [],
+          "docket": [],
+          "tests": "No new tests; re-run the module tests named in W7-A",
+          "exit": "Go/no-go recorded in PLAN.md section 16."
+        }
+      ]
     }
   ],
   "orchestration": {
@@ -3057,6 +3261,138 @@
         "W5-M",
         "W5-A"
       ]
+    },
+    {
+      "id": "D25",
+      "question": "Who may use the Quartermaster hub? Today TurfPowerupOpenContractImpl admits the owning gang and its allies (refusal: 'Only members of the owning gang or its allies can use this NPC.').",
+      "options": [
+        {
+          "key": "A",
+          "label": "Owning gang only",
+          "detail": "Allies get the refusal with the owner's name and nothing else."
+        },
+        {
+          "key": "B",
+          "label": "Owning gang spends; allies look",
+          "detail": "Allies open the hub read-only (owner, status, armed count); buying, placing and orders need the owning gang."
+        },
+        {
+          "key": "C",
+          "label": "Owning gang and allies spend",
+          "detail": "Today's access kept as it is; the hub names the owner and who may spend."
+        }
+      ],
+      "recommended": "B",
+      "why": "Allies can see the turf's defence without spending the owner's money or moving its guards.",
+      "blocks": [
+        "W7-B",
+        "W7-C",
+        "W7-F"
+      ]
+    },
+    {
+      "id": "D26",
+      "question": "Which guard orders does the owner get from the menu?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Hold and defend",
+          "detail": "Hold keeps guards on their P5.1 posts; defend is the T-189 response. Two orders, no path-following."
+        },
+        {
+          "key": "B",
+          "label": "Hold, defend and follow",
+          "detail": "Follow makes guards escort a named member; needs path-following and stop rules."
+        },
+        {
+          "key": "C",
+          "label": "None until the posts ship",
+          "detail": "Guards keep their current behaviour; no order UI in 0.14.0."
+        }
+      ],
+      "recommended": "A",
+      "why": "The posts already give hold; follow adds pathing and stop rules that a turf defender does not need.",
+      "blocks": [
+        "W7-F"
+      ]
+    },
+    {
+      "id": "D27",
+      "question": "What does the Quartermaster or guard nameplate show about its owner?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Short gang tag only",
+          "detail": "The P5.3 format, for example [VIP] Quartermaster. The full name appears only in the menu."
+        },
+        {
+          "key": "B",
+          "label": "Full gang name",
+          "detail": "Readable at a glance; long names run into the 16-character limit."
+        },
+        {
+          "key": "C",
+          "label": "Short tag on the nameplate, full name on hover",
+          "detail": "The nameplate stays short and hover still names the owner."
+        }
+      ],
+      "recommended": "C",
+      "why": "The short tag fits the nameplate and the hover gives the full name for players who ask.",
+      "blocks": [
+        "W7-C"
+      ]
+    },
+    {
+      "id": "D28",
+      "question": "Where does the owner hear that a guard or the Quartermaster is in a fight?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Chat line and action bar, one per turf per cooldown",
+          "detail": "Chat keeps a record, the action bar is what players see mid-fight. The cooldown is a turf_npcs.yml knob (suggested 60 seconds)."
+        },
+        {
+          "key": "B",
+          "label": "Chat line only",
+          "detail": "Simpler; spams during a long attack unless the cooldown is strict."
+        },
+        {
+          "key": "C",
+          "label": "Action bar only",
+          "detail": "Quiet and easy to miss; the action bar is shared with other feedback."
+        }
+      ],
+      "recommended": "A",
+      "why": "Both channels cover the record and the moment; the cooldown stops spam.",
+      "blocks": [
+        "W7-E"
+      ]
+    },
+    {
+      "id": "D29",
+      "question": "Who may place a Quartermaster?",
+      "options": [
+        {
+          "key": "A",
+          "label": "Staff only, as today",
+          "detail": "/glw turf powerupnpc set <turf>; owners ask staff."
+        },
+        {
+          "key": "B",
+          "label": "Owning gang, from an in-world menu on its own turf",
+          "detail": "Costs a placement price set in turf_npcs.yml; the staff command stays."
+        },
+        {
+          "key": "C",
+          "label": "Staff free, owner pays a fee",
+          "detail": "Both paths; the fee and the staff exemption are configured."
+        }
+      ],
+      "recommended": "B",
+      "why": "Owners place it without asking staff, and the price keeps placement a deliberate choice.",
+      "blocks": [
+        "W7-B"
+      ]
     }
   ],
   "docket": {
@@ -3548,6 +3884,14 @@
     {
       "risk": "A drafted verb, key or message copies Gangs+ wording (commercial plugin).",
       "mitigation": "PLAN section 15.1 fixes Gangland's own vocabulary (third pass: friendlyfire -> pvp, the flag -> glw-gang-pvp, rank-number -> rank-position, D22 B struck after a token comparison against the competitor's public pages); lanes rename on sight and record it; the W6-X audit rereads every verb, node, key and token against competitors/gangsplus.md and the live public pages (tokens compared, nothing copied)."
+    },
+    {
+      "risk": "Cop response pulls defenders across turf borders or into fights they should leave alone.",
+      "mitigation": "Cop_Response.Enabled and Targeting_Radius knobs in turf_npcs.yml; defenders react only to a cop that hits a protected member on the owned turf, never start a fight alone, and drop the cop when it leaves range."
+    },
+    {
+      "risk": "Owner feedback spams chat during a long attack.",
+      "mitigation": "Per-turf cooldown knob (D28); action bar goes through ActionBarManager; one death notice per NPC."
     }
   ],
   "out_of_scope": [
