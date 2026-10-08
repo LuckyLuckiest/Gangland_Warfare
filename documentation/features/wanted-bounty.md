@@ -116,16 +116,19 @@ Losing your last star by staying out of sight is an escape, but the cops do not 
   search shows at once.
 - **The search.** Cops keep hunting you as they would a wanted player, but they never cuff or shoot at you during it.
   The squad keeps looking: the cops walking home come back to the search, and the spawns carry on at the lowest tier
-  (one star's squad) until the search ends. A cop you hit stops fighting you and chases you instead.
+  (one star's squad) until the search ends. Hitting a cop is still a crime: it makes you wanted again and the normal
+  chase resumes.
 - **Contact.** A squad that sights you during the search raises you by `Wanted.Post_Escape.Spotted_Stars` (default 1). That
   is a new wanted start: the search ends and the normal chase resumes, with its HUD. `Spotted_Stars: 0` keeps the search
   harmless: the cops only trail you and a sighting changes nothing.
 - **The end.** The search ends when it runs out, when you are wanted again (the normal wanted HUD takes the bar back),
   or when you die or are arrested. Death and arrest end the cops' hunt at once: the squad stands down and is removed,
   and the bounty bar goes. Quitting removes the squad at once, with no stand-down line. When the search runs out on its
-  own the cops give up (a cop you hit stops hunting you too), and the chat says so, with the bounty still standing if it is.
+  own the cops give up, and the chat says so, with the bounty still standing if it is. An admin wanted clear does not
+  end a search that is already running; it runs to its timer (or a reload).
 - **The bounty is not a second money system.** It is the server-made notoriety of the bounty system: a player who kills
-  you can collect it when `Pay_Notoriety` is on, like any other notoriety.
+  you can collect it when `Pay_Notoriety` is on, like any other notoriety. With `Pay_Notoriety` on, two players can farm
+  it (one escapes, the other kills him and collects); it is off by default, so leave it off unless you police that.
 
 `Wanted.Post_Escape.Enable: false` makes an escape end the chase at once, as in 0.16.0: the cops stand down and walk home,
 with no search and no bounty. `Wanted.Hud.Bounty.Enable: false` hides the bounty bar and keeps the chat line and the countdown.
