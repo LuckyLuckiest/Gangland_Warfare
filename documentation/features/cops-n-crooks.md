@@ -143,8 +143,9 @@ the scout (100) and the awp (120) leave its 22-32 band whole, the M4 rifle (10) 
 
 The default callsign `Format` is `"%rank% %role% &f%name% &7#%badge%"`: `Officer ✚ Medic Bob #1592` above the head,
 with the role's colour and symbol from its `Display` block. `%rank%` stays the tier's `Display_Name`; for a cop with
-no role (`Roles_Enabled: false`) `%role%` disappears with its space. The radio uses the same text without colours.
-Remove `%role%` from `Cops.Names.Format` to hide the role. Set `Roles_Enabled: false` in `cop_roles.yml` to spawn
+no role (`Roles_Enabled: false`) `%role%` disappears with its space. The radio does not read this `Format`: it names a
+cop with `Speaker_Name` (see Police Radio). Remove `%role%` from `Cops.Names.Format` to hide the role on the hologram.
+Set `Roles_Enabled: false` in `cop_roles.yml` to spawn
 every cop as its plain tier again.
 
 The Defender's front cone is judged from whoever dealt the damage: the shooter for a bullet or arrow, the attacker for
@@ -212,6 +213,19 @@ blocks). Each line plays a short click sound.
   "Eyes on suspect near the Docks, moving north-east." from posted cops, and "Units returning to patrol." when the trail
   goes cold. Every line may carry `%place%`, the district name at the spot, or "the area" (`Unknown_Place`).
 - **Resisting**, **retreat** and **field care** lines, as described above.
+
+**Speaker names (0.16.1):** a cop's name on the radio is set by `Speaker_Name` in `cop_radio_messages.yml`, a template
+with these placeholders:
+
+- `{rank}`: the tier's `Display_Name`, colour kept, e.g. `&9Officer`.
+- `{role}`: the role word in its colour, without the symbol, e.g. `&cMedic`. Empty for a cop with no role.
+- `{name}`: the first name from `Cops.Names.First_Names`. Empty when that list is empty.
+- `{number}`: the badge number, e.g. `1592`.
+
+An empty placeholder takes its colour code with it and the doubled space goes. The line's own colour resumes after the
+name, so a coloured name does not recolour the rest of the line. The default `"{rank} {role} &f{name} &7#{number}"`
+gives `Officer Medic Bob #1592`, the same text as before. For a rank and name only, use `"{rank} {name}"`. The same
+name is used wherever the radio names a cop: the speaker, a `%unit%` in a line, and a `%member%` a cop is named by.
 
 Lines are throttled per squad and per player, so chat never floods. Every line is in `copsncrooks/cop_radio_messages.yml`
 (Spanish: `_es.yml`). Each key is a list that one entry is picked from at random, and `[]` silences that line.
@@ -406,7 +420,7 @@ Needs `gangland.command.cop.setup`. Kinds for `list`, `remove` and `tp` are `sta
 | `/glw cop setup wand`                      | Gives you the setup wand: left click = pos1, right click = pos2.                         |
 | `/glw cop setup mode <mode>`               | `station`, `district`, `hideout`, `pickup`, `restricted` or `breaker`: what `save` stores. |
 | `/glw cop setup save <name...>`            | Stores the selection under a name according to the mode.                                 |
-| `/glw cop setup list [kind]`               | One line per row: `kind id name world x y z [tags]`.                                     |
+| `/glw cop setup list [kind]`               | One row per placed item: kind, id and name, with a clickable `tp`. A player sees the world and coordinates in the hover; the console gets them as text.                                     |
 | `/glw cop setup remove <kind> <id>`        | Removes a row; removing a station frees its spawners.                                    |
 | `/glw cop setup tp <kind> <id>`            | Teleports you to a station, a point, or the centre of a region.                          |
 | `/glw cop setup link <stationId> <jailId\|none>` | Sets the jail a station books arrests into, or `none`.                             |
@@ -415,7 +429,7 @@ Needs `gangland.command.cop.setup`. Kinds for `list`, `remove` and `tp` are `sta
 
 | Command         | Description                          |
 |-----------------|--------------------------------------|
-| `/glw cop list` | Lists all currently active cop NPCs. |
+| `/glw cop list` | Lists all currently active cop NPCs. Each cop is named with the fixed default format (`Officer Medic Bob #1592`), not your `Speaker_Name` or `Cops.Names.Format`. |
 
 ---
 

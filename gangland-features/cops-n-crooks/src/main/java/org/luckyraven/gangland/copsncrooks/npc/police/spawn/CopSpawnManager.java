@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Predicate;
 
 @CustomLog
@@ -44,6 +45,7 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 	private final DownedTargetFilter downedTargetFilter;
 	private final DetainmentService  detainmentService;
 	private final CuffLockRegistry   cuffLockRegistry;
+	private volatile Predicate<UUID> searchGuard = id -> false;
 
 	CopNpcFactory             copNpcFactory; // package-private: tests swap in a mock
 	private CopConfigProvider configProvider;
@@ -330,12 +332,20 @@ public class CopSpawnManager extends EntitySpawner<CopSpawner> {
 		return new CopSpawner(id, location);
 	}
 
+	/**
+	 * Tells the cops which players are on the post-escape search (0.16.1 T-187). Read per cop tick, so it may be set after
+	 * construction; the default says nobody is.
+	 */
+	public void setSearchGuard(Predicate<UUID> searchGuard) {
+		this.searchGuard = searchGuard;
+	}
+
 	private void rebuildFactories() {
 		CopConfigProvider provider = copLoader.getLoadedProvider();
 		this.configProvider = provider;
 
 		CopBehaviorFactory behaviorFactory = new CopBehaviorFactory(provider, () -> this, detainmentService,
-		                                                            cuffLockRegistry);
+		                                                            cuffLockRegistry, id -> searchGuard.test(id));
 		this.copNpcFactory = new CopNpcFactory(plugin, provider, behaviorFactory, markManager, bartizanNpcWeapons,
 		                                       downedTargetFilter);
 	}

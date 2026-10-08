@@ -15,6 +15,10 @@ public class WantedMessages extends LocalizedModuleYaml {
 
 	private static final String BASE_NAME = "wanted_messages";
 
+	/** Shipped {@code Crimes} lines whose id does not read as a name, so a file that predates them shows the same text. */
+	private static final Map<String, String> SHIPPED_CRIMES = Map.of("Spotted", "Spotted by the cops",
+	                                                                 "Unknown_Crime", "Reported crime");
+
 	/** One line of {@code wanted_messages.yml}: its path in the file and the text used when the file lacks it. */
 	public enum Key {
 		BAR_SEEN("Hud.Bar.Seen", "&c%stars% &4&lIN SIGHT"),
@@ -22,15 +26,21 @@ public class WantedMessages extends LocalizedModuleYaml {
 		BAR_EVADED("Hud.Bar.Evaded", "&a%stars% &2&lSTAR LOST"),
 		BAR_EVADED_MANY("Hud.Bar.Evaded_Many", "&a%stars% &2&l-%count% STARS"),
 		BAR_WAY("Hud.Bar.Way", "   &f%arrow% %distance%m"),
-		TITLE("Hud.Title", "&c%stars%"),
+		BAR_BOUNTY("Hud.Bar.Bounty", "&6&lBOUNTY &e%money_symbol%%amount% &7· &cCops still looking"),
+		BAR_BOUNTY_NONE("Hud.Bar.Bounty_None", "&7Cops still looking"),
+		ANNOUNCE_BOUNTY("Hud.Announce.Bounty", "&6&lBOUNTY &e%money_symbol%%amount% &7is on you, the cops are still looking"),
+		ANNOUNCE_NO_BOUNTY("Hud.Announce.No_Bounty", "&7The cops are still looking for you"),
+		ANNOUNCE_GAVE_UP("Hud.Announce.Gave_Up", "&7The cops gave up the search"),
+		ANNOUNCE_GAVE_UP_BOUNTY("Hud.Announce.Gave_Up_Bounty",
+		                        "&7The cops gave up the search &6BOUNTY %money_symbol%%amount% still stands"),
 		CARD_RAISE("Hud.Card.Raise", "&f%crime%&7: &e%tier% &7inbound, %stance%"),
 		STANCE_CUFFS("Hud.Card.Stance_Cuffs", "they still want you in cuffs"),
 		STANCE_SHOOT("Hud.Card.Stance_Shoot", "they shoot first"),
 		CARD_DROP_EVASION("Hud.Card.Drop_Evasion", "&aYou stayed out of sight"),
 		CARD_DROP_DECAY("Hud.Card.Drop_Decay", "&aThe trail went cold"),
 		CARD_DROP_OTHER("Hud.Card.Drop_Other", "&aA star is gone"),
-		CARD_DROP_PETTY("Hud.Card.Drop_Petty", "&aSmall fry, they dropped the case &7(-%count%)"),
-		CARD_DROP_COLD_TRAIL("Hud.Card.Drop_Cold_Trail", "&aThe trail went stone cold &7(-%count%)"),
+		CARD_DROP_PETTY("Hud.Card.Drop_Petty", "&aSmall fry, the heat is off you for now &7(-%count%)"),
+		CARD_DROP_COLD_TRAIL("Hud.Card.Drop_Cold_Trail", "&aThe trail is fading &7(-%count%)"),
 		CARD_DROP_CLEAN_BREAK("Hud.Card.Drop_Clean_Break", "&aClean break, you left the area &7(-%count%)"),
 		CARD_DROP_STILL_HOT("Hud.Card.Drop_Still_Hot", "&eStill hot, one star at a time"),
 		CARD_DROP_KNOWN_FACE("Hud.Card.Drop_Known_Face", "&eThey know your face, one star at a time"),
@@ -68,9 +78,9 @@ public class WantedMessages extends LocalizedModuleYaml {
 		return line;
 	}
 
-	/** The display name of a crime id: {@code Crimes.<id>} in the file, else the id with spaces. */
+	/** The display name of a crime id: {@code Crimes.<id>} in the file, else the shipped text, else the id with spaces. */
 	public String crimeName(String crimeId) {
-		return color("Crimes." + crimeId, crimeId.replace('_', ' '));
+		return color("Crimes." + crimeId, SHIPPED_CRIMES.getOrDefault(crimeId, crimeId.replace('_', ' ')));
 	}
 
 	/** {@code 45s}, or {@code 1m 05s} from a minute up. */

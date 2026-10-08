@@ -7,10 +7,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
+import org.luckyraven.gangland.copsncrooks.command.CommandMessages;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.keystone.bean.command.CommandHandler;
-import org.luckyraven.gangland.file.configuration.Messages;
-import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.Map;
 
@@ -18,11 +17,13 @@ import java.util.Map;
 public final class UncuffCommand extends Command {
 
 	private final DetainmentService detainmentService;
+	private final CommandMessages   commandMessages;
 
-	public UncuffCommand(JavaPlugin plugin, DetainmentService detainmentService) {
+	public UncuffCommand(JavaPlugin plugin, DetainmentService detainmentService, CommandMessages commandMessages) {
 		super(plugin, "uncuff", false);
 
 		this.detainmentService = detainmentService;
+		this.commandMessages   = commandMessages;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -39,7 +40,7 @@ public final class UncuffCommand extends Command {
 			releasePlayer(commandSender, player);
 			return;
 		}
-		commandSender.sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<player>"));
+		commandSender.sendMessage(commandMessages.usage("/glw uncuff <player>"));
 	}
 
 	@Override
@@ -60,12 +61,13 @@ public final class UncuffCommand extends Command {
 			Player target    = Bukkit.getPlayer(playerStr);
 
 			if (target == null) {
-				sender.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", playerStr));
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.PLAYER_NOT_FOUND,
+                                                          Map.of("player", playerStr)));
 				return;
 			}
 
 			if (!detainmentService.isHandcuffed(target)) {
-				sender.sendMessage(Messages.CUFF_NOT_CUFFED.toString());
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.CUFF_NOT_CUFFED, Map.of()));
 				return;
 			}
 
@@ -77,6 +79,7 @@ public final class UncuffCommand extends Command {
 	private void releasePlayer(CommandSender sender, Player target) {
 		detainmentService.release(target);
 
-		sender.sendMessage(Messages.CUFF_RELEASED.toString().replace("%target%", target.getName()));
+		sender.sendMessage(commandMessages.format(CommandMessages.Key.CUFF_RELEASED,
+                                                  Map.of("target", target.getName())));
 	}
 }

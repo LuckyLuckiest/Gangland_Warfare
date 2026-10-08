@@ -6,7 +6,7 @@
 # by the plugin: %stars%, %time%, %arrow%, %distance%, %crime%, %tier%, %stance%, %count% (also the number of stars
 # a star-drop line reports), %amount%, %paid%, %money_symbol%.
 
-# The boss bar, the title and the star card
+# The boss bar and the star card
 Hud:
    Bar:
       # A cop can see you
@@ -20,8 +20,20 @@ Hud:
       # Added after Searching while Wanted.Hud.Compass is on: an arrow to the way out of the search zone, seen from
       # where you face, and the blocks to go
       Way: "   &f%arrow% %distance%m"
-   # The star count flashed on the screen
-   Title: "&c%stars%"
+      # The bar after an escape while a bounty stands; %money_symbol% and %amount% are the bounty
+      Bounty: "&6&lBOUNTY &e%money_symbol%%amount% &7· &cCops still looking"
+      # The bar after an escape with no bounty on you
+      Bounty_None: "&7Cops still looking"
+   # The lines said in chat when the post-escape search starts or ends (Wanted.Post_Escape)
+   Announce:
+      # The escape with a bounty on you; %money_symbol% and %amount% are the bounty
+      Bounty: "&6&lBOUNTY &e%money_symbol%%amount% &7is on you, the cops are still looking"
+      # The escape with no bounty on you
+      No_Bounty: "&7The cops are still looking for you"
+      # The search runs out with no bounty on you
+      Gave_Up: "&7The cops gave up the search"
+      # The search runs out with a bounty still on you
+      Gave_Up_Bounty: "&7The cops gave up the search &6BOUNTY %money_symbol%%amount% still stands"
    Card:
       # Why a star was raised, with the tier of cop on the way
       Raise: "&f%crime%&7: &e%tier% &7inbound, %stance%"
@@ -36,9 +48,9 @@ Hud:
       # A star dropped for any other reason
       Drop_Other: "&aA star is gone"
       # AUTO: a small chase, every star dropped at once; %count% is how many
-      Drop_Petty: "&aSmall fry, they dropped the case &7(-%count%)"
+      Drop_Petty: "&aSmall fry, the heat is off you for now &7(-%count%)"
       # AUTO: a long chase that went quiet, every star dropped at once
-      Drop_Cold_Trail: "&aThe trail went stone cold &7(-%count%)"
+      Drop_Cold_Trail: "&aThe trail is fading &7(-%count%)"
       # AUTO: you left the search area and lost a share of your stars
       Drop_Clean_Break: "&aClean break, you left the area &7(-%count%)"
       # AUTO: only one star, because the chase is still hot (a rampage, or you logged out)
@@ -84,5 +96,7 @@ Crimes:
    Store_Robbery: "Store robbery"
    Trespass_Restricted: "Trespassing"
    Jailbreak: "Jailbreak"
+   # A sighting by the post-escape search: the cops spotted a player they were looking for
+   Spotted: "Spotted by the cops"
    # The star card's text when no crime is on record, for example a sign or an admin raise
    Unknown_Crime: "Reported crime"

@@ -13,6 +13,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.config.BackupSettings;
 import org.luckyraven.gangland.copsncrooks.npc.police.npc.CopNpc;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.core.wanted.Wanted;
+import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.keystone.npc.NpcSquad;
 import org.luckyraven.keystone.npc.NpcSquadSignal;
 import org.mockito.InOrder;
@@ -22,6 +23,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -449,6 +451,174 @@ class CopManagerSquadTest {
 		manager.onWantedEnd(player);
 
 		verify(fx.radio, times(1)).sayFromLeader(group, "Stand_Down");
+	}
+
+	@Test
+	@DisplayName("an escape wanted end keeps the squad and does not stand the cops down (0.16.1 T-187)")
+	void escapeWantedEnd_keepsGroup_andSkipsStandDown() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		group.add(fx.cop(CopState.PURSUING, 0, 0));
+
+		manager.onWantedEnd(player, WantedCause.EVASION);
+
+		verify(fx.radio, never()).sayFromLeader(group, "Stand_Down");
+		assertSame(group, manager.groupFor(playerId));
+		assertFalse(group.isEmpty());
+	}
+
+	@Test
+	@DisplayName("a death wanted end despawns the squad and forgets the cop attacker (0.16.1 T-187)")
+	void deathWantedEnd_despawnsSquad_andClearsAttackerLock() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		CopNpc   cop   = fx.cop(CopState.PURSUING, 0, 0);
+		group.add(cop);
+		manager.onCopAttacked(cop, player);
+
+		manager.onWantedEnd(player, WantedCause.DEATH);
+
+		assertNull(manager.groupFor(playerId));
+		verify(cop).destroy(any());
+		assertFalse(manager.isCopAttacker(playerId));
+	}
+
+	@Test
+	@DisplayName("an arrest wanted end despawns the squad and forgets the cop attacker (0.16.1 T-187)")
+	void arrestWantedEnd_despawnsSquad_andClearsCopAttacker() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		CopNpc   cop   = fx.cop(CopState.PURSUING, 0, 0);
+		group.add(cop);
+		manager.onCopAttacked(cop, player);
+
+		manager.onWantedEnd(player, WantedCause.ARREST);
+
+		assertNull(manager.groupFor(playerId));
+		assertFalse(manager.isCopAttacker(playerId));
+	}
+
+	@Test
+	@DisplayName("an ordinary wanted end (bribe) keeps the squad and only clears its targets: the cops walk home")
+	void bribeWantedEnd_keepsSquad_andClearsOnlyItsTargets() {
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		CopNpc   cop   = fx.cop(CopState.PURSUING, 0, 0);
+		cop.setTargetPlayerId(playerId);
+		group.add(cop);
+
+		manager.onWantedEnd(player, WantedCause.BRIBE);
+
+		assertSame(group, manager.groupFor(playerId));
+		verify(cop, never()).destroy(any());
+		verify(cop).setTargetPlayerId(null);
+	}
+
+	@Test
+	@DisplayName("with Post_Escape off an escape is the 0.16.0 stand-down: Stand_Down once, the cops walk home")
+	void evasionWantedEnd_withEscapeOff_standsDown_andWalksHome() {
+		manager.setEscapePredicate(cause -> false);
+		manager.onWantedStart(player, wanted);
+		CopGroup group = manager.groupFor(playerId);
+		group.add(fx.cop(CopState.PURSUING, 0, 0));
+
+		manager.onWantedEnd(player, WantedCause.EVASION);
+
+		verify(fx.radio).sayFromLeader(group, "Stand_Down");
+		assertSame(group, manager.groupFor(playerId));
+	}
+
+	@Test
+	@DisplayName("a cop mid-cuff drops the cuff when the player escapes: a searched player is never cuffed")
+	void escapeWantedEnd_cuffingCop_goesBackToPursuit() {
+		manager.onWantedStart(player, wanted);
+		CopNpc cop = fx.cop(CopState.CUFFING, 0, 0);
+		manager.groupFor(playerId).add(cop);
+
+		manager.onWantedEnd(player, WantedCause.EVASION);
+
+		verify(cop).transitionTo(CopState.PURSUING);
+	}
+
+	@Test
+	@DisplayName("an escape pulls the squad's cops that were walking home back into the search (0.16.1 T-187)")
+	void escapeWantedEnd_returningCop_isPulledBackIntoTheSearch() {
+		manager.onWantedStart(player, wanted);
+		CopNpc returningCop = fx.cop(CopState.RETURNING, 0, 0);
+		manager.groupFor(playerId).add(returningCop);
+
+		manager.onWantedEnd(player, WantedCause.EVASION);
+
+		assertEquals(CopState.PURSUING, returningCop.getCurrentState());
+		assertEquals(playerId, returningCop.getTargetPlayerId());
+	}
+
+	@Test
+	@DisplayName("a cop's hit that kills the player ends the squad mid-tick: no ConcurrentModificationException (0.16.1 T-187)")
+	void killingHit_endsSquadMidTick_withoutConcurrentModification() {
+		manager.onWantedStart(player, wanted);
+		CopNpc killer = fx.cop(CopState.PURSUING, 0, 0);
+		CopNpc second = fx.cop(CopState.PURSUING, 0, 0);
+		manager.groupFor(playerId).add(killer);
+		manager.groupFor(playerId).add(second);
+		doAnswer(invocation -> {
+			manager.onWantedEnd(player, WantedCause.DEATH);
+			return null;
+		}).when(killer).tick(any());
+
+		assertDoesNotThrow(() -> manager.aiTick(playerId));
+
+		verify(second, never()).tick(any());
+		assertNull(manager.groupFor(playerId));
+	}
+
+	@Test
+	@DisplayName("a searched player at zero stars keeps a lowest-tier squad spawning (0.16.1 T-187)")
+	void searchedSpawnTick_atZeroStars_spawnsTwoCopsAtTierOne() {
+		manager.onWantedStart(player, wanted);
+		when(fx.targeting.isSearching(playerId)).thenReturn(true);
+
+		manager.spawnTick(playerId, CopManagerFixture.wanted(0));
+
+		verify(fx.spawner).getTargetCopCount(1);
+		verify(fx.spawner, times(2)).spawnNearPlayer(eq(player), anyInt(), any(), isNull());
+	}
+
+	@Test
+	@DisplayName("at zero stars and not searched, the spawn task stops and spawns nothing")
+	void spawnTick_atZeroStars_notSearched_spawnsNothing() {
+		manager.onWantedStart(player, wanted);
+
+		manager.spawnTick(playerId, CopManagerFixture.wanted(0));
+
+		verify(fx.spawner, never()).spawnNearPlayer(any(), anyInt(), any(), any());
+	}
+
+	@Test
+	@DisplayName("a cop in COMBAT on a searched player goes back to the chase and does not strike him")
+	void searchedTarget_inCombat_goesBackToPursuit() {
+		manager.onWantedStart(player, wanted);
+		CopNpc cop = fx.cop(CopState.COMBAT, 0, 0);
+		cop.setTargetPlayerId(playerId);
+		manager.groupFor(playerId).add(cop);
+		when(fx.targeting.isSearching(playerId)).thenReturn(true);
+
+		manager.aiTick(playerId);
+
+		verify(cop).transitionTo(CopState.PURSUING);
+	}
+
+	@Test
+	@DisplayName("the search running out lifts the cop-attacker lock: nobody who hit a cop stays hunted")
+	void searchGaveUp_clearsCopAttackerLock() {
+		manager.onWantedStart(player, wanted);
+		CopNpc cop = fx.cop(CopState.PURSUING, 0, 0);
+		manager.groupFor(playerId).add(cop);
+		manager.onCopAttacked(cop, player);
+
+		manager.searchGaveUp(playerId);
+
+		assertFalse(manager.isCopAttacker(playerId));
 	}
 
 	@Test

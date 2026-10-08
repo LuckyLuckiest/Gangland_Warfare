@@ -60,7 +60,7 @@ class CuffingBehaviorTest {
 		when(cop.getGroup()).thenReturn(group);
 
 		locks    = new CuffLockRegistry();
-		behavior = new CuffingBehavior(CUFF_RADIUS, MAX_ATTEMPTS, 2, 5, locks, mock(DetainmentService.class));
+		behavior = new CuffingBehavior(CUFF_RADIUS, MAX_ATTEMPTS, 2, 5, locks, mock(DetainmentService.class), id -> false);
 	}
 
 	@AfterEach
@@ -92,6 +92,23 @@ class CuffingBehaviorTest {
 
 		verify(cop, never()).transitionTo(CopState.COMBAT);
 		assertFalse(group.isCombatAlert());
+	}
+
+	@Test
+	@DisplayName("a searched player is never cuffed: the cop drops the cuff and goes back to pursuit (0.16.1 T-187)")
+	void searchedTarget_isNeverCuffed() {
+		behavior = new CuffingBehavior(CUFF_RADIUS, MAX_ATTEMPTS, 2, 5, locks, mock(DetainmentService.class),
+		                               playerId::equals);
+		when(cop.distanceTo(player)).thenReturn(1.0);
+		when(cop.hasLineOfSight(player)).thenReturn(true);
+		when(cop.attemptCuff(player)).thenReturn(true);
+		behavior.onEnter(cop);
+
+		behavior.tick(cop);
+
+		verify(cop, never()).attemptCuff(player);
+		verify(cop, never()).transitionTo(CopState.GUARDING);
+		verify(cop).transitionTo(CopState.PURSUING);
 	}
 
 	@Test
@@ -142,9 +159,9 @@ class CuffingBehaviorTest {
 		CopNpc          second  = officer();
 		CopNpc          third   = officer();
 		CuffingBehavior secondCuffing = new CuffingBehavior(CUFF_RADIUS, MAX_ATTEMPTS, 2, 5, locks,
-		                                              mock(DetainmentService.class));
+		                                                    mock(DetainmentService.class), id -> false);
 		CuffingBehavior thirdCuffing  = new CuffingBehavior(CUFF_RADIUS, MAX_ATTEMPTS, 2, 5, locks,
-		                                              mock(DetainmentService.class));
+		                                                    mock(DetainmentService.class), id -> false);
 
 		escape();
 		escape(second, secondCuffing);

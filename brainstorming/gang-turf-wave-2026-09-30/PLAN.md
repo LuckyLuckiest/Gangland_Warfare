@@ -1511,3 +1511,18 @@ time with a green reactor build between, so the parity test must be green inside
 - `CLAUDE.md` (orchestrator, main checkout, after the W6 merge): the fights module row, the module count, the `Host_Api`
   lines (its `1.0` text is already stale: `GanglandApi.VERSION` is `2.0` today).
 - `documentation/migration-0.14.0.md` is edited by one E2 lane per window (W3-E2, W5-E2, W4-E, W6-E2), never two at once.
+
+## 16. NPC interaction: Quartermaster and guards that just work (added 2026-10-08)
+
+Source: the 0.16.0 playtest report "the turf quartermaster doesn't attack the cops when they are attacking the players" (docket T-189) and the owner's request to make the Quartermaster and guards "work effortlessly". The read-only interaction map was done in worktree `E:/Programming/java/wt/cnc161-qm`.
+
+Roadmap entries (`roadmap.json`, rendered in `roadmap.html`): pillar **P9** "Quartermaster and guards that just work" (features P9.1 to P9.7) and wave **W7**.
+
+- **W7-A (delivered in 0.16.1, branch `cnc-0.16.1-qm`):** defenders and the Quartermaster protect the owning gang from cops (T-189). Commits 8062b8a1, 461472ed, 69f5ccc7. Knobs `Cop_Response.*` and `Powerup_Npc.Targeting_Radius` in `turf_npcs.yml`. Not yet merged into 0.16.1 and the owner playtest is still to do.
+- **W7-B to W7-H (0.14.0 line, `gang-turf-territory`):** Quartermaster right-click hub and placement (W7-B), ownership nameplate and refusal text (W7-C), menu and feedback copy moved into the turf YAML (W7-D, haiku), owner feedback lines (W7-E), hold/defend orders (W7-F), hire and top-up in the menu (W7-H). Each lane names its friction point, change, module, model tier and size in its `scope`.
+- **W7-G:** opus gate review and smoke before the wave closes.
+- **Owner decisions D25 to D29:** hub access for allies (D25), which guard orders exist (D26), nameplate owner text (D27), owner alert channel and cooldown (D28), who may place a Quartermaster (D29). Each carries a recommended option in `roadmap.json`.
+
+Constraints kept: every new knob lives in the owning module's own YAML (`turf/turf_npcs.yml`, not `settings.yml`); no `gangland-api` change is planned; the W0 to W6 lanes are unchanged.
+
+Skipped for now (add when a real case needs it): a Memory_Seconds aggressor window; defenders do not pick up a cop that arrives after a fight has started without a new hit; alert faction on the defender side.

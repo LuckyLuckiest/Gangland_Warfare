@@ -97,6 +97,45 @@ a title and, when a star is gained, a siren, a particle ring marking the search 
 out of the zone (it never shows where the cops are). Switch each off under `Wanted.Hud` (`Boss_Bar`, `Star_Card`, `Title`, `Siren`, `Zone_Ring`, `Compass`);
 the text is in `copsncrooks/wanted_messages.yml`.
 
+The title is set per event under `Wanted.Hud.Title` (`Gain`, `Lost`, `Escaped`), each with its own `Title`, `Subtitle`
+and `Fade_In` / `Stay` / `Fade_Out` in ticks. The shipped default is a small subtitle (the star row and the star card) with no big
+title and a one-second stay, so the screen stays readable mid-chase. To get the old full-screen star count back, set
+`Title` to `"&c%stars%"`, `Subtitle` to `"%card%"`, `Stay` to `40` and `Fade_Out` to `10` on each event. Blank title and subtitle send nothing;
+write `Title: ""` to blank a line, since a bare key with no value takes the default.
+
+### After An Escape: The Search And The Bounty (0.16.1)
+
+Losing your last star by staying out of sight is an escape, but the cops do not stand down. For
+`Wanted.Post_Escape.Search_Seconds` (120) they keep searching for you, and a bounty goes on you:
+
+- **The bounty.** The escape adds the auto bounty of your level and the peak star count of the chase (the highest level you
+  reached, not only the star you lost last), as notoriety, once per escape. Nothing is added when the increase would take
+  your notoriety past `Bounty.Kill.Maximum` (the kill path's rule). A chat line (`Wanted.Post_Escape.Announce`) says the bounty is on you, and the bar turns into the bounty bar: `BOUNTY $amount · Cops still
+  looking`, in the colour of `Wanted.Hud.Bounty.Bar_Color` (`YELLOW`), counting down with the search. With no bounty
+  standing the bar reads only `Cops still looking`. The amount is read live, so a bounty posted on you during the
+  search shows at once.
+- **The search.** Cops keep hunting you as they would a wanted player, but they never cuff or shoot at you during it.
+  The squad keeps looking: the cops walking home come back to the search, and the spawns carry on at the lowest tier
+  (one star's squad) until the search ends. Hitting a cop is still a crime: it makes you wanted again and the normal
+  chase resumes.
+- **Contact.** A squad that sights you during the search raises you by `Wanted.Post_Escape.Spotted_Stars` (default 1). That
+  is a new wanted start: the search ends and the normal chase resumes, with its HUD. `Spotted_Stars: 0` keeps the search
+  harmless: the cops only trail you and a sighting changes nothing.
+- **The end.** The search ends when it runs out, when you are wanted again (the normal wanted HUD takes the bar back),
+  or when you die or are arrested. Death and arrest end the cops' hunt at once: the squad stands down and is removed,
+  and the bounty bar goes. Quitting removes the squad at once, with no stand-down line. When the search runs out on its
+  own the cops give up, and the chat says so, with the bounty still standing if it is. An admin wanted clear does not
+  end a search that is already running; it runs to its timer (or a reload).
+- **The bounty is not a second money system.** It is the server-made notoriety of the bounty system: a player who kills
+  you can collect it when `Pay_Notoriety` is on, like any other notoriety. With `Pay_Notoriety` on, two players can farm
+  it (one escapes, the other kills him and collects); it is off by default, so leave it off unless you police that.
+
+`Wanted.Post_Escape.Enable: false` makes an escape end the chase at once, as in 0.16.0: the cops stand down and walk home,
+with no search and no bounty. `Wanted.Hud.Bounty.Enable: false` hides the bounty bar and keeps the chat line and the countdown.
+`Wanted.Post_Escape.Announce: false` drops the chat lines. The search is not carried through a server restart, and a rejoin
+finds the cops gone; the bounty itself is saved with the player and comes back with him. A reload of the cops (a bean
+reload) ends every search at once, and the bounty bar goes with it on its next beat.
+
 ### Police Response Per Star
 
 | Stars   | Cops Sent | Minimum Tier    |

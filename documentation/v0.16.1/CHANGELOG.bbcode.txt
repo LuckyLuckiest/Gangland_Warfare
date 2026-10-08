@@ -1,0 +1,48 @@
+[SIZE=7][B]0.16.1 Changelog[/B][/SIZE]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]📦 Requires[/B][/SIZE]
+
+[LIST]
+[*][B]Keystone 1.15.1 is required[/B] — Replace [ICODE]Keystone-1.15.0.jar[/ICODE] with [ICODE]Keystone-1.15.1.jar[/ICODE] in [ICODE]plugins/[/ICODE]. On an older Keystone Gangland refuses to start and the console says [ICODE]Gangland 0.16.1 needs Keystone 1.15.1 or newer; found 1.15.0[/ICODE]. Tab completion (below) needs this Keystone too.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]✨ New[/B][/SIZE]
+
+[LIST]
+[*][B]Post-escape search and bounty bar[/B] — An escape by evasion no longer ends the hunt. The cops keep searching for [ICODE]Wanted.Post_Escape.Search_Seconds[/ICODE] (default 120 s), a bounty goes on you once and a chat line says so, and a bounty bar counts the search down. Death, arrest and quitting end it at once. A sighting during the search raises you by [ICODE]Spotted_Stars[/ICODE] (default 1), which resumes the normal chase.
+[*][B]Cop, jail and cuff replies match the core style[/B] — [ICODE]/glw cop[/ICODE], [ICODE]/glw jail[/ICODE] and [ICODE]/glw cuff[/ICODE] reply with the [ICODE]GLW >>[/ICODE] prefix, coloured usage, list headers with counts and clickable rows. The text lives in [ICODE]copsncrooks/commands.yml[/ICODE] (English) and [ICODE]commands_es.yml[/ICODE] (Spanish), and the setup wand's lines in [ICODE]copsncrooks/setup.yml[/ICODE]. Every [ICODE]/glw cop setup[/ICODE] subcommand has a help entry.
+[*][B]Turf defenders answer cops who hit your gang[/B] — On a turf its owner's gang protects, the garrison defenders and the Quartermaster fight a cop that hits a member of the owning gang (or of an allied gang). Their stray shots never hurt protected players. On by default. The knobs are in [ICODE]turf/turf_npcs.yml[/ICODE]:
+[CODE]Cop_Response:
+   Enabled: true
+   Targeting_Radius: 32.0
+   Include_Allies: true
+Powerup_Npc:
+   Targeting_Radius: 32.0[/CODE]
+[ICODE]Powerup_Npc.Targeting_Radius[/ICODE] is the Quartermaster's range and was hard-coded before. An existing server keeps its old [ICODE]turf_npcs.yml[/ICODE], so add the [ICODE]Cop_Response[/ICODE] block by hand to change the defaults. Without it the code defaults apply (the response is on).
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]🔧 Changed[/B][/SIZE]
+
+[LIST]
+[*][B]Wanted titles are quieter and configurable[/B] — The star title no longer fills the screen on every change. Titles are set per event in [ICODE]wanted.yml[/ICODE] under [ICODE]Hud.Title.Gain[/ICODE], [ICODE]Hud.Title.Lost[/ICODE] and [ICODE]Hud.Title.Escaped[/ICODE] (each with its own [ICODE]Title[/ICODE], [ICODE]Subtitle[/ICODE] and fades). [ICODE]wanted_messages.yml[/ICODE] [ICODE]Hud.Title[/ICODE] is no longer read. To restore the old look, set [ICODE]Title: "&c%stars%"[/ICODE], [ICODE]Subtitle: "%card%"[/ICODE], [ICODE]Stay: 40[/ICODE] and [ICODE]Fade_Out: 10[/ICODE] on each event.
+[*][B]Escape bounty is priced on the chase's peak[/B] — The notoriety added by an escape follows the highest star count of that chase, not the star it dropped from. Nothing is added while notoriety already sits at [ICODE]Bounty.Kill.Maximum[/ICODE].
+[*][B]Radio names keep their colours[/B] — A cop's name on the radio keeps its colours, and the line's colour resumes after the name. The format is [ICODE]Speaker_Name[/ICODE] in [ICODE]copsncrooks/cop_radio_messages.yml[/ICODE] (and [ICODE]cop_radio_messages_es.yml[/ICODE]), with [ICODE]{rank}[/ICODE], [ICODE]{role}[/ICODE], [ICODE]{name}[/ICODE] and [ICODE]{number}[/ICODE]. [ICODE]{rank} {name}[/ICODE] gives [ICODE]Officer Bob[/ICODE].
+[*][B]Tab completion lists primary command names[/B] — Completion suggests the primary name of each command. An alias is suggested only when nothing else matches. Aliases still run, and [ICODE]/gangland[/ICODE] completes like [ICODE]/glw[/ICODE]. Needs Keystone 1.15.1.
+[/LIST]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[SIZE=6][B]🐛 Fixed[/B][/SIZE]
+
+[LIST]
+[*]A bounty-less escape left the red chase bar on screen until death or the next wanted episode.
+[*]A reload of the cops left a searched player with the bounty bar and no cops.
+[*]A cop kill that ended the squad mid-tick let the rest of that tick run on the destroyed group.
+[*]A server whose [ICODE]wanted_messages.yml[/ICODE] predates [ICODE]Crimes.Spotted[/ICODE] shows the Spotted star card as "Spotted by the cops", not the key turned into words.
+[/LIST]

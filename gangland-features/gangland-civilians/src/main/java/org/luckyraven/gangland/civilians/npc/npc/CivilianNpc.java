@@ -237,6 +237,13 @@ public class CivilianNpc extends AbstractNpc {
 		entityTargetQueue.addFirst(entity);
 	}
 
+	/**
+	 * Drops only {@code entity} from the entity target queue, keeping the rest in order. Returns whether it was queued.
+	 */
+	public boolean removeEntityTarget(LivingEntity entity) {
+		return entityTargetQueue.remove(entity);
+	}
+
 	// ── Combat squad ──────────────────────────────────────────────────────────
 
 	/**

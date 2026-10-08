@@ -12,6 +12,7 @@ import org.luckyraven.gangland.copsncrooks.npc.police.state.CopState;
 import org.luckyraven.gangland.copsncrooks.npc.police.state.CuffLockRegistry;
 
 import java.util.UUID;
+import java.util.function.Predicate;
 
 /**
  * Cop attempts to cuff the target player.
@@ -30,6 +31,8 @@ public class CuffingBehavior implements CopBehavior {
 	private final int               aiTickRate;
 	private final CuffLockRegistry  cuffLockRegistry;
 	private final DetainmentService detainmentService;
+	/** Whether a player is on the post-escape search; a searched player is never cuffed (0.16.1 T-187). */
+	private final Predicate<UUID>   searching;
 
 	private long cuffingTicks;
 	private UUID claimedPlayer;
@@ -41,13 +44,15 @@ public class CuffingBehavior implements CopBehavior {
 	private UUID failTarget;
 
 	public CuffingBehavior(double cuffRadius, int maxAttempts, long cuffingCooldown, int aiTickRate,
-	                       CuffLockRegistry cuffLockRegistry, DetainmentService detainmentService) {
+	                       CuffLockRegistry cuffLockRegistry, DetainmentService detainmentService,
+	                       Predicate<UUID> searching) {
 		this.cuffRadius        = cuffRadius;
 		this.maxAttempts       = maxAttempts;
 		this.cuffingCooldown   = cuffingCooldown;
 		this.aiTickRate        = aiTickRate;
 		this.cuffLockRegistry  = cuffLockRegistry;
 		this.detainmentService = detainmentService;
+		this.searching         = searching;
 
 		reset();
 	}
@@ -68,6 +73,13 @@ public class CuffingBehavior implements CopBehavior {
 
 		if (detainmentService.isRestrained(target)) {
 			cop.transitionTo(CopState.RETURNING);
+			return;
+		}
+
+		// The one place every cuff completes: a searched player is never cuffed, whichever squad's cop is on him. The
+		// lock (if held) is released by onExit (0.16.1 T-187)
+		if (searching.test(target.getUniqueId())) {
+			cop.transitionTo(CopState.PURSUING);
 			return;
 		}
 

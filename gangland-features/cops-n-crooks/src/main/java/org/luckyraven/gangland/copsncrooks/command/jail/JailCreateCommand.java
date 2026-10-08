@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.command.jail;
 
+import java.util.Map;
+import org.luckyraven.gangland.copsncrooks.command.CommandMessages;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -13,30 +15,32 @@ import org.luckyraven.gangland.copsncrooks.jail.JailRegistry;
 import org.luckyraven.gangland.copsncrooks.jail.JailService;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
-import org.luckyraven.gangland.file.configuration.Messages;
 
 class JailCreateCommand extends SubArgument {
 
 	private final JailService        jailService;
 	private final JailRegistry       jailRegistry;
 	private final DetainmentSettings detainmentSettings;
+	private final CommandMessages commandMessages;
 
 	protected JailCreateCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                            JailService jailService,
 	                            JailRegistry jailRegistry,
-	                            DetainmentSettings detainmentSettings) {
+	                            DetainmentSettings detainmentSettings,
+	                            CommandMessages commandMessages) {
 		super(plugin, "create", tree, parent);
 
 		this.jailService        = jailService;
 		this.jailRegistry       = jailRegistry;
 		this.detainmentSettings = detainmentSettings;
+		this.commandMessages    = commandMessages;
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
 			if (!(sender instanceof Player player)) {
-				sender.sendMessage(Messages.NOT_PLAYER.toString());
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.NOT_PLAYER, Map.of()));
 				return;
 			}
 
@@ -55,15 +59,15 @@ class JailCreateCommand extends SubArgument {
 					});
 
 			if (checkForJail) {
-				sender.sendMessage(Messages.JAIL_EXISTS_NEARBY.toString()
-				                                              .replace("%blocks%", String.valueOf(blocks)));
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_EXISTS_NEARBY,
+				                   Map.of("blocks", String.valueOf(blocks))));
 				return;
 			}
 
 			Jail jail = jailService.setJailLocation(location, detainmentSettings.getJailMaxCapacity());
 
-			sender.sendMessage(Messages.JAIL_CREATED.toString()
-			                                        .replace("%id%", String.valueOf(jail.getId())));
+			sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_CREATED,
+				                   Map.of("id", String.valueOf(jail.getId()))));
 		};
 	}
 }

@@ -22,6 +22,10 @@ import org.luckyraven.gangland.copsncrooks.setup.SetupMessages.Key;
 import org.luckyraven.gangland.copsncrooks.station.Station;
 import org.luckyraven.gangland.copsncrooks.station.StationRegistry;
 import org.luckyraven.keystone.item.ItemBuilder;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.hover.content.Text;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -87,8 +91,9 @@ public final class SetupCommands {
 		return null;
 	}
 
-	public void usage(CommandSender sender) {
-		sender.sendMessage(messages.format(Key.USAGE, Map.of()));
+	/** The usage line for a missing or bad operand; {@code fullUsage} starts with {@code /glw} so its command is coloured. */
+	public void usage(CommandSender sender, String fullUsage) {
+		sender.sendMessage(messages.usage(fullUsage));
 	}
 
 	public List<String> modes() {
@@ -215,7 +220,7 @@ public final class SetupCommands {
 		                                                          "kind", point.getKind())));
 	}
 
-	/** One line per row, {@code <kind> <id> <name> <world> <x> <y> <z> [tags]}; {@code kind} filters, null = all. */
+	/** One row per placed item under a header, {@code kind} filters, null = all. */
 	public void list(CommandSender sender, @Nullable String kind) {
 		String wanted = kind == null ? null : kind.toLowerCase(Locale.ROOT);
 		if (wanted != null && !kinds().contains(wanted)) {
@@ -223,30 +228,66 @@ public final class SetupCommands {
 			return;
 		}
 
-		List<String> rows = new ArrayList<>();
+		List<ListRow> rows = new ArrayList<>();
 		if (wanted == null || wanted.equals(STATION)) {
 			for (Station s : stations.all())
-				rows.add(row(STATION, s.getId(), s.getName(), s.getWorld(), s.getX(), s.getY(), s.getZ(), ""));
+				rows.add(new ListRow(STATION, s.getId(), s.getName(), s.getWorld(), s.getX(), s.getY(), s.getZ(), ""));
 		}
 		if (wanted == null || wanted.equals(REGION)) {
 			for (AdminRegion r : regions.all())
-				rows.add(row(REGION, r.getId(), r.getName(), r.getWorld(), r.getMinX(), r.getMinY(), r.getMinZ(),
-				             " [" + String.join(",", r.getTags()) + "]"));
+				rows.add(new ListRow(REGION, r.getId(), r.getName(), r.getWorld(), r.getMinX(), r.getMinY(), r.getMinZ(),
+				                     " [" + String.join(",", r.getTags()) + "]"));
 		}
 		if (wanted == null || wanted.equals(POINT)) {
 			for (SetupPoint p : points.all())
-				rows.add(row(POINT, p.getId(), p.getName(), p.getWorld(), p.getX(), p.getY(), p.getZ(),
-				             " [" + p.getKind() + "]"));
+				rows.add(new ListRow(POINT, p.getId(), p.getName(), p.getWorld(), p.getX(), p.getY(), p.getZ(),
+				                     " [" + p.getKind() + "]"));
 		}
 
-		if (rows.isEmpty()) sender.sendMessage(messages.format(Key.LIST_EMPTY, Map.of()));
-		else rows.forEach(sender::sendMessage);
+		if (rows.isEmpty()) {
+			sender.sendMessage(messages.format(Key.LIST_EMPTY, Map.of()));
+			return;
+		}
+		String kindLabel = wanted == null ? messages.format(Key.KIND_ALL, Map.of()) : wanted;
+		sender.sendMessage(messages.format(Key.LIST_HEADER, Map.of("kind", kindLabel,
+		                                                           "count", String.valueOf(rows.size()))));
+		for (ListRow row : rows) sendRow(sender, row);
 	}
 
-	private static String row(String kind, int id, String name, String world, double x, double y, double z,
-	                          String tags) {
-		return kind + " " + id + " " + name + " " + world + " " + (int) Math.floor(x) + " " + (int) Math.floor(y)
-		       + " " + (int) Math.floor(z) + tags;
+	/**
+	 * A player gets a clickable {@code tp} that runs {@code /glw cop setup tp <kind> <id>}, with the place in the hover.
+	 * The console cannot see a hover, so it gets the label and the place as one plain line.
+	 */
+	private void sendRow(CommandSender sender, ListRow row) {
+		String label = messages.format(Key.ROW_LABEL, Map.of("kind", row.kind(),
+		                                                     "id", String.valueOf(row.id()),
+		                                                     "name", row.name()));
+		String where = messages.format(Key.ROW_WHERE, Map.of("world", row.world(),
+		                                                     "x", String.valueOf(block(row.x())),
+		                                                     "y", String.valueOf(block(row.y())),
+		                                                     "z", String.valueOf(block(row.z())),
+		                                                     "tags", row.tags()));
+		if (!(sender instanceof Player)) {
+			sender.sendMessage(label + where);
+			return;
+		}
+		String tpCommand = "/glw cop setup tp " + row.kind() + " " + row.id();
+
+		var message = new ComponentBuilder(label)
+				.append(messages.format(Key.ROW_TP, Map.of()))
+				.event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, tpCommand))
+				.event(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(where)))
+				.create();
+
+		sender.spigot().sendMessage(message);
+	}
+
+	private static int block(double coordinate) {
+		return (int) Math.floor(coordinate);
+	}
+
+	/** One placed item as the list shows it; {@code tags} is the already-formatted suffix (empty or {@code " [a,b]"}). */
+	private record ListRow(String kind, int id, String name, String world, double x, double y, double z, String tags) {
 	}
 
 	public void remove(CommandSender sender, String kind, String idText) {

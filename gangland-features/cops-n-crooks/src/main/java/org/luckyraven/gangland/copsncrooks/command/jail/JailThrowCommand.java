@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.command.jail;
 
+import java.util.Map;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -7,13 +8,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
+import org.luckyraven.gangland.copsncrooks.command.CommandMessages;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentRegistry;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.gangland.copsncrooks.detainment.intake.JailIntakeService;
 import org.luckyraven.gangland.copsncrooks.jail.Jail;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
-import org.luckyraven.gangland.file.configuration.Messages;
 
 import java.util.Collection;
 
@@ -24,11 +25,13 @@ class JailThrowCommand extends SubArgument {
 	private final DetainmentService  detainmentService;
 	private final DetainmentRegistry detainmentRegistry;
 	private final JailIntakeService  jailIntakeService;
+	private final CommandMessages    commandMessages;
 
 	protected JailThrowCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                           DetainmentService detainmentService,
 	                           DetainmentRegistry detainmentRegistry,
-	                           JailIntakeService jailIntakeService) {
+	                           JailIntakeService jailIntakeService,
+	                           CommandMessages commandMessages) {
 		super(plugin, "throw", tree, parent);
 
 		this.plugin           = plugin;
@@ -36,6 +39,7 @@ class JailThrowCommand extends SubArgument {
 		this.detainmentService  = detainmentService;
 		this.detainmentRegistry = detainmentRegistry;
 		this.jailIntakeService  = jailIntakeService;
+		this.commandMessages    = commandMessages;
 
 		throwPlayer();
 	}
@@ -43,7 +47,7 @@ class JailThrowCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-
+			sender.sendMessage(commandMessages.usage("/glw jail throw <player>"));
 		};
 	}
 
@@ -53,7 +57,8 @@ class JailThrowCommand extends SubArgument {
 			Player target    = Bukkit.getPlayer(playerStr);
 
 			if (target == null) {
-				sender.sendMessage(Messages.PLAYER_NOT_FOUND.toString().replace("%player%", playerStr));
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.PLAYER_NOT_FOUND,
+                                                          Map.of("player", playerStr)));
 				return;
 			}
 
@@ -61,21 +66,22 @@ class JailThrowCommand extends SubArgument {
 			Jail jail = detainmentRegistry.findEmptyJail();
 
 			if (jail == null) {
-				sender.sendMessage(Messages.JAIL_NO_EMPTY.toString());
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_NO_EMPTY, Map.of()));
 				return;
 			}
 
 			if (detainmentService.isJailed(target)) {
-				sender.sendMessage(Messages.JAIL_ALREADY_JAILED.toString());
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_ALREADY_JAILED, Map.of()));
 				return;
 			}
 
 			boolean admitted = jailIntakeService.admit(target);
 			if (!admitted) {
-				sender.sendMessage(Messages.JAIL_NO_EMPTY.toString());
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_NO_EMPTY, Map.of()));
 				return;
 			}
-			sender.sendMessage(Messages.JAIL_THROWN.toString().replace("%target%", target.getName()));
+			sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_THROWN,
+                                                      Map.of("target", target.getName())));
 		}, sender -> {
 			Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
 

@@ -18,10 +18,14 @@ import java.util.function.Supplier;
  * {@code /glw cop setup wand|mode <mode>|save <name...>|list [kind]|remove <kind> <id>|tp <kind> <id>|link <stationId>
  * <jailId|none>}. A thin argument tree over {@link SetupCommands}. Nested argument permissions only add onto the base
  * {@code cop} node, so every action gates on {@code SetupSelections.PERMISSION} itself (the turf wand's GI-35 rule).
+ * A missing operand sends the full usage of that node, so its command is coloured by {@code commandDesign}.
  *
  * @since 0.16.0
  */
 public final class SetupCommand extends SubArgument {
+
+	/** The root has no {@code cop_setup_help} entry, so a bare {@code /glw cop setup} sends this usage. */
+	private static final String ROOT_USAGE = "/glw cop setup <wand|mode|save|list|remove|tp|link>";
 
 	private final JavaPlugin     plugin;
 	private final Tree<Argument> tree;
@@ -40,7 +44,7 @@ public final class SetupCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
-			if (commands.permitted(sender)) commands.usage(sender);
+			if (commands.permitted(sender)) commands.usage(sender, ROOT_USAGE);
 		};
 	}
 
@@ -51,13 +55,13 @@ public final class SetupCommand extends SubArgument {
 			if (admin != null) commands.give(admin);
 		});
 
-		Argument mode = node("mode", usage());
+		Argument mode = node("mode", usage("/glw cop setup mode <mode>"));
 		mode.addSubArgument(free("mode", commands::modes, (argument, sender, args) -> {
 			Player admin = commands.admin(sender);
 			if (admin != null) commands.mode(admin, args[3]);
 		}));
 
-		Argument         save = node("save", usage());
+		Argument         save = node("save", usage("/glw cop setup save <name...>"));
 		OptionalArgument name = free("name", List::of, (argument, sender, args) -> {
 			Player admin = commands.admin(sender);
 			if (admin != null) commands.save(admin, String.join(" ", Arrays.copyOfRange(args, 3, args.length)));
@@ -72,16 +76,17 @@ public final class SetupCommand extends SubArgument {
 			if (commands.permitted(sender)) commands.list(sender, args[3]);
 		}));
 
-		Argument remove = kindThenId("remove", (argument, sender, args) -> {
+		Argument remove = kindThenId("remove", "/glw cop setup remove <kind> <id>", (argument, sender, args) -> {
 			if (commands.permitted(sender)) commands.remove(sender, args[3], args[4]);
 		});
-		Argument tp = kindThenId("tp", (argument, sender, args) -> {
+		Argument tp = kindThenId("tp", "/glw cop setup tp <kind> <id>", (argument, sender, args) -> {
 			Player admin = commands.admin(sender);
 			if (admin != null) commands.teleport(admin, args[3], args[4]);
 		});
 
-		Argument         link    = node("link", usage());
-		OptionalArgument station = free("stationId", commands::stationIds, usage());
+		String           linkUsage = "/glw cop setup link <stationId> <jailId|none>";
+		Argument         link      = node("link", usage(linkUsage));
+		OptionalArgument station   = free("stationId", commands::stationIds, usage(linkUsage));
 		station.addSubArgument(free("jailId", commands::jailChoices, (argument, sender, args) -> {
 			if (commands.permitted(sender)) commands.link(sender, args[3], args[4]);
 		}));
@@ -91,17 +96,18 @@ public final class SetupCommand extends SubArgument {
 	}
 
 	/** {@code <word> <kind> <id>}: the kind suggests station/region/point, the id every id in the registries. */
-	private Argument kindThenId(String word, TriConsumer<Argument, CommandSender, String[]> action) {
-		Argument         root = node(word, usage());
-		OptionalArgument kind = free("kind", commands::kinds, usage());
+	private Argument kindThenId(String word, String fullUsage, TriConsumer<Argument, CommandSender, String[]> action) {
+		Argument         root = node(word, usage(fullUsage));
+		OptionalArgument kind = free("kind", commands::kinds, usage(fullUsage));
 		kind.addSubArgument(free("id", commands::ids, action));
 		root.addSubArgument(kind);
 		return root;
 	}
 
-	private TriConsumer<Argument, CommandSender, String[]> usage() {
+	/** Sends the full {@code /glw ...} usage of this node to a sender who may use the tools. */
+	private TriConsumer<Argument, CommandSender, String[]> usage(String fullUsage) {
 		return (argument, sender, args) -> {
-			if (commands.permitted(sender)) commands.usage(sender);
+			if (commands.permitted(sender)) commands.usage(sender, fullUsage);
 		};
 	}
 

@@ -1,5 +1,7 @@
 package org.luckyraven.gangland.copsncrooks.setup;
 
+import net.md_5.bungee.api.chat.BaseComponent;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -14,12 +16,15 @@ import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -48,32 +53,61 @@ class SetupCommandsTest {
 		fx.points.create("pickup", "Dock", fx.at(7, 65, 9));
 	}
 
+	/** The visible text of one row, with the colour codes removed. */
+	private static String plain(BaseComponent[] row) {
+		return ChatColor.stripColor(BaseComponent.toLegacyText(row));
+	}
+
 	@Test
-	@DisplayName("list prints kind id name world x y z [tags], one line per row")
-	void list_printsOneLinePerRow_inTheC15Format() {
+	@DisplayName("list prints kind id name, one line per row, for a player with the place in the hover")
+	void list_printsOneLinePerRow_forAPlayer() {
 		oneOfEach();
-		CommandSender sender = mock(CommandSender.class);
+		Player admin = fx.admin();
+		Player.Spigot spigot = mock(Player.Spigot.class);
+		when(admin.spigot()).thenReturn(spigot);
 
-		fx.commands.list(sender, null);
+		fx.commands.list(admin, null);
 
-		verify(sender).sendMessage("station 1 HQ world 10 64 20");
-		verify(sender).sendMessage("region 1 Downtown world 0 60 0 [district]");
-		verify(sender).sendMessage("point 1 Dock world 7 65 9 [pickup]");
+		ArgumentCaptor<BaseComponent[]> rows = ArgumentCaptor.forClass(BaseComponent[].class);
+		verify(spigot, times(3)).sendMessage(rows.capture());
+		List<String> lines = rows.getAllValues().stream().map(SetupCommandsTest::plain).toList();
+		assertTrue(lines.get(0).contains("station #1 HQ"), lines.get(0));
+		assertTrue(lines.get(1).contains("region #1 Downtown"), lines.get(1));
+		assertTrue(lines.get(2).contains("point #1 Dock"), lines.get(2));
+	}
+
+	@Test
+	@DisplayName("list from the console prints kind, id, name and the place as one plain line, with no tp")
+	void list_forTheConsole_printsThePlaceAsText() {
+		oneOfEach();
+		CommandSender console = mock(CommandSender.class);
+
+		fx.commands.list(console, "station");
+
+		ArgumentCaptor<String> lines = ArgumentCaptor.forClass(String.class);
+		verify(console, times(2)).sendMessage(lines.capture());
+		String row = ChatColor.stripColor(lines.getAllValues().get(1));
+		assertTrue(row.contains("station #1 HQ"), row);
+		assertTrue(row.contains("world - 10, 64, 20"), row);
+		assertFalse(row.contains("tp"), row);
 	}
 
 	@Test
 	@DisplayName("list <kind> prints only that kind, and refuses a kind it does not know")
 	void list_filtersByKind() {
 		oneOfEach();
-		CommandSender sender = mock(CommandSender.class);
+		Player admin = fx.admin();
 
-		fx.commands.list(sender, "region");
-		fx.commands.list(sender, "bogus");
+		Player.Spigot spigot = mock(Player.Spigot.class);
+		when(admin.spigot()).thenReturn(spigot);
 
-		verify(sender).sendMessage("region 1 Downtown world 0 60 0 [district]");
-		verify(sender, never()).sendMessage("station 1 HQ world 10 64 20");
-		verify(sender, never()).sendMessage("point 1 Dock world 7 65 9 [pickup]");
-		verify(sender).sendMessage(fx.text(SetupMessages.Key.UNKNOWN_KIND));
+		fx.commands.list(admin, "region");
+		fx.commands.list(admin, "bogus");
+
+		ArgumentCaptor<BaseComponent[]> rows = ArgumentCaptor.forClass(BaseComponent[].class);
+		verify(spigot, times(1)).sendMessage(rows.capture());
+		assertTrue(plain(rows.getValue()).contains("region #1 Downtown"));
+		verify(admin).sendMessage(fx.text(SetupMessages.Key.UNKNOWN_KIND));
 	}
 
 	@Test

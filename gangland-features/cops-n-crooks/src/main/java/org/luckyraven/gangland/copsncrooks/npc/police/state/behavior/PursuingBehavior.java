@@ -13,6 +13,7 @@ import org.luckyraven.keystone.npc.NpcSquad;
 
 import java.util.UUID;
 import java.util.function.LongSupplier;
+import java.util.function.Predicate;
 
 /**
  * Cop actively navigates toward a wanted player to attempt cuffing.
@@ -32,6 +33,7 @@ public class PursuingBehavior implements CopBehavior {
 	private final DetainmentService detainmentService;
 	private final CuffLockRegistry  cuffLocks;
 	private final CopRetreat        retreat;
+	private final Predicate<UUID>   searching;
 
 	public PursuingBehavior(double cuffRadius, double alertRange, double maxPursuitDistance, int maxPursuitTicks,
 	                        DetainmentService detainmentService, CuffLockRegistry cuffLocks, RetreatSettings retreat) {
@@ -42,6 +44,17 @@ public class PursuingBehavior implements CopBehavior {
 	PursuingBehavior(double cuffRadius, double alertRange, double maxPursuitDistance, int maxPursuitTicks,
 	                 DetainmentService detainmentService, CuffLockRegistry cuffLocks, RetreatSettings retreat,
 	                 LongSupplier clock) {
+		this(cuffRadius, alertRange, maxPursuitDistance, maxPursuitTicks, detainmentService, cuffLocks, retreat,
+		     clock, id -> false);
+	}
+
+	/**
+	 * {@code searching} tells whether a player is on the post-escape search (0.16.1 T-187). A searched player is neither
+	 * cuffed nor shot at: cops keep closing in on him but do not act on him.
+	 */
+	public PursuingBehavior(double cuffRadius, double alertRange, double maxPursuitDistance, int maxPursuitTicks,
+	                        DetainmentService detainmentService, CuffLockRegistry cuffLocks, RetreatSettings retreat,
+	                        LongSupplier clock, Predicate<UUID> searching) {
 		this.cuffRadius         = cuffRadius;
 		this.alertRange         = alertRange;
 		this.maxPursuitDistance = maxPursuitDistance;
@@ -49,6 +62,7 @@ public class PursuingBehavior implements CopBehavior {
 		this.detainmentService  = detainmentService;
 		this.cuffLocks          = cuffLocks;
 		this.retreat            = new CopRetreat(retreat, clock);
+		this.searching          = searching;
 	}
 
 	@Override
@@ -86,7 +100,10 @@ public class PursuingBehavior implements CopBehavior {
 				return;
 			}
 
-			if (distance <= cuffRadius && cop.hasLineOfSight(player)) {
+			// A player on the post-escape search is neither cuffed nor shot at (0.16.1 T-187)
+			boolean searched = searching.test(player.getUniqueId());
+
+			if (!searched && distance <= cuffRadius && cop.hasLineOfSight(player)) {
 				if (cop.getTierConfig().skipCuffing() || cop.isCombatForced()) {
 					cop.transitionTo(CopState.COMBAT);
 					return;
@@ -99,7 +116,7 @@ public class PursuingBehavior implements CopBehavior {
 			}
 
 			// Ranged cops shoot while closing in
-			if (cop.isRangedAttacker() && cop.hasLineOfSight(player) && cop.canAttack()) {
+			if (!searched && cop.isRangedAttacker() && cop.hasLineOfSight(player) && cop.canAttack()) {
 				cop.attack(player);
 			}
 		} else {

@@ -16,8 +16,11 @@ import org.luckyraven.gangland.copsncrooks.wanted.evasion.AutoDrop.Ending;
 import org.luckyraven.gangland.core.wanted.WantedCause;
 import org.luckyraven.gangland.events.wanted.EvasionState;
 
+import org.bukkit.boss.BarColor;
+
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -88,9 +91,9 @@ class StarCardTest {
 	void dropCard_pendingPlan_picksTheEndingCard() throws IOException {
 		WantedMessages messages = HudFixtures.messages(tempDir);
 
-		assertEquals("Small fry, they dropped the case (-3)",
+		assertEquals("Small fry, the heat is off you for now (-3)",
 		             plain(StarCard.dropCard(messages, WantedCause.EVASION, new DropPlan(3, Ending.PETTY, "petty"), 3)));
-		assertEquals("The trail went stone cold (-4)", plain(StarCard.dropCard(messages, WantedCause.EVASION,
+		assertEquals("The trail is fading (-4)", plain(StarCard.dropCard(messages, WantedCause.EVASION,
 		                                                                       new DropPlan(4, Ending.COLD_TRAIL, "cold"), 4)));
 		assertEquals("Clean break, you left the area (-2)", plain(StarCard.dropCard(messages, WantedCause.EVASION,
 		                                                                           new DropPlan(2, Ending.CLEAN_BREAK, "out"), 2)));
@@ -203,5 +206,17 @@ class StarCardTest {
 
 		// facing +X, 30 blocks short of the east edge
 		assertEquals("↑ 30m", plain(StarCard.wayHint(messages, centre, 40, from)).trim());
+	}
+
+	@Test
+	@DisplayName("the bar colour is read in ROOT locale: a Turkish default still reads WHITE, not WHİTE")
+	void bountyColor_isReadInRootLocale() {
+		Locale previous = Locale.getDefault();
+		Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+		try {
+			assertEquals(BarColor.WHITE, StarCard.bountyColor("white"));
+		} finally {
+			Locale.setDefault(previous);
+		}
 	}
 }

@@ -88,7 +88,10 @@ class RetreatFieldCareOrderTest {
 		CopConfigProvider provider = mock(CopConfigProvider.class);
 		when(provider.getFieldCareSettings()).thenReturn(FieldCareSettings.DEFAULT);
 		when(provider.getAiTickRate()).thenReturn(10);
-		care = new CopFieldCare(() -> provider, mock(CopRadio.class), now::get);
+		CopRadio radio = mock(CopRadio.class);
+		when(radio.speakerName(any())).thenAnswer(inv -> CopRadio.callsign(inv.getArgument(0)));
+		when(radio.memberName(any())).thenAnswer(inv -> CopRadio.callsign(inv.getArgument(0)));
+		care = new CopFieldCare(() -> provider, radio, now::get);
 
 		DetainmentService detainment = mock(DetainmentService.class);
 		behaviors = Map.of(CopState.PURSUING,

@@ -2,6 +2,7 @@ package org.luckyraven.gangland.copsncrooks.config;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.copsncrooks.command.CommandMessages;
 import org.luckyraven.gangland.copsncrooks.jail.JailRegistry;
 import org.luckyraven.gangland.copsncrooks.npc.police.config.CopLoader;
 import org.luckyraven.gangland.copsncrooks.npc.police.spawn.CopSpawnManager;
@@ -55,6 +56,14 @@ public class RegistryModuleConfig {
 	@Bean
 	public SetupMessages setupMessages(FileManager fileManager) {
 		SetupMessages messages = new SetupMessages(fileManager);
+		fileManager.registerInitializer(messages);
+		return messages;
+	}
+
+	/** The reply text of the /glw cop and /glw jail commands, from {@code copsncrooks/commands.yml}. */
+	@Bean
+	public CommandMessages commandMessages(FileManager fileManager) {
+		CommandMessages messages = new CommandMessages(fileManager);
 		fileManager.registerInitializer(messages);
 		return messages;
 	}

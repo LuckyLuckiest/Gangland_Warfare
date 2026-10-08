@@ -1,0 +1,96 @@
+#   +------------------------------------------------------+   #
+# |                  File: commands_es.yml                   | #
+#   +------------------------------------------------------+   #
+#
+# Las respuestas de /glw cop, /glw jail y /glw cuff en español. Se usa cuando Settings.Language es "es". Este archivo
+# reemplaza por completo a commands.yml (no hay recurso clave a clave): cada clave debe estar aquí, con la misma
+# estructura. Los códigos de color & funcionan. Los marcadores %entre signos de porcentaje% los rellena el plugin.
+# El prefijo GLW y el de error vienen del núcleo, así que cada línea solo lleva su color.
+
+# Se muestra antes de la sintaxis completa cuando falta un argumento
+Arguments_Missing: "&4Faltan argumentos&7: "
+# %value%: lo escrito donde se esperaba un número
+Bad_Id: "&c%value% no es un número."
+# %player%: el nombre escrito
+Player_Not_Found: "&c%player% &7no se ha encontrado."
+# Para un remitente que no es jugador (la consola, un bloque de comandos)
+Not_Player: "&cDebes ser un jugador para usar esto."
+
+Cop:
+   List:
+      # %count%: cuántos jugadores están siendo perseguidos
+      Header: "&7Jugadores perseguidos por la policía &8(&f%count%&8)&7:"
+      Empty: "&7Ningún jugador está siendo perseguido por la policía."
+      # Un jugador perseguido por fila: %player%
+      Row: " &b- &f%player%"
+   Target:
+      # %player%: el jugador perseguido
+      Header: "&7El jugador &f%player% &7está siendo perseguido por la policía:"
+      # Un policía por fila: %callsign% y %uuid%
+      Row: " &b- &f%callsign%&7 (%uuid%)"
+      # %target%: el jugador que se ha indicado
+      Not_Chased: "&7El jugador &e%target%&7 no está siendo perseguido por la policía."
+
+Spawner:
+   Set: "&aGenerador de policía colocado en tu ubicación."
+   # %id%: el id del generador
+   Removed: "&aGenerador de policía &e%id%&a eliminado."
+   Teleported: "Teletransportado al generador de policía &e(&b%id%&e)&7."
+   List:
+      # %count%: cuántos generadores de policía hay colocados
+      Header: "&7Generadores de policía &8(&f%count%&8)&7:"
+      Empty: "&7No hay generadores de policía registrados."
+      # %id%: el id del generador, la acción (tp) es clicable
+      Row: " &b- &f#%id% &e(&btp&e)"
+      # Texto al pasar el ratón por una fila: %world% y %x% %y% %z%
+      Hover: "%world% - %x%, %y%, %z%"
+   Info:
+      # %id%: el id del generador. La cabecera va seguida de la acción Tp, que es la parte clicable
+      Header: "&7Generador de policía &f#%id%&7: "
+      Tp: "&e(&btp&e)"
+      Line: " &bMundo: &f%world% &bX: &f%x% &bY: &f%y% &bZ: &f%z%"
+   # %id%: el id escrito
+   Unknown: "&cNo hay ningún generador de policía con el id %id%."
+
+Jail:
+   # %id%: el id de la cárcel
+   Created: "&aCárcel &e%id%&a creada en tu ubicación."
+   # %blocks%: la distancia que debe quedar libre
+   Exists_Nearby: "&cYa existe una cárcel a menos de %blocks% bloques de esta ubicación."
+   Removed: "&aCárcel &e%id%&a eliminada."
+   # %target%: el jugador que ha sido liberado
+   Released: "&aLiberaste a &e%target%&a de la cárcel."
+   # %target%: el jugador que no está encarcelado
+   Not_Jailed: "&cEl jugador &e%target%&c no está encarcelado."
+   # %id%: la cárcel que ha recibido la salida
+   Exit_Set: "&aUbicación de salida establecida para la cárcel &e%id%&a."
+   Exit_Set_Global: "&aSalida global de la cárcel establecida en tu ubicación actual."
+   # %id%: la cárcel a la que se ha teletransportado
+   Teleported: "Teletransportado a la cárcel &e(&b%id%&e)&7."
+   # %target%: el jugador que ha sido enviado a la cárcel
+   Thrown: "&aEnviaste a &e%target%&a a la cárcel."
+   No_Empty: "&c¡No se ha encontrado ninguna celda libre!"
+   Already_Jailed: "&c¡El jugador ya está encarcelado!"
+   List:
+      # %count%: cuántas cárceles hay colocadas
+      Header: "&7Cárceles &8(&f%count%&8)&7:"
+      Empty: "&7No hay cárceles registradas."
+      # %id%: el id de la cárcel, la acción (tp) es clicable
+      Row: " &b- &f#%id% &e(&btp&e)"
+      # Texto al pasar el ratón por una fila: %world% y %x% %y% %z%
+      Hover: "%world% - %x%, %y%, %z%"
+   Info:
+      # %id%: el id de la cárcel. La cabecera va seguida de la acción Tp, que es la parte clicable
+      Header: "&7Cárcel &f#%id%&7: "
+      Tp: "&e(&btp&e)"
+      # %capacity%: cuántos presos caben en la cárcel
+      Line: " &bMundo: &f%world% &bX: &f%x% &bY: &f%y% &bZ: &f%z% &bCapacidad: &f%capacity%"
+   # %id%: el id escrito
+   Unknown: "&cNo hay ninguna cárcel con el id %id%."
+
+Cuff:
+   # %target%: el jugador esposado
+   Handcuffed: "&aEsposaste a &e%target%&a."
+   Released: "&aLiberaste a &e%target%&a de las esposas."
+   Already_Cuffed: "&c¡Este jugador ya está esposado!"
+   Not_Cuffed: "&c¡Este jugador no está esposado!"

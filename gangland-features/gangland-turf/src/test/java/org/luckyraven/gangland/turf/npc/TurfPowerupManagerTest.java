@@ -36,7 +36,7 @@ class TurfPowerupManagerTest {
 		JavaPlugin plugin = mock(JavaPlugin.class);
 		@SuppressWarnings("unchecked")
 		IRepository<TurfPowerupData> repository = mock(IRepository.class);
-		TurfPowerupSettings          settings   = new TurfPowerupSettings("quartermaster");
+		TurfPowerupSettings          settings   = new TurfPowerupSettings("quartermaster", 32.0);
 		CivilianSpawnManager         spawnManager = mock(CivilianSpawnManager.class);
 		when(spawnManager.spawnCivilian(any(Location.class), anyString())).thenReturn(null);
 

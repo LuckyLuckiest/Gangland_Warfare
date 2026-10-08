@@ -19,6 +19,7 @@ file is renamed with a `-old` suffix and a fresh default is generated.
 | `settings.yml`     | Main runtime configuration (all systems)     |
 | `cops.yml`         | Per-tier cop NPC definitions                 |
 | `setup.yml`        | Cops setup wand: item, outline, messages (0.16.0) |
+| `commands.yml`     | Cops, jail and cuff command replies (0.16.1; `commands_es.yml` is the Spanish file) |
 | `civilians.yml`    | Civilian type definitions and spawner config |
 | `cars.yml`         | Car type definitions                         |
 | `wearables.yml`    | Wearable armor definitions                   |
@@ -37,7 +38,7 @@ contains them. The full legacy path -> file -> path table is in [migration-0.15.
 
 | Module | File (under `plugins/Gangland_Warfare/`) |
 |---|---|
-| `cops-n-crooks` | `copsncrooks/wanted.yml`, `copsncrooks/cops.yml`, `copsncrooks/detainment.yml` |
+| `cops-n-crooks` | `copsncrooks/wanted.yml`, `copsncrooks/cops.yml`, `copsncrooks/detainment.yml`, `copsncrooks/setup.yml`, `copsncrooks/commands.yml` (and `commands_es.yml`) |
 | `gangland-civilians` | `npc/civilians.yml` |
 | `gangland-turf` | `turf/turf_settings.yml` |
 | `gangland-gang` | `gang/gang_settings.yml` |
@@ -537,7 +538,16 @@ restores the 0.13.0 behaviour of that piece. Texts are in `copsncrooks/wanted_me
 | `Wanted.Bribe_Stars.Pickup_Radius` | `1.5` | Blocks within which a player takes it (zero or less resets to 1.5) |
 | `Wanted.Bribe_Stars.Item` | `NETHER_STAR` | The pickup's material (an unknown name uses `NETHER_STAR` with a warning) |
 | `Wanted.Hud.Boss_Bar.Enable`, `Star_Card.Enable`, `Title.Enable`, `Zone_Ring.Enable`, `Compass.Enable` | `true` | Each switch removes only its own piece |
+| `Wanted.Hud.Title.Enable` | `true` | 0.16.1. Master switch for the wanted-level title; `false` = no title on any event |
+| `Wanted.Hud.Title.Gain` / `Lost` / `Escaped` `.Enable`, `Title`, `Subtitle` | `true`, `""`, `"%stars% %card%"` (`Escaped`: `"%card%"`) | 0.16.1. One cue per event: a star gained, a star lost while still wanted, and wanted cleared (level 0 by evasion or decay). `Title` and `Subtitle` take `%stars%`, `%level%` (the new star count) and `%card%` (the star card line, empty while `Star_Card` is off). Gained and Lost name the star row, so the count shows even with `Star_Card` off. A blank title and a blank subtitle send nothing (write `Title: ""` / `Subtitle: ""` to blank a line; a bare key with no value takes the default). A cue that is switched off sends its card to chat when `Star_Card` is on |
+| `Wanted.Hud.Title.<event>.Fade_In` / `Stay` / `Fade_Out` | `5` / `20` / `5` | 0.16.1. Ticks (20 = 1 second). The old look (before 0.16.1) was `Title` `"&c%stars%"`, `Subtitle` `"%card%"`, `5` / `40` / `10` on every event; set it back in `wanted.yml` to restore it |
 | `Wanted.Hud.Siren.Enable` / `Sound` / `Volume` / `Pitch` | `true` / `BLOCK_NOTE_BLOCK_BELL` / `1.0` / `0.5` | The siren when stars rise |
+| `Wanted.Post_Escape.Enable` | `true` | 0.16.1. `false` = an escape by evasion ends the chase at once, as in 0.16.0 (the cops stand down and walk home; no search, no bounty) |
+| `Wanted.Post_Escape.Search_Seconds` | `120` | 0.16.1. How long the cops keep searching after an escape; the bounty bar counts it down |
+| `Wanted.Post_Escape.Spotted_Stars` | `1` | 0.16.1. Stars a squad's sighting of a searched player raises him by; the search ends and the chase resumes. `0` = a sighting changes nothing |
+| `Wanted.Post_Escape.Announce` | `true` | 0.16.1. `false` = no chat line when the bounty goes on you and when the cops give up (the bounty bar still shows) |
+| `Wanted.Hud.Bounty.Enable` | `true` | 0.16.1. `false` = no bounty bar after an escape (the chat line and the countdown stay) |
+| `Wanted.Hud.Bounty.Bar_Color` | `YELLOW` | 0.16.1. The bounty bar colour (`BLUE`, `GREEN`, `PINK`, `PURPLE`, `RED`, `WHITE`, `YELLOW`); anything else is `YELLOW` |
 | `Wanted.Hud.Zone_Ring.Particle` / `Points` | `DUST` / `48` | The ring around the search zone; an unknown particle uses `DUST` |
 | `Wanted.Charge_Sheet.Enable` | `true` | `false` = no fine |
 | `Wanted.Charge_Sheet.Base` / `Per_Wanted_Level` / `Maximum` | `200` / `250` / `10000` | Fine = `Base + Per_Wanted_Level x stars`, capped; paid from the wallet only |
@@ -548,11 +558,11 @@ Shipped crime weights (`Heat.Crimes`): `Brandish_Near_Cop` 25, `Assault_Civilian
 `Trespass_Restricted` 300, `Jailbreak` 450. 0.15.0 reports `Kill_Player`, `Kill_Civilian`, `Kill_Cop`, `Assault_Cop`
 and `Resisting_Arrest`; the others are read by later releases. A weight of 0 ignores that crime.
 
-`copsncrooks/wanted_messages.yml` also holds (0.16.0) `Bribe_Star.Taken` (`%stars%`) and `Bribe_Star.Seen`, and holds `Hud.Bar.Seen` / `Searching` / `Evaded` / `Evaded_Many`, `Hud.Title`, `Hud.Card.Raise` /
+`copsncrooks/wanted_messages.yml` also holds (0.16.0) `Bribe_Star.Taken` (`%stars%`) and `Bribe_Star.Seen`, and holds `Hud.Bar.Seen` / `Searching` / `Evaded` / `Evaded_Many`, `Hud.Card.Raise` /
 `Stance_Cuffs` / `Stance_Shoot` / `Drop_Evasion` / `Drop_Decay` / `Drop_Other` / `Drop_Petty` / `Drop_Cold_Trail` / 
 `Drop_Clean_Break` / `Drop_Still_Hot` / `Drop_Known_Face` / `Drop_Narrow`, `Charge_Sheet.Header` / `Crime` / `Total` /
 `Paid` / `Extra_Time` / `Paperwork`, and `Crimes.<Id>` (including `Crimes.Unknown_Crime`, the card text when no crime is
-on record). AUTO ending cards (`Drop_*`) are new in 0.15.2. Placeholders: `%stars%`, `%time%`, `%crime%`, `%tier%`, `%stance%`, `%count%`, `%amount%`, `%paid%`,
+on record). AUTO ending cards (`Drop_*`) are new in 0.15.2. 0.16.1 adds `Hud.Bar.Bounty` / `Bounty_None` (the bar after an escape, with and without a bounty) and `Hud.Announce.Bounty` / `No_Bounty` / `Gave_Up` / `Gave_Up_Bounty` (the chat lines of the post-escape search). The title text moved out of this file: each wanted event's `Title` and `Subtitle` are read from `wanted.yml` `Wanted.Hud.Title.<event>.Title` / `Subtitle`, and a `Hud.Title` still set here is no longer read. `Drop_Petty` and `Drop_Cold_Trail` no longer say the case is dropped (the search can still be on). Placeholders: `%stars%`, `%time%`, `%crime%`, `%tier%`, `%stance%`, `%count%`, `%amount%`, `%paid%`,
 `%money_symbol%`, and `%count%` fills the star-drop lines.
 
 #### AUTO mode settings
@@ -614,7 +624,11 @@ with its placeholders, so copy key names from it.
 | `Setup.Wand.Item` | `BLAZE_ROD` | The wand's material (an unknown name uses `BLAZE_ROD`) |
 | `Setup.Outline.Particle` | `DUST` | The particle of the selection outline, shown only to the admin holding the wand (an unknown name uses `DUST`) |
 | `Setup.Outline.Interval_Ticks` | `10` | Ticks between two draws |
-| `Setup.Messages.*` | see the file | Every wand and command message (`Usage`, `Wand_Given`, `Mode_Set`, `Pos_Set`, `Station_Saved`, `Region_Saved`, `Point_Saved`, `Removed`, `Linked`, ...), `&` colour codes, `%placeholders%` |
+| `Setup.Messages.*` | see the file | Every wand and command message (`Arguments_Missing`, `List_Header`, `Kind_All`, `Row_Label`, `Row_Where`, `Row_Tp`, `Wand_Given`, `Mode_Set`, `Pos_Set`, `Station_Saved`, `Region_Saved`, `Point_Saved`, `Removed`, `Linked`, ...), `&` colour codes, `%placeholders%`. 0.16.1 removed `Usage` (now `Arguments_Missing`); a list row's `Row_Label` takes `%kind%`, a player gets `Row_Where` in the hover, and the console gets the label and the place as one line |
+
+### commands.yml (`copsncrooks/commands.yml`)
+
+New in 0.16.1; ships inside the cops-n-crooks jar and is copied to `plugins/Gangland_Warfare/copsncrooks/` on first boot. It holds the replies of `/glw cop`, `/glw jail` and `/glw cuff`: the list headers and rows (`Cop.List`, `Spawner.List`, `Jail.List`), the `Info` blocks, the actions and the errors. Keys are `Capitalized_Underscore` and nested by block. The GLW prefix (command replies) and the error prefix (errors) come from the core and are added by kind, so a value carries only its colour and text. `commands_es.yml` is the Spanish file: it replaces `commands.yml` whole when `Settings.Language` is `es`, so it must carry every key. Before 0.16.1 these lines were in the core `message_en.yml` / `message_es.yml`; a customised copy there is no longer read (see the 0.16.1 migration note).
 
 ### cop_roles.yml `Squad_Composition`
 
@@ -630,6 +644,29 @@ since 0.16.0); 1-2 stars and the code defaults have none. A bad `@` value counts
 `Contact_Lost` (`%place%`). The code carries the same texts as fallbacks (`CopRadioMessages.DEFAULT_LINES`), so an old
 server file keeps working and speaks the new lines; a server file keeps its own text for an old key. The Spanish file has
 the same keys.
+
+0.16.1 adds the root key `Speaker_Name` (default `"{rank} {role} &f{name} &7#{number}"`, also in `cop_radio_messages_es.yml`).
+It is the template for a cop's name on the radio, with `{rank}`, `{role}`, `{name}` and `{number}`; the colours in it are
+kept and the line's colour resumes after the name. `{rank} {name}` speaks `Officer Bob`.
+
+### turf_npcs.yml (`turf/turf_npcs.yml`)
+
+Ships inside the gangland-turf jar (0.16.1 added `Cop_Response`). A server that already has its `turf_npcs.yml` keeps the
+old file, so the `Cop_Response` block is absent until it is added by hand; the code defaults below apply until then.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `Cop_Response.Enabled` | `true` | `false`: turf defenders and the Quartermaster ignore cops. A cop that hits a protected player on a turf is answered when on |
+| `Cop_Response.Targeting_Radius` | `32.0` | Blocks from a defender or the Quartermaster within which it answers a cop. Minimum 1.0 |
+| `Cop_Response.Include_Allies` | `true` | Also protect members of gangs allied with the turf owner |
+| `Powerup_Npc.Targeting_Radius` | `32.0` | Blocks from the Quartermaster within which a contest attacker is picked up. Minimum 1.0 (was hard-coded before 0.16.1) |
+
+To switch the cop response off on an existing server, add to `turf_npcs.yml`:
+
+```yaml
+Cop_Response:
+   Enabled: false
+```
 
 ### items/money.yml
 

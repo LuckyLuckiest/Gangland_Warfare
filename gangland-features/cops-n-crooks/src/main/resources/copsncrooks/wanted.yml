@@ -207,6 +207,21 @@ Wanted:
             # many days, are deleted at startup
             Forget_After_Days: 90
 
+   # What happens after an escape: you lost your last star by staying out of sight. The cops keep searching, and a
+   # bounty is put on you (the auto bounty of your level and the highest wanted level of the chase).
+   Post_Escape:
+      # false = an escape ends the chase at once, as before the search: the cops stand down and walk home, no search,
+      # no bounty
+      Enable: true
+      # How long the cops keep searching after the escape, in seconds. The search ends early if you are arrested, die
+      # or get wanted again
+      Search_Seconds: 120
+      # Stars the cops raise you by when they sight you during the search: the search ends and the chase resumes.
+      # 0 = a sighting changes nothing and the cops only trail you
+      Spotted_Stars: 1
+      # false = no chat line when the bounty goes on you and when the cops give up (the bounty bar still shows)
+      Announce: true
+
    # What the player sees and hears while chased.
    Hud:
       # The boss bar with the stars and the state of the chase
@@ -217,10 +232,40 @@ Wanted:
       Star_Card:
          # false = no star card
          Enable: true
-      # The star count flashed on the screen
+      # The title flashed on the screen when the wanted level changes. Enable (false = no title on any event)
+      # is the master switch. Each event has its own Title and Subtitle. Placeholders: %stars% the star row,
+      # %level% the new star count, %card% the star card line (empty while Star_Card is off). A blank Title
+      # and a blank Subtitle send nothing. To blank a line write Title: "" or Subtitle: "" (a bare key with no
+      # value reads as absent and takes the default). Gained and Lost show the star row in the subtitle, so the count is still
+      # shown with Star_Card off. Fade_In, Stay and Fade_Out are in ticks (20 = 1 second).
+      # Old look (before 0.16.1): Title "&c%stars%", Subtitle "%card%", Fade_In 5, Stay 40, Fade_Out 10 on every event.
       Title:
-         # false = no title
+         # false = no title on any event
          Enable: true
+         # A star gained
+         Gain:
+            Enable: true
+            Title: ""
+            Subtitle: "%stars% %card%"
+            Fade_In: 5
+            Stay: 20
+            Fade_Out: 5
+         # A star lost while still wanted
+         Lost:
+            Enable: true
+            Title: ""
+            Subtitle: "%stars% %card%"
+            Fade_In: 5
+            Stay: 20
+            Fade_Out: 5
+         # Wanted cleared by evasion or decay (the level reaches 0)
+         Escaped:
+            Enable: true
+            Title: ""
+            Subtitle: "%card%"
+            Fade_In: 5
+            Stay: 20
+            Fade_Out: 5
       # The siren sound, played with the title flash when a star is gained
       Siren:
          # false = silent
@@ -244,6 +289,13 @@ Wanted:
       Compass:
          # false = no arrow, and a held compass keeps its own target
          Enable: true
+      # The bounty bar after an escape: the bounty on you and that the cops are still looking, counting down with the
+      # search. Shown only while Post_Escape is on
+      Bounty:
+         # false = no bounty bar (the chat line about the bounty still shows)
+         Enable: true
+         # Bar colour: BLUE, GREEN, PINK, PURPLE, RED, WHITE or YELLOW
+         Bar_Color: "YELLOW"
 
    # The fine charged when you are arrested. Wallet only, never the bank, never below zero.
    Charge_Sheet:

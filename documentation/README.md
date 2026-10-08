@@ -10,7 +10,8 @@
 
 | Version                                 | Status  | Changelog                                                      |
 |-----------------------------------------|---------|----------------------------------------------------------------|
-| [v0.16.0](./v0.16.0/CHANGELOG.md)       | Current | Cops N Crooks "Where they come from": dispatch from stations, mixed-tier squads, perimeter posts, hideouts, cold trail, hospital respawns, bribe-star pickups |
+| [v0.16.1](./v0.16.1/CHANGELOG.md)       | Current | Cops N Crooks patch: post-escape search and bounty bar, turf defenders answer cops, command and radio text, tab completion (needs Keystone 1.15.1) |
+| [v0.16.0](./v0.16.0/CHANGELOG.md)       | Stable  | Cops N Crooks "Where they come from": dispatch from stations, mixed-tier squads, perimeter posts, hideouts, cold trail, hospital respawns, bribe-star pickups |
 | [v0.15.2](./v0.15.2/CHANGELOG.md)       | Stable  | Cops N Crooks "Smart star drops": AUTO mode judges chase endings, learning per player and level, momentum timers |
 | [v0.15.0](./v0.15.0/CHANGELOG.md)       | Stable  | Cops N Crooks "Lose them": heat, evasion, wanted HUD, charge sheet, regroup, paid bounties |
 | [v0.7.5-DEV](./v0.7.5-DEV/CHANGELOG.md) | Stable | Traders, Banker NPC, Bail — **Cops N Crooks feature-complete** |
@@ -68,7 +69,7 @@ In-depth technical documentation for developers working on the codebase.
 
 Bartizan integration (what the core gets from the weapons plugin, and what degrades without it) is documented in
 [`bartizan-integration.md`](./bartizan-integration.md); server-owner migration notes are in
-[`migration-0.9.0.md`](./migration-0.9.0.md), [`migration-0.15.0.md`](./migration-0.15.0.md) (upgrading from 0.13.0 to 0.15.0, the Cops N Crooks chase), [`migration-0.15.1.md`](./migration-0.15.1.md) (module-owned settings), and [`migration-0.16.0.md`](./migration-0.16.0.md) (0.16.0 dispatch, stations, posts, and hideouts). Recoil is documented in
+[`migration-0.9.0.md`](./migration-0.9.0.md), [`migration-0.15.0.md`](./migration-0.15.0.md) (upgrading from 0.13.0 to 0.15.0, the Cops N Crooks chase), [`migration-0.15.1.md`](./migration-0.15.1.md) (module-owned settings), [`migration-0.16.0.md`](./migration-0.16.0.md) (0.16.0 dispatch, stations, posts, and hideouts), and [`migration-0.16.1.md`](./migration-0.16.1.md) (0.16.1 Keystone 1.15.1, moved text keys, new keys). Recoil is documented in
 [Version Compatibility](./developer/compatibility.md), now a Bartizan-side reflective packet call rather than an
 NMS adapter this repo ships.
 

@@ -1,0 +1,79 @@
+{
+ "pass": false,
+ "summary": "Final gate for Gangland 0.16.1 at 9e17fb51 against base 2a2369f4. I reviewed all 138 changed files and read the live Test Server YAML read-only. I did not run Maven.\n\nThe code passes. I found no cross-lane defect:\n- **Escape search vs turf defenders (T-187 vs T-189):** cops on a post-escape search never cuff or shoot the searched player (`PursuingBehavior`, `CuffingBehavior`, and `resolveTarget` dropping COMBAT). Defenders only answer a cop that has hit someone, so the two features never fight.\n- **Quiet titles vs the Spotted card:** the level-change event fires before the start event (`Wanted.setLevel`), so `raiseCard` still sees the search and the Gain cue carries the Spotted card.\n- **Command style in `/glw cop list`:** the list names cops with the fixed default template. That is a deliberate choice and is documented.\n- **Shared state:** the search state is cleaned up on every exit path (re-wanted, death, downed, arrest via the new `ArrestedEvent`, quit, reload or shutdown, and the timer running out). `startAITask` and `startSpawnTask` do nothing if a task already exists, so a Spotted re-raise in the middle of a tick starts no second task.\n\nConventions are clean:\n- no io.papermc imports, no one-line method bodies, no inline YAML maps, no `\u00a7` literals\n- no new Citizens-typed handlers; the new Bartizan-typed handler sits in cops-n-crooks, which hard-depends on Bartizan\n- no module imports gangland-impl, and turf does not import cops-n-crooks\n- `commands_es.yml` has exactly the same keys as `commands.yml`\n\nVersions are as expected:\n- pom revision 0.16.1, `keystone.version` 1.15.1\n- gangland-api and impl untouched, `GanglandApi.VERSION` 2.3\n- cops-n-crooks and turf at `Host_Api` 2.3, `plugin.yml` unchanged\n- Keystone 1.15.0 to 1.15.1 changes only keystone-command\n\nThe live YAML upgrade is safe. Every new key falls back to a sensible default:\n- `wanted.yml` has only `Hud.Title.Enable`, so it gets the new quiet cues.\n- `Post_Escape` is missing, so the search is on.\n- `turf_npcs.yml` has no `Cop_Response`, so the guard is on (32 blocks, allies included), and `Powerup_Npc.Targeting_Radius` defaults to 32, as hard-coded before.\n- The radio file has no `Speaker_Name`, so the code default applies.\n- `setup.yml` keeps the dead `Usage` key; the new keys use their code defaults.\n\nNone of these errors at boot.\n\nThe release fails on its documentation:\n1. **Boot failure on the live server (major).** The live server runs Keystone-1.15.0.jar. The `KeystoneFloor` guard will disable Gangland 0.16.1 on it, yet the 0.16.1 migration note says \"Nothing needs a new dependency\".\n2. **Missing changelog entries (major).** The changelog leaves out four of the six items. That includes T-189, a combat change that is on by default and whose off switch `Cop_Response` appears nowhere in documentation/.\n\nBoth are documentation fixes; no code change is needed.",
+ "findings": [
+  {
+   "id": "final-1",
+   "severity": "major",
+   "file": "documentation/migration-0.16.1.md",
+   "line": 5,
+   "problem": "The migration note says \"Nothing needs a new dependency\", but the pom now pins keystone.version 1.15.1. The build writes that version into keystone-floor.properties, and Gangland.onEnable refuses an older Keystone through KeystoneFloor.satisfied. The live Test Server has plugins/Keystone-1.15.0.jar. Deploying the Gangland jars as the note says will log \"Gangland 0.16.1 needs Keystone 1.15.1 or newer; found 1.15.0\" and disable the plugin. The tab-completion fix (T-192) also lives only in Keystone 1.15.1. The CHANGELOG (.md and .bbcode.txt) does not mention Keystone either. migration-0.16.0.md lines 12-14 set the precedent of a 'Keystone X is required' bullet.",
+   "fix": "Add a 'Keystone 1.15.1 is required' bullet at the top of migration-0.16.1.md and to both CHANGELOG files: replace Keystone-<version>.jar with E:/Programming/java/Keystone/keystone-plugin/target/Keystone-1.15.1.jar; on an older Keystone the plugin refuses to start with the message above. Delete the 'Nothing needs a new dependency' sentence. Ship Keystone-1.15.1.jar with the deploy."
+  },
+  {
+   "id": "final-2",
+   "severity": "major",
+   "file": "documentation/v0.16.1/CHANGELOG.md",
+   "line": 1,
+   "problem": "Entries from three of the six lanes never reached this shared file. The CHANGELOG.md and CHANGELOG.bbcode.txt cover only T-187 (post-escape search and bounty) and T-191 (titles). They omit four shipped items: T-188 (cop, jail and cuff replies moved to copsncrooks/commands.yml and commands_es.yml, with prefix styling and help entries), T-189 (turf defenders and the Quartermaster now fight cops that hit protected gang members, on by default), T-190 (radio names keep colours and follow the new Speaker_Name template in cop_radio_messages.yml) and T-192 (tab completion lists primary names only and /gangland completes like /glw; needs Keystone 1.15.1). T-189 matters most: Cop_Response (Enabled, Targeting_Radius, Include_Allies) and Powerup_Npc.Targeting_Radius appear nowhere under documentation/. Live servers keep their old turf/turf_npcs.yml, so the owner has no file and no doc showing the off switch.",
+   "fix": "Add New and Changed entries for T-188, T-189, T-190 and T-192 to both changelog files. Add a Cop_Response row (turf/turf_npcs.yml: Enabled true, Targeting_Radius 32.0, Include_Allies true) and Powerup_Npc.Targeting_Radius to documentation/developer/configuration.md and the migration note's new-keys section, and say that existing servers must add the block by hand to change it."
+  },
+  {
+   "id": "final-3",
+   "severity": "minor",
+   "file": "documentation/migration-0.16.1.md",
+   "line": 13,
+   "problem": "The 'Keys that moved or stopped being read' table leaves out one silent meaning change. cops.yml Cops.Names.Format used to drive the radio callsign (colours stripped); since T-190 the radio reads Speaker_Name in cop_radio_messages.yml instead. A server that customised Names.Format (for example removed %role%) now sees the role back on the radio with no warning. The feature doc mentions the change, but the migration table does not.",
+   "fix": "Add a row: 'How a cop is named on the radio | cops.yml Cops.Names.Format | cop_radio_messages.yml (and _es) Speaker_Name | Names.Format now only drives the hologram'."
+  },
+  {
+   "id": "final-4",
+   "severity": "minor",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/listener/wanted/WantedHudListener.java",
+   "line": 225,
+   "problem": "The Spotted star card reads the new Crimes.Spotted key through WantedMessages.crimeName, whose fallback is the key id with underscores turned into spaces. Upgraded servers keep their old copsncrooks/wanted_messages.yml (the live one has no Crimes.Spotted), so the card says \"Spotted: <tier> inbound\" instead of the shipped \"Spotted by the cops\". This is wording only.",
+   "fix": "Give crimeName a code default for Spotted that matches the shipped text, or list Crimes.Spotted in the migration note as a key to copy in."
+  },
+  {
+   "id": "final-5",
+   "severity": "minor",
+   "file": "documentation/README.md",
+   "line": 13,
+   "problem": "The documentation index still marks v0.16.0 as 'Current', has no v0.16.1 changelog row, and does not link migration-0.16.1.md from the migration list on line 71.",
+   "fix": "Add a v0.16.1 row marked Current (move Current off v0.16.0) and link migration-0.16.1.md beside migration-0.16.0.md."
+  },
+  {
+   "id": "final-6",
+   "severity": "minor",
+   "file": "brainstorming/bug-docket-2026-09-06/bugs.json",
+   "problem": "Docket bookkeeping is incomplete, which CLAUDE.md requires after any fix. The Gangland docket database (artifact 4102fb1f, collection bugs) has 'fixed' rows for T-187, T-189 and T-191, but no row for T-188, T-190 or T-192. Those three therefore show as open although they are merged into 0.16.1. The local bugs.json fix text for T-187..T-192 still reads 'Not fixed (0.16.1 planned/in progress)'.",
+   "fix": "Write status rows for T-188 (7ecb4c23 + judge b8de8b4c), T-190 (5725a6e1 + b95a4b93) and T-192 (Keystone 44d84fc..f844a56, pin 6de5daee, merge 9e17fb51). Update the fix fields in bugs.json and rebuild with build_docket.py."
+  },
+  {
+   "id": "final-7",
+   "severity": "minor",
+   "file": "gangland-features/cops-n-crooks/src/main/java/org/luckyraven/gangland/copsncrooks/command/cops/CopListCommand.java",
+   "line": 90,
+   "problem": "Where command formatting meets radio names: `/glw cop list <player>` names each cop with the static CopRadio.callsign(cop), which is the built-in default template with colours stripped. It follows neither the owner's Speaker_Name nor Cops.Names.Format, so an owner who sets Speaker_Name \"{rank} {name}\" still sees \"Officer Medic Bob #1592\" there. The developer doc records this as intentional, and the command is an admin diagnostic, so it is not a defect.",
+   "fix": "Optional: pass the CopRadio bean and use ChatColor.stripColor(copRadio.speakerName(cop)), or leave it and say in the owner doc that cop list uses the fixed format."
+  }
+ ],
+ "ownerChecklist": [
+  "Deploy order: stop the server. Replace plugins/Keystone-1.15.0.jar with E:/Programming/java/Keystone/keystone-plugin/target/Keystone-1.15.1.jar. Replace gangland_warfare-0.16.0.jar with target/gangland_warfare-0.16.1.jar. In plugins/Gangland_Warfare/modules delete all nine *-0.16.0.jar and copy in the nine target/modules/*-0.16.1.jar (turf needs civilians 0.16.1 and cops-n-crooks needs turf 0.16.1).",
+  "Boot: the console shows no 'needs Keystone 1.15.1 or newer' line and no module.* faults. plugins/Gangland_Warfare/copsncrooks/commands.yml and commands_es.yml now exist. `/glw module list` shows nine modules at 0.16.1.",
+  "T-191 titles: run `/glw wanted add 1`. Expected: a small one-second subtitle with the star row and the 'Reported crime: <tier> inbound, ...' card, no big full-screen title, and the siren plays. Run `/glw wanted remove 1`. Expected: a small subtitle with the drop card only.",
+  "T-191 subtitle-only check (open item from the titles lane): in the same test, confirm the subtitle line actually shows on your client, including through ViaVersion on an older client.",
+  "T-187 escape: get 1-2 stars (hit a civilian, or `/glw wanted add 2`) and stay out of sight until the last star drops by evasion. Expected: the Escaped subtitle, a chat line 'BOUNTY $X is on you, the cops are still looking' (or 'The cops are still looking for you' when the bounty is $0), and a yellow boss bar 'BOUNTY $X \u00b7 Cops still looking' that counts down over 120 s.",
+  "T-187 search behaviour: while the bounty bar is up, let a cop reach you. It follows you but never cuffs you or shoots at you. `/glw cop list` lists you as chased. `/glw bounty` (or the bounty placeholder) shows the added notoriety.",
+  "T-187 Spotted: during the search, step into a cop's view. Expected: +1 star and the Gain subtitle card 'Spotted: <tier> inbound' (it reads 'Spotted by the cops' only if Crimes.Spotted is added to your wanted_messages.yml). The bounty bar becomes the red chase bar and the cops cuff and shoot again.",
+  "T-187 timeout: escape again and stay hidden for 120 s. Expected: chat 'The cops gave up the search' (with 'BOUNTY ... still stands' when a bounty remains), the bar disappears, the radio says Stand_Down, and the cops walk home.",
+  "T-187 endings: during a search, die (`/kill`). The bar and the squad vanish at once. In another search, `/glw jail throw <you>` from a second account or the console ends it the same way. Quitting and rejoining shows no bar and no cops, and the bounty is still on you.",
+  "T-188 command style: `/glw jail list` and `/glw cop spawner list` show a 'GLW >>' header with a count and clickable (tp) rows with a world and coordinate hover. `/glw jail release` with no player shows 'Missing Arguments: /glw jail release <player>' with the command coloured. `/glw cop list` shows 'Players being chased by cops (N):'. `/glw cop list <name>` shows one row per cop with its callsign and UUID.",
+  "T-188 console: run `glw cop setup list` from the console. Expected: a header line, then one plain line per item with kind, id, name, world and x, y, z. As a player the same command shows the kind in each row and the coordinates in the hover over a clickable (tp).",
+  "T-189 turf defense: as a member of the gang that owns a turf, garrison defenders (`/glw turf garrison 2`) and/or place the Quartermaster (`/glw turf powerupnpc set <turf>`). Stand on the turf and get 2+ stars so cops shoot you. Expected: defenders and the Quartermaster within 32 blocks of the cop turn on that cop, their stray shots never damage you, and they go idle when the cop dies or you leave the turf. Check the console for no errors from the Bartizan raytrace path.",
+  "T-189 negative: repeat as a player with no gang, or in a gang that is not the owner or an ally. The defenders ignore the cops. Optional: add `Cop_Response:` with `Enabled: false` to turf/turf_npcs.yml and restart; the defenders then ignore cops entirely.",
+  "T-190 radio names: during a chase the radio reads '[RADIO] Officer Medic Bob #1592: ...' with the rank and role in their colours, and the rest of the line keeps its grey. Add `Speaker_Name: \"{rank} {name}\"` to copsncrooks/cop_radio_messages.yml, run `/glw reload files` (restart if it does not apply), and the speaker shows as 'Officer Bob'.",
+  "T-192 tab completion (Paper 1.21.11): type `/glw ` and press Tab. Only primary sub-command names are listed, with no aliases next to them. `/glw jail ` + Tab shows 'teleport' but not 'tp'. Typing `/glw jail tp 1` still runs. `/gangland ` + Tab completes the same list as `/glw `. There are no duplicate suggestions.",
+  "Regression sweep: `/glw cop setup list station` shows rows like '- station #1 HQ'. A wanted player who quits loses the squad at once. `/glw reload` while someone is on the bounty bar removes the bar within half a second, and the console shows no stack traces."
+ ]
+}

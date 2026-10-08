@@ -14,12 +14,17 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.copsncrooks.wanted.WantedMessages;
 import org.luckyraven.gangland.copsncrooks.wanted.config.ChaseConfigLoader;
 import org.luckyraven.gangland.copsncrooks.wanted.config.HudSettings;
+import org.luckyraven.gangland.copsncrooks.wanted.config.PostEscapeSettings;
 import org.luckyraven.gangland.events.wanted.EvasionState;
 
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * The per-player chase HUD: a boss bar (red seen, yellow/white searching with an arrow out of the zone, green for a
@@ -51,24 +56,47 @@ public class WantedHud {
 		this.messages = messages;
 	}
 
-	/** Starts showing the HUD to {@code player}, in the SEEN state. A player already shown only gets new stars. */
+	/**
+	 * Starts showing the HUD to {@code player}, in the SEEN state. A player already shown only gets new stars. A new wanted
+	 * start takes the bar back from a post-escape bounty (0.16.1 T-187).
+	 */
 	public void show(Player player, int level, String stars) {
-		Entry entry = entries.get(player.getUniqueId());
+		Entry entry = entries.computeIfAbsent(player.getUniqueId(), id -> new Entry(player));
 
-		if (entry == null) {
-			entry = new Entry(player);
-			entries.put(player.getUniqueId(), entry);
-
-			if (chase.get().hud().bossBar()) {
-				entry.bar = Bukkit.createBossBar("", BarColor.RED, BarStyle.SOLID);
-				entry.bar.addPlayer(player);
-			}
-		}
+		entry.bounty = false;
+		entry.amount = null;
+		if (entry.bar == null && chase.get().hud().bossBar()) createBar(entry);
 
 		entry.level = level;
 		entry.stars = stars;
 		render(entry);
 	}
+
+	/**
+	 * The post-escape bounty (0.16.1 T-187): the bar reads the bounty and that the cops are still looking, and the HUD
+	 * counts {@code beats} beats (half a second each) down to the expiry reported by {@link #tick()}. {@code amount} is read
+	 * live on every beat.
+	 */
+	public void bounty(Player player, int beats, Supplier<BigDecimal> amount) {
+		Entry entry = entries.computeIfAbsent(player.getUniqueId(), id -> new Entry(player));
+
+		entry.bounty     = true;
+		entry.beatsLeft  = beats;
+		entry.beatsTotal = beats;
+		entry.amount     = amount;
+		entry.state      = EvasionState.SEEN;
+		entry.after      = EvasionState.SEEN;
+
+		if (!postEscape().bountyHud()) {
+			removeBar(entry);
+		} else if (entry.bar == null && chase.get().hud().bossBar()) {
+			createBar(entry);
+		}
+
+		render(entry);
+		aimCompass(entry);
+	}
+
 
 	/** New star count; ignored for a player who is not shown. */
 	public void stars(Player player, int level, String stars) {
@@ -114,6 +142,15 @@ public class WantedHud {
 		render(entry);
 	}
 
+	/** The players whose bar shows a post-escape bounty (0.16.1 wanted-6: the bar is checked against the search each beat). */
+	public List<Player> bountyViewers() {
+		List<Player> viewers = new ArrayList<>();
+		for (Entry entry : entries.values()) {
+			if (entry.bounty) viewers.add(entry.player);
+		}
+		return viewers;
+	}
+
 	/** Removes the bar and the ring and gives the compass back. */
 	public void hide(Player player) {
 		Entry entry = entries.remove(player.getUniqueId());
@@ -123,11 +160,26 @@ public class WantedHud {
 		restoreCompass(entry);
 	}
 
-	/** Half-second beat: flashes the bar, ends the green flash, redraws the ring every second beat. */
-	public void tick() {
+	/**
+	 * Half-second beat: flashes the bar, ends the green flash, redraws the ring every second beat, and counts the bounty
+	 * down. Returns the players whose bounty ran out on this beat; their HUD is already hidden.
+	 */
+	public List<Player> tick() {
 		tickCount++;
 
+		List<Player> expired = new ArrayList<>();
 		for (Entry entry : entries.values()) {
+			if (entry.bounty) {
+				if (--entry.beatsLeft <= 0) {
+					expired.add(entry.player);
+					continue;
+				}
+
+				render(entry);
+				aimCompass(entry);
+				continue;
+			}
+
 			if (entry.state == EvasionState.EVADED && tickCount >= entry.evadedUntil) {
 				entry.state = entry.after;
 				entry.lost  = 1;
@@ -138,10 +190,37 @@ public class WantedHud {
 
 			if (entry.state == EvasionState.SEARCHING && tickCount % 2 == 0) drawRing(entry);
 		}
+
+		for (Player player : expired) hide(player);
+		return expired;
+	}
+
+	private void createBar(Entry entry) {
+		entry.bar = Bukkit.createBossBar("", BarColor.RED, BarStyle.SOLID);
+		entry.bar.addPlayer(entry.player);
+	}
+
+	private void removeBar(Entry entry) {
+		if (entry.bar != null) entry.bar.removeAll();
+		entry.bar = null;
+	}
+
+	/** The post-escape settings; a loader that has no settings yet (a test double) gets the shipped ones. */
+	private PostEscapeSettings postEscape() {
+		PostEscapeSettings settings = chase.getPostEscape();
+		return settings == null ? PostEscapeSettings.DEFAULT : settings;
 	}
 
 	private void render(Entry entry) {
 		if (entry.bar == null) return;
+
+		if (entry.bounty) {
+			entry.bar.setTitle(StarCard.bountyTitle(messages, entry.amount == null ? BigDecimal.ZERO : entry.amount.get()));
+			entry.bar.setColor(StarCard.bountyColor(postEscape().barColor()));
+			entry.bar.setProgress(entry.beatsTotal <= 0 ? 0.0
+			                                            : Math.max(0.0, Math.min(1.0, (double) entry.beatsLeft / entry.beatsTotal)));
+			return;
+		}
 
 		String title = StarCard.barTitle(messages, entry.state, entry.stars, entry.secondsLeft, entry.lost);
 		if (showsWay(entry)) {
@@ -164,12 +243,13 @@ public class WantedHud {
 	private boolean showsWay(Entry entry) {
 		Location centre = entry.centre;
 
-		return entry.state == EvasionState.SEARCHING && chase.get().hud().compass() && centre != null
+		return !entry.bounty && entry.state == EvasionState.SEARCHING && chase.get().hud().compass() && centre != null
 		       && centre.getWorld() != null && centre.getWorld().equals(entry.player.getWorld());
 	}
 
 	private void aimCompass(Entry entry) {
-		if (entry.state != EvasionState.SEARCHING || !chase.get().hud().compass() || entry.centre == null) {
+		if (entry.bounty || entry.state != EvasionState.SEARCHING || !chase.get().hud().compass()
+		    || entry.centre == null) {
 			restoreCompass(entry);
 			return;
 		}
@@ -262,6 +342,10 @@ public class WantedHud {
 		private long               evadedUntil;
 		private boolean            compassSaved;
 		private @Nullable Location savedCompass;
+		private boolean            bounty;
+		private int                beatsLeft;
+		private int                beatsTotal;
+		private @Nullable Supplier<BigDecimal> amount;
 
 		private Entry(Player player) {
 			this.player = player;

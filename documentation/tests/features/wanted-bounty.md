@@ -64,7 +64,7 @@ bounties on other players' heads).
 
 ## Evasion AUTO Mode (0.15.2)
 
-- [ ] `Drop_Mode: AUTO` with one crime (1 star): a drop shows a Petty card ("Small fry, they dropped the case").
+- [ ] `Drop_Mode: AUTO` with one crime (1 star): a drop shows a Petty card ("Small fry, the heat is off you for now").
 - [ ] `Drop_Mode: AUTO` after a 4+ star rampage: a drop shows a Still Hot card ("Still hot, one star at a time").
 - [ ] `Drop_Mode: AUTO` leaving the search zone (outside ratio > 0.5): a drop shows a Clean Break card ("Clean break, you left the area") losing half stars.
 - [ ] `Drop_Mode: AUTO` with 2+ stars lost at once: the bar flashes an Evaded_Many line ("X -%count% STARS").
