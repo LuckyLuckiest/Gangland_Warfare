@@ -4,7 +4,9 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,13 +22,17 @@ import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
 
+import org.luckyraven.keystone.testkit.BukkitStatics;
+
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 /**
@@ -447,10 +453,49 @@ class TurfCopGuardTest {
 		assertFalse(TurfCopGuard.protects(-1, 1, true, (a, b) -> true));
 	}
 
+	@Test
+	@DisplayName("a live config supplier: flipping Enabled takes effect without rebuilding the guard (TF-36)")
+	void liveConfig_changeTakesEffectWithoutRebuild() {
+		LivingEntity cop    = living(0);
+		Location     spot   = loc(0);
+		Player       victim = victim(spot, UUID.randomUUID());
+		whenVictimOn(victim, spot, turf1, 1);
+
+		CivilianNpc defender = npcAt(5, true);
+		wirePowerupsAndDefenders(1, List.of(), List.of(defender));
+
+		AtomicReference<CopGuardConfig> live  = new AtomicReference<>(new CopGuardConfig(false, 32.0, true));
+		TurfCopGuard                    guard = new TurfCopGuard(mock(JavaPlugin.class), turfs, users, membership,
+		                                                         powerups, defenders, live::get);
+
+		guard.onCopHitPlayer(cop, victim);
+		verify(defender, never()).addEntityTargetToFront(cop);
+
+		live.set(enabledConfig());
+		guard.onCopHitPlayer(cop, victim);
+		verify(defender).addEntityTargetToFront(cop);
+	}
+
+	@Test
+	@DisplayName("onShutdown: cancels the 5-tick engagement task (TF-07)")
+	void onShutdown_cancelsTickTask() {
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			BukkitTask task = mock(BukkitTask.class);
+			when(bukkit.scheduler().runTaskTimer(any(Plugin.class), any(Runnable.class), anyLong(), anyLong()))
+					.thenReturn(task);
+			TurfCopGuard guard = guard(enabledConfig());
+			guard.start();
+
+			guard.onShutdown();
+
+			verify(task).cancel();
+		}
+	}
+
 	// ── fixtures ──────────────────────────────────────────────────────────────
 
 	private TurfCopGuard guard(CopGuardConfig config) {
-		return new TurfCopGuard(mock(JavaPlugin.class), turfs, users, membership, powerups, defenders, config);
+		return new TurfCopGuard(mock(JavaPlugin.class), turfs, users, membership, powerups, defenders, () -> config);
 	}
 
 	private static CopGuardConfig enabledConfig() {
