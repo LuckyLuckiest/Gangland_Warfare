@@ -18,6 +18,7 @@ public final class InMemoryActiveBuffRepository implements ActiveBuffRepositoryC
 
 	private final Map<Long, ActiveTurfBuff> rows    = new LinkedHashMap<>();
 	public  final List<ActiveTurfBuff>      deleted = new ArrayList<>();
+	public  int                             deleteExpiredCalls;
 
 	public void seed(ActiveTurfBuff buff) {
 		rows.put(buff.getId(), buff);
@@ -49,6 +50,12 @@ public final class InMemoryActiveBuffRepository implements ActiveBuffRepositoryC
 	public void delete(ActiveTurfBuff data) {
 		rows.remove(data.getId());
 		deleted.add(data);
+	}
+
+	@Override
+	public void deleteExpired(long now) {
+		deleteExpiredCalls++;
+		rows.values().removeIf(buff -> buff.isExpired(now));
 	}
 
 	@Override

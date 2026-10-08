@@ -1,6 +1,8 @@
 package org.luckyraven.gangland.turf.powerups;
 
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,11 +11,15 @@ import org.junit.jupiter.api.io.TempDir;
 import org.luckyraven.gangland.turf.support.InMemoryActiveBuffRepository;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.luckyraven.keystone.testkit.PluginMocks;
+import org.mockito.ArgumentCaptor;
 
 import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
 
 /**
  * Proves {@link ActiveBuffManager}'s effect aggregation and load-time pruning. Ties to the
@@ -177,6 +183,49 @@ class ActiveBuffManagerTest {
 
 			assertTrue(manager.active(99).isEmpty());
 			assertTrue(repository.deleted.isEmpty());
+		}
+	}
+
+	@Test
+	@DisplayName("TF-32: one prune sweep removes every expired buff with a single deleteExpired call, not one delete each")
+	void prune_deletesAllExpiredInOneCall() throws InterruptedException {
+		// Short-lived buffs survive the load-time check, then expire before the captured prune task runs.
+		// 1 s window with a 500 ms margin on each side, so a slow runner cannot expire them during load or miss the sweep.
+		long soon      = System.currentTimeMillis() + 1_000L;
+		long farFuture = System.currentTimeMillis() + 3_600_000L;
+		repository.seed(buff(1L, 1, EffectType.INCOME_MULTIPLIER, 1.25, soon));
+		repository.seed(buff(2L, 1, EffectType.INCOME_MULTIPLIER, 1.25, soon));
+		repository.seed(buff(3L, 1, EffectType.INCOME_MULTIPLIER, 1.25, soon));
+		repository.seed(buff(4L, 1, EffectType.INCOME_MULTIPLIER, 1.25, farFuture));
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			manager.initialize();
+			ArgumentCaptor<Runnable> prune = ArgumentCaptor.forClass(Runnable.class);
+			verify(bukkit.scheduler()).runTaskTimer(any(Plugin.class), prune.capture(), anyLong(), anyLong());
+
+			Thread.sleep(1_500L);
+			prune.getValue().run();
+
+			assertEquals(1, repository.deleteExpiredCalls, "one batched statement per sweep");
+			assertTrue(repository.deleted.isEmpty(), "prune must not delete row by row");
+			List<ActiveTurfBuff> active = manager.active(1);
+			assertEquals(1, active.size());
+			assertEquals(4L, active.get(0).getId(), "the live buff is still active");
+		}
+	}
+
+	@Test
+	@DisplayName("TF-07: onShutdown cancels the 1 Hz prune task")
+	void onShutdown_cancelsPruneTask() {
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			BukkitTask task = mock(BukkitTask.class);
+			when(bukkit.scheduler().runTaskTimer(any(Plugin.class), any(Runnable.class), anyLong(), anyLong()))
+					.thenReturn(task);
+			manager.initialize();
+
+			manager.onShutdown();
+
+			verify(task).cancel();
 		}
 	}
 }

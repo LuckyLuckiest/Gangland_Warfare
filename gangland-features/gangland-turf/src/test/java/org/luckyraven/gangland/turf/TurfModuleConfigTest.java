@@ -15,7 +15,10 @@ import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.config.ConfigDocument;
 import org.luckyraven.keystone.persistence.config.ConfigParser;
 import org.luckyraven.keystone.persistence.config.ConfigReport;
+import org.luckyraven.gangland.turf.contract.TurfRepositoryContract;
+import org.luckyraven.gangland.turf.database.TurfSequenceRepository;
 import org.luckyraven.gangland.turf.powerups.ActiveBuffManager;
+import org.luckyraven.gangland.turf.powerups.GarrisonRepositoryContract;
 import org.luckyraven.gangland.turf.powerups.ActiveBuffRepositoryContract;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.luckyraven.keystone.testkit.PluginMocks;
@@ -119,5 +122,28 @@ class TurfModuleConfigTest {
 		FileManager fileManager = mock(FileManager.class);
 		when(fileManager.getFile("turf_npcs")).thenReturn(handler);
 		return new TurfNpcsConfigLoader(fileManager);
+	}
+
+	@Test
+	@DisplayName("TF-41: the turfManager bean leaves initialize() to the convention pass, so loadAll runs once, not twice")
+	void turfManager_doesNotSelfInitialize() {
+		TurfRepositoryContract repo     = mock(TurfRepositoryContract.class);
+		TurfSequenceRepository sequence = mock(TurfSequenceRepository.class);
+		when(repo.loadAll()).thenReturn(List.of());
+
+		new TurfModuleConfig().turfManager(repo, sequence);
+
+		verify(repo, never()).loadAll();
+	}
+
+	@Test
+	@DisplayName("TF-41: the garrisonManager bean leaves initialize() to the convention pass, so loadAll runs once, not twice")
+	void garrisonManager_doesNotSelfInitialize() {
+		GarrisonRepositoryContract repo = mock(GarrisonRepositoryContract.class);
+		when(repo.loadAll()).thenReturn(List.of());
+
+		new TurfModuleConfig().garrisonManager(repo);
+
+		verify(repo, never()).loadAll();
 	}
 }

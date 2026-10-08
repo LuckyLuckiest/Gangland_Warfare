@@ -4,6 +4,7 @@ import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
+import org.luckyraven.keystone.bean.BeanLifecycle;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -21,7 +22,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * </ul>
  */
 @CustomLog
-public final class ActiveBuffManager {
+public final class ActiveBuffManager implements BeanLifecycle {
 
 	private final JavaPlugin                         plugin;
 	private final ActiveBuffRepositoryContract       repository;
@@ -59,6 +60,22 @@ public final class ActiveBuffManager {
 						  .stream().mapToInt(List::size).sum(), byTurf.size());
 
 		pruneTask = Bukkit.getScheduler().runTaskTimer(plugin, this::prune, 20L, 20L);
+	}
+
+	/**
+	 * The bean is skipped by the convention {@code initialize()} pass and gets this call right after registration, so it
+	 * still loads exactly once. A reload leaves it alone, as before.
+	 */
+	@Override
+	public void onInitialize(boolean firstLoad) {
+		if (firstLoad) {
+			initialize();
+		}
+	}
+
+	@Override
+	public void onShutdown() {
+		shutdown();
 	}
 
 	public void shutdown() {
@@ -137,8 +154,13 @@ public final class ActiveBuffManager {
 		return all;
 	}
 
+	/**
+	 * Drops expired buffs from memory, then deletes them from the repository in one batched call (TF-32) rather than
+	 * one statement per buff.
+	 */
 	private void prune() {
-		long now = System.currentTimeMillis();
+		long    now     = System.currentTimeMillis();
+		boolean removed = false;
 		for (Iterator<Map.Entry<Integer, List<ActiveTurfBuff>>> entries = byTurf.entrySet().iterator();
 		     entries.hasNext(); ) {
 			Map.Entry<Integer, List<ActiveTurfBuff>> entry = entries.next();
@@ -147,12 +169,15 @@ public final class ActiveBuffManager {
 				ActiveTurfBuff buff = it.next();
 				if (buff.isExpired(now)) {
 					it.remove();
-					repository.delete(buff);
+					removed = true;
 				}
 			}
 			if (list.isEmpty()) {
 				entries.remove();
 			}
+		}
+		if (removed) {
+			repository.deleteExpired(now);
 		}
 	}
 }

@@ -6,8 +6,10 @@ import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.support.InMemoryTurfRepository;
+import org.luckyraven.gangland.turf.support.InMemoryTurfSequence;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -58,23 +60,43 @@ class TurfManagerTest {
 	}
 
 	@Test
-	@DisplayName("deleting the highest-id turf then re-initialising re-uses that id (Observation #5)")
-	void idAllocation_reusesHighestIdAfterDeleteAndRestart() {
+	@DisplayName("TF-05: deleting the highest-id turf then restarting never hands its id to a new turf")
+	void idAllocation_neverReusesHighestIdAfterDeleteAndRestart() {
+		InMemoryTurfSequence sequence = new InMemoryTurfSequence();
 		repository.seed(turf(1, "world", 0, 0, 10, 10));
 		repository.seed(turf(2, "world", 20, 20, 30, 30));
 		repository.seed(turf(3, "world", 40, 40, 50, 50));
+		manager = new TurfManager(repository, sequence);
 		manager.initialize();
 		assertEquals(4, manager.allocateId(), "first session allocates past the highest seeded id");
 
 		Turf highest = manager.get(3);
 		manager.delete(highest);
 
-		// Simulate a restart: a fresh TurfManager over the same (now-mutated) repository.
-		TurfManager restarted = new TurfManager(repository);
+		// Simulate a restart: a fresh TurfManager over the same repository and the same persisted sequence.
+		TurfManager restarted = new TurfManager(repository, sequence);
 		restarted.initialize();
 
-		assertEquals(3, restarted.allocateId(),
-		             "id 3 is re-used because nextId reseeds from max(existing)+1, not a monotonic counter");
+		assertEquals(5, restarted.allocateId(),
+		             "id 4 was handed out before the restart and must stay used; 3 must not come back");
+	}
+
+	@Test
+	@DisplayName("TF-05: deleting a turf without allocating, then restarting, never reuses its id")
+	void idAllocation_deleteWithoutAllocateThenRestart_neverReusesId() {
+		InMemoryTurfSequence sequence = new InMemoryTurfSequence();
+		repository.seed(turf(1, "world", 0, 0, 10, 10));
+		repository.seed(turf(2, "world", 20, 20, 30, 30));
+		repository.seed(turf(3, "world", 40, 40, 50, 50));
+		manager = new TurfManager(repository, sequence);
+		manager.initialize();
+
+		manager.delete(manager.get(3));
+
+		TurfManager restarted = new TurfManager(repository, sequence);
+		restarted.initialize();
+
+		assertEquals(4, restarted.allocateId(), "id 3 was used before the delete and must not come back");
 	}
 
 	@Test
@@ -128,5 +150,30 @@ class TurfManagerTest {
 
 		assertNotNull(manager.getRuntimeState(9));
 		assertEquals(turf, repository.loadAll().stream().filter(t -> t.getId() == 9).findFirst().orElseThrow());
+	}
+
+	@Test
+	@DisplayName("TF-34: getTurfsInWorld returns a list callers cannot mutate")
+	void getTurfsInWorld_isUnmodifiable() {
+		manager.create(turf(1, "world", 0, 0, 10, 10));
+
+		List<Turf> view = manager.getTurfsInWorld("world");
+
+		assertThrows(UnsupportedOperationException.class, () -> view.add(turf(2, "world", 20, 20, 30, 30)));
+	}
+
+	@Test
+	@DisplayName("TF-34: iterating getTurfsInWorld while a turf is created in that world does not throw")
+	void getTurfsInWorld_iterationSurvivesCreate() {
+		manager.create(turf(1, "world", 0, 0, 10, 10));
+
+		int seen = 0;
+		for (Turf ignored : manager.getTurfsInWorld("world")) {
+			seen++;
+			manager.create(turf(100 + seen, "world", 100 * seen, 0, 100 * seen + 10, 10));
+		}
+
+		assertEquals(1, seen, "the loop walks the snapshot it started with");
+		assertEquals(2, manager.getTurfsInWorld("world").size());
 	}
 }
