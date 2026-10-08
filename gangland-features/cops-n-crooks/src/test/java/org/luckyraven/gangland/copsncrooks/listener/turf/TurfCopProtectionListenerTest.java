@@ -127,4 +127,10 @@ class TurfCopProtectionListenerTest {
 
 		verify(guard).onCopHitPlayer(cop, victim);
 	}
+
+	@Test
+	@DisplayName("construction binds the cop-target lookup to the guard (the cop's chase is read from CopNpc)")
+	void construction_bindsCopTargetLookup() {
+		verify(guard).bindCopTargets(any());
+	}
 }

@@ -45,7 +45,18 @@ public final class TurfCopGuard {
 	private final TurfDefenderDeployer      defenders;
 	private final CopGuardConfig            config;
 	private final Map<UUID, Engagement>     engagements = new HashMap<>();
+	private       CopTargetLookup           copTargets  = cop -> null;
 	private       BukkitTask                tickTask;
+
+	/**
+	 * Reads the player a cop is currently chasing. Supplied by cops-n-crooks through {@link #bindCopTargets}; the turf
+	 * module never names a cop type. Returns {@code null} when the cop has no player target (or it is offline).
+	 */
+	public interface CopTargetLookup {
+
+		Player targetPlayerOf(LivingEntity cop);
+
+	}
 
 	public TurfCopGuard(JavaPlugin plugin,
 	                    TurfManager turfs,
@@ -61,6 +72,14 @@ public final class TurfCopGuard {
 		this.powerups   = powerups;
 		this.defenders  = defenders;
 		this.config     = config;
+	}
+
+	/**
+	 * Installs the cop-target seam. Until it is bound the guard assumes no cop has a player target, so engagements are
+	 * only dropped by the victim and range rules.
+	 */
+	public void bindCopTargets(CopTargetLookup lookup) {
+		this.copTargets = lookup;
 	}
 
 	public void start() {
@@ -105,7 +124,8 @@ public final class TurfCopGuard {
 	}
 
 	/**
-	 * Drops engagements whose cop or victim is gone, and detaches the cop from each NPC that moved out of range.
+	 * Drops engagements whose cop or victim is gone, or whose cop now chases a player the turf does not protect, and
+	 * detaches the cop from each NPC that moved out of range.
 	 */
 	void tick() {
 		for (Iterator<Engagement> it = engagements.values().iterator(); it.hasNext(); ) {
@@ -121,6 +141,13 @@ public final class TurfCopGuard {
 			Turf here = turfs.findAt(victim.getLocation());
 			if (!victim.isOnline() || victim.isDead() || DownedPlayerRegistry.isDowned(victim.getUniqueId())
 			    || here == null || here.getId() != engagement.turfId() || !protectedOn(here, victim)) {
+				release(engagement);
+				it.remove();
+				continue;
+			}
+			// The cop switched its chase to someone the turf does not protect: stop defending against it.
+			Player chasing = copTargets.targetPlayerOf(cop);
+			if (chasing != null && !protectedOn(here, chasing)) {
 				release(engagement);
 				it.remove();
 				continue;

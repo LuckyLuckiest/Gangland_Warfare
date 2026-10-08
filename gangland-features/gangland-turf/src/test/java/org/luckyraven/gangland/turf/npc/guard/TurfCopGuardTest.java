@@ -366,6 +366,60 @@ class TurfCopGuardTest {
 		assertEquals(0, engagementCount(guard));
 	}
 
+	@Test
+	@DisplayName("cop switches its chase to a non-member without a new hit: released while the member stays protected")
+	void copSwitchesToNonMemberChase_releasedOnTick() throws Exception {
+		LivingEntity cop    = living(0);
+		Location     spot   = loc(0);
+		Player       member = victim(spot, UUID.randomUUID());
+		whenVictimOn(member, spot, turf1, 1);
+
+		Player nonMember = victim(loc(2), UUID.randomUUID());
+		User<Player> challenger = user(3);
+		when(users.findByPlayer(nonMember)).thenReturn(challenger);
+
+		CivilianNpc quartermaster = npcAt(5, true);
+		wirePowerupsAndDefenders(1, List.of(quartermaster), List.of());
+
+		TurfCopGuard guard = guard(enabledConfig());
+		guard.onCopHitPlayer(cop, member);
+		verify(quartermaster).addEntityTargetToFront(cop);
+
+		guard.bindCopTargets(c -> nonMember);
+		guard.tick();
+
+		verify(quartermaster).removeEntityTarget(cop);
+		assertEquals(0, engagementCount(guard));
+	}
+
+	@Test
+	@DisplayName("cop chasing a protected member, or with no player target, keeps the engagement")
+	void copChasingProtectedMemberOrNobody_keepsEngagement() throws Exception {
+		LivingEntity cop    = living(0);
+		Location     spot   = loc(0);
+		Player       member = victim(spot, UUID.randomUUID());
+		whenVictimOn(member, spot, turf1, 1);
+
+		Player otherMember = victim(loc(2), UUID.randomUUID());
+		when(turfs.findAt(loc(2))).thenReturn(turf1);
+		User<Player> sameGang = user(1);
+		when(users.findByPlayer(otherMember)).thenReturn(sameGang);
+
+		CivilianNpc quartermaster = npcAt(5, true);
+		wirePowerupsAndDefenders(1, List.of(quartermaster), List.of());
+
+		TurfCopGuard guard = guard(enabledConfig());
+		guard.onCopHitPlayer(cop, member);
+
+		guard.bindCopTargets(c -> otherMember);
+		guard.tick();
+		guard.bindCopTargets(c -> null);
+		guard.tick();
+
+		verify(quartermaster, never()).removeEntityTarget(cop);
+		assertEquals(1, engagementCount(guard));
+	}
+
 	// ── static protects() helper ─────────────────────────────────────────────
 
 	@Test
