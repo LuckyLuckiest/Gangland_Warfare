@@ -21,7 +21,7 @@ Nothing pushed.
 - A cop that moves out of range of an individual NPC is removed from that NPC only. When an NPC has no entity target left and no player target, it goes back to IDLE.
 - A cop whose chase switches to a non-member releases the engagement (reviewer fix `69f5ccc7`, via the `CopTargetLookup` seam). A cop with no player target, or an offline one, keeps its engagement.
 - No timeout.
-- `TurfCopGuard` is a bean in `TurfModuleConfig`, started and stopped next to `TurfDefenderDeployer`. It is not a listener.
+- `TurfCopGuard` is a bean in `TurfModuleConfig`, started at boot; its tick task is cancelled by Bukkit on plugin disable (no `stop()`). It is not a listener.
 
 ## Files
 Added:
@@ -35,7 +35,7 @@ Changed:
 - `gangland-features/gangland-turf/.../npc/config/TurfPowerupSettings.java` (`targetingRadius`)
 - `gangland-features/gangland-turf/.../npc/TurfPowerupManager.java` (radius from config instead of the literal 32.0; `civilianNpcsOf(turfId)`)
 - `gangland-features/gangland-turf/.../npc/defender/TurfDefenderDeployer.java` (`liveDefenders(turfId)`)
-- `gangland-features/gangland-turf/.../TurfModuleConfig.java` (`TurfCopGuard` bean, start/stop lifecycle)
+- `gangland-features/gangland-turf/.../TurfModuleConfig.java` (`TurfCopGuard` bean, started at boot)
 - `gangland-features/gangland-turf/src/main/resources/turf/turf_npcs.yml`
 
 Tests added or changed:

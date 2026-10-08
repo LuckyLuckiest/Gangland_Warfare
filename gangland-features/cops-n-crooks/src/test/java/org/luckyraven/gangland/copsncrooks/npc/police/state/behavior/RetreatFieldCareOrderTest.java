@@ -90,6 +90,7 @@ class RetreatFieldCareOrderTest {
 		when(provider.getAiTickRate()).thenReturn(10);
 		CopRadio radio = mock(CopRadio.class);
 		when(radio.speakerName(any())).thenAnswer(inv -> CopRadio.callsign(inv.getArgument(0)));
+		when(radio.memberName(any())).thenAnswer(inv -> CopRadio.callsign(inv.getArgument(0)));
 		care = new CopFieldCare(() -> provider, radio, now::get);
 
 		DetainmentService detainment = mock(DetainmentService.class);

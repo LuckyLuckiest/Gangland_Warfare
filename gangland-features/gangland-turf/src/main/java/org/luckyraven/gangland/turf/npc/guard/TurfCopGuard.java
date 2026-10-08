@@ -87,14 +87,6 @@ public final class TurfCopGuard {
 		tickTask = Bukkit.getScheduler().runTaskTimer(plugin, this::tick, TICK_PERIOD, TICK_PERIOD);
 	}
 
-	public void stop() {
-		if (tickTask != null) {
-			tickTask.cancel();
-			tickTask = null;
-		}
-		engagements.clear();
-	}
-
 	/**
 	 * A cop hit {@code victim}. If the victim stands on a turf their gang protects, the defenders and Quartermaster of
 	 * that turf within range of the cop take it on.

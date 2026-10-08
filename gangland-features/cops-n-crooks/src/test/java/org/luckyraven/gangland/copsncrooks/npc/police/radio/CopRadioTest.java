@@ -169,8 +169,14 @@ class CopRadioTest {
 	@Test
 	@DisplayName("a rank-and-name template renders with no role and no badge number")
 	void speakerName_ranknameTemplate() {
-		// &r before the name is invisible here; it is what stops a bold rank bleeding into the name
-		assertEquals("&9Officer &rBob&7", radioWith(FORMAT, "{rank} {name}").speakerName(copA()));
+		// &r before the name stops a bold rank bleeding into it; the name then resumes the unit colour (&b in FORMAT)
+		assertEquals("&9Officer &r&bBob&7", radioWith(FORMAT, "{rank} {name}").speakerName(copA()));
+	}
+
+	@Test
+	@DisplayName("a name inside a line's text resumes the line colour, not the unit colour")
+	void memberName_uncolouredName_resumesLineColour() {
+		assertEquals("&9Officer &r&7Bob&7", radioWith(FORMAT, "{rank} {name}").memberName(copA()));
 	}
 
 	@Test
@@ -180,8 +186,8 @@ class CopRadioTest {
 		when(cop.getCallsign()).thenReturn("&1&lSWAT Tony #1204");
 		when(cop.getFirstName()).thenReturn("Tony");
 
-		assertEquals("&1&lSWAT &rTony&7", radioWith(FORMAT, "{rank} {name}").speakerName(cop));
-		assertEquals("&1&lSWAT&rTony&7", radioWith(FORMAT, "{rank}{name}").speakerName(cop));
+		assertEquals("&1&lSWAT &r&bTony&7", radioWith(FORMAT, "{rank} {name}").speakerName(cop));
+		assertEquals("&1&lSWAT&r&bTony&7", radioWith(FORMAT, "{rank}{name}").speakerName(cop));
 	}
 
 	@Test

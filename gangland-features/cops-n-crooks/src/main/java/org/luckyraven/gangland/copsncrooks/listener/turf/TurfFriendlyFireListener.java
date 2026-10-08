@@ -98,6 +98,36 @@ public final class TurfFriendlyFireListener implements Listener {
 		event.setCancelled(true);
 	}
 
+	/**
+	 * Stray rounds: a defender or Quartermaster that fires at a cop often has a protected member standing in the line
+	 * of fire, so the shot must not hit that member. Cancels when the shooter is a turf NPC of the turf and the victim is
+	 * a player of its owning or allied gang.
+	 */
+	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+	public void onNpcWeaponImpact(WeaponRaytraceImpactEvent event) {
+		if (isNpcFriendlyFire(event.getShooter(), event.getHitEntity())) event.setCancelled(true);
+	}
+
+	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+	public void onNpcDamage(EntityDamageByEntityEvent event) {
+		if (isNpcFriendlyFire(resolveShooter(event.getDamager()), event.getEntity())) event.setCancelled(true);
+	}
+
+	private boolean isNpcFriendlyFire(Entity shooter, Entity victim) {
+		if (shooter == null || !(victim instanceof Player target)) return false;
+
+		int turfId = resolveTurfId(shooter);
+		if (turfId < 0) return false;
+
+		Turf turf = turfs.get(turfId);
+		if (turf == null || turf.isUnclaimed()) return false;
+
+		User<Player> user = users.findByPlayer(target);
+		if (user == null || !user.hasGang()) return false;
+
+		return isFriendly(user.getGangId(), turf.getOwnerGangId());
+	}
+
 	private boolean isFriendly(int attackerGangId, int ownerGangId) {
 		if (attackerGangId == ownerGangId) return true;
 		return membership.gangsAllied(attackerGangId, ownerGangId);
@@ -113,5 +143,10 @@ public final class TurfFriendlyFireListener implements Listener {
 		if (damager instanceof Player p) return p;
 		if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player p) return p;
 		return null;
+	}
+
+	private Entity resolveShooter(Entity damager) {
+		if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Entity shooter) return shooter;
+		return damager;
 	}
 }

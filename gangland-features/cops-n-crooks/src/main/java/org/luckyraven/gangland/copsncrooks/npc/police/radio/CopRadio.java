@@ -240,7 +240,10 @@ public class CopRadio {
 	/** The colour codes at the end of a Format's text before its {@code %line%}. */
 	private static final Pattern LINE_COLOUR = Pattern.compile("((?:&[0-9a-fk-orA-FK-OR])+)$");
 
-	/** A {@code {name}} with no colour code right before it: it gets an {@code &r} so a bold rank cannot bleed into it. */
+	/**
+	 * A {@code {name}} with no colour code right before it: it gets an {@code &r} plus the colour it should resume, so a
+	 * bold or coloured rank cannot bleed into it and the name keeps the line's colour.
+	 */
 	private static final Pattern UNCOLOURED_NAME = Pattern.compile("(?<!&[0-9a-fk-orA-FK-OR])\\{name\\}");
 
 	/** A {@code {rank}} with literal text right after it: a bold rank would run into that text, so it gets an {@code &r}. */
@@ -252,24 +255,33 @@ public class CopRadio {
 	 * id.
 	 */
 	public static String callsign(AbstractNpc npc) {
-		return ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', render(npc, DEFAULT_SPEAKER_NAME, "")));
+		return ChatColor.stripColor(ChatColor.translateAlternateColorCodes('&', render(npc, DEFAULT_SPEAKER_NAME, "", "")));
 	}
 
 	/**
-	 * How {@code npc} is named on the radio: the {@code Speaker_Name} template with its colours kept, then the line's
-	 * own colour ({@link #lineColour}), so the line resumes its colour after the name. A cop with no callsign is named
-	 * as {@link #callsign} names it.
+	 * How {@code npc} is named in {@code %unit%}: the {@code Speaker_Name} template with its colours kept, the unit
+	 * colour before the name, then the line's own colour ({@link #lineColour}) so the line resumes its colour after the
+	 * name. A cop with no callsign is named as {@link #callsign} names it.
 	 */
 	public String speakerName(AbstractNpc npc) {
+		return name(npc, unitColour());
+	}
+
+	/** How {@code npc} is named inside a line's text ({@code %member%}): the name resumes the line colour. */
+	public String memberName(AbstractNpc npc) {
+		return name(npc, lineColour());
+	}
+
+	private String name(AbstractNpc npc, String resume) {
 		List<String> templates = lines.lines("Speaker_Name");
-		return render(npc, templates.isEmpty() ? DEFAULT_SPEAKER_NAME : templates.get(0), lineColour());
+		return render(npc, templates.isEmpty() ? DEFAULT_SPEAKER_NAME : templates.get(0), resume, lineColour());
 	}
 
 	/**
 	 * {@code template} filled with the cop's rank, role word, first name and badge, then {@code lineColour}. A cop with
 	 * no callsign ({@code getCallsign()} null: tests, stray spawns) keeps the tier-and-id name, with no colour suffix.
 	 */
-	static String render(AbstractNpc npc, String template, String lineColour) {
+	static String render(AbstractNpc npc, String template, String resume, String lineColour) {
 		if (!(npc instanceof CopNpc cop) || cop.getCallsign() == null) return fallbackName(npc);
 
 		CopTierConfig tier     = cop.getTierConfig();
@@ -280,7 +292,7 @@ public class CopRadio {
 		String        name     = nullToEmpty(cop.getFirstName());
 		String        number   = cop.getNpc() != null ? String.valueOf(CopNames.badge(cop.getNpc().getId())) : "";
 
-		String guarded   = UNCOLOURED_NAME.matcher(template).replaceAll("&r{name}");
+		String guarded   = UNCOLOURED_NAME.matcher(template).replaceAll("&r" + resume + "{name}");
 		String rankValue = !rank.isEmpty() && BLEEDING_RANK.matcher(guarded).find() ? rank + "&r" : rank;
 		String filled    = fill(fill(fill(fill(guarded, "rank", rankValue), "role", roleWord), "name", name), "number", number);
 		return filled.replaceAll(" {2,}", " ").trim() + lineColour;
@@ -300,9 +312,18 @@ public class CopRadio {
 
 	/** The colour codes just before {@code %line%} in the Format, the colour a line resumes in; empty for none. */
 	private String lineColour() {
+		return colourBefore("%line%");
+	}
+
+	/** The colour codes just before {@code %unit%} in the Format, the colour the speaker's name is written in. */
+	private String unitColour() {
+		return colourBefore("%unit%");
+	}
+
+	private String colourBefore(String token) {
 		List<String> formats = lines.lines("Format");
 		String       format  = formats.isEmpty() ? "" : formats.get(0);
-		int          at      = format.indexOf("%line%");
+		int          at      = format.indexOf(token);
 		if (at < 0) return "";
 		Matcher trailing = LINE_COLOUR.matcher(format.substring(0, at));
 		return trailing.find() ? trailing.group(1) : "";
@@ -412,7 +433,7 @@ public class CopRadio {
 			}
 			case CONTACT_LOST -> commanderSays(group, squad, voice, "Status_Check", where, Map.of());
 			case MAN_DOWN, LEADER_DOWN -> commanderSays(group, squad, voice, "Pull_Back", where,
-			                                            Map.of("member", speakerName(member)), member);
+			                                            Map.of("member", memberName(member)), member);
 			case FLANK_LEFT, FLANK_RIGHT, PUSH -> {
 				postLine(squad, voice, member);
 				AbstractNpc leader = squad.leader();
@@ -581,7 +602,7 @@ public class CopRadio {
 		AbstractNpc speaker = squad.leader();
 		if (speaker == null) return;
 		radio.say(squad, voice, speaker.getEntity(), speakerName(speaker), "Commander_Down", "Format", where, null,
-		          Map.of("member", speakerName(commander)));
+		          Map.of("member", memberName(commander)));
 	}
 
 	private void requestBackup(CopGroup group, NpcSquad squad, RadioVoice voice, AbstractNpc downed,
