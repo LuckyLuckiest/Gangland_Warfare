@@ -51,8 +51,9 @@ and never the Tail rank: ownership moves with `/glw gang transfer`. Staff holdin
 
 | Command                      | Description                                                                  |
 |------------------------------|------------------------------------------------------------------------------|
-| `/glw gang invite <player>`  | Sends a join invitation. The invited player has **60 seconds** to accept.    |
-| `/glw gang accept`           | Accepts a pending gang invitation.                                           |
+| `/glw gang invite <player>`  | Sends a join invitation. An online player has **60 seconds** to accept; an offline player has **72 hours** (`Invite_Offline_Expiry_Hours` in `mail/mail_rules.yml`, `0` = until they next log in). |
+| `/glw gang accept`           | Accepts a pending gang invitation. Accepting one cancels the player's other gang invites. |
+| `/glw gang decline [gang]`   | Declines a pending gang invitation. Name the gang when you have more than one invite. |
 | `/glw gang kick <player>`    | Removes a member. You can only kick members who hold a lower rank than you.  |
 | `/glw gang leave`            | Leaves the gang. The owner cannot leave — they must delete the gang instead. |
 | `/glw gang promote <player>` | Moves a member up one rank in the hierarchy.                                 |
@@ -80,7 +81,7 @@ The gang has a shared bank account separate from all personal balances. Deposits
 
 | Command                       | Description                                                   |
 |-------------------------------|---------------------------------------------------------------|
-| `/glw gang rename <new name>` | Renames the gang.                                             |
+| `/glw gang rename <name>` | Renames the gang.                                             |
 | `/glw gang display <name>`    | Sets a custom display name shown in chat and (via Plaque) scoreboards. |
 | `/glw gang display remove`    | Removes the custom display name, reverting to the plain name. |
 | `/glw gang desc`              | Opens an anvil GUI to write a gang description.               |
