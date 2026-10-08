@@ -58,7 +58,8 @@ class CopSpawnerRemoveCommand extends SubArgument {
 
 			copSpawnManager.removeSpawner(id);
 
-			sender.sendMessage(commandMessages.format(CommandMessages.Key.SPAWNER_REMOVED, Map.of("id", String.valueOf(id))));
+			sender.sendMessage(commandMessages.format(CommandMessages.Key.SPAWNER_REMOVED,
+                                                      Map.of("id", String.valueOf(id))));
 		}, sender -> copSpawnManager.getSpawnerIds()
 				.stream().map(String::valueOf).toList());
 

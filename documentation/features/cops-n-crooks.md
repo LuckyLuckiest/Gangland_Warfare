@@ -420,7 +420,7 @@ Needs `gangland.command.cop.setup`. Kinds for `list`, `remove` and `tp` are `sta
 | `/glw cop setup wand`                      | Gives you the setup wand: left click = pos1, right click = pos2.                         |
 | `/glw cop setup mode <mode>`               | `station`, `district`, `hideout`, `pickup`, `restricted` or `breaker`: what `save` stores. |
 | `/glw cop setup save <name...>`            | Stores the selection under a name according to the mode.                                 |
-| `/glw cop setup list [kind]`               | One line per row: `kind id name world x y z [tags]`.                                     |
+| `/glw cop setup list [kind]`               | One row per placed item: kind, id and name, with a clickable `tp`. A player sees the world and coordinates in the hover; the console gets them as text.                                     |
 | `/glw cop setup remove <kind> <id>`        | Removes a row; removing a station frees its spawners.                                    |
 | `/glw cop setup tp <kind> <id>`            | Teleports you to a station, a point, or the centre of a region.                          |
 | `/glw cop setup link <stationId> <jailId\|none>` | Sets the jail a station books arrests into, or `none`.                             |

@@ -26,7 +26,8 @@ class JailReleaseCommand extends SubArgument {
 	private final CommandMessages commandMessages;
 
 	protected JailReleaseCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                             DetainmentService detainmentService, ReleasePipeline releasePipeline, CommandMessages commandMessages) {
+	                             DetainmentService detainmentService, ReleasePipeline releasePipeline,
+	                             CommandMessages commandMessages) {
 		super(plugin, "release", tree, parent);
 
 		this.plugin          = plugin;
@@ -51,18 +52,21 @@ class JailReleaseCommand extends SubArgument {
 			Player target    = Bukkit.getPlayer(playerStr);
 
 			if (target == null) {
-				sender.sendMessage(commandMessages.format(CommandMessages.Key.PLAYER_NOT_FOUND, Map.of("player", playerStr)));
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.PLAYER_NOT_FOUND,
+                                                          Map.of("player", playerStr)));
 				return;
 			}
 
 			if (!detainmentService.isJailed(target)) {
-				sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_NOT_JAILED, Map.of("target", target.getName())));
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_NOT_JAILED,
+                                                          Map.of("target", target.getName())));
 				return;
 			}
 
 			releasePipeline.release(target, ReleaseReason.ADMIN);
 
-			sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_RELEASED, Map.of("target", target.getName())));
+			sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_RELEASED,
+                                                      Map.of("target", target.getName())));
 		}, sender -> {
 			Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
 

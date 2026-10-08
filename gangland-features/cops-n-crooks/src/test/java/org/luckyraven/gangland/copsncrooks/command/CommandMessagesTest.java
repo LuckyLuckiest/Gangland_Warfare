@@ -20,16 +20,27 @@ class CommandMessagesTest {
 
 	@Test
 	void everyKeyIsShippedWithItsFallback() throws IOException {
-		try (InputStream in = getClass().getResourceAsStream("/copsncrooks/commands.yml")) {
-			assertNotNull(in, "copsncrooks/commands.yml is not on the classpath");
+		YamlConfiguration yaml = load("/copsncrooks/commands.yml");
 
-			YamlConfiguration yaml = YamlConfiguration.loadConfiguration(
-					new InputStreamReader(in, StandardCharsets.UTF_8));
+		for (CommandMessages.Key key : CommandMessages.Key.values()) {
+			assertTrue(yaml.isString(key.path), key.path + " is missing from commands.yml");
+			assertEquals(key.fallback, yaml.getString(key.path), key.path);
+		}
+	}
 
-			for (CommandMessages.Key key : CommandMessages.Key.values()) {
-				assertTrue(yaml.isString(key.path), key.path + " is missing from commands.yml");
-				assertEquals(key.fallback, yaml.getString(key.path), key.path);
-			}
+	/** commands_es.yml replaces commands.yml whole when Settings.Language is es, so it must carry every key too. */
+	@Test
+	void everyKeyIsShippedInTheSpanishFile() throws IOException {
+		YamlConfiguration spanish = load("/copsncrooks/commands_es.yml");
+
+		for (CommandMessages.Key key : CommandMessages.Key.values())
+			assertTrue(spanish.isString(key.path), key.path + " is missing from commands_es.yml");
+	}
+
+	private static YamlConfiguration load(String resource) throws IOException {
+		try (InputStream in = CommandMessagesTest.class.getResourceAsStream(resource)) {
+			assertNotNull(in, resource + " is not on the classpath");
+			return YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8));
 		}
 	}
 

@@ -54,7 +54,8 @@ class JailRemoveCommand extends SubArgument {
 
 			jailService.removeJail(id);
 
-			sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_REMOVED, Map.of("id", String.valueOf(id))));
+			sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_REMOVED,
+                                                      Map.of("id", String.valueOf(id))));
 		}, sender -> {
 			return jailRegistry.getCells()
 					.stream().map(jail -> String.valueOf(jail.getId())).toList();

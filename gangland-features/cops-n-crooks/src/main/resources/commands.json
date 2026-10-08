@@ -48,7 +48,7 @@
 		"description": "Shows the specified page in cop menu."
 	},
 	"cop_list": {
-		"usage": "/glw cop list <player>",
+		"usage": "/glw cop list [player]",
 		"description": "Shows the players being chased by cops. The player is optional: with one, shows that player's cops."
 	},
 	"cop_spawner_set": {
@@ -85,7 +85,7 @@
 	},
 	"cop_setup_list": {
 		"usage": "/glw cop setup list [station|region|point]",
-		"description": "Lists the stations, regions and points: kind id name world x y z [tags]."
+		"description": "Lists the stations, regions and points, one row each with its kind, id and name. A row's tp goes to it; a player sees its world and coordinates in the hover, the console gets them as text."
 	},
 	"cop_setup_remove": {
 		"usage": "/glw cop setup remove <station|region|point> <id>",

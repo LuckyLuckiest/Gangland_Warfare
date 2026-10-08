@@ -254,14 +254,23 @@ public final class SetupCommands {
 		for (ListRow row : rows) sendRow(sender, row);
 	}
 
-	/** A row with a clickable {@code tp} that runs {@code /glw cop setup tp <kind> <id>}; hover shows where it is. */
+	/**
+	 * A player gets a clickable {@code tp} that runs {@code /glw cop setup tp <kind> <id>}, with the place in the hover.
+	 * The console cannot see a hover, so it gets the label and the place as one plain line.
+	 */
 	private void sendRow(CommandSender sender, ListRow row) {
-		String label = messages.format(Key.ROW_LABEL, Map.of("id", String.valueOf(row.id()), "name", row.name()));
+		String label = messages.format(Key.ROW_LABEL, Map.of("kind", row.kind(),
+		                                                     "id", String.valueOf(row.id()),
+		                                                     "name", row.name()));
 		String where = messages.format(Key.ROW_WHERE, Map.of("world", row.world(),
 		                                                     "x", String.valueOf(block(row.x())),
 		                                                     "y", String.valueOf(block(row.y())),
 		                                                     "z", String.valueOf(block(row.z())),
 		                                                     "tags", row.tags()));
+		if (!(sender instanceof Player)) {
+			sender.sendMessage(label + where);
+			return;
+		}
 		String tpCommand = "/glw cop setup tp " + row.kind() + " " + row.id();
 
 		var message = new ComponentBuilder(label)

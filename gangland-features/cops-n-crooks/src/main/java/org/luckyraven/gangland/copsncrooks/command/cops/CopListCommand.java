@@ -69,18 +69,21 @@ class CopListCommand extends SubArgument {
 			Player target     = Bukkit.getPlayer(playerName);
 
 			if (target == null || !target.isOnline()) {
-				sender.sendMessage(messages.format(CommandMessages.Key.PLAYER_NOT_FOUND, Map.of("player", playerName)));
+				sender.sendMessage(messages.format(CommandMessages.Key.PLAYER_NOT_FOUND,
+                                                   Map.of("player", playerName)));
 				return;
 			}
 
 			List<CopNpc> cops = copManager.getCopsForPlayer(target.getUniqueId());
 
 			if (cops.isEmpty()) {
-				sender.sendMessage(messages.format(CommandMessages.Key.COP_TARGET_NOT_CHASED, Map.of("target", target.getName())));
+				sender.sendMessage(messages.format(CommandMessages.Key.COP_TARGET_NOT_CHASED,
+                                                   Map.of("target", target.getName())));
 				return;
 			}
 
-			sender.sendMessage(messages.format(CommandMessages.Key.COP_TARGET_HEADER, Map.of("player", target.getName())));
+			sender.sendMessage(messages.format(CommandMessages.Key.COP_TARGET_HEADER,
+                                               Map.of("player", target.getName())));
 			cops.forEach(cop -> {
 				NPC npc = cop.getNpc();
 				sender.sendMessage(messages.format(CommandMessages.Key.COP_TARGET_ROW,

@@ -56,8 +56,9 @@ Setup:
       Bad_Id: "&c%value% is not a number."
       # The word that stands for every kind in a list header when no kind was given
       Kind_All: "all"
-      # One row of a list: %id% %name%, then %world% %x% %y% %z% and %tags% (the kinds of a region) in the hover text
-      Row_Label: " &b- &f#%id% &f%name% "
+      # One row of a list: %kind% %id% %name%. A player gets the place (%world% %x% %y% %z% and %tags%, the kinds of a
+      # region) in the hover text; the console gets the label and the place as one plain line
+      Row_Label: " &b- &7%kind% &f#%id% &f%name% "
       Row_Where: "&f%world% &7- &f%x%&7, &f%y%&7, &f%z%&8%tags%"
       # The clickable action at the end of a row
       Row_Tp: "&e(&btp&e)"

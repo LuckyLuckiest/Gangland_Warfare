@@ -19,6 +19,7 @@ file is renamed with a `-old` suffix and a fresh default is generated.
 | `settings.yml`     | Main runtime configuration (all systems)     |
 | `cops.yml`         | Per-tier cop NPC definitions                 |
 | `setup.yml`        | Cops setup wand: item, outline, messages (0.16.0) |
+| `commands.yml`     | Cops, jail and cuff command replies (0.16.1; `commands_es.yml` is the Spanish file) |
 | `civilians.yml`    | Civilian type definitions and spawner config |
 | `cars.yml`         | Car type definitions                         |
 | `wearables.yml`    | Wearable armor definitions                   |
@@ -37,7 +38,7 @@ contains them. The full legacy path -> file -> path table is in [migration-0.15.
 
 | Module | File (under `plugins/Gangland_Warfare/`) |
 |---|---|
-| `cops-n-crooks` | `copsncrooks/wanted.yml`, `copsncrooks/cops.yml`, `copsncrooks/detainment.yml` |
+| `cops-n-crooks` | `copsncrooks/wanted.yml`, `copsncrooks/cops.yml`, `copsncrooks/detainment.yml`, `copsncrooks/setup.yml`, `copsncrooks/commands.yml` (and `commands_es.yml`) |
 | `gangland-civilians` | `npc/civilians.yml` |
 | `gangland-turf` | `turf/turf_settings.yml` |
 | `gangland-gang` | `gang/gang_settings.yml` |
@@ -561,7 +562,7 @@ and `Resisting_Arrest`; the others are read by later releases. A weight of 0 ign
 `Stance_Cuffs` / `Stance_Shoot` / `Drop_Evasion` / `Drop_Decay` / `Drop_Other` / `Drop_Petty` / `Drop_Cold_Trail` / 
 `Drop_Clean_Break` / `Drop_Still_Hot` / `Drop_Known_Face` / `Drop_Narrow`, `Charge_Sheet.Header` / `Crime` / `Total` /
 `Paid` / `Extra_Time` / `Paperwork`, and `Crimes.<Id>` (including `Crimes.Unknown_Crime`, the card text when no crime is
-on record). AUTO ending cards (`Drop_*`) are new in 0.15.2. Placeholders: `%stars%`, `%time%`, `%crime%`, `%tier%`, `%stance%`, `%count%`, `%amount%`, `%paid%`,
+on record). AUTO ending cards (`Drop_*`) are new in 0.15.2. 0.16.1 adds `Hud.Bar.Bounty` / `Bounty_None` (the bar after an escape, with and without a bounty) and `Hud.Announce.Bounty` / `No_Bounty` / `Gave_Up` / `Gave_Up_Bounty` (the chat lines of the post-escape search). The title text moved out of this file: each wanted event's `Title` and `Subtitle` are read from `wanted.yml` `Wanted.Hud.Title.<event>.Title` / `Subtitle`, and a `Hud.Title` still set here is no longer read. `Drop_Petty` and `Drop_Cold_Trail` no longer say the case is dropped (the search can still be on). Placeholders: `%stars%`, `%time%`, `%crime%`, `%tier%`, `%stance%`, `%count%`, `%amount%`, `%paid%`,
 `%money_symbol%`, and `%count%` fills the star-drop lines.
 
 #### AUTO mode settings
@@ -623,7 +624,11 @@ with its placeholders, so copy key names from it.
 | `Setup.Wand.Item` | `BLAZE_ROD` | The wand's material (an unknown name uses `BLAZE_ROD`) |
 | `Setup.Outline.Particle` | `DUST` | The particle of the selection outline, shown only to the admin holding the wand (an unknown name uses `DUST`) |
 | `Setup.Outline.Interval_Ticks` | `10` | Ticks between two draws |
-| `Setup.Messages.*` | see the file | Every wand and command message (`Usage`, `Wand_Given`, `Mode_Set`, `Pos_Set`, `Station_Saved`, `Region_Saved`, `Point_Saved`, `Removed`, `Linked`, ...), `&` colour codes, `%placeholders%` |
+| `Setup.Messages.*` | see the file | Every wand and command message (`Arguments_Missing`, `List_Header`, `Kind_All`, `Row_Label`, `Row_Where`, `Row_Tp`, `Wand_Given`, `Mode_Set`, `Pos_Set`, `Station_Saved`, `Region_Saved`, `Point_Saved`, `Removed`, `Linked`, ...), `&` colour codes, `%placeholders%`. 0.16.1 removed `Usage` (now `Arguments_Missing`); a list row's `Row_Label` takes `%kind%`, a player gets `Row_Where` in the hover, and the console gets the label and the place as one line |
+
+### commands.yml (`copsncrooks/commands.yml`)
+
+New in 0.16.1; ships inside the cops-n-crooks jar and is copied to `plugins/Gangland_Warfare/copsncrooks/` on first boot. It holds the replies of `/glw cop`, `/glw jail` and `/glw cuff`: the list headers and rows (`Cop.List`, `Spawner.List`, `Jail.List`), the `Info` blocks, the actions and the errors. Keys are `Capitalized_Underscore` and nested by block. The GLW prefix (command replies) and the error prefix (errors) come from the core and are added by kind, so a value carries only its colour and text. `commands_es.yml` is the Spanish file: it replaces `commands.yml` whole when `Settings.Language` is `es`, so it must carry every key. Before 0.16.1 these lines were in the core `message_en.yml` / `message_es.yml`; a customised copy there is no longer read (see the 0.16.1 migration note).
 
 ### cop_roles.yml `Squad_Composition`
 

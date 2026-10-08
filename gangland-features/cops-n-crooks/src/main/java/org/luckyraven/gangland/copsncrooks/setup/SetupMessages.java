@@ -56,7 +56,7 @@ public class SetupMessages extends LocalizedModuleYaml {
 		UNKNOWN_KIND("Unknown_Kind", "&cKind must be station, region or point.", Style.ERROR),
 		BAD_ID("Bad_Id", "&c%value% is not a number.", Style.ERROR),
 		KIND_ALL("Kind_All", "all", Style.NONE),
-		ROW_LABEL("Row_Label", " &b- &f#%id% &f%name% ", Style.NONE),
+		ROW_LABEL("Row_Label", " &b- &7%kind% &f#%id% &f%name% ", Style.NONE),
 		ROW_WHERE("Row_Where", "&f%world% &7- &f%x%&7, &f%y%&7, &f%z%&8%tags%", Style.NONE),
 		ROW_TP("Row_Tp", "&e(&btp&e)", Style.NONE);
 

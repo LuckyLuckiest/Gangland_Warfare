@@ -91,9 +91,9 @@ class StarCardTest {
 	void dropCard_pendingPlan_picksTheEndingCard() throws IOException {
 		WantedMessages messages = HudFixtures.messages(tempDir);
 
-		assertEquals("Small fry, they dropped the case (-3)",
+		assertEquals("Small fry, the heat is off you for now (-3)",
 		             plain(StarCard.dropCard(messages, WantedCause.EVASION, new DropPlan(3, Ending.PETTY, "petty"), 3)));
-		assertEquals("The trail went stone cold (-4)", plain(StarCard.dropCard(messages, WantedCause.EVASION,
+		assertEquals("The trail is fading (-4)", plain(StarCard.dropCard(messages, WantedCause.EVASION,
 		                                                                       new DropPlan(4, Ending.COLD_TRAIL, "cold"), 4)));
 		assertEquals("Clean break, you left the area (-2)", plain(StarCard.dropCard(messages, WantedCause.EVASION,
 		                                                                           new DropPlan(2, Ending.CLEAN_BREAK, "out"), 2)));

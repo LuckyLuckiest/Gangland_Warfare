@@ -31,10 +31,11 @@ public class CopsNCrooksYamlConfig {
 	 * Settings.getLanguagePicked() via CopRadioMessages/LocalizedModuleYaml. wanted/wanted_messages (0.15.0): chase
 	 * tuning (heat, evasion, HUD, charge sheet) and its text. detainment (0.15.1): jail, bail, bribe and sentence
 	 * knobs, formerly settings.yml Detainment. setup (0.16.0): the admin setup wand's item, outline and messages.
-	 * commands (0.16.1): the replies of the /glw cop and /glw jail commands.
+	 * commands (0.16.1): the replies of the /glw cop, /glw jail and /glw cuff commands; commands_es is the Spanish
+	 * variant, picked by Settings.getLanguagePicked() like cop_radio_messages_es.
 	 */
 	static final String[] FILES = {"cops", "cop_roles", "cop_radio_messages", "cop_radio_messages_es", "wanted",
-	                               "wanted_messages", "detainment", "setup", "commands"};
+	                               "wanted_messages", "detainment", "setup", "commands", "commands_es"};
 
 	private final JavaPlugin plugin;
 

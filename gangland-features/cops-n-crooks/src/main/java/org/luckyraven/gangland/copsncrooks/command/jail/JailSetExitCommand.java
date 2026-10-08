@@ -88,7 +88,8 @@ class JailSetExitCommand extends SubArgument {
 			Location location = player.getLocation();
 			jailExitService.setExit(jailId, location);
 
-			sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_EXIT_SET, Map.of("id", String.valueOf(jailId))));
+			sender.sendMessage(commandMessages.format(CommandMessages.Key.JAIL_EXIT_SET,
+                                                      Map.of("id", String.valueOf(jailId))));
 		}, sender -> {
 			List<String> ids = new ArrayList<>();
 			for (Jail jail : jailRegistry.getCells()) ids.add(String.valueOf(jail.getId()));

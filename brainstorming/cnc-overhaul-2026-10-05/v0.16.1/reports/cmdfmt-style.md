@@ -115,8 +115,8 @@ The module cannot import gangland-impl, but it can import gangland-api. `Localiz
 **Files changed (cops-n-crooks lane, 29 tracked files plus new files):**
 - Command classes now route every line through `CommandMessages` (COMMAND/ERROR/NONE by kind): `command/cops/*`, `command/cops/spawner/*`, `command/jail/*`, `command/cuff/*`, `setup/SetupCommands.java`, `setup/SetupMessages.java`, `config/CopsNCrooksYamlConfig.java`, `config/RegistryModuleConfig.java`.
 - New: `command/CommandMessages.java` (the key table and the prefix helper), `resources/copsncrooks/commands.yml` (the module's reply text, colour in the YAML value).
-- `resources/copsncrooks/setup.yml`: `Row_Label` now `" &b- &f#%id% &f%name% "`.
-- `resources/commands.json`: help entries for the setup and the list/spawner/jail roots.
+- `resources/copsncrooks/setup.yml`: `Row_Label` now `" &b- &7%kind% &f#%id% &f%name% "` (judge round 1: the kind was added; a console gets the label and the place as one plain line).
+- `resources/commands.json`: existing entries reworded only, no entry added. The judge round changed `cop_list` usage to `/glw cop list [player]` and `cop_setup_list` description to say the place is in the hover.
 - Tests: `CommandMessagesTest` (new, `everyKeyIsShippedWithItsFallback`), updated `CopSpawnerListCommandTest`, `JailListCommandTest`, `SetupCommandsTest`.
 - Style doc: rule 3 reads `&f<id or name>`; key table rows for `SPAWNER_LIST_ROW`, `JAIL_LIST_ROW`, `COP_TARGET_ROW` match the code.
 

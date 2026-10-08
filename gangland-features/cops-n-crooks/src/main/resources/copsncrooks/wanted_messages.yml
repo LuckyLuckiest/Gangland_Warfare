@@ -48,9 +48,9 @@ Hud:
       # A star dropped for any other reason
       Drop_Other: "&aA star is gone"
       # AUTO: a small chase, every star dropped at once; %count% is how many
-      Drop_Petty: "&aSmall fry, they dropped the case &7(-%count%)"
+      Drop_Petty: "&aSmall fry, the heat is off you for now &7(-%count%)"
       # AUTO: a long chase that went quiet, every star dropped at once
-      Drop_Cold_Trail: "&aThe trail went stone cold &7(-%count%)"
+      Drop_Cold_Trail: "&aThe trail is fading &7(-%count%)"
       # AUTO: you left the search area and lost a share of your stars
       Drop_Clean_Break: "&aClean break, you left the area &7(-%count%)"
       # AUTO: only one star, because the chase is still hot (a rampage, or you logged out)

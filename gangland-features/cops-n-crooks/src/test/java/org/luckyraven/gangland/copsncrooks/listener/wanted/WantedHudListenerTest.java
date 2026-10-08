@@ -380,7 +380,7 @@ class WantedHudListenerTest {
 
 		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
 		verify(player).sendTitle(anyString(), subtitle.capture(), eq(5), eq(20), eq(5));
-		assertEquals("Small fry, they dropped the case (-3)", ChatColor.stripColor(subtitle.getValue()));
+		assertEquals("Small fry, the heat is off you for now (-3)", ChatColor.stripColor(subtitle.getValue()));
 		assertEquals(null, arcs.takePending(player.getUniqueId()));
 	}
 

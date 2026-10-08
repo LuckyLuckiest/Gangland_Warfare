@@ -64,7 +64,8 @@ class CopSpawnerTeleportCommand extends SubArgument {
 			}
 
 			player.teleport(location);
-			sender.sendMessage(commandMessages.format(CommandMessages.Key.SPAWNER_TELEPORTED, Map.of("id", String.valueOf(id))));
+			sender.sendMessage(commandMessages.format(CommandMessages.Key.SPAWNER_TELEPORTED,
+                                                      Map.of("id", String.valueOf(id))));
 		}, sender -> copSpawnManager.getSpawnerIds()
 				.stream().map(String::valueOf).toList());
 

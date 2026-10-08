@@ -10,7 +10,6 @@ import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.gangland.copsncrooks.command.CommandMessages;
 import org.luckyraven.gangland.copsncrooks.detainment.DetainmentService;
 import org.luckyraven.keystone.bean.command.CommandHandler;
-import org.luckyraven.gangland.file.configuration.Messages;
 
 import java.util.Map;
 
@@ -62,7 +61,8 @@ public final class UncuffCommand extends Command {
 			Player target    = Bukkit.getPlayer(playerStr);
 
 			if (target == null) {
-				sender.sendMessage(commandMessages.format(CommandMessages.Key.PLAYER_NOT_FOUND, Map.of("player", playerStr)));
+				sender.sendMessage(commandMessages.format(CommandMessages.Key.PLAYER_NOT_FOUND,
+                                                          Map.of("player", playerStr)));
 				return;
 			}
 
@@ -79,6 +79,7 @@ public final class UncuffCommand extends Command {
 	private void releasePlayer(CommandSender sender, Player target) {
 		detainmentService.release(target);
 
-		sender.sendMessage(commandMessages.format(CommandMessages.Key.CUFF_RELEASED, Map.of("target", target.getName())));
+		sender.sendMessage(commandMessages.format(CommandMessages.Key.CUFF_RELEASED,
+                                                  Map.of("target", target.getName())));
 	}
 }
