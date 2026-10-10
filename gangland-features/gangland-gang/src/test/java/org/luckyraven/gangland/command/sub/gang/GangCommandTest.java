@@ -107,7 +107,7 @@ class GangCommandTest {
 		verify(player, times(2)).sendMessage(lines.capture());
 		List<String> text = lines.getAllValues().stream().map(ChatColor::stripColor).toList();
 		assertTrue(text.get(0).contains("team up to hold turf"), text.toString());
-		assertTrue(text.get(1).contains("costs $2500"), text.toString());
+		assertTrue(text.get(1).contains("costs $" + Settings.formatAmount(new BigDecimal("2500"))), text.toString());
 
 		ArgumentCaptor<BaseComponent[]> buttons = ArgumentCaptor.forClass(BaseComponent[].class);
 		verify(spigot).sendMessage(buttons.capture());

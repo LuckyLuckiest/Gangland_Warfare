@@ -137,7 +137,7 @@ class GangCreateConfirmTest {
 		when(parent.getPermission()).thenReturn("glw.gang");
 
 		command = new GangCreateCommand(plugin, new Tree<>(), parent, userManager, memberManager, gangManager,
-		                                rankManager, repositoryRegistry, Pattern.compile("[A-Za-z0-9_]{3,16}"),
+		                                rankManager, repositoryRegistry, () -> Pattern.compile("[A-Za-z0-9_]{3,16}"),
 		                                messages);
 	}
 

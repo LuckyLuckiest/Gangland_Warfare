@@ -116,14 +116,14 @@ public final class GangCommand extends Command {
 		player.sendMessage(gangMessages.text("Onboarding.Cost",
 		                                     "&7Starting a gang costs &e%money_symbol%%cost%&7. Joining one is free.",
 		                                     "money_symbol", Settings.getMoneySymbol(),
-		                                     "cost", fee.toPlainString()));
+		                                     "cost", Settings.formatAmount(fee)));
 
 		String browse = gangMessages.text("Onboarding.Browse", "&a[Browse gangs]");
 		String create = gangMessages.text("Onboarding.Create", "&a[Create a gang]");
 		BaseComponent[] buttons = new ComponentBuilder(browse)
 				.event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/glw gang list"))
-				.append("   ")
-				.append(create)
+				.append("   ", ComponentBuilder.FormatRetention.NONE)
+				.append(create, ComponentBuilder.FormatRetention.NONE)
 				.event(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/glw gang create "))
 				.create();
 		player.spigot().sendMessage(buttons);
@@ -133,7 +133,7 @@ public final class GangCommand extends Command {
 	protected void initializeArguments() {
 		Argument create = new GangCreateCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                        memberManager, gangManager, rankManager, repositoryRegistry,
-		                                        gangRules.getNamePattern(), gangMessages);
+		                                        gangRules::getNamePattern, gangMessages);
 		Argument list = new GangListCommand(getPlugin(), getArgumentTree(), getArgument(), gangManager, userManager,
 		                                    gangMessages);
 		Argument info = new GangInfoCommand(getPlugin(), getArgumentTree(), getArgument(), gangManager, userManager,
@@ -161,7 +161,7 @@ public final class GangCommand extends Command {
 		Argument members = new GangMembersCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                          gangManager);
 		Argument name = new GangRenameCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
-		                                      memberManager, gangManager, gangRules.getNamePattern(), gangMessages);
+		                                      memberManager, gangManager, gangRules::getNamePattern, gangMessages);
 		Argument description = new GangDescriptionCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                                  memberManager, gangManager);
 		Argument ally = new GangAllyCommand(getPlugin(), getArgumentTree(), getArgument(), userManager, memberManager,

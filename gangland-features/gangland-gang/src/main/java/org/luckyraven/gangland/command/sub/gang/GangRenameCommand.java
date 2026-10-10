@@ -20,6 +20,7 @@ import org.luckyraven.gangland.gang.file.GangMessages;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import org.luckyraven.keystone.bean.Qualifier;
@@ -31,12 +32,12 @@ class GangRenameCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
-	private final Pattern             namePattern;
+	private final Supplier<Pattern>   namePattern;
 	private final GangMessages        gangMessages;
 
 	protected GangRenameCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                            @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
-	                            GangManager gangManager, Pattern namePattern, GangMessages gangMessages) {
+	                            GangManager gangManager, Supplier<Pattern> namePattern, GangMessages gangMessages) {
 		super(gangland, "rename", tree, parent);
 
 		this.gangland      = gangland;
@@ -91,7 +92,7 @@ class GangRenameCommand extends SubArgument {
 			String newName = args[2];
 
 			// GR-29: the same rules as create; the gang may keep its own name.
-			Optional<String> refusal = GangNameRules.check(newName, namePattern, gangManager.getGangs().values(),
+			Optional<String> refusal = GangNameRules.check(newName, namePattern.get(), gangManager.getGangs().values(),
 			                                               gang.getId());
 			if (refusal.isPresent()) {
 				user.sendMessage(GangNameRules.refusal(gangMessages, refusal.get(), newName));
