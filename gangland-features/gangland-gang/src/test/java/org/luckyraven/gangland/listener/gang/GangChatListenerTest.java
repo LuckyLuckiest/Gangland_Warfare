@@ -107,6 +107,7 @@ class GangChatListenerTest {
 
 		assertTrue(event.isCancelled());
 		verify(rex, never()).sendMessage(anyString());
+		verifyNoInteractions(userManager);
 		Runnable delivery = capturedTask();
 		delivery.run();
 

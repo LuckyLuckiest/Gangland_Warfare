@@ -135,7 +135,7 @@ class GangJoinCommandTest {
 
 		verify(vipers).addMember(user, member, head);
 		verify(member).setGangJoinDateLong(longThat(at -> at >= before && at <= System.currentTimeMillis()));
-		verify(mate).sendMessage(anyString());
+		verify(mate).sendMessage(Messages.GANG_PLAYER_JOINED.toString().replace("%player%", player.getName()));
 		verify(player).sendMessage(messages.text("Social.Joined", "&aYou joined %gang%.", "gang", "Vipers"));
 	}
 

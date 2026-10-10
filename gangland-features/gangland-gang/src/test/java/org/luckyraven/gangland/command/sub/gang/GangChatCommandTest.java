@@ -121,6 +121,23 @@ class GangChatCommandTest {
 	}
 
 	@Test
+	@DisplayName("a multi-word message dispatched through the real argument tree reaches the gang as one line")
+	void multiWord_throughTree_deliversOneLine() throws Exception {
+		when(rex.hasPermission(anyString())).thenReturn(true);
+		Tree<Argument> tree = new Tree<>();
+		Argument       gang = new Argument(mock(JavaPlugin.class), "gang", tree, null, "gang");
+		tree.add(gang.getNode());
+		gang.addSubArgument(chat(tree, gang));
+
+		gang.execute("glw", rex, new String[]{"gang", "chat", "hello", "there"});
+
+		String line = channel.format(messages, "Rex", "hello there");
+		verify(rex).sendMessage(line);
+		verify(mate).sendMessage(line);
+		verify(foe, never()).sendMessage(anyString());
+	}
+
+	@Test
 	@DisplayName("without a message the first use switches gang chat on and says so")
 	void noMessage_togglesOn() throws Exception {
 		chat().executeArgument(rex, new String[]{"gang", "chat"});
@@ -153,7 +170,11 @@ class GangChatCommandTest {
 	}
 
 	private Argument chat() {
-		return new GangChatCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class), userManager,
+		return chat(new Tree<>(), mock(Argument.class));
+	}
+
+	private Argument chat(Tree<Argument> tree, Argument parent) {
+		return new GangChatCommand(mock(JavaPlugin.class), tree, parent, userManager,
 		                           memberManager, gangManager, messages, channel);
 	}
 

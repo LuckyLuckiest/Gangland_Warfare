@@ -53,10 +53,13 @@ public final class GangChatChannel {
 		return recipients;
 	}
 
-	/** The line every gang member sees: {@code [Gang] Rex: hello}. */
+	/**
+	 * The line every gang member sees: {@code [Gang] Rex: hello}. The message goes in after the colour is applied, so
+	 * a player's own {@code &} codes stay literal text.
+	 */
 	public String format(GangMessages messages, String senderName, String message) {
-		return messages.text("Social.Chat_Format", "&a[Gang] &f%player%&7: &f%message%",
-		                     "player", senderName, "message", message);
+		return messages.text("Social.Chat_Format", "&a[Gang] &f%player%&7: &f%message%", "player", senderName)
+		               .replace("%message%", message);
 	}
 
 	/** Sends one gang line to every online member of {@code gangId}. */

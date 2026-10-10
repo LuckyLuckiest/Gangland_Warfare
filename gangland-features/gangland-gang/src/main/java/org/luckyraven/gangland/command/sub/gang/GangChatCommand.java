@@ -60,7 +60,8 @@ final class GangChatCommand extends SubArgument {
 			Player player = (Player) sender;
 			if (channel.toggle(player.getUniqueId())) {
 				sender.sendMessage(messages.text("Social.Chat_On",
-				                                 "&aGang chat on: what you type goes to your gang only. &7/glw gang chat again to switch it off."));
+				                                 "&aGang chat on: what you type goes to your gang only. "
+				                                 + "&7/glw gang chat again to switch it off."));
 			} else {
 				sender.sendMessage(messages.text("Social.Chat_Off", "&7Gang chat off."));
 			}
@@ -68,7 +69,7 @@ final class GangChatCommand extends SubArgument {
 	}
 
 	private Argument messageArgument(JavaPlugin gangland, Tree<Argument> tree) {
-		return new OptionalArgument(gangland, tree, (argument, sender, args) -> {
+		OptionalArgument message = new OptionalArgument(gangland, tree, (argument, sender, args) -> {
 			Gang gang = senderGang(sender);
 			if (gang == null) {
 				return;
@@ -78,6 +79,9 @@ final class GangChatCommand extends SubArgument {
 			channel.broadcast(messages, gang.getId(), ((Player) sender).getName(), text, Bukkit.getOnlinePlayers(),
 			                  this::gangIdOf);
 		}, sender -> List.of("<message>"));
+		// Greedy, so the words after "chat" all reach the action (Keystone stops early on a non-greedy optional).
+		message.setGreedy(true);
+		return message;
 	}
 
 	/** The sender's gang, or {@code null} after telling a sender with no gang (or the console) so. */

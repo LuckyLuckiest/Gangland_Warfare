@@ -86,6 +86,12 @@ class GangChatChannelTest {
 	}
 
 	@Test
+	@DisplayName("colour codes typed in the message stay literal: they are not rendered to the gang")
+	void format_keepsMessageColourCodesLiteral() {
+		assertEquals("[Gang] Rex: &chi", ChatColor.stripColor(channel.format(messages, "Rex", "&chi")));
+	}
+
+	@Test
 	@DisplayName("toggling twice switches gang chat on and then off")
 	void toggle_onThenOff() {
 		UUID id = UUID.randomUUID();
