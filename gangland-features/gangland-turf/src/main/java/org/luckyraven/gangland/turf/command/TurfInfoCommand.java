@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.turf.command;
 
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.keystone.command.argument.Argument;
@@ -19,6 +20,7 @@ import org.luckyraven.gangland.turf.data.TurfRuntimeState;
 import org.luckyraven.gangland.turf.listener.GangDisplayNameResolver;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.selection.WandSelectionManager;
+import org.luckyraven.gangland.util.GanglandChatUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -125,18 +127,23 @@ class TurfInfoCommand extends SubArgument {
 	}
 
 	private Turf find(String token) {
+		Turf byId = null;
 		try {
-			return turfs.get(Integer.parseInt(token));
-		} catch (NumberFormatException exception) {
-			return turfs.getAll().stream()
-					.filter(turf -> token(turf).equalsIgnoreCase(token))
-					.findFirst()
-					.orElse(null);
+			byId = turfs.get(Integer.parseInt(token));
+		} catch (NumberFormatException ignored) {
+			// not an id: the name match below handles it
 		}
+		if (byId != null) {
+			return byId;
+		}
+		return turfs.getAll().stream()
+				.filter(turf -> token(turf).equalsIgnoreCase(token))
+				.findFirst()
+				.orElse(null);
 	}
 
-	/** The turf name as one typed token: colour codes removed, spaces removed. */
+	/** The turf name as one typed token: colour codes and hex colours removed, spaces removed. */
 	private static String token(Turf turf) {
-		return turf.getDisplayName().replaceAll("(?i)[&§][0-9a-fk-or]", "").replace(" ", "");
+		return ChatColor.stripColor(GanglandChatUtil.color(turf.getDisplayName())).replace(" ", "");
 	}
 }

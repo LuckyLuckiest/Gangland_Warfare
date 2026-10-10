@@ -2,6 +2,8 @@ package org.luckyraven.gangland.turf.listener;
 
 import org.luckyraven.gangland.turf.config.TurfMessages;
 
+import java.util.Map;
+
 /**
  * Pure text for the capture boss bar: the time left at the current pace and the title line. Bukkit-free so the pace
  * rule can be tested on its own. W2 replaces the pace rule (guards, plurality); keep this small.
@@ -26,6 +28,38 @@ public final class BossBarText {
 		}
 		double remaining = Math.max(0.0, 100.0 - progress) * durationSeconds / (net * 100.0);
 		return (long) Math.ceil(remaining);
+	}
+
+	/**
+	 * The net rate the seconds-left formula runs on. The unclaimed CLAIM phase is global (anyone inside fills it at one
+	 * attacker's rate), so its pace is 1 whenever anyone is inside and 0 otherwise. Every other phase is attackers minus
+	 * defenders.
+	 *
+	 * @param globalClaimPhase true for an unclaimed turf in the CLAIM phase
+	 * @param attackers        the challenger's count inside
+	 * @param defenders        the defending count inside
+	 * @return the pace to pass to {@link #secondsLeft}
+	 */
+	public static int pace(boolean globalClaimPhase, int attackers, int defenders) {
+		if (globalClaimPhase) {
+			return attackers + defenders > 0 ? 1 : 0;
+		}
+		return attackers - defenders;
+	}
+
+	/**
+	 * Defenders of an unclaimed turf: every gang inside except the challenger.
+	 *
+	 * @param inside       people inside per gang id
+	 * @param challengerId the challenging gang id, or null
+	 * @return the number of people inside who are not in the challenging gang
+	 */
+	public static int unclaimedDefenders(Map<Integer, Integer> inside, Integer challengerId) {
+		return inside.entrySet()
+				.stream()
+				.filter(entry -> !entry.getKey().equals(challengerId))
+				.mapToInt(Map.Entry::getValue)
+				.sum();
 	}
 
 	/**

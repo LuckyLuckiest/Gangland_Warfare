@@ -69,8 +69,6 @@ public final class TurfBossBarListener implements Listener {
 	private final Map<Integer, Map<UUID, BarPair>> barsByTurf              = new HashMap<>();
 	private final Map<Integer, Double>             lastClaimProgress       = new HashMap<>();
 	private final Map<Integer, Double>             lastConsolidateProgress = new HashMap<>();
-	/** Last title pushed to the consolidate bars of each turf; setTitle runs only when the title changes. */
-	private final Map<Integer, String>             lastTitles              = new HashMap<>();
 
 	public TurfBossBarListener(JavaPlugin plugin,
 	                           TurfManager turfs,
@@ -246,7 +244,6 @@ public final class TurfBossBarListener implements Listener {
 	private void clearTurf(int turfId) {
 		lastClaimProgress.remove(turfId);
 		lastConsolidateProgress.remove(turfId);
-		lastTitles.remove(turfId);
 		Map<UUID, BarPair> perViewer = barsByTurf.remove(turfId);
 		if (perViewer == null) {
 			return;
@@ -284,15 +281,14 @@ public final class TurfBossBarListener implements Listener {
 			boolean claimAdvanced   = claimProgress > prevClaim + 0.0005;
 			boolean consAdvanced    = consolidateProgress > prevConsolidate + 0.0005;
 
-			String  title        = bossTitle(turf, state);
-			boolean titleChanged = !title.equals(lastTitles.get(turfId));
+			String title = bossTitle(turf, state);
 
 			for (BarPair pair : entry.getValue().values()) {
 				if (pair.claim() != null) {
 					pair.claim().setProgress(claimProgress);
 				}
 				pair.consolidate().setProgress(consolidateProgress);
-				if (titleChanged) {
+				if (!title.equals(pair.consolidate().getTitle())) {
 					pair.consolidate().setTitle(title);
 				}
 				if (claimAdvanced || consAdvanced) {
@@ -303,29 +299,26 @@ public final class TurfBossBarListener implements Listener {
 			}
 			lastClaimProgress.put(turfId, claimProgress);
 			lastConsolidateProgress.put(turfId, consolidateProgress);
-			lastTitles.put(turfId, title);
 		}
 	}
 
 	/**
 	 * The consolidate bar title at this moment. Owned turf: attackers = the challenger's count inside, defenders = owner
 	 * and allies inside, duration = the capture duration. Unclaimed turf: attackers = the challenger's count, defenders
-	 * = every other gang inside, duration = the current phase's length, so the time shown is the time left in that
-	 * phase. W2 replaces the pace rule; see {@link BossBarText}.
+	 * = every other gang inside, duration = the current phase's length. The time shown is the time left in that phase
+	 * at the pace {@link BossBarText#pace} gives: the counts are shown as they are, but the CLAIM phase is global so its
+	 * pace is 1 whenever anyone is inside. W2 replaces the pace rule; see {@link BossBarText}.
 	 */
 	private String bossTitle(Turf turf, TurfRuntimeState state) {
 		Integer challengerId = state.getChallengerGangId();
 		Map<Integer, Integer> inside = state.getChallengersInside();
 		int attackers = challengerId == null ? 0 : inside.getOrDefault(challengerId, 0);
 
-		int defenders;
-		int duration;
+		int     defenders;
+		int     duration;
+		boolean globalClaim = turf.isUnclaimed() && state.getPhase() == CapturePhase.CLAIM;
 		if (turf.isUnclaimed()) {
-			defenders = inside.entrySet()
-					.stream()
-					.filter(entry -> !entry.getKey().equals(challengerId))
-					.mapToInt(Map.Entry::getValue)
-					.sum();
+			defenders = BossBarText.unclaimedDefenders(inside, challengerId);
 			duration  = state.getPhase() == CapturePhase.CLAIM
 			            ? settings.getUnclaimedPhase1Seconds()
 			            : settings.getUnclaimedPhase2Seconds();
@@ -334,7 +327,8 @@ public final class TurfBossBarListener implements Listener {
 			duration  = settings.getCaptureDurationSeconds();
 		}
 
-		long   secondsLeft = BossBarText.secondsLeft(state.getCaptureProgress(), attackers - defenders, duration);
+		int    pace        = BossBarText.pace(globalClaim, attackers, defenders);
+		long   secondsLeft = BossBarText.secondsLeft(state.getCaptureProgress(), pace, duration);
 		String time        = secondsLeft < 0
 		                     ? text.text("Info.BossBar_Stalled", "stalled")
 		                     : messages.formatDuration(secondsLeft);

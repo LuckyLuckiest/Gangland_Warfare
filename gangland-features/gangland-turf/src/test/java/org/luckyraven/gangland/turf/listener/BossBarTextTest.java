@@ -113,7 +113,7 @@ class BossBarTextTest {
 	@Test
 	@DisplayName("the defenders of an unclaimed turf are every gang inside except the challenger")
 	void unclaimedDefenders_sumsEveryOtherGang() {
-		assertEquals(3, BossBarText.unclaimedDefenders(Map.of(7, 2, 9, 1), 7));
+		assertEquals(1, BossBarText.unclaimedDefenders(Map.of(7, 2, 9, 1), 7));
 	}
 
 	@Test
