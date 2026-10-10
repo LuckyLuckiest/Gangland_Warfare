@@ -1,6 +1,8 @@
 package org.luckyraven.gangland.gang;
 
 import org.bukkit.OfflinePlayer;
+import org.luckyraven.gangland.gang.database.repositories.meta.GangMigration;
+import org.luckyraven.gangland.gang.database.repositories.meta.GangMigrationRepository;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.BeforeEach;
@@ -152,6 +154,9 @@ class GangConfigBeanGraphTest {
 
 		IRepository<RankPermission> rankPermissionRepo = mock(IRepository.class);
 		when(registry.getRepository(RankPermission.class)).thenReturn(rankPermissionRepo);
+
+		// GangConfig.gangMigrations casts this repository to GangMigrationsContract (W2-K).
+		when(registry.getRepository(GangMigration.class)).thenReturn(mock(GangMigrationRepository.class));
 
 		return registry;
 	}

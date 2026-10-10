@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.gang.file;
 
+import org.luckyraven.gangland.gang.GangLevels;
 import lombok.CustomLog;
 import lombok.Getter;
 import org.luckyraven.keystone.persistence.FileHandler;
@@ -29,6 +30,10 @@ public class GangRules implements FileInitializer {
 	private static final String NAME_PATTERN_KEY = "Name_Pattern";
 	private static final String PRESET_KEY       = "Ranks.Preset";
 	private static final String PERMISSIONS_KEY  = "Ranks.Preset_Permissions.";
+	private static final String MAX_LEVEL_KEY    = "Progression.Max_Level";
+	private static final String BASE_XP_KEY      = "Progression.Base_Experience";
+	private static final int    DEFAULT_MAX_LEVEL = 20;
+	private static final double DEFAULT_BASE_XP  = 200.0;
 
 	private final FileHandler fileHandler;
 
@@ -36,20 +41,14 @@ public class GangRules implements FileInitializer {
 	private Pattern      namePattern;
 	@Getter
 	private List<String> rankPreset;
+	@Getter
+	private int          maxLevel;
+	@Getter
+	private double       baseExperience;
 
 	public GangRules(FileManager fileManager) {
 		this.fileHandler = fileManager.getFile(FILE_NAME);
 		initialize();
-	}
-
-	/** Highest gang level (W2 shell: 0 until commit 5 reads Progression). */
-	public int getMaxLevel() {
-		return 0;
-	}
-
-	/** XP level 1 needs (W2 shell: 0 until commit 5 reads Progression). */
-	public double getBaseExperience() {
-		return 0;
 	}
 
 	@Override
@@ -77,6 +76,10 @@ public class GangRules implements FileInitializer {
 		} else {
 			rankPreset = List.copyOf(cleaned);
 		}
+
+		maxLevel       = Math.max(1, config.getInt(MAX_LEVEL_KEY, DEFAULT_MAX_LEVEL));
+		baseExperience = Math.max(1.0, config.getDouble(BASE_XP_KEY, DEFAULT_BASE_XP));
+		GangLevels.bind(maxLevel, baseExperience);
 	}
 
 	/** Permission nodes a preset rank gets on a fresh install, trimmed; empty when the rank has none listed. */

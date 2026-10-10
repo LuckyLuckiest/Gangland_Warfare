@@ -29,6 +29,7 @@ public class GangTable extends Table<Gang> {
 		level.setDefaultValue(0);
 		experience.setDefaultValue(0D);
 		bounty.setDefaultValue(0D);
+		state.setDefaultValue(Gang.State.INVITE.name());
 		lastMemberOnlineAt.setDefaultValue(0L);
 		state.setDefaultValue(Gang.State.OPEN.name());
 

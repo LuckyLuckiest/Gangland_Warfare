@@ -61,7 +61,7 @@ public class Gang {
 	public Gang(int id) {
 		this.id      = id;
 		this.allies  = new HashSet<>();
-		this.level   = new Level();
+		this.level   = GangLevels.newLevel();
 		this.bounty  = new Bounty(IdentitySettings.getBountyEachKillValue(), IdentitySettings.getBountyTimerMultiple());
 		this.economy = new EconomyHandler(null);
 		this.members = new ArrayList<>();
@@ -71,7 +71,7 @@ public class Gang {
 		this.color       = Color.LIGHT_BLUE.name();
 		this.description = "Conquering the hood";
 		this.created     = Instant.now().toEpochMilli();
-		this.state       = State.OPEN;
+		this.state       = State.INVITE;
 	}
 
 	public static int generateId() {
@@ -231,6 +231,10 @@ public class Gang {
 				level.getExperience(), bounty.getAmount().toPlainString(), getAllyListString());
 	}
 
+	/**
+	 * OPEN = anyone may /glw gang join; INVITE = invited players only (the default since 0.17.0, D7); CLOSE = read as
+	 * INVITE (kept so old rows load).
+	 */
 	public enum State {
 		OPEN,
 		INVITE,

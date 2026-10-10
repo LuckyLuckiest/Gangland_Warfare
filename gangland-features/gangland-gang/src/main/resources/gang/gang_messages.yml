@@ -55,3 +55,12 @@ Names:
    # Another gang already has this name, ignoring case. Names are always unique.
    Taken: "&cA gang named %gang% already exists."
 # end Names
+
+# ---------------- Social: gang chat, gang join, gang recruiting (W2-P2) ----------------
+# end Social
+
+# ---------------- Bounty: gang bounties (W2-P1) ----------------
+# end Bounty
+
+# ---------------- Progression: gang levels and the disband payout (W2-P1) ----------------
+# end Progression

@@ -1,10 +1,12 @@
 package org.luckyraven.gangland.gang.member;
 
+import lombok.CustomLog;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
+import org.luckyraven.gangland.gang.database.repositories.meta.GangMigrationRepository;
 import org.luckyraven.gangland.gang.contract.MemberRepositoryContract;
 import org.luckyraven.gangland.gang.contract.RankLookupContract;
 import org.luckyraven.gangland.gang.rank.Rank;
@@ -15,6 +17,7 @@ import org.luckyraven.keystone.persistence.database.component.Table;
 
 import java.util.*;
 
+@CustomLog
 public class MemberManager implements BeanLifecycle {
 
 	private final JavaPlugin               plugin;
@@ -60,6 +63,16 @@ public class MemberManager implements BeanLifecycle {
 		}
 
 		memberRepository.setDataSupplier(members::values);
+
+		// D15 (0.17.0): contribution used to mix bank share and turf points (TF-44); every stored value resets to 0 once.
+		if (!migrations.isDone(CONTRIBUTION_MIGRATION)) {
+			for (Member member : members.values()) {
+				member.setContribution(0D);
+			}
+			GangMigrationRepository.saveThen(memberRepository, new ArrayList<>(members.values()),
+			                                 () -> migrations.markDone(CONTRIBUTION_MIGRATION));
+			log.info("Member contributions reset to 0 once (D15): disbanding now splits the bank by money deposited since");
+		}
 	}
 
 	public void initializeMemberData(Member member, Table<Member> memberTable) {

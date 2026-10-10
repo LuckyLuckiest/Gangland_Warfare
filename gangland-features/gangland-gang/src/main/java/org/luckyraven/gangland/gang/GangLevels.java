@@ -14,15 +14,22 @@ public final class GangLevels {
 	public static final double DEFAULT_BASE_EXPERIENCE = 200;
 	public static final String FORMULA                 = "base * level ^ 1.5";
 
+	private static volatile int    maxLevel       = DEFAULT_MAX_LEVEL;
+	private static volatile double baseExperience = DEFAULT_BASE_EXPERIENCE;
+
 	private GangLevels() {
 	}
 
-	/** max is raised to 1, base to 1 when lower. Stub until the W2-K shell is replaced. */
+	/** max is raised to 1, base to 1 when lower. */
 	public static void bind(int max, double base) {
+		maxLevel       = Math.max(1, max);
+		baseExperience = Math.max(1, base);
 	}
 
 	public static Level newLevel() {
-		return new Level(DEFAULT_MAX_LEVEL, DEFAULT_BASE_EXPERIENCE);
+		Level level = new Level(maxLevel, baseExperience);
+		level.setFormula(FORMULA);
+		return level;
 	}
 
 }

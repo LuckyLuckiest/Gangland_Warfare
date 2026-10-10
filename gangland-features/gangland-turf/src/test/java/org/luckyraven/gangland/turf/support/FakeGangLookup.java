@@ -16,6 +16,12 @@ import java.util.Map;
  */
 public final class FakeGangLookup implements GangLookupContract {
 
+	/** One addExperience call. */
+	public record XpCall(int gangId, double amount) {
+	}
+
+	private final List<XpCall> experience = new ArrayList<>();
+
 	private final Map<Integer, Gang> byId = new LinkedHashMap<>();
 
 	public void register(Gang gang) {
@@ -30,6 +36,15 @@ public final class FakeGangLookup implements GangLookupContract {
 	@Override
 	public Collection<Gang> getAll() {
 		return new ArrayList<>(byId.values());
+	}
+
+	@Override
+	public void addExperience(Gang gang, double amount) {
+		experience.add(new XpCall(gang.getId(), amount));
+	}
+
+	public List<XpCall> experienceCalls() {
+		return new ArrayList<>(experience);
 	}
 
 	public List<Gang> allGangs() {

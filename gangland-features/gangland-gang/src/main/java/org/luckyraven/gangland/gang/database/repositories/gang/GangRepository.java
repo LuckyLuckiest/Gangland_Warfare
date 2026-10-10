@@ -46,7 +46,7 @@ public class GangRepository extends AbstractRepository<Gang> {
 			double bounty             = num(result[v++]).doubleValue();
 			long   created            = num(result[v++]).longValue();
 			long   lastMemberOnlineAt = num(result[v++]).longValue();
-			String state              = text(result[v], "OPEN");
+			String state              = text(result[v], "INVITE");
 
 			Gang gang = new Gang(id);
 
@@ -95,14 +95,11 @@ public class GangRepository extends AbstractRepository<Gang> {
 		return raw instanceof Number number ? number : 0;
 	}
 
+	/** D7: OPEN stays OPEN; INVITE, CLOSE, NULL, "null" and anything unknown read as INVITE (never OPEN). */
 	static Gang.State parseState(String raw) {
-		if (raw == null || raw.equals("null")) {
+		if ("OPEN".equals(raw)) {
 			return Gang.State.OPEN;
 		}
-		try {
-			return Gang.State.valueOf(raw);
-		} catch (IllegalArgumentException ignored) {
-			return Gang.State.OPEN;
-		}
+		return Gang.State.INVITE;
 	}
 }

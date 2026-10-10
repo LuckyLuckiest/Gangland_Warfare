@@ -1,16 +1,19 @@
 package org.luckyraven.gangland.gang;
 
+import lombok.CustomLog;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
+import org.luckyraven.gangland.gang.database.repositories.meta.GangMigrationRepository;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@CustomLog
 public class GangManager implements BeanLifecycle, GangLookupContract {
 
 	private final IRepository<Gang>              gangRepository;
@@ -53,6 +56,22 @@ public class GangManager implements BeanLifecycle, GangLookupContract {
 		// Set data suppliers so repositoryRegistry.saveAll() can persist gangs and alliances
 		gangRepository.setDataSupplier(gangs::values);
 		allianceRepository.setDataSupplier(this::buildAllAlliances);
+
+		// D7 (0.17.0): every stored gang becomes invite-only once; from now on only /glw gang recruiting open opens one.
+		if (!migrations.isDone(STATE_MIGRATION)) {
+			for (Gang gang : gangs.values()) {
+				gang.setState(Gang.State.INVITE);
+			}
+			GangMigrationRepository.saveThen(gangRepository, new ArrayList<>(gangs.values()),
+			                                 () -> migrations.markDone(STATE_MIGRATION));
+			log.info("Gang states migrated: every gang is invite-only (D7); /glw gang recruiting open opens one");
+		}
+	}
+
+	/** W2-P1: adds XP and levels the gang up, firing one GangLevelUpEvent per level gained. Stub: does nothing yet. */
+	@Override
+	public void addExperience(Gang gang, double amount) {
+		// W2-P1
 	}
 
 	public void add(Gang gang) {

@@ -18,7 +18,8 @@ Ranks:
       - member
       - officer
       - owner
-   # Gang permission nodes each preset rank gets on that fresh install. The top rank may do everything anyway.
+   # Gang permission nodes each preset rank gets on that fresh install (gangland.turf.upgrade lets a rank buy guards and
+   # boosts at the Quartermaster). The top rank may do everything anyway.
    # A rank does not inherit the nodes of the ranks below it, so list them again.
    Preset_Permissions:
       member:
@@ -28,4 +29,16 @@ Ranks:
          - gangland.gang.withdraw
          - gangland.gang.invite
          - gangland.gang.description
+         - gangland.turf.upgrade
 # end Ranks
+
+# ---------------- Progression ----------------
+Progression:
+   # Highest gang level. Gang XP comes only from turf the gang holds while a member is online (turf_rules.yml Income).
+   Max_Level: 20
+   # XP level 1 needs. Level n needs Base_Experience x n^1.5 more than level n-1 (200, then 566, then 1,039 ...).
+   # With one turf paying every 10 minutes (1 XP a payout) a gang reaches level 1 in about 1.4 days, level 2 in about
+   # 5, level 3 in about 12. Each level lets the gang hold one more turf (turf_rules.yml Turf_Cap). Applies after a
+   # restart.
+   Base_Experience: 200
+# end Progression

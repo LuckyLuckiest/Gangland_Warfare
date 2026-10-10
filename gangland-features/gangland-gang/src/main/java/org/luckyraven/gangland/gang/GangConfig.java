@@ -4,6 +4,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.core.permission.PermissionRegistryContract;
 import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
+import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
+import org.luckyraven.gangland.gang.database.repositories.meta.GangMigration;
 import org.luckyraven.gangland.gang.contract.GangMessageContract;
 import org.luckyraven.gangland.gang.contract.GangPermissionBridgeContract;
 import org.luckyraven.gangland.gang.contract.GangSettingsContract;
@@ -120,10 +122,16 @@ public final class GangConfig {
 	}
 
 	@Bean
+	public GangMigrationsContract gangMigrations(RepositoryRegistry registry) {
+		return (GangMigrationsContract) registry.getRepository(GangMigration.class);
+	}
+
+	@Bean
 	public GangManager gangManager(RepositoryRegistry repositoryRegistry,
-	                               GangAllianceRepositoryContract allianceRepository) {
+	                               GangAllianceRepositoryContract allianceRepository,
+	                               GangMigrationsContract migrations) {
 		IRepository<Gang> gangRepository = repositoryRegistry.getRepository(Gang.class);
-		return new GangManager(gangRepository, allianceRepository);
+		return new GangManager(gangRepository, allianceRepository, migrations);
 	}
 
 	/**
@@ -148,8 +156,8 @@ public final class GangConfig {
 	@Bean
 	public MemberManager memberManager(JavaPlugin plugin, DatabaseHandler databaseHandler,
 	                                   MemberRepositoryContract memberRepository, GangLookupContract gangLookup,
-	                                   RankLookupContract rankLookup) {
-		return new MemberManager(plugin, databaseHandler, memberRepository, gangLookup, rankLookup);
+	                                   RankLookupContract rankLookup, GangMigrationsContract migrations) {
+		return new MemberManager(plugin, databaseHandler, memberRepository, gangLookup, rankLookup, migrations);
 	}
 
 	/**

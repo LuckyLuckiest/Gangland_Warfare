@@ -54,7 +54,7 @@ public final class GangPermissions {
 	/** Buy guards and boosts at the Quartermaster (W2-Q). Not in ALL until W2-K commit 5. */
 	public static final String TURF_UPGRADE = "gangland.turf.upgrade";
 
-	public static final List<String> ALL = List.of(WITHDRAW, DEPOSIT, RENAME, DESCRIPTION, DISPLAY, COLOR, INVITE, ALLY);
+	public static final List<String> ALL = List.of(WITHDRAW, DEPOSIT, RENAME, DESCRIPTION, DISPLAY, COLOR, INVITE, ALLY, TURF_UPGRADE);
 
 	/**
 	 * Staff override that skips the rank-hierarchy checks of promote, demote and {@code option gang rank}. Kept out of
