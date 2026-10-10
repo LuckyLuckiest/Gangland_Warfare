@@ -17,10 +17,10 @@ import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.data.TurfRuntimeState;
+import org.luckyraven.gangland.turf.events.TurfOwnerChangedEvent;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.support.CaptureFixtures;
 import org.luckyraven.gangland.turf.support.FakeGangLookup;
-import org.luckyraven.gangland.turf.support.FakeUserLookup;
 import org.luckyraven.gangland.turf.support.YamlFixture;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.keystone.testkit.BukkitStatics;
@@ -62,7 +62,6 @@ class GangPresenceListenerTest {
 	private static final int  RIVAL  = 9;
 
 	private final FakeGangLookup gangs = new FakeGangLookup();
-	private final FakeUserLookup users = new FakeUserLookup();
 	private final GangMembership membership = new GangMembership();
 	private final GangMembershipView view = mock(GangMembershipView.class);
 	private final CaptureRules   rules = new CaptureRules(CaptureRules.Window.OWNERS_ONLINE, 120, 24, 15, 60, 10, 4);
@@ -96,7 +95,7 @@ class GangPresenceListenerTest {
 		gangs.register(rival);
 
 		var settings = CaptureFixtures.settings(180, 15, 15, 10, new int[]{25, 50, 75}, 90, 90);
-		tracker = new GangPresenceTracker(mock(org.bukkit.plugin.java.JavaPlugin.class), gangs, users, 10,
+		tracker = new GangPresenceTracker(mock(org.bukkit.plugin.java.JavaPlugin.class), gangs, membership, 10,
 		                                  mock(Runnable.class), () -> rules, settings);
 
 		docks = new Turf(1, "Docks", new CuboidRegion("world", 0, 0, 10, 10), OWNER, BigDecimal.TEN, 0L, 0L);
@@ -206,6 +205,54 @@ class GangPresenceListenerTest {
 		listener.onJoin(join(player));
 
 		assertEquals(0L, tracker.wokeAt(OWNER));
+		verify(player, never()).sendMessage(anyString());
+	}
+
+	private TurfOwnerChangedEvent ownerChanged(Integer newOwnerGangId) {
+		return new TurfOwnerChangedEvent(docks, null, newOwnerGangId, TurfOwnerChangedEvent.Cause.CAPTURE);
+	}
+
+	@Test
+	@DisplayName("owner change: a qualifying member online stamps the new owner at once, with no wake-up (T-248)")
+	void ownerChanged_withQualifyingMemberOnline_stampsWithoutWakeUp() throws IOException {
+		setUp(0L);
+		Player player = ownerPlayer(member(UUID.randomUUID(), 3 * DAY));
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			bukkit.statics().when(Bukkit::getOnlinePlayers).thenAnswer(i -> List.of(player));
+			listener.onOwnerChanged(ownerChanged(OWNER));
+		}
+
+		verify(owner).setLastMemberOnlineAt(anyLong());
+		assertEquals(0L, tracker.wokeAt(OWNER));
+	}
+
+	@Test
+	@DisplayName("owner change: no qualifying member online stamps nothing")
+	void ownerChanged_noMemberOnline_stampsNothing() throws IOException {
+		setUp(0L);
+		ownerPlayer(member(UUID.randomUUID(), 3 * DAY));
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			bukkit.statics().when(Bukkit::getOnlinePlayers).thenAnswer(i -> List.of());
+			listener.onOwnerChanged(ownerChanged(OWNER));
+		}
+
+		verify(owner, never()).setLastMemberOnlineAt(anyLong());
+	}
+
+	@Test
+	@DisplayName("owner change to unclaimed (null new owner) is ignored")
+	void ownerChanged_toUnclaimed_ignored() throws IOException {
+		setUp(0L);
+		Player player = ownerPlayer(member(UUID.randomUUID(), 3 * DAY));
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			bukkit.statics().when(Bukkit::getOnlinePlayers).thenAnswer(i -> List.of(player));
+			listener.onOwnerChanged(ownerChanged(null));
+		}
+
+		verify(owner, never()).setLastMemberOnlineAt(anyLong());
 		verify(player, never()).sendMessage(anyString());
 	}
 

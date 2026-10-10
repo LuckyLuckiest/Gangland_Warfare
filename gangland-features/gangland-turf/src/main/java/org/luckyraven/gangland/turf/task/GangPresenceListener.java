@@ -16,6 +16,7 @@ import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.data.TurfRuntimeState;
+import org.luckyraven.gangland.turf.events.TurfOwnerChangedEvent;
 import org.luckyraven.gangland.turf.listener.GangDisplayNameResolver;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
@@ -68,6 +69,11 @@ public final class GangPresenceListener implements Listener {
 			sendCampingLines(player, gang, rules);
 		}
 		gang.setLastMemberOnlineAt(now);
+	}
+
+	// RED STUB (rf-presence): handler body lands with T-248.
+	@EventHandler
+	public void onOwnerChanged(TurfOwnerChangedEvent event) {
 	}
 
 	@EventHandler

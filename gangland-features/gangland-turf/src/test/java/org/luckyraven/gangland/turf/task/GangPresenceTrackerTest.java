@@ -7,14 +7,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.luckyraven.gangland.core.user.UserLookupContract;
+import org.luckyraven.gangland.data.gang.GangMembership;
+import org.luckyraven.gangland.data.gang.GangMembershipView;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.turf.capture.CaptureRules;
 import org.luckyraven.gangland.turf.support.CaptureFixtures;
 import org.luckyraven.gangland.turf.support.FakeGangLookup;
-import org.luckyraven.gangland.turf.support.FakeUserLookup;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 
 import java.util.List;
@@ -55,7 +55,7 @@ class GangPresenceTrackerTest {
 		Runnable   release = mock(Runnable.class);
 		GangPresenceTracker tracker = new GangPresenceTracker(plugin,
 		                                                      mock(GangLookupContract.class),
-		                                                      mock(UserLookupContract.class),
+		                                                      new GangMembership(),
 		                                                      10,
 		                                                      release, () -> CaptureRules.LEGACY,
 		                                                      CaptureFixtures.settings(180, 15, 15, 10, new int[]{25, 50, 75}, 90, 90));
@@ -73,7 +73,7 @@ class GangPresenceTrackerTest {
 		JavaPlugin plugin = mock(JavaPlugin.class);
 		GangPresenceTracker tracker = new GangPresenceTracker(plugin,
 		                                                      mock(GangLookupContract.class),
-		                                                      mock(UserLookupContract.class),
+		                                                      new GangMembership(),
 		                                                      10,
 		                                                      mock(Runnable.class), () -> CaptureRules.LEGACY,
 		                                                      CaptureFixtures.settings(180, 15, 15, 10, new int[]{25, 50, 75}, 90, 90));
@@ -93,15 +93,19 @@ class GangPresenceTrackerTest {
 	}
 
 	private FakeGangLookup gangs;
-	private FakeUserLookup users;
+	private GangMembership membership;
+	private GangMembershipView view;
 
 	private void setUpWorld() {
 		gangs = new FakeGangLookup();
-		users = new FakeUserLookup();
+		membership = new GangMembership();
+		view = mock(GangMembershipView.class);
+		when(view.gangIdOf(any(UUID.class))).thenReturn(-1);
+		membership.install(view);
 	}
 
 	private GangPresenceTracker tracker(CaptureRules rules) {
-		return new GangPresenceTracker(mock(JavaPlugin.class), gangs, users, 10, mock(Runnable.class),
+		return new GangPresenceTracker(mock(JavaPlugin.class), gangs, membership, 10, mock(Runnable.class),
 		                               () -> rules,
 		                               CaptureFixtures.settings(180, 15, 15, 10, new int[]{25, 50, 75}, 90, 90));
 	}
@@ -128,7 +132,7 @@ class GangPresenceTrackerTest {
 	private Player onlineMember(UUID uuid) {
 		Player player = mock(Player.class);
 		when(player.getUniqueId()).thenReturn(uuid);
-		users.register(player, CaptureFixtures.userInGang(GANG_ID));
+		when(view.gangIdOf(uuid)).thenReturn(GANG_ID);
 		return player;
 	}
 
@@ -241,6 +245,22 @@ class GangPresenceTrackerTest {
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
 			bukkit.statics().when(Bukkit::getOnlinePlayers).thenAnswer(i -> List.of(player));
 			tracker(AGE_0).heartbeat(NOW);
+		}
+
+		verify(gang).setLastMemberOnlineAt(NOW);
+	}
+
+	@Test
+	@DisplayName("heartbeat: the gang comes from GangMembership, not the user record (T-260)")
+	void heartbeat_readsMembership_notTheUserRecord() {
+		setUpWorld();
+		UUID uuid = UUID.randomUUID();
+		Gang gang = gang(10 * DAY, 0L, member(uuid, 3 * DAY));
+		Player player = onlineMember(uuid);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			bukkit.statics().when(Bukkit::getOnlinePlayers).thenAnswer(i -> List.of(player));
+			tracker(AGE_24H).heartbeat(NOW);
 		}
 
 		verify(gang).setLastMemberOnlineAt(NOW);

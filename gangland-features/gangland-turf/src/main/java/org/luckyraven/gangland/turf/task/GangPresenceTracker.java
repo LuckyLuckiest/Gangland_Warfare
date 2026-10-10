@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.member.Member;
@@ -37,6 +38,7 @@ public final class GangPresenceTracker implements BeanLifecycle {
 	private final JavaPlugin         plugin;
 	private final GangLookupContract gangs;
 	private final UserLookupContract users;
+	private final GangMembership     membership;
 	private final int                inactivityAutoReleaseDays;
 	private final Runnable           turfReleaseFn;
 	private final Supplier<CaptureRules> rules;
@@ -56,6 +58,25 @@ public final class GangPresenceTracker implements BeanLifecycle {
 		this.plugin                    = plugin;
 		this.gangs                     = gangs;
 		this.users                     = users;
+		this.membership                = null;
+		this.inactivityAutoReleaseDays = inactivityAutoReleaseDays;
+		this.turfReleaseFn             = turfReleaseFn;
+		this.rules                     = rules;
+		this.settings                  = settings;
+	}
+
+	// RED STUB (rf-presence): membership-based constructor; heartbeat still reads the user record.
+	public GangPresenceTracker(JavaPlugin plugin,
+	                           GangLookupContract gangs,
+	                           GangMembership membership,
+	                           int inactivityAutoReleaseDays,
+	                           Runnable turfReleaseFn,
+	                           Supplier<CaptureRules> rules,
+	                           CaptureSettings settings) {
+		this.plugin                    = plugin;
+		this.gangs                     = gangs;
+		this.users                     = null;
+		this.membership                = membership;
 		this.inactivityAutoReleaseDays = inactivityAutoReleaseDays;
 		this.turfReleaseFn             = turfReleaseFn;
 		this.rules                     = rules;
@@ -149,7 +170,7 @@ public final class GangPresenceTracker implements BeanLifecycle {
 	void heartbeat(long now) {
 		CaptureRules current = rules.get();
 		for (Player player : Bukkit.getOnlinePlayers()) {
-			User<Player> user = users.findByPlayer(player);
+			User<Player> user = users == null ? null : users.findByPlayer(player);
 			if (user == null || !user.hasGang()) {
 				continue;
 			}
