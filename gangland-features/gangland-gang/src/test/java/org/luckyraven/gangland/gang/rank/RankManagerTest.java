@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.gang.GangSettings;
+import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.gangland.core.permission.PermissionRegistryContract;
 import org.luckyraven.gangland.gang.database.repositories.rank.RankParentRepository;
 import org.luckyraven.gangland.gang.database.repositories.rank.RankRepository;
@@ -17,6 +18,9 @@ import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
 import java.util.List;
 import java.util.Set;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -41,6 +45,7 @@ class RankManagerTest {
 	private IRepository<Permission>         permissionRepo;
 	private IRepository<RankPermission>     rankPermissionRepo;
 	private PermissionRegistryContract      permissionRegistry;
+	private GangRules                       rules;
 	private RankManager                     manager;
 
 	@SuppressWarnings("unchecked")
@@ -54,6 +59,8 @@ class RankManagerTest {
 		permissionRepo     = mock(IRepository.class);
 		rankPermissionRepo = mock(IRepository.class);
 		permissionRegistry = mock(PermissionRegistryContract.class);
+		rules              = mock(GangRules.class);
+		when(rules.getRankPreset()).thenReturn(List.of("member", "officer", "owner"));
 
 		when(registry.getRepository(Rank.class)).thenReturn(rankRepo);
 		when(registry.getRepository(RankParent.class)).thenReturn(rankParentRepo);
@@ -65,7 +72,7 @@ class RankManagerTest {
 		when(permissionRepo.loadAll()).thenReturn(List.of());
 		when(rankPermissionRepo.loadAll()).thenReturn(Set.of());
 
-		manager = new RankManager(registry, permissionRegistry);
+		manager = new RankManager(registry, permissionRegistry, rules);
 	}
 
 	@AfterEach
@@ -222,20 +229,18 @@ class RankManagerTest {
 		}
 
 		@Test
-		@DisplayName("Observation #13 (gangs-ranks-mail.md): when no persisted rank matches Gang.Rank.Head, a brand-new "
-		             + "detached Rank becomes the tree root instead of failing loudly")
-		void initialize_headNameMissing_installsDetachedFallbackRoot() {
+		@DisplayName("GR-13: when no persisted rank matches Gang.Rank.Head, the persisted root is kept and nothing is created")
+		void initialize_headNameMissing_keepsPersistedRootAndWarns() {
 			GangSettings.bind(new FakeGangSettingsContract().withRankHead("does-not-exist"));
 			Rank onlyRank = new Rank("member", 2);
 			when(rankRepo.loadAll()).thenReturn(List.of(onlyRank));
 
 			manager.initialize();
 
-			Rank root = manager.getRankTree().getRoot().getData();
-			assertEquals("does-not-exist", root.getName());
-			assertNotSame(onlyRank, root, "the fallback root is a fresh Rank, not the persisted one");
-			assertFalse(manager.getRanks().containsValue(root),
-					"the fallback root is never added to the ranks map, so it is unreachable from RankManager.get(...)");
+			assertSame(onlyRank, manager.getRankTree().getRoot().getData(), "the persisted root stays the root");
+			assertFalse(manager.getRanks().values().stream().anyMatch(rank -> rank.getName().equals("does-not-exist")),
+					"no rank named after the renamed head is invented on a non-empty table");
+			verify(rankRepo, never()).save(any());
 		}
 
 		@Test
@@ -257,33 +262,65 @@ class RankManagerTest {
 	class SeedInitialRanksTest {
 
 		/**
-		 * Before this gate, rank seeding ran once from {@code GanglandDatabase.insertInitialData()} — never from
-		 * {@code RankManager} at all. Concrete-class mocks (not the {@code IRepository<Rank>} interface mocks the
-		 * outer {@code setUp()} uses) so {@code instanceof RankRepository}/{@code RankParentRepository} — the guard
-		 * {@code seedInitialRanks} actually branches on — passes.
+		 * D13 = A: the preset ladder is written only when the rank table is empty (a fresh install). Concrete-class
+		 * mocks so {@code instanceof RankRepository}/{@code RankParentRepository} - the guard RankManager branches on -
+		 * passes.
 		 */
 		@Test
-		@DisplayName("initialize() seeds head/tail ranks and their parent relation before loadAll() reads them")
-		void initialize_seedsHeadAndTailBeforeLoading() throws Exception {
-			RepositoryRegistry      seedRegistry = mock(RepositoryRegistry.class);
-			RankRepository          realRankRepo = mock(RankRepository.class);
-			RankParentRepository    realParentRepo = mock(RankParentRepository.class);
+		@DisplayName("GR-13 / D13 A: an empty rank table seeds the preset ladder member -> officer -> owner, then loads it")
+		void initialize_emptyTable_seedsPreset() {
+			RepositoryRegistry   seedRegistry = mock(RepositoryRegistry.class);
+			RankRepository       realRankRepo = mock(RankRepository.class);
+			RankParentRepository realParentRepo = mock(RankParentRepository.class);
 
 			when(seedRegistry.getRepository(Rank.class)).thenReturn(realRankRepo);
 			when(seedRegistry.getRepository(RankParent.class)).thenReturn(realParentRepo);
 			when(seedRegistry.getRepository(Permission.class)).thenReturn(permissionRepo);
 			when(seedRegistry.getRepository(RankPermission.class)).thenReturn(rankPermissionRepo);
 
-			when(realRankRepo.insertInitialRanks(GangSettings.getGangRankHead(), GangSettings.getGangRankTail()))
-					.thenReturn(new int[]{2, 1});
-			when(realRankRepo.loadAll()).thenReturn(List.of());
-			when(realParentRepo.loadAll()).thenReturn(Set.of());
+			Rank member  = new Rank("member", 1);
+			Rank officer = new Rank("officer", 2);
+			Rank owner   = new Rank("owner", 3);
+			when(realRankRepo.totalRanks()).thenReturn(0);
+			when(realRankRepo.loadAll()).thenReturn(List.of(member, officer, owner));
+			when(realParentRepo.loadAll()).thenReturn(Set.of(new RankParent(1, 2), new RankParent(2, 3)));
+			when(rules.getPresetPermissions("member")).thenReturn(List.of("gangland.gang.deposit"));
+			when(rules.getPresetPermissions("officer")).thenReturn(List.of("gangland.gang.deposit",
+			                                                              "gangland.gang.invite"));
 
-			RankManager seedingManager = new RankManager(seedRegistry, permissionRegistry);
+			RankManager seedingManager = new RankManager(seedRegistry, permissionRegistry, rules);
 			seedingManager.initialize();
 
-			verify(realRankRepo).insertInitialRanks(GangSettings.getGangRankHead(), GangSettings.getGangRankTail());
-			verify(realParentRepo).insertInitialRelation(2, 1);
+			verify(realRankRepo, times(3)).save(any(Rank.class));
+			verify(realParentRepo).insertInitialRelation(1, 2);
+			verify(realParentRepo).insertInitialRelation(2, 3);
+			assertEquals("member", seedingManager.getRankTree().getRoot().getData().getName());
+			assertTrue(member.contains("gangland.gang.deposit"), "the member rank gets its preset node");
+			assertTrue(officer.contains("gangland.gang.invite"), "the officer rank gets its preset node");
+			assertFalse(owner.contains("gangland.gang.invite"), "the owner rank gets only the nodes listed for it");
+		}
+
+		@Test
+		@DisplayName("GR-13 / D13 A: a non-empty rank table is never touched - no rank or link is inserted on boot")
+		void initialize_nonEmptyTable_seedsNothing() {
+			RepositoryRegistry   seedRegistry = mock(RepositoryRegistry.class);
+			RankRepository       realRankRepo = mock(RankRepository.class);
+			RankParentRepository realParentRepo = mock(RankParentRepository.class);
+
+			when(seedRegistry.getRepository(Rank.class)).thenReturn(realRankRepo);
+			when(seedRegistry.getRepository(RankParent.class)).thenReturn(realParentRepo);
+			when(seedRegistry.getRepository(Permission.class)).thenReturn(permissionRepo);
+			when(seedRegistry.getRepository(RankPermission.class)).thenReturn(rankPermissionRepo);
+
+			when(realRankRepo.totalRanks()).thenReturn(2);
+			when(realRankRepo.loadAll()).thenReturn(List.of(new Rank("member", 1), new Rank("owner", 2)));
+			when(realParentRepo.loadAll()).thenReturn(Set.of(new RankParent(1, 2)));
+
+			new RankManager(seedRegistry, permissionRegistry, rules).initialize();
+
+			verify(realRankRepo, never()).save(any(Rank.class));
+			verify(realParentRepo, never()).insertInitialRelation(anyInt(), anyInt());
+			verify(rules, never()).getRankPreset();
 		}
 
 		@Test

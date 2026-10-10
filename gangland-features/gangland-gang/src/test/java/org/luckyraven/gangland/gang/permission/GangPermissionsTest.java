@@ -12,6 +12,8 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -31,6 +33,14 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("GangPermissions - rank gate on the mutating gang subcommands")
 class GangPermissionsTest {
+
+	@Test
+	@DisplayName("GR-03 / PLAN 15.4: ALL lists the eight gangland.gang.* nodes that the rank permission add command accepts")
+	void all_holdsTheEightGangNodes() {
+		assertEquals(List.of(GangPermissions.WITHDRAW, GangPermissions.DEPOSIT, GangPermissions.RENAME,
+		                     GangPermissions.DESCRIPTION, GangPermissions.DISPLAY, GangPermissions.COLOR,
+		                     GangPermissions.INVITE, GangPermissions.ALLY), GangPermissions.ALL);
+	}
 
 	@AfterEach
 	void resetVault() {

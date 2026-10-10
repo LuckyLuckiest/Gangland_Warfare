@@ -115,6 +115,20 @@ class RankRepositorySpiTest {
 	}
 
 	@Test
+	@DisplayName("GR-21: after a delete leaves a gap, a new rank takes max(id)+1, never total+1 (which collides)")
+	void newRankId_afterDeleteWithGap_isMaxPlusOne() throws SQLException {
+		repository.save(new Rank("one", 1));
+		repository.save(new Rank("two", 2));
+		repository.save(new Rank("three", 3));
+		repository.delete(new Rank("two", 2));
+
+		int[] ids = repository.insertInitialRanks("Head", "Tail");
+
+		assertEquals(4, ids[1], "tail takes max(id)+1 = 4; total+1 would be 3 and collide with rank three");
+		assertEquals(5, ids[0], "head follows at 5");
+	}
+
+	@Test
 	@DisplayName("unlinked ranks persist on a legacy vault_group NOT NULL column")
 	void unlinkedRanks_persistOnLegacyNotNullColumn() throws SQLException {
 		// Databases created before vault_group became nullable keep the NOT NULL constraint: applySchema only
