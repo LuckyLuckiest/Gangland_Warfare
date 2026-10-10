@@ -212,6 +212,8 @@ Rules:
    Header: "&6How turf wars work"
    # OWNERS_ONLINE window. %window% = Capture.Post_Logoff_Protection_Minutes (turf_settings.yml) as a duration.
    Window_Online: "&7You can attack a turf while one of its owners is online, and for &f%window%&7 after the last one logs off."
+   # OWNERS_ONLINE window when Post_Logoff_Protection_Minutes is 0: the attack clause without a window.
+   Window_Online_Only: "&7You can attack a turf while one of its owners is online."
    # OWNERS_OFFLINE window. %window% = Capture.Post_Logoff_Protection_Minutes as a duration.
    Window_Offline: "&7You can attack a turf once all its owners have been offline for &f%window%&7."
    # OWNERS_ONLINE only, when Wake_Up_Shield_Seconds is above 0. %wake_up% = that many seconds as a duration.
@@ -230,6 +232,8 @@ Rules:
    Bar_Third_Gang: "&7A third gang inside a capture of someone else's turf does not count."
    # Cap sentence. %cap_base%, %per_level%, %ceiling% = Turf_Cap.Base, Turf_Cap.Per_Level, Turf_Cap.Ceiling.
    Cap: "&7Your gang can hold &f%cap_base%&7 turfs, plus &f%per_level%&7 for each gang level, at most &f%ceiling%&7."
+   # Cap sentence when Turf_Cap.Per_Level is 0 (no level clause). %cap_base%, %ceiling% as above.
+   Cap_Flat: "&7Your gang can hold &f%cap_base%&7 turfs, at most &f%ceiling%&7."
    # Income sentence. %money_symbol% and %amount% = Default_Income_Amount, %interval% = Income_Interval_Minutes as a
    # duration, %idle% = Income.Idle_Hours as a duration, %max_mult% = Income.Max_Multiplier.
    Income: "&7A new turf pays &f%money_symbol%%amount%&7 every &f%interval%&7 while one of its owners was online in the last &f%idle%&7; boosts at most x&f%max_mult%&7."

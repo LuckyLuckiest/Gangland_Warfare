@@ -27,7 +27,8 @@ final class TurfRulesCommand extends SubArgument {
 	private static final String HEADER_FALLBACK        = "&6How turf wars work";
 	private static final String WINDOW_ONLINE_FALLBACK = "&7You can attack a turf while one of its owners is online, and for &f%window%&7 after the last one logs off.";
 	private static final String WINDOW_OFFLINE_FALLBACK = "&7You can attack a turf once all its owners have been offline for &f%window%&7.";
-	private static final String WAKE_UP_FALLBACK       = "&7When the first owner logs in, the turf stays shielded for &f%wake_up%&7.";
+	private static final String WINDOW_ONLINE_ONLY_FALLBACK = "&7You can attack a turf while one of its owners is online.";
+	private static final String WAKE_UP_FALLBACK       ="&7When the first owner logs in, the turf stays shielded for &f%wake_up%&7.";
 	private static final String START_FALLBACK         = "&7A capture starts when your gang has more people inside than the owners and their allies, and more than any other gang.";
 	private static final String START_PRESENCE_FALLBACK = "&7You count after &f%presence%&7 inside; dying or leaving starts your count again.";
 	private static final String BAR_GUARDS_FALLBACK    = "&7Each living guard holds back one attacker (up to &f%guards%&7).";
@@ -35,6 +36,7 @@ final class TurfRulesCommand extends SubArgument {
 	private static final String BAR_MAX_CONTEST_FALLBACK = "&7A capture that goes nowhere for &f%max_contest%&7 ends.";
 	private static final String BAR_THIRD_GANG_FALLBACK = "&7A third gang inside a capture of someone else's turf does not count.";
 	private static final String CAP_FALLBACK          = "&7Your gang can hold &f%cap_base%&7 turfs, plus &f%per_level%&7 for each gang level, at most &f%ceiling%&7.";
+	private static final String CAP_FLAT_FALLBACK     = "&7Your gang can hold &f%cap_base%&7 turfs, at most &f%ceiling%&7.";
 	private static final String INCOME_FALLBACK       = "&7A new turf pays &f%money_symbol%%amount%&7 every &f%interval%&7 while one of its owners was online in the last &f%idle%&7; boosts at most x&f%max_mult%&7.";
 
 	private final TurfRules            rules;
@@ -71,8 +73,12 @@ final class TurfRulesCommand extends SubArgument {
 			lines.add(text.text("Rules.Window_Offline", WINDOW_OFFLINE_FALLBACK,
 			                    "window", messages.formatDuration(windowSeconds)));
 		} else {
-			lines.add(text.text("Rules.Window_Online", WINDOW_ONLINE_FALLBACK,
-			                    "window", messages.formatDuration(windowSeconds)));
+			if (windowSeconds > 0) {
+				lines.add(text.text("Rules.Window_Online", WINDOW_ONLINE_FALLBACK,
+				                    "window", messages.formatDuration(windowSeconds)));
+			} else {
+				lines.add(text.text("Rules.Window_Online_Only", WINDOW_ONLINE_ONLY_FALLBACK));
+			}
 			if (capture.wakeUpShieldSeconds() > 0) {
 				lines.add(text.text("Rules.Wake_Up", WAKE_UP_FALLBACK,
 				                    "wake_up", messages.formatDuration(capture.wakeUpShieldSeconds())));
@@ -101,10 +107,14 @@ final class TurfRulesCommand extends SubArgument {
 		bar.add(text.text("Rules.Bar_Third_Gang", BAR_THIRD_GANG_FALLBACK));
 		lines.add(String.join(" ", bar));
 
-		String cap    = text.text("Rules.Cap", CAP_FALLBACK,
-		                          "cap_base", rules.getTurfCapBase(),
-		                          "per_level", rules.getTurfCapPerLevel(),
-		                          "ceiling", rules.getTurfCapCeiling());
+		String cap    = rules.getTurfCapPerLevel() > 0
+		                ? text.text("Rules.Cap", CAP_FALLBACK,
+		                            "cap_base", rules.getTurfCapBase(),
+		                            "per_level", rules.getTurfCapPerLevel(),
+		                            "ceiling", rules.getTurfCapCeiling())
+		                : text.text("Rules.Cap_Flat", CAP_FLAT_FALLBACK,
+		                            "cap_base", rules.getTurfCapBase(),
+		                            "ceiling", rules.getTurfCapCeiling());
 		String income = text.text("Rules.Income", INCOME_FALLBACK,
 		                          "money_symbol", Settings.getMoneySymbol(),
 		                          "amount", Settings.formatAmount(settings.getDefaultIncomeAmount()),

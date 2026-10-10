@@ -40,7 +40,7 @@ once.
    other gang. You count after 15 seconds inside; dying or leaving starts your count again.
 4. **Bar.** Each living guard holds back one attacker (up to 4). A capture takes at least 60 seconds; one that goes
    nowhere for 10 minutes ends. A third gang inside a capture of someone else's turf does not count.
-5. **Cap and income.** Your gang can hold 2 turfs, plus 1 for each gang level, at most 6. A new turf pays 250 every 10
+5. **Cap and income.** Your gang can hold 2 turfs, plus 1 for each gang level, at most 6. A new turf pays $250 every 10
    minutes while one of its owners was online in the last 24 hours; boosts at most x2.
 
 Clauses whose rule is off (`0`) are left out of the sentence, so a server that turns guards or presence off reads only
@@ -79,6 +79,11 @@ capture fills one bar at `Capture.Duration_Seconds`. They stay so older files lo
 
 - **Who counts.** A member counts for the window and the wake-up only if they joined their gang at least 24 hours ago,
   or the gang is younger than that. Guards count up to 4 and never block a start.
+- **Alerts.** When a capture starts, the owning gang is told wherever it is, in any world, with the attacker count and
+  side; allies get the start line. Half the guards down, the last stand at 75%, and the outcome (held, lost, taken or
+  stalled) are announced the same way.
+- **While you were away.** On login you get up to five lines: the income earned since you left, then the turf events
+  (captured, lost, held, stalled, released).
 - **Start.** The side with the most people inside wins the start. Sides are frozen at the start: a player who joins
   later, or a new ally, is a bystander.
 - **One bar.** Owned and unclaimed turfs use the same bar at `Capture.Duration_Seconds`. A bar fills no faster than
@@ -101,6 +106,8 @@ capture fills one bar at `Capture.Duration_Seconds`. They stay so older files lo
 
 Gang level comes from the gang's turf income (see `gang_rules.yml`, `Progression`), so a gang grows its cap by holding
 turf.
+
+---
 
 ## Drawing Turf
 
@@ -136,14 +143,16 @@ it back; the turf changes hands when the bar completes. The rules are in the "Ho
   attacked while one of its owners is online and for `Capture.Post_Logoff_Protection_Minutes` after the last one logs
   off. When an owner comes back, the turf is shielded for the wake-up shield.
 - **Start and bar.** A capture starts when the attacking gang has more people inside than the owners and their allies,
-  and more than any other gang. Attackers and defenders fill or push back one bar; guards held in reserve hold back
-  attackers, up to `Capture.Guard_Weight_Cap`.
+  and more than any other gang. Attackers and defenders fill or push back one bar; each living guard of the turf holds
+  back one attacker, up to `Capture.Guard_Weight_Cap`; guards never block a start.
 - **After a capture.** The turf cools down for `Capture.Cooldown_Minutes` and cannot be contested again until then. A
   challenger who leaves the turf has `Capture.Abandon_Grace_Seconds` to return before the capture is cancelled.
 
 `/glw turf info [id|name]` shows the turf card, which includes a `Capture:` line with the reason. Tab completion offers
 every turf id and name. While a capture runs, a boss bar shows the attacking gang, the turf, the attackers against the
 defenders and the time left (or `stalled` when the capture is not moving forward).
+
+---
 
 ## Map
 
