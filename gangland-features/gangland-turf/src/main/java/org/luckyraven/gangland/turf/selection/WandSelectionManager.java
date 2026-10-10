@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.turf.selection;
 
 import org.bukkit.entity.Player;
+import org.luckyraven.gangland.turf.command.TurfPermissions;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -13,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class WandSelectionManager {
 
 	public static final String WAND_NBT_KEY     = "gangturf_wand";
-	public static final String ADMIN_PERMISSION = "gangland.turf.admin";
+	public static final String ADMIN_PERMISSION = TurfPermissions.ADMIN;
 
 	private final Map<UUID, Selection> selections = new ConcurrentHashMap<>();
 

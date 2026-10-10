@@ -1,9 +1,14 @@
 package org.luckyraven.gangland.turf.command;
 
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.GanglandApi;
 import org.luckyraven.gangland.command.Command;
+import org.luckyraven.gangland.command.HelpInfo;
+import org.luckyraven.gangland.command.data.CommandInformation;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.command.extension.CommandContributions;
 import org.luckyraven.keystone.bean.Qualifier;
@@ -17,6 +22,7 @@ import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.turf.capture.CaptureEligibility;
 import org.luckyraven.gangland.turf.capture.TurfOwnership;
 import org.luckyraven.gangland.turf.config.TurfMessages;
+import org.luckyraven.gangland.turf.config.TurfRules;
 import org.luckyraven.gangland.turf.config.TurfSettings;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.Turf;
@@ -31,6 +37,7 @@ import org.luckyraven.gangland.turf.selection.WandSelectionManager;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Root of the {@code /glw turf} command tree. Wand / create / delete / setowner / list / info / show / status live as
@@ -39,6 +46,10 @@ import java.util.Map;
  */
 @CommandHandler
 public final class TurfCommand extends Command {
+
+	/** Verbs a player without {@code gangland.turf.admin} may run; every other turf verb is admin only (TF-30). */
+	private static final Set<String> PLAYER_VERBS = Set.of("info", "list");
+	private static final int         HELP_BREAKS  = 7;
 
 	private final TurfManager          turfs;
 	private final WandSelectionManager selections;
@@ -60,6 +71,7 @@ public final class TurfCommand extends Command {
 	private final CommandContributions contributions;
 	private final TurfMessages         text;
 	private final CaptureEligibility   eligibility;
+	private final TurfRules            rules;
 
 	public TurfCommand(JavaPlugin plugin,
 	                   TurfManager turfs,
@@ -76,7 +88,8 @@ public final class TurfCommand extends Command {
 	                   TurfOwnership ownership,
 	                   DependencyContainer container,
 	                   TurfMessages text,
-	                   CaptureEligibility eligibility) {
+	                   CaptureEligibility eligibility,
+	                   TurfRules rules) {
 		super(plugin, "turf", false);
 
 		this.turfs           = turfs;
@@ -94,6 +107,7 @@ public final class TurfCommand extends Command {
 		this.ownership       = ownership;
 		this.text            = text;
 		this.eligibility     = eligibility;
+		this.rules           = rules;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -102,6 +116,29 @@ public final class TurfCommand extends Command {
 				.map(Map.Entry::getValue)
 				.toList();
 		getHelpInfo().addAll(list);
+	}
+
+	/**
+	 * The help entries a sender may run: the root {@code turf} entry, the verbs a player may run, and every verb when the
+	 * sender is a turf admin. {@code usage}'s third token is the verb.
+	 */
+	static List<CommandInformation> visibleEntries(List<CommandInformation> all, boolean admin) {
+		List<CommandInformation> visible = new ArrayList<>();
+		for (CommandInformation entry : all) {
+			String[] tokens = entry.usage().trim().split("\\s+");
+			String   verb   = tokens.length > 2 ? tokens[2] : null;
+			if (verb == null || admin || PLAYER_VERBS.contains(verb)) {
+				visible.add(entry);
+			}
+		}
+		return visible;
+	}
+
+	/** One clickable line that opens the map ({@code Turf.Map_Link}). */
+	static void sendMapLink(CommandSender sender, TurfMessages text) {
+		sender.spigot().sendMessage(new ComponentBuilder(text.text("Turf.Map_Link", "&7[map] &8- open /glw map"))
+				.event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/" + GanglandApi.SHORT_PREFIX + " map"))
+				.create());
 	}
 
 	@Override
@@ -126,28 +163,32 @@ public final class TurfCommand extends Command {
 
 	@Override
 	protected void initializeArguments() {
-		TurfWandCommand wand = new TurfWandCommand(getPlugin(), getArgumentTree(), getArgument(), selections, settings);
-		TurfPos1Command pos1 = new TurfPos1Command(getPlugin(), getArgumentTree(), getArgument(), selections);
-		TurfPos2Command pos2 = new TurfPos2Command(getPlugin(), getArgumentTree(), getArgument(), selections);
+		TurfWandCommand wand = new TurfWandCommand(getPlugin(), getArgumentTree(), getArgument(), selections, settings,
+		                                           text);
+		TurfPos1Command pos1 = new TurfPos1Command(getPlugin(), getArgumentTree(), getArgument(), selections, text);
+		TurfPos2Command pos2 = new TurfPos2Command(getPlugin(), getArgumentTree(), getArgument(), selections, text);
 		TurfCreateCommand create = new TurfCreateCommand(getPlugin(), getArgumentTree(), getArgument(), turfs,
-		                                                 selections, messages, settings);
+		                                                 selections, messages, settings, rules, text);
 		TurfDeleteCommand delete = new TurfDeleteCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                 turfs, selections, messages,
 		                                                 garrisons, activeBuffs, powerupNpcs, ownership);
 		TurfSetOwnerCommand setOwner = new TurfSetOwnerCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                                       turfs, gangs, selections, messages, ownership);
 		TurfListCommand listSub = new TurfListCommand(getPlugin(), getArgumentTree(), getArgument(), turfs, gangs,
-		                                              messages);
+		                                              messages, text);
 		TurfInfoCommand info = new TurfInfoCommand(getPlugin(), getArgumentTree(), getArgument(),
 		                                           turfs, gangs, selections, messages, settings, eligibility, text);
 		TurfShowCommand show = new TurfShowCommand(getPlugin(), getArgumentTree(), getArgument(), turfs, selections,
-		                                           messages, settings);
+		                                           messages, settings, text);
 		TurfStatusCommand status = new TurfStatusCommand(getPlugin(), getArgumentTree(), getArgument(),
-		                                                 turfs, gangs, selections, messages, settings);
+		                                                 turfs, gangs, selections, messages, settings, text,
+		                                                 eligibility);
 		TurfSelectCommand select = new TurfSelectCommand(getPlugin(), getArgumentTree(), getArgument(), turfs,
-		                                                 selections, messages);
+		                                                 selections, messages, text);
+		TurfRenameCommand rename = new TurfRenameCommand(getPlugin(), getArgumentTree(), getArgument(), turfs,
+		                                                 selections, messages, text);
 		TurfTpCommand tp = new TurfTpCommand(getPlugin(), getArgumentTree(), getArgument(), turfs, selections,
-		                                     messages);
+		                                     messages, text);
 		TurfIncomeCommand income = new TurfIncomeCommand(getPlugin(), getArgumentTree(), getArgument(), turfs,
 		                                                 selections, messages, settings);
 		TurfGarrisonCommand garrison = new TurfGarrisonCommand(getPlugin(), getArgumentTree(), getArgument(),
@@ -169,6 +210,7 @@ public final class TurfCommand extends Command {
 		arguments.add(show);
 		arguments.add(status);
 		arguments.add(select);
+		arguments.add(rename);
 		arguments.add(tp);
 		arguments.add(income);
 		arguments.add(garrison);
@@ -184,7 +226,11 @@ public final class TurfCommand extends Command {
 
 	@Override
 	protected void help(CommandSender sender, int page) {
-		getHelpInfo().displayHelp(sender, page, "Turf");
+		HelpInfo visible = new HelpInfo(visibleEntries(getHelpInfo().getList(), TurfPermissions.isAdmin(sender)),
+		                                HELP_BREAKS);
+		int pages = Math.max(1, visible.getMaxPages());
+		visible.displayHelp(sender, Math.max(1, Math.min(page, pages)), "Turf");
+		sendMapLink(sender, text);
 	}
 
 	private void renderGangTurfs(CommandSender sender, int gangId) {
@@ -201,8 +247,10 @@ public final class TurfCommand extends Command {
 			return;
 		}
 		messages.send(sender, "TURF_LIST_HEADER", "count", String.valueOf(owned.size()));
+		var from = sender instanceof Player player ? player.getLocation() : null;
 		for (Turf turf : owned) {
-			TurfListCommand.sendRow(sender, messages, turf, gangName);
+			TurfListCommand.sendRow(sender, text, turf, gangName, from);
 		}
+		sendMapLink(sender, text);
 	}
 }

@@ -126,13 +126,13 @@ class TurfCreateCommandTest {
 	@DisplayName("TF-21: a 600-block-wide selection is refused as too large")
 	void create_tooLarge_refused() throws IOException {
 		buildCommand("Create:\n   Snap_To_Chunks: false\n   Min_Side_Blocks: 16\n   Max_Side_Blocks: 512\n");
-		Player player = player(true, 0, 0, 599, 10);
+		Player player = player(true, 0, 0, 599, 20);
 
 		command.create(player, create("Docks"));
 
 		verify(turfs, never()).create(any());
 		verify(player).sendMessage(text.text("Turf.Create_Too_Large", "&cThat turf is too large.",
-		                                     "min", "16", "max", "512", "x", "600", "z", "11"));
+		                                     "min", "16", "max", "512", "x", "600", "z", "21"));
 	}
 
 	@Test

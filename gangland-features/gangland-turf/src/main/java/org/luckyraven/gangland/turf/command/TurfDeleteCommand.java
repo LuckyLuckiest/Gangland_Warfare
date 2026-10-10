@@ -57,7 +57,7 @@ class TurfDeleteCommand extends SubArgument {
 		return (argument, sender, args) -> {
 			// GI-35: deleting a turf is an admin-only mutation — nested SubArgument permissions only add onto the
 			// base "gangland.command.turf" node, they don't require this stricter one on their own.
-			if (!sender.hasPermission(WandSelectionManager.ADMIN_PERMISSION)) {
+			if (!TurfPermissions.isAdmin(sender)) {
 				sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
 				return;
 			}

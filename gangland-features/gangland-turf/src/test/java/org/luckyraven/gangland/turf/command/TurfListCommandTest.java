@@ -1,6 +1,8 @@
 package org.luckyraven.gangland.turf.command;
 
 import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.junit.jupiter.api.AfterEach;
@@ -21,9 +23,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -66,7 +66,23 @@ class TurfListCommandTest {
 	}
 
 	private static String plain(BaseComponent[] row) {
-		return Arrays.stream(row).map(BaseComponent::toPlainText).collect(Collectors.joining());
+		StringBuilder out = new StringBuilder();
+		for (BaseComponent component : row) {
+			collect(component, out);
+		}
+		return ChatColor.stripColor(out.toString());
+	}
+
+	/** Text of a component and all its extras: the appended tp suffix lives in an extra. */
+	private static void collect(BaseComponent component, StringBuilder out) {
+		if (component instanceof TextComponent text) {
+			out.append(text.getText());
+		}
+		if (component.getExtra() != null) {
+			for (BaseComponent extra : component.getExtra()) {
+				collect(extra, out);
+			}
+		}
 	}
 
 	@Test

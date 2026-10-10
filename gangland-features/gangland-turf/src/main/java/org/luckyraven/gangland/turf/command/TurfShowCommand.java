@@ -9,6 +9,7 @@ import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.turf.config.TurfSettings;
+import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
@@ -29,10 +30,12 @@ class TurfShowCommand extends SubArgument {
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
 	private final TurfSettings         settings;
+	private final TurfMessages         text;
 
 	protected TurfShowCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                          TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages,
-	                          TurfSettings settings) {
+	                          TurfSettings settings,
+	                          TurfMessages text) {
 		super(plugin, "show", tree, parent);
 
 		this.plugin   = plugin;
@@ -40,11 +43,15 @@ class TurfShowCommand extends SubArgument {
 		this.selections = selections;
 		this.messages   = messages;
 		this.settings   = settings;
+		this.text       = text;
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
+			if (!TurfPermissions.requireAdmin(sender, text)) {
+				return;
+			}
 			if (!(sender instanceof Player player)) {
 				return;
 			}

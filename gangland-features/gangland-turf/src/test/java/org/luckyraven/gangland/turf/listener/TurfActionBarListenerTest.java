@@ -73,6 +73,10 @@ class TurfActionBarListenerTest {
 			}
 
 			@Override
+			public void broadcast(String key, Object... replacements) {
+			}
+
+			@Override
 			public String formatDuration(long seconds) {
 				return seconds + "s";
 			}
@@ -111,11 +115,8 @@ class TurfActionBarListenerTest {
 
 	private String enterSubtitle(Turf turf, Integer viewerGangId) {
 		Player player = mock(Player.class);
-		if (viewerGangId == null) {
-			when(users.findByPlayer(player)).thenReturn(null);
-		} else {
-			when(users.findByPlayer(player)).thenReturn(CaptureFixtures.userInGang(viewerGangId));
-		}
+		User<Player> user = viewerGangId == null ? null : CaptureFixtures.userInGang(viewerGangId);
+		when(users.findByPlayer(player)).thenReturn(user);
 		listener.onEnter(new TurfEnterEvent(player, turf));
 
 		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);

@@ -8,6 +8,7 @@ import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.command.argument.types.OptionalArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
+import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
@@ -34,9 +35,11 @@ class TurfSelectCommand extends SubArgument {
 	private final TurfManager          turfs;
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
+	private final TurfMessages         text;
 
 	protected TurfSelectCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                            TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages) {
+	                            TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages,
+	                        TurfMessages text) {
 		super(plugin, "select", tree, parent);
 
 		this.plugin   = plugin;
@@ -44,6 +47,7 @@ class TurfSelectCommand extends SubArgument {
 		this.turfs      = turfs;
 		this.selections = selections;
 		this.messages   = messages;
+		this.text       = text;
 
 		this.addSubArgument(idArgument());
 	}
@@ -51,6 +55,9 @@ class TurfSelectCommand extends SubArgument {
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
+			if (!TurfPermissions.requireAdmin(sender, text)) {
+				return;
+			}
 			if (!(sender instanceof Player player)) {
 				return;
 			}
@@ -65,6 +72,9 @@ class TurfSelectCommand extends SubArgument {
 
 	private OptionalArgument idArgument() {
 		return new OptionalArgument(plugin, tree, (argument, sender, args) -> {
+			if (!TurfPermissions.requireAdmin(sender, text)) {
+				return;
+			}
 			if (!(sender instanceof Player player)) {
 				return;
 			}
