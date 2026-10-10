@@ -38,6 +38,13 @@ public final class TurfTextFixture {
 		                                                                      new int[]{25, 50, 75}, 90, 90));
 	}
 
+	/** A turf_messages.yml with no keys at all, as a server upgraded from before the Turf section looks: every text is its in-code fallback. */
+	public static TurfMessages emptyMessages(Path dir, TurfMessageContract legacy) throws IOException {
+		FileManager fileManager = YamlFixture.fileManager(dir, "turf_messages", "");
+		return new TurfMessages(fileManager, legacy, CaptureFixtures.settings(180, 15, 15, 10,
+		                                                                      new int[]{25, 50, 75}, 90, 90));
+	}
+
 	/** A turf_rules.yml with the given body, read through the real class. */
 	public static TurfRules rules(Path dir, String yaml) throws IOException {
 		return new TurfRules(YamlFixture.fileManager(dir, "turf_rules", yaml));

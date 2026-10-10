@@ -47,8 +47,7 @@ public final class WandListener implements Listener {
 		boolean   first     = action == Action.LEFT_CLICK_BLOCK;
 		Selection selection = selections.get(player);
 		if (!selection.set(clicked.getLocation(), first)) {
-			player.sendMessage(text.text("Turf.Selection_Other_World",
-			                             "&cThat corner is in another world than your selection. Clear it with the other corner first."));
+			player.sendMessage(text.text("Turf.Selection_Other_World", Selection.OTHER_WORLD_FALLBACK));
 			return;
 		}
 

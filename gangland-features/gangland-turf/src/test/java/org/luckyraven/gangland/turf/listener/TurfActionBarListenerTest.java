@@ -18,10 +18,13 @@ import org.luckyraven.gangland.turf.contract.TurfDisplayContract;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
+import org.luckyraven.gangland.turf.data.TurfRuntimeState;
 import org.luckyraven.gangland.turf.events.TurfEnterEvent;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.support.CaptureFixtures;
 import org.luckyraven.gangland.turf.support.FakeGangLookup;
+import org.luckyraven.gangland.turf.state.CapturePhase;
+import org.luckyraven.gangland.turf.state.TurfState;
 import org.luckyraven.gangland.turf.support.TurfTextFixture;
 import org.luckyraven.keystone.util.ActionBarManager;
 import org.mockito.ArgumentCaptor;
@@ -31,6 +34,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -171,6 +175,41 @@ class TurfActionBarListenerTest {
 
 		assertTrue(subtitle.contains("Unclaimed"), subtitle);
 		assertTrue(subtitle.contains("attackable"), subtitle);
+	}
+
+	/** The subtitle of an enter onto a turf whose runtime state is {@code state}; keyEchoing makes it the message key. */
+	private String contestedSubtitle(TurfRuntimeState state) {
+		when(turfs.getRuntimeState(1)).thenReturn(state);
+		Player player = mock(Player.class);
+		listener.onEnter(new TurfEnterEvent(player, turf(2)));
+
+		ArgumentCaptor<String> subtitle = ArgumentCaptor.forClass(String.class);
+		verify(player).sendTitle(anyString(), subtitle.capture(), anyInt(), anyInt(), anyInt());
+		return subtitle.getValue();
+	}
+
+	@Test
+	@DisplayName("a turf in the claim phase keeps the CONTESTING claim subtitle, not a relation subtitle")
+	void subtitle_contestingClaim_unchanged() {
+		gang(1, "Mine");
+		TurfRuntimeState state = new TurfRuntimeState(1);
+		state.setState(TurfState.CONTESTING);
+		state.setPhase(CapturePhase.CLAIM);
+
+		assertEquals("TURF_SUBTITLE_CONTESTING_CLAIM", contestedSubtitle(state));
+	}
+
+	@Test
+	@DisplayName("a turf in the consolidate phase keeps the CONTESTING consolidate subtitle")
+	void subtitle_contestingConsolidate_unchanged() {
+		gang(1, "Mine");
+		gang(2, "Rats");
+		TurfRuntimeState state = new TurfRuntimeState(1);
+		state.setState(TurfState.CONTESTING);
+		state.setPhase(CapturePhase.CONSOLIDATE);
+		state.setChallengerGangId(2);
+
+		assertEquals("TURF_SUBTITLE_CONTESTING_CONSOLIDATE", contestedSubtitle(state));
 	}
 
 	@Test

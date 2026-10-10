@@ -5,6 +5,8 @@ import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,11 +14,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
 import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
+import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.support.TurfTextFixture;
+import org.luckyraven.keystone.command.argument.Argument;
+import org.luckyraven.keystone.datastructure.Tree;
+import org.luckyraven.keystone.testkit.BukkitStatics;
+import org.luckyraven.keystone.testkit.PluginMocks;
 import org.mockito.MockedStatic;
 
 import java.io.IOException;
@@ -120,6 +128,51 @@ class TurfListCommandTest {
 		assertEquals(8, TurfListCommand.pageSlice(all, 1).size());
 		assertEquals(2, TurfListCommand.pageSlice(all, 2).size());
 		assertEquals(9, TurfListCommand.pageSlice(all, 2).get(0).getId());
+	}
+
+	/** The text of every line {@code list} sends on {@code page} through the spigot chat API. */
+	private List<String> listedLines(int page) {
+		List<String> lines = new ArrayList<>();
+		CommandSender.Spigot spigot = mock(CommandSender.Spigot.class, invocation -> {
+			if (invocation.getMethod().getName().equals("sendMessage")) {
+				for (Object arg : invocation.getArguments()) {
+					if (arg instanceof BaseComponent component) {
+						lines.add(plain(new BaseComponent[]{component}));
+					}
+				}
+			}
+			return null;
+		});
+		CommandSender sender = mock(CommandSender.class);
+		when(sender.spigot()).thenReturn(spigot);
+
+		TurfManager manager = mock(TurfManager.class);
+		List<Turf>  all     = new ArrayList<>();
+		for (int id = 1; id <= 10; id++) {
+			all.add(turf(id, id, id));
+		}
+		when(manager.getAll()).thenReturn(all);
+
+		JavaPlugin plugin = PluginMocks.plugin(tempDir);
+		Tree<Argument> tree = new Tree<>();
+		Argument parent = mock(Argument.class);
+		when(parent.getPermission()).thenReturn("gangland.command.turf");
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			TurfListCommand command = new TurfListCommand(plugin, tree, parent, manager,
+			                                              mock(GangLookupContract.class),
+			                                              mock(TurfMessageContract.class), text);
+			command.list(sender, page);
+		}
+		return lines;
+	}
+
+	@Test
+	@DisplayName("ten turfs: the next-page footer is sent on page 1 and not on page 2")
+	void list_footerOnlyBeforeLastPage() {
+		String footer = "Next: /glw turf list 2";
+
+		assertTrue(listedLines(1).stream().anyMatch(line -> line.contains(footer)));
+		assertFalse(listedLines(2).stream().anyMatch(line -> line.contains(footer)));
 	}
 
 	@Test

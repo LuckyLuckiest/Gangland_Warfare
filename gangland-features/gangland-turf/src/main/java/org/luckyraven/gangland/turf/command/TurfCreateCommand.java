@@ -138,13 +138,13 @@ class TurfCreateCommand extends SubArgument {
 		String min = String.valueOf(rules.getMinSideBlocks());
 		String max = String.valueOf(rules.getMaxSideBlocks());
 		if (x < rules.getMinSideBlocks() || z < rules.getMinSideBlocks()) {
-			sender.sendMessage(text.text("Turf.Create_Too_Small", "&cThat turf is too small.",
+			sender.sendMessage(text.text("Turf.Create_Too_Small", "&cThat turf is too small: %x% x %z% blocks. The minimum side is %min% blocks.",
 			                             "min", min, "max", max,
 			                             "x", String.valueOf(x), "z", String.valueOf(z)));
 			return;
 		}
 		if (x > rules.getMaxSideBlocks() || z > rules.getMaxSideBlocks()) {
-			sender.sendMessage(text.text("Turf.Create_Too_Large", "&cThat turf is too large.",
+			sender.sendMessage(text.text("Turf.Create_Too_Large", "&cThat turf is too large: %x% x %z% blocks. The maximum side is %max% blocks.",
 			                             "min", min, "max", max,
 			                             "x", String.valueOf(x), "z", String.valueOf(z)));
 			return;
@@ -162,7 +162,7 @@ class TurfCreateCommand extends SubArgument {
 		}
 
 		if (changed) {
-			sender.sendMessage(text.text("Turf.Create_Snapped", "&7Snapped to chunks.",
+			sender.sendMessage(text.text("Turf.Create_Snapped", "&7Snapped to chunks: (%minx%, %minz%) to (%maxx%, %maxz%)",
 			                             "minx", String.valueOf(region.getMinX()),
 			                             "minz", String.valueOf(region.getMinZ()),
 			                             "maxx", String.valueOf(region.getMaxX()),

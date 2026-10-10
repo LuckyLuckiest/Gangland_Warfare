@@ -12,6 +12,9 @@ import org.jetbrains.annotations.Nullable;
 @Setter
 public final class Selection {
 
+	/** Fallback for {@code Turf.Selection_Other_World}; shared by pos1, pos2 and the wand listener. */
+	public static final String OTHER_WORLD_FALLBACK = "&cThat corner is in another world than your selection. Run /glw turf wand to start a new one.";
+
 	private @Nullable String   world;
 	private @Nullable Location pos1;
 	private @Nullable Location pos2;
@@ -38,7 +41,8 @@ public final class Selection {
 		}
 		String name  = location.getWorld().getName();
 		Location other = first ? this.pos2 : this.pos1;
-		if (other != null && other.getWorld() != null && !other.getWorld().getName().equals(name)) {
+		// Compare with the stored world name: Location.getWorld() throws once the world has been unloaded.
+		if (other != null && this.world != null && !this.world.equals(name)) {
 			return false;
 		}
 		this.world = name;

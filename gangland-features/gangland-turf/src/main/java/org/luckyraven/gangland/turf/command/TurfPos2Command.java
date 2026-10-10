@@ -41,7 +41,7 @@ class TurfPos2Command extends SubArgument {
 			Location  location  = player.getLocation();
 			Selection selection = selections.get(player);
 			if (!selection.set(location, false)) {
-				player.sendMessage(text.text("Turf.Selection_Other_World", "&cThat corner is in another world than your selection. Clear it with the other corner first."));
+				player.sendMessage(text.text("Turf.Selection_Other_World", Selection.OTHER_WORLD_FALLBACK));
 				return;
 			}
 

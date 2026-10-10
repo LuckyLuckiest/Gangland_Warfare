@@ -51,7 +51,8 @@ class TurfWandCommand extends SubArgument {
 					.build();
 			player.getInventory().addItem(wand);
 			player.sendMessage(Messages.TURF_WAND_GIVEN.toString());
-			selections.get(player);
+			// A new wand starts a new selection: the old corners may sit in another world (TF-29).
+			selections.clear(player.getUniqueId());
 		};
 	}
 

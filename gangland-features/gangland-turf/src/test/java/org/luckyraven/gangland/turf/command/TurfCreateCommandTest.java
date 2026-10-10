@@ -78,6 +78,10 @@ class TurfCreateCommandTest {
 	}
 
 	private void buildCommand(String rulesYaml) throws IOException {
+		buildCommand(rulesYaml, text);
+	}
+
+	private void buildCommand(String rulesYaml, TurfMessages messages) throws IOException {
 		TurfRules rules = TurfTextFixture.rules(tempDir, rulesYaml);
 		JavaPlugin plugin = PluginMocks.plugin(tempDir);
 		Tree<Argument> tree  = new Tree<>();
@@ -85,7 +89,7 @@ class TurfCreateCommandTest {
 		when(parent.getPermission()).thenReturn("gangland.command.turf");
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
 			command = new TurfCreateCommand(plugin, tree, parent, turfs, selections, legacy, turfSettings, rules,
-			                                text);
+			                                messages);
 		}
 	}
 
@@ -118,7 +122,7 @@ class TurfCreateCommandTest {
 		command.create(player, create("Docks"));
 
 		verify(turfs, never()).create(any());
-		verify(player).sendMessage(text.text("Turf.Create_Too_Small", "&cThat turf is too small.",
+		verify(player).sendMessage(text.text("Turf.Create_Too_Small", "&cThat turf is too small: %x% x %z% blocks. The minimum side is %min% blocks.",
 		                                     "min", "16", "max", "512", "x", "8", "z", "8"));
 	}
 
@@ -131,7 +135,7 @@ class TurfCreateCommandTest {
 		command.create(player, create("Docks"));
 
 		verify(turfs, never()).create(any());
-		verify(player).sendMessage(text.text("Turf.Create_Too_Large", "&cThat turf is too large.",
+		verify(player).sendMessage(text.text("Turf.Create_Too_Large", "&cThat turf is too large: %x% x %z% blocks. The maximum side is %max% blocks.",
 		                                     "min", "16", "max", "512", "x", "600", "z", "21"));
 	}
 
@@ -166,7 +170,37 @@ class TurfCreateCommandTest {
 		assertEquals(0, region.getMinZ());
 		assertEquals(31, region.getMaxX());
 		assertEquals(47, region.getMaxZ());
-		verify(player).sendMessage(text.text("Turf.Create_Snapped", "&7Snapped to chunks.",
+		verify(player).sendMessage(text.text("Turf.Create_Snapped", "&7Snapped to chunks: (%minx%, %minz%) to (%maxx%, %maxz%)",
+		                                     "minx", "0", "minz", "0", "maxx", "31", "maxz", "47"));
+	}
+
+	@Test
+	@DisplayName("a server whose turf_messages.yml lacks the create keys sees the same wording as the shipped file")
+	void create_missingYamlKeys_fallbacksMatchShipped() throws IOException {
+		TurfMessages bare = TurfTextFixture.emptyMessages(tempDir, legacy);
+		buildCommand("Create:\n   Snap_To_Chunks: false\n   Min_Side_Blocks: 16\n   Max_Side_Blocks: 512\n", bare);
+		Player small = player(true, 0, 0, 7, 7);
+		Player large = player(true, 0, 0, 599, 20);
+
+		command.create(small, create("Docks"));
+		command.create(large, create("Docks"));
+
+		verify(small).sendMessage(text.text("Turf.Create_Too_Small", "",
+		                                    "min", "16", "max", "512", "x", "8", "z", "8"));
+		verify(large).sendMessage(text.text("Turf.Create_Too_Large", "",
+		                                    "min", "16", "max", "512", "x", "600", "z", "21"));
+	}
+
+	@Test
+	@DisplayName("a server whose turf_messages.yml lacks Create_Snapped sees the shipped snap line")
+	void create_snapped_missingYamlKey_fallbackMatchesShipped() throws IOException {
+		buildCommand("Create:\n   Snap_To_Chunks: true\n   Min_Side_Blocks: 16\n   Max_Side_Blocks: 512\n",
+		             TurfTextFixture.emptyMessages(tempDir, legacy));
+		Player player = player(true, 3, 5, 20, 40);
+
+		command.create(player, create("Docks"));
+
+		verify(player).sendMessage(text.text("Turf.Create_Snapped", "",
 		                                     "minx", "0", "minz", "0", "maxx", "31", "maxz", "47"));
 	}
 

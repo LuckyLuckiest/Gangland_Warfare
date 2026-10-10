@@ -96,19 +96,23 @@ Turf:
    Create_Snapped: "&7Snapped to chunks: (%minx%, %minz%) to (%maxx%, %maxz%)"
    # Refusal when a turf already has this name (ignoring case and colour codes).
    Name_Taken: "&cA turf named %turf% already exists."
-   # Refusal when a wand corner is in another world than the other corner.
-   Selection_Other_World: "&cThat corner is in another world than your selection. Clear it with the other corner first."
+   # Refusal when a wand corner is in another world than the other corner. Giving a new wand starts a new selection.
+   Selection_Other_World: "&cThat corner is in another world than your selection. Run /glw turf wand to start a new one."
    # Reply of /glw turf rename. %old% = the old name, %turf% = the new name.
    Renamed: "&7Renamed turf &f%old% &7to &f%turf%&7."
    # Wand item name and lore.
    Wand_Name: "&6Turf Wand"
+   # Wand item lore (the click controls).
    Wand_Lore: "&7Left-click = pos1, right-click = pos2."
    # Wand corner message. %corner% = Corner_1 or Corner_2, %x%, %y%, %z%, %world%.
    Corner_Set: "&7Turf %corner% &7set to &f(%x%, %y%, %z%)&7 in world &f%world%"
+   # Corner names used in Corner_Set: the first and the second corner.
    Corner_1: "&apos1"
+   # Name of the second corner, see Corner_1.
    Corner_2: "&epos2"
    # Phase suffix on /glw turf status for an unclaimed turf being captured.
    Status_Phase_Claim: " &8(Phase 1 - Claim)"
+   # Phase suffix on /glw turf status for a turf in the consolidate phase.
    Status_Phase_Consolidate: " &8(Phase 2 - Consolidate)"
    # /glw turf status while the turf is in cooldown. %turf% = turf name, %reason% = a Reason line.
    Status_Cooldown: "&7%turf% &7- %reason%"
