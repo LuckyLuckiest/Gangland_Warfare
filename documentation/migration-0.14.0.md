@@ -155,7 +155,105 @@ boot. Read the notes below before you start the server on the new jar.
 - The core jar and the gang and turf module jars must be updated together: the inventory YAML clicks and the `turf-`
   placeholder prefix live in the core jar, and the gang verbs they point at live in the gang module.
 
-## W2 - to be filled
+## Wave W2 - Fair fights (ships in 0.17.0)
+
+### 1. Capture window flipped (D1): turfs can be attacked while their owners are online
+
+- **Behaviour change.** A turf can now be attacked while one of its owners is online, and for
+  `Capture.Post_Logoff_Protection_Minutes` after the last one leaves. Before 0.17.0 a turf was only attackable when all
+  its owners were offline. `Capture.Post_Logoff_Protection_Minutes` (`turf/turf_settings.yml`, default 10) keeps its name; it now means "the window after the last owner logs off" in both modes.
+- **Wake-up shield.** After the first qualifying owner logs in, the turf is shielded for 2 minutes (the boss bar and map
+  say "waking up"). The wake-up record is in memory only: after a restart the first qualifying login wakes the gang again.
+- **Qualifying members.** Only members who joined their gang at least 24 h ago keep its turfs open and wake them up
+  (`Capture.Window_Min_Member_Age_Hours`). In a gang younger than that every member counts; `0` counts everyone.
+- **Small servers keep the old rule** with one setting in `turf/turf_rules.yml`: `Capture.Window: OWNERS_OFFLINE`. The
+  qualifying-member age rule still applies in that mode. For the exact pre-0.17.0 behaviour set both
+  `Capture.Window: OWNERS_OFFLINE` and `Capture.Window_Min_Member_Age_Hours: 0`.
+- **Camping line.** An owner who logs in during a closed window gets one line per owned turf that has rivals inside.
+
+### 2. One capture bar on every turf (D5)
+
+- An unclaimed capture is one bar at `Capture.Duration_Seconds` (`turf/turf_settings.yml`). The `Unclaimed_Phase1_Seconds`
+  and `Unclaimed_Phase2_Seconds` keys there are no longer read; leave them or delete them.
+- The bigger crew inside wins the start (ties do not start), attackers count after `Capture.Presence_Seconds` (15 s),
+  guards hold the bar, each bar takes at least `Capture.Min_Capture_Seconds` (60 s), and a contest ends STALLED after
+  `Capture.Max_Contest_Minutes` (10). STALLED sets no cooldown, so a contest can restart at 0% on the next tick if the
+  attackers still dominate.
+- Sides are frozen at the start: a gang that joins the fight later is a bystander until the next contest.
+- Entering a contested turf shows "`%gang%` capturing". The server's `message_en.yml` keeps its old "Phase 2" wording
+  until you edit it. `Commands.Turf.Enter.Contesting_Claim` and `Subtitle_Contesting_Claim` are no longer read.
+- `turf_messages.yml` drops `Turf.Status_Phase_Claim` and `Turf.Status_Phase_Consolidate`; `/glw turf status` shows no
+  phase any more.
+
+### 3. New file content
+
+- `turf/turf_rules.yml` gains the `Capture`, `Turf_Cap`, `Income` and `Garrison` sections (defaults are in the file).
+  Existing keys did not move: the plan's `Turf.Capture.*` to `turf_rules.yml` move was dropped.
+- `gang/gang_rules.yml` gains `Progression` (`Max_Level: 20`, `Base_Experience: 200`). Gang XP comes only from turf income.
+- `turf/turf_messages.yml` gains `Alerts.*`, `Income.*`, `Digest.*`, `Quartermaster.*` and `Rules.*` sections, and
+  `gang/gang_messages.yml` gains `Bounty.*`, `Progression.Fee_Refund`, `Social.*` and `List.Row`. Every new key has an
+  in-code fallback equal to the shipped line, so an old file still shows text; copy the shipped section in to reword it.
+- `turf_powerups.yml`: `CAPTURE_DEFENSE_BONUS` is retired (the `reinforced_defense` entry is removed). An entry still
+  using it is skipped with a warning. `GARRISON_DISCOUNT` now multiplies the guard price (`Garrison.Cost_Per_Guard`,
+  shipped at 1000). Shipped prices changed: `Cost` 5000 to 300, 15000 to 1000.
+- `turf_npcs.yml`: the Quartermaster has `Display_Name: "Quartermaster"`. Changing it renames Quartermasters placed after
+  a restart; existing ones keep the name they were placed with.
+- Reserve cap per turf is `turf_rules.yml` `Garrison.Max_Reserve`.
+
+### 4. Turf income, cap and levels
+
+- **Dormant gangs stop earning.** A turf pays only while its owning gang had a member online within `Income.Idle_Hours`
+  (default 24).
+- **Faucet.** 250 per 10 minutes, 36,000 per active turf per day (D9 = B), capped by `Income.Max_Multiplier` (2.0) and
+  the gang's turf cap.
+- **Turf cap** (`Turf_Cap`) grows with the gang level. A gang over its cap is paid only for its oldest turfs (ties by turf
+  id).
+- **Gang XP** grows from turf income (`Income.Gang_XP_Per_Payout`, default 1.0 per paying turf). Gang levels follow the
+  turf held, and the turf cap reads the level. A level-up line goes to online members.
+- Each payout gives an action-bar line to online members (income, turf count, bank). Joining shows the income and up to
+  four recent turf events since you left, then the map link. After a restart you see the last three events.
+- `/glw turf` shows your gang's turfs against its cap, how many are paying, and the last three events.
+- Quartermaster purchases are logged to the server log only; they are not in the gang digest yet.
+
+### 5. Gang changes
+
+- **Gang chat**: `/glw gang chat <message>` sends to your online gang; `/glw gang chat` toggles chat mode. Leaving the gang
+  or quitting clears it.
+- **Open gangs**: every existing gang is INVITE after the upgrade. Run `/glw gang recruiting open` to let players join with
+  `/glw gang join <gang>`. Recruiting needs the `gangland.gang.invite` node or the top rank.
+- **Gang bounty**: `/glw gang bounty <gang> <amount>` (permission `gangland.command.gang.bounty`). Any player, gangless
+  ones too, puts money from his own balance on another gang (not his own or an ally). The gang that captures one of that
+  gang's turfs collects the whole bounty into its bank. A bounty on a gang with no turf cannot be claimed until it holds
+  one. A bountied gang that disbands destroys its bounty; posters are not refunded.
+- **Disband split.** A disband with zero contributions splits the gang bank equally among members (the owner takes the
+  rounding remainder). The disband fee refund has its own line (`Progression.Fee_Refund`).
+- **Gangless players** get the onboarding screen from `/glw gang` (`gang_info` now has `Open.Condition:
+  "%gangland_user_has-gang%"`). A server that edited `gang_info.yml` adds that line under `Open:` itself.
+- **Officer preset** includes `gangland.turf.upgrade` (buy at the Quartermaster), on a fresh install only.
+- **Permissions**: `gangland.command.turf.rules`, `gangland.command.gang.chat|join|recruiting|bounty` and
+  `gangland.inventory.gang_info` default true.
+- `/glw turf rules` prints the five "how turf wars work" sentences with your server's numbers; run `/glw reload` after
+  editing `turf_rules.yml` or `turf_settings.yml`.
+
+### 6. Quartermaster
+
+- Prices and the garrison discount come from `turf_powerups.yml`. Every purchase re-checks membership and rank on the
+  click; a turf that changed hands closes the panel. Allies can open the Quartermaster and look, but only the owning gang
+  buys. The boost catalogue pages nine boosts at a time.
+
+### 7. Command notes
+
+- `/glw gang accept [gang]` names the gang when you have more than one invite.
+- A player without the command node gets the server's no-permission text. `Only turf admins can do that` appears only for
+  players who hold an admin command node but not `gangland.turf.admin`.
+- `turf create` and `turf rename` refuse a name with no letter or digit (`Turf.Name_Empty`).
+
+### 8. Database and jars
+
+- New table `gang_migration` (created automatically).
+- Repository loads now read numeric columns through `Number` (NULL reads as 0), so a MySQL server returning a wider
+  numeric type or NULL no longer fails the load.
+- The core jar and the gang/turf/mail module jars must be updated together.
 
 ## W3 - to be filled
 

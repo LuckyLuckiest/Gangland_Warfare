@@ -170,10 +170,6 @@ Turf:
    Corner_1: "&apos1"
    # Name of the second corner, see Corner_1.
    Corner_2: "&epos2"
-   # Phase suffix on /glw turf status for an unclaimed turf being captured.
-   Status_Phase_Claim: " &8(Phase 1 - Claim)"
-   # Phase suffix on /glw turf status for a turf in the consolidate phase.
-   Status_Phase_Consolidate: " &8(Phase 2 - Consolidate)"
    # /glw turf status while the turf is in cooldown. %turf% = turf name, %reason% = a Reason line.
    Status_Cooldown: "&7%turf% &7- %reason%"
    # Header of /glw turf list. %page%, %pages%.

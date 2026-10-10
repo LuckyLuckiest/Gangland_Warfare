@@ -215,4 +215,16 @@ placeholders).
 
 ---
 
+## W2 Manual Checks (0.17.0 Fair fights)
+
+- [ ] Owner's ten-minute script and one live two-client fight: alert reaches the owning gang anywhere, with the right side.
+- [ ] Guards hold the bar; the boss bar shows `+N guards`; a failed and a stalled capture are told to both sides; the digest arrives on login.
+- [ ] One boss bar for an unclaimed capture; titles; hover and click on the map.
+- [ ] Quartermaster: buy a guard through the NPC GUI (cannot be scripted); reserve cap 12; a recruit is refused; an ally can only look; catalogue pages turn.
+- [ ] Half-guards alert fires once guards are killed.
+- [ ] Wake-up shield after a server restart; the turf cap refusal at a gang's cap; dormant income after 24 h; over-cap payout; multiplier cap. (Unit tests cover the last four; the restart and digest checks need a live server.)
+- [ ] `/glw turf rules` prints the five sentences with this server's numbers.
+
+---
+
 [Back to Test Index](../README.md)

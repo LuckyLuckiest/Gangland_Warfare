@@ -33,6 +33,7 @@ A Leader holds only `gang.delete` and `gang.rename`. To give a Leader the kick p
 
 A server with an empty rank table gets the gang preset from `gang/gang_rules.yml`:
 
+- The fresh-install officer preset (`gang/gang_rules.yml` `Preset_Permissions`) includes `gangland.turf.upgrade`, so officers buy guards and boosts at the Quartermaster.
 - `Ranks.Preset` lists the ranks, lowest first (default `member`, `officer`, `owner`). The first should equal `Rank.Head`
   and the last `Rank.Tail` in `gang/gang_settings.yml`.
 - `Ranks.Preset_Permissions` lists the `gangland.gang.*` nodes each preset rank gets. A rank does not inherit the nodes
