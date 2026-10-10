@@ -79,7 +79,21 @@ Social:
 # end Social
 
 # ---------------- Bounty: gang bounties (W2-P1) ----------------
+Bounty:
+   # To the poster. %money_symbol%, %amount% = posted now, %gang%, %total% = the gang's whole bounty.
+   Posted: "&aPosted %money_symbol%%amount% on %gang%. &7The gang that takes one of their turfs collects %money_symbol%%total%."
+   # Refusals.
+   Own_Gang: "&cYou cannot put a bounty on your own gang."
+   Ally: "&cYou cannot put a bounty on an allied gang."
+   Unknown: "&cNo gang named %gang%."
+   # To the capturing gang's online members. %gang% = bountied gang, %money_symbol%, %amount%, %turf%.
+   Claimed: "&aYour gang took %turf% from %gang% and collected their %money_symbol%%amount% bounty."
+   # To the bountied gang's online members. %gang% = capturing gang, %money_symbol%, %amount%, %turf%.
+   Lost: "&c%gang% took %turf% and collected the %money_symbol%%amount% bounty on your gang."
 # end Bounty
 
 # ---------------- Progression: gang levels and the disband payout (W2-P1) ----------------
+Progression:
+   # To the gang owner when he disbands: a quarter of the creation fee back. %money_symbol%, %amount%.
+   Fee_Refund: "&7Refunded a quarter of the creation fee: &a%money_symbol%%amount%"
 # end Progression

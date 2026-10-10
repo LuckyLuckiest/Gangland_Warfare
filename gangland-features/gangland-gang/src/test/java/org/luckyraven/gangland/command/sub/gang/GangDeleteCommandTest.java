@@ -13,6 +13,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.CleanupMode;
+import org.junit.jupiter.api.io.TempDir;
+import net.md_5.bungee.api.ChatColor;
 import org.luckyraven.gangland.core.user.IdentitySettings;
 import org.luckyraven.gangland.events.gang.GangDeleteEvent;
 import org.luckyraven.gangland.core.support.FakeIdentitySettingsContract;
@@ -42,8 +45,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
 import java.math.BigDecimal;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -65,6 +71,9 @@ class GangDeleteCommandTest {
 	private static final BigDecimal FEE     = new BigDecimal("400");  // refund is a quarter: 100
 	private static final BigDecimal REFUND  = new BigDecimal("100");
 
+	@TempDir(cleanup = CleanupMode.NEVER)
+	Path tempDir;
+
 	private final List<Player>            online   = new ArrayList<>();
 	private       MockedStatic<Bukkit>    bukkit;
 	private       MockedStatic<Settings>  settings;
@@ -80,6 +89,8 @@ class GangDeleteCommandTest {
 	private       Rank                    ownerRank;
 	private       Rank                    memberRank;
 	private       Gang                    gang;
+	private       RankManager             rankManager;
+	private       Argument                parent;
 	private       GangDeleteCommand       command;
 
 	@BeforeEach
@@ -93,6 +104,15 @@ class GangDeleteCommandTest {
 				if (path.equals(Messages.GANG_REMOVE_CONFIRM.getPath())) return "%timer%";
 				if (path.equals(Messages.MINUTE.getPath())) return "m";
 				if (path.equals(Messages.SECOND.getPath())) return "s";
+				if (path.equals(Messages.KICKED_FROM_GANG.getPath())) {
+					return "KICKED";
+				}
+				if (path.equals(Messages.GANG_REMOVED.getPath())) {
+					return "REMOVED %gang%";
+				}
+				if (path.equals(Messages.DEPOSIT_MONEY_PLAYER.getPath())) {
+					return "DEPOSITED %amount%";
+				}
 				return "";
 			}
 
@@ -130,7 +150,7 @@ class GangDeleteCommandTest {
 		gangManager        = mock(GangManager.class);
 		repositoryRegistry = mock(RepositoryRegistry.class);
 		userRepository     = mock(IRepository.class);
-		RankManager rankManager = mock(RankManager.class);
+		rankManager = mock(RankManager.class);
 
 		ownerRank  = new Rank("owner", 1);
 		memberRank = new Rank("member", 2);
@@ -145,12 +165,15 @@ class GangDeleteCommandTest {
 		gang.setName("Crew");
 		when(gangManager.getGang(GANG_ID)).thenReturn(gang);
 
-		Argument parent = mock(Argument.class);
+		parent = mock(Argument.class);
 		when(parent.getPermission()).thenReturn("glw.gang");
 
-		command = new GangDeleteCommand(plugin, new Tree<>(), parent, userManager, offlineUserManager, memberManager,
-		                                gangManager, rankManager, repositoryRegistry,
-		                                mock(GangMessages.class));
+		command = commandWith(mock(GangMessages.class));
+	}
+
+	private GangDeleteCommand commandWith(GangMessages messages) {
+		return new GangDeleteCommand(plugin, new Tree<>(), parent, userManager, offlineUserManager, memberManager,
+		                             gangManager, rankManager, repositoryRegistry, messages);
 	}
 
 	@AfterEach
@@ -258,6 +281,51 @@ class GangDeleteCommandTest {
 		verify(player).sendMessage(Messages.GANG_REMOVE_CONFIRM.toString()
 		                                   .replace("%timer%",
 		                                            TimeUtil.formatTime(60, true, TimeMessages.getInstance())));
+	}
+
+	@Test
+	@DisplayName("an all-zero vault splits equally on disband, the owner takes the rounding remainder (D15)")
+	void allZeroContributions_splitEqually() {
+		UUID owner = UUID.randomUUID();
+		UUID bob   = UUID.randomUUID();
+		UUID cy    = UUID.randomUUID();
+		List<Member> members = List.of(zeroMember(owner), zeroMember(bob), zeroMember(cy));
+
+		Map<UUID, BigDecimal> shares = GangDeleteCommand.payouts(new BigDecimal("100.00"), members, owner);
+
+		assertEquals(0, new BigDecimal("33.33").compareTo(shares.get(bob)), "bob " + shares.get(bob));
+		assertEquals(0, new BigDecimal("33.33").compareTo(shares.get(cy)), "cy " + shares.get(cy));
+		assertEquals(0, new BigDecimal("33.34").compareTo(shares.get(owner)), "owner " + shares.get(owner));
+		BigDecimal total = shares.values().stream().reduce(BigDecimal.ZERO, BigDecimal::add);
+		assertEquals(0, new BigDecimal("100.00").compareTo(total), "total " + total);
+	}
+
+	@Test
+	@DisplayName("the owner's disband credits him once: his share and the fee refund, one kicked line, one refund line (T-209)")
+	void ownerDelete_creditsOwnerOnce() throws Exception {
+		settings.when(Settings::getLanguagePicked).thenReturn("en");
+		command = commandWith(GangTestMessages.shipped(tempDir));
+		User<Player> alice = owner(1.0);
+		gang.getEconomy().setAmount(new BigDecimal("1000"));
+		disband(alice);
+
+		// every sendMessage the owner received, varargs expanded, in order
+		List<String> plain = mockingDetails(alice).getInvocations().stream()
+				.filter(invocation -> invocation.getMethod().getName().equals("sendMessage"))
+				.flatMap(invocation -> Arrays.stream(invocation.getArguments()))
+				.filter(String.class::isInstance)
+				.map(line -> ChatColor.stripColor((String) line))
+				.toList();
+		assertEquals(1, plain.stream().filter(line -> line.equals("KICKED")).count(), plain.toString());
+		assertEquals(1, plain.stream().filter(line -> line.startsWith("DEPOSITED")).count(), plain.toString());
+		assertEquals(1, plain.stream().filter(line -> line.startsWith("Refunded a quarter")).count(), plain.toString());
+		assertMoney("1100", alice.getEconomy());   // 1000 share + 100 fee refund, paid once
+	}
+
+	private Member zeroMember(UUID uuid) {
+		Member member = new Member(uuid);
+		member.setContribution(0D);
+		return member;
 	}
 
 	private void disband(User<Player> owner) {
