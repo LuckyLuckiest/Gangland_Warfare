@@ -76,12 +76,14 @@ class TerritoryRasterTest {
 	}
 
 	@Test
-	@DisplayName("a turf covering less than half of a cell (120 of 256 blocks) does not take it")
+	@DisplayName("a turf covering less than half of each of two cells (120 of 256 blocks) takes neither")
 	void lessThanHalf_isNone() {
-		var raster = render(List.of(turf(1, blocks(16, 0, 30, 7), TurfRelation.RIVAL, 2)),
+		// 15 x 8 blocks in cell (1, 0) and 15 x 8 in cell (1, -1): neither is a half, so only the centre rule places it
+		var raster = render(List.of(turf(1, blocks(16, -8, 30, 7), TurfRelation.RIVAL, 2)),
 		                    gangs(gang(2, "Rats", "Rats", TurfRelation.RIVAL)), null);
 
 		assertEquals('-', at(raster, 1, 0).glyph());
+		assertEquals('R', at(raster, 1, -1).glyph());
 	}
 
 	@Test
@@ -116,7 +118,7 @@ class TerritoryRasterTest {
 
 		assertEquals('R', at(raster, 1, 1).glyph());
 		assertEquals(7, at(raster, 1, 1).turfId());
-		assertEquals('-', at(raster, 0, 0).glyph());
+		assertEquals('-', at(raster, 2, 0).glyph());
 	}
 
 	@Test

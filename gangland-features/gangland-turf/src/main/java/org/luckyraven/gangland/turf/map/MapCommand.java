@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.turf.map;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
 import org.luckyraven.keystone.bean.command.CommandHandler;
@@ -11,19 +12,21 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Root of the {@code /glw map} command tree (0.17.0). The map grid itself is W1-M's and is not built yet, so the root
- * answers {@code Map.Not_Ready}; the four sub-commands are stubs until their lanes fill them.
+ * Root of the {@code /glw map} command tree (0.17.0). The root sends the chat map (W1-M); the sub-commands are
+ * {@code auto}, {@code hud} (W1-H), {@code text} and {@code legend}.
  */
 @CommandHandler
 public final class MapCommand extends Command {
 
 	private final MapPrefsService prefs;
 	private final TurfMessages    text;
+	private final TurfMapService  map;
 
-	public MapCommand(JavaPlugin plugin, MapPrefsService prefs, TurfMessages text) {
+	public MapCommand(JavaPlugin plugin, MapPrefsService prefs, TurfMessages text, TurfMapService map) {
 		super(plugin, "map", true);
 		this.prefs = prefs;
 		this.text  = text;
+		this.map   = map;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -36,15 +39,17 @@ public final class MapCommand extends Command {
 
 	@Override
 	protected void onExecute(Argument argument, CommandSender sender, String[] arguments) {
-		sender.sendMessage(text.text("Map.Not_Ready", "&7This part of the map is not ready yet."));
+		if (sender instanceof Player player) {
+			map.send(player);
+		}
 	}
 
 	@Override
 	protected void initializeArguments() {
-		MapAutoCommand   auto   = new MapAutoCommand(getPlugin(), getArgumentTree(), getArgument(), prefs, text);
+		MapAutoCommand   auto   = new MapAutoCommand(getPlugin(), getArgumentTree(), getArgument(), prefs, text, map);
 		MapHudCommand    hud    = new MapHudCommand(getPlugin(), getArgumentTree(), getArgument(), prefs, text);
-		MapTextCommand   txt    = new MapTextCommand(getPlugin(), getArgumentTree(), getArgument(), prefs, text);
-		MapLegendCommand legend = new MapLegendCommand(getPlugin(), getArgumentTree(), getArgument(), prefs, text);
+		MapTextCommand   txt    = new MapTextCommand(getPlugin(), getArgumentTree(), getArgument(), prefs, text, map);
+		MapLegendCommand legend = new MapLegendCommand(getPlugin(), getArgumentTree(), getArgument(), prefs, text, map);
 		getArgument().addAllSubArguments(List.of(auto, hud, txt, legend));
 	}
 
