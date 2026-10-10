@@ -1,6 +1,6 @@
 # Turf
 
-[← Back to Index](../README.md) | [Next: Economy →](./economy.md)
+[← Jail & Detainment](./jail-detainment.md) | [Back to Index](../README.md)
 
 ---
 
@@ -70,8 +70,7 @@ in `turf/turf_messages.yml` under `Reason:`:
 | `Reason.Cooldown` | `shielded: just captured, attackable in %time%` | The turf was captured recently. `%time%` is the time left. |
 | `Reason.Owners_Active` | `shielded: %gang% were online in the last %grace%` | The owners were online recently. `%grace%` is `Post_Logoff_Protection_Minutes`. |
 
-> W2 ("one rule per fight") changes the capture rules, including who may attack and when. The sentences above describe
-> the 0.17.0 rules.
+> These are the W1-build rules. W2 ("one rule per fight") replaces them, including who may attack and when.
 
 `/glw turf info [id|name]` shows the turf card, which includes a `Capture:` line with the reason. Tab completion offers
 every turf id and name. While a capture runs, a boss bar shows the attacking gang, the turf, the attackers against the
@@ -86,8 +85,9 @@ the colour of the letter says how it relates to you.
 
 ### Sample
 
-Viewer in Vipers (3 of 4 turfs), Kings allied, Rats rival with members online, Saints rival and all offline. Kings'
-Docks East is under attack by Rats and renders *italic*; the Saints block renders underlined (shielded).
+Viewer in Vipers (3 of 4 turfs), Kings allied, Rats rival, all offline for longer than the protection window
+(attackable); Saints rival with a member online (shielded, underlined). Kings' Docks East is under attack by Rats and
+renders *italic*.
 
 ```
 Map - Turfs 3 - north is up - + you
@@ -135,7 +135,7 @@ The `+` is your cell. Every row is 41 cells wide.
 ### Hover and click
 
 - **Hover a letter:** the turf name, the owner (or `Unclaimed`), the state (`Quiet`, or `Under attack by Rats, 62 %`),
-  the reason sentence, and what the turf pays per interval (or `dormant`). Your own gang's last-online time, and your
+  the reason sentence, and what the turf pays per interval (or `dormant`, from W2). Your own gang's last-online time, and your
   own turf's guards in reserve, show only for your gang. Other gangs' online times and guards never show.
 - **Admins** also see `/glw turf tp <id>` in the hover text. It is text, not a click.
 - **Hover the `+` cell:** the turf under you, your coordinates and your facing.
@@ -146,8 +146,8 @@ The `+` is your cell. Every row is 41 cells wide.
 
 | Command | What it does |
 |---|---|
-| `/glw map` | Prints the grid. Floodgate (Bedrock) players get the text form instead. |
-| `/glw map auto` | Turns the auto map on or off. When on, the map is sent again when the set of turfs in view changes, or when you walk into or out of a turf. Sent at most every `Map.Auto_Min_Interval_Seconds` seconds. Off by default; the setting is forgotten when you log off. |
+| `/glw map` | Prints the grid. Bedrock players get the text form instead. |
+| `/glw map auto` | Turns the auto map on or off. When on, the map is sent again when what it shows changes (its content, not your position). Sent at most every `Map.Auto_Min_Interval_Seconds` seconds. Off by default; the setting is forgotten when you log off. |
 | `/glw map text` | The turfs around you as a list, nearest first, with owner, relation and state in words. |
 | `/glw map legend` | Every gang on your map with its letter and relation. |
 | `/glw map hud <on\|off\|default>` | Sets the turf line in the action bar (see HUD). |
@@ -160,7 +160,7 @@ The `+` is your cell. Every row is 41 cells wide.
 | `Map.Height` | `7` | Rows of the grid. Odd numbers only; 3 to 15. With the header and the two legend lines this is 10 chat lines, the height of the unfocused chat. `9` is the tall option. |
 | `Map.Cell_Blocks` | `16` | Blocks per cell along each side (16 = one chunk). One of `8`, `16`, `32` or `64`; anything else uses 16. |
 | `Map.Auto_Min_Interval_Seconds` | `5` | Minimum seconds between two automatic maps. |
-| `Map.Bedrock_Text_Form` | `true` | Bedrock players (Geyser/Floodgate) get the text list instead of the grid, because their font is not monospaced. |
+| `Map.Bedrock_Text_Form` | `true` | Bedrock players (detected by their UUID prefix) get the text list instead of the grid, because their font is not monospaced. |
 
 Changes apply after `/glw reload`.
 
@@ -181,7 +181,8 @@ Docks - your turf - under attack by Rats, 62%
 - **Who it is for.** Your own turf says `your turf`; an ally's says `<gang> turf` in aqua; a rival's says `<gang> turf`
   in red; an owned turf seen by a player without a gang says `<gang> turf` in yellow; an unclaimed turf says `unclaimed`.
 - **Reason.** Gangless players see `join a gang to capture`. Your own and allied turfs say `quiet`, or `under attack`
-  when a capture runs. Rival and unclaimed turfs show the reason sentence.
+  when a capture runs. Rival and unclaimed turfs show the reason sentence, and `under attack by <gang>, N%` while a
+  capture runs.
 - **Outside every turf** the line is empty, unless you turn it on with `/glw map hud on`. Then it shows
   `Nearest turf: <turf> <distance>m <direction>` in the action bar.
 

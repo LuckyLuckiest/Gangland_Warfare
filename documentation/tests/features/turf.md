@@ -21,12 +21,12 @@ placeholders).
 ## Pre-Conditions
 
 - [ ] Server is running the 0.17.0 build with Keystone, Bartizan and Plaque installed; Citizens optional.
-- [ ] At least four test accounts: one op, one non-op in gang Vipers (member), one non-op in gang Rats (rival, online),
+- [ ] At least four test accounts: one op, one non-op in gang Vipers (member), one non-op in gang Rats (rival; online for shielded items, logged off longer than `Capture.Post_Logoff_Protection_Minutes` for attack items),
   one non-op with no gang.
 - [ ] Two turfs exist: `Docks` owned by Vipers and `Harbor` owned by Rats, both inside one world, at least 100 blocks apart.
 - [ ] Turf config files exist at their defaults: `turf/turf_rules.yml`, `turf/turf_map.yml`, `turf/turf_messages.yml`,
   `turf/turf_settings.yml` (regenerate by deleting them and restarting if unsure).
-- [ ] A Floodgate (Bedrock) test account is available for the text-form item, or the item is marked as skipped.
+- [ ] A Bedrock test account is available for the text-form item, or the item is marked as skipped.
 - [ ] The client's GUI scale can be set to 1, 2, 3 and 4 (Options > Video Settings).
 
 ---
@@ -45,9 +45,9 @@ placeholders).
 
 ## Map Styles
 
-- [ ] A turf under attack (Harbor, Rats capturing) renders its letters in *italic*, and the columns to its right do
+- [ ] A turf under attack (Vipers capturing Harbor, viewed by a third account) renders its letters in *italic*, and the columns to its right do
   NOT shift compared with the same map when no attack runs.
-- [ ] A shielded turf (no owner online, or just captured) renders its letters underlined, and the columns to its right
+- [ ] A shielded turf (an owner online now or within `Capture.Post_Logoff_Protection_Minutes`, or just captured) renders its letters underlined, and the columns to its right
   do NOT shift.
 - [ ] No letter anywhere renders bold.
 - [ ] Your own turf is green, an ally's aqua, a rival's red, an unclaimed cell `#` gray, empty cells `-` dark gray, your
@@ -80,11 +80,11 @@ placeholders).
 - [ ] `/glw map auto` again prints `Auto map off`; walking into turfs now sends nothing.
 - [ ] Turn auto on, log off and log back in: auto is off again (the setting is forgotten on relog).
 - [ ] `/glw map text` prints the turfs around you as a list, nearest first, with owner, relation and state in words.
-- [ ] A Floodgate (Bedrock) player running `/glw map` gets the text form, not the grid. *(Skip if no Bedrock account.)*
+- [ ] A Bedrock player running `/glw map` gets the text form, not the grid. *(Skip if no Bedrock account.)*
 
 ---
 
-## Map Admin View
+## Map Legend
 
 - [ ] `/glw map legend` lists every gang on the map with its letter and relation.
 - [ ] A gang with a name in colour codes (for example `&c` in the name) shows the plain name in the legend.
@@ -126,7 +126,8 @@ placeholders).
 
 - [ ] Enter an own turf (Vipers member in `Docks`): title subtitle reads `Your turf`.
 - [ ] Enter an allied turf (an ally's turf, with an alliance active): subtitle reads `<gang> turf - allied`; no chat line.
-- [ ] Enter a rival turf in cooldown as a Vipers member (`Harbor` just captured): subtitle reads `<gang> turf - shielded:
+- [ ] Enter a rival turf in cooldown as a Vipers member (set `Harbor` unclaimed with `/glw turf setowner none`, let Rats
+  capture it, then a Vipers member enters): subtitle reads `<gang> turf - shielded:
   just captured, attackable in ...`; exactly one chat line `<turf> - shielded: just captured ...`.
 - [ ] Enter a rival turf that is attackable as a Vipers member: subtitle reads `<gang> turf - attackable`; no chat line.
 - [ ] Enter an unclaimed turf: subtitle reads `Unclaimed - attackable` (or the reason).
@@ -188,9 +189,9 @@ placeholders).
 
 ## Restart and Cooldown
 
-- [ ] Capture a turf, let its cooldown start, then restart the server during the cooldown.
-- [ ] After the restart, `/glw turf status` on that turf still says cooldown (TF-27), not idle.
-- [ ] After the restart, the map shows the turf as shielded (underlined) for the viewer.
+- [ ] Capture a turf, let its cooldown start, restart the server during the cooldown; after the restart, `/glw turf status`
+  on that turf still says cooldown (TF-27), not idle.
+- [ ] After the restart, the map shows the turf as shielded (underlined) for a viewer from another gang.
 
 ---
 
