@@ -149,6 +149,47 @@ class TurfPowerupGarrisonViewTest {
 		verify(garrisons).add(TURF_ID, 1);
 	}
 	@Test
+	@DisplayName("a discount below the 10% floor still costs 10% of Cost_Per_Guard (T-275)")
+	void price_discountBelowFloor_isTenPercent() {
+		when(buffs.effectiveMultiplier(TURF_ID, EffectType.GARRISON_DISCOUNT)).thenReturn(0.0);
+
+		assertEquals(0, new BigDecimal("100").compareTo(view.price(TURF_ID)));
+	}
+
+	@Test
+	@DisplayName("a negative discount multiplier costs 10% of Cost_Per_Guard (T-275)")
+	void price_negativeMultiplier_isTenPercent() {
+		when(buffs.effectiveMultiplier(TURF_ID, EffectType.GARRISON_DISCOUNT)).thenReturn(-2.0);
+
+		assertEquals(0, new BigDecimal("100").compareTo(view.price(TURF_ID)));
+	}
+
+	@Test
+	@DisplayName("stacked surcharges never raise the price above Cost_Per_Guard (T-275)")
+	void price_surcharge_isFullPrice() {
+		when(buffs.effectiveMultiplier(TURF_ID, EffectType.GARRISON_DISCOUNT)).thenReturn(1.5);
+
+		assertEquals(0, new BigDecimal("1000").compareTo(view.price(TURF_ID)));
+	}
+
+	@Test
+	@DisplayName("a NaN multiplier falls back to the full price instead of throwing (T-275)")
+	void price_nanMultiplier_isFullPrice() {
+		when(buffs.effectiveMultiplier(TURF_ID, EffectType.GARRISON_DISCOUNT)).thenReturn(Double.NaN);
+
+		assertEquals(0, new BigDecimal("1000").compareTo(view.price(TURF_ID)));
+	}
+
+	@Test
+	@DisplayName("a guard never costs less than 1, however small Cost_Per_Guard is (T-275)")
+	void price_neverBelowOne() {
+		registry.setGarrisonCost(BigDecimal.valueOf(3));
+		when(buffs.effectiveMultiplier(TURF_ID, EffectType.GARRISON_DISCOUNT)).thenReturn(0.1);
+
+		assertEquals(0, BigDecimal.ONE.compareTo(view.price(TURF_ID)));
+	}
+
+	@Test
 	@DisplayName("a turf that changed hands while the panel was open is refused and the panel closes (TF-19)")
 	void turfChangedHands_refusedAndClosed() {
 		when(access.denyKey(viewer, session)).thenReturn("Quartermaster.Owner_Changed");

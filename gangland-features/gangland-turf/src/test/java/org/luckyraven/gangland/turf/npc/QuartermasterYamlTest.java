@@ -12,8 +12,11 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -25,38 +28,38 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DisplayName("Quartermaster YAML - every key read is in the shipped turf files")
 class QuartermasterYamlTest {
 
-	private static final List<String> MESSAGE_KEYS = List.of(
-			"Quartermaster.Title_Menu", "Quartermaster.Title_Buffs", "Quartermaster.Title_Garrison",
-			"Quartermaster.Back", "Quartermaster.Close", "Quartermaster.Page_Next", "Quartermaster.Page_Previous",
-			"Quartermaster.Page_Info",
-			"Quartermaster.Menu_Turf", "Quartermaster.Menu_Owner", "Quartermaster.Menu_Allied",
-			"Quartermaster.Menu_Stock", "Quartermaster.Menu_Active", "Quartermaster.Menu_Bank",
-			"Quartermaster.Menu_Buffs_Name", "Quartermaster.Menu_Buffs_Lore_1", "Quartermaster.Menu_Buffs_Lore_2",
-			"Quartermaster.Menu_Buffs_Active", "Quartermaster.Menu_Garrison_Name", "Quartermaster.Menu_Garrison_Lore_1",
-			"Quartermaster.Menu_Garrison_Lore_2", "Quartermaster.Menu_Garrison_Lore_3",
-			"Quartermaster.Menu_Garrison_Stock",
-			"Quartermaster.Buffs_Effect", "Quartermaster.Buffs_Duration", "Quartermaster.Buffs_Cost",
-			"Quartermaster.Buffs_Click", "Quartermaster.Buffs_Insufficient",
-			"Quartermaster.Garrison_Name", "Quartermaster.Garrison_Stock", "Quartermaster.Garrison_Per_Guard",
-			"Quartermaster.Garrison_Bank", "Quartermaster.Garrison_Buy_Name", "Quartermaster.Garrison_Buy_Cost",
-			"Quartermaster.Garrison_Buy_Click", "Quartermaster.Garrison_Buy_Insufficient",
-			"Quartermaster.Bought_Guard", "Quartermaster.Bought_Boost", "Quartermaster.Cannot_Afford",
-			"Quartermaster.Reserve_Full", "Quartermaster.No_Rank", "Quartermaster.Allies_Look",
-			"Quartermaster.Turf_Gone", "Quartermaster.Owner_Changed", "Quartermaster.Not_Member", "Quartermaster.Not_Allied",
-			"Quartermaster.No_Owner", "Quartermaster.Only_Owner_Or_Allies", "Quartermaster.Gang_Missing");
-
 	private static YamlConfiguration load(String resource) throws IOException {
 		return YamlConfiguration.loadConfiguration(new StringReader(YamlFixture.shipped(resource)));
 	}
 
 	@Test
-	@DisplayName("turf_messages.yml has every Quartermaster line the panels read")
+	@DisplayName("turf_messages.yml has every Quartermaster line the sources read (scanned, T-276)")
 	void messagesPresent() throws IOException {
 		YamlConfiguration yaml = load("/turf/turf_messages.yml");
+		Pattern           key  = Pattern.compile("\"(Quartermaster\\.[A-Za-z_]+)\"");
+		Set<String>       keys = new TreeSet<>();
 
-		for (String key : MESSAGE_KEYS) {
-			assertTrue(yaml.isSet(key), "missing " + key);
+		try (Stream<Path> files = Files.walk(Path.of("src/main/java"))) {
+			for (Path file : files.filter(f -> f.toString().endsWith(".java")).toList()) {
+				Matcher m = key.matcher(Files.readString(file));
+				while (m.find()) {
+					keys.add(m.group(1));
+				}
+			}
 		}
+
+		assertTrue(keys.size() > 40, "the scan must find the Quartermaster keys, found " + keys.size());
+		for (String name : keys) {
+			assertTrue(yaml.isSet(name), "missing " + name);
+		}
+	}
+
+	@Test
+	@DisplayName("the shipped Reserve_Full line says the cap counts guards on duty too (T-268)")
+	void reserveFull_namesWhatIsCounted() throws IOException {
+		String line = load("/turf/turf_messages.yml").getString("Quartermaster.Reserve_Full");
+
+		assertTrue(line.contains("on duty"), line);
 	}
 
 	@Test

@@ -271,11 +271,11 @@ public final class TurfModuleConfig {
 	@Bean
 	public GangPresenceTracker gangPresenceTracker(JavaPlugin plugin,
 	                                               GangLookupContract gangs,
-	                                               UserLookupContract users,
+	                                               GangMembership membership,
 	                                               CaptureSettings settings,
 	                                               InactivityReleaseTask release,
 	                                               TurfRules rules) {
-		GangPresenceTracker tracker = new GangPresenceTracker(plugin, gangs, users,
+		GangPresenceTracker tracker = new GangPresenceTracker(plugin, gangs, membership,
 		                                                      settings.getInactivityAutoReleaseDays(), release,
 		                                                      rules::capture, settings);
 		tracker.start();
