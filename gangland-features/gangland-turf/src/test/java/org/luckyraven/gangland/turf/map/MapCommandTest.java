@@ -69,7 +69,8 @@ class MapCommandTest {
 	}
 
 	private static MapCommand registeredMapCommand() {
-		MapCommand command = new MapCommand(mock(JavaPlugin.class), new MapPrefsService(), mock(TurfMessages.class));
+		MapCommand command = new MapCommand(mock(JavaPlugin.class), new MapPrefsService(), mock(TurfMessages.class),
+		                                    mock(TurfMapService.class));
 		command.initializeArguments();
 		return command;
 	}
