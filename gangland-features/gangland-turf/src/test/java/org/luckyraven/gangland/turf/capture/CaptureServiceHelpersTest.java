@@ -27,16 +27,13 @@ import static org.mockito.Mockito.when;
  * <ul>
  *   <li>{@link CaptureService#isCapturable(Turf, long)} — cooldown / unclaimed / missing-owner / post-logoff-grace
  *       branches (public API, called directly).</li>
- *   <li>the private {@code dominantGang(Map, Integer)} tie/empty/single-entry helper, invoked via reflection since
+ *   <li>the private {@code dominantGang(Map)} tie/empty/single-entry helper, invoked via reflection since
  *       it has no public seam — matches the "CaptureService.dominantGang tie/empty/single-entry, and the dead
  *       exclude parameter" bullet in turf.md's Test Surface section.</li>
  * </ul>
  *
- * <p>{@link #dominantGang_excludeParameterWorksInIsolation()} pins Observation #11 (turf.md): the {@code exclude}
- * parameter is fully functional in isolation — it correctly removes a candidate from contention — but grep across
- * {@code CaptureService.java} shows both call sites ({@code tickIdle}'s initial-challenger pick and
- * {@code tickContestingUnclaimed}'s CLAIM→CONSOLIDATE election) always pass {@code null}. The bug is a dead call
- * site, not a broken method; this test documents the method working exactly as advertised.
+ * <p>{@link #dominantGang_returnsUniqueMaximum()} pins TF-11 (W2-R2): the dead {@code exclude} parameter is gone;
+ * the helper takes one map and returns the strict unique maximum, null on ties or an empty map.
  */
 @DisplayName("CaptureService — isCapturable and dominantGang helpers")
 class CaptureServiceHelpersTest {
@@ -111,16 +108,16 @@ class CaptureServiceHelpersTest {
 		assertTrue(service.isCapturable(turf, now));
 	}
 
-	private Integer dominantGang(Map<Integer, Integer> counts, Integer exclude) throws Exception {
-		Method method = CaptureService.class.getDeclaredMethod("dominantGang", Map.class, Integer.class);
+	private Integer dominantGang(Map<Integer, Integer> counts) throws Exception {
+		Method method = CaptureService.class.getDeclaredMethod("dominantGang", Map.class);
 		method.setAccessible(true);
-		return (Integer) method.invoke(service, counts, exclude);
+		return (Integer) method.invoke(service, counts);
 	}
 
 	@Test
 	@DisplayName("dominantGang returns null for an empty count map")
 	void dominantGang_emptyMapReturnsNull() throws Exception {
-		assertNull(dominantGang(new LinkedHashMap<>(), null));
+		assertNull(dominantGang(new LinkedHashMap<>()));
 	}
 
 	@Test
@@ -129,7 +126,7 @@ class CaptureServiceHelpersTest {
 		Map<Integer, Integer> counts = new LinkedHashMap<>();
 		counts.put(7, 3);
 
-		assertEquals(Integer.valueOf(7), dominantGang(counts, null));
+		assertEquals(Integer.valueOf(7), dominantGang(counts));
 	}
 
 	@Test
@@ -139,7 +136,7 @@ class CaptureServiceHelpersTest {
 		counts.put(1, 5);
 		counts.put(2, 5);
 
-		assertNull(dominantGang(counts, null));
+		assertNull(dominantGang(counts));
 	}
 
 	@Test
@@ -150,18 +147,18 @@ class CaptureServiceHelpersTest {
 		counts.put(2, 5);
 		counts.put(3, 1);
 
-		assertEquals(Integer.valueOf(2), dominantGang(counts, null));
+		assertEquals(Integer.valueOf(2), dominantGang(counts));
 	}
 
 	@Test
-	@DisplayName("the exclude parameter works in isolation: it removes a candidate from contention")
-	void dominantGang_excludeParameterWorksInIsolation() throws Exception {
+	@DisplayName("dominantGang returns the unique maximum with no exclude parameter (TF-11)")
+	void dominantGang_returnsUniqueMaximum() throws Exception {
 		Map<Integer, Integer> counts = new LinkedHashMap<>();
 		counts.put(1, 5);
-		counts.put(2, 5); // tied with 1 -> null without exclusion
+		counts.put(2, 5); // tied at the top -> null
 
-		assertNull(dominantGang(counts, null), "sanity: unexcluded, the tie still resolves to null");
-		assertEquals(Integer.valueOf(2), dominantGang(counts, 1),
-		            "excluding gang 1 leaves gang 2 as the sole (thus dominant) entry");
+		assertNull(dominantGang(counts), "a tie at the top resolves to null");
+		counts.put(2, 4);
+		assertEquals(Integer.valueOf(1), dominantGang(counts), "the strict maximum is the unique entry");
 	}
 }

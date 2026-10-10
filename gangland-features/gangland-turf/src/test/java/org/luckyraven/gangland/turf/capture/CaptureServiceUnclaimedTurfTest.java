@@ -11,7 +11,6 @@ import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.data.TurfRuntimeState;
 import org.luckyraven.gangland.turf.events.TurfCaptureProgressEvent;
-import org.luckyraven.gangland.turf.events.TurfCaptureStartEvent;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.state.CapturePhase;
 import org.luckyraven.gangland.turf.state.TurfState;
@@ -29,21 +28,15 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /**
- * Proves {@link CaptureService#tick} for <b>unclaimed</b> turfs: the two-phase CLAIM/CONSOLIDATE tug-of-war
- * described in the class javadoc and in turf.md's W8. Ties to the "CaptureService maths" bullet in the Test
- * Surface section (CLAIM global fill, CLAIM→CONSOLIDATE election, the CONSOLIDATE→CLAIM(100, null) rollback,
- * and abandon-grace expiry).
- *
- * <p>{@link #claimPhase_fillRateIsFlatRegardlessOfHeadcount()} pins a subtlety implied but not spelled out
- * numerically in turf.md W8 step 3: unlike the owned-turf and CONSOLIDATE tug-of-war, CLAIM's fill delta is a flat
- * {@code base} whenever anyone is inside — it does <b>not</b> scale with how many players (or how many gangs) are
- * present.
+ * Proves {@link CaptureService#tick} for <b>unclaimed</b> turfs under the 0.17.0 one-bar rule (W2-R2, TF-12, D5): the
+ * same tug-of-war as an owned turf at {@code Capture.Duration_Seconds}, with every other gang's counted members as the
+ * opposition. The old CLAIM/CONSOLIDATE phases are gone: the phase stays CLAIM, no handover happens, and the abandon
+ * grace still applies.
  */
-@DisplayName("CaptureService — unclaimed turf, two-phase capture")
+@DisplayName("CaptureService - unclaimed turf, one bar (W2-R2)")
 class CaptureServiceUnclaimedTurfTest {
 
 	private InMemoryTurfRepository     repository;
@@ -73,17 +66,17 @@ class CaptureServiceUnclaimedTurfTest {
 		turfManager.create(turf);
 	}
 
-	/** phase1Seconds/phase2Seconds default to 4s each (base 25) unless a test overrides via a fresh service. */
-	private CaptureService service(int phase1Seconds, int phase2Seconds, int abandonGraceSeconds) {
-		CaptureSettings settings = CaptureFixtures.settings(180, 15, abandonGraceSeconds, 10,
-		                                                    new int[]{25, 50, 75}, phase1Seconds, phase2Seconds);
+	/** The one bar runs at {@code durationSeconds}; the abandon grace is {@code abandonGraceSeconds}. */
+	private CaptureService service(int durationSeconds, int abandonGraceSeconds) {
+		CaptureSettings settings = CaptureFixtures.settings(durationSeconds, 15, abandonGraceSeconds, 10,
+		                                                    new int[]{25, 50, 75}, 90, 90);
 		return new CaptureService(turfManager, gangs, users, settings, sounds, new TurfOwnership(turfManager));
 	}
 
-	private TurfRuntimeState stateAt(CapturePhase phase, double progress, Integer challengerGangId, long lastSeenAt) {
+	private TurfRuntimeState stateAt(double progress, Integer challengerGangId, long lastSeenAt) {
 		TurfRuntimeState state = turfManager.getRuntimeState(turf.getId());
 		state.setState(TurfState.CONTESTING);
-		state.setPhase(phase);
+		state.setPhase(CapturePhase.CLAIM);
 		state.setCaptureProgress(progress);
 		state.setChallengerGangId(challengerGangId);
 		state.setLastChallengerSeenAt(lastSeenAt);
@@ -92,12 +85,11 @@ class CaptureServiceUnclaimedTurfTest {
 
 	private final Map<UUID, Player> playersByUuid = new HashMap<>();
 
-	private Player insidePlayer(int gangId, Map<UUID, Turf> cache) {
+	private void insidePlayer(int gangId, Map<UUID, Turf> cache) {
 		Player player = CaptureFixtures.player();
 		users.register(player, CaptureFixtures.userInGang(gangId));
 		cache.put(player.getUniqueId(), turf);
 		playersByUuid.put(player.getUniqueId(), player);
-		return player;
 	}
 
 	private void tick(CaptureService service, Map<UUID, Turf> cache) {
@@ -110,53 +102,53 @@ class CaptureServiceUnclaimedTurfTest {
 	}
 
 	@Test
-	@DisplayName("CLAIM fill rate is a flat base whenever anyone is inside, regardless of head-count or gang mix")
-	void claimPhase_fillRateIsFlatRegardlessOfHeadcount() {
-		CaptureService service = service(4, 4, 15); // base = 25
-		stateAt(CapturePhase.CLAIM, 0.0, gangA.getId(), System.currentTimeMillis());
-		Map<UUID, Turf> soloCache = new HashMap<>();
-		insidePlayer(gangA.getId(), soloCache);
+	@DisplayName("one bar: the fill is the attackers minus everyone else inside, scaled by Capture.Duration_Seconds")
+	void oneBar_fillRateIsNetAgainstOthers() {
+		CaptureService service = service(20, 15); // one bar: 100 / 20 = 5 per net point
+		stateAt(50.0, gangA.getId(), System.currentTimeMillis());
+		Map<UUID, Turf> cache = new HashMap<>();
+		insidePlayer(gangA.getId(), cache);
+		insidePlayer(gangA.getId(), cache);
+		insidePlayer(gangB.getId(), cache);
 
-		tick(service, soloCache);
-		double soloResult = turfManager.getRuntimeState(turf.getId()).getCaptureProgress();
+		tick(service, cache);
 
-		// Reset and repeat with 5 players spread across both gangs.
-		stateAt(CapturePhase.CLAIM, 0.0, gangA.getId(), System.currentTimeMillis());
-		playersByUuid.clear();
-		Map<UUID, Turf> crowdedCache = new HashMap<>();
-		for (int i = 0; i < 3; i++) {
-			insidePlayer(gangA.getId(), crowdedCache);
-		}
-		for (int i = 0; i < 2; i++) {
-			insidePlayer(gangB.getId(), crowdedCache);
-		}
-
-		tick(service, crowdedCache);
-		double crowdedResult = turfManager.getRuntimeState(turf.getId()).getCaptureProgress();
-
-		assertEquals(25.0, soloResult);
-		assertEquals(soloResult, crowdedResult, "5 players fill Phase 1 at exactly the same rate as 1");
+		assertEquals(55.0, turfManager.getRuntimeState(turf.getId()).getCaptureProgress(), 1e-9, "2 - 1 = +1 net");
 	}
 
 	@Test
-	@DisplayName("CLAIM freezes (does not decay) while empty within the abandon-grace window")
-	void claimPhase_freezesWhileEmptyWithinGrace() {
-		CaptureService service = service(4, 4, 30);
-		stateAt(CapturePhase.CLAIM, 40.0, gangA.getId(), System.currentTimeMillis());
+	@DisplayName("one bar: the phase stays CLAIM at every tick and no CONSOLIDATE handover ever happens")
+	void oneBar_phaseStaysClaimAtEveryTick() {
+		CaptureService service = service(20, 15);
+		stateAt(0.0, gangA.getId(), System.currentTimeMillis());
+		Map<UUID, Turf> cache = new HashMap<>();
+		insidePlayer(gangA.getId(), cache);
+
+		for (int i = 0; i < 4; i++) {
+			tick(service, cache);
+			assertEquals(CapturePhase.CLAIM, turfManager.getRuntimeState(turf.getId()).getPhase());
+		}
+	}
+
+	@Test
+	@DisplayName("one bar: an empty contest freezes (no decay) while inside the abandon-grace window")
+	void oneBar_freezesWhileEmptyWithinGrace() {
+		CaptureService service = service(20, 30);
+		stateAt(40.0, gangA.getId(), System.currentTimeMillis());
 
 		tick(service, new HashMap<>());
 
 		TurfRuntimeState state = turfManager.getRuntimeState(turf.getId());
 		assertEquals(TurfState.CONTESTING, state.getState());
-		assertEquals(40.0, state.getCaptureProgress(), "empty Phase 1 freezes instead of decaying");
+		assertEquals(40.0, state.getCaptureProgress(), 1e-9, "an empty contest freezes instead of decaying");
 	}
 
 	@Test
-	@DisplayName("CLAIM cancels ABANDONED once the abandon-grace window has elapsed while empty")
-	void claimPhase_cancelsAbandonedAfterGraceExpires() {
-		CaptureService service = service(4, 4, 15);
-		long            longAgo = System.currentTimeMillis() - 16_000L;
-		stateAt(CapturePhase.CLAIM, 40.0, gangA.getId(), longAgo);
+	@DisplayName("one bar: an empty contest ends ABANDONED once the abandon-grace window has elapsed")
+	void oneBar_cancelsAbandonedAfterGraceExpires() {
+		CaptureService service = service(20, 15);
+		long           longAgo = System.currentTimeMillis() - 16_000L;
+		stateAt(40.0, gangA.getId(), longAgo);
 
 		tick(service, new HashMap<>());
 
@@ -164,72 +156,12 @@ class CaptureServiceUnclaimedTurfTest {
 	}
 
 	@Test
-	@DisplayName("CLAIM completing with a single dominant gang transitions to CONSOLIDATE at progress 0")
-	void claimComplete_singleDominantGangElectsConsolidatePhase() {
-		CaptureService service = service(4, 4, 15); // base = 25
-		stateAt(CapturePhase.CLAIM, 90.0, gangA.getId(), System.currentTimeMillis());
+	@DisplayName("one bar: reaching 100 completes the capture and hands the turf to the challenger")
+	void oneBar_completesAndTransfersOwnership() {
+		CaptureService service = service(20, 15); // base = 5
+		stateAt(95.0, gangA.getId(), System.currentTimeMillis());
 		Map<UUID, Turf> cache = new HashMap<>();
 		insidePlayer(gangA.getId(), cache);
-		insidePlayer(gangA.getId(), cache);
-		insidePlayer(gangB.getId(), cache); // present but outnumbered — gangA is dominant
-
-		try (BukkitStatics bukkit = BukkitStatics.install()) {
-			for (UUID id : cache.keySet()) {
-				bukkit.statics().when(() -> Bukkit.getPlayer(id)).thenReturn(playersByUuid.get(id));
-			}
-			service.tick(cache);
-
-			TurfRuntimeState state = turfManager.getRuntimeState(turf.getId());
-			assertEquals(CapturePhase.CONSOLIDATE, state.getPhase());
-			assertEquals(0.0, state.getCaptureProgress());
-			assertEquals(gangA.getId(), state.getChallengerGangId());
-
-			// before=90 is already past every configured milestone (25/50/75), so this tick fires no progress
-			// event — only the phase-transition's re-fired TurfCaptureStartEvent.
-			ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
-			verify(bukkit.pluginManager(), times(1)).callEvent(captor.capture());
-			assertInstanceOf(TurfCaptureStartEvent.class, captor.getValue(),
-			                 "the CLAIM->CONSOLIDATE transition re-fires TurfCaptureStartEvent");
-		}
-	}
-
-	@Test
-	@DisplayName("CLAIM completing on a tie between gangs stalls at progress 100 instead of transitioning")
-	void claimComplete_tieStallsAtOneHundred() {
-		CaptureService service = service(4, 4, 15); // base = 25
-		stateAt(CapturePhase.CLAIM, 90.0, gangA.getId(), System.currentTimeMillis());
-		Map<UUID, Turf> cache = new HashMap<>();
-		insidePlayer(gangA.getId(), cache);
-		insidePlayer(gangB.getId(), cache); // exactly tied, 1 each
-
-		tick(service, cache);
-
-		TurfRuntimeState state = turfManager.getRuntimeState(turf.getId());
-		assertEquals(CapturePhase.CLAIM, state.getPhase(), "a tie leaves the phase parked at CLAIM");
-		assertEquals(100.0, state.getCaptureProgress());
-	}
-
-	@Test
-	@DisplayName("CONSOLIDATE tug-of-war: capturing gang minus opposers scales the delta")
-	void consolidatePhase_capturingMinusOpposersScalesDelta() {
-		CaptureService service = service(180, 4, 15); // phase2 base = 25
-		stateAt(CapturePhase.CONSOLIDATE, 50.0, gangA.getId(), System.currentTimeMillis());
-		Map<UUID, Turf> cache = new HashMap<>();
-		insidePlayer(gangA.getId(), cache);
-		insidePlayer(gangA.getId(), cache);
-		insidePlayer(gangB.getId(), cache); // 2 capturing vs 1 opposer -> net +1
-
-		tick(service, cache);
-
-		assertEquals(75.0, turfManager.getRuntimeState(turf.getId()).getCaptureProgress(), 1e-9);
-	}
-
-	@Test
-	@DisplayName("CONSOLIDATE reaching 100 completes the capture and hands the turf to the challenger")
-	void consolidateComplete_transfersOwnership() {
-		CaptureService service = service(180, 1, 15); // phase2 base = 100
-		stateAt(CapturePhase.CONSOLIDATE, 50.0, gangA.getId(), System.currentTimeMillis());
-		Map<UUID, Turf> cache = new HashMap<>();
 		insidePlayer(gangA.getId(), cache);
 
 		tick(service, cache);
@@ -239,35 +171,18 @@ class CaptureServiceUnclaimedTurfTest {
 	}
 
 	@Test
-	@DisplayName("CONSOLIDATE rolling back to 0 reverts to CLAIM at progress 100 with the challenger cleared")
-	void consolidateRollback_revertsToClaimAtOneHundredWithNoChallenger() {
-		CaptureService service = service(180, 1, 15); // phase2 base = 100
-		stateAt(CapturePhase.CONSOLIDATE, 50.0, gangA.getId(), System.currentTimeMillis());
+	@DisplayName("one bar: milestone events report the claim bar only, with consolidate pinned at 0")
+	void milestoneEvents_reportClaimOnly() {
+		CaptureService service = service(4, 15); // base = 25
+		stateAt(0.0, gangA.getId(), System.currentTimeMillis());
 		Map<UUID, Turf> cache = new HashMap<>();
-		insidePlayer(gangB.getId(), cache); // pure opposition, no capturing-gang member present
-
-		tick(service, cache);
-
-		TurfRuntimeState state = turfManager.getRuntimeState(turf.getId());
-		assertEquals(CapturePhase.CLAIM, state.getPhase());
-		assertEquals(100.0, state.getCaptureProgress());
-		assertNull(state.getChallengerGangId());
-		assertNull(turf.getOwnerGangId(), "the turf itself never touched ownership during the rollback");
-	}
-
-	@Test
-	@DisplayName("milestone events split claim/consolidate progress by which phase is currently active")
-	void milestoneEvents_splitByActivePhase() {
-		CaptureService service = service(4, 4, 15); // base = 25
-		stateAt(CapturePhase.CLAIM, 0.0, gangA.getId(), System.currentTimeMillis());
-		Map<UUID, Turf> claimCache = new HashMap<>();
-		insidePlayer(gangA.getId(), claimCache);
+		insidePlayer(gangA.getId(), cache);
 
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
-			for (UUID id : claimCache.keySet()) {
+			for (UUID id : cache.keySet()) {
 				bukkit.statics().when(() -> Bukkit.getPlayer(id)).thenReturn(playersByUuid.get(id));
 			}
-			service.tick(claimCache);
+			service.tick(cache);
 
 			ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
 			verify(bukkit.pluginManager()).callEvent(captor.capture());
