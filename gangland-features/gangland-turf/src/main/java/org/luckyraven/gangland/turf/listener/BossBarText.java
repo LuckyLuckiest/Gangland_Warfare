@@ -28,7 +28,7 @@ public final class BossBarText {
 		if (net <= 0) {
 			return -1L;
 		}
-		double rate = net * 100.0 / durationSeconds;
+		double rate = net * 100.0 / Math.max(1, durationSeconds);
 		if (minCaptureSeconds > 0) {
 			rate = Math.min(rate, 100.0 / minCaptureSeconds);
 		}

@@ -22,8 +22,6 @@ import org.luckyraven.gangland.turf.selection.WandSelectionManager;
 import org.luckyraven.gangland.turf.state.CapturePhase;
 import org.luckyraven.gangland.turf.state.TurfState;
 import org.luckyraven.gangland.turf.support.TurfTextFixture;
-import org.luckyraven.gangland.turf.capture.CaptureSettings;
-import org.luckyraven.gangland.turf.support.CaptureFixtures;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.testkit.BukkitStatics;
@@ -111,7 +109,6 @@ class TurfStatusCommandTest {
 		WandSelectionManager selections = new WandSelectionManager();
 		selections.get(player).setActiveTurfId(1);
 
-		CaptureSettings capture = CaptureFixtures.settings(180, 15, 15, 10, new int[]{25, 50, 75}, 90, 90);
 		JavaPlugin     plugin = PluginMocks.plugin(tempDir);
 		Tree<Argument> tree   = new Tree<>();
 		Argument       parent = mock(Argument.class);

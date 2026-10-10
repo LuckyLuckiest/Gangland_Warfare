@@ -103,6 +103,7 @@ class TurfBossBarTitleTest {
 		String title = ChatColor.stripColor(listener.bossTitle(turf(1), contest(2, Map.of(2, 3), 1, 2)));
 
 		assertTrue(title.contains("3 vs 1 +2 guards"), title);
+		assertTrue(title.contains("stalled"), title);
 	}
 
 	@Test
