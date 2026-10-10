@@ -162,8 +162,9 @@ class GangListCommandTest {
 	@Test
 	@DisplayName("T-240: the shipped List.Row is the members-colon line")
 	void shippedRow_isMembersColonLine() {
-		assertEquals("&f%gang% &7- members: %members% - online: %online%",
-		             messages.text("List.Row", "unused fallback"));
+		String row = messages.text("List.Row", "unused fallback").replace(ChatColor.COLOR_CHAR, '&');
+
+		assertEquals("&f%gang% &7- members: %members% - online: %online%", row);
 	}
 
 	@Test

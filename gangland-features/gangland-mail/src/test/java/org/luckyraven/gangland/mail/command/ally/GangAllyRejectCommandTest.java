@@ -126,7 +126,7 @@ class GangAllyRejectCommandTest {
 
 		reject.action().accept(reject, user, new String[]{"gang", "ally", "reject"});
 
-		verify(senderMember).sendMessage(argThat((String line) -> line.contains("gang1")));
+		verify(senderMember).sendMessage(Messages.GANG_ALLY_REJECT.toString().replace("%gang%", "gang1"));
 		assertEquals(MailStatus.REJECTED, request.getStatus());
 		assertTrue(repo.deleted().contains(request));
 	}

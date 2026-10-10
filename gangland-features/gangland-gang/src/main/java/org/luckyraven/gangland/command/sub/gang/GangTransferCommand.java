@@ -46,8 +46,11 @@ class GangTransferCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final RankManager         rankManager;
 
-	/** GR-10: the confirm window, same as {@code gang leave}; a second request re-arms it. */
-	private static final long CONFIRM_WINDOW_TICKS = 20L * 60L;
+	/**
+	 * GR-10: the confirm window, same as {@code gang leave}; a second request re-arms it. 30 s - the Keystone confirm
+	 * lock's own expiry (T-195).
+	 */
+	private static final long CONFIRM_WINDOW_TICKS = 20L * 30L;
 
 	private final HashMap<User<Player>, AtomicReference<UUID>> pendingTargets = new HashMap<>();
 	private final HashMap<CommandSender, BukkitTask>           autoUnlock     = new HashMap<>();

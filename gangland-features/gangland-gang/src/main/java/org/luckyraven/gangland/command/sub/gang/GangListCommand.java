@@ -88,7 +88,7 @@ class GangListCommand extends SubArgument {
 		int to   = Math.min(from + PAGE_SIZE, sorted.size());
 		for (Gang gang : sorted.subList(from, to)) {
 			int online = gang.getOnlineMembers(userManager::getUser).size();
-			String row = messages.text("List.Row", "&f%gang% &7- %members% members - %online% online",
+			String row = messages.text("List.Row", "&f%gang% &7- members: %members% - online: %online%",
 			                           "gang", gang.getDisplayNameString(),
 			                           "members", gang.getMembers().size(),
 			                           "online", online);
