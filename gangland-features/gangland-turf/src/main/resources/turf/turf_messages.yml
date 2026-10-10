@@ -37,6 +37,55 @@ Map:
    # Replies of /glw map auto.
    Auto_On: "&7Auto map &aon&7: the map is sent again when what it shows changes."
    Auto_Off: "&7Auto map &coff&7."
+   # Hover of a turf run, first line: the turf name. %name% = the turf display name (its own colour codes are kept).
+   Hover_Name: "&f%name%"
+   # Hover of a turf run: the owning gang (%gang%).
+   Hover_Owner: "&7Owner &f%gang%"
+   # Hover of a turf run nobody owns.
+   Hover_Unclaimed: "&7Owner &fUnclaimed"
+   # Hover line for a turf nobody is capturing.
+   Hover_Quiet: "&7Quiet"
+   # Hover line while a gang is capturing. %gang% = the challenger, %percent% = capture progress.
+   Hover_Under_Attack: "&cUnder attack by %gang%, %percent%%"
+   # Owning gang only: the last member logout, %time% = how long ago.
+   Hover_Online: "&7Last member online &f%time% &7ago"
+   # Owning gang only: a member is online now.
+   Hover_Online_Now: "&7Members &aonline now"
+   # Income per interval: %money_symbol% and %amount% = the income, %time% = the interval.
+   Hover_Pays: "&7Pays &f%money_symbol%%amount% &7per %time%"
+   # A turf with no income.
+   Hover_Dormant: "&7Pays &fnothing &7(dormant)"
+   # Owning gang only: %count% = guards in reserve on the turf.
+   Hover_Guards: "&7Your guards: &f%count% &7in reserve"
+   # Admins only, plain text, never a click. %id% = the turf id.
+   Hover_Admin_Tp: "&7Admin: &f/glw turf tp %id%"
+   # Hover of the plus. %place% = the turf under you or Hover_You_No_Turf, %x% and %z% = your block, %facing% = compass.
+   Hover_You: "&fYou&7: %place% &8(%x%, %z%) &7facing %facing%"
+   # The %place% of Hover_You when no turf covers you.
+   Hover_You_No_Turf: "no turf"
+   # One row of /glw map text. %relation% = Relation_ word, %reason% = a Reason line.
+   Text_Row: "&f%name% &7- &f%owner% &7(%relation%) - %distance%m %direction% - %reason%"
+   # The direction of a text row when the viewer stands inside that turf (no compass direction then).
+   Text_Here: "here"
+   # The owner in a text row when no gang owns the turf.
+   Text_Unclaimed: "Unclaimed"
+   # Relation words of a text row.
+   Relation_Own: "own"
+   Relation_Ally: "ally"
+   Relation_Rival: "rival"
+   Relation_Unclaimed: "unclaimed"
+   # A gang with no gang of the viewer's own (gangless viewer).
+   Relation_Other: "other"
+   # One row of /glw map legend. %name% = full name, %relation% = Legend_You, Legend_Ally, Legend_Rival or nothing.
+   Legend_Row: "&7%name% %relation%"
+   # Suffix of a legend row when the gang is shielded.
+   Legend_Shielded: "&7shielded"
+   # Suffix of a legend row when the gang's turf is under attack.
+   Legend_Under_Attack: "&7under attack"
+   # /glw map legend when no gang is in view.
+   Legend_Empty: "&7No gang in view."
+   # Hover of the +N more entry. %list% = the entries not shown.
+   Legend_More_Hover: "&7Not shown: %list%"
 # end Map
 
 # ---------------- Hud: the action-bar turf line ----------------
