@@ -13,6 +13,7 @@ import org.luckyraven.gangland.turf.config.TurfRules;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.events.TurfCaptureFailedEvent;
+import org.luckyraven.gangland.turf.events.TurfOwnerChangedEvent;
 import org.luckyraven.gangland.turf.events.TurfCaptureStartEvent;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.config.TurfNpcsConfigLoader;
@@ -24,6 +25,7 @@ import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
+import java.util.function.IntSupplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -93,6 +95,38 @@ class GarrisonDeployListenerTest {
 	@Test
 	@DisplayName("guards deployed at contest start outlive the longest contest, so a stalled contest keeps them")
 	void contestStart_lifespanOutlivesMaxContest() {
+		IntSupplier lifespan = captureLifespanAtContestStart();
+
+		// 10 minutes of Capture.Max_Contest_Minutes is 600 s; the guards must live past it.
+		assertTrue(lifespan.getAsInt() > CaptureRules.DEFAULTS.maxContestMinutes() * 60,
+		           "lifespan " + lifespan.getAsInt() + " must exceed the max contest");
+	}
+
+	@Test
+	@DisplayName("T-269: a reload that raises Max_Contest_Minutes extends the guards already in the field")
+	void deployLifespan_followsReload() {
+		IntSupplier lifespan = captureLifespanAtContestStart();
+		assertEquals(660, lifespan.getAsInt());
+
+		when(rules.capture()).thenReturn(new CaptureRules(CaptureRules.Window.OWNERS_ONLINE, 120, 24, 15, 60, 30, 4));
+
+		assertEquals(1860, lifespan.getAsInt(), "30 minutes of Max_Contest_Minutes + 60 s");
+	}
+
+	@Test
+	@DisplayName("T-270: an owner change recalls the old owner's guards and clears the garrison stock")
+	void ownerChange_recallsGuardsAndClearsStock() {
+		Turf turf = new Turf(1, "Turf", new CuboidRegion("world", 0, 0, 10, 10), 1, BigDecimal.TEN, 0L, 0L);
+		garrisons.add(1, 3);
+
+		listener.onOwnerChanged(new TurfOwnerChangedEvent(turf, 1, 2, TurfOwnerChangedEvent.Cause.CAPTURE));
+
+		verify(defenders).recall(1);
+		assertEquals(0, garrisons.count(1));
+	}
+
+	/** Runs a capture start on an owned turf with 2 guards in stock and returns the lifespan supplier handed to the deployer. */
+	private IntSupplier captureLifespanAtContestStart() {
 		when(npcConfig.getDefenderConfig()).thenReturn(new TurfDefenderConfig("turf_defender", 16.0, 600));
 		Turf turf = new Turf(1, "Turf", new CuboidRegion("world", 0, 0, 10, 10), 1, BigDecimal.TEN, 0L, 0L);
 		garrisons.add(1, 2);
@@ -107,11 +141,9 @@ class GarrisonDeployListenerTest {
 			listener.onCaptureStart(new TurfCaptureStartEvent(turf, challenger));
 		}
 
-		ArgumentCaptor<Integer> lifespan = ArgumentCaptor.forClass(Integer.class);
+		ArgumentCaptor<IntSupplier> lifespan = ArgumentCaptor.forClass(IntSupplier.class);
 		verify(defenders).deploy(eq(1), any(Location.class), eq("turf_defender"), any(), eq(2), anyDouble(),
 		                         lifespan.capture());
-		// 10 minutes of Capture.Max_Contest_Minutes is 600 s; the guards must live past it.
-		assertTrue(lifespan.getValue() > CaptureRules.DEFAULTS.maxContestMinutes() * 60,
-		           "lifespan " + lifespan.getValue() + " must exceed the max contest");
+		return lifespan.getValue();
 	}
 }

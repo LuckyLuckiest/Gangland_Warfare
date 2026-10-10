@@ -29,6 +29,7 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.LongSupplier;
 
 
 /**
@@ -53,6 +54,11 @@ public final class TurfDigestListener implements Listener {
 	private final TurfMessages    text;
 	private final CaptureSettings capture;
 	private final JavaPlugin      plugin;
+
+	private LongSupplier clock = System::currentTimeMillis;
+
+	void setClock(LongSupplier clock) {
+	}
 
 	public TurfDigestListener(TurfEventBuffer buffer,
 	                          TurfManager turfs,

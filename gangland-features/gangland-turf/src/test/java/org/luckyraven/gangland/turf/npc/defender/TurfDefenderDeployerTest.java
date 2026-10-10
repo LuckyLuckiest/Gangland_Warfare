@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -98,6 +100,7 @@ class TurfDefenderDeployerTest {
 		putDefender(deployer, 1, alive);
 		putDefender(deployer, 1, dying);
 		when(dying.isValid()).thenReturn(false);
+		deployer.markKilled(dying);
 
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
 			deployer.tick();
@@ -112,11 +115,43 @@ class TurfDefenderDeployerTest {
 	}
 
 	@Test
+	@DisplayName("T-251: a guard that vanished without dying (despawned or unloaded) fires no TurfDefenderDownEvent")
+	void despawnedDefender_firesNoDefenderDown() throws Exception {
+		TurfDefenderDeployer deployer = newDeployer();
+		CivilianNpc alive     = liveNpc();
+		CivilianNpc despawned = liveNpc();
+		putDefender(deployer, 1, alive);
+		putDefender(deployer, 1, despawned);
+		when(despawned.isValid()).thenReturn(false);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			deployer.tick();
+
+			verify(bukkit.pluginManager(), org.mockito.Mockito.never()).callEvent(org.mockito.ArgumentMatchers.any(Event.class));
+		}
+		assertEquals(1, deployer.aliveCount(1));
+	}
+
+	@Test
+	@DisplayName("T-269: the lifespan is read on every tick, so a reload extends guards already in the field")
+	void lifespanSupplier_isReadEachTick() throws Exception {
+		TurfDefenderDeployer deployer = newDeployer();
+		CivilianNpc guard = liveNpc();
+		AtomicInteger seconds = new AtomicInteger(0);
+		putDefender(deployer, 1, guard, System.currentTimeMillis(), seconds::get);
+
+		seconds.set(600);
+		deployer.tick();
+
+		assertEquals(1, deployer.aliveCount(1));
+	}
+
+	@Test
 	@DisplayName("a guard removed because its lifespan ran out fires no TurfDefenderDownEvent")
 	void expiredDefender_firesNothing() throws Exception {
 		TurfDefenderDeployer deployer = newDeployer();
 		CivilianNpc expired = liveNpc();
-		putDefender(deployer, 1, expired, System.currentTimeMillis() - 1_000L);
+		putDefender(deployer, 1, expired, System.currentTimeMillis() - 1_000L, () -> 0);
 
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
 			deployer.tick();
@@ -137,19 +172,24 @@ class TurfDefenderDeployerTest {
 	}
 
 	/**
-	 * Builds one {@code Group} holding one {@code TrackedDefender(npc, Long.MAX_VALUE)} and installs it into the
-	 * deployer's private {@code byTurfId} map under {@code turfId} — both nested types are private with no public
-	 * constructor, so this goes through reflection rather than the {@link TurfDefenderDeployer#deploy} seam (which
-	 * needs a live Citizens registry via {@code NpcSupport.available()}).
+	 * Builds one {@code Group} holding one {@code TrackedDefender} that expires at {@code Long.MAX_VALUE}, and installs it
+	 * into the deployer's private {@code byTurfId} map under {@code turfId} - both nested types are private with no
+	 * public constructor, so this goes through reflection rather than the {@link TurfDefenderDeployer#deploy} seam
+	 * (which needs a live Citizens registry via {@code NpcSupport.available()}).
 	 */
-	@SuppressWarnings("unchecked")
 	private static void putDefender(TurfDefenderDeployer deployer, int turfId, CivilianNpc npc) throws Exception {
 		putDefender(deployer, turfId, npc, Long.MAX_VALUE);
 	}
 
-	@SuppressWarnings("unchecked")
 	private static void putDefender(TurfDefenderDeployer deployer, int turfId, CivilianNpc npc, long expiresAt)
 			throws Exception {
+		putDefender(deployer, turfId, npc, expiresAt, () -> 0);
+	}
+
+	/** A guard deployed at {@code deployedAt} whose lifespan (seconds) is read from {@code lifespanSeconds}. */
+	@SuppressWarnings("unchecked")
+	private static void putDefender(TurfDefenderDeployer deployer, int turfId, CivilianNpc npc, long deployedAt,
+	                                IntSupplier lifespanSeconds) throws Exception {
 		Class<?> groupClass           = Class.forName(TurfDefenderDeployer.class.getName() + "$Group");
 		Class<?> trackedDefenderClass = Class.forName(TurfDefenderDeployer.class.getName() + "$TrackedDefender");
 
@@ -163,9 +203,10 @@ class TurfDefenderDeployerTest {
 			byTurfId.put(turfId, group);
 		}
 
-		Constructor<?> defenderCtor = trackedDefenderClass.getDeclaredConstructor(CivilianNpc.class, long.class);
+		Constructor<?> defenderCtor = trackedDefenderClass.getDeclaredConstructor(CivilianNpc.class, long.class,
+		                                                                          IntSupplier.class);
 		defenderCtor.setAccessible(true);
-		Object trackedDefender = defenderCtor.newInstance(npc, expiresAt);
+		Object trackedDefender = defenderCtor.newInstance(npc, deployedAt, lifespanSeconds);
 
 		Field defendersField = groupClass.getDeclaredField("defenders");
 		defendersField.setAccessible(true);

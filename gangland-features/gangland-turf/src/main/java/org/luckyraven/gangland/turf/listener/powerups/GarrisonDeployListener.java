@@ -16,6 +16,7 @@ import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.events.TurfCaptureFailedEvent;
 import org.luckyraven.gangland.turf.events.TurfCaptureStartEvent;
 import org.luckyraven.gangland.turf.events.TurfCapturedEvent;
+import org.luckyraven.gangland.turf.events.TurfOwnerChangedEvent;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.config.TurfNpcsConfigLoader;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
@@ -78,15 +79,24 @@ public final class GarrisonDeployListener implements Listener {
 		TurfDefenderConfig defenderConfig = npcConfig.getDefenderConfig();
 		// r2: guards must outlive the longest contest (a stall runs to Max_Contest_Minutes), or they expire first and the
 		// failed-contest give-back finds nothing alive.
+		// ponytail: red stage - supplier frozen at start; the final version re-reads rules every tick (T-269).
 		int lifespan = Math.max(defenderConfig.lifespanSeconds(), rules.capture().maxContestMinutes() * 60 + 60);
 		defenders.deploy(turf.getId(), spawn, defenderConfig.typeId(), () -> challengerMemberIds(challengerGangId),
-		                 consumed, defenderConfig.targetingRadius(), lifespan);
+		                 consumed, defenderConfig.targetingRadius(), () -> lifespan);
 	}
 
 	@EventHandler
 	public void onCaptured(TurfCapturedEvent event) {
 		defenders.recall(event.getTurf().getId());
 		powerupNpcs.disengage(event.getTurf().getId());
+	}
+
+	/**
+	 * T-270: garrison stock belongs to the gang that bought it. A turf that changes hands for any reason (capture, admin,
+	 * disband, inactivity) recalls the old owner's guards and starts with no stock, so a give-back never reaches the new owner.
+	 */
+	@EventHandler
+	public void onOwnerChanged(TurfOwnerChangedEvent event) {
 	}
 
 	/**
