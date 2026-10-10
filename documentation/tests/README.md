@@ -62,6 +62,7 @@ Run the checklist for any feature whose code, config, or dependencies changed th
 | 16 | [Civilians](./features/civilians.md)               | [civilians (dev)](../developer/civilians.md)      |
 | 17 | [Trader & Shop](./features/trader-shop.md)         | —                                                 |
 | 18 | [Cars & Fuel](./features/cars-fuel.md)             | [gadgets (dev)](../developer/gadgets.md)          |
+| 19 | [Turf](./features/turf.md)                         | [turf](../features/turf.md)                       |
 
 ---
 
