@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.turf.npc.view;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.keystone.inventory.flow.FlowState;
 import org.luckyraven.gangland.turf.data.Turf;
@@ -31,6 +32,10 @@ public final class TurfPowerupFlowSession implements FlowState {
 	private final Gang   viewerGang;
 	@Getter
 	private final String npcDisplayName;
+	/** Zero-based page of the buff catalogue the viewer is on (W2-Q, TF-18). */
+	@Getter
+	@Setter
+	private int          buffPage;
 
 	public TurfPowerupFlowSession(Turf turf, Gang ownerGang, Gang viewerGang, String npcDisplayName) {
 		this.turf           = turf;

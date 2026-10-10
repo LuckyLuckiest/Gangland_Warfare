@@ -89,7 +89,8 @@ public final class TurfPowerupManager implements BeanLifecycle {
 	 */
 	public TurfPowerupNpc place(int turfId, Location location, @Nullable String displayName) {
 		remove(turfId);
-		TurfPowerupData data = new TurfPowerupData(turfId, location, displayName);
+		String name = displayName != null ? displayName : settings.get().displayName();
+		TurfPowerupData data = new TurfPowerupData(turfId, location, name);
 		repository.save(data);
 		return spawn(data);
 	}

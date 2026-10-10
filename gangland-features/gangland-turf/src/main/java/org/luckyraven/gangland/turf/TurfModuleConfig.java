@@ -43,6 +43,7 @@ import org.luckyraven.gangland.turf.npc.config.TurfNpcsConfigLoader;
 import org.luckyraven.gangland.turf.npc.config.TurfPowerupOpenContractImpl;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
 import org.luckyraven.gangland.turf.npc.guard.TurfCopGuard;
+import org.luckyraven.gangland.turf.npc.view.QuartermasterAccess;
 import org.luckyraven.gangland.turf.npc.view.TurfPowerupBuffCatalogueView;
 import org.luckyraven.gangland.turf.npc.view.TurfPowerupFlow;
 import org.luckyraven.gangland.turf.npc.view.TurfPowerupGarrisonView;
@@ -328,25 +329,36 @@ public final class TurfModuleConfig {
 	}
 
 	@Bean
+	public QuartermasterAccess quartermasterAccess(TurfManager turfs, GangLookupContract gangs,
+	                                               UserLookupContract users) {
+		return new QuartermasterAccess(turfs, gangs, users);
+	}
+
+	@Bean
 	public TurfPowerupMenuView turfPowerupMenuView(@SuppressWarnings("unused") Settings settings,
-	                                               GarrisonManager garrisons, ActiveBuffManager buffs) {
-		return new TurfPowerupMenuView(garrisons, buffs,
+	                                               GarrisonManager garrisons, ActiveBuffManager buffs,
+	                                               TurfMessages messages) {
+		return new TurfPowerupMenuView(garrisons, buffs, messages,
 		                               Settings.getInventoryFillItem(), Settings.getInventoryFillName());
 	}
 
 	@Bean
 	public TurfPowerupBuffCatalogueView turfPowerupBuffCatalogueView(@SuppressWarnings("unused") Settings settings,
 	                                                                 PowerupRegistry registry,
-	                                                                 ActiveBuffManager buffs) {
-		return new TurfPowerupBuffCatalogueView(registry, buffs,
+	                                                                 ActiveBuffManager buffs,
+	                                                                 QuartermasterAccess access,
+	                                                                 TurfMessages messages) {
+		return new TurfPowerupBuffCatalogueView(registry, buffs, access, messages,
 		                                        Settings.getInventoryFillItem(),
 		                                        Settings.getInventoryFillName());
 	}
 
 	@Bean
 	public TurfPowerupGarrisonView turfPowerupGarrisonView(@SuppressWarnings("unused") Settings settings,
-	                                                       GarrisonManager garrisons) {
-		return new TurfPowerupGarrisonView(garrisons,
+	                                                       GarrisonManager garrisons, PowerupRegistry registry,
+	                                                       ActiveBuffManager buffs, QuartermasterAccess access,
+	                                                       TurfRules rules, TurfMessages messages) {
+		return new TurfPowerupGarrisonView(garrisons, registry, buffs, access, rules, messages,
 		                                   Settings.getInventoryFillItem(), Settings.getInventoryFillName());
 	}
 
@@ -360,7 +372,9 @@ public final class TurfModuleConfig {
 	@Bean
 	public TurfPowerupOpenContract turfPowerupOpenContract(TurfPowerupFlow flow, TurfManager turfs,
 	                                                       TurfPowerupManager npcs, GangLookupContract gangs,
-	                                                       UserLookupContract users) {
-		return new TurfPowerupOpenContractImpl(flow, turfs, npcs, gangs, users);
+	                                                       UserLookupContract users, TurfMessages messages,
+	                                                       TurfNpcsConfigLoader loader) {
+		return new TurfPowerupOpenContractImpl(flow, turfs, npcs, gangs, users, messages,
+		                                       loader::getPowerupSettings);
 	}
 }

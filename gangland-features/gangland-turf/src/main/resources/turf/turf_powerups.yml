@@ -21,34 +21,40 @@
 #
 # Effect_Type values:
 #   INCOME_MULTIPLIER     Magnitude is the multiplier on the per-interval payout. 1.25 → +25% income.
-#   CAPTURE_DEFENSE_BONUS Magnitude is the flat number added to the defender side of the capture tug-of-war.
-#                         1.0 ≈ one phantom defender that helps push attackers back.
-#   GARRISON_DISCOUNT     Magnitude is the multiplier on the garrison Per_Defender_Cost. 0.8 → 20% off.
+#   GARRISON_DISCOUNT     Magnitude is the multiplier on the guard price (Garrison.Cost_Per_Guard below). 0.8 → 20% off.
+#   CAPTURE_DEFENSE_BONUS retired in 0.17.0 (guards on the capture bar replaced it). An entry that still uses it is
+#                         skipped with a warning.
 #
-# Cost is paid out of the owning gang's bank when the buff is activated.
+# Cost is paid out of the owning gang's bank when the buff is activated. The prices here are the shipped defaults.
+# The reserve cap on guards per turf is turf_rules.yml Garrison.Max_Reserve.
 # Duration_Seconds is wall-clock; the buff expires once that many seconds elapse, regardless of capture activity.
 Powerups:
+   # Income boost, 1.25 times the payout for an hour.
    small_income_boost:
       Display_Name: "&aSmall Income Boost"
-      Cost: 5000
+      # Price in the gang bank.
+      Cost: 300
       Effect_Type: INCOME_MULTIPLIER
       Magnitude: 1.25
       Duration_Seconds: 3600
+   # Income boost, 1.75 times the payout for an hour.
    large_income_boost:
       Display_Name: "&2Large Income Boost"
-      Cost: 15000
+      # Price in the gang bank.
+      Cost: 1000
       Effect_Type: INCOME_MULTIPLIER
       Magnitude: 1.75
       Duration_Seconds: 3600
-   reinforced_defense:
-      Display_Name: "&cReinforced Defense"
-      Cost: 8000
-      Effect_Type: CAPTURE_DEFENSE_BONUS
-      Magnitude: 1.0
-      Duration_Seconds: 1800
+   # Cheaper guards at the Quartermaster for half an hour.
    garrison_discount:
       Display_Name: "&bGarrison Discount"
+      # Price in the gang bank.
       Cost: 2500
       Effect_Type: GARRISON_DISCOUNT
       Magnitude: 0.8
       Duration_Seconds: 1800
+
+# Guards bought at the Quartermaster ("Garrison" panel). They hold the capture bar and fight attackers.
+Garrison:
+   # Price of one guard, paid from the gang bank. A garrison_discount boost multiplies it (0.8 = 20% off).
+   Cost_Per_Guard: 1000

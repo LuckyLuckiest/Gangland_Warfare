@@ -6,5 +6,10 @@ package org.luckyraven.gangland.turf.npc.config;
  * civilian NPCs, just with right-click panel access layered on top and a hostile target set when the turf is being
  * contested.
  */
-public record TurfPowerupSettings(String typeId, double targetingRadius) {
+public record TurfPowerupSettings(String typeId, double targetingRadius, String displayName) {
+
+	/** Settings with the default Quartermaster name (W2-Q, TF-38). */
+	public TurfPowerupSettings(String typeId, double targetingRadius) {
+		this(typeId, targetingRadius, "Quartermaster");
+	}
 }
