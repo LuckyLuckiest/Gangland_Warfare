@@ -51,6 +51,9 @@ import org.luckyraven.gangland.turf.selection.WandSelectionManager;
 import org.luckyraven.gangland.turf.task.GangPresenceTracker;
 import org.luckyraven.gangland.turf.task.InactivityReleaseTask;
 import org.luckyraven.gangland.turf.task.TurfIncomeDistributor;
+import org.luckyraven.gangland.turf.log.TurfEventBuffer;
+import org.bukkit.Bukkit;
+import org.luckyraven.keystone.util.ActionBarManager;
 import org.luckyraven.gangland.turf.task.TurfLocationTracker;
 
 import java.util.List;
@@ -235,12 +238,25 @@ public final class TurfModuleConfig {
 	public TurfIncomeDistributor turfIncomeDistributor(JavaPlugin plugin, TurfSettings settings,
 	                                                   TurfManager turfs,
 	                                                   GangLookupContract gangs,
+	                                                   UserLookupContract users,
 	                                                   ActiveBuffManager buffs,
-	                                                   TurfOwnership ownership) {
+	                                                   TurfOwnership ownership,
+	                                                   TurfRules rules,
+	                                                   TurfEventBuffer buffer,
+	                                                   TurfMessages text) {
 		long                 intervalTicks = settings.getIncomeIntervalMinutes() * 60L * 20L;
-		TurfIncomeDistributor distributor   = new TurfIncomeDistributor(plugin, turfs, gangs, buffs, ownership, intervalTicks);
+		TurfIncomeDistributor distributor   = new TurfIncomeDistributor(plugin, turfs, gangs, users, buffs, ownership,
+		                                                                intervalTicks, rules, buffer, text,
+		                                                                ActionBarManager::sendBackground,
+		                                                                () -> Bukkit.getOnlinePlayers(),
+		                                                                System::currentTimeMillis);
 		distributor.start();
 		return distributor;
+	}
+
+	@Bean
+	public TurfEventBuffer turfEventBuffer() {
+		return new TurfEventBuffer();
 	}
 
 	@Bean

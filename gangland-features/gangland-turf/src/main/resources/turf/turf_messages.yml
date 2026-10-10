@@ -195,9 +195,30 @@ Turf:
 # end Alerts
 
 # ---------------- Income: the payout line and the turf cap line (W2-N2) ----------------
+Income:
+   # Action bar to online members at each payout. %money_symbol%, %amount% = paid this payout, %count% = turfs that
+   # paid, %bank% = gang bank after the payout.
+   Action_Bar: "&aTurf income +%money_symbol%%amount% &7(%count% turfs) - bank %money_symbol%%bank%"
+   # Line in /glw turf for your gang. %owned% = turfs held, %cap% = turfs your gang may hold, %paying% = turfs paying now.
+   Cap_Line: "&7Turfs &f%owned%/%cap% &7- &f%paying% &7paying"
 # end Income
 
 # ---------------- Digest: what happened while you were away (W2-N2) ----------------
+Digest:
+   # First line on join when your gang earned turf income since you left. %money_symbol%, %amount%.
+   Income: "&7Income earned while you were away: &a%money_symbol%%amount%"
+   # Your gang took a turf. %turf%, %gang% = previous owner ("unclaimed" when none).
+   Captured: "&aCaptured %turf% &7from %gang%"
+   # Your gang lost a turf to a capture. %turf%, %gang% = new owner.
+   Lost: "&cLost %turf% &7to %gang%"
+   # Your gang held a turf. %turf%, %gang% = attackers.
+   Held: "&aHeld %turf% &7against %gang%"
+   # An attack ran out of time (both sides). %turf%.
+   Stalled: "&7Attack on %turf% stalled"
+   # Your gang lost a turf because nobody was online for the inactivity limit. %turf%, %days%.
+   Released_Inactive: "&cLost %turf% &7(no owner online for %days% days)"
+   # Your gang lost a turf because its record could not be found. %turf%.
+   Released_Orphaned: "&cLost %turf% &7(gang data missing)"
 # end Digest
 
 # ---------------- Quartermaster: the turf shop panels (W2-Q) ----------------

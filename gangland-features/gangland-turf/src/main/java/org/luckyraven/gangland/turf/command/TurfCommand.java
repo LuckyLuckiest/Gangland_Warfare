@@ -22,6 +22,8 @@ import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.turf.capture.CaptureEligibility;
 import org.luckyraven.gangland.turf.capture.TurfOwnership;
 import org.luckyraven.gangland.turf.config.TurfMessages;
+import org.luckyraven.gangland.turf.log.TurfEventBuffer;
+import org.luckyraven.gangland.turf.task.TurfIncomeDistributor;
 import org.luckyraven.gangland.turf.config.TurfRules;
 import org.luckyraven.gangland.turf.config.TurfSettings;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
@@ -72,6 +74,7 @@ public final class TurfCommand extends Command {
 	private final TurfMessages         text;
 	private final CaptureEligibility   eligibility;
 	private final TurfRules            rules;
+	private final TurfEventBuffer      events;
 
 	public TurfCommand(JavaPlugin plugin,
 	                   TurfManager turfs,
@@ -89,7 +92,8 @@ public final class TurfCommand extends Command {
 	                   DependencyContainer container,
 	                   TurfMessages text,
 	                   CaptureEligibility eligibility,
-	                   TurfRules rules) {
+	                   TurfRules rules,
+	                   TurfEventBuffer events) {
 		super(plugin, "turf", false);
 
 		this.turfs           = turfs;
@@ -108,6 +112,7 @@ public final class TurfCommand extends Command {
 		this.text            = text;
 		this.eligibility     = eligibility;
 		this.rules           = rules;
+		this.events          = events;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -135,7 +140,7 @@ public final class TurfCommand extends Command {
 	}
 
 	/** One clickable line that opens the map ({@code Turf.Map_Link}). */
-	static void sendMapLink(CommandSender sender, TurfMessages text) {
+	public static void sendMapLink(CommandSender sender, TurfMessages text) {
 		sender.spigot().sendMessage(new ComponentBuilder(text.text("Turf.Map_Link", "&7[map] &8- open /glw map"))
 				.event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/" + GanglandApi.SHORT_PREFIX + " map"))
 				.create());
@@ -253,6 +258,15 @@ public final class TurfCommand extends Command {
 		var from = sender instanceof Player player ? player.getLocation() : null;
 		for (Turf turf : owned) {
 			TurfListCommand.sendRow(sender, text, turf, gangName, from);
+		}
+		int cap    = rules.cap(gang == null ? 0 : gang.getLevel().getLevelValue());
+		int paying = gang != null && TurfIncomeDistributor.isActive(gang, System.currentTimeMillis(), rules) ?
+		             Math.min(owned.size(), cap) :
+		             0;
+		sender.sendMessage(text.text("Income.Cap_Line", "&7Turfs &f%owned%/%cap% &7- &f%paying% &7paying",
+		                             "owned", owned.size(), "cap", cap, "paying", paying));
+		for (TurfEventBuffer.Entry entry : events.latest(gangId, 3)) {
+			sender.sendMessage(entry.line());
 		}
 		sendMapLink(sender, text);
 	}

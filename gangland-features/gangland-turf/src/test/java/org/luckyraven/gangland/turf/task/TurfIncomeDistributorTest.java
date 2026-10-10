@@ -122,12 +122,13 @@ class TurfIncomeDistributorTest {
 		return gang;
 	}
 
+	/** A real bank (the gang economy) starting at zero; a mock cannot be made of this Keystone class. */
 	private static EconomyHandler economy() {
-		return mock(EconomyHandler.class);
+		return new EconomyHandler(null);
 	}
 
-	private static BigDecimal amount(String value) {
-		return new BigDecimal(value).setScale(2);
+	private static void assertBank(String expected, EconomyHandler economy) {
+		assertEquals(0, new BigDecimal(expected).compareTo(economy.getAmount()));
 	}
 
 	@Test
@@ -177,7 +178,7 @@ class TurfIncomeDistributorTest {
 
 		distributor().distribute();
 
-		verify(economy, never()).depositAmount(any());
+		assertBank("0", economy);
 		assertTrue(gangs.experienceCalls().isEmpty());
 	}
 
@@ -190,7 +191,7 @@ class TurfIncomeDistributorTest {
 
 		distributor().distribute();
 
-		verify(economy, never()).depositAmount(any());
+		assertBank("0", economy);
 	}
 
 	@Test
@@ -202,7 +203,7 @@ class TurfIncomeDistributorTest {
 
 		distributor().distribute();
 
-		verify(economy).depositAmount(amount("250"));
+		assertBank("250", economy);
 		assertEquals(List.of(new FakeGangLookup.XpCall(1, 1.0)), gangs.experienceCalls());
 	}
 
@@ -216,7 +217,7 @@ class TurfIncomeDistributorTest {
 
 		distributor().distribute();
 
-		verify(economy).depositAmount(amount("500"));
+		assertBank("500", economy);
 	}
 
 	@Test
@@ -230,7 +231,7 @@ class TurfIncomeDistributorTest {
 
 		distributor().distribute();
 
-		verify(economy, times(2)).depositAmount(amount("250"));
+		assertBank("500", economy);
 		assertEquals(2, gangs.experienceCalls().size());
 	}
 
