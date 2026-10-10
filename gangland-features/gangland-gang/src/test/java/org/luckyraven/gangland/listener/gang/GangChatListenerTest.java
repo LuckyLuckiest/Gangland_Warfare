@@ -148,6 +148,20 @@ class GangChatListenerTest {
 	}
 
 	@Test
+	@DisplayName("a toggled player with no cached user (quit raced the deliver task) gets nothing re-sent as public chat")
+	void toggledButUncached_neverRepostsAsPublicChat() {
+		channel.toggle(rex.getUniqueId());
+		when(userManager.getUser(rex)).thenReturn(null);
+		AsyncPlayerChatEvent event = chat(rex, "hi");
+
+		listener.onChat(event);
+		capturedTask().run();
+
+		assertFalse(channel.isOn(rex.getUniqueId()));
+		verify(rex, never()).chat(anyString());
+	}
+
+	@Test
 	@DisplayName("quitting clears the player's gang chat toggle")
 	void quit_forgetsToggle() {
 		channel.toggle(rex.getUniqueId());

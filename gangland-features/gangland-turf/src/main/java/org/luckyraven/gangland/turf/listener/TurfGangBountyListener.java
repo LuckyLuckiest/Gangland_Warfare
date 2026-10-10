@@ -18,8 +18,8 @@ import java.math.BigDecimal;
 /**
  * D8 = B claim: when a gang takes a turf from a gang with a bounty on it, the whole bounty moves into the capturing
  * gang's bank and the bounty resets. Money is moved, never minted. The whole pot moves only when it fits under the
- * capturing gang's {@code Maximum_Balance} (T-259); otherwise nothing moves and the bounty stays on the bountied gang. An unclaimed turf, an ally, the same gang, or a
- * previous owner with no bounty moves nothing.
+ * capturing gang's {@code Maximum_Balance} (T-259); otherwise nothing moves and the bounty stays on the bountied gang.
+ * An unclaimed turf, an ally, the same gang, or a previous owner with no bounty moves nothing.
  */
 @ListenerHandler
 public final class TurfGangBountyListener implements Listener {

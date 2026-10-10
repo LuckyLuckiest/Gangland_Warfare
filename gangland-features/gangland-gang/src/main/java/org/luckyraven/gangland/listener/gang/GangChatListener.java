@@ -59,7 +59,11 @@ public class GangChatListener implements Listener {
 		if (user == null || !user.hasGang()) {
 			channel.forget(player.getUniqueId());
 			player.sendMessage(messages.text("Social.Chat_Off", "&7Gang chat off."));
-			player.chat(message); // T-264: the toggle is off now, so this line goes to public chat instead of being lost
+			// T-264: a null user is not "gangless" (quit removes the user before this task runs); only a known gangless
+			// sender gets the line re-sent as public chat.
+			if (user != null) {
+				player.chat(message);
+			}
 			return;
 		}
 
