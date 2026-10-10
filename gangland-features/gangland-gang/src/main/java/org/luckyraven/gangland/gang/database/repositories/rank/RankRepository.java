@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.gang.database.repositories.rank;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.gang.database.repositories.gang.GangRepository;
 import org.luckyraven.gangland.gang.database.tables.rank.RankTable;
 import org.luckyraven.gangland.gang.rank.Rank;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
@@ -58,17 +59,22 @@ public class RankRepository extends AbstractRepository<Rank> {
 		List<Object[]> data  = tableBackend().selectAll();
 
 		for (Object[] result : data) {
-			int    id         = (int) result[0];
-			String name       = String.valueOf(result[1]);
-			String vaultGroup = result.length > 2 && result[2] != null ? String.valueOf(result[2]) : "";
-			if (vaultGroup.isEmpty()) vaultGroup = null; // '' is how RankTable stores an unlinked rank
-
-			Rank rank = new Rank(name, id);
-			rank.setVaultGroup(vaultGroup);
-			ranks.add(rank);
+			ranks.add(fromRow(result));
 		}
 
 		return ranks;
+	}
+
+	/** One rank row; the id reads through {@link Number}, a SQL NULL as 0 (T-199). */
+	public static Rank fromRow(Object[] result) {
+		int    id         = GangRepository.num(result[0]).intValue();
+		String name       = String.valueOf(result[1]);
+		String vaultGroup = result.length > 2 && result[2] != null ? String.valueOf(result[2]) : "";
+		if (vaultGroup.isEmpty()) vaultGroup = null; // '' is how RankTable stores an unlinked rank
+
+		Rank rank = new Rank(name, id);
+		rank.setVaultGroup(vaultGroup);
+		return rank;
 	}
 
 	@Override

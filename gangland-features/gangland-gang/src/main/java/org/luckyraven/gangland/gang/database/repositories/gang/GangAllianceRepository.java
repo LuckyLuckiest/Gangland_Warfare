@@ -98,9 +98,10 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> imp
 
 		// Load all gang alliances
 		for (Object[] result : gangAlliesData) {
-			int  gangId  = (int) result[0];
-			int  allieId = (int) result[1];
-			long since   = (long) result[2];
+			AllianceRow row     = fromRow(result);
+			int         gangId  = row.gangId();
+			int         allieId = row.allyId();
+			long        since   = row.since();
 
 			Gang gang = gangLookup.findById(gangId);
 			Gang ally = gangLookup.findById(allieId);
@@ -117,6 +118,15 @@ public class GangAllianceRepository extends AbstractRepository<GangAlliance> imp
 
 		return alliances;
 	}
+
+	/** One alliance row, ids and timestamp read through {@link Number}; a SQL NULL reads as 0 (T-199). */
+	public static AllianceRow fromRow(Object[] result) {
+		return new AllianceRow(GangRepository.num(result[0]).intValue(), GangRepository.num(result[1]).intValue(),
+		                       GangRepository.num(result[2]).longValue());
+	}
+
+	/** The three columns of a {@code gang_alliance} row. */
+	public record AllianceRow(int gangId, int allyId, long since) { }
 
 	@Override
 	protected <E> Consumer<E> processSave() {

@@ -23,7 +23,7 @@ List:
    # Header line. %page% is the current page, %pages% the total.
    Header: "&6Gangs &7- page %page%/%pages%"
    # One gang per row. %gang% is the display name, %members% the member count, %online% how many are online.
-   Row: "&f%gang% &7- %members% members - %online% online"
+   Row: "&f%gang% &7- members: %members% - online: %online%"
    # Clickable footer when more pages follow. %page% is the next page number.
    Next: "&7[Next page &e%page%&7]"
 # end List
@@ -54,6 +54,8 @@ Names:
    Invalid: "&cGang names are 3 to 16 letters, digits or underscores."
    # Another gang already has this name, ignoring case. Names are always unique.
    Taken: "&cA gang named %gang% already exists."
+   # The rank named by Rank.Tail does not exist, so a new gang has no owner seat. Refused before any fee is taken.
+   No_Owner_Rank: "&cGangs cannot be created right now: the owner rank is missing. Tell an admin."
 # end Names
 
 # ---------------- Social: gang chat, gang join, gang recruiting (W2-P2) ----------------

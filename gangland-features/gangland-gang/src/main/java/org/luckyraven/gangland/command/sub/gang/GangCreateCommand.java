@@ -1,6 +1,8 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import lombok.CustomLog;
 import org.luckyraven.gangland.gang.GangSettings;
+import org.luckyraven.gangland.gang.rank.Rank;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -39,6 +41,7 @@ import java.util.regex.Pattern;
 
 import org.luckyraven.keystone.bean.Qualifier;
 
+@CustomLog
 class GangCreateCommand extends SubArgument {
 
 	private final JavaPlugin            gangland;
@@ -128,6 +131,24 @@ class GangCreateCommand extends SubArgument {
 				return;
 			}
 
+			// T-233: a renamed Rank.Tail leaves the creator no owner seat; refuse before the fee is taken.
+			Rank tail = rankManager.get(GangSettings.getGangRankTail());
+			if (tail == null) {
+				log.warn("Rank.Tail '{}' matches no rank; refusing gang creation", GangSettings.getGangRankTail());
+				user.sendMessage(gangMessages.text("Names.No_Owner_Rank",
+				                                   "&cGangs cannot be created right now: the owner rank is missing. " +
+				                                   "Tell an admin."));
+
+				createGangName.remove(user);
+
+				CountdownTimer timer = createGangTimer.get(sender);
+				if (timer != null) {
+					timer.stop();
+					createGangTimer.remove(sender);
+				}
+				return;
+			}
+
 			try {
 				user.getEconomy().withdrawAmount(GangSettings.getGangCreateFee());
 			} catch (EconomyException exception) {
@@ -150,7 +171,7 @@ class GangCreateCommand extends SubArgument {
 			Gang gang = new Gang(id);
 
 			member.setGangJoinDateLong(Instant.now().toEpochMilli());
-			gang.addMember(user, member, rankManager.get(GangSettings.getGangRankTail()));
+			gang.addMember(user, member, tail);
 			gang.setName(createGangName.get(user).get());
 			gang.getEconomy().setAmount(GangSettings.getGangInitialBalance());
 

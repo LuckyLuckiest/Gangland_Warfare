@@ -169,6 +169,22 @@ class GangCreateConfirmTest {
 				(String line) -> ChatColor.stripColor(line).contains("A gang named Rats already exists.")));
 	}
 
+	@Test
+	@DisplayName("T-233: with the owner rank missing, the confirm refuses before any fee is taken and creates nothing")
+	@SuppressWarnings("unchecked")
+	void missingOwnerRank_refusedBeforeFee() {
+		when(rankManager.get(GangSettings.getGangRankTail())).thenReturn(null);
+		Staged alice = staged("Alice");
+
+		stageName(alice, "Rats");
+		confirm(alice);
+
+		assertMoney("10000", alice.economy());
+		verify(gangManager, never()).add(any(Gang.class));
+		verify(alice.user()).sendMessage(argThat(
+				(String line) -> ChatColor.stripColor(line).contains("the owner rank is missing")));
+	}
+
 	/** One player's cached user, member and economy. */
 	private Staged staged(String label) {
 		UUID   uuid   = UUID.randomUUID();

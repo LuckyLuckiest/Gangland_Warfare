@@ -185,12 +185,13 @@ public class GangInviteCommand extends SubArgument {
 			mailManager.send(mail);
 
 			user.sendMessage(Messages.GANG_INVITE_PLAYER.toString().replace("%player%", targetStr));
-			if (targetOnline) {
-				user.sendMessage(Messages.GANG_INVITE_EXPIRES_ONLINE.toString());
-			} else if (offlineHours > 0) {
-				user.sendMessage(messages.inviteOfflineExpires(offlineHours));
-			} else {
-				user.sendMessage(Messages.GANG_INVITE_NO_EXPIRY.toString());
+			// T-208: the inviter hears only his own line; the expiry line is for the target.
+			if (!targetOnline) {
+				if (offlineHours > 0) {
+					user.sendMessage(messages.inviteOfflineExpires(offlineHours));
+				} else {
+					user.sendMessage(Messages.GANG_INVITE_NO_EXPIRY.toString());
+				}
 			}
 
 			if (targetOnline) {

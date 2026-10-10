@@ -34,38 +34,43 @@ public class GangRepository extends AbstractRepository<Gang> {
 		List<Object[]> gangsData = tableBackend().selectAll();
 
 		for (Object[] result : gangsData) {
-			int    v                  = 0;
-			int    id                 = (int) result[v++];
-			String name               = text(result[v++], "");
-			String displayName        = text(result[v++], "");
-			String description        = text(result[v++], "Conquering the hood");
-			String color              = text(result[v++], Color.LIGHT_BLUE.name());
-			double balance            = num(result[v++]).doubleValue();
-			int    level              = num(result[v++]).intValue();
-			double experience         = num(result[v++]).doubleValue();
-			double bounty             = num(result[v++]).doubleValue();
-			long   created            = num(result[v++]).longValue();
-			long   lastMemberOnlineAt = num(result[v++]).longValue();
-			String state              = text(result[v], "INVITE");
-
-			Gang gang = new Gang(id);
-
-			gang.setName(name);
-			gang.setDisplayName(displayName);
-			gang.setColor(color);
-			gang.setDescription(description);
-			gang.getEconomy().setAmount(Currency.of(balance));
-			gang.getLevel().setLevelValue(level);
-			gang.getLevel().setExperience(experience);
-			gang.getBounty().setAmount(Currency.of(bounty));
-			gang.setCreated(created);
-			gang.setLastMemberOnlineAt(lastMemberOnlineAt);
-			gang.setState(parseState(state));
-
-			gangs.add(gang);
+			gangs.add(fromRow(result));
 		}
 
 		return gangs;
+	}
+
+	/** One gang row. Every numeric column reads through {@link Number}; a SQL NULL reads as 0 (T-199). */
+	public static Gang fromRow(Object[] result) {
+		int    v                  = 0;
+		int    id                 = num(result[v++]).intValue();
+		String name               = text(result[v++], "");
+		String displayName        = text(result[v++], "");
+		String description        = text(result[v++], "Conquering the hood");
+		String color              = text(result[v++], Color.LIGHT_BLUE.name());
+		double balance            = num(result[v++]).doubleValue();
+		int    level              = num(result[v++]).intValue();
+		double experience         = num(result[v++]).doubleValue();
+		double bounty             = num(result[v++]).doubleValue();
+		long   created            = num(result[v++]).longValue();
+		long   lastMemberOnlineAt = num(result[v++]).longValue();
+		String state              = text(result[v], "INVITE");
+
+		Gang gang = new Gang(id);
+
+		gang.setName(name);
+		gang.setDisplayName(displayName);
+		gang.setColor(color);
+		gang.setDescription(description);
+		gang.getEconomy().setAmount(Currency.of(balance));
+		gang.getLevel().setLevelValue(level);
+		gang.getLevel().setExperience(experience);
+		gang.getBounty().setAmount(Currency.of(bounty));
+		gang.setCreated(created);
+		gang.setLastMemberOnlineAt(lastMemberOnlineAt);
+		gang.setState(parseState(state));
+
+		return gang;
 	}
 
 	@Override
@@ -91,7 +96,7 @@ public class GangRepository extends AbstractRepository<Gang> {
 	}
 
 	/** A SQL NULL numeric column reads as 0; any other value is read through {@link Number}. */
-	static Number num(Object raw) {
+	public static Number num(Object raw) {
 		return raw instanceof Number number ? number : 0;
 	}
 

@@ -12,6 +12,7 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.member.Member;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.core.user.User;
@@ -171,19 +172,23 @@ public class GangAllyRejectCommand extends SubArgument {
 		}, sender -> new ArrayList<>(buildIncomingSenderMap(sender).keySet()), this::buildIncomingSenderMap);
 	}
 
+	/** T-202: an online player with no member row (not yet cached) belongs to no gang; never NPE on him. */
+	private boolean isMemberOf(Player player, int gangId) {
+		Member member = memberManager.getMember(player.getUniqueId());
+		return member != null && member.getGangId() == gangId;
+	}
+
 	private void doReject(Gang userGang, Gang sending, MailItem mail) {
 		Bukkit.getOnlinePlayers()
 				.stream()
-				.filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
-				                        sending.getId())
+				.filter(onlinePlayer -> isMemberOf(onlinePlayer, sending.getId()))
 				.toList()
 				.forEach(pl -> pl.sendMessage(
 						Messages.GANG_ALLY_REJECT.toString().replace("%gang%", userGang.getDisplayNameString())));
 
 		Bukkit.getOnlinePlayers()
 				.stream()
-				.filter(onlinePlayer -> memberManager.getMember(onlinePlayer.getUniqueId()).getGangId() ==
-				                        userGang.getId())
+				.filter(onlinePlayer -> isMemberOf(onlinePlayer, userGang.getId()))
 				.toList()
 				.forEach(pl -> pl.sendMessage(
 						Messages.GANG_ALLY_REJECT.toString().replace("%gang%", sending.getDisplayNameString())));

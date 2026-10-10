@@ -26,13 +26,14 @@ public final class GanglandRankLookup implements RankLookupContract {
 	}
 
 	/**
-	 * GR-28: an empty rank tree has no root; fall back to the tail rank (may still be null).
+	 * GR-28: an empty rank tree has no root; fall back to the head (lowest) rank, which is what callers want (T-203).
+	 * May still be null.
 	 */
 	@Override
 	public @Nullable Rank getRootRank() {
 		if (delegate.getRankTree().getRoot() == null) {
-			log.warn("The rank tree has no root; falling back to the tail rank");
-			return delegate.get(GangSettings.getGangRankTail());
+			log.warn("The rank tree has no root; falling back to the head rank");
+			return delegate.get(GangSettings.getGangRankHead());
 		}
 		return delegate.getRankTree().getRoot().getData();
 	}

@@ -2,6 +2,7 @@ package org.luckyraven.gangland.gang.database.repositories.rank;
 
 import lombok.CustomLog;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.gang.database.repositories.gang.GangRepository;
 import org.luckyraven.gangland.gang.database.tables.rank.RankParentTable;
 import org.luckyraven.gangland.gang.database.tables.rank.RankTable;
 import org.luckyraven.gangland.gang.rank.RankParent;
@@ -102,13 +103,15 @@ public class RankParentRepository extends AbstractRepository<RankParent> {
 		List<Object[]>   data        = tableBackend().selectAll();
 
 		for (Object[] result : data) {
-			int rankId   = (int) result[0];
-			int parentId = (int) result[1];
-
-			rankParents.add(new RankParent(rankId, parentId));
+			rankParents.add(fromRow(result));
 		}
 
 		return rankParents;
+	}
+
+	/** One rank-parent row; both ids read through {@link Number}, a SQL NULL as 0 (T-199). */
+	public static RankParent fromRow(Object[] result) {
+		return new RankParent(GangRepository.num(result[0]).intValue(), GangRepository.num(result[1]).intValue());
 	}
 
 	@Override
