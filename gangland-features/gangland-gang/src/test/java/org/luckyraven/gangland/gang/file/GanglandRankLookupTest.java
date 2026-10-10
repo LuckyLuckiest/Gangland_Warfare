@@ -25,17 +25,17 @@ class GanglandRankLookupTest {
 	}
 
 	@Test
-	@DisplayName("getRootRank with no tree root falls back to the tail rank and does not throw")
-	void getRootRank_noRoot_fallsBackToTail_noNpe() {
+	@DisplayName("getRootRank with no tree root falls back to the head (lowest) rank and does not throw")
+	void getRootRank_noRoot_fallsBackToHead_noNpe() {
 		RankManager manager = mock(RankManager.class);
-		Rank        tail    = mock(Rank.class);
+		Rank        head    = mock(Rank.class);
 
 		when(manager.getRankTree()).thenReturn(new Tree<>());
-		when(manager.get(GangSettings.getGangRankTail())).thenReturn(tail);
+		when(manager.get(GangSettings.getGangRankHead())).thenReturn(head);
 
 		GanglandRankLookup lookup = new GanglandRankLookup(manager);
 
-		assertSame(tail, lookup.getRootRank());
+		assertSame(head, lookup.getRootRank());
 	}
 
 	@Test

@@ -149,6 +149,24 @@ class GangListCommandTest {
 	}
 
 	@Test
+	@DisplayName("T-240: a one-member gang row reads 'members: 1', not '1 members'")
+	void oneMemberRow_readsMembersColon() throws Exception {
+		useGangs(new String[][]{{"Solo", "1"}});
+
+		list().executeArgument(player, new String[]{"gang", "list"});
+
+		List<String> rows = sentRows(player);
+		assertTrue(rows.get(0).contains("members: 1"), rows.toString());
+	}
+
+	@Test
+	@DisplayName("T-240: the shipped List.Row is the members-colon line")
+	void shippedRow_isMembersColonLine() {
+		assertEquals("&f%gang% &7- members: %members% - online: %online%",
+		             messages.text("List.Row", "unused fallback"));
+	}
+
+	@Test
 	@DisplayName("the list verb is its own verb, not an alias of members")
 	void listVerb_notAliasOfMembers() {
 		Argument members = new GangMembersCommand(mock(JavaPlugin.class), new Tree<>(), mock(Argument.class),

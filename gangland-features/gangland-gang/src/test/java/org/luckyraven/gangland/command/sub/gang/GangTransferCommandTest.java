@@ -43,12 +43,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
- * GR-10: a {@code gang transfer} request expires after the 60 s confirm window, like {@code gang leave}.
+ * GR-10: a {@code gang transfer} request expires after the 30 s confirm window (the Keystone confirm lock lapses at 30 s), like {@code gang leave}.
  */
 @DisplayName("GangTransferCommand - confirm window")
 class GangTransferCommandTest {
 
-	private static final long CONFIRM_WINDOW_TICKS = 20L * 60L;
+	private static final long CONFIRM_WINDOW_TICKS = 20L * 30L;
 
 	private BukkitStatics          bukkit;
 	private MockedStatic<Settings> settings;
@@ -89,7 +89,7 @@ class GangTransferCommandTest {
 	}
 
 	@Test
-	@DisplayName("request_thenWindowExpires_unlocksAndForgetsTarget: the lock and the pending target both lapse at 60 s")
+	@DisplayName("request_thenWindowExpires_unlocksAndForgetsTarget: the lock and the pending target both lapse at 30 s")
 	void request_thenWindowExpires_unlocksAndForgetsTarget() {
 		Player owner  = mock(Player.class);
 		Player target = mock(Player.class);
