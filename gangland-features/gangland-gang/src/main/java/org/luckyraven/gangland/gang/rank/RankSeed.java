@@ -41,7 +41,7 @@ public final class RankSeed {
 		}
 
 		for (int i = 0; i <= last; i++) {
-			ranks.save(new Rank(ladder.get(i), i + 1));
+			ranks.insertNow(new Rank(ladder.get(i), i + 1));
 		}
 		for (int i = 0; i < last; i++) {
 			parents.insertInitialRelation(i + 1, i + 2);

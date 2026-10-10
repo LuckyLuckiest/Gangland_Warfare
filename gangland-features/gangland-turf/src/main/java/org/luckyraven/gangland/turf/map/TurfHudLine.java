@@ -68,7 +68,7 @@ public final class TurfHudLine {
 		return state != null && state.getState() == TurfState.CONTESTING;
 	}
 
-	private static String underAttack(TurfMessages text, TurfRuntimeState state, @Nullable String challengerName) {
+	static String underAttack(TurfMessages text, TurfRuntimeState state, @Nullable String challengerName) {
 		return text.text("Hud.Under_Attack", "&cunder attack by %gang%, %percent%%",
 		                 "gang", Objects.requireNonNullElse(challengerName, ""),
 		                 "percent", Math.round(state.getCaptureProgress()));

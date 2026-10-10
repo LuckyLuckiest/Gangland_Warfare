@@ -20,8 +20,10 @@ import org.luckyraven.gangland.turf.config.TurfMapSettings;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
+import org.luckyraven.gangland.turf.data.TurfRuntimeState;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
+import org.luckyraven.gangland.turf.state.TurfState;
 import org.luckyraven.gangland.turf.support.CaptureFixtures;
 import org.luckyraven.gangland.turf.support.FakeGangLookup;
 import org.luckyraven.gangland.turf.support.FakeUserLookup;
@@ -61,6 +63,7 @@ class TurfMapRendererTest {
 	private FakeGangLookup gangs;
 	private FakeUserLookup users;
 	private GarrisonManager garrisons;
+	private TurfManager turfManager;
 	private TurfMapService service;
 
 	@BeforeEach
@@ -88,7 +91,8 @@ class TurfMapRendererTest {
 			return value;
 		});
 		TurfSettings turfSettings = mock(TurfSettings.class);
-		service = new TurfMapService(mock(TurfManager.class), gangs, users,
+		turfManager = mock(TurfManager.class);
+		service = new TurfMapService(turfManager, gangs, users,
 		                             mock(CaptureEligibility.class), mock(TurfMapSettings.class), turfSettings,
 		                             text, legacy, garrisons);
 	}
@@ -227,5 +231,29 @@ class TurfMapRendererTest {
 
 		assertFalse(hover.contains("&f"));
 		assertTrue(hover.startsWith("\u00A7fDocks"));
+	}
+
+	@Test
+	@DisplayName("a text row of a turf under capture says 'under attack' with the challenger, as the HUD and hover do")
+	void textReason_contestingTurf_underAttack() {
+		TurfRuntimeState state = new TurfRuntimeState(7);
+		state.setState(TurfState.CONTESTING);
+		state.setChallengerGangId(2);
+		state.setCaptureProgress(40.0);
+		when(turfManager.getRuntimeState(7)).thenReturn(state);
+		gangs.register(gang(2, NOW, "Vipers"));
+
+		String reason = service.textReason(turf(7, 1), "Gamma", NOW);
+
+		assertTrue(reason.contains("under attack"), reason);
+		assertTrue(reason.contains("Vipers"), reason);
+	}
+
+	@Test
+	@DisplayName("a quiet turf's text row keeps the eligibility reason")
+	void textReason_quietTurf_eligibilityReason() {
+		when(turfManager.getRuntimeState(7)).thenReturn(new TurfRuntimeState(7));
+
+		assertEquals("reason", service.textReason(turf(7, 1), "Gamma", NOW));
 	}
 }

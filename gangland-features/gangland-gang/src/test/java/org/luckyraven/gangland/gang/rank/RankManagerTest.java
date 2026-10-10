@@ -323,7 +323,7 @@ class RankManagerTest {
 			RankManager seedingManager = new RankManager(seedRegistry, permissionRegistry, rules);
 			seedingManager.initialize();
 
-			verify(realRankRepo, times(3)).save(any(Rank.class));
+			verify(realRankRepo, times(3)).insertNow(any(Rank.class));
 			verify(realParentRepo).insertInitialRelation(1, 2);
 			verify(realParentRepo).insertInitialRelation(2, 3);
 			assertEquals("member", seedingManager.getRankTree().getRoot().getData().getName());
@@ -350,7 +350,7 @@ class RankManagerTest {
 
 			new RankManager(seedRegistry, permissionRegistry, rules).initialize();
 
-			verify(realRankRepo, never()).save(any(Rank.class));
+			verify(realRankRepo, never()).insertNow(any(Rank.class));
 			verify(realParentRepo, never()).insertInitialRelation(anyInt(), anyInt());
 			verify(rules, never()).getRankPreset();
 		}

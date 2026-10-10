@@ -33,7 +33,7 @@ class RankSeedTest {
 		assertTrue(RankSeed.seedIfEmpty(ranks, parents, rules, "member", "owner"));
 
 		ArgumentCaptor<Rank> saved = ArgumentCaptor.forClass(Rank.class);
-		verify(ranks, times(3)).save(saved.capture());
+		verify(ranks, times(3)).insertNow(saved.capture());
 		assertEquals(List.of("member", "officer", "owner"), saved.getAllValues().stream().map(Rank::getName).toList());
 		assertEquals(List.of(1, 2, 3), saved.getAllValues().stream().map(Rank::getUsedId).toList());
 		verify(parents).insertInitialRelation(1, 2);
@@ -47,7 +47,7 @@ class RankSeedTest {
 
 		assertFalse(RankSeed.seedIfEmpty(ranks, parents, rules, "member", "owner"));
 
-		verify(ranks, never()).save(any(Rank.class));
+		verify(ranks, never()).insertNow(any(Rank.class));
 		verify(parents, never()).insertInitialRelation(anyInt(), anyInt());
 	}
 
@@ -60,7 +60,7 @@ class RankSeedTest {
 		RankSeed.seedIfEmpty(ranks, parents, rules, "member", "owner");
 
 		ArgumentCaptor<Rank> saved = ArgumentCaptor.forClass(Rank.class);
-		verify(ranks, times(5)).save(saved.capture());
+		verify(ranks, times(5)).insertNow(saved.capture());
 		assertEquals(List.of("member", "soldier", "officer", "underboss", "owner"),
 		             saved.getAllValues().stream().map(Rank::getName).toList());
 		verify(parents).insertInitialRelation(1, 2);
@@ -78,7 +78,7 @@ class RankSeedTest {
 		RankSeed.seedIfEmpty(ranks, parents, rules, "member", "owner");
 
 		ArgumentCaptor<Rank> saved = ArgumentCaptor.forClass(Rank.class);
-		verify(ranks, times(3)).save(saved.capture());
+		verify(ranks, times(3)).insertNow(saved.capture());
 		assertEquals(List.of("member", "officer", "owner"), saved.getAllValues().stream().map(Rank::getName).toList());
 	}
 

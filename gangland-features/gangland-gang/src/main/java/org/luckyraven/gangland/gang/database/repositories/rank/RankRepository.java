@@ -44,6 +44,14 @@ public class RankRepository extends AbstractRepository<Rank> {
 		return counts.isEmpty() ? 0 : counts.get(0);
 	}
 
+	/**
+	 * Writes one rank synchronously. {@link AbstractRepository#save} is asynchronous, so a read right after it can miss
+	 * the row (fresh-install seeding, R1/G1).
+	 */
+	public void insertNow(Rank rank) throws SQLException {
+		tableBackend().upsert(rank);
+	}
+
 	@Override
 	protected Collection<Rank> doLoadAll() throws SQLException {
 		List<Rank>     ranks = new ArrayList<>();

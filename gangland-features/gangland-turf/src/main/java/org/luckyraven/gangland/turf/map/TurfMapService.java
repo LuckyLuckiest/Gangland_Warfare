@@ -147,7 +147,7 @@ public final class TurfMapService {
 			String owner = turf.isUnclaimed()
 			               ? text.text("Map.Text_Unclaimed", "Unclaimed")
 			               : GangDisplayNameResolver.resolve(gangs.findById(turf.getOwnerGangId()));
-			String reason = text.reason(eligibility.evaluate(turf, now), owner, now);
+			String reason = textReason(turf, owner, now);
 			String legacyLine = text.text("Map.Text_Row",
 			                              "&f%name% &7- &f%owner% &7(%relation%) - %distance%m %direction% - %reason%",
 			                              "name", turf.getDisplayName(),
@@ -161,6 +161,16 @@ public final class TurfMapService {
 			viewer.spigot().sendMessage(renderer.clickable(legacyLine, turf.getId(),
 			                                               hoverText(viewer, turf, viewerGang, now)));
 		}
+	}
+
+	/** Reason column of a text row: "under attack" while a capture runs (as the HUD and hover), else the eligibility verdict. */
+	String textReason(Turf turf, String owner, long now) {
+		TurfRuntimeState state = turfs.getRuntimeState(turf.getId());
+		if (TurfHudLine.isContesting(state)) {
+			Gang challenger = state.getChallengerGangId() == null ? null : gangs.findById(state.getChallengerGangId());
+			return TurfHudLine.underAttack(text, state, GangDisplayNameResolver.resolve(challenger));
+		}
+		return text.reason(eligibility.evaluate(turf, now), owner, now);
 	}
 
 	/** One line per gang in view with its relation and state, for {@code /glw map legend}. */
