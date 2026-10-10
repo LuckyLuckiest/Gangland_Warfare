@@ -192,6 +192,28 @@ Turf:
 # end Capture
 
 # ---------------- Alerts: turf alerts that reach a gang anywhere (W2-N1) ----------------
+Alerts:
+   # To the owning gang, anywhere, when a capture of their turf starts. %turf%, %count% = attackers counted,
+   # %gang% = attacking gang, %direction% = N, NE, E ... from the turf centre.
+   Start: "&c%turf% is under attack! &f%count% %gang% &cfrom the %direction%"
+   # Same as Start when no attacker is seen on a side yet (the direction is unknown). %turf%, %count%, %gang%.
+   Start_No_Side: "&c%turf% is under attack! &f%count% %gang%"
+   # To the owner's allies when the capture starts (the only alert allies get). %turf%, %owner%, %gang%.
+   Start_Ally: "&e%turf% &7(%owner%) &eis under attack by %gang%"
+   # To the owners, once per capture, when half the guards of the turf are down. %turf%.
+   Half_Guards: "&eHalf the guards at %turf% are down"
+   # To the owners, once per capture, when the bar passes 75%. %turf%, %progress%.
+   Last_Stand: "&cLast stand at %turf% &7- %progress%%"
+   # To the owners when the attack failed (defended or abandoned). %turf%, %gang% = attackers.
+   Held: "&a%turf% held &7against %gang%"
+   # To the attackers when their attack failed. %turf%.
+   Attack_Failed: "&7Your attack on %turf% failed"
+   # To both sides when the capture ran out of time (turf_rules.yml Capture.Max_Contest_Minutes). %turf%.
+   Stalled: "&7%turf%: the attack stalled"
+   # To the old owners when the turf was taken. %turf%, %gang% = new owner.
+   Lost: "&c%turf% lost to %gang%"
+   # To the new owners. %turf%.
+   Taken: "&aYou took %turf%"
 # end Alerts
 
 # ---------------- Income: the payout line and the turf cap line (W2-N2) ----------------
