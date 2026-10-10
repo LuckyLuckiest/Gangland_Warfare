@@ -44,9 +44,7 @@ import static org.mockito.Mockito.verify;
  * owner id and moves the turf to COOLDOWN, but fires no {@link TurfCapturedEvent} — nothing downstream (boss bars,
  * defenders, the Quartermaster) is ever cleaned up until the income task's next pass auto-releases the turf.
  *
- * <p>{@link #tieOnUnclaimedTurf_startsWithTheLowestGangIdInstead()} shows {@code tickIdle}'s tie-break differs from
- * the mid-contest CLAIM→CONSOLIDATE election: a start-time tie falls back to the lowest gang id and starts anyway,
- * it does not stall.
+ * <p>{@link #unclaimedTurf_tieDoesNotStart()} (W2-R2, TF-48): a start-time tie between rival gangs never starts a contest.
  */
 @DisplayName("CaptureService — contest start (tickIdle) and completion")
 class CaptureServiceStartAndCompleteTest {
@@ -137,10 +135,10 @@ class CaptureServiceStartAndCompleteTest {
 	}
 
 	@Test
-	@DisplayName("owned turf: two distinct challenger gangs cancel each other out and neither starts a contest")
-	void ownedTurf_multipleChallengerGangsBlockStart() {
-		Turf            turf       = createTurf(owner.getId());
-		Gang            thirdGang  = CaptureFixtures.gang(3);
+	@DisplayName("owned turf: tied rival gangs do not start; the strictly largest challenger starts (TF-48)")
+	void ownedTurf_largestChallengerStarts_tiesDoNot() {
+		Turf            turf      = createTurf(owner.getId());
+		Gang            thirdGang = CaptureFixtures.gang(3);
 		gangs.register(thirdGang);
 		CaptureService  service = service(25, 50, 75);
 		Map<UUID, Turf> cache   = new HashMap<>();
@@ -149,7 +147,14 @@ class CaptureServiceStartAndCompleteTest {
 
 		tick(service, cache);
 
-		assertEquals(TurfState.IDLE, turfManager.getRuntimeState(turf.getId()).getState());
+		assertEquals(TurfState.IDLE, turfManager.getRuntimeState(turf.getId()).getState(), "1 vs 1 is a tie");
+
+		playerInGang(challenger.getId(), cache, turf);
+		tick(service, cache);
+
+		TurfRuntimeState state = turfManager.getRuntimeState(turf.getId());
+		assertEquals(TurfState.CONTESTING, state.getState(), "2 vs 1 starts for the largest");
+		assertEquals(challenger.getId(), state.getChallengerGangId());
 	}
 
 	@Test
@@ -184,19 +189,17 @@ class CaptureServiceStartAndCompleteTest {
 	}
 
 	@Test
-	@DisplayName("unclaimed turf: a tie on start falls back to the lowest gang id instead of stalling")
-	void tieOnUnclaimedTurf_startsWithTheLowestGangIdInstead() {
+	@DisplayName("unclaimed turf: a tie on start does not start a contest (TF-48, ties never start)")
+	void unclaimedTurf_tieDoesNotStart() {
 		Turf            turf    = createTurf(null);
 		CaptureService  service = service(25, 50, 75);
 		Map<UUID, Turf> cache   = new HashMap<>();
 		playerInGang(challenger.getId(), cache, turf); // id 2
-		playerInGang(owner.getId(), cache, turf);      // id 1 — reused here purely as "the lower id gang"
+		playerInGang(owner.getId(), cache, turf);      // id 1 - reused here purely as "the other gang"
 
 		tick(service, cache);
 
-		TurfRuntimeState state = turfManager.getRuntimeState(turf.getId());
-		assertEquals(TurfState.CONTESTING, state.getState(), "start-time ties do not block the contest");
-		assertEquals(owner.getId(), state.getChallengerGangId(), "the lowest gang id wins the tie-break at start");
+		assertEquals(TurfState.IDLE, turfManager.getRuntimeState(turf.getId()).getState());
 	}
 
 	@Test
