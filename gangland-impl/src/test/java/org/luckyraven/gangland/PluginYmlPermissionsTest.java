@@ -59,6 +59,7 @@ class PluginYmlPermissionsTest {
 			"gangland.command.gang.recruiting",
 			"gangland.command.gang.bounty",
 			"gangland.inventory.gang_stat",
+			"gangland.inventory.gang_info",
 			"gangland.inventory.alliance_stat");
 
 	/** Children of gangland.turf.admin; never default true. */
@@ -116,10 +117,10 @@ class PluginYmlPermissionsTest {
 	}
 
 	@Test
-	@DisplayName("gang_info menu is op-only so gangless players reach the /glw gang onboarding (NEW-W1-G-1)")
-	void gangInfoMenu_isNotDefaultTrue() {
-		assertFalse(isTrue(defaultOf("gangland.inventory.gang_info")),
-				"gangland.inventory.gang_info must not default to true: the menu would swallow /glw gang for gangless players");
+	@DisplayName("T-226: gang_info menu defaults to true so members open it again; gangless players get onboarding via Open.Condition")
+	void gangInfoMenu_isDefaultTrue() {
+		assertTrue(isTrue(defaultOf("gangland.inventory.gang_info")),
+				"gangland.inventory.gang_info must default to true; the menu's Open.Condition sends gangless players to onboarding");
 	}
 
 	@Test

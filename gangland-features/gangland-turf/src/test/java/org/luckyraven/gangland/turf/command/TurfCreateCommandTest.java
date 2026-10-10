@@ -156,6 +156,18 @@ class TurfCreateCommandTest {
 	}
 
 	@Test
+	@DisplayName("T-243: a name that is empty after colour stripping (&a) is refused and nothing is created")
+	void create_colourOnlyName_refused() throws IOException {
+		buildCommand("Create:\n   Snap_To_Chunks: false\n   Min_Side_Blocks: 16\n   Max_Side_Blocks: 512\n");
+		Player player = player(true, 0, 0, 31, 31);
+
+		command.create(player, create("&a"));
+
+		verify(turfs, never()).create(any());
+		verify(player).sendMessage(text.text("Turf.Name_Empty", "&cA turf name needs at least one letter or digit."));
+	}
+
+	@Test
 	@DisplayName("D3: a snapped create stores the snapped bounds and says so")
 	void create_snapped_storesSnappedBounds() throws IOException {
 		buildCommand("Create:\n   Snap_To_Chunks: true\n   Min_Side_Blocks: 16\n   Max_Side_Blocks: 512\n");

@@ -4,11 +4,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
+import org.luckyraven.gangland.turf.contract.TurfSequenceContract;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.support.InMemoryTurfRepository;
 import org.luckyraven.gangland.turf.support.InMemoryTurfSequence;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,6 +35,52 @@ class TurfManagerTest {
 	void setUp() {
 		repository = new InMemoryTurfRepository();
 		manager    = new TurfManager(repository);
+	}
+
+	@Test
+	@DisplayName("T-201: a failed load never writes a high-water mark below the stored one")
+	void initialize_emptyLoadNeverLowersStoredMark() {
+		RecordingSequence sequence = new RecordingSequence(7);
+		manager = new TurfManager(repository, sequence);
+
+		manager.initialize();
+
+		assertTrue(sequence.saves.isEmpty(), "nothing higher than the stored mark 7, so nothing is written");
+		assertEquals(8, manager.allocateId(), "the allocator still continues past the stored mark");
+	}
+
+	@Test
+	@DisplayName("T-201: a loaded turf above the stored mark raises the saved mark to it")
+	void initialize_raisesStoredMarkToHighestLoadedTurf() {
+		RecordingSequence sequence = new RecordingSequence(7);
+		repository.seed(turf(9, "world", 0, 0, 10, 10));
+		manager = new TurfManager(repository, sequence);
+
+		manager.initialize();
+
+		assertEquals(List.of(9), sequence.saves);
+		assertEquals(10, manager.allocateId());
+	}
+
+	/** Records every value saved, starting from a stored high-water mark. */
+	private static final class RecordingSequence implements TurfSequenceContract {
+
+		private final int           stored;
+		private final List<Integer> saves = new ArrayList<>();
+
+		private RecordingSequence(int stored) {
+			this.stored = stored;
+		}
+
+		@Override
+		public int loadHighWaterMark() {
+			return stored;
+		}
+
+		@Override
+		public void saveHighWaterMark(int highestAllocatedId) {
+			saves.add(highestAllocatedId);
+		}
 	}
 
 	@Test

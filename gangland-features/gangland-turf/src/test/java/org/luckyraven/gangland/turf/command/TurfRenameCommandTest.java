@@ -114,6 +114,18 @@ class TurfRenameCommandTest {
 	}
 
 	@Test
+	@DisplayName("T-243: a rename to a name empty after colour stripping (&a&l) is refused and nothing changes")
+	void rename_colourOnlyName_refused() {
+		Player player = player(true);
+
+		command.rename(player, new String[]{"turf", "rename", "&a&l"});
+
+		assertEquals("Dup", dup.getDisplayName());
+		verify(turfs, never()).persist(any());
+		verify(player).sendMessage(text.text("Turf.Name_Empty", "&cA turf name needs at least one letter or digit."));
+	}
+
+	@Test
 	@DisplayName("a sender without gangland.turf.admin is refused and nothing changes")
 	void rename_nonAdmin_refused() {
 		Player player = player(false);
