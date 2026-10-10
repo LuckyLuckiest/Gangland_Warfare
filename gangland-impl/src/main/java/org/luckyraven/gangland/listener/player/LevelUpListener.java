@@ -32,9 +32,13 @@ public class LevelUpListener implements Listener {
 		user.sendMessage(replacePlaceholders(message, level));
 	}
 
-	private String replacePlaceholders(String message, Level level) {
-		return message.replace("%level%", String.valueOf(level.getLevelValue()))
-		              .replace("%next_level%", String.valueOf(level.nextLevel()))
+	/**
+	 * {@code UserLevelUpEvent} fires after the increment (T-253), so {@code %next_level%} is the level reached and
+	 * {@code %level%} the one before it.
+	 */
+	static String replacePlaceholders(String message, Level level) {
+		return message.replace("%level%", String.valueOf(level.previousLevel()))
+		              .replace("%next_level%", String.valueOf(level.getLevelValue()))
 		              .replace("%max_level%", String.valueOf(level.getMaxLevel()));
 	}
 

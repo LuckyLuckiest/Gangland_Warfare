@@ -11,6 +11,10 @@ import org.luckyraven.gangland.core.events.level.LevelUpEvent;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * An XP curve with a level counter. Level-up events fire after each level's increment, so a listener reads the level
+ * just reached; cancelling one undoes that step and stops further levels (T-253).
+ */
 @Getter
 @Setter
 public class Level {
@@ -37,6 +41,7 @@ public class Level {
 
 	public void addExperience(double experience, boolean levelUp, @Nullable LevelUpEvent event) {
 		if (!Double.isFinite(experience)) return;
+		if (levelValue >= maxLevel) return;   // T-255: no XP collects at the top level
 		this.experience += experience;
 		if (levelUp) handleLevelProgression(event);
 	}
@@ -68,19 +73,29 @@ public class Level {
 	}
 
 	public double getPercentage() {
+		if (levelValue >= maxLevel) return 100D;   // T-255: a maxed bar never reads above 100 %
 		return experience / experienceCalculation(nextLevel()) * 100;
 	}
 
-	public int addLevels(int levels, LevelUpEvent event) {
+	public int addLevels(int levels, @Nullable LevelUpEvent event) {
 		int counter = 0;
 
 		while (levels > 0 && levelValue < maxLevel) {
-			double requiredExp = experienceCalculation(nextLevel());
-			if (experience >= requiredExp) experience -= requiredExp;
+			double required = experienceCalculation(nextLevel());
+			double taken    = experience >= required ? required : 0D;
+			experience -= taken;
+			++levelValue;
 
-			Bukkit.getPluginManager().callEvent(event);
+			// T-253/US-43: the event fires after the increment; a cancel undoes this step and stops. T-277: null is allowed
+			if (event != null) {
+				Bukkit.getPluginManager().callEvent(event);
 
-			if (!event.isCancelled()) ++levelValue;
+				if (event.isCancelled()) {
+					--levelValue;
+					experience += taken;
+					break;
+				}
+			}
 
 			--levels;
 			++counter;
@@ -123,17 +138,23 @@ public class Level {
 		return String.format("Level{level=%d,experience=%.2f,max_level=%d}", levelValue, experience, maxLevel);
 	}
 
-	private void handleLevelProgression(LevelUpEvent event) {
+	private void handleLevelProgression(@Nullable LevelUpEvent event) {
 		double nextLevelAmount = experienceCalculation(nextLevel());
 
 		while (levelValue < maxLevel && experience >= nextLevelAmount) {
 			experience -= nextLevelAmount;
+			++levelValue;
 
+			// T-253: the event fires after the increment, so a listener reads the level just reached; a cancel undoes this step
 			if (event != null) {
 				Bukkit.getPluginManager().callEvent(event);
 
-				if (!event.isCancelled()) ++levelValue;
-			} else ++levelValue;
+				if (event.isCancelled()) {
+					--levelValue;
+					experience += nextLevelAmount;
+					return;
+				}
+			}
 
 			nextLevelAmount = experienceCalculation(nextLevel());
 		}
