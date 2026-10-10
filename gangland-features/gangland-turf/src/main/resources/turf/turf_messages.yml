@@ -85,4 +85,50 @@ Turf:
    Title_Gangless: "&eJoin a gang to capture turf"
    # Refusal when a player without turf admin rights runs a turf admin command.
    Admin_Only: "&cOnly turf admins can do that."
+   # Enter subtitle on your own turf.
+   Subtitle_Own: "&aYour turf"
+   # Enter subtitle on an allied turf. %gang% = owning gang.
+   Subtitle_Ally: "&b%gang% turf - allied"
+   # Enter subtitle on a rival turf. %gang% = owning gang, %reason% = a Reason line.
+   Subtitle_Rival: "&c%gang% turf &7- %reason%"
+   # Enter subtitle on an unclaimed turf. %reason% = a Reason line.
+   Subtitle_Unclaimed: "&7Unclaimed &7- %reason%"
+   # Refusal when a new turf is smaller than Create.Min_Side_Blocks. %x%, %z% = the sides, %min%, %max% = the limits.
+   Create_Too_Small: "&cThat turf is too small: %x% x %z% blocks. The minimum side is %min% blocks."
+   # Refusal when a new turf is larger than Create.Max_Side_Blocks.
+   Create_Too_Large: "&cThat turf is too large: %x% x %z% blocks. The maximum side is %max% blocks."
+   # Info line after a snapped create. The bounds are the snapped ones.
+   Create_Snapped: "&7Snapped to chunks: (%minx%, %minz%) to (%maxx%, %maxz%)"
+   # Refusal when a turf already has this name (ignoring case and colour codes).
+   Name_Taken: "&cA turf named %turf% already exists."
+   # Refusal when a wand corner is in another world than the other corner. Giving a new wand starts a new selection.
+   Selection_Other_World: "&cThat corner is in another world than your selection. Run /glw turf wand to start a new one."
+   # Reply of /glw turf rename. %old% = the old name, %turf% = the new name.
+   Renamed: "&7Renamed turf &f%old% &7to &f%turf%&7."
+   # Wand item name and lore.
+   Wand_Name: "&6Turf Wand"
+   # Wand item lore (the click controls).
+   Wand_Lore: "&7Left-click = pos1, right-click = pos2."
+   # Wand corner message. %corner% = Corner_1 or Corner_2, %x%, %y%, %z%, %world%.
+   Corner_Set: "&7Turf %corner% &7set to &f(%x%, %y%, %z%)&7 in world &f%world%"
+   # Corner names used in Corner_Set: the first and the second corner.
+   Corner_1: "&apos1"
+   # Name of the second corner, see Corner_1.
+   Corner_2: "&epos2"
+   # Phase suffix on /glw turf status for an unclaimed turf being captured.
+   Status_Phase_Claim: " &8(Phase 1 - Claim)"
+   # Phase suffix on /glw turf status for a turf in the consolidate phase.
+   Status_Phase_Consolidate: " &8(Phase 2 - Consolidate)"
+   # /glw turf status while the turf is in cooldown. %turf% = turf name, %reason% = a Reason line.
+   Status_Cooldown: "&7%turf% &7- %reason%"
+   # Header of /glw turf list. %page%, %pages%.
+   List_Header: "&7Turfs - page %page%/%pages%"
+   # One row of /glw turf list in your world. %distance% blocks, %direction% a compass word (empty when inside).
+   List_Row: "&f%turf% &7- %owner% &7- &f%distance%m %direction%"
+   # One row of /glw turf list in another world (and every row for the console).
+   List_Row_Elsewhere: "&f%turf% &7- %owner% &7- in %world%"
+   # Footer of /glw turf list when a next page exists. %next% = the page number.
+   List_Next: "&7Next: /glw turf list %next%"
+   # Clickable line under /glw turf help and the gang turf list.
+   Map_Link: "&7[map] &8- open /glw map"
 # end Turf

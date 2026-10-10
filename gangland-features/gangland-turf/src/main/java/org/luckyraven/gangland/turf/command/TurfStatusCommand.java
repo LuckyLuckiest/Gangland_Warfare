@@ -9,6 +9,8 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.turf.config.TurfSettings;
+import org.luckyraven.gangland.turf.capture.CaptureEligibility;
+import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.data.TurfRuntimeState;
@@ -28,10 +30,13 @@ class TurfStatusCommand extends SubArgument {
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
 	private final TurfSettings         settings;
+	private final TurfMessages         text;
+	private final CaptureEligibility   eligibility;
 
 	protected TurfStatusCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                            TurfManager turfs, GangLookupContract gangs, WandSelectionManager selections,
-	                            TurfMessageContract messages, TurfSettings settings) {
+	                            TurfMessageContract messages, TurfSettings settings,
+	                            TurfMessages text, CaptureEligibility eligibility) {
 		super(plugin, "status", tree, parent);
 
 		this.turfs      = turfs;
@@ -39,11 +44,16 @@ class TurfStatusCommand extends SubArgument {
 		this.selections = selections;
 		this.messages   = messages;
 		this.settings   = settings;
+		this.text       = text;
+		this.eligibility = eligibility;
 	}
 
 	@Override
 	protected TriConsumer<Argument, CommandSender, String[]> action() {
 		return (argument, sender, args) -> {
+			if (!TurfPermissions.requireAdmin(sender, text)) {
+				return;
+			}
 			Turf turf = TurfSelectionResolver.resolve(sender, turfs, selections, messages);
 			if (turf == null) {
 				return;
@@ -72,8 +82,8 @@ class TurfStatusCommand extends SubArgument {
 					String phaseSuffix = "";
 					if (turf.isUnclaimed()) {
 						phaseSuffix = state.getPhase() == CapturePhase.CLAIM
-						              ? " &8(Phase 1 — Claim)"
-						              : " &8(Phase 2 — Consolidate)";
+						              ? text.text("Turf.Status_Phase_Claim", " &8(Phase 1 - Claim)")
+						              : text.text("Turf.Status_Phase_Consolidate", " &8(Phase 2 - Consolidate)");
 					}
 					messages.send(sender, "TURF_STATUS_CONTESTING",
 					              "turf", turf.getDisplayName(),
@@ -81,14 +91,11 @@ class TurfStatusCommand extends SubArgument {
 					              "progress", String.valueOf((int) state.getCaptureProgress()),
 					              "phase", phaseSuffix);
 				}
-				case COOLDOWN -> {
-					long cooldownMs = settings.getCaptureCooldownMinutes() * 60_000L;
-					long left       = (turf.getLastCaptureTimestamp() + cooldownMs - System.currentTimeMillis());
-					long seconds    = Math.max(0L, (left + 999L) / 1000L);
-					messages.send(sender, "TURF_STATUS_COOLDOWN",
-					              "turf", turf.getDisplayName(),
-					              "time", messages.formatDuration(seconds));
-				}
+				case COOLDOWN -> sender.sendMessage(text.text("Turf.Status_Cooldown", "&7%turf% &7- %reason%",
+				                                             "turf", turf.getDisplayName(),
+				                                             "reason", text.reason(
+				                                                     eligibility.evaluate(turf, System.currentTimeMillis()),
+				                                                     ownerName, System.currentTimeMillis())));
 				case IDLE -> messages.send(sender, "TURF_STATUS_IDLE",
 				                           "turf", turf.getDisplayName(),
 				                           "gang", ownerName);

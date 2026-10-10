@@ -43,6 +43,14 @@ public final class CuboidRegion implements Region {
 	}
 
 	/**
+	 * A copy widened outward to whole 16 x 16 chunks (D3): min corner rounded down, max corner rounded up. Two's
+	 * complement masks keep negative coordinates right ({@code -1 & ~15 == -16}, {@code -1 | 15 == -1}).
+	 */
+	public CuboidRegion snappedToChunks() {
+		return new CuboidRegion(world, minX & ~15, minZ & ~15, maxX | 15, maxZ | 15);
+	}
+
+	/**
 	 * @return true when this cuboid overlaps {@code other} on the X/Z plane (both in the same world). Used by creation
 	 * 		to reject conflicting turfs.
 	 */

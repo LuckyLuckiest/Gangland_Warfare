@@ -9,18 +9,22 @@ import org.luckyraven.keystone.command.argument.SubArgument;
 import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
+import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.selection.Selection;
 import org.luckyraven.gangland.turf.selection.WandSelectionManager;
 
 class TurfPos1Command extends SubArgument {
 
 	private final WandSelectionManager selections;
+	private final TurfMessages         text;
 
 	protected TurfPos1Command(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                          WandSelectionManager selections) {
+	                          WandSelectionManager selections,
+	                          TurfMessages text) {
 		super(plugin, "pos1", tree, parent);
 
 		this.selections = selections;
+		this.text       = text;
 	}
 
 	@Override
@@ -28,8 +32,7 @@ class TurfPos1Command extends SubArgument {
 		return (argument, sender, args) -> {
 			// GI-35: see TurfWandCommand — pos1/pos2 chat commands must not bypass the admin gate the physical
 			// wand click already enforces (WandListener).
-			if (!sender.hasPermission(WandSelectionManager.ADMIN_PERMISSION)) {
-				sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
+			if (!TurfPermissions.requireAdmin(sender, text)) {
 				return;
 			}
 			if (!(sender instanceof Player player)) {
@@ -37,7 +40,10 @@ class TurfPos1Command extends SubArgument {
 			}
 			Location  location  = player.getLocation();
 			Selection selection = selections.get(player);
-			selection.set(location, true);
+			if (!selection.set(location, true)) {
+				player.sendMessage(text.text("Turf.Selection_Other_World", Selection.OTHER_WORLD_FALLBACK));
+				return;
+			}
 
 			String reply = Messages.TURF_POS_SET.toString()
 			                                    .replace("%corner%", "pos1")
