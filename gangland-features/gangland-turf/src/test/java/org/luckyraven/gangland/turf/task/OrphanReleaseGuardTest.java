@@ -3,7 +3,11 @@ package org.luckyraven.gangland.turf.task;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.turf.capture.TurfOwnership;
+import org.luckyraven.gangland.turf.config.TurfMessages;
+import org.luckyraven.gangland.turf.config.TurfRules;
 import org.luckyraven.gangland.turf.contract.TurfRepositoryContract;
+import org.luckyraven.gangland.turf.log.TurfEventBuffer;
+import org.luckyraven.gangland.turf.support.FakeUserLookup;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.manager.TurfManager;
@@ -14,6 +18,7 @@ import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -57,8 +62,16 @@ class OrphanReleaseGuardTest {
 		Turf turf = ownedBy99(turfs);
 		FakeGangLookup gangs = new FakeGangLookup();
 		TurfIncomeDistributor distributor = new TurfIncomeDistributor(mock(JavaPlugin.class), turfs, gangs,
+		                                                              new FakeUserLookup(),
 		                                                              mock(ActiveBuffManager.class),
-		                                                              new TurfOwnership(turfs), 1200L);
+		                                                              new TurfOwnership(turfs), 1200L,
+		                                                              mock(TurfRules.class),
+		                                                              new TurfEventBuffer(),
+		                                                              mock(TurfMessages.class),
+		                                                              (player, line, priority) -> {
+		                                                              },
+		                                                              List::of,
+		                                                              () -> 0L);
 
 		try (BukkitStatics ignored = BukkitStatics.install()) {
 			distributor.distribute();
