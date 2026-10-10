@@ -17,7 +17,6 @@ import org.luckyraven.gangland.turf.data.TurfRuntimeState;
 import org.luckyraven.gangland.turf.listener.GangDisplayNameResolver;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.selection.WandSelectionManager;
-import org.luckyraven.gangland.turf.state.CapturePhase;
 
 /**
  * {@code /glw turf status} — prints the live capture/cooldown state of the admin's active-selection turf (or the one
@@ -77,19 +76,11 @@ class TurfStatusCommand extends SubArgument {
 					                  ? null
 					                  : gangs.findById(state.getChallengerGangId());
 					String challengerName = GangDisplayNameResolver.resolve(challenger);
-					// Owned-turf captures are single-phase, so the phase suffix is blank for them;
-					// unclaimed captures tag the row with Phase 1 / Phase 2 for clarity.
-					String phaseSuffix = "";
-					if (turf.isUnclaimed()) {
-						phaseSuffix = state.getPhase() == CapturePhase.CLAIM
-						              ? text.text("Turf.Status_Phase_Claim", " &8(Phase 1 - Claim)")
-						              : text.text("Turf.Status_Phase_Consolidate", " &8(Phase 2 - Consolidate)");
-					}
 					messages.send(sender, "TURF_STATUS_CONTESTING",
 					              "turf", turf.getDisplayName(),
 					              "gang", challengerName,
 					              "progress", String.valueOf((int) state.getCaptureProgress()),
-					              "phase", phaseSuffix);
+					              "phase", "");
 				}
 				case COOLDOWN -> sender.sendMessage(text.text("Turf.Status_Cooldown", "&7%turf% &7- %reason%",
 				                                             "turf", turf.getDisplayName(),

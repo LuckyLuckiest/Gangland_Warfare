@@ -81,7 +81,7 @@ class BossBarTextTest {
 				YamlFixture.fileManager(tempDir, "turf_messages", YamlFixture.shipped("/turf/turf_messages.yml")),
 				mock(TurfMessageContract.class), capture);
 
-		String title = BossBarText.title(text, "Rats", "Docks", 2, 1, "45s");
+		String title = BossBarText.title(text, "Rats", "Docks", 2, "1", "45s");
 
 		assertFalse(title.contains("%"), title);
 		assertTrue(title.contains("Rats") && title.contains("Docks") && title.contains("45s"), title);

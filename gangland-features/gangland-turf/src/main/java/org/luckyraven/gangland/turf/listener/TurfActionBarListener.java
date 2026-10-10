@@ -21,7 +21,6 @@ import org.luckyraven.gangland.turf.data.TurfRuntimeState;
 import org.luckyraven.gangland.turf.events.TurfEnterEvent;
 import org.luckyraven.gangland.turf.events.TurfExitEvent;
 import org.luckyraven.gangland.turf.manager.TurfManager;
-import org.luckyraven.gangland.turf.state.CapturePhase;
 import org.luckyraven.gangland.turf.state.TurfState;
 
 /**
@@ -31,9 +30,9 @@ import org.luckyraven.gangland.turf.state.TurfState;
  *       players realise "this region is a turf".</li>
  *   <li>An action-bar line that stays visible briefly below the hotbar as a secondary reminder of ownership.</li>
  * </ul>
- * The wording branches on whether the turf is currently being contested — entering a turf mid-capture says
- * "Phase 1 in progress" (global claim, anyone helps fill it) or "Phase 2: %gang% consolidating" (per-gang
- * tug-of-war) instead of the static owned/unclaimed labels, so the player understands what they walked into.
+ * The wording branches on whether the turf is currently being contested — entering a contested turf (owned or
+ * unclaimed) says "%gang% capturing" instead of the static owned/unclaimed labels, so the player understands what
+ * they walked into. Since 0.17.0 every capture is one tug of war, so there is no phase wording.
  * All user-facing text is routed through the Messages enum via {@link TurfMessageContract} so localisation stays
  * centralised.
  */
@@ -67,11 +66,7 @@ public final class TurfActionBarListener implements Listener {
 		String subtitle;
 
 		boolean contesting = state != null && state.getState() == TurfState.CONTESTING;
-		if (contesting && state.getPhase() == CapturePhase.CLAIM) {
-			actionBar = messages.format("TURF_ENTER_CONTESTING_CLAIM",
-			                            "turf", turf.getDisplayName());
-			subtitle  = messages.format("TURF_SUBTITLE_CONTESTING_CLAIM");
-		} else if (contesting && state.getPhase() == CapturePhase.CONSOLIDATE) {
+		if (contesting) {
 			Gang challenger = state.getChallengerGangId() == null ?
 			                  null :
 			                  gangs.findById(state.getChallengerGangId());
