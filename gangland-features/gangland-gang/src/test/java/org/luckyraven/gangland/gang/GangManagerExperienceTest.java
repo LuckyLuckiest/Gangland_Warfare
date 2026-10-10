@@ -73,14 +73,34 @@ class GangManagerExperienceTest {
 	}
 
 	@Test
-	@DisplayName("766 XP reaches level 2 in one call: two events")
+	@DisplayName("T-254: 766 XP reaches level 2 in one call: two events, each reading the level it announces")
 	void twoLevels_twoEvents() {
 		Gang gang = newGang();
+		List<Integer> seen = new ArrayList<>();
+		doAnswer(i -> {
+			seen.add(((GangLevelUpEvent) i.getArgument(0)).getLevel().getLevelValue());
+			return null;
+		}).when(pluginManager).callEvent(any(Event.class));
 
 		manager.addExperience(gang, 766);
 
 		assertEquals(2, gang.getLevel().getLevelValue());
-		verify(pluginManager, times(2)).callEvent(any(Event.class));
+		assertEquals(List.of(1, 2), seen);
+	}
+
+	@Test
+	@DisplayName("T-253: a cancelled gang level-up keeps the gang at the level before that step and eats no XP")
+	void cancelledEvent_stopsAtTheLevelBefore() {
+		Gang gang = newGang();
+		doAnswer(i -> {
+			((GangLevelUpEvent) i.getArgument(0)).setCancelled(true);
+			return null;
+		}).when(pluginManager).callEvent(any(Event.class));
+
+		manager.addExperience(gang, 766);
+
+		assertEquals(0, gang.getLevel().getLevelValue());
+		assertEquals(766D, gang.getLevel().getExperience(), 1e-9);
 	}
 
 	@Test
@@ -96,7 +116,7 @@ class GangManagerExperienceTest {
 	}
 
 	@Test
-	@DisplayName("a gang at its maximum level keeps its XP and fires nothing more")
+	@DisplayName("T-255: a gang at its maximum level gains no XP and fires nothing")
 	void maxLevel_noEvent() {
 		GangLevels.bind(1, GangLevels.DEFAULT_BASE_EXPERIENCE);
 		Gang gang = newGang();
@@ -107,7 +127,7 @@ class GangManagerExperienceTest {
 		manager.addExperience(gang, 500);
 
 		assertEquals(1, gang.getLevel().getLevelValue());
-		assertEquals(500D, gang.getLevel().getExperience(), 1e-9);   // the 200 spent on level 1 is gone, the rest is kept
+		assertEquals(0D, gang.getLevel().getExperience(), 1e-9);   // at max level no XP collects
 		verify(pluginManager, never()).callEvent(any(Event.class));
 	}
 
