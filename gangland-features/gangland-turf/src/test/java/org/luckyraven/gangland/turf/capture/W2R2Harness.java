@@ -106,8 +106,9 @@ final class W2R2Harness {
 
 	/** Records a member of {@code gang} who joined at {@code joinDate}, for the frozen-sides check. */
 	Player addMember(Gang gang, Player player, long joinDate) {
+		UUID   uuid   = player.getUniqueId();
 		Member member = mock(Member.class);
-		when(member.getUuid()).thenReturn(player.getUniqueId());
+		when(member.getUuid()).thenReturn(uuid);
 		when(member.getGangJoinDateLong()).thenReturn(joinDate);
 		members.get(gang.getId()).add(member);
 		return player;

@@ -176,6 +176,7 @@ class CaptureServiceRulesTest {
 		h.ownedBy(1);
 		contest(h, 2, 50.0, T0);
 		h.join(5);
+		h.join(2); // the challenger keeps a counted attacker, so the abandon grace does not reset the turf
 
 		h.tick(T0);
 		assertFalse(h.state().getChallengersInside().containsKey(5), "an ally is a defender, not a challenger");
