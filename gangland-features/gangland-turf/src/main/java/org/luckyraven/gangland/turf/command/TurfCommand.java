@@ -252,19 +252,27 @@ public final class TurfCommand extends Command {
 		}
 		if (owned.isEmpty()) {
 			messages.send(sender, "TURF_LIST_EMPTY");
-			return;
+		} else {
+			messages.send(sender, "TURF_LIST_HEADER", "count", String.valueOf(owned.size()));
+			var from = sender instanceof Player player ? player.getLocation() : null;
+			for (Turf turf : owned) {
+				TurfListCommand.sendRow(sender, text, turf, gangName, from);
+			}
 		}
-		messages.send(sender, "TURF_LIST_HEADER", "count", String.valueOf(owned.size()));
-		var from = sender instanceof Player player ? player.getLocation() : null;
-		for (Turf turf : owned) {
-			TurfListCommand.sendRow(sender, text, turf, gangName, from);
-		}
+		sendGangSummary(sender, text, rules, events, gang, gangId, owned.size(), System.currentTimeMillis());
+	}
+
+	/**
+	 * The cap line ({@code owned/cap - paying}), the last three event lines and the map link. Shown even when the gang
+	 * holds no turfs, so a gang that has just lost its last turf still sees what happened. A dormant gang pays nothing,
+	 * so its paying count is 0.
+	 */
+	static void sendGangSummary(CommandSender sender, TurfMessages text, TurfRules rules, TurfEventBuffer events,
+	                            Gang gang, int gangId, int ownedCount, long now) {
 		int cap    = rules.cap(gang == null ? 0 : gang.getLevel().getLevelValue());
-		int paying = gang != null && TurfIncomeDistributor.isActive(gang, System.currentTimeMillis(), rules) ?
-		             Math.min(owned.size(), cap) :
-		             0;
+		int paying = gang != null && TurfIncomeDistributor.isActive(gang, now, rules) ? Math.min(ownedCount, cap) : 0;
 		sender.sendMessage(text.text("Income.Cap_Line", "&7Turfs &f%owned%/%cap% &7- &f%paying% &7paying",
-		                             "owned", owned.size(), "cap", cap, "paying", paying));
+		                             "owned", ownedCount, "cap", cap, "paying", paying));
 		for (TurfEventBuffer.Entry entry : events.latest(gangId, 3)) {
 			sender.sendMessage(entry.line());
 		}

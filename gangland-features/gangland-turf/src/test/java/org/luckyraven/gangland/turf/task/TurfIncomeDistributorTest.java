@@ -105,8 +105,12 @@ class TurfIncomeDistributorTest {
 	}
 
 	private static Turf turf(int id, int ownerGangId, long capturedAt) {
+		return turf(id, ownerGangId, capturedAt, "250");
+	}
+
+	private static Turf turf(int id, int ownerGangId, long capturedAt, String income) {
 		return new Turf(id, "Turf" + id, new CuboidRegion("world", 0, 0, 10, 10), ownerGangId,
-		                new BigDecimal("250"), 0L, capturedAt);
+		                new BigDecimal(income), 0L, capturedAt);
 	}
 
 	/** A gang whose level value is {@code levelValue}, with its bank as a mock economy. */
@@ -221,11 +225,11 @@ class TurfIncomeDistributorTest {
 	}
 
 	@Test
-	@DisplayName("overCap_paysOldestTurfsOnly: at level 0 (cap 2) the turfs captured at 100 and 200 pay, 300 does not")
+	@DisplayName("overCap_paysOldestTurfsOnly: at level 0 (cap 2) the turfs captured at 100 and 200 pay 250 each; the 1000 turf captured at 300 does not")
 	void overCap_paysOldestTurfsOnly() {
 		EconomyHandler economy = economy();
 		gang(1, NOW - HOUR_MS, 0, economy);
-		turfs.create(turf(1, 1, 300L));
+		turfs.create(turf(1, 1, 300L, "1000"));
 		turfs.create(turf(2, 1, 100L));
 		turfs.create(turf(3, 1, 200L));
 
@@ -236,7 +240,21 @@ class TurfIncomeDistributorTest {
 	}
 
 	@Test
-	@DisplayName("oneActionBarLinePerOnlineMember: each online member gets one line naming 500 and 2 turfs; offline gets none")
+	@DisplayName("zeroIncomeTurf_earnsNoXp: a turf that pays nothing grants no gang XP and no action-bar line")
+	void zeroIncomeTurf_earnsNoXp() {
+		EconomyHandler economy = economy();
+		gang(1, NOW - HOUR_MS, 0, economy);
+		turfs.create(turf(1, 1, 0L, "0"));
+
+		distributor().distribute();
+
+		assertBank("0", economy);
+		assertTrue(gangs.experienceCalls().isEmpty());
+		assertTrue(sent.isEmpty());
+	}
+
+	@Test
+	@DisplayName("oneActionBarLinePerOnlineMember: each online member gets one line naming 500 and 2 turfs; a member of another gang gets none")
 	void oneActionBarLinePerOnlineMember() {
 		EconomyHandler economy = economy();
 		gang(1, NOW - HOUR_MS, 3, economy);
@@ -244,9 +262,10 @@ class TurfIncomeDistributorTest {
 		turfs.create(turf(2, 1, 200L));
 		Player online1 = mock(Player.class);
 		Player online2 = mock(Player.class);
-		Player offline = mock(Player.class);
+		Player otherGang = mock(Player.class);
 		users.register(online1, memberOf(1));
 		users.register(online2, memberOf(1));
+		users.register(otherGang, memberOf(2));
 		TurfIncomeDistributor distributor = new TurfIncomeDistributor(plugin, turfs, gangs, users, buffs,
 		                                                              new TurfOwnership(turfs), INTERVAL, rules,
 		                                                              buffer, text,
@@ -255,17 +274,17 @@ class TurfIncomeDistributorTest {
 				                                                              sent.add(player.getName() + "|" + line);
 			                                                              }
 		                                                              },
-		                                                              () -> List.of(online1, online2, offline),
+		                                                              () -> List.of(online1, online2, otherGang),
 		                                                              () -> NOW);
 		when(online1.getName()).thenReturn("one");
 		when(online2.getName()).thenReturn("two");
-		when(offline.getName()).thenReturn("off");
+		when(otherGang.getName()).thenReturn("rival");
 
 		distributor.distribute();
 
 		assertEquals(2, sent.size());
-		assertTrue(sent.stream().allMatch(line -> line.contains("500") && line.contains("2")));
-		assertTrue(sent.stream().noneMatch(line -> line.startsWith("off|")));
+		assertTrue(sent.stream().allMatch(line -> line.contains("+$500.00 ") && line.contains("(2 turfs)")));
+		assertTrue(sent.stream().noneMatch(line -> line.startsWith("rival|")));
 	}
 
 	@Test

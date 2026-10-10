@@ -161,7 +161,7 @@ class TurfDigestListenerTest {
 		buffer.record(1, 30L, "event two");
 		buffer.recordIncome(1, 25L, new BigDecimal("400"));
 
-		listener.sendDigest(player, 100L);
+		listener.sendDigest(player);
 
 		ArgumentCaptor<String> lines = ArgumentCaptor.forClass(String.class);
 		verify(player, times(3)).sendMessage(lines.capture());
@@ -182,11 +182,31 @@ class TurfDigestListenerTest {
 		}
 		buffer.recordIncome(1, 2L, new BigDecimal("400"));
 
-		listener.sendDigest(player, 100L);
+		listener.sendDigest(player);
 
 		ArgumentCaptor<String> lines = ArgumentCaptor.forClass(String.class);
 		verify(player, times(3)).sendMessage(lines.capture());
 		assertEquals(List.of("event 3", "event 4", "event 5"),
+		             lines.getAllValues().stream().map(TurfDigestListenerTest::plain).toList());
+		verify(player.spigot(), times(1)).sendMessage(any(BaseComponent[].class));
+	}
+
+	@Test
+	@DisplayName("join_afterQuit_capsAtFiveLines: income plus the four newest events since the quit, then the map link")
+	void join_afterQuit_capsAtFiveLines() {
+		gangs.register(named(1, "Vipers"));
+		Player player = member(1);
+		buffer.markQuit(player.getUniqueId(), 10L);
+		buffer.recordIncome(1, 25L, new BigDecimal("400"));
+		for (int at = 11; at <= 16; at++) {
+			buffer.record(1, at, "event " + at);
+		}
+
+		listener.sendDigest(player);
+
+		ArgumentCaptor<String> lines = ArgumentCaptor.forClass(String.class);
+		verify(player, times(5)).sendMessage(lines.capture());
+		assertEquals(List.of("Income earned while you were away: $400", "event 13", "event 14", "event 15", "event 16"),
 		             lines.getAllValues().stream().map(TurfDigestListenerTest::plain).toList());
 		verify(player.spigot(), times(1)).sendMessage(any(BaseComponent[].class));
 	}
@@ -202,7 +222,7 @@ class TurfDigestListenerTest {
 		users.register(player, user);
 		buffer.record(1, 1L, "event");
 
-		listener.sendDigest(player, 100L);
+		listener.sendDigest(player);
 
 		verify(player, never()).sendMessage(anyString());
 		verify(player, never()).spigot();

@@ -80,7 +80,7 @@ public final class TurfDigestListener implements Listener {
 		Player player = event.getPlayer();
 		Bukkit.getScheduler().runTaskLater(plugin, () -> {
 			if (player.isOnline()) {
-				sendDigest(player, System.currentTimeMillis());
+				sendDigest(player);
 			}
 		}, JOIN_DELAY_TICKS);
 	}
@@ -164,7 +164,7 @@ public final class TurfDigestListener implements Listener {
 	 * Sends a joining member his digest: the income since his last quit (when any), then the newest event lines since
 	 * that quit (or the last three when he has no quit stamp), then the map link. A player with no gang gets nothing.
 	 */
-	void sendDigest(Player player, long now) {
+	void sendDigest(Player player) {
 		User<Player> user = users.findByPlayer(player);
 		if (user == null || !user.hasGang()) {
 			return;

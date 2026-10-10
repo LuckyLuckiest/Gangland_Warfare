@@ -171,6 +171,9 @@ public final class TurfIncomeDistributor implements BeanLifecycle {
 			double     boost      = buffs.effectiveMultiplier(turf.getId(), EffectType.INCOME_MULTIPLIER);
 			BigDecimal multiplier = BigDecimal.valueOf(Math.min(boost, rules.getMaxIncomeMultiplier()));
 			BigDecimal payout     = turf.getIncomeAmount().multiply(multiplier).setScale(2, RoundingMode.HALF_UP);
+			if (payout.signum() <= 0) {
+				continue;
+			}
 			gang.getEconomy().depositAmount(payout);
 			gangs.addExperience(gang, rules.getGangXpPerPayout());
 			sum = sum.add(payout);
