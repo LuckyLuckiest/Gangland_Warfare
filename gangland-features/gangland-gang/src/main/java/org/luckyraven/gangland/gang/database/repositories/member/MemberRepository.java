@@ -7,6 +7,7 @@ import org.luckyraven.gangland.gang.database.tables.member.MemberTable;
 import org.luckyraven.gangland.gang.database.tables.rank.RankTable;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
+import org.luckyraven.gangland.gang.contract.LoadOutcome;
 import org.luckyraven.gangland.gang.contract.MemberRepositoryContract;
 import org.luckyraven.gangland.gang.contract.RankLookupContract;
 import org.luckyraven.gangland.gang.member.Member;
@@ -28,9 +29,10 @@ import java.util.function.Consumer;
 
 @CustomLog
 @Repository(Member.class)
-public class MemberRepository extends AbstractRepository<Member> implements MemberRepositoryContract {
+public class MemberRepository extends AbstractRepository<Member> implements MemberRepositoryContract, LoadOutcome {
 
 	private final MemberTable memberTable;
+	private volatile boolean   lastLoadFailed;
 
 	private RankLookupContract rankLookup;
 	private GangLookupContract gangLookup;
@@ -55,11 +57,30 @@ public class MemberRepository extends AbstractRepository<Member> implements Memb
 
 	@Override
 	protected Collection<Member> doLoadAll() throws SQLException {
+		lastLoadFailed = true;   // stays true when readRows throws; Keystone reports the exception and returns an empty list
+		Collection<Member> rows = readRows();
+		lastLoadFailed = false;
+		return rows;
+	}
+
+	@Override
+	public boolean lastLoadFailed() {
+		return lastLoadFailed;
+	}
+
+	private Collection<Member> readRows() throws SQLException {
 		List<Member>   members = new ArrayList<>();
 		List<Object[]> data    = tableBackend().selectAll();
 
 		for (Object[] result : data) {
-			Member member = fromRow(result, rankLookup);
+			Member member;
+			try {
+				member = fromRow(result, rankLookup);
+			} catch (IllegalArgumentException exception) {
+				// T-262: a NULL or malformed uuid skips this row instead of failing the whole member load
+				log.warn("Skipping a member row with a bad uuid '{}'", result.length > 0 ? result[0] : null);
+				continue;
+			}
 			UUID   uuid   = member.getUuid();
 			int    gangId = member.getGangId();
 

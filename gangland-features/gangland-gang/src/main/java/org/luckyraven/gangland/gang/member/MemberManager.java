@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
+import org.luckyraven.gangland.gang.contract.LoadOutcome;
 import org.luckyraven.gangland.gang.database.repositories.meta.GangMigrationRepository;
 import org.luckyraven.gangland.gang.contract.MemberRepositoryContract;
 import org.luckyraven.gangland.gang.contract.RankLookupContract;
@@ -65,7 +66,10 @@ public class MemberManager implements BeanLifecycle {
 		memberRepository.setDataSupplier(members::values);
 
 		// D15 (0.17.0): contribution used to mix bank share and turf points (TF-44); every stored value resets to 0 once.
-		if (!migrations.isDone(CONTRIBUTION_MIGRATION)) {
+		if (memberRepository instanceof LoadOutcome outcome && outcome.lastLoadFailed()) {
+			// T-249: a failed read is not an empty table; resetting now would mark D15 done over zero members
+			log.warn("Member table did not load; the D15 contribution reset waits for a boot that reads it");
+		} else if (!migrations.isDone(CONTRIBUTION_MIGRATION)) {
 			for (Member member : members.values()) {
 				member.setContribution(0D);
 			}

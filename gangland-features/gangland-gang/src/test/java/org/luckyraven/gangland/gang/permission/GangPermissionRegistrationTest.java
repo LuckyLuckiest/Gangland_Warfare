@@ -4,6 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.core.permission.PermissionRegistryContract;
 import org.luckyraven.gangland.gang.GangConfig;
+import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
 import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
@@ -26,7 +27,7 @@ class GangPermissionRegistrationTest {
 		PermissionRegistryContract contract       = mock(PermissionRegistryContract.class);
 		GangRules               rules             = mock(GangRules.class);
 
-		new GangConfig().rankManager(registry, contract, rules, permissionManager);
+		new GangConfig().rankManager(registry, contract, rules, permissionManager, GangMigrationsContract.NONE);
 
 		for (String node : GangPermissions.ALL) {
 			verify(permissionManager).addPermission(node);

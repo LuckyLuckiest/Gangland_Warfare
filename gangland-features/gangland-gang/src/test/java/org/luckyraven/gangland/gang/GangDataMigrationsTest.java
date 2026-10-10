@@ -1,10 +1,14 @@
 package org.luckyraven.gangland.gang;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.core.support.FakeIdentitySettingsContract;
+import org.luckyraven.gangland.core.user.IdentitySettings;
 import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
+import org.luckyraven.gangland.gang.contract.LoadOutcome;
 import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
 import org.luckyraven.gangland.gang.contract.MemberRepositoryContract;
 import org.luckyraven.gangland.gang.contract.RankLookupContract;
@@ -19,9 +23,12 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.withSettings;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,6 +55,12 @@ class GangDataMigrationsTest {
 		public void markDone(String id) {
 			done.add(id);
 		}
+	}
+
+	@BeforeEach
+	void bindIdentitySettings() {
+		// new Gang(id) reads IdentitySettings (bounty defaults); bound here because no bootstrap runs in this test.
+		IdentitySettings.bind(new FakeIdentitySettingsContract());
 	}
 
 	@SuppressWarnings("unchecked")
@@ -99,6 +112,36 @@ class GangDataMigrationsTest {
 		newMemberManager(repository, migrations).initialize();
 
 		assertEquals(40.0, later.getContribution());
+	}
+
+	@SuppressWarnings("unchecked")
+	@Test
+	@DisplayName("stateMigration_skippedWhenGangLoadFailed: a failed gang read is not an empty table (T-249)")
+	void stateMigration_skippedWhenGangLoadFailed() {
+		IRepository<Gang> repository = mock(IRepository.class, withSettings().extraInterfaces(LoadOutcome.class));
+		when(repository.loadAll()).thenReturn(List.of());
+		when(((LoadOutcome) repository).lastLoadFailed()).thenReturn(true);
+		FakeMigrations migrations = new FakeMigrations();
+
+		new GangManager(repository, mock(GangAllianceRepositoryContract.class), migrations).initialize();
+
+		assertFalse(migrations.isDone(GangManager.STATE_MIGRATION));
+		verify(repository, never()).saveAll(anyCollection());
+	}
+
+	@Test
+	@DisplayName("contributionMigration_skippedWhenMemberLoadFailed: a failed member read is not an empty table (T-249)")
+	void contributionMigration_skippedWhenMemberLoadFailed() {
+		MemberRepositoryContract repository = mock(MemberRepositoryContract.class,
+		                                           withSettings().extraInterfaces(LoadOutcome.class));
+		when(repository.loadAll()).thenReturn(List.of());
+		when(((LoadOutcome) repository).lastLoadFailed()).thenReturn(true);
+		FakeMigrations migrations = new FakeMigrations();
+
+		newMemberManager(repository, migrations).initialize();
+
+		assertFalse(migrations.isDone(MemberManager.CONTRIBUTION_MIGRATION));
+		verify(repository, never()).saveAll(anyCollection());
 	}
 
 	private static MemberManager newMemberManager(MemberRepositoryContract repository, GangMigrationsContract migrations) {
