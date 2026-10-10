@@ -31,7 +31,6 @@ public class GangTable extends Table<Gang> {
 		bounty.setDefaultValue(0D);
 		state.setDefaultValue(Gang.State.INVITE.name());
 		lastMemberOnlineAt.setDefaultValue(0L);
-		state.setDefaultValue(Gang.State.OPEN.name());
 
 		this.addAttribute(id);
 		this.addAttribute(name);
