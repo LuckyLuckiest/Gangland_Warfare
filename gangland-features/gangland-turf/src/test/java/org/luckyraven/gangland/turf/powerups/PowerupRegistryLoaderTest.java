@@ -3,6 +3,7 @@ package org.luckyraven.gangland.turf.powerups;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.LogEvent;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.apache.logging.log4j.core.config.Property;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +40,7 @@ class PowerupRegistryLoaderTest {
 
 	private final List<String> warnings = new ArrayList<>();
 	private WarningCapture     capture;
+	private String             loggerName;
 	private Level              savedLevel;
 	private org.apache.logging.log4j.core.Logger logger;
 
@@ -46,16 +48,17 @@ class PowerupRegistryLoaderTest {
 	void attach() {
 		capture = new WarningCapture(warnings);
 		capture.start();
+		loggerName = Logger.getLogger(PowerupRegistryLoader.class).getName();
 		logger = (org.apache.logging.log4j.core.Logger) Logger.getLogger(PowerupRegistryLoader.class);
 		savedLevel = logger.getLevel();
-		logger.setLevel(Level.WARN);
+		Configurator.setLevel(loggerName, Level.WARN);
 		logger.addAppender(capture);
 	}
 
 	@AfterEach
 	void detach() {
 		logger.removeAppender(capture);
-		logger.setLevel(savedLevel);
+		Configurator.setLevel(loggerName, savedLevel);
 		capture.stop();
 	}
 
@@ -105,7 +108,7 @@ class PowerupRegistryLoaderTest {
 	@Test
 	@DisplayName("a GARRISON_DISCOUNT Magnitude above 1 loads and logs one warning (T-275)")
 	void discountAboveOne_oneWarning() throws Exception {
-		load("Powerups:\n"
+		PowerupRegistry registry = load("Powerups:\n"
 		     + "   guard_surcharge:\n      Cost: 100\n      Effect_Type: GARRISON_DISCOUNT\n"
 		     + "      Magnitude: 1.5\n      Duration_Seconds: 60\n");
 

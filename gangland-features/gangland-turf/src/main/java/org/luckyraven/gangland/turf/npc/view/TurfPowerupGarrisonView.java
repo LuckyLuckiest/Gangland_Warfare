@@ -87,10 +87,17 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 		builder.fill(FillComponent.of(materialOf(fillItem)).name(fillName));
 	}
 
-	/** The price of one guard on {@code turfId} right now: the YAML price times any active garrison_discount. */
+	/**
+	 * The price of one guard on {@code turfId} right now: the YAML price times any active garrison_discount, kept between
+	 * 10 % and 100 % of Cost_Per_Guard and never below 1 (T-275).
+	 */
 	BigDecimal price(int turfId) {
 		double multiplier = buffs.effectiveMultiplier(turfId, EffectType.GARRISON_DISCOUNT);
-		return registry.garrisonCost().multiply(BigDecimal.valueOf(multiplier)).setScale(0, RoundingMode.HALF_UP);
+		// T-275: stacked or mis-set discounts stay between 10 % and 100 % of Cost_Per_Guard, and a guard never costs 0.
+		// ponytail: fixed 0.1 floor; make it a turf_powerups.yml knob if owners want cheaper guards.
+		multiplier = Double.isFinite(multiplier) ? Math.max(0.1, Math.min(1.0, multiplier)) : 1.0;
+		BigDecimal price = registry.garrisonCost().multiply(BigDecimal.valueOf(multiplier)).setScale(0, RoundingMode.HALF_UP);
+		return price.max(BigDecimal.ONE);
 	}
 
 	private ItemBuilder infoItem(Turf turf, Gang gang) {
@@ -150,7 +157,7 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 
 		// r2: guards still in the field count against the reserve, so a stock of 0 cannot be rebought past the cap.
 		if (garrisons.count(turfId) + aliveGuards.applyAsInt(turfId) >= rules.getMaxReserve()) {
-			viewer.sendMessage(messages.text("Quartermaster.Reserve_Full", "&cThis turf already holds %max% guards.",
+			viewer.sendMessage(messages.text("Quartermaster.Reserve_Full", "&cThis turf already has %max% guards (stock and on duty).",
 			                                 "max", rules.getMaxReserve()));
 			flow.rerender();
 			return;

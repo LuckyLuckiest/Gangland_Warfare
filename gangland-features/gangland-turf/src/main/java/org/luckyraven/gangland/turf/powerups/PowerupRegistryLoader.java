@@ -133,6 +133,10 @@ public final class PowerupRegistryLoader implements BeanLifecycle {
 			return null;
 		}
 
+		if (effectType == EffectType.GARRISON_DISCOUNT && (magnitude <= 0 || magnitude > 1)) {
+			log.warn("turf_powerups.yml {}: GARRISON_DISCOUNT Magnitude {} is outside (0, 1]; guard prices are clamped to 10-100% of Cost_Per_Guard", id, magnitude);
+		}
+
 		if (effectType == EffectType.CAPTURE_DEFENSE_BONUS) {
 			log.warn("{} has no effect since 0.17.0 - guards on the capture bar replaced it; entry skipped", id);
 			return null;

@@ -327,8 +327,8 @@ Quartermaster:
    Bought_Boost: "&aActivated &f%boost% &aon &f%turf%&a."
    # Chat when the gang bank cannot cover a purchase. %money% = the price.
    Cannot_Afford: "&cYour gang bank can't cover &f%money%&c."
-   # Chat when the turf already holds Garrison.Max_Reserve guards. %max% = the cap.
-   Reserve_Full: "&cThis turf already holds %max% guards."
+   # %max% = turf_rules.yml Garrison.Max_Reserve. Guards already deployed in a contest count too.
+   Reserve_Full: "&cThis turf already has %max% guards (stock and on duty)."
    # Chat when the viewer's rank may not spend (needs gangland.turf.upgrade).
    No_Rank: "&cYour rank may not spend gang money here."
    # Chat for an allied viewer who tries to buy: they may only look.

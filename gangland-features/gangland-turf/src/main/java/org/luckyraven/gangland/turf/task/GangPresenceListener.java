@@ -71,9 +71,31 @@ public final class GangPresenceListener implements Listener {
 		gang.setLastMemberOnlineAt(now);
 	}
 
-	// RED STUB (rf-presence): handler body lands with T-248.
+	/**
+	 * T-248: a gang that gains a turf while a qualifying member is online counts as online from that moment, with no
+	 * wake-up shield (it never went offline). Without this the turf read "no <gang> online" until the next heartbeat.
+	 */
 	@EventHandler
 	public void onOwnerChanged(TurfOwnerChangedEvent event) {
+		Integer gangId = event.getNewOwnerGangId();
+		if (gangId == null) {
+			return;
+		}
+		Gang gang = gangs.findById(gangId);
+		if (gang == null) {
+			return;
+		}
+		long         now   = System.currentTimeMillis();
+		CaptureRules rules = tracker.rules();
+		for (Player player : Bukkit.getOnlinePlayers()) {
+			if (membership.gangIdOf(player.getUniqueId()) != gangId) {
+				continue;
+			}
+			if (GangPresenceTracker.qualifies(gang, GangPresenceTracker.memberOf(gang, player.getUniqueId()), rules, now)) {
+				gang.setLastMemberOnlineAt(now);
+				return;
+			}
+		}
 	}
 
 	@EventHandler
