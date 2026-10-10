@@ -67,7 +67,7 @@ public class GangMigrationRepository extends AbstractRepository<GangMigration> i
 		save(new GangMigration(id, System.currentTimeMillis()));
 	}
 
-	private synchronized List<GangMigration> rows() {
+	synchronized List<GangMigration> rows() {
 		List<GangMigration> rows = new ArrayList<>();
 		for (String id : done) {
 			rows.add(new GangMigration(id, System.currentTimeMillis()));

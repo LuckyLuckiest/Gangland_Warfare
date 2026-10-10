@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.gang.GangSettings;
+import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
+import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.gangland.core.permission.PermissionRegistryContract;
 import org.luckyraven.gangland.gang.database.repositories.rank.RankParentRepository;
@@ -16,6 +18,7 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -490,6 +493,93 @@ class RankManagerTest {
 			// in-memory ranksParent set from before clear() still references tail's id (1).
 			assertDoesNotThrow(manager::initialize,
 					"clear() dropped the stale ranksParent entry, so the reload has nothing to resolve");
+		}
+
+	}
+
+	@Nested
+	@DisplayName("T-266: 0.17.0 one-shot grant of gangland.turf.upgrade to ranks holding gangland.gang.withdraw")
+	class TurfUpgradeMigration {
+
+		/** In-memory record of which migrations ran, standing in for the gang_migration table. */
+		static final class FakeMigrations implements GangMigrationsContract {
+
+			private final Set<String> done = new HashSet<>();
+
+			@Override
+			public boolean isDone(String id) {
+				return done.contains(id);
+			}
+
+			@Override
+			public void markDone(String id) {
+				done.add(id);
+			}
+		}
+
+		private static final String TURF_UPGRADE = GangPermissions.TURF_UPGRADE;
+
+		/** A non-empty, not freshly seeded tree: officer holds withdraw, member holds only deposit. */
+		private void persistedTree() {
+			Rank member  = new Rank("member", 1);
+			Rank officer = new Rank("officer", 2);
+			when(rankRepo.loadAll()).thenReturn(List.of(member, officer));
+			when(rankParentRepo.loadAll()).thenReturn(Set.of());
+			when(permissionRepo.loadAll()).thenReturn(List.of(new Permission(10, GangPermissions.WITHDRAW),
+			                                                  new Permission(11, GangPermissions.DEPOSIT)));
+			when(rankPermissionRepo.loadAll()).thenReturn(Set.of(new RankPermission(2, 10),
+			                                                     new RankPermission(1, 11)));
+		}
+
+		@Test
+		@DisplayName("existingTree_withdrawRankGetsTurfUpgradeOnce: officer gets the node, member does not, and the migration is recorded")
+		void existingTree_withdrawRankGetsTurfUpgradeOnce() {
+			persistedTree();
+			FakeMigrations migrations = new FakeMigrations();
+
+			RankManager upgrading = new RankManager(registry, permissionRegistry, rules, migrations);
+			upgrading.initialize();
+
+			assertTrue(upgrading.get("officer").contains(TURF_UPGRADE));
+			assertFalse(upgrading.get("member").contains(TURF_UPGRADE));
+			assertTrue(migrations.isDone(RankManager.TURF_UPGRADE_MIGRATION));
+		}
+
+		@Test
+		@DisplayName("ownerRemovedNode_isNotGrantedAgain: a node the owner removed stays removed on the next boot")
+		void ownerRemovedNode_isNotGrantedAgain() {
+			persistedTree();
+			FakeMigrations migrations = new FakeMigrations();
+			RankManager first = new RankManager(registry, permissionRegistry, rules, migrations);
+			first.initialize();
+			first.removePermission(first.get("officer"), TURF_UPGRADE);
+
+			RankManager second = new RankManager(registry, permissionRegistry, rules, migrations);
+			second.initialize();
+
+			assertFalse(second.get("officer").contains(TURF_UPGRADE));
+		}
+
+		@Test
+		@DisplayName("freshInstall_marksDoneWithoutLog: the seeding path records the migration as done")
+		void freshInstall_marksDoneWithoutLog() throws Exception {
+			RepositoryRegistry   seedRegistry = mock(RepositoryRegistry.class);
+			RankRepository       realRankRepo = mock(RankRepository.class);
+			RankParentRepository realParentRepo = mock(RankParentRepository.class);
+
+			when(seedRegistry.getRepository(Rank.class)).thenReturn(realRankRepo);
+			when(seedRegistry.getRepository(RankParent.class)).thenReturn(realParentRepo);
+			when(seedRegistry.getRepository(Permission.class)).thenReturn(permissionRepo);
+			when(seedRegistry.getRepository(RankPermission.class)).thenReturn(rankPermissionRepo);
+			when(realRankRepo.totalRanks()).thenReturn(0);
+			when(realRankRepo.loadAll()).thenReturn(List.of(new Rank("member", 1), new Rank("officer", 2),
+			                                                new Rank("owner", 3)));
+			when(realParentRepo.loadAll()).thenReturn(Set.of(new RankParent(1, 2), new RankParent(2, 3)));
+			FakeMigrations migrations = new FakeMigrations();
+
+			new RankManager(seedRegistry, permissionRegistry, rules, migrations).initialize();
+
+			assertTrue(migrations.isDone(RankManager.TURF_UPGRADE_MIGRATION));
 		}
 
 	}

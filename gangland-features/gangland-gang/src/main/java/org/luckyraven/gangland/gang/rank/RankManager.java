@@ -7,6 +7,7 @@ import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.core.permission.Permission;
 import org.luckyraven.gangland.gang.GangSettings;
+import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
 import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.gang.database.repositories.rank.RankParentRepository;
@@ -33,12 +34,22 @@ public class RankManager implements BeanLifecycle {
 	private               IRepository<Permission>     permissionRepo;
 	private               IRepository<RankPermission> rankPermissionRepo;
 	private               IRepository<RankParent>     rankParentRepo;
+	private final         GangMigrationsContract      migrations;
+
+	/** 0.17.0 (T-266): ranks holding gangland.gang.withdraw also get gangland.turf.upgrade, once. */
+	public static final String TURF_UPGRADE_MIGRATION = "0.17.0-officer-turf-upgrade";
 
 	public RankManager(RepositoryRegistry repositoryRegistry, PermissionRegistryContract permissionRegistry,
 	                   GangRules rules) {
+		this(repositoryRegistry, permissionRegistry, rules, GangMigrationsContract.NONE);
+	}
+
+	public RankManager(RepositoryRegistry repositoryRegistry, PermissionRegistryContract permissionRegistry,
+	                   GangRules rules, GangMigrationsContract migrations) {
 		this.repositoryRegistry = repositoryRegistry;
 		this.permissionRegistry = permissionRegistry;
 		this.rules              = rules;
+		this.migrations         = migrations;
 		this.ranks              = new HashMap<>();
 		this.ranksParent        = new HashSet<>();
 		this.rankTree           = new Tree<>();
