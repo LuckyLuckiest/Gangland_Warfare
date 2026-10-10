@@ -138,6 +138,22 @@ public class RankManager implements BeanLifecycle {
 		// The fresh-install preset nodes go on after the ranks and the permission counter are loaded (FK-safe ids)
 		if (seeded) applyPresetPermissions();
 
+		if (seeded) {
+			migrations.markDone(TURF_UPGRADE_MIGRATION);   // the fresh-install preset already grants the node
+		} else if (!ranks.isEmpty() && !ranksPermissions.isEmpty() && !migrations.isDone(TURF_UPGRADE_MIGRATION)) {
+			// T-266: ranks that may withdraw from the bank may also spend it at the Quartermaster, once (0.17.0).
+			// An empty read (failed or truly empty) skips without marking, so the next boot retries it.
+			int granted = 0;
+			for (Rank rank : ranks.values()) {
+				if (rank.contains(GangPermissions.WITHDRAW) && addPermission(rank, GangPermissions.TURF_UPGRADE)) {
+					granted++;
+				}
+			}
+			migrations.markDone(TURF_UPGRADE_MIGRATION);
+			log.info("Rank permissions migrated once (0.17.0): {} rank(s) holding {} now also hold {}", granted,
+			         GangPermissions.WITHDRAW, GangPermissions.TURF_UPGRADE);
+		}
+
 		// Set data suppliers so repositoryRegistry.saveAll() can persist each collection
 		rankRepo.setDataSupplier(ranks::values);
 		permissionRepo.setDataSupplier(permissions::values);

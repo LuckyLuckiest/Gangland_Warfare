@@ -149,10 +149,10 @@ public final class GangConfig {
 	@Bean
 	public RankManager rankManager(RepositoryRegistry repositoryRegistry,
 	                               PermissionRegistryContract permissionRegistry, GangRules rules,
-	                               PermissionManager permissionManager) {
+	                               PermissionManager permissionManager, GangMigrationsContract migrations) {
 		GangPermissions.ALL.forEach(permissionManager::addPermission);
 
-		return new RankManager(repositoryRegistry, permissionRegistry, rules);
+		return new RankManager(repositoryRegistry, permissionRegistry, rules, migrations);
 	}
 
 	/**

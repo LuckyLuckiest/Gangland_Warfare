@@ -12,7 +12,8 @@ Name_Pattern: "[A-Za-z0-9_]{3,16}"
 # ---------------- Ranks ----------------
 Ranks:
    # Ranks created on a FRESH install only (when the rank table is empty), lowest first. The first should equal
-   # Rank.Head and the last Rank.Tail in gang_settings.yml. An existing rank tree is never changed.
+   # Rank.Head and the last Rank.Tail in gang_settings.yml. An existing rank tree is never changed, except once in
+   # 0.17.0: every rank holding gangland.gang.withdraw also gets gangland.turf.upgrade.
    # A five-rung example: member, soldier, officer, underboss, owner (one per line, like below).
    Preset:
       - member

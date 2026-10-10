@@ -1,6 +1,7 @@
 package org.luckyraven.gangland.gang.database.repositories.gang;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.luckyraven.gangland.gang.contract.LoadOutcome;
 import org.luckyraven.gangland.gang.database.tables.gang.GangTable;
 import org.luckyraven.keystone.color.Color;
 import org.luckyraven.keystone.economy.Currency;
@@ -18,9 +19,10 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @Repository(Gang.class)
-public class GangRepository extends AbstractRepository<Gang> {
+public class GangRepository extends AbstractRepository<Gang> implements LoadOutcome {
 
 	private final GangTable gangTable;
+	private volatile boolean lastLoadFailed;
 
 	public GangRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
 		super(plugin, databaseHandler, backend);
@@ -30,6 +32,13 @@ public class GangRepository extends AbstractRepository<Gang> {
 
 	@Override
 	protected Collection<Gang> doLoadAll() throws SQLException {
+		lastLoadFailed = true;   // stays true when readRows throws; Keystone reports the exception and returns an empty list
+		Collection<Gang> rows = readRows();
+		lastLoadFailed = false;
+		return rows;
+	}
+
+	private Collection<Gang> readRows() throws SQLException {
 		List<Gang>     gangs     = new ArrayList<>();
 		List<Object[]> gangsData = tableBackend().selectAll();
 
@@ -38,6 +47,11 @@ public class GangRepository extends AbstractRepository<Gang> {
 		}
 
 		return gangs;
+	}
+
+	@Override
+	public boolean lastLoadFailed() {
+		return lastLoadFailed;
 	}
 
 	/** One gang row. Every numeric column reads through {@link Number}; a SQL NULL reads as 0 (T-199). */

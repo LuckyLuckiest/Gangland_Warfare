@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.gang.database.repositories.meta;
 
+import lombok.CustomLog;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.gang.contract.GangMigrationsContract;
 import org.luckyraven.gangland.gang.database.tables.meta.GangMigrationTable;
@@ -13,20 +14,24 @@ import org.luckyraven.keystone.persistence.repository.Repository;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
  * Records which one-shot gang data migrations ran ({@code gang_migration}, W2-K). A migration is looked up once from
  * the table and then answered from memory; {@link #markDone} writes through the normal repository save.
+ *
+ * <p>{@code done_at} is the moment the migration ran: it is read from the table and kept, and is only stamped by
+ * {@link #markDone}. Autosave and shutdown rewrite the stored value, never re-stamp it (T-250).
  */
+@CustomLog
 @Repository(GangMigration.class)
 public class GangMigrationRepository extends AbstractRepository<GangMigration> implements GangMigrationsContract {
 
 	private final GangMigrationTable table;
-	private final Set<String>        done = new HashSet<>();
+	private final Map<String, Long>  doneAt = new HashMap<>();
 	private       boolean            loaded;
 
 	public GangMigrationRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
@@ -37,9 +42,10 @@ public class GangMigrationRepository extends AbstractRepository<GangMigration> i
 	}
 
 	/**
-	 * Saves {@code rows}, then runs {@code then} once the write finished (AbstractRepository's callback), so a migration
-	 * is marked done only after its data is written. A repository without the callback saves and runs {@code then} at
-	 * once.
+	 * Saves {@code rows}, then runs {@code then} once the write attempt finished. Keystone's {@code AbstractRepository}
+	 * runs the callback in a finally, so {@code then} also runs when the write failed: Keystone logs that failure and the
+	 * in-memory rows are written again by the next autosave (proposed docket row T-278, upstream). A repository without the
+	 * callback saves and runs {@code then} at once.
 	 */
 	public static <T> void saveThen(IRepository<T> repository, Collection<T> rows, Runnable then) {
 		if (repository instanceof AbstractRepository<T> abstractRepository) {
@@ -50,27 +56,38 @@ public class GangMigrationRepository extends AbstractRepository<GangMigration> i
 		then.run();
 	}
 
+	/**
+	 * T-249: an unreadable {@code gang_migration} counts as done this boot, so a migration never runs over a table it
+	 * could not read; the next call reads the table again.
+	 */
 	@Override
 	public synchronized boolean isDone(String id) {
 		if (!loaded) {
-			for (GangMigration row : loadAll()) {
-				done.add(row.id());
+			try {
+				for (GangMigration row : doLoadAll()) {
+					doneAt.putIfAbsent(row.id(), row.doneAt());
+				}
+				loaded = true;
+			} catch (SQLException exception) {
+				log.warn("gang_migration could not be read ({}); migration {} is skipped for now", exception.getMessage(), id);
+				return true;
 			}
-			loaded = true;
 		}
-		return done.contains(id);
+		return doneAt.containsKey(id);
 	}
 
 	@Override
 	public synchronized void markDone(String id) {
-		done.add(id);
-		save(new GangMigration(id, System.currentTimeMillis()));
+		long now = System.currentTimeMillis();
+		doneAt.put(id, now);
+		save(new GangMigration(id, now));
 	}
 
+	/** One row per migration with the done_at it was stamped with; never re-stamped (T-250). */
 	synchronized List<GangMigration> rows() {
 		List<GangMigration> rows = new ArrayList<>();
-		for (String id : done) {
-			rows.add(new GangMigration(id, System.currentTimeMillis()));
+		for (Map.Entry<String, Long> entry : doneAt.entrySet()) {
+			rows.add(new GangMigration(entry.getKey(), entry.getValue()));
 		}
 		return rows;
 	}
