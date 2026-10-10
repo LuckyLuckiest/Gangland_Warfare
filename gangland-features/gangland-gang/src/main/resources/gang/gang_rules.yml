@@ -1,0 +1,31 @@
+# +-------------------+ #
+# | Gang module rules | #
+# +-------------------+ #
+# Gameplay rules of the gang module. One top-level section per feature; later releases add sections.
+
+# ---------------- Names ----------------
+# A gang name (the key used in commands such as /glw gang info <name>) must match this Java regular expression after
+# colour codes are stripped. The default allows 3 to 16 letters, digits and underscores.
+Name_Pattern: "[A-Za-z0-9_]{3,16}"
+# end Names
+
+# ---------------- Ranks ----------------
+Ranks:
+   # Ranks created on a FRESH install only (when the rank table is empty), lowest first. The first should equal
+   # Rank.Head and the last Rank.Tail in gang_settings.yml. An existing rank tree is never changed.
+   # A five-rung example: member, soldier, officer, underboss, owner (one per line, like below).
+   Preset:
+      - member
+      - officer
+      - owner
+   # Gang permission nodes each preset rank gets on that fresh install. The top rank may do everything anyway.
+   # A rank does not inherit the nodes of the ranks below it, so list them again.
+   Preset_Permissions:
+      member:
+         - gangland.gang.deposit
+      officer:
+         - gangland.gang.deposit
+         - gangland.gang.withdraw
+         - gangland.gang.invite
+         - gangland.gang.description
+# end Ranks

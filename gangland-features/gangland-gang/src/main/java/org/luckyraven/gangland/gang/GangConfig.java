@@ -16,6 +16,8 @@ import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.data.placeholder.extension.PlaceholderContribution;
 import org.luckyraven.gangland.gang.command.debug.GangDebugContribution;
 import org.luckyraven.gangland.gang.command.option.GangOptionContribution;
+import org.luckyraven.gangland.gang.file.GangMessages;
+import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.gangland.gang.file.GanglandGangMessages;
 import org.luckyraven.gangland.gang.file.GanglandGangPermissionBridge;
 import org.luckyraven.gangland.gang.file.GanglandGangSettings;
@@ -68,6 +70,20 @@ public final class GangConfig {
 		// injecting the contract.
 		GangSettings.bind(contract);
 		return contract;
+	}
+
+	@Bean
+	public GangRules gangRules(GangModuleFiles files, FileManager fileManager) {
+		GangRules rules = new GangRules(fileManager);
+		fileManager.registerInitializer(rules);
+		return rules;
+	}
+
+	@Bean
+	public GangMessages gangMessages(GangModuleFiles files, FileManager fileManager) {
+		GangMessages messages = new GangMessages(fileManager);
+		fileManager.registerInitializer(messages);
+		return messages;
 	}
 
 	@Bean
