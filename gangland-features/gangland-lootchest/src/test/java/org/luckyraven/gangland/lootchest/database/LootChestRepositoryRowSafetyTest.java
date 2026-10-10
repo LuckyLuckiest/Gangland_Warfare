@@ -86,4 +86,16 @@ class LootChestRepositoryRowSafetyTest {
 		assertEquals(0, chest.getInventorySize());
 		assertFalse(chest.isLooted());
 	}
+
+	@Test
+	@DisplayName("T-262: a row with a NULL uuid is skipped and the valid row still loads")
+	void nullUuidRow_isSkipped_validRowLoads() throws SQLException {
+		Object[] bad   = {null, "world", null, null, null, "common", null, null, null, "Chest", null, null, null};
+		Object[] valid = {ID, "world", null, null, null, "common", null, null, null, "Chest", null, null, null};
+		rows(bad, valid);
+
+		Collection<LootChestData> loaded = repository.doLoadAll();
+
+		assertEquals(1, loaded.size());
+	}
 }

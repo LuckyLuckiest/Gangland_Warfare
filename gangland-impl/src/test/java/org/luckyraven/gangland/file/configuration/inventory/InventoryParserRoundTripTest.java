@@ -391,6 +391,17 @@ class InventoryParserRoundTripTest {
 	}
 
 	@Test
+	@DisplayName("T-263: a menu carrying Config_Version is registered, not skipped as non-inventory")
+	void registerInventory_withConfigVersion_isRegistered() throws IOException {
+		Path copy = tempDir.resolve("versioned_menu.yml");
+		Files.writeString(copy, "Config_Version: 'x'\n" + Files.readString(RESOURCES.resolve("gang_stat.yml")));
+
+		context.registerInventory(new FileHandler(plugin, copy.toFile()));
+
+		assertNotNull(definitionStore.getInventory("versioned_menu"), "versioned_menu must be registered");
+	}
+
+	@Test
 	@DisplayName("gang_stat.yml — 6 rows, no slots, fill-only")
 	void gangStat() throws IOException {
 		ChestMenu menu = registerAndBuild("gang_stat");

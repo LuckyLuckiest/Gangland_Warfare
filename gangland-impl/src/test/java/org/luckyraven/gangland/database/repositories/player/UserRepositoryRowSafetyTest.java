@@ -94,4 +94,18 @@ class UserRepositoryRowSafetyTest {
 		assertEquals(1, loaded.size());
 		verify(user).setKills(0);
 	}
+
+	@Test
+	@DisplayName("T-262: a row with a NULL uuid is skipped and the valid row still loads")
+	void nullUuidRow_isSkipped_validRowLoads() throws SQLException {
+		rows(new Object[] {
+				null, null, null, null, null, null, null, null, null, null
+		}, new Object[] {
+				UUID_TEXT, null, null, null, null, null, null, null, null, null
+		});
+
+		Collection<User<? extends org.bukkit.OfflinePlayer>> loaded = repository.doLoadAll();
+
+		assertEquals(1, loaded.size());
+	}
 }
