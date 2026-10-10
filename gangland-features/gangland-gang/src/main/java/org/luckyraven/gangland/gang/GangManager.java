@@ -1,7 +1,6 @@
 package org.luckyraven.gangland.gang;
 
 import lombok.CustomLog;
-import org.bukkit.Bukkit;
 import org.jetbrains.annotations.Nullable;
 import org.luckyraven.gangland.core.user.Level;
 import org.luckyraven.gangland.events.gang.GangLevelUpEvent;
@@ -77,9 +76,11 @@ public class GangManager implements BeanLifecycle, GangLookupContract {
 	}
 
 	/**
-	 * Adds XP to the gang and levels it up, firing one {@link GangLevelUpEvent} per level gained, after the level went
-	 * up (so a listener reads the new level). A non-finite or non-positive amount does nothing; a gang at its maximum
-	 * keeps its XP and fires nothing. Cancelling the event has no effect. No save call: autosave writes the gang row.
+	 * Adds XP to the gang and levels it up, firing one {@link GangLevelUpEvent} per level gained, each after that
+	 * level's increment (so a listener reads the level just reached). Cancelling an event undoes that one level and
+	 * stops further levels in this call, so the gang stays at the level before that step. A non-finite or non-positive
+	 * amount does nothing; a gang at its maximum level gains no XP and fires nothing. No save call: autosave writes the
+	 * gang row.
 	 */
 	@Override
 	public void addExperience(Gang gang, double amount) {
@@ -87,14 +88,9 @@ public class GangManager implements BeanLifecycle, GangLookupContract {
 			return;
 		}
 
-		Level level  = gang.getLevel();
-		int   before = level.getLevelValue();
-
-		level.addExperience(amount, true, null);   // null event: the level goes up without calling Bukkit
-
-		for (int gained = before + 1; gained <= level.getLevelValue(); gained++) {
-			Bukkit.getPluginManager().callEvent(new GangLevelUpEvent(false, gang, level));
-		}
+		Level level = gang.getLevel();
+		// T-254: Level fires one GangLevelUpEvent per level, each after its own increment
+		level.addExperience(amount, true, new GangLevelUpEvent(false, gang, level));
 	}
 
 	public void add(Gang gang) {
