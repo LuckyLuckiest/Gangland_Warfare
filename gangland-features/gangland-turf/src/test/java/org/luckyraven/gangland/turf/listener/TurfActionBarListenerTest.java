@@ -189,14 +189,33 @@ class TurfActionBarListenerTest {
 	}
 
 	@Test
-	@DisplayName("a turf in the claim phase keeps the CONTESTING claim subtitle, not a relation subtitle")
-	void subtitle_contestingClaim_unchanged() {
+	@DisplayName("a turf in the claim phase shows the CONTESTING consolidate subtitle: one tug of war since 0.17.0")
+	void subtitle_contestingClaim_nowConsolidate() {
 		gang(1, "Mine");
 		TurfRuntimeState state = new TurfRuntimeState(1);
 		state.setState(TurfState.CONTESTING);
 		state.setPhase(CapturePhase.CLAIM);
 
-		assertEquals("TURF_SUBTITLE_CONTESTING_CLAIM", contestedSubtitle(state));
+		assertEquals("TURF_SUBTITLE_CONTESTING_CONSOLIDATE", contestedSubtitle(state));
+	}
+
+	@Test
+	@DisplayName("entering an unclaimed turf mid-capture shows the consolidate action bar line, never the claim line")
+	void actionBar_contestingUnclaimedClaimPhase_showsConsolidateLine() {
+		gang(1, "Mine");
+		gang(2, "Rats");
+		TurfRuntimeState state = new TurfRuntimeState(1);
+		state.setState(TurfState.CONTESTING);
+		state.setPhase(CapturePhase.CLAIM);
+		state.setChallengerGangId(2);
+		when(turfs.getRuntimeState(1)).thenReturn(state);
+		Player player = mock(Player.class);
+
+		listener.onEnter(new TurfEnterEvent(player, turf(null)));
+
+		ArgumentCaptor<String> line = ArgumentCaptor.forClass(String.class);
+		bar.verify(() -> ActionBarManager.send(org.mockito.ArgumentMatchers.eq(player), line.capture()));
+		assertEquals("TURF_ENTER_CONTESTING_CONSOLIDATE", line.getValue());
 	}
 
 	@Test
