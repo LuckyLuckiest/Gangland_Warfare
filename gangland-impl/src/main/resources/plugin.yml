@@ -24,5 +24,73 @@ commands:
          - gangland
 
 permissions:
+   # Players may run /glw at all; each sub-command has its own node below. (CM-37, 0.17.0)
    gangland.command.main:
+      default: true
+   gangland.command.map:
+      default: true
+   gangland.command.map.auto:
+      default: true
+   gangland.command.map.hud:
+      default: true
+   gangland.command.map.text:
+      default: true
+   gangland.command.map.legend:
+      default: true
+   gangland.command.turf:
+      default: true
+   gangland.command.turf.info:
+      default: true
+   gangland.command.turf.list:
+      default: true
+   gangland.command.gang:
+      default: true
+   gangland.command.gang.create:
+      default: true
+   gangland.command.gang.leave:
+      default: true
+   gangland.command.gang.list:
+      default: true
+   gangland.command.gang.info:
+      default: true
+   gangland.command.gang.members:
+      default: true
+   gangland.command.gang.balance:
+      default: true
+   gangland.command.gang.deposit:
+      default: true
+   gangland.command.gang.withdraw:
+      default: true
+   gangland.command.gang.invite:
+      default: true
+   gangland.command.gang.invite.cancel:
+      default: true
+   gangland.command.gang.accept:
+      default: true
+   gangland.command.gang.decline:
+      default: true
+   gangland.command.gang.kick:
+      default: true
+   gangland.command.gang.promote:
+      default: true
+   gangland.command.gang.demote:
+      default: true
+   # One namespace for turf staff (TF-30): granting gangland.turf.admin grants every turf admin command.
+   gangland.turf.admin:
       default: op
+      children:
+         gangland.command.turf.wand: true
+         gangland.command.turf.pos1: true
+         gangland.command.turf.pos2: true
+         gangland.command.turf.create: true
+         gangland.command.turf.delete: true
+         gangland.command.turf.setowner: true
+         gangland.command.turf.show: true
+         gangland.command.turf.status: true
+         gangland.command.turf.select: true
+         gangland.command.turf.tp: true
+         gangland.command.turf.income: true
+         gangland.command.turf.garrison: true
+         gangland.command.turf.buff: true
+         gangland.command.turf.powerupnpc: true
+         gangland.command.turf.rename: true
