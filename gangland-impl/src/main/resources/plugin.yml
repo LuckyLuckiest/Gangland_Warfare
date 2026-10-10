@@ -43,6 +43,8 @@ permissions:
       default: true
    gangland.command.turf.list:
       default: true
+   gangland.command.turf.rules:
+      default: true
    gangland.command.gang:
       default: true
    gangland.command.gang.create:
@@ -74,6 +76,14 @@ permissions:
    gangland.command.gang.promote:
       default: true
    gangland.command.gang.demote:
+      default: true
+   gangland.command.gang.chat:
+      default: true
+   gangland.command.gang.join:
+      default: true
+   gangland.command.gang.recruiting:
+      default: true
+   gangland.command.gang.bounty:
       default: true
    # Gang menus (W1-G): gang_stat / alliance_stat check these before opening. gang_info stays op-only (no default)
    # so /glw gang reaches GangCommand and the gangless onboarding; members-only open is NEW-W1-G-1.
