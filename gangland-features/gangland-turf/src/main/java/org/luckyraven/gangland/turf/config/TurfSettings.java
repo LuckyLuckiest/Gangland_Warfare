@@ -53,10 +53,6 @@ public final class TurfSettings implements FileInitializer {
 	@Getter private Tone          failedSound;
 	@Getter private Tone          tickSound;
 	@Getter private Tone          unclaimedSound;
-	@Getter private double        contributionDefenderPresenceTick;
-	@Getter private double        contributionAttackerPresenceTick;
-	@Getter private double        contributionCaptureCompleteBonus;
-	@Getter private double        contributionDefenseSuccessBonus;
 
 	/** Bean constructor: the file was registered by {@code TurfModuleFileConfig} in the KERNEL phase. */
 	public TurfSettings(FileManager fileManager) {
@@ -97,7 +93,7 @@ public final class TurfSettings implements FileInitializer {
 		MovedSetting moved = MovedSetting.of(fileHandler, fileManager, "turf");
 
 		incomeIntervalMinutes = moved.getInt("Income_Interval_Minutes", "Turf.Income_Interval_Minutes", 10);
-		defaultIncomeAmount   = moved.getMoney("Default_Income_Amount", "Turf.Default_Income_Amount", "100");
+		defaultIncomeAmount   = moved.getMoney("Default_Income_Amount", "Turf.Default_Income_Amount", "250");
 		// The code default was BLAZE_ROD but the shipped settings.yml said CARROT_ON_A_STICK; the shipped value is
 		// what every server saw, so it is the default here.
 		wandItemType                 = moved.getString("Wand_Item_Type", "Turf.Wand_Item_Type", "CARROT_ON_A_STICK");
@@ -120,7 +116,7 @@ public final class TurfSettings implements FileInitializer {
 		capturePostLogoffProtectionMinutes = moved.getInt("Capture.Post_Logoff_Protection_Minutes",
 		                                                  "Turf.Capture.Post_Logoff_Protection_Minutes", 10);
 		captureInactivityAutoReleaseDays   = moved.getInt("Capture.Inactivity_Auto_Release_Days",
-		                                                  "Turf.Capture.Inactivity_Auto_Release_Days", 10);
+		                                                  "Turf.Capture.Inactivity_Auto_Release_Days", 4);
 		captureSoundEnabled                = moved.getBoolean("Capture.Enable_Sound",
 		                                                      "Turf.Capture.Enable_Sound", true);
 		captureBroadcastGlobally           = moved.getBoolean("Capture.Broadcast_Globally",
@@ -133,14 +129,6 @@ public final class TurfSettings implements FileInitializer {
 		tickSound      = tone(moved, "Tick", "BLOCK_NOTE_BLOCK_HAT", 0.3, 1.8);
 		unclaimedSound = tone(moved, "Unclaimed", "ENTITY_ENDER_DRAGON_GROWL", 0.5, 1.5);
 
-		contributionDefenderPresenceTick = moved.getDouble("Contribution.Points.Defender_Presence_Tick",
-		                                                   "Turf.Contribution.Points.Defender_Presence_Tick", 0.5);
-		contributionAttackerPresenceTick = moved.getDouble("Contribution.Points.Attacker_Presence_Tick",
-		                                                   "Turf.Contribution.Points.Attacker_Presence_Tick", 1.0);
-		contributionCaptureCompleteBonus = moved.getDouble("Contribution.Points.Capture_Complete_Bonus",
-		                                                   "Turf.Contribution.Points.Capture_Complete_Bonus", 50.0);
-		contributionDefenseSuccessBonus  = moved.getDouble("Contribution.Points.Defense_Success_Bonus",
-		                                                   "Turf.Contribution.Points.Defense_Success_Bonus", 25.0);
 	}
 
 	private static Tone tone(MovedSetting moved, String key, String name, double volume, double pitch) {

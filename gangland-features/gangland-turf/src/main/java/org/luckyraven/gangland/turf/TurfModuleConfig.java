@@ -34,8 +34,6 @@ import org.luckyraven.gangland.turf.contract.TurfDisplayContract;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.contract.TurfRepositoryContract;
 import org.luckyraven.gangland.turf.contract.TurfSoundContract;
-import org.luckyraven.gangland.turf.contribution.TurfContributionSettings;
-import org.luckyraven.gangland.turf.contribution.TurfContributionTickTask;
 import org.luckyraven.gangland.turf.manager.TurfManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.TurfPowerupOpenContract;
@@ -252,26 +250,6 @@ public final class TurfModuleConfig {
 				plugin, gangs, users, settings.getInactivityAutoReleaseDays(), release);
 		tracker.start();
 		return tracker;
-	}
-
-	@Bean
-	public TurfContributionSettings turfContributionSettings(TurfSettings turf) {
-		return new TurfContributionSettings(
-				turf.getContributionDefenderPresenceTick(),
-				turf.getContributionAttackerPresenceTick(),
-				turf.getContributionCaptureCompleteBonus(),
-				turf.getContributionDefenseSuccessBonus());
-	}
-
-	@Bean
-	public TurfContributionTickTask turfContributionTickTask(JavaPlugin plugin,
-	                                                         TurfManager turfs,
-	                                                         GangLookupContract gangs,
-	                                                         UserLookupContract users,
-	                                                         TurfContributionSettings settings) {
-		TurfContributionTickTask task = new TurfContributionTickTask(plugin, turfs, gangs, users, settings);
-		task.start();
-		return task;
 	}
 
 	// TurfBossBarListener and TurfCaptureNotifier are @ListenerHandler classes — the framework instantiates them

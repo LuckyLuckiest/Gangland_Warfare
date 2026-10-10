@@ -22,8 +22,7 @@
 #                   This section only controls how the deployer routes them: which type to spawn, how far they
 #                   chase attackers, and a safety lifespan in case the recall event misses them.
 #
-# These are NOT the powerup catalogue (which lives in turf_powerups.yml) and NOT the contribution payout knobs
-# (which live in turf_settings.yml under Contribution). They're hot-reloadable.
+# These are NOT the powerup catalogue (which lives in turf_powerups.yml). They're hot-reloadable.
 Powerup_Npc:
    # civilians.yml type id used to spawn the per-turf Quartermaster. Display name, model, equipment, health,
    # invulnerability, AI, and combat stats all live in civilians.yml under this type — turf module just routes
