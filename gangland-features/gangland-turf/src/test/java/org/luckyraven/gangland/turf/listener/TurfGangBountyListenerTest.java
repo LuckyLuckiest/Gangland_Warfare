@@ -10,6 +10,8 @@ import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
+import org.luckyraven.gangland.gang.GangSettings;
+import org.luckyraven.gangland.gang.contract.GangSettingsContract;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.events.TurfCapturedEvent;
@@ -38,6 +40,7 @@ class TurfGangBountyListenerTest {
 	private UserLookupContract users;
 	private GangMessages       messages;
 	private TurfGangBountyListener listener;
+	private GangSettingsContract gangSettings;
 	private Turf                turf;
 
 	@BeforeEach
@@ -46,6 +49,10 @@ class TurfGangBountyListenerTest {
 		messages = mock(GangMessages.class);
 		when(messages.text(anyString(), anyString(), any(Object[].class))).thenAnswer(invocation -> invocation.getArgument(0));
 		listener = new TurfGangBountyListener(users, messages);
+
+		gangSettings = mock(GangSettingsContract.class);
+		when(gangSettings.getGangMaxBalance()).thenReturn(new BigDecimal("1000000"));
+		GangSettings.bind(gangSettings);
 
 		turf = mock(Turf.class);
 		when(turf.getDisplayName()).thenReturn("Docks");
@@ -125,6 +132,42 @@ class TurfGangBountyListenerTest {
 
 		assertEquals(0, BigDecimal.ZERO.compareTo(rats.getEconomy().getAmount()));
 		verify(messages, never()).text(anyString(), anyString(), any(Object[].class));
+	}
+
+	@Test
+	@DisplayName("a pot that does not fit under the capturing gang's bank cap stays on the bountied gang (T-259)")
+	void potAboveBankCap_staysOnTheGang() {
+		when(gangSettings.getGangMaxBalance()).thenReturn(new BigDecimal("100"));
+		Gang vipers = gang(7, "Vipers", bountyOf(new BigDecimal("20")));
+		Gang rats   = gang(5, "Rats", new Bounty(BigDecimal.ZERO, 0));
+		rats.getEconomy().setAmount(new BigDecimal("90"));
+		Player   winner     = player();
+		User<Player> winnerUser = member(winner);
+		when(rats.getOnlineMembers(any())).thenReturn(List.of(winnerUser));
+
+		try (MockedStatic<Settings> settings = settings()) {
+			listener.onCaptured(new TurfCapturedEvent(turf, vipers, rats));
+		}
+
+		assertEquals(0, new BigDecimal("90").compareTo(rats.getEconomy().getAmount()), "rats bank " + rats.getEconomy().getAmount());
+		assertEquals(0, new BigDecimal("20").compareTo(vipers.getBounty().getAmount()));
+		verify(winner).sendMessage("Bounty.Bank_Full");
+	}
+
+	@Test
+	@DisplayName("a pot that fits under the capturing gang's bank cap is collected (T-259 guard)")
+	void potWithinBankCap_isCollected() {
+		when(gangSettings.getGangMaxBalance()).thenReturn(new BigDecimal("1000"));
+		Gang vipers = gang(7, "Vipers", bountyOf(new BigDecimal("20")));
+		Gang rats   = gang(5, "Rats", new Bounty(BigDecimal.ZERO, 0));
+		rats.getEconomy().setAmount(new BigDecimal("90"));
+
+		try (MockedStatic<Settings> settings = settings()) {
+			listener.onCaptured(new TurfCapturedEvent(turf, vipers, rats));
+		}
+
+		assertEquals(0, new BigDecimal("110").compareTo(rats.getEconomy().getAmount()), "rats bank " + rats.getEconomy().getAmount());
+		assertFalse(vipers.getBounty().hasBounty());
 	}
 
 	/** A bounty booked the way the post command books it, so {@link Bounty#hasBounty()} is true. */
