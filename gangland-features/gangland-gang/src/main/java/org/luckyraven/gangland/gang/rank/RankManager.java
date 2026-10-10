@@ -140,7 +140,8 @@ public class RankManager implements BeanLifecycle {
 
 		if (seeded) {
 			migrations.markDone(TURF_UPGRADE_MIGRATION);   // the fresh-install preset already grants the node
-		} else if (!ranks.isEmpty() && !ranksPermissions.isEmpty() && !migrations.isDone(TURF_UPGRADE_MIGRATION)) {
+		} else if (!ranks.isEmpty() && !ranksPermissions.isEmpty() && !permissions.isEmpty()
+		           && !migrations.isDone(TURF_UPGRADE_MIGRATION)) {
 			// T-266: ranks that may withdraw from the bank may also spend it at the Quartermaster, once (0.17.0).
 			// An empty read (failed or truly empty) skips without marking, so the next boot retries it.
 			int granted = 0;

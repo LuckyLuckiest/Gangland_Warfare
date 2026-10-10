@@ -561,6 +561,18 @@ class RankManagerTest {
 		}
 
 		@Test
+		@DisplayName("failedPermissionRead_isNotMarkedDone: an empty permission table read skips the grant without marking it done")
+		void failedPermissionRead_isNotMarkedDone() {
+			persistedTree();
+			when(permissionRepo.loadAll()).thenReturn(List.of());
+			FakeMigrations migrations = new FakeMigrations();
+
+			new RankManager(registry, permissionRegistry, rules, migrations).initialize();
+
+			assertFalse(migrations.isDone(RankManager.TURF_UPGRADE_MIGRATION));
+		}
+
+		@Test
 		@DisplayName("freshInstall_marksDoneWithoutLog: the seeding path records the migration as done")
 		void freshInstall_marksDoneWithoutLog() throws Exception {
 			RepositoryRegistry   seedRegistry = mock(RepositoryRegistry.class);
