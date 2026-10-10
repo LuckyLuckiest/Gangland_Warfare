@@ -1,6 +1,5 @@
 package org.luckyraven.gangland.command.sub.gang;
 
-import org.luckyraven.gangland.gang.GangSettings;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -17,8 +16,11 @@ import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.util.GanglandChatUtil;
+import org.luckyraven.gangland.gang.file.GangMessages;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 import org.luckyraven.keystone.bean.Qualifier;
 
@@ -29,10 +31,12 @@ class GangRenameCommand extends SubArgument {
 	private final UserManager<Player> userManager;
 	private final MemberManager       memberManager;
 	private final GangManager         gangManager;
+	private final Pattern             namePattern;
+	private final GangMessages        gangMessages;
 
 	protected GangRenameCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                            @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager,
-	                            GangManager gangManager) {
+	                            GangManager gangManager, Pattern namePattern, GangMessages gangMessages) {
 		super(gangland, "rename", tree, parent);
 
 		this.gangland      = gangland;
@@ -40,6 +44,8 @@ class GangRenameCommand extends SubArgument {
 		this.userManager   = userManager;
 		this.memberManager = memberManager;
 		this.gangManager   = gangManager;
+		this.namePattern   = namePattern;
+		this.gangMessages  = gangMessages;
 
 		gangRename();
 	}
@@ -84,11 +90,13 @@ class GangRenameCommand extends SubArgument {
 			String oldName = gang.getName();
 			String newName = args[2];
 
-			if (!GangSettings.isGangNameDuplicates()) for (Gang checkGangName : gangManager.getGangs().values())
-				if (checkGangName.getName().equalsIgnoreCase(newName)) {
-					user.sendMessage(Messages.DUPLICATE_GANG_NAME.toString().replace("%gang%", newName));
-					return;
-				}
+			// GR-29: the same rules as create; the gang may keep its own name.
+			Optional<String> refusal = GangNameRules.check(newName, namePattern, gangManager.getGangs().values(),
+			                                               gang.getId());
+			if (refusal.isPresent()) {
+				user.sendMessage(GangNameRules.refusal(gangMessages, refusal.get(), newName));
+				return;
+			}
 
 			gang.setName(newName);
 

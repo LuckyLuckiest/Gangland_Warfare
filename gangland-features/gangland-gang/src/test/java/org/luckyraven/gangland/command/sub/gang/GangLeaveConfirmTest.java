@@ -79,6 +79,7 @@ class GangLeaveConfirmTest {
 		player = mock(Player.class);
 		when(player.getUniqueId()).thenReturn(uuid);
 		when(player.hasPermission(anyString())).thenReturn(true);
+		when(player.getName()).thenReturn("Carl");
 
 		user = mock(User.class);
 		when(user.getUser()).thenReturn(player);

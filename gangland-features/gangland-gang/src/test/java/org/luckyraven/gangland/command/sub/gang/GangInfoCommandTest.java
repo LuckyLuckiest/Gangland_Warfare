@@ -117,7 +117,7 @@ class GangInfoCommandTest {
 	@Test
 	@DisplayName("a gang is found by name, ignoring case, and its card names the owner, members and description")
 	void byName_ignoringCase() throws Exception {
-		info().executeArgument(player, new String[]{"gang", "info", "rATS"});
+		lookup().executeArgument(player, new String[]{"gang", "info", "rATS"});
 
 		List<String> card = lines();
 		assertTrue(card.stream().anyMatch(line -> line.contains("Rats")), card.toString());
@@ -129,7 +129,7 @@ class GangInfoCommandTest {
 	@Test
 	@DisplayName("a gang is found by its numeric id")
 	void byId() throws Exception {
-		info().executeArgument(player, new String[]{"gang", "info", "5"});
+		lookup().executeArgument(player, new String[]{"gang", "info", "5"});
 
 		assertTrue(lines().stream().anyMatch(line -> line.contains("Rats")), lines().toString());
 	}
@@ -137,7 +137,7 @@ class GangInfoCommandTest {
 	@Test
 	@DisplayName("the card never shows the bank balance")
 	void card_neverShowsBalance() throws Exception {
-		info().executeArgument(player, new String[]{"gang", "info", "Rats"});
+		lookup().executeArgument(player, new String[]{"gang", "info", "Rats"});
 
 		assertTrue(lines().stream().noneMatch(line -> line.contains(BALANCE)), lines().toString());
 		verify(rats, never()).getEconomy();
@@ -149,7 +149,7 @@ class GangInfoCommandTest {
 		Gang ferrets = gang(9, "Ferrets", "", "owner", "Other", 1);
 		when(rats.getAllies()).thenReturn(Set.of(new GangAlliance(rats, ferrets, 0L)));
 
-		info().executeArgument(player, new String[]{"gang", "info", "Rats"});
+		lookup().executeArgument(player, new String[]{"gang", "info", "Rats"});
 
 		assertTrue(lines().stream().anyMatch(line -> line.contains("Ferrets")), lines().toString());
 	}
@@ -157,7 +157,7 @@ class GangInfoCommandTest {
 	@Test
 	@DisplayName("an unknown gang gets the not-found line")
 	void unknown_notFound() throws Exception {
-		info().executeArgument(player, new String[]{"gang", "info", "Nobody"});
+		lookup().executeArgument(player, new String[]{"gang", "info", "Nobody"});
 
 		verify(player).sendMessage(messages.text("Info.Not_Found", "&cNo gang named %gang%.", "gang", "Nobody"));
 	}
@@ -185,6 +185,11 @@ class GangInfoCommandTest {
 		info().executeArgument(player, new String[]{"gang", "info"});
 
 		verify(player).sendMessage(GanglandChatUtil.setArguments(Messages.ARGUMENTS_MISSING.toString(), "<gang>"));
+	}
+
+	/** The optional name/id child of {@code info}, which is where a typed gang name is answered. */
+	private Argument lookup() {
+		return info().getNode().getChildren().get(0).getData();
 	}
 
 	private Argument info() {

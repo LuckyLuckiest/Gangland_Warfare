@@ -26,12 +26,15 @@ import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.gangland.util.TimeMessages;
+import org.luckyraven.gangland.gang.file.GangMessages;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Pattern;
 
 import org.luckyraven.keystone.bean.Qualifier;
 
@@ -44,10 +47,13 @@ class GangCreateCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final RankManager         rankManager;
 	private final RepositoryRegistry  repositoryRegistry;
+	private final Pattern             namePattern;
+	private final GangMessages        gangMessages;
 
 	protected GangCreateCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                            @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
-	                            RankManager rankManager, RepositoryRegistry repositoryRegistry) {
+	                            RankManager rankManager, RepositoryRegistry repositoryRegistry, Pattern namePattern,
+	                            GangMessages gangMessages) {
 		super(gangland, "create", tree, parent);
 
 		this.gangland           = gangland;
@@ -57,6 +63,8 @@ class GangCreateCommand extends SubArgument {
 		this.gangManager        = gangManager;
 		this.rankManager        = rankManager;
 		this.repositoryRegistry = repositoryRegistry;
+		this.namePattern        = namePattern;
+		this.gangMessages       = gangMessages;
 
 		gangCreate();
 	}
@@ -164,11 +172,13 @@ class GangCreateCommand extends SubArgument {
 
 			AtomicReference<String> name = new AtomicReference<>(args[2]);
 
-			if (!GangSettings.isGangNameDuplicates()) for (Gang gang : gangManager.getGangs().values())
-				if (gang.getName().equalsIgnoreCase(name.get())) {
-					user.sendMessage(Messages.DUPLICATE_GANG_NAME.toString().replace("%gang%", name.get()));
-					return;
-				}
+			// GR-29: names are the command key, so a bad or taken name is refused whatever Name_Duplicates says.
+			Optional<String> refusal = GangNameRules.check(name.get(), namePattern, gangManager.getGangs().values(),
+			                                               null);
+			if (refusal.isPresent()) {
+				user.sendMessage(GangNameRules.refusal(gangMessages, refusal.get(), name.get()));
+				return;
+			}
 
 			createGangName.put(user, name);
 
