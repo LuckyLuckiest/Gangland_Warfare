@@ -19,5 +19,6 @@ public final class TurfDefenderDeathListener implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onCivilianDeath(CivilianDeathEvent event) {
+		defenders.markKilled(event.getCivilianNpc());
 	}
 }

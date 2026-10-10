@@ -70,6 +70,7 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		}
 		for (Group g : byTurfId.values()) g.recallAll();
 		byTurfId.clear();
+		killed.clear();
 	}
 
 	/**
@@ -103,8 +104,6 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		                                       k -> new Group(challengerMembersSupplier, targetingRadius));
 		group.challengerMembers = challengerMembersSupplier;
 		group.targetingRadius   = targetingRadius;
-		// ponytail: red stage - lifespan frozen at deploy; the final version reads the supplier on every tick.
-		int frozen = lifespanSeconds.getAsInt();
 		long deployedAt = System.currentTimeMillis();
 		for (int i = 0; i < count; i++) {
 			CivilianNpc npc = spawnManager.spawnCivilian(spawnLocation, civilianTypeId);
@@ -113,7 +112,7 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 				         civilianTypeId, spawnLocation);
 				continue;
 			}
-			group.defenders.add(new TrackedDefender(npc, deployedAt, () -> frozen));
+			group.defenders.add(new TrackedDefender(npc, deployedAt, lifespanSeconds));
 			group.deployed++;
 		}
 	}
@@ -124,11 +123,24 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	 */
 	public void recall(int turfId) {
 		Group group = byTurfId.remove(turfId);
-		if (group != null) group.recallAll();
+		if (group != null) {
+			for (TrackedDefender d : group.defenders) {
+				killed.remove(d.npc);
+			}
+			group.recallAll();
+		}
 	}
 
 	/** T-251: records that this guard died (not merely vanished); a no-op for an NPC that is not a tracked guard. */
 	public void markKilled(CivilianNpc npc) {
+		for (Group group : byTurfId.values()) {
+			for (TrackedDefender d : group.defenders) {
+				if (d.npc == npc) {
+					killed.add(npc);
+					return;
+				}
+			}
+		}
 	}
 
 	/**
@@ -189,7 +201,15 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 			for (Iterator<TrackedDefender> it = group.defenders.iterator(); it.hasNext(); ) {
 				TrackedDefender d = it.next();
 				if (!d.npc.isValid() || d.npc.isMarkedForRemoval() || now >= d.expiresAt()) {
-					if (now < d.expiresAt()) down++;
+					boolean died = killed.remove(d.npc);
+					if (now < d.expiresAt()) {
+						if (died) {
+							down++;
+						} else {
+							// T-251: unloaded or despawned, not killed - drop it without a defender-down alert
+							log.debug("Turf {}: guard left without dying (despawned or unloaded); not counted as down", entry.getKey());
+						}
+					}
 					if (d.npc.isValid()) d.npc.markForRemoval();
 					it.remove();
 				}

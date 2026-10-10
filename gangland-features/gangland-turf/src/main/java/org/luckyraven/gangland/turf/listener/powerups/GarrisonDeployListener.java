@@ -24,6 +24,7 @@ import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 
 import java.util.HashSet;
+import java.util.function.IntSupplier;
 import java.util.Set;
 import java.util.UUID;
 
@@ -78,11 +79,12 @@ public final class GarrisonDeployListener implements Listener {
 		// TF-36: read the live config at deploy time, so a /glw reload of turf_npcs.yml applies to the next contest.
 		TurfDefenderConfig defenderConfig = npcConfig.getDefenderConfig();
 		// r2: guards must outlive the longest contest (a stall runs to Max_Contest_Minutes), or they expire first and the
-		// failed-contest give-back finds nothing alive.
-		// ponytail: red stage - supplier frozen at start; the final version re-reads rules every tick (T-269).
-		int lifespan = Math.max(defenderConfig.lifespanSeconds(), rules.capture().maxContestMinutes() * 60 + 60);
+		// failed-contest give-back finds nothing alive. T-269: the supplier is read on every deployer tick, so a /glw reload
+		// of turf_npcs.yml or turf_rules.yml reaches guards already in the field.
+		IntSupplier lifespan = () -> Math.max(npcConfig.getDefenderConfig().lifespanSeconds(),
+		                                      rules.capture().maxContestMinutes() * 60 + 60);
 		defenders.deploy(turf.getId(), spawn, defenderConfig.typeId(), () -> challengerMemberIds(challengerGangId),
-		                 consumed, defenderConfig.targetingRadius(), () -> lifespan);
+		                 consumed, defenderConfig.targetingRadius(), lifespan);
 	}
 
 	@EventHandler
@@ -97,6 +99,9 @@ public final class GarrisonDeployListener implements Listener {
 	 */
 	@EventHandler
 	public void onOwnerChanged(TurfOwnerChangedEvent event) {
+		int turfId = event.getTurf().getId();
+		defenders.recall(turfId);
+		garrisons.remove(turfId);
 	}
 
 	/**
