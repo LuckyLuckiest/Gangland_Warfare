@@ -21,6 +21,11 @@ import java.util.function.Consumer;
 @Repository(Jail.class)
 public class JailRepository extends AbstractRepository<Jail> {
 
+	/** A SQL NULL reads as 0; any other value is read through Number (MySQL may return Long/BigDecimal). */
+	private static Number num(Object raw) {
+		return raw instanceof Number number ? number : 0;
+	}
+
 	private final JailTable jailTable;
 
 	public JailRepository(JavaPlugin plugin, DatabaseHandler databaseHandler, DatabaseBackend backend) {
@@ -38,12 +43,12 @@ public class JailRepository extends AbstractRepository<Jail> {
 		for (Object[] result : data) {
 			int v = 0;
 
-			int    id          = (int) result[v++];
+			int    id          = num(result[v++]).intValue();
 			String worldName   = String.valueOf(result[v++]);
-			double x           = (double) result[v++];
-			double y           = (double) result[v++];
-			double z           = (double) result[v++];
-			int    maxCapacity = (int) result[v];
+			double x           = num(result[v++]).doubleValue();
+			double y           = num(result[v++]).doubleValue();
+			double z           = num(result[v++]).doubleValue();
+			int    maxCapacity = num(result[v]).intValue();
 
 			// before the unloaded-world skip, and a floor (never lowered): the next created jail must not reuse this id
 			JailService.ID = Math.max(JailService.ID, id);

@@ -21,6 +21,11 @@ import java.util.function.Consumer;
 @Repository(Waypoint.class)
 public class WaypointRepository extends AbstractRepository<Waypoint> {
 
+	/** A SQL NULL reads as 0; any other value is read through Number (MySQL may return Long/BigDecimal). */
+	private static Number num(Object raw) {
+		return raw instanceof Number number ? number : 0;
+	}
+
 	private final WaypointTable waypointTable;
 	private       int           highestStoredId;
 
@@ -44,23 +49,23 @@ public class WaypointRepository extends AbstractRepository<Waypoint> {
 
 		for (Object[] result : data) {
 			int    v        = 0;
-			int    id       = (int) result[v++];
+			int    id       = num(result[v++]).intValue();
 			// before the unknown-type skip: the next created waypoint must never reuse that row's id
 			highestStoredId = Math.max(highestStoredId, id);
-			int    gangId   = (int) result[v++];
+			int    gangId   = num(result[v++]).intValue();
 			String name     = String.valueOf(result[v++]);
 			String world    = String.valueOf(result[v++]);
-			double x        = (double) result[v++];
-			double y        = (double) result[v++];
-			double z        = (double) result[v++];
-			double yaw      = (double) result[v++];
-			double pitch    = (double) result[v++];
+			double x        = num(result[v++]).doubleValue();
+			double y        = num(result[v++]).doubleValue();
+			double z        = num(result[v++]).doubleValue();
+			double yaw      = num(result[v++]).doubleValue();
+			double pitch    = num(result[v++]).doubleValue();
 			String type     = String.valueOf(result[v++]);
-			int    shield   = (int) result[v++];
-			int    timer    = (int) result[v++];
-			int    cooldown = (int) result[v++];
-			double cost     = (double) result[v++];
-			double radius   = (double) result[v];
+			int    shield   = num(result[v++]).intValue();
+			int    timer    = num(result[v++]).intValue();
+			int    cooldown = num(result[v++]).intValue();
+			double cost     = num(result[v++]).doubleValue();
+			double radius   = num(result[v]).doubleValue();
 
 			// R35: a type this version does not know (a row written by a newer one) skips the row, not the whole load
 			Waypoint.WaypointType waypointType;
