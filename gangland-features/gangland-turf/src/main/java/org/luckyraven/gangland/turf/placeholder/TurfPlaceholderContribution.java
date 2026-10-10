@@ -127,7 +127,8 @@ public final class TurfPlaceholderContribution implements PlaceholderContributio
 
 	/**
 	 * The turf the player stands in when there is one (distance 0), else the nearest turf in their world, cached per
-	 * player for NEAREST_CACHE_MILLIS.
+	 * player for NEAREST_CACHE_MILLIS. Placeholders may be resolved from the async scoreboard thread; the world,
+	 * location and evaluate calls here only read state, which is acceptable.
 	 */
 	private @Nullable TurfGeometry.Nearest nearest(Player player, @Nullable Turf current, long now) {
 		if (current != null) {
@@ -144,6 +145,8 @@ public final class TurfPlaceholderContribution implements PlaceholderContributio
 			Location at = player.getLocation();
 			found = TurfGeometry.nearest(turfs.getTurfsInWorld(world.getName()), at.getBlockX(), at.getBlockZ());
 		}
+		// ponytail: sweeps stale entries on each miss (O(online players)); a quit listener would remove them eagerly
+		nearestCache.values().removeIf(entry -> now - entry.computedAt() >= NEAREST_CACHE_MILLIS);
 		nearestCache.put(player.getUniqueId(), new CachedNearest(found, now));
 		return found;
 	}

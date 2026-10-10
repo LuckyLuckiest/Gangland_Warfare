@@ -142,7 +142,7 @@ public final class TurfHudTask implements BeanLifecycle {
 		Integer          challengerId = state == null ? null : state.getChallengerGangId();
 		String challenger = challengerId == null ? null : GangDisplayNameResolver.resolve(gangs.findById(challengerId));
 
-		return TurfHudLine.inside(text, turf, relation, ownerName, state, challenger,
+		return TurfHudLine.inside(text, turf, relation, gangId == null, ownerName, state, challenger,
 		                          eligibility.evaluate(turf, now), now);
 	}
 

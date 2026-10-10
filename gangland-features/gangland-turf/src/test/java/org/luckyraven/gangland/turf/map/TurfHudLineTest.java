@@ -91,7 +91,7 @@ class TurfHudLineTest {
 	@Test
 	@DisplayName("own turf nobody attacks reads your turf - quiet")
 	void ownQuiet() throws IOException {
-		String line = TurfHudLine.inside(text(), docks(7), TurfRelation.OWN, "Rats", null, null, ATTACKABLE, NOW);
+		String line = TurfHudLine.inside(text(), docks(7), TurfRelation.OWN, false, "Rats", null, null, ATTACKABLE, NOW);
 
 		assertEquals("Docks - your turf - quiet", plain(line));
 	}
@@ -99,7 +99,7 @@ class TurfHudLineTest {
 	@Test
 	@DisplayName("own turf under attack names the challenger and the rounded progress")
 	void ownUnderAttack() throws IOException {
-		String line = TurfHudLine.inside(text(), docks(7), TurfRelation.OWN, "Rats", contesting(62.4, 9), "Vipers",
+		String line = TurfHudLine.inside(text(), docks(7), TurfRelation.OWN, false, "Rats", contesting(62.4, 9), "Vipers",
 		                                 ATTACKABLE, NOW);
 
 		assertEquals("Docks - your turf - under attack by Vipers, 62%", plain(line));
@@ -108,7 +108,7 @@ class TurfHudLineTest {
 	@Test
 	@DisplayName("allied turf nobody attacks reads with the owner name and quiet")
 	void allyQuiet() throws IOException {
-		String line = TurfHudLine.inside(text(), docks(7), TurfRelation.ALLY, "Allies", null, null, ATTACKABLE, NOW);
+		String line = TurfHudLine.inside(text(), docks(7), TurfRelation.ALLY, false, "Allies", null, null, ATTACKABLE, NOW);
 
 		assertEquals("Docks - Allies turf - quiet", plain(line));
 	}
@@ -116,7 +116,7 @@ class TurfHudLineTest {
 	@Test
 	@DisplayName("rival turf that can be captured reads attackable")
 	void rivalAttackable() throws IOException {
-		String line = TurfHudLine.inside(text(), docks(7), TurfRelation.RIVAL, "Rats", null, null, ATTACKABLE, NOW);
+		String line = TurfHudLine.inside(text(), docks(7), TurfRelation.RIVAL, false, "Rats", null, null, ATTACKABLE, NOW);
 
 		assertEquals("Docks - Rats turf - attackable", plain(line));
 	}
@@ -127,7 +127,7 @@ class TurfHudLineTest {
 		CaptureEligibility.Verdict cooldown =
 				new CaptureEligibility.Verdict(Reason.COOLDOWN, NOW + 14 * 60_000L);
 
-		String line = TurfHudLine.inside(text(), docks(7), TurfRelation.RIVAL, "Rats", null, null, cooldown, NOW);
+		String line = TurfHudLine.inside(text(), docks(7), TurfRelation.RIVAL, false, "Rats", null, null, cooldown, NOW);
 
 		assertEquals("Docks - Rats turf - shielded: just captured, attackable in 14m", plain(line));
 	}
@@ -135,7 +135,7 @@ class TurfHudLineTest {
 	@Test
 	@DisplayName("unclaimed turf reads unclaimed and the reason sentence")
 	void unclaimedAttackable() throws IOException {
-		String line = TurfHudLine.inside(text(), docks(null), TurfRelation.UNCLAIMED, "", null, null, ATTACKABLE, NOW);
+		String line = TurfHudLine.inside(text(), docks(null), TurfRelation.UNCLAIMED, false, "", null, null, ATTACKABLE, NOW);
 
 		assertEquals("Docks - unclaimed - attackable", plain(line));
 	}
@@ -143,9 +143,17 @@ class TurfHudLineTest {
 	@Test
 	@DisplayName("a player without a gang is told to join one to capture")
 	void gangless() throws IOException {
-		String line = TurfHudLine.inside(text(), docks(7), TurfRelation.GANGLESS, "Rats", null, null, ATTACKABLE, NOW);
+		String line = TurfHudLine.inside(text(), docks(7), TurfRelation.GANGLESS, false, "Rats", null, null, ATTACKABLE, NOW);
 
 		assertEquals("Docks - Rats turf - join a gang to capture", plain(line));
+	}
+
+	@Test
+	@DisplayName("a gangless player in an unclaimed turf is told to join a gang, not that it is attackable")
+	void ganglessInUnclaimed() throws IOException {
+		String line = TurfHudLine.inside(text(), docks(null), TurfRelation.UNCLAIMED, true, "", null, null, ATTACKABLE, NOW);
+
+		assertEquals("Docks - unclaimed - join a gang to capture", plain(line));
 	}
 
 	@Test

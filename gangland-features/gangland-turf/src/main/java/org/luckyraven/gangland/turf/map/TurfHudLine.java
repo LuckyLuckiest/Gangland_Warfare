@@ -22,9 +22,11 @@ public final class TurfHudLine {
 
 	/**
 	 * The line for a player standing inside {@code turf}. ownerName is the owner's resolved name ("" when unclaimed),
-	 * challengerName the challenger's resolved name (only read while the turf is CONTESTING).
+	 * challengerName the challenger's resolved name (only read while the turf is CONTESTING). viewerGangless is true for
+	 * any player without a gang, whatever the turf's owner, because a gangless player can never capture.
 	 */
-	public static String inside(TurfMessages text, Turf turf, TurfRelation relation, String ownerName,
+	public static String inside(TurfMessages text, Turf turf, TurfRelation relation, boolean viewerGangless,
+	                            String ownerName,
 	                            @Nullable TurfRuntimeState state, @Nullable String challengerName,
 	                            CaptureEligibility.Verdict verdict, long now) {
 		String owner = switch (relation) {
@@ -36,7 +38,7 @@ public final class TurfHudLine {
 		};
 
 		String reason;
-		if (relation == TurfRelation.GANGLESS) {
+		if (viewerGangless || relation == TurfRelation.GANGLESS) {
 			reason = text.text("Hud.Gangless", "&ejoin a gang to capture");
 		} else if (isContesting(state)) {
 			reason = underAttack(text, state, challengerName);
