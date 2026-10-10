@@ -16,6 +16,7 @@ import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.events.TurfCaptureFailedEvent;
 import org.luckyraven.gangland.turf.events.TurfCaptureStartEvent;
 import org.luckyraven.gangland.turf.events.TurfCapturedEvent;
+import org.luckyraven.gangland.turf.events.TurfOwnerChangedEvent;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.config.TurfNpcsConfigLoader;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
@@ -23,6 +24,7 @@ import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 
 import java.util.HashSet;
+import java.util.function.IntSupplier;
 import java.util.Set;
 import java.util.UUID;
 
@@ -77,8 +79,10 @@ public final class GarrisonDeployListener implements Listener {
 		// TF-36: read the live config at deploy time, so a /glw reload of turf_npcs.yml applies to the next contest.
 		TurfDefenderConfig defenderConfig = npcConfig.getDefenderConfig();
 		// r2: guards must outlive the longest contest (a stall runs to Max_Contest_Minutes), or they expire first and the
-		// failed-contest give-back finds nothing alive.
-		int lifespan = Math.max(defenderConfig.lifespanSeconds(), rules.capture().maxContestMinutes() * 60 + 60);
+		// failed-contest give-back finds nothing alive. T-269: the supplier is read on every deployer tick, so a /glw reload
+		// of turf_npcs.yml or turf_rules.yml reaches guards already in the field.
+		IntSupplier lifespan = () -> Math.max(npcConfig.getDefenderConfig().lifespanSeconds(),
+		                                      rules.capture().maxContestMinutes() * 60 + 60);
 		defenders.deploy(turf.getId(), spawn, defenderConfig.typeId(), () -> challengerMemberIds(challengerGangId),
 		                 consumed, defenderConfig.targetingRadius(), lifespan);
 	}
@@ -87,6 +91,17 @@ public final class GarrisonDeployListener implements Listener {
 	public void onCaptured(TurfCapturedEvent event) {
 		defenders.recall(event.getTurf().getId());
 		powerupNpcs.disengage(event.getTurf().getId());
+	}
+
+	/**
+	 * T-270: garrison stock belongs to the gang that bought it. A turf that changes hands for any reason (capture, admin,
+	 * disband, inactivity) recalls the old owner's guards and starts with no stock, so a give-back never reaches the new owner.
+	 */
+	@EventHandler
+	public void onOwnerChanged(TurfOwnerChangedEvent event) {
+		int turfId = event.getTurf().getId();
+		defenders.recall(turfId);
+		garrisons.remove(turfId);
 	}
 
 	/**

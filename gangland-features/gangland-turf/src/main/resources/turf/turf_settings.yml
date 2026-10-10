@@ -52,8 +52,9 @@ Capture:
    # Lockout window (minutes) after a capture completes during which the turf cannot be
    # contested again.
    Cooldown_Minutes: 15
-   # Grace (seconds) after the challenger leaves the turf before the contest cancels as
-   # ABANDONED.
+   # Seconds the attacking gang may have nobody inside the turf before the contest ends
+   # ABANDONED. Stepping out and back in keeps the contest; the attacker counts again after
+   # turf_rules.yml Presence_Seconds.
    Abandon_Grace_Seconds: 15
    # Minutes after the owner gang's last member logs off. With turf_rules.yml Capture.Window OWNERS_ONLINE (the default)
    # a turf stays attackable this long after its last owner leaves, then is shielded until an owner returns. With

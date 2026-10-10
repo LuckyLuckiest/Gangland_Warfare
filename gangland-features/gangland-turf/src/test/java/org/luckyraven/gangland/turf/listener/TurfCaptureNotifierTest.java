@@ -233,8 +233,9 @@ class TurfCaptureNotifierTest {
 		clock.addAndGet(20_000L);
 		notifier.onCaptureFailed(new TurfCaptureFailedEvent(turf, TurfCaptureFailedEvent.Reason.ABANDONED, 2));
 
-		assertEquals(List.of("Docks held against Rats", "Docks held against Rats"), linesOf(ownerPlayer));
-		assertEquals(List.of("Your attack on Docks failed", "Your attack on Docks failed"), linesOf(attacker));
+		// T-271: DEFENDED and ABANDONED share the HELD bucket, so the repeat within 15 minutes is not told again.
+		assertEquals(List.of("Docks held against Rats"), linesOf(ownerPlayer));
+		assertEquals(List.of("Your attack on Docks failed"), linesOf(attacker));
 	}
 
 	@Test
@@ -247,6 +248,59 @@ class TurfCaptureNotifierTest {
 
 		assertEquals(List.of("Docks: the attack stalled"), linesOf(ownerPlayer));
 		assertEquals(List.of("Docks: the attack stalled"), linesOf(attacker));
+	}
+
+	@Test
+	@DisplayName("T-271: a held turf told twice within the 15-minute quiet window is told once")
+	void heldTwiceWithinQuietWindow_toldOnce() {
+		Player ownerPlayer = member(1, overworld, 10, 10);
+		Player attacker = member(2, overworld, 80, 50);
+
+		notifier.onCaptureFailed(new TurfCaptureFailedEvent(turf, TurfCaptureFailedEvent.Reason.DEFENDED, 2));
+		clock.addAndGet(10 * 60_000L);
+		notifier.onCaptureFailed(new TurfCaptureFailedEvent(turf, TurfCaptureFailedEvent.Reason.DEFENDED, 2));
+
+		assertEquals(List.of("Docks held against Rats"), linesOf(ownerPlayer));
+		assertEquals(List.of("Your attack on Docks failed"), linesOf(attacker));
+	}
+
+	@Test
+	@DisplayName("T-271: a stall every ten minutes is told once per side")
+	void stalledEveryTenMinutes_toldOnce() {
+		Player ownerPlayer = member(1, overworld, 10, 10);
+		Player attacker = member(2, overworld, 80, 50);
+
+		for (int i = 0; i < 3; i++) {
+			notifier.onCaptureFailed(new TurfCaptureFailedEvent(turf, TurfCaptureFailedEvent.Reason.STALLED, 2));
+			clock.addAndGet(10 * 60_000L);
+		}
+
+		assertEquals(List.of("Docks: the attack stalled"), linesOf(ownerPlayer));
+		assertEquals(List.of("Docks: the attack stalled"), linesOf(attacker));
+	}
+
+	@Test
+	@DisplayName("T-271: the same outcome after the quiet window is told again")
+	void sameOutcomeAfterQuietWindow_toldAgain() {
+		Player ownerPlayer = member(1, overworld, 10, 10);
+
+		notifier.onCaptureFailed(new TurfCaptureFailedEvent(turf, TurfCaptureFailedEvent.Reason.DEFENDED, 2));
+		clock.addAndGet(16 * 60_000L);
+		notifier.onCaptureFailed(new TurfCaptureFailedEvent(turf, TurfCaptureFailedEvent.Reason.DEFENDED, 2));
+
+		assertEquals(List.of("Docks held against Rats", "Docks held against Rats"), linesOf(ownerPlayer));
+	}
+
+	@Test
+	@DisplayName("T-271: a different attacking gang is told even within the quiet window")
+	void differentAttacker_toldAgain() {
+		Player ownerPlayer = member(1, overworld, 10, 10);
+
+		notifier.onCaptureFailed(new TurfCaptureFailedEvent(turf, TurfCaptureFailedEvent.Reason.DEFENDED, 2));
+		clock.addAndGet(60_000L);
+		notifier.onCaptureFailed(new TurfCaptureFailedEvent(turf, TurfCaptureFailedEvent.Reason.DEFENDED, 3));
+
+		assertEquals(List.of("Docks held against Rats", "Docks held against Cobras"), linesOf(ownerPlayer));
 	}
 
 	@Test

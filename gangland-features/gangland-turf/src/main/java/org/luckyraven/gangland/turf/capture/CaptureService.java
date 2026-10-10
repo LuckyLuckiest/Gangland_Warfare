@@ -39,8 +39,9 @@ import java.util.function.Supplier;
  * </pre>
  * An attacker counts after {@code Presence_Seconds} inside; defenders count at once. While a contest runs, a player who
  * joined his gang, or an ally who allied, after it started is a bystander until it ends. An empty contest freezes its
- * bar and ends {@link TurfCaptureFailedEvent.Reason#ABANDONED} once {@code Abandon_Grace_Seconds} pass without a counted
- * attacker. A contest running {@code Max_Contest_Minutes} ends {@link TurfCaptureFailedEvent.Reason#STALLED}. Reaching
+ * bar and ends {@link TurfCaptureFailedEvent.Reason#ABANDONED} once {@code Abandon_Grace_Seconds} pass with no member of
+ * the attacking gang inside (counted or still counting in), so stepping out and back in keeps the contest (T-252).
+ * A contest running {@code Max_Contest_Minutes} ends {@link TurfCaptureFailedEvent.Reason#STALLED}. Reaching
  * 100 completes the capture unless the attacking gang is now at its turf cap ({@code CANCELLED}); reaching 0 while the
  * defenders lead ends {@link TurfCaptureFailedEvent.Reason#DEFENDED}.
  *
@@ -210,6 +211,7 @@ public final class CaptureService {
 				continue;
 			}
 			if (relation == RIVAL) {
+				groups.presentByGang.merge(gangId, 1, Integer::sum);
 				if (now - entry.enteredAt() >= presenceMs) {
 					groups.challengersByGang.merge(gangId, 1, Integer::sum);
 				}
@@ -323,7 +325,7 @@ public final class CaptureService {
 		state.setGuardsCounted(guards);
 		int defenders = owned ? groups.defenders + guards : othersInside(groups, challengerId);
 
-		if (attackers > 0) {
+		if (groups.presentByGang.getOrDefault(challengerId, 0) > 0) {   // T-252: any attacker inside keeps the contest
 			state.setLastChallengerSeenAt(now);
 		} else if (now - state.getLastChallengerSeenAt() > settings.getAbandonGraceSeconds() * 1000L) {
 			cancel(turf, state, playersInside, TurfCaptureFailedEvent.Reason.ABANDONED);
@@ -464,6 +466,8 @@ public final class CaptureService {
 
 	private static final class TickGroups {
 		final Map<Integer, Integer> challengersByGang = new HashMap<>();
+		/** rival players inside per gang, counted or still counting in (T-252) */
+		final Map<Integer, Integer> presentByGang     = new HashMap<>();
 		int defenders;
 	}
 }

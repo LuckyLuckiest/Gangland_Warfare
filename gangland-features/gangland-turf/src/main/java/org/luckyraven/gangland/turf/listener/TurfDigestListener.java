@@ -28,7 +28,10 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.LongSupplier;
 
 
 /**
@@ -53,6 +56,16 @@ public final class TurfDigestListener implements Listener {
 	private final TurfMessages    text;
 	private final CaptureSettings capture;
 	private final JavaPlugin      plugin;
+
+	private LongSupplier clock = System::currentTimeMillis;
+	// ponytail: fixed 15-minute quiet window; a turf_settings.yml knob if owners ask for one.
+	private static final long OUTCOME_QUIET_MS = 15 * 60_000L;
+	/** Last time each repeated outcome line was recorded (T-271); never pruned, one entry per gang, turf and bucket. */
+	private final Map<String, Long> lastRecorded = new HashMap<>();
+
+	void setClock(LongSupplier clock) {
+		this.clock = clock;
+	}
 
 	public TurfDigestListener(TurfEventBuffer buffer,
 	                          TurfManager turfs,
@@ -104,14 +117,14 @@ public final class TurfDigestListener implements Listener {
 
 	@EventHandler
 	public void onCaptureFailed(TurfCaptureFailedEvent event) {
-		long    now        = System.currentTimeMillis();
+		long    now        = clock.getAsLong();
 		Turf    turf       = event.getTurf();
 		String  turfName   = turf.getDisplayName();
 		Integer owner      = turf.getOwnerGangId();
 		Integer challenger = event.getChallengerGangId();
 		switch (event.getReason()) {
 			case DEFENDED, ABANDONED -> {
-				if (owner != null) {
+				if (owner != null && !repeated(owner, turf.getId(), "HELD", challenger, now)) {
 					record(owner, now, text.text("Digest.Held", "&aHeld %turf% &7against %gang%",
 					                             "turf", turfName,
 					                             "gang", challengerName(challenger)));
@@ -119,10 +132,10 @@ public final class TurfDigestListener implements Listener {
 			}
 			case STALLED -> {
 				String stalled = text.text("Digest.Stalled", "&7Attack on %turf% stalled", "turf", turfName);
-				if (owner != null) {
+				if (owner != null && !repeated(owner, turf.getId(), "STALLED", challenger, now)) {
 					record(owner, now, stalled);
 				}
-				if (challenger != null) {
+				if (challenger != null && !repeated(challenger, turf.getId(), "STALLED", challenger, now)) {
 					record(challenger, now, stalled);
 				}
 			}
@@ -194,6 +207,12 @@ public final class TurfDigestListener implements Listener {
 			player.sendMessage(line);
 		}
 		TurfCommand.sendMapLink(player, text);
+	}
+
+	/** T-271: true when this line for this gang, turf, outcome and challenger was recorded within the quiet window. */
+	private boolean repeated(int gangId, int turfId, String bucket, Integer challenger, long now) {
+		Long last = lastRecorded.put(gangId + "|" + turfId + "|" + bucket + "|" + challenger, now);
+		return last != null && now - last < OUTCOME_QUIET_MS;
 	}
 
 	private void record(int gangId, long now, String line) {

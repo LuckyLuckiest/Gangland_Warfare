@@ -35,6 +35,7 @@ import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -57,6 +58,7 @@ class TurfDigestListenerTest {
 	private CaptureSettings        capture;
 	private MockedStatic<Settings> settings;
 	private TurfDigestListener     listener;
+	private final AtomicLong       clock = new AtomicLong(1_000_000L);
 
 	@BeforeEach
 	void setUp() throws Exception {
@@ -70,6 +72,7 @@ class TurfDigestListenerTest {
 		settings.when(() -> Settings.formatAmount(any(BigDecimal.class)))
 				.thenAnswer(invocation -> ((BigDecimal) invocation.getArgument(0)).toPlainString());
 		listener = new TurfDigestListener(buffer, turfs, gangs, users, text, capture, mock(JavaPlugin.class));
+		listener.setClock(clock::get);
 	}
 
 	@AfterEach
@@ -126,6 +129,32 @@ class TurfDigestListenerTest {
 		listener.onCaptureFailed(new TurfCaptureFailedEvent(docks(1), TurfCaptureFailedEvent.Reason.DEFENDED, 2));
 
 		assertEquals("Held Docks against Rats", plain(buffer.latest(1, 10).get(0).line()));
+	}
+
+	@Test
+	@DisplayName("T-271: a turf defended twice within the quiet window is recorded once")
+	void defendedTwice_recordedOnce() {
+		gangs.register(named(1, "Vipers"));
+		gangs.register(named(2, "Rats"));
+
+		listener.onCaptureFailed(new TurfCaptureFailedEvent(docks(1), TurfCaptureFailedEvent.Reason.DEFENDED, 2));
+		clock.addAndGet(10 * 60_000L);
+		listener.onCaptureFailed(new TurfCaptureFailedEvent(docks(1), TurfCaptureFailedEvent.Reason.DEFENDED, 2));
+
+		assertEquals(1, buffer.latest(1, 10).size());
+	}
+
+	@Test
+	@DisplayName("T-271: a turf defended again after the quiet window is recorded again")
+	void defendedAfterQuietWindow_recordedAgain() {
+		gangs.register(named(1, "Vipers"));
+		gangs.register(named(2, "Rats"));
+
+		listener.onCaptureFailed(new TurfCaptureFailedEvent(docks(1), TurfCaptureFailedEvent.Reason.DEFENDED, 2));
+		clock.addAndGet(16 * 60_000L);
+		listener.onCaptureFailed(new TurfCaptureFailedEvent(docks(1), TurfCaptureFailedEvent.Reason.DEFENDED, 2));
+
+		assertEquals(2, buffer.latest(1, 10).size());
 	}
 
 	@Test

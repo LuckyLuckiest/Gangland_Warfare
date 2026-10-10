@@ -66,6 +66,9 @@ public final class TurfCaptureNotifier implements Listener {
 	private final Map<String, Long> lastSent           = new HashMap<>();
 	private final Set<Integer>      halfAnnounced      = new HashSet<>();
 	private final Set<Integer>      lastStandAnnounced = new HashSet<>();
+	// ponytail: fixed 15-minute quiet window; a turf_settings.yml knob if owners ask for one.
+	private static final long OUTCOME_QUIET_MS = 15 * 60_000L;
+	private final Map<String, Long> lastOutcome = new HashMap<>();
 
 	private LongSupplier clock = System::currentTimeMillis;
 
@@ -184,9 +187,12 @@ public final class TurfCaptureNotifier implements Listener {
 		if (reason == TurfCaptureFailedEvent.Reason.CANCELLED) {
 			return;
 		}
+		Integer attackerId = event.getChallengerGangId();
+		if (repeatedOutcome(turf.getId(), attackerId, reason)) {
+			return;
+		}
 
 		Integer ownerId = turf.getOwnerGangId();
-		Integer attackerId = event.getChallengerGangId();
 		String turfName = turf.getDisplayName();
 
 		if (reason == TurfCaptureFailedEvent.Reason.STALLED) {
@@ -210,6 +216,17 @@ public final class TurfCaptureNotifier implements Listener {
 			String failed = text.text("Alerts.Attack_Failed", "&7Your attack on %turf% failed", "turf", turfName);
 			sendToGang(attackerId, turf, failed, false);
 		}
+	}
+
+	/**
+	 * T-271: true when this outcome for this turf and attacker was already told and keeps repeating (sliding window).
+	 * DEFENDED and ABANDONED share the HELD bucket because they send the same lines.
+	 */
+	private boolean repeatedOutcome(int turfId, Integer attackerId, TurfCaptureFailedEvent.Reason reason) {
+		String bucket = reason == TurfCaptureFailedEvent.Reason.STALLED ? "STALLED" : "HELD";
+		long   now    = clock.getAsLong();
+		Long   last   = lastOutcome.put(turfId + "|" + attackerId + "|" + bucket, now);
+		return last != null && now - last < OUTCOME_QUIET_MS;
 	}
 
 	private void clearContest(int turfId) {
