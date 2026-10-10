@@ -42,7 +42,8 @@ public class GangChatListener implements Listener {
 			return;
 		}
 
-		// Pinned: the line is cancelled before the gang check, so a player who left his gang loses this one line.
+		// Cancelled here (async, no gang lookup off the main thread); a gangless sender gets the line re-sent as public
+		// chat on the main thread (T-264).
 		event.setCancelled(true);
 		String message = event.getMessage();
 		Bukkit.getScheduler().runTask(plugin, () -> deliver(player, message));
@@ -58,6 +59,7 @@ public class GangChatListener implements Listener {
 		if (user == null || !user.hasGang()) {
 			channel.forget(player.getUniqueId());
 			player.sendMessage(messages.text("Social.Chat_Off", "&7Gang chat off."));
+			player.chat(message); // T-264: the toggle is off now, so this line goes to public chat instead of being lost
 			return;
 		}
 
