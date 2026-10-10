@@ -47,8 +47,7 @@ class RankPermissionApplierTest {
 	void initialize_grantsEveryRankPermission() {
 		JavaPlugin plugin = mock(JavaPlugin.class);
 
-		Rank rank = new Rank("Recruit", 1, List.of(new Permission(1, "gangland.turf.capture"),
-		                                           new Permission(2, "gangland.turf.contribute")));
+		Rank rank = new Rank("Recruit", 1, List.of(new Permission(1, "gangland.turf.upgrade")));
 
 		Member member = new Member(UUID.randomUUID());
 		member.setRank(rank);
@@ -60,8 +59,7 @@ class RankPermissionApplierTest {
 
 		RankPermissionApplier.initialize(plugin, user, member);
 
-		verify(attachment).setPermission("gangland.turf.capture", true);
-		verify(attachment).setPermission("gangland.turf.contribute", true);
+		verify(attachment).setPermission("gangland.turf.upgrade", true);
 		verify(user.getUser()).updateCommands();
 	}
 
