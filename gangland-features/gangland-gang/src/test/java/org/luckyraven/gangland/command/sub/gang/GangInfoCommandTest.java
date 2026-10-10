@@ -135,6 +135,17 @@ class GangInfoCommandTest {
 	}
 
 	@Test
+	@DisplayName("a gang whose stored name has colour codes is found by its plain name")
+	void colouredName_foundByPlainName() throws Exception {
+		when(rats.getName()).thenReturn("&cRats");
+
+		lookup().executeArgument(player, new String[]{"gang", "info", "Rats"});
+
+		assertTrue(lines().stream().noneMatch(line -> line.contains("No gang named")), lines().toString());
+		assertTrue(lines().stream().anyMatch(line -> line.contains("Members")), lines().toString());
+	}
+
+	@Test
 	@DisplayName("the card never shows the bank balance")
 	void card_neverShowsBalance() throws Exception {
 		lookup().executeArgument(player, new String[]{"gang", "info", "Rats"});
