@@ -8,6 +8,8 @@ import org.bukkit.scheduler.BukkitTask;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
+import org.luckyraven.gangland.gang.member.Member;
+import org.luckyraven.gangland.turf.capture.CaptureEligibility;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.turf.capture.CaptureRules;
@@ -15,6 +17,7 @@ import org.luckyraven.gangland.turf.capture.CaptureSettings;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 /**
@@ -75,7 +78,7 @@ public final class GangPresenceTracker implements BeanLifecycle {
 	public void start() {
 		if (heartbeatTask == null) {
 			heartbeatTask = Bukkit.getScheduler()
-			                      .runTaskTimer(plugin, this::heartbeat, HEARTBEAT_TICKS, HEARTBEAT_TICKS);
+			                      .runTaskTimer(plugin, () -> heartbeat(System.currentTimeMillis()), HEARTBEAT_TICKS, HEARTBEAT_TICKS);
 		}
 		if (releaseTask == null) {
 			releaseTask = Bukkit.getScheduler()
@@ -103,8 +106,47 @@ public final class GangPresenceTracker implements BeanLifecycle {
 		return inactivityAutoReleaseDays;
 	}
 
-	private void heartbeat() {
-		long now = System.currentTimeMillis();
+	/** The rules in force now (the join listener reads the minimum member age and the wake-up shield). */
+	CaptureRules rules() {
+		return rules.get();
+	}
+
+	/** True when the gang's logout window has closed: never stamped, or the last stamp is older than the window. */
+	boolean windowClosed(Gang gang, long now) {
+		long last = gang.getLastMemberOnlineAt();
+		return last <= 0 || now - last > CaptureEligibility.onlineWindowMs(settings);
+	}
+
+	/**
+	 * True when this member keeps the gang's turfs open: any member of a young gang (created less than the minimum
+	 * member age ago), an old member, or every member when the age rule is off. A join date of 0 counts as old.
+	 */
+	static boolean qualifies(Gang gang, Member member, CaptureRules rules, long now) {
+		if (member == null) {
+			return false;
+		}
+		long ageMs = rules.minMemberAgeHours() * 3_600_000L;
+		if (ageMs <= 0L) {
+			return true;
+		}
+		if (now - gang.getCreated() < ageMs) {
+			return true;
+		}
+		long joined = member.getGangJoinDateLong();
+		return joined <= 0L || now - joined >= ageMs;
+	}
+
+	/** The gang's member record for {@code uuid}, or null when it is not a member. */
+	static Member memberOf(Gang gang, UUID uuid) {
+		return gang.getMembers().stream().filter(m -> uuid.equals(m.getUuid())).findFirst().orElse(null);
+	}
+
+	/**
+	 * Stamps every gang with a qualifying member online. A gang whose window had closed is woken first (its first
+	 * qualifying member online after the logout window), so the join listener and the heartbeat agree on wake-ups.
+	 */
+	void heartbeat(long now) {
+		CaptureRules current = rules.get();
 		for (Player player : Bukkit.getOnlinePlayers()) {
 			User<Player> user = users.findByPlayer(player);
 			if (user == null || !user.hasGang()) {
@@ -113,6 +155,12 @@ public final class GangPresenceTracker implements BeanLifecycle {
 			Gang gang = gangs.findById(user.getGangId());
 			if (gang == null) {
 				continue;
+			}
+			if (!qualifies(gang, memberOf(gang, player.getUniqueId()), current, now)) {
+				continue;
+			}
+			if (windowClosed(gang, now)) {
+				recordWakeUp(gang.getId(), now);
 			}
 			gang.setLastMemberOnlineAt(now);
 		}

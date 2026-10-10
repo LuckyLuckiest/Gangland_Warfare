@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.member.Member;
+
 import org.luckyraven.gangland.turf.capture.CaptureRules;
 import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
@@ -23,6 +24,7 @@ import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.keystone.testkit.BukkitStatics;
 import org.mockito.MockedStatic;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.List;
@@ -50,7 +52,7 @@ import static org.mockito.Mockito.when;
 @DisplayName("GangPresenceListener - qualifying join wakes the gang, camping lines, quit stamps (W2-R1)")
 class GangPresenceListenerTest {
 
-	private static final long NOW    = 100_000_000L;
+	private static final long NOW    = System.currentTimeMillis();   // the listener reads the wall clock
 	private static final long HOUR   = 3_600_000L;
 	private static final long DAY    = 24 * HOUR;
 	private static final int  OWNER  = 7;
@@ -72,7 +74,7 @@ class GangPresenceListenerTest {
 
 	private MockedStatic<Settings> staticSettings;
 
-	void setUp(long ownerLastStamp) {
+	void setUp(long ownerLastStamp) throws IOException {
 		staticSettings = mockStatic(Settings.class, CALLS_REAL_METHODS);
 		staticSettings.when(Settings::getMoneySymbol).thenReturn("$");
 
@@ -128,7 +130,8 @@ class GangPresenceListenerTest {
 	/** A player of the owner gang, registered with the given member record. */
 	private Player ownerPlayer(Member member) {
 		Player player = mock(Player.class);
-		when(player.getUniqueId()).thenReturn(member.getUuid());
+		UUID uuid = member.getUuid();
+		when(player.getUniqueId()).thenReturn(uuid);
 		users.register(player, CaptureFixtures.userInGang(OWNER));
 		when(owner.getMembers()).thenReturn(new java.util.ArrayList<>(List.of(member)));
 		return player;
@@ -148,7 +151,7 @@ class GangPresenceListenerTest {
 
 	@Test
 	@DisplayName("join: a qualifying member after a closed window wakes the gang and stamps it")
-	void join_qualifyingMember_closedWindow_recordsWakeUp_andStamps() {
+	void join_qualifyingMember_closedWindow_recordsWakeUp_andStamps() throws IOException {
 		setUp(0L);
 		Player player = ownerPlayer(member(UUID.randomUUID(), 3 * DAY));
 
@@ -162,7 +165,7 @@ class GangPresenceListenerTest {
 
 	@Test
 	@DisplayName("join: a young member of an old gang neither stamps nor wakes the gang")
-	void join_youngMember_oldGang_neitherStampsNorWakes() {
+	void join_youngMember_oldGang_neitherStampsNorWakes() throws IOException {
 		setUp(0L);
 		Player player = ownerPlayer(member(UUID.randomUUID(), 2 * HOUR));
 
@@ -174,7 +177,7 @@ class GangPresenceListenerTest {
 
 	@Test
 	@DisplayName("join: the wake-up sends one camping line to the joiner per owned turf with rivals inside")
-	void join_withCampers_sendsOneCampingLinePerTurf() {
+	void join_withCampers_sendsOneCampingLinePerTurf() throws IOException {
 		setUp(0L);
 		Player player = ownerPlayer(member(UUID.randomUUID(), 3 * DAY));
 
@@ -189,7 +192,7 @@ class GangPresenceListenerTest {
 
 	@Test
 	@DisplayName("join: an open window neither wakes the gang nor sends camping lines")
-	void join_openWindow_noWakeNoCampingLine() {
+	void join_openWindow_noWakeNoCampingLine() throws IOException {
 		setUp(NOW - 60_000L);
 		Player player = ownerPlayer(member(UUID.randomUUID(), 3 * DAY));
 
@@ -201,7 +204,7 @@ class GangPresenceListenerTest {
 
 	@Test
 	@DisplayName("quit: the last qualifying member leaving stamps the gang")
-	void quit_lastQualifyingMember_stamps() {
+	void quit_lastQualifyingMember_stamps() throws IOException {
 		setUp(NOW - 60_000L);
 		Player player = ownerPlayer(member(UUID.randomUUID(), 3 * DAY));
 
@@ -215,7 +218,7 @@ class GangPresenceListenerTest {
 
 	@Test
 	@DisplayName("quit: another qualifying member still online means no stamp")
-	void quit_otherQualifyingMemberOnline_doesNotStamp() {
+	void quit_otherQualifyingMemberOnline_doesNotStamp() throws IOException {
 		setUp(NOW - 60_000L);
 		UUID leaverId = UUID.randomUUID();
 		UUID stayerId = UUID.randomUUID();
@@ -225,7 +228,9 @@ class GangPresenceListenerTest {
 		Player stayer = mock(Player.class);
 		when(stayer.getUniqueId()).thenReturn(stayerId);
 		users.register(stayer, CaptureFixtures.userInGang(OWNER));
-		when(owner.getMembers()).thenReturn(List.of(member(leaverId, 3 * DAY), member(stayerId, 3 * DAY)));
+		Member leaverMember = member(leaverId, 3 * DAY);
+		Member stayerMember = member(stayerId, 3 * DAY);
+		when(owner.getMembers()).thenReturn(List.of(leaverMember, stayerMember));
 
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
 			bukkit.statics().when(Bukkit::getOnlinePlayers).thenAnswer(i -> List.of(leaver, stayer));

@@ -22,8 +22,10 @@ import org.luckyraven.keystone.bean.listener.ListenerHandler;
  * captured yet, so they know why nothing starts. The line carries the same reason sentence the info card and the map
  * show ({@link TurfMessages#reason}), so every surface agrees.
  *
- * <p>Silent for: a gangless player (nothing to explain), their own turf, an allied turf, an attackable turf, and a turf
- * already CONTESTING (any gang member may help fill an active contest; the boss bar already shows it).
+ * <p>Silent for: a gangless player (nothing to explain), their own turf, an allied turf, and a turf already CONTESTING
+ * (any gang member may help fill an active contest; the boss bar already shows it). An attackable rival or unclaimed
+ * turf gets one count-in line (W2-R1) when Presence_Seconds is on, otherwise nothing. The attacker's turf cap is part
+ * of the verdict (OVER_CAP).
  */
 @ListenerHandler
 @RequiredArgsConstructor
@@ -54,8 +56,14 @@ public final class TurfCaptureFeedbackListener implements Listener {
 			return;
 		}
 
-		CaptureEligibility.Verdict verdict = eligibility.evaluate(turf, now);
+		CaptureEligibility.Verdict verdict = eligibility.evaluateFor(turf, user.getGangId(), now);
 		if (verdict.attackable()) {
+			int seconds = eligibility.rules().presenceSeconds();
+			if (seconds > 0) {
+				player.sendMessage(text.text("Capture.Count_In", "&e%turf% &7- attackable - you count after %seconds% s inside",
+				                             "turf", turf.getDisplayName(),
+				                             "seconds", seconds));
+			}
 			return;
 		}
 		String ownerName = turf.isUnclaimed()
