@@ -155,10 +155,32 @@ class TurfRulesCommandTest {
 		rules.initialize();
 		CommandSender sender = mock(CommandSender.class);
 
-		String all = String.join("\n", run(sender)).toLowerCase(Locale.ROOT);
+		List<String> lines = run(sender);
+		String       all   = String.join("\n", lines).toLowerCase(Locale.ROOT);
 
+		assertEquals(6, lines.size(), lines.toString());
+		assertTrue(lines.get(3).contains("A capture starts"), lines.get(3));
 		assertFalse(all.contains("you count after"), all);
 		assertFalse(all.contains("guard"), all);
+	}
+
+	@Test
+	@DisplayName("a zero logout window and zero per-level drop their clauses instead of printing a zero")
+	void zeroWindowAndPerLevelDropTheirClauses() throws IOException {
+		when(turfSettings.getCapturePostLogoffProtectionMinutes()).thenReturn(0);
+		Files.writeString(tempDir.resolve("turf_rules.yml"), "Turf_Cap:\n   Per_Level: 0\n", StandardCharsets.UTF_8);
+		fileManager.getFile("turf_rules").reloadData();
+		rules.initialize();
+		CommandSender sender = mock(CommandSender.class);
+
+		List<String> lines = run(sender);
+		String       all   = String.join("\n", lines);
+
+		assertEquals(6, lines.size(), lines.toString());
+		assertTrue(lines.get(1).contains("while one of its owners is online."), lines.get(1));
+		assertFalse(all.contains("for 0s"), all);
+		assertFalse(all.contains("plus 0"), all);
+		assertTrue(lines.get(5).contains("at most"), lines.get(5));
 	}
 
 	@Test
