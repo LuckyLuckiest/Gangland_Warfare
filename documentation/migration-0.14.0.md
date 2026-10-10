@@ -85,8 +85,10 @@ boot. Read the notes below before you start the server on the new jar.
 
 - `/glw`, `/glw map ...`, `/glw turf info|list` and these gang player verbs now default to `true` for every player:
   create, leave, list, info, members, balance, deposit, withdraw, invite, invite cancel, accept, decline, kick, promote,
-  demote. The gang menus (`gang_info`, `gang_stat`, `alliance_stat`) also default to `true` through their
-  `gangland.inventory.*` nodes.
+  demote. The gang menus `gang_stat` and `alliance_stat` also default to `true` through their
+  `gangland.inventory.*` nodes. `gangland.inventory.gang_info` is not default true: it is OP-only, so `/glw gang`
+  reaches the gang command for every non-op player (gangless players see the onboarding, members see help).
+  Grant `gangland.inventory.gang_info` to members if you want `/glw gang` to open the gang menu for them.
 - A server that wanted `/glw` op-only negates `gangland.command.main` for the default group.
 - Transfer, delete, rename, description, display, color and ally stay op until a later release.
 - The gang `list` alias of `members` is gone. `/glw gang list [page]` now lists every gang (most members first); use
@@ -137,9 +139,8 @@ boot. Read the notes below before you start the server on the new jar.
 - Gang names must match `gang_rules.yml` `Name_Pattern` (default 3 to 16 letters, digits or underscores). Duplicates are
   always refused, so `Name_Duplicates` in `gang_settings.yml` is ignored. Legacy names with spaces cannot be reached by
   the list click or `gang info`.
-- The onboarding text for players without a gang is in `gang/gang_messages.yml` `Onboarding:`. Known gap (NEW-W1-G-1,
-  open): the gang menu opens for a gangless player too, so `/glw gang` shows the menu, not the onboarding, until that
-  is fixed.
+- Players without a gang see the onboarding text (`gang/gang_messages.yml` `Onboarding:`) on `/glw gang`. Players with
+  a gang see help. The gang menu needs `gangland.inventory.gang_info`, which is OP-only by default.
 - Fresh installs get the `member -> officer -> owner` ranks with default nodes from `gang_rules.yml`
   (`Ranks.Preset`, `Ranks.Preset_Permissions`). Existing rank trees are untouched.
 - A renamed `Rank.Head` logs a warning and keeps the persisted root. A renamed `Rank.Tail` logs a warning and changes

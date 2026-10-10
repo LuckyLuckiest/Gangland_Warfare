@@ -53,7 +53,6 @@ class PluginYmlPermissionsTest {
 			"gangland.command.gang.kick",
 			"gangland.command.gang.promote",
 			"gangland.command.gang.demote",
-			"gangland.inventory.gang_info",
 			"gangland.inventory.gang_stat",
 			"gangland.inventory.alliance_stat");
 
@@ -109,6 +108,13 @@ class PluginYmlPermissionsTest {
 	@DisplayName("every player node defaults to true")
 	void playerNodes_defaultTrue(String node) {
 		assertTrue(isTrue(defaultOf(node)), node + " must default to true");
+	}
+
+	@Test
+	@DisplayName("gang_info menu is op-only so gangless players reach the /glw gang onboarding (NEW-W1-G-1)")
+	void gangInfoMenu_isNotDefaultTrue() {
+		assertFalse(isTrue(defaultOf("gangland.inventory.gang_info")),
+				"gangland.inventory.gang_info must not default to true: the menu would swallow /glw gang for gangless players");
 	}
 
 	@Test
