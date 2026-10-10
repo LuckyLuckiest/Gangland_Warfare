@@ -36,6 +36,7 @@ public final class TurfModule implements KeystoneModule {
 	public static final String LISTENER_PACKAGE   = "org.luckyraven.gangland.turf.listener";
 	public static final String TASK_PACKAGE       = "org.luckyraven.gangland.turf.task";
 	public static final String COMMAND_PACKAGE    = "org.luckyraven.gangland.turf.command";
+	public static final String MAP_PACKAGE        = "org.luckyraven.gangland.turf.map";
 	public static final String REPOSITORY_PACKAGE = "org.luckyraven.gangland.turf.database";
 
 	@Override
