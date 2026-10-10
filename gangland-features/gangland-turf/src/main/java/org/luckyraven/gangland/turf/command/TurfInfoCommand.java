@@ -9,6 +9,8 @@ import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
+import org.luckyraven.gangland.turf.capture.CaptureEligibility;
+import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.config.TurfSettings;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.Turf;
@@ -28,10 +30,13 @@ class TurfInfoCommand extends SubArgument {
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
 	private final TurfSettings         settings;
+	private final CaptureEligibility   eligibility;
+	private final TurfMessages         text;
 
 	protected TurfInfoCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
 	                          TurfManager turfs, GangLookupContract gangs, WandSelectionManager selections,
-	                          TurfMessageContract messages, TurfSettings settings) {
+	                          TurfMessageContract messages, TurfSettings settings,
+	                          CaptureEligibility eligibility, TurfMessages text) {
 		super(plugin, "info", tree, parent);
 
 		this.turfs      = turfs;
@@ -39,10 +44,13 @@ class TurfInfoCommand extends SubArgument {
 		this.selections = selections;
 		this.messages   = messages;
 		this.settings   = settings;
+		this.eligibility = eligibility;
+		this.text        = text;
 	}
 
 	static void renderInfo(CommandSender sender, GangLookupContract gangs, TurfManager turfs,
-	                       TurfMessageContract messages, TurfSettings settings, Turf turf) {
+	                       TurfMessageContract messages, TurfSettings settings, Turf turf,
+	                       CaptureEligibility eligibility, TurfMessages text) {
 		String gangName = "Unclaimed";
 		if (turf.getOwnerGangId() != null) {
 			Gang owner = gangs.findById(turf.getOwnerGangId());
@@ -73,7 +81,7 @@ class TurfInfoCommand extends SubArgument {
 			if (turf == null) {
 				return;
 			}
-			renderInfo(sender, gangs, turfs, messages, settings, turf);
+			renderInfo(sender, gangs, turfs, messages, settings, turf, eligibility, text);
 		};
 	}
 }

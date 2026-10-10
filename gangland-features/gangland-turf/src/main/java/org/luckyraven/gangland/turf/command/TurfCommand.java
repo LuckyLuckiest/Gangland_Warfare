@@ -14,7 +14,9 @@ import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.turf.capture.CaptureEligibility;
 import org.luckyraven.gangland.turf.capture.TurfOwnership;
+import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.config.TurfSettings;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.data.Turf;
@@ -56,6 +58,8 @@ public final class TurfCommand extends Command {
 	 * code into this module, so it is now added directly in {@link #initializeArguments()} instead.
 	 */
 	private final CommandContributions contributions;
+	private final TurfMessages         text;
+	private final CaptureEligibility   eligibility;
 
 	public TurfCommand(JavaPlugin plugin,
 	                   TurfManager turfs,
@@ -70,7 +74,9 @@ public final class TurfCommand extends Command {
 	                   TurfPowerupManager powerupNpcs,
 	                   TurfSettings settings,
 	                   TurfOwnership ownership,
-	                   DependencyContainer container) {
+	                   DependencyContainer container,
+	                   TurfMessages text,
+	                   CaptureEligibility eligibility) {
 		super(plugin, "turf", false);
 
 		this.turfs           = turfs;
@@ -86,6 +92,8 @@ public final class TurfCommand extends Command {
 		this.settings        = settings;
 		this.contributions   = CommandContributions.from(container);
 		this.ownership       = ownership;
+		this.text            = text;
+		this.eligibility     = eligibility;
 
 		var list = getCommands().entrySet()
 				.stream()
@@ -105,7 +113,7 @@ public final class TurfCommand extends Command {
 		Turf at = turfs.findAt(player.getLocation());
 		if (at != null) {
 			selections.get(player).setActiveTurfId(at.getId());
-			TurfInfoCommand.renderInfo(player, gangs, turfs, messages, settings, at);
+			TurfInfoCommand.renderInfo(player, gangs, turfs, messages, settings, at, eligibility, text);
 			return;
 		}
 		User<Player> user = users.findByPlayer(player);
@@ -131,7 +139,7 @@ public final class TurfCommand extends Command {
 		TurfListCommand listSub = new TurfListCommand(getPlugin(), getArgumentTree(), getArgument(), turfs, gangs,
 		                                              messages);
 		TurfInfoCommand info = new TurfInfoCommand(getPlugin(), getArgumentTree(), getArgument(),
-		                                           turfs, gangs, selections, messages, settings);
+		                                           turfs, gangs, selections, messages, settings, eligibility, text);
 		TurfShowCommand show = new TurfShowCommand(getPlugin(), getArgumentTree(), getArgument(), turfs, selections,
 		                                           messages, settings);
 		TurfStatusCommand status = new TurfStatusCommand(getPlugin(), getArgumentTree(), getArgument(),

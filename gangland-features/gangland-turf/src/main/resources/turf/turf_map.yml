@@ -1,0 +1,36 @@
+#   +------------------------------------------------------+   #
+#  /     __________      _______________       ____         \  #
+# |     / ________/      \_____   _____/      / __ \         | #
+# |    | /                     | |           / /  \ \        | #
+# |    | |  _______            | |          / /____\ \       | #
+# |    | |  \_____ \           | |         / ________ \      | #
+# |    | \_______/ ||          | |        / /        \ \     | #
+# |     \__________/           |_|       /_/          \_\    | #
+# |                                                          | #
+# |                 File: turf_map.yml                       | #
+# |                  Author: [LuckyRaven10]                  | #
+#  \                                                        /  #
+#   +------------------------------------------------------+   #
+
+# +---------------+ #
+
+# The /glw map chat grid and the turf HUD line. Read by the turf module (TurfMapSettings); /glw reload applies changes.
+Map:
+   # Columns of the chat map. Odd numbers only (an even value is raised by one); 11 to 61.
+   Width: 41
+   # Rows of the chat map. Odd numbers only (an even value is raised by one); 3 to 15. 7 keeps the header, the map
+   # and the two legend lines at 10 chat lines, the height of the unfocused chat. 9 is the tall option.
+   Height: 7
+   # Blocks per map cell along each side. 16 = one chunk. One of 8, 16, 32 or 64; anything else uses 16.
+   Cell_Blocks: 16
+   # /glw map auto sends the map again at most this often (seconds), and only when what it shows changed.
+   Auto_Min_Interval_Seconds: 5
+   # Bedrock players (Geyser/Floodgate) get the text list instead of the grid, because their font is not monospaced.
+   Bedrock_Text_Form: true
+Hud:
+   # Show the turf line in the action bar while a player stands inside a turf.
+   Enabled: true
+   # Seconds between two turf lines.
+   Interval_Seconds: 2
+   # Action-bar priority of the turf line. Cars, jetpacks and guns use 10 and replace it; keep it below 10.
+   Priority: 9

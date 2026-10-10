@@ -1,0 +1,83 @@
+# +----------------------+ #
+# | Turf module messages | #
+# +----------------------+ #
+# Turf texts added since 0.17.0. Older turf texts are still in message_en.yml (Commands.Turf and Errors.Turf).
+# Colour codes use &. Words between % signs are filled in by the plugin.
+
+# ---------------- Reason: one sentence for every surface (map hover, HUD, info card, enter feedback) ----------------
+Reason:
+   # Nothing stops you from capturing this turf right now.
+   Attackable: "&aattackable"
+   # Captured recently. %time% = time left until it can be attacked again.
+   Cooldown: "&eshielded: just captured, attackable in %time%"
+   # An owner was online recently. %gang% = owning gang, %grace% = the Post_Logoff_Protection_Minutes window.
+   Owners_Active: "&eshielded: %gang% were online in the last %grace%"
+# end Reason
+
+# ---------------- Map: /glw map ----------------
+Map:
+   # Sent by a /glw map part that is not finished yet.
+   Not_Ready: "&7This part of the map is not ready yet."
+   # First line. %owned% = turfs your gang owns.
+   Header: "&7Map - &fTurfs %owned% &7- north is up - &f+ &7you"
+   # First line for a player without a gang.
+   Header_Gangless: "&7Map - north is up - &f+ &7you"
+   # First line when no turf is in view. %turf%, %distance% (blocks), %direction% (N, NE, E, ...).
+   Header_Empty: "&7No turf in view - nearest &f%turf% &7%distance%m %direction%"
+   # First line when the world has no turf at all.
+   Header_None: "&7No turf in this world."
+   # Second legend line; it never changes.
+   Legend_Key: "&7# unclaimed  &8- &7none  &7&oitalic&r &7attacked  &7&nunderlined&r &7shielded"
+   # Words after a gang in the first legend line.
+   Legend_You: "(you)"
+   Legend_Ally: "(ally)"
+   Legend_Rival: "(rival)"
+   # End of the first legend line when not every gang fits. %count% = gangs left out.
+   Legend_More: "+%count% more"
+   # Replies of /glw map auto.
+   Auto_On: "&7Auto map &aon&7: the map is sent again when what it shows changes."
+   Auto_Off: "&7Auto map &coff&7."
+# end Map
+
+# ---------------- Hud: the action-bar turf line ----------------
+Hud:
+   # Inside a turf. %turf% = turf name, %owner% = one of the Owner_ lines, %reason% = a Reason line, Quiet,
+   # Under_Attack or Gangless.
+   Inside: "&f%turf% &7- %owner% &7- %reason%"
+   Owner_Own: "&ayour turf"
+   Owner_Ally: "&b%gang% turf"
+   Owner_Rival: "&c%gang% turf"
+   # An owned turf as seen by a player without a gang.
+   Owner_Gangless: "&e%gang% turf"
+   Owner_Unclaimed: "&7unclaimed"
+   # Reason part for a player without a gang.
+   Gangless: "&ejoin a gang to capture"
+   # Reason part on your own or an allied turf that nobody attacks.
+   Quiet: "&aquiet"
+   # Reason part on your own or an allied turf under attack. %gang% = attacker, %percent% = capture progress.
+   Under_Attack: "&cunder attack by %gang%, %percent%%"
+   # Outside every turf, only after /glw map hud on.
+   Nearest: "&7Nearest turf: &f%turf% &7%distance%m %direction%"
+   # Replies of /glw map hud.
+   Mode_On: "&7Turf line: &finside turfs and the nearest turf&7."
+   Mode_Off: "&7Turf line: &coff&7."
+   Mode_Default: "&7Turf line: &finside turfs only&7."
+# end Hud
+
+# ---------------- Info: /glw turf info card and the capture boss bar ----------------
+Info:
+   # Line added to /glw turf info. %reason% = a Reason line.
+   Reason_Line: "&7Capture: %reason%"
+   # Capture boss bar title. %gang%, %turf%, %attackers%, %defenders%, %time% (time left at this pace, or Stalled).
+   BossBar_Title: "&c%gang% &fis capturing &e%turf% &7- &f%attackers% &7vs &f%defenders% &7- &f%time%"
+   # %time% when the capture is not moving forward.
+   BossBar_Stalled: "stalled"
+# end Info
+
+# ---------------- Turf: /glw turf admin and player texts ----------------
+Turf:
+   # Enter title for a player without a gang.
+   Title_Gangless: "&eJoin a gang to capture turf"
+   # Refusal when a player without turf admin rights runs a turf admin command.
+   Admin_Only: "&cOnly turf admins can do that."
+# end Turf

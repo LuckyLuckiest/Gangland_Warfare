@@ -23,6 +23,10 @@ import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.gangland.turf.capture.CaptureEligibility;
+import org.luckyraven.gangland.turf.config.TurfMapSettings;
+import org.luckyraven.gangland.turf.config.TurfMessages;
+import org.luckyraven.gangland.turf.config.TurfRules;
+import org.luckyraven.gangland.turf.map.MapPrefsService;
 import org.luckyraven.gangland.turf.capture.CaptureService;
 import org.luckyraven.gangland.turf.capture.TurfOwnership;
 import org.luckyraven.gangland.turf.capture.CaptureSettings;
@@ -180,6 +184,35 @@ public final class TurfModuleConfig {
 	@Bean
 	public CaptureEligibility captureEligibility(CaptureService captureService) {
 		return captureService.eligibility();
+	}
+
+	@Bean
+	public TurfRules turfRules(TurfModuleFiles files, FileManager fileManager) {
+		TurfRules rules = new TurfRules(fileManager);
+		fileManager.registerInitializer(rules);
+		return rules;
+	}
+
+	@Bean
+	public TurfMapSettings turfMapSettings(TurfModuleFiles files, FileManager fileManager) {
+		TurfMapSettings settings = new TurfMapSettings(fileManager);
+		fileManager.registerInitializer(settings);
+		return settings;
+	}
+
+	@Bean
+	public TurfMessages turfMessages(TurfModuleFiles files,
+	                                 FileManager fileManager,
+	                                 TurfMessageContract legacy,
+	                                 CaptureSettings capture) {
+		TurfMessages messages = new TurfMessages(fileManager, legacy, capture);
+		fileManager.registerInitializer(messages);
+		return messages;
+	}
+
+	@Bean
+	public MapPrefsService mapPrefsService() {
+		return new MapPrefsService();
 	}
 
 	@Bean

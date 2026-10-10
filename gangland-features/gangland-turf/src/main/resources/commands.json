@@ -28,12 +28,12 @@
 		"description": "Set the owner of your active-selection turf. Pass 'none' to clear ownership."
 	},
 	"turf_list": {
-		"usage": "/glw turf list",
-		"description": "List every turf with its owner and world."
+		"usage": "/glw turf list [page]",
+		"description": "List turfs nearest first, with distance and direction, 8 per page."
 	},
 	"turf_info": {
-		"usage": "/glw turf info",
-		"description": "Detailed info for your active-selection turf — owner, bounds, income, state."
+		"usage": "/glw turf info [id|name]",
+		"description": "Show a turf card: owner, size, income, state and whether you can attack it. With no argument, the turf you stand in or your active selection."
 	},
 	"turf_show": {
 		"usage": "/glw turf show",
@@ -41,7 +41,7 @@
 	},
 	"turf_status": {
 		"usage": "/glw turf status",
-		"description": "Live state of your active-selection turf — capture progress, cooldown, challenger."
+		"description": "Live state of your active-selection turf  -  capture progress, cooldown, challenger."
 	},
 	"turf_select": {
 		"usage": "/glw turf select [id]",
@@ -66,5 +66,29 @@
 	"turf_powerupnpc": {
 		"usage": "/glw turf powerupnpc <set|remove>",
 		"description": "Place (at your current location) or remove the per-turf Quartermaster NPC for your active-selection turf."
+	},
+	"turf_rename": {
+		"usage": "/glw turf rename <name>",
+		"description": "Rename your active-selection turf (turf admins)."
+	},
+	"map": {
+		"usage": "/glw map",
+		"description": "Show the turf map around you: who owns what and what you can attack. Hover a letter for details, click it for the turf card."
+	},
+	"map_auto": {
+		"usage": "/glw map auto",
+		"description": "Turn the auto map on or off: it is sent again when what it shows changes."
+	},
+	"map_hud": {
+		"usage": "/glw map hud <on|off|default>",
+		"description": "on: also show the nearest turf in the action bar outside every turf. off: no turf line. default: the line inside turfs only."
+	},
+	"map_text": {
+		"usage": "/glw map text",
+		"description": "The turfs around you as a list, nearest first, with owner, relation and state in words."
+	},
+	"map_legend": {
+		"usage": "/glw map legend",
+		"description": "Every gang on your map with its letter and relation."
 	}
 }

@@ -1,0 +1,25 @@
+#   +------------------------------------------------------+   #
+#  /     __________      _______________       ____         \  #
+# |     / ________/      \_____   _____/      / __ \         | #
+# |    | /                     | |           / /  \ \        | #
+# |    | |  _______            | |          / /____\ \       | #
+# |    | |  \_____ \           | |         / ________ \      | #
+# |    | \_______/ ||          | |        / /        \ \     | #
+# |     \__________/           |_|       /_/          \_\    | #
+# |                                                          | #
+# |                 File: turf_rules.yml                     | #
+# |                  Author: [LuckyRaven10]                  | #
+#  \                                                        /  #
+#   +------------------------------------------------------+   #
+
+# +---------------+ #
+
+# Rules for drawing turf. Read by the turf module (TurfRules); /glw reload applies changes.
+Create:
+   # Snap the corners of a NEW turf outward to whole chunks (16 x 16 blocks), so /glw map shows no partial cells.
+   # Turfs that already exist are never changed.
+   Snap_To_Chunks: true
+   # The shortest side (X or Z) a new turf may have, in blocks, measured after snapping.
+   Min_Side_Blocks: 16
+   # The longest side (X or Z) a new turf may have, in blocks, measured after snapping.
+   Max_Side_Blocks: 512
