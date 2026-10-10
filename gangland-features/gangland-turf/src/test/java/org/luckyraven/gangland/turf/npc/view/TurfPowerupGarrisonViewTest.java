@@ -16,6 +16,7 @@ import org.luckyraven.keystone.economy.EconomyHandler;
 import org.luckyraven.keystone.inventory.flow.MenuFlow;
 
 import java.math.BigDecimal;
+import java.util.function.IntUnaryOperator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,6 +43,7 @@ class TurfPowerupGarrisonViewTest {
 	private ActiveBuffManager         buffs;
 	private QuartermasterAccess       access;
 	private TurfRules                 rules;
+	private IntUnaryOperator          aliveGuards;
 	private EconomyHandler            bank;
 	private MenuFlow<TurfPowerupFlowSession> flow;
 	private Player                    viewer;
@@ -57,6 +59,7 @@ class TurfPowerupGarrisonViewTest {
 		buffs  = mock(ActiveBuffManager.class);
 		access = mock(QuartermasterAccess.class);
 		rules  = mock(TurfRules.class);
+		aliveGuards = mock(IntUnaryOperator.class);
 		when(buffs.effectiveMultiplier(TURF_ID, EffectType.GARRISON_DISCOUNT)).thenReturn(1.0);
 		when(rules.getMaxReserve()).thenReturn(12);
 
@@ -75,7 +78,7 @@ class TurfPowerupGarrisonViewTest {
 		messages = mock(TurfMessages.class);
 		when(messages.text(anyString(), anyString())).thenAnswer(invocation -> invocation.getArgument(0));
 		view = new TurfPowerupGarrisonView(garrisons, registry, buffs, access, rules,
-		                                   messages, "STONE", "&7");
+		                                   aliveGuards, messages, "STONE", "&7");
 	}
 
 	@Test
@@ -122,6 +125,29 @@ class TurfPowerupGarrisonViewTest {
 		verify(garrisons, never()).add(anyInt(), anyInt());
 	}
 
+	@Test
+	@DisplayName("guards still in the field count against the reserve: stock 0 + 12 alive is refused (r2)")
+	void reserveCap_countsDeployedGuards() {
+		when(garrisons.count(TURF_ID)).thenReturn(0);
+		when(aliveGuards.applyAsInt(TURF_ID)).thenReturn(12);
+
+		view.attemptBuy(flow, viewer, session);
+
+		assertUnpaid();
+		verify(garrisons, never()).add(anyInt(), anyInt());
+	}
+
+	@Test
+	@DisplayName("a buy is allowed while stock plus deployed guards is under Max_Reserve")
+	void reserveCap_underCapStillBuys() {
+		when(garrisons.count(TURF_ID)).thenReturn(4);
+		when(aliveGuards.applyAsInt(TURF_ID)).thenReturn(7);
+
+		view.attemptBuy(flow, viewer, session);
+
+		assertPaid("1000");
+		verify(garrisons).add(TURF_ID, 1);
+	}
 	@Test
 	@DisplayName("a turf that changed hands while the panel was open is refused and the panel closes (TF-19)")
 	void turfChangedHands_refusedAndClosed() {

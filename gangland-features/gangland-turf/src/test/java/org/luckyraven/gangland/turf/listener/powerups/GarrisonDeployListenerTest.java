@@ -1,35 +1,56 @@
 package org.luckyraven.gangland.turf.listener.powerups;
 
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
+import org.luckyraven.gangland.turf.capture.CaptureRules;
+import org.luckyraven.gangland.turf.config.TurfRules;
 import org.luckyraven.gangland.turf.data.CuboidRegion;
 import org.luckyraven.gangland.turf.data.Turf;
 import org.luckyraven.gangland.turf.events.TurfCaptureFailedEvent;
+import org.luckyraven.gangland.turf.events.TurfCaptureStartEvent;
 import org.luckyraven.gangland.turf.npc.TurfPowerupManager;
 import org.luckyraven.gangland.turf.npc.config.TurfNpcsConfigLoader;
+import org.luckyraven.gangland.turf.npc.defender.TurfDefenderConfig;
 import org.luckyraven.gangland.turf.npc.defender.TurfDefenderDeployer;
 import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 import org.luckyraven.gangland.turf.support.InMemoryGarrisonRepository;
+import org.luckyraven.keystone.testkit.BukkitStatics;
+import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class GarrisonDeployListenerTest {
 
-	private GarrisonManager      garrisons;
-	private TurfDefenderDeployer defenders;
+	private GarrisonManager        garrisons;
+	private TurfDefenderDeployer   defenders;
+	private TurfNpcsConfigLoader   npcConfig;
+	private TurfRules              rules;
 	private GarrisonDeployListener listener;
 
 	@BeforeEach
 	void setUp() {
 		garrisons = new GarrisonManager(new InMemoryGarrisonRepository());
 		defenders = mock(TurfDefenderDeployer.class);
-		listener = new GarrisonDeployListener(garrisons, defenders, mock(TurfNpcsConfigLoader.class),
-		                                      mock(TurfPowerupManager.class), mock(GangLookupContract.class));
+		npcConfig = mock(TurfNpcsConfigLoader.class);
+		rules     = mock(TurfRules.class);
+		when(rules.getMaxReserve()).thenReturn(12);
+		when(rules.capture()).thenReturn(CaptureRules.DEFAULTS);
+		listener = new GarrisonDeployListener(garrisons, defenders, npcConfig,
+		                                      mock(TurfPowerupManager.class), mock(GangLookupContract.class), rules);
 	}
 
 	@Test
@@ -55,5 +76,42 @@ class GarrisonDeployListenerTest {
 
 		assertEquals(0, garrisons.count(2));
 		verify(defenders).recall(2);
+	}
+
+	@Test
+	@DisplayName("the give-back never takes the stock past Garrison.Max_Reserve (stock 11 + 2 survivors -> 12)")
+	void failedContest_giveBackCappedAtMaxReserve() {
+		Turf turf = new Turf(1, "Turf", new CuboidRegion("world", 0, 0, 10, 10), 1, BigDecimal.TEN, 0L, 0L);
+		garrisons.add(1, 11);
+		when(defenders.aliveCount(1)).thenReturn(2);
+
+		listener.onFailed(new TurfCaptureFailedEvent(turf, TurfCaptureFailedEvent.Reason.DEFENDED, 2));
+
+		assertEquals(12, garrisons.count(1));
+	}
+
+	@Test
+	@DisplayName("guards deployed at contest start outlive the longest contest, so a stalled contest keeps them")
+	void contestStart_lifespanOutlivesMaxContest() {
+		when(npcConfig.getDefenderConfig()).thenReturn(new TurfDefenderConfig("turf_defender", 16.0, 600));
+		Turf turf = new Turf(1, "Turf", new CuboidRegion("world", 0, 0, 10, 10), 1, BigDecimal.TEN, 0L, 0L);
+		garrisons.add(1, 2);
+		Gang challenger = mock(Gang.class);
+		when(challenger.getId()).thenReturn(2);
+
+		try (BukkitStatics bukkit = BukkitStatics.install()) {
+			World world = mock(World.class);
+			when(world.getHighestBlockYAt(anyInt(), anyInt())).thenReturn(64);
+			bukkit.statics().when(() -> Bukkit.getWorld("world")).thenReturn(world);
+
+			listener.onCaptureStart(new TurfCaptureStartEvent(turf, challenger));
+		}
+
+		ArgumentCaptor<Integer> lifespan = ArgumentCaptor.forClass(Integer.class);
+		verify(defenders).deploy(eq(1), any(Location.class), eq("turf_defender"), any(), eq(2), anyDouble(),
+		                         lifespan.capture());
+		// 10 minutes of Capture.Max_Contest_Minutes is 600 s; the guards must live past it.
+		assertTrue(lifespan.getValue() > CaptureRules.DEFAULTS.maxContestMinutes() * 60,
+		           "lifespan " + lifespan.getValue() + " must exceed the max contest");
 	}
 }

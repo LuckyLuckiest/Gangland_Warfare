@@ -122,6 +122,8 @@ are `small_income_boost` (300), `large_income_boost` (1000) and `garrison_discou
 - **Every click re-checks** membership, rank and ownership. A turf that changed hands closes the panel.
 - **Guards.** One guard costs `Garrison.Cost_Per_Guard` (1000) from the gang bank, multiplied by any active
   `garrison_discount`. A turf holds at most `Garrison.Max_Reserve` (12) guards in reserve.
+- **Survivors.** Guards still alive when a contest fails return to the reserve, up to the `Garrison.Max_Reserve` cap.
+  Guards on the field count against that cap too, so a buy is refused while stock plus live guards reach it.
 - **Boost catalogue** pages nine boosts at a time.
 
 ---

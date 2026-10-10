@@ -357,9 +357,10 @@ public final class TurfModuleConfig {
 	public TurfPowerupGarrisonView turfPowerupGarrisonView(@SuppressWarnings("unused") Settings settings,
 	                                                       GarrisonManager garrisons, PowerupRegistry registry,
 	                                                       ActiveBuffManager buffs, QuartermasterAccess access,
-	                                                       TurfRules rules, TurfMessages messages) {
-		return new TurfPowerupGarrisonView(garrisons, registry, buffs, access, rules, messages,
-		                                   Settings.getInventoryFillItem(), Settings.getInventoryFillName());
+	                                                       TurfRules rules, TurfDefenderDeployer defenders,
+	                                                       TurfMessages messages) {
+		return new TurfPowerupGarrisonView(garrisons, registry, buffs, access, rules, defenders::aliveCount,
+		                                   messages, Settings.getInventoryFillItem(), Settings.getInventoryFillName());
 	}
 
 	@Bean

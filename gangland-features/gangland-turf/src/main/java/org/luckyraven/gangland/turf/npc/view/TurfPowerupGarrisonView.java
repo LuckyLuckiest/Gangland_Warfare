@@ -25,6 +25,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntUnaryOperator;
 
 import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.money;
 import static org.luckyraven.gangland.turf.npc.view.QuartermasterAccess.refusal;
@@ -50,6 +51,7 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 	private final ActiveBuffManager    buffs;
 	private final QuartermasterAccess  access;
 	private final TurfRules            rules;
+	private final IntUnaryOperator     aliveGuards;
 	private final TurfMessages         messages;
 	private final String               fillItem;
 	private final String               fillName;
@@ -146,7 +148,8 @@ public final class TurfPowerupGarrisonView implements Panel<TurfPowerupFlowSessi
 			return;
 		}
 
-		if (garrisons.count(turfId) >= rules.getMaxReserve()) {
+		// r2: guards still in the field count against the reserve, so a stock of 0 cannot be rebought past the cap.
+		if (garrisons.count(turfId) + aliveGuards.applyAsInt(turfId) >= rules.getMaxReserve()) {
 			viewer.sendMessage(messages.text("Quartermaster.Reserve_Full", "&cThis turf already holds %max% guards.",
 			                                 "max", rules.getMaxReserve()));
 			flow.rerender();
