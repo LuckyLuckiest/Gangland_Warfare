@@ -142,7 +142,7 @@ class TurfRulesCommandTest {
 		List<String> lines = run(sender);
 
 		assertEquals(5, lines.size(), lines.toString());
-		assertTrue(lines.get(1).contains("offline for 600s"), lines.get(1));
+		assertTrue(lines.get(1).contains("offline for") && lines.get(1).contains("600s"), lines.get(1));
 		assertFalse(lines.get(1).contains("shielded for"), lines.get(1));
 	}
 

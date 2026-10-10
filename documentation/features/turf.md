@@ -26,6 +26,82 @@ Turf is provided by the `gangland-turf` runtime module. Turf admin rights come f
 
 ---
 
+## How turf wars work
+
+`/glw turf rules` prints these five sentences with this server's own numbers, so the page below shows the shipped
+defaults. The numbers come from `turf/turf_rules.yml` and `turf/turf_settings.yml`; `/glw reload` applies a change at
+once.
+
+1. **Window.** You can attack a turf while one of its owners is online, and for 10 minutes after the last one logs off.
+   (`OWNERS_OFFLINE` instead: you can attack a turf once all its owners have been offline for 10 minutes.)
+2. **Wake-up.** When the first owner logs in, the turf stays shielded for 120 seconds. (Only with `OWNERS_ONLINE` and a
+   wake-up above 0.)
+3. **Start.** A capture starts when your gang has more people inside than the owners and their allies, and more than any
+   other gang. You count after 15 seconds inside; dying or leaving starts your count again.
+4. **Bar.** Each living guard holds back one attacker (up to 4). A capture takes at least 60 seconds; one that goes
+   nowhere for 10 minutes ends. A third gang inside a capture of someone else's turf does not count.
+5. **Cap and income.** Your gang can hold 2 turfs, plus 1 for each gang level, at most 6. A new turf pays 250 every 10
+   minutes while one of its owners was online in the last 24 hours; boosts at most x2.
+
+Clauses whose rule is off (`0`) are left out of the sentence, so a server that turns guards or presence off reads only
+what applies to it.
+
+### Key table
+
+| Key | File | Default | Meaning |
+|---|---|---|---|
+| `Capture.Window` | `turf_rules.yml` | `OWNERS_ONLINE` | `OWNERS_ONLINE` or `OWNERS_OFFLINE` (see Window above). |
+| `Capture.Wake_Up_Shield_Seconds` | `turf_rules.yml` | `120` | Shield after the first owner logs in (`OWNERS_ONLINE` only). `0` turns it off. |
+| `Capture.Window_Min_Member_Age_Hours` | `turf_rules.yml` | `24` | Only members who joined their gang this many hours ago keep its turfs open and wake them up. In a younger gang every member counts. `0` counts everyone. |
+| `Capture.Presence_Seconds` | `turf_rules.yml` | `15` | Seconds an attacker must stay alive inside before counting. Defenders count at once. `0` turns it off. |
+| `Capture.Min_Capture_Seconds` | `turf_rules.yml` | `60` | The bar never fills faster than this, whatever the head-count. `0` turns it off. |
+| `Capture.Max_Contest_Minutes` | `turf_rules.yml` | `10` | A capture still running after this ends as stalled; the defenders keep the turf. `0` turns it off. |
+| `Capture.Guard_Weight_Cap` | `turf_rules.yml` | `4` | Each living guard holds back one attacker, up to this many. `0` means guards never count. |
+| `Turf_Cap.Base` | `turf_rules.yml` | `2` | Turfs a gang may hold at level 0. |
+| `Turf_Cap.Per_Level` | `turf_rules.yml` | `1` | Extra turfs per gang level. |
+| `Turf_Cap.Ceiling` | `turf_rules.yml` | `6` | The most turfs any gang may hold. |
+| `Income.Idle_Hours` | `turf_rules.yml` | `24` | A turf pays only while one of its owners was online in the last this many hours. |
+| `Income.Max_Multiplier` | `turf_rules.yml` | `2.0` | Income boosts stack, but a turf never pays more than this many times its income. |
+| `Income.Gang_XP_Per_Payout` | `turf_rules.yml` | `1` | Gang XP per paying turf per payout. |
+| `Garrison.Max_Reserve` | `turf_rules.yml` | `12` | Most guards a turf can hold in reserve. |
+| `Capture.Duration_Seconds` | `turf_settings.yml` | `180` | Seconds for one attacker with nobody against them to fill the bar from 0 to 100. Owned and unclaimed turfs alike. |
+| `Capture.Cooldown_Minutes` | `turf_settings.yml` | `15` | After a capture completes, the turf cannot be contested again for this long. |
+| `Capture.Abandon_Grace_Seconds` | `turf_settings.yml` | `15` | Grace after the challenger leaves the turf before the capture is cancelled as abandoned. |
+| `Capture.Post_Logoff_Protection_Minutes` | `turf_settings.yml` | `10` | The logout window: how long after the last owner logs off the turf stays attackable (`OWNERS_ONLINE`) or shielded (`OWNERS_OFFLINE`). |
+| `Capture.Inactivity_Auto_Release_Days` | `turf_settings.yml` | `4` | Days with no owner online before every turf the gang owns is released. |
+| `Income_Interval_Minutes` | `turf_settings.yml` | `10` | Minutes between income payouts. |
+| `Default_Income_Amount` | `turf_settings.yml` | `250` | Income stamped on a new turf. Existing turfs keep their own amount (`/glw turf income`). |
+
+The `Capture.Unclaimed_Phase1_Seconds` and `Capture.Unclaimed_Phase2_Seconds` keys are unused since 0.17.0: every
+capture fills one bar at `Capture.Duration_Seconds`. They stay so older files load.
+
+### Rules in short
+
+- **Who counts.** A member counts for the window and the wake-up only if they joined their gang at least 24 hours ago,
+  or the gang is younger than that. Guards count up to 4 and never block a start.
+- **Start.** The side with the most people inside wins the start. Sides are frozen at the start: a player who joins
+  later, or a new ally, is a bystander.
+- **One bar.** Owned and unclaimed turfs use the same bar at `Capture.Duration_Seconds`. A bar fills no faster than
+  60 seconds, and a capture still running after 10 minutes ends as stalled.
+- **Cap.** A gang's turf cap is `2 + 1` per gang level, never more than 6. A gang at its cap cannot start a capture. A
+  gang over its cap keeps its turfs, but only the oldest turfs up to its cap pay.
+- **Income.** A turf pays money and gang XP only while one of its owners was online in the last 24 hours. Boosts stack
+  but stop at x2. A turf over its gang's cap pays nothing.
+- **Reasons.** Every surface shows one reason sentence (table below). The sentences are the same on the map, the action
+  bar, the info card and the enter message.
+
+| Key (`turf_messages.yml`, `Reason:`) | Sentence | When |
+|---|---|---|
+| `Reason.Attackable` | `attackable` | Nothing stops you from capturing the turf now. |
+| `Reason.Cooldown` | `shielded: just captured, attackable in %time%` | The turf was captured recently. |
+| `Reason.Owners_Active` | `shielded: %gang% were online in the last %grace%` | `OWNERS_OFFLINE`: an owner was online recently. |
+| `Reason.No_Owners_Online` | `shielded: no %gang% online (attackable when one logs in)` | `OWNERS_ONLINE`: nobody of the owning gang is online or was recently. |
+| `Reason.Waking_Up` | `shielded: %gang% waking up, attackable in %time%` | The owning gang just came online; the wake-up shield is running. |
+| `Reason.Over_Cap` | `shielded: your gang already holds its turf cap` | Your gang already holds as many turfs as its level allows. |
+
+Gang level comes from the gang's turf income (see `gang_rules.yml`, `Progression`), so a gang grows its cap by holding
+turf.
+
 ## Drawing Turf
 
 Turf is drawn with the turf wand. Left-click a block for corner 1 (`pos1`), right-click for corner 2 (`pos2`).
@@ -54,29 +130,20 @@ Turf is drawn with the turf wand. Left-click a block for corner 1 (`pos1`), righ
 ## Capturing
 
 A rival captures a turf by standing inside it. The capture bar fills while attackers are inside and defenders inside push
-it back; the turf changes hands when the bar completes. Current W1 rules, set in `turf/turf_settings.yml` under `Capture:`:
+it back; the turf changes hands when the bar completes. The rules are in the "How turf wars work" section above.
 
-| Key | Default | Meaning |
-|---|---|---|
-| `Capture.Cooldown_Minutes` | `15` | After a capture completes, the turf cannot be contested again for this long. |
-| `Capture.Post_Logoff_Protection_Minutes` | `10` | After the last member of the owning gang logs off, its turfs stay shielded for this long. |
-
-The map, the action bar, the info card and the enter message all give the same one-sentence reason. The sentences are
-in `turf/turf_messages.yml` under `Reason:`:
-
-| Key | Default sentence | When |
-|---|---|---|
-| `Reason.Attackable` | `attackable` | Nothing stops you from capturing the turf now. |
-| `Reason.Cooldown` | `shielded: just captured, attackable in %time%` | The turf was captured recently. `%time%` is the time left. |
-| `Reason.Owners_Active` | `shielded: %gang% were online in the last %grace%` | The owners were online recently. `%grace%` is `Post_Logoff_Protection_Minutes`. |
-
-> These are the W1-build rules. W2 ("one rule per fight") replaces them, including who may attack and when.
+- **Who can attack, and when.** The window (`Capture.Window`) decides it. With the default `OWNERS_ONLINE`, a turf can be
+  attacked while one of its owners is online and for `Capture.Post_Logoff_Protection_Minutes` after the last one logs
+  off. When an owner comes back, the turf is shielded for the wake-up shield.
+- **Start and bar.** A capture starts when the attacking gang has more people inside than the owners and their allies,
+  and more than any other gang. Attackers and defenders fill or push back one bar; guards held in reserve hold back
+  attackers, up to `Capture.Guard_Weight_Cap`.
+- **After a capture.** The turf cools down for `Capture.Cooldown_Minutes` and cannot be contested again until then. A
+  challenger who leaves the turf has `Capture.Abandon_Grace_Seconds` to return before the capture is cancelled.
 
 `/glw turf info [id|name]` shows the turf card, which includes a `Capture:` line with the reason. Tab completion offers
 every turf id and name. While a capture runs, a boss bar shows the attacking gang, the turf, the attackers against the
 defenders and the time left (or `stalled` when the capture is not moving forward).
-
----
 
 ## Map
 
@@ -264,6 +331,7 @@ Player commands are open to everyone from 0.17.0. Admin verbs are marked **admin
 | `/glw turf` | Shows the turf you stand in, or your gang's turfs. `[map]` link on the root. | Everyone |
 | `/glw turf info [id\|name]` | Turf card: owner, size, income, state, the reason, and whether you can attack it. | Everyone |
 | `/glw turf list [page]` | Turfs nearest first with distance and direction, 8 per page. | Everyone |
+| `/glw turf rules` | The five sentences of how turf wars work, with this server's numbers. | Everyone |
 | `/glw map` | Turf map around you. | Everyone |
 | `/glw map auto` | Turns the auto map on or off. | Everyone |
 | `/glw map hud <on\|off\|default>` | Turf line in the action bar. | Everyone |
@@ -294,7 +362,7 @@ Wand, status and turf-card texts come from `turf/turf_messages.yml`.
 |---|---|---|
 | `gangland.command.main` | `true` | `/glw` itself. |
 | `gangland.command.map` (and `.auto`, `.hud`, `.text`, `.legend`) | `true` | The map commands. |
-| `gangland.command.turf`, `.turf.info`, `.turf.list` | `true` | The turf root, info and list. |
+| `gangland.command.turf`, `.turf.info`, `.turf.list`, `.turf.rules` | `true` | The turf root, info, list and rules. |
 | `gangland.turf.admin` | `op` | Every turf admin verb (the `gangland.command.turf.<verb>` nodes for wand, pos1, pos2, create, delete, setowner, show, status, select, tp, income, garrison, buff, powerupnpc and rename are its children). |
 
 Turf admin rights come only from `gangland.turf.admin`. Its verbs are checked in code as well, so a player without the node

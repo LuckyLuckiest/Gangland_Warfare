@@ -204,4 +204,33 @@ Turf:
 # end Quartermaster
 
 # ---------------- Rules: /glw turf rules (W2-E1) ----------------
+# Sentences of /glw turf rules. Placeholders: %window%, %wake_up%, %presence%, %guards%, %min_capture%, %max_contest%,
+# %cap_base%, %per_level%, %ceiling%, %money_symbol%, %amount%, %interval%, %idle%, %max_mult%. Durations are filled in
+# with the server's own numbers; a sentence whose rule is off is left out.
+Rules:
+   # The header line.
+   Header: "&6How turf wars work"
+   # OWNERS_ONLINE window. %window% = Capture.Post_Logoff_Protection_Minutes (turf_settings.yml) as a duration.
+   Window_Online: "&7You can attack a turf while one of its owners is online, and for &f%window%&7 after the last one logs off."
+   # OWNERS_OFFLINE window. %window% = Capture.Post_Logoff_Protection_Minutes as a duration.
+   Window_Offline: "&7You can attack a turf once all its owners have been offline for &f%window%&7."
+   # OWNERS_ONLINE only, when Wake_Up_Shield_Seconds is above 0. %wake_up% = that many seconds as a duration.
+   Wake_Up: "&7When the first owner logs in, the turf stays shielded for &f%wake_up%&7."
+   # First sentence of the start rule.
+   Start: "&7A capture starts when your gang has more people inside than the owners and their allies, and more than any other gang."
+   # Second sentence of the start rule, only when Presence_Seconds is above 0. %presence% = that many seconds as a duration.
+   Start_Presence: "&7You count after &f%presence%&7 inside; dying or leaving starts your count again."
+   # Guard clause, only when Guard_Weight_Cap is above 0. %guards% = the cap.
+   Bar_Guards: "&7Each living guard holds back one attacker (up to &f%guards%&7)."
+   # Minimum-capture clause, only when Min_Capture_Seconds is above 0. %min_capture% = that many seconds as a duration.
+   Bar_Min_Capture: "&7A capture takes at least &f%min_capture%&7."
+   # Stall clause, only when Max_Contest_Minutes is above 0. %max_contest% = that many minutes as a duration.
+   Bar_Max_Contest: "&7A capture that goes nowhere for &f%max_contest%&7 ends."
+   # Third-gang clause, always shown.
+   Bar_Third_Gang: "&7A third gang inside a capture of someone else's turf does not count."
+   # Cap sentence. %cap_base%, %per_level%, %ceiling% = Turf_Cap.Base, Turf_Cap.Per_Level, Turf_Cap.Ceiling.
+   Cap: "&7Your gang can hold &f%cap_base%&7 turfs, plus &f%per_level%&7 for each gang level, at most &f%ceiling%&7."
+   # Income sentence. %money_symbol% and %amount% = Default_Income_Amount, %interval% = Income_Interval_Minutes as a
+   # duration, %idle% = Income.Idle_Hours as a duration, %max_mult% = Income.Max_Multiplier.
+   Income: "&7A new turf pays &f%money_symbol%%amount%&7 every &f%interval%&7 while one of its owners was online in the last &f%idle%&7; boosts at most x&f%max_mult%&7."
 # end Rules
