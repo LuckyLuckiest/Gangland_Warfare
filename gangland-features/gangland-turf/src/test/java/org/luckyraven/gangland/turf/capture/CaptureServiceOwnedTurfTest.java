@@ -191,7 +191,11 @@ class CaptureServiceOwnedTurfTest {
 
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
 			service.tick(new HashMap<>(), t0 + 16_000L);
-			verify(bukkit.pluginManager()).callEvent(org.mockito.ArgumentMatchers.isA(TurfCaptureFailedEvent.class));
+			ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+			verify(bukkit.pluginManager()).callEvent(captor.capture());
+			assertInstanceOf(TurfCaptureFailedEvent.class, captor.getValue());
+			assertEquals(TurfCaptureFailedEvent.Reason.ABANDONED,
+			            ((TurfCaptureFailedEvent) captor.getValue()).getReason());
 		}
 		assertEquals(TurfState.IDLE, state.getState(), "past the 15 s grace the contest ends ABANDONED");
 	}
