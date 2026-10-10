@@ -1,12 +1,16 @@
-# Migrating a server to Gangland 0.14.0 (gang and turf line)
+# Migrating a server to Gangland 0.17.0 (Gang & Turf I)
 
 [← Back to Documentation Index](./README.md)
 
-Gangland 0.14.0 is the gang and turf line: turf ids, captures, alliances, gang transfer and invites are made trustworthy.
-Nothing needs a new dependency and `gangland-api` stays at `2.3` with no `Host_Api` change. The new files are created on first
-boot. Read the notes below before you start the server on the new jar.
+This guide covers the upgrade from 0.16.1 to 0.17.0. Parts 1, 2 and 3 are the Gang & Turf I waves (W0, W1 and W2); all three
+ship together in 0.17.0. Part 4 lists the release fixes made after the waves.
 
-## W0 - trustworthy foundations
+Gangland 0.17.0 needs Keystone 1.15.1 (the `keystone.version` in the root `pom.xml`). Nothing needs a new dependency.
+`gangland-api` stays at `2.3` with no `Host_Api` change in any module. The new files are created on first boot, and the
+first boot also refreshes the shipped menus (see Part 4, item 12). Read the notes below before you start the server on the
+new jar.
+
+## Part 1 - Trustworthy foundations
 
 ### 1. Turf ids and the new `turf_sequence` table
 
@@ -29,7 +33,7 @@ boot. Read the notes below before you start the server on the new jar.
 
 - The inactivity auto-release first runs 5 minutes after boot, then every 24 hours.
 - Server downtime counts as gang inactivity. A server that was down longer than `Capture.Inactivity_Auto_Release_Days`
-  (`turf/turf_settings.yml`, default 10) releases those turfs 5 minutes after it comes back.
+  (`turf/turf_settings.yml`, default 4) releases those turfs 5 minutes after it comes back.
 
 ### 4. Turf NPC config reloads
 
@@ -79,16 +83,15 @@ boot. Read the notes below before you start the server on the new jar.
 
 - `/glw turf buff <powerup>` is an admin tool and activates a buff for free.
 
-## Wave W1 - See the city (ships in 0.17.0)
+## Part 2 - See the city
 
 ### 1. Player commands are open by default (CM-37)
 
 - `/glw`, `/glw map ...`, `/glw turf info|list` and these gang player verbs now default to `true` for every player:
   create, leave, list, info, members, balance, deposit, withdraw, invite, invite cancel, accept, decline, kick, promote,
-  demote. The gang menus `gang_stat` and `alliance_stat` also default to `true` through their
-  `gangland.inventory.*` nodes. `gangland.inventory.gang_info` is not default true: it is OP-only, so `/glw gang`
-  reaches the gang command for every non-op player (gangless players see the onboarding, members see help).
-  Grant `gangland.inventory.gang_info` to members if you want `/glw gang` to open the gang menu for them.
+  demote. The gang menus `gang_info`, `gang_stat` and `alliance_stat` also default to `true` through their
+  `gangland.inventory.*` nodes (`gang_info` since T-226). `/glw gang` opens the gang menu for members; gangless players
+  get the onboarding screen from the menu's `Open.Condition` (see Part 3, item 5).
 - A server that wanted `/glw` op-only negates `gangland.command.main` for the default group.
 - Transfer, delete, rename, description, display, color and ally stay op until a later release.
 - The gang `list` alias of `members` is gone. `/glw gang list [page]` now lists every gang (most members first); use
@@ -140,7 +143,7 @@ boot. Read the notes below before you start the server on the new jar.
   always refused, so `Name_Duplicates` in `gang_settings.yml` is ignored. Legacy names with spaces cannot be reached by
   the list click or `gang info`.
 - Players without a gang see the onboarding text (`gang/gang_messages.yml` `Onboarding:`) on `/glw gang`. Players with
-  a gang see help. The gang menu needs `gangland.inventory.gang_info`, which is OP-only by default.
+  a gang see help. The gang menu needs `gangland.inventory.gang_info`, which defaults to true.
 - Fresh installs get the `member -> officer -> owner` ranks with default nodes from `gang_rules.yml`
   (`Ranks.Preset`, `Ranks.Preset_Permissions`). Existing rank trees are untouched.
 - A renamed `Rank.Head` logs a warning and keeps the persisted root. A renamed `Rank.Tail` logs a warning and changes
@@ -155,7 +158,7 @@ boot. Read the notes below before you start the server on the new jar.
 - The core jar and the gang and turf module jars must be updated together: the inventory YAML clicks and the `turf-`
   placeholder prefix live in the core jar, and the gang verbs they point at live in the gang module.
 
-## Wave W2 - Fair fights (ships in 0.17.0)
+## Part 3 - Fair fights
 
 ### 1. Capture window flipped (D1): turfs can be attacked while their owners are online
 
@@ -180,8 +183,8 @@ boot. Read the notes below before you start the server on the new jar.
   `Capture.Max_Contest_Minutes` (10). STALLED sets no cooldown, so a contest can restart at 0% on the next tick if the
   attackers still dominate.
 - Sides are frozen at the start: a gang that joins the fight later is a bystander until the next contest.
-- Entering a contested turf shows "`%gang%` capturing". The server's `message_en.yml` keeps its old "Phase 2" wording
-  until you edit it. `Commands.Turf.Enter.Contesting_Claim` and `Subtitle_Contesting_Claim` are no longer read.
+- Entering a contested turf shows "`%gang%` capturing". `message/message_en.yml` and `message/message_es.yml` are rewritten on the
+  first 0.17.0 boot (their `Config_Version` changes); the old copies are kept as `*-old.yml`, so copy your edits back by hand. `Commands.Turf.Enter.Contesting_Claim` and `Subtitle_Contesting_Claim` are no longer read.
 - `turf_messages.yml` drops `Turf.Status_Phase_Claim` and `Turf.Status_Phase_Consolidate`; `/glw turf status` shows no
   phase any more.
 
@@ -204,7 +207,8 @@ boot. Read the notes below before you start the server on the new jar.
 
 - **Dormant gangs stop earning.** A turf pays only while its owning gang had a member online within `Income.Idle_Hours`
   (default 24).
-- **Faucet.** 250 per 10 minutes, 36,000 per active turf per day (D9 = B), capped by `Income.Max_Multiplier` (2.0) and
+- **Faucet.** New turfs pay 250 per 10 minutes (`Default_Income_Amount`, stamped on new turfs only; existing turfs keep their amount),
+  36,000 per day at that amount (D9 = B), capped by `Income.Max_Multiplier` (2.0) and
   the gang's turf cap.
 - **Turf cap** (`Turf_Cap`) grows with the gang level. A gang over its cap is paid only for its oldest turfs (ties by turf
   id).
@@ -223,13 +227,16 @@ boot. Read the notes below before you start the server on the new jar.
   `/glw gang join <gang>`. Recruiting needs the `gangland.gang.invite` node or the top rank.
 - **Gang bounty**: `/glw gang bounty <gang> <amount>` (permission `gangland.command.gang.bounty`). Any player, gangless
   ones too, puts money from his own balance on another gang (not his own or an ally). The gang that captures one of that
-  gang's turfs collects the whole bounty into its bank. A bounty on a gang with no turf cannot be claimed until it holds
+  gang's turfs collects the whole bounty into its bank, unless the bounty would take that bank over `Account.Maximum_Balance`.
+  Then nothing moves and the bounty stays (Part 4, item 4). A bounty on a gang with no turf cannot be claimed until it holds
   one. A bountied gang that disbands destroys its bounty; posters are not refunded.
 - **Disband split.** A disband with zero contributions splits the gang bank equally among members (the owner takes the
   rounding remainder). The disband fee refund has its own line (`Progression.Fee_Refund`).
 - **Gangless players** get the onboarding screen from `/glw gang` (`gang_info` now has `Open.Condition:
-  "%gangland_user_has-gang%"`). A server that edited `gang_info.yml` adds that line under `Open:` itself.
-- **Officer preset** includes `gangland.turf.upgrade` (buy at the Quartermaster), on a fresh install only.
+  "%gangland_user_has-gang%"`). An unversioned `gang_info.yml` is replaced on the first boot (Part 4, item 12); copy your own edits back from `gang_info-old.yml`.
+- **Officer preset** includes `gangland.turf.upgrade` (buy at the Quartermaster) on a fresh install. Existing rank trees
+  get it once: the first 0.17.0 boot grants `gangland.turf.upgrade` to every rank that holds `gangland.gang.withdraw`
+  and logs one line. Removing the node later sticks; the grant does not come back on later boots (Part 4, item 2).
 - **Permissions**: `gangland.command.turf.rules`, `gangland.command.gang.chat|join|recruiting|bounty` and
   `gangland.inventory.gang_info` default true.
 - `/glw turf rules` prints the five "how turf wars work" sentences with your server's numbers; run `/glw reload` after
@@ -255,13 +262,113 @@ boot. Read the notes below before you start the server on the new jar.
   numeric type or NULL no longer fails the load.
 - The core jar and the gang/turf/mail module jars must be updated together.
 
-## W3 - to be filled
+## Part 4 - Release fixes
 
-## W4 - to be filled
+These fixes went into 0.17.0 after the three parts above. Each item names the file or key and its default.
 
-## W5 - to be filled
+### 1. One-shot migrations survive a failed read
 
-## W6 - to be filled
+- A failed read of the gang or member table no longer counts as done. The D7 migration (invite-only default) and the D15
+  migration (contribution reset) wait for a boot that reads those tables.
+- A failed read of `gang_migration` counts as done for that boot and writes nothing; the table is read again on the next
+  check.
+- `gang_migration.done_at` is the real time the migration ran, kept per migration id.
+
+### 2. Turf-upgrade grant
+
+- The first 0.17.0 boot grants `gangland.turf.upgrade` once to every rank that holds `gangland.gang.withdraw` and logs one
+  line. Fresh installs get no log line; their preset already holds the node. Removing the node later sticks. See Part 3,
+  section 5.
+
+### 3. Level-ups
+
+- Level-up lines name the level reached: `%next_level%` in the `Level_Up` lines of `message/message_en.yml` is the level the
+  player or gang just reached. `%level%` is the level before it.
+- A level-up event fires after the level is raised. If a listener cancels it, that one level is undone and no further
+  levels are added.
+- Gangs and players collect no XP at the max level.
+- **Developers:** a `LevelUpEvent` listener reads the level just reached with `event.getLevel().getLevelValue()`. The
+  event is fired after the increment, so a listener that reads the level before the step sees the old value.
+
+### 4. Gang bounty: own gang and bank cap
+
+- A bounty on your own gang is refused, even when the gang lookup was stale.
+- A claim that would push the capturing gang's bank over `Account.Maximum_Balance` (`gang/gang_settings.yml`, default
+  `100_000_000_000`) does not happen. The bounty stays on the bountied gang, and the capturing gang's online members get
+  `Bounty.Bank_Full` from `gang/gang_messages.yml`:
+
+  ```yaml
+  Bounty:
+     Bank_Full: "&eYour gang bank cannot hold the %money_symbol%%amount% bounty on %gang%; it stays on them."
+  ```
+
+  Existing `gang_messages.yml` files without this key show the in-code fallback, which is the same line.
+
+### 5. Joining cancels other invites
+
+- `/glw gang join <gang>` cancels the joiner's other pending gang invites, the same as `/glw gang accept`. The player gets
+  `Invite_Siblings_Cancelled` from `mail/mail_messages.yml` only when there were invites to cancel.
+
+### 6. Gang chat after leaving
+
+- A player who left his gang while in gang chat mode now has his next line sent to public chat, after the `Social.Chat_Off` line
+  from `gang/gang_messages.yml`. Before 0.17.0 the line was dropped.
+
+### 7. Captures: stepping out keeps the contest
+
+- A challenger who steps out of a contested turf and back in keeps the contest. The attackers' contest ends `ABANDONED` only
+  after no member of the attacking gang has been inside for `Capture.Abandon_Grace_Seconds` (`turf/turf_settings.yml`,
+  default `15`).
+- This is the defaulted reading of an open owner decision. The owner has not yet confirmed it.
+
+### 8. Guards
+
+- Only a guard that dies fires the "guard down" event. A guard that vanishes (chunk unload, NPC despawn) is dropped
+  quietly. Known gap: the "half the guards are down" ratio still counts vanished guards in its total.
+- A `/glw reload` extends guards already in the field when it raises `Capture.Max_Contest_Minutes` or
+  `Defender.Lifespan_Seconds` (`turf/turf_npcs.yml`). The lifespan is read on every tick.
+- A turf that changes owner loses its garrison stock. The old owner's guards are recalled.
+
+### 9. Repeated outcome lines are quiet
+
+- A held, failed or stalled line, and the digest line for the same outcome, is shown once per turf and attacking gang
+  within a fixed 15-minute window. It is not a config key. The next repeat after that window is shown again.
+
+### 10. New owner's turf is attackable at once
+
+- When a turf changes hands, it reads "attackable" at once while one of the new owner's qualifying members is online. The
+  "no `<gang>` online" minute no longer shows.
+
+### 11. Quartermaster prices and wording
+
+- `turf/turf_messages.yml` `Quartermaster.Reserve_Full` now reads:
+
+  ```yaml
+  Quartermaster:
+     Reserve_Full: "&cThis turf already has %max% guards (stock and on duty)."
+  ```
+
+  The old text was `&cThis turf already holds %max% guards.`. An existing `turf_messages.yml` keeps the old text until you
+  edit it.
+- `garrison_discount` is clamped. The guard price is `Garrison.Cost_Per_Guard` (`turf/turf_powerups.yml`, shipped at
+  `1000`) times the discount, kept between 10 % and 100 % of `Garrison.Cost_Per_Guard`, and never below 1. A
+  `GARRISON_DISCOUNT` entry whose `Magnitude` is outside (0, 1] logs one warning at load.
+
+### 12. Menus refresh by version
+
+- Every shipped `inventory/*.yml` now carries `Config_Version: '0.17.0'` (the plugin version, filtered at build). On the first 0.17.0 boot, a shipped menu
+  that has no `Config_Version` is replaced from the jar. The old file is kept as `inventory/<name>-old.yml`. Copy your
+  customisations back by hand.
+- Menus you added yourself (no copy in the jar) are not touched.
+- From 0.17.0 on, shipped menus follow the plugin version, like `settings.yml`. This is how the `Open.Condition` line in
+  `gang_info.yml` reaches existing servers.
+
+### 13. Bad uuid rows and waypoint ids
+
+- A database row with a bad or missing uuid is skipped with a warning that names the table. This covers users, banks,
+  members, loot chests, bankers, traders, seized inventory and detainments. Fix or delete those rows.
+- Waypoint renumbering reads ids as numbers, so MySQL `BIGINT` ids work. A waypoint row with a null id is skipped with one
+  warning.
 
 ---
 

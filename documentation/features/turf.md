@@ -121,7 +121,7 @@ are `small_income_boost` (300), `large_income_boost` (1000) and `garrison_discou
   can open the panel and look, but cannot buy.
 - **Every click re-checks** membership, rank and ownership. A turf that changed hands closes the panel.
 - **Guards.** One guard costs `Garrison.Cost_Per_Guard` (1000) from the gang bank, multiplied by any active
-  `garrison_discount`. A turf holds at most `Garrison.Max_Reserve` (12) guards in reserve.
+  `garrison_discount`. The price stays between 10 % and 100 % of `Garrison.Cost_Per_Guard` and never drops below 1. A turf holds at most `Garrison.Max_Reserve` (12) guards in reserve.
 - **Survivors.** Guards still alive when a contest fails return to the reserve, up to the `Garrison.Max_Reserve` cap.
   Guards on the field count against that cap too, so a buy is refused while stock plus live guards reach it.
 - **Boost catalogue** pages nine boosts at a time.
@@ -165,7 +165,8 @@ it back; the turf changes hands when the bar completes. The rules are in the "Ho
   and more than any other gang. Attackers and defenders fill or push back one bar; each living guard of the turf holds
   back one attacker, up to `Capture.Guard_Weight_Cap`; guards never block a start.
 - **After a capture.** The turf cools down for `Capture.Cooldown_Minutes` and cannot be contested again until then. A
-  challenger who leaves the turf has `Capture.Abandon_Grace_Seconds` to return before the capture is cancelled.
+  capture is cancelled as abandoned only after no member of the attacking gang has been inside the turf for
+  `Capture.Abandon_Grace_Seconds`. An attacker who steps out and back in keeps the contest.
 
 `/glw turf info [id|name]` shows the turf card, which includes a `Capture:` line with the reason. Tab completion offers
 every turf id and name. While a capture runs, a boss bar shows the attacking gang, the turf, the attackers against the
