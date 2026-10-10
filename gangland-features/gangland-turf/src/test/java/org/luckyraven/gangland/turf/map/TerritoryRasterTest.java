@@ -226,6 +226,16 @@ class TerritoryRasterTest {
 	}
 
 	@Test
+	@DisplayName("an &x hex-coloured display name is stripped before its letters are read")
+	void glyph_ampersandXHexDisplayName_strippedFirst() {
+		var raster = render(List.of(turf(1, cells(-3, -3, -3, -3), TurfRelation.RIVAL, 1)),
+		                    gangs(gang(1, "&x&f&f&0&0&0&0Rats", "Rats", TurfRelation.RIVAL)), null);
+
+		assertEquals('R', at(raster, -3, -3).glyph());
+		assertEquals("Rats", raster.legend().get(0).fullName());
+	}
+
+	@Test
 	@DisplayName("a gang with no ASCII letter anywhere takes the first free letter")
 	void glyph_noLetterAnywhere_takesFreeLetter() {
 		var raster = render(List.of(turf(1, cells(-3, -3, -3, -3), TurfRelation.RIVAL, 1)),

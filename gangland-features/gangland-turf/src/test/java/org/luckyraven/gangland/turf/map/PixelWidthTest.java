@@ -35,7 +35,13 @@ class PixelWidthTest {
 	@DisplayName("colour and format codes measure zero")
 	void colourCodesAreFree() {
 		assertEquals(0, PixelWidth.of("&c&l&r"));
-		assertEquals(0, PixelWidth.of("§7§o"));
+		assertEquals(0, PixelWidth.of("\u00A77\u00A7o"));
+	}
+
+	@Test
+	@DisplayName("an &x hex colour code measures zero like the others")
+	void hexXCode_isFree() {
+		assertEquals(0, PixelWidth.of("&x&f&f&0&0&0&0"));
 	}
 
 	@Test

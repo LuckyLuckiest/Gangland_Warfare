@@ -48,8 +48,8 @@ public final class MapCommand extends Command {
 	protected void initializeArguments() {
 		MapAutoCommand   auto   = new MapAutoCommand(getPlugin(), getArgumentTree(), getArgument(), prefs, text, map);
 		MapHudCommand    hud    = new MapHudCommand(getPlugin(), getArgumentTree(), getArgument(), prefs, text);
-		MapTextCommand   txt    = new MapTextCommand(getPlugin(), getArgumentTree(), getArgument(), prefs, text, map);
-		MapLegendCommand legend = new MapLegendCommand(getPlugin(), getArgumentTree(), getArgument(), prefs, text, map);
+		MapTextCommand   txt    = new MapTextCommand(getPlugin(), getArgumentTree(), getArgument(), map);
+		MapLegendCommand legend = new MapLegendCommand(getPlugin(), getArgumentTree(), getArgument(), map);
 		getArgument().addAllSubArguments(List.of(auto, hud, txt, legend));
 	}
 

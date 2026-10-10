@@ -8,6 +8,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.CleanupMode;
+import org.junit.jupiter.api.io.TempDir;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.turf.capture.CaptureEligibility;
@@ -23,9 +25,12 @@ import org.luckyraven.gangland.turf.powerups.GarrisonManager;
 import org.luckyraven.gangland.turf.support.CaptureFixtures;
 import org.luckyraven.gangland.turf.support.FakeGangLookup;
 import org.luckyraven.gangland.turf.support.FakeUserLookup;
+import org.luckyraven.gangland.turf.support.YamlFixture;
+import org.luckyraven.keystone.persistence.FileManager;
 import org.mockito.MockedStatic;
 
 import java.math.BigDecimal;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 
@@ -196,5 +201,31 @@ class TurfMapRendererTest {
 		assertFalse(asAlly.contains("Last member"));
 		assertFalse(asAlly.contains("online now"));
 		assertTrue(asOwner.contains("Last member"));
+	}
+
+	@TempDir(cleanup = CleanupMode.NEVER)
+	Path tempDir;
+
+	@Test
+	@DisplayName("a turf hover built from the shipped turf_messages.yml starts with the name, not a raw '&f'")
+	void hover_realMessages_noRawAmpersand() throws Exception {
+		FileManager fileManager = YamlFixture.fileManager(tempDir, "turf_messages",
+		                                                  YamlFixture.shipped("/turf/turf_messages.yml"));
+		TurfMessageContract legacy = mock(TurfMessageContract.class);
+		when(legacy.formatDuration(anyLong())).thenReturn("5m");
+		TurfMessages real = new TurfMessages(fileManager, legacy,
+		                                     CaptureFixtures.settings(180, 15, 15, 10, new int[]{25, 50, 75}, 90, 90));
+		CaptureEligibility eligibility = mock(CaptureEligibility.class);
+		when(eligibility.evaluate(any(), anyLong()))
+				.thenReturn(new CaptureEligibility.Verdict(CaptureEligibility.Reason.ATTACKABLE, 0L));
+		gangs.register(gang(1, NOW, "Vipers"));
+		TurfMapService realService = new TurfMapService(mock(TurfManager.class), gangs, users, eligibility,
+		                                          mock(TurfMapSettings.class), mock(TurfSettings.class), real, legacy,
+		                                          garrisons);
+
+		String hover = realService.hoverText(viewer(UUID.randomUUID()), turf(7, null), null, NOW);
+
+		assertFalse(hover.contains("&f"));
+		assertTrue(hover.startsWith("\u00A7fDocks"));
 	}
 }

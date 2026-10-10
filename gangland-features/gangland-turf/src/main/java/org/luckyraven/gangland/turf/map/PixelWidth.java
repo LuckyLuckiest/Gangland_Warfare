@@ -7,7 +7,7 @@ package org.luckyraven.gangland.turf.map;
  */
 public final class PixelWidth {
 
-	private static final String CODE = "[&§][0-9a-fk-orA-FK-OR]";
+	private static final String CODE = "[&\u00A7][0-9a-fk-orxA-FK-ORX]";
 
 	private PixelWidth() {
 	}

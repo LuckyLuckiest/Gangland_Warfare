@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
  */
 public final class TurfMapService {
 
-	private static final long ONLINE_NOW_MILLIS = 60_000L;
+	private static final long ONLINE_NOW_MILLIS = 120_000L;
 	private static final int  TEXT_ROWS        = 10;
 
 	private final TurfManager           turfs;
@@ -184,7 +184,7 @@ public final class TurfMapService {
 	/** Hover of one turf run: facts a viewer may see; guards and online time only for the owning gang. */
 	String hoverText(Player viewer, Turf turf, @Nullable Integer viewerGang, long now) {
 		List<String> lines = new ArrayList<>();
-		lines.add("&f" + turf.getDisplayName());
+		lines.add(text.text("Map.Hover_Name", "&f%name%", "name", turf.getDisplayName()));
 
 		Gang owner = turf.getOwnerGangId() == null ? null : gangs.findById(turf.getOwnerGangId());
 		String ownerName = owner == null ? "" : GangDisplayNameResolver.resolve(owner);

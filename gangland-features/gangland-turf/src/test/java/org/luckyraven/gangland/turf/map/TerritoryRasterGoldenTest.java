@@ -187,6 +187,6 @@ class TerritoryRasterGoldenTest {
 		String key  = YamlConfiguration.loadConfiguration(new StringReader(yaml)).getString("Map.Legend_Key");
 
 		assertEquals("# unclaimed  - none  italic attacked  underlined shielded",
-		             key.replaceAll("[&§][0-9a-fk-orA-FK-OR]", ""));
+		             key.replaceAll("[&\u00A7][0-9a-fk-orxA-FK-ORX]", ""));
 	}
 }

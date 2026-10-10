@@ -37,6 +37,8 @@ Map:
    # Replies of /glw map auto.
    Auto_On: "&7Auto map &aon&7: the map is sent again when what it shows changes."
    Auto_Off: "&7Auto map &coff&7."
+   # Hover of a turf run, first line: the turf name. %name% = the turf display name (its own colour codes are kept).
+   Hover_Name: "&f%name%"
    # Hover of a turf run: the owning gang (%gang%).
    Hover_Owner: "&7Owner &f%gang%"
    # Hover of a turf run nobody owns.

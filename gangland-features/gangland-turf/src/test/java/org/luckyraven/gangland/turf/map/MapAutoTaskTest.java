@@ -55,15 +55,16 @@ class MapAutoTaskTest {
 	}
 
 	@Test
-	@DisplayName("the first tick sends the map to a player with auto on")
-	void firstTick_sends() {
+	@DisplayName("the first tick seeds a viewer without resending: the command already sent the map")
+	void firstTick_seedsWithoutResending_commandAlreadySent() {
 		prefs.setAuto(id, true);
 		MapAutoTask task = task();
 
 		clock.set(seconds(0));
 		task.tick();
 
-		assertEquals(1, sent.size());
+		assertEquals(0, sent.size());
+		assertEquals(1, rasters);
 	}
 
 	@Test
@@ -79,7 +80,7 @@ class MapAutoTaskTest {
 		clock.set(seconds(INTERVAL_SECONDS + 1));
 		task.tick();
 
-		assertEquals(1, sent.size());
+		assertEquals(0, sent.size());
 	}
 
 	@Test
@@ -93,11 +94,11 @@ class MapAutoTaskTest {
 		glyph = 'B';
 		clock.set(seconds(2));
 		task.tick();
-		assertEquals(1, sent.size());
+		assertEquals(0, sent.size());
 
 		clock.set(seconds(INTERVAL_SECONDS));
 		task.tick();
-		assertEquals(2, sent.size());
+		assertEquals(1, sent.size());
 	}
 
 	@Test
@@ -115,11 +116,11 @@ class MapAutoTaskTest {
 		task.tick();
 
 		assertEquals(computed + 1, rasters);
-		assertEquals(1, sent.size());
+		assertEquals(0, sent.size());
 	}
 
 	@Test
-	@DisplayName("a player removed from auto is forgotten, so turning auto back on sends at once")
+	@DisplayName("a player removed from auto is forgotten: turning auto back on seeds it again from a fresh raster")
 	void leavingAuto_forgotten() {
 		prefs.setAuto(id, true);
 		MapAutoTask task = task();
@@ -129,11 +130,13 @@ class MapAutoTaskTest {
 		prefs.setAuto(id, false);
 		clock.set(seconds(1));
 		task.tick();
+		int computed = rasters;
 
 		prefs.setAuto(id, true);
 		clock.set(seconds(2));
 		task.tick();
 
-		assertEquals(2, sent.size());
+		assertEquals(computed + 1, rasters);
+		assertEquals(0, sent.size());
 	}
 }

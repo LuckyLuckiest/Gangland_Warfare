@@ -29,7 +29,7 @@ public final class TerritoryRaster {
 	static final char   VIEWER    = '+';
 	private static final String ALPHABET = "ABCDEFGHJKLMNOPQRSTUVWXYZ";
 	private static final String DIGITS   = "23456789";
-	private static final String CODE     = "[&§][0-9a-fk-orA-FK-OR]";
+	private static final String CODE     = "[&\u00A7][0-9a-fk-orxA-FK-ORX]";
 	private static final String HEX      = "&#[0-9A-Fa-f]{6}";
 
 	public enum Style { PLAIN, ITALIC, UNDERLINE, ITALIC_UNDERLINE }

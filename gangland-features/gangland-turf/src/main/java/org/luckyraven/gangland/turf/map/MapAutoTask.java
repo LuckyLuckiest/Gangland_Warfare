@@ -95,10 +95,21 @@ public final class MapAutoTask implements BeanLifecycle {
 			if (player == null) {
 				continue;
 			}
-			Viewer state = viewers.computeIfAbsent(id, unused -> new Viewer());
+			Viewer state = viewers.get(id);
+			if (state == null) {
+				// First sight: MapAutoCommand already sent the map when auto went on, so seed the hash, do not resend.
+				state = new Viewer();
+				viewers.put(id, state);
+				state.raster     = rasters.apply(player);
+				state.key        = cellKey(player);
+				state.computedAt = now;
+				state.sentHash   = state.raster.contentHash();
+				state.sentAt     = now;
+				continue;
+			}
 			String key = cellKey(player);
 			boolean moved = !key.equals(state.key);
-			if (state.raster == null || moved || now - state.computedAt >= intervalMillis) {
+			if (moved || now - state.computedAt >= intervalMillis) {
 				state.raster     = rasters.apply(player);
 				state.key        = key;
 				state.computedAt = now;
