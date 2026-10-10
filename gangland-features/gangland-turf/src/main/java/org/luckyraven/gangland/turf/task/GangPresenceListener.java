@@ -7,8 +7,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.luckyraven.gangland.core.user.User;
-import org.luckyraven.gangland.core.user.UserLookupContract;
+import org.luckyraven.gangland.data.gang.GangMembership;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.gang.member.Member;
@@ -45,7 +44,7 @@ import java.util.UUID;
 public final class GangPresenceListener implements Listener {
 
 	private final GangLookupContract     gangs;
-	private final UserLookupContract     users;
+	private final GangMembership         membership;
 	private final GangPresenceTracker    tracker;
 	private final TurfManager            turfs;
 	private final TurfMessages           text;
@@ -90,13 +89,14 @@ public final class GangPresenceListener implements Listener {
 		gang.setLastMemberOnlineAt(now);
 	}
 
-	/** The player's gang, or null for a gangless player or a gang that no longer exists. */
+	/**
+	 * The player's gang, or null for a gangless player or a gang that no longer exists. Reads {@link GangMembership}
+	 * rather than the user record: on a real join the user is created gang-less and its gang id is hydrated later by an
+	 * async task, so at join time the user record cannot yet say which gang the player belongs to.
+	 */
 	private Gang gangOf(Player player) {
-		User<Player> user = users.findByPlayer(player);
-		if (user == null || !user.hasGang()) {
-			return null;
-		}
-		return gangs.findById(user.getGangId());
+		int gangId = membership.gangIdOf(player.getUniqueId());
+		return gangId == -1 ? null : gangs.findById(gangId);
 	}
 
 	/** One camping line per owned turf that has rival attackers inside: the rival with the most, ties to lowest id. */
@@ -131,11 +131,10 @@ public final class GangPresenceListener implements Listener {
 			if (online.equals(quitting)) {
 				continue;
 			}
-			User<Player> other = users.findByPlayer(online);
-			if (other == null || !other.hasGang() || other.getGangId() != gang.getId()) {
+			UUID uuid = online.getUniqueId();
+			if (membership.gangIdOf(uuid) != gang.getId()) {
 				continue;
 			}
-			UUID   uuid   = online.getUniqueId();
 			Member member = GangPresenceTracker.memberOf(gang, uuid);
 			if (GangPresenceTracker.qualifies(gang, member, rules, now)) {
 				return true;

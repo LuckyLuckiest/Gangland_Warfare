@@ -78,7 +78,8 @@ public final class GangPresenceTracker implements BeanLifecycle {
 	public void start() {
 		if (heartbeatTask == null) {
 			heartbeatTask = Bukkit.getScheduler()
-			                      .runTaskTimer(plugin, () -> heartbeat(System.currentTimeMillis()), HEARTBEAT_TICKS, HEARTBEAT_TICKS);
+			                      .runTaskTimer(plugin, () -> heartbeat(System.currentTimeMillis()),
+			                                    HEARTBEAT_TICKS, HEARTBEAT_TICKS);
 		}
 		if (releaseTask == null) {
 			releaseTask = Bukkit.getScheduler()
