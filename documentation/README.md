@@ -42,6 +42,7 @@ Guides for features that are part of the base plugin and not tied to a specific 
 | 14 | [Traders](./features/traders.md)                   | Trader NPCs — buy, barter, sell, tip; mood and traits (module: `gangland-npc-shops`) |
 | 15 | [Bank & Banker](./features/bank.md)                | Banker NPC, tier ladder, daily caps, interest, loans (module: `gangland-npc-shops`) |
 | 16 | [Jail & Detainment](./features/jail-detainment.md) | Handcuffing, jailing, bail, bribery, and sentence timers         |
+| 17 | [Turf](./features/turf.md)                         | Turf capture, the `/glw map` grid, HUD line, placeholders and turf admin (module: `gangland-turf`) |
 
 Weapons, ammunition and wearables are provided by the standalone **Bartizan** plugin as of 0.9.0, not this repo —
 see its own documentation in `E:\Programming\java\Bartizan\documentation`.
