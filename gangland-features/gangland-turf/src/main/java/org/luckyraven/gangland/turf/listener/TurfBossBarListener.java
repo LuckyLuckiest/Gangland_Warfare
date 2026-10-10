@@ -16,6 +16,8 @@ import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.turf.capture.CaptureSettings;
+import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.contract.TurfSoundContract;
 import org.luckyraven.gangland.turf.data.Turf;
@@ -61,6 +63,8 @@ public final class TurfBossBarListener implements Listener {
 	private final UserLookupContract  users;
 	private final TurfMessageContract messages;
 	private final TurfSoundContract   sounds;
+	private final CaptureSettings     settings;
+	private final TurfMessages        text;
 
 	private final Map<Integer, Map<UUID, BarPair>> barsByTurf              = new HashMap<>();
 	private final Map<Integer, Double>             lastClaimProgress       = new HashMap<>();
@@ -71,12 +75,16 @@ public final class TurfBossBarListener implements Listener {
 	                           GangLookupContract gangs,
 	                           UserLookupContract users,
 	                           TurfMessageContract messages,
-	                           TurfSoundContract sounds) {
+	                           TurfSoundContract sounds,
+	                           CaptureSettings settings,
+	                           TurfMessages text) {
 		this.turfs    = turfs;
 		this.gangs    = gangs;
 		this.users    = users;
 		this.messages = messages;
 		this.sounds   = sounds;
+		this.settings = settings;
+		this.text     = text;
 
 		Bukkit.getScheduler().runTaskTimer(plugin, this::refreshProgress, 20L, 20L);
 	}
@@ -194,10 +202,9 @@ public final class TurfBossBarListener implements Listener {
 			return;
 		}
 
-		Gang     challenger = state.getChallengerGangId() == null ? null : gangs.findById(state.getChallengerGangId());
-		BarColor color      = resolveColor(viewer, turf.getOwnerGangId(), state.getChallengerGangId());
+		BarColor color = resolveColor(viewer, turf.getOwnerGangId(), state.getChallengerGangId());
 
-		BossBar consolidateBar = Bukkit.createBossBar(buildConsolidateTitle(turf, challenger), color, BarStyle.SOLID);
+		BossBar consolidateBar = Bukkit.createBossBar(bossTitle(turf, state), color, BarStyle.SOLID);
 		BossBar claimBar       = null;
 
 		if (turf.isUnclaimed()) {
@@ -274,11 +281,16 @@ public final class TurfBossBarListener implements Listener {
 			boolean claimAdvanced   = claimProgress > prevClaim + 0.0005;
 			boolean consAdvanced    = consolidateProgress > prevConsolidate + 0.0005;
 
+			String title = bossTitle(turf, state);
+
 			for (BarPair pair : entry.getValue().values()) {
 				if (pair.claim() != null) {
 					pair.claim().setProgress(claimProgress);
 				}
 				pair.consolidate().setProgress(consolidateProgress);
+				if (!title.equals(pair.consolidate().getTitle())) {
+					pair.consolidate().setTitle(title);
+				}
 				if (claimAdvanced || consAdvanced) {
 					for (Player listener : pair.consolidate().getPlayers()) {
 						sounds.playCaptureTick(listener);
@@ -290,10 +302,40 @@ public final class TurfBossBarListener implements Listener {
 		}
 	}
 
-	private String buildConsolidateTitle(Turf turf, Gang challenger) {
-		return ChatUtil.color(messages.format("TURF_BOSSBAR_TITLE",
-		                                      "turf", turf.getDisplayName(),
-		                                      "gang", GangDisplayNameResolver.resolve(challenger)));
+	/**
+	 * The consolidate bar title at this moment. Owned turf: attackers = the challenger's count inside, defenders = owner
+	 * and allies inside, duration = the capture duration. Unclaimed turf: attackers = the challenger's count, defenders
+	 * = every other gang inside, duration = the current phase's length. The time shown is the time left in that phase
+	 * at the pace {@link BossBarText#pace} gives: the counts are shown as they are, but the CLAIM phase is global so its
+	 * pace is 1 whenever anyone is inside. W2 replaces the pace rule; see {@link BossBarText}.
+	 */
+	private String bossTitle(Turf turf, TurfRuntimeState state) {
+		Integer challengerId = state.getChallengerGangId();
+		Map<Integer, Integer> inside = state.getChallengersInside();
+		int attackers = challengerId == null ? 0 : inside.getOrDefault(challengerId, 0);
+
+		int     defenders;
+		int     duration;
+		boolean globalClaim = turf.isUnclaimed() && state.getPhase() == CapturePhase.CLAIM;
+		if (turf.isUnclaimed()) {
+			defenders = BossBarText.unclaimedDefenders(inside, challengerId);
+			duration  = state.getPhase() == CapturePhase.CLAIM
+			            ? settings.getUnclaimedPhase1Seconds()
+			            : settings.getUnclaimedPhase2Seconds();
+		} else {
+			defenders = state.getDefendersInside();
+			duration  = settings.getCaptureDurationSeconds();
+		}
+
+		int    pace        = BossBarText.pace(globalClaim, attackers, defenders);
+		long   secondsLeft = BossBarText.secondsLeft(state.getCaptureProgress(), pace, duration);
+		String time        = secondsLeft < 0
+		                     ? text.text("Info.BossBar_Stalled", "stalled")
+		                     : messages.formatDuration(secondsLeft);
+		Gang   challenger  = challengerId == null ? null : gangs.findById(challengerId);
+
+		return BossBarText.title(text, GangDisplayNameResolver.resolve(challenger), turf.getDisplayName(),
+		                         attackers, defenders, time);
 	}
 
 	private String buildClaimTitle() {
