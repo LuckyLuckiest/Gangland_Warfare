@@ -27,6 +27,7 @@ public class GangManager implements BeanLifecycle, GangLookupContract {
 	public static final String STATE_MIGRATION = "0.17.0-gang-state-invite";
 
 	private final GangMigrationsContract migrations;
+	private       boolean                loaded;
 
 	public GangManager(IRepository<Gang> gangRepository,
 	                   GangAllianceRepositoryContract allianceRepository) {
@@ -110,8 +111,15 @@ public class GangManager implements BeanLifecycle, GangLookupContract {
 		clear();
 	}
 
+	/**
+	 * Keystone's BeanFactory calls this once per bean registration; only the first load initializes, so the D7
+	 * migration cannot run twice (its {@code markDone} is async and would not have landed yet).
+	 */
 	@Override
 	public void onInitialize(boolean firstLoad) {
+		if (firstLoad && loaded) return;
+
+		loaded = true;
 		initialize();
 	}
 
