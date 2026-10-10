@@ -29,6 +29,20 @@ A Leader holds only `gang.delete` and `gang.rename`. To give a Leader the kick p
 
 ---
 
+## Fresh-Install Preset
+
+A server with an empty rank table gets the gang preset from `gang/gang_rules.yml`:
+
+- `Ranks.Preset` lists the ranks, lowest first (default `member`, `officer`, `owner`). The first should equal `Rank.Head`
+  and the last `Rank.Tail` in `gang/gang_settings.yml`.
+- `Ranks.Preset_Permissions` lists the `gangland.gang.*` nodes each preset rank gets. A rank does not inherit the nodes
+  of the ranks below it, so list them again. The top rank may do everything anyway.
+
+The preset is seeded only into an empty table. An existing rank tree is never changed by it; edit ranks with the
+commands above.
+
+---
+
 ## Commands
 
 All rank commands require appropriate admin permissions.

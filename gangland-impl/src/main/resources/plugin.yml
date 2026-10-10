@@ -75,6 +75,13 @@ permissions:
       default: true
    gangland.command.gang.demote:
       default: true
+   # Gang menus (W1-G): the gang_info / gang_stat / alliance_stat inventories check these before opening.
+   gangland.inventory.gang_info:
+      default: true
+   gangland.inventory.gang_stat:
+      default: true
+   gangland.inventory.alliance_stat:
+      default: true
    # One namespace for turf staff (TF-30): granting gangland.turf.admin grants every turf admin command.
    gangland.turf.admin:
       default: op

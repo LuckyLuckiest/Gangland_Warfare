@@ -79,10 +79,80 @@ boot. Read the notes below before you start the server on the new jar.
 
 - `/glw turf buff <powerup>` is an admin tool and activates a buff for free.
 
-## W1 - to be filled
+## Wave W1 - See the city (ships in 0.17.0)
 
+### 1. Player commands are open by default (CM-37)
+
+- `/glw`, `/glw map ...`, `/glw turf info|list` and these gang player verbs now default to `true` for every player:
+  create, leave, list, info, members, balance, deposit, withdraw, invite, invite cancel, accept, decline, kick, promote,
+  demote. The gang menus (`gang_info`, `gang_stat`, `alliance_stat`) also default to `true` through their
+  `gangland.inventory.*` nodes.
+- A server that wanted `/glw` op-only negates `gangland.command.main` for the default group.
+- Transfer, delete, rename, description, display, color and ally stay op until a later release.
+- The gang `list` alias of `members` is gone. `/glw gang list [page]` now lists every gang (most members first); use
+  `/glw gang members` for your own gang's members.
+
+### 2. Turf admin namespace (TF-30)
+
+- `gangland.turf.admin` now grants every turf admin command. `/glw turf tp|select|show|status` need it, as do the other
+  admin verbs (wand, pos1, pos2, create, rename, delete, setowner, income, garrison, buff, powerupnpc). Players without
+  it get `Only turf admins can do that.`
 - `/glw turf wand` now also clears the active turf selection, so `tp` and `show` with no id no longer fall back to
   the stand-in turf until `select` is run again.
+- `/glw turf rename <name>` is new (admin). Names must be unique, ignoring case and colour codes.
+
+### 3. Turf creation (TF-29, D3 A)
+
+- New turfs snap outward to whole chunks (`Create.Snap_To_Chunks`, default `true` in `turf/turf_rules.yml`). Each side,
+  measured after snapping, must be `Create.Min_Side_Blocks` (16) to `Create.Max_Side_Blocks` (512) blocks.
+- Existing turfs are unchanged.
+- A corner in another world than the other corner is refused with `Turf.Selection_Other_World`.
+
+### 4. New files on first boot (nothing to migrate; defaults shown)
+
+- `plugins/Gangland_Warfare/turf/turf_rules.yml`, `turf/turf_map.yml`, `turf/turf_messages.yml`.
+- `plugins/Gangland_Warfare/gang/gang_rules.yml`, `gang/gang_messages.yml`.
+- A server whose `turf_messages.yml` predates a key falls back to the shipped wording in code, so no line goes blank.
+
+### 5. Map and HUD (D6 A)
+
+- `/glw map` prints a chat map of the turfs around you (10 lines by default). Variants: `auto`, `hud`, `text`, `legend`.
+  Auto is off by default and forgotten on quit. Bedrock players (`Map.Bedrock_Text_Form`) get the text list.
+- The action-bar turf line (`turf_map.yml` `Hud:`, priority 9) replaces the persistent "territory" boss bar. The
+  `TURF_PRESENCE_*` message keys are now unused and can be removed from custom files.
+- Six placeholders for scoreboards: `%gangland_turf-name%`, `%gangland_turf-owner%`, `%gangland_turf-state%`,
+  `%gangland_turf-relation%`, `%gangland_turf-nearest-name%`, `%gangland_turf-nearest-distance%`.
+- `turf_messages.yml` `Map.Hover_Name` and `Map.Text_Here` are new. Older files fall back to the in-code wording.
+
+### 6. One reason everywhere
+
+- Turf entry chat lines and the info card show one reason sentence (`shielded: ...` or `attackable`). Allied turfs no
+  longer print the "protected" line. Chat lines appear only for a rival or unclaimed turf that cannot be captured yet.
+- `/glw turf info` accepts `[id|name]` and tab-completes both. The card gains a `Capture:` line.
+
+### 7. Gangs
+
+- `/glw gang info [gang]` shows a public card (name, description, members online/total, owner, allies, created date).
+  It never shows the bank balance. It accepts a name (any case) or a numeric id.
+- Gang names must match `gang_rules.yml` `Name_Pattern` (default 3 to 16 letters, digits or underscores). Duplicates are
+  always refused, so `Name_Duplicates` in `gang_settings.yml` is ignored. Legacy names with spaces cannot be reached by
+  the list click or `gang info`.
+- The onboarding text for players without a gang is in `gang/gang_messages.yml` `Onboarding:`. Known gap (NEW-W1-G-1,
+  open): the gang menu opens for a gangless player too, so `/glw gang` shows the menu, not the onboarding, until that
+  is fixed.
+- Fresh installs get the `member -> officer -> owner` ranks with default nodes from `gang_rules.yml`
+  (`Ranks.Preset`, `Ranks.Preset_Permissions`). Existing rank trees are untouched.
+- A renamed `Rank.Head` logs a warning and keeps the persisted root. A renamed `Rank.Tail` logs a warning and changes
+  nothing; set `Rank.Tail` back to an existing rank name, or a gang created meanwhile gives its creator no rank for
+  deposit, withdraw and disband.
+- `gangland.gang.*` nodes appear in `/glw permission` search, help and LuckPerms completion, default OP.
+- `rank permission add` refuses unknown nodes and applies accepted nodes to online members at once. Node names are
+  saved lower case.
+
+### 8. Jars
+
+- The core jar and the gang and turf module jars must be updated together: the inventory YAML clicks and the `turf-`
+  placeholder prefix live in the core jar, and the gang verbs they point at live in the gang module.
 
 ## W2 - to be filled
 

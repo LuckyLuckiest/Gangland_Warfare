@@ -27,6 +27,22 @@ the money is deducted.
 
 ---
 
+## Gang List and Info
+
+```
+/glw gang list [page]      Every gang, most members first (any player)
+/glw gang info [gang]      Public card: name, description, members online/total, owner, allies, created date
+/glw gang members          Your own gang's members
+```
+
+- `gang info` accepts a name (any case) or a numeric id. It never shows the bank balance.
+- Gang names must match `Name_Pattern` in `gang/gang_rules.yml` (default 3 to 16 letters, digits or underscores).
+  Names are always unique: `Name_Duplicates` in `gang/gang_settings.yml` is ignored.
+- Known gaps: `gang list` and `gang info` refuse console senders, and a gangless player still sees the gang menu
+  instead of the onboarding text (see [migration 0.14.0](../migration-0.14.0.md)).
+
+---
+
 ## Rank Hierarchy
 
 Gangs use the server's global rank system internally. Two ranks are reserved:

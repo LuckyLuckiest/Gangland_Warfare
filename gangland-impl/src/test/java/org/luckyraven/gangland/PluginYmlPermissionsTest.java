@@ -52,7 +52,10 @@ class PluginYmlPermissionsTest {
 			"gangland.command.gang.decline",
 			"gangland.command.gang.kick",
 			"gangland.command.gang.promote",
-			"gangland.command.gang.demote");
+			"gangland.command.gang.demote",
+			"gangland.inventory.gang_info",
+			"gangland.inventory.gang_stat",
+			"gangland.inventory.alliance_stat");
 
 	/** Children of gangland.turf.admin; never default true. */
 	static final List<String> ADMIN = List.of(

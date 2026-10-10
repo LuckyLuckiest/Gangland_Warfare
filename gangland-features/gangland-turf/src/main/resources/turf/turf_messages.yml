@@ -16,8 +16,6 @@ Reason:
 
 # ---------------- Map: /glw map ----------------
 Map:
-   # Sent by a /glw map part that is not finished yet.
-   Not_Ready: "&7This part of the map is not ready yet."
    # First line. %owned% = turfs your gang owns.
    Header: "&7Map - &fTurfs %owned% &7- north is up - &f+ &7you"
    # First line for a player without a gang.
