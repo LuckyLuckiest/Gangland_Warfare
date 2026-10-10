@@ -57,6 +57,7 @@ public final class CaptureService {
 	private final CaptureSettings    settings;
 	private final TurfSoundContract  sounds;
 	private final TurfOwnership      ownership;
+	private final CaptureEligibility eligibility;
 
 	public CaptureService(TurfManager turfs,
 	                      GangLookupContract gangs,
@@ -69,7 +70,13 @@ public final class CaptureService {
 		this.users     = users;
 		this.settings  = settings;
 		this.sounds    = sounds;
-		this.ownership = ownership;
+		this.ownership   = ownership;
+		this.eligibility = new CaptureEligibility(gangs, settings);
+	}
+
+	/** The capture verdict every surface reads (map, HUD, info card, boss bar). */
+	public CaptureEligibility eligibility() {
+		return eligibility;
 	}
 
 	private static double clamp(double value, double min, double max) {
@@ -114,20 +121,7 @@ public final class CaptureService {
 	}
 
 	public boolean isCapturable(Turf turf, long now) {
-		long cooldownMs = settings.getCooldownMinutes() * 60_000L;
-		if (now < turf.getLastCaptureTimestamp() + cooldownMs) {
-			return false;
-		}
-		if (turf.isUnclaimed()) {
-			return true;
-		}
-		Gang owner = gangs.findById(turf.getOwnerGangId());
-		if (owner == null) {
-			return true;
-		}
-		// Post-logoff grace: protected if any member online OR last-online within the grace window.
-		long graceMs = settings.getPostLogoffProtectionMinutes() * 60_000L;
-		return now - owner.getLastMemberOnlineAt() > graceMs;
+		return eligibility.evaluate(turf, now).attackable();
 	}
 
 	private Map<Integer, List<Player>> indexPlayersByTurf(Map<UUID, Turf> cache) {

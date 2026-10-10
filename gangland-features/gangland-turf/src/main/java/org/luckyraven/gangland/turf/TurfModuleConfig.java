@@ -22,6 +22,7 @@ import org.luckyraven.gangland.turf.place.TurfRegionProvider;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.keystone.persistence.FileManager;
+import org.luckyraven.gangland.turf.capture.CaptureEligibility;
 import org.luckyraven.gangland.turf.capture.CaptureService;
 import org.luckyraven.gangland.turf.capture.TurfOwnership;
 import org.luckyraven.gangland.turf.capture.CaptureSettings;
@@ -174,6 +175,11 @@ public final class TurfModuleConfig {
 	                                     TurfSoundContract sounds,
 	                                     TurfOwnership ownership) {
 		return new CaptureService(turfs, gangs, users, settings, sounds, ownership);
+	}
+
+	@Bean
+	public CaptureEligibility captureEligibility(CaptureService captureService) {
+		return captureService.eligibility();
 	}
 
 	@Bean
