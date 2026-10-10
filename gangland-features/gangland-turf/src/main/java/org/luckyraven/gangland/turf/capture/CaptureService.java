@@ -105,6 +105,15 @@ public final class CaptureService {
 
 			List<Player> playersInside = inside.getOrDefault(turf.getId(), Collections.emptyList());
 			TickGroups   groups        = classify(turf, playersInside);
+			state.setChallengersInside(groups.challengersByGang.isEmpty() ? Map.of()
+			                                                              : Map.copyOf(groups.challengersByGang));
+			state.setDefendersInside(groups.defenders);
+			// TF-27: runtime state is not persisted, so a turf captured just before a restart loads as IDLE. Its cooldown is
+			// still enforced (isCapturable reads the persisted timestamp); this only makes the displayed state say so.
+			if (state.getState() == TurfState.IDLE
+			    && now < turf.getLastCaptureTimestamp() + settings.getCooldownMinutes() * 60_000L) {
+				state.setState(TurfState.COOLDOWN);
+			}
 
 			switch (state.getState()) {
 				case IDLE -> tickIdle(turf, state, groups, playersInside, now);

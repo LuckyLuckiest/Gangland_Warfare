@@ -5,6 +5,8 @@ import lombok.Setter;
 import org.luckyraven.gangland.turf.state.CapturePhase;
 import org.luckyraven.gangland.turf.state.TurfState;
 
+import java.util.Map;
+
 /**
  * Live per-turf state that is <b>not</b> persisted. Capture progress resets to zero and state resets to IDLE on every
  * server start — in-flight captures do not survive restart. Cooldown anchors on {@link Turf#getLastCaptureTimestamp()}
@@ -34,6 +36,14 @@ public final class TurfRuntimeState {
 	 * epoch ms; used for abandon-grace detection
 	 */
 	private       long         lastChallengerSeenAt;
+	/**
+	 * Gang id -> members of that gang inside the turf on the last capture tick (owner and allies excluded). Read-only.
+	 */
+	private       Map<Integer, Integer> challengersInside = Map.of();
+	/**
+	 * Owner and allied members inside the turf on the last capture tick.
+	 */
+	private       int                   defendersInside;
 
 	public TurfRuntimeState(int turfId) {
 		this.turfId          = turfId;
@@ -48,5 +58,7 @@ public final class TurfRuntimeState {
 		this.captureProgress      = 0.0;
 		this.challengerGangId     = null;
 		this.lastChallengerSeenAt = 0L;
+		this.challengersInside    = Map.of();
+		this.defendersInside      = 0;
 	}
 }

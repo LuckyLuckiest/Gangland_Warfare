@@ -164,7 +164,8 @@ class CaptureServiceStartAndCompleteTest {
 
 		tick(service, cache);
 
-		assertEquals(TurfState.IDLE, turfManager.getRuntimeState(turf.getId()).getState());
+		// TF-27: the persisted capture timestamp shows COOLDOWN after a restart; no contest starts.
+		assertEquals(TurfState.COOLDOWN, turfManager.getRuntimeState(turf.getId()).getState());
 	}
 
 	@Test
