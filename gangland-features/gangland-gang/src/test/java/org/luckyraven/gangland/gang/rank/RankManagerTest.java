@@ -244,6 +244,38 @@ class RankManagerTest {
 		}
 
 		@Test
+		@DisplayName("GR-13: several persisted roots with a missing head keep the lowest id as the root")
+		void initialize_headNameMissing_severalRoots_keepsLowestId() {
+			GangSettings.bind(new FakeGangSettingsContract().withRankHead("does-not-exist"));
+			Rank higher = new Rank("alpha", 5);
+			Rank lower  = new Rank("beta", 2);
+			when(rankRepo.loadAll()).thenReturn(List.of(higher, lower));
+
+			manager.initialize();
+
+			assertSame(lower, manager.getRankTree().getRoot().getData(), "the lowest-id root is kept");
+		}
+
+		@Test
+		@DisplayName("a renamed Rank.Tail on a non-empty table creates nothing; the persisted ranks and links stay as they are")
+		void initialize_tailNameMissing_warnsAndCreatesNothing() {
+			GangSettings.bind(new FakeGangSettingsContract().withRankTail("does-not-exist"));
+			Rank member  = new Rank("member", 1);
+			Rank officer = new Rank("officer", 2);
+			Rank owner   = new Rank("owner-old", 3);
+			when(rankRepo.loadAll()).thenReturn(List.of(member, officer, owner));
+			when(rankParentRepo.loadAll()).thenReturn(Set.of(new RankParent(1, 2), new RankParent(2, 3)));
+
+			manager.initialize();
+
+			assertEquals(3, manager.getRanks().size(), "no rank is created for the renamed tail");
+			assertNull(manager.get("does-not-exist"));
+			assertEquals(Set.of(new RankParent(1, 2), new RankParent(2, 3)), manager.getRanksParent());
+			verify(rankRepo, never()).save(any());
+			verify(rankParentRepo, never()).save(any());
+		}
+
+		@Test
 		@DisplayName("a rank with no RankParent entries pointing at it builds a leaf with no children")
 		void initialize_rankWithNoParentLinks_isLeaf() {
 			Rank head = new Rank("member", 2);
@@ -258,7 +290,7 @@ class RankManagerTest {
 	}
 
 	@Nested
-	@DisplayName("seedInitialRanks() - WS5 G2 step 7b, moved from GanglandDatabase.insertInitialData")
+	@DisplayName("initialize() seeds the preset ladder on an empty rank table only (D13 A)")
 	class SeedInitialRanksTest {
 
 		/**

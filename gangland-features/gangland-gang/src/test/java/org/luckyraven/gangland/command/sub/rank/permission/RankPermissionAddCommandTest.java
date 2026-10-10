@@ -35,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -123,6 +124,19 @@ class RankPermissionAddCommandTest {
 
 		verify(rankManager).addPermission(officer, GangPermissions.INVITE);
 		verify(user).setPermission(GangPermissions.INVITE, true);
+	}
+
+	@Test
+	@DisplayName("a mixed-case node is checked and saved in lower case, so the stored node matches the case-insensitive lookups")
+	void mixedCaseNode_isSavedLowerCase() {
+		Rank officer = new Rank("officer", 2);
+		when(rankManager.get("officer")).thenReturn(officer);
+		when(rankManager.permissionExists(anyString())).thenReturn(true);
+
+		add("officer", "Gangland.Gang.Invite");
+
+		verify(rankManager).addPermission(officer, GangPermissions.INVITE);
+		verify(rankManager, never()).addPermission(any(Rank.class), eq("Gangland.Gang.Invite"));
 	}
 
 	@Test

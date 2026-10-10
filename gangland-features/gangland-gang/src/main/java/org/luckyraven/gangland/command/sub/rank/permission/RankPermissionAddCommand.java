@@ -24,6 +24,7 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 class RankPermissionAddCommand extends SubArgument {
@@ -78,7 +79,8 @@ class RankPermissionAddCommand extends SubArgument {
 				return;
 			}
 
-			String permString = args[4];
+			// Saved in lower case: permissionExists and findPermission match case-insensitively, so the stored node must too
+			String permString = args[4].toLowerCase(Locale.ROOT);
 
 			// GR-37: only a node the module or the server knows; anything else is refused and never persisted
 			if (!rankManager.permissionExists(permString)) {

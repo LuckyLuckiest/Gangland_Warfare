@@ -27,39 +27,6 @@ public class RankRepository extends AbstractRepository<Rank> {
 	}
 
 	/**
-	 * Inserts the initial tail and head ranks if they do not already exist in the database.
-	 * <p>
-	 * The tail rank is inserted first (lower rank), followed by the head rank (leader). Each rank only gets created
-	 * when absent, making this method safe to call on every startup.
-	 *
-	 * @param headName the name of the head (leader) rank
-	 * @param tailName the name of the tail (lowest) rank
-	 *
-	 * @return {@code int[0]} = head rank id, {@code int[1]} = tail rank id
-	 */
-	public int[] insertInitialRanks(String headName, String tailName) throws SQLException {
-		// Tail rank first (lower rank), then the head rank — same insertion order as before.
-		int tailId = resolveOrInsertRank(tailName);
-		int headId = resolveOrInsertRank(headName);
-
-		return new int[]{headId, tailId};
-	}
-
-	private int resolveOrInsertRank(String name) throws SQLException {
-		Integer existingId = getBackend().queryBuilder(rankTable.getName())
-		                                 .where("name", name)
-		                                 .one(resultSet -> resultSet.getInt("id"));
-		if (existingId != null) {
-			return existingId;
-		}
-
-		int id = nextRankId();
-		tableBackend().insert(new Rank(name, id));
-
-		return id;
-	}
-
-	/**
 	 * The next free rank id: {@code max(id) + 1}. {@code total + 1} collides with a surviving id after a delete leaves a
 	 * gap (GR-21).
 	 */

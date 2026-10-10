@@ -27,7 +27,7 @@ import static org.mockito.Mockito.mock;
 /**
  * Proves the DatabaseBackend-SPI path Gangland's repositories migrated onto (Keystone 1.7.1): schema application
  * through the backend diff engine, {@code save}/{@code loadAll}/{@code delete} through {@code TableBackend}, and
- * the bespoke {@code insertInitialRanks} query rewritten onto {@code BackendQueryBuilder}/{@code execute}.
+ * the bespoke rank-id query ({@code nextRankId}) rewritten onto {@code BackendQueryBuilder}/{@code execute}.
  *
  * <p>Uses a disabled {@code PluginMocks} plugin so every repository write takes the synchronous inline path.
  */
@@ -100,32 +100,20 @@ class RankRepositorySpiTest {
 	}
 
 	@Test
-	@DisplayName("insertInitialRanks creates tail then head once, and is idempotent")
-	void insertInitialRanks_isIdempotent() throws SQLException {
-		int[] first = repository.insertInitialRanks("Leader", "Recruit");
-
-		assertEquals(1, first[1], "tail rank is inserted first and takes id 1");
-		assertEquals(2, first[0], "head rank follows and takes id 2");
-
-		int[] second = repository.insertInitialRanks("Leader", "Recruit");
-		assertArrayEquals(first, second, "re-running on startup must resolve, not re-insert");
-
-		List<Object[]> names = backend.query("SELECT name FROM rank_tree", rs -> new Object[]{rs.getString("name")});
-		assertEquals(2, names.size());
+	@DisplayName("nextRankId on an empty table is 1")
+	void nextRankId_emptyTable_isOne() throws SQLException {
+		assertEquals(1, repository.nextRankId());
 	}
 
 	@Test
-	@DisplayName("GR-21: after a delete leaves a gap, a new rank takes max(id)+1, never total+1 (which collides)")
+	@DisplayName("GR-21: after a delete leaves a gap, the next id is max(id)+1, never total+1 (which collides)")
 	void newRankId_afterDeleteWithGap_isMaxPlusOne() throws SQLException {
 		repository.save(new Rank("one", 1));
 		repository.save(new Rank("two", 2));
 		repository.save(new Rank("three", 3));
 		repository.delete(new Rank("two", 2));
 
-		int[] ids = repository.insertInitialRanks("Head", "Tail");
-
-		assertEquals(4, ids[1], "tail takes max(id)+1 = 4; total+1 would be 3 and collide with rank three");
-		assertEquals(5, ids[0], "head follows at 5");
+		assertEquals(4, repository.nextRankId(), "max(id)+1 = 4; total+1 would be 3 and collide with rank three");
 	}
 
 	@Test
@@ -138,7 +126,8 @@ class RankRepositorySpiTest {
 		                "vault_group TEXT NOT NULL DEFAULT '')");
 		backend.applySchema(TableSchemas.fromTable(new RankTable()));
 
-		repository.insertInitialRanks("owner", "member");
+		repository.save(new Rank("owner", 1));
+		repository.save(new Rank("member", 2));
 		repository.save(new Rank("officer", 3));
 
 		Collection<Rank> loaded = repository.loadAll();

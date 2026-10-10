@@ -122,6 +122,8 @@ public class RankManager implements BeanLifecycle {
 			}
 		}
 
+		warnIfTailMissing();
+
 		// The fresh-install preset nodes go on after the ranks and the permission counter are loaded (FK-safe ids)
 		if (seeded) applyPresetPermissions();
 
@@ -159,6 +161,25 @@ public class RankManager implements BeanLifecycle {
 				addPermission(rank, node);
 			}
 		}
+	}
+
+	/**
+	 * A renamed {@code Rank.Tail} is not recreated (D13 A): the persisted ranks stay as they are, and one warning names
+	 * the configured tail and the persisted leaf ranks so the owner can fix the config.
+	 */
+	private void warnIfTailMissing() {
+		String tail = GangSettings.getGangRankTail();
+		if (ranks.isEmpty() || get(tail) != null) return;
+
+		Set<Integer> parentIds = ranksParent.stream().map(RankParent::rankId).collect(Collectors.toSet());
+		String leaves = ranks.values()
+				.stream()
+				.filter(rank -> !parentIds.contains(rank.getUsedId()))
+				.map(Rank::getName)
+				.collect(Collectors.joining(", "));
+
+		log.warn("Rank.Tail '{}' matches no persisted rank; no rank is created. The persisted leaf rank(s): [{}]",
+		         tail, leaves);
 	}
 
 	/**
