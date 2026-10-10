@@ -177,4 +177,17 @@ class TurfInfoCommandTest {
 		assertTrue(lines.getAllValues().stream().anyMatch(line -> line.contains("just captured")),
 		           lines.getAllValues().toString());
 	}
+
+	@Test
+	@DisplayName("a turf whose name is all digits is still found by name when no turf has that id")
+	void info_allDigitName_fallsBackToName() {
+		CommandSender sender = mock(CommandSender.class);
+		int id = turfs.allocateId();
+		turfs.create(new Turf(id, "2024", new CuboidRegion("world", 40, 0, 50, 10), null,
+		                      BigDecimal.TEN, System.currentTimeMillis(), 0L));
+
+		command.idArgument().executeArgument(sender, new String[]{"turf", "info", "2024"});
+
+		verify(messages).send(sender, "TURF_INFO_HEADER", "turf", "2024", "id", String.valueOf(id));
+	}
 }

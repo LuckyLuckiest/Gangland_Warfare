@@ -16,6 +16,7 @@ import org.mockito.MockedStatic;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -83,5 +84,41 @@ class BossBarTextTest {
 
 		assertFalse(title.contains("%"), title);
 		assertTrue(title.contains("Rats") && title.contains("Docks") && title.contains("45s"), title);
+	}
+
+	@Test
+	@DisplayName("the unclaimed CLAIM phase paces at one attacker's rate whenever anyone is inside, 1v1 gives 1")
+	void pace_claimPhase_oneVsOne_isOne() {
+		assertEquals(1, BossBarText.pace(true, 1, 1));
+	}
+
+	@Test
+	@DisplayName("the unclaimed CLAIM phase with three attackers and no defenders still paces at 1, not 3")
+	void pace_claimPhase_threeVsZero_isOne() {
+		assertEquals(1, BossBarText.pace(true, 3, 0));
+	}
+
+	@Test
+	@DisplayName("the unclaimed CLAIM phase with nobody inside paces at 0")
+	void pace_claimPhase_nobodyInside_isZero() {
+		assertEquals(0, BossBarText.pace(true, 0, 0));
+	}
+
+	@Test
+	@DisplayName("the CONSOLIDATE phase is a tug of war: 1v1 nets to 0")
+	void pace_consolidate_oneVsOne_isZero() {
+		assertEquals(0, BossBarText.pace(false, 1, 1));
+	}
+
+	@Test
+	@DisplayName("the defenders of an unclaimed turf are every gang inside except the challenger")
+	void unclaimedDefenders_sumsEveryOtherGang() {
+		assertEquals(3, BossBarText.unclaimedDefenders(Map.of(7, 2, 9, 1), 7));
+	}
+
+	@Test
+	@DisplayName("with no challenger every gang inside counts as a defender of an unclaimed turf")
+	void unclaimedDefenders_noChallenger_sumsAll() {
+		assertEquals(3, BossBarText.unclaimedDefenders(Map.of(7, 2, 9, 1), null));
 	}
 }
