@@ -154,7 +154,9 @@ public final class TurfMapService {
 			                              "owner", owner,
 			                              "relation", relationWord(TurfRelation.of(turf, viewerGang, gangs)),
 			                              "distance", where.distance(),
-			                              "direction", where.direction(),
+			                              "direction", where.direction().isEmpty()
+			                                           ? text.text("Map.Text_Here", "here")
+			                                           : where.direction(),
 			                              "reason", reason);
 			viewer.spigot().sendMessage(renderer.clickable(legacyLine, turf.getId(),
 			                                               hoverText(viewer, turf, viewerGang, now)));

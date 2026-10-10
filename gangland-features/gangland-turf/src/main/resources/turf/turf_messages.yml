@@ -65,6 +65,8 @@ Map:
    Hover_You_No_Turf: "no turf"
    # One row of /glw map text. %relation% = Relation_ word, %reason% = a Reason line.
    Text_Row: "&f%name% &7- &f%owner% &7(%relation%) - %distance%m %direction% - %reason%"
+   # The direction of a text row when the viewer stands inside that turf (no compass direction then).
+   Text_Here: "here"
    # The owner in a text row when no gang owns the turf.
    Text_Unclaimed: "Unclaimed"
    # Relation words of a text row.

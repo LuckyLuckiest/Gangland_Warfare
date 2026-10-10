@@ -102,6 +102,28 @@ class MapAutoTaskTest {
 	}
 
 	@Test
+	@DisplayName("a cell move that changes the content before the interval recomputes but waits to send")
+	void cellMove_contentChange_waitsForTheInterval() {
+		prefs.setAuto(id, true);
+		MapAutoTask task = task();
+		clock.set(seconds(0));
+		task.tick();
+		int computed = rasters;
+
+		glyph = 'B';
+		at = new Location(null, 40, 64, 8);
+		when(viewer.getLocation()).thenReturn(at);
+		clock.set(seconds(1));
+		task.tick();
+		assertEquals(computed + 1, rasters);
+		assertEquals(0, sent.size());
+
+		clock.set(seconds(INTERVAL_SECONDS));
+		task.tick();
+		assertEquals(1, sent.size());
+	}
+
+	@Test
 	@DisplayName("a cell move with unchanged content recomputes but does not send")
 	void cellMove_unchangedContent_noSend() {
 		prefs.setAuto(id, true);

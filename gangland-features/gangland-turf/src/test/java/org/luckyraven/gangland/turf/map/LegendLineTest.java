@@ -67,6 +67,15 @@ class LegendLineTest {
 	}
 
 	@Test
+	@DisplayName("a cut never splits an emoji surrogate pair in the name")
+	void emojiNameNotSplit() {
+		String name = "Rat" + "🐀".repeat(6);
+		String label = LegendLine.label(entry('R', name, TurfRelation.RIVAL), "(you)", "(ally)", "(rival)");
+
+		assertEquals("R Rat" + "🐀".repeat(5) + " (rival)", label);
+	}
+
+	@Test
 	@DisplayName("a gangless relation adds no suffix")
 	void gangless_noSuffix() {
 		String label = LegendLine.label(entry('V', "Vipers", TurfRelation.GANGLESS), "(you)", "(ally)", "(rival)");

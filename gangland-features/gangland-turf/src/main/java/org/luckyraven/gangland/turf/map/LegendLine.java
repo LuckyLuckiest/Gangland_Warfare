@@ -25,8 +25,9 @@ public final class LegendLine {
 	/** Glyph, the full name cut to {@link #NAME_CHARS} characters, then the relation word (none for a gangless viewer). */
 	public static String label(TerritoryRaster.LegendEntry entry, String you, String ally, String rival) {
 		String name = entry.fullName();
-		if (name.length() > NAME_CHARS) {
-			name = name.substring(0, NAME_CHARS);
+		if (name.codePointCount(0, name.length()) > NAME_CHARS) {
+			// code-point cut: a surrogate pair (emoji) is never split
+			name = name.substring(0, name.offsetByCodePoints(0, NAME_CHARS));
 		}
 		String word = switch (entry.relation()) {
 			case OWN -> you;
