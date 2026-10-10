@@ -9,6 +9,7 @@ import org.luckyraven.keystone.util.TriConsumer;
 import org.luckyraven.keystone.datastructure.Tree;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.turf.capture.TurfOwnership;
+import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.events.TurfCaptureFailedEvent;
 import org.luckyraven.gangland.turf.data.Turf;
@@ -32,13 +33,14 @@ class TurfDeleteCommand extends SubArgument {
 	private final TurfManager          turfs;
 	private final WandSelectionManager selections;
 	private final TurfMessageContract  messages;
+	private final TurfMessages         text;
 	private final GarrisonManager      garrisons;
 	private final ActiveBuffManager    buffs;
 	private final TurfPowerupManager   powerupNpcs;
 	private final TurfOwnership        ownership;
 
 	protected TurfDeleteCommand(JavaPlugin plugin, Tree<Argument> tree, Argument parent,
-	                            TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages,
+	                            TurfManager turfs, WandSelectionManager selections, TurfMessageContract messages, TurfMessages text,
 	                            GarrisonManager garrisons, ActiveBuffManager buffs, TurfPowerupManager powerupNpcs,
 	                            TurfOwnership ownership) {
 		super(plugin, "delete", tree, parent);
@@ -46,6 +48,7 @@ class TurfDeleteCommand extends SubArgument {
 		this.turfs       = turfs;
 		this.selections  = selections;
 		this.messages    = messages;
+		this.text = text;
 		this.garrisons   = garrisons;
 		this.buffs       = buffs;
 		this.powerupNpcs = powerupNpcs;
@@ -57,8 +60,7 @@ class TurfDeleteCommand extends SubArgument {
 		return (argument, sender, args) -> {
 			// GI-35: deleting a turf is an admin-only mutation — nested SubArgument permissions only add onto the
 			// base "gangland.command.turf" node, they don't require this stricter one on their own.
-			if (!TurfPermissions.isAdmin(sender)) {
-				sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
+			if (!TurfPermissions.requireAdmin(sender, text)) {
 				return;
 			}
 			Turf turf = TurfSelectionResolver.resolve(sender, turfs, selections, messages);

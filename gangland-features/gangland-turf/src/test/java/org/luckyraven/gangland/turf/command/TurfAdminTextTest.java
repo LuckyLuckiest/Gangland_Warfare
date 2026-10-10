@@ -74,6 +74,7 @@ class TurfAdminTextTest {
 		Messages.init(provider);
 	}
 
+	private TurfMessages         text;
 	private String               adminOnly;
 	private JavaPlugin           plugin;
 	private Tree<Argument>       tree;
@@ -85,7 +86,7 @@ class TurfAdminTextTest {
 
 	@BeforeEach
 	void setUp() throws Exception {
-		TurfMessages text = new TurfMessages(
+		text = new TurfMessages(
 				YamlFixture.fileManager(tempDir, "turf_messages", YamlFixture.shipped("/turf/turf_messages.yml")),
 				mock(TurfMessageContract.class),
 				CaptureFixtures.settings(180, 15, 15, 10, new int[]{25, 50, 75}, 90, 90));
@@ -129,7 +130,7 @@ class TurfAdminTextTest {
 	@DisplayName("buff: a non-admin gets Turf.Admin_Only")
 	void buff_nonAdmin_getsAdminOnlyText() {
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
-			verb = new TurfBuffCommand(plugin, tree, parent, turfs, selections, messages,
+			verb = new TurfBuffCommand(plugin, tree, parent, turfs, selections, messages, text,
 			                    mock(PowerupRegistry.class), mock(ActiveBuffManager.class));
 		}
 		Player player = nonAdmin();
@@ -144,7 +145,7 @@ class TurfAdminTextTest {
 	void delete_nonAdmin_getsAdminOnlyText() {
 		TurfDeleteCommand command;
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
-			command = new TurfDeleteCommand(plugin, tree, parent, turfs, selections, messages,
+			command = new TurfDeleteCommand(plugin, tree, parent, turfs, selections, messages, text,
 			                                mock(GarrisonManager.class), mock(ActiveBuffManager.class),
 			                                mock(TurfPowerupManager.class), new TurfOwnership(turfs));
 		}
@@ -159,7 +160,7 @@ class TurfAdminTextTest {
 	@DisplayName("garrison: a non-admin gets Turf.Admin_Only")
 	void garrison_nonAdmin_getsAdminOnlyText() {
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
-			verb = new TurfGarrisonCommand(plugin, tree, parent, turfs, selections, messages, mock(GarrisonManager.class));
+			verb = new TurfGarrisonCommand(plugin, tree, parent, turfs, selections, messages, text, mock(GarrisonManager.class));
 		}
 		Player player = nonAdmin();
 
@@ -172,7 +173,7 @@ class TurfAdminTextTest {
 	@DisplayName("income: a non-admin gets Turf.Admin_Only")
 	void income_nonAdmin_getsAdminOnlyText() {
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
-			verb = new TurfIncomeCommand(plugin, tree, parent, turfs, selections, messages, mock(TurfSettings.class));
+			verb = new TurfIncomeCommand(plugin, tree, parent, turfs, selections, messages, text, mock(TurfSettings.class));
 		}
 		Player player = nonAdmin();
 
@@ -185,7 +186,7 @@ class TurfAdminTextTest {
 	@DisplayName("powerupnpc: a non-admin gets Turf.Admin_Only")
 	void powerupNpc_nonAdmin_getsAdminOnlyText() {
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
-			verb = new TurfPowerupNpcCommand(plugin, tree, parent, turfs, selections, messages,
+			verb = new TurfPowerupNpcCommand(plugin, tree, parent, turfs, selections, messages, text,
 			                          mock(TurfPowerupManager.class));
 		}
 		Player player = nonAdmin();
@@ -199,7 +200,7 @@ class TurfAdminTextTest {
 	@DisplayName("setowner: a non-admin gets Turf.Admin_Only")
 	void setOwner_nonAdmin_getsAdminOnlyText() {
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
-			verb = new TurfSetOwnerCommand(plugin, tree, parent, turfs, new FakeGangLookup(), selections, messages,
+			verb = new TurfSetOwnerCommand(plugin, tree, parent, turfs, new FakeGangLookup(), selections, messages, text,
 			                        new TurfOwnership(turfs));
 		}
 		Player player = nonAdmin();

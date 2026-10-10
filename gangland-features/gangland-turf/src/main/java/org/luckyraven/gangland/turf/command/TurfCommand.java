@@ -170,10 +170,10 @@ public final class TurfCommand extends Command {
 		TurfCreateCommand create = new TurfCreateCommand(getPlugin(), getArgumentTree(), getArgument(), turfs,
 		                                                 selections, messages, settings, rules, text);
 		TurfDeleteCommand delete = new TurfDeleteCommand(getPlugin(), getArgumentTree(), getArgument(),
-		                                                 turfs, selections, messages,
+		                                                 turfs, selections, messages, text,
 		                                                 garrisons, activeBuffs, powerupNpcs, ownership);
 		TurfSetOwnerCommand setOwner = new TurfSetOwnerCommand(getPlugin(), getArgumentTree(), getArgument(),
-		                                                       turfs, gangs, selections, messages, ownership);
+		                                                       turfs, gangs, selections, messages, text, ownership);
 		TurfListCommand listSub = new TurfListCommand(getPlugin(), getArgumentTree(), getArgument(), turfs, gangs,
 		                                              messages, text);
 		TurfInfoCommand info = new TurfInfoCommand(getPlugin(), getArgumentTree(), getArgument(),
@@ -192,13 +192,13 @@ public final class TurfCommand extends Command {
 		TurfTpCommand tp = new TurfTpCommand(getPlugin(), getArgumentTree(), getArgument(), turfs, selections,
 		                                     messages, text);
 		TurfIncomeCommand income = new TurfIncomeCommand(getPlugin(), getArgumentTree(), getArgument(), turfs,
-		                                                 selections, messages, settings);
+		                                                 selections, messages, text, settings);
 		TurfGarrisonCommand garrison = new TurfGarrisonCommand(getPlugin(), getArgumentTree(), getArgument(),
-		                                                       turfs, selections, messages, garrisons);
+		                                                       turfs, selections, messages, text, garrisons);
 		TurfBuffCommand buff = new TurfBuffCommand(getPlugin(), getArgumentTree(), getArgument(),
-		                                           turfs, selections, messages, powerupRegistry, activeBuffs);
+		                                           turfs, selections, messages, text, powerupRegistry, activeBuffs);
 		TurfPowerupNpcCommand powerupNpc = new TurfPowerupNpcCommand(getPlugin(), getArgumentTree(), getArgument(),
-		                                                             turfs, selections, messages, powerupNpcs);
+		                                                             turfs, selections, messages, text, powerupNpcs);
 
 		List<Argument> arguments = new ArrayList<>();
 		arguments.add(wand);

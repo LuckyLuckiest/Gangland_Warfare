@@ -85,8 +85,10 @@ permissions:
       default: true
    gangland.command.gang.bounty:
       default: true
-   # Gang menus (W1-G): gang_stat / alliance_stat check these before opening. gang_info stays op-only (no default)
-   # so /glw gang reaches GangCommand and the gangless onboarding; members-only open is NEW-W1-G-1.
+   # Gang menus (W1-G): gang_stat / alliance_stat check these before opening. gang_info defaults to true (T-226) so
+   # members open it again from /glw gang; its Open.Condition hands gangless players to the onboarding screen.
+   gangland.inventory.gang_info:
+      default: true
    gangland.inventory.gang_stat:
       default: true
    gangland.inventory.alliance_stat:

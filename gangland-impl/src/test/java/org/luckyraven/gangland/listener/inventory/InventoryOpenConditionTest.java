@@ -19,8 +19,6 @@ import org.luckyraven.keystone.inventory.chest.ChestMenu;
 
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -39,6 +37,7 @@ class InventoryOpenConditionTest {
 	private static final String CONDITION = "%gangland_user_has-gang%";
 
 	private Player                 player;
+	private PlayerCommandPreprocessEvent event;
 	private InventoryBuilder       builder;
 	private ChestMenu              menu;
 	private ConditionEvaluator     conditions;
@@ -49,6 +48,9 @@ class InventoryOpenConditionTest {
 	@BeforeEach
 	void setUp() {
 		player     = mock(Player.class);
+		event      = mock(PlayerCommandPreprocessEvent.class);
+		when(event.getMessage()).thenReturn("/glw gang");
+		when(event.getPlayer()).thenReturn(player);
 		builder    = mock(InventoryBuilder.class);
 		menu       = mock(ChestMenu.class);
 		conditions = mock(ConditionEvaluator.class);
@@ -71,7 +73,6 @@ class InventoryOpenConditionTest {
 	}
 
 	private PlayerCommandPreprocessEvent runCommand() {
-		PlayerCommandPreprocessEvent event = new PlayerCommandPreprocessEvent(player, "/glw gang");
 		listener.onInventoryCommand(event);
 		return event;
 	}
@@ -82,9 +83,9 @@ class InventoryOpenConditionTest {
 		openCommandWith(CONDITION);
 		when(conditions.evaluate(player, CONDITION)).thenReturn(false);
 
-		PlayerCommandPreprocessEvent event = runCommand();
+		runCommand();
 
-		assertFalse(event.isCancelled(), "the command must reach GangCommand");
+		verify(event, never()).setCancelled(true);
 		verify(builder, never()).createMenu(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
 		verify(menu, never()).open(any());
 	}
@@ -95,9 +96,9 @@ class InventoryOpenConditionTest {
 		openCommandWith(CONDITION);
 		when(conditions.evaluate(eq(player), eq(CONDITION))).thenReturn(true);
 
-		PlayerCommandPreprocessEvent event = runCommand();
+		runCommand();
 
-		assertTrue(event.isCancelled());
+		verify(event).setCancelled(true);
 		verify(menu).open(player);
 	}
 
@@ -106,9 +107,9 @@ class InventoryOpenConditionTest {
 	void noCondition_opensMenuAndCancels() {
 		openCommandWith(null);
 
-		PlayerCommandPreprocessEvent event = runCommand();
+		runCommand();
 
-		assertTrue(event.isCancelled());
+		verify(event).setCancelled(true);
 		verify(menu).open(player);
 	}
 }

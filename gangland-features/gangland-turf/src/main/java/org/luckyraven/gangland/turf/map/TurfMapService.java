@@ -84,7 +84,9 @@ public final class TurfMapService {
 			TurfRelation relation  = TurfRelation.of(turf, viewerGang, gangs);
 			TurfRuntimeState state = turfs.getRuntimeState(turf.getId());
 			boolean underAttack = state != null && state.getState() == TurfState.CONTESTING;
-			boolean shielded    = (relation == TurfRelation.RIVAL || relation == TurfRelation.UNCLAIMED)
+			// T-231: a gangless viewer never gets shield styling from "attackable for him" (he cannot capture at all).
+			boolean shielded    = viewerGang != null
+			                      && (relation == TurfRelation.RIVAL || relation == TurfRelation.UNCLAIMED)
 			                      && !eligibility.evaluate(turf, now).attackable();
 			inputs.add(new TerritoryRaster.Input(turf.getId(), turf.getDisplayName(), turf.getRegion(), relation,
 			                                     turf.getOwnerGangId(), underAttack, shielded));
@@ -147,7 +149,7 @@ public final class TurfMapService {
 			String owner = turf.isUnclaimed()
 			               ? text.text("Map.Text_Unclaimed", "Unclaimed")
 			               : GangDisplayNameResolver.resolve(gangs.findById(turf.getOwnerGangId()));
-			String reason = textReason(turf, owner, now);
+			String reason = textReason(turf, owner, viewerGang, now);
 			String legacyLine = text.text("Map.Text_Row",
 			                              "&f%name% &7- &f%owner% &7(%relation%) - %distance%m %direction% - %reason%",
 			                              "name", turf.getDisplayName(),
@@ -163,14 +165,25 @@ public final class TurfMapService {
 		}
 	}
 
-	/** Reason column of a text row: "under attack" while a capture runs (as the HUD and hover), else the eligibility verdict. */
-	String textReason(Turf turf, String owner, long now) {
+	/**
+	 * Reason column of a text row: the gangless sentence for a viewer without a gang (as the HUD), "under attack" while
+	 * a capture runs (as the HUD and hover), else the eligibility verdict.
+	 */
+	String textReason(Turf turf, String owner, @Nullable Integer viewerGang, long now) {
+		if (viewerGang == null) {
+			return gangless();
+		}
 		TurfRuntimeState state = turfs.getRuntimeState(turf.getId());
 		if (TurfHudLine.isContesting(state)) {
 			Gang challenger = state.getChallengerGangId() == null ? null : gangs.findById(state.getChallengerGangId());
 			return TurfHudLine.underAttack(text, state, GangDisplayNameResolver.resolve(challenger));
 		}
 		return text.reason(eligibility.evaluate(turf, now), owner, now);
+	}
+
+	/** The one reason a player without a gang sees, the same key and text the HUD uses (Hud.Gangless). */
+	private String gangless() {
+		return text.text("Hud.Gangless", "&ejoin a gang to capture");
 	}
 
 	/** One line per gang in view with its relation and state, for {@code /glw map legend}. */
@@ -214,7 +227,9 @@ public final class TurfMapService {
 			lines.add(text.text("Map.Hover_Quiet", "&7Quiet"));
 		}
 
-		lines.add(text.reason(eligibility.evaluate(turf, now), ownerName, now));
+		lines.add(viewerGang == null
+		          ? gangless()
+		          : text.reason(eligibility.evaluate(turf, now), ownerName, now));
 
 		boolean ownGang = owner != null && viewerGang != null && viewerGang.equals(turf.getOwnerGangId());
 		if (ownGang) {

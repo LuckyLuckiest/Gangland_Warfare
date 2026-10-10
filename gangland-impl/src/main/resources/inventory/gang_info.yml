@@ -5,6 +5,8 @@ Information:
    Open:
       Command: "/glw gang"
       Permission: "gangland.command.gang"
+      # Only a player with a gang gets this menu from /glw gang; anyone else reaches the onboarding screen (T-226).
+      Condition: "%gangland_user_has-gang%"
    Configuration:
       Fill: true
       Border: false
