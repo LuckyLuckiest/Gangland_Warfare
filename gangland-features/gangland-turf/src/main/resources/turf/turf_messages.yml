@@ -62,6 +62,8 @@ Hud:
    Mode_On: "&7Turf line: &finside turfs and the nearest turf&7."
    Mode_Off: "&7Turf line: &coff&7."
    Mode_Default: "&7Turf line: &finside turfs only&7."
+   # Placeholder answer (%gangland_turf-name%, %gangland_turf-owner%, ...) when there is no turf to name.
+   Placeholder_None: "-"
 # end Hud
 
 # ---------------- Info: /glw turf info card and the capture boss bar ----------------
