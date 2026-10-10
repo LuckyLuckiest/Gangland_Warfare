@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.database.repositories.player;
 
+import lombok.CustomLog;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.database.tables.player.BankTable;
 import org.luckyraven.gangland.database.tables.player.UserTable;
@@ -22,6 +23,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 @Repository(Bank.class)
+@CustomLog
 public class BankRepository extends AbstractRepository<Bank> {
 
 	private final BankTable bankTable;
@@ -49,7 +51,14 @@ public class BankRepository extends AbstractRepository<Bank> {
 
 		for (Object[] result : data) {
 			int        v           = 0;
-			UUID       uuid        = UUID.fromString(String.valueOf(result[v++]));
+			UUID uuid;
+			try {
+				uuid = UUID.fromString(String.valueOf(result[v++]));
+			} catch (IllegalArgumentException exception) {
+				// T-262: a NULL or malformed uuid skips this row instead of failing the whole load
+				log.warn("Skipping a bank row with a bad uuid '{}'", result[0]);
+				continue;
+			}
 			String     name        = String.valueOf(result[v++]);
 			BigDecimal bankBalance = Currency.ofYaml(result[v++]);
 

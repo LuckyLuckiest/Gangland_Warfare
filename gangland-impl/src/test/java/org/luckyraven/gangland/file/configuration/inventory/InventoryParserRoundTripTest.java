@@ -228,7 +228,9 @@ class InventoryParserRoundTripTest {
 	private FileHandler load(String name) throws IOException {
 		Path source = RESOURCES.resolve(name + ".yml");
 		Path copy   = tempDir.resolve(name + ".yml");
-		Files.copy(source, copy);
+		// T-263: Keystone regenerates a file whose Config_Version differs from the plugin version. The shipped
+		// ${project.version} placeholder is filled with the test plugin's version, as Maven resource filtering does.
+		Files.writeString(copy, Files.readString(source).replace("${project.version}", plugin.getDescription().getVersion()));
 		return new FileHandler(plugin, copy.toFile());
 	}
 
@@ -394,7 +396,8 @@ class InventoryParserRoundTripTest {
 	@DisplayName("T-263: a menu carrying Config_Version is registered, not skipped as non-inventory")
 	void registerInventory_withConfigVersion_isRegistered() throws IOException {
 		Path copy = tempDir.resolve("versioned_menu.yml");
-		Files.writeString(copy, "Config_Version: 'x'\n" + Files.readString(RESOURCES.resolve("gang_stat.yml")));
+		String version = plugin.getDescription().getVersion();
+		Files.writeString(copy, "Config_Version: '" + version + "'\n" + Files.readString(RESOURCES.resolve("gang_stat.yml")).replaceFirst("(?s)^.*?(?=Information:)", ""));
 
 		context.registerInventory(new FileHandler(plugin, copy.toFile()));
 

@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.npcshops.database;
 
+import lombok.CustomLog;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -19,6 +20,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 @Repository(TraderData.class)
+@CustomLog
 public class TraderRepository extends AbstractRepository<TraderData> {
 
 	private final TraderTable table;
@@ -37,7 +39,14 @@ public class TraderRepository extends AbstractRepository<TraderData> {
 		for (Object[] row : data) {
 			int v = 0;
 
-			UUID   id          = UUID.fromString(String.valueOf(row[v++]));
+			UUID id;
+			try {
+				id = UUID.fromString(String.valueOf(row[v++]));
+			} catch (IllegalArgumentException exception) {
+				// T-262: a NULL or malformed uuid skips this row instead of failing the whole load
+				log.warn("Skipping a trader row with a bad uuid '{}'", row[0]);
+				continue;
+			}
 			String shopKey     = String.valueOf(row[v++]);
 			String worldName   = String.valueOf(row[v++]);
 			double x           = ((Number) row[v++]).doubleValue();
