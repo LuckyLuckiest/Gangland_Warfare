@@ -16,6 +16,8 @@ import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.GangManager;
+import org.luckyraven.gangland.gang.file.GangMessages;
+import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.gang.rank.RankManager;
@@ -148,7 +150,8 @@ class GangCommandsJsonParityTest {
 		                                      mock(UserManager.class), mock(UserManager.class),
 		                                      mock(GangManager.class), mock(MemberManager.class),
 		                                      mock(RankManager.class), mock(RepositoryRegistry.class),
-		                                      mock(PermissionManager.class), mock(DependencyContainer.class), null);
+		                                      mock(PermissionManager.class), mock(DependencyContainer.class), null,
+		                                      mock(GangRules.class), mock(GangMessages.class));
 		command.initializeArguments();
 		return command;
 	}
