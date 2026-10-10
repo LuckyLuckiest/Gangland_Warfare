@@ -26,12 +26,16 @@ import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.keystone.persistence.repository.IRepository;
 import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.gangland.util.TimeMessages;
+import org.luckyraven.gangland.gang.file.GangMessages;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 import org.luckyraven.keystone.bean.Qualifier;
 
@@ -44,10 +48,13 @@ class GangCreateCommand extends SubArgument {
 	private final GangManager         gangManager;
 	private final RankManager         rankManager;
 	private final RepositoryRegistry  repositoryRegistry;
+	private final Supplier<Pattern>   namePattern;
+	private final GangMessages        gangMessages;
 
 	protected GangCreateCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                            @Qualifier("online") UserManager<Player> userManager, MemberManager memberManager, GangManager gangManager,
-	                            RankManager rankManager, RepositoryRegistry repositoryRegistry) {
+	                            RankManager rankManager, RepositoryRegistry repositoryRegistry, Supplier<Pattern> namePattern,
+	                            GangMessages gangMessages) {
 		super(gangland, "create", tree, parent);
 
 		this.gangland           = gangland;
@@ -57,6 +64,8 @@ class GangCreateCommand extends SubArgument {
 		this.gangManager        = gangManager;
 		this.rankManager        = rankManager;
 		this.repositoryRegistry = repositoryRegistry;
+		this.namePattern        = namePattern;
+		this.gangMessages       = gangMessages;
 
 		gangCreate();
 	}
@@ -99,6 +108,23 @@ class GangCreateCommand extends SubArgument {
 
 			if (user.hasGang()) {
 				user.sendMessage(Messages.PLAYER_IN_GANG.toString());
+				return;
+			}
+
+			// GR-29: the name was free when it was staged, but another player may have taken it inside the confirm
+			// window. Check again before the fee is withdrawn, so two gangs can never share a name.
+			String stagedName = createGangName.get(user).get();
+			Optional<String> refusal = GangNameRules.check(stagedName, namePattern.get(), gangManager.getGangs().values(),
+			                                               null);
+			if (refusal.isPresent()) {
+				user.sendMessage(GangNameRules.refusal(gangMessages, refusal.get(), stagedName));
+				createGangName.remove(user);
+
+				CountdownTimer timer = createGangTimer.get(sender);
+				if (timer != null) {
+					timer.stop();
+					createGangTimer.remove(sender);
+				}
 				return;
 			}
 
@@ -164,11 +190,13 @@ class GangCreateCommand extends SubArgument {
 
 			AtomicReference<String> name = new AtomicReference<>(args[2]);
 
-			if (!GangSettings.isGangNameDuplicates()) for (Gang gang : gangManager.getGangs().values())
-				if (gang.getName().equalsIgnoreCase(name.get())) {
-					user.sendMessage(Messages.DUPLICATE_GANG_NAME.toString().replace("%gang%", name.get()));
-					return;
-				}
+			// GR-29: names are the command key, so a bad or taken name is refused whatever Name_Duplicates says.
+			Optional<String> refusal = GangNameRules.check(name.get(), namePattern.get(), gangManager.getGangs().values(),
+			                                               null);
+			if (refusal.isPresent()) {
+				user.sendMessage(GangNameRules.refusal(gangMessages, refusal.get(), name.get()));
+				return;
+			}
 
 			createGangName.put(user, name);
 

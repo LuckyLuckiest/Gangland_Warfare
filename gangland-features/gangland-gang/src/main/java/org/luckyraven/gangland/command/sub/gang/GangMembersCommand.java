@@ -27,7 +27,7 @@ class GangMembersCommand extends SubArgument {
 
 	protected GangMembersCommand(JavaPlugin gangland, Tree<Argument> tree, Argument parent,
 	                             @Qualifier("online") UserManager<Player> userManager, GangManager gangManager) {
-		super(gangland, new String[]{"members", "list"}, tree, parent);
+		super(gangland, new String[]{"members"}, tree, parent);
 
 		this.userManager = userManager;
 		this.gangManager = gangManager;

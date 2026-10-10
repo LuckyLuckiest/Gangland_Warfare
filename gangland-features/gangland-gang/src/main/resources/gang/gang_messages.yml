@@ -2,3 +2,56 @@
 # | Gang module messages | #
 # +----------------------+ #
 # Gang texts added since 0.17.0. Older gang texts are still in message_en.yml.
+# Every value may use & colour codes and the %name% placeholders listed above it.
+
+# ---------------- Onboarding ----------------
+Onboarding:
+   # The first line a gangless player sees on /glw gang.
+   What: "&6Gangs &7team up to hold turf, share a bank and fight together."
+   # The second line: the create fee. %money_symbol% and %cost% are filled in.
+   Cost: "&7Starting a gang costs &e%money_symbol%%cost%&7. Joining one is free."
+   # Button that runs /glw gang list.
+   Browse: "&a[Browse gangs]"
+   # Button that fills /glw gang create into the chat so the player only types the name.
+   Create: "&a[Create a gang]"
+# end Onboarding
+
+# ---------------- List ----------------
+List:
+   # Shown when no gang exists yet. Used by /glw gang list.
+   Empty: "&7There are no gangs yet."
+   # Header line. %page% is the current page, %pages% the total.
+   Header: "&6Gangs &7- page %page%/%pages%"
+   # One gang per row. %gang% is the display name, %members% the member count, %online% how many are online.
+   Row: "&f%gang% &7- %members% members - %online% online"
+   # Clickable footer when more pages follow. %page% is the next page number.
+   Next: "&7[Next page &e%page%&7]"
+# end List
+
+# ---------------- Info ----------------
+Info:
+   # Card title: %gang% is the display name, %name% the plain gang name.
+   Title: "&6%gang% &7(%name%)"
+   # The gang description.
+   Description: "&7Description: &f%description%"
+   # Member counts: %online% online out of %total% members.
+   Members: "&7Members: &a%online%&7/&e%total%"
+   # The member holding the tail rank.
+   Owner: "&7Owner: &f%owner%"
+   # Allied gangs by display name, comma separated.
+   Allies: "&7Allies: &f%allies%"
+   # Creation date, dd/MM/yyyy.
+   Created: "&7Created: &f%created%"
+   # Shown in place of an owner or an ally list that is empty.
+   None: "none"
+   # Shown when no gang matches the name or id. %gang% is what the player typed.
+   Not_Found: "&cNo gang named %gang%."
+# end Info
+
+# ---------------- Names ----------------
+Names:
+   # A name must match the gang_rules.yml Name_Pattern after colour codes are stripped.
+   Invalid: "&cGang names are 3 to 16 letters, digits or underscores."
+   # Another gang already has this name, ignoring case. Names are always unique.
+   Taken: "&cA gang named %gang% already exists."
+# end Names

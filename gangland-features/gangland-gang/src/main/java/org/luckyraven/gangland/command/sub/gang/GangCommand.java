@@ -1,10 +1,17 @@
 package org.luckyraven.gangland.command.sub.gang;
 
+import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.command.Command;
+import org.luckyraven.gangland.file.configuration.Settings;
+import org.luckyraven.gangland.gang.GangSettings;
+import org.luckyraven.gangland.gang.file.GangMessages;
+import org.luckyraven.gangland.gang.file.GangRules;
 import org.luckyraven.keystone.command.argument.Argument;
 import org.luckyraven.gangland.command.extension.CommandContributions;
 import org.luckyraven.gangland.command.sub.gang.ally.GangAllyCommand;
@@ -15,11 +22,13 @@ import org.luckyraven.keystone.permission.PermissionManager;
 import org.luckyraven.gangland.gang.GangManager;
 import org.luckyraven.gangland.gang.member.MemberManager;
 import org.luckyraven.gangland.gang.rank.RankManager;
+import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
 import org.luckyraven.gangland.gang.permission.GangPermissions;
 import org.luckyraven.keystone.inventory.InventoryService;
 import org.luckyraven.keystone.persistence.repository.RepositoryRegistry;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +49,8 @@ public final class GangCommand extends Command {
 	 */
 	private final CommandContributions       contributions;
 	private final InventoryService           inventoryService;
+	private final GangRules                  gangRules;
+	private final GangMessages               gangMessages;
 
 	private final JavaPlugin gangland;
 
@@ -52,7 +63,9 @@ public final class GangCommand extends Command {
 	                   RepositoryRegistry repositoryRegistry,
 	                   PermissionManager permissionManager,
 	                   DependencyContainer container,
-	                   InventoryService inventoryService
+	                   InventoryService inventoryService,
+	                   GangRules gangRules,
+	                   GangMessages gangMessages
 	) {
 		super(gangland, "gang", true);
 
@@ -66,6 +79,8 @@ public final class GangCommand extends Command {
 		this.repositoryRegistry = repositoryRegistry;
 		this.permissionManager  = permissionManager;
 		this.inventoryService   = inventoryService;
+		this.gangRules          = gangRules;
+		this.gangMessages       = gangMessages;
 		this.contributions      = CommandContributions.from(container);
 
 		var list = getCommands().entrySet()
@@ -80,13 +95,49 @@ public final class GangCommand extends Command {
 	@Override
 	protected void onExecute(Argument argument, CommandSender commandSender, String[] arguments) {
 		// The gang_info.yml menu takes /glw gang before this runs; whoever it didn't open for still gets an answer.
+		if (commandSender instanceof Player player && isGangless(player)) {
+			sendOnboarding(player);
+			return;
+		}
 		help(commandSender, 1);
+	}
+
+	private boolean isGangless(Player player) {
+		User<Player> user = userManager.getUser(player);
+		return user != null && !user.hasGang();
+	}
+
+	/** Three lines for a gangless player: what a gang is, what starting one costs, and two buttons. */
+	private void sendOnboarding(Player player) {
+		BigDecimal fee = GangSettings.getGangCreateFee();
+
+		player.sendMessage(gangMessages.text("Onboarding.What",
+		                                     "&6Gangs &7team up to hold turf, share a bank and fight together."));
+		player.sendMessage(gangMessages.text("Onboarding.Cost",
+		                                     "&7Starting a gang costs &e%money_symbol%%cost%&7. Joining one is free.",
+		                                     "money_symbol", Settings.getMoneySymbol(),
+		                                     "cost", Settings.formatAmount(fee)));
+
+		String browse = gangMessages.text("Onboarding.Browse", "&a[Browse gangs]");
+		String create = gangMessages.text("Onboarding.Create", "&a[Create a gang]");
+		BaseComponent[] buttons = new ComponentBuilder(browse)
+				.event(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/glw gang list"))
+				.append("   ", ComponentBuilder.FormatRetention.NONE)
+				.append(create, ComponentBuilder.FormatRetention.NONE)
+				.event(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/glw gang create "))
+				.create();
+		player.spigot().sendMessage(buttons);
 	}
 
 	@Override
 	protected void initializeArguments() {
 		Argument create = new GangCreateCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
-		                                        memberManager, gangManager, rankManager, repositoryRegistry);
+		                                        memberManager, gangManager, rankManager, repositoryRegistry,
+		                                        gangRules::getNamePattern, gangMessages);
+		Argument list = new GangListCommand(getPlugin(), getArgumentTree(), getArgument(), gangManager, userManager,
+		                                    gangMessages);
+		Argument info = new GangInfoCommand(getPlugin(), getArgumentTree(), getArgument(), gangManager, userManager,
+		                                    gangMessages);
 		Argument delete = new GangDeleteCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                        offlineUserManager, memberManager, gangManager, rankManager,
 		                                        repositoryRegistry);
@@ -110,7 +161,7 @@ public final class GangCommand extends Command {
 		Argument members = new GangMembersCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                          gangManager);
 		Argument name = new GangRenameCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
-		                                      memberManager, gangManager);
+		                                      memberManager, gangManager, gangRules::getNamePattern, gangMessages);
 		Argument description = new GangDescriptionCommand(getPlugin(), getArgumentTree(), getArgument(), userManager,
 		                                                  memberManager, gangManager);
 		Argument ally = new GangAllyCommand(getPlugin(), getArgumentTree(), getArgument(), userManager, memberManager,
@@ -126,6 +177,8 @@ public final class GangCommand extends Command {
 		List<Argument> arguments = new ArrayList<>();
 
 		arguments.add(create);
+		arguments.add(list);
+		arguments.add(info);
 		arguments.add(delete);
 
 		// invite / accept (and anything else a module hangs under /glw gang) come from installed modules

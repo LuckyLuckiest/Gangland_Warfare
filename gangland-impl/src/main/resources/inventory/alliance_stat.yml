@@ -17,4 +17,4 @@ Information:
          - ""
          - "&eClick to view details"
       OnClick:
-         Command: "/glw gang ally info %ally_id%"
+         Command: "/glw gang info %ally_id%"
