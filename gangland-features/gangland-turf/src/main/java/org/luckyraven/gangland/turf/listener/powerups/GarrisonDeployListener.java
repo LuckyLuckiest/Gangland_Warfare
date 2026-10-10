@@ -83,10 +83,19 @@ public final class GarrisonDeployListener implements Listener {
 		powerupNpcs.disengage(event.getTurf().getId());
 	}
 
+	/**
+	 * A failed contest recalls the guards. On a turf the owner still holds, the guards that survived go back to the
+	 * garrison stock, so they deploy again on the next contest instead of being lost with the stock already at 0.
+	 */
 	@EventHandler
 	public void onFailed(TurfCaptureFailedEvent event) {
-		defenders.recall(event.getTurf().getId());
-		powerupNpcs.disengage(event.getTurf().getId());
+		Turf turf = event.getTurf();
+		int  alive = defenders.aliveCount(turf.getId());
+		defenders.recall(turf.getId());
+		if (!turf.isUnclaimed()) {
+			garrisons.add(turf.getId(), alive);
+		}
+		powerupNpcs.disengage(turf.getId());
 	}
 
 	/**

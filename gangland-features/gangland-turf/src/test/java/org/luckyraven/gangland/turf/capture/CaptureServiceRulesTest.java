@@ -408,4 +408,40 @@ class CaptureServiceRulesTest {
 		assertEquals(0, h.state().getGuardsCounted());
 		assertEquals(T0, h.state().getContestStartedAt());
 	}
+
+	@Test
+	@DisplayName("guards held at 0%: an owned contest with 3 guards and 1 attacker stays CONTESTING across ticks")
+	void guardHeldBar_doesNotEndDefendedAtZero() {
+		W2R2Harness h = new W2R2Harness(20, W2R2Harness.rules(0, 0, 0, 4));
+		h.gang(1);
+		h.gang(2);
+		h.ownedBy(1);
+		h.guards.put(1, 3);
+		h.join(2);
+
+		h.tick(T0);
+		h.tick(T0 + 1_000L);
+
+		assertEquals(TurfState.CONTESTING, h.state().getState());
+		assertEquals(0.0, h.state().getCaptureProgress(), 1e-9);
+		assertEquals(3, h.state().getGuardsCounted());
+		assertTrue(h.failedReasons().isEmpty(), "no DEFENDED while the bar never moved");
+	}
+
+	@Test
+	@DisplayName("DEFENDED still fires once the bar is pushed back down to 0 from above")
+	void guardsPushBarToZero_defended() {
+		W2R2Harness h = new W2R2Harness(20, W2R2Harness.rules(0, 0, 0, 4));
+		h.gang(1);
+		h.gang(2);
+		h.ownedBy(1);
+		h.guards.put(1, 3);
+		h.join(2);
+		contest(h, 2, 3.0, T0);
+
+		h.tick(T0 + 1_000L);
+
+		assertEquals(TurfState.IDLE, h.state().getState());
+		assertEquals(TurfCaptureFailedEvent.Reason.DEFENDED, onlyFailure(h));
+	}
 }

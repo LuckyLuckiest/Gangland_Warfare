@@ -360,7 +360,9 @@ public final class CaptureService {
 			complete(turf, state, playersInside, now);
 			return;
 		}
-		if (after <= 0.0 && defenders > attackers) {
+		// Only a bar pushed down to 0 is DEFENDED. A guard-held bar that never moved (before == 0) stays CONTESTING,
+		// so guards that are deployed at start cannot end their own contest on the first tick.
+		if (after <= 0.0 && before > 0.0 && defenders > attackers) {
 			cancel(turf, state, playersInside, TurfCaptureFailedEvent.Reason.DEFENDED);
 		}
 	}

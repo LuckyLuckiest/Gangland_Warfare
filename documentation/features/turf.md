@@ -64,6 +64,8 @@ what applies to it.
 | `Income.Max_Multiplier` | `turf_rules.yml` | `2.0` | Income boosts stack, but a turf never pays more than this many times its income. |
 | `Income.Gang_XP_Per_Payout` | `turf_rules.yml` | `1` | Gang XP per paying turf per payout. |
 | `Garrison.Max_Reserve` | `turf_rules.yml` | `12` | Most guards a turf can hold in reserve. |
+| `Garrison.Cost_Per_Guard` | `turf_powerups.yml` | `1000` | Price of one guard at the Quartermaster, from the gang bank. A `garrison_discount` boost multiplies it. |
+| `Powerup_Npc.Display_Name` | `turf_npcs.yml` | `Quartermaster` | Name of the per-turf Quartermaster NPC (the panel titles use it). |
 | `Capture.Duration_Seconds` | `turf_settings.yml` | `180` | Seconds for one attacker with nobody against them to fill the bar from 0 to 100. Owned and unclaimed turfs alike. |
 | `Capture.Cooldown_Minutes` | `turf_settings.yml` | `15` | After a capture completes, the turf cannot be contested again for this long. |
 | `Capture.Abandon_Grace_Seconds` | `turf_settings.yml` | `15` | Grace after the challenger leaves the turf before the capture is cancelled as abandoned. |
@@ -92,6 +94,9 @@ capture fills one bar at `Capture.Duration_Seconds`. They stay so older files lo
   gang over its cap keeps its turfs, but only the oldest turfs up to its cap pay.
 - **Income.** A turf pays money and gang XP only while one of its owners was online in the last 24 hours. Boosts stack
   but stop at x2. A turf over its gang's cap pays nothing.
+- **Payout line.** At each payout, online members get an action-bar line: `Turf income +<amount> (<n> turfs) - bank <bank>`
+  (`Income.Action_Bar` in `turf_messages.yml`).
+- **Cap line.** `/glw turf` opens with `Turfs <owned>/<cap> - <paying> paying` for your gang (`Income.Cap_Line`).
 - **Reasons.** Every surface shows one reason sentence (table below). The sentences are the same on the map, the action
   bar, the info card and the enter message.
 
@@ -106,6 +111,18 @@ capture fills one bar at `Capture.Duration_Seconds`. They stay so older files lo
 
 Gang level comes from the gang's turf income (see `gang_rules.yml`, `Progression`), so a gang grows its cap by holding
 turf.
+
+### Quartermaster
+
+Each turf has a Quartermaster NPC that sells boosts and guards. Prices come from `turf_powerups.yml`; the shipped boosts
+are `small_income_boost` (300), `large_income_boost` (1000) and `garrison_discount` (2500, 20% off guards).
+
+- **Who buys.** The owning gang, and only a member who holds `gangland.turf.upgrade` (the top rank always may). Allies
+  can open the panel and look, but cannot buy.
+- **Every click re-checks** membership, rank and ownership. A turf that changed hands closes the panel.
+- **Guards.** One guard costs `Garrison.Cost_Per_Guard` (1000) from the gang bank, multiplied by any active
+  `garrison_discount`. A turf holds at most `Garrison.Max_Reserve` (12) guards in reserve.
+- **Boost catalogue** pages nine boosts at a time.
 
 ---
 
@@ -337,7 +354,7 @@ Player commands are open to everyone from 0.17.0. Admin verbs are marked **admin
 
 | Command | Usage | Who |
 |---|---|---|
-| `/glw turf` | Shows the turf you stand in, or your gang's turfs. `[map]` link on the root. | Everyone |
+| `/glw turf` | Shows the turf you stand in, or your gang's turfs, under the cap line (`Turfs owned/cap - n paying`). `[map]` link on the root. | Everyone |
 | `/glw turf info [id\|name]` | Turf card: owner, size, income, state, the reason, and whether you can attack it. | Everyone |
 | `/glw turf list [page]` | Turfs nearest first with distance and direction, 8 per page. | Everyone |
 | `/glw turf rules` | The five sentences of how turf wars work, with this server's numbers. | Everyone |
@@ -374,8 +391,9 @@ Wand, status and turf-card texts come from `turf/turf_messages.yml`.
 | `gangland.command.turf`, `.turf.info`, `.turf.list`, `.turf.rules` | `true` | The turf root, info, list and rules. |
 | `gangland.turf.admin` | `op` | Every turf admin verb (the `gangland.command.turf.<verb>` nodes for wand, pos1, pos2, create, delete, setowner, show, status, select, tp, income, garrison, buff, powerupnpc and rename are its children). |
 
-Turf admin rights come only from `gangland.turf.admin`. Its verbs are checked in code as well, so a player without the node
-gets `Only turf admins can do that.` even if a permission plugin grants the command node.
+Turf admin rights come only from `gangland.turf.admin`. Its verbs are checked in code as well. A player without the command
+node gets the server's no-permission text. `Only turf admins can do that` is for players who hold an admin command node but
+not `gangland.turf.admin`.
 
 ---
 
