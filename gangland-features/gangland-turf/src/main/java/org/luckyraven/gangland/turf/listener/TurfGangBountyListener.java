@@ -8,6 +8,7 @@ import org.luckyraven.gangland.core.bounty.Bounty;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
+import org.luckyraven.gangland.gang.GangSettings;
 import org.luckyraven.gangland.gang.file.GangMessages;
 import org.luckyraven.gangland.turf.events.TurfCapturedEvent;
 import org.luckyraven.keystone.bean.listener.ListenerHandler;
@@ -16,8 +17,9 @@ import java.math.BigDecimal;
 
 /**
  * D8 = B claim: when a gang takes a turf from a gang with a bounty on it, the whole bounty moves into the capturing
- * gang's bank and the bounty resets. Money is moved, never minted. An unclaimed turf, an ally, the same gang, or a
- * previous owner with no bounty moves nothing.
+ * gang's bank and the bounty resets. Money is moved, never minted. The whole pot moves only when it fits under the
+ * capturing gang's {@code Maximum_Balance} (T-259); otherwise nothing moves and the bounty stays on the bountied gang.
+ * An unclaimed turf, an ally, the same gang, or a previous owner with no bounty moves nothing.
  */
 @ListenerHandler
 public final class TurfGangBountyListener implements Listener {
@@ -47,13 +49,24 @@ public final class TurfGangBountyListener implements Listener {
 			return;
 		}
 
-		BigDecimal pot = bounty.getAmount();
+		BigDecimal pot    = bounty.getAmount();
+		String     turf   = event.getTurf().getDisplayName();
+		String     amount = Settings.formatAmount(pot);
+		String     symbol = Settings.getMoneySymbol();
+
+		// T-259: the pot moves only if it fits under the gang bank cap; otherwise it stays on the bountied gang
+		if (capturer.getEconomy().getAmount().add(pot).compareTo(GangSettings.getGangMaxBalance()) > 0) {
+			for (var member : capturer.getOnlineMembers(users::findByPlayer)) {
+				member.getUser().sendMessage(messages.text("Bounty.Bank_Full",
+				                                           "&eYour gang bank cannot hold the %money_symbol%%amount% bounty on %gang%; it stays on them.",
+				                                           "money_symbol", symbol, "amount", amount,
+				                                           "gang", bountied.getDisplayNameString()));
+			}
+			return;
+		}
+
 		capturer.getEconomy().depositAmount(pot);
 		bounty.resetBounty();
-
-		String turf   = event.getTurf().getDisplayName();
-		String amount = Settings.formatAmount(pot);
-		String symbol = Settings.getMoneySymbol();
 
 		for (var member : bountied.getOnlineMembers(users::findByPlayer)) {
 			member.getUser().sendMessage(messages.text("Bounty.Lost",

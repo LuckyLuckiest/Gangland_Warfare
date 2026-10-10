@@ -30,7 +30,7 @@ class GangMessagesBountyYamlTest {
 		YamlConfiguration yaml = shipped();
 
 		for (String key : new String[]{"Bounty.Posted", "Bounty.Own_Gang", "Bounty.Ally", "Bounty.Unknown",
-		                               "Bounty.Claimed", "Bounty.Lost"}) {
+		                               "Bounty.Claimed", "Bounty.Lost", "Bounty.Bank_Full"}) {
 			assertNotNull(yaml.getString(key), key + " is missing from gang_messages.yml");
 		}
 	}

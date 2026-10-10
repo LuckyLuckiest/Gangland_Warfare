@@ -129,7 +129,7 @@ class GangChatListenerTest {
 	}
 
 	@Test
-	@DisplayName("a toggled player who has left the gang gets Chat_Off on the main thread and the toggle is cleared")
+	@DisplayName("a toggled player who has left the gang gets Chat_Off, the toggle is cleared and the line is re-sent as public chat")
 	void toggledButGangless_forgetsAndTellsChatOff() {
 		channel.toggle(rex.getUniqueId());
 		User<Player> left = user(false, -1);
@@ -143,7 +143,22 @@ class GangChatListenerTest {
 
 		assertFalse(channel.isOn(rex.getUniqueId()));
 		verify(rex).sendMessage(messages.text("Social.Chat_Off", "&7Gang chat off."));
+		verify(rex).chat("hi"); // T-264: the line is re-sent as public chat, not lost
 		verify(mate, never()).sendMessage(anyString());
+	}
+
+	@Test
+	@DisplayName("a toggled player with no cached user (quit raced the deliver task) gets nothing re-sent as public chat")
+	void toggledButUncached_neverRepostsAsPublicChat() {
+		channel.toggle(rex.getUniqueId());
+		when(userManager.getUser(rex)).thenReturn(null);
+		AsyncPlayerChatEvent event = chat(rex, "hi");
+
+		listener.onChat(event);
+		capturedTask().run();
+
+		assertFalse(channel.isOn(rex.getUniqueId()));
+		verify(rex, never()).chat(anyString());
 	}
 
 	@Test

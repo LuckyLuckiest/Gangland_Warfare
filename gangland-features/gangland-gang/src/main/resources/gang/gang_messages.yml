@@ -90,6 +90,9 @@ Bounty:
    Claimed: "&aYour gang took %turf% from %gang% and collected their %money_symbol%%amount% bounty."
    # To the bountied gang's online members. %gang% = capturing gang, %money_symbol%, %amount%, %turf%.
    Lost: "&c%gang% took %turf% and collected the %money_symbol%%amount% bounty on your gang."
+   # To the capturing gang's online members when the bounty does not fit under gang_settings.yml Maximum_Balance; the
+   # bounty stays on the other gang. %money_symbol%, %amount%, %gang% = bountied gang.
+   Bank_Full: "&eYour gang bank cannot hold the %money_symbol%%amount% bounty on %gang%; it stays on them."
 # end Bounty
 
 # ---------------- Progression: gang levels and the disband payout (W2-P1) ----------------

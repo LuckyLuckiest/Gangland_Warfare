@@ -77,6 +77,7 @@ final class GangBountyCommand extends SubArgument {
 
 	private void post(CommandSender sender, String[] args) {
 		if (!(sender instanceof Player player)) {
+			sender.sendMessage(Messages.NOT_PLAYER.toString());
 			return;
 		}
 
@@ -87,15 +88,17 @@ final class GangBountyCommand extends SubArgument {
 
 		Gang target = find(args[2]);
 		if (target == null) {
-			player.sendMessage(messages.text("Bounty.Unknown", "&cNo gang named %gang%.", "gang", args[2]));
+			player.sendMessage(messages.text("Bounty.Unknown", "&cNo gang named %gang%.", "gang",
+			                                 GangNameRules.plain(args[2])));
 			return;
 		}
 
-		Gang own = ownGang(player);
-		if (own != null && own.getId() == target.getId()) {
+		// T-256: the id, not a cache lookup that can miss
+		if (user.hasGang() && user.getGangId() == target.getId()) {
 			player.sendMessage(messages.text("Bounty.Own_Gang", "&cYou cannot put a bounty on your own gang."));
 			return;
 		}
+		Gang own = ownGang(player);
 		if (own != null && own.isAlly(target)) {
 			player.sendMessage(messages.text("Bounty.Ally", "&cYou cannot put a bounty on an allied gang."));
 			return;

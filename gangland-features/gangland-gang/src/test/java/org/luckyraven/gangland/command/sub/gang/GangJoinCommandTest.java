@@ -3,7 +3,9 @@ package org.luckyraven.gangland.command.sub.gang;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.junit.jupiter.api.AfterEach;
@@ -16,6 +18,7 @@ import org.luckyraven.gangland.command.Command;
 import org.luckyraven.gangland.command.data.InformationManager;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.events.gang.GangJoinEvent;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.file.configuration.Settings;
 import org.luckyraven.gangland.gang.Gang;
@@ -41,6 +44,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.longThat;
 import static org.mockito.Mockito.*;
@@ -54,6 +58,7 @@ class GangJoinCommandTest {
 
 	private MockedStatic<Bukkit>   bukkit;
 	private MockedStatic<Settings> settings;
+	private PluginManager          pluginManager;
 	private GangMessages           messages;
 	private GangManager            gangManager;
 	private UserManager<Player>    userManager;
@@ -84,7 +89,7 @@ class GangJoinCommandTest {
 		settings.when(Settings::getMoneySymbol).thenReturn("$");
 		settings.when(Settings::getLanguagePicked).thenReturn("en");
 
-		PluginManager pluginManager = mock(PluginManager.class);
+		pluginManager = mock(PluginManager.class);
 		Server        server        = mock(Server.class);
 		when(server.getPluginManager()).thenReturn(pluginManager);
 		bukkit = mockStatic(Bukkit.class);
@@ -137,6 +142,38 @@ class GangJoinCommandTest {
 		verify(member).setGangJoinDateLong(longThat(at -> at >= before && at <= System.currentTimeMillis()));
 		verify(mate).sendMessage(Messages.GANG_PLAYER_JOINED.toString().replace("%player%", player.getName()));
 		verify(player).sendMessage(messages.text("Social.Joined", "&aYou joined %gang%.", "gang", "Vipers"));
+	}
+
+	@Test
+	@DisplayName("joining an open gang fires GangJoinEvent so the mail module drops the other invites (T-265)")
+	void openGang_firesGangJoinEvent() throws Exception {
+		Gang vipers = gang("Vipers", Gang.State.OPEN);
+		gangs.add(vipers);
+
+		nameArgument().executeArgument(player, new String[]{"gang", "join", "Vipers"});
+
+		verify(pluginManager).callEvent(argThat((Event event) -> event instanceof GangJoinEvent joined
+		                                                         && joined.getGang() == vipers
+		                                                         && joined.getPlayer() == player));
+	}
+
+	@Test
+	@DisplayName("a typed colour code in an unknown name is not rendered in the refusal (T-257)")
+	void unknownName_typedColourCodesNotRendered() throws Exception {
+		nameArgument().executeArgument(player, new String[]{"gang", "join", "&kGhost"});
+
+		verify(player).sendMessage(messages.text("Social.Unknown", "&cNo gang named %gang%.", "gang", "Ghost"));
+	}
+
+	@Test
+	@DisplayName("a console sender gets the not-a-player reply, not the no-permission one (T-280)")
+	void console_getsNotPlayer() throws Exception {
+		ConsoleCommandSender console = mock(ConsoleCommandSender.class);
+
+		nameArgument().executeArgument(console, new String[]{"gang", "join", "Vipers"});
+
+		verify(console).sendMessage(Messages.NOT_PLAYER.toString());
+		verify(console, never()).sendMessage(Messages.COMMAND_NO_PERM.toString());
 	}
 
 	@Test

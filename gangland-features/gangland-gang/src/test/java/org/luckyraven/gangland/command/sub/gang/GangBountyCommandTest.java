@@ -2,6 +2,7 @@ package org.luckyraven.gangland.command.sub.gang;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginManager;
@@ -165,6 +166,17 @@ class GangBountyCommandTest {
 	}
 
 	@Test
+	@DisplayName("a member is refused for his own gang even when the gang lookup by id misses (T-256)")
+	void staleOwnGangLookup_stillRefused() {
+		asMember(5);
+		when(gangManager.getGang(5)).thenReturn(null);
+
+		post("Rats", "300");
+
+		assertRefused("Bounty.Own_Gang", "&cYou cannot put a bounty on your own gang.", BALANCE, rats);
+	}
+
+	@Test
 	@DisplayName("a member cannot put a bounty on an allied gang")
 	void ally_refused() {
 		asMember(5);
@@ -181,6 +193,26 @@ class GangBountyCommandTest {
 
 		verify(player).sendMessage(messages.text("Bounty.Unknown", "&cNo gang named %gang%.", "gang", "Nobody"));
 		assertEquals(0, BALANCE.compareTo(economy.getAmount()));
+	}
+
+	@Test
+	@DisplayName("a typed colour code in an unknown gang name is not rendered in the refusal (T-257)")
+	void unknownGang_typedColourCodesNotRendered() {
+		post("&kGhost", "300");
+
+		verify(player).sendMessage(messages.text("Bounty.Unknown", "&cNo gang named %gang%.", "gang", "Ghost"));
+		assertEquals(0, BALANCE.compareTo(economy.getAmount()));
+	}
+
+	@Test
+	@DisplayName("a console sender gets the not-a-player reply (T-258)")
+	void console_getsNotPlayer() {
+		ConsoleCommandSender console = mock(ConsoleCommandSender.class);
+
+		amountArgument().executeArgument(console, new String[]{"gang", "bounty", "Vipers", "300"});
+
+		verify(console).sendMessage(Messages.NOT_PLAYER.toString());
+		assertEquals(0, BigDecimal.ZERO.compareTo(vipers.getBounty().getAmount()));
 	}
 
 	@Test

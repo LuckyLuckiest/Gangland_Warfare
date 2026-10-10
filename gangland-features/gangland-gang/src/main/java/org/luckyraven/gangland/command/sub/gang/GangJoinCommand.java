@@ -1,11 +1,13 @@
 package org.luckyraven.gangland.command.sub.gang;
 
 import lombok.CustomLog;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.core.user.User;
 import org.luckyraven.gangland.core.user.UserManager;
+import org.luckyraven.gangland.events.gang.GangJoinEvent;
 import org.luckyraven.gangland.file.configuration.Messages;
 import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.GangManager;
@@ -28,7 +30,7 @@ import java.util.Objects;
 
 /**
  * {@code /glw gang join <gang>}: a gangless player joins an OPEN gang at its head (lowest) rank, the same way an
- * accepted invite does. Pending invites are mail data and are not touched here.
+ * accepted invite does. Joining fires GangJoinEvent; the mail module cancels the player's other pending invites.
  */
 @CustomLog
 final class GangJoinCommand extends SubArgument {
@@ -72,7 +74,7 @@ final class GangJoinCommand extends SubArgument {
 
 	private void join(CommandSender sender, String key) {
 		if (!(sender instanceof Player player)) {
-			sender.sendMessage(Messages.COMMAND_NO_PERM.toString());
+			sender.sendMessage(Messages.NOT_PLAYER.toString());
 			return;
 		}
 
@@ -87,7 +89,8 @@ final class GangJoinCommand extends SubArgument {
 
 		Gang gang = find(key);
 		if (gang == null) {
-			sender.sendMessage(messages.text("Social.Unknown", "&cNo gang named %gang%.", "gang", key));
+			sender.sendMessage(messages.text("Social.Unknown", "&cNo gang named %gang%.", "gang",
+			                                 GangNameRules.plain(key)));
 			return;
 		}
 		if (gang.getState() != Gang.State.OPEN) {
@@ -118,6 +121,8 @@ final class GangJoinCommand extends SubArgument {
 		gang.addMember(user, member, rank);
 		sender.sendMessage(messages.text("Social.Joined", "&aYou joined %gang%.",
 		                                 "gang", gang.getDisplayNameString()));
+		// T-265: mail drops his other invites
+		Bukkit.getPluginManager().callEvent(new GangJoinEvent(gang, player));
 	}
 
 	/** A gang whose plain name matches {@code key} ignoring case; names only, never ids. */
