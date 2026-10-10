@@ -91,6 +91,14 @@ placeholders).
 
 ---
 
+## Turf Rules
+
+- [ ] `/glw turf rules` prints a header and five sentences; the numbers match `turf/turf_rules.yml` and `turf/turf_settings.yml`.
+- [ ] Edit one value (for example `Capture.Presence_Seconds` in `turf/turf_rules.yml`), run `/glw reload`, run `/glw turf rules` again: the new number shows at once.
+- [ ] With `Capture.Window: OWNERS_OFFLINE`, the rules show the offline sentence and no wake-up sentence.
+- [ ] With `Capture.Presence_Seconds: 0` and `Capture.Guard_Weight_Cap: 0`, the start and bar sentences drop their presence and guard clauses.
+- [ ] Any player without a gang can run `/glw turf rules`.
+
 ## HUD
 
 - [ ] Stand inside `Harbor` as a Vipers member: the action bar shows the turf line (`Harbor - Rats turf - ...`) and it
