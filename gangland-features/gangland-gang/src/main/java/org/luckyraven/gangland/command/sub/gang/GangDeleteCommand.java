@@ -34,6 +34,7 @@ import org.luckyraven.gangland.util.GanglandChatUtil;
 import org.luckyraven.gangland.util.TimeMessages;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -272,7 +273,10 @@ class GangDeleteCommand extends SubArgument {
 			                            .divide(BigDecimal.valueOf(4), Currency.SCALE, Currency.ROUNDING_MODE);
 
 			user.getEconomy().depositAmount(amount);
-			user.sendMessage(depositMoney.replace("%amount%", Settings.formatAmount(amount)));
+			user.sendMessage(messages.text("Progression.Fee_Refund",
+			                               "&7Refunded a quarter of the creation fee: &a%money_symbol%%amount%",
+			                               "money_symbol", Settings.getMoneySymbol(),
+			                               "amount", Settings.formatAmount(amount)));
 
 			IRepository<Gang>         gangRepository         = repositoryRegistry.getRepository(Gang.class);
 			IRepository<GangAlliance> gangAllianceRepository = repositoryRegistry.getRepository(GangAlliance.class);
@@ -303,17 +307,21 @@ class GangDeleteCommand extends SubArgument {
 	}
 
 	/**
-	 * Splits the whole vault pro rata on each member's contribution, a negative contribution counting as zero. The
-	 * disbanding owner also takes whatever a zero total or rounding leaves, so the shares sum to exactly {@code pool}.
+	 * Splits the whole vault pro rata on each member's contribution, a negative contribution counting as zero. When
+	 * the total contribution is zero (D15) every member gets an equal share of the pool, rounded down to the currency
+	 * scale. The disbanding owner also takes whatever rounding leaves, so the shares sum to exactly {@code pool}.
 	 */
 	static Map<UUID, BigDecimal> payouts(BigDecimal pool, List<Member> members, UUID owner) {
 		double                total  = members.stream().mapToDouble(m -> Math.max(0, m.getContribution())).sum();
+		BigDecimal            equal  = members.isEmpty() ? Currency.ZERO :
+		                               pool.divide(BigDecimal.valueOf(members.size()), Currency.SCALE, RoundingMode.DOWN);
 		Map<UUID, BigDecimal> shares = new HashMap<>();
 		BigDecimal            left   = pool;
 
 		for (Member member : members) {
-			BigDecimal share = total > 0 ? Currency.multiply(pool, Math.max(0, member.getContribution()) / total)
-			                                       .min(left) : Currency.ZERO;
+			BigDecimal share = total > 0 ?
+			                   Currency.multiply(pool, Math.max(0, member.getContribution()) / total).min(left) :
+			                   equal;
 			shares.put(member.getUuid(), share);
 			left = left.subtract(share);
 		}

@@ -44,7 +44,7 @@ class TurfGangBountyListenerTest {
 	void setUp() {
 		users    = mock(UserLookupContract.class);
 		messages = mock(GangMessages.class);
-		when(messages.text(anyString(), anyString(), any())).thenAnswer(invocation -> invocation.getArgument(0));
+		when(messages.text(anyString(), anyString(), any(Object[].class))).thenAnswer(invocation -> invocation.getArgument(0));
 		listener = new TurfGangBountyListener(users, messages);
 
 		turf = mock(Turf.class);
@@ -58,8 +58,10 @@ class TurfGangBountyListenerTest {
 		Player   loser    = player();
 		Gang     rats     = gang(5, "Rats", new Bounty(BigDecimal.ZERO, 0));
 		Player   winner   = player();
-		when(vipers.getOnlineMembers(any())).thenReturn(List.of(member(loser)));
-		when(rats.getOnlineMembers(any())).thenReturn(List.of(member(winner)));
+		User<Player> loserUser  = member(loser);
+		User<Player> winnerUser = member(winner);
+		when(vipers.getOnlineMembers(any())).thenReturn(List.of(loserUser));
+		when(rats.getOnlineMembers(any())).thenReturn(List.of(winnerUser));
 
 		try (MockedStatic<Settings> settings = settings()) {
 			listener.onCaptured(new TurfCapturedEvent(turf, vipers, rats));
@@ -122,7 +124,7 @@ class TurfGangBountyListenerTest {
 		}
 
 		assertEquals(0, BigDecimal.ZERO.compareTo(rats.getEconomy().getAmount()));
-		verify(messages, never()).text(anyString(), anyString(), any());
+		verify(messages, never()).text(anyString(), anyString(), any(Object[].class));
 	}
 
 	/** A bounty booked the way the post command books it, so {@link Bounty#hasBounty()} is true. */

@@ -104,9 +104,15 @@ class GangDeleteCommandTest {
 				if (path.equals(Messages.GANG_REMOVE_CONFIRM.getPath())) return "%timer%";
 				if (path.equals(Messages.MINUTE.getPath())) return "m";
 				if (path.equals(Messages.SECOND.getPath())) return "s";
-				if (path.equals(Messages.KICKED_FROM_GANG.getPath())) return "KICKED";
-				if (path.equals(Messages.GANG_REMOVED.getPath())) return "REMOVED %gang%";
-				if (path.equals(Messages.DEPOSIT_MONEY_PLAYER.getPath())) return "DEPOSITED %amount%";
+				if (path.equals(Messages.KICKED_FROM_GANG.getPath())) {
+					return "KICKED";
+				}
+				if (path.equals(Messages.GANG_REMOVED.getPath())) {
+					return "REMOVED %gang%";
+				}
+				if (path.equals(Messages.DEPOSIT_MONEY_PLAYER.getPath())) {
+					return "DEPOSITED %amount%";
+				}
 				return "";
 			}
 
@@ -301,14 +307,15 @@ class GangDeleteCommandTest {
 		command = commandWith(GangTestMessages.shipped(tempDir));
 		User<Player> alice = owner(1.0);
 		gang.getEconomy().setAmount(new BigDecimal("1000"));
-		List<String> lines = new ArrayList<>();
-		doAnswer(i -> lines.addAll(Arrays.stream(i.getArguments()).map(String::valueOf).toList()))
-				.when(alice).sendMessage(org.mockito.ArgumentMatchers.<String[]>any());
-		doAnswer(i -> lines.add(i.<String>getArgument(0))).when(alice).sendMessage(anyString());
-
 		disband(alice);
 
-		List<String> plain = lines.stream().map(ChatColor::stripColor).toList();
+		// every sendMessage the owner received, varargs expanded, in order
+		List<String> plain = mockingDetails(alice).getInvocations().stream()
+				.filter(invocation -> invocation.getMethod().getName().equals("sendMessage"))
+				.flatMap(invocation -> Arrays.stream(invocation.getArguments()))
+				.filter(String.class::isInstance)
+				.map(line -> ChatColor.stripColor((String) line))
+				.toList();
 		assertEquals(1, plain.stream().filter(line -> line.equals("KICKED")).count(), plain.toString());
 		assertEquals(1, plain.stream().filter(line -> line.startsWith("DEPOSITED")).count(), plain.toString());
 		assertEquals(1, plain.stream().filter(line -> line.startsWith("Refunded a quarter")).count(), plain.toString());

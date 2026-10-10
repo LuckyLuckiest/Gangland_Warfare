@@ -1,7 +1,10 @@
 package org.luckyraven.gangland.gang;
 
 import lombok.CustomLog;
+import org.bukkit.Bukkit;
 import org.jetbrains.annotations.Nullable;
+import org.luckyraven.gangland.core.user.Level;
+import org.luckyraven.gangland.events.gang.GangLevelUpEvent;
 import org.luckyraven.keystone.bean.BeanLifecycle;
 import org.luckyraven.gangland.gang.contract.GangAllianceRepositoryContract;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
@@ -68,10 +71,25 @@ public class GangManager implements BeanLifecycle, GangLookupContract {
 		}
 	}
 
-	/** W2-P1: adds XP and levels the gang up, firing one GangLevelUpEvent per level gained. Stub: does nothing yet. */
+	/**
+	 * Adds XP to the gang and levels it up, firing one {@link GangLevelUpEvent} per level gained, after the level went
+	 * up (so a listener reads the new level). A non-finite or non-positive amount does nothing; a gang at its maximum
+	 * keeps its XP and fires nothing. Cancelling the event has no effect. No save call: autosave writes the gang row.
+	 */
 	@Override
 	public void addExperience(Gang gang, double amount) {
-		// W2-P1
+		if (gang == null || !Double.isFinite(amount) || amount <= 0) {
+			return;
+		}
+
+		Level level  = gang.getLevel();
+		int   before = level.getLevelValue();
+
+		level.addExperience(amount, true, null);   // null event: the level goes up without calling Bukkit
+
+		for (int gained = before + 1; gained <= level.getLevelValue(); gained++) {
+			Bukkit.getPluginManager().callEvent(new GangLevelUpEvent(false, gang, level));
+		}
 	}
 
 	public void add(Gang gang) {

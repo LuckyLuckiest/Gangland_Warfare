@@ -107,7 +107,7 @@ class GangManagerExperienceTest {
 		manager.addExperience(gang, 500);
 
 		assertEquals(1, gang.getLevel().getLevelValue());
-		assertEquals(700D, gang.getLevel().getExperience(), 1e-9);
+		assertEquals(500D, gang.getLevel().getExperience(), 1e-9);   // the 200 spent on level 1 is gone, the rest is kept
 		verify(pluginManager, never()).callEvent(any(Event.class));
 	}
 
