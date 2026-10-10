@@ -16,6 +16,8 @@ import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.turf.capture.CaptureSettings;
+import org.luckyraven.gangland.turf.config.TurfMessages;
 import org.luckyraven.gangland.turf.contract.TurfMessageContract;
 import org.luckyraven.gangland.turf.contract.TurfSoundContract;
 import org.luckyraven.gangland.turf.data.Turf;
@@ -61,22 +63,30 @@ public final class TurfBossBarListener implements Listener {
 	private final UserLookupContract  users;
 	private final TurfMessageContract messages;
 	private final TurfSoundContract   sounds;
+	private final CaptureSettings     settings;
+	private final TurfMessages        text;
 
 	private final Map<Integer, Map<UUID, BarPair>> barsByTurf              = new HashMap<>();
 	private final Map<Integer, Double>             lastClaimProgress       = new HashMap<>();
 	private final Map<Integer, Double>             lastConsolidateProgress = new HashMap<>();
+	/** Last title pushed to the consolidate bars of each turf; setTitle runs only when the title changes. */
+	private final Map<Integer, String>             lastTitles              = new HashMap<>();
 
 	public TurfBossBarListener(JavaPlugin plugin,
 	                           TurfManager turfs,
 	                           GangLookupContract gangs,
 	                           UserLookupContract users,
 	                           TurfMessageContract messages,
-	                           TurfSoundContract sounds) {
+	                           TurfSoundContract sounds,
+	                           CaptureSettings settings,
+	                           TurfMessages text) {
 		this.turfs    = turfs;
 		this.gangs    = gangs;
 		this.users    = users;
 		this.messages = messages;
 		this.sounds   = sounds;
+		this.settings = settings;
+		this.text     = text;
 
 		Bukkit.getScheduler().runTaskTimer(plugin, this::refreshProgress, 20L, 20L);
 	}
@@ -194,10 +204,9 @@ public final class TurfBossBarListener implements Listener {
 			return;
 		}
 
-		Gang     challenger = state.getChallengerGangId() == null ? null : gangs.findById(state.getChallengerGangId());
-		BarColor color      = resolveColor(viewer, turf.getOwnerGangId(), state.getChallengerGangId());
+		BarColor color = resolveColor(viewer, turf.getOwnerGangId(), state.getChallengerGangId());
 
-		BossBar consolidateBar = Bukkit.createBossBar(buildConsolidateTitle(turf, challenger), color, BarStyle.SOLID);
+		BossBar consolidateBar = Bukkit.createBossBar(bossTitle(turf, state), color, BarStyle.SOLID);
 		BossBar claimBar       = null;
 
 		if (turf.isUnclaimed()) {
@@ -237,6 +246,7 @@ public final class TurfBossBarListener implements Listener {
 	private void clearTurf(int turfId) {
 		lastClaimProgress.remove(turfId);
 		lastConsolidateProgress.remove(turfId);
+		lastTitles.remove(turfId);
 		Map<UUID, BarPair> perViewer = barsByTurf.remove(turfId);
 		if (perViewer == null) {
 			return;
@@ -274,11 +284,17 @@ public final class TurfBossBarListener implements Listener {
 			boolean claimAdvanced   = claimProgress > prevClaim + 0.0005;
 			boolean consAdvanced    = consolidateProgress > prevConsolidate + 0.0005;
 
+			String  title        = bossTitle(turf, state);
+			boolean titleChanged = !title.equals(lastTitles.get(turfId));
+
 			for (BarPair pair : entry.getValue().values()) {
 				if (pair.claim() != null) {
 					pair.claim().setProgress(claimProgress);
 				}
 				pair.consolidate().setProgress(consolidateProgress);
+				if (titleChanged) {
+					pair.consolidate().setTitle(title);
+				}
 				if (claimAdvanced || consAdvanced) {
 					for (Player listener : pair.consolidate().getPlayers()) {
 						sounds.playCaptureTick(listener);
@@ -287,13 +303,45 @@ public final class TurfBossBarListener implements Listener {
 			}
 			lastClaimProgress.put(turfId, claimProgress);
 			lastConsolidateProgress.put(turfId, consolidateProgress);
+			lastTitles.put(turfId, title);
 		}
 	}
 
-	private String buildConsolidateTitle(Turf turf, Gang challenger) {
-		return ChatUtil.color(messages.format("TURF_BOSSBAR_TITLE",
-		                                      "turf", turf.getDisplayName(),
-		                                      "gang", GangDisplayNameResolver.resolve(challenger)));
+	/**
+	 * The consolidate bar title at this moment. Owned turf: attackers = the challenger's count inside, defenders = owner
+	 * and allies inside, duration = the capture duration. Unclaimed turf: attackers = the challenger's count, defenders
+	 * = every other gang inside, duration = the current phase's length, so the time shown is the time left in that
+	 * phase. W2 replaces the pace rule; see {@link BossBarText}.
+	 */
+	private String bossTitle(Turf turf, TurfRuntimeState state) {
+		Integer challengerId = state.getChallengerGangId();
+		Map<Integer, Integer> inside = state.getChallengersInside();
+		int attackers = challengerId == null ? 0 : inside.getOrDefault(challengerId, 0);
+
+		int defenders;
+		int duration;
+		if (turf.isUnclaimed()) {
+			defenders = inside.entrySet()
+					.stream()
+					.filter(entry -> !entry.getKey().equals(challengerId))
+					.mapToInt(Map.Entry::getValue)
+					.sum();
+			duration  = state.getPhase() == CapturePhase.CLAIM
+			            ? settings.getUnclaimedPhase1Seconds()
+			            : settings.getUnclaimedPhase2Seconds();
+		} else {
+			defenders = state.getDefendersInside();
+			duration  = settings.getCaptureDurationSeconds();
+		}
+
+		long   secondsLeft = BossBarText.secondsLeft(state.getCaptureProgress(), attackers - defenders, duration);
+		String time        = secondsLeft < 0
+		                     ? text.text("Info.BossBar_Stalled", "stalled")
+		                     : messages.formatDuration(secondsLeft);
+		Gang   challenger  = challengerId == null ? null : gangs.findById(challengerId);
+
+		return BossBarText.title(text, GangDisplayNameResolver.resolve(challenger), turf.getDisplayName(),
+		                         attackers, defenders, time);
 	}
 
 	private String buildClaimTitle() {

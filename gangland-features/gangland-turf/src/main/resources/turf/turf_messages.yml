@@ -68,6 +68,9 @@ Hud:
 Info:
    # Line added to /glw turf info. %reason% = a Reason line.
    Reason_Line: "&7Capture: %reason%"
+   # Chat line when a gang member enters a rival or unclaimed turf that cannot be captured yet. %turf% = turf name,
+   # %reason% = a Reason line.
+   Blocked_Line: "&e%turf% &7- %reason%"
    # Capture boss bar title. %gang%, %turf%, %attackers%, %defenders%, %time% (time left at this pace, or Stalled).
    BossBar_Title: "&c%gang% &fis capturing &e%turf% &7- &f%attackers% &7vs &f%defenders% &7- &f%time%"
    # %time% when the capture is not moving forward.
