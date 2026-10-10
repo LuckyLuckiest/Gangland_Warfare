@@ -81,6 +81,9 @@ boot. Read the notes below before you start the server on the new jar.
 
 ## W1 - to be filled
 
+- `/glw turf wand` now also clears the active turf selection, so `tp` and `show` with no id no longer fall back to
+  the stand-in turf until `select` is run again.
+
 ## W2 - to be filled
 
 ## W3 - to be filled

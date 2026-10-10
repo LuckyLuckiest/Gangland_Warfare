@@ -112,6 +112,9 @@ public final class TurfActionBarListener implements Listener {
 	private String enterSubtitle(Player player, Turf turf, Integer ownerId) {
 		User<Player> user       = users.findByPlayer(player);
 		Integer      viewerGang = user != null && user.hasGang() ? user.getGangId() : null;
+		if (viewerGang == null) {
+			return text.text("Turf.Title_Gangless", "&eJoin a gang to capture turf");
+		}
 		String       ownerName  = ownerId == null
 		                          ? ""
 		                          : GangDisplayNameResolver.resolve(gangs.findById(ownerId));

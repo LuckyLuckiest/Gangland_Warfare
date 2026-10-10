@@ -221,4 +221,12 @@ class TurfActionBarListenerTest {
 
 		assertTrue(subtitle.contains("Join a gang to capture turf"), subtitle);
 	}
+
+	@Test
+	@DisplayName("a gangless viewer on an unclaimed turf is told to join a gang, not 'attackable'")
+	void subtitle_ganglessOnUnclaimed() {
+		String subtitle = enterSubtitle(turf(null), null);
+
+		assertTrue(subtitle.contains("Join a gang to capture turf"), subtitle);
+	}
 }
