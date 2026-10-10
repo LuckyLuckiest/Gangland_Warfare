@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.data.teleportation;
 
+import lombok.CustomLog;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
@@ -16,6 +17,7 @@ import org.luckyraven.keystone.persistence.repository.IRepository;
 import java.sql.Types;
 import java.util.*;
 
+@CustomLog
 public class WaypointManager implements BeanLifecycle, WaypointLookupContract {
 
 	private final Gangland               gangland;
@@ -131,14 +133,20 @@ public class WaypointManager implements BeanLifecycle, WaypointLookupContract {
 			// its id, and the loaded waypoints are renumbered around it.
 			Set<Integer> unloaded = new HashSet<>();
 			for (Object[] result : rowsData) {
-				int id = (int) result[0];
-				if (!waypoints.containsKey(id)) unloaded.add(id);
+				// a NULL id is warned about once, in the renumbering loop below
+				if (result[0] instanceof Number number && !waypoints.containsKey(number.intValue())) {
+					unloaded.add(number.intValue());
+				}
 			}
 
 			int tempId = 1;
 			int maxId  = 0;
 			for (Object[] result : rowsData) {
-				int id = (int) result[0];
+				if (!(result[0] instanceof Number rowId)) {
+					log.warn("Skipping a waypoint row with no numeric id ({})", result[0]);   // T-261
+					continue;
+				}
+				int id = rowId.intValue();
 				if (unloaded.contains(id)) {
 					maxId = Math.max(maxId, id);
 					continue;

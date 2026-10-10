@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.copsncrooks.database;
 
+import lombok.CustomLog;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.luckyraven.gangland.copsncrooks.detainment.inventory.SeizedInventory;
 import org.luckyraven.keystone.persistence.database.DatabaseHandler;
@@ -16,6 +17,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 @Repository(SeizedInventory.class)
+@CustomLog
 public class SeizedInventoryRepository extends AbstractRepository<SeizedInventory> {
 
 	private final SeizedInventoryTable seizedInventoryTable;
@@ -33,7 +35,14 @@ public class SeizedInventoryRepository extends AbstractRepository<SeizedInventor
 		for (Object[] result : data) {
 			int v = 0;
 
-			UUID   uuid       = UUID.fromString(String.valueOf(result[v++]));
+			UUID uuid;
+			try {
+				uuid = UUID.fromString(String.valueOf(result[v++]));
+			} catch (IllegalArgumentException exception) {
+				// T-262: a NULL or malformed uuid skips this row instead of failing the whole load
+				log.warn("Skipping a seized inventory row with a bad uuid '{}'", result[0]);
+				continue;
+			}
 			String serialized = String.valueOf(result[v++]);
 			long   seizedAt   = ((Number) result[v]).longValue();
 

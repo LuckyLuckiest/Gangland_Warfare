@@ -95,7 +95,14 @@ public class DetainmentRepository extends AbstractRepository<DetainedPlayer> {
 		for (Object[] result : data) {
 			int v = 0;
 
-			UUID    uuid      = UUID.fromString(String.valueOf(result[v++]));
+			UUID uuid;
+			try {
+				uuid = UUID.fromString(String.valueOf(result[v++]));
+			} catch (IllegalArgumentException exception) {
+				// T-262: a NULL or malformed uuid skips this row instead of failing the whole load
+				log.warn("Skipping a detainment row with a bad uuid '{}'", result[0]);
+				continue;
+			}
 			Object  rawJailId = result[v++];
 			Integer jailId    = rawJailId == null ? null : ((Number) rawJailId).intValue();
 			Object  rawState  = v < result.length ? result[v++] : null;

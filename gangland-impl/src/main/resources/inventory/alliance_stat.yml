@@ -1,3 +1,6 @@
+# Replaced from the plugin jar when the plugin version changes; the old file is kept as <name>-old.yml.
+Config_Version: '${project.version}'
+
 Information:
    Display_Name: "&6&lGang Allies"
    Size: 54

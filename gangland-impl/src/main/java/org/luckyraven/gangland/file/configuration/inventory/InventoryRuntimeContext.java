@@ -100,11 +100,6 @@ public class InventoryRuntimeContext {
 		ConfigReport report = new ConfigReport();
 		NodeReader   root   = FileHandlerReader.read(fileHandler, report);
 
-		if (root.get("Config_Version").asString().orNull() != null) {
-			log.warn("Skipping inventory file '{}' — it has a Config_Version key (treated as non-inventory)", fileName);
-			return;
-		}
-
 		MappingNode informationSection = root.get("Information").asMapping().required().orNull();
 		if (informationSection == null) {
 			log.warn("Skipping inventory file '{}' — missing or malformed 'Information' block", fileName);

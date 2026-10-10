@@ -1,5 +1,6 @@
 package org.luckyraven.gangland.lootchest.database;
 
+import lombok.CustomLog;
 import lombok.Setter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -19,6 +20,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 @Repository(LootChestData.class)
+@CustomLog
 public class LootChestRepository extends AbstractRepository<LootChestData> {
 
 	/** A SQL NULL reads as 0; any other value is read through Number (MySQL may return Long/BigDecimal). */
@@ -45,7 +47,14 @@ public class LootChestRepository extends AbstractRepository<LootChestData> {
 		for (Object[] result : data) {
 			int v = 0;
 
-			UUID    id            = UUID.fromString(String.valueOf(result[v++]));
+			UUID id;
+			try {
+				id = UUID.fromString(String.valueOf(result[v++]));
+			} catch (IllegalArgumentException exception) {
+				// T-262: a NULL or malformed uuid skips this row instead of failing the whole load
+				log.warn("Skipping a loot chest row with a bad uuid '{}'", result[0]);
+				continue;
+			}
 			String  worldName     = String.valueOf(result[v++]);
 			double  x             = num(result[v++]).doubleValue();
 			double  y             = num(result[v++]).doubleValue();

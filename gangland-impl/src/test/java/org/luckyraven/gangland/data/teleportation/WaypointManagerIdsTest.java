@@ -123,4 +123,43 @@ class WaypointManagerIdsTest {
 		assertSame(unsaved, manager.get(5));
 		assertEquals(6, new Waypoint("new", "gangland").getUsedId());
 	}
+
+	@Test
+	@DisplayName("T-261: refactorIds renumbers when MySQL returns the id column as Long")
+	void refactorIds_longIds_renumber() throws SQLException {
+		Waypoint a = waypoint("a", 3);
+		Waypoint b = waypoint("b", 7);
+		manager.add(a);
+		manager.add(b);
+		Database db = mock(Database.class);
+		when(database.getDatabase()).thenReturn(db);
+		when(db.table(anyString())).thenReturn(db);
+		List<Object[]> rows = new ArrayList<>();
+		rows.add(new Object[]{3L});
+		rows.add(new Object[]{7L});
+		when(db.selectAll(any(String[].class))).thenReturn(rows);
+
+		manager.refactorIds();
+
+		assertSame(a, manager.get(1));
+		assertSame(b, manager.get(2));
+	}
+
+	@Test
+	@DisplayName("T-261: refactorIds skips a row with a NULL id and renumbers the rest")
+	void refactorIds_nullIdRow_isSkipped() throws SQLException {
+		Waypoint c = waypoint("c", 3);
+		manager.add(c);
+		Database db = mock(Database.class);
+		when(database.getDatabase()).thenReturn(db);
+		when(db.table(anyString())).thenReturn(db);
+		List<Object[]> rows = new ArrayList<>();
+		rows.add(new Object[]{null});
+		rows.add(new Object[]{3});
+		when(db.selectAll(any(String[].class))).thenReturn(rows);
+
+		manager.refactorIds();
+
+		assertSame(c, manager.get(1));
+	}
 }
