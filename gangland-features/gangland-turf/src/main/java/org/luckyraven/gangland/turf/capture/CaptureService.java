@@ -20,6 +20,8 @@ import org.luckyraven.gangland.turf.state.CapturePhase;
 import org.luckyraven.gangland.turf.state.TurfState;
 
 import java.util.*;
+import java.util.function.IntUnaryOperator;
+import java.util.function.Supplier;
 
 /**
  * Drives the capture state machine. Called once per 1-Hz tick by the location tracker, passed the fresh player→turf
@@ -57,21 +59,44 @@ public final class CaptureService {
 	private final CaptureSettings    settings;
 	private final TurfSoundContract  sounds;
 	private final TurfOwnership      ownership;
-	private final CaptureEligibility eligibility;
+	private final CaptureEligibility     eligibility;
+	private final Supplier<CaptureRules> rules;
+	private final IntUnaryOperator       guardsAlive;
 
+	/** Today's rules (CaptureRules.LEGACY), no guards - for tests written before W2. */
 	public CaptureService(TurfManager turfs,
 	                      GangLookupContract gangs,
 	                      UserLookupContract users,
 	                      CaptureSettings settings,
 	                      TurfSoundContract sounds,
 	                      TurfOwnership ownership) {
-		this.turfs     = turfs;
-		this.gangs     = gangs;
-		this.users     = users;
-		this.settings  = settings;
-		this.sounds    = sounds;
+		this(turfs, gangs, users, settings, sounds, ownership, new CaptureEligibility(gangs, settings),
+		     () -> CaptureRules.LEGACY, turfId -> 0);
+	}
+
+	/**
+	 * @param eligibility the shared capture verdict (its own bean since 0.17.0)
+	 * @param rules       TurfRules::capture in production
+	 * @param guardsAlive turf id -> living guards of that turf (TurfDefenderDeployer::aliveCount)
+	 */
+	public CaptureService(TurfManager turfs,
+	                      GangLookupContract gangs,
+	                      UserLookupContract users,
+	                      CaptureSettings settings,
+	                      TurfSoundContract sounds,
+	                      TurfOwnership ownership,
+	                      CaptureEligibility eligibility,
+	                      Supplier<CaptureRules> rules,
+	                      IntUnaryOperator guardsAlive) {
+		this.turfs       = turfs;
+		this.gangs       = gangs;
+		this.users       = users;
+		this.settings    = settings;
+		this.sounds      = sounds;
 		this.ownership   = ownership;
-		this.eligibility = new CaptureEligibility(gangs, settings);
+		this.eligibility = eligibility;
+		this.rules       = rules;
+		this.guardsAlive = guardsAlive;
 	}
 
 	/** The capture verdict every surface reads (map, HUD, info card, boss bar). */
@@ -94,7 +119,11 @@ public final class CaptureService {
 	 * for the tick.
 	 */
 	public void tick(Map<UUID, Turf> playerTurfCache) {
-		long                       now    = System.currentTimeMillis();
+		tick(playerTurfCache, System.currentTimeMillis());
+	}
+
+	/** Tests pass a fixed clock; production calls the one-argument form. */
+	void tick(Map<UUID, Turf> playerTurfCache, long now) {
 		Map<Integer, List<Player>> inside = indexPlayersByTurf(playerTurfCache);
 
 		for (Turf turf : turfs.getAll()) {
@@ -422,11 +451,12 @@ public final class CaptureService {
 
 	private void cancel(Turf turf, TurfRuntimeState state, List<Player> playersInside,
 	                    TurfCaptureFailedEvent.Reason reason) {
+		Integer challenger = state.getChallengerGangId();
 		state.reset();
 		for (Player player : playersInside) {
 			sounds.playCaptureFailed(player);
 		}
-		Bukkit.getPluginManager().callEvent(new TurfCaptureFailedEvent(turf, reason));
+		Bukkit.getPluginManager().callEvent(new TurfCaptureFailedEvent(turf, reason, challenger));
 	}
 
 	/**

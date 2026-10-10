@@ -42,7 +42,14 @@ public final class TurfMessages extends LocalizedModuleYaml {
 			case COOLDOWN -> text("Reason.Cooldown", "&eshielded: just captured, attackable in %time%",
 			                      "time", legacy.formatDuration(
 							Math.max(1L, (verdict.untilMillis() - now + 999L) / 1000L)));
-			case NO_OWNERS_ONLINE, WAKING_UP, OVER_CAP -> "";
+			case NO_OWNERS_ONLINE -> text("Reason.No_Owners_Online",
+			                              "&eshielded: no %gang% online (attackable when one logs in)",
+			                              "gang", ownerName);
+			case WAKING_UP -> text("Reason.Waking_Up", "&eshielded: %gang% waking up, attackable in %time%",
+			                       "gang", ownerName,
+			                       "time", legacy.formatDuration(
+							Math.max(1L, (verdict.untilMillis() - now + 999L) / 1000L)));
+			case OVER_CAP -> text("Reason.Over_Cap", "&eshielded: your gang already holds its turf cap");
 			case OWNERS_ACTIVE -> text("Reason.Owners_Active", "&eshielded: %gang% were online in the last %grace%",
 			                           "gang", ownerName,
 			                           "grace", legacy.formatDuration(

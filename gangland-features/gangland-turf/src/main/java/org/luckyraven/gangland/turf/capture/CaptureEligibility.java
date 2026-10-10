@@ -11,7 +11,8 @@ import java.util.function.Supplier;
 /**
  * The one capture verdict every surface reads (P2.2): the map hover, the HUD line, the turf info card, the enter
  * feedback and the capture boss bar. Pure and Bukkit-free. Extracted in 0.17.0 (W1 kickoff) from
- * CaptureService#isCapturable with identical behaviour; W2 changes the rules here, nowhere else.
+ * CaptureService#isCapturable with identical behaviour. W2-R1 adds the OWNERS_ONLINE window and the wake-up shield inside
+ * evaluate; evaluateFor adds the turf cap.
  */
 public final class CaptureEligibility {
 
@@ -73,14 +74,24 @@ public final class CaptureEligibility {
 		return rules.get();
 	}
 
-	/** The verdict for one attacking gang (W2 shell: same as evaluate until commit 3). */
+	/**
+	 * The verdict for one attacking gang: {@link #evaluate} first; when that says attackable but the gang already holds
+	 * its turf cap, OVER_CAP.
+	 */
 	public Verdict evaluateFor(Turf turf, int attackerGangId, long now) {
-		return evaluate(turf, now);
+		Verdict verdict = evaluate(turf, now);
+		if (!verdict.attackable()) {
+			return verdict;
+		}
+		if (overCap(attackerGangId)) {
+			return new Verdict(Reason.OVER_CAP, 0L);
+		}
+		return verdict;
 	}
 
-	/** True when gang {@code gangId} already holds as many turfs as its level allows (W2 shell: false until commit 3). */
+	/** True when gang {@code gangId} already holds as many turfs as its level allows (W2-R2 re-checks it at complete). */
 	public boolean overCap(int gangId) {
-		return false;
+		return ownedTurfs.applyAsInt(gangId) >= turfCap.applyAsInt(gangId);
 	}
 
 	public Verdict evaluate(Turf turf, long now) {

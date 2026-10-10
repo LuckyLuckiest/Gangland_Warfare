@@ -10,6 +10,12 @@ import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.core.user.User;
+import org.luckyraven.gangland.turf.capture.CaptureRules;
+import org.luckyraven.gangland.turf.capture.CaptureSettings;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * Heartbeat that refreshes each gang's {@code lastMemberOnlineAt} timestamp while at least one member is online. When
@@ -30,6 +36,9 @@ public final class GangPresenceTracker implements BeanLifecycle {
 	private final UserLookupContract users;
 	private final int                inactivityAutoReleaseDays;
 	private final Runnable           turfReleaseFn;
+	private final Supplier<CaptureRules> rules;
+	private final CaptureSettings    settings;
+	private final Map<Integer, Long> wokeAt = new HashMap<>();
 
 	private BukkitTask heartbeatTask;
 	private BukkitTask releaseTask;
@@ -38,12 +47,29 @@ public final class GangPresenceTracker implements BeanLifecycle {
 	                           GangLookupContract gangs,
 	                           UserLookupContract users,
 	                           int inactivityAutoReleaseDays,
-	                           Runnable turfReleaseFn) {
+	                           Runnable turfReleaseFn,
+	                           Supplier<CaptureRules> rules,
+	                           CaptureSettings settings) {
 		this.plugin                    = plugin;
 		this.gangs                     = gangs;
 		this.users                     = users;
 		this.inactivityAutoReleaseDays = inactivityAutoReleaseDays;
 		this.turfReleaseFn             = turfReleaseFn;
+		this.rules                     = rules;
+		this.settings                  = settings;
+	}
+
+	/**
+	 * Epoch ms gang {@code gangId} last woke up (its first qualifying member came online after the logout window
+	 * closed); 0 when unknown. In memory only: after a restart the first login wakes the gang again. Filled by W2-R1.
+	 */
+	public long wokeAt(int gangId) {
+		return wokeAt.getOrDefault(gangId, 0L);
+	}
+
+	/** Records a wake-up (W2-R1 calls it from the join listener and the heartbeat). */
+	public void recordWakeUp(int gangId, long at) {
+		wokeAt.put(gangId, at);
 	}
 
 	public void start() {

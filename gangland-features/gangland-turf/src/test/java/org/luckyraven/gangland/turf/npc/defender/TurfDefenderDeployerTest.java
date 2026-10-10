@@ -156,7 +156,12 @@ class TurfDefenderDeployerTest {
 		Constructor<?> groupCtor = groupClass.getDeclaredConstructor(Supplier.class, double.class);
 		groupCtor.setAccessible(true);
 		Supplier<Set<UUID>> noChallengers = Set::of;
-		Object group = groupCtor.newInstance(noChallengers, 32.0);
+		Map<Integer, Object> byTurfId = fieldMap(deployer);
+		Object group = byTurfId.get(turfId);
+		if (group == null) {
+			group = groupCtor.newInstance(noChallengers, 32.0);
+			byTurfId.put(turfId, group);
+		}
 
 		Constructor<?> defenderCtor = trackedDefenderClass.getDeclaredConstructor(CivilianNpc.class, long.class);
 		defenderCtor.setAccessible(true);
@@ -166,8 +171,12 @@ class TurfDefenderDeployerTest {
 		defendersField.setAccessible(true);
 		((List<Object>) defendersField.get(group)).add(trackedDefender);
 
+	}
+
+	@SuppressWarnings("unchecked")
+	private static Map<Integer, Object> fieldMap(TurfDefenderDeployer deployer) throws Exception {
 		Field byTurfIdField = TurfDefenderDeployer.class.getDeclaredField("byTurfId");
 		byTurfIdField.setAccessible(true);
-		((Map<Integer, Object>) byTurfIdField.get(deployer)).put(turfId, group);
+		return (Map<Integer, Object>) byTurfIdField.get(deployer);
 	}
 }

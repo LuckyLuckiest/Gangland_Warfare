@@ -19,6 +19,7 @@ import org.luckyraven.gangland.turf.config.GanglandTurfMessages;
 import org.luckyraven.gangland.turf.config.GanglandTurfSounds;
 import org.luckyraven.gangland.turf.config.TurfSettings;
 import org.luckyraven.gangland.turf.place.TurfRegionProvider;
+import org.luckyraven.gangland.gang.Gang;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.keystone.persistence.FileManager;
@@ -175,13 +176,23 @@ public final class TurfModuleConfig {
 	                                     UserLookupContract users,
 	                                     CaptureSettings settings,
 	                                     TurfSoundContract sounds,
-	                                     TurfOwnership ownership) {
-		return new CaptureService(turfs, gangs, users, settings, sounds, ownership);
+	                                     TurfOwnership ownership,
+	                                     CaptureEligibility eligibility,
+	                                     TurfRules rules,
+	                                     TurfDefenderDeployer defenders) {
+		return new CaptureService(turfs, gangs, users, settings, sounds, ownership, eligibility, rules::capture,
+		                          defenders::aliveCount);
 	}
 
 	@Bean
-	public CaptureEligibility captureEligibility(CaptureService captureService) {
-		return captureService.eligibility();
+	public CaptureEligibility captureEligibility(GangLookupContract gangs, CaptureSettings settings, TurfRules rules,
+	                                             GangPresenceTracker presence, TurfManager turfs) {
+		return new CaptureEligibility(gangs, settings, rules::capture, presence::wokeAt,
+		                              gangId -> {
+		                              	Gang gang = gangs.findById(gangId);
+		                              	return gang == null ? 0 : rules.cap(gang.getLevel().getLevelValue());
+		                              },
+		                              turfs::countOwnedBy);
 	}
 
 	@Bean
@@ -245,9 +256,11 @@ public final class TurfModuleConfig {
 	                                               GangLookupContract gangs,
 	                                               UserLookupContract users,
 	                                               CaptureSettings settings,
-	                                               InactivityReleaseTask release) {
-		GangPresenceTracker tracker = new GangPresenceTracker(
-				plugin, gangs, users, settings.getInactivityAutoReleaseDays(), release);
+	                                               InactivityReleaseTask release,
+	                                               TurfRules rules) {
+		GangPresenceTracker tracker = new GangPresenceTracker(plugin, gangs, users,
+		                                                      settings.getInactivityAutoReleaseDays(), release,
+		                                                      rules::capture, settings);
 		tracker.start();
 		return tracker;
 	}

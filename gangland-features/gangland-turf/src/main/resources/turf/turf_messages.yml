@@ -10,8 +10,14 @@ Reason:
    Attackable: "&aattackable"
    # Captured recently. %time% = time left until it can be attacked again.
    Cooldown: "&eshielded: just captured, attackable in %time%"
-   # An owner was online recently. %gang% = owning gang, %grace% = the Post_Logoff_Protection_Minutes window.
+   # OWNERS_OFFLINE window only: an owner was online recently. %gang% = owning gang, %grace% = Post_Logoff_Protection_Minutes.
    Owners_Active: "&eshielded: %gang% were online in the last %grace%"
+   # OWNERS_ONLINE window: nobody of the owning gang online now or recently. %gang% = owning gang.
+   No_Owners_Online: "&eshielded: no %gang% online (attackable when one logs in)"
+   # The owning gang just came online; attackable when the wake-up shield ends. %gang%, %time% = time left.
+   Waking_Up: "&eshielded: %gang% waking up, attackable in %time%"
+   # The viewer's gang already holds as many turfs as its level allows (turf_rules.yml Turf_Cap).
+   Over_Cap: "&eshielded: your gang already holds its turf cap"
 # end Reason
 
 # ---------------- Map: /glw map ----------------
@@ -124,6 +130,8 @@ Info:
    BossBar_Title: "&c%gang% &fis capturing &e%turf% &7- &f%attackers% &7vs &f%defenders% &7- &f%time%"
    # %time% when the capture is not moving forward.
    BossBar_Stalled: "stalled"
+   # Added to the boss bar defenders count while guards hold the bar. %guards% = guards counted.
+   BossBar_Guards: " &7+%guards% guards"
 # end Info
 
 # ---------------- Turf: /glw turf admin and player texts ----------------

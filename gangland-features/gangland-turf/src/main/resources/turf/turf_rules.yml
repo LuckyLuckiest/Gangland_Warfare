@@ -23,3 +23,57 @@ Create:
    Min_Side_Blocks: 16
    # The longest side (X or Z) a new turf may have, in blocks, measured after snapping.
    Max_Side_Blocks: 512
+
+# end Create
+
+# ---------------- Capture: when and how a turf can be taken (0.17.0) ----------------
+# Capture timing (duration, cooldown, abandon grace, the logout window) stays in turf_settings.yml under Capture:.
+Capture:
+   # OWNERS_ONLINE (default): a turf can be attacked while one of its owners is online, and for
+   # Capture.Post_Logoff_Protection_Minutes (turf_settings.yml) after the last one logs off; then it is shielded until
+   # an owner returns. OWNERS_OFFLINE: the pre-0.17.0 rule, for small servers - a turf can only be attacked once every
+   # owner has been offline that long.
+   Window: OWNERS_ONLINE
+   # OWNERS_ONLINE only: seconds a turf stays shielded after the first owner comes online, so attackers waiting at the
+   # turf cannot strike the moment an owner logs in. 0 turns it off.
+   Wake_Up_Shield_Seconds: 120
+   # Only members who joined their gang at least this many hours ago keep its turfs open to attack and wake them up.
+   # In a gang younger than this, every member counts. 0 counts everyone.
+   Window_Min_Member_Age_Hours: 24
+   # Seconds an attacker must stay alive inside a turf before they count for a capture. Defenders count at once.
+   # Dying or leaving the turf starts the count again. 0 turns it off.
+   Presence_Seconds: 15
+   # The capture bar never fills faster than this many seconds, whatever the head-count. 0 turns it off.
+   Min_Capture_Seconds: 60
+   # A capture still running after this many minutes ends as stalled; the defenders keep the turf. 0 turns it off.
+   Max_Contest_Minutes: 10
+   # Each living guard of the turf holds back one attacker, up to this many guards. 0 means guards never count.
+   Guard_Weight_Cap: 4
+# end Capture
+
+# ---------------- Turf_Cap: how many turfs one gang may hold (0.17.0) ----------------
+Turf_Cap:
+   # A gang may hold Base + Per_Level x its gang level turfs, never more than Ceiling. A gang at its cap cannot start a
+   # capture; a gang over its cap keeps its turfs, but only the oldest Base + Per_Level x level of them pay.
+   Base: 2
+   # Extra turfs per gang level.
+   Per_Level: 1
+   # The most turfs any gang may hold.
+   Ceiling: 6
+# end Turf_Cap
+
+# ---------------- Income: what a held turf pays (0.17.0) ----------------
+Income:
+   # A turf pays its owners (money and gang XP) only while one of them was online in the last this many hours.
+   Idle_Hours: 24
+   # Income boosts stack, but a turf never pays more than this many times its income.
+   Max_Multiplier: 2.0
+   # Gang XP the owning gang earns per paying turf per payout (every Income_Interval_Minutes in turf_settings.yml).
+   Gang_XP_Per_Payout: 1
+# end Income
+
+# ---------------- Garrison: guards bought at the Quartermaster (0.17.0) ----------------
+Garrison:
+   # The most guards a turf can hold in reserve. Buying stops at this number.
+   Max_Reserve: 12
+# end Garrison

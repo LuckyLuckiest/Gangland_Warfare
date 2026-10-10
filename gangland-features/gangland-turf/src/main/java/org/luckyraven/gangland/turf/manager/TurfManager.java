@@ -150,9 +150,15 @@ public final class TurfManager {
 	 * Called whenever ownership or the persisted capture timestamp changes. Bypasses the autosave cadence — capture is
 	 * an important enough state change that it should hit disk immediately.
 	 */
-	/** How many turfs gang {@code gangId} owns right now (W2 shell: 0 until commit 3). */
+	/** How many turfs gang {@code gangId} owns right now. */
 	public int countOwnedBy(int gangId) {
-		return 0;
+		int count = 0;
+		for (Turf turf : turfsById.values()) {
+			if (turf.getOwnerGangId() != null && turf.getOwnerGangId() == gangId) {
+				count++;
+			}
+		}
+		return count;
 	}
 
 	public void persist(Turf turf) {

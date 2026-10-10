@@ -35,8 +35,9 @@ public final class TurfOwnership {
 		if (state == null || state.getState() != TurfState.CONTESTING) {
 			return false;
 		}
+		Integer challenger = state.getChallengerGangId();
 		state.reset();
-		Bukkit.getPluginManager().callEvent(new TurfCaptureFailedEvent(turf, reason));
+		Bukkit.getPluginManager().callEvent(new TurfCaptureFailedEvent(turf, reason, challenger));
 		return true;
 	}
 

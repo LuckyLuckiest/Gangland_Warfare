@@ -65,6 +65,7 @@ class InactivityReleaseTaskTest {
 	@DisplayName("owner gang no longer exists -> one event with cause ORPHANED")
 	void missingGang_firesOrphaned() {
 		Turf turf = turf(1, 99);
+		gang(7, System.currentTimeMillis()); // another gang is loaded, so the T-196 guard lets the sweep run
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
 			task.run();
 

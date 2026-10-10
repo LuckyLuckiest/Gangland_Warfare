@@ -12,6 +12,7 @@ import org.luckyraven.gangland.civilians.npc.CivilianState;
 import org.luckyraven.gangland.civilians.npc.npc.CivilianNpc;
 import org.luckyraven.gangland.civilians.npc.spawn.CivilianSpawnManager;
 import org.luckyraven.keystone.bean.BeanLifecycle;
+import org.luckyraven.gangland.turf.events.TurfDefenderDownEvent;
 import org.luckyraven.keystone.npc.NpcSupport;
 
 import java.util.*;
@@ -107,6 +108,7 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 				continue;
 			}
 			group.defenders.add(new TrackedDefender(npc, expiresAt));
+			group.deployed++;
 		}
 	}
 
@@ -159,9 +161,9 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 		return civilianService;
 	}
 
-	/** How many guards of {@code turfId} are alive (W2 shell: 0 until commit 3). */
+	/** How many guards of {@code turfId} are alive, valid and not expired right now (0 when none were deployed). */
 	public int aliveCount(int turfId) {
-		return 0;
+		return liveDefenders(turfId).size();
 	}
 
 	/** Package-private for tests (W2-K). */
@@ -172,13 +174,19 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 			Map.Entry<Integer, Group> entry = entries.next();
 			Group                     group = entry.getValue();
 
+			int down = 0;
 			// Reap dead / expired defenders first so targeting only runs over live ones.
 			for (Iterator<TrackedDefender> it = group.defenders.iterator(); it.hasNext(); ) {
 				TrackedDefender d = it.next();
 				if (!d.npc.isValid() || d.npc.isMarkedForRemoval() || now >= d.expiresAt) {
+					if (now < d.expiresAt) down++;
 					if (d.npc.isValid()) d.npc.markForRemoval();
 					it.remove();
 				}
+			}
+			if (down > 0) {
+				Bukkit.getPluginManager().callEvent(
+						new TurfDefenderDownEvent(entry.getKey(), group.defenders.size(), group.deployed));
 			}
 			if (group.defenders.isEmpty()) {
 				entries.remove();
@@ -219,6 +227,7 @@ public final class TurfDefenderDeployer implements BeanLifecycle {
 	private static final class Group {
 
 		final List<TrackedDefender> defenders = new ArrayList<>();
+		int deployed;
 		Supplier<Set<UUID>> challengerMembers;
 		double              targetingRadius;
 

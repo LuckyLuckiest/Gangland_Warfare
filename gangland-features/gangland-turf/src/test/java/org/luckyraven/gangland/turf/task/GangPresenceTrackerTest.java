@@ -5,6 +5,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.luckyraven.gangland.turf.capture.CaptureRules;
+import org.luckyraven.gangland.turf.support.CaptureFixtures;
 import org.luckyraven.gangland.core.user.UserLookupContract;
 import org.luckyraven.gangland.gang.contract.GangLookupContract;
 import org.luckyraven.keystone.testkit.BukkitStatics;
@@ -36,7 +38,8 @@ class GangPresenceTrackerTest {
 		                                                      mock(GangLookupContract.class),
 		                                                      mock(UserLookupContract.class),
 		                                                      10,
-		                                                      release);
+		                                                      release, () -> CaptureRules.LEGACY,
+		                                                      CaptureFixtures.settings(180, 15, 15, 10, new int[]{25, 50, 75}, 90, 90));
 
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
 			tracker.start();
@@ -53,7 +56,8 @@ class GangPresenceTrackerTest {
 		                                                      mock(GangLookupContract.class),
 		                                                      mock(UserLookupContract.class),
 		                                                      10,
-		                                                      mock(Runnable.class));
+		                                                      mock(Runnable.class), () -> CaptureRules.LEGACY,
+		                                                      CaptureFixtures.settings(180, 15, 15, 10, new int[]{25, 50, 75}, 90, 90));
 
 		try (BukkitStatics bukkit = BukkitStatics.install()) {
 			BukkitTask heartbeat = mock(BukkitTask.class);
