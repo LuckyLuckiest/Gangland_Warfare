@@ -397,7 +397,8 @@ class InventoryParserRoundTripTest {
 	void registerInventory_withConfigVersion_isRegistered() throws IOException {
 		Path copy = tempDir.resolve("versioned_menu.yml");
 		String version = plugin.getDescription().getVersion();
-		Files.writeString(copy, "Config_Version: '" + version + "'\n" + Files.readString(RESOURCES.resolve("gang_stat.yml")).replaceFirst("(?s)^.*?(?=Information:)", ""));
+		String body    = Files.readString(RESOURCES.resolve("gang_stat.yml")).replaceFirst("(?s)^.*?(?=Information:)", "");
+		Files.writeString(copy, "Config_Version: '" + version + "'\n" + body);
 
 		context.registerInventory(new FileHandler(plugin, copy.toFile()));
 

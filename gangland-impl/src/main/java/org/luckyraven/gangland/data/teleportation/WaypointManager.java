@@ -133,12 +133,10 @@ public class WaypointManager implements BeanLifecycle, WaypointLookupContract {
 			// its id, and the loaded waypoints are renumbered around it.
 			Set<Integer> unloaded = new HashSet<>();
 			for (Object[] result : rowsData) {
-				if (!(result[0] instanceof Number number)) {
-					log.warn("Skipping a waypoint row with no numeric id ({})", result[0]);   // T-261
-					continue;
+				// a NULL id is warned about once, in the renumbering loop below
+				if (result[0] instanceof Number number && !waypoints.containsKey(number.intValue())) {
+					unloaded.add(number.intValue());
 				}
-				int id = number.intValue();
-				if (!waypoints.containsKey(id)) unloaded.add(id);
 			}
 
 			int tempId = 1;

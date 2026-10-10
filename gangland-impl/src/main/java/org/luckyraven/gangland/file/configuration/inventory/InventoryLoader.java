@@ -6,7 +6,10 @@ import org.luckyraven.keystone.persistence.FileHandler;
 import org.luckyraven.keystone.persistence.FileManager;
 import org.luckyraven.keystone.persistence.FolderLoader;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
 
 @CustomLog
 public class InventoryLoader extends FolderLoader {
@@ -41,12 +44,12 @@ public class InventoryLoader extends FolderLoader {
 	 * from the jar (Keystone keeps the old file as <name>-old.yml). A menu with no copy in the jar is the owner's own and
 	 * is left alone.
 	 */
-	private void refreshIfUnversioned(FileHandler handler) {
+	void refreshIfUnversioned(FileHandler handler) {
 		if (handler.getFileConfiguration().getString("Config_Version") != null) {
 			return;
 		}
 		String resource = "inventory/" + handler.getName() + ".yml";
-		if (gangland.getResource(resource) == null) {
+		if (!isShippedMenu(handler, resource)) {
 			return;
 		}
 		try {
@@ -54,6 +57,19 @@ public class InventoryLoader extends FolderLoader {
 			handler.reloadData();      // re-parses so registerInventory reads the new file
 		} catch (IOException exception) {
 			log.warn("Could not refresh {} from the jar: {}", resource, exception.getMessage());
+		}
+	}
+
+	/** True only for the top-level {@code inventory/<name>.yml} the jar ships; a nested file with that name is not. */
+	private boolean isShippedMenu(FileHandler handler, String resource) {
+		Path expected = new File(gangland.getDataFolder(), resource).toPath().toAbsolutePath().normalize();
+		if (!handler.getFile().toPath().toAbsolutePath().normalize().equals(expected)) {
+			return false;
+		}
+		try (InputStream jarCopy = gangland.getResource(resource)) {
+			return jarCopy != null;
+		} catch (IOException exception) {
+			return false;
 		}
 	}
 }
