@@ -19,6 +19,11 @@ public final class GangNameRules {
 	private GangNameRules() {
 	}
 
+	/** A gang name as the player sees it: colour codes removed. Names are stored raw, so lookups compare this form. */
+	public static String plain(String raw) {
+		return ChatColor.stripColor(ChatUtil.color(raw));
+	}
+
 	/** The player-facing refusal for a key returned by {@link #check}, from gang_messages.yml. */
 	public static String refusal(GangMessages messages, String key, String name) {
 		if (TAKEN.equals(key)) return messages.text(TAKEN, "&cA gang named %gang% already exists.", "gang", name);
@@ -28,7 +33,7 @@ public final class GangNameRules {
 	/** Validates a gang name for create and rename. Returns the gang_messages.yml key of the refusal, or empty. */
 	public static Optional<String> check(String rawName, Pattern pattern, Collection<Gang> existing,
 	                                     @Nullable Integer selfId) {
-		String name = ChatColor.stripColor(ChatUtil.color(rawName));
+		String name = plain(rawName);
 
 		if (!pattern.matcher(name).matches()) return Optional.of(INVALID);
 
@@ -36,8 +41,7 @@ public final class GangNameRules {
 			if (selfId != null && gang.getId() == selfId) continue;
 			if (gang.getName() == null) continue;
 
-			String other = ChatColor.stripColor(ChatUtil.color(gang.getName()));
-			if (other.equalsIgnoreCase(name)) return Optional.of(TAKEN);
+			if (plain(gang.getName()).equalsIgnoreCase(name)) return Optional.of(TAKEN);
 		}
 
 		return Optional.empty();

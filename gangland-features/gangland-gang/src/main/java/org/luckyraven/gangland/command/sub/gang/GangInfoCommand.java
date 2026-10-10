@@ -82,10 +82,11 @@ class GangInfoCommand extends SubArgument {
 		}, sender -> gangManager.getAll().stream().map(Gang::getName).filter(Objects::nonNull).toList());
 	}
 
-	/** By name first (ignoring case), then by numeric id. */
+	/** By name first (ignoring case and colour codes), then by numeric id. */
 	private Gang find(String key) {
+		String plain = GangNameRules.plain(key);
 		for (Gang gang : gangManager.getAll()) {
-			if (gang.getName() != null && gang.getName().equalsIgnoreCase(key)) return gang;
+			if (gang.getName() != null && GangNameRules.plain(gang.getName()).equalsIgnoreCase(plain)) return gang;
 		}
 
 		try {
